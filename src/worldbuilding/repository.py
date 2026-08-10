@@ -6,6 +6,7 @@ import json
 import yaml
 from pathlib import Path
 from datetime import datetime
+from typing import Any, Optional
 from src.worldbuilding.schema import WorldSpec, load_world_spec_from_yaml, InvalidWorldSpecError
 
 class WorldRepositoryError(Exception):
@@ -80,6 +81,69 @@ class WorldRepository:
                 raise WorldRepositoryError(f"Composition world '{world_id}' has not been resolved. Run resolve first.")
 
             return load_world_spec_from_yaml(yaml_path)
+        except Exception as e:
+            if isinstance(e, WorldRepositoryError):
+                raise e
+            raise WorldRepositoryError(f"Failed to load world '{world_id}': {e}") from e
+
+    def load_world_with_context(self, world_id: str) -> "tuple[WorldSpec, Optional[Any]]":
+        """Loads a WorldSpec exactly as `load_world()` does, plus the CompileContext
+        (`resolved/compile_context.json`) alongside it when the world is a resolved
+        composition and that file exists.
+
+        TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION: `WorldCompiler.compile()` can only
+        correctly resolve `entity.identity.role`/`.faction` via a catalog lookup when it has
+        `context.legacy_roles`/`context.legacy_faction` to consult (it has no `catalog_repo`
+        parameter of its own) -- without it, `get_role_enum()`/`get_faction_enum()` fall through
+        to a naive keyword-matching fallback that fails for almost every real monster archetype
+        role_id (e.g. "predator_hunter", "raider", "sentinel", "scout", "leader" -- none contain
+        the literal substrings MONSTER/GUARD/etc it checks for), silently defaulting to CITIZEN.
+        `WorldAssemblyResolver.assemble()` already computes and persists the correct mapping to
+        `resolved/compile_context.json` alongside `world.resolved.yaml` for every composition
+        world -- `load_world()` alone never surfaced it, forcing every one of its own real
+        callers to either duplicate this loading logic themselves (only `src/worldbuilding/
+        cli.py`'s own `compile` subcommand and `src/lab/orchestrator.py` did) or silently
+        compile without it (every other real caller: `src/cli/entry.py`,
+        `tools/calibrate_simq.py`, `tools/balance_measure.py`, `tools/personality_audit.py`).
+        Centralizing the correct loading logic here, matching this session's own established
+        precedent of extracting a shared helper when the same fix needs to land in multiple
+        real call sites.
+
+        Returns (spec, context) where `context` is `None` for a non-composition world or a
+        composition whose `compile_context.json` is missing (matching `load_world()`'s own
+        existing "resolved but not yet re-run through compile_context generation" tolerance --
+        callers should treat a `None` context as "role/faction resolution falls back to naive
+        keyword matching", not as an error).
+        """
+        try:
+            yaml_path = self._resolve_world_path(world_id)
+        except (ValueError, PermissionError) as e:
+            raise WorldRepositoryError(f"Secure path resolution failed for '{world_id}': {e}") from e
+
+        if not yaml_path.is_file():
+            raise WorldRepositoryError(f"World spec file not found: '{world_id}'")
+
+        try:
+            with open(yaml_path, "r", encoding="utf-8") as f:
+                raw_dict = yaml.safe_load(f)
+            if not (raw_dict and "worldcomposition" in raw_dict.get("schema_version", "")):
+                return load_world_spec_from_yaml(yaml_path), None
+
+            resolved_path = yaml_path.parent / "resolved" / "world.resolved.yaml"
+            if not resolved_path.is_file():
+                raise WorldRepositoryError(f"Composition world '{world_id}' has not been resolved. Run resolve first.")
+
+            spec = load_world_spec_from_yaml(resolved_path)
+
+            compile_context_path = resolved_path.parent / "compile_context.json"
+            context = None
+            if compile_context_path.is_file():
+                from src.worldassembly.context import CompileContext
+                with open(compile_context_path, "r", encoding="utf-8") as f:
+                    context_data = json.load(f)
+                context = CompileContext.from_dict(context_data)
+
+            return spec, context
         except Exception as e:
             if isinstance(e, WorldRepositoryError):
                 raise e

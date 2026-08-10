@@ -7933,3 +7933,31 @@
     change to combat resolution, tactical decision-making, or movement resolution logic itself
     (the one exception, movement.py's new additive property_updates tag, is tracked separately
     under combat_movement.yaml COMB-302).
+
+- id: INFRA-330
+  text: >
+    TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION -- `tools/calibrate_simq.py`'s own
+    `_load_world_state()` compiled every calibration run's world state via
+    `WorldCompiler.compile(spec, seed)` with no `context` argument, meaning every SimQ
+    calibration run this project has ever produced (including every committed anchor in
+    `tests/simulation_quality/fixtures/grade_anchors.json`) compiled its entities with
+    `entity.identity.role`/`.faction` silently defaulted via naive keyword matching rather than
+    real catalog resolution -- see SUB-384 (`docs/parity_ledger/substrate.yaml`) for the full
+    root-cause chain.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    `_load_world_state()` now loads via `WorldRepository.load_world_with_context(name)` and
+    passes the real `context` into `WorldCompiler.compile()`, matching the fix in SUB-384.
+  proof_type: regression
+  test_path: >
+    tests/simulation_quality/test_calibrate_simq.py -- 6 passed, no regressions (this fix
+    changes WHICH catalog-correct role/faction values entities get, not calibrate_simq.py's own
+    control flow, so its existing test suite is unaffected). See SUB-384's own test_path for the
+    real, direct fix verification.
+  divergence_note: null
+  support_boundary: >
+    This entry documents specifically the calibration-tooling half of the fix. See SUB-384 for
+    the full 4-call-site fix, the real, measured anchor-drift disclosure (dungeon_crawl/
+    urban_political), and the disclosed-but-not-actioned recalibration follow-up.

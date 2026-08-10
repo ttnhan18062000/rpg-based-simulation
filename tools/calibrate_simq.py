@@ -135,14 +135,19 @@ def _load_world_state(name: str, seed: int):
         )
 
     try:
-        import yaml
-        from src.worldbuilding.schema import WorldSpec
         from src.worldbuilding.compiler import WorldCompiler
+        from src.worldbuilding.repository import WorldRepository
 
-        with open(resolved_path, encoding="utf-8") as fh:
-            raw = yaml.safe_load(fh)
-        spec = WorldSpec(**raw)
-        state, report = WorldCompiler.compile(spec, seed)
+        # TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION: WorldCompiler.compile() can only
+        # correctly resolve entity.identity.role/.faction via a catalog lookup when it has
+        # context.legacy_roles/.legacy_faction to consult -- without it, role/faction resolution
+        # falls back to naive keyword-matching that fails for almost every real monster
+        # archetype role_id (e.g. "predator_hunter"/"raider"/"sentinel"/"scout"/"leader"),
+        # silently defaulting to CITIZEN. load_world_with_context() surfaces the real,
+        # already-computed compile_context.json alongside world.resolved.yaml.
+        repo = WorldRepository(os.path.join("data", "worlds"))
+        spec, context = repo.load_world_with_context(name)
+        state, report = WorldCompiler.compile(spec, seed, context=context)
         logger.info(
             "Loaded world '%s': %d entities, %d regions, %d resource nodes",
             name,

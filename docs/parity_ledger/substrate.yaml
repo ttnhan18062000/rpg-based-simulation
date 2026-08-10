@@ -4608,3 +4608,81 @@
     sites) and root-cause chain. This entry documents specifically the substrate/executor-layer
     half of the fix (the sequential dispatch path), matching this file's own existing SUB-034
     citation of executor.py.
+
+- id: SUB-384
+  text: >
+    TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION -- `WorldCompiler.compile()`
+    (`src/worldbuilding/compiler.py`) has no `catalog_repo` parameter of its own; it can only
+    correctly resolve `entity.identity.role`/`.faction` for real, catalog-driven population
+    entries via a pre-populated `context.legacy_roles`/`.legacy_factions` mapping (a
+    `CompileContext` computed once during `WorldAssemblyResolver.assemble()`'s own module
+    resolution and persisted to `resolved/compile_context.json` alongside `world.resolved.yaml`).
+    `WorldRepository.load_world()` never surfaced this file -- every real caller either
+    duplicated the correct load-and-pass logic independently (`src/worldbuilding/cli.py`'s own
+    `compile` subcommand, `src/lab/orchestrator.py`) or silently compiled without it (`src/cli/
+    entry.py` -- the general "run a simulation" CLI entrypoint; `tools/calibrate_simq.py`;
+    `tools/balance_measure.py`; `tools/personality_audit.py`). Without a real `context`,
+    `get_role_enum()`/`get_faction_enum()` (`compiler.py`) fall through to a naive
+    keyword-matching fallback that fails for almost every real archetype role_id/faction_id
+    (e.g. "predator_hunter"/"raider"/"sentinel"/"scout"/"leader" contain none of the literal
+    substrings HERO/SHOP/STORE/MONSTER/CITIZEN/CIVILIAN/WORKER/PEASANT/GUARD it checks for; real
+    faction IDs like "goblin_warband"/"wild_beast_pack"/"undead_remnants" contain none of
+    HERO/GUILD/VILLAGE/MONSTER/HORDE/HOSTILE/COUNCIL/TOWN), silently defaulting role to CITIZEN
+    and faction to NEUTRAL. Confirmed via direct compiled-state inspection
+    (`dungeon_crawl_seed42`): every sampled monster-archetype entity showed `role=CITIZEN`
+    regardless of its own real role_id, including ones roles.yaml correctly maps to MONSTER
+    (predator_hunter/raider/sentinel/leader) -- ruling out the ambiguous-shared-role-id
+    hypothesis this ticket's own filing originally suspected as the sole cause.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    Added `WorldRepository.load_world_with_context(world_id) -> (WorldSpec, Optional[
+    CompileContext])` (`src/worldbuilding/repository.py`) -- mirrors `load_world()`'s own
+    existing composition-detection logic exactly, additionally loading `resolved/
+    compile_context.json` via `CompileContext.from_dict()` when present (returns `context=None`
+    for a non-composition world or a resolved-but-context-less one, matching `load_world()`'s
+    own existing tolerance -- not an error). Updated all 4 real, confirmed-buggy call sites
+    (`src/cli/entry.py`, `tools/calibrate_simq.py`, `tools/balance_measure.py`, `tools/
+    personality_audit.py`) to use it and pass `context=context` into `WorldCompiler.compile()`.
+    Real, direct compiled-state re-verification (`dungeon_crawl_seed42`): zero entities show
+    `role=CITIZEN` post-fix (was ~100% of monster-archetype entities); entities now correctly
+    show MONSTER(=2) or GUARD(=5) matching their real catalog role_id.
+    `urban_political_seed42`: faction distribution moved from `{TOWN_COUNCIL: 14, NEUTRAL: 13,
+    HERO_GUILD: 3}` (zero MONSTER_HORDE at all) to `{TOWN_COUNCIL: 14, NEUTRAL: 9,
+    MONSTER_HORDE: 4, HERO_GUILD: 3}` -- 4 real hostile-faction entities that were previously
+    invisible to hostility detection (tagged NEUTRAL) are now correctly tagged MONSTER_HORDE.
+    Real, material downstream effect measured (see support_boundary): `urban_political`'s own
+    COMBAT pillar SimQ score moved from grade C (norm ~-0.002, 5 events) to grade A (norm
+    ~+1.03, 196 events) -- reproduced twice, consistent both runs.
+  proof_type: regression
+  test_path: >
+    tests/unit/worldbuilding/test_world_repository.py (4 new tests: non-composition returns
+    None context; composition with real compile_context.json returns the correct EntityRole
+    mapping; composition missing compile_context.json degrades gracefully to None; unresolved
+    composition still raises -- all 4 confirmed via git-stash bisection to genuinely fail
+    pre-fix). Full scoped re-run: tests/unit/worldbuilding/, tests/simulation_quality/,
+    tests/unit/content_semantics/, tests/unit/core/, tests/unit/entities/, tests/unit/world/,
+    tests/unit/tactical/, tests/unit/combat/, tests/unit/engine/, tests/unit/kernel/,
+    tests/integration/worldassembly/, tests/integration/kernel/test_determinism_suite.py --
+    1479 passed, 84 skipped, only the 1 pre-existing, already-confirmed-unrelated failure
+    (test_grade_anchor_file_exists_and_valid, missing local calibration-report fixture,
+    confirmed via bisection identical on pristine pre-fix code).
+  divergence_note: null
+  support_boundary: >
+    Real, disclosed, material anchor drift confirmed and NOT silently absorbed:
+    `dungeon_crawl_seed42_2000t` COMBAT norm moved from -0.0096 (post-COMB-310 baseline) to
+    -0.0205 (6->2 events) and WORLD moved from +0.2950 (152 events) to +0.2540 (114 events) --
+    both a modest, expected consequence of `SpawnService.process_spawns()`'s own real
+    monster-density check (`src/world/spawn.py:55`, gated on `entity.identity.role ==
+    EntityRole.MONSTER`) now correctly counting real monsters instead of always seeing ~0 and
+    over-spawning. `urban_political_seed42_2000t` COMBAT moved from grade C to grade A (see
+    v2_evidence) -- a large, real, positive shift, not a regression: previously-invisible
+    hostile pairs are now correctly detected and engaging. `grade_anchors.json` is NOT updated
+    by this ticket (out of its own explicit scope, which is role/faction correctness, not
+    anchor recalibration) -- a follow-up recalibration ticket is warranted given this real,
+    material shift, left for the user's own next direction. `CombatRewardClassificationService`
+    (`src/engine/combat_rewards.py`, keyed by `EntityRole.MONSTER`/`HERO`) is a real, secondary
+    downstream consumer also affected (a previously-mistagged monster fell through to a
+    different, unintended reward classification) -- not separately re-verified at corpus scale
+    here, disclosed as a real, plausible, unconfirmed secondary effect.

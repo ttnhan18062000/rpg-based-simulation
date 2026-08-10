@@ -298,16 +298,35 @@ real design work), out of scope for "make the existing foundation solid."
 
 ---
 
-## A related foundation-layer data-integrity risk (disclosed, not fixed)
+## A related foundation-layer data-integrity risk (fixed: `TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION`)
 
-**Monster-kind entities are frequently mistagged `role=CITIZEN` instead of `role=MONSTER`**
-corpus-wide (found during `TCK-20260808-LIFECYCLE-SCORE-WORLD-ARCHETYPE-AWARENESS`). This matters
+**Monster-kind entities were frequently mistagged `role=CITIZEN` instead of `role=MONSTER`**
+corpus-wide (found during `TCK-20260808-LIFECYCLE-SCORE-WORLD-ARCHETYPE-AWARENESS`). This mattered
 for this audit because `entity.identity.role` is exactly the field the user's own design vision
-depends on to separate "human, complex path" entities from "monster, patrol/attack-only" entities
-— and it is not currently a reliable signal at the foundation layer. `SpawnService`'s own density
-check (`src/world/spawn.py`) reads `EntityRole.MONSTER` for the same mistagged field. Not fixed by
-this document; flagged as a real precondition for any future work that wants to lean on the
-human/monster behavioral split the user described.
+depends on to separate "human, complex path" entities from "monster, patrol/attack-only" entities.
+
+**Root cause, confirmed** (`TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION`): `WorldCompiler.
+compile()` has no `catalog_repo` of its own — it can only correctly resolve role/faction via a
+pre-populated `CompileContext.legacy_roles`/`.legacy_factions` mapping, which `WorldAssemblyResolver.
+assemble()` already computes and persists to `resolved/compile_context.json` alongside `world.
+resolved.yaml` for every corpus world. `WorldRepository.load_world()` never surfaced this file,
+so every real caller either duplicated the correct loading logic independently or silently
+compiled without it — falling back to naive keyword matching that fails for almost every real
+archetype role_id (e.g. "predator_hunter"/"raider"/"scout") and faction_id (e.g.
+"goblin_warband"/"wild_beast_pack"), defaulting role to CITIZEN and faction to NEUTRAL. Not a
+narrow content-authoring issue — a structural gap affecting every real monster-archetype entity
+in every corpus world compiled through the affected call sites.
+
+**Fixed**: `WorldRepository.load_world_with_context()` (new method) surfaces the real
+`compile_context.json`; all 4 real, confirmed-buggy call sites (`src/cli/entry.py` — the general
+simulation-run CLI; `tools/calibrate_simq.py`; `tools/balance_measure.py`;
+`tools/personality_audit.py`) updated to use it. See `docs/parity_ledger/substrate.yaml` SUB-384
+and `docs/parity_ledger/infrastructure.yaml` INFRA-330 for the full fix and real, measured impact
+— including a large, positive COMBAT-pillar shift on `urban_political` (grade C → A) from
+previously-invisible hostile-faction entities now being correctly detected.
+`SpawnService.process_spawns()`'s own density check (`src/world/spawn.py`) reads
+`EntityRole.MONSTER` for the same field, and is a real, disclosed downstream consumer whose
+spawn-rate behavior shifted as a result (see SUB-384's own support_boundary).
 
 ## Recommendation
 
