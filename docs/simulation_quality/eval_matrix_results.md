@@ -348,6 +348,27 @@ see the AGENCY Cross-World Design Note below for why that is archetype-correct, 
 > `REGRESSION` classification pending its own dedicated investigation
 > (`TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION` or successor).
 
+> **NOTE (2026-08-10 — `TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION`):** the
+> disclosed regression above is now investigated and closed. Two confirmed mechanisms, both
+> tracing back to the same SUB-384 fix: (1) **PROGRESSION** — `CombatRewardClassificationService`
+> (`src/engine/combat_rewards.py`) is keyed by `EntityRole`; a previously-mistagged monster now
+> correctly resolves to `MONSTER_KILL` reward classification on defeat, changing real
+> `xp_granted` amounts. (2) **SOCIAL/ECONOMY/COGNITION/AGENCY** — confirmed via `grep` that none
+> of these scorers read role/faction directly; the mechanism is a cascading behavioral change —
+> correctly-tagged monsters now engage/die/behave differently from tick 1 onward, altering
+> deterministic RNG-consumption order and population composition for the rest of each run. The
+> 2026-08-07 D06 F6 watchdog-throttle hypothesis was directly checked (not assumed): 3 independent
+> re-runs of `urban_political_seed42_500t` showed the watchdog firing repeatedly from tick 25, yet
+> produced a bit-identical SOCIAL score all 3 times — ruling that mechanism out for this drift.
+> `grade_anchors.json` recalibrated across 17 run_keys / 31 fields (the original 15 keys/27 fields
+> plus 2 additional keys — `urban_political_selfmodel_execution_probe_seed42_200t`,
+> `urban_political_selfmodel_probe_seed42_200t` — found while regenerating a missing guard-test
+> calibration fixture, same confirmed cause). Post-recalibration fast-tier sweep
+> (`pytest tests/simulation_quality/test_grade_regression.py -m "not slow" -q`): 35 passed, 15
+> failed (all carrying a pre-existing `[known tick_budget: ...]` annotation — accepted,
+> already-documented noise, left untouched), 20 skipped, 18 deselected. Zero unexplained
+> failures. See `docs/parity_ledger/substrate.yaml` SUB-384 for the full field list.
+
 ---
 
 ### simq_routing_test (ENABLE_ADVENTURE_ROUTING=ON)

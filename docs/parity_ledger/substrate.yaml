@@ -4686,3 +4686,23 @@
     downstream consumer also affected (a previously-mistagged monster fell through to a
     different, unintended reward classification) -- not separately re-verified at corpus scale
     here, disclosed as a real, plausible, unconfirmed secondary effect.
+
+    UPDATE (TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION, 2026-08-10): both
+    follow-ups above now confirmed and closed. `CombatRewardClassificationService`'s downstream
+    effect is confirmed real and direct: `progression.py`'s `EVENT_TYPES` includes `xp_granted`,
+    which the service's role-keyed reward classification directly determines -- a
+    previously-mistagged monster now correctly resolves to `MONSTER_KILL` on defeat, changing
+    real `xp_granted` amounts (PROGRESSION drift on 6 run_keys). Corpus-wide recalibration
+    performed: `grade_anchors.json` updated across 17 run_keys / 31 fields total (SOCIAL,
+    ECONOMY, PROGRESSION, COGNITION, AGENCY, plus 2 additional COMBAT keys found while
+    regenerating a guard-fixture gap) -- see `docs/simulation_quality/eval_matrix_results.md`
+    and `docs/audits/D20_simq_integration.md` 2026-08-10 entries for the full list. Remaining
+    SOCIAL/ECONOMY/COGNITION/AGENCY drift (scorers confirmed via grep to never read role/faction
+    directly) attributed to a cascading behavioral change: SUB-384 changes which entities engage
+    in combat and survive from tick 1 onward, altering deterministic RNG-consumption order and
+    population composition for the rest of each run. The 2026-08-07 watchdog-throttle hypothesis
+    (D06 F6) was directly checked (not just cited) and ruled out: 3 independent re-runs of
+    `urban_political_seed42_500t` showed the watchdog firing repeatedly (from tick 25) yet
+    produced a bit-identical SOCIAL score all 3 times -- decisive evidence against that
+    mechanism for this drift. `test_grade_anchor_file_exists_and_valid`'s missing-fixture issue
+    (noted above) is also now resolved: the missing `quality_report.json` was regenerated.
