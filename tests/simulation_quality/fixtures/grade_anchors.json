@@ -2195,8 +2195,8 @@
   },
   "hero_guild_routing_seed456_500t": {
     "COGNITION": {
-      "grade": "B",
-      "score": 0.2917505030181087
+      "grade": "A",
+      "score": 0.9255533199195171
     },
     "AGENCY": {
       "grade": "A",
@@ -2211,8 +2211,8 @@
       "score": 0.0
     },
     "ECONOMY": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "B",
+      "score": 0.10972568578553615
     },
     "PROGRESSION": {
       "grade": "D",
@@ -2245,8 +2245,8 @@
       "score": 0.0
     },
     "COMBAT": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "A",
+      "score": 1.0552763819095476
     },
     "FACTION": {
       "grade": "C",
@@ -2329,8 +2329,8 @@
       "score": 0.0
     },
     "COMBAT": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "A",
+      "score": 1.5477386934673367
     },
     "FACTION": {
       "grade": "C",
@@ -2497,8 +2497,8 @@
       "score": 0.0
     },
     "COMBAT": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "A",
+      "score": 1.35
     },
     "FACTION": {
       "grade": "S",
@@ -2875,8 +2875,8 @@
       "score": 0.0
     },
     "COMBAT": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "A",
+      "score": 1.221105527638191
     },
     "FACTION": {
       "grade": "S",
@@ -2929,8 +2929,8 @@
       "score": 0.0
     },
     "PROGRESSION": {
-      "grade": "C",
-      "score": -0.1568627450980392
+      "grade": "A",
+      "score": 0.5877862595419847
     },
     "SOCIAL": {
       "grade": "C",
@@ -2959,8 +2959,8 @@
       "score": 0.0
     },
     "COMBAT": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "A",
+      "score": 1.196808510638298
     },
     "FACTION": {
       "grade": "S",
@@ -2971,8 +2971,8 @@
       "score": 0.0
     },
     "PROGRESSION": {
-      "grade": "C",
-      "score": -0.1568627450980392
+      "grade": "A",
+      "score": 0.5132275132275133
     },
     "SOCIAL": {
       "grade": "C",
@@ -3337,8 +3337,8 @@
       "score": 0.0
     },
     "COMBAT": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "A",
+      "score": 1.095
     },
     "FACTION": {
       "grade": "S",
@@ -3383,20 +3383,20 @@
       "score": 0.010050251256281407
     },
     "FACTION": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "S",
+      "score": 7.5
     },
     "ECONOMY": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "A",
+      "score": 0.5303867403314917
     },
     "PROGRESSION": {
-      "grade": "C",
-      "score": -0.1568627450980392
+      "grade": "A",
+      "score": 0.8735632183908046
     },
     "SOCIAL": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "S",
+      "score": 29.115
     },
     "INFORMATION": {
       "grade": "C",

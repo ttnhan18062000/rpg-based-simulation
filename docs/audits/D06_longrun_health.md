@@ -265,6 +265,26 @@ audit does not have to rediscover the mechanism from scratch.
 > and no anchor was flagged unverified. `kernel.py` and `grade_anchors.json` were left untouched, per
 > this finding's scope guard.
 
+> **Extended to the FAST tier, 2026-08-10, `TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP`:**
+> the FAST tier (<=500t) was never subjected to the same multi-trial check above — this ticket found
+> the first confirmed instances. Multi-trial re-runs (2-4 trials each, identical seed/code) of a
+> sample of FAST_ANCHOR_KEYS found: `dungeon_crawl_seed42_500t`, `highland_traverse_seed42_200t`,
+> `hero_guild_routing_seed42_500t` stable; `simq_routing_test_seed42_500t` (PROGRESSION, COGNITION),
+> `simq_routing_test_seed123_500t` (PROGRESSION), and `urban_political_seed456_500t` (ECONOMY,
+> PROGRESSION) showed real, tolerance-crossing variance despite the same watchdog trips firing in
+> every run (starting tick ~25, earlier than this section's own documented ~300-320 SLOW-tier
+> onset). Unlike the SLOW-tier's own uniform stability, this is scenario/pillar-dependent: every
+> confirmed-unstable case has a low absolute event count for the affected pillar (10-30 events),
+> making it disproportionately sensitive to which individual events the throttle happens to drop —
+> not isolated to one world family (`urban_political` and `simq_routing_test`/`ENABLE_ADVENTURE_ROUTING`
+> both affected). Not fixed at the mechanism level (same scope guard as the finding above — `kernel.py`
+> untouched); instead classified via a new `watchdog_variance` provenance entry in
+> `tests/simulation_quality/fixtures/score_ceilings.json` (`tools/simq_ceiling.py`'s existing
+> ceiling-lookup mechanism), so future drift on these specific (run_key, pillar) pairs reads as
+> known, understood noise rather than an unexplained regression. A full FAST-tier sweep matching this
+> section's own 18-key/3-trial SLOW-tier methodology was not performed (descoped to a representative
+> sample per that ticket's own Acceptance Criteria) — a future audit may still find more affected keys.
+
 ---
 
 ## Key Findings Summary
@@ -276,7 +296,7 @@ audit does not have to rediscover the mechanism from scratch.
 | F3 | 11/15 | Rejection cascade grows to 500K–550K/run at ~650/tick after RC1 fix |
 | F4 | 15/15 | Quest system never activates — no material blockers generated while F1 persists |
 | F5 | 9/15 | Late-run attrition exceeds spawn rate; entity count ends below starting count — **RESOLVED** (P2-B, `SpawnConfig` two-tier cadence); a separately-conflated early-collapse symptom in other worlds fixed 2026-07-04 by `TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` (stale hazard-kind content, unrelated cause) |
-| F6 | N/A | Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle drops resolution work based on real compute time, not seed) — **documented, not fixed** (intentional engine behavior); narrow mitigation applied via a tolerance-based regression guard, `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` (2026-07-09); all 18 shipped long-run anchors re-verified stable against this variance, `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` (2026-07-11) |
+| F6 | N/A | Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle drops resolution work based on real compute time, not seed) — **documented, not fixed** (intentional engine behavior); narrow mitigation applied via a tolerance-based regression guard, `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` (2026-07-09); all 18 shipped long-run anchors re-verified stable against this variance, `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` (2026-07-11); extended to the FAST tier 2026-08-10 (`TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP`) — unlike the SLOW tier, 3 low-event-count (run_key, pillar) pairs found unstable, classified via a new `watchdog_variance` score-ceiling entry rather than fixed |
 
 **Performance — all green:**
 - Tick compute: 9–15ms avg, stable, well within 50ms budget ✓
