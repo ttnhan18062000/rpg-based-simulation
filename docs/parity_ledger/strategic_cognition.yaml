@@ -2451,17 +2451,30 @@
   support_boundary: null
 - id: STRAT-226
   text: >-
-    AdventureRouteScorer applies a bravery/caution risk multiplier
-    (max(0.1, (1.0 + caution×0.8) - bravery×0.6)) that produces ≥2× combat_engage
-    rate differential between bottom and top bravery quartiles (measured 4.92× at
-    SEED=42, TICKS=400, 8 heroes).
+    GoalRegistry's CombatEngageScorer/CombatRetreatScorer apply a bravery-weighted
+    utility term (CombatEngageScorer: utility += bravery×40.0; CombatRetreatScorer:
+    utility -= bravery×30.0, src/ai/goals/scorers.py:101-132) that produces ≥1.5×
+    combat_engage rate differential between bottom and top bravery quartiles
+    (measured mean ratio 1.7421× across a 24-seed aggregate, 16 heroes/8 monsters,
+    90x90 topology). The System-A AdventureRouteScorer bravery/caution risk
+    multiplier this entry previously cited (src/domains/adventure/scoring.py) is a
+    real, live mechanism for its own route family, but RouteFamily.HUNT_WEAK_ENEMY
+    (its only combat-tagged route) is confirmed dead code — AdventureRouteScorer
+    can never route a hero into combat_engage today. The measured combat_engage
+    rate differential is produced entirely by System B (GoalRegistry).
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >-
-    src/domains/adventure/scoring.py line 103 — bravery coefficient 0.6, caution
-    coefficient 0.8, floor max(0.1,...) preserved; measured 4.92× ratio confirmed
-    by E11D investigation (TCK-20260619-E11D-SCORING-CAL).
+    src/ai/goals/scorers.py lines 101-132 — CombatEngageScorer bravery coefficient
+    +40.0, CombatRetreatScorer bravery coefficient -30.0; src/ai/goals/__init__.py
+    GoalRegistry registration. Measured bottom_rate=0.4576, top_rate=0.7972,
+    ratio=1.7421 (24-seed mean, SEEDS=1..24, 16 heroes, 8 monsters, 90x90 topology)
+    confirmed by TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION,
+    superseding the stale System-A/E11D attribution and 4.92× figure from
+    TCK-20260619-E11D-SCORING-CAL (measured before ENABLE_COMBAT_ENGAGEMENT ran
+    end-to-end; the 2x threshold implied by that figure was never reachable once
+    combat_engagement actually executed and has been recalibrated to 1.5x).
   proof_type: parity
   test_path: tests/integration/scenarios/test_entity_differentiation.py::test_bravery_quartile_combat_rate_2x
   divergence_note: null
@@ -3178,10 +3191,11 @@
     flee gate consumed by src/engine/tactical.py's PANIC_RETREAT branch, never referenced
     subject.identity.personality.bravery, despite bravery's own dataclass comment declaring
     intent ("Biases combat vs flee", src/core/state.py:420). This differs from the already-real,
-    already-verified STRAT-226 bravery/caution risk multiplier (AdventureRouteScorer, strategic
-    long-horizon route selection) -- that is a separate function governing a separate,
-    longer-horizon decision; the tactical, per-tick panic/flee gate had no bravery term at all
-    until this ticket.
+    already-verified STRAT-226 bravery-weighted combat_engage/combat_retreat utility term
+    (GoalRegistry's CombatEngageScorer/CombatRetreatScorer, src/ai/goals/scorers.py -- strategic
+    goal-selection, not tactical per-tick appraisal) -- that is a separate function governing a
+    separate, longer-horizon decision; the tactical, per-tick panic/flee gate had no bravery term
+    at all until this ticket.
   status: verified
   priority: P2
   legacy_evidence: null

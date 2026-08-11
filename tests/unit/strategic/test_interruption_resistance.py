@@ -101,7 +101,10 @@ class TestInterruptionResistance:
         assert result_high is None
 
     def test_lock_prevents_switch(self):
-        """Project lock prevents any switch regardless of score."""
+        """Project lock blocks a switch when the candidate doesn't clear the urgency floor,
+        but no longer blocks unconditionally: a candidate whose normalized score clears both
+        the current project's normalized effective score and the urgency floor now bypasses
+        the lock, regardless of kind (generalized STRAT-186 rule)."""
         current = ProjectState(
             id="locked", kind="crafting", status=ProjectStatus.ACTIVE,
             score=10, lock_until_tick=100
@@ -110,9 +113,17 @@ class TestInterruptionResistance:
             profile=CognitionProfile(interruption_resistance=0.0),
             current_project=current
         )
-        candidate = ProjectState(id="rival", kind="quest", status=ProjectStatus.ACTIVE, score=999)
-        result = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate, current_tick=50)
-        assert result is None  # Locked until tick 100
+        # score=50 -> candidate_pct=0.5, below the 0.8 urgency floor -> still blocked.
+        low_urgency_candidate = ProjectState(id="rival", kind="quest", status=ProjectStatus.ACTIVE, score=50)
+        result = StrategicIntelligenceSystem.evaluate_project_switch(entity, low_urgency_candidate, current_tick=50)
+        assert result is None  # Locked until tick 100, floor not cleared
+
+        # score=999 -> candidate_pct=9.99, clears both the floor and current's normalized
+        # effective score -> the generalized rule now bypasses the lock (intentional loosening).
+        high_urgency_candidate = ProjectState(id="rival", kind="quest", status=ProjectStatus.ACTIVE, score=999)
+        result_bypass = StrategicIntelligenceSystem.evaluate_project_switch(entity, high_urgency_candidate, current_tick=50)
+        assert result_bypass is not None
+        assert result_bypass.current_project_id_set == "rival"
 
     def test_interruption_resistance_resume_suspended(self):
         """Verify a suspended project can be resumed."""
@@ -133,6 +144,129 @@ class TestInterruptionResistance:
         assert resumed.status == ProjectStatus.ACTIVE
         assert result.current_project_id_set == "old_quest"
         assert result.current_objective_id_set == "obj_1"
+
+
+class TestGenericInterruptionBypass:
+    """STRAT-186 (generalized): the lock-bypass gate replaces the old kind-string allowlist
+    (kind=='danger' and score>80, or kind=='detour') with: 'detour' as the sole unconditional
+    structural bypass, and any other kind bypassing only when its score -- normalized as a
+    percentage of its own system's declared max -- both exceeds the current project's own
+    normalized effective score AND clears the 0.8 urgency floor."""
+
+    def test_generic_kind_bypasses_when_score_and_floor_clear(self):
+        """A novel kind never seen by the old allowlist bypasses the lock when both the
+        floor and the current's normalized effective score are cleared."""
+        current = ProjectState(
+            id="current", kind="crafting", status=ProjectStatus.ACTIVE,
+            score=5, lock_until_tick=100
+        )
+        entity = _make_entity(
+            profile=CognitionProfile(interruption_resistance=0.1),
+            current_project=current
+        )
+        # candidate_pct = 90/100 = 0.9 > 0.8 floor; current_pct = 5/100 + 3/100 = 0.08
+        candidate = ProjectState(id="novel", kind="scavenge", status=ProjectStatus.ACTIVE, score=90)
+        result = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate, current_tick=50)
+        assert result is not None
+        assert result.current_project_id_set == "novel"
+
+    def test_generic_kind_blocked_when_floor_not_cleared(self):
+        """A novel kind clears the current's normalized effective score but not the 0.8
+        urgency floor -- still blocked."""
+        current = ProjectState(
+            id="current", kind="crafting", status=ProjectStatus.ACTIVE,
+            score=5, lock_until_tick=100
+        )
+        entity = _make_entity(
+            profile=CognitionProfile(interruption_resistance=0.1),
+            current_project=current
+        )
+        # candidate_pct = 60/100 = 0.6 < 0.8 floor, even though 0.6 > current_pct (0.08)
+        candidate = ProjectState(id="novel", kind="scavenge", status=ProjectStatus.ACTIVE, score=60)
+        result = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate, current_tick=50)
+        assert result is None
+
+    def test_generic_kind_blocked_when_effective_current_not_cleared(self):
+        """A novel kind clears the 0.8 urgency floor but the current project's own
+        normalized effective score still exceeds it -- still blocked."""
+        current = ProjectState(
+            id="current", kind="crafting", status=ProjectStatus.ACTIVE,
+            score=90, lock_until_tick=100
+        )
+        entity = _make_entity(
+            profile=CognitionProfile(interruption_resistance=0.5),
+            current_project=current
+        )
+        # candidate_pct = 85/100 = 0.85 > 0.8 floor
+        # current_pct = 90/100 + (0.5*30)/100 = 0.9 + 0.15 = 1.05 > candidate_pct
+        candidate = ProjectState(id="novel", kind="scavenge", status=ProjectStatus.ACTIVE, score=85)
+        result = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate, current_tick=50)
+        assert result is None
+
+    def test_detour_bypasses_lock_unconditionally(self):
+        """'detour' stays the sole unconditional structural bypass -- it must not be folded
+        into the generic score/floor gate, so a detour candidate whose normalized percentage
+        is far below the 0.8 urgency floor still bypasses the lock (the generic gate's own
+        floor/normalized-effective-pct condition is never evaluated for it).
+
+        Note: current's raw score/resistance are kept low (not "high-score" as originally
+        sketched) because the function's final `candidate.score > effective_current_score`
+        check (STRAT-005/006) is unchanged and unconditional -- it applies after the lock
+        gate on every path, including a detour-bypassed one. A high-score current would fail
+        that final raw check regardless of the lock-bypass outcome, making it impossible for
+        this test to observe a successful switch; a low-score current isolates the assertion
+        to the lock-bypass gate itself, which is what this test targets."""
+        current = ProjectState(
+            id="current", kind="crafting", status=ProjectStatus.ACTIVE,
+            score=0.5, lock_until_tick=100
+        )
+        entity = _make_entity(
+            profile=CognitionProfile(interruption_resistance=0.0),
+            current_project=current
+        )
+        # candidate_pct would be 1.0/100 = 0.01, far below the 0.8 floor -- a non-detour
+        # candidate at this score would be blocked by the generic gate. detour skips it.
+        candidate = ProjectState(id="detour_proj", kind="detour", status=ProjectStatus.ACTIVE, score=1.0)
+        result = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate, current_tick=50)
+        assert result is not None
+        assert result.current_project_id_set == "detour_proj"
+
+    def test_danger_bypass_still_works_when_effective_current_clears(self):
+        """The old 'kind==danger and score>80' scenario still bypasses post-generalization
+        when the current project's own normalized effective score also clears (AC4, identical
+        half)."""
+        current = ProjectState(
+            id="current", kind="crafting", status=ProjectStatus.ACTIVE,
+            score=10, lock_until_tick=100
+        )
+        entity = _make_entity(
+            profile=CognitionProfile(interruption_resistance=0.3),
+            current_project=current
+        )
+        # candidate_pct = 85/100 = 0.85 > 0.8 floor
+        # current_pct = 10/100 + (0.3*30)/100 = 0.1 + 0.09 = 0.19 < candidate_pct
+        candidate = ProjectState(id="danger_proj", kind="danger", status=ProjectStatus.ACTIVE, score=85)
+        result = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate, current_tick=50)
+        assert result is not None
+        assert result.current_project_id_set == "danger_proj"
+
+    def test_danger_bypass_blocked_when_effective_current_not_cleared(self):
+        """AC4's intentional-tightening half: a 'kind==danger, score>80' candidate that would
+        have bypassed unconditionally under the old code is now blocked because the current
+        project's own normalized effective score is not cleared."""
+        current = ProjectState(
+            id="current", kind="crafting", status=ProjectStatus.ACTIVE,
+            score=90, lock_until_tick=100
+        )
+        entity = _make_entity(
+            profile=CognitionProfile(interruption_resistance=0.8),
+            current_project=current
+        )
+        # candidate_pct = 85/100 = 0.85 > 0.8 floor
+        # current_pct = 90/100 + (0.8*30)/100 = 0.9 + 0.24 = 1.14 > candidate_pct
+        candidate = ProjectState(id="danger_proj", kind="danger", status=ProjectStatus.ACTIVE, score=85)
+        result = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate, current_tick=50)
+        assert result is None
 
 
 class TestCognitionProfile:

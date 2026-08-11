@@ -26,6 +26,32 @@ logger = logging.getLogger(__name__)
 # failures to self-resolve. STRAT-234.
 _MAX_CONSECUTIVE_REJECTIONS: int = 20
 
+# Declared score ceiling for System A (AdventureRouteScorer) candidates/currents, used only to
+# normalize the lock-bypass comparison below — not a hard clamp on AdventureRouteScorer's own
+# output. Source: docs/mechanics/04_strategic_cognition.md §6.6 "Total non-blocked: 0.0 to ~2.9".
+_ADVENTURE_ROUTE_SCORE_MAX: float = 2.9
+
+# Declared score ceiling for System B (GoalRegistry) candidates/currents and for any kind not
+# recognized as a real ProjectKind member (synthetic/test kinds default here — GoalRegistry is the
+# universal per-entity baseline, the closer analogue for an unclassified score). Matches the scale
+# the pre-existing "danger" bypass (score > 80) was already implicitly calibrated against.
+#
+# NOT a true hard ceiling: TownScorer (src/ai/goals/scorers.py) can reach ~200 and SleepScorer ~130
+# (confirmed in investigation.md's own scorer survey). This constant is a calibration anchor
+# continuing the pre-existing score>80 threshold, not a claim that no System B scorer exceeds it —
+# a candidate from one of those two scorers can legitimately produce candidate_pct > 1.0, which is
+# intentional (their real-world urgency is genuinely higher, so clearing the floor more easily is
+# correct, not a bug) and does not break the comparison (no clamp exists; percentages simply aren't
+# bounded to [0, 1] for these two scorers). Do not "fix" this by clamping or by raising the constant
+# to 200 — that would only shift which System B scorers under-clear the floor instead.
+_GOAL_UTILITY_SCORE_MAX: float = 100.0
+
+# Generalized urgency floor for the lock-bypass gate, replacing the old `kind=='danger' and
+# score > 80` special case. 0.8 == 80/100, the exact threshold the code already used before this
+# ticket, expressed as a percentage of _GOAL_UTILITY_SCORE_MAX so it generalizes across kinds and
+# both score systems. STRAT-186.
+_INTERRUPTION_URGENCY_FLOOR_PCT: float = 0.8
+
 if TYPE_CHECKING:
     from src.engine.cadence import SystemCadence
 
@@ -38,7 +64,7 @@ from src.engine.policy import GovernorPolicy
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
-    CognitionProfile
+    CognitionProfile, ProjectKind
 )
 from src.strategy.cognition_capacity import CapacityService
 from src.core.inventory import InventoryService
@@ -58,6 +84,28 @@ from src.systems.strategic_systems.belief import BeliefCycleSystem
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
+
+
+def _score_scale_max(kind) -> float:
+    """Return the declared score ceiling for the system that produced `kind`.
+
+    Classification is by the *actual Python enum class* of `kind`, not its string value:
+    ProjectKind.HARVESTING and GoalKind.HARVESTING (and ProjectKind.SOCIAL / GoalKind.SOCIAL)
+    share identical string values (src/core/strategic.py:121-148) but are different enum classes.
+    A value-based check (e.g. `kind in {v.value for v in ProjectKind}`) would silently misclassify
+    System B candidates as System A for those two overlapping kinds — do not do that.
+
+    Does not unify or alter the ProjectKind/GoalKind vocabulary split (out of scope, tracked under
+    D22/C4) — it only reads the enum identity already present at each ProjectState construction
+    site: mapper.py:96-107 always emits real ProjectKind members; intelligence.py's own
+    GoalRegistry-sourced candidate (line ~1334) always emits real GoalKind members. Anything else
+    (raw strings — "detour", test fixtures, any future third system) defaults to the
+    GoalRegistry/universal-baseline scale.
+    """
+    if isinstance(kind, ProjectKind):
+        return _ADVENTURE_ROUTE_SCORE_MAX
+    return _GOAL_UTILITY_SCORE_MAX
+
 
 class StrategicIntelligenceSystem:
     """
@@ -885,6 +933,18 @@ class StrategicIntelligenceSystem:
     ) -> Optional[StrategicUpdate]:
         """
         Phase 9: Strategic interruption resistance and retention.
+
+        Lock-bypass gate (when the current project's lock has not yet expired):
+        `"detour"` remains the sole unconditional structural bypass. Any other candidate,
+        regardless of `kind`, may bypass the lock only when its score — expressed as a
+        percentage of its own system's declared max (`_ADVENTURE_ROUTE_SCORE_MAX` for
+        `ProjectKind`-typed candidates, `_GOAL_UTILITY_SCORE_MAX` otherwise) — both exceeds
+        the current project's own normalized effective score (`current.score` plus
+        `retention_margin`, same percentage basis) AND clears `_INTERRUPTION_URGENCY_FLOOR_PCT`.
+        This replaces the old hardcoded `kind == "danger" and score > 80` / `kind == "detour"`
+        allowlist. The raw `retention_margin`/`effective_current_score` formula and the
+        unlocked-path final comparison below are unchanged.
+
         Logic ID: STRAT-185 (Strategic project retention is bounded by interruption resistance)
         Logic ID: STRAT-186 (Strategic project switching requires margin or explicit emergency)
         Logic ID: STRAT-187 (Current project has reservation priority)
@@ -910,17 +970,28 @@ class StrategicIntelligenceSystem:
                 current_objective_id_set=candidate_project.active_objective_id
             )
 
-        if current.lock_until_tick > current_tick:
-            # Bypass lock ONLY for high-urgency danger/safety projects
-            if (candidate_project.kind == "danger" and candidate_project.score > 80) or candidate_project.kind == "detour":
-                pass 
-            else:
-                return None 
-
         # Logic ID: STRAT-005 (Project switching uses interruption resistance)
         retention_margin = profile.interruption_resistance * profile.resistance_multiplier
         # Logic ID: STRAT-006 (Current project gets retention priority)
         effective_current_score = current.score + retention_margin
+
+        if current.lock_until_tick > current_tick:
+            # STRAT-186 (generalized): the lock may be bypassed only for the unconditional "detour"
+            # structural override, or when the candidate's score — expressed as a percentage of its own
+            # system's declared max — both exceeds the current project's own normalized effective score
+            # AND clears the urgency floor. This comparison is intentionally normalized and kept separate
+            # from the raw `effective_current_score` comparison below: the raw formula and the unlocked
+            # path must stay byte-identical (test_interruption_resistance_margin depends on this).
+            if candidate_project.kind == "detour":
+                pass
+            else:
+                candidate_max = _score_scale_max(candidate_project.kind)
+                current_max = _score_scale_max(current.kind)
+                candidate_pct = candidate_project.score / candidate_max
+                normalized_effective_current_pct = (current.score / current_max) + (retention_margin / current_max)
+                if not (candidate_pct > normalized_effective_current_pct
+                        and candidate_pct > _INTERRUPTION_URGENCY_FLOOR_PCT):
+                    return None
 
         if candidate_project.score > effective_current_score:
             return StrategicUpdate(

@@ -205,12 +205,21 @@ def test_compatibility_family_points_to_clean_source():
 
 def test_living_family_marked_resolved_partially_until_runtime_consumer():
     """Verify that living families (e.g., need_profiles, body_models) stay RESOLVED_PARTIALLY."""
-    for family in ["living/need_profiles", "living/body_models", "living/drive_profiles", "living/sense_profiles", "living/cognition_profiles"]:
+    # TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY: living/cognition_profiles gained a
+    # real runtime consumer (AdventureDecisionPhase.apply() reads supports_adventure_routing),
+    # so it no longer belongs to the "no runtime consumer yet" group asserted below -- it still
+    # stays RESOLVED_PARTIALLY (implementation_state unchanged), just with real evidence now.
+    for family in ["living/need_profiles", "living/body_models", "living/drive_profiles", "living/sense_profiles"]:
         entry = CONTENT_USAGE_MATRIX[family]
         assert entry.implementation_state == "RESOLVED_PARTIALLY", (
             f"Living family '{family}' must be RESOLVED_PARTIALLY until runtime consumers exist"
         )
         assert entry.runtime_consumer_evidence == "None yet"
+
+    cognition_entry = CONTENT_USAGE_MATRIX["living/cognition_profiles"]
+    assert cognition_entry.implementation_state == "RESOLVED_PARTIALLY"
+    assert cognition_entry.runtime_consumer_evidence != "None yet"
+    assert "AdventureDecisionPhase" in cognition_entry.runtime_consumer_evidence
 
 
 def test_foundation_resolver_fetches_known_ids():

@@ -319,6 +319,11 @@ def test_adventure_decision_phase_wires_writer():
     # Build a minimal state with one hero that has active lifecycle
     hero = MagicMock()
     hero.identity.role = EntityRole.HERO
+    # TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY: eligibility is now resolved from
+    # identity.properties["cognition_profile_id"], not identity.role alone -- a bare MagicMock's
+    # .properties.get(...) would return a truthy Mock, which fails the real catalog lookup and
+    # excludes the hero. Set a real dict with an eligible profile id explicitly.
+    hero.identity.properties = {"cognition_profile_id": "practical_humanoid"}
     hero.combat.alive = True
     hero.lifecycle.active = True
     hero.strategic.current_project_id = None

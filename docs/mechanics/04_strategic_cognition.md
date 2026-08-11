@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-09
+last_verified: 2026-08-10
 ---
 
 # Chapter 4: Strategic Cognition
@@ -25,7 +25,7 @@ Entities evaluate multiple "Concerns" and select the one with the highest calcul
 ---
 
 ## 2. Interruption Resistance
-To prevent "Goal Flickering" (rapidly switching between two similar goals), entities apply an **Interruption Margin**.
+To prevent "Goal Flickering" (rapidly switching between two similar goals), entities apply an **Interruption Margin**. For adventure-domain project routing specifically, this law only governs entities whose resolved `CognitionProfileDefinition.supports_adventure_routing` is `True` (`src/content/schema.py:100`) — see `docs/simulation/domains/adventure_contract.md` for the full eligibility gate. (System B's general goal-switching via `GoalRegistry` also uses `Switch_Allowed`/`Interruption_Margin`, independent of this eligibility gate.)
 
 ```python
 # Switching Law
@@ -36,7 +36,7 @@ Interruption_Margin = Profile_Resistance * resistance_multiplier
 ```
 *   **Profile Resistance**: A value (0.0 to 1.0) defined by the entity's personality or class.
 *   **resistance_multiplier**: A profile-defined constant (not a hard-coded 30.0); value varies by entity profile.
-*   **Emergency Bypass**: High-urgency "Danger" concerns (score > 80) ignore the interruption margin.
+*   **Generalized Bypass**: While a project's lock is active, only a `detour`-kind candidate is exempt from the added normalized floor/percentage gate below — it is not exempt from the base retention-priority comparison above (`candidate_project.score > effective_current_score` still applies to it unconditionally, like every candidate). Every other candidate kind, from either scoring system (System A/`AdventureRouteScorer`, declared ceiling `~2.9`, see §6.6; System B/`GoalRegistry`, ceiling `100.0`), must additionally clear a dual condition while the lock is active, each score normalized to its own system's ceiling: its normalized score must exceed both (a) the current project's normalized effective score (`current.score/current_max + retention_margin/current_max`), and (b) a fixed urgency floor of `0.8`. This generalizes the old "Danger score above 80" special case (which only ever applied to one concern kind on one 0-100 scale) to any kind on either scale.
 
 ---
 
@@ -253,6 +253,10 @@ Traits are compared by verb prefix only (first token before `:`). Token format: 
 | **Total non-blocked** | 0.0 | ~2.9 |
 | blocker_penalty | 0.0 | 2.0 (fixed) |
 | **Total blocked** | clamped to 0 | ~0.9 |
+
+This `~2.9` "Total non-blocked" ceiling is also the normalization anchor
+(`_ADVENTURE_ROUTE_SCORE_MAX = 2.9`, `src/systems/strategic_systems/intelligence.py:29-31`) that
+System A candidate scores are divided by when evaluated against §2's Generalized Bypass gate.
 
 ---
 

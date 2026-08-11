@@ -12,10 +12,12 @@ from typing import Dict, List, Optional, Any
 
 from src.core.state import AuthoritativeState, EntityState
 from src.core.enums import EntityRole
-from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
+from src.core.updates import StateUpdate, EntityUpdate
 from src.domains.adventure.generator import AdventureRouteGenerator
 from src.domains.adventure.schema import RouteFamily
 from src.domains.adventure.service import AdventureDecisionService
+from src.engine.behavior_consumers import get_cognition_profile_definition, get_role_definition
+from src.systems.strategic import StrategicIntelligenceSystem
 from src.engine.spatial_query import SpatialQueryService
 from src.world.providers.resources import ResourceOpportunityProvider
 from src.world.providers.services import ServiceOpportunityProvider
@@ -44,6 +46,56 @@ def _threat_resolved(hero: EntityState, state: AuthoritativeState) -> bool:
     return not has_hostile
 
 
+def _resolve_cognition_profile_id(entity: EntityState) -> Optional[str]:
+    """
+    Resolve the cognition profile governing this entity's adventure eligibility.
+
+    Tier 1: explicit identity.properties["cognition_profile_id"] (archetype-native spawn path,
+    ArchetypeEntityFactory.build_entity, src/entities/archetype_factory.py:56-57) always wins.
+    Tier 2: identity.properties["role_id"] -> RoleDefinition.default_cognition_profile, mirroring
+    EntityArchetypeResolver._resolve_from_definition's own archetype-or-role-default pattern
+    (src/content/resolver.py:460-462).
+    Tier 3: entities spawned via the hero_adventurers world module (WorldEntitySpawner
+    ._spawn_legacy_guard, src/worldassembly/entity_spawner.py:101-141, fed by the no-archetype_id
+    else-branch of ProfileResolutionEngine.resolve(), src/worldassembly/resolver.py:1020-1032)
+    have BOTH cognition_profile_id and role_id absent/None in identity.properties -- confirmed by
+    direct read this session (ResolvedEntityProfile.role_id defaults to None, and the else-branch
+    never sets it). identity.role (the legacy EntityRole enum) is still reliably HERO for these
+    entities (RoleSemanticsService.get_legacy_entity_role), so fall back through the enum for
+    this one evidenced real-corpus gap only.
+    """
+    props = entity.identity.properties  # always a dict, never None: src/core/state.py:490
+    explicit = props.get("cognition_profile_id")
+    if explicit:
+        return explicit
+    role_id = props.get("role_id")
+    if role_id:
+        role_def = get_role_definition(role_id)
+        if role_def and role_def.default_cognition_profile:
+            return role_def.default_cognition_profile
+    if entity.identity.role == EntityRole.HERO:
+        role_def = get_role_definition("hero")
+        if role_def and role_def.default_cognition_profile:
+            return role_def.default_cognition_profile
+    return None
+
+
+def _supports_adventure_routing(entity: EntityState, cache: Dict[str, bool]) -> bool:
+    """Eligibility predicate: does entity's resolved cognition profile allow adventure routing?
+
+    `cache` is a per-apply()-call dict keyed by cognition_profile_id, so the catalog accessor is
+    invoked at most once per distinct profile id encountered in a tick, not once per hero
+    (see Step 5's call site and Step 9's caching test).
+    """
+    profile_id = _resolve_cognition_profile_id(entity)
+    if not profile_id:
+        return False
+    if profile_id not in cache:
+        profile_def = get_cognition_profile_definition(profile_id)
+        cache[profile_id] = bool(profile_def and profile_def.supports_adventure_routing)
+    return cache[profile_id]
+
+
 class AdventureDecisionPhase:
     """
     Simulates subjective routing decisions for heroes, running at strategic cadence.
@@ -62,7 +114,7 @@ class AdventureDecisionPhase:
         and generate strategic StateUpdates for state transition.
         
         Eligible entities are:
-            - Heroes (EntityRole = 0)
+            - Cognitively adventure-capable (resolved cognition_profile.supports_adventure_routing = True)
             - Alive (combat.alive = True)
             - Active (lifecycle.active = True)
             - Not active in a locked/unresolved project (unless project is stale or lock is expired)
@@ -70,10 +122,12 @@ class AdventureDecisionPhase:
         update = StateUpdate()
         tick = state.tick
 
-        # Avoid processing if no heroes exist
+        # Avoid processing if no eligible entities exist
+        _profile_eligibility_cache: Dict[str, bool] = {}
         heroes = [
             e for e in state.entities.values()
-            if e.identity.role == EntityRole.HERO and e.combat.alive and e.lifecycle.active
+            if _supports_adventure_routing(e, _profile_eligibility_cache)
+            and e.combat.alive and e.lifecycle.active
         ]
         if not heroes:
             return update
@@ -135,12 +189,12 @@ class AdventureDecisionPhase:
 
             # 3. Create strategic updates for the committed choice
             if result.proposed_project and result.proposed_objective:
-                strat_upd = StrategicUpdate(
-                    projects_add_or_update=[result.proposed_project],
-                    current_project_id_set=result.proposed_project.id,
-                    current_objective_id_set=result.proposed_objective.id,
+                strat_upd = StrategicIntelligenceSystem.evaluate_project_switch(
+                    hero, result.proposed_project, tick
                 )
-                
+                if strat_upd is None:
+                    continue
+
                 # Retrieve existing property updates or create new
                 prop_upd = {
                     "last_routing_tick": tick,

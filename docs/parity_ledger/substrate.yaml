@@ -4161,7 +4161,16 @@
   proof_type: parity
   test_path: tests/unit/content/test_content_usage_matrix.py::test_merged_matrix_covers_all_disk_files
   divergence_note: null
-  support_boundary: null
+  support_boundary: >
+    This entry's claim is scoped to `_auto_discover_extra_entries`'s own placeholder-generation
+    behavior for UNREGISTERED content families -- it does not cover ongoing manual maintenance of
+    fields on already hand-registered CONTENT_USAGE_MATRIX rows (e.g. `compile_runtime_consumer`,
+    `runtime_consumer_evidence`), which is a distinct, unautomated editorial action with no
+    auto-discovery involvement. Confirmed via TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY:
+    updating the already-registered `living/cognition_profiles` row's `runtime_consumer_evidence`
+    to reflect a new real runtime consumer (`AdventureDecisionPhase`) touched `matrix.py` without
+    exercising or affecting `_auto_discover_extra_entries` at all -- not a divergence from this
+    entry's own claim, just outside what the claim was ever scoped to describe.
 
 - id: SUB-374
   text: >

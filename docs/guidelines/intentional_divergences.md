@@ -21,6 +21,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **RPG-CORE** | Lead Suppression | **Stabilized** | RATIFIED |
 | **RPG-CORE** | Attention Limits | **Bounded** | RATIFIED |
 | **RPG-CORE** | Action Style | **Hardened** | RATIFIED |
+| **RPG-CORE** | Interruption-Bypass Generalization | **Enforced** | RATIFIED |
 | **World Assembly** | Service Assembly | **Stabilized** | DEFERRED |
 | **World / Environment** | Hazard-Kind Faction Endurance | **Bug Fix** | RATIFIED |
 | **World / Authoring** | Worldtemplate.v1 Schema Removal | **Unified** | RATIFIED |
@@ -955,6 +956,39 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `tests/unit/entities/test_archetype_entity_factory.py` (4 new tests),
   `tests/unit/worldassembly/test_entity_spawner_legacy_guard.py` (4 tests, new),
   `tests/integration/worldassembly/test_world_entity_spawner.py` (4 new tests).
+- **Status**: ACTIVE
+
+### 2.40 Interruption-Bypass Generalization (TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION)
+- **Subsystem**: Strategic Cognition / Project Interruption
+- **Old Behavior**: `evaluate_project_switch()`'s lock-bypass gate (`src/systems/strategic_systems/intelligence.py`)
+  allowed exactly two hardcoded cases: `kind == "detour"` (unconditional), or `kind == "danger"
+  and score > 80` (unconditional, ignoring the current project's own score/retention entirely).
+  No production `ProjectState(` construction site in `src/` ever set `kind="danger"` — this branch
+  was reachable only via a directly hand-constructed `ProjectState`, not any live corpus scenario.
+- **New Behavior**: `"detour"` remains the sole unconditional structural bypass. Any other
+  candidate, regardless of `kind`, may bypass an active lock only when its score — normalized to
+  a percentage of its own system's declared max (`_ADVENTURE_ROUTE_SCORE_MAX=2.9` for
+  `ProjectKind`-typed candidates, classified via `isinstance(kind, ProjectKind)`;
+  `_GOAL_UTILITY_SCORE_MAX=100.0` otherwise) — both exceeds the current project's own normalized
+  effective score and clears an 80%-of-max urgency floor (`_INTERRUPTION_URGENCY_FLOOR_PCT`). This
+  is a real, deliberate tightening of the (previously unreachable-in-production) danger-kind case,
+  not a change to any observed live behavior: a `kind=="danger", score>80` candidate that would
+  have bypassed unconditionally before now additionally requires the current project's own score
+  not dominate it. The pre-existing raw `retention_margin`/`effective_current_score` formula
+  (STRAT-005/006) and the final unconditional `candidate.score > effective_current_score`
+  comparison are unchanged. Also fixed a co-dependent defect: `RouteToProjectMapper.map_to_states()`
+  (`src/domains/adventure/mapper.py`) previously hardcoded `score=1.0` for every System-A
+  (`AdventureRouteScorer`) project regardless of its real computed score; it now carries the real
+  `AdventureRouteOption.score` through, and `AdventureDecisionPhase.apply()`
+  (`src/domains/adventure/phase.py`) now routes its project handoff through
+  `StrategicIntelligenceSystem.evaluate_project_switch()` instead of unconditionally overwriting
+  `current_project_id` — both were prerequisites for the normalized comparison to be real rather
+  than comparing a live score against a placeholder.
+- **Rationale**: **Enforced**. Generalizes a hardcoded kind-string special case into the score/
+  urgency rule it was already implicitly modeling, closing the gap where any future project `kind`
+  (present or not-yet-invented) had no path to legitimately interrupt a locked project regardless
+  of how urgent it actually was.
+- **Verification**: `tests/unit/strategic/test_interruption_resistance.py::TestGenericInterruptionBypass::test_danger_bypass_blocked_when_effective_current_not_cleared`.
 - **Status**: ACTIVE
 
 ---

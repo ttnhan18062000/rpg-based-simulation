@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-07-03
+last_verified: 2026-08-11
 ---
 
 # Adventure Domain Contract
@@ -16,7 +16,7 @@ last_verified: 2026-07-03
 
 ## Purpose
 
-The adventure domain implements **subjective route selection** for heroes. Each eligible tick, it generates candidate routes the hero could pursue, scores them through a personality-biased formula, selects the highest-scoring non-deferred route, and emits a `StateUpdate` carrying a `StrategicUpdate` that sets the hero's active project and objective. Downstream tactical systems read the project to determine immediate actions.
+The adventure domain implements **subjective route selection** for entities whose resolved `CognitionProfileDefinition.supports_adventure_routing` is `True` (see the Engine Phase eligibility table below) — "hero" is retained throughout this document, and in the code's own parameter naming (e.g. `_threat_resolved(hero, state)`), as the established shorthand for the routed entity, not a role gate. Each eligible tick, it generates candidate routes the hero could pursue, scores them through a personality-biased formula, selects the highest-scoring non-deferred route, and emits a `StateUpdate` carrying a `StrategicUpdate` that sets the hero's active project and objective. Downstream tactical systems read the project to determine immediate actions.
 
 ---
 
@@ -28,7 +28,7 @@ Runs every tick for all entities that satisfy the eligibility criteria:
 
 | Criterion | Check |
 |---|---|
-| Role | `EntityRole = 0` (hero) |
+| Cognition eligibility | Resolved `CognitionProfileDefinition.supports_adventure_routing = True`, resolved via (a) explicit `identity.properties["cognition_profile_id"]`, else (b) `identity.properties["role_id"]` → `RoleDefinition.default_cognition_profile`, else (c) legacy `EntityRole.HERO` → the `"hero"` role's own default |
 | Alive | `entity.combat.alive = True` |
 | Active | `entity.lifecycle.active = True` |
 | Project lock | `tick >= active_project.lock_until_tick` (or no active project) |
@@ -142,13 +142,25 @@ Note: `caution` is a derived trait (`1.0 - bravery`); `curiosity` is read from `
 
 **Greed/industry elif ordering issue:** In one scoring branch the `greed` condition is listed before the `industry` condition using an `elif` chain. For certain family values that match both intents, the `industry` branch may be unreachable. This is a documented known behaviour — not yet corrected.
 
-#### Calibration Note (E11D, 2026-06-19)
+#### Calibration Note (E11D, 2026-06-19 — corrected TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION)
 
-The bravery coefficient (`0.6`) and caution coefficient (`0.8`) are calibration-tested.
-Measured baseline: SEED=42, TICKS=400, 8 heroes → **4.92× combat_engage rate ratio**
-between bottom and top bravery quartiles (acceptance criterion: ≥2×).
+The bravery coefficient (`0.6`) and caution coefficient (`0.8`) shown above still describe
+`AdventureRouteScorer`'s own risk-multiplier term correctly, but the combat_engage-rate ratio
+this note originally cited as evidence of their effect was mis-attributed: `RouteFamily.
+HUNT_WEAK_ENEMY` (System A's only combat-tagged route) is confirmed dead code in
+`src/domains/adventure/generator.py` (zero call sites), so `AdventureRouteScorer` can never
+route a hero into combat at all today. The original 4.92× baseline almost certainly measured
+`ProjectKind.COMBAT` via that now-dead route, not `GoalKind.COMBAT_ENGAGE`.
 
-- At bravery=0.0 (caution=1.0): `risk_multiplier = 1.8` (maximum risk aversion)
+The real, live combat-engagement mechanism is System B (`GoalRegistry` / `CombatEngageScorer`,
+`src/ai/goals/scorers.py`): `utility = 40 + bravery×40 + stamina_ratio×20` when a hostile is
+visible. Re-measured baseline (`TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION`):
+SEEDS=1..24, TICKS=400, 16 heroes/8 monsters → **~1.74× mean combat_engage rate ratio**
+between bottom and top bravery quartiles, averaged per-seed (recalibrated acceptance
+criterion: ≥1.5×, down from the stale ≥2× reading of the original 4.92× number).
+
+- At bravery=0.0 (caution=1.0): `risk_multiplier = 1.8` (maximum risk aversion) — still an
+  accurate description of `AdventureRouteScorer`'s own non-combat routing behavior.
 - At bravery=1.0 (caution=0.0): `risk_multiplier = 0.4` (minimum risk aversion, floor preserved)
 - The `max(0.1, …)` floor ensures survival-tier dominance is never zeroed out.
 

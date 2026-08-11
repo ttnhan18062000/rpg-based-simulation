@@ -46,6 +46,22 @@ def get_pressure_resolver():
     return _pressure_resolver
 
 
+def get_cognition_profile_definition(profile_id: str):
+    """Return the named CognitionProfileDefinition via the warmed catalog singleton."""
+    global _catalog
+    if _catalog is None:
+        _auto_init()
+    return _catalog.get_cognition_profile(profile_id)
+
+
+def get_role_definition(role_id: str):
+    """Return the named RoleDefinition via the warmed catalog singleton."""
+    global _catalog
+    if _catalog is None:
+        _auto_init()
+    return _catalog.get_role(role_id)
+
+
 def _auto_init() -> None:
     """Load default catalog and initialise consumers."""
     global _catalog, _perception_gate, _pressure_resolver

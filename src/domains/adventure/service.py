@@ -144,6 +144,7 @@ class AdventureDecisionService:
                 target=target,
                 target_pos=target_pos,
                 tick=tick,
+                score=selected.score,
             )
             proposed_project = proj
             proposed_objective = obj

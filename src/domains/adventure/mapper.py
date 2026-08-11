@@ -71,6 +71,7 @@ class RouteToProjectMapper:
         target: Optional[str] = None,
         target_pos: Optional[Tuple[float, float]] = None,
         tick: int = 0,
+        score: float = 1.0,
     ) -> Tuple[Optional[ProjectState], Optional[ObjectiveState]]:
         """
         Produce deterministic ProjectState and ObjectiveState instances based
@@ -97,7 +98,7 @@ class RouteToProjectMapper:
             id=project_id,
             kind=p_kind,
             status=ProjectStatus.ACTIVE,
-            score=1.0,
+            score=score,
             lock_until_tick=min(tick + 10, tick + 50),  # cap: no lock exceeds 50 ticks
             objectives=[obj],
             active_objective_id=objective_id,
