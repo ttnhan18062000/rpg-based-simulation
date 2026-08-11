@@ -301,6 +301,9 @@ single flip:
 2. Shadow-mode integration test: run both paths side by side on the same scenario, diff their
    decisions without either affecting committed state — surfaces normalization miscalibration
    before it's live.
+   **Status: done, see TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE** — 24-test shadow-mode parity
+   suite landed at `tests/integration/domains/adventure/test_adventure_shadow_migration_parity.py`
+   (parity ledger: `docs/parity_ledger/strategic_cognition.yaml` STRAT-253).
 3. Only then remove `AdventureDecisionPhase` from `pipeline.py` and delete the class.
 4. Full-corpus SimQ re-run to catch any behavior regression the shadow test's synthetic scenarios
    missed.
