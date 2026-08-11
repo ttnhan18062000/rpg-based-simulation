@@ -3382,3 +3382,66 @@
     `evaluate_project_switch()`'s retention-margin/lock-bypass logic, not cross-path
     route-family/raw_score parity, and belongs to a different sibling ticket's subject matter;
     STRAT-185 is deliberately left untouched by this entry.
+- id: STRAT-254
+  text: >-
+    TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER -- a new `SocialContractGoalScorer` (implementing the
+    existing `GoalScorer` protocol) exists, is registered under a new `GoalKind.SOCIAL_CONTRACT =
+    "social_contract"` (src/core/strategic.py, deliberately NOT `"z_"`-prefixed so it sorts ahead
+    of `ADVENTURE_ROUTE` on an exact-utility tie), and is a real, unit-tested tier-5 candidate
+    returned by `GoalRegistry.get_all_scores()`. It scans an entity's ACTIVE RECRUITMENT/LOAN
+    contracts, computes `raw_score = clamp(trust*1.0 + urgency*1.0 + value*0.9 - risk_weight*0.3,
+    0.0, 2.9)` per contract from real state (`entity.social.bonds`/`trust_history`,
+    `contract.expiry_tick`/`terms`), and reduces multiple simultaneous active contracts to one
+    candidate (highest raw score wins, ties broken by contract id ascending) inside a single
+    `score()` call. `ContractService.accept_contract()` (src/systems/social_systems/contracts.py)
+    no longer builds `ProjectState`/`ObjectiveState` inline or writes `current_project_id_set`
+    directly -- it now only transitions contract status, closing the confirmed arbiter-bypass site.
+    `StrategicIntelligenceSystem`'s tier-5 winner-construction site
+    (src/systems/strategic_systems/intelligence.py, ~line 1468) gained a matching materialization
+    branch for a `SOCIAL_CONTRACT` win, using `best_candidate.metadata.get("raw_score", 0.0)`,
+    deliberately never `.utility` (the same scale-mismatch defect class fixed in
+    TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG). The materialized
+    `ProjectState.kind` uses `ContractService.get_project_mapping()`'s real `ProjectKind` member
+    (RECRUITMENT -> COMBAT, LOAN -> SOCIAL), which lands on the same `_ADVENTURE_ROUTE_SCORE_MAX
+    = 2.9` scale as adventure routes via `_score_scale_max()`'s `isinstance(kind, ProjectKind)`
+    classification -- a deliberate, disclosed design choice (reusing the existing scale rather than
+    extending the classifier), not an oversight. Disclosed scope boundary: `accept_contract()`
+    itself has no production caller today, but `SocialContractGoalScorer` is confirmed
+    live-reachable via `CoreActions.execute_recruit()` (src/engine/domain/core_actions.py:96-105),
+    which builds ACTIVE RECRUITMENT contracts directly -- so this fix has real production impact
+    without requiring `accept_contract()` to be wired into a live call site.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/ai/goals/social_contract_scorer.py -- SocialContractGoalScorer (score(), raw-score formula,
+    multi-contract reduction, target_pos resolution);
+    src/core/strategic.py:137 -- GoalKind.SOCIAL_CONTRACT = "social_contract";
+    src/ai/goals/__init__.py:23 -- GoalRegistry.register(GoalKind.SOCIAL_CONTRACT, SocialContractGoalScorer());
+    src/systems/strategic_systems/intelligence.py:1468-1503 -- tier-5 winner-construction
+    SOCIAL_CONTRACT branch using best_candidate.metadata.get("raw_score", 0.0);
+    src/systems/social_systems/contracts.py -- ContractService.accept_contract() simplified to
+    only transition_contract(), no direct current_project_id_set write;
+    ContractService.get_project_mapping() resolves the real ProjectKind/ObjectiveKind pair.
+  proof_type: contract
+  test_path: >-
+    tests/unit/strategic/test_social_contract_materialization.py::test_active_contract_wins_arbitration_with_no_current_project,
+    tests/unit/strategic/test_social_contract_materialization.py::test_social_contract_winner_materializes_with_raw_score_not_utility,
+    tests/unit/strategic/test_social_contract_materialization.py::test_social_contract_recruitment_maps_to_combat_project_loan_maps_to_social_project,
+    tests/unit/strategic/test_social_contract_materialization.py::test_high_lock_current_project_retains_against_low_urgency_contract,
+    tests/unit/strategic/test_social_contract_materialization.py::test_high_urgency_contract_interrupts_locked_current_project,
+    tests/unit/strategic/test_social_contract_materialization.py::test_social_contract_target_position_is_tactically_resolvable_not_a_stall,
+    tests/unit/social/test_contract_lifecycle.py::test_accept_contract_no_longer_sets_current_project_id_directly
+  divergence_note: >-
+    Not a divergence from the Mechanics Bible. This is an explicit, disclosed intentional behavior
+    change from the pre-existing legacy behavior: accepting a contract used to always win the
+    project slot unconditionally; post-migration it competes in tier-5 arbitration via
+    evaluate_project_switch() and can lose to a higher-locked existing project. This is the
+    ticket's stated point, not a regression.
+  support_boundary: >-
+    Real, registered, unit-tested code, reachable through the live tier-5 pipeline path
+    (StrategicIntelligenceSystem.evaluate_strategic_intent(), driven every tick by the
+    unconditional src/engine/pipeline.py:"strategic_intelligence" phase) via any ACTIVE
+    RECRUITMENT/LOAN contract regardless of provenance -- including execute_recruit()-originated
+    contracts, which bypass accept_contract() entirely. accept_contract() itself remains reachable
+    only from tests today (no production caller), a disclosed, not a hidden, gap.

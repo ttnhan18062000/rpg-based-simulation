@@ -1465,6 +1465,43 @@ class StrategicIntelligenceSystem:
                     if boredom_upd:
                         return StrategicUpdate(boredom_delta=boredom_upd)
                     return StrategicUpdate()
+            elif best_candidate.kind == GoalKind.SOCIAL_CONTRACT:
+                # AC3/AC4/AC5/AC6 (ticket items 2,3,4,5,6): materialize a contract win into a
+                # real ProjectKind-typed project, using proj_kind/obj_kind/obj_id_prefix already
+                # resolved by SocialContractGoalScorer via ContractService.get_project_mapping()
+                # and carried in metadata -- intelligence.py needs no new import of
+                # ContractKind/ContractService/ObjectiveKind to build this branch (all resolved
+                # upstream in the scorer).
+                contract_id = best_candidate.metadata.get("contract_id")
+                proj_kind = best_candidate.metadata.get("proj_kind")
+                obj_kind = best_candidate.metadata.get("obj_kind")
+                obj_id_prefix = best_candidate.metadata.get("obj_id_prefix", "obj_contract_")
+                obj = ObjectiveState(
+                    id=f"{obj_id_prefix}{contract_id}_t{current_tick}",
+                    kind=obj_kind,
+                    target=best_candidate.target_id,
+                    target_position=best_candidate.target_pos,
+                    status=ObjectiveStatus.ACTIVE,
+                )
+                candidate_proj = ProjectState(
+                    id=f"proj_contract_{contract_id}_t{current_tick}",
+                    kind=proj_kind,
+                    status=ProjectStatus.ACTIVE,
+                    objectives=[obj],
+                    active_objective_id=obj.id,
+                    # Preserves accept_contract()'s original 50-tick lock (contracts.py pre-edit
+                    # line 180, confirmed read directly) -- deliberately NOT the generic branch's
+                    # min(current_tick+10, current_tick+50) == current_tick+10 (Design
+                    # Decision #10).
+                    lock_until_tick=current_tick + 50,
+                    created_tick=current_tick,
+                    # NEVER best_candidate.utility -- utility is normalized onto the 100-ceiling
+                    # scale for tier-5 competition only; ProjectState.score is read back through
+                    # _score_scale_max()'s 2.9-ceiling scale once kind is a real ProjectKind.
+                    # Passing utility here reproduces the
+                    # TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG defect class.
+                    score=best_candidate.metadata.get("raw_score", 0.0),
+                )
             else:
                 cand_kind_str = getattr(best_candidate.kind, "value", best_candidate.kind)
                 obj = ObjectiveState(

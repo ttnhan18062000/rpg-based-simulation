@@ -1025,6 +1025,38 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Verification**: `tests/unit/observability/test_event_extractor_agency2.py::TestAntiDriftGuards::test_defer_property_name_constant_matches_phase_and_extractor`.
 - **Status**: ACTIVE
 
+### 2.42 Social-Contract Acceptance No Longer Unconditionally Wins the Project Slot (TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER)
+- **Subsystem**: Strategic Cognition / Social Contracts
+- **Old Behavior**: `ContractService.accept_contract()` (`src/systems/social_systems/contracts.py`)
+  built a `ProjectState`/`ObjectiveState` inline and wrote `current_project_id_set` directly on
+  acceptance — an accepted RECRUITMENT or LOAN contract always won the entity's project slot,
+  unconditionally overwriting whatever project was active, regardless of that project's own score
+  or lock state. This was a confirmed arbiter-bypass site (same defect class as the adventure and
+  interruption-bypass sites closed in §2.40/§2.41).
+- **New Behavior**: `accept_contract()` now only transitions contract status — it no longer
+  constructs project/objective state or writes `current_project_id_set`. A new
+  `SocialContractGoalScorer` (`src/ai/goals/social_contract_scorer.py`), registered under a new
+  `GoalKind.SOCIAL_CONTRACT` (`src/core/strategic.py`), scans an entity's ACTIVE RECRUITMENT/LOAN
+  contracts and produces a tier-5 candidate (`raw_score = clamp(trust*1.0 + urgency*1.0 +
+  value*0.9 - risk_weight*0.3, 0.0, 2.9)`). `StrategicIntelligenceSystem`'s tier-5
+  winner-construction site (`src/systems/strategic_systems/intelligence.py:1468-1503`) now
+  materializes a `SOCIAL_CONTRACT` win into a real `ProjectState` (kind mapped via
+  `ContractService.get_project_mapping()`: RECRUITMENT -> COMBAT, LOAN -> SOCIAL) through the same
+  `evaluate_project_switch()` arbiter every other candidate competes through — a contract can now
+  legitimately lose to a higher-locked existing project. This is the disclosed, explicit point of
+  the change, not a regression: it closes the confirmed arbiter-bypass site (see parity ledger
+  `STRAT-254`, `docs/parity_ledger/strategic_cognition.yaml`, and `SOC-208`,
+  `docs/parity_ledger/social_narrative.yaml`).
+- **Rationale**: **Enforced**. Generalizes the same GoalScorer-wrapper pattern already applied to
+  adventure routing (§2.35/§2.41) and the interruption-bypass gate (§2.40) to the remaining
+  confirmed social-contract arbiter-bypass site — a contract's urgency now has to actually clear
+  the same score/retention bar as every other strategic candidate rather than winning by
+  construction.
+- **Verification**: `tests/unit/strategic/test_social_contract_materialization.py::test_high_lock_current_project_retains_against_low_urgency_contract`,
+  `tests/unit/strategic/test_social_contract_materialization.py::test_high_urgency_contract_interrupts_locked_current_project`,
+  `tests/unit/social/test_contract_lifecycle.py::test_accept_contract_no_longer_sets_current_project_id_directly`.
+- **Status**: ACTIVE
+
 ---
 
 ## 3. Unsupported / Retired Behavior

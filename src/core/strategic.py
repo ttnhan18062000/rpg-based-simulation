@@ -134,6 +134,10 @@ class GoalKind(str, Enum):
     # values (Risk #5): starts with 'z', so it never wins an exact-utility tie against any other
     # GoalKind under intelligence.py:1369's `sort(key=lambda x: (-x.utility, x.kind))` — see
     # plan.md "Unresolved Questions Now Resolved" for the full worked rationale.
+    SOCIAL_CONTRACT = "social_contract"  # deliberately NOT "z_"-prefixed (Design Decision #5):
+    # sorts before "z_adventure_route" so an accepted social obligation wins an exact-utility tie
+    # against routine adventuring; does not collide with any ProjectKind value or existing
+    # GoalKind value (verified against strategic.py:121-152 directly).
 
 
 class ProjectKind(str, Enum):

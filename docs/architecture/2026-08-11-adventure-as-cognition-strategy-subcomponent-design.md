@@ -369,13 +369,31 @@ during this session's own architecture review:
 - `src/systems/social_systems/contracts.py:187` → a `SocialContractGoalScorer`. Contract-driven
   obligations would compete fairly against combat, recovery, and adventure instead of
   unconditionally overriding them.
+  **Status: done, see `TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER`** — `SocialContractGoalScorer`
+  (`src/ai/goals/social_contract_scorer.py`) landed under `GoalKind.SOCIAL_CONTRACT`, and
+  `ContractService.accept_contract()` was simplified to only the status transition, no longer
+  writing `ProjectState`/`current_project_id_set` directly. See the "Post-landing" note below and
+  `docs/parity_ledger/strategic_cognition.yaml` (`STRAT-254`) for the landed citations.
 - `src/systems/world_systems/events.py:98` (`stabilize_project`) → a
   `RegionStabilizationGoalScorer`. Regional-crisis urgency becomes a real, comparable score instead
-  of an automatic override.
+  of an automatic override. **Status: still open** — no ticket has landed this one yet (tracked as
+  `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`).
 
-Both are real, not hypothetical — the exact same "direct overwrite, no arbiter" defect class fixed
-for adventure this session, still present, currently unguarded. Fixing them this way closes the
-safety gap and extends the pattern in the same piece of work, not two separate ones.
+Both were real, not hypothetical — the exact same "direct overwrite, no arbiter" defect class fixed
+for adventure this session, present at design time. Fixing them this way closes the safety gap and
+extends the pattern in the same piece of work, not two separate ones.
+
+> **Post-landing note (2026-08-11/12, `TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER`):** the
+> `contracts.py:187` item above has since landed exactly as this section anticipated — same wrapper
+> principle, `SocialContractGoalScorer` scans `ACTIVE` `RECRUITMENT`/`LOAN` contracts and competes
+> through the existing `evaluate_project_switch()` arbiter rather than overwriting
+> `current_project_id` directly. One refinement not anticipated by this section at design time: the
+> scorer itself (unlike `accept_contract()`, which still has no production caller) is live-reachable
+> today via `CoreActions.execute_recruit()` (`src/engine/domain/core_actions.py:96-105`), which
+> constructs already-`ACTIVE` `RECRUITMENT` contracts through a path that never calls
+> `accept_contract()` — so this is a real, disclosed production behavior change, not merely a
+> landed-but-inert wrapper. `contracts.py:187` is accordingly moved out of the `BYPASS` subgraph
+> below; `events.py:98` remains, still unguarded.
 
 **Deepening adventure's own reasoning** (internal richness, not a structural change — orthogonal to
 the wrapper migration itself):
@@ -469,13 +487,14 @@ graph TD
     RES(("entity.strategic.current_project_id\n(the shared resource)"))
     EPS -->|"the ONLY legitimate write path"| RES
 
+    GSC["SocialContractGoalScorer (NEW, landed)"]
+    GSC -.->|"tier 5: get_all_scores()\n(TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER)"| SIS
+
     subgraph BYPASS["Still-unguarded bypass writers (real, unfixed — Future Extension target)"]
-        CON["social_systems/contracts.py:187"]
         EVT["world_systems/events.py:98 (stabilize_project)"]
         TAC["engine/tactical.py:194 (clear only)"]
         GV["pipeline_phases/guild_visit.py:88 (clear only)"]
     end
-    CON -.->|"unconditional overwrite\n(no arbiter call)"| RES
     EVT -.->|"unconditional overwrite\n(no arbiter call)"| RES
     TAC -.->|clears field| RES
     GV -.->|clears field| RES
@@ -483,18 +502,22 @@ graph TD
     classDef removed fill:#333,stroke:#900,color:#fff,stroke-dasharray: 5 5
     classDef newnode fill:#1a4,stroke:#0a2,color:#fff
     classDef bypass fill:#444,stroke:#900,color:#fff,stroke-dasharray: 3 3
-    class GAD newnode
-    class CON,EVT,TAC,GV bypass
+    class GAD,GSC newnode
+    class EVT,TAC,GV bypass
 ```
 
 *`AdventureDecisionPhase` itself is not shown — it's deleted by this design (§5). Dashed arrows into
-the shared resource mark paths that skip the arbiter; solid marks the one enforced path. The `BYPASS`
-subgraph shows four sites, not just the two (`contracts.py`, `events.py`) discussed in prose and
-Future Extension Patterns below — `tactical.py:194` and `guild_visit.py:88` are confirmed real too,
-but only ever *clear* the field (`current_project_id_set=""`), never steal it from an active project,
-a meaningfully lower-risk pattern than the other two's unconditional overwrite. Included in the
-diagram for completeness; not discussed as Future Extension candidates since "clearing" doesn't need
-the same competitive-arbitration fix "stealing" does.*
+the shared resource mark paths that skip the arbiter; solid marks the one enforced path.
+`social_systems/contracts.py:187` (`CON` in earlier revisions of this diagram) has been removed from
+the `BYPASS` subgraph and is now shown as `GSC`/`SocialContractGoalScorer`, routed through the same
+arbiter as `AdventureGoalScorer` (`TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER`, see the Future
+Extension Patterns "Post-landing note" above). The `BYPASS` subgraph now shows three sites, not the
+original four — `events.py:98` (discussed in prose above, still open) plus `tactical.py:194` and
+`guild_visit.py:88`, confirmed real but only ever *clear* the field
+(`current_project_id_set=""`), never steal it from an active project, a meaningfully lower-risk
+pattern than an unconditional overwrite. Included in the diagram for completeness; not discussed as
+Future Extension candidates since "clearing" doesn't need the same competitive-arbitration fix
+"stealing" does.*
 
 ### Decision tree with real data — one tick for an adventure-eligible hero
 
