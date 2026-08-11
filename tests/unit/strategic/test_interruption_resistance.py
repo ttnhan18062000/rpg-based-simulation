@@ -9,12 +9,46 @@ Covers:
 - RPG-0042: current_project_retention
 """
 import pytest
-from src.core.state import EntityState
+from src.core.state import AuthoritativeState, CombatComponent, EntityState
 from src.core.strategic import (
     StrategicComponent, CognitionProfile, ProjectState, ProjectStatus,
     ObjectiveState, ObjectiveStatus
 )
 from src.systems.strategic import StrategicIntelligenceSystem
+
+
+def _make_state(entities: list, tick: int = 5) -> AuthoritativeState:
+    """Minimal AuthoritativeState fixture, mirroring
+    tests/unit/systems/test_spawn_lock_condition.py's own _make_state() shape."""
+    ent_map = {e.id: e for e in entities}
+    return AuthoritativeState(
+        tick=tick,
+        seed=42,
+        world_time=100,
+        entities=ent_map,
+        groups={},
+        regions={},
+        resource_nodes={},
+        buildings={},
+        chests={},
+        ground_items={},
+        corpses={},
+        camps={},
+        local_scars={},
+        global_resources={},
+        town_tiles=(),
+        building_tiles=(),
+        terrain=(),
+        home_storage={},
+        town_center=(0.0, 0.0),
+        periodic_due_ticks={},
+        work_debt={},
+        movement_count=0,
+        maturity=0,
+        last_calamity_tick=0,
+        blocked_tiles=(),
+        town_entity_ids=(),
+    )
 
 
 def _make_entity(profile=None, current_project=None):
@@ -267,6 +301,96 @@ class TestGenericInterruptionBypass:
         candidate = ProjectState(id="danger_proj", kind="danger", status=ProjectStatus.ACTIVE, score=85)
         result = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate, current_tick=50)
         assert result is None
+
+
+class TestEvaluateProjectSwitchStateParam:
+    """AC1/AC2 (TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION): evaluate_project_switch()
+    gains an optional `state` parameter used to check whether the triggering threat for a
+    locked project has resolved (HP > 80%, no hostile within radius 10.0)."""
+
+    def test_evaluate_project_switch_signature_accepts_state_kwarg(self):
+        """The signature accepts a `state=` kwarg, and also still accepts no `state` at all
+        (backward-compat smoke test for the 27 pre-existing direct call sites' calling
+        convention, which predate this parameter)."""
+        current = ProjectState(
+            id="current", kind="crafting", status=ProjectStatus.ACTIVE, score=10
+        )
+        entity = _make_entity(
+            profile=CognitionProfile(interruption_resistance=0.0),
+            current_project=current,
+        )
+        candidate = ProjectState(id="rival", kind="quest", status=ProjectStatus.ACTIVE, score=50)
+        state = _make_state([entity], tick=10)
+
+        # (a) called with a real state=
+        result_with_state = StrategicIntelligenceSystem.evaluate_project_switch(
+            entity, candidate, current_tick=10, state=state
+        )
+        assert result_with_state is not None
+
+        # (b) called with no state argument at all
+        result_without_state = StrategicIntelligenceSystem.evaluate_project_switch(
+            entity, candidate, current_tick=10
+        )
+        assert result_without_state is not None
+
+    def test_evaluate_project_switch_unlocked_path_identical_with_and_without_state(self):
+        """For an unlocked current project (lock_until_tick <= current_tick), the raw
+        comparison result must be byte-identical whether `state` is passed or omitted --
+        `state` must not leak into the unlocked raw-comparison path."""
+        current = ProjectState(
+            id="current", kind="crafting", status=ProjectStatus.ACTIVE,
+            score=50, lock_until_tick=0,
+        )
+        entity = _make_entity(
+            profile=CognitionProfile(interruption_resistance=0.5),
+            current_project=current,
+        )
+        candidate = ProjectState(id="rival", kind="quest", status=ProjectStatus.ACTIVE, score=55)
+        state = _make_state([entity], tick=10)
+
+        result_with_state = StrategicIntelligenceSystem.evaluate_project_switch(
+            entity, candidate, current_tick=10, state=state
+        )
+        result_without_state = StrategicIntelligenceSystem.evaluate_project_switch(
+            entity, candidate, current_tick=10
+        )
+        assert result_with_state == result_without_state
+
+    def test_evaluate_project_switch_locked_project_released_when_threat_resolved(self):
+        """Locked current project + entity HP>80% + no hostile within radius 10.0 --> the
+        locked-branch percentage/urgency-floor gate is skipped entirely and the raw
+        comparison alone determines the outcome. The candidate here is scored to FAIL the
+        old percentage/urgency-floor gate but PASS the raw comparison, proving the
+        short-circuit is real and not accidentally equivalent to the pre-existing gate."""
+        from src.core.builder import V2EntityBuilder
+        from src.engine.apply import replace as fast_replace
+
+        current = ProjectState(
+            id="locked", kind="crafting", status=ProjectStatus.ACTIVE,
+            score=10, lock_until_tick=100,
+        )
+        builder = (
+            V2EntityBuilder(1)
+            .kind("hero")
+            .location(5.0, 5.0)
+            .strategic(projects={current.id: current}, current_project_id=current.id)
+            .cognition(interruption_resistance=0.0)
+        )
+        builder.replace_combat(CombatComponent(hp=100, max_hp=100, atk=10, def_stat=2))
+        entity = builder.build()
+
+        # candidate_pct = 40/100 = 0.4, below the 0.8 urgency floor -> would be blocked by
+        # the old percentage gate. But candidate.score (40) > effective_current_score
+        # (10 + 0.0*margin = 10) -> passes the raw comparison this test targets.
+        candidate = ProjectState(id="rival", kind="quest", status=ProjectStatus.ACTIVE, score=40)
+        state = _make_state([entity], tick=50)
+
+        result = StrategicIntelligenceSystem.evaluate_project_switch(
+            entity, candidate, current_tick=50, state=state
+        )
+        assert result is not None
+        assert result.current_project_id_set == "rival"
 
 
 class TestCognitionProfile:

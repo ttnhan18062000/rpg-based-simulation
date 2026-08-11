@@ -18,32 +18,10 @@ from src.domains.adventure.schema import RouteFamily
 from src.domains.adventure.service import AdventureDecisionService
 from src.engine.behavior_consumers import get_cognition_profile_definition, get_role_definition
 from src.systems.strategic import StrategicIntelligenceSystem
-from src.engine.spatial_query import SpatialQueryService
+from src.systems.strategic_systems.intelligence import _threat_resolved
 from src.world.providers.resources import ResourceOpportunityProvider
 from src.world.providers.services import ServiceOpportunityProvider
 from src.observability.cognition.decision_trace_writer import get_active_writer as _get_active_writer
-
-
-def _threat_resolved(hero: EntityState, state: AuthoritativeState) -> bool:
-    """
-    Return True when the triggering threat for a survival lock is no longer active:
-    entity HP has recovered above 80% AND no hostile entity is within interaction radius.
-
-    Used as an early-release condition for strategic project locks on COMBAT_RETREAT /
-    RECOVER projects so that entities are not held idle after the threat passes.
-    """
-    hp_ratio = hero.combat.hp / max(1, hero.combat.max_hp)
-    if hp_ratio <= 0.8:
-        return False
-    nearby_ids = SpatialQueryService.nearby_entities(state, hero.navigation.position, radius=10.0)
-    has_hostile = any(
-        eid != hero.id
-        and (e := state.entities.get(eid)) is not None
-        and e.combat.alive
-        and e.identity.faction != hero.identity.faction
-        for eid in nearby_ids
-    )
-    return not has_hostile
 
 
 def _resolve_cognition_profile_id(entity: EntityState) -> Optional[str]:
@@ -190,7 +168,7 @@ class AdventureDecisionPhase:
             # 3. Create strategic updates for the committed choice
             if result.proposed_project and result.proposed_objective:
                 strat_upd = StrategicIntelligenceSystem.evaluate_project_switch(
-                    hero, result.proposed_project, tick
+                    hero, result.proposed_project, tick, state=state
                 )
                 if strat_upd is None:
                     continue

@@ -259,6 +259,18 @@ already-documented-but-never-wired `COMBAT_RETREAT` case) is a deliberate, discl
 it closes a real, pre-existing gap between `_threat_resolved()`'s own documented intent and both its
 actual implementation and the parity ledger's own text, not scope creep invented by this design.
 
+> **Post-landing citation correction (2026-08-11, `TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION`):**
+> the fix described above has since landed exactly as specified. The line citations in the paragraph
+> above were already approximate at design time and are now additionally stale post-relocation —
+> `_threat_resolved()` no longer lives at `phase.py:27-46`; it is now a module-level function at
+> `src/systems/strategic_systems/intelligence.py:112`. `evaluate_project_switch()`'s widened
+> signature (now including `state: Optional[AuthoritativeState] = None`) is at
+> `intelligence.py:955`, not `:928-932`. Its two calls inside `evaluate_strategic_intent()` are now
+> at `intelligence.py:1384` and `:1494`, not `:1341`/`:1422`. This note corrects citations only; the
+> design rationale above is unchanged and matches the landed implementation. See
+> `docs/parity_ledger/strategic_cognition.yaml`'s `STRAT-236` entry for the current authoritative
+> citations.
+
 ### 6. Data flow — one tick, cognition-eligible entity
 
 1. Self-model phase runs (`src/cognition/`, unchanged) → produces the entity's self-model.

@@ -66,6 +66,7 @@ from src.core.strategic import (
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
     CognitionProfile, ProjectKind, GoalKind
 )
+from src.engine.spatial_query import SpatialQueryService
 from src.strategy.cognition_capacity import CapacityService
 from src.core.inventory import InventoryService
 from src.engine.cadence import should_run, SystemCadence
@@ -106,6 +107,30 @@ def _score_scale_max(kind) -> float:
     if isinstance(kind, ProjectKind):
         return _ADVENTURE_ROUTE_SCORE_MAX
     return _GOAL_UTILITY_SCORE_MAX
+
+
+def _threat_resolved(hero: EntityState, state: AuthoritativeState) -> bool:
+    """
+    Return True when the triggering threat for a survival lock is no longer active:
+    entity HP has recovered above 80% AND no hostile entity is within interaction radius.
+
+    Used as an early-release condition inside evaluate_project_switch()'s locked-branch gate
+    so that entities are not held idle in a project lock after the threat passes. Relocated
+    from src/domains/adventure/phase.py (TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION) to
+    generalize beyond AdventureDecisionPhase's original sole-caller scope. STRAT-236.
+    """
+    hp_ratio = hero.combat.hp / max(1, hero.combat.max_hp)
+    if hp_ratio <= 0.8:
+        return False
+    nearby_ids = SpatialQueryService.nearby_entities(state, hero.navigation.position, radius=10.0)
+    has_hostile = any(
+        eid != hero.id
+        and (e := state.entities.get(eid)) is not None
+        and e.combat.alive
+        and e.identity.faction != hero.identity.faction
+        for eid in nearby_ids
+    )
+    return not has_hostile
 
 
 class StrategicIntelligenceSystem:
@@ -930,7 +955,8 @@ class StrategicIntelligenceSystem:
     def evaluate_project_switch(
         entity: EntityState,
         candidate_project: ProjectState,
-        current_tick: int
+        current_tick: int,
+        state: Optional[AuthoritativeState] = None
     ) -> Optional[StrategicUpdate]:
         """
         Phase 9: Strategic interruption resistance and retention.
@@ -977,26 +1003,38 @@ class StrategicIntelligenceSystem:
         effective_current_score = current.score + retention_margin
 
         if current.lock_until_tick > current_tick:
-            # STRAT-186 (generalized): the lock may be bypassed only for the unconditional "detour"
-            # structural override, or when the candidate's score — expressed as a percentage of its own
-            # system's declared max — both exceeds the current project's own normalized effective score
-            # AND clears the urgency floor. This comparison is intentionally normalized and kept separate
-            # from the raw `effective_current_score` comparison below: the raw formula and the unlocked
-            # path must stay byte-identical (test_interruption_resistance_margin depends on this).
-            if candidate_project.kind == "detour":
-                pass
-            else:
-                candidate_max = _score_scale_max(candidate_project.kind)
-                current_max = _score_scale_max(current.kind)
-                candidate_pct = candidate_project.score / candidate_max
-                # TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG: the margin term is
-                # deliberately normalized against the universal baseline scale (_GOAL_UTILITY_SCORE_MAX),
-                # not current_max — current_max can be as small as _ADVENTURE_ROUTE_SCORE_MAX (2.9),
-                # which made retention_margin/current_max structurally dominate the comparison.
-                normalized_effective_current_pct = (current.score / current_max) + (retention_margin / _GOAL_UTILITY_SCORE_MAX)
-                if not (candidate_pct > normalized_effective_current_pct
-                        and candidate_pct > _INTERRUPTION_URGENCY_FLOOR_PCT):
-                    return None
+            # STRAT-236 (generalized): when a real world `state` is supplied and the triggering
+            # threat has resolved (HP > 80%, no hostile within radius 10.0), the lock is treated
+            # as already expired. `state is None` (the default for the 27 pre-existing direct
+            # test call sites that predate this check) short-circuits `and` before
+            # `_threat_resolved` is ever called, preserving today's behavior exactly. Computed
+            # here, inside the lock-active gate, rather than above it, so the O(radius^2) spatial
+            # scan in SpatialQueryService.nearby_entities() only runs when the current project is
+            # actually locked — not on every evaluate_project_switch() call for an unlocked,
+            # healthy entity (the common case across all 3 real production call sites).
+            threat_resolved = state is not None and _threat_resolved(entity, state)
+
+            if not threat_resolved:
+                # STRAT-186 (generalized): the lock may be bypassed only for the unconditional "detour"
+                # structural override, or when the candidate's score — expressed as a percentage of its own
+                # system's declared max — both exceeds the current project's own normalized effective score
+                # AND clears the urgency floor. This comparison is intentionally normalized and kept separate
+                # from the raw `effective_current_score` comparison below: the raw formula and the unlocked
+                # path must stay byte-identical (test_interruption_resistance_margin depends on this).
+                if candidate_project.kind == "detour":
+                    pass
+                else:
+                    candidate_max = _score_scale_max(candidate_project.kind)
+                    current_max = _score_scale_max(current.kind)
+                    candidate_pct = candidate_project.score / candidate_max
+                    # TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG: the margin term is
+                    # deliberately normalized against the universal baseline scale (_GOAL_UTILITY_SCORE_MAX),
+                    # not current_max — current_max can be as small as _ADVENTURE_ROUTE_SCORE_MAX (2.9),
+                    # which made retention_margin/current_max structurally dominate the comparison.
+                    normalized_effective_current_pct = (current.score / current_max) + (retention_margin / _GOAL_UTILITY_SCORE_MAX)
+                    if not (candidate_pct > normalized_effective_current_pct
+                            and candidate_pct > _INTERRUPTION_URGENCY_FLOOR_PCT):
+                        return None
 
         if candidate_project.score > effective_current_score:
             return StrategicUpdate(
@@ -1343,7 +1381,7 @@ class StrategicIntelligenceSystem:
                             created_tick=current_tick,
                             score=best.score + 50.0
                         )
-                        detour_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, detour_proj, current_tick)
+                        detour_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, detour_proj, current_tick, state=state)
                         if detour_up:
                             final_detour = replace(detour_up, 
                                 boredom_delta=boredom_upd,
@@ -1453,7 +1491,7 @@ class StrategicIntelligenceSystem:
                     return StrategicUpdate(boredom_delta=boredom_upd)
                 return StrategicUpdate()
 
-            switch_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate_proj, current_tick)
+            switch_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate_proj, current_tick, state=state)
             if switch_up:
                 return replace(switch_up, 
                     boredom_delta=boredom_upd,

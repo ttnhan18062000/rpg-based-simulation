@@ -1999,12 +1999,18 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: src/systems/strategic_systems/intelligence.py:991-996 (evaluate_project_switch,
-    locked-branch normalization) — normalized_effective_current_pct now normalizes the
-    retention_margin term against the fixed _GOAL_UTILITY_SCORE_MAX (100.0) rather than
-    current_max, so a locked System-A current (current_max=2.9) is genuinely interruptible
-    by a System-B candidate that clears both the margin and the urgency floor. Fixed under
-    TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG.
+  v2_evidence: src/systems/strategic_systems/intelligence.py:1017-1037 (evaluate_project_switch,
+    locked-branch normalization; line numbers re-verified under
+    TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION — this block is now nested one level
+    deeper, under `if not threat_resolved:`, following STRAT-236's early-release check;
+    prior citation of :991-996 had drifted) — normalized_effective_current_pct now
+    normalizes the retention_margin term against the fixed _GOAL_UTILITY_SCORE_MAX (100.0)
+    rather than current_max, so a locked System-A current (current_max=2.9) is genuinely
+    interruptible by a System-B candidate that clears both the margin and the urgency
+    floor. Fixed under TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG. The
+    27 pre-existing direct test call sites (state=None default) reach this block
+    unconditionally, byte-identical to before; only callers passing a real state can
+    short-circuit past it via the STRAT-236 threat-resolved check.
   proof_type: parity
   test_path: tests/unit/strategic/test_score_normalization.py::test_locked_system_a_current_interrupted_by_high_urgency_system_b_candidate
   divergence_note: null
@@ -2014,11 +2020,17 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: src/systems/strategic_systems/intelligence.py:991-996 (evaluate_project_switch,
-    locked-branch normalization) — a locked current project still blocks a System-B candidate
-    that fails to clear the normalized margin or the urgency floor, confirming reservation
-    priority is favored but not absolute. Denominator fix under
-    TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG left this blocking behavior intact.
+  v2_evidence: src/systems/strategic_systems/intelligence.py:1017-1037 (evaluate_project_switch,
+    locked-branch normalization; line numbers re-verified under
+    TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION — this block is now nested one level
+    deeper, under `if not threat_resolved:`, following STRAT-236's early-release check;
+    prior citation of :991-996 had drifted) — a locked current project still blocks a
+    System-B candidate that fails to clear the normalized margin or the urgency floor,
+    confirming reservation priority is favored but not absolute. Denominator fix under
+    TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG left this blocking behavior
+    intact. Reservation priority is now conditional on the STRAT-236 threat-resolved gate
+    not having already released the lock — the 27 pre-existing direct test call sites
+    (state=None default) are unaffected, byte-identical to before.
   proof_type: parity
   test_path: tests/unit/strategic/test_score_normalization.py::test_locked_system_a_current_still_blocks_low_urgency_system_b_candidate
   divergence_note: null
@@ -2697,20 +2709,30 @@
   text: >-
     Project lock (lock_until_tick) has a conditional early-release path: when HP ratio
     > 0.8 AND no alive hostile entity of a different faction is within radius 10.0,
-    the lock is bypassed in AdventureDecisionPhase even before lock_until_tick expires.
-    This prevents cascading 10-tick relocks from creating >50-tick dead windows after
-    combat (D06 F2 — 200-tick activation delay). All lock assignments are capped at
-    current_tick + 50 ticks maximum.
+    the lock is treated as expired inside evaluate_project_switch()'s own locked-branch
+    gate — generalized (TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION) beyond the
+    original AdventureDecisionPhase-only scope to any caller that supplies a real
+    AuthoritativeState. This prevents cascading 10-tick relocks from creating >50-tick
+    dead windows after combat (D06 F2 — 200-tick activation delay). All lock assignments
+    are capped at current_tick + 50 ticks maximum.
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >-
-    src/domains/adventure/phase.py — _threat_resolved() helper and conditional lock check
-    (TCK-20260627-P2A-SPAWN-LOCK-COND). src/domains/adventure/mapper.py:L101,
-    src/systems/strategic_systems/intelligence.py:L1266,L1340 — cap via min(N, tick+50).
+    src/systems/strategic_systems/intelligence.py — _threat_resolved() helper (relocated
+    from src/domains/adventure/phase.py, TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION;
+    originally TCK-20260627-P2A-SPAWN-LOCK-COND) and the widened lock-expiry condition
+    inside evaluate_project_switch()'s locked-branch gate. AdventureDecisionPhase's own
+    pre-filter at src/domains/adventure/phase.py:129 remains a separate, still-active gate.
+    Cap via min(N, tick+50): src/domains/adventure/mapper.py:102,
+    src/systems/strategic_systems/intelligence.py:1380,1483 (line numbers re-verified this
+    session — the ledger's prior L1266/L1340 citations had already drifted from unrelated
+    changes and are corrected here alongside the relocation).
   proof_type: parity
   test_path: >-
-    tests/unit/systems/test_spawn_lock_condition.py::TestLockEarlyRelease::test_lock_released_when_hp_high_and_no_hostiles
+    tests/unit/strategic/test_threat_resolved_lock_release.py::test_combat_retreat_project_locked_via_system_b_early_released_when_threat_resolved
+    | tests/unit/strategic/test_threat_resolved_lock_release.py::test_combat_retreat_project_locked_via_system_b_retained_when_threat_still_active
+    | tests/unit/systems/test_spawn_lock_condition.py::TestLockEarlyRelease::test_lock_released_when_hp_high_and_no_hostiles
   divergence_note: null
   support_boundary: null
 - id: STRAT-237
