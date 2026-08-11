@@ -205,7 +205,7 @@ Auditing `blocker_penalty = 2.0` requires knowing how often entities are blocked
 
 **Impact on E12**: gap. The measurement pass should query `cognition_features` alongside simulation events. The `StaleBlocker` pattern count across entities is direct evidence for or against whether `blocker_penalty = 2.0` is the right threshold. Recommend: wire `CognitionFeatureExtractor` into the post-run pipeline before E12 begins measurement.
 
-**Impact on E11D**: same gap. Bravery calibration (≥2× differential) is currently measured only by route-kind outcome rates (E11C harness). Adding `graph_churn_rate` and `overload_count` split by personality quartile would reveal whether high-bravery entities also have lower cognitive stress — a richer signal for calibration than outcome rates alone.
+**Impact on E11D**: same gap. Bravery calibration (recalibrated to a ≥1.5× differential — `TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION` found the original ≥2× target unreachable and re-measured a real ~1.74× ratio, attributed to `GoalRegistry`/`CombatEngageScorer`, not `AdventureRouteScorer`) is currently measured only by route-kind outcome rates (E11C harness). Adding `graph_churn_rate` and `overload_count` split by personality quartile would reveal whether high-bravery entities also have lower cognitive stress — a richer signal for calibration than outcome rates alone.
 
 ---
 

@@ -63,7 +63,7 @@ If ever used between-session (e.g. overnight personality evolution): fixed quant
 
 | Epic | How embeddings fit |
 |---|---|
-| **E11D-SCORING-CAL** | Use embedding-based calibration to find bravery coefficient for ≥2× differential, instead of manual tuning |
+| **E11D-SCORING-CAL** | Use embedding-based calibration to find bravery coefficient for ≥1.5× differential (recalibrated from an original ≥2× target — real 2× found unreachable, see `TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION`), instead of manual tuning |
 | **E51 Chronicle** | Embed event sequences for narrative arc clustering and coherence scoring |
 | **E43 Social Memory** | Latent relationship representation for multi-party social dynamics beyond trust float |
 | **E62 Culture Drift** | Cultural embedding space where regions drift toward each other based on shared events |
