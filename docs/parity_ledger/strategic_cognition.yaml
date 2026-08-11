@@ -1999,9 +1999,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: src/systems/strategic_systems/intelligence.py:991-996 (evaluate_project_switch,
+    locked-branch normalization) — normalized_effective_current_pct now normalizes the
+    retention_margin term against the fixed _GOAL_UTILITY_SCORE_MAX (100.0) rather than
+    current_max, so a locked System-A current (current_max=2.9) is genuinely interruptible
+    by a System-B candidate that clears both the margin and the urgency floor. Fixed under
+    TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG.
+  proof_type: parity
+  test_path: tests/unit/strategic/test_score_normalization.py::test_locked_system_a_current_interrupted_by_high_urgency_system_b_candidate
   divergence_note: null
   support_boundary: null
 - id: STRAT-187
@@ -2009,9 +2014,13 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: src/systems/strategic_systems/intelligence.py:991-996 (evaluate_project_switch,
+    locked-branch normalization) — a locked current project still blocks a System-B candidate
+    that fails to clear the normalized margin or the urgency floor, confirming reservation
+    priority is favored but not absolute. Denominator fix under
+    TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG left this blocking behavior intact.
+  proof_type: parity
+  test_path: tests/unit/strategic/test_score_normalization.py::test_locked_system_a_current_still_blocks_low_urgency_system_b_candidate
   divergence_note: null
   support_boundary: null
 - id: STRAT-188

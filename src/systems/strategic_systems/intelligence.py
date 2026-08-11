@@ -988,7 +988,11 @@ class StrategicIntelligenceSystem:
                 candidate_max = _score_scale_max(candidate_project.kind)
                 current_max = _score_scale_max(current.kind)
                 candidate_pct = candidate_project.score / candidate_max
-                normalized_effective_current_pct = (current.score / current_max) + (retention_margin / current_max)
+                # TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG: the margin term is
+                # deliberately normalized against the universal baseline scale (_GOAL_UTILITY_SCORE_MAX),
+                # not current_max — current_max can be as small as _ADVENTURE_ROUTE_SCORE_MAX (2.9),
+                # which made retention_margin/current_max structurally dominate the comparison.
+                normalized_effective_current_pct = (current.score / current_max) + (retention_margin / _GOAL_UTILITY_SCORE_MAX)
                 if not (candidate_pct > normalized_effective_current_pct
                         and candidate_pct > _INTERRUPTION_URGENCY_FLOOR_PCT):
                     return None

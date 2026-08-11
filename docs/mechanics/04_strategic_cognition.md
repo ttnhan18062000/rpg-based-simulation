@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-10
+last_verified: 2026-08-11
 ---
 
 # Chapter 4: Strategic Cognition
@@ -36,7 +36,7 @@ Interruption_Margin = Profile_Resistance * resistance_multiplier
 ```
 *   **Profile Resistance**: A value (0.0 to 1.0) defined by the entity's personality or class.
 *   **resistance_multiplier**: A profile-defined constant (not a hard-coded 30.0); value varies by entity profile.
-*   **Generalized Bypass**: While a project's lock is active, only a `detour`-kind candidate is exempt from the added normalized floor/percentage gate below — it is not exempt from the base retention-priority comparison above (`candidate_project.score > effective_current_score` still applies to it unconditionally, like every candidate). Every other candidate kind, from either scoring system (System A/`AdventureRouteScorer`, declared ceiling `~2.9`, see §6.6; System B/`GoalRegistry`, ceiling `100.0`), must additionally clear a dual condition while the lock is active, each score normalized to its own system's ceiling: its normalized score must exceed both (a) the current project's normalized effective score (`current.score/current_max + retention_margin/current_max`), and (b) a fixed urgency floor of `0.8`. This generalizes the old "Danger score above 80" special case (which only ever applied to one concern kind on one 0-100 scale) to any kind on either scale.
+*   **Generalized Bypass**: While a project's lock is active, only a `detour`-kind candidate is exempt from the added normalized floor/percentage gate below — it is not exempt from the base retention-priority comparison above (`candidate_project.score > effective_current_score` still applies to it unconditionally, like every candidate). Every other candidate kind, from either scoring system (System A/`AdventureRouteScorer`, declared ceiling `~2.9`, see §6.6; System B/`GoalRegistry`, ceiling `100.0`), must additionally clear a dual condition while the lock is active: its own score, normalized to its own system's ceiling, must exceed both (a) the current project's normalized effective score (`current.score/current_max + retention_margin/_GOAL_UTILITY_SCORE_MAX`), and (b) a fixed urgency floor of `0.8`. `current.score` is normalized to the current project's own system ceiling (`current_max`), same as always, but `retention_margin` is deliberately always normalized against the fixed universal baseline scale (`_GOAL_UTILITY_SCORE_MAX = 100.0`) rather than `current_max` — `retention_margin`'s own raw range (0-30, from `interruption_resistance × resistance_multiplier`) was calibrated against System B's 0-100 range from the start, and is not a coherent value against System A's much smaller `~2.9` scale, where dividing by `current_max` would let the margin term alone (e.g. `9.0/2.9 ≈ 3.1`) structurally exceed any real candidate percentage and make a locked System A project un-interruptible regardless of urgency (TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG). This generalizes the old "Danger score above 80" special case (which only ever applied to one concern kind on one 0-100 scale) to any kind on either scale.
 
 ---
 
