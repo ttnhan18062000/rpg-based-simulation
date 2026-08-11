@@ -4171,6 +4171,13 @@
     to reflect a new real runtime consumer (`AdventureDecisionPhase`) touched `matrix.py` without
     exercising or affecting `_auto_discover_extra_entries` at all -- not a divergence from this
     entry's own claim, just outside what the claim was ever scoped to describe.
+    Addendum (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE): the same hand-registered
+    `living/cognition_profiles` row's `compile_runtime_consumer` and `runtime_consumer_evidence`
+    fields were edited again, renaming the cited runtime consumer from `AdventureDecisionPhase`
+    (deleted this ticket, src/domains/adventure/phase.py no longer exists) to `AdventureGoalScorer`
+    (src/ai/goals/adventure_scorer.py, the sole surviving adventure-decision path). Same as the
+    prior addendum: a manual editorial update to an already-registered row, not an
+    `_auto_discover_extra_entries` exercise -- still outside this entry's own scoped claim.
 
 - id: SUB-374
   text: >

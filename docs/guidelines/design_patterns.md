@@ -46,32 +46,37 @@ Rules:
   - Gate execution via should_run() cadence check (docs/engine/governance_logic.md)
 ```
 
-**Representative implementation — `AdventureDecisionPhase`** (`src/domains/adventure/phase.py`):
+**Representative implementation — `CombatEngagementPhase`** (`src/domains/combat_engagement/phase.py`):
 
 ```python
-class AdventureDecisionPhase:
-    """Simulates subjective routing decisions for heroes."""
+class CombatEngagementPhase:
+    """Resolves pre-combat engagement decisions for entities."""
 
     @staticmethod
     def apply(
         state: AuthoritativeState,
         context: Optional[dict] = None,
-        trace_writer: Optional[Any] = None,
-        faction_directives: Optional[list] = None,
-        factions: Optional[Any] = None,
-    ) -> StateUpdate:
-        update = StateUpdate()
+    ) -> CombatEngagementDecisionResult:
         # ... read state, compute decisions ...
-        return StateUpdate(entity_updates=entity_updates)
+        return CombatEngagementDecisionResult(entity_updates=entity_updates)
 ```
+
+**Formerly also `AdventureDecisionPhase`** (`src/domains/adventure/phase.py`) — deleted by
+TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE. Adventure routing now follows a *different* pattern:
+it is a tier-5 `GoalScorer` (`AdventureGoalScorer.score(entity, state) -> GoalScore`, registered in
+`GoalRegistry`, `src/ai/goals/adventure_scorer.py`), not a dedicated pipeline-phase class — see
+`docs/mechanics/04_strategic_cognition.md` §2 for that pattern instead. Do not use the deleted
+class as a template for new domain logic; use one of the 7 reference implementations below, or the
+`GoalScorer` protocol (`src/ai/goals/base.py`) if the new logic is itself a competing strategic
+goal candidate rather than an unconditional per-tick phase.
 
 ### Reference implementations
 
-All 8 domain phases use this pattern (D12 audit — all confirmed):
+All 7 remaining domain phases use this pattern (D12 audit found 8; `AdventureDecisionPhase` was
+deleted by TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE and is no longer one of them):
 
 | Phase Class | File | Typed Return |
 |---|---|---|
-| `AdventureDecisionPhase` | `src/domains/adventure/phase.py` | `-> StateUpdate` |
 | `ProgressionPhase` | `src/domains/progression/phase.py` | `-> Optional[ProgressionConversionResult]` |
 | `CooperationPhase` | `src/domains/cooperation/phase.py` | `-> Optional[CooperationResult]` |
 | `CombatEngagementPhase` | `src/domains/combat_engagement/phase.py` | `-> CombatEngagementDecisionResult` |

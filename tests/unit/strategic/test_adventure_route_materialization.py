@@ -43,7 +43,7 @@ def _state(entities=None, tick=10):
 
 def _eligible(monkeypatch):
     monkeypatch.setattr(
-        "src.domains.adventure.phase._supports_adventure_routing",
+        "src.ai.goals.adventure_scorer._supports_adventure_routing",
         lambda entity, cache: True,
     )
 
@@ -166,3 +166,56 @@ def test_form_party_materialized_objective_is_tactically_resolvable_not_a_stall(
     stalled_obj = dc_replace(materialized_obj, target_position=None)
     stalled_resolved = TacticalDecisionSystem._resolve_target_position(state, stalled_obj)
     assert stalled_resolved == (None, None, None)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Ported from tests/integration/domains/adventure/test_adventure_shadow_migration_parity.py
+# (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE, plan.md Step 6): that file's entire premise
+# (diffing two coexisting live decision paths) disappeared once AdventureDecisionPhase was
+# deleted, and it was retired in full. This helper + test guard a real, independently-valuable
+# regression class -- the raw_score-vs-utility scale-mismatch defect
+# TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG fixed -- that doesn't need two
+# live paths to verify, so it survives here rather than disappearing with the rest of the
+# shadow-parity suite.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _diff_routes(phase_family, phase_raw_score, scorer_family, scorer_raw_score,
+                  phase_utility=None, scorer_utility=None):
+    """Itemized diff report -- required by the ticket's own Scope text ("surfacing
+    normalization miscalibration as a named itemized diff report, not single pass/fail"),
+    not just a standalone unit test. raw_score and utility mismatches are kept in
+    separate keys so the design doc's scale-mismatch defect shape (raw_score vs. utility
+    getting conflated) is caught by the report's own shape, not just its content."""
+    report = {"family_mismatches": [], "raw_score_mismatches": [], "utility_mismatches": []}
+    if phase_family != scorer_family:
+        report["family_mismatches"].append({"phase": phase_family, "scorer": scorer_family})
+    if phase_raw_score != scorer_raw_score:
+        report["raw_score_mismatches"].append({"phase": phase_raw_score, "scorer": scorer_raw_score})
+    if phase_utility is not None and scorer_utility is not None and phase_utility != scorer_utility:
+        report["utility_mismatches"].append({"phase": phase_utility, "scorer": scorer_utility})
+    return report
+
+
+def test_shadow_diff_report_separates_raw_score_from_utility_mismatches():
+    """Exercises the shared _diff_routes() definition against 2 synthetic cases, proving the
+    report *shape* keeps raw_score and utility mismatches apart -- catching the design doc's
+    scale-mismatch bug shape (raw_score/utility conflation) by construction."""
+    # Case A: raw_score differs, family matches, no utility args supplied.
+    diff_a = _diff_routes(
+        phase_family="recover", phase_raw_score=1.5,
+        scorer_family="recover", scorer_raw_score=2.0,
+    )
+    assert len(diff_a["raw_score_mismatches"]) == 1
+    assert diff_a["family_mismatches"] == []
+    assert diff_a["utility_mismatches"] == []
+
+    # Case B: utility differs (hypothetical -- the old AdventureDecisionPhase path never
+    # actually produced a utility value), raw_score and family match.
+    diff_b = _diff_routes(
+        phase_family="recover", phase_raw_score=1.5,
+        scorer_family="recover", scorer_raw_score=1.5,
+        phase_utility=40.0, scorer_utility=55.0,
+    )
+    assert len(diff_b["utility_mismatches"]) == 1
+    assert diff_b["raw_score_mismatches"] == []
+    assert diff_b["family_mismatches"] == []

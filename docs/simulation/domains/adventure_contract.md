@@ -8,8 +8,8 @@ last_verified: 2026-08-11
 
 # Adventure Domain Contract
 
-**Source:** `src/domains/adventure/` (generator.py, scoring.py, service.py, resolver.py, mapper.py, phase.py, schema.py)  
-**Pipeline phase:** the Adventure Decision stage (`AdventureDecisionPhase`)  
+**Source:** `src/domains/adventure/` (generator.py, scoring.py, service.py, resolver.py, mapper.py, schema.py) + `src/ai/goals/adventure_scorer.py` (`AdventureGoalScorer`, the tier-5 entry point)  
+**Pipeline phase:** tier-5 goal candidate — `AdventureGoalScorer.score(entity, state)`, invoked via `GoalRegistry.get_all_scores()` inside `StrategicIntelligenceSystem.evaluate_strategic_intent()` (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE deleted the former dedicated `AdventureDecisionPhase` pipeline stage; see Engine Phase below)  
 **Authoritative status:** Strategic routing domain — selects hero projects and objectives each tick. Does not execute combat or harvest actions directly.
 
 ---
@@ -22,18 +22,29 @@ The adventure domain implements **subjective route selection** for entities whos
 
 ## Engine Phase
 
-**Adventure Decision stage — `AdventureDecisionPhase.apply(state, context)`**
+**Tier-5 goal candidate — `AdventureGoalScorer.score(entity, state)`**
+(`src/ai/goals/adventure_scorer.py`; TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE)
 
-Runs every tick for all entities that satisfy the eligibility criteria:
+`AdventureGoalScorer` is registered unconditionally in `GoalRegistry`
+(`src/ai/goals/__init__.py`) and invoked via `GoalRegistry.get_all_scores()` inside
+`StrategicIntelligenceSystem.evaluate_strategic_intent()`, which runs every tick through the
+always-on `strategic_intelligence` pipeline phase (`src/engine/pipeline.py`), subject only to
+per-entity `SystemCadence` throttling — the same cadence and 20.0 tier-5 utility floor every
+other `GoalKind` scorer respects. Eligible entities:
 
 | Criterion | Check |
 |---|---|
 | Cognition eligibility | Resolved `CognitionProfileDefinition.supports_adventure_routing = True`, resolved via (a) explicit `identity.properties["cognition_profile_id"]`, else (b) `identity.properties["role_id"]` → `RoleDefinition.default_cognition_profile`, else (c) legacy `EntityRole.HERO` → the `"hero"` role's own default |
 | Alive | `entity.combat.alive = True` |
 | Active | `entity.lifecycle.active = True` |
-| Project lock | `tick >= active_project.lock_until_tick` (or no active project) |
+| Project lock | `tick >= active_project.lock_until_tick`, or the triggering threat has resolved (`_threat_resolved()`), or no active project — enforced inside `StrategicIntelligenceSystem.evaluate_project_switch()`'s shared locked-branch gate, not by a route-generation pre-filter |
 
-Heroes with an unexpired `lock_until_tick` on their current project are skipped — they committed to a plan and it has not yet elapsed.
+These checks are unchanged from the prior, now-deleted phase-based mechanism
+(TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE) — only their call site changed: eligibility
+(cognition profile / alive / active) still gates whether `AdventureGoalScorer.score()` attempts
+route generation at all, and the project-lock check now lives in the shared
+`evaluate_project_switch()` arbiter every `GoalKind` candidate's commit already routes through,
+rather than a route-generation pre-filter specific to adventure routing.
 
 ---
 
@@ -186,7 +197,7 @@ All mutations are emitted as a `StateUpdate` — never applied directly inside t
 | `StrategicUpdate` | `projects_add_or_update`, `current_project_id_set`, `current_objective_id_set` |
 | `EntityUpdate.property_updates` | `last_routing_tick`, `last_routing_family`, `candidate_count`, `selected score` (debug trace) |
 
-No direct writes to `AuthoritativeState` occur inside `AdventureDecisionPhase`.
+No direct writes to `AuthoritativeState` occur inside `AdventureGoalScorer.score()`.
 
 ---
 
@@ -217,7 +228,7 @@ No direct writes to `AuthoritativeState` occur inside `AdventureDecisionPhase`.
 Primary test targets:
 
 ```
-grep -r "AdventureDecisionPhase\|AdventureRouteGenerator\|AdventureRouteScorer\|RouteToProjectMapper\|RouteFamily" tests/
+grep -r "AdventureGoalScorer\|AdventureRouteGenerator\|AdventureRouteScorer\|RouteToProjectMapper\|RouteFamily" tests/
 ```
 
 Tests must cover:

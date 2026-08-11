@@ -1,18 +1,22 @@
 """
 tests/unit/strategic/test_project_system_precedence.py
 
-Regression guard for the System A (adventure_decision) vs. System B
-(strategic_intelligence) StrategicUpdate merge precedence
+Regression guard for StrategicUpdate merge precedence
 (TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP, investigation Open Question 1).
 
 StrategicUpdate.merge is last-write-wins for current_project_id_set /
-current_objective_id_set (src/core/updates.py:549-550). Since
-"strategic_intelligence" (System B) runs after "adventure_decision" (System A)
-in the same tick (src/engine/pipeline.py), System B's selection wins whenever
-it actually produces a value this tick. This test documents that behavior as a
-tested, intentional property rather than an emergent, unverified side effect
-of phase ordering — this ticket does not change merge semantics or unify the
-two systems (explicit Out of Scope).
+current_objective_id_set (src/core/updates.py:549-550). Historically (before
+TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE) this mattered because a separate,
+earlier-running "adventure_decision" pipeline phase (System A) could be
+overwritten by the later "strategic_intelligence" phase (System B) within the
+same tick. As of that ticket, AdventureDecisionPhase no longer exists:
+adventure routing is now a tier-5 GoalScorer candidate
+(AdventureGoalScorer, src/ai/goals/adventure_scorer.py) evaluated inside
+GoalRegistry.get_all_scores() within evaluate_strategic_intent() itself — the
+two systems no longer run as separate phases at all. This test still documents
+StrategicUpdate.merge's own last-write-wins property as a tested, intentional
+fact of the merge mechanism (not phase-ordering-dependent), which remains true
+and load-bearing for the current single-phase design.
 """
 from src.core.updates import StrategicUpdate
 

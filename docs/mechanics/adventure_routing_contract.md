@@ -147,11 +147,24 @@ Computed in an if/elif chain — only the first matching branch applies per rout
 
 ## Lifecycle
 
-Adventure routing runs in the kernel's **Scheduling** stage. Specifically: `StrategicWorldIntegrationSystem` emits opportunities → `AdventureRouteGenerator.generate()` builds candidates → `AdventureRouteScorer.score()` scores each → service layer selects top candidate → `ObjectiveIntentResolver.resolve()` maps to `ActionIntent`.
+Adventure routing runs inside the kernel's **Scheduling** stage, as one tier-5 goal candidate
+among others. Specifically: `StrategicWorldIntegrationSystem` emits opportunities →
+`AdventureRouteGenerator.generate()` builds candidates → `AdventureRouteScorer.score()` scores
+each → service layer selects top candidate → `ObjectiveIntentResolver.resolve()` maps to
+`ActionIntent`.
 
-Today the entry point into this sequence is `AdventureDecisionPhase` (`src/domains/adventure/phase.py`), registered unconditionally in `src/engine/pipeline.py` and run every tick for every adventure-eligible entity — this remains the only *live/wired* adventure-decision mechanism.
-
-**Second entry point exists, not yet wired (TCK-20260811-ADVENTURE-GOAL-SCORER):** `AdventureGoalScorer` (`src/ai/goals/adventure_scorer.py`), registered under `GoalKind.ADVENTURE_ROUTE` in `GoalRegistry`, replicates the same opportunities → `generate()` → `decide()` sequence above for a single entity and folds the result into `GoalRegistry.get_all_scores()`'s tier-5 goal competition (see `04_strategic_cognition.md` §2). It is unit-tested in isolation but nothing in `src/engine/pipeline.py` yet calls `GoalRegistry.get_all_scores()` in a way that lets `ADVENTURE_ROUTE` win and materialize in a live run — do not read this contract as describing two active routing paths; `AdventureDecisionPhase` above is still the sole mechanism actually deciding adventure routes today. The tier-5 cutover is a separate, later, explicitly-gated ticket.
+**Sole live entry point (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE):** `AdventureGoalScorer.score(entity, state)`
+(`src/ai/goals/adventure_scorer.py`), registered unconditionally under `GoalKind.ADVENTURE_ROUTE`
+in `GoalRegistry`, invoked via `GoalRegistry.get_all_scores()` inside
+`StrategicIntelligenceSystem.evaluate_strategic_intent()` — which itself runs every tick through
+the always-on `strategic_intelligence` pipeline phase (`src/engine/pipeline.py`), subject only to
+per-entity `SystemCadence` throttling (see `04_strategic_cognition.md` §2). The formerly-separate
+`AdventureDecisionPhase` pipeline stage (`src/domains/adventure/phase.py`), which used to run its
+own duplicate route-generation/scoring pass every tick ahead of the tier-5 competition, has been
+deleted — `AdventureGoalScorer` was already winning tier-5 arbitration for every non-cadence-skipped
+entity before the deletion (later-merged, last-writer-wins semantics), so this cutover removed
+now-wasted duplicate compute rather than switching on a new live path for the first time. Do not
+read this contract as describing two active routing paths — only one exists today.
 
 ---
 

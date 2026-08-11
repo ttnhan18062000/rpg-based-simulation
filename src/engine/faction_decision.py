@@ -1,9 +1,19 @@
 """FactionDecisionPhase — read-only domain phase that emits transient FactionDirective structs.
 FactionAwarenessService — reads recent world events and produces FactionUpdate tension deltas.
 
-Runs inside AuthoritativeApplyPipeline.refine() before adventure_decision (E53Ac).
-Directives are NEVER persisted in AuthoritativeState — they are transient per-tick scratch
-consumed within the same refine() call by E53Ac (directive propagation).
+Runs inside AuthoritativeApplyPipeline.refine() as a direct call (not via run_phase()),
+immediately after the "blacksmith" phase and before "faction_awareness" (see pipeline.py's
+refine() phase sequence). Directives are NEVER persisted in AuthoritativeState — they are
+transient per-tick scratch.
+
+As of TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE, the sole live adventure-decision path is
+AdventureGoalScorer.score() (src/ai/goals/adventure_scorer.py), a tier-5 GoalScorer invoked
+per-entity from StrategicIntelligenceSystem — not a pipeline-level phase with access to this
+tick's computed faction_directives list. AdventureGoalScorer calls
+AdventureDecisionService.decide() with faction_directives=None unconditionally, so the
+directives this phase produces are not currently threaded into adventure-route scoring (see
+docs/mechanics/04_strategic_cognition.md §6.10 and docs/parity_ledger/strategic_cognition.yaml
+STRAT-252 for the disclosed simplification).
 """
 from __future__ import annotations
 

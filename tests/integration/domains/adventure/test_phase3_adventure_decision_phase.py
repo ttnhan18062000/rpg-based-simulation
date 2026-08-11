@@ -1,18 +1,26 @@
 """
 tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py
 
-Phase 3 — AdventureDecisionPhase integration tests.
+Phase 3 — adventure-routing integration tests.
 Verifies entity lifecycle filtering, strategic lock compliance, and transition.
+
+Migrated by TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE (plan.md Step 5 item 6): the deleted
+AdventureDecisionPhase.apply() calls are retargeted to
+StrategicIntelligenceSystem.evaluate_strategic_intent()/AdventureGoalScorer().score(), the
+tier-5 path that already wins arbitration live (see investigation.md's "Does deleting
+AdventureDecisionPhase actually make ADVENTURE_ROUTE live for the first time?" -- no).
 """
 
 import pytest
+from src.ai.goals import GoalRegistry
+from src.ai.goals.adventure_scorer import AdventureGoalScorer
 from src.core.builder import V2EntityBuilder
 from src.core.state import CombatComponent, BiologicalComponent, PersonalityComponent, AuthoritativeState
 from src.core.updates import StateUpdate
-from src.domains.adventure.phase import AdventureDecisionPhase
 from src.core.strategic import ProjectState, ProjectKind, GoalKind, ProjectStatus, ObjectiveState, ObjectiveKind, ObjectiveStatus, StrategicComponent
 from src.domains.adventure.schema import RouteFamily, AdventureRouteOption
 from src.domains.adventure.generator import AdventureRouteGenerator
+from src.systems.strategic_systems.intelligence import StrategicIntelligenceSystem
 
 
 def _state(entities) -> AuthoritativeState:
@@ -69,22 +77,19 @@ def test_filters_out_locked_projects():
         active_objective_id="o1",
         created_tick=1,
     )
-    b.replace_self_model(None) # simple default self model
-    
     # Set strategic projects
     entity = b.build()
     # Force projects mapping manually
     from src.engine.apply import replace
     new_strat = replace(entity.strategic, projects={"proj1": proj}, current_project_id="proj1", current_objective_id="o1")
     entity = replace(entity, strategic=new_strat)
-    
+
     state = _state([entity])
-    
-    # Run integration phase
-    update = AdventureDecisionPhase.apply(state)
-    
-    # Should skip hero because project is locked
-    assert not update.entity_updates
+
+    result = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
+
+    # Project remains locked -- no switch committed.
+    assert result.current_project_id_set is None
 
 
 def _build_hero_with_active_system_b_lock(current_score: float, current_resistance: float) -> AuthoritativeState:
@@ -127,10 +132,17 @@ def _build_hero_with_active_system_b_lock(current_score: float, current_resistan
 
 def test_apply_respects_active_system_b_lock(monkeypatch):
     """AC3: a hero with current_project_id pointing at an ACTIVE System-B project with an
-    unexpired lock, where AdventureDecisionPhase independently proposes a new route the same
-    tick whose real (post-Step-2) score does not clear the generalized bypass gate -- apply()
-    must NOT overwrite current_project_id while the System-B lock is active."""
+    unexpired lock, where AdventureGoalScorer independently proposes a new route the same
+    tick whose real (post-Step-2) score does not clear the generalized bypass gate -- the
+    switch must NOT overwrite current_project_id while the System-B lock is active.
+
+    The real AdventureGoalScorer().score() call (generator patched, service unmocked) is
+    isolated from unrelated real GoalKind scorers by feeding its single resulting GoalScore
+    into a patched GoalRegistry.get_all_scores -- evaluate_strategic_intent() otherwise scores
+    every registered GoalKind for this entity, which is real tier-5 competition this test does
+    not intend to exercise (only the ADVENTURE_ROUTE-vs-lock interaction)."""
     state = _build_hero_with_active_system_b_lock(current_score=50.0, current_resistance=0.3)
+    entity = state.entities[1]
 
     weak_route = AdventureRouteOption(
         family=RouteFamily.GATHER_RESOURCE,
@@ -144,22 +156,21 @@ def test_apply_respects_active_system_b_lock(monkeypatch):
         staticmethod(lambda entity, state=None, opportunities=(): (weak_route,)),
     )
 
-    update = AdventureDecisionPhase.apply(state)
+    real_score = AdventureGoalScorer().score(entity, state)
+    monkeypatch.setattr(GoalRegistry, "get_all_scores", lambda e, s: [real_score])
 
-    # The System-B project's current_project_id must be preserved: either no entity_update
-    # entry for this hero at all, or one whose strategic update does not overwrite
-    # current_project_id_set to the new route's project id.
-    if 1 in update.entity_updates:
-        strat = update.entity_updates[1].strategic
-        assert strat is None or not strat.current_project_id_set or strat.current_project_id_set == "proj_system_b"
+    result = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
+
+    # The System-B project's current_project_id must be preserved.
+    assert result.current_project_id_set in (None, "", "proj_system_b")
 
 
 def test_apply_switches_when_candidate_clears_bar(monkeypatch):
     """Inverse of test_apply_respects_active_system_b_lock: the new route's real (post-Step-2)
     score clears both the current project's normalized effective score and the urgency floor
-    (and the unchanged raw effective_current_score check) after normalization -- apply() must
-    still commit the switch, proving Step 7's rewiring doesn't over-correct into 'never switch
-    while any lock exists'.
+    (and the unchanged raw effective_current_score check) after normalization -- the switch
+    must still commit, proving Step 7's rewiring doesn't over-correct into 'never switch while
+    any lock exists'.
 
     current.score/resistance are kept low (rather than a realistic mid/high System-B score) so
     the function's unchanged final raw `candidate.score > effective_current_score` check also
@@ -168,6 +179,7 @@ def test_apply_switches_when_candidate_clears_bar(monkeypatch):
     score+margin is comparably small (see test_score_normalization.py's own note on this same
     structural point)."""
     state = _build_hero_with_active_system_b_lock(current_score=1.0, current_resistance=0.0)
+    entity = state.entities[1]
 
     strong_route = AdventureRouteOption(
         family=RouteFamily.GATHER_RESOURCE,
@@ -181,12 +193,12 @@ def test_apply_switches_when_candidate_clears_bar(monkeypatch):
         staticmethod(lambda entity, state=None, opportunities=(): (strong_route,)),
     )
 
-    update = AdventureDecisionPhase.apply(state)
+    real_score = AdventureGoalScorer().score(entity, state)
+    monkeypatch.setattr(GoalRegistry, "get_all_scores", lambda e, s: [real_score])
 
-    assert 1 in update.entity_updates
-    strat = update.entity_updates[1].strategic
-    assert strat is not None
-    assert strat.current_project_id_set not in (None, "", "proj_system_b")
+    result = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
+
+    assert result.current_project_id_set not in (None, "", "proj_system_b")
 
 
 def test_zero_regression_human_practical_humanoid_hero_archetype_native():
@@ -195,7 +207,15 @@ def test_zero_regression_human_practical_humanoid_hero_archetype_native():
     per ArchetypeEntityFactory.build_entity's real output shape, src/entities/archetype_factory.py
     :48-57) is included under the new cognition-profile eligibility check exactly as it was
     under the old role-only check -- both checks agree this entity is eligible, since
-    practical_humanoid.supports_adventure_routing=True and identity.role==HERO also holds."""
+    practical_humanoid.supports_adventure_routing=True and identity.role==HERO also holds.
+
+    Migrated (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE, Step 4's intentional divergence):
+    the deleted phase.py used to prove "entity was evaluated at all" via the last_defer_reason
+    property write, which is deliberately not ported to AdventureGoalScorer.score(). The
+    equivalent, still-real proof in the new path is score.metadata carrying a route_family --
+    only populated once _supports_adventure_routing has passed and AdventureDecisionService
+    .decide() has actually run; an ineligible entity's early-return never populates metadata
+    (see AdventureGoalScorer.score()'s ineligible branch)."""
     b = V2EntityBuilder(1)
     b.identity(
         role=0,  # EntityRole.HERO
@@ -210,14 +230,12 @@ def test_zero_regression_human_practical_humanoid_hero_archetype_native():
     entity = b.build()
     state = _state([entity])
 
-    update = AdventureDecisionPhase.apply(state)
-
     # No opportunities are wired in this minimal state, so the service defers with a reason
-    # rather than picking a route -- that deferral is itself the observable proof the entity
-    # was evaluated at all (excluded entities never reach the decision service and produce no
-    # entity_update whatsoever).
-    assert 1 in update.entity_updates
-    assert update.entity_updates[1].property_updates.get("last_defer_reason")
+    # rather than picking a route -- the resulting DEFER_WITH_REASON metadata is itself the
+    # observable proof the entity was evaluated at all (excluded entities never reach the
+    # decision service and never populate metadata).
+    score = AdventureGoalScorer().score(entity, state)
+    assert score.metadata.get("route_family") == RouteFamily.DEFER_WITH_REASON
 
 
 def test_zero_regression_human_practical_humanoid_hero_legacy_guard_shape():
@@ -228,7 +246,10 @@ def test_zero_regression_human_practical_humanoid_hero_legacy_guard_shape():
     (investigation.md Risk 1). This is the single highest-value zero-regression test: it fails
     loudly if the Tier-3 EntityRole.HERO -> 'hero' role default fallback is missing or wrong,
     since both of the only two real corpus worlds with ENABLE_ADVENTURE_ROUTING on today spawn
-    heroes through exactly this shape."""
+    heroes through exactly this shape.
+
+    Migrated (see test_zero_regression_human_practical_humanoid_hero_archetype_native's own
+    migration note for the last_defer_reason -> metadata rationale)."""
     b = V2EntityBuilder(1)
     b.identity(
         role=0,  # EntityRole.HERO
@@ -242,10 +263,8 @@ def test_zero_regression_human_practical_humanoid_hero_legacy_guard_shape():
     entity = b.build()
     state = _state([entity])
 
-    update = AdventureDecisionPhase.apply(state)
-
-    assert 1 in update.entity_updates
-    assert update.entity_updates[1].property_updates.get("last_defer_reason")
+    score = AdventureGoalScorer().score(entity, state)
+    assert score.metadata.get("route_family") == RouteFamily.DEFER_WITH_REASON
 
 
 def test_adventure_decision_does_not_discard_earlier_phase_updates():

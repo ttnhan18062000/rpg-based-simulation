@@ -27,7 +27,7 @@ Entities evaluate multiple "Concerns" and select the one with the highest calcul
 ## 2. Interruption Resistance
 To prevent "Goal Flickering" (rapidly switching between two similar goals), entities apply an **Interruption Margin**. For adventure-domain project routing specifically, this law only governs entities whose resolved `CognitionProfileDefinition.supports_adventure_routing` is `True` (`src/content/schema.py:100`) — see `docs/simulation/domains/adventure_contract.md` for the full eligibility gate. (System B's general goal-switching via `GoalRegistry` also uses `Switch_Allowed`/`Interruption_Margin`, independent of this eligibility gate.)
 
-**New tier-5 candidate, not yet live (TCK-20260811-ADVENTURE-GOAL-SCORER):** `AdventureGoalScorer` (`src/ai/goals/adventure_scorer.py`), registered under a new `GoalKind.ADVENTURE_ROUTE` member in `GoalRegistry`, now exists as a second, unit-tested entry point into adventure routing — one candidate among the other `GoalKind` scorers in tier 5's `GoalRegistry.get_all_scores()` competition, rather than a structurally separate earlier phase invisible to tiers 1-4. It wraps the same opportunities → `AdventureRouteGenerator.generate()` → `AdventureDecisionService.decide()` sequence, unchanged, that `AdventureDecisionPhase` already runs, and its materialization branch (`src/systems/strategic_systems/intelligence.py`) uses the candidate's raw route score, not its normalized `GoalScore.utility`, when constructing the resulting `ProjectState` via `RouteToProjectMapper`. As of this writing, `src/engine/pipeline.py` still registers only `AdventureDecisionPhase` (unmodified) and nothing calls `GoalRegistry.get_all_scores()` in a way that lets `ADVENTURE_ROUTE` actually win and materialize in a live run — `AdventureDecisionPhase`, described above, remains the sole active/wired adventure-decision mechanism. The tier-5 cutover (retiring `AdventureDecisionPhase`) is a separate, later, explicitly-gated ticket.
+**Sole live tier-5 candidate (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE):** `AdventureGoalScorer` (`src/ai/goals/adventure_scorer.py`), registered unconditionally under `GoalKind.ADVENTURE_ROUTE` in `GoalRegistry`, is the sole adventure-decision mechanism — one candidate among the other `GoalKind` scorers in tier 5's `GoalRegistry.get_all_scores()` competition, evaluated every tick `StrategicIntelligenceSystem.evaluate_strategic_intent()` reaches for an entity (subject only to per-entity `SystemCadence` throttling, the same as every other `GoalKind`). It wraps the same opportunities → `AdventureRouteGenerator.generate()` → `AdventureDecisionService.decide()` sequence, unchanged, and its materialization branch (`src/systems/strategic_systems/intelligence.py`) uses the candidate's raw route score, not its normalized `GoalScore.utility`, when constructing the resulting `ProjectState` via `RouteToProjectMapper`. The formerly-separate `AdventureDecisionPhase` pipeline phase — which ran its own duplicate route-generation/scoring pass every tick, silently superseded by this tier-5 path's later-merged, last-writer-wins result whenever both ran — has been deleted; its eligibility helpers (`_resolve_cognition_profile_id`/`_supports_adventure_routing`) relocated byte-identical into this same module.
 
 ```python
 # Switching Law
@@ -308,8 +308,16 @@ The escort target entity itself receives no adjustment (it cannot protect itself
 ### 6.10 Faction Directive Urgency Scoring (E53Ac)
 
 Applied in `AdventureRouteScorer.score()` block §2b when `faction_directives` is non-None.
-`FactionDecisionPhase.execute()` runs every tick before `AdventureDecisionPhase` in the pipeline,
-producing a `list[FactionDirective]` that is passed through to the scorer.
+`FactionDecisionPhase.execute()` runs every tick in the pipeline, producing a
+`list[FactionDirective]`, but as of `TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE` this list is
+**not** threaded into the live adventure-routing call path: `AdventureGoalScorer.score()`
+(`src/ai/goals/adventure_scorer.py`, the sole live adventure-decision mechanism) calls
+`AdventureDecisionService.decide()` with `faction_directives=None` unconditionally — there is no
+`state.faction_directives` attribute for a `GoalScorer.score(entity, state)` call site to read,
+unlike the deleted phase's own `apply()` signature, which received it as a pipeline-level
+argument. This section's scoring table below remains accurate for when `faction_directives` is
+supplied (e.g. via direct test calls to the scorer/service), but describes a condition that does
+not occur in a live tick today — a disclosed simplification, not implemented parity.
 
 | Entity role | Route family | Condition | Urgency delta |
 |---|---|---|---|

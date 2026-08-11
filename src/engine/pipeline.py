@@ -232,20 +232,6 @@ class AuthoritativeApplyPipeline:
         )
         costs["military_conflict"] = (time.perf_counter_ns() - t_start) / 1e6
 
-        # --- Enhanced RPG Phase 3: Adventure Routing ---
-        t_start = time.perf_counter_ns()
-        from src.domains.adventure.phase import AdventureDecisionPhase
-        update = run_phase(
-            "adventure_decision", update,
-            lambda u: u.merge(AdventureDecisionPhase.apply(
-                state,
-                faction_directives=faction_directives,
-                factions=state.factions,
-            )),
-            "ENABLE_ADVENTURE_ROUTING",
-        )
-        costs["adventure_decision"] = (time.perf_counter_ns() - t_start) / 1e6
-
         # --- Phase 3: Action & Movement Routing ---
         t_start = time.perf_counter_ns()
         update = run_phase("action_routing", update, lambda u: AuthoritativeApplyPipeline._route_action_intent(state, u))

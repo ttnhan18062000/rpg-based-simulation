@@ -3,8 +3,11 @@ from typing import Dict, Optional, Tuple
 
 from src.ai.goals.base import GoalScorer, GoalScore
 from src.core.state import EntityState, AuthoritativeState
+from src.core.enums import EntityRole
 from src.core.strategic import GoalKind
 from src.domains.adventure.schema import RouteFamily
+from src.engine.behavior_consumers import get_cognition_profile_definition, get_role_definition
+from src.observability.cognition.decision_trace_writer import get_active_writer as _get_active_writer
 
 # Per-process cache of cognition_profile_id -> supports_adventure_routing, shared across all
 # entities and ticks. phase.py's own _supports_adventure_routing(entity, cache) expects a
@@ -18,6 +21,56 @@ from src.domains.adventure.schema import RouteFamily
 _PROFILE_ELIGIBILITY_CACHE: Dict[str, bool] = {}
 
 
+def _resolve_cognition_profile_id(entity: EntityState) -> Optional[str]:
+    """
+    Resolve the cognition profile governing this entity's adventure eligibility.
+
+    Tier 1: explicit identity.properties["cognition_profile_id"] (archetype-native spawn path,
+    ArchetypeEntityFactory.build_entity, src/entities/archetype_factory.py:56-57) always wins.
+    Tier 2: identity.properties["role_id"] -> RoleDefinition.default_cognition_profile, mirroring
+    EntityArchetypeResolver._resolve_from_definition's own archetype-or-role-default pattern
+    (src/content/resolver.py:460-462).
+    Tier 3: entities spawned via the hero_adventurers world module (WorldEntitySpawner
+    ._spawn_legacy_guard, src/worldassembly/entity_spawner.py:101-141, fed by the no-archetype_id
+    else-branch of ProfileResolutionEngine.resolve(), src/worldassembly/resolver.py:1020-1032)
+    have BOTH cognition_profile_id and role_id absent/None in identity.properties -- confirmed by
+    direct read this session (ResolvedEntityProfile.role_id defaults to None, and the else-branch
+    never sets it). identity.role (the legacy EntityRole enum) is still reliably HERO for these
+    entities (RoleSemanticsService.get_legacy_entity_role), so fall back through the enum for
+    this one evidenced real-corpus gap only.
+    """
+    props = entity.identity.properties  # always a dict, never None: src/core/state.py:490
+    explicit = props.get("cognition_profile_id")
+    if explicit:
+        return explicit
+    role_id = props.get("role_id")
+    if role_id:
+        role_def = get_role_definition(role_id)
+        if role_def and role_def.default_cognition_profile:
+            return role_def.default_cognition_profile
+    if entity.identity.role == EntityRole.HERO:
+        role_def = get_role_definition("hero")
+        if role_def and role_def.default_cognition_profile:
+            return role_def.default_cognition_profile
+    return None
+
+
+def _supports_adventure_routing(entity: EntityState, cache: Dict[str, bool]) -> bool:
+    """Eligibility predicate: does entity's resolved cognition profile allow adventure routing?
+
+    `cache` is a per-apply()-call dict keyed by cognition_profile_id, so the catalog accessor is
+    invoked at most once per distinct profile id encountered in a tick, not once per hero
+    (see Step 5's call site and Step 9's caching test).
+    """
+    profile_id = _resolve_cognition_profile_id(entity)
+    if not profile_id:
+        return False
+    if profile_id not in cache:
+        profile_def = get_cognition_profile_definition(profile_id)
+        cache[profile_id] = bool(profile_def and profile_def.supports_adventure_routing)
+    return cache[profile_id]
+
+
 class AdventureGoalScorer(GoalScorer):
     """
     GoalScorer wrapper around AdventureDecisionService.decide() (src/domains/adventure/
@@ -28,25 +81,6 @@ class AdventureGoalScorer(GoalScorer):
     """
 
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
-        # Lazy import: src/systems/strategic_systems/intelligence.py:77 does a top-level
-        # `from src.ai.goals import GoalRegistry`, which (once this module is registered in
-        # src/ai/goals/__init__.py) means loading src.ai.goals can trigger loading
-        # intelligence.py as a nested side effect, and vice versa. A transitive import path
-        # back from phase.py DOES exist (corrected 2026-08-11 -- the earlier claim that no such
-        # path exists was factually wrong and has been struck): phase.py:20 does
-        # `from src.systems.strategic import StrategicIntelligenceSystem`; src/systems/
-        # strategic.py (confirmed read directly) is a one-line compatibility shim doing
-        # `from src.systems.strategic_systems.intelligence import StrategicIntelligenceSystem`;
-        # and intelligence.py:77 is the same `from src.ai.goals import GoalRegistry` line cited
-        # above. So phase.py -> src.systems.strategic -> src.systems.strategic_systems.
-        # intelligence -> src.ai.goals is a real, confirmed transitive path. The lazy-import
-        # pattern below is precisely what keeps that path safe -- deferring both this import and
-        # the constants import to call time (after all modules have finished loading) means
-        # neither one depends on which module happens to trigger the load chain first,
-        # regardless of how many hops the transitive path has. This import is deferred for the
-        # same reason as the constants import below, not because the path doesn't exist.
-        from src.domains.adventure.phase import _supports_adventure_routing
-
         if not _supports_adventure_routing(entity, _PROFILE_ELIGIBILITY_CACHE):
             return GoalScore(kind=GoalKind.ADVENTURE_ROUTE, utility=0.0, target_id=None)
 
@@ -68,19 +102,23 @@ class AdventureGoalScorer(GoalScorer):
         from src.world.providers.resources import ResourceOpportunityProvider
         from src.world.providers.services import ServiceOpportunityProvider
 
-        # Replicates phase.py:154-167's opportunities -> generate -> decide sequence exactly,
-        # for this single entity. All three calls are unchanged (confirmed by reading
-        # generator.py, service.py, phase.py directly). faction_directives is NOT threaded
-        # through here: unlike AdventureDecisionPhase.apply() (pipeline.py:238-244), which
-        # receives it as a pipeline-level artifact computed earlier in the same tick by
-        # FactionDecisionPhase.execute() (pipeline.py:181, confirmed read directly -- NOT an
-        # attribute of AuthoritativeState, so there is no `state.faction_directives` to read),
-        # there is no natural source for it at this GoalScorer.score(entity, state) call
-        # signature. decide()'s own faction_directives parameter already defaults to None
-        # (service.py:36), so passing None here is a disclosed simplification, not a silent
-        # gap: this scorer is unwired from pipeline.py in this ticket's scope (ticket Out of
-        # Scope), so no live behavior depends on this yet -- C3 (the wiring ticket) must decide
-        # whether/how to thread real faction directives once this path goes live.
+        # Replicates the deleted AdventureDecisionPhase.apply()'s opportunities -> generate ->
+        # decide sequence exactly, for this single entity (generator.py, service.py unchanged).
+        # This IS the live, sole adventure-decision path today (TCK-20260811-DELETE-ADVENTURE-
+        # DECISION-PHASE deleted AdventureDecisionPhase and cut over to this scorer). It is
+        # reached unconditionally, every tick, for every entity eligible per
+        # _supports_adventure_routing() above -- not gated behind ENABLE_ADVENTURE_ROUTING or
+        # any other flag (see docs/parity_ledger/strategic_cognition.yaml STRAT-252).
+        #
+        # faction_directives is NOT threaded through here: unlike the deleted phase's apply(),
+        # which received it as a pipeline-level artifact computed earlier in the same tick by
+        # FactionDecisionPhase.execute() (pipeline.py:181), there is no `state.faction_directives`
+        # attribute for this GoalScorer.score(entity, state) call signature to read.
+        # decide()'s own faction_directives parameter already defaults to None (service.py:36),
+        # so passing None here is a disclosed, intentional simplification -- live and current,
+        # not a placeholder awaiting a follow-up wiring ticket. See
+        # docs/mechanics/04_strategic_cognition.md §6.10 and docs/systems/faction_contract.md
+        # for the full disclosure of what this means for faction-directive urgency scoring.
         opportunities = (
             ResourceOpportunityProvider.get_opportunities(entity, state)
             + ServiceOpportunityProvider.get_opportunities(entity, state)
@@ -94,6 +132,18 @@ class AdventureGoalScorer(GoalScorer):
             faction_directives=None,
             factions=state.factions,
         )
+
+        # Risk #1 resolution (plan.md Step 3 decision, PORT): mirrors phase.py's own
+        # decision-trace-writer call (formerly phase.py:147-152), the only writer to
+        # decision_trace.jsonl anywhere in the codebase. Written unconditionally for every
+        # entity this scorer evaluates, before the DEFER_WITH_REASON/target resolution branches
+        # below -- matching AdventureDecisionPhase.apply()'s old per-hero loop, which recorded
+        # the trace before checking whether the result was DEFER_WITH_REASON.
+        _writer = _get_active_writer()
+        if _writer is not None:
+            scored_candidates = result.trace.get("scored_candidates", [])
+            if scored_candidates:
+                _writer.write_trace(entity.id, state.tick, scored_candidates)
 
         selected = result.selected
         if selected is None or selected.family == RouteFamily.DEFER_WITH_REASON:

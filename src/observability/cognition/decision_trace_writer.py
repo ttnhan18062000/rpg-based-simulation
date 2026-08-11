@@ -4,8 +4,11 @@ src/observability/cognition/decision_trace_writer.py
 Decision Trace Writer — Epic 2.2A.
 
 Writes per-entity scored adventure route traces to decision_trace.jsonl in
-LIGHT and above observability modes. Wired into AdventureDecisionPhase.apply()
-after scoring completes. Does NOT modify execute_brain() in any way.
+LIGHT and above observability modes. Wired into AdventureGoalScorer.score()
+(src/ai/goals/adventure_scorer.py) after AdventureDecisionService.decide()
+completes -- relocated here from the now-deleted AdventureDecisionPhase.apply()
+by TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE. Does NOT modify execute_brain()
+in any way.
 
 Module-level singleton pattern (parallel to ObservabilityConfig) allows
 injection from the Kernel without threading the writer through pipeline.refine().

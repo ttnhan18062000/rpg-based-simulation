@@ -14,7 +14,10 @@ tags: [decision-trace, observability, schema, adventure-routing, phase-2]
 ## Overview
 
 `decision_trace.jsonl` captures the scored adventure route breakdown for every
-eligible hero on every tick where `AdventureDecisionPhase` runs. It addresses
+eligible hero on every tick `AdventureGoalScorer.score()` evaluates (the tier-5
+`GoalRegistry` candidate, invoked via `StrategicIntelligenceSystem.evaluate_strategic_intent()`;
+TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE deleted the former dedicated `AdventureDecisionPhase`
+pipeline stage and ported this writer call into the scorer). It addresses
 D15 audit Gap 1: "No goal score comparison (WHY goal X was chosen)."
 
 The file is written in LIGHT mode and above (all modes except OFF). It is the
@@ -92,7 +95,9 @@ Defined in `src/domains/adventure/scoring.py:AdventureRouteScorer.score()`.
 ## Implementation Notes
 
 - **Writer:** `src/observability/cognition/decision_trace_writer.py:DecisionTraceWriter`
-- **Wired at:** `src/domains/adventure/phase.py:AdventureDecisionPhase.apply()`
+- **Wired at:** `src/ai/goals/adventure_scorer.py:AdventureGoalScorer.score()` (relocated from
+  `src/domains/adventure/phase.py:AdventureDecisionPhase.apply()` by
+  TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE)
 - **Lifecycle managed by:** `src/engine/kernel.py` (parallel to cognition recorder)
 - **execute_brain() is NOT touched** — route scoring is in the strategic pipeline phase,
   not the tactical cognition domain.

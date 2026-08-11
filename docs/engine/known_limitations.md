@@ -53,6 +53,18 @@ measure behaviour gated behind one of these flags must explicitly enable the fla
 `_build_kernel(enable_routing=True)` pattern in
 `tests/integration/scenarios/test_balance_regression.py` is the canonical example.
 
+**`ENABLE_ADVENTURE_ROUTING` no longer gates anything (as of
+`TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`):** the phase it used to gate,
+`adventure_decision` (`AdventureDecisionPhase`), was deleted from `src/engine/pipeline.py`'s
+`refine()`. Its replacement, `AdventureGoalScorer` (`src/ai/goals/adventure_scorer.py`), is a
+tier-5 `GoalScorer` that runs unconditionally as part of `StrategicIntelligenceSystem`'s
+per-entity scoring — it does not read `ENABLE_ADVENTURE_ROUTING` or any other feature flag (see
+`docs/parity_ledger/strategic_cognition.yaml` STRAT-252). The flag entry still exists in
+`FeatureFlagManager` and remains default-`OFF` for backward compatibility with existing scenario
+configs and tests that set it, but flipping it ON or OFF no longer changes any live behavior.
+The other 10 flags in this list are unaffected and still gate real pipeline phases via
+`run_phase(..., feature_flag=...)`.
+
 **Do not change the default to `ON` without first re-running `tools/balance_measure.py`** on
 the affected scenario (e.g. `urban_political`, seed 42, 100 ticks) to establish new baseline
 constants, and updating the corresponding constants in `test_balance_regression.py`.

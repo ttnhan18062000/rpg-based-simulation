@@ -2390,13 +2390,13 @@
   divergence_note: null
   support_boundary: null
 - id: INFRA-211
-  text: "Decision trace writer (LIGHT+ mode): AdventureDecisionPhase writes per-entity scored route breakdown to decision_trace.jsonl after each strategic decision, capturing all 8 score-term fields (urgency, benefit, personality_bias, confidence_bonus, risk_penalty, blocker_penalty, score, selected) plus runner_up_scores (ranks 2–3) and source_goal_score (winner). Routes are sorted descending by score before serialization. A per-entity goal-score cache (top-3) is maintained and exposed to EntityInspectionSnapshot via get_latest_goal_scores(). execute_brain() is not modified."
+  text: "Decision trace writer (LIGHT+ mode): AdventureGoalScorer.score() writes per-entity scored route breakdown to decision_trace.jsonl after each strategic decision, capturing all 8 score-term fields (urgency, benefit, personality_bias, confidence_bonus, risk_penalty, blocker_penalty, score, selected) plus runner_up_scores (ranks 2–3) and source_goal_score (winner). Routes are sorted descending by score before serialization. A per-entity goal-score cache (top-3) is maintained and exposed to EntityInspectionSnapshot via get_latest_goal_scores(). execute_brain() is not modified. (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE: the writer call was ported byte-equivalent from the deleted AdventureDecisionPhase.apply() into AdventureGoalScorer.score(), which is now the sole call site.)"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter.write_trace (bounded in-memory enqueue only, hot-path safety contract §3) + DecisionTraceWriter._write_entry_to_file (actual decision_trace.jsonl write, dispatched off-path by a private QueueDrainWorker) + DecisionTraceWriter.get_latest_goal_scores + src/domains/adventure/phase.py::AdventureDecisionPhase.apply + src/observability/live/entity_inspector.py::EntityInspectionSnapshot.goal_scores + src/observability/config.py::OBS_DECISION_TRACE"
+  v2_evidence: "src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter.write_trace (bounded in-memory enqueue only, hot-path safety contract §3) + DecisionTraceWriter._write_entry_to_file (actual decision_trace.jsonl write, dispatched off-path by a private QueueDrainWorker) + DecisionTraceWriter.get_latest_goal_scores + src/ai/goals/adventure_scorer.py::AdventureGoalScorer.score (writer call ported here by TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE; src/domains/adventure/phase.py::AdventureDecisionPhase no longer exists, file deleted) + src/observability/live/entity_inspector.py::EntityInspectionSnapshot.goal_scores + src/observability/config.py::OBS_DECISION_TRACE"
   proof_type: feature
-  test_path: tests/unit/observability/test_decision_trace.py::test_decision_trace_runner_up_scores_present
+  test_path: "tests/unit/observability/test_decision_trace.py::test_decision_trace_runner_up_scores_present; tests/unit/observability/test_decision_trace.py::test_adventure_goal_scorer_wires_writer"
   divergence_note: null
   support_boundary: null
 - id: INFRA-212
@@ -2976,6 +2976,22 @@
     negative_count=0, and no stasis_N/population_stasis tag appears in either 1000t report; the
     normalized-score dip (1.4207→1.0071) is pure effective_denom growth, not a decay-toward-stasis
     signal. See eval_matrix_results.md's "Long-Run Hot-Pillar Anchors" section, Hypothesis 1.
+    Addendum (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE): AdventureDecisionPhase and its
+    src/engine/pipeline.py run_phase(..., "ENABLE_ADVENTURE_ROUTING") registration have been
+    deleted; src/domains/adventure/phase.py no longer exists. The above ENABLE_ADVENTURE_ROUTING
+    flag-gating claim for route_selected/action_executed/route_family_first_use is UNVERIFIED
+    against the current codebase as of this ticket and needs re-confirmation against
+    docs/parity_ledger/strategic_cognition.yaml STRAT-252, which records that
+    AdventureGoalScorer.score() (the sole surviving adventure-decision path,
+    src/ai/goals/adventure_scorer.py) is reached unconditionally every tick via the always-on
+    strategic_intelligence pipeline phase, not gated by ENABLE_ADVENTURE_ROUTING or any other
+    flag -- and that this was already true (not newly introduced by this deletion ticket) per a
+    prior ticket in the same cutover series. Whether route_selected/action_executed/
+    route_family_first_use now also fire unconditionally (which would change the AGENCY=C
+    archetype-correctness claims above for dungeon_crawl/urban_political/sandbox_world) has not
+    been re-measured here -- this is a housekeeping correction of a dead-code citation, not a
+    recalibration; a follow-up ticket should re-run the AGENCY calibration sweep referenced above
+    against current HEAD before this support_boundary's grading claims are relied upon again.
 - id: INFRA-238
   text: "CombatScorer covers all contract §5 COMBAT rules: combat_active, combat_resolved,
     survival_tension, tactical_variety (per unique modifier), attrition, early_extinction
@@ -3750,6 +3766,13 @@
     hero_guild_routing (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY) also forces the flag ON via its
     own profile YAML; route_selected/action_executed fire as expected — AGENCY graded A at all 3
     measured seeds (42/123/456, 500t).
+    Addendum (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE): AdventureDecisionPhase
+    (src/domains/adventure/phase.py) has been deleted along with its pipeline.py
+    ENABLE_ADVENTURE_ROUTING-gated registration; the "requires AdventureDecisionPhase to run,
+    which is gated by ENABLE_ADVENTURE_ROUTING" claim above cites now-deleted code and is
+    unverified against the current codebase. See INFRA-237's matching addendum, above, and
+    docs/parity_ledger/strategic_cognition.yaml STRAT-252 for the surviving
+    AdventureGoalScorer-based path's actual (unconditional) reachability. Not re-measured here.
 - id: INFRA-251
   text: "calibrate_simq.py --window-size and --loop-threshold CLI flags override detection_params.yaml
     window_size/loop_threshold for the current run only. ScoringWeights is patched via model_copy()

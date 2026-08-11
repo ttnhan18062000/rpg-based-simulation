@@ -65,7 +65,7 @@ def _fake_decide_factory(raw_score, family=RouteFamily.GATHER_RESOURCE, target_n
 
 def _eligible(monkeypatch):
     monkeypatch.setattr(
-        "src.domains.adventure.phase._supports_adventure_routing",
+        "src.ai.goals.adventure_scorer._supports_adventure_routing",
         lambda entity, cache: True,
     )
 
@@ -139,7 +139,7 @@ def test_adventure_goal_scorer_ineligible_entity_returns_zero_utility_no_target(
                               "ineligible entity (early-return before expensive work).")
 
     monkeypatch.setattr(
-        "src.domains.adventure.phase._supports_adventure_routing",
+        "src.ai.goals.adventure_scorer._supports_adventure_routing",
         lambda entity, cache: False,
     )
     monkeypatch.setattr(AdventureDecisionService, "decide", _spy_decide)

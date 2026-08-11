@@ -306,33 +306,26 @@ def test_close_is_idempotent():
 
 
 # ---------------------------------------------------------------------------
-# Adventure phase integration test
+# Adventure scorer integration test
 # ---------------------------------------------------------------------------
 
-def test_adventure_decision_phase_wires_writer():
-    """AdventureDecisionPhase.apply() calls writer.write_trace for eligible heroes."""
-    from src.domains.adventure.phase import AdventureDecisionPhase
+def test_adventure_goal_scorer_wires_writer():
+    """AdventureGoalScorer.score() calls writer.write_trace for eligible entities
+    (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE, plan.md Step 3 port; migrated from the
+    deleted AdventureDecisionPhase.apply()'s own equivalent coverage)."""
+    from src.ai.goals.adventure_scorer import AdventureGoalScorer
+    from src.core.builder import V2EntityBuilder
+    from src.core.state import AuthoritativeState
+    from src.domains.adventure.generator import AdventureRouteGenerator
     from src.domains.adventure.schema import RouteFamily
+    from src.domains.adventure.service import AdventureDecisionService
+    from src.world.providers.resources import ResourceOpportunityProvider
+    from src.world.providers.services import ServiceOpportunityProvider
 
     mock_writer = MagicMock()
 
-    # Build a minimal state with one hero that has active lifecycle
-    hero = MagicMock()
-    hero.identity.role = EntityRole.HERO
-    # TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY: eligibility is now resolved from
-    # identity.properties["cognition_profile_id"], not identity.role alone -- a bare MagicMock's
-    # .properties.get(...) would return a truthy Mock, which fails the real catalog lookup and
-    # excludes the hero. Set a real dict with an eligible profile id explicitly.
-    hero.identity.properties = {"cognition_profile_id": "practical_humanoid"}
-    hero.combat.alive = True
-    hero.lifecycle.active = True
-    hero.strategic.current_project_id = None
-    hero.id = 42
-
-    state = MagicMock()
-    state.tick = 5
-    state.entities = {42: hero}
-    state.resource_nodes = {}
+    entity = V2EntityBuilder(42).kind("hero").location(0.0, 0.0).build()
+    state = AuthoritativeState(tick=5, seed=1, entities={42: entity}, town_center=(50.0, 50.0))
 
     # Patch AdventureRouteGenerator and AdventureDecisionService to return a scored result
     scored_route = _make_route(score=0.8)
@@ -346,10 +339,19 @@ def test_adventure_decision_phase_wires_writer():
     mock_result.proposed_objective = None
     mock_result.trace = {"scored_candidates": [scored_route]}
 
-    with patch("src.domains.adventure.phase.AdventureRouteGenerator.generate", return_value=[scored_route]), \
-         patch("src.domains.adventure.phase.AdventureDecisionService.decide", return_value=mock_result), \
-         patch("src.world.providers.resources.ResourceOpportunityProvider.get_opportunities", return_value=[]):
-        AdventureDecisionPhase.apply(state, trace_writer=mock_writer)
+    # AdventureRouteGenerator/AdventureDecisionService/opportunity providers are function-local
+    # imports inside AdventureGoalScorer.score() (Step 1's Anti-Drift Hazard -- the constants
+    # import stays lazy for a real circular-import reason), so there is no
+    # src.ai.goals.adventure_scorer-qualified module attribute to string-patch; patch the shared
+    # class objects at their own defining modules instead (same pattern
+    # test_adventure_route_materialization.py already uses via monkeypatch.setattr).
+    with patch("src.ai.goals.adventure_scorer._supports_adventure_routing", return_value=True), \
+         patch.object(AdventureRouteGenerator, "generate", return_value=[scored_route]), \
+         patch.object(AdventureDecisionService, "decide", return_value=mock_result), \
+         patch.object(ResourceOpportunityProvider, "get_opportunities", return_value=[]), \
+         patch.object(ServiceOpportunityProvider, "get_opportunities", return_value=[]), \
+         patch("src.ai.goals.adventure_scorer._get_active_writer", return_value=mock_writer):
+        AdventureGoalScorer().score(entity, state)
 
     mock_writer.write_trace.assert_called_once_with(42, 5, [scored_route])
 

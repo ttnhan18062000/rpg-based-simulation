@@ -430,11 +430,21 @@ class TestRouteFamilyFirstUse:
 
 class TestAntiDriftGuards:
     def test_defer_property_name_constant_matches_phase_and_extractor(self):
-        """Guard 1: "last_defer_reason" string must appear in both phase.py and event_extractor.py.
-        If either side renames it, event emission silently breaks."""
-        from src.domains.adventure import phase as phase_mod
-        source = inspect.getsource(phase_mod.AdventureDecisionPhase.apply)
-        assert "last_defer_reason" in source
+        """Guard 1 (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE, plan.md Step 4/Step 5 item 8):
+        the deleted AdventureDecisionPhase.apply() used to write "last_defer_reason" so
+        event_extractor.py could emit defer_with_reason. That wiring is a deliberate, disclosed,
+        NOT-ported divergence -- see docs/guidelines/intentional_divergences.md's
+        "Adventure-Route Defer-Reason Observability Gap" entry (2.41) for the full rationale
+        (the DEFER_WITH_REASON signal is discarded by the shared tier-5 utility-floor check
+        before it ever reaches a property-write site). This guard now asserts the current,
+        disclosed absence of that wiring in AdventureGoalScorer.score() honestly, rather than
+        silently deleting coverage for the gap -- if a future edit re-adds partial
+        "last_defer_reason" wiring here without also updating that divergence entry, this test
+        fails loudly and prompts the doc update.
+        """
+        from src.ai.goals.adventure_scorer import AdventureGoalScorer
+        source = inspect.getsource(AdventureGoalScorer.score)
+        assert "last_defer_reason" not in source
         extractor_source = inspect.getsource(EventExtractor.extract)
         assert "last_defer_reason" in extractor_source
 

@@ -34,6 +34,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Observability** | DecisionTraceWriter Async Drain — Crash-Loss & Overflow-Drop Windows | **Bounded** | RATIFIED |
 | **Engine / Combat-Progression** | Opportunity-Attack Kill Reward Orphaned on the Victim | **Bug Fix** | RATIFIED |
 | **Engine / Combat-Progression** | Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path | **Bug Fix** | RATIFIED |
+| **Engine / Cognition-Strategy** | Adventure-Route Defer-Reason Observability Gap | **Bounded** | RATIFIED |
 
 ---
 
@@ -989,6 +990,39 @@ This document is the canonical record of intentional behavior shifts in `src` co
   (present or not-yet-invented) had no path to legitimately interrupt a locked project regardless
   of how urgent it actually was.
 - **Verification**: `tests/unit/strategic/test_interruption_resistance.py::TestGenericInterruptionBypass::test_danger_bypass_blocked_when_effective_current_not_cleared`.
+- **Status**: ACTIVE
+
+---
+
+### 2.41 Adventure-Route Defer-Reason Observability Gap (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE)
+- **Subsystem**: Engine / Cognition-Strategy
+- **Old Behavior**: `AdventureDecisionPhase.apply()` wrote
+  `property_updates={"last_defer_reason": result.selected.reason or "unknown",
+  "last_defer_tick": tick}` on an entity's `EntityUpdate` whenever
+  `AdventureDecisionService.decide()` returned `RouteFamily.DEFER_WITH_REASON`
+  (`src/domains/adventure/phase.py:157-165`, pre-deletion). `event_extractor.py:620-626` read
+  this key to emit a `defer_with_reason` SimulationEvent (`event_category: "strategy"`), feeding
+  the AGENCY SimQ pillar.
+- **New Behavior**: `AdventureGoalScorer.score()` (`src/ai/goals/adventure_scorer.py`) carries the
+  same DEFER_WITH_REASON signal only as `GoalScore.metadata` (`route_family`, `raw_score`) — it
+  does not write `last_defer_reason`/`last_defer_tick` to any `EntityUpdate.property_updates`, and
+  the tier-5 arbitration path (`StrategicIntelligenceSystem.evaluate_strategic_intent()`) has no
+  site that threads this metadata into a committed `EntityUpdate` without a larger
+  `StrategicUpdate` schema change. `defer_with_reason` events no longer fire for adventure-routing
+  deferrals.
+- **Rationale**: **Bounded**. The DEFER_WITH_REASON signal is discarded by the shared tier-5
+  utility-floor check (`src/systems/strategic_systems/intelligence.py:1409`,
+  `if g_score.utility < 20.0: continue`) before any `StrategicUpdate`-returning site inside
+  `evaluate_strategic_intent()` is ever reached — `AdventureGoalScorer`'s DEFER_WITH_REASON branch
+  always scores `utility=0.0` by design (`adventure_scorer.py`'s DEFER_WITH_REASON early return).
+  Porting this signal for real therefore requires special-casing sub-floor scores inside the
+  shared tier-5 scoring loop itself (`intelligence.py:1394-1414`), a change that affects every
+  `GoalKind` scorer's ineligible/deferred case, not just adventure's — deliberately bounded out of
+  `TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`'s narrow relocate-and-delete scope. A future
+  ticket should design how sub-floor scorer signals surface (e.g., a
+  `StrategicUpdate.property_updates` field populated from inside the shared loop before the floor
+  filter runs, not merely threaded through the existing return sites) as its own reviewed change.
+- **Verification**: `tests/unit/observability/test_event_extractor_agency2.py::TestAntiDriftGuards::test_defer_property_name_constant_matches_phase_and_extractor`.
 - **Status**: ACTIVE
 
 ---

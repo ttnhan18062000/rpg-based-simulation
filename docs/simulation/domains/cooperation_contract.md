@@ -168,7 +168,7 @@ All primary mutations are emitted as typed intents — never applied directly in
 | **Emotion domain** | Fear level from the emotion domain adjusts the near-death trigger threshold. A frightened entity will detect near-death at a higher HP value than a calm entity. |
 | **Motivation domain** | `cooperation_bias` from entity doctrine modulates posture scoring. Doctrine-flagged cooperative entities weight COOPERATE higher than DEFER when a partner is available. |
 | **Social systems layer** | `ContractState` output is consumed by the social systems layer to register the active cooperation agreement and update bilateral trust over time. |
-| **Adventure domain** | `BlockerState` from DEFER_NO_PARTNER is read by the adventure domain on the next tick to inject a blocker penalty on FORM_PARTY routes, preventing repeated fruitless cooperation attempts. Cooperative commitments that produce project locks (`lock_until_tick`) are respected by AdventureDecisionPhase. |
+| **Adventure domain** | `BlockerState` from DEFER_NO_PARTNER is read by the adventure domain on the next tick to inject a blocker penalty on FORM_PARTY routes, preventing repeated fruitless cooperation attempts. Cooperative commitments that produce project locks (`lock_until_tick`) are respected by the shared `StrategicIntelligenceSystem.evaluate_project_switch()` locked-branch gate that every `GoalKind` candidate's commit routes through, including `AdventureGoalScorer`'s (formerly `AdventureDecisionPhase`, deleted by TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE). |
 | **Economic system** | `ResourceTransferIntent` from HIRE_SUPPORT is applied by the economic resolution system — gold is not deducted inside this domain. |
 
 ---

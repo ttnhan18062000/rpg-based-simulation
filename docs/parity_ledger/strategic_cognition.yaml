@@ -2722,8 +2722,7 @@
     src/systems/strategic_systems/intelligence.py — _threat_resolved() helper (relocated
     from src/domains/adventure/phase.py, TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION;
     originally TCK-20260627-P2A-SPAWN-LOCK-COND) and the widened lock-expiry condition
-    inside evaluate_project_switch()'s locked-branch gate. AdventureDecisionPhase's own
-    pre-filter at src/domains/adventure/phase.py:129 remains a separate, still-active gate.
+    inside evaluate_project_switch()'s locked-branch gate.
     Cap via min(N, tick+50): src/domains/adventure/mapper.py:102,
     src/systems/strategic_systems/intelligence.py:1380,1483 (line numbers re-verified this
     session — the ledger's prior L1266/L1340 citations had already drifted from unrelated
@@ -3275,19 +3274,19 @@
     per family (nearest inn else town_center for RECOVER, town_center for ASK_INFORMATION, nearest
     real ally else own position for FORM_PARTY).
 
-    This is NOT yet the live/wired decision path. `AdventureDecisionPhase`
-    (src/domains/adventure/phase.py, registered in src/engine/pipeline.py) is completely
-    unmodified and remains the sole active adventure-decision mechanism in a live simulation run.
-    Nothing in pipeline.py currently routes a live tick through `GoalRegistry`'s tier-5
-    competition in a way that lets `ADVENTURE_ROUTE` actually win and materialize during a real
-    run -- that wiring/cutover is separate, later-ticket scope
-    (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE, gated on this ticket plus
-    TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE landing first). Recorded here as a real, tested,
-    registered component -- not as a live behavior change -- since no entry previously documented
-    this mechanism, and STRAT-078/STRAT-247/STRAT-250 already establish that
-    `AdventureDecisionPhase` is the current live path for adventure routing. Addendum
-    (TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE): this prerequisite is now satisfied (see the new
-    shadow-parity entry, STRAT-253, below).
+    Addendum (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE): `AdventureGoalScorer` is now the
+    sole live adventure-decision mechanism. `AdventureDecisionPhase`
+    (formerly src/domains/adventure/phase.py) has been deleted, along with its
+    src/engine/pipeline.py registration; `_resolve_cognition_profile_id`/
+    `_supports_adventure_routing` relocated byte-identical into this same module
+    (src/ai/goals/adventure_scorer.py). `StrategicIntelligenceSystem.evaluate_strategic_intent()`
+    reaches `GoalRegistry.get_all_scores()` (and therefore `AdventureGoalScorer`) unconditionally
+    every tick via the always-on `strategic_intelligence` pipeline phase -- confirmed by direct
+    trace that this was already true (unconditional registration, later phase order,
+    last-writer-wins merge semantics) before this cutover; the deletion removed now-wasted
+    duplicate compute and closed 2 real observability gaps, it did not flip a switch for the
+    first time. Addendum (TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE): this prerequisite is
+    satisfied (see STRAT-253, below, now recording historical migration evidence).
   status: verified
   priority: P2
   legacy_evidence: null
@@ -3310,85 +3309,76 @@
     tests/unit/strategic/test_adventure_route_materialization.py::test_form_party_materialized_objective_is_tactically_resolvable_not_a_stall
   divergence_note: null
   support_boundary: >-
-    Real, registered, unit-tested code -- not a live behavior change. GoalRegistry.get_all_scores()
-    and the intelligence.py materialization branch are reachable only through test harnesses/direct
-    calls in this ticket's scope; no pipeline.py phase currently drives a live tick through this
-    path, so AdventureDecisionPhase's existing live behavior (and every entry that documents it,
-    e.g. STRAT-247/STRAT-250) is entirely unaffected. Cutover tracked separately
-    (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE).
+    Real, registered, unit-tested code. Addendum (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE):
+    GoalRegistry.get_all_scores() and the intelligence.py materialization branch are now reachable
+    through the live tier-5 pipeline path (StrategicIntelligenceSystem.evaluate_strategic_intent(),
+    driven every tick by the unconditional src/engine/pipeline.py:"strategic_intelligence" phase),
+    not only through test harnesses/direct calls. AdventureDecisionPhase has been deleted; entries
+    that documented it as the live mechanism (STRAT-247/STRAT-250) are stale on that specific point
+    and superseded by this cutover.
 - id: STRAT-253
   text: >-
-    TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE -- a shadow-mode parity test suite proves
-    `AdventureDecisionPhase.apply()` (the live path, src/domains/adventure/phase.py) and
-    `AdventureGoalScorer().score()`/materialization (the not-yet-wired path, STRAT-252) are
+    TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE -- a shadow-mode parity test suite proved
+    `AdventureDecisionPhase.apply()` (the then-live path, src/domains/adventure/phase.py) and
+    `AdventureGoalScorer().score()`/materialization (then the not-yet-wired path, STRAT-252) were
     read-only against `AuthoritativeState` (hash-before/hash-after via `CanonicalStateHasher`,
-    plus dataclass-equality on the acting entity, per call) and select the same winning
-    `RouteFamily`/`raw_score` (never `utility`) for representative scenario fixtures. Coverage is a
+    plus dataclass-equality on the acting entity, per call) and selected the same winning
+    `RouteFamily`/`raw_score` (never `utility`) for representative scenario fixtures. Coverage was a
     disclosed two-tier split, not uniform across all 15 `RouteToProjectMapper._MAP` families: 6 of
     15 (RECOVER, BUY_UPGRADE, CRAFT_UPGRADE, GATHER_RESOURCE, ASK_INFORMATION, FORM_PARTY) got real
     end-to-end shadow verification -- a genuine `AuthoritativeState` scenario driven through
     `AdventureRouteGenerator.generate()`'s actual reachable `kind_map`, then both decision paths,
     then diffed. The remaining 9 of 15 (TRAIN_SKILL, TAKE_EASY_QUEST, HUNT_WEAK_ENEMY,
     SELL_LOOT_FOR_GOLD, SCOUT_LOCATION, RETURN_TOWN, QUEST_OPPORTUNITY, PROTECT_TARGET,
-    OWN_SURVIVAL) got mapper-level-only parity verification: `RouteToProjectMapper.map_to_states()`
-    called twice with identical arguments and diffed, plus a `get_kinds()` schema check --  not a
-    full end-to-end shadow comparison, because `AdventureRouteGenerator.generate()`'s real
-    `kind_map` (a closed, hardcoded 6-entry dict) structurally cannot construct a candidate with
-    any of these 9 families from a real `AuthoritativeState` today; this is a pre-existing gap in
-    the adventure-routing feature itself, not a gap in this ticket's test-writing effort. This
-    entry does not claim all 15 families are fully shadow-tested end-to-end -- only 6 are; the
-    other 9 have mapper-level-only parity. A shared, itemized `_diff_routes()` helper (returning
-    separate `family_mismatches`/`raw_score_mismatches`/`utility_mismatches` lists, never a bare
-    pass/fail) backs every comparison in both tiers, so a normalization-miscalibration bug of the
-    same shape as the scale-mismatch defect STRAT-252 fixed would surface as a named itemized diff,
-    not a silent pass.
-  status: verified
+    OWN_SURVIVAL) got mapper-level-only parity verification. A shared, itemized `_diff_routes()`
+    helper (returning separate `family_mismatches`/`raw_score_mismatches`/`utility_mismatches`
+    lists, never a bare pass/fail) backed every comparison in both tiers.
+
+    Addendum (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE): `AdventureDecisionPhase` has been
+    deleted, so the two decision paths this suite diffed no longer co-exist -- `AdventureGoalScorer`
+    is now sole live (see STRAT-252). The shadow-parity suite's own premise (proving two coexisting
+    paths agree) therefore no longer applies; the 24-test file was retired in full. One
+    independently-valuable assertion survives, ported into
+    `tests/unit/strategic/test_adventure_route_materialization.py`: the raw_score-vs-utility
+    scale-mismatch report-shape guard
+    (`test_shadow_diff_report_separates_raw_score_from_utility_mismatches`), which does not need
+    two live paths to verify. This entry now documents historical migration evidence -- the
+    24/24-passing shadow-parity proof that ratified the cutover -- not live-passing coverage.
+  status: legacy_verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >-
-    tests/integration/domains/adventure/test_adventure_shadow_migration_parity.py -- 24 passing
-    tests. `_diff_routes()` (module-level helper) backs every family/raw_score comparison in the
-    file. AC1 (no mutation): `test_shadow_scenario_neither_path_mutates_state` hashes `state` via
+    Historical: tests/integration/domains/adventure/test_adventure_shadow_migration_parity.py (now
+    deleted) recorded 24/24 passing tests at the time of TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE's
+    cutover -- this ticket's own commit is the record of that result; the suite is not independently
+    re-run since its premise (two coexisting decision paths) no longer holds. AC1 (no mutation):
+    `test_shadow_scenario_neither_path_mutates_state` hashed `state` via
     `CanonicalStateHasher.get_hash()` before/after each of `AdventureDecisionPhase.apply()`,
-    `AdventureGoalScorer().score()`, and `RouteToProjectMapper.map_to_states()` individually, plus a
-    dataclass-equality check on the acting entity. AC2 tier 1 (6 real end-to-end families):
-    `test_shadow_parity_recover_family`, `test_shadow_parity_buy_upgrade_family`,
-    `test_shadow_parity_craft_upgrade_family`, `test_shadow_parity_gather_resource_family`,
-    `test_shadow_parity_ask_information_family`, `test_shadow_parity_form_party_family`. AC2 tier 2
-    (all 15 families, mapper-level): `test_shadow_parity_mapper_level_all_15_families`, parametrized
-    over all 15 `RouteToProjectMapper._MAP` keys. AC3 (diff report separates raw_score from utility
-    mismatches): `test_shadow_diff_report_separates_raw_score_from_utility_mismatches`. AC4
-    (DELETE-ADVENTURE-DECISION-PHASE gate already encoded): regression guard
-    `test_delete_adventure_decision_phase_ac1_already_encodes_the_gate`. No `src/` production code
-    was changed by this ticket; `AdventureDecisionPhase`/`AdventureDecisionService`/
-    `AdventureRouteGenerator`/`AdventureRouteScorer`/`RouteToProjectMapper`/`AdventureGoalScorer`
-    are all unmodified shadow-comparison targets.
+    `AdventureGoalScorer().score()`, and `RouteToProjectMapper.map_to_states()` individually. AC2
+    tier 1 (6 real end-to-end families) and tier 2 (all 15 families, mapper-level) both passed. AC3
+    (diff report separates raw_score from utility mismatches) is the one assertion that survives
+    live, ported to `tests/unit/strategic/test_adventure_route_materialization.py`
+    ::test_shadow_diff_report_separates_raw_score_from_utility_mismatches. AC4
+    (DELETE-ADVENTURE-DECISION-PHASE gate already encoded) was satisfied historically by
+    `test_delete_adventure_decision_phase_ac1_already_encodes_the_gate`, now moot since the gate has
+    fired.
   proof_type: differential
   test_path: >-
-    tests/integration/domains/adventure/test_adventure_shadow_migration_parity.py (24 tests total;
-    representative: test_shadow_scenario_neither_path_mutates_state,
-    test_shadow_parity_recover_family, test_shadow_parity_buy_upgrade_family,
-    test_shadow_parity_craft_upgrade_family, test_shadow_parity_gather_resource_family,
-    test_shadow_parity_ask_information_family, test_shadow_parity_form_party_family,
-    test_shadow_parity_mapper_level_all_15_families[parametrized over all 15 RouteFamily members],
-    test_shadow_diff_report_separates_raw_score_from_utility_mismatches,
-    test_delete_adventure_decision_phase_ac1_already_encodes_the_gate)
+    tests/unit/strategic/test_adventure_route_materialization.py::test_shadow_diff_report_separates_raw_score_from_utility_mismatches
   divergence_note: >-
-    Not a divergence from the Mechanics Bible or a legacy behavior change -- this entry documents a
-    parity proof between two co-existing, currently-non-live-switched decision paths
-    (`AdventureDecisionPhase` is still the sole live path; see STRAT-252). Recorded as `verified`
-    (not `divergent`) because both paths agree on route-family/raw_score wherever they can both
-    reach a comparison; the only asymmetry is the 6-vs-9 reachability split documented above, which
-    is a pre-existing generator limitation, not a behavioral disagreement between the two paths.
-    This test does not compare `target_pos`/tactical-resolvability between paths (a separate,
-    already-live gap noted in this ticket's investigation.md, out of scope here).
+    Not a divergence from the Mechanics Bible or a legacy behavior change. Historically (pre-
+    TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE) this entry documented a parity proof between two
+    co-existing, currently-non-live-switched decision paths. The two paths no longer co-exist --
+    `AdventureDecisionPhase` has been deleted and `AdventureGoalScorer` is now the sole live
+    adventure-decision mechanism (see STRAT-252). Recorded as `legacy_verified` (not `divergent`)
+    because both paths agreed on route-family/raw_score wherever they could both reach a comparison
+    at the time of the cutover; the only asymmetry was the 6-vs-9 reachability split documented
+    above, a pre-existing generator limitation, not a behavioral disagreement between the two paths.
   support_boundary: >-
-    Priority is P1, not P0: TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE's own AC1 hard-gates
-    `AdventureDecisionPhase` removal on this ticket being in `tickets/done/`, but nothing in the
-    live simulation depends on this shadow-parity proof today -- `AdventureDecisionPhase` remains
-    the sole active adventure-decision mechanism in a live tick (STRAT-252), and
-    `AdventureGoalScorer` is reachable only through test harnesses/direct calls. Does not close
-    STRAT-185 (P0, "Strategic project retention is bounded by interruption resistance",
-    `test_path: null`) -- that claim is about `evaluate_project_switch()`'s retention-margin/
-    lock-bypass logic, not cross-path route-family/raw_score parity, and belongs to a different
-    sibling ticket's subject matter; STRAT-185 is deliberately left untouched by this entry.
+    Priority is P1. Addendum (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE): `AdventureGoalScorer`
+    is now reachable through the live tier-5 pipeline path (not only test harnesses/direct calls) --
+    see STRAT-252's own addendum. Does not close STRAT-185 (P0, "Strategic project retention is
+    bounded by interruption resistance", `test_path: null`) -- that claim is about
+    `evaluate_project_switch()`'s retention-margin/lock-bypass logic, not cross-path
+    route-family/raw_score parity, and belongs to a different sibling ticket's subject matter;
+    STRAT-185 is deliberately left untouched by this entry.
