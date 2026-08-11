@@ -130,6 +130,10 @@ class GoalKind(str, Enum):
     RECOVER = "recover"
     RESOLVE_BLOCKER = "resolve_blocker"
     GUILD = "guild"
+    ADVENTURE_ROUTE = "z_adventure_route"  # deliberately sorts after all 10 existing GoalKind
+    # values (Risk #5): starts with 'z', so it never wins an exact-utility tie against any other
+    # GoalKind under intelligence.py:1369's `sort(key=lambda x: (-x.utility, x.kind))` — see
+    # plan.md "Unresolved Questions Now Resolved" for the full worked rationale.
 
 
 class ProjectKind(str, Enum):

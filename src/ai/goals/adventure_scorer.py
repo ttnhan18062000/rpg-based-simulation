@@ -1,0 +1,230 @@
+from __future__ import annotations
+from typing import Dict, Optional, Tuple
+
+from src.ai.goals.base import GoalScorer, GoalScore
+from src.core.state import EntityState, AuthoritativeState
+from src.core.strategic import GoalKind
+from src.domains.adventure.schema import RouteFamily
+
+# Per-process cache of cognition_profile_id -> supports_adventure_routing, shared across all
+# entities and ticks. phase.py's own _supports_adventure_routing(entity, cache) expects a
+# cache dict shared across one AdventureDecisionPhase.apply() call (phase.py:83-96, confirmed
+# read directly: "cache is a per-apply()-call dict keyed by cognition_profile_id"). This scorer
+# is invoked once per entity per tick via GoalRegistry.get_all_scores(entity, state)
+# (base.py:46-50) -- there is no natural per-tick shared cache object at this call site
+# (investigation.md Risk #3). Cognition profile definitions are static content for the run's
+# duration, so a module-level dict persisting across ticks is a safe substitute, not a
+# correctness risk.
+_PROFILE_ELIGIBILITY_CACHE: Dict[str, bool] = {}
+
+
+class AdventureGoalScorer(GoalScorer):
+    """
+    GoalScorer wrapper around AdventureDecisionService.decide() (src/domains/adventure/
+    service.py), registered under GoalKind.ADVENTURE_ROUTE as one candidate among many in tier 5
+    of StrategicIntelligenceSystem.evaluate_strategic_intent()
+    (src/systems/strategic_systems/intelligence.py:1355). See
+    docs/architecture/2026-08-11-adventure-as-cognition-strategy-subcomponent-design.md.
+    """
+
+    def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
+        # Lazy import: src/systems/strategic_systems/intelligence.py:77 does a top-level
+        # `from src.ai.goals import GoalRegistry`, which (once this module is registered in
+        # src/ai/goals/__init__.py) means loading src.ai.goals can trigger loading
+        # intelligence.py as a nested side effect, and vice versa. A transitive import path
+        # back from phase.py DOES exist (corrected 2026-08-11 -- the earlier claim that no such
+        # path exists was factually wrong and has been struck): phase.py:20 does
+        # `from src.systems.strategic import StrategicIntelligenceSystem`; src/systems/
+        # strategic.py (confirmed read directly) is a one-line compatibility shim doing
+        # `from src.systems.strategic_systems.intelligence import StrategicIntelligenceSystem`;
+        # and intelligence.py:77 is the same `from src.ai.goals import GoalRegistry` line cited
+        # above. So phase.py -> src.systems.strategic -> src.systems.strategic_systems.
+        # intelligence -> src.ai.goals is a real, confirmed transitive path. The lazy-import
+        # pattern below is precisely what keeps that path safe -- deferring both this import and
+        # the constants import to call time (after all modules have finished loading) means
+        # neither one depends on which module happens to trigger the load chain first,
+        # regardless of how many hops the transitive path has. This import is deferred for the
+        # same reason as the constants import below, not because the path doesn't exist.
+        from src.domains.adventure.phase import _supports_adventure_routing
+
+        if not _supports_adventure_routing(entity, _PROFILE_ELIGIBILITY_CACHE):
+            return GoalScore(kind=GoalKind.ADVENTURE_ROUTE, utility=0.0, target_id=None)
+
+        # MUST be a lazy (function-local) import, not top-level: intelligence.py's own
+        # top-level `from src.ai.goals import GoalRegistry` (intelligence.py:77) means a
+        # top-level import here of intelligence.py's constants would depend on which module
+        # happens to be imported first process-wide -- a fragile, easy-to-silently-break
+        # ordering dependency. Deferring to call time (after all modules have finished
+        # loading at import time) removes the fragility entirely. Matches this codebase's own
+        # established convention: every scorer in src/ai/goals/scorers.py already does
+        # function-local imports for cross-module concerns (e.g. SpatialQueryService imported
+        # inside RecoverScorer.score(), scorers.py:181).
+        from src.systems.strategic_systems.intelligence import (
+            _ADVENTURE_ROUTE_SCORE_MAX,
+            _GOAL_UTILITY_SCORE_MAX,
+        )
+        from src.domains.adventure.generator import AdventureRouteGenerator
+        from src.domains.adventure.service import AdventureDecisionService
+        from src.world.providers.resources import ResourceOpportunityProvider
+        from src.world.providers.services import ServiceOpportunityProvider
+
+        # Replicates phase.py:154-167's opportunities -> generate -> decide sequence exactly,
+        # for this single entity. All three calls are unchanged (confirmed by reading
+        # generator.py, service.py, phase.py directly). faction_directives is NOT threaded
+        # through here: unlike AdventureDecisionPhase.apply() (pipeline.py:238-244), which
+        # receives it as a pipeline-level artifact computed earlier in the same tick by
+        # FactionDecisionPhase.execute() (pipeline.py:181, confirmed read directly -- NOT an
+        # attribute of AuthoritativeState, so there is no `state.faction_directives` to read),
+        # there is no natural source for it at this GoalScorer.score(entity, state) call
+        # signature. decide()'s own faction_directives parameter already defaults to None
+        # (service.py:36), so passing None here is a disclosed simplification, not a silent
+        # gap: this scorer is unwired from pipeline.py in this ticket's scope (ticket Out of
+        # Scope), so no live behavior depends on this yet -- C3 (the wiring ticket) must decide
+        # whether/how to thread real faction directives once this path goes live.
+        opportunities = (
+            ResourceOpportunityProvider.get_opportunities(entity, state)
+            + ServiceOpportunityProvider.get_opportunities(entity, state)
+        )
+        candidates = AdventureRouteGenerator.generate(entity, state, opportunities=opportunities)
+        result = AdventureDecisionService.decide(
+            entity,
+            candidates,
+            tick=state.tick,
+            resource_nodes=state.resource_nodes,
+            faction_directives=None,
+            factions=state.factions,
+        )
+
+        selected = result.selected
+        if selected is None or selected.family == RouteFamily.DEFER_WITH_REASON:
+            # AC5: ineligible/DEFER_WITH_REASON never clear the 20.0 tier-5 floor.
+            return GoalScore(
+                kind=GoalKind.ADVENTURE_ROUTE,
+                utility=0.0,
+                target_id=None,
+                metadata={
+                    "route_family": RouteFamily.DEFER_WITH_REASON,
+                    "raw_score": selected.score if selected else 0.0,
+                },
+            )
+
+        raw_score = selected.score
+        family = selected.family
+
+        # Risk #1 resolution (plan.md decision, REVISED 2026-08-11 after an
+        # architecture-reviewer pass -- fix belongs here, in the scorer's own target_id/
+        # target_pos construction, NOT in the shared floor gate at intelligence.py:1373, per
+        # investigation.md's Anti-Drift Hazards). RECOVER (forced, generator.py:98-109),
+        # ASK_INFORMATION (forced, generator.py:111-123), and FORM_PARTY (always,
+        # generator.py:125-163) never populate target_node_id/source_opportunity_ids
+        # (confirmed by reading generator.py directly). decide() then leaves target=None
+        # (service.py:134-140) and target_pos is never set at all, for any route
+        # (service.py:135, confirmed unconditional). Left as-is, these three families would
+        # always fail intelligence.py:1373's target-presence check regardless of utility.
+        #
+        # Synthesizing target_id ALONE is not sufficient (this was the plan's original,
+        # reviewer-rejected version): it clears the target-presence check but leaves
+        # target_pos=None, which RouteToProjectMapper.map_to_states() (mapper.py:88-95) commits
+        # verbatim into ObjectiveState.target_position, and
+        # TacticalDecisionSystem._resolve_target_position() (tactical.py:702-753) can never
+        # recover from int()/ast.literal_eval() parsing since target_id is neither -- its only
+        # remaining fallback IS target_position (tactical.py:751-752), which is also None. The
+        # committed project then wins tier-5 arbitration and locks the slot, but tactical.py's
+        # `if target_pos:` guard (tactical.py:221, and again at 275 for the non-REACH_LOCATION
+        # branch) is False every tick, so the entity never even starts navigating -- it stalls
+        # forever. This is the exact "wins but stalls" defect the reviewer traced end-to-end.
+        #
+        # Fix: pair the placeholder target_id with a REAL target_pos, sourced the same way the
+        # codebase's own working precedent already does it -- TownScorer pairs
+        # target_id="town_center" with target_pos=state.town_center (scorers.py:98);
+        # RecoverScorer pairs a real building id (or "town_center") with
+        # target_pos=best_bldg.position or state.town_center (scorers.py:181-186). With a real
+        # target_pos, _resolve_target_position()'s node-3 fallback (tactical.py:751-752)
+        # resolves it into real navigation -- node_id/building_id stay None, which is the SAME
+        # documented, accepted limitation tactical_contract.md §7 already describes for
+        # TownScorer's own "town_center" winners (arrival dispatches to a bare idle EntityUpdate,
+        # not INTERACT/EAT/REST) -- not a new gap, an existing accepted one these 3 families now
+        # share with TownScorer. This makes the candidate genuinely tactically actionable
+        # (navigates, then reaches the same accepted idle-arrival state TownScorer winners already
+        # reach) instead of a permanent dead lock.
+        if selected.target_node_id is not None:
+            target_id = str(selected.target_node_id)
+            target_pos = None
+        elif selected.source_opportunity_ids:
+            target_id = selected.source_opportunity_ids[0]
+            target_pos = None
+        else:
+            target_id = f"adventure:{family.value}"
+            target_pos = AdventureGoalScorer._resolve_placeholder_target_pos(family, entity, state)
+
+        utility = (raw_score / _ADVENTURE_ROUTE_SCORE_MAX) * _GOAL_UTILITY_SCORE_MAX
+
+        return GoalScore(
+            kind=GoalKind.ADVENTURE_ROUTE,
+            utility=utility,
+            target_id=target_id,
+            target_pos=target_pos,
+            metadata={"route_family": family, "raw_score": raw_score},
+        )
+
+    @staticmethod
+    def _resolve_placeholder_target_pos(
+        family: RouteFamily, entity: EntityState, state: AuthoritativeState
+    ) -> Optional[Tuple[float, float]]:
+        """
+        Real target_pos source for the 3 route families that never carry a
+        target_node_id/source_opportunity_ids (see the Risk #1 comment block in score() above).
+        Mirrors the SAME real data sources RecoverScorer/TownScorer already use
+        (src/ai/goals/scorers.py:98,163,186, confirmed read directly) -- deliberately not a
+        synthetic placeholder position, per the architecture-reviewer's explicit instruction to
+        "read RecoverScorer/TownScorer directly to see what real position data they pull from
+        entity/state, and use the same kind of real, available field."
+        """
+        from src.domains.adventure.schema import RouteFamily as _RF
+
+        if family == _RF.RECOVER:
+            # Same source as RecoverScorer's own no-target_node_id path (scorers.py:181-186):
+            # nearest inn if one exists, else town_center. "Recovering" plausibly means going to
+            # a place of rest, not staying in place -- mirrors the existing scorer exactly rather
+            # than inventing a new convention.
+            from src.engine.spatial_query import SpatialQueryService
+            best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
+            return best_bldg.position if best_bldg else state.town_center
+
+        if family == _RF.ASK_INFORMATION:
+            # Same source as TownScorer's target_pos (scorers.py:98): information-gathering is a
+            # town-centered activity in this codebase's existing convention (no dedicated
+            # "information source" building exists in the real content corpus -- confirmed by
+            # GuildNeedScorer's own docstring, scorers.py:233, noting no world ever declares a
+            # dedicated "guild" building either, and using town_hall/town_center instead).
+            return state.town_center
+
+        if family == _RF.FORM_PARTY:
+            # Real ally position, mirroring generator.py's OWN FORM_PARTY candidate-eligibility
+            # filter exactly (generator.py:126-137, confirmed read directly: non-self,
+            # non-MONSTER role, alive). generator.py only generates a FORM_PARTY route when this
+            # candidate list is non-empty (generator.py:138 `if candidates:`), and score() reads
+            # the same `state` snapshot generate() just ran against synchronously within the same
+            # call -- so a non-empty candidate list is expected here too. Nearest by Manhattan
+            # distance, matching this codebase's existing nearest-selection convention (e.g.
+            # CombatEngageScorer's `min(hostiles, key=...)`, scorers.py:113-117). Defensive
+            # fallback to the entity's own current position (organizing/waiting in place) if,
+            # against expectation, no candidate remains -- never re-raises or returns None, since
+            # a None here would silently reproduce the exact "stalls forever" defect being fixed.
+            from src.core.enums import EntityRole
+            candidates = [
+                e for e in state.entities.values()
+                if e.id != entity.id
+                and getattr(e.identity, "role", EntityRole.MONSTER) != EntityRole.MONSTER
+                and getattr(e, "is_alive", True)
+            ]
+            if candidates:
+                nearest = min(
+                    candidates,
+                    key=lambda e: abs(e.navigation.position[0] - entity.navigation.position[0])
+                    + abs(e.navigation.position[1] - entity.navigation.position[1]),
+                )
+                return nearest.navigation.position
+            return entity.navigation.position
+
+        return None

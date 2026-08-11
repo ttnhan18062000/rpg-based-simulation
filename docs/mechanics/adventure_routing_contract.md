@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-08-11
 tags: [adventure-routing, strategic-cognition, scoring, route-family, opportunity]
 related_chapter: 04_strategic_cognition.md
 ---
@@ -148,6 +148,10 @@ Computed in an if/elif chain — only the first matching branch applies per rout
 ## Lifecycle
 
 Adventure routing runs in the kernel's **Scheduling** stage. Specifically: `StrategicWorldIntegrationSystem` emits opportunities → `AdventureRouteGenerator.generate()` builds candidates → `AdventureRouteScorer.score()` scores each → service layer selects top candidate → `ObjectiveIntentResolver.resolve()` maps to `ActionIntent`.
+
+Today the entry point into this sequence is `AdventureDecisionPhase` (`src/domains/adventure/phase.py`), registered unconditionally in `src/engine/pipeline.py` and run every tick for every adventure-eligible entity — this remains the only *live/wired* adventure-decision mechanism.
+
+**Second entry point exists, not yet wired (TCK-20260811-ADVENTURE-GOAL-SCORER):** `AdventureGoalScorer` (`src/ai/goals/adventure_scorer.py`), registered under `GoalKind.ADVENTURE_ROUTE` in `GoalRegistry`, replicates the same opportunities → `generate()` → `decide()` sequence above for a single entity and folds the result into `GoalRegistry.get_all_scores()`'s tier-5 goal competition (see `04_strategic_cognition.md` §2). It is unit-tested in isolation but nothing in `src/engine/pipeline.py` yet calls `GoalRegistry.get_all_scores()` in a way that lets `ADVENTURE_ROUTE` win and materialize in a live run — do not read this contract as describing two active routing paths; `AdventureDecisionPhase` above is still the sole mechanism actually deciding adventure routes today. The tier-5 cutover is a separate, later, explicitly-gated ticket.
 
 ---
 

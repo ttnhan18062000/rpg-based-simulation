@@ -64,7 +64,7 @@ from src.engine.policy import GovernorPolicy
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
-    CognitionProfile, ProjectKind
+    CognitionProfile, ProjectKind, GoalKind
 )
 from src.strategy.cognition_capacity import CapacityService
 from src.core.inventory import InventoryService
@@ -76,6 +76,7 @@ from src.systems.world_systems.intake import ConcernIntakeSystem
 from src.engine.domain_logic import SimulationDomainLogic
 from src.ai.goals import GoalRegistry
 from src.ai.score_modifiers import ScoreModifierSystem
+from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
 from src.systems.strategic_systems.detour import DetourSuggestionSystem
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
@@ -1398,25 +1399,54 @@ class StrategicIntelligenceSystem:
                          leads_remove=memory_upd.leads_remove
                     )
             
-            cand_kind_str = getattr(best_candidate.kind, "value", best_candidate.kind)
-            obj = ObjectiveState(
-                id=f"{cand_kind_str}_{best_candidate.target_id}",
-                kind="reach_location",
-                target=best_candidate.target_id,
-                target_position=best_candidate.target_pos,
-                status=ObjectiveStatus.ACTIVE
-            )
-            candidate_proj = ProjectState(
-                id=f"proj_{cand_kind_str}_{current_tick}",
-                kind=best_candidate.kind,
-                status=ProjectStatus.ACTIVE,
-                objectives=[obj],
-                active_objective_id=obj.id,
-                lock_until_tick=min(current_tick + 10, current_tick + 50),  # cap at 50 ticks
-                created_tick=current_tick,
-                score=best_candidate.utility
-            )
-            
+            if best_candidate.kind == GoalKind.ADVENTURE_ROUTE:
+                # AC3/AC4: materialize via RouteToProjectMapper using the RAW route score
+                # (metadata["raw_score"]), never best_candidate.utility. _score_scale_max()
+                # (intelligence.py:89-107) classifies a RouteToProjectMapper-mapped
+                # ProjectState.kind (a real ProjectKind) onto the 2.9-ceiling scale, not the
+                # 100-ceiling scale `utility` was normalized onto (Step 2's normalization is
+                # ONLY for tier-5 competition, not for the committed ProjectState.score).
+                # Passing `utility` here would reproduce the
+                # TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG defect class --
+                # see design doc Sec 4's worked-through scale-mismatch arithmetic.
+                candidate_proj, obj = RouteToProjectMapper.map_to_states(
+                    family=best_candidate.metadata.get("route_family"),
+                    entity_id=entity.id,
+                    target=best_candidate.target_id,
+                    target_pos=best_candidate.target_pos,
+                    tick=current_tick,
+                    score=best_candidate.metadata.get("raw_score", 0.0),
+                )
+                if candidate_proj is None or obj is None:
+                    # Preserves RouteToProjectMapper's existing (None, None) contract
+                    # (mapper.py:81-82, confirmed: DEFER_WITH_REASON -> get_kinds() returns
+                    # (None, None) -> map_to_states() returns (None, None)). Should not
+                    # normally be reached here since DEFER_WITH_REASON never clears the tier-5
+                    # floor (AC5, Step 2's early return), but this is a defensive no-op, not an
+                    # assumption that the mapper always returns non-None.
+                    if boredom_upd:
+                        return StrategicUpdate(boredom_delta=boredom_upd)
+                    return StrategicUpdate()
+            else:
+                cand_kind_str = getattr(best_candidate.kind, "value", best_candidate.kind)
+                obj = ObjectiveState(
+                    id=f"{cand_kind_str}_{best_candidate.target_id}",
+                    kind="reach_location",
+                    target=best_candidate.target_id,
+                    target_position=best_candidate.target_pos,
+                    status=ObjectiveStatus.ACTIVE
+                )
+                candidate_proj = ProjectState(
+                    id=f"proj_{cand_kind_str}_{current_tick}",
+                    kind=best_candidate.kind,
+                    status=ProjectStatus.ACTIVE,
+                    objectives=[obj],
+                    active_objective_id=obj.id,
+                    lock_until_tick=min(current_tick + 10, current_tick + 50),  # cap at 50 ticks
+                    created_tick=current_tick,
+                    score=best_candidate.utility
+                )
+
             at_capacity = len(strat.projects) >= strat.profile.max_active_projects
             if at_capacity and not existing:
                 if boredom_upd:

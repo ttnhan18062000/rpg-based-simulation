@@ -27,6 +27,8 @@ Entities evaluate multiple "Concerns" and select the one with the highest calcul
 ## 2. Interruption Resistance
 To prevent "Goal Flickering" (rapidly switching between two similar goals), entities apply an **Interruption Margin**. For adventure-domain project routing specifically, this law only governs entities whose resolved `CognitionProfileDefinition.supports_adventure_routing` is `True` (`src/content/schema.py:100`) — see `docs/simulation/domains/adventure_contract.md` for the full eligibility gate. (System B's general goal-switching via `GoalRegistry` also uses `Switch_Allowed`/`Interruption_Margin`, independent of this eligibility gate.)
 
+**New tier-5 candidate, not yet live (TCK-20260811-ADVENTURE-GOAL-SCORER):** `AdventureGoalScorer` (`src/ai/goals/adventure_scorer.py`), registered under a new `GoalKind.ADVENTURE_ROUTE` member in `GoalRegistry`, now exists as a second, unit-tested entry point into adventure routing — one candidate among the other `GoalKind` scorers in tier 5's `GoalRegistry.get_all_scores()` competition, rather than a structurally separate earlier phase invisible to tiers 1-4. It wraps the same opportunities → `AdventureRouteGenerator.generate()` → `AdventureDecisionService.decide()` sequence, unchanged, that `AdventureDecisionPhase` already runs, and its materialization branch (`src/systems/strategic_systems/intelligence.py`) uses the candidate's raw route score, not its normalized `GoalScore.utility`, when constructing the resulting `ProjectState` via `RouteToProjectMapper`. As of this writing, `src/engine/pipeline.py` still registers only `AdventureDecisionPhase` (unmodified) and nothing calls `GoalRegistry.get_all_scores()` in a way that lets `ADVENTURE_ROUTE` actually win and materialize in a live run — `AdventureDecisionPhase`, described above, remains the sole active/wired adventure-decision mechanism. The tier-5 cutover (retiring `AdventureDecisionPhase`) is a separate, later, explicitly-gated ticket.
+
 ```python
 # Switching Law
 Switch_Allowed = New_Goal_Score > (Current_Goal_Score + Interruption_Margin)
@@ -257,6 +259,16 @@ Traits are compared by verb prefix only (first token before `:`). Token format: 
 This `~2.9` "Total non-blocked" ceiling is also the normalization anchor
 (`_ADVENTURE_ROUTE_SCORE_MAX = 2.9`, `src/systems/strategic_systems/intelligence.py:29-31`) that
 System A candidate scores are divided by when evaluated against §2's Generalized Bypass gate.
+
+The same constant has a second consumer as of TCK-20260811-ADVENTURE-GOAL-SCORER: `AdventureGoalScorer`
+(§2, "New tier-5 candidate") normalizes a raw route score onto the `GoalScore.utility` 0-100 scale via
+`utility = (raw_score / _ADVENTURE_ROUTE_SCORE_MAX) * _GOAL_UTILITY_SCORE_MAX` for tier-5 goal
+competition — a different purpose than the Generalized Bypass gate above, but the same anchor value.
+Both readings must stay consistent if `_ADVENTURE_ROUTE_SCORE_MAX` is ever recalibrated. This
+normalized `utility` is used only for tier-5 arbitration; the materialization branch that commits a
+winning `ADVENTURE_ROUTE` candidate to a real `ProjectState` uses the raw route score instead, since
+the resulting `ProjectState.kind` is a `ProjectKind` classified back onto this same 2.9-ceiling scale,
+not the 100.0 one.
 
 ---
 

@@ -3229,3 +3229,66 @@
     is structurally unreachable -- no real entity-generation path ever assigns a non-default
     ActionStyle); and bravery has zero race/archetype correlation (pure per-entity RNG) -- both
     real, evaluated, and deferred as separate scope, not fixed here.
+
+- id: STRAT-252
+  text: >-
+    TCK-20260811-ADVENTURE-GOAL-SCORER -- a new `AdventureGoalScorer` (implementing the existing
+    `GoalScorer` protocol) exists, is registered under a new `GoalKind.ADVENTURE_ROUTE =
+    "z_adventure_route"` (src/core/strategic.py, deliberately sorted after all 10 pre-existing
+    GoalKind members), and is a real, unit-tested tier-5 candidate returned by
+    `GoalRegistry.get_all_scores()`. It wraps the existing, unchanged adventure-routing pipeline
+    (opportunities -> `AdventureRouteGenerator.generate()` -> `AdventureDecisionService.decide()`)
+    rather than reimplementing route selection. `StrategicIntelligenceSystem`'s tier-5
+    winner-construction site (src/systems/strategic_systems/intelligence.py, ~line 1402) gained a
+    matching materialization branch for an `ADVENTURE_ROUTE` win: it calls
+    `RouteToProjectMapper.map_to_states(score=metadata["raw_score"], ...)`, deliberately never
+    `best_candidate.utility`, since `utility` is normalized onto a 100-ceiling scale for tier-5
+    competition only while `ProjectState.score` expects the mapper's own ~2.9-ceiling scale --
+    passing `utility` would reproduce the scale-mismatch defect class fixed in
+    TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG. Architecture review also found
+    and fixed a real stall risk: 3 route families (forced RECOVER, forced ASK_INFORMATION,
+    FORM_PARTY) previously produced no real target/position from the pipeline, which would let
+    them win arbitration and then stall with no tactical progress -- fixed via a new
+    `AdventureGoalScorer._resolve_placeholder_target_pos()` sourcing a real, resolvable position
+    per family (nearest inn else town_center for RECOVER, town_center for ASK_INFORMATION, nearest
+    real ally else own position for FORM_PARTY).
+
+    This is NOT yet the live/wired decision path. `AdventureDecisionPhase`
+    (src/domains/adventure/phase.py, registered in src/engine/pipeline.py) is completely
+    unmodified and remains the sole active adventure-decision mechanism in a live simulation run.
+    Nothing in pipeline.py currently routes a live tick through `GoalRegistry`'s tier-5
+    competition in a way that lets `ADVENTURE_ROUTE` actually win and materialize during a real
+    run -- that wiring/cutover is separate, later-ticket scope
+    (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE, gated on this ticket plus
+    TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE landing first). Recorded here as a real, tested,
+    registered component -- not as a live behavior change -- since no entry previously documented
+    this mechanism, and STRAT-078/STRAT-247/STRAT-250 already establish that
+    `AdventureDecisionPhase` is the current live path for adventure routing.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/ai/goals/adventure_scorer.py -- AdventureGoalScorer (score(), _resolve_placeholder_target_pos());
+    src/core/strategic.py:133 -- GoalKind.ADVENTURE_ROUTE = "z_adventure_route";
+    src/ai/goals/__init__.py:21 -- GoalRegistry.register(GoalKind.ADVENTURE_ROUTE, AdventureGoalScorer());
+    src/systems/strategic_systems/intelligence.py:1402-1429 -- tier-5 winner-construction
+    ADVENTURE_ROUTE branch calling RouteToProjectMapper.map_to_states(score=metadata["raw_score"]).
+    Unit-verified end-to-end via direct TacticalDecisionSystem._resolve_target_position() calls in
+    tests/unit/strategic/test_adventure_route_materialization.py, confirming the 3 previously-stalling
+    route families now resolve to a real navigable position.
+  proof_type: contract
+  test_path: >-
+    tests/unit/ai/goals/test_adventure_goal_scorer.py::test_adventure_goal_scorer_implements_goal_scorer_protocol,
+    tests/unit/ai/goals/test_adventure_goal_scorer.py::test_form_party_winner_has_non_null_target_id_and_resolvable_target_pos,
+    tests/unit/ai/goals/test_adventure_goal_scorer.py::test_forced_recover_winner_target_pos_resolves_to_inn_or_town_center,
+    tests/unit/ai/goals/test_adventure_goal_scorer.py::test_forced_ask_information_winner_target_pos_resolves_to_town_center,
+    tests/unit/strategic/test_adventure_route_materialization.py::test_adventure_route_winner_materializes_with_raw_score_not_utility,
+    tests/unit/strategic/test_adventure_route_materialization.py::test_form_party_materialized_objective_is_tactically_resolvable_not_a_stall
+  divergence_note: null
+  support_boundary: >-
+    Real, registered, unit-tested code -- not a live behavior change. GoalRegistry.get_all_scores()
+    and the intelligence.py materialization branch are reachable only through test harnesses/direct
+    calls in this ticket's scope; no pipeline.py phase currently drives a live tick through this
+    path, so AdventureDecisionPhase's existing live behavior (and every entry that documents it,
+    e.g. STRAT-247/STRAT-250) is entirely unaffected. Cutover tracked separately
+    (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE).
