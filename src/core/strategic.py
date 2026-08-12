@@ -138,6 +138,13 @@ class GoalKind(str, Enum):
     # sorts before "z_adventure_route" so an accepted social obligation wins an exact-utility tie
     # against routine adventuring; does not collide with any ProjectKind value or existing
     # GoalKind value (verified against strategic.py:121-152 directly).
+    REGION_STABILIZATION = "region_stabilization"  # Design Decision #3: does not collide with any
+    # existing GoalKind or ProjectKind value (in particular, deliberately NOT "stabilize" -- see
+    # Design Decision #4's resume/dedup non-collision rationale). Sorts after "recover" (loses an
+    # exact-utility tie to personal recovery) but before "resolve_blocker"/"social"/
+    # "social_contract"/"town_return"/"z_adventure_route" (wins ties against a routine social
+    # contract or adventuring) under intelligence.py:1408's
+    # `sort(key=lambda x: (-x.utility, x.kind))` tie-break.
 
 
 class ProjectKind(str, Enum):
@@ -154,6 +161,10 @@ class ProjectKind(str, Enum):
     INFORMATION = "information"
     INFORMATION_SEEKING = "information_seeking"
     TRAVEL = "travel"
+    STABILIZE = "stabilize"  # Design Decision #2: matches the raw string interpret_regional_danger()
+    # already used, mirrors DirectiveKind.STABILIZE's existing naming (strategic.py:89) -- a
+    # different, unrelated enum class, no cross-validation, confirmed harmless (ProjectState.kind is
+    # never assigned a DirectiveKind value anywhere in this codebase).
 
 
 class ConcernKind(str, Enum):

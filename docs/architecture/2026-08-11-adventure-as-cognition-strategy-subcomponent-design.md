@@ -3,7 +3,7 @@ status: active
 layer: strategy
 authority: P1
 audience: developer
-last_verified: 2026-08-11
+last_verified: 2026-08-12
 ---
 
 # Adventure as a Strategic-Cognition Sub-Component — Wrapper Design
@@ -376,8 +376,12 @@ during this session's own architecture review:
   `docs/parity_ledger/strategic_cognition.yaml` (`STRAT-254`) for the landed citations.
 - `src/systems/world_systems/events.py:98` (`stabilize_project`) → a
   `RegionStabilizationGoalScorer`. Regional-crisis urgency becomes a real, comparable score instead
-  of an automatic override. **Status: still open** — no ticket has landed this one yet (tracked as
-  `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`).
+  of an automatic override.
+  **Status: done, see `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`** — `RegionStabilizationGoalScorer`
+  (`src/ai/goals/region_stabilization_scorer.py`) landed under `GoalKind.REGION_STABILIZATION`, and
+  `EventInterpreter.interpret_regional_danger()` was simplified to concern-generation only, no longer
+  writing `ProjectState`/`current_project_id_set` directly. See the "Post-landing note" below and
+  `docs/parity_ledger/strategic_cognition.yaml` (`STRAT-255`) for the landed citations.
 
 Both were real, not hypothetical — the exact same "direct overwrite, no arbiter" defect class fixed
 for adventure this session, present at design time. Fixing them this way closes the safety gap and
@@ -394,6 +398,22 @@ extends the pattern in the same piece of work, not two separate ones.
 > `accept_contract()` — so this is a real, disclosed production behavior change, not merely a
 > landed-but-inert wrapper. `contracts.py:187` is accordingly moved out of the `BYPASS` subgraph
 > below; `events.py:98` remains, still unguarded.
+
+> **Post-landing note (2026-08-11/12, `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`):** the
+> `events.py:98` item above has since landed too — same wrapper principle,
+> `RegionStabilizationGoalScorer` reads `state.regions` via `LegalityServiceV2.get_region_for_position()`
+> and a newly-extracted shared helper, `EventInterpreter.compute_danger_urgency()`, and competes
+> through the existing `evaluate_project_switch()` arbiter rather than overwriting
+> `current_project_id` directly. This is a real, disclosed production behavior change — and, if
+> anything, a stronger one than `contracts.py:187`'s: unlike `SocialContractGoalScorer` (which wraps
+> an already-live decision path reachable via `execute_recruit()`), `interpret_regional_danger()`
+> itself has no production caller before or after this migration, so registering the scorer makes
+> LEG-RPG-116 (regional-danger-driven stabilization) live-reachable in production for the first time
+> ever — cadence-gated (`SystemCadence.strategic_intelligence`, default every 10 ticks) and
+> work-queue-budgeted (`StrategicWorkQueue.build()`), the same throttling every other tier-5 scorer
+> already operates under, not "unconditional every tick." `events.py:98` is accordingly moved out of
+> the `BYPASS` subgraph below; only `tactical.py:194` and `guild_visit.py:88` (both clear-only
+> writers) remain.
 
 **Deepening adventure's own reasoning** (internal richness, not a structural change — orthogonal to
 the wrapper migration itself):
@@ -490,20 +510,21 @@ graph TD
     GSC["SocialContractGoalScorer (NEW, landed)"]
     GSC -.->|"tier 5: get_all_scores()\n(TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER)"| SIS
 
+    GRS["RegionStabilizationGoalScorer (NEW, landed)"]
+    GRS -.->|"tier 5: get_all_scores()\n(TCK-20260811-REGION-STABILIZATION-GOAL-SCORER)"| SIS
+
     subgraph BYPASS["Still-unguarded bypass writers (real, unfixed — Future Extension target)"]
-        EVT["world_systems/events.py:98 (stabilize_project)"]
         TAC["engine/tactical.py:194 (clear only)"]
         GV["pipeline_phases/guild_visit.py:88 (clear only)"]
     end
-    EVT -.->|"unconditional overwrite\n(no arbiter call)"| RES
     TAC -.->|clears field| RES
     GV -.->|clears field| RES
 
     classDef removed fill:#333,stroke:#900,color:#fff,stroke-dasharray: 5 5
     classDef newnode fill:#1a4,stroke:#0a2,color:#fff
     classDef bypass fill:#444,stroke:#900,color:#fff,stroke-dasharray: 3 3
-    class GAD,GSC newnode
-    class EVT,TAC,GV bypass
+    class GAD,GSC,GRS newnode
+    class TAC,GV bypass
 ```
 
 *`AdventureDecisionPhase` itself is not shown — it's deleted by this design (§5). Dashed arrows into
@@ -511,13 +532,15 @@ the shared resource mark paths that skip the arbiter; solid marks the one enforc
 `social_systems/contracts.py:187` (`CON` in earlier revisions of this diagram) has been removed from
 the `BYPASS` subgraph and is now shown as `GSC`/`SocialContractGoalScorer`, routed through the same
 arbiter as `AdventureGoalScorer` (`TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER`, see the Future
-Extension Patterns "Post-landing note" above). The `BYPASS` subgraph now shows three sites, not the
-original four — `events.py:98` (discussed in prose above, still open) plus `tactical.py:194` and
-`guild_visit.py:88`, confirmed real but only ever *clear* the field
-(`current_project_id_set=""`), never steal it from an active project, a meaningfully lower-risk
-pattern than an unconditional overwrite. Included in the diagram for completeness; not discussed as
-Future Extension candidates since "clearing" doesn't need the same competitive-arbitration fix
-"stealing" does.*
+Extension Patterns "Post-landing note" above). `world_systems/events.py:98` (`EVT` in earlier
+revisions of this diagram) has since also been removed from the `BYPASS` subgraph and is now shown
+as `GRS`/`RegionStabilizationGoalScorer`, routed through the same arbiter
+(`TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`, see the second "Post-landing note" above). The
+`BYPASS` subgraph now shows only the two remaining sites — `tactical.py:194` and `guild_visit.py:88`
+— confirmed real but only ever *clear* the field (`current_project_id_set=""`), never steal it from
+an active project, a meaningfully lower-risk pattern than an unconditional overwrite. Included in the
+diagram for completeness; not discussed as Future Extension candidates since "clearing" doesn't need
+the same competitive-arbitration fix "stealing" does.*
 
 ### Decision tree with real data — one tick for an adventure-eligible hero
 

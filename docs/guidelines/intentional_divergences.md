@@ -35,6 +35,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Combat-Progression** | Opportunity-Attack Kill Reward Orphaned on the Victim | **Bug Fix** | RATIFIED |
 | **Engine / Combat-Progression** | Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path | **Bug Fix** | RATIFIED |
 | **Engine / Cognition-Strategy** | Adventure-Route Defer-Reason Observability Gap | **Bounded** | RATIFIED |
+| **Strategic Cognition / Regional Danger** | Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot | **Enforced** | RATIFIED |
 
 ---
 
@@ -1055,6 +1056,56 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Verification**: `tests/unit/strategic/test_social_contract_materialization.py::test_high_lock_current_project_retains_against_low_urgency_contract`,
   `tests/unit/strategic/test_social_contract_materialization.py::test_high_urgency_contract_interrupts_locked_current_project`,
   `tests/unit/social/test_contract_lifecycle.py::test_accept_contract_no_longer_sets_current_project_id_directly`.
+- **Status**: ACTIVE
+
+---
+
+### 2.43 Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot (TCK-20260811-REGION-STABILIZATION-GOAL-SCORER)
+- **Subsystem**: Strategic Cognition / Regional Danger
+- **Old Behavior**: `EventInterpreter.interpret_regional_danger()` (`src/systems/world_systems/events.py`)
+  computed `should_pivot = urgency > profile.interruption_resistance` and, if true, built a
+  `ProjectState`/`ObjectiveState` inline (`kind="stabilize"`, a bare string with no matching
+  `ProjectKind` member) and wrote `current_project_id_set` directly — an entity always pivoted to
+  regional-danger stabilization the instant urgency exceeded its own interruption resistance,
+  unconditionally overwriting whatever project was active regardless of that project's own score or
+  lock state. This was a confirmed arbiter-bypass site (same defect class as the adventure,
+  interruption-bypass, and social-contract sites closed in §2.40/§2.41/§2.42).
+- **New Behavior**: `interpret_regional_danger()` now only generates a `danger`-kind `ConcernState`
+  — it no longer builds project/objective state or writes `current_project_id_set`. A new
+  `RegionStabilizationGoalScorer` (`src/ai/goals/region_stabilization_scorer.py`), registered under
+  a new `GoalKind.REGION_STABILIZATION` (`src/core/strategic.py`), resolves the entity's current
+  region and produces a tier-5 candidate via the shared `EventInterpreter.compute_danger_urgency()`
+  helper (`raw_score = urgency * 2.9`). `StrategicIntelligenceSystem`'s tier-5 winner-construction
+  site (`src/systems/strategic_systems/intelligence.py:1505-1539`) materializes a
+  `REGION_STABILIZATION` win into a real `ProjectState(kind=ProjectKind.STABILIZE, ...)` (a new,
+  real enum member replacing the old bare string) through the same `evaluate_project_switch()`
+  arbiter every other candidate competes through — regional danger can now legitimately lose to a
+  higher-locked existing project. `profile.interruption_resistance` still governs pivoting, but only
+  through the single, unified `retention_margin` mechanism (§2) every other tier-5 candidate already
+  goes through; the old direct `should_pivot` urgency-vs-resistance formula is not preserved
+  anywhere post-migration. This is the disclosed, explicit point of the change, not a regression: it
+  closes the confirmed arbiter-bypass site (see parity ledger `STRAT-255`,
+  `docs/parity_ledger/strategic_cognition.yaml`).
+- **Separately (not a divergence, a first-time-live disclosure)**: unlike the adventure-route and
+  social-contract wrapper migrations (§2.41/§2.42), which wrapped already-live decision paths,
+  `interpret_regional_danger()` itself has zero production callers, before or after this migration —
+  it exists only for its own concern-generation unit tests. `RegionStabilizationGoalScorer` instead
+  re-implements the hazard-threshold/urgency decision to read `state.regions` directly via the
+  shared `compute_danger_urgency()` helper, which means **registering this scorer makes
+  LEG-RPG-116 (regional-danger-driven stabilization) live-reachable in production for the first time
+  ever** — cadence-gated (`SystemCadence.strategic_intelligence`) and work-queue-budgeted
+  (`StrategicWorkQueue.build()`), the same throttling every other tier-5 scorer already operates
+  under, not "unconditional every tick." See `docs/mechanics/04_strategic_cognition.md` §2a and
+  `STRAT-255`'s `support_boundary` field for the full disclosure.
+- **Rationale**: **Enforced**. Generalizes the same GoalScorer-wrapper pattern already applied to
+  adventure routing (§2.35/§2.41), the interruption-bypass gate (§2.40), and social-contract
+  acceptance (§2.42) to the remaining confirmed regional-danger arbiter-bypass site — regional
+  danger's urgency now has to actually clear the same score/retention bar as every other strategic
+  candidate rather than winning by construction.
+- **Verification**: `tests/unit/strategic/test_region_stabilization_materialization.py::test_high_lock_current_project_retains_against_low_urgency_regional_danger`,
+  `tests/unit/strategic/test_region_stabilization_materialization.py::test_high_urgency_regional_danger_interrupts_locked_current_project`,
+  `tests/unit/strategic/test_event_interpretation.py::TestStrategicPivotOnDanger::test_project_pivot_when_urgency_exceeds_resistance`,
+  `tests/unit/strategic/test_event_interpretation.py::TestStrategicPivotOnDanger::test_no_pivot_when_resistance_high`.
 - **Status**: ACTIVE
 
 ---

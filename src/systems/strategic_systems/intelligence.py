@@ -1502,6 +1502,41 @@ class StrategicIntelligenceSystem:
                     # TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG defect class.
                     score=best_candidate.metadata.get("raw_score", 0.0),
                 )
+            elif best_candidate.kind == GoalKind.REGION_STABILIZATION:
+                # AC2/AC3/AC5/AC6: materialize a regional-danger win into a real
+                # ProjectKind-typed project, using proj_kind/obj_kind already resolved by
+                # RegionStabilizationGoalScorer via EventInterpreter.compute_danger_urgency()
+                # and carried in metadata -- intelligence.py needs no new import of
+                # ObjectiveKind/EventInterpreter to build this branch (all resolved upstream in
+                # the scorer, see plan.md New Finding #11).
+                region_id = best_candidate.metadata.get("region_id")
+                proj_kind = best_candidate.metadata.get("proj_kind")
+                obj_kind = best_candidate.metadata.get("obj_kind")
+                obj = ObjectiveState(
+                    id=f"obj_stabilize_{region_id}_t{current_tick}",
+                    kind=obj_kind,
+                    target=best_candidate.target_id,
+                    target_position=best_candidate.target_pos,
+                    status=ObjectiveStatus.ACTIVE,
+                )
+                candidate_proj = ProjectState(
+                    id=f"project_stabilize_{region_id}_t{current_tick}",
+                    kind=proj_kind,
+                    status=ProjectStatus.ACTIVE,
+                    objectives=[obj],
+                    active_objective_id=obj.id,
+                    # New Finding #10: the ORIGINAL bypass set no lock_until_tick at all (it
+                    # never went through evaluate_project_switch()) -- no bespoke value to
+                    # preserve, so this uses the SAME generic-branch default every other
+                    # no-bespoke-lock GoalKind already gets, not a new invented value.
+                    lock_until_tick=min(current_tick + 10, current_tick + 50),
+                    created_tick=current_tick,
+                    # NEVER best_candidate.utility -- see New Finding #7's full scale-mismatch
+                    # analysis. utility is normalized onto the 100-ceiling scale for tier-5
+                    # competition only; ProjectState.score is read back through
+                    # _score_scale_max()'s 2.9-ceiling scale once kind is a real ProjectKind.
+                    score=best_candidate.metadata.get("raw_score", 0.0),
+                )
             else:
                 cand_kind_str = getattr(best_candidate.kind, "value", best_candidate.kind)
                 obj = ObjectiveState(

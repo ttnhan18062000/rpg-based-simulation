@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-11
+last_verified: 2026-08-12
 ---
 
 # Chapter 4: Strategic Cognition
@@ -40,6 +40,46 @@ Interruption_Margin = Profile_Resistance * resistance_multiplier
 *   **resistance_multiplier**: A profile-defined constant (not a hard-coded 30.0); value varies by entity profile.
 *   **Generalized Bypass**: While a project's lock is active, only a `detour`-kind candidate is exempt from the added normalized floor/percentage gate below — it is not exempt from the base retention-priority comparison above (`candidate_project.score > effective_current_score` still applies to it unconditionally, like every candidate). Every other candidate kind, from either scoring system (System A/`AdventureRouteScorer`, declared ceiling `~2.9`, see §6.6; System B/`GoalRegistry`, ceiling `100.0`), must additionally clear a dual condition while the lock is active: its own score, normalized to its own system's ceiling, must exceed both (a) the current project's normalized effective score (`current.score/current_max + retention_margin/_GOAL_UTILITY_SCORE_MAX`), and (b) a fixed urgency floor of `0.8`. `current.score` is normalized to the current project's own system ceiling (`current_max`), same as always, but `retention_margin` is deliberately always normalized against the fixed universal baseline scale (`_GOAL_UTILITY_SCORE_MAX = 100.0`) rather than `current_max` — `retention_margin`'s own raw range (0-30, from `interruption_resistance × resistance_multiplier`) was calibrated against System B's 0-100 range from the start, and is not a coherent value against System A's much smaller `~2.9` scale, where dividing by `current_max` would let the margin term alone (e.g. `9.0/2.9 ≈ 3.1`) structurally exceed any real candidate percentage and make a locked System A project un-interruptible regardless of urgency (TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG). This generalizes the old "Danger score above 80" special case (which only ever applied to one concern kind on one 0-100 scale) to any kind on either scale. As of `TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER`, `SocialContractGoalScorer`-materialized projects also land on System A's `~2.9` ceiling once materialized (any real `ProjectKind`-typed candidate does, by `_score_scale_max()`'s `isinstance` check) — "System A" here means "any `ProjectKind`-typed candidate," not specifically adventure.
 *   **Threat-Resolved Early Release (STRAT-236)**: Before the dual-condition gate above is even entered, the lock itself (`lock_until_tick > current_tick`) is treated as already expired — the entire locked-branch block (detour exemption and dual-condition gate alike) is skipped, falling straight through to the same base retention-priority comparison (`candidate_project.score > effective_current_score`) that an unlocked or detour-kind candidate already uses — when the entity's HP ratio exceeds `0.8` **and** no alive hostile entity of a different faction is within radius `10.0` of the entity's position, evaluated via the module-level `_threat_resolved()` helper (`src/systems/strategic_systems/intelligence.py`). This check only runs when the caller supplies a real `AuthoritativeState` (`evaluate_project_switch()`'s `state` parameter, default `None`); with no `state`, the lock is evaluated exactly as if this condition did not exist. Originally `AdventureDecisionPhase`-only, this early-release condition was relocated and generalized to any caller with `state` in scope — including System B's `evaluate_strategic_intent()` — by `TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION`. Purpose: prevents cascading 10-tick relocks from creating >50-tick dead windows after combat resolves (D06 F2 — 200-tick activation delay).
+
+---
+
+## 2a. Regional Danger and Stabilization Projects (LEG-RPG-116)
+
+When an entity's current region's `hazard_level` exceeds `0.7`, `EventInterpreter.
+compute_danger_urgency()` (`src/systems/world_systems/events.py`) computes
+`urgency = min(1.0, (hazard_level - 0.7) / 0.3)` (0.0 at the threshold, 1.0 at `hazard_level >= 1.0`)
+and `interpret_regional_danger()` generates a `danger`-kind `ConcernState` from it every tick this
+method is called (today: only from its own direct unit tests -- see the Reachability note below).
+
+As of `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`, `RegionStabilizationGoalScorer`
+(`src/ai/goals/region_stabilization_scorer.py`), registered under `GoalKind.REGION_STABILIZATION`,
+is the live production path for this mechanic: it resolves the entity's current region via
+`LegalityServiceV2.get_region_for_position()`, calls the same `compute_danger_urgency()` helper, and
+-- if the region is dangerous -- emits a tier-5 `GoalScore` candidate. Its raw score is
+`urgency * 2.9` (calibrated to System A's `~2.9` ceiling, §6.6), carried in `GoalScore.metadata
+["raw_score"]`; its `target_pos` is the region's own centroid (`(bounds[0]+bounds[2])/2,
+(bounds[1]+bounds[3])/2`), since a region id is not itself a resolvable tactical target. A winning
+candidate materializes into a `ProjectState(kind=ProjectKind.STABILIZE, ...)` through
+`evaluate_project_switch()`, exactly like every other tier-5 candidate -- not an unconditional
+override.
+
+**Reachability note**: `interpret_regional_danger()` itself has no production caller, before or
+after this migration -- it exists only for its own concern-generation unit tests. Unlike
+`AdventureGoalScorer`/`SocialContractGoalScorer` (which wrapped already-live decision paths),
+`RegionStabilizationGoalScorer` re-implements the hazard-threshold/urgency decision to read
+`state.regions` directly (via the shared `compute_danger_urgency()` helper), which means
+**registering this scorer makes LEG-RPG-116 live-reachable in production for the first time** --
+not merely a bypass-closure on an already-live mechanic. See
+`docs/parity_ledger/strategic_cognition.yaml` (`STRAT-255`) for the full disclosure.
+
+**Pre-migration behavior (historical, no longer current)**: prior to this ticket,
+`interpret_regional_danger()` additionally computed `should_pivot = urgency >
+profile.interruption_resistance` and, if true, unconditionally suspended the entity's current
+project and set `current_project_id` directly -- with no comparison against the current project's
+own strength or lock state. This direct-write bypass has been removed; `should_pivot`'s
+urgency-vs-resistance formula is not preserved anywhere post-migration -- `profile.
+interruption_resistance` still governs pivoting, but only through the single, unified
+`retention_margin` mechanism (§2) every other tier-5 candidate already goes through.
 
 ---
 
@@ -284,6 +324,17 @@ in `docs/parity_ledger/strategic_cognition.yaml` (`STRAT-254`). As with `ADVENTU
 materialization branch for a winning `SOCIAL_CONTRACT` candidate (`intelligence.py`'s
 `elif best_candidate.kind == GoalKind.SOCIAL_CONTRACT:` branch) commits `ProjectState.score` from
 `metadata["raw_score"]`, never from `best_candidate.utility`.
+
+The same constant has a fourth consumer as of `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`:
+`RegionStabilizationGoalScorer` normalizes `urgency * _ADVENTURE_ROUTE_SCORE_MAX` (itself
+recalibrated from the pre-migration `interpret_regional_danger()`'s `urgency * 100`, which was only
+valid while `kind="stabilize"` was a bare string outside `_score_scale_max()`'s `ProjectKind`
+classification -- see §2a's Reachability note) onto the same `GoalScore.utility` 0-100 scale via the
+same `utility = (raw_score / _ADVENTURE_ROUTE_SCORE_MAX) * _GOAL_UTILITY_SCORE_MAX` formula. This
+constant is therefore now shared by three structurally unrelated raw-score domains (adventure
+routing, social contracts, regional stabilization), purely because `_score_scale_max()` classifies
+by Python enum class (`isinstance(kind, ProjectKind)`), not by provenance — recorded in
+`docs/parity_ledger/strategic_cognition.yaml` (`STRAT-255`).
 
 ---
 
