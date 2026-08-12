@@ -72,6 +72,7 @@ From the entity under evaluation:
 | `entity.inventory` | Items held (informs SELL_LOOT_FOR_GOLD and BUY_UPGRADE routes) |
 | `entity.cognition` / self-model | Known weaknesses and self-assessed gaps |
 | `entity.cognition.memory.causal.entries` | `future_advice` values for 2 mapped advice strings (`avoid_enemy`, `boost_party_trust`) suppress/promote `HUNT_WEAK_ENEMY`/`FORM_PARTY` — see `docs/mechanics/04_strategic_cognition.md` §6.11 |
+| Ad-hoc `CapabilityEstimateService.estimate()` call (GATHER_RESOURCE/CRAFT_UPGRADE only; entity.combat/stamina/inventory/equipment) | Feeds `confidence_bonus` for the two mapped families — see `docs/mechanics/04_strategic_cognition.md` §6.12; NOT via `entity.self_model.capabilities`, which stays empty in production |
 
 From world state:
 
@@ -135,7 +136,7 @@ score = urgency + benefit + personality_bias + confidence_bonus - risk_penalty -
 | `benefit` | `route.expected_benefit` (0.0–1.0) |
 | `personality_bias` | Per-family trait contribution (see table below) |
 | `memory_adjustment` | `±1.0` when a matching `CausalMemoryEntry.future_advice` is present (`avoid_enemy` → `HUNT_WEAK_ENEMY` suppress, `boost_party_trust` → `FORM_PARTY` promote) — see `docs/mechanics/04_strategic_cognition.md` §6.11 |
-| `confidence_bonus` | Derived from `route.confidence` |
+| `confidence_bonus` | `route.confidence × 0.15` (flat); for GATHER_RESOURCE/CRAFT_UPGRADE with a resolvable capability key: `CapabilityEstimate.estimate × 0.15` — see `docs/mechanics/04_strategic_cognition.md` §6.12 |
 | `risk_penalty` | `expected_risk × risk_multiplier × 0.5`; risk_multiplier = `max(0.1, (1.0 + caution×0.8) - bravery×0.6)` |
 | `blocker_penalty` | `2.0` flat if `route.blockers` is non-empty |
 

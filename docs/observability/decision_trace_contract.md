@@ -69,7 +69,9 @@ Controlled by `OBS_DECISION_TRACE` flag in `ObservabilityConfig`.
       "urgency": <float>,            // Active need urgency contribution
       "benefit": <float>,            // Expected benefit (depletion-adjusted)
       "personality_bias": <float>,   // Personality trait bias for this family
-      "confidence_bonus": <float>,   // Confidence contribution (route.confidence * 0.15)
+      "confidence_bonus": <float>,   // route.confidence * 0.15 (flat); or a CapabilityEstimateService
+                                      // estimate for GATHER_RESOURCE/CRAFT_UPGRADE with a resolvable
+                                      // capability key -- see docs/mechanics/04_strategic_cognition.md §6.12
       "risk_penalty": <float>,       // Risk penalty (risk × multiplier × 0.5)
       "blocker_penalty": <float>,    // Blocker penalty (2.0 if blocked, else 0.0)
       "selected": <bool>             // true for the winning route (index 0)

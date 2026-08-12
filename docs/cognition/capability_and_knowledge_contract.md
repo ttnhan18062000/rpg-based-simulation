@@ -74,7 +74,7 @@ Each estimate stored as `CapabilityEstimate(capability_key, estimate, confidence
 
 ### How adventure routing uses capability estimates
 
-The adventure domain (`src/domains/adventure/`) reads capability estimates to score route feasibility. A route with `estimate < threshold` for a required capability generates a blocker (scored at −2.0 penalty). The exact threshold is configurable in the adventure scoring config.
+As of `TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING`, `AdventureRouteScorer.score()` (`src/domains/adventure/scoring.py`) calls `CapabilityEstimateService.estimate()` directly, ad hoc, for `GATHER_RESOURCE` and `CRAFT_UPGRADE` routes with a resolvable capability key — the resulting `CapabilityEstimate.estimate` value feeds `confidence_bonus` (replacing the flat `route.confidence × 0.15` term for those two families only), NOT a blocker-generation threshold mechanism. There is no `−2.0` capability-blocker penalty anywhere in `scoring.py` — that prior claim was aspirational and inaccurate. This call is scorer-local and ad hoc: it does not go through `SelfModelUpdatePhase`, and `entity.self_model.capabilities.estimates` remains empty in production (see `docs/mechanics/04_strategic_cognition.md` §6.12's closing disclosure), because `SelfModelUpdatePhase.apply()` never passes a `capability_context` to `run()`. Unlike `memory_adjustment`'s "Not yet live" callout (§6.11), this term IS live and observable via a real `generate() → score()` chain today — only `entity.self_model.capabilities` itself stays unpopulated, not the scorer-local read of it.
 
 ### Confidence decay
 

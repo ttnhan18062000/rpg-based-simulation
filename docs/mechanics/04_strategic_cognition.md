@@ -144,7 +144,7 @@ score = max(0.0, score)   # clamped to non-negative; rounded to 4 decimal places
 | `personality_bias` | `trait × weight` (family-matched; see §6.4) | **Weight varies by trait** (greed: 0.50, sociability: 0.40, others: 0.25) | 0.50 |
 | `plan_advance_bonus` | `1.5 if route.family matches head BuildGoal.target_route_family and that goal is pending/in_progress, else 0.0` | **Fixed: 1.5**, capped at 3.0 | 3.0 |
 | `memory_adjustment` | `±1.0 when a matching CausalMemoryEntry.future_advice is present` (see §6.11) | **Fixed: ±1.0** | 1.0 |
-| `confidence_bonus` | `route.confidence × 0.15` | **Weight: 0.15** | 0.15 |
+| `confidence_bonus` | `route.confidence × 0.15` (flat); for GATHER_RESOURCE/CRAFT_UPGRADE with a resolvable capability key: `CapabilityEstimate.estimate × 0.15` (see §6.12) | **Weight: 0.15** | 0.15 |
 | `risk_penalty` | `route.expected_risk × risk_multiplier × 0.5` | **Risk weight: 0.5**; multiplier below | — |
 | `blocker_penalty` | `2.0 if route.blockers else 0.0` | **Fixed: 2.0** (see §6.3) | 2.0 |
 
@@ -452,5 +452,37 @@ into the live pipeline.
 **Source:** `src/domains/adventure/scoring.py` §4c, `src/domains/adventure/schema.py`
 (`memory_adjustment` field), `src/core/cognition.py` (`CausalMemoryEntry`), `src/domains/memory/
 attribution.py` (`CausalAttributionService.attribute()`) (TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING,
+2026-08-11)
+
+### 6.12 Capability-Driven Confidence Bonus
+
+Applied in `AdventureRouteScorer.score()` block §5. For `GATHER_RESOURCE` and `CRAFT_UPGRADE` routes
+with a resolvable capability key, `confidence_bonus` uses `CapabilityEstimate.estimate × 0.15` instead
+of the flat `route.confidence × 0.15` term. All other routes, and mapped routes whose key cannot be
+resolved, keep the flat term unchanged. The `0.15` weight itself does not change — only the operand
+multiplied by it.
+
+| Route family | Capability key | Key resolution source |
+|---|---|---|
+| `GATHER_RESOURCE` | `gather.resource.<kind>` | `resource_nodes[route.target_node_id].kind`, only when `route.requirements` carries a `has_item` entry naming a required tool |
+| `CRAFT_UPGRADE` | `craft.recipe.<recipe_id>` | `route.requirements`'s `Requirement(kind="recipe_known", subject=recipe_id)` entry |
+
+**Fallback (never raises):** the capability lookup is skipped entirely — keeping `confidence_bonus`
+at `route.confidence × 0.15` — when: `resource_nodes` is `None`, `route.target_node_id` is `None`, the
+target node is missing from `resource_nodes`, no `has_item` requirement naming a tool exists on a
+`GATHER_RESOURCE` route, or no `recipe_known` requirement exists on a `CRAFT_UPGRADE` route. The
+tool-requirement guard is necessary: `CapabilityEstimateService.estimate()`'s `has_tool` defaults to
+`True` when no tool data is supplied, so an ungated call would silently switch off the flat term for
+every resolvable `GATHER_RESOURCE` route, including the common case where no tool is required at all.
+
+This is a scorer-local, ad-hoc `CapabilityEstimateService.estimate()` call — `entity.self_model.
+capabilities.estimates` itself remains empty in every real tick, because `SelfModelUpdatePhase.
+apply()` never passes a `capability_context` to `run()` (confirmed `src/cognition/
+self_model_phase.py:57-62`). This term is fully live and observable via a real `generate() →
+score()` chain today (unlike `memory_adjustment`, §6.11) because both `GATHER_RESOURCE` and
+`CRAFT_UPGRADE` are live-generated route families.
+
+**Source:** `src/domains/adventure/scoring.py` §5, `src/cognition/capability_estimate.py`
+(`CapabilityEstimateService.estimate()`, unchanged) (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING,
 2026-08-11)
 

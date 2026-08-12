@@ -2516,7 +2516,15 @@
     constants documented in docs/mechanics/04_strategic_cognition.md §6.4;
     memory_adjustment = ±1.0 when a matching CausalMemoryEntry.future_advice is present
     (avoid_enemy → HUNT_WEAK_ENEMY suppress, boost_party_trust → FORM_PARTY promote),
-    all constants documented in docs/mechanics/04_strategic_cognition.md §6.11.
+    all constants documented in docs/mechanics/04_strategic_cognition.md §6.11;
+    confidence_bonus for GATHER_RESOURCE/CRAFT_UPGRADE routes with a resolvable
+    capability key (resource kind via resource_nodes[target_node_id].kind, or recipe
+    id via route.requirements's recipe_known entry) is computed via an ad-hoc
+    CapabilityEstimateService.estimate() call instead of route.confidence, same 0.15
+    weight; all other routes, and mapped routes whose key cannot be resolved, keep
+    route.confidence × 0.15; entity.self_model.capabilities itself remains
+    unpopulated in production; all constants documented in
+    docs/mechanics/04_strategic_cognition.md §6.12.
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2531,11 +2539,15 @@
     memory_adjustment = ±1.0 fixed magnitude, boolean-gated per advice string, entity's own
     subjective causal-memory belief only, not yet observable in a live run since
     MemoryUpdatePhase has zero pipeline call sites (TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING).
+    confidence_bonus capability-driven source for GATHER_RESOURCE/
+    CRAFT_UPGRADE, ad-hoc CapabilityEstimateService.estimate() call, SelfModelUpdatePhase.apply()
+    still never passes capability_context (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING).
   proof_type: parity
   test_path: >-
     tests/unit/domains/adventure/test_phase3_route_scoring.py;
     tests/unit/domains/adventure/test_depletion_scoring.py;
-    tests/unit/domains/adventure/test_memory_informed_scoring.py
+    tests/unit/domains/adventure/test_memory_informed_scoring.py;
+    tests/unit/domains/adventure/test_capability_confidence_scoring.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-228

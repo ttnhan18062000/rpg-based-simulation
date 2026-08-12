@@ -113,7 +113,7 @@ final_score = round(max(0.0, score), 4)
 | `urgency` | max urgency value of active needs matching the route's family (via `family_needs` lookup table) |
 | `benefit` | `route.expected_benefit` directly |
 | `personality_bias` | see personality bias table below (max +0.25) |
-| `confidence_bonus` | `route.confidence * 0.15` |
+| `confidence_bonus` | `route.confidence * 0.15` (flat); for `GATHER_RESOURCE`/`CRAFT_UPGRADE` routes with a resolvable capability key, an ad-hoc `CapabilityEstimateService.estimate()` call replaces the source instead — see `docs/mechanics/04_strategic_cognition.md` §6.12 (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING) |
 | `risk_penalty` | `route.expected_risk * risk_multiplier * 0.5` |
 | `blocker_penalty` | `2.0` if any blocker present, else `0.0` |
 
@@ -227,7 +227,9 @@ Scoring:
   urgency = 0.3 (harvest_need active)
   benefit = 2.0
   personality_bias = greed * 0.25 = 0.7 * 0.25 = 0.175  (greed branch fires, industry skipped)
-  confidence_bonus = 0.85 * 0.15 = 0.1275
+  confidence_bonus = 0.85 * 0.15 = 0.1275  (flat term: no tool requirement on this route, so the
+    TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING capability-estimate source, §6.12, does
+    not apply here -- see the confidence_bonus row above for when it does)
   risk_penalty = 0.1 * risk_multiplier * 0.5 = 0.1 * 0.82 * 0.5 = 0.041
   blocker_penalty = 0.0
   score = 0.3 + 2.0 + 0.175 + 0.1275 - 0.041 - 0.0 = 2.5615

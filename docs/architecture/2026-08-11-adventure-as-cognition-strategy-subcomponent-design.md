@@ -427,9 +427,16 @@ the wrapper migration itself):
   opportunities key to a shop/structure id, not an NPC vendor entity id. Also not yet live in any
   running simulation: `MemoryUpdatePhase` is unreachable from the pipeline (see
   `memory_contract.md`).
-- **Capability-estimate-driven confidence**: `src/cognition/`'s `CapabilityEstimateService` already
-  computes real "can I fight/craft/travel" estimates that adventure's own `confidence_bonus` term
-  doesn't read — wiring this in closes an inert loop between two subsystems that already exist.
+- **Capability-estimate-driven confidence** (closed, scoped,
+  `TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING`): `AdventureRouteScorer.score()` now calls
+  `CapabilityEstimateService.estimate()` directly, ad hoc, for `GATHER_RESOURCE` (via
+  `resource_nodes[target_node_id].kind`) and `CRAFT_UPGRADE` (via `route.requirements`'s
+  `recipe_known` entry) — the only two route families with an evidence-backed capability-key source
+  (`AdventureRouteOption` has no `enemy_id`/`region_id` field, so "can I fight/travel" remain
+  unbuildable without inventing a data source). This bypasses, not fixes, the upstream gap:
+  `SelfModelUpdatePhase.apply()` still never passes a `capability_context` to `run()`, so `entity.
+  self_model.capabilities.estimates` remains empty in every real tick — see `capability_and_
+  knowledge_contract.md`.
 - **Relationship-aware `FORM_PARTY`**: real trust/relationship data already exists in
   `src/systems/social_systems/`; today's `FORM_PARTY` bias is a flat `sociability` scalar.
 - **Multi-step planning** (materially larger, separate question): everything above is still a
