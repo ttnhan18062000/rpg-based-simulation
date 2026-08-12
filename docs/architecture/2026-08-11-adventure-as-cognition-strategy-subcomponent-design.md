@@ -452,6 +452,14 @@ the wrapper migration itself):
   ever picking the single next action — this implies a new persistent planning concept, not a
   scorer tweak, and deserves its own design conversation rather than folding into this one.
 
+> **Post-landing note (2026-08-12, `TCK-20260811-MULTI-STEP-PLANNING-DESIGN`):** the "Multi-step
+> planning" item above has since been design-reviewed — see `TCK-20260811-MULTI-STEP-PLANNING-DESIGN`,
+> decision: GO, design doc at
+> `docs/architecture/2026-08-12-multi-step-persistent-planning-design.md`. A follow-up
+> implementation ticket (`TCK-20260812-COMMITTED-INTENTION-SEQUENCE`) has been filed at
+> `tickets/todos/TCK-20260812-COMMITTED-INTENTION-SEQUENCE.md` to build the `committed_intentions`
+> model described there; not yet landed as of this note.
+
 ## Diagrams
 
 ### Full strategy system — component diagram (post-design)
