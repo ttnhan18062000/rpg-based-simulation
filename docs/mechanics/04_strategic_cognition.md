@@ -486,3 +486,45 @@ score()` chain today (unlike `memory_adjustment`, §6.11) because both `GATHER_R
 (`CapabilityEstimateService.estimate()`, unchanged) (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING,
 2026-08-11)
 
+---
+
+## 7. Party Composition & Formation Scoring
+
+### 7.1 PartyCompositionScorer.score() — Role Diversity & OCEAN Compatibility
+
+`src/systems/social_systems/party_composition.py`. Pre-existing behavior (TCK-20260628-E41F-PARTY-SCORER,
+first documented here as of TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY — was previously undocumented
+in the Mechanics Bible):
+
+score = ROLE_DIVERSITY_WEIGHT(0.6) × score_role_diversity(entities) + OCEAN_COMPAT_WEIGHT(0.4) × score_ocean_compatibility(entities)
+
+- `score_role_diversity`: fraction of the 4 `PartyRole` values (TANK/HEALER/DPS/SUPPORT) represented
+  in the candidate pool (0.0–1.0).
+- `score_ocean_compatibility`: normalized bravery + sociability variance across the pool (0.0–1.0);
+  `0.5` neutral for a single-candidate pool.
+
+### 7.2 Trust/Bonds-Aware Adjustment (TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY)
+
+When `PartyCompositionScorer.score(entities, actor=acting_entity)` is called with `actor` supplied:
+
+score = clamp(base_score + TRUST_BONUS_WEIGHT(0.15) × score_trust_bonds(actor, entities), 0.0, 1.0)
+
+`score_trust_bonds` is the mean, across the candidate pool, of each candidate's directed trust value
+as seen from `actor`'s own `SocialComponent`: `SocialBond.sentiment` if a bond exists toward that
+candidate, else `trust_history.get(candidate.id, 0.0)` — bond takes priority (same rule as
+`SocialAppraisalSystem.appraise_contract()`, §Social Systems Contract). Range −1.0 to 1.0; `0.0` for
+an unknown/never-met candidate. Omitting `actor` reproduces §7.1's base score exactly.
+
+`AdventureRouteGenerator.generate()`'s FORM_PARTY branch (`src/domains/adventure/generator.py`) uses
+this to compute both `expected_benefit` (via `PartyCompositionScorer.score(candidates[:8],
+actor=entity)`) and, separately, `confidence`:
+
+confidence = clamp(sociability + 0.3 + TRUST_BONUS_WEIGHT(0.15) × score_trust_bonds(entity, candidates), 0.0, 1.0)
+
+This is entirely generation-time (`AdventureRouteGenerator`), not scoring-time — `scoring.py`'s
+`AdventureRouteScorer.score()` and its `FORM_PARTY | sociability | 0.40` `personality_bias` term
+(§6.4) are **unmodified** by this section; the trust/bonds term never reaches `scoring.py`.
+
+**Source:** `src/systems/social_systems/party_composition.py`, `src/domains/adventure/generator.py`
+(TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY, 2026-08-11)
+

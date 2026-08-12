@@ -437,8 +437,15 @@ the wrapper migration itself):
   `SelfModelUpdatePhase.apply()` still never passes a `capability_context` to `run()`, so `entity.
   self_model.capabilities.estimates` remains empty in every real tick — see `capability_and_
   knowledge_contract.md`.
-- **Relationship-aware `FORM_PARTY`**: real trust/relationship data already exists in
-  `src/systems/social_systems/`; today's `FORM_PARTY` bias is a flat `sociability` scalar.
+- **Relationship-aware `FORM_PARTY`** (closed, scoped, `TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY`):
+  `PartyCompositionScorer.score()` now accepts an optional `actor` parameter and folds a
+  `trust_history`/`bonds`-derived term (bond sentiment priority, else raw trust_history, weight 0.15)
+  into `comp_score`; `AdventureRouteGenerator.generate()`'s FORM_PARTY branch folds the same term into
+  generation-time `confidence`. This is entirely a generation-time change — `AdventureRouteOption`
+  has no per-candidate identity field (the same class of gap flagged for `HUNT_WEAK_ENEMY`/
+  `SCOUT_LOCATION` above), so the value reaching the route is a pool-level mean across candidates,
+  not a literal single-candidate output; `scoring.py`'s `FORM_PARTY | sociability | 0.40`
+  `personality_bias` term is untouched.
 - **Multi-step planning** (materially larger, separate question): everything above is still a
   single-step, freshly-re-decided-every-eligible-tick choice. A genuinely deeper version would let
   an entity commit to a short sequence of intentions (e.g. train → craft → quest) rather than only

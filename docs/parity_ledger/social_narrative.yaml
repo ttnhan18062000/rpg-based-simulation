@@ -3293,3 +3293,38 @@
     different code path). grade_anchors.json not recalibrated: quest_event's calibration_hits was
     0 before this migration (no real quests existed in live gameplay in any scored scenario as of
     SOC-241's own verification), so no existing baseline reflects a state to shift away from.
+- id: SOC-244
+  text: >
+    PartyCompositionScorer.score() (src/systems/social_systems/party_composition.py) accepts an
+    optional keyword-only actor: EntityState parameter. When supplied, a new TRUST_BONUS_WEIGHT=0.15
+    term is added to the existing role-diversity(0.6)/OCEAN-compatibility(0.4) base score: mean of
+    each candidate's directed trust value (SocialBond.sentiment if a bond exists toward that
+    candidate, else raw trust_history.get(candidate.id, 0.0), bond takes priority per the same rule
+    documented for SocialAppraisalSystem.appraise_contract() in
+    docs/simulation/social_systems_contract.md), clamped to [0.0, 1.0]. Omitting actor (every
+    pre-existing call site) reproduces the pre-existing base-score-only output exactly.
+    AdventureRouteGenerator.generate()'s FORM_PARTY branch (src/domains/adventure/generator.py) now
+    passes actor=entity to score() and folds the same weighted trust term into the generation-time
+    confidence value alongside the pre-existing sociability + 0.3 formula. No change to
+    src/domains/adventure/scoring.py: AdventureRouteScorer's personality_bias (sociability × 0.40,
+    STRAT-227) is untouched. All constants documented in docs/mechanics/04_strategic_cognition.md §7.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/social_systems/party_composition.py — PartyCompositionScorer.score() actor kwarg,
+    TRUST_BONUS_WEIGHT=0.15, _candidate_trust_value(), score_trust_bonds().
+    src/domains/adventure/generator.py — FORM_PARTY block passes actor=entity to score() and folds
+    trust_term into confidence. Verified by TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY.
+  proof_type: parity
+  test_path: tests/unit/social/test_party_composition.py::test_party_composition_score_reflects_candidate_trust_history
+  divergence_note: >
+    New mechanic added by TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY. No prior version of
+    PartyCompositionScorer.score() read trust_history/bonds; it combined only role-diversity and
+    OCEAN-compatibility. Note: party_composition.py's own module docstring cites "Logic IDs: SOC-231
+    (role diversity), SOC-232 (OCEAN compatibility)" and src/core/state.py's GroupRecord.
+    composition_score field comment cites "(SOC-232)" — both are pre-existing, incorrect citations
+    (SOC-231 is Grief/rage urgency, SOC-232 is Nemesis relation; neither entry documents party
+    composition). This is a pre-existing bug in the source, not introduced or fixed by this ticket;
+    SOC-244 is a genuinely new id, not a continuation of either.
+  support_boundary: null

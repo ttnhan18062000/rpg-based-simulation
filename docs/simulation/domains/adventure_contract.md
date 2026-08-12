@@ -73,6 +73,7 @@ From the entity under evaluation:
 | `entity.cognition` / self-model | Known weaknesses and self-assessed gaps |
 | `entity.cognition.memory.causal.entries` | `future_advice` values for 2 mapped advice strings (`avoid_enemy`, `boost_party_trust`) suppress/promote `HUNT_WEAK_ENEMY`/`FORM_PARTY` — see `docs/mechanics/04_strategic_cognition.md` §6.11 |
 | Ad-hoc `CapabilityEstimateService.estimate()` call (GATHER_RESOURCE/CRAFT_UPGRADE only; entity.combat/stamina/inventory/equipment) | Feeds `confidence_bonus` for the two mapped families — see `docs/mechanics/04_strategic_cognition.md` §6.12; NOT via `entity.self_model.capabilities`, which stays empty in production |
+| `entity.social.trust_history` / `.bonds` (FORM_PARTY candidate pool only, via `PartyCompositionScorer.score_trust_bonds()`) | Feeds `expected_benefit` and `confidence` for the FORM_PARTY route — see `docs/mechanics/04_strategic_cognition.md` §7.2; computed in `AdventureRouteGenerator.generate()`, NOT in `scoring.py` |
 
 From world state:
 

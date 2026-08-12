@@ -11,13 +11,17 @@ import pytest
 
 from src.systems.social_systems.party_composition import PartyCompositionScorer, PartyRole
 from src.core.enums import EntityRole, Faction
+from src.core.models.social import SocialBond
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _entity(eid: int, kind: str = "hero", bravery: float = 0.5, sociability: float = 0.5):
+def _entity(
+    eid: int, kind: str = "hero", bravery: float = 0.5, sociability: float = 0.5,
+    trust_history: dict = None, bonds: dict = None,
+):
     from src.core.builder import V2EntityBuilder
     entity = (
         V2EntityBuilder(eid)
@@ -26,6 +30,7 @@ def _entity(eid: int, kind: str = "hero", bravery: float = 0.5, sociability: flo
         .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
         .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
         .inventory(gold=0)
+        .social(trust_history=trust_history or {}, bonds=bonds or {})
         .build()
     )
     p = replace(entity.identity.personality, bravery=bravery, sociability=sociability)
@@ -129,6 +134,67 @@ def test_score_balanced_party_higher_than_homogeneous():
 
 
 # ---------------------------------------------------------------------------
+# Trust/bonds-aware scoring (SOC-244, TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY)
+# ---------------------------------------------------------------------------
+
+def test_party_composition_score_reflects_candidate_trust_history():
+    pool = [_entity(2, kind="guard"), _entity(3, kind="mage")]
+    actor_low = _entity(1, kind="hero", trust_history={2: -0.8})
+    actor_high = _entity(1, kind="hero", trust_history={2: 0.8})
+    assert PartyCompositionScorer.score(pool, actor=actor_low) != PartyCompositionScorer.score(
+        pool, actor=actor_high
+    )
+
+
+def test_party_composition_score_unchanged_when_actor_omitted():
+    balanced = [
+        _entity(1, kind="guard", bravery=0.9, sociability=0.2),
+        _entity(2, kind="mage", bravery=0.1, sociability=0.8),
+        _entity(3, kind="hero", bravery=0.3, sociability=0.4),
+        _entity(4, kind="worker", bravery=0.2, sociability=0.6),
+    ]
+    homogeneous = [_entity(i, kind="guard", bravery=0.7, sociability=0.5) for i in range(4)]
+
+    for pool in (balanced, homogeneous):
+        role_div = PartyCompositionScorer.score_role_diversity(pool)
+        ocean_compat = PartyCompositionScorer.score_ocean_compatibility(pool)
+        expected = round(
+            PartyCompositionScorer.ROLE_DIVERSITY_WEIGHT * role_div
+            + PartyCompositionScorer.OCEAN_COMPAT_WEIGHT * ocean_compat,
+            4,
+        )
+        assert PartyCompositionScorer.score(pool) == expected
+
+
+def test_party_composition_score_prioritizes_bond_sentiment_over_trust_history():
+    candidate = _entity(2, kind="guard")
+    actor = _entity(
+        1, kind="hero",
+        trust_history={2: -0.9},
+        bonds={2: SocialBond(target_id=2, sentiment=0.9)},
+    )
+    assert PartyCompositionScorer.score_trust_bonds(actor, [candidate]) == pytest.approx(0.9)
+
+
+def test_party_composition_trust_lookup_does_not_mutate_social_state():
+    actor = _entity(1, kind="hero", trust_history={2: 0.5})
+    candidate = _entity(2, kind="guard")
+    actor_social_before = actor.social
+    candidate_social_before = candidate.social
+
+    PartyCompositionScorer.score([candidate], actor=actor)
+
+    assert actor.social is actor_social_before
+    assert candidate.social is candidate_social_before
+
+
+def test_party_composition_trust_lookup_defaults_safely_for_unknown_candidate():
+    actor = _entity(1, kind="hero")
+    candidate = _entity(2, kind="guard")
+    assert PartyCompositionScorer.score_trust_bonds(actor, [candidate]) == 0.0
+
+
+# ---------------------------------------------------------------------------
 # FORM_PARTY route generation
 # ---------------------------------------------------------------------------
 
@@ -179,3 +245,28 @@ def test_form_party_benefit_reflects_composition_score():
     fp = next((r for r in routes if r.family == RouteFamily.FORM_PARTY), None)
     assert fp is not None
     assert fp.expected_benefit >= 0.3, "FORM_PARTY expected_benefit should be ≥ 0.3"
+
+
+def test_form_party_route_benefit_and_confidence_differ_with_candidate_trust():
+    from src.domains.adventure.generator import AdventureRouteGenerator
+    from src.domains.adventure.schema import RouteFamily
+
+    candidate = _entity(2, kind="guard", bravery=0.8)
+
+    actor_low = _entity(1, kind="worker", sociability=0.7, trust_history={2: -0.9})
+    actor_high = _entity(1, kind="worker", sociability=0.7, trust_history={2: 0.9})
+
+    class _FakeStateLow:
+        entities = {1: actor_low, 2: candidate}
+
+    class _FakeStateHigh:
+        entities = {1: actor_high, 2: candidate}
+
+    routes_low = AdventureRouteGenerator.generate(actor_low, state=_FakeStateLow())
+    routes_high = AdventureRouteGenerator.generate(actor_high, state=_FakeStateHigh())
+
+    fp_low = next(r for r in routes_low if r.family == RouteFamily.FORM_PARTY)
+    fp_high = next(r for r in routes_high if r.family == RouteFamily.FORM_PARTY)
+
+    assert fp_low.expected_benefit != fp_high.expected_benefit
+    assert fp_low.confidence != fp_high.confidence

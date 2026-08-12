@@ -136,7 +136,8 @@ class AdventureRouteGenerator:
                     and getattr(e, "is_alive", True)
                 ]
                 if candidates:
-                    comp_score = PartyCompositionScorer.score(candidates[:8])
+                    trust_term = PartyCompositionScorer.score_trust_bonds(entity, candidates[:8])
+                    comp_score = PartyCompositionScorer.score(candidates[:8], actor=entity)
                     # E43G: block FORM_PARTY if any candidate is a nemesis.
                     from src.core.strategic import BlockerKind
                     nemesis_ids = {
@@ -150,13 +151,20 @@ class AdventureRouteGenerator:
                         AdventureRouteOption(
                             family=RouteFamily.FORM_PARTY,
                             score=0.0,
-                            confidence=min(1.0, sociability + 0.3),
+                            confidence=min(
+                                1.0,
+                                max(
+                                    0.0,
+                                    sociability + 0.3
+                                    + PartyCompositionScorer.TRUST_BONUS_WEIGHT * trust_term,
+                                ),
+                            ),
                             expected_benefit=max(0.3, comp_score),
                             expected_risk=0.1,
                             blockers=route_blockers,
                             reason=(
                                 f"Party formation: {len(candidates)} candidates, "
-                                f"comp_score={comp_score:.2f}"
+                                f"comp_score={comp_score:.2f}, trust_term={trust_term:.2f}"
                                 + (" [nemesis block]" if route_blockers else "")
                             ),
                         )
