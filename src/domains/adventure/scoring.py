@@ -4,7 +4,8 @@ src/domains/adventure/scoring.py
 Phase 3 — AdventureRouteScorer
 
 Implements subjective route scoring with imperfect decision personality bias.
-Reads only subjective self-model aspects to protect information opacity.
+Reads only subjective self-model and cognition/memory aspects — the entity's own
+beliefs, never omniscient world truth — to protect information opacity.
 """
 
 from __future__ import annotations
@@ -43,7 +44,7 @@ class AdventureRouteScorer:
         """
         Calculate subjective score for the route option and return updated option.
         Formula:
-            score = urgency + benefit + personality_bias + confidence_bonus - risk_penalty - blocker_penalty
+            score = urgency + benefit + personality_bias + plan_advance_bonus + memory_adjustment + confidence_bonus - risk_penalty - blocker_penalty
 
         Optional group context enables class-synergy multipliers (SOC-229):
           - WARRIOR + MAGE both present in group.roles → HUNT_WEAK_ENEMY score ×1.15
@@ -220,6 +221,25 @@ class AdventureRouteScorer:
                     plan_advance_bonus = 1.5
         plan_advance_bonus = min(plan_advance_bonus, 3.0)
 
+        # ── 4c. Memory-Informed Advice Adjustment (TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING) ──
+        # Reads only the entity's own subjective causal-memory beliefs (never state/world truth).
+        # Fixed ±1.0 magnitude, boolean-gated per advice string (not accumulated per matching
+        # entry) so a full 30-entry causal-memory buffer with many matching entries still produces
+        # exactly one adjustment per mapped family, never a growing stack.
+        memory_adjustment = 0.0
+        causal_entries = entity.cognition.memory.causal.entries
+        if causal_entries:
+            has_avoid_enemy = any(
+                "avoid_enemy" in e.future_advice for e in causal_entries
+            )
+            has_boost_party_trust = any(
+                "boost_party_trust" in e.future_advice for e in causal_entries
+            )
+            if has_avoid_enemy and route.family == RouteFamily.HUNT_WEAK_ENEMY:
+                memory_adjustment -= 1.0
+            if has_boost_party_trust and route.family == RouteFamily.FORM_PARTY:
+                memory_adjustment += 1.0
+
         # ── 5. Confidence Bonus ─────────────────────────────────────────────
         confidence_bonus = route.confidence * 0.15
 
@@ -229,7 +249,7 @@ class AdventureRouteScorer:
             blocker_penalty = 2.0  # massive penalty for blocked routes
 
         # ── 7. Calculate Final Score ─────────────────────────────────────────
-        final_score = urgency + benefit + personality_bias + plan_advance_bonus + confidence_bonus - risk_penalty - blocker_penalty
+        final_score = urgency + benefit + personality_bias + plan_advance_bonus + memory_adjustment + confidence_bonus - risk_penalty - blocker_penalty
         final_score = round(max(0.0, final_score), 4)
 
         # ── 8. Class-Synergy Multipliers (SOC-229) ───────────────────────────
@@ -273,6 +293,7 @@ class AdventureRouteScorer:
             benefit_score=round(benefit, 4),
             personality_bias=round(personality_bias, 4),
             plan_advance_bonus=round(plan_advance_bonus, 4),
+            memory_adjustment=round(memory_adjustment, 4),
             confidence_bonus=round(confidence_bonus, 4),
             risk_penalty=round(risk_penalty, 4),
             blocker_penalty=round(blocker_penalty, 4),

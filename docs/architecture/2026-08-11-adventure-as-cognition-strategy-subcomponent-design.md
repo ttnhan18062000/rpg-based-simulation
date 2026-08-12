@@ -418,10 +418,15 @@ extends the pattern in the same piece of work, not two separate ones.
 **Deepening adventure's own reasoning** (internal richness, not a structural change — orthogonal to
 the wrapper migration itself):
 
-- **Memory-informed candidates**: `src/domains/memory/` already tracks entity experience, but
-  `AdventureRouteGenerator` doesn't consult it — an entity that suppresses `BUY_UPGRADE` at a vendor
-  who previously cheated it starts to look like it remembers, not just re-derives the same choice
-  fresh every tick.
+- **Memory-informed candidates** (closed, scoped, `TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING`):
+  `AdventureRouteScorer.score()` now reads `entity.cognition.memory.causal.entries` for 2 of the 4
+  supported `event_kind`s' advice values (`avoid_enemy` → suppress `HUNT_WEAK_ENEMY`,
+  `boost_party_trust` → promote `FORM_PARTY`). The original vendor-cheating example (an entity
+  suppressing `BUY_UPGRADE` at a vendor who previously cheated it) remains explicitly unbuildable —
+  `CausalAttributionService.attribute()` has no vendor/trade/cheating `event_kind`, and `buy_item`
+  opportunities key to a shop/structure id, not an NPC vendor entity id. Also not yet live in any
+  running simulation: `MemoryUpdatePhase` is unreachable from the pipeline (see
+  `memory_contract.md`).
 - **Capability-estimate-driven confidence**: `src/cognition/`'s `CapabilityEstimateService` already
   computes real "can I fight/craft/travel" estimates that adventure's own `confidence_bonus` term
   doesn't read — wiring this in closes an inert loop between two subsystems that already exist.

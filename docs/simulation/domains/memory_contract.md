@@ -149,8 +149,8 @@ All memory domain mutations use `dataclasses.replace` — the same read-phase di
 
 | Field | Mutation | Mechanism |
 |---|---|---|
-| `entity.cognition.causal_memory` | Append `CausalMemoryEntry`; evict oldest if at capacity | `dataclasses.replace` |
-| `entity.cognition.spatial_memory` | `mark_region_danger()`, `update_region_visit()` | `dataclasses.replace` |
+| `entity.cognition.memory.causal` | Append `CausalMemoryEntry`; evict oldest if at capacity | `dataclasses.replace` |
+| `entity.cognition.memory.spatial` | `mark_region_danger()`, `update_region_visit()` | `dataclasses.replace` |
 | `entity.cognition.temporal_model.urgency` | Recalculated urgency value | `dataclasses.replace` |
 
 ---
@@ -170,7 +170,7 @@ All memory domain mutations use `dataclasses.replace` — the same read-phase di
 
 | Domain / System | Relationship |
 |---|---|
-| **Adventure domain** | Causal lessons in `CausalMemoryEntry` feed adventure route scoring — advice from past failures (e.g., avoid a region, change approach) influences route selection. Spatial danger flags from `mark_region_danger()` block certain routes when the entity's spatial memory records a region as dangerous. |
+| **Adventure domain** | As of `TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING`, `AdventureRouteScorer.score()` (`src/domains/adventure/scoring.py`) reads `entity.cognition.memory.causal.entries` for exactly 2 of the 10 possible `future_advice` values (`avoid_enemy` → suppress `HUNT_WEAK_ENEMY`, `boost_party_trust` → promote `FORM_PARTY`) — the scoring-side wiring is real code. However, this is not yet observable in any live run: `MemoryUpdatePhase`, the only code that ever populates `CausalMemoryEntry` records, has zero call sites in `src/engine/pipeline.py` (confirmed repo-wide). Spatial danger flags remain unaffected by adventure scoring (unchanged from prior text). |
 | **Motivation domain** | `TemporalModel.urgency` — updated by `TemporalPressureService` each tick — is read as an urgency dimension in `MotivationPressureSet`. High temporal urgency biases the motivation domain toward deadline-related route families. |
 | **Cognition layer (knowledge_model)** | The knowledge model is updated separately (by `KnowledgeModelService`, not by this domain). The memory domain reads entity cognition state that the knowledge model also reads, but they write to strictly non-overlapping fields. |
 | **Cooperation domain** | The cooperation domain reads `entity.timeline` (recent events) for help-need trigger detection. The memory domain reads the same event log for causal attribution triggering. Neither writes to the other's memory state. |

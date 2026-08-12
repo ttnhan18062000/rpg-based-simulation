@@ -131,7 +131,7 @@ The adventure decision pipeline (enabled via `ENABLE_ADVENTURE_ROUTING`) scores 
 ### 6.1 Scoring Formula
 
 ```
-score = urgency + benefit + personality_bias + confidence_bonus − risk_penalty − blocker_penalty
+score = urgency + benefit + personality_bias + plan_advance_bonus + memory_adjustment + confidence_bonus − risk_penalty − blocker_penalty
 score = max(0.0, score)   # clamped to non-negative; rounded to 4 decimal places
 ```
 
@@ -142,6 +142,8 @@ score = max(0.0, score)   # clamped to non-negative; rounded to 4 decimal places
 | `urgency` | `max(need.urgency for matched needs)` | Depends on active need pressures | ~2.0 |
 | `benefit` | `route.expected_benefit × depletion_fraction` (GATHER_RESOURCE); `route.expected_benefit` (all others) | World-defined per opportunity; see §6.2.1 | — |
 | `personality_bias` | `trait × weight` (family-matched; see §6.4) | **Weight varies by trait** (greed: 0.50, sociability: 0.40, others: 0.25) | 0.50 |
+| `plan_advance_bonus` | `1.5 if route.family matches head BuildGoal.target_route_family and that goal is pending/in_progress, else 0.0` | **Fixed: 1.5**, capped at 3.0 | 3.0 |
+| `memory_adjustment` | `±1.0 when a matching CausalMemoryEntry.future_advice is present` (see §6.11) | **Fixed: ±1.0** | 1.0 |
 | `confidence_bonus` | `route.confidence × 0.15` | **Weight: 0.15** | 0.15 |
 | `risk_penalty` | `route.expected_risk × risk_multiplier × 0.5` | **Risk weight: 0.5**; multiplier below | — |
 | `blocker_penalty` | `2.0 if route.blockers else 0.0` | **Fixed: 2.0** (see §6.3) | 2.0 |
@@ -400,4 +402,55 @@ exists. See `docs/guidelines/v2_intentional_divergences.md` for rationale.
 
 **Source:** `src/domains/adventure/scoring.py` §2b, `src/engine/faction_decision.py`,
 `src/engine/faction_constants.py` (TCK-20260619-E53Ac-DIRECTIVE-PROP, 2026-06-22)
+
+---
+
+### 6.11 Memory-Informed Advice Adjustment
+
+Applied in `AdventureRouteScorer.score()` block §4c. Reads `entity.cognition.memory.causal.entries`
+(a `Tuple[CausalMemoryEntry, ...]`, populated by `CausalAttributionService.attribute()`) and applies
+a fixed ±1.0 adjustment for exactly 2 of the 10 real, reachable `future_advice` values a
+`CausalMemoryEntry` can carry across the memory system's 4 supported `event_kind`s.
+
+| `event_kind` | `future_advice` value | Mapped `RouteFamily` | Direction | Magnitude |
+|---|---|---|---|---|
+| `combat_loss` (fallback branch — fires only when none of `hp_pct < 0.3` / `stamina < 20` / `weapon_dur < 0.2` triggered) | `avoid_enemy` | `HUNT_WEAK_ENEMY` | Suppress | `−1.0` |
+| `party_abandoned` (unconditional) | `boost_party_trust` | `FORM_PARTY` | Promote | `+1.0` |
+
+The read is boolean-gated per matching advice string via `any(...)` over the full entries tuple, not
+accumulated per matching entry — a full 30-entry causal-memory buffer with many matching entries
+still produces exactly one ±1.0 adjustment per mapped family, never a growing stack.
+
+**Magnitude rationale:** ±1.0 sits below `blocker_penalty` (2.0, §6.5) so a blocked route is never
+rescued by a favorable memory adjustment, and above `confidence_bonus` (max 0.15, §6.2) and
+`personality_bias` (max 0.50, §6.4) so the effect is unambiguously measurable, comparable in order
+of magnitude to `plan_advance_bonus` (flat 1.5, §6.2). This constant is **undertuned** — no live-run
+measurement is possible until `MemoryUpdatePhase` is wired into the pipeline (see the "Not yet live"
+callout below) — the same honest disclosure pattern §6.5 already uses for `blocker_penalty`.
+Symmetric magnitude (not asymmetric suppress-vs-promote weighting) is chosen because there is no
+empirical basis yet to justify asymmetry.
+
+**Deliberately left unmapped in this pass:** `heal_first` / `rest_often` / `repair_weapon`
+(`combat_loss`, non-fallback branches), `seek_trusted_guide` / `verify_intel` (`failed_search`),
+`acquire_mats` / `train_blacksmith` (`failed_craft`), `realign_directive` (`party_abandoned`) — all
+real, reachable advice strings, deferred to a future ticket with product/design input on the
+correct `RouteFamily` target, not guessed at here.
+
+**Not yet live:** This term is real, reachable code in `AdventureRouteScorer.score()`, but
+`CausalMemoryEntry` records are never created in a live simulation run today — `MemoryUpdatePhase`
+(`src/domains/memory/phase.py`), the only code that populates
+`entity.cognition.memory.causal.entries`, has zero call sites in `src/engine/pipeline.py` or
+anywhere else outside its own file and tests. This term is exercised only by unit tests with
+manually-constructed `CausalMemoryEntry` fixtures until a separate ticket wires `MemoryUpdatePhase`
+into the live pipeline.
+
+**Dead-code caveat:** `AdventureRouteGenerator.generate()` never emits a `HUNT_WEAK_ENEMY` candidate
+(confirmed zero emission sites) — the `avoid_enemy` suppression is provably correct at the
+`AdventureRouteScorer.score()` unit level but has zero observable effect via a live
+`generate()` → `score()` call chain today.
+
+**Source:** `src/domains/adventure/scoring.py` §4c, `src/domains/adventure/schema.py`
+(`memory_adjustment` field), `src/core/cognition.py` (`CausalMemoryEntry`), `src/domains/memory/
+attribution.py` (`CausalAttributionService.attribute()`) (TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING,
+2026-08-11)
 

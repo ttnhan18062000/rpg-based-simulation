@@ -2513,7 +2513,10 @@
     confidence_bonus weight = 0.15; risk weight = 0.5 × risk_multiplier; for
     GATHER_RESOURCE routes the benefit term is multiplied by depletion_fraction =
     remaining_charges / max_charges (0.0 when empty, 1.0 when full); all
-    constants documented in docs/mechanics/04_strategic_cognition.md §6.4.
+    constants documented in docs/mechanics/04_strategic_cognition.md §6.4;
+    memory_adjustment = ±1.0 when a matching CausalMemoryEntry.future_advice is present
+    (avoid_enemy → HUNT_WEAK_ENEMY suppress, boost_party_trust → FORM_PARTY promote),
+    all constants documented in docs/mechanics/04_strategic_cognition.md §6.11.
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2525,10 +2528,14 @@
     Depletion-fraction multiplier on benefit term for GATHER_RESOURCE
     (TCK-20260619-E21C-SCORING-WIRE, 2026-06-20). E12A measurement:
     blocker_frequency=0.0 → blocker constant retained (TCK-20260619-E12B-BLOCKER-RECAL).
+    memory_adjustment = ±1.0 fixed magnitude, boolean-gated per advice string, entity's own
+    subjective causal-memory belief only, not yet observable in a live run since
+    MemoryUpdatePhase has zero pipeline call sites (TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING).
   proof_type: parity
   test_path: >-
     tests/unit/domains/adventure/test_phase3_route_scoring.py;
-    tests/unit/domains/adventure/test_depletion_scoring.py
+    tests/unit/domains/adventure/test_depletion_scoring.py;
+    tests/unit/domains/adventure/test_memory_informed_scoring.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-228
