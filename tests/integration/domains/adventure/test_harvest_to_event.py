@@ -33,6 +33,7 @@ from src.engine.economy import ResourceTransactionSystem
 from src.engine.intent.action_intent import ActionIntent, ActionIntentAdapter
 from src.engine.interaction import InteractionSystem
 from src.observability.event_extractor import EventExtractor
+from src.observability.event_shapers import run_shadow_shapers
 from src.observability.config import ObservabilityMode
 
 
@@ -75,6 +76,7 @@ def test_crafting_project_produces_item_crafted_event_through_full_pipeline():
     # 3. The same event derivation event_extractor.py runs every tick.
     EventExtractor.reset_run_state()
     events = EventExtractor.extract(state, state, resolved_update, mode=ObservabilityMode.LIGHT)
+    events += run_shadow_shapers(state, resolved_update, tick=state.tick, mode=ObservabilityMode.LIGHT)
 
     event_types = {e.event_type for e in events}
     assert "item_crafted" in event_types, (
@@ -130,6 +132,7 @@ def test_reach_resource_arrival_produces_resource_harvested_event_through_full_p
     # 4. The same event derivation event_extractor.py runs every tick.
     EventExtractor.reset_run_state()
     events = EventExtractor.extract(state, state, resolved_update, mode=ObservabilityMode.LIGHT)
+    events += run_shadow_shapers(state, resolved_update, tick=state.tick, mode=ObservabilityMode.LIGHT)
 
     event_types = {e.event_type for e in events}
     assert "resource_harvested" in event_types, (

@@ -3007,7 +3007,10 @@
     shop_transaction events in any run — the AC's "real calibration run" bar is unmet, though
     reachability itself (this entry's text) is proven at the unit/integration level (test_path
     above) via direct, real-pipeline-component construction (ActionIntentAdapter.execute() ->
-    ResourceTransactionSystem.resolve_all() -> event_extractor.py, no mocks). Three distinct,
+    ResourceTransactionSystem.resolve_all() -> EventExtractor.extract() + run_shadow_shapers()'s
+    EconomyShaper, no mocks; event_extractor.py's own legacy ECONOMY loop is the flag-gated
+    rollback path as of TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION, not the live terminus).
+    Three distinct,
     out-of-scope contributing factors were empirically isolated: (1) ENABLE_ADVENTURE_ROUTING
     defaults to FeatureMode.OFF (src/domains/optimization/feature_flags.py) and the
     urban_political calibration profile never turns it on, so System A never runs in the
@@ -3028,7 +3031,9 @@
     ActionIntent(kind="HARVEST_RESOURCE", target_id=node_id) routed through
     ActionIntentAdapter.execute()'s existing HARVEST_RESOURCE dispatch (action_intent.py:78,130),
     which converges on the same authoritative completion path (InteractionSystem.enforce ->
-    ResourceTransactionSystem.resolve_all -> event_extractor.py's resource_harvested derivation)
+    ResourceTransactionSystem.resolve_all -> run_shadow_shapers()'s EconomyShaper
+    resource_harvested derivation, the same live terminus established above; event_extractor.py's
+    own resource_harvested branch is the flag-gated legacy rollback path, not the terminus)
     that REACH_LOCATION's arrival branch already uses. Verified end-to-end, non-mocked, by
     tests/integration/domains/adventure/test_harvest_to_event.py::test_reach_resource_arrival_produces_resource_harvested_event_through_full_pipeline.
     None of factors (1) and (2) were touched, per this ticket's explicit scope guards (do not
