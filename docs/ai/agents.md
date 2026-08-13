@@ -21,6 +21,36 @@ await agent("do X", { agentType: 'agent-name' })
 
 ---
 
+## Brainstorming Agents
+
+These agents support the `/brainstorming` skill, which runs before a ticket exists — its output
+(a design spec at `docs/architecture/YYYY-MM-DD-<topic>-design.md`) feeds `/create-tickets`, which
+in turn produces the tickets the agents below act on.
+
+### `spec-document-reviewer`
+
+**Role:** Reviews a written design spec for completeness, internal consistency, clarity, scope
+focus, and YAGNI violations before implementation planning begins.
+
+**Scope:** The spec document's own internal quality — not simulation-mechanics parity
+(`mechanics-auditor`'s job) or durable-state/API-boundary architecture (`architecture-reviewer`'s
+job). Registered `TCK-20260811-BRAINSTORMING-SPEC-REVIEWER-AGENT-MISSING`, replacing an
+unregistered generic-agent-plus-inline-prompt template that the `/brainstorming` skill's own
+instructions had already drifted to reference as a named subagent type.
+
+**Review dimensions:** Completeness (TODOs/placeholders), Consistency (internal contradictions),
+Clarity (ambiguity that could cause the wrong thing to be built), Scope (single-plan focus), YAGNI
+(unrequested features).
+
+**Output:** Approved / Issues Found verdict, per-issue findings tied to a spec section, advisory
+recommendations (non-blocking).
+
+**When to invoke directly:** `/brainstorming`'s own Spec Review Loop step, immediately after the
+design spec is written and committed — never with the invoking session's own conversation history
+as context, only the spec file itself.
+
+---
+
 ## Ticket Lifecycle Agents
 
 These agents handle the pre-implementation and post-implementation phases of a development ticket.
@@ -431,6 +461,7 @@ deserialization, or file-path handling, even outside the automated workflow.
 
 | Agent | Phase in lifecycle | Primary output |
 |---|---|---|
+| `spec-document-reviewer` | Brainstorming (pre-ticket) | Approved / Issues Found verdict |
 | `ticket-scoper` | Pre-work | `tickets/inprogress/{id}.md` |
 | `investigator` | Pre-work | `investigation.md`, `test_plan.md` |
 | `concern-investigator` | Pre-work (pre-ticket) | Structured JSON (files_found, ac_signals, ...) |

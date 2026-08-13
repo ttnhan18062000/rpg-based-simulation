@@ -37,7 +37,6 @@ _FOUR_CONFIRMED_SKILLS_COMPANION_ASSETS = {
         "trade-off-analysis.md",
     ],
     "brainstorming": [
-        "spec-document-reviewer-prompt.md",
         "visual-companion.md",
         "scripts/frame-template.html",
         "scripts/helper.js",

@@ -32,7 +32,7 @@ skills:
     description: Explores user intent, requirements, and design before creative implementation work.
     workflows: []
     roles: []
-    companion_assets: [spec-document-reviewer-prompt.md, visual-companion.md, scripts/frame-template.html, scripts/helper.js, scripts/server.cjs, scripts/start-server.sh, scripts/stop-server.sh]
+    companion_assets: [visual-companion.md, scripts/frame-template.html, scripts/helper.js, scripts/server.cjs, scripts/start-server.sh, scripts/stop-server.sh]
   - id: combat-mechanics
     description: Deterministic combat resolution (damage formula, tactical modifiers) and CombatPosture pre-combat assessment in src/domains/combat_engagement/.
     workflows: []

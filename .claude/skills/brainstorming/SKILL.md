@@ -27,7 +27,7 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save to `docs/architecture/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
+7. **Spec review loop** — dispatch `Agent(subagent_type: "spec-document-reviewer", ...)` with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke `/create-tickets` on the written spec to produce an investigation-backed ticket ready for `/implement-ticket` or `/implement-epic` (this repo has no separate `writing-plans` skill — planning happens inside `implement-ticket`'s own Plan phase)
 
@@ -118,7 +118,7 @@ digraph brainstorming {
 **Spec Review Loop:**
 After writing the spec document:
 
-1. Dispatch spec-document-reviewer subagent (see spec-document-reviewer-prompt.md)
+1. Dispatch `Agent(subagent_type: "spec-document-reviewer", prompt: "Review the spec at <SPEC_FILE_PATH>...")` — pass the spec's file path and any user-stated constraints; never pass your own session history (see `.claude/agents/spec-document-reviewer.md` for the review criteria this agent applies)
 2. If Issues Found: fix, re-dispatch, repeat until Approved
 3. If loop exceeds 3 iterations, surface to human for guidance
 
