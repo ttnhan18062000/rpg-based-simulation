@@ -4722,3 +4722,26 @@
     produced a bit-identical SOCIAL score all 3 times -- decisive evidence against that
     mechanism for this drift. `test_grade_anchor_file_exists_and_valid`'s missing-fixture issue
     (noted above) is also now resolved: the missing `quality_report.json` was regenerated.
+
+    UPDATE (TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP, 2026-08-13):
+    `lifecycle_full_coverage_world_seed42_200t` added to the set of worlds recalibrated under
+    this cause -- a `FAST_ANCHOR_KEYS` registration gap left it ungated since its own creation
+    (`TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD`), so nobody looked at it during the 2026-08-10
+    recalibration pass above. Registering the key surfaced drift on 8 of its 10 pillars, but the
+    drift here is explicitly **compound, not purely SUB-384**: this world's own profile sets
+    `ENABLE_ADVENTURE_ROUTING: "ON"`, directly exposing it to the separate
+    `TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION` mechanism (commit `3d992dd0`,
+    `docs/guidelines/intentional_divergences.md` §2.40) that zeroed COGNITION/AGENCY, *plus* 3
+    additional tier-5 GoalScorer-consolidation commits
+    (`TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`, `TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER`,
+    `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`) that landed after the audit run which
+    discovered the gap. SUB-384's own role/faction signature was independently re-confirmed for
+    this world (`data/worlds/lifecycle_full_coverage_world/resolved/compile_context.json` shows
+    real `legacy_roles`/`legacy_factions` entries) before folding it into this pass. 8 pillars
+    recalibrated in `grade_anchors.json`: COGNITION, AGENCY, COMBAT, ECONOMY, PROGRESSION,
+    SOCIAL, WORLD, NARRATIVE (ECONOMY was not part of this ticket's originally-named 7-pillar
+    scope; folded in per the same same-anchor/same-causal-cluster precedent this UPDATE block's
+    own 2026-08-10 entry set, above). FACTION and INFORMATION confirmed unchanged, left untouched.
+    See `docs/simulation_quality/eval_matrix_results.md`'s new `lifecycle_full_coverage_world`
+    section for the full before/after table. This UPDATE does not change `status`/`priority` --
+    a calibration-data update, not a new finding about SUB-384's own root cause or fix.

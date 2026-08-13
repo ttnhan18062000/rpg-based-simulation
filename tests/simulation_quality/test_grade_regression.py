@@ -187,6 +187,11 @@ FAST_ANCHOR_KEYS = [
     "quest_dense_frontier_seed42_200t",
     "quest_dense_frontier_seed123_200t",
     "quest_dense_frontier_seed456_200t",
+    # new — TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD added this anchor entry (grade_anchors.json
+    # count 80 -> 81) but never registered it here, so it went ungated until
+    # TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE's SimQ audit (SIMQ-AUDIT-20260811T111151Z)
+    # caught it as an UNCOVERED_ANCHOR_KEY and registered it (fast tier: 200t <= 500t).
+    "lifecycle_full_coverage_world_seed42_200t",
 ]
 
 SLOW_ANCHOR_KEYS = [

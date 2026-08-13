@@ -427,6 +427,37 @@ behavior: the floor prevents S-grade inflation from AGENCY's initialization burs
 the grade reflects actual event count differences (137 vs 40 events). COGNITION shows B for seeds
 123/456 only — borderline signal, consistent with prior analysis.
 
+> **NOTE (2026-08-13 — `TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP`):**
+> COGNITION dropped A→C (event_count 0, was 194-196 events at `seed42_500t`) at both
+> `simq_routing_test_seed42_500t` and `simq_routing_test_seed456_500t` (see the `hero_guild_routing`
+> subsection below for that world's matching drift). Root cause directly bisected via `git worktree`
+> to commit `3d992dd0` (`TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION`,
+> `docs/guidelines/intentional_divergences.md` §2.40, rationale class Enforced): `AdventureDecisionPhase
+> .apply()` now routes project handoff through `evaluate_project_switch()`'s lock/urgency-floor gate
+> instead of unconditionally overwriting `current_project_id`, closing the asymmetry that let this
+> world's danger-concern/active-project mismatch persist and fire `decision_divergence_detected`
+> (COGNITION's `subjective_divergence`-weighted event, `config/simulation_quality/scoring_weights.yaml`,
+> `src/simulation_quality/scorers/cognition.py:106-110`) on essentially every tick the mismatch
+> persisted. 15 independent Investigate-phase trials (8 idle + 4 induced-load, plus 3 inside the
+> dependent `test_simq_routing_test_seed42_500t_cognition_grade_stability` guard's own prior form)
+> were bit-identical at `event_count=0, normalized_score=0.0, grade=C` — load-insensitive, ruling out
+> F6 watchdog jitter as the primary mechanism. `watchdog_variance` deliberately NOT extended to this
+> discrete grade-band crossing: the drift is a real, understood, intentional behavior change, not
+> throttle-driven noise. `grade_anchors.json` COGNITION recalibrated to `{"grade": "C", "score":
+> 0.0}` for both run_keys. **Correction found during Implement**: a fresh isolated rerun of the
+> dependent guard test produced a rare residual (`event_count=2, grade=B`, 1 of 18 total trials
+> across Investigate + Implement) under artificially induced heavy load — the guard was therefore
+> kept in its tolerance-guard shape (not converted to strict bit-identical) to honestly account for
+> this residual; see the test's own docstring for the full accounting. The pre-existing
+> `score_ceilings.json` `watchdog_variance` entry for `simq_routing_test_seed42_500t`/COGNITION is
+> now permanently inert for the score-tolerance check it annotates and marked as superseded, not
+> deleted. **Disclosed, not fixed by this update**: fresh re-verification also found AGENCY has
+> drifted to `0/C` on both these run_keys (previously only confirmed on `seed42_500t`), plus a milder
+> COGNITION/AGENCY score-tolerance drift (not a band crossing) on the un-named
+> `simq_routing_test_seed123_500t` — a different pillar/mechanism (plausibly
+> `docs/guidelines/intentional_divergences.md` §2.41's `defer_with_reason` observability gap), tracked
+> by `TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT`, not this ticket's scope.
+
 ---
 
 ### sandbox_world
@@ -603,6 +634,20 @@ calibration world except `simq_routing_test`" ruling for any of the 9 non-routin
 only adds `hero_guild_routing` as a second, named exception to that ruling, exactly as
 `simq_routing_test` already was.
 
+> **NOTE (2026-08-13 — `TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP`):**
+> COGNITION dropped S→C (`hero_guild_routing_seed42_500t`) and A→C (`hero_guild_routing_seed456_500t`)
+> — event_count 0 at both, same root cause and same bisection to commit `3d992dd0`
+> (`TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION`) as the `simq_routing_test` NOTE above;
+> `hero_guild_routing` also sets `ENABLE_ADVENTURE_ROUTING: "ON"` and is directly exposed to the same
+> `AdventureDecisionPhase`/`evaluate_project_switch()` fix. 15/15 trials bit-identical, load-insensitive
+> — not F6. `grade_anchors.json` COGNITION recalibrated to `{"grade": "C", "score": 0.0}` for both
+> run_keys. **Disclosed, not fixed by this update**: AGENCY has also drifted to `0/C` on both run_keys
+> (band-crossing failures against their A anchors), and `hero_guild_routing_seed456_500t`'s ECONOMY and
+> PROGRESSION additionally drifted beyond score tolerance (not band-crossing). A milder
+> COGNITION/AGENCY score-tolerance drift (not band-crossing) was also found on the un-named
+> `hero_guild_routing_seed123_500t`. All tracked by
+> `TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT`, not this ticket's scope.
+
 **Third exception class — `urban_political`'s dormant `hometown` gap, accepted as permanent
 non-issue (TCK-20260706-SIMQ-URBAN-POLITICAL-HOMETOWN-RESOURCE-GAP):**
 `TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP`'s investigation (§4(i)) found that
@@ -624,6 +669,47 @@ tier per `corpus_tier_taxonomy.md`) was never intended as adventuring/routing-or
 action is required unless a future ticket explicitly proposes reversing both
 `TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA` and `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY`'s
 Out-of-Scope ruling for `urban_political`.
+
+---
+
+## lifecycle_full_coverage_world — First Registration & Recalibration
+(`TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP`)
+
+`TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD` added `lifecycle_full_coverage_world_seed42_200t`'s
+`grade_anchors.json` entry but never registered the key in `test_grade_regression.py`'s
+`FAST_ANCHOR_KEYS` list — a registration step missed at creation time, with no dedicated isolated
+test to catch the gap. Registering the key (a mechanical fix, part of the `/simq-audit mode=full`
+run `SIMQ-AUDIT-20260811T111151Z` that discovered this ticket) immediately surfaced that 8 of the
+anchor's 10 pillars had drifted beyond score tolerance since creation — FACTION and INFORMATION
+were the only pillars still within band+tolerance.
+
+> **NOTE (2026-08-13 — `TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP`):**
+> Confirmed compound, not single-cause. This world's own profile
+> (`config/simulation_quality/profiles/lifecycle_full_coverage_world.yaml`) sets
+> `ENABLE_ADVENTURE_ROUTING: "ON"` by design (to maximize lifecycle-bucket reachability), so it is
+> directly exposed to the same `TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION` mechanism
+> (commit `3d992dd0`) documented in the `simq_routing_test`/`hero_guild_routing` NOTEs above
+> (COGNITION and AGENCY both went to `0 events/0.0/C`, matching that signature exactly), *and* the
+> SUB-384 role/faction-mistagging cascade documented in `docs/parity_ledger/substrate.yaml`
+> (confirmed directly: `data/worlds/lifecycle_full_coverage_world/resolved/compile_context.json`
+> shows real `legacy_roles`/`legacy_factions` entries, the exact SUB-384 signature), *and* 3
+> additional tier-5 GoalScorer-consolidation commits
+> (`TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`, `TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER`,
+> `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`) that landed after the audit run which discovered
+> this gap — this world's own drift was still measurably moving between the investigation session
+> and Implement-time re-verification (SOCIAL event_count 2395 at anchor-creation time → 496/497
+> across three independent later samples), consistent with active, still-landing churn in this
+> commit cluster rather than a single settled cause.
+>
+> `grade_anchors.json` recalibrated for 8 pillars, using Implement-time fresh values (2-3
+> independent trials, bit-identical on all scored fields): COGNITION A/1.2879→C/0.0, AGENCY
+> A/1.925→C/0.0, COMBAT B/0.0101→B/0.0237, ECONOMY A/0.5304→C/0.0 (newly found drifted beyond the
+> originally-scoped 7 pillars, folded into this same recalibration per the SUB-384
+> `TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION` precedent of folding same-cause
+> same-anchor findings into an active pass), PROGRESSION A/0.8736→C/-0.1569, SOCIAL S/29.115→S/6.19,
+> WORLD A/0.54→A/0.72, NARRATIVE C/0.0→B/0.1230. FACTION (S/7.5) and INFORMATION (C/0.0) confirmed
+> unchanged, left untouched. `pytest tests/simulation_quality/test_grade_regression.py -m "not
+> slow" -q -k lifecycle_full_coverage_world_seed42_200t` passes cleanly post-recalibration.
 
 ---
 

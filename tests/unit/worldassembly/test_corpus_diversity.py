@@ -496,29 +496,65 @@ def test_urban_political_seed123_500t_cognition_bit_identical_under_load() -> No
 # — none were bit-identical, so all 14 use the tolerance-based guard shape (2b), unlike
 # urban_political_seed123_500t above. See each test's own docstring for its specific
 # repro evidence and the section of repro_sweep.md it cites.
+#
+# NOTE (TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP):
+# `test_simq_routing_test_seed42_500t_cognition_grade_stability` below was reassessed
+# during this ticket's Implement phase. Investigate's own 15 trials (8 idle + 4 load-2x,
+# plus 3 inside this test's prior form) were bit-identical at COGNITION=0/C, bisected to
+# `3d992dd0` (`TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION`,
+# `docs/guidelines/intentional_divergences.md` §2.40) — a real, deterministic step-change
+# eliminating the `decision_divergence_detected`-generating stuck-state. However, a
+# strict bit-identical (2a) conversion was falsified by direct re-run at Implement time:
+# 1 of 3 fresh trials under this test's own induced-load mechanism produced
+# `event_count=2, grade=B, loop_detected=True` instead of the expected 0/C (the other 2
+# reruns matched 0/C). This is evidence of a rare residual variance surviving the
+# `3d992dd0` fix — plausibly a distinct, smaller-magnitude watchdog/loop-detection signal
+# under heavy induced CPU contention, not yet root-caused to the same precision as the
+# main COGNITION step-change. The anchor value (`grade_anchors.json`, a single
+# non-stress-tested calibration run) is still correctly recalibrated to 0/C — that is the
+# overwhelming-majority, expected value (17/18 trials across Investigate + this rerun
+# session). But this guard test is reverted to the tolerance-based (2b) shape, matching
+# the other 14 anchors in this section, with a floor reflecting the now-rare residual
+# rather than the pre-3d992dd0 magnitude (183-179 events, always grade A) — not the
+# strict 2a bit-identical shape, since real evidence contradicts that premise. See
+# `TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT` (filed from this same
+# ticket) for the separate, unrelated AGENCY drift on this same run_key — not to be
+# confused with this COGNITION residual, a different pillar and different mechanism.
 # ---------------------------------------------------------------------------
 @pytest.mark.slow
 def test_simq_routing_test_seed42_500t_cognition_grade_stability() -> None:
     """Tolerance-based grade-stability guard for `simq_routing_test_seed42_500t`
-    (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
+    COGNITION (TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP).
 
-    Section 2's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
-    drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
-    idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
-    COGNITION event_count/score varied across all 4 idle/load trials (183->179 events at 4x load); F6/decision_divergence_detected-class.
+    Formerly a tolerance-based guard (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP),
+    reflecting real F6/decision_divergence_detected-class watchdog variance observed at
+    the time (183->179 events across idle/2x/4x-load trials, always grade A). The bulk of
+    that variance is gone: this ticket's investigation directly bisected (disposable
+    `git worktree`s) this anchor's COGNITION drop to commit `3d992dd0`
+    (`TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION`,
+    `docs/guidelines/intentional_divergences.md` §2.40), not F6 jitter: 15 independent
+    trials were bit-identical at `event_count=0, normalized_score=0.0, grade=C`.
+    `AdventureDecisionPhase.apply()` now routes project handoff through
+    `evaluate_project_switch()`'s lock/urgency-floor gate instead of unconditionally
+    overwriting `current_project_id`, so the danger-concern stuck-mismatch state that
+    used to drive `decision_divergence_detected` essentially never persists for this
+    world anymore.
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
-    3 fresh same-seed trials and asserts (a) each trial's grade stays within the
-    existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
-    trials stays within an evidence-derived tolerance of the anchor's re-anchored value
-    (tolerance = 1.3x the largest single-sample deviation observed in the repro, floored
-    at the standard SCORE_TOLERANCE_ABS_FLOOR=0.05 -- derived from repro_sweep.md's actual
-    trial-to-trial spread, not invented).
+    However, a strict bit-identical (2a) assertion was falsified during this same
+    ticket's Implement phase: a fresh rerun under this test's own induced-load mechanism
+    produced `event_count=2, grade=B, loop_detected=True` on 1 of 3 trials — a rare
+    residual signal (roughly 1/18 trials across all sampling this ticket performed,
+    Investigate's 15 plus 3 reruns) surviving the `3d992dd0` fix, not yet root-caused to
+    the same precision as the main step-change. This test therefore stays in the
+    tolerance-guard (2b) shape rather than converting to 2a: one idle trial and one
+    induced-load trial (2x core oversubscription) via the real throttled Kernel, with a
+    floor that accepts the deterministic 0/C outcome as the expected case but tolerates
+    the observed rare residual (event_count <= 2, grade in {"C", "B"}) rather than
+    asserting strict equality.
     """
+    import multiprocessing
     import tempfile
+    import time
 
     from tools.calibrate_simq import (
         _build_hub,
@@ -528,56 +564,68 @@ def test_simq_routing_test_seed42_500t_cognition_grade_stability() -> None:
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
 
     world_name = "simq_routing_test"
     profile_name = "simq_routing_test"
     seed = 42
     ticks = 500
-    n_trials = 3
-    anchors = {
-        "COGNITION": {"grade": "A", "score": 1.8373, "abs_floor": 0.0521},
-    }
 
-    profile = _resolve_profile(profile_name)
-    feature_flags = _load_profile_feature_flags(profile)
-    trial_scores: dict[str, list[float]] = {p: [] for p in anchors}
-    band_failures: list[str] = []
+    def _busy_loop(stop_flag) -> None:
+        x = 0
+        while not stop_flag.value:
+            for _ in range(200000):
+                x = (x * 1103515245 + 12345) & 0x7FFFFFFF
 
-    for trial in range(n_trials):
+    def _run_cognition(label: str, cal_dir: str) -> dict:
+        profile = _resolve_profile(profile_name)
+        feature_flags = _load_profile_feature_flags(profile)
         engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
         weights = _load_weights(profile)
-        with tempfile.TemporaryDirectory() as cal_dir:
-            hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
-            _replay_jsonl_through_hub(engine_run_dir, hub)
-            report = hub.get_quality_report()
-            persistence.write_report(report)
-            persistence.shutdown()
-        for pillar, target in anchors.items():
-            snap = report.pillars[pillar]
-            trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+        hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_{label}")
+        _replay_jsonl_through_hub(engine_run_dir, hub)
+        report = hub.get_quality_report()
+        persistence.write_report(report)
+        persistence.shutdown()
+        cognition = report.pillars["COGNITION"]
+        return {
+            "event_count": cognition.event_count,
+            "raw_score": cognition.raw_score,
+            "normalized_score": cognition.normalized_score,
+            "grade": cognition.grade,
+            "loop_detected": cognition.loop_detected,
+        }
 
-    assert not band_failures, (
-        f"simq_routing_test_seed42_500t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
-        + "\n".join(band_failures)
-    )
+    with tempfile.TemporaryDirectory() as idle_dir:
+        idle_result = _run_cognition("idle", idle_dir)
 
-    score_failures: list[str] = []
-    for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
-            score_failures.append(
-                f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
-                f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
-                f"per-trial values: {trial_scores[pillar]}"
-            )
-    assert not score_failures, (
-        f"simq_routing_test_seed42_500t -- {len(score_failures)} pillar(s) drifted beyond evidence-derived score tolerance:\n"
-        + "\n".join(score_failures)
+    stop_flag = multiprocessing.Value("b", False)
+    n_workers = max(1, multiprocessing.cpu_count() * 2)
+    procs = [multiprocessing.Process(target=_busy_loop, args=(stop_flag,)) for _ in range(n_workers)]
+    for p in procs:
+        p.start()
+    try:
+        time.sleep(1.0)  # let induced load ramp up before the drive starts
+        with tempfile.TemporaryDirectory() as load_dir:
+            load_result = _run_cognition("load", load_dir)
+    finally:
+        stop_flag.value = True
+        for p in procs:
+            p.join(timeout=5.0)
+            if p.is_alive():
+                p.terminate()
+
+    for label, result in (("idle", idle_result), ("load", load_result)):
+        assert result["event_count"] <= 2, (
+            f"simq_routing_test_seed42_500t COGNITION ({label}) exceeded the tolerance floor "
+            f"for the confirmed-rare residual variance — result={result}"
+        )
+        assert result["grade"] in ("C", "B"), (
+            f"simq_routing_test_seed42_500t COGNITION ({label}) graded outside the tolerated "
+            f"{{C, B}} band — result={result}"
+        )
+    assert idle_result["event_count"] == 0 and idle_result["grade"] == "C", (
+        f"simq_routing_test_seed42_500t COGNITION (idle) drifted from the confirmed "
+        f"deterministic value under non-induced-load conditions — actual={idle_result}"
     )
 
 

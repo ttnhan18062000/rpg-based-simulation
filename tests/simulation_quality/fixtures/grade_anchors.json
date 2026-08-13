@@ -221,8 +221,8 @@
   },
   "simq_routing_test_seed42_500t": {
     "COGNITION": {
-      "grade": "A",
-      "score": 1.3253012048192772
+      "grade": "C",
+      "score": 0.0
     },
     "AGENCY": {
       "grade": "A",
@@ -389,8 +389,8 @@
   },
   "simq_routing_test_seed456_500t": {
     "COGNITION": {
-      "grade": "A",
-      "score": 0.570264765784114
+      "grade": "C",
+      "score": 0.0
     },
     "AGENCY": {
       "grade": "A",
@@ -2111,8 +2111,8 @@
   },
   "hero_guild_routing_seed42_500t": {
     "COGNITION": {
-      "grade": "S",
-      "score": 2.108433734939759
+      "grade": "C",
+      "score": 0.0
     },
     "AGENCY": {
       "grade": "A",
@@ -2195,8 +2195,8 @@
   },
   "hero_guild_routing_seed456_500t": {
     "COGNITION": {
-      "grade": "A",
-      "score": 0.9255533199195171
+      "grade": "C",
+      "score": 0.0
     },
     "AGENCY": {
       "grade": "A",
@@ -3371,32 +3371,32 @@
   },
   "lifecycle_full_coverage_world_seed42_200t": {
     "COGNITION": {
-      "grade": "A",
-      "score": 1.2878787878787878
+      "grade": "C",
+      "score": 0.0
     },
     "AGENCY": {
-      "grade": "A",
-      "score": 1.925
+      "grade": "C",
+      "score": 0.0
     },
     "COMBAT": {
       "grade": "B",
-      "score": 0.010050251256281407
+      "score": 0.023668639053254437
     },
     "FACTION": {
       "grade": "S",
       "score": 7.5
     },
     "ECONOMY": {
-      "grade": "A",
-      "score": 0.5303867403314917
+      "grade": "C",
+      "score": 0.0
     },
     "PROGRESSION": {
-      "grade": "A",
-      "score": 0.8735632183908046
+      "grade": "C",
+      "score": -0.1568627450980392
     },
     "SOCIAL": {
       "grade": "S",
-      "score": 29.115
+      "score": 6.19
     },
     "INFORMATION": {
       "grade": "C",
@@ -3404,11 +3404,11 @@
     },
     "WORLD": {
       "grade": "A",
-      "score": 0.54
+      "score": 0.72
     },
     "NARRATIVE": {
-      "grade": "C",
-      "score": 0.0
+      "grade": "B",
+      "score": 0.12295081967213115
     }
   }
 }
