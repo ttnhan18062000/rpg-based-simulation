@@ -87,7 +87,16 @@ class EntityInspector:
             "blockers_count": len(entity.strategic.blockers),
             "contracts_count": len(entity.strategic.contracts),
             "leads_count": len(entity.strategic.leads),
-            "boredom": entity.strategic.boredom.copy() if hasattr(entity.strategic.boredom, "copy") else entity.strategic.boredom
+            "boredom": entity.strategic.boredom.copy() if hasattr(entity.strategic.boredom, "copy") else entity.strategic.boredom,
+            "committed_intentions_count": len(entity.strategic.committed_intentions),
+            "committed_intention_head": (
+                {
+                    "goal_kind": entity.strategic.committed_intentions[0].goal_kind,
+                    "status": entity.strategic.committed_intentions[0].status,
+                    "sequence_index": entity.strategic.committed_intentions[0].sequence_index,
+                }
+                if entity.strategic.committed_intentions else None
+            ),
         }
         
         # 5. Timeline Events

@@ -112,6 +112,54 @@ Strategic goals are broken down into a multi-step hierarchy.
 3.  **Objective**: A granular, atomic step (e.g., "Travel to Forge", "Interact with Anvil").
 4.  **Action**: The raw engine command sent to the simulation.
 
+### Committed Intentions (Multi-Step Planning)
+`CommittedIntention` (`src/core/strategic.py`) is a durable, frozen record letting an entity
+commit to a short, ordered sequence of future intentions (e.g. train -> craft -> quest) instead
+of re-deciding the single next action every eligible tick. `StrategicComponent.committed_intentions`
+holds the sequence as a `Tuple[CommittedIntention, ...]`, capped at
+`CognitionProfile.max_committed_intentions` (default **3**) and enforced by
+`CapacityEnforcementPhase` using an order-preserving trim (`score_func=lambda ci: -ci.sequence_index`)
+that drops the furthest-future, lowest-priority entries first, never the front of the sequence.
+
+**Materialization.** Each eligible tick, `evaluate_strategic_intent()`
+(`src/systems/strategic_systems/intelligence.py`) checks `committed_intentions[0]`: if its
+`status == "pending"` and its `goal_kind` is one of the 10 generic `GoalKind` values (the
+pre-epic set with live registered scorers — `ADVENTURE_ROUTE`/`SOCIAL_CONTRACT`/
+`REGION_STABILIZATION` are excluded, MVP scope), it is synthesized as an ordinary tier-5
+`GoalScore` candidate (`utility=50.0`, a fixed mid-scale value) and appended to the same
+candidate list `GoalRegistry`'s live scorers populate — before routine/role-utility biasing, so
+it is boosted identically to a live candidate. It then competes through the completely
+**unmodified** `evaluate_project_switch()` arbiter (STRAT-185/186/187 lock/margin logic
+applies exactly as it does to every other tier-5 candidate). Because the 10 eligible kinds
+always resolve to a real `GoalKind` instance (not `ProjectKind`), a committed intention's
+materialized `ProjectState.score` equals `best_candidate.utility` directly (the 100-ceiling
+scale) — this is scale-consistent by construction, unlike the three special branches, which
+must use `metadata["raw_score"]` to avoid the 2.9-ceiling `ProjectKind` scale.
+
+**Retry-on-loss.** When the synthesized candidate loses arbitration (a different candidate
+wins, or `evaluate_project_switch()` itself blocks the switch), no code touches
+`committed_intentions` — the entry is left exactly as it was (`sequence_index` unchanged,
+`status="pending"`) and is re-synthesized and re-offered on the next eligible tick. This is a
+structural consequence of the win-transition bookkeeping firing only `if switch_up:`, not a
+retry counter or timer.
+
+**Win transition.** When the synthesized candidate wins, the head entry is written back via
+`StrategicUpdate.committed_intentions_add_or_update` with `status="active"` — the sole place a
+`CommittedIntention` is ever mutated, going through the same authoritative
+`StrategicPatch.apply()` merge path (keyed by `intention_id`, re-sorted by `sequence_index`) as
+every other `StrategicComponent` collection.
+
+**Scope note (as of this ticket).** No production write path constructs a `CommittedIntention`
+yet — this mechanism is consume-side only. A future ticket owns: (a) a write path (a candidate
+producer is `ProgressionPlan.goal_queue`, see
+`docs/simulation/domains/progression_planner_contract.md`, auto-seeding `committed_intentions`
+— explicitly deferred, not decided here), (b) mid-sequence-skip/abandonment semantics (advancing
+past `committed_intentions[0]` when its status is not `"pending"` is out of scope — only the
+head is ever read), and (c) a bounded retry count for a permanently-unresolvable `target_hint`
+(currently: a `None` `target_hint` never clears the arbiter's own target-floor check, so it
+retries forever, harmlessly, since nothing in this ticket's scope can ever produce one in
+production).
+
 ---
 
 ## 5. Perception & Salience

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
         CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState,
-        ContractState, TurningPointState
+        ContractState, TurningPointState, CommittedIntention
     )
     from src.engine.policy import GovernorPolicy
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
@@ -511,21 +511,25 @@ class StrategicUpdate:
     # Beliefs
     beliefs_add_or_update: list[Any] = field(default_factory=list)
     beliefs_remove: list[str] = field(default_factory=list)
+    # Committed Intentions
+    committed_intentions_add_or_update: list[CommittedIntention] = field(default_factory=list)
+    committed_intentions_remove: list[str] = field(default_factory=list)  # by intention_id
 
     def is_noop(self) -> bool:
-        return (not self.blockers_add_or_update and not self.blockers_remove and 
-                not self.leads_add_or_update and not self.leads_remove and 
-                not self.directives_add_or_update and not self.directives_remove and 
-                not self.projects_add_or_update and not self.projects_remove and 
-                self.current_project_id_set is None and self.current_objective_id_set is None and 
-                not self.boredom_delta and not self.concerns_add_or_update and 
-                not self.concerns_remove and not self.candidate_zones_add_or_update and 
-                not self.candidate_zones_remove and not self.hypotheses_add_or_update and 
-                not self.hypotheses_remove and not self.source_trust_updates and 
-                not self.contracts_add_or_update and not self.contracts_remove and 
-                not self.turning_points_add and self.overload_source_set is None and 
-                self.overload_tick_set is None and not self.beliefs_add_or_update and 
-                not self.beliefs_remove)
+        return (not self.blockers_add_or_update and not self.blockers_remove and
+                not self.leads_add_or_update and not self.leads_remove and
+                not self.directives_add_or_update and not self.directives_remove and
+                not self.projects_add_or_update and not self.projects_remove and
+                self.current_project_id_set is None and self.current_objective_id_set is None and
+                not self.boredom_delta and not self.concerns_add_or_update and
+                not self.concerns_remove and not self.candidate_zones_add_or_update and
+                not self.candidate_zones_remove and not self.hypotheses_add_or_update and
+                not self.hypotheses_remove and not self.source_trust_updates and
+                not self.contracts_add_or_update and not self.contracts_remove and
+                not self.turning_points_add and self.overload_source_set is None and
+                self.overload_tick_set is None and not self.beliefs_add_or_update and
+                not self.beliefs_remove and not self.committed_intentions_add_or_update and
+                not self.committed_intentions_remove)
 
     def merge(self, other: StrategicUpdate) -> StrategicUpdate:
         """Merges another StrategicUpdate into this one."""
@@ -562,7 +566,9 @@ class StrategicUpdate:
             overload_source_set=other.overload_source_set if other.overload_source_set is not None else self.overload_source_set,
             overload_tick_set=other.overload_tick_set if other.overload_tick_set is not None else self.overload_tick_set,
             beliefs_add_or_update=self.beliefs_add_or_update + other.beliefs_add_or_update,
-            beliefs_remove=self.beliefs_remove + other.beliefs_remove
+            beliefs_remove=self.beliefs_remove + other.beliefs_remove,
+            committed_intentions_add_or_update=self.committed_intentions_add_or_update + other.committed_intentions_add_or_update,
+            committed_intentions_remove=self.committed_intentions_remove + other.committed_intentions_remove
         )
 
 @dataclass(frozen=True, slots=True)

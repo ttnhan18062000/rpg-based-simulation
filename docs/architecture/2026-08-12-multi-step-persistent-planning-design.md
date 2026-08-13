@@ -3,7 +3,7 @@ status: active
 layer: strategy
 authority: P1
 audience: developer
-last_verified: 2026-08-12
+last_verified: 2026-08-13
 ---
 
 # Multi-Step Persistent Planning for Adventure-Eligible Entities — Design & Go/No-Go
@@ -422,6 +422,16 @@ by construction.
 The follow-up ticket has been filed: `tickets/todos/TCK-20260812-COMMITTED-INTENTION-SEQUENCE.md`,
 using the stub above verbatim as its scope.
 
+> **Post-landing note (2026-08-13, `TCK-20260812-COMMITTED-INTENTION-SEQUENCE`):** the follow-up
+> ticket has landed, consume-side only, exactly as scoped above — no changes to
+> `evaluate_project_switch()`'s own body (golden-hash-verified byte-identical), no
+> `ProgressionPlan.goal_queue` changes, no new `GoalKind`/`GoalScorer`. See
+> `docs/mechanics/04_strategic_cognition.md` §4 ("Committed Intentions (Multi-Step Planning)") for
+> the landed mechanism description and `docs/parity_ledger/strategic_cognition.yaml` (`STRAT-256`)
+> for the parity citation. All five Open Questions below were resolved with explicit
+> implementation-time decisions rather than silently defaulted — see each question's own
+> post-landing annotation.
+
 ## Open Questions For Implementation
 
 These are genuinely unresolved details, deliberately left for the follow-up implementation ticket
@@ -432,20 +442,52 @@ to resolve with empirical/implementation-time judgment — not gaps in this desi
    validated for this genuinely different use case (a durable sequence vs. a set of concurrently
    trackable projects). The follow-up ticket should treat this as a starting point, not a settled
    constant.
+   > **Resolved (`TCK-20260812-COMMITTED-INTENTION-SEQUENCE`, plan.md Design Decision 7):** the
+   > `3` default is kept, not re-tuned — this question asked only whether 3 is empirically right,
+   > and the follow-up ticket explicitly deferred re-tuning to a future ticket pending evidence.
+   > Enforcement reuses `CapacityService.trim_list()` (not `trim_dict()`, since
+   > `committed_intentions` is an ordered `Tuple`) with an order-encoding
+   > `score_func=lambda ci: -ci.sequence_index`, so the furthest-future entry is dropped first,
+   > never the front of the sequence.
 2. **Exact abandonment semantics when a mid-sequence intention is skipped.**
    `CommittedIntention.status` includes `"skipped"` (Design §2's sketch), but this design does not
    specify the trigger (explicit player/AI decision? automatic timeout? external world-state
    invalidation?) or whether skipping index N auto-advances to N+1 or halts the whole sequence.
    Left for the follow-up ticket's own implementation-time design.
+   > **Resolved (`TCK-20260812-COMMITTED-INTENTION-SEQUENCE`, plan.md Design Decision 8):** no
+   > skip-trigger or auto-advance mechanism was implemented. The materialization hook only ever
+   > reads `committed_intentions[0]`; a non-`"pending"` head is treated as not-due, and
+   > `committed_intentions[1]` is never consulted. Auto-advance is deferred to a future ticket,
+   > which would also need to add the write path that could ever produce a non-`"pending"` head.
 3. **`target_hint` re-resolution failure handling.** Design §2 specifies `target_hint` is
    "re-resolved at materialization time if absent" but does not specify what happens if resolution
    fails (the hinted target no longer exists) — abandon the intention, skip to the next
    `sequence_index`, or retry next tick with a fresh resolution attempt. Follow-up ticket's call.
+   > **Resolved (`TCK-20260812-COMMITTED-INTENTION-SEQUENCE`, plan.md Design Decision 9):** no
+   > bespoke re-resolution logic was added. A `None` `target_hint` produces a synthesized
+   > `GoalScore` with no resolvable target, which the arbiter's own existing floor check
+   > (`intelligence.py:1412`) already skips — a free "no-op this tick, retry next tick" with zero
+   > new code. Disclosed limitation: since no write path in this ticket's scope can ever set
+   > `target_hint` after construction, a permanently-`None` value would retry forever once a future
+   > write path exists; that future ticket must decide whether to bound the retry count.
 4. **Whether `ProgressionPlan.goal_queue`'s head-goal bias should auto-seed
    `committed_intentions` at plan-creation time** — flagged only as a "nice-to-have, explicitly not
    part of this design's own scope" in the Future Extension Patterns section above; whether and how
    to wire this is fully open.
+   > **Resolved (`TCK-20260812-COMMITTED-INTENTION-SEQUENCE`, plan.md Design Decision 10):** no
+   > auto-seed code was added — the ticket's own Out of Scope already forbade
+   > `ProgressionPlan.goal_queue`/`PlanRevisionService` changes. The deferral is now stated
+   > explicitly in `docs/mechanics/04_strategic_cognition.md` §4's "Scope note," which names
+   > `ProgressionPlan.goal_queue` as a candidate future write-path producer rather than leaving the
+   > relationship unmentioned. See also `docs/simulation/domains/progression_planner_contract.md`
+   > for `goal_queue`'s own, unchanged episode-cadence contract.
 5. **Observability/debug surface shape** — the Durable State Rule's minimum ("inspection/debug
    visibility") is a hard requirement, but this design does not specify the exact surface (a new
    `EntityInspector` field, a decision-trace entry, a dedicated debug endpoint) — an implementation
    detail for the follow-up ticket, not a design-level decision.
+   > **Resolved (`TCK-20260812-COMMITTED-INTENTION-SEQUENCE`, plan.md Design Decision 11):** no new
+   > `EntityInspectionSnapshot` field or endpoint was added. `EntityInspector.strategic_summary`
+   > (`src/observability/live/entity_inspector.py`) gained `committed_intentions_count` (int) and
+   > `committed_intention_head` (a small dict with `goal_kind`/`status`/`sequence_index`, or `None`
+   > when empty), matching that dict's existing flat-field convention
+   > (`current_project_id`, `blockers_count`, etc.).

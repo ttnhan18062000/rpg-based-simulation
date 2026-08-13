@@ -208,6 +208,28 @@ No dedicated "mentor" role exists in `EntityCarryForward`; detection is purely s
 
 ---
 
+## Relationship to `StrategicComponent.committed_intentions` (Distinct Concept)
+
+As of `TCK-20260812-COMMITTED-INTENTION-SEQUENCE`, a second, structurally unrelated planning
+concept exists: `StrategicComponent.committed_intentions` (`src/core/strategic.py`), documented in
+`docs/mechanics/04_strategic_cognition.md` §4 ("Committed Intentions (Multi-Step Planning)"). Do
+not conflate the two — they have non-overlapping responsibility, per
+`docs/architecture/2026-08-12-multi-step-persistent-planning-design.md` Design §3:
+
+| | `ProgressionPlan.goal_queue` (this doc) | `StrategicComponent.committed_intentions` |
+|---|---|---|
+| Cadence | Episode-cadence — written only from `CampaignOrchestrator._build_initial_state()`/`_advance_state()` | Tick-cadence — consulted every eligible `evaluate_strategic_intent()` tick |
+| Horizon | Long (18+ months / multi-episode) | Medium (a handful of ticks to a fraction of an episode) |
+| How it's consulted | Advisory only — `goal_queue[0]` contributes a flat `+1.5` scoring nudge (see "Plan-Advance Scoring Bonus" above); never writes `current_project_id` directly | Materializes `committed_intentions[0]` as an ordinary tier-5 `GoalScore` candidate that competes through, and can win, `evaluate_project_switch()` |
+| Write path status | Live (E61A–E61D) | Not yet implemented — `TCK-20260812-COMMITTED-INTENTION-SEQUENCE` landed consume-side only; nothing in production constructs a `CommittedIntention` yet |
+
+**Auto-seed relationship (deferred, not implemented):** a future ticket could have
+`goal_queue`'s head-goal bias seed the initial `committed_intentions` ordering at plan-creation
+time. This is explicitly *not* implemented by `TCK-20260812-COMMITTED-INTENTION-SEQUENCE` — see
+that design doc's Open Question 4 and its post-landing resolution note.
+
+---
+
 ## Parity Ledger References
 
 | ID | Description |

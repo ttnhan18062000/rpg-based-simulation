@@ -8,7 +8,7 @@ from src.core.state import (
     EntityState, CombatComponent, InventoryComponent, NavigationComponent,
     TaskComponent, IdentityComponent, AuthoritativeState, StrategicComponent
 )
-from src.core.strategic import ConcernState, ConcernKind, BlockerState, BlockerKind
+from src.core.strategic import ConcernState, ConcernKind, BlockerState, BlockerKind, CommittedIntention
 
 def test_entity_inspector_idle():
     # 1. Test when manager is None
@@ -294,3 +294,35 @@ def test_narrative_modifiers_both_grief_and_nemesis():
     assert snap.narrative_modifiers["grief_concerns"][0]["dead_ally_id"] == 7
     assert len(snap.narrative_modifiers["nemesis_blockers"]) == 1
     assert snap.narrative_modifiers["nemesis_blockers"][0]["antagonist_id"] == 5
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260812-COMMITTED-INTENTION-SEQUENCE (New Test 12) -- observability surface
+# ---------------------------------------------------------------------------
+
+def test_committed_intentions_observability_surface_empty_when_none():
+    entity = _simple_entity(1)
+    snap = EntityInspector.inspect_entity(_dummy_manager(entity), 1)
+    assert snap.strategic_summary["committed_intentions_count"] == 0
+    assert snap.strategic_summary["committed_intention_head"] is None
+
+
+def test_committed_intentions_observability_surface_reports_head():
+    ci_head = CommittedIntention(
+        intention_id="ci_1", goal_kind="harvesting", target_hint="node_5",
+        sequence_index=0, status="pending",
+    )
+    ci_next = CommittedIntention(
+        intention_id="ci_2", goal_kind="social", target_hint=None,
+        sequence_index=1, status="pending",
+    )
+    strat = StrategicComponent(committed_intentions=(ci_head, ci_next))
+    entity = _simple_entity(1, strat)
+    snap = EntityInspector.inspect_entity(_dummy_manager(entity), 1)
+
+    assert snap.strategic_summary["committed_intentions_count"] == 2
+    assert snap.strategic_summary["committed_intention_head"] == {
+        "goal_kind": "harvesting",
+        "status": "pending",
+        "sequence_index": 0,
+    }

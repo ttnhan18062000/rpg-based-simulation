@@ -3,7 +3,7 @@ status: active
 layer: strategy
 authority: P1
 audience: developer
-last_verified: 2026-08-12
+last_verified: 2026-08-13
 ---
 
 # Adventure as a Strategic-Cognition Sub-Component — Wrapper Design
@@ -452,13 +452,18 @@ the wrapper migration itself):
   ever picking the single next action — this implies a new persistent planning concept, not a
   scorer tweak, and deserves its own design conversation rather than folding into this one.
 
-> **Post-landing note (2026-08-12, `TCK-20260811-MULTI-STEP-PLANNING-DESIGN`):** the "Multi-step
-> planning" item above has since been design-reviewed — see `TCK-20260811-MULTI-STEP-PLANNING-DESIGN`,
+> **Post-landing note (2026-08-13, `TCK-20260812-COMMITTED-INTENTION-SEQUENCE`):** the "Multi-step
+> planning" item above has since been design-reviewed (`TCK-20260811-MULTI-STEP-PLANNING-DESIGN`,
 > decision: GO, design doc at
-> `docs/architecture/2026-08-12-multi-step-persistent-planning-design.md`. A follow-up
-> implementation ticket (`TCK-20260812-COMMITTED-INTENTION-SEQUENCE`) has been filed at
-> `tickets/todos/TCK-20260812-COMMITTED-INTENTION-SEQUENCE.md` to build the `committed_intentions`
-> model described there; not yet landed as of this note.
+> `docs/architecture/2026-08-12-multi-step-persistent-planning-design.md`) and the follow-up
+> implementation ticket (`TCK-20260812-COMMITTED-INTENTION-SEQUENCE`) has landed, consume-side
+> only: a new `CommittedIntention` durable record and `StrategicComponent.committed_intentions`
+> field, materialized one step at a time as an ordinary tier-5 `GoalScore` candidate through the
+> unmodified `evaluate_project_switch()` arbiter (golden-hash-verified byte-identical). No
+> production write path exists yet — the mechanism is fully wired but inert until a future ticket
+> seeds `committed_intentions` for real entities. See
+> `docs/mechanics/04_strategic_cognition.md` §4 and `docs/parity_ledger/strategic_cognition.yaml`
+> (`STRAT-256`) for the landed citations.
 
 ## Diagrams
 

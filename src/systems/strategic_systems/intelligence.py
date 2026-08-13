@@ -52,6 +52,12 @@ _GOAL_UTILITY_SCORE_MAX: float = 100.0
 # both score systems. STRAT-186.
 _INTERRUPTION_URGENCY_FLOOR_PCT: float = 0.8
 
+# TCK-20260812-COMMITTED-INTENTION-SEQUENCE: fixed, mid-scale utility for a materialized
+# CommittedIntention candidate -- above the 20.0 winner floor (intelligence.py:1412), below the
+# 100.0 GoalKind scale ceiling (_GOAL_UTILITY_SCORE_MAX), so it competes as an ordinary
+# mid-strength tier-5 candidate rather than a guaranteed winner or loser.
+_COMMITTED_INTENTION_BASE_UTILITY: float = 50.0
+
 if TYPE_CHECKING:
     from src.engine.cadence import SystemCadence
 
@@ -76,6 +82,7 @@ from src.systems.world_systems.routine import RoutineService
 from src.systems.world_systems.intake import ConcernIntakeSystem
 from src.engine.domain_logic import SimulationDomainLogic
 from src.ai.goals import GoalRegistry
+from src.ai.goals.base import GoalScore
 from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
@@ -86,6 +93,16 @@ from src.systems.strategic_systems.belief import BeliefCycleSystem
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
+
+# TCK-20260812-COMMITTED-INTENTION-SEQUENCE: the 10 pre-epic "generic" GoalKind values, each with
+# a live registered scorer (src/ai/goals/__init__.py). Excludes ADVENTURE_ROUTE/SOCIAL_CONTRACT/
+# REGION_STABILIZATION, which materialize through dedicated branches (:1440-1539) requiring
+# synthetic metadata a committed intention has no legitimate way to populate -- MVP scope.
+_COMMITTED_INTENTION_ELIGIBLE_KINDS = frozenset({
+    GoalKind.HARVESTING, GoalKind.FATIGUE, GoalKind.HUNGER, GoalKind.SOCIAL,
+    GoalKind.TOWN_RETURN, GoalKind.COMBAT_ENGAGE, GoalKind.COMBAT_RETREAT,
+    GoalKind.RECOVER, GoalKind.RESOLVE_BLOCKER, GoalKind.GUILD,
+})
 
 
 def _score_scale_max(kind) -> float:
@@ -1392,7 +1409,28 @@ class StrategicIntelligenceSystem:
         
         # 4. Goal Scoring & Routine Biasing
         all_scores = GoalRegistry.get_all_scores(entity, state)
-        
+
+        # TCK-20260812-COMMITTED-INTENTION-SEQUENCE: materialize committed_intentions[0] (when
+        # due) as an ordinary tier-5 candidate, injected before routine/role-boost so it is
+        # boosted like a live scorer's candidate. "When due" reduces to head.status == "pending"
+        # -- the arbiter's own lock/margin logic (evaluate_project_switch(), unmodified) does the
+        # rest, exactly as it already does for every other tier-5 candidate.
+        if strat.committed_intentions:
+            head = strat.committed_intentions[0]
+            if head.status == "pending":
+                try:
+                    head_kind = GoalKind(head.goal_kind)
+                except ValueError:
+                    head_kind = None
+                if head_kind in _COMMITTED_INTENTION_ELIGIBLE_KINDS:
+                    all_scores = all_scores + [GoalScore(
+                        kind=head_kind,
+                        utility=_COMMITTED_INTENTION_BASE_UTILITY,
+                        target_id=head.target_hint,
+                        target_pos=None,
+                        metadata={"committed_intention_id": head.intention_id},
+                    )]
+
         # PH9: Routine & Life-Rhythm Biasing
         all_scores = [
             replace(s, utility=s.utility + 
@@ -1565,10 +1603,18 @@ class StrategicIntelligenceSystem:
 
             switch_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate_proj, current_tick, state=state)
             if switch_up:
-                return replace(switch_up, 
+                # TCK-20260812-COMMITTED-INTENTION-SEQUENCE: win-transition bookkeeping. Only
+                # fires when the winning candidate is THIS tick's synthesized committed-intention
+                # candidate (matched by the metadata tag set at injection, above) -- a live
+                # scorer's candidate for the same GoalKind must not advance the sequence.
+                extra_ci = {}
+                if strat.committed_intentions and best_candidate.metadata.get("committed_intention_id") == strat.committed_intentions[0].intention_id:
+                    extra_ci["committed_intentions_add_or_update"] = [replace(strat.committed_intentions[0], status="active")]
+                return replace(switch_up,
                     boredom_delta=boredom_upd,
                     leads_add_or_update=memory_upd.leads_add_or_update,
-                    leads_remove=memory_upd.leads_remove
+                    leads_remove=memory_upd.leads_remove,
+                    **extra_ci
                 )
             
             # Law 194-197: Enforce Strategic Bandwidth

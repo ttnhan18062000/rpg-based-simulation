@@ -3,7 +3,7 @@
 # Compliance IDs: STRAT-060, STRAT-061, STRAT-062, STRAT-063, SUB-022
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from enum import Enum
 
 
@@ -325,6 +325,16 @@ class SourceTrustEntry:
 
 
 @dataclass(frozen=True, slots=True)
+class CommittedIntention:
+    """One step in a short, ordered, durable sequence of future intentions."""
+    intention_id: str
+    goal_kind: str
+    target_hint: Optional[str]
+    sequence_index: int
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
 class CognitionProfile:
     """
     Profile-specific capacity limits for strategic cognition.
@@ -340,6 +350,7 @@ class CognitionProfile:
     resistance_multiplier: float = 30.0   # Scales resistance into project utility score
     detour_breadth: int = 3  # Max detour suggestions per tick
     reserved_detour_depth: int = 2    # Max nesting depth for detour chains (reserved for future recursive planning)
+    max_committed_intentions: int = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -361,6 +372,7 @@ class StrategicComponent:
     contracts: Dict[str, ContractState] = field(default_factory=dict)
     turning_points: List[TurningPointState] = field(default_factory=list)
     beliefs: Dict[str, Any] = field(default_factory=dict)
+    committed_intentions: Tuple[CommittedIntention, ...] = field(default_factory=tuple)
 
     # Active tracking
     current_project_id: Optional[str] = None

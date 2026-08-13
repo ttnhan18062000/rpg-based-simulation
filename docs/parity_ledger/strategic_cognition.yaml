@@ -3549,3 +3549,75 @@
     unit tests today (no production caller, before or after this ticket) -- a disclosed, not a
     hidden, gap; the mechanic it partially encodes is live via the new scorer's independent
     re-implementation, not via that method being called.
+- id: STRAT-256
+  text: A CommittedIntention durable multi-step planning sequence (StrategicComponent.committed_intentions)
+    materializes one step at a time as an ordinary tier-5 GoalScore candidate, competing through
+    the completely unmodified evaluate_project_switch() arbiter; a losing committed intention
+    stays queued (retried next eligible tick) rather than being discarded.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >-
+    src/core/strategic.py -- CommittedIntention (frozen dataclass: intention_id, goal_kind,
+    target_hint, sequence_index, status), StrategicComponent.committed_intentions
+    (Tuple[CommittedIntention, ...]), CognitionProfile.max_committed_intentions (default 3);
+    src/core/updates.py -- StrategicUpdate.committed_intentions_add_or_update/_remove,
+    is_noop()/merge() updated;
+    src/engine/patches.py -- StrategicPatch.apply()'s merge_committed_intentions() helper
+    (dict-by-intention_id merge, re-sorted by sequence_index -- order-preserving, distinct from
+    the dict-keyed merge_dict() every other collection uses);
+    src/replay/fingerprint.py -- StateFingerprinter._strategic_identity() includes
+    committed_intentions, sorted by sequence_index;
+    src/systems/strategic_systems/intelligence.py -- evaluate_strategic_intent()'s materialization
+    hook (injects committed_intentions[0] as a GoalScore immediately after
+    GoalRegistry.get_all_scores(), restricted to the 10 generic GoalKind values via
+    _COMMITTED_INTENTION_ELIGIBLE_KINDS; win-transition bookkeeping inside the existing
+    `if switch_up:` branch flips status to "active"); evaluate_project_switch() itself is
+    byte-identical (golden SHA-256 hash guard, see test_path);
+    src/engine/pipeline_phases/capacity_enforcement.py -- CapacityEnforcementPhase's 7th
+    enforcement block, trim_list(score_func=lambda ci: -ci.sequence_index) (order-preserving, not
+    score-based, unlike the other 6 caps);
+    src/observability/live/entity_inspector.py -- EntityInspector.strategic_summary gains
+    committed_intentions_count/committed_intention_head;
+    src/core/builder.py -- V2EntityBuilder.strategic(committed_intentions=...) test-fixture
+    parameter.
+  proof_type: parity
+  test_path: >-
+    tests/unit/strategic/test_committed_intention_model.py::test_committed_intention_dataclass_shape,
+    tests/unit/strategic/test_committed_intention_model.py::test_cognition_profile_max_committed_intentions_default,
+    tests/unit/strategic/test_committed_intention_model.py::test_builder_supports_committed_intentions,
+    tests/unit/strategic/test_committed_intention_model.py::test_builder_committed_intentions_defaults_to_empty_tuple,
+    tests/unit/strategic/test_committed_intention_model.py::test_max_committed_intentions_cap_enforced_on_add,
+    tests/unit/strategic/test_committed_intention_model.py::test_under_cap_no_removal,
+    tests/unit/strategic/test_committed_intention_materialization.py::test_committed_intention_head_materializes_as_ordinary_tier5_candidate,
+    tests/unit/strategic/test_committed_intention_materialization.py::test_committed_intention_materializes_via_generic_branch_with_scale_consistent_score,
+    tests/unit/strategic/test_committed_intention_materialization.py::test_losing_committed_intention_retries_next_eligible_tick,
+    tests/unit/strategic/test_committed_intention_materialization.py::test_committed_intentions_participate_in_routine_role_boosting,
+    tests/unit/strategic/test_committed_intention_materialization.py::test_duplicate_goal_kind_committed_intention_and_live_scorer_coexist,
+    tests/unit/strategic/test_committed_intention_materialization.py::test_committed_intention_epic_goal_kind_is_not_materialized,
+    tests/unit/strategic/test_committed_intention_materialization.py::test_committed_intention_with_no_target_hint_never_materializes,
+    tests/unit/strategic/test_committed_intention_materialization.py::test_committed_intention_non_pending_head_is_not_materialized,
+    tests/integration/kernel/test_p1_replay_fidelity.py::test_committed_intentions_included_in_replay_fingerprint,
+    tests/unit/observability/test_entity_inspector.py::test_committed_intentions_observability_surface_empty_when_none,
+    tests/unit/observability/test_entity_inspector.py::test_committed_intentions_observability_surface_reports_head,
+    tests/architecture/test_committed_intention_arbiter_byte_identical_guard.py::test_evaluate_project_switch_source_hash_unchanged
+  divergence_note: >-
+    Not a divergence from the Mechanics Bible -- this is new-in-V2 functionality with no legacy
+    behavior to compare against (status is `verified`, not `legacy_verified`), additive-only:
+    StrategicComponent/CognitionProfile gain new fields with backward-compatible defaults, and
+    evaluate_project_switch() is provably unmodified (golden hash guard). Disclosed consequence:
+    all 10 eligible GoalKind values already have live registered scorers
+    (src/ai/goals/__init__.py), so a committed intention's synthesized candidate and a live
+    scorer's candidate for the same GoalKind routinely coexist in the same tick's candidate list
+    (this is the normal case, not an edge case) -- both entries are duplicate-tolerant through the
+    existing sort/selection logic, re-verified directly by
+    test_duplicate_goal_kind_committed_intention_and_live_scorer_coexist, not merely assumed safe
+    by code inspection.
+  support_boundary: >-
+    Consume-side only. This ticket implements no production write path that ever constructs a
+    CommittedIntention -- StrategicComponent.committed_intentions is reachable through the full
+    authoritative apply path (StrategicPatch.apply(), replay fingerprinting, capacity enforcement,
+    observability) and will materialize correctly the moment any entity's committed_intentions is
+    populated, but nothing in production populates it yet. A future ticket owns the write path
+    (e.g. seeding from ProgressionPlan.goal_queue, deliberately not touched by this ticket) before
+    this mechanism is end-to-end reachable in a real simulation run.
