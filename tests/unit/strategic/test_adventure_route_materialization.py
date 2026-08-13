@@ -94,6 +94,52 @@ def test_adventure_route_winner_materializes_with_raw_score_not_utility(monkeypa
     assert project.kind != GoalKind.ADVENTURE_ROUTE
 
 
+def test_adventure_route_win_thread_family_into_strategic_update(monkeypatch):
+    """TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE: a winning ADVENTURE_ROUTE
+    candidate's materialization must thread the route family into
+    StrategicUpdate.last_routing_family_set as the .value STRING (not the raw RouteFamily enum).
+    type(...) is str is required, not isinstance -- RouteFamily(str, Enum) means isinstance would
+    still pass even if .value were forgotten."""
+    _eligible(monkeypatch)
+    monkeypatch.setattr(
+        AdventureDecisionService, "decide",
+        _fake_decide_factory(2.0, family=RouteFamily.TAKE_EASY_QUEST, target_node_id=777),
+    )
+    entity = _entity()
+    state = _state(entities={1: entity}, tick=123)
+
+    result = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
+
+    assert result is not None
+    assert result.last_routing_family_set == "take_easy_quest"
+    assert type(result.last_routing_family_set) is str
+    assert result.last_routing_tick_set == 123
+
+
+def test_adventure_route_win_that_loses_project_switch_does_not_set_routing_family(monkeypatch):
+    """Reproduces the pre-deletion phase's `if strat_upd is None: continue` semantics: a winning
+    best_candidate whose evaluate_project_switch() call is rejected must NOT set
+    last_routing_family_set anywhere -- proves the `if switch_up:` gate, not an unconditional set
+    inside the ADVENTURE_ROUTE branch."""
+    _eligible(monkeypatch)
+    monkeypatch.setattr(
+        AdventureDecisionService, "decide",
+        _fake_decide_factory(2.0, family=RouteFamily.TAKE_EASY_QUEST, target_node_id=777),
+    )
+    monkeypatch.setattr(
+        StrategicIntelligenceSystem, "evaluate_project_switch",
+        staticmethod(lambda entity, candidate_proj, current_tick, state=None: None),
+    )
+    entity = _entity()
+    state = _state(entities={1: entity})
+
+    result = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
+
+    assert result is not None
+    assert result.last_routing_family_set is None
+    assert result.last_routing_tick_set is None
+
+
 def test_adventure_route_winner_preserves_none_none_handling_for_defer_family(monkeypatch):
     """Defensive case (test_plan.md): if a winning GoalScore's metadata["route_family"] is
     somehow RouteFamily.DEFER_WITH_REASON, the materialization branch must no-op (mirroring
@@ -123,6 +169,35 @@ def test_adventure_route_winner_preserves_none_none_handling_for_defer_family(mo
     assert result is not None
     assert result.projects_add_or_update == []
     assert result.current_project_id_set is None
+
+
+def test_adventure_route_defer_family_does_not_set_routing_family(monkeypatch):
+    """TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE: DEFER_WITH_REASON never reaches
+    the switch_up-returning path (mirrored by the (None, None) mapper contract above), so it must
+    not set last_routing_family_set/last_routing_tick_set either -- last_routing_family was only
+    ever written on the winning-route path, matching the pre-deletion phase's own behavior."""
+
+    def _fake_get_all_scores(entity, state):
+        return [
+            GoalScore(
+                kind=GoalKind.ADVENTURE_ROUTE,
+                utility=99.0,
+                target_id="adventure:defer_with_reason",
+                target_pos=(1.0, 1.0),
+                metadata={"route_family": RouteFamily.DEFER_WITH_REASON, "raw_score": 0.0},
+            )
+        ]
+
+    monkeypatch.setattr(GoalRegistry, "get_all_scores", _fake_get_all_scores)
+
+    entity = _entity()
+    state = _state(entities={1: entity})
+
+    result = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
+
+    assert result is not None
+    assert result.last_routing_family_set is None
+    assert result.last_routing_tick_set is None
 
 
 def test_form_party_materialized_objective_is_tactically_resolvable_not_a_stall(monkeypatch):

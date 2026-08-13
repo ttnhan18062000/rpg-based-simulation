@@ -3633,3 +3633,73 @@
     populated, but nothing in production populates it yet. A future ticket owns the write path
     (e.g. seeding from ProgressionPlan.goal_queue, deliberately not touched by this ticket) before
     this mechanism is end-to-end reachable in a real simulation run.
+- id: STRAT-257
+  text: A winning ADVENTURE_ROUTE tier-5 candidate's resolved RouteFamily is carried from
+    evaluate_strategic_intent()'s win branch through a dedicated StrategicUpdate scalar-pair field
+    (last_routing_family_set/last_routing_tick_set) into the committed EntityUpdate's
+    property_updates (last_routing_family/last_routing_tick), restoring the write path
+    AdventureDecisionPhase.apply() (deleted by TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE) used
+    to own unconditionally for every winning route, pre-deletion.
+  status: verified
+  priority: P2
+  legacy_evidence: >-
+    Pre-deletion src/domains/adventure/phase.py:178-179 (readable via
+    git show 1825f914^:src/domains/adventure/phase.py) -- AdventureDecisionPhase.apply() wrote
+    property_updates={"last_routing_family": ..., "last_routing_tick": ...} unconditionally on
+    every winning route, read by event_extractor.py:594-618 (rollback path) and
+    event_shapers.py:750-773 (live path) to emit route_selected/action_executed/
+    route_family_first_use.
+  v2_evidence: >-
+    src/core/updates.py:512-513 -- StrategicUpdate.last_routing_family_set: Optional[str] /
+    last_routing_tick_set: Optional[int], following the existing overload_source_set/
+    overload_tick_set "set last-write-wins" convention; is_noop() (line ~533-534) and merge()
+    (line ~572-573, last-write-wins) both updated;
+    src/systems/strategic_systems/intelligence.py:~1632-1641 -- the shared switch_up return site
+    (ADVENTURE_ROUTE win branch, gated on `if switch_up:` so a candidate that wins tier-5
+    competition but is then rejected by evaluate_project_switch() does not set the field) sets
+    last_routing_family_set = route_family.value (the RouteFamily.value string, not the raw enum)
+    and last_routing_tick_set = current_tick;
+    src/systems/strategic_systems/intelligence.py:940-944 -- StrategicIntelligenceSystem.fused_strategic_pass()'s
+    merge site (the actual live pipeline path, wired via src/engine/pipeline.py:333), copies
+    strat_up.last_routing_family_set/last_routing_tick_set into
+    EntityUpdate.property_updates["last_routing_family"]/["last_routing_tick"];
+    src/systems/strategic_systems/intelligence.py:640-643 -- the identical copy-then-set fix also
+    applied at evaluate_all_strategic_intents()'s merge site (real, callable code, but confirmed by
+    repo-wide grep during Implement to be unreferenced anywhere in src/ -- not the live pipeline
+    path, kept as defensive parity since the function itself remains a real materialization path
+    exercised by its own direct tests).
+  proof_type: parity
+  test_path: >-
+    tests/unit/core/test_strategic_update_routing_family.py::test_strategic_update_last_routing_family_set_is_noop_default,
+    tests/unit/core/test_strategic_update_routing_family.py::test_strategic_update_merge_last_routing_family_last_write_wins,
+    tests/unit/strategic/test_fused_strategic_pass_routing_family.py::test_fused_strategic_pass_property_updates_carries_last_routing_family,
+    tests/unit/strategic/test_evaluate_all_strategic_intents_routing_family.py::test_adventure_route_win_property_updates_carries_last_routing_family,
+    tests/unit/strategic/test_adventure_route_materialization.py::test_adventure_route_win_that_loses_project_switch_does_not_set_routing_family,
+    tests/unit/strategic/test_adventure_route_materialization.py::test_adventure_route_defer_family_does_not_set_routing_family,
+    tests/unit/observability/test_event_shapers_strategy.py::test_agency_events_fire_end_to_end_for_winning_adventure_route
+  divergence_note: null
+  support_boundary: >-
+    Write-path only, and currently unreachable in the two calibration worlds this repo measures
+    AGENCY against. The mechanism is verified correct end-to-end at the unit/integration level
+    (a winning ADVENTURE_ROUTE candidate's StrategicUpdate and resulting
+    EntityUpdate.property_updates both carry last_routing_family/last_routing_tick, and
+    StrategyShaper.shape() emits route_selected/action_executed/route_family_first_use for such an
+    update), but a fresh tools/calibrate_simq.py run against all 6 named run_keys
+    (simq_routing_test/hero_guild_routing x seeds 42/123/456, _500t) post-fix still measures
+    AGENCY=C/0.0/events=0, byte-identical to pre-fix. Root cause (see
+    TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE Implementation Notes / plan.md
+    Deviations): ADVENTURE_ROUTE's utility (capped at _ADVENTURE_ROUTE_SCORE_MAX=2.9 on the shared
+    0-100 tier-5 competition scale, observed ~20-26 in practice) never outscores COMBAT_ENGAGE
+    (~100-144) or REGION_STABILIZATION (flat 100.0) in either calibration world at any sampled
+    seed -- a separate, unrelated mechanism (the tier-5 goal-competition scale interacting with
+    TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE's architecture change from an unconditional
+    standalone phase to a competing GoalScorer), out of this entry's scope to fix. Priority is set
+    to P2 (not P0/P1) specifically because of this gap: the write path is real and correct, but it
+    currently produces no measurable behavior change in either calibration world, matching the
+    priority given to the sibling GoalScorer-wrapper-family entries this restores alongside
+    (STRAT-252/254/255, all P2). Tracked by the filed follow-up
+    TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5 (OPEN, standard, P1), which owns
+    determining whether AdventureGoalScorer's utility scale itself needs rescaling before this
+    write path's downstream events can ever fire in practice; once that follow-up lands, this
+    entry's support_boundary should be revisited (and grade_anchors.json AGENCY recalibrated for
+    the 6 run_keys, per that ticket's own scope, not this one's).

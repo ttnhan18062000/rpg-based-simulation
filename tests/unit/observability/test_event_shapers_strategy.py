@@ -185,6 +185,60 @@ def test_route_selected_not_emitted_without_routing_family():
     assert "route_selected" not in _types(events)
 
 
+def test_agency_events_fire_end_to_end_for_winning_adventure_route(monkeypatch):
+    """TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE: end-to-end proof, closing the
+    gap between "the field is set" (Step 1-3's unit/integration tests) and "the observability
+    events actually fire". Feeds the real StateUpdate produced by
+    StrategicIntelligenceSystem.evaluate_all_strategic_intents() for a winning ADVENTURE_ROUTE
+    candidate through the live StrategyShaper.shape() path, unlike the property_updates-driven
+    tests above which hand-construct the dict directly."""
+    from src.core.builder import V2EntityBuilder
+    from src.core.state import AuthoritativeState
+    from src.core.updates import StateUpdate
+    from src.domains.adventure.schema import AdventureDecisionResult, AdventureRouteOption, RouteFamily
+    from src.domains.adventure.service import AdventureDecisionService
+    from src.engine.cadence import SystemCadence
+    from src.systems.strategic import StrategicIntelligenceSystem
+
+    monkeypatch.setattr(
+        "src.ai.goals.adventure_scorer._supports_adventure_routing",
+        lambda entity, cache: True,
+    )
+
+    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None):
+        selected = AdventureRouteOption(
+            family=RouteFamily.TAKE_EASY_QUEST,
+            score=2.0,
+            confidence=1.0,
+            expected_benefit=0.5,
+            expected_risk=0.0,
+            target_node_id=777,
+        )
+        return AdventureDecisionResult(
+            selected=selected, rejected=(), proposed_project=None, proposed_objective=None, trace={},
+        )
+
+    monkeypatch.setattr(AdventureDecisionService, "decide", _fake_decide)
+
+    hero = V2EntityBuilder(1).kind("hero").location(0.0, 0.0).build()
+    tick = 42
+    prior_state = AuthoritativeState(tick=tick, seed=42, entities={1: hero}, town_center=(50.0, 50.0))
+    cadence = SystemCadence(strategic_intelligence=1)
+
+    result = StrategicIntelligenceSystem.evaluate_all_strategic_intents(
+        prior_state, StateUpdate(), cadence=cadence,
+    )
+
+    events = StrategyShaper().shape(prior_state, result, tick=tick)
+    types = _types(events)
+    assert "route_selected" in types
+    assert "action_executed" in types
+    assert "route_family_first_use" in types
+    for e in events:
+        if e.event_type in ("route_selected", "action_executed", "route_family_first_use"):
+            assert e.payload["family"] == "take_easy_quest"
+
+
 def test_defer_with_reason():
     prior = _prior_state({1: _entity()})
     upd = _update({1: _entity_update(property_updates={"last_defer_reason": "no_path"})})

@@ -631,7 +631,17 @@ class StrategicIntelligenceSystem:
                 final_identity_upd = None
 
             if final_identity_upd is not ent_upd.identity or strat_up is not ent_upd.strategic or ent_upd.navigation is not None or ent_upd.interaction is not None or has_existing_upd:
-                final_upd = replace(ent_upd, identity=final_identity_upd, strategic=strat_up)
+                # TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE: this is the live
+                # pipeline's actual strategic-intelligence merge site (fused_strategic_pass(),
+                # wired via src/engine/pipeline.py:333) -- copy-then-set, not a wholesale
+                # replace, since ent_upd.property_updates may already carry earlier phases'
+                # writes for this entity within this same tick.
+                prop_updates = dict(ent_upd.property_updates)
+                if strat_up is not None and strat_up.last_routing_family_set is not None:
+                    prop_updates["last_routing_family"] = strat_up.last_routing_family_set
+                if strat_up is not None and strat_up.last_routing_tick_set is not None:
+                    prop_updates["last_routing_tick"] = strat_up.last_routing_tick_set
+                final_upd = replace(ent_upd, identity=final_identity_upd, strategic=strat_up, property_updates=prop_updates)
                 refined_entity_updates[e_id] = final_upd
         
         if state.tick % 10 == 0:
@@ -924,7 +934,15 @@ class StrategicIntelligenceSystem:
                 # Merge with existing updates if any
                 existing_strat = ent_upd.strategic or StrategicUpdate()
                 merged_strat = existing_strat.merge(strat_up)
-                refined_entity_updates[e_id] = replace(ent_upd, strategic=merged_strat)
+                # TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE: copy-then-set, not a
+                # wholesale replace -- ent_upd.property_updates may already carry earlier phases'
+                # writes for this entity within this same tick.
+                prop_updates = dict(ent_upd.property_updates)
+                if strat_up.last_routing_family_set is not None:
+                    prop_updates["last_routing_family"] = strat_up.last_routing_family_set
+                if strat_up.last_routing_tick_set is not None:
+                    prop_updates["last_routing_tick"] = strat_up.last_routing_tick_set
+                refined_entity_updates[e_id] = replace(ent_upd, strategic=merged_strat, property_updates=prop_updates)
                 
         return replace(update, entity_updates=refined_entity_updates)
 
@@ -1610,11 +1628,23 @@ class StrategicIntelligenceSystem:
                 extra_ci = {}
                 if strat.committed_intentions and best_candidate.metadata.get("committed_intention_id") == strat.committed_intentions[0].intention_id:
                     extra_ci["committed_intentions_add_or_update"] = [replace(strat.committed_intentions[0], status="active")]
+                # TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE: restore
+                # last_routing_family/last_routing_tick emission for a winning, accepted
+                # ADVENTURE_ROUTE candidate. .value is required -- RouteFamily(str, Enum) means
+                # str(route_family) yields "RouteFamily.X", not the deleted phase's original
+                # "x" contract that event_shapers.py/event_extractor.py read.
+                extra_routing = {}
+                if best_candidate.kind == GoalKind.ADVENTURE_ROUTE:
+                    route_family = best_candidate.metadata.get("route_family")
+                    if route_family is not None:
+                        extra_routing["last_routing_family_set"] = route_family.value
+                        extra_routing["last_routing_tick_set"] = current_tick
                 return replace(switch_up,
                     boredom_delta=boredom_upd,
                     leads_add_or_update=memory_upd.leads_add_or_update,
                     leads_remove=memory_upd.leads_remove,
-                    **extra_ci
+                    **extra_ci,
+                    **extra_routing
                 )
             
             # Law 194-197: Enforce Strategic Bandwidth

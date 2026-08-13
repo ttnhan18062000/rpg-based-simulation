@@ -476,6 +476,20 @@ the grade reflects actual event count differences (137 vs 40 events). COGNITION 
 > `seed42`/`seed456`). Restoring `last_routing_family` emission is deliberately **not** done here —
 > tracked by `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`.
 
+> **NOTE (2026-08-13 — `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`):** the
+> `last_routing_family`/`last_routing_tick` write-path is now fixed (see
+> `docs/guidelines/intentional_divergences.md` §2.41's Restoration addendum for the full trail).
+> AGENCY remains unchanged at `{"grade": "C", "score": 0.0}`/`events=0` for all 3 seeds after a
+> fresh `calibrate_simq.py` re-run against the fixed code — the write-path bug was real but was not
+> the (sole) blocker. DEBUG-level tier-5 goal-selection tracing across full 500-tick runs shows
+> `ADVENTURE_ROUTE`'s utility (capped at `_ADVENTURE_ROUTE_SCORE_MAX=2.9` on the shared 0-100
+> competition scale, observed ~20-26) never outscoring `COMBAT_ENGAGE` (~100-144) in this world's
+> goblin-raid scenario at any sampled seed. `grade_anchors.json` is therefore left unchanged (the
+> `C`/`0.0` values remain the correct, freshly-measured numbers). This row of the table above and
+> the paragraph's own "Root cause" text are intentionally NOT rewritten to claim a restored `A`
+> grade — no such grade was measured. A follow-up ticket investigating the `ADVENTURE_ROUTE`
+> utility-scale-vs-tier5-competition question is recommended.
+
 ---
 
 ### sandbox_world
@@ -1496,6 +1510,17 @@ the same stasis pattern `simq_routing_test_seed456` hit pre-fix.
 > ticket, tracked instead by `TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT`. Restoring
 > `last_routing_family` emission is deliberately not done here — tracked by
 > `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`.
+
+> **NOTE (2026-08-13 — `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`):** the
+> `last_routing_family`/`last_routing_tick` write-path is now fixed (see
+> `docs/guidelines/intentional_divergences.md` §2.41's Restoration addendum). AGENCY remains
+> unchanged at `{"grade": "C", "score": 0.0}`/`events=0` for all 3 seeds after a fresh
+> `calibrate_simq.py` re-run against the fixed code — DEBUG-level tier-5 goal-selection tracing
+> shows `ADVENTURE_ROUTE` never outscoring `COMBAT_ENGAGE`/`REGION_STABILIZATION` in this world's
+> scenario at any sampled seed. `grade_anchors.json` is left unchanged. Not rewritten to claim a
+> restored `A` grade — none was measured. See the `simq_routing_test` NOTE above for the full
+> methodology; a follow-up ticket on the utility-scale-vs-tier5-competition question is
+> recommended.
 
 ---
 

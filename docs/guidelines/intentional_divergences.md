@@ -1054,8 +1054,71 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`. The `last_defer_reason` half of this
   section is unaffected by this broadened disclosure — it stays exactly as already
   `Bounded`/deliberately-not-ported, per the Rationale above.
-- **Verification**: `tests/unit/observability/test_event_extractor_agency2.py::TestAntiDriftGuards::test_defer_property_name_constant_matches_phase_and_extractor`.
-- **Status**: ACTIVE
+- **Restoration (TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE, 2026-08-13)**: The
+  `last_routing_family`/`last_routing_tick` write-path gap described in the broadened-disclosure
+  paragraph above is now fixed. `StrategicUpdate` (`src/core/updates.py`) gained a dedicated
+  `last_routing_family_set: Optional[str]` / `last_routing_tick_set: Optional[int]` scalar pair,
+  following the existing `overload_source_set`/`overload_tick_set` "set last-write-wins"
+  convention, with `is_noop()`/`merge()` support. `intelligence.py`'s `ADVENTURE_ROUTE` win branch
+  (the shared `switch_up` return site, gated on `if switch_up:` so a candidate that wins the
+  tier-5 competition but is then rejected by `evaluate_project_switch()` does not set the field)
+  now sets `last_routing_family_set = best_candidate.metadata["route_family"].value` — the
+  `.value` string, not the raw `RouteFamily` enum (`RouteFamily(str, Enum)` would otherwise make
+  `str(family)` yield `"RouteFamily.X"`, not the deleted phase's original contract).
+  **Implementation correction**: this ticket's own plan.md originally targeted
+  `StrategicIntelligenceSystem.evaluate_all_strategic_intents()` (`intelligence.py:884-929`) as
+  "the outer refine-loop merge site" for copying the resolved value into
+  `EntityUpdate.property_updates`. That function is not referenced anywhere in `src/` and is not
+  wired into the live tick pipeline — confirmed by a repo-wide grep during Implement. The actual
+  live merge site is `StrategicIntelligenceSystem.fused_strategic_pass()`
+  (`intelligence.py:291-642`, wired via `src/engine/pipeline.py:333`,
+  `run_phase("strategic_intelligence", update, lambda u:
+  StrategicIntelligenceSystem.fused_strategic_pass(state, u, cadence=cadence))`), which has its
+  own separate `strat_up`-to-`EntityUpdate` merge site (`intelligence.py:~627-635`). Implement
+  applied the identical copy-then-set `property_updates["last_routing_family"]`/
+  `["last_routing_tick"]` fix at the correct, live site, and added a dedicated regression test
+  (`tests/unit/strategic/test_fused_strategic_pass_routing_family.py`) exercising
+  `fused_strategic_pass()` directly, in addition to the originally-planned
+  `evaluate_all_strategic_intents()` coverage (kept since that function remains real, callable
+  code, just not pipeline-referenced).
+  **Open finding — AC3 not satisfied for the calibration worlds**: with the corrected write path
+  verified working end-to-end at the unit/integration level (a winning `ADVENTURE_ROUTE`
+  candidate's `StrategicUpdate` and resulting `EntityUpdate.property_updates` both carry
+  `last_routing_family`/`last_routing_tick`, and `StrategyShaper.shape()` emits `route_selected`/
+  `action_executed`/`route_family_first_use` for such an update), a fresh
+  `tools/calibrate_simq.py` run against all 6 named run_keys (`simq_routing_test`/
+  `hero_guild_routing` × seeds 42/123/456, `_500t`) still shows `AGENCY: {"grade": "C", "score":
+  0.0}`, events=0, byte-identical to the pre-fix state. DEBUG-level tracing of
+  `evaluate_strategic_intent()`'s tier-5 goal-selection log
+  (`"[Tick N] Entity E strategic goal selection: chosen=..., rejected=..."`) across full 500-tick
+  runs of both worlds at all sampled seeds shows `ADVENTURE_ROUTE`'s utility (capped at
+  `_ADVENTURE_ROUTE_SCORE_MAX = 2.9`, normalized onto the shared 0-100 competition scale, observed
+  ~20-26) never once outscoring `COMBAT_ENGAGE` (observed ~100-144) or `REGION_STABILIZATION`
+  (observed flat 100.0) whenever either is active — and in these two worlds (a goblin raiding
+  party plus, for `hero_guild_routing`, additional region-stabilization pressure), one or the
+  other is active on effectively every evaluated tick for every hero. This is a separate,
+  unrelated mechanism from the write-path bug this ticket fixes: it is the tier-5 goal-competition
+  scale (`_score_scale_max()`, `intelligence.py:108-126`) interacting with
+  `TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`'s architecture change from an unconditional
+  standalone phase (which never competed against other `GoalKind`s at all) to a competing
+  `GoalScorer`. This ticket does not touch that competition/scale logic (out of scope per its own
+  Scope Guards), so `grade_anchors.json` was left unchanged (the current `C`/`0.0` AGENCY values
+  for all 6 run_keys are still the freshly-measured, correct values — there is nothing to
+  recalibrate), and `docs/simulation_quality/eval_matrix_results.md`'s AGENCY Cross-World Design
+  Note was likewise left as-is rather than being rewritten to claim a restoration that fresh
+  measurement does not support. A follow-up ticket is recommended to investigate whether
+  `ADVENTURE_ROUTE`'s utility ceiling/normalization should be revisited for routing-capable worlds
+  with near-constant combat/danger pressure — that is a goal-competition design question, not an
+  emission-wiring bug, and is explicitly not decided here.
+- **Verification**: `tests/unit/observability/test_event_extractor_agency2.py::TestAntiDriftGuards::test_defer_property_name_constant_matches_phase_and_extractor`;
+  `tests/unit/core/test_strategic_update_routing_family.py`;
+  `tests/unit/strategic/test_adventure_route_materialization.py`;
+  `tests/unit/strategic/test_fused_strategic_pass_routing_family.py`;
+  `tests/unit/strategic/test_evaluate_all_strategic_intents_routing_family.py`;
+  `tests/unit/observability/test_event_shapers_strategy.py`.
+- **Status**: ACTIVE (write-path restored; AGENCY event emission for `simq_routing_test`/
+  `hero_guild_routing` remains blocked by the separate tier-5 competition-scale finding above,
+  pending a follow-up ticket)
 
 ### 2.42 Social-Contract Acceptance No Longer Unconditionally Wins the Project Slot (TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER)
 - **Subsystem**: Strategic Cognition / Social Contracts

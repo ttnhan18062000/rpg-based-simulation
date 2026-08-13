@@ -3002,6 +3002,39 @@
     is unaffected (different mechanism, ENABLE_ADVENTURE_ROUTING=OFF, not re-verified by this
     ticket -- see eval_matrix_results.md AGENCY Cross-World Design Note). grade_anchors.json
     recalibrated accordingly.
+    Addendum (TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE, 2026-08-13): the
+    last_routing_family/last_routing_tick write-path gap identified by the addendum above is now
+    fixed -- StrategicUpdate.last_routing_family_set/last_routing_tick_set (src/core/updates.py),
+    set at the ADVENTURE_ROUTE win branch and copied into EntityUpdate.property_updates at
+    StrategicIntelligenceSystem.fused_strategic_pass() (src/systems/strategic_systems/
+    intelligence.py, wired live via src/engine/pipeline.py:333 -- NOT
+    evaluate_all_strategic_intents(), which this ticket's own plan.md originally targeted and
+    which a repo-wide grep during Implement confirmed is not referenced anywhere in src/, i.e. not
+    the live pipeline path). Verified correct at the unit/integration level: a winning
+    ADVENTURE_ROUTE candidate's StrategicUpdate and resulting EntityUpdate.property_updates both
+    carry last_routing_family (the RouteFamily.value string, not the raw enum), and
+    StrategyShaper.shape() emits route_selected/action_executed/route_family_first_use for such an
+    update (tests/unit/strategic/test_fused_strategic_pass_routing_family.py,
+    tests/unit/observability/test_event_shapers_strategy.py). HOWEVER a fresh calibrate_simq.py run
+    against all 6 named run_keys post-fix still measures AGENCY=C/0.0/events=0, byte-identical to
+    pre-fix -- DEBUG-level tier-5 goal-selection tracing across full 500-tick runs of both worlds
+    at all sampled seeds confirms ADVENTURE_ROUTE's utility (capped at
+    _ADVENTURE_ROUTE_SCORE_MAX=2.9 on the shared 0-100 competition scale, observed ~20-26) never
+    outscores COMBAT_ENGAGE (~100-144) or REGION_STABILIZATION (flat 100.0) in either world at any
+    sampled seed, and one or the other goal is active on effectively every evaluated tick for
+    every hero in these two worlds. This is a separate, unrelated mechanism (the tier-5
+    goal-competition scale interacting with TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE's
+    architecture change from an unconditional standalone phase to a competing GoalScorer) that
+    this ticket's scope explicitly excludes touching -- grade_anchors.json was therefore left
+    unchanged (the C/0.0 values are still the correct, freshly-measured numbers) and this entry's
+    support_boundary claims above (AGENCY=C for these run_keys) remain accurate as of this
+    addendum, not restored to A. See docs/guidelines/intentional_divergences.md §2.41's own
+    Restoration addendum for the full evidence trail; filed as
+    TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5 (OPEN, standard, P1) to investigate
+    the ADVENTURE_ROUTE utility-scale-vs-tier5-competition question. See also
+    docs/parity_ledger/strategic_cognition.yaml STRAT-257, which documents the write-path mechanism
+    itself (the schema-level StrategicUpdate field addition and its two threading sites) as
+    distinct from this entry's observability/event-emission angle.
 - id: INFRA-238
   text: "CombatScorer covers all contract §5 COMBAT rules: combat_active, combat_resolved,
     survival_tension, tactical_variety (per unique modifier), attrition, early_extinction
