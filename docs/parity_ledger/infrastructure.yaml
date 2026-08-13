@@ -3122,6 +3122,15 @@
     ENABLE_ADVENTURE_ROUTING support_boundary above. Content authoring alone cannot close this;
     flagged for a follow-up investigation into the strategy/cognition layer's goal-generation
     path for these 4 intent kinds.
+    ADDENDUM (TCK-20260812-EVENT-TYPE-COVERAGE-SOURCE-COLUMN-STALENESS): the code citation above
+    (event_extractor.py L327-353) names the pre-cutover location as of this finding's original
+    TCK-20260713 investigation date. As of the push-shaper migrations (TCK-20260806-PUSH-CUTOVER-
+    COMBAT-ECONOMY-FACTION), the same accepted-intent_results/source_kind gating for these 4 event
+    types is now the live-default apply-layer EconomyShaper's derivation
+    (src/observability/event_shapers.py); event_extractor.py's block above is now the flag-gated
+    (_push_shapers_active) rollback path, not the sole terminus. This does not change the root
+    cause finding itself (no entity ever generates an accepted harvest/craft/trade intent in the
+    corpus) — that gap is upstream of, and identical under, either derivation path.
 - id: INFRA-243
   text: "ProgressionScorer covers all contract §5 PROGRESSION rules including XP-per-10
     scaling, level cap detection, all plateau types (xp_freeze, skill_silence, xp_rate_zero,

@@ -2823,6 +2823,10 @@
   v2_evidence: >
     src/observability/event_extractor.py — lead_certainty_updated block;
     _CERTAINTY_FLOAT = {PRECISE:1.0, APPROXIMATE:0.5, VAGUE:0.25, EXHAUSTED:0.0}
+    As of the push-shaper migrations (see STRAT-247), this event is also derived by the
+    live-default apply-layer StrategyShaper (src/observability/event_shapers.py);
+    event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)
+    rollback path, not the sole terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_information2.py::TestLeadCertaintyUpdated
@@ -2841,6 +2845,10 @@
     src/observability/event_extractor.py — belief_stale block; _BELIEF_STALE_TICKS = 50;
     _emitted_stale_leads class-level dict reset in reset_run_state().
     config/simulation_quality/detection_params.yaml — belief_stale_threshold: 50
+    As of the push-shaper migrations (see STRAT-247), this event is also derived by the
+    live-default apply-layer StrategyShaper (src/observability/event_shapers.py);
+    event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)
+    rollback path, not the sole terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_information2.py::TestBeliefStale
@@ -2860,6 +2868,10 @@
   v2_evidence: >
     src/observability/event_extractor.py — decision_diverged_by_belief and
     decision_divergence_detected blocks; _NON_SURVIVAL_PROJECT_KINDS frozenset constant.
+    As of the push-shaper migrations (see STRAT-247), both events are also derived by the
+    live-default apply-layer StrategyShaper (src/observability/event_shapers.py);
+    event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)
+    rollback path, not the sole terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_information2.py::TestDecisionDivergedByBelief;

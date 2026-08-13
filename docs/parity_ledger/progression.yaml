@@ -1215,6 +1215,11 @@
   v2_evidence: >
     src/observability/event_extractor.py — skill_unlocked block; set diff on
     _curr_id.learned_skills vs _prior_id.learned_skills.
+    As of the push-shaper migrations (see PROG-117), this event is also derived by
+    the live-default apply-layer ProgressionShaper
+    (src/observability/event_shapers.py); event_extractor.py's block above is now
+    the flag-gated (_push_shapers_phase2_active) rollback path, not the sole
+    terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_progression.py::TestSkillUnlocked
@@ -1232,6 +1237,11 @@
   v2_evidence: >
     src/observability/event_extractor.py — trait_expressed and pillar_trait_unlocked blocks;
     set diff on identity.traits and identity.active_breakthroughs.
+    As of the push-shaper migrations (see PROG-117), both events are also derived by
+    the live-default apply-layer ProgressionShaper
+    (src/observability/event_shapers.py); event_extractor.py's block above is now
+    the flag-gated (_push_shapers_phase2_active) rollback path, not the sole
+    terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_progression.py::TestTraitExpressed;
@@ -1253,6 +1263,11 @@
     src/observability/event_extractor.py — progression_conversion_applied and
     progression_plateau_detected blocks; _XP_PLATEAU_TICKS = 50;
     _emitted_plateau set and _last_xp_tick dict reset in reset_run_state().
+    As of the push-shaper migrations (see PROG-117), both events are also derived by
+    the live-default apply-layer ProgressionShaper
+    (src/observability/event_shapers.py); event_extractor.py's block above is now
+    the flag-gated (_push_shapers_phase2_active) rollback path, not the sole
+    terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_progression.py::TestProgressionConversionApplied;

@@ -27,7 +27,7 @@
 - id: ENTITY-003
   mutation_source: "EntityUpdate.combat (CombatUpdate)"
   status: observed
-  evidence: "src/observability/event_extractor.py (multiple sites); docs/simulation_quality/event_type_coverage.md §1.1"
+  evidence: "src/observability/event_extractor.py (multiple sites); docs/simulation_quality/event_type_coverage.md §1.1. 6 of these event types (combat_damage, combat_initiated, near_death_survival, hazard_drain_applied, plus entity_killed, the combat_kill translation target) are also available via the live-default apply-layer CombatShaper (src/observability/event_shapers.py); combat_hard_law_violation remains event_extractor.py-only, not shaper-migrated."
   event_types: ["combat_damage", "combat_initiated", "near_death_survival", "combat_kill (-> entity_killed)", "hazard_drain_applied", "combat_hard_law_violation"]
   notes: "Extensively covered — this session's own COMBAT investigations (TCK-20260806/07) confirm real, live coverage."
 
@@ -55,7 +55,7 @@
 - id: ENTITY-007
   mutation_source: "EntityUpdate.identity (IdentityUpdate)"
   status: observed
-  evidence: "src/observability/event_extractor.py (entity_role_changed/entity_faction_changed/recipe_learned/skill_cooldown_started diff blocks, plus the pre-existing skill/trait/evolution_level events); role_set/faction_set have zero real producers anywhere in src/ (confirmed via direct grep) — the event exists but is currently unreachable by any path since the mechanic itself is unimplemented; recipe_learned/skill_cooldown_started verified via real hand-constructed IdentityComponent objects"
+  evidence: "src/observability/event_extractor.py (entity_role_changed/entity_faction_changed/recipe_learned/skill_cooldown_started diff blocks, plus the pre-existing skill/trait/evolution_level events); role_set/faction_set have zero real producers anywhere in src/ (confirmed via direct grep) — the event exists but is currently unreachable by any path since the mechanic itself is unimplemented; recipe_learned/skill_cooldown_started verified via real hand-constructed IdentityComponent objects. skill_unlocked/trait_expressed/pillar_trait_unlocked/level_up are also available via the live-default apply-layer ProgressionShaper (src/observability/event_shapers.py); entity_role_changed/entity_faction_changed/recipe_learned/skill_cooldown_started remain event_extractor.py-only, not shaper-migrated."
   event_types: ["skill_unlocked", "trait_expressed", "pillar_trait_unlocked", "level_up", "entity_role_changed", "entity_faction_changed", "recipe_learned", "skill_cooldown_started"]
   notes: "learned_skills/traits/active_breakthroughs/evolution_level were already observed. role/faction/recipes/cooldowns fixed by TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP. All 4 new events classified unscored_intentional. entity_role_changed/entity_faction_changed have no live producer anywhere (role/faction reassignment is defined but never mutated); wired anyway, future-proofed. recipe_learned's one real producer (BlacksmithSystem.enforce) is unconditional but not naturally exercised within a 1500-tick verification budget. skill_cooldown_started's producer is wired but has no live AI driver."
 

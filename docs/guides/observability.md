@@ -28,7 +28,8 @@ Key source files:
 |---|---|
 | `src/observability/event_recorder.py` | Writes `SimulationEvent` objects to the shared queue; controls backpressure |
 | `src/observability/events.py` | `SimulationEvent` and `ObservabilityEventEnvelope` dataclasses, `EventCategory` type |
-| `src/observability/event_extractor.py` | Reads state diffs per tick, produces `SimulationEvent` objects; read-only observer |
+| `src/observability/event_extractor.py` | Reads state diffs per tick, produces `SimulationEvent` objects; read-only observer. Legacy path — still live for domains not yet shaper-migrated, and the flag-gated rollback path for migrated domains (see below) |
+| `src/observability/event_shapers.py` | Apply-layer push shapers (`SHAPER_REGISTRY`/`PHASE2_SHAPER_REGISTRY`/`QUEST_SHAPER_REGISTRY`/`AGENCY_SHAPER_REGISTRY`, delivered via `run_shadow_shapers()`); derives events directly from `prior_state` + `update`, not a post-tick diff. Live-default derivation path for most COMBAT/ECONOMY/FACTION/AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL/NARRATIVE event types since the 2026-08-06/07/08 push-shaper cutover tickets — see `docs/simulation_quality/event_type_coverage.md` §1.1's `source` column for the current per-event-type derivation path |
 | `src/observability/queue.py` | Global observability queue, `QueueDrainWorker` |
 | `src/observability/hard_law_monitor.py` | Listens for `InvariantViolation` events; raises hard stops |
 | `src/observability/trace.py` | Decision trace capture and replay |
@@ -166,9 +167,15 @@ python3 -m src compare-sweep <sweep_id> --baseline docs/observability/baselines/
 
 1. Add the `event_type` string and optional `category` to `src/observability/events.py`
    (`EventCategory` Literal, if a new category is needed).
-2. Emit the event in `src/observability/event_extractor.py` from the appropriate per-tick
-   loop (entity loop, faction loop, world-events loop). `EventExtractor` is read-only —
-   it observes state diffs, never mutates.
+2. Emit the event in `src/observability/event_shapers.py` — add it to the relevant domain's
+   shaper class (registered in `SHAPER_REGISTRY`/`PHASE2_SHAPER_REGISTRY`/
+   `QUEST_SHAPER_REGISTRY`/`AGENCY_SHAPER_REGISTRY`, delivered via `run_shadow_shapers()`),
+   the live-default path for most domains since the 2026-08-06/07/08 push-shaper cutover
+   tickets. Only emit in `src/observability/event_extractor.py`'s per-tick loop (entity loop,
+   faction loop, world-events loop) if the event's domain has not yet been shaper-migrated —
+   check `docs/simulation_quality/event_type_coverage.md` §1.1's `source` column for the
+   current per-event-type derivation path before choosing. Both `EventExtractor` and each
+   `EventShaper` are read-only observers — neither mutates state.
 3. If the new event should be scored by SimQ, add a translation entry in
    `src/simulation_quality/quality_hub.py` and a scorer handler. See
    [`docs/guides/simulation_quality.md`](simulation_quality.md) §Adding a new scoring rule.
@@ -176,8 +183,10 @@ python3 -m src compare-sweep <sweep_id> --baseline docs/observability/baselines/
    condition, event not emitted when condition is absent (anti-drift guard).
 
 **Architecture boundary:** `src/observability/` must never import from `src/engine/`,
-`src/domains/`, or `src/systems/`. All observations flow through state diffs passed into
-`EventExtractor`, not through direct coupling to engine internals.
+`src/domains/`, or `src/systems/`. Observations flow either through state diffs passed into
+`EventExtractor` (legacy path) or through the typed `prior_state`/`update` records passed into
+an `event_shapers.py` shaper (live-default path for most domains) — not through direct coupling
+to engine internals.
 
 ---
 

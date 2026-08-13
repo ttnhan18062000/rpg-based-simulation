@@ -2956,6 +2956,12 @@
     {ENABLE_SOCIAL_COOPERATION: "ON"}; SOCIAL grade C→S at 3 seeds each).
     (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION, TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO,
     TCK-20260710-SIMQ-DEPTH-SOCIAL)
+    As of the push-shaper migrations, cooperation_event is now also derived by the
+    live-default apply-layer StrategyShaper (cross-domain colocation, see SOC-239),
+    and reputation_delta is now also derived by the live-default apply-layer
+    SocialShaper (see SOC-240); both in src/observability/event_shapers.py.
+    event_extractor.py's blocks above are now the flag-gated
+    (_push_shapers_phase2_active) rollback path, not the sole terminus.
   proof_type: parity
   test_path: >
     tests/unit/observability/test_event_extractor_social_faction.py::test_cooperation_event_emitted_when_decision_in_property_updates;
@@ -2979,6 +2985,10 @@
     src/observability/event_extractor.py (contract_completed: status == ContractStatus.FULFILLED;
     contract_lapsed: prior==ACTIVE and new==EXPIRED; contract_expired_offer: prior==OFFERED
     and new==EXPIRED or reap-removed). (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
+    As of the push-shaper migrations, all 3 event types are also derived by the
+    live-default apply-layer SocialShaper (src/observability/event_shapers.py, see
+    SOC-240); event_extractor.py's blocks above are now the flag-gated
+    (_push_shapers_phase2_active) rollback path, not the sole terminus.
   proof_type: null
   test_path: >
     tests/unit/observability/test_event_extractor_social_faction.py::test_contract_completed_on_fulfilled_status;
@@ -3013,6 +3023,16 @@
     += "faction"). src/simulation_quality/quality_hub.py (TRANSLATION_MAP additions:
     leadership_changed, alliance_formed, betrayal_desertion).
     (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
+    As of the push-shaper migrations, diplomatic_transition, alliance_accepted,
+    territory_ownership_changed, faction_tension_delta, war_declared, and
+    military_conflict_resolved are also derived by the live-default apply-layer
+    FactionShaper (src/observability/event_shapers.py). faction_extinct, despite
+    sitting in this same entry alongside those 6 FactionShaper-derived events, is
+    derived by the separate DeferredInstrumentationShaper
+    (src/observability/event_shapers.py), not FactionShaper. event_extractor.py's
+    blocks above are now the flag-gated (_push_shapers_active for the first 6,
+    _push_shapers_phase2_active for faction_extinct) rollback path, not the sole
+    terminus.
   proof_type: null
   test_path: >
     tests/unit/observability/test_event_extractor_social_faction.py::test_diplomatic_transition_emitted_from_faction_update;
@@ -3053,6 +3073,16 @@
     conservation_law_verified block at tick % 50 with economy_event_types guard.
     src/engine/scenario_runtime.py — scenario_objective_progressed emit in
     _evaluate_after_tick() when result == RUNNING.
+    As of the push-shaper migrations, alliance_proposed and resource_seized are also
+    derived by the live-default apply-layer FactionShaper; paid_info_transaction is
+    also derived by the live-default apply-layer EconomyShaper; conservation_law_verified
+    is now derived by run_shadow_shapers() as a cross-shaper aggregation, not any
+    single per-domain shaper class (all in src/observability/event_shapers.py).
+    scenario_objective_progressed remains scenario_runtime.py-only — not
+    shaper-migrated. event_extractor.py's blocks above are now the flag-gated
+    (_push_shapers_active for alliance_proposed/resource_seized/paid_info_transaction,
+    _push_shapers_phase2_active for conservation_law_verified) rollback path, not the
+    sole terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_faction_economy.py::TestAllianceProposed;
@@ -3077,6 +3107,10 @@
     strategic.contracts loop; isinstance guards on expiry_tick/created_tick;
     progress = elapsed / (expiry - created); thresholds (0.25, 0.50, 0.75);
     _emitted_contract_milestones class-level set gate; reset in reset_run_state().
+    As of the push-shaper migrations, this event is also derived by the live-default
+    apply-layer SocialShaper (src/observability/event_shapers.py, see SOC-240);
+    event_extractor.py's block above is now the flag-gated
+    (_push_shapers_phase2_active) rollback path, not the sole terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_contract_milestone.py
@@ -3096,6 +3130,10 @@
     src/observability/event_extractor.py — social_memory_created block after reputation_delta
     block, inside social section; compares curr_trust vs prior_trust per entity per tick;
     _emitted_social_memory class-level set gate; reset in reset_run_state().
+    As of the push-shaper migrations, this event is also derived by the live-default
+    apply-layer SocialShaper (src/observability/event_shapers.py, see SOC-240);
+    event_extractor.py's block above is now the flag-gated
+    (_push_shapers_phase2_active) rollback path, not the sole terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_social_memory.py

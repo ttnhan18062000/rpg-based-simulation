@@ -1338,6 +1338,10 @@
   v2_evidence: >
     src/observability/event_extractor.py — ecology_cycle_completed block;
     tick % 200 == 0 guard iterating current_state.regions.
+    As of the push-shaper migrations, this event is also derived by the live-default
+    apply-layer WorldDynamicsShaper (src/observability/event_shapers.py);
+    event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)
+    rollback path, not the sole terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestEcologyCycleCompleted
@@ -1362,6 +1366,13 @@
     kind exclusion set); node_recharged block inside resource_node_regenerated guard
     (remaining_charges 0→>0 only); threat_evolved block with threshold crossing logic
     in world_updates loop with try/except for MagicMock safety.
+    As of the push-shaper migrations, spawn_cadence_fired and threat_evolved are also
+    derived by the live-default apply-layer WorldDynamicsShaper
+    (src/observability/event_shapers.py); node_recharged, despite sitting in this same
+    entry alongside its two siblings, is derived by the separate
+    DeferredInstrumentationShaper (src/observability/event_shapers.py), not
+    WorldDynamicsShaper. event_extractor.py's block above is now the flag-gated
+    (_push_shapers_phase2_active) rollback path for all three, not the sole terminus.
   proof_type: parity
   test_path: >-
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
