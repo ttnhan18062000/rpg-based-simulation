@@ -6100,6 +6100,26 @@
     `_canonicalize`/`_flag_outliers` (INFRA-283/284's separate, already-shipped normalization
     concern -- confirmed byte-identical by the same source-hash guard this entry's test_path
     cites).
+
+
+    **Addendum (TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS, 2026-08-14):** this entry's
+    original `text`/`v2_evidence` described `_load_runs_and_events()` rebuilding the index only
+    when `DEFAULT_DB_PATH` was *missing* -- a present-but-outdated index was read silently
+    forever, under-reporting retro numbers with no warning (confirmed: one real session
+    under-counted 7 runs/41 events vs. the correct 18 runs/123 events). Fixed by adding
+    `_index_is_stale(db_path)` (generate_retro.py:66-77) -- returns `True` if the DB is missing OR
+    any of `RUNS_FILE`/`EVENTS_FILE`/`DEFAULT_TOOLS_FILE` has a newer mtime than the index -- and
+    gating the on-demand-rebuild branch on it (:90, `if _index_is_stale(DEFAULT_DB_PATH):`)
+    instead of the old bare `if not DEFAULT_DB_PATH.exists():` check. Rebuild-on-stale reuses the
+    exact same `build_index.build()` call and non-fatal-fallback-on-`Exception` semantics this
+    entry's `text` already documents -- no change to the never-hard-gating guarantee. New tests:
+    `test_generate_retro_rebuilds_stale_index_not_just_missing_index` (writes a row, builds the
+    index, appends a second row that postdates the index's mtime, confirms the second load
+    reflects both rows) and `test_index_is_stale_false_when_index_newer_than_all_sources`
+    (negative case). `docs/agent-monitoring/schema.md`'s "Derived SQLite Index" section and
+    `docs/agent-monitoring/README.md`'s Quick Start snippet and Done-Ticket Monitoring Coverage
+    Audit rationale were corrected in the same ticket to say "missing or stale" rather than
+    "missing" alone.
 - id: INFRA-292
   text: >
     New read-only baseline-metrics reporting tool over agent-monitoring/*.jsonl

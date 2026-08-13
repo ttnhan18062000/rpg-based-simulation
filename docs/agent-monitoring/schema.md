@@ -26,7 +26,10 @@ remain the sole write-path/append-only ground truth, untouched by the index or i
 Run `make agent-monitoring-index` to (re)build it. `query.py` and `validate.py` **hard-require**
 the index to exist (exiting with an actionable "run `make agent-monitoring-index` first" error if
 it's missing) — a deliberate choice, since neither is meant to run without its data source.
-`generate_retro.py` is the one exception: it builds the index on demand if missing, and falls back
+`generate_retro.py` is the one exception: it builds the index on demand if missing **or stale**
+(any of `runs.jsonl`/`events.jsonl`/`tools.jsonl` has a newer mtime than the index —
+`TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS`, since a present-but-outdated index was
+previously read silently forever, under-reporting retro numbers with no warning), and falls back
 to reading the raw JSONL directly if that on-demand build itself fails, so the weekly retro report
 never becomes hard-blocked on the index's presence. `events`/`tools` tables use non-unique
 `(run_id, seq)` indexes, not a `UNIQUE` constraint — historical pause/resume seq-collision

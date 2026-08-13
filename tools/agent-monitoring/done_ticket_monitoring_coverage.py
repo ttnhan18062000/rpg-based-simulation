@@ -60,12 +60,14 @@ def _collect_done_ticket_ids(done_dir: Path) -> tuple:
 def build_coverage_section(done_dir: Path = Path("tickets/done")) -> dict:
     ticket_entries, unparseable = _collect_done_ticket_ids(done_dir)
     # Deliberately reads runs.jsonl directly rather than through generate_retro's
-    # _load_runs_and_events() SQLite-index path: that index is only rebuilt when *missing*, not
-    # when stale, and this audit's whole purpose is checking coverage for tickets that may have
-    # just been recorded seconds ago — a stale index would false-positive them as "missing"
-    # (caught during this ticket's own Test phase: TCK-20260805-COMBAT-SKILL and several other
-    # same-session tickets, confirmed present in the real runs.jsonl file, were wrongly reported
-    # missing before this fix).
+    # _load_runs_and_events() SQLite-index path: even after TCK-20260811-AGENT-MONITORING-
+    # INDEX-SILENT-STALENESS taught that path to rebuild on staleness (any source JSONL newer
+    # than the index's own mtime), a mtime-comparison rebuild is still only as fresh as the last
+    # time something happened to call it, not truly up-to-the-second — and this audit's whole
+    # purpose is checking coverage for tickets that may have just been recorded seconds ago, so
+    # it needs the direct-read guarantee regardless (caught during this ticket's own Test phase:
+    # TCK-20260805-COMBAT-SKILL and several other same-session tickets, confirmed present in the
+    # real runs.jsonl file, were wrongly reported missing before this fix).
     runs = load_jsonl(RUNS_FILE)
     run_ids_present = {r.get("run_id") for r in runs if r.get("run_id")}
 

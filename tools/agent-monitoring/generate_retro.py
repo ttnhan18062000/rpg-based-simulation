@@ -63,15 +63,31 @@ def load_jsonl(path):
     return [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
 
 
+def _index_is_stale(db_path):
+    """True if db_path is missing, or any source JSONL (runs/events/tools) has a newer mtime
+    than the index — the index is a point-in-time snapshot (TCK-20260713-MONITORING-SQLITE-INDEX),
+    so any write to a source file after the index was last built makes it stale, not just absent.
+    """
+    if not db_path.exists():
+        return True
+    db_mtime = db_path.stat().st_mtime
+    for source in (RUNS_FILE, EVENTS_FILE, DEFAULT_TOOLS_FILE):
+        if source.exists() and source.stat().st_mtime > db_mtime:
+            return True
+    return False
+
+
 def _load_runs_and_events():
     """Return (all_runs, all_events) sourced from the derived SQLite index when available,
-    building it on demand if missing. The index must never become a hard gating dependency for
-    a retro report (unlike query.py/validate.py's open_index(), which sys.exit(1)s) — any failure
-    along this path (missing index, on-demand build failure) degrades to the original direct
+    (re)building it on demand if missing OR stale (TCK-20260811-AGENT-MONITORING-INDEX-SILENT-
+    STALENESS — a present-but-outdated index previously read silently, under-reporting retro
+    numbers with no warning). The index must never become a hard gating dependency for a retro
+    report (unlike query.py/validate.py's open_index(), which sys.exit(1)s) — any failure along
+    this path (missing/stale index, on-demand build failure) degrades to the original direct
     load_jsonl(RUNS_FILE)/load_jsonl(EVENTS_FILE) scan rather than raising.
     """
     try:
-        if not DEFAULT_DB_PATH.exists():
+        if _index_is_stale(DEFAULT_DB_PATH):
             import build_index
             from types import SimpleNamespace
 

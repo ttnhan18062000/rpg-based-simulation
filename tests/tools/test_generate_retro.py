@@ -814,6 +814,73 @@ def test_generate_retro_builds_index_on_demand_when_missing(tmp_path, monkeypatc
     assert [e["run_id"] for e in events] == ["TCK-ONDEMAND"]
 
 
+def test_generate_retro_rebuilds_stale_index_not_just_missing_index(tmp_path, monkeypatch):
+    # TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS: a present-but-outdated index was
+    # previously read silently forever (old code only checked DEFAULT_DB_PATH.exists()) —
+    # under-reporting retro numbers with no warning. This proves a source JSONL write that
+    # postdates the index's mtime triggers a rebuild before read, not just a missing DB file.
+    import os
+    import time
+
+    runs_file = tmp_path / "runs.jsonl"
+    events_file = tmp_path / "events.jsonl"
+    tools_file = tmp_path / "tools.jsonl"
+    runs_file.write_text(
+        '{"run_id":"TCK-STALE-BEFORE","start_ts":"2026-08-10T00:00:00Z",'
+        '"end_ts":"2026-08-10T00:10:00Z","workflow":"implement-ticket","tier":"standard",'
+        '"final_status":"DONE","agent_count":1}\n'
+    )
+    events_file.write_text(
+        '{"run_id":"TCK-STALE-BEFORE","seq":1,"phase":"Implement","agent":"implementer",'
+        '"status":"ok","summary":"done"}\n'
+    )
+    tools_file.write_text("")
+
+    monkeypatch.setattr(generate_retro, "RUNS_FILE", runs_file)
+    monkeypatch.setattr(generate_retro, "EVENTS_FILE", events_file)
+    monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tools_file)
+
+    # First load builds the index (missing-DB path) and reflects only the "before" row.
+    runs, events = generate_retro._load_runs_and_events()
+    assert [r["run_id"] for r in runs] == ["TCK-STALE-BEFORE"]
+    assert generate_retro.DEFAULT_DB_PATH.exists()
+
+    # Write a new record that postdates the index's own mtime (not just the source file's
+    # existing mtime — sleep briefly to guarantee a strictly later mtime on filesystems with
+    # coarse mtime resolution).
+    time.sleep(0.05)
+    with runs_file.open("a") as f:
+        f.write(
+            '{"run_id":"TCK-STALE-AFTER","start_ts":"2026-08-11T00:00:00Z",'
+            '"end_ts":"2026-08-11T00:10:00Z","workflow":"implement-ticket","tier":"standard",'
+            '"final_status":"DONE","agent_count":1}\n'
+        )
+    os.utime(runs_file, None)  # force mtime update even on filesystems with 1s resolution
+
+    assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is True
+
+    runs, events = generate_retro._load_runs_and_events()
+
+    assert {r["run_id"] for r in runs} == {"TCK-STALE-BEFORE", "TCK-STALE-AFTER"}
+
+
+def test_index_is_stale_false_when_index_newer_than_all_sources(tmp_path, monkeypatch):
+    runs_file = tmp_path / "runs.jsonl"
+    events_file = tmp_path / "events.jsonl"
+    tools_file = tmp_path / "tools.jsonl"
+    runs_file.write_text("")
+    events_file.write_text("")
+    tools_file.write_text("")
+
+    monkeypatch.setattr(generate_retro, "RUNS_FILE", runs_file)
+    monkeypatch.setattr(generate_retro, "EVENTS_FILE", events_file)
+    monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tools_file)
+
+    generate_retro._load_runs_and_events()  # builds the index fresh, now newer than all sources
+
+    assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is False
+
+
 def test_generate_retro_produces_clear_error_message_if_build_on_demand_disabled_or_fails(
     tmp_path, monkeypatch, capsys
 ):

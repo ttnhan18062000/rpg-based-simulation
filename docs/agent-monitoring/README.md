@@ -85,10 +85,13 @@ audit found this question previously required ad hoc regex against raw `tools.js
 `tools/agent-monitoring/done_ticket_monitoring_coverage.py` is a separate, read-only audit
 checking whether every ticket under `tickets/done/` has at least one matching `run_id` record in
 `runs.jsonl`. Reports `covered`/`missing`/`unparseable` ticket lists. Deliberately reads
-`runs.jsonl` directly rather than through `generate_retro`'s SQLite-index path — that index is
-only rebuilt when missing, not when stale, and this audit's whole purpose (catching a just-closed
-ticket with no monitoring record) requires up-to-the-second freshness a lazily-rebuilt index
-cannot guarantee. Built by `TCK-20260805-DONE-TICKET-MONITORING-COVERAGE-AUDIT` after
+`runs.jsonl` directly rather than through `generate_retro`'s SQLite-index path — even after
+`TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS` taught that path to rebuild on staleness
+(any source JSONL newer than the index's own mtime), a mtime-comparison rebuild is still only
+as fresh as the last time something happened to call `_load_runs_and_events()`, not truly
+up-to-the-second, and this audit's whole purpose (catching a just-closed ticket with no
+monitoring record) needs the direct-read guarantee regardless. Built by
+`TCK-20260805-DONE-TICKET-MONITORING-COVERAGE-AUDIT` after
 `TCK-20260805-CODEX-EVENT-TRACE-GAP-INVESTIGATION` found 2 `DONE` tickets with zero monitoring
 records. The full audit found 719 of 1,303 tickets missing coverage, but this is **not** an
 ongoing systemic bug — the earliest real `runs.jsonl` record is dated 2026-06-07 (the
@@ -109,7 +112,7 @@ to a single isolated miss in August) rather than a flat ongoing rate.
 
 ```bash
 # Build the derived SQLite index (required by query.py/validate.py; generate_retro.py
-# builds it on demand if missing — see schema.md's "Derived SQLite Index" section):
+# builds it on demand if missing or stale — see schema.md's "Derived SQLite Index" section):
 make agent-monitoring-index
 
 # After some workflow runs have completed:
