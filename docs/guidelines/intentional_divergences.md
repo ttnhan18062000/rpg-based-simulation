@@ -1110,6 +1110,27 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `ADVENTURE_ROUTE`'s utility ceiling/normalization should be revisited for routing-capable worlds
   with near-constant combat/danger pressure — that is a goal-competition design question, not an
   emission-wiring bug, and is explicitly not decided here.
+- **Related finding — HARVESTING tier-5 starvation on `hero_guild_routing_seed456_500t` /
+  `simq_routing_test_seed456_500t` (TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT, 2026-08-13)**:
+  the same tier-5-goal-competition-dominance phenomenon this section documents for `ADVENTURE_ROUTE`
+  (Restoration addendum above) independently and additionally suppresses `HARVESTING` on these two
+  run_keys. DEBUG-trace evidence: `HARVESTING` wins tier-5 goal arbitration exactly 1/371 evaluated
+  ticks on `hero_guild_routing_seed456_500t` and 1/335 on `simq_routing_test_seed456_500t` — the
+  same two competitors (`COMBAT_ENGAGE`, `REGION_STABILIZATION`) dominate both worlds' tick budgets
+  for the same structural reason (§2.43's `REGION_STABILIZATION` scorer floors at 100.0;
+  `CombatEngageScorer` floors at 40 and commonly reaches 70-140+; `HarvestScorer`'s distance-decayed
+  `50.0/dist` formula rarely exceeds 30). This directly suppresses ECONOMY (harvesting/crafting/trade
+  events never fire) on both run_keys and PROGRESSION indirectly (via `capability_growth_stalled` —
+  gear/gold growth requires harvesting/crafting, which essentially never runs). Recalibrated in
+  `grade_anchors.json` by this ticket (`hero_guild_routing_seed456_500t` ECONOMY/PROGRESSION,
+  `simq_routing_test_seed456_500t` PROGRESSION) — see this ticket's own investigation.md Finding 1.
+  This is a distinct `GoalKind` (`HARVESTING`, not `ADVENTURE_ROUTE`) and a mechanistically distinct
+  formula (distance-decay, not a hard scale cap), but the same downstream starvation *class* as this
+  section's existing `ADVENTURE_ROUTE` disclosure. Not fixed here — a recalibrate-and-disclose
+  decision, matching this ticket's own scope guards. If `TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-
+  NEVER-WINS-TIER5` (the open follow-up already tracking the `ADVENTURE_ROUTE` half of this same
+  phenomenon) is ever picked up, `HARVESTING`'s distance-decay formula should be considered in the
+  same pass, since it loses to the identical two competitors for a structurally analogous reason.
 - **Verification**: `tests/unit/observability/test_event_extractor_agency2.py::TestAntiDriftGuards::test_defer_property_name_constant_matches_phase_and_extractor`;
   `tests/unit/core/test_strategic_update_routing_family.py`;
   `tests/unit/strategic/test_adventure_route_materialization.py`;

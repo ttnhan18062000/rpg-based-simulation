@@ -490,6 +490,19 @@ the grade reflects actual event count differences (137 vs 40 events). COGNITION 
 > grade — no such grade was measured. A follow-up ticket investigating the `ADVENTURE_ROUTE`
 > utility-scale-vs-tier5-competition question is recommended.
 
+> **NOTE (2026-08-13 — `TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT`):** the table's PROGRESSION
+> row above ("norm ≈ -0.06, event_count=1, all 3 seeds") is now stale for `seed456` specifically —
+> fresh measurement (this ticket) confirms `simq_routing_test_seed456_500t`'s PROGRESSION is
+> `C`/`-0.2359249329758713` (25 events, one of two observed bimodal states — see
+> `score_ceilings.json`'s new `watchdog_variance` entry for the full 6-trial evidence), root-caused
+> to the same tier-5 `HARVESTING`-starvation mechanism disclosed in
+> `docs/guidelines/intentional_divergences.md` §2.41's newest addendum: `HARVESTING` wins tier-5
+> goal arbitration only 1/335 evaluated ticks on this run_key, so gear/gold growth (which drives
+> PROGRESSION's `capability_growth_stalled` signal) almost never occurs. `grade_anchors.json`'s
+> `simq_routing_test_seed456_500t.PROGRESSION` anchor recalibrated accordingly by this ticket. The
+> table row itself is intentionally left unrewritten (per this doc's own established
+> disclose-don't-rewrite convention) — this NOTE is the disclosure.
+
 ---
 
 ### sandbox_world
@@ -1521,6 +1534,22 @@ the same stasis pattern `simq_routing_test_seed456` hit pre-fix.
 > restored `A` grade — none was measured. See the `simq_routing_test` NOTE above for the full
 > methodology; a follow-up ticket on the utility-scale-vs-tier5-competition question is
 > recommended.
+
+> **NOTE (2026-08-13 — `TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT`):** the table's ECONOMY and
+> PROGRESSION rows above (both currently reading "C"/"stable", not broken out per-seed) are now
+> recalibrated for `seed456` specifically — the prior 2026-08-13
+> `TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT` NOTE already flagged this exact gap
+> ("`seed456`'s ECONOMY/PROGRESSION drift is disclosed but deliberately not recalibrated by this
+> ticket, tracked instead by `TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT`") — that forward
+> reference is now resolved. Fresh measurement (this ticket): ECONOMY `C`/`0.0` (was anchored
+> `B`/`0.10972568578553615`), PROGRESSION `C`/`-0.3025210084033613` (was anchored
+> `D`/`-0.6212534059945504`). Root cause: the same tier-5 `HARVESTING`-starvation mechanism
+> disclosed in `docs/guidelines/intentional_divergences.md` §2.41's newest addendum — `HARVESTING`
+> wins tier-5 goal arbitration only 1/371 evaluated ticks on this run_key, so ECONOMY's
+> harvest/craft/trade events almost never fire, and PROGRESSION's `capability_growth_stalled` signal
+> follows from the resulting flat gear/gold. `grade_anchors.json`'s
+> `hero_guild_routing_seed456_500t.{ECONOMY,PROGRESSION}` anchors recalibrated accordingly. The
+> table rows themselves are intentionally left unrewritten — this NOTE is the disclosure.
 
 ---
 
