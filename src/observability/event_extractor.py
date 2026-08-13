@@ -1400,8 +1400,8 @@ class EventExtractor:
         # (TCK-20260806-PUSH-CUTOVER-PHASE2), same rollback pattern.
         for b_id, b_upd in ([] if _push_shapers_phase2_active else (getattr(update, "building_updates", None) or {}).items()):
             if getattr(b_upd, "hp_delta", 0.0) is not None and getattr(b_upd, "hp_delta", 0.0) < 0:
-                from src.engine.spatial_query import SpatialQueryService
-                _region = SpatialQueryService.get_building_region(current_state, b_id) if current_state else None
+                from src.engine.kernel import Kernel
+                _region = Kernel.get_building_region(current_state, b_id) if current_state else None
                 events.append(SimulationEvent(
                     event_type="building_sabotaged", event_category="region",
                     tick=tick, entity_id=None, severity="WARNING",

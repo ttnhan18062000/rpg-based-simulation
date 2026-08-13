@@ -1113,10 +1113,10 @@ class WorldDynamicsShaper:
     needing full-state absence-checking.
 
     `building_sabotaged` substitutes `prior_state` for the old extractor's `current_state` in its
-    `SpatialQueryService.get_building_region()` call — building positions are durable/stable
+    `Kernel.get_building_region()` call — building positions are durable/stable
     (sabotage only changes HP, never position), so a prior-tick lookup is equivalent, confirmed by
-    reading `get_building_region()`'s own implementation (reads `state.buildings`, not anything
-    sabotage would have changed).
+    reading `SpatialQueryService.get_building_region()`'s own implementation (reads
+    `state.buildings`, not anything sabotage would have changed).
     """
 
     _MILITARY_RESOLVED = frozenset({
@@ -1253,8 +1253,8 @@ class WorldDynamicsShaper:
         # only ever set functional_set=False, never hp_delta)
         for b_id, b_upd in (getattr(update, "building_updates", None) or {}).items():
             if getattr(b_upd, "hp_delta", 0.0) is not None and getattr(b_upd, "hp_delta", 0.0) < 0:
-                from src.engine.spatial_query import SpatialQueryService
-                region = SpatialQueryService.get_building_region(prior_state, b_id) if prior_state else None
+                from src.engine.kernel import Kernel
+                region = Kernel.get_building_region(prior_state, b_id) if prior_state else None
                 events.append(SimulationEvent(
                     event_type="building_sabotaged", event_category="region",
                     tick=tick, entity_id=None, severity="WARNING",

@@ -182,11 +182,28 @@ python3 -m src compare-sweep <sweep_id> --baseline docs/observability/baselines/
 4. Add tests in `tests/unit/observability/` — at minimum: event emitted on the correct
    condition, event not emitted when condition is absent (anti-drift guard).
 
-**Architecture boundary:** `src/observability/` must never import from `src/engine/`,
-`src/domains/`, or `src/systems/`. Observations flow either through state diffs passed into
-`EventExtractor` (legacy path) or through the typed `prior_state`/`update` records passed into
-an `event_shapers.py` shaper (live-default path for most domains) — not through direct coupling
-to engine internals.
+**Architecture boundary:** `src/observability/` files must route any `src/engine/` dependency
+through the `Kernel` facade (`from src.engine.kernel import Kernel`) — never import a
+lower-level engine internal directly (e.g. `WorldIndexService`, `SpatialQueryService`,
+`LegalityServiceV2`). This is the established pattern from `TCK-20260627-P2G-KERNEL-FACADE`
+(`Kernel.get_world_indexes()`) and its siblings `Kernel.get_building_region()` and
+`Kernel.verify_occupancy_legal()`; `tests/architecture/test_phase18_import_boundaries.py::
+test_observability_engine_imports_go_through_kernel_facade` enforces it. Separately,
+`src/observability/` may import a small, pinned allowlist of pure/stateless symbols from
+`src/domains/`/`src/systems/` for read-only event classification and presentation — currently
+`WorldEventCategory` (Enum), `AbandonmentEvaluator`/`AbandonmentCategory` (stateless static
+evaluator), `_MAX_CONSECUTIVE_REJECTIONS` (constant), and `CognitionGraphExporter` (stateless
+read-only presenter) — but must never call into a state-mutating method or otherwise create
+hot-path coupling; `test_observability_domains_systems_import_allowlist` (same file) pins this
+exact set, and expanding it requires updating both the test and this note together, not a
+silent addition. Hot-path-specific restrictions (no importing heavy
+`observability.anomaly`/`observability.cognition`/`observability.reporting` submodules into
+`src/engine/`, `config.py`, `event_extractor.py`, or `event_recorder.py`) are separately
+enforced by `tests/architecture/test_phase19_observability_boundaries.py::
+test_hot_path_does_not_import_heavy_analyzers`. Observations otherwise flow through state diffs
+passed into `EventExtractor` (legacy path) or through the typed `prior_state`/`update` records
+passed into an `event_shapers.py` shaper (live-default path for most domains) — not through
+direct coupling to engine internals.
 
 ---
 

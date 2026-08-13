@@ -148,8 +148,6 @@ class HardLawMonitor:
         only covered by the multi-occupant tile scan below; entities and resource nodes
         carry no such self-registration and are checked directly against verify_occupancy.
         """
-        from src.engine.legality import LegalityServiceV2
-
         objects: List[Tuple[str, int, Tuple[float, float]]] = []
         for e_id, entity in state.entities.items():
             if not entity.lifecycle.active or not entity.combat.alive:
@@ -196,7 +194,7 @@ class HardLawMonitor:
             if tile in reported_tiles:
                 continue
             ignore_id = obj_id if kind == "entity" else None
-            legal, reason = LegalityServiceV2.verify_occupancy(pos, state, ignore_entity_id=ignore_id)
+            legal, reason = Kernel.verify_occupancy_legal(pos, state, ignore_entity_id=ignore_id)
             if legal:
                 continue
             reported_tiles.add(tile)

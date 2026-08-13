@@ -1246,3 +1246,27 @@ class Kernel:
         """
         from src.engine.world_index import WorldIndexService
         return WorldIndexService.get_indexes(state, dirty)
+
+    @staticmethod
+    def get_building_region(state: Any, building_id: int) -> Any:
+        """Return the region containing *building_id*, delegating to SpatialQueryService.
+
+        Observability code must call this method rather than importing
+        SpatialQueryService directly.  Kernel is the stable boundary for engine-internal
+        services (same rationale as get_world_indexes — TCK-20260627-P2G-KERNEL-FACADE).
+        """
+        from src.engine.spatial_query import SpatialQueryService
+        return SpatialQueryService.get_building_region(state, building_id)
+
+    @staticmethod
+    def verify_occupancy_legal(
+        pos: Any, state: Any, ignore_entity_id: Optional[int] = None
+    ) -> Any:
+        """Return (legal, reason) for *pos*, delegating to LegalityServiceV2.verify_occupancy.
+
+        Observability code must call this method rather than importing
+        LegalityServiceV2 directly.  Kernel is the stable boundary for engine-internal
+        services (same rationale as get_world_indexes — TCK-20260627-P2G-KERNEL-FACADE).
+        """
+        from src.engine.legality import LegalityServiceV2
+        return LegalityServiceV2.verify_occupancy(pos, state, ignore_entity_id=ignore_entity_id)
