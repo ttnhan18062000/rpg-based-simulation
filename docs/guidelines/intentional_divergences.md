@@ -1012,17 +1012,48 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `StrategicUpdate` schema change. `defer_with_reason` events no longer fire for adventure-routing
   deferrals.
 - **Rationale**: **Bounded**. The DEFER_WITH_REASON signal is discarded by the shared tier-5
-  utility-floor check (`src/systems/strategic_systems/intelligence.py:1409`,
-  `if g_score.utility < 20.0: continue`) before any `StrategicUpdate`-returning site inside
-  `evaluate_strategic_intent()` is ever reached — `AdventureGoalScorer`'s DEFER_WITH_REASON branch
-  always scores `utility=0.0` by design (`adventure_scorer.py`'s DEFER_WITH_REASON early return).
-  Porting this signal for real therefore requires special-casing sub-floor scores inside the
-  shared tier-5 scoring loop itself (`intelligence.py:1394-1414`), a change that affects every
+  utility-floor check (`src/systems/strategic_systems/intelligence.py:1450`,
+  `if g_score.utility < 20.0 or (...): continue`) before any `StrategicUpdate`-returning site
+  inside `evaluate_strategic_intent()` is ever reached — `AdventureGoalScorer`'s DEFER_WITH_REASON
+  branch always scores `utility=0.0` by design (`adventure_scorer.py`'s DEFER_WITH_REASON early
+  return). Porting this signal for real therefore requires special-casing sub-floor scores inside
+  the shared tier-5 scoring loop itself (`intelligence.py:1394-1414`), a change that affects every
   `GoalKind` scorer's ineligible/deferred case, not just adventure's — deliberately bounded out of
   `TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`'s narrow relocate-and-delete scope. A future
   ticket should design how sub-floor scorer signals surface (e.g., a
   `StrategicUpdate.property_updates` field populated from inside the shared loop before the floor
   filter runs, not merely threaded through the existing return sites) as its own reviewed change.
+- **Broadened disclosure (TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT, 2026-08-13)**:
+  The SAME deleted `AdventureDecisionPhase.apply()` was also the sole writer of
+  `last_routing_family`/`last_routing_tick` (pre-deletion `phase.py:178-179`, readable via
+  `git show 1825f914^:src/domains/adventure/phase.py`), written unconditionally on every
+  **winning** route (i.e. whenever `evaluate_project_switch()` — now
+  `evaluate_strategic_intent()`'s `ADVENTURE_ROUTE` branch — returns a non-`None` committed
+  candidate), not just on the DEFER_WITH_REASON path this section otherwise describes. This case is
+  **not** covered by the "Rationale: Bounded" argument above: a winning `ADVENTURE_ROUTE`
+  candidate does not hit the sub-floor discard — it reaches a real commit site
+  (`RouteToProjectMapper.map_to_states()`, `intelligence.py:1478-1495`) — it simply never writes
+  `EntityUpdate.property_updates` there. `event_shapers.py:750-773` (live path,
+  `ENABLE_PUSH_EVENT_SHAPERS_PHASE2` defaults `ON`) and `event_extractor.py:594-618` (rollback
+  path) both read `last_routing_family` to emit `route_selected`, `action_executed`, and
+  `route_family_first_use` — 3 of AGENCY's 4 adventure-routing event types. All three are
+  therefore also silently dead for every routing-capable world, not just the
+  DEFER_WITH_REASON-driven `defer_with_reason` event this section originally documented — a
+  strictly larger observability blast radius than previously disclosed here. Restoring this half
+  is **not** a narrow observability fix: it requires a new field on the shared
+  `StrategicUpdate` durable-update schema (`src/core/updates.py`; no such field exists today), a
+  `StrategicUpdate.merge()` change, and threading it through two call sites in
+  `intelligence.py` — the `ADVENTURE_ROUTE` win branch where the family is known
+  (`intelligence.py:1478-1495`) and the outer refine-loop merge site
+  (`intelligence.py:917-927`) that today only assigns `.strategic`, never `.property_updates` —
+  because `RouteFamily -> ProjectKind` is a many-to-one mapping
+  (`src/domains/adventure/mapper.py:31-47`), the specific family cannot be reconstructed after the
+  fact from the committed `ProjectState.kind` at that outer site. This is deliberately **not**
+  ported as part of this recalibration-only ticket (recalibrate-and-disclose decision, not a
+  reflexive fix, given the area's active-churn history) — tracked instead by
+  `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`. The `last_defer_reason` half of this
+  section is unaffected by this broadened disclosure — it stays exactly as already
+  `Bounded`/deliberately-not-ported, per the Rationale above.
 - **Verification**: `tests/unit/observability/test_event_extractor_agency2.py::TestAntiDriftGuards::test_defer_property_name_constant_matches_phase_and_extractor`.
 - **Status**: ACTIVE
 

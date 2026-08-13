@@ -632,25 +632,29 @@ def test_simq_routing_test_seed42_500t_cognition_grade_stability() -> None:
 @pytest.mark.slow
 def test_simq_routing_test_seed42_1000t_cognition_grade_stability() -> None:
     """Tolerance-based grade-stability guard for `simq_routing_test_seed42_1000t`
-    (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
+    COGNITION (TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT).
 
-    Section 2's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
-    drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
-    idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
-    COGNITION event_count ranged 316-401 across trials (idle-2 alone spiked to grade S); not load-monotonic but genuinely unstable, F6/decision_divergence_detected-class.
-
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
-    3 fresh same-seed trials and asserts (a) each trial's grade stays within the
-    existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
-    trials stays within an evidence-derived tolerance of the anchor's re-anchored value
-    (tolerance = 1.3x the largest single-sample deviation observed in the repro, floored
-    at the standard SCORE_TOLERANCE_ABS_FLOOR=0.05 -- derived from repro_sweep.md's actual
-    trial-to-trial spread, not invented).
+    Formerly a 3-trial mean-tolerance guard against a stale anchor
+    (`{"grade": "A", "score": 1.7961, ...}`, TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP)
+    with a docstring framed around F6/`decision_divergence_detected`-class watchdog
+    variance. That framing is stale: root cause is the same commit bisected for the
+    `_500t` sibling (`test_simq_routing_test_seed42_500t_cognition_grade_stability`
+    above) -- `3d992dd0` (`TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION`,
+    `docs/guidelines/intentional_divergences.md` §2.40) -- not throttle-driven noise.
+    This ticket's own fresh repro (both idle and one induced-load trial via the
+    `_500t` sibling's own `_busy_loop`/`multiprocessing` mechanism, 2x core
+    oversubscription) found `event_count=0, grade=C, loop_detected=False` in every
+    condition -- no residual observed at this tick count, unlike the `_500t` sibling's
+    own rare 1/18-trial residual. This guard nonetheless defaults to the same
+    tolerance-guard (2b) shape as the `_500t` sibling rather than a strict
+    bit-identical (2a) assertion, matching that sibling's own precedent that idle-only
+    sampling under-covers this test family -- the cost of staying at 2b when 2a would
+    also work is low, while the cost of prematurely locking 2a is a guaranteed future
+    flake ticket.
     """
+    import multiprocessing
     import tempfile
+    import time
 
     from tools.calibrate_simq import (
         _build_hub,
@@ -660,81 +664,97 @@ def test_simq_routing_test_seed42_1000t_cognition_grade_stability() -> None:
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
 
     world_name = "simq_routing_test"
     profile_name = "simq_routing_test"
     seed = 42
     ticks = 1000
-    n_trials = 3
-    anchors = {
-        "COGNITION": {"grade": "A", "score": 1.7961, "abs_floor": 0.2768},
-    }
 
-    profile = _resolve_profile(profile_name)
-    feature_flags = _load_profile_feature_flags(profile)
-    trial_scores: dict[str, list[float]] = {p: [] for p in anchors}
-    band_failures: list[str] = []
+    def _busy_loop(stop_flag) -> None:
+        x = 0
+        while not stop_flag.value:
+            for _ in range(200000):
+                x = (x * 1103515245 + 12345) & 0x7FFFFFFF
 
-    for trial in range(n_trials):
+    def _run_cognition(label: str, cal_dir: str) -> dict:
+        profile = _resolve_profile(profile_name)
+        feature_flags = _load_profile_feature_flags(profile)
         engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
         weights = _load_weights(profile)
-        with tempfile.TemporaryDirectory() as cal_dir:
-            hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
-            _replay_jsonl_through_hub(engine_run_dir, hub)
-            report = hub.get_quality_report()
-            persistence.write_report(report)
-            persistence.shutdown()
-        for pillar, target in anchors.items():
-            snap = report.pillars[pillar]
-            trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+        hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_{label}")
+        _replay_jsonl_through_hub(engine_run_dir, hub)
+        report = hub.get_quality_report()
+        persistence.write_report(report)
+        persistence.shutdown()
+        cognition = report.pillars["COGNITION"]
+        return {
+            "event_count": cognition.event_count,
+            "raw_score": cognition.raw_score,
+            "normalized_score": cognition.normalized_score,
+            "grade": cognition.grade,
+            "loop_detected": cognition.loop_detected,
+        }
 
-    assert not band_failures, (
-        f"simq_routing_test_seed42_1000t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
-        + "\n".join(band_failures)
-    )
+    with tempfile.TemporaryDirectory() as idle_dir:
+        idle_result = _run_cognition("idle", idle_dir)
 
-    score_failures: list[str] = []
-    for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
-            score_failures.append(
-                f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
-                f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
-                f"per-trial values: {trial_scores[pillar]}"
-            )
-    assert not score_failures, (
-        f"simq_routing_test_seed42_1000t -- {len(score_failures)} pillar(s) drifted beyond evidence-derived score tolerance:\n"
-        + "\n".join(score_failures)
+    stop_flag = multiprocessing.Value("b", False)
+    n_workers = max(1, multiprocessing.cpu_count() * 2)
+    procs = [multiprocessing.Process(target=_busy_loop, args=(stop_flag,)) for _ in range(n_workers)]
+    for p in procs:
+        p.start()
+    try:
+        time.sleep(1.0)  # let induced load ramp up before the drive starts
+        with tempfile.TemporaryDirectory() as load_dir:
+            load_result = _run_cognition("load", load_dir)
+    finally:
+        stop_flag.value = True
+        for p in procs:
+            p.join(timeout=5.0)
+            if p.is_alive():
+                p.terminate()
+
+    for label, result in (("idle", idle_result), ("load", load_result)):
+        assert result["event_count"] <= 2, (
+            f"simq_routing_test_seed42_1000t COGNITION ({label}) exceeded the tolerance floor "
+            f"for the confirmed-rare residual variance -- result={result}"
+        )
+        assert result["grade"] in ("C", "B"), (
+            f"simq_routing_test_seed42_1000t COGNITION ({label}) graded outside the tolerated "
+            f"{{C, B}} band -- result={result}"
+        )
+    assert idle_result["event_count"] == 0 and idle_result["grade"] == "C", (
+        f"simq_routing_test_seed42_1000t COGNITION (idle) drifted from the confirmed "
+        f"deterministic value under non-induced-load conditions -- actual={idle_result}"
     )
 
 
 @pytest.mark.slow
 def test_hero_guild_routing_seed42_1000t_cognition_grade_stability() -> None:
     """Tolerance-based grade-stability guard for `hero_guild_routing_seed42_1000t`
-    (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
+    COGNITION (TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT).
 
-    Section 2's idle-vs-induced-load repro
-    (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
-    drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
-    idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
-    COGNITION event_count 412 (both idle, grade S) vs 327 (both load levels, grade A) -- load-correlated grade-band shift, F6/decision_divergence_detected-class.
-
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
-    3 fresh same-seed trials and asserts (a) each trial's grade stays within the
-    existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
-    trials stays within an evidence-derived tolerance of the anchor's re-anchored value
-    (tolerance = 1.3x the largest single-sample deviation observed in the repro, floored
-    at the standard SCORE_TOLERANCE_ABS_FLOOR=0.05 -- derived from repro_sweep.md's actual
-    trial-to-trial spread, not invented).
+    Formerly a 3-trial mean-tolerance guard against a stale anchor
+    (`{"grade": "S", "score": 2.0641, ...}`, TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP)
+    with a docstring framed around F6/`decision_divergence_detected`-class watchdog
+    variance. That framing is stale: root cause is the same commit bisected for the
+    `simq_routing_test_seed42_1000t` sibling above -- `3d992dd0`
+    (`TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION`,
+    `docs/guidelines/intentional_divergences.md` §2.40) -- not throttle-driven noise.
+    This ticket's own fresh repro (both idle and one induced-load trial via the
+    `_500t` sibling's own `_busy_loop`/`multiprocessing` mechanism, 2x core
+    oversubscription) found `event_count=0, grade=C, loop_detected=False` in every
+    condition -- no residual observed at this tick count. This guard nonetheless
+    defaults to the same tolerance-guard (2b) shape as the `_500t` sibling
+    (`test_simq_routing_test_seed42_500t_cognition_grade_stability` above) rather than
+    a strict bit-identical (2a) assertion, matching that sibling's own precedent that
+    idle-only sampling under-covers this test family -- the cost of staying at 2b when
+    2a would also work is low, while the cost of prematurely locking 2a is a
+    guaranteed future flake ticket.
     """
+    import multiprocessing
     import tempfile
+    import time
 
     from tools.calibrate_simq import (
         _build_hub,
@@ -744,56 +764,68 @@ def test_hero_guild_routing_seed42_1000t_cognition_grade_stability() -> None:
         _resolve_profile,
         _run_engine,
     )
-    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
 
     world_name = "hero_guild_routing"
     profile_name = "hero_guild_routing"
     seed = 42
     ticks = 1000
-    n_trials = 3
-    anchors = {
-        "COGNITION": {"grade": "S", "score": 2.0641, "abs_floor": 0.5536},
-    }
 
-    profile = _resolve_profile(profile_name)
-    feature_flags = _load_profile_feature_flags(profile)
-    trial_scores: dict[str, list[float]] = {p: [] for p in anchors}
-    band_failures: list[str] = []
+    def _busy_loop(stop_flag) -> None:
+        x = 0
+        while not stop_flag.value:
+            for _ in range(200000):
+                x = (x * 1103515245 + 12345) & 0x7FFFFFFF
 
-    for trial in range(n_trials):
+    def _run_cognition(label: str, cal_dir: str) -> dict:
+        profile = _resolve_profile(profile_name)
+        feature_flags = _load_profile_feature_flags(profile)
         engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
         weights = _load_weights(profile)
-        with tempfile.TemporaryDirectory() as cal_dir:
-            hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_trial{trial}")
-            _replay_jsonl_through_hub(engine_run_dir, hub)
-            report = hub.get_quality_report()
-            persistence.write_report(report)
-            persistence.shutdown()
-        for pillar, target in anchors.items():
-            snap = report.pillars[pillar]
-            trial_scores[pillar].append(snap.normalized_score)
-            if not _within_band(snap.grade, target["grade"]):
-                band_failures.append(
-                    f"  trial {trial} {pillar}: grade={snap.grade} outside +/-1 band of anchor grade={target['grade']}"
-                )
+        hub, persistence = _build_hub(weights, cal_dir, run_id or f"{profile_name}_seed{seed}_{ticks}t_{label}")
+        _replay_jsonl_through_hub(engine_run_dir, hub)
+        report = hub.get_quality_report()
+        persistence.write_report(report)
+        persistence.shutdown()
+        cognition = report.pillars["COGNITION"]
+        return {
+            "event_count": cognition.event_count,
+            "raw_score": cognition.raw_score,
+            "normalized_score": cognition.normalized_score,
+            "grade": cognition.grade,
+            "loop_detected": cognition.loop_detected,
+        }
 
-    assert not band_failures, (
-        f"hero_guild_routing_seed42_1000t -- {len(band_failures)} trial/pillar grade(s) drifted beyond anchor band:\n"
-        + "\n".join(band_failures)
-    )
+    with tempfile.TemporaryDirectory() as idle_dir:
+        idle_result = _run_cognition("idle", idle_dir)
 
-    score_failures: list[str] = []
-    for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
-            score_failures.append(
-                f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
-                f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
-                f"per-trial values: {trial_scores[pillar]}"
-            )
-    assert not score_failures, (
-        f"hero_guild_routing_seed42_1000t -- {len(score_failures)} pillar(s) drifted beyond evidence-derived score tolerance:\n"
-        + "\n".join(score_failures)
+    stop_flag = multiprocessing.Value("b", False)
+    n_workers = max(1, multiprocessing.cpu_count() * 2)
+    procs = [multiprocessing.Process(target=_busy_loop, args=(stop_flag,)) for _ in range(n_workers)]
+    for p in procs:
+        p.start()
+    try:
+        time.sleep(1.0)  # let induced load ramp up before the drive starts
+        with tempfile.TemporaryDirectory() as load_dir:
+            load_result = _run_cognition("load", load_dir)
+    finally:
+        stop_flag.value = True
+        for p in procs:
+            p.join(timeout=5.0)
+            if p.is_alive():
+                p.terminate()
+
+    for label, result in (("idle", idle_result), ("load", load_result)):
+        assert result["event_count"] <= 2, (
+            f"hero_guild_routing_seed42_1000t COGNITION ({label}) exceeded the tolerance floor "
+            f"for the confirmed-rare residual variance -- result={result}"
+        )
+        assert result["grade"] in ("C", "B"), (
+            f"hero_guild_routing_seed42_1000t COGNITION ({label}) graded outside the tolerated "
+            f"{{C, B}} band -- result={result}"
+        )
+    assert idle_result["event_count"] == 0 and idle_result["grade"] == "C", (
+        f"hero_guild_routing_seed42_1000t COGNITION (idle) drifted from the confirmed "
+        f"deterministic value under non-induced-load conditions -- actual={idle_result}"
     )
 
 

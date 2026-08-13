@@ -413,7 +413,18 @@ with a qualifying module), not a queued initiative.
 
 **AGENCY** — C in every world except `simq_routing_test`/`hero_guild_routing` is archetype-correct
 by design (`ENABLE_ADVENTURE_ROUTING` is opt-in per world, DA-ruled intentional,
-`TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`). Not a gap.
+`TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`). Not a gap. **Targeted correction (2026-08-13,
+`TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT`), not a full refresh:** this doc's
+last full corpus run (2026-08-07) predates `TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`. Fresh
+re-verification now confirms `simq_routing_test`/`hero_guild_routing` ALSO grade C (0 events/0.0)
+on their 4 named `_500t` anchors — a real observability regression (the deleted phase was the sole
+writer of `entity.last_routing_family`, `docs/guidelines/intentional_divergences.md` §2.41), not
+the pre-existing `ENABLE_ADVENTURE_ROUTING`-opt-in design this paragraph otherwise still correctly
+describes. Per this doc's own convention (see "Purpose" above), a full `tools/evaluate_simq.py`
+re-run is still owed to refresh the rest of this doc's 79-anchor picture (including the grade
+distribution table above) — not performed here, out of scope for a docs-only pass. See
+`eval_matrix_results.md`'s 2026-08-13 NOTE blocks for the authoritative evidentiary record in the
+meantime.
 
 **COGNITION** — split state, the one pillar with a genuinely unresolved half:
 - Self-model *materialization* generalizes cleanly and cheaply to real archetype worlds (proven

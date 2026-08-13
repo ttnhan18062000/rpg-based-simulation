@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-08-11
+last_verified: 2026-08-13
 ---
 
 # Adventure Domain Contract
@@ -52,7 +52,15 @@ rather than a route-generation pre-filter specific to adventure routing.
 
 - The hero's **active route selection**: which `RouteFamily` the hero pursues this tick
 - The hero's **strategic project assignment**: `current_project_id` and `current_objective_id` written via `StrategicUpdate`
-- **Debug trace properties** on the entity: `last_routing_tick`, `last_routing_family`, candidate count
+- **Debug trace properties** on the entity — historically `last_routing_tick`, `last_routing_family`,
+  candidate count — but **`AdventureGoalScorer.score()` does not currently emit any of these.** The
+  sole writer was the now-deleted `AdventureDecisionPhase.apply()`
+  (`TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`); no replacement was ported when the phase was
+  removed. Confirmed no-op via direct source search (`src/domains/adventure/`,
+  `src/ai/goals/adventure_scorer.py` — zero `EntityUpdate`/`property_updates` emission of any kind)
+  during `TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT`. See
+  `docs/guidelines/intentional_divergences.md` §2.41 (broadened disclosure) and follow-up ticket
+  `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE` (the code-fix, not yet implemented).
 
 The adventure domain does not own world state, inventory, combat state, or any other entity's strategic state.
 
@@ -199,7 +207,7 @@ All mutations are emitted as a `StateUpdate` — never applied directly inside t
 | Update type | Fields written |
 |---|---|
 | `StrategicUpdate` | `projects_add_or_update`, `current_project_id_set`, `current_objective_id_set` |
-| `EntityUpdate.property_updates` | `last_routing_tick`, `last_routing_family`, `candidate_count`, `selected score` (debug trace) |
+| `EntityUpdate.property_updates` | ~~`last_routing_tick`, `last_routing_family`, `candidate_count`, `selected score`~~ (debug trace) — **currently none of these are written**; sole writer deleted by `TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE` without a replacement. See `docs/guidelines/intentional_divergences.md` §2.41 and `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`. |
 
 No direct writes to `AuthoritativeState` occur inside `AdventureGoalScorer.score()`.
 

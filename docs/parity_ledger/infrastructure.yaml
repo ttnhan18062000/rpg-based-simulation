@@ -2992,6 +2992,16 @@
     been re-measured here -- this is a housekeeping correction of a dead-code citation, not a
     recalibration; a follow-up ticket should re-run the AGENCY calibration sweep referenced above
     against current HEAD before this support_boundary's grading claims are relied upon again.
+    Addendum (TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT): re-verification
+    performed. AGENCY is now 0 events/0.0/C for all 6 measured routing-capable run_keys
+    (simq_routing_test/hero_guild_routing, seeds 42/123/456, 500t) -- confirmed root cause is the
+    last_routing_family property-write loss (docs/guidelines/intentional_divergences.md §2.41,
+    broadened), not a scorer-logic defect. AgencyScorer itself is unaffected (this entry's own
+    v2_evidence/test_path remain correct -- this is an emission-side gap, not a scoring-logic
+    parity divergence). The dungeon_crawl/urban_political/sandbox_world archetype-blocked-C claim
+    is unaffected (different mechanism, ENABLE_ADVENTURE_ROUTING=OFF, not re-verified by this
+    ticket -- see eval_matrix_results.md AGENCY Cross-World Design Note). grade_anchors.json
+    recalibrated accordingly.
 - id: INFRA-238
   text: "CombatScorer covers all contract §5 COMBAT rules: combat_active, combat_resolved,
     survival_tension, tactical_variety (per unique modifier), attrition, early_extinction

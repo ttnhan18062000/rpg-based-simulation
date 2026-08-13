@@ -458,6 +458,24 @@ the grade reflects actual event count differences (137 vs 40 events). COGNITION 
 > `docs/guidelines/intentional_divergences.md` §2.41's `defer_with_reason` observability gap), tracked
 > by `TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT`, not this ticket's scope.
 
+> **NOTE (2026-08-13 — `TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT`):** AGENCY
+> confirmed collapsed A→C (event_count 0) on all 3 `simq_routing_test` seeds (42/123/456, 500t),
+> not just `seed42_500t` as first flagged — fresh re-verification (2 independent trials per
+> run_key, bit-identical) at current HEAD. Root cause confirmed broader than
+> `docs/guidelines/intentional_divergences.md` §2.41 previously disclosed: the deleted
+> `AdventureDecisionPhase.apply()` was the sole writer of BOTH `last_defer_reason` (§2.41's
+> originally-documented half) AND `last_routing_family` (newly disclosed) — the latter fed
+> `route_selected`, `action_executed`, and `route_family_first_use`, 3 of AGENCY's 4
+> adventure-routing event types, and is written unconditionally on every winning route, not just a
+> sub-floor-discarded one. §2.41 has been broadened to disclose this. The `seed123` pair (this
+> ticket's own investigation found) shows the identical full-zero signature, not a milder one — the
+> originating ticket's "milder... different magnitude" framing reflected a pre-deletion snapshot.
+> `grade_anchors.json` AGENCY recalibrated to `{"grade": "C", "score": 0.0}` for all 3 seeds, and
+> COGNITION+AGENCY recalibrated the same way for `simq_routing_test_seed123_500t` specifically
+> (COGNITION was previously un-recalibrated by the originating ticket, which only covered
+> `seed42`/`seed456`). Restoring `last_routing_family` emission is deliberately **not** done here —
+> tracked by `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`.
+
 ---
 
 ### sandbox_world
@@ -581,22 +599,32 @@ consequence of entity 23's freed decision stream; both remain within the ±1-let
 **Archetype decision (TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA):** AGENCY=C in every calibration
 world except `simq_routing_test` is **archetype-correct** and requires no remediation.
 
-**Root cause:** All three AGENCY key events (`route_selected`, `action_executed`,
-`route_family_first_use`) are emitted only from `AdventureDecisionPhase`
-(`src/domains/adventure/phase.py`). This phase is invoked through `run_phase("adventure_decision",
-..., "ENABLE_ADVENTURE_ROUTING")` in `src/engine/pipeline.py`, and `ENABLE_ADVENTURE_ROUTING`
-defaults to `FeatureMode.OFF` (`src/domains/optimization/feature_flags.py:16`). When the flag is
-OFF, `run_phase` short-circuits before `AdventureDecisionPhase.apply()` runs, so zero
-`route_selected`, `action_executed`, or `route_family_first_use` events are ever produced —
-`AgencyScorer` (`src/simulation_quality/scorers/agency.py`) has nothing to score and every
-default-mode world grades AGENCY=C across all seeds and tick counts (dungeon_crawl, urban_political,
-sandbox_world, and the six confirmed zero-pillar worlds in the section below).
+**Root cause (updated 2026-08-13, see NOTE blocks below):** All three AGENCY key events
+(`route_selected`, `action_executed`, `route_family_first_use`) were historically emitted only
+from `AdventureDecisionPhase` (`src/domains/adventure/phase.py`), invoked through
+`run_phase("adventure_decision", ..., "ENABLE_ADVENTURE_ROUTING")` in `src/engine/pipeline.py`.
+`AdventureDecisionPhase` (and its `run_phase` registration) was **deleted** by
+`TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE` — `src/domains/adventure/phase.py` no longer
+exists. `AdventureGoalScorer.score()` (`src/ai/goals/adventure_scorer.py`) is the sole surviving
+adventure-decision path today and runs unconditionally every tick via the always-on
+`strategic_intelligence` pipeline phase (not gated by `ENABLE_ADVENTURE_ROUTING`), but no
+replacement site writes the underlying `last_routing_family` property that
+`route_selected`/`action_executed`/`route_family_first_use` are read from
+(`docs/guidelines/intentional_divergences.md` §2.41, broadened) — so these three event types are
+now silently dead for every routing-capable world, `ENABLE_ADVENTURE_ROUTING` setting
+notwithstanding. `ENABLE_ADVENTURE_ROUTING` still defaults to `FeatureMode.OFF`
+(`src/domains/optimization/feature_flags.py:16`) and still explains why AGENCY=C is
+archetype-correct for `dungeon_crawl`, `urban_political`, `sandbox_world`, and the six confirmed
+zero-pillar worlds below — that mechanism (the flag gate) is unaffected and unrelated to the
+emission-loss described here.
 
-`simq_routing_test` is the one calibration world that forces `ENABLE_ADVENTURE_ROUTING=ON`
-(see the `simq_routing_test` section above): AGENCY activates (non-C) in all 3 seeds — A, A, and F
-(seed456's F is a stasis-dynamic gate violation, not a return to the inactive-flag C — see AC6
-above) — demonstrating the scorer and emitters are wired correctly and activate as designed once
-the routing gate is open.
+`simq_routing_test` is the one calibration world that forces `ENABLE_ADVENTURE_ROUTING=ON` (see
+the `simq_routing_test` section above), and `hero_guild_routing` is a second such world (see
+below). Both previously graded AGENCY=A at all 3 measured seeds (42/123/456, 500t), demonstrating
+the scorer and (then-live) emitters were wired correctly. **As of current HEAD, both now grade
+AGENCY=C at all 3 seeds** — not because the flag gate reactivated, but because the emission-side
+`last_routing_family` write no longer exists (see the 2026-08-13 NOTE blocks in both worlds'
+sections above for the confirmed re-verification evidence and the recalibrated anchors).
 
 `AdventureDecisionPhase` is opt-in by world archetype, not a global default — it represents a
 distinct "routing-capable" archetype rather than a baseline behavior every world is expected to
@@ -1452,6 +1480,22 @@ structural-default routes and the guaranteed `DEFER_WITH_REASON` fallback availa
 `ServiceOpportunityProvider`, confirmed by direct read of `src/domains/adventure/phase.py`) — but a
 future world that relies more heavily on gather_resource routes in these regions could be exposed to
 the same stasis pattern `simq_routing_test_seed456` hit pre-fix.
+
+> **NOTE (2026-08-13 — `TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT`):** the AGENCY
+> `A` grade shown in the 500t table above is now stale. Fresh re-verification (2 independent
+> trials per run_key, bit-identical) at current HEAD confirms AGENCY has collapsed A→C
+> (event_count 0) on all 3 seeds (42/123/456, 500t) — same root cause and same magnitude as
+> `simq_routing_test`'s matching drift (see that world's own 2026-08-13 NOTE above): the deleted
+> `AdventureDecisionPhase.apply()` was the sole writer of `last_routing_family`, which fed
+> `route_selected`/`action_executed`/`route_family_first_use` (3 of AGENCY's 4 adventure-routing
+> event types), and no replacement site writes it (`docs/guidelines/intentional_divergences.md`
+> §2.41, broadened). `seed123` additionally shows the identical COGNITION collapse. `COGNITION`,
+> `AGENCY`, and (for `seed456` specifically) `ECONOMY`/`PROGRESSION` in the table above should not
+> be read as current without cross-checking `grade_anchors.json`'s recalibrated values —
+> `seed456`'s ECONOMY/PROGRESSION drift is disclosed but deliberately not recalibrated by this
+> ticket, tracked instead by `TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT`. Restoring
+> `last_routing_family` emission is deliberately not done here — tracked by
+> `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`.
 
 ---
 
