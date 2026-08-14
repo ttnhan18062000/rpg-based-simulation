@@ -429,6 +429,7 @@ visibility only, no new blocking status.
 - Finds the entry covering target classification (or adds a new one)
 - Sets `status: verified`, `v2_evidence: "src/content_semantics/relation.py::RelationProjectionWrapper"`, `test_path: "tests/unit/content_semantics/test_relation_wrapper.py::test_combat_target_uses_relation_projection_for_clean_data"`
 - If the legacy fallback is an intentional divergence from the Mechanics Bible: sets `status: divergent`, adds to `docs/guidelines/intentional_divergences.md`
+- Writes through `tools/parity_ledger_writer.py::write_entry` (as of `TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL`) rather than a raw `Edit`/`Write` on the shard file — `write_entry` validates against `docs/parity_ledger/schema.json` before writing and rebuilds the derived parity SQLite index in-process on success. `parity-updater` then issues a separate, visible `python3 tools/parity_index.py build` Bash call so the write registers on the `parity_write_safety` retro co-occurrence metric, which only matches a literal `Bash` command containing `"parity_index.py"` and `"build"`.
 
 **Skipped when:** `files_changed` has no `src/` path and `behavior_changed` is false — the
 `parity-updater` agent call is replaced with a `skipped` event. A P0 ledger safeguard checks first that

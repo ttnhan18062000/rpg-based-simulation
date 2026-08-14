@@ -21,6 +21,14 @@ be matched by this substring check.
 import yaml
 from pathlib import Path
 
+
+class ShardParseError(Exception):
+    def __init__(self, filename: str, message: str):
+        self.filename = filename
+        self.message = message
+        super().__init__(f"failed to parse shard {filename!r}: {message}")
+
+
 CANONICAL_LEDGER_FILES = (
     "substrate.yaml",
     "combat_movement.yaml",
@@ -46,7 +54,10 @@ def find_p0_intersection(files_changed, ledger_dir="docs/parity_ledger"):
         path = ledger_path / filename
         if not path.exists():
             continue
-        entries = yaml.safe_load(path.read_text()) or []
+        try:
+            entries = yaml.safe_load(path.read_text()) or []
+        except yaml.YAMLError as exc:
+            raise ShardParseError(filename, str(exc)) from exc
         for entry in entries:
             if entry.get("priority") != "P0":
                 continue

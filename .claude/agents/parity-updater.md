@@ -58,13 +58,18 @@ For `divergent` status, `divergence_note` is also required.
 ## What to Do
 
 1. Identify which ledger file(s) cover the changed behavior (provided in the task or derivable from the changed source files).
-2. Read the relevant YAML file.
-3. Find the entry (or entries) that describe the changed behavior.
-4. Update the entry:
+2. Read the relevant YAML file to find the entry (or entries) that describe the changed behavior, and to see its current field values.
+3. Construct the full entry dict per the Entry Schema above:
    - If behavior now matches the Mechanics Bible: set `status: verified`, update `v2_evidence` with the source location, set `test_path` to the test that proves it.
    - If behavior intentionally diverges: set `status: divergent`, update `v2_evidence`, set `divergence_note` explaining why, and ensure there is an entry in `docs/guidelines/v2_intentional_divergences.md`.
-   - If no entry exists for the new behavior: add one with the next available ID for that prefix.
-5. If the divergence is intentional, also append to `docs/guidelines/v2_intentional_divergences.md` with: rationale class, description, and `Verification:` test path.
+   - If no entry exists for the new behavior: construct a new entry with the next available ID for that prefix.
+4. Write the entry through the validating writer — never via raw `Edit`/`Write` on the YAML file directly:
+   ```
+   python3 -c "import sys; sys.path.insert(0,'tools'); from parity_ledger_writer import write_entry; import json; print(json.dumps(write_entry('<shard_filename>', <entry_dict>)))"
+   ```
+   `write_entry` rejects a malformed entry (bad `id` pattern; missing `v2_evidence`/`test_path` for `verified`/`divergent`; missing `divergence_note` for `divergent`; missing `test_path` for `P0`) before writing anything, and rebuilds the derived parity index in-process on success.
+5. Immediately after, issue a **separate, visible** Bash call: `python3 tools/parity_index.py build`. This is redundant with step 4's in-process rebuild for correctness (the index is already fresh) but is required for `tools/agent-monitoring/generate_retro.py`'s `parity_write_safety` co-occurrence metric, which only matches a literal `Bash` tool call whose command text contains `"parity_index.py"` and `"build"` — an in-process Python call made inside a script invoked via one Bash call is invisible to it.
+6. If the divergence is intentional, also append to `docs/guidelines/v2_intentional_divergences.md` with: rationale class, description, and `Verification:` test path.
 
 ## Output
 

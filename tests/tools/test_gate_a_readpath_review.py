@@ -45,7 +45,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 import parity_index as pi  # noqa: E402
-from parity_ledger_scan import find_p0_intersection  # noqa: E402
+from parity_ledger_scan import find_p0_intersection, ShardParseError  # noqa: E402
 from gate_checks.parity_updater_static import derive_mapping  # noqa: E402
 
 _ARTIFACT_DIR = _REPO_ROOT / "staging_artifacts" / "TCK-20260731-PARITY-READPATH-GATE"
@@ -131,13 +131,14 @@ def _build_temp_index_for_case(case: dict, tmp_path: Path) -> dict:
 
 
 def _safe_find_p0_intersection(changed_path: str, ledger_dir: Path) -> dict:
-    """find_p0_intersection (tools/parity_ledger_scan.py:49) has no try/except around
-    yaml.safe_load -- a malformed canonical shard raises an uncaught yaml.YAMLError. This
-    wrapper only exists so the harness can record that crash as a real result instead of
-    letting it abort the whole pytest run; it never changes find_p0_intersection itself."""
+    """find_p0_intersection (tools/parity_ledger_scan.py) raises a labeled ShardParseError on a
+    malformed canonical shard (fixed by TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL Step 3;
+    previously an uncaught bare yaml.YAMLError). This wrapper only exists so the harness can
+    record that as a real result instead of letting it abort the whole pytest run; it never
+    changes find_p0_intersection itself."""
     try:
         return {"ok": True, "hits": find_p0_intersection([changed_path], ledger_dir=str(ledger_dir))}
-    except yaml.YAMLError as exc:
+    except (yaml.YAMLError, ShardParseError) as exc:
         return {"ok": False, "error_class": type(exc).__name__}
 
 
