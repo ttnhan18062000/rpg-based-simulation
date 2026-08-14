@@ -67,7 +67,10 @@ The index at `agent-monitoring/retro/index.md` is updated automatically.
 | **Summary Quality** | Empty-summary count is scoped to current-schema events only (agent field set); pre-normalization legacy events (agent is null) never had a summary field and are reported separately as "Legacy-format records," not as a prompt-quality issue. Truncation count still covers all events (current + legacy). |
 | **Slow Runs** | > 30 min runs (fixed threshold) — usually Review or Implement phase. Consider splitting or simplifying scope. |
 | **Outliers** | Conditionally rendered — only appears when at least one value exceeds 3x its group's median (`duration_s` grouped by tier, `cost_proxy_score` grouped by normalized phase). A *relative* signal, distinct from Slow Runs' fixed 30-minute threshold: a run can be an Outlier without being a Slow Run (fast overall, but far from its tier's norm) and vice versa. Flags a value as worth a look, not a claim about *why* it's high — investigate before assuming (`TCK-20260719-RETRO-OUTLIER-FLAGS`). |
-| **Tool Safety Audit** | Conditionally rendered — only appears when at least one Investigate-phase `(run_id, seq)` pair has `tools.jsonl` data in the period. Reports search-before-grep hard-rule (CLAUDE.md) compliance rate for real Investigate phases, and (since `TCK-20260807-PARITY-WRITE-SAFETY-METRIC-RESCOPE`) a count of `docs/parity_ledger/*.yaml` write calls made in a run that ALSO invokes `parity_index.py`'s build path (same `run_id`, anywhere in that run's own tool history) — an ordinary parity-updater edit with no co-occurring build call in the same run is not flagged, since it's the normal, required workflow (CLAUDE.md's Authoritative Mechanics Rule), not a risk. Also reports a zero-tolerance count of unsafe `parity_index.py build` invocations (targeting the real repo path instead of a scratch path) — unaffected by the rescope. Both counts should read 0 — a nonzero count is a real read-only-guarantee violation, not noise (`TCK-20260803-RETRO-TOOL-SAFETY-AUDIT`). |
+| **Tool Safety Audit** | Conditionally rendered — only appears when at least one Investigate-phase `(run_id, seq)` pair has `tools.jsonl` data in the period. Reports search-before-grep hard-rule (CLAUDE.md) compliance rate for real Investigate phases, and (since `TCK-20260807-PARITY-WRITE-SAFETY-METRIC-RESCOPE`) a count of `docs/parity_ledger/*.yaml` write calls made in a run that ALSO invokes `parity_index.py`'s build path (same `run_id`, anywhere in that run's own tool history) — an ordinary parity-updater edit with no co-occurring build call in the same run is not flagged, since it's the normal, required workflow (CLAUDE.md's Authoritative Mechanics Rule), not a risk. Also reports a zero-tolerance count of unsafe `parity_index.py build` invocations (targeting the real repo path instead of a scratch path) — unaffected by the rescope. Both counts should read 0 — a nonzero count is a real read-only-guarantee violation, not noise (`TCK-20260803-RETRO-TOOL-SAFETY-AUDIT`). See "Investigate-Step Search-Before-Grep Callout" below for the hand-orchestration-path fix this compliance rate measures. Its `### Read-Count Correlation (Search-Before-Grep Compliance)` subsection (`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`) reports the compliant-vs-non-compliant groups' median/average `Read`-tool-call count per Investigate pair — a real evidence signal for whether search-before-grep compliance correlates with lower raw-investigation effort, not a proof that it causes it. |
+| **Search & Investigation Effort** | Conditionally rendered — omitted when the period has zero search or `Read` tool calls. Corpus-wide (not per-run) trend of follow-up search-tool calls (`SEARCH_TOOL_NAMES` = `{mcp__knowledge-search__search_docs, ToolSearch, WebSearch}`) and raw-investigation `Read`-tool calls, plus their ratio — the same numbers `retrieval_baseline_metrics.py`'s one-off JSON snapshot reports, now trended report-over-report via `agent-monitoring/retro/index.md`'s Search Calls / Read Calls columns (`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`). See `docs/parity_ledger/infrastructure.yaml`'s `INFRA-292` entry for the underlying section functions' provenance. |
+| **Parity Index Read-Path Usage** | Always rendered — the only section in this file that is never omitted, since "0 today" is itself the reportable finding: `parity_index.py`'s `entry`/`impact`/`health` read path was reviewed GO (`TCK-20260731-PARITY-READPATH-GATE`'s Gate A) but has zero real call sites yet. Reports a live count against the period's `tools.jsonl` data (not a hardcoded value), so a future ticket wiring in a real call site needs no code change here to start reporting nonzero (`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`). |
+| **Skill Usage** | Two subsections with genuinely different scope, under one heading omitted only when both have nothing to show. `### Per-Skill Invocation Counts (This Period)` is period-scoped (reuses `build_skill_usage_section`, trended report-over-report via `index.md`'s Skill Invocations column) — omitted when the period has zero `Skill` tool calls. `### Zero-Invocation Flags (All-Time, N-Day Grace Period)` is all-time (never period-scoped — "has this skill ever been invoked" must be answered against the whole corpus, not one week's slice) and is only computed/rendered when the caller explicitly passed `all_tools` to `generate()` (`main()`'s real call path always does; the 121+ synthetic-fixture tests that pass only `tools=` never trigger it, so they never touch the real `.claude/skills/` catalog on disk). Splits flagged skills into `flagged_stale` (a real, parseable `date_added` older than the grace period — confirmed-age signal) and `flagged_unknown_age` (no recorded `date_added` — fail-open, lower-certainty signal, never conflated with `flagged_stale`). Visibility only: no skill is ever auto-invoked or auto-deprecated from this flag (`TCK-20260810-SKILL-USAGE-RETRO-TRACKING`). |
 
 ---
 
@@ -210,6 +213,35 @@ has an active ticket but `.claude/current_run`'s `run_id` is empty — it goes
 silent again as soon as the sidecar is correctly written for that phase.
 Advisory-only, non-blocking; does not replace the orchestrating agent's own
 responsibility to write the sidecar.
+
+---
+
+## Investigate-Step Search-Before-Grep Callout
+
+Hand-orchestrated sessions performing Investigate-phase work directly (not via
+`Agent(subagent_type: "investigator")` dispatch) had no phase-scoped
+search-before-grep instruction: `.claude/skills/implement-ticket/SKILL.md`'s
+Step 0 ("Context search") fires once, upfront, before Scope, and does not
+repeat per phase. Three post-fix violations
+(`TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD`,
+`TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION`,
+`TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE`) showed sessions
+skipping straight to grep/Read at the Investigate step with zero phase-scoped
+`mcp__knowledge-search__search_docs` or `graphify` call
+(`TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP`).
+
+`SKILL.md`'s own numbered step 2 ("Investigate") now carries an explicit,
+non-optional, self-contained search-before-grep instruction stating that
+Step 0's one-time upfront call does not substitute for a fresh, phase-scoped
+call before any grep/Read work — mirroring the equivalent fix already made to
+`.claude/agents/investigator.md` for the agent-dispatched path
+(`TCK-20260807-SEARCH-BEFORE-GREP-OBSISO-EPIC-GAP`).
+
+Check the "Tool Safety Audit" row above (search-before-grep hard-rule
+compliance rate for real Investigate phases) to confirm this fix holds over
+time. Proving long-term compliance across future retro windows is the
+responsibility of the sibling ticket
+`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`, not this section.
 
 ---
 

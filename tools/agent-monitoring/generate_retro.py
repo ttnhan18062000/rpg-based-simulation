@@ -10,11 +10,12 @@ Usage:
 """
 import argparse
 import json
+import re
 import sqlite3
 import statistics
 import sys
 from collections import Counter, defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
 
 # tools/agent-monitoring/generate_retro.py's parent is tools/agent-monitoring/, so parent.parent
@@ -55,6 +56,7 @@ DEFAULT_TOOLS_FILE = Path("agent-monitoring/tools.jsonl")
 
 # Repo root — two levels above tools/agent-monitoring/, matching this file's actual depth.
 _DEFAULT_TICKETS_ROOT = Path(__file__).resolve().parent.parent.parent
+_DEFAULT_SKILLS_DIR = _DEFAULT_TICKETS_ROOT / ".claude" / "skills"
 
 
 def load_jsonl(path):
@@ -274,6 +276,284 @@ def _is_unsafe_parity_build_call(tool_row):
     if "--db-path" not in summary:
         return True  # no override -> defaults to the real repo parity-index/parity.db path
     return "parity-index/parity.db" in summary
+
+
+# Path-anchored so a bare filename match (e.g. tests/tools/test_parity_index.py, whose character
+# immediately preceding "parity_index.py" is "_", not "/") never matches, and requiring one of
+# entry/impact/health as the very next token excludes --help, `git log -- ... parity_index.py`,
+# and `sed -n '1,60p' tools/parity_index.py` — all real corpus-observed shapes that merely mention
+# the filename without invoking its read path (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING).
+_PARITY_INDEX_READPATH_RE = re.compile(r'(?:^|/)parity_index\.py\s+(entry|impact|health)\b')
+
+
+def _is_parity_index_readpath_call(tool_row):
+    """True if this row invokes parity_index.py's entry/impact/health read path — a separate
+    detector from _is_parity_index_build_call above (read-path usage vs. build-path write-safety);
+    the two are never merged."""
+    if tool_row.get("tool") != "Bash":
+        return False
+    return bool(_PARITY_INDEX_READPATH_RE.search(tool_row.get("input_summary") or ""))
+
+
+def compute_parity_index_readpath_call_count(tools: list[dict]) -> dict:
+    """Pure, read-only count of parity_index.py entry/impact/health invocations observed in
+    `tools`. Confirmed 0 today (TCK-20260731-PARITY-READPATH-GATE's Gate A review found the read
+    path reviewed GO but not yet wired into any real call site) — this function counts live
+    against whatever `tools` it is given, so a future real call site needs zero code change here
+    to start reporting a nonzero number."""
+    bash_rows = [r for r in tools if r.get("tool") == "Bash"]
+    matches = [r for r in tools if _is_parity_index_readpath_call(r)]
+    return {
+        "count": len(matches),
+        "bash_rows_scanned": len(bash_rows),
+        "examples": matches[:5],
+        "derivation": (
+            "Counts tools.jsonl rows where tool == \"Bash\" and input_summary matches "
+            "parity_index.py followed immediately by entry, impact, or health (path-anchored, "
+            "so a filename mention alone — e.g. test_parity_index.py, --help, `git log -- ... "
+            "parity_index.py`, `sed -n '1,60p' tools/parity_index.py` — never counts). "
+            "bash_rows_scanned is the total Bash-tool row population this detector ran against "
+            "(the section's own 'N' denominator). Confirmed 0 real call sites as of "
+            "TCK-20260731-PARITY-READPATH-GATE's Gate A review (reviewed GO, not yet wired into "
+            "any real workflow call site) — this is the expected, correct value until a future "
+            "ticket adds a real entry/impact/health call site, not a bug."
+        ),
+    }
+
+
+# The literal `tool` values confirmed present in the real corpus (investigation.md's direct scan)
+# that represent a follow-up search action. mcp__knowledge-search__search_health is deliberately
+# excluded — it is a health-check call, not a follow-up search. Bash is excluded even though some
+# Bash calls have search-flavored input_summary text, since that is not distinguishable by tool
+# name alone and this metric must stay precise, not inflated.
+#
+# Relocated here from retrieval_baseline_metrics.py (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-
+# TRACKING) to resolve a real circular-import constraint: retrieval_baseline_metrics.py already
+# imports FROM generate_retro.py, so generate_retro.py importing this constant back from
+# retrieval_baseline_metrics.py would create a two-file import cycle. retrieval_baseline_metrics.py
+# now re-imports this name from generate_retro.py's existing import statement instead of defining
+# it — semantics and membership are unchanged, only the file of definition moved.
+SEARCH_TOOL_NAMES = frozenset({
+    "mcp__knowledge-search__search_docs",
+    "ToolSearch",
+    "WebSearch",
+})
+
+# 14 days: the 6 domain skills authored by TCK-20260804-SKILL-CATALOG-MODERNIZATION-EPIC
+# (date_added: "2026-08-05") are 10 days old as of this ticket's investigation — still inside a
+# 14-day window, matching the requirement that they not be flagged on day 1.
+# TCK-20260705-SIX-SKILLS-INVESTIGATION's pre-existing zero-invocation skills stayed at zero past
+# 30+ days regardless of grace length, so grace-period length mainly protects genuinely-new
+# skills, not a cure for structurally-redundant ones (TCK-20260810-SKILL-USAGE-RETRO-TRACKING).
+SKILL_ZERO_INVOCATION_GRACE_PERIOD_DAYS = 14
+
+
+def build_search_count_section(tools: list) -> dict:
+    per_run: dict = defaultdict(int)
+    total = 0
+    for record in tools:
+        if record.get("tool") in SEARCH_TOOL_NAMES:
+            # tools.jsonl records issued outside any workflow run carry run_id=None
+            # (legacy_reader.py's "interactive_null" shape) — grouped under a literal
+            # "unattributed" key rather than None, since a None dict key breaks
+            # json.dumps(sort_keys=True)'s key comparison against the str keys of real runs.
+            run_id = record.get("run_id") or "unattributed"
+            per_run[run_id] += 1
+            total += 1
+    return {
+        "derivation": "Derived from tools.jsonl's literal `tool` field, filtered to "
+                      "SEARCH_TOOL_NAMES = {mcp__knowledge-search__search_docs, ToolSearch, "
+                      "WebSearch}. This is a finer-grained derivation than the ticket AC's literal "
+                      "'tool_call_count' wording — tool_call_count is a coarse per-event total-tool"
+                      "-activity aggregate on events.jsonl records, and does not distinguish a search "
+                      "call from any other tool call. This report uses the more precise, still-100%"
+                      "-existing-data derivation because it actually answers 'how many follow-up "
+                      "searches happened', per this ticket's plan.md Step 3.",
+        "per_run": dict(per_run),
+        "total": total,
+    }
+
+
+def build_raw_investigation_count_section(tools: list) -> dict:
+    per_run: dict = defaultdict(int)
+    total = 0
+    for record in tools:
+        if record.get("tool") == "Read":
+            # Same run_id=None -> "unattributed" convention as build_search_count_section
+            # (see that function's inline comment) — reused verbatim, not reinvented.
+            run_id = record.get("run_id") or "unattributed"
+            per_run[run_id] += 1
+            total += 1
+
+    search_total = build_search_count_section(tools)["total"]
+    if search_total > 0:
+        ratio = round(total / search_total, 4)
+    else:
+        ratio = (
+            "undefined: zero search_count.total in corpus, cannot compute a ratio "
+            "without a fabricated denominator"
+        )
+
+    return {
+        "derivation": (
+            "Derived from tools.jsonl's literal `tool` field, filtered to `tool == \"Read\"` "
+            "(the single most common non-Bash tool in this corpus). `Grep` is not counted "
+            "because no distinct `Grep` tool name is ever recorded in this environment; "
+            "grep-equivalent work runs through the catch-all `Bash` tool, which is excluded "
+            "here for the same non-distinguishability rationale documented on "
+            "SEARCH_TOOL_NAMES above (some Bash calls are search/grep-flavored by content, "
+            "but that is not distinguishable by tool name alone). This section is therefore "
+            "a proxy for raw investigation effort (how often the agent had to open a file "
+            "directly to look), not a literal grep-call count. read_to_search_ratio is "
+            "computed corpus-wide only (this section's total Read count divided by "
+            "search_count's total, both derived from this same tools list), never per-run, "
+            "because search_count.per_run and this section's per_run do not share an "
+            "identical run_id key set in general; if search_count.total is 0 the ratio is "
+            "the literal string above instead of a divided-by-zero or fabricated value."
+        ),
+        "per_run": dict(per_run),
+        "total": total,
+        "read_to_search_ratio": ratio,
+    }
+
+
+# Relocated here from skill_usage_metric.py (TCK-20260810-SKILL-USAGE-RETRO-TRACKING) to resolve
+# the identical circular-import constraint SEARCH_TOOL_NAMES/build_search_count_section faced
+# above: skill_usage_metric.py already imports DEFAULT_TOOLS_FILE/load_jsonl FROM
+# generate_retro.py, so generate_retro.py importing build_skill_usage_section back FROM
+# skill_usage_metric.py would create a two-file import cycle. skill_usage_metric.py now
+# re-imports this name from generate_retro.py's existing import statement instead of defining it
+# — semantics, regex, and output shape are unchanged, only the file of definition moved.
+#
+# tools.jsonl's `input_summary` field is a Python-dict-repr string (e.g. "{'skill': 'graphify', ...}"),
+# not JSON — confirmed by direct inspection. json.loads() on this field raises
+# json.JSONDecodeError; regex extraction is the only correct approach.
+_SKILL_NAME_RE = re.compile(r"'skill':\s*'([^']*)'")
+
+
+def build_skill_usage_section(tools: list) -> dict:
+    per_skill: dict = defaultdict(int)
+    per_skill_per_run: dict = defaultdict(lambda: defaultdict(int))
+    total = 0
+    unparseable = 0
+
+    for record in tools:
+        if record.get("tool") != "Skill":
+            continue
+        total += 1
+        # tools.jsonl records issued outside any workflow run carry run_id=None (legacy_reader.py's
+        # "interactive_null" shape) — grouped under a literal "unattributed" key rather than None,
+        # since a None dict key breaks json.dumps(sort_keys=True)'s key comparison against the str
+        # keys of real runs (same convention as build_search_count_section's own run_id handling).
+        run_id = record.get("run_id") or "unattributed"
+        match = _SKILL_NAME_RE.search(record.get("input_summary", ""))
+        if match:
+            skill_name = match.group(1)
+            per_skill[skill_name] += 1
+            per_skill_per_run[skill_name][run_id] += 1
+        else:
+            unparseable += 1
+
+    return {
+        "total_skill_invocations": total,
+        "unparseable": unparseable,
+        "per_skill": dict(per_skill),
+        "per_skill_per_run": {k: dict(v) for k, v in per_skill_per_run.items()},
+        "derivation": (
+            "Derived from tools.jsonl's literal `tool` field, filtered to `tool == 'Skill'`, "
+            "with the skill name extracted from `input_summary` via regex "
+            r"(r\"'skill':\s*'([^']*)'\") — never json.loads(), since input_summary is a Python "
+            "dict-repr string, not JSON. Records where the regex finds no match are counted under "
+            "`unparseable`, never silently dropped. `unattributed` covers Skill invocations with "
+            "no run_id (interactive, outside any workflow run). Distinct from generate_retro.py's "
+            "tag_breakdown_skill aggregate — this is a raw per-skill invocation count, not a "
+            "tag-driven gate-hit count."
+        ),
+    }
+
+
+def compute_zero_invocation_skill_flags(
+    tools: list, skills_dir: Path | None = None, today: date | None = None
+) -> dict:
+    """All-time (never period-scoped) cross-reference of the real `.claude/skills/*/SKILL.md`
+    catalog against `build_skill_usage_section(tools)`'s per_skill counts — flags any skill with
+    zero invocations, split into two non-conflated buckets rather than one undifferentiated list:
+
+    - `flagged_stale`: a real, parseable `date_added` older than the grace period, zero
+      invocations. A confirmed-age signal.
+    - `flagged_unknown_age`: no `date_added` (missing, unparseable frontmatter, or unparseable
+      date string), zero invocations. A fail-open, lower-certainty signal — cannot prove the
+      skill is genuinely stale, but there is no recorded authorship date and no invocation either.
+      This fail-open choice is what makes `backend-testing`'s real pre-TCK-20260805-COMMUNITY-
+      SKILL-SWAP-UNDISCLOSED state (no `date_added` at all) correctly flaggable.
+
+    `skills_dir`/`today` default to the real on-disk catalog / real wall-clock date only when the
+    caller omits them — accepting both as parameters (rather than reading them internally by
+    default) keeps this function's own unit tests deterministic. This function's real-filesystem
+    default is safe only because `generate()` (see Step 4) never reaches this function unless the
+    caller explicitly supplied `all_tools` — callers that have not opted in never trigger a real
+    `.claude/skills/` scan as a side effect.
+
+    Read-only: only ever calls `skills_dir.iterdir()` and `skill_md.read_text()`. Never writes
+    to `.claude/skills/` or anywhere else.
+    """
+    skills_dir = skills_dir or _DEFAULT_SKILLS_DIR
+    today = today or datetime.now(timezone.utc).date()
+
+    per_skill = build_skill_usage_section(tools)["per_skill"]
+
+    flagged_stale = []
+    flagged_unknown_age = []
+    catalog_parse_errors = []
+
+    for skill_path in sorted(skills_dir.iterdir()):
+        skill_md = skill_path / "SKILL.md"
+        if not skill_md.is_file():
+            continue
+        name = skill_path.name
+        if per_skill.get(name, 0) > 0:
+            continue
+
+        try:
+            fm = extract_frontmatter(skill_md.read_text())
+        except ValueError:
+            catalog_parse_errors.append(name)
+            flagged_unknown_age.append(name)
+            continue
+
+        date_added = fm.get("date_added") if fm else None
+        if not date_added:
+            flagged_unknown_age.append(name)
+            continue
+
+        try:
+            added_date = datetime.strptime(date_added, "%Y-%m-%d").date()
+        except ValueError:
+            flagged_unknown_age.append(name)
+            continue
+
+        if (today - added_date).days >= SKILL_ZERO_INVOCATION_GRACE_PERIOD_DAYS:
+            flagged_stale.append(name)
+
+    return {
+        "grace_period_days": SKILL_ZERO_INVOCATION_GRACE_PERIOD_DAYS,
+        "flagged_stale": sorted(flagged_stale),
+        "flagged_unknown_age": sorted(flagged_unknown_age),
+        "catalog_parse_errors": sorted(catalog_parse_errors),
+        "derivation": (
+            "All-time (never period-scoped) cross-reference of the real .claude/skills/*/SKILL.md "
+            "catalog against build_skill_usage_section(tools)'s per_skill counts. A skill with "
+            "any nonzero invocation count is never flagged, regardless of age. Of the remaining "
+            "zero-invocation skills: `flagged_stale` requires a real, parseable `date_added` "
+            f"older than the {SKILL_ZERO_INVOCATION_GRACE_PERIOD_DAYS}-day grace period — a "
+            "confirmed-age signal. `flagged_unknown_age` covers skills with no (or unparseable) "
+            "`date_added` and zero invocations — an honest, lower-certainty signal, not proof of "
+            "staleness, since no authorship date can be established. This fail-open policy on "
+            "missing date_added is deliberate: it is what makes backend-testing's real pre-"
+            "TCK-20260805-COMMUNITY-SKILL-SWAP-UNDISCLOSED state (no date_added field at all) "
+            "correctly flaggable, per TCK-20260810-SKILL-USAGE-RETRO-TRACKING's AC2."
+        ),
+    }
 
 
 def _collect_inprogress_tagged_tickets(root):
@@ -766,6 +1046,17 @@ def compute_shadow_baseline_comparison(events: list[dict]) -> dict:
     }
 
 
+def compute_search_investigation_trend(tools: list[dict]) -> dict:
+    """Thin wrapper over the two relocated section functions above — adds no filtering logic of
+    its own, so the trended report-over-report numbers this feeds stay identical to
+    retrieval_baseline_metrics.py's one-off snapshot numbers (TCK-20260810-CONTEXT-TOOLING-
+    EFFECTIVENESS-TRACKING)."""
+    return {
+        "search_count": build_search_count_section(tools),
+        "raw_investigation_count": build_raw_investigation_count_section(tools),
+    }
+
+
 def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
     """Pure, read-only computation over `events`/`tools` auditing (1) search-before-grep
     hard-rule compliance (CLAUDE.md) for tools.jsonl rows within real Investigate-phase
@@ -815,6 +1106,40 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
     investigate_pair_count = len(per_pair_compliance)
     compliant_count = sum(1 for v in per_pair_compliance.values() if v)
 
+    # Read-count correlation (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING): reuses
+    # pair_tool_rows/per_pair_compliance above, already built per Investigate-phase pair — not a
+    # second scan of `tools`. Real evidence for or against "does search-before-grep compliance
+    # reduce raw investigation effort", not an assumed causal story.
+    pair_read_counts = {
+        key: sum(1 for r in rows if r.get("tool") == "Read") for key, rows in pair_tool_rows.items()
+    }
+    compliant_reads = [
+        count for key, count in pair_read_counts.items() if per_pair_compliance[key]
+    ]
+    non_compliant_reads = [
+        count for key, count in pair_read_counts.items() if not per_pair_compliance[key]
+    ]
+
+    def _group_stats(counts):
+        return {
+            "count": len(counts),
+            "median": statistics.median(counts) if counts else None,
+            "average": (sum(counts) / len(counts)) if counts else None,
+        }
+
+    read_count_correlation = {
+        "compliant_group": _group_stats(compliant_reads),
+        "non_compliant_group": _group_stats(non_compliant_reads),
+        "derivation": (
+            "Per-Investigate-pair Read-tool-call count, split by that pair's own "
+            "search-before-grep compliance (per_pair_compliance above) — reuses pair_tool_rows, "
+            "never a second scan of tools. median/average are computed independently for the "
+            "compliant and non-compliant groups; an empty group reports None for both rather than "
+            "a fabricated 0 or a statistics.median([]) crash. A real evidence signal for whether "
+            "compliance correlates with lower raw-investigation effort — not a causal claim."
+        ),
+    }
+
     run_ids_with_build_calls = {
         r.get("run_id") for r in tools if _is_parity_index_build_call(r) and r.get("run_id")
     }
@@ -843,19 +1168,35 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
             "parity_ledger_yaml_write_examples": parity_yaml_writes[:5],
             "unsafe_parity_build_examples": unsafe_parity_builds[:5],
         },
+        "read_count_correlation": read_count_correlation,
     }
 
 
-def generate(runs, events, label, week_str=None, tickets_root=None, tools=None):
+def generate(runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
     TCK-20260718-RETRO-STATS-REFACTOR extraction; see that ticket's plan.md Step 3 for the
     byte-identical-output proof this relies on.
+
+    `all_tools` (TCK-20260810-SKILL-USAGE-RETRO-TRACKING) is deliberately NOT defaulted from
+    `tools` — `tools` is period-scoped (sliced to the reporting window by main()), but the
+    zero-invocation-skill flag is an all-time question ("has this skill ever been invoked"), so
+    conflating the two would make the flag silently wrong on every --week/--days report. The
+    Zero-Invocation Flags subsection — and compute_zero_invocation_skill_flags itself, whose own
+    skills_dir default reaches the real .claude/skills/ catalog on disk — is computed and
+    rendered ONLY when the caller's own argument is explicitly non-None (see `zif` below). Never
+    substitute `tools` (or any other implicit default) for a missing `all_tools` here: doing so
+    was a confirmed architecture-review violation (2026-08-15) that silently coupled 121+
+    pre-existing tests' synthetic fixtures to the real, unmocked skills catalog.
     """
     metrics = compute_retro_metrics(runs, events, tickets_root)
     retrieval_metrics = compute_retrieval_metrics(events)
     shadow_comparison = compute_shadow_baseline_comparison(events)
     tool_safety = compute_tool_safety_metrics(events, tools or [])
+    sit = compute_search_investigation_trend(tools or [])
+    pircc = compute_parity_index_readpath_call_count(tools or [])
+    su = build_skill_usage_section(tools or [])
+    zif = compute_zero_invocation_skill_flags(all_tools) if all_tools is not None else None
     rs = metrics["run_summary"]
     gate_counter = Counter(metrics["gate_failure_breakdown"])
     reason_counter = Counter(metrics["reason_code_breakdown"])
@@ -1227,6 +1568,30 @@ def generate(runs, events, label, week_str=None, tickets_root=None, tools=None):
         lines.append(f"Freshness: {dict(baseline_m['freshness_distribution']) or '_none_'}")
         lines.append("")
 
+    # Search & Investigation Effort (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING): trends
+    # retrieval_baseline_metrics.py's search_count/raw_investigation_count/read_to_search_ratio
+    # numbers (relocated into this module to resolve a circular-import constraint, see
+    # compute_search_investigation_trend) report-over-report. Additive, separately-gated section —
+    # omitted entirely (not rendered empty) when the period has zero search or Read tool calls.
+    sc = sit["search_count"]
+    ric = sit["raw_investigation_count"]
+    if sc["total"] + ric["total"] > 0:
+        lines.append("## Search & Investigation Effort")
+        lines.append("")
+
+        lines.append("### Search Calls (Follow-Up Search Tooling)")
+        lines.append("")
+        lines.append(f"**Total:** {sc['total']}")
+        lines.append("")
+
+        lines.append("### Raw Investigation (Read) Calls")
+        lines.append("")
+        ratio = ric["read_to_search_ratio"]
+        ratio_str = ratio if isinstance(ratio, str) else f"{ratio}"
+        lines.append(f"**Total:** {ric['total']}")
+        lines.append(f"**Read-to-search ratio:** {ratio_str}")
+        lines.append("")
+
     # Tool Safety Audit (TCK-20260803-RETRO-TOOL-SAFETY-AUDIT): audits search-before-grep hard-rule
     # compliance (CLAUDE.md) during real Investigate phases, and parity_index.py write-safety
     # (zero-tolerance docs/parity_ledger/*.yaml write / real-path build invocation count).
@@ -1261,6 +1626,84 @@ def generate(runs, events, label, week_str=None, tickets_root=None, tools=None):
             f"{pws['unsafe_parity_build_count']}"
         )
         lines.append("")
+
+        rcc = tool_safety["read_count_correlation"]
+        lines.append("### Read-Count Correlation (Search-Before-Grep Compliance)")
+        lines.append("")
+
+        def _fmt_stat(value):
+            return "n/a" if value is None else f"{value:.1f}"
+
+        compliant_group = rcc["compliant_group"]
+        non_compliant_group = rcc["non_compliant_group"]
+        lines.append("| Group | Pairs | Median Read count | Avg Read count |")
+        lines.append("|---|---|---|---|")
+        lines.append(
+            f"| Compliant | {compliant_group['count']} | "
+            f"{_fmt_stat(compliant_group['median'])} | {_fmt_stat(compliant_group['average'])} |"
+        )
+        lines.append(
+            f"| Non-compliant | {non_compliant_group['count']} | "
+            f"{_fmt_stat(non_compliant_group['median'])} | {_fmt_stat(non_compliant_group['average'])} |"
+        )
+        lines.append("")
+
+    # Parity Index Read-Path Usage (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING): unlike
+    # every other section in this file, this one always renders — "0 today" is itself the
+    # reportable finding (parity_index.py's entry/impact/health read path was reviewed GO by
+    # TCK-20260731-PARITY-READPATH-GATE's Gate A but has zero real call sites yet), not an empty
+    # period this section should stay silent about.
+    lines.append("## Parity Index Read-Path Usage")
+    lines.append("")
+    lines.append(
+        f"**`entry`/`impact`/`health` call count:** {pircc['count']}/{pircc['bash_rows_scanned']} "
+        f"Bash rows scanned"
+    )
+    lines.append("")
+    lines.append(f"_{pircc['derivation']}_")
+    lines.append("")
+
+    # Skill Usage (TCK-20260810-SKILL-USAGE-RETRO-TRACKING): two subsections of genuinely
+    # different scope under one heading — a period-scoped per-skill invocation count (trended
+    # report-over-report via index.md's Skill Invocations column, gated like Search & Investigation
+    # Effort above) and an all-time zero-invocation flag (gated separately, only computed/rendered
+    # when the caller explicitly supplied all_tools — see `zif` above). The whole heading is
+    # omitted (not rendered empty) when neither subsection has anything to show.
+    if su["total_skill_invocations"] > 0 or (
+        zif is not None and (zif["flagged_stale"] or zif["flagged_unknown_age"])
+    ):
+        lines.append("## Skill Usage")
+        lines.append("")
+
+        if su["total_skill_invocations"] > 0:
+            lines.append("### Per-Skill Invocation Counts (This Period)")
+            lines.append("")
+            lines.append("| Skill | Invocations |")
+            lines.append("|---|---|")
+            for skill in sorted(su["per_skill"]):
+                lines.append(f"| {skill} | {su['per_skill'][skill]} |")
+            lines.append("")
+            lines.append(f"**Total:** {su['total_skill_invocations']}")
+            lines.append("")
+            lines.append(f"_{su['derivation']}_")
+            lines.append("")
+
+        if zif is not None and (zif["flagged_stale"] or zif["flagged_unknown_age"]):
+            lines.append(
+                f"### Zero-Invocation Flags (All-Time, {zif['grace_period_days']}-Day Grace Period)"
+            )
+            lines.append("")
+            if zif["flagged_stale"]:
+                lines.append("**Flagged (confirmed age past grace period):** " + ", ".join(zif["flagged_stale"]))
+            else:
+                lines.append("**Flagged (confirmed age past grace period):** _none_")
+            if zif["flagged_unknown_age"]:
+                lines.append("**Flagged (unknown age, no `date_added`):** " + ", ".join(zif["flagged_unknown_age"]))
+            else:
+                lines.append("**Flagged (unknown age, no `date_added`):** _none_")
+            lines.append("")
+            lines.append(f"_{zif['derivation']}_")
+            lines.append("")
 
     # Notes (human-written)
     lines.append("## Notes")
@@ -1306,7 +1749,7 @@ def main():
         label = week_str
         out_name = f"RETRO-{week_str}.md"
 
-    report = generate(runs, events, label, week_str, tools=tools)
+    report = generate(runs, events, label, week_str, tools=tools, all_tools=all_tools)
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)
     out_path = RETRO_DIR / out_name
@@ -1315,16 +1758,18 @@ def main():
     print(f"Runs: {len(runs)}, Events: {len(events)}")
 
     # Update index
-    _update_index(all_runs)
+    _update_index(all_runs, all_tools)
 
 
-def _update_index(all_runs):
+def _update_index(all_runs, all_tools=None):
+    all_tools = all_tools or []
+
     retro_files = sorted(RETRO_DIR.glob("RETRO-*.md"), reverse=True)
     retro_files = [f for f in retro_files if f.name != "index.md"]
 
     lines = ["# Agent Monitoring Retro Index", ""]
-    lines.append("| Report | Runs | DONE | Gate failures |")
-    lines.append("|---|---|---|---|")
+    lines.append("| Report | Runs | DONE | Gate failures | Search Calls | Read Calls | Skill Invocations |")
+    lines.append("|---|---|---|---|---|---|---|")
 
     runs_by_week = defaultdict(list)
     for r in all_runs:
@@ -1338,7 +1783,23 @@ def _update_index(all_runs):
         n = len(week_runs)
         done = sum(1 for r in week_runs if _resolve_status(r) == "DONE")
         fails = sum(1 for r in week_runs if _resolve_status(r) not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS"))
-        lines.append(f"| [{name}]({f.name}) | {n} | {done} | {fails} |")
+
+        # Mirrors main()'s own per-period run_id filter of all_tools (:1536/:1545) — reused here,
+        # not a new mechanism, threaded through the same run-id-to-week association runs_by_week
+        # already computed above.
+        if name == "ALL":
+            week_tools = all_tools
+        else:
+            week_run_ids = {r.get("run_id") for r in week_runs}
+            week_tools = [t for t in all_tools if t.get("run_id") in week_run_ids]
+        search_calls = build_search_count_section(week_tools)["total"]
+        read_calls = build_raw_investigation_count_section(week_tools)["total"]
+        skill_invocations = build_skill_usage_section(week_tools)["total_skill_invocations"]
+
+        lines.append(
+            f"| [{name}]({f.name}) | {n} | {done} | {fails} | {search_calls} | {read_calls} | "
+            f"{skill_invocations} |"
+        )
 
     (RETRO_DIR / "index.md").write_text("\n".join(lines) + "\n")
 
