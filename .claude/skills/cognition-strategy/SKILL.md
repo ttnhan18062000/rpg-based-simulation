@@ -70,8 +70,13 @@ Interruption_Margin = Profile_Resistance * resistance_multiplier
 
 `Profile_Resistance` is 0.0-1.0, defined by the entity's personality/class. `resistance_multiplier`
 is a **profile-defined constant, not a hardcoded 30.0** — it varies by entity profile; don't
-assume a fixed value when reading or modifying this logic. **Emergency bypass**: Danger concerns
-scoring > 80 ignore the interruption margin entirely.
+assume a fixed value when reading or modifying this logic. **Generalized bypass** (not a single
+"Danger score > 80" special case anymore): while a project's lock is active, only a `detour`-kind
+candidate is exempt from the added normalized floor/percentage gate — it still must clear the base
+`candidate_project.score > effective_current_score` comparison, like every candidate. Every other
+candidate kind must additionally clear a dual condition (normalized score exceeds the current
+project's normalized effective score, and a fixed urgency floor of `0.8`) while the lock is active.
+See `docs/mechanics/04_strategic_cognition.md` §2 for the full derivation.
 
 ## Leads, Blockers, Project Lifecycle
 

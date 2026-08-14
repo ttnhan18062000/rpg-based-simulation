@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260810-COGNITION-STRATEGY-SKILL-BYPASS-SYNC
-phase: open
+phase: done
 date: 2026-08-10
 tags: [cognition, strategy]
 ---
@@ -16,7 +16,7 @@ Sync `.claude/skills/cognition-strategy/SKILL.md` (and its `.agents/` mirror) wi
 generalized interruption-bypass rule landed in `docs/mechanics/04_strategic_cognition.md` §2
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -63,12 +63,14 @@ the Mechanics Bible now describe different bypass rules — a real residual docu
 - Re-litigating or rewriting any other part of either SKILL.md file
 
 ## Acceptance Criteria
-- [ ] `.claude/skills/cognition-strategy/SKILL.md`'s bypass-rule sentence matches the real landed
+- [x] `.claude/skills/cognition-strategy/SKILL.md`'s bypass-rule sentence matches the real landed
       rule (detour = sole exemption from the lock's added floor/percentage gate; base
       `effective_current_score` comparison still applies to detour too), not the stale "score > 80"
       framing
-- [ ] `.agents/skills/cognition-strategy/SKILL.md` receives the same fix
-- [ ] `tests/tools/test_cognition_strategy_skill_content.py` still passes
+- [x] `.agents/skills/cognition-strategy/SKILL.md` receives the same fix
+- [x] `tests/tools/test_cognition_strategy_skill_content.py` still passes — 8/8 passed, including
+      `test_agents_mirror_body_matches_claude_source` (confirms both files' bodies stayed identical
+      after the edit)
 
 ## Related Tickets
 - TCK-20260810-COGNITION-ELIGIBILITY-BYPASS-DOCS (the ticket that found and deliberately deferred
@@ -93,13 +95,45 @@ the Mechanics Bible now describe different bypass rules — a real residual docu
   Implement time by diffing a few other skill files across both directories
 
 ## Implementation Notes
-(filled during Implement)
+
+Read `docs/mechanics/04_strategic_cognition.md` §2 directly at Implement time rather than
+paraphrasing this ticket's own Request Summary (per the ticket's own explicit instruction) — the
+doc has evolved further since this ticket was filed, now also covering
+`TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG`,
+`TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER`, and `TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION`.
+The corrected SKILL.md sentence paraphrases only the core Generalized Bypass rule (detour's sole
+exemption + the dual-condition gate for every other candidate), matching this ticket's own AC
+wording, and cross-references the doc for the fuller derivation rather than inlining the doc's
+entire, now-longer explanation into the skill file's terse style.
+
+Confirmed `.claude/skills/cognition-strategy/SKILL.md` and `.agents/skills/cognition-strategy/
+SKILL.md` are byte-identical in body (only frontmatter legitimately differs — `.claude/` uses
+`description`/`source`/`date_added`, `.agents/` uses a single `description` field, a pre-existing,
+out-of-scope convention difference per this ticket's own Out of Scope) before editing, confirmed
+via direct diff. Applied the identical corrected sentence to both files' bodies.
+
+Grepped the full repo (`docs/`, `.claude/`, `.agents/`, excluding `docs/archive/`) for any other
+citation of the stale "Danger concerns scoring > 80" / "Emergency Bypass" framing — zero hits
+remain anywhere outside the frozen archive copy.
 
 ## Test Summary
-(filled during Test)
+
+`pytest tests/tools/test_cognition_strategy_skill_content.py -v -m "not slow"` → 8 passed, including
+`test_agents_mirror_body_matches_claude_source` (confirms the two files' bodies are still identical
+post-edit).
 
 ## Files Changed
-(filled during Finalize)
+
+- `.claude/skills/cognition-strategy/SKILL.md` — replaced the stale "Emergency bypass: Danger
+  concerns scoring > 80 ignore the interruption margin entirely" sentence with the real, generalized
+  bypass rule (detour's sole exemption from the added floor/percentage gate; every other candidate's
+  dual-condition gate), cross-referencing `docs/mechanics/04_strategic_cognition.md` §2.
+- `.agents/skills/cognition-strategy/SKILL.md` — identical body fix.
 
 ## Completion Summary
-(filled during Finalize)
+
+Synced both `cognition-strategy` SKILL.md copies with the real, generalized interruption-bypass rule
+already landed in `docs/mechanics/04_strategic_cognition.md` §2, closing a documentation-parity gap
+deliberately deferred by `TCK-20260810-COGNITION-ELIGIBILITY-BYPASS-DOCS`. Both files' bodies
+confirmed byte-identical before and after the edit (frontmatter difference is pre-existing and
+out of scope). No source code touched — pure doc-mirror sync, per the ticket's own Out of Scope.
