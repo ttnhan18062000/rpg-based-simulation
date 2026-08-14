@@ -3703,3 +3703,30 @@
     write path's downstream events can ever fire in practice; once that follow-up lands, this
     entry's support_boundary should be revisited (and grade_anchors.json AGENCY recalibrated for
     the 6 run_keys, per that ticket's own scope, not this one's).
+    Addendum (TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5, 2026-08-13): the
+    follow-up named above has landed -- this is that entry's own called-for revisit.
+    AdventureGoalScorer.score() (src/ai/goals/adventure_scorer.py) no longer normalizes against
+    the shared _ADVENTURE_ROUTE_SCORE_MAX=2.9 tier-5 competition scale this support_boundary's
+    prior text cites; it now normalizes against a new, dedicated
+    _ADVENTURE_ROUTE_TIER5_COMPETITION_MAX=2.4 declared in adventure_scorer.py itself
+    (src/systems/strategic_systems/intelligence.py's _ADVENTURE_ROUTE_SCORE_MAX stays exactly 2.9,
+    confirmed unmodified by this ticket's diff). Consequently the prior claim above -- a fresh
+    calibrate_simq.py run measuring AGENCY=C/0.0/events=0 "byte-identical to pre-fix" across all 6
+    run_keys -- no longer holds uniformly: this entry's own write path (last_routing_family/
+    last_routing_tick, and the route_selected/action_executed/route_family_first_use events it
+    feeds) now fires for 1 of 6 named run_keys (hero_guild_routing_seed42_500t, AGENCY grade B,
+    normalized_score=0.0236, event_count=3, reproduced deterministically on a second independent
+    re-run). The write path this entry documents is therefore now confirmed producing a real,
+    measurable behavior change in at least one calibration world, not merely correct-but-inert as
+    previously recorded. The other 5 run_keys (simq_routing_test_seed{42,123,456}_500t,
+    hero_guild_routing_seed{123,456}_500t) still measure 0 events/AGENCY C/0.0, unchanged --
+    ResolveBlockerScorer's flat utility=80.0 floor and CombatEngageScorer's floor of 40.0 still
+    structurally dominate on those run_keys/seeds even under the corrected 2.4 ceiling. Priority
+    remains P2: the write path is real, correct, and now demonstrably live-firing in one world
+    (an upgrade from purely-correct-but-inert), matching sibling entry INFRA-237's own upgraded
+    confidence. grade_anchors.json's AGENCY entry was recalibrated for hero_guild_routing_seed42_500t
+    only; the other 5 run_keys were left at {"grade": "C", "score": 0.0}, matching the
+    still-correct, still-measured reality for those run_keys. See
+    docs/parity_ledger/infrastructure.yaml INFRA-237's own matching fourth addendum and
+    docs/guidelines/intentional_divergences.md §2.41's "Restoration (partial)" addendum for the
+    full root-cause/fix narrative.

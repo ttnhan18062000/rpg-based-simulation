@@ -1137,9 +1137,41 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `tests/unit/strategic/test_fused_strategic_pass_routing_family.py`;
   `tests/unit/strategic/test_evaluate_all_strategic_intents_routing_family.py`;
   `tests/unit/observability/test_event_shapers_strategy.py`.
+- **Restoration (partial) — TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5,
+  2026-08-13**: The tier-5 competition-scale mismatch this section's "Open finding" paragraph
+  above identified (`ADVENTURE_ROUTE`'s utility normalized against `_ADVENTURE_ROUTE_SCORE_MAX
+  =2.9`, a denominator calibrated for a faction-directive-inclusive input configuration the live
+  path never actually receives — see `docs/mechanics/04_strategic_cognition.md` §6.6/§6.10 for the
+  full corrected derivation) is now fixed. `AdventureGoalScorer.score()`
+  (`src/ai/goals/adventure_scorer.py`) normalizes against a new, dedicated
+  `_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX = 2.4` module-level constant instead —
+  `max(empirical raw_score corpus maximum = 0.7439 across the same 6-run_key corpus,
+  theoretical safety floor = 2.4 derived from RECOVER's own real max-urgency ceiling)` rounded up
+  to 1 decimal place. `_ADVENTURE_ROUTE_SCORE_MAX` itself stays exactly `2.9`, untouched, and
+  continues to serve only the Generalized Bypass gate (`evaluate_project_switch()`) —
+  `RegionStabilizationGoalScorer`/`SocialContractGoalScorer` are unaffected (confirmed by direct
+  regression tests). A fresh, clean `calibrate_simq.py` run against all 6 named run_keys post-fix
+  measured a real, non-forced, evidence-grounded outcome: `route_selected`/`action_executed`/
+  `route_family_first_use` each fired exactly once (nonzero) for `hero_guild_routing_seed42_500t`
+  only (AGENCY grade `B`, `normalized_score=0.0236`, `event_count=3` — reproduced identically on
+  an independent re-run at the same seed, confirming determinism). The other 5 run_keys
+  (`simq_routing_test_seed{42,123,456}_500t`, `hero_guild_routing_seed{123,456}_500t`) still
+  measured 0 events (`AGENCY: {"grade": "C", "score": 0.0}`, unchanged) — consistent with
+  investigation.md Risk #2's own caution that `ResolveBlockerScorer`'s flat `utility=80.0` floor
+  and `CombatEngageScorer`'s floor of `40.0` may still structurally dominate even a corrected
+  Adventure ceiling's typical output on most ticks in these two danger-heavy calibration worlds.
+  This is a real, mixed restoration — not a full flip to nonzero for all 6 run_keys — and is
+  reported here as measured, not assumed. `grade_anchors.json`'s AGENCY entry for
+  `hero_guild_routing_seed42_500t` was recalibrated to `{"grade": "B", "score": 0.0236}`; the
+  other 5 run_keys' AGENCY entries were left at `{"grade": "C", "score": 0.0}`, matching the
+  still-correct, still-measured reality for those run_keys. Whether the still-zero outcome on the
+  other 5 run_keys is itself archetype-correct (mirroring `TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`'s
+  precedent) is an open design/product question, explicitly not decided by this ticket — a
+  candidate for a future, separately-scoped DA-ruling ticket if desired.
 - **Status**: ACTIVE (write-path restored; AGENCY event emission for `simq_routing_test`/
-  `hero_guild_routing` remains blocked by the separate tier-5 competition-scale finding above,
-  pending a follow-up ticket)
+  `hero_guild_routing` now fires for 1 of 6 named run_keys following the tier-5-competition-scale
+  fix above; the other 5 remain at zero events, a real and current measurement, not a residual
+  gap awaiting further restoration work)
 
 ### 2.42 Social-Contract Acceptance No Longer Unconditionally Wins the Project Slot (TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER)
 - **Subsystem**: Strategic Cognition / Social Contracts

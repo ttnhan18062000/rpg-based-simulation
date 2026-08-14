@@ -338,12 +338,12 @@ Traits are compared by verb prefix only (first token before `:`). Token format: 
 
 | Component | Min | Max |
 |---|---|---|
-| urgency | 0.0 | ~2.0 |
+| urgency | 0.0 | ~2.0 (only when faction_directives is live-supplied; see the per-need-key ceiling table below for the live tier-5-competition path) |
 | benefit | 0.0 | ~0.5 (typical opportunity) |
-| personality_bias | 0.0 | 0.25 |
+| personality_bias | 0.0 | 0.50 (greed/GATHER_RESOURCE-family, QUEST_OPPORTUNITY); 0.40 (sociability/FORM_PARTY); 0.25 (caution/RECOVER, curiosity/ASK_INFORMATION-family, industry/CRAFT_UPGRADE) — not a flat 0.25; see §6.4 |
 | confidence_bonus | 0.0 | 0.15 |
 | risk_penalty | 0.0 | ~0.9 (max_risk=1.0 × 1.8 × 0.5) |
-| **Total non-blocked** | 0.0 | ~2.9 |
+| **Total non-blocked** | 0.0 | ~2.9 (faction-directive-inclusive theoretical estimate — see live-ceiling correction below) |
 | blocker_penalty | 0.0 | 2.0 (fixed) |
 | **Total blocked** | clamped to 0 | ~0.9 |
 
@@ -351,16 +351,76 @@ This `~2.9` "Total non-blocked" ceiling is also the normalization anchor
 (`_ADVENTURE_ROUTE_SCORE_MAX = 2.9`, `src/systems/strategic_systems/intelligence.py:29-31`) that
 System A candidate scores are divided by when evaluated against §2's Generalized Bypass gate.
 
+**Live tier-5-competition ceiling is lower, and now uses its own dedicated denominator
+(`TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5`).** The `~2.9` figure above
+assumes `faction_directives` is live (§6.10's urgency boosts), which — per §6.10's own
+disclosure — is never true on the live `AdventureGoalScorer.score()` call path (`faction_directives=
+None` unconditionally). `AdventureGoalScorer.score()`'s `utility` computation was originally
+reusing `_ADVENTURE_ROUTE_SCORE_MAX=2.9` for its own tier-5-competition normalization even though
+its own real, live-reachable `raw_score` ceiling never approaches it — this silently compressed
+`AdventureGoalScorer.utility` into a narrow low band (empirically measured: max `raw_score=0.7439`
+across a 6-run_key corpus spanning `simq_routing_test`/`hero_guild_routing` × seeds {42,123,456}
+`_500t`, i.e. `utility ≈ 25.6` at the observed maximum), which `COMBAT_ENGAGE`
+(floor `utility=40.0`) and `ResolveBlockerScorer` (flat `utility=80.0`) structurally dominated on
+effectively every tier-5-competitive tick. The fix: `AdventureGoalScorer.score()`
+(`src/ai/goals/adventure_scorer.py`) now normalizes against its own dedicated
+`_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX = 2.4` module-level constant — decoupled from
+`_ADVENTURE_ROUTE_SCORE_MAX`, which stays exactly `2.9` and continues to serve only the
+Generalized Bypass gate above. `2.4` is `max(empirical raw_score corpus maximum = 0.7439,
+theoretical safety floor = 2.4)` rounded up to 1 decimal place — the theoretical floor, derived
+below, governs. A `min(100.0, utility)` runtime clamp guards against any future change to
+opportunity-generation/need-interpretation logic silently pushing `utility` above the implicit
+0-100 `GoalScore.utility` contract.
+
+**Per-need-key urgency-tier ceiling (the real, live-reachable basis for the `2.4` theoretical
+floor above).** `AdventureRouteScorer.score()`'s `urgency` term is the max urgency among whichever
+`InterpretedNeed` keys a `RouteFamily` maps to (`family_needs` dict,
+`src/domains/adventure/scoring.py:116-132`). Each need key's own maximum reachable urgency tier is
+fixed by `src/cognition/need_interpretation.py`'s own branching — not every need key can reach
+`_URGENCY_CRITICAL`:
+
+| Need key | Max urgency tier reachable | Source |
+|---|---|---|
+| `healing` | `_URGENCY_CRITICAL` (0.95), when `health < 0.20` | `need_interpretation.py:70-77` |
+| `food` | `_URGENCY_CRITICAL` (0.95), when `hunger > 85.0` | `need_interpretation.py:80-90` |
+| `rest` | `_URGENCY_HIGH` (0.75) only, never CRITICAL | `need_interpretation.py:92-101` |
+| `stamina_recovery` | `_URGENCY_MEDIUM` (0.50) flat | `need_interpretation.py:103-112` |
+| `equipment_repair` | `_URGENCY_HIGH` (0.75) only, never CRITICAL | `need_interpretation.py:114-123` |
+| `equipment_improvement` | `_URGENCY_MEDIUM` (0.50) only — never HIGH/CRITICAL | `need_interpretation.py:125-137` |
+| `inventory_space` | `_URGENCY_HIGH` (0.75) only, never CRITICAL | `need_interpretation.py:139-148` |
+| `gold` | `_URGENCY_HIGH` (0.75) only, never CRITICAL | `need_interpretation.py:150-159` |
+| `information` | `_URGENCY_LOW` (0.25) flat | `need_interpretation.py:161-169` |
+| `social` | never populated anywhere in the codebase — urgency term contributes `0.0` | full-repo grep, zero hits |
+
+Of the live-reachable `RouteFamily` values (`AdventureRouteGenerator.generate()` only ever
+produces `GATHER_RESOURCE`, `BUY_UPGRADE`, `CRAFT_UPGRADE`, `RECOVER`, `ASK_INFORMATION`,
+`FORM_PARTY`), `RECOVER` is the dominant family at a `2.35` ceiling, rounding up to the `2.4`
+theoretical floor used above — not `CRAFT_UPGRADE`, whose matched need key
+(`equipment_improvement`) is hardcoded to `_URGENCY_MEDIUM` and can never reach HIGH/CRITICAL.
+`RouteFamily.RECOVER` itself maps to **two** distinct opportunity kinds sharing the same
+urgency-lookup key set (`generator.py:38-45`'s `kind_map`): `repair_gear` (fixed
+`estimated_reward=80.0`, capping `expected_benefit=0.8`) and `rest_inn`
+(`estimated_reward=sleep_debt`, a per-entity state value reaching `expected_benefit=1.0` at
+`sleep_debt=100`). Because the urgency term is keyed by `route.family`, not by which opportunity
+kind backs the candidate, a `rest_inn`-backed RECOVER candidate can still inherit an
+independently-critical `healing` urgency (a low-health, sleep-deprived entity is a realistic
+combined state). RECOVER's corrected ceiling: `urgency(0.95, healing CRITICAL) +
+benefit(1.0, rest_inn at sleep_debt=100) + personality_bias(0.25, caution) +
+confidence_bonus(0.15, rest_inn's confidence=1.0 fixed) − risk_penalty(0) = 2.35`.
+
 The same constant has a second consumer as of TCK-20260811-ADVENTURE-GOAL-SCORER: `AdventureGoalScorer`
-(§2, "New tier-5 candidate") normalizes a raw route score onto the `GoalScore.utility` 0-100 scale via
+(§2, "New tier-5 candidate") normalized a raw route score onto the `GoalScore.utility` 0-100 scale via
 `utility = (raw_score / _ADVENTURE_ROUTE_SCORE_MAX) * _GOAL_UTILITY_SCORE_MAX` for tier-5 goal
-competition — a different purpose than the Generalized Bypass gate above, but the same anchor value.
-Both readings must stay consistent if `_ADVENTURE_ROUTE_SCORE_MAX` is ever recalibrated (now affecting
-`SocialContractGoalScorer` too — see the third-consumer paragraph below). This
+competition — a different purpose than the Generalized Bypass gate above, but originally the same
+anchor value. As of `TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5`, this consumer no
+longer reads `_ADVENTURE_ROUTE_SCORE_MAX` at all — it uses its own dedicated
+`_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX` (see the live-ceiling correction above). `SocialContract
+GoalScorer`/`RegionStabilizationGoalScorer` (the third/fourth consumers below) still read
+`_ADVENTURE_ROUTE_SCORE_MAX = 2.9` directly, unaffected by this decoupling. This
 normalized `utility` is used only for tier-5 arbitration; the materialization branch that commits a
 winning `ADVENTURE_ROUTE` candidate to a real `ProjectState` uses the raw route score instead, since
-the resulting `ProjectState.kind` is a `ProjectKind` classified back onto this same 2.9-ceiling scale,
-not the 100.0 one.
+the resulting `ProjectState.kind` is a `ProjectKind` classified back onto the `_ADVENTURE_ROUTE_SCORE_
+MAX`-anchored 2.9-ceiling scale, not the 100.0 one.
 
 The same constant has a third consumer as of TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER:
 `SocialContractGoalScorer` (`src/ai/goals/social_contract_scorer.py`) normalizes its own raw contract
@@ -433,6 +493,16 @@ unlike the deleted phase's own `apply()` signature, which received it as a pipel
 argument. This section's scoring table below remains accurate for when `faction_directives` is
 supplied (e.g. via direct test calls to the scorer/service), but describes a condition that does
 not occur in a live tick today — a disclosed simplification, not implemented parity.
+
+**Downstream effect on §6.6's normalization ceiling
+(`TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5`):** `faction_directives=None`'s
+effect here is not merely a call-signature simplification — it is the specific reason §6.6's old
+`~2.9` "Total non-blocked" figure over-estimated the tier-5-competition-reachable ceiling for
+`AdventureGoalScorer.score()`. The `~2.0` urgency-term estimate `~2.9` was built from is only
+reachable via this section's faction-directive urgency boosts; the needs-based baseline alone (see
+§6.6's per-need-key ceiling table) never exceeds `0.95`. This is now corrected by §6.6's dedicated
+`_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX = 2.4` denominator, calibrated to the real,
+faction-directive-excluded live path this section describes.
 
 | Entity role | Route family | Condition | Urgency delta |
 |---|---|---|---|

@@ -20,6 +20,19 @@ from src.observability.cognition.decision_trace_writer import get_active_writer 
 # correctness risk.
 _PROFILE_ELIGIBILITY_CACHE: Dict[str, bool] = {}
 
+# Dedicated tier-5-competition normalization ceiling for AdventureGoalScorer.score(), decoupled
+# from src.systems.strategic_systems.intelligence._ADVENTURE_ROUTE_SCORE_MAX (TCK-20260813-
+# ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5). _ADVENTURE_ROUTE_SCORE_MAX stays 2.9 and
+# continues to serve only _score_scale_max()'s Generalized Bypass gate purpose in
+# evaluate_project_switch() -- do not reuse it here, and do not let a future scorer reuse THIS
+# constant for an unrelated purpose either (that reuse pattern is what caused this ticket).
+# Value derived in plan.md Step 1: max(empirical raw_score corpus maximum across
+# simq_routing_test/hero_guild_routing x seeds{42,123,456}_500t, 2.4 theoretical safety floor
+# derived from RECOVER's own real max-urgency ceiling (healing=CRITICAL + rest_inn benefit=1.0)
+# -- see plan.md Step 1b for the full per-need-key urgency-tier table). Empirical max measured
+# this session was 0.7439 (well below the theoretical floor), so the floor of 2.4 governs.
+_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX: float = 2.4
+
 
 def _resolve_cognition_profile_id(entity: EntityState) -> Optional[str]:
     """
@@ -93,10 +106,7 @@ class AdventureGoalScorer(GoalScorer):
         # established convention: every scorer in src/ai/goals/scorers.py already does
         # function-local imports for cross-module concerns (e.g. SpatialQueryService imported
         # inside RecoverScorer.score(), scorers.py:181).
-        from src.systems.strategic_systems.intelligence import (
-            _ADVENTURE_ROUTE_SCORE_MAX,
-            _GOAL_UTILITY_SCORE_MAX,
-        )
+        from src.systems.strategic_systems.intelligence import _GOAL_UTILITY_SCORE_MAX
         from src.domains.adventure.generator import AdventureRouteGenerator
         from src.domains.adventure.service import AdventureDecisionService
         from src.world.providers.resources import ResourceOpportunityProvider
@@ -207,7 +217,10 @@ class AdventureGoalScorer(GoalScorer):
             target_id = f"adventure:{family.value}"
             target_pos = AdventureGoalScorer._resolve_placeholder_target_pos(family, entity, state)
 
-        utility = (raw_score / _ADVENTURE_ROUTE_SCORE_MAX) * _GOAL_UTILITY_SCORE_MAX
+        utility = min(
+            _GOAL_UTILITY_SCORE_MAX,
+            (raw_score / _ADVENTURE_ROUTE_TIER5_COMPETITION_MAX) * _GOAL_UTILITY_SCORE_MAX,
+        )
 
         return GoalScore(
             kind=GoalKind.ADVENTURE_ROUTE,

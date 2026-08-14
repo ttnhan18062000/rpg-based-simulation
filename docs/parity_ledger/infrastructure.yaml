@@ -3035,6 +3035,31 @@
     docs/parity_ledger/strategic_cognition.yaml STRAT-257, which documents the write-path mechanism
     itself (the schema-level StrategicUpdate field addition and its two threading sites) as
     distinct from this entry's observability/event-emission angle.
+    Addendum (TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5, 2026-08-13): root cause
+    confirmed -- AdventureGoalScorer.score() (src/ai/goals/adventure_scorer.py) was normalizing its
+    own raw route score against _ADVENTURE_ROUTE_SCORE_MAX=2.9, a denominator calibrated for a
+    faction-directive-inclusive input configuration (docs/mechanics/04_strategic_cognition.md
+    §6.10's own live faction_directives=None disclosure) that the live tier-5-competition call path
+    never actually receives; the real, live-reachable raw_score ceiling is ~2.4 (theoretical,
+    RECOVER family) and empirically measured at max 0.7439 across the same 6-run_key corpus. Fix:
+    AdventureGoalScorer.score() now normalizes against a new, dedicated module-level constant,
+    _ADVENTURE_ROUTE_TIER5_COMPETITION_MAX = 2.4, declared in adventure_scorer.py itself (not
+    intelligence.py, to avoid the exact "convenient shared constant" reuse pattern that caused this
+    defect for SocialContractGoalScorer/RegionStabilizationGoalScorer). _ADVENTURE_ROUTE_SCORE_MAX
+    itself stays exactly 2.9, untouched, and continues to serve only the Generalized Bypass gate
+    (pinned by a new source-level guard test, tests/architecture/
+    test_adventure_route_score_max_unchanged.py). A fresh, clean calibrate_simq.py run against all 6
+    named run_keys post-fix measured: route_selected/action_executed/route_family_first_use each
+    fired exactly once (nonzero) for hero_guild_routing_seed42_500t (AGENCY grade B, normalized_score
+    0.0236, event_count=3 -- reproduced identically on a second independent re-run at the same
+    seed, confirming determinism), while the other 5 run_keys (simq_routing_test_seed{42,123,456}_
+    500t, hero_guild_routing_seed{123,456}_500t) still measured 0 events (AGENCY C/0.0, unchanged)
+    -- consistent with investigation.md Risk #2's own caution that ResolveBlockerScorer's flat
+    utility=80.0 floor and CombatEngageScorer's floor of 40.0 may still structurally dominate even a
+    corrected Adventure ceiling's typical output on most ticks. grade_anchors.json's AGENCY entry
+    for hero_guild_routing_seed42_500t only was recalibrated to {"grade": "B", "score": 0.0236}; the
+    other 5 run_keys' AGENCY entries were left at {"grade": "C", "score": 0.0}, matching the
+    still-correct, still-measured reality for those run_keys.
 - id: INFRA-238
   text: "CombatScorer covers all contract §5 COMBAT rules: combat_active, combat_resolved,
     survival_tension, tactical_variety (per unique modifier), attrition, early_extinction

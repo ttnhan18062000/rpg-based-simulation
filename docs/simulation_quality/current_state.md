@@ -426,6 +426,20 @@ distribution table above) — not performed here, out of scope for a docs-only p
 `eval_matrix_results.md`'s 2026-08-13 NOTE blocks for the authoritative evidentiary record in the
 meantime.
 
+**Second targeted correction (2026-08-13, `TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5`):**
+the "ALSO grade C (0 events/0.0)" reading two sentences above is now stale for exactly one of the
+six named `_500t` run_keys. That ticket found and fixed a second, independent defect stacked on top
+of the write-path regression above — `AdventureGoalScorer.score()` was normalizing its raw route
+score against a denominator (`_ADVENTURE_ROUTE_SCORE_MAX=2.9`) calibrated for an input the live
+path never receives, silently compressing `ADVENTURE_ROUTE`'s tier-5 utility below
+`COMBAT_ENGAGE`/`ResolveBlockerScorer`'s floors on effectively every tick. A fresh
+`calibrate_simq.py` run post-fix (both defects now addressed) measured a real, mixed outcome:
+`hero_guild_routing_seed42_500t` now fires (AGENCY grade `B`, `normalized_score=0.0236`,
+`event_count=3`); the other five run_keys (`simq_routing_test_seed{42,123,456}_500t`,
+`hero_guild_routing_seed{123,456}_500t`) remain at grade `C`/0 events, unchanged. See
+`docs/mechanics/04_strategic_cognition.md` §6.6 for the corrected derivation and
+`eval_matrix_results.md`'s second 2026-08-13 NOTE blocks for the full measured evidence.
+
 **COGNITION** — split state, the one pillar with a genuinely unresolved half:
 - Self-model *materialization* generalizes cleanly and cheaply to real archetype worlds (proven
   on `urban_political`, `TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE`) — this is what drives

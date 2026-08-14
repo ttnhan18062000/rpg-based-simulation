@@ -112,3 +112,19 @@ def test_region_stabilization_goal_scorer_raw_score_calibrated_to_2_9_not_100():
     score = RegionStabilizationGoalScorer().score(entity, state)
     assert score.metadata["raw_score"] == pytest.approx(2.9)
     assert score.metadata["raw_score"] != 100.0
+
+
+def test_region_stabilization_goal_scorer_utility_unchanged_by_adventure_denominator_decoupling():
+    """TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5: RegionStabilizationGoalScorer
+    never imports from adventure_scorer.py, and its own raw_score = urgency * _ADVENTURE_ROUTE_
+    SCORE_MAX / utility = (raw_score / _ADVENTURE_ROUTE_SCORE_MAX) * 100 formula still uses the
+    unchanged, untouched _ADVENTURE_ROUTE_SCORE_MAX=2.9 from intelligence.py (algebraic
+    self-cancellation, investigation.md). At hazard_level=1.0 this must still compute
+    utility==100.0 and raw_score==2.9 exactly, proving the adventure-side dedicated-denominator
+    fix has zero effect here."""
+    entity = _entity()
+    region = RegionState(id="swamp", name="Swamp", bounds=(0, 0, 10, 10), hazard_level=1.0)
+    state = _state(entities={1: entity}, regions={"swamp": region})
+    score = RegionStabilizationGoalScorer().score(entity, state)
+    assert score.utility == 100.0
+    assert score.metadata["raw_score"] == pytest.approx(2.9)

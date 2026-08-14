@@ -193,6 +193,26 @@ def test_social_contract_goal_scorer_raw_score_clamped_to_2_9_ceiling():
     assert raw == 2.9
 
 
+def test_social_contract_goal_scorer_utility_stays_bounded_by_100_after_adventure_fix():
+    """TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5: SocialContractGoalScorer
+    imports _ADVENTURE_ROUTE_SCORE_MAX/_GOAL_UTILITY_SCORE_MAX from intelligence.py, never from
+    adventure_scorer.py -- unaffected by the new dedicated _ADVENTURE_ROUTE_TIER5_COMPETITION_MAX.
+    Reuses the raw_score==2.9-clamp-ceiling fixture above, but asserts on the FULL score() call
+    path's .utility (not just the _raw_score() helper), proving the implicit 0-100 GoalScore.
+    utility bound still holds exactly at the clamp ceiling post-fix."""
+    contract = ContractState(
+        id="c1", kind=ContractKind.LOAN, source_id=2, target_id=1,
+        terms={"amount": 1000, "duration": 100},
+        status=ContractStatus.ACTIVE, expiry_tick=100,
+    )
+    ent = V2EntityBuilder(1).kind("hero").social(
+        bonds={2: SocialBond(target_id=2, sentiment=1.0)}
+    ).strategic(contracts={"c1": contract}).build()
+    state = _state(entities={1: ent, 2: _entity(eid=2)}, tick=100)
+    score = SocialContractGoalScorer().score(ent, state)
+    assert score.utility == 100.0
+
+
 # --- Design Decision #8 target_pos resolution --------------------------------------------------
 
 

@@ -490,6 +490,21 @@ the grade reflects actual event count differences (137 vs 40 events). COGNITION 
 > grade — no such grade was measured. A follow-up ticket investigating the `ADVENTURE_ROUTE`
 > utility-scale-vs-tier5-competition question is recommended.
 
+> **NOTE (2026-08-13 — `TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5`):** the
+> `ADVENTURE_ROUTE` utility-scale-vs-tier5-competition question the prior NOTE recommended is now
+> resolved with a real fix (see `docs/guidelines/intentional_divergences.md` §2.41's Restoration
+> addendum and `docs/mechanics/04_strategic_cognition.md` §6.6 for the full corrected derivation):
+> `AdventureGoalScorer.score()` now normalizes against a new, dedicated
+> `_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX = 2.4` constant instead of the shared
+> `_ADVENTURE_ROUTE_SCORE_MAX = 2.9`. A fresh, clean `calibrate_simq.py` re-run against all 3
+> `simq_routing_test` seeds (42/123/456, `_500t`) post-fix still measures `AGENCY: {"grade": "C",
+> "score": 0.0}`, events=0, byte-identical to pre-fix, for all 3 seeds in **this** world — the fix
+> did not flip any `simq_routing_test` seed to nonzero. (`hero_guild_routing_seed42_500t` did flip
+> to nonzero — see that world's own 2026-08-13 NOTE below for the full measured evidence; this is
+> a real, mixed, evidence-grounded outcome, not a uniform fix across both worlds.)
+> `grade_anchors.json` is therefore left unchanged for all 3 `simq_routing_test` run_keys — the
+> `C`/`0.0` values remain the correct, freshly-measured numbers.
+
 > **NOTE (2026-08-13 — `TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT`):** the table's PROGRESSION
 > row above ("norm ≈ -0.06, event_count=1, all 3 seeds") is now stale for `seed456` specifically —
 > fresh measurement (this ticket) confirms `simq_routing_test_seed456_500t`'s PROGRESSION is
@@ -648,10 +663,21 @@ emission-loss described here.
 `simq_routing_test` is the one calibration world that forces `ENABLE_ADVENTURE_ROUTING=ON` (see
 the `simq_routing_test` section above), and `hero_guild_routing` is a second such world (see
 below). Both previously graded AGENCY=A at all 3 measured seeds (42/123/456, 500t), demonstrating
-the scorer and (then-live) emitters were wired correctly. **As of current HEAD, both now grade
-AGENCY=C at all 3 seeds** — not because the flag gate reactivated, but because the emission-side
-`last_routing_family` write no longer exists (see the 2026-08-13 NOTE blocks in both worlds'
-sections above for the confirmed re-verification evidence and the recalibrated anchors).
+the scorer and (then-live) emitters were wired correctly. Both then collapsed to AGENCY=C at all 3
+seeds after `TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE` — not because the flag gate
+reactivated, but because the emission-side `last_routing_family` write no longer existed. **As of
+`TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5`'s fix (2026-08-13)**, the picture is
+mixed, not uniform: the write-path is restored AND the tier-5-competition-scale mismatch that
+previously suppressed `ADVENTURE_ROUTE` on effectively every tick is corrected
+(`_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX = 2.4`, decoupled from the unrelated `2.9`
+Generalized-Bypass-gate constant — see `docs/mechanics/04_strategic_cognition.md` §6.6). A fresh
+`calibrate_simq.py` run against all 6 named run_keys (both worlds × seeds 42/123/456, `_500t`)
+measured real, nonzero `route_selected`/`action_executed`/`route_family_first_use` events (AGENCY
+grade `B`) for exactly one of the six — `hero_guild_routing_seed42_500t`. The remaining five
+(`simq_routing_test` all 3 seeds, `hero_guild_routing_seed123_500t`,
+`hero_guild_routing_seed456_500t`) still measure zero events, AGENCY=C, matching the pre-fix
+reading — see both worlds' own 2026-08-13 NOTE blocks above for the full measured evidence and
+the recalibrated anchor (`hero_guild_routing_seed42_500t` only).
 
 `AdventureDecisionPhase` is opt-in by world archetype, not a global default — it represents a
 distinct "routing-capable" archetype rather than a baseline behavior every world is expected to
@@ -1534,6 +1560,26 @@ the same stasis pattern `simq_routing_test_seed456` hit pre-fix.
 > restored `A` grade — none was measured. See the `simq_routing_test` NOTE above for the full
 > methodology; a follow-up ticket on the utility-scale-vs-tier5-competition question is
 > recommended.
+
+> **NOTE (2026-08-13 — `TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5`):** the
+> follow-up ticket the prior NOTE recommended is now resolved with a real fix (see
+> `docs/guidelines/intentional_divergences.md` §2.41's Restoration addendum and
+> `docs/mechanics/04_strategic_cognition.md` §6.6 for the full corrected derivation):
+> `AdventureGoalScorer.score()` now normalizes against a new, dedicated
+> `_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX = 2.4` constant instead of the shared
+> `_ADVENTURE_ROUTE_SCORE_MAX = 2.9`. A fresh, clean `calibrate_simq.py` re-run against all 3
+> `hero_guild_routing` seeds (42/123/456, `_500t`) post-fix measured a real, mixed outcome:
+> **`seed42` flipped to nonzero** — `route_selected`/`action_executed`/`route_family_first_use`
+> each fired exactly once, AGENCY grade `B`, `normalized_score=0.0236`, `event_count=3`
+> (reproduced identically on an independent re-run at the same seed, confirming determinism).
+> `seed123` and `seed456` remain at `AGENCY: {"grade": "C", "score": 0.0}`, events=0, unchanged —
+> consistent with investigation.md Risk #2's own caution that `ResolveBlockerScorer`'s flat
+> `utility=80.0` floor and `CombatEngageScorer`'s floor of `40.0` may still structurally dominate
+> even a corrected Adventure ceiling's typical output on most ticks. `grade_anchors.json`'s AGENCY
+> anchor for `hero_guild_routing_seed42_500t` only was recalibrated to `{"grade": "B", "score":
+> 0.0236}`; `seed123`/`seed456` are left unchanged at `{"grade": "C", "score": 0.0}`, matching the
+> still-correct, still-measured reality for those two seeds. This is a real, evidence-based,
+> partial win — not a uniform restoration to `A` across all 3 seeds.
 
 > **NOTE (2026-08-13 — `TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT`):** the table's ECONOMY and
 > PROGRESSION rows above (both currently reading "C"/"stable", not broken out per-seed) are now

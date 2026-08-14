@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from src.ai.goals import GoalRegistry
-from src.ai.goals.adventure_scorer import AdventureGoalScorer
+from src.ai.goals.adventure_scorer import AdventureGoalScorer, _ADVENTURE_ROUTE_TIER5_COMPETITION_MAX
 from src.ai.goals.base import GoalScore
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, BuildingState
@@ -93,15 +93,20 @@ def test_adventure_goal_scorer_implements_goal_scorer_protocol(monkeypatch):
 # --- AC2 ---------------------------------------------------------------------------------
 
 
+# NOTE (TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5): this test now asserts the
+# dedicated _ADVENTURE_ROUTE_TIER5_COMPETITION_MAX=2.4 denominator's own boundary, not the old
+# shared _ADVENTURE_ROUTE_SCORE_MAX=2.9 boundary. raw_score==2.9 no longer normalizes to
+# utility==100.0 here -- 2.9 is now the Generalized Bypass gate's own, unrelated ceiling (see
+# test_score_normalization.py and the architecture-guard test below).
 @pytest.mark.parametrize(
     "raw_score,expected_utility",
     [
-        (2.9, 100.0),   # AC2's literal claim: raw_score==2.9 normalizes to utility==100.0 exactly
-        (1.45, 50.0),   # midpoint sanity check
+        (_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX, 100.0),
+        (_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX / 2, 50.0),
         (0.0, 0.0),
     ],
 )
-def test_adventure_goal_scorer_normalizes_raw_score_to_utility_exact(monkeypatch, raw_score, expected_utility):
+def test_adventure_goal_scorer_normalizes_raw_score_to_utility_exact_dedicated_denominator(monkeypatch, raw_score, expected_utility):
     _eligible(monkeypatch)
     monkeypatch.setattr(
         AdventureDecisionService, "decide",
@@ -110,7 +115,7 @@ def test_adventure_goal_scorer_normalizes_raw_score_to_utility_exact(monkeypatch
     entity = _entity()
     state = _state(entities={1: entity})
     score = AdventureGoalScorer().score(entity, state)
-    assert score.utility == expected_utility
+    assert score.utility == pytest.approx(expected_utility)
 
 
 def test_adventure_goal_scorer_metadata_carries_route_family_and_raw_score(monkeypatch):
@@ -125,6 +130,50 @@ def test_adventure_goal_scorer_metadata_carries_route_family_and_raw_score(monke
     assert set(score.metadata.keys()) >= {"route_family", "raw_score"}
     assert score.metadata["route_family"] == RouteFamily.HUNT_WEAK_ENEMY
     assert score.metadata["raw_score"] == 1.8
+
+
+# --- TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5: dedicated-denominator fix ----
+
+
+def test_adventure_route_typical_score_produces_meaningfully_higher_utility_than_before_fix(monkeypatch):
+    """RECOVER critical-healing-plus-rest_inn example (plan.md Step 1b, corrected ceiling):
+    raw_score=2.35 from urgency(0.95, healing CRITICAL) + benefit(1.0, rest_inn at
+    sleep_debt=100) + personality_bias(0.25, caution) + confidence_bonus(0.15) - risk_penalty(0).
+    Pre-fix, this normalized against the old shared _ADVENTURE_ROUTE_SCORE_MAX=2.9:
+    (2.35/2.9)*100 = 81.03. Post-fix, using the dedicated, smaller denominator, utility must be
+    measurably higher -- the whole point of decoupling the denominator from a ceiling
+    (faction-directive-inclusive, never live in this call path) the real formula rarely reaches.
+    """
+    _eligible(monkeypatch)
+    raw_score = 2.35
+    pre_fix_utility = (raw_score / 2.9) * 100.0
+    monkeypatch.setattr(
+        AdventureDecisionService, "decide",
+        _fake_decide_factory(raw_score, family=RouteFamily.RECOVER, target_node_id=999),
+    )
+    entity = _entity()
+    state = _state(entities={1: entity})
+    score = AdventureGoalScorer().score(entity, state)
+    assert score.utility > pre_fix_utility
+    assert score.utility == pytest.approx((raw_score / _ADVENTURE_ROUTE_TIER5_COMPETITION_MAX) * 100.0)
+
+
+@pytest.mark.parametrize("raw_score", [0.58, 0.6914, 0.75])
+def test_adventure_route_sibling_ticket_typical_band_produces_higher_utility_than_before_fix(monkeypatch, raw_score):
+    """Sibling ticket's own DEBUG-trace-observed typical raw_score band
+    (investigation.md: "~0.58-0.75"), re-confirmed this session's empirical measurement
+    (max 0.7439 across all 6 named calibration run_keys). Quantifies the fix's real-world
+    magnitude, not just its boundary values."""
+    _eligible(monkeypatch)
+    pre_fix_utility = (raw_score / 2.9) * 100.0
+    monkeypatch.setattr(
+        AdventureDecisionService, "decide",
+        _fake_decide_factory(raw_score, family=RouteFamily.GATHER_RESOURCE, target_node_id=999),
+    )
+    entity = _entity()
+    state = _state(entities={1: entity})
+    score = AdventureGoalScorer().score(entity, state)
+    assert score.utility > pre_fix_utility
 
 
 # --- AC5 ---------------------------------------------------------------------------------

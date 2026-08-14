@@ -148,6 +148,20 @@ A mediocre one (~1.0 raw) becomes ~34.5 — comfortably clears the floor. **This
 validation once real** (same discipline as every calibration this session — E11D, the 24-seed
 quartile recalibration), not assumed correct by formula alone.
 
+**Superseded (2026-08-13, `TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5`):** the
+empirical validation this paragraph called for found the shared-constant reuse above was exactly
+wrong — `_ADVENTURE_ROUTE_SCORE_MAX=2.9` is calibrated for a faction-directive-inclusive input the
+live tier-5-competition call path never actually receives, so the real, live-reachable `raw_score`
+ceiling never approached 2.9 and `AdventureGoalScorer.utility` was silently compressed below
+`CombatEngageScorer`/`ResolveBlockerScorer`'s floors on effectively every tick — the exact
+"never wins tier 5" defect this design set out to avoid. `AdventureGoalScorer.score()` now
+normalizes against its own dedicated `_ADVENTURE_ROUTE_TIER5_COMPETITION_MAX = 2.4` constant
+instead, decoupled from `_ADVENTURE_ROUTE_SCORE_MAX` (which stays 2.9, unaffected, and continues to
+serve only `evaluate_project_switch()`'s Generalized Bypass gate). See
+`docs/mechanics/04_strategic_cognition.md` §6.6 for the corrected derivation and
+`docs/guidelines/intentional_divergences.md` §2.41 for the measured, mixed outcome (1 of 6 named
+calibration run_keys now fires `ADVENTURE_ROUTE` events; the other 5 remain at zero, unchanged).
+
 ### 4. Materialization — a real gap found during design review, and a real bug found during spec review
 
 Verified directly (`intelligence.py`, the generic construction runs approximately lines 1397-1414,

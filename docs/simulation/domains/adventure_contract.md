@@ -71,7 +71,14 @@ rather than a route-generation pre-filter specific to adventure routing.
   important caveat that this fixes the write path but does not by itself guarantee
   `route_selected`/`action_executed`/`route_family_first_use` actually fire in any given world — that
   additionally requires `ADVENTURE_ROUTE` to win tier-5 goal competition, which is a separate,
-  unrelated mechanism this ticket does not touch.
+  unrelated mechanism this ticket does not touch. A follow-up ticket,
+  `TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5` (same §2.41, "Restoration
+  (partial)" addendum), did touch the tier-5-competition mechanism and fixed a real, separate
+  scale mismatch there. Measured result across all 6 named calibration `_500t` run_keys: the
+  three events now fire for exactly one (`hero_guild_routing_seed42_500t`, AGENCY grade `B`); the
+  other five still measure zero events. Both fixes are real and both are needed — restoring the
+  write path alone does not make `ADVENTURE_ROUTE` win tier-5, and fixing the tier-5 scale alone
+  would have had nothing to write with.
 
 The adventure domain does not own world state, inventory, combat state, or any other entity's strategic state.
 
