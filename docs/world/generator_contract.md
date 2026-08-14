@@ -3,7 +3,7 @@ status: authoritative
 layer: engine
 authority: P1
 audience: agent
-last_verified: 2026-06-16
+last_verified: 2026-08-08
 tags: [worldgeneration, engine, contract, determinism, procedural, pipeline]
 ---
 
@@ -11,7 +11,10 @@ tags: [worldgeneration, engine, contract, determinism, procedural, pipeline]
 
 **Source:** `src/worldgeneration/` (2 files: generator.py, schema.py)  
 **Compliance namespace:** `WORLD-GEN-001` through `WORLD-GEN-004`  
-**System overview:** `docs/systems/world_generation.md` — do not duplicate here.
+**System overview:** `docs/systems/world_generation.md` was archived 2026-08-10
+(`TCK-20260809-STALE-DOCS-AI-BRAIN-ARCHITECTURE-AUDIT` — cited non-existent files like
+`src/core/grid.py`) to `docs/archive/systems/world_generation.md`. This contract is now the
+primary current technical reference for world generation; no separate overview doc exists.
 
 ---
 
@@ -73,7 +76,7 @@ Cross-links:
 | `settlement_style` | `str` | `"scattered"` | Region layout style tag (recorded in provenance; not currently a dispatch key) |
 | `danger_level` | `float` | `1.0` | Hazard scalar applied to wilderness region hazard_level values |
 | `resource_density` | `float` | `0.5` | Resource node count scalar |
-| `population_scale` | `float` | `1.0` | Entity count scalar for both citizens and monsters |
+| `population_scale` | `float` | `1.0` | Entity count scalar for both citizens and monsters, now also area/hazard-modulated — see Step 6 |
 | `required_modules` | `List[str]` | `[]` | Reserved — not currently consumed by the generator |
 | `constraints` | `Dict[str, Any]` | `{}` | Reserved — not currently consumed by the generator |
 | `budget_profile` | `str` | `"local_dev"` | Validator budget profile tag (passed to `WorldValidator`) |
@@ -116,10 +119,16 @@ Where `cx = width // 2`, `cy = height // 2`. Region bounds are clamped to `[0, w
 
 All factions from `catalog_repo.factions` are mapped to `FactionSpec`. Two roles are dynamically resolved:
 
-- **civilian_faction**: defaults to `"town_council"`; overridden by first `alignment_bucket == "defender"` faction if `"town_council"` is not in defenders.
-- **hostile_faction**: defaults to `"goblin_warband"`; overridden by first `alignment_bucket == "invader"` faction if `"goblin_warband"` is not in invaders.
+- **civilian_faction**: `"town_council"` if present among `alignment_bucket == "defender"` catalog factions; else the first defender found; else (TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY) any real faction already present in the generated `FactionSpec` set, falling back to the literal `"town_council"` only if the catalog has zero factions at all.
+- **hostile_faction**: same pattern, `"goblin_warband"` / first invader / any real present faction / literal `"goblin_warband"` fallback.
 
-Faction selection is **not RNG-controlled** — it is deterministic by catalog content.
+Faction selection is **not RNG-controlled** — it is deterministic by catalog content. The
+present-faction fallback (added by TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY) hardens the case
+where an injected `CatalogRepository` has zero `defender`-bucket or zero `invader`-bucket
+factions — previously this could reference a faction ID absent from the generated `FactionSpec`
+set and fail `WorldValidator`'s referential-integrity check (`WORLD-REF-001`); confirmed this does
+NOT occur with the real shipped `data/content` catalog (both `town_council`/`goblin_warband` are
+real registered factions there) — the risk was specific to non-default injected catalogs.
 
 ### Step 4 — Building Placement
 
@@ -147,18 +156,43 @@ For each node: `resource_type` and `region` are chosen via `rng.choice()`. `coun
 
 Resource ID format: `res_node_{index}`.
 
-### Step 6 — Population Allocation
+### Step 6 — Population Allocation (area/hazard-aware, TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY)
+
+Ported from `src/world/spawn.py`'s real, proven runtime respawn-density formula (area-proportional,
+hazard-modified, floored) — see `docs/world/raid_boss_camp_contract.md`. Not a verbatim copy of
+that formula's constants (calibrated for wilderness monster respawn maintenance, not initial town
+sizing) — new reference constants are derived from this generator's own default reference point
+(`target_world_size=(100,100)`, `danger_level=1.0`) so the new formula reproduces the exact old
+flat-formula values at that default:
 
 ```
-citizen_count = max(5, int(15 × population_scale))
-monster_count = max(2, int(8 × population_scale))
+town_area = (town_x1 - town_x0) * (town_y1 - town_y0)   # from Step 2's town_center bounds
+citizen_count = max(5, int(15 × population_scale × (town_area / 900)))
+# no hazard term for citizens — town_center.hazard_level is hardcoded 0.0 (Step 2), permanently inert
+
+wild_area = (wild_x1 - wild_x0) * (wild_y1 - wild_y0)    # from Step 2's wilderness_forest bounds
+monster_count = max(2, int(8 × population_scale × (wild_area / 3366) × ((1 + wild_hazard) / (1 + 1.2))))
 ```
+
+`900` / `3366` / `1.2` are `town_center`/`wilderness_forest`'s own real bounds-derived
+area/hazard values at the default reference point (`target_world_size=(100,100)`,
+`danger_level=1.0`), not arbitrary constants.
+
+**Important caveat, confirmed not assumed**: `town_center`'s bounds are a **fixed ±15-tile
+radius around the map center** (Step 2) — `town_area` is therefore always `900` in practice
+regardless of `target_world_size` (only clamped smaller near a map edge under 30 tiles). Citizen
+count consequently does NOT vary with `target_world_size` alone, only with `population_scale` —
+this is a real, disclosed consequence of Step 2's own fixed-radius carving, not a bug in this
+formula. `wilderness_forest`'s bounds fill "everything left of the town", so `wild_area` DOES
+genuinely scale with `target_world_size`, and monster count responds correctly to both
+`target_world_size` and `danger_level` (previously only `population_scale` affected it).
 
 Two fixed population groups are always created:
 - `"citizens"` — `citizen_count` entities, `citizen_role`/`civilian_faction`, spawned in `town_center`
 - `"monsters"` — `monster_count` entities, `hostile_role`/`hostile_faction`, spawned in `wilderness_forest`
 
-Population counts are **not RNG-controlled** — they are deterministic from `population_scale`.
+Population counts are **not RNG-controlled** — they are deterministic from `population_scale`,
+`target_world_size`, and `danger_level`.
 
 ### Step 7 — Assembly and Output
 

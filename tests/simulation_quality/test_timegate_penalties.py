@@ -438,47 +438,65 @@ class TestAgencyTimegate:
     def test_stasis_N_timegate_fires_after_gate(
         self, scorer: AgencyScorer, scoring_weights: ScoringWeights
     ) -> None:
-        """stasis_N tag appears when defer_idle window count exceeds stasis_gate_ticks."""
+        """stasis_N tag appears once the per-entity streak exceeds stasis_gate_ticks, and the
+        one-shot escalation delta fires only when the streak reaches gate + cap (not at the
+        first post-gate call)."""
         gate = scoring_weights.int_param("stasis_gate_ticks")
-        extra = 3
-        ctx = _ctx(
-            PillarId.AGENCY, tick=100,
-            window_tags={"defer_idle": gate + extra, "action_taken": 1},
+        cap = scoring_weights.int_param("stasis_extra_ticks_cap")
+        entity_id = 55
+        ctx = _ctx(PillarId.AGENCY, tick=100, window_tags={"defer_idle": 0, "action_taken": 1})
+
+        recs = [
+            scorer.score(_env("defer_with_reason", tick=100 + i, entity_id=entity_id), ctx)
+            for i in range(gate + cap)
+        ]
+        assert all(rec is not None for rec in recs)
+        # first post-gate call (index == gate) already carries the stasis_N tag
+        assert "stasis_N" in recs[gate].tags, "stasis_N tag must be present once streak exceeds gate"
+        # but the escalation delta only fires at streak == gate + cap (the last call here)
+        expected_fire = scoring_weights["defer_idle"] + scoring_weights["stasis_per_tick"] * cap
+        assert recs[-1].delta == pytest.approx(expected_fire)
+        assert recs[gate].delta == pytest.approx(scoring_weights["defer_idle"]), (
+            "escalation must NOT fire at the first post-gate call (streak = gate+1)"
         )
-        rec = scorer.score(_env("defer_with_reason", tick=100), ctx)
-        assert rec is not None
-        assert "stasis_N" in rec.tags, "stasis_N tag must be present when defer_idle > gate"
 
     def test_stasis_N_timegate_not_before_gate(
         self, scorer: AgencyScorer, scoring_weights: ScoringWeights
     ) -> None:
-        """stasis_N must NOT appear when defer_idle is below stasis_gate_ticks."""
+        """stasis_N must NOT appear while the per-entity streak is at or below stasis_gate_ticks."""
         gate = scoring_weights.int_param("stasis_gate_ticks")
-        ctx = _ctx(
-            PillarId.AGENCY, tick=100,
-            window_tags={"defer_idle": gate - 1, "action_taken": 1},
-        )
-        rec = scorer.score(_env("defer_with_reason", tick=100), ctx)
-        assert rec is not None
-        assert "stasis_N" not in rec.tags, "stasis_N must not fire before defer_idle exceeds gate"
+        entity_id = 56
+        ctx = _ctx(PillarId.AGENCY, tick=100, window_tags={"defer_idle": 0, "action_taken": 1})
 
-    def test_stasis_N_timegate_accumulates_linearly(
+        for i in range(gate):
+            rec = scorer.score(_env("defer_with_reason", tick=100 + i, entity_id=entity_id), ctx)
+            assert rec is not None
+            assert "stasis_N" not in rec.tags, "stasis_N must not fire before streak exceeds gate"
+
+    def test_stasis_N_timegate_bounded_one_shot(
         self, scorer: AgencyScorer, scoring_weights: ScoringWeights
     ) -> None:
-        """stasis_N delta accumulates: base defer_idle delta + stasis_per_tick * extra_ticks."""
+        """stasis_N's score contribution is a one-shot capped escalation, not unbounded linear
+        accumulation: the cumulative escalation contribution over a long streak stays fixed at
+        stasis_per_tick * stasis_extra_ticks_cap, regardless of streak length."""
         gate = scoring_weights.int_param("stasis_gate_ticks")
-        extra = 4
-        ctx = _ctx(
-            PillarId.AGENCY, tick=100,
-            window_tags={"defer_idle": gate + extra, "action_taken": 1},
-        )
-        rec = scorer.score(_env("defer_with_reason", tick=100), ctx)
-        assert rec is not None
-        assert "stasis_N" in rec.tags
-        expected = scoring_weights["defer_idle"] + scoring_weights["stasis_per_tick"] * extra
-        assert rec.delta == pytest.approx(expected), (
-            f"Expected delta={expected}, got {rec.delta}. "
-            "stasis_N accumulation must be base + stasis_per_tick * extra_ticks"
+        cap = scoring_weights.int_param("stasis_extra_ticks_cap")
+        entity_id = 57
+        ctx = _ctx(PillarId.AGENCY, tick=100, window_tags={"defer_idle": 0, "action_taken": 1})
+
+        streak_length = gate + cap + 50
+        total_delta = 0.0
+        for i in range(streak_length):
+            rec = scorer.score(_env("defer_with_reason", tick=100 + i, entity_id=entity_id), ctx)
+            assert rec is not None
+            total_delta += rec.delta
+
+        base_total = scoring_weights["defer_idle"] * streak_length
+        escalation_contribution = total_delta - base_total
+        expected_escalation = scoring_weights["stasis_per_tick"] * cap
+        assert escalation_contribution == pytest.approx(expected_escalation), (
+            f"Expected fixed one-shot escalation of {expected_escalation}, got "
+            f"{escalation_contribution}. stasis_N must not accumulate linearly with streak length."
         )
 
     # --- population_stasis one-shot (tick > stasis_gate AND action_taken == 0) ---

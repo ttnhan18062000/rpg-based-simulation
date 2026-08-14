@@ -15,7 +15,7 @@ tags: [perf, cadence, integration]
 Integrate System Cadence into Authoritative Pipeline
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

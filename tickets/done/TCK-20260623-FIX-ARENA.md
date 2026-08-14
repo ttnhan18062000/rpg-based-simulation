@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-ARENA
 phase: implement
 date: 2026-06-23
-tags: [test-repair, arena, quest, simulation, teardown, P2]
+tags: [test-repair, arena, quest, simulation, teardown]
 ---
 
 # TCK-20260623-FIX-ARENA

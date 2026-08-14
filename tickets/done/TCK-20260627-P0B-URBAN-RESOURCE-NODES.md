@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P0B-URBAN-RESOURCE-NODES
 phase: done
 date: 2026-06-27
-tags: [p0, resource-nodes, urban-political, world-content, blocker]
+tags: [resource-nodes, urban-political, world-content, blocker]
 ---
 
 # TCK-20260627-P0B-URBAN-RESOURCE-NODES

@@ -15,7 +15,7 @@ tags: [infra, ledger, validator]
 Implement Engine Logic Ledger Validator
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

@@ -15,7 +15,7 @@ tags: [mb, task4, adaptive, pool]
 Implement Adaptive Saturated-Pool Strategy
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

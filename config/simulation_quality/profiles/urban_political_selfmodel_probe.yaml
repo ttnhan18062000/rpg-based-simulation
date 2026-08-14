@@ -1,0 +1,25 @@
+# Permanent grade-anchor probe profile (formalized TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE,
+# originally created by TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE as
+# _investigation_probe_urban_political_selfmodel_only.yaml).
+# NOT a shipped profile — not referenced by any world's default calibration inheritance chain;
+# used only by tests/simulation_quality/test_grade_regression.py's
+# test_urban_political_selfmodel_cognition_isolated_grade_anchor. Isolates
+# ENABLE_SELF_MODEL_COGNITION materialization from ENABLE_BELIEF_ASSIMILATION routing by
+# turning the self-model flag ON while omitting the belief-assimilation flag that
+# urban_political.yaml normally ships ON.
+#
+# Corrected 2026-07-12 (orchestrator re-verification): the file at this path previously
+# lacked ENABLE_SELF_MODEL_COGNITION entirely and instead carried ENABLE_SOCIAL_COOPERATION
+# plus unrelated pillar weights — content that did not match this file's own header comment
+# or its stated investigative purpose. Rebuilt from urban_political.yaml's actual shipped
+# profile (config/simulation_quality/profiles/urban_political.yaml) with only the two
+# intended changes applied: ENABLE_SELF_MODEL_COGNITION added ON, ENABLE_BELIEF_ASSIMILATION
+# removed.
+pillar_weights:
+  FACTION: 1.5
+  ECONOMY: 1.5
+  SOCIAL: 1.5
+  COMBAT: 0.3
+feature_flags:
+  ENABLE_SOCIAL_COOPERATION: "ON"
+  ENABLE_SELF_MODEL_COGNITION: "ON"

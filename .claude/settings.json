@@ -4,6 +4,7 @@
       "Write",
       "Edit",
       "mcp__knowledge-search__search_docs",
+      "mcp__knowledge-search__search_health",
       "Bash(git *)",
       "Bash(grep *)",
       "Bash(find *)",
@@ -25,6 +26,9 @@
       "Bash(python3 *)",
       "Bash(python *)",
       "Bash(/usr/bin/python3 *)",
+      "Bash(.venv/bin/python3 *)",
+      "Bash(/home/vboxuser/Work/rpg-based-simulation/.venv/bin/python3 *)",
+      "Bash(/home/vboxuser/Work/venv/bin/python3 *)",
       "Bash(uv run *)",
       "Bash(uv *)",
       "Bash(pytest *)",
@@ -75,6 +79,15 @@
             "command": "DESC=$(python3 -c \"import json,sys; d=json.load(sys.stdin); i=d.get('tool_input',{}); print(i.get('description','') + ' ' + i.get('prompt',''))\" 2>/dev/null || true); case \"$DESC\" in *invest*|*search*|*find*|*explor*|*locat*|*grep*|*where*|*ticket*|*scope*) echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"context-search: Before spawning this agent, have you called search_docs (mcp__knowledge-search__search_docs) and graphify query for this topic? These are REQUIRED before grep/find per CLAUDE.md Hard Rules.\"}}' ;; esac"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',d).get('file_path',''))\" 2>/dev/null || true); case \"$FILE\" in */tickets/*|*/staging_artifacts/*|*/src/*|*/tests/*|*/docs/*) if ls tickets/inprogress/*.md >/dev/null 2>&1; then RUN_ID=$(python3 -c \"import json; print(json.load(open('.claude/current_run')).get('run_id') or '')\" 2>/dev/null || true); if [ -z \"$RUN_ID\" ]; then echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"sidecar-check: tickets/inprogress/ has an active ticket but .claude/current_run has no run_id. If you are hand-orchestrating implement-ticket.js, write the sidecar (writeSidecar shape: run_id/seq/phase/agent/execution_id/provider) before continuing, or tool_call_count/cost_proxy_score will read 0 for this phase.\"}}'; fi; fi ;; esac"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -93,6 +106,24 @@
           {
             "type": "command",
             "command": "FILE=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',d).get('file_path',''))\" 2>/dev/null || true); case \"$FILE\" in */src/*|*/tests/*) [ -f graphify-out/graph.json ] && graphify update . 2>/dev/null || true ;; esac"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 tools/agent-monitoring/retro_nudge_hook.py 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 tools/agent-monitoring/epic_staleness_check.py --hook 2>/dev/null || true"
           }
         ]
       }

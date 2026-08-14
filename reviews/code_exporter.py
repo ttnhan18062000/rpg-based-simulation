@@ -125,6 +125,8 @@ def main() -> None:
         workspace_root / "scripts",
         workspace_root / "tools",
         workspace_root / "data",
+        workspace_root / "content",
+        workspace_root / "config",
     ]
     test_dirs = [
         workspace_root / "tests",
@@ -133,18 +135,8 @@ def main() -> None:
         workspace_root / "frontend",
     ]
 
-    # Explicit extra infrastructure and workflow files for Loki, Prometheus, Grafana, and agent workflows
+    # Explicit extra infrastructure files for Loki, Prometheus, Grafana (agent workflows live in agent_dirs/agent_extra_files below)
     extra_infra_files = [
-        workspace_root / ".claude/workflows/compact-simulation-result.js",
-        workspace_root / ".claude/workflows/create-tickets.js",
-        workspace_root / ".claude/workflows/generate-simulation-setup.js",
-        workspace_root / ".claude/workflows/implement-epic.js",
-        workspace_root / ".claude/workflows/implement-ticket.js",
-        workspace_root / ".claude/workflows/investigate-simulation-result.js",
-        workspace_root / ".claude/workflows/prepare-simulation-execution.js",
-        workspace_root / ".claude/workflows/propose-simulation-enhancements.js",
-        workspace_root / ".claude/workflows/register-simulation-result.js",
-        workspace_root / ".claude/workflows/update-knowledge-store.js",
         workspace_root / "docker-compose.yml",
         workspace_root / "prometheus.yml",
         workspace_root / "promtail-config.yml",
@@ -159,10 +151,21 @@ def main() -> None:
         workspace_root / "docs",
     ]
 
+    # Agent-orchestration system: subagent definitions, skills, hooks/permissions, workflow scripts
+    agent_dirs = [
+        workspace_root / ".claude" / "agents",
+        workspace_root / ".claude" / "skills",
+    ]
+    agent_extra_files = sorted((workspace_root / ".claude" / "workflows").glob("*.js")) + [
+        workspace_root / ".claude" / "settings.json",
+        workspace_root / ".claude" / "settings.local.json",
+    ]
+
     src_output = reviews_dir / "src_export.py"
     test_output = reviews_dir / "test_export.py"
     frontend_output = reviews_dir / "frontend_export.txt"
     docs_output = reviews_dir / "docs_export.txt"
+    agent_output = reviews_dir / "agent_export.txt"
     tickets_todos_dir = workspace_root / "tickets" / "todos"
 
     print("Starting full project export...")
@@ -170,16 +173,17 @@ def main() -> None:
     print(f"Output Directory: {reviews_dir}")
 
     # 0. Export epic ticket folders — one output file per subfolder in tickets/todos/
-    if tickets_todos_dir.exists():
-        for epic_dir in sorted(tickets_todos_dir.iterdir()):
-            if epic_dir.is_dir():
-                epic_output = reviews_dir / f"tickets_{epic_dir.name}.txt"
-                export_directories(
-                    workspace_root,
-                    [epic_dir],
-                    epic_output,
-                    {".md"},
-                )
+    # Temporarily disabled — re-enable when per-ticket/epic export is needed again.
+    # if tickets_todos_dir.exists():
+    #     for epic_dir in sorted(tickets_todos_dir.iterdir()):
+    #         if epic_dir.is_dir():
+    #             epic_output = reviews_dir / f"tickets_{epic_dir.name}.txt"
+    #             export_directories(
+    #                 workspace_root,
+    #                 [epic_dir],
+    #                 epic_output,
+    #                 {".md"},
+    #             )
 
     # 1. Export Backend Sources + Dynamic/Static Content Catalog & Configurations + Infrastructure Context
     export_directories(
@@ -198,6 +202,9 @@ def main() -> None:
 
     # 4. Export Docs (all markdown + YAML — excludes archive/ via should_include)
     export_directories(workspace_root, docs_dirs, docs_output, {".md", ".yaml", ".yml"})
+
+    # 5. Export Agent-Orchestration System (subagents, skills, hooks/permissions, workflow scripts)
+    export_directories(workspace_root, agent_dirs, agent_output, {".md"}, extra_files=agent_extra_files)
 
     print("Project export completed successfully!")
 

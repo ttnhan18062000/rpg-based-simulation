@@ -2,11 +2,12 @@ from dataclasses import dataclass, field
 from typing import Mapping, Any, Dict, Optional, Tuple
 from collections.abc import Mapping as MappingType
 
-from src.core.state import EntityState
-from src.core.updates import EntityUpdate, NavigationUpdate, InventoryUpdate, BiologicalUpdate
+from src.core.state import EntityState, ItemStack
+from src.core.updates import EntityUpdate, NavigationUpdate, InventoryUpdate, BiologicalUpdate, ResourceTransferIntent
 from src.world.providers.requirements import Requirement, RequirementEvaluator
 from src.engine.domain.action_router import ActionRouter
 from src.core.registries import RecipeRegistry, ItemRegistry, ResourceRegistry
+from src.town.shop import ShopService
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,7 +62,13 @@ class ActionIntentAdapter:
             reqs.append(Requirement(kind="has_gold", quantity=gold_cost))
             reqs.append(Requirement(kind="inventory_space", quantity=1))
         elif intent.kind == "REQUEST_CRAFT":
+            # ObjectiveIntentResolver never populates payload["recipe_id"] — the
+            # recipe id instead travels as the opportunity id string in target_id
+            # (objective.target, per AdventureDecisionService's opportunity-id
+            # fallback), e.g. "opp_craft_<recipe_id>" (services.py:62).
             recipe_id = intent.payload.get("recipe_id")
+            if not recipe_id and isinstance(intent.target_id, str) and intent.target_id.startswith("opp_craft_"):
+                recipe_id = intent.target_id.removeprefix("opp_craft_")
             if recipe_id and RecipeRegistry.contains(recipe_id):
                 recipe = RecipeRegistry.get(recipe_id)
                 reqs.append(Requirement(kind="recipe_known", subject=recipe_id))
@@ -134,11 +141,119 @@ class ActionIntentAdapter:
                 execution_result="SUCCESS"
             )
             cls._traces.append(trace)
-            gold_deduct = intent.payload.get("cost_gold", 0)
+
+            if "query_kind" not in intent.payload:
+                # Adventure/AGENCY-domain-originated intent (ObjectiveIntentResolver) — behavior
+                # must stay byte-identical to pre-fix code. Do not read "cost_paid" here.
+                gold_deduct = intent.payload.get("cost_gold", 0)
+                return {entity.id: EntityUpdate(
+                    entity_id=entity.id,
+                    inventory=InventoryUpdate(gold_delta=-gold_deduct),
+                )}
+
+            # Information-domain-originated (InformationIntentResolver) — close the loop.
+            # Reuse the EXISTING canonical assimilation path (InformationResponseNormalizer +
+            # InformationAssimilationService), the same two calls Branch A makes at phase.py:56-69,
+            # instead of hand-rolling a second KnowledgeFact-merge implementation. Branch A's service
+            # enforces capacity bounds (max_facts=10, max_unknowns=5, oldest-eviction) on this exact
+            # durable field (EntityState.self_model.knowledge); a hand-rolled merge here would silently
+            # skip those invariants and create two code paths reaching the same state through different,
+            # divergent mechanisms — architecture-review finding, fixed here.
+            gold_deduct = intent.payload.get("cost_paid", 0)  # dead-key fix: resolver.py writes "cost_paid"
+
+            from src.domains.information.schema import InformationQuery
+            from src.domains.information.normalizer import InformationResponseNormalizer
+            from src.domains.information.assimilation import InformationAssimilationService
+            from dataclasses import replace as dataclass_replace
+
+            subject = intent.payload.get("subject", "")
+            query = InformationQuery(subject=subject, kind=intent.payload.get("query_kind", ""))
+            normalized = InformationResponseNormalizer.normalize(
+                query=query,
+                source_id=intent.target_id if intent.target_id is not None else "",
+                raw_response={
+                    "answer_kind": "KNOWN_FACT",
+                    "certainty": intent.payload.get("expected_certainty", 0.5),
+                    "details": {},
+                },
+                cost_paid=gold_deduct,
+                current_tick=current_tick,
+            )
+            assim = InformationAssimilationService.assimilate(entity, normalized, current_tick)
+            new_bundle = dataclass_replace(entity.self_model, knowledge=assim.knowledge_update)
+
             return {entity.id: EntityUpdate(
                 entity_id=entity.id,
-                inventory=InventoryUpdate(gold_delta=-gold_deduct)
+                inventory=InventoryUpdate(gold_delta=-gold_deduct),
+                self_model_bundle_set=new_bundle,
+                strategic=assim.strategic_update,
             )}
+
+        elif intent.kind == "REQUEST_CRAFT":
+            # Durable-state commitment is deferred to the pre-existing, already
+            # parity-verified ResourceTransactionResolver "CRAFTING" branch
+            # (src/core/conservation.py:133) via the same ResourceTransferIntent
+            # shape src/engine/blacksmith.py:205-218 already builds — do not call
+            # CraftingSystem.craft() directly, it bypasses that authoritative path
+            # and would not surface an item_crafted event.
+            recipe = RecipeRegistry.get(recipe_id)
+            materials = [ItemStack(mat, count) for mat, count in recipe.requires_items.items()]
+            trace = IntentTrace(
+                intent_kind=intent.kind,
+                actor_id=intent.actor_id,
+                why_selected=intent.reason or "request craft",
+                opportunity_source_id=intent.source_opportunity_id,
+                requirements_checked=tuple(reqs),
+                execution_result="SUCCESS"
+            )
+            cls._traces.append(trace)
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                resource_transfers=[ResourceTransferIntent(
+                    source_id=recipe_id,
+                    source_kind="CRAFTING",
+                    items_add=[ItemStack(recipe.output_item_id, 1)],
+                    items_remove=materials,
+                    gold_delta=-recipe.gold_cost,
+                    gold_cost=recipe.gold_cost,
+                    transfer_kind="CRAFT",
+                )],
+            )}
+
+        elif intent.kind == "BUY_ITEM":
+            # Same rationale as REQUEST_CRAFT: delegate to the existing, reusable
+            # ShopService.buy_item (src/town/shop.py), which already builds the
+            # authoritative ResourceTransferIntent(source_kind="SHOP_BUY") the
+            # ResourceTransactionResolver "SHOP_BUY" branch expects.
+            item_id = intent.payload.get("item_id")
+            if not item_id and isinstance(intent.target_id, str) and intent.target_id.startswith("opp_buy_"):
+                item_id = intent.target_id.removeprefix("opp_buy_")
+            quantity = intent.payload.get("quantity", 1)
+
+            result = ShopService.buy_item(entity, item_id, quantity, context) if (item_id and context is not None) else None
+            if result is None:
+                trace = IntentTrace(
+                    intent_kind=intent.kind,
+                    actor_id=intent.actor_id,
+                    why_selected=intent.reason or "strategic choice",
+                    opportunity_source_id=intent.source_opportunity_id,
+                    requirements_checked=tuple(reqs),
+                    execution_result="FAILED_REQUIREMENTS: shop_unavailable"
+                )
+                cls._traces.append(trace)
+                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+
+            trace = IntentTrace(
+                intent_kind=intent.kind,
+                actor_id=intent.actor_id,
+                why_selected=intent.reason or "buy item",
+                opportunity_source_id=intent.source_opportunity_id,
+                requirements_checked=tuple(reqs),
+                execution_result="SUCCESS"
+            )
+            cls._traces.append(trace)
+            return {entity.id: result.entity_updates[entity.id]}
+
         else:
             router_payload["action"] = intent.kind
 

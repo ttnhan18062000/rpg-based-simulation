@@ -20,6 +20,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from src.core.enums import EntityRole
 from src.observability.config import ObservabilityConfig, ObservabilityMode
 from src.observability.cognition.decision_trace_writer import (
     DecisionTraceWriter,
@@ -219,34 +220,112 @@ def test_set_and_get_active_writer():
     """set_active_writer/get_active_writer round-trip."""
     with tempfile.TemporaryDirectory() as run_dir:
         writer = DecisionTraceWriter(run_dir=run_dir)
-        set_active_writer(writer)
-        assert get_active_writer() is writer
-        set_active_writer(None)
-        assert get_active_writer() is None
+        try:
+            set_active_writer(writer)
+            assert get_active_writer() is writer
+            set_active_writer(None)
+            assert get_active_writer() is None
+        finally:
+            writer.close()
 
 
 # ---------------------------------------------------------------------------
-# Adventure phase integration test
+# Async queue+worker lifecycle — TCK-20260702-OBSISO-TRACE-ASYNC
 # ---------------------------------------------------------------------------
 
-def test_adventure_decision_phase_wires_writer():
-    """AdventureDecisionPhase.apply() calls writer.write_trace for eligible heroes."""
-    from src.domains.adventure.phase import AdventureDecisionPhase
+def test_write_trace_performs_no_synchronous_file_io():
+    """write_trace() must not touch the filesystem — it only enqueues in-memory."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        try:
+            with patch("builtins.open") as mock_open, patch("os.makedirs") as mock_makedirs:
+                for tick in range(5):
+                    writer.write_trace(entity_id=1, tick=tick, scored_routes=[_make_route()])
+
+            mock_open.assert_not_called()
+            mock_makedirs.assert_not_called()
+
+            trace_path = os.path.join(run_dir, "decision_trace.jsonl")
+            assert not os.path.exists(trace_path), (
+                "decision_trace.jsonl must not exist before the drain worker has run"
+            )
+        finally:
+            writer.close()
+
+
+def test_get_latest_goal_scores_returns_immediately_before_flush():
+    """get_latest_goal_scores() reflects the in-memory cache with no close()/drain forced."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        try:
+            routes = [
+                _make_route(family=RouteFamily.GATHER_RESOURCE, score=0.9),
+                _make_route(family=RouteFamily.RECOVER, score=0.6),
+            ]
+            writer.write_trace(entity_id=9, tick=1, scored_routes=routes)
+
+            cached = writer.get_latest_goal_scores(9)
+            assert len(cached) == 2
+            assert cached[0]["rank"] == 1
+            assert cached[0]["goal_id"] == RouteFamily.GATHER_RESOURCE.value
+        finally:
+            writer.close()
+
+
+def test_worker_thread_does_not_survive_close():
+    """No 'observability-drain-worker' thread survives after close()."""
+    from tests.tools.memory_probe import count_drain_workers
+
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+    before = count_drain_workers()
+
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        writer.write_trace(entity_id=1, tick=1, scored_routes=[_make_route()])
+        writer.close()
+
+    after = count_drain_workers()
+    assert after <= before, (
+        f"DecisionTraceWriter.close() leaked a drain-worker thread: before={before}, after={after}"
+    )
+
+
+def test_close_is_idempotent():
+    """Calling close() twice must not raise or double-join."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        writer.write_trace(entity_id=1, tick=1, scored_routes=[_make_route()])
+        writer.close()
+        writer.close()  # must not raise
+
+
+# ---------------------------------------------------------------------------
+# Adventure scorer integration test
+# ---------------------------------------------------------------------------
+
+def test_adventure_goal_scorer_wires_writer():
+    """AdventureGoalScorer.score() calls writer.write_trace for eligible entities
+    (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE, plan.md Step 3 port; migrated from the
+    deleted AdventureDecisionPhase.apply()'s own equivalent coverage)."""
+    from src.ai.goals.adventure_scorer import AdventureGoalScorer
+    from src.core.builder import V2EntityBuilder
+    from src.core.state import AuthoritativeState
+    from src.domains.adventure.generator import AdventureRouteGenerator
     from src.domains.adventure.schema import RouteFamily
+    from src.domains.adventure.service import AdventureDecisionService
+    from src.world.providers.resources import ResourceOpportunityProvider
+    from src.world.providers.services import ServiceOpportunityProvider
 
     mock_writer = MagicMock()
 
-    # Build a minimal state with one hero that has active lifecycle
-    hero = MagicMock()
-    hero.combat.alive = True
-    hero.lifecycle.active = True
-    hero.strategic.current_project_id = None
-    hero.id = 42
-
-    state = MagicMock()
-    state.tick = 5
-    state.entities = {42: hero}
-    state.resource_nodes = {}
+    entity = V2EntityBuilder(42).kind("hero").location(0.0, 0.0).build()
+    state = AuthoritativeState(tick=5, seed=1, entities={42: entity}, town_center=(50.0, 50.0))
 
     # Patch AdventureRouteGenerator and AdventureDecisionService to return a scored result
     scored_route = _make_route(score=0.8)
@@ -260,10 +339,19 @@ def test_adventure_decision_phase_wires_writer():
     mock_result.proposed_objective = None
     mock_result.trace = {"scored_candidates": [scored_route]}
 
-    with patch("src.domains.adventure.phase.AdventureRouteGenerator.generate", return_value=[scored_route]), \
-         patch("src.domains.adventure.phase.AdventureDecisionService.decide", return_value=mock_result), \
-         patch("src.world.providers.resources.ResourceOpportunityProvider.get_opportunities", return_value=[]):
-        AdventureDecisionPhase.apply(state, trace_writer=mock_writer)
+    # AdventureRouteGenerator/AdventureDecisionService/opportunity providers are function-local
+    # imports inside AdventureGoalScorer.score() (Step 1's Anti-Drift Hazard -- the constants
+    # import stays lazy for a real circular-import reason), so there is no
+    # src.ai.goals.adventure_scorer-qualified module attribute to string-patch; patch the shared
+    # class objects at their own defining modules instead (same pattern
+    # test_adventure_route_materialization.py already uses via monkeypatch.setattr).
+    with patch("src.ai.goals.adventure_scorer._supports_adventure_routing", return_value=True), \
+         patch.object(AdventureRouteGenerator, "generate", return_value=[scored_route]), \
+         patch.object(AdventureDecisionService, "decide", return_value=mock_result), \
+         patch.object(ResourceOpportunityProvider, "get_opportunities", return_value=[]), \
+         patch.object(ServiceOpportunityProvider, "get_opportunities", return_value=[]), \
+         patch("src.ai.goals.adventure_scorer._get_active_writer", return_value=mock_writer):
+        AdventureGoalScorer().score(entity, state)
 
     mock_writer.write_trace.assert_called_once_with(42, 5, [scored_route])
 
@@ -435,23 +523,36 @@ def test_tick_index_load_from_disk():
 
 
 def test_tick_index_incremental_vs_rebuild():
-    """Incremental append_entry and full rebuild produce identical tick→offset mappings."""
+    """Incremental append_entry (via the drain worker) and full rebuild produce identical
+    tick→offset mappings.
+
+    The incremental snapshot must be captured after the worker's drain has run but BEFORE
+    close()'s own explicit rebuild() call — otherwise both snapshots are always taken
+    post-rebuild and the comparison silently stops proving anything about the worker's
+    incremental append_entry() path. Drive the drain manually rather than calling close()
+    for the first snapshot.
+    """
     ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
     with tempfile.TemporaryDirectory() as run_dir:
         writer = DecisionTraceWriter(run_dir=run_dir)
-        writer.write_trace(entity_id=1, tick=1, scored_routes=[_make_route()])
-        writer.write_trace(entity_id=2, tick=1, scored_routes=[_make_route()])
-        writer.write_trace(entity_id=3, tick=2, scored_routes=[_make_route()])
-        # Capture incremental index state before close()
-        incremental_index = dict(writer._index._index)
+        try:
+            writer.write_trace(entity_id=1, tick=1, scored_routes=[_make_route()])
+            writer.write_trace(entity_id=2, tick=1, scored_routes=[_make_route()])
+            writer.write_trace(entity_id=3, tick=2, scored_routes=[_make_route()])
 
-        # close() calls rebuild() — should produce same result
-        writer.close()
-        rebuilt_index = dict(writer._index._index)
+            writer._worker.stop()
+            for item in writer._queue.drain():
+                writer._write_entry_to_file(item)  # populates _index incrementally, no rebuild yet
+            incremental_index = dict(writer._index._index)
 
-        assert incremental_index == rebuilt_index, (
-            "Incremental index and full rebuild must agree on tick→offset mappings"
-        )
+            writer._index.rebuild()
+            rebuilt_index = dict(writer._index._index)
+
+            assert incremental_index == rebuilt_index, (
+                "Incremental index and full rebuild must agree on tick→offset mappings"
+            )
+        finally:
+            writer.close()
 
 
 # ---------------------------------------------------------------------------

@@ -57,25 +57,35 @@ def test_interruption_resistance_margin():
     assert up_c.current_project_id_set == "proj_C"
 
 def test_project_lock():
+    """Lock blocks a switch when the candidate doesn't clear the urgency floor (score=50.0 ->
+    candidate_pct=0.5, below the 0.8 floor), but the generalized STRAT-186 rule now bypasses
+    the lock for a candidate that clears both the floor and current's normalized effective
+    score (score=100.0 -> candidate_pct=1.0), regardless of kind -- an intentional loosening."""
     entity = create_mock_entity(resistance=0.1, current_proj_id="proj_A")
     # Locked until tick 200
     current = ProjectState(
-        id="proj_A", kind="harvesting", status=ProjectStatus.ACTIVE, 
+        id="proj_A", kind="harvesting", status=ProjectStatus.ACTIVE,
         score=10.0, lock_until_tick=200
     )
     entity.strategic.projects["proj_A"] = current
-    
-    # Very high utility candidate
-    candidate = ProjectState(
+
+    # Below the urgency floor (candidate_pct=0.5 < 0.8): lock still blocks.
+    low_urgency_candidate = ProjectState(
+        id="proj_B", kind="combat", status=ProjectStatus.ACTIVE, score=50.0
+    )
+    up = StrategicIntelligenceSystem.evaluate_project_switch(entity, low_urgency_candidate, current_tick=100)
+    assert up is None
+
+    # Clears both the floor and current's normalized effective score: generalized rule bypasses.
+    high_urgency_candidate = ProjectState(
         id="proj_B", kind="combat", status=ProjectStatus.ACTIVE, score=100.0
     )
-    
-    # At tick 100, lock is active
-    up = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate, current_tick=100)
-    assert up is None
-    
-    # At tick 201, lock is expired
-    up_expired = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate, current_tick=201)
+    up_bypass = StrategicIntelligenceSystem.evaluate_project_switch(entity, high_urgency_candidate, current_tick=100)
+    assert up_bypass is not None
+    assert up_bypass.current_project_id_set == "proj_B"
+
+    # At tick 201, lock is expired -- unlocked path, unaffected by this ticket.
+    up_expired = StrategicIntelligenceSystem.evaluate_project_switch(entity, high_urgency_candidate, current_tick=201)
     assert up_expired is not None
     assert up_expired.current_project_id_set == "proj_B"
 

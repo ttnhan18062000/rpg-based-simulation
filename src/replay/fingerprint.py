@@ -215,8 +215,18 @@ class StateFingerprinter:
             for kind, value in sorted(strategic.boredom.items())
         )
 
+        committed_intention_ident = "|".join(
+            f"{ci.intention_id}:"
+            f"{ci.goal_kind}:"
+            f"{ci.sequence_index}:"
+            f"{ci.status}:"
+            f"{ci.target_hint}"
+            for ci in sorted(strategic.committed_intentions, key=lambda c: c.sequence_index)
+        )
+
         return (
             f"projects=[{project_ident}];"
+            f"committed_intentions=[{committed_intention_ident}];"
             f"blockers=[{blocker_ident}];"
             f"leads=[{lead_ident}];"
             f"directives=[{directive_ident}];"

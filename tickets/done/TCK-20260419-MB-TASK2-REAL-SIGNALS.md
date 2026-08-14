@@ -15,7 +15,7 @@ tags: [mb, task2, real, signals]
 Replace weak signals with real bounded accounting
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

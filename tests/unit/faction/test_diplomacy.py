@@ -414,6 +414,29 @@ def test_war_to_neutral_exhaustion():
     assert any(u.diplomatic_relations_set.get("fa") == DS.NEUTRAL for u in updates if u.faction_id == "fb")
 
 
+def test_urban_political_seeded_tension_fires_tense_transition():
+    """bandit_company/town_council seeded at tension_level=0.5 (urban_political world content)
+    produce a NEUTRAL->TENSE transition via compute_transitions() (TCK-20260702-SIMQ-UPLIFT2-FACTION)."""
+    from src.core.state import FactionState
+    from src.domains.faction.diplomatic_state_machine import compute_transitions
+    from src.core.enums import DiplomaticState
+
+    factions = {
+        "bandit_company": FactionState(faction_id="bandit_company", tension_level=0.5),
+        "town_council": FactionState(faction_id="town_council", tension_level=0.5),
+    }
+    updates = compute_transitions(factions)
+
+    assert any(
+        u.faction_id == "bandit_company" and u.diplomatic_relations_set.get("town_council") == DiplomaticState.TENSE
+        for u in updates
+    )
+    assert any(
+        u.faction_id == "town_council" and u.diplomatic_relations_set.get("bandit_company") == DiplomaticState.TENSE
+        for u in updates
+    )
+
+
 def test_vassal_suppresses_transitions():
     """VASSAL state (like ALLIED) suppresses all threshold-driven transitions."""
     from src.domains.faction.diplomatic_state_machine import compute_transitions

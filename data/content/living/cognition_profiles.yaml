@@ -9,6 +9,7 @@
   tool_reasoning: "medium"
   social_reasoning: "medium"
   risk_modeling: "medium"
+  supports_adventure_routing: true
 
 # STATE: REDESIGNED-CORE
 - id: "instinctive_animal"
@@ -20,6 +21,7 @@
   tool_reasoning: "none"
   social_reasoning: "pack_basic"
   risk_modeling: "instinctive"
+  supports_adventure_routing: false
 
 # STATE: ADDITIONAL
 - id: "opportunistic_humanoid"
@@ -31,6 +33,7 @@
   tool_reasoning: "medium"
   social_reasoning: "medium"
   risk_modeling: "medium"
+  supports_adventure_routing: true
 
 # STATE: ADDITIONAL
 - id: "disciplined_guard"
@@ -42,6 +45,7 @@
   tool_reasoning: "medium"
   social_reasoning: "medium"
   risk_modeling: "medium_high"
+  supports_adventure_routing: true
 
 # STATE: ADDITIONAL
 - id: "trade_pragmatist"
@@ -53,6 +57,7 @@
   tool_reasoning: "medium"
   social_reasoning: "high"
   risk_modeling: "high"
+  supports_adventure_routing: true
 
 # STATE: ADDITIONAL
 - id: "arcane_scholar"
@@ -64,6 +69,7 @@
   tool_reasoning: "high"
   social_reasoning: "medium"
   risk_modeling: "medium"
+  supports_adventure_routing: true
 
 # STATE: ADDITIONAL
 - id: "undead_fixated"
@@ -75,3 +81,4 @@
   tool_reasoning: "low"
   social_reasoning: "low"
   risk_modeling: "low"
+  supports_adventure_routing: false

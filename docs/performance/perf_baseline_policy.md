@@ -27,9 +27,34 @@ Performance baselines are calibrated specifically for targeted hardware profiles
 - **`CLASS_B` (Standard Gaming Desktop)**: 4 Dedicated Cores, 8GB RAM. Target: 2,500 entities at < 40ms per tick.
 - **`CLASS_C` (Constrained Edge / CI Runner)**: 2 Cores, 2GB RAM. Target: 500 entities at < 30ms per tick.
 
+> **Known conflict, not resolved here**: `docs/engine/contracts/certification_contract.md` §3 defines
+> these classes by a binary AND-rule (`CLASS_B` = ≥4 logical cores **and** ≥8GB RAM) instead of this
+> table's core-count-only reading, so a 4-core/<8GB machine is `CLASS_B` by this table but `CLASS_C`
+> under the canonical certification contract. See `docs/performance/simq_isolation_overhead.md`'s
+> Hardware Class section for a worked example of the discrepancy. Flagged, not fixed, by
+> TCK-20260702-OBSISO-ISOLATION-PROOF — pre-existing and out of that ticket's scope.
+
+### 2.3 Named Benchmark Results
+- **SimQ mode isolation overhead** (`QUALITY_SCORING_DISABLED=1` vs. in-process vs. broker):
+  `docs/performance/simq_isolation_overhead.md`, produced by
+  `tests/perf/test_simq_isolation_overhead.py`.
+
 ---
 
 ## 3. CI Performance Regression Guards
+
+**Correction (2026-08-08, `TCK-20260808-SIMQ-CORPUS-PERF-BASELINE-INTEGRATION`):** direct grep for
+real usage of `src/perf/regression_gate.py`'s `PerfRegressionGate`/`PerfBaseline`/`PerfResult`
+classes found **zero real consumers** anywhere in `tests/`/`src/` — the only 2 hits are a skill-doc
+text-content check and a code comment, never an actual instantiation. The mechanism §3.1-3.3 below
+describes (p50/p95/p99 threshold percentages, `UnacceptableRegressionError`) does not match what
+`tests/perf/test_perf_regression_baseline.py` actually runs today: a simpler check comparing
+`avg_tick_compute_ms` against `max(5.0, baseline_avg * 1.25)`, reading the committed baseline JSON
+directly as a dict, never going through those dataclasses. This section is retained as-written
+(a larger correction is out of this ticket's own scope — see the ticket for what it did and didn't
+touch) but should not be trusted as an accurate description of the currently-live CI check; treat
+`tests/perf/test_perf_regression_baseline.py`'s own source as authoritative until a dedicated
+doc-accuracy ticket reconciles this section with reality.
 
 The automated Continuous Integration (CI) pipeline enforces strict regression checks via the `PerfRegressionGate` harness.
 
@@ -81,3 +106,30 @@ When simulation complexity increases (e.g., introducing a new subsystem or expan
    git add data/baselines/*.json
    git commit -m "CHORE: Re-calibrate performance baselines for Class B hardware targets"
    ```
+
+---
+
+## 5. SimQ Corpus World Baselines (`TCK-20260808-SIMQ-CORPUS-PERF-BASELINE-INTEGRATION`)
+
+Prior to 2026-08-08, all committed baselines (`tests/perf/baselines/*.json`) covered only
+synthetic scenarios (`combat_10`, `idle_100`, `mixed_200`, `movement_100`, `resource_100`,
+`strategic_100`, via `src/perf/scenarios.py`'s raw `State` builders) — none of the real, authored
+SimQ world corpus (`data/worlds/`) had ever been perf-measured.
+
+`tools/bench_corpus_world.py --world {name} [--commit]` benchmarks a real corpus world: reuses
+`tools/calibrate_simq.py::_load_world_state()` to build the same real, `WorldCompiler`-compiled
+`AuthoritativeState` SimQ calibration uses (no synthetic content, no separate authoring), then runs
+`BenchHarness(PERF_PROFILES["PERF_512MB_LOCAL"]).run_benchmark(...)` — a genuinely separate,
+dedicated benchmark execution (NOT a free byproduct of a calibration run — `BenchHarness` runs its
+own warmup+sample tick loop). Writes the same raw-dict JSON shape as the existing baselines
+(`avg_tick_compute_ms`, `tick_ms{}`, `mem_rss_mb{}`, `phase_breakdown{}`), so
+`tests/perf/test_perf_regression_baseline.py`'s own real, live comparison logic applies unchanged
+— committed baselines are added as new `(scenario_id, builder_fn, kwargs)` rows in that file's own
+`parametrize` list.
+
+**Coverage so far**: `simq_corpus_frontier_extended` (59 entities), `simq_corpus_frontier_marches`
+(62 entities), `simq_corpus_crowded_frontier` (38 entities) — the corpus's largest 3 worlds by
+entity count at the time this ticket ran. Extending coverage to the remaining corpus worlds, or to
+`TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION`'s own new large world once it exists, is a
+natural follow-up using the same `tools/bench_corpus_world.py --commit` command — not automated in
+this ticket.

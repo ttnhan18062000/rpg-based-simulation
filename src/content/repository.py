@@ -154,6 +154,10 @@ NON_CATALOG_FILES: frozenset = frozenset({
     "compatibility/migration_map.yaml",
     "packs/swamp_border_pack.yaml",
     "packs/frontier_extended_pack.yaml",
+    # Real gameplay-tuning data read directly by src/worldbuilding/compiler.py, not a
+    # CatalogRepository content family (no per-record schema needed for a small bias/threshold
+    # table). TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION / COMBAT-ACTIONSTYLE-WIRING.
+    "social/personality_bias.yaml",
 })
 
 

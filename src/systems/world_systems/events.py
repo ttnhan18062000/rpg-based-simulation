@@ -33,24 +33,51 @@ class EventInterpreter:
     """
 
     @staticmethod
+    def compute_danger_urgency(region: RegionState) -> Optional[float]:
+        """
+        LEG-RPG-116: pure hazard-threshold/urgency math, byte-identical to the original inline
+        computation this method replaces (events.py, historical lines 48-51). Extracted so
+        interpret_regional_danger()'s own concern generation and RegionStabilizationGoalScorer
+        (src/ai/goals/region_stabilization_scorer.py) share a single source of truth for the
+        threshold/formula -- see plan.md TCK-20260811-REGION-STABILIZATION-GOAL-SCORER, New
+        Finding #9, mirroring ContractService.get_project_mapping()'s own extraction precedent
+        from TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER.
+
+        Returns None if region.hazard_level <= 0.7 (no danger -- no concern, no candidate).
+        Returns urgency in [0.0, 1.0] otherwise: 0.0 at hazard_level=0.7, 1.0 at hazard_level>=1.0.
+        """
+        if region.hazard_level <= 0.7:
+            return None
+        return min(1.0, (region.hazard_level - 0.7) / 0.3)
+
+    @staticmethod
     def interpret_regional_danger(
         entity: EntityState,
         region: RegionState,
         current_tick: int
     ) -> Optional[StrategicUpdate]:
         """
-        LEG-RPG-116: Strategic pivot on regional danger.
+        LEG-RPG-116: Strategic pivot on regional danger -- concern generation only.
 
-        If hazard_level > 0.7, generates a STABILIZE concern and potentially
-        interrupts the current project if the entity's interruption resistance
-        is overcome by the danger urgency.
+        Project-pivot spawning is no longer performed here
+        (TCK-20260811-REGION-STABILIZATION-GOAL-SCORER): RegionStabilizationGoalScorer
+        (src/ai/goals/region_stabilization_scorer.py) now scores every entity's current region
+        each tick as a tier-5 GoalRegistry candidate (via the shared
+        EventInterpreter.compute_danger_urgency() helper), and the winning candidate is
+        materialized into a real ProjectState/ObjectiveState by
+        StrategicIntelligenceSystem.evaluate_strategic_intent()'s
+        `elif best_candidate.kind == GoalKind.REGION_STABILIZATION:` branch, through
+        evaluate_project_switch() -- not unconditionally. `entity` is retained as a parameter
+        (unused by this simplified body) to preserve this method's existing call signature for
+        its other 2 direct test call sites and for consistency with sibling
+        EventInterpreter methods (interpret_scar_detection, interpret_near_death,
+        interpret_directive_event all take `entity` as their first argument) -- see plan.md
+        Scope Guards.
         """
-        if region.hazard_level <= 0.7:
+        urgency = EventInterpreter.compute_danger_urgency(region)
+        if urgency is None:
             return None
 
-        urgency = min(1.0, (region.hazard_level - 0.7) / 0.3)  # 0.0 at 0.7, 1.0 at 1.0
-
-        # Generate concern
         concern = ConcernState(
             id=f"concern_danger_{region.id}",
             kind="danger",
@@ -59,47 +86,7 @@ class EventInterpreter:
             created_tick=current_tick
         )
 
-        # Check if we should pivot project
-        profile = entity.strategic.profile
-        should_pivot = urgency > profile.interruption_resistance
-
-        updates = StrategicUpdate(
-            concerns_add_or_update=[concern]
-        )
-
-        if should_pivot and entity.strategic.current_project_id:
-            # Create a stabilize project
-            stabilize_project = ProjectState(
-                id=f"project_stabilize_{region.id}",
-                kind="stabilize",
-                status=ProjectStatus.ACTIVE,
-                score=urgency * 100,
-                objectives=[
-                    ObjectiveState(
-                        id=f"obj_stabilize_{region.id}",
-                        kind="investigate",
-                        target=region.id,
-                        status=ObjectiveStatus.ACTIVE
-                    )
-                ],
-                active_objective_id=f"obj_stabilize_{region.id}",
-                created_tick=current_tick
-            )
-
-            # Suspend current project
-            current = entity.strategic.projects.get(entity.strategic.current_project_id)
-            suspended = []
-            if current and current.status == ProjectStatus.ACTIVE:
-                suspended.append(replace(current, status=ProjectStatus.SUSPENDED))
-
-            updates = replace(
-                updates,
-                projects_add_or_update=[stabilize_project] + suspended,
-                current_project_id_set=stabilize_project.id,
-                current_objective_id_set=stabilize_project.active_objective_id
-            )
-
-        return updates
+        return StrategicUpdate(concerns_add_or_update=[concern])
 
     @staticmethod
     def interpret_scar_detection(

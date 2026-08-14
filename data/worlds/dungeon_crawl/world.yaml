@@ -22,3 +22,6 @@ module_refs:
     parameters:
       danger_scale: 4
 generation_seed: 303
+faction_tension_overrides:
+  goblin_warband: 0.5
+  bandit_company: 0.5

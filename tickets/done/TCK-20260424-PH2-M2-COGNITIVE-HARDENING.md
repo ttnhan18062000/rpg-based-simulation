@@ -15,7 +15,7 @@ tags: [ph2, m2, cognitive, hardening]
 Phase 2 Milestone 2: Cognitive Hardening
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

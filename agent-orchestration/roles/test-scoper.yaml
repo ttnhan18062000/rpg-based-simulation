@@ -1,0 +1,5 @@
+role_version: 1
+role_id: test-scoper
+description: Maps changed files to relevant tests, builds and runs the scoped pytest command, and reports pass/fail counts and coverage gaps.
+phases: [Test]
+has_agent_file: true

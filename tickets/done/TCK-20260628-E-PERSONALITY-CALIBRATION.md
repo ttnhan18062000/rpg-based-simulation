@@ -15,7 +15,7 @@ tags: [epic, personality, ocean, calibration, long-run, p3, deferred, blocked]
 Epic: Personality → Long-Run Behavior Calibration at 1,000+ ticks
 
 ## Status
-DONE (E11B audit + E11C weight-tuning + E11D abandonment-rate all complete)
+DONE
 
 ## Tier
 epic
@@ -128,3 +128,4 @@ Once audit data is available, identify calibration gaps and scope child tickets.
 ## Files Changed
 
 ## Completion Summary
+All child tickets are complete: E11B (audit), E11C (weight-tuning), E11D (abandonment-rate).

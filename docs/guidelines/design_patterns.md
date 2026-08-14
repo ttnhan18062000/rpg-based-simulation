@@ -22,6 +22,7 @@ not the extension model for new code.
 | **2 — Decision/Mutation Separation** | Express all state changes as typed update records; never mutate `AuthoritativeState` directly | `src/core/updates.py`, `src/engine/apply.py` |
 | **3 — Presenter / Read-Model** | Shape all API responses through presenter classes; never expose raw domain objects | `src/api/presenters/`, `src/api/read_model_service.py` |
 | **4 — Feature Pack Registration** | Extend adventure route types and domain behaviors without touching engine internals | `src/domains/feature_packs/registry.py`, `src/domains/feature_packs/loader.py` |
+| **6 — Compile-Time Pillar Activation** | Diagnose and fix a SimQ pillar stuck at `C` because `WorldCompiler.compile()` never constructs a durable-state field | `src/worldbuilding/schema.py`, `src/worldbuilding/compiler.py`, `src/worldassembly/schema.py`, `src/worldassembly/resolver.py` |
 
 ---
 
@@ -45,32 +46,37 @@ Rules:
   - Gate execution via should_run() cadence check (docs/engine/governance_logic.md)
 ```
 
-**Representative implementation — `AdventureDecisionPhase`** (`src/domains/adventure/phase.py`):
+**Representative implementation — `CombatEngagementPhase`** (`src/domains/combat_engagement/phase.py`):
 
 ```python
-class AdventureDecisionPhase:
-    """Simulates subjective routing decisions for heroes."""
+class CombatEngagementPhase:
+    """Resolves pre-combat engagement decisions for entities."""
 
     @staticmethod
     def apply(
         state: AuthoritativeState,
         context: Optional[dict] = None,
-        trace_writer: Optional[Any] = None,
-        faction_directives: Optional[list] = None,
-        factions: Optional[Any] = None,
-    ) -> StateUpdate:
-        update = StateUpdate()
+    ) -> CombatEngagementDecisionResult:
         # ... read state, compute decisions ...
-        return StateUpdate(entity_updates=entity_updates)
+        return CombatEngagementDecisionResult(entity_updates=entity_updates)
 ```
+
+**Formerly also `AdventureDecisionPhase`** (`src/domains/adventure/phase.py`) — deleted by
+TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE. Adventure routing now follows a *different* pattern:
+it is a tier-5 `GoalScorer` (`AdventureGoalScorer.score(entity, state) -> GoalScore`, registered in
+`GoalRegistry`, `src/ai/goals/adventure_scorer.py`), not a dedicated pipeline-phase class — see
+`docs/mechanics/04_strategic_cognition.md` §2 for that pattern instead. Do not use the deleted
+class as a template for new domain logic; use one of the 7 reference implementations below, or the
+`GoalScorer` protocol (`src/ai/goals/base.py`) if the new logic is itself a competing strategic
+goal candidate rather than an unconditional per-tick phase.
 
 ### Reference implementations
 
-All 8 domain phases use this pattern (D12 audit — all confirmed):
+All 7 remaining domain phases use this pattern (D12 audit found 8; `AdventureDecisionPhase` was
+deleted by TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE and is no longer one of them):
 
 | Phase Class | File | Typed Return |
 |---|---|---|
-| `AdventureDecisionPhase` | `src/domains/adventure/phase.py` | `-> StateUpdate` |
 | `ProgressionPhase` | `src/domains/progression/phase.py` | `-> Optional[ProgressionConversionResult]` |
 | `CooperationPhase` | `src/domains/cooperation/phase.py` | `-> Optional[CooperationResult]` |
 | `CombatEngagementPhase` | `src/domains/combat_engagement/phase.py` | `-> CombatEngagementDecisionResult` |
@@ -270,6 +276,160 @@ logic (use Domain Phase for that), but it is documented here to avoid confusion.
 When to use `DamageCalculator` vs. Domain Phase: use `DamageCalculator` only for extending
 combat damage resolution math (new damage types). Use Domain Phase for any new domain-level
 decision logic that reads state and produces strategic updates.
+
+---
+
+## Pattern 6 — Compile-Time Pillar Activation Pattern
+
+### When to use
+
+When a SimQ pillar is stuck at grade `C` (or lower) with `calibration_hits == 0` on every event
+type it scores, and investigation traces the root cause to a durable-state field on
+`AuthoritativeState` that is **permanently empty/default for every compiled world** — not a
+scoring bug, not a threshold bug, but a bootstrap gap: nothing in `WorldCompiler.compile()` ever
+constructs the field at all, so the scoring condition can never be satisfied regardless of what
+world content is authored. This pattern was independently discovered and applied twice —
+`TCK-20260702-SIMQ-UPLIFT2-FACTION` (for `AuthoritativeState.factions`) and
+`TCK-20260702-SIMQ-UPLIFT2-INFORMATION` + `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER` (for
+`AuthoritativeState.information_source_profiles` / `pending_information_responses`) — with the
+exact same shape both times. Reach for this pattern before re-deriving it from scratch.
+
+### The failure signature
+
+Confirm the diagnosis with one grep before doing anything else: find the single
+`AuthoritativeState(...)` constructor call inside `WorldCompiler.compile()`
+(`src/worldbuilding/compiler.py`) — there is exactly one authoritative init point for a fresh
+`AuthoritativeState` — and check whether the suspect field's keyword argument is passed at all.
+If it is simply absent from that call, the field falls back to its dataclass default
+(`field(default_factory=list, ...)` / `field(default_factory=dict, ...)`) on every compiled world,
+with no way for any `world.yaml` content to ever populate it. This is the bug class, not a
+one-world content gap.
+
+### The fix shape
+
+```
+WorldSpec (src/worldbuilding/schema.py)
+  new typed spec field, e.g. FooSpec / List[FooSpec]
+    │
+    ▼ mirrored onto (both, or normalize() raises ValidationError on every world — see trap below)
+WorldCompositionSpec + NormalizedWorldComposition (src/worldassembly/schema.py)
+    │
+    ▼ resolver passthrough (no catalog) or override-merge (catalog exists)
+WorldAssemblyResolver.assemble() (src/worldassembly/resolver.py)
+    │
+    ▼ constructs domain object(s) from the resolved spec field
+WorldCompiler.compile() (src/worldbuilding/compiler.py)
+    │
+    ▼ passed into the single AuthoritativeState(...) constructor call
+AuthoritativeState.<field> is no longer permanently empty
+```
+
+**Step 1 — schema field, composition-level not module-level.** Add the typed field to `WorldSpec`
+directly, then mirror it onto `WorldCompositionSpec`. Author the actual content at the
+**composition level** (`data/worlds/<world>/world.yaml`), not on a shared `world_modules/*.yaml`
+file — a module can be referenced by several worlds (FACTION's investigation found
+`frontier_village_core`/`bandit_road_trade_pressure` alone are shared by 7 worlds), so any field
+declared on a module leaks into every world that references it. Composition-level scoping is the
+only mechanism that activates exactly one target world.
+
+**The `extra="forbid"` mirroring trap.** `WorldCompositionNormalizer.normalize()` does
+`composition.model_dump()` then `NormalizedWorldComposition(**data)`. Since `model_dump()` always
+serializes every field on `WorldCompositionSpec` (including the new one, defaulting to
+`{}`/`[]` when unset), and `NormalizedWorldComposition` has
+`model_config = ConfigDict(frozen=True, extra="forbid")`, **forgetting to mirror the new field
+onto `NormalizedWorldComposition` raises `pydantic.ValidationError` on every call to
+`normalize()`, for every world composition, not just the target one.** This is the exact omission
+the FACTION ticket's architecture review caught before it shipped (see
+`stored_artifacts/TCK-20260702-SIMQ-UPLIFT2-FACTION/plan.md`, "Review Fix Log"). Treat the
+`WorldCompositionSpec` field and its `NormalizedWorldComposition` mirror as one atomic change —
+never land one without the other.
+
+**If a global catalog exists for the content (e.g. the faction catalog,
+`data/content/social/factions.yaml`), a plain per-world field is not enough.**
+`WorldAssemblyResolver.assemble()` may pre-seed the composed dict from the *entire* catalog before
+any module merge — check for this before assuming an override will apply cleanly. FACTION's
+`faction_tension_overrides` had to be applied as an explicit override-merge *after* the
+catalog+module merge completes, validated against the already-merged keys (fail fast with
+`ValueError` on an unknown ID — don't silently no-op a typo). If no catalog exists for the content
+(both INFORMATION cases), the resolver step is a direct passthrough with no merge and no
+membership validation needed.
+
+**Compiler construction is additive, not conditional.** Build the domain object(s) for every spec
+entry (including ones at their default value) and pass the result into the single
+`AuthoritativeState(...)` call. Do not add a second construction path anywhere else — that call is
+the one seeding point.
+
+### The verification shape
+
+Verify at every layer, not just the end state:
+1. **Schema round-trip tests** — the new field defaults correctly when absent, round-trips when
+   present, and rejects out-of-bound values; the `NormalizedWorldComposition` mirror round-trips
+   unchanged for both the empty and populated case (this is the direct regression guard for the
+   `extra="forbid"` trap above).
+2. **Compiler seeding tests** — a hand-built `WorldSpec` fixture (no resolver needed) proves
+   `AuthoritativeState.<field>` is populated correctly, including the "no entries declared → empty
+   result" regression guard.
+3. **Resolver passthrough/override tests** — a composition declaring the field is passed straight
+   through (or merged/overridden) correctly, and a composition that does **not** declare it is
+   provably byte-identical to prior behavior (every other world must be unaffected).
+4. **A direct-pipeline integration test** that loads the real resolved YAML for the target world,
+   compiles it, and asserts the seeded value reaches `AuthoritativeState` and produces the correct
+   effect one layer up (e.g. `compute_transitions()` firing a transition, or
+   `InformationBeliefPhase.apply()` assimilating a fact) — proves the full compile path, not just
+   isolated unit fixtures.
+5. **Real recalibration through the live loop** — run `tools/calibrate_simq.py` against the target
+   world/scenario set and confirm `calibration_hits > 0` in the actual `quality_report.json`, not
+   just a compile-time assertion. A unit test proving the domain object is constructed correctly is
+   not sufficient proof that the pillar activated — `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER`
+   found a *second*, unrelated bug (a kernel tick-alignment mismatch,
+   `Kernel._phase_advancement()` comparing a post-advance `tick` against a pre-advance-stamped
+   property) that kept `calibration_hits` at `0` through the real live loop even after the
+   compile-time plumbing was fully correct and unit-tested. Only the live recalibration run catches
+   this class of gap. Spot-check at least one untouched sibling world in the same recalibration
+   pass to confirm zero leakage.
+
+### The known pitfall: compile-time seeding is not automatically persistent across ticks
+
+`WorldCompiler.compile()` only runs once, at world-load time. From tick 1 onward,
+`ApplyPath.apply_generation()` (`src/engine/apply.py`, called every tick from
+`Kernel._phase_advancement()`) rebuilds `AuthoritativeState` from `prior_state` via its own
+`AuthoritativeState(...)` constructor call — a **second**, separate construction site from the
+compiler's. **Whether a compile-time-seeded field survives into that rebuild is a per-field,
+explicit choice in `apply_generation()`'s merge logic — it is not automatic just because the field
+exists on `AuthoritativeState`.**
+
+- `factions` was explicitly added to `apply_generation()`'s carry-forward logic — `FactionState`
+  persists and accumulates (`tension_level` deltas, etc.) across the whole run.
+- `information_source_profiles` and `pending_information_responses` were **not** added to
+  `apply_generation()`'s carry-forward logic. `pending_information_responses` in particular is
+  visible to `InformationBeliefPhase.apply()` for exactly one `refine()` call — the initial
+  compiled state at tick 0 — and is silently reset to `[]` (its dataclass default) on every
+  subsequent tick advancement. The seed fires **once, then stops**; it does not re-fire and it is
+  not an inbox that accumulates. This is not a bug: a bounded, single-fire assimilation is a
+  correct and fully-verified outcome for `pending_information_responses` (documented as rationale
+  class **Bounded** in `docs/guidelines/intentional_divergences.md`), and it is a deliberate
+  difference from `factions`' persistent-across-ticks behavior, not an oversight in either
+  direction.
+
+Whenever you add a new compile-time-seeded field, **decide explicitly** whether it must persist
+across ticks (add it to `apply_generation()`'s merge/reconstruction logic and test that it survives
+tick 2, tick N) or is intentionally single-fire/one-shot (leave `apply_generation()` untouched, but
+say so explicitly in the parity ledger entry and, if the single-fire behavior is a deliberate
+divergence worth flagging, in `docs/guidelines/intentional_divergences.md`). Do not leave this
+question implicit — grep `src/engine/apply.py`'s final `AuthoritativeState(...)` call for the new
+field's keyword to confirm which behavior actually ships, rather than assuming either one.
+
+### Reference implementations
+
+| Ticket | Field(s) activated | Catalog? | Persistence | Parity ledger |
+|---|---|---|---|---|
+| `TCK-20260702-SIMQ-UPLIFT2-FACTION` | `AuthoritativeState.factions` (`FactionState.tension_level`) | Yes — global faction catalog forced a composition-level override-merge (`faction_tension_overrides`), not a plain passthrough | Persistent — carried forward every tick by `apply_generation()` | `docs/parity_ledger/faction.yaml::FAC-012` |
+| `TCK-20260702-SIMQ-UPLIFT2-INFORMATION` | `AuthoritativeState.information_source_profiles` | No catalog — direct passthrough | N/A (static source-profile data, not a per-tick mutable record) | `docs/parity_ledger/infrastructure.yaml::INFRA-256` |
+| `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER` | `AuthoritativeState.pending_information_responses` | No catalog — direct passthrough | Single-fire only — not carried forward by `apply_generation()`; fires once at tick 0 (documented, correct, not a bug) | `docs/parity_ledger/infrastructure.yaml::INFRA-257` |
+
+Read `FAC-012` and `INFRA-256`/`INFRA-257` for the exact `v2_evidence` file:line references and
+measured `calibration_hits` outcomes before starting a new application of this pattern — they are
+the canonical worked examples this section summarizes.
 
 ---
 

@@ -1,0 +1,5 @@
+role_version: 1
+role_id: architecture-reviewer
+description: Validates the plan against durable-state, API-boundary, registry, and Mechanics Bible rules before implementation, then re-validates the actual diff after implementation.
+phases: [Review, Architecture-Verify]
+has_agent_file: true

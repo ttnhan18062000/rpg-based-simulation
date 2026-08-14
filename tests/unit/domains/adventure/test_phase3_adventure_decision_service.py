@@ -61,8 +61,51 @@ def test_rejects_blocked_routes():
 def test_defers_when_no_candidates():
     entity = _entity()
     result = AdventureDecisionService.decide(entity, [], tick=1)
-    
+
     assert result.selected is not None
     assert result.selected.family == RouteFamily.DEFER_WITH_REASON
     assert result.proposed_project is None
     assert result.proposed_objective is None
+
+
+def test_resolved_target_node_id_preferred_over_opportunity_id():
+    """
+    TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP Step 3: when the selected
+    route's target_node_id was resolved (Step 2), ObjectiveState.target must be
+    the stringified ref id, not the raw opportunity id — so tactical.py's
+    existing int-cast + resource_nodes/buildings lookup can resolve a real
+    position for it, the same way REACH_LOCATION already does.
+    """
+    entity = _entity()
+    route = AdventureRouteOption(
+        family=RouteFamily.GATHER_RESOURCE,
+        score=0.9,
+        confidence=1.0,
+        expected_benefit=0.8,
+        expected_risk=0.1,
+        source_opportunity_ids=("opp_resource_42",),
+        target_node_id=42,
+    )
+
+    result = AdventureDecisionService.decide(entity, [route], tick=7)
+
+    assert result.proposed_objective is not None
+    assert result.proposed_objective.target == "42"
+
+
+def test_opportunity_id_used_when_target_node_id_unresolved():
+    entity = _entity()
+    route = AdventureRouteOption(
+        family=RouteFamily.CRAFT_UPGRADE,
+        score=0.9,
+        confidence=1.0,
+        expected_benefit=0.8,
+        expected_risk=0.1,
+        source_opportunity_ids=("opp_craft_iron_sword",),
+        target_node_id=None,
+    )
+
+    result = AdventureDecisionService.decide(entity, [route], tick=7)
+
+    assert result.proposed_objective is not None
+    assert result.proposed_objective.target == "opp_craft_iron_sword"

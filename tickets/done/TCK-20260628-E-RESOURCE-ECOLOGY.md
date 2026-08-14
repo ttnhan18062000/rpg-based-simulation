@@ -4,7 +4,7 @@ layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20260628-E-RESOURCE-ECOLOGY
-phase: scoped
+phase: done
 date: 2026-06-28
 tags: [epic, resource-ecology, regeneration, economy, p3, deferred, blocked]
 ---
@@ -15,7 +15,7 @@ tags: [epic, resource-ecology, regeneration, economy, p3, deferred, blocked]
 Epic: Resource Ecology Regeneration — complete complex regeneration cycles
 
 ## Status
-SCOPED (epic — awaiting child tickets)
+DONE
 
 ## Tier
 epic

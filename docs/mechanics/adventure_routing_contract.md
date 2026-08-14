@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-08-11
 tags: [adventure-routing, strategic-cognition, scoring, route-family, opportunity]
 related_chapter: 04_strategic_cognition.md
 ---
@@ -113,7 +113,7 @@ final_score = round(max(0.0, score), 4)
 | `urgency` | max urgency value of active needs matching the route's family (via `family_needs` lookup table) |
 | `benefit` | `route.expected_benefit` directly |
 | `personality_bias` | see personality bias table below (max +0.25) |
-| `confidence_bonus` | `route.confidence * 0.15` |
+| `confidence_bonus` | `route.confidence * 0.15` (flat); for `GATHER_RESOURCE`/`CRAFT_UPGRADE` routes with a resolvable capability key, an ad-hoc `CapabilityEstimateService.estimate()` call replaces the source instead — see `docs/mechanics/04_strategic_cognition.md` §6.12 (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING) |
 | `risk_penalty` | `route.expected_risk * risk_multiplier * 0.5` |
 | `blocker_penalty` | `2.0` if any blocker present, else `0.0` |
 
@@ -147,7 +147,24 @@ Computed in an if/elif chain — only the first matching branch applies per rout
 
 ## Lifecycle
 
-Adventure routing runs in the kernel's **Scheduling** stage. Specifically: `StrategicWorldIntegrationSystem` emits opportunities → `AdventureRouteGenerator.generate()` builds candidates → `AdventureRouteScorer.score()` scores each → service layer selects top candidate → `ObjectiveIntentResolver.resolve()` maps to `ActionIntent`.
+Adventure routing runs inside the kernel's **Scheduling** stage, as one tier-5 goal candidate
+among others. Specifically: `StrategicWorldIntegrationSystem` emits opportunities →
+`AdventureRouteGenerator.generate()` builds candidates → `AdventureRouteScorer.score()` scores
+each → service layer selects top candidate → `ObjectiveIntentResolver.resolve()` maps to
+`ActionIntent`.
+
+**Sole live entry point (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE):** `AdventureGoalScorer.score(entity, state)`
+(`src/ai/goals/adventure_scorer.py`), registered unconditionally under `GoalKind.ADVENTURE_ROUTE`
+in `GoalRegistry`, invoked via `GoalRegistry.get_all_scores()` inside
+`StrategicIntelligenceSystem.evaluate_strategic_intent()` — which itself runs every tick through
+the always-on `strategic_intelligence` pipeline phase (`src/engine/pipeline.py`), subject only to
+per-entity `SystemCadence` throttling (see `04_strategic_cognition.md` §2). The formerly-separate
+`AdventureDecisionPhase` pipeline stage (`src/domains/adventure/phase.py`), which used to run its
+own duplicate route-generation/scoring pass every tick ahead of the tier-5 competition, has been
+deleted — `AdventureGoalScorer` was already winning tier-5 arbitration for every non-cadence-skipped
+entity before the deletion (later-merged, last-writer-wins semantics), so this cutover removed
+now-wasted duplicate compute rather than switching on a new live path for the first time. Do not
+read this contract as describing two active routing paths — only one exists today.
 
 ---
 
@@ -210,7 +227,9 @@ Scoring:
   urgency = 0.3 (harvest_need active)
   benefit = 2.0
   personality_bias = greed * 0.25 = 0.7 * 0.25 = 0.175  (greed branch fires, industry skipped)
-  confidence_bonus = 0.85 * 0.15 = 0.1275
+  confidence_bonus = 0.85 * 0.15 = 0.1275  (flat term: no tool requirement on this route, so the
+    TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING capability-estimate source, §6.12, does
+    not apply here -- see the confidence_bonus row above for when it does)
   risk_penalty = 0.1 * risk_multiplier * 0.5 = 0.1 * 0.82 * 0.5 = 0.041
   blocker_penalty = 0.0
   score = 0.3 + 2.0 + 0.175 + 0.1275 - 0.041 - 0.0 = 2.5615

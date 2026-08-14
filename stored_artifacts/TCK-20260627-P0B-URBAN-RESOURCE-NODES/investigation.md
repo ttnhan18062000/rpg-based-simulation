@@ -5,7 +5,7 @@ authority: P0
 audience: agent
 ticket_id: TCK-20260627-P0B-URBAN-RESOURCE-NODES
 artifact_type: investigation
-tags: [p0, resource-nodes, urban-political, world-content, hotfix]
+tags: [resource-nodes, urban-political, world-content, hotfix]
 ---
 
 # Investigation — TCK-20260627-P0B-URBAN-RESOURCE-NODES

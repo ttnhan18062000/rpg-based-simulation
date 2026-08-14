@@ -6,6 +6,7 @@ from typing import Optional
 
 from src.simulation_quality.score_record import ScoreRecord
 from src.simulation_quality.quality_report import QualityReport
+from src.simulation_quality.run_health import RunHealthRecord
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,25 @@ class QualityPersistence:
             os.rename(tmp_path, final_path)
         except Exception as exc:
             logger.warning("QualityPersistence.write_report: failed to write report: %s", exc)
+
+    @staticmethod
+    def write_run_health(run_dir: str, record: RunHealthRecord) -> None:
+        """Write a RunHealthRecord sidecar next to quality_report.json in run_dir.
+
+        Static (not an instance method touching self._file_handle) because callers
+        such as calibrate_simq.py's _run_engine() need to persist this record before
+        a full QualityPersistence instance for run_dir exists — instantiating one
+        just for this write would open a second, never-closed quality_scores.jsonl
+        handle in the same directory.
+        """
+        tmp_path = os.path.join(run_dir, "quality_report.run_health.json.tmp")
+        final_path = os.path.join(run_dir, "quality_report.run_health.json")
+        try:
+            with open(tmp_path, "w", encoding="utf-8") as fh:
+                json.dump(record.to_dict(), fh, indent=2)
+            os.rename(tmp_path, final_path)
+        except Exception as exc:
+            logger.warning("QualityPersistence.write_run_health: failed to write record: %s", exc)
 
     def shutdown(self) -> None:
         if self._file_handle is not None:

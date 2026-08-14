@@ -133,60 +133,48 @@ class ContractService:
         )
 
     @staticmethod
+    def get_project_mapping(contract: ContractState):
+        """
+        Returns (ProjectKind, ObjectiveKind, objective_id_prefix) for the 2 of 5 ContractKind
+        members that spawn a strategic project -- exactly preserving accept_contract()'s
+        pre-existing 2-of-5 coverage (RECRUITMENT -> ProjectKind.COMBAT, LOAN -> ProjectKind.SOCIAL,
+        both ObjectiveKind.REACH_LOCATION; contracts.py pre-edit lines 155-171, confirmed read
+        directly). Returns None for PROTECTION/MERCHANT/POSITION_SWAP -- do not widen this
+        coverage (see plan.md Scope Guards).
+        """
+        from src.core.strategic import ProjectKind, ObjectiveKind
+        if contract.kind == ContractKind.RECRUITMENT:
+            return ProjectKind.COMBAT, ObjectiveKind.REACH_LOCATION, "obj_recruit_"
+        if contract.kind == ContractKind.LOAN:
+            return ProjectKind.SOCIAL, ObjectiveKind.REACH_LOCATION, "obj_loan_"
+        return None
+
+    @staticmethod
     def accept_contract(
         entity: EntityState,
         contract_id: str,
         tick: int
     ) -> StrategicUpdate:
         """
-        Transition an OFFERED contract to ACTIVE and spawn active strategic project/objective.
+        Transition an OFFERED/COUNTERED contract to ACTIVE.
+
+        Project/objective spawning is no longer performed here
+        (TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER): SocialContractGoalScorer
+        (src/ai/goals/social_contract_scorer.py) now scores every entity's ACTIVE
+        RECRUITMENT/LOAN contracts each tick as a tier-5 GoalRegistry candidate, and the winning
+        candidate is materialized into a real ProjectState/ObjectiveState by
+        StrategicIntelligenceSystem.evaluate_strategic_intent()'s
+        `elif best_candidate.kind == GoalKind.SOCIAL_CONTRACT:` branch, through
+        evaluate_project_switch() -- not unconditionally. This function intentionally no longer
+        builds any ProjectState/ObjectiveState or sets current_project_id_set: doing so here AND
+        via the arbiter would create a second, orphaned project per accepted contract competing
+        for max_active_projects bandwidth against the arbiter-materialized one (see plan.md
+        Design Decision #7). The kind->(ProjectKind, ObjectiveKind) mapping this method used to
+        inline now lives in ContractService.get_project_mapping(), reused by the scorer.
         """
         strat_up, _ = SocialContractSystem.transition_contract(
             entity, contract_id, ContractStatus.ACTIVE, tick
         )
-        
-        contract = entity.strategic.contracts.get(contract_id)
-        if contract and strat_up.contracts_add_or_update:
-            from src.core.strategic import ProjectState, ProjectKind, ProjectStatus, ObjectiveState, ObjectiveKind, ObjectiveStatus
-            projects_add = []
-            obj = None
-            proj_kind = ProjectKind.SOCIAL
-            
-            if contract.kind == ContractKind.RECRUITMENT:
-                proj_kind = ProjectKind.COMBAT
-                obj = ObjectiveState(
-                    id=f"obj_recruit_{contract.id}",
-                    kind=ObjectiveKind.REACH_LOCATION,
-                    target=str(contract.source_id),
-                    status=ObjectiveStatus.ACTIVE
-                )
-            elif contract.kind == ContractKind.LOAN:
-                proj_kind = ProjectKind.SOCIAL
-                obj = ObjectiveState(
-                    id=f"obj_loan_{contract.id}",
-                    kind=ObjectiveKind.REACH_LOCATION,
-                    target=str(contract.source_id),
-                    status=ObjectiveStatus.ACTIVE
-                )
-                
-            if obj:
-                proj = ProjectState(
-                    id=f"proj_contract_{contract.id}",
-                    kind=proj_kind,
-                    status=ProjectStatus.ACTIVE,
-                    objectives=[obj],
-                    active_objective_id=obj.id,
-                    created_tick=tick,
-                    lock_until_tick=tick + 50
-                )
-                projects_add.append(proj)
-                
-            if projects_add:
-                strat_up = replace(strat_up,
-                    projects_add_or_update=list(strat_up.projects_add_or_update) + projects_add,
-                    current_project_id_set=projects_add[0].id
-                )
-                
         return strat_up
 
     @staticmethod

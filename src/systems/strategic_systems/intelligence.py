@@ -26,6 +26,38 @@ logger = logging.getLogger(__name__)
 # failures to self-resolve. STRAT-234.
 _MAX_CONSECUTIVE_REJECTIONS: int = 20
 
+# Declared score ceiling for System A (AdventureRouteScorer) candidates/currents, used only to
+# normalize the lock-bypass comparison below — not a hard clamp on AdventureRouteScorer's own
+# output. Source: docs/mechanics/04_strategic_cognition.md §6.6 "Total non-blocked: 0.0 to ~2.9".
+_ADVENTURE_ROUTE_SCORE_MAX: float = 2.9
+
+# Declared score ceiling for System B (GoalRegistry) candidates/currents and for any kind not
+# recognized as a real ProjectKind member (synthetic/test kinds default here — GoalRegistry is the
+# universal per-entity baseline, the closer analogue for an unclassified score). Matches the scale
+# the pre-existing "danger" bypass (score > 80) was already implicitly calibrated against.
+#
+# NOT a true hard ceiling: TownScorer (src/ai/goals/scorers.py) can reach ~200 and SleepScorer ~130
+# (confirmed in investigation.md's own scorer survey). This constant is a calibration anchor
+# continuing the pre-existing score>80 threshold, not a claim that no System B scorer exceeds it —
+# a candidate from one of those two scorers can legitimately produce candidate_pct > 1.0, which is
+# intentional (their real-world urgency is genuinely higher, so clearing the floor more easily is
+# correct, not a bug) and does not break the comparison (no clamp exists; percentages simply aren't
+# bounded to [0, 1] for these two scorers). Do not "fix" this by clamping or by raising the constant
+# to 200 — that would only shift which System B scorers under-clear the floor instead.
+_GOAL_UTILITY_SCORE_MAX: float = 100.0
+
+# Generalized urgency floor for the lock-bypass gate, replacing the old `kind=='danger' and
+# score > 80` special case. 0.8 == 80/100, the exact threshold the code already used before this
+# ticket, expressed as a percentage of _GOAL_UTILITY_SCORE_MAX so it generalizes across kinds and
+# both score systems. STRAT-186.
+_INTERRUPTION_URGENCY_FLOOR_PCT: float = 0.8
+
+# TCK-20260812-COMMITTED-INTENTION-SEQUENCE: fixed, mid-scale utility for a materialized
+# CommittedIntention candidate -- above the 20.0 winner floor (intelligence.py:1412), below the
+# 100.0 GoalKind scale ceiling (_GOAL_UTILITY_SCORE_MAX), so it competes as an ordinary
+# mid-strength tier-5 candidate rather than a guaranteed winner or loser.
+_COMMITTED_INTENTION_BASE_UTILITY: float = 50.0
+
 if TYPE_CHECKING:
     from src.engine.cadence import SystemCadence
 
@@ -38,8 +70,9 @@ from src.engine.policy import GovernorPolicy
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
-    CognitionProfile
+    CognitionProfile, ProjectKind, GoalKind
 )
+from src.engine.spatial_query import SpatialQueryService
 from src.strategy.cognition_capacity import CapacityService
 from src.core.inventory import InventoryService
 from src.engine.cadence import should_run, SystemCadence
@@ -49,7 +82,9 @@ from src.systems.world_systems.routine import RoutineService
 from src.systems.world_systems.intake import ConcernIntakeSystem
 from src.engine.domain_logic import SimulationDomainLogic
 from src.ai.goals import GoalRegistry
+from src.ai.goals.base import GoalScore
 from src.ai.score_modifiers import ScoreModifierSystem
+from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
 from src.systems.strategic_systems.detour import DetourSuggestionSystem
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
@@ -58,6 +93,62 @@ from src.systems.strategic_systems.belief import BeliefCycleSystem
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
+
+# TCK-20260812-COMMITTED-INTENTION-SEQUENCE: the 10 pre-epic "generic" GoalKind values, each with
+# a live registered scorer (src/ai/goals/__init__.py). Excludes ADVENTURE_ROUTE/SOCIAL_CONTRACT/
+# REGION_STABILIZATION, which materialize through dedicated branches (:1440-1539) requiring
+# synthetic metadata a committed intention has no legitimate way to populate -- MVP scope.
+_COMMITTED_INTENTION_ELIGIBLE_KINDS = frozenset({
+    GoalKind.HARVESTING, GoalKind.FATIGUE, GoalKind.HUNGER, GoalKind.SOCIAL,
+    GoalKind.TOWN_RETURN, GoalKind.COMBAT_ENGAGE, GoalKind.COMBAT_RETREAT,
+    GoalKind.RECOVER, GoalKind.RESOLVE_BLOCKER, GoalKind.GUILD,
+})
+
+
+def _score_scale_max(kind) -> float:
+    """Return the declared score ceiling for the system that produced `kind`.
+
+    Classification is by the *actual Python enum class* of `kind`, not its string value:
+    ProjectKind.HARVESTING and GoalKind.HARVESTING (and ProjectKind.SOCIAL / GoalKind.SOCIAL)
+    share identical string values (src/core/strategic.py:121-148) but are different enum classes.
+    A value-based check (e.g. `kind in {v.value for v in ProjectKind}`) would silently misclassify
+    System B candidates as System A for those two overlapping kinds — do not do that.
+
+    Does not unify or alter the ProjectKind/GoalKind vocabulary split (out of scope, tracked under
+    D22/C4) — it only reads the enum identity already present at each ProjectState construction
+    site: mapper.py:96-107 always emits real ProjectKind members; intelligence.py's own
+    GoalRegistry-sourced candidate (line ~1334) always emits real GoalKind members. Anything else
+    (raw strings — "detour", test fixtures, any future third system) defaults to the
+    GoalRegistry/universal-baseline scale.
+    """
+    if isinstance(kind, ProjectKind):
+        return _ADVENTURE_ROUTE_SCORE_MAX
+    return _GOAL_UTILITY_SCORE_MAX
+
+
+def _threat_resolved(hero: EntityState, state: AuthoritativeState) -> bool:
+    """
+    Return True when the triggering threat for a survival lock is no longer active:
+    entity HP has recovered above 80% AND no hostile entity is within interaction radius.
+
+    Used as an early-release condition inside evaluate_project_switch()'s locked-branch gate
+    so that entities are not held idle in a project lock after the threat passes. Relocated
+    from src/domains/adventure/phase.py (TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION) to
+    generalize beyond AdventureDecisionPhase's original sole-caller scope. STRAT-236.
+    """
+    hp_ratio = hero.combat.hp / max(1, hero.combat.max_hp)
+    if hp_ratio <= 0.8:
+        return False
+    nearby_ids = SpatialQueryService.nearby_entities(state, hero.navigation.position, radius=10.0)
+    has_hostile = any(
+        eid != hero.id
+        and (e := state.entities.get(eid)) is not None
+        and e.combat.alive
+        and e.identity.faction != hero.identity.faction
+        for eid in nearby_ids
+    )
+    return not has_hostile
+
 
 class StrategicIntelligenceSystem:
     """
@@ -540,7 +631,17 @@ class StrategicIntelligenceSystem:
                 final_identity_upd = None
 
             if final_identity_upd is not ent_upd.identity or strat_up is not ent_upd.strategic or ent_upd.navigation is not None or ent_upd.interaction is not None or has_existing_upd:
-                final_upd = replace(ent_upd, identity=final_identity_upd, strategic=strat_up)
+                # TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE: this is the live
+                # pipeline's actual strategic-intelligence merge site (fused_strategic_pass(),
+                # wired via src/engine/pipeline.py:333) -- copy-then-set, not a wholesale
+                # replace, since ent_upd.property_updates may already carry earlier phases'
+                # writes for this entity within this same tick.
+                prop_updates = dict(ent_upd.property_updates)
+                if strat_up is not None and strat_up.last_routing_family_set is not None:
+                    prop_updates["last_routing_family"] = strat_up.last_routing_family_set
+                if strat_up is not None and strat_up.last_routing_tick_set is not None:
+                    prop_updates["last_routing_tick"] = strat_up.last_routing_tick_set
+                final_upd = replace(ent_upd, identity=final_identity_upd, strategic=strat_up, property_updates=prop_updates)
                 refined_entity_updates[e_id] = final_upd
         
         if state.tick % 10 == 0:
@@ -833,7 +934,15 @@ class StrategicIntelligenceSystem:
                 # Merge with existing updates if any
                 existing_strat = ent_upd.strategic or StrategicUpdate()
                 merged_strat = existing_strat.merge(strat_up)
-                refined_entity_updates[e_id] = replace(ent_upd, strategic=merged_strat)
+                # TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE: copy-then-set, not a
+                # wholesale replace -- ent_upd.property_updates may already carry earlier phases'
+                # writes for this entity within this same tick.
+                prop_updates = dict(ent_upd.property_updates)
+                if strat_up.last_routing_family_set is not None:
+                    prop_updates["last_routing_family"] = strat_up.last_routing_family_set
+                if strat_up.last_routing_tick_set is not None:
+                    prop_updates["last_routing_tick"] = strat_up.last_routing_tick_set
+                refined_entity_updates[e_id] = replace(ent_upd, strategic=merged_strat, property_updates=prop_updates)
                 
         return replace(update, entity_updates=refined_entity_updates)
 
@@ -881,10 +990,23 @@ class StrategicIntelligenceSystem:
     def evaluate_project_switch(
         entity: EntityState,
         candidate_project: ProjectState,
-        current_tick: int
+        current_tick: int,
+        state: Optional[AuthoritativeState] = None
     ) -> Optional[StrategicUpdate]:
         """
         Phase 9: Strategic interruption resistance and retention.
+
+        Lock-bypass gate (when the current project's lock has not yet expired):
+        `"detour"` remains the sole unconditional structural bypass. Any other candidate,
+        regardless of `kind`, may bypass the lock only when its score — expressed as a
+        percentage of its own system's declared max (`_ADVENTURE_ROUTE_SCORE_MAX` for
+        `ProjectKind`-typed candidates, `_GOAL_UTILITY_SCORE_MAX` otherwise) — both exceeds
+        the current project's own normalized effective score (`current.score` plus
+        `retention_margin`, same percentage basis) AND clears `_INTERRUPTION_URGENCY_FLOOR_PCT`.
+        This replaces the old hardcoded `kind == "danger" and score > 80` / `kind == "detour"`
+        allowlist. The raw `retention_margin`/`effective_current_score` formula and the
+        unlocked-path final comparison below are unchanged.
+
         Logic ID: STRAT-185 (Strategic project retention is bounded by interruption resistance)
         Logic ID: STRAT-186 (Strategic project switching requires margin or explicit emergency)
         Logic ID: STRAT-187 (Current project has reservation priority)
@@ -910,17 +1032,44 @@ class StrategicIntelligenceSystem:
                 current_objective_id_set=candidate_project.active_objective_id
             )
 
-        if current.lock_until_tick > current_tick:
-            # Bypass lock ONLY for high-urgency danger/safety projects
-            if (candidate_project.kind == "danger" and candidate_project.score > 80) or candidate_project.kind == "detour":
-                pass 
-            else:
-                return None 
-
         # Logic ID: STRAT-005 (Project switching uses interruption resistance)
         retention_margin = profile.interruption_resistance * profile.resistance_multiplier
         # Logic ID: STRAT-006 (Current project gets retention priority)
         effective_current_score = current.score + retention_margin
+
+        if current.lock_until_tick > current_tick:
+            # STRAT-236 (generalized): when a real world `state` is supplied and the triggering
+            # threat has resolved (HP > 80%, no hostile within radius 10.0), the lock is treated
+            # as already expired. `state is None` (the default for the 27 pre-existing direct
+            # test call sites that predate this check) short-circuits `and` before
+            # `_threat_resolved` is ever called, preserving today's behavior exactly. Computed
+            # here, inside the lock-active gate, rather than above it, so the O(radius^2) spatial
+            # scan in SpatialQueryService.nearby_entities() only runs when the current project is
+            # actually locked — not on every evaluate_project_switch() call for an unlocked,
+            # healthy entity (the common case across all 3 real production call sites).
+            threat_resolved = state is not None and _threat_resolved(entity, state)
+
+            if not threat_resolved:
+                # STRAT-186 (generalized): the lock may be bypassed only for the unconditional "detour"
+                # structural override, or when the candidate's score — expressed as a percentage of its own
+                # system's declared max — both exceeds the current project's own normalized effective score
+                # AND clears the urgency floor. This comparison is intentionally normalized and kept separate
+                # from the raw `effective_current_score` comparison below: the raw formula and the unlocked
+                # path must stay byte-identical (test_interruption_resistance_margin depends on this).
+                if candidate_project.kind == "detour":
+                    pass
+                else:
+                    candidate_max = _score_scale_max(candidate_project.kind)
+                    current_max = _score_scale_max(current.kind)
+                    candidate_pct = candidate_project.score / candidate_max
+                    # TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG: the margin term is
+                    # deliberately normalized against the universal baseline scale (_GOAL_UTILITY_SCORE_MAX),
+                    # not current_max — current_max can be as small as _ADVENTURE_ROUTE_SCORE_MAX (2.9),
+                    # which made retention_margin/current_max structurally dominate the comparison.
+                    normalized_effective_current_pct = (current.score / current_max) + (retention_margin / _GOAL_UTILITY_SCORE_MAX)
+                    if not (candidate_pct > normalized_effective_current_pct
+                            and candidate_pct > _INTERRUPTION_URGENCY_FLOOR_PCT):
+                        return None
 
         if candidate_project.score > effective_current_score:
             return StrategicUpdate(
@@ -1267,7 +1416,7 @@ class StrategicIntelligenceSystem:
                             created_tick=current_tick,
                             score=best.score + 50.0
                         )
-                        detour_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, detour_proj, current_tick)
+                        detour_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, detour_proj, current_tick, state=state)
                         if detour_up:
                             final_detour = replace(detour_up, 
                                 boredom_delta=boredom_upd,
@@ -1278,7 +1427,28 @@ class StrategicIntelligenceSystem:
         
         # 4. Goal Scoring & Routine Biasing
         all_scores = GoalRegistry.get_all_scores(entity, state)
-        
+
+        # TCK-20260812-COMMITTED-INTENTION-SEQUENCE: materialize committed_intentions[0] (when
+        # due) as an ordinary tier-5 candidate, injected before routine/role-boost so it is
+        # boosted like a live scorer's candidate. "When due" reduces to head.status == "pending"
+        # -- the arbiter's own lock/margin logic (evaluate_project_switch(), unmodified) does the
+        # rest, exactly as it already does for every other tier-5 candidate.
+        if strat.committed_intentions:
+            head = strat.committed_intentions[0]
+            if head.status == "pending":
+                try:
+                    head_kind = GoalKind(head.goal_kind)
+                except ValueError:
+                    head_kind = None
+                if head_kind in _COMMITTED_INTENTION_ELIGIBLE_KINDS:
+                    all_scores = all_scores + [GoalScore(
+                        kind=head_kind,
+                        utility=_COMMITTED_INTENTION_BASE_UTILITY,
+                        target_id=head.target_hint,
+                        target_pos=None,
+                        metadata={"committed_intention_id": head.intention_id},
+                    )]
+
         # PH9: Routine & Life-Rhythm Biasing
         all_scores = [
             replace(s, utility=s.utility + 
@@ -1323,37 +1493,158 @@ class StrategicIntelligenceSystem:
                          leads_remove=memory_upd.leads_remove
                     )
             
-            cand_kind_str = getattr(best_candidate.kind, "value", best_candidate.kind)
-            obj = ObjectiveState(
-                id=f"{cand_kind_str}_{best_candidate.target_id}",
-                kind="reach_location",
-                target=best_candidate.target_id,
-                target_position=best_candidate.target_pos,
-                status=ObjectiveStatus.ACTIVE
-            )
-            candidate_proj = ProjectState(
-                id=f"proj_{cand_kind_str}_{current_tick}",
-                kind=best_candidate.kind,
-                status=ProjectStatus.ACTIVE,
-                objectives=[obj],
-                active_objective_id=obj.id,
-                lock_until_tick=min(current_tick + 10, current_tick + 50),  # cap at 50 ticks
-                created_tick=current_tick,
-                score=best_candidate.utility
-            )
-            
+            if best_candidate.kind == GoalKind.ADVENTURE_ROUTE:
+                # AC3/AC4: materialize via RouteToProjectMapper using the RAW route score
+                # (metadata["raw_score"]), never best_candidate.utility. _score_scale_max()
+                # (intelligence.py:89-107) classifies a RouteToProjectMapper-mapped
+                # ProjectState.kind (a real ProjectKind) onto the 2.9-ceiling scale, not the
+                # 100-ceiling scale `utility` was normalized onto (Step 2's normalization is
+                # ONLY for tier-5 competition, not for the committed ProjectState.score).
+                # Passing `utility` here would reproduce the
+                # TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG defect class --
+                # see design doc Sec 4's worked-through scale-mismatch arithmetic.
+                candidate_proj, obj = RouteToProjectMapper.map_to_states(
+                    family=best_candidate.metadata.get("route_family"),
+                    entity_id=entity.id,
+                    target=best_candidate.target_id,
+                    target_pos=best_candidate.target_pos,
+                    tick=current_tick,
+                    score=best_candidate.metadata.get("raw_score", 0.0),
+                )
+                if candidate_proj is None or obj is None:
+                    # Preserves RouteToProjectMapper's existing (None, None) contract
+                    # (mapper.py:81-82, confirmed: DEFER_WITH_REASON -> get_kinds() returns
+                    # (None, None) -> map_to_states() returns (None, None)). Should not
+                    # normally be reached here since DEFER_WITH_REASON never clears the tier-5
+                    # floor (AC5, Step 2's early return), but this is a defensive no-op, not an
+                    # assumption that the mapper always returns non-None.
+                    if boredom_upd:
+                        return StrategicUpdate(boredom_delta=boredom_upd)
+                    return StrategicUpdate()
+            elif best_candidate.kind == GoalKind.SOCIAL_CONTRACT:
+                # AC3/AC4/AC5/AC6 (ticket items 2,3,4,5,6): materialize a contract win into a
+                # real ProjectKind-typed project, using proj_kind/obj_kind/obj_id_prefix already
+                # resolved by SocialContractGoalScorer via ContractService.get_project_mapping()
+                # and carried in metadata -- intelligence.py needs no new import of
+                # ContractKind/ContractService/ObjectiveKind to build this branch (all resolved
+                # upstream in the scorer).
+                contract_id = best_candidate.metadata.get("contract_id")
+                proj_kind = best_candidate.metadata.get("proj_kind")
+                obj_kind = best_candidate.metadata.get("obj_kind")
+                obj_id_prefix = best_candidate.metadata.get("obj_id_prefix", "obj_contract_")
+                obj = ObjectiveState(
+                    id=f"{obj_id_prefix}{contract_id}_t{current_tick}",
+                    kind=obj_kind,
+                    target=best_candidate.target_id,
+                    target_position=best_candidate.target_pos,
+                    status=ObjectiveStatus.ACTIVE,
+                )
+                candidate_proj = ProjectState(
+                    id=f"proj_contract_{contract_id}_t{current_tick}",
+                    kind=proj_kind,
+                    status=ProjectStatus.ACTIVE,
+                    objectives=[obj],
+                    active_objective_id=obj.id,
+                    # Preserves accept_contract()'s original 50-tick lock (contracts.py pre-edit
+                    # line 180, confirmed read directly) -- deliberately NOT the generic branch's
+                    # min(current_tick+10, current_tick+50) == current_tick+10 (Design
+                    # Decision #10).
+                    lock_until_tick=current_tick + 50,
+                    created_tick=current_tick,
+                    # NEVER best_candidate.utility -- utility is normalized onto the 100-ceiling
+                    # scale for tier-5 competition only; ProjectState.score is read back through
+                    # _score_scale_max()'s 2.9-ceiling scale once kind is a real ProjectKind.
+                    # Passing utility here reproduces the
+                    # TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG defect class.
+                    score=best_candidate.metadata.get("raw_score", 0.0),
+                )
+            elif best_candidate.kind == GoalKind.REGION_STABILIZATION:
+                # AC2/AC3/AC5/AC6: materialize a regional-danger win into a real
+                # ProjectKind-typed project, using proj_kind/obj_kind already resolved by
+                # RegionStabilizationGoalScorer via EventInterpreter.compute_danger_urgency()
+                # and carried in metadata -- intelligence.py needs no new import of
+                # ObjectiveKind/EventInterpreter to build this branch (all resolved upstream in
+                # the scorer, see plan.md New Finding #11).
+                region_id = best_candidate.metadata.get("region_id")
+                proj_kind = best_candidate.metadata.get("proj_kind")
+                obj_kind = best_candidate.metadata.get("obj_kind")
+                obj = ObjectiveState(
+                    id=f"obj_stabilize_{region_id}_t{current_tick}",
+                    kind=obj_kind,
+                    target=best_candidate.target_id,
+                    target_position=best_candidate.target_pos,
+                    status=ObjectiveStatus.ACTIVE,
+                )
+                candidate_proj = ProjectState(
+                    id=f"project_stabilize_{region_id}_t{current_tick}",
+                    kind=proj_kind,
+                    status=ProjectStatus.ACTIVE,
+                    objectives=[obj],
+                    active_objective_id=obj.id,
+                    # New Finding #10: the ORIGINAL bypass set no lock_until_tick at all (it
+                    # never went through evaluate_project_switch()) -- no bespoke value to
+                    # preserve, so this uses the SAME generic-branch default every other
+                    # no-bespoke-lock GoalKind already gets, not a new invented value.
+                    lock_until_tick=min(current_tick + 10, current_tick + 50),
+                    created_tick=current_tick,
+                    # NEVER best_candidate.utility -- see New Finding #7's full scale-mismatch
+                    # analysis. utility is normalized onto the 100-ceiling scale for tier-5
+                    # competition only; ProjectState.score is read back through
+                    # _score_scale_max()'s 2.9-ceiling scale once kind is a real ProjectKind.
+                    score=best_candidate.metadata.get("raw_score", 0.0),
+                )
+            else:
+                cand_kind_str = getattr(best_candidate.kind, "value", best_candidate.kind)
+                obj = ObjectiveState(
+                    id=f"{cand_kind_str}_{best_candidate.target_id}",
+                    kind="reach_location",
+                    target=best_candidate.target_id,
+                    target_position=best_candidate.target_pos,
+                    status=ObjectiveStatus.ACTIVE
+                )
+                candidate_proj = ProjectState(
+                    id=f"proj_{cand_kind_str}_{current_tick}",
+                    kind=best_candidate.kind,
+                    status=ProjectStatus.ACTIVE,
+                    objectives=[obj],
+                    active_objective_id=obj.id,
+                    lock_until_tick=min(current_tick + 10, current_tick + 50),  # cap at 50 ticks
+                    created_tick=current_tick,
+                    score=best_candidate.utility
+                )
+
             at_capacity = len(strat.projects) >= strat.profile.max_active_projects
             if at_capacity and not existing:
                 if boredom_upd:
                     return StrategicUpdate(boredom_delta=boredom_upd)
                 return StrategicUpdate()
 
-            switch_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate_proj, current_tick)
+            switch_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate_proj, current_tick, state=state)
             if switch_up:
-                return replace(switch_up, 
+                # TCK-20260812-COMMITTED-INTENTION-SEQUENCE: win-transition bookkeeping. Only
+                # fires when the winning candidate is THIS tick's synthesized committed-intention
+                # candidate (matched by the metadata tag set at injection, above) -- a live
+                # scorer's candidate for the same GoalKind must not advance the sequence.
+                extra_ci = {}
+                if strat.committed_intentions and best_candidate.metadata.get("committed_intention_id") == strat.committed_intentions[0].intention_id:
+                    extra_ci["committed_intentions_add_or_update"] = [replace(strat.committed_intentions[0], status="active")]
+                # TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE: restore
+                # last_routing_family/last_routing_tick emission for a winning, accepted
+                # ADVENTURE_ROUTE candidate. .value is required -- RouteFamily(str, Enum) means
+                # str(route_family) yields "RouteFamily.X", not the deleted phase's original
+                # "x" contract that event_shapers.py/event_extractor.py read.
+                extra_routing = {}
+                if best_candidate.kind == GoalKind.ADVENTURE_ROUTE:
+                    route_family = best_candidate.metadata.get("route_family")
+                    if route_family is not None:
+                        extra_routing["last_routing_family_set"] = route_family.value
+                        extra_routing["last_routing_tick_set"] = current_tick
+                return replace(switch_up,
                     boredom_delta=boredom_upd,
                     leads_add_or_update=memory_upd.leads_add_or_update,
-                    leads_remove=memory_upd.leads_remove
+                    leads_remove=memory_upd.leads_remove,
+                    **extra_ci,
+                    **extra_routing
                 )
             
             # Law 194-197: Enforce Strategic Bandwidth

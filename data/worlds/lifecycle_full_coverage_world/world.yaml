@@ -1,0 +1,58 @@
+# TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD
+schema_version: "worldcomposition.v1"
+world_id: "lifecycle_full_coverage_world"
+name: "Lifecycle Full-Coverage World"
+description: >
+  Stress-tier world authored to fill a named scale-diversity gap: no world in the corpus
+  structurally exercises all reachable entity_lifecycle_score.py lifecycle_phase_buckets at once.
+  Composes 8 proven-compatible modules (hero_guild_routing's own 5-module base plus
+  simq_scale_stress_seed42's hostile-module additions) with ENABLE_ADVENTURE_ROUTING,
+  ENABLE_SOCIAL_COOPERATION, ENABLE_BELIEF_ASSIMILATION, and ENABLE_GUILD_QUEST_GENERATION all ON.
+  IDENTITY (entity_role_changed/entity_faction_changed) is confirmed unreachable by any content
+  (no producer exists anywhere in src/) -- this world's own honest phase_coverage ceiling is
+  9/10, not 10/10.
+provided_features:
+  - "settlement"
+  - "hero_presence"
+  - "mountain_traversal"
+  - "conflict"
+  - "quest_seeding"
+  - "adventure_routing"
+  - "belief_assimilation"
+  - "social_cooperation"
+module_refs:
+  - module_id: "frontier_village_core"
+    order: 0
+  - module_id: "hero_adventurers"
+    order: 1
+  - module_id: "mountain_pass"
+    order: 2
+  - module_id: "ruins_mystery_quest"
+    order: 3
+  - module_id: "goblin_camp_conflict"
+    order: 4
+  - module_id: "wolf_den_near_forest"
+    order: 5
+  - module_id: "orc_clan_territory"
+    order: 6
+  - module_id: "river_crossing"
+    order: 7
+generation_seed: 42
+faction_tension_overrides:
+  town_council: 0.5
+  merchant_league: 0.5
+  hero_guild: 0.4
+  undead_remnants: 0.5
+  spirit_court: 0.5
+  goblin_warband: 0.5
+  wild_beast_pack: 0.4
+  orc_clan: 0.6
+information_source_profiles:
+  - source_id: "route_waystation_guide"
+    source_kind: "guide"
+    knowledge_scopes: ["regional_danger", "common_resource_sources"]
+    accuracy: 0.4
+    freshness: 0.6
+    bias: 0.1
+    cost_gold: 0
+    max_answers_per_query: 2

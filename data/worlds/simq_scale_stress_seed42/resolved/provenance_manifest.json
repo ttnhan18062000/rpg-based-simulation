@@ -1,0 +1,2048 @@
+{
+  "manifest_id": "prov_5eb177d6db2018c1",
+  "world_id": "simq_scale_stress_seed42",
+  "source_schema_version": "provenancemanifest.v1",
+  "catalog_fingerprint": "48ebc0bad9506b16cd32bf9a3e0aa2a76ba814d19b6e2deaca7b51b768794a42",
+  "module_fingerprints": {
+    "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
+    "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
+    "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
+    "goblin_camp_conflict": "7e712ab3d3321805bfad0b116c66ac5c679854fe887f7752b9ab6a27cb61e5fb",
+    "moon_cult_ruins": "c88d3ef942949a3d1a211d59602619701a43ee944dad0ec928b2eaf60248a3c7",
+    "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
+    "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
+    "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
+    "sunken_swamp_border": "adbeeba097121a59128bc0d09a3b35b5fbaca044c2761049d3f97c477ca2ff96",
+    "undead_battlefield": "5a28c8d022a3a2d2510e3b0ef36e62ef4cb78d366f2b61e2c226c8797ee86b30",
+    "wolf_den_near_forest": "236ed57805d9d8a947b072448b36ce728b6b6653ad9fd5f0085c3bfb269953ee",
+    "forest_warden_grove": "1afd9828cbd2087f5cbafffdbd2d3b81c59a32d20fa66debd95249844022e3fe"
+  },
+  "composition_fingerprint": "6a1f92c6bf90571c0605cbc08e2a4c93a2831da1903e6f125d2c014441b9fd70",
+  "resolver_version": "1.0.0",
+  "content_fingerprint": "5eb177d6db2018c1bb57d99df9fd78f2e8a26b770519d0ec9e6fe3e34fe3076e",
+  "created_at": "2026-08-07T19:49:51.473949Z",
+  "records": {
+    "hero_guild": {
+      "element_id": "hero_guild",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Default chosen faction for hero-centered scenarios."
+      }
+    },
+    "town_council": {
+      "element_id": "town_council",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Settlement authority and civil administration."
+      }
+    },
+    "neutral": {
+      "element_id": "neutral",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Fallback for unaffiliated content."
+      }
+    },
+    "wild_beast_pack": {
+      "element_id": "wild_beast_pack",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Territorial animal groups. Contextual threat, not enemy-by-race."
+      }
+    },
+    "goblin_warband": {
+      "element_id": "goblin_warband",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Opportunistic raider faction."
+      }
+    },
+    "merchant_league": {
+      "element_id": "merchant_league",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Trade-centered faction that prefers negotiated safety."
+      }
+    },
+    "bandit_company": {
+      "element_id": "bandit_company",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Outlaw faction hostile to settlement safety and trade routes."
+      }
+    },
+    "forest_wardens": {
+      "element_id": "forest_wardens",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Protective faction defending forest balance."
+      }
+    },
+    "orc_clan": {
+      "element_id": "orc_clan",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "rival"
+      },
+      "details": {
+        "description": "Honor/strength-driven clan faction, not always hostile."
+      }
+    },
+    "dwarven_mine_clan": {
+      "element_id": "dwarven_mine_clan",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Mining and crafting faction controlling mountain/mine assets."
+      }
+    },
+    "moon_cult": {
+      "element_id": "moon_cult",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Ritual faction tied to moon ruins and arcane materials."
+      }
+    },
+    "undead_remnants": {
+      "element_id": "undead_remnants",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Purpose-bound remnants around battlefields, ruins, and barrows."
+      }
+    },
+    "arcane_circle": {
+      "element_id": "arcane_circle",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Research faction interested in crystals, ruins, and magical anomalies."
+      }
+    },
+    "swamp_tribe": {
+      "element_id": "swamp_tribe",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "rival"
+      },
+      "details": {
+        "description": "Lizardfolk/swamp faction defending wetland territory."
+      }
+    },
+    "dragon_cult": {
+      "element_id": "dragon_cult",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Cult faction serving dragonkin/fire-aligned power."
+      }
+    },
+    "spirit_court": {
+      "element_id": "spirit_court",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "quest_forest_survey": {
+      "element_id": "quest_forest_survey",
+      "element_type": "quest_definition",
+      "source_module": "forest_deep_ecology",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "explore"
+      },
+      "details": {
+        "tags": [
+          "nature",
+          "exploration"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "hometown": {
+      "element_id": "hometown",
+      "element_type": "region",
+      "source_module": "frontier_village_core",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "frontier_village"
+      },
+      "details": {
+        "bounds": [
+          10,
+          10,
+          40,
+          40
+        ],
+        "terrain": "plain",
+        "hazard_level": 0.0,
+        "ecology_source": [
+          "frontier_village_ecology"
+        ]
+      }
+    },
+    "frontier_village_population_village_worker": {
+      "element_id": "frontier_village_population_village_worker",
+      "element_type": "population",
+      "source_module": "frontier_village_core",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "worker",
+        "faction": "town_council",
+        "stats_profile": "commoner_base",
+        "inventory_profile": "hero_pocket",
+        "cognition_profile": "practical_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "WORKER",
+          "legacy_engine_bucket": "TOWN_COUNCIL"
+        }
+      },
+      "details": {
+        "count": 8,
+        "spawn_region": "hometown",
+        "archetype_source": "village_worker",
+        "population_recipe_source": "frontier_village_population"
+      }
+    },
+    "frontier_village_population_frontier_guard": {
+      "element_id": "frontier_village_population_frontier_guard",
+      "element_type": "population",
+      "source_module": "frontier_village_core",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "guard",
+        "faction": "town_council",
+        "stats_profile": "frontier_guard_base",
+        "inventory_profile": "guard_basic_kit",
+        "cognition_profile": "disciplined_guard",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "TOWN_COUNCIL"
+        }
+      },
+      "details": {
+        "count": 3,
+        "spawn_region": "hometown",
+        "archetype_source": "frontier_guard",
+        "population_recipe_source": "frontier_village_population"
+      }
+    },
+    "frontier_village_population_traveling_merchant": {
+      "element_id": "frontier_village_population_traveling_merchant",
+      "element_type": "population",
+      "source_module": "frontier_village_core",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "merchant",
+        "faction": "merchant_league",
+        "stats_profile": "merchant_base",
+        "inventory_profile": "merchant_trade_pack",
+        "cognition_profile": "trade_pragmatist",
+        "compatibility_projection": {
+          "legacy_engine_role": "SHOPKEEPER",
+          "legacy_engine_bucket": "NEUTRAL"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "hometown",
+        "archetype_source": "traveling_merchant",
+        "population_recipe_source": "frontier_village_population"
+      }
+    },
+    "frontier_village_population_village_blacksmith": {
+      "element_id": "frontier_village_population_village_blacksmith",
+      "element_type": "population",
+      "source_module": "frontier_village_core",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "blacksmith",
+        "faction": "town_council",
+        "stats_profile": "artisan_base",
+        "inventory_profile": "blacksmith_toolkit",
+        "cognition_profile": "practical_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "WORKER",
+          "legacy_engine_bucket": "TOWN_COUNCIL"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "hometown",
+        "archetype_source": "village_blacksmith",
+        "population_recipe_source": "frontier_village_population"
+      }
+    },
+    "res_0": {
+      "element_id": "res_0",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "wood_node"
+      },
+      "details": {
+        "count": 8,
+        "region": "hometown"
+      }
+    },
+    "res_1": {
+      "element_id": "res_1",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "herb_patch"
+      },
+      "details": {
+        "count": 5,
+        "region": "hometown"
+      }
+    },
+    "town_hall_0": {
+      "element_id": "town_hall_0",
+      "element_type": "building",
+      "source_module": "frontier_village_core",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "town_hall"
+      },
+      "details": {
+        "region": "hometown"
+      }
+    },
+    "shop_0": {
+      "element_id": "shop_0",
+      "element_type": "building",
+      "source_module": "frontier_village_core",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "shop"
+      },
+      "details": {
+        "region": "hometown"
+      }
+    },
+    "blacksmith_0": {
+      "element_id": "blacksmith_0",
+      "element_type": "building",
+      "source_module": "frontier_village_core",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "blacksmith"
+      },
+      "details": {
+        "region": "hometown"
+      }
+    },
+    "inn_0": {
+      "element_id": "inn_0",
+      "element_type": "building",
+      "source_module": "frontier_village_core",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "inn"
+      },
+      "details": {
+        "region": "hometown"
+      }
+    },
+    "healer_hut_0": {
+      "element_id": "healer_hut_0",
+      "element_type": "building",
+      "source_module": "frontier_village_core",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "healer_hut"
+      },
+      "details": {
+        "region": "hometown"
+      }
+    },
+    "rel_town_to_merchants": {
+      "element_id": "rel_town_to_merchants",
+      "element_type": "faction",
+      "source_module": "frontier_village_core",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "town_council",
+        "target_faction": "merchant_league",
+        "relationship_model": "trade_positive"
+      },
+      "details": {}
+    },
+    "rel_merchants_to_town": {
+      "element_id": "rel_merchants_to_town",
+      "element_type": "faction",
+      "source_module": "frontier_village_core",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "merchant_league",
+        "target_faction": "town_council",
+        "relationship_model": "trade_positive"
+      },
+      "details": {}
+    },
+    "quest_village_fetch_supply_run": {
+      "element_id": "quest_village_fetch_supply_run",
+      "element_type": "quest_definition",
+      "source_module": "frontier_village_core",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "village",
+          "settlement",
+          "supply"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "quest_village_escort_merchant_delivery": {
+      "element_id": "quest_village_escort_merchant_delivery",
+      "element_type": "quest_definition",
+      "source_module": "frontier_village_core",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "village",
+          "settlement",
+          "trade"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_village_defend_gate_assault": {
+      "element_id": "quest_village_defend_gate_assault",
+      "element_type": "quest_definition",
+      "source_module": "frontier_village_core",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "village",
+          "settlement",
+          "defense"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "bandit_road": {
+      "element_id": "bandit_road",
+      "element_type": "region",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "bandit_road"
+      },
+      "details": {
+        "bounds": [
+          40,
+          40,
+          100,
+          60
+        ],
+        "terrain": "road",
+        "hazard_level": 2.0,
+        "ecology_source": [
+          "bandit_road_ecology"
+        ]
+      }
+    },
+    "bandit_ambush_group_bandit_scout": {
+      "element_id": "bandit_ambush_group_bandit_scout",
+      "element_type": "population",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "scout",
+        "faction": "bandit_company",
+        "stats_profile": "bandit_scout_base",
+        "inventory_profile": "goblin_looter_pouch",
+        "cognition_profile": "opportunistic_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 4,
+        "spawn_region": "bandit_road",
+        "archetype_source": "bandit_scout",
+        "population_recipe_source": "bandit_ambush_group"
+      }
+    },
+    "merchant_caravan_traveling_merchant": {
+      "element_id": "merchant_caravan_traveling_merchant",
+      "element_type": "population",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "merchant",
+        "faction": "merchant_league",
+        "stats_profile": "merchant_base",
+        "inventory_profile": "merchant_trade_pack",
+        "cognition_profile": "trade_pragmatist",
+        "compatibility_projection": {
+          "legacy_engine_role": "SHOPKEEPER",
+          "legacy_engine_bucket": "NEUTRAL"
+        }
+      },
+      "details": {
+        "count": 2,
+        "spawn_region": "bandit_road",
+        "archetype_source": "traveling_merchant",
+        "population_recipe_source": "merchant_caravan"
+      }
+    },
+    "merchant_caravan_frontier_guard": {
+      "element_id": "merchant_caravan_frontier_guard",
+      "element_type": "population",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "guard",
+        "faction": "town_council",
+        "stats_profile": "frontier_guard_base",
+        "inventory_profile": "guard_basic_kit",
+        "cognition_profile": "disciplined_guard",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "TOWN_COUNCIL"
+        }
+      },
+      "details": {
+        "count": 2,
+        "spawn_region": "bandit_road",
+        "archetype_source": "frontier_guard",
+        "population_recipe_source": "merchant_caravan"
+      }
+    },
+    "rel_town_to_bandits": {
+      "element_id": "rel_town_to_bandits",
+      "element_type": "faction",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "town_council",
+        "target_faction": "bandit_company",
+        "relationship_model": "security_hostility"
+      },
+      "details": {}
+    },
+    "rel_bandits_to_merchants": {
+      "element_id": "rel_bandits_to_merchants",
+      "element_type": "faction",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "bandit_company",
+        "target_faction": "merchant_league",
+        "relationship_model": "predatory_trade_ambush"
+      },
+      "details": {}
+    },
+    "quest_bandit_escort_merchant_caravan": {
+      "element_id": "quest_bandit_escort_merchant_caravan",
+      "element_type": "quest_definition",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "trade",
+          "escort"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_bandit_hunt_road_captain": {
+      "element_id": "quest_bandit_hunt_road_captain",
+      "element_type": "quest_definition",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "conflict",
+          "bounty"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_bandit_investigate_ambush_source": {
+      "element_id": "quest_bandit_investigate_ambush_source",
+      "element_type": "quest_definition",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "conflict",
+          "mystery"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "goblin_camp": {
+      "element_id": "goblin_camp",
+      "element_type": "region",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "goblin_camp"
+      },
+      "details": {
+        "bounds": [
+          95,
+          20,
+          125,
+          55
+        ],
+        "terrain": "forest",
+        "hazard_level": 3.0,
+        "ecology_source": [
+          "goblin_camp_ecology"
+        ]
+      }
+    },
+    "goblin_raiding_party_goblin_scout": {
+      "element_id": "goblin_raiding_party_goblin_scout",
+      "element_type": "population",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "scout",
+        "faction": "goblin_warband",
+        "stats_profile": "goblin_scout_base",
+        "inventory_profile": "goblin_looter_pouch",
+        "cognition_profile": "opportunistic_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 2,
+        "spawn_region": "goblin_camp",
+        "archetype_source": "goblin_scout",
+        "population_recipe_source": "goblin_raiding_party"
+      }
+    },
+    "goblin_raiding_party_goblin_raider": {
+      "element_id": "goblin_raiding_party_goblin_raider",
+      "element_type": "population",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "raider",
+        "faction": "goblin_warband",
+        "stats_profile": "goblin_raider_base",
+        "inventory_profile": "goblin_looter_pouch",
+        "cognition_profile": "opportunistic_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 4,
+        "spawn_region": "goblin_camp",
+        "archetype_source": "goblin_raider",
+        "population_recipe_source": "goblin_raiding_party"
+      }
+    },
+    "goblin_raiding_party_goblin_archer": {
+      "element_id": "goblin_raiding_party_goblin_archer",
+      "element_type": "population",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "scout",
+        "faction": "goblin_warband",
+        "stats_profile": "goblin_archer_base",
+        "inventory_profile": "goblin_looter_pouch",
+        "cognition_profile": "opportunistic_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 2,
+        "spawn_region": "goblin_camp",
+        "archetype_source": "goblin_archer",
+        "population_recipe_source": "goblin_raiding_party"
+      }
+    },
+    "goblin_raiding_party_goblin_warlord": {
+      "element_id": "goblin_raiding_party_goblin_warlord",
+      "element_type": "population",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "leader",
+        "faction": "goblin_warband",
+        "stats_profile": "warlord_base",
+        "inventory_profile": "boss_hoard_token",
+        "cognition_profile": "opportunistic_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "goblin_camp",
+        "archetype_source": "goblin_warlord",
+        "population_recipe_source": "goblin_raiding_party"
+      }
+    },
+    "rel_town_to_goblin_warband": {
+      "element_id": "rel_town_to_goblin_warband",
+      "element_type": "faction",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "town_council",
+        "target_faction": "goblin_warband",
+        "relationship_model": "security_hostility"
+      },
+      "details": {}
+    },
+    "rel_goblin_warband_to_town": {
+      "element_id": "rel_goblin_warband_to_town",
+      "element_type": "faction",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "goblin_warband",
+        "target_faction": "town_council",
+        "relationship_model": "raider_opportunity"
+      },
+      "details": {}
+    },
+    "quest_goblin_hunt_warlord": {
+      "element_id": "quest_goblin_hunt_warlord",
+      "element_type": "quest_definition",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "goblin",
+          "conflict",
+          "bounty"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_goblin_fetch_stolen_goods": {
+      "element_id": "quest_goblin_fetch_stolen_goods",
+      "element_type": "quest_definition",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "goblin",
+          "conflict",
+          "loot"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_goblin_defend_village_perimeter": {
+      "element_id": "quest_goblin_defend_village_perimeter",
+      "element_type": "quest_definition",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "goblin",
+          "conflict",
+          "defense"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "moon_cave": {
+      "element_id": "moon_cave",
+      "element_type": "region",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "moon_cave"
+      },
+      "details": {
+        "bounds": [
+          100,
+          70,
+          130,
+          110
+        ],
+        "terrain": "cave",
+        "hazard_level": 4.0,
+        "ecology_source": []
+      }
+    },
+    "moon_cult_apprentice_circle_apprentice_mage": {
+      "element_id": "moon_cult_apprentice_circle_apprentice_mage",
+      "element_type": "population",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "mage",
+        "faction": "arcane_circle",
+        "stats_profile": "apprentice_mage_base",
+        "inventory_profile": "mage_satchel",
+        "cognition_profile": "arcane_scholar",
+        "compatibility_projection": {
+          "legacy_engine_role": "HERO",
+          "legacy_engine_bucket": "NEUTRAL"
+        }
+      },
+      "details": {
+        "count": 4,
+        "spawn_region": "moon_cave",
+        "archetype_source": "apprentice_mage",
+        "population_recipe_source": "moon_cult_apprentice_circle"
+      }
+    },
+    "moon_cult_ruins__moon_resin_tree_0": {
+      "element_id": "moon_cult_ruins__moon_resin_tree_0",
+      "element_type": "resource",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "moon_resin_tree"
+      },
+      "details": {
+        "count": 3,
+        "region": "moon_cave"
+      }
+    },
+    "moon_cult_ruins__crystal_outcrop_1": {
+      "element_id": "moon_cult_ruins__crystal_outcrop_1",
+      "element_type": "resource",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "crystal_outcrop"
+      },
+      "details": {
+        "count": 4,
+        "region": "moon_cave"
+      }
+    },
+    "rel_moon_cult_to_town": {
+      "element_id": "rel_moon_cult_to_town",
+      "element_type": "faction",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "moon_cult",
+        "target_faction": "town_council",
+        "relationship_model": "hidden_conflict"
+      },
+      "details": {}
+    },
+    "quest_mcult_investigate_ritual_site": {
+      "element_id": "quest_mcult_investigate_ritual_site",
+      "element_type": "quest_definition",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "cult",
+          "arcane",
+          "mystery"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_mcult_explore_cave_network": {
+      "element_id": "quest_mcult_explore_cave_network",
+      "element_type": "quest_definition",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "explore"
+      },
+      "details": {
+        "tags": [
+          "cult",
+          "arcane",
+          "exploration"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_mcult_defend_arcane_circle": {
+      "element_id": "quest_mcult_defend_arcane_circle",
+      "element_type": "quest_definition",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "cult",
+          "arcane",
+          "defense"
+        ],
+        "reward_budget": 200
+      }
+    },
+    "old_mine": {
+      "element_id": "old_mine",
+      "element_type": "region",
+      "source_module": "old_mine_resource_loop",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "old_mine"
+      },
+      "details": {
+        "bounds": [
+          20,
+          60,
+          60,
+          105
+        ],
+        "terrain": "cave",
+        "hazard_level": 2.0,
+        "ecology_source": [
+          "old_mine_resource_ecology"
+        ]
+      }
+    },
+    "old_mine_spider_cluster_cave_spider": {
+      "element_id": "old_mine_spider_cluster_cave_spider",
+      "element_type": "population",
+      "source_module": "old_mine_resource_loop",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "predator_hunter",
+        "faction": "wild_beast_pack",
+        "stats_profile": "cave_spider_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 5,
+        "spawn_region": "old_mine",
+        "archetype_source": "cave_spider",
+        "population_recipe_source": "old_mine_spider_cluster"
+      }
+    },
+    "old_mine_resource_loop__iron_vein_0": {
+      "element_id": "old_mine_resource_loop__iron_vein_0",
+      "element_type": "resource",
+      "source_module": "old_mine_resource_loop",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "iron_vein"
+      },
+      "details": {
+        "count": 8,
+        "region": "old_mine"
+      }
+    },
+    "old_mine_resource_loop__crystal_outcrop_1": {
+      "element_id": "old_mine_resource_loop__crystal_outcrop_1",
+      "element_type": "resource",
+      "source_module": "old_mine_resource_loop",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "crystal_outcrop"
+      },
+      "details": {
+        "count": 4,
+        "region": "old_mine"
+      }
+    },
+    "old_mine_resource_loop__silver_vein_2": {
+      "element_id": "old_mine_resource_loop__silver_vein_2",
+      "element_type": "resource",
+      "source_module": "old_mine_resource_loop",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "silver_vein"
+      },
+      "details": {
+        "count": 2,
+        "region": "old_mine"
+      }
+    },
+    "mine_entrance_0": {
+      "element_id": "mine_entrance_0",
+      "element_type": "building",
+      "source_module": "old_mine_resource_loop",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "mine_entrance"
+      },
+      "details": {
+        "region": "old_mine"
+      }
+    },
+    "rel_dwarves_to_goblins": {
+      "element_id": "rel_dwarves_to_goblins",
+      "element_type": "faction",
+      "source_module": "old_mine_resource_loop",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "dwarven_mine_clan",
+        "target_faction": "goblin_warband",
+        "relationship_model": "resource_security_hostility"
+      },
+      "details": {}
+    },
+    "quest_mine_fetch_ore": {
+      "element_id": "quest_mine_fetch_ore",
+      "element_type": "quest_definition",
+      "source_module": "old_mine_resource_loop",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "resource",
+          "economy"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "orc_stronghold": {
+      "element_id": "orc_stronghold",
+      "element_type": "region",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "orc_territory"
+      },
+      "details": {
+        "bounds": [
+          160,
+          60,
+          200,
+          100
+        ],
+        "terrain": "plain",
+        "hazard_level": 3.0,
+        "ecology_source": [
+          "orc_territory_ecology"
+        ]
+      }
+    },
+    "orc_clan_warband_orc_brute": {
+      "element_id": "orc_clan_warband_orc_brute",
+      "element_type": "population",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "raider",
+        "faction": "orc_clan",
+        "stats_profile": "orc_brute_base",
+        "inventory_profile": "goblin_looter_pouch",
+        "cognition_profile": "opportunistic_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 5,
+        "spawn_region": "orc_stronghold",
+        "archetype_source": "orc_brute",
+        "population_recipe_source": "orc_clan_warband"
+      }
+    },
+    "orc_clan_territory__iron_vein_0": {
+      "element_id": "orc_clan_territory__iron_vein_0",
+      "element_type": "resource",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "iron_vein"
+      },
+      "details": {
+        "count": 4,
+        "region": "orc_stronghold"
+      }
+    },
+    "orc_clan_territory__wood_node_1": {
+      "element_id": "orc_clan_territory__wood_node_1",
+      "element_type": "resource",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "wood_node"
+      },
+      "details": {
+        "count": 6,
+        "region": "orc_stronghold"
+      }
+    },
+    "rel_town_to_orc_clan": {
+      "element_id": "rel_town_to_orc_clan",
+      "element_type": "faction",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "town_council",
+        "target_faction": "orc_clan",
+        "relationship_model": "security_hostility"
+      },
+      "details": {}
+    },
+    "rel_orc_clan_to_town": {
+      "element_id": "rel_orc_clan_to_town",
+      "element_type": "faction",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "orc_clan",
+        "target_faction": "town_council",
+        "relationship_model": "territorial_raider"
+      },
+      "details": {}
+    },
+    "quest_orc_hunt_patrol_warband": {
+      "element_id": "quest_orc_hunt_patrol_warband",
+      "element_type": "quest_definition",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "orc",
+          "conflict",
+          "bounty"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_orc_escort_settler_convoy": {
+      "element_id": "quest_orc_escort_settler_convoy",
+      "element_type": "quest_definition",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "orc",
+          "conflict",
+          "escort"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_orc_investigate_expansion_signs": {
+      "element_id": "quest_orc_investigate_expansion_signs",
+      "element_type": "quest_definition",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "orc",
+          "conflict",
+          "territory"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "river_ford": {
+      "element_id": "river_ford",
+      "element_type": "region",
+      "source_module": "river_crossing",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "near_forest"
+      },
+      "details": {
+        "bounds": [
+          130,
+          30,
+          160,
+          70
+        ],
+        "terrain": "river",
+        "hazard_level": 1.0,
+        "ecology_source": []
+      }
+    },
+    "river_crossing__herb_patch_0": {
+      "element_id": "river_crossing__herb_patch_0",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "herb_patch"
+      },
+      "details": {
+        "count": 3,
+        "region": "river_ford"
+      }
+    },
+    "watchtower_0": {
+      "element_id": "watchtower_0",
+      "element_type": "building",
+      "source_module": "river_crossing",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "watchtower"
+      },
+      "details": {
+        "region": "river_ford"
+      }
+    },
+    "quest_survey_river_route": {
+      "element_id": "quest_survey_river_route",
+      "element_type": "quest_definition",
+      "source_module": "river_crossing",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "explore"
+      },
+      "details": {
+        "tags": [
+          "river",
+          "terrain",
+          "scouting"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "swamp_border_territory": {
+      "element_id": "swamp_border_territory",
+      "element_type": "region",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "sunken_swamp"
+      },
+      "details": {
+        "bounds": [
+          180,
+          80,
+          220,
+          120
+        ],
+        "terrain": "swamp",
+        "hazard_level": 2.5,
+        "ecology_source": []
+      }
+    },
+    "swamp_tribe_patrol_lizardfolk_scout": {
+      "element_id": "swamp_tribe_patrol_lizardfolk_scout",
+      "element_type": "population",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "scout",
+        "faction": "swamp_tribe",
+        "stats_profile": "bandit_scout_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 3,
+        "spawn_region": "swamp_border_territory",
+        "archetype_source": "lizardfolk_scout",
+        "population_recipe_source": "swamp_tribe_patrol"
+      }
+    },
+    "swamp_tribe_patrol_lizardfolk_shaman": {
+      "element_id": "swamp_tribe_patrol_lizardfolk_shaman",
+      "element_type": "population",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "shaman",
+        "faction": "swamp_tribe",
+        "stats_profile": "apprentice_mage_base",
+        "inventory_profile": "mage_satchel",
+        "cognition_profile": "practical_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "HERO",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "swamp_border_territory",
+        "archetype_source": "lizardfolk_shaman",
+        "population_recipe_source": "swamp_tribe_patrol"
+      }
+    },
+    "swamp_ambush_party_lizardfolk_scout": {
+      "element_id": "swamp_ambush_party_lizardfolk_scout",
+      "element_type": "population",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "scout",
+        "faction": "swamp_tribe",
+        "stats_profile": "bandit_scout_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 4,
+        "spawn_region": "swamp_border_territory",
+        "archetype_source": "lizardfolk_scout",
+        "population_recipe_source": "swamp_ambush_party"
+      }
+    },
+    "sunken_swamp_border__wood_node_0": {
+      "element_id": "sunken_swamp_border__wood_node_0",
+      "element_type": "resource",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "wood_node"
+      },
+      "details": {
+        "count": 4,
+        "region": "swamp_border_territory"
+      }
+    },
+    "sunken_swamp_border__herb_patch_1": {
+      "element_id": "sunken_swamp_border__herb_patch_1",
+      "element_type": "resource",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "herb_patch"
+      },
+      "details": {
+        "count": 3,
+        "region": "swamp_border_territory"
+      }
+    },
+    "haunted_battlefield": {
+      "element_id": "haunted_battlefield",
+      "element_type": "region",
+      "source_module": "undead_battlefield",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "haunted_battlefield"
+      },
+      "details": {
+        "bounds": [
+          120,
+          20,
+          160,
+          60
+        ],
+        "terrain": "ruin",
+        "hazard_level": 4.0,
+        "ecology_source": [
+          "haunted_battlefield_ecology"
+        ]
+      }
+    },
+    "undead_battlefield_patrol_undead_sentinel": {
+      "element_id": "undead_battlefield_patrol_undead_sentinel",
+      "element_type": "population",
+      "source_module": "undead_battlefield",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "sentinel",
+        "faction": "undead_remnants",
+        "stats_profile": "undead_sentinel_base",
+        "inventory_profile": "undead_empty",
+        "cognition_profile": "undead_fixated",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 6,
+        "spawn_region": "haunted_battlefield",
+        "archetype_source": "undead_sentinel",
+        "population_recipe_source": "undead_battlefield_patrol"
+      }
+    },
+    "undead_battlefield__spirit_wisp_0": {
+      "element_id": "undead_battlefield__spirit_wisp_0",
+      "element_type": "resource",
+      "source_module": "undead_battlefield",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "spirit_wisp"
+      },
+      "details": {
+        "count": 2,
+        "region": "haunted_battlefield"
+      }
+    },
+    "rel_undead_to_living": {
+      "element_id": "rel_undead_to_living",
+      "element_type": "faction",
+      "source_module": "undead_battlefield",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "undead_remnants",
+        "target_faction": "town_council",
+        "relationship_model": "purpose_bound_hostility"
+      },
+      "details": {}
+    },
+    "quest_undead_investigate_risen_source": {
+      "element_id": "quest_undead_investigate_risen_source",
+      "element_type": "quest_definition",
+      "source_module": "undead_battlefield",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "undead",
+          "mystery",
+          "ruins"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_undead_defend_survivor_camp": {
+      "element_id": "quest_undead_defend_survivor_camp",
+      "element_type": "quest_definition",
+      "source_module": "undead_battlefield",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "undead",
+          "defense",
+          "ruins"
+        ],
+        "reward_budget": 200
+      }
+    },
+    "quest_undead_hunt_wraith_patrol": {
+      "element_id": "quest_undead_hunt_wraith_patrol",
+      "element_type": "quest_definition",
+      "source_module": "undead_battlefield",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "undead",
+          "spirit",
+          "bounty"
+        ],
+        "reward_budget": 180
+      }
+    },
+    "near_forest": {
+      "element_id": "near_forest",
+      "element_type": "region",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "near_forest"
+      },
+      "details": {
+        "bounds": [
+          45,
+          10,
+          90,
+          55
+        ],
+        "terrain": "forest",
+        "hazard_level": 1.0,
+        "ecology_source": [
+          "wolf_den_ecology"
+        ]
+      }
+    },
+    "wolf_den": {
+      "element_id": "wolf_den",
+      "element_type": "region",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "wolf_den"
+      },
+      "details": {
+        "bounds": [
+          70,
+          30,
+          105,
+          70
+        ],
+        "terrain": "forest",
+        "hazard_level": 2.0,
+        "ecology_source": [
+          "wolf_den_ecology"
+        ]
+      }
+    },
+    "wolf_pack_small_hungry_wolf": {
+      "element_id": "wolf_pack_small_hungry_wolf",
+      "element_type": "population",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "predator_hunter",
+        "faction": "wild_beast_pack",
+        "stats_profile": "wolf_predator_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 4,
+        "spawn_region": "wolf_den",
+        "archetype_source": "hungry_wolf",
+        "population_recipe_source": "wolf_pack_small"
+      }
+    },
+    "wolf_pack_small_alpha_wolf": {
+      "element_id": "wolf_pack_small_alpha_wolf",
+      "element_type": "population",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "alpha",
+        "faction": "wild_beast_pack",
+        "stats_profile": "wolf_predator_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "wolf_den",
+        "archetype_source": "alpha_wolf",
+        "population_recipe_source": "wolf_pack_small"
+      }
+    },
+    "wolf_den_near_forest__wood_node_0": {
+      "element_id": "wolf_den_near_forest__wood_node_0",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "wood_node"
+      },
+      "details": {
+        "count": 8,
+        "region": "near_forest"
+      }
+    },
+    "wolf_den_near_forest__herb_patch_1": {
+      "element_id": "wolf_den_near_forest__herb_patch_1",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "herb_patch"
+      },
+      "details": {
+        "count": 6,
+        "region": "near_forest"
+      }
+    },
+    "wolf_den_near_forest__healing_flower_patch_2": {
+      "element_id": "wolf_den_near_forest__healing_flower_patch_2",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "healing_flower_patch"
+      },
+      "details": {
+        "count": 3,
+        "region": "near_forest"
+      }
+    },
+    "rel_town_to_wild_beasts": {
+      "element_id": "rel_town_to_wild_beasts",
+      "element_type": "faction",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "town_council",
+        "target_faction": "wild_beast_pack",
+        "relationship_model": "settlement_safety_vs_wildlife"
+      },
+      "details": {}
+    },
+    "rel_wild_beasts_to_town": {
+      "element_id": "rel_wild_beasts_to_town",
+      "element_type": "faction",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "wild_beast_pack",
+        "target_faction": "town_council",
+        "relationship_model": "territorial_animal"
+      },
+      "details": {}
+    },
+    "quest_wolf_hunt_alpha_pack": {
+      "element_id": "quest_wolf_hunt_alpha_pack",
+      "element_type": "quest_definition",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "wolf",
+          "ecology",
+          "bounty"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_wolf_explore_forest_trail": {
+      "element_id": "quest_wolf_explore_forest_trail",
+      "element_type": "quest_definition",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "explore"
+      },
+      "details": {
+        "tags": [
+          "wolf",
+          "ecology",
+          "exploration"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "quest_wolf_fetch_herb_gathering": {
+      "element_id": "quest_wolf_fetch_herb_gathering",
+      "element_type": "quest_definition",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "wolf",
+          "ecology",
+          "resource"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "sacred_grove": {
+      "element_id": "sacred_grove",
+      "element_type": "region",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "sacred_grove"
+      },
+      "details": {
+        "bounds": [
+          40,
+          70,
+          80,
+          120
+        ],
+        "terrain": "forest",
+        "hazard_level": 1.5,
+        "ecology_source": [
+          "sacred_grove_ecology"
+        ]
+      }
+    },
+    "deep_forest": {
+      "element_id": "deep_forest",
+      "element_type": "region",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "near_forest"
+      },
+      "details": {
+        "bounds": [
+          0,
+          70,
+          40,
+          120
+        ],
+        "terrain": "forest",
+        "hazard_level": 2.0,
+        "ecology_source": [
+          "sacred_grove_ecology"
+        ]
+      }
+    },
+    "forest_warden_patrol_forest_ranger": {
+      "element_id": "forest_warden_patrol_forest_ranger",
+      "element_type": "population",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "ranger",
+        "faction": "forest_wardens",
+        "stats_profile": "ranger_base",
+        "inventory_profile": "ranger_pack",
+        "cognition_profile": "disciplined_guard",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "HERO_GUILD"
+        }
+      },
+      "details": {
+        "count": 3,
+        "spawn_region": "sacred_grove",
+        "archetype_source": "forest_ranger",
+        "population_recipe_source": "forest_warden_patrol"
+      }
+    },
+    "sacred_grove_guardians_spirit_guardian": {
+      "element_id": "sacred_grove_guardians_spirit_guardian",
+      "element_type": "population",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "guardian",
+        "faction": "spirit_court",
+        "stats_profile": "spirit_guardian_base",
+        "inventory_profile": "undead_empty",
+        "cognition_profile": "arcane_scholar",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "NEUTRAL"
+        }
+      },
+      "details": {
+        "count": 2,
+        "spawn_region": "sacred_grove",
+        "archetype_source": "spirit_guardian",
+        "population_recipe_source": "sacred_grove_guardians"
+      }
+    },
+    "forest_warden_grove__healing_flower_patch_0": {
+      "element_id": "forest_warden_grove__healing_flower_patch_0",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "healing_flower_patch"
+      },
+      "details": {
+        "count": 5,
+        "region": "sacred_grove"
+      }
+    },
+    "forest_warden_grove__spirit_wisp_1": {
+      "element_id": "forest_warden_grove__spirit_wisp_1",
+      "element_type": "resource",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "spirit_wisp"
+      },
+      "details": {
+        "count": 2,
+        "region": "sacred_grove"
+      }
+    },
+    "rel_forest_wardens_to_wild_beasts": {
+      "element_id": "rel_forest_wardens_to_wild_beasts",
+      "element_type": "faction",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "forest_wardens",
+        "target_faction": "wild_beast_pack",
+        "relationship_model": "ecology_respect"
+      },
+      "details": {}
+    },
+    "quest_grove_escort_warden_patrol": {
+      "element_id": "quest_grove_escort_warden_patrol",
+      "element_type": "quest_definition",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "warden",
+          "ecology",
+          "escort"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_grove_defend_sacred_grove": {
+      "element_id": "quest_grove_defend_sacred_grove",
+      "element_type": "quest_definition",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "warden",
+          "ecology",
+          "defense"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_grove_investigate_spirit_disturbance": {
+      "element_id": "quest_grove_investigate_spirit_disturbance",
+      "element_type": "quest_definition",
+      "source_module": "forest_warden_grove",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "warden",
+          "spirit",
+          "mystery"
+        ],
+        "reward_budget": 150
+      }
+    }
+  }
+}

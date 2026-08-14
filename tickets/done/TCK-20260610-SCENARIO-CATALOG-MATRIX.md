@@ -15,7 +15,7 @@ tags: [scenario, catalog, matrix]
 Add scenario catalog matrix integration test covering 8 scenario setups
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

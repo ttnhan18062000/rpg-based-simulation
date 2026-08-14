@@ -1,9 +1,6 @@
 ---
 name: api-design-principles
-description: "Master REST and GraphQL API design principles to build intuitive, scalable, and maintainable APIs that delight developers. Use when designing new APIs, reviewing API specifications, or establishing..."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: 'REST and GraphQL API design principles for building intuitive, scalable, maintainable APIs.'
 ---
 
 # API Design Principles
@@ -34,6 +31,16 @@ Master REST and GraphQL API design principles to build intuitive, scalable, and 
 4. Validate with examples and review for consistency.
 
 Refer to `resources/implementation-playbook.md` for detailed patterns, checklists, and templates.
+
+## In This Repo
+
+This skill's REST/GraphQL guidance is generic and does not know about this repo's own hard,
+gate-enforced boundary rule: API routes (`src/api/routes/`, `src/api/ws/`, `src/api/server.py`)
+must consume `src/api/presenters/*.py` only — never a raw `AuthoritativeState`/`EntityState`
+domain object (CLAUDE.md's "Do not expose raw domain models from APIs" Hard Rule, AST-enforced
+unconditionally by `tests/architecture/test_api_read_model_guard.py`). When this skill's generic
+principles (e.g. "return the full resource") would conflict with that rule, the repo rule wins —
+route through a presenter, never the raw model.
 
 ## Resources
 

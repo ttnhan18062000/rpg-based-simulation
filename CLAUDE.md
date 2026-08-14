@@ -22,6 +22,7 @@
 * Do not leave changes untested or untraceable.
 * Every implement-ticket workflow run (including hotfix) must record a run entry and at least one event entry to `agent-monitoring/`. Monitoring write failure must never fail the workflow.
 * **Do not run grep, find, raw file reads, or spawn Explore agents for investigation before first calling `search_docs` (MCP) and `graphify query` for the topic.** These tools traverse inferred relationships and doc registries that raw grep cannot. Grep and file reads are permitted only as follow-up after the semantic search results are in hand.
+* **Never edit an artifact to make an automated gate/check pass instead of fixing the underlying substance.** A gate's blocking result (`NEEDS_CHANGES`, `BLOCKED`, `NEEDS_HUMAN_INPUT`, a failing test, a failing validator, etc.) is correct information to report, not an obstacle to route around — stop and report it truthfully, even if it looks trivially resolvable. This applies at every level of agent delegation, including any sub-agent you spawn to carry out a step.
 
 ---
 
@@ -88,6 +89,7 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 - Clean up: `rm -rf data/runs/* reports/release_proof/*`.
 - Verify no leftover staging/temp files remain.
 - If any files under `docs/` were created or modified: run `make knowledge-index-update` to keep the agent context search index current.
+- `docs/REGISTRY.yaml` is regenerated unconditionally as part of Finalize's post-migration self-check (all tiers, including hotfix) — no manual `make docs-registry` step is needed. Always stage the regenerated file (`git add docs/REGISTRY.yaml`) as part of ticket close, alongside `agent-monitoring/`.
 - **Always stage `agent-monitoring/` (including `tools.jsonl`) in every commit** — the monitoring tools auto-update `tools.jsonl` on every run; never leave it as an unstaged modification.
 
 ### Commit Convention
@@ -103,7 +105,7 @@ TCK-YYYYMMDD-SHORT-SCOPE: Brief description of change
 | Tier | Pipeline | Use when |
 |---|---|---|
 | `hotfix` | Scope → Implement → Test → Parity → Verify → Finalize | Bug fix or minimal targeted change with self-evident intent |
-| `standard` | Full 9-phase pipeline | Any new feature, refactor, or substantive repair |
+| `standard` | Full 10-phase pipeline (+1 conditional: Security-Review) | Any new feature, refactor, or substantive repair |
 | `epic` | Scope only — tracks child tickets | Large multi-ticket initiative; no direct implementation |
 
 ---
@@ -134,7 +136,7 @@ tags: []
 ## Status         (OPEN | INPROGRESS | BLOCKED | DONE)
 ## Tier           (hotfix | standard | epic)
 ## Type           (bug | feature | refactor | chore | repair)
-## Priority       (P0 | P1 | P2)
+## Priority       (P0 | P1 | P2 | P3)
 ## Request Summary
 ## Scope
 ## Out of Scope
@@ -150,7 +152,13 @@ tags: []
 ## Completion Summary
 ```
 
-Frontmatter block is required as the first element. Fill `layer` and `tags` based on scope; leave `tags: []` if uncertain. Use `misc` for layer only if no keyword match is possible.
+Frontmatter block is required as the first element. Fill `layer` and `tags` based on scope; leave `tags: []` if uncertain.
+
+**`layer` is a hard allowlist**, not free text, and stays single-valued (never a list): every ticket/doc's `layer:` must already be registered in `registries/layer_registry.jsonl`, or `validate_frontmatter.py` rejects it. Before assigning `layer`, check `python3 tools/layer_registry.py list` — use an existing entry if it genuinely fits the ticket's subsystem; register a new one only if it doesn't, with `python3 tools/layer_registry.py add <layer> --note "why this layer exists"` (append-only: it cannot be renamed or removed once added). Use `misc` only if no real layer fits — never force-fit into `misc` when a genuine category is just missing from the registry; register the real one instead.
+
+**Tags are a hard allowlist**, not free text: every tag on a ticket/artifact created on or after 2026-07-04 must already be registered in `registries/tag_registry.jsonl`, or `validate_frontmatter.py` rejects it. Before using a genuinely new tag, check `python3 tools/tag_registry.py list` — if it isn't there, register it first with `python3 tools/tag_registry.py add <tag> --category <subsystem-topic|process-skill-signal|quality-attribute|meta-process> --note "why"` (append-only: it cannot be renamed or removed once added). See `docs/guidelines/tag_taxonomy.md` for the category definitions and `docs/guides/ticket_tagging.md` for a practical walkthrough.
+
+`layer` and `tags` are both registry-backed and append-only, but differ in shape: `layer` is single-value and uncategorized (it *is* the subsystem-topic dimension itself), `tags` is multi-value and split into 4 taxonomy categories (Subsystem/Topic, Process/Skill-signal, Phase/Milestone, Quality-attribute — see `docs/guidelines/tag_taxonomy.md`). `## Tier` (`hotfix | standard | epic`) and `## Status` (`OPEN | INPROGRESS | BLOCKED | DONE`, plus `EPIC_SCOPED` for epic-tier tickets) are ticket-*body* fields, not frontmatter — validated by a separate mechanism, `tools/ticket_field_values.py`, since body sections are parsed differently from frontmatter (see that module's docstring). `## Priority` is body-field too, values `P0 | P1 | P2 | P3`.
 
 ---
 
@@ -211,6 +219,7 @@ A task is not done unless all are true:
 - Temporary run data cleaned: `data/runs/`, `reports/release_proof/`
 - No known material gap is left unstated
 - Agent monitoring records written: run entry in `agent-monitoring/runs.jsonl`, at least one event in `agent-monitoring/events.jsonl` _(guaranteed by workflow — not verified by done-checker)_
+- Frontmatter valid in the ticket and its staging artifacts (script-checked by `done-checker`'s `frontmatter_valid` condition)
 
 ---
 
@@ -221,7 +230,7 @@ The **Mechanics Bible** (`docs/mechanics/`) and the **Engine Contracts** (`docs/
 - **Consistency**: All logic changes MUST be consistent with the laws defined in the Mechanics Bible.
 - **Parity**: Documentation and source code must remain in 100% semantic parity. If logic changes, update the corresponding doc AND the parity ledger entry (`docs/parity_ledger/`) in the same session.
 - **Reference**: When explaining or implementing mechanics, cite the specific chapter in `docs/mechanics/` or the contract ID in `docs/engine/`.
-- **Divergence**: Any intentional behavior change that differs from the Mechanics Bible MUST be recorded in `docs/guidelines/v2_intentional_divergences.md` with a rationale class and verification path.
+- **Divergence**: Any intentional behavior change that differs from the Mechanics Bible MUST be recorded in `docs/guidelines/intentional_divergences.md` with a rationale class and verification path.
 - **Precedence**: In case of ambiguity between legacy behavior and the V2 Mechanics Bible, the Mechanics Bible takes precedence.
 
 ### Mechanics Bible — `docs/mechanics/`
@@ -246,7 +255,7 @@ The master index is `project_lawbook_m10.md`. Key contracts:
 | File | Covers |
 |---|---|
 | `kernel.md` | 6-phase deterministic loop (Init → Governance → Scheduling → Packetization → Resolution → Persistence) |
-| `authoritative_pipeline.md` | 17-phase refinement sequence for world mutation |
+| `authoritative_pipeline.md` | 32-phase refinement sequence for world mutation |
 | `authoritative_mutation_pipeline_contract.md` | Mutation rules and apply-path law |
 | `governance_logic.md` | Governance and eligibility rules |
 | `performance_contract.md` | Hardware classes (A/B/C) and scaling limits |
@@ -279,18 +288,18 @@ Each entry has: `id`, `text`, `status` (`verified` / `divergent` / `missing` / `
 | `world_dynamics.yaml` | World evolution, ecology, calamities |
 | `infrastructure.yaml` | Replay, telemetry, observability, workers |
 
-### Intentional Divergences — `docs/guidelines/v2_intentional_divergences.md`
+### Intentional Divergences — `docs/guidelines/intentional_divergences.md`
 
 The canonical record of V2 behavior shifts from legacy. Any new divergence must be added here with a rationale class (`Hardened` / `Enforced` / `Unified` / `Stabilized` / `Bounded` / `Bug Fix` / `Intentional Gameplay Change`) and a `Verification` test path.
 
 ### Other Active Doc Areas
 
-- `docs/architecture/` — ADRs (adr-004 watchdog, adr-005 performance, world assembly, world repository layout)
-- `docs/combat/` — Combat rulebooks per milestone (m1–m7)
+- `docs/architecture/` — ADR-shaped design docs (`simulation_watchdog.md`, `performance_optimization.md`, world assembly, world repository layout)
+- `docs/combat/` — Combat rulebooks (`combat_movement_overhaul_spec.md`, `observability_rulebook.md`, `rollout_hardening_rulebook.md`)
 - `docs/strategy/` — Bounded cognition contracts and test matrices
 - `docs/guidelines/design_patterns.md` — Coding and design conventions
 - `docs/compliance/checklist.md` + `gap_analysis.md` — Compliance tracking
-- `docs/testing/v2_test_taxonomy.md` — Test classification rules
+- `docs/testing/test_taxonomy.md` — Test classification rules
 
 ---
 
@@ -310,6 +319,9 @@ Some tools should be invoked automatically based on the task — the user does n
 | `docs/REGISTRY.yaml` exists + user asks about prior work or related docs | Query registry by `related_code_areas` or `layer` — do not scan raw directories |
 | **Any investigation** (ticket creation, scoping, implementation planning, answering "how does X work") | **Step 1 (required)**: `mcp__knowledge-search__search_docs` with `query` = the topic. **Step 2 (required)**: `graphify query "<topic>"`. **Step 3 (fallback only)**: `python3 tools/knowledge_search.py query "<q>" --top-k 5`. Only after these: use grep/read/Explore to verify specific file paths. |
 | User asks project-specific mechanics, architecture, or history question | Same as "Any investigation" row above. `search_docs` is always available inside Claude Code sessions registered with `.mcp.json` — never skip it. |
+| Editing or investigating `src/api/` | `/api-design-principles` — review shape/boundaries before or after the change |
+| Investigating a traceback, test failure, or unexpected runtime error | `/debugging-strategies`; if the failure is specifically in world assembly/content resolution (`src/worldassembly/`, `src/worldbuilding/`, `src/worldmodules/`, `src/content/`, `src/core/registries.py`) use `Agent(subagent_type: "world-debugger")` instead — narrower and more specific for that case |
+| Profiling or investigating a slow simulation tick / high-memory world assembly | `/python-performance-optimization` |
 
 ### Require explicit user opt-in (never auto-invoke)
 
@@ -330,4 +342,4 @@ This project has a graphify knowledge graph at `graphify-out/`.
 - For cross-module questions ("how does X relate to Y"), prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse extracted and inferred edges instead of scanning files.
 - After modifying files under `src/` or `tests/`, run `graphify update .` to keep the graph current (AST-only, no API cost). Do not run if changes are only to docs, configurations, or non-code files.
 - Use `/graphify` to build or rebuild the full graph.
-- `docs/REGISTRY.yaml` is the authoritative flat index of all tagged docs and closed tickets. Query it with `grep` or `python3 -c 'import yaml; ...'` before scanning raw directories. Run `make docs-registry` to regenerate after new docs are added.
+- `docs/REGISTRY.yaml` is the authoritative flat index of all tagged docs and closed tickets. Query it with `grep` or `python3 -c 'import yaml; ...'` before scanning raw directories. Regeneration on ticket close is automatic (see "After Work" above); run `make docs-registry` manually only to preview an up-to-date registry mid-session, e.g. after adding new docs before any ticket has closed.

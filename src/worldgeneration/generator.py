@@ -38,6 +38,20 @@ from src.worldbuilding.schema import (
 )
 from src.worldbuilding.validator import WorldValidator, ValidationContext
 
+# TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY: reference-point constants for the area-aware
+# population formula in WorldProceduralGenerator.generate(). Derived from (not invented for) the
+# generator's own default GenerationIntentSpec values (target_world_size=(100,100),
+# danger_level=1.0) so the new formula reproduces the old flat formula's exact values at that
+# default -- area/danger sensitivity only appears away from it. Ported from src/world/spawn.py's
+# real, proven runtime respawn formula (area-proportional, hazard-modified, floored), but NOT a
+# verbatim copy of its constants (BASE_MONSTER_DENSITY=2.0, /10000.0 divisor) -- those are
+# calibrated for wilderness monster respawn maintenance, not initial town population sizing;
+# applying them verbatim to citizens would produce a near-zero town. See this ticket's own
+# investigation.md for the full derivation.
+_TOWN_REFERENCE_AREA = 900       # town_center's own area at target_world_size=(100,100): 30x30
+_WILD_REFERENCE_AREA = 3366      # wilderness_forest's own area at target_world_size=(100,100)
+_WILD_REFERENCE_HAZARD = 1.2     # wilderness_forest.hazard_level at danger_level=1.0 (1.2 * 1.0)
+
 
 class WorldProceduralGenerator:
     """
@@ -123,17 +137,27 @@ class WorldProceduralGenerator:
                     details={"description": cat_faction.description or ""}
                 )
 
-        # Find civilian/defender faction and monster/invader faction dynamically
-        civilian_faction = "town_council"
-        hostile_faction = "goblin_warband"
-
+        # Find civilian/defender faction and monster/invader faction dynamically.
+        # TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY: the previous hardcoded literal fallback
+        # ("town_council"/"goblin_warband") had no guarantee of actually being present in the
+        # `factions` dict built above -- true for the real shipped data/content catalog (both are
+        # real registered defender/invader factions there), but WorldProceduralGenerator is
+        # constructor-injectable with ANY CatalogRepository, and a catalog with zero
+        # defender-bucket or zero invader-bucket factions would dangling-reference and fail
+        # WorldValidator (reproduced directly during this ticket's own investigation). Falls back
+        # to any REAL faction actually present in `factions` instead of an unchecked literal --
+        # still lets WorldValidator catch the case where `factions` is completely empty (no
+        # catalog factions at all), which is a real, harder failure worth surfacing, not silently
+        # synthesizing a faction that isn't real.
         defenders = [f_id for f_id, f in self.catalog_repo.factions.items() if f.alignment_bucket == "defender"]
         invaders = [f_id for f_id, f in self.catalog_repo.factions.items() if f.alignment_bucket == "invader"]
-        
-        if defenders:
-            civilian_faction = "town_council" if "town_council" in defenders else defenders[0]
-        if invaders:
-            hostile_faction = "goblin_warband" if "goblin_warband" in invaders else invaders[0]
+
+        civilian_faction = "town_council" if "town_council" in defenders else (
+            defenders[0] if defenders else next(iter(factions), "town_council")
+        )
+        hostile_faction = "goblin_warband" if "goblin_warband" in invaders else (
+            invaders[0] if invaders else next(iter(factions), "goblin_warband")
+        )
 
         # Find roles dynamically
         citizen_role = "citizen"
@@ -207,9 +231,28 @@ class WorldProceduralGenerator:
                 details={"region": r_region}
             )
 
-        # 6. Population Allocation (Scale-based seeding)
-        pop_count_citizen = max(5, int(15 * intent.population_scale))
-        pop_count_monster = max(2, int(8 * intent.population_scale))
+        # 6. Population Allocation (area/hazard-aware, TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY).
+        # Citizens: no hazard term -- town_center.hazard_level is hardcoded 0.0 above (line ~81)
+        # at this generator's current region-carving, so a (1+hazard) multiplier would be
+        # permanently inert; not added for cosmetic formula-symmetry with nothing behind it.
+        town_x0, town_y0, town_x1, town_y1 = regions["town_center"].bounds
+        town_area = (town_x1 - town_x0) * (town_y1 - town_y0)
+        pop_count_citizen = max(5, int(
+            15 * intent.population_scale * (town_area / _TOWN_REFERENCE_AREA)
+        ))
+
+        # Monsters: both target_world_size (area) and danger_level (hazard) now genuinely affect
+        # count -- danger_level was already a real intent field but never factored into
+        # population before this ticket, consistent with spawn.py's own real precedent (danger
+        # scales monster presence, not just monster combat strength).
+        wild_x0, wild_y0, wild_x1, wild_y1 = regions["wilderness_forest"].bounds
+        wild_area = (wild_x1 - wild_x0) * (wild_y1 - wild_y0)
+        wild_hazard = regions["wilderness_forest"].hazard_level
+        pop_count_monster = max(2, int(
+            8 * intent.population_scale
+            * (wild_area / _WILD_REFERENCE_AREA)
+            * ((1.0 + wild_hazard) / (1.0 + _WILD_REFERENCE_HAZARD))
+        ))
         
         # Citizens in town
         entities.append(PopulationSpec(

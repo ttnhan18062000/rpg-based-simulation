@@ -64,6 +64,20 @@ _ALL_FLAG_NAMES: Tuple[str, ...] = (
 # ENABLE_ADVENTURE_ROUTING to be ON for the adventure pipeline to execute.
 _ADVENTURE_ROUTING_PERSPECTIVES = frozenset({"hero_guild_perspective"})
 
+# Explicit, named allowlist of flags deliberately cut over to a live "ON" default — each backed
+# by a real, validated replacement (not speculative rollout), documented in feature_flags.py's own
+# comment block at the flag's definition (TCK-20260807-FEATURE-FLAG-OFF-SHADOW-TEST-STALE).
+# Mirrors tests/unit/config/test_phase10_feature_flags.py::_DELIBERATE_ON_DEFAULT_FLAGS — kept in
+# sync with that file (TCK-20260811-PUSH-EVENT-SHAPERS-DEFAULT-DEV002-VIOLATION). Adding a flag
+# here must NOT be done casually — it defeats this test's entire purpose (catching *accidental* ON
+# defaults) unless the flag has the same real-cutover backing these do.
+_DELIBERATE_ON_DEFAULT_FLAGS = frozenset({
+    "ENABLE_PUSH_EVENT_SHAPERS",         # TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION
+    "ENABLE_PUSH_EVENT_SHAPERS_PHASE2",  # TCK-20260806-PUSH-CUTOVER-PHASE2
+    "ENABLE_PUSH_EVENT_SHAPERS_QUEST",   # TCK-20260807-QUEST-EVENT-PUSH-MIGRATION
+    "ENABLE_PUSH_EVENT_SHAPERS_AGENCY",  # TCK-20260807-COMMITMENT-ABANDONED-PUSH-MIGRATION-GAP / TCK-20260807-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP
+})
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -235,12 +249,20 @@ def test_feature_flag_defaults_are_stable_across_instances():
         f"Instance 2: {s2}. Instance 3: {s3}. "
         "This indicates module-level mutable state is leaking between instantiations."
     )
-    # All values must be 'OFF'
+    # All values must be 'OFF', except the explicit, named, documented exceptions in
+    # _DELIBERATE_ON_DEFAULT_FLAGS — real cutovers, not accidental defaults — which must
+    # instead be 'ON' (so an accidental revert of a deliberate cutover is also caught).
     for flag, value in s1.items():
-        assert value == FeatureMode.OFF.value, (
-            f"Flag {flag!r} serializes as {value!r} instead of 'OFF'. "
-            "Defaults must be FeatureMode.OFF per DEV-002."
-        )
+        if flag in _DELIBERATE_ON_DEFAULT_FLAGS:
+            assert value == FeatureMode.ON.value, (
+                f"Flag {flag!r} is in the deliberate-ON-default allowlist but serializes as "
+                f"{value!r} instead of 'ON' — allowlist entry is now stale, update or remove it."
+            )
+        else:
+            assert value == FeatureMode.OFF.value, (
+                f"Flag {flag!r} serializes as {value!r} instead of 'OFF'. "
+                "Defaults must be FeatureMode.OFF per DEV-002."
+            )
 
 
 # ---------------------------------------------------------------------------

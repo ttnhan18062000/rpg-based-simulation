@@ -129,18 +129,32 @@ class CapacityEnforcementPhase:
                     lambda z: z.score
                 )
 
+            # 7. Enforce Committed Intentions (ordered by sequence_index -- NOT score-based, unlike 1-6 above)
+            ci_removals = []
+            if len(entity.strategic.committed_intentions) + len(strat_upd.committed_intentions_add_or_update) > profile.max_committed_intentions:
+                by_id = {ci.intention_id: ci for ci in entity.strategic.committed_intentions}
+                for ci in strat_upd.committed_intentions_add_or_update:
+                    by_id[ci.intention_id] = ci
+                for ci_id in strat_upd.committed_intentions_remove:
+                    by_id.pop(ci_id, None)
+                combined = list(by_id.values())
+                survivors = CapacityService.trim_list(combined, profile.max_committed_intentions, score_func=lambda ci: -ci.sequence_index)
+                survivor_ids = {ci.intention_id for ci in survivors}
+                ci_removals = [ci.intention_id for ci in combined if ci.intention_id not in survivor_ids]
+
             # If nothing changed, continue
-            any_removals = lead_removals or concern_removals or project_removals or hypo_removals or zone_removals
+            any_removals = lead_removals or concern_removals or project_removals or hypo_removals or zone_removals or ci_removals
             if not any_removals and len(trimmed_tps) == len(all_tps):
                 continue
-                
+
             # Update the strategic update with removals
             new_leads_remove = list(set(strat_upd.leads_remove) | set(lead_removals))
             new_concerns_remove = list(set(strat_upd.concerns_remove) | set(concern_removals))
             new_projects_remove = list(set(strat_upd.projects_remove) | set(project_removals))
             new_hypotheses_remove = list(set(strat_upd.hypotheses_remove) | set(hypo_removals))
             new_zones_remove = list(set(strat_upd.candidate_zones_remove) | set(zone_removals))
-            
+            new_committed_intentions_remove = list(set(strat_upd.committed_intentions_remove) | set(ci_removals))
+
             refined_entity_updates[e_id] = replace(
                 ent_upd,
                 strategic=replace(
@@ -149,11 +163,12 @@ class CapacityEnforcementPhase:
                     concerns_remove=new_concerns_remove,
                     projects_remove=new_projects_remove,
                     hypotheses_remove=new_hypotheses_remove,
-                    candidate_zones_remove=new_zones_remove
+                    candidate_zones_remove=new_zones_remove,
+                    committed_intentions_remove=new_committed_intentions_remove
                 )
             )
-            
-            if lead_removals or concern_removals or project_removals or hypo_removals or zone_removals:
+
+            if lead_removals or concern_removals or project_removals or hypo_removals or zone_removals or ci_removals:
                 # Audit rejections due to capacity
                 reason = "STRATEGIC_CAPACITY_TRIM"
                 new_rejections_delta = dict(update.rejections_delta)

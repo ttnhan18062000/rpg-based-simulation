@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "undead_battlefield_patrol_undead_sentinel": {
+      "legacy_role": 2,
+      "legacy_faction": 1,
+      "hp": 130,
+      "max_hp": 130,
+      "atk": 14,
+      "def": 6,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "undead_empty",
+      "cognition_seed": "undead_fixated",
+      "archetype_id": "undead_sentinel",
+      "race_id": "undead",
+      "role_id": "sentinel",
+      "faction_id": "undead_remnants",
+      "traits": [
+        "undead"
+      ],
+      "themes": [
+        "undead",
+        "ruin"
+      ],
+      "stat_profile_id": "undead_sentinel_base",
+      "combat_profile_id": "undead_slam",
+      "cognition_profile_id": "undead_fixated",
+      "drive_profile_id": "undead_purpose_bound",
+      "need_profile_id": "undead_purpose",
+      "sense_profile_id": "undead_dread_senses",
+      "inventory_profile_id": "undead_empty",
+      "skill_profile_id": "undead_sentinel_skills"
+    }
+  },
+  "buildings": {
+    "watchtower_0": {
+      "hp": 800,
+      "max_hp": 800,
+      "service_profile_id": "guard_post_service",
+      "owner_faction": null
+    }
+  },
+  "resources": {
+    "mountain_pass__iron_vein_0": {
+      "required_ticks": 15,
+      "resource_type": "iron_vein",
+      "yield_policy": null
+    },
+    "mountain_pass__frost_shard_cluster_1": {
+      "required_ticks": 24,
+      "resource_type": "frost_shard_cluster",
+      "yield_policy": null
+    },
+    "river_crossing__herb_patch_0": {
+      "required_ticks": 8,
+      "resource_type": "herb_patch",
+      "yield_policy": null
+    }
+  },
+  "factions": {
+    "hero_guild": {
+      "starting_gold": 1000.0
+    },
+    "town_council": {
+      "starting_gold": 1000.0
+    },
+    "neutral": {
+      "starting_gold": 1000.0
+    },
+    "wild_beast_pack": {
+      "starting_gold": 1000.0
+    },
+    "goblin_warband": {
+      "starting_gold": 1000.0
+    },
+    "merchant_league": {
+      "starting_gold": 1000.0
+    },
+    "bandit_company": {
+      "starting_gold": 1000.0
+    },
+    "forest_wardens": {
+      "starting_gold": 1000.0
+    },
+    "orc_clan": {
+      "starting_gold": 1000.0
+    },
+    "dwarven_mine_clan": {
+      "starting_gold": 1000.0
+    },
+    "moon_cult": {
+      "starting_gold": 1000.0
+    },
+    "undead_remnants": {
+      "starting_gold": 1000.0
+    },
+    "arcane_circle": {
+      "starting_gold": 1000.0
+    },
+    "swamp_tribe": {
+      "starting_gold": 1000.0
+    },
+    "dragon_cult": {
+      "starting_gold": 1000.0
+    },
+    "spirit_court": {
+      "starting_gold": 1000.0
+    }
+  },
+  "region_ownership": {},
+  "legacy_factions": {
+    "undead_remnants": 1
+  },
+  "legacy_roles": {
+    "sentinel": 2
+  },
+  "perspectives": {}
+}

@@ -1,0 +1,13 @@
+{
+  "world_id": "hero_guild_routing",
+  "seed": 42,
+  "entity_count": 31,
+  "region_count": 4,
+  "resource_node_count": 4,
+  "building_count": 5,
+  "quest_count": 10,
+  "distinct_populated_factions": 5,
+  "warnings": [],
+  "compile_duration_ms": 13.328159984666854,
+  "state_hash": "56e999580cbcc9ec36db27ec48e20262"
+}

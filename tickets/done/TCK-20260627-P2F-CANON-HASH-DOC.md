@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2F-CANON-HASH-DOC
 phase: done
 date: 2026-06-27
-tags: [p2, canonical-hash, determinism, documentation, known-limitations]
+tags: [canonical-hash, determinism, documentation, known-limitations]
 ---
 
 # TCK-20260627-P2F-CANON-HASH-DOC

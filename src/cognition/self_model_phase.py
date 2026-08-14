@@ -39,6 +39,16 @@ class SelfModelUpdatePhase:
         """
         new_entity_updates = dict(update.entity_updates)
 
+        # Group compile-time-seeded InformationResponse-shaped events by actor_id
+        # (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B — third application of the compile-time-seed
+        # pattern; see docs/guidelines/design_patterns.md Pattern 6).
+        events_by_actor: Dict[int, List[Any]] = {}
+        for entry in getattr(state, "pending_self_model_information_events", []):
+            actor_id = entry.get("actor_id")
+            event = entry.get("event")
+            if actor_id is not None and event is not None:
+                events_by_actor.setdefault(actor_id, []).append(event)
+
         for entity_id, entity in state.entities.items():
             if not entity.lifecycle.active or not entity.combat.alive:
                 continue
@@ -47,7 +57,7 @@ class SelfModelUpdatePhase:
             new_bundle = SelfModelUpdatePhase.run(
                 entity=entity,
                 state=state,
-                events=[],
+                events=events_by_actor.get(entity_id, []),
                 tick=state.tick
             )
 

@@ -21,6 +21,8 @@ EXPECTED_KEYS = {
     # E41A lifecycle fields:
     "formation_tick", "escort_target_id", "grievance_log",
     "reward_pool", "last_leadership_check_tick", "dissolution_tick",
+    # SOC-232: PartyCompositionScorer result at formation
+    "composition_score",
 }
 
 

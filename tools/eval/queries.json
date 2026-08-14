@@ -3,240 +3,549 @@
     "query": "how does the damage formula work for attacker vs defender",
     "expected_doc_ids": ["mechanics/02_combat_laws"],
     "category": "semantic",
-    "notes": "semantic — 'damage formula' is an H2 heading in combat laws"
+    "notes": "semantic — 'damage formula' is an H2 heading in combat laws",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "what core attributes does an entity have at creation",
     "expected_doc_ids": ["mechanics/01_entity_anatomy"],
     "category": "semantic",
-    "notes": "semantic — entity anatomy chapter covers starting attributes"
+    "notes": "semantic — entity anatomy chapter covers starting attributes",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "how does stamina pressure build up over time and affect an entity",
     "expected_doc_ids": ["mechanics/01_entity_anatomy"],
     "category": "semantic",
-    "notes": "semantic — biological pressures section of entity anatomy"
+    "notes": "semantic — biological pressures section of entity anatomy",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "how does the economy enforce conservation of resources",
     "expected_doc_ids": ["mechanics/03_economic_laws"],
     "category": "semantic",
-    "notes": "semantic — atomic conservation is the central law of chapter 03"
+    "notes": "semantic — atomic conservation is the central law of chapter 03",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "what is the goal hierarchy for AI strategic decisions",
     "expected_doc_ids": ["mechanics/04_strategic_cognition"],
     "category": "semantic",
-    "notes": "semantic — goal hierarchy is chapter 04's core concept"
+    "notes": "semantic — goal hierarchy is chapter 04's core concept",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "how does regional trauma accumulate from events",
     "expected_doc_ids": ["mechanics/05_world_evolution"],
     "category": "semantic",
-    "notes": "semantic — regional trauma is a world evolution mechanic"
+    "notes": "semantic — regional trauma is a world evolution mechanic",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "what happens during each phase of the engine tick loop",
     "expected_doc_ids": ["engine/kernel"],
     "category": "semantic",
-    "notes": "semantic — kernel defines the 6-phase deterministic loop"
+    "notes": "semantic — kernel defines the 6-phase deterministic loop",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "how are entities identified and what is their lifecycle",
     "expected_doc_ids": ["core/entities"],
     "category": "semantic",
-    "notes": "semantic — entity lifecycle and identity are in core/entities"
+    "notes": "semantic — entity lifecycle and identity are in core/entities",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "what is the immutability law for simulation state",
     "expected_doc_ids": ["core/state"],
     "category": "semantic",
-    "notes": "semantic — state immutability law defined in core/state"
+    "notes": "semantic — state immutability law defined in core/state",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "how does durability decay for items used in combat",
     "expected_doc_ids": ["mechanics/02_combat_laws"],
     "category": "semantic",
-    "notes": "semantic — durability decay is a combat laws topic"
+    "notes": "semantic — durability decay is a combat laws topic",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "how does harvesting work and what governs resource yields",
     "expected_doc_ids": ["mechanics/03_economic_laws"],
     "category": "semantic",
-    "notes": "semantic — harvesting rules are part of economic laws"
+    "notes": "semantic — harvesting rules are part of economic laws",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "how are world regions defined and what are their boundaries",
     "expected_doc_ids": ["mechanics/06_worldbuilding_foundation"],
     "category": "semantic",
-    "notes": "semantic — declarative topology and region definitions"
+    "notes": "semantic — declarative topology and region definitions",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "how does an agent perceive and store knowledge about the world",
     "expected_doc_ids": ["mechanics/04_strategic_cognition"],
     "category": "semantic",
-    "notes": "semantic — perception and knowledge management in chapter 04"
+    "notes": "semantic — perception and knowledge management in chapter 04",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "what are the performance targets for different hardware classes",
     "expected_doc_ids": ["engine/performance_contract"],
     "category": "semantic",
-    "notes": "semantic — hardware class A/B/C scaling limits in performance contract"
+    "notes": "semantic — hardware class A/B/C scaling limits in performance contract",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "what calamities can affect the world and how do they trigger",
     "expected_doc_ids": ["mechanics/05_world_evolution"],
     "category": "semantic",
-    "notes": "semantic — calamities are a world evolution mechanism"
+    "notes": "semantic — calamities are a world evolution mechanism",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "WorldRepository",
     "expected_doc_ids": ["architecture/world_repository_layout"],
     "category": "exact-term",
-    "notes": "exact-term — WorldRepository is the subject of the layout doc"
+    "notes": "exact-term — WorldRepository is the subject of the layout doc",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "AuthoritativeState",
     "expected_doc_ids": ["core/state", "engine/authoritative_mutation_pipeline_contract"],
     "category": "exact-term",
-    "notes": "exact-term — canonical state concept defined in core/state and engine contracts"
+    "notes": "exact-term — canonical state concept defined in core/state and engine contracts",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "authoritative_mutation_pipeline",
     "expected_doc_ids": ["engine/authoritative_mutation_pipeline_contract", "engine/authoritative_pipeline"],
     "category": "exact-term",
-    "notes": "exact-term — phrase appears as doc name and in pipeline contract text"
+    "notes": "exact-term — phrase appears as doc name and in pipeline contract text",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "WorldCompositionSpec",
     "expected_doc_ids": ["architecture/world_assembly_architecture"],
     "category": "exact-term",
-    "notes": "exact-term — WorldCompositionSpec is the input type in world assembly"
+    "notes": "exact-term — WorldCompositionSpec is the input type in world assembly",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "governance_logic eligibility",
     "expected_doc_ids": ["engine/governance_logic"],
     "category": "exact-term",
-    "notes": "exact-term — governance_logic is both a file name and the concept"
+    "notes": "exact-term — governance_logic is both a file name and the concept",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "replay contract determinism",
-    "expected_doc_ids": ["engine/contracts/replay_contract"],
+    "expected_doc_ids": ["engine/replay_contract"],
     "category": "exact-term",
-    "notes": "exact-term — replay contract doc name plus key topic"
+    "notes": "exact-term — replay contract doc name plus key topic",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "scheduler_contract tick scheduling",
-    "expected_doc_ids": ["engine/contracts/scheduler_contract"],
+    "expected_doc_ids": ["engine/scheduler_contract"],
     "category": "exact-term",
-    "notes": "exact-term — scheduler contract file and concept"
+    "notes": "exact-term — scheduler contract file and concept",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "XP scaling progression formula",
     "expected_doc_ids": ["mechanics/01_entity_anatomy"],
     "category": "exact-term",
-    "notes": "exact-term — XP scaling is covered in entity anatomy chapter"
+    "notes": "exact-term — XP scaling is covered in entity anatomy chapter",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "apply_packet authoritative application",
     "expected_doc_ids": ["engine/authoritative_pipeline", "engine/authoritative_apply_contract"],
     "category": "exact-term",
-    "notes": "exact-term — apply_packet is the mutation application unit"
+    "notes": "exact-term — apply_packet is the mutation application unit",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "parity_ledger infrastructure status verified",
-    "expected_doc_ids": ["engine/contracts/infrastructure_overview"],
+    "expected_doc_ids": ["engine/infrastructure_overview"],
     "category": "exact-term",
-    "notes": "exact-term — parity ledger schema and infrastructure coverage"
+    "notes": "exact-term — parity ledger schema and infrastructure coverage",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "design_patterns coding conventions",
     "expected_doc_ids": ["guidelines/design_patterns"],
     "category": "exact-term",
-    "notes": "exact-term — the design patterns guideline doc by name"
+    "notes": "exact-term — the design patterns guideline doc by name",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 700
   },
   {
     "query": "ResolvedWorldBundle entity assignment",
     "expected_doc_ids": ["architecture/world_assembly_architecture"],
     "category": "exact-term",
-    "notes": "exact-term — ResolvedWorldBundle is the output of world assembly"
+    "notes": "exact-term — ResolvedWorldBundle is the output of world assembly",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "watchdog adr simulation safety",
-    "expected_doc_ids": ["architecture/adr-004-simulation-watchdog"],
+    "expected_doc_ids": ["architecture/simulation_watchdog"],
     "category": "exact-term",
-    "notes": "exact-term — ADR-004 covers simulation watchdog"
+    "notes": "exact-term — ADR-004 covers simulation watchdog",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "performance optimization adr bounded cognition",
-    "expected_doc_ids": ["architecture/adr-005-performance-optimization"],
+    "expected_doc_ids": ["architecture/performance_optimization"],
     "category": "exact-term",
-    "notes": "exact-term — ADR-005 covers performance optimization"
+    "notes": "exact-term — ADR-005 covers performance optimization",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "entity_anatomy attributes derived stats",
     "expected_doc_ids": ["mechanics/01_entity_anatomy"],
     "category": "exact-term",
-    "notes": "exact-term — doc name and subject combined"
+    "notes": "exact-term — doc name and subject combined",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "how does crafting relate to economic conservation laws",
     "expected_doc_ids": ["mechanics/03_economic_laws"],
     "category": "cross-section",
-    "notes": "cross-section — crafting (economy) ties back to conservation law, may also surface engine contracts"
+    "notes": "cross-section — crafting (economy) ties back to conservation law, may also surface engine contracts",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "how do combat outcomes affect the authoritative state pipeline",
     "expected_doc_ids": ["mechanics/02_combat_laws", "engine/authoritative_pipeline"],
     "category": "cross-section",
-    "notes": "cross-section — combat (mechanics) and authoritative pipeline (engine) both relevant"
+    "notes": "cross-section — combat (mechanics) and authoritative pipeline (engine) both relevant",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "entity attribute changes after XP reward and level up",
-    "expected_doc_ids": ["mechanics/01_entity_anatomy", "engine/contracts/progression_package"],
+    "expected_doc_ids": ["mechanics/01_entity_anatomy"],
     "category": "cross-section",
-    "notes": "cross-section — progression (entity anatomy) and progression contract (engine)"
+    "notes": "cross-section — progression (entity anatomy) and progression contract (engine); progression_package is archived and permanently unmatchable, see the no-result entry for that concept",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "how does world ecology affect resource node availability",
     "expected_doc_ids": ["mechanics/05_world_evolution", "mechanics/03_economic_laws"],
     "category": "cross-section",
-    "notes": "cross-section — ecology (world evolution) drives resource yields (economics)"
+    "notes": "cross-section — ecology (world evolution) drives resource yields (economics)",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "observability and replay for simulation determinism verification",
-    "expected_doc_ids": ["engine/contracts/replay_contract", "engine/contracts/observability_contract"],
+    "expected_doc_ids": ["engine/replay_contract", "engine/observability_contract"],
     "category": "cross-section",
-    "notes": "cross-section — replay and observability both serve determinism verification"
+    "notes": "cross-section — replay and observability both serve determinism verification",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
   },
   {
     "query": "aaa",
     "expected_doc_ids": [],
     "category": "edge-case",
-    "notes": "edge-case — very short nonsense query, should return some results or zero; no expected match"
+    "notes": "edge-case — very short nonsense query, should return some results or zero; no expected match",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
   },
   {
     "query": "damge formuler attakcer defneder",
     "expected_doc_ids": ["mechanics/02_combat_laws"],
     "category": "edge-case",
-    "notes": "edge-case — misspelled version of semantic query 1; BM25 may miss, semantic should still find"
+    "notes": "edge-case — misspelled version of semantic query 1; BM25 may miss, semantic should still find",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
   },
   {
     "query": "what is the meaning of simulation",
     "expected_doc_ids": [],
     "category": "edge-case",
-    "notes": "edge-case — extremely broad query with no single correct answer; test that results are returned without crash"
+    "notes": "edge-case — extremely broad query with no single correct answer; test that results are returned without crash",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
   },
   {
     "query": "xyzzy_nonexistent_term_not_in_any_doc",
     "expected_doc_ids": [],
     "category": "edge-case",
-    "notes": "edge-case — token with no match anywhere; should return zero or near-zero results gracefully"
+    "notes": "edge-case — token with no match anywhere; should return zero or near-zero results gracefully",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
   },
   {
     "query": "how",
     "expected_doc_ids": [],
     "category": "edge-case",
-    "notes": "edge-case — single stop-word query; stopword filtering should handle gracefully"
+    "notes": "edge-case — single stop-word query; stopword filtering should handle gracefully",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "known_limitations current scope boundaries",
+    "expected_doc_ids": ["engine/known_limitations"],
+    "category": "doc/exact-id",
+    "notes": "doc/exact-id — single, unambiguous doc identity match (known_limitations is both file name and topic)",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
+  },
+  {
+    "query": "damage_formula_contract exact formula reference",
+    "expected_doc_ids": ["mechanics/damage_formula_contract"],
+    "category": "doc/exact-id",
+    "notes": "doc/exact-id — single, unambiguous doc identity match, the sub-contract companion to 02_combat_laws",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
+  },
+  {
+    "query": "regional_sovereignty region boundary definition doc",
+    "expected_doc_ids": ["mechanics/regional_sovereignty"],
+    "category": "doc/exact-id",
+    "notes": "doc/exact-id — single, unambiguous doc identity match by file name and subject",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 1800
+  },
+  {
+    "query": "combat movement rulebook manhattan distance orthogonal adjacency spatial rules",
+    "expected_doc_ids": ["combat/combat_movement_overhaul_spec"],
+    "category": "policy-vs-superseded",
+    "notes": "policy-vs-superseded — query could plausibly match the historical Milestone-1 docs/archive/combat/combat_movement_rulebook.md (same Manhattan-distance/adjacency section), but that doc is archived and unindexed; the live, current answer is the consolidated overhaul spec that superseded it. Verified by direct content comparison, not assumed.",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "superseded",
+    "context_budget": 1800
+  },
+  {
+    "query": "engine support matrix grid movement resource interaction official status",
+    "expected_doc_ids": ["engine/supported_gameplay_surface"],
+    "category": "policy-vs-superseded",
+    "notes": "policy-vs-superseded — query could plausibly match the historical docs/archive/engine_contracts/support_matrix.md (same Grid Movement/Resource Interaction support-matrix topic), but that doc is archived and unindexed; the live, current answer is supported_gameplay_surface, its verified topical successor.",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "superseded",
+    "context_budget": 900
+  },
+  {
+    "query": "unsupported logic register legacy V1 systems replaced in V2",
+    "expected_doc_ids": ["engine/legacy_replacement_ledger"],
+    "category": "policy-vs-superseded",
+    "notes": "policy-vs-superseded — query could plausibly match the historical docs/archive/engine_contracts/unsupported_register.md (same legacy-vs-V2 disposition topic), but that doc is archived and unindexed; the live, current answer is legacy_replacement_ledger, the authoritative V1-to-V2 replacement record.",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "superseded",
+    "context_budget": 900
+  },
+  {
+    "query": "curated 40 query evaluation set measuring Recall@5 and MRR@10 against the live index",
+    "expected_doc_ids": ["TCK-20260612-LOCAL-CTX-EVAL"],
+    "category": "ticket-history",
+    "notes": "ticket-history — matches this ticket's own Request Summary text (the original queries.json/eval_search.py ticket)",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "eval harness bare document id compared against anchored chunk id comparison bug",
+    "expected_doc_ids": ["TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX"],
+    "category": "ticket-history",
+    "notes": "ticket-history — matches this ticket's own Request Summary text describing the bare-vs-anchored doc_id comparison bug",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "monitoring pause resume across sessions silently aliasing seq buckets",
+    "expected_doc_ids": ["TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION"],
+    "category": "ticket-history",
+    "notes": "ticket-history — matches this ticket's own Request Summary text describing the pause/resume seq-collision mechanism",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "knowledge_docs.doc_id chunk-level id field function",
+    "expected_doc_ids": ["TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX"],
+    "category": "symbol-to-test",
+    "notes": "proxy — targets a ticket documenting the symbol, not literal source-code retrieval (corpus does not index src/). Its Request Summary literally names knowledge_docs.doc_id and the chunk-level id field.",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "build_index.py module normalizing runs events tools into SQLite tables",
+    "expected_doc_ids": ["TCK-20260713-MONITORING-SQLITE-INDEX"],
+    "category": "symbol-to-test",
+    "notes": "proxy — targets a ticket documenting the symbol, not literal source-code retrieval (corpus does not index src/). Its Request Summary literally names tools/agent-monitoring/build_index.py.",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "query.py in-memory linear scan module migrated onto the SQLite index",
+    "expected_doc_ids": ["TCK-20260713-MONITORING-QUERY-INDEX-MIGRATE"],
+    "category": "symbol-to-test",
+    "notes": "proxy — targets a ticket documenting the symbol, not literal source-code retrieval (corpus does not index src/). Its Request Summary literally names tools/agent-monitoring/query.py.",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "tools/eval_search.py and tools/eval/queries.json changed together",
+    "expected_doc_ids": ["TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX"],
+    "category": "changed-path",
+    "notes": "proxy — targets a ticket whose summary names the changed path, not a literal path-ownership index (corpus does not index src/ or tests/). Its Request Summary names both tools/eval_search.py and tools/eval/queries.json inline.",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "tools/agent-monitoring/build_index.py path added by which ticket",
+    "expected_doc_ids": ["TCK-20260713-MONITORING-SQLITE-INDEX"],
+    "category": "changed-path",
+    "notes": "proxy — targets a ticket whose summary names the changed path, not a literal path-ownership index (corpus does not index src/ or tests/). Its Request Summary names tools/agent-monitoring/build_index.py inline.",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "tools/agent-monitoring/query.py path migrated to which index",
+    "expected_doc_ids": ["TCK-20260713-MONITORING-QUERY-INDEX-MIGRATE"],
+    "category": "changed-path",
+    "notes": "proxy — targets a ticket whose summary names the changed path, not a literal path-ownership index (corpus does not index src/ or tests/). Its Request Summary names tools/agent-monitoring/query.py inline.",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "worker_contract provider execution obligations",
+    "expected_doc_ids": ["engine/worker_contract"],
+    "category": "provider/workflow/monitoring",
+    "notes": "provider/workflow/monitoring — worker_contract is a provider-facing engine contract under docs/engine/contracts/",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
+  },
+  {
+    "query": "observability contract signal emission requirements",
+    "expected_doc_ids": ["engine/observability_contract"],
+    "category": "provider/workflow/monitoring",
+    "notes": "provider/workflow/monitoring — observability_contract governs monitoring/telemetry obligations; doc_id corrected in Step 1 of this ticket, reused here as a legitimate target",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
+  },
+  {
+    "query": "infrastructure_overview monitoring parity coverage status",
+    "expected_doc_ids": ["engine/infrastructure_overview"],
+    "category": "provider/workflow/monitoring",
+    "notes": "provider/workflow/monitoring — infrastructure_overview covers monitoring/telemetry/worker infrastructure status; doc_id corrected in Step 1 of this ticket, reused here as a legitimate target",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 900
+  },
+  {
+    "query": "engine contract for progression package resource engine phase 5 certification support matrix",
+    "expected_doc_ids": [],
+    "category": "no-result",
+    "notes": "no-result — models docs/archive/engine_contracts/progression_package.md, which is permanently unmatchable because docs/archive/ is excluded from the index by design (not a bug). This is the Resolved Decision 1 conversion of the old cross-section entry's dead second id.",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "archived",
+    "context_budget": 400
+  },
+  {
+    "query": "what is the meaning of life for a simulated npc",
+    "expected_doc_ids": [],
+    "category": "no-result",
+    "notes": "no-result — extremely broad philosophical query with no single correct doc answer; distinct from the existing edge-case broad-query entry",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
+  },
+  {
+    "query": "quantum entanglement teleportation mechanics",
+    "expected_doc_ids": [],
+    "category": "no-result",
+    "notes": "no-result — concept genuinely absent from this project's corpus; should return zero or near-zero results gracefully",
+    "allowable_alternatives": [],
+    "source_lifecycle_assumption": "current",
+    "context_budget": 400
   }
 ]

@@ -478,3 +478,33 @@ def test_subsystem_order_documentation():
         < positions["AuthoritativeApplyPipeline._resolve_occupancy_conflicts"]
         < positions["LifecycleSystem.resolve_lifecycle"]
     )
+
+
+def test_objective_intent_resolver_is_reachable_from_production_pipeline():
+    """
+    STRICT LAW:
+        ObjectiveIntentResolver.resolve must be called from a production call
+        site (TacticalDecisionSystem.evaluate_entity_intent), not just from its
+        own unit test file.
+
+    Background (TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP):
+        ObjectiveIntentResolver correctly maps every ObjectiveKind to an
+        executable ActionIntent, but was orphaned — never called anywhere in
+        the production pipeline — so every ObjectiveKind other than the
+        hardcoded REACH_LOCATION silently fell through to an idle EntityUpdate.
+        This guard prevents the resolver from silently becoming orphaned again
+        after a future refactor moves or removes its call site.
+
+    Fraud this catches:
+        - tactical.py's Pillar 5.1 objective-pursuit branch stops calling
+          ObjectiveIntentResolver.resolve, quietly reintroducing the routing
+          gap this ticket closed.
+    """
+    from src.engine.tactical import TacticalDecisionSystem
+
+    source = inspect.getsource(TacticalDecisionSystem.evaluate_entity_intent)
+    assert "ObjectiveIntentResolver.resolve" in source, (
+        "ObjectiveIntentResolver.resolve is no longer called from "
+        "TacticalDecisionSystem.evaluate_entity_intent — every non-REACH_LOCATION "
+        "ObjectiveKind will silently fall through to an idle EntityUpdate again."
+    )

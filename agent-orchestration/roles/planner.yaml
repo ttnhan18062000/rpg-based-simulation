@@ -1,0 +1,5 @@
+role_version: 1
+role_id: planner
+description: Produces plan.md from investigation findings — ordered, implementer-ready steps with scope guards and an acceptance-criteria map.
+phases: [Plan]
+has_agent_file: true

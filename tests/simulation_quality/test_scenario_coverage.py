@@ -416,3 +416,16 @@ def test_sq22_narrative_owns_scenario_stalled(weights: ScoringWeights) -> None:
     env = _env("scenario_stalled")
     rec = narrative.score(env, _ctx())
     assert rec is not None and rec.pillar == PillarId.NARRATIVE
+
+
+# ─── SQ-23: Infrastructure sabotage (WORLD primary, FACTION excluded) ────────
+
+def test_sq23_world_owns_building_sabotaged(weights: ScoringWeights) -> None:
+    world = WorldDynamicsScorer(weights)
+    faction = FactionScorer(weights)
+    env = _env("building_sabotaged", payload={"region_id": "r1"})
+    world_rec = world.score(env, _ctx())
+    faction_rec = faction.score(env, _ctx())
+    assert world_rec is not None and world_rec.pillar == PillarId.WORLD
+    assert world_rec.delta > 0
+    assert faction_rec is None, "FACTION must not score building_sabotaged (SQ-23)"

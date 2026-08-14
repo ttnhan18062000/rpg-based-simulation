@@ -9,3 +9,6 @@ pillar_weights:
   INFORMATION: 1.0
   WORLD: 1.0
   NARRATIVE: 1.0
+
+feature_flags:
+  ENABLE_ADVENTURE_ROUTING: "ON"

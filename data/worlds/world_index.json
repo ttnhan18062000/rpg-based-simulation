@@ -1,35 +1,5 @@
 {
   "worlds": {
-    "urban_political": {
-      "world_id": "urban_political",
-      "name": "Urban Political",
-      "path": "urban_political/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-02T00:59:39.041768",
-      "updated_at": "2026-07-02T00:59:39.041768",
-      "status": "COMPOSITION"
-    },
-    "highland_traverse": {
-      "world_id": "highland_traverse",
-      "name": "Highland Traverse",
-      "path": "highland_traverse/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-02T00:59:39.043057",
-      "updated_at": "2026-07-02T00:59:39.043057",
-      "status": "COMPOSITION"
-    },
-    "dungeon_crawl": {
-      "world_id": "dungeon_crawl",
-      "name": "Dungeon Crawl",
-      "path": "dungeon_crawl/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-02T00:59:39.045324",
-      "updated_at": "2026-07-02T00:59:39.045324",
-      "status": "COMPOSITION"
-    },
     "simq_routing_test": {
       "world_id": "simq_routing_test",
       "name": "SimQ Routing Test",
@@ -37,17 +7,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.046975",
-      "updated_at": "2026-07-02T00:59:39.046975",
-      "status": "COMPOSITION"
-    },
-    "frontier_extended": {
-      "world_id": "frontier_extended",
-      "name": "Frontier Extended",
-      "path": "frontier_extended/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-02T00:59:39.048335",
-      "updated_at": "2026-07-02T00:59:39.048335",
+      "updated_at": "2026-07-07T17:00:00.456137",
       "status": "COMPOSITION"
     },
     "swamp_border_world": {
@@ -57,7 +17,77 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.049279",
-      "updated_at": "2026-07-02T00:59:39.049279",
+      "updated_at": "2026-07-07T17:00:00.458460",
+      "status": "COMPOSITION"
+    },
+    "highland_traverse": {
+      "world_id": "highland_traverse",
+      "name": "Highland Traverse",
+      "path": "highland_traverse/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.043057",
+      "updated_at": "2026-07-07T17:00:00.460631",
+      "status": "COMPOSITION"
+    },
+    "unit_faction_tension": {
+      "world_id": "unit_faction_tension",
+      "name": "Unit Test \u2014 Faction Tension Isolation",
+      "path": "unit_faction_tension/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T01:07:51.834222",
+      "updated_at": "2026-07-07T17:00:00.461711",
+      "status": "COMPOSITION"
+    },
+    "crowded_frontier": {
+      "world_id": "crowded_frontier",
+      "name": "Crowded Frontier",
+      "path": "crowded_frontier/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T17:00:00.462733",
+      "updated_at": "2026-07-07T17:00:00.462733",
+      "status": "COMPOSITION"
+    },
+    "frontier_extended": {
+      "world_id": "frontier_extended",
+      "name": "Frontier Extended",
+      "path": "frontier_extended/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.048335",
+      "updated_at": "2026-07-07T17:00:00.465424",
+      "status": "COMPOSITION"
+    },
+    "hero_guild_routing": {
+      "world_id": "hero_guild_routing",
+      "name": "Hero Guild Routing",
+      "path": "hero_guild_routing/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T09:27:44.404565",
+      "updated_at": "2026-07-07T17:00:00.467260",
+      "status": "COMPOSITION"
+    },
+    "urban_political": {
+      "world_id": "urban_political",
+      "name": "Urban Political",
+      "path": "urban_political/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.041768",
+      "updated_at": "2026-07-07T17:00:00.470733",
+      "status": "COMPOSITION"
+    },
+    "dungeon_crawl": {
+      "world_id": "dungeon_crawl",
+      "name": "Dungeon Crawl",
+      "path": "dungeon_crawl/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.045324",
+      "updated_at": "2026-07-07T17:00:00.472352",
       "status": "COMPOSITION"
     },
     "sandbox_world": {
@@ -67,17 +97,37 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-05-23T15:47:38.022954",
-      "updated_at": "2026-07-02T00:59:39.049927",
+      "updated_at": "2026-07-07T17:00:00.474295",
       "status": "COMPOSITION"
     },
-    "frontier_living_world": {
-      "world_id": "frontier_living_world",
-      "name": "Frontier Living World",
-      "path": "frontier_living_world/world.yaml",
+    "frontier_marches": {
+      "world_id": "frontier_marches",
+      "name": "Frontier Marches",
+      "path": "frontier_marches/world.yaml",
       "schema_version": "worldcomposition.v1",
       "tags": [],
-      "created_at": "2026-07-02T00:59:39.050748",
-      "updated_at": "2026-07-02T00:59:39.050748",
+      "created_at": "2026-07-07T17:00:00.476840",
+      "updated_at": "2026-07-07T17:00:00.476840",
+      "status": "COMPOSITION"
+    },
+    "unit_information_source": {
+      "world_id": "unit_information_source",
+      "name": "Unit Test \u2014 Information Source Isolation",
+      "path": "unit_information_source/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T01:07:51.830214",
+      "updated_at": "2026-07-07T17:00:00.478923",
+      "status": "COMPOSITION"
+    },
+    "resource_dense_basin": {
+      "world_id": "resource_dense_basin",
+      "name": "Resource-Dense Basin",
+      "path": "resource_dense_basin/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T17:00:00.479781",
+      "updated_at": "2026-07-07T17:00:00.479781",
       "status": "COMPOSITION"
     },
     "wilderness_survival": {
@@ -87,7 +137,17 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.052001",
-      "updated_at": "2026-07-02T00:59:39.052001",
+      "updated_at": "2026-07-07T17:00:00.481287",
+      "status": "COMPOSITION"
+    },
+    "unit_selfmodel_pilot": {
+      "world_id": "unit_selfmodel_pilot",
+      "name": "Unit Test \u2014 Self-Model Cognition Isolation",
+      "path": "unit_selfmodel_pilot/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T08:00:25.141773",
+      "updated_at": "2026-07-07T17:00:00.482917",
       "status": "COMPOSITION"
     },
     "generated_frontier_3_42": {
@@ -97,7 +157,17 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.054159",
-      "updated_at": "2026-07-02T00:59:39.054159",
+      "updated_at": "2026-07-07T17:00:00.486706",
+      "status": "COMPOSITION"
+    },
+    "frontier_living_world": {
+      "world_id": "frontier_living_world",
+      "name": "Frontier Living World",
+      "path": "frontier_living_world/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.050748",
+      "updated_at": "2026-07-07T17:00:00.489140",
       "status": "COMPOSITION"
     }
   }

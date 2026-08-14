@@ -1,6 +1,6 @@
 ---
 name: debugging-strategies
-description: Master systematic debugging techniques, profiling tools, and root cause analysis to efficiently track down bugs across any codebase or technology stack. Use when investigating bugs, performance issues, or unexpected behavior.
+description: 'Systematic debugging techniques, profiling tools, and root cause analysis.'
 ---
 
 # Debugging Strategies
@@ -17,6 +17,20 @@ Transform debugging from frustrating guesswork into systematic problem-solving w
 - Profiling application performance
 - Investigating memory leaks
 - Debugging distributed systems
+
+## In This Repo
+
+If the failure is specifically in world assembly, worldbuilding, worldmodules, content resolution
+(`src/worldassembly/`, `src/worldbuilding/`, `src/worldmodules/`, `src/content/`,
+`src/core/registries.py`), use the `world-debugger` agent instead of applying this skill's generic
+methodology directly — it's narrower and already traces the authoritative pipeline for that
+specific failure class (CLAUDE.md's Proactive Tool Use table).
+
+For any tick-level or state-mutation failure, ground the generic strategies below in this repo's
+real deterministic-tick model first: `docs/engine/kernel.md` (the 7-phase tick loop — Resolution
+is the only phase allowed to write state) and `docs/engine/authoritative_pipeline.md` (the 32-phase
+`AuthoritativeApplyPipeline` every durable mutation actually flows through). A bug that looks like
+non-determinism is far more often a `StateUpdate`/`DirtySet` ordering issue than a genuine race.
 
 ## Core Principles
 

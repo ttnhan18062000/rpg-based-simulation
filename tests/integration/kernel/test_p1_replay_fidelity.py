@@ -475,3 +475,37 @@ def test_event_level_replay_fidelity():
 
     assert detour is not None
     assert state_v3_r.entities[1].strategic.current_project_id == detour.id
+
+
+def test_committed_intentions_included_in_replay_fingerprint():
+    """
+    TCK-20260812-COMMITTED-INTENTION-SEQUENCE (New Test 10): committed_intentions is
+    replay-visible planning state (Design Decision 1) -- StateFingerprinter must include it,
+    or two states differing only in committed_intentions would silently collide on
+    state_hash, hiding a real divergence during replay-fidelity verification.
+    """
+    from src.core.strategic import CommittedIntention
+    from src.replay.fingerprint import StateFingerprinter
+
+    e1 = create_mock_entity(1, pos=(0.0, 0.0))
+    state_a = AuthoritativeState(tick=1, seed=42, entities={1: e1})
+
+    ci = CommittedIntention(
+        intention_id="ci_1",
+        goal_kind="harvesting",
+        target_hint="node_10",
+        sequence_index=0,
+        status="pending",
+    )
+    e1_with_ci = replace(e1, strategic=replace(e1.strategic, committed_intentions=(ci,)))
+    state_b = replace_entity(state_a, 1, e1_with_ci)
+
+    hash_a = StateFingerprinter.get_fingerprint(state_a)["state_hash"]
+    hash_b = StateFingerprinter.get_fingerprint(state_b)["state_hash"]
+
+    assert hash_a != hash_b
+
+    ident_a = StateFingerprinter._strategic_identity(state_a.entities[1])
+    ident_b = StateFingerprinter._strategic_identity(state_b.entities[1])
+    assert "committed_intentions=[]" in ident_a
+    assert "ci_1:harvesting:0:pending:node_10" in ident_b

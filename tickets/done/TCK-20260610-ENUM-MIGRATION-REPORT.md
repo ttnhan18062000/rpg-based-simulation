@@ -15,7 +15,7 @@ tags: [enum, migration, report]
 Add enum migration backlog report showing remaining direct enum usage by category
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

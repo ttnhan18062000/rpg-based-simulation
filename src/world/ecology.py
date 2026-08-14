@@ -121,21 +121,22 @@ class ResourceEcologyService:
                 # Seed chance (50% per interval if under target)
                 if generator.rng.get_float(Domain.SPAWN, state.tick, f"seed_{r_id}") < 0.5:
                     # Determine node kind based on region
-                    kind = "WOOD" if region.kind == "FOREST" else "STONE"
-                    if region.kind == "MOUNTAIN": kind = "IRON"
-                    
+                    kind = "wood_node" if region.kind == "FOREST" else "stone_outcrop"
+                    if region.kind == "MOUNTAIN": kind = "iron_vein"
+
                     # Random position
                     rx = generator.rng.get_float(Domain.SPAWN, state.tick, f"x_{r_id}") * (xmax - xmin) + xmin
                     ry = generator.rng.get_float(Domain.SPAWN, state.tick, f"y_{r_id}") * (ymax - ymin) + ymin
-                    
+
                     # Create ResourceNodeState using next_node_id
                     from src.core.state import ResourceNodeState
+                    from src.core.registries import ResourceRegistry
                     node_id = state.next_node_id + len(nodes_add)
                     new_node = ResourceNodeState(
                         id=node_id,
                         kind=kind,
                         position=(rx, ry),
-                        yields_item=kind.lower() + "_ore" if kind != "WOOD" else "wood_log",
+                        yields_item=ResourceRegistry.get(kind).yield_item,
                         remaining_charges=5,
                         max_charges=5,
                         required_ticks=10,

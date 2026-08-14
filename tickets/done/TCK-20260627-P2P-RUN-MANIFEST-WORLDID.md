@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2P-RUN-MANIFEST-WORLDID
 phase: done
 date: 2026-06-27
-tags: [p2, run-manifest, traceability, observability, world-id]
+tags: [run-manifest, traceability, observability, world-id]
 ---
 
 # TCK-20260627-P2P-RUN-MANIFEST-WORLDID

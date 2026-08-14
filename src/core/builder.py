@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import fields, is_dataclass
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Set
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
 from src.core.state import (
     EntityState,
@@ -43,6 +43,7 @@ from src.core.strategic import (
     SourceTrustEntry,
     TurningPointState,
     ContractState,
+    CommittedIntention,
 )
 
 from src.core.enums import EntityRole, Faction
@@ -249,6 +250,7 @@ class V2EntityBuilder:
         action_style: Optional[int] = None,
         alive: Optional[bool] = None,
         readiness: Optional[float] = None,
+        readiness_speed: Optional[float] = None,
         wounds: Optional[List[WoundState]] = None,
         scars: Optional[List[ScarState]] = None,
     ) -> V2EntityBuilder:
@@ -267,6 +269,7 @@ class V2EntityBuilder:
             "action_style": action_style,
             "alive": alive,
             "readiness": readiness,
+            "readiness_speed": readiness_speed,
             "wounds": list(wounds) if wounds is not None else None,
             "scars": list(scars) if scars is not None else None,
         }
@@ -459,6 +462,7 @@ class V2EntityBuilder:
         primary_overload_source: Optional[str] = None,
         last_overload_tick: Optional[int] = None,
         boredom: Optional[Dict[str, float]] = None,
+        committed_intentions: Optional[Tuple[CommittedIntention, ...]] = None,
     ) -> V2EntityBuilder:
         current = self._strategic_to_dict()
 
@@ -479,6 +483,7 @@ class V2EntityBuilder:
             "primary_overload_source": primary_overload_source,
             "last_overload_tick": last_overload_tick,
             "boredom": _copy_dict(boredom) if boredom is not None else None,
+            "committed_intentions": tuple(committed_intentions) if committed_intentions is not None else None,
         }
 
         for key, value in updates.items():

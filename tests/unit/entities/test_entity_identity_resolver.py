@@ -108,6 +108,41 @@ def test_mixed_entity_prefers_clean_identity():
     assert identity.legacy_faction == Faction.MONSTER_HORDE
 
 
+def test_faction_id_alone_resolves_clean_not_collapsed_to_neutral():
+    """TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE: worldbuilding/compiler.py sets faction_id
+    but never role_id -- confirmed via live corpus instrumentation to previously fall through to
+    Path 3's compatibility_projection, which maps any faction outside the legacy 4-value Faction
+    enum to "neutral", silently destroying real, correct faction identity for hostility checks.
+    A real faction_id must now be trusted on its own."""
+    entity = (
+        V2EntityBuilder(7)
+        .kind("monster")
+        .identity(
+            role=EntityRole.MONSTER,
+            faction=Faction.NEUTRAL,
+            properties={"faction_id": "goblin_warband"},
+        )
+        .build()
+    )
+    identity = RESOLVER.resolve(entity)
+    assert identity.source == "clean_metadata"
+    assert identity.faction_id == "goblin_warband"
+    assert identity.role_id == "creature"  # derived from _ROLE_COMPAT[EntityRole.MONSTER]
+
+
+def test_faction_id_alone_with_unmappable_legacy_role_gets_unresolved_role():
+    entity = (
+        V2EntityBuilder(8)
+        .kind("goblin")
+        .identity(role=999, faction=Faction.NEUTRAL, properties={"faction_id": "bandit_company"})
+        .build()
+    )
+    identity = RESOLVER.resolve(entity)
+    assert identity.source == "clean_metadata"
+    assert identity.faction_id == "bandit_company"
+    assert identity.role_id == "unresolved"
+
+
 def test_missing_faction_role_fails_clearly():
     # Entity with no clean properties and no valid enum values (role=999, faction=999)
     entity = (

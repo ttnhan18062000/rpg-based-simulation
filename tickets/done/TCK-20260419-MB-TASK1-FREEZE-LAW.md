@@ -15,7 +15,7 @@ tags: [mb, task1, freeze, law]
 Freeze the runtime signal and governor law set
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

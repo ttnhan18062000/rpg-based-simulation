@@ -91,8 +91,11 @@ def run_measurement(ticks: int = 1000, seed: int = 42, world_id: str = "urban_po
     print(f"Loading world: {world_id} (seed={seed}, ticks={ticks})", file=sys.stderr)
 
     repo = WorldRepository("data/worlds")
-    spec = repo.load_world(world_id)
-    state, compile_report = WorldCompiler.compile(spec, seed=seed)
+    # TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION: see cli/entry.py's own identical fix
+    # comment -- load_world_with_context() is required for correct entity.identity.role/.faction
+    # resolution against real, catalog-driven monster archetypes.
+    spec, context = repo.load_world_with_context(world_id)
+    state, compile_report = WorldCompiler.compile(spec, seed=seed, context=context)
     rng = DeterministicRNG(seed)
 
     print(f"Compiled: {compile_report['entity_count']} entities, hash={compile_report['state_hash']}", file=sys.stderr)

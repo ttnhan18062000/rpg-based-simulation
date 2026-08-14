@@ -1,4 +1,5 @@
 ---
+status: active
 title: Simulation Quality Scoring — Getting Started Guide
 layer: observability
 authority: P1
@@ -9,7 +10,12 @@ tags: [simq, quality, observability, guide]
 # Simulation Quality Scoring — Getting Started Guide
 
 This guide explains how to enable, read, and act on the Simulation Quality (SimQ) module.
-For the authoritative spec, see [`quality_scoring_contract.md`](../quality_scoring_contract.md).
+For the authoritative spec, see
+[`quality_scoring_contract.md`](../simulation_quality/quality_scoring_contract.md) (relative path
+corrected — the previous `../quality_scoring_contract.md` resolved to a nonexistent
+`docs/quality_scoring_contract.md`). For every axis this system can be extended along (world
+breadth/depth, tuning config, temporal depth, feed mode, anchor granularity, and more), see
+[`extension_points.md`](../simulation_quality/extension_points.md).
 
 ---
 
@@ -26,6 +32,28 @@ Use SimQ to:
 - Verify that balance changes actually improved simulation health
 - Monitor a long run without watching every tick
 - Drive automated regression tests against grade thresholds
+
+### Data flow
+
+See [Feed modes](#feed-modes) below for when each feed path applies.
+
+```mermaid
+flowchart LR
+    Engine["Engine<br/>observability event bus"]
+
+    Engine --> InProcess["InProcessQualityFeed<br/><small>default — QueueDrainWorker<br/>thread, same process</small>"]
+    Engine --> Broker["BrokerQualityFeed<br/><small>production multi-process —<br/>Redis stream via RedisStreamConsumer</small>"]
+
+    InProcess --> Hub["QualityHub<br/>.on_envelope()"]
+    Broker --> Hub
+
+    Hub --> Pillars["10 pillar scorers<br/><small>Cognition · Agency · Combat · Faction · Economy<br/>Progression · Social · Information · World Dynamics · Narrative</small>"]
+
+    Pillars --> Grades["Normalized scores<br/>→ letter grades"]
+
+    Grades --> API["REST API<br/>/status /pillars /pillars/{id} /alerts /report"]
+    Grades --> Report["QualityReport<br/><small>written to QUALITY_RUN_DIR<br/>on worker shutdown (broker mode)</small>"]
+```
 
 ---
 
@@ -67,20 +95,24 @@ All five endpoints return `{"enabled": false}` when disabled.
 
 ## Environment variables
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `QUALITY_SCORING_DISABLED` | unset | Set to `1` to disable all scoring |
-| `QUALITY_FEED_MODE` | `inprocess` | `inprocess` or `broker` (Redis) |
-| `QUALITY_BROKER_URL` | `redis://localhost:6379` | Redis URL for broker mode |
-| `QUALITY_STREAM_NAME` | `sim:events` | Redis stream name |
-| `QUALITY_CONSUMER_GROUP` | `quality_scoring` | Redis consumer group |
-| `QUALITY_WEIGHTS_PATH` | `config/simulation_quality/scoring_weights.yaml` | Pillar event weights |
-| `QUALITY_GRADE_PATH` | `config/simulation_quality/grade_thresholds.yaml` | Grade cutoffs |
-| `QUALITY_DETECTION_PATH` | `config/simulation_quality/detection_params.yaml` | Loop / time-gate params |
-| `QUALITY_PROFILE` | `default` | Config profile subdirectory |
-| `QUALITY_RUN_DIR` | `data/runs/quality_worker` | Where persistence writes score records |
-| `QUALITY_RUN_ID` | `broker_worker` | Run ID stamped on every score record |
-| `QUALITY_WORKER_PORT` | `8082` | Health-check port in broker-worker mode |
+| Variable | Default | Purpose | Owning Process |
+|---|---|---|---|
+| `QUALITY_SCORING_DISABLED` | unset | Set to `1` to disable all scoring | Engine only |
+| `QUALITY_FEED_MODE` | `inprocess` | `inprocess` or `broker` (Redis) | Engine only |
+| `QUALITY_BROKER_URL` | `ObservabilityConfig.get_redis_url()` (`SIM_REDIS_URL`/`RPG_REDIS_URL`, else `redis://localhost:6379/0`) | Redis URL for broker mode | Engine + Worker |
+| `QUALITY_STREAM_NAME` | `ObservabilityConfig.get_stream_name()` (`SIM_STREAM_NAME`/`RPG_STREAM_NAME`, else `simulation:events`) | Redis stream name | Engine + Worker |
+| `QUALITY_CONSUMER_GROUP` | `quality_scoring` | Redis consumer group | Engine + Worker |
+| `QUALITY_WEIGHTS_PATH` | `config/simulation_quality/scoring_weights.yaml` | Pillar event weights | Engine + Worker |
+| `QUALITY_GRADE_PATH` | `config/simulation_quality/grade_thresholds.yaml` | Grade cutoffs | Engine + Worker |
+| `QUALITY_DETECTION_PATH` | `config/simulation_quality/detection_params.yaml` | Loop / time-gate params | Engine + Worker |
+| `QUALITY_PROFILE` | `default` | Config profile subdirectory | Engine + Worker |
+| `QUALITY_RUN_DIR` | `data/runs/{QUALITY_RUN_ID}` | Where persistence writes score records | Worker only |
+| `QUALITY_RUN_ID` | `broker_worker` | Run ID stamped on every score record | Worker only |
+| `QUALITY_WORKER_PORT` | `8082` | Health-check port in broker-worker mode | Worker only |
+| `QUALITY_STALE_WARNING_SECONDS` | `30` | Seconds after start before the worker logs a WARNING if zero events have been consumed (startup diagnosability — see "Broker" quickstart below) | Worker only |
+| `SIM_STREAM_NAME` / `RPG_STREAM_NAME` | unset (falls through to `simulation:events`) | Producer-side Redis stream key; `QUALITY_STREAM_NAME` defaults onto this | Engine (producer, `src/observability/config.py`) |
+| `SIM_REDIS_URL` / `RPG_REDIS_URL` | unset (falls through to `redis://localhost:6379/0`) | Producer-side Redis URL; `QUALITY_BROKER_URL` defaults onto this | Engine (producer, `src/observability/config.py`) |
+| `SIM_STREAM_BACKEND` / `RPG_STREAM_BACKEND` | unset (deployment-profile-derived) | Selects `redis`/`null`/`in_process` event stream backend | Engine (producer, `src/observability/config.py`) |
 
 ---
 
@@ -272,19 +304,32 @@ QUALITY_FEED_MODE=inprocess python -m src.main
 ### Broker (Redis, production multi-process)
 
 Events are published to a Redis stream by the engine process. The `BrokerQualityFeed`
-consumes them in a separate process via `RedisStreamConsumer`.
+consumes them in a separate process via `RedisStreamConsumer`. `QUALITY_BROKER_URL` and
+`QUALITY_STREAM_NAME` default onto `ObservabilityConfig.get_redis_url()`/`get_stream_name()`
+(the same values the producer resolves), so setting them explicitly is optional as long as
+they already match the producer's `SIM_REDIS_URL`/`SIM_STREAM_NAME` configuration:
 
 ```bash
 QUALITY_FEED_MODE=broker \
-QUALITY_BROKER_URL=redis://localhost:6379 \
-QUALITY_STREAM_NAME=sim:events \
 python -m src.simulation_quality.worker
 ```
 
 The standalone worker process:
 - Connects to Redis on startup; logs a warning and degrades gracefully if unavailable
-- Exposes a health endpoint at `http://localhost:8082/health`
+- Logs its resolved `(broker_url, stream_name, consumer_group)` triple at INFO on start, and warns
+  after `QUALITY_STALE_WARNING_SECONDS` (default 30) if zero events have been consumed — the
+  previously-silent failure mode when producer/consumer stream names diverged
+- Exposes a health endpoint at `http://localhost:8082/health`, including a `pillar_event_counts`
+  dict (one key per `PillarId`, e.g. `"AGENCY"`, `"COMBAT"`) once the hub has processed at least
+  one envelope — sourced from `QualityHub`'s existing per-pillar `PillarAccumulator` snapshots, so
+  a future scorer-coverage regression (e.g. a partial pillar list) is observable via `/health`
+  rather than silent (`TCK-20260804-OBSISO-WORKER-PARITY-HOTFIX`)
 - Writes a final `QualityReport` to `QUALITY_RUN_DIR` on shutdown (SIGTERM or SIGINT)
+
+**Operational note:** `QUALITY_RUN_DIR` defaults to `data/runs/{QUALITY_RUN_ID}`, so operators
+running more than one concurrent broker-mode worker must set a distinct `QUALITY_RUN_ID` per
+run — two workers left on the default `QUALITY_RUN_ID=broker_worker` still collide on the same
+output directory and overwrite each other's score records.
 
 ---
 

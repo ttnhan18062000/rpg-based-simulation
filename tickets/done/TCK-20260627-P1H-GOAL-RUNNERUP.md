@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P1H-GOAL-RUNNERUP
 phase: done
 date: 2026-06-27
-tags: [p1, cognition, decision-trace, runner-up, goal-score, observability]
+tags: [cognition, decision-trace, runner-up, goal-score, observability]
 ---
 
 # TCK-20260627-P1H-GOAL-RUNNERUP

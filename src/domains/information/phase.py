@@ -17,6 +17,7 @@ from src.domains.information.router import InformationQueryRouter
 from src.domains.information.normalizer import InformationResponseNormalizer
 from src.domains.information.assimilation import InformationAssimilationService
 from src.domains.information.resolver import InformationIntentResolver
+from src.engine.intent.action_intent import ActionIntent
 
 
 class InformationBeliefPhase:
@@ -90,19 +91,19 @@ class InformationBeliefPhase:
                     q = InformationQuery(subject=first_unk.subject, kind="material_source")
                     
                     candidates = InformationQueryRouter.route(actor, q, state, profiles)
-                    if candidates:
-                        best_cand = candidates[0]
-                        intent = InformationIntentResolver.resolve(actor, best_cand, q, state)
-                        
-                        if intent:
+                    for cand in candidates:
+                        result = InformationIntentResolver.resolve(actor, cand, q, state)
+                        if isinstance(result, ActionIntent):
                             entity_updates[actor.id] = EntityUpdate(
                                 entity_id=actor.id,
-                                intent_results=[intent],
+                                intent_results=[result],
                                 property_updates={
                                     "last_routed_query_subject": first_unk.subject,
                                     "last_routed_query_tick": state.tick,
                                 },
                             )
+                            break
+                        # else: InformationResponse(answer_kind="insufficient_gold", ...) — try next candidate
 
         if entity_updates:
             update = StateUpdate(entity_updates=entity_updates)

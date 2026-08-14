@@ -20,3 +20,6 @@ module_refs:
   - module_id: "survivor_camp_shelter"
     order: 3
 generation_seed: 101
+faction_tension_overrides:
+  undead_remnants: 0.5
+  wild_beast_pack: 0.5

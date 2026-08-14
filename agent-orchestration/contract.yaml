@@ -1,0 +1,33 @@
+# Top-level manifest for the provider-neutral implement-ticket agent orchestration contract.
+# See agent-orchestration/README.md for the versioning scheme and the one-way future-authority
+# direction, and docs/architecture/agent_orchestration_contract.md (the ADR) for the design
+# decisions this directory implements.
+version: 1
+name: implement-ticket-agent-orchestration-contract
+description: >
+  Provider-neutral semantic contract for the implement-ticket workflow: phases,
+  tier-applicability, roles, skills, monitoring identity fields, and hook-event
+  vocabulary, as the one authoritative description adapters must translate from
+  without silently redefining.
+governs:
+  - path: workflows/implement-ticket.yaml
+    version_field: workflow_version
+    description: Phase list, per-tier applicability matrix, and role/agent vocabulary for the implement-ticket workflow.
+  - path: roles/
+    version_field: role_version
+    description: One file per delegated subagent role (10 files) that participates in implement-ticket.
+  - path: skills.yaml
+    version_field: skills_version
+    description: Catalog of reusable skills and their workflow/role associations.
+  - path: monitoring-schema.yaml
+    version_field: schema_version
+    description: Execution-identity field model (execution_id/run_id/ticket_id), consumed verbatim from docs/ai/monitoring_writer_decision.md.
+  - path: hook-events.yaml
+    version_field: hook_schema_version
+    description: Normalized lifecycle hook-event vocabulary currently wired in .claude/settings.json.
+  - path: hook-surface-policy.yaml
+    version_field: hook_surface_policy_version
+    description: Per-provider available/normalized/enabled hook-event policy and Codex activation boundary.
+  - path: terminal-statuses.yaml
+    version_field: terminal_status_schema_version
+    description: Normalized terminal outcomes for the implement-ticket workflow.

@@ -33,6 +33,11 @@ Achieved 100% architectural parity with the Aspect-Oriented Architecture (AOA) b
 ## Status
 DONE
 
-**Tier:** standard
-**Type:** chore
-**Priority:** P1
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1

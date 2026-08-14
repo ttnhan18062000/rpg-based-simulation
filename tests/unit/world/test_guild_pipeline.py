@@ -1,5 +1,5 @@
 import pytest
-from src.core.state import AuthoritativeState, ResourceNodeState
+from src.core.state import AuthoritativeState, ResourceNodeState, RegionState
 from src.core.builder import V2EntityBuilder
 from src.town.guild import GuildAction
 from src.engine.apply import ApplyPath
@@ -65,5 +65,26 @@ def test_guild_visit_determinism():
     
     lead1 = upd1.entity_updates[99].strategic.leads_add_or_update[0]
     lead2 = upd2.entity_updates[99].strategic.leads_add_or_update[0]
-    
+
     assert lead1.id == lead2.id
+
+
+@pytest.mark.v2_contract
+def test_guild_visit_quest_reflects_region_pressure():
+    # 1. Setup: entity located in a region with high trauma (above the 50.0
+    # instability threshold, normalizes to 1.0), no resource nodes.
+    region = RegionState(id="dark_forest", name="Dark Forest", bounds=(0, 0, 10, 10), trauma_score=60.0)
+    entity = (V2EntityBuilder(99)
+        .kind("hero")
+        .location(0, 0)
+        .navigation(region_id="dark_forest")
+        .strategic()
+        .build())
+    state = AuthoritativeState(tick=1, seed=42, entities={99: entity}, regions={"dark_forest": region})
+
+    # 2. Guild Visit
+    upd = GuildAction.visit(entity, state)
+    assert upd is not None
+    strat_upd = upd.entity_updates[99].strategic
+    assert len(strat_upd.projects_add_or_update) == 1
+    assert strat_upd.projects_add_or_update[0].kind == "quest"

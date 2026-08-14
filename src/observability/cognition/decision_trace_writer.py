@@ -4,26 +4,47 @@ src/observability/cognition/decision_trace_writer.py
 Decision Trace Writer — Epic 2.2A.
 
 Writes per-entity scored adventure route traces to decision_trace.jsonl in
-LIGHT and above observability modes. Wired into AdventureDecisionPhase.apply()
-after scoring completes. Does NOT modify execute_brain() in any way.
+LIGHT and above observability modes. Wired into AdventureGoalScorer.score()
+(src/ai/goals/adventure_scorer.py) after AdventureDecisionService.decide()
+completes -- relocated here from the now-deleted AdventureDecisionPhase.apply()
+by TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE. Does NOT modify execute_brain()
+in any way.
 
 Module-level singleton pattern (parallel to ObservabilityConfig) allows
 injection from the Kernel without threading the writer through pipeline.refine().
 
-Epic 2.2B extension: maintains a DecisionTraceIndex sidecar updated
-incrementally on each write (crash recovery) and rebuilt on close (completeness).
+Epic 2.2B extension: maintains a DecisionTraceIndex sidecar, updated on the
+drain worker's cadence (crash recovery) and rebuilt on close (completeness).
+
+TCK-20260702-OBSISO-TRACE-ASYNC: write_trace() is a bounded in-memory enqueue
+only (hot-path safety contract §3). The actual decision_trace.jsonl write and
+DecisionTraceIndex.append_entry() call happen off-path on a private
+QueueDrainWorker, following the same per-instance queue+worker pattern as
+EventRecorder. See docs/guidelines/intentional_divergences.md for the
+resulting bounded crash-loss and queue-overflow-drop windows.
 """
 from __future__ import annotations
 
 import json
 import os
 import logging
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from src.observability.config import ObservabilityConfig
 from src.observability.cognition.tick_index import DecisionTraceIndex
+from src.observability.queue import BoundedObservabilityQueue, QueueDrainWorker
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class _DecisionTraceQueueItem:
+    # Decision-trace entries carry no real priority semantics; this constant value exists
+    # only to satisfy BoundedObservabilityQueue's shared severity-eviction interface.
+    severity: str = "INFO"
+    entry: Dict[str, Any] = field(default_factory=dict)
+
 
 # Module-level active writer registry — set by Kernel at run start/end.
 _active_writer: Optional["DecisionTraceWriter"] = None
@@ -57,6 +78,10 @@ class DecisionTraceWriter:
         # Schema: {entity_id: [{"goal_id": str, "score": float, "rank": int}, ...]}
         self._latest_goal_scores: Dict[int, List[Dict[str, Any]]] = {}
 
+        self._queue = BoundedObservabilityQueue(max_size=ObservabilityConfig.get_max_queue_size())
+        self._worker = QueueDrainWorker(queue=self._queue, file_write_fn=self._write_entry_to_file)
+        self._worker.start()
+
     def _ensure_open(self) -> None:
         if self._file is None:
             os.makedirs(os.path.dirname(self._path), exist_ok=True)
@@ -82,9 +107,6 @@ class DecisionTraceWriter:
             return
 
         try:
-            self._ensure_open()
-            offset = self._file.tell()
-
             # Sort descending by score so winner is always at index 0.
             sorted_routes = sorted(scored_routes, key=lambda r: r.score, reverse=True)
 
@@ -125,12 +147,16 @@ class DecisionTraceWriter:
                 "runner_up_scores": runner_up_scores,
                 "routes": routes_payload,
             }
-            self._file.write(json.dumps(entry) + "\n")
-            self._file.flush()
-            # Incremental index update: record first offset for this tick (crash recovery).
-            self._index.append_entry(tick, offset)
+            self._queue.try_push(_DecisionTraceQueueItem(entry=entry))
         except Exception:
             logger.exception("DecisionTraceWriter.write_trace failed (non-fatal)")
+
+    def _write_entry_to_file(self, item: "_DecisionTraceQueueItem") -> None:
+        self._ensure_open()
+        offset = self._file.tell()
+        self._file.write(json.dumps(item.entry) + "\n")
+        self._file.flush()
+        self._index.append_entry(item.entry["tick"], offset)
 
     def get_latest_goal_scores(self, entity_id: int) -> List[Dict[str, Any]]:
         """
@@ -141,7 +167,17 @@ class DecisionTraceWriter:
         return self._latest_goal_scores.get(entity_id, [])
 
     def close(self) -> None:
-        """Close the underlying file handle and rebuild the tick index sidecar."""
+        """Stop the drain worker, flush remaining queued entries, close the file, rebuild the index sidecar."""
+        if getattr(self, "_worker", None):
+            self._worker.stop()
+
+        try:
+            remaining = self._queue.drain()
+            for item in remaining:
+                self._write_entry_to_file(item)
+        except Exception:
+            logger.exception("DecisionTraceWriter.close final queue drain failed (non-fatal)")
+
         if self._file is not None:
             try:
                 self._file.close()
@@ -149,6 +185,7 @@ class DecisionTraceWriter:
                 logger.exception("DecisionTraceWriter.close failed (non-fatal)")
             finally:
                 self._file = None
+
         # Rebuild the index from the completed file to ensure a clean, complete sidecar
         # even if any incremental append_entry calls were missed during the run.
         try:

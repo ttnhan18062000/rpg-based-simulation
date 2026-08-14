@@ -33,8 +33,13 @@ This ticket addresses the first priority of the `final_implementation_plan.md`. 
 - [TCK-20260330-CORE-STABILIZATION](file:///home/vboxuser/Work/rpg-based-simulation/tickets/inprogress/TCK-20260330-CORE-STABILIZATION.md) (Superseded/Extended)
 
 ## Status
-INPROGRESS
+DONE
 
-**Tier:** standard
-**Type:** chore
-**Priority:** P1
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1

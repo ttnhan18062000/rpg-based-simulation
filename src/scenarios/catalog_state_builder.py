@@ -64,6 +64,7 @@ class CatalogScenarioStateBuilder:
         entities = self._spawner.spawn_from_context(
             setup.world_bundle.compile_context,
             self._catalog,
+            seed=seed,
         )
         state = AuthoritativeState(tick=0, seed=seed, entities=entities)
         return CatalogScenarioBuildResult(

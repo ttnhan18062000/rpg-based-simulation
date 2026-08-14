@@ -22,10 +22,10 @@ Phase names match the `run_phase()` call identifiers in `src/engine/pipeline.py:
 | 2 | `actor_validity` | Rejects intents from dead, stunned, or incapacitated actors (`TOWN-001`). |
 | 3 | `self_model` | Enhanced RPG: updates cognitive self-model (`ENABLE_SELF_MODEL_COGNITION`). |
 | 4 | `information_belief` | Enhanced RPG: assimilates new information into entity belief state (`ENABLE_BELIEF_ASSIMILATION`). |
-| 5 | `cooperation` | Enhanced RPG: resolves social cooperation contracts (`ENABLE_SOCIAL_COOPERATION`). |
-| 6 | `contracts` | Expires stale social and legal contracts before system consumption. |
-| 7 | `blacksmith` | Validates crafting/blacksmithing requirements and resource costs (`TOWN-155`). |
-| 8 | `adventure_decision` | Enhanced RPG: routes adventure/quest decision logic (`ENABLE_ADVENTURE_ROUTING`). |
+| 5 | `information_intent_execution` | Enhanced RPG: executes self-model query-routing intents via `ActionIntentAdapter.execute()` (`ENABLE_INFORMATION_INTENT_EXECUTION`). |
+| 6 | `cooperation` | Enhanced RPG: resolves social cooperation contracts (`ENABLE_SOCIAL_COOPERATION`). |
+| 7 | `contracts` | Expires stale social and legal contracts before system consumption. |
+| 8 | `blacksmith` | Validates crafting/blacksmithing requirements and resource costs (`TOWN-155`). |
 | 9 | `action_routing` | Resolves combat, skills, and tactical ability interactions (`TOWN-149`). |
 | 10 | `position_swaps` | Resolves adjacent position exchange contracts and mutual passing (`COMB-028`). |
 | 11 | `movement_routing` | Calculates movement steps, terrain costs, and obstacle avoidance (`COMB-046`). |

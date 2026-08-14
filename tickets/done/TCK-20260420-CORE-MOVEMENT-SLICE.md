@@ -16,7 +16,7 @@ tags: [core, movement, slice]
 First Official RPG Slice: Deterministic Grid Movement
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

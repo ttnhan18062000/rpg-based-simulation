@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO
 phase: done
 date: 2026-07-02
-tags: [simulation_quality, faction, social, information, emission, diagnostic]
+tags: [simulation-quality, faction, social, information, emission, diagnostic]
 ---
 
 # TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO

@@ -15,7 +15,7 @@ tags: [resource-ecology, regeneration, scarcity, economy, world-evolution, epic,
 Epic 2.1 · Resource Ecology Regeneration
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic

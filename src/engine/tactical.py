@@ -11,13 +11,14 @@ logger = logging.getLogger(__name__)
 from src.core.updates import EntityUpdate, TaskUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
 from src.engine.positioning import PositioningService
-from src.core.strategic import ProjectStatus
+from src.core.strategic import ProjectStatus, ObjectiveKind
 from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
 from src.core.skills import SKILL_REGISTRY
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
+    from src.core.strategic import ObjectiveState
 
 class TacticalDecisionSystem:
     """
@@ -160,11 +161,15 @@ class TacticalDecisionSystem:
                 entity.task.payload.get("target_id") == n.id
                 or n.task.payload.get("target_id") == entity.id
             )
+            # `intruding` left unset (None) -- see the matching note in
+            # LegalityServiceV2.verify_attack_legality (src/engine/legality.py); hardcoding
+            # False here previously made contextual_intruder_groups-based hostility
+            # (e.g. wild_beast_pack's stance) structurally unreachable regardless of
+            # combat_engaged (TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION).
             context = RelationContext(
                 distance=float(dist),
                 combat_engaged=combat_engaged,
                 target_race=get_race_id_str(n),
-                intruding=False,
             )
             try:
                 _tgt_identity = _id_resolver.resolve(n)
@@ -211,30 +216,7 @@ class TacticalDecisionSystem:
                 if project:
                     obj = next((o for o in project.objectives if o.id == obj_id), None)
                     if obj and obj.kind == "reach_location" and obj.target:
-                        # Find the node or target position
-                        target_pos = None
-                        node_id = None
-                        building_id = None
-                        try:
-                            candidate_id = int(obj.target)
-                            node = state.resource_nodes.get(candidate_id)
-                            if node:
-                                target_pos = node.position
-                                node_id = candidate_id
-                            else:
-                                # Not a resource node — check buildings (e.g. HUNGER→tavern, FATIGUE→inn)
-                                building = state.buildings.get(candidate_id)
-                                if building:
-                                    target_pos = building.position
-                                    building_id = candidate_id
-                        except ValueError:
-                            # Not an int, try coordinate tuple
-                            # Safe coordinate parse: "(x, y)" -> (float, float)
-                            try:
-                                import ast
-                                target_pos = ast.literal_eval(obj.target)
-                            except (ValueError, SyntaxError):
-                                target_pos = None
+                        target_pos, node_id, building_id = TacticalDecisionSystem._resolve_target_position(state, obj)
 
                         if target_pos:
                             dist = abs(target_pos[0] - entity.navigation.position[0]) + abs(target_pos[1] - entity.navigation.position[1])
@@ -279,7 +261,54 @@ class TacticalDecisionSystem:
                                     entity_id=entity.id,
                                     navigation=NavigationUpdate(target_set=target_pos, movement_mode_set=MovementMode.WANDER),
                                 )
-            
+                    elif obj and obj.kind not in (ObjectiveKind.REACH_LOCATION, ObjectiveKind.DEFEAT_ENEMY):
+                        # Pillar 5.1 continued: every other ObjectiveKind System A/B can
+                        # produce reaches real execution via ObjectiveIntentResolver +
+                        # ActionIntentAdapter, not just REACH_LOCATION. DEFEAT_ENEMY is
+                        # excluded — handled entirely by the hostile-engagement branch
+                        # below (gated on `hostiles`, not `obj.kind`).
+                        target_pos = None
+                        node_id = None
+                        if obj.target:
+                            target_pos, node_id, _ = TacticalDecisionSystem._resolve_target_position(state, obj)
+
+                        if target_pos:
+                            dist = abs(target_pos[0] - entity.navigation.position[0]) + abs(target_pos[1] - entity.navigation.position[1])
+                            if dist > 1.0:
+                                return EntityUpdate(
+                                    entity_id=entity.id,
+                                    navigation=NavigationUpdate(target_set=target_pos, movement_mode_set=MovementMode.WANDER),
+                                )
+                            if obj.kind == ObjectiveKind.REACH_RESOURCE and node_id is not None:
+                                # Arrived at the resource node: transition to a harvest
+                                # action instead of falling through to
+                                # ObjectiveIntentResolver's REACH_RESOURCE -> MOVE_TO
+                                # mapping, which would re-issue navigation forever.
+                                from src.engine.intent.action_intent import ActionIntent, ActionIntentAdapter
+
+                                harvest_intent = ActionIntent(
+                                    kind="HARVEST_RESOURCE",
+                                    actor_id=entity.id,
+                                    target_id=node_id,
+                                    source_opportunity_id=obj.id,
+                                    reason=f"Arrived at resource node {node_id} for objective {obj.id}",
+                                )
+                                updates = ActionIntentAdapter.execute(
+                                    entity, harvest_intent, current_tick=state.tick, neighbor_view=neighbors, context=state
+                                )
+                                return updates.get(entity.id, EntityUpdate(entity_id=entity.id))
+
+                        from src.domains.adventure.resolver import ObjectiveIntentResolver
+                        from src.engine.intent.action_intent import ActionIntentAdapter
+
+                        intent = ObjectiveIntentResolver.resolve(
+                            entity.id, obj, payload={"position": target_pos} if target_pos else {}
+                        )
+                        updates = ActionIntentAdapter.execute(
+                            entity, intent, current_tick=state.tick, neighbor_view=neighbors, context=state
+                        )
+                        return updates.get(entity.id, EntityUpdate(entity_id=entity.id))
+
             # 4.1 Role-Based Obligation (Phase 7)
             group = state.groups.get(entity.identity.group_id) if entity.identity.group_id is not None else None
             if group and not hostiles:
@@ -564,14 +593,19 @@ class TacticalDecisionSystem:
                 )
             )
 
-        # ActionStyle Bias: Aggressive entities ignore range buffers, Evasive entities maintain them strictly
-        # Logic ID: COMB-263 (Weapon range affects tactical choice)
-        attack_range = entity.combat.range
-        if style == ActionStyle.AGGRESSIVE:
-             attack_range += 1
-        elif style == ActionStyle.EVASIVE and dist_to_target < attack_range:
-             # Evasive skirmishers might choose to reposition instead of attacking if too close
-             pass
+        # (Removed, TCK-20260809-TACTICAL-DEAD-ACTIONSTYLE-SUBBRANCHES: this block previously
+        # computed an ActionStyle-biased `attack_range` local variable -- AGGRESSIVE +1,
+        # EVASIVE a bare `pass` stub with no real reposition logic -- but `is_attack_legal` is
+        # already decided above (line ~401) using the entity's real, un-biased combat range,
+        # before this block ever ran, and nothing below reads this variable. Confirmed dead code,
+        # not a design decision. Re-implementing it "for real" would require feeding an
+        # ActionStyle-biased range into `is_attack_legal`'s own computation -- the exact
+        # combat-legality decision point this same session's earlier tickets
+        # (TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION,
+        # TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE) spent significant real,
+        # corpus-verified effort hardening (0% -> 28.5%/36.6% real legal rate). Removed rather
+        # than risk regressing that freshly-verified path for a speculative game-feel effect with
+        # no confirmed requirement.
 
         if is_attack_legal:
             # 5.5 Skill Selection (Task 8.7 Hardening)
@@ -664,6 +698,59 @@ class TacticalDecisionSystem:
                     }
                 )
             )
+
+    @staticmethod
+    def _resolve_target_position(
+        state: AuthoritativeState, obj: "ObjectiveState"
+    ) -> Tuple[Optional[Tuple[float, float]], Optional[int], Optional[int]]:
+        """
+        Resolve an objective's `target` (an int-castable resource-node/building id,
+        or a stringified coordinate tuple) into a concrete world position.
+
+        Caller must guard `obj.target` truthy before calling — `int(None)` raises
+        TypeError, which is deliberately left uncaught here to keep this a byte-
+        identical extraction of the pre-existing REACH_LOCATION inline logic.
+
+        `obj.target_position` fallback (TCK-20260807-TOWN-RETURN-TARGET-RESOLUTION-BUG):
+        some scorers (`TownScorer`, `RecoverScorer`, `ResolveBlockerScorer`) set `target_id` to a
+        non-int-castable, non-coordinate string (e.g. `"town_center"`) that this function can
+        never parse into a position, even though the objective's own `target_position` field
+        already carries the real, correct position (set from the same `GoalScore.target_pos` at
+        objective-creation time — see `evaluate_strategic_intent()`'s `ObjectiveState(...)`
+        construction). When the int/tuple parse above yields no position, fall back to it. This
+        is additive only: for the currently-working int-castable paths (`HarvestScorer`/
+        `EatScorer`/`SleepScorer`/`GuildNeedScorer`), the parse above always succeeds first, so
+        `node_id`/`building_id` (needed for the INTERACT/EAT/REST arrival-dispatch branches) are
+        still populated exactly as before — this fallback only activates when they'd otherwise
+        stay `None` anyway. Mirrors `StrategicIntelligenceSystem._resolve_active_objective()`'s
+        own "detour" case, which already prefers `target_position` this same way.
+        """
+        target_pos = None
+        node_id = None
+        building_id = None
+        try:
+            candidate_id = int(obj.target)
+            node = state.resource_nodes.get(candidate_id)
+            if node:
+                target_pos = node.position
+                node_id = candidate_id
+            else:
+                # Not a resource node — check buildings (e.g. HUNGER→tavern, FATIGUE→inn)
+                building = state.buildings.get(candidate_id)
+                if building:
+                    target_pos = building.position
+                    building_id = candidate_id
+        except ValueError:
+            # Not an int, try coordinate tuple
+            # Safe coordinate parse: "(x, y)" -> (float, float)
+            try:
+                import ast
+                target_pos = ast.literal_eval(obj.target)
+            except (ValueError, SyntaxError):
+                target_pos = None
+        if target_pos is None and getattr(obj, "target_position", None) is not None:
+            target_pos = obj.target_position
+        return target_pos, node_id, building_id
 
     @staticmethod
     def select_best_target(

@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2I-WORKFLOW-TYPES
 phase: done
 date: 2026-06-27
-tags: [p2, type-safety, lab, workflows, typeddict, return-type]
+tags: [type-safety, lab, workflows, typeddict, return-type]
 ---
 
 # TCK-20260627-P2I-WORKFLOW-TYPES

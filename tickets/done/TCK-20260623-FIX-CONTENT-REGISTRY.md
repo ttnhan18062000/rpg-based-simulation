@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-CONTENT-REGISTRY
 phase: open
 date: 2026-06-23
-tags: [test-repair, content, registry, schema, P2]
+tags: [test-repair, content, registry, schema]
 ---
 
 # TCK-20260623-FIX-CONTENT-REGISTRY

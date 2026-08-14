@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2E-FEATURE-FLAG-TEST
 phase: done
 date: 2026-06-27
-tags: [p2, feature-flags, testing, scenario, per-scenario-defaults, integration]
+tags: [feature-flags, testing, scenario, per-scenario-defaults, integration]
 ---
 
 # TCK-20260627-P2E-FEATURE-FLAG-TEST

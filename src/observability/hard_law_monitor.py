@@ -135,6 +135,80 @@ class HardLawMonitor:
         return violations
 
     @staticmethod
+    def check_initial_placement(state: AuthoritativeState) -> List[HardLawViolation]:
+        """
+        Unconditional full-population placement-legality scan (entities + buildings +
+        resource nodes), run once at Kernel.__init__. WorldCompiler.compile() never
+        validates spawn positions, and check_occupancy() below only inspects entities
+        that moved on the current tick, so nothing checks the compiled spawn state itself.
+
+        Buildings self-register their own tile into state.blocked_tiles at compile time
+        (src/worldbuilding/compiler.py), so calling verify_occupancy() against a
+        building's own position always fails against itself. Buildings are therefore
+        only covered by the multi-occupant tile scan below; entities and resource nodes
+        carry no such self-registration and are checked directly against verify_occupancy.
+        """
+        objects: List[Tuple[str, int, Tuple[float, float]]] = []
+        for e_id, entity in state.entities.items():
+            if not entity.lifecycle.active or not entity.combat.alive:
+                continue
+            objects.append(("entity", e_id, entity.navigation.position))
+        for b_id, building in state.buildings.items():
+            objects.append(("building", b_id, building.position))
+        for r_id, node in state.resource_nodes.items():
+            objects.append(("resource_node", r_id, node.position))
+
+        by_pos: Dict[Tuple[int, int], List[Tuple[str, int]]] = {}
+        for kind, obj_id, pos in objects:
+            tile = (int(pos[0]), int(pos[1]))
+            by_pos.setdefault(tile, []).append((kind, obj_id))
+
+        violations: List[HardLawViolation] = []
+        reported_tiles: Set[Tuple[int, int]] = set()
+
+        for tile, occupants in by_pos.items():
+            if len(occupants) <= 1:
+                continue
+            (kind, obj_id), (other_kind, other_id) = occupants[0], occupants[1]
+            reported_tiles.add(tile)
+            violations.append(HardLawViolation(
+                law_id="LAW-SPAWN-OCCUPANCY",
+                entity_id=obj_id,
+                severity="ERROR",
+                message=(
+                    f"Initial placement collision on tile {tile}: "
+                    f"{kind} {obj_id} and {other_kind} {other_id} both occupy this space."
+                ),
+                details={
+                    "object_kind": kind,
+                    "tile": tile,
+                    "colliding_object_kind": other_kind,
+                    "colliding_object_id": other_id,
+                }
+            ))
+
+        for kind, obj_id, pos in objects:
+            if kind == "building":
+                continue
+            tile = (int(pos[0]), int(pos[1]))
+            if tile in reported_tiles:
+                continue
+            ignore_id = obj_id if kind == "entity" else None
+            legal, reason = Kernel.verify_occupancy_legal(pos, state, ignore_entity_id=ignore_id)
+            if legal:
+                continue
+            reported_tiles.add(tile)
+            violations.append(HardLawViolation(
+                law_id="LAW-SPAWN-OCCUPANCY",
+                entity_id=obj_id,
+                severity="ERROR",
+                message=f"Initial placement violation: {kind} {obj_id} at tile {tile} is illegally placed ({reason.name}).",
+                details={"object_kind": kind, "tile": tile, "reason": reason.name}
+            ))
+
+        return violations
+
+    @staticmethod
     def check_occupancy(state: AuthoritativeState, dirty_set: Optional[DirtySet]) -> List[HardLawViolation]:
         """
         Performs scoped tile collision checks on dirty moving entities.

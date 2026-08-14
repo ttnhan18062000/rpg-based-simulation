@@ -163,3 +163,53 @@ def test_entity_combat_stats_are_positive(bundle, catalog):
         assert state.combat.hp > 0, f"Entity {eid} hp must be > 0"
         assert state.combat.max_hp > 0, f"Entity {eid} max_hp must be > 0"
         assert state.combat.atk > 0, f"Entity {eid} atk must be > 0"
+
+
+def test_spawned_entities_have_real_nonzero_personality(bundle, catalog):
+    """TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY: entities spawned through
+    spawn_from_context (archetype-native path) must no longer default to all-zero
+    personality."""
+    ctx = bundle.compile_context
+    spawner = WorldEntitySpawner()
+    entities = spawner.spawn_from_context(ctx, catalog)
+
+    non_zero_count = sum(
+        1 for state in entities.values()
+        if any([
+            state.identity.personality.bravery > 0.0,
+            state.identity.personality.greed > 0.0,
+            state.identity.personality.sociability > 0.0,
+            state.identity.personality.industry > 0.0,
+        ])
+    )
+    assert non_zero_count == len(entities), (
+        "Every spawned entity should have real, non-zero personality"
+    )
+
+
+def test_spawn_from_context_is_deterministic_given_seed(bundle, catalog):
+    """Same (CompileContext, base_entity_id, seed) must produce bit-identical personality
+    across repeated calls -- docs/world/assembly_contract.md's own determinism guarantee,
+    now parameterized by seed."""
+    ctx = bundle.compile_context
+    spawner = WorldEntitySpawner()
+
+    entities_1 = spawner.spawn_from_context(ctx, catalog, seed=7)
+    entities_2 = spawner.spawn_from_context(ctx, catalog, seed=7)
+
+    for eid in entities_1:
+        assert entities_1[eid].identity.personality == entities_2[eid].identity.personality
+
+
+def test_spawn_from_context_different_seeds_differ(bundle, catalog):
+    """Different seeds should (with overwhelming probability) produce different personality
+    draws -- confirms seed is actually threaded through, not silently ignored."""
+    ctx = bundle.compile_context
+    spawner = WorldEntitySpawner()
+
+    entities_a = spawner.spawn_from_context(ctx, catalog, seed=1)
+    entities_b = spawner.spawn_from_context(ctx, catalog, seed=2)
+
+    personalities_a = [entities_a[eid].identity.personality for eid in entities_a]
+    personalities_b = [entities_b[eid].identity.personality for eid in entities_b]
+    assert personalities_a != personalities_b

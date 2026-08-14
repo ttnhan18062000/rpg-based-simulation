@@ -183,6 +183,42 @@ def test_profile_ids_stored_in_properties():
     assert props["skill_profile_id"] == "skill_worker"
 
 
+def test_build_entity_produces_real_nonzero_personality():
+    """TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY: entities built via
+    ArchetypeEntityFactory must no longer default to all-zero personality."""
+    c = _contract(faction_id="wild_beast_pack")
+    entity = FACTORY.build_entity(20, c, _spawn())
+    p = entity.identity.personality
+    assert p.bravery > 0.0 or p.greed > 0.0 or p.sociability > 0.0 or p.industry > 0.0
+
+
+def test_build_entity_action_style_correlates_with_bravery():
+    """A high-bravery-biased faction (wild_beast_pack, +0.35) should skew AGGRESSIVE more
+    than a default-bias faction, activating the real, previously-dormant ActionStyle hooks."""
+    from src.core.enums import ActionStyle
+    predator_styles = [
+        FACTORY.build_entity(eid, _contract(faction_id="wild_beast_pack"), _spawn()).combat.action_style
+        for eid in range(30, 50)
+    ]
+    assert any(s == ActionStyle.AGGRESSIVE for s in predator_styles)
+
+
+def test_build_entity_personality_is_deterministic_given_seed():
+    """Same (entity_id, contract, spawn, seed) must produce bit-identical personality."""
+    c = _contract(faction_id="goblin_clan")
+    e1 = FACTORY.build_entity(50, c, _spawn(), seed=99)
+    e2 = FACTORY.build_entity(50, c, _spawn(), seed=99)
+    assert e1.identity.personality == e2.identity.personality
+
+
+def test_build_entity_default_seed_backward_compatible():
+    """build_entity's own seed parameter must default so all pre-existing positional-arg
+    call sites (no seed) keep working."""
+    c = _contract()
+    entity = FACTORY.build_entity(51, c, _spawn())
+    assert entity is not None
+
+
 def test_factory_does_not_import_catalog_repository():
     import ast
     import inspect

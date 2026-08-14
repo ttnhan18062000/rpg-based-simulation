@@ -15,7 +15,7 @@ tags: [worldmodules, data, compositions, archetypes]
 New world archetype compositions demonstrating distinct play patterns
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

@@ -81,7 +81,7 @@ Applies to files under `tickets/done/` and `tickets/inprogress/`.
 | `ticket_id` | yes | string | e.g. `TCK-20260606-DOCSITE-SCHEMA` |
 | `phase` | yes | enum | see PHASE_VALUES |
 | `date` | yes | ISO 8601 date | ticket creation date |
-| `tags` | no | list of strings | free-form |
+| `tags` | no | list of strings | see `docs/guidelines/tag_taxonomy.md` — controlled vocabulary, forward-only enforced from `2026-07-04` |
 
 Example:
 ```yaml
@@ -110,7 +110,7 @@ Applies to files under `stored_artifacts/` (plan.md, investigation.md, test_plan
 | `audience` | yes | enum | see AUDIENCE_VALUES |
 | `ticket_id` | yes | string | parent ticket ID |
 | `artifact_type` | yes | enum | see ARTIFACT_TYPE_VALUES |
-| `tags` | no | list of strings | free-form |
+| `tags` | no | list of strings | see `docs/guidelines/tag_taxonomy.md` — controlled vocabulary, forward-only enforced from `2026-07-04` |
 
 Example:
 ```yaml

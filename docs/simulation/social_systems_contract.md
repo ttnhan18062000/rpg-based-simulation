@@ -8,7 +8,7 @@ last_verified: 2026-06-13
 
 # Social Systems Contract
 
-**Source:** `src/systems/social_systems/` (appraisal.py, contracts.py, relationships.py, guilds.py, party.py, memory.py, group_service.py, reputation.py)
+**Source:** `src/systems/social_systems/` (appraisal.py, contracts.py, relationships.py, guilds.py, party.py, party_composition.py, memory.py, group_service.py, reputation.py)
 **Related docs:** [docs/simulation/domains/cooperation_contract.md](domains/cooperation_contract.md), [docs/simulation/domains/commitment_contract.md](domains/commitment_contract.md), [docs/simulation/domains/domain_ownership_map.md](domains/domain_ownership_map.md)
 
 ---
@@ -129,6 +129,24 @@ Dissolution rules:
 - Explicit LEAVE action by any member → voluntary quit (commitment penalty applies)
 
 Shared goal mechanics: party members share objective visibility. When the leader sets a project, members receive a `force_route_reevaluation` flag pointing them toward the same region.
+
+---
+
+## Party Composition — `party_composition.py`
+
+Compliance ID: SOC-244 (trust/bonds-aware term only; the pre-existing role-diversity/OCEAN-compatibility
+base score has no dedicated compliance id — see `docs/parity_ledger/social_narrative.yaml`'s SOC-244
+divergence_note for the pre-existing SOC-231/SOC-232 docstring mis-citation, not fixed here)
+
+`PartyCompositionScorer.score(entities, actor=None)` scores a candidate pool's party-formation
+quality, 0.0–1.0: `0.6 × role_diversity + 0.4 × OCEAN_compatibility` (TANK/HEALER/DPS/SUPPORT role
+coverage; bravery/sociability variance). When `actor` (the entity forming the party) is supplied,
+an additional `0.15 ×` mean directed trust/bond term is added and the result clamped to
+`[0.0, 1.0]` — see `docs/mechanics/04_strategic_cognition.md` §7. Bond sentiment takes priority
+over `trust_history` when both exist for a candidate, matching the Relationships section's rule
+above. Used by `AdventureRouteGenerator`'s FORM_PARTY route (`src/domains/adventure/`) and by
+`GroupSystem`'s ally-cohesion group formation (`src/systems/world_systems/groups.py`, which never
+passes `actor` and is unaffected by the trust/bonds term).
 
 ---
 

@@ -15,7 +15,7 @@ tags: [ph2, m4, social, continuity]
 Phase 2 Milestone 4: Social Continuity & Nemesis System
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

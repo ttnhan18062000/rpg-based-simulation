@@ -111,6 +111,22 @@ class TestResourceSeized:
         assert rec.delta == scoring_weights["economic_military_coupling"]
 
 
+class TestFactionTrajectoryStagnant:
+    def test_scores_configured_weight_and_tag(self, scorer: FactionScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("faction_trajectory_stagnant", payload={"faction_id": "f1", "ticks_since_territory_change": 301}), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights["faction_trajectory_stagnant"]
+        assert "faction_trajectory_stagnant" in rec.tags
+
+
 class TestNullReturn:
     def test_null_unknown(self, scorer: FactionScorer) -> None:
         assert scorer.score(_env("combat_initiated"), _ctx()) is None
+
+
+class TestBuildingSabotageOwnership:
+    def test_building_sabotaged_not_in_faction_event_types(self) -> None:
+        assert "building_sabotaged" not in FactionScorer.EVENT_TYPES
+
+    def test_building_sabotaged_not_scored_by_faction(self, scorer: FactionScorer) -> None:
+        assert scorer.score(_env("building_sabotaged"), _ctx()) is None

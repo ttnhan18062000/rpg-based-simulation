@@ -17,7 +17,7 @@ Complete Authoritative Action Proposal Model
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 standard

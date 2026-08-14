@@ -1,20 +1,20 @@
 {
-  "manifest_id": "prov_35a0ca25ce2ad77f",
+  "manifest_id": "prov_e8bb40253a568fa4",
   "world_id": "generated_frontier_3_42",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
+  "catalog_fingerprint": "10d77896a90aebb8c796b454766426b039a63265141b8574940c783cdee0455c",
   "module_fingerprints": {
     "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
-    "bandit_road_trade_pressure": "14f4161782ab617ee6da3a54afa2487d2eefd2cc63ff66899e08f87bc2993161",
-    "goblin_camp_conflict": "36e0a62287420b3a3ab01ce4396ce507e998bbecbc6ed4c0beb37c346d933daf",
-    "moon_cult_ruins": "2df69af1a6804ec21579ec0a7a4d4b3dde2878c40e28fe9b80355e7b63e2e02e",
-    "old_mine_resource_loop": "dbef38a7d0c2261e24948cd9dded020279386c10e0084872a2df9963bb9cc677",
-    "orc_clan_territory": "7162ce4798b527bebb9026704fae3e07dca324d0a63408efd1e8324a9e35811a"
+    "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
+    "goblin_camp_conflict": "7e712ab3d3321805bfad0b116c66ac5c679854fe887f7752b9ab6a27cb61e5fb",
+    "moon_cult_ruins": "c88d3ef942949a3d1a211d59602619701a43ee944dad0ec928b2eaf60248a3c7",
+    "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
+    "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
   },
-  "composition_fingerprint": "21ca13659706104be4deb8262598dc01c31b55a1710244f55d24e0cd26b79bbb",
+  "composition_fingerprint": "08df661524d9fb50237b7d875aeeb81bd7a0a1a213175a2960a0fb1454d6996a",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "35a0ca25ce2ad77f45767f6986df2223d3aff3eb94c97f4639e699edba9dc33b",
-  "created_at": "2026-06-30T18:18:41.909839Z",
+  "content_fingerprint": "e8bb40253a568fa4b8656d8cc0cc5184ce00c1e77d644fdf463025c6d501380e",
+  "created_at": "2026-07-09T16:15:14.992333Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

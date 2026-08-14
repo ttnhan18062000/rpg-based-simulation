@@ -1,0 +1,460 @@
+{
+  "manifest_id": "prov_6c7094d3edeed29e",
+  "world_id": "quest_dense_frontier",
+  "source_schema_version": "provenancemanifest.v1",
+  "catalog_fingerprint": "10d77896a90aebb8c796b454766426b039a63265141b8574940c783cdee0455c",
+  "module_fingerprints": {
+    "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
+    "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
+    "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
+    "ruins_mystery_quest": "678978502f5aad463a61082fb026caddef6796d83d9a9b6936e42ac49dc2116c"
+  },
+  "composition_fingerprint": "5c7db0903cf598dbc3774a2362ca66e82ef857428d92ed8f3a08411c26056b68",
+  "resolver_version": "1.0.0",
+  "content_fingerprint": "6c7094d3edeed29e1b1a2340e30c2fbffad8826ed185f8e26aac18302d624ac3",
+  "created_at": "2026-08-05T17:18:04.617323Z",
+  "records": {
+    "hero_guild": {
+      "element_id": "hero_guild",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Default chosen faction for hero-centered scenarios."
+      }
+    },
+    "town_council": {
+      "element_id": "town_council",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Settlement authority and civil administration."
+      }
+    },
+    "neutral": {
+      "element_id": "neutral",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Fallback for unaffiliated content."
+      }
+    },
+    "wild_beast_pack": {
+      "element_id": "wild_beast_pack",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Territorial animal groups. Contextual threat, not enemy-by-race."
+      }
+    },
+    "goblin_warband": {
+      "element_id": "goblin_warband",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Opportunistic raider faction."
+      }
+    },
+    "merchant_league": {
+      "element_id": "merchant_league",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Trade-centered faction that prefers negotiated safety."
+      }
+    },
+    "bandit_company": {
+      "element_id": "bandit_company",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Outlaw faction hostile to settlement safety and trade routes."
+      }
+    },
+    "forest_wardens": {
+      "element_id": "forest_wardens",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Protective faction defending forest balance."
+      }
+    },
+    "orc_clan": {
+      "element_id": "orc_clan",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "rival"
+      },
+      "details": {
+        "description": "Honor/strength-driven clan faction, not always hostile."
+      }
+    },
+    "dwarven_mine_clan": {
+      "element_id": "dwarven_mine_clan",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Mining and crafting faction controlling mountain/mine assets."
+      }
+    },
+    "moon_cult": {
+      "element_id": "moon_cult",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Ritual faction tied to moon ruins and arcane materials."
+      }
+    },
+    "undead_remnants": {
+      "element_id": "undead_remnants",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Purpose-bound remnants around battlefields, ruins, and barrows."
+      }
+    },
+    "arcane_circle": {
+      "element_id": "arcane_circle",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Research faction interested in crystals, ruins, and magical anomalies."
+      }
+    },
+    "swamp_tribe": {
+      "element_id": "swamp_tribe",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "rival"
+      },
+      "details": {
+        "description": "Lizardfolk/swamp faction defending wetland territory."
+      }
+    },
+    "dragon_cult": {
+      "element_id": "dragon_cult",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Cult faction serving dragonkin/fire-aligned power."
+      }
+    },
+    "spirit_court": {
+      "element_id": "spirit_court",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "quest_forest_survey": {
+      "element_id": "quest_forest_survey",
+      "element_type": "quest_definition",
+      "source_module": "forest_deep_ecology",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "explore"
+      },
+      "details": {
+        "tags": [
+          "nature",
+          "exploration"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "mountain_pass_zone": {
+      "element_id": "mountain_pass_zone",
+      "element_type": "region",
+      "source_module": "mountain_pass",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "frozen_peak"
+      },
+      "details": {
+        "bounds": [
+          80,
+          80,
+          120,
+          120
+        ],
+        "terrain": "mountain",
+        "hazard_level": 2.5,
+        "ecology_source": []
+      }
+    },
+    "mountain_pass__iron_vein_0": {
+      "element_id": "mountain_pass__iron_vein_0",
+      "element_type": "resource",
+      "source_module": "mountain_pass",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "iron_vein"
+      },
+      "details": {
+        "count": 4,
+        "region": "mountain_pass_zone"
+      }
+    },
+    "mountain_pass__frost_shard_cluster_1": {
+      "element_id": "mountain_pass__frost_shard_cluster_1",
+      "element_type": "resource",
+      "source_module": "mountain_pass",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "frost_shard_cluster"
+      },
+      "details": {
+        "count": 2,
+        "region": "mountain_pass_zone"
+      }
+    },
+    "quest_explore_mountain_route": {
+      "element_id": "quest_explore_mountain_route",
+      "element_type": "quest_definition",
+      "source_module": "mountain_pass",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "explore"
+      },
+      "details": {
+        "tags": [
+          "mountain",
+          "terrain",
+          "exploration"
+        ],
+        "reward_budget": 90
+      }
+    },
+    "quest_hunt_mountain_predator": {
+      "element_id": "quest_hunt_mountain_predator",
+      "element_type": "quest_definition",
+      "source_module": "mountain_pass",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "mountain",
+          "terrain",
+          "combat"
+        ],
+        "reward_budget": 130
+      }
+    },
+    "river_ford": {
+      "element_id": "river_ford",
+      "element_type": "region",
+      "source_module": "river_crossing",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "near_forest"
+      },
+      "details": {
+        "bounds": [
+          130,
+          30,
+          160,
+          70
+        ],
+        "terrain": "river",
+        "hazard_level": 1.0,
+        "ecology_source": []
+      }
+    },
+    "river_crossing__herb_patch_0": {
+      "element_id": "river_crossing__herb_patch_0",
+      "element_type": "resource",
+      "source_module": "river_crossing",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "herb_patch"
+      },
+      "details": {
+        "count": 3,
+        "region": "river_ford"
+      }
+    },
+    "watchtower_0": {
+      "element_id": "watchtower_0",
+      "element_type": "building",
+      "source_module": "river_crossing",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "watchtower"
+      },
+      "details": {
+        "region": "river_ford"
+      }
+    },
+    "quest_survey_river_route": {
+      "element_id": "quest_survey_river_route",
+      "element_type": "quest_definition",
+      "source_module": "river_crossing",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "explore"
+      },
+      "details": {
+        "tags": [
+          "river",
+          "terrain",
+          "scouting"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "haunted_battlefield": {
+      "element_id": "haunted_battlefield",
+      "element_type": "region",
+      "source_module": "ruins_mystery_quest",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "haunted_battlefield"
+      },
+      "details": {
+        "bounds": [
+          60,
+          80,
+          100,
+          120
+        ],
+        "terrain": "ruin",
+        "hazard_level": 3.5,
+        "ecology_source": [
+          "haunted_battlefield_ecology"
+        ]
+      }
+    },
+    "undead_battlefield_patrol_undead_sentinel": {
+      "element_id": "undead_battlefield_patrol_undead_sentinel",
+      "element_type": "population",
+      "source_module": "ruins_mystery_quest",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "sentinel",
+        "faction": "undead_remnants",
+        "stats_profile": "undead_sentinel_base",
+        "inventory_profile": "undead_empty",
+        "cognition_profile": "undead_fixated",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 6,
+        "spawn_region": "haunted_battlefield",
+        "archetype_source": "undead_sentinel",
+        "population_recipe_source": "undead_battlefield_patrol"
+      }
+    },
+    "quest_ruins_first_contact": {
+      "element_id": "quest_ruins_first_contact",
+      "element_type": "quest_definition",
+      "source_module": "ruins_mystery_quest",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "mystery",
+          "ruins"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_spirit_source_trace": {
+      "element_id": "quest_spirit_source_trace",
+      "element_type": "quest_definition",
+      "source_module": "ruins_mystery_quest",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "mystery",
+          "ruins",
+          "spirit"
+        ],
+        "reward_budget": 150
+      }
+    }
+  }
+}

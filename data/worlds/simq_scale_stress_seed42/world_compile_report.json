@@ -1,0 +1,15 @@
+{
+  "world_id": "simq_scale_stress_seed42",
+  "seed": 42,
+  "entity_count": 68,
+  "region_count": 13,
+  "resource_node_count": 18,
+  "building_count": 7,
+  "quest_count": 27,
+  "distinct_populated_factions": 11,
+  "warnings": [
+    "QuestDefinition 'survey_river_route' required_location_tag 'river' does not match any region type or tag in this world"
+  ],
+  "compile_duration_ms": 23.67244102060795,
+  "state_hash": "f7aae75582e1d63a753422e9eb389186"
+}

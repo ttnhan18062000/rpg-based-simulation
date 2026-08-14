@@ -43,8 +43,12 @@ def _run_simulation(ticks: int, seed: int, world_id: str) -> str:
 
     try:
         repo = WorldRepository("data/worlds")
-        spec = repo.load_world(world_id)
-        state, _ = WorldCompiler.compile(spec, seed=seed)
+        # TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION: see cli/entry.py's own identical
+        # fix comment -- load_world_with_context() is required for correct
+        # entity.identity.role/.faction resolution against real, catalog-driven monster
+        # archetypes.
+        spec, context = repo.load_world_with_context(world_id)
+        state, _ = WorldCompiler.compile(spec, seed=seed, context=context)
 
         flags = dict(state.feature_flags)
         flags["ENABLE_ADVENTURE_ROUTING"] = 1.0

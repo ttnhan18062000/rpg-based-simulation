@@ -14,6 +14,8 @@ class InformationScorer(PillarScorer):
     paid_information_transaction is scored here as primary (not in EconomyScorer).
     """
 
+    PILLAR_ID = PillarId.INFORMATION
+
     EVENT_TYPES = (
         "belief_assimilated",
         "lead_certainty_updated",

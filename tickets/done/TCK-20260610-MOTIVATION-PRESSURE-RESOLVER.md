@@ -15,7 +15,7 @@ tags: [motivation, pressure, resolver]
 Add MotivationPressureResolver consuming need_profile and drive_profile from catalog
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

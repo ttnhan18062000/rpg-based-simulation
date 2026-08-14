@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory
 
 # Default
 help: ## Show available commands
@@ -47,6 +47,25 @@ serve: build ## Build frontend + start production server
 
 serve-only: ## Start production server (assumes frontend already built)
 	python3 -m src serve --port 8000
+
+# ── Agent Ops Dashboard ──────────────────────────────────
+
+dashboard-install: ## Install agent ops dashboard frontend Node dependencies
+	cd dashboard-frontend && npm install
+
+dashboard-build: ## Build the agent ops dashboard frontend for production
+	cd dashboard-frontend && npm run build
+
+dashboard-dev: ## Start dashboard backend (reload) + Vite dev server concurrently
+	@echo "Starting dashboard backend on :8471 and Vite dev server..."
+	@echo "Press Ctrl+C to stop both."
+	@trap 'kill 0' INT; \
+		uvicorn src.api.agent_ops_dashboard.main:app --host 127.0.0.1 --port 8471 --reload & \
+		(cd dashboard-frontend && npm run dev) & \
+		wait
+
+dashboard-serve: dashboard-build ## Build dashboard frontend + start single-process production server (port 8420)
+	python3 -m src.api.agent_ops_dashboard.serve
 
 # ── Infrastructure & Testing ─────────────────────────────
 
@@ -153,6 +172,9 @@ test-quick: ## Run fast tests only (skip slow integration)
 test-cov: ## Run tests with coverage report (V2)
 	python3 -m pytest tests_v2/ -v --tb=short --cov=src_v2 --cov-report=term-missing
 
+test-collect: ## List and count collected Python test nodes (tests/ only; does not run tests)
+	python3 -m pytest tests/ --collect-only -q
+
 perf-measure: ## Re-measure perf tests and print proposed perf_baselines.json diff
 	python3 tools/perf_guard.py measure
 
@@ -233,6 +255,15 @@ docs-build: docs-artifacts ## Build Docusaurus static site to website/build/
 docs-registry: ## Regenerate docs/REGISTRY.yaml from frontmatter
 	python3 tools/generate_registry.py
 
+simq-corpus-registry: ## Regenerate config/simulation_quality/corpus_registry.yaml from real world/profile/anchor data
+	python3 tools/generate_corpus_registry.py
+
+tag-report: ## Print a tag-usage report over completed tickets (pass ARGS="--json reports/tag_report.json")
+	python3 tools/tag_report.py $(ARGS)
+
+ticket-stats-report: ## Print a ticket-corpus stats report (velocity/tier/priority/layer/artifact-completeness) (pass ARGS="--json reports/ticket_stats_report.json")
+	python3 tools/ticket_stats_report.py $(ARGS)
+
 # ── Agent Monitoring ─────────────────────────────────────
 
 agent-monitoring-retro: ## Generate current-week agent monitoring retro report
@@ -243,6 +274,28 @@ agent-monitoring-validate: ## Cross-check agent monitoring integrity against wor
 
 agent-monitoring-query: ## Query agent monitoring records (pass ARGS="--agent investigator --days 14")
 	python3 tools/agent-monitoring/query.py $(ARGS)
+
+agent-monitoring-weight-check: ## Required check before proposing a cost_proxy.py weight change (pass ARGS='--candidate-weights "{...}"')
+	python3 tools/agent-monitoring/weight_sensitivity_check.py $(ARGS)
+
+agent-monitoring-epic-staleness: ## Report open epics with no recent child-ticket activity
+	python3 tools/agent-monitoring/epic_staleness_check.py
+
+agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
+	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
+	  tools/agent-monitoring/build_index.py
+
+parity-index: ## Rebuild the derived read-only SQLite index over docs/parity_ledger/*.yaml (on-demand only — not CI)
+	python3 tools/parity_index.py build
+
+parity-index-check: ## Report whether parity-index/parity.db is stale relative to live docs/parity_ledger/*.yaml
+	python3 tools/parity_index.py check-staleness
+
+simq-long-run-lifecycle-observation: ## Run the 5000-tick combined SimQ + entity-lifecycle observation across the curated 6-world sample
+	python3 tools/simq_long_run_observation.py
+
+content-inventory: ## Regenerate config/content_inventory.json from real data/content/ counts
+	python3 tools/generate_content_inventory.py
 
 # ── Knowledge Search ─────────────────────────────────────────────────────────
 # developer env only — not CI
@@ -288,6 +341,38 @@ evaluate: ## Diff current calibration data against grade anchors (no engine re-r
 
 evaluate-full: ## Re-run engine for all fast (≤500t) scenarios and diff against grade anchors
 	$(PYTHON) tools/evaluate_simq.py
+
+simq-full-audit: ## Mechanical SimQ audit: diff calibration vs anchors, run fast regression tests, scan anchor/parity coverage gaps
+	@echo "[simq-full-audit] Step 1/3: diff current calibration data against anchors (no engine re-run)"
+	-$(PYTHON) tools/evaluate_simq.py --dry-run
+	@echo "[simq-full-audit] Step 2/3: run fast-tier grade regression tests"
+	$(PYTHON) -m pytest tests/simulation_quality/test_grade_regression.py -m "not slow" -q; test_status=$$?; \
+	echo "[simq-full-audit] Step 3/3: cross-check anchor key coverage + parity ledger candidates"; \
+	$(PYTHON) tools/simq_audit_gaps.py; \
+	exit $$test_status
+
+simq-full-audit-full: ## Same as simq-full-audit but re-runs the engine for all fast (<=500t) scenarios first
+	-$(PYTHON) tools/evaluate_simq.py
+	$(PYTHON) -m pytest tests/simulation_quality/test_grade_regression.py -m "not slow" -q; test_status=$$?; \
+	$(PYTHON) tools/simq_audit_gaps.py; \
+	exit $$test_status
+
+simq-full-audit-slow: ## Slow-tier (1000t/2000t) regression check -- run after simq-full-audit passes
+	$(PYTHON) -m pytest tests/simulation_quality/test_grade_regression.py -q
+
+simq-corpus-diversity-slow-isolated: ## [slow] Run test_corpus_diversity.py's -m slow guards as isolated per-test subprocesses (no cumulative-session-load carryover, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
+	@nodeids=$$($(PYTHON) -m pytest tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget large --collect-only -q | grep '::' || true); \
+	nodeid_count=$$(echo "$$nodeids" | grep -c '::' || true); \
+	if [ "$$nodeid_count" -lt 32 ]; then \
+	  echo "ERROR: expected >=32 tests from test_corpus_diversity.py -m slow, collected $$nodeid_count -- aborting, not silently passing (collection failure, marker drift, import error, or misconfiguration)"; \
+	  exit 1; \
+	fi; \
+	status=0; \
+	for nodeid in $$nodeids; do \
+	  echo "[isolated] $$nodeid"; \
+	  $(PYTHON) -m pytest "$$nodeid" --resource-budget large --tb=short -q || status=1; \
+	done; \
+	exit $$status
 
 mcp-server-test: ## Smoke-test MCP search_docs tool via --test mode (no MCP client needed)
 	@echo '{"query": "damage formula", "top_k": 3}' | \

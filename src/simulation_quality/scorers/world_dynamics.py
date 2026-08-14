@@ -14,6 +14,8 @@ class WorldDynamicsScorer(PillarScorer):
     ecology_cycle_completed is scored HERE (not in EconomyScorer) per SQ-08 conflict note.
     """
 
+    PILLAR_ID = PillarId.WORLD
+
     EVENT_TYPES = (
         "calamity_spawned",
         "boss_spawned",
@@ -29,6 +31,9 @@ class WorldDynamicsScorer(PillarScorer):
         "hazard_drain_applied",
         "threat_evolved",
         "node_recharged",
+        "building_sabotaged",
+        "spawn_occupancy_violation",
+        "world_hard_law_violation",
     )
 
     def __init__(self, weights: ScoringWeights) -> None:
@@ -168,6 +173,15 @@ class WorldDynamicsScorer(PillarScorer):
 
         if et == "hazard_drain_applied":
             return _rec(self.weights["hazard_active"], "hazard drain applied in hazardous region", ("hazard_active",))
+
+        if et == "building_sabotaged":
+            return _rec(self.weights["infrastructure_damaged"], "building took sabotage damage — real infrastructure consequence", ("infrastructure_damaged",))
+
+        if et == "spawn_occupancy_violation":
+            return _rec(self.weights["spawn_occupancy_violation"], "spawn placement violated occupancy/terrain legality — correctness fault, zero occurrences is the target", ("spawn_occupancy_violation",))
+
+        if et == "world_hard_law_violation":
+            return _rec(self.weights["world_hard_law"], "hard law violated outside the combat/spawn-occupancy domain (stamina, position, or movement-occupancy)", ("world_hard_law",))
 
         if et == "threat_evolved":
             return None  # threat_evolved not in scoring table but in event bus; no score defined

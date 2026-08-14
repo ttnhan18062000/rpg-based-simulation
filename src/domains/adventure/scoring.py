@@ -4,13 +4,20 @@ src/domains/adventure/scoring.py
 Phase 3 — AdventureRouteScorer
 
 Implements subjective route scoring with imperfect decision personality bias.
-Reads only subjective self-model aspects to protect information opacity.
+Reads only subjective self-model, cognition/memory, and (for
+GATHER_RESOURCE/CRAFT_UPGRADE routes with a resolvable capability key) entity-owned
+combat/stamina/inventory/equipment aspects via an ad-hoc
+CapabilityEstimateService.estimate() call — never omniscient world truth, and never
+entity.self_model.capabilities itself, which remains unpopulated in production (see
+TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING) — to protect information
+opacity.
 """
 
 from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
+from src.cognition.capability_estimate import CapabilityContext, CapabilityEstimateService
 from src.core.state import EntityState, ResourceNodeState
 from src.domains.adventure.schema import RouteFamily, AdventureRouteOption
 from src.engine.faction_constants import DEFEND_BORDER, TRADE_ROUTE, COMMISSION_QUEST
@@ -43,11 +50,17 @@ class AdventureRouteScorer:
         """
         Calculate subjective score for the route option and return updated option.
         Formula:
-            score = urgency + benefit + personality_bias + confidence_bonus - risk_penalty - blocker_penalty
+            score = urgency + benefit + personality_bias + plan_advance_bonus + memory_adjustment + confidence_bonus - risk_penalty - blocker_penalty
 
         Optional group context enables class-synergy multipliers (SOC-229):
           - WARRIOR + MAGE both present in group.roles → HUNT_WEAK_ENEMY score ×1.15
           - Entity is EntityRole.HERO                 → QUEST_OPPORTUNITY score ×1.10
+
+        For GATHER_RESOURCE/CRAFT_UPGRADE routes with a resolvable capability key,
+        confidence_bonus is computed from CapabilityEstimateService.estimate() instead
+        of route.confidence (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING); all
+        other routes, and mapped routes whose key cannot be resolved, keep the flat
+        route.confidence × 0.15 term.
         """
         # ── 1. Fetch Personality Traits (Robust Range Normalisation) ─────────
         def get_trait(trait_name: str) -> float:
@@ -220,8 +233,96 @@ class AdventureRouteScorer:
                     plan_advance_bonus = 1.5
         plan_advance_bonus = min(plan_advance_bonus, 3.0)
 
-        # ── 5. Confidence Bonus ─────────────────────────────────────────────
+        # ── 4c. Memory-Informed Advice Adjustment (TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING) ──
+        # Reads only the entity's own subjective causal-memory beliefs (never state/world truth).
+        # Fixed ±1.0 magnitude, boolean-gated per advice string (not accumulated per matching
+        # entry) so a full 30-entry causal-memory buffer with many matching entries still produces
+        # exactly one adjustment per mapped family, never a growing stack.
+        memory_adjustment = 0.0
+        causal_entries = entity.cognition.memory.causal.entries
+        if causal_entries:
+            has_avoid_enemy = any(
+                "avoid_enemy" in e.future_advice for e in causal_entries
+            )
+            has_boost_party_trust = any(
+                "boost_party_trust" in e.future_advice for e in causal_entries
+            )
+            if has_avoid_enemy and route.family == RouteFamily.HUNT_WEAK_ENEMY:
+                memory_adjustment -= 1.0
+            if has_boost_party_trust and route.family == RouteFamily.FORM_PARTY:
+                memory_adjustment += 1.0
+
+        # ── 5. Confidence Bonus (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING) ──────
+        # For GATHER_RESOURCE/CRAFT_UPGRADE routes with a resolvable capability key,
+        # confidence_bonus is fed by an ad-hoc CapabilityEstimateService.estimate() call
+        # (entity-owned combat/stamina/inventory/equipment only) instead of the flat
+        # generation-time route.confidence constant. Replacement of the term's input
+        # source, not a new additive term -- weight stays 0.15. Never touches
+        # entity.self_model.capabilities (stays empty in production); this is a
+        # scorer-local, throwaway read, never written back to durable entity state.
         confidence_bonus = route.confidence * 0.15
+        capability_estimate_value = None
+
+        if (
+            route.family == RouteFamily.GATHER_RESOURCE
+            and resource_nodes is not None
+            and route.target_node_id is not None
+        ):
+            gather_node = resource_nodes.get(route.target_node_id)
+            if gather_node is not None:
+                resource_kind = gather_node.kind
+                required_tool = None
+                for req in route.requirements:
+                    if req.kind == "has_item" and req.subject:
+                        required_tool = req.subject
+                        break
+                # Review round-1 fix: only take the capability-estimate path when a real tool
+                # requirement exists. Without this gate, resource_data={} for tool-less resources
+                # makes CapabilityEstimateService.estimate() default has_tool=True
+                # (capability_estimate.py:179), always returning a non-None estimate and silently
+                # switching off the flat term for every resolvable GATHER_RESOURCE route --
+                # including the common case where no tool is required at all. There is nothing
+                # capability-relevant to estimate when no tool requirement exists, so the flat
+                # term is correctly kept in that case.
+                if required_tool is not None:
+                    resource_data = {resource_kind: {"required_tool": required_tool}}
+                    cap_component = CapabilityEstimateService.estimate(
+                        entity,
+                        context=CapabilityContext(
+                            gather_resources=(resource_kind,), resource_data=resource_data
+                        ),
+                    )
+                    cap_estimate = cap_component.estimates.get(f"gather.resource.{resource_kind}")
+                    if cap_estimate is not None:
+                        capability_estimate_value = cap_estimate.estimate
+
+        elif route.family == RouteFamily.CRAFT_UPGRADE:
+            recipe_id = None
+            gold_cost = 0
+            requires_items: Dict[str, int] = {}
+            for req in route.requirements:
+                if req.kind == "recipe_known" and req.subject:
+                    recipe_id = req.subject
+                elif req.kind == "has_gold":
+                    gold_cost = req.quantity
+                elif req.kind == "has_item" and req.subject:
+                    requires_items[req.subject] = req.quantity
+            if recipe_id is not None:
+                cap_component = CapabilityEstimateService.estimate(
+                    entity,
+                    context=CapabilityContext(
+                        craft_recipes=(recipe_id,),
+                        recipe_data={
+                            recipe_id: {"requires_items": requires_items, "gold_cost": gold_cost}
+                        },
+                    ),
+                )
+                cap_estimate = cap_component.estimates.get(f"craft.recipe.{recipe_id}")
+                if cap_estimate is not None:
+                    capability_estimate_value = cap_estimate.estimate
+
+        if capability_estimate_value is not None:
+            confidence_bonus = capability_estimate_value * 0.15
 
         # ── 6. Blocker Penalty ───────────────────────────────────────────────
         blocker_penalty = 0.0
@@ -229,7 +330,7 @@ class AdventureRouteScorer:
             blocker_penalty = 2.0  # massive penalty for blocked routes
 
         # ── 7. Calculate Final Score ─────────────────────────────────────────
-        final_score = urgency + benefit + personality_bias + plan_advance_bonus + confidence_bonus - risk_penalty - blocker_penalty
+        final_score = urgency + benefit + personality_bias + plan_advance_bonus + memory_adjustment + confidence_bonus - risk_penalty - blocker_penalty
         final_score = round(max(0.0, final_score), 4)
 
         # ── 8. Class-Synergy Multipliers (SOC-229) ───────────────────────────
@@ -273,6 +374,7 @@ class AdventureRouteScorer:
             benefit_score=round(benefit, 4),
             personality_bias=round(personality_bias, 4),
             plan_advance_bonus=round(plan_advance_bonus, 4),
+            memory_adjustment=round(memory_adjustment, 4),
             confidence_bonus=round(confidence_bonus, 4),
             risk_penalty=round(risk_penalty, 4),
             blocker_penalty=round(blocker_penalty, 4),

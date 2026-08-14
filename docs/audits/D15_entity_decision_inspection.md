@@ -124,7 +124,7 @@ Does not surface cognition snapshots or behavior timeline events.
 |---|---|---|
 | OFF | No | No |
 | LIGHT (default) | **No** | Yes |
-| NORMAL / FULL / RESEARCH | **No** | Yes |
+| NORMAL / FULL / RESEARCH | **Yes (all/selected entities)** — fixed 2026-08-05, `TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP` | Yes |
 | DEBUG | Yes (all entities) | Yes |
 | CERTIFICATION | Yes (selected entities) | Yes |
 | LONG_RUN | **No** | Yes |
@@ -133,7 +133,8 @@ Does not surface cognition snapshots or behavior timeline events.
 run directory directly or `grep` them.
 
 **Rating:** Architecture is sound and the data model is rich. Two problems: (a) not queryable
-via API; (b) only available in DEBUG/CERTIFICATION mode for routine strategic changes.
+via API; (b) only available in DEBUG/CERTIFICATION/NORMAL/FULL/RESEARCH mode for routine strategic
+changes — LIGHT (the default) and LONG_RUN still only capture anomalies, unchanged.
 
 ---
 
@@ -178,7 +179,7 @@ is no way for a developer to query it without writing Python.
 
 ## Gap Analysis
 
-### Gap 1 — No "why goal X was chosen" explanation — Impact: 15 / 15 — **RESOLVED by TCK-20260619-E22A-TRACE-WRITER**
+### Gap 1 — No "why goal X was chosen" explanation — Impact: 15 / 15 — **FULLY RESOLVED (two-stage fix; runner-up half confirmed accurate 2026-07-04)**
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -187,21 +188,42 @@ is no way for a developer to query it without writing Python.
 | Fix Leverage | 5 | One change (retain top-N scores at commit) eliminates an entire class of black-box work |
 | **Total** | **15** | |
 
-**The core gap.** Every inspection tool shows the entity's *current* goal ID. None show
-why that goal won the scoring competition this tick.
+**The core gap (historical — both halves now resolved, see Resolution below).** Every
+inspection tool showed the entity's *current* goal ID. None showed why that goal won the
+scoring competition this tick.
 
 Goal scoring happens inside `execute_brain()` → `CognitionDomain` during `_phase_collection()`.
 The ranked scores for all candidate goals are computed transiently and discarded at tick
-boundary. `source_goal_score` in cognition snapshots captures only the winning project's
-score — not the runner-up scores.
+boundary. `source_goal_score` in cognition snapshots originally captured only the winning
+project's score — not the runner-up scores.
 
-**DX impact:** Developer cannot distinguish "entity stuck on low-priority goal because
-all alternatives scored lower" from "entity stuck on high-priority goal that should be
-interrupted but isn't." These require completely different fixes but look identical from
-the inspection API.
+**DX impact (historical):** Developer could not distinguish "entity stuck on low-priority
+goal because all alternatives scored lower" from "entity stuck on high-priority goal that
+should be interrupted but isn't." These require completely different fixes but looked
+identical from the inspection API.
 
 **Gap from D01:** "Route decision trace is already computed every tick — this is promotion
 of existing data to a queryable API, not new logic." (D01 §Decision Explanation Model)
+
+**Resolution (two stages):**
+1. `TCK-20260619-E22A-TRACE-WRITER` — promoted the decision trace to a queryable
+   `decision_trace.jsonl` API (the header's original "RESOLVED" tag referred to this stage
+   only; it did not yet add runner-up scores, which is why the "core gap"/"DX impact" prose
+   above was left describing the pre-fix state for a while — a documentation staleness this
+   entry now corrects).
+2. `TCK-20260627-P1H-GOAL-RUNNERUP` — added the actual runner-up-score capture this Gap
+   asked for: `DecisionTraceWriter.write_trace()` (`src/observability/cognition/decision_trace_writer.py`)
+   sorts candidates descending and emits `source_goal_score` (winner) + `runner_up_scores`
+   (ranks 2-3, gracefully truncated below 3 candidates) via a bounded per-entity cache;
+   `EntityInspectionSnapshot.goal_scores` is populated from that same cache. Documented in
+   `docs/observability/decision_trace_contract.md`'s "Goal Score Cache" section.
+
+**Reconfirmed 2026-07-04** via `TCK-20260703-SIMQ-UPLIFT3-GOAL-TRACE`'s investigation (which set
+out to build this exact feature, discovered it already existed, and closed as a documentation-only
+duplicate): `tests/unit/observability/test_decision_trace.py`'s 4 runner-up-specific tests
+(`test_decision_trace_runner_up_scores_present`, `_source_goal_score_present`,
+`_runner_up_fewer_than_3`, `_runner_up_single_candidate`) all pass (24/24 in the full file).
+`docs/plans/audit_fix_plan.md`'s P1-H entry was corrected to match.
 
 ---
 
@@ -285,11 +307,20 @@ invisible to external tools, dashboards, or CLI queries.
 
 ### Gap 6 — Default mode (LIGHT) severely limits cognition capture — Impact: 7 / 15
 
-> **RESOLVED: TCK-20260619-E22-DECISION-EXPLAIN (2026-06-20):** Decision trace promoted to first-class durable object; REST API at /api/v1/observability/cognition/{entity_id}/tick/{n} implemented; tick index and LIGHT-mode capture added.
+> **PARTIALLY RESOLVED — corrected 2026-08-05 (`TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP`):**
+> the "RESOLVED" annotation this entry previously carried conflated two separate artifacts.
+> `TCK-20260619-E22-DECISION-EXPLAIN` (2026-06-20) genuinely added LIGHT-mode capture, but only for
+> `decision_trace.jsonl` (`DecisionTraceWriter`) — verified directly, `decision_trace.jsonl` is
+> real and populated in a LIGHT-mode run. It did **not** touch `cognition_graph_snapshots.jsonl`/
+> diffs (`ObservabilityCognitionRecorder`/`CognitionCapturePolicy`, a separate recorder), which is
+> what this gap's own title and cost/frequency scoring below describe. That half remained
+> genuinely unresolved until this ticket, which also found and fixed a related bug: NORMAL/FULL/
+> RESEARCH modes fell through `CognitionCapturePolicy.should_capture()`'s branching to `False`
+> despite their `ObservabilityConfig` flags implying richer capture — see the corrected table below.
 
 | Dimension | Score | Reason |
 |---|---|---|
-| Debug Time Cost | 2 | Workaround is known: switch to DEBUG mode and re-run |
+| Debug Time Cost | 2 | Workaround is known: switch to DEBUG/CERTIFICATION mode (or NORMAL/FULL/RESEARCH, fixed 2026-08-05) and re-run |
 | Frequency of Need | 3 | Affects every LIGHT-mode run; common scenario |
 | Fix Leverage | 2 | Requires policy change; risk of performance impact in LIGHT mode |
 | **Total** | **7** | |
@@ -297,7 +328,11 @@ invisible to external tools, dashboards, or CLI queries.
 In LIGHT mode — the mode most developers run — cognition snapshots are only written
 when an anomaly fires. Normal goal switching, blocker resolution, and project changes
 produce no cognition artifact. Developers who don't run in DEBUG mode see a black box
-for all routine strategic decisions.
+for all routine strategic decisions. **Still true as of 2026-08-05** — LIGHT mode is
+unchanged; `TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP` investigated whether to change
+SimQ's calibration harness to a richer mode and found the storage/perf cost prohibitive at
+corpus scale (see that ticket's own investigation.md for real measured figures) — deliberately
+not adopted, not silently dropped.
 
 ---
 

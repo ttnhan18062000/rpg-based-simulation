@@ -29,6 +29,13 @@ logger = logging.getLogger("calibrate_simq")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
+class CalibrationIntegrityError(Exception):
+    """Raised when a calibration run lost SimQ events to queue overflow or SURVIVAL
+    mode-shed — a run in this state must not silently produce a graded quality_report.json.
+    """
+    pass
+
+
 def _resolve_profile(name: str) -> str:
     """Return the profile name to use for the given world name.
 
@@ -109,23 +116,38 @@ def _load_world_state(name: str, seed: int):
     """Load and compile a WorldSpec for the given world name.
 
     Looks for ``data/worlds/{name}/resolved/world.resolved.yaml``.
-    Returns ``(AuthoritativeState, compile_report)`` on success, or
-    ``(None, None)`` if the world is not found or compilation fails.
+    Returns ``(AuthoritativeState, compile_report)`` on success. The literal
+    name ``"generic"`` (the CLI's ``--name`` default) intentionally has no
+    world directory and returns ``(None, None)`` to use the hero+goblins
+    fallback scenario. Any other name that fails to resolve raises
+    ``FileNotFoundError`` — a mistyped or nonexistent world name must not
+    silently degrade into a meaningless synthetic scenario that still
+    produces a "successful" quality report.
     """
     resolved_path = os.path.join("data", "worlds", name, "resolved", "world.resolved.yaml")
     if not os.path.exists(resolved_path):
-        logger.info("No resolved world spec found for '%s' at %s — using generic simulation", name, resolved_path)
-        return None, None
+        if name == "generic":
+            logger.info("No world requested ('generic') — using generic hero+goblins simulation")
+            return None, None
+        raise FileNotFoundError(
+            f"World '{name}' not found: {resolved_path} does not exist. "
+            "Pass --name generic for the synthetic fallback scenario, or check for a typo in --name."
+        )
 
     try:
-        import yaml
-        from src.worldbuilding.schema import WorldSpec
         from src.worldbuilding.compiler import WorldCompiler
+        from src.worldbuilding.repository import WorldRepository
 
-        with open(resolved_path, encoding="utf-8") as fh:
-            raw = yaml.safe_load(fh)
-        spec = WorldSpec(**raw)
-        state, report = WorldCompiler.compile(spec, seed)
+        # TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION: WorldCompiler.compile() can only
+        # correctly resolve entity.identity.role/.faction via a catalog lookup when it has
+        # context.legacy_roles/.legacy_faction to consult -- without it, role/faction resolution
+        # falls back to naive keyword-matching that fails for almost every real monster
+        # archetype role_id (e.g. "predator_hunter"/"raider"/"sentinel"/"scout"/"leader"),
+        # silently defaulting to CITIZEN. load_world_with_context() surfaces the real,
+        # already-computed compile_context.json alongside world.resolved.yaml.
+        repo = WorldRepository(os.path.join("data", "worlds"))
+        spec, context = repo.load_world_with_context(name)
+        state, report = WorldCompiler.compile(spec, seed, context=context)
         logger.info(
             "Loaded world '%s': %d entities, %d regions, %d resource nodes",
             name,
@@ -139,7 +161,14 @@ def _load_world_state(name: str, seed: int):
         return None, None
 
 
-def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10, extra_flags: dict | None = None) -> tuple[str, float]:
+def _run_engine(
+    name: str,
+    seed: int,
+    ticks: int,
+    entity_count: int = 10,
+    extra_flags: dict | None = None,
+    cal_dir: str | None = None,
+) -> tuple[str, float, str]:
     """Drive the kernel tick_once() N times; return (run_dir, elapsed_sec, run_id).
 
     If a compiled world spec exists for ``name``, loads it via WorldCompiler and
@@ -150,6 +179,10 @@ def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10, extra_
     from the calibration profile YAML's ``feature_flags:`` block.  These are applied
     before env-var overrides so that environment variables can still override profile
     defaults.
+
+    ``cal_dir``, when given, is where the RunHealthRecord sidecar
+    (``quality_report.run_health.json``) is written — same directory
+    ``quality_report.json`` itself lands in (see ``main()``).
     """
     from src.engine.kernel import Kernel
     from src.core.state import AuthoritativeState
@@ -190,6 +223,7 @@ def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10, extra_
         "ENABLE_BELIEF_ASSIMILATION", "ENABLE_PROGRESSION_EVOLUTION",
         "ENABLE_SOCIAL_COOPERATION", "ENABLE_WORLD_EMERGENCE",
         "ENABLE_LIFE_ARC_CAMPAIGNS", "ENABLE_ENHANCED_TRACE_EVENTS",
+        "ENABLE_PUSH_EVENT_SHAPERS",
     ]
 
     def _parse_flag_value(raw: str) -> FeatureMode | None:
@@ -225,7 +259,11 @@ def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10, extra_
         from dataclasses import replace as dc_replace
         state = dc_replace(state, feature_flags=existing)
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng)
+    # no_frame_pacing disables the kernel's tick-rate sleep (which pads each tick to
+    # max_tick_budget_ms for real-time pacing). Calibration runs are offline/batch, not
+    # real-time, so this sleep only slows down the run without affecting simulation logic.
+    # Same fix as tests/regression/test_behavioral_5k.py (TCK-20260628-E-LONGRUN-REGRESSION).
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True})
 
     run_id = getattr(kernel, "_run_id", None)
     start = time.perf_counter()
@@ -233,12 +271,62 @@ def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10, extra_
         kernel.tick_once()
     elapsed = time.perf_counter() - start
 
-    # Shutdown so drain worker flushes remaining JSONL events
+    # Read drop/pressure/SURVIVAL state while the recorder is still alive. This must
+    # happen before kernel.shutdown() below (EventRecorder.shutdown() does not clear
+    # queue.dropped_count — drain() only empties the queue, the counter itself
+    # persists — but the guard's raise, not this read, is what the ordering below
+    # protects).
+    obs_status = kernel.event_recorder.observability_status()
+    dropped_count = kernel.event_recorder.queue.dropped_count
+    survival_triggered = any(obs_status["survival_counts"].values())
+    guard_passed = (
+        dropped_count == 0
+        and obs_status["mode"] == "NORMAL"
+        and not survival_triggered
+    )
+
+    if cal_dir:
+        from src.simulation_quality.run_health import RunHealthRecord
+        from src.simulation_quality.persistence import QualityPersistence
+        QualityPersistence.write_run_health(
+            cal_dir,
+            RunHealthRecord(
+                dropped_count=dropped_count,
+                pressure_mode_final=obs_status["mode"],
+                survival_triggered=survival_triggered,
+                guard_passed=guard_passed,
+            ),
+        )
+
+    # Shutdown so drain worker flushes remaining JSONL events. Unconditional — runs
+    # regardless of guard_passed so background threads (this recorder's own drain
+    # worker, plus the kernel's independent DecisionTraceWriter worker) and open
+    # file handles are always released, even when the guard below is about to
+    # hard-fail this run. (Deviation from the original plan's literal "raise
+    # strictly BEFORE this block" — see plan.md Deviations: skipping shutdown
+    # entirely on guard failure leaked the DecisionTraceWriter worker thread and
+    # tripped tests/conftest.py's session-scoped thread-leak sentinel, a real
+    # regression this ticket must not introduce. The protected invariant — the
+    # raise must never be nested inside / swallowed by this try/except — holds
+    # either way, since the raise below is a separate, non-nested statement.)
     try:
         kernel.shutdown()
     except Exception:
         pass
     time.sleep(0.3)
+
+    # P0 hard-fail — raised in its own statement, never nested inside the
+    # try/except above. That block swallows exceptions from kernel.shutdown()
+    # itself; if this raise were moved inside it (or merged into its body), the
+    # guard's hard-fail would be silently swallowed and do nothing.
+    if not guard_passed:
+        raise CalibrationIntegrityError(
+            f"Calibration run integrity check failed for run_id={run_id}: "
+            f"dropped_count={dropped_count}, pressure_mode_final={obs_status['mode']}, "
+            f"survival_triggered={survival_triggered}. SimQ scoring for this run is "
+            "unreliable (events were lost to queue overflow or SURVIVAL mode-shed) — "
+            "see quality_report.run_health.json."
+        )
 
     if run_id and os.path.isdir(os.path.join("data", "runs", run_id)):
         run_dir = os.path.join("data", "runs", run_id)
@@ -337,7 +425,10 @@ def main():
         print(f"[calibrate_simq] Profile feature flags: {profile_feature_flags}")
 
     print(f"[calibrate_simq] Running engine: {run_tag} entities={args.entities} profile={profile}")
-    engine_run_dir, elapsed, run_id = _run_engine(args.name, args.seed, args.ticks, args.entities, extra_flags=profile_feature_flags)
+    engine_run_dir, elapsed, run_id = _run_engine(
+        args.name, args.seed, args.ticks, args.entities,
+        extra_flags=profile_feature_flags, cal_dir=cal_dir,
+    )
     print(f"[calibrate_simq] Engine done in {elapsed:.2f}s. JSONL at: {engine_run_dir}")
 
     weights = _load_weights(profile)

@@ -1,22 +1,23 @@
 {
-  "manifest_id": "prov_fb04878b284eee95",
+  "manifest_id": "prov_71383b455feb8c18",
   "world_id": "frontier_extended",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
+  "catalog_fingerprint": "10d77896a90aebb8c796b454766426b039a63265141b8574940c783cdee0455c",
   "module_fingerprints": {
     "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
-    "bandit_road_trade_pressure": "14f4161782ab617ee6da3a54afa2487d2eefd2cc63ff66899e08f87bc2993161",
-    "goblin_camp_conflict": "36e0a62287420b3a3ab01ce4396ce507e998bbecbc6ed4c0beb37c346d933daf",
-    "old_mine_resource_loop": "dbef38a7d0c2261e24948cd9dded020279386c10e0084872a2df9963bb9cc677",
-    "orc_clan_territory": "7162ce4798b527bebb9026704fae3e07dca324d0a63408efd1e8324a9e35811a",
-    "undead_battlefield": "0d1daa592a5fa30bf11c363017769c8234287c33aed53a8319da3a38858fa67d",
-    "wolf_den_near_forest": "b95456ea741bcd26f54e54f965a0cb57c0b37dca9d8d75ad77e7fcf65d88ff16",
-    "forest_warden_grove": "68998009e7d2ae7e372e198409d58f83e5faab2441e0e655bd83547f5cdc8384"
+    "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
+    "goblin_camp_conflict": "7e712ab3d3321805bfad0b116c66ac5c679854fe887f7752b9ab6a27cb61e5fb",
+    "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
+    "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
+    "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
+    "undead_battlefield": "5a28c8d022a3a2d2510e3b0ef36e62ef4cb78d366f2b61e2c226c8797ee86b30",
+    "wolf_den_near_forest": "236ed57805d9d8a947b072448b36ce728b6b6653ad9fd5f0085c3bfb269953ee",
+    "forest_warden_grove": "1afd9828cbd2087f5cbafffdbd2d3b81c59a32d20fa66debd95249844022e3fe"
   },
-  "composition_fingerprint": "b39920dc3b8ee2a4013bfae5eef710118e87e7d2cf0c3e6c6d28acc45c7be2ba",
+  "composition_fingerprint": "8218c3f899ebb6a37a4892785039858234dea59157550a17d2a1a0357dd59cac",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "fb04878b284eee95a0e6353ac67b538131e11a9b7f67654f38ff5e958e857b5f",
-  "created_at": "2026-06-30T18:44:57.309040Z",
+  "content_fingerprint": "71383b455feb8c189210f4ee59bb0309ec9c2c588f808b5317d69d1dbe616800",
+  "created_at": "2026-07-13T18:26:56.511118Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -425,9 +426,11 @@
     "rel_town_to_merchants": {
       "element_id": "rel_town_to_merchants",
       "element_type": "faction",
-      "source_module": "frontier_village_core",
+      "source_module": "trading_company_hub",
       "recipe_type": "relationship",
-      "parameters": {},
+      "parameters": {
+        "merchant_count": 3
+      },
       "profiles": {
         "source_faction": "town_council",
         "target_faction": "merchant_league",
@@ -438,9 +441,11 @@
     "rel_merchants_to_town": {
       "element_id": "rel_merchants_to_town",
       "element_type": "faction",
-      "source_module": "frontier_village_core",
+      "source_module": "trading_company_hub",
       "recipe_type": "relationship",
-      "parameters": {},
+      "parameters": {
+        "merchant_count": 3
+      },
       "profiles": {
         "source_faction": "merchant_league",
         "target_faction": "town_council",
@@ -1161,6 +1166,155 @@
           "territory"
         ],
         "reward_budget": 100
+      }
+    },
+    "trading_hometown": {
+      "element_id": "trading_hometown",
+      "element_type": "region",
+      "source_module": "trading_company_hub",
+      "recipe_type": "region",
+      "parameters": {
+        "merchant_count": 3
+      },
+      "profiles": {
+        "biome": "frontier_village"
+      },
+      "details": {
+        "bounds": [
+          45,
+          10,
+          80,
+          45
+        ],
+        "terrain": "plain",
+        "hazard_level": 0.5,
+        "ecology_source": [
+          "frontier_village_ecology"
+        ]
+      }
+    },
+    "trading_pop_0": {
+      "element_id": "trading_pop_0",
+      "element_type": "population",
+      "source_module": "trading_company_hub",
+      "recipe_type": "population",
+      "parameters": {
+        "merchant_count": 3
+      },
+      "profiles": {
+        "role": "merchant",
+        "faction": "merchant_league",
+        "stats_profile": null
+      },
+      "details": {
+        "count": 3,
+        "spawn_region": "trading_hometown"
+      }
+    },
+    "trading_res_0": {
+      "element_id": "trading_res_0",
+      "element_type": "resource",
+      "source_module": "trading_company_hub",
+      "recipe_type": "resource",
+      "parameters": {
+        "merchant_count": 3
+      },
+      "profiles": {
+        "resource_type": "iron_vein"
+      },
+      "details": {
+        "count": 6,
+        "region": "trading_hometown"
+      }
+    },
+    "trading_bld_0": {
+      "element_id": "trading_bld_0",
+      "element_type": "building",
+      "source_module": "trading_company_hub",
+      "recipe_type": "building",
+      "parameters": {
+        "merchant_count": 3
+      },
+      "profiles": {
+        "building_type": "shop"
+      },
+      "details": {
+        "region": "trading_hometown"
+      }
+    },
+    "trading_bld_1": {
+      "element_id": "trading_bld_1",
+      "element_type": "building",
+      "source_module": "trading_company_hub",
+      "recipe_type": "building",
+      "parameters": {
+        "merchant_count": 3
+      },
+      "profiles": {
+        "building_type": "inn"
+      },
+      "details": {
+        "region": "trading_hometown"
+      }
+    },
+    "quest_trade_fetch_shipment_goods": {
+      "element_id": "quest_trade_fetch_shipment_goods",
+      "element_type": "quest_definition",
+      "source_module": "trading_company_hub",
+      "recipe_type": "quest_definition",
+      "parameters": {
+        "merchant_count": 3
+      },
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "trade",
+          "economy",
+          "supply"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_trade_escort_merchant_convoy": {
+      "element_id": "quest_trade_escort_merchant_convoy",
+      "element_type": "quest_definition",
+      "source_module": "trading_company_hub",
+      "recipe_type": "quest_definition",
+      "parameters": {
+        "merchant_count": 3
+      },
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "trade",
+          "economy",
+          "escort"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_trade_investigate_sabotage": {
+      "element_id": "quest_trade_investigate_sabotage",
+      "element_type": "quest_definition",
+      "source_module": "trading_company_hub",
+      "recipe_type": "quest_definition",
+      "parameters": {
+        "merchant_count": 3
+      },
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "trade",
+          "economy",
+          "mystery"
+        ],
+        "reward_budget": 150
       }
     },
     "haunted_battlefield": {

@@ -1,0 +1,10 @@
+schema_version: "worldcomposition.v1"
+world_id: "quest_dense_frontier"
+name: "Quest-Dense Frontier"
+description: "Stress-tier world closing corpus_tier_taxonomy.md's named scale-diversity gap #5: quest-def count currently scales almost linearly with entity count across the corpus. Composes ruins_mystery_quest (standalone, no settlement dependency, 6 entities via undead_battlefield_patrol, 2 quest_definitions) with 3 zero-population terrain/ecology modules that each still contribute quest_definitions: mountain_pass (2 quests, 0 population), river_crossing (1 quest, 0 population), forest_deep_ecology (1 quest, 0 population). Result: 6 entities, 6 quest_definitions, ratio 1.0 -- well beyond the corpus's prior incidental maximum (wilderness_survival, ratio 0.636, not deliberately authored for this purpose) -- deliberately minimizing population while maximizing quest count from population-free modules (TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE)."
+modules:
+  - "ruins_mystery_quest"
+  - "mountain_pass"
+  - "river_crossing"
+  - "forest_deep_ecology"
+generation_seed: 701

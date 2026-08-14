@@ -1,0 +1,7 @@
+# TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION — scale-stress corpus world.
+# No feature flags enabled beyond corpus-wide defaults: this world has no authored
+# faction_tension_overrides/information_source_profiles content (unlike frontier_marches etc.),
+# so ENABLE_BELIEF_ASSIMILATION would have nothing to route against. Documented skip, matching
+# the corpus's existing "no settlement-adjacent module" INFORMATION-skip precedent
+# (wilderness_survival, dungeon_crawl) rather than silently enabling an inert flag.
+feature_flags: {}

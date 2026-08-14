@@ -38,6 +38,11 @@ from pathlib import Path
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
+_TOOLS_DIR = Path(__file__).resolve().parent
+if str(_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_TOOLS_DIR))
+from hybrid_retrieval import hybrid_fuse_and_filter  # noqa: E402
+
 _DEFAULT_DB = Path("knowledge-index/knowledge.db")
 _MANIFEST_PATH = Path("knowledge-index/manifest.json")
 _CACHE_PATH = Path("knowledge-index/embeddings_cache.pkl")
@@ -994,8 +999,44 @@ def cmd_query(args) -> int:
         bm25_raw = bm25_obj.get_scores(query_tokens)
         bm25_max = float(bm25_raw.max()) if bm25_raw.max() > 0 else 1.0
 
-    # --- Vector path ---
-    if mode in ("hybrid", "vector"):
+    # --- True hybrid path: independent bounded dense + lexical retrieval, RRF fusion ---
+    if mode == "hybrid" and bm25_obj is not None:
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer(_MODEL_NAME)
+        query_emb = model.encode([query_text], show_progress_bar=False, convert_to_numpy=True)[0]
+
+        conn = sqlite3.connect(str(db_path))
+        import sqlite_vec as sv  # noqa: F811
+        conn.enable_load_extension(True)
+        sv.load(conn)
+        conn.enable_load_extension(False)
+
+        hybrid_results = hybrid_fuse_and_filter(
+            conn=conn,
+            query_vec_bytes=_serialize_f32(query_emb.tolist()),
+            query_tokens=query_tokens,
+            bm25_obj=bm25_obj,
+            bm25_doc_ids=_bm25_doc_ids,
+            top_k=top_k,
+        )
+        conn.close()
+
+        results = [
+            (
+                r.rrf_score,
+                r.semantic_score if r.semantic_score is not None else 0.0,
+                r.keyword_score if r.keyword_score is not None else 0.0,
+                r.doc_id,
+                r.path,
+                r.heading,
+                r.section,
+                r.text,
+            )
+            for r in hybrid_results
+        ]
+
+    # --- Vector-only path (bm25 not loaded, or mode was never "hybrid") — unchanged ---
+    elif mode in ("hybrid", "vector"):
         from sentence_transformers import SentenceTransformer
         model = SentenceTransformer(_MODEL_NAME)
         query_emb = model.encode([query_text], show_progress_bar=False, convert_to_numpy=True)[0]

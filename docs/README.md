@@ -110,7 +110,7 @@ Exits 0 if valid, 1 on any violation. Content type is inferred from path (no `co
 
 ### The doc registry
 
-`docs/REGISTRY.yaml` is a flat machine-readable index of all tagged docs and closed tickets (912 entries after the initial pass). It is committed to git so agents can query it without running the script.
+`docs/REGISTRY.yaml` is a flat machine-readable index of all tagged docs and closed tickets. It is committed to git so agents can query it without running the script.
 
 ```bash
 make docs-registry   # Regenerate docs/REGISTRY.yaml
@@ -186,6 +186,7 @@ Entity self-knowledge layer. Covers: self-assessment, capability estimation, kno
 
 Claude Code subagents, workflows, and skills for the development and simulation lifecycle.
 
+- [System Overview](ai/system_overview.md) — consolidated technical narrative of the full agent system
 - [AI README](ai/README.md) — overview
 - [Agents](ai/agents.md) — all subagents: roles, inputs, outputs
 - [Workflows](ai/workflows.md) — multi-agent orchestration phases and return values
@@ -207,6 +208,8 @@ Practical how-to guides for working with each major subsystem. These are startin
 | [guides/content_authoring.md](guides/content_authoring.md) | World modules, compositions, scenarios — quickstart, sharp edges, FAQ |
 | [guides/bounded_cognition_tuning.md](guides/bounded_cognition_tuning.md) | Tuning AI cognition parameters, archetype defaults, troubleshooting |
 | [guides/agent_monitoring.md](guides/agent_monitoring.md) | Agent retrospectives, monitoring queries, gate failure patterns |
+| [guides/feature_flags.md](guides/feature_flags.md) | Feature flag defaults, rollout profiles, SimQ activation, and the DEV-002 default-OFF policy |
+| [guides/agent_ops_dashboard.md](guides/agent_ops_dashboard.md) | Agent ops dashboard: build/serve, Gantt/Replay/Tickets views, API + design constraints |
 
 ---
 

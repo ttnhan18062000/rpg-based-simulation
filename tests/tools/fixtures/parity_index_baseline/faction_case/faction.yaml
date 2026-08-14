@@ -1,0 +1,6 @@
+- id: FAC-001
+  text: Synthetic faction-shard entry for TCK-20260731-PARITY-INDEX-BASELINE fixture capture.
+  status: verified
+  priority: P0
+  v2_evidence: src/factions/diplomacy.py
+  test_path: tests/unit/test_diplomacy.py

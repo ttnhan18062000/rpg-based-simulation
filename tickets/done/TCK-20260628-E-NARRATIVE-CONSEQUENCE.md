@@ -15,7 +15,7 @@ tags: [epic, narrative, consequence, motivation, chronicle, p3, deferred]
 Epic: Narrative Consequence Layer — chronicle events into real-time motivation feedback
 
 ## Status
-DONE — all 3 child tickets complete: E43F (grief urgency), E43G (nemesis relation), E43H (observability surface)
+DONE
 
 ## Tier
 epic
@@ -120,4 +120,6 @@ See child tickets TCK-20260628-E43F-GRIEF-URGENCY, TCK-20260628-E43G-NEMESIS-REL
 
 ## Completion Summary
 All acceptance criteria met: ally death → grief urgency concern → episode decay; 2+ antagonist episodes → nemesis relation → FORM_PARTY block; grief + nemesis visible in EntityInspectionSnapshot.narrative_modifiers. Parity ledger entries SOC-231 and SOC-232 added.
+All 3 child tickets are complete: E43F (grief urgency), E43G (nemesis relation), E43H (observability
+surface).
 

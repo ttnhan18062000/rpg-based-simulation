@@ -17,9 +17,6 @@ class EvolutionSystem:
     Ensures that identity transformations are authoritative and auditable.
     """
 
-    # Default threshold for evolution. In a full system, this would come from a profile.
-    EVOLUTION_THRESHOLD = 1000 
-
     @staticmethod
     def evaluate(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         """

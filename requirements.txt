@@ -1,10 +1,10 @@
-# torch must be installed from the CPU-only wheel index:
-#   pip install torch --index-url https://download.pytorch.org/whl/cpu
-# All environments for this project use CPU-only PyTorch (no CUDA/GPU).
-torch==2.12.1+cpu
-sentence-transformers==5.6.0
-sqlite-vec==0.1.9
-rank-bm25==0.2.2
+# Core application + test dependencies. Installed by CI (.github/workflows/test.yml) and
+# for normal engine/API development.
+#
+# The local agent knowledge-search tooling (torch, sentence-transformers, sqlite-vec,
+# rank-bm25) lives in requirements-knowledge.txt instead — those packages are not needed
+# by the engine, API, or test suite, and torch's CPU-only wheel is not resolvable from
+# public PyPI without an extra index URL. See docs/guidelines/agent_working_environment.md.
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.12.1
@@ -29,7 +29,6 @@ Pygments==2.19.2
 pytest==9.0.2
 pytest-asyncio==1.4.0
 PyYAML==6.0.2
-rank-bm25==0.2.2
 requests==2.32.3
 sse-starlette==3.3.2
 starlette==0.52.1

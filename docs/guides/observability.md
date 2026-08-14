@@ -28,7 +28,8 @@ Key source files:
 |---|---|
 | `src/observability/event_recorder.py` | Writes `SimulationEvent` objects to the shared queue; controls backpressure |
 | `src/observability/events.py` | `SimulationEvent` and `ObservabilityEventEnvelope` dataclasses, `EventCategory` type |
-| `src/observability/event_extractor.py` | Reads state diffs per tick, produces `SimulationEvent` objects; read-only observer |
+| `src/observability/event_extractor.py` | Reads state diffs per tick, produces `SimulationEvent` objects; read-only observer. Legacy path — still live for domains not yet shaper-migrated, and the flag-gated rollback path for migrated domains (see below) |
+| `src/observability/event_shapers.py` | Apply-layer push shapers (`SHAPER_REGISTRY`/`PHASE2_SHAPER_REGISTRY`/`QUEST_SHAPER_REGISTRY`/`AGENCY_SHAPER_REGISTRY`, delivered via `run_shadow_shapers()`); derives events directly from `prior_state` + `update`, not a post-tick diff. Live-default derivation path for most COMBAT/ECONOMY/FACTION/AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL/NARRATIVE event types since the 2026-08-06/07/08 push-shaper cutover tickets — see `docs/simulation_quality/event_type_coverage.md` §1.1's `source` column for the current per-event-type derivation path |
 | `src/observability/queue.py` | Global observability queue, `QueueDrainWorker` |
 | `src/observability/hard_law_monitor.py` | Listens for `InvariantViolation` events; raises hard stops |
 | `src/observability/trace.py` | Decision trace capture and replay |
@@ -166,18 +167,43 @@ python3 -m src compare-sweep <sweep_id> --baseline docs/observability/baselines/
 
 1. Add the `event_type` string and optional `category` to `src/observability/events.py`
    (`EventCategory` Literal, if a new category is needed).
-2. Emit the event in `src/observability/event_extractor.py` from the appropriate per-tick
-   loop (entity loop, faction loop, world-events loop). `EventExtractor` is read-only —
-   it observes state diffs, never mutates.
+2. Emit the event in `src/observability/event_shapers.py` — add it to the relevant domain's
+   shaper class (registered in `SHAPER_REGISTRY`/`PHASE2_SHAPER_REGISTRY`/
+   `QUEST_SHAPER_REGISTRY`/`AGENCY_SHAPER_REGISTRY`, delivered via `run_shadow_shapers()`),
+   the live-default path for most domains since the 2026-08-06/07/08 push-shaper cutover
+   tickets. Only emit in `src/observability/event_extractor.py`'s per-tick loop (entity loop,
+   faction loop, world-events loop) if the event's domain has not yet been shaper-migrated —
+   check `docs/simulation_quality/event_type_coverage.md` §1.1's `source` column for the
+   current per-event-type derivation path before choosing. Both `EventExtractor` and each
+   `EventShaper` are read-only observers — neither mutates state.
 3. If the new event should be scored by SimQ, add a translation entry in
    `src/simulation_quality/quality_hub.py` and a scorer handler. See
    [`docs/guides/simulation_quality.md`](simulation_quality.md) §Adding a new scoring rule.
 4. Add tests in `tests/unit/observability/` — at minimum: event emitted on the correct
    condition, event not emitted when condition is absent (anti-drift guard).
 
-**Architecture boundary:** `src/observability/` must never import from `src/engine/`,
-`src/domains/`, or `src/systems/`. All observations flow through state diffs passed into
-`EventExtractor`, not through direct coupling to engine internals.
+**Architecture boundary:** `src/observability/` files must route any `src/engine/` dependency
+through the `Kernel` facade (`from src.engine.kernel import Kernel`) — never import a
+lower-level engine internal directly (e.g. `WorldIndexService`, `SpatialQueryService`,
+`LegalityServiceV2`). This is the established pattern from `TCK-20260627-P2G-KERNEL-FACADE`
+(`Kernel.get_world_indexes()`) and its siblings `Kernel.get_building_region()` and
+`Kernel.verify_occupancy_legal()`; `tests/architecture/test_phase18_import_boundaries.py::
+test_observability_engine_imports_go_through_kernel_facade` enforces it. Separately,
+`src/observability/` may import a small, pinned allowlist of pure/stateless symbols from
+`src/domains/`/`src/systems/` for read-only event classification and presentation — currently
+`WorldEventCategory` (Enum), `AbandonmentEvaluator`/`AbandonmentCategory` (stateless static
+evaluator), `_MAX_CONSECUTIVE_REJECTIONS` (constant), and `CognitionGraphExporter` (stateless
+read-only presenter) — but must never call into a state-mutating method or otherwise create
+hot-path coupling; `test_observability_domains_systems_import_allowlist` (same file) pins this
+exact set, and expanding it requires updating both the test and this note together, not a
+silent addition. Hot-path-specific restrictions (no importing heavy
+`observability.anomaly`/`observability.cognition`/`observability.reporting` submodules into
+`src/engine/`, `config.py`, `event_extractor.py`, or `event_recorder.py`) are separately
+enforced by `tests/architecture/test_phase19_observability_boundaries.py::
+test_hot_path_does_not_import_heavy_analyzers`. Observations otherwise flow through state diffs
+passed into `EventExtractor` (legacy path) or through the typed `prior_state`/`update` records
+passed into an `event_shapers.py` shaper (live-default path for most domains) — not through
+direct coupling to engine internals.
 
 ---
 

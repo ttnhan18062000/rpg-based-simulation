@@ -15,7 +15,7 @@ tags: [ph7, m5, deterministic, world, gen]
 Phase 7 Milestone 5: Deterministic World Generation and Engine Phase-Order Closure
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

@@ -108,6 +108,28 @@ def test_no_valid_route_generates_defer_with_reason():
     assert "blocked" in routes[0].reason or "no active opportunities" in routes[0].reason
 
 
+def test_target_node_id_widened_to_all_int_castable_opportunity_kinds():
+    """
+    TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP Step 2: target_node_id
+    capture is no longer scoped to "gather_resource" only — any opportunity
+    whose target_id int-casts gets it populated (e.g. a resource-provider
+    opportunity keyed by a real node id), while opportunities whose target_id
+    is a non-numeric string (e.g. a service id) still degrade safely to None.
+    """
+    entity = _entity()
+    opps = [
+        Opportunity(id="o1", kind="gather_resource", target_id="42", subject="iron_ore", estimated_reward=10.0, estimated_risk=0.1, requirements=(), confidence=1.0),
+        Opportunity(id="o2", kind="craft_item", target_id="blacksmith_hometown", subject="iron_sword", estimated_reward=60.0, estimated_risk=0.1, requirements=(), confidence=1.0),
+    ]
+    routes = AdventureRouteGenerator.generate(entity, None, opps)
+
+    gather_route = next(r for r in routes if r.family == RouteFamily.GATHER_RESOURCE)
+    assert gather_route.target_node_id == 42
+
+    craft_route = next(r for r in routes if r.family == RouteFamily.CRAFT_UPGRADE)
+    assert craft_route.target_node_id is None
+
+
 def test_generator_caps_result_count():
     entity = _entity()
     opps = [

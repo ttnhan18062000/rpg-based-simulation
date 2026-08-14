@@ -1,0 +1,5 @@
+role_version: 1
+role_id: security-reviewer
+description: Reviews the diff for injection, unsafe deserialization, path traversal, secrets-in-code, and raw-domain-model exposure on security-tagged tickets.
+phases: [Security-Review]
+has_agent_file: true

@@ -15,34 +15,79 @@ Skills are slash commands that trigger focused, session-scoped task patterns. Th
 
 ## Skills vs. Workflows — How Invocation Works
 
-**Skills** are the user-facing slash commands. Type `/skill-name args` in the prompt. Claude reads the skill's `SKILL.md`, parses the args, and invokes the workflow internally via the `Workflow` tool.
+**Skills** are the user-facing slash commands. Type `/skill-name args` in the prompt. Claude reads
+the skill's `SKILL.md`, which instructs it to read the corresponding `.claude/workflows/*.js` file
+directly and translate its phase/agent/bash constructs into tool calls by hand — **there is no
+`Workflow` tool in this harness** to invoke instead. Every project workflow-shortcut `SKILL.md`
+states this explicitly in its own Action section (e.g. "Do not call the Workflow tool — it is not
+available").
 
-**Workflows** (`.claude/workflows/*.js`) are Claude-internal multi-agent scripts. They are **not** directly slash-commandable. `/workflow implement-ticket` is not a valid command — it will fail with "Unknown command: /workflow". The correct form is `/implement-ticket` (the skill).
+**Workflows** (`.claude/workflows/*.js`) are Claude-internal multi-agent scripts. They are **not**
+directly slash-commandable on their own — only workflows with a corresponding `.claude/skills/*/
+SKILL.md` wrapper (below) are reachable via a slash command at all. `/workflow implement-ticket` is
+not a valid command — it will fail with "Unknown command: /workflow". The correct form, for a
+workflow that has a skill wrapper, is `/implement-ticket`.
 
 ```
-You type:                Claude does internally:
-/implement-ticket ...  →  Workflow({ name: "implement-ticket", args: { ... } })
-/implement-epic ...    →  Workflow({ name: "implement-epic", args: { ... } })
+You type:                Claude does:
+/implement-ticket ...  →  Reads .claude/workflows/implement-ticket.js and manually executes its
+                           phases via Agent/Bash/etc. tool calls — no Workflow tool involved.
 ```
+
+---
+
+## Tag-Based Skill Suggestions
+
+A second, complementary invocation signal exists alongside `CLAUDE.md`'s file-path-based auto-invoke
+table (which fires *during* editing): a ticket's `Process/Skill-signal` tags (`api-design`,
+`debugging`, `performance`, `security`) now produce a `suggested_skills` note at ticket-scoping time,
+*before* implementation work starts — computed by `ticket-scoper` and `create-tickets.js`'s Structure
+phase, surfaced via `log(...)` in `implement-ticket.js`'s Scope phase. See
+[`docs/guides/ticket_tagging.md`](../guides/ticket_tagging.md) for the full tag→skill mapping and the
+related registry-search-filter mechanism — not duplicated here.
+
+The tag→skill mapping itself is single-sourced, not a hand-copied table: it lives as a
+`triggers_skill` field on each tag's `tag_registry.jsonl` row, read live via
+`tools/tag_registry.py::get_skill_mapping()` (or `python3 tools/tag_registry.py skill-mapping` from
+the CLI) — every consumer (`ticket-scoper.md`, `ticket_tagging.md`, `create-tickets.js`,
+`implement-ticket.js`) reads this one source (`TCK-20260720-SKILL-MAPPING-DEDUP`).
+
+For 3 of the 4 tags (`api-design`, `debugging`, `performance`), the suggestion stays purely
+advisory — logged, never enforced. `security` is the one exception: it is no longer advisory-only.
+`implement-ticket.js` runs a mandatory `Security-Review` gate whenever a ticket's frontmatter `tags`
+includes `security` (ground truth) or `suggested_skills` includes `/security-review` — this can
+block ticket close (`SECURITY_BLOCKED`) (`TCK-20260705-WORKFLOW-SECURITY-GATE`).
 
 ---
 
 ## Project Skills (Workflow Shortcuts)
 
-These skills trigger the project's multi-agent workflows.
+These skills trigger the project's multi-agent workflows. **Only 4 of the project's 11
+`.claude/workflows/*.js` files currently have a `.claude/skills/*/SKILL.md` wrapper** — a workflow
+with no wrapper has no slash command today (confirmed 2026-07-20 orchestration audit; see the row
+notes below).
 
 | Skill | Workflow triggered | When to use |
 |---|---|---|
 | `/create-tickets` | `create-tickets` | Parse a markdown doc into TCK-*.md ticket files |
 | `/implement-ticket` | `implement-ticket` | Implement one development task end-to-end |
 | `/implement-epic` | `implement-epic` | Implement all tickets in a folder or epic sequentially |
-| `/generate-simulation-setup` | `generate-simulation-setup` | Create specs for a new simulation experiment |
-| `/prepare-simulation-execution` | `prepare-simulation-execution` | Validate specs and get the run command |
-| `/investigate-simulation-result` | `investigate-simulation-result` | Deep anomaly investigation after a run |
-| `/propose-simulation-enhancements` | `propose-simulation-enhancements` | Hypothesize and propose fixes for anomalies |
-| `/register-simulation-result` | `register-simulation-result` | Register a completed run into the lab index |
-| `/compact-simulation-result` | `compact-simulation-result` | Compress old run logs to recover disk space |
-| `/update-knowledge-store` | `update-knowledge-store` | Commit approved insights to the knowledge graph |
+| `/simq-audit` | `simq-audit` | Check SimQ grade/anchor drift after a calibration corpus change; closes cleanly or spawns a follow-up ticket |
+
+The following 7 simulation/lab workflows exist under `.claude/workflows/*.js` but have **no
+`SKILL.md` wrapper today** — they are not currently invocable via slash command. Adding wrappers
+for them (mirroring the Action-section pattern the 4 skills above already use) is tracked as
+future work, not yet scoped:
+
+| Workflow (no skill wrapper) | Intended purpose |
+|---|---|
+| `generate-simulation-setup` | Create specs for a new simulation experiment |
+| `prepare-simulation-execution` | Validate specs and get the run command |
+| `investigate-simulation-result` | Deep anomaly investigation after a run |
+| `propose-simulation-enhancements` | Hypothesize and propose fixes for anomalies |
+| `register-simulation-result` | Register a completed run into the lab index |
+| `compact-simulation-result` | Compress old run logs to recover disk space |
+| `update-knowledge-store` | Commit approved insights to the knowledge graph |
 
 ---
 
@@ -114,6 +159,12 @@ The `graphify-out/wiki/index.md` provides a navigable wiki built from the graph.
 
 ---
 
+### Observability
+
+**`/agent-monitoring-retro`** — Generate the weekly agent monitoring retro report (`make agent-monitoring-retro`) and walk through the retrospective process (run summary, gate failures, tier distribution, summary quality, slow runs). Use weekly, after 5+ completed tickets, or before changing any agent prompt/phase/tier rule. A `PostToolUse` hook (`tools/agent-monitoring/retro_nudge_hook.py`) nudges via `additionalContext` once 5+ `implement-ticket` runs have completed DONE since the last dated `RETRO-<week>.md` report.
+
+---
+
 ### Configuration
 
 **`/update-config`** — Modify `settings.json` or `settings.local.json`. Use for:
@@ -142,6 +193,13 @@ These skills are Python and engineering patterns adapted for this project and st
 | `/doc-coauthoring` | `doc-coauthoring/SKILL.md` | Documentation co-authoring |
 | `/prompt-builder` | `prompt-builder/SKILL.md` | Prompt construction guidance |
 | `/frontend-design` | `frontend-design/SKILL.md` | Frontend component design |
+| `/agent-monitoring-retro` | `agent-monitoring-retro/SKILL.md` | Agent monitoring retro report generation |
+| `/observability` | `observability/SKILL.md` | `src/observability/` — HardLawMonitor's 7 laws, `ObservabilityMode` policy, `EventRecorder` backpressure modes (added `TCK-20260805-OBSERVABILITY-SKILL`, part of the domain-coverage sweep — a real, mature subsystem that had zero prior skill/agent coverage) |
+| `/simq-dev` | `simq-dev/SKILL.md` | Development/debugging side of `src/simulation_quality/` — adding scorers/pillars, debugging a wrong score. Complements `/simq-audit`'s audit-only coverage, does not duplicate it (added `TCK-20260805-SIMQ-DEV-SKILL`) |
+| `/systems-economy` | `systems-economy/SKILL.md` | `src/systems/` — atomic conservation, inventory limits, market/reputation-discount formulas, crafting, quests, guild — sourced from the Mechanics Bible's Economic Laws chapter (added `TCK-20260805-SYSTEMS-SKILL`, the largest single domain gap found in the sweep) |
+| `/combat-mechanics` | `combat-mechanics/SKILL.md` | `src/domains/combat_engagement/` and combat resolution — deterministic damage formula, tactical modifiers, `CombatPosture` pre-combat assessment, the Sliding State pipeline-ordering rule (added `TCK-20260805-COMBAT-SKILL`) |
+| `/cognition-strategy` | `cognition-strategy/SKILL.md` | `src/cognition/`, `src/strategy/`, `src/ai/goals/` — foregrounds the cognition/strategy/domain-decision boundary a generic skill would get wrong; goal hierarchy, interruption resistance, bounded strategic appraisal scoring (added `TCK-20260805-COGNITION-STRATEGY-SKILL`, flagged the highest-value gap in the sweep) |
+| `/progression-entities` | `progression-entities/SKILL.md` | `src/entities/`, `src/progression/` — core attributes, derived stat formulas, XP curve, level-up execution, AP allocation gates (added `TCK-20260805-PROGRESSION-ENTITIES-SKILL`, the last of the 6 confirmed domain-coverage-sweep gaps) |
 
 ---
 

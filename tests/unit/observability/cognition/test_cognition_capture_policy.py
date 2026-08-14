@@ -82,6 +82,23 @@ class TestCognitionCapturePolicy:
         # But should still capture anomalies
         assert policy.should_capture(entity2, 1, "ANOMALY_TRIGGERED")
 
+    @pytest.mark.parametrize("mode", [ObservabilityMode.NORMAL, ObservabilityMode.FULL, ObservabilityMode.RESEARCH])
+    def test_normal_full_research_modes_capture_state_changes(self, mode):
+        """NORMAL/FULL/RESEARCH modes must capture state changes like DEBUG/CERTIFICATION do --
+        previously fell through to False despite ObservabilityConfig's flag table marking them
+        progressively richer than LIGHT (TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP)."""
+        ObservabilityConfig.set_override_mode(mode)
+        policy = CognitionCapturePolicy(selected_entity_ids={1})
+        entity1 = DummyEntity(1)
+        entity2 = DummyEntity(2)
+
+        assert policy.should_capture(entity1, 1, "PROJECT_CHANGED")
+        assert policy.should_capture(entity1, 1, "ANOMALY_TRIGGERED")
+
+        # Entity 2 is not in the selected set, so it should not capture non-anomalies
+        assert not policy.should_capture(entity2, 1, "PROJECT_CHANGED")
+        assert policy.should_capture(entity2, 1, "ANOMALY_TRIGGERED")
+
     def test_state_changes_detection(self):
         """Verify that state changes (blocker, lead, concern, project swaps) are triggered properly."""
         policy = CognitionCapturePolicy()

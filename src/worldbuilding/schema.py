@@ -49,6 +49,97 @@ class FactionSpec(BaseModel):
 
     id: str = Field(..., min_length=1, description="Unique identifier for the faction")
     type: str = Field(..., min_length=1, description="Architectural or behavior type of the faction")
+    initial_tension_level: float = Field(
+        0.0, ge=0.0, le=1.0,
+        description="Starting tension_level seeded into FactionState at compile time (mechanics range [0.0, 1.0])"
+    )
+
+class InformationSourceProfileSpec(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    source_id: str = Field(..., min_length=1, description="Identifier looked up via state.entities.get(source_id) for proximity cost; a non-entity string is valid and yields dist_cost=0.0 (no proximity penalty)")
+    source_kind: Literal["guide", "guild", "blacksmith", "traveler"] = Field(
+        ..., description="Must match an existing InformationSourceKind value (src/domains/information/schema.py) — no new kinds may be introduced here"
+    )
+    knowledge_scopes: List[str] = Field(
+        default_factory=list,
+        description="Matched against InformationQueryRouter.matches_scope()'s hard-coded vocabulary (common_resource_sources, recipe_requirements, regional_danger) — free-form here by design; the router's vocabulary is not re-validated at schema level (out of this ticket's scope to couple schema to router internals)"
+    )
+    accuracy: float = Field(..., ge=0.0, le=1.0)
+    freshness: float = Field(..., ge=0.0, le=1.0)
+    bias: float = Field(0.0, description="No documented bound in the domain dataclass; left unconstrained")
+    cost_gold: int = Field(0, ge=0)
+    max_answers_per_query: int = Field(3, ge=1)
+
+
+class PendingInformationResponseSpec(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    target_population_id: str = Field(
+        ..., min_length=1,
+        description="References an existing PopulationSpec.id (post-merge population key, "
+                    "e.g. 'pop_0'). Compiler resolves this to the actor_id of the first "
+                    "compiled entity whose properties['population_id'] matches — the same "
+                    "addressing mechanism already used for per-population profile overrides "
+                    "(compiler.py context.entities lookup). Not a raw entity ID: compiled "
+                    "entity IDs are positional and not stably addressable from world content."
+    )
+    subject: str = Field(..., min_length=1, description="Matches InformationQuery.subject / KnowledgeFact.subject")
+    query_kind: str = Field(..., min_length=1, description="Matches InformationQuery.kind (e.g. 'material_source' | 'recipe_definition' | 'danger_rating')")
+    source_id: str = Field(..., min_length=1, description="Free-text provenance label for the normalized response; not validated against information_source_profiles")
+    answer_kind: Literal["KNOWN_FACT", "PARTIAL_LEAD", "RUMOR", "CONTRADICTION"] = Field(
+        ..., description="Matches InformationResponseNormalizer.normalize()'s branching. 'UNKNOWN' is intentionally excluded here — it produces no KnowledgeFact/LeadState and is not a meaningful thing to author as static compile-time content"
+    )
+    certainty: float = Field(1.0, ge=0.0, le=1.0)
+    details: Dict[str, Any] = Field(default_factory=dict)
+    reason: Optional[str] = Field(None, description="Only meaningful when answer_kind produces an UnknownFact; unused for KNOWN_FACT/PARTIAL_LEAD/RUMOR/CONTRADICTION but accepted for schema symmetry with the raw_response dict shape")
+    cost_paid: int = Field(0, ge=0)
+
+
+class SelfModelInformationFactSpec(BaseModel):
+    """Maps 1:1 onto src.world.providers.information.KnowledgeFact (the provider-side transfer
+    object in that same file — NOT src.core.self_model.KnowledgeFact, the entity-owned record,
+    and NOT src.worldbuilding.schema's own PendingInformationResponseSpec vocabulary)."""
+    model_config = ConfigDict(frozen=True)
+
+    subject: str = Field(..., min_length=1)
+    fact_type: str = Field(..., min_length=1, description="e.g. 'resource_source' | 'recipe_definition' | 'danger_rating'")
+    details: Dict[str, Any] = Field(default_factory=dict)
+
+
+class PendingSelfModelInformationEventSpec(BaseModel):
+    """Compile-time-seeded InformationResponse-shaped event for SelfModelUpdatePhase's Step 1
+    (KnowledgeModelService.assimilate()) — the third application of the compile-time-seed
+    pattern (docs/guidelines/design_patterns.md, Pattern 6), following
+    information_source_profiles and pending_information_responses. Distinct from
+    PendingInformationResponseSpec: this targets src.world.providers.information.InformationResponse's
+    lowercase answer_kind vocabulary (Step 1's actual consumer), not
+    InformationResponseNormalizer's uppercase vocabulary (Branch A's consumer)."""
+    model_config = ConfigDict(frozen=True)
+
+    target_population_id: str = Field(
+        ..., min_length=1,
+        description="Same addressing mechanism as PendingInformationResponseSpec.target_population_id "
+                    "— resolved to a compiled actor_id via entity.properties['population_id'] matching."
+    )
+    answer_kind: Literal["known", "partial", "unknown", "insufficient_gold"] = Field(
+        ..., description="Matches InformationResponse.answer_kind's lowercase vocabulary exactly "
+                         "(src/world/providers/information.py:25). Do NOT use "
+                         "PendingInformationResponseSpec's uppercase vocabulary "
+                         "(KNOWN_FACT/PARTIAL_LEAD/RUMOR/CONTRADICTION) — different consumer, "
+                         "different type, different casing."
+    )
+    facts: List[SelfModelInformationFactSpec] = Field(default_factory=list)
+    unknowns: List[str] = Field(
+        default_factory=list,
+        description="Plain subject strings — maps directly onto InformationResponse.unknowns: "
+                    "Tuple[str, ...]. NOT UnknownFact objects (that is Branch A's "
+                    "NormalizedInformationResponse.unknowns shape, a different, incompatible type)."
+    )
+    certainty: float = Field(0.0, ge=0.0, le=1.0)
+    source_id: Optional[str] = Field(None)
+    cost_gold: int = Field(0, ge=0)
+
 
 class PopulationSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
@@ -132,6 +223,9 @@ class WorldSpec(BaseModel):
     topology: TopologySpec
     regions: list[RegionSpec] = Field(default_factory=list)
     factions: list[FactionSpec] = Field(default_factory=list)
+    information_source_profiles: List[InformationSourceProfileSpec] = Field(default_factory=list)
+    pending_information_responses: List[PendingInformationResponseSpec] = Field(default_factory=list)
+    pending_self_model_information_events: List[PendingSelfModelInformationEventSpec] = Field(default_factory=list)
     entities: list[PopulationSpec] = Field(default_factory=list)
     resources: list[ResourceNodeSpec] = Field(default_factory=list)
     buildings: list[BuildingSpec] = Field(default_factory=list)

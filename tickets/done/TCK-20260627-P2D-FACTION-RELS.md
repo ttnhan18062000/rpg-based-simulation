@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2D-FACTION-RELS
 phase: done
 date: 2026-06-27
-tags: [p2, faction-relationships, content, catalog, encounter-variety]
+tags: [faction-relationships, content, catalog, encounter-variety]
 ---
 
 # TCK-20260627-P2D-FACTION-RELS

@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2J-PATCHES-TYPE
 phase: done
 date: 2026-06-27
-tags: [p2, type-safety, engine, patches, merge, return-type]
+tags: [type-safety, engine, patches, merge, return-type]
 ---
 
 # TCK-20260627-P2J-PATCHES-TYPE

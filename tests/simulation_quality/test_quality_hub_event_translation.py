@@ -112,6 +112,42 @@ def test_invariant_unknown_no_translation() -> None:
     result = QualityHub._translate(_env("InvariantViolation", {"law_id": "UNKNOWN-LAW"}))
     assert result.event_type == "InvariantViolation"
 
+def test_invariant_spawn_occupancy_law() -> None:
+    result = QualityHub._translate(_env("InvariantViolation", {"law_id": "LAW-SPAWN-OCCUPANCY"}))
+    assert result.event_type == "spawn_occupancy_violation"
+
+def test_invariant_unknown_law_id_no_translation() -> None:
+    """A law_id that matches none of the known real laws or dormant prefix branches passes
+    through untranslated. (Previously this test used LAW-HP-NONNEGATIVE as its "unknown" example
+    — that was the exact gap TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP closed; see
+    test_invariant_hp_nonnegative_routes_to_combat_hard_law below for the corrected behavior.)"""
+    result = QualityHub._translate(_env("InvariantViolation", {"law_id": "LAW-DOES-NOT-EXIST"}))
+    assert result.event_type == "InvariantViolation"
+
+
+def test_invariant_hp_nonnegative_routes_to_combat_hard_law() -> None:
+    """TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP: real HardLawMonitor laws (LAW-* prefixed)
+    previously fell through untranslated except LAW-SPAWN-OCCUPANCY. HP/READINESS are
+    combat-domain invariants routed to the existing generic combat_hard_law_violation signal."""
+    result = QualityHub._translate(_env("InvariantViolation", {"law_id": "LAW-HP-NONNEGATIVE"}))
+    assert result.event_type == "combat_hard_law_violation"
+
+
+def test_invariant_readiness_nonnegative_routes_to_combat_hard_law() -> None:
+    result = QualityHub._translate(_env("InvariantViolation", {"law_id": "LAW-READINESS-NONNEGATIVE"}))
+    assert result.event_type == "combat_hard_law_violation"
+
+
+def test_invariant_gold_nonnegative_routes_to_conservation_violated() -> None:
+    result = QualityHub._translate(_env("InvariantViolation", {"law_id": "LAW-GOLD-NONNEGATIVE"}))
+    assert result.event_type == "conservation_law_violated"
+
+
+def test_invariant_stamina_position_occupancy_route_to_world_hard_law() -> None:
+    for law_id in ("LAW-STAMINA-NONNEGATIVE", "LAW-POSITION-FINITE", "LAW-OCCUPANCY-COLLISION"):
+        result = QualityHub._translate(_env("InvariantViolation", {"law_id": law_id}))
+        assert result.event_type == "world_hard_law_violation", law_id
+
 
 # ── Pass-through for unknown types ───────────────────────────────────────────
 

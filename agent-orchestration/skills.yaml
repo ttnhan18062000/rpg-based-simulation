@@ -1,0 +1,120 @@
+# One entry per .claude/skills/*/SKILL.md directory. Distinct vocabulary axis from roles/*.yaml
+# (reusable skills vs. delegated subagent roles) — see test_skills_yaml_does_not_duplicate_role_fields.
+# `workflows`/`roles` only reference ids that actually exist elsewhere in this contract today
+# (workflows/implement-ticket.yaml, roles/*.yaml); left empty where the corresponding
+# workflows/<name>.yaml file has not been built yet in this first vertical slice.
+# `companion_assets` is a curated per-skill allowlist of non-SKILL.md files (relative to the
+# skill's own .claude/skills/<id>/ directory) that the Codex adapter also copies into
+# .agents/skills/<id>/ — not derived from directory listing or from SKILL.md's own references.
+skills_version: 1
+skills:
+  - id: agent-monitoring-retro
+    description: Generates the agent monitoring retro report from accumulated runs.jsonl/events.jsonl data.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: api-design-principles
+    description: REST and GraphQL API design principles for building intuitive, scalable, maintainable APIs.
+    workflows: []
+    roles: []
+    companion_assets: [assets/api-design-checklist.md, assets/rest-api-template.py, references/graphql-schema-design.md, references/rest-best-practices.md, resources/implementation-playbook.md]
+  - id: architecture
+    description: Architectural decision-making framework — requirements analysis, trade-off evaluation, ADR documentation.
+    workflows: []
+    roles: []
+    companion_assets: [context-discovery.md, examples.md, pattern-selection.md, patterns-reference.md, trade-off-analysis.md]
+  - id: backend-testing
+    description: Writes comprehensive backend unit, integration, and API tests.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: brainstorming
+    description: Explores user intent, requirements, and design before creative implementation work.
+    workflows: []
+    roles: []
+    companion_assets: [visual-companion.md, scripts/frame-template.html, scripts/helper.js, scripts/server.cjs, scripts/start-server.sh, scripts/stop-server.sh]
+  - id: combat-mechanics
+    description: Deterministic combat resolution (damage formula, tactical modifiers) and CombatPosture pre-combat assessment in src/domains/combat_engagement/.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: cognition-strategy
+    description: Internal self-model, bounded strategic appraisal, goal hierarchy, and interruption resistance across src/cognition/, src/strategy/, src/ai/goals/ — foregrounds the boundary between them.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: create-tickets
+    description: Ticket creation/scoping workflow — comprehend, investigate, structure, write, link.
+    workflows: []
+    roles: [ticket-scoper]
+    companion_assets: []
+  - id: debugging-strategies
+    description: Systematic debugging techniques, profiling tools, and root cause analysis.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: doc-coauthoring
+    description: Structured workflow for co-authoring documentation, proposals, and technical specs.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: frontend-design
+    description: Produces distinctive, production-grade frontend interfaces and UI components.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: implement-epic
+    description: Scopes and tracks child tickets for a large multi-ticket initiative.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: implement-ticket
+    description: Full ticket implementation workflow orchestrator — scope through finalize.
+    workflows: [implement-ticket]
+    roles: []
+    companion_assets: []
+  - id: observability
+    description: HardLawMonitor's 7 invariant laws, ObservabilityMode policy, and EventRecorder backpressure modes in src/observability/.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: progression-entities
+    description: Core attributes, derived combat stats, XP curve, level-up execution, and AP allocation across src/entities/ and src/progression/.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: prompt-builder
+    description: Guides creation of high-quality structured prompts with proper tool and format conventions.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: python-performance-optimization
+    description: Profiles and optimizes Python code using cProfile, memory profilers, and performance best practices.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: python-testing-patterns
+    description: Comprehensive pytest testing strategies — fixtures, mocking, test-driven development.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: simq-audit
+    description: Recalibration/drift-classification audit workflow for simulation quality.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: simq-dev
+    description: Development/debugging side of simulation_quality scorers — adding pillars, adding scoring rules, debugging a wrong score.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: systems-economy
+    description: Economy, crafting, harvest, market, quest, guild logic in src/systems/ — atomic conservation, inventory limits, market/reputation formulas.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: test-driven-development
+    description: Write-tests-first workflow used before implementing any feature or bugfix.
+    workflows: []
+    roles: []
+    companion_assets: [testing-anti-patterns.md]

@@ -93,14 +93,67 @@ def _types(events) -> list[str]:
 
 # ── combat_initiated ──────────────────────────────────────────────────────────
 
+def _real_combat_entity_update(attacker_id: int = 99, outcome_kind: str = "SURVIVE", hp_delta: int = -20):
+    """A MagicMock entity_update whose .combat represents a genuine combat resolution
+    (attacker_id set, outcome_kind not HAZARD/REJECTED) — matches EventExtractor._real_combat_update.
+    hp_delta is set explicitly (not just left as an auto-generated MagicMock attribute) because the
+    unrelated hazard_drain_applied branch also reads combat.hp_delta on the same object."""
+    combat = MagicMock()
+    combat.attacker_id = attacker_id
+    combat.outcome_kind = outcome_kind
+    combat.hp_delta = hp_delta
+    return MagicMock(combat=combat)
+
+
 def test_combat_initiated_emitted_on_first_hit():
     prior = _entity(hp=100, max_hp=100)
     curr = _entity(hp=80, max_hp=100)
     prior_state = _state({1: prior})
     curr_state = _state({1: curr})
     curr_state.tick = 10
-    events = EventExtractor.extract(prior_state, curr_state, _update({1: MagicMock(combat_upd=None)}), ObservabilityMode.NORMAL)
+    events = EventExtractor.extract(prior_state, curr_state, _update({1: _real_combat_entity_update()}), ObservabilityMode.NORMAL)
     assert "combat_initiated" in _types(events)
+
+
+def test_combat_initiated_not_emitted_for_hazard_damage():
+    prior = _entity(hp=100, max_hp=100)
+    curr = _entity(hp=80, max_hp=100)
+    prior_state = _state({1: prior})
+    curr_state = _state({1: curr})
+    curr_state.tick = 10
+    hazard_update = _real_combat_entity_update(attacker_id=None, outcome_kind="HAZARD")
+    events = EventExtractor.extract(prior_state, curr_state, _update({1: hazard_update}), ObservabilityMode.NORMAL)
+    assert "combat_initiated" not in _types(events)
+    assert "combat_damage" not in _types(events)
+
+
+def test_combat_initiated_not_emitted_for_biological_damage():
+    """CombatUpdate's dataclass default outcome_kind ("SURVIVE") is what biological.py's
+    starvation/exhaustion damage relies on — attacker_id must be the real discriminant, not
+    outcome_kind alone, or this case would be misclassified as combat."""
+    prior = _entity(hp=100, max_hp=100)
+    curr = _entity(hp=99, max_hp=100)
+    prior_state = _state({1: prior})
+    curr_state = _state({1: curr})
+    curr_state.tick = 10
+    biological_update = _real_combat_entity_update(attacker_id=None, outcome_kind="SURVIVE")
+    events = EventExtractor.extract(prior_state, curr_state, _update({1: biological_update}), ObservabilityMode.NORMAL)
+    assert "combat_initiated" not in _types(events)
+    assert "combat_damage" not in _types(events)
+
+
+def test_combat_damage_attacker_id_populated_for_real_combat():
+    prior = _entity(hp=100, max_hp=100)
+    curr = _entity(hp=80, max_hp=100)
+    prior_state = _state({1: prior})
+    curr_state = _state({1: curr})
+    curr_state.tick = 10
+    events = EventExtractor.extract(
+        prior_state, curr_state, _update({1: _real_combat_entity_update(attacker_id=42)}),
+        ObservabilityMode.NORMAL,
+    )
+    dmg = next(e for e in events if e.event_type == "combat_damage")
+    assert dmg.attacker_id == 42
 
 
 def test_combat_initiated_not_emitted_when_already_damaged():
@@ -131,8 +184,19 @@ def test_near_death_survival_emitted_when_hp_crosses_threshold():
     prior_state = _state({1: prior})
     curr_state = _state({1: curr})
     curr_state.tick = 10
-    events = EventExtractor.extract(prior_state, curr_state, _update(), ObservabilityMode.NORMAL)
+    events = EventExtractor.extract(prior_state, curr_state, _update({1: _real_combat_entity_update()}), ObservabilityMode.NORMAL)
     assert "near_death_survival" in _types(events)
+
+
+def test_near_death_survival_not_emitted_for_hazard_damage():
+    prior = _entity(hp=25, max_hp=100)
+    curr = _entity(hp=15, max_hp=100)
+    prior_state = _state({1: prior})
+    curr_state = _state({1: curr})
+    curr_state.tick = 10
+    hazard_update = _real_combat_entity_update(attacker_id=None, outcome_kind="HAZARD")
+    events = EventExtractor.extract(prior_state, curr_state, _update({1: hazard_update}), ObservabilityMode.NORMAL)
+    assert "near_death_survival" not in _types(events)
 
 
 def test_near_death_survival_not_emitted_when_already_below_threshold():
@@ -161,7 +225,7 @@ def test_near_death_survival_payload():
     prior_state = _state({1: prior})
     curr_state = _state({1: curr})
     curr_state.tick = 10
-    events = EventExtractor.extract(prior_state, curr_state, _update(), ObservabilityMode.NORMAL)
+    events = EventExtractor.extract(prior_state, curr_state, _update({1: _real_combat_entity_update()}), ObservabilityMode.NORMAL)
     nd = next(e for e in events if e.event_type == "near_death_survival")
     assert nd.payload["hp"] == 15
     assert nd.payload["max_hp"] == 100
@@ -295,7 +359,7 @@ def test_demographic_mortality_emitted_on_despawn_no_attacker():
     prior_state = _state({5: prior})
     curr_state = _state({})
     curr_state.tick = 10
-    upd = _update({5: MagicMock(combat_upd=None)})
+    upd = _update({5: MagicMock(combat=None)})
     events = EventExtractor.extract(prior_state, curr_state, upd, ObservabilityMode.NORMAL)
     assert "demographic_mortality" in _types(events)
 
@@ -307,6 +371,7 @@ def test_demographic_mortality_not_emitted_on_combat_kill():
     curr_state.tick = 10
     combat_upd = MagicMock()
     combat_upd.attacker_id = 2  # killed by attacker
-    upd = _update({5: MagicMock(combat_upd=combat_upd)})
+    combat_upd.outcome_kind = "KILL"
+    upd = _update({5: MagicMock(combat=combat_upd)})
     events = EventExtractor.extract(prior_state, curr_state, upd, ObservabilityMode.NORMAL)
     assert "demographic_mortality" not in _types(events)

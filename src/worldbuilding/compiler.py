@@ -17,6 +17,7 @@ from src.core.state import (
     ResourceNodeState,
     InventoryComponent,
     PersonalityComponent,
+    FactionState,
 )
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
@@ -24,6 +25,9 @@ from src.replay.fingerprint import StateFingerprinter
 from src.worldbuilding.schema import WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
 from src.core.strategic import ProjectKind
+from src.domains.information.schema import InformationSourceProfile
+from src.world.providers.information import InformationResponse as _ProviderInformationResponse
+from src.world.providers.information import KnowledgeFact as _ProviderKnowledgeFact
 
 
 def get_role_enum(role_str: str, catalog_repo: Optional[Any] = None, context: Optional[Any] = None) -> EntityRole:
@@ -69,6 +73,13 @@ def get_faction_enum(faction_str: str, catalog_repo: Optional[Any] = None, conte
         return Faction.TOWN_COUNCIL
     return Faction.NEUTRAL
 
+
+
+# get_bravery_bias/get_action_style_for_bravery moved to src/content_semantics/personality.py
+# (TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY) -- shared with ArchetypeEntityFactory's own
+# entity-construction path, matching content_semantics/'s established role for cross-cutting
+# semantic helpers. Re-imported here so this module's own existing callers/tests are unaffected.
+from src.content_semantics.personality import get_bravery_bias, get_action_style_for_bravery  # noqa: E402, F401
 
 
 def get_quest_kind(kind_str: str) -> QuestKind:
@@ -174,10 +185,11 @@ class WorldCompiler:
 
         # 3. Compile factions (Initialize starting vaults in global_resources)
         global_resources: Dict[str, float] = {}
+        factions: Dict[str, FactionState] = {}
         for f_spec in spec.factions:
             faction_enum = get_faction_enum(f_spec.id, context=context)
             starting_gold = 1000.0
-            
+
             # Context-backed Faction starting gold override
             if context is not None and f_spec.id in context.factions:
                 starting_gold = context.factions[f_spec.id].starting_gold
@@ -190,6 +202,11 @@ class WorldCompiler:
                 global_resources["faction_town_council_gold"] = starting_gold
             else:
                 global_resources[f"faction_{f_spec.id.lower()}_gold"] = starting_gold
+
+            factions[f_spec.id] = FactionState(
+                faction_id=f_spec.id,
+                tension_level=f_spec.initial_tension_level,
+            )
 
         # 4. Compile resources
         resource_nodes: Dict[int, ResourceNodeState] = {}
@@ -288,10 +305,15 @@ class WorldCompiler:
                         if hasattr(resolved, "legacy_faction") and resolved.legacy_faction is not None:
                             faction_enum = Faction(resolved.legacy_faction)
 
-                    # Seed personality deterministically from entity ID + world seed
+                    # Seed personality deterministically from entity ID + world seed.
+                    # Bravery is biased by the entity's real faction alignment_bucket (see
+                    # get_bravery_bias) so race/faction produces a real, measurable population
+                    # skew (e.g. wild_beast_pack trending brave) while individual per-entity RNG
+                    # variance is preserved within that skew.
+                    bravery_bias = get_bravery_bias(pop_spec.faction)
                     personality = PersonalityComponent(
                         greed=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=10),
-                        bravery=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=11),
+                        bravery=min(1.0, max(0.0, rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=11) + bravery_bias)),
                         sociability=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=12),
                         industry=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=13),
                     )
@@ -333,7 +355,8 @@ class WorldCompiler:
                             def_stat=def_stat,
                             attack_range=attack_range,
                             alive=True,
-                            readiness=readiness
+                            readiness=readiness,
+                            action_style=get_action_style_for_bravery(personality.bravery)
                         )
                         .lifecycle(active=True)
                     )
@@ -401,6 +424,78 @@ class WorldCompiler:
             )
             compiled_quests.append(q_state)
 
+        information_source_profiles: List[InformationSourceProfile] = [
+            InformationSourceProfile(
+                source_id=p.source_id,
+                source_kind=p.source_kind,
+                knowledge_scopes=tuple(p.knowledge_scopes),
+                accuracy=p.accuracy,
+                freshness=p.freshness,
+                bias=p.bias,
+                cost_gold=p.cost_gold,
+                max_answers_per_query=p.max_answers_per_query,
+            )
+            for p in spec.information_source_profiles
+        ]
+
+        # 6b. Resolve pending_information_responses: target_population_id -> compiled actor_id
+        pending_information_responses: List[Dict[str, Any]] = []
+        for r in spec.pending_information_responses:
+            actor_id = next(
+                (eid for eid, e in entities.items()
+                 if e.properties.get("population_id") == r.target_population_id),
+                None,
+            )
+            if actor_id is None:
+                warnings.append(
+                    f"pending_information_responses target_population_id "
+                    f"'{r.target_population_id}' matched no compiled entity; entry skipped"
+                )
+                continue
+            pending_information_responses.append({
+                "actor_id": actor_id,
+                "subject": r.subject,
+                "query_kind": r.query_kind,
+                "source_id": r.source_id,
+                "raw_response": {
+                    "answer_kind": r.answer_kind,
+                    "certainty": r.certainty,
+                    "details": dict(r.details),
+                    "reason": r.reason,
+                },
+                "cost_paid": r.cost_paid,
+            })
+
+        # 6c. Resolve pending_self_model_information_events: target_population_id -> compiled actor_id,
+        # construct real InformationResponse objects (Step 1's consumer needs attribute access, not
+        # dict-item access — a different construction shape from 6b above).
+        pending_self_model_information_events: List[Dict[str, Any]] = []
+        for r in spec.pending_self_model_information_events:
+            actor_id = next(
+                (eid for eid, e in entities.items()
+                 if e.properties.get("population_id") == r.target_population_id),
+                None,
+            )
+            if actor_id is None:
+                warnings.append(
+                    f"pending_self_model_information_events target_population_id "
+                    f"'{r.target_population_id}' matched no compiled entity; entry skipped"
+                )
+                continue
+            event = _ProviderInformationResponse(
+                answer_kind=r.answer_kind,
+                facts=tuple(
+                    _ProviderKnowledgeFact(subject=f.subject, fact_type=f.fact_type, details=dict(f.details))
+                    for f in r.facts
+                ),
+                unknowns=tuple(r.unknowns),
+                suggested_leads=(),
+                certainty=r.certainty,
+                source_id=r.source_id,
+                cost_gold=r.cost_gold,
+            )
+            pending_self_model_information_events.append({"actor_id": actor_id, "event": event})
+
         # Assemble final AuthoritativeState
         state = AuthoritativeState(
             tick=0,
@@ -413,7 +508,11 @@ class WorldCompiler:
             global_resources=global_resources,
             blocked_tiles=blocked_tiles,
             town_tiles=town_tiles,
-            town_entity_ids=town_entity_ids
+            town_entity_ids=town_entity_ids,
+            factions=factions,
+            information_source_profiles=information_source_profiles,
+            pending_information_responses=pending_information_responses,
+            pending_self_model_information_events=pending_self_model_information_events
         )
 
         # Calculate fingerprint state hash
@@ -432,6 +531,10 @@ class WorldCompiler:
             "resource_node_count": len(resource_nodes),
             "building_count": len(buildings),
             "quest_count": len(compiled_quests),
+            "distinct_populated_factions": len({
+                fid for e in entities.values()
+                if (fid := e.properties.get("faction_id"))
+            }),
             "warnings": warnings,
             "compile_duration_ms": compile_duration_ms,
             "state_hash": state_hash

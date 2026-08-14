@@ -48,6 +48,10 @@ Runs every tick for all alive/active entities:
 ```
 Step 1: Knowledge assimilation (KnowledgeModelService.assimilate)
          └─ Only if InformationResponse events exist for this entity this tick
+         └─ Events sourced from AuthoritativeState.pending_self_model_information_events
+            (compile-time-seeded, filtered by actor_id; confirmed matching code 2026-07-04,
+            TCK-20260703-SIMQ-UPLIFT3-BRANCH-B — see self_model_contract.md's "Phase lifecycle"
+            section for detail)
 Step 2: Self-assessment (SelfAssessmentService.assess)
          └─ Dirty check: skip steps 3–4 if nothing changed
 Step 3: Need interpretation (NeedInterpretationService.interpret)
@@ -66,7 +70,7 @@ Output: `SelfModelBundle` written to `entity.self_model` via `EntityUpdate(self_
 |---|---|
 | `src/domains/motivation/` | `entity.self_model.needs.dominant_need` → route bias |
 | `src/domains/perception/` | `entity.self_model.needs` → attention focus for salience scoring |
-| `src/domains/adventure/` | `entity.self_model.capabilities` → route feasibility (can entity reach/fight?) |
+| `src/domains/adventure/` | Ad-hoc `CapabilityEstimateService.estimate()` call from `AdventureRouteScorer.score()` (GATHER_RESOURCE/CRAFT_UPGRADE only) → `confidence_bonus`; NOT via `entity.self_model.capabilities`, which remains empty in production (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING) |
 | `src/systems/strategic_systems/intelligence.py` | `entity.self_model` (full bundle) → blocker inference, project evaluation |
 | `src/strategy/` | `entity.self_model` → cognition capacity limits |
 | `src/world/motivation/pressure_resolver.py` | World-side, runs before the cognition step; provides need_profile/drive_profile that feed into need interpretation |

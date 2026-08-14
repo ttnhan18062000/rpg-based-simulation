@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2L-CONTENT-GUIDE
 phase: done
 date: 2026-06-27
-tags: [p2, documentation, content-authoring, guide, dx, sharp-edges]
+tags: [documentation, content-authoring, guide, dx, sharp-edges]
 ---
 
 # TCK-20260627-P2L-CONTENT-GUIDE

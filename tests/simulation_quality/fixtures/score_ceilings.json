@@ -1,0 +1,60 @@
+{
+  "entries": [
+    {
+      "run_key": null,
+      "pillar": "NARRATIVE",
+      "ceiling_kind": "corrected",
+      "reason": "quest_event was misclassified corpus-wide before the fix, inflating NARRATIVE's quest_active score; the 2026-08-07 recalibration reflects the honest, corrected value, not an ongoing ceiling.",
+      "evidence": "src/observability/event_extractor.py's quest_event type filter",
+      "since_ticket": "TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG"
+    },
+    {
+      "run_key": "simq_routing_test_seed42_500t",
+      "pillar": "PROGRESSION",
+      "ceiling_kind": "watchdog_variance",
+      "reason": "Real run-to-run non-determinism confirmed via 4 independent re-runs (identical seed/code): event_count varied 10/11/11/10, score varied -0.272/-0.300/-0.249/-0.272. Watchdog trips confirmed present in every run (kernel.py's tick-budget throttle, D06 F6), starting tick ~25. 5 other FAST-tier scenarios sampled the same way (dungeon_crawl_seed42_500t, highland_traverse_seed42_200t, hero_guild_routing_seed42_500t, simq_routing_test_seed123_500t, simq_routing_test_seed456_500t) were stable or showed only sub-tolerance noise despite the same watchdog trips firing -- this scenario's own low PROGRESSION event count (10-11) makes it unusually sensitive to which individual events the throttle happens to drop, unlike scenarios with a larger event sample. Not a code defect; a real, low-event-count sample-size sensitivity to an already-documented engine mechanism.",
+      "evidence": "3x/4x reproducibility re-runs of tools/evaluate_simq.py --scenario simq_routing_test_seed42_500t; docs/audits/D06_longrun_health.md F6",
+      "since_ticket": "TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP"
+    },
+    {
+      "run_key": "simq_routing_test_seed42_500t",
+      "pillar": "COGNITION",
+      "ceiling_kind": "watchdog_variance",
+      "reason": "Same watchdog-throttle-driven event-count sensitivity as this run_key's own PROGRESSION entry: event_count varied 194/196/194/193 across 4 independent re-runs. See the PROGRESSION entry for this run_key for the full comparison against 5 stable-sampled FAST-tier scenarios. SUPERSEDED (TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP, 2026-08-13): this entry is now permanently inert for the score-tolerance failure path this ceiling annotates. Direct git-worktree bisection to commit 3d992dd0 (TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION, docs/guidelines/intentional_divergences.md §2.40) confirmed the 194-196 event range documented above was itself the pre-fix state; post-fix, the modal outcome across 18 independent trials (Investigate's 15 plus 3 Implement-time reruns; idle and 2x/4x induced-load alike) is bit-identical at event_count=0/normalized_score=0.0/grade=C. The anchor has been recalibrated to this deterministic value. Note: 1 of those 18 trials (an Implement-time induced-load rerun) produced a rare residual event_count=2/grade=B/loop_detected=True outcome, not yet root-caused to the same precision as the main step-change — see tests/unit/worldassembly/test_corpus_diversity.py::test_simq_routing_test_seed42_500t_cognition_grade_stability's own docstring, which was kept in the tolerance-guard shape (not converted to strict bit-identical) to account for this. This residual is far below the score-tolerance threshold this ceiling entry's own mechanism (_format_score_failures) would ever need to annotate, so the entry remains permanently inert for THAT check even though not literally 100% deterministic under artificially induced heavy load. Left in place, not deleted, to preserve the audit history of the real watchdog-variance finding that was true at the time.",
+      "evidence": "3x/4x reproducibility re-runs of tools/evaluate_simq.py --scenario simq_routing_test_seed42_500t; docs/audits/D06_longrun_health.md F6",
+      "since_ticket": "TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP"
+    },
+    {
+      "run_key": "simq_routing_test_seed123_500t",
+      "pillar": "PROGRESSION",
+      "ceiling_kind": "watchdog_variance",
+      "reason": "SUPERSEDED-IN-PART (TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT, 2026-08-13): the 'COGNITION stable at 0.5295/52 events' aside below is no longer true -- fresh re-verification found COGNITION collapsed to 0 events/0.0/C for this run_key (see grade_anchors.json's own recalibrated COGNITION value and docs/guidelines/intentional_divergences.md §2.41). This entry's own PROGRESSION/watchdog_variance classification is unaffected and remains accurate. Original reason preserved below for audit history: Same mechanism confirmed on a second simq_routing_test seed: event_count varied 28/24, score varied -0.5605/-0.4798 across 2 independent re-runs -- both outside the standard score tolerance. Not confirmed for this run_key's own COGNITION (stable at 0.5295/52 events across both re-runs) or for simq_routing_test_seed456_500t (stable at 0.6415/63 events across 2 re-runs, though only lightly sampled). See simq_routing_test_seed42_500t's PROGRESSION entry for the full cross-scenario comparison.",
+      "evidence": "2x reproducibility re-runs of tools/evaluate_simq.py --scenario simq_routing_test_seed123_500t",
+      "since_ticket": "TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP"
+    },
+    {
+      "run_key": "urban_political_seed456_500t",
+      "pillar": "ECONOMY",
+      "ceiling_kind": "watchdog_variance",
+      "reason": "Same watchdog-throttle-driven low-event-count sensitivity confirmed on a different world family (not just simq_routing_test/ENABLE_ADVENTURE_ROUTING): 3 independent re-runs gave event_count 14/17/14, score 0.2394/0.2893/0.2394 -- real variance beyond score tolerance. Confirms this is a general FAST-tier phenomenon (any low-event-count pillar is vulnerable), not isolated to one scenario family.",
+      "evidence": "3x reproducibility re-runs of tools/evaluate_simq.py --scenario urban_political_seed456_500t",
+      "since_ticket": "TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP"
+    },
+    {
+      "run_key": "urban_political_seed456_500t",
+      "pillar": "PROGRESSION",
+      "ceiling_kind": "watchdog_variance",
+      "reason": "Same watchdog-throttle-driven low-event-count sensitivity as this run_key's own ECONOMY entry: 3 independent re-runs gave event_count 17/19/17, score -0.0202/0.0302/-0.0202.",
+      "evidence": "3x reproducibility re-runs of tools/evaluate_simq.py --scenario urban_political_seed456_500t",
+      "since_ticket": "TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP"
+    },
+    {
+      "run_key": "simq_routing_test_seed456_500t",
+      "pillar": "PROGRESSION",
+      "ceiling_kind": "watchdog_variance",
+      "reason": "Real run-to-run non-determinism confirmed via 6 independent re-runs this session (5 clean, 1 DEBUG-instrumented and excluded from this count): event_count/normalized_score split bimodally across the 5 clean trials -- 21 events/-0.15483870967741936 (trials 1, 5) vs. 25 events/-0.2359249329758713 (trials 3, 4, 6), a reproducible 2/5-vs-3/5 split, not a single stable value. The anchor is recalibrated to the modal (3/5) state, -0.2359249329758713; the minority (2/5) state remains a real, expected, ceiling-annotated deviation, not a code defect. Same watchdog-throttle-driven low-event-count sensitivity as the existing simq_routing_test_seed42_500t and _seed123_500t PROGRESSION entries (kernel.py's tick-budget throttle, D06 F6, intermittently dropping a different number of events run-to-run) -- COMBAT and ECONOMY on this same run_key stayed byte-identical across all 6 trials, confirming the jitter is localized to PROGRESSION specifically, matching the established pattern for this pillar.",
+      "evidence": "6 independent same-seed re-runs of tools/calibrate_simq.py --ticks 500 --seed 456 --name simq_routing_test this session (5 clean, 1 debug-instrumented); docs/audits/D06_longrun_health.md F6",
+      "since_ticket": "TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT"
+    }
+  ]
+}

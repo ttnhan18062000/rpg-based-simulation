@@ -3,7 +3,7 @@
 # Compliance IDs: STRAT-060, STRAT-061, STRAT-062, STRAT-063, SUB-022
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from enum import Enum
 
 
@@ -129,6 +129,22 @@ class GoalKind(str, Enum):
     COMBAT_RETREAT = "combat_retreat"
     RECOVER = "recover"
     RESOLVE_BLOCKER = "resolve_blocker"
+    GUILD = "guild"
+    ADVENTURE_ROUTE = "z_adventure_route"  # deliberately sorts after all 10 existing GoalKind
+    # values (Risk #5): starts with 'z', so it never wins an exact-utility tie against any other
+    # GoalKind under intelligence.py:1369's `sort(key=lambda x: (-x.utility, x.kind))` — see
+    # plan.md "Unresolved Questions Now Resolved" for the full worked rationale.
+    SOCIAL_CONTRACT = "social_contract"  # deliberately NOT "z_"-prefixed (Design Decision #5):
+    # sorts before "z_adventure_route" so an accepted social obligation wins an exact-utility tie
+    # against routine adventuring; does not collide with any ProjectKind value or existing
+    # GoalKind value (verified against strategic.py:121-152 directly).
+    REGION_STABILIZATION = "region_stabilization"  # Design Decision #3: does not collide with any
+    # existing GoalKind or ProjectKind value (in particular, deliberately NOT "stabilize" -- see
+    # Design Decision #4's resume/dedup non-collision rationale). Sorts after "recover" (loses an
+    # exact-utility tie to personal recovery) but before "resolve_blocker"/"social"/
+    # "social_contract"/"town_return"/"z_adventure_route" (wins ties against a routine social
+    # contract or adventuring) under intelligence.py:1408's
+    # `sort(key=lambda x: (-x.utility, x.kind))` tie-break.
 
 
 class ProjectKind(str, Enum):
@@ -145,6 +161,10 @@ class ProjectKind(str, Enum):
     INFORMATION = "information"
     INFORMATION_SEEKING = "information_seeking"
     TRAVEL = "travel"
+    STABILIZE = "stabilize"  # Design Decision #2: matches the raw string interpret_regional_danger()
+    # already used, mirrors DirectiveKind.STABILIZE's existing naming (strategic.py:89) -- a
+    # different, unrelated enum class, no cross-validation, confirmed harmless (ProjectState.kind is
+    # never assigned a DirectiveKind value anywhere in this codebase).
 
 
 class ConcernKind(str, Enum):
@@ -305,6 +325,16 @@ class SourceTrustEntry:
 
 
 @dataclass(frozen=True, slots=True)
+class CommittedIntention:
+    """One step in a short, ordered, durable sequence of future intentions."""
+    intention_id: str
+    goal_kind: str
+    target_hint: Optional[str]
+    sequence_index: int
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
 class CognitionProfile:
     """
     Profile-specific capacity limits for strategic cognition.
@@ -320,6 +350,7 @@ class CognitionProfile:
     resistance_multiplier: float = 30.0   # Scales resistance into project utility score
     detour_breadth: int = 3  # Max detour suggestions per tick
     reserved_detour_depth: int = 2    # Max nesting depth for detour chains (reserved for future recursive planning)
+    max_committed_intentions: int = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -341,6 +372,7 @@ class StrategicComponent:
     contracts: Dict[str, ContractState] = field(default_factory=dict)
     turning_points: List[TurningPointState] = field(default_factory=list)
     beliefs: Dict[str, Any] = field(default_factory=dict)
+    committed_intentions: Tuple[CommittedIntention, ...] = field(default_factory=tuple)
 
     # Active tracking
     current_project_id: Optional[str] = None

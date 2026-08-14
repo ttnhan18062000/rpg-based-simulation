@@ -1,0 +1,23 @@
+{
+  "fixture_schema_version": 1,
+  "capture_grade": "direct_experiment",
+  "hook_event_name": "PostToolUse",
+  "codex_cli_version": "codex-cli 0.145.0",
+  "captured_at_utc": "2026-07-22T10:11:11Z",
+  "capture_method": "isolated scratch directory outside this repo; throwaway .codex/config.toml registering one PostToolUse hook that dumped its real stdin verbatim; codex exec triggered one tool call",
+  "raw_stdin_payload": {
+    "session_id": "019f894e-cded-7242-bfda-05d6f7b8fa58",
+    "turn_id": "019f894e-ce8a-77c0-87bb-5e40b76dc7ab",
+    "transcript_path": "/home/u24desktop/.codex/sessions/2026/07/22/rollout-2026-07-22T17-11-10-019f894e-cded-7242-bfda-05d6f7b8fa58.jsonl",
+    "cwd": "/tmp/codex-fixture-capture-scratch",
+    "hook_event_name": "PostToolUse",
+    "model": "gpt-5.6-terra",
+    "permission_mode": "default",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "ls -la ."
+    },
+    "tool_response": "total 32\ndrwxrwxr-x   4 u24desktop u24desktop  4096 Jul 22 17:09 .\ndrwxrwxrwt 188 root       root       20480 Jul 22 17:11 ..\ndrwxrwxr-x   2 u24desktop u24desktop  4096 Jul 22 17:09 .codex\ndrwxrwxr-x   7 u24desktop u24desktop  4096 Jul 22 17:05 .git\n",
+    "tool_use_id": "exec-8e3733cc-3b91-419e-83b5-7960675a68c8"
+  }
+}

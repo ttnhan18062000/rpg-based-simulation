@@ -231,11 +231,19 @@ class LegalityServiceV2:
         if attacker.task.payload.get("target_id") == target.id or target.task.payload.get("target_id") == attacker.id:
             combat_engaged = True
 
+        # `intruding` is left unset (None): no real territorial-trespass detector exists in
+        # src/ (confirmed via grep, TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION).
+        # Hardcoding False here previously forced RelationProjectionService's own
+        # contextual_intruder_groups handling to resolve to "neutral" unconditionally
+        # (relation.py's `if context.intruding is False: label = "neutral"` treats an explicit
+        # False as a confirmed non-intrusion, permanently overriding combat_engaged), making any
+        # faction relationship defined via contextual_intruder_groups (e.g. wild_beast_pack's
+        # real content-defined stance toward town_council/hero_guild) structurally unable to
+        # ever attack through this path.
         context = RelationContext(
             distance=float(dist),
             combat_engaged=combat_engaged,
             target_race=get_race_id_str(target),
-            intruding=False
         )
 
         semantics_service = get_faction_semantics_service()

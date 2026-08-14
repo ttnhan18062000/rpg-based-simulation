@@ -329,9 +329,16 @@ def test_pipeline_simultaneous_attack_atomicity(base_state):
     assert upd_1.task.payload_set.get("outcome") == "SUCCESS"
     assert upd_1.identity.evolution_points_delta > 0
     
-    # Attacker 2 should FAIL because Attacker 1 already killed it in the same refinement pass
-    assert upd_2.task.payload_set.get("outcome") == "FAILURE"
-    assert upd_2.task.payload_set.get("reason") == "TARGET_INCAPACITATED"
+    # Attacker 2 should FAIL because Attacker 1 already killed it in the same refinement pass --
+    # and, since TARGET_INCAPACITATED is an unrecoverable ATTACK failure, its task resets to a
+    # genuinely empty payload (not a FAILURE/reason record) so scheduler.py's own is_idle_act
+    # gate reclassifies it back to brain evaluation next tick instead of retrying the same dead
+    # target forever (TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET,
+    # TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS -- a non-empty-but-
+    # actionless payload was confirmed, via live corpus trace, to still bypass is_idle_act and
+    # let the retry loop reoccur).
+    assert upd_2.task.payload_set == {}
+    assert getattr(upd_2.identity, "evolution_points_delta", 0) in (0, None)
 
 def test_aoe_splash_los_obstruction(base_state):
     """Verify that splash damage does not penetrate solid walls."""
@@ -461,10 +468,17 @@ def test_aoe_sliding_state_awareness(base_state):
     refined = AuthoritativeApplyPipeline.refine(state, raw_upd)
     
     # Action 1 (AoE) should succeed and kill victim
-    # Action 2 (Attack) should FAIL because victim is already dead in the sliding state
+    # Action 2 (Attack) should FAIL because victim is already dead in the sliding state -- and,
+    # since TARGET_INCAPACITATED is an unrecoverable ATTACK failure, its task resets to a
+    # genuinely empty payload rather than a FAILURE/reason record (see
+    # test_pipeline_simultaneous_attack_atomicity's own comment for the full rationale).
     upd_3 = refined.entity_updates[3]
-    assert upd_3.task.payload_set.get("outcome") == "FAILURE"
-    assert upd_3.task.payload_set.get("reason") == "TARGET_INCAPACITATED"
+    assert upd_3.task.payload_set == {}
+    # Victim must show exactly one lethal hit (the AoE splash), not a second attack landing on
+    # top of an already-dead target in the same sliding-state pass.
+    upd_2 = refined.entity_updates.get(2)
+    assert upd_2 is not None and upd_2.combat is not None
+    assert upd_2.combat.alive_set is False
 
 def test_skill_pipeline_validation(base_state):
     """

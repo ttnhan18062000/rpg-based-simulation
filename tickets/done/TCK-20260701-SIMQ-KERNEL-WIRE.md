@@ -15,7 +15,7 @@ tags: [simq, kernel, wiring, observability, integration]
 Wire SimQ hub into Kernel startup and server lifespan (G1 / G2 / G3 fix)
 
 ## Status
-DONE — DUPLICATE / CREATED IN ERROR
+DONE
 
 ## Tier
 standard

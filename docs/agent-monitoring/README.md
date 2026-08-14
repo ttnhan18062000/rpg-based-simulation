@@ -18,6 +18,7 @@ Observability layer for the Claude Code AI agent workflow. Tracks workflow runs 
 - Which agents were called, in which phase, and what each did in one sentence (`events.jsonl`)
 - Every individual tool call during a session: tool name, input summary, status, duration (`tools.jsonl`)
 - Per-agent tool call counts derived from `tools.jsonl`, stored as `tool_call_count` on each event
+- A monotonic cost-proxy score per agent event, derived from `tools.jsonl` (Bash duration + Agent spawn count + edit-tool call count), stored as `cost_proxy_score` — an explicit proxy, not real token/dollar cost (see schema.md)
 - Weekly retro reports derived from the above
 
 ## What It Does NOT Capture
@@ -25,6 +26,79 @@ Observability layer for the Claude Code AI agent workflow. Tracks workflow runs 
 - **Token counts** — the workflow `agent()` call returns the agent's output content only; the underlying API usage (`input_tokens`, `output_tokens`) is consumed by the Claude Code runtime and never forwarded to the workflow script. There is no workaround short of a platform change from Anthropic.
 - Agent internal reasoning or chain-of-thought
 - Simulation engine telemetry
+
+**2026-07-19 — `cost_proxy_score` calibration finding.** The platform-blocked gap above was
+reconfirmed independently against this machine's own local session transcripts (33 files, 26,911
+assistant turns with a real `usage` block — `isSidechain` is `false` on every one of them, meaning
+zero subagent-turn transcripts exist locally either). A regression fit at the correct grain (one
+turn's tokens against that same turn's own tool calls) found no usable signal (R²≈0.0000); a fit at
+session-aggregate grain found a strong but domain-mismatched signal (R²=0.93, `edit_count` the
+dominant single predictor at r=0.91) — not adopted, since it measures the orchestrator's whole
+session, not the per-subagent/per-phase footprint `compute_cost_proxy_score()` actually scores.
+Net: `edit_count` is a weak, unconfirmed prior for `W_EDIT` being under-weighted relative to
+`W_AGENT` in the shipped formula — not adopted as a weight change. Recalibration remains blocked on
+better ground-truth data at the right grain, not on missing investigation. Full evidence trail:
+`experiments/cost_proxy_calibration/RESULTS.md`.
+
+**`tools/agent-monitoring/weight_sensitivity_check.py`** (promoted from the experiment above by
+`TCK-20260719-WEIGHT-SENSITIVITY-PROMOTE`) is the **required check before ever proposing a
+`cost_proxy.py` weight change** — it recomputes `cost_proxy_score` for every real `(run_id, seq)`
+group under two weight sets and compares the resulting spend-by-phase/spend-by-agent rank order,
+so a candidate reweighting's real impact is measured before it ships, not discovered after. See
+`make agent-monitoring-weight-check` below.
+
+## Baseline Metrics Snapshot (one-off)
+
+`tools/agent-monitoring/retrieval_baseline_metrics.py` is a separate, one-off/periodic
+read-only baseline-snapshot script (distinct from the recurring weekly retro above) that prints a
+JSON report over the same `runs.jsonl`/`events.jsonl`/`tools.jsonl` sources. Report sections:
+`context_tokens`, `search_count`, `raw_investigation_count`, `duration`, `gate_outcome`,
+`review_rework`, `legacy_schema_notes`. Every derived/proxy section states its own computation and
+limits inline via a `derivation`/`disclosure`/`reason` field — never a silent number. See
+`docs/parity_ledger/infrastructure.yaml`'s `INFRA-292` entry for exact source line-range
+provenance of each section.
+
+## Security Gate Firing Check
+
+`tools/agent-monitoring/security_gate_firing_check.py` is a separate, read-only pass/fail check
+(distinct from `compute_retro_metrics()`'s aggregate `tag_breakdown_skill` count above) that
+classifies every `security`-tagged ticket into `missed` (a `DONE` run with no `Security-Review`
+event ever recorded — the gate should have fired and didn't), `clean` (a `DONE` run with a
+`Security-Review` event or `SECURITY_BLOCKED` status somewhere in its history), or `pending` (not
+yet reached `DONE`, not evaluable). Exits `1` if `missed` is non-empty. Built by
+`TCK-20260805-SECURITY-GATE-FIRING-MONITOR` after `TCK-20260731-GATE-BYPASS-HARDENING` proved that
+a gate's code being structurally correct does not guarantee it fired on a real historical run.
+
+## Skill Usage Metric
+
+`tools/agent-monitoring/skill_usage_metric.py` is a separate, read-only per-skill invocation-count
+tool (distinct from `compute_retro_metrics()`'s `tag_breakdown_skill` above, which counts
+tag-driven gate hits, not raw invocations) that answers "how many times was each skill actually
+invoked" by filtering `tools.jsonl` to `tool == 'Skill'` and extracting the skill name from
+`input_summary` via regex (that field is a Python dict-repr string, not JSON — `json.loads()` on
+it raises). Reports `per_skill`, `per_skill_per_run`, and an `unparseable` count for any record the
+regex can't match. Built by `TCK-20260805-SKILL-USAGE-METRIC` after this session's own skill-usage
+audit found this question previously required ad hoc regex against raw `tools.jsonl` every time.
+
+## Done-Ticket Monitoring Coverage Audit
+
+`tools/agent-monitoring/done_ticket_monitoring_coverage.py` is a separate, read-only audit
+checking whether every ticket under `tickets/done/` has at least one matching `run_id` record in
+`runs.jsonl`. Reports `covered`/`missing`/`unparseable` ticket lists. Deliberately reads
+`runs.jsonl` directly rather than through `generate_retro`'s SQLite-index path — even after
+`TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS` taught that path to rebuild on staleness
+(any source JSONL newer than the index's own mtime), a mtime-comparison rebuild is still only
+as fresh as the last time something happened to call `_load_runs_and_events()`, not truly
+up-to-the-second, and this audit's whole purpose (catching a just-closed ticket with no
+monitoring record) needs the direct-read guarantee regardless. Built by
+`TCK-20260805-DONE-TICKET-MONITORING-COVERAGE-AUDIT` after
+`TCK-20260805-CODEX-EVENT-TRACE-GAP-INVESTIGATION` found 2 `DONE` tickets with zero monitoring
+records. The full audit found 719 of 1,303 tickets missing coverage, but this is **not** an
+ongoing systemic bug — the earliest real `runs.jsonl` record is dated 2026-06-07 (the
+`TCK-20260607-MON-CAPTURE` ticket that built agent-monitoring capture itself), so every ticket
+dated before that structurally cannot have a record; bucketing the remainder by month shows a
+clean rollout-adoption curve (124 missing in the June 2026 rollout month, 24 in July, converging
+to a single isolated miss in August) rather than a flat ongoing rate.
 
 ## Navigation
 
@@ -37,6 +111,10 @@ Observability layer for the Claude Code AI agent workflow. Tracks workflow runs 
 ## Quick Start
 
 ```bash
+# Build the derived SQLite index (required by query.py/validate.py; generate_retro.py
+# builds it on demand if missing or stale — see schema.md's "Derived SQLite Index" section):
+make agent-monitoring-index
+
 # After some workflow runs have completed:
 make agent-monitoring-retro         # generate this week's report
 open agent-monitoring/retro/RETRO-$(date +%Y-W%V).md
@@ -46,4 +124,7 @@ make agent-monitoring-validate
 
 # Query events
 make agent-monitoring-query ARGS="--agent investigator --days 7"
+
+# Before proposing any cost_proxy.py weight change:
+make agent-monitoring-weight-check ARGS='--candidate-weights "{\"bash\": 0.01, \"agent\": 100, \"edit\": 10}"'
 ```

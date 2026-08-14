@@ -56,6 +56,299 @@ def test_structural_world_assembly_resolver(repos):
     assert "standard_villagers" in prov.module_fingerprints
 
 
+def test_faction_tension_overrides_applied_after_merge(repos):
+    """A composition-level faction_tension_overrides entry lands on the resolved WorldSpec's
+    matching FactionSpec.initial_tension_level; all other factions stay at 0.0 (TCK-20260702-SIMQ-UPLIFT2-FACTION)."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="tension_override_test",
+        name="Tension Override Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        faction_tension_overrides={"bandit_company": 0.5},
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    factions_by_id = {f.id: f for f in bundle.world_spec.factions}
+    assert factions_by_id["bandit_company"].initial_tension_level == 0.5
+    other_factions = [f for fid, f in factions_by_id.items() if fid != "bandit_company"]
+    assert other_factions, "expected other catalog factions to be present for regression comparison"
+    assert all(f.initial_tension_level == 0.0 for f in other_factions)
+
+
+def test_no_faction_tension_overrides_matches_current_behavior(repos):
+    """A composition with no faction_tension_overrides key resolves every faction to
+    initial_tension_level == 0.0 (regression guard — other worlds unaffected)."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_tension_override_test",
+        name="No Tension Override Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    assert all(f.initial_tension_level == 0.0 for f in bundle.world_spec.factions)
+
+
+def test_faction_tension_overrides_unknown_faction_raises(repos):
+    """faction_tension_overrides referencing a faction ID absent after merge raises ValueError."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="tension_override_unknown_test",
+        name="Tension Override Unknown Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        faction_tension_overrides={"nonexistent_faction": 0.5},
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    with pytest.raises(ValueError) as exc_info:
+        resolver.assemble(composition)
+    assert "nonexistent_faction" in str(exc_info.value)
+
+
+def test_faction_tension_overrides_out_of_range_raises(repos):
+    """An out-of-range faction_tension_overrides value raises ValidationError via FactionSpec.model_validate."""
+    from pydantic import ValidationError
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="tension_override_oor_test",
+        name="Tension Override Out Of Range Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        faction_tension_overrides={"bandit_company": 1.5},
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    with pytest.raises(ValidationError):
+        resolver.assemble(composition)
+
+
+def test_resolver_passes_information_source_profiles_from_composition(repos):
+    """A composition declaring information_source_profiles entries lands on the resolved
+    WorldSpec's information_source_profiles, all fields round-tripped unchanged
+    (TCK-20260702-SIMQ-UPLIFT2-INFORMATION)."""
+    cat, mod = repos
+    from src.worldassembly.schema import InformationSourceProfileSpec
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="information_profiles_test",
+        name="Information Profiles Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        information_source_profiles=[
+            InformationSourceProfileSpec(
+                source_id="town_notice_board",
+                source_kind="guide",
+                knowledge_scopes=["regional_danger", "common_resource_sources"],
+                accuracy=0.4,
+                freshness=0.6,
+                bias=0.1,
+                cost_gold=0,
+                max_answers_per_query=2,
+            ),
+            InformationSourceProfileSpec(
+                source_id="traveling_merchant_rumors",
+                source_kind="traveler",
+                knowledge_scopes=["common_resource_sources", "recipe_requirements"],
+                accuracy=0.65,
+                freshness=0.8,
+                bias=0.2,
+                cost_gold=5,
+                max_answers_per_query=3,
+            ),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    profiles = bundle.world_spec.information_source_profiles
+    assert len(profiles) == 2
+    by_id = {p.source_id: p for p in profiles}
+
+    board = by_id["town_notice_board"]
+    assert board.source_kind == "guide"
+    assert board.knowledge_scopes == ["regional_danger", "common_resource_sources"]
+    assert board.accuracy == 0.4
+    assert board.freshness == 0.6
+    assert board.bias == 0.1
+    assert board.cost_gold == 0
+    assert board.max_answers_per_query == 2
+
+    merchant = by_id["traveling_merchant_rumors"]
+    assert merchant.source_kind == "traveler"
+    assert merchant.knowledge_scopes == ["common_resource_sources", "recipe_requirements"]
+    assert merchant.accuracy == 0.65
+    assert merchant.freshness == 0.8
+    assert merchant.bias == 0.2
+    assert merchant.cost_gold == 5
+    assert merchant.max_answers_per_query == 3
+
+
+def test_resolver_no_information_source_profiles_declared_yields_empty_list(repos):
+    """A composition with no information_source_profiles key resolves to an empty list
+    (regression guard — every world other than urban_political must be unaffected)."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_information_profiles_test",
+        name="No Information Profiles Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    assert bundle.world_spec.information_source_profiles == []
+
+
+def test_resolver_passes_pending_information_responses_from_composition(repos):
+    """A composition declaring pending_information_responses entries lands on the resolved
+    WorldSpec's pending_information_responses, all fields round-tripped unchanged
+    (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    cat, mod = repos
+    from src.worldassembly.schema import PendingInformationResponseSpec
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="pending_responses_test",
+        name="Pending Responses Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        pending_information_responses=[
+            PendingInformationResponseSpec(
+                target_population_id="pop_0",
+                subject="bandit_road_danger",
+                query_kind="danger_rating",
+                source_id="town_notice_board",
+                answer_kind="KNOWN_FACT",
+                certainty=0.8,
+                details={"danger_level": "elevated", "region": "bandit_road"},
+                cost_paid=0,
+            ),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    responses = bundle.world_spec.pending_information_responses
+    assert len(responses) == 1
+    r = responses[0]
+    assert r.target_population_id == "pop_0"
+    assert r.subject == "bandit_road_danger"
+    assert r.query_kind == "danger_rating"
+    assert r.source_id == "town_notice_board"
+    assert r.answer_kind == "KNOWN_FACT"
+    assert r.certainty == 0.8
+    assert r.details == {"danger_level": "elevated", "region": "bandit_road"}
+    assert r.cost_paid == 0
+
+
+def test_resolver_no_pending_information_responses_declared_yields_empty_list(repos):
+    """A composition with no pending_information_responses key resolves to an empty list
+    (regression guard — every world other than urban_political must be unaffected)."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_pending_responses_test",
+        name="No Pending Responses Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    assert bundle.world_spec.pending_information_responses == []
+
+
+def test_resolver_passes_pending_self_model_information_events_from_composition(repos):
+    """A composition declaring pending_self_model_information_events entries lands on the
+    resolved WorldSpec's pending_self_model_information_events, all fields round-tripped
+    unchanged (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)."""
+    cat, mod = repos
+    from src.worldassembly.schema import PendingSelfModelInformationEventSpec
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="self_model_events_test",
+        name="Self Model Events Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        pending_self_model_information_events=[
+            PendingSelfModelInformationEventSpec(
+                target_population_id="pop_1",
+                answer_kind="unknown",
+                unknowns=["material.moon_resin.source"],
+                certainty=0.0,
+                source_id=None,
+                cost_gold=0,
+            ),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    events = bundle.world_spec.pending_self_model_information_events
+    assert len(events) == 1
+    e = events[0]
+    assert e.target_population_id == "pop_1"
+    assert e.answer_kind == "unknown"
+    assert e.unknowns == ["material.moon_resin.source"]
+    assert e.certainty == 0.0
+    assert e.source_id is None
+    assert e.cost_gold == 0
+
+
+def test_resolver_no_pending_self_model_information_events_declared_yields_empty_list(repos):
+    """A composition with no pending_self_model_information_events key resolves to an empty
+    list (regression guard — every world other than urban_political must be unaffected)."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_self_model_events_test",
+        name="No Self Model Events Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    assert bundle.world_spec.pending_self_model_information_events == []
+
+
 def test_id_collision_prevention(repos):
     """Verify duplicate IDs across merged layouts raise structural errors."""
     cat, mod = repos
@@ -524,6 +817,118 @@ def test_composition_normalization_shorthand_and_mixed(repos):
     from pydantic import ValidationError
     with pytest.raises(ValidationError):
         WorldCompositionNormalizer.normalize(unknown_dict)
+
+    # 4. faction_tension_overrides mirrors through unset (default {}) and set unchanged
+    no_overrides_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_overrides_world",
+        name="No Overrides World",
+        module_refs=[],
+    )
+    normalized_no_overrides = WorldCompositionNormalizer.normalize(no_overrides_spec)
+    assert normalized_no_overrides.faction_tension_overrides == {}
+
+    overrides_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="overrides_world",
+        name="Overrides World",
+        module_refs=[],
+        faction_tension_overrides={"faction_x": 0.5},
+    )
+    normalized_overrides = WorldCompositionNormalizer.normalize(overrides_spec)
+    assert normalized_overrides.faction_tension_overrides == {"faction_x": 0.5}
+
+    # 5. information_source_profiles mirrors through unset (default []) and set unchanged
+    from src.worldassembly.schema import InformationSourceProfileSpec
+
+    no_profiles_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_information_profiles_world",
+        name="No Information Profiles World",
+        module_refs=[],
+    )
+    normalized_no_profiles = WorldCompositionNormalizer.normalize(no_profiles_spec)
+    assert normalized_no_profiles.information_source_profiles == []
+
+    profiles_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="information_profiles_world",
+        name="Information Profiles World",
+        module_refs=[],
+        information_source_profiles=[
+            InformationSourceProfileSpec(
+                source_id="town_notice_board",
+                source_kind="guide",
+                accuracy=0.4,
+                freshness=0.6,
+            ),
+        ],
+    )
+    normalized_profiles = WorldCompositionNormalizer.normalize(profiles_spec)
+    assert len(normalized_profiles.information_source_profiles) == 1
+    assert normalized_profiles.information_source_profiles[0].source_id == "town_notice_board"
+
+    # 6. pending_information_responses mirrors through unset (default []) and set unchanged
+    from src.worldassembly.schema import PendingInformationResponseSpec
+
+    no_pending_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_pending_responses_world",
+        name="No Pending Responses World",
+        module_refs=[],
+    )
+    normalized_no_pending = WorldCompositionNormalizer.normalize(no_pending_spec)
+    assert normalized_no_pending.pending_information_responses == []
+
+    pending_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="pending_responses_world",
+        name="Pending Responses World",
+        module_refs=[],
+        pending_information_responses=[
+            PendingInformationResponseSpec(
+                target_population_id="pop_0",
+                subject="bandit_road_danger",
+                query_kind="danger_rating",
+                source_id="town_notice_board",
+                answer_kind="KNOWN_FACT",
+                certainty=0.8,
+            ),
+        ],
+    )
+    normalized_pending = WorldCompositionNormalizer.normalize(pending_spec)
+    assert len(normalized_pending.pending_information_responses) == 1
+    assert normalized_pending.pending_information_responses[0].target_population_id == "pop_0"
+
+    # 7. pending_self_model_information_events mirrors through unset (default []) and set unchanged
+    # (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)
+    from src.worldassembly.schema import PendingSelfModelInformationEventSpec
+
+    no_self_model_events_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_self_model_events_world",
+        name="No Self Model Events World",
+        module_refs=[],
+    )
+    normalized_no_self_model_events = WorldCompositionNormalizer.normalize(no_self_model_events_spec)
+    assert normalized_no_self_model_events.pending_self_model_information_events == []
+
+    self_model_events_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="self_model_events_world",
+        name="Self Model Events World",
+        module_refs=[],
+        pending_self_model_information_events=[
+            PendingSelfModelInformationEventSpec(
+                target_population_id="pop_1",
+                answer_kind="unknown",
+                unknowns=["material.moon_resin.source"],
+            ),
+        ],
+    )
+    normalized_self_model_events = WorldCompositionNormalizer.normalize(self_model_events_spec)
+    assert len(normalized_self_model_events.pending_self_model_information_events) == 1
+    assert normalized_self_model_events.pending_self_model_information_events[0].target_population_id == "pop_1"
 
 
 def test_v2_module_resolution_and_heuristics(repos):

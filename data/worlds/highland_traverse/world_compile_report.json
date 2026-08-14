@@ -1,14 +1,15 @@
 {
   "world_id": "highland_traverse",
-  "seed": 42,
+  "seed": 91,
   "entity_count": 18,
   "region_count": 5,
   "resource_node_count": 3,
   "building_count": 5,
   "quest_count": 6,
+  "distinct_populated_factions": 3,
   "warnings": [
     "QuestDefinition 'survey_river_route' required_location_tag 'river' does not match any region type or tag in this world"
   ],
-  "compile_duration_ms": 24.039716001425404,
-  "state_hash": "0b21be4168aa40e2e41009dfb5bfac0b"
+  "compile_duration_ms": 13.812092001899146,
+  "state_hash": "26fb4c8a8f6e607da596814e3bf5af12"
 }

@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260701-SIMQ-AGENCY-ROUTING-DOC
 phase: done
 date: 2026-07-01
-tags: [simq, agency, documentation, feature-flag]
+tags: [simq, agency, documentation, feature-flags]
 ---
 
 # TCK-20260701-SIMQ-AGENCY-ROUTING-DOC

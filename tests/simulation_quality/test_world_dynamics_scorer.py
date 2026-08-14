@@ -45,7 +45,7 @@ class TestEcologyOwnership:
     def test_ecology_cycling_positive(self, scorer: WorldDynamicsScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("ecology_cycle_completed"), _ctx())
         assert rec is not None
-        assert rec.delta == scoring_weights["ecology_cycling"]
+        assert rec.delta == scoring_weights.for_pillar("WORLD")["ecology_cycling"]
 
     def test_ecology_broken_once(self, scorer: WorldDynamicsScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("ecology_cycle_completed", payload={"ecology_broken": True}), _ctx())
@@ -143,6 +143,58 @@ class TestStructureAndHazard:
         rec = scorer.score(_env("hazard_drain_applied"), _ctx())
         assert rec is not None
         assert rec.delta == scoring_weights["hazard_active"]
+
+
+class TestBuildingSabotage:
+    def test_building_sabotaged_registered_in_scorer_registry(self) -> None:
+        assert "building_sabotaged" in WorldDynamicsScorer.EVENT_TYPES
+
+    def test_building_sabotaged_scored_by_world_dynamics(self, scorer: WorldDynamicsScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("building_sabotaged", payload={"region_id": "r1"}), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights["infrastructure_damaged"]
+        assert rec.pillar == PillarId.WORLD
+        assert "infrastructure_damaged" in rec.tags
+
+
+class TestSpawnOccupancyViolation:
+    def test_spawn_occupancy_violation_in_world_dynamics_event_types(self) -> None:
+        assert "spawn_occupancy_violation" in WorldDynamicsScorer.EVENT_TYPES
+
+    def test_spawn_occupancy_violation_scores_negative(self, scorer: WorldDynamicsScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("spawn_occupancy_violation", payload={"region_id": "r1"}), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights["spawn_occupancy_violation"]
+        assert rec.delta < 0
+        assert rec.pillar == PillarId.WORLD
+        assert "spawn_occupancy_violation" in rec.tags
+
+    def test_scoring_weights_yaml_has_spawn_occupancy_key(self, scoring_weights: ScoringWeights) -> None:
+        assert scoring_weights.for_pillar(PillarId.WORLD)["spawn_occupancy_violation"] < 0
+
+    def test_spawn_occupancy_weight_is_negative(self, scoring_weights: ScoringWeights) -> None:
+        assert scoring_weights["spawn_occupancy_violation"] < 0
+
+
+class TestWorldHardLawViolation:
+    """TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP: covers LAW-STAMINA-NONNEGATIVE,
+    LAW-POSITION-FINITE, and LAW-OCCUPANCY-COLLISION, none of which had an existing
+    pillar-generic signal to reuse (unlike HP/READINESS -> combat_hard_law_violation and
+    GOLD -> conservation_law_violated)."""
+
+    def test_world_hard_law_violation_in_event_types(self) -> None:
+        assert "world_hard_law_violation" in WorldDynamicsScorer.EVENT_TYPES
+
+    def test_world_hard_law_violation_scores_negative(self, scorer: WorldDynamicsScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("world_hard_law_violation", payload={"law_id": "LAW-STAMINA-NONNEGATIVE"}), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights["world_hard_law"]
+        assert rec.delta < 0
+        assert rec.pillar == PillarId.WORLD
+        assert "world_hard_law" in rec.tags
+
+    def test_scoring_weights_yaml_has_world_hard_law_key(self, scoring_weights: ScoringWeights) -> None:
+        assert scoring_weights.for_pillar(PillarId.WORLD)["world_hard_law"] < 0
 
 
 class TestNullReturn:

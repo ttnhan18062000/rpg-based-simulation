@@ -1,0 +1,8 @@
+ticket_id: TCK-20260801-MONITORING-WRITER-STATUS-STALE
+human_owner: tnhan
+rollback_plan_summary: >
+  Run only with the tested scratch configuration. If rollback is needed, restore
+  the exact pre-enable scratch-config bytes in one action and verify the
+  hook-free project config plus monitoring-prefix preservation. Expected hotfix
+  lifecycle artifacts and append-only monitoring records are retained for
+  review; no historical monitoring data is deleted or rewritten.

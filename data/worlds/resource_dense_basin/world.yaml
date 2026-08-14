@@ -1,0 +1,13 @@
+# STATE: ADDITIONAL
+schema_version: "worldcomposition.v1"
+world_id: "resource_dense_basin"
+name: "Resource-Dense Basin"
+description: "A frontier village pressed between an orc-held stronghold and an old mine riddled with resource nodes — three regions carry a resource-node density roughly 7x the corpus average, the inverse of frontier_extended's sparse-large-map profile."
+modules:
+  - "frontier_village_core"
+  - "old_mine_resource_loop"
+  - "orc_clan_territory"
+default_perspectives:
+  - "merchant_league_perspective"
+  - "wild_beast_pack_perspective"
+generation_seed: 602

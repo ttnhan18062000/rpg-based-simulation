@@ -15,7 +15,7 @@ tags: [ph7, m2, substrate, closure]
 Phase 7 Milestone 2: Substrate Closure and Intent Hardening
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

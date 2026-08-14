@@ -149,8 +149,18 @@ class AuthoritativeApplyPipeline:
         # Retrieve dynamic profiles/pending responses from state or context if present
         source_profiles = getattr(state, "information_source_profiles", [])
         pending_resps = getattr(state, "pending_information_responses", [])
-        update = run_phase("information_belief", update, lambda u: InformationBeliefPhase.apply(state, source_profiles, pending_resps), "ENABLE_BELIEF_ASSIMILATION")
+        update = run_phase("information_belief", update, lambda u: u.merge(InformationBeliefPhase.apply(state, source_profiles, pending_resps)), "ENABLE_BELIEF_ASSIMILATION")
         costs["information_belief"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Enhanced RPG Phase 6: Information Intent Execution (self-model query-routing) ---
+        t_start = time.perf_counter_ns()
+        from src.engine.pipeline_phases.information_intent_execution import InformationIntentExecutionPhase
+        update = run_phase(
+            "information_intent_execution", update,
+            lambda u: InformationIntentExecutionPhase.execute(state, u),
+            "ENABLE_INFORMATION_INTENT_EXECUTION",
+        )
+        costs["information_intent_execution"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Enhanced RPG Phase 7: Social Cooperation ---
         t_start = time.perf_counter_ns()
@@ -222,20 +232,6 @@ class AuthoritativeApplyPipeline:
         )
         costs["military_conflict"] = (time.perf_counter_ns() - t_start) / 1e6
 
-        # --- Enhanced RPG Phase 3: Adventure Routing ---
-        t_start = time.perf_counter_ns()
-        from src.domains.adventure.phase import AdventureDecisionPhase
-        update = run_phase(
-            "adventure_decision", update,
-            lambda u: AdventureDecisionPhase.apply(
-                state,
-                faction_directives=faction_directives,
-                factions=state.factions,
-            ),
-            "ENABLE_ADVENTURE_ROUTING",
-        )
-        costs["adventure_decision"] = (time.perf_counter_ns() - t_start) / 1e6
-
         # --- Phase 3: Action & Movement Routing ---
         t_start = time.perf_counter_ns()
         update = run_phase("action_routing", update, lambda u: AuthoritativeApplyPipeline._route_action_intent(state, u))
@@ -246,7 +242,17 @@ class AuthoritativeApplyPipeline:
         # --- Enhanced RPG Phase 4: Combat Engagement ---
         t_start = time.perf_counter_ns()
         from src.domains.combat_engagement.phase import CombatEngagementPhase
-        update = run_phase("combat_engagement", update, lambda u: CombatEngagementPhase.apply(state), "ENABLE_COMBAT_ENGAGEMENT")
+        # u.merge(...) is required here (TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-
+        # PUSH-SHAPER-EVENTS): CombatEngagementPhase.apply() builds a fresh StateUpdate() with no
+        # awareness of prior phases' own output. Without merging into the incoming `u`, run_phase's
+        # own real chaining (`return phase_upd`) replaced the ENTIRE accumulated update wholesale
+        # whenever this phase ran -- silently discarding every real StateUpdate produced by every
+        # earlier phase in this same tick (including action_routing's own real ATTACK dispatch and
+        # movement_routing), confirmed via live corpus A/B testing to deterministically suppress
+        # all push-shaper combat events (combat_engagement_started/ended, combat_resolved,
+        # combat_damage, entity_killed) to zero whenever ENABLE_COMBAT_ENGAGEMENT=ON. Matches the
+        # same u.merge(...) pattern already used by information_belief above.
+        update = run_phase("combat_engagement", update, lambda u: u.merge(CombatEngagementPhase.apply(state)), "ENABLE_COMBAT_ENGAGEMENT")
         costs["combat_engagement"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 4: Interaction & World Effects ---
@@ -290,6 +296,13 @@ class AuthoritativeApplyPipeline:
         dirty_builder.mark_from_update(state, update)
         update = update.replace(dirty_set=dirty_builder.build())
         update = run_phase("quest_rewards", update, lambda u: AuthoritativeApplyPipeline._resolve_quest_rewards(state, u))
+
+        # TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING: guild-visit arrival detection + completion.
+        # Placed adjacent to quest_rewards — new project completion/lead generation is
+        # conceptually part of this phase group, not earlier trust/validity phases.
+        from src.engine.pipeline_phases.guild_visit import GuildVisitPhase
+        update = run_phase("guild_visit", update, lambda u: GuildVisitPhase.resolve(state, u), "ENABLE_GUILD_QUEST_GENERATION")
+
         update = run_phase("shop", update, lambda u: ShopSystem.enforce(state, u))
 
         # E42C: Paid information transactions — inject intents before resolver runs.

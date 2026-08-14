@@ -1,12 +1,13 @@
 {
   "world_id": "dungeon_crawl",
-  "seed": 303,
+  "seed": 42,
   "entity_count": 32,
   "region_count": 4,
   "resource_node_count": 3,
   "building_count": 1,
   "quest_count": 9,
+  "distinct_populated_factions": 4,
   "warnings": [],
-  "compile_duration_ms": 17.393993002770003,
-  "state_hash": "dac7c0a73743a45be531f0d0e72b2afd"
+  "compile_duration_ms": 12.461463047657162,
+  "state_hash": "4dcbbdde3c36fec2d3118b88491d08f3"
 }

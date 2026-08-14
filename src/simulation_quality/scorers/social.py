@@ -14,6 +14,8 @@ class SocialScorer(PillarScorer):
     Does NOT score alliance_formed — that is FactionScorer.
     """
 
+    PILLAR_ID = PillarId.SOCIAL
+
     EVENT_TYPES = (
         "cooperation_event",
         "group_joined",

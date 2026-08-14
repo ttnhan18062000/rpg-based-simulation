@@ -36,6 +36,11 @@ Resolve AI decision errors and Pydantic validation failures occurring during sna
 ## Status
 DONE
 
-**Tier:** standard
-**Type:** chore
-**Priority:** P1
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1

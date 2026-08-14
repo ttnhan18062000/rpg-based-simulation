@@ -28,6 +28,15 @@ const request = (args && args.request) || ''
 const tierOverride = (args && args.tier_override) || ''
 
 if (!folder && !epicId && !request) {
+  // No production run happened (Discover never ran) — still write a minimal monitoring record
+  // rather than skip it entirely, per CLAUDE.md's "every run must record a monitoring entry" rule
+  // (previously silently skipped on this path — orchestration audit finding).
+  const invalidTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  const invalidTs = (invalidTsRaw || '').trim() || null
+  const invalidRunId = `EPIC-INVALID-ARGS-${(invalidTs || '').replace(/[^0-9]/g, '')}`
+  await bash(
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${invalidRunId}","start_ts":"${invalidTs}","end_ts":"${invalidTs}","workflow":"implement-epic","tier":"epic","final_status":"INVALID_ARGS","agent_count":0}' 2>/dev/null || true`
+  )
   return {
     status: 'INVALID_ARGS',
     message: 'Provide one of: folder (path), epic_id (TCK-...), or request (natural language).',
@@ -40,7 +49,7 @@ phase('Discover')
 
 const DISCOVER_SCHEMA = {
   type: 'object',
-  required: ['mode', 'ticket_ids', 'already_done', 'summary', 'ts'],
+  required: ['mode', 'ticket_ids', 'already_done', 'summary'],
   properties: {
     mode: { type: 'string', enum: ['folder', 'epic_id', 'request'] },
     ticket_ids: {
@@ -59,11 +68,19 @@ const DISCOVER_SCHEMA = {
   },
 }
 
+// Orchestrator-side ts capture — replaces the former per-branch "Step 0 — run `date -u ...`"
+// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). This file has no
+// pushEvent/writeSidecar cluster to compose alongside, so it gets its own local helper, called
+// immediately before the single `agent()` call below.
+const captureTs = async () => {
+  const out = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  return (out || '').trim() || null
+}
+
+const discoverTs = await captureTs()
 const discovery = await agent(
   folder
     ? `Discover tickets in folder "${folder}".
-
-Step 0 — run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
 Step 1 — list all files in the folder:
   Run: ls "${folder}"
@@ -96,8 +113,6 @@ Do not implement anything. Discovery only.`
     : epicId
     ? `Discover child tickets for epic "${epicId}".
 
-Step 0 — run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
 Step 1 — find and read the epic ticket:
   Check tickets/inprogress/${epicId}.md, tickets/done/${epicId}.md, tickets/todos/ subdirectories.
   Read the file. Extract the ## Related Tickets section.
@@ -121,10 +136,8 @@ Step 4 — return:
 
 Request: ${request}
 
-Step 0 — run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
 Step 1 — create an epic ticket using the ticket-scoper approach:
-  - Scan tickets/ for overlapping scope
+  - Scan tickets/ (including inprogress/, done/, and backlogs/) for overlapping scope — a hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned
   - Draft the epic ticket at tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md
   - Set Tier: epic, Status: OPEN
   - The ## Related Tickets section should list the child tickets that will need to be created
@@ -140,7 +153,7 @@ Step 2 — return:
   { label: 'discover', schema: DISCOVER_SCHEMA }
 )
 
-const batchStartTs = discovery.ts || null
+const batchStartTs = discoverTs || null
 
 log(`Discover: ${discovery.summary}`)
 
@@ -150,6 +163,21 @@ if (discovery.already_done.length > 0) {
 
 // request mode — epic created, no children yet
 if (discovery.mode === 'request') {
+  // Discover ran and created a real ticket — write a minimal monitoring record directly (this
+  // path returns before the batch-monitoring-write agent() call below, which only fires once
+  // ticketIds is known) rather than skip it entirely (orchestration audit finding). Uses a fixed
+  // literal summary, not discovery.summary, to avoid embedding arbitrary agent-returned text into
+  // a shell single-quoted JSON string — this file's own established quote-corruption risk.
+  const epicCreatedTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  const epicCreatedTs = (epicCreatedTsRaw || '').trim() || null
+  const createdEpicId = (discovery.epic_ticket_path || '').replace(/^.*\//, '').replace(/\.md$/, '').replace(/[^a-zA-Z0-9-]/g, '-') || 'UNKNOWN'
+  const epicCreatedRunId = 'EPIC-' + createdEpicId
+  await bash(
+    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${epicCreatedRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Epic ticket created; no child tickets yet","ts":"${epicCreatedTs}"}]' 2>/dev/null || true`
+  )
+  await bash(
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${epicCreatedRunId}","start_ts":"${batchStartTs || epicCreatedTs}","end_ts":"${epicCreatedTs}","workflow":"implement-epic","tier":"epic","final_status":"EPIC_CREATED","agent_count":1}' 2>/dev/null || true`
+  )
   return {
     status: 'EPIC_CREATED',
     epic_ticket_path: discovery.epic_ticket_path,
@@ -161,6 +189,21 @@ if (discovery.mode === 'request') {
 const ticketIds = discovery.ticket_ids
 
 if (ticketIds.length === 0) {
+  // Discover ran but found nothing to do — write a minimal monitoring record directly (mirrors
+  // the EPIC_CREATED fix above; this path also returns before the batch-monitoring-write agent()
+  // call below) rather than skip it entirely (orchestration audit finding). batchRunId matches
+  // exactly what the batch-monitoring-write section below would compute had the batch proceeded.
+  const nothingTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  const nothingTs = (nothingTsRaw || '').trim() || null
+  const nothingRunId = epicId
+    ? 'EPIC-' + epicId
+    : 'FOLDER-' + folder.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+  await bash(
+    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${nothingRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Discover found no tickets to implement (all done or none found)","ts":"${nothingTs}"}]' 2>/dev/null || true`
+  )
+  await bash(
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${nothingRunId}","start_ts":"${batchStartTs || nothingTs}","end_ts":"${nothingTs}","workflow":"implement-epic","tier":"epic","final_status":"NOTHING_TO_DO","agent_count":1}' 2>/dev/null || true`
+  )
   return {
     status: 'NOTHING_TO_DO',
     already_done: discovery.already_done,
@@ -238,6 +281,13 @@ Step 1 — get current timestamp (batch end time):
 Step 2 — write batch events (add run_id="${batchRunId}" and ts=END_TS to each):
   Events: ${JSON.stringify(batchEvents)}
   Run: python3 tools/agent-monitoring/record_events.py --data '<JSON array with run_id and ts=END_TS added>'
+
+Step 2b — verify: after Step 2, run:
+  grep -c "\"run_id\":\"${batchRunId}\"" agent-monitoring/events.jsonl
+Confirm the count is >= ${batchEvents.length}. If it is lower, retry Step 2 once.
+If still short after retry, proceed to Step 3 anyway (per the "do NOT raise" rule below)
+but prefix the WARNING in Step 3's failure message with "EVENTS-MISSING: " so a future
+retro run can distinguish this from an ordinary write failure.
 
 Step 3 — write batch run record (replace <END_TS> with the value from Step 1):
   python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${batchRunId}","start_ts":"${batchStartTsLiteral}","end_ts":"<END_TS>","workflow":"implement-epic","tier":"epic","final_status":"${batchStatus}","agent_count":${results.length}}'

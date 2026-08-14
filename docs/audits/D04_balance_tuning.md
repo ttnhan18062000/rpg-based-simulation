@@ -225,7 +225,19 @@ After completing P0-HUNGER-SATIATION and P0-ENTITY-INIT, a controlled measuremen
 | Measurement Confidence | 5 | Confirmed: `ENABLE_ADVENTURE_ROUTING` flag defaults to `FeatureMode.OFF` in `feature_flags.py` |
 | Fix Urgency | 5 | Must be enabled (or test harness must set explicitly) for any economic balance measurement |
 
-**Root Cause 2 — urban_political has zero resource nodes:**
+**Status update (2026-07-04):** RC2 and RC3 below are both **RESOLVED** —
+`TCK-20260627-P0B-URBAN-RESOURCE-NODES` and `TCK-20260627-P0C-ENTITY-REGION-ASSIGN` (the tickets
+already named in each Root Cause's callout below) both landed and are in `tickets/done/`. Confirmed
+during `TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT`'s investigation this session, which found and
+corrected a stale claim in `docs/simulation_quality/quality_scoring_contract.md` repeating this
+same "resource_nodes=0/region_id=None" finding as if still current. The historical measurements
+below (RC2/RC3 sections, §6.3, §6.6, Key Observations Summary, §Recommended Follow-Up) are retained
+as the original point-in-time audit record, not rewritten in place — but should not be read as
+describing current behavior. RC1 (`ENABLE_ADVENTURE_ROUTING` defaulting OFF) and RC4 (all routes
+DEFER) remain accurate as documented: RC1 is an intentional, still-current feature-flag default
+(not a bug), and RC4 was itself only ever a downstream consequence of RC1–RC3.
+
+**Root Cause 2 — urban_political has zero resource nodes: (historical — RESOLVED, see Status update above)**
 
 > **Ticket:** TCK-20260627-P0B-URBAN-RESOURCE-NODES
 
@@ -239,7 +251,7 @@ After completing P0-HUNGER-SATIATION and P0-ENTITY-INIT, a controlled measuremen
 | Measurement Confidence | 5 | Confirmed: `len(state.resource_nodes) == 0` after `WorldCompiler.compile()` |
 | Fix Urgency | 5 | Blocks all economic measurement for urban_political world |
 
-**Root Cause 3 — Entity navigation.region_id is None:**
+**Root Cause 3 — Entity navigation.region_id is None: (historical — RESOLVED, see Status update above)**
 
 > **Ticket:** TCK-20260627-P0C-ENTITY-REGION-ASSIGN
 

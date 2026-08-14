@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-BEHAVIORAL-MISC
 phase: done
 date: 2026-06-23
-tags: [test-repair, ci-gate, rejection-audit, hunger, pipeline, P2]
+tags: [test-repair, ci-gate, rejection-audit, hunger, pipeline]
 ---
 
 # TCK-20260623-FIX-BEHAVIORAL-MISC

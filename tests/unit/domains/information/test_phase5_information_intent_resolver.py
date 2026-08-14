@@ -9,6 +9,7 @@ from src.core.builder import V2EntityBuilder
 from src.core.state import CombatComponent, BiologicalComponent, PersonalityComponent, AuthoritativeState
 from src.domains.information.schema import InformationSourceCandidate, InformationQuery
 from src.domains.information.resolver import InformationIntentResolver
+from src.world.providers.information import InformationResponse
 
 
 def _entity(e_id, x=0.0, y=0.0, gold=100):
@@ -83,9 +84,39 @@ def test_near_source_resolves_to_ask_information():
     q = InformationQuery(subject="iron_ore", kind="material_source")
     
     intent = InformationIntentResolver.resolve(actor, cand, q, state)
-    
+
     assert intent is not None
     assert intent.kind == "ASK_INFORMATION"
     assert intent.target_id == 2
     assert intent.payload.get("cost_paid") == 5
     assert intent.payload.get("subject") == "iron_ore"
+
+
+def test_intent_resolver_insufficient_gold_produces_signal_not_silent_none():
+    """TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE fix 3: the affordability gate must
+    return a structured InformationResponse(answer_kind="insufficient_gold", ...) signal,
+    consumable by KnowledgeModelService.assimilate()'s existing branch, instead of a bare
+    None that silently drops the outcome."""
+    actor = _entity(1, x=0.0, y=0.0, gold=0)
+    source = _entity(2, x=1.0, y=1.0)  # near (dist = 1.41)
+    state = _state([actor, source])
+
+    cand = InformationSourceCandidate(
+        source_id=2,
+        source_kind="guide",
+        expected_relevance=0.8,
+        expected_certainty=0.7,
+        cost_gold=5,
+        distance_cost=1.41,
+        trust_score=0.5,
+        reason="Matched guide scope.",
+    )
+
+    q = InformationQuery(subject="iron_ore", kind="material_source")
+
+    result = InformationIntentResolver.resolve(actor, cand, q, state)
+
+    assert isinstance(result, InformationResponse)
+    assert result.answer_kind == "insufficient_gold"
+    assert result.cost_gold == 5
+    assert result.source_id == "2"

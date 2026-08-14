@@ -1,6 +1,6 @@
 ---
 name: prompt-builder
-description: 'Guide users through creating high-quality GitHub Copilot prompts with proper structure, tools, and best practices.'
+description: 'Guides creation of high-quality structured prompts with proper tool and format conventions.'
 ---
 
 # Professional Prompt Builder

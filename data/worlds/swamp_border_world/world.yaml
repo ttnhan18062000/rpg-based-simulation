@@ -3,12 +3,43 @@ schema_version: "worldcomposition.v1"
 world_id: "swamp_border_world"
 name: "Swamp Border World"
 description: "Frontier settlement with an adjacent sunken swamp inhabited by lizardfolk tribes and swamp trolls."
-modules:
-  - "frontier_village_core"
-  - "wolf_den_near_forest"
-  - "sunken_swamp_border"
+module_refs:
+  - module_id: "frontier_village_core"
+    order: 0
+  - module_id: "wolf_den_near_forest"
+    order: 1
+  - module_id: "sunken_swamp_border"
+    order: 2
+  - module_id: "trading_company_hub"
+    order: 3
+    namespace: "trading"
+    parameters:
+      merchant_count: 3
 default_perspectives:
   - "hero_guild_perspective"
   - "wild_beast_pack_perspective"
   - "swamp_tribe_perspective"
 generation_seed: 77
+faction_tension_overrides:
+  town_council: 0.5
+  swamp_tribe: 0.5
+information_source_profiles:
+  - source_id: "town_notice_board"
+    source_kind: "guide"
+    knowledge_scopes: ["regional_danger", "common_resource_sources"]
+    accuracy: 0.4
+    freshness: 0.6
+    bias: 0.1
+    cost_gold: 0
+    max_answers_per_query: 2
+pending_information_responses:
+  - target_population_id: "frontier_village_population_frontier_guard"
+    subject: "swamp_border_danger"
+    query_kind: "danger_rating"
+    source_id: "town_notice_board"
+    answer_kind: "KNOWN_FACT"
+    certainty: 0.7
+    details:
+      danger_level: "elevated"
+      region: "swamp_border_territory"
+    cost_paid: 0

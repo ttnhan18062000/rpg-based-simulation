@@ -98,6 +98,7 @@ class CognitionProfileDefinition(CatalogBaseDefinition):
     social_reading: Optional[str] = Field(None)
     social_reasoning: Optional[str] = Field(None)
     risk_modeling: Optional[str] = Field(None)
+    supports_adventure_routing: bool = Field(False)
 
 
 class StatsProfileDefinition(CatalogBaseDefinition):

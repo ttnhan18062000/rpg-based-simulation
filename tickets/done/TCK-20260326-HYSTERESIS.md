@@ -15,7 +15,7 @@ tags: [hysteresis]
 Goal Hysteresis & Anti-Oscillation System
 
 ## Priority
-P1: High
+P1
 
 ## Description
 Entities oscillate between states (Combat↔Flee, Loot↔Wander) when their scores are near decision boundaries. The existing `HysteresisModifier` (1.25x boost to current goal) is insufficient — a mere 25% bonus is easily overcome by large score swings (e.g., HP crossing the flee threshold causes +200% flee score). This sub-ticket implements robust anti-oscillation with minimum commitment duration and cooldown penalties.

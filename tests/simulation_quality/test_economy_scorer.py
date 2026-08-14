@@ -123,7 +123,7 @@ class TestMiscPositives:
     def test_paid_info_transaction(self, scorer: EconomyScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("paid_info_transaction"), _ctx())
         assert rec is not None
-        assert rec.delta == scoring_weights["knowledge_economy_active"]
+        assert rec.delta == scoring_weights.for_pillar("ECONOMY")["knowledge_economy_active"]
 
     def test_quest_reward_dispensed(self, scorer: EconomyScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("quest_reward_dispensed"), _ctx())

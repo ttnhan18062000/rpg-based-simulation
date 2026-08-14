@@ -90,10 +90,12 @@ def test_unknown_workflow_rejected(tmp_path: Path):
     assert "Unknown or unregistered skill" in str(excinfo.value)
 
 def test_real_registry_contracts():
-    """Verify the actual Phase 14 workflow contracts registered in the project."""
-    project_root = Path(__file__).resolve().parents[3]
-    workflows_dir = project_root / ".agents" / "workflows"
-    skills_dir = project_root / ".agents" / "skills"
+    """Verify workflow contract parsing against a frozen snapshot of the real Phase 14
+    contracts — decoupled from live .agents/ per TCK-20260721-AGENTS-DIR-DISPOSITION,
+    which classifies .agents/workflows/ as archive-retire."""
+    fixtures_dir = Path(__file__).resolve().parent / "fixtures"
+    workflows_dir = fixtures_dir / "agents_workflows"
+    skills_dir = fixtures_dir / "agents_skills"
 
     registry = WorkflowRegistry(workflows_dir, skills_dir)
     registry.scan_and_register()

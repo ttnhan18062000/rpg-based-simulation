@@ -15,7 +15,7 @@ tags: [strategic, intel]
 Strategic Resource Intelligence and Blocker/Lead Recovery
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

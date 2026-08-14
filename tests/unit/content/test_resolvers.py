@@ -872,3 +872,33 @@ class TestPopulationSpecArchetypeId:
             assert loaded_repo.get_entity_archetype(arch.archetype_id) is not None, (
                 f"archetype_id '{arch.archetype_id}' not found in catalog"
             )
+
+
+# ===========================================================================
+# TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY: supports_adventure_routing field
+# ===========================================================================
+
+def test_schema_supports_adventure_routing_field(loaded_repo: CatalogRepository):
+    """CognitionProfileDefinition.supports_adventure_routing defaults False and all 7 authored
+    profiles in data/content/living/cognition_profiles.yaml parse with their intended explicit
+    value (no profile silently left at the schema default by omission)."""
+    expected = {
+        "practical_humanoid": True,
+        "instinctive_animal": False,
+        "opportunistic_humanoid": True,
+        "disciplined_guard": True,
+        "trade_pragmatist": True,
+        "arcane_scholar": True,
+        "undead_fixated": False,
+    }
+    for profile_id, expected_value in expected.items():
+        profile = loaded_repo.get_cognition_profile(profile_id)
+        assert profile is not None, f"cognition profile '{profile_id}' not found in catalog"
+        assert isinstance(profile.supports_adventure_routing, bool)
+        assert profile.supports_adventure_routing is expected_value, (
+            f"{profile_id}.supports_adventure_routing expected {expected_value}, "
+            f"got {profile.supports_adventure_routing}"
+        )
+
+    unauthored = CognitionProfileDefinition(id="unauthored_test_profile")
+    assert unauthored.supports_adventure_routing is False

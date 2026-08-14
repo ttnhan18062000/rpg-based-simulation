@@ -634,6 +634,17 @@ class WorldAssemblyResolver:
                     details={"tags": qd.tags, "reward_budget": qd.reward_budget}
                 )
 
+        # Apply composition-level faction tension overrides after catalog/module merge
+        for f_id, tension in normalized_comp.faction_tension_overrides.items():
+            if f_id not in factions:
+                raise ValueError(
+                    f"faction_tension_overrides references unknown faction '{f_id}' "
+                    f"not present after catalog/module faction merge"
+                )
+            factions[f_id] = FactionSpec.model_validate(
+                {**factions[f_id].model_dump(), "initial_tension_level": tension}
+            )
+
         # Resolve perspectives declared in composition (WORLD-ASM-009: unknown ID raises ResolverError)
         resolved_perspectives: Dict[str, Any] = {}
         for persp_id in normalized_comp.default_perspectives:
@@ -659,6 +670,9 @@ class WorldAssemblyResolver:
             topology=TopologySpec(width=width, height=height, coordinate_system="grid"),
             regions=list(regions.values()),
             factions=list(factions.values()),
+            information_source_profiles=list(normalized_comp.information_source_profiles),
+            pending_information_responses=list(normalized_comp.pending_information_responses),
+            pending_self_model_information_events=list(normalized_comp.pending_self_model_information_events),
             entities=list(entities.values()),
             resources=list(resources.values()),
             buildings=list(buildings.values()),

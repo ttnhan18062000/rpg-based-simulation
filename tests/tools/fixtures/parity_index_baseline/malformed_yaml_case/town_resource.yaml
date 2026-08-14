@@ -1,0 +1,6 @@
+- id: TR-101
+  text: Synthetic entry proving the malformed sibling shard is skipped, not fatal.
+  status: verified
+  priority: P1
+  v2_evidence: src/town/harvest.py
+  test_path: tests/unit/test_harvest.py

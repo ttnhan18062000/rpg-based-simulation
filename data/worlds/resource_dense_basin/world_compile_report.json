@@ -1,0 +1,13 @@
+{
+  "world_id": "resource_dense_basin",
+  "seed": 602,
+  "entity_count": 23,
+  "region_count": 3,
+  "resource_node_count": 7,
+  "building_count": 6,
+  "quest_count": 7,
+  "distinct_populated_factions": 4,
+  "warnings": [],
+  "compile_duration_ms": 10.779347008792683,
+  "state_hash": "80a25a56b30d8a349b19823298a5147f"
+}

@@ -84,7 +84,24 @@ If dirty check passes (nothing changed): only knowledge is merged if updated; no
 2. Maps the returned `SelfModelBundle` back into `EntityUpdate(self_model_bundle_set=...)`
 3. Returns the refined `StateUpdate`
 
-The resulting `SelfModelBundle` is written to `entity.self_model` through the authoritative apply path.
+The resulting `SelfModelBundle` is written to `entity.self_model` through the authoritative apply path
+(`SelfModelPatch`, `src/engine/patches.py`, wired into `extract_patches()` —
+`TCK-20260703-SIMQ-UPLIFT3-BRANCH-B`, 2026-07-04; previously `self_model_bundle_set` was silently
+dropped by every apply pass for every entity — see `docs/parity_ledger/substrate.yaml::SUB-374`).
+
+`SelfModelUpdatePhase.apply()` sources this tick's `events` from
+`AuthoritativeState.pending_self_model_information_events` (compile-time-seeded, filtered by
+`actor_id` — see `docs/parity_ledger/infrastructure.yaml::INFRA-259`), not a live event bus or
+provider call.
+
+**2026-07-04 confirmation (`TCK-20260703-SIMQ-UPLIFT3-BRANCH-B`):** the Dirty check section above
+("No InformationResponse events arrived for this entity this tick") now genuinely matches code —
+`self_model_phase.py`'s `SelfModelUpdatePhase.apply()` previously hardcoded `events=[]`
+unconditionally, making this sentence vacuously true (there was never any other outcome). It now
+groups `pending_self_model_information_events` by `actor_id` and passes each entity's real events,
+so the sentence describes an actual runtime condition, not a permanent one. This is gated by
+`ENABLE_SELF_MODEL_COGNITION`, which stays `OFF` in every shipped calibration profile — the fix
+makes the mechanism correct and reachable, it does not turn the flag on anywhere.
 
 ---
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional, Any, Dict, List
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 
-from src.worldbuilding.schema import RegionSpec, FactionSpec, PopulationSpec, QuestDefinition
+from src.worldbuilding.schema import RegionSpec, FactionSpec, PopulationSpec, QuestDefinition, InformationSourceProfileSpec, PendingInformationResponseSpec, PendingSelfModelInformationEventSpec
 
 
 class ModuleRefSpec(BaseModel):
@@ -37,6 +37,28 @@ class WorldCompositionSpec(BaseModel):
     global_parameters: Dict[str, Any] = Field(default_factory=dict, description="Global configuration variables")
     generation_seed: int = Field(42, description="Seed for deterministic procedural resolution")
     validation_profile: str = Field("local_dev", description="Validation profile budget category (e.g. local_dev, ci)")
+    faction_tension_overrides: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Per-faction initial_tension_level overrides scoped to this composition only. Keys must be catalog-registered faction IDs already present after module merge."
+    )
+    information_source_profiles: List[InformationSourceProfileSpec] = Field(
+        default_factory=list,
+        description="Information sources declared directly on this composition (no global catalog exists for this content — see UQ-1 resolution in plan.md). Scoped to this composition only."
+    )
+    pending_information_responses: List[PendingInformationResponseSpec] = Field(
+        default_factory=list,
+        description="Compile-time-seeded pending information responses, targeted at a population "
+                    "by target_population_id. No global catalog exists for this content (same "
+                    "reasoning as information_source_profiles). Scoped to this composition only."
+    )
+    pending_self_model_information_events: List[PendingSelfModelInformationEventSpec] = Field(
+        default_factory=list,
+        description="Compile-time-seeded InformationResponse-shaped events for "
+                    "SelfModelUpdatePhase's Step 1 (KnowledgeModelService.assimilate()). No global "
+                    "catalog exists for this content (same reasoning as "
+                    "information_source_profiles/pending_information_responses). Scoped to this "
+                    "composition only."
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -143,6 +165,28 @@ class NormalizedWorldComposition(BaseModel):
     global_parameters: Dict[str, Any] = Field(default_factory=dict, description="Global configuration variables")
     generation_seed: int = Field(42, description="Seed for deterministic procedural resolution")
     validation_profile: str = Field("local_dev", description="Validation profile budget category (e.g. local_dev, ci)")
+    faction_tension_overrides: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Per-faction initial_tension_level overrides scoped to this composition only. Keys must be catalog-registered faction IDs already present after module merge."
+    )
+    information_source_profiles: List[InformationSourceProfileSpec] = Field(
+        default_factory=list,
+        description="Information sources declared directly on this composition (no global catalog exists for this content — see UQ-1 resolution in plan.md). Scoped to this composition only."
+    )
+    pending_information_responses: List[PendingInformationResponseSpec] = Field(
+        default_factory=list,
+        description="Compile-time-seeded pending information responses, targeted at a population "
+                    "by target_population_id. No global catalog exists for this content (same "
+                    "reasoning as information_source_profiles). Scoped to this composition only."
+    )
+    pending_self_model_information_events: List[PendingSelfModelInformationEventSpec] = Field(
+        default_factory=list,
+        description="Compile-time-seeded InformationResponse-shaped events for "
+                    "SelfModelUpdatePhase's Step 1 (KnowledgeModelService.assimilate()). No global "
+                    "catalog exists for this content (same reasoning as "
+                    "information_source_profiles/pending_information_responses). Scoped to this "
+                    "composition only."
+    )
 
     @field_validator("schema_version")
     @classmethod

@@ -15,7 +15,7 @@ tags: [md, task3, harden, fallback, and, bounds]
 Harden fallback, failure handling, and bounded execution controls
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

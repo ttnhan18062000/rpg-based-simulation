@@ -12,7 +12,10 @@ tags: [town, buildings, economy, sabotage, contract]
 **Source:** `src/town/` (10 files: blacksmith.py, buildings.py, class_hall.py, guild.py, home.py, home_storage.py, inn.py, sabotage.py, shop.py, town_navigation.py)  
 **Authoritative status:** Town state IS authoritative — `BuildingState` participates in `AuthoritativeState` and its hash.  
 **RPG economic laws:** `docs/mechanics/03_economic_laws.md` (atomic conservation — do not duplicate here).  
-**System overview:** `docs/systems/buildings_and_economy.md` (do not duplicate here).
+**System overview:** `docs/systems/buildings_and_economy.md` was archived 2026-08-10
+(`TCK-20260809-STALE-DOCS-AI-BRAIN-ARCHITECTURE-AUDIT` — cited a non-existent `src/core/buildings.py`)
+to `docs/archive/systems/buildings_and_economy.md`. This contract is now the primary current
+technical reference for town/building behavior; no separate overview doc exists.
 
 ---
 

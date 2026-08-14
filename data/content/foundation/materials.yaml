@@ -60,6 +60,12 @@
   common_regions: ["ruin", "battlefield", "barrow"]
 
 # STATE: ADDITIONAL
+- id: "stone"
+  display_name: "Stone"
+  categories: ["mineral", "crafting", "construction"]
+  common_regions: ["frontier_village", "mountain", "mine"]
+
+# STATE: ADDITIONAL
 - id: "steel"
   display_name: "Steel"
   categories: ["metal", "crafted", "weapon"]

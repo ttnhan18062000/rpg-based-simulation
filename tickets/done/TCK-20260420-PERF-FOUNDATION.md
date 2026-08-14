@@ -15,7 +15,7 @@ tags: [perf, foundation]
 Benchmarking and Profiling Foundation (Milestone 3)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

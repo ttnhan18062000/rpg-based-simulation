@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Tuple, Optional, Any, Dict, List
 from dataclasses import replace
 
 from src.core.movement_modes import MovementMode
-from src.core.updates import EntityUpdate, NavigationUpdate, StaminaUpdate
+from src.core.updates import EntityUpdate, NavigationUpdate, StaminaUpdate, LifecycleUpdate
 from src.core.enums import ReasonCode
 
 from src.engine.legality import LegalityServiceV2
@@ -185,6 +185,19 @@ class MovementSystem:
         if mode == MovementMode.RETREAT and entity.combat.action_style == 2: # EVASIVE
              skip_oa = True
 
+        # Real, additive tag for a genuine successful escape (real hostile(s) present, would have
+        # attacked, but didn't) -- previously left zero trace on the returned EntityUpdate, making
+        # this real outcome indistinguishable from an ordinary move with nothing nearby
+        # (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY). Mirrors this file's own established
+        # property_updates pattern (see "movement_resolution": "POSITION_SWAP" elsewhere in this
+        # module) -- purely additive, no change to the real skip_oa/OA resolution logic itself.
+        escape_tag: Dict[str, Any] = {}
+        if engaged_hostiles and skip_oa:
+            escape_tag = {
+                "combat_escape": "EVASIVE_SUCCESS",
+                "combat_escape_evaded_ids": list(engaged_hostiles),
+            }
+
         # 5. Opportunity Attack Trigger (Checklist Section 8)
         # Logic ID: COMB-009 (Disengagement, pursuit, target stickiness are explicit rules)
         # Logic ID: COMB-272 (Disengagement has explicit consequence)
@@ -201,16 +214,38 @@ class MovementSystem:
                 combat_update = CombatResolutionSystem.resolve_multi_attack(
                     attackers, entity, state_or_context, is_opportunity_attack=True, is_lethal=False
                 )
-                updates[entity.id] = EntityUpdate(entity_id=entity.id, combat=combat_update)
+                # Lift generation_delta/is_permadeath_set onto entity's own top-level lifecycle
+                # field, mirroring the reference pattern in combat_actions.py::execute_attack()'s
+                # defender_up construction -- left un-lifted (as with resource_transfers before
+                # it), rebirth/permadeath was computed correctly inside combat_update but never
+                # applied to real state (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION).
+                lifecycle_upd = LifecycleUpdate(
+                    age_delta=0,
+                    generation_delta=combat_update.generation_delta,
+                    is_permadeath_set=combat_update.is_permadeath_set,
+                ) if (combat_update.generation_delta != 0 or combat_update.is_permadeath_set is not None) else None
+                updates[entity.id] = EntityUpdate(entity_id=entity.id, combat=combat_update, lifecycle=lifecycle_upd)
+
+                # combat_update.resource_transfers rewards whoever defeated `entity` (the
+                # attackers), not `entity` itself — must be lifted onto the attacker's own
+                # top-level EntityUpdate.resource_transfers, the only field
+                # ResourceTransactionSystem.resolve_all() reads (src/engine/economy.py:58).
+                # Left un-lifted, the reward was silently orphaned inside a nested CombatUpdate
+                # that nothing ever reads back out. attacker_id follows the same "first attacker"
+                # attribution convention already used for multi-attacker kills elsewhere
+                # (src/observability/event_shapers.py:158).
+                if combat_update.resource_transfers and combat_update.attacker_id is not None:
+                    reward_upd = EntityUpdate(
+                        entity_id=combat_update.attacker_id,
+                        resource_transfers=combat_update.resource_transfers,
+                    )
+                    existing_attacker_upd = updates.get(combat_update.attacker_id)
+                    updates[combat_update.attacker_id] = (
+                        existing_attacker_upd.merge(reward_upd) if existing_attacker_upd else reward_upd
+                    )
 
         # 6. Final Subject Execution
         actor_up = updates.get(entity.id, EntityUpdate(entity_id=entity.id))
-        
-        # Terrain Cost (Checklist Section 7)
-        terrain_cost = 1.0
-        if success and effective_target:
-            tile = (int(effective_target[0]), int(effective_target[1]))
-            terrain_cost = TerrainCostService.get_tile_cost(tile, state_or_context)
 
         # Stamina drain on movement (Checklist Part 6 Section E)
         # VERIFIED v2: stamina_drain_movement
@@ -236,18 +271,23 @@ class MovementSystem:
             region_id_set=new_region_id
         )
 
-        # VERIFIED v2: environmental_move_cost
-        # Logic ID: COMB-199 (Movement cost applied during authoritative application)
-        readiness_cost = (entity.combat.move_cost * terrain_cost) / max(0.1, move_speed_mult)
-
+        # Movement no longer costs readiness (TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-
+        # DECOUPLE): readiness's own documented contract (docs/engine/contracts/minimal_kernel.md
+        # Section 5) is a pure attack-eligibility/cooldown gate, not a movement-fatigue resource --
+        # stamina (stamina_upd above, VERIFIED v2: stamina_drain_movement) already fills that role
+        # with its own separate regen and exhaustion mechanic
+        # (docs/combat/combat_movement_overhaul_spec.md Section 5). Movement previously
+        # double-costed both resources, meaning any entity that had to travel to reach a hostile
+        # arrived readiness-depleted even with passive readiness regen active, capping the real
+        # corpus-wide attack-legal rate at ~1.3% even after
+        # TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION's own fixes.
         updates[entity.id] = replace(
             actor_up,
             new_position=effective_target,
             moved_this_tick=success,
-            # VERIFIED v2: authoritative_move_cost
-            readiness_delta=-readiness_cost if success else 0.0,
             navigation=nav_upd,
-            stamina_update=stamina_upd
+            stamina_update=stamina_upd,
+            property_updates={**actor_up.property_updates, **escape_tag} if escape_tag else actor_up.property_updates
         )
 
         

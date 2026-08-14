@@ -85,9 +85,74 @@ const COMPREHEND_SCHEMA = {
       type: 'string',
       description: 'One sentence: N concerns extracted from the proposal (≤200 chars)',
     },
+    ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ`, captured first' },
   },
 }
 
+// ─── Agent Monitoring Setup ────────────────────────────────────────────────────
+// Hard rule: mandatory for every run (including hotfix). Failure is non-fatal.
+// No single ticket_id exists yet (this workflow creates N tickets), so run_id
+// is derived from the source doc path — mirrors implement-epic's FOLDER-{path}.
+
+const sourceSlug = source.replace(/\.[^/.]+$/, '').replace(/[^A-Za-z0-9]+/g, '-').toUpperCase().replace(/^-+|-+$/g, '')
+const runId = `CREATE-TICKETS-${sourceSlug}`
+
+const events = []
+// reasonCode (TCK-20260706-CREATE-TICKETS-TAG-CHECK, reusing the reason_code field from
+// TCK-20260706-MONITORING-REASON-CODE): optional, null by default. Populated on the Structure
+// phase's 'blocked' event when tasks are skipped for having an unregistered tag.
+const pushEvent = (phaseLabel, agentName, status, summary, ts, reasonCode) => {
+  events.push({
+    seq: events.length + 1,
+    phase: phaseLabel,
+    agent: agentName,
+    status,
+    summary: (summary || '').toString().slice(0, 200),
+    ts: ts || null,
+    reason_code: reasonCode || null,
+  })
+}
+
+let startTs = null
+
+// Orchestrator-side ts capture — replaces the former "Step 0: run `date -u ...`"
+// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). This file has no
+// writeSidecar mechanism, so it gets its own local helper, called immediately before the
+// Comprehend `agent()` call.
+const captureTs = async () => {
+  const out = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  return (out || '').trim() || null
+}
+
+const writeMonitoring = async (finalStatus) => {
+  const eventsJson = JSON.stringify(events)
+  const eventsCount = events.length
+  const startTsLiteral = startTs ? startTs : '<END_TS>'
+  const result = await agent(
+    `Write agent monitoring records for run "${runId}". This is bookkeeping — do NOT fail if writes error.
+
+Step 1 — get current timestamp (run end time):
+  Run via Bash: date -u +%Y-%m-%dT%H:%M:%SZ
+  Save result as END_TS. Replace every literal <END_TS> in the commands below with this value.
+
+Step 2 — build and write events:
+  Input events: ${eventsJson}
+  For each event: add "run_id": "${runId}". If "ts" is null or missing, set "ts" to END_TS.
+  Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
+
+Step 3 — write run record (replace <END_TS> with the value from Step 1):
+  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${runId}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"create-tickets","tier":"n/a","final_status":"${finalStatus}","agent_count":${eventsCount}}'
+
+If any command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
+Return "monitoring written" or "monitoring write failed: <reason>".`,
+    { label: 'monitoring-write' }
+  )
+  if (!result) {
+    log('WARNING: agent-monitoring write agent returned null (non-fatal)')
+  }
+}
+
+const comprehendTs = await captureTs()
 const comprehension = await agent(
   `Read a proposal document and extract the discrete concerns the author is describing.
 
@@ -127,9 +192,14 @@ Return: concerns[], summary (one sentence: N concerns extracted).`,
   { label: 'comprehend', schema: COMPREHEND_SCHEMA }
 )
 
+startTs = comprehendTs || null
+
 log(`Comprehend: ${comprehension.summary}`)
+pushEvent('Comprehend', 'create-tickets', 'ok', comprehension.summary, startTs)
 
 if (comprehension.concerns.length === 0) {
+  pushEvent('Comprehend', 'create-tickets', 'skipped', 'No actionable concerns found in the proposal', startTs)
+  await writeMonitoring('NOTHING_TO_CREATE')
   return {
     status: 'NOTHING_TO_CREATE',
     source,
@@ -232,7 +302,7 @@ const investigations = await pipeline(
     const registryLayers = DOMAIN_TO_LAYERS[domainKey] || ['core']
 
     return agent(
-      `Investigate concern "${concern.id}: ${concern.title}" using the project's structured knowledge assets before falling back to grep.
+      `Investigate concern "${concern.id}: ${concern.title}".
 
 Concern (from proposal):
   Title: ${concern.title}
@@ -244,108 +314,23 @@ Concern (from proposal):
 Raw excerpts from proposal:
 ${concern.raw_excerpts.map(e => `  - ${e}`).join('\n')}
 
-Work through these steps in order. Each step narrows the search so the next step is more targeted.
-Do NOT invent file paths — report only what the tools actually return.
+Registry layers to search: ${registryLayers.join(', ')}
 
-─── Step 0: Semantic prior-work retrieval ─────────────────────────────────────
-
-  Run (only if knowledge-index/ exists — the tool will self-check):
-    python3 tools/knowledge_search.py query "${concern.title} ${concern.description}" --top-k 5
-
-  If the command prints "knowledge index not found" or exits non-zero: skip and proceed to Step 1.
-  If results are returned: note each returned ticket ID and path. Use these as warm-start
-  candidates in Step 3 (prior ticket cross-reference) — check them in working_log.csv before
-  running additional keyword greps.
-
-─── Step 1: Knowledge graph — code structure ──────────────────────────────────
-
-  1a. Read graphify-out/GRAPH_REPORT.md for god nodes and community structure.
-      Identify which community/god node is most relevant to domain_area="${concern.domain_area}".
-
-  1b. Run the graphify CLI to find code nodes related to this concern:
-        graphify query "${concern.title}"
-      Note: if the CLI is unavailable, search graphify-out/graph.json via:
-        python3 -c "
-import json
-with open('graphify-out/graph.json') as f: g = json.load(f)
-terms = '${concern.title}'.lower().split()
-hits = [n for n in g.get('nodes', []) if any(t in str(n).lower() for t in terms)]
-for h in hits[:15]: print(h)
-"
-      Collect: node names, file paths, module names surfaced by the graph.
-
-─── Step 2: Docs and prior tickets via REGISTRY.yaml ──────────────────────────
-
-  Query REGISTRY.yaml for entries in the relevant layers (${registryLayers.join(', ')}):
-    python3 -c "
-import yaml
-with open('docs/REGISTRY.yaml') as f:
-    entries = yaml.safe_load(f)
-layers = ${JSON.stringify(registryLayers)}
-matches = [e for e in entries if e.get('layer') in layers]
-docs    = [e for e in matches if e.get('type') == 'doc']
-tickets = [e for e in matches if e.get('type') == 'ticket']
-print('=== DOCS ===')
-for e in docs[:20]:   print(e['path'], '-', e['title'])
-print('=== TICKETS ===')
-for e in tickets[:30]: print(e.get('ticket_id', e['path']), '-', e['title'])
-"
-
-  From the doc list: read the highest-authority entries (P0 first) that match this concern.
-  From the ticket list: note IDs for cross-referencing in step 3.
-
-─── Step 3: Prior ticket history via working_log.csv ──────────────────────────
-
-  Extract keywords from the concern title and description (nouns, domain terms).
-  Search ticket history for each keyword:
-    grep -i "<keyword>" tickets/working_log.csv
-
-  For up to 3 matching prior tickets, check if stored_artifacts/<ticket_id>/investigation.md exists.
-  If it does, read it — prior investigations in the same area often surface the same constraints and risks.
-  Determine if any prior ticket FULLY covers this concern (is_duplicate=true) or partially overlaps (related_ticket).
-
-─── Step 4: Code files ────────────────────────────────────────────────────────
-
-  Use the node names and file paths from Step 1 as primary targets.
-  Read up to 3 most relevant files to understand current behavior, missing logic, or broken state.
-  Note specific line ranges where the relevant logic lives.
-
-  Only fall back to grep if Step 1 returned no usable file paths:
-    grep -r "<noun from concern>" src/ --include="*.py" -l 2>/dev/null
-
-─── Step 5: Existing tests ────────────────────────────────────────────────────
-
-  Using file names found in Step 4, find their test counterparts:
-    find tests/ -name "test_<module_name>.py" 2>/dev/null
-  Also grep for key terms in tests/:
-    grep -r "<key term>" tests/ --include="*.py" -l 2>/dev/null
-  Identify specific test function names that already cover this area.
-
-─── Step 6: Derive acceptance criteria signals ────────────────────────────────
-
-  From: concern description + code behavior (step 4) + doc constraints (step 2) + test patterns (step 5)
-  Produce 2-4 concrete, testable AC signals. Each must describe a SPECIFIC, VERIFIABLE outcome.
-
-  Bad:  "the system handles this case correctly"
-  Bad:  "the feature works as expected"
-  Good: "harvesting a non-empty node returns quantity > 0 and decrements node.quantity by that amount"
-  Good: "calling resolve_conflict() with two overlapping regions raises RegionConflictError"
-
-─── Step 7: Assess tier ───────────────────────────────────────────────────────
-
-  hotfix: fix is in ≤1 file and ≤1 function, no new state, no architecture change
-  standard: anything else
-
-Return: concern_id="${concern.id}", files_found (only actual paths from steps 1/4), constraints
-(with doc path prefix), existing_tests, related_tickets, ac_signals, risks,
-is_duplicate, duplicate_of, tier_recommendation, summary.`,
-      { label: `investigate:${concern.id}`, schema: INVESTIGATION_SCHEMA }
+Return: concern_id="${concern.id}", plus all other INVESTIGATION_SCHEMA fields per your system prompt's methodology.`,
+      { agentType: 'concern-investigator', label: `investigate:${concern.id}`, schema: INVESTIGATION_SCHEMA }
     )
   }
 )
 
 const validInvestigations = investigations.filter(Boolean)
 log(`Investigate: ${validInvestigations.length}/${comprehension.concerns.length} concerns investigated`)
+
+for (const inv of validInvestigations) {
+  pushEvent('Investigate', `investigate:${inv.concern_id}`, inv.is_duplicate ? 'skipped' : 'ok', inv.summary, null)
+}
+if (validInvestigations.length < comprehension.concerns.length) {
+  pushEvent('Investigate', 'create-tickets', 'failed', `${comprehension.concerns.length - validInvestigations.length} investigation agent(s) returned null`, null)
+}
 
 const duplicates = validInvestigations.filter(i => i.is_duplicate)
 if (duplicates.length > 0) {
@@ -355,6 +340,7 @@ if (duplicates.length > 0) {
 const activeInvestigations = validInvestigations.filter(i => !i.is_duplicate)
 
 if (activeInvestigations.length === 0) {
+  await writeMonitoring('NOTHING_TO_CREATE')
   return {
     status: 'NOTHING_TO_CREATE',
     source,
@@ -374,13 +360,28 @@ phase('Structure')
 
 const TASK_SCHEMA = {
   type: 'object',
-  required: ['short_scope', 'title', 'tier', 'type', 'priority', 'request_summary', 'scope', 'out_of_scope', 'acceptance_criteria', 'related_code_areas'],
+  required: ['short_scope', 'title', 'tier', 'type', 'priority', 'request_summary', 'scope', 'out_of_scope', 'acceptance_criteria', 'related_code_areas', 'tags', 'suggested_skills', 'tag_relevance_flags'],
   properties: {
     short_scope: {
       type: 'string',
       description: 'UPPER-KEBAB-CASE, max 4 words, unique across all tasks in this batch. Descriptive, not generic.',
     },
     title: { type: 'string' },
+    tags: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Canonical-form tags (lowercase, hyphen-separated, never p0/p1/p2) per docs/guidelines/tag_taxonomy.md\'s full 5-category model — see prompt rule below.',
+    },
+    suggested_skills: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Mapped skill(s) from the tag->skill table below; empty array if no tag matches.',
+    },
+    tag_relevance_flags: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'One string "<tag>: <one-line reason>" per assigned tag whose registered note/category does not clearly match this concern\'s title/scope/files_found; empty array if every tag fits.',
+    },
     tier: { type: 'string', enum: ['hotfix', 'standard', 'epic'] },
     type: { type: 'string', enum: ['bug', 'feature', 'refactor', 'chore', 'repair'] },
     priority: { type: 'string', enum: ['P0', 'P1', 'P2'] },
@@ -504,6 +505,26 @@ Step 4 — produce ticket tasks using these strict rules:
   assumptions:
   - From investigation risks that remain as open questions
 
+  tags:
+  - Canonical form only: lowercase, hyphen-separated. Never emit p0/p1/p2 as tags.
+  - Follow docs/guidelines/tag_taxonomy.md's full 5-category model (Subsystem/Topic, Phase/Milestone, Process/Skill-signal, Quality-attribute, Meta-Process) — the same policy ticket-scoper.md uses for single-ticket scoping.
+  - Include a Process/Skill-signal tag from this closed list ONLY when it applies: api-design, debugging, performance, security
+  - Assign a Subsystem/Topic (or Phase/Milestone, Quality-attribute, Meta-Process) tag only when this concern's investigated files_found or domain clearly indicates one — e.g. files_found under dashboard-frontend/ or src/api/agent_ops_dashboard/ -> dashboard; files_found touching agent-monitoring/*.jsonl -> observability. Do not guess a tag from the title alone if files_found doesn't support it.
+  - If nothing clearly applies, tags may be an empty array.
+
+  tag_relevance_flags:
+  - For each tag assigned above, briefly self-check: does this tag's own registered note/category
+    (see `python3 tools/tag_registry.py list`) plausibly match this concern's title, scope, and
+    files_found/related_code_areas? This is additive to the files_found-evidence guardrail above —
+    it does not replace or weaken it. If a tag does not clearly fit, add one string
+    "<tag>: <one-line reason>". Empty array if every tag clearly fits or no tags were assigned.
+
+  suggested_skills:
+  - Run \`python3 tools/tag_registry.py skill-mapping\` and match each assigned
+    Process/Skill-signal tag against its JSON keys the same way (skill field, or
+    Agent(subagent_type: carveout_agent) if a carve-out applies per its carveout_paths); empty
+    array if nothing matches. Do not invent mappings for tags outside this live mapping's keys.
+
   tier:
   - Use investigation's tier_recommendation
   - Override to 'standard' if scope, out_of_scope, or AC count suggests more than a one-liner
@@ -520,11 +541,13 @@ Return: date (YYYYMMDD), folder_name, tasks[], skipped[], summary.`,
 )
 
 log(`Structure: ${structured.summary}`)
+pushEvent('Structure', 'structure', structured.tasks.length > 0 ? 'ok' : 'skipped', structured.summary, null)
 if (structured.skipped.length > 0) {
   log(`Skipped: ${structured.skipped.join(' | ')}`)
 }
 
 if (structured.tasks.length === 0) {
+  await writeMonitoring('NOTHING_TO_CREATE')
   return {
     status: 'NOTHING_TO_CREATE',
     source,
@@ -550,13 +573,63 @@ if (droppedScopes.length > 0) {
   log(`WARNING: duplicate short_scope from structure — dropped: ${droppedScopes.join(', ')}`)
 }
 
+// Tag-registry check (TCK-20260706-CREATE-TICKETS-TAG-CHECK): orchestrator-run, same pattern as
+// implement-ticket.js's Scope-phase check. Mirrors droppedScopes' defensive-skip precedent
+// directly above — the structure agent may still produce an unregistered tag despite
+// instructions restricting it to a closed 4-tag list; skip writing that task and continue the
+// batch, rather than aborting all N tickets over one task's tag.
+const allBatchTags = [...new Set(dedupedTasks.flatMap(t => t.tags || []))]
+const tagsArgs = allBatchTags.map(t => `"${t}"`).join(' ')
+const tagCheckOutput = tagsArgs ? await bash(
+  `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from tag_registry import check_tags_registered
+print('TAG_CHECK_JSON:' + json.dumps(check_tags_registered(sys.argv[1:])))
+" ${tagsArgs}`
+) : 'TAG_CHECK_JSON:[]'
+let unregisteredBatchTags = []
+const tagCheckMarkerIndex = tagCheckOutput.indexOf('TAG_CHECK_JSON:')
+if (tagCheckMarkerIndex !== -1) {
+  try { unregisteredBatchTags = JSON.parse(tagCheckOutput.slice(tagCheckMarkerIndex + 'TAG_CHECK_JSON:'.length).trim()) }
+  catch (e) { unregisteredBatchTags = [] }
+}
+
+let tasksReadyToWrite = dedupedTasks
+const tasksWithUnregisteredTags = []
+if (unregisteredBatchTags.length > 0) {
+  const unregisteredSet = new Set(unregisteredBatchTags)
+  tasksReadyToWrite = []
+  for (const task of dedupedTasks) {
+    const badTags = (task.tags || []).filter(t => unregisteredSet.has(t))
+    if (badTags.length > 0) {
+      tasksWithUnregisteredTags.push({ short_scope: task.short_scope, tags: badTags })
+    } else {
+      tasksReadyToWrite.push(task)
+    }
+  }
+  log(`WARNING: unregistered tag(s) — skipping write for: ${tasksWithUnregisteredTags.map(t => `${t.short_scope} (${t.tags.join(', ')})`).join(' | ')}`)
+  log('Register each via `python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`, then re-run to pick up the skipped concern(s).')
+  pushEvent('Structure', 'create-tickets', 'blocked', `${tasksWithUnregisteredTags.length} task(s) skipped — unregistered tag(s)`, null, 'tag_registry_rejection')
+}
+
+const tasksWithSkills = tasksReadyToWrite.filter(t => t.suggested_skills && t.suggested_skills.length > 0)
+if (tasksWithSkills.length > 0) {
+  log(`Suggested skills: ${tasksWithSkills.map(t => `${t.short_scope}: ${t.suggested_skills.join(', ')}`).join(' | ')}`)
+}
+
+const tasksWithRelevanceFlags = tasksReadyToWrite.filter(t => t.tag_relevance_flags && t.tag_relevance_flags.length > 0)
+if (tasksWithRelevanceFlags.length > 0) {
+  log(`Tag relevance flags: ${tasksWithRelevanceFlags.map(t => `${t.short_scope}: ${t.tag_relevance_flags.join('; ')}`).join(' | ')}`)
+}
+
 const outputFolder = outputOverride
   ? (outputOverride.endsWith('/') ? outputOverride : outputOverride + '/')
   : `tickets/todos/${structured.folder_name}/`
 
 const dateStr = structured.date
 
-log(`Writing ${dedupedTasks.length} ticket(s) to ${outputFolder}`)
+log(`Writing ${tasksReadyToWrite.length} ticket(s) to ${outputFolder}`)
 
 // ─── Phase 4: Write (parallel) ────────────────────────────────────────────────
 //
@@ -578,7 +651,7 @@ const WRITE_SCHEMA = {
 }
 
 const written = await pipeline(
-  dedupedTasks,
+  tasksReadyToWrite,
   (task) => {
     const ticketId = `TCK-${dateStr}-${task.short_scope}`
     const ticketPath = `${outputFolder}${ticketId}.md`
@@ -604,13 +677,13 @@ Steps:
    Frontmatter block (substitute actual values):
    ---
    status: active
-   layer: <infer from task.related_code_areas and task.title — use LAYER_VALUES in tools/validate_frontmatter.py>
+   layer: <infer from task.related_code_areas and task.title — registered in registries/layer_registry.jsonl, `python3 tools/layer_registry.py list` to see valid values>
    authority: P1
    audience: agent
    ticket_id: ${ticketId}
    phase: open
    date: <YYYY-MM-DD from TS>
-   tags: []
+   tags: <substitute task.tags as a YAML flow-sequence, e.g. [tagging, skills]; use [] only if task.tags is empty>
    ---
 
    Map task data to markdown sections:
@@ -640,20 +713,26 @@ summary (one sentence confirming the file was written, ≤200 chars), ts=TS.`,
 const succeeded = written.filter(Boolean)
 const ticketIds = succeeded.map(w => w.ticket_id)
 
-log(`Written: ${succeeded.length}/${dedupedTasks.length} tickets`)
-if (succeeded.length < dedupedTasks.length) {
-  log(`WARNING: ${dedupedTasks.length - succeeded.length} write agent(s) returned null`)
+log(`Written: ${succeeded.length}/${tasksReadyToWrite.length} tickets`)
+for (const w of succeeded) {
+  pushEvent('Write', 'ticket-scoper', 'ok', w.summary || `Wrote ${w.ticket_id}`, w.ts)
+}
+if (succeeded.length < tasksReadyToWrite.length) {
+  log(`WARNING: ${tasksReadyToWrite.length - succeeded.length} write agent(s) returned null`)
+  pushEvent('Write', 'ticket-scoper', 'failed', `${tasksReadyToWrite.length - succeeded.length} write agent(s) returned null`, null)
 }
 
 // ─── Auto-generate SEQUENCE.md when intra-batch dependencies exist ────────────
 //
 // Detect which tickets depend on other tickets in this same batch,
 // topological-sort them, and write SEQUENCE.md if any deps were found.
+// Uses tasksReadyToWrite, not dedupedTasks — a task skipped for an unregistered tag was never
+// written, so it must not appear in the dependency graph either (TCK-20260706-CREATE-TICKETS-TAG-CHECK).
 
-const batchIdSet = new Set(dedupedTasks.map(t => `TCK-${dateStr}-${t.short_scope}`))
+const batchIdSet = new Set(tasksReadyToWrite.map(t => `TCK-${dateStr}-${t.short_scope}`))
 
 const depMap = new Map()
-for (const task of dedupedTasks) {
+for (const task of tasksReadyToWrite) {
   const ticketId = `TCK-${dateStr}-${task.short_scope}`
   const prereqs = new Set()
   for (const rt of (task.related_tickets || [])) {
@@ -736,7 +815,7 @@ Confirm: DONE or ERROR.`,
 if (epicId && ticketIds.length > 0) {
   phase('Link')
 
-  await agent(
+  const linkResult = await agent(
     `Append new ticket IDs to the ## Related Tickets section of epic ${epicId}.
 
 Step 1 — find the epic ticket:
@@ -752,8 +831,12 @@ Step 3 — report: DONE (file path updated) or SKIPPED (epic ticket not found).`
     { label: 'link-epic', phase: 'Link' }
   )
 
+  const linkText = (linkResult || '').toString()
+  pushEvent('Link', 'link-epic', linkText.includes('SKIPPED') ? 'skipped' : 'ok', linkText.slice(0, 200) || `Linked to ${epicId}`, null)
   log(`Linked ${ticketIds.length} ticket(s) to epic ${epicId}`)
 }
+
+await writeMonitoring('DONE')
 
 return {
   status: 'DONE',
@@ -763,6 +846,7 @@ return {
   duplicates_skipped: duplicates.map(d => `${d.concern_id} → ${d.duplicate_of}`),
   skipped: structured.skipped,
   scope_dupes_dropped: droppedScopes,
+  tags_not_registered: tasksWithUnregisteredTags,
   epic_linked: !!epicId,
   message: succeeded.length > 0
     ? `Created ${succeeded.length} ticket(s) in ${outputFolder}.${epicId ? ` Linked to ${epicId}.` : ` Run /implement-epic folder=${outputFolder} to implement.`}`

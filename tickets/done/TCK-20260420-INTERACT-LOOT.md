@@ -15,7 +15,7 @@ tags: [interact, loot]
 Channeled Looting and Interruption Recovery
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

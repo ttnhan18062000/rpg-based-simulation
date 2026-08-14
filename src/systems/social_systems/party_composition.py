@@ -3,10 +3,12 @@ PartyCompositionScorer — evaluate candidate party composition quality.
 
 Ticket: TCK-20260628-E41F-PARTY-SCORER
 Logic IDs: SOC-231 (role diversity), SOC-232 (OCEAN compatibility)
+Logic ID: SOC-244 (trust/bonds-aware composition + confidence, TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY)
 
 Score combines:
 - Role diversity (TANK/HEALER/DPS/SUPPORT coverage): 60% weight
 - OCEAN complementarity (bravery + sociability variance): 40% weight
+- Trust/bonds directed sentiment (optional, when actor supplied): weight 0.15, additive
 
 Result (0.0–1.0) feeds into the FORM_PARTY route's expected_benefit so that
 sociable entities prefer forming parties when the candidate pool is balanced.
@@ -14,7 +16,7 @@ sociable entities prefer forming parties when the candidate pool is balanced.
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
@@ -37,6 +39,7 @@ class PartyCompositionScorer:
 
     ROLE_DIVERSITY_WEIGHT: float = 0.6
     OCEAN_COMPAT_WEIGHT: float = 0.4
+    TRUST_BONUS_WEIGHT: float = 0.15
 
     @staticmethod
     def infer_party_role(entity: "EntityState") -> PartyRole:
@@ -101,18 +104,56 @@ class PartyCompositionScorer:
         social_score = min(1.0, _variance(socials) / 0.25)
         return round((bravery_score + social_score) / 2.0, 4)
 
-    @classmethod
-    def score(cls, entities: "List[EntityState]") -> float:
+    @staticmethod
+    def _candidate_trust_value(actor: "EntityState", candidate: "EntityState") -> float:
         """
-        Combined composition quality score, 0.0–1.0.
-        Weighted sum of role diversity and OCEAN complementarity.
+        Directed trust/bond value the acting entity holds toward one specific candidate,
+        on trust_history/SocialBond.sentiment's shared native -1.0..1.0 scale. Bond
+        sentiment takes priority over trust_history when both exist (established
+        precedent: appraisal.py's SocialAppraisalSystem.appraise_contract(), "Private
+        sentiment takes priority"; docs/simulation/social_systems_contract.md's
+        "Bond sentiment takes priority over trust_history in appraisal"). Neutral
+        default 0.0 for a candidate with no prior relationship record.
+        """
+        bond = actor.social.bonds.get(candidate.id)
+        if bond is not None:
+            return bond.sentiment
+        return actor.social.trust_history.get(candidate.id, 0.0)
+
+    @staticmethod
+    def score_trust_bonds(actor: "EntityState", entities: "List[EntityState]") -> float:
+        """
+        Mean directed trust/bond sentiment the acting entity holds toward each
+        candidate in the pool, read from the acting entity's own SocialComponent
+        only (never global/omniscient state). Range: -1.0 to 1.0. Empty pool -> 0.0.
+        """
+        if not entities:
+            return 0.0
+        values = [
+            PartyCompositionScorer._candidate_trust_value(actor, e) for e in entities
+        ]
+        return round(sum(values) / len(values), 4)
+
+    @classmethod
+    def score(
+        cls, entities: "List[EntityState]", *, actor: "Optional[EntityState]" = None
+    ) -> float:
+        """
+        Combined composition quality score, 0.0-1.0.
+        Weighted sum of role diversity and OCEAN complementarity, plus an optional
+        trust/bonds-aware adjustment when `actor` (the entity forming the party) is
+        supplied (TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY). Omitting `actor`
+        reproduces today's exact pre-existing output -- every pre-existing call site
+        does this.
         """
         if not entities:
             return 0.0
         role_div = cls.score_role_diversity(entities)
         ocean_compat = cls.score_ocean_compatibility(entities)
-        return round(
-            cls.ROLE_DIVERSITY_WEIGHT * role_div
-            + cls.OCEAN_COMPAT_WEIGHT * ocean_compat,
-            4,
+        base_score = (
+            cls.ROLE_DIVERSITY_WEIGHT * role_div + cls.OCEAN_COMPAT_WEIGHT * ocean_compat
         )
+        if actor is None:
+            return round(base_score, 4)
+        trust_term = cls.score_trust_bonds(actor, entities)
+        return round(max(0.0, min(1.0, base_score + cls.TRUST_BONUS_WEIGHT * trust_term)), 4)

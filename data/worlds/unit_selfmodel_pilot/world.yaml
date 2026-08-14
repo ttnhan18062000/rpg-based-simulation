@@ -1,0 +1,16 @@
+schema_version: "worldcomposition.v1"
+world_id: "unit_selfmodel_pilot"
+name: "Unit Test — Self-Model Cognition Isolation"
+description: "Unit-tier isolation world for the COGNITION pillar's self-model mechanism (Branch B materialization half only). Composes frontier_village_core + hero_adventurers — hero_adventurers's 3 un-ided population_recipes produce the positional pop_0/pop_1/pop_2 addressing fallback (WorldAssemblyResolver.resolve, same mechanism urban_political and unit_information_source both rely on) needed to target target_population_id. One pending_self_model_information_events entry targets pop_1 with an unknown fact about material.wood.source (a real material this composition's own frontier_village_core resource_recipes actually produce, via wood_node). ENABLE_SELF_MODEL_COGNITION is turned ON via this world's own profile YAML; ENABLE_BELIEF_ASSIMILATION stays absent (default OFF) — this world deliberately isolates SelfModelUpdatePhase's knowledge-assimilation half only, not InformationBeliefPhase's query-routing half (gated behind the other flag, and out of this world's scope per TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT's Scope item 3). No information_source_profiles or pending_information_responses content is seeded in this world. faction_tension_overrides stays at catalog default (all factions 0.0) — every other Pattern-6 field stays at baseline so this isolates self-model cognition alone."
+modules:
+  - "frontier_village_core"
+  - "hero_adventurers"
+generation_seed: 503
+pending_self_model_information_events:
+  - target_population_id: "pop_1"
+    answer_kind: "unknown"
+    unknowns:
+      - "material.wood.source"
+    certainty: 0.0
+    source_id: null
+    cost_gold: 0

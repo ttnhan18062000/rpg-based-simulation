@@ -80,6 +80,18 @@ Maps dynamic catalog role IDs to legacy `EntityRole` enum values and provides pr
 - `get_role_family(role_id)` → str — returns `RoleDefinition.role_family` or `"civilian"` if not found.
 - `get_default_stats_profile(role_id)` → Optional[str] — returns `RoleDefinition.default_stats_profile` or `None`.
 
+**Real, structural caveat** (`TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION`): this
+service's own real, catalog-aware lookup is only ever reached at compile time via
+`WorldCompiler.compile()`'s own local `get_role_enum()`/`get_faction_enum()` helpers
+(`src/worldbuilding/compiler.py`) when a `CompileContext` with a pre-populated `legacy_roles`/
+`legacy_factions` mapping is passed in — `WorldCompiler.compile()` has no `catalog_repo`
+parameter of its own and cannot call `RoleSemanticsService` directly. Real archetype role_ids
+like "predator_hunter"/"raider"/"scout" almost never literally contain the keyword-fallback's
+own matched substrings, so a caller that omits `context` silently gets the naive fallback's
+default (`EntityRole.CITIZEN`), not a real catalog lookup. Use
+`WorldRepository.load_world_with_context()` (not `load_world()`) when compiling a world whose
+`entity.identity.role`/`.faction` values need to be correct.
+
 ---
 
 ## DefaultSemanticsService (`src/content_semantics/defaults.py`)

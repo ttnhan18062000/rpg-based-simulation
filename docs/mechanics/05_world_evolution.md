@@ -60,11 +60,20 @@ As `Hazard Level` (0.0 to 1.0) increases, entities within the region suffer:
 
 #### Native Endurance to a Region's Hazard Kind
 Every region carries a `hazard_kind` tag (e.g. `"PHYSICAL"` — the default, `"NATURAL_TERRAIN"`,
-`"TOXIC_GAS"`) describing *what kind* of hazard its passive drain represents. Separately, a
-faction's catalog definition may declare `hazard_immunities` — the set of `hazard_kind` values
-its members endure without harm (e.g. `wild_beast_pack` and `goblin_warband` both declare
-`hazard_immunities: ["NATURAL_TERRAIN"]`, since wolves and goblins are native to their own
-forest habitats).
+`"TOXIC_GAS"`, `"UNDEAD_CORRUPTION"`, `"ARCANE_CORRUPTION"`) describing *what kind* of hazard its
+passive drain represents. Separately, a faction's catalog definition may declare
+`hazard_immunities` — the set of `hazard_kind` values its members endure without harm (e.g.
+`wild_beast_pack` and `goblin_warband` both declare `hazard_immunities: ["NATURAL_TERRAIN"]`,
+since wolves and goblins are native to their own forest habitats; `undead_remnants` declares
+`hazard_immunities: ["UNDEAD_CORRUPTION"]`, since undead endure the corruption of their own
+battlefield for a distinct in-fiction reason from ordinary wilderness endurance). `"TOXIC_GAS"`
+remains synthetic/test-only (used only in unit tests, `tests/unit/world/test_regional_consequences.py`);
+`"UNDEAD_CORRUPTION"` is an authored production value as of
+TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS (`data/content/world_modules/undead_battlefield.yaml`).
+`"ARCANE_CORRUPTION"` is an authored production value as of
+TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE
+(`data/content/world_modules/moon_cult_ruins.yaml`'s `moon_cave` region, matched by
+`arcane_circle`'s `hazard_immunities`).
 
 When computing Passive HP Drain for an entity, `EnvironmentService.calculate_hazard_drain`
 resolves the entity's catalog faction id and checks it against the region's `hazard_kind`:
@@ -91,6 +100,14 @@ matching `hazard_immunities` entry for the exemption to take effect.
 > artifacts are generated ahead-of-time from the source catalog and do not pick up this
 > mechanism's effect until they are recompiled — that recompile is the responsibility of
 > `TCK-20260701-SANDBOX-MONSTER-BALANCE`, not this chapter's authoring change.
+>
+> `TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` extended this mechanism corpus-wide: 7 modules
+> (`orc_clan_territory`, `bandit_road_trade_pressure`, `old_mine_resource_loop`,
+> `forest_warden_grove`, `undead_battlefield`, `nomadic_herd`, `sunken_swamp_border`) gained
+> `hazard_kind` + matching native-faction `hazard_immunities`, and the 8 worlds whose compiled
+> state predated these fixes (`simq_routing_test`, `dungeon_crawl`, `generated_frontier_3_42`,
+> `frontier_extended`, `frontier_living_world`, `swamp_border_world`, `highland_traverse`,
+> `wilderness_survival`) were recompiled to pick them up.
 
 ---
 
@@ -105,6 +122,20 @@ The world automatically replenishes consumed resources and removes "Simulation T
 ### Decay Laws
 *   **Corpses**: Entities that are killed remain in the world as `Corpse` objects for a fixed duration (`decay_tick`) before being permanently removed.
 *   **Ground Items**: Items dropped on the floor also decay over time to prevent simulation clutter.
+
+### Derived Scarcity Ratio (Consumer-Facing)
+Resource nodes do not carry a separate durable "scarcity" field -- consumers derive one at read
+time from `ResourceNodeState.remaining_charges / max_charges`, scoped to nodes tagged into a
+region via `ResourceRegistry` definitions' `source_region_tags`. Two consumers use this ratio
+today:
+*   **`ResourceOpportunityProvider`** (`src/world/providers/resources.py`) uses the raw ratio
+    directly as a *reward multiplier* -- opportunities on a near-depleted node are worth less
+    (`reward *= 0.5 + 0.5 * depletion_mult`).
+*   **`QuestGenerator`** (`src/quests/generator.py`) uses the *inverse* of the region-averaged
+    ratio, `scarcity = 1.0 - avg(remaining/max)`, as a *quest-selection weight* -- a region with
+    heavily depleted nodes favors `GATHER`-kind quest templates. This is a distinct derived
+    signal from the trauma/hazard signals in §2 above, aggregated the same way (read-time, from
+    durable per-node fields, never itself persisted).
 
 ---
 

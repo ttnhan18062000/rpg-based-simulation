@@ -1,9 +1,6 @@
 ---
 name: architecture
-description: "Architectural decision-making framework. Requirements analysis, trade-off evaluation, ADR documentation. Use when making architecture decisions or analyzing system design."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: 'Architectural decision-making framework — requirements analysis, trade-off evaluation, ADR documentation.'
 ---
 
 # Architecture Decision Framework
@@ -26,11 +23,12 @@ date_added: "2026-02-27"
 
 ## 🔗 Related Skills
 
-| Skill | Use For |
+| Skill / Resource | Use For |
 |-------|---------|
-| `@[skills/database-design]` | Database schema design |
-| `@[skills/api-patterns]` | API design patterns |
-| `@[skills/deployment-procedures]` | Deployment architecture |
+| `architecture-reviewer` agent | The real, gated mechanism in this repo that validates a plan (pre-Implement) or a diff (post-Implement Architecture-Verify) against durable-state, API-boundary, registry, and Mechanics Bible rules — this skill's soft ADR-writing guidance complements, but does not replace, that hard gate. |
+| `docs/architecture/` | Where this repo's real ADR-shaped design docs live — the same location the `brainstorming` skill's spec-writing flow (`docs/architecture/YYYY-MM-DD-<topic>-design.md`) targets. |
+| `api-design-principles` skill | REST/GraphQL API design patterns (this repo, adjacent skill). |
+| CLAUDE.md "Architecture Rule" | This repo's own durable-state/API-boundary/strategic-tactical/uncertainty rules — the authoritative source, not this skill's generic patterns, whenever the two disagree. |
 
 ---
 

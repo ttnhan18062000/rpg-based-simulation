@@ -94,3 +94,89 @@ def test_20_tick_run_produces_nonzero_tick_count(minimal_kernel):
         f"SimQ tick_count=0 — hub.on_envelope() was never called despite 20 injected events. "
         f"Pillar event counts: { {pid: snap.event_count for pid, snap in report.pillars.items()} }"
     )
+
+
+def _build_kernel(monkeypatch, tmp_path, feed_mode=None, scoring_disabled=False, run_id="broker-config-test"):
+    monkeypatch.setenv("QUALITY_RUN_DIR", str(tmp_path))
+    if feed_mode is None:
+        monkeypatch.delenv("QUALITY_FEED_MODE", raising=False)
+    else:
+        monkeypatch.setenv("QUALITY_FEED_MODE", feed_mode)
+    if scoring_disabled:
+        monkeypatch.setenv("QUALITY_SCORING_DISABLED", "1")
+    else:
+        monkeypatch.delenv("QUALITY_SCORING_DISABLED", raising=False)
+
+    profile = RuntimeProfile(
+        name="test",
+        hardware_class=HardwareClass.CLASS_B,
+        max_ram_mb=1024,
+        max_tick_budget_ms=500,
+        max_cpu_percent=50.0,
+        max_worker_count=0,
+        max_queue_depth=64,
+        max_replay_buffer_kb=0,
+        max_observability_budget_percent=5.0,
+    )
+    state = AuthoritativeState(tick=0, seed=42)
+    rng = MagicMock()
+    kernel = Kernel(profile, state, rng, run_id=run_id, flags={"no_replay": True})
+    return kernel
+
+
+def test_kernel_broker_mode_builds_zero_quality_hub(monkeypatch, tmp_path):
+    """TCK-20260702-OBSISO-BROKER-CONFIG G3: broker mode must not construct a QualityHub."""
+    kernel = _build_kernel(monkeypatch, tmp_path, feed_mode="broker")
+    try:
+        assert kernel._quality_hub is None
+    finally:
+        kernel.shutdown()
+
+
+def test_kernel_broker_mode_starts_zero_consumer_threads(monkeypatch, tmp_path):
+    """TCK-20260702-OBSISO-BROKER-CONFIG G3: broker mode must not start an in-engine
+    'broker-quality-feed' consumer thread."""
+    import threading
+
+    kernel = _build_kernel(monkeypatch, tmp_path, feed_mode="broker")
+    try:
+        thread_names = {t.name for t in threading.enumerate()}
+        assert "broker-quality-feed" not in thread_names
+    finally:
+        kernel.shutdown()
+
+
+def test_kernel_inprocess_mode_unaffected_by_g3_fix(monkeypatch, tmp_path):
+    """Guards against a G3 implementation that branches on the QUALITY_FEED_MODE string
+    instead of the resolved _feed instance's concrete type."""
+    kernel = _build_kernel(monkeypatch, tmp_path, feed_mode="inprocess")
+    try:
+        assert kernel._quality_hub is not None
+        registered_scorers = {
+            id(scorer)
+            for scorer_list in kernel._quality_hub.SCORER_REGISTRY.values()
+            for scorer in scorer_list
+        }
+        assert len(registered_scorers) == 10, (
+            f"Expected all 10 pillar scorers registered in in-process mode, got {len(registered_scorers)}"
+        )
+    finally:
+        kernel.shutdown()
+
+
+def test_quality_scoring_disabled_still_wins_in_both_modes(monkeypatch, tmp_path):
+    """AC #4: QUALITY_SCORING_DISABLED=1 disables everything, in both inprocess and broker
+    QUALITY_FEED_MODE."""
+    import threading
+
+    for feed_mode in ("inprocess", "broker"):
+        kernel = _build_kernel(
+            monkeypatch, tmp_path, feed_mode=feed_mode, scoring_disabled=True,
+            run_id=f"disabled-{feed_mode}",
+        )
+        try:
+            assert kernel._quality_hub is None
+            thread_names = {t.name for t in threading.enumerate()}
+            assert "broker-quality-feed" not in thread_names
+        finally:
+            kernel.shutdown()

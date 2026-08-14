@@ -78,6 +78,31 @@ def test_contract_lifecycle_acceptance():
     assert new_contract.status == ContractStatus.ACTIVE
     assert new_contract.expiry_tick == 200 # 100 + 100 duration
 
+def test_accept_contract_no_longer_sets_current_project_id_directly():
+    """
+    TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER AC1 -- the single highest-value regression guard
+    for this ticket's core behavior change. accept_contract() must no longer build any
+    ProjectState/ObjectiveState or set current_project_id_set directly: project materialization
+    now runs exclusively through SocialContractGoalScorer + evaluate_strategic_intent()'s
+    SOCIAL_CONTRACT branch. Asserting `projects_add_or_update == []` (not just
+    `current_project_id_set is None`) closes the Design Decision #7 duplicate-project/bandwidth
+    hazard -- a future edit that re-adds any ProjectState construction to accept_contract() while
+    leaving current_project_id_set alone would otherwise go undetected here.
+    """
+    contract = ContractService.create_recruitment_contract("c6", 99, 1, tick=100)
+    entity = (V2EntityBuilder(1)
+        .kind("ACTOR")
+        .location(0, 0)
+        .strategic(contracts={contract.id: contract})
+        .build())
+
+    update = ContractService.accept_contract(entity, contract.id, tick=100)
+
+    assert update.current_project_id_set is None
+    assert update.projects_add_or_update == []
+    assert update.contracts_add_or_update[0].status == ContractStatus.ACTIVE
+
+
 def test_contract_lifecycle_resolution():
     contract = ContractService.create_recruitment_contract("c5", 99, 1, tick=100)
     contract = replace(contract, status=ContractStatus.ACTIVE)

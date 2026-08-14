@@ -1,0 +1,23 @@
+# Permanent grade-anchor probe profile (TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE).
+# NOT a shipped profile — not referenced by any world's default calibration inheritance chain;
+# used only by tests/simulation_quality/test_grade_regression.py's
+# test_urban_political_selfmodel_execution_isolated_grade_anchor. A separate, new file from
+# the existing urban_political_selfmodel_probe.yaml (that probe deliberately leaves
+# ENABLE_BELIEF_ASSIMILATION OFF to isolate self-model materialization from query-routing;
+# mutating it in place would invalidate its own grade anchor). This probe instead turns
+# ENABLE_SELF_MODEL_COGNITION, ENABLE_BELIEF_ASSIMILATION, and the new
+# ENABLE_INFORMATION_INTENT_EXECUTION all ON, so Branch B's routed ActionIntent actually
+# executes through the production pipeline (InformationIntentExecutionPhase) — proving
+# ActionIntentAdapter.execute() fires through a real Kernel.tick_once() loop.
+# Rebuilt from urban_political.yaml's actual shipped profile (config/simulation_quality/
+# profiles/urban_political.yaml) with the three intended additive flags applied.
+pillar_weights:
+  FACTION: 1.5
+  ECONOMY: 1.5
+  SOCIAL: 1.5
+  COMBAT: 0.3
+feature_flags:
+  ENABLE_SOCIAL_COOPERATION: "ON"
+  ENABLE_SELF_MODEL_COGNITION: "ON"
+  ENABLE_BELIEF_ASSIMILATION: "ON"
+  ENABLE_INFORMATION_INTENT_EXECUTION: "ON"

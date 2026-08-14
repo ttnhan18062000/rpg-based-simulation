@@ -82,8 +82,11 @@ Manages feature rollout modes. Controls which domain features are active in a gi
 | `ENABLE_BELIEF_ASSIMILATION` | information domain (Information / Belief Processing stage) |
 | `ENABLE_PROGRESSION_EVOLUTION` | progression domain |
 | `ENABLE_SOCIAL_COOPERATION` | cooperation domain |
+| `ENABLE_WORLD_EMERGENCE` | World emergence domain activation |
+| `ENABLE_LIFE_ARC_CAMPAIGNS` | Life-arc campaign domain |
+| `ENABLE_ENHANCED_TRACE_EVENTS` | Enhanced trace/observability event emission |
 
-**Rule:** Before calling any domain on the tick path, check `FeatureFlagManager.get_flag(flag_name)`. If the mode is `OFF`, skip the domain call entirely. If the mode is `SHADOW`, run but do not apply output.
+**Rule:** Before calling any domain on the tick path, check `FeatureFlagManager.get_flag_mode(flag_name)`. If the mode is `OFF`, skip the domain call entirely. If the mode is `SHADOW`, run but do not apply output.
 
 ---
 
@@ -113,7 +116,7 @@ Enforces provider count caps derived from `GracefulDegradationManager.get_provid
 
 ## RolloutProfiles (`rollout_profiles.py`)
 
-Defines named rollout configurations (sets of feature flags) for different deployment profiles (development, staging, production, benchmark). Used by `FeatureFlagManager` initialization.
+Defines 3 hardware-tier profiles keyed by `HardwareClass` (`CLASS_A`/`CLASS_B`/`CLASS_C`), each carrying `enabled_phases`/`shadow_phases`/`disabled_phases` plus `max_ram_mb`/`tick_budget_ms`/`max_trace_events`. `RolloutProfileManager.get_profile(hardware_class)` returns one of these as a declarative descriptor — it has no side effect. `RolloutProfileManager` has no method that applies a profile to a live `FeatureFlagManager`; wiring a chosen profile's flags into a running `FeatureFlagManager` is left to the caller.
 
 ---
 

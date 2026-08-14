@@ -1,0 +1,1 @@
+{"run_id":"TCK-20260607-PATH-DRIFT-SRC","ts":"2026-06-07T08:55:34Z","seq":1,"phase":"Scope","agent":"ticket-scoper","status":"ok","summary":"Loaded hotfix ticket TCK-20260607-PATH-DRIFT-SRC \u2014 fix hardcoded old content paths in src/"}

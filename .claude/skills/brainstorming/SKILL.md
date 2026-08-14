@@ -26,10 +26,10 @@ You MUST create a task for each of these items and complete them in order:
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
+6. **Write design doc** — save to `docs/architecture/YYYY-MM-DD-<topic>-design.md` and commit
+7. **Spec review loop** — dispatch `Agent(subagent_type: "spec-document-reviewer", ...)` with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+9. **Transition to implementation** — invoke `/create-tickets` on the written spec to produce an investigation-backed ticket ready for `/implement-ticket` or `/implement-epic` (this repo has no separate `writing-plans` skill — planning happens inside `implement-ticket`'s own Plan phase)
 
 ## Process Flow
 
@@ -46,7 +46,7 @@ digraph brainstorming {
     "Spec review loop" [shape=box];
     "Spec review passed?" [shape=diamond];
     "User reviews spec?" [shape=diamond];
-    "Invoke writing-plans skill" [shape=doublecircle];
+    "Invoke /create-tickets" [shape=doublecircle];
 
     "Explore project context" -> "Visual questions ahead?";
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
@@ -62,11 +62,11 @@ digraph brainstorming {
     "Spec review passed?" -> "Spec review loop" [label="issues found,\nfix and re-dispatch"];
     "Spec review passed?" -> "User reviews spec?" [label="approved"];
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "User reviews spec?" -> "Invoke /create-tickets" [label="approved"];
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**The terminal state is invoking `/create-tickets`.** Do NOT invoke `frontend-design` or any other implementation skill directly — this repo has no separate `writing-plans` skill; the transition from a design spec to code always goes through ticket creation first.
 
 ## The Process
 
@@ -111,15 +111,14 @@ digraph brainstorming {
 
 **Documentation:**
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design (spec) to `docs/architecture/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
-- Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
 **Spec Review Loop:**
 After writing the spec document:
 
-1. Dispatch spec-document-reviewer subagent (see spec-document-reviewer-prompt.md)
+1. Dispatch `Agent(subagent_type: "spec-document-reviewer", prompt: "Review the spec at <SPEC_FILE_PATH>...")` — pass the spec's file path and any user-stated constraints; never pass your own session history (see `.claude/agents/spec-document-reviewer.md` for the review criteria this agent applies)
 2. If Issues Found: fix, re-dispatch, repeat until Approved
 3. If loop exceeds 3 iterations, surface to human for guidance
 
@@ -132,8 +131,10 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 **Implementation:**
 
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+- Invoke `/create-tickets` on the spec document to produce an investigation-backed ticket
+- Do NOT jump straight to writing code. This repo has no separate `writing-plans` skill —
+  `/create-tickets` is the next step; the resulting ticket's own Plan phase (inside
+  `/implement-ticket`) is where the detailed implementation plan gets produced.
 
 ## Key Principles
 

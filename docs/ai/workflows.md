@@ -35,8 +35,10 @@ Workflow({ name: "workflow-name", args: { key: value } })
 
 | Phase | What happens |
 |---|---|
-| Parse | Reads source doc + optional structure template; scans existing tickets for duplicates; extracts one task per discrete concern |
-| Write | Writes `TCK-YYYYMMDD-<SHORT-SCOPE>.md` per task into the output folder (parallel) |
+| Comprehend | Reads the source doc and extracts one task per discrete concern; no codebase investigation yet |
+| Investigate | Per-concern, in parallel: `tools/knowledge_search.py`, `graphify query`, `docs/REGISTRY.yaml` lookups, a `working_log.csv` grep, code/test reads, and a tier assessment |
+| Structure | One synthesis agent produces ticket fields from the investigation evidence only, handling merge/split/short-scope dedup across concerns; orchestrator then runs `tools/tag_registry.py::check_tags_registered` across all tasks' tags — any task with an unregistered tag is skipped (not written), reported in the final `tags_not_registered` field, and excluded from the `SEQUENCE.md` dependency graph, while the rest of the batch proceeds (`TCK-20260706-CREATE-TICKETS-TAG-CHECK`) |
+| Write | Per ticket (only those that passed the tag-registry check), parallel `ticket-scoper` invocations write `TCK-YYYYMMDD-<SHORT-SCOPE>.md` into the output folder, plus a conditional `SEQUENCE.md` when intra-batch dependencies are detected |
 | Link | If `epic_id` given, appends new ticket IDs to the epic's `## Related Tickets` section |
 
 **Args:**
@@ -64,8 +66,9 @@ Workflow({ name: "workflow-name", args: { key: value } })
 ```
 
 **Artifacts produced:**
-- `tickets/todos/<folder>/TCK-YYYYMMDD-<SHORT-SCOPE>.md` — one per task, Status: OPEN, all required sections filled
+- `tickets/todos/<folder>/TCK-YYYYMMDD-<SHORT-SCOPE>.md` — one per task that passed the tag-registry check, Status: OPEN, all required sections filled
 - Epic `## Related Tickets` updated (if `epic_id` provided)
+- Return value includes `tags_not_registered`: tasks skipped for an unregistered tag, alongside the existing `scope_dupes_dropped` field
 
 ---
 
@@ -77,15 +80,22 @@ Workflow({ name: "workflow-name", args: { key: value } })
 
 | Phase | Agent used | Gate condition |
 |---|---|---|
-| Scope | `ticket-scoper` | Stops if conflicts detected |
+| Scope | `ticket-scoper` | Stops if conflicts detected, or if any ticket tag isn't in `registries/tag_registry.jsonl` (orchestrator-run check via `tools/tag_registry.py::check_tags_registered`, after the agent call returns); when resuming an existing `ticket_id`, an orchestrator-run `resolveScopeTicketLocation()` step (via `tools/agent-monitoring/scope_ticket_relocate.py::resolve_and_relocate_ticket`) resolves `ticket_path`/`tier`/`todos_source_path` deterministically before the agent call, replacing the former agent-prompt-text file search — for a `tickets/todos/` original it moves (copy-then-delete) the file when `## Tier` is `epic`, or copies it (leaving the original in place, as before) otherwise, so an epic ticket — which never reaches Finalize's cleanup — never ends up permanently duplicated on disk |
 | Investigate | `investigator` | — |
 | Plan | `planner` | Stops if unresolved questions in plan |
 | Review | `architecture-reviewer` | Stops if NEEDS_CHANGES or BLOCKED |
 | Implement | `implementer` | — |
+| Document-Update | `doc-updater` | Runs unconditionally, every tier; its `docs_updated` paths merge into `implementation.files_changed` before the doc-staleness gate evaluates them; a doc-updater blocker is reported via a `failed`-status event but does not stop the pipeline — Verify's `check_docs_to_update_coverage` remains the actual backstop for standard/epic tier |
+| Architecture-Verify | `architecture-reviewer` | Second, post-Implement call; runs `tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks` before the agent call and injects its JSON output; narrowly scoped to judging flagged items, not re-reviewing the plan; stops if NEEDS_CHANGES or BLOCKED (same vocabulary as Review); skipped for hotfix |
 | Test | `test-scoper` | Stops if any test fails |
-| Parity | `parity-updater` | — |
-| Verify | `done-checker` | Stops if any DoD condition fails |
-| Finalize | inline | Moves ticket, writes working_log.csv, migrates artifacts |
+| Parity | `parity-updater` | Skipped when `files_changed` has no `src/` path and `behavior_changed` is false; a P0 ledger safeguard forces the full run instead if any P0 entry's `v2_evidence` would go stale; when not skipped, runs `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` before the agent call and `::cross_reference_touched` after it returns, surfacing any untouched-mapped-subsystem miss; a genuine miss now hard-blocks the phase (returns `PARITY_INCOMPLETE`); an unparseable cross-ref result remains non-blocking |
+| Security-Review | `security-reviewer` | Fires when the ticket's tags include `security` (ground truth) or suggested_skills includes /security-review; stops if NEEDS_CHANGES or BLOCKED |
+| Verify | `done-checker` | Runs `tools/gate_checks/done_checker_static.py::run_static_precheck` first and cites its output for 6 machine-checked conditions (3, 4, 7, 10, 12, plus `ticket_field_values_valid` — no dedicated DoD number yet, see `docs/ai/agents.md`'s `done-checker` section); stops if any DoD condition fails |
+| Finalize | inline | Moves ticket, writes working_log.csv, migrates artifacts; then runs `run_finalize_selfcheck` via `bash()` to confirm the migration actually landed — returns `FINALIZE_INCOMPLETE` instead of `DONE` if a discrepancy is found; separately, after `writeMonitoring('DONE')`, runs three advisory-only Finalize-tail checks (`implement-ticket.js:1502-1581`) — `check_monitoring_write_recorded` (confirms the agent-monitoring write, `runs.jsonl`/`events.jsonl`, for this run landed), `check_tag_drift` (flags a possible mismatch between the ticket's declared `tags:` and its `Files Changed`/`Related Code Areas` content; `CLEAN`/`FLAGGED`, never `PASS`/`FAIL`), and `check_workflow_meta_conformance` (aggregated via `summarize_conformance_results`, `Security-Review` filtered out at this call site; flags a declared `meta.phases` title that fired zero events during this run — added by `TCK-20260804-SKILL-DRIFT-DETECTION`, wiring in the verifier `TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK` had built but left unwired) — all three are loud but non-blocking (a `failed`-status event plus a `WARNING` in the returned `message`), `status` always stays `DONE` (CLAUDE.md's Hard Rule that a monitoring write failure — and, by the same precedent, these checks — must never fail the workflow) |
+
+`mechanics-auditor` is not one of the phases above — it is an ad hoc agent (`Agent(subagent_type: "mechanics-auditor")`, no `implement-ticket.js` call site) that now has its own static pre-check (`tools/gate_checks/mechanics_auditor_static.py`), self-invoked rather than orchestrator-run; see `docs/ai/agents.md`'s `mechanics-auditor` section for detail.
+
+`check_skill_doc_covers_meta_phases()` (`tools/gate_checks/workflow_meta_conformance.py`, added by `TCK-20260804-SKILL-DRIFT-DETECTION`) is also not one of the phases above and not wired into any workflow's Finalize tail — it runs as a pytest test (`tests/tools/test_workflow_meta_conformance.py`) that asserts every hand-orchestration `SKILL.md` mentions all of its own workflow's declared `meta.phases` titles, catching doc-vs-code drift on every test-suite run rather than only at ticket-close time.
 
 **Args:**
 
@@ -108,11 +118,19 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 | Status | Meaning | Next action |
 |---|---|---|
 | `CONFLICTS_DETECTED` | Duplicate or conflicting tickets found | Review conflicts, adjust scope, re-run |
+| `TAGS_NOT_REGISTERED` | A ticket tag isn't in `registries/tag_registry.jsonl` | Register it (`python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`) or edit the ticket to use an existing registered tag, then re-run with `ticket_id` |
+| `SCOPE_AGENT_FAILED` | The Scope-phase `ticket-scoper` agent call returned null or malformed output with no `ticket_id` | Re-run; if it persists, investigate the agent call itself |
+| `EPIC_SCOPED` | Ticket tier is `epic` — scoped only, no implementation performed | Create child tickets, implement them individually or via `implement-epic` |
 | `NEEDS_HUMAN_INPUT` | Plan has unresolved questions | Read `staging_artifacts/{id}/plan.md`, resolve, re-run with `ticket_id` |
-| `NEEDS_CHANGES` | Architecture review rejected plan | Fix `plan.md` violations, re-run with `ticket_id` |
-| `BLOCKED` | Architecture fundamental conflict | Revisit scope, re-run with `ticket_id` |
+| `NEEDS_CHANGES` | Architecture review rejected the plan (Review phase) or a post-Implement diff (Architecture-Verify phase) — same status string, distinguish by which phase logged it | Review: fix `plan.md` violations. Architecture-Verify: fix the flagged code. Re-run with `ticket_id` either way |
+| `BLOCKED` | Architecture fundamental conflict — plan (Review phase) or diff (Architecture-Verify phase) | Review: revisit scope. Architecture-Verify: fix the flagged code. Re-run with `ticket_id` either way |
+| `DOC_STALENESS_BLOCKED` | A behavior-changing `src/` or `.claude/workflows/*.js` diff has no `docs/` path in `files_changed` (`tools/gate_checks/doc_staleness_check.py`) | Add a `docs/` update reflecting the behavior change, re-run with `ticket_id` |
 | `TESTS_FAILED` | One or more tests failing | Fix failing tests, re-run with `ticket_id` |
+| `DATA_RUNS_CLEAN_FAILED` | Post-Test auto-clean of `data/runs/*`/`reports/release_proof/*` failed | Resolve manually (check permissions/locks), re-run with `ticket_id` |
+| `SECURITY_BLOCKED` | Security review rejected the change | Fix violations, re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD conditions not met | Fix listed items, re-run with `ticket_id` |
+| `PARITY_INCOMPLETE` | A `src/` file mapped to a parity-ledger subsystem had no corresponding `docs/parity_ledger/*.yaml` entry touched in this diff (`tools/gate_checks/parity_updater_static.py::cross_reference_touched`) | Read `failing_items`, update the missing `docs/parity_ledger/*.yaml` entry, re-run with `ticket_id` |
+| `FINALIZE_INCOMPLETE` | Finalize ran its steps, but the post-migration self-check (`run_finalize_selfcheck`) found a discrepancy — e.g. `stored_artifacts/` incomplete, `staging_artifacts/` not cleaned, ticket not moved, or the working_log row is missing/duplicated | Read `failing_items`, fix the discrepancy manually, re-run with `ticket_id` |
 | `DONE` | Ticket closed, artifacts migrated | — |
 
 **Artifacts produced:**
@@ -120,6 +138,18 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 - `stored_artifacts/{ticket_id}/` (investigation.md, plan.md, test_plan.md)
 - `tickets/working_log.csv` (one new row)
 - `agent-monitoring/runs.jsonl` + `events.jsonl` (one run record + per-phase events)
+
+**`lane-architecture` coverage boundary:** `make lane-architecture` (`pytest tests/ -m "architecture"`)
+is a `src/`-simulation-code guard lane only — durable-state mutation discipline, cross-domain import
+bans, unstable-sort detection. It has **zero overlap** with the 4 gate-checker modules in
+`tools/gate_checks/` (`done_checker_static.py`, `parity_updater_static.py`,
+`mechanics_auditor_static.py`, `architecture_reviewer_static.py`): none of
+`tests/tools/test_*_static.py` carry `@pytest.mark.architecture`, by deliberate design
+(`tickets/done/gate-determinism-followups/SEQUENCE.md` decision 1) — these are agent-workflow
+hygiene checks, not simulation-code architecture guards, and are intentionally not folded into
+`lane-architecture`. Whether `lane-architecture` itself is wired into CI is a separate,
+already-resolved question (audit finding D18 F3); this note is strictly about content-coverage
+boundary.
 
 ---
 
@@ -181,7 +211,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 
 **Purpose:** Generate world specs, scenario configs, and experiment parameters for a new simulation run.
 
-**Phases:** Spec Draft → Validation → Promotion
+**Phases:** Scan → Draft → Validate
 
 **Args:**
 
@@ -247,7 +277,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 
 **Purpose:** Deep multi-agent investigation of balance anomalies in a completed simulation run.
 
-**Phases:** Load → Analyze → Correlate → Report
+**Phases:** Load → Analyze → Report
 
 **Args:**
 
@@ -291,7 +321,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 
 **Purpose:** Compress heavy event log files and archive unnecessary telemetry from past simulation runs to recover disk space.
 
-**Phases:** Inventory → Compact → Archive
+**Phases:** Scan → Compact → Archive
 
 **Args:**
 
@@ -327,9 +357,58 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 **Outputs:**
 - Structured knowledge contribution (rule statements, evidence, confidence, scope, exceptions)
 - Graph update description (new nodes and edges for `graphify-out/`)
-- Audit log JSON (what was included, excluded, approved, and how to revert)
+- Audit log JSON (what was included, excluded, approved)
+
+**Revert:** `RevertSimulationKnowledgeWorkflow.run(session_id)` (`src/lab/workflows.py`) reverts the
+most recent sync for that session. It removes exactly the insight/known-issue/rule files recorded
+in that sync's `files_written` audit event, matches and removes the corresponding
+`decision_log.jsonl` line by exact content equality (never by timestamp alone), and rejects with
+`LabKnowledgeRevertError` if any target file was modified by a later sync. The revert action itself
+is logged as a `knowledge_reverted` audit event. It does not regenerate or revert
+`knowledge_update_report.md` — that report is a derived artifact, not source-of-truth knowledge
+state.
 
 **When to use:** Only after the approval gate passes. This is the final step in the simulation learning loop, committing validated insights into the long-term knowledge graph.
+
+---
+
+### `simq-audit`
+
+**Purpose:** A narrow calibration and anchor-drift maintenance lane for the 10-pillar SimQ grading system — recalibrates against `grade_anchors.json`, classifies drift, and either closes out cleanly or spawns a follow-up ticket. Never changes SimQ scoring formulas or pillar logic (`src/simulation_quality/*` is out of scope for every phase).
+
+**Phases:**
+
+| Phase | What happens |
+|---|---|
+| Recalibrate | Runs `make simq-full-audit` (or `-full`/`-slow` per `mode`) — diffs current calibration data against anchors, runs fast-tier grade regression tests, and cross-checks anchor/parity coverage gaps |
+| Classify Drift | Classifies each flagged item as `EXPECTED_DRIFT` (must cite a specific commit/ticket), `REGRESSION`, `DA_NEEDED`, or `NO_ACTION`, and computes a rollup verdict: `no_regression` / `regression` / `needs_da_decision` |
+| Update Anchors | Edits `grade_anchors.json` and `FAST_ANCHOR_KEYS`/`SLOW_ANCHOR_KEYS` for `EXPECTED_DRIFT` items only; gates on `ANCHORS_STILL_FAILING` |
+| Sync Docs | Updates `docs/simulation_quality/eval_matrix_results.md` and `docs/audits/D20_simq_integration.md`; conditionally `event_type_coverage.md` and `v2_intentional_divergences.md` |
+| Parity Check | Updates `docs/parity_ledger/*.yaml` entries flagged by the coverage/parity gap scan |
+| Verify | DoD-style gate: fast-tier regression tests pass, zero uncovered anchor keys, every instructed doc touched or explicitly skipped; `BLOCKED` on failure |
+| Report | Deterministic branch on the Classify Drift verdict — no ticket for `no_regression`, one spawned ticket otherwise |
+
+**Args:**
+
+| Arg | Type | Required | Description |
+|---|---|---|---|
+| `mode` | string | No | `fast` (default) — dry-run diff only; `full` — re-runs the engine for fast scenarios first; `slow` — fast tier then the slow (1000t/2000t) tier |
+| `worlds` | string | No | Optional comma-separated scope for calibration re-runs; only meaningful with `mode=full` |
+
+**Outputs:**
+- Updated `grade_anchors.json` / `FAST_ANCHOR_KEYS` / `SLOW_ANCHOR_KEYS` (Update Anchors phase, `EXPECTED_DRIFT` items only)
+- Updated `docs/simulation_quality/eval_matrix_results.md` and `docs/audits/D20_simq_integration.md`, conditionally `event_type_coverage.md` and `v2_intentional_divergences.md` (Sync Docs phase)
+- Updated `docs/parity_ledger/*.yaml` entries (Parity Check phase)
+- Either a suggested no-ticket chore-commit message or one spawned follow-up ticket (Report phase, see Return values below)
+
+**Return values:**
+
+| Status | Meaning | Next action |
+|---|---|---|
+| `DONE_NO_TICKET` | Verdict was `no_regression` — no ticket created, suggested chore-commit message emitted | — |
+| `NEEDS_TICKET` | Verdict was `regression` or `needs_da_decision` — one ticket spawned via `ticket-scoper` | Hand off with `/implement-ticket ticket_id=<new-id>` |
+
+**When to use:** After a SimQ-related uplift ticket lands, or on a recalibration cadence, to check anchor/grade drift without re-deriving the manual process by hand (see [`audit_workflow.md`](../simulation_quality/audit_workflow.md) §1 for the manual sequence this replaces).
 
 ---
 

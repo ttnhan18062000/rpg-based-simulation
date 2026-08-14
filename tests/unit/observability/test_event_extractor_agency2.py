@@ -312,7 +312,12 @@ class TestCommitmentAbandoned:
         assert "entity_id" in ev.payload
         assert "tick" in ev.payload
 
-    def test_commitment_abandoned_and_quest_event_both_emitted(self):
+    def test_commitment_abandoned_fires_independently_of_quest_event(self):
+        """TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG (correction): `_project_state_update`'s
+        fixture is a generic (non-QuestState) project — commitment_abandoned is project-kind-
+        agnostic and must still fire for it, but QuestEvent construction is now gated to real
+        QuestState instances only, so it must NOT fire here. Previously asserted the opposite
+        (both should fire), encoding the exact mislabeling bug this ticket fixes."""
         prior_state, curr_state, u = _project_state_update(
             1, ProjectStatus.ACTIVE, ProjectStatus.ABANDONED, hp=80, max_hp=100
         )
@@ -320,7 +325,7 @@ class TestCommitmentAbandoned:
         types = _types(events)
         assert "commitment_abandoned" in types
         quest_events = [e for e in events if isinstance(e, QuestEvent)]
-        assert len(quest_events) >= 1
+        assert len(quest_events) == 0
 
 
 # ── Group C: rejection_cascade_tick ──────────────────────────────────────────
@@ -425,11 +430,21 @@ class TestRouteFamilyFirstUse:
 
 class TestAntiDriftGuards:
     def test_defer_property_name_constant_matches_phase_and_extractor(self):
-        """Guard 1: "last_defer_reason" string must appear in both phase.py and event_extractor.py.
-        If either side renames it, event emission silently breaks."""
-        from src.domains.adventure import phase as phase_mod
-        source = inspect.getsource(phase_mod.AdventureDecisionPhase.apply)
-        assert "last_defer_reason" in source
+        """Guard 1 (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE, plan.md Step 4/Step 5 item 8):
+        the deleted AdventureDecisionPhase.apply() used to write "last_defer_reason" so
+        event_extractor.py could emit defer_with_reason. That wiring is a deliberate, disclosed,
+        NOT-ported divergence -- see docs/guidelines/intentional_divergences.md's
+        "Adventure-Route Defer-Reason Observability Gap" entry (2.41) for the full rationale
+        (the DEFER_WITH_REASON signal is discarded by the shared tier-5 utility-floor check
+        before it ever reaches a property-write site). This guard now asserts the current,
+        disclosed absence of that wiring in AdventureGoalScorer.score() honestly, rather than
+        silently deleting coverage for the gap -- if a future edit re-adds partial
+        "last_defer_reason" wiring here without also updating that divergence entry, this test
+        fails loudly and prompts the doc update.
+        """
+        from src.ai.goals.adventure_scorer import AdventureGoalScorer
+        source = inspect.getsource(AdventureGoalScorer.score)
+        assert "last_defer_reason" not in source
         extractor_source = inspect.getsource(EventExtractor.extract)
         assert "last_defer_reason" in extractor_source
 
@@ -438,16 +453,21 @@ class TestAntiDriftGuards:
         assert hasattr(EventExtractor, "reset_run_state")
         EventExtractor.reset_run_state()
 
-    def test_commitment_abandoned_and_quest_event_coexist_on_abandoned_transition(self):
-        """Guard 3: ACTIVE→ABANDONED must produce both commitment_abandoned and a QuestEvent.
-        Ensures commitment_abandoned is additive, not a replacement."""
+    def test_commitment_abandoned_fires_for_non_quest_project_without_quest_event(self):
+        """Guard 3 (corrected, TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG): ACTIVE→ABANDONED on a
+        generic (non-QuestState) project must still produce commitment_abandoned — it is
+        project-kind-agnostic — but must NOT produce a QuestEvent, since quest_event construction
+        is now gated to real QuestState instances only. commitment_abandoned remains additive to
+        a real QuestEvent when the project genuinely is a quest (see
+        test_event_extractor_narrative.py's TestQuestEventConfirmation), just not for this
+        fixture's own generic project."""
         prior_state, curr_state, u = _project_state_update(
             1, ProjectStatus.ACTIVE, ProjectStatus.ABANDONED, hp=80, max_hp=100
         )
         events = EventExtractor.extract(prior_state, curr_state, u, ObservabilityMode.NORMAL)
         assert "commitment_abandoned" in _types(events)
         quest_events = [e for e in events if isinstance(e, QuestEvent)]
-        assert len(quest_events) >= 1
+        assert len(quest_events) == 0
 
     def test_abandonment_category_string_values(self):
         """Guard 4: AbandonmentCategory string values must match expected payload strings."""

@@ -4,6 +4,7 @@ import logging
 from typing import Any, List, Optional
 from src.core.state import AuthoritativeState
 from src.core.strategic import ProjectStatus
+from src.core.quests import QuestState
 from src.core.updates import StateUpdate
 from src.domains.commitment.abandonment import AbandonmentEvaluator, AbandonmentCategory
 from src.domains.world_emergence.schema import WorldEventCategory
@@ -18,6 +19,30 @@ logger = logging.getLogger(__name__)
 
 _NEAR_DEATH_THRESHOLD = 0.2
 
+# outcome_kind values that never represent a real entity-vs-entity combat resolution, even when
+# a CombatUpdate carries an attacker_id (defense-in-depth alongside the attacker_id check below).
+_NON_COMBAT_OUTCOME_KINDS = ("HAZARD", "REJECTED")
+
+
+def _real_combat_update(e_upd: Any) -> Any | None:
+    """Return e_upd.combat only if it represents a genuine entity-vs-entity combat resolution.
+
+    attacker_id is the primary discriminant: every real damage-dealing CombatUpdate constructed
+    by src/engine/combat.py sets it, while non-combat HP-reducing sources (hazard drain in
+    world_dynamics.py, starvation/exhaustion in biological.py) never do — both leave attacker_id
+    at its None default. outcome_kind is checked too, defense-in-depth, since CombatUpdate's own
+    dataclass default for outcome_kind ("SURVIVE") coincides with a real combat value and is not
+    itself a safe discriminant on its own.
+    """
+    combat_upd = getattr(e_upd, "combat", None) if e_upd is not None else None
+    if combat_upd is None:
+        return None
+    if getattr(combat_upd, "attacker_id", None) is None:
+        return None
+    if getattr(combat_upd, "outcome_kind", None) in _NON_COMBAT_OUTCOME_KINDS:
+        return None
+    return combat_upd
+
 # LeadCertainty enum value → float for band-crossing delta computation (lead_certainty_updated)
 _CERTAINTY_FLOAT: dict[str, float] = {
     "PRECISE": 1.0, "APPROXIMATE": 0.5, "VAGUE": 0.25, "EXHAUSTED": 0.0,
@@ -28,6 +53,14 @@ _BELIEF_STALE_TICKS = 50
 
 # How many ticks without XP before progression_plateau_detected fires (xp_rate_zero)
 _XP_PLATEAU_TICKS = 50
+
+# How many ticks with zero movement across level/skills/gear/gold before
+# capability_growth_stalled fires (TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE)
+_CAPABILITY_STALL_TICKS = 300
+
+# Minimum lifecycle.generation (a completed Hero's Journey rebirth already occurred) for
+# life_arc_incoherent to be eligible
+_LATE_GENERATION_THRESHOLD = 2
 
 # Project kinds inconsistent with a high-urgency DANGER concern (decision_divergence_detected)
 _NON_SURVIVAL_PROJECT_KINDS = frozenset(("harvesting", "exploration", "social", "crafting"))
@@ -54,6 +87,13 @@ class EventExtractor:
     # Contract milestones: "{contract_id}:{label}" keys already emitted this run
     _emitted_contract_milestones: set[str] = set()
 
+    # Capability trend / life-arc coherence (TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE):
+    # entity_id → last tick any of level/skills/gear/gold moved. Initialized to first-observed
+    # tick (not 0) so an entity first seen mid-run isn't immediately treated as stalled.
+    _last_capability_growth_tick: dict[int, int] = {}
+    _emitted_capability_stalled: set[int] = set()
+    _emitted_life_arc_incoherent: set[int] = set()
+
     _SOCIAL_MEMORY_THRESHOLD = 0.3  # minimum trust_history delta to emit
     _CONTRACT_MILESTONE_THRESHOLDS = ((0.25, "25%"), (0.50, "50%"), (0.75, "75%"))
 
@@ -66,6 +106,9 @@ class EventExtractor:
         cls._emitted_stale_leads.clear()
         cls._emitted_social_memory.clear()
         cls._emitted_contract_milestones.clear()
+        cls._last_capability_growth_tick.clear()
+        cls._emitted_capability_stalled.clear()
+        cls._emitted_life_arc_incoherent.clear()
 
     @staticmethod
     def extract(
@@ -77,6 +120,48 @@ class EventExtractor:
         """Compares state transitions to produce semantic events matching volume policies."""
         if mode == ObservabilityMode.OFF:
             return []
+
+        # TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION: COMBAT/ECONOMY/FACTION event
+        # emission moved to src/observability/event_shapers.py's apply-layer shaper registry,
+        # delivered live by Kernel._phase_observability() when this flag is "ON" (the default —
+        # see FeatureFlagManager). The branches below stay in this file, flag-gated, as a real
+        # rollback path: set ENABLE_PUSH_EVENT_SHAPERS to anything other than "ON" to restore
+        # exact pre-cutover diffing behavior for these 3 domains. Default "ON" (not falling back
+        # to the old path) when feature_flags is absent/doesn't override — matches
+        # FeatureFlagManager's own new default, so an unconfigured run gets the current default
+        # behavior, not a silent revert to pre-cutover diffing.
+        _push_shapers_active = (getattr(prior_state, "feature_flags", None) or {}).get(
+            "ENABLE_PUSH_EVENT_SHAPERS", "ON") == "ON"
+
+        # Phase 2 cutover (TCK-20260806-PUSH-CUTOVER-PHASE2): same rollback pattern as
+        # _push_shapers_active above, but on the SEPARATE ENABLE_PUSH_EVENT_SHAPERS_PHASE2 flag —
+        # NOT the same flag reused, contrary to this epic's own original premise. Phase 2's
+        # shapers live in a separate PHASE2_SHAPER_REGISTRY specifically because
+        # ENABLE_PUSH_EVENT_SHAPERS already defaulted "ON" by the time Phase 2 began (Phase 1's
+        # own cutover), so registering into the same registry/flag would have delivered
+        # immediately with no SHADOW window — a real bug found and fixed during
+        # TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY's own build. Default "ON" for the same reason
+        # _push_shapers_active defaults "ON": this cutover ticket is what flips the *default*
+        # (feature_flags.py), so an unconfigured run gets the new default behavior, not a silent
+        # revert.
+        _push_shapers_phase2_active = (getattr(prior_state, "feature_flags", None) or {}).get(
+            "ENABLE_PUSH_EVENT_SHAPERS_PHASE2", "ON") == "ON"
+
+        # Quest cutover (TCK-20260807-QUEST-EVENT-PUSH-MIGRATION): same rollback pattern as
+        # _push_shapers_active/_push_shapers_phase2_active above, on its OWN
+        # ENABLE_PUSH_EVENT_SHAPERS_QUEST flag — NOT the Phase 2 flag (already ON, would give no
+        # SHADOW window, the same reason Phase 2 needed its own flag distinct from Phase 1's).
+        # Gates ONLY the quest_event construction below, NOT commitment_abandoned (a separate,
+        # not-yet-migrated signal, tracked by TCK-20260807-COMMITMENT-ABANDONED-PUSH-MIGRATION-GAP).
+        _push_shapers_quest_active = (getattr(prior_state, "feature_flags", None) or {}).get(
+            "ENABLE_PUSH_EVENT_SHAPERS_QUEST", "ON") == "ON"
+
+        # Agency cutover (TCK-20260807-COMMITMENT-ABANDONED-PUSH-MIGRATION-GAP,
+        # TCK-20260807-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP): same rollback pattern as the
+        # flags above, on its OWN ENABLE_PUSH_EVENT_SHAPERS_AGENCY flag — gates commitment_abandoned
+        # and rejection_cascade_tick, the last 2 real push-migration gaps found in this file.
+        _push_shapers_agency_active = (getattr(prior_state, "feature_flags", None) or {}).get(
+            "ENABLE_PUSH_EVENT_SHAPERS_AGENCY", "ON") == "ON"
 
         tick = current_state.tick
         now = time.time()
@@ -98,16 +183,21 @@ class EventExtractor:
                         tick=tick, timestamp=now, entity_id=eid,
                         action="despawn", details={"kind": prior_ent.kind, "position": prior_ent.navigation.position}
                     ))
-                    # Demographic mortality — despawn without a combat attacker
-                    e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
-                    has_attacker = bool(e_upd and getattr(e_upd, "combat_upd", None) and e_upd.combat_upd.attacker_id)
-                    if not has_attacker:
-                        events.append(SimulationEvent(
-                            event_type="demographic_mortality", event_category="lifecycle",
-                            tick=tick, entity_id=eid, severity="INFO",
-                            source_system="event_extractor", message="",
-                            payload={"kind": prior_ent.kind},
-                        ))
+                    # Demographic mortality — despawn without a combat attacker. Flag-gated
+                    # (TCK-20260806-PUSH-CUTOVER-PHASE2): live behind DeferredInstrumentationShaper
+                    # when ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON" (default); this branch is the
+                    # rollback path when it isn't. LifecycleEvent (despawn) above stays
+                    # unconditional — it is not a migrated event.
+                    if not _push_shapers_phase2_active:
+                        e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
+                        has_attacker = _real_combat_update(e_upd) is not None
+                        if not has_attacker:
+                            events.append(SimulationEvent(
+                                event_type="demographic_mortality", event_category="lifecycle",
+                                tick=tick, entity_id=eid, severity="INFO",
+                                source_system="event_extractor", message="",
+                                payload={"kind": prior_ent.kind},
+                            ))
                 continue
 
             # Spawn lifecycle
@@ -116,12 +206,15 @@ class EventExtractor:
                     tick=tick, timestamp=now, entity_id=eid,
                     action="spawn", details={"kind": entity.kind, "position": entity.navigation.position}
                 ))
-                events.append(SimulationEvent(
-                    event_type="demographic_birth", event_category="lifecycle",
-                    tick=tick, entity_id=eid, severity="INFO",
-                    source_system="event_extractor", message="",
-                    payload={"kind": entity.kind},
-                ))
+                # demographic_birth: flag-gated (TCK-20260806-PUSH-CUTOVER-PHASE2), same pattern —
+                # LifecycleEvent (spawn) above stays unconditional.
+                if not _push_shapers_phase2_active:
+                    events.append(SimulationEvent(
+                        event_type="demographic_birth", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"kind": entity.kind},
+                    ))
                 continue
 
             # Movement (exclusively low-volume for non-LIGHT/LONG_RUN modes)
@@ -133,77 +226,333 @@ class EventExtractor:
                         end_pos=entity.navigation.position
                     ))
 
-            # Combat damage event
-            hp_diff = entity.combat.hp - prior_ent.combat.hp
-            if hp_diff < 0:
-                is_lethal = (entity.combat.hp <= 0 or not entity.lifecycle.active)
-                # Volumization rule: skip routine damage inside LIGHT or LONG_RUN mode unless lethal
-                if is_lethal or mode not in (ObservabilityMode.LIGHT, ObservabilityMode.LONG_RUN):
-                    attacker_id = None
-                    e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
-                    if e_upd and getattr(e_upd, "combat_upd", None):
-                        attacker_id = e_upd.combat_upd.attacker_id
+            # Vitals — biological/stamina/wounds (TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP).
+            # Full coverage by design (every real delta, not just threshold crossings), same
+            # high-volume-but-real precedent as `movement` above — emitted unconditionally,
+            # severity distinguishes major from minor, not scored to any SimQ pillar in this pass
+            # (a separate decision; see the ticket's own Out of Scope).
+            #
+            # _is_real_number guards against test fixtures that build `entity`/`prior_ent` as a
+            # bare MagicMock() with only some components explicitly wired (a well-established
+            # pattern across tests/unit/observability/ — .biological/.stamina are commonly left
+            # unset, which MagicMock auto-fills with further Mocks, not real floats). Real
+            # EntityState objects always carry real floats here; this never affects real ticks.
+            def _is_real_number(*values: Any) -> bool:
+                return all(isinstance(v, (int, float)) for v in values)
 
-                    events.append(CombatDamageEvent(
-                        tick=tick, timestamp=now, entity_id=eid,
-                        attacker_id=attacker_id, damage=int(-hp_diff),
-                        is_lethal=is_lethal
-                    ))
-
-            # Kill events
-            if prior_ent.lifecycle.active and not entity.lifecycle.active:
-                killer_id = None
-                e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
-                if e_upd and getattr(e_upd, "combat_upd", None):
-                    killer_id = e_upd.combat_upd.attacker_id
-
-                events.append(CombatKillEvent(
-                    tick=tick, timestamp=now, entity_id=eid,
-                    killer_id=killer_id
-                ))
-
-                # NARRATIVE: hero_death_unrecorded — hero-kind entity deactivated this tick (D4)
-                if getattr(entity, "kind", None) == "hero":
+            if mode not in (ObservabilityMode.LIGHT, ObservabilityMode.LONG_RUN):
+                bio, prior_bio = entity.biological, prior_ent.biological
+                if _is_real_number(
+                    bio.hunger, bio.sleep_debt, bio.rest_pressure,
+                    prior_bio.hunger, prior_bio.sleep_debt, prior_bio.rest_pressure,
+                ) and (bio.hunger, bio.sleep_debt, bio.rest_pressure) != (
+                    prior_bio.hunger, prior_bio.sleep_debt, prior_bio.rest_pressure
+                ):
+                    worst = max(bio.hunger, bio.sleep_debt, bio.rest_pressure)
+                    severity = "CRITICAL" if worst >= 95 else "WARNING" if worst >= 80 else "INFO"
                     events.append(SimulationEvent(
-                        event_type="hero_death_unrecorded",
-                        event_category="lifecycle",
-                        tick=tick,
-                        entity_id=eid,
-                        severity="WARNING",
-                        source_system="event_extractor",
-                        message="",
-                        payload={"entity_id": eid},
+                        event_type="biological_state_changed", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity=severity,
+                        source_system="event_extractor", message="",
+                        payload={
+                            "hunger": bio.hunger, "sleep_debt": bio.sleep_debt,
+                            "rest_pressure": bio.rest_pressure,
+                            "hunger_delta": bio.hunger - prior_bio.hunger,
+                            "sleep_debt_delta": bio.sleep_debt - prior_bio.sleep_debt,
+                            "rest_pressure_delta": bio.rest_pressure - prior_bio.rest_pressure,
+                        },
                     ))
 
-            # Combat initiated — entity was at full HP prior tick, now taking damage
-            if (entity.lifecycle.active
+                stam, prior_stam = entity.stamina, prior_ent.stamina
+                if _is_real_number(stam.current, prior_stam.current) and stam.current != prior_stam.current:
+                    severity = "WARNING" if stam.current < stam.exhaustion_threshold else "INFO"
+                    events.append(SimulationEvent(
+                        event_type="stamina_changed", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity=severity,
+                        source_system="event_extractor", message="",
+                        payload={
+                            "current": stam.current, "max_stamina": stam.max_stamina,
+                            "delta": stam.current - prior_stam.current,
+                            "exhausted": stam.current < stam.exhaustion_threshold,
+                        },
+                    ))
+
+                entity_wounds = entity.combat.wounds if isinstance(entity.combat.wounds, list) else []
+                prior_wounds = prior_ent.combat.wounds if isinstance(prior_ent.combat.wounds, list) else []
+                prior_wound_ids = {w.id for w in prior_wounds}
+                for wound in entity_wounds:
+                    if wound.id not in prior_wound_ids:
+                        severity = "CRITICAL" if wound.severity >= 0.7 else "WARNING" if wound.severity >= 0.4 else "INFO"
+                        events.append(SimulationEvent(
+                            event_type="wound_sustained", event_category="lifecycle",
+                            tick=tick, entity_id=eid, severity=severity,
+                            source_system="event_extractor", message="",
+                            payload={"wound_id": wound.id, "kind": wound.kind, "severity": wound.severity},
+                        ))
+                prior_wounds_by_id = {w.id: w for w in prior_wounds}
+                for wound in entity_wounds:
+                    prior_wound = prior_wounds_by_id.get(wound.id)
+                    if prior_wound is not None and wound.healed and not prior_wound.healed:
+                        events.append(SimulationEvent(
+                            event_type="wound_healed", event_category="lifecycle",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"wound_id": wound.id, "kind": wound.kind},
+                        ))
+                entity_scars = entity.combat.scars if isinstance(entity.combat.scars, list) else []
+                prior_scars = prior_ent.combat.scars if isinstance(prior_ent.combat.scars, list) else []
+                prior_scar_ids = {s.id for s in prior_scars}
+                for scar in entity_scars:
+                    if scar.id not in prior_scar_ids:
+                        events.append(SimulationEvent(
+                            event_type="scar_gained", event_category="lifecycle",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"scar_id": scar.id, "wound_kind": scar.wound_kind},
+                        ))
+
+                # Base attributes (TCK-20260808-ENTITY-ATTRIBUTES-OBSERVABILITY-GAP). Full
+                # coverage by design, same rationale as the vitals events above. Severity is
+                # direction-based (WARNING on any decline, INFO otherwise) rather than
+                # magnitude-based -- no existing numeric "significant attribute change" threshold
+                # exists anywhere in the repo to reuse, unlike exhaustion_threshold/WoundState.
+                # severity above.
+                attrs, prior_attrs = entity.attributes, prior_ent.attributes
+                _ATTR_FIELDS = (
+                    "strength", "agility", "vitality", "endurance",
+                    "intelligence", "spirit", "wisdom", "perception", "charisma",
+                )
+                if _is_real_number(*(getattr(attrs, f) for f in _ATTR_FIELDS)) and _is_real_number(
+                    *(getattr(prior_attrs, f) for f in _ATTR_FIELDS)
+                ):
+                    attr_deltas = {
+                        f: getattr(attrs, f) - getattr(prior_attrs, f)
+                        for f in _ATTR_FIELDS
+                        if getattr(attrs, f) != getattr(prior_attrs, f)
+                    }
+                    if attr_deltas:
+                        severity = "WARNING" if any(d < 0 for d in attr_deltas.values()) else "INFO"
+                        events.append(SimulationEvent(
+                            event_type="attribute_changed", event_category="lifecycle",
+                            tick=tick, entity_id=eid, severity=severity,
+                            source_system="event_extractor", message="",
+                            payload={"deltas": attr_deltas},
+                        ))
+
+                # Equipment (TCK-20260808-ENTITY-EQUIPMENT-OBSERVABILITY-GAP). Full coverage by
+                # design, same rationale as the events above -- durability only changes on
+                # discrete combat-hit/repair actions (never an unconditional per-tick decay), so
+                # per-real-delta coverage does not create movement/biological-class volume.
+                eq, prior_eq = entity.equipment, prior_ent.equipment
+                eq_slots = eq.slots if isinstance(eq.slots, dict) else {}
+                prior_eq_slots = prior_eq.slots if isinstance(prior_eq.slots, dict) else {}
+                for slot in set(eq_slots) | set(prior_eq_slots):
+                    new_item = eq_slots.get(slot)
+                    old_item = prior_eq_slots.get(slot)
+                    if new_item == old_item:
+                        continue
+                    if new_item is not None:
+                        events.append(SimulationEvent(
+                            event_type="item_equipped", event_category="lifecycle",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"slot": slot.value, "item_id": new_item, "previous_item_id": old_item},
+                        ))
+                    elif old_item is not None:
+                        events.append(SimulationEvent(
+                            event_type="item_unequipped", event_category="lifecycle",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"slot": slot.value, "previous_item_id": old_item},
+                        ))
+
+                # Durability severity bands (INFO >= 50, WARNING < 50 and > 0, CRITICAL <= 0) use
+                # the field's real 0-100 scale (src/core/equipment.py/combat.py/core_actions.py
+                # all agree on this scale) -- the same 50% "needs repair" intent already designed
+                # into src/domains/progression/gaps.py and src/engine/gold_sink.py, just applied
+                # correctly (both of those compare against a 0-1 scale by mistake, a disclosed,
+                # unfixed bug -- see this ticket's own investigation.md).
+                eq_dur = eq.durability if isinstance(eq.durability, dict) else {}
+                prior_eq_dur = prior_eq.durability if isinstance(prior_eq.durability, dict) else {}
+                for slot in set(eq_dur) | set(prior_eq_dur):
+                    new_dur = eq_dur.get(slot)
+                    old_dur = prior_eq_dur.get(slot)
+                    if not _is_real_number(new_dur, old_dur) or new_dur == old_dur:
+                        continue
+                    if new_dur > old_dur:
+                        severity = "INFO"
+                    elif new_dur <= 0.0:
+                        severity = "CRITICAL"
+                    elif new_dur < 50.0:
+                        severity = "WARNING"
+                    else:
+                        severity = "INFO"
+                    events.append(SimulationEvent(
+                        event_type="equipment_durability_changed", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity=severity,
+                        source_system="event_extractor", message="",
+                        payload={"slot": slot.value, "durability": new_dur, "delta": new_dur - old_dur},
+                    ))
+
+                # Identity: role/faction/recipes/cooldowns (TCK-20260808-ENTITY-IDENTITY-ROLE-
+                # FACTION-OBSERVABILITY-GAP). Full coverage by design, same rationale as the
+                # events above. No TaskUpdate.work_kind_set event -- deliberate verdict, documented
+                # in this ticket's own investigation.md: it is per-tick scheduling plumbing (every
+                # acting entity, nearly every tick), not persistent narrative state.
+                ident, prior_ident = entity.identity, prior_ent.identity
+                if _is_real_number(ident.role, prior_ident.role) and ident.role != prior_ident.role:
+                    events.append(SimulationEvent(
+                        event_type="entity_role_changed", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"role": ident.role, "previous_role": prior_ident.role},
+                    ))
+                if _is_real_number(ident.faction, prior_ident.faction) and ident.faction != prior_ident.faction:
+                    events.append(SimulationEvent(
+                        event_type="entity_faction_changed", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"faction": ident.faction, "previous_faction": prior_ident.faction},
+                    ))
+                new_recipes = ident.known_recipes if isinstance(ident.known_recipes, (set, frozenset)) else set()
+                prior_recipes = prior_ident.known_recipes if isinstance(prior_ident.known_recipes, (set, frozenset)) else set()
+                for recipe_id in new_recipes - prior_recipes:
+                    events.append(SimulationEvent(
+                        event_type="recipe_learned", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"recipe_id": recipe_id},
+                    ))
+                new_cooldowns = ident.cooldowns if isinstance(ident.cooldowns, dict) else {}
+                prior_cooldowns = prior_ident.cooldowns if isinstance(prior_ident.cooldowns, dict) else {}
+                for skill_id, tick_ready in new_cooldowns.items():
+                    if prior_cooldowns.get(skill_id) != tick_ready:
+                        events.append(SimulationEvent(
+                            event_type="skill_cooldown_started", event_category="lifecycle",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"skill_id": skill_id, "tick_ready": tick_ready},
+                        ))
+
+            # Combat damage event — only classified as combat when a genuine entity-vs-entity
+            # combat resolution caused the HP loss (see _real_combat_update: hazard drain and
+            # biological/starvation damage both reduce HP without ever setting attacker_id).
+            # Flag-gated (TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION): live behind
+            # src/observability/event_shapers.py's CombatShaper when ENABLE_PUSH_EVENT_SHAPERS is
+            # "ON" (default); this branch is the rollback path when it isn't.
+            hp_diff = entity.combat.hp - prior_ent.combat.hp
+            if not _push_shapers_active and hp_diff < 0:
+                e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
+                real_combat_upd = _real_combat_update(e_upd)
+                if real_combat_upd is not None:
+                    is_lethal = (entity.combat.hp <= 0 or not entity.lifecycle.active)
+                    # Volumization rule: skip routine damage inside LIGHT or LONG_RUN mode unless lethal
+                    if is_lethal or mode not in (ObservabilityMode.LIGHT, ObservabilityMode.LONG_RUN):
+                        events.append(CombatDamageEvent(
+                            tick=tick, timestamp=now, entity_id=eid,
+                            attacker_id=real_combat_upd.attacker_id, damage=int(-hp_diff),
+                            is_lethal=is_lethal
+                        ))
+
+            # Kill events — fires on a lifecycle.active→False transition, EXCEPT the same-tick
+            # outcome_kind=="KILL" case, which CombatShaper now owns live when
+            # ENABLE_PUSH_EVENT_SHAPERS is "ON" (TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-
+            # FACTION), and EXCEPT any death whose own authoritative
+            # `LifecycleComponent.death_reason` isn't "COMBAT" (TCK-20260809-COMBAT-KILL-
+            # LIFECYCLE-CREDIT-GAP-INVESTIGATION). `LifecycleSystem.resolve_lifecycle()` is the
+            # sole runtime writer of both `lifecycle.active` and `death_reason` (set together, same
+            # EntityUpdate) and only ever assigns "OLD_AGE" or "COMBAT" — this branch used to fire
+            # unconditionally on ANY active->False transition regardless of cause, which meant
+            # HAZARD-caused deaths (a world_dynamics-owned mechanic, already excluded from
+            # `_real_combat_update` via `_NON_COMBAT_OUTCOME_KINDS`) and OLD_AGE deaths were both
+            # being counted as `combat_kill`/`entity_killed` and penalized under the COMBAT
+            # pillar's attrition scoring, even though neither is combat. Confirmed via direct
+            # pipeline instrumentation on `dungeon_crawl_seed42_2000t`: of the run's 25
+            # calibrate_simq-scored `combat_kill` events, every one traced back to a `death_reason`
+            # of "HAZARD-preceded" (killer_id always None, prior combat_upd outcome_kind="HAZARD")
+            # or unset (no combat_upd at all, matching a mass despawn/old-age cluster) — none
+            # traced to "COMBAT" — while genuine `combat_engagement_ended` activity that same run
+            # produced zero credit because it never resolved as KILL/ESCAPED. This was the real,
+            # structural reason the COMBAT pillar sat at the B/C grade boundary: it was absorbing
+            # negative credit from non-combat mortality while its own positive-scoring surface
+            # stayed unreachable. Genuine combat deaths (`death_reason=="COMBAT"`) were separately
+            # confirmed still to fire correctly under this fix.
+            # Old-age/despawn deaths keep their own real credit path: `demographic_mortality`
+            # (WORLD pillar) fires separately when the corpse is later removed via
+            # `entities_remove`, unaffected by this change.
+            if prior_ent.lifecycle.active and not entity.lifecycle.active:
+                e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
+                real_combat_upd = _real_combat_update(e_upd)
+                is_shaper_owned_kill = (
+                    _push_shapers_active and real_combat_upd is not None
+                    and getattr(real_combat_upd, "outcome_kind", None) == "KILL"
+                )
+                is_genuine_combat_death = getattr(entity.lifecycle, "death_reason", None) == "COMBAT"
+                if not is_shaper_owned_kill:
+                    if is_genuine_combat_death:
+                        killer_id = real_combat_upd.attacker_id if real_combat_upd is not None else None
+
+                        events.append(CombatKillEvent(
+                            tick=tick, timestamp=now, entity_id=eid,
+                            killer_id=killer_id
+                        ))
+
+                    # NARRATIVE: hero_death_unrecorded — hero-kind entity deactivated this tick
+                    # (D4). Deliberately NOT gated on is_genuine_combat_death: this is a broader
+                    # "a hero died and nothing else recorded it" narrative-gap signal, not a
+                    # combat-specific one — a hero dying of old age with no other tracking is just
+                    # as real an "unrecorded" gap as a hero dying in unattributed combat.
+                    if getattr(entity, "kind", None) == "hero":
+                        events.append(SimulationEvent(
+                            event_type="hero_death_unrecorded",
+                            event_category="lifecycle",
+                            tick=tick,
+                            entity_id=eid,
+                            severity="WARNING",
+                            source_system="event_extractor",
+                            message="",
+                            payload={"entity_id": eid},
+                        ))
+
+            # Combat initiated — entity was at full HP prior tick, now taking damage from a
+            # genuine combat resolution (same _real_combat_update guard as combat_damage above).
+            # Flag-gated, same rollback pattern as combat_damage above.
+            if (not _push_shapers_active
+                    and entity.lifecycle.active
                     and prior_ent.combat.hp == prior_ent.combat.max_hp
                     and entity.combat.hp < entity.combat.max_hp):
                 e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
-                attacker_id = None
-                if e_upd and getattr(e_upd, "combat_upd", None):
-                    attacker_id = e_upd.combat_upd.attacker_id
-                events.append(SimulationEvent(
-                    event_type="combat_initiated", event_category="combat",
-                    tick=tick, entity_id=eid, severity="INFO",
-                    source_system="event_extractor", message="",
-                    payload={"attacker_id": attacker_id},
-                ))
+                real_combat_upd = _real_combat_update(e_upd)
+                if real_combat_upd is not None:
+                    events.append(SimulationEvent(
+                        event_type="combat_initiated", event_category="combat",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"attacker_id": real_combat_upd.attacker_id},
+                    ))
 
-            # Near-death survival — HP crosses below 20% threshold while entity survives
+            # Near-death survival — HP crosses below 20% threshold while entity survives a
+            # genuine combat resolution (previously fired on any HP-threshold crossing at all,
+            # including hazard/biological causes — same _real_combat_update guard as above).
+            # Flag-gated, same rollback pattern as combat_damage above.
             near_death_hp = prior_ent.combat.max_hp * _NEAR_DEATH_THRESHOLD
-            if (entity.lifecycle.active
+            if (not _push_shapers_active
+                    and entity.lifecycle.active
                     and entity.combat.hp < near_death_hp
                     and prior_ent.combat.hp >= near_death_hp):
-                events.append(SimulationEvent(
-                    event_type="near_death_survival", event_category="combat",
-                    tick=tick, entity_id=eid, severity="WARNING",
-                    source_system="event_extractor", message="",
-                    payload={"hp": entity.combat.hp, "max_hp": entity.combat.max_hp},
-                ))
+                e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
+                if _real_combat_update(e_upd) is not None:
+                    events.append(SimulationEvent(
+                        event_type="near_death_survival", event_category="combat",
+                        tick=tick, entity_id=eid, severity="WARNING",
+                        source_system="event_extractor", message="",
+                        payload={"hp": entity.combat.hp, "max_hp": entity.combat.max_hp},
+                    ))
 
-            # XP granted and level-up (via IdentityComponent)
-            if hasattr(entity, "identity") and hasattr(prior_ent, "identity"):
+            # XP granted and level-up (via IdentityComponent). Flag-gated
+            # (TCK-20260806-PUSH-CUTOVER-PHASE2): live behind ProgressionShaper when
+            # ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON" (default); this block is the rollback path.
+            if not _push_shapers_phase2_active and hasattr(entity, "identity") and hasattr(prior_ent, "identity"):
                 xp_delta = entity.identity.evolution_points - prior_ent.identity.evolution_points
                 if xp_delta > 0:
                     events.append(SimulationEvent(
@@ -236,81 +585,103 @@ class EventExtractor:
             if e_upd_ext is not None:
                 prop = getattr(e_upd_ext, "property_updates", None) or {}
 
-                # Agency: route_selected / action_executed
-                routing_family = prop.get("last_routing_family")
-                if routing_family:
-                    events.append(SimulationEvent(
-                        event_type="route_selected", event_category="strategy",
-                        tick=tick, entity_id=eid, severity="INFO",
-                        source_system="event_extractor", message="",
-                        payload={"family": routing_family},
-                    ))
-                    events.append(SimulationEvent(
-                        event_type="action_executed", event_category="strategy",
-                        tick=tick, entity_id=eid, severity="INFO",
-                        source_system="event_extractor", message="",
-                        payload={"family": routing_family},
-                    ))
-                    # Agency: route_family_first_use (once per novel family per entity per run)
-                    seen = EventExtractor._seen_routing_families.setdefault(eid, set())
-                    if routing_family not in seen:
-                        seen.add(routing_family)
+                # route_selected through cooperation_event: flag-gated
+                # (TCK-20260806-PUSH-CUTOVER-PHASE2) — live behind StrategyShaper when
+                # ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON" (default); this block is the rollback
+                # path when it isn't. The intent_results loop below is a SEPARATE, already-guarded
+                # (Phase 1) block — not touched here.
+                if not _push_shapers_phase2_active:
+                    # Agency: route_selected / action_executed
+                    routing_family = prop.get("last_routing_family")
+                    if routing_family:
                         events.append(SimulationEvent(
-                            event_type="route_family_first_use", event_category="strategy",
+                            event_type="route_selected", event_category="strategy",
                             tick=tick, entity_id=eid, severity="INFO",
                             source_system="event_extractor", message="",
-                            payload={"entity_id": eid, "family": routing_family, "tick": tick},
+                            payload={"family": routing_family},
+                        ))
+                        events.append(SimulationEvent(
+                            event_type="action_executed", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"family": routing_family},
+                        ))
+                        # Agency: route_family_first_use (once per novel family per entity per run)
+                        seen = EventExtractor._seen_routing_families.setdefault(eid, set())
+                        if routing_family not in seen:
+                            seen.add(routing_family)
+                            events.append(SimulationEvent(
+                                event_type="route_family_first_use", event_category="strategy",
+                                tick=tick, entity_id=eid, severity="INFO",
+                                source_system="event_extractor", message="",
+                                payload={"entity_id": eid, "family": routing_family, "tick": tick},
+                            ))
+
+                    # Agency: defer_with_reason — property set by phase.py on DEFER_WITH_REASON
+                    # path. Key "last_defer_reason" must match phase.py property_updates key
+                    # exactly.
+                    defer_reason = prop.get("last_defer_reason")
+                    if defer_reason:
+                        events.append(SimulationEvent(
+                            event_type="defer_with_reason", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"entity_id": eid, "reason": defer_reason, "tick": tick},
                         ))
 
-                # Agency: defer_with_reason — property set by phase.py on DEFER_WITH_REASON path.
-                # Key "last_defer_reason" must match phase.py property_updates key exactly.
-                defer_reason = prop.get("last_defer_reason")
-                if defer_reason:
-                    events.append(SimulationEvent(
-                        event_type="defer_with_reason", event_category="strategy",
-                        tick=tick, entity_id=eid, severity="INFO",
-                        source_system="event_extractor", message="",
-                        payload={"entity_id": eid, "reason": defer_reason, "tick": tick},
-                    ))
+                    # Cognition: self_model_updated (PP-03)
+                    if getattr(e_upd_ext, "self_model_bundle_set", None) is not None:
+                        events.append(SimulationEvent(
+                            event_type="self_model_updated", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={},
+                        ))
 
-                # Cognition: self_model_updated (PP-03)
-                if getattr(e_upd_ext, "self_model_bundle_set", None) is not None:
-                    events.append(SimulationEvent(
-                        event_type="self_model_updated", event_category="strategy",
-                        tick=tick, entity_id=eid, severity="INFO",
-                        source_system="event_extractor", message="",
-                        payload={},
-                    ))
+                    # Information: belief_assimilated + belief_updated (PP-04)
+                    if prop.get("last_assimilated_tick") == prior_state.tick:
+                        subject = prop.get("last_assimilated_subject", "unknown")
+                        events.append(SimulationEvent(
+                            event_type="belief_assimilated", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"subject": subject},
+                        ))
+                        events.append(SimulationEvent(
+                            event_type="belief_updated", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"subject": subject},
+                        ))
 
-                # Information: belief_assimilated + belief_updated (PP-04)
-                if prop.get("last_assimilated_tick") == tick:
-                    subject = prop.get("last_assimilated_subject", "unknown")
-                    events.append(SimulationEvent(
-                        event_type="belief_assimilated", event_category="strategy",
-                        tick=tick, entity_id=eid, severity="INFO",
-                        source_system="event_extractor", message="",
-                        payload={"subject": subject},
-                    ))
-                    events.append(SimulationEvent(
-                        event_type="belief_updated", event_category="strategy",
-                        tick=tick, entity_id=eid, severity="INFO",
-                        source_system="event_extractor", message="",
-                        payload={"subject": subject},
-                    ))
+                    # Information: route_new_query (fix 4,
+                    # TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE)
+                    if prop.get("last_routed_query_tick") == prior_state.tick:
+                        subject = prop.get("last_routed_query_subject", "unknown")
+                        events.append(SimulationEvent(
+                            event_type="route_new_query", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"subject": subject},
+                        ))
 
-                # Social: cooperation_event (PP-05)
-                if prop.get("last_cooperation_decision") is not None:
-                    events.append(SimulationEvent(
-                        event_type="cooperation_event", event_category="social",
-                        tick=tick, entity_id=eid, severity="INFO",
-                        source_system="event_extractor", message="",
-                        payload={"entity_id": eid,
-                                 "decision": str(prop["last_cooperation_decision"])},
-                    ))
+                    # Social: cooperation_event (PP-05)
+                    if prop.get("last_cooperation_decision") is not None:
+                        events.append(SimulationEvent(
+                            event_type="cooperation_event", event_category="social",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"entity_id": eid,
+                                     "decision": str(prop["last_cooperation_decision"])},
+                        ))
 
-                # Economy + Information events from intent_results (resource_transfers cleared by PP-27)
+                # Economy + Information events from intent_results (resource_transfers cleared
+                # by PP-27). Flag-gated (TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION): live
+                # behind EconomyShaper when ENABLE_PUSH_EVENT_SHAPERS is "ON" (default); this loop
+                # is the rollback path when it isn't. Every branch inside is a migrated ECONOMY
+                # event — no partial-condition case here, unlike the Kill-events branch above.
                 _GOLD_SINK_KINDS = frozenset(("REPAIR_FEE", "SERVICE_FEE", "TAX"))
-                for ir in (getattr(e_upd_ext, "intent_results", None) or []):
+                for ir in ([] if _push_shapers_active else (getattr(e_upd_ext, "intent_results", None) or [])):
                     if not getattr(ir, "accepted", False):
                         continue
                     src_kind = getattr(ir, "source_kind", None)
@@ -381,9 +752,11 @@ class EventExtractor:
                                 payload={"source_id": _info_src},
                             ))
 
-                # World: hazard_drain_applied (WorldDynamicsSystem sets outcome_kind="HAZARD")
+                # World: hazard_drain_applied (WorldDynamicsSystem sets outcome_kind="HAZARD").
+                # Flag-gated, same rollback pattern as the economy loop above — migrated alongside
+                # COMBAT per TCK-20260806-PUSH-SHAPER-REGISTRY-COMBAT's Decision 1.
                 combat_upd = getattr(e_upd_ext, "combat", None)
-                if combat_upd and getattr(combat_upd, "outcome_kind", None) == "HAZARD":
+                if not _push_shapers_active and combat_upd and getattr(combat_upd, "outcome_kind", None) == "HAZARD":
                     hp_delta = getattr(combat_upd, "hp_delta", 0)
                     if hp_delta < 0:
                         events.append(SimulationEvent(
@@ -395,7 +768,11 @@ class EventExtractor:
 
             # Cognition: lead_certainty_changed (PP-30 side effect — state diff)
             # Information: lead_certainty_updated (band-crossing), belief_stale, decision signals
-            if hasattr(entity, "strategic") and hasattr(prior_ent, "strategic"):
+            # Flag-gated (TCK-20260806-PUSH-CUTOVER-PHASE2): the entire block below
+            # (lead_certainty_changed through decision_divergence_detected) is migrated to
+            # StrategyShaper — live when ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON" (default); this
+            # block is the rollback path when it isn't.
+            if not _push_shapers_phase2_active and hasattr(entity, "strategic") and hasattr(prior_ent, "strategic"):
                 curr_leads = getattr(entity.strategic, "leads", None) or {}
                 prior_leads = getattr(prior_ent.strategic, "leads", None) or {}
                 _stale_emitted = EventExtractor._emitted_stale_leads.setdefault(eid, set())
@@ -485,10 +862,12 @@ class EventExtractor:
                                          "concern_urgency": round(_top_urgency, 4)},
                             ))
 
-            # Social: group_joined / group_expelled (PP-34 group membership state diff)
+            # Social: group_joined / group_expelled (PP-34 group membership state diff). Flag-gated
+            # (TCK-20260806-PUSH-CUTOVER-PHASE2): live behind SocialShaper when
+            # ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON" (default); this block is the rollback path.
             curr_group = getattr(entity, "group_id", None)
             prior_group = getattr(prior_ent, "group_id", None)
-            if curr_group != prior_group:
+            if not _push_shapers_phase2_active and curr_group != prior_group:
                 if curr_group is not None:
                     events.append(SimulationEvent(
                         event_type="group_joined", event_category="social",
@@ -504,8 +883,10 @@ class EventExtractor:
                         payload={"prior_group_id": str(prior_group)},
                     ))
 
-            # Social: reputation_delta (PP-18, significant public reputation change)
-            if hasattr(entity, "social") and hasattr(prior_ent, "social"):
+            # Social: reputation_delta (PP-18, significant public reputation change) +
+            # social_memory_created below. Flag-gated (TCK-20260806-PUSH-CUTOVER-PHASE2), same
+            # rollback pattern.
+            if not _push_shapers_phase2_active and hasattr(entity, "social") and hasattr(prior_ent, "social"):
                 curr_rep = getattr(entity.social, "public_reputation", None)
                 prior_rep = getattr(prior_ent.social, "public_reputation", None)
                 if isinstance(curr_rep, (int, float)) and isinstance(prior_rep, (int, float)):
@@ -545,8 +926,13 @@ class EventExtractor:
                                      "score": round(float(curr_score), 6)},
                         ))
 
-            # Social: contract lifecycle events (PP-35 contracts state diff)
-            if hasattr(entity, "strategic") and hasattr(prior_ent, "strategic"):
+            # Social: contract lifecycle events (PP-35 contracts state diff). Flag-gated
+            # (TCK-20260806-PUSH-CUTOVER-PHASE2): the entire block below (through
+            # contract_milestone_completed) is migrated to SocialShaper — live when
+            # ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON" (default); this block is the rollback path.
+            # The Quest progress lifecycle block right after this one is a SEPARATE, unrelated,
+            # NOT-migrated block (QuestEvent, out of this epic's scope) — not touched here.
+            if not _push_shapers_phase2_active and hasattr(entity, "strategic") and hasattr(prior_ent, "strategic"):
                 curr_contracts = getattr(entity.strategic, "contracts", None) or {}
                 prior_contracts = getattr(prior_ent.strategic, "contracts", None) or {}
                 for cid, cs in curr_contracts.items():
@@ -643,50 +1029,86 @@ class EventExtractor:
                                          "kind": str(getattr(cs, "kind", ""))},
                             ))
 
-            # Quest progress lifecycle events
+            # Quest progress lifecycle events (TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG: gated to
+            # real QuestState instances only — this loop previously iterated ALL strategic
+            # projects of any kind, mislabeling unrelated GoalKind-typed AI strategic goals
+            # (town_return, combat_engage, harvesting, etc.) as quest_event. commitment_abandoned
+            # (below) is deliberately NOT gated the same way — it is a generic project-abandonment
+            # classification that applies to any project kind, not quest-specific, and must keep
+            # reading the generic ProjectStatus field).
+            #
+            # QuestEvent construction itself is flag-gated (TCK-20260807-QUEST-EVENT-PUSH-
+            # MIGRATION): live behind NarrativeShaper when ENABLE_PUSH_EVENT_SHAPERS_QUEST is "ON"
+            # (default); the branch below is the rollback path. commitment_abandoned stays
+            # unconditional — not yet migrated (TCK-20260807-COMMITMENT-ABANDONED-PUSH-MIGRATION-
+            # GAP).
             prior_projects = prior_ent.strategic.projects
             current_projects = entity.strategic.projects
             for qid, qstate in current_projects.items():
                 prior_qstate = prior_projects.get(qid)
-                if prior_qstate is None:
-                    events.append(QuestEvent(
-                        tick=tick, timestamp=now, entity_id=eid,
-                        quest_id=qid, status="started"
-                    ))
-                elif prior_qstate.status != qstate.status:
-                    events.append(QuestEvent(
-                        tick=tick, timestamp=now, entity_id=eid,
-                        quest_id=qid, status=str(qstate.status)
-                    ))
-                    # Agency: commitment_abandoned (behavioral classification, not just
-                    # status change — coexists with the QuestEvent above which becomes
-                    # project_abandoned via _TRANSLATE_CONDITIONAL in quality_hub.py)
-                    if (getattr(prior_qstate, "status", None) != ProjectStatus.ABANDONED
-                            and getattr(qstate, "status", None) == ProjectStatus.ABANDONED):
-                        _hp = getattr(getattr(entity, "combat", None), "hp", 100)
-                        _max_hp = getattr(getattr(entity, "combat", None), "max_hp", 100)
-                        _classification = AbandonmentEvaluator.evaluate_abandonment(
-                            _hp, _max_hp,
-                            is_party_in_combat=False,   # Q1: default; see plan decisions
-                            is_greed_driven=False,       # Q1: default; see plan decisions
-                        )
-                        if _classification.category != AbandonmentCategory.SURVIVAL:
-                            events.append(SimulationEvent(
-                                event_type="commitment_abandoned", event_category="strategy",
-                                tick=tick, entity_id=eid, severity="INFO",
-                                source_system="event_extractor", message="",
-                                payload={
-                                    "entity_id": eid,
-                                    "project_id": qid,
-                                    "category": _classification.category.value,
-                                    "penalty": _classification.penalty,
-                                    "tick": tick,
-                                },
-                            ))
+
+                if not _push_shapers_quest_active and isinstance(qstate, QuestState):
+                    # quest_status (QuestStatus: ACTIVE/COMPLETED/REWARD_PENDING/REWARDED) is the
+                    # field QuestService/QuestResolutionSystem actually mutate — NOT the generic
+                    # .status (ProjectStatus) inherited from ProjectState, which quest logic never
+                    # touches. .name.lower() (not str(enum)) so the status string matches what
+                    # quality_hub.py's _translate_quest_event() checks for ("completed"/"failed").
+                    # Explicit payload={"status": ...} — QuestEvent.status is a top-level Pydantic
+                    # field, never copied into .payload by ObservabilityEventEnvelope.
+                    # from_simulation_event() (which only carries .payload through), so without
+                    # this, quality_hub.py's translator is structurally blind to the real status
+                    # regardless of which field this branch reads — a second, deeper bug found
+                    # alongside the ProjectStatus/QuestStatus field mismatch itself.
+                    if prior_qstate is None or not isinstance(prior_qstate, QuestState):
+                        events.append(QuestEvent(
+                            tick=tick, timestamp=now, entity_id=eid,
+                            quest_id=qid, status="started",
+                            payload={"status": "started"},
+                        ))
+                    elif prior_qstate.quest_status != qstate.quest_status:
+                        _status_str = qstate.quest_status.name.lower()
+                        events.append(QuestEvent(
+                            tick=tick, timestamp=now, entity_id=eid,
+                            quest_id=qid, status=_status_str,
+                            payload={"status": _status_str},
+                        ))
+
+                # Agency: commitment_abandoned (behavioral classification, not just status
+                # change — coexists with the QuestEvent above which becomes project_abandoned via
+                # _TRANSLATE_CONDITIONAL in quality_hub.py) — generic to ANY project kind, keyed
+                # on the generic ProjectStatus field, deliberately independent of the
+                # QuestState-only gate above. Flag-gated (TCK-20260807-COMMITMENT-ABANDONED-PUSH-
+                # MIGRATION-GAP): live behind AgencyShaper when ENABLE_PUSH_EVENT_SHAPERS_AGENCY is
+                # "ON" (default); the branch below is the rollback path.
+                if not _push_shapers_agency_active and prior_qstate is not None and (
+                        getattr(prior_qstate, "status", None) != ProjectStatus.ABANDONED
+                        and getattr(qstate, "status", None) == ProjectStatus.ABANDONED):
+                    _hp = getattr(getattr(entity, "combat", None), "hp", 100)
+                    _max_hp = getattr(getattr(entity, "combat", None), "max_hp", 100)
+                    _classification = AbandonmentEvaluator.evaluate_abandonment(
+                        _hp, _max_hp,
+                        is_party_in_combat=False,   # Q1: default; see plan decisions
+                        is_greed_driven=False,       # Q1: default; see plan decisions
+                    )
+                    if _classification.category != AbandonmentCategory.SURVIVAL:
+                        events.append(SimulationEvent(
+                            event_type="commitment_abandoned", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={
+                                "entity_id": eid,
+                                "project_id": qid,
+                                "category": _classification.category.value,
+                                "penalty": _classification.penalty,
+                                "tick": tick,
+                            },
+                        ))
 
             # Progression: skill_unlocked, trait_expressed, pillar_trait_unlocked,
-            # progression_conversion_applied, progression_plateau_detected
-            if hasattr(entity, "identity") and hasattr(prior_ent, "identity"):
+            # progression_conversion_applied, progression_plateau_detected. Flag-gated
+            # (TCK-20260806-PUSH-CUTOVER-PHASE2): live behind ProgressionShaper when
+            # ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON" (default); this block is the rollback path.
+            if not _push_shapers_phase2_active and hasattr(entity, "identity") and hasattr(prior_ent, "identity"):
                 _curr_id = entity.identity
                 _prior_id = prior_ent.identity
                 _curr_skills = getattr(_curr_id, "learned_skills", None) or frozenset()
@@ -756,32 +1178,98 @@ class EventExtractor:
                                      "level": getattr(_curr_id, "evolution_level", 1)},
                         ))
 
-        # Agency: rejection_cascade_tick — post-entity-loop population aggregate.
-        # Count all rejected intent results across entities in this tick's updates.
-        _total_rejections = 0
-        _reason_counts: dict[str, int] = {}
-        _all_upd = getattr(update, "entity_updates", {}) or {}
-        for _e_upd in _all_upd.values():
-            for _ir in (getattr(_e_upd, "intent_results", None) or []):
-                if not getattr(_ir, "accepted", True):
-                    _total_rejections += 1
-                    _r = getattr(_ir, "reason", None) or "unknown"
-                    _reason_counts[_r] = _reason_counts.get(_r, 0) + 1
-        if _total_rejections >= _MAX_CONSECUTIVE_REJECTIONS:
-            _dominant = max(_reason_counts, key=_reason_counts.__getitem__) if _reason_counts else "unknown"
-            events.append(SimulationEvent(
-                event_type="rejection_cascade_tick", event_category="strategy",
-                tick=tick, entity_id=None, severity="WARNING",
-                source_system="event_extractor", message="",
-                payload={
-                    "count": _total_rejections,
-                    "tick": tick,
-                    "dominant_failure_reason": _dominant,
-                },
-            ))
+            # Capability trend / life-arc coherence (TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-
+            # LIFECYCLE). NEW signal, not a Phase 1/2 migration — no ProgressionShaper equivalent
+            # exists, so there is no double-fire risk and this block is deliberately NOT gated
+            # behind _push_shapers_phase2_active; it always runs regardless of that flag's value
+            # (see staging_artifacts/TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE/
+            # investigation.md's architecture-decision section for the full reasoning).
+            if (hasattr(entity, "identity") and hasattr(prior_ent, "identity")
+                    and hasattr(entity, "lifecycle") and hasattr(entity, "equipment")
+                    and hasattr(entity, "inventory")):
+                _cap_curr_id = entity.identity
+                _cap_curr_level = getattr(_cap_curr_id, "evolution_level", 1)
+                _cap_prior_level = getattr(prior_ent.identity, "evolution_level", 1)
+                _cap_curr_skills = getattr(_cap_curr_id, "learned_skills", None) or frozenset()
+                _cap_prior_skills = getattr(prior_ent.identity, "learned_skills", None) or frozenset()
+                _cap_curr_gold = getattr(entity.inventory, "gold", 0)
+                _cap_prior_gold = getattr(prior_ent.inventory, "gold", 0)
+                _cap_curr_slots = getattr(entity.equipment, "slots", None)
+                _cap_prior_slots = getattr(prior_ent.equipment, "slots", None)
+                _cap_curr_gear = (sum(1 for v in _cap_curr_slots.values() if v)
+                                  if isinstance(_cap_curr_slots, dict) else 0)
+                _cap_prior_gear = (sum(1 for v in _cap_prior_slots.values() if v)
+                                   if isinstance(_cap_prior_slots, dict) else 0)
+                _cap_levels_numeric = isinstance(_cap_curr_level, (int, float)) and isinstance(_cap_prior_level, (int, float))
+                _cap_gold_numeric = isinstance(_cap_curr_gold, (int, float)) and isinstance(_cap_prior_gold, (int, float))
 
-        # Resource node depletion and regeneration
-        if hasattr(current_state, "resource_nodes") and hasattr(prior_state, "resource_nodes"):
+                _cap_grew = (
+                    (_cap_levels_numeric and _cap_curr_level > _cap_prior_level)
+                    or len(_cap_curr_skills) > len(_cap_prior_skills)
+                    or _cap_curr_gear > _cap_prior_gear
+                    or (_cap_gold_numeric and _cap_curr_gold > _cap_prior_gold)
+                )
+                if eid not in EventExtractor._last_capability_growth_tick:
+                    EventExtractor._last_capability_growth_tick[eid] = tick
+                if _cap_grew:
+                    EventExtractor._last_capability_growth_tick[eid] = tick
+                elif eid not in EventExtractor._emitted_capability_stalled:
+                    _since_growth = tick - EventExtractor._last_capability_growth_tick[eid]
+                    if _since_growth > _CAPABILITY_STALL_TICKS:
+                        EventExtractor._emitted_capability_stalled.add(eid)
+                        events.append(SimulationEvent(
+                            event_type="capability_growth_stalled", event_category="lifecycle",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"ticks_since_growth": _since_growth, "level": _cap_curr_level},
+                        ))
+
+                _cap_generation = getattr(entity.lifecycle, "generation", 1)
+                if (
+                    eid not in EventExtractor._emitted_life_arc_incoherent
+                    and isinstance(_cap_generation, int)
+                    and _cap_generation >= _LATE_GENERATION_THRESHOLD
+                    and _cap_levels_numeric and _cap_curr_level <= 1
+                    and not set(_cap_curr_skills)
+                ):
+                    EventExtractor._emitted_life_arc_incoherent.add(eid)
+                    events.append(SimulationEvent(
+                        event_type="life_arc_incoherent", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"generation": _cap_generation, "level": _cap_curr_level},
+                    ))
+
+        # Agency: rejection_cascade_tick — post-entity-loop population aggregate. Flag-gated
+        # (TCK-20260807-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP): live behind AgencyShaper when
+        # ENABLE_PUSH_EVENT_SHAPERS_AGENCY is "ON" (default); the block below is the rollback path.
+        if not _push_shapers_agency_active:
+            _total_rejections = 0
+            _reason_counts: dict[str, int] = {}
+            _all_upd = getattr(update, "entity_updates", {}) or {}
+            for _e_upd in _all_upd.values():
+                for _ir in (getattr(_e_upd, "intent_results", None) or []):
+                    if not getattr(_ir, "accepted", True):
+                        _total_rejections += 1
+                        _r = getattr(_ir, "reason", None) or "unknown"
+                        _reason_counts[_r] = _reason_counts.get(_r, 0) + 1
+            if _total_rejections >= _MAX_CONSECUTIVE_REJECTIONS:
+                _dominant = max(_reason_counts, key=_reason_counts.__getitem__) if _reason_counts else "unknown"
+                events.append(SimulationEvent(
+                    event_type="rejection_cascade_tick", event_category="strategy",
+                    tick=tick, entity_id=None, severity="WARNING",
+                    source_system="event_extractor", message="",
+                    payload={
+                        "count": _total_rejections,
+                        "tick": tick,
+                        "dominant_failure_reason": _dominant,
+                    },
+                ))
+
+        # Resource node depletion and regeneration. Flag-gated (TCK-20260806-PUSH-CUTOVER-PHASE2):
+        # live behind DeferredInstrumentationShaper when ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON"
+        # (default); this block is the rollback path.
+        if not _push_shapers_phase2_active and hasattr(current_state, "resource_nodes") and hasattr(prior_state, "resource_nodes"):
             for node_id, node in current_state.resource_nodes.items():
                 prior_node = prior_state.resource_nodes.get(node_id)
                 if prior_node is None:
@@ -810,8 +1298,10 @@ class EventExtractor:
                     ))
 
         # World: ecology_cycle_completed — fires once per region per ecology interval (every 200 ticks)
-        # ResourceEcologyService.ECOLOGY_INTERVAL == 200
-        if tick % 200 == 0 and hasattr(current_state, "regions"):
+        # ResourceEcologyService.ECOLOGY_INTERVAL == 200. Flag-gated
+        # (TCK-20260806-PUSH-CUTOVER-PHASE2): live behind WorldDynamicsShaper when
+        # ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON" (default); this block is the rollback path.
+        if not _push_shapers_phase2_active and tick % 200 == 0 and hasattr(current_state, "regions"):
             for _r_id, _region in (current_state.regions or {}).items():
                 events.append(SimulationEvent(
                     event_type="ecology_cycle_completed", event_category="region",
@@ -822,8 +1312,9 @@ class EventExtractor:
                              "net_pressure_delta": 0.0},
                 ))
 
-        # World: spawn_cadence_fired — detects spawn batch committed on cadence tick
-        if tick % _SPAWN_INTERVAL == 0:
+        # World: spawn_cadence_fired — detects spawn batch committed on cadence tick. Flag-gated
+        # (TCK-20260806-PUSH-CUTOVER-PHASE2), same rollback pattern.
+        if not _push_shapers_phase2_active and tick % _SPAWN_INTERVAL == 0:
             _spawned_monsters = [
                 e for e in (getattr(update, "entities_add", None) or [])
                 if getattr(e, "kind", None) not in (None, "world_boss", "ancient_sentinel", "goblin_raider")
@@ -837,8 +1328,11 @@ class EventExtractor:
                 ))
 
         # Economy: conservation_law_verified — throttled (1 per 50 ticks) to avoid noise
-        # Fires when economy transactions occurred this tick, implying the conservation law was checked
-        if tick % 50 == 0:
+        # Fires when economy transactions occurred this tick, implying the conservation law was
+        # checked. Flag-gated (TCK-20260806-PUSH-CUTOVER-PHASE2): live behind
+        # run_shadow_shapers()'s own cross-shaper aggregation when ENABLE_PUSH_EVENT_SHAPERS_PHASE2
+        # is "ON" (default); this block is the rollback path.
+        if not _push_shapers_phase2_active and tick % 50 == 0:
             _has_economy_tx = any(
                 e.event_type in ("resource_harvested", "item_crafted", "shop_transaction",
                                  "paid_information_transaction", "gold_sink_fired")
@@ -852,8 +1346,12 @@ class EventExtractor:
                     payload={"tick": tick},
                 ))
 
-        # World dynamics events — from StateUpdate world_updates and entities_add
-        for rid, w_upd in (getattr(update, "world_updates", None) or {}).items():
+        # World dynamics events — from StateUpdate world_updates and entities_add. Flag-gated
+        # (TCK-20260806-PUSH-CUTOVER-PHASE2): region_trauma_delta through region_transformed are
+        # migrated to WorldDynamicsShaper — live when ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON"
+        # (default); this loop is the rollback path. building_sabotaged below is a SEPARATE loop,
+        # guarded independently.
+        for rid, w_upd in ([] if _push_shapers_phase2_active else (getattr(update, "world_updates", None) or {}).items()):
             if getattr(w_upd, "trauma_delta", 0.0) != 0.0:
                 events.append(SimulationEvent(
                     event_type="region_trauma_delta", event_category="region",
@@ -896,7 +1394,24 @@ class EventExtractor:
                     payload={"region_id": rid, "new_kind": w_upd.kind_set},
                 ))
 
-        if getattr(update, "last_calamity_tick_set", None) == tick:
+        # World: building_sabotaged — building took sabotage damage (hp_delta < 0 discriminates
+        # BuildingSabotageSystem.resolve() from town_resolution.py's insolvency writes, which only
+        # ever set functional_set=False with no hp_delta). Flag-gated
+        # (TCK-20260806-PUSH-CUTOVER-PHASE2), same rollback pattern.
+        for b_id, b_upd in ([] if _push_shapers_phase2_active else (getattr(update, "building_updates", None) or {}).items()):
+            if getattr(b_upd, "hp_delta", 0.0) is not None and getattr(b_upd, "hp_delta", 0.0) < 0:
+                from src.engine.kernel import Kernel
+                _region = Kernel.get_building_region(current_state, b_id) if current_state else None
+                events.append(SimulationEvent(
+                    event_type="building_sabotaged", event_category="region",
+                    tick=tick, entity_id=None, severity="WARNING",
+                    source_system="event_extractor", message="",
+                    payload={"building_id": b_id, "hp_delta": b_upd.hp_delta,
+                             "region_id": _region.id if _region else None},
+                ))
+
+        # calamity_spawned: flag-gated (TCK-20260806-PUSH-CUTOVER-PHASE2), same rollback pattern.
+        if not _push_shapers_phase2_active and getattr(update, "last_calamity_tick_set", None) == prior_state.tick:
             events.append(SimulationEvent(
                 event_type="calamity_spawned", event_category="lifecycle",
                 tick=tick, entity_id=None, severity="CRITICAL",
@@ -904,8 +1419,10 @@ class EventExtractor:
                 payload={"tick": tick},
             ))
 
+        # boss_spawned / narrative_milestone (boss variant) / raid_party_spawned: flag-gated
+        # (TCK-20260806-PUSH-CUTOVER-PHASE2), same rollback pattern.
         _BOSS_KINDS = frozenset(("world_boss", "ancient_sentinel"))
-        for new_ent in (getattr(update, "entities_add", None) or []):
+        for new_ent in ([] if _push_shapers_phase2_active else (getattr(update, "entities_add", None) or [])):
             kind = getattr(new_ent, "kind", None)
             if kind in _BOSS_KINDS:
                 events.append(SimulationEvent(
@@ -933,10 +1450,16 @@ class EventExtractor:
                     payload={"kind": kind},
                 ))
 
-        # Faction events from FactionUpdate records (PP-08/09/10/11)
+        # Faction events from FactionUpdate records (PP-08/09/10/11). Flag-gated
+        # (TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION): live behind FactionShaper when
+        # ENABLE_PUSH_EVENT_SHAPERS is "ON" (default); this loop is the rollback path when it
+        # isn't. Every event this loop produces (diplomatic_transition, alliance_proposed,
+        # alliance_accepted, territory_ownership_changed, resource_seized, faction_tension_delta)
+        # is migrated — no partial-condition case here. faction_extinct (a separate block, below)
+        # is explicitly DEFERRED, not migrated, and stays fully unconditional.
         _seen_diplo_pairs: set = set()
         _faction_upds = getattr(update, "faction_updates", None)
-        if not isinstance(_faction_upds, (list, tuple)):
+        if not isinstance(_faction_upds, (list, tuple)) or _push_shapers_active:
             _faction_upds = ()
         for upd in _faction_upds:
             fid = upd.faction_id
@@ -980,13 +1503,21 @@ class EventExtractor:
                             payload={"faction_id": fid, "partner_id": other_fid},
                         ))
 
-            # FACTION: territory_ownership_changed (PP-11)
+            # FACTION: territory_ownership_changed (PP-11). faction_territory_pct
+            # (TCK-20260807-FACTION-TERRITORY-PCT-PAYLOAD-GAP): this faction's post-update
+            # territory count over total world regions — FactionScorer's faction_monopoly/
+            # faction_conquest_degenerate branches depend on this key, previously never set.
+            _total_regions = len(getattr(current_state, "regions", None) or {})
+            _curr_faction_st = (getattr(current_state, "factions", None) or {}).get(fid)
+            _curr_territory = getattr(_curr_faction_st, "territory", None) or ()
+            _territory_pct = (len(_curr_territory) / _total_regions) if _total_regions > 0 else 0.0
             for region_id in (upd.territory_add or ()):
                 events.append(SimulationEvent(
                     event_type="territory_ownership_changed", event_category="faction",
                     tick=tick, entity_id=None, severity="WARNING",
                     source_system="event_extractor", message="",
-                    payload={"faction_id": fid, "region_id": region_id},
+                    payload={"faction_id": fid, "region_id": region_id,
+                             "faction_territory_pct": _territory_pct},
                 ))
                 # FACTION: resource_seized — territory transfer driven by faction conflict
                 if getattr(upd, "tension_delta", 0.0) > 0:
@@ -1016,7 +1547,14 @@ class EventExtractor:
             _world_evts = ()
         for we in _world_evts:
             cat = getattr(we, "category", None)
-            if cat == WorldEventCategory.FACTION_WAR_DECLARED:
+            # war_declared/military_conflict_resolved specifically are migrated (FACTION), flag-
+            # gated (TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION) — but this loop ALSO
+            # produces world_emergence_event/narrative_milestone (NARRATIVE, out of migration
+            # scope) below, which must stay fully unconditional. Only this if/elif is guarded, not
+            # the whole loop.
+            if _push_shapers_active:
+                pass
+            elif cat == WorldEventCategory.FACTION_WAR_DECLARED:
                 events.append(SimulationEvent(
                     event_type="war_declared", event_category="faction",
                     tick=tick, entity_id=None, severity="CRITICAL",
@@ -1034,55 +1572,65 @@ class EventExtractor:
                     },
                 ))
 
-            # NARRATIVE: world_emergence_event — one per WorldEvent in world_events_add (D1)
-            events.append(SimulationEvent(
-                event_type="world_emergence_event",
-                event_category="lifecycle",
-                tick=tick,
-                entity_id=None,
-                severity="INFO",
-                source_system="event_extractor",
-                message="",
-                payload={
-                    "category": str(cat) if cat else "",
-                    "region_id": str(getattr(we, "region_id", "") or ""),
-                    "subject": str(getattr(we, "subject", "") or ""),
-                },
-            ))
-
-            # NARRATIVE: narrative_milestone — war and sovereignty (D2)
-            if cat == WorldEventCategory.FACTION_WAR_DECLARED:
+            # NARRATIVE: world_emergence_event — one per WorldEvent in world_events_add (D1).
+            # narrative_milestone (war/sovereignty variant) below too. Both migrated to
+            # WorldDynamicsShaper — flag-gated (TCK-20260806-PUSH-CUTOVER-PHASE2), live when
+            # ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON" (default); this pair is the rollback path.
+            # Only these two constructs are guarded, not the whole loop — the war_declared/
+            # military_conflict_resolved if/elif above (Phase 1, ENABLE_PUSH_EVENT_SHAPERS) stays
+            # independently gated by its own, separate flag, untouched here.
+            if not _push_shapers_phase2_active:
                 events.append(SimulationEvent(
-                    event_type="narrative_milestone",
+                    event_type="world_emergence_event",
                     event_category="lifecycle",
                     tick=tick,
                     entity_id=None,
-                    severity="WARNING",
+                    severity="INFO",
                     source_system="event_extractor",
                     message="",
                     payload={
-                        "milestone": "first_war",
+                        "category": str(cat) if cat else "",
+                        "region_id": str(getattr(we, "region_id", "") or ""),
                         "subject": str(getattr(we, "subject", "") or ""),
                     },
                 ))
-            elif cat == WorldEventCategory.SOVEREIGNTY_SHIFT:
-                events.append(SimulationEvent(
-                    event_type="narrative_milestone",
-                    event_category="lifecycle",
-                    tick=tick,
-                    entity_id=None,
-                    severity="WARNING",
-                    source_system="event_extractor",
-                    message="",
-                    payload={
-                        "milestone": "first_sovereignty_transfer",
-                        "region_id": str(getattr(we, "region_id", "") or ""),
-                    },
-                ))
 
-        # FACTION: faction_extinct (PP-08/PP-33) — only when faction state changed this tick
+                # NARRATIVE: narrative_milestone — war and sovereignty (D2)
+                if cat == WorldEventCategory.FACTION_WAR_DECLARED:
+                    events.append(SimulationEvent(
+                        event_type="narrative_milestone",
+                        event_category="lifecycle",
+                        tick=tick,
+                        entity_id=None,
+                        severity="WARNING",
+                        source_system="event_extractor",
+                        message="",
+                        payload={
+                            "milestone": "first_war",
+                            "subject": str(getattr(we, "subject", "") or ""),
+                        },
+                    ))
+                elif cat == WorldEventCategory.SOVEREIGNTY_SHIFT:
+                    events.append(SimulationEvent(
+                        event_type="narrative_milestone",
+                        event_category="lifecycle",
+                        tick=tick,
+                        entity_id=None,
+                        severity="WARNING",
+                        source_system="event_extractor",
+                        message="",
+                        payload={
+                            "milestone": "first_sovereignty_transfer",
+                            "region_id": str(getattr(we, "region_id", "") or ""),
+                        },
+                    ))
+
+        # FACTION: faction_extinct (PP-08/PP-33) — only when faction state changed this tick.
+        # Flag-gated (TCK-20260806-PUSH-CUTOVER-PHASE2): live behind
+        # DeferredInstrumentationShaper when ENABLE_PUSH_EVENT_SHAPERS_PHASE2 is "ON" (default);
+        # this block is the rollback path.
         _faction_upd_list = getattr(update, "faction_updates", None)
-        if isinstance(_faction_upd_list, list) and _faction_upd_list:
+        if not _push_shapers_phase2_active and isinstance(_faction_upd_list, list) and _faction_upd_list:
             _living_faction_ids: set = set()
             for _ent in (getattr(current_state, "entities", {}) or {}).values():
                 _hp = getattr(_ent, "hp", None)

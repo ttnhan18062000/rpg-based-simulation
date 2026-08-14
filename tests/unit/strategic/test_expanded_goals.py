@@ -5,7 +5,7 @@ from src.core.state import (
     StrategicComponent, BiologicalComponent, CombatComponent, StaminaComponent,
     BuildingState
 )
-from src.core.strategic import BlockerState, LeadState
+from src.core.strategic import BlockerState, LeadState, GoalKind
 from src.core.builder import V2EntityBuilder
 from src.core.updates import StrategicUpdate, EntityUpdate
 from src.systems.strategic import StrategicIntelligenceSystem
@@ -156,6 +156,53 @@ def test_resolve_blocker_scorer(base_state):
     score_blocked = scorer.score(entity_blocked, base_state)
     assert score_blocked.utility == 80.0
     assert score_blocked.target_pos == (3.0, 4.0)
+
+
+# ── target_position fallback, end-to-end (TCK-20260807-TOWN-RETURN-TARGET-RESOLUTION-BUG) ──
+# TownScorer/RecoverScorer(no-inn)/ResolveBlockerScorer(non-coordinate blocker id) all set
+# target_id to a value TacticalDecisionSystem._resolve_target_position can't parse into a
+# position (a bare string like "town_center", or a blocker id like "b1"). Prior to the fix, a
+# project built from any of these scorers' GoalScores would win the goal competition but the
+# entity would never actually navigate anywhere -- these tests drive the real production path
+# (StrategicIntelligenceSystem.evaluate_strategic_intent -> TacticalDecisionSystem
+# .evaluate_entity_intent) end-to-end to confirm real navigation now results.
+
+def test_town_return_project_now_produces_real_navigation():
+    from src.engine.tactical import TacticalDecisionSystem
+
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .location(50.0, 50.0)
+              .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+              .lifecycle(active=True)
+              .biological(hunger=90.0, sleep_debt=90.0)
+              .build())
+    state = AuthoritativeState(tick=10, seed=1, entities={1: entity}, town_center=(0.0, 0.0))
+
+    strat_upd = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity)
+    assert strat_upd.projects_add_or_update, "TownScorer should have won and created a project"
+    project = strat_upd.projects_add_or_update[0]
+    assert project.kind == GoalKind.TOWN_RETURN
+    obj = project.objectives[0]
+    assert obj.target == "town_center"
+    assert obj.target_position == (0.0, 0.0)
+
+    entity_with_project = (V2EntityBuilder(1)
+                            .kind("hero")
+                            .location(50.0, 50.0)
+                            .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+                            .lifecycle(active=True)
+                            .biological(hunger=90.0, sleep_debt=90.0)
+                            .strategic(projects={project.id: project}, current_project_id=project.id,
+                                       current_objective_id=obj.id)
+                            .build())
+    state2 = AuthoritativeState(tick=10, seed=1, entities={1: entity_with_project}, town_center=(0.0, 0.0))
+
+    tac_upd = TacticalDecisionSystem.evaluate_entity_intent(state2, entity_with_project, neighbors=[])
+    assert tac_upd.navigation is not None and tac_upd.navigation.target_set == (0.0, 0.0), (
+        "town_return objective did not resolve a real navigation target — "
+        "the target_position fallback did not fire"
+    )
 
 
 def test_deterministic_tie_breaking(base_state):

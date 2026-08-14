@@ -31,6 +31,7 @@ class WorldEntitySpawner:
         *,
         base_entity_id: int = 1,
         default_position: Tuple[float, float] = (0.0, 0.0),
+        seed: int = 42,
     ) -> Dict[int, EntityState]:
         """
         Spawn EntityState objects for all entity profiles in a CompileContext.
@@ -40,6 +41,12 @@ class WorldEntitySpawner:
 
         Profiles with archetype_id use the archetype-native path.
         Profiles without archetype_id use the explicit legacy guard path.
+
+        `seed` drives real, per-entity personality generation (both paths) --
+        TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY. Given the same CompileContext,
+        base_entity_id, and seed, spawn_from_context still produces bit-identical EntityState
+        objects (docs/world/assembly_contract.md's own determinism guarantee, now parameterized
+        by seed rather than seed-free).
         """
         result: Dict[int, EntityState] = {}
         entity_id = base_entity_id
@@ -52,7 +59,7 @@ class WorldEntitySpawner:
                 initial_active=True,
             )
 
-            state = self._spawn_one(entity_id, profile, spawn, catalog_repo)
+            state = self._spawn_one(entity_id, profile, spawn, catalog_repo, seed)
             if state is not None:
                 result[entity_id] = state
             entity_id += 1
@@ -65,11 +72,12 @@ class WorldEntitySpawner:
         profile: ResolvedEntityProfile,
         spawn: EntitySpawnContext,
         catalog_repo: object,
+        seed: int,
     ) -> Optional[EntityState]:
         if profile.archetype_id:
-            return self._spawn_archetype_native(entity_id, profile, spawn, catalog_repo)
+            return self._spawn_archetype_native(entity_id, profile, spawn, catalog_repo, seed)
         else:
-            return self._spawn_legacy_guard(entity_id, profile, spawn)
+            return self._spawn_legacy_guard(entity_id, profile, spawn, seed)
 
     def _spawn_archetype_native(
         self,
@@ -77,6 +85,7 @@ class WorldEntitySpawner:
         profile: ResolvedEntityProfile,
         spawn: EntitySpawnContext,
         catalog_repo: object,
+        seed: int,
     ) -> Optional[EntityState]:
         """Archetype-native path: catalog → resolved archetype → contract → EntityState."""
         try:
@@ -84,21 +93,24 @@ class WorldEntitySpawner:
             resolver = EntityArchetypeResolver(catalog_repo)  # type: ignore[arg-type]
             resolved_arch = resolver.resolve(profile.archetype_id)
             contract = resolved_archetype_to_contract(resolved_arch)
-            return self._factory.build_entity(entity_id, contract, spawn)
+            return self._factory.build_entity(entity_id, contract, spawn, seed)
         except Exception:
             # Archetype resolution failed — fall through to legacy guard
-            return self._spawn_legacy_guard(entity_id, profile, spawn)
+            return self._spawn_legacy_guard(entity_id, profile, spawn, seed)
 
     def _spawn_legacy_guard(
         self,
         entity_id: int,
         profile: ResolvedEntityProfile,
         spawn: EntitySpawnContext,
+        seed: int,
     ) -> EntityState:
         # LEGACY GUARD: no archetype_id available or archetype resolution failed.
         # Uses V2EntityBuilder directly from profile stats. This path is explicit
         # and intentional — not a silent fallback.
         from src.core.builder import V2EntityBuilder
+        from src.content_semantics.personality import build_personality_for_entity, get_action_style_for_bravery
+        personality = build_personality_for_entity(entity_id, profile.faction_id, seed)
         return (
             V2EntityBuilder(entity_id)
             .kind(profile.race_id or "human")
@@ -113,6 +125,7 @@ class WorldEntitySpawner:
                     "faction_id": profile.faction_id,
                     "role_id": profile.role_id,
                 },
+                personality=personality,
             )
             .combat(
                 hp=profile.hp,
@@ -122,6 +135,7 @@ class WorldEntitySpawner:
                 attack_range=profile.attack_range,
                 readiness=profile.readiness,
                 alive=True,
+                action_style=get_action_style_for_bravery(personality.bravery),
             )
             .build()
         )

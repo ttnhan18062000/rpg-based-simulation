@@ -17,7 +17,6 @@ Migrate town test suites to V2EntityBuilder
 
 ## Status
 DONE
-INPROGRESS
 
 ## Tier
 standard

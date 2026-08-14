@@ -11,6 +11,8 @@ from src.simulation_quality.weights import ScoringWeights
 class CombatScorer(PillarScorer):
     """Scores Combat pillar: SQ-03, SQ-04 (primary)."""
 
+    PILLAR_ID = PillarId.COMBAT
+
     EVENT_TYPES = (
         "combat_initiated",
         "combat_resolved",

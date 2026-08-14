@@ -15,7 +15,7 @@ tags: [simq, event-emission, world-dynamics, camp, scoring, infrastructure]
 Wire camp_constructed emitter: add event recorder to CampService
 
 ## Status
-DONE — CLOSED, WRONG PREMISE
+DONE
 
 ## Tier
 standard

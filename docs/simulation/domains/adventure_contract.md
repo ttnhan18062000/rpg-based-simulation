@@ -3,37 +3,48 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-08-13
 ---
 
 # Adventure Domain Contract
 
-**Source:** `src/domains/adventure/` (generator.py, scoring.py, service.py, resolver.py, mapper.py, phase.py, schema.py)  
-**Pipeline phase:** the Adventure Decision stage (`AdventureDecisionPhase`)  
+**Source:** `src/domains/adventure/` (generator.py, scoring.py, service.py, resolver.py, mapper.py, schema.py) + `src/ai/goals/adventure_scorer.py` (`AdventureGoalScorer`, the tier-5 entry point)  
+**Pipeline phase:** tier-5 goal candidate — `AdventureGoalScorer.score(entity, state)`, invoked via `GoalRegistry.get_all_scores()` inside `StrategicIntelligenceSystem.evaluate_strategic_intent()` (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE deleted the former dedicated `AdventureDecisionPhase` pipeline stage; see Engine Phase below)  
 **Authoritative status:** Strategic routing domain — selects hero projects and objectives each tick. Does not execute combat or harvest actions directly.
 
 ---
 
 ## Purpose
 
-The adventure domain implements **subjective route selection** for heroes. Each eligible tick, it generates candidate routes the hero could pursue, scores them through a personality-biased formula, selects the highest-scoring non-deferred route, and emits a `StateUpdate` carrying a `StrategicUpdate` that sets the hero's active project and objective. Downstream tactical systems read the project to determine immediate actions.
+The adventure domain implements **subjective route selection** for entities whose resolved `CognitionProfileDefinition.supports_adventure_routing` is `True` (see the Engine Phase eligibility table below) — "hero" is retained throughout this document, and in the code's own parameter naming (e.g. `_threat_resolved(hero, state)`), as the established shorthand for the routed entity, not a role gate. Each eligible tick, it generates candidate routes the hero could pursue, scores them through a personality-biased formula, selects the highest-scoring non-deferred route, and emits a `StateUpdate` carrying a `StrategicUpdate` that sets the hero's active project and objective. Downstream tactical systems read the project to determine immediate actions.
 
 ---
 
 ## Engine Phase
 
-**Adventure Decision stage — `AdventureDecisionPhase.apply(state, context)`**
+**Tier-5 goal candidate — `AdventureGoalScorer.score(entity, state)`**
+(`src/ai/goals/adventure_scorer.py`; TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE)
 
-Runs every tick for all entities that satisfy the eligibility criteria:
+`AdventureGoalScorer` is registered unconditionally in `GoalRegistry`
+(`src/ai/goals/__init__.py`) and invoked via `GoalRegistry.get_all_scores()` inside
+`StrategicIntelligenceSystem.evaluate_strategic_intent()`, which runs every tick through the
+always-on `strategic_intelligence` pipeline phase (`src/engine/pipeline.py`), subject only to
+per-entity `SystemCadence` throttling — the same cadence and 20.0 tier-5 utility floor every
+other `GoalKind` scorer respects. Eligible entities:
 
 | Criterion | Check |
 |---|---|
-| Role | `EntityRole = 0` (hero) |
+| Cognition eligibility | Resolved `CognitionProfileDefinition.supports_adventure_routing = True`, resolved via (a) explicit `identity.properties["cognition_profile_id"]`, else (b) `identity.properties["role_id"]` → `RoleDefinition.default_cognition_profile`, else (c) legacy `EntityRole.HERO` → the `"hero"` role's own default |
 | Alive | `entity.combat.alive = True` |
 | Active | `entity.lifecycle.active = True` |
-| Project lock | `tick >= active_project.lock_until_tick` (or no active project) |
+| Project lock | `tick >= active_project.lock_until_tick`, or the triggering threat has resolved (`_threat_resolved()`), or no active project — enforced inside `StrategicIntelligenceSystem.evaluate_project_switch()`'s shared locked-branch gate, not by a route-generation pre-filter |
 
-Heroes with an unexpired `lock_until_tick` on their current project are skipped — they committed to a plan and it has not yet elapsed.
+These checks are unchanged from the prior, now-deleted phase-based mechanism
+(TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE) — only their call site changed: eligibility
+(cognition profile / alive / active) still gates whether `AdventureGoalScorer.score()` attempts
+route generation at all, and the project-lock check now lives in the shared
+`evaluate_project_switch()` arbiter every `GoalKind` candidate's commit already routes through,
+rather than a route-generation pre-filter specific to adventure routing.
 
 ---
 
@@ -41,7 +52,33 @@ Heroes with an unexpired `lock_until_tick` on their current project are skipped 
 
 - The hero's **active route selection**: which `RouteFamily` the hero pursues this tick
 - The hero's **strategic project assignment**: `current_project_id` and `current_objective_id` written via `StrategicUpdate`
-- **Debug trace properties** on the entity: `last_routing_tick`, `last_routing_family`, candidate count
+- **Debug trace properties** on the entity — `last_routing_tick`, `last_routing_family` — restored by
+  `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`. The write path is not inside
+  `AdventureGoalScorer.score()` itself (which only returns a `GoalScore` with
+  `metadata={"route_family": ...}`, never an `EntityUpdate`); it runs through a new
+  `StrategicUpdate.last_routing_family_set`/`last_routing_tick_set` scalar pair
+  (`src/core/updates.py`), set at `StrategicIntelligenceSystem.evaluate_strategic_intent()`'s
+  `ADVENTURE_ROUTE` win branch (only when `evaluate_project_switch()` actually accepts the
+  candidate — `src/systems/strategic_systems/intelligence.py`), and copied into
+  `EntityUpdate.property_updates["last_routing_family"]`/`["last_routing_tick"]` at the live
+  strategic-intelligence merge site, `StrategicIntelligenceSystem.fused_strategic_pass()`
+  (wired into the tick pipeline via `src/engine/pipeline.py:333`; NOT
+  `evaluate_all_strategic_intents()`, a same-file sibling with an equivalent merge pattern that is
+  not referenced anywhere in `src/` and is not the live path). `candidate_count`/`selected score`
+  were never part of this contract even pre-deletion — the deleted phase only ever passed those two
+  to the decision-trace writer (`trace_records`), never to `property_updates`. See
+  `docs/guidelines/intentional_divergences.md` §2.41 for the restoration record, including the
+  important caveat that this fixes the write path but does not by itself guarantee
+  `route_selected`/`action_executed`/`route_family_first_use` actually fire in any given world — that
+  additionally requires `ADVENTURE_ROUTE` to win tier-5 goal competition, which is a separate,
+  unrelated mechanism this ticket does not touch. A follow-up ticket,
+  `TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5` (same §2.41, "Restoration
+  (partial)" addendum), did touch the tier-5-competition mechanism and fixed a real, separate
+  scale mismatch there. Measured result across all 6 named calibration `_500t` run_keys: the
+  three events now fire for exactly one (`hero_guild_routing_seed42_500t`, AGENCY grade `B`); the
+  other five still measure zero events. Both fixes are real and both are needed — restoring the
+  write path alone does not make `ADVENTURE_ROUTE` win tier-5, and fixing the tier-5 scale alone
+  would have had nothing to write with.
 
 The adventure domain does not own world state, inventory, combat state, or any other entity's strategic state.
 
@@ -60,6 +97,9 @@ From the entity under evaluation:
 | `entity.strategic` | Current project state and `lock_until_tick` |
 | `entity.inventory` | Items held (informs SELL_LOOT_FOR_GOLD and BUY_UPGRADE routes) |
 | `entity.cognition` / self-model | Known weaknesses and self-assessed gaps |
+| `entity.cognition.memory.causal.entries` | `future_advice` values for 2 mapped advice strings (`avoid_enemy`, `boost_party_trust`) suppress/promote `HUNT_WEAK_ENEMY`/`FORM_PARTY` — see `docs/mechanics/04_strategic_cognition.md` §6.11 |
+| Ad-hoc `CapabilityEstimateService.estimate()` call (GATHER_RESOURCE/CRAFT_UPGRADE only; entity.combat/stamina/inventory/equipment) | Feeds `confidence_bonus` for the two mapped families — see `docs/mechanics/04_strategic_cognition.md` §6.12; NOT via `entity.self_model.capabilities`, which stays empty in production |
+| `entity.social.trust_history` / `.bonds` (FORM_PARTY candidate pool only, via `PartyCompositionScorer.score_trust_bonds()`) | Feeds `expected_benefit` and `confidence` for the FORM_PARTY route — see `docs/mechanics/04_strategic_cognition.md` §7.2; computed in `AdventureRouteGenerator.generate()`, NOT in `scoring.py` |
 
 From world state:
 
@@ -122,7 +162,8 @@ score = urgency + benefit + personality_bias + confidence_bonus - risk_penalty -
 | `urgency` | Maximum urgency across entity's active needs matching the route family |
 | `benefit` | `route.expected_benefit` (0.0–1.0) |
 | `personality_bias` | Per-family trait contribution (see table below) |
-| `confidence_bonus` | Derived from `route.confidence` |
+| `memory_adjustment` | `±1.0` when a matching `CausalMemoryEntry.future_advice` is present (`avoid_enemy` → `HUNT_WEAK_ENEMY` suppress, `boost_party_trust` → `FORM_PARTY` promote) — see `docs/mechanics/04_strategic_cognition.md` §6.11 |
+| `confidence_bonus` | `route.confidence × 0.15` (flat); for GATHER_RESOURCE/CRAFT_UPGRADE with a resolvable capability key: `CapabilityEstimate.estimate × 0.15` — see `docs/mechanics/04_strategic_cognition.md` §6.12 |
 | `risk_penalty` | `expected_risk × risk_multiplier × 0.5`; risk_multiplier = `max(0.1, (1.0 + caution×0.8) - bravery×0.6)` |
 | `blocker_penalty` | `2.0` flat if `route.blockers` is non-empty |
 
@@ -142,13 +183,25 @@ Note: `caution` is a derived trait (`1.0 - bravery`); `curiosity` is read from `
 
 **Greed/industry elif ordering issue:** In one scoring branch the `greed` condition is listed before the `industry` condition using an `elif` chain. For certain family values that match both intents, the `industry` branch may be unreachable. This is a documented known behaviour — not yet corrected.
 
-#### Calibration Note (E11D, 2026-06-19)
+#### Calibration Note (E11D, 2026-06-19 — corrected TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION)
 
-The bravery coefficient (`0.6`) and caution coefficient (`0.8`) are calibration-tested.
-Measured baseline: SEED=42, TICKS=400, 8 heroes → **4.92× combat_engage rate ratio**
-between bottom and top bravery quartiles (acceptance criterion: ≥2×).
+The bravery coefficient (`0.6`) and caution coefficient (`0.8`) shown above still describe
+`AdventureRouteScorer`'s own risk-multiplier term correctly, but the combat_engage-rate ratio
+this note originally cited as evidence of their effect was mis-attributed: `RouteFamily.
+HUNT_WEAK_ENEMY` (System A's only combat-tagged route) is confirmed dead code in
+`src/domains/adventure/generator.py` (zero call sites), so `AdventureRouteScorer` can never
+route a hero into combat at all today. The original 4.92× baseline almost certainly measured
+`ProjectKind.COMBAT` via that now-dead route, not `GoalKind.COMBAT_ENGAGE`.
 
-- At bravery=0.0 (caution=1.0): `risk_multiplier = 1.8` (maximum risk aversion)
+The real, live combat-engagement mechanism is System B (`GoalRegistry` / `CombatEngageScorer`,
+`src/ai/goals/scorers.py`): `utility = 40 + bravery×40 + stamina_ratio×20` when a hostile is
+visible. Re-measured baseline (`TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION`):
+SEEDS=1..24, TICKS=400, 16 heroes/8 monsters → **~1.74× mean combat_engage rate ratio**
+between bottom and top bravery quartiles, averaged per-seed (recalibrated acceptance
+criterion: ≥1.5×, down from the stale ≥2× reading of the original 4.92× number).
+
+- At bravery=0.0 (caution=1.0): `risk_multiplier = 1.8` (maximum risk aversion) — still an
+  accurate description of `AdventureRouteScorer`'s own non-combat routing behavior.
 - At bravery=1.0 (caution=0.0): `risk_multiplier = 0.4` (minimum risk aversion, floor preserved)
 - The `max(0.1, …)` floor ensures survival-tier dominance is never zeroed out.
 
@@ -172,9 +225,9 @@ All mutations are emitted as a `StateUpdate` — never applied directly inside t
 | Update type | Fields written |
 |---|---|
 | `StrategicUpdate` | `projects_add_or_update`, `current_project_id_set`, `current_objective_id_set` |
-| `EntityUpdate.property_updates` | `last_routing_tick`, `last_routing_family`, `candidate_count`, `selected score` (debug trace) |
+| `EntityUpdate.property_updates` | `last_routing_tick`, `last_routing_family` — written on a winning, `evaluate_project_switch()`-accepted `ADVENTURE_ROUTE` candidate, via `StrategicUpdate.last_routing_family_set`/`last_routing_tick_set` (see "What It Owns" above). Restored by `TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE`; `candidate_count`/`selected score` were never written to `property_updates` even pre-deletion. |
 
-No direct writes to `AuthoritativeState` occur inside `AdventureDecisionPhase`.
+No direct writes to `AuthoritativeState` occur inside `AdventureGoalScorer.score()`.
 
 ---
 
@@ -205,7 +258,7 @@ No direct writes to `AuthoritativeState` occur inside `AdventureDecisionPhase`.
 Primary test targets:
 
 ```
-grep -r "AdventureDecisionPhase\|AdventureRouteGenerator\|AdventureRouteScorer\|RouteToProjectMapper\|RouteFamily" tests/
+grep -r "AdventureGoalScorer\|AdventureRouteGenerator\|AdventureRouteScorer\|RouteToProjectMapper\|RouteFamily" tests/
 ```
 
 Tests must cover:

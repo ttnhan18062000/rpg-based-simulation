@@ -1,38 +1,69 @@
 import pytest
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, RegionState
-from src.core.strategic import ContractState, ContractKind, ContractStatus
+from src.core.strategic import ContractState, ContractKind, ContractStatus, ProjectKind
+from src.ai.goals.social_contract_scorer import SocialContractGoalScorer
 from src.systems.social_systems.contracts import ContractService
 from src.systems.social_systems.appraisal import SocialAppraisalSystem
+from src.systems.strategic import StrategicIntelligenceSystem
+
 
 def test_accepted_contract_spawns_project_and_objective():
-    """Verify that accepting recruitment/loan contracts automatically spawns strategic projects & objectives."""
-    ent = (V2EntityBuilder(1)
-        .kind("HERO")
-        .build())
-        
+    """
+    Verify accepting a recruitment contract ultimately produces a strategic project & objective
+    -- rewritten (TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER, per the ticket's own Scope: "rewritten
+    as a scorer-output assertion, not just extended") since accept_contract() itself no longer
+    builds any ProjectState/ObjectiveState or sets current_project_id_set directly. The three
+    steps below exercise, in order: the simplified accept_contract() (status transition only),
+    SocialContractGoalScorer.score() (raw score + contract identity in metadata), and the full
+    evaluate_strategic_intent() arbitration (real ProjectKind-typed materialization) -- SOC-208's
+    "accepted contract creates explicit obligation/contract state" now verified end-to-end.
+    """
     contract = ContractState(
         id="c1",
         kind=ContractKind.RECRUITMENT,
         source_id=2,
         target_id=1,
-        status=ContractStatus.OFFERED
+        terms={"daily_pay": 20, "duration": 100, "risk_level": "NORMAL"},
+        status=ContractStatus.OFFERED,
     )
-    
-    # Add contract to entity state
-    ent = V2EntityBuilder(1).kind("HERO").strategic(contracts={"c1": contract}).build()
-    
-    # Accept contract
+    ent = (
+        V2EntityBuilder(1).kind("HERO")
+        .social(trust_history={2: 0.8})
+        .strategic(contracts={"c1": contract})
+        .build()
+    )
+
+    # 1. accept_contract() performs only the status transition -- no project/objective spawning,
+    #    no current_project_id_set (AC1).
     strat_up = ContractService.accept_contract(ent, "c1", tick=100)
-    
-    assert strat_up.current_project_id_set == "proj_contract_c1"
-    assert len(strat_up.projects_add_or_update) == 1
-    
-    proj = strat_up.projects_add_or_update[0]
-    assert proj.id == "proj_contract_c1"
-    assert proj.kind == "combat"
-    assert len(proj.objectives) == 1
-    assert proj.objectives[0].id == "obj_recruit_c1"
+    assert strat_up.current_project_id_set is None
+    assert strat_up.projects_add_or_update == []
+    assert strat_up.contracts_add_or_update[0].status == ContractStatus.ACTIVE
+
+    # Apply the transition to build an entity with the now-ACTIVE contract present.
+    active_contract = strat_up.contracts_add_or_update[0]
+    ent_active = (
+        V2EntityBuilder(1).kind("HERO")
+        .social(trust_history={2: 0.8})
+        .strategic(contracts={"c1": active_contract})
+        .build()
+    )
+
+    # 2. SocialContractGoalScorer.score() produces a GoalScore carrying the raw score + contract
+    #    identity in metadata (AC2, AC6).
+    state = AuthoritativeState(tick=100, seed=42, entities={1: ent_active})
+    score = SocialContractGoalScorer().score(ent_active, state)
+    assert score.metadata["raw_score"] is not None
+    assert score.metadata["contract_id"] == "c1"
+
+    # 3. The full arbitration produces the real ProjectKind-typed ProjectState/ObjectiveState
+    #    (AC5 -- a real ProjectKind enum member, not the bare string "combat" the old,
+    #    pre-migration test asserted).
+    result = StrategicIntelligenceSystem.evaluate_strategic_intent(state, ent_active, force=True)
+    assert result is not None
+    proj = result.projects_add_or_update[0]
+    assert proj.kind == ProjectKind.COMBAT
     assert proj.objectives[0].target == "2"
 
 def test_contract_failure_degrades_trust():

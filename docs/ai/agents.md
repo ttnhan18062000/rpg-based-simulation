@@ -21,6 +21,36 @@ await agent("do X", { agentType: 'agent-name' })
 
 ---
 
+## Brainstorming Agents
+
+These agents support the `/brainstorming` skill, which runs before a ticket exists — its output
+(a design spec at `docs/architecture/YYYY-MM-DD-<topic>-design.md`) feeds `/create-tickets`, which
+in turn produces the tickets the agents below act on.
+
+### `spec-document-reviewer`
+
+**Role:** Reviews a written design spec for completeness, internal consistency, clarity, scope
+focus, and YAGNI violations before implementation planning begins.
+
+**Scope:** The spec document's own internal quality — not simulation-mechanics parity
+(`mechanics-auditor`'s job) or durable-state/API-boundary architecture (`architecture-reviewer`'s
+job). Registered `TCK-20260811-BRAINSTORMING-SPEC-REVIEWER-AGENT-MISSING`, replacing an
+unregistered generic-agent-plus-inline-prompt template that the `/brainstorming` skill's own
+instructions had already drifted to reference as a named subagent type.
+
+**Review dimensions:** Completeness (TODOs/placeholders), Consistency (internal contradictions),
+Clarity (ambiguity that could cause the wrong thing to be built), Scope (single-plan focus), YAGNI
+(unrequested features).
+
+**Output:** Approved / Issues Found verdict, per-issue findings tied to a spec section, advisory
+recommendations (non-blocking).
+
+**When to invoke directly:** `/brainstorming`'s own Spec Review Loop step, immediately after the
+design spec is written and committed — never with the invoking session's own conversation history
+as context, only the spec file itself.
+
+---
+
 ## Ticket Lifecycle Agents
 
 These agents handle the pre-implementation and post-implementation phases of a development ticket.
@@ -30,9 +60,10 @@ These agents handle the pre-implementation and post-implementation phases of a d
 **Role:** Creates a correctly-formatted ticket and scans for conflicts before any work begins.
 
 **What it does:**
-- Scans `tickets/inprogress/`, `tickets/done/`, `docs/`, `stored_artifacts/`, and relevant source files for duplicate work, conflicting requirements, or architectural mismatches
+- Scans `tickets/inprogress/`, `tickets/done/`, `tickets/backlogs/`, `docs/`, `stored_artifacts/`, and relevant source files for duplicate work, conflicting requirements, or architectural mismatches — a hit in `tickets/backlogs/` means the work was already investigated and deliberately deprioritized, not abandoned
 - Produces `tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md` with all required sections
 - Creates `staging_artifacts/{ticket_id}/`
+- Picks tags per `docs/guidelines/tag_taxonomy.md`, ideally from what `python3 tools/tag_registry.py list` already shows registered — the orchestrator checks this after the agent returns and gates on it (`TAGS_NOT_REGISTERED`, `TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`), so this agent's own choice doesn't need to enforce it itself
 
 **Inputs:** A request description (free text) or an existing ticket path.
 
@@ -40,6 +71,10 @@ These agents handle the pre-implementation and post-implementation phases of a d
 - Ticket file at `tickets/inprogress/{ticket_id}.md`
 - Staging directory
 - Conflict report (if any)
+- `suggested_skills` list (skill/agent invocations mapped from the ticket's `Process/Skill-signal` tags — e.g. `debugging` -> `/debugging-strategies` or `world-debugger`; empty if no tag maps)
+- `tag_relevance_flags` list (one string per assigned tag whose registered note/category doesn't
+  clearly match the ticket's own title/scope/related_code_areas; empty if all tags fit — advisory
+  only, never rejects a tag)
 
 **When to invoke directly:** When you want to draft a ticket for human review before running the full `implement-ticket` workflow.
 
@@ -51,7 +86,7 @@ These agents handle the pre-implementation and post-implementation phases of a d
 
 **What it does:**
 - Reads the ticket, all "Related Code Areas" files, relevant `docs/mechanics/` and `docs/engine/` chapters, and `docs/parity_ledger/` for overlapping entries
-- Searches `stored_artifacts/` and `tickets/done/` for prior work in the same area
+- Searches `stored_artifacts/` and `tickets/done/` for prior work in the same area (including tag-based matches against `docs/REGISTRY.yaml`, per `docs/guides/ticket_tagging.md`)
 
 **Inputs:** Ticket ID. Reads `tickets/inprogress/{ticket_id}.md`.
 
@@ -60,6 +95,24 @@ These agents handle the pre-implementation and post-implementation phases of a d
 - `staging_artifacts/{ticket_id}/test_plan.md` — regression surface, new tests required per AC, scoped pytest commands
 
 **When to invoke directly:** When an existing ticket needs a fresh investigation before planning (e.g., investigation.md is stale after scope change).
+
+---
+
+### `concern-investigator`
+
+**Role:** Investigates a pre-ticket proposal concern and returns structured JSON findings for `create-tickets.js`'s Structure phase — distinct from `investigator`, which operates on an existing ticket and writes markdown files. Read-only: its `tools:` frontmatter field omits `Edit`, `Write`, and `NotebookEdit`, since this phase never needs to change repo state.
+
+**What it does:**
+- Works through the same mandatory context-scan ordering as `investigator`/`CLAUDE.md`'s Context Scan rule: semantic `search_docs` retrieval → graphify query → `docs/REGISTRY.yaml` (layer + tag match) → `tickets/working_log.csv` cross-reference → code file reads → test discovery → AC-signal derivation → tier assessment
+- Never writes files to disk — returns JSON only
+
+**Inputs:** A concern object (`id`, `title`, `description`, `domain_area`, `type_hint`, `priority_hint`, `raw_excerpts`) and a derived `registryLayers` list — supplied per-call in the invocation prompt. No ticket file is required or read.
+
+**Outputs:** JSON matching `INVESTIGATION_SCHEMA` (`concern_id`, `files_found`, `constraints`, `existing_tests`, `related_tickets`, `ac_signals`, `risks`, `is_duplicate`, `duplicate_of`, `tier_recommendation`, `summary`) — never writes files to disk.
+
+**When to invoke directly:** Available for ad hoc "investigate this idea before I write a ticket" use, same as `investigator`/`world-debugger`/`simulation-analyst` are documented as directly invokable. No invocation-context restriction — the tool-scoping (not caller identity) is what makes this agent safe to expose broadly.
+
+Use `investigator` when a ticket already exists and you need file-based artifacts; use `concern-investigator` when you have a pre-ticket idea and want structured findings back without writing anything.
 
 ---
 
@@ -87,6 +140,21 @@ These agents handle the pre-implementation and post-implementation phases of a d
 
 **Role:** Validates a plan against architecture rules before any code is written.
 
+**Step 0 — static pre-check (post-Implement only):** The original pre-Implement call (below) has
+no code to parse — `plan.md` is prose, not Python source. A **second, post-Implement** call to this
+same agent, in the `Architecture-Verify` phase, runs
+`tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks(files_changed)` (via
+`bash()`, before the agent call) and injects its `condition`/`status`/`evidence` JSON output into
+the prompt. Three checks: `check_durable_state_mutation` (AST scan for `object.__setattr__`
+bypasses outside a field-name allowlist, nested mutable-container mutation by field-name heuristic,
+and direct nested attribute assignment), `check_api_boundary_exposure` (AST scan of `src/api/`
+top-level route functions for a raw-domain-model return annotation), and
+`check_reason_metadata_smuggling` (regex scan for a delimiter-packed `reason`/`metadata` value later
+unpacked via a matching `.split(...)` in the same file — this one has zero confirmed historical
+incidents in this repo; disclosed as speculative/rule-derived, not evidence-derived). In this second
+call, the agent judges only the flagged item(s) against the real diff — not the whole plan again —
+and self-reports provenance in a `verified_by` field.
+
 **What it checks:**
 - Durable state rule (no direct mutation, no meaning in `reason`/`metadata` strings)
 - API boundary (no raw domain models, shaped read models only)
@@ -96,34 +164,55 @@ These agents handle the pre-implementation and post-implementation phases of a d
 - Engine contract compliance (`docs/engine/authoritative_pipeline.md` for pipeline changes)
 - Parity ledger impact — flags P0 entries that will be affected
 
-**Inputs:** `staging_artifacts/{ticket_id}/plan.md` + ticket.
+**Inputs:** `staging_artifacts/{ticket_id}/plan.md` + ticket (pre-Implement call); `files_changed` +
+static-check JSON (post-Implement `Architecture-Verify` call).
 
-**Outputs:** `APPROVED` / `NEEDS_CHANGES` / `BLOCKED` verdict with violation list and parity entries affected.
+**Outputs:** `APPROVED` / `NEEDS_CHANGES` / `BLOCKED` verdict with violation list and parity entries
+affected (pre-Implement call); same vocabulary plus a `verified_by` field (post-Implement
+`Architecture-Verify` call).
 
-**Gate behavior:** The `implement-ticket` workflow halts on `NEEDS_CHANGES` or `BLOCKED` and returns the violations. Fix the plan, then re-run with `ticket_id`.
+**Gate behavior:** The `implement-ticket` workflow halts on `NEEDS_CHANGES` or `BLOCKED` from either
+call. Pre-Implement: fix the plan, then re-run with `ticket_id`. Post-Implement
+(`Architecture-Verify`): fix the flagged code, then re-run with `ticket_id`.
 
 ---
 
 ### `done-checker`
 
-**Role:** Verifies all 11 Definition-of-Done conditions before a ticket can close.
+**Role:** Verifies all 13 Definition-of-Done conditions before a ticket can close.
 
-**The 11 conditions:**
+**Step 0 — static pre-check:** Before judging conditions 3, 4, 7, 10, and 12 by hand, the agent runs
+`tools/gate_checks/done_checker_static.py`'s `run_static_precheck(ticket_id, tier, start_ts)` (via
+`python3 -c "..."`) and cites its PASS/FAIL/NA + evidence output verbatim for those conditions
+instead of re-deriving them by hand. The agent self-reports which conditions came from the script
+vs. pure judgment in a `verified_by` field.
+
+As of `TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM`, the static pre-check aggregates **6** checks,
+not 5: `staging_artifacts_complete` (4), `data_runs_clean` (10), `ticket_location` (3),
+`working_log_no_row_yet` (7), `frontmatter_valid` (12), and a 6th, `ticket_field_values_valid`
+(canonical `## Tier`/`## Priority` body-field values), which does not yet have a dedicated
+numbered DoD condition of its own — deliberately left undecided by that ticket's own Implementation
+Notes ("left for a future ticket if a dedicated DoD-list entry for this check is ever wanted").
+
+**The 13 conditions:**
 1. Implementation matches accepted scope
 2. Architecture constraints respected
-3. Ticket updated and in `tickets/inprogress/`
-4. Staging artifacts complete (`plan.md`, `investigation.md`, `test_plan.md`)
+3. Ticket has required metadata, in `tickets/inprogress/` — script-checked
+4. Staging artifacts complete (`plan.md`, `investigation.md`, `test_plan.md`) — script-checked
 5. Tests run and updated
 6. Docs updated if behavior changed
-7. `tickets/working_log.csv` entry added
+7. `tickets/working_log.csv` entry not yet present (pre-Finalize) — script-checked
 8. No undocumented decisions
 9. Repo state consistent
-10. `data/runs/` and `reports/release_proof/` cleaned
+10. `data/runs/` and `reports/release_proof/` cleaned — script-checked
 11. No material gaps unstated
+12. Frontmatter valid in ticket and staging artifacts — script-checked
+13. Agent monitoring records (pre-marked PASS — written by workflow after READY_TO_CLOSE)
 
 **Inputs:** Ticket ID. Reads the ticket, staging artifacts, test results, and parity ledger.
 
-**Outputs:** `READY_TO_CLOSE` or `BLOCKED` with a per-condition table showing evidence.
+**Outputs:** `READY_TO_CLOSE` or `BLOCKED` with a per-condition table showing evidence, plus a
+`verified_by` field listing which conditions came from the static script vs. pure judgment.
 
 **When to invoke directly:** Before manually closing a ticket that was implemented outside the workflow.
 
@@ -179,6 +268,15 @@ These agents handle the pre-implementation and post-implementation phases of a d
 
 **Role:** Keeps `docs/parity_ledger/` accurate after a behavior change.
 
+**Step 0 — static pre-check:** The orchestrator runs
+`tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` (via `bash()`) *before*
+this agent is invoked, injecting the resulting `src/` file → expected ledger file(s) todo-list into
+the prompt's preamble (`NA` = no existing `v2_evidence` citation found). After this agent's turn
+ends, the orchestrator runs `::cross_reference_touched` (via `bash()`) against the actual `git
+status` diff of `docs/parity_ledger/` and records any discrepancy in `agent-monitoring/events.jsonl`
+— visibility only, not a blocking gate. The agent self-reports which of its findings were informed
+by the injected context vs. independent judgment in a `verified_by` field.
+
 **Ledger files it manages:**
 
 | File | Subsystem |
@@ -199,6 +297,31 @@ These agents handle the pre-implementation and post-implementation phases of a d
 - P0 entries must have a non-null `test_path` pointing to a passing test
 
 **When to invoke directly:** After any manual code change that affects simulation behavior.
+
+---
+
+### `doc-updater`
+
+**Role:** Applies `docs/` updates for a behavior change, outside `parity_ledger/`, `audits/`,
+`archive/`, `scenarios/`, `entity/`.
+
+**Step 0 — orchestrator-injected context:** Standard/epic tier: the orchestrator injects
+`investigation.md`'s `## Docs Requiring Update` bullets (flagged paths) into the prompt preamble,
+and the agent reads `investigation.md` itself for the full reason text alongside each. Hotfix tier:
+no `investigation.md` exists, so the agent reads `${ticketInfo.ticket_path}`'s own `## Scope`
+section directly, plus the real `files_changed` diff, and uses its own judgment for whether a
+`docs/` update is warranted.
+
+**Per-family rules it applies:**
+- `docs/mechanics/` — bit-identical parity with source, cite chapter + section
+- `docs/engine/` — cite the specific contract ID (`project_lawbook_m10.md` is the index)
+- `docs/guides/*.md` — match the file's existing terse per-row table convention
+- `docs/guidelines/intentional_divergences.md` — rationale class + description + `Verification:` test path, all three required
+- `docs/plans/` — update in place if still live, never move to `docs/plans/archive/`
+- `docs/audits/` — never edited; cite-only, dated point-in-time snapshots
+- Everything else (17 general folders) — read the target doc's frontmatter plus 2-3 sibling docs first, match existing structure; `status: authoritative` docs get full Mechanics-Bible-level rigor regardless of folder
+
+**When to invoke directly:** After any manual doc-relevant change — mirrors `parity-updater`'s own guidance.
 
 ---
 
@@ -223,7 +346,73 @@ These agents handle the pre-implementation and post-implementation phases of a d
 - `MISSING` — law is documented but has no implementation
 - `UNDOCUMENTED` — implementation exists but has no corresponding law
 
+**Step 0 — static pre-check:** Before finalizing a `Status`/`Finding` for any entry, the agent runs
+`tools/gate_checks/mechanics_auditor_static.py`'s `verify_entry_test_path(entry_id)` (via
+`python3 -c "..."`) and cites its PASS/FAIL + evidence verbatim. This check only confirms whether the
+entry's cited `test_path` exists and passes — it never overrides the agent's own bit-identical
+code-vs-formula comparison. A static `FAIL` (commonly: no `test_path` at all — 82% of `verified`
+entries have none) does not downgrade a `PARITY` row to `DIVERGENT`/`MISSING`; it is appended as a
+caveat in `Finding` instead, since a missing test citation is a verification gap, not evidence of code
+divergence. Unlike `done-checker`/`parity-updater`'s Step 0 (orchestrator-run and independently
+verified), this Step 0 has no orchestrator-side enforcement — `mechanics-auditor` has no pipeline call
+site — so compliance depends entirely on the agent actually running the script and citing it honestly.
+The agent self-reports in `verified_by` whether each row's `Status` was corroborated by the static check
+or came from independent judgment alone.
+
+A separate, on-demand post-hoc audit closes part of this gap after the fact:
+`tools/gate_checks/mechanics_auditor_static.py`'s `audit_verified_by_claims(rows, ...)` takes a
+`mechanics-auditor` session's own output rows and independently recomputes each `verified`-status
+row's Step 0 result, flagging a row whose `verified_by` omits the static-check tag entirely ("Step 0
+skipped") or whose claim contradicts a fresh recompute without a disclosed caveat ("falsely cited").
+It returns `honesty_status: "PASS"|"FAIL"` per row — a field distinct from, and never overriding,
+the agent's own `PARITY`/`DIVERGENT`/`MISSING`/`UNDOCUMENTED` classification. **Disclosed
+limitation:** nothing currently calls this function automatically — it requires a human reviewer or
+a future ticket to supply a session's output rows explicitly. Closing that invocation gap would
+require a durable-capture mechanism for ad hoc agent output that does not exist yet (see
+`TCK-20260710-MECHANICS-AUDITOR-ENFORCEMENT`'s plan.md, Decision 2).
+
+A convenience wrapper, `candidate_ledger_files_for_module`, reuses `parity-updater`'s
+`expected_subsystems_for_files` to locate candidate ledger files when auditing a whole chapter/module
+rather than a single named entry.
+
 **When to invoke directly:** Before modifying a simulation subsystem, or after a `parity-updater` run to verify the ledger is consistent with the actual implementation.
+
+---
+
+### `security-reviewer`
+
+**Role:** Reviews implemented code changes for security vulnerabilities before Verify.
+
+**Trigger:** Conditional — the `implement-ticket` workflow's Security-Review phase fires only when the
+ticket's `tags` include `security` (ground truth), or its derived `suggested_skills` include
+`/security-review` (secondary). For a ticket matching neither, this phase does not run — zero added
+latency, agent calls, or events.
+
+**Registry lookup:** Before reviewing, reads `docs/REGISTRY.yaml` to find active docs matching the
+ticket's layer (`type: doc`, `status: active`/`authoritative`, `layer: <ticket_layer>`) rather than
+scanning `docs/` by listing. Falls back to the checklist below directly if the registry doesn't exist.
+
+**What it checks:**
+1. Injection — command/SQL/template injection in new string-building code
+2. Unsafe deserialization — `pickle`, `yaml.load` without `SafeLoader`, `eval`/`exec` on external input
+3. Path traversal — unvalidated path joins or user-controlled file paths
+4. Subprocess/command injection — `subprocess`/`os.system`/`shell=True` with unsanitized input
+5. Secrets-in-code — hardcoded credentials, API keys, tokens committed to source
+6. Raw-domain-model API exposure — overlaps `architecture-reviewer`'s API-boundary rule (no raw domain
+   models exposed from APIs, shaped read models only); cross-references that rule by name rather than
+   restating it
+
+**Inputs:** Ticket + its changed files/diff.
+
+**Outputs:** `APPROVED` / `NEEDS_CHANGES` / `BLOCKED` verdict, per-violation findings (which of the six
+categories, what the code does, the fix), and a `summary` field (one sentence ≤200 chars) for the agent
+monitoring event record.
+
+**Gate behavior:** The `implement-ticket` workflow halts with `SECURITY_BLOCKED` on `NEEDS_CHANGES` or
+`BLOCKED` and does not proceed to Verify/Finalize. Fix the flagged code, then re-run with `ticket_id`.
+
+**When to invoke directly:** After any manual change touching auth, secrets, subprocess calls,
+deserialization, or file-path handling, even outside the automated workflow.
 
 ---
 
@@ -272,14 +461,18 @@ These agents handle the pre-implementation and post-implementation phases of a d
 
 | Agent | Phase in lifecycle | Primary output |
 |---|---|---|
+| `spec-document-reviewer` | Brainstorming (pre-ticket) | Approved / Issues Found verdict |
 | `ticket-scoper` | Pre-work | `tickets/inprogress/{id}.md` |
 | `investigator` | Pre-work | `investigation.md`, `test_plan.md` |
+| `concern-investigator` | Pre-work (pre-ticket) | Structured JSON (files_found, ac_signals, ...) |
 | `planner` | Pre-work | `plan.md` |
 | `architecture-reviewer` | Gate before implementation | APPROVED / NEEDS_CHANGES verdict |
 | `implementer` | Implementation | Code changes + implementation notes |
 | `test-scoper` | Post-implementation | Test results (pass/fail) |
 | `parity-updater` | Post-implementation | Updated `docs/parity_ledger/*.yaml` |
+| `doc-updater` | Post-implementation | Updated `docs/` files (`docs_updated`/`docs_skipped`) |
 | `done-checker` | Closure gate | READY_TO_CLOSE / BLOCKED verdict |
 | `mechanics-auditor` | Quality / compliance | PARITY/DIVERGENT/MISSING table |
+| `security-reviewer` | Conditional gate (security-tagged tickets only) | APPROVED/NEEDS_CHANGES/BLOCKED verdict |
 | `world-debugger` | Debugging | Root cause + fix recommendation |
 | `simulation-analyst` | Analysis | Anomaly table + severity |

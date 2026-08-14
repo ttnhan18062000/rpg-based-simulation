@@ -113,6 +113,7 @@ def test_compile_report_contents():
             "resource_node_count",
             "building_count",
             "quest_count",
+            "distinct_populated_factions",
             "warnings",
             "compile_duration_ms",
             "state_hash"
@@ -131,4 +132,5 @@ def test_compile_report_contents():
         assert saved["resource_node_count"] == 2
         assert saved["building_count"] == 1
         assert saved["quest_count"] == 0
+        assert saved["distinct_populated_factions"] == 2
         assert saved["state_hash"] == report["state_hash"]

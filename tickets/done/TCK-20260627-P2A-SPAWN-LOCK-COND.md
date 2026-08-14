@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2A-SPAWN-LOCK-COND
 phase: done
 date: 2026-06-27
-tags: [p2, spawn-lock, lock-until-tick, conditional, activation-delay, project-state]
+tags: [spawn-lock, lock-until-tick, conditional, activation-delay, project-state]
 ---
 
 # TCK-20260627-P2A-SPAWN-LOCK-COND

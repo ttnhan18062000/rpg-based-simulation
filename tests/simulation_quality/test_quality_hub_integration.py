@@ -83,6 +83,7 @@ class TestErrorIsolation:
         from src.simulation_quality.score_record import ScoreRecord
 
         class BoomScorer(PillarScorer):
+            PILLAR_ID = PillarId.COMBAT
             EVENT_TYPES = ("action_executed",)
             def score(self, envelope, context):
                 raise RuntimeError("intentional test error")

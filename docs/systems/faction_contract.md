@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: systems
+authority: P1
+audience: developer
+last_verified: 2026-06-23
+---
+
 # Faction System Contract
 
 **Status**: AUTHORITATIVE — E53A–E53D complete. Last verified: 2026-06-23.
@@ -115,10 +123,17 @@ Constants defined in `src/engine/faction_constants.py`.
 
 ## Directive Propagation to Entity Scoring (E53Ac)
 
-`FactionDecisionPhase.execute()` runs every tick before `AdventureDecisionPhase` in the
-pipeline. Its output (`list[FactionDirective]`) is passed as `faction_directives` parameter
-through `AdventureDecisionPhase.apply()` → `AdventureDecisionService.decide()` →
-`AdventureRouteScorer.score()`.
+`FactionDecisionPhase.execute()` runs every tick, producing `list[FactionDirective]`. **As of
+TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE this list is no longer threaded into the live
+adventure-routing call path.** The dedicated `AdventureDecisionPhase` pipeline stage that used to
+receive `faction_directives` as a direct `apply()` argument has been deleted; the surviving tier-5
+entry point, `AdventureGoalScorer.score(entity, state)` (`src/ai/goals/adventure_scorer.py`), has
+no `state.faction_directives` attribute to read and calls `AdventureDecisionService.decide()` with
+`faction_directives=None` unconditionally (see `docs/mechanics/04_strategic_cognition.md` §6.10,
+which discloses the same gap). The urgency-adjustment table below remains an accurate description
+of `AdventureRouteScorer.score()`'s own scoring logic when `faction_directives` is supplied (e.g.
+via direct test calls), but describes a condition that does not occur in a live tick today — a
+disclosed simplification, not implemented parity.
 
 ### Urgency Adjustments
 
@@ -161,7 +176,11 @@ pipeline.py:refine()
                  │  siege_progress_delta=+0.05
                  ├─ Defender reinforcement (≥3 GUARD): +0.02/-0.02 offset    (E53Cb)
                  └─ Squad commitment: GroupRecord(roles=FACTION_SQUAD)       (E53Cb)
-  [Phase 3]   AdventureDecisionPhase.apply(state, faction_directives=..., factions=...)
+  [Tier 5]    AdventureGoalScorer.score(entity, state)  (faction_directives NOT threaded — see
+              "Directive Propagation to Entity Scoring" above; runs via
+              StrategicIntelligenceSystem.evaluate_strategic_intent(), not a dedicated pipeline
+              phase — AdventureDecisionPhase was deleted by
+              TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE)
   ...
 ```
 

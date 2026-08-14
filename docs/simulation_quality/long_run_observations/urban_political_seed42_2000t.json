@@ -1,0 +1,4522 @@
+{
+  "world": "urban_political",
+  "seed": 42,
+  "ticks": 2000,
+  "obs_mode": "NORMAL",
+  "health": {
+    "dropped_count": 0,
+    "pressure_mode_final": "PRESSURE",
+    "survival_triggered": true,
+    "data_loss": false
+  },
+  "simq_event_count": 57214,
+  "simq_report": {
+    "run_id": "run_1786189141_5169",
+    "tick_count": 2000,
+    "overall_score": 1.5121520809900757,
+    "overall_grade": "A",
+    "generated_at": "2026-08-08T11:40:38.332760+00:00",
+    "pillars": {
+      "COGNITION": {
+        "raw_score": 3.0,
+        "normalized_score": 0.006,
+        "grade": "B",
+        "event_count": 2,
+        "negative_count": 0,
+        "loop_detected": true,
+        "loop_flags": [
+          "self_model_active"
+        ],
+        "worst_events": []
+      },
+      "AGENCY": {
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "grade": "C",
+        "event_count": 0,
+        "negative_count": 0,
+        "loop_detected": false,
+        "loop_flags": [],
+        "worst_events": []
+      },
+      "COMBAT": {
+        "raw_score": 11.0,
+        "normalized_score": 0.007236842105263158,
+        "grade": "B",
+        "event_count": 23,
+        "negative_count": 7,
+        "loop_detected": true,
+        "loop_flags": [
+          "combat_active",
+          "combat_dormant"
+        ],
+        "worst_events": [
+          {
+            "tick": 486,
+            "event_id": "2e9d69db50e24f98a0bac3f9982a07fa",
+            "pillar": "COMBAT",
+            "delta": -15.0,
+            "reason": "zero combat events in hostile world by tick threshold",
+            "event_type": "combat_damage",
+            "entity_id": 4,
+            "region_id": null,
+            "tags": [
+              "combat_dormant"
+            ]
+          },
+          {
+            "tick": 864,
+            "event_id": "3601b5e36048482aa096ff68e013e8fd",
+            "pillar": "COMBAT",
+            "delta": -1.0,
+            "reason": "entity killed in combat",
+            "event_type": "entity_killed",
+            "entity_id": 29,
+            "region_id": null,
+            "tags": [
+              "attrition"
+            ]
+          },
+          {
+            "tick": 911,
+            "event_id": "6e755c019cd64c138f602e57ace19990",
+            "pillar": "COMBAT",
+            "delta": -1.0,
+            "reason": "entity killed in combat",
+            "event_type": "entity_killed",
+            "entity_id": 16,
+            "region_id": null,
+            "tags": [
+              "attrition"
+            ]
+          },
+          {
+            "tick": 957,
+            "event_id": "c1d4cacfac1040b9bffe0c8c579694d8",
+            "pillar": "COMBAT",
+            "delta": -1.0,
+            "reason": "entity killed in combat",
+            "event_type": "entity_killed",
+            "entity_id": 12,
+            "region_id": null,
+            "tags": [
+              "attrition"
+            ]
+          },
+          {
+            "tick": 1513,
+            "event_id": "537a65449a74491cbe9db16a7d81ef39",
+            "pillar": "COMBAT",
+            "delta": -1.0,
+            "reason": "entity killed in combat",
+            "event_type": "entity_killed",
+            "entity_id": 31,
+            "region_id": null,
+            "tags": [
+              "attrition"
+            ]
+          },
+          {
+            "tick": 1520,
+            "event_id": "6f9ca08fda044a4a9b0d8b974466bbde",
+            "pillar": "COMBAT",
+            "delta": -1.0,
+            "reason": "entity killed in combat",
+            "event_type": "entity_killed",
+            "entity_id": 32,
+            "region_id": null,
+            "tags": [
+              "attrition"
+            ]
+          },
+          {
+            "tick": 1520,
+            "event_id": "2c804ecf51e043f1b8d637364cb4fe0b",
+            "pillar": "COMBAT",
+            "delta": -1.0,
+            "reason": "entity killed in combat",
+            "event_type": "entity_killed",
+            "entity_id": 33,
+            "region_id": null,
+            "tags": [
+              "attrition"
+            ]
+          }
+        ]
+      },
+      "FACTION": {
+        "raw_score": 145.0,
+        "normalized_score": 0.29,
+        "grade": "B",
+        "event_count": 29,
+        "negative_count": 0,
+        "loop_detected": true,
+        "loop_flags": [
+          "diplomacy_active"
+        ],
+        "worst_events": []
+      },
+      "ECONOMY": {
+        "raw_score": 92.0,
+        "normalized_score": 0.09573361082206035,
+        "grade": "B",
+        "event_count": 15,
+        "negative_count": 0,
+        "loop_detected": true,
+        "loop_flags": [
+          "gold_flow",
+          "inflation_controlled"
+        ],
+        "worst_events": []
+      },
+      "PROGRESSION": {
+        "raw_score": -243.0,
+        "normalized_score": -0.13403199117484832,
+        "grade": "C",
+        "event_count": 44,
+        "negative_count": 35,
+        "loop_detected": true,
+        "loop_flags": [
+          "capability_growth_stalled",
+          "xp_plateau"
+        ],
+        "worst_events": [
+          {
+            "tick": 305,
+            "event_id": "9ec107cef6e34139a27ef02de6296c95",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 7,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 307,
+            "event_id": "d008898352954fdb91a4225e782f9ca3",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 307,
+            "event_id": "ce903e37fa024355872eff52941cd757",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 307,
+            "event_id": "7268618e4a334a22b9f6e94f2ec0e572",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 29,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 307,
+            "event_id": "a41ac6d88c464c88a7e881b394d00d44",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 5,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 307,
+            "event_id": "18e35287b38c49048909ee5ea99ce6a4",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 17,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 307,
+            "event_id": "8171d69f1104435d954cd166f007ef89",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 19,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 307,
+            "event_id": "a51cbf3a8a58451db5f36090294d2539",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 30,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 312,
+            "event_id": "be2a7a9638ba475aa04a69fa0cf56a7d",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 10,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 319,
+            "event_id": "985c8971d8424fa294822b1e53babb1a",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 22,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 338,
+            "event_id": "7dc39ea70e8b46b7b55af506215c2eb6",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 4,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 344,
+            "event_id": "1026b237ff294fdd88ae6e27affac704",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 27,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 506,
+            "event_id": "60ab94e21da24d96acfd12eb21217292",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 26,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 507,
+            "event_id": "787c44a44ec54ab6b6a7a1c03c9810cf",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 25,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 508,
+            "event_id": "f3b2c740dee4487ca3a259a2168fda09",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 13,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 514,
+            "event_id": "485801497c234a4893c8275f9233ab5b",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 2,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 515,
+            "event_id": "c956ba2eb4814fd583754885452d0ed1",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 16,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 814,
+            "event_id": "32583956ff5e41cea1908e4c7b9206ca",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 8,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 815,
+            "event_id": "e242847bc5aa498ab87feceecc4acf01",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 3,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 815,
+            "event_id": "0dabce94374c4147ac9c937afbeb84a9",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 12,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 815,
+            "event_id": "d165c78fc360472fab168fd15cf91577",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 6,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 815,
+            "event_id": "09e62e40d1ca46d0aa0dfda84d429ff9",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 9,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 815,
+            "event_id": "c025897c3bba4e82b5da66388bdeccb4",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 11,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 815,
+            "event_id": "58f0beea8f5c4d7ba1386b0462f6f9b2",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 24,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 829,
+            "event_id": "4ffa28ea03434cc595ed7fdc4ca5457b",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 31,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 833,
+            "event_id": "f243dced72264fe3866a6bf0f91a7955",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 33,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 834,
+            "event_id": "80baeb1638d04b6590a2552a88b6ee64",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 32,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1304,
+            "event_id": "b689bdd5db7d4e449884864f15ac869a",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 36,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1305,
+            "event_id": "dfc7a30effb64ce3bb6361b6291c6f5f",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 35,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1306,
+            "event_id": "51bf85c9d70d4f5ba3ea404abd65d32e",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 34,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1810,
+            "event_id": "755432615bb04035bd5a009523e590ca",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 40,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1811,
+            "event_id": "7bca7fb6a5164ca6b13a6f5d8e06faec",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 39,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1812,
+            "event_id": "e6dfafaeddf8403a8722960c95650b85",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 38,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1813,
+            "event_id": "f1041d89a939481ab8c33d41a44c509f",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 37,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 51,
+            "event_id": "2968ce68e4a34d36855d4245b008b35c",
+            "pillar": "PROGRESSION",
+            "delta": -8.0,
+            "reason": "XP gain rate dropped to zero after tick gate",
+            "event_type": "progression_plateau_detected",
+            "entity_id": 10,
+            "region_id": null,
+            "tags": [
+              "xp_plateau"
+            ]
+          }
+        ]
+      },
+      "SOCIAL": {
+        "raw_score": 21006.0,
+        "normalized_score": 10.503,
+        "grade": "S",
+        "event_count": 12449,
+        "negative_count": 5758,
+        "loop_detected": true,
+        "loop_flags": [
+          "cooperation_active"
+        ],
+        "worst_events": [
+          {
+            "tick": 18,
+            "event_id": "b50d9d36fba246dd9ca268c0b017be22",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 19,
+            "event_id": "7df51cc0189d49bdab17931a7b89c95e",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 20,
+            "event_id": "ac64f28489c24fcd947dc88f0d327d43",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 21,
+            "event_id": "80a2f6cbd34b4e0abe514d8ba3a3e9da",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 22,
+            "event_id": "3f7f6a6e4cde4b82a11c0604a090b74e",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 34,
+            "event_id": "91cbd009fe2f4ae0850539a96f6bf843",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 35,
+            "event_id": "69ccc468b83743d4adcef6920a93fdb4",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 36,
+            "event_id": "a1dd9e1cbcb4459a80b4daa8c901be6b",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 37,
+            "event_id": "5e80ae1848ca4376abe27d2c59b38783",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 38,
+            "event_id": "9b1e6dcb4ed94cd4b0fac11544d5a495",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 39,
+            "event_id": "eb95ab2ee5224b57bc7aa7f646fe615c",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 40,
+            "event_id": "c2f8508210394a858be8fea26ed829f6",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 41,
+            "event_id": "23869a675aaf4c159ad4285e677aaaaa",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 42,
+            "event_id": "65867fb50bd147bf9d420f8382d74472",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 43,
+            "event_id": "8551355210f54508bf4ee11214f63aeb",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 44,
+            "event_id": "fb9d9bef193449eba3590821f975a696",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 45,
+            "event_id": "3b02d73ad2bd4c76a1223fdf31f85654",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 46,
+            "event_id": "fbeb64ff38854dde8e39eb1d5293354a",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 46,
+            "event_id": "9003645b87e942b48b463b29d7009823",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 27,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 47,
+            "event_id": "f2e9f9a5479b410f8b87b1b5c0911d67",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 47,
+            "event_id": "732efab40d434151a576d7ef59c0ab90",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 27,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 48,
+            "event_id": "7715bef0f6414482bd914c5c58f808bd",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 48,
+            "event_id": "e1d2350e0fa2422c91d7a0b999785418",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 27,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 49,
+            "event_id": "288fe31da4af4e0d85a86ff48316fc4d",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 49,
+            "event_id": "888f6fa733c14b108ab4e8d70910ee8d",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 27,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 50,
+            "event_id": "e8908080af4c41769a69f86d4c7a740a",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 51,
+            "event_id": "5fe89fdd025f48879c00ca48dd8feb6f",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 52,
+            "event_id": "36f2b229d9504a8eb38c2a08e6a0d9bb",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 53,
+            "event_id": "d76aca42000f40ce92c15d890f060e57",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 54,
+            "event_id": "1a41e8f6345a4a408e3a28ef31d1d9e2",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 55,
+            "event_id": "75b3f83d109a47a8beb7e780162d44db",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 56,
+            "event_id": "1d97a76d8bfe427b87293bbab3175f6c",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 57,
+            "event_id": "ec125c2ba21b49a8be42e36848bc317e",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 58,
+            "event_id": "687f753db65c47c18a97dad6cded94a8",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 59,
+            "event_id": "a7ab7e5ef29947d182fab3caed0e0a91",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 60,
+            "event_id": "b4ef59f64f224cfa93bcb0801ca6aa99",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 61,
+            "event_id": "30522b8f20a64e53bc833ac79fbd7d88",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 62,
+            "event_id": "a7a1eaa4b814429c9755d08e3fc62da1",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 63,
+            "event_id": "9e32ade6e45f48f89a3dba55f035c83a",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 64,
+            "event_id": "134769e782c9456bb1ff7b7eba873c10",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 65,
+            "event_id": "6e8decd496a54b40b82cb1b105f16b96",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 66,
+            "event_id": "d82e2b177bcf4850b9b0f5f583e2de0d",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 66,
+            "event_id": "527dcf0977e942bea3cccbf1c0fe2b72",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 67,
+            "event_id": "2b6e1e17febd464988061a4da0fbe0cf",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 67,
+            "event_id": "58e5b606e00e4a1a95839a416e5ecb99",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 68,
+            "event_id": "0639c956e7fe4ee6a63b5953b92e52ef",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 68,
+            "event_id": "aaa950aa93be485b9f76c2139f96083d",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 69,
+            "event_id": "c2317b0dc6dd465c9c3fb28383c1a93f",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 69,
+            "event_id": "231d70f16ccc411ebd5304b0322e1287",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 70,
+            "event_id": "f558c167887b452ea7445a96ff99ef02",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 70,
+            "event_id": "28c07cff4e6e45098ac0a680f00016ac",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 71,
+            "event_id": "7d4c70f018e04ec5bcfd5bd5c78395fe",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 71,
+            "event_id": "619c10741399460e8a46c977e4f68a5e",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 72,
+            "event_id": "0beb091cb4b04507a1ba7dc672b94d62",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 72,
+            "event_id": "4cb99ac91c2340a3b4d360368c45cc51",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 73,
+            "event_id": "77ed238dd3554300bacff3a90bdff605",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 73,
+            "event_id": "d65a304350fb4273b744eb183dfd09c0",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 74,
+            "event_id": "b5956dcd88de4f649988bd80f3db96ab",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 74,
+            "event_id": "6847689109bb472d936230433b1b0c3a",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 75,
+            "event_id": "bfbe5e0b3f4a4a94aae28ff1ce56cc00",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 75,
+            "event_id": "6bc251da667b4db8be8094e15a44312d",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 76,
+            "event_id": "584613fb52074e508c36e587f90ebce3",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 76,
+            "event_id": "78681743bf7b489cb122697d30b8c767",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 77,
+            "event_id": "dc7852623ab341d698e0577800b5d40f",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 77,
+            "event_id": "8f4470c81de44901a23847ead61799ff",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 78,
+            "event_id": "ca892ce277af48978d20b1cc2313eb03",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 78,
+            "event_id": "51543ab03ab8487ab135e72556144c4a",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 79,
+            "event_id": "2650f55b17244b24aca9219ad2fd321d",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 79,
+            "event_id": "4086d699136d48f3bfa0ea0bac27fb72",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 80,
+            "event_id": "97161bfa6b64469d805c4d3f30b5abff",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 80,
+            "event_id": "92dc0c6aaed5491c84aefb5be6272be2",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 81,
+            "event_id": "c7d9db41affc4f9497d352858559cd98",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 81,
+            "event_id": "62704a2dabdc4db48a8b7b9d441db7fa",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 82,
+            "event_id": "65fb5fd23c7d441e97d3ab20350730ec",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 82,
+            "event_id": "470c784c31b5425db04e27a12b87edaf",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 83,
+            "event_id": "e18b7fe0a1bd4aba97d669152367148a",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 83,
+            "event_id": "640998ff59ae4269838a70d1a9baf104",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 84,
+            "event_id": "6e98eb414ffa465eb83418f92f9f3fb5",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 84,
+            "event_id": "70df8b21afb242418018c1c8279dfc2f",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 85,
+            "event_id": "203c55f9d5c94b01b735571351eb4f16",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 85,
+            "event_id": "0e02d9a8c0ad4295aca101076673789e",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 86,
+            "event_id": "e65f3e2a41d046edb128cea52cedecd1",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 86,
+            "event_id": "9ce60fba77b74157a90aa723ac1c74b2",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 87,
+            "event_id": "438953e83b054c16923e903089f79aad",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 87,
+            "event_id": "d0d47ff9a26f4145b5787b55a76f0351",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 88,
+            "event_id": "02e7a2446baf4b10aeeccb0d5a0cd4c1",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 88,
+            "event_id": "0745e78c21a64a3d91e03cb151f1f4d8",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 89,
+            "event_id": "ca54a4110df44354bb3075d8d648d926",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 89,
+            "event_id": "2b70118c5ec541789b39df9935090d8f",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 90,
+            "event_id": "38f8b75a80124bffa94b814cf0aa0dbf",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 90,
+            "event_id": "370f3f72eed74699882ce8b30302e29a",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 91,
+            "event_id": "b812e29585a149009a908e09040fecc9",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 91,
+            "event_id": "3d990523d9df4209a5ce1d07fbdb93dc",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 92,
+            "event_id": "b6f680490a2b403c911ce837163c565f",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 92,
+            "event_id": "9e928f7606cd4e93b9c2f45a4032613c",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 93,
+            "event_id": "d0d3efb8f759491eb2e5924c740da984",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 93,
+            "event_id": "39a0958091db4a2f93837f972d1b4ae2",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 94,
+            "event_id": "98bbc49665a0470993a657390f017b94",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 94,
+            "event_id": "8ec38e11a93f4bdf9d5d4a516deb8ed8",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          },
+          {
+            "tick": 95,
+            "event_id": "50ad248e7322434d8fd755a5721925ab",
+            "pillar": "SOCIAL",
+            "delta": -1.0,
+            "reason": "contract offer expired without acceptance",
+            "event_type": "contract_expired_offer",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "offer_dead"
+            ]
+          }
+        ]
+      },
+      "INFORMATION": {
+        "raw_score": 10.0,
+        "normalized_score": 0.02,
+        "grade": "B",
+        "event_count": 1,
+        "negative_count": 0,
+        "loop_detected": true,
+        "loop_flags": [
+          "belief_active"
+        ],
+        "worst_events": []
+      },
+      "WORLD": {
+        "raw_score": 214.0,
+        "normalized_score": 0.107,
+        "grade": "B",
+        "event_count": 42,
+        "negative_count": 0,
+        "loop_detected": true,
+        "loop_flags": [
+          "hazard_active"
+        ],
+        "worst_events": []
+      },
+      "NARRATIVE": {
+        "raw_score": -3.0,
+        "normalized_score": -0.002997002997002997,
+        "grade": "C",
+        "event_count": 3,
+        "negative_count": 3,
+        "loop_detected": true,
+        "loop_flags": [
+          "hero_death_unrecorded"
+        ],
+        "worst_events": [
+          {
+            "tick": 1001,
+            "event_id": "f2e03396193e4354bcc4c5c4b404fe8a",
+            "pillar": "NARRATIVE",
+            "delta": -1.0,
+            "reason": "hero died but no chronicle entry or narrative event emitted",
+            "event_type": "hero_death_unrecorded",
+            "entity_id": 22,
+            "region_id": null,
+            "tags": [
+              "hero_death_unrecorded"
+            ]
+          },
+          {
+            "tick": 1001,
+            "event_id": "1f17ee0212b54d099ab46e12e3847d86",
+            "pillar": "NARRATIVE",
+            "delta": -1.0,
+            "reason": "hero died but no chronicle entry or narrative event emitted",
+            "event_type": "hero_death_unrecorded",
+            "entity_id": 23,
+            "region_id": null,
+            "tags": [
+              "hero_death_unrecorded"
+            ]
+          },
+          {
+            "tick": 1001,
+            "event_id": "8a5d1c4a29ce4c43811abf146ab8667a",
+            "pillar": "NARRATIVE",
+            "delta": -1.0,
+            "reason": "hero died but no chronicle entry or narrative event emitted",
+            "event_type": "hero_death_unrecorded",
+            "entity_id": 24,
+            "region_id": null,
+            "tags": [
+              "hero_death_unrecorded"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "lifecycle_score": {
+    "run_metadata": {
+      "ticks": 2000,
+      "stall_detector_reachable": true,
+      "life_arc_detector_reachable": null,
+      "clustering_reliable": true
+    },
+    "entity_metrics": {
+      "22": {
+        "path_length": 428,
+        "path_density": 0.214,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "ECONOMY",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.1752,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.8847,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0047,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "HERO",
+          "faction": "hero_guild",
+          "kind": "hero",
+          "region": "hometown"
+        }
+      },
+      "20": {
+        "path_length": 22,
+        "path_density": 0.011,
+        "phase_coverage": 0.4,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.8922,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.7222,
+        "loop_score_period": 4,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": 0.0,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "GUARD",
+          "faction": "town_council",
+          "kind": "guard",
+          "region": "bandit_road"
+        }
+      },
+      "21": {
+        "path_length": 10,
+        "path_density": 0.005,
+        "phase_coverage": 0.2,
+        "buckets_touched": [
+          "COMBAT",
+          "VITALS"
+        ],
+        "path_entropy": 1.0,
+        "path_entropy_confidence": "normal",
+        "loop_score": 1.0,
+        "loop_score_period": 2,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": 0.0,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "GUARD",
+          "faction": "town_council",
+          "kind": "guard",
+          "region": "bandit_road"
+        }
+      },
+      "7": {
+        "path_length": 1520,
+        "path_density": 0.76,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4405,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.621,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0013,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "WORKER",
+          "faction": "town_council",
+          "kind": "worker",
+          "region": "hometown"
+        }
+      },
+      "15": {
+        "path_length": 3657,
+        "path_density": 1.8285,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.6784,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4866,
+        "loop_score_period": 5,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0005,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "bandit_company",
+          "kind": "scout",
+          "region": "bandit_road"
+        }
+      },
+      "14": {
+        "path_length": 1715,
+        "path_density": 0.8575,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.6204,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.6798,
+        "loop_score_period": 10,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0012,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "bandit_company",
+          "kind": "scout",
+          "region": "bandit_road"
+        }
+      },
+      "16": {
+        "path_length": 768,
+        "path_density": 0.384,
+        "phase_coverage": 0.7,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5851,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.5112,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0026,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "bandit_company",
+          "kind": "scout",
+          "region": "bandit_road"
+        }
+      },
+      "17": {
+        "path_length": 1600,
+        "path_density": 0.8,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4549,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.6215,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0013,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "bandit_company",
+          "kind": "scout",
+          "region": "bandit_road"
+        }
+      },
+      "18": {
+        "path_length": 931,
+        "path_density": 0.4655,
+        "phase_coverage": 0.4,
+        "buckets_touched": [
+          "EXPLORATION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.7238,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.5335,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": 0.0,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "merchant_league",
+          "kind": "merchant",
+          "region": "bandit_road"
+        }
+      },
+      "19": {
+        "path_length": 1874,
+        "path_density": 0.937,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5986,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4885,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0011,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "merchant_league",
+          "kind": "merchant",
+          "region": "bandit_road"
+        }
+      },
+      "29": {
+        "path_length": 3552,
+        "path_density": 1.776,
+        "phase_coverage": 0.7,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.6961,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4928,
+        "loop_score_period": 5,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0006,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "merchant_league",
+          "kind": "merchant",
+          "region": "trading_hometown"
+        }
+      },
+      "30": {
+        "path_length": 1765,
+        "path_density": 0.8825,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5571,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.498,
+        "loop_score_period": 12,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0011,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "merchant_league",
+          "kind": "merchant",
+          "region": "trading_hometown"
+        }
+      },
+      "5": {
+        "path_length": 1948,
+        "path_density": 0.974,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4617,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.5332,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.001,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "WORKER",
+          "faction": "town_council",
+          "kind": "worker",
+          "region": "hometown"
+        }
+      },
+      "13": {
+        "path_length": 817,
+        "path_density": 0.4085,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4767,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.5455,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0024,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "town_council",
+          "kind": "blacksmith",
+          "region": "hometown"
+        }
+      },
+      "23": {
+        "path_length": 404,
+        "path_density": 0.202,
+        "phase_coverage": 0.4,
+        "buckets_touched": [
+          "EXPLORATION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.1743,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.9177,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": 0.0,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "HERO",
+          "faction": "hero_guild",
+          "kind": "hero",
+          "region": "hometown"
+        }
+      },
+      "10": {
+        "path_length": 2005,
+        "path_density": 1.0025,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4602,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.523,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.001,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "GUARD",
+          "faction": "town_council",
+          "kind": "guard",
+          "region": "hometown"
+        }
+      },
+      "1": {
+        "path_length": 783,
+        "path_density": 0.3915,
+        "phase_coverage": 0.4,
+        "buckets_touched": [
+          "EXPLORATION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5301,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.5346,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": 0.0,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "WORKER",
+          "faction": "town_council",
+          "kind": "worker",
+          "region": "hometown"
+        }
+      },
+      "27": {
+        "path_length": 502,
+        "path_density": 0.251,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.3102,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.8109,
+        "loop_score_period": 5,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.004,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "merchant_league",
+          "kind": "merchant",
+          "region": "trading_hometown"
+        }
+      },
+      "4": {
+        "path_length": 1949,
+        "path_density": 0.9745,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4354,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.5324,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.001,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "WORKER",
+          "faction": "town_council",
+          "kind": "worker",
+          "region": "hometown"
+        }
+      },
+      "26": {
+        "path_length": 1817,
+        "path_density": 0.9085,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.6826,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4227,
+        "loop_score_period": 5,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0011,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "merchant_league",
+          "kind": "merchant",
+          "region": "trading_hometown"
+        }
+      },
+      "25": {
+        "path_length": 1315,
+        "path_density": 0.6575,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5227,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4703,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0015,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "merchant_league",
+          "kind": "merchant",
+          "region": "trading_hometown"
+        }
+      },
+      "2": {
+        "path_length": 778,
+        "path_density": 0.389,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4629,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4792,
+        "loop_score_period": 10,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0026,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "WORKER",
+          "faction": "town_council",
+          "kind": "worker",
+          "region": "hometown"
+        }
+      },
+      "31": {
+        "path_length": 2595,
+        "path_density": 1.2975,
+        "phase_coverage": 0.8,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "ECONOMY",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5755,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.7309,
+        "loop_score_period": 12,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": 0.0004,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "32": {
+        "path_length": 3309,
+        "path_density": 1.6545,
+        "phase_coverage": 0.7,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.672,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4611,
+        "loop_score_period": 6,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0003,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "33": {
+        "path_length": 3254,
+        "path_density": 1.627,
+        "phase_coverage": 0.8,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "ECONOMY",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.6434,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4581,
+        "loop_score_period": 6,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0006,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "28": {
+        "path_length": 724,
+        "path_density": 0.362,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.6885,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.477,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0014,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "merchant_league",
+          "kind": "merchant",
+          "region": "trading_hometown"
+        }
+      },
+      "8": {
+        "path_length": 811,
+        "path_density": 0.4055,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5071,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.5272,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0012,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "WORKER",
+          "faction": "town_council",
+          "kind": "worker",
+          "region": "hometown"
+        }
+      },
+      "12": {
+        "path_length": 1097,
+        "path_density": 0.5485,
+        "phase_coverage": 0.7,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.7394,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4308,
+        "loop_score_period": 6,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0009,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "merchant_league",
+          "kind": "merchant",
+          "region": "hometown"
+        }
+      },
+      "24": {
+        "path_length": 410,
+        "path_density": 0.205,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.2445,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.9007,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0024,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "HERO",
+          "faction": "hero_guild",
+          "kind": "hero",
+          "region": "hometown"
+        }
+      },
+      "11": {
+        "path_length": 809,
+        "path_density": 0.4045,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4732,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.536,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0025,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "GUARD",
+          "faction": "town_council",
+          "kind": "guard",
+          "region": "hometown"
+        }
+      },
+      "6": {
+        "path_length": 810,
+        "path_density": 0.405,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4924,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.5266,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0012,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "WORKER",
+          "faction": "town_council",
+          "kind": "worker",
+          "region": "hometown"
+        }
+      },
+      "9": {
+        "path_length": 799,
+        "path_density": 0.3995,
+        "phase_coverage": 0.7,
+        "buckets_touched": [
+          "COMBAT",
+          "ECONOMY",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4476,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4975,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": 0.0,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "GUARD",
+          "faction": "town_council",
+          "kind": "guard",
+          "region": "hometown"
+        }
+      },
+      "3": {
+        "path_length": 726,
+        "path_density": 0.363,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.6101,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4159,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0014,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "WORKER",
+          "faction": "town_council",
+          "kind": "worker",
+          "region": "hometown"
+        }
+      },
+      "34": {
+        "path_length": 2406,
+        "path_density": 1.203,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.6987,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.5543,
+        "loop_score_period": 12,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0004,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "35": {
+        "path_length": 2918,
+        "path_density": 1.459,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.743,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4404,
+        "loop_score_period": 5,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0003,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "36": {
+        "path_length": 2909,
+        "path_density": 1.4545,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.7435,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4539,
+        "loop_score_period": 5,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0003,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "37": {
+        "path_length": 813,
+        "path_density": 0.4065,
+        "phase_coverage": 0.7,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.7181,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4356,
+        "loop_score_period": 5,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0025,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "38": {
+        "path_length": 805,
+        "path_density": 0.4025,
+        "phase_coverage": 0.7,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.7131,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4487,
+        "loop_score_period": 5,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0025,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "39": {
+        "path_length": 816,
+        "path_density": 0.408,
+        "phase_coverage": 0.7,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.7163,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4575,
+        "loop_score_period": 5,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0025,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "40": {
+        "path_length": 822,
+        "path_density": 0.411,
+        "phase_coverage": 0.7,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "SOCIAL",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.713,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4639,
+        "loop_score_period": 5,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0024,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      }
+    },
+    "aggregation": {
+      "global": {
+        "entity_count": 40,
+        "path_length": {
+          "mean": 1424.825,
+          "stdev": 981.4195
+        },
+        "path_density": {
+          "mean": 0.7124,
+          "stdev": 0.4907
+        },
+        "phase_coverage": {
+          "mean": 0.57,
+          "stdev": 0.1208
+        },
+        "path_entropy": {
+          "mean": 0.577,
+          "stdev": 0.1726
+        },
+        "loop_score": {
+          "mean": 0.5631,
+          "stdev": 0.1489
+        },
+        "growth_trajectory": {
+          "mean": -0.0013,
+          "stdev": 0.0011
+        },
+        "conclusion_coherence_rate": 1.0
+      },
+      "zscores": {
+        "22": {
+          "path_length": -1.0157,
+          "path_density": -1.0157,
+          "phase_coverage": 0.2483,
+          "path_entropy": -2.3277,
+          "loop_score": 2.1601,
+          "growth_trajectory": -3.033
+        },
+        "20": {
+          "path_length": -1.4294,
+          "path_density": -1.4294,
+          "phase_coverage": -1.4069,
+          "path_entropy": 1.8264,
+          "loop_score": 1.0685,
+          "growth_trajectory": 1.1413
+        },
+        "21": {
+          "path_length": -1.4416,
+          "path_density": -1.4416,
+          "phase_coverage": -3.0621,
+          "path_entropy": 2.4509,
+          "loop_score": 2.9346,
+          "growth_trajectory": 1.1413
+        },
+        "7": {
+          "path_length": 0.097,
+          "path_density": 0.097,
+          "phase_coverage": -0.5793,
+          "path_entropy": -0.7906,
+          "loop_score": 0.3887,
+          "growth_trajectory": -0.0133
+        },
+        "15": {
+          "path_length": 2.2744,
+          "path_density": 2.2744,
+          "phase_coverage": 0.2483,
+          "path_entropy": 0.5877,
+          "loop_score": -0.5141,
+          "growth_trajectory": 0.6972
+        },
+        "14": {
+          "path_length": 0.2957,
+          "path_density": 0.2957,
+          "phase_coverage": 0.2483,
+          "path_entropy": 0.2517,
+          "loop_score": 0.7837,
+          "growth_trajectory": 0.0755
+        },
+        "16": {
+          "path_length": -0.6693,
+          "path_density": -0.6693,
+          "phase_coverage": 1.0759,
+          "path_entropy": 0.0471,
+          "loop_score": -0.3489,
+          "growth_trajectory": -1.1679
+        },
+        "17": {
+          "path_length": 0.1785,
+          "path_density": 0.1785,
+          "phase_coverage": -0.5793,
+          "path_entropy": -0.7072,
+          "loop_score": 0.3921,
+          "growth_trajectory": -0.0133
+        },
+        "18": {
+          "path_length": -0.5032,
+          "path_density": -0.5032,
+          "phase_coverage": -1.4069,
+          "path_entropy": 0.8507,
+          "loop_score": -0.1991,
+          "growth_trajectory": 1.1413
+        },
+        "19": {
+          "path_length": 0.4577,
+          "path_density": 0.4577,
+          "phase_coverage": -0.5793,
+          "path_entropy": 0.1254,
+          "loop_score": -0.5014,
+          "growth_trajectory": 0.1643
+        },
+        "29": {
+          "path_length": 2.1674,
+          "path_density": 2.1674,
+          "phase_coverage": 1.0759,
+          "path_entropy": 0.6902,
+          "loop_score": -0.4725,
+          "growth_trajectory": 0.6084
+        },
+        "30": {
+          "path_length": 0.3466,
+          "path_density": 0.3466,
+          "phase_coverage": -0.5793,
+          "path_entropy": -0.1151,
+          "loop_score": -0.4375,
+          "growth_trajectory": 0.1643
+        },
+        "5": {
+          "path_length": 0.5331,
+          "path_density": 0.5331,
+          "phase_coverage": -0.5793,
+          "path_entropy": -0.6678,
+          "loop_score": -0.2011,
+          "growth_trajectory": 0.2531
+        },
+        "13": {
+          "path_length": -0.6193,
+          "path_density": -0.6193,
+          "phase_coverage": -0.5793,
+          "path_entropy": -0.5809,
+          "loop_score": -0.1185,
+          "growth_trajectory": -0.9903
+        },
+        "23": {
+          "path_length": -1.0402,
+          "path_density": -1.0402,
+          "phase_coverage": -1.4069,
+          "path_entropy": -2.3329,
+          "loop_score": 2.3818,
+          "growth_trajectory": 1.1413
+        },
+        "10": {
+          "path_length": 0.5912,
+          "path_density": 0.5912,
+          "phase_coverage": -0.5793,
+          "path_entropy": -0.6765,
+          "loop_score": -0.2696,
+          "growth_trajectory": 0.2531
+        },
+        "1": {
+          "path_length": -0.654,
+          "path_density": -0.654,
+          "phase_coverage": -1.4069,
+          "path_entropy": -0.2715,
+          "loop_score": -0.1917,
+          "growth_trajectory": 1.1413
+        },
+        "27": {
+          "path_length": -0.9403,
+          "path_density": -0.9403,
+          "phase_coverage": -0.5793,
+          "path_entropy": -1.5455,
+          "loop_score": 1.6644,
+          "growth_trajectory": -2.4113
+        },
+        "4": {
+          "path_length": 0.5341,
+          "path_density": 0.5341,
+          "phase_coverage": 0.2483,
+          "path_entropy": -0.8202,
+          "loop_score": -0.2065,
+          "growth_trajectory": 0.2531
+        },
+        "26": {
+          "path_length": 0.3996,
+          "path_density": 0.3996,
+          "phase_coverage": 0.2483,
+          "path_entropy": 0.612,
+          "loop_score": -0.9434,
+          "growth_trajectory": 0.1643
+        },
+        "25": {
+          "path_length": -0.1119,
+          "path_density": -0.1119,
+          "phase_coverage": -0.5793,
+          "path_entropy": -0.3144,
+          "loop_score": -0.6236,
+          "growth_trajectory": -0.1909
+        },
+        "2": {
+          "path_length": -0.6591,
+          "path_density": -0.6591,
+          "phase_coverage": 0.2483,
+          "path_entropy": -0.6608,
+          "loop_score": -0.5638,
+          "growth_trajectory": -1.1679
+        },
+        "31": {
+          "path_length": 1.1923,
+          "path_density": 1.1923,
+          "phase_coverage": 1.9035,
+          "path_entropy": -0.0085,
+          "loop_score": 1.127,
+          "growth_trajectory": 1.4965
+        },
+        "32": {
+          "path_length": 1.9198,
+          "path_density": 1.9198,
+          "phase_coverage": 1.0759,
+          "path_entropy": 0.5506,
+          "loop_score": -0.6854,
+          "growth_trajectory": 0.8748
+        },
+        "33": {
+          "path_length": 1.8638,
+          "path_density": 1.8638,
+          "phase_coverage": 1.9035,
+          "path_entropy": 0.3849,
+          "loop_score": -0.7056,
+          "growth_trajectory": 0.6084
+        },
+        "28": {
+          "path_length": -0.7141,
+          "path_density": -0.7141,
+          "phase_coverage": 0.2483,
+          "path_entropy": 0.6462,
+          "loop_score": -0.5786,
+          "growth_trajectory": -0.1021
+        },
+        "8": {
+          "path_length": -0.6254,
+          "path_density": -0.6254,
+          "phase_coverage": -0.5793,
+          "path_entropy": -0.4048,
+          "loop_score": -0.2414,
+          "growth_trajectory": 0.0755
+        },
+        "12": {
+          "path_length": -0.334,
+          "path_density": -0.334,
+          "phase_coverage": 1.0759,
+          "path_entropy": 0.9411,
+          "loop_score": -0.889,
+          "growth_trajectory": 0.3419
+        },
+        "24": {
+          "path_length": -1.034,
+          "path_density": -1.034,
+          "phase_coverage": -0.5793,
+          "path_entropy": -1.9262,
+          "loop_score": 2.2676,
+          "growth_trajectory": -0.9903
+        },
+        "11": {
+          "path_length": -0.6275,
+          "path_density": -0.6275,
+          "phase_coverage": -0.5793,
+          "path_entropy": -0.6012,
+          "loop_score": -0.1823,
+          "growth_trajectory": -1.0791
+        },
+        "6": {
+          "path_length": -0.6265,
+          "path_density": -0.6265,
+          "phase_coverage": -0.5793,
+          "path_entropy": -0.4899,
+          "loop_score": -0.2454,
+          "growth_trajectory": 0.0755
+        },
+        "9": {
+          "path_length": -0.6377,
+          "path_density": -0.6377,
+          "phase_coverage": 1.0759,
+          "path_entropy": -0.7495,
+          "loop_score": -0.4409,
+          "growth_trajectory": 1.1413
+        },
+        "3": {
+          "path_length": -0.7121,
+          "path_density": -0.7121,
+          "phase_coverage": 0.2483,
+          "path_entropy": 0.192,
+          "loop_score": -0.989,
+          "growth_trajectory": -0.1021
+        },
+        "34": {
+          "path_length": 0.9998,
+          "path_density": 0.9998,
+          "phase_coverage": 0.2483,
+          "path_entropy": 0.7053,
+          "loop_score": -0.0593,
+          "growth_trajectory": 0.786
+        },
+        "35": {
+          "path_length": 1.5214,
+          "path_density": 1.5214,
+          "phase_coverage": 0.2483,
+          "path_entropy": 0.962,
+          "loop_score": -0.8245,
+          "growth_trajectory": 0.8748
+        },
+        "36": {
+          "path_length": 1.5123,
+          "path_density": 1.5123,
+          "phase_coverage": 0.2483,
+          "path_entropy": 0.9649,
+          "loop_score": -0.7338,
+          "growth_trajectory": 0.8748
+        },
+        "37": {
+          "path_length": -0.6234,
+          "path_density": -0.6234,
+          "phase_coverage": 1.0759,
+          "path_entropy": 0.8177,
+          "loop_score": -0.8567,
+          "growth_trajectory": -1.0791
+        },
+        "38": {
+          "path_length": -0.6316,
+          "path_density": -0.6316,
+          "phase_coverage": 1.0759,
+          "path_entropy": 0.7887,
+          "loop_score": -0.7687,
+          "growth_trajectory": -1.0791
+        },
+        "39": {
+          "path_length": -0.6204,
+          "path_density": -0.6204,
+          "phase_coverage": 1.0759,
+          "path_entropy": 0.8073,
+          "loop_score": -0.7096,
+          "growth_trajectory": -1.0791
+        },
+        "40": {
+          "path_length": -0.6142,
+          "path_density": -0.6142,
+          "phase_coverage": 1.0759,
+          "path_entropy": 0.7881,
+          "loop_score": -0.6666,
+          "growth_trajectory": -0.9903
+        }
+      },
+      "groups": {
+        "role": {
+          "HERO": {
+            "entity_count": 3,
+            "path_length": {
+              "mean": 414.0,
+              "stdev": 10.198
+            },
+            "path_density": {
+              "mean": 0.207,
+              "stdev": 0.0051
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0816
+            },
+            "path_entropy": {
+              "mean": 0.198,
+              "stdev": 0.0329
+            },
+            "loop_score": {
+              "mean": 0.901,
+              "stdev": 0.0135
+            },
+            "growth_trajectory": {
+              "mean": -0.0024,
+              "stdev": 0.0019
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "GUARD": {
+            "entity_count": 5,
+            "path_length": {
+              "mean": 729.0,
+              "stdev": 728.8739
+            },
+            "path_density": {
+              "mean": 0.3645,
+              "stdev": 0.3644
+            },
+            "phase_coverage": {
+              "mean": 0.46,
+              "stdev": 0.1625
+            },
+            "path_entropy": {
+              "mean": 0.6546,
+              "stdev": 0.2405
+            },
+            "loop_score": {
+              "mean": 0.6557,
+              "stdev": 0.1897
+            },
+            "growth_trajectory": {
+              "mean": -0.0007,
+              "stdev": 0.001
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "WORKER": {
+            "entity_count": 8,
+            "path_length": {
+              "mean": 1165.625,
+              "stdev": 511.5567
+            },
+            "path_density": {
+              "mean": 0.5828,
+              "stdev": 0.2558
+            },
+            "phase_coverage": {
+              "mean": 0.525,
+              "stdev": 0.0661
+            },
+            "path_entropy": {
+              "mean": 0.4925,
+              "stdev": 0.0539
+            },
+            "loop_score": {
+              "mean": 0.5213,
+              "stdev": 0.054
+            },
+            "growth_trajectory": {
+              "mean": -0.0012,
+              "stdev": 0.0007
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "CITIZEN": {
+            "entity_count": 14,
+            "path_length": {
+              "mean": 1581.0,
+              "stdev": 935.7656
+            },
+            "path_density": {
+              "mean": 0.7905,
+              "stdev": 0.4679
+            },
+            "phase_coverage": {
+              "mean": 0.5643,
+              "stdev": 0.0895
+            },
+            "path_entropy": {
+              "mean": 0.5953,
+              "stdev": 0.1175
+            },
+            "loop_score": {
+              "mean": 0.5335,
+              "stdev": 0.1014
+            },
+            "growth_trajectory": {
+              "mean": -0.0014,
+              "stdev": 0.001
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "MONSTER": {
+            "entity_count": 10,
+            "path_length": {
+              "mean": 2064.7,
+              "stdev": 1051.5957
+            },
+            "path_density": {
+              "mean": 1.0324,
+              "stdev": 0.5258
+            },
+            "phase_coverage": {
+              "mean": 0.69,
+              "stdev": 0.07
+            },
+            "path_entropy": {
+              "mean": 0.6937,
+              "stdev": 0.0487
+            },
+            "loop_score": {
+              "mean": 0.4904,
+              "stdev": 0.0861
+            },
+            "growth_trajectory": {
+              "mean": -0.0011,
+              "stdev": 0.0011
+            },
+            "conclusion_coherence_rate": 1.0
+          }
+        },
+        "faction": {
+          "hero_guild": {
+            "entity_count": 3,
+            "path_length": {
+              "mean": 414.0,
+              "stdev": 10.198
+            },
+            "path_density": {
+              "mean": 0.207,
+              "stdev": 0.0051
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0816
+            },
+            "path_entropy": {
+              "mean": 0.198,
+              "stdev": 0.0329
+            },
+            "loop_score": {
+              "mean": 0.901,
+              "stdev": 0.0135
+            },
+            "growth_trajectory": {
+              "mean": -0.0024,
+              "stdev": 0.0019
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "town_council": {
+            "entity_count": 14,
+            "path_length": {
+              "mean": 984.7857,
+              "stdev": 619.1419
+            },
+            "path_density": {
+              "mean": 0.4924,
+              "stdev": 0.3096
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.1134
+            },
+            "path_entropy": {
+              "mean": 0.5493,
+              "stdev": 0.1688
+            },
+            "loop_score": {
+              "mean": 0.571,
+              "stdev": 0.1362
+            },
+            "growth_trajectory": {
+              "mean": -0.0011,
+              "stdev": 0.0009
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "bandit_company": {
+            "entity_count": 4,
+            "path_length": {
+              "mean": 1935.0,
+              "stdev": 1059.2212
+            },
+            "path_density": {
+              "mean": 0.9675,
+              "stdev": 0.5296
+            },
+            "phase_coverage": {
+              "mean": 0.6,
+              "stdev": 0.0707
+            },
+            "path_entropy": {
+              "mean": 0.5847,
+              "stdev": 0.082
+            },
+            "loop_score": {
+              "mean": 0.5748,
+              "stdev": 0.0791
+            },
+            "growth_trajectory": {
+              "mean": -0.0014,
+              "stdev": 0.0008
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "merchant_league": {
+            "entity_count": 9,
+            "path_length": {
+              "mean": 1508.5556,
+              "stdev": 858.8888
+            },
+            "path_density": {
+              "mean": 0.7543,
+              "stdev": 0.4294
+            },
+            "phase_coverage": {
+              "mean": 0.5556,
+              "stdev": 0.0956
+            },
+            "path_entropy": {
+              "mean": 0.6132,
+              "stdev": 0.1286
+            },
+            "loop_score": {
+              "mean": 0.5138,
+              "stdev": 0.1098
+            },
+            "growth_trajectory": {
+              "mean": -0.0013,
+              "stdev": 0.001
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "None": {
+            "entity_count": 10,
+            "path_length": {
+              "mean": 2064.7,
+              "stdev": 1051.5957
+            },
+            "path_density": {
+              "mean": 1.0324,
+              "stdev": 0.5258
+            },
+            "phase_coverage": {
+              "mean": 0.69,
+              "stdev": 0.07
+            },
+            "path_entropy": {
+              "mean": 0.6937,
+              "stdev": 0.0487
+            },
+            "loop_score": {
+              "mean": 0.4904,
+              "stdev": 0.0861
+            },
+            "growth_trajectory": {
+              "mean": -0.0011,
+              "stdev": 0.0011
+            },
+            "conclusion_coherence_rate": 1.0
+          }
+        },
+        "kind": {
+          "hero": {
+            "entity_count": 3,
+            "path_length": {
+              "mean": 414.0,
+              "stdev": 10.198
+            },
+            "path_density": {
+              "mean": 0.207,
+              "stdev": 0.0051
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0816
+            },
+            "path_entropy": {
+              "mean": 0.198,
+              "stdev": 0.0329
+            },
+            "loop_score": {
+              "mean": 0.901,
+              "stdev": 0.0135
+            },
+            "growth_trajectory": {
+              "mean": -0.0024,
+              "stdev": 0.0019
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "guard": {
+            "entity_count": 5,
+            "path_length": {
+              "mean": 729.0,
+              "stdev": 728.8739
+            },
+            "path_density": {
+              "mean": 0.3645,
+              "stdev": 0.3644
+            },
+            "phase_coverage": {
+              "mean": 0.46,
+              "stdev": 0.1625
+            },
+            "path_entropy": {
+              "mean": 0.6546,
+              "stdev": 0.2405
+            },
+            "loop_score": {
+              "mean": 0.6557,
+              "stdev": 0.1897
+            },
+            "growth_trajectory": {
+              "mean": -0.0007,
+              "stdev": 0.001
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "worker": {
+            "entity_count": 8,
+            "path_length": {
+              "mean": 1165.625,
+              "stdev": 511.5567
+            },
+            "path_density": {
+              "mean": 0.5828,
+              "stdev": 0.2558
+            },
+            "phase_coverage": {
+              "mean": 0.525,
+              "stdev": 0.0661
+            },
+            "path_entropy": {
+              "mean": 0.4925,
+              "stdev": 0.0539
+            },
+            "loop_score": {
+              "mean": 0.5213,
+              "stdev": 0.054
+            },
+            "growth_trajectory": {
+              "mean": -0.0012,
+              "stdev": 0.0007
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "scout": {
+            "entity_count": 4,
+            "path_length": {
+              "mean": 1935.0,
+              "stdev": 1059.2212
+            },
+            "path_density": {
+              "mean": 0.9675,
+              "stdev": 0.5296
+            },
+            "phase_coverage": {
+              "mean": 0.6,
+              "stdev": 0.0707
+            },
+            "path_entropy": {
+              "mean": 0.5847,
+              "stdev": 0.082
+            },
+            "loop_score": {
+              "mean": 0.5748,
+              "stdev": 0.0791
+            },
+            "growth_trajectory": {
+              "mean": -0.0014,
+              "stdev": 0.0008
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "merchant": {
+            "entity_count": 9,
+            "path_length": {
+              "mean": 1508.5556,
+              "stdev": 858.8888
+            },
+            "path_density": {
+              "mean": 0.7543,
+              "stdev": 0.4294
+            },
+            "phase_coverage": {
+              "mean": 0.5556,
+              "stdev": 0.0956
+            },
+            "path_entropy": {
+              "mean": 0.6132,
+              "stdev": 0.1286
+            },
+            "loop_score": {
+              "mean": 0.5138,
+              "stdev": 0.1098
+            },
+            "growth_trajectory": {
+              "mean": -0.0013,
+              "stdev": 0.001
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "blacksmith": {
+            "entity_count": 1,
+            "path_length": {
+              "mean": 817.0,
+              "stdev": 0.0
+            },
+            "path_density": {
+              "mean": 0.4085,
+              "stdev": 0.0
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.4767,
+              "stdev": 0.0
+            },
+            "loop_score": {
+              "mean": 0.5455,
+              "stdev": 0.0
+            },
+            "growth_trajectory": {
+              "mean": -0.0024,
+              "stdev": 0.0
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "goblin_raider": {
+            "entity_count": 10,
+            "path_length": {
+              "mean": 2064.7,
+              "stdev": 1051.5957
+            },
+            "path_density": {
+              "mean": 1.0324,
+              "stdev": 0.5258
+            },
+            "phase_coverage": {
+              "mean": 0.69,
+              "stdev": 0.07
+            },
+            "path_entropy": {
+              "mean": 0.6937,
+              "stdev": 0.0487
+            },
+            "loop_score": {
+              "mean": 0.4904,
+              "stdev": 0.0861
+            },
+            "growth_trajectory": {
+              "mean": -0.0011,
+              "stdev": 0.0011
+            },
+            "conclusion_coherence_rate": 1.0
+          }
+        },
+        "region": {
+          "hometown": {
+            "entity_count": 16,
+            "path_length": {
+              "mean": 1005.875,
+              "stdev": 528.7206
+            },
+            "path_density": {
+              "mean": 0.5029,
+              "stdev": 0.2644
+            },
+            "phase_coverage": {
+              "mean": 0.5375,
+              "stdev": 0.0857
+            },
+            "path_entropy": {
+              "mean": 0.4457,
+              "stdev": 0.1406
+            },
+            "loop_score": {
+              "mean": 0.5879,
+              "stdev": 0.1571
+            },
+            "growth_trajectory": {
+              "mean": -0.0015,
+              "stdev": 0.0012
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "bandit_road": {
+            "entity_count": 8,
+            "path_length": {
+              "mean": 1322.125,
+              "stdev": 1110.1691
+            },
+            "path_density": {
+              "mean": 0.6611,
+              "stdev": 0.5551
+            },
+            "phase_coverage": {
+              "mean": 0.4875,
+              "stdev": 0.1452
+            },
+            "path_entropy": {
+              "mean": 0.6942,
+              "stdev": 0.1649
+            },
+            "loop_score": {
+              "mean": 0.6304,
+              "stdev": 0.1628
+            },
+            "growth_trajectory": {
+              "mean": -0.0008,
+              "stdev": 0.0008
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "trading_hometown": {
+            "entity_count": 6,
+            "path_length": {
+              "mean": 1612.5,
+              "stdev": 994.8103
+            },
+            "path_density": {
+              "mean": 0.8063,
+              "stdev": 0.4974
+            },
+            "phase_coverage": {
+              "mean": 0.5667,
+              "stdev": 0.0745
+            },
+            "path_entropy": {
+              "mean": 0.5762,
+              "stdev": 0.1368
+            },
+            "loop_score": {
+              "mean": 0.5286,
+              "stdev": 0.1286
+            },
+            "growth_trajectory": {
+              "mean": -0.0016,
+              "stdev": 0.0011
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "None": {
+            "entity_count": 10,
+            "path_length": {
+              "mean": 2064.7,
+              "stdev": 1051.5957
+            },
+            "path_density": {
+              "mean": 1.0324,
+              "stdev": 0.5258
+            },
+            "phase_coverage": {
+              "mean": 0.69,
+              "stdev": 0.07
+            },
+            "path_entropy": {
+              "mean": 0.6937,
+              "stdev": 0.0487
+            },
+            "loop_score": {
+              "mean": 0.4904,
+              "stdev": 0.0861
+            },
+            "growth_trajectory": {
+              "mean": -0.0011,
+              "stdev": 0.0011
+            },
+            "conclusion_coherence_rate": 1.0
+          }
+        }
+      }
+    },
+    "clustering": {
+      "global": {
+        "entity_count": 40,
+        "distinct_shapes": 24,
+        "dominant_shape": [
+          "StrategicBlockerAdded",
+          "biological_state_changed",
+          "capability_growth_stalled",
+          "contract_expired_offer",
+          "contract_offer_created",
+          "cooperation_event",
+          "movement",
+          "progression_plateau_detected",
+          "project_started",
+          "stamina_changed",
+          "strategic_goal_changed"
+        ],
+        "dominant_shape_count": 9,
+        "dominant_shape_share": 0.225
+      },
+      "groups": {
+        "role": {
+          "HERO": {
+            "entity_count": 3,
+            "distinct_shapes": 3,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "belief_assimilated",
+              "belief_updated",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "gold_transferred",
+              "hero_death_unrecorded",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "self_model_updated",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 1,
+            "dominant_shape_share": 0.3333
+          },
+          "GUARD": {
+            "entity_count": 5,
+            "distinct_shapes": 4,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 2,
+            "dominant_shape_share": 0.4
+          },
+          "WORKER": {
+            "entity_count": 8,
+            "distinct_shapes": 6,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 2,
+            "dominant_shape_share": 0.25
+          },
+          "CITIZEN": {
+            "entity_count": 14,
+            "distinct_shapes": 8,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.3571
+          },
+          "MONSTER": {
+            "entity_count": 10,
+            "distinct_shapes": 5,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "demographic_birth",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "raid_party_spawned",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 4,
+            "dominant_shape_share": 0.4
+          }
+        },
+        "faction": {
+          "hero_guild": {
+            "entity_count": 3,
+            "distinct_shapes": 3,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "belief_assimilated",
+              "belief_updated",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "gold_transferred",
+              "hero_death_unrecorded",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "self_model_updated",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 1,
+            "dominant_shape_share": 0.3333
+          },
+          "town_council": {
+            "entity_count": 14,
+            "distinct_shapes": 9,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.3571
+          },
+          "bandit_company": {
+            "entity_count": 4,
+            "distinct_shapes": 3,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "combat_damage",
+              "combat_initiated",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "near_death_survival",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 2,
+            "dominant_shape_share": 0.5
+          },
+          "merchant_league": {
+            "entity_count": 9,
+            "distinct_shapes": 6,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 4,
+            "dominant_shape_share": 0.4444
+          },
+          "None": {
+            "entity_count": 10,
+            "distinct_shapes": 5,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "demographic_birth",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "raid_party_spawned",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 4,
+            "dominant_shape_share": 0.4
+          }
+        },
+        "kind": {
+          "hero": {
+            "entity_count": 3,
+            "distinct_shapes": 3,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "belief_assimilated",
+              "belief_updated",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "gold_transferred",
+              "hero_death_unrecorded",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "self_model_updated",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 1,
+            "dominant_shape_share": 0.3333
+          },
+          "guard": {
+            "entity_count": 5,
+            "distinct_shapes": 4,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 2,
+            "dominant_shape_share": 0.4
+          },
+          "worker": {
+            "entity_count": 8,
+            "distinct_shapes": 6,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 2,
+            "dominant_shape_share": 0.25
+          },
+          "scout": {
+            "entity_count": 4,
+            "distinct_shapes": 3,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "combat_damage",
+              "combat_initiated",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "near_death_survival",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 2,
+            "dominant_shape_share": 0.5
+          },
+          "merchant": {
+            "entity_count": 9,
+            "distinct_shapes": 6,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 4,
+            "dominant_shape_share": 0.4444
+          },
+          "blacksmith": {
+            "entity_count": 1,
+            "distinct_shapes": 1,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 1,
+            "dominant_shape_share": 1.0
+          },
+          "goblin_raider": {
+            "entity_count": 10,
+            "distinct_shapes": 5,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "demographic_birth",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "raid_party_spawned",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 4,
+            "dominant_shape_share": 0.4
+          }
+        },
+        "region": {
+          "hometown": {
+            "entity_count": 16,
+            "distinct_shapes": 11,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.3125
+          },
+          "bandit_road": {
+            "entity_count": 8,
+            "distinct_shapes": 7,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "combat_damage",
+              "combat_initiated",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "near_death_survival",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 2,
+            "dominant_shape_share": 0.25
+          },
+          "trading_hometown": {
+            "entity_count": 6,
+            "distinct_shapes": 4,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 3,
+            "dominant_shape_share": 0.5
+          },
+          "None": {
+            "entity_count": 10,
+            "distinct_shapes": 5,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "contract_expired_offer",
+              "contract_offer_created",
+              "cooperation_event",
+              "demographic_birth",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "raid_party_spawned",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 4,
+            "dominant_shape_share": 0.4
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+# Real, read-only-derived replay fixture for TCK-20260721-CODEX-REPLAY-PROOF.
+#
+# Sourced from (all read-only, none of these files are written by this fixture or by the
+# replay runner that consumes it):
+#   - tickets/done/TCK-20260721-ORCHESTRATION-CONTRACT-ADR.md (frontmatter tags, ticket path)
+#   - stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/{investigation,plan}.md (paths only —
+#     the runner reads the real permanent files at replay time, not a copy embedded here)
+#   - agent-monitoring/events.jsonl, run_id=TCK-20260721-ORCHESTRATION-CONTRACT-ADR, seq 1-4
+#   - agent-monitoring/runs.jsonl, matching run_id row (final_status, tier)
+#
+# Review phase note: agent-monitoring/events.jsonl does not persist the full REVIEW_SCHEMA JSON
+# (verdict/violations) — only status/summary. This fixture's Review phase.output.verdict and
+# .violations are RECONSTRUCTED from the real seq=4 event's status="ok" and its summary text
+# ("APPROVED - execution identity consumed verbatim, no runtime/contract files created"), not
+# literally persisted anywhere as full JSON. See docs/ai/replay_fixture_spec.md.
+version: 1
+source:
+  ticket_id: TCK-20260721-ORCHESTRATION-CONTRACT-ADR
+  ticket_path: tickets/done/TCK-20260721-ORCHESTRATION-CONTRACT-ADR.md
+  stored_artifacts_dir: stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/
+  events_run_id: TCK-20260721-ORCHESTRATION-CONTRACT-ADR
+  events_seq_range: [1, 4]
+  final_status: DONE
+  tier: standard
+phases:
+  - phase: Scope
+    agent: ticket-scoper
+    input:
+      tags: [ai, workflows, process-improvement]
+      conflicts: []
+    output:
+      status: ok
+      summary: "Loaded existing ticket; all 3 evidence-input tickets confirmed done with their decision docs existing"
+      ts: "2026-07-21T08:19:23Z"
+    transition: ok
+
+  - phase: Investigate
+    agent: investigator
+    input: {}
+    output:
+      status: ok
+      summary: "Confirmed simulation_watchdog.md/performance_optimization.md ADR shape over unused numbered template"
+      ts: "2026-07-21T08:20:47Z"
+    transition: ok
+
+  - phase: Plan
+    agent: planner
+    input:
+      plan_path: stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/plan.md
+    output:
+      status: ok
+      summary: "5-step plan: author ADR with 5 labeled decisions + consumed execution-identity subsection, register, link"
+      ts: "2026-07-21T08:24:18Z"
+    transition: ok
+
+  - phase: Review
+    agent: architecture-reviewer
+    input:
+      plan_path: stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/plan.md
+      investigation_path: stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-ADR/investigation.md
+    output:
+      # verdict/violations reconstructed from real events.jsonl seq=4 status=ok + summary text;
+      # full REVIEW_SCHEMA JSON was never persisted — see replay_fixture_spec.md.
+      verdict: APPROVED
+      violations: []
+      status: ok
+      summary: "APPROVED - execution identity consumed verbatim, no runtime/contract files created"
+      ts: "2026-07-21T08:27:30Z"
+    transition: APPROVED

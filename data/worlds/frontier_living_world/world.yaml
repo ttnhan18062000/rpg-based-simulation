@@ -3,15 +3,49 @@ schema_version: "worldcomposition.v1"
 world_id: "frontier_living_world"
 name: "Frontier Living World"
 description: "Balanced world composition covering village, wildlife, goblins, mine economy, trade road, and undead danger."
-modules:
-  - "frontier_village_core"
-  - "wolf_den_near_forest"
-  - "goblin_camp_conflict"
-  - "old_mine_resource_loop"
-  - "bandit_road_trade_pressure"
-  - "undead_battlefield"
+module_refs:
+  - module_id: "frontier_village_core"
+    order: 0
+  - module_id: "wolf_den_near_forest"
+    order: 1
+  - module_id: "goblin_camp_conflict"
+    order: 2
+  - module_id: "old_mine_resource_loop"
+    order: 3
+  - module_id: "bandit_road_trade_pressure"
+    order: 4
+  - module_id: "undead_battlefield"
+    order: 5
+  - module_id: "trading_company_hub"
+    order: 6
+    namespace: "trading"
+    parameters:
+      merchant_count: 3
 default_perspectives:
   - "hero_guild_perspective"
   - "wild_beast_pack_perspective"
   - "goblin_warband_perspective"
 generation_seed: 42
+faction_tension_overrides:
+  bandit_company: 0.5
+  merchant_league: 0.5
+information_source_profiles:
+  - source_id: "town_notice_board"
+    source_kind: "guide"
+    knowledge_scopes: ["regional_danger", "common_resource_sources"]
+    accuracy: 0.4
+    freshness: 0.6
+    bias: 0.1
+    cost_gold: 0
+    max_answers_per_query: 2
+pending_information_responses:
+  - target_population_id: "frontier_village_population_frontier_guard"
+    subject: "trade_road_bandit_activity"
+    query_kind: "danger_rating"
+    source_id: "town_notice_board"
+    answer_kind: "KNOWN_FACT"
+    certainty: 0.8
+    details:
+      danger_level: "elevated"
+      region: "bandit_road"
+    cost_paid: 0

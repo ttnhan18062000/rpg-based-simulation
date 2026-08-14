@@ -74,15 +74,24 @@ class EntityIdentityResolver:
         props = entity.identity.properties or {}
 
         # --- Path 1: clean_metadata ---
+        # A real, content-driven faction_id is trusted on its own -- role_id is a real gap in
+        # some spawn/compile paths (worldbuilding/compiler.py never sets it) but has zero real
+        # consumers of its own (confirmed via grep: only .faction_id/.archetype_id are ever read,
+        # in tactical.py/quests.py). Requiring role_id here previously discarded a correct
+        # faction_id by falling through to Path 3's coarse legacy-enum projection, which collapses
+        # any faction outside the old 4-value Faction enum to "neutral" -- silently defeating
+        # hostility detection for the majority of a real content-driven roster
+        # (TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE: 100% of dungeon_crawl's entities,
+        # 43% of urban_political's, confirmed via live corpus instrumentation).
         faction_id = props.get("faction_id")
-        role_id = props.get("role_id")
-        if faction_id and role_id:
+        role_id = props.get("role_id") or _ROLE_COMPAT.get(entity.identity.role)
+        if faction_id:
             return ResolvedEntityIdentity(
                 entity_id=entity.id,
                 archetype_id=props.get("archetype_id"),
                 race_id=props.get("race_id"),
                 faction_id=faction_id,
-                role_id=role_id,
+                role_id=role_id or "unresolved",
                 profession_id=props.get("profession_id"),
                 legacy_faction=_try_faction(entity.identity.faction),
                 legacy_role=_try_role(entity.identity.role),

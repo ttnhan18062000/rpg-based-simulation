@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P1A-REJECTION-BACKOFF
 phase: done
 date: 2026-06-27
-tags: [p1, rejection-cascade, project-state, backoff, memory, performance]
+tags: [rejection-cascade, project-state, backoff, memory, performance]
 ---
 
 # TCK-20260627-P1A-REJECTION-BACKOFF

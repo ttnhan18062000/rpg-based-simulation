@@ -1,17 +1,26 @@
 """
 tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py
 
-Phase 3 — AdventureDecisionPhase integration tests.
+Phase 3 — adventure-routing integration tests.
 Verifies entity lifecycle filtering, strategic lock compliance, and transition.
+
+Migrated by TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE (plan.md Step 5 item 6): the deleted
+AdventureDecisionPhase.apply() calls are retargeted to
+StrategicIntelligenceSystem.evaluate_strategic_intent()/AdventureGoalScorer().score(), the
+tier-5 path that already wins arbitration live (see investigation.md's "Does deleting
+AdventureDecisionPhase actually make ADVENTURE_ROUTE live for the first time?" -- no).
 """
 
 import pytest
+from src.ai.goals import GoalRegistry
+from src.ai.goals.adventure_scorer import AdventureGoalScorer
 from src.core.builder import V2EntityBuilder
 from src.core.state import CombatComponent, BiologicalComponent, PersonalityComponent, AuthoritativeState
 from src.core.updates import StateUpdate
-from src.domains.adventure.phase import AdventureDecisionPhase
-from src.core.strategic import ProjectState, ProjectKind, ProjectStatus, ObjectiveState, ObjectiveKind, ObjectiveStatus, StrategicComponent
-from src.domains.adventure.schema import RouteFamily
+from src.core.strategic import ProjectState, ProjectKind, GoalKind, ProjectStatus, ObjectiveState, ObjectiveKind, ObjectiveStatus, StrategicComponent
+from src.domains.adventure.schema import RouteFamily, AdventureRouteOption
+from src.domains.adventure.generator import AdventureRouteGenerator
+from src.systems.strategic_systems.intelligence import StrategicIntelligenceSystem
 
 
 def _state(entities) -> AuthoritativeState:
@@ -68,19 +77,233 @@ def test_filters_out_locked_projects():
         active_objective_id="o1",
         created_tick=1,
     )
-    b.replace_self_model(None) # simple default self model
-    
     # Set strategic projects
     entity = b.build()
     # Force projects mapping manually
     from src.engine.apply import replace
     new_strat = replace(entity.strategic, projects={"proj1": proj}, current_project_id="proj1", current_objective_id="o1")
     entity = replace(entity, strategic=new_strat)
-    
+
     state = _state([entity])
-    
-    # Run integration phase
-    update = AdventureDecisionPhase.apply(state)
-    
-    # Should skip hero because project is locked
-    assert not update.entity_updates
+
+    result = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
+
+    # Project remains locked -- no switch committed.
+    assert result.current_project_id_set is None
+
+
+def _build_hero_with_active_system_b_lock(current_score: float, current_resistance: float) -> AuthoritativeState:
+    """Build a hero (HP > 80%, no hostile nearby -> _threat_resolved() True, so the per-hero
+    own-lock gate at phase.py:150 does NOT skip the entity) with current_project_id pointing
+    at an ACTIVE System-B (GoalKind-typed) ProjectState whose lock has not yet expired at
+    state.tick=5."""
+    b = V2EntityBuilder(1)
+    b.replace_combat(CombatComponent(hp=90, max_hp=100, atk=10, def_stat=2))
+    b.replace_biological(BiologicalComponent(hunger=0.0, sleep_debt=0.0))
+    p = PersonalityComponent(greed=0.5, bravery=0.5, sociability=0.5, industry=0.5)
+    b.identity(evolution_level=1, personality=p)
+
+    obj = ObjectiveState(id="o1", kind=ObjectiveKind.REACH_LOCATION, target=None, target_position=None, status=ObjectiveStatus.UNRESOLVED, blocker_ids=[])
+    proj = ProjectState(
+        id="proj_system_b",
+        kind=GoalKind.COMBAT_ENGAGE,
+        status=ProjectStatus.ACTIVE,
+        score=current_score,
+        lock_until_tick=100,
+        objectives=[obj],
+        active_objective_id="o1",
+        created_tick=1,
+    )
+    entity = b.build()
+    from src.engine.apply import replace
+    new_strat = replace(
+        entity.strategic,
+        projects={"proj_system_b": proj},
+        current_project_id="proj_system_b",
+        current_objective_id="o1",
+    )
+    if current_resistance is not None:
+        from dataclasses import replace as dc_replace
+        new_strat = dc_replace(new_strat, profile=dc_replace(new_strat.profile, interruption_resistance=current_resistance))
+    entity = replace(entity, strategic=new_strat)
+
+    return _state([entity])
+
+
+def test_apply_respects_active_system_b_lock(monkeypatch):
+    """AC3: a hero with current_project_id pointing at an ACTIVE System-B project with an
+    unexpired lock, where AdventureGoalScorer independently proposes a new route the same
+    tick whose real (post-Step-2) score does not clear the generalized bypass gate -- the
+    switch must NOT overwrite current_project_id while the System-B lock is active.
+
+    The real AdventureGoalScorer().score() call (generator patched, service unmocked) is
+    isolated from unrelated real GoalKind scorers by feeding its single resulting GoalScore
+    into a patched GoalRegistry.get_all_scores -- evaluate_strategic_intent() otherwise scores
+    every registered GoalKind for this entity, which is real tier-5 competition this test does
+    not intend to exercise (only the ADVENTURE_ROUTE-vs-lock interaction)."""
+    state = _build_hero_with_active_system_b_lock(current_score=50.0, current_resistance=0.3)
+    entity = state.entities[1]
+
+    weak_route = AdventureRouteOption(
+        family=RouteFamily.GATHER_RESOURCE,
+        score=0.0,
+        confidence=0.5,
+        expected_benefit=0.3,
+        expected_risk=0.5,
+    )
+    monkeypatch.setattr(
+        AdventureRouteGenerator, "generate",
+        staticmethod(lambda entity, state=None, opportunities=(): (weak_route,)),
+    )
+
+    real_score = AdventureGoalScorer().score(entity, state)
+    monkeypatch.setattr(GoalRegistry, "get_all_scores", lambda e, s: [real_score])
+
+    result = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
+
+    # The System-B project's current_project_id must be preserved.
+    assert result.current_project_id_set in (None, "", "proj_system_b")
+
+
+def test_apply_switches_when_candidate_clears_bar(monkeypatch):
+    """Inverse of test_apply_respects_active_system_b_lock: the new route's real (post-Step-2)
+    score clears both the current project's normalized effective score and the urgency floor
+    (and the unchanged raw effective_current_score check) after normalization -- the switch
+    must still commit, proving Step 7's rewiring doesn't over-correct into 'never switch while
+    any lock exists'.
+
+    current.score/resistance are kept low (rather than a realistic mid/high System-B score) so
+    the function's unchanged final raw `candidate.score > effective_current_score` check also
+    clears -- that raw check is independent of the lock-bypass gate and applies to every path,
+    so a System-A-scale candidate (~0-2.9) can only ever clear it against a current whose raw
+    score+margin is comparably small (see test_score_normalization.py's own note on this same
+    structural point)."""
+    state = _build_hero_with_active_system_b_lock(current_score=1.0, current_resistance=0.0)
+    entity = state.entities[1]
+
+    strong_route = AdventureRouteOption(
+        family=RouteFamily.GATHER_RESOURCE,
+        score=0.0,
+        confidence=1.0,
+        expected_benefit=15.0,
+        expected_risk=0.0,
+    )
+    monkeypatch.setattr(
+        AdventureRouteGenerator, "generate",
+        staticmethod(lambda entity, state=None, opportunities=(): (strong_route,)),
+    )
+
+    real_score = AdventureGoalScorer().score(entity, state)
+    monkeypatch.setattr(GoalRegistry, "get_all_scores", lambda e, s: [real_score])
+
+    result = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
+
+    assert result.current_project_id_set not in (None, "", "proj_system_b")
+
+
+def test_zero_regression_human_practical_humanoid_hero_archetype_native():
+    """TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY Step 6: an archetype-native hero
+    (identity.role=HERO, properties carrying explicit archetype_id/role_id/cognition_profile_id
+    per ArchetypeEntityFactory.build_entity's real output shape, src/entities/archetype_factory.py
+    :48-57) is included under the new cognition-profile eligibility check exactly as it was
+    under the old role-only check -- both checks agree this entity is eligible, since
+    practical_humanoid.supports_adventure_routing=True and identity.role==HERO also holds.
+
+    Migrated (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE, Step 4's intentional divergence):
+    the deleted phase.py used to prove "entity was evaluated at all" via the last_defer_reason
+    property write, which is deliberately not ported to AdventureGoalScorer.score(). The
+    equivalent, still-real proof in the new path is score.metadata carrying a route_family --
+    only populated once _supports_adventure_routing has passed and AdventureDecisionService
+    .decide() has actually run; an ineligible entity's early-return never populates metadata
+    (see AdventureGoalScorer.score()'s ineligible branch)."""
+    b = V2EntityBuilder(1)
+    b.identity(
+        role=0,  # EntityRole.HERO
+        properties={
+            "archetype_id": "adventurer_hero",
+            "race_id": "human",
+            "faction_id": "hero_guild",
+            "role_id": "hero",
+            "cognition_profile_id": "practical_humanoid",
+        },
+    )
+    entity = b.build()
+    state = _state([entity])
+
+    # No opportunities are wired in this minimal state, so the service defers with a reason
+    # rather than picking a route -- the resulting DEFER_WITH_REASON metadata is itself the
+    # observable proof the entity was evaluated at all (excluded entities never reach the
+    # decision service and never populate metadata).
+    score = AdventureGoalScorer().score(entity, state)
+    assert score.metadata.get("route_family") == RouteFamily.DEFER_WITH_REASON
+
+
+def test_zero_regression_human_practical_humanoid_hero_legacy_guard_shape():
+    """TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY Step 7: a hero spawned via the
+    hero_adventurers world module's real shape (WorldEntitySpawner._spawn_legacy_guard,
+    src/worldassembly/entity_spawner.py:118-127) has NO cognition_profile_id key and an
+    explicitly-None role_id in identity.properties -- the confirmed real-corpus gap
+    (investigation.md Risk 1). This is the single highest-value zero-regression test: it fails
+    loudly if the Tier-3 EntityRole.HERO -> 'hero' role default fallback is missing or wrong,
+    since both of the only two real corpus worlds with ENABLE_ADVENTURE_ROUTING on today spawn
+    heroes through exactly this shape.
+
+    Migrated (see test_zero_regression_human_practical_humanoid_hero_archetype_native's own
+    migration note for the last_defer_reason -> metadata rationale)."""
+    b = V2EntityBuilder(1)
+    b.identity(
+        role=0,  # EntityRole.HERO
+        properties={
+            "archetype_id": None,
+            "race_id": None,
+            "role_id": None,
+            "faction_id": None,
+        },
+    )
+    entity = b.build()
+    state = _state([entity])
+
+    score = AdventureGoalScorer().score(entity, state)
+    assert score.metadata.get("route_family") == RouteFamily.DEFER_WITH_REASON
+
+
+def test_adventure_decision_does_not_discard_earlier_phase_updates():
+    """TCK-20260808-ROUTING-FLAG-FACTION-INFORMATION-RNG-COUPLING: the adventure_decision phase's
+    own run_phase call site in pipeline.py previously returned AdventureDecisionPhase.apply()'s
+    fresh StateUpdate directly instead of merging it into the accumulated update -- silently
+    discarding every phase's output that ran earlier in the same tick (diplomatic_transitions,
+    information_belief, cooperation, contracts/blacksmith) whenever ENABLE_ADVENTURE_ROUTING=ON.
+    Real, controlled proof this was NOT an RNG-consumption-order bug (the ticket's own original
+    hypothesis): compute_transitions() is a pure function of state.factions and produced the
+    identical FactionUpdate list regardless of the flag -- the discard happened strictly inside
+    refine(), after diplomatic_transitions merged its updates, before refine() returned."""
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    from src.core.state import FactionState, DiplomaticState
+    from src.systems.world_systems.generator import EntityGenerator
+    from src.domains.optimization.feature_flags import FeatureMode
+
+    # Two factions with tension high enough that diplomatic_state_machine.compute_transitions()
+    # produces a real NEUTRAL -> TENSE FactionUpdate for this pair (threshold: pair_tension > 0.4).
+    factions = {
+        "alpha": FactionState(faction_id="alpha", tension_level=0.5),
+        "beta": FactionState(faction_id="beta", tension_level=0.5),
+    }
+    hero = EntityGenerator(seed=1).spawn_hero((10.0, 10.0))
+
+    state = _state([hero])
+    from dataclasses import replace as dc_replace
+    state = dc_replace(
+        state, factions=factions, building_tiles={},
+        feature_flags={"ENABLE_ADVENTURE_ROUTING": FeatureMode.ON},
+    )
+
+    refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
+
+    assert refined.faction_updates, (
+        "diplomatic_transitions' own real FactionUpdate output was discarded by the "
+        "adventure_decision phase -- it must survive refine() when routing is ON"
+    )
+    assert any(
+        fu.faction_id in ("alpha", "beta") and fu.diplomatic_relations_set
+        for fu in refined.faction_updates
+    )

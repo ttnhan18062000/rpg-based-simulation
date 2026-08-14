@@ -16,11 +16,66 @@ class FeatureFlagManager:
             "ENABLE_ADVENTURE_ROUTING": FeatureMode.OFF,
             "ENABLE_COMBAT_ENGAGEMENT": FeatureMode.OFF,
             "ENABLE_BELIEF_ASSIMILATION": FeatureMode.OFF,
+            "ENABLE_INFORMATION_INTENT_EXECUTION": FeatureMode.OFF,
             "ENABLE_PROGRESSION_EVOLUTION": FeatureMode.OFF,
             "ENABLE_SOCIAL_COOPERATION": FeatureMode.OFF,
             "ENABLE_WORLD_EMERGENCE": FeatureMode.OFF,
             "ENABLE_LIFE_ARC_CAMPAIGNS": FeatureMode.OFF,
             "ENABLE_ENHANCED_TRACE_EVENTS": FeatureMode.OFF,
+            # Default ON (not OFF like the other 11 flags): validated and cut over by
+            # TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION — this is the live default path
+            # for COMBAT/ECONOMY/FACTION event emission, not a speculative rollout candidate.
+            # event_extractor.py's old diffing branches for these 3 domains remain in the
+            # codebase, flag-gated to fire only when this is NOT "ON" — setting it to "OFF"
+            # is a real, working rollback to pre-cutover behavior, not just a partial one.
+            "ENABLE_PUSH_EVENT_SHAPERS": FeatureMode.ON,
+            # Default ON (not OFF like the 11 phase-gating flags): validated (6-world real
+            # comparison, TCK-20260806-PUSH-SHADOW-VALIDATION-PERF-PHASE2, GO verdict) and cut
+            # over by TCK-20260806-PUSH-CUTOVER-PHASE2 — this is the live default path for
+            # AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL event emission (Phase 2's ~50
+            # events), not a speculative rollout candidate. Same exception class as
+            # ENABLE_PUSH_EVENT_SHAPERS above, kept on its OWN separate flag (not merged into that
+            # one) specifically because it defaulted OFF during Phase 2's build — event_shapers.py's
+            # PHASE2_SHAPER_REGISTRY existed precisely to give Phase 2 a real SHADOW-validation
+            # window independent of Phase 1's already-ON flag (a real double-firing bug was found
+            # and fixed during TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY's own build when this
+            # premise was first tested). event_extractor.py's old diffing branches for Phase 2's
+            # domains remain in the codebase, flag-gated to fire only when this is NOT "ON" —
+            # setting it to "OFF" is a real, working rollback to pre-cutover behavior.
+            "ENABLE_PUSH_EVENT_SHAPERS_PHASE2": FeatureMode.ON,
+            # New gameplay behavior (TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING), not a validated
+            # replacement of existing behavior — DEV-002's default-OFF policy applies (unlike the
+            # two ON-default flags above, which cut over already-proven behavior). Gates both
+            # GuildNeedScorer (src/ai/goals/scorers.py, checked via state.feature_flags directly)
+            # and the guild_visit pipeline phase (src/engine/pipeline.py, checked via
+            # FeatureFlagManager/run_phase) — belt-and-suspenders so a stale kind=="guild" project
+            # from before a flag flip can't silently complete even if the scorer alone were somehow
+            # bypassed.
+            "ENABLE_GUILD_QUEST_GENERATION": FeatureMode.OFF,
+            # Default ON (not OFF): validated via real-kernel checks in both SHADOW
+            # (construct-only) and ON (deliver, no double-fire against event_extractor.py's own
+            # rollback path) during TCK-20260807-QUEST-EVENT-PUSH-MIGRATION -- migrates
+            # quest_event (entity-project quest lifecycle, SOC-241) to the shaper-registry
+            # pattern. Same exception class as ENABLE_PUSH_EVENT_SHAPERS/_PHASE2 above, kept on
+            # its OWN separate flag rather than folded into ENABLE_PUSH_EVENT_SHAPERS_PHASE2
+            # (which already defaults ON) for the identical reason Phase 2 needed its own flag
+            # distinct from Phase 1's: reusing an already-ON flag would deliver live immediately
+            # with no real SHADOW-validation window. event_extractor.py's old quest_event diffing
+            # block remains in the codebase, flag-gated to fire only when this is NOT "ON" -- a
+            # real, working rollback to pre-migration behavior.
+            "ENABLE_PUSH_EVENT_SHAPERS_QUEST": FeatureMode.ON,
+            # Default ON (not OFF): validated via real-kernel checks in both SHADOW
+            # (construct-only) and ON (deliver, no double-fire against event_extractor.py's own
+            # rollback path) during TCK-20260807-COMMITMENT-ABANDONED-PUSH-MIGRATION-GAP /
+            # TCK-20260807-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP -- migrates
+            # commitment_abandoned + rejection_cascade_tick (both AgencyScorer) to the
+            # shaper-registry pattern. Same exception class as the 3 push-event-shaper flags
+            # above, kept on its OWN separate flag rather than folded into any already-ON flag
+            # for the identical reason ENABLE_PUSH_EVENT_SHAPERS_QUEST needed its own flag apart
+            # from ENABLE_PUSH_EVENT_SHAPERS_PHASE2. event_extractor.py's old diffing blocks for
+            # both events remain in the codebase, flag-gated to fire only when this is NOT "ON"
+            # -- a real, working rollback to pre-migration behavior.
+            "ENABLE_PUSH_EVENT_SHAPERS_AGENCY": FeatureMode.ON,
         }
         if overrides:
             for k, v in overrides.items():

@@ -36,7 +36,7 @@ class TestBeliefAssimilated:
     def test_belief_active(self, scorer: InformationScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("belief_assimilated"), _ctx(window_tags={"belief_active": 3}))
         assert rec is not None
-        assert rec.delta == scoring_weights["belief_active"]
+        assert rec.delta == scoring_weights.for_pillar("INFORMATION")["belief_active"]
 
     def test_belief_system_silent_after_gate(self, scorer: InformationScorer, scoring_weights: ScoringWeights) -> None:
         gate = scoring_weights.int_param("belief_dormant_window")
@@ -82,7 +82,7 @@ class TestPaidInfo:
     def test_knowledge_economy_active(self, scorer: InformationScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("paid_information_transaction"), _ctx(event_count=5))
         assert rec is not None
-        assert rec.delta == scoring_weights["knowledge_economy_active"]
+        assert rec.delta == scoring_weights.for_pillar("INFORMATION")["knowledge_economy_active"]
 
     def test_knowledge_economy_dormant_after_gate(self, scorer: InformationScorer, scoring_weights: ScoringWeights) -> None:
         gate = scoring_weights.int_param("zero_diplomacy_by_tick")
@@ -107,7 +107,7 @@ class TestDecisionDiverged:
     def test_subjective_divergence(self, scorer: InformationScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("decision_diverged_by_belief"), _ctx())
         assert rec is not None
-        assert rec.delta == scoring_weights["subjective_divergence"]
+        assert rec.delta == scoring_weights.for_pillar("INFORMATION")["subjective_divergence"]
 
     def test_omniscience_collapse_once(self, scorer: InformationScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("decision_diverged_by_belief", payload={"is_collapse": True}), _ctx())

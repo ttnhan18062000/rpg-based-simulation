@@ -1,3 +1,12 @@
+---
+status: authoritative
+layer: world
+authority: P1
+audience: developer
+last_verified: 2026-07-02
+tags: [demographics, cohort, population, density-signal, phase-5]
+---
+
 # Demographics Contract
 
 > **Authority:** Certified Level 1 (Authoritative)

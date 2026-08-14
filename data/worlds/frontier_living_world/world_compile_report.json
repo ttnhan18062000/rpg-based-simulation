@@ -1,12 +1,13 @@
 {
   "world_id": "frontier_living_world",
   "seed": 42,
-  "entity_count": 46,
-  "region_count": 7,
-  "resource_node_count": 9,
-  "building_count": 6,
-  "quest_count": 16,
+  "entity_count": 49,
+  "region_count": 8,
+  "resource_node_count": 10,
+  "building_count": 8,
+  "quest_count": 19,
+  "distinct_populated_factions": 6,
   "warnings": [],
-  "compile_duration_ms": 17.386564999469556,
-  "state_hash": "ec600cdee5a577d70261273d2e63d9a2"
+  "compile_duration_ms": 36.03613399900496,
+  "state_hash": "b5ba0b687cb226e68c439009b6b10c08"
 }

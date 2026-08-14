@@ -16,6 +16,7 @@ This document records the current technical limitations, unsupported features, a
 ### 1.1 Spatial / Navigation
 - **Linear Stepping Only**: Pathfinding through dynamic obstacles (e.g., other entities or newly spawned objects) is best-effort. V2 currently relies on direct linear stepping toward coordinates for supported proofs.
 - **Congestion Weakness**: While congestion is handled by yielding, high-density entity overlaps are not yet hardened against all edge cases.
+- **Mutual-pursuit diagonal deadlock** (`TCK-20260810-NAVIGATION-SINGLE-AXIS-STEPPING-DIAGONAL-PURSUIT-DEADLOCK`): `NavigationSystem.get_next_step()` (`src/systems/world_systems/navigation.py:99-103`) is a single-axis-priority stepper — it moves exactly one axis per tick, favoring Y on an exact `|dx| == |dy|` tie. When TWO entities are simultaneously, mutually pursuing each other (both live-retargeting to the other's current position every tick, per `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`) and land on a perfectly diagonal offset, both entities' own tie-break resolves identically (Y-axis), and their moves cancel each other's progress every tick — an infinite, deterministic orbit with the Manhattan distance between them held perfectly constant. Confirmed analytically (a standalone re-implementation of the tie-break rule reproduces the exact real corpus trace) and empirically via a real, non-mocked `Kernel.tick_once()` loop. A single-sided pursuer chasing a static or non-reactive target is NOT affected — it converges normally via a staircase path (verified separately); the deadlock requires BOTH sides to be reactively re-targeting each other. **Real corpus prevalence measured, not assumed**: across 3 seeds (42/123/456) × up to 8 corpus worlds (`dungeon_crawl`, `urban_political`, `wilderness_survival`, `crowded_frontier`, `swamp_border_world`, `hero_guild_routing`), 2000 ticks each, exactly 1 real pursuit pair (out of the full sample) ever entered a genuine, sustained (≥20-tick) deadlock — the specific pair already known from `TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS`'s own investigation, seed 42, `dungeon_crawl` only. All other seed/world combinations showed either zero mutual-pursuit interactions on an exact diagonal offset, or trivially short (1-9 tick) coincidental ties that resolved normally on the next tick. **Disposition**: a real, confirmed, deterministic bug, but rare enough in practice (a specific spawn-geometry coincidence, not a systemic pattern) that a stepping-algorithm change was judged disproportionate to the real, measured impact — documented here rather than fixed, per this ticket's own explicit "document-and-defer if rare" scope branch.
 
 ### 1.2 Resource loops
 - **No Complex Regeneration**: Resource nodes do not currently support complex regeneration logic (e.g., seasonal growth, depletion cooldowns). Nodes are static or reset on scenario reload.
@@ -31,7 +32,7 @@ This document records the current technical limitations, unsupported features, a
 
 ### 1.5 Feature Flag Defaults (Phase 10 Rollout Gates)
 
-All 10 Phase 10 feature flags in `src/domains/optimization/feature_flags.py` default to
+All 11 Phase 10 feature flags in `src/domains/optimization/feature_flags.py` default to
 `FeatureMode.OFF`. The flags are:
 
 - `ENABLE_WORLD_CAPABILITY_LAYER`
@@ -39,6 +40,7 @@ All 10 Phase 10 feature flags in `src/domains/optimization/feature_flags.py` def
 - `ENABLE_ADVENTURE_ROUTING`
 - `ENABLE_COMBAT_ENGAGEMENT`
 - `ENABLE_BELIEF_ASSIMILATION`
+- `ENABLE_INFORMATION_INTENT_EXECUTION`
 - `ENABLE_PROGRESSION_EVOLUTION`
 - `ENABLE_SOCIAL_COOPERATION`
 - `ENABLE_WORLD_EMERGENCE`
@@ -50,6 +52,18 @@ measure behaviour gated behind one of these flags must explicitly enable the fla
 `overrides` constructor argument or `FeatureFlagManager.set_flag_mode()`. The existing
 `_build_kernel(enable_routing=True)` pattern in
 `tests/integration/scenarios/test_balance_regression.py` is the canonical example.
+
+**`ENABLE_ADVENTURE_ROUTING` no longer gates anything (as of
+`TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`):** the phase it used to gate,
+`adventure_decision` (`AdventureDecisionPhase`), was deleted from `src/engine/pipeline.py`'s
+`refine()`. Its replacement, `AdventureGoalScorer` (`src/ai/goals/adventure_scorer.py`), is a
+tier-5 `GoalScorer` that runs unconditionally as part of `StrategicIntelligenceSystem`'s
+per-entity scoring — it does not read `ENABLE_ADVENTURE_ROUTING` or any other feature flag (see
+`docs/parity_ledger/strategic_cognition.yaml` STRAT-252). The flag entry still exists in
+`FeatureFlagManager` and remains default-`OFF` for backward compatibility with existing scenario
+configs and tests that set it, but flipping it ON or OFF no longer changes any live behavior.
+The other 10 flags in this list are unaffected and still gate real pipeline phases via
+`run_phase(..., feature_flag=...)`.
 
 **Do not change the default to `ON` without first re-running `tools/balance_measure.py`** on
 the affected scenario (e.g. `urban_political`, seed 42, 100 ticks) to establish new baseline

@@ -17,6 +17,7 @@ regions:
   - 40
   terrain: plain
   hazard_level: 0.0
+  hazard_kind: PHYSICAL
   tags:
   - plain
   - settlement
@@ -29,7 +30,21 @@ regions:
   - 120
   terrain: swamp
   hazard_level: 2.5
+  hazard_kind: NATURAL_TERRAIN
   tags: []
+- id: trading_hometown
+  type: town
+  bounds:
+  - 45
+  - 10
+  - 80
+  - 45
+  terrain: plain
+  hazard_level: 0.5
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - plain
+  - trade_route
 - id: near_forest
   type: wilderness
   bounds:
@@ -39,6 +54,7 @@ regions:
   - 55
   terrain: forest
   hazard_level: 1.0
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
 - id: wolf_den
@@ -50,41 +66,81 @@ regions:
   - 70
   terrain: forest
   hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
 factions:
 - id: hero_guild
   type: defender
+  initial_tension_level: 0.0
 - id: town_council
   type: defender
+  initial_tension_level: 0.5
 - id: neutral
   type: neutral
+  initial_tension_level: 0.0
 - id: wild_beast_pack
   type: wild
+  initial_tension_level: 0.0
 - id: goblin_warband
   type: invader
+  initial_tension_level: 0.0
 - id: merchant_league
   type: neutral
+  initial_tension_level: 0.0
 - id: bandit_company
   type: invader
+  initial_tension_level: 0.0
 - id: forest_wardens
   type: defender
+  initial_tension_level: 0.0
 - id: orc_clan
   type: rival
+  initial_tension_level: 0.0
 - id: dwarven_mine_clan
   type: defender
+  initial_tension_level: 0.0
 - id: moon_cult
   type: invader
+  initial_tension_level: 0.0
 - id: undead_remnants
   type: invader
+  initial_tension_level: 0.0
 - id: arcane_circle
   type: neutral
+  initial_tension_level: 0.0
 - id: swamp_tribe
   type: rival
+  initial_tension_level: 0.5
 - id: dragon_cult
   type: invader
+  initial_tension_level: 0.0
 - id: spirit_court
   type: neutral
+  initial_tension_level: 0.0
+information_source_profiles:
+- source_id: town_notice_board
+  source_kind: guide
+  knowledge_scopes:
+  - regional_danger
+  - common_resource_sources
+  accuracy: 0.4
+  freshness: 0.6
+  bias: 0.1
+  cost_gold: 0
+  max_answers_per_query: 2
+pending_information_responses:
+- target_population_id: frontier_village_population_frontier_guard
+  subject: swamp_border_danger
+  query_kind: danger_rating
+  source_id: town_notice_board
+  answer_kind: KNOWN_FACT
+  certainty: 0.7
+  details:
+    danger_level: elevated
+    region: swamp_border_territory
+  cost_paid: 0
+pending_self_model_information_events: []
 entities:
 - id: frontier_village_population_village_worker
   count: 8
@@ -128,6 +184,11 @@ entities:
   faction: swamp_tribe
   spawn_region: swamp_border_territory
   archetype_id: lizardfolk_scout
+- id: trading_pop_0
+  count: 3
+  role: merchant
+  faction: merchant_league
+  spawn_region: trading_hometown
 - id: wolf_pack_small_hungry_wolf
   count: 4
   role: predator_hunter
@@ -161,6 +222,11 @@ resources:
   count: 3
   region: swamp_border_territory
   regen_rate: 1
+- id: trading_res_0
+  resource_type: iron_vein
+  count: 6
+  region: trading_hometown
+  regen_rate: 1
 - id: wolf_den_near_forest__wood_node_0
   resource_type: wood_node
   count: 8
@@ -192,6 +258,12 @@ buildings:
 - id: healer_hut_0
   type: healer_hut
   region: hometown
+- id: trading_bld_0
+  type: shop
+  region: trading_hometown
+- id: trading_bld_1
+  type: inn
+  region: trading_hometown
 quest_definitions:
 - id: village_fetch_supply_run
   type: fetch
@@ -242,6 +314,57 @@ quest_definitions:
   - settlement
   - defense
   source_module: frontier_village_core
+- id: trade_fetch_shipment_goods
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - trade
+  - economy
+  - supply
+  source_module: trading_company_hub
+- id: trade_escort_merchant_convoy
+  type: escort
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - trade
+  - economy
+  - escort
+  source_module: trading_company_hub
+- id: trade_investigate_sabotage
+  type: investigate
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - trade
+  - economy
+  - mystery
+  source_module: trading_company_hub
 - id: wolf_hunt_alpha_pack
   type: hunt
   required_participant_tags:

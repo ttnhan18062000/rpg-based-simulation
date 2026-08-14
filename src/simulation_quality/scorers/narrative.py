@@ -17,6 +17,8 @@ class NarrativeScorer(PillarScorer):
     Does NOT duplicate FactionScorer signals (alliance/war events).
     """
 
+    PILLAR_ID = PillarId.NARRATIVE
+
     EVENT_TYPES = (
         "quest_started",
         "quest_completed",

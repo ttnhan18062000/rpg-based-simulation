@@ -1,0 +1,131 @@
+claude_adapter_schema_version: 1
+source_workflow_id: implement-ticket
+phase_order:
+- Scope
+- Investigate
+- Plan
+- Review
+- Implement
+- Document-Update
+- Architecture-Verify
+- Test
+- Parity
+- Security-Review
+- Verify
+- Finalize
+phases:
+- name: Scope
+  tiers:
+    standard: full
+    hotfix: full
+- name: Investigate
+  tiers:
+    standard: full
+    hotfix: skipped_event
+- name: Plan
+  tiers:
+    standard: full
+    hotfix: skipped_event
+- name: Review
+  tiers:
+    standard: full
+    hotfix: skipped_event
+- name: Implement
+  tiers:
+    standard: full
+    hotfix: full
+- name: Document-Update
+  tiers:
+    standard: full
+    hotfix: full
+- name: Architecture-Verify
+  tiers:
+    standard: full
+    hotfix: skipped_event
+- name: Test
+  tiers:
+    standard: full
+    hotfix: full
+- name: Parity
+  tiers:
+    standard: conditional
+    hotfix: conditional
+  condition: src_change_and_behavior_changed
+  if_false: skipped_event
+- name: Security-Review
+  tiers:
+    standard: conditional
+    hotfix: conditional
+  condition: security_tag_or_suggested_skill
+  if_false: conditional_absent
+- name: Verify
+  tiers:
+    standard: full
+    hotfix: full
+- name: Finalize
+  tiers:
+    standard: full
+    hotfix: full
+terminal_statuses:
+- value: CONFLICTS_DETECTED
+  kind: literal
+  phases:
+  - Scope
+- value: TAGS_NOT_REGISTERED
+  kind: literal
+  phases:
+  - Scope
+- value: EPIC_SCOPED
+  kind: literal
+  phases:
+  - Scope
+- value: SCOPE_AGENT_FAILED
+  kind: bypass
+  phases:
+  - Scope
+- value: NEEDS_HUMAN_INPUT
+  kind: literal
+  phases:
+  - Investigate
+- value: NEEDS_CHANGES
+  kind: verdict_derived
+  phases:
+  - Review
+  - Architecture-Verify
+- value: BLOCKED
+  kind: verdict_derived
+  phases:
+  - Review
+  - Architecture-Verify
+- value: DOC_STALENESS_BLOCKED
+  kind: literal
+  phases:
+  - Implement
+- value: TESTS_FAILED
+  kind: literal
+  phases:
+  - Test
+- value: DATA_RUNS_CLEAN_FAILED
+  kind: literal
+  phases:
+  - Test
+- value: PARITY_INCOMPLETE
+  kind: literal
+  phases:
+  - Parity
+- value: SECURITY_BLOCKED
+  kind: literal
+  phases:
+  - Security-Review
+- value: DOD_BLOCKED
+  kind: literal
+  phases:
+  - Verify
+- value: FINALIZE_INCOMPLETE
+  kind: literal
+  phases:
+  - Finalize
+- value: DONE
+  kind: literal
+  phases:
+  - Finalize

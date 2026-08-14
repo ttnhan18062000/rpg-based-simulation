@@ -192,6 +192,106 @@ def test_repository_index_rebuild_classifies_composition_worlds(tmp_path):
     assert index_data["worlds"]["w2_composition"]["status"] == "COMPOSITION"
     assert index_data["worlds"]["w2_composition"]["schema_version"] == "worldcomposition.v1"
 
+def _write_composition_with_resolved(tmp_path, world_id: str, with_compile_context: bool = True):
+    """Shared fixture builder: a worldcomposition.v1 world.yaml plus its resolved/
+    world.resolved.yaml, and (unless with_compile_context=False) a real compile_context.json
+    carrying a role->EntityRole mapping -- mirrors the real, on-disk shape every corpus world
+    under data/worlds/ already has (confirmed via TCK-20260808-MONSTER-ROLE-MISTAGGING-
+    INVESTIGATION's own direct inspection)."""
+    w_dir = tmp_path / world_id
+    w_dir.mkdir()
+    composition_data = {
+        "schema_version": "worldcomposition.v1",
+        "world_id": world_id,
+        "name": "Composition World",
+        "module_refs": [],
+    }
+    with open(w_dir / "world.yaml", "w") as f:
+        yaml.safe_dump(composition_data, f)
+
+    resolved_dir = w_dir / "resolved"
+    resolved_dir.mkdir()
+    with open(resolved_dir / "world.resolved.yaml", "w") as f:
+        yaml.safe_dump(create_valid_world_dict(world_id, "Composition World"), f)
+
+    if with_compile_context:
+        from src.worldassembly.context import CompileContext
+        from src.core.enums import EntityRole
+
+        ctx = CompileContext()
+        ctx.register_legacy_role("predator_hunter", EntityRole.MONSTER)
+        ctx.register_legacy_role("scout", EntityRole.GUARD)
+        with open(resolved_dir / "compile_context.json", "w") as f:
+            json.dump(ctx.to_dict(), f)
+
+    return w_dir
+
+
+def test_load_world_with_context_non_composition_returns_none_context(tmp_path):
+    """A plain worldspec.v1 world (not a composition) has no compile_context.json at all --
+    load_world_with_context() must return (spec, None), matching load_world()'s own existing
+    behavior for this case exactly."""
+    repo = WorldRepository(tmp_path)
+    w_dir = tmp_path / "plain_world"
+    w_dir.mkdir()
+    with open(w_dir / "world.yaml", "w") as f:
+        yaml.safe_dump(create_valid_world_dict("plain_world", "Plain World"), f)
+
+    spec, context = repo.load_world_with_context("plain_world")
+    assert spec.world_id == "plain_world"
+    assert context is None
+
+
+def test_load_world_with_context_composition_loads_real_role_mapping(tmp_path):
+    """TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION: the real bug this method fixes --
+    a composition world's own compile_context.json must be loaded and returned so
+    WorldCompiler.compile() can correctly resolve entity.identity.role for real, catalog-driven
+    monster archetypes instead of falling back to naive keyword matching (which defaults almost
+    every real monster role_id, e.g. "predator_hunter", to CITIZEN)."""
+    from src.core.enums import EntityRole
+
+    repo = WorldRepository(tmp_path)
+    _write_composition_with_resolved(tmp_path, "monster_world")
+
+    spec, context = repo.load_world_with_context("monster_world")
+    assert spec.world_id == "monster_world"
+    assert context is not None
+    assert context.legacy_roles["predator_hunter"] == EntityRole.MONSTER
+    assert context.legacy_roles["scout"] == EntityRole.GUARD
+
+
+def test_load_world_with_context_composition_missing_compile_context_degrades_to_none(tmp_path):
+    """Graceful degradation: a resolved composition world whose compile_context.json is
+    missing (e.g. an older resolve predating this artifact) must still load successfully with
+    context=None, not raise -- matching load_world()'s own existing tolerance for a resolved-
+    but-context-less world."""
+    repo = WorldRepository(tmp_path)
+    _write_composition_with_resolved(tmp_path, "no_context_world", with_compile_context=False)
+
+    spec, context = repo.load_world_with_context("no_context_world")
+    assert spec.world_id == "no_context_world"
+    assert context is None
+
+
+def test_load_world_with_context_unresolved_composition_raises(tmp_path):
+    """A composition world with no resolved/world.resolved.yaml at all must raise, matching
+    load_world()'s own existing "Run resolve first" error for this case."""
+    repo = WorldRepository(tmp_path)
+    w_dir = tmp_path / "unresolved_world"
+    w_dir.mkdir()
+    composition_data = {
+        "schema_version": "worldcomposition.v1",
+        "world_id": "unresolved_world",
+        "name": "Unresolved World",
+        "module_refs": [],
+    }
+    with open(w_dir / "world.yaml", "w") as f:
+        yaml.safe_dump(composition_data, f)
+
+    with pytest.raises(WorldRepositoryError, match="has not been resolved"):
+        repo.load_world_with_context("unresolved_world")
+
+
 def test_repository_save_world(tmp_path):
     repo = WorldRepository(tmp_path)
     

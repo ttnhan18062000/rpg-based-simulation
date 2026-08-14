@@ -7,10 +7,17 @@ YAML list with one entry per file. Ticket entries are joined with stored_artifac
 by ticket_id to enumerate artifact_files.
 
 Usage:
-  python3 tools/generate_registry.py [--root <dir>] [--output <path>]
+  python3 tools/generate_registry.py [--root <dir>] [--output <path>] [--check]
 
-Exit 0 = success.
-Exit 1 = one or more doc files missing frontmatter (CI gate).
+--check performs a dry run: regenerates entries in-memory, diffs the parsed
+entry list against the on-disk output file (never raw file text — the header
+carries a live timestamp), and writes nothing.
+
+Exit 0 = success (or, with --check, in sync with the on-disk file).
+Exit 1 = one or more doc files missing frontmatter (CI gate). Takes precedence
+         over drift detection: with --check, this short-circuits before the diff.
+Exit 2 = --check only: on-disk output is out of sync with a fresh regeneration,
+         or the output file does not exist.
 """
 
 import argparse
@@ -32,7 +39,22 @@ from validate_frontmatter import extract_frontmatter  # noqa: E402
 # ---------------------------------------------------------------------------
 
 # Subdirectories under docs/ to skip entirely (not indexed in the registry).
-_SKIP_DOC_SUBDIRS = {"archive", "superpowers", "specs", "parity_ledger", "scenarios", "entity"}
+#
+# - "archive", "parity_ledger" — real exclusions: contain .md files that would
+#   otherwise be indexed by collect_docs()'s docs_dir.rglob("*.md"); skip-list
+#   membership is load-bearing for these two.
+# - "scenarios", "entity" — currently inert no-ops: as of the audit date below
+#   they contain zero .md files (they hold .yaml/.mmd content instead), so
+#   collect_docs()'s *.md-only rglob already excludes them regardless of this
+#   set's membership. Retained anyway for forward-compatibility documentation
+#   and because their content is actively referenced elsewhere:
+#   docs/scenarios/phase1/*.yaml by tests/unit/strategic/test_scenario_runner.py;
+#   docs/entity/*.mmd by docs/strategy/world_capability_design.md and
+#   docs/guides/diagram_index.md. Do not remove without re-verifying those
+#   references first.
+#
+# Audited and confirmed accurate by TCK-20260803-DOCS-STRUCTURE-AUDIT (2026-08-03).
+_SKIP_DOC_SUBDIRS = {"archive", "parity_ledger", "scenarios", "entity"}
 
 _AUTHORITY_SORT = {"P0": 0, "P1": 1, "P2": 2}
 
@@ -405,8 +427,69 @@ def _normalise_entry_for_output(entry: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def generate_registry(root: Path, output: Path) -> int:
-    """Generate docs/REGISTRY.yaml. Returns exit code (0=ok, 1=doc errors)."""
+def _print_drift_summary(on_disk_entries: list, fresh_entries: list, output: Path) -> None:
+    """Print a human-readable added/removed/changed summary, keyed by entry 'path'."""
+    on_disk_by_path = {e.get("path"): e for e in on_disk_entries if isinstance(e, dict)}
+    fresh_by_path = {e.get("path"): e for e in fresh_entries}
+
+    added = sorted(set(fresh_by_path) - set(on_disk_by_path))
+    removed = sorted(set(on_disk_by_path) - set(fresh_by_path))
+    changed = sorted(
+        path
+        for path in (set(fresh_by_path) & set(on_disk_by_path))
+        if fresh_by_path[path] != on_disk_by_path[path]
+    )
+
+    print(f"DRIFT: {output} is out of sync with a fresh regeneration:", file=sys.stderr)
+    if added:
+        print(f"  added ({len(added)}):", file=sys.stderr)
+        for path in added:
+            print(f"    + {path}", file=sys.stderr)
+    if removed:
+        print(f"  removed ({len(removed)}):", file=sys.stderr)
+        for path in removed:
+            print(f"    - {path}", file=sys.stderr)
+    if changed:
+        print(f"  changed ({len(changed)}):", file=sys.stderr)
+        for path in changed:
+            on_disk_entry = on_disk_by_path[path]
+            fresh_entry = fresh_by_path[path]
+            changed_fields = sorted(
+                k
+                for k in set(on_disk_entry) | set(fresh_entry)
+                if on_disk_entry.get(k) != fresh_entry.get(k)
+            )
+            print(f"    ~ {path} (fields: {', '.join(changed_fields)})", file=sys.stderr)
+    print(f"  Run: python3 tools/generate_registry.py --output {output} to regenerate.", file=sys.stderr)
+
+
+def _check_drift(output: Path, output_entries: list) -> int:
+    """Diff output_entries against the on-disk output file. Never writes to output.
+
+    Returns 0 (in sync) or 2 (drift detected, including a missing output file).
+    """
+    if not _HAS_PYYAML:
+        raise RuntimeError("PyYAML is required for --check mode (yaml.safe_load)")
+
+    if not output.exists():
+        print(
+            f"DRIFT: {output} does not exist (would write {len(output_entries)} entries)",
+            file=sys.stderr,
+        )
+        return 2
+
+    on_disk_entries = _yaml.safe_load(output.read_text(encoding="utf-8")) or []
+
+    if on_disk_entries == output_entries:
+        print(f"In sync: {len(output_entries)} entries match {output}")
+        return 0
+
+    _print_drift_summary(on_disk_entries, output_entries, output)
+    return 2
+
+
+def generate_registry(root: Path, output: Path, *, check: bool = False) -> int:
+    """Generate docs/REGISTRY.yaml. Returns exit code (0=ok, 1=doc errors, 2=drift in --check mode)."""
     doc_entries, doc_errors = collect_docs(root)
     ticket_entries = collect_tickets(root)
 
@@ -419,6 +502,16 @@ def generate_registry(root: Path, output: Path) -> int:
     for e in output_entries:
         if e.get("type") == "doc" and e.get("last_verified") is None:
             e.pop("last_verified", None)
+
+    if check:
+        # doc_errors short-circuits before the diff — an un-computable entry list
+        # cannot produce a trustworthy comparison target. Never writes in this branch.
+        if doc_errors:
+            print(f"\nERROR: {len(doc_errors)} doc file(s) missing frontmatter:", file=sys.stderr)
+            for err in doc_errors:
+                print(f"  {err}", file=sys.stderr)
+            return 1
+        return _check_drift(output, output_entries)
 
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     header = (
@@ -457,6 +550,12 @@ def main() -> None:
         default="docs/REGISTRY.yaml",
         help="Output path for the registry YAML (default: docs/REGISTRY.yaml)",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Dry-run: diff in-memory regeneration against on-disk output, write nothing, "
+             "exit 0 (in sync) / 1 (doc frontmatter errors) / 2 (drift detected)",
+    )
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -464,7 +563,7 @@ def main() -> None:
     if not output.is_absolute():
         output = root / output
 
-    sys.exit(generate_registry(root, output))
+    sys.exit(generate_registry(root, output, check=args.check))
 
 
 if __name__ == "__main__":

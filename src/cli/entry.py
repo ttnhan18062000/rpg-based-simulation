@@ -211,9 +211,14 @@ def _run_cli(args):
 
     logging.info(f"Loading and compiling world specification: {world_id}...")
     repo = WorldRepository("data/worlds")
-    spec = repo.load_world(world_id)
+    # TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION: load_world_with_context() (not
+    # load_world()) surfaces the compile_context.json role/faction mapping
+    # WorldCompiler.compile() needs to correctly resolve entity.identity.role/.faction for
+    # real, catalog-driven monster archetypes -- without it, resolution silently falls back to
+    # naive keyword matching, defaulting almost every monster to CITIZEN.
+    spec, context = repo.load_world_with_context(world_id)
 
-    state, compile_report = WorldCompiler.compile(spec, seed=seed)
+    state, compile_report = WorldCompiler.compile(spec, seed=seed, context=context)
     logging.info(f"World successfully compiled! Entities spawned: {compile_report['entity_count']}, Hash: {compile_report['state_hash']}")
     
     # Handle replay path override

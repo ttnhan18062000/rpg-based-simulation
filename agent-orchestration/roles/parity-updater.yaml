@@ -1,0 +1,5 @@
+role_version: 1
+role_id: parity-updater
+description: Updates docs/parity_ledger/ entries for behavior changes and reports P0 entries missing a test_path.
+phases: [Parity]
+has_agent_file: true

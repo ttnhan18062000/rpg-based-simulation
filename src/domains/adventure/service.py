@@ -133,7 +133,9 @@ class AdventureDecisionService:
             # Let's extract first opportunity or location details if they exist in source_opportunity_ids
             target = None
             target_pos = None
-            if selected.source_opportunity_ids:
+            if selected.target_node_id is not None:
+                target = str(selected.target_node_id)
+            elif selected.source_opportunity_ids:
                 target = selected.source_opportunity_ids[0]
             
             proj, obj = RouteToProjectMapper.map_to_states(
@@ -142,6 +144,7 @@ class AdventureDecisionService:
                 target=target,
                 target_pos=target_pos,
                 tick=tick,
+                score=selected.score,
             )
             proposed_project = proj
             proposed_objective = obj

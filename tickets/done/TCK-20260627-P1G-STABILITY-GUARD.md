@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P1G-STABILITY-GUARD
 phase: done
 date: 2026-06-27
-tags: [p1, kernel, stability-guard, audit-mode, isolation, documentation]
+tags: [kernel, stability-guard, audit-mode, isolation, documentation]
 ---
 
 # TCK-20260627-P1G-STABILITY-GUARD

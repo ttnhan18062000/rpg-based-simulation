@@ -1,0 +1,609 @@
+schema_version: worldspec.v1
+world_id: lifecycle_full_coverage_world
+name: Lifecycle Full-Coverage World
+description: 'Stress-tier world authored to fill a named scale-diversity gap: no world
+  in the corpus structurally exercises all reachable entity_lifecycle_score.py lifecycle_phase_buckets
+  at once. Composes 8 proven-compatible modules (hero_guild_routing''s own 5-module
+  base plus simq_scale_stress_seed42''s hostile-module additions) with ENABLE_ADVENTURE_ROUTING,
+  ENABLE_SOCIAL_COOPERATION, ENABLE_BELIEF_ASSIMILATION, and ENABLE_GUILD_QUEST_GENERATION
+  all ON. IDENTITY (entity_role_changed/entity_faction_changed) is confirmed unreachable
+  by any content (no producer exists anywhere in src/) -- this world''s own honest
+  phase_coverage ceiling is 9/10, not 10/10.
+
+  '
+topology:
+  width: 201
+  height: 121
+  coordinate_system: grid
+regions:
+- id: hometown
+  type: town
+  bounds:
+  - 10
+  - 10
+  - 40
+  - 40
+  terrain: plain
+  hazard_level: 0.0
+  hazard_kind: PHYSICAL
+  tags:
+  - plain
+  - settlement
+- id: goblin_camp
+  type: wilderness
+  bounds:
+  - 95
+  - 20
+  - 125
+  - 55
+  terrain: forest
+  hazard_level: 3.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+- id: mountain_pass_zone
+  type: wilderness
+  bounds:
+  - 80
+  - 80
+  - 120
+  - 120
+  terrain: mountain
+  hazard_level: 2.5
+  hazard_kind: PHYSICAL
+  tags:
+  - mountain
+- id: orc_stronghold
+  type: wilderness
+  bounds:
+  - 160
+  - 60
+  - 200
+  - 100
+  terrain: plain
+  hazard_level: 3.0
+  hazard_kind: NATURAL_TERRAIN
+  tags: []
+- id: river_ford
+  type: wilderness
+  bounds:
+  - 130
+  - 30
+  - 160
+  - 70
+  terrain: river
+  hazard_level: 1.0
+  hazard_kind: PHYSICAL
+  tags: []
+- id: haunted_battlefield
+  type: wilderness
+  bounds:
+  - 60
+  - 80
+  - 100
+  - 120
+  terrain: ruin
+  hazard_level: 3.5
+  hazard_kind: UNDEAD_CORRUPTION
+  tags:
+  - ruins
+- id: near_forest
+  type: wilderness
+  bounds:
+  - 45
+  - 10
+  - 90
+  - 55
+  terrain: forest
+  hazard_level: 1.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+- id: wolf_den
+  type: wilderness
+  bounds:
+  - 70
+  - 30
+  - 105
+  - 70
+  terrain: forest
+  hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - forest
+factions:
+- id: hero_guild
+  type: defender
+  initial_tension_level: 0.4
+- id: town_council
+  type: defender
+  initial_tension_level: 0.5
+- id: neutral
+  type: neutral
+  initial_tension_level: 0.0
+- id: wild_beast_pack
+  type: wild
+  initial_tension_level: 0.4
+- id: goblin_warband
+  type: invader
+  initial_tension_level: 0.5
+- id: merchant_league
+  type: neutral
+  initial_tension_level: 0.5
+- id: bandit_company
+  type: invader
+  initial_tension_level: 0.0
+- id: forest_wardens
+  type: defender
+  initial_tension_level: 0.0
+- id: orc_clan
+  type: rival
+  initial_tension_level: 0.6
+- id: dwarven_mine_clan
+  type: defender
+  initial_tension_level: 0.0
+- id: moon_cult
+  type: invader
+  initial_tension_level: 0.0
+- id: undead_remnants
+  type: invader
+  initial_tension_level: 0.5
+- id: arcane_circle
+  type: neutral
+  initial_tension_level: 0.0
+- id: swamp_tribe
+  type: rival
+  initial_tension_level: 0.0
+- id: dragon_cult
+  type: invader
+  initial_tension_level: 0.0
+- id: spirit_court
+  type: neutral
+  initial_tension_level: 0.5
+information_source_profiles:
+- source_id: route_waystation_guide
+  source_kind: guide
+  knowledge_scopes:
+  - regional_danger
+  - common_resource_sources
+  accuracy: 0.4
+  freshness: 0.6
+  bias: 0.1
+  cost_gold: 0
+  max_answers_per_query: 2
+pending_information_responses: []
+pending_self_model_information_events: []
+entities:
+- id: frontier_village_population_village_worker
+  count: 8
+  role: worker
+  faction: town_council
+  spawn_region: hometown
+  archetype_id: village_worker
+- id: frontier_village_population_frontier_guard
+  count: 3
+  role: guard
+  faction: town_council
+  spawn_region: hometown
+  archetype_id: frontier_guard
+- id: frontier_village_population_traveling_merchant
+  count: 1
+  role: merchant
+  faction: merchant_league
+  spawn_region: hometown
+  archetype_id: traveling_merchant
+- id: frontier_village_population_village_blacksmith
+  count: 1
+  role: blacksmith
+  faction: town_council
+  spawn_region: hometown
+  archetype_id: village_blacksmith
+- id: goblin_raiding_party_goblin_scout
+  count: 2
+  role: scout
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_scout
+- id: goblin_raiding_party_goblin_raider
+  count: 4
+  role: raider
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_raider
+- id: goblin_raiding_party_goblin_archer
+  count: 2
+  role: scout
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_archer
+- id: goblin_raiding_party_goblin_warlord
+  count: 1
+  role: leader
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_warlord
+- id: pop_0
+  count: 1
+  role: hero
+  faction: hero_guild
+  spawn_region: hometown
+- id: pop_1
+  count: 1
+  role: hero
+  faction: hero_guild
+  spawn_region: hometown
+- id: pop_2
+  count: 1
+  role: hero
+  faction: hero_guild
+  spawn_region: hometown
+- id: orc_clan_warband_orc_brute
+  count: 5
+  role: raider
+  faction: orc_clan
+  spawn_region: orc_stronghold
+  archetype_id: orc_brute
+- id: undead_battlefield_patrol_undead_sentinel
+  count: 6
+  role: sentinel
+  faction: undead_remnants
+  spawn_region: haunted_battlefield
+  archetype_id: undead_sentinel
+- id: wolf_pack_small_hungry_wolf
+  count: 4
+  role: predator_hunter
+  faction: wild_beast_pack
+  spawn_region: wolf_den
+  archetype_id: hungry_wolf
+- id: wolf_pack_small_alpha_wolf
+  count: 1
+  role: alpha
+  faction: wild_beast_pack
+  spawn_region: wolf_den
+  archetype_id: alpha_wolf
+resources:
+- id: res_0
+  resource_type: wood_node
+  count: 8
+  region: hometown
+  regen_rate: 1
+- id: res_1
+  resource_type: herb_patch
+  count: 5
+  region: hometown
+  regen_rate: 1
+- id: mountain_pass__iron_vein_0
+  resource_type: iron_vein
+  count: 4
+  region: mountain_pass_zone
+  regen_rate: 1
+- id: mountain_pass__frost_shard_cluster_1
+  resource_type: frost_shard_cluster
+  count: 2
+  region: mountain_pass_zone
+  regen_rate: 1
+- id: orc_clan_territory__iron_vein_0
+  resource_type: iron_vein
+  count: 4
+  region: orc_stronghold
+  regen_rate: 1
+- id: orc_clan_territory__wood_node_1
+  resource_type: wood_node
+  count: 6
+  region: orc_stronghold
+  regen_rate: 1
+- id: river_crossing__herb_patch_0
+  resource_type: herb_patch
+  count: 3
+  region: river_ford
+  regen_rate: 1
+- id: wolf_den_near_forest__wood_node_0
+  resource_type: wood_node
+  count: 8
+  region: near_forest
+  regen_rate: 1
+- id: wolf_den_near_forest__herb_patch_1
+  resource_type: herb_patch
+  count: 6
+  region: near_forest
+  regen_rate: 1
+- id: wolf_den_near_forest__healing_flower_patch_2
+  resource_type: healing_flower_patch
+  count: 3
+  region: near_forest
+  regen_rate: 1
+buildings:
+- id: town_hall_0
+  type: town_hall
+  region: hometown
+- id: shop_0
+  type: shop
+  region: hometown
+- id: blacksmith_0
+  type: blacksmith
+  region: hometown
+- id: inn_0
+  type: inn
+  region: hometown
+- id: healer_hut_0
+  type: healer_hut
+  region: hometown
+- id: watchtower_0
+  type: watchtower
+  region: river_ford
+quest_definitions:
+- id: village_fetch_supply_run
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - plain
+  - settlement
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - village
+  - settlement
+  - supply
+  source_module: frontier_village_core
+- id: village_escort_merchant_delivery
+  type: escort
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - settlement
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - village
+  - settlement
+  - trade
+  source_module: frontier_village_core
+- id: village_defend_gate_assault
+  type: defend
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - plain
+  - settlement
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - village
+  - settlement
+  - defense
+  source_module: frontier_village_core
+- id: goblin_hunt_warlord
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - goblin
+  - conflict
+  - bounty
+  source_module: goblin_camp_conflict
+- id: goblin_fetch_stolen_goods
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - goblin
+  - conflict
+  - loot
+  source_module: goblin_camp_conflict
+- id: goblin_defend_village_perimeter
+  type: defend
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - goblin
+  - conflict
+  - defense
+  source_module: goblin_camp_conflict
+- id: explore_mountain_route
+  type: explore
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - mountain
+  - wilderness
+  reward_budget: 90
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - mountain
+  - terrain
+  - exploration
+  source_module: mountain_pass
+- id: hunt_mountain_predator
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - mountain
+  - wilderness
+  reward_budget: 130
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - mountain
+  - terrain
+  - combat
+  source_module: mountain_pass
+- id: orc_hunt_patrol_warband
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - wilderness
+  - plain
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - orc
+  - conflict
+  - bounty
+  source_module: orc_clan_territory
+- id: orc_escort_settler_convoy
+  type: escort
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - wilderness
+  - plain
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - orc
+  - conflict
+  - escort
+  source_module: orc_clan_territory
+- id: orc_investigate_expansion_signs
+  type: investigate
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - wilderness
+  - plain
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - orc
+  - conflict
+  - territory
+  source_module: orc_clan_territory
+- id: survey_river_route
+  type: explore
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - wilderness
+  - river
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - river
+  - terrain
+  - scouting
+  source_module: river_crossing
+- id: ruins_first_contact
+  type: investigate
+  required_participant_tags:
+  - undead
+  required_location_tags:
+  - ruins
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - mystery
+  - ruins
+  source_module: ruins_mystery_quest
+- id: spirit_source_trace
+  type: investigate
+  required_participant_tags:
+  - spiritual
+  required_location_tags:
+  - ruins
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - mystery
+  - ruins
+  - spirit
+  source_module: ruins_mystery_quest
+- id: wolf_hunt_alpha_pack
+  type: hunt
+  required_participant_tags:
+  - beast
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - wolf
+  - ecology
+  - bounty
+  source_module: wolf_den_near_forest
+- id: wolf_explore_forest_trail
+  type: explore
+  required_participant_tags:
+  - beast
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - wolf
+  - ecology
+  - exploration
+  source_module: wolf_den_near_forest
+- id: wolf_fetch_herb_gathering
+  type: fetch
+  required_participant_tags: []
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - wolf
+  - ecology
+  - resource
+  source_module: wolf_den_near_forest
+validation:
+  expected_min_entities: 1
+  allow_overlapping_regions: false

@@ -35,6 +35,15 @@ if "knowledge_search" not in sys.modules:
     spec.loader.exec_module(_ks)
 _ks = sys.modules["knowledge_search"]
 
+_HR_PATH = _TOOLS_DIR / "hybrid_retrieval.py"
+
+if "hybrid_retrieval" not in sys.modules:
+    spec = importlib.util.spec_from_file_location("hybrid_retrieval", _HR_PATH)
+    _hr = importlib.util.module_from_spec(spec)
+    sys.modules["hybrid_retrieval"] = _hr
+    spec.loader.exec_module(_hr)
+_hr = sys.modules["hybrid_retrieval"]
+
 _INDEX_DIR = _ks._DEFAULT_DB.parent
 _DB_PATH = _ks._DEFAULT_DB
 _BM25_PATH = _INDEX_DIR / "bm25.pkl"
@@ -86,7 +95,7 @@ def _run_search(query: str, top_k: int = 8, section: str | None = None,
     except Exception as exc:
         return {"error": f"embed failed: {exc}"}
 
-    rows = []
+    hybrid_results = []
     con = None
     try:
         import sqlite_vec
@@ -94,17 +103,16 @@ def _run_search(query: str, top_k: int = 8, section: str | None = None,
         con.enable_load_extension(True)
         sqlite_vec.load(con)
         con.enable_load_extension(False)
-        sql = """
-            SELECT kd.rowid, kd.doc_id, kd.path, kd.text, kd.heading, kd.section, distance
-            FROM knowledge_vec kv
-            JOIN knowledge_docs kd ON kd.rowid = kv.rowid
-            WHERE kv.embedding MATCH ?
-              AND k = ?
-            ORDER BY distance
-        """
-        rows = con.execute(sql, (q_bytes, min(top_k * 4, 50))).fetchall()
+        hybrid_results = _hr.hybrid_fuse_and_filter(
+            conn=con,
+            query_vec_bytes=q_bytes,
+            query_tokens=query_tokens,
+            bm25_obj=_STATE.bm25,
+            bm25_doc_ids=_STATE.doc_ids,
+            top_k=top_k,
+        )
     except Exception:
-        rows = []
+        hybrid_results = []
     finally:
         if con is not None:
             try:
@@ -112,34 +120,24 @@ def _run_search(query: str, top_k: int = 8, section: str | None = None,
             except Exception:
                 pass
 
+    # `section` narrows the CLI-facing result set by exact match -- orthogonal to the
+    # authority/freshness metadata filter, so it stays a post-fusion filter here rather than
+    # folding into filter_candidates()'s pre-fusion logic.
     if section:
-        rows = [r for r in rows if r[5] == section]
+        hybrid_results = [r for r in hybrid_results if r.section == section]
 
     results = []
-    for row in rows[:top_k]:
-        rowid, doc_id, path, text, heading, sec, distance = row
-        sem_score = max(0.0, 1.0 - float(distance))
-        kw_score = 0.0
-        if _STATE.bm25 is not None and query_tokens:
-            scores = _STATE.bm25.get_scores(query_tokens)
-            try:
-                idx = _STATE.doc_ids.index(doc_id)
-                kw_score = float(scores[idx]) / 10.0
-            except (ValueError, IndexError):
-                kw_score = 0.0
-        title_boost, heading_boost, code_boost = _ks._compute_boosts(query_tokens, doc_id, heading, text)
-        combined = _ks._hybrid_score(sem_score, kw_score, title_boost, heading_boost, code_boost)
-        excerpt = text[:200].replace("\n", " ")
+    for r in hybrid_results[:top_k]:
         results.append({
-            "doc_id": doc_id,
-            "title": _derive_title(doc_id),
-            "heading": heading or "",
-            "source_path": path,
-            "section": sec or "",
-            "score": round(combined, 4),
-            "semantic_score": round(sem_score, 4),
-            "keyword_score": round(kw_score, 4),
-            "excerpt": excerpt,
+            "doc_id": r.doc_id,
+            "title": _derive_title(r.doc_id),
+            "heading": r.heading or "",
+            "source_path": r.path,
+            "section": r.section or "",
+            "score": round(r.rrf_score, 4),
+            "semantic_score": round(r.semantic_score or 0.0, 4),
+            "keyword_score": round(r.keyword_score or 0.0, 4),
+            "excerpt": r.text[:200].replace("\n", " "),
         })
 
     results.sort(key=lambda r: r["score"], reverse=True)

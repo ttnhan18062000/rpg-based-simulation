@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P1I-WORLD-BALANCE-FIX
 phase: done
 date: 2026-06-27
-tags: [p1, world-content, dungeon-crawl, wilderness-survival, entity-attrition, world-authoring]
+tags: [world-content, dungeon-crawl, wilderness-survival, entity-attrition, world-authoring]
 ---
 
 # TCK-20260627-P1I-WORLD-BALANCE-FIX

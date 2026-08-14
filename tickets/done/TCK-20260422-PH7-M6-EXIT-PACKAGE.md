@@ -15,7 +15,7 @@ tags: [ph7, m6, exit, package]
 Phase 7 Milestone 6: Replay-Visible Deterministic State Closure and Phase 7 Exit Package
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

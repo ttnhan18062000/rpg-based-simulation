@@ -25,14 +25,16 @@ def _identity(learned_skills=frozenset(), traits=frozenset(),
     return i
 
 
-def _entity(eid: int = 1, identity=None):
+def _entity(eid: int = 1, identity=None, generation: int = 1, gold: float = 0.0,
+            equipped_slots: dict | None = None):
     e = MagicMock()
     e.id = eid
     e.kind = "hero"
     e.combat = MagicMock(); e.combat.hp = 100; e.combat.max_hp = 100
-    e.lifecycle = MagicMock(); e.lifecycle.active = True
+    e.lifecycle = MagicMock(); e.lifecycle.active = True; e.lifecycle.generation = generation
     e.navigation = MagicMock(); e.navigation.position = (0.0, 0.0)
-    e.inventory = MagicMock(); e.inventory.gold = 0.0
+    e.inventory = MagicMock(); e.inventory.gold = gold
+    e.equipment = MagicMock(); e.equipment.slots = equipped_slots or {}
     e.identity = identity or _identity()
     e.strategic = MagicMock()
     e.strategic.projects = {}
@@ -215,3 +217,97 @@ class TestProgressionPlateauDetected:
         evts2 = EventExtractor.extract(state60, state60, update, ObservabilityMode.NORMAL)
         plateau_count = sum(1 for e in evts1 + evts2 if e.event_type == "progression_plateau_detected")
         assert plateau_count == 1
+
+
+# ── capability_growth_stalled ─────────────────────────────────────────────────
+# TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE
+
+class TestCapabilityGrowthStalled:
+    def test_fires_after_stall_ticks_with_zero_movement_on_all_dimensions(self):
+        entity = _entity(identity=_identity(evolution_level=3), gold=10.0,
+                          equipped_slots={"MAIN_HAND": "sword"})
+        # First-observed at tick 10 sets the baseline; a later call at tick 10+301 with
+        # identical state should fire (301 > _CAPABILITY_STALL_TICKS=300).
+        first = _state({1: entity}, tick=10)
+        EventExtractor.extract(first, first, _update(1), ObservabilityMode.NORMAL)
+        later = _state({1: entity}, tick=311)
+        events = EventExtractor.extract(later, later, _update(1), ObservabilityMode.NORMAL)
+        assert "capability_growth_stalled" in _types(events)
+
+    def test_not_fired_when_first_observed_mid_run(self):
+        # An entity first seen at a high tick must not immediately appear stalled — the tracked
+        # baseline is initialized to the first-observed tick, not 0.
+        entity = _entity(identity=_identity(evolution_level=3))
+        state = _state({1: entity}, tick=5000)
+        events = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
+        assert "capability_growth_stalled" not in _types(events)
+
+    def test_not_fired_when_level_increases(self):
+        prior = _entity(identity=_identity(evolution_level=3))
+        curr = _entity(identity=_identity(evolution_level=4))
+        first = _state({1: prior}, tick=10)
+        EventExtractor.extract(first, first, _update(1), ObservabilityMode.NORMAL)
+        later = _state({1: curr}, tick=311)
+        events = EventExtractor.extract(_state({1: prior}, tick=311), later, _update(1), ObservabilityMode.NORMAL)
+        assert "capability_growth_stalled" not in _types(events)
+
+    def test_not_fired_when_only_gold_increases(self):
+        prior = _entity(identity=_identity(evolution_level=3), gold=10.0)
+        first = _state({1: prior}, tick=10)
+        EventExtractor.extract(first, first, _update(1), ObservabilityMode.NORMAL)
+        curr = _entity(identity=_identity(evolution_level=3), gold=50.0)
+        events = EventExtractor.extract(_state({1: prior}, tick=311), _state({1: curr}, tick=311),
+                                         _update(1), ObservabilityMode.NORMAL)
+        assert "capability_growth_stalled" not in _types(events)
+
+    def test_fires_only_once_per_entity_per_run(self):
+        entity = _entity(identity=_identity(evolution_level=3))
+        first = _state({1: entity}, tick=10)
+        EventExtractor.extract(first, first, _update(1), ObservabilityMode.NORMAL)
+        later = _state({1: entity}, tick=311)
+        evts1 = EventExtractor.extract(later, later, _update(1), ObservabilityMode.NORMAL)
+        evts2 = EventExtractor.extract(later, later, _update(1), ObservabilityMode.NORMAL)
+        count = sum(1 for e in evts1 + evts2 if e.event_type == "capability_growth_stalled")
+        assert count == 1
+
+
+# ── life_arc_incoherent ────────────────────────────────────────────────────────
+# TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE
+
+class TestLifeArcIncoherent:
+    def test_fires_when_late_generation_with_no_growth(self):
+        entity = _entity(identity=_identity(evolution_level=1, learned_skills=frozenset()),
+                          generation=2)
+        state = _state({1: entity}, tick=100)
+        events = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
+        assert "life_arc_incoherent" in _types(events)
+
+    def test_not_fired_at_generation_one(self):
+        entity = _entity(identity=_identity(evolution_level=1, learned_skills=frozenset()),
+                          generation=1)
+        state = _state({1: entity}, tick=100)
+        events = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
+        assert "life_arc_incoherent" not in _types(events)
+
+    def test_not_fired_when_level_above_one(self):
+        entity = _entity(identity=_identity(evolution_level=5, learned_skills=frozenset()),
+                          generation=2)
+        state = _state({1: entity}, tick=100)
+        events = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
+        assert "life_arc_incoherent" not in _types(events)
+
+    def test_not_fired_when_skills_present(self):
+        entity = _entity(identity=_identity(evolution_level=1, learned_skills=frozenset({"archery"})),
+                          generation=2)
+        state = _state({1: entity}, tick=100)
+        events = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
+        assert "life_arc_incoherent" not in _types(events)
+
+    def test_fires_only_once_per_entity_per_run(self):
+        entity = _entity(identity=_identity(evolution_level=1, learned_skills=frozenset()),
+                          generation=2)
+        state = _state({1: entity}, tick=100)
+        evts1 = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
+        evts2 = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
+        count = sum(1 for e in evts1 + evts2 if e.event_type == "life_arc_incoherent")
+        assert count == 1

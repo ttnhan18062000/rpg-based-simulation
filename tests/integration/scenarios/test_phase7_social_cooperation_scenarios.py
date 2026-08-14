@@ -49,14 +49,15 @@ def test_scenario_7_1_risky_objective_creates_help_request():
     # Assert A chose to REQUEST_HELP and proposed a contract targeting B
     assert 1 in refined.entity_updates
     a_up = refined.entity_updates[1]
-    decision = a_up.property_updates["last_cooperation_decision"]
-    
-    assert decision.selected_posture == CooperationPosture.REQUEST_HELP
-    assert decision.selected_partner_id == 2
+    decision_posture = a_up.property_updates["last_cooperation_decision"]
+
+    assert decision_posture == CooperationPosture.REQUEST_HELP.value
     assert "proposed_cooperation_contract" in a_up.property_updates
-    
+    contract = a_up.strategic.contracts_add_or_update[0]
+    assert contract.target_id == 2
+
     # Verify Forbidden Behavior assertion: Entity A does NOT go solo
-    assert decision.selected_posture != CooperationPosture.SOLO
+    assert decision_posture != CooperationPosture.SOLO.value
 
 
 def test_scenario_7_2_no_good_partner_causes_defer():
@@ -93,7 +94,7 @@ def test_scenario_7_2_no_good_partner_causes_defer():
     
     assert 1 in refined.entity_updates
     a_up = refined.entity_updates[1]
-    decision = a_up.property_updates["last_cooperation_decision"]
-    
-    assert decision.selected_posture == CooperationPosture.DEFER_NO_PARTNER
+    decision_posture = a_up.property_updates["last_cooperation_decision"]
+
+    assert decision_posture == CooperationPosture.DEFER_NO_PARTNER.value
     assert "cooperation_blocker" in a_up.property_updates

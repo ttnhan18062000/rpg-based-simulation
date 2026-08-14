@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import pickle
+import sqlite3
 import sys
 import tomllib
 from pathlib import Path
@@ -181,3 +183,79 @@ class TestMakefileTargets:
         block = makefile[idx: idx + 300]
         assert "search_mcp.py" in block
         assert "--test" in block
+
+
+# ── AC1/Scope (TCK-20260729-HYBRID-RETRIEVAL-FUSION): _run_search() fusion wiring ────────────
+
+class _FakeBM25ScoresRS(list):
+    def max(self):
+        return max(self) if self else 0.0
+
+
+class _FakeBM25RunSearch:
+    def get_scores(self, tokens):
+        return _FakeBM25ScoresRS([0.0, 9.0])
+
+
+class TestRunSearchFusionWiring:
+    """Proves _run_search() -- the exact function `search_docs` (every agent's MCP tool)
+    invokes -- routes through hybrid_retrieval.hybrid_fuse_and_filter and surfaces a
+    lexical-only exact match outside the dense channel's candidate cut (AC1), the confirmed
+    live bug this ticket fixes. Only the sqlite-vec-dependent ANN query itself
+    (`_hr._dense_candidates`) is stubbed, so this runs without sqlite-vec installed.
+    """
+
+    def test_lexical_only_match_surfaced(self, tmp_path, monkeypatch):
+        fake_db = tmp_path / "knowledge.db"
+        con = sqlite3.connect(str(fake_db))
+        con.execute(
+            """
+            CREATE TABLE knowledge_docs (
+                rowid       INTEGER PRIMARY KEY,
+                doc_id      TEXT NOT NULL,
+                path        TEXT NOT NULL,
+                text        TEXT NOT NULL,
+                source_type TEXT NOT NULL,
+                heading     TEXT NOT NULL DEFAULT '',
+                section     TEXT NOT NULL DEFAULT ''
+            )
+            """
+        )
+        con.executemany(
+            "INSERT INTO knowledge_docs (rowid, doc_id, path, text, source_type, heading, section) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+                (0, "doc-a", "docs/a.md", "alpha text", "doc_chunk", "A", "docs"),
+                (1, "doc-rare", "docs/rare.md", "zzqfrobnicate_widget appears here",
+                 "doc_chunk", "Rare", "docs"),
+            ],
+        )
+        con.commit()
+        con.close()
+
+        monkeypatch.setattr(_mod, "_DB_PATH", fake_db)
+        monkeypatch.setattr(
+            _mod._hr, "_dense_candidates",
+            lambda conn, query_vec_bytes, dense_candidate_k: [
+                (0, "doc-a", "docs/a.md", "A", "docs", "alpha text", "doc_chunk", 0.1),
+            ],
+        )
+        monkeypatch.setitem(sys.modules, "sqlite_vec", MagicMock())
+
+        mock_model = MagicMock()
+        mock_model.encode.return_value.tolist.return_value = [0.0] * 8
+        _mod._STATE.model = mock_model
+        _mod._STATE.bm25 = _FakeBM25RunSearch()
+        _mod._STATE.doc_ids = ["doc-a", "doc-rare"]
+        _mod._STATE.ready = True
+
+        results = _mod._run_search("zzqfrobnicate_widget", top_k=5)
+
+        assert isinstance(results, list)
+        result_ids = [r["doc_id"] for r in results]
+        assert "doc-rare" in result_ids, (
+            f"lexical-only hit missing from _run_search results: {result_ids}"
+        )
+        for key in ("doc_id", "title", "heading", "source_path", "section",
+                    "score", "semantic_score", "keyword_score", "excerpt"):
+            assert key in results[0], f"missing key in _run_search result: {key}"

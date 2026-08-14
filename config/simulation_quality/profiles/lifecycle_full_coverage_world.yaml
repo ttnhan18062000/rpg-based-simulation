@@ -1,0 +1,8 @@
+# TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD -- all 4 flags ON by design, to maximize real
+# lifecycle_phase_buckets reachability (STRATEGY_COGNITION route/belief events, SOCIAL
+# cooperation events, NARRATIVE_QUEST via real guild-quest generation).
+feature_flags:
+  ENABLE_ADVENTURE_ROUTING: "ON"
+  ENABLE_SOCIAL_COOPERATION: "ON"
+  ENABLE_BELIEF_ASSIMILATION: "ON"
+  ENABLE_GUILD_QUEST_GENERATION: "ON"

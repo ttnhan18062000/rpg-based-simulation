@@ -15,7 +15,7 @@ tags: [narrative]
 Narrative Memory System — Recording & Recall for Goal Influence
 
 ## Priority
-P1: High
+P1
 
 ## Description
 Entities record significant events (GLORY, TRAUMA) into `memory_log` via `action_system.py`, but this data is never used to influence AI decisions. This ticket completes the Narrative Memory system by:

@@ -1,0 +1,1800 @@
+{
+  "world": "wilderness_survival",
+  "seed": 42,
+  "ticks": 2000,
+  "obs_mode": "NORMAL",
+  "health": {
+    "dropped_count": 0,
+    "pressure_mode_final": "NORMAL",
+    "survival_triggered": false,
+    "data_loss": false
+  },
+  "simq_event_count": 18150,
+  "simq_report": {
+    "run_id": "run_1786188794_5169",
+    "tick_count": 2000,
+    "overall_score": 0.047933954970530004,
+    "overall_grade": "B",
+    "generated_at": "2026-08-08T11:33:56.732826+00:00",
+    "pillars": {
+      "COGNITION": {
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "grade": "C",
+        "event_count": 0,
+        "negative_count": 0,
+        "loop_detected": false,
+        "loop_flags": [],
+        "worst_events": []
+      },
+      "AGENCY": {
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "grade": "C",
+        "event_count": 0,
+        "negative_count": 0,
+        "loop_detected": false,
+        "loop_flags": [],
+        "worst_events": []
+      },
+      "COMBAT": {
+        "raw_score": -13.0,
+        "normalized_score": -0.008381689232753063,
+        "grade": "C",
+        "event_count": 5,
+        "negative_count": 3,
+        "loop_detected": true,
+        "loop_flags": [
+          "combat_dormant"
+        ],
+        "worst_events": [
+          {
+            "tick": 846,
+            "event_id": "3d9ed2b8405f4db592b12c3f2c587ea7",
+            "pillar": "COMBAT",
+            "delta": -15.0,
+            "reason": "zero combat events in hostile world by tick threshold",
+            "event_type": "combat_damage",
+            "entity_id": 9,
+            "region_id": null,
+            "tags": [
+              "combat_dormant"
+            ]
+          },
+          {
+            "tick": 1551,
+            "event_id": "c468b307110c45a8a70e664e9efd2fc3",
+            "pillar": "COMBAT",
+            "delta": -1.0,
+            "reason": "entity killed in combat",
+            "event_type": "entity_killed",
+            "entity_id": 13,
+            "region_id": null,
+            "tags": [
+              "attrition"
+            ]
+          },
+          {
+            "tick": 1551,
+            "event_id": "f5137a45ee754829a0dd6a504be9ee84",
+            "pillar": "COMBAT",
+            "delta": -1.0,
+            "reason": "entity killed in combat",
+            "event_type": "entity_killed",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "attrition"
+            ]
+          }
+        ]
+      },
+      "FACTION": {
+        "raw_score": 145.0,
+        "normalized_score": 0.29,
+        "grade": "B",
+        "event_count": 29,
+        "negative_count": 0,
+        "loop_detected": true,
+        "loop_flags": [
+          "diplomacy_active"
+        ],
+        "worst_events": []
+      },
+      "ECONOMY": {
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "grade": "C",
+        "event_count": 0,
+        "negative_count": 0,
+        "loop_detected": false,
+        "loop_flags": [],
+        "worst_events": []
+      },
+      "PROGRESSION": {
+        "raw_score": -203.0,
+        "normalized_score": -0.1122787610619469,
+        "grade": "C",
+        "event_count": 23,
+        "negative_count": 22,
+        "loop_detected": true,
+        "loop_flags": [
+          "capability_growth_stalled",
+          "xp_plateau"
+        ],
+        "worst_events": [
+          {
+            "tick": 302,
+            "event_id": "53b5ed434234430a9dc9fb25a83862d7",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 9,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 302,
+            "event_id": "ea9a0bcd85a04139bfcc5d5141849155",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 1,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 302,
+            "event_id": "71e662e0a2cd4ca092f981873375afbe",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 2,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 302,
+            "event_id": "ecdb194918ed41de8e99e9d3fff828d1",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 3,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 302,
+            "event_id": "0039ecd7673f4e55b413c9e9691d0040",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 4,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 302,
+            "event_id": "5bcc03e53a9c4043bc1a4b8c5009bcdc",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 5,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 302,
+            "event_id": "0fae350ba43940db8f8d5f4d2cadaefc",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 6,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 302,
+            "event_id": "7e567bf86a704b21af65b0c1a1b015f3",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 7,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 302,
+            "event_id": "6e77494cb7314e73b7540c6c8f554eae",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 8,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 302,
+            "event_id": "7d72e7adedbe40a589dae67670dbfa7f",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 10,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 302,
+            "event_id": "25547791632d41ed8a8e4f9133cc533c",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 11,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 803,
+            "event_id": "6129537e62384f1b97e8360c47219ede",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 12,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 804,
+            "event_id": "a09f20465399451fa97e92b1eface6cd",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 14,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 805,
+            "event_id": "38cd60e9836546538d9c19bc02e3873d",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 13,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1303,
+            "event_id": "76ab5ce361ec467e809b1854fb057c6b",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 16,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1304,
+            "event_id": "0b2aa083995943fe8009393a64f6461a",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 15,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1305,
+            "event_id": "e94634d21d4442779871117100390095",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 17,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1805,
+            "event_id": "590e9865bb7b48068e41ec17507a037f",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 21,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1806,
+            "event_id": "b65067ae973540798fc88b59059e483d",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 20,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1807,
+            "event_id": "60d284be79e943c19f28cc88fd9f3dc8",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 19,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1808,
+            "event_id": "f9626333f50e40f3b647f5e3dc7d17e2",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 18,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 201,
+            "event_id": "b930805186c34e98bbff7fa46bc73076",
+            "pillar": "PROGRESSION",
+            "delta": -8.0,
+            "reason": "XP gain rate dropped to zero after tick gate",
+            "event_type": "progression_plateau_detected",
+            "entity_id": 10,
+            "region_id": null,
+            "tags": [
+              "xp_plateau"
+            ]
+          }
+        ]
+      },
+      "SOCIAL": {
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "grade": "C",
+        "event_count": 0,
+        "negative_count": 0,
+        "loop_detected": false,
+        "loop_flags": [],
+        "worst_events": []
+      },
+      "INFORMATION": {
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "grade": "C",
+        "event_count": 0,
+        "negative_count": 0,
+        "loop_detected": false,
+        "loop_flags": [],
+        "worst_events": []
+      },
+      "WORLD": {
+        "raw_score": 620.0,
+        "normalized_score": 0.31,
+        "grade": "B",
+        "event_count": 180,
+        "negative_count": 0,
+        "loop_detected": true,
+        "loop_flags": [
+          "ecology_cycling",
+          "hazard_active"
+        ],
+        "worst_events": []
+      },
+      "NARRATIVE": {
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "grade": "C",
+        "event_count": 0,
+        "negative_count": 0,
+        "loop_detected": false,
+        "loop_flags": [],
+        "worst_events": []
+      }
+    }
+  },
+  "lifecycle_score": {
+    "run_metadata": {
+      "ticks": 2000,
+      "stall_detector_reachable": true,
+      "life_arc_detector_reachable": null,
+      "clustering_reliable": true
+    },
+    "entity_metrics": {
+      "1": {
+        "path_length": 395,
+        "path_density": 0.1975,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.351,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.9046,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0051,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "undead_remnants",
+          "kind": "sentinel",
+          "region": "haunted_battlefield"
+        }
+      },
+      "2": {
+        "path_length": 716,
+        "path_density": 0.358,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4706,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.8984,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0028,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "undead_remnants",
+          "kind": "sentinel",
+          "region": "haunted_battlefield"
+        }
+      },
+      "3": {
+        "path_length": 453,
+        "path_density": 0.2265,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.3961,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.8969,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0044,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "undead_remnants",
+          "kind": "sentinel",
+          "region": "haunted_battlefield"
+        }
+      },
+      "4": {
+        "path_length": 643,
+        "path_density": 0.3215,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4532,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.9104,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0031,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "undead_remnants",
+          "kind": "sentinel",
+          "region": "haunted_battlefield"
+        }
+      },
+      "5": {
+        "path_length": 693,
+        "path_density": 0.3465,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4627,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.9052,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0029,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "undead_remnants",
+          "kind": "sentinel",
+          "region": "haunted_battlefield"
+        }
+      },
+      "6": {
+        "path_length": 687,
+        "path_density": 0.3435,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4649,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.9029,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0029,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "undead_remnants",
+          "kind": "sentinel",
+          "region": "haunted_battlefield"
+        }
+      },
+      "7": {
+        "path_length": 455,
+        "path_density": 0.2275,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4389,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.8594,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0044,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "wild_beast_pack",
+          "kind": "predator_hunter",
+          "region": "wolf_den"
+        }
+      },
+      "8": {
+        "path_length": 631,
+        "path_density": 0.3155,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4868,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.8814,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0032,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "wild_beast_pack",
+          "kind": "predator_hunter",
+          "region": "wolf_den"
+        }
+      },
+      "9": {
+        "path_length": 1522,
+        "path_density": 0.761,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4407,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.903,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0013,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "wild_beast_pack",
+          "kind": "predator_hunter",
+          "region": "wolf_den"
+        }
+      },
+      "10": {
+        "path_length": 565,
+        "path_density": 0.2825,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4654,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.8907,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0035,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "wild_beast_pack",
+          "kind": "predator_hunter",
+          "region": "wolf_den"
+        }
+      },
+      "11": {
+        "path_length": 583,
+        "path_density": 0.2915,
+        "phase_coverage": 0.5,
+        "buckets_touched": [
+          "COMBAT",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.482,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.8698,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0034,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "CITIZEN",
+          "faction": "wild_beast_pack",
+          "kind": "alpha",
+          "region": "wolf_den"
+        }
+      },
+      "12": {
+        "path_length": 262,
+        "path_density": 0.131,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5933,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.702,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0076,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "13": {
+        "path_length": 1932,
+        "path_density": 0.966,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4702,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4966,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.001,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "14": {
+        "path_length": 1917,
+        "path_density": 0.9585,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4639,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4845,
+        "loop_score_period": 12,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.001,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "15": {
+        "path_length": 717,
+        "path_density": 0.3585,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5399,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4746,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0028,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "16": {
+        "path_length": 1784,
+        "path_density": 0.892,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.4768,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4773,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0011,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "17": {
+        "path_length": 1797,
+        "path_density": 0.8985,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.479,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.4889,
+        "loop_score_period": 3,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0011,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "18": {
+        "path_length": 553,
+        "path_density": 0.2765,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5113,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.652,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0036,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "19": {
+        "path_length": 555,
+        "path_density": 0.2775,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5087,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.6551,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0036,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "20": {
+        "path_length": 551,
+        "path_density": 0.2755,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5081,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.6489,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0036,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      },
+      "21": {
+        "path_length": 561,
+        "path_density": 0.2805,
+        "phase_coverage": 0.6,
+        "buckets_touched": [
+          "COMBAT",
+          "CONCLUSION_DEMOGRAPHIC",
+          "EXPLORATION",
+          "GROWTH_PROGRESSION",
+          "STRATEGY_COGNITION",
+          "VITALS"
+        ],
+        "path_entropy": 0.5335,
+        "path_entropy_confidence": "normal",
+        "loop_score": 0.6137,
+        "loop_score_period": 7,
+        "loop_score_confidence": "normal",
+        "growth_trajectory": -0.0036,
+        "conclusion_coherence": true,
+        "silent_from_spawn": false,
+        "metadata": {
+          "role": "MONSTER",
+          "faction": null,
+          "kind": "goblin_raider",
+          "region": null
+        }
+      }
+    },
+    "aggregation": {
+      "global": {
+        "entity_count": 21,
+        "path_length": {
+          "mean": 855.8095,
+          "stdev": 537.8086
+        },
+        "path_density": {
+          "mean": 0.4279,
+          "stdev": 0.2689
+        },
+        "phase_coverage": {
+          "mean": 0.5476,
+          "stdev": 0.0499
+        },
+        "path_entropy": {
+          "mean": 0.476,
+          "stdev": 0.049
+        },
+        "loop_score": {
+          "mean": 0.7389,
+          "stdev": 0.1729
+        },
+        "growth_trajectory": {
+          "mean": -0.0031,
+          "stdev": 0.0015
+        },
+        "conclusion_coherence_rate": 1.0
+      },
+      "zscores": {
+        "1": {
+          "path_length": -0.8568,
+          "path_density": -0.8568,
+          "phase_coverage": -0.9535,
+          "path_entropy": -2.5518,
+          "loop_score": 0.9586,
+          "growth_trajectory": -1.279
+        },
+        "2": {
+          "path_length": -0.26,
+          "path_density": -0.26,
+          "phase_coverage": -0.9535,
+          "path_entropy": -0.1112,
+          "loop_score": 0.9227,
+          "growth_trajectory": 0.2241
+        },
+        "3": {
+          "path_length": -0.749,
+          "path_density": -0.749,
+          "phase_coverage": -0.9535,
+          "path_entropy": -1.6314,
+          "loop_score": 0.9141,
+          "growth_trajectory": -0.8216
+        },
+        "4": {
+          "path_length": -0.3957,
+          "path_density": -0.3957,
+          "phase_coverage": -0.9535,
+          "path_entropy": -0.4662,
+          "loop_score": 0.9921,
+          "growth_trajectory": 0.028
+        },
+        "5": {
+          "path_length": -0.3027,
+          "path_density": -0.3027,
+          "phase_coverage": -0.9535,
+          "path_entropy": -0.2724,
+          "loop_score": 0.9621,
+          "growth_trajectory": 0.1587
+        },
+        "6": {
+          "path_length": -0.3139,
+          "path_density": -0.3139,
+          "phase_coverage": -0.9535,
+          "path_entropy": -0.2275,
+          "loop_score": 0.9488,
+          "growth_trajectory": 0.1587
+        },
+        "7": {
+          "path_length": -0.7453,
+          "path_density": -0.7453,
+          "phase_coverage": -0.9535,
+          "path_entropy": -0.758,
+          "loop_score": 0.6972,
+          "growth_trajectory": -0.8216
+        },
+        "8": {
+          "path_length": -0.418,
+          "path_density": -0.418,
+          "phase_coverage": -0.9535,
+          "path_entropy": 0.2194,
+          "loop_score": 0.8244,
+          "growth_trajectory": -0.0373
+        },
+        "9": {
+          "path_length": 1.2387,
+          "path_density": 1.2387,
+          "phase_coverage": -0.9535,
+          "path_entropy": -0.7213,
+          "loop_score": 0.9493,
+          "growth_trajectory": 1.2043
+        },
+        "10": {
+          "path_length": -0.5407,
+          "path_density": -0.5407,
+          "phase_coverage": -0.9535,
+          "path_entropy": -0.2173,
+          "loop_score": 0.8782,
+          "growth_trajectory": -0.2334
+        },
+        "11": {
+          "path_length": -0.5073,
+          "path_density": -0.5073,
+          "phase_coverage": -0.9535,
+          "path_entropy": 0.1215,
+          "loop_score": 0.7573,
+          "growth_trajectory": -0.168
+        },
+        "12": {
+          "path_length": -1.1041,
+          "path_density": -1.1041,
+          "phase_coverage": 1.0488,
+          "path_entropy": 2.3927,
+          "loop_score": -0.2133,
+          "growth_trajectory": -2.9128
+        },
+        "13": {
+          "path_length": 2.0011,
+          "path_density": 2.0011,
+          "phase_coverage": 1.0488,
+          "path_entropy": -0.1193,
+          "loop_score": -1.4013,
+          "growth_trajectory": 1.4004
+        },
+        "14": {
+          "path_length": 1.9732,
+          "path_density": 1.9732,
+          "phase_coverage": 1.0488,
+          "path_entropy": -0.2479,
+          "loop_score": -1.4713,
+          "growth_trajectory": 1.4004
+        },
+        "15": {
+          "path_length": -0.2581,
+          "path_density": -0.2581,
+          "phase_coverage": 1.0488,
+          "path_entropy": 1.303,
+          "loop_score": -1.5286,
+          "growth_trajectory": 0.2241
+        },
+        "16": {
+          "path_length": 1.7259,
+          "path_density": 1.7259,
+          "phase_coverage": 1.0488,
+          "path_entropy": 0.0154,
+          "loop_score": -1.513,
+          "growth_trajectory": 1.335
+        },
+        "17": {
+          "path_length": 1.75,
+          "path_density": 1.75,
+          "phase_coverage": 1.0488,
+          "path_entropy": 0.0602,
+          "loop_score": -1.4459,
+          "growth_trajectory": 1.335
+        },
+        "18": {
+          "path_length": -0.563,
+          "path_density": -0.563,
+          "phase_coverage": 1.0488,
+          "path_entropy": 0.7194,
+          "loop_score": -0.5025,
+          "growth_trajectory": -0.2987
+        },
+        "19": {
+          "path_length": -0.5593,
+          "path_density": -0.5593,
+          "phase_coverage": 1.0488,
+          "path_entropy": 0.6663,
+          "loop_score": -0.4845,
+          "growth_trajectory": -0.2987
+        },
+        "20": {
+          "path_length": -0.5668,
+          "path_density": -0.5668,
+          "phase_coverage": 1.0488,
+          "path_entropy": 0.6541,
+          "loop_score": -0.5204,
+          "growth_trajectory": -0.2987
+        },
+        "21": {
+          "path_length": -0.5482,
+          "path_density": -0.5482,
+          "phase_coverage": 1.0488,
+          "path_entropy": 1.1724,
+          "loop_score": -0.724,
+          "growth_trajectory": -0.2987
+        }
+      },
+      "groups": {
+        "role": {
+          "CITIZEN": {
+            "entity_count": 11,
+            "path_length": {
+              "mean": 667.5455,
+              "stdev": 288.9723
+            },
+            "path_density": {
+              "mean": 0.3338,
+              "stdev": 0.1445
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.4466,
+              "stdev": 0.0384
+            },
+            "loop_score": {
+              "mean": 0.893,
+              "stdev": 0.0155
+            },
+            "growth_trajectory": {
+              "mean": -0.0034,
+              "stdev": 0.001
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "MONSTER": {
+            "entity_count": 10,
+            "path_length": {
+              "mean": 1062.9,
+              "stdev": 658.5365
+            },
+            "path_density": {
+              "mean": 0.5314,
+              "stdev": 0.3293
+            },
+            "phase_coverage": {
+              "mean": 0.6,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.5085,
+              "stdev": 0.0376
+            },
+            "loop_score": {
+              "mean": 0.5694,
+              "stdev": 0.0875
+            },
+            "growth_trajectory": {
+              "mean": -0.0029,
+              "stdev": 0.0019
+            },
+            "conclusion_coherence_rate": 1.0
+          }
+        },
+        "faction": {
+          "undead_remnants": {
+            "entity_count": 6,
+            "path_length": {
+              "mean": 597.8333,
+              "stdev": 125.9159
+            },
+            "path_density": {
+              "mean": 0.2989,
+              "stdev": 0.063
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.4331,
+              "stdev": 0.0444
+            },
+            "loop_score": {
+              "mean": 0.9031,
+              "stdev": 0.0045
+            },
+            "growth_trajectory": {
+              "mean": -0.0035,
+              "stdev": 0.0009
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "wild_beast_pack": {
+            "entity_count": 5,
+            "path_length": {
+              "mean": 751.2,
+              "stdev": 389.6862
+            },
+            "path_density": {
+              "mean": 0.3756,
+              "stdev": 0.1948
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.4628,
+              "stdev": 0.0201
+            },
+            "loop_score": {
+              "mean": 0.8809,
+              "stdev": 0.0153
+            },
+            "growth_trajectory": {
+              "mean": -0.0032,
+              "stdev": 0.001
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "None": {
+            "entity_count": 10,
+            "path_length": {
+              "mean": 1062.9,
+              "stdev": 658.5365
+            },
+            "path_density": {
+              "mean": 0.5314,
+              "stdev": 0.3293
+            },
+            "phase_coverage": {
+              "mean": 0.6,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.5085,
+              "stdev": 0.0376
+            },
+            "loop_score": {
+              "mean": 0.5694,
+              "stdev": 0.0875
+            },
+            "growth_trajectory": {
+              "mean": -0.0029,
+              "stdev": 0.0019
+            },
+            "conclusion_coherence_rate": 1.0
+          }
+        },
+        "kind": {
+          "sentinel": {
+            "entity_count": 6,
+            "path_length": {
+              "mean": 597.8333,
+              "stdev": 125.9159
+            },
+            "path_density": {
+              "mean": 0.2989,
+              "stdev": 0.063
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.4331,
+              "stdev": 0.0444
+            },
+            "loop_score": {
+              "mean": 0.9031,
+              "stdev": 0.0045
+            },
+            "growth_trajectory": {
+              "mean": -0.0035,
+              "stdev": 0.0009
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "predator_hunter": {
+            "entity_count": 4,
+            "path_length": {
+              "mean": 793.25,
+              "stdev": 425.4153
+            },
+            "path_density": {
+              "mean": 0.3966,
+              "stdev": 0.2127
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.4579,
+              "stdev": 0.0197
+            },
+            "loop_score": {
+              "mean": 0.8836,
+              "stdev": 0.0159
+            },
+            "growth_trajectory": {
+              "mean": -0.0031,
+              "stdev": 0.0011
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "alpha": {
+            "entity_count": 1,
+            "path_length": {
+              "mean": 583.0,
+              "stdev": 0.0
+            },
+            "path_density": {
+              "mean": 0.2915,
+              "stdev": 0.0
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.482,
+              "stdev": 0.0
+            },
+            "loop_score": {
+              "mean": 0.8698,
+              "stdev": 0.0
+            },
+            "growth_trajectory": {
+              "mean": -0.0034,
+              "stdev": 0.0
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "goblin_raider": {
+            "entity_count": 10,
+            "path_length": {
+              "mean": 1062.9,
+              "stdev": 658.5365
+            },
+            "path_density": {
+              "mean": 0.5314,
+              "stdev": 0.3293
+            },
+            "phase_coverage": {
+              "mean": 0.6,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.5085,
+              "stdev": 0.0376
+            },
+            "loop_score": {
+              "mean": 0.5694,
+              "stdev": 0.0875
+            },
+            "growth_trajectory": {
+              "mean": -0.0029,
+              "stdev": 0.0019
+            },
+            "conclusion_coherence_rate": 1.0
+          }
+        },
+        "region": {
+          "haunted_battlefield": {
+            "entity_count": 6,
+            "path_length": {
+              "mean": 597.8333,
+              "stdev": 125.9159
+            },
+            "path_density": {
+              "mean": 0.2989,
+              "stdev": 0.063
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.4331,
+              "stdev": 0.0444
+            },
+            "loop_score": {
+              "mean": 0.9031,
+              "stdev": 0.0045
+            },
+            "growth_trajectory": {
+              "mean": -0.0035,
+              "stdev": 0.0009
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "wolf_den": {
+            "entity_count": 5,
+            "path_length": {
+              "mean": 751.2,
+              "stdev": 389.6862
+            },
+            "path_density": {
+              "mean": 0.3756,
+              "stdev": 0.1948
+            },
+            "phase_coverage": {
+              "mean": 0.5,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.4628,
+              "stdev": 0.0201
+            },
+            "loop_score": {
+              "mean": 0.8809,
+              "stdev": 0.0153
+            },
+            "growth_trajectory": {
+              "mean": -0.0032,
+              "stdev": 0.001
+            },
+            "conclusion_coherence_rate": 1.0
+          },
+          "None": {
+            "entity_count": 10,
+            "path_length": {
+              "mean": 1062.9,
+              "stdev": 658.5365
+            },
+            "path_density": {
+              "mean": 0.5314,
+              "stdev": 0.3293
+            },
+            "phase_coverage": {
+              "mean": 0.6,
+              "stdev": 0.0
+            },
+            "path_entropy": {
+              "mean": 0.5085,
+              "stdev": 0.0376
+            },
+            "loop_score": {
+              "mean": 0.5694,
+              "stdev": 0.0875
+            },
+            "growth_trajectory": {
+              "mean": -0.0029,
+              "stdev": 0.0019
+            },
+            "conclusion_coherence_rate": 1.0
+          }
+        }
+      }
+    },
+    "clustering": {
+      "global": {
+        "entity_count": 21,
+        "distinct_shapes": 5,
+        "dominant_shape": [
+          "biological_state_changed",
+          "capability_growth_stalled",
+          "hazard_drain_applied",
+          "movement",
+          "progression_plateau_detected",
+          "project_started",
+          "stamina_changed",
+          "strategic_goal_changed"
+        ],
+        "dominant_shape_count": 10,
+        "dominant_shape_share": 0.4762,
+        "diversity_context": "monster-only gauntlet (TCK-20260808-LIFECYCLE-SCORE-WORLD-ARCHETYPE-AWARENESS) -- low diversity is expected by design for this world's archetype, not a defect"
+      },
+      "groups": {
+        "role": {
+          "CITIZEN": {
+            "entity_count": 11,
+            "distinct_shapes": 2,
+            "dominant_shape": [
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "hazard_drain_applied",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 10,
+            "dominant_shape_share": 0.9091
+          },
+          "MONSTER": {
+            "entity_count": 10,
+            "distinct_shapes": 3,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "demographic_birth",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "raid_party_spawned",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.5
+          }
+        },
+        "faction": {
+          "undead_remnants": {
+            "entity_count": 6,
+            "distinct_shapes": 1,
+            "dominant_shape": [
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "hazard_drain_applied",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 6,
+            "dominant_shape_share": 1.0
+          },
+          "wild_beast_pack": {
+            "entity_count": 5,
+            "distinct_shapes": 2,
+            "dominant_shape": [
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "hazard_drain_applied",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 4,
+            "dominant_shape_share": 0.8
+          },
+          "None": {
+            "entity_count": 10,
+            "distinct_shapes": 3,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "demographic_birth",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "raid_party_spawned",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.5
+          }
+        },
+        "kind": {
+          "sentinel": {
+            "entity_count": 6,
+            "distinct_shapes": 1,
+            "dominant_shape": [
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "hazard_drain_applied",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 6,
+            "dominant_shape_share": 1.0
+          },
+          "predator_hunter": {
+            "entity_count": 4,
+            "distinct_shapes": 2,
+            "dominant_shape": [
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "hazard_drain_applied",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 3,
+            "dominant_shape_share": 0.75
+          },
+          "alpha": {
+            "entity_count": 1,
+            "distinct_shapes": 1,
+            "dominant_shape": [
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "hazard_drain_applied",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 1,
+            "dominant_shape_share": 1.0
+          },
+          "goblin_raider": {
+            "entity_count": 10,
+            "distinct_shapes": 3,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "demographic_birth",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "raid_party_spawned",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.5
+          }
+        },
+        "region": {
+          "haunted_battlefield": {
+            "entity_count": 6,
+            "distinct_shapes": 1,
+            "dominant_shape": [
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "hazard_drain_applied",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 6,
+            "dominant_shape_share": 1.0
+          },
+          "wolf_den": {
+            "entity_count": 5,
+            "distinct_shapes": 2,
+            "dominant_shape": [
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "hazard_drain_applied",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 4,
+            "dominant_shape_share": 0.8
+          },
+          "None": {
+            "entity_count": 10,
+            "distinct_shapes": 3,
+            "dominant_shape": [
+              "StrategicBlockerAdded",
+              "biological_state_changed",
+              "capability_growth_stalled",
+              "demographic_birth",
+              "movement",
+              "progression_plateau_detected",
+              "project_started",
+              "raid_party_spawned",
+              "stamina_changed",
+              "strategic_goal_changed"
+            ],
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.5
+          }
+        }
+      }
+    }
+  }
+}

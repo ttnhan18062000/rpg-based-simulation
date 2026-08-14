@@ -1,0 +1,16 @@
+# STATE: ADDITIONAL
+schema_version: "worldcomposition.v1"
+world_id: "crowded_frontier"
+name: "Crowded Frontier"
+description: "A single frontier settlement pressed on three sides by a bandit-controlled road, a goblin war-camp, and an orc clan's stronghold — six distinct factions contest a footprint no larger than the corpus's smallest worlds."
+modules:
+  - "frontier_village_core"
+  - "hero_adventurers"
+  - "bandit_road_trade_pressure"
+  - "goblin_camp_conflict"
+  - "orc_clan_territory"
+default_perspectives:
+  - "hero_guild_perspective"
+  - "goblin_warband_perspective"
+  - "merchant_league_perspective"
+generation_seed: 601

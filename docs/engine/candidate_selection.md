@@ -62,7 +62,7 @@ Entities that are dead, incapacitated, or in a non-movement-eligible state are r
 Entities that already moved this tick (tracked in a per-tick moved set) are excluded — prevents double-movement from processing order artefacts.
 
 ### Stage 3: Target validity
-Entity's intended movement target is validated against world state. Invalid or unreachable targets produce no candidate (the movement intent itself may be voided).
+Entity's intended movement target is validated against world state. Invalid or unreachable targets produce no candidate (the movement intent itself may be voided). Before this "already at target" comparison, a stale, persisted `entity.navigation.target` (no fresh decision this tick) is live-refreshed via `MovementCandidateSelector.resolve_live_tracking_target()` when `entity.task.payload["target_id"]` names a still-alive entity — using its CURRENT position rather than the fallback's static snapshot. Without this, a pursuing entity that already "arrived" at a stale, one-time snapshot of its target's old position is permanently excluded from candidacy here, even though the target has since moved and route_movement_intent's own live-retargeting (Tier 2 downstream) would otherwise find a real, legal step toward it (`TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS`).
 
 ### Stage 4: Force-full-scan bypass
 If `force_full_scan=True` is set on the dirty set for this tick (triggered by calamity events or world restructuring), all liveness-checked entities are included regardless of readiness or urgency classification.

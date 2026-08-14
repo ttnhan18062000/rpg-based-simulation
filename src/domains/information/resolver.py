@@ -7,11 +7,12 @@ Translates subjective query options or search parameters into executable ActionI
 """
 
 from __future__ import annotations
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, Union
 
 from src.core.state import EntityState, AuthoritativeState
 from src.engine.intent.action_intent import ActionIntent
 from src.domains.information.schema import InformationSourceCandidate, InformationQuery
+from src.world.providers.information import InformationResponse
 
 
 class InformationIntentResolver:
@@ -25,7 +26,7 @@ class InformationIntentResolver:
         candidate: InformationSourceCandidate,
         query: InformationQuery,
         state: AuthoritativeState,
-    ) -> Optional[ActionIntent]:
+    ) -> Union[ActionIntent, "InformationResponse"]:
         """
         Produce ActionIntent to ask information or move to the source if far away.
         """
@@ -60,13 +61,18 @@ class InformationIntentResolver:
             "subject": query.subject,
             "query_kind": query.kind,
             "cost_paid": candidate.cost_gold,
+            "expected_certainty": candidate.expected_certainty,
+            "source_kind": candidate.source_kind,
         }
 
         # 3. Affordability check
         actor_gold = getattr(entity.inventory, "gold", 0) or 0
         if actor_gold < candidate.cost_gold:
-            # Gold blocker details
-            return None
+            return InformationResponse(
+                answer_kind="insufficient_gold",
+                cost_gold=candidate.cost_gold,
+                source_id=str(candidate.source_id),
+            )
 
         return ActionIntent(
             kind="ASK_INFORMATION",

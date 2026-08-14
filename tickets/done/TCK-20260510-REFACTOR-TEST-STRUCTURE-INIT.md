@@ -15,7 +15,7 @@ tags: [refactor, test, structure, init]
 Initialize Refactored Test Structure and Migrate Pipeline Tests
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

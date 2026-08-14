@@ -4,8 +4,8 @@ import os
 import tempfile
 import json
 from src.worldbuilding.schema import WorldSpec
-from src.worldbuilding.compiler import WorldCompiler, get_role_enum, get_faction_enum, get_quest_kind
-from src.core.enums import EntityRole, Faction
+from src.worldbuilding.compiler import WorldCompiler, get_role_enum, get_faction_enum, get_quest_kind, get_bravery_bias, get_action_style_for_bravery
+from src.core.enums import EntityRole, Faction, ActionStyle
 from src.core.quests import QuestKind
 
 
@@ -157,6 +157,363 @@ def test_compiler_quest_referential_warnings():
     assert "unknown_forest" in report["warnings"][0]
 
 
+def test_compiler_seeds_faction_tension_from_spec():
+    """WorldCompiler.compile() seeds FactionState.tension_level from FactionSpec.initial_tension_level (TCK-20260702-SIMQ-UPLIFT2-FACTION)."""
+    data = create_base_valid_spec()
+    data["factions"] = [
+        {"id": "a", "type": "x", "initial_tension_level": 0.5},
+        {"id": "b", "type": "y"},
+    ]
+    data["entities"] = []
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert set(state.factions.keys()) == {"a", "b"}
+    assert state.factions["a"].tension_level == 0.5
+    assert state.factions["b"].tension_level == 0.0
+
+
+def test_compiler_seeds_full_faction_roster_at_zero_tension_by_default():
+    """Every declared FactionSpec produces a FactionState entry even with no initial_tension_level set."""
+    data = create_base_valid_spec()
+    data["entities"] = []
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert set(state.factions.keys()) == {"villagers", "monsters"}
+    assert all(f.tension_level == 0.0 for f in state.factions.values())
+
+
+def test_compiler_no_factions_declared_yields_empty_factions_dict():
+    """spec.factions == [] compiles to state.factions == {} (schema-level regression guard)."""
+    data = create_base_valid_spec()
+    data["factions"] = []
+    data["entities"] = []
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.factions == {}
+
+
+def test_compiler_seeds_information_source_profiles_from_spec():
+    """WorldCompiler.compile() constructs InformationSourceProfile domain objects from
+    spec.information_source_profiles and passes them into AuthoritativeState
+    (TCK-20260702-SIMQ-UPLIFT2-INFORMATION)."""
+    from src.domains.information.schema import InformationSourceProfile
+
+    data = create_base_valid_spec()
+    data["entities"] = []
+    data["information_source_profiles"] = [
+        {
+            "source_id": "town_notice_board",
+            "source_kind": "guide",
+            "knowledge_scopes": ["regional_danger", "common_resource_sources"],
+            "accuracy": 0.4,
+            "freshness": 0.6,
+            "bias": 0.1,
+            "cost_gold": 0,
+            "max_answers_per_query": 2,
+        },
+        {
+            "source_id": "traveling_merchant_rumors",
+            "source_kind": "traveler",
+            "knowledge_scopes": ["common_resource_sources", "recipe_requirements"],
+            "accuracy": 0.65,
+            "freshness": 0.8,
+            "bias": 0.2,
+            "cost_gold": 5,
+            "max_answers_per_query": 3,
+        },
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.information_source_profiles) == 2
+    by_id = {p.source_id: p for p in state.information_source_profiles}
+
+    board = by_id["town_notice_board"]
+    assert isinstance(board, InformationSourceProfile)
+    assert board.source_kind == "guide"
+    assert board.knowledge_scopes == ("regional_danger", "common_resource_sources")
+    assert board.accuracy == 0.4
+    assert board.freshness == 0.6
+    assert board.bias == 0.1
+    assert board.cost_gold == 0
+    assert board.max_answers_per_query == 2
+
+    merchant = by_id["traveling_merchant_rumors"]
+    assert merchant.source_kind == "traveler"
+    assert merchant.knowledge_scopes == ("common_resource_sources", "recipe_requirements")
+    assert merchant.accuracy == 0.65
+    assert merchant.freshness == 0.8
+    assert merchant.bias == 0.2
+    assert merchant.cost_gold == 5
+    assert merchant.max_answers_per_query == 3
+
+
+def test_compiler_no_information_sources_declared_yields_empty_list():
+    """spec.information_source_profiles == [] compiles to state.information_source_profiles == []
+    (schema-level regression guard, mirrors test_compiler_no_factions_declared_yields_empty_factions_dict)."""
+    data = create_base_valid_spec()
+    data["entities"] = []
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.information_source_profiles == []
+
+
+def test_compiler_seeds_pending_information_responses_from_spec():
+    """WorldCompiler.compile() resolves target_population_id -> compiled actor_id and
+    constructs a pending_information_responses dict entry on AuthoritativeState
+    (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    data = create_base_valid_spec()
+    data["entities"] = [
+        {"id": "pop_test", "count": 1, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"},
+    ]
+    data["pending_information_responses"] = [
+        {
+            "target_population_id": "pop_test",
+            "subject": "bandit_road_danger",
+            "query_kind": "danger_rating",
+            "source_id": "town_notice_board",
+            "answer_kind": "KNOWN_FACT",
+            "certainty": 0.8,
+            "details": {"danger_level": "elevated", "region": "bandit_road"},
+            "cost_paid": 0,
+        },
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.pending_information_responses) == 1
+    entry = state.pending_information_responses[0]
+    compiled_actor_id = next(
+        eid for eid, e in state.entities.items()
+        if e.properties.get("population_id") == "pop_test"
+    )
+    assert entry["actor_id"] == compiled_actor_id
+    assert entry["subject"] == "bandit_road_danger"
+    assert entry["query_kind"] == "danger_rating"
+    assert entry["source_id"] == "town_notice_board"
+    assert entry["raw_response"] == {
+        "answer_kind": "KNOWN_FACT",
+        "certainty": 0.8,
+        "details": {"danger_level": "elevated", "region": "bandit_road"},
+        "reason": None,
+    }
+    assert entry["cost_paid"] == 0
+
+
+def test_compiler_pending_information_response_unmatched_population_is_skipped_with_warning():
+    """A target_population_id referencing no compiled entity is skipped, and a warning is recorded."""
+    data = create_base_valid_spec()
+    data["pending_information_responses"] = [
+        {
+            "target_population_id": "does_not_exist",
+            "subject": "bandit_road_danger",
+            "query_kind": "danger_rating",
+            "source_id": "town_notice_board",
+            "answer_kind": "KNOWN_FACT",
+            "certainty": 0.8,
+        },
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, report = WorldCompiler.compile(spec, seed=42)
+
+    assert state.pending_information_responses == []
+    assert any("does_not_exist" in w for w in report["warnings"])
+
+
+def test_compiler_no_pending_information_responses_declared_yields_empty_list():
+    """spec.pending_information_responses == [] compiles to state.pending_information_responses == []
+    (schema-level regression guard)."""
+    data = create_base_valid_spec()
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.pending_information_responses == []
+
+
+def test_compiler_seeds_pending_self_model_information_events_from_spec():
+    """WorldCompiler.compile() resolves target_population_id -> compiled actor_id and
+    constructs a real InformationResponse instance inside a
+    pending_self_model_information_events dict entry on AuthoritativeState
+    (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)."""
+    from src.world.providers.information import InformationResponse
+
+    data = create_base_valid_spec()
+    data["entities"] = [
+        {"id": "pop_test", "count": 1, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"},
+    ]
+    data["pending_self_model_information_events"] = [
+        {
+            "target_population_id": "pop_test",
+            "answer_kind": "unknown",
+            "unknowns": ["material.moon_resin.source"],
+        },
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.pending_self_model_information_events) == 1
+    entry = state.pending_self_model_information_events[0]
+    compiled_actor_id = next(
+        eid for eid, e in state.entities.items()
+        if e.properties.get("population_id") == "pop_test"
+    )
+    assert entry["actor_id"] == compiled_actor_id
+    event = entry["event"]
+    assert isinstance(event, InformationResponse)
+    assert event.answer_kind == "unknown"
+    assert event.unknowns == ("material.moon_resin.source",)
+    assert event.facts == ()
+    assert event.suggested_leads == ()
+
+
+def test_compiler_pending_self_model_information_event_unmatched_population_is_skipped_with_warning():
+    """A target_population_id referencing no compiled entity is skipped, and a warning is recorded."""
+    data = create_base_valid_spec()
+    data["pending_self_model_information_events"] = [
+        {
+            "target_population_id": "does_not_exist",
+            "answer_kind": "unknown",
+            "unknowns": ["material.moon_resin.source"],
+        },
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, report = WorldCompiler.compile(spec, seed=42)
+
+    assert state.pending_self_model_information_events == []
+    assert any("does_not_exist" in w for w in report["warnings"])
+
+
+def test_compiler_no_pending_self_model_information_events_declared_yields_empty_list():
+    """spec.pending_self_model_information_events == [] compiles to
+    state.pending_self_model_information_events == [] (schema-level regression guard)."""
+    data = create_base_valid_spec()
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.pending_self_model_information_events == []
+
+
+def test_urban_political_resolved_world_seeds_one_pending_self_model_information_event():
+    """urban_political's resolved world spec compiles with the seeded
+    pending_self_model_information_events entry targeting pop_1
+    (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)."""
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+    from src.world.providers.information import InformationResponse
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.pending_self_model_information_events) == 1
+    entry = state.pending_self_model_information_events[0]
+    assert state.entities[entry["actor_id"]].properties["population_id"] == "pop_1"
+    event = entry["event"]
+    assert isinstance(event, InformationResponse)
+    assert event.answer_kind == "unknown"
+    assert event.unknowns == ("material.moon_resin.source",)
+
+
+def test_urban_political_resolved_world_seeds_one_pending_information_response():
+    """urban_political's resolved world spec compiles with the seeded pending_information_responses
+    entry targeting pop_0 (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.pending_information_responses) == 1
+    entry = state.pending_information_responses[0]
+    assert state.entities[entry["actor_id"]].properties["population_id"] == "pop_0"
+    assert entry["subject"] == "bandit_road_danger"
+    assert entry["query_kind"] == "danger_rating"
+    assert entry["source_id"] == "town_notice_board"
+    assert entry["raw_response"] == {
+        "answer_kind": "KNOWN_FACT",
+        "certainty": 0.8,
+        "details": {"danger_level": "elevated", "region": "bandit_road"},
+        "reason": None,
+    }
+    assert entry["cost_paid"] == 0
+
+
+def test_urban_political_resolved_world_seeds_two_information_sources():
+    """urban_political's resolved world spec compiles with the two corrected
+    InformationSourceProfile entries (TCK-20260702-SIMQ-UPLIFT2-INFORMATION)."""
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.information_source_profiles) == 2
+    by_id = {p.source_id: p for p in state.information_source_profiles}
+
+    board = by_id["town_notice_board"]
+    assert board.source_kind == "guide"
+    assert board.knowledge_scopes == ("regional_danger", "common_resource_sources")
+    assert board.accuracy == 0.4
+    assert board.freshness == 0.6
+    assert board.bias == 0.1
+    assert board.cost_gold == 0
+    assert board.max_answers_per_query == 2
+
+    merchant = by_id["traveling_merchant_rumors"]
+    assert merchant.source_kind == "traveler"
+    assert merchant.knowledge_scopes == ("common_resource_sources", "recipe_requirements")
+    assert merchant.accuracy == 0.65
+    assert merchant.freshness == 0.8
+    assert merchant.bias == 0.2
+    assert merchant.cost_gold == 5
+    assert merchant.max_answers_per_query == 3
+
+
+def test_urban_political_resolved_world_seeds_bandit_town_council_tension():
+    """urban_political's resolved world spec compiles with bandit_company/town_council at
+    tension_level=0.5 via composition-level faction_tension_overrides (TCK-20260702-SIMQ-UPLIFT2-FACTION)."""
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.factions["bandit_company"].tension_level == 0.5
+    assert state.factions["town_council"].tension_level == 0.5
+
+
+def test_urban_political_resolved_bandit_road_hazard_kind_matches_source():
+    """urban_political's resolved bandit_road region must carry the hazard_kind its
+    source module (bandit_road_trade_pressure.yaml) declares, not a stale default from
+    an out-of-date recompile (TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE)."""
+    import yaml
+
+    resolved = yaml.safe_load(
+        open("data/worlds/urban_political/resolved/world.resolved.yaml").read()
+    )
+    regions_by_id = {r["id"]: r for r in resolved["regions"]}
+    assert regions_by_id["bandit_road"]["hazard_kind"] == "NATURAL_TERRAIN", (
+        "urban_political's resolved bandit_road region is stale relative to "
+        "bandit_road_trade_pressure.yaml's source — re-run "
+        "`worldbuilding.cli resolve` + `compile --from-resolved` for urban_political."
+    )
+    assert regions_by_id["trading_hometown"]["hazard_kind"] == "NATURAL_TERRAIN", (
+        "urban_political's resolved trading_hometown region is stale relative to "
+        "trading_company_hub.yaml's source — re-run "
+        "`worldbuilding.cli resolve` + `compile --from-resolved` for urban_political."
+    )
+
+
 def test_helper_enum_mappers():
     assert get_role_enum("hero") == EntityRole.HERO
     assert get_role_enum("worker") == EntityRole.WORKER
@@ -264,4 +621,99 @@ def test_quest_location_tag_warns_on_genuine_mismatch():
     assert len(report["warnings"]) >= 1, "Should warn when tag matches no region type or tags"
     assert "settlement" in report["warnings"][0], (
         "Warning message should name the unmatched tag"
+    )
+
+
+def test_get_bravery_bias_by_real_alignment_bucket():
+    """TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION: bravery bias values are real, external
+    data (data/content/social/personality_bias.yaml), keyed by the real, content-defined
+    alignment_bucket (data/content/social/factions.yaml) -- not hardcoded per-faction in code, so
+    a designer can retune values or a new faction's alignment_bucket inherits a sensible bias
+    with no code change required."""
+    assert get_bravery_bias("wild_beast_pack") == 0.35   # alignment_bucket: wild
+    assert get_bravery_bias("goblin_warband") == 0.25    # alignment_bucket: invader
+    assert get_bravery_bias("orc_clan") == 0.15          # alignment_bucket: rival
+    assert get_bravery_bias("hero_guild") == 0.05        # alignment_bucket: defender
+    assert get_bravery_bias("merchant_league") == 0.0    # alignment_bucket: neutral
+    assert get_bravery_bias("nonexistent_faction_xyz") == 0.0  # no crash, no real content match
+
+
+# test_personality_bias_config_loads_from_real_data_file and
+# test_personality_bias_config_falls_back_safely_on_bad_file moved to
+# tests/unit/content_semantics/test_personality.py -- _load_personality_bias_config,
+# _PERSONALITY_BIAS_FALLBACK, and _personality_bias_cache moved to
+# src/content_semantics/personality.py (TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY),
+# shared with ArchetypeEntityFactory's own entity-construction path. get_bravery_bias/
+# get_action_style_for_bravery are re-exported from this module (compiler.py) for backward
+# compatibility with this file's own remaining tests below.
+
+
+def test_compiler_faction_bravery_bias_produces_real_population_skew():
+    """A predator faction's real, compiled population should show a measurably higher average
+    bravery than a neutral civilian faction's, while individual per-entity RNG variance is
+    preserved (not every entity identical)."""
+    data = create_base_valid_spec()
+    data["regions"].append({"id": "predator_zone", "type": "wilderness", "bounds": [20, 20, 40, 40], "terrain": "FOREST"})
+    data["factions"] = [
+        {"id": "wild_beast_pack", "type": "hostile"},
+        {"id": "merchant_league", "type": "civilian"},
+    ]
+    data["entities"] = [
+        {"id": "predators", "count": 30, "role": "monster", "faction": "wild_beast_pack", "spawn_region": "predator_zone"},
+        {"id": "merchants", "count": 30, "role": "citizen", "faction": "merchant_league", "spawn_region": "town_square"},
+    ]
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    predator_bravery = [
+        e.identity.personality.bravery for e in state.entities.values()
+        if e.identity.properties.get("faction_id") == "wild_beast_pack"
+    ]
+    merchant_bravery = [
+        e.identity.personality.bravery for e in state.entities.values()
+        if e.identity.properties.get("faction_id") == "merchant_league"
+    ]
+    assert len(predator_bravery) == 30
+    assert len(merchant_bravery) == 30
+
+    avg_predator = sum(predator_bravery) / len(predator_bravery)
+    avg_merchant = sum(merchant_bravery) / len(merchant_bravery)
+    assert avg_predator > avg_merchant + 0.2, (
+        f"predator faction avg bravery ({avg_predator:.3f}) should be measurably higher than "
+        f"merchant faction avg bravery ({avg_merchant:.3f})"
+    )
+    # Individual variance preserved within the faction -- not every predator identical.
+    assert len(set(predator_bravery)) > 1
+
+
+def test_get_action_style_for_bravery_thresholds():
+    """TCK-20260809-COMBAT-ACTIONSTYLE-WIRING: ActionStyle is derived from bravery via real,
+    data-driven thresholds (personality_bias.yaml), not hardcoded per-entity."""
+    assert get_action_style_for_bravery(0.9) == ActionStyle.AGGRESSIVE
+    assert get_action_style_for_bravery(0.65) == ActionStyle.AGGRESSIVE  # boundary, inclusive
+    assert get_action_style_for_bravery(0.5) == ActionStyle.BALANCED
+    assert get_action_style_for_bravery(0.35) == ActionStyle.EVASIVE  # boundary, inclusive
+    assert get_action_style_for_bravery(0.1) == ActionStyle.EVASIVE
+
+
+def test_compiler_faction_bravery_bias_produces_real_action_style_skew():
+    """A predator faction's real, compiled population should skew toward AGGRESSIVE ActionStyle
+    (previously every entity defaulted to BALANCED regardless of faction) -- the real mechanism
+    that activates dormant kiting-distance and opportunity-attack-escape differentiation."""
+    data = create_base_valid_spec()
+    data["regions"].append({"id": "predator_zone", "type": "wilderness", "bounds": [20, 20, 40, 40], "terrain": "FOREST"})
+    data["factions"] = [{"id": "wild_beast_pack", "type": "hostile"}]
+    data["entities"] = [
+        {"id": "predators", "count": 30, "role": "monster", "faction": "wild_beast_pack", "spawn_region": "predator_zone"},
+    ]
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    styles = [e.combat.action_style for e in state.entities.values()]
+    assert len(styles) == 30
+    # Not every entity is the class default (BALANCED=0) -- action_style is real, not dormant.
+    assert any(s != 0 for s in styles)
+    aggressive_count = sum(1 for s in styles if s == ActionStyle.AGGRESSIVE)
+    assert aggressive_count > len(styles) / 2, (
+        "wild_beast_pack's high bravery bias (+0.35) should skew most entities AGGRESSIVE"
     )

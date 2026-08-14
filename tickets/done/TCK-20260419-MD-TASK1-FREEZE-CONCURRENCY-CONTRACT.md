@@ -15,7 +15,7 @@ tags: [md, task1, freeze, concurrency, contract]
 Milestone D - Task 1: Audit and Freeze the Bounded Concurrency Contract
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

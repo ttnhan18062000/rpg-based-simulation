@@ -1,0 +1,11 @@
+schema_version: "worldcomposition.v1"
+world_id: "unit_faction_tension"
+name: "Unit Test — Faction Tension Isolation"
+description: "Unit-tier isolation world for the FACTION pillar. Reuses sandbox_world's exact module pair (frontier_village_core + wolf_den_near_forest, already proven population-stable to 2000 ticks) with non-zero faction_tension_overrides on the two factions this pairing actually populates (town_council, merchant_league); every other Pattern-6 field (information_source_profiles, pending_information_responses, pending_self_model_information_events) stays empty/default, and no profile YAML exists for this world so all feature flags default OFF."
+modules:
+  - "frontier_village_core"
+  - "wolf_den_near_forest"
+generation_seed: 501
+faction_tension_overrides:
+  town_council: 0.5
+  merchant_league: 0.5

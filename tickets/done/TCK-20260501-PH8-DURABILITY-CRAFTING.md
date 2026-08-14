@@ -15,7 +15,7 @@ tags: [ph8, durability, crafting]
 Phase 8: Implementing Equipment Durability and Hardening Crafting
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

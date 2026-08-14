@@ -9,6 +9,8 @@ audience: developer
 
 The WorldLoop Frontend is a high-performance React application built with **Vite** and **TypeScript**. It utilizes the **HTML5 Canvas API** to render thousands of entities and world objects at 60 FPS.
 
+> **Known gap (2026-07-16), verified directly against the real backend:** the frontend's `useSimulation.ts` hook (§2 below) calls `/map`, `/static`, `/stats`, `/speed`, `/clear_events` — none of which exist as routes in `src/api/server.py` (checked against the complete route list). The UI components described below are real and well-built; the data layer connecting them to the live backend is not currently functional. See `docs/plans/world_rendering/idea_world_rendering_core.md` for a proposed server-owned rendering core that would either reconnect this frontend (implementing its missing routes) or supersede it with a new client — not yet decided.
+
 ---
 
 ## 1. Technology Stack

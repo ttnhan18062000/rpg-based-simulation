@@ -18,7 +18,7 @@ tags: [audit, long-run, performance, attrition, behavioral-continuity, rejection
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim |
-| **Audit date** | 2026-06-19 |
+| **Audit date** | 2026-06-19 (original); 2026-07-09 (F6 added — wall-clock non-determinism finding from `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`) |
 
 **What this dimension answers:** Does the simulation remain healthy, performant, and behaviorally active across 1,000 ticks — or do entities stagnate, the world deplete, or the engine degrade? This is the first long-run observation after the RC1/RC2/RC3 fixes. D03 confirmed behavioral stasis onset by tick 20 under the broken pipeline. This audit confirms the RC fixes restored behavioral activity while revealing new systemic gaps at the 1,000-tick scale.
 
@@ -191,6 +191,100 @@ SpawnService fires at ~tick 500 and successfully adds 3 entities in both seeds. 
 
 For a 1,000-tick run this is marginal. A 5,000-tick run risks entity count approaching zero.
 
+**Status update (2026-07-04):** `docs/plans/audit_fix_plan.md`'s P2-B entry (sourced from this
+finding) is now **RESOLVED** — `src/world/spawn.py`'s two-tier `SpawnConfig` cadence (WORLD-103)
+addresses the spawn/attrition rate directly. A *separate*, previously-conflated symptom — total
+early-tick population collapse in `frontier_extended`/`frontier_living_world`/`wilderness_survival`
+(56→13 alive within the first 50 ticks in one case) — was root-caused by
+`TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` (2026-07-04) to a *different* cause entirely: those
+worlds' compiled content was stale relative to the 2026-07-01 hazard-native-immunity fix, so
+entities took unmitigated lethal hazard drain in their own habitat. Fixed by adding missing
+`hazard_kind` declarations to 7 world modules and recompiling. All 5 previously-collapsing or
+never-checked worlds now hold ≥60% population over 300 ticks — see
+`docs/simulation_quality/eval_matrix_results.md` for the current numbers. The `sandbox_world`
+data in this table itself predates that world's `worldcomposition.v1` migration
+(`TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE`) and is retained here as the original historical
+measurement, not updated in place.
+
+---
+
+### F6 — Wall-Clock-Dependent Non-Determinism at Long Tick Counts (Tick-Budget Throttle)
+
+> **Discovered:** 2026-07-09, `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`
+> **Status:** Documented, not fixed — intentional engine behavior, not a bug
+
+**Score: not scored on the Emergence Gap axes above (this is a determinism/reproducibility finding, not
+a behavioral-emergence gap) — flagged here because D06 owns "does the simulation remain healthy... across
+1,000+ ticks," and this finding is specifically a long-run-scale phenomenon invisible at ≤300 ticks.**
+
+Investigating a late-tick (800→1000) population collapse in `generated_frontier_3_42`, two independent
+instrumented drives — same seed (42), same code, same machine, run back-to-back — diverged sharply:
+floor-violation onset differed by 100+ ticks (tick 860 vs. 960) and the tick-1000 population endpoint
+differed by more than 2× (12/44 vs. 5/44 alive). Root cause: `src/engine/kernel.py`'s tick-budget
+watchdog (`kernel.py:420-442`) and mid-tick emergency throttle (`kernel.py:574-601`) measure **real
+wall-clock compute time** per tick (`time.perf_counter_ns()`), and when a tick's measured time exceeds
+budget, the mid-tick path drops the remaining resolution-queue work items for that tick — entities do not
+act, defend, or flee that tick. *Which* entities get dropped depends on where in the resolution queue the
+elapsed-time check trips, which depends on actual wall-clock timing (system load, scheduler jitter, GC
+pauses), not the deterministic seed or RNG stream.
+
+Both throttle paths are documented, intentional behavior (`docs/engine/kernel.md` §"Emergency
+Throttling") and are already known to be non-determinism-guaranteed (`docs/engine/kernel.md` §"State
+Hashing in Phase 7": canonical hash is `"SKIPPED"` in `DEGRADED` mode) — this finding does not reveal a
+new violation, it is the **first population-outcome-level test to actually encounter** an already-known
+gap, because no existing hard-assertion test previously drove any corpus world past ~tick 400-500 in a
+non-`audit_mode` context. The first `"Tick N exceeded budget"` watchdog warning fires at tick ~300-320 in
+every observed run; below that, floor assertions are reliably reproducible (confirmed: the existing
+300-tick `test_population_stability` window has never shown this divergence).
+
+**Resolution applied (narrow, not a fix for the underlying non-determinism):** `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`
+added `test_generated_frontier_3_42_extended_population_stability` — a tolerance-based regression guard
+(3 same-seed trials, throttling left active/no `audit_mode`, hard per-trial floor through tick 800,
+relaxed mean-across-trials floors at ticks 900/1000, hard no-full-extinction check) rather than a tight
+per-tick assertion, since the investigation confirmed a tight assertion would be empirically false and
+`audit_mode=True` would verify a materially different (unthrottled, unrealistically optimistic) scenario.
+Explicitly did **not** touch `kernel.py`'s watchdog/throttle/`ResourceGovernor` logic — that is documented,
+intentional, corpus-wide engine behavior governing real hardware-class performance scaling
+(`docs/engine/performance_contract.md` §7), not a `generated_frontier_3_42`-specific defect.
+
+**Open question for a future ticket (not resolved here):** whether other long-run calibration tiers
+(the 1000t/2000t anchors added by `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` and others in
+`docs/simulation_quality/eval_matrix_results.md`) are silently exposed to the same run-to-run variance in
+their `quality_report.json` outputs — i.e. whether a single calibration run's grade is representative or
+got a lucky/unlucky throttle-timing draw. Out of scope for the ticket that found this; flagged so a future
+audit does not have to rediscover the mechanism from scratch.
+
+> **Resolved 2026-07-11, `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY`:** all 18 `SLOW_ANCHOR_KEYS`
+> entries re-run 3 independent same-seed trials each (54 total runs, real throttled `Kernel`, no
+> `audit_mode`), transcribed in `staging_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`
+> and documented per-key in `docs/simulation_quality/eval_matrix_results.md`'s "Anchor Reliability
+> Verification" section. Result: **18/18 keys stable** — every one of 540 pillar/trial data points
+> landed within the existing ±1-`GRADE_ORDER` band, despite confirmed throttle-timing variance
+> (`budget_warnings` 41–539/run, `watchdog_trips` 1–3/run, up to ~4× elapsed-time spread for
+> identical seed/code within a single key). No anchor required conversion to a tolerance-based guard
+> and no anchor was flagged unverified. `kernel.py` and `grade_anchors.json` were left untouched, per
+> this finding's scope guard.
+
+> **Extended to the FAST tier, 2026-08-10, `TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP`:**
+> the FAST tier (<=500t) was never subjected to the same multi-trial check above — this ticket found
+> the first confirmed instances. Multi-trial re-runs (2-4 trials each, identical seed/code) of a
+> sample of FAST_ANCHOR_KEYS found: `dungeon_crawl_seed42_500t`, `highland_traverse_seed42_200t`,
+> `hero_guild_routing_seed42_500t` stable; `simq_routing_test_seed42_500t` (PROGRESSION, COGNITION),
+> `simq_routing_test_seed123_500t` (PROGRESSION), and `urban_political_seed456_500t` (ECONOMY,
+> PROGRESSION) showed real, tolerance-crossing variance despite the same watchdog trips firing in
+> every run (starting tick ~25, earlier than this section's own documented ~300-320 SLOW-tier
+> onset). Unlike the SLOW-tier's own uniform stability, this is scenario/pillar-dependent: every
+> confirmed-unstable case has a low absolute event count for the affected pillar (10-30 events),
+> making it disproportionately sensitive to which individual events the throttle happens to drop —
+> not isolated to one world family (`urban_political` and `simq_routing_test`/`ENABLE_ADVENTURE_ROUTING`
+> both affected). Not fixed at the mechanism level (same scope guard as the finding above — `kernel.py`
+> untouched); instead classified via a new `watchdog_variance` provenance entry in
+> `tests/simulation_quality/fixtures/score_ceilings.json` (`tools/simq_ceiling.py`'s existing
+> ceiling-lookup mechanism), so future drift on these specific (run_key, pillar) pairs reads as
+> known, understood noise rather than an unexplained regression. A full FAST-tier sweep matching this
+> section's own 18-key/3-trial SLOW-tier methodology was not performed (descoped to a representative
+> sample per that ticket's own Acceptance Criteria) — a future audit may still find more affected keys.
+
 ---
 
 ## Key Findings Summary
@@ -201,7 +295,8 @@ For a 1,000-tick run this is marginal. A 5,000-tick run risks entity count appro
 | F2 | 7/15 | 200-tick activation delay from initial spawn project locks |
 | F3 | 11/15 | Rejection cascade grows to 500K–550K/run at ~650/tick after RC1 fix |
 | F4 | 15/15 | Quest system never activates — no material blockers generated while F1 persists |
-| F5 | 9/15 | Late-run attrition exceeds spawn rate; entity count ends below starting count |
+| F5 | 9/15 | Late-run attrition exceeds spawn rate; entity count ends below starting count — **RESOLVED** (P2-B, `SpawnConfig` two-tier cadence); a separately-conflated early-collapse symptom in other worlds fixed 2026-07-04 by `TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` (stale hazard-kind content, unrelated cause) |
+| F6 | N/A | Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle drops resolution work based on real compute time, not seed) — **documented, not fixed** (intentional engine behavior); narrow mitigation applied via a tolerance-based regression guard, `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` (2026-07-09); all 18 shipped long-run anchors re-verified stable against this variance, `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` (2026-07-11); extended to the FAST tier 2026-08-10 (`TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP`) — unlike the SLOW tier, 3 low-event-count (run_key, pillar) pairs found unstable, classified via a new `watchdog_variance` score-ceiling entry rather than fixed |
 
 **Performance — all green:**
 - Tick compute: 9–15ms avg, stable, well within 50ms budget ✓
@@ -224,3 +319,17 @@ If the `lock_until_tick` for `proj_combat_retreat` / `proj_recover` is currently
 
 **P2 — D04 and D05 now unblocked but conditionally**
 D04 (Balance & Tuning) and D05 (Entity Differentiation) can now run, but F1 means economic/crafting tuning analysis is still not possible until hunger satiation is resolved. D05 can observe personality differentiation across survival-tier behavior; it is not blocked by F1 for that scope.
+
+**P2 — Audit whether other long-run SimQ anchors (1000t/2000t) are throttle-timing-sensitive (F6)** — **RESOLVED 2026-07-11**
+`TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` and other long-run calibration entries in
+`docs/simulation_quality/eval_matrix_results.md` were each captured from a single run. F6 confirmed at
+least one world (`generated_frontier_3_42`) shows >2× population variance between two back-to-back
+same-seed runs past ~tick 300-320. Determine whether any already-shipped 1000t/2000t anchor grade would
+flip if re-measured, and whether a tolerance-based re-verification (same pattern as
+`test_generated_frontier_3_42_extended_population_stability`) should become the standard for all
+long-run anchors rather than a single-run point estimate.
+**Sequenced as Phase 0.1 (the blocking first phase)** in `docs/plans/archive/simq_development_roadmap.md`.
+**Result (`TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY`):** all 18 shipped anchors re-verified stable
+across 3 trials each — none flip; a tolerance-based re-verification standard was evaluated but found
+unnecessary since the existing ±1-`GRADE_ORDER` band already absorbs the observed variance for every
+key. See the F6 finding above for full evidence.

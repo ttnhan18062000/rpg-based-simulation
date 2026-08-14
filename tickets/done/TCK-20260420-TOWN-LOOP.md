@@ -15,7 +15,7 @@ tags: [town, loop]
 Town-Driven Resource Resolution (Material Handback)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

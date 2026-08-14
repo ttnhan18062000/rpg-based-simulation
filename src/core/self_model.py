@@ -214,9 +214,12 @@ class SelfModelBundle:
     Groups all four Phase 2 self-model components under one field on EntityState.
 
     Default: all components at their empty/zero default values.
-    Intentionally excluded from authoritative canonical hash (it is derived from
-    raw state, not a mutation source).  Include via to_canonical_dict() only in
-    inspection/debug exports.
+    Participates in the authoritative canonical hash: to_canonical_dict() is called
+    unconditionally by EntityState.to_canonical_dict() (src/core/state.py:750), which is
+    the same method CanonicalStateHasher.to_canonical_data() (src/engine/checkpoint.py:81)
+    uses to compute the full canonical hash for determinism/replay/certification. There is
+    no separate hash-only vs. debug-only code path - to_canonical_dict()'s output is used
+    for both the canonical hash and inspection/debug exports.
     """
     self_awareness: SelfAwarenessComponent = field(
         default_factory=SelfAwarenessComponent

@@ -1,0 +1,12 @@
+# .codex/config.toml — TCK-20260721-CODEX-GUIDANCE-FIXTURE-CAPTURE
+#
+# Minimal project marker, committed only after the isolated scratch-directory fixture-capture
+# experiment (Step 11 of this ticket's plan.md; captured payload at
+# tests/fixtures/codex_hook_payloads/post_tool_use_stdin_capture.json) confirmed real
+# PostToolUse hook stdin-payload behavior and the project-trust/hook-registration mechanics.
+#
+# This file deliberately contains ZERO hook registrations — no [hooks] table, no per-event
+# hook arrays, at any nesting level. This ticket's scope explicitly forbids enabling any
+# production hook. A future, separate ticket (live-Codex-pilot-guardrails, out of this
+# ticket's scope) owns actually wiring a production hook, using the registration syntax this
+# ticket's Step 11 discovered and recorded in this ticket's Implementation Notes.

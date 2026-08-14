@@ -229,33 +229,34 @@ class Kernel:
         self._quality_feed = None
         _quality_fn = None
         if obs_mode != ObservabilityMode.OFF:
-            from src.simulation_quality.feed import build_feed_from_env
+            from src.simulation_quality.feed import build_feed_from_env, BrokerQualityFeed
             _feed = build_feed_from_env()
             if _feed is not None:
-                from src.simulation_quality.weights import ScoringWeights
-                from src.simulation_quality.quality_hub import QualityHub
-                from src.simulation_quality.persistence import QualityPersistence
-                from src.simulation_quality.scorers import build_all_scorers
-                try:
-                    _q_profile = os.environ.get("QUALITY_PROFILE", "default")
-                    _weights = ScoringWeights.load(
-                        "config/simulation_quality/scoring_weights.yaml",
-                        "config/simulation_quality/grade_thresholds.yaml",
-                        "config/simulation_quality/detection_params.yaml",
-                        _q_profile,
-                    )
-                    _q_run_dir = run_dir_str or f"data/runs/{self._run_id}"
-                    _hub = QualityHub(
-                        scorers=build_all_scorers(_weights),
-                        weights=_weights,
-                        persistence=QualityPersistence(_q_run_dir),
-                        run_id=self._run_id,
-                    )
-                    _quality_fn = _hub.on_envelope
-                    self._quality_hub = _hub
-                    self._quality_feed = _feed
-                except Exception:
-                    logger.warning("SimQ hub construction failed (non-fatal) — quality scoring disabled for this run")
+                self._quality_feed = _feed
+                if not isinstance(_feed, BrokerQualityFeed):
+                    from src.simulation_quality.weights import ScoringWeights
+                    from src.simulation_quality.quality_hub import QualityHub
+                    from src.simulation_quality.persistence import QualityPersistence
+                    from src.simulation_quality.scorers import build_all_scorers
+                    try:
+                        _q_profile = os.environ.get("QUALITY_PROFILE", "default")
+                        _weights = ScoringWeights.load(
+                            "config/simulation_quality/scoring_weights.yaml",
+                            "config/simulation_quality/grade_thresholds.yaml",
+                            "config/simulation_quality/detection_params.yaml",
+                            _q_profile,
+                        )
+                        _q_run_dir = run_dir_str or f"data/runs/{self._run_id}"
+                        _hub = QualityHub(
+                            scorers=build_all_scorers(_weights),
+                            weights=_weights,
+                            persistence=QualityPersistence(_q_run_dir),
+                            run_id=self._run_id,
+                        )
+                        _quality_fn = _hub.on_envelope
+                        self._quality_hub = _hub
+                    except Exception:
+                        logger.warning("SimQ hub construction failed (non-fatal) — quality scoring disabled for this run")
 
         self._event_recorder = EventRecorder(
             run_dir=run_dir_str,
@@ -301,12 +302,18 @@ class Kernel:
         self._current_tick_violation_count = 0
 
         # Lifecycle supervisor: count registered workers for shutdown accounting.
-        # 1 = EventRecorder._worker (QueueDrainWorker), started when obs is enabled.
-        self._workers_started = 1 if (obs_mode != ObservabilityMode.OFF) else 0
+        # 2 = EventRecorder._worker + DecisionTraceWriter._worker (both QueueDrainWorker
+        # instances), started when obs is enabled.
+        self._workers_started = 2 if (obs_mode != ObservabilityMode.OFF) else 0
         self._last_shutdown_report = None
 
         from src.observability.event_extractor import EventExtractor
         EventExtractor.reset_run_state()
+        from src.observability.event_shapers import StrategyShaper, ProgressionShaper, SocialShaper, FactionShaper
+        StrategyShaper.reset_run_state()
+        ProgressionShaper.reset_run_state()
+        SocialShaper.reset_run_state()
+        FactionShaper.reset_run_state()
 
         self.validate(flags)
 
@@ -318,9 +325,13 @@ class Kernel:
         except Exception as _warmup_err:
             logger.warning("ContentWarmupService.warmup() failed (non-fatal): %s", _warmup_err)
 
+        self._run_initial_placement_check()
+
     @property
     def quality_hub(self):
-        """Read-only access to the QualityHub instance (None if SimQ is disabled)."""
+        """Read-only access to the QualityHub instance (None if SimQ is disabled or
+        QUALITY_FEED_MODE=broker — broker-mode scoring runs in the external QualityWorker
+        process, not in-engine)."""
         return self._quality_hub
 
     def validate(self, flags: Optional[Dict[str, bool]] = None) -> None:
@@ -735,6 +746,91 @@ class Kernel:
         if getattr(self._state, "movement_cache", None) is not None:
             self._cache_registry.register_cache("movement_plan_cache", self._state.movement_cache)
 
+    def _run_initial_placement_check(self) -> None:
+        """
+        One-time, unconditional spawn-placement legality scan (LAW-SPAWN-OCCUPANCY).
+        Mirrors _run_hard_law_checks()'s mode-gating/persistence/alert-routing shape
+        exactly, including its LONG_RUN fall-through (no explicit log, no raise) —
+        deliberately inherited so the 7th law does not diverge from the other 6's
+        mode-gating precedent (TCK-20260716-PLACELEGAL-HARDLAW, Resolved Decision 2).
+        Uses tick=0 explicitly since this runs before the first tick.
+        """
+        from src.observability.config import ObservabilityConfig, ObservabilityMode
+        from src.observability.hard_law_monitor import HardLawMonitor, HardLawViolationError
+
+        mode = ObservabilityConfig.get_mode()
+        if mode == ObservabilityMode.OFF:
+            return
+
+        violations = HardLawMonitor.check_initial_placement(self._state)
+        if not violations:
+            return
+
+        if not hasattr(self._status, "cumulative_violations"):
+            self._status.cumulative_violations = {}
+        if not hasattr(self._status, "hard_law_violations"):
+            self._status.hard_law_violations = []
+
+        self._status.hard_law_violations.extend(violations)
+        self._status.last_hard_law_violation_tick = 0
+
+        for v in violations:
+            self._status.cumulative_violations[v.law_id] = self._status.cumulative_violations.get(v.law_id, 0) + 1
+
+        # Route hard law violations to alerts and persist them to jsonl
+        if self._artifact_repo and self._run_id:
+            try:
+                import os
+                import json
+                v_path = self._artifact_repo.resolve_path(self._run_id, "violations")
+                os.makedirs(os.path.dirname(v_path), exist_ok=True)
+                with open(v_path, "a", encoding="utf-8") as f:
+                    for v in violations:
+                        record = {
+                            "tick": 0,
+                            "law_id": v.law_id,
+                            "entity_id": v.entity_id,
+                            "severity": v.severity,
+                            "message": v.message,
+                            "details": v.details
+                        }
+                        f.write(json.dumps(record) + "\n")
+            except Exception:
+                logger.exception("Failed to write to hard_law_violations.jsonl")
+
+        try:
+            from src.observability.alerts.manager import AlertsManager
+            from src.observability.alerts.models import AlertEvent
+            router = AlertsManager.get_router()
+            for v in violations:
+                event = AlertEvent.create_hard_law_violation(self._run_id, 0, v)
+                router.route(event)
+        except Exception:
+            logger.exception("Failed to route hard law violation alerts")
+
+        from src.observability.events import SimulationEvent
+        for v in violations:
+            payload = dict(v.details)
+            payload["law_id"] = v.law_id
+            event = SimulationEvent(
+                event_type="InvariantViolation",
+                event_category="hard_law",
+                tick=0,
+                severity=v.severity,
+                source_system="hard_law_monitor",
+                message=v.message,
+                entity_id=v.entity_id,
+                payload=payload,
+            )
+            if self._event_recorder is not None:
+                self._event_recorder.record(event)
+
+        if mode in (ObservabilityMode.DEBUG, ObservabilityMode.CERTIFICATION):
+            raise HardLawViolationError(violations)
+        elif mode == ObservabilityMode.LIGHT:
+            for v in violations:
+                logger.warning(f"[{v.severity}] Hard Law Violation: {v.law_id} on entity {v.entity_id}: {v.message}")
+
     def _run_hard_law_checks(self, dirty_set: Optional[Any]) -> None:
         from src.observability.config import ObservabilityConfig, ObservabilityMode
         from src.observability.hard_law_monitor import HardLawMonitor, HardLawViolationError
@@ -817,6 +913,35 @@ class Kernel:
         # 1. Extract domain events
         generated_events = EventExtractor.extract(prior_state, self._state, update, obs_mode)
 
+        # 1b. Push-based event shapers (src/observability/event_shapers.py) — the live default
+        # path for COMBAT/ECONOMY/FACTION as of TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION.
+        # Read directly from prior_state.feature_flags — NOT routed through FeatureFlagManager/
+        # run_phase (that mechanism gates pipeline phases; this flag gates an observability-only
+        # delivery path). Default "ON" when the key is absent — matches FeatureFlagManager's own
+        # default, so a run with no explicit override gets live delivery, not a silent fallback to
+        # SHADOW/construct-only behavior. "ON" delivers to generated_events (merged into the same
+        # record loop below, identical treatment to EventExtractor's own output); "SHADOW"
+        # constructs and logs a count only, delivering nothing — useful for validating future
+        # (Phase 2) shaper additions the same way this epic validated Phase 1. Wrapped defensively
+        # so a bug in this path can never affect the real tick (Zero Simulation Impact,
+        # quality_scoring_contract.md §3.1) — event_extractor.py's own flag-gated branches are the
+        # real rollback path if this ever needs to be disabled entirely.
+        _push_shaper_mode = (getattr(prior_state, "feature_flags", None) or {}).get(
+            "ENABLE_PUSH_EVENT_SHAPERS", "ON")
+        if _push_shaper_mode in ("ON", "SHADOW"):
+            try:
+                from src.observability.event_shapers import run_shadow_shapers
+                shaper_events = run_shadow_shapers(prior_state, update, tick, obs_mode)
+                if _push_shaper_mode == "ON":
+                    generated_events.extend(shaper_events)
+                else:
+                    logger.debug(
+                        "push_event_shapers SHADOW: %d events constructed (tick=%d, not delivered)",
+                        len(shaper_events), tick,
+                    )
+            except Exception:
+                logger.exception("push_event_shapers raised — ignored, tick unaffected")
+
         # 2. Convert hard law violations to SimulationEvents
         current_violations = getattr(self._status, "current_tick_violations", [])
         for v in current_violations:
@@ -833,7 +958,7 @@ class Kernel:
             generated_events.append(event)
 
         # Emit GovernorModeChanged if a transition happened this tick
-        if getattr(self._status, "last_transition_tick", -1) == tick:
+        if getattr(self._status, "last_transition_tick", -1) == prior_state.tick:
             prev_mode = getattr(self._status, "previous_mode", "NORMAL")
             event = SimulationEvent(
                 event_type="GovernorModeChanged",
@@ -985,6 +1110,7 @@ class Kernel:
                 logger.exception("DecisionTraceWriter.close() failed during shutdown (non-fatal)")
             from src.observability.cognition.decision_trace_writer import set_active_writer
             set_active_writer(None)
+            workers_stopped += 1
 
         # Wire BehaviorWorker into shutdown: join any running behavior-normalization threads.
         import threading
@@ -1120,3 +1246,27 @@ class Kernel:
         """
         from src.engine.world_index import WorldIndexService
         return WorldIndexService.get_indexes(state, dirty)
+
+    @staticmethod
+    def get_building_region(state: Any, building_id: int) -> Any:
+        """Return the region containing *building_id*, delegating to SpatialQueryService.
+
+        Observability code must call this method rather than importing
+        SpatialQueryService directly.  Kernel is the stable boundary for engine-internal
+        services (same rationale as get_world_indexes — TCK-20260627-P2G-KERNEL-FACADE).
+        """
+        from src.engine.spatial_query import SpatialQueryService
+        return SpatialQueryService.get_building_region(state, building_id)
+
+    @staticmethod
+    def verify_occupancy_legal(
+        pos: Any, state: Any, ignore_entity_id: Optional[int] = None
+    ) -> Any:
+        """Return (legal, reason) for *pos*, delegating to LegalityServiceV2.verify_occupancy.
+
+        Observability code must call this method rather than importing
+        LegalityServiceV2 directly.  Kernel is the stable boundary for engine-internal
+        services (same rationale as get_world_indexes — TCK-20260627-P2G-KERNEL-FACADE).
+        """
+        from src.engine.legality import LegalityServiceV2
+        return LegalityServiceV2.verify_occupancy(pos, state, ignore_entity_id=ignore_entity_id)

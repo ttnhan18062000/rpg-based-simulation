@@ -428,6 +428,16 @@ class StrategicPatch(ComponentPatch):
                     res.pop(item_id, None)
                 return res
 
+            def merge_committed_intentions(current_tuple, add_list, remove_list):
+                if not add_list and not remove_list:
+                    return current_tuple
+                by_id = {ci.intention_id: ci for ci in current_tuple}
+                for item in add_list:
+                    by_id[item.intention_id] = item
+                for item_id in remove_list:
+                    by_id.pop(item_id, None)
+                return tuple(sorted(by_id.values(), key=lambda ci: ci.sequence_index))
+
             nb = merge_dict(new_strat.blockers, u_strat.blockers_add_or_update, u_strat.blockers_remove)
             nl = merge_dict(new_strat.leads, u_strat.leads_add_or_update, u_strat.leads_remove)
             nd = merge_dict(new_strat.directives, u_strat.directives_add_or_update, u_strat.directives_remove)
@@ -454,12 +464,15 @@ class StrategicPatch(ComponentPatch):
                 ntrust = dict(ntrust)
                 for entry in u_strat.source_trust_updates:
                     ntrust[entry.entity_id] = entry
-                    
+
+            nci = merge_committed_intentions(new_strat.committed_intentions, u_strat.committed_intentions_add_or_update, u_strat.committed_intentions_remove)
+
             new_strat = replace(new_strat,
                 blockers=shallow_freeze(nb), leads=shallow_freeze(nl), directives=shallow_freeze(nd),
                 projects=shallow_freeze(np), concerns=shallow_freeze(nc), candidate_zones=shallow_freeze(ncz),
                 hypotheses=shallow_freeze(nh), contracts=shallow_freeze(ncon), turning_points=tuple(ntp),
                 boredom=shallow_freeze(nbor), source_trust=shallow_freeze(ntrust), beliefs=shallow_freeze(nbel),
+                committed_intentions=nci,
                 current_project_id=u_strat.current_project_id_set if u_strat.current_project_id_set is not None else new_strat.current_project_id,
                 current_objective_id=u_strat.current_objective_id_set if u_strat.current_objective_id_set is not None else new_strat.current_objective_id
             )
@@ -625,6 +638,26 @@ class WoundPatch(ComponentPatch):
             changes["combat"] = new_com
 
 
+@dataclass(frozen=True, slots=True)
+class SelfModelPatch(ComponentPatch):
+    self_model_bundle_set: Optional[Any] = None  # SelfModelBundle
+
+    def is_noop(self) -> bool:
+        return self.self_model_bundle_set is None
+
+    def merge(self, other: SelfModelPatch) -> SelfModelPatch:
+        if not other or other.is_noop():
+            return self
+        return SelfModelPatch(
+            entity_id=self.entity_id,
+            self_model_bundle_set=other.self_model_bundle_set if other.self_model_bundle_set is not None else self.self_model_bundle_set,
+        )
+
+    def apply(self, entity: EntityState, changes: Dict[str, Any]) -> None:
+        if self.self_model_bundle_set is not None:
+            changes["self_model"] = self.self_model_bundle_set
+
+
 def extract_patches(entity_id: int, update: EntityUpdate) -> List[ComponentPatch]:
     """
     Extracts all active component patches from a monolithic EntityUpdate.
@@ -680,5 +713,8 @@ def extract_patches(entity_id: int, update: EntityUpdate) -> List[ComponentPatch
         if not p.is_noop(): patches.append(p)
     if update.wound_update is not None:
         p = WoundPatch(entity_id, wound_update=update.wound_update)
+        if not p.is_noop(): patches.append(p)
+    if update.self_model_bundle_set is not None:
+        p = SelfModelPatch(entity_id, self_model_bundle_set=update.self_model_bundle_set)
         if not p.is_noop(): patches.append(p)
     return patches
