@@ -15,7 +15,7 @@ tags: [cognition, strategy]
 Update authoritative docs for cognition-driven eligibility and generalized bypass
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

@@ -263,3 +263,16 @@ def test_done_with_trailing_content_after_proper_tier_heading_passes(tmp_path):
     results = check_ticket_status_drift(tmp_path)
     assert len(results) == 1
     assert results[0]["status"] == "PASS"
+
+
+# ---------------------------------------------------------------------------
+# Makefile wiring (TCK-20260810-STATUS-DRIFT-CHECK-WIRING) — static text guard, no live `make`
+# invocation or subprocess, matching test_dashboard_makefile_targets.py's pure-text approach and
+# test_epic_staleness_check.py's precedent of no subprocess test for a report-only corpus check.
+# ---------------------------------------------------------------------------
+
+
+def test_makefile_wires_status_drift_check():
+    makefile_text = (_REPO_ROOT / "Makefile").read_text(encoding="utf-8")
+    assert "status-drift-check:" in makefile_text
+    assert "python3 tools/gate_checks/status_drift_check.py" in makefile_text

@@ -18,7 +18,7 @@ engage combat MORE than high-bravery heroes) — root-caused to the exact commit
 scorer itself (which uses the correct sign)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

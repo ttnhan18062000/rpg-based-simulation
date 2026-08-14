@@ -281,6 +281,9 @@ agent-monitoring-weight-check: ## Required check before proposing a cost_proxy.p
 agent-monitoring-epic-staleness: ## Report open epics with no recent child-ticket activity
 	python3 tools/agent-monitoring/epic_staleness_check.py
 
+status-drift-check: ## Report ## Status body-text drift in tickets/done/ and lowercase final_status in runs.jsonl
+	python3 tools/gate_checks/status_drift_check.py
+
 agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
 	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
 	  tools/agent-monitoring/build_index.py
