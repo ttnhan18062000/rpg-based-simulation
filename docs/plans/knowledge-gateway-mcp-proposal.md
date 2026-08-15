@@ -1,3 +1,11 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: agent
+tags: [mcp]
+---
+
 # Proposal: Local Knowledge Gateway MCP
 
 **Status:** Proposed  
@@ -1040,25 +1048,82 @@ If migration is unsafe, deleting and rebuilding the cache must remain a valid re
 ### Phase 0: Contract and Measurement Baseline
 
 - Freeze versioned JSON Schemas for MCP requests, success/partial/error responses, statements,
-  evidence, conflicts, and status/freshness/verification enums.
-- Define provider adapter invocation, timeout, version, and fixture contracts.
-- Define and test provider capability descriptors for Context Search and Graphify.
+  evidence, conflicts, and status/freshness/verification enums. **Done** (`TCK-20260814-KGMCP-CONTRACT-SCHEMAS`) —
+  frozen `schema_version: 1` JSON Schema files under `docs/engine/contracts/knowledge_gateway_mcp/`
+  (`shared_enums.schema.json`, `knowledge_context_request.schema.json`,
+  `knowledge_context_response.schema.json`, `knowledge_status_response.schema.json`); prose contract
+  at `docs/engine/contracts/knowledge_gateway_mcp_contract.md`.
+- Define provider adapter invocation, timeout, version, and fixture contracts. **Done**
+  (`TCK-20260814-KGMCP-CONTRACT-SCHEMAS`) — see
+  `docs/engine/contracts/knowledge_gateway_mcp_contract.md` §1 (adapter invocation contract table,
+  grounded in direct observation of `tools/search_mcp.py` and the installed `graphify` CLI binary).
+- Define and test provider capability descriptors for Context Search and Graphify. **Done**
+  (`TCK-20260814-KGMCP-CONTRACT-SCHEMAS`) — `docs/engine/contracts/knowledge_gateway_mcp/
+  provider_capabilities.schema.json` (shape) plus the two populated instances,
+  `provider_capabilities_context_search.json` and `provider_capabilities_graphify.json`; tested by
+  `tests/tools/test_knowledge_gateway_contract_schemas.py` (19 tests). See
+  `knowledge_gateway_mcp_contract.md` §2–§4 for descriptor semantics and the Graphify
+  CLI-vs-in-process-adapter design decision (D1).
 - Define evidence identity kinds, provider-qualified normalization, and the finest supported
-  dependency granularity per provider.
-- Freeze separate cache-lookup and evidence-validity identity contracts.
+  dependency granularity per provider. **Done** (`TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY`) —
+  the closed 8-kind taxonomy, stable-identity forms, preferred fingerprints, and
+  rename/delete/duplicate-name/schema-version-change normalization rules at
+  `docs/engine/contracts/knowledge_gateway_mcp/evidence_identity_kinds.schema.json`; per-provider
+  finest-granularity advertisement via `provider_capabilities.schema.json`'s
+  `evidence_granularities[]` field (frozen by the sibling `TCK-20260814-KGMCP-CONTRACT-SCHEMAS`).
+- Freeze separate cache-lookup and evidence-validity identity contracts. **Done**
+  (`TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY`) — see
+  `docs/engine/contracts/knowledge_gateway_mcp/evidence_cache_identity_contract.md` §1 (lookup
+  identity), §2 (evidence-validity identity), §3 (non-collapse rule), §4 (`PROVIDER_GENERATION`
+  fallback rule).
 - Record current latency, tool-call counts, repeated-demand signals, and returned-token estimates
-  for representative queries.
+  for representative queries. **Done** (`TCK-20260814-KGMCP-MEASUREMENT-BASELINE`) — a fixed,
+  versioned 7-entry representative-query corpus at
+  `tools/agent-monitoring/kgmcp_baseline_corpus.py`, with a real recorded direct-tool baseline
+  (latency, tool-call counts, sources recalled, serialized-token estimate) at
+  `tests/tools/fixtures/kgmcp_measurement_baseline_corpus_results.json`, produced by
+  `tools/agent-monitoring/kgmcp_baseline_runner.py`; see
+  `docs/engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract.md` §1.
 - Define separate measurement for lookup, evidence validation, provider fallback, packet assembly,
-  and end-to-end latency.
-- Predeclare measurable promotion thresholds from that baseline.
-- Define repository, branch, and working-tree cache identity.
-- Ratify the cached-payload redaction and retention policy.
+  and end-to-end latency. **Done** (`TCK-20260814-KGMCP-MEASUREMENT-BASELINE`) — see
+  `docs/engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract.md` §2 (the 5
+  measurement-point definitions, each citing `tools/retrieval_events.py`'s Wrapper functions where
+  a live precedent exists) and §2.6 (the fixture-baseline-vs-future-gateway-latency
+  non-conflation rule).
+- Predeclare measurable promotion thresholds from that baseline. **Done**
+  (`TCK-20260814-KGMCP-MEASUREMENT-BASELINE`) — see
+  `docs/engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract.md` §4 (minimum
+  latency, minimum token-reduction, and no-regression-recall thresholds, each a formula over the
+  recorded-baseline fixture's fields) and §5 (the §18.1 repeated-demand estimation design).
+- Define repository, branch, and working-tree cache identity. **Done**
+  (`TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY`) — see
+  `docs/engine/contracts/knowledge_gateway_mcp/evidence_cache_identity_contract.md` §5.
+- Ratify the cached-payload redaction and retention policy. **Drafted / pending ratification**
+  (`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`) — see
+  `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §11 (Ratification
+  Status): the artifact is drafted, not ratified; §24 item 1 remains an open reviewer decision this
+  ticket does not self-resolve.
 - Define migrations that evolve the existing `retrieval_cache.db` rather than creating a parallel
-  store.
+  store. **Done** (`TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY`) — design-only migration plan at
+  `docs/engine/contracts/knowledge_gateway_mcp/cache_migration_plan.md` (scoped
+  `retrieval_cache_schema_version` constant, ordered `migration_00N_*` function list, same-file
+  in-place evolution; zero edits to `tools/retrieval_cache.py`).
 - Define a reproducible token-counting method, budget tolerance, SQLite operating limits, and
-  cache-GC defaults.
+  cache-GC defaults. **Drafted / pending ratification**
+  (`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`) — see
+  `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §8 (token-counting
+  method, `kgmcp_char_heuristic_v1`), §9 (SQLite operational limits), §10 (cache-GC defaults); none
+  of these defaults are implemented in `tools/retrieval_cache.py` yet.
 - Draft the generated-agent-instruction change replacing the blanket pre-scan mandate with the
   cheapest-reliable-source and ambient-utility rule; do not activate it before review.
+  **Done (drafted; not activated)** (`TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT`) — see
+  `docs/ai/claude_md_prescan_mandate_relaxation_draft.md`: drafted replacement instruction text
+  covering §2.1's ambient-utility/cheapest-reliable-source substance, cross-referencing all 3 live
+  instruction surfaces (`CLAUDE.md`'s Context Scan section, `CLAUDE.md`'s Proactive Tool Use table,
+  and `.claude/skills/implement-ticket/SKILL.md`'s Step 2 callout) without editing any of them.
+  Activation is explicitly gated on `TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP`'s compliance
+  fix being retro-confirmed by `TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`'s correlation
+  section — pending as of this ticket; this ticket does not itself activate or unblock activation.
 
 ### Phase 1: Read-Only Gateway
 
