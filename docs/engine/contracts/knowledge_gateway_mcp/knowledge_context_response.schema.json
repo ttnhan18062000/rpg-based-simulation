@@ -114,6 +114,11 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "provider_failures": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Machine-readable, per-provider failure reasons (e.g. 'graphify: subprocess timeout'). Always present as an array (possibly empty) — never a silent omission when a provider fails. See docs/plans/knowledge-gateway-mcp-proposal.md §16 'one provider unavailable' row."
+    },
     "budget_requested": { "type": "integer" },
     "budget_returned": { "type": "integer" },
     "cache_key_version": { "type": "integer" },
