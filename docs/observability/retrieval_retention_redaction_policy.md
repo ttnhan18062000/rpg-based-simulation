@@ -69,6 +69,12 @@ introduced below (§Decision C) are new categories a future Phase 3+ implementat
 to `src/observability/reporting/retention.py` or a sibling module — this ticket makes no such code
 change, consistent with its own Out of Scope.
 
+This document is itself extended, not superseded, by
+`docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md`
+(`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`), which scopes this document's categories and
+MAY/PROHIBITED vocabulary specifically to the Knowledge Gateway MCP's future cached *payload* rows
+(answer/context content) — a concept that did not exist when this document was written.
+
 ## Decision B — Retrieval Events Are Retain-Forever/Redaction-Only; Caches Are Duration-Based
 
 Retrieval *events* (the telemetry records themselves) land in `agent-monitoring/*.jsonl` per the
