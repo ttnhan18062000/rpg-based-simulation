@@ -917,6 +917,16 @@ The Knowledge Gateway is never a correctness dependency.
 
 Failures should be observable but fail-open for agent work.
 
+**Phase 1 test coverage (as of `TCK-20260815-KGMCP-P1-FAILOPEN-TESTS`):** the "Gateway process
+unavailable," "One provider unavailable," and "Token-budget assembly failure" rows are each proven
+by a dedicated, deterministic test against the real gateway in
+`tests/tools/test_knowledge_gateway_failure_semantics.py` (13 tests total). The remaining 4 rows are
+explicitly deferred, not silently untested — recorded in that same file's module docstring, each
+with a one-line reason and file:line citation: "Graphify stale" and "Context Search stale" have no
+Phase 1 implementation to test (`freshness` is a hardcoded `"UNKNOWN"` literal in
+`tools/knowledge_gateway_packet_assembly.py`, never computed or compared against a baseline); "Cache
+missing or corrupt" and "Cached evidence mismatch" remain Phase-2-only, since no cache exists yet.
+
 ## 17. Security and Privacy
 
 The gateway should inherit the existing retrieval redaction policy and extend it for cached payloads.
@@ -1131,13 +1141,71 @@ If migration is unsafe, deleting and rebuilding the cache must remain a valid re
 
 ### Phase 1: Read-Only Gateway
 
-- Implement deterministic routing over Context Search and Graphify.
-- Expose `knowledge_context` and `knowledge_status`.
+- Implement deterministic routing over Context Search and Graphify. **Done**
+  (`TCK-20260815-KGMCP-P1-QUERY-ROUTER`) — standalone `tools/knowledge_gateway_router.py`: six
+  stable-identifier matchers, the §8 7-row intent/provider routing table, capability-aware routing
+  constraints consulting the frozen `provider_capabilities_*.json` descriptors, and a
+  sequential-bounded `{context_search, graphify}` ambiguous-intent fallback; tested by
+  `tests/tools/test_knowledge_gateway_router.py` (31 tests). No MCP tool surface, packet assembly,
+  or caching — those remain separate Phase 1 bullets/tickets below.
+- Expose `knowledge_context` and `knowledge_status`. **Done**
+  (`TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE`) — `tools/knowledge_gateway_mcp.py`: a real FastMCP
+  server (`FastMCP("knowledge-gateway")`) registering exactly these two tools over
+  `knowledge_gateway_router.py::route()` and `knowledge_gateway_packet_assembly.py`, request/
+  response validated against the frozen §9.1/§9.2 JSON Schemas with a real
+  `jsonschema.Draft7Validator`; tested by `tests/tools/test_knowledge_gateway_mcp.py` (12 tests).
 - Register the gateway as an ambient general repository utility, with no ticket or workflow
-  metadata required.
-- Return uncached normalized results with provenance.
-- Use deterministic classification and extractive/template packet assembly only.
-- Preserve direct provider tools and fail-open behavior.
+  metadata required. **Done** (`TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE`) — one new
+  `knowledge-gateway` entry added to `.mcp.json` under `mcpServers`, mirroring the existing
+  `knowledge-search` entry's shape exactly; the pre-existing `knowledge-search` and `github`
+  entries, and `tools/search_mcp.py` itself, are provably untouched (zero diff).
+- Return uncached normalized results with provenance. **Done**
+  (`TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE`) — `knowledge_context` is the first live call site that
+  actually returns `PacketAssembly` output to a caller: `provenance_providers[]`, per-item
+  `context[].path`/`context[].authority`, and `evidence[].path` are all populated from real
+  provider content, and no caching exists in this response path (Phase 2 not yet built).
+- Use deterministic classification and extractive/template packet assembly only. **Done**
+  (`TCK-20260815-KGMCP-P1-PACKET-ASSEMBLY`) — `tools/knowledge_gateway_packet_assembly.py`:
+  extractive statement/context/evidence construction rendering real provider content only (§9.1),
+  the `FACT`/`INFERENCE`/`DECISION` per-statement classification (§13), `NegativeClaimSupport`
+  handling that never treats an empty result alone as evidence of absence (§13.1), structural
+  conflict representation (§14), and token-budgeted assembly with priority tiers and truncation
+  (§15) using the first real `kgmcp_char_heuristic_v1` callable
+  (`docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §8); tested by
+  `tests/tools/test_knowledge_gateway_packet_assembly.py` (27 tests).
+- Preserve direct provider tools and fail-open behavior. **Done**
+  (`TCK-20260815-KGMCP-P1-FAILOPEN-TESTS`) — `tests/tools/test_knowledge_gateway_failure_semantics.py`
+  (13 tests) proves this against the real gateway rather than trusting the MCP-tool-surface ticket's
+  own happy-path tests: subprocess-level smoke tests confirm `tools/search_mcp.py` and the `graphify`
+  CLI remain independently callable, unmodified, when the gateway process is down; a static guard
+  confirms `tools/search_mcp.py`'s own source never imports any `knowledge_gateway_*` module. The
+  "one provider unavailable" §16 row also got a real code fix here, not just a test — a
+  `provider_failures` list was already computed internally in `tools/knowledge_gateway_packet_assembly.py`
+  and silently discarded before reaching the response; it is now carried onto `PacketAssembly` and
+  always emitted (even as `[]`) in `knowledge_context`'s response (`tools/knowledge_gateway_mcp.py`),
+  documented additively in
+  `docs/engine/contracts/knowledge_gateway_mcp/knowledge_context_response.schema.json`. A second,
+  previously-uncaught `FileNotFoundError`/`TimeoutExpired` propagation path internal to
+  `knowledge_gateway_router.py::route()` is now also caught at the `knowledge_gateway_mcp.py` call
+  site, without editing the frozen router itself. See §16 below for per-row Phase 1 test-coverage
+  status.
+
+Phase 1 acceptance check against the Phase 0 measurement baseline (`TCK-20260815-KGMCP-P1-BASELINE-COMPARISON`,
+the epic's own closing acceptance ticket): the real gateway was run against all 7 of Phase 0's
+frozen corpus entries and measured against §4's three predeclared promotion thresholds. The
+honest result is a full miss — §4.1 (latency), §4.2 (token reduction), and §4.3 (no-regression
+recall) each FAIL in aggregate and for every one of the 7 entries, including an expected FAIL on
+`Q2_symbol_lookup`/`Q5_test_impact` recall (routing-design behavior from the real
+single-primary-provider `ROUTING_TABLE`, not a defect) and, for the other 5 entries, an
+additional structural cause discovered during measurement (Phase 0's `doc_id` and Phase 1's
+`source_path`-derived evidence identity diverge for documents nested more than one directory
+level under `docs/`). Full per-threshold numbers, root-cause analysis, and the committed
+comparison fixture are at
+`docs/engine/contracts/knowledge_gateway_mcp/phase1_baseline_comparison.md` and
+`tests/tools/fixtures/kgmcp_phase1_baseline_comparison_results.json`. This is not characterized as
+Phase 1 "succeeding" against its own predeclared bar — it did not — and no threshold was
+redefined or narrowed to obscure the miss. Whether and how to proceed toward Phase 2 in light of
+this result is a separate, later human-reviewer decision, out of this ticket's own scope.
 
 ### Phase 2: Real Provider-Result Cache
 

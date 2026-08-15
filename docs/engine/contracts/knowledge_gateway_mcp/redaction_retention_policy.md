@@ -176,9 +176,13 @@ boundaries for deriving `budget_class` from a `kgmcp_char_heuristic_v1` count �
 medium (501–2000 tokens), large (>2000 tokens) — without redefining `budget_class` itself, since no
 schema currently freezes its value set as an enum.
 
-**No callable ships in `tools/` as part of this ticket.** This section documents the method only,
-consistent with this ticket's Out of Scope excluding cache read/write implementation. A future
-ticket implements `kgmcp_char_heuristic_v1` as a callable function.
+**No callable shipped in `tools/` as part of this ticket** (`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`)
+— this section documented the method only, consistent with that ticket's Out of Scope excluding
+cache read/write implementation. `kgmcp_char_heuristic_v1` is now implemented as a real callable at
+`tools/knowledge_gateway_packet_assembly.py:81`, added by `TCK-20260815-KGMCP-P1-PACKET-ASSEMBLY`
+as part of its token-budgeted assembly work (§15); see
+`test_kgmcp_char_heuristic_v1_matches_frozen_formula`
+(`tests/tools/test_knowledge_gateway_packet_assembly.py:111`) for the formula-parity test.
 
 **Ratification (§24 item 4):** approved as drafted by the repository owner on 2026-08-15, recorded
 in `TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`. `kgmcp_char_heuristic_v1` and its ±20%
