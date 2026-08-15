@@ -75,7 +75,12 @@ def test_token_counting_method_returns_integer_compatible_with_budget_schema():
     assert "budget_returned" in text
     assert "budget_class" in text
     assert "non-negative integer" in text
-    assert "No callable ships in" in text or "no callable ships in" in text.lower()
+    # Originally asserted "No callable ships in tools/..." (present tense, AC7 as scoped by
+    # TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY, which explicitly deferred the callable to a
+    # future ticket). TCK-20260815-KGMCP-P1-PACKET-ASSEMBLY implemented the real callable at
+    # tools/knowledge_gateway_packet_assembly.py, so §8 now correctly speaks in the past tense —
+    # this test asserts that updated, accurate wording instead.
+    assert "No callable shipped in" in text or "no callable shipped in" in text.lower()
 
 
 # ---------------------------------------------------------------------------
