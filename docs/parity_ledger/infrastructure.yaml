@@ -8953,3 +8953,70 @@
     any Sec.4 threshold; the real, measured, honestly-reported result is 0/7 pass
     on all 3 thresholds, stated in full in phase1_baseline_comparison.md and never
     characterized as a partial or aggregate success.'
+- id: INFRA-340
+  text: 'Fixed `doc_id` truncation of nested `docs/` paths beyond the first subdirectory
+    in `tools/knowledge_search.py::_collect_docs_chunks()` -- TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION.
+    `doc_id` was derived as `f"{section}/{stem}"` where `section` was only `rel_parts[0]`
+    (the immediate subdirectory of `docs/`), silently discarding any deeper nesting
+    -- e.g. `docs/engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract.md`
+    collapsed to `doc_id = "engine/measurement_baseline_contract"`, dropping `contracts/knowledge_gateway_mcp/`.
+    This created a real (confirmed non-collided, quantified by investigation.md at
+    0 actual collisions / 338 files / 120 truncated-but-non-colliding) identity-collision
+    risk, and was traced by TCK-20260815-KGMCP-P1-BASELINE-COMPARISON as part of the
+    cause of its honest section 4.3 recall-threshold FAIL (Phase 0''s doc_id-based
+    recall values could not be matched against Phase 1''s full-path evidence_id values
+    for any doc nested more than one level under docs/). Fix: doc_id is now derived
+    from the full relative path under docs_root (`rel.with_suffix("").as_posix()`),
+    a strict generalization that is byte-identical to the old value for depth-1 docs.
+    `section` is still computed the same way for the unrelated chunk-metadata `section`
+    field, used by search_mcp.py''s --section post-filter -- unchanged semantics.
+    A full (non-incremental) index rebuild (`make knowledge-index`) was required and
+    run, since the incremental path''s mtime-only change detection would silently
+    no-op on a pure code-derivation change with no manifest-tracked corpus file touched.
+    All 3 named downstream consumers (context_packet_assembler.py, search_server.py,
+    search_mcp.py) plus 2 additional real consumers found in investigation (hybrid_retrieval.py,
+    kgmcp_phase1_gateway_runner.py) treat doc_id as an opaque string and required
+    zero source changes -- confirmed via their existing test suites, all passing.
+    9 stale `expected_doc_ids` entries across 8 query objects in tools/eval/queries.json
+    (keyed to the old truncated scheme) were corrected to the new full-path scheme,
+    plus 4 entries in test_eval_search.py''s _KNOWN_STALE_DOC_IDS guard set (added
+    by the earlier, opposite-direction TCK-20260728-EVAL-FIXTURE-REPAIR ticket) were
+    removed as a necessary consequence, since this fix reintroduces exactly those
+    4 full-path strings as now-correct. Honest downstream note (not a claim of a clean
+    metrics win): post-fix `make eval-search` measured Recall@5 0.50 / Recall@10 0.74
+    / MRR@10 0.28 against a documented pre-fix baseline of 0.53 / 0.65 / 0.33 (TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX)
+    -- Recall@10 improved, Recall@5 and MRR@10 dipped, most plausibly from the 9 corrected
+    queries'' own hit/miss status changing under the now-correct scheme (an expected,
+    acceptable consequence of the fix per plan.md, not itself a bug), though the comparison
+    is also confounded by substantial corpus growth between the much-earlier baseline
+    measurement (smaller corpus) and now (7382 documents indexed). Both before and
+    after remain below the pre-existing 0.80 pass threshold, a known, separately-tracked,
+    out-of-scope condition. This entry records the doc_id derivation fix itself as
+    verified and tested, not the eval-search threshold as passing. Follows the INFRA-294/295/296
+    agent-tooling-infrastructure precedent for ledgering this class of tools/ change.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/knowledge_search.py:286-293 (`_collect_docs_chunks()` -- `doc_id
+    = rel.with_suffix("").as_posix()`, the full nested relative path under docs_root,
+    minus the .md suffix, replacing the prior truncated `f"{section}/{stem}"`; `section`
+    retained immediately after for the unrelated chunk-metadata field), docstring
+    at :242-249 updated to state the new full-path doc_id semantics. Rebuilt knowledge-index/knowledge.db
+    via `make knowledge-index` (full rebuild, not --incremental) -- verified directly
+    via SQLite query that nested docs under docs/engine/contracts/knowledge_gateway_mcp/
+    now carry full-path doc_id values and the old truncated form no longer exists
+    in knowledge_docs. tools/eval/queries.json -- 9 expected_doc_ids entries across
+    8 query objects corrected to the new scheme. tests/tools/test_eval_search.py --
+    4 entries removed from _KNOWN_STALE_DOC_IDS (module-level set, deviation recorded
+    in plan.md's Deviations section).
+  proof_type: regression
+  test_path: tests/tools/test_knowledge_search.py::TestDocsChunkExtraction::test_collect_docs_chunks_preserves_full_nested_path,tests/tools/test_knowledge_search.py::TestDocsChunkExtraction::test_collect_docs_chunks_no_collision_same_stem_different_subdir,tests/tools/test_knowledge_search.py::TestDocsChunkExtraction::test_collect_docs_chunks_single_level_path_unchanged,tests/tools/test_knowledge_search.py::TestDocsChunkExtraction::test_chunk_id_anchor_suffix_unaffected_by_nesting_fix,tests/tools/test_knowledge_search.py::TestManifestHelpers::test_build_incremental_noop_leaves_stale_doc_id_documented,tests/tools/test_eval_search.py::TestQueriesFixtureIntegrity::test_expected_doc_ids_match_current_scheme
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/retrieval tooling only -- no simulation behavior,
+    Mechanics Bible chapter, or engine contract governs doc_id semantics (same category
+    as INFRA-294 through INFRA-339). No `src/` file touched. This entry documents
+    the doc_id derivation fix as verified and tested; it does NOT claim tools/eval_search.py''s
+    Recall@5/Recall@10/MRR@10 thresholds pass -- both before and after this fix they
+    remain below the pre-existing 0.80 pass threshold, a known, separately-tracked,
+    out-of-scope condition (see ticket AC #5, left honestly unchecked rather than
+    marked satisfied).'

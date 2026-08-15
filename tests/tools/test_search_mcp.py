@@ -64,6 +64,18 @@ class TestMcpJson:
         assert entry["args"][0].endswith("search_mcp.py")
 
 
+# ── Title derivation — nesting-agnosticism guard ──────────────────────────────
+
+class TestDeriveTitle:
+    def test_agnostic_to_nesting_depth(self):
+        """_derive_title() splits on the LAST '/' only, so it produces the same title for a
+        doc_id regardless of how many nesting levels precede the stem — confirms it needs no
+        change for TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION's full-path doc_id fix."""
+        old_scheme = "engine/measurement_baseline_contract"
+        new_scheme = "engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract"
+        assert _mod._derive_title(old_scheme) == _mod._derive_title(new_scheme)
+
+
 # ── T-SEARCH-01: _run_search returns list with required keys ─────────────────
 
 class TestRunSearch:

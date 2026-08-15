@@ -1052,3 +1052,5 @@
 {"run_id":"TCK-20260815-KGMCP-P1-BASELINE-COMPARISON","workflow":"implement-ticket","tier":"standard","final_status":"IN_PROGRESS","agent_count":0,"start_ts":"2026-08-15T11:52:56Z","duration_s":null}
 {"run_id":"TCK-20260815-KGMCP-P1-BASELINE-COMPARISON","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"start_ts":"2026-08-15T11:52:56Z","end_ts":"2026-08-15T12:47:00Z","duration_s":3244}
 {"run_id":"EPIC-TCK-20260815-KNOWLEDGE-GATEWAY-MCP-PHASE1-EPIC","start_ts":"2026-08-15T08:38:34Z","end_ts":"2026-08-15T12:41:01Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":5,"duration_s":14547}
+{"run_id":"TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION","workflow":"implement-ticket","tier":"hotfix","final_status":"IN_PROGRESS","agent_count":0,"start_ts":"2026-08-15T13:23:27Z","duration_s":null}
+{"run_id":"TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":6,"start_ts":"2026-08-15T13:23:27Z","end_ts":"2026-08-15T14:36:00Z","duration_s":4353}

@@ -178,6 +178,15 @@ class TestDeriveTitle:
         import tools.search_server as srv
         assert srv._derive_title("engine/kernel") == "Kernel"
 
+    def test_agnostic_to_nesting_depth(self):
+        """_derive_title() splits on the LAST '/' only, so it produces the same title for a
+        doc_id regardless of how many nesting levels precede the stem — confirms it needs no
+        change for TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION's full-path doc_id fix."""
+        import tools.search_server as srv
+        old_scheme = "engine/measurement_baseline_contract"
+        new_scheme = "engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract"
+        assert srv._derive_title(old_scheme) == srv._derive_title(new_scheme)
+
 
 # ── Excerpt helper ────────────────────────────────────────────────────────────
 
