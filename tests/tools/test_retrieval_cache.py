@@ -311,3 +311,42 @@ class TestRetrievalVersionAndManifest:
     def test_corpus_generation_reads_built_at_from_manifest(self, tmp_path):
         _write_manifest(tmp_path, "2026-07-29T00:00:00Z")
         assert rc._corpus_generation() == "2026-07-29T00:00:00Z"
+
+
+# ---------------------------------------------------------------------------
+# Crash recovery — today's marker-only schema only
+# (TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY)
+# ---------------------------------------------------------------------------
+
+class TestCrashRecovery:
+    def test_deleted_cache_db_rebuilds_clean_marker_only_schema(self, tmp_path):
+        """This test verifies rebuild of the schema that exists today (three marker-only
+        tables: retrieval_index_cache_rows, retrieval_query_cache_rows,
+        retrieval_packet_cache_rows). It does not and cannot test payload-row recovery,
+        because no payload column exists yet (cache_migration_plan.md confirms Level 1/2
+        payload tables are unimplemented Phase 2/3 work). A future ticket that adds payload
+        tables must extend this test, not treat it as already covering that case.
+        """
+        rc.write_index_cache("hash-a", "emb-v1", "chunk-v1", source_id="doc-1")
+        rc.write_query_cache("some query", {"top_k": 5}, "gen-1", 1, score=0.9)
+        rc.write_packet_cache("packet-1", ["h1"], "gen-1", "policy-1")
+
+        rc.CACHE_DB_PATH.unlink()
+
+        result = rc.check_index_cache("hash-a", "emb-v1", "chunk-v1")
+        assert result.status == rc.MISS
+
+        conn = rc._get_connection()
+        try:
+            for table_name in rc._TABLE_NAME_BY_ALIAS.values():
+                count = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
+                assert count == 0
+        finally:
+            conn.close()
+
+        touched_outside_cache_dir = [
+            path
+            for path in tmp_path.rglob("*")
+            if path.is_file() and path != rc.CACHE_DB_PATH
+        ]
+        assert touched_outside_cache_dir == []
