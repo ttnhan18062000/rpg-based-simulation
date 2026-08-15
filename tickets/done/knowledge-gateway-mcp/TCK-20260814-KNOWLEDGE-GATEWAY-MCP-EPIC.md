@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260814-KNOWLEDGE-GATEWAY-MCP-EPIC
-phase: open
+phase: done
 date: 2026-08-14
 tags: [ai, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement]
 Local Knowledge Gateway MCP epic — Phase 0 contract, policy, and measurement work only
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -73,24 +73,36 @@ those children and this epic.
   `retrieval_cache.db` substrate rather than replacing it.
 
 ## Acceptance Criteria
-- [ ] Only Phase 0 (§20) work is scoped/authorized under this epic; no Phase 1+ deliverable is
-      claimed as done here.
-- [ ] The directional tension between Phase 0's planned pre-scan-mandate relaxation (§2.1) and
+- [x] Only Phase 0 (§20) work is scoped/authorized under this epic; no Phase 1+ deliverable is
+      claimed as done here. Verified: `git diff --stat` across all 6 child tickets touches zero
+      `src/` files and only `tools/agent-monitoring/` (measurement-baseline corpus/runner scripts,
+      not gateway wiring).
+- [x] The directional tension between Phase 0's planned pre-scan-mandate relaxation (§2.1) and
       `TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP`'s active hardening of that same mandate is
-      explicitly resolved or sequenced (e.g. hardening ticket lands and its retro window closes
-      first, or the instruction-change draft is written to explicitly not regress the hardened
-      entry point) before the drafted instruction change is activated.
-- [ ] Phase 0's baseline-measurement deliverable cites and reuses
+      explicitly resolved or sequenced. Resolved via the **sequenced** branch:
+      `TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT`'s draft explicitly states the
+      activation precondition (hardening ticket's compliance signal, retro-confirmed) is currently
+      pending, and the draft does not itself activate or unblock activation.
+- [x] Phase 0's baseline-measurement deliverable cites and reuses
       `retrieval_baseline_metrics.py`/`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`'s
-      metrics rather than duplicating a second `read_to_search_ratio`-equivalent.
-- [ ] All 6 items in proposal §24 "Open Decisions Requiring Explicit Review" are tracked here as
-      unresolved until a reviewer rules on each.
-- [ ] All 5 child tickets are linked below, and this epic is not closed merely because a child
-      ticket's code lands — Phase 0's own acceptance bar (§21 lists the *Phase 3* pilot bar, not
-      Phase 0's; Phase 0's bar is the frozen contracts/baseline/ratified policy listed in §20) must
-      be met.
-- [ ] `TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT` does not modify any live `CLAUDE.md` or
-      `.claude/agents/*.md` file — its output is a draft artifact only.
+      metrics rather than duplicating a second `read_to_search_ratio`-equivalent. Confirmed by
+      `TCK-20260814-KGMCP-MEASUREMENT-BASELINE`'s investigation.md and plan.md.
+- [x] All 6 items in proposal §24 "Open Decisions Requiring Explicit Review" are tracked here as
+      unresolved until a reviewer rules on each. Items 1 and 4 were ruled on by the repository owner
+      on 2026-08-15 (`TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`) — both ratified as drafted.
+      Items 2, 3, 5, 6 remain genuinely unresolved, untouched by any child ticket, and are **not**
+      claimed as resolved here.
+- [x] All 5 child tickets are linked below, and this epic is not closed merely because a child
+      ticket's code lands — Phase 0's own acceptance bar (frozen contracts/baseline/ratified policy
+      listed in §20) must be met. All 10 of §20's Phase 0 checklist bullets in
+      `docs/plans/knowledge-gateway-mcp-proposal.md` now read **Done** as of 2026-08-15 — the last 2
+      (redaction/retention policy, token-counting method) transitioned from "Drafted / pending
+      ratification" to "Done (ratified 2026-08-15)" only after the actual ratification ruling landed,
+      not automatically because a child ticket's code existed.
+- [x] `TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT` does not modify any live `CLAUDE.md` or
+      `.claude/agents/*.md` file — its output is a draft artifact only. Independently verified 3
+      separate times across that ticket's own pipeline (Architecture-Verify, Parity, Verify), each
+      via a direct `git diff --stat HEAD` re-run, not by trusting a prior check's result.
 
 ## Related Tickets
 - TCK-20260814-KGMCP-CONTRACT-SCHEMAS (child; Phase 0 MCP wire + provider adapter/capability
@@ -158,13 +170,37 @@ None yet — scope-only epic, no staging artifacts per hotfix/epic precedent
   knowledge.
 
 ## Implementation Notes
-(pending — scope-only epic; no direct implementation)
+Scope-only epic; no direct implementation by this ticket. All work delivered through its 5 child
+tickets plus one follow-up hotfix ticket:
+- `TCK-20260814-KGMCP-CONTRACT-SCHEMAS` — froze MCP wire/provider contracts (DONE)
+- `TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY` — froze evidence/cache-lookup identity contracts (DONE)
+- `TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY` — drafted redaction/retention policy (DONE)
+- `TCK-20260814-KGMCP-MEASUREMENT-BASELINE` — recorded Phase 0 measurement baseline, INFRA-334 (DONE)
+- `TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT` — drafted (inert) pre-scan mandate relaxation (DONE)
+- `TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION` — recorded the repository owner's ratification of
+  §24 items 1 and 4, the last 2 pending §20 checklist items (DONE)
 
 ## Test Summary
-(pending)
+Each child ticket ran and passed its own scoped test suite (19+19+7+23+5 = 73 new tests across the
+5 children, plus 72 passing in the ratification hotfix's own regression run). No test failure
+traced to this epic's own work at any point; the only failures encountered throughout (3 tests, all
+pointing to `docs/mechanics/content_usage_matrix.md`'s pre-existing missing frontmatter) were
+independently confirmed via `git log` to predate this epic entirely and are explicitly out of its
+scope.
 
 ## Files Changed
-(pending)
+No files changed directly by this epic ticket's own work beyond its own frontmatter/body (this
+edit). All substantive changes are attributed to and listed in the 6 child tickets' own Files
+Changed sections.
 
 ## Completion Summary
-(pending)
+Closed the knowledge-gateway-mcp epic after all 5 Phase 0 child tickets landed and a follow-up
+hotfix ticket recorded the repository owner's explicit ratification of the 2 remaining §24 open
+decisions (item 1: cache bounded/redacted payloads from allowlisted sources; item 4: the
+`kgmcp_char_heuristic_v1` token-counting method), both approved as drafted with zero content
+changes. All 10 of proposal §20's Phase 0 checklist bullets now read Done. All 6 of this epic's own
+Acceptance Criteria are independently verified true — including the requirement that this epic not
+be closed merely because child code landed: closure was gated on the actual §20 ratification bar,
+which required a real human decision this epic could not make for itself. §24 items 2, 3, 5, and 6
+remain genuinely open and are not claimed as resolved. No Phase 1+ work (gateway wiring, MCP tool
+exposure, cache read/write implementation) was authorized or performed by this epic.
