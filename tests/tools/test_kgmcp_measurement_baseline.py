@@ -34,7 +34,7 @@ _FIXTURE_PATH = (
 )
 _INVESTIGATION_MD = (
     _REPO_ROOT
-    / "staging_artifacts"
+    / "stored_artifacts"
     / "TCK-20260814-KGMCP-MEASUREMENT-BASELINE"
     / "investigation.md"
 )

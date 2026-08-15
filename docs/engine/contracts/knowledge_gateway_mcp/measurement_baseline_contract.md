@@ -283,7 +283,7 @@ not corpus queries). This section's field names (`intent`, `entity_id`, `normali
   referenced by citation only, never redefined here.
 - `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §6/§8 — the 4
   already-distinct version axes §3 cites, and the `kgmcp_char_heuristic_v1` formula §4.2 uses;
-  drafted, not ratified.
+  ratified 2026-08-15 (`TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`).
 - `docs/plans/knowledge-gateway-mcp-proposal.md` §8, §18, §18.1, §20, §21, §22 — the proposal
   sections this document implements.
 

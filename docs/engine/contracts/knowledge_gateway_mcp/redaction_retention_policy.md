@@ -180,6 +180,11 @@ schema currently freezes its value set as an enum.
 consistent with this ticket's Out of Scope excluding cache read/write implementation. A future
 ticket implements `kgmcp_char_heuristic_v1` as a callable function.
 
+**Ratification (§24 item 4):** approved as drafted by the repository owner on 2026-08-15, recorded
+in `TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`. `kgmcp_char_heuristic_v1` and its ±20%
+tolerance are approved; no changes were made to the method described above as a result of
+ratification.
+
 ## 9. SQLite Operational Limits
 
 These are **documented defaults; they are not implemented in `tools/retrieval_cache.py` by this
@@ -244,15 +249,20 @@ row's eviction never deletes or alters the underlying project truth it reference
 
 ## 11. Ratification Status
 
-**This policy artifact is drafted, not ratified.** Phase 2 payload caching may not begin until a
-reviewer explicitly ratifies or rejects §24 item 1 of
+**Ratified as drafted.** The repository owner, acting as reviewer, ratified §24 item 1 of
 `docs/plans/knowledge-gateway-mcp-proposal.md` (caching bounded/redacted answer/context payloads
-from allowlisted source types at all). This ticket produces the artifact reviewers decide on; it
-does not itself decide or imply approval.
+from allowlisted source types) on 2026-08-15, recorded in
+`TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`. No changes were made to §2–§10's rules as a result
+of ratification — the allowlist, redaction rules, size cap, secret-scan baseline, never-cache
+enumeration, token-counting method, SQLite limits, and cache-GC defaults are approved exactly as
+drafted.
 
-Nothing in this document — including the specific numeric defaults in §5/§9/§8, or the concrete
-regex patterns in §4 — should be read as pre-authorizing implementation. Each is a proposed default
-for a reviewer to ratify, adjust, or reject alongside the §24 item 1 decision itself.
+Ratification authorizes a future ticket to begin implementing Phase 2 payload caching against this
+policy. It does not itself implement anything — no `src/`/`tools/` code changes accompany this
+ratification. The secret-scan ruleset in §4 remains explicitly flagged as a non-production-complete
+starting baseline that must still be reviewed and expanded by a dedicated security-focused pass
+before Phase 2 payload caching goes live; ratifying the policy's overall shape does not waive that
+follow-up requirement.
 
 ## 12. Cross-References
 

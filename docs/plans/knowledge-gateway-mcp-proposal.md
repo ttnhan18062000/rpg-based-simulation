@@ -1098,22 +1098,26 @@ If migration is unsafe, deleting and rebuilding the cache must remain a valid re
 - Define repository, branch, and working-tree cache identity. **Done**
   (`TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY`) — see
   `docs/engine/contracts/knowledge_gateway_mcp/evidence_cache_identity_contract.md` §5.
-- Ratify the cached-payload redaction and retention policy. **Drafted / pending ratification**
-  (`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`) — see
+- Ratify the cached-payload redaction and retention policy. **Done (ratified 2026-08-15)**
+  (`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`, ratified by
+  `TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`) — see
   `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §11 (Ratification
-  Status): the artifact is drafted, not ratified; §24 item 1 remains an open reviewer decision this
-  ticket does not self-resolve.
+  Status): §24 item 1 approved as drafted; no changes to the policy's rules. Phase 2 payload-caching
+  implementation is still a separate, un-started future ticket.
 - Define migrations that evolve the existing `retrieval_cache.db` rather than creating a parallel
   store. **Done** (`TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY`) — design-only migration plan at
   `docs/engine/contracts/knowledge_gateway_mcp/cache_migration_plan.md` (scoped
   `retrieval_cache_schema_version` constant, ordered `migration_00N_*` function list, same-file
   in-place evolution; zero edits to `tools/retrieval_cache.py`).
 - Define a reproducible token-counting method, budget tolerance, SQLite operating limits, and
-  cache-GC defaults. **Drafted / pending ratification**
-  (`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`) — see
+  cache-GC defaults. **Done (ratified 2026-08-15)**
+  (`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`, ratified by
+  `TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`) — see
   `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §8 (token-counting
-  method, `kgmcp_char_heuristic_v1`), §9 (SQLite operational limits), §10 (cache-GC defaults); none
-  of these defaults are implemented in `tools/retrieval_cache.py` yet.
+  method, `kgmcp_char_heuristic_v1`, §24 item 4 approved as drafted), §9 (SQLite operational
+  limits), §10 (cache-GC defaults) — §9/§10 were documented defaults not gated on a formal §24 item,
+  ratified alongside §8 for consistency. None of these defaults are implemented in
+  `tools/retrieval_cache.py` yet — that remains a separate, un-started future ticket.
 - Draft the generated-agent-instruction change replacing the blanket pre-scan mandate with the
   cheapest-reliable-source and ambient-utility rule; do not activate it before review.
   **Done (drafted; not activated)** (`TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT`) — see
@@ -1247,11 +1251,14 @@ This is a negative-knowledge query. A missing search result is not sufficient ev
 
 Before implementation, reviewers should decide:
 
-1. Ratify or reject the proposal's recommendation to cache bounded, redacted answer/context
-   payloads from allowlisted source types.
+1. **Ratified 2026-08-15** (`TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`) — approved as drafted:
+   cache bounded, redacted answer/context payloads from allowlisted source types, per
+   `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md`.
 2. Select the canonical repository and branch identity format.
 3. Select the Graphify relation types eligible for deterministic answers.
-4. Approve the packet token-counting method, budget classes, and tolerance produced in Phase 0.
+4. **Ratified 2026-08-15** (`TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`) — approved as drafted:
+   the `kgmcp_char_heuristic_v1` packet token-counting method (±20% tolerance), per
+   `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §8.
 5. Classify the specialized `data/lab_knowledge` store and decide whether it is eligible for a
    future read adapter.
 6. Select the authoritative committed location for any future human-approved reusable knowledge.

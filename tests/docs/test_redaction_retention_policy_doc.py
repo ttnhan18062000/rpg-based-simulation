@@ -135,11 +135,18 @@ def test_gc_policy_never_authorizes_evicting_evidence_the_identity_contract_prot
 
 
 # ---------------------------------------------------------------------------
-# Step 6 — AC7: ratification-pending flag
+# Step 6 — AC7: ratification status is recorded accurately
+#
+# Originally asserted the pre-ratification "drafted, not ratified" state (AC7 as scoped by
+# TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY). The repository owner ratified §24 item 1 on
+# 2026-08-15 (TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION), so the doc's own §11 changed to
+# reflect that — this test now asserts the ratified state instead, since the property under test
+# ("the doc's ratification section accurately reflects the real, current ratification status") is
+# unchanged; only the real status itself changed.
 # ---------------------------------------------------------------------------
 
-def test_policy_doc_explicitly_flags_ratification_pending():
+def test_policy_doc_explicitly_flags_ratification_status():
     text = _read_doc()
-    assert "drafted, not ratified" in text
-    assert "may not begin until" in text
-    assert "does not itself decide or imply approval" in text
+    assert "Ratified as drafted" in text
+    assert "TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION" in text
+    assert "No changes were made to §2" in text
