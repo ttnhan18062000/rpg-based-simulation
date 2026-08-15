@@ -58,6 +58,21 @@ limits inline via a `derivation`/`disclosure`/`reason` field — never a silent 
 `docs/parity_ledger/infrastructure.yaml`'s `INFRA-292` entry for exact source line-range
 provenance of each section.
 
+## Knowledge Gateway MCP Phase 0 Measurement Baseline (one-time, separate from both cadences)
+
+`tools/agent-monitoring/kgmcp_baseline_corpus.py` defines a fixed, versioned 7-entry
+representative-query corpus for the Knowledge Gateway MCP proposal's Phase 0 measurement baseline
+(`docs/plans/knowledge-gateway-mcp-proposal.md` §18/§20). The real, recorded-from-a-real-run
+direct-tool baseline (Context Search + Graphify latency, tool-call counts, sources recalled,
+serialized-token estimate per query) is committed at
+`tests/tools/fixtures/kgmcp_measurement_baseline_corpus_results.json`, produced once by
+`tools/agent-monitoring/kgmcp_baseline_runner.py`. This is a **one-time Phase-0 recording**,
+distinct from both `retrieval_baseline_metrics.py`'s periodic snapshot and `generate_retro.py`'s
+recurring weekly cadence above — it must never be described as feeding either of those. See
+`docs/engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract.md` for the 5 latency
+measurement-point definitions, the fixture-derived promotion thresholds, and the repeated-demand
+estimation design.
+
 **2026-08-14 — `search_count`/`raw_investigation_count` now also feed the recurring cadence**
 (`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`). `SEARCH_TOOL_NAMES`,
 `build_search_count_section`, and `build_raw_investigation_count_section` were relocated into

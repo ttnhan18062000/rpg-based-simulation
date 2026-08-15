@@ -8595,3 +8595,48 @@
     retro cadence; this entry follows the newer, actually-followed TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING
     / INFRA-332 precedent of ledgering this class of change once it is wired in, per
     plan.md Step 7.'
+- id: INFRA-334
+  text: 'Knowledge Gateway MCP Phase 0 measurement baseline -- TCK-20260814-KGMCP-MEASUREMENT-BASELINE.
+    Unlike its two pure-doc KGMCP siblings (KGMCP-CONTRACT-SCHEMAS, KGMCP-EVIDENCE-CACHE-IDENTITY,
+    neither ledgered), this ticket adds real, testable Python code under tools/agent-monitoring/:
+    a fixed 7-entry representative-query corpus module and a one-time corpus-runner
+    script that makes real tools/search_mcp.py::_run_search() calls and real "graphify
+    query" subprocess calls, timed with time.perf_counter() mirroring tools/retrieval_events.py:175-177
+    exact pattern, and writes a committed fixture. Follows the INFRA-281 through INFRA-333
+    agent-tooling-infrastructure precedent for ledgering this class of change (INFRA-292
+    own text).'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/agent-monitoring/kgmcp_baseline_corpus.py:21 (CORPUS_VERSION
+    = 1), :23-33 (ROUTING_SHAPES, 7 canonical routing-shape IDs matching proposal
+    Sec.8 table), :35-43 (USE_CASES, 5 canonical use-case IDs matching proposal Sec.22),
+    :45-91 (CORPUS, 7 entries, one per routing shape, 5 double-tagged with a use case),
+    :93-103 (kgmcp_char_heuristic_v1_token_count(), implementing the formula frozen
+    at redaction_retention_policy.md:147-149 as a callable for the first time). tools/agent-monitoring/kgmcp_baseline_runner.py:68-90
+    (_run_context_search, calls _run_search() directly, never through wrap_hybrid_retrieval/wrap_retrieval_cache_check,
+    timed via time.perf_counter()), :92-115 (_run_graphify, subprocess.run of the
+    graphify CLI, timed the same way), :117-169 (run_corpus(), assembles the 7-entry
+    report including the honest Q3_requirement_completeness Parity-Ledger-not-yet-callable
+    disclosure), :171-179 (main(), writes the committed fixture tests/tools/fixtures/kgmcp_measurement_baseline_corpus_results.json).
+    tests/tools/test_kgmcp_measurement_baseline.py -- 23 tests covering all 7 routing
+    shapes (test_representative_query_corpus_covers_all_7_routing_shapes:84), all
+    5 use cases (test_representative_query_corpus_covers_all_5_use_cases:91), real-measured-never-estimated
+    fixture fields (test_corpus_baseline_entries_have_real_measured_fields_never_estimated:117),
+    one bounded live smoke-check with an explicit signal.alarm timeout (test_corpus_baseline_wall_time_and_tool_call_count_are_plausible:164),
+    zero mutation of the real agent-monitoring/ corpus via run_corpus() in-process
+    (test_zero_mutation_of_real_agent_monitoring_corpus:192), and the 5-latency-point/threshold/
+    repeated-demand contract-doc structural assertions (test_measurement_baseline_contract_defines_all_5_latency_points:222,
+    test_predeclared_thresholds_cite_recorded_baseline_numbers:249, test_repeated_demand_design_never_stores_raw_prompt_text:273).
+    docs/engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract.md Sec.1-7
+    (corpus summary, 5 latency measurement points citing tools/retrieval_events.py
+    Wrapper functions, predeclared thresholds as formulas over the committed fixture,
+    Sec.18.1 repeated-demand design using only deterministic intent/entity_id/normalized_filters/query_hash).
+  proof_type: regression
+  test_path: tests/tools/test_kgmcp_measurement_baseline.py
+  divergence_note: null
+  support_boundary: Agent-orchestration/measurement tooling only -- no simulation
+    behavior involved, no src/ file touched. No live Knowledge Gateway MCP gateway
+    code added or wired anywhere (tools/search_mcp.py, tools/retrieval_cache.py, tools/hybrid_retrieval.py,
+    tools/context_packet_assembler.py, tools/retrieval_events.py read/imported/subprocessed
+    by the new runner script, never edited -- ticket Out of Scope, explicit).
