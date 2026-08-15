@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "provider_id": "graphify",
+  "adapter_version": "graphify-cli-0.8.39",
+  "stable_entity_ids": "PARTIAL",
+  "evidence_granularities": ["node", "edge"],
+  "fine_grained_fingerprints": false,
+  "incremental_refresh": false,
+  "deterministic_relationships": "PARTIAL",
+  "historical_queries": false,
+  "negative_knowledge_support": "NONE",
+  "cancellation": false,
+  "timeout": false,
+  "branch_awareness": "NONE",
+  "generation_fingerprint": true
+}

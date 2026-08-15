@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Knowledge Gateway MCP — Shared Enums",
+  "description": "Phase 0 contract-only. status/freshness/verification are three separate, non-collapsible dimensions per docs/plans/knowledge-gateway-mcp-proposal.md §12/§13 — never merge them into one confidence-style field. statement_classification is the §13 FACT/INFERENCE/DECISION vocabulary. All four enums are a new, separate vocabulary — disjoint from tools/validate_frontmatter.py's STATUS_VALUES/AUTHORITY_VALUES and docs/parity_ledger/schema.json's status/priority enums.",
+  "schema_version": 1,
+  "definitions": {
+    "status": {
+      "type": "string",
+      "enum": ["OK", "PARTIAL", "CONFLICTED", "UNVERIFIED", "ERROR"]
+    },
+    "freshness": {
+      "type": "string",
+      "enum": ["FRESH", "NEEDS_REVALIDATION", "STALE", "UNKNOWN"]
+    },
+    "verification": {
+      "type": "string",
+      "enum": ["VERIFIED", "SUPPORTED", "INFERRED", "UNVERIFIED"]
+    },
+    "statement_classification": {
+      "type": "string",
+      "enum": ["FACT", "INFERENCE", "DECISION"]
+    }
+  }
+}

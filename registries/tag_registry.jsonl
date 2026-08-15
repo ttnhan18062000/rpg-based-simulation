@@ -58,3 +58,4 @@
 {"added_date": "2026-07-31", "category": "subsystem-topic", "note": "core subsystem word, previously only in registry_query.py's hardcoded SEED_TAGS", "tag": "engine"}
 {"added_date": "2026-07-31", "category": "subsystem-topic", "note": "core subsystem word, previously only in registry_query.py's hardcoded SEED_TAGS", "tag": "strategy"}
 {"added_date": "2026-08-05", "category": "subsystem-topic", "note": "core subsystem word: XP/attribute progression, src/progression/, src/entities/, docs/mechanics/01_entity_anatomy.md + attribute_progression_contract.md \u2014 genuinely missing, previously no registered tag covered this domain", "tag": "progression"}
+{"added_date": "2026-08-14", "category": "subsystem-topic", "note": "Model Context Protocol / Knowledge Gateway MCP tooling \u2014 first used by TCK-20260814-KGMCP-CONTRACT-SCHEMAS staging artifacts", "tag": "mcp"}
