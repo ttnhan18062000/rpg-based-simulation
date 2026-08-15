@@ -335,16 +335,19 @@ def test_gateway_enums_are_disjoint_from_frontmatter_and_parity_enums():
 # Test 12 — no live tool/routing code was introduced
 # ---------------------------------------------------------------------------
 
-def test_no_live_gateway_tool_code_or_mcp_registration_introduced():
+def test_phase_1_gateway_tool_code_and_mcp_registration_now_exist():
+    """Phase 0's "no live gateway code yet" guarantee correctly expires once Phase 1 lands it
+    (TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE) — this test's predecessor,
+    `test_no_live_gateway_tool_code_or_mcp_registration_introduced`, asserted the inverse of what
+    is now true and has been updated in the same change rather than left broken."""
     mcp_config = json.loads((_REPO_ROOT / ".mcp.json").read_text())
-    assert set(mcp_config["mcpServers"].keys()) == {"knowledge-search", "github"}, (
-        "no new mcpServers entry may be added by a Phase-0 contract-only ticket"
+    assert set(mcp_config["mcpServers"].keys()) == {"knowledge-search", "github", "knowledge-gateway"}, (
+        "Phase 1 must register exactly one new mcpServers entry: knowledge-gateway"
     )
 
-    forbidden_names = {"knowledge_context", "knowledge_status"}
-    for py_file in (_REPO_ROOT / "tools").glob("*.py"):
-        text = py_file.read_text()
-        for name in forbidden_names:
-            assert f"def {name}(" not in text, (
-                f"{py_file}: found a live '{name}' tool implementation — Phase 0 is contract-only"
-            )
+    live_tool_names = {"knowledge_context", "knowledge_status"}
+    gateway_module_text = (_REPO_ROOT / "tools" / "knowledge_gateway_mcp.py").read_text()
+    for name in live_tool_names:
+        assert f"def {name}(" in gateway_module_text, (
+            f"tools/knowledge_gateway_mcp.py: expected a live '{name}' tool implementation"
+        )

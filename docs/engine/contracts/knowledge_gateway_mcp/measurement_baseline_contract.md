@@ -68,6 +68,13 @@ the `check_*_cache()` functions perform internally. Once a real, disjoint eviden
 exists (§2.2 below), lookup latency must be re-measured as lookup-only — this wrapper's current
 number must never be reused verbatim as a lookup-only figure.
 
+**Reconfirmed 2026-08-15 (`TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE`):** now that a real Phase 1
+gateway (`tools/knowledge_gateway_mcp.py`) exists, this framing was explicitly re-examined against
+it and remains accurate — `wrap_retrieval_cache_check()` is still not invoked by any live call
+site. Phase 1's `knowledge_context` calls the router and packet assembler directly and unwrapped;
+no cache exists yet for it to check. See that ticket's Implementation Notes for the full
+function-by-function re-verification of all 3 Wrapper functions.
+
 ### 2.2 Evidence-validation latency
 
 **Meaning:** time to determine, for a candidate the lookup step already selected, whether it is
@@ -113,6 +120,16 @@ before the packet is returned.
 timing at `:324-326`) is implemented but not invoked by any live call site — it already times
 `assemble_context_packet()` end to end and is direct precedent for this measurement point's
 instrumentation shape.
+
+**Reconfirmed 2026-08-15 (`TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE`):** now that a real Phase 1
+gateway exists, this framing was explicitly re-examined against it and remains accurate —
+`wrap_context_packet_assembly()` wraps `tools/context_packet_assembler.py::assemble_context_packet()`,
+a structurally different, unrelated packet assembler from the one Phase 1's `knowledge_context`
+actually calls (`tools/knowledge_gateway_packet_assembly.py::assemble_packet()`). Phase 1 invokes
+the latter directly and unwrapped; `tools/retrieval_events.py` is not imported by
+`tools/knowledge_gateway_mcp.py` at all (verified zero-diff and zero-invocation by that ticket's
+own tests). See that ticket's Implementation Notes for the full function-by-function
+re-verification of all 3 Wrapper functions.
 
 ### 2.5 End-to-end latency
 

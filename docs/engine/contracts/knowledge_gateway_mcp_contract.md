@@ -18,6 +18,13 @@ interface-shape half: the MCP wire contract and the provider adapter contract. E
 cache-lookup identity, and redaction/retention policy are covered by sibling tickets
 (`KGMCP-EVIDENCE-CACHE-IDENTITY`, `KGMCP-REDACTION-RETENTION-POLICY`), not this document.
 
+**Phase 1 update (2026-08-15, `TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE`):** the "no code exists yet"
+framing above describes this document's own Phase 0 ticket and is now historical, not current — a
+real `knowledge_context`/`knowledge_status` MCP server (`tools/knowledge_gateway_mcp.py`) and
+router (`tools/knowledge_gateway_router.py`) now exist and were built and validated against this
+contract's frozen schemas without any schema change. No gateway cache exists yet (Phase 2), so the
+cache-related portions of this framing remain accurate today.
+
 ---
 
 ## 1. Provider adapter invocation contract
@@ -54,15 +61,20 @@ following twelve fields: `provider_id`, `adapter_version`, `stable_entity_ids`,
 `timeout`, `branch_awareness`, and the optional `generation_fingerprint`.
 
 **Routing consequence (§8.1).** A capability descriptor is not decorative metadata — it is the
-sole authority a future router may consult before treating a provider as able to do something. The
+sole authority the router may consult before treating a provider as able to do something. The
 router must never claim a capability the descriptor does not advertise: if `cancellation: false`,
 the router must not attempt to cancel a call to that provider; if `timeout: false`, the router must
 not assume a bounded-latency guarantee from that provider. The contract-level expression of this
 rule is a helper `capability_allows(descriptor: dict, capability_name: str) -> bool`, returning the
 boolean value of the named field. `tests/tools/test_knowledge_gateway_contract_schemas.py` defines
-this helper inline (test-only, not `tools/` code — no router exists yet to own it) and asserts it
-returns `False` for both populated descriptors' `cancellation` and `timeout` fields, matching §3's
-grounded values below.
+this helper inline (test-only, not `tools/` code). A real router now exists —
+`tools/knowledge_gateway_router.py::capability_allows()`, built by
+`TCK-20260815-KGMCP-P1-QUERY-ROUTER` — and owns the live decision logic; the test-local copy above
+was deliberately left in place unmodified as a cross-checked stub rather than retired
+(`tests/tools/test_knowledge_gateway_router.py::test_router_never_claims_unadvertised_capability`
+asserts the two agree on real fixtures). Both copies assert `capability_allows()` returns `False`
+for both populated descriptors' `cancellation` and `timeout` fields, matching §3's grounded values
+below.
 
 The two populated instances are:
 - `docs/engine/contracts/knowledge_gateway_mcp/provider_capabilities_context_search.json`

@@ -6,6 +6,12 @@
       "env": {},
       "description": "Local semantic search over project docs, tickets, and investigations"
     },
+    "knowledge-gateway": {
+      "command": "bash",
+      "args": ["tools/start_knowledge_gateway_mcp.sh"],
+      "env": {},
+      "description": "Knowledge Gateway MCP — routed, provenance-tracked context packets over Context Search and Graphify (Phase 1: read-only, uncached)"
+    },
     "github": {
       "command": "docker",
       "args": [

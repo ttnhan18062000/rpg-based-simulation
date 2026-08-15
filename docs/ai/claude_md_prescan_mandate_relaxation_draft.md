@@ -76,6 +76,14 @@ today; the gateway itself (`knowledge_context`/`knowledge_status` MCP tools) is 
 implemented in `tools/` — only Phase 0 (contract/schema/policy work) is complete for this epic as
 of this draft.
 
+**Update (2026-08-15, `TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE`):** the sentence above is now
+historical, not current — a real `knowledge_context`/`knowledge_status` FastMCP server
+(`tools/knowledge_gateway_mcp.py`, registered as the `knowledge-gateway` entry in `.mcp.json`) now
+exists as of Phase 1. This does not change this draft's Activation Precondition above, which is
+gated on the separate, unrelated `TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`
+retro-confirmation signal, not on gateway existence — the gateway now being real and callable does
+not itself satisfy that precondition or activate this draft's replacement instruction text.
+
 ## Non-Regression Cross-Reference
 
 A future activation ticket must check this replacement text against **all three** live
