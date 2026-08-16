@@ -194,19 +194,24 @@ def test_mcp_json_gains_exactly_one_new_server_entry():
 
 def test_search_mcp_py_provably_untouched():
     """`tools/knowledge_gateway_packet_assembly.py` was a frozen dependency only for this file's
-    own originating ticket (TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE) — it is dropped from this
+    own originating ticket (TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE) — it was dropped from this
     banned-path tuple by TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT, whose entire,
-    twice-Architecture-Review-approved scope is to make targeted edits to exactly that module
-    (dedup identity, conflict-vs-dedup guard, budget-truncation marker). The remaining three paths
-    stay genuinely frozen for every Knowledge Gateway MCP ticket, this one included (per its own
-    AC5/Out-of-Scope)."""
+    twice-Architecture-Review-approved scope was to make targeted edits to exactly that module
+    (dedup identity, conflict-vs-dedup guard, budget-truncation marker).
+
+    `tools/knowledge_gateway_router.py` is dropped from this tuple the same way by
+    TCK-20260816-KGMCP-P4-PARITY-ADAPTER, whose own twice-Architecture-Review-approved plan
+    requires adding `_run_parity_provider()`/`_load_parity_index_module()` to that module and
+    wiring `ROUTING_TABLE["requirement_completeness_verification"]` to a real `parity_ledger`
+    primary provider (closing Phase 1's deliberate `not_yet_routed="parity_ledger"` placeholder).
+    The remaining two paths stay genuinely frozen for every Knowledge Gateway MCP ticket, this one
+    included (per its own Out-of-Scope)."""
     result = subprocess.run(
         ["git", "diff", "--stat", "HEAD"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     for banned_path in (
         "tools/search_mcp.py",
-        "tools/knowledge_gateway_router.py",
         "tools/retrieval_events.py",
     ):
         assert banned_path not in result.stdout, (
@@ -335,6 +340,14 @@ def _patch_small_cacheable_search(monkeypatch, matched_identifier=None):
 
 
 def test_identical_repeated_knowledge_context_call_is_a_genuine_cache_hit(monkeypatch):
+    """TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING (test_plan.md's own flagged
+    re-verification note): Level 2 is now checked before Level 1, so an unmodified repeat call
+    would become a Level 2 hit instead, no longer exercising this test's own original Level 1
+    intent. Level 2's lookup is forced to always miss here so this test continues to demonstrate
+    Level 1's own unmodified hit behavior specifically — the dedicated Level 2 version lives in
+    test_identical_repeated_knowledge_context_call_is_a_genuine_level2_cache_hit."""
+    kgc_mod = _mod._load_cache_module()
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_lookup", lambda *a, **k: None)
     search_calls = _patch_small_cacheable_search(monkeypatch)
 
     response1 = _mod._run_knowledge_context("some cache query")
@@ -376,7 +389,13 @@ def test_cache_hit_rejected_when_corpus_generation_changes_and_no_finer_fingerpr
 # ---------------------------------------------------------------------------
 
 def test_cached_result_from_feature_branch_not_served_on_different_branch(monkeypatch):
+    """Level 2's lookup is forced to always miss (see
+    test_identical_repeated_knowledge_context_call_is_a_genuine_cache_hit's own note above) so
+    this test continues to demonstrate Level 1's own unmodified branch-scope behavior specifically
+    — the dedicated Level 2 version lives in
+    test_level2_cached_result_from_feature_branch_not_served_on_different_branch."""
     kgc_mod = _mod._load_cache_module()
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_lookup", lambda *a, **k: None)
     search_calls = _patch_small_cacheable_search(monkeypatch)
 
     monkeypatch.setattr(kgc_mod, "_current_repo_branch_scope", lambda: "repo::feature-x")
@@ -393,7 +412,12 @@ def test_cached_result_from_feature_branch_not_served_on_different_branch(monkey
 def test_new_commit_alone_does_not_force_cache_miss_when_evidence_unchanged(monkeypatch):
     """§5 rule 1 — this ticket's identity/validity computation never derives from HEAD commit SHA
     at all (only branch name, via _current_repo_branch_scope()), so a real hit persists across
-    repeated calls with no commit-tracking anywhere to force a miss."""
+    repeated calls with no commit-tracking anywhere to force a miss. Level 2's lookup is forced to
+    always miss so this test continues to demonstrate Level 1's own unmodified behavior
+    specifically (see test_identical_repeated_knowledge_context_call_is_a_genuine_cache_hit's own
+    note above)."""
+    kgc_mod = _mod._load_cache_module()
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_lookup", lambda *a, **k: None)
     search_calls = _patch_small_cacheable_search(monkeypatch)
 
     response1 = _mod._run_knowledge_context("commit-stable query")
@@ -409,6 +433,11 @@ def test_new_commit_alone_does_not_force_cache_miss_when_evidence_unchanged(monk
 # ---------------------------------------------------------------------------
 
 def test_cache_write_calls_evaluate_write_candidate_before_any_insert(monkeypatch):
+    """TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING (Risk 6, double-write on a genuine
+    full miss): evaluate_write_candidate is now called twice on a real full miss — once for the
+    Level 2 write (which runs first) and once for the Level 1 write immediately after — both
+    calls happen before Level 1's own real INSERT, so the original single-call assertion is
+    updated to [1, 1] rather than silently left asserting a now-false [1]."""
     from tools import retrieval_cache as rc
 
     kgc_mod = _mod._load_cache_module()
@@ -420,14 +449,14 @@ def test_cache_write_calls_evaluate_write_candidate_before_any_insert(monkeypatc
     def spy(*args, **kwargs):
         calls.append(1)
         assert rc.provider_result_cache_stats()["total_rows"] == 0, (
-            "evaluate_write_candidate must be called before any real INSERT"
+            "evaluate_write_candidate must be called before any real Level 1 INSERT"
         )
         return original(*args, **kwargs)
 
     monkeypatch.setattr(kgc_mod.rk, "evaluate_write_candidate", spy)
 
     _mod._run_knowledge_context("redaction-gated query")
-    assert calls == [1]
+    assert calls == [1, 1]
     assert rc.provider_result_cache_stats()["total_rows"] == 1
 
 
@@ -453,6 +482,15 @@ def test_cache_write_reject_verdict_results_in_zero_rows_written(monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_knowledge_status_reports_real_cache_entry_counts_and_rates_after_writes(monkeypatch):
+    """Level 2's lookup is forced to always miss so this test continues to demonstrate Level 1's
+    own unmodified cache_entry_counts/rate fields specifically (a real Level 2 hit on the second
+    call would otherwise mean Level 1's own hit-recording is never reached at all — see
+    test_identical_repeated_knowledge_context_call_is_a_genuine_cache_hit's own note above). The
+    dedicated Level 2/Level 1-distinct version lives in
+    test_knowledge_status_reports_real_level2_cache_entry_counts_and_rates_distinct_from_level1."""
+    kgc_mod = _mod._load_cache_module()
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_lookup", lambda *a, **k: None)
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_write", lambda *a, **k: None)
     search_calls = _patch_small_cacheable_search(monkeypatch)
 
     _mod._run_knowledge_context("status query")  # MISS + real write
@@ -536,3 +574,365 @@ def test_cache_layer_failure_is_fail_open_and_never_blocks_the_provider_path(mon
     assert response["status"] == "OK"
     assert response["cache"] == "MISS"
     _validate_response(response)
+
+
+# ---------------------------------------------------------------------------
+# 19+ — TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING: Level 2 (assembled-packet) cache
+# lookup/write wired in front of Level 1, checked first.
+# ---------------------------------------------------------------------------
+
+def test_level2_cache_layer_failure_is_fail_open_and_never_blocks_the_provider_path(monkeypatch):
+    kgc_mod = _mod._load_cache_module()
+    _patch_small_cacheable_search(monkeypatch)
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("simulated Level 2 cache-layer failure")
+
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_lookup", boom)
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_write", boom)
+
+    response = _mod._run_knowledge_context("level2 fail-open query")
+    assert response["status"] == "OK"
+    assert response["cache"] == "MISS"
+    _validate_response(response)
+
+
+# --- Cross-cutting: Risk 6 double-write *independence* — plan.md Step 5(b) explicitly keeps the
+# Level 2 and Level 1 cache-write hooks in their own separate try/except blocks "so a Level 2
+# write failure can never suppress the Level 1 write, and vice versa." The fail-open tests above
+# only prove the overall response still succeeds when *both* levels fail together; these two
+# prove each write is genuinely independent of the other's failure, not merely that the request
+# as a whole degrades gracefully. ---
+
+def test_level2_write_failure_does_not_prevent_or_corrupt_the_level1_write(monkeypatch):
+    """plan.md Step 5(b): the Level 2 write hook's own try/except must not suppress the Level 1
+    write hook immediately after it. Breaking only the Level 2 write must still leave exactly one
+    real Level 1 row written."""
+    from tools import retrieval_cache as rc
+
+    kgc_mod = _mod._load_cache_module()
+    _patch_small_cacheable_search(monkeypatch)
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("simulated Level 2 write failure")
+
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_write", boom)
+
+    response = _mod._run_knowledge_context("level2 write failure independence query")
+    assert response["status"] == "OK"
+    assert response["cache"] == "MISS"
+    _validate_response(response)
+    assert rc.context_packet_cache_stats()["total_rows"] == 0, (
+        "the simulated Level 2 write failure must mean no Level 2 row was written"
+    )
+    assert rc.provider_result_cache_stats()["total_rows"] == 1, (
+        "a Level 2 write failure must never prevent or corrupt the independent Level 1 write"
+    )
+
+
+def test_level1_write_failure_does_not_prevent_or_corrupt_the_level2_write(monkeypatch):
+    """The reverse of the test above: breaking only the Level 1 write (which runs second, after
+    the Level 2 write hook) must not retroactively corrupt or roll back the Level 2 row that was
+    already independently written first."""
+    from tools import retrieval_cache as rc
+
+    kgc_mod = _mod._load_cache_module()
+    _patch_small_cacheable_search(monkeypatch)
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("simulated Level 1 write failure")
+
+    monkeypatch.setattr(kgc_mod, "perform_cache_write", boom)
+
+    response = _mod._run_knowledge_context("level1 write failure independence query")
+    assert response["status"] == "OK"
+    assert response["cache"] == "MISS"
+    _validate_response(response)
+    assert rc.provider_result_cache_stats()["total_rows"] == 0, (
+        "the simulated Level 1 write failure must mean no Level 1 row was written"
+    )
+    assert rc.context_packet_cache_stats()["total_rows"] == 1, (
+        "a Level 1 write failure must never prevent or corrupt the independent Level 2 write "
+        "that already happened before it in the call sequence"
+    )
+
+
+# --- AC1: identical repeated call is a genuine Level 2 hit, never reaching packet assembly or
+# the Level 1 lookup at all ---
+
+def test_identical_repeated_knowledge_context_call_is_a_genuine_level2_cache_hit(monkeypatch):
+    kgc_mod = _mod._load_cache_module()
+    pa_mod = _mod._load_packet_assembly_module()
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    response1 = _mod._run_knowledge_context("level2 repeat query")
+    assert response1["cache"] == "MISS"
+    assert len(search_calls) == 1
+
+    assemble_calls = []
+    original_assemble = pa_mod.assemble_packet
+    monkeypatch.setattr(
+        pa_mod, "assemble_packet",
+        lambda *a, **k: assemble_calls.append(1) or original_assemble(*a, **k),
+    )
+    lookup_calls = []
+    original_lookup = kgc_mod.perform_cache_lookup
+    monkeypatch.setattr(
+        kgc_mod, "perform_cache_lookup",
+        lambda *a, **k: lookup_calls.append(1) or original_lookup(*a, **k),
+    )
+
+    response2 = _mod._run_knowledge_context("level2 repeat query")
+    assert response2["cache"] == "HIT_L2"
+    assert len(search_calls) == 1, "the second identical call must never reach _run_search() again"
+    assert assemble_calls == [], "a genuine Level 2 hit must never reach assemble_packet()"
+    assert lookup_calls == [], "a genuine Level 2 hit must never reach the Level 1 lookup at all"
+    assert response2["answer"] == response1["answer"]
+    _validate_response(response2)
+
+
+# --- AC2: a Level 2 miss correctly falls through to Level 1's existing, unmodified lookup ---
+
+def test_level2_miss_falls_through_to_unmodified_level1_lookup(monkeypatch):
+    kgc_mod = _mod._load_cache_module()
+    pa_mod = _mod._load_packet_assembly_module()
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    response1 = _mod._run_knowledge_context("level2 fallthrough query")
+    assert response1["cache"] == "MISS"
+    assert len(search_calls) == 1
+
+    # Forces a genuine Level 2 miss on the second call (never matches), leaving the real Level 1
+    # row (written by the first call above) as the only real hit candidate.
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_lookup", lambda *a, **k: None)
+
+    lookup_calls = []
+    original_lookup = kgc_mod.perform_cache_lookup
+    monkeypatch.setattr(
+        kgc_mod, "perform_cache_lookup",
+        lambda *a, **k: lookup_calls.append(1) or original_lookup(*a, **k),
+    )
+    assemble_calls = []
+    original_assemble = pa_mod.assemble_packet
+    monkeypatch.setattr(
+        pa_mod, "assemble_packet",
+        lambda *a, **k: assemble_calls.append(1) or original_assemble(*a, **k),
+    )
+
+    response2 = _mod._run_knowledge_context("level2 fallthrough query")
+    assert response2["cache"] == "HIT", "Level 1's own unmodified lookup must serve the hit"
+    assert lookup_calls == [1], "Level 1's perform_cache_lookup() must be consulted on a Level 2 miss"
+    assert assemble_calls == [], "a genuine Level 1 hit must never reach assemble_packet()"
+    assert len(search_calls) == 1
+
+
+# --- AC3: a Level 2 hit is rejected/refreshed when dependency-invalidation logic determines it
+# stale ---
+
+def test_level2_hit_rejected_on_changed_paths_intersection_triggers_real_refresh(monkeypatch):
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    response1 = _mod._run_knowledge_context("level2 changed paths query")
+    assert response1["cache"] == "MISS"
+    assert len(search_calls) == 1
+
+    response2 = _mod._run_knowledge_context(
+        "level2 changed paths query", changed_paths=["docs/foo.md"]
+    )
+    assert response2["cache"] == "MISS", (
+        "a changed_paths intersection with the packet's own evidence_dependencies must force a "
+        "genuine refresh, never a stale Level 2 hit"
+    )
+    assert len(search_calls) == 2
+
+
+def test_level2_hit_rejected_on_provider_generation_bump_real_call(monkeypatch):
+    from tools import retrieval_cache as rc
+
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    rc._MANIFEST_PATH.write_text(json.dumps({"version": 1, "built_at": "gen-1", "paths": {}}))
+    response1 = _mod._run_knowledge_context("level2 generation query")
+    assert response1["cache"] == "MISS"
+    assert len(search_calls) == 1
+
+    rc._MANIFEST_PATH.write_text(json.dumps({"version": 1, "built_at": "gen-2", "paths": {}}))
+    response2 = _mod._run_knowledge_context("level2 generation query")
+    assert response2["cache"] == "MISS", (
+        "a corpus_generation bump must force a genuine Level 2 refresh"
+    )
+    assert len(search_calls) == 2
+
+
+# --- AC4: Level 2 cache writes independently verified to go through redaction/secret-scan/
+# size-cap enforcement, no bypass path ---
+
+def test_level2_cache_write_calls_evaluate_write_candidate_before_any_insert(monkeypatch):
+    from tools import retrieval_cache as rc
+
+    kgc_mod = _mod._load_cache_module()
+    _patch_small_cacheable_search(monkeypatch)
+
+    calls = []
+    original = kgc_mod.rk.evaluate_write_candidate
+
+    def spy(*args, **kwargs):
+        calls.append(1)
+        if len(calls) == 1:
+            assert rc.context_packet_cache_stats()["total_rows"] == 0, (
+                "evaluate_write_candidate must be called before any real Level 2 INSERT"
+            )
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(kgc_mod.rk, "evaluate_write_candidate", spy)
+
+    _mod._run_knowledge_context("level2 redaction-gated query")
+    assert len(calls) == 2, (
+        "evaluate_write_candidate must be called once for the Level 2 write and once for the "
+        "Level 1 write"
+    )
+    assert rc.context_packet_cache_stats()["total_rows"] == 1
+
+
+def test_level2_write_reject_verdict_results_in_zero_rows_written(monkeypatch):
+    from tools import retrieval_cache as rc
+
+    kgc_mod = _mod._load_cache_module()
+    _patch_small_cacheable_search(monkeypatch)
+
+    reject_decision = kgc_mod.rk.WriteDecision(
+        verdict=kgc_mod.rk.REJECT, rejection_category="oversized_payload",
+        redacted_payload=None, redacted_hash=None, redaction_policy_version=1,
+    )
+    monkeypatch.setattr(kgc_mod.rk, "evaluate_write_candidate", lambda **kw: reject_decision)
+
+    response = _mod._run_knowledge_context("level2 rejected query")
+    assert response["cache"] == "MISS"
+    assert rc.context_packet_cache_stats()["total_rows"] == 0
+
+
+def test_level2_write_respects_max_payload_bytes_size_cap_with_real_measured_packet(monkeypatch):
+    from tools import knowledge_gateway_redaction as rk
+
+    kgc_mod = _mod._load_cache_module()
+    _patch_small_cacheable_search(monkeypatch)
+
+    measured_sizes = []
+    original_check = rk.check_size_cap
+
+    def spy(redacted_payload):
+        measured_sizes.append(len(redacted_payload.encode("utf-8")))
+        return original_check(redacted_payload)
+
+    monkeypatch.setattr(kgc_mod.rk, "check_size_cap", spy)
+
+    _mod._run_knowledge_context("level2 real size measurement query")
+
+    assert measured_sizes, "the size-cap check must have run for the real Level 2 write"
+    assert measured_sizes[0] <= rk.MAX_PAYLOAD_BYTES, (
+        f"real assembled Level 2 packet measured at {measured_sizes[0]} bytes must stay under "
+        f"MAX_PAYLOAD_BYTES ({rk.MAX_PAYLOAD_BYTES})"
+    )
+
+
+# --- AC5: branch/working-tree scope from the dependency ticket is genuinely enforced before a
+# Level 2 hit is served ---
+
+def test_level2_cached_result_from_feature_branch_not_served_on_different_branch(monkeypatch):
+    kgc_mod = _mod._load_cache_module()
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    monkeypatch.setattr(kgc_mod, "_current_branch", lambda: "feature-x")
+    response1 = _mod._run_knowledge_context("level2 branch query")
+    assert response1["cache"] == "MISS"
+    assert len(search_calls) == 1
+
+    monkeypatch.setattr(kgc_mod, "_current_branch", lambda: "main")
+
+    original_lookup = kgc_mod.perform_context_packet_cache_lookup
+    lookup_results = []
+
+    def spy(*args, **kwargs):
+        result = original_lookup(*args, **kwargs)
+        lookup_results.append(result)
+        return result
+
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_lookup", spy)
+
+    _mod._run_knowledge_context("level2 branch query")
+    assert lookup_results == [None], (
+        "the real Level 2 lookup orchestrator must reject a row written under a different branch, "
+        "never serve it as a genuine hit"
+    )
+
+
+# --- AC6: knowledge_status's Level 2 cache-domain fields are real and populated, distinct from
+# Level 1's ---
+
+def test_knowledge_status_reports_real_level2_cache_entry_counts_and_rates_distinct_from_level1(
+    monkeypatch,
+):
+    kgc_mod = _mod._load_cache_module()
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    _mod._run_knowledge_context("status level2 query")               # MISS -> writes L1 + L2
+    hit1 = _mod._run_knowledge_context("status level2 query")        # genuine L2 hit
+    hit2 = _mod._run_knowledge_context("status level2 query")        # genuine L2 hit again
+    assert hit1["cache"] == "HIT_L2"
+    assert hit2["cache"] == "HIT_L2"
+    assert len(search_calls) == 1
+
+    monkeypatch.setattr(kgc_mod, "perform_context_packet_cache_lookup", lambda *a, **k: None)
+    _mod._run_knowledge_context("status level1 only query")          # MISS -> writes L1 (+ L2 row)
+    hit3 = _mod._run_knowledge_context("status level1 only query")   # Level1-only hit (L2 forced miss)
+    assert hit3["cache"] == "HIT"
+    assert len(search_calls) == 2
+
+    status = _mod._run_knowledge_status()
+    _validate_status_response(status)
+
+    kinds = {entry["kind"]: entry["count"] for entry in status["cache_entry_counts"]}
+    assert kinds["provider_result"] == 2
+    assert kinds["context_packet"] == 2
+
+    assert status["cache_hit_rate"] == pytest.approx(1 / 3)
+    assert status["level2_cache_hit_rate"] == pytest.approx(2 / 4)
+    assert status["cache_hit_rate"] != status["level2_cache_hit_rate"], (
+        "Level 2's hit rate must be a real, independently-computed value, never an alias of "
+        "Level 1's own rate"
+    )
+    assert status["cache_hit_attribution"] == {"level1_hits": 1, "level2_hits": 2}
+
+
+def test_knowledge_status_level2_fields_omitted_when_level2_cache_has_zero_rows():
+    status = _mod._run_knowledge_status()
+    assert "level2_cache_hit_rate" not in status
+    assert "level2_cache_miss_rate" not in status
+    assert "cache_hit_attribution" not in status
+    assert "cache_entry_counts" not in status
+
+
+# `test_knowledge_gateway_router_py_provably_untouched` (AC7 of
+# TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING) was removed by
+# TCK-20260816-KGMCP-P4-PARITY-ADAPTER. History: that guard asserted
+# `tools/knowledge_gateway_router.py` stays byte-unchanged forever, for that ticket's own scope
+# boundary. TCK-20260816-KGMCP-P4-PARITY-ADAPTER's own twice-Architecture-Review-approved plan
+# requires editing exactly that file (`_run_parity_provider()`, `_load_parity_index_module()`,
+# `ROUTING_TABLE["requirement_completeness_verification"]`'s real `parity_ledger` primary
+# provider) — the same reasoning `test_search_mcp_py_provably_untouched` above already applies to
+# dropping this same path from its own banned-path tuple. No file remains that this specific,
+# single-purpose guard's reasoning still protects, so the test was deleted rather than left
+# vacuously/dangerously asserting an invariant this ticket's own approved scope deliberately
+# breaks. `tools/knowledge_gateway_router.py`'s real, still-relevant behavioral contracts remain
+# covered by its own full test suite (`tests/tools/test_knowledge_gateway_router.py`).
+
+
+# --- Cross-cutting: Risk 6 double-write question ---
+
+def test_level2_double_write_on_full_miss_writes_both_level1_and_level2_rows(monkeypatch):
+    from tools import retrieval_cache as rc
+
+    _patch_small_cacheable_search(monkeypatch)
+    _mod._run_knowledge_context("double write query")
+    assert rc.provider_result_cache_stats()["total_rows"] == 1
+    assert rc.context_packet_cache_stats()["total_rows"] == 1
