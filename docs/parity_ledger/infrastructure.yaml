@@ -6547,23 +6547,23 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'tools/retrieval_cache.py:53 (`CACHE_DB_PATH` -- isolated `knowledge-index/retrieval_cache.db`
-    file), :70-88 (`MAY_LIST_COLUMNS` -- the exact allowlist of columns the three
+  v2_evidence: 'tools/retrieval_cache.py:59 (`CACHE_DB_PATH` -- isolated `knowledge-index/retrieval_cache.db`
+    file), :76-95 (`MAY_LIST_COLUMNS` -- the exact allowlist of columns the three
     tables carry, including `created_at` on the same footing as `reason_code`/`cache_status`),
-    :108-151 (`_init_schema()` -- `CREATE TABLE IF NOT EXISTS` for `retrieval_index_cache_rows`
+    :147-191 (`_init_schema()` -- `CREATE TABLE IF NOT EXISTS` for `retrieval_index_cache_rows`
     / `retrieval_query_cache_rows` / `retrieval_packet_cache_rows`, each with a `created_at
-    REAL NOT NULL` column, never `DROP TABLE`), :155-169 (`_validate_may_list_kwargs()`
+    REAL NOT NULL` column, never `DROP TABLE`), :251-264 (`_validate_may_list_kwargs()`
     -- the single shared MAY-list enforcement point wrapping all three write paths,
-    raises `ValueError` on any prohibited field), :183-192 (`_corpus_generation()`
+    raises `ValueError` on any prohibited field), :279-287 (`_corpus_generation()`
     -- read-only `manifest.json` `built_at` proxy, `_NO_MANIFEST` sentinel on absence),
-    :204-259 (`check_index_cache()` / `write_index_cache()` -- AC1 hit/miss + same-hash
-    stale-row eviction on version change), :266-328 (`check_query_cache()` / `write_query_cache()`
+    :300-349 (`check_index_cache()` / `write_index_cache()` -- AC1 hit/miss + same-hash
+    stale-row eviction on version change), :362-418 (`check_query_cache()` / `write_query_cache()`
     -- AC2 hit/miss/stale-rejected with `corpus_generation_mismatch`/`retrieval_version_mismatch`
-    reason codes), :335-403 (`check_packet_cache()` / `write_packet_cache()` -- AC3
+    reason codes), :431-488 (`check_packet_cache()` / `write_packet_cache()` -- AC3
     hit/stale-rejected on `cited_hash_mismatch`/`corpus_generation_mismatch`/`policy_version_mismatch`,
-    raw fields only, no `ContextPacket` import), :406-433 (`prune()` -- manual, operator-invoked,
+    raw fields only, no `ContextPacket` import), :502-524 (`prune()` -- manual, operator-invoked,
     `created_at`-threshold deletion across the three tables; not called by any `check_*`/`write_*`
-    function above), :435-531 (CLI: `stats` / `check-index` / `check-query` / `check-packet`
+    function above), :531-627 (CLI: `stats` / `check-index` / `check-query` / `check-packet`
     / `prune` subcommands, mirroring `tools/hybrid_retrieval.py`''s and `tools/knowledge_search.py`''s
     existing CLI shape).
 
@@ -9020,3 +9020,340 @@
     remain below the pre-existing 0.80 pass threshold, a known, separately-tracked,
     out-of-scope condition (see ticket AC #5, left honestly unchecked rather than
     marked satisfied).'
+- id: INFRA-341
+  text: 'New Level 1 provider-result cache schema/migration in tools/retrieval_cache.py
+    -- TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS (1st child of TCK-20260815-KNOWLEDGE-GATEWAY-MCP-PHASE2-EPIC),
+    implementing docs/engine/contracts/knowledge_gateway_mcp/cache_migration_plan.md''s
+    frozen design (itself frozen by the DONE TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY)
+    as real code for the first time. Adds `retrieval_cache_schema_version: int = 1`,
+    a new module constant distinct from and never aliased to `RETRIEVAL_VERSION` (cache-key-derivation
+    logic, unchanged) or `tools/retrieval_events.py`''s `retrieval_event_schema_version`
+    (event-field-shape versioning, unchanged) -- the third of the 4 genuinely distinct
+    version axes docs/observability/redaction_retention_policy.md Sec.6 names. Adds
+    the `LEVEL1_CACHE_COLUMNS: frozenset[str]` allowlist constant (21 columns), mapping
+    docs/plans/knowledge-gateway-mcp-proposal.md Sec.10.2''s Level 1 provider-result-cache
+    row shape 1:1 onto column names: contract-literal names reused verbatim from docs/engine/contracts/knowledge_gateway_mcp/evidence_cache_identity_contract.md
+    Sec.1 (lookup identity: normalized_intent, resolved_entity_ids, filters, budget_class,
+    routing_policy_version, repo_branch_scope) and Sec.2 (validity identity: evidence_fingerprints,
+    validated_negative_scopes, adapter_version_at_validation, working_tree_overlap,
+    provider_generation_at_validation) for every Sec.10.2 concept that has a contract-literal
+    counterpart, plus 10 plan-invented columns for the concepts that do not (query_hash,
+    provider_name, adapter_version, result_payload, source_ids, source_paths, provider_generation,
+    created_at, last_hit_at, hit_count) -- including a deliberately distinct write-time-provenance
+    adapter_version/provider_generation pair, kept separate from the contract''s check-time
+    adapter_version_at_validation/provider_generation_at_validation pair per the contract''s
+    own Sec.3 Non-collapse rule. Adds the standalone `migration_001_add_level1_tables(conn)`
+    function: two `CREATE TABLE IF NOT EXISTS` statements (new `retrieval_provider_result_cache_rows`
+    table with exactly the LEVEL1_CACHE_COLUMNS column set, PRIMARY KEY (query_hash,
+    repo_branch_scope); new single-row `retrieval_cache_generation` metadata table)
+    followed by a DELETE+INSERT pair that keeps exactly one generation row per successful
+    migration, then one conn.commit() -- no PRAGMA, busy_timeout, chmod, or import
+    os anywhere. Additive-only: the three pre-existing marker-only tables (retrieval_index_cache_rows/retrieval_query_cache_rows/retrieval_packet_cache_rows)
+    and every one of their 8 existing call sites into _get_connection() are byte-for-byte
+    unmodified -- migration_001_add_level1_tables is never called from _get_connection(),
+    _init_schema(), or any check_*_cache()/write_*_cache()/prune() function, so it
+    never auto-runs and the new tables do not survive a raw CACHE_DB_PATH.unlink()
+    + reconnect until explicitly re-invoked (intentional, per cache_migration_plan.md
+    Sec.5''s migrate/rebuild design-only freeze). Schema-only: this entry certifies
+    the DDL/constants/migration-function shape is real, additive, idempotent, and
+    matches the frozen design and Sec.10.2''s row shape exactly -- it does NOT certify
+    any read/write logic against the new table (no check_provider_result_cache/write_provider_result_cache-style
+    function exists yet; that is TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s
+    job), nor any redaction/secret-scanning/size-cap enforcement on result_payload
+    (TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH''s job), nor evidence-fingerprint
+    validation logic. tools/knowledge_gateway_router.py, tools/knowledge_gateway_packet_assembly.py,
+    and tools/knowledge_gateway_mcp.py remain byte-unchanged; knowledge-index/retrieval_cache.db
+    remains the single cache database file.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'tools/retrieval_cache.py:62 (`retrieval_cache_schema_version: int
+    = 1`, immediately after `RETRIEVAL_VERSION` at :56, with the distinctness comment
+    mirroring tools/retrieval_events.py''s own for `retrieval_event_schema_version`),
+    :115-142 (`LEVEL1_CACHE_COLUMNS: frozenset[str]` -- the column allowlist, placed
+    after `MAY_LIST_COLUMNS` at :87-106, not merged into it; this ticket''s own diff
+    shipped 21 of the 22 entries now present -- the 22nd, `redaction_policy_version`
+    at :140, was added afterward by the sibling TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING/migration_003,
+    see INFRA-343), :212-262 (`migration_001_add_level1_tables(conn)` -- two `CREATE
+    TABLE IF NOT EXISTS` statements for `retrieval_cache_generation` and `retrieval_provider_result_cache_rows`,
+    followed by the DELETE+INSERT single-row-generation pair and one `conn.commit()`;
+    standalone, not called from `_get_connection()` (:149-158, unchanged), `_init_schema()`
+    (:161-205, unchanged), or any of the 8 existing `check_*_cache()`/`write_*_cache()`/`prune()`/`cmd_stats()`
+    call sites). Line numbers corrected as of TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING
+    (INFRA-343), whose own additions to tools/retrieval_cache.py (new top-of-file
+    sys.path bootstrap/redaction import, migration_003, the Level 1 read/write functions)
+    shifted this entry''s original line numbers below; the DDL/constants/migration-function
+    shape and 21-columns-as-shipped-by-this-ticket claim above are unaffected by that
+    shift.'
+  proof_type: regression
+  test_path: tests/tools/test_retrieval_cache.py::TestMigrations,tests/tools/test_retrieval_cache.py::TestCrashRecovery::test_deleted_cache_db_rebuild_does_not_silently_resurrect_level1_payload_rows
+  divergence_note: null
+  support_boundary: Agent-orchestration/knowledge-retrieval tooling only -- no simulation
+    behavior, Mechanics Bible chapter, or engine contract governs this module's semantics
+    (same category as INFRA-294 through INFRA-340). No `src/` file touched, no read/write
+    logic against the new table exists yet (schema-only, by this ticket's own explicit
+    Out of Scope), no redaction/secret-scanning/size-cap enforcement on `result_payload`,
+    no evidence-fingerprint validation logic. `tools/knowledge_gateway_router.py`,
+    `tools/knowledge_gateway_packet_assembly.py`, and `tools/knowledge_gateway_mcp.py`
+    remain byte-unchanged (confirmed via empty `git diff --stat HEAD` for all three);
+    `knowledge-index/retrieval_cache.db` remains the single cache database file, no
+    second database created.
+- id: INFRA-342
+  text: 'Redaction/allowlist write-path enforcement functions in tools/knowledge_gateway_redaction.py
+    -- TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH (2nd child of TCK-20260815-KNOWLEDGE-GATEWAY-MCP-PHASE2-EPIC),
+    implementing docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md
+    Sec.2-Sec.7, Sec.9, and Sec.10 as real, tested pure functions for the first time
+    (previously documentation only, explicitly disclaimed at ratification as "no callable
+    ships as part of this ticket"). Implements: Sec.2 provider-source allowlist (check_allowlist
+    / ALLOWED_SOURCE_TYPES); Sec.3 redaction + hashing (redact_content, local _hash_text
+    -- SHA-256 on the redacted payload only, the unredacted hash is never computed
+    or stored anywhere in the module); Sec.4''s 4 verbatim secret-scan patterns (scan_for_secrets
+    / _SECRET_SCAN_PATTERNS -- AWS access key ID, generic api_key assignment, PEM
+    private-key header, Bearer token; any match is a hard reject, never redact-and-store);
+    Sec.5''s 8192-byte size cap on the UTF-8-encoded redacted payload (check_size_cap
+    -- reject only, no truncation path exists anywhere in the module); Sec.6''s redaction_policy_version
+    stamping (module-level redaction_policy_version = 1, the 4th distinct version
+    axis, stamped on every WriteDecision, ALLOW and REJECT alike); Sec.7''s 6 independently-testable
+    never-cache categories (check_never_cache_categories / CATEGORY_* constants);
+    the evaluate_write_candidate() orchestrator tying Sec.2-Sec.7 together in a fixed
+    order (allowlist -> redact -> secret-scan -> size-cap -> never-cache -> stamp+hash
+    -> ALLOW) and returning the frozen WriteDecision dataclass; Sec.9''s SQLite operational
+    limits (open_connection_with_limits -- WAL mode, busy_timeout=5000, chmod 0600
+    only on first creation; check_db_size_within_limit against the 256 MiB ceiling;
+    execute_bounded_transaction as a generic statement-list primitive with no literal
+    SQL of its own; an in-process, non-blocking acquire_write_guard/release_write_guard
+    stampede guard); and Sec.10''s cache-GC eligibility surface (CacheRowSnapshot
+    -- a Plan-invented synthetic test shape, not a claim about tools/retrieval_cache.py::LEVEL1_CACHE_COLUMNS
+    -- plus 6 independent gc_eligible_* predicates and gc_eligibility_never_flags_protected_evidence()
+    enforcing the SYMBOL/FILE never-flag-on-bare-PROVIDER_GENERATION-bump rule from
+    evidence_cache_identity_contract.md Sec.4).'
+  status: verified
+  priority: P1
+  v2_evidence: 'tools/knowledge_gateway_redaction.py:59 (module-level `redaction_policy_version:
+    int = 1`), :61-63 (`SOURCE_TYPE_CONTEXT_SEARCH`/`SOURCE_TYPE_GRAPHIFY`/`ALLOWED_SOURCE_TYPES`),
+    :82-87 (`check_allowlist()`), :94-126 (`_HOME_PATH_PATTERN` at :97, `_ABS_PATH_PATTERN`
+    at :102, `_hash_text()` at :105-106, `redact_content()` at :109-126), :134-172
+    (`_SECRET_SCAN_PATTERNS` dict at :134-152 -- originally 4 entries as built by
+    this ticket (AWS access key ID, generic api_key assignment, PEM private-key header,
+    Bearer token), expanded to 10 entries by the sibling TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s
+    own post-Security-Review fix (see INFRA-343''s support_boundary and the module
+    docstring''s "Update" paragraph) -- `scan_for_secrets()` at :155-172), :179-184
+    (`check_size_cap()`, `MAX_PAYLOAD_BYTES=8192` constant at :68), :191-247 (Sec.7
+    CATEGORY_* constants at :191-196, `check_never_cache_categories()` at :209-247),
+    :254-298 (`WriteDecision` frozen dataclass at :254-261, `evaluate_write_candidate()`
+    orchestrator at :264-298 -- secret-scan step at :283-285 scans `raw_content`,
+    not the redacted text, per a Security-Review fix: a redaction placeholder can
+    swallow an adjacent secret with no separator, so scanning post-redaction risked
+    a false negative independent of the redundant re-scan inside `check_never_cache_categories()`),
+    :305-358 (Sec.9: `open_connection_with_limits()` at :305-321, `check_db_size_within_limit()`
+    at :324-325, `execute_bounded_transaction()` at :328-336, `acquire_write_guard()`/`release_write_guard()`
+    at :343-358), :370-438 (Sec.10: `CacheRowSnapshot` dataclass at :370-387, 6 `gc_eligible_*`
+    predicates at :390-424, `gc_eligibility_never_flags_protected_evidence()` at :427-438).
+    Line numbers corrected as of TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s
+    post-Security-Review fix pass, which prepended a new module-docstring "Update"
+    paragraph and expanded `_SECRET_SCAN_PATTERNS`/added `_TOKEN_SHAPED_SECRET_PATTERNS`,
+    shifting every symbol below its own insertion point; the underlying claims about
+    what this ticket (REDACTION-WRITE-PATH) itself built are otherwise unchanged.'
+  proof_type: regression
+  test_path: 'tests/tools/test_knowledge_gateway_redaction.py (65 tests as of TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s
+    post-Security-Review fix, all passing: TestModuleDisclosure x1, TestAllowlist
+    x3, TestRedactionAndHashing x5, TestSecretScan x24 (originally x10 as built by
+    this ticket; +14 added by the sibling ticket''s post-Security-Review fix), TestSizeCap
+    x4, TestNeverCacheCategories x9 (originally x7; +2 added by the same fix), TestRedactionPolicyVersion
+    x2, TestSqliteOperationalLimits x7, TestGcEligibility x8, TestWorkflowIsolationGuards
+    x2)'
+  divergence_note: null
+  support_boundary: 'This ticket builds pure, directly-testable functions only --
+    zero wiring into the live gateway. tools/knowledge_gateway_router.py, tools/knowledge_gateway_packet_assembly.py,
+    and tools/knowledge_gateway_mcp.py are all confirmed byte-unchanged (empty `git
+    diff --stat HEAD` for all three). Zero actual cache writes: no INSERT/UPDATE SQL
+    literal anywhere in tools/knowledge_gateway_redaction.py (module-level architecture-guard
+    test confirms this statically), and open_connection_with_limits()/execute_bounded_transaction()
+    are generic primitives that issue no SQL of their own. `redaction_policy_version`
+    stays in-memory-only on `WriteDecision` per plan.md DD2 -- no schema or migration
+    change to tools/retrieval_cache.py (confirmed byte-diff-free from this ticket
+    specifically; that file''s own working-tree diff predates this ticket''s session,
+    from the already-closed sibling TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS
+    covered by INFRA-341, whose own citations into tools/retrieval_cache.py were independently
+    re-verified against the current file and remain accurate -- no correction needed).
+    The Sec.4 secret-scan baseline remains the ratified policy''s own disclosed non-production-complete
+    starting point (4 patterns only: AWS access key ID, generic api_key assignment,
+    PEM private-key header, Bearer token -- no hardening or expansion performed by
+    this ticket); the policy''s own text states this baseline "must be reviewed and
+    expanded by a security-focused pass before Phase 2 payload caching goes live,"
+    a precondition this ticket does not resolve and does not claim to resolve, since
+    it wires nothing into a live request path. That precondition was later resolved
+    by the sibling TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s own post-Security-Review
+    fix, which expanded `_SECRET_SCAN_PATTERNS` in this same file from this ticket''s
+    original 4 entries to 10 (see INFRA-343) -- the "4 patterns only" count and "no
+    hardening or expansion performed by this ticket" claim above describe only what
+    REDACTION-WRITE-PATH itself shipped at the time, not tools/knowledge_gateway_redaction.py''s
+    current file state.'
+- id: INFRA-343
+  text: 'Real cache read/write wiring into the live Knowledge Gateway MCP gateway
+    -- TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING (3rd child of TCK-20260815-KNOWLEDGE-GATEWAY-MCP-PHASE2-EPIC),
+    implementing docs/plans/knowledge-gateway-mcp-proposal.md Sec.12/Sec.12.1/Sec.12.2/Sec.12.3
+    as real, live-gateway-reachable logic for the first time (both dependency tickets,
+    TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS (INFRA-341) and TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH
+    (INFRA-342), had shipped pure/schema-only code with zero live wiring). New module
+    tools/knowledge_gateway_cache.py: cache-lookup identity (compute_lookup_identity),
+    evidence-validity revalidation kept genuinely separate from lookup (revalidate_cache_row/select_validation_basis
+    -- Non-collapse rule), branch/working-tree scope (is_branch_compatible, working_tree_overlap_forces_revalidation,
+    _current_repo_branch_scope), and the perform_cache_lookup()/perform_cache_write()
+    orchestrators. tools/retrieval_cache.py gained the real read/write functions against
+    retrieval_provider_result_cache_rows for the first time (check_provider_result_cache,
+    write_provider_result_cache, record_provider_result_cache_hit, provider_result_cache_stats,
+    _get_level1_connection, ProviderResultCacheLookup) plus migration_003_add_redaction_policy_version_column
+    (LEVEL1_CACHE_COLUMNS 21->22). tools/knowledge_gateway_mcp.py''s _run_knowledge_context()
+    now has two real cache hooks (cache-check before assemble_packet(), cache-write
+    on a genuine miss, both fail-open) and _run_knowledge_status() now reports real
+    cache_entry_counts/cache_hit_rate/cache_miss_rate/cache_stale_rejection_rate fields
+    Phase 1 explicitly omitted.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: tools/knowledge_gateway_cache.py:132-155 (`compute_lookup_identity()`),
+    :157-163 (`select_validation_basis()`), :191-194 (`is_branch_compatible()`), :196-202
+    (`working_tree_overlap_forces_revalidation()`), :204-219 (`revalidate_cache_row()`
+    -- Non-collapse rule, consulted only after a lookup HIT), :226-249 (`perform_cache_lookup()`
+    orchestrator), :262-335 (`perform_cache_write()` orchestrator -- refuses PARTIAL-status
+    responses at :282-283, routes every write through `knowledge_gateway_redaction.evaluate_write_candidate()`
+    at :306 (verdict checked at :307, gating the write call) with no bypass); tools/retrieval_cache.py:265-283
+    (`migration_003_add_redaction_policy_version_column()`, PRAGMA table_info-guarded;
+    `LEVEL1_CACHE_COLUMNS` grew 21->22 at :115-146), :531-534 (`ProviderResultCacheLookup`),
+    :550-591 (`check_provider_result_cache()` -- DD10 PK+Python-comparison identity
+    check), :598-607 (`_get_level1_connection()`, opens CACHE_DB_PATH via `knowledge_gateway_redaction.open_connection_with_limits()`),
+    :610-646 (`write_provider_result_cache()` -- sole real INSERT OR REPLACE path),
+    :651-662 (`record_provider_result_cache_hit()`), :667-690 (`provider_result_cache_stats()`);
+    tools/knowledge_gateway_mcp.py:128-135 (`_load_cache_module()`), :220-237 (cache-check
+    hook in `_run_knowledge_context()`, fail-open try/except at :225-231), :315-323
+    (cache-write hook, fail-open try/except at :320-323), :346-410 (`_run_knowledge_status()`,
+    real cache-domain fields populated at :391-407 from `provider_result_cache_stats()`).
+  proof_type: regression
+  test_path: 'tests/tools/test_knowledge_gateway_cache.py (20 tests: identity/revalidation/orchestrator
+    unit+fixture tests plus architecture guards, including test_per_key_stampede_guard_prevents_concurrent_duplicate_write
+    and test_size_cap_gate_skips_write_without_raising_when_db_over_ceiling); tests/tools/test_knowledge_gateway_mcp.py
+    (9 new AC1/AC2/AC4/AC5/AC6/fail-open integration tests plus narrowed test_knowledge_status_omits_all_cache_specific_fields_enumerated);
+    tests/tools/test_retrieval_cache.py::TestProviderResultCache,tests/tools/test_retrieval_cache.py::TestMigration003,tests/tools/test_retrieval_cache.py::TestProviderResultCacheStats
+    (16 new test methods); tests/tools/test_knowledge_gateway_failure_semantics.py
+    (13-test matrix, unmodified pass + new _isolated_cache_db fixture); tests/tools/test_knowledge_gateway_redaction.py::TestSecretScan,tests/tools/test_knowledge_gateway_redaction.py::TestNeverCacheCategories
+    (16 new tests added by this ticket''s own post-Security-Review fix: 14 new TestSecretScan
+    detection/reject-outright pairs for github_token/slack_token/openai_api_key/anthropic_api_key/generic_password_or_secret_assignment/basic_auth_in_url
+    plus 2 cross-match tests (test_openai_pattern_does_not_mismatch_an_anthropic_key,
+    test_anthropic_pattern_does_not_mismatch_an_openai_key), plus 2 new TestNeverCacheCategories
+    token-vs-credential classification tests)'
+  divergence_note: null
+  support_boundary: 'This is the first ticket to perform real INSERT writes into retrieval_provider_result_cache_rows
+    -- all real writes gated by evaluate_write_candidate() returning ALLOW, no raw/unredacted
+    bypass path anywhere (confirmed by a static AST guard test, test_no_raw_insert_statement_bypasses_redaction_anywhere_in_cache_module).
+    This is the first real caller of open_connection_with_limits() against the real
+    CACHE_DB_PATH -- WAL mode is now file-wide live, confirmed non-breaking for the
+    8 existing _get_connection() call sites by Architecture Review. migration_003_add_redaction_policy_version_column
+    was added (Architecture-Review-approved, additive ALTER TABLE guarded by an explicit
+    PRAGMA table_info idempotency check; LEVEL1_CACHE_COLUMNS grew 21->22). tools/knowledge_gateway_router.py
+    and tools/knowledge_gateway_packet_assembly.py remain byte-unchanged (confirmed
+    by Architecture-Verify). The security-pass precondition for the secret-scan baseline
+    was operative (the write path is reachable from a live knowledge_context call
+    for the first time) and this ticket''s own Security-Review phase has since run:
+    it BLOCKED once on the 4-pattern secret-scan baseline''s concrete named gaps (no
+    named-service token formats such as GitHub/Slack, no OpenAI/Anthropic API-key
+    formats, no generic password/secret-named assignment, no basic-auth-in-URL form),
+    and re-ran to APPROVED after this ticket''s own post-Security-Review fix expanded
+    tools/knowledge_gateway_redaction.py''s `_SECRET_SCAN_PATTERNS` from 4 to 10 entries
+    (added github_token, slack_token, openai_api_key, anthropic_api_key, generic_password_or_secret_assignment,
+    basic_auth_in_url -- see INFRA-342''s corrected citations for exact line numbers)
+    and added 16 new tests to tests/tools/test_knowledge_gateway_redaction.py (TestSecretScan
+    10->24, TestNeverCacheCategories 7->9). This closes the ratified policy''s own
+    "must be reviewed and expanded by a security-focused pass before Phase 2 payload
+    caching goes live" precondition for the go-live moment this ticket represents
+    -- a real, substantive addition this ticket ultimately shipped, not merely a citation
+    correction.'
+- id: INFRA-344
+  text: 'Knowledge Gateway MCP Phase 2 baseline recomparison runner -- TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON
+    (closes the Phase 2 epic''s own acceptance-measurement loop, mirroring TCK-20260815-KGMCP-P1-BASELINE-COMPARISON''s
+    (INFRA-339) precedent for the warm-cache side). Runs the real gateway (tools/knowledge_gateway_mcp.py::_run_knowledge_context())
+    against Phase 0''s frozen 7-entry corpus (tools/agent-monitoring/kgmcp_baseline_corpus.py::CORPUS,
+    read-only, unmodified) TWICE per entry -- once cold, once warm -- with cache-hit
+    status on the warm call independently verified via two agreeing real signals (a
+    provider-round-trip spy on assemble_packet and a direct SQL hit_count delta read),
+    never assumed from response["cache"] alone (DD2). Computes measurement_baseline_contract.md
+    Sec.4.1 (latency) against warm-path numbers only, Sec.4.2 (token reduction) independently
+    for cold and warm, and Sec.4.3 (no-regression recall) via Phase 1''s own imported,
+    unmodified normalization helpers (DD7) -- exact Phase 1 request-shape parity per
+    DD1''s Architecture Review ruling, no budget_tokens override used to force a different
+    result. This entry certifies the measurement tool itself as real, correct, and
+    tested -- it does NOT claim the measured cache/gateway performance succeeded.
+    The tool''s own honest, real output: 0/7 genuine cache hits (every entry''s cold
+    response payload exceeded the deployed 8192-byte cache write size cap, rejected
+    by evaluate_write_candidate with rejection_category == "oversized_payload" on
+    all 7 entries, confirmed by both verification signals agreeing with zero signal_anomaly
+    occurrences), so all 3 predeclared thresholds FAIL for all 7 entries (Sec.4.1
+    0/7, Sec.4.2-cold 0/7, Sec.4.2-warm 0/7, Sec.4.3 0/7) -- exactly mirroring Phase
+    1''s own honest all-FAIL result. No threshold was redefined, narrowed, or excluded
+    to force a pass; no corpus entry was excluded or substituted. See docs/engine/contracts/knowledge_gateway_mcp/phase2_baseline_recomparison.md
+    for the full per-entry breakdown.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'tools/agent-monitoring/kgmcp_phase2_gateway_runner.py -- _load_gateway_module()
+    (:114-124, DD8: sys.modules key "kgmcp_phase2_recomparison_gateway", distinct
+    from Phase 1''s own key so spies never interact with a different sibling-loaded
+    module instance); _read_hit_count() (:135-153, direct read-only SQL read of retrieval_provider_result_cache_rows.hit_count
+    against the real, live CACHE_DB_PATH); _run_single_entry() (:156-269, the per-entry
+    cold+warm double-call loop: installs a counting spy on _kgpa.assemble_packet at
+    :169-177 and a pass-through spy on _kgr_redaction.evaluate_write_candidate at
+    :179-188 -- both restored in a finally block at :218-221; cache_status_warm at
+    :226-230 requires BOTH the spy call count == 1 AND the SQL hit_count delta ==
+    1 to agree, else conservatively MISS with a signal_anomaly recorded at :232-241;
+    cache_write_rejection_reason captured from the cold call''s own WriteDecision
+    at :243-249, since perform_cache_write() itself always returns None and discards
+    it); _compute_entry_thresholds() (:272-340, Sec.4.1 warm-only at :274-290, Sec.4.2
+    cold+warm computed independently at :292-319, Sec.4.3 via the imported, unmodified
+    _compute_threshold_4_3() at :321-333); run_corpus() (:343-445, live-derives threshold_ms/threshold_tokens
+    from the Phase 0 fixture at :354-359 -- never hand-typed -- and raises at :420-427
+    if knowledge-index/manifest.json''s built_at changed mid-run, Risk #6 guard);
+    _compute_aggregate() (:448-467); main() (:470-479, writes the committed fixture,
+    run once by hand). Real, measured aggregate as of the committed fixture: all_thresholds_pass=false,
+    genuine_cache_hit_count=0/7, threshold_4_1=0/7, threshold_4_2_cold=0/7, threshold_4_2_warm=0/7,
+    threshold_4_3=0/7 (threshold_ms=935.32, threshold_tokens=1263.57, both re-derived
+    live from the Phase 0 fixture). tests/tools/fixtures/kgmcp_phase2_baseline_recomparison_results.json
+    (the real, committed 7-entry-plus-aggregate output, recorded_at_utc-stamped, cache_status_warm
+    == "MISS" and cache_write_rejection_reason == "oversized_payload" for all 7 entries).
+    docs/engine/contracts/knowledge_gateway_mcp/phase2_baseline_recomparison.md (results
+    doc: states the all-FAIL verdict plainly, per-entry byte-size-vs-cap and per-threshold
+    PASS/FAIL tables, DD1''s Architecture Review ruling, and the Q1 warm-speedup honest
+    caveat). docs/plans/knowledge-gateway-mcp-proposal.md (Phase 2 results-narrative
+    paragraph appended after the Phase 2 section''s final bullet, before the Phase
+    3 header). measurement_baseline_contract.md Sec.4 (the 3 predeclared threshold
+    formulas measured against, unedited).'
+  proof_type: regression
+  test_path: 'tests/tools/test_kgmcp_phase2_baseline_recomparison.py (17 tests: 16
+    passed, 1 failed as of this ticket''s own Test Summary -- the 1 failure, test_no_frozen_kgmcp_dependency_edited,
+    is a confirmed pre-existing, non-regression condition caused by already-Done,
+    uncommitted sibling Phase 2 tickets'' own diffs to tools/knowledge_gateway_mcp.py/knowledge_gateway_redaction.py/knowledge_gateway_cache.py/retrieval_cache.py
+    landing before this ticket''s own work began -- independently reproduced by running
+    Phase 1''s own identical guard, test_kgmcp_phase1_baseline_comparison.py::test_no_frozen_kgmcp_dependency_edited,
+    in isolation, which also fails today for the identical reason with zero involvement
+    from this ticket; disclosed honestly here as 16/17, not claimed as 17/17)'
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/knowledge-retrieval measurement tooling only
+    -- no simulation behavior involved, no src/ file touched. Measurement-only: this
+    ticket does not modify tools/knowledge_gateway_mcp.py, tools/knowledge_gateway_router.py,
+    tools/knowledge_gateway_packet_assembly.py, tools/knowledge_gateway_cache.py,
+    tools/knowledge_gateway_redaction.py, or tools/retrieval_cache.py -- all 6 confirmed
+    byte-unchanged by this ticket''s own diff by 2 independent prior reviews (this
+    agent''s own git diff --stat HEAD scoping of those 6 paths against this ticket''s
+    new/changed file list confirms zero overlap: this ticket''s own changes are limited
+    to tools/agent-monitoring/kgmcp_phase2_gateway_runner.py, tests/tools/fixtures/kgmcp_phase2_baseline_recomparison_results.json,
+    docs/engine/contracts/knowledge_gateway_mcp/phase2_baseline_recomparison.md, tests/tools/test_kgmcp_phase2_baseline_recomparison.py,
+    and an appended paragraph in docs/plans/knowledge-gateway-mcp-proposal.md). Exact
+    Phase 1 request-shape parity was maintained per DD1''s Architecture Review ruling
+    -- no budget_tokens override was used anywhere to force a different (more favorable)
+    result than the real, honest measurement. This entry''s ''verified'' status certifies
+    the measurement tool''s own correctness, real execution, and honest reporting
+    -- it is not a claim that the measured cache/gateway performance meets any Sec.4
+    threshold; the real, measured, honestly-reported result is 0/7 genuine cache hits
+    and 0/7 pass on all 3 predeclared thresholds (4 buckets counting Sec.4.2''s cold/warm
+    split), stated in full in phase2_baseline_recomparison.md and never characterized
+    as a partial or aggregate success, exactly mirroring INFRA-339''s (Phase 1) own
+    honest all-FAIL precedent.'

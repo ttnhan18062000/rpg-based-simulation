@@ -39,10 +39,27 @@ from dataclasses import dataclass
 from pathlib import Path
 
 _TOOLS_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _TOOLS_DIR.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+# Imported for Level 1 provider-result-cache writes only (DD2/DD4,
+# TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING) — open_connection_with_limits() applies its own
+# §9 connection-tuning defaults to the real CACHE_DB_PATH, per _get_level1_connection() below. The
+# 3 legacy marker-only tables' own 8 _get_connection() call sites are untouched (DD4) and never call
+# this module. One-directional dependency only: knowledge_gateway_redaction.py imports nothing from
+# this module (verified by direct read), so no import cycle is created.
+from tools import knowledge_gateway_redaction as _kgr_redaction  # noqa: E402
 
 # Manually bumped on breaking changes to this module's own key-derivation or invalidation logic —
 # no existing "version of retrieval logic" concept exists anywhere in the repo to derive this from.
 RETRIEVAL_VERSION: int = 1
+
+# DDL/table-shape version for this module's migrations (cache_migration_plan.md §1) — distinct
+# from RETRIEVAL_VERSION above (cache-key-derivation logic) and from
+# tools/retrieval_events.py::retrieval_event_schema_version (event-field shape). Bumped once per
+# new migration function added, never aliased to either sibling constant.
+retrieval_cache_schema_version: int = 1
 
 # Sentinel-over-fabrication precedent: tools/hybrid_retrieval.py::UNRATED,
 # tools/code_test_index.py's DOCSTRING_GAP/ASSOCIATED_TESTS_GAP. If manifest.json does not exist
@@ -85,6 +102,42 @@ MAY_LIST_COLUMNS: frozenset[str] = frozenset(
         "cache_status",
         "reason_code",
         "created_at",
+    }
+)
+
+# Column set for the new Level 1 provider-result cache table (retrieval_provider_result_cache_rows),
+# mapped 1:1 onto docs/plans/knowledge-gateway-mcp-proposal.md §10.2's Level 1 row-shape bullets and
+# evidence_cache_identity_contract.md §1/§2's literal field names — see plan.md DD5 for the full
+# per-column provenance table. NOT a write-path validation allowlist (unlike MAY_LIST_COLUMNS) —
+# this ticket ships no write function for this table; this constant exists so the structural test
+# below and the later read-write-wiring ticket have one documented source of truth for the column
+# set, not two.
+LEVEL1_CACHE_COLUMNS: frozenset[str] = frozenset(
+    {
+        "query_hash",
+        "normalized_intent",
+        "resolved_entity_ids",
+        "filters",
+        "budget_class",
+        "routing_policy_version",
+        "repo_branch_scope",
+        "provider_name",
+        "adapter_version",
+        "result_payload",
+        "source_ids",
+        "source_paths",
+        "provider_generation",
+        "evidence_fingerprints",
+        "validated_negative_scopes",
+        "adapter_version_at_validation",
+        "working_tree_overlap",
+        "provider_generation_at_validation",
+        "created_at",
+        "last_hit_at",
+        "hit_count",
+        # 22nd column, added by migration_003_add_redaction_policy_version_column (DD3, confirmed
+        # by Architecture Review) — TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING.
+        "redaction_policy_version",
     }
 )
 
@@ -150,6 +203,84 @@ def _init_schema(conn: sqlite3.Connection) -> None:
         """
     )
     conn.commit()
+
+
+# ---------------------------------------------------------------------------
+# Migrations (Level 1 provider-result cache, TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS)
+# ---------------------------------------------------------------------------
+
+def migration_001_add_level1_tables(conn: sqlite3.Connection) -> None:
+    """Adds the Level 1 provider-result cache table plus the retrieval_cache_generation metadata
+    table, per cache_migration_plan.md §1/§2. CREATE TABLE IF NOT EXISTS only — additive, never
+    touches the three existing marker-only tables. Idempotent: safe to call again on a database
+    that already has this migration applied. Not called by _get_connection(), _init_schema(), or
+    any check_*_cache()/write_*_cache()/prune() function (see plan.md DD6) — must be invoked
+    directly.
+    """
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS retrieval_cache_generation (
+            retrieval_cache_schema_version INTEGER NOT NULL,
+            migrated_at REAL NOT NULL
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS retrieval_provider_result_cache_rows (
+            query_hash TEXT NOT NULL,
+            normalized_intent TEXT NOT NULL,
+            resolved_entity_ids TEXT NOT NULL,
+            filters TEXT NOT NULL,
+            budget_class TEXT,
+            routing_policy_version TEXT NOT NULL,
+            repo_branch_scope TEXT NOT NULL,
+            provider_name TEXT NOT NULL,
+            adapter_version TEXT NOT NULL,
+            result_payload TEXT NOT NULL,
+            source_ids TEXT NOT NULL,
+            source_paths TEXT NOT NULL,
+            provider_generation TEXT NOT NULL,
+            evidence_fingerprints TEXT NOT NULL,
+            validated_negative_scopes TEXT,
+            adapter_version_at_validation TEXT,
+            working_tree_overlap TEXT,
+            provider_generation_at_validation TEXT,
+            created_at REAL NOT NULL,
+            last_hit_at REAL,
+            hit_count INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY (query_hash, repo_branch_scope)
+        )
+        """
+    )
+    conn.execute("DELETE FROM retrieval_cache_generation")
+    conn.execute(
+        "INSERT INTO retrieval_cache_generation "
+        "(retrieval_cache_schema_version, migrated_at) VALUES (?, ?)",
+        (retrieval_cache_schema_version, time.time()),
+    )
+    conn.commit()
+
+
+def migration_003_add_redaction_policy_version_column(conn: sqlite3.Connection) -> None:
+    """Adds redaction_policy_version to retrieval_provider_result_cache_rows (DD3, Architecture
+    Review-confirmed, TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING). Never called from
+    _get_connection()/_init_schema() or any of the original 6 check/write functions — invoked only
+    from _get_level1_connection() below. Idempotent via an explicit table_info existence check
+    (SQLite has no ALTER TABLE ... ADD COLUMN IF NOT EXISTS). Ordinal 3, never 2 — the
+    ordinal immediately after this one is reserved for Level 2/Phase 3 tables by
+    TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS's own Anti-Drift Notes and must never be reused
+    or stubbed here.
+    """
+    columns = [row[1] for row in conn.execute(
+        "PRAGMA table_info(retrieval_provider_result_cache_rows)"
+    ).fetchall()]
+    if "redaction_policy_version" not in columns:
+        conn.execute(
+            "ALTER TABLE retrieval_provider_result_cache_rows "
+            "ADD COLUMN redaction_policy_version INTEGER"
+        )
+        conn.commit()
 
 
 def _validate_may_list_kwargs(kwargs: dict, *, table: str) -> dict:
@@ -390,6 +521,172 @@ def write_packet_cache(
         conn.commit()
     finally:
         conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Level 1 provider-result cache (§1/§2 identity fields) — read/write, orchestrated by
+# tools/knowledge_gateway_cache.py (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING). Follows the
+# exact check/write pair shape every other cache level above already uses.
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class ProviderResultCacheLookup:
+    status: str                 # HIT or MISS — never a validity-verdict field (Non-collapse rule, DD9)
+    reason_code: str | None
+    row: dict | None            # raw stored column values, present only on HIT
+
+
+def _ensure_level1_schema_for_read() -> None:
+    """Guarantees retrieval_provider_result_cache_rows exists via a short-lived plain connection
+    before a read — a SELECT against a missing table raises sqlite3.OperationalError on a fresh
+    DB. No WAL needed for a read-only path (DD4 restricts the WAL-mode connection to writes)."""
+    conn = _get_connection()
+    try:
+        migration_001_add_level1_tables(conn)
+    finally:
+        conn.close()
+
+
+def check_provider_result_cache(
+    query_hash: str,
+    repo_branch_scope: str,
+    *,
+    normalized_intent: str,
+    filters_json: str,
+    budget_class: str,
+    routing_policy_version: int,
+) -> ProviderResultCacheLookup:
+    """SELECT by the real primary key (query_hash, repo_branch_scope), then compare the stored
+    normalized_intent/filters/budget_class/routing_policy_version columns against the caller's
+    current computed values (DD10 — the PK alone is narrower than the full §1 6-field lookup
+    identity: filters/budget_class/routing_policy_version are ordinary columns, not part of the
+    primary key). Any mismatch is a MISS, not STALE_REJECTED — a different-identity case, not a
+    staleness case, mirroring check_query_cache()'s own existing pattern of comparing
+    corpus_generation/retrieval_version in Python after a broader SQL SELECT.
+    routing_policy_version is stored as TEXT (see migration_001's CREATE TABLE) — the caller's int
+    is coerced via str() for the comparison, matching exactly how write_provider_result_cache()
+    below persists it, so the two sides are never compared across mismatched types.
+    """
+    _ensure_level1_schema_for_read()
+    conn = _get_connection()
+    try:
+        row = conn.execute(
+            "SELECT * FROM retrieval_provider_result_cache_rows "
+            "WHERE query_hash = ? AND repo_branch_scope = ?",
+            (query_hash, repo_branch_scope),
+        ).fetchone()
+        columns = [d[0] for d in conn.execute(
+            "SELECT * FROM retrieval_provider_result_cache_rows LIMIT 0"
+        ).description]
+    finally:
+        conn.close()
+    if row is None:
+        return ProviderResultCacheLookup(status=MISS, reason_code="no_cached_row", row=None)
+    row_dict = dict(zip(columns, row))
+    if (
+        row_dict["normalized_intent"] != normalized_intent
+        or row_dict["filters"] != filters_json
+        or row_dict["budget_class"] != budget_class
+        or row_dict["routing_policy_version"] != str(routing_policy_version)
+    ):
+        return ProviderResultCacheLookup(
+            status=MISS, reason_code="identity_mismatch_on_shared_key", row=None
+        )
+    return ProviderResultCacheLookup(status=HIT, reason_code=None, row=row_dict)
+
+
+def _get_level1_connection() -> sqlite3.Connection:
+    """DD4/DD2 — opens CACHE_DB_PATH via knowledge_gateway_redaction.open_connection_with_limits()
+    (that helper's own §9 connection-tuning defaults), not the plain _get_connection() the 3 legacy
+    tables use.
+    Ensures the Level 1 table and the redaction_policy_version column (DD3, migration_003) exist
+    before any write."""
+    conn = _kgr_redaction.open_connection_with_limits(CACHE_DB_PATH)
+    migration_001_add_level1_tables(conn)
+    migration_003_add_redaction_policy_version_column(conn)
+    return conn
+
+
+def write_provider_result_cache(
+    *,
+    query_hash: str, normalized_intent: str, resolved_entity_ids_json: str, filters_json: str,
+    budget_class: str, routing_policy_version: int, repo_branch_scope: str,
+    provider_name_json: str, adapter_version_json: str, result_payload: str,
+    source_ids_json: str, source_paths_json: str, provider_generation: str,
+    evidence_fingerprints_json: str, validated_negative_scopes: str | None,
+    adapter_version_at_validation_json: str, working_tree_overlap_json: str,
+    provider_generation_at_validation: str,
+    redaction_policy_version: int | None = None,
+) -> None:
+    """INSERT OR REPLACE by the (query_hash, repo_branch_scope) primary key — the sole real write
+    path for this table (orchestrated only by
+    tools/knowledge_gateway_cache.py::perform_cache_write(), after
+    knowledge_gateway_redaction.evaluate_write_candidate() has already returned ALLOW; never called
+    with raw/unredacted content)."""
+    conn = _get_level1_connection()
+    try:
+        conn.execute(
+            "INSERT OR REPLACE INTO retrieval_provider_result_cache_rows "
+            "(query_hash, normalized_intent, resolved_entity_ids, filters, budget_class, "
+            " routing_policy_version, repo_branch_scope, provider_name, adapter_version, "
+            " result_payload, source_ids, source_paths, provider_generation, "
+            " evidence_fingerprints, validated_negative_scopes, adapter_version_at_validation, "
+            " working_tree_overlap, provider_generation_at_validation, redaction_policy_version, "
+            " created_at, last_hit_at, hit_count)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 0)",
+            (
+                query_hash, normalized_intent, resolved_entity_ids_json, filters_json, budget_class,
+                str(routing_policy_version), repo_branch_scope, provider_name_json,
+                adapter_version_json, result_payload, source_ids_json, source_paths_json,
+                provider_generation, evidence_fingerprints_json, validated_negative_scopes,
+                adapter_version_at_validation_json, working_tree_overlap_json,
+                provider_generation_at_validation, redaction_policy_version, time.time(),
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def record_provider_result_cache_hit(query_hash: str, repo_branch_scope: str) -> None:
+    """Called only after a genuine, revalidated HIT (never on a bare lookup hit — DD9) —
+    increments hit_count and stamps last_hit_at."""
+    conn = _get_level1_connection()
+    try:
+        conn.execute(
+            "UPDATE retrieval_provider_result_cache_rows "
+            "SET hit_count = hit_count + 1, last_hit_at = ? "
+            "WHERE query_hash = ? AND repo_branch_scope = ?",
+            (time.time(), query_hash, repo_branch_scope),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def provider_result_cache_stats() -> dict:
+    """Read-only aggregation over retrieval_provider_result_cache_rows for
+    tools/knowledge_gateway_mcp.py::_run_knowledge_status() (Step 10). Never mutates, never raises
+    on a fresh/never-migrated DB (returns zeros instead) — knowledge_status must never error out
+    because no cache activity has happened yet.
+    """
+    conn = _get_connection()
+    try:
+        table_exists = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='retrieval_provider_result_cache_rows'"
+        ).fetchone()
+        if table_exists is None:
+            return {"total_rows": 0, "total_hits": 0}
+        total = conn.execute(
+            "SELECT COUNT(*) FROM retrieval_provider_result_cache_rows"
+        ).fetchone()[0]
+        total_hits = conn.execute(
+            "SELECT COALESCE(SUM(hit_count), 0) FROM retrieval_provider_result_cache_rows"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    return {"total_rows": total, "total_hits": total_hits}
 
 
 # ---------------------------------------------------------------------------

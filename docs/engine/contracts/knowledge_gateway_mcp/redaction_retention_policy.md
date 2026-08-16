@@ -74,9 +74,11 @@ truncates/selects fields for `agent-monitoring/tools.jsonl` records (`summarize_
 pattern-match or strip secret values, and must not be cited as an existing secret-detection
 precedent for this policy.
 
-**This policy defines a new baseline regex ruleset, as part of this ticket's own scope**, covering
-four common credential shapes, each a well-known, low-false-positive-risk pattern requiring no new
-dependency:
+**This policy defines a new baseline regex ruleset, as part of this ticket's own scope**, originally
+covering four common credential shapes, each a well-known, low-false-positive-risk pattern requiring
+no new dependency. `TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`'s own Security-Review phase (see
+below) expanded this to ten shapes, closing the concrete gaps that phase identified (no named-service
+token formats, no generic password/secret-named assignment, no basic-auth-in-URL form):
 
 | Shape | Pattern (illustrative) |
 |---|---|
@@ -84,12 +86,35 @@ dependency:
 | Generic API-key-looking assignment | `(api[_-]?key\|apikey)\s*[:=]\s*['"][A-Za-z0-9_\-]{16,}['"]` |
 | PEM private-key header | `-----BEGIN (RSA \|EC \|OPENSSH )?PRIVATE KEY-----` |
 | Bearer token | `Bearer\s+[A-Za-z0-9\-_.]{20,}` |
+| GitHub token (`ghp_`/`gho_`/`ghs_`/`ghr_`/`github_pat_`) | `gh[pousr]_[A-Za-z0-9]{36,}\|github_pat_[A-Za-z0-9_]{20,}` |
+| Slack token (`xoxb-`/`xoxa-`/`xoxp-`/`xoxr-`/`xoxs-`) | `xox[baprs]-[A-Za-z0-9\-]+` |
+| OpenAI API key | `sk-(?!ant-)[A-Za-z0-9]{20,}` |
+| Anthropic API key | `sk-ant-[A-Za-z0-9\-_]{20,}` |
+| Generic password/secret-named assignment | `(password\|passwd\|secret)\s*[:=]\s*['"][^'"]{6,}['"]` |
+| Basic-auth-in-URL | `https?://[^\s:/@]+:[^\s:/@]+@` |
 
 **This baseline ruleset is a documented starting point, not a production-complete secret scanner.
 It is explicitly NEW (not a reuse of any existing repository tooling) and explicitly
-non-production-complete. It must be reviewed and expanded by a security-focused pass before Phase 2
-payload caching goes live.** Any content matching one of these four patterns must cause the write to
-be rejected outright (see §7, Never-Cache Enumeration), never silently redacted and stored.
+non-production-complete.** The original four-pattern set was reviewed and expanded to the ten
+patterns above by a security-focused pass, closing the "must be reviewed and expanded ... before
+Phase 2 payload caching goes live" precondition below for this policy's go-live moment — expansion
+is not the same claim as completeness: ten well-known shapes still do not cover every real-world
+credential format, and this baseline remains open to further expansion by a future pass. Any content
+matching one of these ten patterns must cause the write to be rejected outright (see §7, Never-Cache
+Enumeration), never silently redacted and stored.
+
+**This precondition is now operative, not merely prospective, and has been addressed (not waived).**
+`TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH` implemented the original ruleset as pure functions with
+no live caller. `TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING` is the ticket that wired real cache
+reads and writes into the live `knowledge_context` request path
+(`tools/knowledge_gateway_mcp.py::_run_knowledge_context()`), so cache writes governed by this
+ruleset are now genuinely reachable from a real, running MCP tool call — the condition this
+precondition's own "before Phase 2 payload caching goes live" language names. That ticket's own
+Architecture Review ruling (DD5) made no claim that this precondition was satisfied at Implement
+time; its own Security-Review phase subsequently found the original four-pattern baseline had
+concrete, named gaps and required — as a narrow, bounded fix, not a redesign — the expansion to ten
+patterns documented above before that ticket's own blocking gate could close. This document's table
+and disclosure above reflect that expanded, current state.
 
 ## 5. Payload Size Cap
 
@@ -120,6 +145,25 @@ merged with, or confused with any of them:
 `redaction_policy_version` versions none of those three axes — it versions only the redaction/
 allowlist/secret-scan/size-cap rules defined in §2–§5 of this document. A future implementation
 bumps `redaction_policy_version` when, and only when, those rules themselves change.
+
+**No callable shipped as part of this ticket** (`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`) —
+this section documented the field only. `redaction_policy_version` is now implemented as a real,
+stamped value: the module-level constant `redaction_policy_version = 1`
+(`tools/knowledge_gateway_redaction.py:47`) and the `WriteDecision.redaction_policy_version` field
+(`tools/knowledge_gateway_redaction.py:225`), stamped on every `ALLOW` and `REJECT` decision
+returned by `evaluate_write_candidate()`, added by `TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH`.
+Its distinctness from the other 3 version axes named above is verified by a dedicated test in
+`tests/tools/test_knowledge_gateway_redaction.py`.
+
+**Persistence resolved by `TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING` (Architecture Review DD3,
+option b).** `redaction_policy_version` is now persisted onto an actual
+`retrieval_provider_result_cache_rows` column, not stamped in-memory only: a new
+`migration_003_add_redaction_policy_version_column(conn)` (`tools/retrieval_cache.py:265-283`) adds
+the column via an idempotent `ALTER TABLE ... ADD COLUMN`, guarded by an explicit `PRAGMA
+table_info` existence check (SQLite has no `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`).
+`LEVEL1_CACHE_COLUMNS` grew from 21 to 22 entries as a result. See
+`docs/engine/contracts/knowledge_gateway_mcp/cache_migration_plan.md` §2 for the migration's
+documented shape.
 
 ## 7. Never-Cache Enumeration
 
@@ -191,8 +235,23 @@ ratification.
 
 ## 9. SQLite Operational Limits
 
-These are **documented defaults; they are not implemented in `tools/retrieval_cache.py` by this
-ticket. Implementation is deferred to a future ticket.**
+These were **documented defaults, not implemented in `tools/retrieval_cache.py` by this
+document's own architectural boundary** — `tools/retrieval_cache.py` is not, and is not intended to
+become, the home for these limits. They are now implemented as real, tested logic
+in a separate new module, `tools/knowledge_gateway_redaction.py`, added by
+`TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH`: `open_connection_with_limits(db_path)` applies
+`PRAGMA journal_mode=WAL` and `PRAGMA busy_timeout=5000` on every connection open and chmods the
+file `0600` immediately after creation (never re-chmodding a pre-existing file);
+`check_db_size_within_limit(db_path)` enforces the 256 MB ceiling; `execute_bounded_transaction()`
+wraps a caller-supplied statement list in a single per-call transaction; and
+`acquire_write_guard()` / `release_write_guard()` implement the per-key stampede guard as an
+in-process lock keyed by cache key (not multi-process safe — see the functions' own docstrings).
+`tools/retrieval_cache.py` itself remains byte-unchanged by this work — `db_path` is a required,
+caller-supplied parameter with no default onto `tools.retrieval_cache.CACHE_DB_PATH`, and
+`test_sqlite_defaults_not_silently_implemented` (`tests/docs/test_redaction_retention_policy_doc.py`)
+continues to pass because it is scoped only to `tools/retrieval_cache.py`'s own source text. Wiring
+these functions into `tools/retrieval_cache.py`'s or the live gateway's actual connection-opening
+path remains a separate, not-yet-started ticket (`TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`).
 
 `tools/retrieval_cache.py`'s `_get_connection()` (`tools/retrieval_cache.py:96-105`) is the single
 existing connection-opening code path, called by every `check_*_cache`/`write_*_cache` function and
@@ -264,9 +323,15 @@ drafted.
 Ratification authorizes a future ticket to begin implementing Phase 2 payload caching against this
 policy. It does not itself implement anything — no `src/`/`tools/` code changes accompany this
 ratification. The secret-scan ruleset in §4 remains explicitly flagged as a non-production-complete
-starting baseline that must still be reviewed and expanded by a dedicated security-focused pass
-before Phase 2 payload caching goes live; ratifying the policy's overall shape does not waive that
-follow-up requirement.
+starting baseline; ratifying the policy's overall shape did not itself discharge the "must still be
+reviewed and expanded by a dedicated security-focused pass before Phase 2 payload caching goes live"
+follow-up requirement. **Phase 2 payload caching went live with
+`TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`; that ticket's own Security-Review phase — not this
+ratification — was the vehicle for the required security-focused pass, and performed it: §4's
+secret-scan baseline was reviewed and expanded from four to ten patterns as a direct result. See §4
+for the expanded pattern set and its own disclosure that expansion is not a claim of completeness —
+the baseline remains a documented starting point, open to further expansion, not a
+production-complete secret scanner.**
 
 ## 12. Cross-References
 

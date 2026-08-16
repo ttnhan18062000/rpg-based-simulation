@@ -1209,11 +1209,92 @@ this result is a separate, later human-reviewer decision, out of this ticket's o
 
 ### Phase 2: Real Provider-Result Cache
 
-- Add SQLite schema and migrations.
-- Store actual bounded normalized results.
+- Add SQLite schema and migrations. **Done**
+  (`TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS`) — `tools/retrieval_cache.py`: added the
+  `retrieval_cache_schema_version` constant, the `LEVEL1_CACHE_COLUMNS` allowlist, and a standalone
+  `migration_001_add_level1_tables(conn)` function that creates the new
+  `retrieval_provider_result_cache_rows` (§10.2's Level 1: Provider-result cache row shape) and
+  `retrieval_cache_generation` metadata tables — additive-only, `CREATE TABLE IF NOT EXISTS` against
+  the same `knowledge-index/retrieval_cache.db` file, never called from `_get_connection()`,
+  `_init_schema()`, or any existing `check_*_cache()`/`write_*_cache()`/`prune()` hot path, and the 3
+  existing marker-only tables left byte-unchanged; tested by 11 new tests in
+  `tests/tools/test_retrieval_cache.py` (new `TestMigrations` class plus one `TestCrashRecovery`
+  sibling test). Read/write wiring against the new table and the Level 2 migration remain separate,
+  not-yet-started Phase 2 tickets.
+- Store actual bounded normalized results. **Done**
+  (`TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH`) — new module `tools/knowledge_gateway_redaction.py`:
+  `check_allowlist()` (§2 Context Search/Graphify-only allowlist), `redact_content()` plus a local
+  `_hash_text()` (§3 home-path/absolute-path redaction before hashing, redacted-hash-only), the
+  4-pattern `scan_for_secrets()` (§4 baseline, reject-outright on match, never redact-and-store),
+  `check_size_cap()` (§5 8192-byte cap on the redacted payload, reject not truncate),
+  `check_never_cache_categories()` (§7's 6 independent categories), the `WriteDecision` dataclass
+  and `evaluate_write_candidate()` orchestrator stamping `redaction_policy_version` (§6, a 4th
+  distinct version axis) on every ALLOW/REJECT decision, and the §9 SQLite operational-limits
+  helpers `open_connection_with_limits()` / `check_db_size_within_limit()` /
+  `execute_bounded_transaction()` / `acquire_write_guard()` / `release_write_guard()`, plus §10 GC-
+  eligibility predicates (`gc_eligible_*`, `gc_eligibility_never_flags_protected_evidence()`) against
+  a synthetic `CacheRowSnapshot`; tested by 49 new tests in
+  `tests/tools/test_knowledge_gateway_redaction.py`. Pure, directly-testable functions only — no
+  `INSERT`/`UPDATE` against `retrieval_provider_result_cache_rows`, and `tools/retrieval_cache.py`
+  was not edited. Wiring these functions into the live gateway request path remains a separate,
+  not-yet-started ticket (`TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`).
 - Validate direct evidence fingerprints before hits, falling back to provider generation only when
-  the provider capability contract lacks reliable finer-grained evidence.
-- Add exact normalized-query reuse.
+  the provider capability contract lacks reliable finer-grained evidence. **Done**
+  (`TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`) — new module `tools/knowledge_gateway_cache.py`
+  implements lookup-identity computation (§1) and evidence-validity revalidation (§2/§3/§4) as
+  genuinely separate, non-collapsed steps. §12.2's lazy, read-time fingerprint revalidation runs
+  before serving a hit, falling back to `PROVIDER_GENERATION`-level validation only when the provider
+  capability contract lacks finer-grained evidence (confirmed against both real
+  `provider_capabilities_*.json` files, which today both declare `fine_grained_fingerprints: false` —
+  a genuine, disclosed limitation, not a defect this ticket introduces). §12.3's branch/working-tree
+  scope is enforced as a hard partition checked before any fingerprint comparison: a new commit alone
+  never forces a cache miss when direct evidence is unchanged, and a cached result from one branch is
+  never served on an unrelated branch. Wired into
+  `tools/knowledge_gateway_mcp.py::_run_knowledge_context()` via two new hook call-outs
+  (cache-check immediately after routing, cache-write before response-schema validation); every cache
+  write routes exclusively through `knowledge_gateway_redaction.evaluate_write_candidate()`, no
+  bypass path anywhere. The SYMBOL/FILE-kind fingerprint-mismatch path is fixture-based (mirroring
+  Phase 0's own precedent), not exercisable against real live provider output today, since both real
+  providers currently only supply `PROVIDER_GENERATION`-level evidence — labeled honestly, not
+  presented as tested end-to-end against real data. Tested by 18 new tests in
+  `tests/tools/test_knowledge_gateway_cache.py` plus 9 new integration tests in
+  `tests/tools/test_knowledge_gateway_mcp.py`.
+- Add exact normalized-query reuse. **Done** (`TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`) — an
+  identical repeated `knowledge_context` call (same normalized intent/resolved entity IDs/filters/
+  budget class) now produces a genuine cache hit on the second call, served without a provider
+  round-trip, verified by a real test proving the second call never reaches
+  `_run_search()`/`graphify query`
+  (`test_identical_repeated_knowledge_context_call_is_a_genuine_cache_hit`). Cache writes on a genuine
+  miss go through `tools/retrieval_cache.py`'s new `check_provider_result_cache()`/
+  `write_provider_result_cache()` pair; a `PARTIAL`-status response is deliberately never cached
+  (discovered as a real regression during Implement — see the ticket's own Implementation Notes).
+  `knowledge_status` now also reports real cache entry counts and hit/miss/stale-rejection rates via
+  the new `provider_result_cache_stats()`, previously omitted per Phase 1's own honest
+  not-yet-available disclosure; `latency_summary_ms`/`provider_fallback_rate` remain honestly omitted
+  since this ticket adds no latency instrumentation.
+
+Phase 2 acceptance recomparison against Phase 0's promotion thresholds and Phase 1's own recorded
+cold-path result (`TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON`, the "other half" of Phase 2's own
+bargain): the real, now-cache-wired gateway was run twice per entry (cold, then warm) against the
+same 7-entry frozen corpus, under the exact same request shape Phase 1 used (no `budget_tokens`
+override — an explicit Architecture Review ruling, not a default). The honest result is 0/7
+genuine cache hits: every one of the 7 entries' real, default-budget response payload (10.6–30.5 KB)
+exceeds the deployed cache's `MAX_PAYLOAD_BYTES = 8192` write size cap, so every cache write was
+rejected (`cache_write_rejection_reason: "oversized_payload"` on all 7 entries, independently
+confirmed by both a provider-round-trip spy and a direct cache-table `hit_count` delta check — never
+inferred from the response body alone). §4.1 (warm-path latency), §4.2 (token reduction, cold and
+warm computed separately), and §4.3 (no-regression recall, recomputed with the now-fixed evidence-ID
+normalization) each FAIL in aggregate and for every entry; the Q2/Q5 recall miss persists for the
+same documented single-primary-provider routing reason, and the non-Q2/Q5 recall counts are
+identical to Phase 1's own recorded counts (the doc_id fix was already fully reflected by Phase 1's
+own measurement, so no further change was expected or found). Full per-threshold numbers and the
+committed recomparison fixture are at
+`docs/engine/contracts/knowledge_gateway_mcp/phase2_baseline_recomparison.md` and
+`tests/tools/fixtures/kgmcp_phase2_baseline_recomparison_results.json`. This is not characterized as
+Phase 2 "succeeding" against its own predeclared bar — the real cache, as deployed, cannot
+demonstrate a genuine warm-hit path against this gateway's real, default-shaped response sizes.
+Whether to widen the size cap, change the default response shape, or otherwise revisit the cache's
+design is a separate, later human-reviewer decision, out of this ticket's own scope.
 
 ### Phase 3: Context-Packet Cache and Token Budgets
 

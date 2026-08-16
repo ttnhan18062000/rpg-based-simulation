@@ -1,0 +1,740 @@
+"""Tests for tools/knowledge_gateway_redaction.py — the pure write-path enforcement functions for
+`docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §2-§10.
+
+Built for TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH. This ticket ships pure functions only — no
+test in this file opens `knowledge-index/retrieval_cache.db` at its real path or issues a real
+INSERT/UPDATE against `retrieval_provider_result_cache_rows`; every §9 test uses a tmp_path-scoped
+throwaway SQLite file, mirroring tests/tools/test_retrieval_cache.py's own `_isolated_cache_db`
+fixture pattern (never CACHE_DB_PATH itself).
+"""
+from __future__ import annotations
+
+import ast
+import sys
+from pathlib import Path
+
+import pytest
+
+_REPO_ROOT = Path(__file__).parent.parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from tools import knowledge_gateway_redaction as kgr  # noqa: E402
+from tools import retrieval_cache as rc  # noqa: E402
+from tools import retrieval_events as re_mod  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _reset_write_locks():
+    kgr._write_locks.clear()
+    yield
+    kgr._write_locks.clear()
+
+
+# ---------------------------------------------------------------------------
+# Step 1 — module docstring disclosure
+# ---------------------------------------------------------------------------
+
+class TestModuleDisclosure:
+    def test_module_docstring_preserves_non_production_complete_disclosure(self):
+        normalized = " ".join(kgr.__doc__.split())
+        assert "not a production-complete secret scanner" in normalized
+        assert "security-focused pass before Phase 2 payload caching goes live" in normalized
+
+
+# ---------------------------------------------------------------------------
+# Step 2 — §2 Allowlist
+# ---------------------------------------------------------------------------
+
+class TestAllowlist:
+    def test_allowlist_accepts_context_search_source_type(self):
+        assert kgr.check_allowlist(kgr.SOURCE_TYPE_CONTEXT_SEARCH) is True
+
+    def test_allowlist_accepts_graphify_source_type(self):
+        assert kgr.check_allowlist(kgr.SOURCE_TYPE_GRAPHIFY) is True
+
+    def test_allowlist_rejects_unlisted_source_type(self):
+        assert kgr.check_allowlist("raw_filesystem_read") is False
+        assert kgr.check_allowlist("live_shell_stdout") is False
+        assert kgr.check_allowlist("") is False
+
+
+# ---------------------------------------------------------------------------
+# Step 3 — §3 Redaction rules and hashing
+# ---------------------------------------------------------------------------
+
+class TestRedactionAndHashing:
+    def test_redaction_replaces_local_username_in_home_path(self):
+        unix_input = "Path is /home/alice/project/file.py for the build."
+        unix_output = kgr.redact_content(unix_input)
+        assert "alice" not in unix_output
+        assert kgr.LOCAL_USER_PLACEHOLDER in unix_output
+
+        windows_input = r"Path is C:\Users\alice\project\file.py for the build."
+        windows_output = kgr.redact_content(windows_input)
+        assert "alice" not in windows_output
+        assert kgr.LOCAL_USER_PLACEHOLDER in windows_output
+
+    def test_redaction_replaces_machine_specific_absolute_path(self):
+        not_under_repo = kgr.redact_content(
+            "Config found at /opt/secret-data/config.txt on disk.", repo_root=Path("/repo/project")
+        )
+        assert "/opt/secret-data/config.txt" not in not_under_repo
+        assert kgr.LOCAL_PATH_PLACEHOLDER in not_under_repo
+
+        under_repo = kgr.redact_content(
+            "See /repo/project/src/foo.py for details.", repo_root=Path("/repo/project")
+        )
+        assert "/repo/project/src/foo.py" not in under_repo
+        assert "src/foo.py" in under_repo
+        assert kgr.LOCAL_PATH_PLACEHOLDER not in under_repo
+
+    def test_redacted_hash_differs_from_unredacted_hash_for_same_input(self):
+        raw = "Home dir: /home/bob/secret-notes.txt"
+        redacted = kgr.redact_content(raw)
+        assert redacted != raw
+        assert kgr._hash_text(raw) != kgr._hash_text(redacted)
+
+    def test_only_redacted_hash_is_ever_returned_for_persistence(self):
+        raw_content = "Home dir: /home/bob/notes.txt has the build output."
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=raw_content
+        )
+        assert decision.verdict == kgr.ALLOW
+        assert decision.redacted_hash == kgr._hash_text(kgr.redact_content(raw_content))
+        assert decision.redacted_hash != kgr._hash_text(raw_content)
+
+        field_names = {f.name for f in __import__("dataclasses").fields(kgr.WriteDecision)}
+        assert "unredacted_hash" not in field_names
+
+    def test_redaction_runs_before_hashing_order_is_enforced(self):
+        raw_content = "See /home/carol/data/report.txt for the numbers."
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_GRAPHIFY, raw_content=raw_content
+        )
+        assert decision.verdict == kgr.ALLOW
+        assert decision.redacted_hash == kgr._hash_text(kgr.redact_content(raw_content))
+        assert decision.redacted_hash != kgr._hash_text(raw_content)
+
+
+# ---------------------------------------------------------------------------
+# Step 4 — §4 Secret-scan baseline
+# ---------------------------------------------------------------------------
+
+_AWS_KEY = "AKIAABCDEFGHIJKLMNOP"
+_API_KEY_ASSIGNMENT = 'api_key = "abcdefghij1234567890"'
+_PEM_HEADER = "-----BEGIN RSA PRIVATE KEY-----"
+_BEARER_TOKEN = "Bearer a1b2c3d4e5f6g7h8i9j0KLMN"
+_CLEAN_CONTENT = "This is a perfectly normal piece of retrieved documentation text."
+
+# Expanded set (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING's own Security-Review pass).
+_GITHUB_TOKEN_GHP = "ghp_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8"
+_GITHUB_TOKEN_FINE_GRAINED = "github_pat_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4"
+_SLACK_TOKEN = "xoxb-111111111111-222222222222-abcdefghijklmnopqrstuvwx"
+_OPENAI_KEY = "sk-" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4"
+_ANTHROPIC_KEY = "sk-ant-" + "A1b2C3d4E5f6G7h8I9j0K1l2"
+_PASSWORD_ASSIGNMENT = 'password = "supersecretvalue1"'
+_BASIC_AUTH_URL = "https://alice:hunter2@internal.example.com/api"
+
+
+class TestSecretScan:
+    def test_secret_scan_detects_aws_style_access_key_id(self):
+        assert kgr.scan_for_secrets(f"key = {_AWS_KEY}") == "aws_access_key_id"
+
+    def test_secret_scan_rejects_write_on_aws_key_match(self):
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=f"key = {_AWS_KEY}"
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "aws_access_key_id"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+    def test_secret_scan_detects_generic_api_key_assignment(self):
+        assert kgr.scan_for_secrets(_API_KEY_ASSIGNMENT) == "generic_api_key_assignment"
+
+    def test_secret_scan_rejects_write_on_api_key_match(self):
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=_API_KEY_ASSIGNMENT
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "generic_api_key_assignment"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+    def test_secret_scan_detects_pem_private_key_header(self):
+        assert kgr.scan_for_secrets(_PEM_HEADER) == "pem_private_key_header"
+        assert kgr.scan_for_secrets("-----BEGIN EC PRIVATE KEY-----") == "pem_private_key_header"
+        assert (
+            kgr.scan_for_secrets("-----BEGIN OPENSSH PRIVATE KEY-----") == "pem_private_key_header"
+        )
+        assert kgr.scan_for_secrets("-----BEGIN PRIVATE KEY-----") == "pem_private_key_header"
+
+    def test_secret_scan_rejects_write_on_pem_header_match(self):
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=_PEM_HEADER
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "pem_private_key_header"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+    def test_secret_scan_detects_bearer_token(self):
+        assert kgr.scan_for_secrets(_BEARER_TOKEN) == "bearer_token"
+
+    def test_secret_scan_rejects_write_on_bearer_token_match(self):
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=_BEARER_TOKEN
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "bearer_token"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+    def test_secret_scan_clean_content_is_not_rejected(self):
+        assert kgr.scan_for_secrets(_CLEAN_CONTENT) is None
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=_CLEAN_CONTENT
+        )
+        assert decision.verdict == kgr.ALLOW
+
+    def test_secret_scan_match_short_circuits_before_size_cap_or_redaction_store(self):
+        oversized_secret_content = f"key = {_AWS_KEY}\n" + ("x" * 9000)
+        assert len(oversized_secret_content.encode("utf-8")) > kgr.MAX_PAYLOAD_BYTES
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=oversized_secret_content
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "aws_access_key_id"
+
+    # --- Expanded patterns (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING Security-Review pass) ---
+
+    def test_secret_scan_detects_github_token(self):
+        assert kgr.scan_for_secrets(f"token = {_GITHUB_TOKEN_GHP}") == "github_token"
+        assert kgr.scan_for_secrets(f"token = {_GITHUB_TOKEN_FINE_GRAINED}") == "github_token"
+
+    def test_secret_scan_rejects_write_on_github_token_match(self):
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=f"token = {_GITHUB_TOKEN_GHP}"
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "github_token"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+    def test_secret_scan_detects_slack_token(self):
+        assert kgr.scan_for_secrets(_SLACK_TOKEN) == "slack_token"
+
+    def test_secret_scan_rejects_write_on_slack_token_match(self):
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=_SLACK_TOKEN
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "slack_token"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+    def test_secret_scan_detects_openai_api_key(self):
+        assert kgr.scan_for_secrets(_OPENAI_KEY) == "openai_api_key"
+
+    def test_secret_scan_rejects_write_on_openai_api_key_match(self):
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=_OPENAI_KEY
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "openai_api_key"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+    def test_secret_scan_detects_anthropic_api_key(self):
+        assert kgr.scan_for_secrets(_ANTHROPIC_KEY) == "anthropic_api_key"
+
+    def test_secret_scan_rejects_write_on_anthropic_api_key_match(self):
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=_ANTHROPIC_KEY
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "anthropic_api_key"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+    def test_openai_pattern_does_not_mismatch_an_anthropic_key(self):
+        """An Anthropic key must be attributed exclusively to anthropic_api_key — never also
+        matched (or mis-attributed) as openai_api_key, since both share the "sk-" prefix. The
+        openai_api_key pattern's negative lookahead is what this test is really verifying.
+        """
+        assert kgr.scan_for_secrets(_ANTHROPIC_KEY) == "anthropic_api_key"
+        assert kgr._SECRET_SCAN_PATTERNS["openai_api_key"].search(_ANTHROPIC_KEY) is None
+
+    def test_anthropic_pattern_does_not_mismatch_an_openai_key(self):
+        assert kgr.scan_for_secrets(_OPENAI_KEY) == "openai_api_key"
+        assert kgr._SECRET_SCAN_PATTERNS["anthropic_api_key"].search(_OPENAI_KEY) is None
+
+    def test_secret_scan_detects_generic_password_assignment(self):
+        assert (
+            kgr.scan_for_secrets(_PASSWORD_ASSIGNMENT) == "generic_password_or_secret_assignment"
+        )
+        assert (
+            kgr.scan_for_secrets("passwd: 'anotherSecretValue'")
+            == "generic_password_or_secret_assignment"
+        )
+        assert (
+            kgr.scan_for_secrets('secret = "topsecretvalue123"')
+            == "generic_password_or_secret_assignment"
+        )
+
+    def test_secret_scan_rejects_write_on_password_assignment_match(self):
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=_PASSWORD_ASSIGNMENT
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "generic_password_or_secret_assignment"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+    def test_secret_scan_detects_basic_auth_in_url(self):
+        assert kgr.scan_for_secrets(_BASIC_AUTH_URL) == "basic_auth_in_url"
+
+    def test_secret_scan_rejects_write_on_basic_auth_in_url_match(self):
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=_BASIC_AUTH_URL
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "basic_auth_in_url"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+
+# ---------------------------------------------------------------------------
+# Step 5 — §5 Payload size cap
+# ---------------------------------------------------------------------------
+
+class TestSizeCap:
+    def test_payload_under_cap_is_accepted(self):
+        assert kgr.check_size_cap("a" * 8000) is True
+
+    def test_payload_exactly_at_cap_is_accepted(self):
+        assert kgr.check_size_cap("a" * 8192) is True
+
+    def test_payload_over_cap_is_rejected_not_truncated(self):
+        assert kgr.check_size_cap("a" * 8193) is False
+
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content="a" * 8193
+        )
+        assert decision.verdict == kgr.REJECT
+        assert decision.rejection_category == "oversized_payload"
+        assert decision.redacted_payload is None
+        assert decision.redacted_hash is None
+
+    def test_size_cap_measured_on_redacted_not_raw_payload(self):
+        raw_content = "/home/someuser/very/long/path/segment/example/file.py " * 300
+        assert len(raw_content.encode("utf-8")) > kgr.MAX_PAYLOAD_BYTES
+
+        redacted = kgr.redact_content(raw_content)
+        assert kgr.check_size_cap(redacted) is True
+
+        decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=raw_content
+        )
+        assert decision.verdict == kgr.ALLOW
+
+
+# ---------------------------------------------------------------------------
+# Step 6 — §7 Never-cache enumeration
+# ---------------------------------------------------------------------------
+
+_ENV_VALUE_CONTENT = "DATABASE_URL=postgres://localhost:5432/db"
+_CONFIG_CONTENT = "timeout: 30\nretries: 5\ndebug: true"
+_UNREDACTED_TOOL_OUTPUT_CONTENT = "Tool ran successfully with no issues."
+_UNREDACTED_TOOL_OUTPUT_REDACTED = (
+    "Tool ran successfully with no issues. Output logged to /home/otheruser/logs/output.txt"
+)
+_RAW_PROMPT_CONTENT = "Please summarize this document for me."
+
+
+class TestNeverCacheCategories:
+    def test_never_cache_rejects_secrets_or_credentials(self):
+        violated = kgr.check_never_cache_categories(
+            content=_AWS_KEY, redacted_content=_AWS_KEY
+        )
+        assert kgr.CATEGORY_SECRETS_OR_CREDENTIALS in violated
+
+    def test_never_cache_rejects_tokens(self):
+        violated = kgr.check_never_cache_categories(
+            content=_BEARER_TOKEN, redacted_content=_BEARER_TOKEN
+        )
+        assert kgr.CATEGORY_TOKENS in violated
+        # Documented fold (plan.md DD6): tokens are detected via the same scan_for_secrets()
+        # function §4 builds, not a second independent pattern set.
+        assert kgr.scan_for_secrets(_BEARER_TOKEN) == "bearer_token"
+
+    def test_never_cache_rejects_named_service_tokens_as_tokens_category(self):
+        """github_token/slack_token are named-service *tokens* (like bearer_token), not
+        credentials — both must classify into CATEGORY_TOKENS, not CATEGORY_SECRETS_OR_CREDENTIALS.
+        """
+        for content in (_GITHUB_TOKEN_GHP, _SLACK_TOKEN):
+            violated = kgr.check_never_cache_categories(content=content, redacted_content=content)
+            assert violated == frozenset({kgr.CATEGORY_TOKENS}), (content, violated)
+
+    def test_never_cache_rejects_named_service_api_keys_as_secrets_or_credentials_category(self):
+        """openai_api_key/anthropic_api_key/generic_password_or_secret_assignment/
+        basic_auth_in_url are credential shapes (like the pre-existing AWS/generic-api-key/PEM
+        patterns), not named-service tokens — all four must classify into
+        CATEGORY_SECRETS_OR_CREDENTIALS, not CATEGORY_TOKENS.
+        """
+        for content in (_OPENAI_KEY, _ANTHROPIC_KEY, _PASSWORD_ASSIGNMENT, _BASIC_AUTH_URL):
+            violated = kgr.check_never_cache_categories(content=content, redacted_content=content)
+            assert violated == frozenset({kgr.CATEGORY_SECRETS_OR_CREDENTIALS}), (content, violated)
+
+    def test_never_cache_rejects_raw_environment_values(self):
+        violated = kgr.check_never_cache_categories(
+            content=_ENV_VALUE_CONTENT, redacted_content=_ENV_VALUE_CONTENT
+        )
+        assert kgr.CATEGORY_RAW_ENVIRONMENT_VALUES in violated
+
+    def test_never_cache_rejects_unredacted_sensitive_tool_output(self):
+        violated = kgr.check_never_cache_categories(
+            content=_UNREDACTED_TOOL_OUTPUT_CONTENT,
+            redacted_content=_UNREDACTED_TOOL_OUTPUT_REDACTED,
+        )
+        assert kgr.CATEGORY_UNREDACTED_SENSITIVE_TOOL_OUTPUT in violated
+
+    def test_never_cache_rejects_arbitrary_config_file_contents(self):
+        violated = kgr.check_never_cache_categories(
+            content=_CONFIG_CONTENT, redacted_content=_CONFIG_CONTENT
+        )
+        assert kgr.CATEGORY_ARBITRARY_CONFIG_FILE_CONTENTS in violated
+
+    def test_never_cache_rejects_unrestricted_raw_prompts(self):
+        violated = kgr.check_never_cache_categories(
+            content=_RAW_PROMPT_CONTENT, redacted_content=_RAW_PROMPT_CONTENT, is_raw_prompt=True
+        )
+        assert kgr.CATEGORY_UNRESTRICTED_RAW_PROMPTS in violated
+
+    def test_never_cache_categories_are_independently_enforced(self):
+        cases = [
+            (
+                {"content": _AWS_KEY, "redacted_content": _AWS_KEY},
+                kgr.CATEGORY_SECRETS_OR_CREDENTIALS,
+            ),
+            (
+                {"content": _BEARER_TOKEN, "redacted_content": _BEARER_TOKEN},
+                kgr.CATEGORY_TOKENS,
+            ),
+            (
+                {"content": _ENV_VALUE_CONTENT, "redacted_content": _ENV_VALUE_CONTENT},
+                kgr.CATEGORY_RAW_ENVIRONMENT_VALUES,
+            ),
+            (
+                {
+                    "content": _UNREDACTED_TOOL_OUTPUT_CONTENT,
+                    "redacted_content": _UNREDACTED_TOOL_OUTPUT_REDACTED,
+                },
+                kgr.CATEGORY_UNREDACTED_SENSITIVE_TOOL_OUTPUT,
+            ),
+            (
+                {"content": _CONFIG_CONTENT, "redacted_content": _CONFIG_CONTENT},
+                kgr.CATEGORY_ARBITRARY_CONFIG_FILE_CONTENTS,
+            ),
+            (
+                {
+                    "content": _RAW_PROMPT_CONTENT,
+                    "redacted_content": _RAW_PROMPT_CONTENT,
+                    "is_raw_prompt": True,
+                },
+                kgr.CATEGORY_UNRESTRICTED_RAW_PROMPTS,
+            ),
+        ]
+        for kwargs, expected_category in cases:
+            violated = kgr.check_never_cache_categories(**kwargs)
+            assert violated == frozenset({expected_category}), (
+                f"expected exactly {{{expected_category}}}, got {violated} for {kwargs}"
+            )
+
+
+# ---------------------------------------------------------------------------
+# Step 7 — §6 redaction_policy_version stamping
+# ---------------------------------------------------------------------------
+
+class TestRedactionPolicyVersion:
+    def test_redaction_policy_version_is_stamped_on_every_write_decision(self):
+        allow_decision = kgr.evaluate_write_candidate(
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=_CLEAN_CONTENT
+        )
+        assert allow_decision.redaction_policy_version == kgr.redaction_policy_version
+
+        reject_decision = kgr.evaluate_write_candidate(
+            source_type="raw_filesystem_read", raw_content=_CLEAN_CONTENT
+        )
+        assert reject_decision.redaction_policy_version == kgr.redaction_policy_version
+
+    def test_redaction_policy_version_distinct_from_retrieval_version(self):
+        assert kgr.redaction_policy_version == 1
+        assert rc.RETRIEVAL_VERSION == 1
+        assert rc.retrieval_cache_schema_version == 1
+        assert re_mod.retrieval_event_schema_version == 1
+        # Same value today is a coincidence, not a shared identity -- confirmed by them being
+        # four entirely separate module-level names, never imported/aliased from one another.
+        assert "redaction_policy_version" not in dir(rc)
+        assert "redaction_policy_version" not in dir(re_mod)
+        assert "RETRIEVAL_VERSION" not in dir(kgr)
+        assert "retrieval_cache_schema_version" not in dir(kgr)
+        assert "retrieval_event_schema_version" not in dir(kgr)
+
+
+# ---------------------------------------------------------------------------
+# Step 8 — §9 SQLite operational limits
+# ---------------------------------------------------------------------------
+
+class TestSqliteOperationalLimits:
+    def test_wal_mode_pragma_applied_on_connection_open(self, tmp_path):
+        conn = kgr.open_connection_with_limits(tmp_path / "wal.db")
+        try:
+            mode = conn.execute("PRAGMA journal_mode").fetchone()[0]
+            assert mode.lower() == "wal"
+        finally:
+            conn.close()
+
+    def test_busy_timeout_pragma_set_to_5000ms(self, tmp_path):
+        conn = kgr.open_connection_with_limits(tmp_path / "timeout.db")
+        try:
+            value = conn.execute("PRAGMA busy_timeout").fetchone()[0]
+            assert value == kgr.SQLITE_BUSY_TIMEOUT_MS
+        finally:
+            conn.close()
+
+    def test_file_permissions_set_to_0600_after_creation(self, tmp_path):
+        db_path = tmp_path / "perm.db"
+        conn = kgr.open_connection_with_limits(db_path)
+        conn.close()
+        assert oct(db_path.stat().st_mode)[-3:] == "600"
+
+    def test_max_db_size_check_flags_oversized_database(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(kgr, "SQLITE_MAX_DB_SIZE_BYTES", 100)
+        small_path = tmp_path / "small.db"
+        small_path.write_bytes(b"0" * 10)
+        assert kgr.check_db_size_within_limit(small_path) is True
+
+        big_path = tmp_path / "big.db"
+        big_path.write_bytes(b"0" * 200)
+        assert kgr.check_db_size_within_limit(big_path) is False
+
+        nonexistent_path = tmp_path / "does-not-exist.db"
+        assert kgr.check_db_size_within_limit(nonexistent_path) is True
+
+    def test_write_path_wraps_statements_in_single_bounded_transaction(self, tmp_path):
+        import sqlite3
+
+        class _CountingConnection(sqlite3.Connection):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.commit_calls = 0
+
+            def commit(self):
+                self.commit_calls += 1
+                return super().commit()
+
+        conn = sqlite3.connect(str(tmp_path / "tx.db"), factory=_CountingConnection)
+        conn.execute("CREATE TABLE t (a INTEGER)")
+        conn.commit()
+        conn.commit_calls = 0
+
+        kgr.execute_bounded_transaction(
+            conn,
+            [
+                ("INSERT INTO t VALUES (?)", (1,)),
+                ("INSERT INTO t VALUES (?)", (2,)),
+            ],
+        )
+        assert conn.commit_calls == 1
+        rows = conn.execute("SELECT a FROM t ORDER BY a").fetchall()
+        assert rows == [(1,), (2,)]
+        conn.close()
+
+    def test_per_key_stampede_guard_prevents_concurrent_duplicate_write(self):
+        assert kgr.acquire_write_guard("cache-key-1") is True
+        assert kgr.acquire_write_guard("cache-key-1") is False
+        kgr.release_write_guard("cache-key-1")
+        assert kgr.acquire_write_guard("cache-key-1") is True
+        kgr.release_write_guard("cache-key-1")
+
+        # A distinct key is independent of cache-key-1's guard state.
+        assert kgr.acquire_write_guard("cache-key-2") is True
+        kgr.release_write_guard("cache-key-2")
+
+    def test_sqlite_limits_functions_not_added_to_tools_retrieval_cache_py(self):
+        """Narrowed by TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING (DD3, Architecture
+        Review-confirmed): migration_003_add_redaction_policy_version_column legitimately issues a
+        real `PRAGMA table_info(...)` schema-introspection query for its ALTER TABLE idempotency
+        check — a different PRAGMA than the §9 connection-tuning ones
+        (journal_mode/busy_timeout/chmod) this guard exists to keep exclusively behind
+        knowledge_gateway_redaction.open_connection_with_limits(). Only those connection-tuning
+        forms stay banned.
+        """
+        source = Path(rc.__file__).read_text(encoding="utf-8")
+        assert "PRAGMA journal_mode" not in source
+        assert "PRAGMA busy_timeout" not in source
+        assert "busy_timeout" not in source
+        assert "os.chmod" not in source
+        assert "chmod" not in source
+
+        tree = ast.parse(source)
+        imported_modules = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported_modules.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imported_modules.add(node.module)
+        assert "os" not in imported_modules
+
+
+# ---------------------------------------------------------------------------
+# Step 9 — §10 Cache-GC eligibility predicates
+# ---------------------------------------------------------------------------
+
+def _snapshot(**overrides) -> "kgr.CacheRowSnapshot":
+    defaults = dict(
+        repo_branch_scope="main",
+        provider_generation="gen-1",
+        hit_count=5,
+        created_at=1_000.0,
+        last_hit_at=1_000.0,
+        cache_status="complete",
+        evidence_kind=None,
+        only_change_is_provider_generation_bump=False,
+    )
+    defaults.update(overrides)
+    return kgr.CacheRowSnapshot(**defaults)
+
+
+class TestGcEligibility:
+    def test_gc_eligibility_flags_expired_exact_query_result(self):
+        snapshot = _snapshot(created_at=1_000.0)
+        assert (
+            kgr.gc_eligible_expired_exact_query_result(
+                snapshot, now=1_000.0 + 100_000, max_age_seconds=86_400
+            )
+            is True
+        )
+        assert (
+            kgr.gc_eligible_expired_exact_query_result(
+                snapshot, now=1_000.0 + 10, max_age_seconds=86_400
+            )
+            is False
+        )
+
+    def test_gc_eligibility_flags_packet_for_deleted_branch(self):
+        snapshot = _snapshot()
+        assert kgr.gc_eligible_deleted_branch_packet(snapshot, branch_exists=False) is True
+        assert kgr.gc_eligible_deleted_branch_packet(snapshot, branch_exists=True) is False
+
+    def test_gc_eligibility_flags_obsolete_provider_version_row(self):
+        snapshot = _snapshot(provider_generation="gen-1")
+        assert (
+            kgr.gc_eligible_obsolete_provider_version_row(
+                snapshot, current_provider_generation="gen-2"
+            )
+            is True
+        )
+        assert (
+            kgr.gc_eligible_obsolete_provider_version_row(
+                snapshot, current_provider_generation="gen-1"
+            )
+            is False
+        )
+
+    def test_gc_eligibility_flags_low_use_regenerable_packet(self):
+        snapshot = _snapshot(hit_count=1)
+        assert kgr.gc_eligible_low_use_regenerable_packet(snapshot, low_use_threshold=5) is True
+
+        busy_snapshot = _snapshot(hit_count=10)
+        assert (
+            kgr.gc_eligible_low_use_regenerable_packet(busy_snapshot, low_use_threshold=5) is False
+        )
+
+    def test_gc_eligibility_flags_stale_row_superseded_by_refresh(self):
+        snapshot = _snapshot()
+        assert kgr.gc_eligible_stale_row_superseded_by_refresh(snapshot, superseded=True) is True
+        assert kgr.gc_eligible_stale_row_superseded_by_refresh(snapshot, superseded=False) is False
+
+    def test_gc_eligibility_flags_failed_incomplete_write(self):
+        pending_snapshot = _snapshot(cache_status="pending")
+        assert kgr.gc_eligible_failed_incomplete_write(pending_snapshot) is True
+
+        complete_snapshot = _snapshot(cache_status="complete")
+        assert kgr.gc_eligible_failed_incomplete_write(complete_snapshot) is False
+
+        none_status_snapshot = _snapshot(cache_status=None)
+        assert kgr.gc_eligible_failed_incomplete_write(none_status_snapshot) is False
+
+    def test_gc_eligibility_never_flags_symbol_or_file_backed_evidence_on_bare_generation_bump(
+        self,
+    ):
+        symbol_snapshot = _snapshot(
+            evidence_kind="SYMBOL", only_change_is_provider_generation_bump=True
+        )
+        assert kgr.gc_eligibility_never_flags_protected_evidence(symbol_snapshot) is True
+
+        file_snapshot = _snapshot(
+            evidence_kind="FILE", only_change_is_provider_generation_bump=True
+        )
+        assert kgr.gc_eligibility_never_flags_protected_evidence(file_snapshot) is True
+
+        unprotected_kind_snapshot = _snapshot(
+            evidence_kind=None, only_change_is_provider_generation_bump=True
+        )
+        assert kgr.gc_eligibility_never_flags_protected_evidence(unprotected_kind_snapshot) is False
+
+        not_a_bare_bump_snapshot = _snapshot(
+            evidence_kind="SYMBOL", only_change_is_provider_generation_bump=False
+        )
+        assert (
+            kgr.gc_eligibility_never_flags_protected_evidence(not_a_bare_bump_snapshot) is False
+        )
+
+    def test_prune_remains_the_only_eviction_call_site(self):
+        source = Path(kgr.__file__).read_text(encoding="utf-8")
+        assert "DELETE FROM" not in source
+        assert "conn.execute(\"DELETE" not in source
+
+        tree = ast.parse(source)
+        called_names = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                called_names.add(node.func.id)
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                called_names.add(node.func.attr)
+        assert "prune" not in called_names
+
+
+# ---------------------------------------------------------------------------
+# Step 10 — Whole-module architecture guards
+# ---------------------------------------------------------------------------
+
+class TestWorkflowIsolationGuards:
+    def test_module_does_not_import_live_gateway_files(self):
+        source = Path(kgr.__file__).read_text(encoding="utf-8")
+        tree = ast.parse(source)
+
+        imported_names: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported_names.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imported_names.add(node.module)
+
+        banned_modules = {
+            "knowledge_gateway_router",
+            "knowledge_gateway_packet_assembly",
+            "knowledge_gateway_mcp",
+            "tools.knowledge_gateway_router",
+            "tools.knowledge_gateway_packet_assembly",
+            "tools.knowledge_gateway_mcp",
+        }
+        assert not (imported_names & banned_modules)
+
+    def test_no_insert_or_update_literal_sql_against_provider_result_cache_rows(self):
+        source = Path(kgr.__file__).read_text(encoding="utf-8")
+        assert "INSERT INTO retrieval_provider_result_cache_rows" not in source
+        assert "UPDATE retrieval_provider_result_cache_rows" not in source

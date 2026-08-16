@@ -105,12 +105,23 @@ def test_sqlite_operational_limits_are_documented():
 
 
 def test_sqlite_defaults_not_silently_implemented():
-    """Anti-scope-creep guard: this ticket documents SQLite defaults but must never wire them
-    into tools/retrieval_cache.py. Fails loudly if any drifting implementer adds PRAGMA/
-    busy_timeout/chmod code to that module under cover of satisfying AC4.
+    """Anti-scope-creep guard: this ticket documents SQLite defaults but must never wire the §9
+    *connection-tuning* defaults (journal_mode=WAL, busy_timeout, chmod-on-create) directly into
+    tools/retrieval_cache.py — those stay exclusively behind
+    knowledge_gateway_redaction.open_connection_with_limits(). Fails loudly if any drifting
+    implementer re-adds that connection-tuning PRAGMA/busy_timeout/chmod code to that module under
+    cover of satisfying AC4.
+
+    Narrowed by TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING (DD3, Architecture Review-confirmed):
+    migration_003_add_redaction_policy_version_column legitimately issues a real
+    `PRAGMA table_info(...)` schema-introspection query for its ALTER TABLE idempotency check
+    (SQLite has no `ADD COLUMN IF NOT EXISTS`) — a different PRAGMA than the connection-tuning ones
+    this guard exists to block, and not a duplication of open_connection_with_limits()'s own logic.
+    Only the specific connection-tuning PRAGMA forms are still banned.
     """
     source = _RETRIEVAL_CACHE_PY.read_text()
-    assert "PRAGMA" not in source
+    assert "PRAGMA journal_mode" not in source
+    assert "PRAGMA busy_timeout" not in source
     assert "busy_timeout" not in source
     assert "os.chmod" not in source
     assert "chmod" not in source

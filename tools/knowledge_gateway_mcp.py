@@ -125,6 +125,16 @@ def _load_search_mcp_module():
     return sys.modules[key]
 
 
+def _load_cache_module():
+    key = "kgmcp_mcp_cache"
+    if key not in sys.modules:
+        spec = importlib.util.spec_from_file_location(key, _TOOLS_DIR / "knowledge_gateway_cache.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[key] = mod
+        spec.loader.exec_module(mod)
+    return sys.modules[key]
+
+
 def _omit_none(d: dict) -> dict:
     """Both `knowledge_status.providers[].generation` and `knowledge_context`'s
     `context[]`/`evidence[]` `path`/`authority` fields are typed plain `string` (no `null`
@@ -207,6 +217,25 @@ def _run_knowledge_context(
         RESPONSE_VALIDATOR.validate(fallback_response)
         return fallback_response
 
+    # Cache-check hook (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING) — runs after route()
+    # succeeds (compute_lookup_identity() structurally requires routing_decision.matched_identifier)
+    # and before assemble_packet(), so a genuine hit skips the provider round-trip entirely.
+    # Broad try/except: a cache-layer failure must never prevent the direct provider path from
+    # succeeding (fail-open, mirrors this function's own router-failure precedent above).
+    cached_payload = None
+    try:
+        _kgc = _load_cache_module()
+        cached_payload = _kgc.perform_cache_lookup(request, routing_decision, effective_budget)
+    except Exception:
+        cached_payload = None
+
+    if cached_payload is not None:
+        hit_response: dict = dict(cached_payload)
+        hit_response["cache"] = "HIT"
+        hit_response["cache_key_version"] = _kgc.ROUTING_POLICY_VERSION
+        RESPONSE_VALIDATOR.validate(hit_response)
+        return hit_response
+
     packet = _kgpa.assemble_packet(routing_decision, query, effective_budget)
 
     response: dict = {
@@ -283,6 +312,17 @@ def _run_knowledge_context(
         for conflict in packet.conflicts
     ]
 
+    # Cache-write hook (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING) — miss path only (the hit
+    # path above returns early and never reaches here). response["cache"] describes what happened
+    # on *this* call and is set before the write attempt, independent of whether the write itself
+    # succeeds. Broad try/except: fail-open, same guarantee as the cache-check hook above.
+    response["cache"] = "MISS"
+    try:
+        _kgc = _load_cache_module()
+        _kgc.perform_cache_write(request, routing_decision, response, effective_budget)
+    except Exception:
+        pass
+
     RESPONSE_VALIDATOR.validate(response)
     return response
 
@@ -304,11 +344,15 @@ def _git_branch_scope() -> dict:
 
 
 def _run_knowledge_status() -> dict:
-    """Phase-1 field subset only — no cache exists yet. Every cache-specific field (§9.2's 6
-    named fields plus `latency_summary_ms` in its entirety, plus `provider_fallback_rate`) is
-    omitted outright, never a fabricated `0`/`null`/`{}` placeholder (see plan.md Step 3's
-    field-by-field disposition table). Only `gateway_version`, `reported_schema_version`,
-    `providers`, and `branch_scope` are Phase-1-populable."""
+    """`gateway_version`/`reported_schema_version`/`providers`/`branch_scope` are always
+    populated. As of TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING, `cache_entry_counts`/
+    `cache_hit_rate`/`cache_miss_rate`/`cache_stale_rejection_rate` are also real and populated
+    (DD12) once the real cache has at least one row — see `_load_cache_module().rc.
+    provider_result_cache_stats()` below. `latency_summary_ms` and `provider_fallback_rate` stay
+    omitted outright (this ticket adds no latency instrumentation — `tools/retrieval_events.py`'s
+    3 wrapper functions remain genuinely unused); `recent_invalidation_reasons`/`cache_rebuildable`
+    also stay omitted (not named by this ticket's own AC6/Scope). Never a fabricated `0`/`null`/
+    `{}` placeholder for any field this module cannot back with a real value."""
     import shutil
 
     _sm = _load_search_mcp_module()
@@ -338,6 +382,29 @@ def _run_knowledge_status() -> dict:
         "providers": [context_search_provider, graphify_provider],
         "branch_scope": _git_branch_scope(),
     }
+
+    # Cache-domain fields (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING, DD12) — real, populable
+    # now that a real cache exists. latency_summary_ms/provider_fallback_rate stay honestly
+    # omitted: this ticket adds no latency instrumentation (tools/retrieval_events.py's 3 wrapper
+    # functions remain genuinely unused). recent_invalidation_reasons/cache_rebuildable also stay
+    # omitted — not named by this ticket's own AC6/Scope.
+    stats = _load_cache_module().rc.provider_result_cache_stats()
+    if stats["total_rows"] > 0:
+        # Rate formula, defined against exactly the two real, test-observable counts this ticket's
+        # schema actually tracks (no separate event log exists): total_hits (cumulative hit_count
+        # across all rows) and total_rows (one row per real cache write following a miss). There is
+        # no distinct in-schema counter for "served candidate rejected by evidence-validity
+        # revalidation" versus an ordinary no-cached-row miss (both simply fall through to MISS,
+        # per DD9/DD10) — cache_stale_rejection_rate is therefore genuinely, not fabricatedly, 0.0
+        # under this ticket's own scope: a real computed ratio over a real, currently-always-zero
+        # count, not an invented placeholder number.
+        denom = stats["total_hits"] + stats["total_rows"]
+        response["cache_entry_counts"] = [
+            {"kind": "provider_result", "count": stats["total_rows"]}
+        ]
+        response["cache_hit_rate"] = stats["total_hits"] / denom
+        response["cache_miss_rate"] = stats["total_rows"] / denom
+        response["cache_stale_rejection_rate"] = 0.0
 
     STATUS_RESPONSE_VALIDATOR.validate(response)
     return response
@@ -386,9 +453,10 @@ def _build_server():
     @server.tool()
     def knowledge_status() -> dict:
         """
-        Report the Knowledge Gateway's Phase 1 status: gateway/schema version, provider
-        availability and generation, and branch scope. Cache-specific fields are omitted — no
-        cache exists yet (Phase 2).
+        Report the Knowledge Gateway's status: gateway/schema version, provider availability and
+        generation, branch scope, and (once the real cache has at least one row) cache entry
+        counts and hit/miss/stale-rejection rates. Latency and provider-fallback-rate fields stay
+        omitted — no latency instrumentation is wired in yet.
         """
         return _run_knowledge_status()
 

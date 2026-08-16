@@ -138,6 +138,22 @@ def kg_mod():
     return _load_mcp_module()
 
 
+@pytest.fixture(autouse=True)
+def _isolated_cache_db(tmp_path, monkeypatch):
+    """Added by TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING — this file's real
+    `_run_knowledge_context()` calls now genuinely read/write the Level 1 provider-result cache
+    (previously a no-op before this ticket). Mirrors `tests/tools/test_knowledge_gateway_mcp.py`'s
+    own `_isolated_cache_db` fixture (DD14) so this file's tests never touch the real on-disk
+    `knowledge-index/retrieval_cache.db`, and so the repeated same-query calls in
+    `test_graphify_nonzero_returncode_distinguished_from_legitimate_empty_result` cannot be served
+    a stale cross-run cached row."""
+    from tools import retrieval_cache as rc
+
+    monkeypatch.setattr(rc, "CACHE_DB_PATH", tmp_path / "retrieval_cache.db")
+    monkeypatch.setattr(rc, "_MANIFEST_PATH", tmp_path / "manifest.json")
+    yield
+
+
 def _load_json(path: Path) -> dict:
     return json.loads(path.read_text())
 

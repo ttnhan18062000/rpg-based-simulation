@@ -92,6 +92,20 @@ Ordered migration function list (names are placeholders; bodies are Phase 2/3 wo
 2. `migration_002_add_level2_tables(conn: sqlite3.Connection) -> None` — adds the Level 2
    (dependency-tracking) tables per §10.3. Same `CREATE TABLE IF NOT EXISTS` idempotency guarantee
    as migration 001; no column addition to an existing table.
+3. `migration_003_add_redaction_policy_version_column(conn: sqlite3.Connection) -> None` — adds a
+   `redaction_policy_version` column to the existing `retrieval_provider_result_cache_rows` table, so
+   a cache row can carry an on-disk record of which version of
+   `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §6's redaction/
+   allowlist/secret-scan/size-cap rules wrote it. Unlike migrations 1 and 2 above, this is an `ALTER
+   TABLE ... ADD COLUMN` against a table that may already hold rows, not a `CREATE TABLE IF NOT
+   EXISTS` against a wholly new table — idempotency is instead guaranteed by an explicit `PRAGMA
+   table_info(retrieval_provider_result_cache_rows)` existence check before altering (SQLite has no
+   `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`). Ordinal 3, immediately after migration 2 above, per
+   this document's own reservation that ordinal 2 belongs to the Level 2/Phase 3 tables and must
+   never be reused or stubbed by a later migration. Unlike migrations 1 and 2, which remain
+   design-only placeholders as of this document, migration 3's body is real, implemented code —
+   added by `TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`, Architecture-Review-approved (DD3,
+   option b); `tools/retrieval_cache.py:265-283`.
 
 Each migration function:
 - Is idempotent and individually re-runnable (safe to call again on a database that already has the

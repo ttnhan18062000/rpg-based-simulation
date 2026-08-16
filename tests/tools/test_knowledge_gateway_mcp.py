@@ -45,6 +45,24 @@ def _load_mcp_module():
 _mod = _load_mcp_module()
 
 
+@pytest.fixture(autouse=True)
+def _isolated_cache_db(tmp_path, monkeypatch):
+    """DD14 (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING) — mirrors
+    tests/tools/test_retrieval_cache.py's own `_isolated_cache_db` fixture. Every test in this
+    file now potentially reads/writes real Level 1 cache rows via `_mod._run_knowledge_context()`/
+    `_mod._run_knowledge_status()`; without isolation, repeated runs would pollute the real
+    on-disk `knowledge-index/retrieval_cache.db` and/or produce flaky cross-test cache hits.
+    `_MANIFEST_PATH` is also isolated (beyond DD14's own one-line sketch, following
+    `test_retrieval_cache.py`'s own precedent exactly) so `_corpus_generation()`-driven tests never
+    read or depend on the real `knowledge-index/manifest.json`.
+    """
+    from tools import retrieval_cache as rc
+
+    monkeypatch.setattr(rc, "CACHE_DB_PATH", tmp_path / "retrieval_cache.db")
+    monkeypatch.setattr(rc, "_MANIFEST_PATH", tmp_path / "manifest.json")
+    yield
+
+
 def _load_json(path: Path) -> dict:
     return json.loads(path.read_text())
 
@@ -106,11 +124,17 @@ def test_knowledge_context_value_level_validation_rejects_invalid_enum_value():
 # 4 — knowledge_status never fabricates a cache-specific field value (AC #3)
 # ---------------------------------------------------------------------------
 
+# Narrowed by TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING (DD13): cache_entry_counts/
+# cache_hit_rate/cache_miss_rate/cache_stale_rejection_rate are removed from this omission set —
+# they are now genuinely populated once the real cache has at least one row (see
+# test_knowledge_status_reports_real_cache_entry_counts_and_rates_after_writes below). This is a
+# legitimate, read-and-justify correction of a Phase-1-scoped assumption that has since expired by
+# this ticket's own in-scope behavior change — not a routed-around gate — mirroring
+# TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS's own DD3/Step 6 precedent for
+# test_kgmcp_measurement_baseline.py's banned-path tuple. The remaining guarantee (these 3 fields
+# plus latency_summary_ms stay honestly omitted — this ticket adds no latency instrumentation and
+# does not populate these) is preserved unweakened.
 _CACHE_SPECIFIC_FIELDS = {
-    "cache_entry_counts",
-    "cache_hit_rate",
-    "cache_miss_rate",
-    "cache_stale_rejection_rate",
     "recent_invalidation_reasons",
     "cache_rebuildable",
     "provider_fallback_rate",
@@ -123,12 +147,13 @@ def test_knowledge_status_omits_all_cache_specific_fields_enumerated():
     for field in _CACHE_SPECIFIC_FIELDS:
         assert field not in response, f"{field} must be omitted, never a fabricated placeholder"
 
-    # No real call site emits any latency data in Phase 1 (Design Decision D1/D5) — the entire
-    # top-level key is omitted, not just its cache-domain sub-fields.
+    # No real call site emits any latency data (Design Decision D1/D5, still true post-Phase-2) —
+    # the entire top-level key is omitted, not just its cache-domain sub-fields.
     assert "latency_summary_ms" not in response
 
-    # The Phase-1-populable fields ARE present with real values — a pure absence-check alone
-    # would not catch a broken implementation that omits everything.
+    # This test's own isolated cache DB (see _isolated_cache_db fixture) has zero rows at this
+    # point — the cache-domain fields therefore stay genuinely absent here too (DD12's own
+    # `if stats["total_rows"] > 0` gate), so the exact-keys assertion still holds.
     assert set(response.keys()) == {"gateway_version", "reported_schema_version", "providers", "branch_scope"}
     assert response["providers"]
     assert response["branch_scope"]["branch"]
@@ -273,3 +298,186 @@ def test_knowledge_context_omits_null_path_and_authority_never_returns_null_for_
     assert response["evidence"], "expected at least one graphify-sourced evidence entry"
     for entry in response["evidence"]:
         assert "path" not in entry
+
+
+# ---------------------------------------------------------------------------
+# 11 — AC1: identical repeated call is a genuine cache hit
+# (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING)
+# ---------------------------------------------------------------------------
+
+def _patch_small_cacheable_search(monkeypatch, matched_identifier=None):
+    """Shared scaffold: a real routing decision shape (matched_identifier included, unlike tests
+    9/10's deliberately-partial SimpleNamespace) plus a small, real-shaped context_search result
+    that stays comfortably under the §5 8KB redacted-payload cap so a real cache write succeeds."""
+    router_mod = _mod._load_router_module()
+    pa_mod = _mod._load_packet_assembly_module()
+    pa_search_mod = pa_mod._load_search_mcp_module()
+
+    fake_decision = SimpleNamespace(
+        providers_selected=["context_search"], matched_identifier=matched_identifier
+    )
+    monkeypatch.setattr(router_mod, "route", lambda q, requested_guarantee=None: fake_decision)
+
+    search_calls = []
+
+    def spy(q):
+        search_calls.append(q)
+        return [{"excerpt": "a short, cacheable answer", "source_path": "docs/foo.md"}]
+
+    monkeypatch.setattr(pa_search_mod, "_run_search", spy)
+    return search_calls
+
+
+def test_identical_repeated_knowledge_context_call_is_a_genuine_cache_hit(monkeypatch):
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    response1 = _mod._run_knowledge_context("some cache query")
+    assert response1["cache"] == "MISS"
+    assert len(search_calls) == 1
+
+    response2 = _mod._run_knowledge_context("some cache query")
+    assert response2["cache"] == "HIT"
+    assert len(search_calls) == 1, "the second identical call must never reach _run_search() again"
+    assert response2["answer"] == response1["answer"]
+    _validate_response(response2)
+
+
+# ---------------------------------------------------------------------------
+# 12 — AC2: cache hit rejected/refreshed on a real corpus_generation bump
+# (PROVIDER_GENERATION-level — the only fingerprint-mismatch path either real live provider can
+# exercise today; see plan.md/investigation.md Risks item 2. The SYMBOL/FILE-kind path is
+# fixture-tested in tests/tools/test_knowledge_gateway_cache.py, not here.)
+# ---------------------------------------------------------------------------
+
+def test_cache_hit_rejected_when_corpus_generation_changes_and_no_finer_fingerprint_exists(monkeypatch):
+    from tools import retrieval_cache as rc
+
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    rc._MANIFEST_PATH.write_text(json.dumps({"version": 1, "built_at": "gen-1", "paths": {}}))
+    response1 = _mod._run_knowledge_context("generation query")
+    assert response1["cache"] == "MISS"
+    assert len(search_calls) == 1
+
+    rc._MANIFEST_PATH.write_text(json.dumps({"version": 1, "built_at": "gen-2", "paths": {}}))
+    response2 = _mod._run_knowledge_context("generation query")
+    assert response2["cache"] == "MISS", "a corpus_generation bump must force a genuine refresh"
+    assert len(search_calls) == 2
+
+
+# ---------------------------------------------------------------------------
+# 13 — AC4: branch/working-tree scope is real
+# ---------------------------------------------------------------------------
+
+def test_cached_result_from_feature_branch_not_served_on_different_branch(monkeypatch):
+    kgc_mod = _mod._load_cache_module()
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    monkeypatch.setattr(kgc_mod, "_current_repo_branch_scope", lambda: "repo::feature-x")
+    response1 = _mod._run_knowledge_context("branch query")
+    assert response1["cache"] == "MISS"
+    assert len(search_calls) == 1
+
+    monkeypatch.setattr(kgc_mod, "_current_repo_branch_scope", lambda: "repo::main")
+    response2 = _mod._run_knowledge_context("branch query")
+    assert response2["cache"] == "MISS", "a cached result from a different branch must never be served"
+    assert len(search_calls) == 2
+
+
+def test_new_commit_alone_does_not_force_cache_miss_when_evidence_unchanged(monkeypatch):
+    """§5 rule 1 — this ticket's identity/validity computation never derives from HEAD commit SHA
+    at all (only branch name, via _current_repo_branch_scope()), so a real hit persists across
+    repeated calls with no commit-tracking anywhere to force a miss."""
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    response1 = _mod._run_knowledge_context("commit-stable query")
+    assert response1["cache"] == "MISS"
+
+    response2 = _mod._run_knowledge_context("commit-stable query")
+    assert response2["cache"] == "HIT"
+    assert len(search_calls) == 1
+
+
+# ---------------------------------------------------------------------------
+# 14 — AC5: cache writes go through the redaction write-path
+# ---------------------------------------------------------------------------
+
+def test_cache_write_calls_evaluate_write_candidate_before_any_insert(monkeypatch):
+    from tools import retrieval_cache as rc
+
+    kgc_mod = _mod._load_cache_module()
+    _patch_small_cacheable_search(monkeypatch)
+
+    calls = []
+    original = kgc_mod.rk.evaluate_write_candidate
+
+    def spy(*args, **kwargs):
+        calls.append(1)
+        assert rc.provider_result_cache_stats()["total_rows"] == 0, (
+            "evaluate_write_candidate must be called before any real INSERT"
+        )
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(kgc_mod.rk, "evaluate_write_candidate", spy)
+
+    _mod._run_knowledge_context("redaction-gated query")
+    assert calls == [1]
+    assert rc.provider_result_cache_stats()["total_rows"] == 1
+
+
+def test_cache_write_reject_verdict_results_in_zero_rows_written(monkeypatch):
+    from tools import retrieval_cache as rc
+
+    kgc_mod = _mod._load_cache_module()
+    _patch_small_cacheable_search(monkeypatch)
+
+    reject_decision = kgc_mod.rk.WriteDecision(
+        verdict=kgc_mod.rk.REJECT, rejection_category="oversized_payload",
+        redacted_payload=None, redacted_hash=None, redaction_policy_version=1,
+    )
+    monkeypatch.setattr(kgc_mod.rk, "evaluate_write_candidate", lambda **kw: reject_decision)
+
+    response = _mod._run_knowledge_context("rejected query")
+    assert response["cache"] == "MISS"
+    assert rc.provider_result_cache_stats()["total_rows"] == 0
+
+
+# ---------------------------------------------------------------------------
+# 15 — AC6: knowledge_status's cache-domain fields are real and populated
+# ---------------------------------------------------------------------------
+
+def test_knowledge_status_reports_real_cache_entry_counts_and_rates_after_writes(monkeypatch):
+    search_calls = _patch_small_cacheable_search(monkeypatch)
+
+    _mod._run_knowledge_context("status query")  # MISS + real write
+    _mod._run_knowledge_context("status query")  # genuine HIT
+    assert len(search_calls) == 1
+
+    status = _mod._run_knowledge_status()
+    _validate_status_response(status)
+    assert status["cache_entry_counts"] == [{"kind": "provider_result", "count": 1}]
+    assert status["cache_hit_rate"] == 0.5
+    assert status["cache_miss_rate"] == 0.5
+    assert status["cache_stale_rejection_rate"] == 0.0
+    assert "latency_summary_ms" not in status
+    assert "provider_fallback_rate" not in status
+
+
+# ---------------------------------------------------------------------------
+# 16 — fail-open: a cache-layer failure never prevents the direct provider path from succeeding
+# ---------------------------------------------------------------------------
+
+def test_cache_layer_failure_is_fail_open_and_never_blocks_the_provider_path(monkeypatch):
+    kgc_mod = _mod._load_cache_module()
+    _patch_small_cacheable_search(monkeypatch)
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("simulated cache-layer failure")
+
+    monkeypatch.setattr(kgc_mod, "perform_cache_lookup", boom)
+    monkeypatch.setattr(kgc_mod, "perform_cache_write", boom)
+
+    response = _mod._run_knowledge_context("fail-open query")
+    assert response["status"] == "OK"
+    assert response["cache"] == "MISS"
+    _validate_response(response)
