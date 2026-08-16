@@ -145,6 +145,85 @@ The two populated instances are:
   `built_at_commit`; no branch-scoping flag exists on `query`.
 - `generation_fingerprint: true` — `built_at_commit` is a real, confirmed field.
 
+### Parity Ledger (`provider_capabilities_parity_ledger.json`)
+
+**Phase 4 update (2026-08-16, `TCK-20260816-KGMCP-P4-PARITY-ADAPTER`):** this subsection fulfills
+§2's own forward reference above ("Parity Ledger gains one before its Phase 4 adapter is enabled").
+Unlike Graphify's descriptor (§4 below), this one describes a real, tested, **in-process** adapter
+(`tools/knowledge_gateway_router.py::_run_parity_provider()`), not a CLI shell-out — it is
+genuinely, end-to-end wired: `tools/knowledge_gateway_packet_assembly.py::call_providers_for_routing_decision()`
+dispatches to it for any query routed to the `requirement_completeness_verification` shape (a
+`parity_id`-matched identifier, or the free-text `Q3_requirement_completeness` shape), and
+`render_candidates()` renders its results into real response statements/context/evidence entries.
+
+- `adapter_version: null` — no adapter code exists to version yet; `tools/parity_index.py` exposes
+  `SCHEMA_VERSION`/`IMPORTER_VERSION` module constants, but these describe the *index build format*,
+  not the caller/adapter code — the same reasoning already applied to Context Search's
+  `index_version` above. `null` is the honest value.
+- `stable_entity_ids: "FULL"` — parity entry-ids are human-authored YAML fields
+  (`docs/parity_ledger/schema.json` id pattern `^[A-Z]+-[0-9]{3}$`), never build-derived;
+  cross-shard uniqueness is enforced at build time by `DuplicateEntryIdError`
+  (`tools/parity_index.py:235`, inside `_populate_entries()`). A removed id is tombstoned, never
+  reused (`evidence_identity_kinds.schema.json`'s `PARITY_ENTRY.normalization_rules.delete`). This
+  is a directly-verified guarantee, unlike Context Search's `doc_id`/Graphify's node `id`, both
+  marked `PARTIAL` above because cross-rebuild stability was not verified for either — Parity's is.
+- `evidence_granularities: ["entry"]` — `entry()` (`tools/parity_index.py:550-596`) returns one
+  whole ledger entry per call; no sub-entry granularity exists.
+- `fine_grained_fingerprints: true` — `entry()`'s returned record includes `canonical_fragment_hash`,
+  a real per-entry sha256 of the entry's own serialized YAML content, computed at
+  `tools/parity_index.py:238-240` and stored per `_EXPECTED_COLUMNS["entries"]`
+  (`tools/parity_index.py:113-117`) — the exact field `evidence_identity_kinds.schema.json`'s
+  `PARITY_ENTRY.preferred_fingerprint` already names. Unlike Context Search (`false`, no per-result
+  hash field exists), Parity genuinely has one.
+- `incremental_refresh: false` — `build()` (`tools/parity_index.py:530-547`) always does a full
+  `_atomic_replace_db()` rebuild of the whole index file; no single-entry incremental update path
+  exists anywhere in the module.
+- `deterministic_relationships: "PARTIAL"` — `entry()`'s `code_refs`/`test_refs`/`constraint_refs`/
+  `ticket_refs` come from `_populate_ref_tables()` (`tools/parity_index.py:271-310`), which inserts
+  both `relation="declared"` refs (the structured `test_path` field, L288-289, explicitly authored)
+  and `relation=None` refs (regex-scraped out of free-text `v2_evidence`/`legacy_evidence`/`text`
+  fields, L296-310, deterministic match but never validated against the actual file or curated by a
+  human) — a coexisting validated/unvalidated split, the same reasoning Graphify's own `PARTIAL`
+  (`EXTRACTED`/`INFERRED` split) applies above. `FULL` would overclaim the unvalidated half; `NONE`
+  would underclaim the declared half.
+- `historical_queries: false` — no query-history storage exists anywhere in `tools/parity_index.py`.
+- `negative_knowledge_support: "SCOPED"` — **earned, not assumed**: `_run_parity_provider()` calls
+  `check_staleness()` (`tools/parity_index.py:406-447`) whenever `entry()` returns `found: False`,
+  attaching the real freshness signal (`source_manifest_hash`/`live_hash` recomputed against the
+  live `docs/parity_ledger/*.yaml` shards) to its return value under a `staleness` key. Per
+  `tmp/mcp-followup-instruction.md` §5's stricter definition ("evidence + validated search scope,"
+  not just an absent lookup), a bare `entry()` call alone would only justify `NONE` — the checked
+  scope is what earns `SCOPED` here. **Disclosed limitation (not silently dropped):** this makes the
+  *adapter's* `SCOPED` claim honest, but it does not yet flip any real `_run_knowledge_context()`
+  response's `verification` field end-to-end — `assemble_packet()`'s own zero-statements
+  negative-claim auto-trigger (`tools/knowledge_gateway_packet_assembly.py`, the `if not statements:`
+  block) never threads a real `validated_scopes` value through to `build_negative_claim_support()`
+  regardless of which provider's descriptor declares `SCOPED`. Threading `validated_scopes` into
+  that single auto-trigger call site is a distinct, separately-scoped follow-up, deliberately
+  deferred by this ticket's plan.md (see its Anti-Drift Notes and Summary).
+- `cancellation: false`, `timeout: false` — `entry()`'s call path (`_connect_readonly()` → a
+  synchronous `sqlite3` query, `tools/parity_index.py:94-99, 550-556`) has no cancellation hook and
+  no timeout parameter anywhere.
+- `branch_awareness: "NONE"` — `entry(entry_id, db_path=None)`'s signature has no branch/
+  working-tree parameter; the index reflects whatever `docs/parity_ledger/*.yaml` shards existed at
+  the last `build()` call, not the current branch.
+- `generation_fingerprint: true` — `check_staleness()`'s `source_manifest_hash`/`live_hash`
+  (`tools/parity_index.py:402, 424`) is a real, content-derived, whole-shard-set fingerprint,
+  directly analogous to Graphify's `built_at_commit` above.
+
+**A second disclosed gap, found during this same doc-update pass, outside this ticket's own
+Related Code Areas:** now that `parity_ledger` is a genuinely live third provider (able to appear in
+a real response's `providers_consulted_this_call`), `tools/knowledge_gateway_redaction.py::ALLOWED_SOURCE_TYPES`
+(only `SOURCE_TYPE_CONTEXT_SEARCH`/`SOURCE_TYPE_GRAPHIFY`) and the Level 1/Level 2 cache-write
+`source_type` derivation in `tools/knowledge_gateway_cache.py` (`"context_search" in
+providers_consulted else SOURCE_TYPE_GRAPHIFY` — a binary check with no `parity_ledger` branch) do
+not account for it. Because `parity_ledger` is only ever selected alongside `context_search` on the
+`requirement_completeness_verification` row (never alone), this binary check always resolves such a
+payload's `source_type` to `SOURCE_TYPE_CONTEXT_SEARCH` — the write is allowed, but the resulting
+cache row is mislabeled rather than being explicitly allowlisted (or rejected) as parity-sourced.
+See `redaction_retention_policy.md` §2 for the full disclosure; not fixed here, as it is a
+code change to files outside this ticket's own Scope/Related Code Areas, not a documentation gap.
+
 ---
 
 ## 4. Design Decision D1 — the Graphify descriptor documents the real CLI binary, not a future in-process adapter
@@ -177,7 +256,9 @@ descriptor's values (particularly `timeout`/`cancellation`) can honestly change 
 - `docs/engine/contracts/knowledge_gateway_mcp/provider_capabilities.schema.json` — the
   `ProviderCapabilities` descriptor shape.
 - `docs/engine/contracts/knowledge_gateway_mcp/provider_capabilities_context_search.json`,
-  `provider_capabilities_graphify.json` — the two populated descriptor instances (§3 above).
+  `provider_capabilities_graphify.json`, `provider_capabilities_parity_ledger.json` — the three
+  populated descriptor instances (§3 above; the Parity descriptor added by
+  `TCK-20260816-KGMCP-P4-PARITY-ADAPTER`).
 - `docs/engine/contracts/knowledge_gateway_mcp/knowledge_context_request.schema.json` — the
   `knowledge_context` request contract.
 - `docs/engine/contracts/knowledge_gateway_mcp/knowledge_context_response.schema.json` — the

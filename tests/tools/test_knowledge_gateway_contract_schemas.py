@@ -31,6 +31,7 @@ _RESPONSE_SCHEMA = _CONTRACTS_DIR / "knowledge_context_response.schema.json"
 _STATUS_RESPONSE_SCHEMA = _CONTRACTS_DIR / "knowledge_status_response.schema.json"
 _CONTEXT_SEARCH_INSTANCE = _CONTRACTS_DIR / "provider_capabilities_context_search.json"
 _GRAPHIFY_INSTANCE = _CONTRACTS_DIR / "provider_capabilities_graphify.json"
+_PARITY_LEDGER_INSTANCE = _CONTRACTS_DIR / "provider_capabilities_parity_ledger.json"
 
 _ALL_SCHEMA_FILES = [
     _SHARED_ENUMS,
@@ -256,7 +257,11 @@ def test_context_search_descriptor_matches_real_run_health_shape():
 # Test 9 — ProviderCapabilities descriptor is populated and tested for both adapters
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("instance_path", [_CONTEXT_SEARCH_INSTANCE, _GRAPHIFY_INSTANCE], ids=lambda p: p.stem)
+@pytest.mark.parametrize(
+    "instance_path",
+    [_CONTEXT_SEARCH_INSTANCE, _GRAPHIFY_INSTANCE, _PARITY_LEDGER_INSTANCE],
+    ids=lambda p: p.stem,
+)
 def test_provider_capabilities_instance_has_all_fields_with_valid_enum_values(instance_path):
     schema = _load(_PROVIDER_CAPABILITIES_SCHEMA)
     instance = _load(instance_path)
@@ -293,7 +298,11 @@ def capability_allows(descriptor: dict, capability_name: str) -> bool:
     return bool(descriptor[capability_name])
 
 
-@pytest.mark.parametrize("instance_path", [_CONTEXT_SEARCH_INSTANCE, _GRAPHIFY_INSTANCE], ids=lambda p: p.stem)
+@pytest.mark.parametrize(
+    "instance_path",
+    [_CONTEXT_SEARCH_INSTANCE, _GRAPHIFY_INSTANCE, _PARITY_LEDGER_INSTANCE],
+    ids=lambda p: p.stem,
+)
 def test_capability_allows_rejects_unadvertised_cancellation_and_timeout(instance_path):
     descriptor = _load(instance_path)
     assert capability_allows(descriptor, "cancellation") is False
@@ -351,3 +360,51 @@ def test_phase_1_gateway_tool_code_and_mcp_registration_now_exist():
         assert f"def {name}(" in gateway_module_text, (
             f"tools/knowledge_gateway_mcp.py: expected a live '{name}' tool implementation"
         )
+
+
+# ---------------------------------------------------------------------------
+# Test 13 — Parity Ledger ProviderCapabilities descriptor (TCK-20260816-KGMCP-P4-PARITY-ADAPTER)
+# ---------------------------------------------------------------------------
+
+def test_parity_capability_descriptor_is_schema_valid():
+    schema = _load(_PROVIDER_CAPABILITIES_SCHEMA)
+    instance = _load(_PARITY_LEDGER_INSTANCE)
+
+    assert _PROVIDER_CAPABILITIES_FIELDS.issubset(instance.keys())
+    assert set(instance.keys()) == _PROVIDER_CAPABILITIES_FIELDS | {"schema_version"}
+
+    enum_fields = {
+        "stable_entity_ids": schema["properties"]["stable_entity_ids"]["enum"],
+        "deterministic_relationships": schema["properties"]["deterministic_relationships"]["enum"],
+        "negative_knowledge_support": schema["properties"]["negative_knowledge_support"]["enum"],
+        "branch_awareness": schema["properties"]["branch_awareness"]["enum"],
+    }
+    for field, allowed in enum_fields.items():
+        assert instance[field] in allowed, f"parity_ledger: {field}={instance[field]!r} not in {allowed}"
+
+    for field in ("fine_grained_fingerprints", "incremental_refresh", "historical_queries", "cancellation", "timeout"):
+        assert isinstance(instance[field], bool)
+
+
+def test_parity_negative_knowledge_support_is_scoped_not_none_or_complete():
+    """Coupled to _run_parity_provider()'s real behavior (tools/knowledge_gateway_router.py):
+    SCOPED is only honest because that adapter calls tools.parity_index.check_staleness()
+    whenever entry() returns found: False. If a future edit ever removes that staleness call, this
+    test's expected value and the descriptor's real value must both change to "NONE" together —
+    do not let them silently desync."""
+    descriptor = _load(_PARITY_LEDGER_INSTANCE)
+    assert descriptor["negative_knowledge_support"] == "SCOPED"
+
+
+def test_parity_descriptor_fields_are_never_copied_verbatim_from_context_search_or_graphify():
+    parity = _load(_PARITY_LEDGER_INSTANCE)
+    context_search = _load(_CONTEXT_SEARCH_INSTANCE)
+    graphify = _load(_GRAPHIFY_INSTANCE)
+
+    shared_skeleton = {"schema_version"}
+    parity_fields = {k: v for k, v in parity.items() if k not in shared_skeleton}
+    context_search_fields = {k: v for k, v in context_search.items() if k not in shared_skeleton}
+    graphify_fields = {k: v for k, v in graphify.items() if k not in shared_skeleton}
+
+    assert parity_fields != context_search_fields
+    assert parity_fields != graphify_fields

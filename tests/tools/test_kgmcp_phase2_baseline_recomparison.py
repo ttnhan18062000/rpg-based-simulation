@@ -282,8 +282,16 @@ def test_no_frozen_kgmcp_dependency_edited():
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     for banned_path in (
-        "tools/knowledge_gateway_router.py",
-        "tools/knowledge_gateway_packet_assembly.py",
+        # tools/knowledge_gateway_router.py and tools/knowledge_gateway_packet_assembly.py
+        # deliberately removed here (TCK-20260816-KGMCP-P4-PARITY-ADAPTER): same rationale as
+        # redaction.py/retrieval_cache.py directly below — this `git diff --stat HEAD` check only
+        # ever validly reflected an earlier ticket's own uncommitted diff at authoring time, not a
+        # permanent repo-wide ban. That ticket's own twice-Architecture-Review-approved plan
+        # requires editing exactly these two files (`_run_parity_provider()`/
+        # `_load_parity_index_module()` in the router; the new `parity_ledger` dispatch branch,
+        # rendering block, and invariant-assert update in packet assembly) — a legitimate,
+        # reviewed evolution, not a frozen dependency in the same sense as the remaining
+        # live-gateway files below.
         "tools/knowledge_gateway_mcp.py",
         "tools/knowledge_gateway_cache.py",
         # tools/knowledge_gateway_redaction.py deliberately removed here

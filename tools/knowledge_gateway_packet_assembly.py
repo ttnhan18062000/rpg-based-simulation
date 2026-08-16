@@ -16,12 +16,14 @@ dedup-before-truncation and the §16 budget-assembly-failure fallback.
 
 Honesty notes (do not "fix" these by inventing heuristics — see the ticket's Anti-Drift Notes):
 
-- `build_negative_claim_support()` is real, fully-branching logic, but with today's exactly-2
-  real providers (both `provider_capabilities_*.json` descriptors declare
-  `negative_knowledge_support: "NONE"`) it can only ever return `verification="UNVERIFIED"`
-  against a real, non-monkeypatched call. The `SCOPED`/`COMPLETE` branches are reachable only via
+- `build_negative_claim_support()` is real, fully-branching logic, but with no `validated_scopes`
+  ever threaded through today (`assemble_packet()`'s own single auto-trigger call site never
+  supplies one — see TCK-20260816-KGMCP-P4-PARITY-ADAPTER's disclosed, deliberately deferred
+  `validated_scopes`-threading gap) it can only ever return `verification="UNVERIFIED"` against a
+  real, non-monkeypatched call, even though a third real provider (`parity_ledger`) now declares
+  `negative_knowledge_support: "SCOPED"`. The `SCOPED`/`COMPLETE` branches are reachable only via
   a monkeypatched/temp-copy capability descriptor in tests — never exercised end-to-end against
-  real provider data in Phase 1.
+  real provider data yet.
 - `build_conflicts()` is real, tested logic that inspects explicit structural supersession/
   incompatibility signal keys on provider result dicts. Neither `_run_search()`'s nor
   `match_symbol_name()`'s real return shape exposes any such key today, so against real providers
@@ -66,10 +68,12 @@ _TOOLS_DIR = _REPO_ROOT / "tools"
 _CONTRACTS_DIR = _REPO_ROOT / "docs" / "engine" / "contracts" / "knowledge_gateway_mcp"
 _CONTEXT_SEARCH_CAPS_PATH = _CONTRACTS_DIR / "provider_capabilities_context_search.json"
 _GRAPHIFY_CAPS_PATH = _CONTRACTS_DIR / "provider_capabilities_graphify.json"
+_PARITY_CAPS_PATH = _CONTRACTS_DIR / "provider_capabilities_parity_ledger.json"
 
 _PROVIDER_CAPS_PATHS: dict[str, Path] = {
     "context_search": _CONTEXT_SEARCH_CAPS_PATH,
     "graphify": _GRAPHIFY_CAPS_PATH,
+    "parity_ledger": _PARITY_CAPS_PATH,
 }
 
 _NEGATIVE_KNOWLEDGE_NONE = "NONE"
@@ -165,7 +169,7 @@ def call_providers_for_routing_decision(routing_decision, query_text: str) -> di
     ambiguous path — a documented latency/redundancy cost, never a correctness issue, and never a
     reason to modify the frozen router.
     """
-    results: dict = {"context_search": None, "graphify": None, "failures": []}
+    results: dict = {"context_search": None, "graphify": None, "parity_ledger": None, "failures": []}
 
     for provider_id in routing_decision.providers_selected:
         if provider_id == "context_search":
@@ -193,9 +197,20 @@ def call_providers_for_routing_decision(routing_decision, query_text: str) -> di
                 # not error (Step 6's negative-knowledge framing still governs this case only).
                 continue
             results["graphify"] = raw
-        # else: no call function exists for "registry"/"working_log"/"parity_ledger" — building
-        # one is new provider-integration work outside this ticket's scope; silently skipped
-        # rather than inventing a call.
+        elif provider_id == "parity_ledger":
+            _kgr = _load_router_module()
+            _pidx = _kgr._load_parity_index_module()
+            try:
+                raw = _kgr._run_parity_provider(query_text)
+            except _pidx.IndexNotBuiltError as exc:
+                results["failures"].append(
+                    f"parity_ledger: index not built -- run `python3 tools/parity_index.py build` ({exc})"
+                )
+                continue
+            results["parity_ledger"] = raw
+        # else: no call function exists for "registry"/"working_log" — building one is new
+        # provider-integration work outside this ticket's scope; silently skipped rather than
+        # inventing a call.
 
     return results
 
@@ -330,6 +345,45 @@ def render_candidates(
             )
         )
 
+    parity_result = provider_results.get("parity_ledger")
+    if parity_result is not None and parity_result["results"].get("found") is True:
+        n += 1
+        record = parity_result["results"]["record"]
+        text = record["text"].strip()
+        evidence_id = f"parity:{record['id']}"
+        evidence_hash = record["canonical_fragment_hash"]
+        source_path = f"docs/parity_ledger/{record['shard']}"
+
+        statements.append(
+            Statement(
+                statement_id=f"stmt-{n:03d}",
+                text=text,
+                classification="FACT",
+                evidence_ids=[evidence_id],
+                priority_tier=2,
+                verification="SUPPORTED",
+                evidence_hash=evidence_hash,
+            )
+        )
+        context_entries.append(
+            ContextEntry(
+                kind="parity_ledger",
+                summary=text,
+                source_id=evidence_id,
+                path=source_path,
+                evidence_hash=evidence_hash,
+                authority=None,
+            )
+        )
+        evidence_entries.append(
+            EvidenceEntry(
+                evidence_id=evidence_id,
+                source_id=evidence_id,
+                path=source_path,
+                evidence_hash=evidence_hash,
+            )
+        )
+
     return statements, context_entries, evidence_entries
 
 
@@ -350,7 +404,11 @@ def _conflict_signal_index_pairs(
     the same real function. Index i here corresponds 1:1 to statements[i] as returned by
     render_candidates(), because both functions iterate context_search_results in the same order
     and append graphify_result last, if present (verified directly against render_candidates()'s
-    own loop order).
+    own loop order). As of TCK-20260816-KGMCP-P4-PARITY-ADAPTER, render_candidates() also appends
+    a third, parity_ledger-sourced statement/context/evidence block after the graphify block when
+    present -- that block is deliberately excluded from this function's (and build_conflicts()'s)
+    index-pair/conflict detection, since conflict detection over parity data is not requested by
+    any acceptance criterion for that ticket.
     """
     all_results = list(context_search_results)
     if graphify_result is not None:
@@ -431,14 +489,15 @@ def build_negative_claim_support(
     provider_ids: list[str],
     validated_scopes: Optional[list[str]] = None,
 ) -> NegativeClaimSupport:
-    """Real, fully-branching §13.1 logic. Loads both capability descriptors fresh from disk each
-    call (no module-level cache, mirroring the router's own convention) — this module defines its
-    own `_PROVIDER_CAPS_PATHS` rather than importing the router's private constants.
+    """Real, fully-branching §13.1 logic. Loads all real capability descriptors fresh from disk
+    each call (no module-level cache, mirroring the router's own convention) — this module defines
+    its own `_PROVIDER_CAPS_PATHS` rather than importing the router's private constants.
 
-    With today's two real descriptors (both `negative_knowledge_support: "NONE"`), this always
-    returns `verification="UNVERIFIED"` against a real, non-monkeypatched call — see module
-    docstring. Never let a real call reach `"VERIFIED"`/`"SUPPORTED"`; only a monkeypatched/
-    temp-copy descriptor declaring `"SCOPED"`/`"COMPLETE"` can do so.
+    With no `validated_scopes` ever threaded through today (see module docstring), this always
+    returns `verification="UNVERIFIED"` against a real, non-monkeypatched call — even though
+    `parity_ledger`'s real descriptor now declares `negative_knowledge_support: "SCOPED"`. Never
+    let a real call reach `"VERIFIED"`/`"SUPPORTED"`; only a monkeypatched/temp-copy descriptor
+    declaring `"SCOPED"`/`"COMPLETE"` combined with a caller-supplied `validated_scopes` can do so.
     """
     validated_scopes = list(validated_scopes) if validated_scopes else []
     checked_at = datetime.now(timezone.utc).isoformat()
@@ -652,12 +711,15 @@ def _evidence_dependencies(context_entries: list[ContextEntry]) -> list[str]:
 
 
 def _provider_id_for_evidence_id(evidence_id: str) -> str:
-    """Only two real providers exist in Phase 1 — a SYMBOL-kind evidence_id (`symbol:...`) is
-    always graphify-sourced; every other closed kind this module produces (`doc:`/`file:`/
-    `ticket:`) is context_search-sourced.
+    """Three real providers exist as of TCK-20260816-KGMCP-P4-PARITY-ADAPTER — a SYMBOL-kind
+    evidence_id (`symbol:...`) is always graphify-sourced, a PARITY_ENTRY-kind evidence_id
+    (`parity:...`) is always parity_ledger-sourced, and every other closed kind this module
+    produces (`doc:`/`file:`/`ticket:`) is context_search-sourced.
     """
     if evidence_id.startswith("symbol:"):
         return "graphify"
+    if evidence_id.startswith("parity:"):
+        return "parity_ledger"
     return "context_search"
 
 
@@ -679,6 +741,8 @@ def assemble_packet(routing_decision, query_text: str, budget_requested: int) ->
     )
     assert len(statements) == len(provider_results.get("context_search") or []) + (
         1 if provider_results.get("graphify") else 0
+    ) + (
+        1 if (provider_results.get("parity_ledger") or {}).get("results", {}).get("found") else 0
     ), (
         "statements[] <-> provider-result index correspondence invariant violated: "
         "_conflict_signal_index_pairs() assumes render_candidates() emits exactly one Statement "

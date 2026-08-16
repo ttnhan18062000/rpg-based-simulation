@@ -7,8 +7,11 @@ Mirrors tests/tools/test_search_mcp.py's own flat-file module-loading precedent:
 """
 from __future__ import annotations
 
+import ast
 import importlib.util
+import inspect
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -166,12 +169,12 @@ def test_routes_symbol_dependency_path_to_graphify():
     assert decision.providers_selected == ["graphify"]
 
 
-def test_routes_requirement_completeness_to_context_search_with_not_yet_routed_marker():
+def test_routes_requirement_completeness_to_context_search_and_parity_ledger():
     entry = _corpus_entry("Q3_requirement_completeness")
     decision = _mod.route(entry["query_text"])
     assert decision.routing_shape == "requirement_completeness_verification"
-    assert decision.providers_selected == ["context_search"]
-    assert decision.not_yet_routed == "parity_ledger"
+    assert decision.providers_selected == ["context_search", "parity_ledger"]
+    assert decision.not_yet_routed is None
 
 
 def test_routes_ticket_historical_rationale_to_context_search_ticket_index():
@@ -213,12 +216,25 @@ def test_ticket_id_identifier_routes_via_ticket_work_status_row():
     assert decision.routing_shape == "ticket_work_status"
 
 
-def test_parity_id_identifier_routes_via_requirement_completeness_row_with_marker():
+def test_parity_id_identifier_routes_via_requirement_completeness_row():
     decision = _mod.route("INFRA-334")
     assert decision.matched_identifier is not None
     assert decision.matched_identifier.category == "parity_id"
     assert decision.routing_shape == "requirement_completeness_verification"
-    assert decision.not_yet_routed == "parity_ledger"
+    assert decision.providers_selected == ["context_search", "parity_ledger"]
+    assert decision.not_yet_routed is None
+
+
+def test_requirement_completeness_row_no_longer_has_not_yet_routed_marker():
+    row = _mod.ROUTING_TABLE["requirement_completeness_verification"]
+    assert row.not_yet_routed is None
+    assert "parity_ledger" in row.primary_providers
+
+
+def test_parity_id_identifier_routes_to_parity_ledger_provider():
+    decision = _mod.route("INFRA-349")
+    assert "parity_ledger" in decision.providers_selected
+    assert decision.matched_identifier.category == "parity_id"
 
 
 # ---------------------------------------------------------------------------
@@ -382,3 +398,120 @@ def test_no_live_gateway_tool_code_or_mcp_registration_introduced():
             assert f"def {name}(" not in text, (
                 f"{py_file}: found a live '{name}' tool implementation"
             )
+
+
+# ---------------------------------------------------------------------------
+# 6. Parity Ledger provider adapter (TCK-20260816-KGMCP-P4-PARITY-ADAPTER)
+# ---------------------------------------------------------------------------
+
+_PARITY_LEDGER_DIR = _REPO_ROOT / "docs" / "parity_ledger"
+
+
+def test_run_parity_provider_returns_real_entry_for_existing_id(tmp_path, monkeypatch):
+    pidx = _mod._load_parity_index_module()
+    db_path = tmp_path / "parity.db"
+    build_report = pidx.build(ledger_dir=_PARITY_LEDGER_DIR, db_path=db_path)
+    assert build_report["status"] == "ok"
+    monkeypatch.setattr(pidx, "DEFAULT_DB_PATH", db_path)
+
+    result = _mod._run_parity_provider("INFRA-349")
+    assert result["provider_id"] == "parity_ledger"
+    assert result["results"]["found"] is True
+    assert result["results"]["record"]["id"] == "INFRA-349"
+    # A found result never needs a staleness check.
+    assert result["staleness"] is None
+
+
+def test_stale_parity_index_is_disclosed_not_silently_trusted(tmp_path, monkeypatch):
+    pidx = _mod._load_parity_index_module()
+    ledger_copy = tmp_path / "ledger"
+    shutil.copytree(_PARITY_LEDGER_DIR, ledger_copy)
+
+    db_path = tmp_path / "parity.db"
+    build_report = pidx.build(ledger_dir=ledger_copy, db_path=db_path)
+    assert build_report["status"] == "ok"
+
+    # Mutate the tmp-path ledger copy AFTER building, without rebuilding -- this is what makes
+    # check_staleness() genuinely report STALE against this test's own isolated ledger state.
+    infra_shard = ledger_copy / "infrastructure.yaml"
+    infra_shard.write_text(
+        infra_shard.read_text()
+        + '\n- id: INFRA-999\n'
+        '  text: "Test-only fixture entry added after build() to force a genuine STALE result."\n'
+        '  status: verified\n'
+        '  priority: P1\n'
+        '  legacy_evidence: null\n'
+        '  v2_evidence: "test fixture"\n'
+        '  proof_type: differential\n'
+        '  test_path: "tests/tools/test_knowledge_gateway_router.py::test_stale_parity_index_is_disclosed_not_silently_trusted"\n'
+        '  divergence_note: null\n'
+        '  support_boundary: "test fixture only, never a real ledger entry"\n'
+    )
+
+    # Dual monkeypatch (Architecture Review fix): both DEFAULT_DB_PATH and DEFAULT_LEDGER_DIR must
+    # be patched together, or check_staleness() would silently recompute live_hash from the real
+    # repo's own docs/parity_ledger/*.yaml shards instead of this test's mutated copy.
+    monkeypatch.setattr(pidx, "DEFAULT_DB_PATH", db_path)
+    monkeypatch.setattr(pidx, "DEFAULT_LEDGER_DIR", ledger_copy)
+
+    result = _mod._run_parity_provider("ZZZZ-9999")
+    assert result["results"]["found"] is False
+    assert result["staleness"] is not None
+    assert result["staleness"]["status"] == "STALE"
+
+
+# ---------------------------------------------------------------------------
+# 7. Anti-drift guards (TCK-20260816-KGMCP-P4-PARITY-ADAPTER)
+# ---------------------------------------------------------------------------
+
+def test_route_ambiguous_provider_set_is_unchanged():
+    assert _mod._AMBIGUOUS_PROVIDERS == ("context_search", "graphify")
+
+
+def _run_parity_provider_body_calls_and_kwargs():
+    """AST-only inspection of _run_parity_provider's actual code body (never its docstring prose,
+    which legitimately names impact()/health()/symbol as things this adapter does NOT call)."""
+    source = inspect.getsource(_mod._run_parity_provider)
+    tree = ast.parse(source)
+    called_attrs = set()
+    kwarg_names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            called_attrs.add(node.func.attr)
+        if isinstance(node, ast.keyword) and node.arg is not None:
+            kwarg_names.add(node.arg)
+    return called_attrs, kwarg_names
+
+
+def test_changed_path_impact_call_is_not_wired_by_this_ticket():
+    called_attrs, kwarg_names = _run_parity_provider_body_calls_and_kwargs()
+    assert "impact" not in called_attrs
+    assert "changed_path" not in kwarg_names
+
+
+def test_symbol_filter_on_impact_remains_unused_for_parity_provider():
+    called_attrs, kwarg_names = _run_parity_provider_body_calls_and_kwargs()
+    assert "impact" not in called_attrs
+    assert "symbol" not in kwarg_names
+
+
+def test_parity_index_module_is_never_modified():
+    result = subprocess.run(
+        ["git", "diff", "HEAD", "--", "tools/parity_index.py"],
+        cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
+    )
+    assert result.stdout == "", "tools/parity_index.py must remain byte-unchanged for this ticket"
+
+
+def test_context_search_and_graphify_capability_descriptors_are_byte_identical_to_before():
+    result = subprocess.run(
+        [
+            "git", "diff", "HEAD", "--",
+            "docs/engine/contracts/knowledge_gateway_mcp/provider_capabilities_context_search.json",
+            "docs/engine/contracts/knowledge_gateway_mcp/provider_capabilities_graphify.json",
+        ],
+        cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
+    )
+    assert result.stdout == "", (
+        "the two pre-existing capability descriptors must remain byte-unchanged for this ticket"
+    )

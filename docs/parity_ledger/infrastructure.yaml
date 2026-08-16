@@ -9617,24 +9617,24 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'tools/knowledge_gateway_packet_assembly.py:234-242 (`_content_hash()`,
+  v2_evidence: 'tools/knowledge_gateway_packet_assembly.py:249-257 (`_content_hash()`,
     single sha256(text.strip().encode(''utf-8'')).hexdigest() source of truth, confirmed
-    by direct grep to be the module''s only hashlib.sha256(...) literal); :338-341
+    by direct grep to be the module''s only hashlib.sha256(...) literal); :392-395
     (`_dedup_key()`, returns statement.evidence_hash when present, falls back to _content_hash(statement.text)
-    only for directly-constructed test fixtures); :344-364 (`_conflict_signal_index_pairs()`,
+    only for directly-constructed test fixtures); :398-422 (`_conflict_signal_index_pairs()`,
     reuses the existing _structural_supersession_signal() primitive build_conflicts()
     already calls over the same context_search+graphify ordering render_candidates()
-    uses -- not a second, parallel conflict-detection heuristic); :367-370/:393-398
+    uses -- not a second, parallel conflict-detection heuristic); :425-428/:438-444
     (`deduplicate_statements()`''s new `conflict_index_pairs` parameter -- on a dedup-key
     collision between two statements whose original indices are a known conflict-flagged
     pair, the later statement is forced into its own distinct group via `f"{key}::conflict-{idx}"`
-    instead of merging); :680-688 (assemble_packet()''s Architecture-Review-mandated
+    instead of merging); :742-752 (assemble_packet()''s Architecture-Review-mandated
     fail-loud cardinality assertion, run immediately after _conflict_signal_index_pairs()
-    and before deduplicate_statements() is called); :631-632 (`PacketAssembly.budget_truncated:
-    bool` / `omitted_statement_count: int` field declarations); :707-708 (their computation
+    and before deduplicate_statements() is called); :690-691 (`PacketAssembly.budget_truncated:
+    bool` / `omitted_statement_count: int` field declarations); :771-772 (their computation
     immediately after assemble_within_budget() returns: omitted_statement_count =
     len(statements) - len(included_statements), budget_truncated = omitted_statement_count
-    > 0); :760-761 (threaded into the PacketAssembly constructor). tools/knowledge_gateway_mcp.py:209-210
+    > 0); :824-825 (threaded into the PacketAssembly constructor). tools/knowledge_gateway_mcp.py:209-210
     (budget_truncated=False/omitted_statement_count=0 in the router-failure fallback_response,
     since nothing was ever truncated by budget on that path); :277-278 (packet.budget_truncated/packet.omitted_statement_count
     threaded into the main _run_knowledge_context() response dict; shifted below this
@@ -9655,7 +9655,17 @@
     push the constructor-threading citation to +20. Confirmed via `git diff HEAD --
     tools/knowledge_gateway_packet_assembly.py` showing these as the only additional
     hunks beyond this entry''s own diff. The real/tested shape of every cited function/field
-    is unaffected by the shift (see INFRA-348).'
+    is unaffected by the shift (see INFRA-348). Line numbers corrected a third time
+    as of TCK-20260816-KGMCP-P4-PARITY-ADAPTER (INFRA-351), whose several insertion
+    points in the same file -- the parity_ledger dispatch branch in call_providers_for_routing_decision()
+    (~L200-210), the extended _conflict_signal_index_pairs() docstring disclosing
+    the new parity block''s exclusion from conflict-pair indexing, the parity rendering
+    block in render_candidates() (~L348-386), the third invariant-assert term, and
+    the parity: branch in _provider_id_for_evidence_id() (~L713-723) -- produced a
+    non-uniform cumulative shift (from +15 near the top of the file to +64 near the
+    bottom) rather than one single offset. Re-confirmed by direct read of each cited
+    symbol''s real current location this session; the real/tested shape of every cited
+    function/field is unaffected by the shift (see INFRA-351).'
   proof_type: regression
   test_path: 'tests/tools/test_knowledge_gateway_packet_assembly.py (11 new tests:
     test_dedup_identity_uses_content_hash_not_casefold_normalization, test_dedup_collapses_only_on_exact_content_hash_match_across_providers,
@@ -9718,11 +9728,11 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'tools/knowledge_gateway_packet_assembly.py:627 (`PacketAssembly.evidence_dependencies:
-    list[str]` field, placed after `evidence`, before `conflicts`); :637-651 (`_evidence_dependencies(context_entries)`,
-    `sorted({c.path for c in context_entries if c.path})`); :744 (`evidence_dependencies
+  v2_evidence: 'tools/knowledge_gateway_packet_assembly.py:686 (`PacketAssembly.evidence_dependencies:
+    list[str]` field, placed after `evidence`, before `conflicts`); :696-710 (`_evidence_dependencies(context_entries)`,
+    `sorted({c.path for c in context_entries if c.path})`); :808 (`evidence_dependencies
     = _evidence_dependencies(final_context)`, called from `final_context` per DD1,
-    not `final_evidence`); :756 (threaded into the `PacketAssembly` constructor).
+    not `final_evidence`); :820 (threaded into the `PacketAssembly` constructor).
     tools/knowledge_gateway_cache.py:232-234 (Step 9 section header, "Level 2 packet-level
     revalidation"); :236-246 (`_level2_repo_branch_scope(repository_id, branch)`,
     pure `f"{repository_id}::{branch}"` string join, never a git read); :249-283 (`revalidate_context_packet_row(row,
@@ -9741,7 +9751,17 @@
     whose new `CONTEXT_PACKET_RESPONSE_SCHEMA_VERSION` module constant (inserted immediately
     before `compute_lookup_identity()`, i.e. above every symbol this entry cites)
     produced a uniform +5 line shift; the real/tested shape of every cited function
-    is unaffected (see INFRA-349).'
+    is unaffected (see INFRA-349). Line numbers into tools/knowledge_gateway_packet_assembly.py
+    corrected a second time as of TCK-20260816-KGMCP-P4-PARITY-ADAPTER (INFRA-351),
+    whose several insertion points in that file (parity_ledger provider dispatch,
+    rendering block, invariant-assert term, and _provider_id_for_evidence_id() extension
+    -- see INFRA-351''s own v2_evidence for the full list) shifted every citation
+    into that file below the dataclass by +59 (field declaration, helper function)
+    to +64 (call site, constructor threading); tools/knowledge_gateway_cache.py''s
+    own citations are unaffected (that file is not touched by TCK-20260816-KGMCP-P4-PARITY-ADAPTER).
+    Re-confirmed by direct read of each cited symbol''s real current location this
+    session; the real/tested shape of every cited function is unaffected by the shift
+    (see INFRA-351).'
   proof_type: regression
   test_path: 'tests/tools/test_knowledge_gateway_packet_assembly.py (4 new tests:
     test_evidence_dependencies_aggregated_from_packet_evidence_paths, test_evidence_dependencies_excludes_paths_from_omitted_budget_truncated_statements,
@@ -10030,3 +10050,257 @@
     and whether the epic should close, is explicitly out of scope for this ticket
     and this entry -- left to a human reviewer''s own closure decision on the parent
     epic.'
+- id: INFRA-351
+  text: 'Knowledge Gateway MCP Phase 4 Parity Ledger provider adapter -- TCK-20260816-KGMCP-P4-PARITY-ADAPTER
+    (closes Phase 1''s deliberate not_yet_routed="parity_ledger" placeholder on the
+    requirement_completeness_verification routing row, ROUTING_TABLE["requirement_completeness_verification"]
+    (tools/knowledge_gateway_router.py:165) -- primary_providers is now ("context_search",
+    "parity_ledger"), not_yet_routed field omitted/None). Adds a real, versioned ProviderCapabilities
+    descriptor (docs/engine/contracts/knowledge_gateway_mcp/provider_capabilities_parity_ledger.json),
+    every field honestly justified against real tools/parity_index.py behavior --
+    negative_knowledge_support: SCOPED is earned, not assumed: _run_parity_provider()
+    (tools/knowledge_gateway_router.py:292-312, with its loader _load_parity_index_module()
+    at :282-289 and the _PARITY_CAPS_PATH constant at :38) calls tools/parity_index.py::entry()
+    only -- never impact()/health(), never a subprocess or recursive MCP call -- and
+    calls check_staleness() exactly once, only when entry() returns found: False,
+    attaching the result under a staleness key. Genuinely end-to-end wired, not just
+    an isolated unit test of a disconnected function: the real per-call dispatch layer,
+    call_providers_for_routing_decision() (tools/knowledge_gateway_packet_assembly.py:200-210),
+    gained a parity_ledger elif branch that lazy-loads the router module and catches
+    tools.parity_index.IndexNotBuiltError by name, appending a failure string and
+    continuing rather than crashing the whole packet-assembly call -- so a live _run_knowledge_context()
+    call for a parity-ID-shaped query (e.g. "INFRA-349") reaches entry() and returns
+    real ledger data. render_candidates() (tools/knowledge_gateway_packet_assembly.py:348-386)
+    gained a third rendering block, only emitting a Statement/ContextEntry/EvidenceEntry
+    when entry() actually found a row, using the closed PARITY_ENTRY evidence-identity
+    form (evidence_id=f"parity:{record[''id'']}", evidence_hash=record[''canonical_fragment_hash''],
+    source_path=f"docs/parity_ledger/{record[''shard'']}"). The statement-count invariant
+    assert in assemble_packet() (tools/knowledge_gateway_packet_assembly.py:742-746)
+    gained the third parity_ledger-found term, and _provider_id_for_evidence_id()
+    (tools/knowledge_gateway_packet_assembly.py:713-723) gained a parity: prefix branch
+    feeding the real provenance_providers response field. 18 new tests added across
+    the Implement and Test phases (verified this session via git diff HEAD against
+    the four touched test files, correcting an initial ~11 estimate, mirroring this
+    same ticket''s own Test-phase discipline of re-verifying a miscounted number rather
+    than trusting a prior estimate): 9 in tests/tools/test_knowledge_gateway_router.py,
+    3 in tests/tools/test_knowledge_gateway_packet_assembly.py, 3 in tests/tools/test_knowledge_gateway_contract_schemas.py,
+    3 in tests/tools/test_knowledge_gateway_mcp.py (plus 2 pre-existing placeholder-asserting
+    router tests renamed and re-assigned to assert the new real routing behavior,
+    not counted among the 18 new). Of the 18, 15 landed in the Implement phase (Steps
+    6-9 of plan.md) and 3 landed in the later Test phase closing real gaps plan.md''s
+    own Implement pass had not yet covered: a full MCP-round-trip test (test_gateway_call_reaches_real_parity_entry_for_existing_id_end_to_end),
+    a free-text co-primary-provider test (test_free_text_requirement_completeness_query_uses_context_search_and_does_not_error_on_parity),
+    and a genuine-negative-on-a-fresh-index test (test_gateway_call_reports_genuine_negative_result_on_fresh_index).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'Real, end-to-end tests drive call_providers_for_routing_decision()
+    and _run_knowledge_context() against a real, freshly-built parity-index/parity.db
+    and a real, currently-existing entry id (INFRA-349), asserting genuine entry()
+    data appears in the response -- not a stub/mock. Symbol locations (all re-confirmed
+    by direct read this session, current as of this entry''s own write): tools/knowledge_gateway_router.py:38
+    (_PARITY_CAPS_PATH), :165 (ROUTING_TABLE row), :282-289 (_load_parity_index_module()),
+    :292-312 (_run_parity_provider()), :212 (_PROVIDER_CAPS_PATHS registration); tools/knowledge_gateway_packet_assembly.py:76
+    (this module''s own independent _PROVIDER_CAPS_PATHS registration), :200-210 (call_providers_for_routing_decision()''s
+    parity_ledger dispatch branch, IndexNotBuiltError caught by name), :348-386 (render_candidates()''s
+    parity rendering block), :742-746 (the extended statement-count invariant assert),
+    :713-723 (_provider_id_for_evidence_id()''s parity: branch). See test_path.'
+  proof_type: differential
+  test_path: tests/tools/test_knowledge_gateway_packet_assembly.py::test_parity_id_query_reaches_real_entry_lookup_end_to_end
+  divergence_note: null
+  support_boundary: "Passthrough only, per docs/plans/knowledge-gateway-mcp-proposal.md\
+    \ \xA73.3 -- the adapter never overrides or replaces docs/parity_ledger/*.yaml's\
+    \ own authoritative status. impact()/health() and changed_paths threading are\
+    \ explicitly out of this entry's scope (TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT's\
+    \ job). Two disclosed, deliberate gaps, neither fixed here: (1) validated_scopes\
+    \ threading gap -- assemble_packet()'s own zero-statements negative-claim auto-trigger\
+    \ (tools/knowledge_gateway_packet_assembly.py, the 'if not statements:' block)\
+    \ still never threads a real validated_scopes value through to build_negative_claim_support(),\
+    \ so the new parity_ledger provider's real SCOPED descriptor claim does not yet\
+    \ flip any real _run_knowledge_context() response's verification field end-to-end\
+    \ -- honest about the adapter's own real, earned capability, not yet wired into\
+    \ the response; a distinct, separately-scoped threading change to that single\
+    \ auto-trigger call site, deliberately deferred, strong candidate for a follow-up\
+    \ ticket. (2) source_type mislabeling gap -- the live parity_ledger provider is\
+    \ not yet reflected in tools/knowledge_gateway_redaction.py::ALLOWED_SOURCE_TYPES\
+    \ (:63, still frozenset({SOURCE_TYPE_CONTEXT_SEARCH, SOURCE_TYPE_GRAPHIFY})) or\
+    \ the Level 1/Level 2 cache-write source_type derivation in tools/knowledge_gateway_cache.py\
+    \ (:357-361 and :559 area, a binary 'context_search' in providers_consulted else\
+    \ SOURCE_TYPE_GRAPHIFY check with no parity_ledger branch) -- a packet whose evidence\
+    \ includes real parity_ledger content still gets its cache-write payload labeled\
+    \ SOURCE_TYPE_CONTEXT_SEARCH today (since parity_ledger is only ever selected\
+    \ alongside context_search on this routing row, per Step 3's design), which is\
+    \ not incorrect per se (the write is allowed by the real eligibility check and\
+    \ the cached payload's real content is unaffected) but is an honest mislabeling\
+    \ of provenance in the cache layer, found by Document-Update, not fixed here (code\
+    \ change outside this ticket's Scope/Related Code Areas) -- disclosed for a follow-up\
+    \ ticket to add a real parity_ledger-aware branch."
+- id: INFRA-352
+  text: 'Knowledge Gateway MCP Phase 4 changed-path-aware task context -- TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT.
+    `changed_paths` is a real, optional field on `knowledge_context`''s request schema
+    and `_run_knowledge_context()`''s signature (tools/knowledge_gateway_mcp.py:153),
+    already wired into integration point (a) -- cache-validity revalidation via working_tree_overlap_forces_revalidation()
+    (tools/knowledge_gateway_cache.py:206-211) -- at both Level 1 (revalidate_cache_row(),
+    :214-229) and Level 2 (revalidate_context_packet_row(), :249-283), built incidentally
+    by TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING and the Phase 3 packet-cache
+    tickets before this ticket formally introduced changed_paths as a caller option.
+    This ticket''s own Investigate/Plan phase confirmed AC1-AC3 were already substantively
+    satisfied by that prior incidental work rather than manufacturing new tools/src/
+    code to re-prove them, and its Test phase closed the one real remaining gap --
+    Level 1''s own caller-level wiring had only unit-level coverage, not an end-to-end-from-the-caller
+    proof -- by adding two new tests to tests/tools/test_knowledge_gateway_cache.py:
+    test_revalidate_cache_row_rejects_on_changed_paths_intersection and test_revalidate_cache_row_survives_unrelated_changed_path.
+    Integration point (b) -- routing changed_paths into the Parity adapter''s impact(changed_path=...)
+    call (tools/parity_index.py:599) -- was evaluated and declined; see support_boundary.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'tools/knowledge_gateway_mcp.py:153 (changed_paths: Optional[list[str]]
+    = None on _run_knowledge_context()''s real signature), :167-168 (threaded into
+    the request dict only when not None). tools/knowledge_gateway_cache.py:206-211
+    (working_tree_overlap_forces_revalidation(), the shared primitive -- evidence_paths
+    intersected with changed_paths, never a full-tree hash), :214-229 (revalidate_cache_row(),
+    Level 1, calls the primitive first before any fingerprint comparison), :249-283
+    (revalidate_context_packet_row(), Level 2, calls the same primitive after the
+    branch-compatibility check). End-to-end caller-level test: tests/tools/test_knowledge_gateway_mcp.py:820
+    (test_level2_hit_rejected_on_changed_paths_intersection_triggers_real_refresh
+    -- a real _run_knowledge_context() call with changed_paths=["docs/foo.md"] forces
+    a genuine MISS/refresh on a packet whose evidence_dependencies overlap that path).
+    Level 1 caller-level unit coverage added this session: tests/tools/test_knowledge_gateway_cache.py::test_revalidate_cache_row_rejects_on_changed_paths_intersection
+    and ::test_revalidate_cache_row_survives_unrelated_changed_path (both re-confirmed
+    passing).'
+  proof_type: regression
+  test_path: tests/tools/test_knowledge_gateway_mcp.py::test_level2_hit_rejected_on_changed_paths_intersection_triggers_real_refresh
+  divergence_note: null
+  support_boundary: 'This entry documents (a) -- cache-validity revalidation -- as
+    already live and tested at both cache levels, and explicitly declines (b) -- routing
+    changed_paths into the Parity adapter''s impact(changed_path=...) call. Reasoning,
+    per this ticket''s own plan.md Decision Record: (1) the ticket''s Out of Scope
+    forbids changing the Parity adapter itself -- _run_parity_provider() (tools/knowledge_gateway_router.py:292-312)
+    calls only entry(), per its own docstring at :293-294 (''never impact()/health(),
+    and never a subprocess or recursive MCP call''), and making it conditionally call
+    impact() instead would be adapter-routing-design work, not a caller-side use of
+    an already-fixed interface; (2) a real shape mismatch reinforces this -- impact(changed_path=None,
+    test_path=None, symbol=None, db_path=None) (tools/parity_index.py:599) takes a
+    single changed_path (singular), while the gateway''s field is changed_paths (plural,
+    a list), so wiring one into the other requires a real design decision (loop over
+    paths? first match? union/dedup?) that belongs to a separately-scoped ticket;
+    (3) a sibling ticket committed a deliberate, named guard against exactly this:
+    tests/tools/test_knowledge_gateway_router.py::test_changed_path_impact_call_is_not_wired_by_this_ticket
+    (:486-489) AST-inspects _run_parity_provider()''s real body and asserts ''impact''
+    not in called_attrs and ''changed_path'' not in kwarg_names -- unchanged and still
+    passing after this ticket; its sibling test_symbol_filter_on_impact_remains_unused_for_parity_provider
+    (:492-495) is likewise unchanged; (4) no concrete demand exists -- no failing
+    test, no measured routing-quality gap, and no ticket/user complaint currently
+    shows entry() underperforming impact() for the requirement_completeness_verification
+    routing row. Cross-reference INFRA-351''s own support_boundary text (''impact()/health()
+    and changed_paths threading are explicitly out of this entry''s scope (TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT''s
+    job)'') -- that text established which ticket owns the decision, not what the
+    decision must be; this entry is the deciding record, and the decision is: not
+    wired, deliberately.'
+- id: INFRA-353
+  text: 'Knowledge Gateway MCP Phase 4 workflow-integration recommendation evaluation
+    -- TCK-20260816-KGMCP-P4-WORKFLOW-RECOMMENDATION-EVALUATION. Surveys every real
+    "reach for project knowledge" call site in .claude/workflows/*.js and .claude/agents/*.md
+    (Scope and Investigate phases'' search_docs+graphify sequence, Document-Update/doc-updater''s
+    absence of any knowledge-tool call, Architecture Review''s docs/REGISTRY.yaml
+    filter, and the dormant SHADOW_CONTEXT_PACKET_ENABLED hook) and evaluates each
+    against the real, committed Phase 1-3 latency/token measurements (docs/engine/contracts/knowledge_gateway_mcp/phase1_baseline_comparison.md,
+    phase2_baseline_recomparison.md, phase3_pilot_acceptance_measurement.md) and agent-monitoring/retro/RETRO-2026-W33.md.
+    This entry certifies that this evaluation''s methodology was sound -- real call
+    sites were surveyed with real citations, real measured numbers were used without
+    cherry-picking the most favorable phase, and no candidate point was left unaddressed,
+    with every numeric/path citation independently re-verified accurate across 2 Architecture-Review
+    passes (the 1st caught and required correction of an overstated latency claim;
+    the 2nd independently re-verified the corrected numbers exact) -- it does NOT
+    certify that any particular workflow integration is correct or beneficial, since
+    no integration was implemented (Out of Scope explicitly forbids any diff to .claude/workflows/*.js,
+    .claude/skills/*/SKILL.md, or .claude/agents/*.md, confirmed empty via git status
+    --porcelain). The evaluation''s own honest, real output: recommend against integration
+    at 3 of 4 candidate points (evidenced universal 1.05x-3.0x token overhead per
+    Phase 1, plus latency overhead for 4 of 7 corpus entries at 1.35x-2.85x -- the
+    other 3 entries measured faster on latency alone), insufficient evidence at 1
+    (Document-Update, a genuine capability mismatch against knowledge_status_response.schema.json),
+    and the shadow-packet hook flagged as a future-only candidate, conditioned on
+    Phase 3''s own disclosed budget-enforcement (Sec.21 #12) and token-count (AC4/Sec.18)
+    gaps closing first. See docs/engine/contracts/knowledge_gateway_mcp/phase4_workflow_recommendation.md
+    for the full per-candidate breakdown.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: docs/engine/contracts/knowledge_gateway_mcp/phase4_workflow_recommendation.md
+  test_path: tests/docs/test_phase4_workflow_recommendation_doc.py
+  proof_type: regression
+  divergence_note: null
+  support_boundary: 'This entry certifies the evaluation methodology was sound (real
+    call sites surveyed with real citations, real measured numbers used without cherry-picking,
+    no candidate left unaddressed, all citations independently verified accurate by
+    2 Architecture-Review passes). It does NOT certify that any evaluated workflow
+    integration is correct or beneficial -- none was implemented in this ticket. The
+    evaluation''s real, honest outcome: recommend against 3 of 4 candidates, insufficient
+    evidence at 1. Full numeric detail lives in docs/engine/contracts/knowledge_gateway_mcp/phase4_workflow_recommendation.md,
+    not restated here.'
+- id: INFRA-354
+  text: 'Knowledge Gateway MCP Phase 4 direct-tool comparison -- TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON.
+    Runs a real, live, paired gateway-vs-direct-tool comparison across all 7 frozen
+    corpus entries (tools/agent-monitoring/kgmcp_baseline_corpus.py), fresh (no Phase
+    0-3 fixture reuse -- INFRA-351/352 made every historical Q3 and general-drift
+    number stale). Runner: tools/agent-monitoring/kgmcp_phase4_direct_tool_comparison_runner.py.
+    Key functions: _compute_context_search_half() (line 265) calls the imported, unmodified
+    _compute_threshold_4_3() then overwrites only its returned "derivation" string
+    (lines 282-287) to correct a real false-provenance claim (Architecture Review
+    1st-pass required fix -- the imported helper''s own hardcoded string falsely claimed
+    Phase 0 fixture provenance once fed this ticket''s freshly-run data); _extract_graphify_source_paths()
+    (line 256, regex re.findall(r"src=([^\s\]]+)", raw_stdout)) closes Design Decision
+    D3''s 3-phase-old Graphify-recall N/A; run_corpus() (line 373) assembles and writes
+    tests/tools/fixtures/kgmcp_phase4_direct_tool_comparison_results.json. Unlike
+    INFRA-344/350/353''s ''methodology, not conclusion'' framing, this entry DOES
+    certify the real measured result, because this ticket''s own job was to report
+    the real gateway-vs-direct comparison, whatever it turned out to be. Real, honest,
+    negative headline result: the gateway is slower (1.31x-3.76x) and heavier in tokens
+    (1.04x-2.93x) than the direct-tool combination for all 7 of 7 corpus entries in
+    this fresh, cold-cache run; hand-written, mechanically-verified reviewer_judgment
+    field recorded 6/7 entries direct_equal_or_better, 1/7 (Q3_requirement_completeness)
+    mixed, 0/7 gateway_equal_or_better. Full per-query-type detail: docs/engine/contracts/knowledge_gateway_mcp/phase4_direct_tool_comparison.md.
+    Trustworthiness of the measurement itself is evidenced by 2 real pre-implementation
+    fixes Architecture Review required and confirmed applied (the derivation-string
+    false provenance claim above, and an unfalsifiable subjective reviewer_judgment
+    field made falsifiable by Step 6''s concrete procedure -- every entry with a recorded
+    source_completeness gap must cite a real, verbatim source_id/path, and no two
+    entries'' rationale strings may be byte-identical, enforced by test_reviewer_judgment_cites_a_real_recorded_source_when_source_completeness_shows_a_gap
+    and test_reviewer_judgment_rationales_are_not_byte_identical_across_entries),
+    plus 2 further gaps the Test phase closed: mechanical verification of the Q4/Q6
+    normalization-false-positive claim (test_reviewer_judgment_normalization_false_positive_claims_are_mechanically_verified)
+    and a corpus-version staleness check (test_fixture_corpus_version_matches_currently_imported_baseline_corpus).
+    24 tests total verify this entry, across 2 files: tests/tools/test_kgmcp_phase4_direct_tool_comparison.py
+    (19 tests) and tests/docs/test_phase4_direct_tool_comparison_doc.py (5 tests);
+    all 24 passing.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/agent-monitoring/kgmcp_phase4_direct_tool_comparison_runner.py
+    (_compute_context_search_half:265, derivation-override:282-287, _extract_graphify_source_paths:256,
+    run_corpus:373); tests/tools/fixtures/kgmcp_phase4_direct_tool_comparison_results.json;
+    docs/engine/contracts/knowledge_gateway_mcp/phase4_direct_tool_comparison.md
+  test_path: tests/tools/test_kgmcp_phase4_direct_tool_comparison.py
+  proof_type: differential
+  divergence_note: null
+  support_boundary: 'This entry certifies the real, measured gateway-vs-direct-tool
+    comparison result itself, not only sound methodology (unlike INFRA-344/350/353''s
+    ''methodology, not conclusion'' framing) -- because this ticket''s own job was
+    to report the real comparison, whatever it turned out to be, and the honest, negative,
+    unspun result IS what is being certified as correct and real. The real headline:
+    the gateway was slower and heavier in tokens than direct tool use for all 7 of
+    7 corpus entries (1.31x-3.76x latency, 1.04x-2.93x tokens), and reviewer judgment
+    favored direct tools on 6 of 7 entries with the 7th (Q3) judged mixed -- 0 of
+    7 favored the gateway. Trustworthiness of this measurement is evidenced by 2 required
+    Architecture-Review pre-implementation fixes (a false provenance string in the
+    reused derivation output; an unfalsifiable subjective reviewer_judgment field
+    made falsifiable by a concrete, source-citing, non-duplicate-rationale procedure)
+    plus 2 further gaps the Test phase closed (mechanical verification of the Q4/Q6
+    false-positive claim; a corpus-version staleness check) -- all confirmed applied
+    and passing across 24 tests in tests/tools/test_kgmcp_phase4_direct_tool_comparison.py
+    (19) and tests/docs/test_phase4_direct_tool_comparison_doc.py (5). This entry
+    does NOT certify that the gateway is broadly superior or inferior to direct tool
+    use beyond this 7-entry corpus, or that any fix to the observed disadvantage has
+    been made -- both are explicitly out of scope for this measurement-only ticket.'

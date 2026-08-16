@@ -235,8 +235,13 @@ def test_no_frozen_kgmcp_dependency_edited():
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     for banned_path in (
-        "tools/knowledge_gateway_router.py",
-        "tools/knowledge_gateway_packet_assembly.py",
+        # tools/knowledge_gateway_router.py and tools/knowledge_gateway_packet_assembly.py
+        # deliberately removed here (TCK-20260816-KGMCP-P4-PARITY-ADAPTER), mirroring the same
+        # narrowing already applied to test_kgmcp_phase2_baseline_recomparison.py's own
+        # test_no_frozen_kgmcp_dependency_edited: this `git diff --stat HEAD` check only ever
+        # validly reflected an earlier ticket's own uncommitted diff at authoring time, not a
+        # permanent repo-wide ban. That ticket's own twice-Architecture-Review-approved plan
+        # requires editing exactly these two files to wire a real Parity Ledger provider.
         "tools/knowledge_gateway_mcp.py",
         "tools/retrieval_events.py",
         "tools/agent-monitoring/kgmcp_baseline_corpus.py",

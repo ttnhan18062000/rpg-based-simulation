@@ -223,3 +223,42 @@ class TestParityUpdaterAgentDocUsesNewWritePath:
         assert "parity_ledger_writer" in text
         assert "write_entry" in text
         assert "python3 tools/parity_index.py build" in text
+
+
+_INFRASTRUCTURE_LEDGER_PATH = (
+    Path(__file__).resolve().parent.parent.parent / "docs" / "parity_ledger" / "infrastructure.yaml"
+)
+
+
+class TestInfra352DocumentsChangedPathsIntegrationDecision:
+    """Content-lock for TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT's INFRA-352 entry (plan.md
+    Step 3): asserts the entry's real, written text/support_boundary still discloses both the
+    live integration point (a) wiring and the declined integration point (b) decision, so a
+    future silent edit that drops either half of the record fails this test rather than eroding
+    unnoticed. Mirrors the doc-content-assertion pattern in
+    test_evidence_cache_identity_contract.py::
+    test_changed_paths_intersected_with_cached_evidence_paths_approach_is_documented (asserts
+    specific substrings are present in a frozen doc rather than re-testing the underlying code)."""
+
+    @staticmethod
+    def _infra_352_entry():
+        entries = yaml.safe_load(_INFRASTRUCTURE_LEDGER_PATH.read_text())
+        for entry in entries:
+            if entry.get("id") == "INFRA-352":
+                return entry
+        raise AssertionError("INFRA-352 entry not found in docs/parity_ledger/infrastructure.yaml")
+
+    def test_infra_352_documents_changed_paths_integration_decision(self):
+        entry = self._infra_352_entry()
+
+        assert "changed_paths" in entry["text"]
+        assert "working_tree_overlap_forces_revalidation" in entry["text"]
+
+        assert "impact" in entry["support_boundary"]
+        assert (
+            "test_changed_path_impact_call_is_not_wired_by_this_ticket"
+            in entry["support_boundary"]
+        )
+
+        assert entry["status"] == "verified"
+        assert entry["test_path"]

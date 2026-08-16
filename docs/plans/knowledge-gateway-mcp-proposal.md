@@ -1365,11 +1365,88 @@ boundary — that determination is a separate, later human-reviewer call based o
 
 ### Phase 4: Parity and Workflow Integration
 
-- Add Parity Ledger routing.
-- Add changed-path-aware task context.
+- Add Parity Ledger routing. **Done** (`TCK-20260816-KGMCP-P4-PARITY-ADAPTER`) — a real, versioned
+  `ProviderCapabilities` descriptor
+  (`docs/engine/contracts/knowledge_gateway_mcp/provider_capabilities_parity_ledger.json`) and a
+  real, in-process adapter (`tools/knowledge_gateway_router.py::_run_parity_provider()`) now exist,
+  calling `tools/parity_index.py::entry()` only — never `impact()`/`health()`, never a subprocess or
+  recursive MCP call, per §7.1's own design decision. `ROUTING_TABLE["requirement_completeness_verification"]`
+  no longer carries the Phase 1 `not_yet_routed="parity_ledger"` placeholder; it now routes to
+  `primary_providers=("context_search", "parity_ledger")`. This is genuinely, end-to-end wired, not
+  just a router-level unit test in isolation: the real per-call dispatch layer,
+  `tools/knowledge_gateway_packet_assembly.py::call_providers_for_routing_decision()`, gained a
+  `parity_ledger` branch, so a live `_run_knowledge_context()` call for a parity-ID-shaped query (or
+  the free-text `Q3_requirement_completeness` shape) reaches `entry()` and returns real ledger data
+  in the response's `statements`/`context`/`evidence` — confirmed by
+  `test_parity_id_query_reaches_real_entry_lookup_end_to_end` and
+  `test_gateway_call_never_crashes_when_parity_index_absent` (both real calls, no
+  `tools.parity_index` internals mocked). `negative_knowledge_support` is declared `SCOPED`, earned
+  by the adapter calling `check_staleness()` whenever `entry()` returns `found: False`. A
+  missing/stale `parity-index/parity.db` fails open via a named `IndexNotBuiltError` catch at the
+  dispatch layer, never crashing the gateway call
+  (`test_missing_parity_index_fails_open_not_crash`,
+  `test_stale_parity_index_is_disclosed_not_silently_trusted`). `context_search` stays a co-primary
+  provider on the same row (a deliberate choice, not a stopgap — the free-text case still needs it).
+  Two limitations are disclosed, not silently left implicit: (1) `assemble_packet()`'s own
+  zero-statements negative-claim auto-trigger never threads `validated_scopes` through, so the
+  `SCOPED` declaration does not yet flip any real response's `verification` field end-to-end — a
+  distinct, separately-scoped threading change, deferred to a follow-up ticket; (2) the cached-payload
+  redaction eligible-source allowlist (`tools/knowledge_gateway_redaction.py::ALLOWED_SOURCE_TYPES`)
+  and the Level 1/Level 2 cache-write `source_type` derivation in `tools/knowledge_gateway_cache.py`
+  were not updated to recognize `parity_ledger` as a distinct source type, so a cached packet
+  containing real parity-sourced content is currently mislabeled as Context-Search-sourced rather
+  than explicitly allowlisted — see
+  `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §2 for the full
+  disclosure. See
+  `docs/engine/contracts/knowledge_gateway_mcp_contract.md` §3's new "Parity Ledger" subsection for
+  the full per-field capability evidence.
+- Add changed-path-aware task context. **Done** (`TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT`) —
+  `changed_paths` is a real, optional `knowledge_context` field
+  (`tools/knowledge_gateway_mcp.py:153`), already wired into cache-validity revalidation
+  (integration point (a), built incidentally by the Phase 2/3 cache-wiring tickets) via
+  `working_tree_overlap_forces_revalidation()` (`tools/knowledge_gateway_cache.py:206-211`) at both
+  Level 1 and Level 2, proven end-to-end by
+  `test_level2_hit_rejected_on_changed_paths_intersection_triggers_real_refresh`. Routing-integration
+  (point (b), preferring the Parity adapter's `impact(changed_path=...)` over `entry()`) was
+  evaluated and explicitly declined — one-line reason: it would be a change to the adapter's own
+  routing decision (out of this ticket's scope) with a real singular/plural shape mismatch
+  (`impact(changed_path=...)` vs. the gateway's plural `changed_paths`) and no demonstrated need,
+  and a sibling-committed guard test
+  (`test_changed_path_impact_call_is_not_wired_by_this_ticket`) already locks the non-wiring in
+  place. See `INFRA-352` for the full reasoning.
 - Evaluate optional workflow recommendations or opportunistic calls without creating a mandatory
-  phase, gate, or ticket step.
-- Compare gateway packets against existing direct-tool behavior.
+  phase, gate, or ticket step. **Done** (`TCK-20260816-KGMCP-P4-WORKFLOW-RECOMMENDATION-EVALUATION`) —
+  real, evidence-based evaluation performed across every candidate integration point in
+  `.claude/workflows/*.js` and `.claude/agents/*.md`. Result: recommend against integration at 3 of
+  4 candidate points (Scope/Investigate `search_docs`+`graphify` sequence; Architecture Review's
+  `docs/REGISTRY.yaml` filter), measured universally 1.05x-3.0x heavier in tokens and slower in
+  latency for 4 of 7 corpus entries (1.35x-2.85x; the other 3 entries measured faster on latency
+  alone) than the existing baseline; insufficient evidence at 1 (Document-Update/doc-updater — capability mismatch,
+  not a measured regression); the dormant `SHADOW_CONTEXT_PACKET_ENABLED` hook flagged as a future-
+  only candidate conditioned on Phase 3's own disclosed budget-enforcement and token-count gaps
+  closing first. No code, workflow, or skill file changed by this ticket. See
+  `docs/engine/contracts/knowledge_gateway_mcp/phase4_workflow_recommendation.md` for the full
+  breakdown.
+- Compare gateway packets against existing direct-tool behavior. **Done**
+  (`TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON`) — a real, paired, fresh (no Phase 1-3 fixture
+  reuse) run of all 7 frozen corpus entries against both the real gateway call and the real
+  equivalent direct-tool call(s) (Context Search, Graphify, and — newly callable for
+  `Q3_requirement_completeness` since `INFRA-351` landed — the Parity Ledger `entry()` adapter
+  directly). Real, honest, negative result on cost: **the gateway was slower (1.31x-3.76x) and
+  heavier in tokens (1.04x-2.93x) than direct tool use for all 7 of 7 entries** in this fresh,
+  cold-cache run — no entry excluded, no threshold redefined to flip an unfavorable result. On
+  objective quality (source-completeness), the Graphify half matched exactly (0 missing, 0 extra)
+  on all 4 Graphify-routed entries; the Context-Search half showed real, narrow drops on 3 of 7
+  entries after hand-inspection ruled out 2 recorded misses as normalization-shape false positives,
+  not real content loss. Hand-written reviewer judgments (disclosed, non-computed, each citing a
+  real recorded source_id/path per entry): 6 of 7 entries (`Q1`, `Q2`, `Q4`, `Q5`, `Q6`, `Q7`)
+  judged `direct_equal_or_better`; 1 of 7 (`Q3_requirement_completeness`, the newly-live Parity
+  Ledger route) judged `mixed`; 0 of 7 judged `gateway_equal_or_better`. This does not characterize
+  the gateway as broadly superior or inferior to direct tool use, nor does it declare Phase 4
+  complete — per this ticket's own Out of Scope, that determination is a separate, later,
+  human-reviewer call. See
+  `docs/engine/contracts/knowledge_gateway_mcp/phase4_direct_tool_comparison.md` for full per-entry
+  detail.
 
 ### Phase 5: Entity-Aware Reuse
 

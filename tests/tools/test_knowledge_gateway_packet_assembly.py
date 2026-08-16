@@ -777,6 +777,89 @@ def test_evidence_dependencies_empty_in_section16_budget_assembly_failure_not_fu
     assert packet.evidence_dependencies == []
 
 
+# ---------------------------------------------------------------------------
+# TCK-20260816-KGMCP-P4-PARITY-ADAPTER: real end-to-end parity_ledger provider dispatch
+# ---------------------------------------------------------------------------
+
+_PARITY_LEDGER_DIR = _REPO_ROOT / "docs" / "parity_ledger"
+
+
+def test_parity_id_query_reaches_real_entry_lookup_end_to_end(tmp_path, monkeypatch):
+    """Resolves investigation.md Risk 1: drives call_providers_for_routing_decision() -- the real
+    per-call provider-dispatch layer every live _run_knowledge_context() call goes through --
+    directly against a real, freshly-built parity index. Never monkeypatches tools.parity_index's
+    entry()/check_staleness() themselves, only the module-level DEFAULT_DB_PATH constant so the
+    real build()/entry() code runs against test-isolated state instead of a developer's real
+    parity-index/parity.db.
+    """
+    kgr_mod = kpa._load_router_module()
+    pidx = kgr_mod._load_parity_index_module()
+    db_path = tmp_path / "parity.db"
+    build_report = pidx.build(ledger_dir=_PARITY_LEDGER_DIR, db_path=db_path)
+    assert build_report["status"] == "ok"
+    monkeypatch.setattr(pidx, "DEFAULT_DB_PATH", db_path)
+
+    decision = SimpleNamespace(providers_selected=["parity_ledger"])
+    results = kpa.call_providers_for_routing_decision(decision, "INFRA-349")
+
+    assert results["parity_ledger"] is not None
+    assert results["parity_ledger"]["results"]["found"] is True
+    assert results["parity_ledger"]["results"]["record"]["id"] == "INFRA-349"
+    assert results["failures"] == []
+
+
+def test_missing_parity_index_fails_open_not_crash(tmp_path, monkeypatch):
+    kgr_mod = kpa._load_router_module()
+    pidx = kgr_mod._load_parity_index_module()
+    monkeypatch.setattr(pidx, "DEFAULT_DB_PATH", tmp_path / "does_not_exist" / "parity.db")
+
+    decision = SimpleNamespace(providers_selected=["parity_ledger"])
+    results = kpa.call_providers_for_routing_decision(decision, "INFRA-349")
+
+    assert results["parity_ledger"] is None
+    assert results["failures"]
+    assert "parity_ledger: index not built" in results["failures"][0]
+
+
+def test_free_text_requirement_completeness_query_uses_context_search_and_does_not_error_on_parity(
+    tmp_path, monkeypatch
+):
+    """Gap-check (Architecture-Verify follow-up): `ROUTING_TABLE["requirement_completeness_verification"]`
+    has BOTH `context_search` and `parity_ledger` as primary providers, so a free-text (non-parity-ID
+    -shaped) query classified into this row -- e.g. the real corpus query text for
+    `Q3_requirement_completeness` in `tools/agent-monitoring/kgmcp_baseline_corpus.py` -- still
+    dispatches to `parity_ledger`. This proves that co-primary dispatch: (1) context_search still
+    returns its own real results untouched, (2) the parity adapter receives the raw free-text query
+    as the literal entry_id (per `_run_parity_provider()`'s own documented Design Decision D1),
+    genuinely calls the real `tools/parity_index.py::entry()` against a real, freshly-built index,
+    and returns `found: False` for the whole sentence -- and (3) this is real provider behavior, not
+    an error: it must never land in `results["failures"]`."""
+    kgr_mod = kpa._load_router_module()
+    pidx = kgr_mod._load_parity_index_module()
+    db_path = tmp_path / "parity.db"
+    build_report = pidx.build(ledger_dir=_PARITY_LEDGER_DIR, db_path=db_path)
+    assert build_report["status"] == "ok"
+    monkeypatch.setattr(pidx, "DEFAULT_DB_PATH", db_path)
+
+    sm_mod = kpa._load_search_mcp_module()
+    real_cs_results = [_cs_result(excerpt="Q3 free-text requirement-completeness real result")]
+    monkeypatch.setattr(sm_mod, "_run_search", lambda q: real_cs_results)
+
+    free_text_query = "Is the read_count_correlation feature fully implemented?"
+    decision = SimpleNamespace(providers_selected=["context_search", "parity_ledger"])
+    results = kpa.call_providers_for_routing_decision(decision, free_text_query)
+
+    assert results["failures"] == [], (
+        "a free-text query genuinely not existing as a parity entry ID is real provider "
+        "behavior (found: False), never a failure"
+    )
+    assert results["context_search"] == real_cs_results
+
+    assert results["parity_ledger"] is not None
+    assert results["parity_ledger"]["results"]["found"] is False
+    assert results["parity_ledger"]["results"]["entry_id"] == free_text_query
+
+
 def test_module_does_not_edit_knowledge_gateway_router():
     """`tools/knowledge_gateway_router.py` is untracked in this working tree (its own ticket has
     not yet been committed), so a `git diff HEAD` check would be a silent no-op regardless of

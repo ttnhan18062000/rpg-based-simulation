@@ -279,6 +279,94 @@ def test_knowledge_context_passes_through_router_and_assembler_failure_without_s
 
 
 # ---------------------------------------------------------------------------
+# 9b — TCK-20260816-KGMCP-P4-PARITY-ADAPTER: a missing parity index fails open end-to-end
+# ---------------------------------------------------------------------------
+
+def test_gateway_call_never_crashes_when_parity_index_absent(tmp_path, monkeypatch):
+    """Drives a real _run_knowledge_context("INFRA-349") call -- a parity_id-identifier-matched
+    query, real routing all the way through -- with DEFAULT_DB_PATH monkeypatched to a nonexistent
+    path so tools/parity_index.py::entry() genuinely raises IndexNotBuiltError. Reaches PARTIAL via
+    call_providers_for_routing_decision()'s own failures-list branch (Step 4), not the router-level
+    FileNotFoundError/subprocess.TimeoutExpired fallback at knowledge_gateway_mcp.py:192-220, since
+    route() itself never raises IndexNotBuiltError -- only the provider call inside
+    assemble_packet() does."""
+    router_mod = _mod._load_router_module()
+    pidx = router_mod._load_parity_index_module()
+    monkeypatch.setattr(pidx, "DEFAULT_DB_PATH", tmp_path / "does_not_exist" / "parity.db")
+
+    response = _mod._run_knowledge_context("INFRA-349")
+    assert response["status"] == "PARTIAL"
+    _validate_response(response)
+
+
+# ---------------------------------------------------------------------------
+# 9c — TCK-20260816-KGMCP-P4-PARITY-ADAPTER: a real, fresh parity index is genuinely reached by
+# a full, live _run_knowledge_context() MCP-tool-level round trip (AC3's "not a stub/mock" claim,
+# gap-checked: existing coverage only drove call_providers_for_routing_decision()/
+# _run_parity_provider() directly at the packet-assembly/router layer, or the fail-open path
+# above -- neither proves the found:True happy path reaches entry() through the actual tool entry
+# point a real MCP client calls).
+# ---------------------------------------------------------------------------
+
+def test_gateway_call_reaches_real_parity_entry_for_existing_id_end_to_end(tmp_path, monkeypatch):
+    """Builds a real, freshly-built parity index from the real docs/parity_ledger/*.yaml shards,
+    monkeypatches only the module-level DEFAULT_DB_PATH constant (never entry()/check_staleness()
+    themselves) for test isolation, then drives a real, full _run_knowledge_context("INFRA-349")
+    call -- the same MCP-tool-level entry point a real client invokes -- and asserts the response
+    genuinely carries a parity_ledger-sourced context/evidence entry for the real INFRA-349 record,
+    not a stub or mock."""
+    router_mod = _mod._load_router_module()
+    pidx = router_mod._load_parity_index_module()
+    db_path = tmp_path / "parity.db"
+    build_report = pidx.build(ledger_dir=_REPO_ROOT / "docs" / "parity_ledger", db_path=db_path)
+    assert build_report["status"] == "ok"
+    monkeypatch.setattr(pidx, "DEFAULT_DB_PATH", db_path)
+
+    response = _mod._run_knowledge_context("INFRA-349")
+    _validate_response(response)
+
+    parity_context_entries = [c for c in response["context"] if c["kind"] == "parity_ledger"]
+    assert parity_context_entries, "expected a real parity_ledger-sourced context entry"
+
+    parity_evidence_entries = [
+        e for e in response["evidence"] if e["evidence_id"] == "parity:INFRA-349"
+    ]
+    assert parity_evidence_entries, "expected a real parity:INFRA-349 evidence entry"
+
+
+# ---------------------------------------------------------------------------
+# 9d — TCK-20260816-KGMCP-P4-PARITY-ADAPTER: genuine negative result on a FRESH (not stale) index
+# -- distinct from the stale-index case: this is "the ID really doesn't exist, and the index
+# itself is fine," which is what makes the SCOPED negative_knowledge_support claim honest.
+# ---------------------------------------------------------------------------
+
+def test_gateway_call_reports_genuine_negative_result_on_fresh_index(tmp_path, monkeypatch):
+    router_mod = _mod._load_router_module()
+    pidx = router_mod._load_parity_index_module()
+    db_path = tmp_path / "parity.db"
+    ledger_dir = _REPO_ROOT / "docs" / "parity_ledger"
+    build_report = pidx.build(ledger_dir=ledger_dir, db_path=db_path)
+    assert build_report["status"] == "ok"
+    monkeypatch.setattr(pidx, "DEFAULT_DB_PATH", db_path)
+    monkeypatch.setattr(pidx, "DEFAULT_LEDGER_DIR", ledger_dir)
+
+    # A genuinely nonexistent parity ID, shape-matched by match_parity_id() but never written to
+    # any real shard -- the index was just freshly built above, so check_staleness() must report
+    # FRESH, not STALE, proving this is a real "ID doesn't exist" result and not an artifact of a
+    # stale index.
+    staleness = pidx.check_staleness()
+    assert staleness["status"] == "FRESH"
+
+    response = _mod._run_knowledge_context("ZZZZ-99999")
+    _validate_response(response)
+
+    parity_context_entries = [c for c in response["context"] if c["kind"] == "parity_ledger"]
+    assert parity_context_entries == [], (
+        "a genuinely nonexistent parity ID must never produce a parity_ledger context entry"
+    )
+
+
+# ---------------------------------------------------------------------------
 # 10 — never null for typed-string fields (context/evidence path/authority)
 # ---------------------------------------------------------------------------
 

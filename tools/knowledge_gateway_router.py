@@ -35,6 +35,7 @@ _MONITORING_TOOLS_DIR = _TOOLS_DIR / "agent-monitoring"
 _CONTRACTS_DIR = _REPO_ROOT / "docs" / "engine" / "contracts" / "knowledge_gateway_mcp"
 _CONTEXT_SEARCH_CAPS_PATH = _CONTRACTS_DIR / "provider_capabilities_context_search.json"
 _GRAPHIFY_CAPS_PATH = _CONTRACTS_DIR / "provider_capabilities_graphify.json"
+_PARITY_CAPS_PATH = _CONTRACTS_DIR / "provider_capabilities_parity_ledger.json"
 
 _REGISTRY_YAML_PATH = _REPO_ROOT / "docs" / "REGISTRY.yaml"
 _LAYER_REGISTRY_PATH = _REPO_ROOT / "registries" / "layer_registry.jsonl"
@@ -161,8 +162,7 @@ ROUTING_TABLE: dict[str, RoutingTableRow] = {
     ),
     "requirement_completeness_verification": RoutingTableRow(
         shape_id="requirement_completeness_verification",
-        primary_providers=("context_search",),
-        not_yet_routed="parity_ledger",
+        primary_providers=("context_search", "parity_ledger"),
     ),
     "ticket_historical_rationale": RoutingTableRow(
         shape_id="ticket_historical_rationale",
@@ -209,6 +209,7 @@ _DETERMINISTIC_RELATIONSHIPS_RANK = {"NONE": 0, "PARTIAL": 1, "FULL": 2}
 _PROVIDER_CAPS_PATHS = {
     "context_search": _CONTEXT_SEARCH_CAPS_PATH,
     "graphify": _GRAPHIFY_CAPS_PATH,
+    "parity_ledger": _PARITY_CAPS_PATH,
 }
 
 
@@ -276,6 +277,39 @@ def _run_context_search_provider(query_text: str) -> dict:
 def _run_graphify_provider(query_text: str) -> dict:
     result = match_symbol_name(query_text)
     return {"provider_id": "graphify", "results": result}
+
+
+def _load_parity_index_module():
+    key = "kgmcp_router_parity_index"
+    if key not in sys.modules:
+        spec = importlib.util.spec_from_file_location(key, _TOOLS_DIR / "parity_index.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[key] = mod
+        spec.loader.exec_module(mod)
+    return sys.modules[key]
+
+
+def _run_parity_provider(query_text: str) -> dict:
+    """In-process call to tools/parity_index.py::entry() only -- never impact()/health(), and
+    never a subprocess or recursive MCP call (docs/plans/knowledge-gateway-mcp-proposal.md §7.1).
+    query_text is used directly as the entry_id: correct for a parity_id-identifier-matched query
+    (query_text IS the id text, e.g. "INFRA-349"); for a natural-language query shape-classified
+    into the same requirement_completeness_verification row, entry() legitimately returns
+    found: False for the whole sentence treated as an id -- real provider behavior, not an error,
+    matching match_parity_id()'s own existence-agnostic Design Decision D1 (this file, L78-80).
+
+    negative_knowledge_support=SCOPED (descriptor, Step 1) is only honest if a found:False result
+    is resolved with a real staleness check -- so check_staleness() is called here, once, only when
+    needed (investigation.md Risk 2). This does not change any assemble_packet() response field
+    yet (Risk 3 -- deliberately deferred, see plan.md Anti-Drift Notes); it makes the raw returned
+    staleness data real and available for a future ticket to consume.
+    """
+    _pidx = _load_parity_index_module()
+    entry_result = _pidx.entry(query_text)
+    staleness = None
+    if entry_result.get("found") is False:
+        staleness = _pidx.check_staleness()
+    return {"provider_id": "parity_ledger", "results": entry_result, "staleness": staleness}
 
 
 def route_ambiguous(query_text: str) -> "RoutingDecision":

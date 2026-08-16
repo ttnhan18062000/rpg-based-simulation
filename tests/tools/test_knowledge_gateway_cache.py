@@ -209,6 +209,41 @@ def test_symbol_backed_cache_row_survives_unrelated_generation_bump_fixture():
     assert valid is True
 
 
+def test_revalidate_cache_row_rejects_on_changed_paths_intersection():
+    """Level 1 sibling to test_revalidate_context_packet_row_rejects_on_changed_paths_intersection
+    below — revalidate_cache_row() consults working_tree_overlap_forces_revalidation() at its own
+    call site (§5 rule 3) exactly like its Level 2 sibling does; this proves that path is genuinely
+    exercised through revalidate_cache_row() itself, not just through the shared helper function in
+    isolation (see test_working_tree_fingerprint_uses_changed_paths_intersection_not_full_tree_hash)."""
+    row = {
+        "working_tree_overlap": json.dumps(["docs/a.md"]),
+        "evidence_fingerprints": "gen-1",
+        "provider_generation_at_validation": "gen-1",
+    }
+    valid = _mod.revalidate_cache_row(
+        row, capability_descriptor={"fine_grained_fingerprints": False},
+        current_provider_generation="gen-1",
+        current_evidence_fingerprint=None,
+        changed_paths=["docs/a.md"],
+    )
+    assert valid is False
+
+
+def test_revalidate_cache_row_survives_unrelated_changed_path():
+    row = {
+        "working_tree_overlap": json.dumps(["docs/a.md"]),
+        "evidence_fingerprints": "gen-1",
+        "provider_generation_at_validation": "gen-1",
+    }
+    valid = _mod.revalidate_cache_row(
+        row, capability_descriptor={"fine_grained_fingerprints": False},
+        current_provider_generation="gen-1",
+        current_evidence_fingerprint=None,
+        changed_paths=["docs/unrelated.md"],
+    )
+    assert valid is True
+
+
 def test_working_tree_fingerprint_uses_changed_paths_intersection_not_full_tree_hash():
     assert _mod.working_tree_overlap_forces_revalidation(
         json.dumps(["docs/foo.md", "docs/bar.md"]), ["src/unrelated.py"]

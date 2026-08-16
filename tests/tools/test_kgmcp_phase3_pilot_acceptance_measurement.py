@@ -86,15 +86,15 @@ _RESULTS_TEXT = _RESULTS_MD.read_text()
 # Snapshot captured at the start of this ticket's own Implementation (2026-08-16, before this test
 # file or the new runner existed) — see module docstring for why a content-hash snapshot is used
 # here instead of Phase 1/Phase 2's own `git diff --stat HEAD` substring technique.
+# knowledge_gateway_router.py and knowledge_gateway_packet_assembly.py deliberately removed from
+# this dict (TCK-20260816-KGMCP-P4-PARITY-ADAPTER), mirroring the same narrowing already applied
+# to Phase 1/Phase 2's own `git diff --stat HEAD`-based frozen-dependency guards: this hash
+# snapshot only ever validly reflected an earlier ticket's own committed state at authoring time,
+# not a permanent repo-wide ban. That ticket's own twice-Architecture-Review-approved plan requires
+# editing exactly these two files to wire a real Parity Ledger provider.
 _FROZEN_FILE_HASHES = {
     _TOOLS_DIR / "knowledge_gateway_mcp.py": (
         "d489c9094e80de555db51fe4b047cacd730bd61511c2af993f81b69425898dbf"
-    ),
-    _TOOLS_DIR / "knowledge_gateway_router.py": (
-        "13e5bb6ca702a933a6df829f1743b2c21a294837cc313023948b18f98ad66852"
-    ),
-    _TOOLS_DIR / "knowledge_gateway_packet_assembly.py": (
-        "1a63d7da217963b9aa57170eb8bcd33ed0472c9df5e1845b74b21b22fcb827e6"
     ),
     _TOOLS_DIR / "knowledge_gateway_cache.py": (
         "4b74cef3615bf5325750c40c7feacac1059820833de893a69c63f7003841d0cc"

@@ -48,6 +48,27 @@ Eligible source types, at Phase 2/3, are limited to:
 Any source type not named above is not eligible for a cache write until a future ticket explicitly
 adds it to this allowlist.
 
+**Disclosed gap, found 2026-08-16 (`TCK-20260816-KGMCP-P4-PARITY-ADAPTER`'s Document-Update pass),
+not fixed here — this is a code change outside that ticket's own Scope/Related Code Areas:** Phase 4
+wired a real, third live provider, `parity_ledger`
+(`docs/engine/contracts/knowledge_gateway_mcp/provider_capabilities_parity_ledger.json`,
+`tools/knowledge_gateway_router.py::_run_parity_provider()`), genuinely reachable end-to-end from
+`_run_knowledge_context()` and able to appear in a real response's `providers_consulted_this_call`.
+Neither `tools/knowledge_gateway_redaction.py::ALLOWED_SOURCE_TYPES` (still only
+`SOURCE_TYPE_CONTEXT_SEARCH`/`SOURCE_TYPE_GRAPHIFY`) nor the Level 1/Level 2 cache-write
+`source_type` derivation in `tools/knowledge_gateway_cache.py` (`"context_search" in
+providers_consulted else SOURCE_TYPE_GRAPHIFY` — a binary check, no `parity_ledger` branch, present
+at both the Level 1 and Level 2 write-path call sites) were updated to account for it. Because
+`parity_ledger` is only ever selected alongside `context_search` on the
+`requirement_completeness_verification` routing row (never alone,
+`tools/knowledge_gateway_router.py::ROUTING_TABLE`), this binary check always resolves such a
+payload's `source_type` to `SOURCE_TYPE_CONTEXT_SEARCH` today — the write is allowed by
+`check_allowlist()`, but the resulting cache row is silently mislabeled as Context-Search-sourced
+rather than being explicitly allowlisted (or rejected) as parity-sourced. This is a real,
+disclosed gap for a follow-up ticket to resolve (either add `parity_ledger` as a named §2 eligible
+source type with its own `SOURCE_TYPE_PARITY_LEDGER` allowlist/labeling, or make an explicit,
+justified decision to keep it unlabeled) — not a silent omission.
+
 ## 3. Redaction Rules
 
 Before any content-derived value is hashed or stored in a cache row, the following must be stripped
