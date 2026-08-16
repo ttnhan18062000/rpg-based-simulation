@@ -310,6 +310,13 @@ class TestSecretScan:
 # ---------------------------------------------------------------------------
 
 class TestSizeCap:
+    def test_max_payload_bytes_is_the_real_data_derived_value(self):
+        """Regression guard (TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION): every other
+        test in this class references kgr.MAX_PAYLOAD_BYTES symbolically, so a silent regression of
+        the constant back to 8192 (or any other value) would pass every boundary test here
+        undetected. This test pins the real, data-derived literal value."""
+        assert kgr.MAX_PAYLOAD_BYTES == 65536
+
     def test_payload_under_cap_is_accepted(self):
         assert kgr.check_size_cap("a" * 8000) is True
 

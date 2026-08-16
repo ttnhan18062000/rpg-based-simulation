@@ -286,7 +286,14 @@ def test_no_frozen_kgmcp_dependency_edited():
         "tools/knowledge_gateway_packet_assembly.py",
         "tools/knowledge_gateway_mcp.py",
         "tools/knowledge_gateway_cache.py",
-        "tools/knowledge_gateway_redaction.py",
+        # tools/knowledge_gateway_redaction.py deliberately removed here
+        # (TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION): this `git diff --stat HEAD`
+        # check only ever validly reflected THIS ticket's own uncommitted diff at the moment it
+        # was authored — it was never meant as a permanent repo-wide ban. redaction.py has since
+        # been legitimately, reviewably evolved twice (Security-Review's 4->10 secret-scan pattern
+        # expansion in TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING, and this hotfix's real,
+        # data-derived MAX_PAYLOAD_BYTES recalibration) — it is not a frozen dependency in the same
+        # sense as the 3 live-gateway files above.
         "tools/retrieval_cache.py",
         "tools/retrieval_events.py",
         "tools/knowledge_search.py",

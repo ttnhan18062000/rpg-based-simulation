@@ -9131,29 +9131,38 @@
   priority: P1
   v2_evidence: 'tools/knowledge_gateway_redaction.py:59 (module-level `redaction_policy_version:
     int = 1`), :61-63 (`SOURCE_TYPE_CONTEXT_SEARCH`/`SOURCE_TYPE_GRAPHIFY`/`ALLOWED_SOURCE_TYPES`),
-    :82-87 (`check_allowlist()`), :94-126 (`_HOME_PATH_PATTERN` at :97, `_ABS_PATH_PATTERN`
-    at :102, `_hash_text()` at :105-106, `redact_content()` at :109-126), :134-172
-    (`_SECRET_SCAN_PATTERNS` dict at :134-152 -- originally 4 entries as built by
+    :88-93 (`check_allowlist()`), :100-132 (`_HOME_PATH_PATTERN` at :103, `_ABS_PATH_PATTERN`
+    at :108, `_hash_text()` at :111-112, `redact_content()` at :115-132), :140-178
+    (`_SECRET_SCAN_PATTERNS` dict at :140-158 -- originally 4 entries as built by
     this ticket (AWS access key ID, generic api_key assignment, PEM private-key header,
     Bearer token), expanded to 10 entries by the sibling TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s
     own post-Security-Review fix (see INFRA-343''s support_boundary and the module
-    docstring''s "Update" paragraph) -- `scan_for_secrets()` at :155-172), :179-184
-    (`check_size_cap()`, `MAX_PAYLOAD_BYTES=8192` constant at :68), :191-247 (Sec.7
-    CATEGORY_* constants at :191-196, `check_never_cache_categories()` at :209-247),
-    :254-298 (`WriteDecision` frozen dataclass at :254-261, `evaluate_write_candidate()`
-    orchestrator at :264-298 -- secret-scan step at :283-285 scans `raw_content`,
-    not the redacted text, per a Security-Review fix: a redaction placeholder can
-    swallow an adjacent secret with no separator, so scanning post-redaction risked
-    a false negative independent of the redundant re-scan inside `check_never_cache_categories()`),
-    :305-358 (Sec.9: `open_connection_with_limits()` at :305-321, `check_db_size_within_limit()`
-    at :324-325, `execute_bounded_transaction()` at :328-336, `acquire_write_guard()`/`release_write_guard()`
-    at :343-358), :370-438 (Sec.10: `CacheRowSnapshot` dataclass at :370-387, 6 `gc_eligible_*`
-    predicates at :390-424, `gc_eligibility_never_flags_protected_evidence()` at :427-438).
+    docstring''s "Update" paragraph) -- `scan_for_secrets()` at :161-178), :185-190
+    (`check_size_cap()`, `MAX_PAYLOAD_BYTES=65536` constant at :68 -- recalibrated
+    from the original 8192 by TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION,
+    tracked separately by INFRA-345), :197-253 (Sec.7 CATEGORY_* constants at :197-202,
+    `check_never_cache_categories()` at :215-253), :260-304 (`WriteDecision` frozen
+    dataclass at :260-267, `evaluate_write_candidate()` orchestrator at :270-304 --
+    secret-scan step at :289-291 scans `raw_content`, not the redacted text, per a
+    Security-Review fix: a redaction placeholder can swallow an adjacent secret with
+    no separator, so scanning post-redaction risked a false negative independent of
+    the redundant re-scan inside `check_never_cache_categories()`), :311-364 (Sec.9:
+    `open_connection_with_limits()` at :311-327, `check_db_size_within_limit()` at
+    :330-331, `execute_bounded_transaction()` at :334-342, `acquire_write_guard()`/`release_write_guard()`
+    at :349-364), :376-444 (Sec.10: `CacheRowSnapshot` dataclass at :376-393, 6 `gc_eligible_*`
+    predicates at :396-430, `gc_eligibility_never_flags_protected_evidence()` at :433-444).
     Line numbers corrected as of TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s
     post-Security-Review fix pass, which prepended a new module-docstring "Update"
     paragraph and expanded `_SECRET_SCAN_PATTERNS`/added `_TOKEN_SHAPED_SECRET_PATTERNS`,
     shifting every symbol below its own insertion point; the underlying claims about
-    what this ticket (REDACTION-WRITE-PATH) itself built are otherwise unchanged.'
+    what this ticket (REDACTION-WRITE-PATH) itself built are otherwise unchanged.
+    Line numbers further corrected as of TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION,
+    which lengthened the `MAX_PAYLOAD_BYTES` inline comment and `check_size_cap()`''s
+    docstring (recalibrating the constant itself from 8192 to 65536, tracked separately
+    by INFRA-345), shifting every symbol from `check_allowlist()` onward by a uniform
+    +6 lines (verified line-by-line against the live file; :59 and :61-63 are unaffected
+    since they precede the insertion point at :68); the underlying claims about what
+    this ticket (REDACTION-WRITE-PATH) itself built remain otherwise unchanged.'
   proof_type: regression
   test_path: 'tests/tools/test_knowledge_gateway_redaction.py (65 tests as of TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s
     post-Security-Review fix, all passing: TestModuleDisclosure x1, TestAllowlist
@@ -9357,3 +9366,77 @@
     split), stated in full in phase2_baseline_recomparison.md and never characterized
     as a partial or aggregate success, exactly mirroring INFRA-339''s (Phase 1) own
     honest all-FAIL precedent.'
+- id: INFRA-345
+  text: 'Level 1 provider-result cache write-path payload size cap recalibrated to
+    a real, data-derived value -- TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION
+    (hotfix). redaction_retention_policy.md Sec.5 originally set MAX_PAYLOAD_BYTES
+    = 8192 at Phase 0 ratification time (docs/plans/knowledge-gateway-mcp-proposal.md
+    Sec.24 item 1), before any real gateway existed and with no real payload data
+    to derive the number from -- justified only by the proposal''s "bounded/redacted"
+    framing, not a measurement. TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON (INFRA-344)''s
+    honest real-corpus measurement found this cap rejected every real gateway response
+    as oversized_payload: the 7 frozen corpus entries'' real cold response payloads
+    ranged ~10,612-30,548 bytes (kgmcp_char_heuristic_v1 cold gateway_tokens 2653-7637),
+    all exceeding the 8192-byte cap by 1.3x-3.7x, making the Level 1 cache structurally
+    inert for real usage -- the redaction/size-cap machinery itself worked exactly
+    as designed; only the numeric threshold was miscalibrated. This hotfix recalibrates
+    MAX_PAYLOAD_BYTES to 65536 (64 KiB), ~2.15x the real observed maximum, rounded
+    to the nearest clean power of two, and re-verifies against the real live gateway.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'tools/knowledge_gateway_redaction.py:68 (`MAX_PAYLOAD_BYTES: int =
+    65536`, inline comment citing "Sec.5, redaction_retention_policy.md:121 -- recalibrated"),
+    :185-190 (`check_size_cap()`, docstring updated to cite the new value and the
+    doc line), :190 (`return len(redacted_payload.encode("utf-8")) <= MAX_PAYLOAD_BYTES`
+    -- gate logic itself unchanged, only the constant''s value changed). docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md
+    Sec.5 (lines 119-146): :121 states the new "64 KiB (65536 bytes)" cap and "reject
+    not truncate" rule (unchanged from before this hotfix); :126-146 is a new "Recalibration
+    history" paragraph citing this ticket by ID, the real observed 8192-byte 7/7 rejection
+    finding, the ~10,612-30,548-byte real range, the new 65536 value, and the 2.15x/power-of-two
+    headroom derivation -- replacing the prior placeholder rationale ("consistent
+    with the ''bounded/redacted'' framing... proposed policy", never data-derived).
+    Live re-verification (not a pytest run; a real, manual, one-time invocation of
+    tools/agent-monitoring/kgmcp_phase2_gateway_runner.py::run_corpus() against the
+    live gateway and a genuinely cold local retrieval_cache.db, per the ticket''s
+    Implementation Notes Sec.6): genuine_cache_hit_count went from the historically-measured
+    0/7 (INFRA-344''s frozen fixture, cap=8192) to a real, confirmed 7/7 (cap=65536,
+    all 7 entries cache_status_warm == "HIT", cache_write_rejection_reason == None).
+    Not a change to any committed fixture or test-asserted value -- this is a one-time
+    live measurement, honestly reported in the ticket, not re-runnable via the frozen
+    tests/tools/fixtures/kgmcp_phase2_baseline_recomparison_results.json (which this
+    hotfix deliberately left unmodified, per the "never edit a sibling ticket''s historical
+    measurement doc" precedent).'
+  proof_type: regression
+  test_path: 'tests/tools/test_knowledge_gateway_redaction.py::TestSizeCap (5 tests,
+    all passing: new test_max_payload_bytes_is_the_real_data_derived_value asserts
+    the literal 65536 value -- closing a coverage gap where every other TestSizeCap
+    assertion referenced kgr.MAX_PAYLOAD_BYTES only symbolically and would not have
+    caught a silent regression back to 8192; test_payload_under_cap_is_accepted, test_payload_exactly_at_cap_is_accepted,
+    test_payload_over_cap_is_rejected_not_truncated, and test_size_cap_measured_on_redacted_not_raw_payload
+    updated to track the new constant), plus tests/docs/test_redaction_retention_policy_doc.py::test_payload_size_cap_doc_matches_live_module_constant
+    (new -- cross-checks the doc''s stated cap value against the live module constant
+    so doc and code can never silently drift apart on a future recalibration).'
+  divergence_note: null
+  support_boundary: 'This is a pure constant/doc recalibration, not a redesign: no
+    change to what gets cached (response envelope shrinking, field exclusion, compression
+    -- that remains Phase 3''s explicit "Enforce caller budgets using measured output
+    size" deliverable, out of scope here), no change to the redaction/allowlist/secret-scan/never-cache
+    logic (Sec.2-Sec.4, Sec.7 all untouched), and no change to tools/knowledge_gateway_mcp.py,
+    tools/knowledge_gateway_router.py, tools/knowledge_gateway_packet_assembly.py,
+    tools/knowledge_gateway_cache.py, or tools/retrieval_cache.py (all confirmed unedited
+    by this ticket). Only MAX_PAYLOAD_BYTES''s numeric value (8192 -> 65536) and its
+    surrounding comment/docstring/doc prose changed. Real live re-verification result:
+    genuine cache-hit rate went from 0/7 to 7/7 (confirmed against a genuinely cold
+    cache state, not an already-warmed one -- see the ticket''s Implementation Notes
+    Sec.6 for the cache-pollution false-negative this required investigating past).
+    The other 3 measurement_baseline_contract.md Sec.4 threshold categories (Sec.4.1
+    latency, Sec.4.2 token-reduction cold+warm, Sec.4.3 recall) honestly remain FAIL
+    0/7 in this same live re-verification run -- unrelated to this hotfix''s size-cap-only
+    scope, not claimed fixed. Traceability note: this hotfix''s substantive code/doc/test
+    changes were already committed under commit 62311b44 (an earlier, differently-titled
+    "repo hygiene" commit, a disclosed git-staging accident per the ticket''s Implementation
+    Notes Sec.10, not a history rewrite) rather than a ticket-referencing commit;
+    this entry does not cite a specific commit hash since the parity ledger schema
+    has no commit field, and the real code/doc/test state is independently verifiable
+    regardless of which commit it landed under.'

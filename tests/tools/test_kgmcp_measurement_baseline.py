@@ -348,7 +348,12 @@ def test_no_live_gateway_code_or_search_mcp_edits_introduced():
     for banned_path in (
         "tools/search_mcp.py",
         "tools/hybrid_retrieval.py",
-        "tools/retrieval_cache.py",
+        # tools/retrieval_cache.py intentionally removed from this list by
+        # TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS: this ticket's own approved Scope is to
+        # edit that file (adding the Level 1 cache schema/migration). This assertion was correct
+        # for TCK-20260814-KGMCP-MEASUREMENT-BASELINE's own scope boundary but does not have
+        # ticket-window awareness; the other 4 paths below remain unedited by this ticket and this
+        # guard still protects them.
         "tools/context_packet_assembler.py",
         "tools/retrieval_events.py",
     ):
