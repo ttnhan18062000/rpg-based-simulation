@@ -53,15 +53,32 @@ class TestMcpJson:
         assert "knowledge-search" in data["mcpServers"]
 
     def test_command_is_python3(self):
+        """TCK-20260624-FIX-TOOLS-SERVER intentionally repointed the top-level `command` to
+        `bash` running a portability wrapper (tools/start_search_mcp.sh), rather than invoking
+        python3 directly — see test_start_search_mcp_wrapper_invokes_python3 below for the real
+        interpreter hop."""
         data = json.loads((_REPO_ROOT / ".mcp.json").read_text())
         entry = data["mcpServers"]["knowledge-search"]
-        assert entry["command"] == "python3"
+        assert entry["command"] == "bash"
 
     def test_args_point_to_search_mcp(self):
+        """args[0] is the wrapper script, not search_mcp.py directly — the wrapper itself execs
+        search_mcp.py with whichever python3 it finds (see test_start_search_mcp_wrapper_invokes_
+        python3 below)."""
         data = json.loads((_REPO_ROOT / ".mcp.json").read_text())
         entry = data["mcpServers"]["knowledge-search"]
         assert len(entry["args"]) >= 1
-        assert entry["args"][0].endswith("search_mcp.py")
+        assert entry["args"][0] == "tools/start_search_mcp.sh"
+
+    def test_start_search_mcp_wrapper_invokes_python3(self):
+        """Proves the full .mcp.json -> wrapper -> real interpreter chain end-to-end, not just
+        the first hop — derives the wrapper path from args[0] so it stays correct even if
+        .mcp.json's args value is ever legitimately re-pointed elsewhere."""
+        data = json.loads((_REPO_ROOT / ".mcp.json").read_text())
+        entry = data["mcpServers"]["knowledge-search"]
+        wrapper_path = _REPO_ROOT / entry["args"][0]
+        assert wrapper_path.exists(), f"{wrapper_path} referenced by .mcp.json but does not exist"
+        assert "python3" in wrapper_path.read_text()
 
 
 # ── Title derivation — nesting-agnosticism guard ──────────────────────────────

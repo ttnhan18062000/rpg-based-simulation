@@ -23,6 +23,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _TOOLS_DIR = _REPO_ROOT / "tools"
@@ -372,10 +374,15 @@ def _agent_monitoring_porcelain_snapshot() -> str:
     return result.stdout
 
 
+@pytest.mark.slow
 def test_zero_mutation_of_agent_monitoring_and_manifest_across_full_run():
     """Exercises the new runner's full live-call path (`run_corpus()`, all 7 corpus entries,
     cold+warm) in-process, deliberately NOT `main()` (which also overwrites the committed
-    recomparison fixture — see the runner's own one-time-script convention)."""
+    recomparison fixture — see the runner's own one-time-script convention).
+
+    Marked slow (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP): measured at 40.94s alone,
+    at/over tests/conftest.py's default 60s "medium" fast-lane budget — a real live-gateway call,
+    not a code bug."""
     assert _REAL_AGENT_MONITORING_DIR.is_dir()
     assert "tmp" not in str(_REAL_AGENT_MONITORING_DIR).lower()
 

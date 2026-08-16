@@ -53,6 +53,22 @@ _CORPUS_PATH = _ARTIFACT_DIR / "gate_a_corpus.json"
 _RESULTS_PATH = _ARTIFACT_DIR / "gate_a_results.json"
 _DECISION_DOC_PATH = _REPO_ROOT / "docs" / "ai" / "parity_readpath_gate_a_decision.md"
 
+_CORPUS_AVAILABLE = _CORPUS_PATH.exists()
+_SKIP_REASON = (
+    "gate_a_corpus.json and gate_a_results.json were never committed to this repository at any "
+    "point in its history — confirmed via exhaustive `git log --all` search on 2026-08-17 "
+    "(TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP): no date-ranged history search, no "
+    "grep-by-name search, and no diff-filter=A search against staging_artifacts/"
+    "TCK-20260731-PARITY-READPATH-GATE/ found any trace of either file. The raw corpus/results "
+    "JSON is unrecoverable. This does NOT invalidate the Gate A GO decision itself — "
+    "docs/ai/parity_readpath_gate_a_decision.md narrates its own real findings (including the "
+    "WORLD-076 divergent-status case) independently of this raw JSON's presence in the repo. "
+    "Reconstructing the corpus now, with hindsight knowledge of what the decision doc already "
+    "says it proved, would be a fabricated after-the-fact 'freeze' of already-known results — "
+    "explicitly forbidden by this ticket's own Out of Scope section. Skipping honestly rather "
+    "than fabricating a corpus or leaving these tests erroring."
+)
+
 _KNOWN_PHASE2_FIXTURE_IDS = {"COMB-501", "COMB-502", "CM-601", "SC-601", "TR-701", "FAC-801"}
 
 
@@ -169,6 +185,7 @@ class TestNoMutation:
 # TestCorpusIntegrity
 # ---------------------------------------------------------------------------
 
+@pytest.mark.skipif(not _CORPUS_AVAILABLE, reason=_SKIP_REASON)
 class TestCorpusIntegrity:
 
     def test_gate_a_corpus_cases_have_pinned_source_and_expected_set(self):
@@ -228,6 +245,8 @@ class TestCorpusIntegrity:
 
 @pytest.fixture(scope="module")
 def gate_a_full_run(tmp_path_factory):
+    if not _CORPUS_AVAILABLE:
+        pytest.skip(_SKIP_REASON)
     corpus = _load_corpus()
     results = json.loads(_RESULTS_PATH.read_text())
 
@@ -517,6 +536,7 @@ class TestAdjudication:
                     "explicit adjudication (AC #3)."
                 )
 
+    @pytest.mark.skipif(not _CORPUS_AVAILABLE, reason=_SKIP_REASON)
     def test_gate_a_no_phase2_synthetic_fixture_relabeled_as_ticket_derived_corpus(self):
         corpus = _load_corpus()
         for case in corpus["synthetic_edge_cases"]:

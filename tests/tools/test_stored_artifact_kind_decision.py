@@ -23,13 +23,24 @@ _CONTRACT_PATH = _REPO_ROOT / "docs" / "engine" / "contracts" / "context_packet_
 # remove) the corresponding constant, not treat a failure here as a regression to work around.
 # This ticket's own named set differs from the sibling ticket's (`validate_frontmatter.py` swapped
 # in for `parity_index.py`), per this ticket's own Out of Scope list.
+#
+# tools/generate_registry.py removed (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP,
+# 2026-08-17): this file has legitimately changed via unrelated later work since TCK-20260802-
+# STORED-ARTIFACT-KIND's own Implementation start — confirmed via `git log` that TCK-20260802-
+# STORED-ARTIFACT-KIND itself never touched it. This hash snapshot only ever validly reflected
+# that ticket's own committed state at authoring time, not a permanent repo-wide ban. The
+# remaining entries below still correctly protect the files that ticket's own diff actually left
+# untouched.
+#
+# tools/validate_frontmatter.py ALSO removed (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP,
+# 2026-08-17): discovered stale beyond this ticket's own Investigate-phase pytest run, which only
+# ever surfaced the tools/generate_registry.py mismatch above because this test's assert-in-a-loop
+# stops at the first failing entry in dict iteration order (generate_registry.py was inserted
+# before validate_frontmatter.py) — masking that validate_frontmatter.py had also drifted.
+# Confirmed via `git log` that TCK-20260802-STORED-ARTIFACT-KIND never touched
+# tools/validate_frontmatter.py either; its real last-touch commit (29d78798, 2026-08-14)
+# postdates TCK-20260802-STORED-ARTIFACT-KIND's own Implementation start (2026-08-02).
 _EXPECTED_TOOLS_HASHES = {
-    "tools/generate_registry.py": (
-        "28125dfedc5b81d936b1f3ccf3f0e6743675256420f0803be5460c927461ee6a"
-    ),
-    "tools/validate_frontmatter.py": (
-        "99d64fbc93e1f247e14d869ab4318c830e79406ce5765697e48c7337cbf3e0a0"
-    ),
     "tools/context_packet_assembler.py": (
         "003565a6757a929b9560285364b0a6b58569acba783a806a4a56add1cd31fcde"
     ),

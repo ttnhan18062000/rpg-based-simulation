@@ -664,10 +664,16 @@ def _agent_monitoring_porcelain_snapshot() -> str:
 
 
 @pytest.mark.extra_slow
+@pytest.mark.slow
 def test_zero_mutation_of_agent_monitoring_and_manifest_across_full_run():
     """Exercises the new runner's full live-call path (`run_corpus()`, all 7 corpus entries, the
     full 4-call-plus-AC6 sequence) in-process, deliberately NOT `main()` (which would also
     overwrite the committed fixture — see the runner's own one-time-script convention).
+
+    Also marked slow, stacked on extra_slow (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP):
+    measured at 60.98s alone, over tests/conftest.py's default 60s "medium" fast-lane budget —
+    extra_slow alone does not satisfy `-m "not slow"`'s fast-lane filter, and extra_slow is left
+    in place since it is still an accurate, true statement about this test's cost.
 
     This test's own real runtime (~30 real live gateway calls: 4 per entry × 7 entries + 2 extra
     AC6 calls) exceeds the default `--resource-budget medium` 60s time limit (Phase 2's own

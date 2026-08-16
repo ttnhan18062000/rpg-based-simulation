@@ -27,10 +27,14 @@ from gate_checks.parity_updater_static import derive_mapping, expected_subsystem
 
 LEDGER_DIR = _REPO_ROOT / "docs" / "parity_ledger"
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "parity_index_baseline"
+# Path updated (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP, 2026-08-17): this doc was
+# archived to docs/plans/archive/agent_infrastructure/... after TCK-20260731-PARITY-INDEX-BASELINE
+# closed; the original docs/plans/agent_infrastructure/... path no longer exists.
 DECISION_DOC = (
     _REPO_ROOT
     / "docs"
     / "plans"
+    / "archive"
     / "agent_infrastructure"
     / "parity_ledger_sqlite_context"
     / "v1_decisions_phase0.md"
@@ -112,7 +116,12 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
             if entry.get("status") in ("verified", "divergent") and not entry.get("test_path"):
                 live_missing += 1
     assert manifest["missing_evidence_health"]["missing_test_path_count"] == live_missing
-    assert live_missing == 1347
+    # This count naturally drifts downward as parity ledger entries legitimately gain a
+    # `test_path` over time — it is not a frozen invariant. Updated from 1347 to the real,
+    # current count (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP, 2026-08-17). The
+    # substantive check is the assertion above (manifest's own count matches a fresh, independent
+    # live scan) — this second assertion only guards against a silent, unexplained large swing.
+    assert live_missing == 1343
 
 
 # ---------------------------------------------------------------------------
