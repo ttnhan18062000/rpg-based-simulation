@@ -59,7 +59,7 @@ RETRIEVAL_VERSION: int = 1
 # from RETRIEVAL_VERSION above (cache-key-derivation logic) and from
 # tools/retrieval_events.py::retrieval_event_schema_version (event-field shape). Bumped once per
 # new migration function added, never aliased to either sibling constant.
-retrieval_cache_schema_version: int = 1
+retrieval_cache_schema_version: int = 2
 
 # Sentinel-over-fabrication precedent: tools/hybrid_retrieval.py::UNRATED,
 # tools/code_test_index.py's DOCSTRING_GAP/ASSOCIATED_TESTS_GAP. If manifest.json does not exist
@@ -138,6 +138,49 @@ LEVEL1_CACHE_COLUMNS: frozenset[str] = frozenset(
         # 22nd column, added by migration_003_add_redaction_policy_version_column (DD3, confirmed
         # by Architecture Review) — TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING.
         "redaction_policy_version",
+    }
+)
+
+# Column set for the new Level 2 assembled-context-packet cache table
+# (retrieval_context_packet_cache_rows), mapped 1:1 onto
+# docs/plans/knowledge-gateway-mcp-proposal.md §10.2's Level 2 row-shape bullets and §10.3's
+# CachedPacket field list — see plan.md DD5 for the full per-column provenance table. One field is
+# renamed from §10.3's literal `schema_version`: `response_schema_version` (DD3), to avoid colliding
+# with this module's own retrieval_cache_schema_version DDL-version constant
+# (cache_migration_plan.md §1). NOT a write-path validation allowlist (unlike MAY_LIST_COLUMNS) —
+# this ticket ships no write function for this table; this constant exists so the structural test
+# below and the later read-write-wiring ticket have one documented source of truth for the column
+# set, not two.
+LEVEL2_CACHE_COLUMNS: frozenset[str] = frozenset(
+    {
+        "packet_id",
+        "normalized_intent",
+        "query_key_hash",
+        "entity_ids",
+        "answer",
+        "statements",
+        "context_items",
+        "evidence",
+        "conflicts",
+        "evidence_dependencies",
+        "provenance_providers",
+        "providers_consulted_this_call",
+        "repository_id",
+        "branch",
+        "head_commit",
+        "working_tree_fingerprint",
+        "provider_generations",
+        "policy_version",
+        "response_schema_version",
+        "budget_requested",
+        "budget_returned",
+        "status",
+        "freshness",
+        "verification",
+        "lifecycle",
+        "created_at",
+        "last_validated_at",
+        "hit_count",
     }
 )
 
@@ -254,10 +297,69 @@ def migration_001_add_level1_tables(conn: sqlite3.Connection) -> None:
         """
     )
     conn.execute("DELETE FROM retrieval_cache_generation")
+    # Plan DD2 (Architecture-Review-corrected mechanism): hardcoded literal, not the live module
+    # constant — decouples this migration's on-disk stamp from a constant other migrations bump.
     conn.execute(
         "INSERT INTO retrieval_cache_generation "
         "(retrieval_cache_schema_version, migrated_at) VALUES (?, ?)",
-        (retrieval_cache_schema_version, time.time()),
+        (1, time.time()),
+    )
+    conn.commit()
+
+
+def migration_002_add_level2_tables(conn: sqlite3.Connection) -> None:
+    """Adds the Level 2 assembled-context-packet cache table, per cache_migration_plan.md §2 and
+    proposal §10.2/§10.3. CREATE TABLE IF NOT EXISTS only — additive, never touches the 3 legacy
+    marker-only tables or the Level 1 retrieval_provider_result_cache_rows table. Idempotent: safe
+    to call again on a database that already has this migration applied. Not called by
+    _get_connection(), _init_schema(), or _get_level1_connection() (see plan.md DD6/Out of Scope) —
+    must be invoked directly. Per plan.md DD2 (Architecture-Review-corrected mechanism): stamps
+    retrieval_cache_generation with its own hardcoded literal target version (2), scoped to this
+    migration's own INSERT only. Neither this function nor migration_001 reads the live
+    retrieval_cache_schema_version module constant when stamping retrieval_cache_generation --
+    migration_001's own INSERT independently hardcodes its own literal (1), so the module constant
+    (bumped to 2) can be updated freely for introspection purposes without risk of retroactively
+    changing either migration's stamped output.
+    """
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS retrieval_context_packet_cache_rows (
+            packet_id TEXT NOT NULL PRIMARY KEY,
+            normalized_intent TEXT NOT NULL,
+            query_key_hash TEXT NOT NULL,
+            entity_ids TEXT NOT NULL,
+            answer TEXT,
+            statements TEXT NOT NULL,
+            context_items TEXT NOT NULL,
+            evidence TEXT NOT NULL,
+            conflicts TEXT NOT NULL,
+            evidence_dependencies TEXT NOT NULL,
+            provenance_providers TEXT NOT NULL,
+            providers_consulted_this_call TEXT NOT NULL,
+            repository_id TEXT NOT NULL,
+            branch TEXT NOT NULL,
+            head_commit TEXT,
+            working_tree_fingerprint TEXT,
+            provider_generations TEXT NOT NULL,
+            policy_version TEXT NOT NULL,
+            response_schema_version INTEGER NOT NULL,
+            budget_requested INTEGER,
+            budget_returned INTEGER,
+            status TEXT NOT NULL,
+            freshness TEXT NOT NULL,
+            verification TEXT NOT NULL,
+            lifecycle TEXT,
+            created_at REAL NOT NULL,
+            last_validated_at REAL,
+            hit_count INTEGER NOT NULL DEFAULT 0
+        )
+        """
+    )
+    conn.execute("DELETE FROM retrieval_cache_generation")
+    conn.execute(
+        "INSERT INTO retrieval_cache_generation "
+        "(retrieval_cache_schema_version, migrated_at) VALUES (?, ?)",
+        (2, time.time()),
     )
     conn.commit()
 

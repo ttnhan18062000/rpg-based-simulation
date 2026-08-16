@@ -14,8 +14,13 @@ statement of its own.
 
 What this is not: no routing logic (`tools/knowledge_gateway_router.py` is untouched, Out of
 Scope), no packet-assembly/extractive-rendering logic (`tools/knowledge_gateway_packet_assembly.py`
-is untouched, Out of Scope), no Level 2/Level 3 caching (semantic/fuzzy matching, verified-knowledge
-caching — later phases).
+is untouched, Out of Scope), no Level 3 caching (verified-knowledge caching — Phase 6), no
+semantic/fuzzy dependency matching (Phase 5). Level 2 revalidation-decision logic (branch/
+working-tree scope and evidence-dependency invalidation for the context-packet cache, per
+`TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION`) lives in this module as
+`revalidate_context_packet_row()`, reusing the same §5 primitives as the Level 1 path above — no
+live Level 2 lookup/write path is wired into the gateway yet (that remains
+`TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`'s job).
 
 Import style (Step 1's own documented latitude): this module imports `tools.retrieval_cache` and
 `tools.knowledge_gateway_redaction` via the real package import (`from tools import ... as ...`),
@@ -217,6 +222,60 @@ def revalidate_cache_row(
             return True
         return row["provider_generation_at_validation"] == current_provider_generation
     return row["evidence_fingerprints"] == current_evidence_fingerprint
+
+
+# ---------------------------------------------------------------------------
+# Step 9 — Level 2 packet-level revalidation (TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION)
+# ---------------------------------------------------------------------------
+
+def _level2_repo_branch_scope(repository_id: str, branch: str) -> str:
+    """Single named helper for the repository_id/branch -> combined-scope-string reconstruction
+    is_branch_compatible() expects (investigation.md Risk 3) -- same "::" join format
+    _current_repo_branch_scope() already uses for Level 1 (f"{repo_root}::{branch}"), so a Level 2
+    row written under one format and compared under a differently-shaped reconstruction can never
+    silently fail to match. Not the same function as _current_repo_branch_scope() -- that one
+    performs a live `git branch --show-current` subprocess read; this one is a pure string join
+    over caller-supplied values, since Level 2's row/current identity is supplied by the caller
+    (DD3), never queried internally by this module.
+    """
+    return f"{repository_id}::{branch}"
+
+
+def revalidate_context_packet_row(
+    row: dict, *, capability_descriptor: dict,
+    current_provider_generations: dict[str, str],
+    current_repository_id: str, current_branch: str,
+    changed_paths: list[str],
+) -> bool:
+    """True = still valid (packet may be served as a genuine HIT). False = stale (treat as MISS).
+    Level 2 sibling to revalidate_cache_row() (§5) -- consumes only a stored row dict (never a live
+    PacketAssembly; tools/knowledge_gateway_packet_assembly.py is not imported here, guarded by
+    test_module_does_not_import_knowledge_gateway_router_or_packet_assembly). Unlike Level 1, this
+    function performs the branch-compatibility check itself (DD3) -- no Level 2 lookup
+    orchestrator exists yet to do it first.
+    """
+    row_scope = _level2_repo_branch_scope(row["repository_id"], row["branch"])
+    current_scope = _level2_repo_branch_scope(current_repository_id, current_branch)
+    if not is_branch_compatible(row_scope, current_scope):
+        return False  # §5 rule 2 -- hard partition, checked before any other comparison.
+
+    if working_tree_overlap_forces_revalidation(row["evidence_dependencies"], changed_paths):
+        return False  # §5 rule 3.
+
+    basis = select_validation_basis(capability_descriptor)
+    if basis != "PROVIDER_GENERATION":
+        # DD4 -- Level 2's schema carries no evidence_fingerprints-equivalent column to support
+        # §4's finer-grained comparison. Fail closed (force revalidation) rather than assume
+        # validity without the data to prove it. Unreachable with both real providers today (both
+        # report fine_grained_fingerprints: False -- see Risk 4 / test_provider_generation_
+        # fallback_used_for_both_real_providers_today).
+        return False
+
+    row_generations: dict[str, str] = json.loads(row["provider_generations"])
+    for provider_id, stored_generation in row_generations.items():
+        if current_provider_generations.get(provider_id) != stored_generation:
+            return False  # §5 rule 1, per-provider (Investigate Question 2's dict-shaped finding).
+    return True
 
 
 # ---------------------------------------------------------------------------

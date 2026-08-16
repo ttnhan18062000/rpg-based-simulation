@@ -1,0 +1,692 @@
+{
+  "ac4_vs_level1_warm": {
+    "baseline_median_end_to_end_ms": 1543.316800147295,
+    "baseline_median_full_payload_tokens": 2615,
+    "baseline_name": "this_run_level1_warm",
+    "derivation": "pass = (statistics.median(l2_warm end_to_end_ms across 7 entries) < statistics.median(this_run_level1_warm end_to_end_ms across 7 entries)) AND (statistics.median(l2_warm full-payload tokens across 7 entries) < statistics.median(this_run_level1_warm full-payload tokens across 7 entries)). statistics.median, never statistics.mean, per \u00a721's closing bullet's explicit 'median' wording (distinct from \u00a74.1/\u00a74.2's own mean-based formulas). Reported honestly as FAIL if either median comparison does not show improvement \u2014 this function is structurally capable of returning pass: False, not only ever PASS.",
+    "l2_warm_median_end_to_end_ms": 1438.2083122618496,
+    "l2_warm_median_full_payload_tokens": 2865,
+    "latency_improved": true,
+    "pass": false,
+    "tokens_improved": false
+  },
+  "ac4_vs_phase1_cold": {
+    "baseline_median_end_to_end_ms": 2521.7777830548584,
+    "baseline_median_full_payload_tokens": 2846,
+    "baseline_name": "phase1_cold",
+    "derivation": "pass = (statistics.median(l2_warm end_to_end_ms across 7 entries) < statistics.median(phase1_cold end_to_end_ms across 7 entries)) AND (statistics.median(l2_warm full-payload tokens across 7 entries) < statistics.median(phase1_cold full-payload tokens across 7 entries)). statistics.median, never statistics.mean, per \u00a721's closing bullet's explicit 'median' wording (distinct from \u00a74.1/\u00a74.2's own mean-based formulas). Reported honestly as FAIL if either median comparison does not show improvement \u2014 this function is structurally capable of returning pass: False, not only ever PASS.",
+    "l2_warm_median_end_to_end_ms": 1438.2083122618496,
+    "l2_warm_median_full_payload_tokens": 2865,
+    "latency_improved": true,
+    "pass": false,
+    "tokens_improved": false
+  },
+  "ac6_entry_id": "Q1_authoritative_state",
+  "ac6_result": {
+    "branch_partition": {
+      "pass": true,
+      "revalidate_context_packet_row_result": false,
+      "synthetic_incompatible_branch": "a-different-synthetic-branch-for-ac6-testing",
+      "technique_disclosure": "Direct call to the real revalidate_context_packet_row() against a real, just-rewritten row, with a synthetic incompatible current_branch argument \u2014 not a full _run_knowledge_context() round trip with an actual second git branch, since the 7-entry corpus cannot organically produce a second incompatible branch (investigation.md Q3)."
+    },
+    "stale_rejection": {
+      "cache_status": "MISS",
+      "call_ms": 1569.920385722071,
+      "changed_path_used": "docs/simulation/domains/domain_ownership_map.md",
+      "genuinely_refreshed": true
+    },
+    "uncommitted_change_invalidation_note": "changed_paths is the gateway's only representation of 'uncommitted changes' (no separate git-diff-based mechanism exists) \u2014 this criterion shares stale_rejection's evidence verbatim, never double-counted as a second, independent real-world verification (plan.md Step 8 item 4).",
+    "unrelated_change_non_invalidation": {
+      "cache_status": "HIT_L2",
+      "call_ms": 1437.3337449505925,
+      "changed_path_used": "docs/this_path_is_intentionally_unrelated_to_any_corpus_entrys_cited_evidence_for_ac6_testing.md",
+      "genuine_hit_preserved": true
+    }
+  },
+  "aggregate": {
+    "ac2_budget_compliance": {
+      "of": 7,
+      "pass_count": 2
+    },
+    "ac3_conflicts_observed_in_corpus": false,
+    "ac3_total_conflicts_observed_in_corpus": 0,
+    "ac4_vs_level1_warm_pass": false,
+    "ac4_vs_phase1_cold_pass": false,
+    "ac5_recall_regression_free": true,
+    "ac5_recall_regressions": [],
+    "genuine_l1_hit_count": {
+      "count": 7,
+      "of": 7
+    },
+    "genuine_l2_hit_count": {
+      "count": 7,
+      "of": 7
+    }
+  },
+  "all_touched_packet_ids": [
+    "04943fe66cf11683afac9f70fcb746dee954d8e98fd271c0de8a84a1cf59be02",
+    "1dd770fba39d8a112f0cc5ba1b4aed05f7d5d5eaf95756d44951cbe0b14adc30",
+    "2f634b63f7d95f4ed9f512eeac2a54029b0d0f49dea5a68d3bf2aeb41f4e4e54",
+    "3aa9a43c82e5b8fff3108bc30982f111c5a38593ab0bb51c9de335afee7cc11b",
+    "654cc681c8e83dd4af4d62fec1cb9c58e625a6d6ade86d14246b845290cc55ad",
+    "6e63370d651202c841f5beedaf7b823dcfe4d498d894d3cc73e2485512d975e1",
+    "96ddff0ac3c6382aad857ba51b36fe98b29f62c14973a217b5dfa27a5f71c57b",
+    "a1517d95f6018dbd7cafe837626c771344010932a8d6d451d2e28848c5b512fc",
+    "a24773d6164492e373e7574f86b9958a104533b38cf2aff367012b717ff81f35",
+    "b12d0f1caac030436d474246074fd7f23fc9ed47af21f5f8697e7bb5caaa0475",
+    "bc926a2bdd1ba1ef0dd9fe6d3132b3c4cf6a0960988d77a72f1f0f1bcfa62485",
+    "c9381b62aaf6854d5c46c62f89878edf7bd6adab5b82e44fcc7cff85b402eae1",
+    "e8c71d2a7e70e36f49c0e155f9c3fa7f67ea53bb3ebc7828ad3bdb0c08a3af97",
+    "f6f6cb25b2a16aa279beccb731ddafca48a288472e96a4f4865b61084919473c"
+  ],
+  "compared_against_phase1_recorded_at_utc": "2026-08-15T12:08:34.691655Z",
+  "compared_against_phase2_recorded_at_utc": "2026-08-15T20:47:44.365430Z",
+  "concurrent_write_risk_note": "This runner opens its own short-lived sqlite3 connections for reads and for the one disclosed isolation DELETE. Concurrent writes to knowledge-index/retrieval_cache.db from another live process during this run are a low-probability, undetected residual risk this runner cannot itself observe or guard against (Architecture Review advisory note) \u2014 disclosed here, not silently assumed away.",
+  "constrained_budget_tokens_used": 1000,
+  "corpus_version": 1,
+  "default_budget_tokens_used": 4000,
+  "entries": [
+    {
+      "ac6_result": {
+        "branch_partition": {
+          "pass": true,
+          "revalidate_context_packet_row_result": false,
+          "synthetic_incompatible_branch": "a-different-synthetic-branch-for-ac6-testing",
+          "technique_disclosure": "Direct call to the real revalidate_context_packet_row() against a real, just-rewritten row, with a synthetic incompatible current_branch argument \u2014 not a full _run_knowledge_context() round trip with an actual second git branch, since the 7-entry corpus cannot organically produce a second incompatible branch (investigation.md Q3)."
+        },
+        "stale_rejection": {
+          "cache_status": "MISS",
+          "call_ms": 1569.920385722071,
+          "changed_path_used": "docs/simulation/domains/domain_ownership_map.md",
+          "genuinely_refreshed": true
+        },
+        "uncommitted_change_invalidation_note": "changed_paths is the gateway's only representation of 'uncommitted changes' (no separate git-diff-based mechanism exists) \u2014 this criterion shares stale_rejection's evidence verbatim, never double-counted as a second, independent real-world verification (plan.md Step 8 item 4).",
+        "unrelated_change_non_invalidation": {
+          "cache_status": "HIT_L2",
+          "call_ms": 1437.3337449505925,
+          "changed_path_used": "docs/this_path_is_intentionally_unrelated_to_any_corpus_entrys_cited_evidence_for_ac6_testing.md",
+          "genuine_hit_preserved": true
+        }
+      },
+      "budget_compliance": {
+        "budget_tokens_requested": 1000,
+        "derivation": "full_payload_tokens = knowledge_gateway_packet_assembly.kgmcp_char_heuristic_v1(json.dumps(response)) over the FULL response payload \u2014 never response['budget_returned'], which is a statements[]-only running total, <= budget_requested by construction (assemble_within_budget(), tools/knowledge_gateway_packet_assembly.py:584-611), and would trivially 'pass' regardless of real gateway behavior. tolerance_threshold_tokens = budget_tokens_requested * 1.2, the documented \u00b120% tolerance ratified in redaction_retention_policy.md \u00a78 as 'the standard against which a future implementation validates the Phase 3 pilot's returned content respects the requested budget within a documented tolerance acceptance bar' \u2014 cited verbatim, not a new tolerance invented here. pass = (full_payload_tokens <= tolerance_threshold_tokens). context[]/evidence[]/conflicts[] are unbudgeted by construction, so a real FAIL here is a plausible, legitimate outcome.",
+        "full_payload_tokens": 2668,
+        "pass": false,
+        "tolerance_multiplier": 1.2,
+        "tolerance_threshold_tokens": 1200.0
+      },
+      "cache_hit_count_delta_l2": 1,
+      "cache_status_l1warm": "HIT",
+      "cache_status_l2warm": "HIT_L2",
+      "cold_call_anomaly": null,
+      "cold_end_to_end_ms": 5412.757392041385,
+      "cold_fallback_and_assembly_ms": 3936.1208798363805,
+      "cold_lookup_and_validation_ms": 13.587172143161297,
+      "conflicts_report": {
+        "conflicts_observed": 0,
+        "conflicts_observed_in_corpus": false,
+        "limitation_note": "build_conflicts() is structural (explicit supersession/deprecation-marker detection in source docs, tools/knowledge_gateway_packet_assembly.py:558-579), not automatic cross-provider factual-value comparison. The frozen 7-entry corpus was designed around \u00a78 routing-shape coverage, not conflict-shape coverage, so 0 real conflicts across all 7 entries is a plausible, honest outcome. If total is 0, this criterion's visibility mechanism itself remains separately unit-tested (build_conflicts()'s own test suite), but this real corpus does not naturally exercise a real conflict occurrence \u2014 this is disclosed as a genuine corpus-coverage limitation, never silently marked satisfied."
+      },
+      "constrained_budget_cache_status": "MISS",
+      "constrained_budget_end_to_end_ms": 1538.5925718583167,
+      "id": "Q1_authoritative_state",
+      "instrumentation_granularity_note": "3 real, externally-timed segments (lookup_and_validation_ms, fallback_and_assembly_ms, end_to_end_ms), not the proposal's 5-name wording (lookup, validation, fallback, assembly, end-to-end) \u2014 'validation' is not a separate call boundary from 'lookup' inside perform_context_packet_cache_lookup()/perform_cache_lookup(), and 'assembly' is not separate from 'fallback' inside assemble_packet(), in the current gateway code. This is a genuine, disclosed instrumentation-granularity limit of measurement-only tooling, not a shortfall in measurement effort.",
+      "isolation_delete_anomaly": null,
+      "isolation_delete_rowcount": 1,
+      "l1_warm_end_to_end_ms": 1577.6280271820724,
+      "l1_warm_fallback_and_assembly_ms": null,
+      "l1_warm_full_payload_tokens": 2387,
+      "l1_warm_lookup_and_validation_ms": 24.639025796204805,
+      "l2_warm_end_to_end_ms": 1566.9657178223133,
+      "l2_warm_fallback_and_assembly_ms": null,
+      "l2_warm_full_payload_tokens": 2668,
+      "l2_warm_lookup_and_validation_ms": 19.612503238022327,
+      "providers_selected": [
+        "context_search"
+      ],
+      "query_text": "What is AuthoritativeState, and who may mutate it?",
+      "recall_report": {
+        "anchor_exact_matches": [],
+        "baseline_sources": [
+          "simulation/quest_contract#authoritative-status-001",
+          "simulation/domain_ownership_map#authoritative-status-001",
+          "engine/authoritative_pipeline#body-000",
+          "simulation/belief_and_detour_contract#mutation-rules-005",
+          "engine/simulation_kernel_contract#3-authoritative-state-003",
+          "plans/knowledge-gateway-mcp-proposal#22-representative-use-cases-031",
+          "TCK-20260425-PH8-M3",
+          "simulation/motivation_contract#what-it-may-mutate-008"
+        ],
+        "computed_from_contaminated_cache_hit": false,
+        "contamination_note": null,
+        "derivation": "context_search half of \u00a74.3's union only (Design Decision D3 \u2014 no Phase 0 graphify source baseline exists to compare against). baseline_sources = Phase 0 fixture's context_search.sources_recalled for this entry (read-only). gateway_sources = response['context'][*]['source_id'] from the real _run_knowledge_context() call, normalized via _normalize_phase1_source_id() (Design Decision D2: strip doc:/ticket:/file: prefixes and docs/.md decoration). missing_sources = baseline_sources whose normalized path is absent from the normalized gateway path set \u2014 comparison is on path only (before '#'), anchor exact-match is informational only (anchor_exact_matches), never a source of a false miss from cosmetic anchor re-slugging drift. pass = (missing_sources is empty). No Phase 0 graphify source baseline exists to compare against (the fixture recorded only raw_stdout_bytes, never a source list) \u2014 the graphify half of \u00a74.3's union is reported as N/A here, not silently treated as empty-and-passing. See Design Decision D3, staging_artifacts/TCK-20260815-KGMCP-P1-BASELINE-COMPARISON/plan.md. Computed from the cold (call 1) response only, per Phase 2's own established precedent (a genuine hit's content is identical to the cold response that produced it).",
+        "gateway_sources": [
+          "simulation/domains/domain_ownership_map#authoritative-status",
+          "simulation/quest_contract#authoritative-status",
+          "engine/authoritative_pipeline#engine",
+          "simulation/belief_and_detour_contract#mutation-rules",
+          "engine/contracts/simulation_kernel_contract#3-authoritative-state",
+          "plans/knowledge-gateway-mcp-proposal#22-representative-use-cases",
+          "tickets/working_log.csv",
+          "simulation/domains/motivation_contract#what-it-may-mutate"
+        ],
+        "graphify_half_status": "N/A",
+        "missing_sources": [
+          "simulation/domain_ownership_map#authoritative-status-001",
+          "engine/simulation_kernel_contract#3-authoritative-state-003",
+          "TCK-20260425-PH8-M3",
+          "simulation/motivation_contract#what-it-may-mutate-008"
+        ],
+        "pass": false,
+        "phase1_recall_missing_count": 4,
+        "phase2_recall_missing_count": 4,
+        "recall_missing_count_comparison": "Phase 3 (this run): 4 missing. Phase 1 (recorded): 4 missing. Phase 2 (recorded, cold): 4 missing.",
+        "recall_regression_flag": false
+      },
+      "routing_shape": "definition_terminology_architecture",
+      "signal_anomaly_l1warm": null,
+      "signal_anomaly_l2warm": null
+    },
+    {
+      "ac6_result": null,
+      "budget_compliance": {
+        "budget_tokens_requested": 1000,
+        "derivation": "full_payload_tokens = knowledge_gateway_packet_assembly.kgmcp_char_heuristic_v1(json.dumps(response)) over the FULL response payload \u2014 never response['budget_returned'], which is a statements[]-only running total, <= budget_requested by construction (assemble_within_budget(), tools/knowledge_gateway_packet_assembly.py:584-611), and would trivially 'pass' regardless of real gateway behavior. tolerance_threshold_tokens = budget_tokens_requested * 1.2, the documented \u00b120% tolerance ratified in redaction_retention_policy.md \u00a78 as 'the standard against which a future implementation validates the Phase 3 pilot's returned content respects the requested budget within a documented tolerance acceptance bar' \u2014 cited verbatim, not a new tolerance invented here. pass = (full_payload_tokens <= tolerance_threshold_tokens). context[]/evidence[]/conflicts[] are unbudgeted by construction, so a real FAIL here is a plausible, legitimate outcome.",
+        "full_payload_tokens": 168,
+        "pass": true,
+        "tolerance_multiplier": 1.2,
+        "tolerance_threshold_tokens": 1200.0
+      },
+      "cache_hit_count_delta_l2": 1,
+      "cache_status_l1warm": "HIT",
+      "cache_status_l2warm": "HIT_L2",
+      "cold_call_anomaly": null,
+      "cold_end_to_end_ms": 2709.1016648337245,
+      "cold_fallback_and_assembly_ms": 1237.5034261494875,
+      "cold_lookup_and_validation_ms": 17.01408624649048,
+      "conflicts_report": {
+        "conflicts_observed": 0,
+        "conflicts_observed_in_corpus": false,
+        "limitation_note": "build_conflicts() is structural (explicit supersession/deprecation-marker detection in source docs, tools/knowledge_gateway_packet_assembly.py:558-579), not automatic cross-provider factual-value comparison. The frozen 7-entry corpus was designed around \u00a78 routing-shape coverage, not conflict-shape coverage, so 0 real conflicts across all 7 entries is a plausible, honest outcome. If total is 0, this criterion's visibility mechanism itself remains separately unit-tested (build_conflicts()'s own test suite), but this real corpus does not naturally exercise a real conflict occurrence \u2014 this is disclosed as a genuine corpus-coverage limitation, never silently marked satisfied."
+      },
+      "constrained_budget_cache_status": "MISS",
+      "constrained_budget_end_to_end_ms": 2657.374698203057,
+      "id": "Q2_symbol_lookup",
+      "instrumentation_granularity_note": "3 real, externally-timed segments (lookup_and_validation_ms, fallback_and_assembly_ms, end_to_end_ms), not the proposal's 5-name wording (lookup, validation, fallback, assembly, end-to-end) \u2014 'validation' is not a separate call boundary from 'lookup' inside perform_context_packet_cache_lookup()/perform_cache_lookup(), and 'assembly' is not separate from 'fallback' inside assemble_packet(), in the current gateway code. This is a genuine, disclosed instrumentation-granularity limit of measurement-only tooling, not a shortfall in measurement effort.",
+      "isolation_delete_anomaly": null,
+      "isolation_delete_rowcount": 1,
+      "l1_warm_end_to_end_ms": 1446.0568879731,
+      "l1_warm_fallback_and_assembly_ms": null,
+      "l1_warm_full_payload_tokens": 4398,
+      "l1_warm_lookup_and_validation_ms": 23.76731811091304,
+      "l2_warm_end_to_end_ms": 1554.9071771092713,
+      "l2_warm_fallback_and_assembly_ms": null,
+      "l2_warm_full_payload_tokens": 4983,
+      "l2_warm_lookup_and_validation_ms": 20.463902037590742,
+      "providers_selected": [
+        "graphify"
+      ],
+      "query_text": "Where is compute_search_investigation_trend defined, and what functions call it?",
+      "recall_report": {
+        "anchor_exact_matches": [],
+        "baseline_sources": [
+          "TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC",
+          "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
+          "agent-monitoring/README#what-it-captures-001",
+          "audits/audit_dimensions#group-b-codebase-architecture-006",
+          "TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION",
+          "guides/agent_monitoring#investigate-step-search-before-grep-call-011",
+          "TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE",
+          "architecture/doc_updater_agent#decision-003"
+        ],
+        "computed_from_contaminated_cache_hit": false,
+        "contamination_note": null,
+        "derivation": "context_search half of \u00a74.3's union only (Design Decision D3 \u2014 no Phase 0 graphify source baseline exists to compare against). baseline_sources = Phase 0 fixture's context_search.sources_recalled for this entry (read-only). gateway_sources = response['context'][*]['source_id'] from the real _run_knowledge_context() call, normalized via _normalize_phase1_source_id() (Design Decision D2: strip doc:/ticket:/file: prefixes and docs/.md decoration). missing_sources = baseline_sources whose normalized path is absent from the normalized gateway path set \u2014 comparison is on path only (before '#'), anchor exact-match is informational only (anchor_exact_matches), never a source of a false miss from cosmetic anchor re-slugging drift. pass = (missing_sources is empty). No Phase 0 graphify source baseline exists to compare against (the fixture recorded only raw_stdout_bytes, never a source list) \u2014 the graphify half of \u00a74.3's union is reported as N/A here, not silently treated as empty-and-passing. See Design Decision D3, staging_artifacts/TCK-20260815-KGMCP-P1-BASELINE-COMPARISON/plan.md. Computed from the cold (call 1) response only, per Phase 2's own established precedent (a genuine hit's content is identical to the cold response that produced it).",
+        "gateway_sources": [
+          "Where is compute_search_investigation_trend defined, and what functions call it?"
+        ],
+        "graphify_half_status": "N/A",
+        "missing_sources": [
+          "TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC",
+          "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
+          "agent-monitoring/README#what-it-captures-001",
+          "audits/audit_dimensions#group-b-codebase-architecture-006",
+          "TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION",
+          "guides/agent_monitoring#investigate-step-search-before-grep-call-011",
+          "TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE",
+          "architecture/doc_updater_agent#decision-003"
+        ],
+        "pass": false,
+        "phase1_recall_missing_count": 8,
+        "phase2_recall_missing_count": 8,
+        "recall_missing_count_comparison": "Phase 3 (this run): 8 missing. Phase 1 (recorded): 8 missing. Phase 2 (recorded, cold): 8 missing.",
+        "recall_regression_flag": false
+      },
+      "routing_shape": "symbol_lookup_callers_references",
+      "signal_anomaly_l1warm": null,
+      "signal_anomaly_l2warm": null
+    },
+    {
+      "ac6_result": null,
+      "budget_compliance": {
+        "budget_tokens_requested": 1000,
+        "derivation": "full_payload_tokens = knowledge_gateway_packet_assembly.kgmcp_char_heuristic_v1(json.dumps(response)) over the FULL response payload \u2014 never response['budget_returned'], which is a statements[]-only running total, <= budget_requested by construction (assemble_within_budget(), tools/knowledge_gateway_packet_assembly.py:584-611), and would trivially 'pass' regardless of real gateway behavior. tolerance_threshold_tokens = budget_tokens_requested * 1.2, the documented \u00b120% tolerance ratified in redaction_retention_policy.md \u00a78 as 'the standard against which a future implementation validates the Phase 3 pilot's returned content respects the requested budget within a documented tolerance acceptance bar' \u2014 cited verbatim, not a new tolerance invented here. pass = (full_payload_tokens <= tolerance_threshold_tokens). context[]/evidence[]/conflicts[] are unbudgeted by construction, so a real FAIL here is a plausible, legitimate outcome.",
+        "full_payload_tokens": 2865,
+        "pass": false,
+        "tolerance_multiplier": 1.2,
+        "tolerance_threshold_tokens": 1200.0
+      },
+      "cache_hit_count_delta_l2": 1,
+      "cache_status_l1warm": "HIT",
+      "cache_status_l2warm": "HIT_L2",
+      "cold_call_anomaly": null,
+      "cold_end_to_end_ms": 1517.8968678228557,
+      "cold_fallback_and_assembly_ms": 64.9966150522232,
+      "cold_lookup_and_validation_ms": 13.79266707226634,
+      "conflicts_report": {
+        "conflicts_observed": 0,
+        "conflicts_observed_in_corpus": false,
+        "limitation_note": "build_conflicts() is structural (explicit supersession/deprecation-marker detection in source docs, tools/knowledge_gateway_packet_assembly.py:558-579), not automatic cross-provider factual-value comparison. The frozen 7-entry corpus was designed around \u00a78 routing-shape coverage, not conflict-shape coverage, so 0 real conflicts across all 7 entries is a plausible, honest outcome. If total is 0, this criterion's visibility mechanism itself remains separately unit-tested (build_conflicts()'s own test suite), but this real corpus does not naturally exercise a real conflict occurrence \u2014 this is disclosed as a genuine corpus-coverage limitation, never silently marked satisfied."
+      },
+      "constrained_budget_cache_status": "MISS",
+      "constrained_budget_end_to_end_ms": 1554.6742109581828,
+      "id": "Q3_requirement_completeness",
+      "instrumentation_granularity_note": "3 real, externally-timed segments (lookup_and_validation_ms, fallback_and_assembly_ms, end_to_end_ms), not the proposal's 5-name wording (lookup, validation, fallback, assembly, end-to-end) \u2014 'validation' is not a separate call boundary from 'lookup' inside perform_context_packet_cache_lookup()/perform_cache_lookup(), and 'assembly' is not separate from 'fallback' inside assemble_packet(), in the current gateway code. This is a genuine, disclosed instrumentation-granularity limit of measurement-only tooling, not a shortfall in measurement effort.",
+      "isolation_delete_anomaly": null,
+      "isolation_delete_rowcount": 1,
+      "l1_warm_end_to_end_ms": 1543.316800147295,
+      "l1_warm_fallback_and_assembly_ms": null,
+      "l1_warm_full_payload_tokens": 2615,
+      "l1_warm_lookup_and_validation_ms": 25.428422261029482,
+      "l2_warm_end_to_end_ms": 1430.7725061662495,
+      "l2_warm_fallback_and_assembly_ms": null,
+      "l2_warm_full_payload_tokens": 2865,
+      "l2_warm_lookup_and_validation_ms": 21.377703174948692,
+      "providers_selected": [
+        "context_search"
+      ],
+      "query_text": "Is the read_count_correlation feature fully implemented?",
+      "recall_report": {
+        "anchor_exact_matches": [
+          "TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE",
+          "TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION",
+          "TCK-20260628-E-NARRATIVE-CONSEQUENCE"
+        ],
+        "baseline_sources": [
+          "TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC",
+          "TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE",
+          "TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION",
+          "TCK-20260719-COST-PROXY-CALIBRATION-NOTE",
+          "TCK-20260628-E-NARRATIVE-CONSEQUENCE",
+          "simulation_quality/entity_lifecycle_score#empirical-calibration-tck-20260808-entit-008",
+          "audits/D01_rpg_feature_impact#key-findings-040",
+          "compliance/checklist#audit-standard-001"
+        ],
+        "computed_from_contaminated_cache_hit": false,
+        "contamination_note": null,
+        "derivation": "context_search half of \u00a74.3's union only (Design Decision D3 \u2014 no Phase 0 graphify source baseline exists to compare against). baseline_sources = Phase 0 fixture's context_search.sources_recalled for this entry (read-only). gateway_sources = response['context'][*]['source_id'] from the real _run_knowledge_context() call, normalized via _normalize_phase1_source_id() (Design Decision D2: strip doc:/ticket:/file: prefixes and docs/.md decoration). missing_sources = baseline_sources whose normalized path is absent from the normalized gateway path set \u2014 comparison is on path only (before '#'), anchor exact-match is informational only (anchor_exact_matches), never a source of a false miss from cosmetic anchor re-slugging drift. pass = (missing_sources is empty). No Phase 0 graphify source baseline exists to compare against (the fixture recorded only raw_stdout_bytes, never a source list) \u2014 the graphify half of \u00a74.3's union is reported as N/A here, not silently treated as empty-and-passing. See Design Decision D3, staging_artifacts/TCK-20260815-KGMCP-P1-BASELINE-COMPARISON/plan.md. Computed from the cold (call 1) response only, per Phase 2's own established precedent (a genuine hit's content is identical to the cold response that produced it).",
+        "gateway_sources": [
+          "tickets/working_log.csv",
+          "TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE",
+          "TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION",
+          "TCK-20260628-E-NARRATIVE-CONSEQUENCE",
+          "simulation_quality/entity_lifecycle_score#empirical-calibration-tck-20260808-entity-lifecycle-score-calibration",
+          "engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract#5-repeated-demand-estimation-design-18-1",
+          "audits/D01_rpg_feature_impact#key-findings",
+          "compliance/checklist#audit-standard"
+        ],
+        "graphify_half_status": "N/A",
+        "missing_sources": [
+          "TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC",
+          "TCK-20260719-COST-PROXY-CALIBRATION-NOTE"
+        ],
+        "pass": false,
+        "phase1_recall_missing_count": 2,
+        "phase2_recall_missing_count": 2,
+        "recall_missing_count_comparison": "Phase 3 (this run): 2 missing. Phase 1 (recorded): 2 missing. Phase 2 (recorded, cold): 2 missing.",
+        "recall_regression_flag": false
+      },
+      "routing_shape": "requirement_completeness_verification",
+      "signal_anomaly_l1warm": null,
+      "signal_anomaly_l2warm": null
+    },
+    {
+      "ac6_result": null,
+      "budget_compliance": {
+        "budget_tokens_requested": 1000,
+        "derivation": "full_payload_tokens = knowledge_gateway_packet_assembly.kgmcp_char_heuristic_v1(json.dumps(response)) over the FULL response payload \u2014 never response['budget_returned'], which is a statements[]-only running total, <= budget_requested by construction (assemble_within_budget(), tools/knowledge_gateway_packet_assembly.py:584-611), and would trivially 'pass' regardless of real gateway behavior. tolerance_threshold_tokens = budget_tokens_requested * 1.2, the documented \u00b120% tolerance ratified in redaction_retention_policy.md \u00a78 as 'the standard against which a future implementation validates the Phase 3 pilot's returned content respects the requested budget within a documented tolerance acceptance bar' \u2014 cited verbatim, not a new tolerance invented here. pass = (full_payload_tokens <= tolerance_threshold_tokens). context[]/evidence[]/conflicts[] are unbudgeted by construction, so a real FAIL here is a plausible, legitimate outcome.",
+        "full_payload_tokens": 2753,
+        "pass": false,
+        "tolerance_multiplier": 1.2,
+        "tolerance_threshold_tokens": 1200.0
+      },
+      "cache_hit_count_delta_l2": 1,
+      "cache_status_l1warm": "HIT",
+      "cache_status_l2warm": "HIT_L2",
+      "cold_call_anomaly": null,
+      "cold_end_to_end_ms": 1682.1555150672793,
+      "cold_fallback_and_assembly_ms": 67.81571824103594,
+      "cold_lookup_and_validation_ms": 16.404176596552134,
+      "conflicts_report": {
+        "conflicts_observed": 0,
+        "conflicts_observed_in_corpus": false,
+        "limitation_note": "build_conflicts() is structural (explicit supersession/deprecation-marker detection in source docs, tools/knowledge_gateway_packet_assembly.py:558-579), not automatic cross-provider factual-value comparison. The frozen 7-entry corpus was designed around \u00a78 routing-shape coverage, not conflict-shape coverage, so 0 real conflicts across all 7 entries is a plausible, honest outcome. If total is 0, this criterion's visibility mechanism itself remains separately unit-tested (build_conflicts()'s own test suite), but this real corpus does not naturally exercise a real conflict occurrence \u2014 this is disclosed as a genuine corpus-coverage limitation, never silently marked satisfied."
+      },
+      "constrained_budget_cache_status": "MISS",
+      "constrained_budget_end_to_end_ms": 1531.7950677126646,
+      "id": "Q4_historical_rationale",
+      "instrumentation_granularity_note": "3 real, externally-timed segments (lookup_and_validation_ms, fallback_and_assembly_ms, end_to_end_ms), not the proposal's 5-name wording (lookup, validation, fallback, assembly, end-to-end) \u2014 'validation' is not a separate call boundary from 'lookup' inside perform_context_packet_cache_lookup()/perform_cache_lookup(), and 'assembly' is not separate from 'fallback' inside assemble_packet(), in the current gateway code. This is a genuine, disclosed instrumentation-granularity limit of measurement-only tooling, not a shortfall in measurement effort.",
+      "isolation_delete_anomaly": null,
+      "isolation_delete_rowcount": 1,
+      "l1_warm_end_to_end_ms": 1438.1305831484497,
+      "l1_warm_fallback_and_assembly_ms": null,
+      "l1_warm_full_payload_tokens": 2461,
+      "l1_warm_lookup_and_validation_ms": 21.55569987371564,
+      "l2_warm_end_to_end_ms": 1448.9050703123212,
+      "l2_warm_fallback_and_assembly_ms": null,
+      "l2_warm_full_payload_tokens": 2753,
+      "l2_warm_lookup_and_validation_ms": 19.429990090429783,
+      "providers_selected": [
+        "context_search"
+      ],
+      "query_text": "Why was WorldTemplateExpander removed?",
+      "recall_report": {
+        "anchor_exact_matches": [
+          "TCK-20260701-WORLDTEMPLATE-REMOVE",
+          "TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE"
+        ],
+        "baseline_sources": [
+          "TCK-20260701-WORLDTEMPLATE-REMOVE",
+          "TCK-20260523-WORLD-TEMPLATES",
+          "guidelines/intentional_divergences#221-worldtemplatev1-schema-removal-tck-2-022",
+          "architecture/world_repository_layout#proposed-strategy-layout-003",
+          "plans/knowledge-gateway-mcp-proposal#22-representative-use-cases-031",
+          "TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE",
+          "architecture/world_repository_layout#body-000",
+          "audits/D03_behavioral_emergence#pre-condition-bug-003"
+        ],
+        "computed_from_contaminated_cache_hit": false,
+        "contamination_note": null,
+        "derivation": "context_search half of \u00a74.3's union only (Design Decision D3 \u2014 no Phase 0 graphify source baseline exists to compare against). baseline_sources = Phase 0 fixture's context_search.sources_recalled for this entry (read-only). gateway_sources = response['context'][*]['source_id'] from the real _run_knowledge_context() call, normalized via _normalize_phase1_source_id() (Design Decision D2: strip doc:/ticket:/file: prefixes and docs/.md decoration). missing_sources = baseline_sources whose normalized path is absent from the normalized gateway path set \u2014 comparison is on path only (before '#'), anchor exact-match is informational only (anchor_exact_matches), never a source of a false miss from cosmetic anchor re-slugging drift. pass = (missing_sources is empty). No Phase 0 graphify source baseline exists to compare against (the fixture recorded only raw_stdout_bytes, never a source list) \u2014 the graphify half of \u00a74.3's union is reported as N/A here, not silently treated as empty-and-passing. See Design Decision D3, staging_artifacts/TCK-20260815-KGMCP-P1-BASELINE-COMPARISON/plan.md. Computed from the cold (call 1) response only, per Phase 2's own established precedent (a genuine hit's content is identical to the cold response that produced it).",
+        "gateway_sources": [
+          "TCK-20260701-WORLDTEMPLATE-REMOVE",
+          "stored_artifacts/TCK-20260523-WORLD-TEMPLATES/investigation.md",
+          "guidelines/intentional_divergences#2-21-worldtemplate-v1-schema-removal-tck-20260701-worldtemplate-remove",
+          "architecture/world_repository_layout#proposed-strategy-layout",
+          "plans/knowledge-gateway-mcp-proposal#22-representative-use-cases",
+          "TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE",
+          "architecture/world_repository_layout#architecture",
+          "audits/D03_behavioral_emergence#pre-condition-bug"
+        ],
+        "graphify_half_status": "N/A",
+        "missing_sources": [
+          "TCK-20260523-WORLD-TEMPLATES"
+        ],
+        "pass": false,
+        "phase1_recall_missing_count": 1,
+        "phase2_recall_missing_count": 1,
+        "recall_missing_count_comparison": "Phase 3 (this run): 1 missing. Phase 1 (recorded): 1 missing. Phase 2 (recorded, cold): 1 missing.",
+        "recall_regression_flag": false
+      },
+      "routing_shape": "ticket_historical_rationale",
+      "signal_anomaly_l1warm": null,
+      "signal_anomaly_l2warm": null
+    },
+    {
+      "ac6_result": null,
+      "budget_compliance": {
+        "budget_tokens_requested": 1000,
+        "derivation": "full_payload_tokens = knowledge_gateway_packet_assembly.kgmcp_char_heuristic_v1(json.dumps(response)) over the FULL response payload \u2014 never response['budget_returned'], which is a statements[]-only running total, <= budget_requested by construction (assemble_within_budget(), tools/knowledge_gateway_packet_assembly.py:584-611), and would trivially 'pass' regardless of real gateway behavior. tolerance_threshold_tokens = budget_tokens_requested * 1.2, the documented \u00b120% tolerance ratified in redaction_retention_policy.md \u00a78 as 'the standard against which a future implementation validates the Phase 3 pilot's returned content respects the requested budget within a documented tolerance acceptance bar' \u2014 cited verbatim, not a new tolerance invented here. pass = (full_payload_tokens <= tolerance_threshold_tokens). context[]/evidence[]/conflicts[] are unbudgeted by construction, so a real FAIL here is a plausible, legitimate outcome.",
+        "full_payload_tokens": 164,
+        "pass": true,
+        "tolerance_multiplier": 1.2,
+        "tolerance_threshold_tokens": 1200.0
+      },
+      "cache_hit_count_delta_l2": 1,
+      "cache_status_l1warm": "HIT",
+      "cache_status_l2warm": "HIT_L2",
+      "cold_call_anomaly": null,
+      "cold_end_to_end_ms": 2575.843306723982,
+      "cold_fallback_and_assembly_ms": 1116.8100624345243,
+      "cold_lookup_and_validation_ms": 18.38158257305622,
+      "conflicts_report": {
+        "conflicts_observed": 0,
+        "conflicts_observed_in_corpus": false,
+        "limitation_note": "build_conflicts() is structural (explicit supersession/deprecation-marker detection in source docs, tools/knowledge_gateway_packet_assembly.py:558-579), not automatic cross-provider factual-value comparison. The frozen 7-entry corpus was designed around \u00a78 routing-shape coverage, not conflict-shape coverage, so 0 real conflicts across all 7 entries is a plausible, honest outcome. If total is 0, this criterion's visibility mechanism itself remains separately unit-tested (build_conflicts()'s own test suite), but this real corpus does not naturally exercise a real conflict occurrence \u2014 this is disclosed as a genuine corpus-coverage limitation, never silently marked satisfied."
+      },
+      "constrained_budget_cache_status": "MISS",
+      "constrained_budget_end_to_end_ms": 2547.741106711328,
+      "id": "Q5_test_impact",
+      "instrumentation_granularity_note": "3 real, externally-timed segments (lookup_and_validation_ms, fallback_and_assembly_ms, end_to_end_ms), not the proposal's 5-name wording (lookup, validation, fallback, assembly, end-to-end) \u2014 'validation' is not a separate call boundary from 'lookup' inside perform_context_packet_cache_lookup()/perform_cache_lookup(), and 'assembly' is not separate from 'fallback' inside assemble_packet(), in the current gateway code. This is a genuine, disclosed instrumentation-granularity limit of measurement-only tooling, not a shortfall in measurement effort.",
+      "isolation_delete_anomaly": null,
+      "isolation_delete_rowcount": 1,
+      "l1_warm_end_to_end_ms": 1549.9408380128443,
+      "l1_warm_fallback_and_assembly_ms": null,
+      "l1_warm_full_payload_tokens": 3784,
+      "l1_warm_lookup_and_validation_ms": 27.425321750342846,
+      "l2_warm_end_to_end_ms": 1430.071147158742,
+      "l2_warm_fallback_and_assembly_ms": null,
+      "l2_warm_full_payload_tokens": 4953,
+      "l2_warm_lookup_and_validation_ms": 20.821793004870415,
+      "providers_selected": [
+        "graphify"
+      ],
+      "query_text": "What tests must run if tools/agent-monitoring/generate_retro.py changes?",
+      "recall_report": {
+        "anchor_exact_matches": [],
+        "baseline_sources": [
+          "TCK-20260607-MON-RETRO",
+          "TCK-20260803-RETRO-TOOL-SAFETY-AUDIT",
+          "TCK-20260805-SKILL-USAGE-METRIC",
+          "TCK-20260728-RETRIEVAL-BASELINE-METRICS",
+          "guides/agent_monitoring#how-to-generate-a-report-002",
+          "TCK-20260705-MONITORING-RUNID-JOIN",
+          "TCK-20260720-MONITORING-PIPELINE-BUGFIXES",
+          "TCK-20260705-RETRO-METRIC-ACCURACY"
+        ],
+        "computed_from_contaminated_cache_hit": false,
+        "contamination_note": null,
+        "derivation": "context_search half of \u00a74.3's union only (Design Decision D3 \u2014 no Phase 0 graphify source baseline exists to compare against). baseline_sources = Phase 0 fixture's context_search.sources_recalled for this entry (read-only). gateway_sources = response['context'][*]['source_id'] from the real _run_knowledge_context() call, normalized via _normalize_phase1_source_id() (Design Decision D2: strip doc:/ticket:/file: prefixes and docs/.md decoration). missing_sources = baseline_sources whose normalized path is absent from the normalized gateway path set \u2014 comparison is on path only (before '#'), anchor exact-match is informational only (anchor_exact_matches), never a source of a false miss from cosmetic anchor re-slugging drift. pass = (missing_sources is empty). No Phase 0 graphify source baseline exists to compare against (the fixture recorded only raw_stdout_bytes, never a source list) \u2014 the graphify half of \u00a74.3's union is reported as N/A here, not silently treated as empty-and-passing. See Design Decision D3, staging_artifacts/TCK-20260815-KGMCP-P1-BASELINE-COMPARISON/plan.md. Computed from the cold (call 1) response only, per Phase 2's own established precedent (a genuine hit's content is identical to the cold response that produced it).",
+        "gateway_sources": [
+          "What tests must run if tools/agent-monitoring/generate_retro.py changes?"
+        ],
+        "graphify_half_status": "N/A",
+        "missing_sources": [
+          "TCK-20260607-MON-RETRO",
+          "TCK-20260803-RETRO-TOOL-SAFETY-AUDIT",
+          "TCK-20260805-SKILL-USAGE-METRIC",
+          "TCK-20260728-RETRIEVAL-BASELINE-METRICS",
+          "guides/agent_monitoring#how-to-generate-a-report-002",
+          "TCK-20260705-MONITORING-RUNID-JOIN",
+          "TCK-20260720-MONITORING-PIPELINE-BUGFIXES",
+          "TCK-20260705-RETRO-METRIC-ACCURACY"
+        ],
+        "pass": false,
+        "phase1_recall_missing_count": 8,
+        "phase2_recall_missing_count": 8,
+        "recall_missing_count_comparison": "Phase 3 (this run): 8 missing. Phase 1 (recorded): 8 missing. Phase 2 (recorded, cold): 8 missing.",
+        "recall_regression_flag": false
+      },
+      "routing_shape": "test_impact_of_change",
+      "signal_anomaly_l1warm": null,
+      "signal_anomaly_l2warm": null
+    },
+    {
+      "ac6_result": null,
+      "budget_compliance": {
+        "budget_tokens_requested": 1000,
+        "derivation": "full_payload_tokens = knowledge_gateway_packet_assembly.kgmcp_char_heuristic_v1(json.dumps(response)) over the FULL response payload \u2014 never response['budget_returned'], which is a statements[]-only running total, <= budget_requested by construction (assemble_within_budget(), tools/knowledge_gateway_packet_assembly.py:584-611), and would trivially 'pass' regardless of real gateway behavior. tolerance_threshold_tokens = budget_tokens_requested * 1.2, the documented \u00b120% tolerance ratified in redaction_retention_policy.md \u00a78 as 'the standard against which a future implementation validates the Phase 3 pilot's returned content respects the requested budget within a documented tolerance acceptance bar' \u2014 cited verbatim, not a new tolerance invented here. pass = (full_payload_tokens <= tolerance_threshold_tokens). context[]/evidence[]/conflicts[] are unbudgeted by construction, so a real FAIL here is a plausible, legitimate outcome.",
+        "full_payload_tokens": 2836,
+        "pass": false,
+        "tolerance_multiplier": 1.2,
+        "tolerance_threshold_tokens": 1200.0
+      },
+      "cache_hit_count_delta_l2": 1,
+      "cache_status_l1warm": "HIT",
+      "cache_status_l2warm": "HIT_L2",
+      "cold_call_anomaly": null,
+      "cold_end_to_end_ms": 1638.5158617049456,
+      "cold_fallback_and_assembly_ms": 60.45036297291517,
+      "cold_lookup_and_validation_ms": 18.63648137077689,
+      "conflicts_report": {
+        "conflicts_observed": 0,
+        "conflicts_observed_in_corpus": false,
+        "limitation_note": "build_conflicts() is structural (explicit supersession/deprecation-marker detection in source docs, tools/knowledge_gateway_packet_assembly.py:558-579), not automatic cross-provider factual-value comparison. The frozen 7-entry corpus was designed around \u00a78 routing-shape coverage, not conflict-shape coverage, so 0 real conflicts across all 7 entries is a plausible, honest outcome. If total is 0, this criterion's visibility mechanism itself remains separately unit-tested (build_conflicts()'s own test suite), but this real corpus does not naturally exercise a real conflict occurrence \u2014 this is disclosed as a genuine corpus-coverage limitation, never silently marked satisfied."
+      },
+      "constrained_budget_cache_status": "MISS",
+      "constrained_budget_end_to_end_ms": 1513.4381838142872,
+      "id": "Q6_ticket_status",
+      "instrumentation_granularity_note": "3 real, externally-timed segments (lookup_and_validation_ms, fallback_and_assembly_ms, end_to_end_ms), not the proposal's 5-name wording (lookup, validation, fallback, assembly, end-to-end) \u2014 'validation' is not a separate call boundary from 'lookup' inside perform_context_packet_cache_lookup()/perform_cache_lookup(), and 'assembly' is not separate from 'fallback' inside assemble_packet(), in the current gateway code. This is a genuine, disclosed instrumentation-granularity limit of measurement-only tooling, not a shortfall in measurement effort.",
+      "isolation_delete_anomaly": null,
+      "isolation_delete_rowcount": 1,
+      "l1_warm_end_to_end_ms": 1443.309627007693,
+      "l1_warm_fallback_and_assembly_ms": null,
+      "l1_warm_full_payload_tokens": 2460,
+      "l1_warm_lookup_and_validation_ms": 23.370000533759594,
+      "l2_warm_end_to_end_ms": 1432.5456181541085,
+      "l2_warm_fallback_and_assembly_ms": null,
+      "l2_warm_full_payload_tokens": 2836,
+      "l2_warm_lookup_and_validation_ms": 21.104490850120783,
+      "providers_selected": [
+        "context_search"
+      ],
+      "query_text": "What is the current status of TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING?",
+      "recall_report": {
+        "anchor_exact_matches": [
+          "TCK-20260810-SKILL-USAGE-RETRO-TRACKING",
+          "TCK-20260810-STATUS-DRIFT-CHECK-WIRING"
+        ],
+        "baseline_sources": [
+          "TCK-20260810-SKILL-USAGE-RETRO-TRACKING",
+          "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
+          "TCK-20260728-CONTEXT-PACKET-SCHEMA",
+          "TCK-20260810-STATUS-DRIFT-CHECK-WIRING",
+          "agent-monitoring/schema#detecting-a-specific-scripts-subcommand--023",
+          "ai/default_packet_scenarios_decision#body-000",
+          "guides/agent_monitoring#report-sections-004",
+          "f037e9a1-43fa-4687-982f-38a78f927cb8"
+        ],
+        "computed_from_contaminated_cache_hit": false,
+        "contamination_note": null,
+        "derivation": "context_search half of \u00a74.3's union only (Design Decision D3 \u2014 no Phase 0 graphify source baseline exists to compare against). baseline_sources = Phase 0 fixture's context_search.sources_recalled for this entry (read-only). gateway_sources = response['context'][*]['source_id'] from the real _run_knowledge_context() call, normalized via _normalize_phase1_source_id() (Design Decision D2: strip doc:/ticket:/file: prefixes and docs/.md decoration). missing_sources = baseline_sources whose normalized path is absent from the normalized gateway path set \u2014 comparison is on path only (before '#'), anchor exact-match is informational only (anchor_exact_matches), never a source of a false miss from cosmetic anchor re-slugging drift. pass = (missing_sources is empty). No Phase 0 graphify source baseline exists to compare against (the fixture recorded only raw_stdout_bytes, never a source list) \u2014 the graphify half of \u00a74.3's union is reported as N/A here, not silently treated as empty-and-passing. See Design Decision D3, staging_artifacts/TCK-20260815-KGMCP-P1-BASELINE-COMPARISON/plan.md. Computed from the cold (call 1) response only, per Phase 2's own established precedent (a genuine hit's content is identical to the cold response that produced it).",
+        "gateway_sources": [
+          "TCK-20260814-KGMCP-MEASUREMENT-BASELINE",
+          "TCK-20260810-SKILL-USAGE-RETRO-TRACKING",
+          "stored_artifacts/TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING/investigation.md",
+          "stored_artifacts/TCK-20260728-CONTEXT-PACKET-SCHEMA/investigation.md",
+          "TCK-20260810-STATUS-DRIFT-CHECK-WIRING",
+          "agent-monitoring/schema#detecting-a-specific-script-s-subcommand-in-bash-rows",
+          "ai/default_packet_scenarios_decision#ai",
+          "guides/agent_monitoring#report-sections"
+        ],
+        "graphify_half_status": "N/A",
+        "missing_sources": [
+          "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
+          "TCK-20260728-CONTEXT-PACKET-SCHEMA",
+          "f037e9a1-43fa-4687-982f-38a78f927cb8"
+        ],
+        "pass": false,
+        "phase1_recall_missing_count": 3,
+        "phase2_recall_missing_count": 3,
+        "recall_missing_count_comparison": "Phase 3 (this run): 3 missing. Phase 1 (recorded): 3 missing. Phase 2 (recorded, cold): 3 missing.",
+        "recall_regression_flag": false
+      },
+      "routing_shape": "ticket_work_status",
+      "signal_anomaly_l1warm": null,
+      "signal_anomaly_l2warm": null
+    },
+    {
+      "ac6_result": null,
+      "budget_compliance": {
+        "budget_tokens_requested": 1000,
+        "derivation": "full_payload_tokens = knowledge_gateway_packet_assembly.kgmcp_char_heuristic_v1(json.dumps(response)) over the FULL response payload \u2014 never response['budget_returned'], which is a statements[]-only running total, <= budget_requested by construction (assemble_within_budget(), tools/knowledge_gateway_packet_assembly.py:584-611), and would trivially 'pass' regardless of real gateway behavior. tolerance_threshold_tokens = budget_tokens_requested * 1.2, the documented \u00b120% tolerance ratified in redaction_retention_policy.md \u00a78 as 'the standard against which a future implementation validates the Phase 3 pilot's returned content respects the requested budget within a documented tolerance acceptance bar' \u2014 cited verbatim, not a new tolerance invented here. pass = (full_payload_tokens <= tolerance_threshold_tokens). context[]/evidence[]/conflicts[] are unbudgeted by construction, so a real FAIL here is a plausible, legitimate outcome.",
+        "full_payload_tokens": 2751,
+        "pass": false,
+        "tolerance_multiplier": 1.2,
+        "tolerance_threshold_tokens": 1200.0
+      },
+      "cache_hit_count_delta_l2": 1,
+      "cache_status_l1warm": "HIT",
+      "cache_status_l2warm": "HIT_L2",
+      "cold_call_anomaly": null,
+      "cold_end_to_end_ms": 2575.1908598467708,
+      "cold_fallback_and_assembly_ms": 1106.1858511529863,
+      "cold_lookup_and_validation_ms": 15.993668232113123,
+      "conflicts_report": {
+        "conflicts_observed": 0,
+        "conflicts_observed_in_corpus": false,
+        "limitation_note": "build_conflicts() is structural (explicit supersession/deprecation-marker detection in source docs, tools/knowledge_gateway_packet_assembly.py:558-579), not automatic cross-provider factual-value comparison. The frozen 7-entry corpus was designed around \u00a78 routing-shape coverage, not conflict-shape coverage, so 0 real conflicts across all 7 entries is a plausible, honest outcome. If total is 0, this criterion's visibility mechanism itself remains separately unit-tested (build_conflicts()'s own test suite), but this real corpus does not naturally exercise a real conflict occurrence \u2014 this is disclosed as a genuine corpus-coverage limitation, never silently marked satisfied."
+      },
+      "constrained_budget_cache_status": "MISS",
+      "constrained_budget_end_to_end_ms": 2557.527818251401,
+      "id": "Q7_negative_knowledge",
+      "instrumentation_granularity_note": "3 real, externally-timed segments (lookup_and_validation_ms, fallback_and_assembly_ms, end_to_end_ms), not the proposal's 5-name wording (lookup, validation, fallback, assembly, end-to-end) \u2014 'validation' is not a separate call boundary from 'lookup' inside perform_context_packet_cache_lookup()/perform_cache_lookup(), and 'assembly' is not separate from 'fallback' inside assemble_packet(), in the current gateway code. This is a genuine, disclosed instrumentation-granularity limit of measurement-only tooling, not a shortfall in measurement effort.",
+      "isolation_delete_anomaly": null,
+      "isolation_delete_rowcount": 1,
+      "l1_warm_end_to_end_ms": 1564.777695108205,
+      "l1_warm_fallback_and_assembly_ms": null,
+      "l1_warm_full_payload_tokens": 7490,
+      "l1_warm_lookup_and_validation_ms": 22.22329191863537,
+      "l2_warm_end_to_end_ms": 1438.2083122618496,
+      "l2_warm_fallback_and_assembly_ms": null,
+      "l2_warm_full_payload_tokens": 7655,
+      "l2_warm_lookup_and_validation_ms": 22.791594732552767,
+      "providers_selected": [
+        "context_search",
+        "graphify"
+      ],
+      "query_text": "Is Kafka currently used in this repository?",
+      "recall_report": {
+        "anchor_exact_matches": [
+          "TCK-20260406-RPG-CORE-STABILIZE"
+        ],
+        "baseline_sources": [
+          "TCK-20260405-LOGFIX",
+          "compliance/checklist#kafka-disabled-mode-behavior-043",
+          "engine/infrastructure_compat_contract#4-divergences-exclusions-004",
+          "logic_checklist_exhaustive#kafka-disabled-mode-behavior-041",
+          "logic_checklist_exhaustive#16-brokerless-recovery-and-degraded-mode-112",
+          "TCK-20260406-RPG-CORE-STABILIZE",
+          "compliance/checklist#disabledmissing-dependency-paths-061",
+          "engine/infrastructure_compat_contract#3-infrastructure-isolation-003"
+        ],
+        "computed_from_contaminated_cache_hit": false,
+        "contamination_note": null,
+        "derivation": "context_search half of \u00a74.3's union only (Design Decision D3 \u2014 no Phase 0 graphify source baseline exists to compare against). baseline_sources = Phase 0 fixture's context_search.sources_recalled for this entry (read-only). gateway_sources = response['context'][*]['source_id'] from the real _run_knowledge_context() call, normalized via _normalize_phase1_source_id() (Design Decision D2: strip doc:/ticket:/file: prefixes and docs/.md decoration). missing_sources = baseline_sources whose normalized path is absent from the normalized gateway path set \u2014 comparison is on path only (before '#'), anchor exact-match is informational only (anchor_exact_matches), never a source of a false miss from cosmetic anchor re-slugging drift. pass = (missing_sources is empty). No Phase 0 graphify source baseline exists to compare against (the fixture recorded only raw_stdout_bytes, never a source list) \u2014 the graphify half of \u00a74.3's union is reported as N/A here, not silently treated as empty-and-passing. See Design Decision D3, staging_artifacts/TCK-20260815-KGMCP-P1-BASELINE-COMPARISON/plan.md. Computed from the cold (call 1) response only, per Phase 2's own established precedent (a genuine hit's content is identical to the cold response that produced it).",
+        "gateway_sources": [
+          "tickets/working_log.csv",
+          "compliance/checklist#kafka-disabled-mode-behavior",
+          "engine/contracts/infrastructure_compat_contract#4-divergences-exclusions",
+          "logic_checklist_exhaustive#kafka-disabled-mode-behavior",
+          "logic_checklist_exhaustive#16-brokerless-recovery-and-degraded-mode-behavior-tied-to-execution",
+          "TCK-20260406-RPG-CORE-STABILIZE",
+          "compliance/checklist#disabled-missing-dependency-paths",
+          "engine/contracts/infrastructure_compat_contract#3-infrastructure-isolation",
+          "Is Kafka currently used in this repository?"
+        ],
+        "graphify_half_status": "N/A",
+        "missing_sources": [
+          "TCK-20260405-LOGFIX",
+          "engine/infrastructure_compat_contract#4-divergences-exclusions-004",
+          "engine/infrastructure_compat_contract#3-infrastructure-isolation-003"
+        ],
+        "pass": false,
+        "phase1_recall_missing_count": 3,
+        "phase2_recall_missing_count": 3,
+        "recall_missing_count_comparison": "Phase 3 (this run): 3 missing. Phase 1 (recorded): 3 missing. Phase 2 (recorded, cold): 3 missing.",
+        "recall_regression_flag": false
+      },
+      "routing_shape": "broad_task_context",
+      "signal_anomaly_l1warm": null,
+      "signal_anomaly_l2warm": null
+    }
+  ],
+  "manifest_built_at_at_run_time": "2026-08-16T08:02:24.840638+00:00",
+  "pre_run_cache_db_state": {
+    "db_exists": true,
+    "retrieval_context_packet_cache_rows": 0,
+    "retrieval_provider_result_cache_rows": 0
+  },
+  "recorded_at_utc": "2026-08-16T08:38:44.283589Z"
+}

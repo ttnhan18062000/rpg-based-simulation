@@ -210,6 +210,7 @@ class Statement:
     evidence_ids: list[str]
     priority_tier: int
     verification: Optional[str] = None
+    evidence_hash: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -228,6 +229,17 @@ class EvidenceEntry:
     source_id: str
     path: Optional[str]
     evidence_hash: str
+
+
+def _content_hash(text: str) -> str:
+    """Single source of truth for the content-hash formula used both for
+    ContextEntry/EvidenceEntry.evidence_hash (render_candidates()) and as _dedup_key()'s
+    hash-based fallback for directly-constructed Statement test fixtures. Strips text
+    internally so callers may pass either already-stripped or raw text safely -- render_
+    candidates() passes already-stripped text (a no-op re-strip), _dedup_key()'s fallback
+    passes statement.text directly.
+    """
+    return hashlib.sha256(text.strip().encode("utf-8")).hexdigest()
 
 
 def render_candidates(
@@ -249,7 +261,7 @@ def render_candidates(
         text = result["excerpt"].strip()
         source_path = result["source_path"]
         evidence_id = _evidence_id_for_context_search_result(result, anchor_counts)
-        evidence_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        evidence_hash = _content_hash(text)
 
         statements.append(
             Statement(
@@ -259,6 +271,7 @@ def render_candidates(
                 evidence_ids=[evidence_id],
                 priority_tier=2,
                 verification="SUPPORTED",
+                evidence_hash=evidence_hash,
             )
         )
         context_entries.append(
@@ -285,7 +298,7 @@ def render_candidates(
         n += 1
         text = graphify_result["stdout"].strip()
         evidence_id = _evidence_id_for_graphify_result(query_text)
-        evidence_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        evidence_hash = _content_hash(text)
 
         statements.append(
             Statement(
@@ -295,6 +308,7 @@ def render_candidates(
                 evidence_ids=[evidence_id],
                 priority_tier=2,
                 verification="SUPPORTED",
+                evidence_hash=evidence_hash,
             )
         )
         context_entries.append(
@@ -322,24 +336,69 @@ def render_candidates(
 # ── Step 5: Deduplication before truncation ───────────────────────────────────
 
 def _dedup_key(statement: Statement) -> str:
-    return " ".join(statement.text.strip().casefold().split())
+    if statement.evidence_hash is not None:
+        return statement.evidence_hash
+    return _content_hash(statement.text)
 
 
-def deduplicate_statements(statements: list[Statement]) -> list[Statement]:
-    """Groups by exact-match on normalized text (mechanical/string-based, never a
-    semantic-similarity judgment — §14's ban on semantic judgment governs *conflict* detection,
-    not this §15-required dedup step). Keyed only on rendered text, never on provider — handles
-    both same-provider duplicate chunks and the cross-provider case identically. For each
-    duplicate group, the first-encountered statement survives; every other member's
-    `evidence_ids` merge into it, order-preserved, no duplicate IDs.
+def _conflict_signal_index_pairs(
+    context_search_results: list[dict], graphify_result: Optional[dict]
+) -> set[frozenset[int]]:
+    """Lightweight companion to build_conflicts() (Step 7): reuses the identical
+    _structural_supersession_signal() detection primitive build_conflicts() already calls -- this
+    is NOT a second, parallel conflict-detection heuristic, just an earlier, index-pair-only use of
+    the same real function. Index i here corresponds 1:1 to statements[i] as returned by
+    render_candidates(), because both functions iterate context_search_results in the same order
+    and append graphify_result last, if present (verified directly against render_candidates()'s
+    own loop order).
     """
+    all_results = list(context_search_results)
+    if graphify_result is not None:
+        all_results.append(graphify_result)
+
+    pairs: set[frozenset[int]] = set()
+    for i, result_a in enumerate(all_results):
+        for j, result_b in enumerate(all_results[i + 1:], start=i + 1):
+            if _structural_supersession_signal(result_a, result_b) is not None:
+                pairs.add(frozenset({i, j}))
+    return pairs
+
+
+def deduplicate_statements(
+    statements: list[Statement],
+    conflict_index_pairs: Optional[set[frozenset[int]]] = None,
+) -> list[Statement]:
+    """Groups by content-hash identity (mechanical/structural, never a semantic-similarity
+    judgment — §14's ban on semantic judgment governs *conflict* detection, not this §15-required
+    dedup step) — the same fingerprint concept
+    `docs/engine/contracts/knowledge_gateway_mcp/evidence_identity_kinds.schema.json` establishes
+    for its content-bearing kinds, via `_dedup_key()`/`_content_hash()`. Keyed only on rendered
+    text's hash, never on provider — handles both same-provider duplicate chunks and the
+    cross-provider case identically. For each duplicate group, the first-encountered statement
+    survives; every other member's `evidence_ids` merge into it, order-preserved, no duplicate IDs.
+
+    `conflict_index_pairs` (optional, per Gap 2/AC4): a set of index pairs into the same raw
+    provider-result ordering `render_candidates()` used to build `statements[]`, identifying
+    results flagged as mutually conflicting via `_structural_supersession_signal()`. If two
+    statements would otherwise collapse into the same dedup group *and* their original indices are
+    a known conflict-flagged pair, the later statement is forced into its own distinct group
+    instead of being silently merged — two conflict-flagged items must never collapse into one
+    even when their rendered text happens to be identical.
+    """
+    conflict_index_pairs = conflict_index_pairs or set()
     order: list[str] = []
     groups: dict[str, Statement] = {}
+    group_anchor_index: dict[str, int] = {}
 
-    for statement in statements:
+    for idx, statement in enumerate(statements):
         key = _dedup_key(statement)
+        if key in groups and frozenset({idx, group_anchor_index[key]}) in conflict_index_pairs:
+            # Conflict-flagged pair renders identical text -- must never silently merge (AC4/§14).
+            # Force this statement into its own distinct group instead of collapsing it.
+            key = f"{key}::conflict-{idx}"
         if key not in groups:
             groups[key] = statement
+            group_anchor_index[key] = idx
             order.append(key)
             continue
         existing = groups[key]
@@ -565,11 +624,31 @@ class PacketAssembly:
     statements: list[Statement]
     context: list[ContextEntry]
     evidence: list[EvidenceEntry]
+    evidence_dependencies: list[str]
     conflicts: list[Conflict]
     budget_requested: int
     budget_returned: int
+    budget_truncated: bool
+    omitted_statement_count: int
     provider_failures: list[str]
     negative_claim_support: Optional[NegativeClaimSupport] = None
+
+
+def _evidence_dependencies(context_entries: list[ContextEntry]) -> list[str]:
+    """Aggregates the packet's real dependency-path set for the Level 2 evidence_dependencies
+    column, from the packet's own final `context` items (post-dedup, post-budget-truncation) --
+    NOT from `evidence` (`final_evidence`). The two carry identical .path values for every
+    context_search-sourced result in the ordinary/truncated branches (same source_id/evidence_id
+    filter -- verified by direct trace of render_candidates()/assemble_packet()), but diverge in
+    the section-16 budget-assembly-failure branch, where final_context is correctly emptied
+    (matching the packet's own empty answer/statements) while final_evidence is deliberately left
+    as the full, unfiltered evidence_entries list. Reading final_context keeps
+    evidence_dependencies consistent with what the packet actually claims, in every branch,
+    without any branch-specific special-casing here. graphify-sourced entries carry path=None
+    (symbol-kind evidence is not path-tracked by this module at all, matching Level 1's own
+    identical limitation) and contribute nothing -- not a crash, not a literal "None" string.
+    """
+    return sorted({c.path for c in context_entries if c.path})
 
 
 def _provider_id_for_evidence_id(evidence_id: str) -> str:
@@ -594,7 +673,20 @@ def assemble_packet(routing_decision, query_text: str, budget_requested: int) ->
     ]
 
     statements, context_entries, evidence_entries = render_candidates(provider_results, query_text)
-    statements = deduplicate_statements(statements)
+    conflict_index_pairs = _conflict_signal_index_pairs(
+        provider_results.get("context_search") or [],
+        provider_results.get("graphify"),
+    )
+    assert len(statements) == len(provider_results.get("context_search") or []) + (
+        1 if provider_results.get("graphify") else 0
+    ), (
+        "statements[] <-> provider-result index correspondence invariant violated: "
+        "_conflict_signal_index_pairs() assumes render_candidates() emits exactly one Statement "
+        "per context_search result plus one more iff graphify is present, in that same order. "
+        "If this fires, render_candidates() and _conflict_signal_index_pairs()/build_conflicts() "
+        "have desynced and AC4's conflict-vs-dedup exclusion can silently misfire."
+    )
+    statements = deduplicate_statements(statements, conflict_index_pairs)
 
     negative_claim_support: Optional[NegativeClaimSupport] = None
     if not statements:
@@ -612,6 +704,8 @@ def assemble_packet(routing_decision, query_text: str, budget_requested: int) ->
     )
 
     included_statements, budget_returned = assemble_within_budget(statements, budget_requested)
+    omitted_statement_count = len(statements) - len(included_statements)
+    budget_truncated = omitted_statement_count > 0
 
     # §16 budget-assembly-failure fallback: the budget was too small to admit even the single
     # lowest-cost, highest-priority statement — distinct from ordinary partial truncation, which
@@ -647,6 +741,7 @@ def assemble_packet(routing_decision, query_text: str, budget_requested: int) ->
         for statement in final_statements
         for evidence_id in statement.evidence_ids
     })
+    evidence_dependencies = _evidence_dependencies(final_context)
 
     return PacketAssembly(
         status=status,
@@ -658,9 +753,12 @@ def assemble_packet(routing_decision, query_text: str, budget_requested: int) ->
         statements=final_statements,
         context=final_context,
         evidence=final_evidence,
+        evidence_dependencies=evidence_dependencies,
         conflicts=conflicts,
         budget_requested=budget_requested,
         budget_returned=budget_returned,
+        budget_truncated=budget_truncated,
+        omitted_statement_count=omitted_statement_count,
         provider_failures=failures,
         negative_claim_support=negative_claim_support,
     )

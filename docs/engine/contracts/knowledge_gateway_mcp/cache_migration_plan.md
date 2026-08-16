@@ -91,7 +91,12 @@ Ordered migration function list (names are placeholders; bodies are Phase 2/3 wo
    confirmed by this ticket's own investigation (Risk 1) that Scope adds only new tables.
 2. `migration_002_add_level2_tables(conn: sqlite3.Connection) -> None` — adds the Level 2
    (dependency-tracking) tables per §10.3. Same `CREATE TABLE IF NOT EXISTS` idempotency guarantee
-   as migration 001; no column addition to an existing table.
+   as migration 001; no column addition to an existing table. Like migration 3 below, this
+   migration's body is now real, implemented code — added by
+   `TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS`, creating the new
+   `retrieval_context_packet_cache_rows` table (28 columns, `LEVEL2_CACHE_COLUMNS`, per proposal
+   §10.2/§10.3); `tools/retrieval_cache.py:310-364`. No read/write logic against this table exists
+   yet — that remains separate, later work (`TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`).
 3. `migration_003_add_redaction_policy_version_column(conn: sqlite3.Connection) -> None` — adds a
    `redaction_policy_version` column to the existing `retrieval_provider_result_cache_rows` table, so
    a cache row can carry an on-disk record of which version of
@@ -102,10 +107,11 @@ Ordered migration function list (names are placeholders; bodies are Phase 2/3 wo
    table_info(retrieval_provider_result_cache_rows)` existence check before altering (SQLite has no
    `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`). Ordinal 3, immediately after migration 2 above, per
    this document's own reservation that ordinal 2 belongs to the Level 2/Phase 3 tables and must
-   never be reused or stubbed by a later migration. Unlike migrations 1 and 2, which remain
-   design-only placeholders as of this document, migration 3's body is real, implemented code —
+   never be reused or stubbed by a later migration. Migration 3's body is real, implemented code —
    added by `TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`, Architecture-Review-approved (DD3,
-   option b); `tools/retrieval_cache.py:265-283`.
+   option b); `tools/retrieval_cache.py:265-283`. (Migrations 1 and 2 above are likewise real,
+   implemented code as of `TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS` — see migration
+   2's own annotation above; no migration in this ordered list remains a design-only placeholder.)
 
 Each migration function:
 - Is idempotent and individually re-runnable (safe to call again on a database that already has the

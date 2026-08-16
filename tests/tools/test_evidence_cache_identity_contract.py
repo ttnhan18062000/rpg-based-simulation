@@ -117,7 +117,10 @@ def test_no_shared_code_or_table_conflates_lookup_hit_with_validity_proof():
     function_names = {
         node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
     }
-    for lookup_fn in ("check_index_cache", "check_query_cache", "check_packet_cache"):
+    for lookup_fn in (
+        "check_index_cache", "check_query_cache", "check_packet_cache",
+        "check_provider_result_cache",
+    ):
         assert lookup_fn in function_names, f"expected lookup function {lookup_fn} not found"
 
     result_dataclass_fields = {}
@@ -145,8 +148,31 @@ def test_no_shared_code_or_table_conflates_lookup_hit_with_validity_proof():
             f"today's lookup-check return shape must smuggle no validity/freshness verdict"
         )
 
-    assert "freshness" not in source.lower()
-    assert "verification" not in source.lower()
+    # TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS (Architecture-Review-ratified DD4,
+    # docs/guidelines/intentional_divergences.md §2.44): the new Level 2
+    # retrieval_context_packet_cache_rows table legitimately carries freshness/verification
+    # columns (LEVEL2_CACHE_COLUMNS, migration_002_add_level2_tables) -- a schema-only, bounded
+    # divergence from this file's own Non-collapse rule Bullet 1, ratified because no
+    # check_*/write_* lookup function exists yet for that table (separately guarded by
+    # tests/tools/test_retrieval_cache.py::TestLevel2Migrations::
+    # test_no_actual_read_write_functions_added_for_the_new_level2_table). The real rule this
+    # test protects -- Bullet 2, no lookup FUNCTION return shape ever carries a freshness/
+    # verification verdict -- stays enforced by the three check_*_cache Result dataclass
+    # field-set assertions above; narrowed here to every current lookup function's own source
+    # (including check_provider_result_cache, Level 1's own real lookup function, added post-hoc
+    # to this loop by Architecture-Verify's own review of this ticket) instead of a blanket
+    # whole-file substring ban the ratified Level 2 schema columns would otherwise always trip.
+    for lookup_fn in (
+        "check_index_cache", "check_query_cache", "check_packet_cache",
+        "check_provider_result_cache",
+    ):
+        fn_node = next(
+            node for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name == lookup_fn
+        )
+        fn_source = (ast.get_source_segment(source, fn_node) or "").lower()
+        assert "freshness" not in fn_source
+        assert "verification" not in fn_source
 
 
 # ---------------------------------------------------------------------------

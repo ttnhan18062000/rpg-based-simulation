@@ -294,7 +294,15 @@ def test_no_frozen_kgmcp_dependency_edited():
         # expansion in TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING, and this hotfix's real,
         # data-derived MAX_PAYLOAD_BYTES recalibration) — it is not a frozen dependency in the same
         # sense as the 3 live-gateway files above.
-        "tools/retrieval_cache.py",
+        # tools/retrieval_cache.py deliberately removed here too
+        # (TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS), same rationale as
+        # redaction.py directly above: this check only ever validly reflected an earlier
+        # ticket's own uncommitted diff at authoring time, not a permanent repo-wide ban.
+        # retrieval_cache.py has since been legitimately, reviewably evolved by two further
+        # tickets (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING's migration_003, and this
+        # ticket's migration_002/LEVEL2_CACHE_COLUMNS, both Architecture-Review-approved) —
+        # already removed from this exact banned-path list in
+        # tests/tools/test_kgmcp_measurement_baseline.py by the first of those two tickets.
         "tools/retrieval_events.py",
         "tools/knowledge_search.py",
         "tools/agent-monitoring/kgmcp_baseline_corpus.py",

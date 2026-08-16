@@ -423,3 +423,257 @@ def test_size_cap_gate_skips_write_without_raising_when_db_over_ceiling():
     finally:
         rc.write_provider_result_cache = original_write
         rk.check_db_size_within_limit = original_check
+
+
+# ---------------------------------------------------------------------------
+# Step 9 — revalidate_context_packet_row() / _level2_repo_branch_scope()
+# (TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION)
+# ---------------------------------------------------------------------------
+
+def _level2_row(
+    *,
+    evidence_dependencies=None,
+    repository_id: str = "repo-a",
+    branch: str = "main",
+    provider_generations=None,
+):
+    """Level-2-row-shaped dict, matching LEVEL2_CACHE_COLUMNS' real column names
+    (tools/retrieval_cache.py:154-185) — constructed directly, per test_plan.md's own stated
+    approach, since no live Level 2 write function exists yet for this ticket to round-trip
+    through (Out of Scope)."""
+    return {
+        "evidence_dependencies": json.dumps(sorted(evidence_dependencies or [])),
+        "repository_id": repository_id,
+        "branch": branch,
+        "provider_generations": json.dumps(provider_generations or {"context_search": "gen-1"}),
+    }
+
+
+def test_level2_repo_branch_scope_matches_current_repo_branch_scope_join_format():
+    assert _mod._level2_repo_branch_scope("repo-a", "main") == "repo-a::main"
+
+
+def test_revalidate_context_packet_row_rejects_on_changed_paths_intersection():
+    row = _level2_row(evidence_dependencies=["docs/a.md"])
+    valid = _mod.revalidate_context_packet_row(
+        row,
+        capability_descriptor={"fine_grained_fingerprints": False},
+        current_provider_generations={"context_search": "gen-1"},
+        current_repository_id="repo-a",
+        current_branch="main",
+        changed_paths=["docs/a.md"],
+    )
+    assert valid is False
+
+
+def test_revalidate_context_packet_row_survives_unrelated_changed_path():
+    row = _level2_row(evidence_dependencies=["docs/a.md"])
+    valid = _mod.revalidate_context_packet_row(
+        row,
+        capability_descriptor={"fine_grained_fingerprints": False},
+        current_provider_generations={"context_search": "gen-1"},
+        current_repository_id="repo-a",
+        current_branch="main",
+        changed_paths=["docs/unrelated.md"],
+    )
+    assert valid is True
+
+
+def test_revalidate_context_packet_row_rejects_cross_branch_even_with_identical_dependencies():
+    """§5 rule 2's own 'before any fingerprint comparison is even consulted' wording — proven via
+    a call-order spy on working_tree_overlap_forces_revalidation(): it must never be invoked once
+    the branch check has already failed."""
+    row = _level2_row(
+        evidence_dependencies=["docs/a.md"],
+        repository_id="repo-a",
+        branch="feature-x",
+        provider_generations={"context_search": "gen-1"},
+    )
+    spy_calls = []
+    original = _mod.working_tree_overlap_forces_revalidation
+
+    def _spy(*args, **kwargs):
+        spy_calls.append((args, kwargs))
+        return original(*args, **kwargs)
+
+    _mod.working_tree_overlap_forces_revalidation = _spy
+    try:
+        valid = _mod.revalidate_context_packet_row(
+            row,
+            capability_descriptor={"fine_grained_fingerprints": False},
+            current_provider_generations={"context_search": "gen-1"},
+            current_repository_id="repo-a",
+            current_branch="main",
+            changed_paths=[],  # deliberately empty/non-overlapping — proves rejection is branch-driven
+        )
+    finally:
+        _mod.working_tree_overlap_forces_revalidation = original
+
+    assert valid is False
+    assert spy_calls == [], (
+        "working_tree_overlap_forces_revalidation must never be consulted once the branch check "
+        "has already failed"
+    )
+
+
+def test_revalidate_context_packet_row_survives_new_commit_alone_unchanged_generations():
+    """Mirrors §5's Level 1 precedent — a new commit alone, with unchanged provider generations,
+    must not force a miss. Also confirms the function's own source never reads row['head_commit']
+    (DD2 — that column is never part of this ticket's mechanism)."""
+    row = _level2_row(
+        evidence_dependencies=["docs/a.md"],
+        provider_generations={"context_search": "gen-1", "graphify": "gen-1"},
+    )
+    valid = _mod.revalidate_context_packet_row(
+        row,
+        capability_descriptor={"fine_grained_fingerprints": False},
+        current_provider_generations={"context_search": "gen-1", "graphify": "gen-1"},
+        current_repository_id="repo-a",
+        current_branch="main",
+        changed_paths=[],
+    )
+    assert valid is True
+
+    tree = ast.parse(_CACHE_MODULE_PATH.read_text())
+    func_node = next(
+        node for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "revalidate_context_packet_row"
+    )
+    func_source = ast.get_source_segment(_CACHE_MODULE_PATH.read_text(), func_node)
+    assert "head_commit" not in func_source
+    assert "working_tree_fingerprint" not in func_source
+
+
+def test_revalidate_context_packet_row_multi_provider_generations_dict_all_checked():
+    """Closes Investigate Question 2's finding — packet-level generation comparison is genuinely
+    dict-shaped, not a single-string reuse: only one of two providers' generation actually
+    changed, and that alone must be enough to force revalidation."""
+    row = _level2_row(
+        evidence_dependencies=["docs/a.md"],
+        provider_generations={"context_search": "gen-1", "graphify": "gen-1"},
+    )
+    valid = _mod.revalidate_context_packet_row(
+        row,
+        capability_descriptor={"fine_grained_fingerprints": False},
+        current_provider_generations={"context_search": "gen-2", "graphify": "gen-1"},
+        current_repository_id="repo-a",
+        current_branch="main",
+        changed_paths=[],
+    )
+    assert valid is False
+
+
+def test_revalidate_context_packet_row_never_returns_freshness_or_verification_field():
+    """§3 Non-collapse rule compliance for this ticket's own new function — bare bool only,
+    every return statement in the function body is a literal True/False."""
+    tree = ast.parse(_CACHE_MODULE_PATH.read_text())
+    func_node = next(
+        node for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "revalidate_context_packet_row"
+    )
+    for node in ast.walk(func_node):
+        if isinstance(node, ast.Return):
+            assert (
+                isinstance(node.value, ast.Constant) and isinstance(node.value.value, bool)
+            ), f"revalidate_context_packet_row must return a bare bool, found: {ast.dump(node.value)}"
+
+
+def test_revalidate_context_packet_row_fails_closed_when_finer_basis_selected_but_no_level2_fingerprint_column_exists():
+    """DD4 — Level 2's LEVEL2_CACHE_COLUMNS has no evidence_fingerprints-equivalent column, so when
+    select_validation_basis() returns 'FINER' there is no schema-legal way to perform §4's finer
+    comparison. This must fail closed (force revalidation), never silently assume validity."""
+    row = _level2_row(
+        evidence_dependencies=["docs/a.md"],
+        provider_generations={"context_search": "gen-1"},
+    )
+    valid = _mod.revalidate_context_packet_row(
+        row,
+        capability_descriptor={"fine_grained_fingerprints": True},  # forces select_validation_basis() -> "FINER"
+        current_provider_generations={"context_search": "gen-1"},  # generations identical -- would
+        current_repository_id="repo-a",                            # otherwise look "valid" if this
+        current_branch="main",                                     # branch were wrongly skipped
+        changed_paths=[],
+    )
+    assert valid is False
+
+
+def test_working_tree_overlap_forces_revalidation_called_unmodified_against_evidence_dependencies_shape(
+    monkeypatch,
+):
+    """Direct-reuse proof (Investigate Question 1) — Step 1's real aggregation output
+    (PacketAssembly.evidence_dependencies) is fed into working_tree_overlap_forces_revalidation()
+    with no intermediate transformation: the exact JSON string revalidate_context_packet_row()
+    passes through is json.dumps(sorted(packet.evidence_dependencies))."""
+    from tools import knowledge_gateway_packet_assembly as kpa
+
+    sm_mod = kpa._load_search_mcp_module()
+    monkeypatch.setattr(
+        sm_mod,
+        "_run_search",
+        lambda q: [
+            {
+                "doc_id": "chunk-1",
+                "title": "T",
+                "heading": "H",
+                "source_path": "docs/a.md",
+                "section": "",
+                "score": 0.9,
+                "semantic_score": 0.9,
+                "keyword_score": 0.9,
+                "excerpt": "some real excerpt text",
+            }
+        ],
+    )
+    packet = kpa.assemble_packet(
+        SimpleNamespace(providers_selected=["context_search"]), "test query", 10_000
+    )
+    assert packet.evidence_dependencies == ["docs/a.md"]
+
+    row = _level2_row(evidence_dependencies=packet.evidence_dependencies)
+    assert row["evidence_dependencies"] == json.dumps(sorted(packet.evidence_dependencies))
+
+    spy_calls = []
+    original = _mod.working_tree_overlap_forces_revalidation
+
+    def _spy(evidence_paths_json, changed_paths):
+        spy_calls.append((evidence_paths_json, changed_paths))
+        return original(evidence_paths_json, changed_paths)
+
+    _mod.working_tree_overlap_forces_revalidation = _spy
+    try:
+        valid = _mod.revalidate_context_packet_row(
+            row,
+            capability_descriptor={"fine_grained_fingerprints": False},
+            current_provider_generations={"context_search": "gen-1"},
+            current_repository_id="repo-a",
+            current_branch="main",
+            changed_paths=["docs/a.md"],
+        )
+    finally:
+        _mod.working_tree_overlap_forces_revalidation = original
+
+    assert valid is False
+    assert len(spy_calls) == 1
+    called_json, called_changed_paths = spy_calls[0]
+    assert called_json == json.dumps(sorted(packet.evidence_dependencies))
+    assert called_changed_paths == ["docs/a.md"]
+
+
+def test_no_junction_table_or_new_sqlite_table_introduced_by_this_ticket():
+    """Anti-scope-creep guard (Architecture-Review-corrected — see plan.md's 'Architecture Review
+    Corrections' section). Matches real DDL statements only (`CREATE TABLE IF NOT EXISTS <name> (`)
+    against the live tools/retrieval_cache.py, excluding two docstring occurrences phrased as the
+    literal text 'CREATE TABLE IF NOT EXISTS only -- additive, never...' that a plain \\w+ match
+    would false-positive on. This ticket's own diff never opens tools/retrieval_cache.py at all —
+    the count must equal the pre-ticket baseline of 6 (3 legacy marker-only tables,
+    retrieval_cache_generation, the Level 1 table, the Level 2 table)."""
+    import re
+
+    _RETRIEVAL_CACHE_PATH = _TOOLS_DIR / "retrieval_cache.py"
+    source = _RETRIEVAL_CACHE_PATH.read_text()
+    matches = re.findall(r"CREATE TABLE IF NOT EXISTS \w+\s*\(", source)
+    assert len(matches) == 6, (
+        f"expected exactly 6 real CREATE TABLE DDL statements in tools/retrieval_cache.py, "
+        f"found {len(matches)}: {matches} -- this ticket must not add a junction table or any "
+        f"new SQLite table"
+    )

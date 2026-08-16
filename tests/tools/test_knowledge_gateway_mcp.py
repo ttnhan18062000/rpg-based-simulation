@@ -193,6 +193,13 @@ def test_mcp_json_gains_exactly_one_new_server_entry():
 
 
 def test_search_mcp_py_provably_untouched():
+    """`tools/knowledge_gateway_packet_assembly.py` was a frozen dependency only for this file's
+    own originating ticket (TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE) — it is dropped from this
+    banned-path tuple by TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT, whose entire,
+    twice-Architecture-Review-approved scope is to make targeted edits to exactly that module
+    (dedup identity, conflict-vs-dedup guard, budget-truncation marker). The remaining three paths
+    stay genuinely frozen for every Knowledge Gateway MCP ticket, this one included (per its own
+    AC5/Out-of-Scope)."""
     result = subprocess.run(
         ["git", "diff", "--stat", "HEAD"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
@@ -200,7 +207,6 @@ def test_search_mcp_py_provably_untouched():
     for banned_path in (
         "tools/search_mcp.py",
         "tools/knowledge_gateway_router.py",
-        "tools/knowledge_gateway_packet_assembly.py",
         "tools/retrieval_events.py",
     ):
         assert banned_path not in result.stdout, (
@@ -466,6 +472,55 @@ def test_knowledge_status_reports_real_cache_entry_counts_and_rates_after_writes
 # ---------------------------------------------------------------------------
 # 16 — fail-open: a cache-layer failure never prevents the direct provider path from succeeding
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# 17/18 — TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT: budget-truncation marker
+# ---------------------------------------------------------------------------
+
+def test_knowledge_context_response_schema_accepts_new_budget_marker_field(monkeypatch):
+    router_mod = _mod._load_router_module()
+    pa_mod = _mod._load_packet_assembly_module()
+    pa_search_mod = pa_mod._load_search_mcp_module()
+
+    fake_decision = SimpleNamespace(providers_selected=["context_search"], matched_identifier=None)
+    monkeypatch.setattr(router_mod, "route", lambda q, requested_guarantee=None: fake_decision)
+
+    text_a = "first statement text that costs some real budget"
+    text_b = "second statement text that costs additional real budget beyond the first"
+    monkeypatch.setattr(
+        pa_search_mod,
+        "_run_search",
+        lambda q: [
+            {"excerpt": text_a, "source_path": "docs/a.md"},
+            {"excerpt": text_b, "source_path": "docs/b.md"},
+        ],
+    )
+
+    cost_a = pa_mod.kgmcp_char_heuristic_v1(text_a.strip())
+    response = _mod._run_knowledge_context("budget marker query", budget_tokens=cost_a)
+    _validate_response(response)
+    assert response["budget_truncated"] is True
+    assert response["omitted_statement_count"] == 1
+
+
+def test_run_knowledge_context_budget_truncated_packet_response_has_visible_marker(monkeypatch):
+    router_mod = _mod._load_router_module()
+    pa_mod = _mod._load_packet_assembly_module()
+    pa_search_mod = pa_mod._load_search_mcp_module()
+
+    fake_decision = SimpleNamespace(providers_selected=["context_search"], matched_identifier=None)
+    monkeypatch.setattr(router_mod, "route", lambda q, requested_guarantee=None: fake_decision)
+    monkeypatch.setattr(
+        pa_search_mod,
+        "_run_search",
+        lambda q: [{"excerpt": "a short answer that fits easily", "source_path": "docs/a.md"}],
+    )
+
+    response = _mod._run_knowledge_context("not truncated query", budget_tokens=10_000)
+    _validate_response(response)
+    assert response["budget_truncated"] is False
+    assert response["omitted_statement_count"] == 0
+
 
 def test_cache_layer_failure_is_fail_open_and_never_blocks_the_provider_path(monkeypatch):
     kgc_mod = _mod._load_cache_module()

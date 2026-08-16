@@ -121,6 +121,8 @@
     },
     "budget_requested": { "type": "integer" },
     "budget_returned": { "type": "integer" },
+    "budget_truncated": { "type": "boolean" },
+    "omitted_statement_count": { "type": "integer" },
     "cache_key_version": { "type": "integer" },
     "error": {
       "type": "object",

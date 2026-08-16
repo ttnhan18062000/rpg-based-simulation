@@ -36,6 +36,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Combat-Progression** | Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path | **Bug Fix** | RATIFIED |
 | **Engine / Cognition-Strategy** | Adventure-Route Defer-Reason Observability Gap | **Bounded** | RATIFIED |
 | **Strategic Cognition / Regional Danger** | Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot | **Enforced** | RATIFIED |
+| **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
 
 ---
 
@@ -1253,6 +1254,31 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `tests/unit/strategic/test_region_stabilization_materialization.py::test_high_urgency_regional_danger_interrupts_locked_current_project`,
   `tests/unit/strategic/test_event_interpretation.py::TestStrategicPivotOnDanger::test_project_pivot_when_urgency_exceeds_resistance`,
   `tests/unit/strategic/test_event_interpretation.py::TestStrategicPivotOnDanger::test_no_pivot_when_resistance_high`.
+- **Status**: ACTIVE
+
+### 2.44 Level 2 Packet-Cache Freshness/Verification Column Co-location (TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS)
+- **Subsystem**: Knowledge Gateway MCP / Packet Cache
+- **Old Behavior**: No equivalent — this is a new table
+  (`retrieval_context_packet_cache_rows`, `tools/retrieval_cache.py`,
+  `migration_002_add_level2_tables`), not a modification of prior behavior.
+- **New Behavior**: The new table carries `freshness` and `verification` columns on the same row
+  as lookup-identity fields (`packet_id`, `normalized_intent`, `query_key_hash`), which
+  `docs/engine/contracts/knowledge_gateway_mcp/evidence_cache_identity_contract.md` §3's
+  Non-collapse rule Bullet 1 says a lookup-table row should "never" carry.
+- **Rationale**: **Bounded**. The divergence is schema-only and explicitly bounded: no lookup
+  function exists on this table yet (this ticket adds no `check_*`/`write_*`-style function,
+  guarded by `tests/tools/test_retrieval_cache.py::TestLevel2Migrations::test_no_actual_read_write_functions_added_for_the_new_level2_table`),
+  so Bullet 2's function-return-shape rule is not violated by this ticket. The wire contract's own
+  `required: [status, freshness, verification, ...]` list
+  (`docs/engine/contracts/knowledge_gateway_mcp/knowledge_context_response.schema.json`)
+  operationally justifies persisting last-computed values as row state.
+- **Verification**: `TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING` (the next ticket in
+  this ticket's own sibling sequence) must add a test asserting that whatever lookup function it
+  introduces for `retrieval_context_packet_cache_rows` never returns the raw
+  `freshness`/`verification` column values off a row without a separate, explicit revalidation
+  step first — i.e. Bullet 2 stays enforced procedurally by that ticket's own function design,
+  even though Bullet 1's schema-level "never" is knowingly overridden by this ticket's table
+  shape.
 - **Status**: ACTIVE
 
 ---

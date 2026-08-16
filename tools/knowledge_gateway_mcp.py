@@ -206,6 +206,8 @@ def _run_knowledge_context(
             "answer": "",
             "budget_requested": effective_budget,
             "budget_returned": 0,
+            "budget_truncated": False,
+            "omitted_statement_count": 0,
             "statements": [],
             "context": [],
             "evidence": [],
@@ -247,6 +249,8 @@ def _run_knowledge_context(
         "answer": packet.answer,
         "budget_requested": packet.budget_requested,
         "budget_returned": packet.budget_returned,
+        "budget_truncated": packet.budget_truncated,
+        "omitted_statement_count": packet.omitted_statement_count,
         "provider_failures": packet.provider_failures,
     }
     # `mode` is passed through only if the caller supplied it — never fabricate a default when

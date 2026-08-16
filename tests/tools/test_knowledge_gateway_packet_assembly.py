@@ -511,6 +511,272 @@ def test_module_does_not_modify_or_import_retrieval_cache():
     assert "sqlite3" not in source
 
 
+# ---------------------------------------------------------------------------
+# TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT — Gap 1: content-hash dedup identity
+# ---------------------------------------------------------------------------
+
+def test_dedup_identity_uses_content_hash_not_casefold_normalization(monkeypatch):
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search"],
+        cs_results=[
+            _cs_result(source_path="docs/a.md", heading="X", excerpt="Damage Equals ATK Minus DEF."),
+            _cs_result(source_path="docs/b.md", heading="Y", excerpt="damage equals atk minus def."),
+        ],
+    )
+    # A regression to the old casefold key would collapse these two into one statement.
+    assert len(packet.statements) == 2
+
+
+def test_dedup_collapses_only_on_exact_content_hash_match_across_providers(monkeypatch):
+    shared_text = "Damage equals ATK minus DEF."
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search", "graphify"],
+        cs_results=[_cs_result(
+            source_path="docs/mechanics/02_combat_laws.md",
+            heading="Damage Formula",
+            excerpt=shared_text,
+        )],
+        graphify_result=_graphify_result(stdout=shared_text),
+    )
+    assert len(packet.statements) == 1
+    assert len(packet.statements[0].evidence_ids) == 2
+    assert kpa._dedup_key(packet.statements[0]) == hashlib.sha256(
+        shared_text.strip().encode("utf-8")
+    ).hexdigest()
+
+
+def test_dedup_key_is_stricter_than_semantic_similarity_no_fuzzy_merge(monkeypatch):
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search"],
+        cs_results=[
+            _cs_result(source_path="docs/a.md", heading="X", excerpt="Damage equals ATK minus DEF."),
+            _cs_result(
+                source_path="docs/b.md", heading="Y",
+                excerpt="Damage equals ATK minus DEF plus bonus.",
+            ),
+        ],
+    )
+    assert len(packet.statements) == 2
+
+
+def test_no_semantic_or_embedding_dependency_introduced():
+    """Mirrors test_statement_classification_is_ephemeral_not_persisted's AST-walk pattern —
+    catches silent Phase-5-scope creep (semantic/fuzzy dedup) into this Phase-3 ticket. Walks
+    only real import statements (not docstrings, which already legitimately discuss the
+    embedding/similarity boundary in prose)."""
+    tree = ast.parse(_MODULE_PATH.read_text())
+    forbidden_modules = {
+        "sentence_transformers", "sklearn", "tiktoken", "difflib", "numpy", "scipy",
+    }
+    imported: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported.update(alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imported.add(node.module.split(".")[0])
+    assert not (imported & forbidden_modules), imported & forbidden_modules
+
+
+def test_evidence_hash_and_dedup_key_share_single_content_hash_helper(monkeypatch):
+    stub_calls: list[str] = []
+
+    def _stub_content_hash(text: str) -> str:
+        stub_calls.append(text)
+        return f"STUBBED::{text.strip()}"
+
+    monkeypatch.setattr(kpa, "_content_hash", _stub_content_hash)
+
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search"],
+        cs_results=[_cs_result(excerpt="single source of truth marker text")],
+    )
+    assert packet.evidence[0].evidence_hash == "STUBBED::single source of truth marker text"
+
+    directly_constructed = kpa.Statement(
+        "stmt-999", "single source of truth marker text", "FACT", ["file:x"],
+        priority_tier=2, evidence_hash=None,
+    )
+    assert kpa._dedup_key(directly_constructed) == "STUBBED::single source of truth marker text"
+    assert stub_calls, "expected _content_hash() to actually be called by both code paths"
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT — Gap 2/AC4: dedup-vs-conflict guard
+# ---------------------------------------------------------------------------
+
+def test_dedup_does_not_merge_conflict_flagged_pair_even_with_identical_text(monkeypatch):
+    shared_text = "identical restated sentence"
+    old = _cs_result(
+        source_path="docs/a.md", heading="X", excerpt=shared_text,
+        superseded_by="docs/b.md",
+    )
+    new = _cs_result(
+        source_path="docs/b.md", heading="Y", excerpt=shared_text,
+        supersedes="docs/a.md",
+    )
+    packet = _assemble(monkeypatch, providers_selected=["context_search"], cs_results=[old, new])
+
+    assert len(packet.statements) == 2
+    assert len(packet.conflicts) == 1
+    assert packet.status == "CONFLICTED"
+
+
+def test_conflicting_claims_with_different_text_still_never_merge_and_pass_through_dedup(monkeypatch):
+    old = _cs_result(
+        source_path="docs/a.md", heading="X", excerpt="old value",
+        superseded_by="docs/b.md",
+    )
+    new = _cs_result(
+        source_path="docs/b.md", heading="Y", excerpt="new value",
+        supersedes="docs/a.md",
+    )
+    packet = _assemble(monkeypatch, providers_selected=["context_search"], cs_results=[old, new])
+
+    assert len(packet.statements) == 2
+    assert len(packet.conflicts) == 1
+
+
+def test_conflict_index_pairs_correspondence_invariant_raises_on_desync(monkeypatch):
+    """Deliberately desyncs render_candidates()'s statement cardinality from provider_results so
+    the Step 4 cardinality assertion in assemble_packet() must raise, proving the desync fails
+    loudly rather than silently letting AC4's conflict-vs-dedup exclusion misfire."""
+    real_render_candidates = kpa.render_candidates
+
+    def _desynced_render_candidates(provider_results, query_text):
+        statements, context_entries, evidence_entries = real_render_candidates(
+            provider_results, query_text
+        )
+        extra = dataclasses.replace(
+            statements[0], statement_id="stmt-extra", text="not backed by any provider result"
+        )
+        return [*statements, extra], context_entries, evidence_entries
+
+    monkeypatch.setattr(kpa, "render_candidates", _desynced_render_candidates)
+
+    with pytest.raises(AssertionError):
+        _assemble(
+            monkeypatch,
+            providers_selected=["context_search"],
+            cs_results=[_cs_result(excerpt="real single provider result")],
+        )
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT — Gap 3/AC2/AC3: budget-truncation marker
+# ---------------------------------------------------------------------------
+
+def test_budget_truncation_produces_visible_marker_when_content_is_dropped(monkeypatch):
+    text_a = "first statement text that costs some real budget"
+    text_b = "second statement text that costs additional real budget beyond the first"
+    cost_a = kpa.kgmcp_char_heuristic_v1(text_a.strip())
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search"],
+        cs_results=[
+            _cs_result(source_path="docs/a.md", heading="A", excerpt=text_a),
+            _cs_result(source_path="docs/b.md", heading="B", excerpt=text_b),
+        ],
+        budget_requested=cost_a,
+    )
+    assert packet.budget_truncated is True
+    assert packet.omitted_statement_count == 1
+
+
+def test_no_budget_truncation_marker_is_false_and_present_when_everything_fits(monkeypatch):
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search"],
+        cs_results=[_cs_result(excerpt="small statement that fits comfortably in the budget")],
+        budget_requested=10_000,
+    )
+    assert packet.budget_truncated is False
+    assert packet.omitted_statement_count == 0
+
+
+def test_budget_truncation_marker_set_in_sec16_total_failure_fallback_too(monkeypatch):
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search"],
+        cs_results=[_cs_result(excerpt="a" * 500)],
+        budget_requested=1,
+    )
+    assert packet.statements == []
+    assert packet.budget_truncated is True
+    assert packet.omitted_statement_count == 1
+
+
+# ---------------------------------------------------------------------------
+# evidence_dependencies (TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION, plan.md DD1)
+# ---------------------------------------------------------------------------
+
+def test_evidence_dependencies_aggregated_from_packet_evidence_paths(monkeypatch):
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search"],
+        cs_results=[
+            _cs_result(source_path="docs/a.md", heading="A", excerpt="statement about a"),
+            _cs_result(source_path="docs/b.md", heading="B", excerpt="statement about b"),
+        ],
+    )
+    assert packet.evidence_dependencies == ["docs/a.md", "docs/b.md"]
+
+
+def test_evidence_dependencies_excludes_paths_from_omitted_budget_truncated_statements(monkeypatch):
+    text_a = "first statement text that costs some real budget"
+    text_b = "second statement text that costs additional real budget beyond the first"
+    cost_a = kpa.kgmcp_char_heuristic_v1(text_a.strip())
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search"],
+        cs_results=[
+            _cs_result(source_path="docs/a.md", heading="A", excerpt=text_a),
+            _cs_result(source_path="docs/b.md", heading="B", excerpt=text_b),
+        ],
+        budget_requested=cost_a,
+    )
+    assert packet.budget_truncated is True
+    assert packet.evidence_dependencies == ["docs/a.md"]
+    assert "docs/b.md" not in packet.evidence_dependencies
+
+
+def test_evidence_dependencies_omits_graphify_symbol_evidence_with_no_path(monkeypatch):
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search", "graphify"],
+        cs_results=[_cs_result(source_path="docs/a.md", heading="A", excerpt="statement about a")],
+        graphify_result=_graphify_result(),
+    )
+    assert any(entry.path is None for entry in packet.evidence)
+    assert packet.evidence_dependencies == ["docs/a.md"]
+    assert None not in packet.evidence_dependencies
+    assert "None" not in packet.evidence_dependencies
+
+
+def test_evidence_dependencies_empty_in_section16_budget_assembly_failure_not_full_unfiltered_evidence(
+    monkeypatch,
+):
+    """DD1's own correction test — the section-16 budget-assembly-failure branch leaves
+    `final_evidence` (packet.evidence) as the full, unfiltered evidence_entries list, but
+    `final_context` (and therefore evidence_dependencies) must be empty in that branch, matching
+    the packet's own empty answer/statements. Asserting evidence_dependencies == [] here, while
+    packet.evidence is non-empty, is the direct proof that evidence_dependencies is aggregated
+    from final_context and not final_evidence."""
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search"],
+        cs_results=[_cs_result(source_path="docs/a.md", excerpt="a" * 500)],
+        budget_requested=1,
+    )
+    assert packet.statements == []
+    assert packet.context == []
+    assert packet.evidence  # final_evidence deliberately left unfiltered on this branch
+    assert packet.evidence_dependencies == []
+
+
 def test_module_does_not_edit_knowledge_gateway_router():
     """`tools/knowledge_gateway_router.py` is untracked in this working tree (its own ticket has
     not yet been committed), so a `git diff HEAD` check would be a silent no-op regardless of

@@ -8723,16 +8723,19 @@
     via importlib.util.spec_from_file_location, calls _run_search()/match_symbol_name()
     directly using RoutingDecision.providers_selected); render_candidates() (Step
     4, Statement/ContextEntry/EvidenceEntry construction, verbatim text rendering);
-    deduplicate_statements() (Step 5, exact-text-match dedup merging evidence_ids);
-    build_negative_claim_support() (Step 6, NegativeClaimSupport per Sec.13.1); build_conflicts()
-    (Step 7, structural-only conflict scan per Sec.14); assemble_within_budget() (Step
-    8, priority-tier sort plus real kgmcp_char_heuristic_v1-measured greedy truncation);
-    Sec.16 budget-failure fallback wired into assemble_packet() (Step 9); assemble_packet()
-    orchestrator and PacketAssembly dataclass (Step 10). docs/plans/knowledge-gateway-mcp-proposal.md
-    Sec.9.1, Sec.13, Sec.13.1, Sec.14, Sec.15, Sec.16 (packet-assembly and token-budgeting
-    specification implemented). docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md
-    Sec.8 (kgmcp_char_heuristic_v1 formula implemented as a real callable for the
-    first time).
+    deduplicate_statements() (Step 5, content-hash dedup identity via _content_hash()
+    merging evidence_ids, conflict-signal-aware exclusion guard -- text amended by
+    TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT, see INFRA-347 for the ticket's
+    own new entry); build_negative_claim_support() (Step 6, NegativeClaimSupport per
+    Sec.13.1); build_conflicts() (Step 7, structural-only conflict scan per Sec.14);
+    assemble_within_budget() (Step 8, priority-tier sort plus real kgmcp_char_heuristic_v1-measured
+    greedy truncation); Sec.16 budget-failure fallback wired into assemble_packet()
+    (Step 9); assemble_packet() orchestrator and PacketAssembly dataclass (Step 10).
+    docs/plans/knowledge-gateway-mcp-proposal.md Sec.9.1, Sec.13, Sec.13.1, Sec.14,
+    Sec.15, Sec.16 (packet-assembly and token-budgeting specification implemented).
+    docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md Sec.8
+    (kgmcp_char_heuristic_v1 formula implemented as a real callable for the first
+    time).
   proof_type: regression
   test_path: tests/tools/test_knowledge_gateway_packet_assembly.py
   divergence_note: null
@@ -9074,17 +9077,27 @@
     after `MAY_LIST_COLUMNS` at :87-106, not merged into it; this ticket''s own diff
     shipped 21 of the 22 entries now present -- the 22nd, `redaction_policy_version`
     at :140, was added afterward by the sibling TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING/migration_003,
-    see INFRA-343), :212-262 (`migration_001_add_level1_tables(conn)` -- two `CREATE
+    see INFRA-343), :255-307 (`migration_001_add_level1_tables(conn)` -- two `CREATE
     TABLE IF NOT EXISTS` statements for `retrieval_cache_generation` and `retrieval_provider_result_cache_rows`,
     followed by the DELETE+INSERT single-row-generation pair and one `conn.commit()`;
-    standalone, not called from `_get_connection()` (:149-158, unchanged), `_init_schema()`
-    (:161-205, unchanged), or any of the 8 existing `check_*_cache()`/`write_*_cache()`/`prune()`/`cmd_stats()`
+    standalone, not called from `_get_connection()` (:192-201, shifted -- unchanged
+    in shape), `_init_schema()` (:204-248, shifted -- unchanged in shape), or any
+    of the 8 existing `check_*_cache()`/`write_*_cache()`/`prune()`/`cmd_stats()`
     call sites). Line numbers corrected as of TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING
     (INFRA-343), whose own additions to tools/retrieval_cache.py (new top-of-file
     sys.path bootstrap/redaction import, migration_003, the Level 1 read/write functions)
     shifted this entry''s original line numbers below; the DDL/constants/migration-function
     shape and 21-columns-as-shipped-by-this-ticket claim above are unaffected by that
-    shift.'
+    shift. Line numbers corrected a second time as of TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS
+    (INFRA-346), whose migration_002_add_level2_tables(conn) insertion between migration_001
+    and migration_003 (plus the new LEVEL2_CACHE_COLUMNS block) shifted this entry''s
+    _get_connection()/_init_schema()/migration_001_add_level1_tables() line numbers
+    further below; the DDL/constants/migration-function shape and 21-columns-as-shipped-by-this-ticket
+    claim above remain unaffected. Also note: the retrieval_cache_schema_version module
+    constant cited above at :62 (as `int = 1`, this ticket''s own originally-shipped
+    value) is now live-valued `int = 2` as of INFRA-346''s bump -- the :62 line number
+    is still correct, only the literal value quoted has since changed by a later ticket''s
+    own in-scope, intentional edit; not a claim this entry''s own shipped code regressed.'
   proof_type: regression
   test_path: tests/tools/test_retrieval_cache.py::TestMigrations,tests/tools/test_retrieval_cache.py::TestCrashRecovery::test_deleted_cache_db_rebuild_does_not_silently_resurrect_level1_payload_rows
   divergence_note: null
@@ -9221,23 +9234,57 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: tools/knowledge_gateway_cache.py:132-155 (`compute_lookup_identity()`),
-    :157-163 (`select_validation_basis()`), :191-194 (`is_branch_compatible()`), :196-202
-    (`working_tree_overlap_forces_revalidation()`), :204-219 (`revalidate_cache_row()`
-    -- Non-collapse rule, consulted only after a lookup HIT), :226-249 (`perform_cache_lookup()`
-    orchestrator), :262-335 (`perform_cache_write()` orchestrator -- refuses PARTIAL-status
-    responses at :282-283, routes every write through `knowledge_gateway_redaction.evaluate_write_candidate()`
-    at :306 (verdict checked at :307, gating the write call) with no bypass); tools/retrieval_cache.py:265-283
+  v2_evidence: tools/knowledge_gateway_cache.py:137-154 (`compute_lookup_identity()`),
+    :162-166 (`select_validation_basis()`), :196-198 (`is_branch_compatible()`), :201-206
+    (`working_tree_overlap_forces_revalidation()`), :209-224 (`revalidate_cache_row()`
+    -- Non-collapse rule, consulted only after a lookup HIT), :285-308 (`perform_cache_lookup()`
+    orchestrator), :321-394 (`perform_cache_write()` orchestrator -- refuses PARTIAL-status
+    responses at :341-342, routes every write through `knowledge_gateway_redaction.evaluate_write_candidate()`
+    at :365 (verdict checked at :366, gating the write call) with no bypass); tools/retrieval_cache.py:367-385
     (`migration_003_add_redaction_policy_version_column()`, PRAGMA table_info-guarded;
-    `LEVEL1_CACHE_COLUMNS` grew 21->22 at :115-146), :531-534 (`ProviderResultCacheLookup`),
-    :550-591 (`check_provider_result_cache()` -- DD10 PK+Python-comparison identity
-    check), :598-607 (`_get_level1_connection()`, opens CACHE_DB_PATH via `knowledge_gateway_redaction.open_connection_with_limits()`),
-    :610-646 (`write_provider_result_cache()` -- sole real INSERT OR REPLACE path),
-    :651-662 (`record_provider_result_cache_hit()`), :667-690 (`provider_result_cache_stats()`);
-    tools/knowledge_gateway_mcp.py:128-135 (`_load_cache_module()`), :220-237 (cache-check
-    hook in `_run_knowledge_context()`, fail-open try/except at :225-231), :315-323
-    (cache-write hook, fail-open try/except at :320-323), :346-410 (`_run_knowledge_status()`,
-    real cache-domain fields populated at :391-407 from `provider_result_cache_stats()`).
+    `LEVEL1_CACHE_COLUMNS` grew 21->22 at :115-142), :634-638 (`ProviderResultCacheLookup`),
+    :652-697 (`check_provider_result_cache()` -- DD10 PK+Python-comparison identity
+    check), :700-709 (`_get_level1_connection()`, opens CACHE_DB_PATH via `knowledge_gateway_redaction.open_connection_with_limits()`),
+    :712-750 (`write_provider_result_cache()` -- sole real INSERT OR REPLACE path),
+    :753-766 (`record_provider_result_cache_hit()`), :769-791 (`provider_result_cache_stats()`);
+    tools/knowledge_gateway_mcp.py:128-135 (`_load_cache_module()`, unshifted -- precedes
+    both of this ticket's insertion points), :222-239 (cache-check hook in `_run_knowledge_context()`,
+    fail-open try/except at :227-233; shifted +2 from :220-237/:225-231 by TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT's
+    `budget_truncated`/`omitted_statement_count` insertion into the router-failure
+    `fallback_response` dict above this hook), :319-327 (cache-write hook, fail-open
+    try/except at :324-327; shifted +4 from :315-323/:320-323 by that same ticket's
+    second insertion of the same two fields into the main response dict, which lands
+    above this hook too), :350-414 (`_run_knowledge_status()`, real cache-domain fields
+    populated at :395-411 from `provider_result_cache_stats()`; shifted +4 from :346-410/:391-407,
+    cumulative with both insertions above). Line numbers corrected as of TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS
+    (INFRA-346), whose migration_002_add_level2_tables(conn) insertion (between migration_001
+    and migration_003) plus the new LEVEL2_CACHE_COLUMNS block shifted every function/class
+    this entry cites below migration_001 in tools/retrieval_cache.py; the real/tested
+    shape of every cited function (migration_003_add_redaction_policy_version_column,
+    ProviderResultCacheLookup, check_provider_result_cache, _get_level1_connection,
+    write_provider_result_cache, record_provider_result_cache_hit, provider_result_cache_stats)
+    is unaffected by that shift -- confirmed byte-identical apart from position via
+    direct diff against this ticket's own change set, which touches only tools/retrieval_cache.py's
+    schema_version constant, LEVEL2_CACHE_COLUMNS, migration_001's INSERT literal,
+    and migration_002 itself (see INFRA-346). Line numbers into tools/knowledge_gateway_mcp.py
+    corrected as of TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT (INFRA-347),
+    whose two `budget_truncated`/`omitted_statement_count` insertions (fallback_response
+    dict, then the main response dict) shifted every function/hook this entry cites
+    below its first insertion point in tools/knowledge_gateway_mcp.py; the real/tested
+    shape of every cited hook/function is unaffected by the shift -- confirmed via
+    `git diff HEAD -- tools/knowledge_gateway_mcp.py` showing exactly two +2-line
+    additive hunks, both inside `_run_knowledge_context()`'s response dicts, with
+    no other lines touched (see INFRA-347). Line numbers into tools/knowledge_gateway_cache.py
+    corrected a second time as of TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION
+    (INFRA-348), whose new "Step 9" section (_level2_repo_branch_scope()/revalidate_context_packet_row(),
+    55 net new lines) was inserted immediately after revalidate_cache_row() and before
+    perform_cache_lookup(), plus a 5-line module-docstring correction above it --
+    confirmed via `git diff HEAD -- tools/knowledge_gateway_cache.py` showing exactly
+    those two additive hunks and no other lines touched. compute_lookup_identity()/select_validation_basis()/is_branch_compatible()/working_tree_overlap_forces_revalidation()/revalidate_cache_row()
+    shift only from the docstring hunk (+5); perform_cache_lookup()/perform_cache_write()
+    (and their internal :341-342/:365/:366 line refs) shift by the full +59 (docstring
+    +5, Step 9 insertion +54) since both sit after the insertion point. The real/tested
+    shape of every cited function is unaffected by either shift (see INFRA-348).
   proof_type: regression
   test_path: 'tests/tools/test_knowledge_gateway_cache.py (20 tests: identity/revalidation/orchestrator
     unit+fixture tests plus architecture guards, including test_per_key_stampede_guard_prevents_concurrent_duplicate_write
@@ -9440,3 +9487,265 @@
     this entry does not cite a specific commit hash since the parity ledger schema
     has no commit field, and the real code/doc/test state is independently verifiable
     regardless of which commit it landed under.'
+- id: INFRA-346
+  text: "Level 2 assembled context-packet cache schema/migration added -- TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS\
+    \ (1st child of TCK-20260816-KNOWLEDGE-GATEWAY-MCP-PHASE3-EPIC), implementing\
+    \ the already-reserved `migration_002_add_level2_tables(conn)` ordinal from docs/engine/contracts/knowledge_gateway_mcp/cache_migration_plan.md\
+    \ \xA72 as real code for the first time, per proposal \xA710.2's Level 2 row shape\
+    \ and \xA710.3's conceptual CachedPacket field list. Adds `LEVEL2_CACHE_COLUMNS`\
+    \ (28-column frozenset allowlist, one field renamed from the proposal's literal\
+    \ `schema_version` to `response_schema_version` per DD3, to avoid colliding with\
+    \ this module's own `retrieval_cache_schema_version` DDL constant) and `migration_002_add_level2_tables(conn)`,\
+    \ which creates the new `retrieval_context_packet_cache_rows` table (`CREATE TABLE\
+    \ IF NOT EXISTS`, all 28 `LEVEL2_CACHE_COLUMNS` columns) and stamps `retrieval_cache_generation`\
+    \ with its own hardcoded literal target version (2). Also applies the Architecture-Review-mandated\
+    \ DD2 correction decoupling `migration_001_add_level1_tables`'s own INSERT from\
+    \ the live `retrieval_cache_schema_version` module constant (now a hardcoded literal\
+    \ `1`, value-neutral since the constant was already `1` at that point) and bumps\
+    \ the module constant itself `1` -> `2`. Schema/migration only -- no read/write\
+    \ function against the new table exists yet; that is TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING's\
+    \ job."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'tools/retrieval_cache.py:62 (`retrieval_cache_schema_version: int
+    = 2`, bumped from `1`, immediately after `RETRIEVAL_VERSION` at :56), :144-185
+    (`LEVEL2_CACHE_COLUMNS: frozenset[str]` -- the 28-entry column allowlist, placed
+    immediately after `LEVEL1_CACHE_COLUMNS` at :115-142, with the `response_schema_version`
+    rename comment at :148-149 documenting the DD3 disambiguation against the module-level
+    `retrieval_cache_schema_version` constant), :310-364 (`migration_002_add_level2_tables(conn)`
+    -- docstring at :311-323 states the reserved-ordinal/DD2/DD6 rules; the single
+    `conn.execute(...)` call wrapping the `CREATE TABLE IF NOT EXISTS retrieval_context_packet_cache_rows`
+    statement with all 28 columns at :324-357; `DELETE FROM retrieval_cache_generation`
+    at :358 followed by the hardcoded-literal-`2` `INSERT` at :359-363 and `conn.commit()`
+    at :364; inserted textually between `migration_001_add_level1_tables` (ending
+    :307) and `migration_003_add_redaction_policy_version_column` (starting :367),
+    preserving migration_003''s ordinal-3 position exactly), :255-307 (`migration_001_add_level1_tables(conn)`,
+    its own DELETE+INSERT pair now at :299-306 -- the DD2-corrected comment at :300-301
+    and the hardcoded-literal-`1` `INSERT` at :302-306, replacing the prior direct
+    read of the live `retrieval_cache_schema_version` module constant; value-neutral,
+    since the constant was already `1` at the time this migration was originally written).
+    Line numbers verified directly against the current file state (this ticket''s
+    own diff), not inherited from any prior entry''s citations.'
+  proof_type: regression
+  test_path: 'tests/tools/test_retrieval_cache.py::TestLevel2Migrations (13 tests:
+    function-existence/reserved-ordinal-and-source-position AST check, column-set-matches-LEVEL2_CACHE_COLUMNS
+    check, fresh-DB/legacy-only-DB/Level-1-already-migrated-DB idempotency and no-data-loss
+    checks, retrieval_packet_cache_rows and retrieval_provider_result_cache_rows byte-unmodified
+    checks, retrieval_cache_generation stamped-to-2 check, and test_migration_002_never_creates_a_second_database_file
+    -- the post-Test-phase AC6 coverage-gap fix asserting no second database file
+    is created in the isolated tmp_path cache directory), tests/tools/test_knowledge_gateway_redaction.py::TestRedactionPolicyVersion::test_redaction_policy_version_distinct_from_retrieval_version
+    (corrected assertion: `rc.retrieval_cache_schema_version == 2`, was `== 1`, to
+    track this ticket''s constant bump; no other assertion in that test touched)'
+  divergence_note: null
+  support_boundary: "Schema/migration only: this ticket adds no read/write function\
+    \ against the new `retrieval_context_packet_cache_rows` table (no `check_*_cache`/`write_*_cache`-style\
+    \ function ships here), and no read/write wiring into the live gateway exists\
+    \ yet -- tools/knowledge_gateway_mcp.py, tools/knowledge_gateway_router.py, and\
+    \ tools/knowledge_gateway_packet_assembly.py are all confirmed byte-unchanged\
+    \ by this ticket's own diff (empty `git diff --stat HEAD` for all three). The\
+    \ existing marker-only `retrieval_packet_cache_rows` table (owned by the separate,\
+    \ unrelated TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC) and Level 1's `retrieval_provider_result_cache_rows`\
+    \ table plus `migration_003_add_redaction_policy_version_column` remain byte-unchanged\
+    \ by this ticket. `knowledge-index/retrieval_cache.db` remains the single cache\
+    \ database file -- no second database created (see test_migration_002_never_creates_a_second_database_file\
+    \ above). This entry also carries a known, formally-recorded intentional divergence\
+    \ from docs/engine/contracts/knowledge_gateway_mcp/evidence_cache_identity_contract.md\
+    \ \xA73's Non-collapse rule: the new table's `freshness`/`verification` columns\
+    \ sit on the same row as lookup-identity fields, which \xA73 Bullet 1 says a lookup-table\
+    \ row should never carry. Recorded in docs/guidelines/intentional_divergences.md\
+    \ \xA72.44 (\"Level 2 Packet-Cache Freshness/Verification Column Co-location\"\
+    ), rationale class Bounded -- justified because no lookup function exists on this\
+    \ table yet, so Bullet 2's function-return-shape rule cannot be violated by this\
+    \ schema-only ticket. \xA72.44's own Verification clause obligates the next ticket,\
+    \ TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING, to add a test asserting\
+    \ that whatever lookup function it introduces for `retrieval_context_packet_cache_rows`\
+    \ never returns raw `freshness`/`verification` column values off a row without\
+    \ a separate, explicit revalidation step first -- that obligation is inherited\
+    \ by that later ticket, not discharged here."
+- id: INFRA-347
+  text: 'Knowledge Gateway MCP Phase 3 packet-assembly hardening -- TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT
+    (sibling of TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS/INFRA-346, twice
+    reviewed by Architecture-Review with 2 real safety-critical corrections, both
+    independently proven non-vacuous by Architecture-Verify via live break/restore).
+    This ticket does NOT originate multi-provider packet deduplication or caller-budget
+    enforcement -- both mechanisms (deduplicate_statements()/assemble_within_budget()/kgmcp_char_heuristic_v1())
+    already existed as real, tested code as of Phase 1''s TCK-20260815-KGMCP-P1-PACKET-ASSEMBLY,
+    per INFRA-336''s own corrected text. Instead it hardens both: (1) replaces dedup
+    identity from casefold-text equality with a single shared _content_hash() sha256
+    helper (one call site in the whole module, verified by direct grep), threaded
+    through Statement.evidence_hash and _dedup_key(); (2) adds a conflict-signal-aware
+    dedup guard -- _conflict_signal_index_pairs(), reusing the existing _structural_supersession_signal()
+    primitive build_conflicts() already calls -- plus a fail-loud cardinality assertion
+    in assemble_packet() (len(statements) == len(context_search results) + (1 if graphify
+    else 0)) so two conflict-flagged items can never silently collapse into one deduplicated
+    statement even when their rendered text is byte-identical (AC4, the ticket''s
+    single most safety-critical requirement); and (3) adds PacketAssembly.budget_truncated/omitted_statement_count
+    visibility fields, threaded into knowledge_gateway_mcp.py''s _run_knowledge_context()
+    response and the router-failure fallback_response, plus additive (non-schema_version-bumping)
+    properties on knowledge_context_response.schema.json, so budget-driven truncation
+    is always visible, never silent (AC2/AC3). Deduplication continues to never merge
+    genuinely conflicting claims into one silently-resolved item (AC4); tools/knowledge_gateway_router.py
+    remains byte-unchanged (AC5).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'tools/knowledge_gateway_packet_assembly.py:234-242 (`_content_hash()`,
+    single sha256(text.strip().encode(''utf-8'')).hexdigest() source of truth, confirmed
+    by direct grep to be the module''s only hashlib.sha256(...) literal); :338-341
+    (`_dedup_key()`, returns statement.evidence_hash when present, falls back to _content_hash(statement.text)
+    only for directly-constructed test fixtures); :344-364 (`_conflict_signal_index_pairs()`,
+    reuses the existing _structural_supersession_signal() primitive build_conflicts()
+    already calls over the same context_search+graphify ordering render_candidates()
+    uses -- not a second, parallel conflict-detection heuristic); :367-370/:393-398
+    (`deduplicate_statements()`''s new `conflict_index_pairs` parameter -- on a dedup-key
+    collision between two statements whose original indices are a known conflict-flagged
+    pair, the later statement is forced into its own distinct group via `f"{key}::conflict-{idx}"`
+    instead of merging); :680-688 (assemble_packet()''s Architecture-Review-mandated
+    fail-loud cardinality assertion, run immediately after _conflict_signal_index_pairs()
+    and before deduplicate_statements() is called); :631-632 (`PacketAssembly.budget_truncated:
+    bool` / `omitted_statement_count: int` field declarations); :707-708 (their computation
+    immediately after assemble_within_budget() returns: omitted_statement_count =
+    len(statements) - len(included_statements), budget_truncated = omitted_statement_count
+    > 0); :760-761 (threaded into the PacketAssembly constructor). tools/knowledge_gateway_mcp.py:209-210
+    (budget_truncated=False/omitted_statement_count=0 in the router-failure fallback_response,
+    since nothing was ever truncated by budget on that path); :252-253 (packet.budget_truncated/packet.omitted_statement_count
+    threaded into the main _run_knowledge_context() response dict). docs/engine/contracts/knowledge_gateway_mcp/knowledge_context_response.schema.json:124-125
+    (additive, non-required budget_truncated/omitted_statement_count properties, no
+    schema_version bump -- matches the provider_failures precedent). Line numbers
+    corrected a second time as of TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION
+    (INFRA-348), whose additive `evidence_dependencies: list[str]` PacketAssembly
+    field (+1 line before `conflicts`) and `_evidence_dependencies()` helper (+15
+    lines, inserted immediately after the dataclass) shifted every line this entry
+    cites at or below the dataclass by +18 (field declarations +1 only, since they
+    sit above the helper; the cardinality assertion and its computation shift the
+    full +18); a further `evidence_dependencies = _evidence_dependencies(final_context)`
+    line plus its `evidence_dependencies=evidence_dependencies,` constructor argument
+    (+2 lines total, both ahead of the constructor''s `conflicts=conflicts,` line)
+    push the constructor-threading citation to +20. Confirmed via `git diff HEAD --
+    tools/knowledge_gateway_packet_assembly.py` showing these as the only additional
+    hunks beyond this entry''s own diff. The real/tested shape of every cited function/field
+    is unaffected by the shift (see INFRA-348).'
+  proof_type: regression
+  test_path: 'tests/tools/test_knowledge_gateway_packet_assembly.py (11 new tests:
+    test_dedup_identity_uses_content_hash_not_casefold_normalization, test_dedup_collapses_only_on_exact_content_hash_match_across_providers,
+    test_dedup_key_is_stricter_than_semantic_similarity_no_fuzzy_merge, test_no_semantic_or_embedding_dependency_introduced,
+    test_evidence_hash_and_dedup_key_share_single_content_hash_helper, test_dedup_does_not_merge_conflict_flagged_pair_even_with_identical_text,
+    test_conflicting_claims_with_different_text_still_never_merge_and_pass_through_dedup,
+    test_conflict_index_pairs_correspondence_invariant_raises_on_desync, test_budget_truncation_produces_visible_marker_when_content_is_dropped,
+    test_no_budget_truncation_marker_is_false_and_present_when_everything_fits, test_budget_truncation_marker_set_in_sec16_total_failure_fallback_too);
+    tests/tools/test_knowledge_gateway_mcp.py (2 new tests: test_knowledge_context_response_schema_accepts_new_budget_marker_field,
+    test_run_knowledge_context_budget_truncated_packet_response_has_visible_marker).
+    All 60 tests in both files (38+22) reconfirmed passing this session via `.venv/bin/python3
+    -m pytest tests/tools/test_knowledge_gateway_packet_assembly.py tests/tools/test_knowledge_gateway_mcp.py
+    -q`.'
+  divergence_note: null
+  support_boundary: 'This ticket hardens already-existing Phase 1 dedup/budget mechanisms
+    -- it does NOT originate them: dedup and budget-token flow (deduplicate_statements()/assemble_within_budget()/kgmcp_char_heuristic_v1())
+    already existed as real, tested code before this ticket, per the corrected INFRA-336
+    entry. tools/knowledge_gateway_router.py confirmed byte-unchanged this session
+    (`git diff --stat HEAD` shows zero lines). tools/knowledge_gateway_cache.py and
+    tools/retrieval_cache.py are untouched by this ticket (retrieval_cache.py''s visible
+    git diff is entirely staged, pre-existing from the already-committed sibling TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS
+    ticket -- confirmed by an empty `git diff` against the index for both files).
+    Both Architecture-Review-mandated safety corrections -- the fail-loud cardinality
+    assertion and the shared _content_hash() helper -- were independently proven non-vacuous
+    by Architecture-Verify via a live break/restore test: temporarily removing the
+    cardinality assertion made test_conflict_index_pairs_correspondence_invariant_raises_on_desync
+    fail (''DID NOT RAISE AssertionError''), and temporarily reintroducing a second
+    inline hashlib.sha256(...) literal in _dedup_key()''s fallback made test_evidence_hash_and_dedup_key_share_single_content_hash_helper
+    fail on hash mismatch; both were then restored byte-identical (diffed against
+    a pre-change backup) before the final test run.'
+- id: INFRA-348
+  text: 'Level 2 context-packet cache dependency records and targeted-invalidation
+    logic -- TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION (sibling of TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS/INFRA-346
+    and TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT/INFRA-347, 2 Review
+    passes). Implements docs/plans/knowledge-gateway-mcp-proposal.md Sec.20 Phase
+    3''s fourth bullet, "Add packet dependency records and targeted invalidation,"
+    as two additive pieces, neither wired into a live Level 2 lookup/write path yet
+    (that is TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING''s job): (1) a new
+    `PacketAssembly.evidence_dependencies: list[str]` field, populated by `_evidence_dependencies()`
+    from `assemble_packet()`''s `final_context` (DD1 -- correctly sourced, not `final_evidence`,
+    per Architecture-Review''s correction; the two diverge on the Sec.16 budget-assembly-failure
+    branch, where `final_context` is emptied but `final_evidence` is deliberately
+    left as the full unfiltered list by the sibling DEDUP-BUDGET ticket''s own design
+    -- aggregating from `final_evidence` would have produced an inaccurate superset
+    AC1 explicitly forbids); (2) `_level2_repo_branch_scope()` and `revalidate_context_packet_row()`
+    in tools/knowledge_gateway_cache.py, a new Level 2 sibling to `revalidate_cache_row()`
+    that reuses evidence_cache_identity_contract.md Sec.5''s already-frozen `is_branch_compatible()`/`working_tree_overlap_forces_revalidation()`
+    primitives unmodified (only a one-line adapter reconstructs the combined repo_branch_scope
+    string from Level 2''s split repository_id/branch columns), and fails closed (DD4
+    -- returns False, forcing revalidation) when `select_validation_basis()` returns
+    "FINER", since Level 2''s schema has no evidence_fingerprints-equivalent column
+    to support Sec.4''s finer-grained comparison. Both DD1 and DD4 were independently
+    proven genuine, non-vacuous behavior by Architecture-Verify via live break/restore
+    testing, not check-passing busywork. `revalidate_cache_row()` itself is byte-unchanged;
+    `revalidate_context_packet_row()` is a genuinely new orchestrator (not a parameter
+    tweak) because Level 1''s orchestrator hardcodes Level 1 column names/shapes that
+    either do not exist at Level 2 or are differently shaped (provider_generations
+    is a per-provider dict at Level 2, vs. Level 1''s single string), and because
+    Level 2 has no lookup-orchestrator caller yet to do the branch check first.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'tools/knowledge_gateway_packet_assembly.py:627 (`PacketAssembly.evidence_dependencies:
+    list[str]` field, placed after `evidence`, before `conflicts`); :637-651 (`_evidence_dependencies(context_entries)`,
+    `sorted({c.path for c in context_entries if c.path})`); :744 (`evidence_dependencies
+    = _evidence_dependencies(final_context)`, called from `final_context` per DD1,
+    not `final_evidence`); :756 (threaded into the `PacketAssembly` constructor).
+    tools/knowledge_gateway_cache.py:227-229 (Step 9 section header, "Level 2 packet-level
+    revalidation"); :231-241 (`_level2_repo_branch_scope(repository_id, branch)`,
+    pure `f"{repository_id}::{branch}"` string join, never a git read); :244-278 (`revalidate_context_packet_row(row,
+    *, capability_descriptor, current_provider_generations, current_repository_id,
+    current_branch, changed_paths)`, in order: :259-260 branch-compatibility check
+    via `is_branch_compatible()` (returns False immediately on incompatibility, before
+    any other comparison), :262-263 `working_tree_overlap_forces_revalidation()` against
+    `row["evidence_dependencies"]`, :265-272 `select_validation_basis()` fail-closed
+    False on any basis other than "PROVIDER_GENERATION" (DD4), :274-277 per-provider
+    dict comparison of `json.loads(row["provider_generations"])` against `current_provider_generations`).
+    `revalidate_cache_row()` (tools/knowledge_gateway_cache.py:209-224) confirmed
+    byte-unchanged by this ticket''s diff (`git diff HEAD -- tools/knowledge_gateway_cache.py`
+    shows exactly two additive hunks: a 5-line module-docstring correction and the
+    Step 9 insertion, nothing else touched).'
+  proof_type: regression
+  test_path: 'tests/tools/test_knowledge_gateway_packet_assembly.py (4 new tests:
+    test_evidence_dependencies_aggregated_from_packet_evidence_paths, test_evidence_dependencies_excludes_paths_from_omitted_budget_truncated_statements,
+    test_evidence_dependencies_omits_graphify_symbol_evidence_with_no_path, test_evidence_dependencies_empty_in_section16_budget_assembly_failure_not_full_unfiltered_evidence
+    [Plan-derived, DD1]); tests/tools/test_knowledge_gateway_cache.py (10 new tests:
+    test_level2_repo_branch_scope_matches_current_repo_branch_scope_join_format, test_revalidate_context_packet_row_rejects_on_changed_paths_intersection,
+    test_revalidate_context_packet_row_survives_unrelated_changed_path, test_revalidate_context_packet_row_rejects_cross_branch_even_with_identical_dependencies,
+    test_revalidate_context_packet_row_survives_new_commit_alone_unchanged_generations,
+    test_revalidate_context_packet_row_multi_provider_generations_dict_all_checked,
+    test_revalidate_context_packet_row_never_returns_freshness_or_verification_field,
+    test_revalidate_context_packet_row_fails_closed_when_finer_basis_selected_but_no_level2_fingerprint_column_exists
+    [Plan-derived, DD4], test_working_tree_overlap_forces_revalidation_called_unmodified_against_evidence_dependencies_shape,
+    test_no_junction_table_or_new_sqlite_table_introduced_by_this_ticket). All 14
+    new tests reconfirmed passing this session via `.venv/bin/python3 -m pytest tests/tools/test_knowledge_gateway_packet_assembly.py
+    -k evidence_dependencies` (4 passed) and `.venv/bin/python3 -m pytest tests/tools/test_knowledge_gateway_cache.py
+    -k "level2_repo_branch_scope or revalidate_context_packet_row or working_tree_overlap_forces_revalidation_called_unmodified
+    or no_junction_table_or_new_sqlite_table"` (10 passed); the pre-existing AST-based
+    architecture guard test_module_does_not_import_knowledge_gateway_router_or_packet_assembly
+    reconfirmed passing separately.'
+  divergence_note: null
+  support_boundary: This ticket builds real, tested dependency-aggregation and targeted-invalidation
+    LOGIC -- it is NOT yet wired into a live Level 2 lookup/write path. No Level 2
+    check_context_packet_cache()/write_context_packet_cache() pair exists anywhere
+    in the repo, so there is no live cache row for revalidate_context_packet_row()
+    to ever be invoked against until TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING
+    lands and performs that wiring -- that is the next ticket's job, not this one's.
+    tools/retrieval_cache.py was NOT touched by this ticket -- confirmed by Architecture-Verify;
+    the Level 2 schema this ticket's row-dict-shaped functions assume already exists
+    from the earlier sibling ticket TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS
+    (INFRA-346), and `git diff HEAD -- tools/retrieval_cache.py` attributable to this
+    session is empty. revalidate_context_packet_row() is confirmed to never import
+    tools.knowledge_gateway_packet_assembly -- the existing AST-based architecture
+    guard test_module_does_not_import_knowledge_gateway_router_or_packet_assembly
+    still passes, re-verified directly after this ticket's change (see tools/knowledge_gateway_cache.py's
+    own module docstring, corrected post-Architecture-Verify to accurately describe
+    this new function while still disclosing no live Level 2 lookup/write path is
+    wired in yet). Both DD1 (final_context, not final_evidence, is the correct aggregation
+    source) and DD4 (fail-closed default when select_validation_basis() returns "FINER"
+    and Level 2's schema has no fingerprint column to verify against) were independently
+    confirmed genuine, non-vacuous behavior by Architecture-Verify via live break/restore
+    testing -- not check-passing busywork. tools/knowledge_gateway_router.py and docs/engine/contracts/knowledge_gateway_mcp/evidence_cache_identity_contract.md
+    remain byte-unchanged; no junction table or new SQLite table was introduced (test_no_junction_table_or_new_sqlite_table_introduced_by_this_ticket).

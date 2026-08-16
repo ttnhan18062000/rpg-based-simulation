@@ -19,6 +19,7 @@ import ast
 import dataclasses
 import inspect
 import json
+import sqlite3
 import sys
 import time
 from pathlib import Path
@@ -778,9 +779,368 @@ class TestMigration003:
             conn.close()
         assert row == ("qh-preserve", "what is x", '{"answer": "x"}')
 
-    def test_migration_002_name_never_reused_or_stubbed(self):
+    def test_migration_002_landed_with_the_reserved_name_not_stubbed_or_renamed(self):
+        """Prior to TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS, this test guarded
+        ordinal 2 against premature/stubbed reuse by asserting "migration_002" was absent from
+        the source entirely. That ticket has now landed the real migration_002_add_level2_tables
+        function at the reserved ordinal (see TestLevel2Migrations), fulfilling the reservation
+        this guard used to protect -- updated here (not deleted) so the guard still catches a
+        stub or a rename, rather than being left asserting a now-false claim."""
         source = Path(rc.__file__).read_text()
-        assert "migration_002" not in source
+        assert "def migration_002_add_level2_tables(" in source
+        assert source.count("def migration_002_add_level2_tables(") == 1
+
+
+def _insert_level2_row(conn: sqlite3.Connection, *, packet_id: str = "p1",
+                        evidence_dependencies: str = "[]") -> None:
+    conn.execute(
+        "INSERT INTO retrieval_context_packet_cache_rows "
+        "(packet_id, normalized_intent, query_key_hash, entity_ids, statements, "
+        "context_items, evidence, conflicts, evidence_dependencies, provenance_providers, "
+        "providers_consulted_this_call, repository_id, branch, provider_generations, "
+        "policy_version, response_schema_version, status, freshness, verification, "
+        "created_at, hit_count) "
+        "VALUES (?, 'intent', 'qkh-1', '[]', '[]', '[]', '[]', '[]', ?, '[]', '[]', "
+        "'repo-a', 'main', '{}', 'policy-1', 1, 'ok', 'fresh', 'verified', ?, 0)",
+        (packet_id, evidence_dependencies, time.time()),
+    )
+    conn.commit()
+
+
+class TestLevel2Migrations:
+    """TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS — migration_002_add_level2_tables and
+    LEVEL2_CACHE_COLUMNS (plan.md Step 5). migration_002 assumes retrieval_cache_generation already
+    exists (created only by migration_001) -- an explicit, deliberate design documented in plan.md
+    Step 2/DD2's "Ordering assumption" (migration_002 is never auto-applied and never itself
+    verifies migration_001 ran first; calling it on a connection where migration_001 has never run
+    raises sqlite3.OperationalError by design, mirroring migration_001's own "explicit invocation
+    only" pattern). Every test below therefore applies migration_001 before migration_002,
+    consistent with that documented ordering assumption and with the real chain this module's own
+    production caller uses today (migration_001 -> migration_003 -> migration_002).
+    """
+
+    def test_migration_002_function_exists_with_reserved_name_and_ordinal(self):
+        assert callable(rc.migration_002_add_level2_tables)
+        params = list(inspect.signature(rc.migration_002_add_level2_tables).parameters.values())
+        assert len(params) == 1
+        assert params[0].name == "conn"
+        assert params[0].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+
+        source = Path(rc.__file__).read_text()
+        tree = ast.parse(source)
+        def_lines = {
+            node.name: node.lineno
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name in {
+                "migration_001_add_level1_tables",
+                "migration_002_add_level2_tables",
+                "migration_003_add_redaction_policy_version_column",
+            }
+        }
+        assert (
+            def_lines["migration_001_add_level1_tables"]
+            < def_lines["migration_002_add_level2_tables"]
+            < def_lines["migration_003_add_redaction_policy_version_column"]
+        )
+
+    def test_migration_002_never_creates_a_second_database_file(self, tmp_path):
+        """AC6 (Test-phase-flagged gap): migration_002_add_level2_tables takes a connection, not a
+        path (confirmed structurally by test_migration_002_function_exists_with_reserved_name_and_
+        ordinal's signature assertion above), so it cannot open a second file on its own -- but
+        that's an implementation-shape argument, not an independent end-to-end check. This test
+        proves it behaviorally: after running migration_001 then migration_002 against the isolated
+        tmp_path CACHE_DB_PATH, the only file(s) present are the single cache DB (plus any SQLite
+        journal/WAL/SHM sidecar of that *same* file) -- never a second, distinct database file."""
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_002_add_level2_tables(conn)
+        finally:
+            conn.close()
+
+        db_stem = rc.CACHE_DB_PATH.stem
+        other_files = [
+            path
+            for path in tmp_path.rglob("*")
+            if path.is_file() and path.stem != db_stem
+        ]
+        assert other_files == [], (
+            f"expected only sidecar files of {rc.CACHE_DB_PATH.name}, found: {other_files}"
+        )
+
+    def test_migration_002_applies_cleanly_to_a_fresh_database(self):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_002_add_level2_tables(conn)
+            table_names = {
+                row[0]
+                for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
+        finally:
+            conn.close()
+        assert table_names >= {
+            "retrieval_index_cache_rows",
+            "retrieval_query_cache_rows",
+            "retrieval_packet_cache_rows",
+            "retrieval_provider_result_cache_rows",
+            "retrieval_cache_generation",
+            "retrieval_context_packet_cache_rows",
+        }
+
+    def test_migration_002_applies_cleanly_on_top_of_legacy_only_schema_with_zero_data_loss(self):
+        rc.write_index_cache("hash-a", "emb-v1", "chunk-v1", source_id="doc-1")
+        rc.write_query_cache("some query", {"top_k": 5}, "gen-1", 1, score=0.9)
+        rc.write_packet_cache("packet-1", ["h1"], "gen-1", "policy-1")
+
+        conn = rc._get_connection()
+        try:
+            before = {
+                table_name: conn.execute(f"SELECT * FROM {table_name}").fetchall()
+                for table_name in rc._TABLE_NAME_BY_ALIAS.values()
+            }
+
+            # migration_001 required first -- see class docstring.
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_002_add_level2_tables(conn)
+
+            for table_name in rc._TABLE_NAME_BY_ALIAS.values():
+                after = conn.execute(f"SELECT * FROM {table_name}").fetchall()
+                assert after == before[table_name]
+
+            new_table_rows = conn.execute(
+                "SELECT * FROM retrieval_context_packet_cache_rows"
+            ).fetchall()
+        finally:
+            conn.close()
+        assert new_table_rows == []
+
+    def test_migration_002_applies_cleanly_on_top_of_level1_already_migrated_schema_with_zero_data_loss(
+        self,
+    ):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_003_add_redaction_policy_version_column(conn)
+
+            conn.execute(
+                "INSERT INTO retrieval_provider_result_cache_rows "
+                "(query_hash, normalized_intent, resolved_entity_ids, filters, "
+                "routing_policy_version, repo_branch_scope, provider_name, adapter_version, "
+                "result_payload, source_ids, source_paths, provider_generation, "
+                "evidence_fingerprints, created_at, hit_count) "
+                "VALUES ('h1','intent','[]','{}', 'rp-v1', 'repo:main', 'prov', 'av1', "
+                "'payload', '[]', '[]', 'gen-1', '[]', ?, 0)",
+                (time.time(),),
+            )
+            conn.commit()
+
+            before = conn.execute(
+                "SELECT * FROM retrieval_provider_result_cache_rows"
+            ).fetchall()
+
+            rc.migration_002_add_level2_tables(conn)
+
+            after = conn.execute(
+                "SELECT * FROM retrieval_provider_result_cache_rows"
+            ).fetchall()
+            columns_after = [
+                row[1]
+                for row in conn.execute(
+                    "PRAGMA table_info(retrieval_provider_result_cache_rows)"
+                )
+            ]
+            table_names = {
+                row[0]
+                for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
+        finally:
+            conn.close()
+        assert after == before
+        assert "redaction_policy_version" in columns_after
+        assert "retrieval_context_packet_cache_rows" in table_names
+
+    def test_new_level2_table_column_set_matches_proposal_section_10_3_cachedpacket_field_list(
+        self,
+    ):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_002_add_level2_tables(conn)
+            columns = {
+                row[1]
+                for row in conn.execute(
+                    "PRAGMA table_info(retrieval_context_packet_cache_rows)"
+                )
+            }
+        finally:
+            conn.close()
+        assert columns == rc.LEVEL2_CACHE_COLUMNS
+
+    def test_migration_002_is_idempotent_when_run_twice(self):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_002_add_level2_tables(conn)
+            schema_before = list(
+                conn.execute("PRAGMA table_info(retrieval_context_packet_cache_rows)")
+            )
+            _insert_level2_row(conn, packet_id="p1")
+
+            rc.migration_002_add_level2_tables(conn)
+
+            schema_after = list(
+                conn.execute("PRAGMA table_info(retrieval_context_packet_cache_rows)")
+            )
+            generation_rows = conn.execute(
+                "SELECT retrieval_cache_schema_version FROM retrieval_cache_generation"
+            ).fetchall()
+            payload_rows = conn.execute(
+                "SELECT packet_id FROM retrieval_context_packet_cache_rows"
+            ).fetchall()
+        finally:
+            conn.close()
+        assert schema_after == schema_before
+        assert generation_rows == [(2,)]
+        assert payload_rows == [("p1",)]
+
+    def test_migration_002_does_not_alter_existing_marker_only_or_level1_table_column_sets(self):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_003_add_redaction_policy_version_column(conn)
+
+            tables = list(rc._TABLE_NAME_BY_ALIAS.values()) + [
+                "retrieval_provider_result_cache_rows"
+            ]
+            before = {
+                table_name: list(conn.execute(f"PRAGMA table_info({table_name})"))
+                for table_name in tables
+            }
+
+            rc.migration_002_add_level2_tables(conn)
+
+            after = {
+                table_name: list(conn.execute(f"PRAGMA table_info({table_name})"))
+                for table_name in tables
+            }
+        finally:
+            conn.close()
+        assert after == before
+
+    def test_retrieval_cache_schema_version_correctly_reflects_new_schema_state_after_migration_002(
+        self,
+    ):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_003_add_redaction_policy_version_column(conn)
+            rc.migration_002_add_level2_tables(conn)
+            full_chain_rows = conn.execute(
+                "SELECT retrieval_cache_schema_version FROM retrieval_cache_generation"
+            ).fetchall()
+        finally:
+            conn.close()
+        assert full_chain_rows == [(2,)]
+
+        # Regression guard for investigation.md Risk 1 / plan.md DD2: migration_001 run alone, in
+        # true isolation on a separate connection, must still stamp exactly 1 -- unaffected by
+        # migration_002 having ever existed or run elsewhere.
+        isolated_conn = sqlite3.connect(":memory:")
+        try:
+            rc.migration_001_add_level1_tables(isolated_conn)
+            migration_001_alone_rows = isolated_conn.execute(
+                "SELECT retrieval_cache_schema_version FROM retrieval_cache_generation"
+            ).fetchall()
+        finally:
+            isolated_conn.close()
+        assert migration_001_alone_rows == [(1,)]
+
+    def test_evidence_dependencies_column_is_json_text_and_supports_set_intersection_like_the_existing_marker_only_packet_table(
+        self,
+    ):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_002_add_level2_tables(conn)
+            deps = ["path/a.py", "path/b.py"]
+            _insert_level2_row(conn, packet_id="p1", evidence_dependencies=json.dumps(deps))
+
+            stored_deps_json = conn.execute(
+                "SELECT evidence_dependencies FROM retrieval_context_packet_cache_rows "
+                "WHERE packet_id = 'p1'"
+            ).fetchone()[0]
+        finally:
+            conn.close()
+        current_changed_paths = ["path/a.py", "path/b.py"]
+        assert set(current_changed_paths) == set(json.loads(stored_deps_json))
+
+        different_changed_paths = ["path/a.py", "path/c.py"]
+        assert set(different_changed_paths) != set(json.loads(stored_deps_json))
+
+    def test_new_level2_table_name_does_not_collide_with_existing_marker_only_packet_table(self):
+        rc.write_packet_cache("packet-1", ["h1"], "gen-1", "policy-1")
+
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_002_add_level2_tables(conn)
+            _insert_level2_row(conn, packet_id="p1")
+
+            table_names = {
+                row[0]
+                for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
+            marker_rows = conn.execute(
+                "SELECT packet_key_hash FROM retrieval_packet_cache_rows"
+            ).fetchall()
+            level2_rows = conn.execute(
+                "SELECT packet_id FROM retrieval_context_packet_cache_rows"
+            ).fetchall()
+        finally:
+            conn.close()
+        assert "retrieval_packet_cache_rows" != "retrieval_context_packet_cache_rows"
+        assert {"retrieval_packet_cache_rows", "retrieval_context_packet_cache_rows"} <= table_names
+        assert marker_rows == [("packet-1",)]
+        assert level2_rows == [("p1",)]
+
+    def test_no_actual_read_write_functions_added_for_the_new_level2_table(self):
+        assert not hasattr(rc, "check_context_packet_cache")
+        assert not hasattr(rc, "write_context_packet_cache")
+        module_public_names = {name for name in dir(rc) if not name.startswith("_")}
+        read_write_style_names = {
+            name
+            for name in module_public_names
+            if name.startswith("check_") or name.startswith("write_")
+        }
+        assert read_write_style_names == {
+            "check_index_cache",
+            "check_query_cache",
+            "check_packet_cache",
+            "check_provider_result_cache",
+            "write_index_cache",
+            "write_query_cache",
+            "write_packet_cache",
+            "write_provider_result_cache",
+        }
+
+    def test_no_pragma_busy_timeout_chmod_or_os_import_introduced_by_level2_migration(self):
+        source = Path(rc.__file__).read_text()
+        assert "PRAGMA journal_mode" not in source
+        assert "PRAGMA busy_timeout" not in source
+        assert "busy_timeout" not in source
+        assert "os.chmod" not in source
+        assert "chmod" not in source
+
+        tree = ast.parse(source)
+        imported_modules = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported_modules.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imported_modules.add(node.module)
+        assert "os" not in imported_modules
 
 
 class TestProviderResultCacheStats:

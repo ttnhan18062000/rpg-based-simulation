@@ -479,7 +479,7 @@ class TestRedactionPolicyVersion:
     def test_redaction_policy_version_distinct_from_retrieval_version(self):
         assert kgr.redaction_policy_version == 1
         assert rc.RETRIEVAL_VERSION == 1
-        assert rc.retrieval_cache_schema_version == 1
+        assert rc.retrieval_cache_schema_version == 2
         assert re_mod.retrieval_event_schema_version == 1
         # Same value today is a coincidence, not a shared identity -- confirmed by them being
         # four entirely separate module-level names, never imported/aliased from one another.
