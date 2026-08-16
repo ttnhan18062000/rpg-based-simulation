@@ -1096,3 +1096,5 @@
 {"run_id":"TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":8,"start_ts":"2026-08-16T15:41:24Z","end_ts":"2026-08-16T17:36:35Z","duration_s":6911}
 {"run_id":"TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP","workflow":"implement-ticket","tier":"standard","final_status":"IN_PROGRESS","agent_count":0,"start_ts":"2026-08-16T18:20:51Z","duration_s":null}
 {"run_id":"TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":8,"start_ts":"2026-08-16T19:30:00Z","end_ts":"2026-08-16T20:11:03Z","duration_s":2463}
+{"run_id":"TCK-20260817-HOTFIX-KGMCP-MISSING-JSONSCHEMA-DEPENDENCY","workflow":"implement-ticket","tier":"hotfix","final_status":"IN_PROGRESS","agent_count":0,"start_ts":"2026-08-16T22:46:33Z","duration_s":null}
+{"run_id":"TCK-20260817-HOTFIX-KGMCP-MISSING-JSONSCHEMA-DEPENDENCY","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":2,"start_ts":"2026-08-16T22:00:00Z","end_ts":"2026-08-16T22:59:47Z","duration_s":3587}
