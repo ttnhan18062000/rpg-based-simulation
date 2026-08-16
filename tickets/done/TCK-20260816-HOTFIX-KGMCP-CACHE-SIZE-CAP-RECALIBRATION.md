@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION
-phase: open
+phase: done
 date: 2026-08-16
 tags: [ai, mcp, bug]
 ---
@@ -15,7 +15,7 @@ tags: [ai, mcp, bug]
 Recalibrate the Level 1 cache's 8KB payload size cap using real measured gateway payload sizes
 
 ## Status
-INPROGRESS (Parity phase complete; Verify/Finalize remain)
+DONE
 
 ## Tier
 hotfix
@@ -359,5 +359,33 @@ non-ticket-referencing commit due to a `git commit` staging accident) — both a
 in Implementation Notes §9-10 rather than glossed over. Final scoped suite: **110/110 passing.**
 Parity phase added `docs/parity_ledger/infrastructure.yaml`'s **INFRA-345** (verified/P1/regression)
 recording the recalibration, and corrected **INFRA-342**'s stale line citations (+6-line drift and
-an 8192->65536 value correction) caused by this hotfix's own edits to the same source file — Verify
-and Finalize remain.
+an 8192->65536 value correction) caused by this hotfix's own edits to the same source file.
+
+**11. DoD Verify found a real, legitimate blocker (repo-state consistency) and it has been
+resolved — not routed around.** `done-checker`'s first Verify pass found
+`tests/tools/test_kgmcp_measurement_baseline.py` carrying an uncommitted, undisclosed diff
+unrelated to this ticket. Investigation confirmed it was genuine, already-reviewed, correctly
+attributed work from `TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS` (the first Phase 2 child
+ticket, from much earlier in this session) — a legitimate banned-path narrowing with its own
+correct justifying comment, verified during that ticket's own pipeline, that simply never got
+committed due to a commit-scoping omission at the time. Committed separately, under its own correct
+original ticket attribution (commit `50e2ac06`), not folded into this hotfix's own commit.
+
+**That commit itself repeated the same mistake §10 already disclosed once**: `git commit` was run
+without a path-scoped pathspec while this hotfix's own Test/Parity work was still staged, so commit
+`50e2ac06` (titled for `TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS`) also swept in this hotfix's
+`INFRA-345` parity entry, the `INFRA-342` correction, the 2 new coverage-gap tests, the guard-test
+narrowing, and this ticket file's own edits. Verified the content itself is unaffected and correct
+regardless of commit boundary (`MAX_PAYLOAD_BYTES == 65536` confirmed live, `INFRA-345` present and
+accurate) — per the same git-safety-protocol reasoning as §10, this is disclosed here rather than
+corrected via history rewrite. Net effect across both incidents: this hotfix's real, verified
+substance is split across commits `62311b44` and `50e2ac06`, neither of which references
+`TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION` by ID — a real traceability gap, fully
+disclosed, with no effect on correctness. Only this ticket's own Finalize-time work (moving the
+ticket to `tickets/done/`, the working_log row) will land in a commit that actually references this
+ticket's ID.
+
+Verify (`done-checker`) re-ran, confirmed the stray-diff blocker resolved, independently
+re-confirmed all 110/110 tests, confirmed `MAX_PAYLOAD_BYTES == 65536` live, confirmed `INFRA-345`
+accurate, and confirmed §11's disclosure is honest and complete — verdict READY_TO_CLOSE. This
+ticket is now finalized and moved to `tickets/done/`.
