@@ -1086,3 +1086,7 @@
 {"run_id":"TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON","workflow":"implement-ticket","tier":"standard","final_status":"IN_PROGRESS","agent_count":0,"start_ts":"2026-08-16T13:14:14Z","duration_s":null}
 {"run_id":"TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":12,"start_ts":"2026-08-16T13:14:14Z","end_ts":"2026-08-16T14:21:31Z","duration_s":4037}
 {"run_id":"EPIC-TCK-20260816-KNOWLEDGE-GATEWAY-MCP-PHASE4-EPIC","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":4,"start_ts":"2026-08-16T10:08:57Z","end_ts":"2026-08-16T14:25:36Z","duration_s":15399}
+{"run_id":"EPIC-TCK-20260816-KNOWLEDGE-GATEWAY-MCP-PHASE5-EPIC","workflow":"implement-epic","tier":"epic","final_status":"IN_PROGRESS","agent_count":0,"start_ts":"2026-08-16T14:29:50Z","duration_s":null}
+{"run_id":"TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT","workflow":"implement-ticket","tier":"standard","final_status":"IN_PROGRESS","agent_count":0,"start_ts":"2026-08-16T14:29:50Z","duration_s":null}
+{"run_id":"TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":12,"start_ts":"2026-08-16T14:29:50Z","end_ts":"2026-08-16T15:27:24Z","duration_s":3454}
+{"run_id":"EPIC-TCK-20260816-KNOWLEDGE-GATEWAY-MCP-PHASE5-EPIC","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":1,"start_ts":"2026-08-16T14:29:50Z","end_ts":"2026-08-16T15:30:07Z","duration_s":3617}

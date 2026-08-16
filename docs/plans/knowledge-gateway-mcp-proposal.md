@@ -1454,6 +1454,25 @@ boundary — that determination is a separate, later human-reviewer call based o
 - Reuse results across compatible phrasings.
 - Add conservative semantic candidate matching with deterministic validation.
 
+`TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT` performed the first real measurement of
+repeated/semantically-equivalent question demand for this phase, against this repository's own
+real historical usage (not the frozen 7-entry corpus, which is deliberately built unique-per-entry
+and cannot demonstrate repeated demand by design). Primary source
+(`agent-monitoring/events.jsonl` Investigate-phase summaries, 521 distinct tickets): 17
+conservative repeated-demand pairs. Secondary/corroborating source (`tickets/working_log.csv`,
+1,411 tickets): 372 conservative repeated-demand pairs. See
+`docs/engine/contracts/knowledge_gateway_mcp/phase5_repeated_demand_measurement.md` for full
+per-source detail, method, and figures. The finding is a small, real, but mostly-non-literal
+signal — most matched pairs are natural incremental/sequential investigation of an evolving
+codebase, not the same question asked twice with different wording. Cross-referenced against
+Phase 3's own real budget-tolerance FAIL and genuine-cache-hit token-count regression, and Phase
+4's own real 7/7 negative gateway-vs-direct-tool comparison, the honest recommendation is: proceed
+with Phase 5's remaining two bullets (canonical entity IDs/aliases; conservative semantic
+candidate matching) only after Phase 3's own disclosed gaps close — not now, not never. This
+paragraph does not itself declare any Phase 5 bullet built, and does not authorize or block a
+future child ticket; that determination is a separate, later human-reviewer call based on these
+real numbers.
+
 ### Phase 6: Verified Knowledge, Only If Justified
 
 - Require repeated-demand evidence showing meaningful residual value beyond Levels 1–2.

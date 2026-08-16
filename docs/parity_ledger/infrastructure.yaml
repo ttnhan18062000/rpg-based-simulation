@@ -10304,3 +10304,68 @@
     does NOT certify that the gateway is broadly superior or inferior to direct tool
     use beyond this 7-entry corpus, or that any fix to the observed disadvantage has
     been made -- both are explicitly out of scope for this measurement-only ticket.'
+- id: INFRA-355
+  text: 'Knowledge Gateway MCP Phase 5 repeated-demand measurement -- TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT.
+    Measures, honestly, whether real repeated/semantically-equivalent question demand
+    exists in this repository''s own history before investing in Phase 5''s canonical-entity-ID/alias
+    and semantic-candidate-matching mechanisms -- no gateway/cache/router source file
+    (tools/knowledge_gateway_*.py) is touched anywhere in this ticket, confirmed by
+    git status --porcelain across Implement and Architecture-Verify. Runner: tools/agent-monitoring/kgmcp_phase5_repeated_demand_measurement_runner.py,
+    reading only two frozen point-in-time snapshot fixtures (tests/tools/fixtures/kgmcp_phase5_events_investigate_snapshot.json,
+    521 records; kgmcp_phase5_working_log_snapshot.json, 1,411 records) -- never the
+    live agent-monitoring/events.jsonl or tickets/working_log.csv, so re-running always
+    reproduces the same numbers. Key functions: _build_records() (lines 159-175) extracts
+    per-record identifiers (CamelCase symbols, file paths, ticket IDs, parity-entry
+    IDs) via extract_identifiers() (lines 137-146) and classifies intent via classify_intent()
+    (lines 126-134); _compare_records() (lines 178-213) is the shared pairwise matching
+    logic driving both the primary and secondary measurements -- a conservative pair
+    requires the same non-''other'' intent bucket AND at least one overlapping specific
+    identifier, never a shared subsystem-topic tag alone (tag-only overlap is counted
+    separately and explicitly not treated as a repeated-demand signal, per proposal
+    Sec.11.2''s conservative multi-signal requirement). Self-contamination guard (Architecture
+    Review 1st-pass required, independently re-verified fixed on both Review and Architecture-Verify
+    passes): this ticket''s own mandatory Investigate-phase monitoring write would
+    otherwise land in the exact agent-monitoring/events.jsonl dataset this ticket
+    measures -- the events snapshot fixture was frozen with an explicit run_id ==
+    ''TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT'' exclusion applied before
+    writing (521 records, not the live file''s 522), and the committed runner is structurally
+    incapable of re-introducing the contamination since it reads only the frozen snapshot
+    paths, never the live files -- verified by test_events_snapshot_excludes_this_tickets_own_run_id
+    and test_runner_reads_frozen_snapshot_paths_not_live_source_files. This entry
+    certifies the measurement methodology itself as real, correct, and tested -- mirroring
+    INFRA-344''s and INFRA-353''s own ''methodology, not conclusion'' framing -- it
+    does NOT certify that Phase 5 is warranted or that the recommendation itself is
+    correct; that is a separate, later, human-reviewer call. The tool''s own honest,
+    real output: 17/521 conservative repeated-demand pairs in the primary source (15
+    strong symbol/path-sharing, 2 ticket/parity-ID-only, 427 tag-only pairs explicitly
+    not counted; 30/521 distinct tickets involved, 5.8%), and 372/1411 in the secondary
+    source (282 strong, 10,347 tag-only not counted; 261/1411 tickets involved, 18.5%)
+    -- a small, real, mostly-non-literal signal, cross-referenced against Phase 3''s
+    real budget-tolerance FAIL and Phase 4''s real 7/7 negative gateway-vs-direct-tool
+    comparison to recommend proceeding with Phase 5''s remaining two bullets only
+    after Phase 3''s own disclosed gaps close -- not now, not never. Full detail:
+    docs/engine/contracts/knowledge_gateway_mcp/phase5_repeated_demand_measurement.md.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/agent-monitoring/kgmcp_phase5_repeated_demand_measurement_runner.py;
+    tests/tools/fixtures/kgmcp_phase5_repeated_demand_measurement_results.json; tests/tools/fixtures/kgmcp_phase5_events_investigate_snapshot.json;
+    tests/tools/fixtures/kgmcp_phase5_working_log_snapshot.json; docs/engine/contracts/knowledge_gateway_mcp/phase5_repeated_demand_measurement.md
+  proof_type: regression
+  test_path: tests/tools/test_kgmcp_phase5_repeated_demand_measurement.py, tests/docs/test_phase5_repeated_demand_measurement_doc.py
+  divergence_note: null
+  support_boundary: 'This entry certifies the measurement methodology was sound (a
+    real, non-corpus, non-synthetic data source used and justified; the equivalence-detection
+    method genuinely mirrors proposal Sec.11.2''s conservative multi-signal shape,
+    never string-only or embedding-only; the measurement is reproducible -- re-running
+    the committed runner against the frozen committed snapshots reproduces the exact
+    17/521 and 372/1411 numbers; the self-contamination hazard confirmed live during
+    Architecture Review was fixed and independently re-verified on both the Review
+    and Architecture-Verify passes). It does NOT certify that Phase 5 is warranted
+    or that the recommendation itself is correct -- that is a separate, later, human-reviewer
+    call, exactly as INFRA-344/INFRA-353 draw the same line for their own respective
+    tickets. Real headline numbers, stated plainly: 17/521 conservative repeated-demand
+    pairs in the primary source (agent-monitoring/events.jsonl, 5.8% of tickets involved),
+    372/1411 in the secondary source (tickets/working_log.csv, 18.5% of tickets involved)
+    -- a small, real, mostly-non-literal signal, not proof of material repeated demand.
+    Full numeric detail: docs/engine/contracts/knowledge_gateway_mcp/phase5_repeated_demand_measurement.md.'
