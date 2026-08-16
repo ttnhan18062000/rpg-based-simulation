@@ -964,10 +964,19 @@ class TestLevel2Migrations:
     def test_new_level2_table_column_set_matches_proposal_section_10_3_cachedpacket_field_list(
         self,
     ):
+        # Updated by TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING (plan.md PD4): mirrors
+        # test_new_table_column_set_matches_proposal_section_10_2_row_shape's own precedent —
+        # LEVEL2_CACHE_COLUMNS gained 4 entries (redaction_policy_version/budget_truncated/
+        # omitted_statement_count/provider_failures) added by
+        # migration_004_add_level2_write_path_columns, a real, in-scope schema widening this
+        # ticket performs. migration_004 must now run alongside migration_001/migration_002 for
+        # the live table shape to match the full documented column set; migration_002 alone (this
+        # test's original scope) is a strict subset by design.
         conn = rc._get_connection()
         try:
             rc.migration_001_add_level1_tables(conn)
             rc.migration_002_add_level2_tables(conn)
+            rc.migration_004_add_level2_write_path_columns(conn)
             columns = {
                 row[1]
                 for row in conn.execute(
@@ -1105,9 +1114,14 @@ class TestLevel2Migrations:
         assert marker_rows == [("packet-1",)]
         assert level2_rows == [("p1",)]
 
-    def test_no_actual_read_write_functions_added_for_the_new_level2_table(self):
-        assert not hasattr(rc, "check_context_packet_cache")
-        assert not hasattr(rc, "write_context_packet_cache")
+    def test_check_and_write_functions_now_exist_for_the_new_level2_table(self):
+        """TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING inverts this guard's premise: real
+        check_context_packet_cache()/write_context_packet_cache() functions now exist. Replaces
+        (not deletes) the old test_no_actual_read_write_functions_added_for_the_new_level2_table,
+        whose own premise this ticket makes false — still a real, replacement guard against a
+        stub/rename, not a coverage regression."""
+        assert callable(rc.check_context_packet_cache)
+        assert callable(rc.write_context_packet_cache)
         module_public_names = {name for name in dir(rc) if not name.startswith("_")}
         read_write_style_names = {
             name
@@ -1119,10 +1133,12 @@ class TestLevel2Migrations:
             "check_query_cache",
             "check_packet_cache",
             "check_provider_result_cache",
+            "check_context_packet_cache",
             "write_index_cache",
             "write_query_cache",
             "write_packet_cache",
             "write_provider_result_cache",
+            "write_context_packet_cache",
         }
 
     def test_no_pragma_busy_timeout_chmod_or_os_import_introduced_by_level2_migration(self):
@@ -1153,4 +1169,281 @@ class TestProviderResultCacheStats:
         rc.record_provider_result_cache_hit("qh-a", "repo::main")
         rc.record_provider_result_cache_hit("qh-a", "repo::main")
         stats = rc.provider_result_cache_stats()
+        assert stats == {"total_rows": 2, "total_hits": 2}
+
+
+# ---------------------------------------------------------------------------
+# migration_004 — Level 2 write-path columns
+# (TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING, plan.md Step 1/PD4)
+# ---------------------------------------------------------------------------
+
+class TestMigration004:
+    _NEW_COLUMNS = (
+        "redaction_policy_version", "budget_truncated", "omitted_statement_count",
+        "provider_failures",
+    )
+
+    def test_migration_004_adds_redaction_policy_version_budget_truncated_omitted_statement_count_provider_failures_columns_idempotently(
+        self,
+    ):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_002_add_level2_tables(conn)
+            rc.migration_004_add_level2_write_path_columns(conn)
+            rc.migration_004_add_level2_write_path_columns(conn)  # must not raise
+            columns = [row[1] for row in conn.execute(
+                "PRAGMA table_info(retrieval_context_packet_cache_rows)"
+            )]
+        finally:
+            conn.close()
+        for name in self._NEW_COLUMNS:
+            assert columns.count(name) == 1, f"{name} must be added exactly once, idempotently"
+
+    def test_migration_004_preserves_existing_rows_and_column_set_matches_updated_constant(self):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_002_add_level2_tables(conn)
+            _insert_level2_row(conn, packet_id="p-preserve")
+            rc.migration_004_add_level2_write_path_columns(conn)
+            row = conn.execute(
+                "SELECT packet_id, normalized_intent FROM retrieval_context_packet_cache_rows "
+                "WHERE packet_id = 'p-preserve'"
+            ).fetchone()
+            columns = {c[1] for c in conn.execute(
+                "PRAGMA table_info(retrieval_context_packet_cache_rows)"
+            )}
+        finally:
+            conn.close()
+        assert row == ("p-preserve", "intent")
+        assert columns == rc.LEVEL2_CACHE_COLUMNS
+
+
+# ---------------------------------------------------------------------------
+# Level 2 context-packet cache — read/write orchestration
+# (TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING, plan.md Step 2)
+# ---------------------------------------------------------------------------
+
+def _write_level2_row(**overrides) -> None:
+    kwargs = dict(
+        packet_id="p-1", normalized_intent="what is x", query_key_hash="qkh-1",
+        entity_ids_json="[]", answer="an answer", statements_json="[]",
+        context_items_json="[]", evidence_json="[]", conflicts_json="[]",
+        evidence_dependencies_json="[]", provenance_providers_json="[]",
+        providers_consulted_this_call_json='["context_search"]',
+        repository_id="repo-a", branch="main", head_commit=None,
+        working_tree_fingerprint=None, provider_generations_json='{"context_search": "gen-1"}',
+        policy_version="1", response_schema_version=1, budget_requested=4000,
+        budget_returned=100, status="OK", freshness="UNKNOWN", verification="SUPPORTED",
+        lifecycle=None, redaction_policy_version=1, budget_truncated=False,
+        omitted_statement_count=0, provider_failures_json=None,
+    )
+    kwargs.update(overrides)
+    rc.write_context_packet_cache(**kwargs)
+
+
+class TestContextPacketCache:
+    def test_check_context_packet_cache_creates_table_on_first_real_use(self):
+        result = rc.check_context_packet_cache(
+            "qkh-1", normalized_intent="what is x", entity_ids_json="[]",
+            repository_id="repo-a", branch="main", budget_tokens=4000,
+        )
+        assert result.status == rc.MISS
+        conn = rc._get_connection()
+        try:
+            table_names = {
+                row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
+        finally:
+            conn.close()
+        assert "retrieval_context_packet_cache_rows" in table_names
+
+    def test_fresh_nonexistent_db_gets_migration_001_applied_before_migration_002_on_first_level2_access(
+        self,
+    ):
+        """Deviation 1 (plan.md/investigation.md): _get_level2_connection()/
+        _ensure_level2_schema_for_read() must call migration_001_add_level1_tables(conn) before
+        migration_002_add_level2_tables(conn), because migration_002 itself assumes
+        retrieval_cache_generation (created only by migration_001) already exists. This test
+        touches Level 2 *first* on a genuinely non-existent DB file (never calling any Level 1
+        function or migration directly) and asserts both migrations' real effects are present --
+        not just that no exception was raised, but that migration_001's own tables genuinely
+        exist too, proving the ordering fix, not merely tolerating its absence."""
+        assert not rc.CACHE_DB_PATH.exists(), "the DB file must be genuinely non-existent first"
+
+        result = rc.check_context_packet_cache(
+            "qkh-fresh", normalized_intent="fresh db query", entity_ids_json="[]",
+            repository_id="repo-a", branch="main", budget_tokens=4000,
+        )
+        assert result.status == rc.MISS
+
+        conn = rc._get_connection()
+        try:
+            table_names = {
+                row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
+            generation_row = conn.execute(
+                "SELECT retrieval_cache_schema_version FROM retrieval_cache_generation"
+            ).fetchone()
+        finally:
+            conn.close()
+
+        # migration_002's own effects (Level 2 table exists).
+        assert "retrieval_context_packet_cache_rows" in table_names
+        # migration_001's own effects (Level 1 tables + the generation-metadata row migration_002
+        # depends on) must also be present -- this is the real proof migration_001 ran first.
+        assert "retrieval_cache_generation" in table_names
+        assert generation_row is not None, (
+            "retrieval_cache_generation must have a stamped row, proving migration_001 (not just "
+            "table creation) genuinely ran before migration_002 on a fresh Level-2-first access"
+        )
+
+    def test_check_context_packet_cache_miss_on_no_row(self):
+        result = rc.check_context_packet_cache(
+            "no-such-hash", normalized_intent="x", entity_ids_json="[]",
+            repository_id="repo-a", branch="main", budget_tokens=4000,
+        )
+        assert result.status == rc.MISS
+        assert result.reason_code == "no_cached_row"
+        assert result.row is None
+
+    def test_check_context_packet_cache_hit_on_matching_full_identity(self):
+        _write_level2_row()
+        result = rc.check_context_packet_cache(
+            "qkh-1", normalized_intent="what is x", entity_ids_json="[]",
+            repository_id="repo-a", branch="main", budget_tokens=4000,
+        )
+        assert result.status == rc.HIT
+        assert result.reason_code is None
+        assert result.row["answer"] == "an answer"
+
+    def test_check_context_packet_cache_miss_on_identity_mismatch_despite_shared_query_key_hash(
+        self,
+    ):
+        _write_level2_row()
+        result = rc.check_context_packet_cache(
+            "qkh-1", normalized_intent="what is x", entity_ids_json="[]",
+            repository_id="repo-a", branch="feature-x", budget_tokens=4000,
+        )
+        assert result.status == rc.MISS
+        assert result.reason_code == "identity_mismatch_on_shared_key"
+        assert result.row is None
+
+    def test_level2_lookup_disambiguates_multiple_rows_sharing_the_same_query_key_hash(self):
+        """Directly targets Risk 3 -- query_key_hash is unindexed/non-unique, packet_id is the
+        real PK. Seeds two rows sharing the same query_key_hash but different branch, and asserts
+        the lookup returns the correct row for the current scope, never the first row an unordered
+        fetchall() happens to return."""
+        _write_level2_row(packet_id="p-main", branch="main", answer="main answer")
+        _write_level2_row(packet_id="p-feature", branch="feature-x", answer="feature answer")
+
+        main_result = rc.check_context_packet_cache(
+            "qkh-1", normalized_intent="what is x", entity_ids_json="[]",
+            repository_id="repo-a", branch="main", budget_tokens=4000,
+        )
+        assert main_result.status == rc.HIT
+        assert main_result.row["answer"] == "main answer"
+
+        feature_result = rc.check_context_packet_cache(
+            "qkh-1", normalized_intent="what is x", entity_ids_json="[]",
+            repository_id="repo-a", branch="feature-x", budget_tokens=4000,
+        )
+        assert feature_result.status == rc.HIT
+        assert feature_result.row["answer"] == "feature answer"
+
+    def test_level2_lookup_disambiguates_by_budget_tokens_not_just_budget_class(self):
+        """plan.md PD2 -- budget_tokens is part of Level 2's real identity, not budget_class. Two
+        rows sharing everything except budget_requested must never collide."""
+        _write_level2_row(packet_id="p-small-budget", budget_requested=600, answer="answer-600")
+        _write_level2_row(packet_id="p-large-budget", budget_requested=1800, answer="answer-1800")
+
+        result_600 = rc.check_context_packet_cache(
+            "qkh-1", normalized_intent="what is x", entity_ids_json="[]",
+            repository_id="repo-a", branch="main", budget_tokens=600,
+        )
+        assert result_600.status == rc.HIT
+        assert result_600.row["answer"] == "answer-600"
+
+        result_1800 = rc.check_context_packet_cache(
+            "qkh-1", normalized_intent="what is x", entity_ids_json="[]",
+            repository_id="repo-a", branch="main", budget_tokens=1800,
+        )
+        assert result_1800.status == rc.HIT
+        assert result_1800.row["answer"] == "answer-1800"
+
+    def test_lookup_function_never_returns_a_freshness_or_verification_field(self):
+        field_names = {f.name for f in dataclasses.fields(rc.ContextPacketCacheLookup)}
+        assert "freshness" not in field_names
+        assert "verification" not in field_names
+        assert field_names == {"status", "reason_code", "row"}
+
+    def test_write_context_packet_cache_creates_table_and_inserts_row(self):
+        _write_level2_row()
+        conn = rc._get_connection()
+        try:
+            rows = conn.execute(
+                "SELECT packet_id, redaction_policy_version "
+                "FROM retrieval_context_packet_cache_rows"
+            ).fetchall()
+        finally:
+            conn.close()
+        assert rows == [("p-1", 1)]
+
+    def test_write_context_packet_cache_insert_or_replace_overwrites_same_pk(self):
+        _write_level2_row(answer="first")
+        _write_level2_row(answer="second")
+        conn = rc._get_connection()
+        try:
+            rows = conn.execute(
+                "SELECT answer FROM retrieval_context_packet_cache_rows"
+            ).fetchall()
+        finally:
+            conn.close()
+        assert rows == [("second",)]
+
+    def test_level2_write_stamps_redaction_policy_version_column(self):
+        _write_level2_row(redaction_policy_version=1)
+        conn = rc._get_connection()
+        try:
+            value = conn.execute(
+                "SELECT redaction_policy_version FROM retrieval_context_packet_cache_rows "
+                "WHERE packet_id = 'p-1'"
+            ).fetchone()[0]
+        finally:
+            conn.close()
+        assert value == 1
+
+    def test_record_context_packet_cache_hit_increments_hit_count_and_stamps_last_validated_at(
+        self,
+    ):
+        _write_level2_row()
+        rc.record_context_packet_cache_hit("p-1")
+        conn = rc._get_connection()
+        try:
+            hit_count, last_validated_at = conn.execute(
+                "SELECT hit_count, last_validated_at FROM retrieval_context_packet_cache_rows "
+                "WHERE packet_id = 'p-1'"
+            ).fetchone()
+        finally:
+            conn.close()
+        assert hit_count == 1
+        assert last_validated_at is not None
+
+
+class TestContextPacketCacheStats:
+    def test_context_packet_cache_stats_zero_on_fresh_db(self):
+        assert rc.context_packet_cache_stats() == {"total_rows": 0, "total_hits": 0}
+
+    def test_level2_context_packet_cache_stats_function_never_raises_on_unmigrated_db(self):
+        # No write has ever happened -- the table may not exist yet; must return zeros, never
+        # raise, mirroring provider_result_cache_stats()'s own fresh/never-migrated DB contract.
+        assert rc.context_packet_cache_stats() == {"total_rows": 0, "total_hits": 0}
+
+    def test_context_packet_cache_stats_reflects_real_rows_and_hits(self):
+        _write_level2_row(packet_id="p-a")
+        _write_level2_row(packet_id="p-b")
+        rc.record_context_packet_cache_hit("p-a")
+        rc.record_context_packet_cache_hit("p-a")
+        stats = rc.context_packet_cache_stats()
         assert stats == {"total_rows": 2, "total_hits": 2}

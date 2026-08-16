@@ -185,6 +185,20 @@ table_info` existence check (SQLite has no `ALTER TABLE ... ADD COLUMN IF NOT EX
 `docs/engine/contracts/knowledge_gateway_mcp/cache_migration_plan.md` §2 for the migration's
 documented shape.
 
+**Extended to Level 2 by `TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`.** The same
+`redaction_policy_version` column is now also persisted on the Level 2 (assembled-packet) cache
+table, `retrieval_context_packet_cache_rows`, via `migration_004_add_level2_write_path_columns(conn)`
+(`tools/retrieval_cache.py`), the same idempotent `ALTER TABLE ... ADD COLUMN` pattern migration 3
+established. Level 2 writes were independently re-verified — not assumed — to route through the
+same `evaluate_write_candidate()` gate this section describes, with no bypass path: a real,
+currently-passing architecture-guard test
+(`test_no_raw_insert_statement_bypasses_redaction_anywhere_in_level2_cache_module`,
+`tests/tools/test_knowledge_gateway_cache.py`) asserts no raw `.execute(`/`sqlite3` call reaches
+`retrieval_context_packet_cache_rows` outside that gate, and
+`test_level2_write_stamps_redaction_policy_version_column` confirms the column is genuinely
+populated on write, not left null. No new `source_type` literal was introduced for Level 2 writes —
+the same 2-entry allowlist (§2) is reused unmodified.
+
 ## 7. Never-Cache Enumeration
 
 The following must never be written to any Knowledge Gateway cache row, under any circumstance,

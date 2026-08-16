@@ -38,6 +38,15 @@
     "cache_hit_rate": { "type": "number" },
     "cache_miss_rate": { "type": "number" },
     "cache_stale_rejection_rate": { "type": "number" },
+    "level2_cache_hit_rate": { "type": "number" },
+    "level2_cache_miss_rate": { "type": "number" },
+    "cache_hit_attribution": {
+      "type": "object",
+      "properties": {
+        "level1_hits": { "type": "integer" },
+        "level2_hits": { "type": "integer" }
+      }
+    },
     "latency_summary_ms": {
       "type": "object",
       "properties": {

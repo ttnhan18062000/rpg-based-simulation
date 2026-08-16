@@ -1281,6 +1281,40 @@ This document is the canonical record of intentional behavior shifts in `src` co
   shape.
 - **Status**: ACTIVE
 
+### 2.45 Level 2 Lookup Identity Includes Exact `budget_tokens`, Not `budget_class` (TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING)
+- **Subsystem**: Knowledge Gateway MCP / Packet Cache
+- **Old Behavior**: `docs/engine/contracts/knowledge_gateway_mcp/evidence_cache_identity_contract.md`
+  §1 states `budget_class` is "the caller's budget tier (token/latency budget bucket), not the raw
+  numeric budget," and names it as the only budget-related field in lookup identity. Level 1's
+  `compute_lookup_identity()` (`tools/knowledge_gateway_cache.py:137-154`, unmodified by this
+  ticket) follows this literally: it stores only the bucketed `budget_class` (thresholds 500/2000
+  tokens), never the raw integer.
+- **New Behavior**: Level 2's new, additively-named `compute_context_packet_lookup_identity()`
+  (`tools/knowledge_gateway_cache.py`) includes the literal `budget_tokens` integer as a 7th
+  lookup-identity field, used both in `packet_id`'s hash input (`PD1`) and in
+  `check_context_packet_cache()`'s Python-side disambiguation comparison against stored rows
+  (`PD3`).
+- **Rationale**: **Bounded**. `assemble_within_budget()`'s real truncation behavior (added by
+  `TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT`) is driven by the literal
+  `effective_budget` integer, not by `budget_class`'s coarse bucket — two requests for the same
+  query with different `budget_tokens` values that fall in the same bucket (e.g. 600 and 1800, both
+  "medium") can produce differently-truncated packets (different `included_statements`/`answer`/
+  `budget_returned`/`budget_truncated`/`omitted_statement_count`). Using only `budget_class` at
+  Level 2 risks silently serving a packet truncated for one caller's actual budget to a different
+  caller who requested a materially different budget in the same bucket — a genuine correctness
+  defect specific to a packet-cache layer whose stored payload itself varies continuously with the
+  exact budget value, not merely its bucket. §1 predates Level 2's existence and did not anticipate
+  a caching layer with this property. Bounded because the divergence is scoped only to Level 2's
+  new, additively-named identity function — Level 1's `compute_lookup_identity()` is unmodified,
+  and Level 1's own latent exposure to the same class of imprecision (out of this ticket's scope to
+  fix there) is untouched.
+- **Verification**: `test_identical_repeated_knowledge_context_call_is_a_genuine_level2_cache_hit`
+  (AC1) plus
+  `tests/tools/test_retrieval_cache.py::TestContextPacketCache::test_level2_lookup_disambiguates_by_budget_tokens_not_just_budget_class`
+  — asserts two calls differing only in `budget_tokens` within the same `budget_class` bucket do
+  not collide on the same Level 2 row/`packet_id`.
+- **Status**: ACTIVE
+
 ---
 
 ## 3. Unsupported / Retired Behavior

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION
-phase: open
+phase: done
 date: 2026-08-16
 tags: [ai, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [ai, mcp]
 Add packet dependency records and targeted invalidation for the Level 2 context-packet cache
 
 ## Status
-INPROGRESS (Parity phase complete; see Completion Summary)
+DONE
 
 ## Tier
 standard

@@ -305,6 +305,65 @@ def test_no_raw_insert_statement_bypasses_redaction_anywhere_in_cache_module():
     )
 
 
+def test_no_raw_insert_statement_bypasses_redaction_anywhere_in_level2_cache_module():
+    """AC4's 'no raw/unredacted Level 2 write path exists anywhere' guard — mirrors
+    test_no_raw_insert_statement_bypasses_redaction_anywhere_in_cache_module's exact AST-based
+    technique, adapted for the new Level 2 orchestrator function
+    (perform_context_packet_cache_write). Statically confirms:
+    1. tools/knowledge_gateway_cache.py itself contains no literal SQL INSERT text of its own
+       (already proven module-wide by the Level 1 test above; re-confirmed here for the specific
+       Level 2 write function).
+    2. rc.write_context_packet_cache() is called from exactly one place across tools/*.py:
+       perform_context_packet_cache_write() in tools/knowledge_gateway_cache.py.
+    3. Inside perform_context_packet_cache_write(), the call to evaluate_write_candidate()
+       precedes the call to write_context_packet_cache() in source order, with an intervening
+       decision.verdict-gated early return — never an unconditional write.
+    """
+    cache_source = _CACHE_MODULE_PATH.read_text()
+    assert ".execute(" not in cache_source
+    assert "sqlite3" not in cache_source
+
+    call_sites = []
+    for py_file in sorted(_TOOLS_DIR.glob("*.py")):
+        text = py_file.read_text()
+        if "write_context_packet_cache(" in text:
+            call_sites.append(py_file.name)
+    assert call_sites == ["knowledge_gateway_cache.py", "retrieval_cache.py"], (
+        f"write_context_packet_cache must be defined in retrieval_cache.py and called only from "
+        f"knowledge_gateway_cache.py's perform_context_packet_cache_write(); found: {call_sites}"
+    )
+
+    tree = ast.parse(cache_source)
+    perform_write_node = next(
+        node for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "perform_context_packet_cache_write"
+    )
+    func_source = ast.get_source_segment(cache_source, perform_write_node)
+    eval_index = func_source.index("evaluate_write_candidate(")
+    write_index = func_source.index("write_context_packet_cache(")
+    assert eval_index < write_index, (
+        "evaluate_write_candidate() must be called before write_context_packet_cache()"
+    )
+    between = func_source[eval_index:write_index]
+    assert "decision.verdict" in between and "return" in between, (
+        "there must be a decision.verdict-gated early return between the redaction check and the "
+        "real write — never an unconditional call"
+    )
+
+
+def test_level2_lookup_function_never_returns_a_freshness_or_verification_field():
+    """Directly discharges the named obligation inherited from
+    docs/guidelines/intentional_divergences.md §2.44's own Verification clause — mirrors
+    test_lookup_function_never_returns_a_freshness_or_verification_field (Level 1) exactly,
+    applied to the new Level 2 lookup function's own return-type dataclass."""
+    from tools import retrieval_cache as rc
+    import dataclasses
+
+    field_names = {f.name for f in dataclasses.fields(rc.ContextPacketCacheLookup)}
+    assert "freshness" not in field_names
+    assert "verification" not in field_names
+
+
 def test_migration_001_still_never_called_from_the_original_six_check_or_write_functions():
     import inspect
     from tools import retrieval_cache as rc

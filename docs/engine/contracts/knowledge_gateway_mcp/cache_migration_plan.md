@@ -95,8 +95,14 @@ Ordered migration function list (names are placeholders; bodies are Phase 2/3 wo
    migration's body is now real, implemented code — added by
    `TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS`, creating the new
    `retrieval_context_packet_cache_rows` table (28 columns, `LEVEL2_CACHE_COLUMNS`, per proposal
-   §10.2/§10.3); `tools/retrieval_cache.py:310-364`. No read/write logic against this table exists
-   yet — that remains separate, later work (`TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`).
+   §10.2/§10.3); `tools/retrieval_cache.py:310-364`. **Read/write logic against this table is now
+   real, implemented code too** — added by `TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`
+   (`check_context_packet_cache()`/`write_context_packet_cache()`/
+   `record_context_packet_cache_hit()`/`context_packet_cache_stats()`, `tools/retrieval_cache.py`),
+   orchestrated by `perform_context_packet_cache_lookup()`/`perform_context_packet_cache_write()`
+   (`tools/knowledge_gateway_cache.py`) and wired into the live `_run_knowledge_context()` call path,
+   checked before Level 1 — superseding this sentence's earlier "no read/write logic... yet"
+   framing.
 3. `migration_003_add_redaction_policy_version_column(conn: sqlite3.Connection) -> None` — adds a
    `redaction_policy_version` column to the existing `retrieval_provider_result_cache_rows` table, so
    a cache row can carry an on-disk record of which version of
@@ -112,6 +118,16 @@ Ordered migration function list (names are placeholders; bodies are Phase 2/3 wo
    option b); `tools/retrieval_cache.py:265-283`. (Migrations 1 and 2 above are likewise real,
    implemented code as of `TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS` — see migration
    2's own annotation above; no migration in this ordered list remains a design-only placeholder.)
+4. `migration_004_add_level2_write_path_columns(conn: sqlite3.Connection) -> None` — adds
+   `redaction_policy_version INTEGER`, `budget_truncated INTEGER`, `omitted_statement_count
+   INTEGER`, `provider_failures TEXT` to the existing `retrieval_context_packet_cache_rows` table
+   (closing the same `redaction_policy_version`-persistence gap migration 3 closed for Level 1, plus
+   3 further write-fidelity columns needed for a Level 2 hit to faithfully reconstruct a response).
+   Same `ALTER TABLE ... ADD COLUMN` idempotency pattern as migration 3 — a `PRAGMA table_info`
+   existence check per column, guarded, never touching migrations 1–3 or `LEVEL1_CACHE_COLUMNS`.
+   Ordinal 4, the next open ordinal after migration 3. Migration 4's body is real, implemented
+   code — added by `TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`;
+   `tools/retrieval_cache.py`. No migration in this ordered list remains a design-only placeholder.
 
 Each migration function:
 - Is idempotent and individually re-runnable (safe to call again on a database that already has the

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260816-KNOWLEDGE-GATEWAY-MCP-PHASE3-EPIC
-phase: open
+phase: done
 date: 2026-08-16
 tags: [ai, mcp]
 ---
@@ -15,7 +15,7 @@ tags: [ai, mcp]
 Local Knowledge Gateway MCP — Phase 3: Context-Packet Cache and Token Budgets
 
 ## Status
-EPIC_SCOPED
+DONE (closed with 2 of 4 §20 bullets honestly left open — see Completion Summary)
 
 ## Tier
 epic
@@ -128,45 +128,72 @@ in this epic must still complete its own Parity phase.
 - Any change to `CLAUDE.md`, `.claude/agents/*.md`, or `.claude/skills/*.md`.
 
 ## Acceptance Criteria
-- [ ] Only Phase 3 (§20) work is scoped/authorized under this epic; no Phase 4+ deliverable
+- [x] Only Phase 3 (§20) work is scoped/authorized under this epic; no Phase 4+ deliverable
       (Parity Ledger routing as a gateway data source, changed-path-aware task context, entity-alias
       reuse, durable verified knowledge) is claimed as done here.
-- [ ] The Level 2 schema and migration extend `knowledge-index/retrieval_cache.db` in place via
+- [x] The Level 2 schema and migration extend `knowledge-index/retrieval_cache.db` in place via
       `migration_002_add_level2_tables`, per `cache_migration_plan.md`'s already-reserved ordinal —
       no second database, no renumbering, no reuse of the ordinal for anything else.
-- [ ] The existing marker-only `retrieval_packet_cache_rows` table remains byte-for-byte unmodified
-      by every child ticket in this epic — verified by a real test, not merely asserted.
-- [ ] Assembled packets are genuinely deduplicated across multiple providers before being stored or
+- [x] The existing marker-only `retrieval_packet_cache_rows` table remains byte-for-byte unmodified
+      by every child ticket in this epic — verified by a real test, not merely asserted
+      (`tests/tools/test_retrieval_cache.py`, multiple assertions distinguishing it from
+      `retrieval_context_packet_cache_rows`).
+- [x] Assembled packets are genuinely deduplicated across multiple providers before being stored or
       returned — verified by a real test proving duplicate context items from different providers
-      collapse to one.
+      collapse to one (`test_duplicate_fact_across_two_providers_yields_one_statement_two_evidence_ids`).
+      **Caveat, honestly disclosed**: this AC's literal text ("real test") is satisfied at the
+      unit/fixture level; the real 7-entry corpus never actually exercised genuine duplicate content
+      across both providers in the same query (only 1/7 entries queried both providers at all), so
+      real-corpus-scale dedup remains structurally proven but not empirically observed — this is why
+      the corresponding §20 proposal bullet stays unmarked (see Completion Summary).
 - [ ] Caller budgets are enforced using real measured output size (not an estimate), within a
       documented tolerance, and any budget-driven pruning is visible/marked, never silent — per this
       epic's own Phase 3 Pilot Acceptance Criterion "Returned content respects the requested budget
-      within a documented tolerance."
-- [ ] Conflicts between providers are surfaced structurally and are never silently merged into a
-      single answer — per §21's explicit criterion.
-- [ ] Packet dependency records exist and targeted invalidation genuinely works: a changed cited
-      source invalidates the affected cached packet; an unrelated changed source does not.
-- [ ] A Level 2 cache hit returns a stored packet payload without rerunning any provider — verified
+      within a documented tolerance." **NOT MET.** The measured output size and visible-pruning
+      mechanism (`budget_truncated`/`omitted_statement_count`) is real, but the real-corpus
+      measurement found only 2/7 entries actually stayed within the documented ±20% tolerance,
+      because `context[]`/`evidence[]`/`conflicts[]` are structurally unbudgeted by
+      `assemble_within_budget()`. A real, measured FAIL — see Completion Summary.
+- [x] Conflicts between providers are surfaced structurally and are never silently merged into a
+      single answer — per §21's explicit criterion. Structural guarantee proven by a fail-loud
+      cardinality assertion and a dedicated non-vacuous (break/restore) guard test. **Caveat**: the
+      real 7-entry corpus surfaced zero actual cross-provider conflicts, so this is a proven
+      structural guarantee, not an empirically-observed real-corpus behavior — disclosed honestly by
+      the acceptance-measurement ticket rather than silently assumed.
+- [x] Packet dependency records exist and targeted invalidation genuinely works: a changed cited
+      source invalidates the affected cached packet; an unrelated changed source does not — built by
+      `TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION`, made live by
+      `TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`, and independently re-verified at real,
+      live-corpus scale by `TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT`.
+- [x] A Level 2 cache hit returns a stored packet payload without rerunning any provider — verified
       by a real test proving the provider round-trip is skipped, mirroring Phase 2's own genuine-
-      hit verification discipline (spy/counter, not `response["cache"]` alone).
-- [ ] This epic's own acceptance-measurement child ticket honestly re-measures against proposal
+      hit verification discipline (spy/counter, not `response["cache"]` alone) —
+      `test_identical_repeated_knowledge_context_call_is_a_genuine_level2_cache_hit`, and
+      independently dual-signal-verified again by the acceptance-measurement ticket's own real run.
+- [x] This epic's own acceptance-measurement child ticket honestly re-measures against proposal
       §21's full Phase 3 Pilot Acceptance Criteria list using the frozen 7-entry corpus, reporting
       whichever result is real — including a FAIL on any criterion, if that is what the real
-      measurement shows.
-- [ ] Every Phase 3 child ticket writes a real, schema-valid `docs/parity_ledger/infrastructure.yaml`
+      measurement shows. `TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT` did exactly this: 5/8
+      PASS, 1 real FAIL, 1 disclosed limitation, 1 PARTIAL.
+- [x] Every Phase 3 child ticket writes a real, schema-valid `docs/parity_ledger/infrastructure.yaml`
       entry for its own behavior change, per this repo's own CLAUDE.md governance rule — unaffected
       by "Parity Ledger not required until Phase 4," which concerns only the gateway's own routing
       behavior, not this repo's ticket-close governance requirement (see naming-collision
-      clarification above).
+      clarification above). INFRA-346/347/348/349/350, one per child ticket.
 - [ ] `docs/plans/knowledge-gateway-mcp-proposal.md` §20's Phase 3 bullets are annotated Done as
-      child tickets land, mirroring the Phase 0/1/2 epics' own annotation convention.
-- [ ] `CLAUDE.md`, `.claude/agents/*.md`, and `.claude/skills/*.md` remain byte-unchanged by every
-      child ticket in this epic.
+      child tickets land, mirroring the Phase 0/1/2 epics' own annotation convention. **PARTIALLY
+      MET.** 2 of 4 bullets are marked Done (packet payload storage; dependency records + targeted
+      invalidation). 2 remain honestly unmarked for real, specific reasons — see Completion Summary.
+- [x] `CLAUDE.md`, `.claude/agents/*.md`, and `.claude/skills/*.md` remain byte-unchanged by every
+      child ticket in this epic — confirmed via `git diff --stat HEAD` returning empty for all three
+      paths.
 - [ ] This epic is not closed merely because a child ticket's code lands — Phase 3's own bar (all
       §20 Phase 3 bullets Done, a real Level 2 cache genuinely producing hits with dependency-aware
       invalidation, and an honest measurement against §21's full Phase 3 Pilot Acceptance Criteria
-      list) must be met.
+      list) must be met. **This literal bar is NOT fully met** — 2/4 §20 bullets remain open. The
+      epic is closed anyway, by explicit user decision, with both gaps stated honestly rather than
+      silently glossed over or worked around — mirroring the Phase 2 epic's own precedent of closing
+      on a real, disclosed tension rather than blocking indefinitely. See Completion Summary.
 
 ## Related Tickets
 - TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS (child 1; Level 2 schema + migration_002 —
@@ -250,15 +277,87 @@ None yet — scope-only epic, no staging artifacts per the Phase 0/1/2 epics' ow
   open here — the read/write-wiring child ticket must verify this, not assume it.
 
 ## Implementation Notes
-Scope-only epic; no direct implementation. Child tickets land sequentially per `SEQUENCE.md`'s
-dependency order, each independently reviewed (Architecture Review pre-Implement,
-Architecture-Verify post-Implement) and verified (done-checker) before the next begins.
+Scope-only epic; no direct implementation. All 5 child tickets landed sequentially per
+`SEQUENCE.md`'s dependency order, each independently reviewed (Architecture Review pre-Implement,
+Architecture-Verify post-Implement), security-reviewed where tagged, and verified (done-checker) —
+in every case across 1-2 Verify passes, with zero gates routed around per this repo's Gate
+Integrity hard rule.
+
+After all 5 children closed, a final epic-level doc sweep (this epic's own closure step, not a
+child ticket's) re-assessed the 3 of 4 `docs/plans/knowledge-gateway-mcp-proposal.md` §20 Phase 3
+bullets each individual child ticket had left unmarked at the time (before Level 2 was genuinely
+live). One (dependency records + targeted invalidation) was found genuinely closable given the
+now-complete picture and marked Done, citing all three tickets that built/wired/proved it. Two
+(multi-provider dedup; caller budget enforcement) were found to have real, specific, unresolved
+gaps and were left honestly unmarked — see Completion Summary.
 
 ## Test Summary
-(pending — closes only once all 5 child tickets are DONE and this epic's own acceptance bar is met)
+Aggregate across all 5 child tickets (each ticket's own Test Summary has the full detail):
+- PACKET-CACHE-SCHEMA-MIGRATIONS: 514 tests passing (13 new).
+- PACKET-DEDUP-BUDGET-ENFORCEMENT: 130 tests passing (13 new).
+- PACKET-DEPENDENCY-INVALIDATION: 138 tests passing (14 new).
+- PACKET-CACHE-READ-WRITE-WIRING: 287 tests passing (40 new across Implement + Test-phase gap-check).
+- PILOT-ACCEPTANCE-MEASUREMENT: 31 tests passing (new measurement-runner test file), plus the real,
+  honest 7-entry-corpus measurement run itself (the actual "test" this ticket exists to perform).
 
 ## Files Changed
-(pending)
+Aggregate — see each child ticket's own Files Changed for exact line-level detail:
+- `tools/retrieval_cache.py` — Level 2 schema (`migration_002`), write-path columns (`migration_004`),
+  real Level 2 read/write functions.
+- `tools/knowledge_gateway_cache.py` — Level 2 lookup/write/revalidation orchestration
+  (`compute_context_packet_lookup_identity()`, `perform_context_packet_cache_lookup()`,
+  `perform_context_packet_cache_write()`, `revalidate_context_packet_row()`,
+  `_level2_repo_branch_scope()`).
+- `tools/knowledge_gateway_packet_assembly.py` — `evidence_dependencies` field, shared
+  `_content_hash()` helper, conflict-signal-aware dedup guard, `budget_truncated`/
+  `omitted_statement_count` fields.
+- `tools/knowledge_gateway_mcp.py` — Level 2 check-then-fall-through wired into
+  `_run_knowledge_context()` ahead of Level 1; new `knowledge_status` Level 2 fields.
+- `tools/agent-monitoring/kgmcp_phase3_gateway_runner.py` — new real-corpus measurement runner.
+- `docs/guidelines/intentional_divergences.md` — §2.44 (Non-collapse rule, Level 2 schema),
+  §2.45 (budget_tokens in Level 2 lookup identity).
+- `docs/parity_ledger/infrastructure.yaml` — INFRA-346/347/348/349/350.
+- `docs/plans/knowledge-gateway-mcp-proposal.md` — §20 Phase 3 bullets (2/4 marked Done), §21
+  honest-result narrative paragraph.
+- `docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md` — new results
+  doc.
+- Various test files across `tests/tools/` — 111 new tests total across all 5 children.
 
 ## Completion Summary
-(pending)
+All 5 Phase 3 child tickets are DONE, each independently reviewed, tested, and verified. The Level 2
+assembled-packet cache is genuinely real: it is checked before Level 1 in the live
+`_run_knowledge_context()` call path, produces genuine cache hits without re-invoking any provider,
+correctly enforces branch/working-tree scope, and correctly rejects/refreshes on both a changed
+cited source and a provider-generation bump — all independently re-verified at real, live-corpus
+scale (not just unit-fixture scale) by this epic's own final acceptance-measurement ticket.
+
+**This epic closes with two gaps stated honestly, not glossed over, per explicit user decision to
+close now rather than block on them (mirroring the Phase 2 epic's own precedent of closing on a
+real, disclosed tension):**
+
+1. **Caller budget enforcement measurably fails its own documented tolerance at real-corpus scale.**
+   The mechanism is real (measured output size, visible `budget_truncated` marker, never silent) —
+   but `TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT`'s honest measurement found only 2 of 7
+   real corpus entries actually stayed within the documented ±20% tolerance, because
+   `context[]`/`evidence[]`/`conflicts[]` are structurally unbudgeted by `assemble_within_budget()`.
+   This is a real, specific, measured FAIL against this epic's own stated Phase 3 Pilot Acceptance
+   Criterion, not a documentation gap.
+
+2. **Multi-provider deduplication is structurally proven but never empirically observed at real-corpus
+   scale.** `deduplicate_statements()`/`assemble_packet()` are real, tested, and reachable from the
+   live call path, and the dedup identity/collision-guard logic is unit-tested — but the real 7-entry
+   corpus never actually exercised genuine duplicate content across both providers in the same query
+   (only 1 of 7 entries even queried both providers). This is a real coverage gap, not a functional
+   defect — the mechanism has not been disproven, only unproven at the scale that matters.
+
+Neither gap was worked around, silently assumed closed, or hidden in either the code, the tests, the
+parity ledger, or the proposal doc's own annotations — `docs/plans/knowledge-gateway-mcp-proposal.md`
+§20 Phase 3 explicitly leaves both corresponding bullets unmarked, with the real reasoning stated
+inline. Closing these two gaps is left to a separately-scoped follow-up ticket, for a human reviewer
+to prioritize against the rest of the Knowledge Gateway MCP roadmap — this epic does not self-assign
+that follow-up ticket's ID or scope.
+
+This epic does **not** declare Phase 3 "production-capable" or the pilot boundary closed — per its
+own explicit Out of Scope and the acceptance-measurement ticket's own Out of Scope, that
+determination remains a separate, later human-reviewer call based on the real §21 numbers now on
+record (`docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md`).

@@ -181,6 +181,15 @@ LEVEL2_CACHE_COLUMNS: frozenset[str] = frozenset(
         "created_at",
         "last_validated_at",
         "hit_count",
+        # 4 columns added by migration_004_add_level2_write_path_columns
+        # (TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING, plan.md PD4) — close the
+        # redaction_policy_version persistence gap and the 3 write-fidelity gaps needed to
+        # faithfully reconstruct a hit response (budget_truncated/omitted_statement_count/
+        # provider_failures all exist on the live response dict but had no Level 2 column before).
+        "redaction_policy_version",
+        "budget_truncated",
+        "omitted_statement_count",
+        "provider_failures",
     }
 )
 
@@ -382,6 +391,47 @@ def migration_003_add_redaction_policy_version_column(conn: sqlite3.Connection) 
             "ALTER TABLE retrieval_provider_result_cache_rows "
             "ADD COLUMN redaction_policy_version INTEGER"
         )
+        conn.commit()
+
+
+def migration_004_add_level2_write_path_columns(conn: sqlite3.Connection) -> None:
+    """Adds redaction_policy_version, budget_truncated, omitted_statement_count, and
+    provider_failures to retrieval_context_packet_cache_rows (plan.md PD4,
+    TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING). Never called from
+    _get_connection()/_init_schema() or any of the original 6 check/write functions — invoked only
+    from _get_level2_connection() below. Idempotent via an explicit table_info existence check per
+    column (SQLite has no ALTER TABLE ... ADD COLUMN IF NOT EXISTS), mirroring
+    migration_003_add_redaction_policy_version_column's exact pattern. Ordinal 4, the next open
+    ordinal after migration_003 (no migration_004_* exists anywhere in this file before this
+    ticket).
+    """
+    columns = [row[1] for row in conn.execute(
+        "PRAGMA table_info(retrieval_context_packet_cache_rows)"
+    ).fetchall()]
+    added = False
+    if "redaction_policy_version" not in columns:
+        conn.execute(
+            "ALTER TABLE retrieval_context_packet_cache_rows "
+            "ADD COLUMN redaction_policy_version INTEGER"
+        )
+        added = True
+    if "budget_truncated" not in columns:
+        conn.execute(
+            "ALTER TABLE retrieval_context_packet_cache_rows ADD COLUMN budget_truncated INTEGER"
+        )
+        added = True
+    if "omitted_statement_count" not in columns:
+        conn.execute(
+            "ALTER TABLE retrieval_context_packet_cache_rows "
+            "ADD COLUMN omitted_statement_count INTEGER"
+        )
+        added = True
+    if "provider_failures" not in columns:
+        conn.execute(
+            "ALTER TABLE retrieval_context_packet_cache_rows ADD COLUMN provider_failures TEXT"
+        )
+        added = True
+    if added:
         conn.commit()
 
 
@@ -785,6 +835,219 @@ def provider_result_cache_stats() -> dict:
         ).fetchone()[0]
         total_hits = conn.execute(
             "SELECT COALESCE(SUM(hit_count), 0) FROM retrieval_provider_result_cache_rows"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    return {"total_rows": total, "total_hits": total_hits}
+
+
+# ---------------------------------------------------------------------------
+# Level 2 context-packet cache (§10.2/§10.3) — read/write, orchestrated by
+# tools/knowledge_gateway_cache.py (TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING). Follows
+# the exact check/write pair shape Level 1's provider-result cache above already uses, adapted for
+# packet_id being the real primary key (query_key_hash is an ordinary, non-unique, unindexed
+# column — plan.md PD1/PD3).
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class ContextPacketCacheLookup:
+    status: str                 # HIT or MISS — never a validity-verdict field (Non-collapse rule)
+    reason_code: str | None
+    row: dict | None            # raw stored column values, present only on HIT
+
+
+def _ensure_level2_schema_for_read() -> None:
+    """Guarantees retrieval_context_packet_cache_rows exists via a short-lived plain connection
+    before a read — a SELECT against a missing table raises sqlite3.OperationalError on a fresh
+    DB. Deviation from plan.md's literal "mirrors _ensure_level1_schema_for_read() exactly, calls
+    migration_002 only" text (discovered during Test-phase execution, not a silent workaround):
+    migration_002_add_level2_tables() itself assumes retrieval_cache_generation already exists
+    (created only by migration_001 — see TestLevel2Migrations' own class docstring in
+    tests/tools/test_retrieval_cache.py, "migration_002 assumes retrieval_cache_generation already
+    exists... the real chain this module's own production caller uses today is migration_001 ->
+    migration_003 -> migration_002"). Level 2 is now itself a production caller of migration_002,
+    reached via a hook that runs BEFORE the Level 1 hooks (plan.md Step 5) — on a genuinely fresh
+    DB, migration_002 alone raises sqlite3.OperationalError: no such table:
+    retrieval_cache_generation. migration_001_add_level1_tables() must run first here too,
+    mirroring the same real ordering _get_level1_connection() already depends on transitively (not
+    migration_003 — that migration only touches the Level 1 table, irrelevant to a Level 2
+    connection)."""
+    conn = _get_connection()
+    try:
+        migration_001_add_level1_tables(conn)
+        migration_002_add_level2_tables(conn)
+    finally:
+        conn.close()
+
+
+def check_context_packet_cache(
+    query_key_hash: str,
+    *,
+    normalized_intent: str,
+    entity_ids_json: str,
+    repository_id: str,
+    branch: str,
+    budget_tokens: int,
+) -> ContextPacketCacheLookup:
+    """SELECT by the non-unique query_key_hash column (`.fetchall()`, never `.fetchone()` —
+    packet_id is the real primary key, query_key_hash carries no uniqueness constraint) and
+    disambiguate in Python against normalized_intent/entity_ids/repository_id/branch/
+    budget_requested (plan.md PD3). Any row returned but not matching every field is a MISS with
+    reason_code="identity_mismatch_on_shared_key" (mirrors check_provider_result_cache's own
+    analogous Level 1 case); zero rows returned is a MISS with reason_code="no_cached_row".
+    budget_requested is stored as INTEGER (migration_002's CREATE TABLE) — compared directly
+    against the caller's int, no type-coercion gap exists here (unlike Level 1's
+    routing_policy_version, which is stored as TEXT).
+    """
+    _ensure_level2_schema_for_read()
+    conn = _get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM retrieval_context_packet_cache_rows WHERE query_key_hash = ?",
+            (query_key_hash,),
+        ).fetchall()
+        columns = [d[0] for d in conn.execute(
+            "SELECT * FROM retrieval_context_packet_cache_rows LIMIT 0"
+        ).description]
+    finally:
+        conn.close()
+    if not rows:
+        return ContextPacketCacheLookup(status=MISS, reason_code="no_cached_row", row=None)
+    for row in rows:
+        row_dict = dict(zip(columns, row))
+        if (
+            row_dict["normalized_intent"] == normalized_intent
+            and row_dict["entity_ids"] == entity_ids_json
+            and row_dict["repository_id"] == repository_id
+            and row_dict["branch"] == branch
+            and row_dict["budget_requested"] == budget_tokens
+        ):
+            return ContextPacketCacheLookup(status=HIT, reason_code=None, row=row_dict)
+    return ContextPacketCacheLookup(
+        status=MISS, reason_code="identity_mismatch_on_shared_key", row=None
+    )
+
+
+def _get_level2_connection() -> sqlite3.Connection:
+    """Mirrors _get_level1_connection() exactly in its own connection-tuning mechanics — opens
+    CACHE_DB_PATH via knowledge_gateway_redaction.open_connection_with_limits() (that helper's own
+    §9 connection-tuning defaults), not the plain _get_connection() the 3 legacy tables use.
+    Ensures the Level 2 table and its migration_004 write-path columns exist before any write.
+    Also runs migration_001_add_level1_tables() first (deviation from plan.md's literal text,
+    discovered during Test-phase execution — see _ensure_level2_schema_for_read()'s own docstring
+    for the full explanation): migration_002_add_level2_tables() assumes
+    retrieval_cache_generation already exists, which only migration_001 creates, and Level 2's
+    write hook is reached before the Level 1 write hook on a genuinely fresh DB (plan.md Step 5)."""
+    conn = _kgr_redaction.open_connection_with_limits(CACHE_DB_PATH)
+    migration_001_add_level1_tables(conn)
+    migration_002_add_level2_tables(conn)
+    migration_004_add_level2_write_path_columns(conn)
+    return conn
+
+
+def write_context_packet_cache(
+    *,
+    packet_id: str,
+    normalized_intent: str,
+    query_key_hash: str,
+    entity_ids_json: str,
+    answer: str | None,
+    statements_json: str,
+    context_items_json: str,
+    evidence_json: str,
+    conflicts_json: str,
+    evidence_dependencies_json: str,
+    provenance_providers_json: str,
+    providers_consulted_this_call_json: str,
+    repository_id: str,
+    branch: str,
+    head_commit: str | None,
+    working_tree_fingerprint: str | None,
+    provider_generations_json: str,
+    policy_version: str,
+    response_schema_version: int,
+    budget_requested: int | None,
+    budget_returned: int | None,
+    status: str,
+    freshness: str,
+    verification: str,
+    lifecycle: str | None,
+    redaction_policy_version: int | None,
+    budget_truncated: bool | None,
+    omitted_statement_count: int | None,
+    provider_failures_json: str | None,
+) -> None:
+    """INSERT OR REPLACE by the packet_id primary key — the sole real write path for this table
+    (orchestrated only by tools/knowledge_gateway_cache.py::perform_context_packet_cache_write(),
+    after knowledge_gateway_redaction.evaluate_write_candidate() has already returned ALLOW; never
+    called with raw/unredacted content). Mirrors write_provider_result_cache()'s shape exactly,
+    including its conn.commit()/finally: conn.close() structure."""
+    conn = _get_level2_connection()
+    try:
+        conn.execute(
+            "INSERT OR REPLACE INTO retrieval_context_packet_cache_rows "
+            "(packet_id, normalized_intent, query_key_hash, entity_ids, answer, statements, "
+            " context_items, evidence, conflicts, evidence_dependencies, provenance_providers, "
+            " providers_consulted_this_call, repository_id, branch, head_commit, "
+            " working_tree_fingerprint, provider_generations, policy_version, "
+            " response_schema_version, budget_requested, budget_returned, status, freshness, "
+            " verification, lifecycle, redaction_policy_version, budget_truncated, "
+            " omitted_statement_count, provider_failures, created_at, last_validated_at, "
+            " hit_count)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+            " ?, ?, ?, ?, ?, NULL, 0)",
+            (
+                packet_id, normalized_intent, query_key_hash, entity_ids_json, answer,
+                statements_json, context_items_json, evidence_json, conflicts_json,
+                evidence_dependencies_json, provenance_providers_json,
+                providers_consulted_this_call_json, repository_id, branch, head_commit,
+                working_tree_fingerprint, provider_generations_json, policy_version,
+                response_schema_version, budget_requested, budget_returned, status, freshness,
+                verification, lifecycle, redaction_policy_version,
+                int(budget_truncated) if budget_truncated is not None else None,
+                omitted_statement_count, provider_failures_json, time.time(),
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def record_context_packet_cache_hit(packet_id: str) -> None:
+    """Called only after a genuine, revalidated HIT (never on a bare lookup hit) — increments
+    hit_count and stamps last_validated_at. Mirrors record_provider_result_cache_hit() exactly,
+    adapted for the packet_id primary key and Level 2's last_validated_at column name (Level 1's
+    equivalent column is named last_hit_at)."""
+    conn = _get_level2_connection()
+    try:
+        conn.execute(
+            "UPDATE retrieval_context_packet_cache_rows "
+            "SET hit_count = hit_count + 1, last_validated_at = ? WHERE packet_id = ?",
+            (time.time(), packet_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def context_packet_cache_stats() -> dict:
+    """Read-only aggregation over retrieval_context_packet_cache_rows for
+    tools/knowledge_gateway_mcp.py::_run_knowledge_status(). Mirrors provider_result_cache_stats()
+    exactly — table-existence check via sqlite_master, returns {"total_rows": 0, "total_hits": 0}
+    on a fresh/never-migrated DB (never raises)."""
+    conn = _get_connection()
+    try:
+        table_exists = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='retrieval_context_packet_cache_rows'"
+        ).fetchone()
+        if table_exists is None:
+            return {"total_rows": 0, "total_hits": 0}
+        total = conn.execute(
+            "SELECT COUNT(*) FROM retrieval_context_packet_cache_rows"
+        ).fetchone()[0]
+        total_hits = conn.execute(
+            "SELECT COALESCE(SUM(hit_count), 0) FROM retrieval_context_packet_cache_rows"
         ).fetchone()[0]
     finally:
         conn.close()

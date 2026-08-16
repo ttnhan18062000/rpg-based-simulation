@@ -130,7 +130,7 @@ _CLEAN_CONTENT = "This is a perfectly normal piece of retrieved documentation te
 # Expanded set (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING's own Security-Review pass).
 _GITHUB_TOKEN_GHP = "ghp_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8"
 _GITHUB_TOKEN_FINE_GRAINED = "github_pat_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4"
-_SLACK_TOKEN = "xoxb-111111111111-222222222222-abcdefghijklmnopqrstuvwx"
+_SLACK_TOKEN = "xoxb-fake-placeholder-example-token"  # obviously-fake shape, not a real credential
 _OPENAI_KEY = "sk-" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4"
 _ANTHROPIC_KEY = "sk-ant-" + "A1b2C3d4E5f6G7h8I9j0K1l2"
 _PASSWORD_ASSIGNMENT = 'password = "supersecretvalue1"'

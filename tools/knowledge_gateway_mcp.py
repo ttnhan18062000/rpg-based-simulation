@@ -219,11 +219,36 @@ def _run_knowledge_context(
         RESPONSE_VALIDATOR.validate(fallback_response)
         return fallback_response
 
-    # Cache-check hook (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING) — runs after route()
-    # succeeds (compute_lookup_identity() structurally requires routing_decision.matched_identifier)
-    # and before assemble_packet(), so a genuine hit skips the provider round-trip entirely.
-    # Broad try/except: a cache-layer failure must never prevent the direct provider path from
-    # succeeding (fail-open, mirrors this function's own router-failure precedent above).
+    # Level 2 cache-check hook (TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING) — runs
+    # BEFORE the Level 1 cache-check hook and BEFORE assemble_packet(), so a genuine Level 2 hit
+    # never reaches packet assembly or the Level 1 lookup at all. Broad try/except: a cache-layer
+    # failure must never prevent the direct provider path from succeeding (fail-open, its own
+    # independent try/except — kept separate from the Level 1 hooks' own try/except blocks so a
+    # Level 2 failure can never suppress or be suppressed by a Level 1 outcome on the same call).
+    cached_packet = None
+    try:
+        _kgc = _load_cache_module()
+        cached_packet = _kgc.perform_context_packet_cache_lookup(
+            request, routing_decision, effective_budget
+        )
+    except Exception:
+        cached_packet = None
+
+    if cached_packet is not None:
+        hit_response: dict = dict(cached_packet)
+        if mode is not None:
+            hit_response["mode"] = mode
+        hit_response["cache"] = "HIT_L2"
+        hit_response["cache_key_version"] = _kgc.ROUTING_POLICY_VERSION
+        RESPONSE_VALIDATOR.validate(hit_response)
+        return hit_response
+
+    # Level 1 cache-check hook (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING) — runs after
+    # route() succeeds (compute_lookup_identity() structurally requires
+    # routing_decision.matched_identifier) and before assemble_packet(), so a genuine hit skips
+    # the provider round-trip entirely. Broad try/except: a cache-layer failure must never prevent
+    # the direct provider path from succeeding (fail-open, mirrors this function's own
+    # router-failure precedent above).
     cached_payload = None
     try:
         _kgc = _load_cache_module()
@@ -316,11 +341,26 @@ def _run_knowledge_context(
         for conflict in packet.conflicts
     ]
 
-    # Cache-write hook (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING) — miss path only (the hit
-    # path above returns early and never reaches here). response["cache"] describes what happened
-    # on *this* call and is set before the write attempt, independent of whether the write itself
-    # succeeds. Broad try/except: fail-open, same guarantee as the cache-check hook above.
+    # Cache-write hooks — miss path only (both hit paths above return early and never reach here).
+    # response["cache"] describes what happened on *this* call and is set before either write
+    # attempt, independent of whether either write itself succeeds.
     response["cache"] = "MISS"
+
+    # Level 2 cache-write hook (TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING) — its own,
+    # separate fail-open try/except block (kept independent from the Level 1 write's own
+    # try/except immediately below), so a Level 2 write failure can never suppress the Level 1
+    # write, and vice versa — both writes are attempted independently on a genuine full miss.
+    try:
+        _kgc = _load_cache_module()
+        _kgc.perform_context_packet_cache_write(
+            request, routing_decision, response, effective_budget,
+            evidence_dependencies=packet.evidence_dependencies,
+        )
+    except Exception:
+        pass
+
+    # Level 1 cache-write hook (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING). Broad try/except:
+    # fail-open, same guarantee as the cache-check hook above.
     try:
         _kgc = _load_cache_module()
         _kgc.perform_cache_write(request, routing_decision, response, effective_budget)
@@ -409,6 +449,25 @@ def _run_knowledge_status() -> dict:
         response["cache_hit_rate"] = stats["total_hits"] / denom
         response["cache_miss_rate"] = stats["total_rows"] / denom
         response["cache_stale_rejection_rate"] = 0.0
+
+    # Level 2 cache-domain fields (TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING) — real,
+    # additive, distinct from the Level 1 fields above. Never fabricated when Level 2 has zero
+    # rows — omit entirely, mirroring this function's own "never a fabricated 0/null/{} placeholder"
+    # discipline.
+    level2_stats = _load_cache_module().rc.context_packet_cache_stats()
+    if level2_stats["total_rows"] > 0:
+        response.setdefault("cache_entry_counts", []).append(
+            {"kind": "context_packet", "count": level2_stats["total_rows"]}
+        )
+        level2_denom = level2_stats["total_hits"] + level2_stats["total_rows"]
+        response["level2_cache_hit_rate"] = level2_stats["total_hits"] / level2_denom
+        response["level2_cache_miss_rate"] = level2_stats["total_rows"] / level2_denom
+
+    if stats["total_rows"] > 0 or level2_stats["total_rows"] > 0:
+        response["cache_hit_attribution"] = {
+            "level1_hits": stats["total_hits"] if stats["total_rows"] > 0 else 0,
+            "level2_hits": level2_stats["total_hits"] if level2_stats["total_rows"] > 0 else 0,
+        }
 
     STATUS_RESPONSE_VALIDATOR.validate(response)
     return response

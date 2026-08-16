@@ -85,6 +85,11 @@ ROUTING_POLICY_VERSION: int = 1  # DD7 — versions this module's assumption abo
 _BUDGET_CLASS_SMALL_MAX = 500     # DD8 — reused from redaction_retention_policy.md §8's
 _BUDGET_CLASS_MEDIUM_MAX = 2000   # provisional buckets (small/medium/large).
 
+# Local module constant, not an import of tools.knowledge_gateway_mcp.REPORTED_SCHEMA_VERSION —
+# that module loads this one via sibling-loading, not the reverse; importing it back here would be
+# circular (plan.md Step 3, TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING).
+CONTEXT_PACKET_RESPONSE_SCHEMA_VERSION: int = 1
+
 
 def compute_budget_class(budget_tokens: int) -> str:
     if budget_tokens <= _BUDGET_CLASS_SMALL_MAX:
@@ -389,6 +394,226 @@ def perform_cache_write(request: dict, routing_decision, response: dict, effecti
             working_tree_overlap_json=json.dumps(source_paths),
             provider_generation_at_validation=provider_generation,
             redaction_policy_version=decision.redaction_policy_version,
+        )
+    finally:
+        rk.release_write_guard(cache_key)
+
+
+# ---------------------------------------------------------------------------
+# Level 2 context-packet cache lookup identity + orchestration
+# (TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING, plan.md Step 3)
+#
+# Additively named throughout — never touches compute_lookup_identity()'s existing 6-field shape,
+# perform_cache_lookup(), or perform_cache_write() (Anti-Drift Notes).
+# ---------------------------------------------------------------------------
+
+def _current_branch() -> str:
+    """Returns only the branch name (unlike _current_repo_branch_scope(), which returns the
+    combined "{root}::{branch}" string) — Level 2's identity carries repository_id/branch as two
+    separate columns, per plan.md PD1."""
+    return subprocess.run(
+        ["git", "branch", "--show-current"], cwd=str(_REPO_ROOT),
+        capture_output=True, text=True,
+    ).stdout.strip() or "DETACHED"
+
+
+def compute_context_packet_lookup_identity(
+    request: dict, routing_decision, effective_budget: int
+) -> dict:
+    """Level 2's own, new, additively-named lookup-identity function (plan.md PD2/PD3) — includes
+    the literal budget_tokens integer (not budget_class), recorded as an intentional divergence
+    from evidence_cache_identity_contract.md §1's "not the raw numeric budget" instruction (see
+    docs/guidelines/intentional_divergences.md §2.45). packet_id is computed deterministically as a
+    hash over this same identity (plan.md PD1), making write_context_packet_cache()'s INSERT OR
+    REPLACE naturally idempotent per-identity — this does not remove the need for real multi-row
+    disambiguation in check_context_packet_cache() (PD3), since query_key_hash alone is not unique.
+    """
+    normalized_intent = rc._normalize_query(request["query"])
+    entity_ids_json = json.dumps(sorted(compute_resolved_entity_ids(routing_decision)))
+    repository_id = str(_REPO_ROOT)
+    branch = _current_branch()
+    budget_tokens = effective_budget
+    query_key_hash = rc._hash_text(normalized_intent)
+    packet_id = rc._hash_text(
+        json.dumps(
+            {
+                "normalized_intent": normalized_intent,
+                "entity_ids_json": entity_ids_json,
+                "repository_id": repository_id,
+                "branch": branch,
+                "budget_tokens": budget_tokens,
+                "query_key_hash": query_key_hash,
+            },
+            sort_keys=True,
+        )
+    )
+    return {
+        "normalized_intent": normalized_intent,
+        "entity_ids_json": entity_ids_json,
+        "repository_id": repository_id,
+        "branch": branch,
+        "budget_tokens": budget_tokens,
+        "query_key_hash": query_key_hash,
+        "packet_id": packet_id,
+    }
+
+
+def _current_provider_generations_for(provider_ids: list[str]) -> dict[str, str]:
+    """Mirrors the exact value Level 1's write path already stamps into provider_generation/
+    provider_generation_at_validation (perform_cache_write(), the single rc._corpus_generation()
+    value), reshaped into the per-provider dict revalidate_context_packet_row() consumes."""
+    return {pid: rc._corpus_generation() for pid in provider_ids}
+
+
+def _context_packet_row_to_response(row: dict) -> dict:
+    """Deserializes a stored Level 2 row's typed/JSON columns into the same field names
+    _run_knowledge_context()'s own response dict uses. Deliberately does not set `mode` (plan.md
+    PD5) — the mcp.py hook site supplies it from the current request instead, since assemble_packet
+    never branches on mode/include_history/evidence_detail (the packet's content is
+    filter-independent) and replaying a possibly-stale stored value would be less correct than
+    echoing the current request's own value."""
+    response: dict = {
+        "status": row["status"],
+        "freshness": row["freshness"],
+        "verification": row["verification"],
+        "provenance_providers": json.loads(row["provenance_providers"]),
+        "providers_consulted_this_call": json.loads(row["providers_consulted_this_call"]),
+        "answer": row["answer"],
+        "budget_requested": row["budget_requested"],
+        "budget_returned": row["budget_returned"],
+        "budget_truncated": bool(row["budget_truncated"]),
+        "omitted_statement_count": row["omitted_statement_count"],
+        "statements": json.loads(row["statements"]),
+        "context": json.loads(row["context_items"]),
+        "evidence": json.loads(row["evidence"]),
+        "conflicts": json.loads(row["conflicts"]),
+    }
+    if row.get("provider_failures") is not None:
+        response["provider_failures"] = json.loads(row["provider_failures"])
+    return response
+
+
+def perform_context_packet_cache_lookup(
+    request: dict, routing_decision, effective_budget: int
+) -> dict | None:
+    """Returns the cached, already-assembled, already-redacted response payload dict on a genuine,
+    revalidated HIT; `None` on any MISS/stale result. Reuses revalidate_context_packet_row()/
+    _capability_descriptor_for() unmodified — this function must not duplicate
+    is_branch_compatible() before calling revalidate_context_packet_row(), since that function
+    already performs the branch-compatibility check internally."""
+    identity = compute_context_packet_lookup_identity(request, routing_decision, effective_budget)
+    lookup = rc.check_context_packet_cache(
+        identity["query_key_hash"],
+        normalized_intent=identity["normalized_intent"],
+        entity_ids_json=identity["entity_ids_json"],
+        repository_id=identity["repository_id"],
+        branch=identity["branch"],
+        budget_tokens=identity["budget_tokens"],
+    )
+    if lookup.status != rc.HIT:
+        return None
+    stored_provider_ids = list(json.loads(lookup.row["provider_generations"]).keys())
+    current_provider_generations = _current_provider_generations_for(stored_provider_ids)
+    capability_descriptor = _capability_descriptor_for(routing_decision.providers_selected)
+    valid = revalidate_context_packet_row(
+        lookup.row,
+        capability_descriptor=capability_descriptor,
+        current_provider_generations=current_provider_generations,
+        current_repository_id=identity["repository_id"],
+        current_branch=identity["branch"],
+        changed_paths=request.get("changed_paths", []),
+    )
+    if not valid:
+        return None
+    rc.record_context_packet_cache_hit(identity["packet_id"])
+    return _context_packet_row_to_response(lookup.row)
+
+
+def perform_context_packet_cache_write(
+    request: dict,
+    routing_decision,
+    response: dict,
+    effective_budget: int,
+    *,
+    evidence_dependencies: list[str],
+) -> None:
+    """Fire-and-forget from the caller's perspective (the caller wraps this in try/except for
+    fail-open semantics). Mirrors perform_cache_write()'s structure exactly — same PARTIAL-status
+    guard, same raw_payload construction (_RESPONSE_KEYS_EXCLUDED_FROM_CACHE_PAYLOAD reused
+    unmodified) and evaluate_write_candidate() verdict-gated early return, same source_type
+    derivation (no new source-type literal). Uses a distinct write-guard key namespace
+    (f"level2:{packet_id}") so a Level 1 write and a concurrent Level 2 write for the same query
+    never contend unnecessarily — both share rk._write_locks/acquire_write_guard()/
+    release_write_guard() unmodified."""
+    if response.get("status") == "PARTIAL":
+        return
+    identity = compute_context_packet_lookup_identity(request, routing_decision, effective_budget)
+    cache_key = f"level2:{identity['packet_id']}"
+    if not rk.acquire_write_guard(cache_key):
+        return  # another in-process write for this exact key is already in flight
+    try:
+        if not rk.check_db_size_within_limit(rc.CACHE_DB_PATH):
+            return  # §9 ceiling — skip write, still return the live result to the caller
+
+        providers_consulted = response.get("providers_consulted_this_call", [])
+        source_type = (
+            rk.SOURCE_TYPE_CONTEXT_SEARCH
+            if "context_search" in providers_consulted
+            else rk.SOURCE_TYPE_GRAPHIFY
+        )
+        raw_payload = json.dumps(
+            {
+                k: v
+                for k, v in response.items()
+                if k not in _RESPONSE_KEYS_EXCLUDED_FROM_CACHE_PAYLOAD
+            },
+            sort_keys=True,
+        )
+        decision = rk.evaluate_write_candidate(source_type=source_type, raw_content=raw_payload)
+        if decision.verdict != rk.ALLOW:
+            return
+
+        provider_generations_json = json.dumps(
+            {pid: rc._corpus_generation() for pid in providers_consulted}
+        )
+        rc.write_context_packet_cache(
+            packet_id=identity["packet_id"],
+            normalized_intent=identity["normalized_intent"],
+            query_key_hash=identity["query_key_hash"],
+            entity_ids_json=identity["entity_ids_json"],
+            answer=response.get("answer"),
+            statements_json=json.dumps(response.get("statements", [])),
+            context_items_json=json.dumps(response.get("context", [])),
+            evidence_json=json.dumps(response.get("evidence", [])),
+            conflicts_json=json.dumps(response.get("conflicts", [])),
+            evidence_dependencies_json=json.dumps(sorted(evidence_dependencies)),
+            provenance_providers_json=json.dumps(response.get("provenance_providers", [])),
+            providers_consulted_this_call_json=json.dumps(providers_consulted),
+            repository_id=identity["repository_id"],
+            branch=identity["branch"],
+            head_commit=None,  # honest omission — mirrors perform_cache_write()'s own precedent
+            working_tree_fingerprint=None,
+            provider_generations_json=provider_generations_json,
+            # Reuses ROUTING_POLICY_VERSION as Level 2's own generic policy_version stamp — no
+            # separate "packet policy" version concept exists anywhere in this repo to derive a
+            # second one from; this is the same versioning axis Level 1's routing_policy_version
+            # column already stamps.
+            policy_version=str(ROUTING_POLICY_VERSION),
+            response_schema_version=CONTEXT_PACKET_RESPONSE_SCHEMA_VERSION,
+            budget_requested=identity["budget_tokens"],
+            budget_returned=response.get("budget_returned"),
+            status=response.get("status"),
+            freshness=response.get("freshness"),
+            verification=response.get("verification"),
+            lifecycle=None,  # honest omission — no lifecycle concept exists yet for this ticket
+            redaction_policy_version=decision.redaction_policy_version,
+            budget_truncated=response.get("budget_truncated"),
+            omitted_statement_count=response.get("omitted_statement_count"),
+            provider_failures_json=(
+                json.dumps(response["provider_failures"])
+                if response.get("provider_failures")
+                else None
+            ),
         )
     finally:
         rk.release_write_guard(cache_key)

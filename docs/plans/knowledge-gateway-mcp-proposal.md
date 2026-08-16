@@ -1299,13 +1299,69 @@ design is a separate, later human-reviewer decision, out of this ticket's own sc
 ### Phase 3: Context-Packet Cache and Token Budgets
 
 - Assemble deduplicated multi-provider packets.
-- Store and return actual packet payloads.
+- Store and return actual packet payloads. **Done** (`TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`) —
+  a real Level 2 (assembled-packet) cache lookup and write path is now genuinely wired into the live
+  `_run_knowledge_context()` call path, checked before Level 1: an identical repeated
+  `knowledge_context` call (same normalized intent/resolved entity IDs/`repository_id`/branch/
+  `budget_tokens`) now returns the cached, already-assembled, already-redacted packet payload without
+  ever reaching `assemble_packet()` or Level 1's own lookup
+  (`test_identical_repeated_knowledge_context_call_is_a_genuine_level2_cache_hit`). A Level 2 miss
+  falls through unmodified to Level 1's existing lookup, then to live providers
+  (`test_level2_miss_falls_through_to_unmodified_level1_lookup`). A Level 2 hit is rejected and
+  refreshed when dependency-invalidation logic determines staleness
+  (`test_level2_hit_rejected_on_changed_paths_intersection_triggers_real_refresh`,
+  `test_level2_hit_rejected_on_provider_generation_bump_real_call`), and branch/working-tree scope is
+  enforced before a hit is served (`test_level2_cached_result_from_feature_branch_not_served_on_different_branch`).
+  Level 2 writes are independently verified — not assumed — to route through the same
+  `evaluate_write_candidate()` redaction/secret-scan/size-cap enforcement Level 1 already uses, with
+  no bypass path (`test_level2_cache_write_calls_evaluate_write_candidate_before_any_insert`,
+  `test_no_raw_insert_statement_bypasses_redaction_anywhere_in_level2_cache_module`). `knowledge_status`
+  now reports real Level 2 cache-domain fields distinct from Level 1's. This closes the one gap this
+  bullet's own core capability required — a live store-and-return path — that did not exist anywhere
+  before this ticket, unlike the sibling bullets above/below, which this ticket's own predecessor
+  tickets hardened rather than originated.
 - Enforce caller budgets using measured output size.
-- Add packet dependency records and targeted invalidation.
+- Add packet dependency records and targeted invalidation. **Done**
+  (`TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION`, wired live by
+  `TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`, independently re-verified at real-corpus/
+  live scale by `TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT`) — the dependency-invalidation
+  ticket built the real mechanism (`PacketAssembly.evidence_dependencies` aggregated from
+  `final_context`, plus `revalidate_context_packet_row()`/`_level2_repo_branch_scope()` in
+  `tools/knowledge_gateway_cache.py`, reusing §5's `is_branch_compatible()`/
+  `working_tree_overlap_forces_revalidation()` primitives unmodified) as additive, pure, tested
+  logic with no live call path yet. The read-write-wiring ticket made it genuinely reachable: Level
+  2 lookups in `_run_knowledge_context()` now call `perform_context_packet_cache_lookup()`, which
+  revalidates against this dependency/branch logic before ever serving a hit. The pilot-acceptance
+  ticket then independently re-verified the wired mechanism against real, live gateway calls (not
+  synthetic row dicts) for `Q1_authoritative_state`: stale rejection on a real changed cited path
+  (`cache_status: "MISS"`, `genuinely_refreshed: true`), unrelated-change non-invalidation on a
+  follow-up real call (`cache_status: "HIT_L2"`, `genuine_hit_preserved: true`), and
+  uncommitted-change invalidation (sharing the stale-rejection evidence, since `changed_paths` is
+  the gateway's only representation of uncommitted changes) all **PASS** —
+  `test_stale_rejection_and_unrelated_change_live_real_corpus_round_trip` and
+  `test_uncommitted_change_invalidation_shares_stale_rejection_evidence_not_double_counted` in
+  `tests/tools/test_kgmcp_phase3_pilot_acceptance_measurement.py`. Branch partition also **PASS**,
+  via a disclosed, targeted technique (`test_branch_partition_live_direct_call_against_a_real_current_row`):
+  a direct call to the real `revalidate_context_packet_row()` against a real, just-written row with
+  a synthetic incompatible branch argument — not a full round trip through an actual second git
+  branch, since the frozen 7-entry corpus cannot organically produce one; disclosed as such in both
+  the committed fixture's `technique_disclosure` field and
+  `docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md`'s AC6
+  section. See §21 below for the two Phase 3 pilot acceptance criteria (budget tolerance, conflict
+  visibility) this same measurement ticket found did NOT pass or could not be exercised — targeted
+  invalidation's own criteria are the ones that did.
 
 Completion of Phase 3 is the first production-capable pilot boundary. Its provider set is Context
 Search plus Graphify; Parity Ledger is not required until Phase 4. Production-capable here means an
 opt-in advisory tool with approved payload policy and acceptance tests, not mandatory workflow use.
+
+`TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT` performed the first real measurement of this
+boundary's §21 Pilot Acceptance Criteria against the live Level 2 cache path — a real, mixed
+result (5/8 newly-measurable criteria PASS, 1 FAIL, 1 disclosed coverage limitation, 1 PARTIAL on
+the closing criterion; see §21 and
+`docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md` for full
+detail). This measurement does not itself declare Phase 3 production-capable or close this pilot
+boundary — that determination is a separate, later human-reviewer call based on these real numbers.
 
 ### Phase 4: Parity and Workflow Integration
 
@@ -1358,6 +1414,26 @@ The first production-capable gateway should satisfy all of the following:
 - Evaluation reports lookup, validation, fallback, assembly, and end-to-end latency separately and
   demonstrates lower median end-to-end latency and fewer delivered tokens for repeated
   representative queries without reducing authoritative-source recall.
+
+**Phase 3 Pilot Acceptance measurement (first real pass against the live Level 2 cache):**
+`TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT` ran the frozen 7-entry corpus against the
+real, live Level 2 packet-cache path for the first time and honestly measured the 8 criteria above
+that depend on Level 2 behavior (warm hit/no re-run, stale rejection, unrelated-change
+non-invalidation, branch partition, uncommitted-change invalidation, budget tolerance, conflict
+visibility, and the closing latency/token/recall criterion). Real, mixed result: 5/8 PASS (warm hit
+no-rerun, stale rejection, unrelated-change non-invalidation, branch partition, uncommitted-change
+invalidation); 1 FAIL (budget tolerance — only 2/7 corpus entries stayed within the documented
+±20% tolerance, since `context[]`/`evidence[]`/`conflicts[]` are structurally unbudgeted by
+`assemble_within_budget()`); 1 disclosed coverage limitation, not a pass/fail (conflict visibility
+— 0/7 real cross-provider conflicts observed across the corpus, a genuine gap in this corpus's own
+design, not evidence the mechanism itself is broken); 1 PARTIAL on the closing criterion (median
+end-to-end latency genuinely improved against both the Phase 1 cold baseline and a
+freshly-measured Level 1 warm baseline, but delivered-token count did not improve against either
+baseline, so `pass: false` is reported honestly; recall stayed regression-free at 0/7). Full
+per-criterion detail, real numbers, and disclosed limitations are in
+`docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md`. No criterion
+above is marked satisfied by this note — the real, mixed result stands as measured; whether/how to
+address the budget-tolerance FAIL is a separate, later, human-scoped ticket.
 
 ## 22. Representative Use Cases
 
