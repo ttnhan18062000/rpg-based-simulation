@@ -901,6 +901,20 @@ Budgeting must measure the content actually returned, not estimate cost as a con
 
 Deduplication should occur before truncation. When multiple providers support the same fact, the packet should normally include one concise statement with multiple evidence references rather than repeat similar excerpts.
 
+**Accounting scope (updated by `TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE`):**
+"the content actually returned" is measured per statement — each included statement's own text
+plus its own matched `context[]`/`evidence[]` entries are costed together as one atomic unit
+(`assemble_within_budget()`'s widened per-statement cost), since a statement and its supporting
+context/evidence are architecturally inseparable in the current assembly pipeline (one is never
+shipped without the other). `conflicts[]` is measured and truncated separately, against whatever
+budget remains after statements/context/evidence, since it is not owned by any single statement.
+This closes the previously-disclosed gap where `context[]`/`evidence[]`/`conflicts[]` were
+structurally unbudgeted — but the accounting still does not include JSON structural overhead or
+untouched response fields (`statement_id`, `classification`, `kind`, `EvidenceEntry.source_id`,
+etc.), so it remains a real, honestly-disclosed underestimate of the true serialized response
+size; see `docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md`'s
+"Post-fix re-measurement" section for the real measured gap.
+
 ## 16. Failure and Fallback Semantics
 
 The Knowledge Gateway is never a correctness dependency.
@@ -1528,8 +1542,21 @@ freshly-measured Level 1 warm baseline, but delivered-token count did not improv
 baseline, so `pass: false` is reported honestly; recall stayed regression-free at 0/7). Full
 per-criterion detail, real numbers, and disclosed limitations are in
 `docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md`. No criterion
-above is marked satisfied by this note — the real, mixed result stands as measured; whether/how to
-address the budget-tolerance FAIL is a separate, later, human-scoped ticket.
+above is marked satisfied by this note — the real, mixed result stands as measured.
+
+**Update (`TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE`):** the budget-tolerance
+FAIL was addressed by widening `assemble_within_budget()`'s per-statement cost to include each
+statement's own matched `context[]`/`evidence[]` content, plus a new, separate
+`truncate_conflicts_within_budget()` pass for `conflicts[]`. The real, honest re-measured pass rate
+is still **2/7**, unchanged — every previously-failing entry's real payload genuinely shrank
+(11%-22%), but not enough to cross the ±20% tolerance threshold, because the widened accounting
+still does not count JSON structural overhead or untouched response fields (`statement_id`,
+`classification`, `kind`, `EvidenceEntry.source_id`, etc.) that the real `json.dumps(response)`
+measurement counts. See `phase3_pilot_acceptance_measurement.md`'s own "Post-fix re-measurement"
+section for full per-entry numbers. The multi-provider dedup real-corpus-proof gap (§21's own
+conflict-visibility-adjacent coverage question) was independently re-confirmed still open — 0/7
+real cross-provider content duplicates in the live corpus — locked in by a regression test rather
+than closed via a fabricated corpus extension.
 
 ## 22. Representative Use Cases
 

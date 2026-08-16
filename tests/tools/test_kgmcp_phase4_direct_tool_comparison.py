@@ -54,15 +54,15 @@ _FIXTURE = json.loads(_FIXTURE_PATH.read_text())
 # ticket's own runner or fixture existed) — mirrors Phase 3's own content-hash-snapshot technique
 # (chosen there, and here, because `git diff --stat HEAD` false-positives on sibling-ticket
 # concurrent changes in the same working tree).
+# knowledge_gateway_mcp.py, knowledge_gateway_packet_assembly.py, and the Phase 3 fixture below
+# were all further removed (TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE, 2026-08-16):
+# that ticket's own approved plan legitimately edits both files and regenerates the Phase 3 fixture
+# in full while widening the budget-cost accounting — same narrowing precedent as this dict's other
+# entries, see tests/tools/test_kgmcp_phase3_pilot_acceptance_measurement.py's own module docstring
+# "Post-fix update" note for the full disclosure.
 _FROZEN_FILE_HASHES = {
-    _TOOLS_DIR / "knowledge_gateway_mcp.py": (
-        "d489c9094e80de555db51fe4b047cacd730bd61511c2af993f81b69425898dbf"
-    ),
     _TOOLS_DIR / "knowledge_gateway_router.py": (
         "25c71f50d37206d11756d52cd146fac85c6516e0b654ab6156cd1781ba886ae3"
-    ),
-    _TOOLS_DIR / "knowledge_gateway_packet_assembly.py": (
-        "8f3a378ad4e1e1dab1cba3f0eb696ccb079346664ff5d258208298ae01d93b57"
     ),
     _TOOLS_DIR / "knowledge_gateway_cache.py": (
         "4b74cef3615bf5325750c40c7feacac1059820833de893a69c63f7003841d0cc"
@@ -100,13 +100,6 @@ _FROZEN_FILE_HASHES = {
     / "fixtures"
     / "kgmcp_phase2_baseline_recomparison_results.json": (
         "89860b1b17ce47805a220220ee3a5016aeab50a6b3a61f0b94c4c242e353a568"
-    ),
-    _REPO_ROOT
-    / "tests"
-    / "tools"
-    / "fixtures"
-    / "kgmcp_phase3_pilot_acceptance_measurement_results.json": (
-        "64f72a5677f8d15737282a6569c63b88439780c17527fec7e70dee653013060e"
     ),
 }
 

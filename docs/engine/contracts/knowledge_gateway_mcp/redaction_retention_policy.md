@@ -258,6 +258,17 @@ token count. This tolerance is the standard against which a future implementatio
 Phase 3 pilot's "returned content respects the requested budget within a documented tolerance"
 acceptance bar (`docs/plans/knowledge-gateway-mcp-proposal.md` §21).
 
+**Measured scope (updated by `TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE`):** §21
+#12's own acceptance measurement is, and always was, measured against the full response payload
+(`json.dumps(response)`), never a partial subset — that has not changed. What changed is what
+`assemble_within_budget()` itself now *bounds*: previously `statements[]` text only, now each
+included statement's own matched `context[]`/`evidence[]` content too (plus a separate
+`conflicts[]` truncation pass), narrowing — but not closing — the real, honestly-measured gap
+between what this budgeting mechanism accounts for and what §21 #12's own full-payload measurement
+actually counts (JSON structural overhead and untouched response fields remain outside this
+method's scope). See `docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md`'s
+"Post-fix re-measurement" section for the real numbers.
+
 The method produces a plain non-negative integer, compatible with the already-frozen integer-typed
 budget fields it must feed:
 

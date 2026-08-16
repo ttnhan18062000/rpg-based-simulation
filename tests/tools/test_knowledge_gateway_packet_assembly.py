@@ -104,6 +104,28 @@ def _assemble(
     )
 
 
+def _real_combined_cost_of_first_statement(
+    monkeypatch, *, cs_results: list[dict], query_text: str = "test query"
+) -> int:
+    """Real, measured cost of the first rendered statement PLUS its own matching
+    context/evidence entries — computed by calling the real `_statement_included_content_cost()`
+    the fixed `assemble_within_budget()` itself uses, against the real `Statement`/`ContextEntry`/
+    `EvidenceEntry` the pipeline actually produces for `cs_results[0]`. Never a guessed/hardcoded
+    literal — a budget-boundary test that wants "exactly enough for one statement's real combined
+    cost" must derive that value from the real code, not from the old statement-only formula."""
+    packet = _assemble(
+        monkeypatch,
+        providers_selected=["context_search"],
+        cs_results=cs_results,
+        budget_requested=100_000,
+        query_text=query_text,
+    )
+    statement = packet.statements[0]
+    context_by_id = {c.source_id: c for c in packet.context}
+    evidence_by_id = {e.evidence_id: e for e in packet.evidence}
+    return kpa._statement_included_content_cost(statement, context_by_id, evidence_by_id)
+
+
 # ---------------------------------------------------------------------------
 # Step 1 — kgmcp_char_heuristic_v1
 # ---------------------------------------------------------------------------
@@ -284,6 +306,115 @@ def test_budget_returned_never_exceeds_budget_requested():
     ]
     _, returned = kpa.assemble_within_budget(statements, budget_requested=77)
     assert returned <= 77
+
+
+def test_assemble_within_budget_accounts_context_and_evidence_bytes_not_just_statement_text():
+    """TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE AC1: a statement whose own
+    `text` alone fits comfortably under budget, but whose paired context/evidence content does
+    not, must be genuinely excluded — not silently returned oversized."""
+    statement = kpa.Statement("stmt-001", "short", "FACT", ["doc:docs/a.md#a"], priority_tier=2)
+    ctx = kpa.ContextEntry(
+        kind="context_search",
+        summary="x" * 400,
+        source_id="doc:docs/a.md#a",
+        path="docs/a.md",
+        evidence_hash="deadbeef" * 8,
+        authority=None,
+    )
+    ev = kpa.EvidenceEntry(
+        evidence_id="doc:docs/a.md#a",
+        source_id="doc:docs/a.md#a",
+        path="docs/a.md",
+        evidence_hash="deadbeef" * 8,
+    )
+    statement_only_cost = kpa.kgmcp_char_heuristic_v1(statement.text)
+    budget = statement_only_cost + 1  # fits the statement text alone, nothing more
+
+    included_legacy, _ = kpa.assemble_within_budget([statement], budget)
+    assert included_legacy == [statement]  # 2-arg form: unaware of context/evidence, still fits
+
+    included_widened, _ = kpa.assemble_within_budget([statement], budget, [ctx], [ev])
+    assert included_widened == []  # 4-arg form: real combined cost exceeds the same budget
+
+
+def test_conflicts_are_measured_against_budget_even_though_real_corpus_never_populates_them():
+    small_conflict = kpa.Conflict(
+        subject="docs/a.md vs docs/b.md",
+        claims=[
+            kpa.ConflictClaim(value="short", source_id="docs/a.md", authority="", valid_from="", valid_to=None),
+            kpa.ConflictClaim(value="also short", source_id="docs/b.md", authority="", valid_from="", valid_to=None),
+        ],
+        automatic_resolution=None,
+        recommended_action="human review",
+    )
+    large_conflict = kpa.Conflict(
+        subject="docs/c.md vs docs/d.md",
+        claims=[
+            kpa.ConflictClaim(value="y" * 500, source_id="docs/c.md", authority="", valid_from="", valid_to=None),
+            kpa.ConflictClaim(value="z" * 500, source_id="docs/d.md", authority="", valid_from="", valid_to=None),
+        ],
+        automatic_resolution=None,
+        recommended_action="human review",
+    )
+    small_cost = sum(kpa.kgmcp_char_heuristic_v1(c.value) for c in small_conflict.claims)
+
+    included, cost = kpa.truncate_conflicts_within_budget(
+        [small_conflict, large_conflict], remaining_budget=small_cost
+    )
+    assert included == [small_conflict]
+    assert cost == small_cost
+
+
+def test_budget_returned_reflects_combined_cost_when_context_and_evidence_are_supplied():
+    statement = kpa.Statement("stmt-001", "short text", "FACT", ["doc:docs/a.md#a"], priority_tier=2)
+    ctx = kpa.ContextEntry(
+        kind="context_search",
+        summary="short text",
+        source_id="doc:docs/a.md#a",
+        path="docs/a.md",
+        evidence_hash="deadbeef" * 8,
+        authority=None,
+    )
+    ev = kpa.EvidenceEntry(
+        evidence_id="doc:docs/a.md#a",
+        source_id="doc:docs/a.md#a",
+        path="docs/a.md",
+        evidence_hash="deadbeef" * 8,
+    )
+
+    _, returned_legacy = kpa.assemble_within_budget([statement], budget_requested=100_000)
+    _, returned_widened = kpa.assemble_within_budget(
+        [statement], budget_requested=100_000, context_entries=[ctx], evidence_entries=[ev]
+    )
+    assert returned_widened > returned_legacy
+
+
+def test_assemble_within_budget_never_uses_length_times_constant_estimate():
+    statement = kpa.Statement("stmt-001", "short", "FACT", ["doc:docs/a.md#a"], priority_tier=2)
+    ev_short = kpa.EvidenceEntry(
+        evidence_id="doc:docs/a.md#a", source_id="doc:docs/a.md#a", path="a", evidence_hash="h",
+    )
+    ev_long = kpa.EvidenceEntry(
+        evidence_id="doc:docs/a.md#a", source_id="doc:docs/a.md#a",
+        path="a" * 200, evidence_hash="h" * 200,
+    )
+    ctx = kpa.ContextEntry(
+        kind="context_search", summary="a" * 40, source_id="doc:docs/a.md#a",
+        path="a", evidence_hash="h", authority=None,
+    )
+
+    cost_short = kpa._statement_included_content_cost(statement, {ctx.source_id: ctx}, {ev_short.evidence_id: ev_short})
+    cost_long = kpa._statement_included_content_cost(statement, {ctx.source_id: ctx}, {ev_long.evidence_id: ev_long})
+    statement_only_cost = kpa.kgmcp_char_heuristic_v1(statement.text)
+
+    assert cost_long > cost_short
+    assert cost_long != cost_short * 2  # not a fixed multiplier of anything
+    assert cost_short - statement_only_cost == (
+        kpa.kgmcp_char_heuristic_v1(ctx.summary)
+        + kpa.kgmcp_char_heuristic_v1(ev_short.evidence_id)
+        + kpa.kgmcp_char_heuristic_v1(ev_short.path or "")
+        + kpa.kgmcp_char_heuristic_v1(ev_short.evidence_hash)
+    )
 
 
 def test_duplicate_fact_across_two_providers_yields_one_statement_two_evidence_ids(monkeypatch):
@@ -672,7 +803,10 @@ def test_conflict_index_pairs_correspondence_invariant_raises_on_desync(monkeypa
 def test_budget_truncation_produces_visible_marker_when_content_is_dropped(monkeypatch):
     text_a = "first statement text that costs some real budget"
     text_b = "second statement text that costs additional real budget beyond the first"
-    cost_a = kpa.kgmcp_char_heuristic_v1(text_a.strip())
+    cost_a = _real_combined_cost_of_first_statement(
+        monkeypatch,
+        cs_results=[_cs_result(source_path="docs/a.md", heading="A", excerpt=text_a)],
+    )
     packet = _assemble(
         monkeypatch,
         providers_selected=["context_search"],
@@ -728,7 +862,10 @@ def test_evidence_dependencies_aggregated_from_packet_evidence_paths(monkeypatch
 def test_evidence_dependencies_excludes_paths_from_omitted_budget_truncated_statements(monkeypatch):
     text_a = "first statement text that costs some real budget"
     text_b = "second statement text that costs additional real budget beyond the first"
-    cost_a = kpa.kgmcp_char_heuristic_v1(text_a.strip())
+    cost_a = _real_combined_cost_of_first_statement(
+        monkeypatch,
+        cs_results=[_cs_result(source_path="docs/a.md", heading="A", excerpt=text_a)],
+    )
     packet = _assemble(
         monkeypatch,
         providers_selected=["context_search"],

@@ -9628,15 +9628,15 @@
     (`deduplicate_statements()`''s new `conflict_index_pairs` parameter -- on a dedup-key
     collision between two statements whose original indices are a known conflict-flagged
     pair, the later statement is forced into its own distinct group via `f"{key}::conflict-{idx}"`
-    instead of merging); :742-752 (assemble_packet()''s Architecture-Review-mandated
+    instead of merging); :807-817 (assemble_packet()''s Architecture-Review-mandated
     fail-loud cardinality assertion, run immediately after _conflict_signal_index_pairs()
-    and before deduplicate_statements() is called); :690-691 (`PacketAssembly.budget_truncated:
-    bool` / `omitted_statement_count: int` field declarations); :771-772 (their computation
+    and before deduplicate_statements() is called); :753-754 (`PacketAssembly.budget_truncated:
+    bool` / `omitted_statement_count: int` field declarations); :838-839 (their computation
     immediately after assemble_within_budget() returns: omitted_statement_count =
     len(statements) - len(included_statements), budget_truncated = omitted_statement_count
-    > 0); :824-825 (threaded into the PacketAssembly constructor). tools/knowledge_gateway_mcp.py:209-210
+    > 0); :896-897 (threaded into the PacketAssembly constructor). tools/knowledge_gateway_mcp.py:209-210
     (budget_truncated=False/omitted_statement_count=0 in the router-failure fallback_response,
-    since nothing was ever truncated by budget on that path); :277-278 (packet.budget_truncated/packet.omitted_statement_count
+    since nothing was ever truncated by budget on that path); :279-280 (packet.budget_truncated/packet.omitted_statement_count
     threaded into the main _run_knowledge_context() response dict; shifted below this
     ticket''s own Level 2 cache-check hook -- TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING/INFRA-349
     -- which that later ticket inserted earlier in the same function, at :222-244).
@@ -9665,7 +9665,26 @@
     non-uniform cumulative shift (from +15 near the top of the file to +64 near the
     bottom) rather than one single offset. Re-confirmed by direct read of each cited
     symbol''s real current location this session; the real/tested shape of every cited
-    function/field is unaffected by the shift (see INFRA-351).'
+    function/field is unaffected by the shift (see INFRA-351). Line numbers corrected
+    a fourth time as of TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE
+    (INFRA-356), whose widened assemble_within_budget() (now also costing each statement''s
+    matched context[]/evidence[] entries, not just Statement.text) and new, separate
+    truncate_conflicts_within_budget() pass over conflicts[] -- plus the 2 new PacketAssembly
+    fields conflicts_truncated: bool/omitted_conflict_count: int -- shifted this entry''s
+    assemble_packet()-internal citations: the cardinality assertion from :742-752
+    to :807-817, the PacketAssembly.budget_truncated/omitted_statement_count field
+    declarations from :690-691 to :753-754, their post-assemble_within_budget() computation
+    from :771-772 to :838-839, and their PacketAssembly-constructor threading from
+    :824-825 to :896-897; tools/knowledge_gateway_mcp.py''s main _run_knowledge_context()
+    response-dict threading shifted from :277-278 to :279-280 (the router-failure
+    fallback_response citation at :209-210 is unaffected -- INFRA-356''s 2 new fallback
+    fields were appended after it, not inserted before). The top-of-file citations
+    (_content_hash() :249-257, _dedup_key() :392-395, _conflict_signal_index_pairs()
+    :398-422, deduplicate_statements()''s conflict_index_pairs param :425-428/:438-444)
+    and the knowledge_context_response.schema.json:124-125 citation are unaffected
+    -- confirmed by direct read of each cited symbol''s real current location this
+    session. The real/tested shape of every cited function/field is unaffected by
+    the shift (see INFRA-356).'
   proof_type: regression
   test_path: 'tests/tools/test_knowledge_gateway_packet_assembly.py (11 new tests:
     test_dedup_identity_uses_content_hash_not_casefold_normalization, test_dedup_collapses_only_on_exact_content_hash_match_across_providers,
@@ -10369,3 +10388,94 @@
     372/1411 in the secondary source (tickets/working_log.csv, 18.5% of tickets involved)
     -- a small, real, mostly-non-literal signal, not proof of material repeated demand.
     Full numeric detail: docs/engine/contracts/knowledge_gateway_mcp/phase5_repeated_demand_measurement.md.'
+- id: INFRA-356
+  text: 'Knowledge Gateway MCP budget-tolerance/dedup-coverage closure -- TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE
+    (sibling of INFRA-344/INFRA-350/INFRA-353/INFRA-355, same ''certify methodology,
+    not conclusion'' framing for measurement/evaluation-only work). Widens assemble_within_budget()
+    to also cost each statement''s matched context[]/evidence[] entries via kgmcp_char_heuristic_v1()
+    (previously only Statement.text was costed), and adds a new, separate truncate_conflicts_within_budget()
+    pass for conflicts[] -- conflicts are not owned by any single statement, so they
+    cannot be costed inside the per-statement loop and require their own pass. New
+    PacketAssembly fields conflicts_truncated: bool / omitted_conflict_count: int,
+    threaded through knowledge_gateway_mcp.py''s router-failure fallback and main
+    response dict alongside the existing budget_truncated/omitted_statement_count
+    pair. Real, honest, disclosed result: the fix is real and measured -- every previously
+    failing corpus entry''s full response payload genuinely shrank 11%-22%. But the
+    real Sec.21 #12 budget-tolerance pass rate is UNCHANGED at 2/7, because the widened
+    accounting -- by its own Architecture-Review-approved design -- still does not
+    count JSON structural overhead or untouched response fields (statement_id, classification,
+    kind, EvidenceEntry.source_id, cache_key_version, etc.) that the real json.dumps(response)
+    measurement in _compute_budget_compliance() (tools/agent-monitoring/kgmcp_phase3_gateway_runner.py:398)
+    counts. Two design options were weighed at Plan review: (a) widen per-statement/conflict
+    cost accounting -- selected, implemented here; (b) count full JSON structural
+    bytes via an orphan-statement mechanism -- explicitly REJECTED as architecturally
+    incompatible during Plan review, not achieved. This is the honest, disclosed limit
+    of the chosen design, not a discovered equivalence between (a) and (b). Separately,
+    this ticket re-confirms Gap 2 (cross-provider dedup) genuinely open, not fixed:
+    a new live regression-lock test confirms 0 real cross-provider content duplicates
+    exist in the live 7-entry corpus today, and a new, previously undocumented, adjacent
+    gap was found and regression-locked but NOT fixed -- parity-sourced statements
+    key dedup identity on record[''canonical_fragment_hash''] (tools/knowledge_gateway_packet_assembly.py:354),
+    not _content_hash(text) like the other two providers, untested/unexercised in
+    the live corpus since no live found=True parity statement exists today.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'tools/knowledge_gateway_packet_assembly.py:249 (_content_hash(), unchanged
+    this ticket); :668 (assemble_within_budget(), widened this ticket with new context_entries=()/evidence_entries=()
+    params to also cost each statement''s matched context[]/evidence[] entries via
+    kgmcp_char_heuristic_v1(), previously only Statement.text was costed); :710 (truncate_conflicts_within_budget(),
+    new this ticket -- a separate pass over conflicts[] since conflicts are not owned
+    by any single statement and cannot be costed inside the per-statement loop); :739
+    (class PacketAssembly); :753 (budget_truncated: bool); :754 (omitted_statement_count:
+    int); :755 (conflicts_truncated: bool, new this ticket); :756 (omitted_conflict_count:
+    int, new this ticket); :807 (cardinality assertion, len(statements) == ...); :838-839
+    (omitted_statement_count = len(statements) - len(included_statements); budget_truncated
+    = omitted_statement_count > 0); :861-862 (omitted_conflict_count = len(conflicts)
+    - len(final_conflicts); conflicts_truncated = omitted_conflict_count > 0, new
+    this ticket); :882 (return PacketAssembly(...) constructor call, threading all
+    four fields). tools/knowledge_gateway_mcp.py:209-212 (router-failure fallback
+    budget_truncated/omitted_statement_count/conflicts_truncated/omitted_conflict_count);
+    :279-282 (main _run_knowledge_context() response dict threading of the same four
+    fields). tools/agent-monitoring/kgmcp_phase3_gateway_runner.py:398 (_compute_budget_compliance(),
+    the real json.dumps(response)-based measurement that the widened per-statement/conflict
+    accounting still does not fully match -- confirming the disclosed Sec.21 #12 gap
+    is real, not an artifact of a stale measurement). tests/tools/test_kgmcp_baseline_corpus_dedup_coverage.py
+    (new this ticket) confirms 0 real cross-provider content duplicates exist in the
+    live 7-entry corpus, and locks the newly found parity-provider canonical_fragment_hash
+    dedup-identity divergence (tools/knowledge_gateway_packet_assembly.py:354) as
+    untested/unexercised, not fixed.'
+  proof_type: regression
+  test_path: tests/tools/test_knowledge_gateway_packet_assembly.py (49); tests/tools/test_knowledge_gateway_mcp.py
+    (41); tests/tools/test_kgmcp_baseline_corpus_dedup_coverage.py::test_live_corpus_has_zero_cross_provider_content_duplicates_documented_limitation,
+    tests/tools/test_kgmcp_baseline_corpus_dedup_coverage.py::test_parity_ledger_evidence_hash_uses_canonical_fragment_hash_not_content_hash
+    (2, new, live-corpus regression-lock, ~21s runtime, not mocked); tests/tools/test_knowledge_gateway_router.py
+    (40, anti-drift, unmodified); tests/tools/test_kgmcp_phase3_pilot_acceptance_measurement.py
+    (25, 2 renamed/updated to real post-fix fixture values); tests/tools/test_kgmcp_phase4_direct_tool_comparison.py
+    (25, frozen-hash guard narrowed). 182 tests total, independently re-verified twice
+    this session -- once by Architecture-Verify, once by an independent Test-phase
+    re-run.
+  divergence_note: null
+  support_boundary: 'This entry certifies the widened per-statement/conflict budget-cost
+    accounting and the new conflicts_truncated/omitted_conflict_count visibility fields
+    are real, measured, and tested -- every previously failing corpus entry''s full
+    response payload genuinely shrank 11%-22%. It does NOT certify that the real Sec.21
+    #12 budget-tolerance pass rate improved: it is UNCHANGED at 2/7, because the widened
+    accounting -- by explicit, Architecture-Review-approved design -- still excludes
+    JSON structural overhead and untouched response fields (statement_id, classification,
+    kind, EvidenceEntry.source_id, cache_key_version, etc.) that the real json.dumps(response)
+    measurement in _compute_budget_compliance() counts. Option (a), widen per-statement/conflict
+    cost accounting, was selected and implemented; option (b), count full JSON structural
+    bytes via an orphan-statement mechanism, was explicitly REJECTED as architecturally
+    incompatible during Plan review -- not achieved. This is the honest, disclosed
+    limit of the chosen design, not a discovered equivalence. Gap 2 (cross-provider
+    dedup) is re-confirmed genuinely open, not fixed: 0 real cross-provider duplicates
+    exist in the live corpus today (regression-locked), but a new, previously undocumented,
+    adjacent gap was found and regression-locked, NOT fixed -- parity-sourced statements
+    key dedup identity on record[''canonical_fragment_hash''], not _content_hash(text)
+    like the other two providers, and this path is untested/unexercised in the live
+    corpus since no live found=True parity statement exists today. Also disclosed,
+    out of scope, NOT fixed by this entry: docs/engine/contracts/knowledge_gateway_mcp/knowledge_context_response.schema.json
+    types conflicts[].automatic_resolution as non-nullable string, but real code (_structural_supersession_signal())
+    always sets it None -- no real conflict-carrying response can ever validate against
+    that schema.'

@@ -60,7 +60,7 @@ import sys
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _TOOLS_DIR = _REPO_ROOT / "tools"
@@ -640,8 +640,36 @@ def build_conflicts(
 
 # ── Step 8: Token-budgeted assembly ───────────────────────────────────────────
 
+def _statement_included_content_cost(
+    statement: Statement,
+    context_by_id: dict[str, ContextEntry],
+    evidence_by_id: dict[str, EvidenceEntry],
+) -> int:
+    """Real, measured cost of a statement PLUS every context/evidence entry that would ship
+    alongside it once included (mirrors assemble_packet()'s own included_evidence_ids filter —
+    a statement's evidence_ids is precisely what final_context/final_evidence get filtered by
+    downstream, so this sums over the same evidence_ids). Never a length*constant estimate
+    (assemble_within_budget()'s own docstring) — every term is a real kgmcp_char_heuristic_v1()
+    call on real text/field content actually present on a real ContextEntry/EvidenceEntry.
+    """
+    cost = kgmcp_char_heuristic_v1(statement.text)
+    for evidence_id in statement.evidence_ids:
+        ctx = context_by_id.get(evidence_id)
+        if ctx is not None:
+            cost += kgmcp_char_heuristic_v1(ctx.summary)
+        ev = evidence_by_id.get(evidence_id)
+        if ev is not None:
+            cost += kgmcp_char_heuristic_v1(ev.evidence_id)
+            cost += kgmcp_char_heuristic_v1(ev.path or "")
+            cost += kgmcp_char_heuristic_v1(ev.evidence_hash)
+    return cost
+
+
 def assemble_within_budget(
-    statements: list[Statement], budget_requested: int
+    statements: list[Statement],
+    budget_requested: int,
+    context_entries: Sequence[ContextEntry] = (),
+    evidence_entries: Sequence[EvidenceEntry] = (),
 ) -> tuple[list[Statement], int]:
     """Sorts by `(priority_tier ascending, original candidate order)` — stable, deterministic.
     Greedily accumulates: cost is a real `kgmcp_char_heuristic_v1()` measurement of the exact
@@ -651,22 +679,57 @@ def assemble_within_budget(
     lower-priority statements are dropped. `budget_returned` is the literal running total, so
     `budget_returned <= budget_requested` holds by construction, not by a post-hoc clamp.
 
+    `context_entries`/`evidence_entries` (optional, default `()`) let the cost of each statement
+    include its own matched `ContextEntry.summary`/`EvidenceEntry` fields — real response bytes
+    that ship alongside the statement once included (see `_statement_included_content_cost()`).
+    With the defaults, cost degrades to exactly `kgmcp_char_heuristic_v1(statement.text)` — not a
+    special-cased "legacy mode," just the same formula correctly evaluating to zero extra terms
+    when there is nothing to look up.
+
     Must be called only after `deduplicate_statements()` has already run (§15: "Deduplication
     should occur before truncation").
     """
     ordered_indices = sorted(range(len(statements)), key=lambda i: (statements[i].priority_tier, i))
+    context_by_id = {c.source_id: c for c in context_entries}
+    evidence_by_id = {e.evidence_id: e for e in evidence_entries}
 
     included: list[Statement] = []
     running_total = 0
     for i in ordered_indices:
         statement = statements[i]
-        cost = kgmcp_char_heuristic_v1(statement.text)
+        cost = _statement_included_content_cost(statement, context_by_id, evidence_by_id)
         if running_total + cost <= budget_requested:
             included.append(statement)
             running_total += cost
         else:
             break
 
+    return included, running_total
+
+
+def truncate_conflicts_within_budget(
+    conflicts: list[Conflict], remaining_budget: int
+) -> tuple[list[Conflict], int]:
+    """Real-measured, greedy, original-order truncation of conflicts[] against whatever budget
+    remains after statement+context+evidence assembly. Cost is the real sum of
+    kgmcp_char_heuristic_v1() over each claim's real .value text -- the only prose-bearing field on
+    a Conflict/ConflictClaim -- never a length*constant estimate. Never reorders conflicts; drops
+    the first conflict (and everything after it in list order) that would overflow, mirroring
+    assemble_within_budget()'s own break-on-first-overflow discipline.
+
+    `conflicts[]` is never owned by any single statement (`Conflict.subject` is a
+    `source_path`/`symbol` pair string, not linked to any `evidence_id`), so it cannot reuse the
+    per-statement mechanism above and gets its own, separate pass.
+    """
+    included: list[Conflict] = []
+    running_total = 0
+    for conflict in conflicts:
+        cost = sum(kgmcp_char_heuristic_v1(claim.value) for claim in conflict.claims)
+        if running_total + cost <= remaining_budget:
+            included.append(conflict)
+            running_total += cost
+        else:
+            break
     return included, running_total
 
 
@@ -689,6 +752,8 @@ class PacketAssembly:
     budget_returned: int
     budget_truncated: bool
     omitted_statement_count: int
+    conflicts_truncated: bool
+    omitted_conflict_count: int
     provider_failures: list[str]
     negative_claim_support: Optional[NegativeClaimSupport] = None
 
@@ -767,7 +832,9 @@ def assemble_packet(routing_decision, query_text: str, budget_requested: int) ->
         provider_results.get("graphify"),
     )
 
-    included_statements, budget_returned = assemble_within_budget(statements, budget_requested)
+    included_statements, budget_returned = assemble_within_budget(
+        statements, budget_requested, context_entries, evidence_entries
+    )
     omitted_statement_count = len(statements) - len(included_statements)
     budget_truncated = omitted_statement_count > 0
 
@@ -789,10 +856,15 @@ def assemble_packet(routing_decision, query_text: str, budget_requested: int) ->
         final_evidence = [e for e in evidence_entries if e.evidence_id in included_evidence_ids]
         answer = " ".join(s.text for s in included_statements)
 
+    remaining_budget = max(budget_requested - budget_returned, 0)
+    final_conflicts, _conflicts_cost = truncate_conflicts_within_budget(conflicts, remaining_budget)
+    omitted_conflict_count = len(conflicts) - len(final_conflicts)
+    conflicts_truncated = omitted_conflict_count > 0
+
     failures = provider_results.get("failures", [])
     if budget_assembly_failed or failures:
         status = "PARTIAL"
-    elif conflicts:
+    elif final_conflicts:
         status = "CONFLICTED"
     else:
         status = "OK"
@@ -818,11 +890,13 @@ def assemble_packet(routing_decision, query_text: str, budget_requested: int) ->
         context=final_context,
         evidence=final_evidence,
         evidence_dependencies=evidence_dependencies,
-        conflicts=conflicts,
+        conflicts=final_conflicts,
         budget_requested=budget_requested,
         budget_returned=budget_returned,
         budget_truncated=budget_truncated,
         omitted_statement_count=omitted_statement_count,
+        conflicts_truncated=conflicts_truncated,
+        omitted_conflict_count=omitted_conflict_count,
         provider_failures=failures,
         negative_claim_support=negative_claim_support,
     )

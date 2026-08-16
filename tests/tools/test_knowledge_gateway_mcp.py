@@ -622,7 +622,27 @@ def test_knowledge_context_response_schema_accepts_new_budget_marker_field(monke
         ],
     )
 
-    cost_a = pa_mod.kgmcp_char_heuristic_v1(text_a.strip())
+    # cost_a must be the real *combined* statement+context+evidence cost the widened
+    # assemble_within_budget() accounting now measures (TCK-20260816-KGMCP-BUDGET-TOLERANCE-
+    # DEDUP-COVERAGE-CLOSURE), not the old statement-text-only cost -- otherwise this budget now
+    # admits zero statements instead of one, a real and expected consequence of the fix, not a
+    # regression. Derived by rendering text_a in isolation through the real render_candidates()
+    # and _statement_included_content_cost(), never a guessed/hardcoded literal, mirroring
+    # tests/tools/test_knowledge_gateway_packet_assembly.py's own
+    # _real_combined_cost_of_first_statement() helper. This test was not in the plan's own listed
+    # "fix these two tests" set (Step 6 item 5 only scanned
+    # test_knowledge_gateway_packet_assembly.py for the same anti-pattern) -- a real, disclosed
+    # deviation, recorded in staging_artifacts' plan.md Deviations section.
+    a_statements, a_context, a_evidence = pa_mod.render_candidates(
+        {"context_search": [{"excerpt": text_a, "source_path": "docs/a.md"}]},
+        "budget marker query",
+    )
+    cost_a = pa_mod._statement_included_content_cost(
+        a_statements[0],
+        {c.source_id: c for c in a_context},
+        {e.evidence_id: e for e in a_evidence},
+    )
+
     response = _mod._run_knowledge_context("budget marker query", budget_tokens=cost_a)
     _validate_response(response)
     assert response["budget_truncated"] is True
@@ -646,6 +666,67 @@ def test_run_knowledge_context_budget_truncated_packet_response_has_visible_mark
     _validate_response(response)
     assert response["budget_truncated"] is False
     assert response["omitted_statement_count"] == 0
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE: conflicts[] budget-truncation
+# markers threaded through the response, independently of statements[] truncation.
+# ---------------------------------------------------------------------------
+
+def test_new_truncation_markers_threaded_into_run_knowledge_context_response(monkeypatch):
+    router_mod = _mod._load_router_module()
+    pa_mod = _mod._load_packet_assembly_module()
+    pa_search_mod = pa_mod._load_search_mcp_module()
+
+    fake_decision = SimpleNamespace(providers_selected=["context_search"], matched_identifier=None)
+    monkeypatch.setattr(router_mod, "route", lambda q, requested_guarantee=None: fake_decision)
+
+    cs_results = [
+        {"excerpt": "old value text", "source_path": "docs/a.md", "superseded_by": "docs/b.md"},
+        {"excerpt": "new value text", "source_path": "docs/b.md", "supersedes": "docs/a.md"},
+    ]
+    monkeypatch.setattr(pa_search_mod, "_run_search", lambda q: cs_results)
+
+    # Derive the real combined statement+context+evidence cost directly from the packet
+    # assembler rather than through _run_knowledge_context() with a budget large enough to admit
+    # the conflict: a real, pre-existing, unrelated bug (response schema's `automatic_resolution`
+    # is typed plain "string", but every real Conflict.automatic_resolution is None, per
+    # _structural_supersession_signal()) makes RESPONSE_VALIDATOR.validate() reject any response
+    # whose conflicts[] is genuinely non-empty. Never previously triggered because no real corpus
+    # entry populates conflicts[] (module docstring) -- flagged for a follow-up ticket, not fixed
+    # here (out of this ticket's scope). Calling assemble_packet() directly sidesteps response
+    # validation entirely for this probe, so this test can still prove the real combined cost
+    # without tripping the unrelated latent bug.
+    probe_packet = pa_mod.assemble_packet(fake_decision, "conflict probe query", 1_000_000)
+    assert probe_packet.conflicts  # sanity: the fixture really produces a real conflict
+    exact_statement_budget = probe_packet.budget_returned
+
+    response = _mod._run_knowledge_context(
+        "conflict truncation query", budget_tokens=exact_statement_budget
+    )
+    _validate_response(response)
+    # Statements are not truncated -- the budget was sized to exactly admit both real statements
+    # (plus their context/evidence). conflicts[], measured against the budget *remaining* after
+    # statements, is genuinely and independently truncated -- the two marker pairs never collapse
+    # into one shared signal.
+    assert response["budget_truncated"] is False
+    assert response["omitted_statement_count"] == 0
+    assert response["conflicts_truncated"] is True
+    assert response["omitted_conflict_count"] == 1
+    assert response["conflicts"] == []
+
+
+def test_knowledge_context_response_schema_accepts_new_context_truncation_marker_field():
+    instance = {
+        "status": "OK",
+        "freshness": "UNKNOWN",
+        "verification": "UNVERIFIED",
+        "provenance_providers": [],
+        "providers_consulted_this_call": [],
+        "conflicts_truncated": True,
+        "omitted_conflict_count": 2,
+    }
+    _validate_response(instance)
 
 
 def test_cache_layer_failure_is_fail_open_and_never_blocks_the_provider_path(monkeypatch):
