@@ -199,7 +199,7 @@ class TestSecretScan:
         assert decision.verdict == kgr.ALLOW
 
     def test_secret_scan_match_short_circuits_before_size_cap_or_redaction_store(self):
-        oversized_secret_content = f"key = {_AWS_KEY}\n" + ("x" * 9000)
+        oversized_secret_content = f"key = {_AWS_KEY}\n" + ("x" * (kgr.MAX_PAYLOAD_BYTES + 1))
         assert len(oversized_secret_content.encode("utf-8")) > kgr.MAX_PAYLOAD_BYTES
         decision = kgr.evaluate_write_candidate(
             source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content=oversized_secret_content
@@ -314,13 +314,13 @@ class TestSizeCap:
         assert kgr.check_size_cap("a" * 8000) is True
 
     def test_payload_exactly_at_cap_is_accepted(self):
-        assert kgr.check_size_cap("a" * 8192) is True
+        assert kgr.check_size_cap("a" * kgr.MAX_PAYLOAD_BYTES) is True
 
     def test_payload_over_cap_is_rejected_not_truncated(self):
-        assert kgr.check_size_cap("a" * 8193) is False
+        assert kgr.check_size_cap("a" * (kgr.MAX_PAYLOAD_BYTES + 1)) is False
 
         decision = kgr.evaluate_write_candidate(
-            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content="a" * 8193
+            source_type=kgr.SOURCE_TYPE_CONTEXT_SEARCH, raw_content="a" * (kgr.MAX_PAYLOAD_BYTES + 1)
         )
         assert decision.verdict == kgr.REJECT
         assert decision.rejection_category == "oversized_payload"
@@ -328,7 +328,7 @@ class TestSizeCap:
         assert decision.redacted_hash is None
 
     def test_size_cap_measured_on_redacted_not_raw_payload(self):
-        raw_content = "/home/someuser/very/long/path/segment/example/file.py " * 300
+        raw_content = "/home/someuser/very/long/path/segment/example/file.py " * 1300
         assert len(raw_content.encode("utf-8")) > kgr.MAX_PAYLOAD_BYTES
 
         redacted = kgr.redact_content(raw_content)

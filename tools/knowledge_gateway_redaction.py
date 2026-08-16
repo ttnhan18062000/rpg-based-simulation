@@ -2,7 +2,7 @@
 tools/knowledge_gateway_redaction.py — Pure, directly-testable write-path enforcement functions
 for `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §2-§10: the §2
 provider-source allowlist, §3 redaction + hashing, the §4 secret-scan baseline (expanded to 10
-patterns — see below), the §5 8 KB payload size cap, §6 `redaction_policy_version` stamping via
+patterns — see below), the §5 64 KiB payload size cap, §6 `redaction_policy_version` stamping via
 `WriteDecision`, the §7 never-cache enumeration (6 independent categories), §9 SQLite operational
 limits, and the §10 cache-GC eligibility predicates plus the identity-contract's SYMBOL/FILE
 never-flag rule.
@@ -65,7 +65,13 @@ ALLOWED_SOURCE_TYPES: frozenset[str] = frozenset({SOURCE_TYPE_CONTEXT_SEARCH, SO
 LOCAL_USER_PLACEHOLDER = "<local-user>"   # §3, redaction_retention_policy.md:57
 LOCAL_PATH_PLACEHOLDER = "<local-path>"   # §3, redaction_retention_policy.md:60
 
-MAX_PAYLOAD_BYTES: int = 8192             # §5, redaction_retention_policy.md:96
+MAX_PAYLOAD_BYTES: int = 65536            # §5, redaction_retention_policy.md:121 — recalibrated
+                                           # by TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION
+                                           # from the real 7-entry corpus's observed cold response
+                                           # range (~10,612-30,548 bytes,
+                                           # tests/tools/fixtures/kgmcp_phase2_baseline_recomparison_results.json),
+                                           # ~2.15x the observed max, rounded to the nearest clean
+                                           # power of two (64 KiB).
 
 SQLITE_MAX_DB_SIZE_BYTES: int = 256 * 1024 * 1024   # §9 table, redaction_retention_policy.md:208
 SQLITE_BUSY_TIMEOUT_MS: int = 5000                  # §9 table, redaction_retention_policy.md:213
@@ -177,9 +183,9 @@ def scan_for_secrets(text: str) -> str | None:
 # ---------------------------------------------------------------------------
 
 def check_size_cap(redacted_payload: str) -> bool:
-    """True iff the UTF-8-encoded redacted payload is <= MAX_PAYLOAD_BYTES (8192). Must be called
+    """True iff the UTF-8-encoded redacted payload is <= MAX_PAYLOAD_BYTES (65536). Must be called
     on already-redacted text only (§5: "measured on the UTF-8-encoded redacted payload" —
-    redaction_retention_policy.md:96). Never truncates; callers must reject outright on False.
+    redaction_retention_policy.md:121). Never truncates; callers must reject outright on False.
     """
     return len(redacted_payload.encode("utf-8")) <= MAX_PAYLOAD_BYTES
 

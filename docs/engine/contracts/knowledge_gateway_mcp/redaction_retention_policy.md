@@ -118,12 +118,32 @@ and disclosure above reflect that expanded, current state.
 
 ## 5. Payload Size Cap
 
-Each cached payload row is capped at **8 KB** (8192 bytes, measured on the UTF-8-encoded redacted
-payload) — consistent with the "bounded/redacted" framing of
-`docs/plans/knowledge-gateway-mcp-proposal.md` §24 item 1's proposed policy. A payload exceeding
-this cap must cause the write to be **rejected**, not silently truncated: silent truncation would
-produce a cache row that looks complete but is missing content, which is a worse failure mode than
-a visible cache miss.
+Each cached payload row is capped at **64 KiB** (65536 bytes, measured on the UTF-8-encoded
+redacted payload). A payload exceeding this cap must cause the write to be **rejected**, not
+silently truncated: silent truncation would produce a cache row that looks complete but is missing
+content, which is a worse failure mode than a visible cache miss.
+
+**Recalibration history (`TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION`):** the original
+`8192`-byte cap (ratified at Phase 0, `docs/plans/knowledge-gateway-mcp-proposal.md` §24 item 1)
+was set before any real gateway existed, with no real payload data to derive it from — it was
+justified only by the "bounded/redacted" *framing* of that proposal, not by a measurement. Once a
+real gateway and cache existed, `TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON`'s live measurement
+against the frozen 7-entry corpus (`tests/tools/fixtures/kgmcp_phase2_baseline_recomparison_results.json`,
+also reported at `docs/engine/contracts/knowledge_gateway_mcp/phase2_baseline_recomparison.md`)
+found the 8192-byte cap rejected **every** real response (`oversized_payload`, 7/7): cold response
+payload sizes ranged **~10,612–30,548 bytes** (`kgmcp_char_heuristic_v1` cold `gateway_tokens`
+2653–7637, ×4 bytes/token), 1.3x–3.7x over the old cap. The cap was structurally inert for real
+usage.
+
+The new **65536**-byte value is derived directly from that real range: it is **~2.15x the real
+observed maximum** (30,548 bytes), rounded up to the nearest clean power of two (2^16). This
+headroom is deliberate, not padding-for-its-own-sake — it comfortably covers organic corpus/response
+growth (new providers, larger evidence sets) without the cap collapsing back to "always rejects" on
+the next reasonably-sized entry, while remaining small enough to still be a genuine, meaningful
+bound: a payload an order of magnitude past the real observed max (e.g. a runaway or malformed
+response) is still rejected, not silently accepted. This is not "large enough to never reject
+anything" — it is the smallest clean power-of-two multiple that clears the real max with reasonable
+margin.
 
 ## 6. Redaction-Policy Version
 
