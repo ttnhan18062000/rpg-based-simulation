@@ -315,6 +315,12 @@ knowledge-index-update: ## Incremental reindex — only re-embeds changed/new fi
 	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
 	  tools/knowledge_search.py build --incremental
 
+kgmcp-bootstrap: parity-index knowledge-index ## Rebuild all local, gitignored Knowledge Gateway MCP caches for a fresh environment (see docs/guidelines/agent_working_environment.md)
+	@echo "parity-index/parity.db and knowledge-index/{knowledge.db,bm25.pkl,embeddings_cache.pkl} rebuilt."
+	@echo "knowledge-index/retrieval_cache.db (KGMCP Level 1/2 cache) has no bootstrap step -- it"
+	@echo "self-initializes empty on the first real knowledge_context/knowledge_status call and warms"
+	@echo "up from there. See docs/guidelines/agent_working_environment.md for full detail."
+
 search-server-docker: ## PRIMARY — start knowledge search server in Docker (persistent, survives terminal close)
 	docker compose -f tools/search/docker-compose.yml up -d --build
 	@echo "[search-server] Server starting on http://localhost:8765 (check logs: make search-server-logs)"

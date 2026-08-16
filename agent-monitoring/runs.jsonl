@@ -1090,3 +1090,6 @@
 {"run_id":"TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT","workflow":"implement-ticket","tier":"standard","final_status":"IN_PROGRESS","agent_count":0,"start_ts":"2026-08-16T14:29:50Z","duration_s":null}
 {"run_id":"TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":12,"start_ts":"2026-08-16T14:29:50Z","end_ts":"2026-08-16T15:27:24Z","duration_s":3454}
 {"run_id":"EPIC-TCK-20260816-KNOWLEDGE-GATEWAY-MCP-PHASE5-EPIC","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":1,"start_ts":"2026-08-16T14:29:50Z","end_ts":"2026-08-16T15:30:07Z","duration_s":3617}
+{"run_id":"TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE","workflow":"implement-ticket","tier":"standard","final_status":"IN_PROGRESS","agent_count":0,"start_ts":"2026-08-16T15:41:24Z","duration_s":null}
+{"run_id":"TCK-20260816-HOTFIX-KGMCP-LOCAL-DATA-BOOTSTRAP-DOCS","workflow":"implement-ticket","tier":"hotfix","final_status":"IN_PROGRESS","agent_count":0,"start_ts":"2026-08-16T15:57:25Z","duration_s":null}
+{"run_id":"TCK-20260816-HOTFIX-KGMCP-LOCAL-DATA-BOOTSTRAP-DOCS","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":2,"start_ts":"2026-08-16T15:57:25Z","end_ts":"2026-08-16T16:15:18Z","duration_s":1073}

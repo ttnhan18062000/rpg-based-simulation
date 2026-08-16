@@ -94,6 +94,7 @@ Once installed, the hook is silent on unrelated commits and self-skips if `knowl
 |---|---|
 | `make knowledge-index` | Full rebuild — embeds all docs, tickets, investigations from scratch. Use after model change or first setup. |
 | `make knowledge-index-update` | Incremental rebuild — re-embeds only changed/new/deleted files. Use after normal doc or ticket changes. |
+| `make kgmcp-bootstrap` | Runs `parity-index` + `knowledge-index` together — one-command fresh-environment setup. See "Other Local, Gitignored Caches" below. |
 | `make search-server-docker` | **Primary.** Start the search server in Docker (persistent, survives terminal close and system restart). |
 | `make search-server-stop` | Stop the Docker container. |
 | `make search-server-logs` | Tail the Docker container logs. |
@@ -260,6 +261,38 @@ All HTTP queries work identically. The only difference is the server does not au
 | After deleting a doc | `make knowledge-index-update` |
 | Index seems stale or returning wrong results | `make knowledge-index` (full rebuild) |
 | Switching to a different embedding model | `make knowledge-index` (full rebuild) |
+
+---
+
+## Other Local, Gitignored Caches (Knowledge Gateway MCP)
+
+The semantic search index above is one of three local, disposable caches this repository uses. None
+of them are committed — all three are deliberately rebuildable-only, per this repository's own
+principle that "the local database must remain disposable and rebuildable"
+(`docs/plans/knowledge-gateway-mcp-proposal.md` §10, `tmp/mcp-followup-instruction.md` §10). If you
+are setting up a fresh checkout or moving to a new environment, none of these need to be copied —
+rebuild them instead:
+
+| Artifact | Real path | What it is | Gitignored? | How to rebuild |
+|---|---|---|---|---|
+| Semantic search index | `knowledge-index/knowledge.db`, `bm25.pkl`, `embeddings_cache.pkl`, `manifest.json` | The `search_docs` index described above | Yes (`.gitignore:264`) | `make knowledge-index` |
+| Parity Ledger query index | `parity-index/parity.db` | Read-only SQLite index over `docs/parity_ledger/*.yaml`, built by `tools/parity_index.py` | Yes (`.gitignore:271`) | `make parity-index` |
+| Knowledge Gateway MCP cache | `knowledge-index/retrieval_cache.db` | The Knowledge Gateway MCP's Level 1 (provider-result) and Level 2 (assembled-packet) cache — see `docs/plans/knowledge-gateway-mcp-proposal.md` §10 for the cache design | Yes (same `knowledge-index/` ignore rule) | No bootstrap command exists — see below |
+
+**One-command bootstrap for a fresh environment:**
+
+```bash
+make kgmcp-bootstrap    # runs parity-index + knowledge-index in sequence
+```
+
+**`retrieval_cache.db` has no explicit rebuild command.** Unlike the other two, its Level 1/Level 2
+tables (`tools/retrieval_cache.py`'s `_get_level1_connection()`/`_get_level2_connection()`) are only
+created lazily, the first time a real `knowledge_context` or `knowledge_status` MCP call runs against
+a fresh environment — the schema self-initializes empty and then warms up from real usage. This is
+intentional, not a gap: there is nothing meaningful to pre-populate it with (cached provider results
+and assembled packets only exist after real queries run), so `kgmcp-bootstrap` does not attempt to
+touch it. Expect the gateway's own cache-hit rate to start at 0 in any new environment and warm up
+naturally.
 
 ---
 
