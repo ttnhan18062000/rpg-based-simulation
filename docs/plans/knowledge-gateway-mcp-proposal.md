@@ -20,6 +20,17 @@ policy, and measurement work only. It does not yet authorize production gateway 
 payload retention. Phases 1 and later require Phase 0's versioned contracts, security ruling, and
 measured acceptance thresholds to be approved first.
 
+**Status as of 2026-08-16:** Phases 0-5 all have real, implemented, tested, and measured child
+tickets landed (see §20 for the full per-phase ledger and §21 for Phase 3's pilot acceptance
+measurement, including its post-fix re-measurement). None of this implementation work self-declares
+production-capable status — every phase's own text explicitly defers that determination to a
+separate, later human-reviewer call, and that remains true here. The real, measured evidence
+gathered so far is mixed-to-negative on this proposal's own core latency/token hypothesis (see §25's
+"Status update" for the honest summary) — this status line exists so a reader does not mistake
+"Phases 0-5 built" for "Phases 0-5 justified the investment." See
+`docs/engine/contracts/knowledge_gateway_mcp/audit_phase0_5.md` for a full, consolidated audit of
+what was built, what was honestly measured, and what remains open.
+
 ### Architectural Invariants
 
 - The gateway is an optimization and coordination layer, never a source of project truth.
@@ -1637,6 +1648,37 @@ This approach can be implemented incrementally and preserves existing authority 
 the potential to reduce latency and delivered tokens, but the size of that benefit remains a Phase
 0 measurement question. Promotion beyond an advisory read-only gateway should depend on measured
 results, not on cache-hit counts alone.
+
+**Status update (2026-08-16, real measured results from Phases 3-5):** the "size of that benefit"
+question this recommendation deferred to measurement has now been measured, and the honest answer
+is mixed-to-negative, not the hoped-for clean win:
+
+- Phase 3's own pilot acceptance measurement found budget-tolerance FAILing (2/7 corpus entries
+  within tolerance) even after a real, dedicated fix widened the cost-accounting formula
+  (`TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE`) — payloads shrank 11%-22% per
+  entry but the pass rate stayed 2/7, because the fix's own approved design still doesn't count
+  JSON structural overhead. Genuine-cache-hit token count also did not improve against either
+  baseline in the original pilot measurement.
+- Phase 4's direct-tool comparison (`TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON`) found the
+  gateway **slower (1.31x-3.76x) and heavier in tokens (1.04x-2.93x) than direct tool use for all 7
+  of 7 corpus entries** in a fresh, cold-cache, paired run — no entry excluded, no threshold
+  redefined. Reviewer judgment: 6/7 direct-tool-equal-or-better, 1/7 mixed, 0/7 gateway-better.
+- Phase 4's workflow-integration evaluation recommended against integration at 3 of 4 candidate
+  points, measured 1.05x-3.0x heavier in tokens universally.
+- Phase 5's repeated-demand measurement found a small, real, but mostly-non-literal repeated-question
+  signal against this repository's own real historical usage, and recommended proceeding with
+  entity-aware reuse "only after Phase 3's own disclosed gaps close — not now, not never." Those
+  gaps are now closed in the sense of being re-measured and honestly re-confirmed (see above), not
+  in the sense of the underlying numbers having improved.
+
+None of this means the gateway is a failed idea — the architecture (versioned provider contracts,
+evidence-aware invalidation, branch/working-tree safety, typed truncation visibility) is real,
+tested, and independently verified sound at every phase by Architecture Review. What it means is
+that this proposal's original latency/token hypothesis is not yet empirically supported by the
+gateway's cold/warm-cache-mixed real-world corpus performance, and Phase 6 (or any further
+production-promotion decision) should be weighed against these real numbers, not against the
+optimistic framing in this section's original text above. See
+`docs/engine/contracts/knowledge_gateway_mcp/audit_phase0_5.md` for the full consolidated audit.
 
 ## 26. Repository Evidence Map
 
