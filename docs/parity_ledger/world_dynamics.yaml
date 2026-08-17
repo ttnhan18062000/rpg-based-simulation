@@ -807,34 +807,39 @@
   support_boundary: null
 - id: WORLD-076
   text: Spawn avoids occupied tile or uses conflict-safe placement.
-  status: divergent
+  status: verified
   priority: P0
   legacy_evidence: null
   v2_evidence: >
-    HardLawMonitor.check_initial_placement() (LAW-SPAWN-OCCUPANCY,
-    src/observability/hard_law_monitor.py), invoked once from
-    Kernel._run_initial_placement_check() at Kernel.__init__ (src/engine/kernel.py),
-    now detects tile-collision violations that this entry's text claims do not occur;
-    test_path below reproduces the violation at seed=42 (entities 6 and 14 on tile
-    (27, 38)). TCK-20260716-PLACELEGAL-HARDLAW.
+    Root cause fixed by TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE:
+    WorldCompiler.compile() step 6 (src/worldbuilding/compiler.py) drew each entity's spawn tile
+    purely as a hash of (seed, entity_id, sub_id) via DeterministicRNG.get_int(), with no
+    occupancy awareness -- confirmed as the exact cause of the entity-6/entity-14 tile-(27,38)
+    collision this entry previously flagged as divergent. Fix: compile() now tracks
+    occupied_entity_tiles (seeded from blocked_tiles/buildings and resource_node positions,
+    updated as each entity is placed) and, only when a drawn tile actually collides, calls the
+    new _resolve_entity_spawn_tile() helper to deterministically re-roll (bumped sub_id, still a
+    pure function of seed/entity_id/sub_id) or, as a last resort, raster-scan the region's
+    bounding box for a free tile. Entities that never collided are never perturbed --
+    verified: a full corpus sweep (all 18 worlds x seeds 42/137/999 = 63 combos) recompiled
+    before/after the fix confirms zero entity positions changed except the 39 combos that had a
+    real collision (all 39 now resolved), and 3 repeated compiles of the same world/seed produce
+    a bit-identical state_hash.
   proof_type: parity
   test_path: tests/engine/test_hard_law_monitor.py::test_seed42_entity6_entity14_tile_27_38_collision
   divergence_note: >
-    Prior claim (this entry's original v2_evidence, preserved here per the INFRA-270 lineage
-    convention -- historical entries/claims are not silently deleted, corrections are appended
-    forward): "Implementation proven via exhaustive checklist audit Phase 1-11." That checklist
-    audit did not catch this bug.
-    TCK-20260716-PLACELEGAL-HARDLAW's regression test (test_path above) contradicts the prior
-    claim: compiling unit_information_density at seed=42 deterministically spawns entities 6 and
-    14 on the identical tile (27, 38) -- spawn placement does not reliably avoid occupied tiles.
-    HardLawMonitor.check_initial_placement() (LAW-SPAWN-OCCUPANCY,
-    src/observability/hard_law_monitor.py) now detects and records this class of violation at
-    Kernel.__init__ time, but does not fix the underlying spawn-placement RNG collision -- that
-    root cause is out of this ticket's scope. Re-verified during implementation: the same class of
-    collision (different entity pairs each time) also appears at seeds 137 and 999 in the same
-    worlds, and in most of the 18-world corpus at seed 137 -- the problem is broader than the single
-    recurring entity-6/entity-14 case the prior claim's audit missed. Flip back to verified once a
-    future ticket fixes the underlying collision and re-verification is possible.
+    Historical record (not deleted, per the INFRA-270 lineage convention): this entry was
+    flipped to divergent by TCK-20260716-PLACELEGAL-HARDLAW after its regression test showed
+    compiling unit_information_density at seed=42 deterministically spawned entities 6 and 14 on
+    the identical tile (27, 38), and a re-verification during that ticket's implementation found
+    the same collision class (different entity pairs) at seeds 137/999 across most of the
+    18-world corpus. That ticket's HardLawMonitor.check_initial_placement() (LAW-SPAWN-OCCUPANCY)
+    detected and recorded the violation but deliberately did not fix the underlying spawn RNG,
+    noting "Flip back to verified once a future ticket fixes the underlying collision and
+    re-verification is possible." TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE
+    is that future ticket: root-caused and fixed the collision (see v2_evidence above); the
+    original claim now holds and re-verification (63/63 combos, zero LAW-SPAWN-OCCUPANCY
+    violations) is complete.
   support_boundary: null
 - id: WORLD-077
   text: Camp placement is deterministic.

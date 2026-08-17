@@ -100,6 +100,59 @@ def get_quest_kind(kind_str: str) -> QuestKind:
 
 _SPAWN_TABLES_PATH = Path(__file__).parent.parent.parent / "data" / "content" / "spawn_tables.yaml"
 
+# LAW-SPAWN-OCCUPANCY collision resolution (TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE).
+# sub_id 0/1 are the base x/y draw; 10-14 are personality/class. Reroll sub_ids start well above
+# that range so reroll draws are a distinct RNG stream from any other per-entity field.
+_ENTITY_SPAWN_COLLISION_MAX_REROLLS = 12
+_ENTITY_SPAWN_COLLISION_SUB_ID_BASE = 100
+
+
+def _resolve_entity_spawn_tile(
+    rng: "DeterministicRNG",
+    entity_id: int,
+    min_x: int,
+    min_y: int,
+    max_x: int,
+    max_y: int,
+    occupied: "Set[tuple[int, int]]",
+) -> "tuple[int, int]":
+    """
+    Deterministically resolve an entity spawn tile that collides with an already-occupied
+    tile (LAW-SPAWN-OCCUPANCY). Only called when the base draw actually collides, so a
+    previously non-colliding world/seed's entity placements are never perturbed.
+
+    Root cause: each entity's spawn tile (`WorldCompiler.compile`, step 6) is drawn purely
+    as a hash of (seed, entity_id, sub_id) with no occupancy awareness -- two distinct
+    entity IDs can legitimately hash to the same tile within a region's bounds. This was
+    confirmed by direct reproduction: `unit_selfmodel_pilot` at seed=42 places entity 6 and
+    entity 14 both at (27, 38) inside the `hometown` region (bounds (10, 10, 40, 40)).
+
+    Strategy: deterministically re-roll using bumped sub_id values (still a pure function
+    of seed/entity_id/sub_id -- fully reproducible and order-independent), then fall back to
+    a deterministic raster scan of the region's bounding box for the rare case a region is
+    densely packed enough that rerolling doesn't find a free tile within the attempt budget.
+    """
+    for attempt in range(_ENTITY_SPAWN_COLLISION_MAX_REROLLS):
+        sub_id = _ENTITY_SPAWN_COLLISION_SUB_ID_BASE + attempt * 2
+        x = rng.get_int(Domain.WORLD, 0, entity_id, min_x, max_x, sub_id=sub_id)
+        y = rng.get_int(Domain.WORLD, 0, entity_id, min_y, max_y, sub_id=sub_id + 1)
+        if (x, y) not in occupied:
+            return x, y
+
+    # Deterministic raster fallback: scan in stable row-major order so the outcome stays
+    # reproducible even when rerolling can't find a free tile within the attempt budget.
+    for y in range(min_y, max_y + 1):
+        for x in range(min_x, max_x + 1):
+            if (x, y) not in occupied:
+                return x, y
+
+    # Region fully packed (more spawns than tiles) -- no free tile exists. Keep the last
+    # deterministic reroll draw; the caller records a compile warning for this case.
+    sub_id = _ENTITY_SPAWN_COLLISION_SUB_ID_BASE + (_ENTITY_SPAWN_COLLISION_MAX_REROLLS - 1) * 2
+    x = rng.get_int(Domain.WORLD, 0, entity_id, min_x, max_x, sub_id=sub_id)
+    y = rng.get_int(Domain.WORLD, 0, entity_id, min_y, max_y, sub_id=sub_id + 1)
+    return x, y
+
 
 def _load_class_table() -> Dict[str, List[str]]:
     """Return role→[class_ids] from spawn_tables.yaml. Falls back to empty dict on error."""
@@ -208,6 +261,10 @@ class WorldCompiler:
                 tension_level=f_spec.initial_tension_level,
             )
 
+        # Collected across steps 4-7; step 6 also appends LAW-SPAWN-OCCUPANCY
+        # region-exhaustion warnings (see _resolve_entity_spawn_tile).
+        warnings: List[str] = []
+
         # 4. Compile resources
         resource_nodes: Dict[int, ResourceNodeState] = {}
         next_resource_id = 10000
@@ -269,6 +326,15 @@ class WorldCompiler:
         entities: Dict[int, EntityState] = {}
         town_entity_ids: Set[int] = set()
         next_entity_id = 1
+        # LAW-SPAWN-OCCUPANCY: track tiles already claimed by buildings, resource nodes, and
+        # previously-placed entities so a colliding draw can be deterministically resolved
+        # (TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE). Seeded once, before
+        # any entity is placed, so entity placement order (ascending entity_id, i.e. population
+        # authoring order) alone determines which entity of a colliding pair gets nudged --
+        # never the earlier one, which keeps every non-colliding world's placements unchanged.
+        occupied_entity_tiles: Set[tuple[int, int]] = set(blocked_tiles) | {
+            (int(node.position[0]), int(node.position[1])) for node in resource_nodes.values()
+        }
         for pop_idx, pop_spec in enumerate(spec.entities):
             region_id = pop_spec.spawn_region
             region = regions.get(region_id)
@@ -277,6 +343,20 @@ class WorldCompiler:
                 for _ in range(pop_spec.count):
                     x = rng.get_int(Domain.WORLD, 0, next_entity_id, min_x, max_x, sub_id=0)
                     y = rng.get_int(Domain.WORLD, 0, next_entity_id, min_y, max_y, sub_id=1)
+
+                    if (x, y) in occupied_entity_tiles:
+                        x, y = _resolve_entity_spawn_tile(
+                            rng, next_entity_id, min_x, min_y, max_x, max_y, occupied_entity_tiles
+                        )
+                        if (x, y) in occupied_entity_tiles:
+                            warnings.append(
+                                f"entity {next_entity_id} (population "
+                                f"'{getattr(pop_spec, 'id', f'pop_{pop_idx}')}') could not be "
+                                f"placed on a free tile in region '{region_id}' "
+                                f"(bounds {region.bounds}) -- region is fully packed; "
+                                f"LAW-SPAWN-OCCUPANCY will still flag tile ({x}, {y})"
+                            )
+                    occupied_entity_tiles.add((x, y))
 
                     # Initialize core stats with legacy default parameters
                     hp = 100
@@ -368,7 +448,6 @@ class WorldCompiler:
 
         # 7. Compile quest_definitions (authoring blueprints) into seeded QuestState records
         compiled_quests: List[QuestState] = []
-        warnings: List[str] = []
 
         # Build a pool of all semantic location labels reachable in this world.
         # Use spec.regions (RegionSpec list) — regions dict holds RegionState (runtime
