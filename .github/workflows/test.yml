@@ -63,6 +63,8 @@ jobs:
                  tests/unit/campaigns \
                  tests/unit/scenarios \
                  tests/unit/systems \
+                 tests/unit/actions \
+                 tests/unit/ai \
                  -m "not slow" --tb=short -q
 
   # ── Unit: infra / observability / domains ─────────────────────────────────
@@ -92,6 +94,7 @@ jobs:
                  tests/unit/cognition \
                  tests/unit/docs \
                  tests/unit/certification \
+                 tests/unit/tools \
                  -m "not slow" --tb=short -q
 
   # ── Integration tests (excluding slow) ────────────────────────────────────
@@ -126,6 +129,35 @@ jobs:
                  tests/engine \
                  tests/observability \
                  -m "not slow" --tb=short -q
+
+  # ── Agent orchestration / codex / replay ──────────────────────────────────
+  # TCK-20260817-CI-COVERAGE-GAP-16-ORPHANED-TEST-DIRS: these 12 directories (added by commit
+  # 29d78798, "Simulation quality #20") were never wired into any CI job -- 439 of their 440
+  # tests had never run in CI at all until this batch of fixes. Own dedicated job (not folded
+  # into api-tools) given the volume (83 files).
+  agent-orchestration:
+    name: "Agent orchestration / codex / replay"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Run
+        run: |
+          pytest tests/agent_codex_live_transport \
+                 tests/agent_codex_pilot_executor \
+                 tests/agent_codex_pilot_guardrails \
+                 tests/agent_codex_pilot_orchestration \
+                 tests/agent_codex_posttool_adapter \
+                 tests/agent_codex_realrepo_pilot_harness \
+                 tests/agent_codex_runtime_shadow \
+                 tests/agent_orchestration \
+                 tests/agent_orchestration_claude_adapter \
+                 tests/agent_orchestration_codex_adapter \
+                 tests/agent_replay \
+                 tests/agent_replay_codex \
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Simulation quality (SimQ scoring module) ──────────────────────────────
   simulation-quality:
@@ -216,6 +248,7 @@ jobs:
       - unit-infra
       - integration
       - api-tools
+      - agent-orchestration
       - simulation-quality
       - arch-docs
       - perf-cert-arena
