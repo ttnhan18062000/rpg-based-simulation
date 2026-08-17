@@ -50,6 +50,7 @@ import hashlib
 import importlib.util
 import json
 import shutil
+import sqlite3
 import statistics
 import subprocess
 import sys
@@ -637,12 +638,44 @@ def test_stale_rejection_and_unrelated_change_live_real_corpus_round_trip():
     import kgmcp_phase3_gateway_runner as runner
 
     mod = runner._load_gateway_module()
+    _kgr = mod._load_router_module()
+    _kgc = mod._load_cache_module()
 
     corpus_entry = CORPUS[0]  # Q1_authoritative_state
     query_text = corpus_entry["query_text"]
     real_cited_path = "docs/simulation/domains/domain_ownership_map.md"
     fresh_budget_tokens = 3333  # distinct from both DEFAULT_BUDGET_TOKENS (4000) and the
     # constrained-budget identity (1000) the committed run already touched.
+
+    # TCK-20260817-KGMCP-P3-LIVE-CORPUS-TEST-CACHE-ISOLATION: "previously-untouched" above does
+    # not hold once this test (or the corpus runner) has run more than once against the same
+    # local retrieval_cache.db -- confirmed via direct reproduction: budget_tokens=3333 alone is
+    # NOT enough to guarantee a fresh identity. The Level 1 provider-result cache's real primary
+    # key is (query_hash, repo_branch_scope) -- it does not include budget_tokens at all (an
+    # ordinary column, not part of the PK; DD10), so it's shared across every budget tier for the
+    # same query and durably survives repeated runs regardless of which budget_tokens value was
+    # used last. Delete exactly the rows THIS call is about to (re)write -- both Level 1 and
+    # Level 2, scoped to a single named key each, mirroring
+    # tests/tools/test_kgmcp_phase3_pilot_acceptance_measurement.py::test_isolation_delete_sql_is_scoped_to_a_single_named_column_never_a_blanket_delete's
+    # own existing precedent -- so this test is hermetic regardless of prior local runs.
+    routing_decision = _kgr.route(query_text)
+    request = {"query": query_text}
+    l1_identity = _kgc.compute_lookup_identity(request, routing_decision, fresh_budget_tokens)
+    l2_identity = _kgc.compute_context_packet_lookup_identity(request, routing_decision, fresh_budget_tokens)
+    db_path = Path(_kgc.rc.CACHE_DB_PATH)
+    conn = sqlite3.connect(str(db_path))
+    try:
+        conn.execute(
+            "DELETE FROM retrieval_provider_result_cache_rows WHERE query_hash = ? AND repo_branch_scope = ?",
+            (l1_identity["query_hash"], l1_identity["repo_branch_scope"]),
+        )
+        conn.execute(
+            "DELETE FROM retrieval_context_packet_cache_rows WHERE packet_id = ?",
+            (l2_identity["packet_id"],),
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
     response_stale = mod._run_knowledge_context(
         query_text, changed_paths=[real_cited_path], budget_tokens=fresh_budget_tokens
