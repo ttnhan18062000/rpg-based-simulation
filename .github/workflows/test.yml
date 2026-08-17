@@ -36,7 +36,7 @@ jobs:
                  tests/unit/content_semantics \
                  tests/unit/feature_packs \
                  tests/unit/culture \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Unit: gameplay systems ────────────────────────────────────────────────
   unit-gameplay:
@@ -65,7 +65,7 @@ jobs:
                  tests/unit/systems \
                  tests/unit/actions \
                  tests/unit/ai \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Unit: infra / observability / domains ─────────────────────────────────
   unit-infra:
@@ -95,7 +95,7 @@ jobs:
                  tests/unit/docs \
                  tests/unit/certification \
                  tests/unit/tools \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Integration tests (excluding slow) ────────────────────────────────────
   integration:
@@ -128,7 +128,7 @@ jobs:
                  tests/logging \
                  tests/engine \
                  tests/observability \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Agent orchestration / codex / replay ──────────────────────────────────
   # TCK-20260817-CI-COVERAGE-GAP-16-ORPHANED-TEST-DIRS: these 12 directories (added by commit
@@ -171,7 +171,7 @@ jobs:
       - name: Run
         run: |
           pytest tests/simulation_quality \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Architecture / docs / static guards ──────────────────────────────────
   arch-docs:
@@ -189,7 +189,7 @@ jobs:
                  tests/integrity \
                  tests/static \
                  tests/refactor \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Perf / certification / arena ─────────────────────────────────────────
   perf-cert-arena:
@@ -205,7 +205,7 @@ jobs:
           pytest tests/perf \
                  tests/certification \
                  tests/arena \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Migration lanes + expansion gate ─────────────────────────────────────
   migration-lanes:

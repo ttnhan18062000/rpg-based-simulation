@@ -1133,3 +1133,4 @@
 {"run_id":"TCK-20260817-AGENT-MONITORING-LEGACY-CLASSIFIER-MISSING-END-TS","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1,"start_ts":"2026-08-17T09:57:57Z","end_ts":"2026-08-17T10:02:57Z","duration_s":300}
 {"run_id":"TCK-20260817-DASHBOARD-PROGRESS-TIMELINE-ECHARTS-BUNDLE-VIOLATION","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1,"start_ts":"2026-08-17T09:54:57Z","end_ts":"2026-08-17T10:02:57Z","duration_s":480}
 {"run_id":"TCK-20260817-KGMCP-P3-LIVE-CORPUS-TEST-CACHE-ISOLATION","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1,"start_ts":"2026-08-17T09:37:57Z","end_ts":"2026-08-17T10:02:57Z","duration_s":1500}
+{"run_id":"TCK-20260817-CI-FAST-LANE-EXTRA-SLOW-FILTER-INCONSISTENCY","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1,"start_ts":"2026-08-17T09:55:19Z","end_ts":"2026-08-17T10:10:19Z","duration_s":900}
