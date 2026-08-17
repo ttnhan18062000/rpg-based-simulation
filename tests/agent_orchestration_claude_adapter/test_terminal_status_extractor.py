@@ -94,7 +94,7 @@ def test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count():
     )
 
     by_value = {e["value"]: e for e in all_statuses}
-    assert by_value["FINALIZE_INCOMPLETE"]["call_sites"] == [1450, 1462]
+    assert by_value["FINALIZE_INCOMPLETE"]["call_sites"] == [1457, 1469]
     assert by_value["DONE"]["kind"] == "literal"
     assert by_value["NEEDS_CHANGES"]["kind"] == "verdict_derived"
     assert by_value["BLOCKED"]["kind"] == "verdict_derived"

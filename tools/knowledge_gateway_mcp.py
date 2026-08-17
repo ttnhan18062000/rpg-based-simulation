@@ -382,6 +382,14 @@ def _git_branch_scope() -> dict:
         ["git", "branch", "--show-current"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True,
     ).stdout.strip()
+    if not branch:
+        # `--show-current` is empty in detached-HEAD state (e.g. CI's default
+        # actions/checkout@v4 behavior) — fall back to the short commit sha so
+        # branch_scope stays non-empty instead of silently reporting nothing.
+        branch = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=str(_REPO_ROOT), capture_output=True, text=True,
+        ).stdout.strip()
     dirty = bool(
         subprocess.run(
             ["git", "status", "--porcelain"],

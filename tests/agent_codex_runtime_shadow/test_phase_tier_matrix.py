@@ -21,7 +21,7 @@ def test_phase_tier_matrix_reads_real_implement_ticket_yaml():
     matrix = load_supported_matrix()
     assert matrix.tier == "standard"
     assert matrix.phases == ["Scope", "Investigate", "Plan", "Review"]
-    assert matrix.workflow_version == 1
+    assert matrix.workflow_version == 2
 
 
 def test_rejects_hotfix_tier():

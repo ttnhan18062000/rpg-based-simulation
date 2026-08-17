@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -53,10 +54,27 @@ def load_anchor_keys(path: Path = DEFAULT_ANCHORS_PATH) -> list[str]:
     return [k for k in data if k not in _META_KEYS]
 
 
+_ISOLATED_RUN_KEY_PATTERN = re.compile(r'''(?:run_key|guard_run_key)\s*=\s*["']([^"']+)["']''')
+
+
+def _load_isolated_anchor_keys() -> set[str]:
+    """Anchor keys checked by standalone isolated-grade-anchor tests via a literal
+    `run_key = "..."` / `guard_run_key = "..."` assignment in test_grade_regression.py,
+    rather than via FAST_ANCHOR_KEYS/SLOW_ANCHOR_KEYS membership (e.g.
+    test_urban_political_selfmodel_cognition_isolated_grade_anchor). These are genuinely
+    regression-checked, so a naive list-membership check would false-flag them as uncovered.
+    """
+    import inspect
+
+    import tests.simulation_quality.test_grade_regression as tgr
+
+    return set(_ISOLATED_RUN_KEY_PATTERN.findall(inspect.getsource(tgr)))
+
+
 def find_uncovered_anchor_keys(
     anchor_keys: list[str], fast_keys: list[str], slow_keys: list[str]
 ) -> list[str]:
-    covered = set(fast_keys) | set(slow_keys)
+    covered = set(fast_keys) | set(slow_keys) | _load_isolated_anchor_keys()
     return [k for k in anchor_keys if k not in covered]
 
 

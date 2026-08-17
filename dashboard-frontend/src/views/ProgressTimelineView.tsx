@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ECharts } from 'echarts'
 import ReactEChartsCore from 'echarts-for-react/lib/core'
 import * as echarts from 'echarts/core'
 import { CustomChart } from 'echarts/charts'
@@ -50,7 +49,7 @@ export function ProgressTimelineView({ onSelectRun }: ProgressTimelineViewProps)
   // tooltip-dismissed/dataZoom-reset regression (TCK-20260730-PROGRESS-TIMELINE-VIEW-HOTFIX).
   // Ticks are driven straight into the ECharts instance below instead.
   const nowIsoRef = useRef(new Date().toISOString())
-  const echartsInstanceRef = useRef<ECharts | null>(null)
+  const echartsInstanceRef = useRef<echarts.ECharts | null>(null)
 
   // Recomputed only on a structural data change (new/changed runs or entries, glossary load,
   // or a range-control change) — never on the per-second tick. Passed to ReactEChartsCore with
@@ -100,7 +99,7 @@ export function ProgressTimelineView({ onSelectRun }: ProgressTimelineViewProps)
         echarts={echarts}
         option={option}
         onEvents={onEvents}
-        onChartReady={(instance: ECharts) => {
+        onChartReady={(instance: echarts.ECharts) => {
           echartsInstanceRef.current = instance
         }}
         style={{ height: '100%', width: '100%' }}
