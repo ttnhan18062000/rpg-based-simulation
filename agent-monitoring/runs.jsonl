@@ -1121,3 +1121,4 @@
 {"run_id":"TCK-20260817-HOTFIX-PROGRESS-TIMELINE-VIEW-BARE-ECHARTS-IMPORT","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1,"start_ts":"2026-08-17T07:00:53Z","end_ts":"2026-08-17T07:03:53Z","duration_s":180}
 {"run_id":"TCK-20260817-HOTFIX-WORLD-PROFILE-FIXTURE-4-MISSING-WORLDS","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1,"start_ts":"2026-08-17T07:04:53Z","end_ts":"2026-08-17T07:07:53Z","duration_s":180}
 {"run_id":"TCK-20260817-HOTFIX-BELIEF-ASSIMILATED-TESTS-BYPASS-SHADOW-SHAPERS","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1,"start_ts":"2026-08-17T07:08:53Z","end_ts":"2026-08-17T07:11:53Z","duration_s":180}
+{"run_id":"TCK-20260817-STANDARD-AGENTS-MD-PIPELINE-PHASE-COUNT-DRIFT","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":2,"start_ts":"2026-08-17T07:04:39Z","end_ts":"2026-08-17T07:24:39Z","duration_s":1200}

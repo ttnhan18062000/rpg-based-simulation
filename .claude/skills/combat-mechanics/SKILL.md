@@ -91,16 +91,16 @@ no splash damage from their own teammates.
 ## The Authoritative Pipeline Phases — and the Sliding State Rule
 
 Source: `docs/engine/authoritative_pipeline.md`. Combat logic executes as specific named phases
-inside the 32-phase `AuthoritativeApplyPipeline`, in this fixed order:
+inside the 37-phase `AuthoritativeApplyPipeline`, in this fixed order:
 
 | Phase # | Name | What it does | Compliance ID |
 |---|---|---|---|
-| 10 | `action_routing` | Routes combat/skill/tactical-ability intents through `SimulationDomainLogic` | `TOWN-149`, `COMB-001` |
-| 11 | `position_swaps` | Resolves adjacent position exchange contracts and mutual passing | `COMB-028` |
-| 13 | `combat_engagement` | Enhanced RPG full combat engagement sequences | flag `ENABLE_COMBAT_ENGAGEMENT` |
-| 26 | `near_death_hardening` | Finalizes near-death state and damage-mitigation logic | `COMB-121` |
+| 12 | `action_routing` | Routes combat/skill/tactical-ability intents through `SimulationDomainLogic` | `TOWN-149`, `COMB-001` |
+| 13 | `position_swaps` | Resolves adjacent position exchange contracts and mutual passing | `COMB-028` |
+| 15 | `combat_engagement` | Enhanced RPG full combat engagement sequences | flag `ENABLE_COMBAT_ENGAGEMENT` |
+| 31 | `near_death_hardening` | Finalizes near-death state and damage-mitigation logic | `COMB-121` |
 
-**Sliding State causal rule** (lives on phase 10, `action_routing`, `src/engine/pipeline_phases/actions.py`):
+**Sliding State causal rule** (lives on phase 12, `action_routing`, `src/engine/pipeline_phases/actions.py`):
 if Actor A kills Target T in this tick, Actor B — processed **later in the same tick's queue** —
 sees T as already dead and **cannot receive a kill reward** for it. This is real, intentional,
 order-dependent behavior, not a bug — a skill or debugging session that assumes all actors see a

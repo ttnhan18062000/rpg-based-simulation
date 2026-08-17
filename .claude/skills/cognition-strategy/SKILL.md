@@ -127,15 +127,15 @@ CURRENT_SCORE + switch_margin` — prevents thrashing.
 ## The Authoritative Pipeline Phases
 
 Source: `docs/engine/authoritative_pipeline.md`. This domain's operations execute as 4 specific
-named phases in the 32-phase `AuthoritativeApplyPipeline`:
+named phases in the 37-phase `AuthoritativeApplyPipeline`:
 
 | Phase # | Name | What it does | Flag/Compliance ID |
 |---|---|---|---|
 | 3 | `self_model` | Updates cognitive self-model | `ENABLE_SELF_MODEL_COGNITION` |
 | 4 | `information_belief` | Assimilates new information into entity belief state | `ENABLE_BELIEF_ASSIMILATION` |
 | 5 | `information_intent_execution` | Executes self-model query-routing intents via `ActionIntentAdapter.execute()` | `ENABLE_INFORMATION_INTENT_EXECUTION` |
-| 25 | `strategic_intelligence` | Updates strategic blockers, leads, and project markers | `STRAT-002` |
+| 30 | `strategic_intelligence` | Updates strategic blockers, leads, and project markers | `STRAT-002` |
 
-Note phases 3-5 run early (cognition/belief), phase 25 runs much later (strategic intelligence) —
-this ordering matters: strategic decisions at phase 25 see the tick's already-updated self-model
+Note phases 3-5 run early (cognition/belief), phase 30 runs much later (strategic intelligence) —
+this ordering matters: strategic decisions at phase 30 see the tick's already-updated self-model
 and belief state from phases 3-5, not a stale pre-tick snapshot.
