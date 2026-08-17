@@ -1,3 +1,11 @@
+---
+status: active
+layer: engine
+authority: P2
+audience: agent
+tags: [engine, documentation, determinism, performance]
+---
+
 # Proposal: Kernel Concurrency Design Review — Findings & Follow-Ups
 
 **Origin**: a system-design discussion session (2026-08-17, no code/test changes made) that
