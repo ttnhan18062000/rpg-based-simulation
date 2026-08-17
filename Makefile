@@ -341,9 +341,16 @@ install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ 
 	@echo "[hooks] post-commit hook installed"
 
 eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires knowledge-index)
-	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) tools/eval_search.py
+	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done) tools/eval_search.py
 
-PYTHON := $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done)
+# [ -x "$$py" ] only resolves an absolute/relative path to a literal file -- it never does a
+# PATH lookup for a bare command name, so "python3" alone always failed this check even when a
+# real python3 was on PATH (confirmed: CI has no .venv/bin/python3 and no
+# /home/vboxuser/... path, so this loop silently produced an EMPTY PYTHON on every CI runner,
+# breaking every $(PYTHON)-using target with "sh: 1: -m: not found" -- masked until now because
+# the "slow" CI job's own `needs:` gate had never let it run to completion before).
+# command -v correctly resolves bare "python3" via PATH as well as absolute/relative paths.
+PYTHON := $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done)
 
 evaluate: ## Diff current calibration data against grade anchors (no engine re-run)
 	$(PYTHON) tools/evaluate_simq.py --dry-run
