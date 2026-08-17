@@ -35,6 +35,7 @@ This discussion surfaced three live contradictions between individually-authorit
 - Record the newly-found simulation_kernel_contract.md §9 broader staleness (3 of its 4 bullets look stale: "No scheduler optimization" vs DeterministicScheduler.select_work(), "No adaptive degradation" vs the RuntimeMode ladder, "No external event brokers" vs SimQ's broker mode) with the unconfirmed hypothesis that §9 may describe minimal_kernel.md's narrower scope, needing owner confirmation — do not silently fix
 - Cross-link the concurrency and phase-count contradictions in the audit as already-ticketed rather than re-fixing them
 - Write down a concrete structural convention with an enforcement mechanism (canonical-doc-per-topic map with cross-link-only rule for satellites, or a periodic/automated doc-parity check), with at least one example wired into a living test, following the test_agents_md_pipeline_note_matches_live_engine_doc pattern
+- **(Added 2026-08-17, from independent audits D23/D24 — see Assumptions):** fold in two further pieces of evidence for the same phase-count contradiction that neither of the two seed tickets currently cites: (a) `docs/guides/simulation.md:19-26` describes yet another 6-phase loop and cites `src/engine/authoritative_pipeline.py` as "the 17-phase mutation sequence" — that file does not exist (the real implementation is `src/engine/pipeline.py` + `src/engine/pipeline_phases/`); (b) root `CLAUDE.md` itself states a third number, a "32-phase refinement sequence," for the same subsystem. Both should be corrected as part of this audit's phase-count reconciliation work, alongside architecture.md/README.md.
 
 ## Out of Scope
 - Fixing the Collection-concurrency contradiction (already ticketed: TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION)
@@ -54,6 +55,7 @@ This discussion surfaced three live contradictions between individually-authorit
 - TCK-20260619-P0-DOC-REPAIR
 - TCK-20260702-OBSISO-ISOLATION-PROOF
 - TCK-20260817-STANDARD-AGENTS-MD-PIPELINE-PHASE-COUNT-DRIFT
+- TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (source of the two new evidence pieces added 2026-08-17)
 
 ## Related Docs
 - docs/engine/kernel.md
@@ -66,6 +68,10 @@ This discussion surfaced three live contradictions between individually-authorit
 - docs/performance/simq_isolation_overhead.md
 - docs/audits/D17_documentation_currency.md
 - docs/audits/audit_dimensions.md
+- docs/guides/simulation.md (added 2026-08-17 — cites nonexistent src/engine/authoritative_pipeline.py)
+- docs/audits/D23_architecture_resilience.md (added 2026-08-17)
+- docs/audits/D24_codebase_health_observatory.md (added 2026-08-17)
+- CLAUDE.md (added 2026-08-17 — states a third "32-phase" claim)
 
 ## Related Stored Artifacts
 None.
