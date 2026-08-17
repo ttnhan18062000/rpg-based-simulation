@@ -889,7 +889,12 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
     anchors = {
         "COGNITION": {"grade": "S", "score": 14.478, "abs_floor": 3.6322},
         "ECONOMY": {"grade": "B", "score": 0.1465, "abs_floor": 0.0866},
-        "NARRATIVE": {"grade": "B", "score": 0.3715, "abs_floor": 0.0908},
+        # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
+        # the 0.3715 anchor predated TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG, which removed
+        # ~700 mislabeled AI-goal-transition events counted as fake quest activity. Post-fix,
+        # this world's profile does not enable ENABLE_GUILD_QUEST_GENERATION, so real quest
+        # events are correctly 0 -- 3 fresh trials measured [-0.001, 0.0, 0.0].
+        "NARRATIVE": {"grade": "B", "score": 0.0, "abs_floor": 0.05},
     }
 
     profile = _resolve_profile(profile_name)
@@ -1167,7 +1172,11 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
     ticks = 200
     n_trials = 3
     anchors = {
-        "SOCIAL": {"grade": "S", "score": 7.525, "abs_floor": 0.546},
+        # SOCIAL re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
+        # 7.525 was an unsynced literal left stale since commit 29d78798, which committed the
+        # correct 17.895 to grade_anchors.json in the same commit without updating this copy.
+        # 3 fresh trials measured [14.2, 12.065, 17.39].
+        "SOCIAL": {"grade": "S", "score": 17.895, "abs_floor": 7.579},
         "WORLD": {"grade": "B", "score": 0.21, "abs_floor": 0.078},
     }
 
@@ -1337,7 +1346,11 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
     ticks = 200
     n_trials = 3
     anchors = {
-        "SOCIAL": {"grade": "S", "score": 7.525, "abs_floor": 1.5275},
+        # SOCIAL re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
+        # 7.525 was an unsynced literal left stale since commit 29d78798, which committed the
+        # correct 16.815 to grade_anchors.json in the same commit without updating this copy.
+        # 6 fresh trials across 2 runs measured [15.61, 16.47, 15.61, 18.355, 13.565, 13.885].
+        "SOCIAL": {"grade": "S", "score": 16.815, "abs_floor": 4.225},
     }
 
     profile = _resolve_profile(profile_name)
@@ -1591,7 +1604,11 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
     ticks = 200
     n_trials = 3
     anchors = {
-        "SOCIAL": {"grade": "S", "score": 4.9625, "abs_floor": 1.0757},
+        # SOCIAL re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
+        # 4.9625 was an unsynced literal left stale since commit 29d78798, which committed the
+        # correct 33.7 to grade_anchors.json in the same commit without updating this copy.
+        # 3 fresh trials measured [33.725, 36.685, 37.84].
+        "SOCIAL": {"grade": "S", "score": 33.7, "abs_floor": 5.382},
     }
 
     profile = _resolve_profile(profile_name)
