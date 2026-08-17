@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -78,6 +79,11 @@ _SHAPE_CLASSIFIED_GRAPHIFY_QUERY = "where is X defined"
 def test_gateway_down_search_mcp_test_mode_still_works():
     """Mirrors the `mcp-server-test` Makefile target's own invocation shape exactly
     (`Makefile:380-382`)."""
+    sys.path.insert(0, str(_TOOLS_DIR))
+    from search_mcp import _DB_PATH
+    if not _DB_PATH.exists():
+        pytest.skip("knowledge index not built — run make knowledge-index")
+
     result = subprocess.run(
         [sys.executable, "tools/search_mcp.py", "--test"],
         input=json.dumps({"query": "damage formula", "top_k": 3}),
@@ -94,6 +100,9 @@ def test_gateway_down_graphify_cli_still_works():
     """`"assemble_packet"` is a real, stable symbol name from this ticket's own subject module —
     safe to hardcode (verified live: `graphify query "assemble_packet"` returns 18+ result
     lines)."""
+    if shutil.which("graphify") is None:
+        pytest.skip("graphify CLI not installed in this environment")
+
     result = subprocess.run(
         ["graphify", "query", "assemble_packet"],
         capture_output=True,

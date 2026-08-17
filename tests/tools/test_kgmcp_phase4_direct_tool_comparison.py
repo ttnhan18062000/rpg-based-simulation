@@ -23,6 +23,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -181,6 +182,13 @@ def test_zero_mutation_of_real_agent_monitoring_corpus_from_comparison_runner():
     — deliberately NOT `main()` (which would also overwrite the committed, hand-annotated fixture).
     Real runtime: ~7 gateway calls + ~15 direct-tool calls, comparable in scale to Phase 3's own
     `extra_slow`-marked equivalent — run with `--resource-budget large`."""
+    from search_mcp import _DB_PATH
+
+    if not _DB_PATH.exists():
+        pytest.skip("knowledge index not built — run make knowledge-index")
+    if shutil.which("graphify") is None:
+        pytest.skip("graphify CLI not installed in this environment")
+
     assert _REAL_AGENT_MONITORING_DIR.is_dir()
     assert "tmp" not in str(_REAL_AGENT_MONITORING_DIR).lower()
 

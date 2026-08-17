@@ -79,7 +79,13 @@ def test_hard_law_occupancy_collision():
     assert any(v.law_id == "LAW-OCCUPANCY-COLLISION" for v in violations)
 
 
-def test_observability_modes_and_kernel_integration(monkeypatch):
+def test_observability_modes_and_kernel_integration(request):
+    # ObservabilityConfig's override mode is class-level global state -- reset it on exit
+    # so a DEBUG override set below doesn't leak into later tests/modules run in the same
+    # pytest process (found via a real CI cross-file collision with test_metrics_export.py,
+    # TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL).
+    request.addfinalizer(ObservabilityConfig.clear_all_overrides)
+
     # Set config to OFF mode
     ObservabilityConfig.set_override_mode(ObservabilityMode.OFF)
     assert ObservabilityConfig.get_mode() == ObservabilityMode.OFF

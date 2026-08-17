@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import ast
 import json
+import shutil
 import signal
 import subprocess
 import sys
@@ -165,7 +166,10 @@ def test_corpus_baseline_wall_time_and_tool_call_count_are_plausible():
     """Exactly one bounded live re-invocation, matching test_plan.md's 'still really callable'
     smoke check — Q1_authoritative_state only, never all 7 queries, with an explicit timeout
     since the plan did not specify one and no CI-side pytest-timeout plugin is installed."""
-    from search_mcp import _run_search
+    from search_mcp import _DB_PATH, _run_search
+
+    if not _DB_PATH.exists():
+        pytest.skip("knowledge index not built — run make knowledge-index")
 
     q1 = next(e for e in CORPUS if e["id"] == "Q1_authoritative_state")
 
@@ -199,6 +203,13 @@ def test_zero_mutation_of_real_agent_monitoring_corpus():
     proves zero agent-monitoring/ mutation from the real live-call path; only the file-write step is
     skipped.
     """
+    from search_mcp import _DB_PATH
+
+    if not _DB_PATH.exists():
+        pytest.skip("knowledge index not built — run make knowledge-index")
+    if shutil.which("graphify") is None:
+        pytest.skip("graphify CLI not installed in this environment")
+
     assert _REAL_AGENT_MONITORING_DIR.is_dir()
     assert "tmp" not in str(_REAL_AGENT_MONITORING_DIR).lower()
 

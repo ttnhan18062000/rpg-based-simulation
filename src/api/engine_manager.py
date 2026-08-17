@@ -111,16 +111,30 @@ class V2EngineManager:
         
         rng = DeterministicRNG(self._seed)
         gen = EntityGenerator(self._seed)
-        
+
         entities = {}
         # Spawn hero at center
-        hero = gen.spawn_hero((64.0, 64.0))
+        hero_pos = (64.0, 64.0)
+        hero = gen.spawn_hero(hero_pos)
         entities[hero.id] = hero
-        
-        # Spawn monsters
-        for i in range(self._entities_count - 1):
-            monster = gen.spawn_goblin((60.0 + i, 60.0 + i))
+
+        # Spawn monsters along a diagonal from (60, 60). Skip any offset whose tile
+        # (LAW-SPAWN-OCCUPANCY collides on int(x)/int(y), not exact float equality) would
+        # land on the hero's own tile -- with entities_count=10 (the default used by
+        # src/api/server.py's real startup path), offset 4 lands exactly on hero_pos,
+        # producing a deterministic spawn-placement collision (TCK-20260817-STANDARD-
+        # SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL).
+        hero_tile = (int(hero_pos[0]), int(hero_pos[1]))
+        placed = 0
+        offset = 0
+        while placed < self._entities_count - 1:
+            pos = (60.0 + offset, 60.0 + offset)
+            offset += 1
+            if (int(pos[0]), int(pos[1])) == hero_tile:
+                continue
+            monster = gen.spawn_goblin(pos)
             entities[monster.id] = monster
+            placed += 1
             
         state = AuthoritativeState(
             tick=0,

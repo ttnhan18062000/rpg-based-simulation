@@ -32,9 +32,15 @@ async def test_observability_websocket_suite():
             assert data["type"] == "subscription_ack"
             assert data["filters"] == {}
 
-            # Wait for a heartbeat
+            # Wait for a heartbeat. The default server runs a live, continuously-ticking
+            # simulation broadcasting real domain events (combat/economy/etc.) much faster
+            # than the 5s heartbeat interval -- a small fixed read count can exhaust itself
+            # entirely on real events still ahead of the heartbeat in the FIFO queue. Drain
+            # on an overall wall-clock deadline instead of a message count, so several
+            # heartbeat intervals are guaranteed to elapse regardless of event volume.
             has_heartbeat = False
-            for _ in range(5):
+            deadline = asyncio.get_event_loop().time() + 20.0
+            while asyncio.get_event_loop().time() < deadline:
                 resp = await asyncio.wait_for(ws.recv(), timeout=6.0)
                 data = json.loads(resp)
                 if data["type"] == "heartbeat":

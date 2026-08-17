@@ -91,6 +91,31 @@ def _deps_available() -> bool:
     return ok
 
 
+def _numpy_available() -> bool:
+    """Return True if numpy is importable. Not covered by _deps_available()'s
+    sentence-transformers/sqlite-vec check -- cmd_query()'s hybrid-fusion branch imports it
+    separately (tools/knowledge_search.py:998), and it is not installed in CI's lean
+    requirements.txt environment (requirements-knowledge.txt is dev-only, per that file's own
+    header comment; numpy isn't declared in either)."""
+    try:
+        import numpy  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def _bm25_deps_available() -> bool:
+    """Return True if rank_bm25 and numpy are importable. Unlike sentence-transformers/
+    sqlite-vec (requirements-knowledge.txt, local-dev-only per requirements.txt's own
+    header comment), these two are the minimum needed for BM25/hybrid-fusion code paths and
+    are not installed in CI's lean requirements.txt environment either."""
+    try:
+        import rank_bm25  # noqa: F401
+    except ImportError:
+        return False
+    return _numpy_available()
+
+
 # ---------------------------------------------------------------------------
 # Group 1 — Build happy path (AC1)
 # ---------------------------------------------------------------------------
@@ -1359,6 +1384,7 @@ class TestTokenize:
 # Group B — TestBm25BuildLoad (unit, non-slow)
 # ---------------------------------------------------------------------------
 
+@pytest.mark.skipif(not _bm25_deps_available(), reason="rank_bm25/numpy not installed")
 class TestBm25BuildLoad:
     """Unit tests for _build_bm25_index() and _load_bm25()."""
 
@@ -2004,6 +2030,8 @@ class TestHybridFusionWiring:
     """
 
     def test_lexical_only_match_surfaced_through_cmd_query(self, tmp_path, monkeypatch, capsys):
+        if not _numpy_available():
+            pytest.skip("numpy not installed")
         fake_db = tmp_path / "knowledge.db"
         conn = sqlite3.connect(str(fake_db))
         conn.execute(

@@ -350,6 +350,10 @@ class _FakeBM25Guard:
 
 class TestModeRoutingGuard:
     def test_vector_and_keyword_modes_do_not_call_fusion_helper(self, tmp_path, monkeypatch):
+        try:
+            import numpy  # noqa: F401
+        except ImportError:
+            pytest.skip("numpy not installed")
         calls = []
         monkeypatch.setattr(_ks, "hybrid_fuse_and_filter", lambda **kw: calls.append(kw) or [])
 
