@@ -61,8 +61,9 @@ class CombatEngagementPhase:
         return CombatEngagementDecisionResult(entity_updates=entity_updates)
 ```
 
-**Formerly also `AdventureDecisionPhase`** (`src/domains/adventure/phase.py`) — deleted by
-TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE. Adventure routing now follows a *different* pattern:
+**Formerly also `AdventureDecisionPhase`** (was at src/domains/adventure/phase.py — that file no
+longer exists) — deleted by TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE. Adventure routing now
+follows a *different* pattern:
 it is a tier-5 `GoalScorer` (`AdventureGoalScorer.score(entity, state) -> GoalScore`, registered in
 `GoalRegistry`, `src/ai/goals/adventure_scorer.py`), not a dedicated pipeline-phase class — see
 `docs/mechanics/04_strategic_cognition.md` §2 for that pattern instead. Do not use the deleted

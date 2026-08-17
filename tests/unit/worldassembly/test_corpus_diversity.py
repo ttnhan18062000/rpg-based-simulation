@@ -178,7 +178,15 @@ def _faction_hazard_immunities() -> dict[str, set[str]]:
 
 
 def _anchored_world_ids() -> set[str]:
-    """Every world_id with >=1 entry in grade_anchors.json (strip _seed{N}_{ticks}t)."""
+    """Every world_id with >=1 entry in grade_anchors.json (strip _seed{N}_{ticks}t).
+
+    Some anchor keys are derived from calibration profile overlays (e.g.
+    ``urban_political_selfmodel_probe``), not real worlds — those have no
+    ``data/worlds/{id}/`` directory of their own, since they apply a profile on top of
+    an existing world (see ``config/simulation_quality/profiles/``). Only ids that
+    correspond to a real world directory are returned; the underlying world's own
+    direct anchor entries already cover its module-family membership.
+    """
     anchors = json.loads(FIXTURE_PATH.read_text())
     world_ids = set()
     for key in anchors:
@@ -186,7 +194,8 @@ def _anchored_world_ids() -> set[str]:
             continue
         # run_key format: "{world_id}_seed{N}_{ticks}t"
         base = key.rsplit("_seed", 1)[0]
-        world_ids.add(base)
+        if (WORLDS_ROOT / base).is_dir():
+            world_ids.add(base)
     return world_ids
 
 

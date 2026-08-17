@@ -332,6 +332,7 @@ def test_adventure_goal_scorer_wires_writer():
 
     selected_mock = MagicMock()
     selected_mock.family = RouteFamily.GATHER_RESOURCE
+    selected_mock.score = 0.8
 
     mock_result = MagicMock()
     mock_result.selected = selected_mock
