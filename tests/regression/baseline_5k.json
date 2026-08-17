@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "generated_at": "2026-06-28T03:25:32Z",
+  "generated_at": "2026-08-17T08:42:13Z",
   "world_id": "urban_political",
   "seed": 42,
   "ticks": 5000,
   "sample_interval": 100,
   "sample_count": 50,
-  "elapsed_s": 172.7,
+  "elapsed_s": 103.7,
   "metrics": {
-    "alive_avg": 11.34,
-    "gold_avg": 457.32,
+    "alive_avg": 13.3,
+    "gold_avg": 584.16,
     "quest_active_count": 0.0
   }
 }
