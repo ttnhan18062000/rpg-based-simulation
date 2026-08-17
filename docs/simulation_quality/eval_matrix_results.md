@@ -3030,3 +3030,36 @@ One new, unrelated, disclosed-not-fixed finding surfaced while closing this out:
 `hero_guild_routing_seed42_500t`/COGNITION — anchor `1.016` vs. 3 fresh trials averaging `~1.83`
 with small genuine jitter (not bit-identical, unlike the COMBAT batch) — no cause diagnosed,
 left as-is, candidate for a future small investigation.
+
+---
+
+## COGNITION Loop-Detection Recurrence — `urban_political_seed123_500t` Bit-Identical Guard
+## Falsified (TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION)
+
+**Reliability status update: stable -> bimodal, tolerance-guard conversion applied.** The
+"stable" verdict recorded above (`## COGNITION Loop-Detection Nondeterminism Verification`,
+`TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM`) was correct at the time — 4/4 repro
+trials landed on grade B. `tests/unit/worldassembly/test_corpus_diversity.py -m slow` never ran
+to completion on real CI between that ticket's closure and 2026-08-17 (blocked by unrelated CI
+gating, later a real `Makefile` interpreter-discovery bug,
+`TCK-20260817-HOTFIX-MAKEFILE-PYTHON-DISCOVERY-BROKEN-ON-CI`), so the bit-identical guard was
+never re-exercised against real drift until today.
+
+10 fresh, independent trials today (including plain idle-only reruns — induced load is not even
+required to trigger it) split 8/10 grade S (`event_count=355`, `raw_score=1768.0`,
+`normalized_score=3.536` — internally bit-identical across all 8 S-observations) and 2/10 grade
+B (matching the original `0.088` anchor exactly). Root cause is the same mechanism already
+identified in 2026-07: `decision_divergence_detected`'s missing "already-emitted" dedup gate
+(`src/observability/event_extractor.py:844-863`) combined with F6's wall-clock watchdog/throttle
+(`src/engine/kernel.py:420-442`/`574-601`) — this scenario now does enter the danger-concern
+stuck state the original repro did not observe.
+
+`test_urban_political_seed123_500t_cognition_bit_identical_under_load` was converted to
+`test_urban_political_seed123_500t_cognition_grade_stability`, a tolerance-band guard using an
+explicit `band_tolerance=2` override (anchor grade S, since B and S are 2 `GRADE_ORDER` steps
+apart and no single anchor fits the file's standard ±1 band) and `abs_floor=4.482` (1.3x the
+real max deviation between the two observed clusters). Per this repo's established precedent for
+F6-attributed COGNITION findings, a source-level dedup-gate fix was investigated as an
+alternative and deliberately deferred (large corpus-wide recalibration blast radius across every
+anchor relying on this event's repeat-count) rather than implemented in this ticket — flagged as
+recommended future work, not resolved here.
