@@ -219,6 +219,13 @@ class BlockerState:
     severity: float = 0.5
     resolved: bool = False
     target_quantity: int = 1
+    # Mirrors LeadState.suppression_until_tick's existing pattern (below): set when a
+    # resolve_blocker project timed out without resolving this blocker
+    # (TCK-20260817-STANDARD-HUNGER-STARVED-BY-RESOLVE-BLOCKER-FLAT-UTILITY), so
+    # ResolveBlockerScorer stops re-bidding a flat, un-decaying utility for the same
+    # unresolved blocker every tick and other needs (e.g. biological pressure) get a real
+    # chance to win the next scoring pass instead of an immediate re-abandon loop.
+    suppression_until_tick: int = 0
 
 
 @dataclass(frozen=True, slots=True)

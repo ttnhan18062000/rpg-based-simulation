@@ -3730,3 +3730,31 @@
     docs/parity_ledger/infrastructure.yaml INFRA-237's own matching fourth addendum and
     docs/guidelines/intentional_divergences.md §2.41's "Restoration (partial)" addendum for the
     full root-cause/fix narrative.
+- id: STRAT-258
+  text: A resolve_blocker project that can never actually resolve its blocker (e.g. an "access"
+    blocker whose subject isn't parseable coordinates) times out after 50 ticks (matching this
+    project kind's own creation-time lock_until_tick ceiling) and is abandoned, suppressing the
+    specific unresolved blocker for 100 further ticks (BlockerState.suppression_until_tick,
+    mirroring LeadState's existing suppression_until_tick pattern) so ResolveBlockerScorer's flat,
+    non-decaying utility=80.0 (STRAT-257's addendum and 04_strategic_cognition.md §"the `~2.9`
+    figure above" both already document this flat floor as structurally dominant) doesn't
+    permanently starve every other biological/strategic need once bid on an unresolvable blocker.
+  status: verified
+  priority: P1
+  v2_evidence: src/systems/strategic_systems/intelligence.py (resolve_blocker timeout/abandon
+    branch, StrategicIntelligenceSystem.evaluate_project_switch), src/ai/goals/scorers.py
+    (ResolveBlockerScorer.score()'s suppression_until_tick filter), src/core/strategic.py
+    (BlockerState.suppression_until_tick field).
+  test_path: tests/unit/strategic/test_strategic_detour_ph6.py::test_resolve_blocker_project_timeout_abandons_and_suppresses_blocker,
+    tests/unit/strategic/test_strategic_detour_ph6.py::test_resolve_blocker_scorer_skips_suppressed_blocker,
+    tests/integration/scenarios/test_hunger_satiation.py::test_hunger_satiation_resolves_in_food_world
+  divergence_note: >-
+    Found via TCK-20260817-STANDARD-HUNGER-STARVED-BY-RESOLVE-BLOCKER-FLAT-UTILITY: a hero entity
+    that picked up a transient movement-oscillation "access" blocker (congestion) at a settlement
+    boundary had its hunger project permanently suspended for the rest of a 400-tick run, because
+    (a) resolve_blocker was the only GoalKind with no completion condition at all, and (b) even
+    once abandoned on a bare timeout, the same blocker would immediately re-win the very next
+    scoring pass at its flat utility=80.0, recreating an identical project forever. Both gaps are
+    now closed. Does not change ResolveBlockerScorer's own utility formula/value (per this repo's
+    Strategic/Tactical Rule, not solved by "more tactical goal scoring") -- only the blocker
+    lifecycle around it, at the strategic layer.
