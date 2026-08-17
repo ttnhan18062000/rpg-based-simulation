@@ -57,7 +57,23 @@ def test_long_run_stability():
         )
         
         rng = DeterministicRNG(seed)
-        kernel = Kernel(profile, state, rng)
+        # TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE: audit_mode=True is
+        # required here, not optional. src/engine/kernel.py's tick-budget watchdog and mid-tick
+        # emergency throttle measure real wall-clock compute time (time.perf_counter_ns()) and
+        # drop resolution-queue work when a tick runs long -- this is documented, intentional
+        # engine behavior (docs/audits/D06_longrun_health.md F6, docs/parity_ledger/
+        # infrastructure.yaml INFRA-273), not a bug, and is explicitly out of scope to change here.
+        # Both throttle paths are gated `not audit_mode`, so without this flag two same-seed runs
+        # can trip the watchdog at different tick numbers (confirmed via direct reproduction) and
+        # diverge -- this is exactly what caused this test's real CI failure. This mirrors the
+        # already-established pattern for every other strict hash-equality determinism check in
+        # this repo (src/certification/harness.py, tests/unit/kernel/test_replay_determinism.py,
+        # LongRunStabilityHarness.verify_determinism_parity()) and matches docs/engine/
+        # deterministic_execution.md's own Extension Rule 5 ("audit_mode should be enabled in all
+        # CI runs that verify the determinism guarantee"). Verified: 3 independent repeated runs
+        # of this exact scenario (seed 999, 2000 ticks) produce a bit-identical hash with this flag
+        # set, and 0 watchdog trips.
+        kernel = Kernel(profile, state, rng, flags={"audit_mode": True})
 
         mem_samples = []
         pop_samples = []
