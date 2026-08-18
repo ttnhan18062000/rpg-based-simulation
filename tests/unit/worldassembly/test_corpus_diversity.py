@@ -1098,7 +1098,14 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
     ticks = 1000
     n_trials = 3
     anchors = {
-        "SOCIAL": {"grade": "S", "score": 17.9655, "abs_floor": 2.9568},
+        # SOCIAL re-anchored 2026-08-18: 17.9655 was left unsynced with grade_anchors.json's
+        # already-correct 21.374 (grade S unchanged) committed by
+        # TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION (role/faction-mistagging-fix
+        # cascading behavioral drift, same causal class documented in that ticket for this
+        # pillar). 6 fresh trials across 2 runs measured
+        # [18.156, 25.608, 23.748, 21.059, 24.359, 26.606]; max deviation from 21.374 is 5.232,
+        # abs_floor = 1.3 * 5.232 = 6.8016.
+        "SOCIAL": {"grade": "S", "score": 21.374, "abs_floor": 6.8016},
         "ECONOMY": {"grade": "A", "score": 0.6564, "abs_floor": 0.2878},
     }
 
