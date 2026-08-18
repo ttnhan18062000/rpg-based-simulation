@@ -48,7 +48,10 @@ multi-ticket-shaped). No ticket was removed.
 | J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic |
 | K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic |
 
-All ten tickets live in their own `tickets/todos/<name>/` folder, not `tickets/inprogress/`.
+**(2026-08-18)** The 8 downgraded (standard/hotfix) tickets moved from their own
+`tickets/todos/<name>/` folder to flat `tickets/todos/TCK-*.md` files — standard/hotfix tier
+tickets in this project don't carry a per-ticket subfolder. J and K, still epic tier, keep their
+`tickets/todos/<name>/` folders. None of the ten live in `tickets/inprogress/`.
 
 ## Important connection to existing work
 

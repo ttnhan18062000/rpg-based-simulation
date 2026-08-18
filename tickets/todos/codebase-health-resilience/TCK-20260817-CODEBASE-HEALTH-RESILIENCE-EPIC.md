@@ -81,9 +81,10 @@ acceptance-criteria — no `create-tickets` pass needed for these 8). J and K re
 both are genuinely multi-ticket-shaped per their source docs. No sub-epic ticket was removed.
 
 Once a specific sub-epic is chosen for action: the 8 standard/hotfix ones go straight to
-implementation against their own ticket; J and K still need a `create-tickets` pass against a
-dedicated proposal document, producing investigated child tickets in their own
-`tickets/todos/<name>/` folder.
+implementation against their own ticket (now flat files directly under `tickets/todos/`, no
+subfolder — standard/hotfix tier tickets in this project don't carry one); J and K still need a
+`create-tickets` pass against a dedicated proposal document, producing investigated child tickets
+in their own `tickets/todos/<name>/` folder (kept, since they remain epic tier).
 
 ## Out of Scope
 - Implementing any fix from either audit (RabbitMQ/Kafka removal, `/health` fix, Redis DLQ,
@@ -186,6 +187,9 @@ None yet — staging artifacts for this ticket are in
   error-handling-hygiene,determinism-verification-gap,codebase-navigability-hygiene,
   codebase-health-observatory-tooling}/TCK-*-EPIC.md (new — 10 epic tickets, each with
   staging_artifacts/)
+- **(2026-08-18)** 8 of those tickets downgraded from epic to standard/hotfix tier; their files
+  moved from `tickets/todos/<name>/TCK-*.md` to flat `tickets/todos/TCK-*.md` (no subfolder),
+  their now-empty `<name>/` folders removed. J and K's subfolders kept (still epic tier).
 - tickets/todos/kernel-concurrency-design-review/TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT.md
   (amended — two new evidence pieces folded into existing scope, not duplicated)
 
