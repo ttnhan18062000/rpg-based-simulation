@@ -287,63 +287,18 @@ def _run_knowledge_context(
     if mode is not None:
         response["mode"] = mode
 
-    response["statements"] = [
-        _omit_none(
-            {
-                "statement_id": s.statement_id,
-                "text": s.text,
-                "classification": s.classification,
-                "evidence_ids": s.evidence_ids,
-                "verification": s.verification,
-            }
-        )
-        for s in packet.statements
-    ]
-    response["context"] = [
-        _omit_none(
-            {
-                "kind": c.kind,
-                "summary": c.summary,
-                "source_id": c.source_id,
-                "path": c.path,
-                "evidence_hash": c.evidence_hash,
-                "authority": c.authority,
-            }
-        )
-        for c in packet.context
-    ]
-    response["evidence"] = [
-        _omit_none(
-            {
-                "evidence_id": e.evidence_id,
-                "source_id": e.source_id,
-                "path": e.path,
-                "evidence_hash": e.evidence_hash,
-            }
-        )
-        for e in packet.evidence
-    ]
-    response["conflicts"] = [
-        {
-            "subject": conflict.subject,
-            "claims": [
-                {
-                    "value": claim.value,
-                    "source_id": claim.source_id,
-                    "authority": claim.authority,
-                    "valid_from": claim.valid_from,
-                    # `valid_to` is explicitly typed ["string", "null"] in the response schema —
-                    # unlike path/authority above, a real None here passes through as JSON null
-                    # unmodified, no omission needed.
-                    "valid_to": claim.valid_to,
-                }
-                for claim in conflict.claims
-            ],
-            "automatic_resolution": conflict.automatic_resolution,
-            "recommended_action": conflict.recommended_action,
-        }
-        for conflict in packet.conflicts
-    ]
+    # Statement/context/evidence/conflict dict shapes are built by _kgpa's own fragment functions
+    # (statement_response_fragment()/context_response_fragment()/evidence_response_fragment()/
+    # conflict_response_fragment()) rather than inlined here a second time — the SAME functions
+    # assemble_within_budget()/truncate_conflicts_within_budget() use to measure real budget cost
+    # (TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING). This is a structural guarantee, not
+    # just a convention: a future change to any of these shapes updates both the real response and
+    # what the budget accounting measures in one place, by construction — the exact drift this
+    # ticket was created to close cannot silently reopen here.
+    response["statements"] = [_kgpa.statement_response_fragment(s) for s in packet.statements]
+    response["context"] = [_kgpa.context_response_fragment(c) for c in packet.context]
+    response["evidence"] = [_kgpa.evidence_response_fragment(e) for e in packet.evidence]
+    response["conflicts"] = [_kgpa.conflict_response_fragment(c) for c in packet.conflicts]
 
     # Cache-write hooks — miss path only (both hit paths above return early and never reach here).
     # response["cache"] describes what happened on *this* call and is set before either write

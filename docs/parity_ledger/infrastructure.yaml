@@ -10479,3 +10479,45 @@
     types conflicts[].automatic_resolution as non-nullable string, but real code (_structural_supersession_signal())
     always sets it None -- no real conflict-carrying response can ever validate against
     that schema.'
+- id: INFRA-357
+  text: 'Knowledge Gateway MCP budget-accounting JSON structural-overhead closure
+    -- TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING (follow-up to INFRA-356,
+    same ''certify methodology, not conclusion'' framing). INFRA-356''s widened assemble_within_budget()
+    still under-counted real response payload size by summing hand-picked raw field
+    text (statement.text, ContextEntry.summary, EvidenceEntry.evidence_id/path/evidence_hash)
+    -- silently missing statement_id, classification, verification, ContextEntry.kind/source_id/path/evidence_hash/authority,
+    EvidenceEntry.source_id, plus every included item''s own real JSON structural
+    overhead (braces, keys, commas, quoting). This ticket closes that gap structurally:
+    four new public functions in tools/knowledge_gateway_packet_assembly.py -- statement_response_fragment()/context_response_fragment()/evidence_response_fragment()/
+    conflict_response_fragment() -- are now the single source of truth for what each
+    item serializes to, called by BOTH the real cost functions (_statement_included_content_cost(),
+    truncate_conflicts_within_budget()) and tools/knowledge_gateway_mcp.py''s actual
+    response builder (refactored from inlined dict literals to calling these same
+    functions), so the two can no longer silently drift apart. Cost is now measured
+    via real kgmcp_char_heuristic_v1(json.dumps(fragment, sort_keys=True)) per item
+    -- every serialized field plus that item''s real per-item JSON structural overhead,
+    not a hand-picked subset. Real, honest re-measurement against the frozen 7-entry
+    corpus (cache tables cleared, cache: MISS confirmed both times, run twice for
+    reproducibility): Sec.21 #12 budget-tolerance pass rate is now 7/7, up from 2/7
+    -- every previously-failing context_search-routed entry dropped from the post-INFRA-356
+    range of 2200-2450 tokens to 1038-1171, comfortably under the 1200-token (1000
+    x 1.2) threshold. Full per-entry table in docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md''s
+    own ''Further accounting closure'' section (Real re-measurement subsection). Verified
+    via 49+92 passing unit/integration tests, including a new shared-source-of-truth
+    test proving response[''statements'']/[''context'']/[''evidence'']/[''conflicts'']
+    exactly equal the fragment functions'' output for the real objects a live call
+    produces, and a new test proving a previously-invisible field (Statement.verification)
+    now correctly affects cost and inclusion.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'tools/knowledge_gateway_packet_assembly.py: statement_response_fragment()/context_response_fragment()/evidence_response_fragment()/conflict_response_fragment()
+    (new, shared source of truth); _statement_included_content_cost() and truncate_conflicts_within_budget()
+    (both rewritten to measure real json.dumps() cost of each fragment instead of
+    hand-picked field text). tools/knowledge_gateway_mcp.py: statement/context/evidence/conflict
+    response-building block (refactored to call the same fragment functions instead
+    of inlining the dict shape a second time). Real corpus re-measurement: 7/7 PASS
+    (up from 2/7), docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md.'
+  test_path: tests/tools/test_knowledge_gateway_packet_assembly.py::test_previously_uncounted_verification_field_now_affects_cost_and_inclusion,
+    tests/tools/test_knowledge_gateway_mcp.py::test_response_statement_context_evidence_fragments_match_shared_source_of_truth
+  divergence_note: null

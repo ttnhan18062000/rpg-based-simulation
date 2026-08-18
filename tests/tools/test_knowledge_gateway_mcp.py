@@ -399,6 +399,55 @@ def test_knowledge_context_omits_null_path_and_authority_never_returns_null_for_
         assert "path" not in entry
 
 
+def test_response_statement_context_evidence_fragments_match_shared_source_of_truth(monkeypatch):
+    """TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING: response["statements"]/["context"]/
+    ["evidence"] must be built by calling packet_assembly's statement_response_fragment()/
+    context_response_fragment()/evidence_response_fragment() -- the SAME functions
+    assemble_within_budget() uses to measure real cost -- not an independently-inlined dict shape
+    that could silently drift out of sync with the accounting again. Spies on assemble_packet()
+    to capture the real Statement/ContextEntry/EvidenceEntry objects, then proves every response
+    item equals that object's fragment function output exactly, not just structurally similar."""
+    router_mod = _mod._load_router_module()
+    pa_mod = _mod._load_packet_assembly_module()
+    pa_router_mod = pa_mod._load_router_module()
+
+    fake_decision = SimpleNamespace(providers_selected=["graphify"])
+    monkeypatch.setattr(router_mod, "route", lambda q, requested_guarantee=None: fake_decision)
+    monkeypatch.setattr(
+        pa_router_mod,
+        "match_symbol_name",
+        lambda q: {"symbol": q, "returncode": 0, "stdout": "graphify traversal output for fragment parity check"},
+    )
+
+    captured = {}
+    real_assemble_packet = pa_mod.assemble_packet
+
+    def spy_assemble_packet(*args, **kwargs):
+        packet = real_assemble_packet(*args, **kwargs)
+        captured["packet"] = packet
+        return packet
+
+    monkeypatch.setattr(pa_mod, "assemble_packet", spy_assemble_packet)
+
+    response = _mod._run_knowledge_context("fragment_parity_symbol")
+    _validate_response(response)
+
+    packet = captured["packet"]
+    assert packet.statements, "test needs at least one real statement to prove fragment parity"
+    assert response["statements"] == [
+        pa_mod.statement_response_fragment(s) for s in packet.statements
+    ]
+    assert response["context"] == [
+        pa_mod.context_response_fragment(c) for c in packet.context
+    ]
+    assert response["evidence"] == [
+        pa_mod.evidence_response_fragment(e) for e in packet.evidence
+    ]
+    assert response["conflicts"] == [
+        pa_mod.conflict_response_fragment(c) for c in packet.conflicts
+    ]
+
+
 # ---------------------------------------------------------------------------
 # 11 — AC1: identical repeated call is a genuine cache hit
 # (TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING)

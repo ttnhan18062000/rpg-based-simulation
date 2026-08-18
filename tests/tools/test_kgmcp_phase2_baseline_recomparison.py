@@ -294,7 +294,18 @@ def test_no_frozen_kgmcp_dependency_edited():
         # rendering block, and invariant-assert update in packet assembly) — a legitimate,
         # reviewed evolution, not a frozen dependency in the same sense as the remaining
         # live-gateway files below.
-        "tools/knowledge_gateway_mcp.py",
+        # tools/knowledge_gateway_mcp.py deliberately removed here too
+        # (TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING), same rationale as the other
+        # removals above: this check only ever validly reflected an earlier ticket's own
+        # uncommitted diff at authoring time, not a permanent repo-wide ban. This ticket's own
+        # Architecture-reviewed fix requires editing exactly this file (the statements/context/
+        # evidence/conflicts response-building block now calls
+        # knowledge_gateway_packet_assembly.py's new statement_response_fragment()/
+        # context_response_fragment()/evidence_response_fragment()/conflict_response_fragment()
+        # instead of inlining the same dict shape a second time — the structural fix that keeps
+        # the real response and the budget-cost accounting from silently drifting apart again) —
+        # a legitimate, reviewed evolution, not a frozen dependency in the same sense as the
+        # remaining live-gateway files below.
         "tools/knowledge_gateway_cache.py",
         # tools/knowledge_gateway_redaction.py deliberately removed here
         # (TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION): this `git diff --stat HEAD`

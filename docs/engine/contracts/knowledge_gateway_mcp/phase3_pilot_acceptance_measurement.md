@@ -197,6 +197,49 @@ but that is a larger, different design (effectively moving to whole-envelope mea
 this ticket's own approved scope (widen the existing per-statement/conflicts cost function) — not
 attempted here.
 
+### Further accounting closure (`TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING`)
+
+Did exactly the whole-envelope-style closure the paragraph above predicted:
+`statement_response_fragment()`/`context_response_fragment()`/`evidence_response_fragment()`/
+`conflict_response_fragment()` (new, `tools/knowledge_gateway_packet_assembly.py`) are now the
+single source of truth for each item's real serialized dict, shared by both the cost functions and
+`tools/knowledge_gateway_mcp.py`'s actual response builder. Cost is now
+`kgmcp_char_heuristic_v1(json.dumps(fragment, sort_keys=True))` per item — every field named in
+the "does not count" list above (`statement_id`, `classification`, `verification`,
+`ContextEntry.kind`/`source_id`/`path`/`evidence_hash`/`authority`, `EvidenceEntry.source_id`)
+plus that item's own real per-item JSON structural overhead is now counted. Verified via 49+92
+passing tests, including a new shared-source-of-truth test and a new test proving a previously-
+invisible field now correctly affects cost and inclusion.
+
+**Real re-measurement: PASS, 7/7.** Corrects an earlier draft of this update, which wrongly
+concluded the knowledge-search stack was unavailable in-session — that check used the bare `python3`
+on `PATH` rather than `.venv/bin/python3`, which does have `sentence-transformers` installed; the
+real gateway runs fine once invoked correctly. Cleared both live cache tables
+(`retrieval_provider_result_cache_rows`, `retrieval_context_packet_cache_rows` — gitignored,
+untracked local dev-machine state, same disclosed hygiene precedent as the recalibration hotfix)
+and re-ran the frozen 7-entry corpus twice at `budget_tokens=1000`, confirming `cache: MISS` (a
+genuine cold compute, not a stale cached value) and identical numbers both times:
+
+| Entry | providers_selected | full_payload_tokens | threshold (1000×1.2) | Result |
+|---|---|---|---|---|
+| Q1_authoritative_state | context_search | 1115 | 1200 | PASS |
+| Q2_symbol_lookup | graphify | 183 | 1200 | PASS |
+| Q3_requirement_completeness | context_search, parity_ledger | 1099 | 1200 | PASS |
+| Q4_historical_rationale | context_search | 1171 | 1200 | PASS |
+| Q5_test_impact | graphify | 179 | 1200 | PASS |
+| Q6_ticket_status | context_search | 1154 | 1200 | PASS |
+| Q7_negative_knowledge | context_search, graphify | 1038 | 1200 | PASS |
+
+Every previously-failing `context_search`-routed entry (Q1, Q3, Q4, Q6, Q7) dropped from the
+post-INFRA-356 range of 2200-2450 tokens to 1038-1171 — comfortably under the 1200 threshold. The
+fragment-based, real-`json.dumps()`-per-item accounting closes the gap in full on this corpus: real
+Sec.21 #12 budget-tolerance pass rate is **7/7**, up from 2/7. The small residual this fix
+deliberately doesn't close (inter-element array-separator commas, fixed top-level envelope fields)
+turned out not to matter for this corpus's actual entries — there was enough margin under the new
+accounting that the residual never mattered in practice. Measured with
+`docs/plans/knowledge-gateway-mcp-proposal.md`'s own re-derivation of `_compute_budget_compliance()`
+(`tools/agent-monitoring/kgmcp_phase3_gateway_runner.py:398`), not a new formula.
+
 ## #13 — conflicts are visible and never silently merged
 
 **Result: DISCLOSED LIMITATION, 0/7 real conflicts observed.** `build_conflicts()`

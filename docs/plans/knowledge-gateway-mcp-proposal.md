@@ -1569,6 +1569,28 @@ conflict-visibility-adjacent coverage question) was independently re-confirmed s
 real cross-provider content duplicates in the live corpus — locked in by a regression test rather
 than closed via a fabricated corpus extension.
 
+**Further update (`TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING`):** closed the accounting
+gap the prior update disclosed. `statement_response_fragment()`/`context_response_fragment()`/
+`evidence_response_fragment()`/`conflict_response_fragment()` (new,
+`tools/knowledge_gateway_packet_assembly.py`) are now the single source of truth for what each
+item serializes to, called by both the real cost functions and `tools/knowledge_gateway_mcp.py`'s
+actual response builder (refactored from inlining the same dict shape a second time) — cost is now
+`kgmcp_char_heuristic_v1(json.dumps(fragment, sort_keys=True))` per item, capturing every
+serialized field (`statement_id`, `classification`, `verification`, `ContextEntry.kind`/
+`source_id`/`path`/`evidence_hash`/`authority`, `EvidenceEntry.source_id`) plus that item's own
+real JSON structural overhead, not a hand-picked subset. Verified via 49+92 passing tests,
+including a new test proving the response and the budget accounting can no longer silently drift
+apart (both now read from the same functions) and a new test proving a previously-invisible field
+(`Statement.verification`) now correctly affects cost and inclusion.
+
+**Real re-measurement: PASS, 7/7** (up from 2/7) — cache tables cleared, corpus re-run twice at
+`budget_tokens=1000`, confirmed `cache: MISS` (genuine cold compute) both times with identical
+results. Every previously-failing `context_search`-routed entry dropped from the post-INFRA-356
+range of 2200-2450 tokens to 1038-1171, comfortably under the 1200 threshold. Full per-entry table
+in `phase3_pilot_acceptance_measurement.md`'s own "Further accounting closure" section. (An earlier
+draft of this update wrongly reported this as blocked by a missing knowledge-search stack — that
+check used the wrong Python interpreter; corrected here.)
+
 ## 22. Representative Use Cases
 
 ### “What is `AuthoritativeState`, and who may mutate it?”

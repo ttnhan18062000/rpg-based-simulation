@@ -242,7 +242,12 @@ def test_no_frozen_kgmcp_dependency_edited():
         # validly reflected an earlier ticket's own uncommitted diff at authoring time, not a
         # permanent repo-wide ban. That ticket's own twice-Architecture-Review-approved plan
         # requires editing exactly these two files to wire a real Parity Ledger provider.
-        "tools/knowledge_gateway_mcp.py",
+        # tools/knowledge_gateway_mcp.py deliberately removed here too
+        # (TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING), mirroring the same narrowing
+        # already applied to test_kgmcp_phase2_baseline_recomparison.py's own copy of this guard:
+        # a legitimate, Architecture-reviewed evolution (response-building now calls
+        # knowledge_gateway_packet_assembly.py's new shared response-fragment functions instead
+        # of inlining the dict shape a second time), not a frozen dependency.
         "tools/retrieval_events.py",
         "tools/agent-monitoring/kgmcp_baseline_corpus.py",
         "tools/agent-monitoring/kgmcp_baseline_runner.py",

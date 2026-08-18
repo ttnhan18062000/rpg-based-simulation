@@ -1154,3 +1154,4 @@
 {"run_id":"TCK-20260818-KGMCP-CACHE-WRITE-SIZE-CAP-FIX","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1,"start_ts":"2026-08-18T11:55:55Z","end_ts":"2026-08-18T12:10:55Z","duration_s":900}
 {"run_id":"TCK-20260818-KGMCP-TICKET-VERIFY-SCOPED-REGRESSION-GAP","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1,"start_ts":"2026-08-18T11:49:34Z","end_ts":"2026-08-18T12:34:34Z","duration_s":2700}
 {"run_id":"TCK-20260818-HOTFIX-TERMINAL-STATUS-CONTRACT-DRIFT","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1,"start_ts":"2026-08-18T12:32:40Z","end_ts":"2026-08-18T12:52:40Z","duration_s":1200}
+{"run_id":"TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1,"start_ts":"2026-08-18T14:19:22Z","end_ts":"2026-08-18T15:49:22Z","duration_s":5400}

@@ -640,6 +640,80 @@ def build_conflicts(
 
 # ── Step 8: Token-budgeted assembly ───────────────────────────────────────────
 
+# Response-fragment builders — the SINGLE source of truth for what a Statement/ContextEntry/
+# EvidenceEntry/Conflict serializes to in the real MCP response, shared between the budget cost
+# functions below and tools/knowledge_gateway_mcp.py's actual response builder (which calls these
+# same functions rather than inlining the dict shape a second time). This is the structural fix
+# for TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING: the prior per-field-summing cost
+# function (kept below, in spirit, but rebuilt on these fragments) silently missed every field not
+# explicitly hand-picked — statement_id, classification, verification, ContextEntry.kind/
+# source_id/path/evidence_hash/authority, EvidenceEntry.source_id — plus all JSON structural
+# overhead (braces, keys, commas, quoting) for every included item. Measuring the real
+# `json.dumps()` size of the actual fragment each item produces closes that gap structurally: any
+# field these functions serialize is automatically costed, and any field the real response builder
+# adds later must be added here too (both read from the same functions, so drift is caught by
+# tests/tools/test_knowledge_gateway_packet_assembly.py exercising both call sites against the
+# same fixtures, not just possible in principle).
+
+def statement_response_fragment(statement: Statement) -> dict:
+    """The exact dict a Statement serializes to in response["statements"][i]."""
+    fragment = {
+        "statement_id": statement.statement_id,
+        "text": statement.text,
+        "classification": statement.classification,
+        "evidence_ids": statement.evidence_ids,
+        "verification": statement.verification,
+    }
+    return {k: v for k, v in fragment.items() if v is not None}
+
+
+def context_response_fragment(entry: ContextEntry) -> dict:
+    """The exact dict a ContextEntry serializes to in response["context"][i]."""
+    fragment = {
+        "kind": entry.kind,
+        "summary": entry.summary,
+        "source_id": entry.source_id,
+        "path": entry.path,
+        "evidence_hash": entry.evidence_hash,
+        "authority": entry.authority,
+    }
+    return {k: v for k, v in fragment.items() if v is not None}
+
+
+def evidence_response_fragment(entry: EvidenceEntry) -> dict:
+    """The exact dict an EvidenceEntry serializes to in response["evidence"][i]."""
+    fragment = {
+        "evidence_id": entry.evidence_id,
+        "source_id": entry.source_id,
+        "path": entry.path,
+        "evidence_hash": entry.evidence_hash,
+    }
+    return {k: v for k, v in fragment.items() if v is not None}
+
+
+def conflict_response_fragment(conflict: Conflict) -> dict:
+    """The exact dict a Conflict serializes to in response["conflicts"][i]. Unlike the three
+    fragment builders above, every field here is required by the response schema (no `_omit_none`
+    filtering) — `valid_to` is explicitly typed `["string", "null"]` and passes through as JSON
+    `null` unmodified, matching tools/knowledge_gateway_mcp.py's response-building comment on the
+    same field."""
+    return {
+        "subject": conflict.subject,
+        "claims": [
+            {
+                "value": claim.value,
+                "source_id": claim.source_id,
+                "authority": claim.authority,
+                "valid_from": claim.valid_from,
+                "valid_to": claim.valid_to,
+            }
+            for claim in conflict.claims
+        ],
+        "automatic_resolution": conflict.automatic_resolution,
+        "recommended_action": conflict.recommended_action,
+    }
+
+
 def _statement_included_content_cost(
     statement: Statement,
     context_by_id: dict[str, ContextEntry],
@@ -650,18 +724,27 @@ def _statement_included_content_cost(
     a statement's evidence_ids is precisely what final_context/final_evidence get filtered by
     downstream, so this sums over the same evidence_ids). Never a length*constant estimate
     (assemble_within_budget()'s own docstring) — every term is a real kgmcp_char_heuristic_v1()
-    call on real text/field content actually present on a real ContextEntry/EvidenceEntry.
+    call, now measured against each item's REAL serialized response fragment
+    (statement_response_fragment()/context_response_fragment()/evidence_response_fragment()) via
+    `json.dumps()`, not a hand-picked subset of fields' raw text. This captures every field the
+    real response actually serializes for that item, plus that item's own real JSON structural
+    overhead (braces, keys, commas, quoting) — closing the gap
+    TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING's investigation found between this
+    function's old accounting and the real `json.dumps(response)` measurement §21 #12 checks
+    against. Disclosed, deliberately out-of-scope residual: inter-element array-separator commas
+    in the final joined statements[]/context[]/evidence[] arrays (1 byte per boundary) and the
+    fixed top-level envelope fields unrelated to statement count (status, freshness, budget_*
+    metadata, etc.) — both small and independent of which/how-many statements are included, unlike
+    the per-item gap this fix closes.
     """
-    cost = kgmcp_char_heuristic_v1(statement.text)
+    cost = kgmcp_char_heuristic_v1(json.dumps(statement_response_fragment(statement), sort_keys=True))
     for evidence_id in statement.evidence_ids:
         ctx = context_by_id.get(evidence_id)
         if ctx is not None:
-            cost += kgmcp_char_heuristic_v1(ctx.summary)
+            cost += kgmcp_char_heuristic_v1(json.dumps(context_response_fragment(ctx), sort_keys=True))
         ev = evidence_by_id.get(evidence_id)
         if ev is not None:
-            cost += kgmcp_char_heuristic_v1(ev.evidence_id)
-            cost += kgmcp_char_heuristic_v1(ev.path or "")
-            cost += kgmcp_char_heuristic_v1(ev.evidence_hash)
+            cost += kgmcp_char_heuristic_v1(json.dumps(evidence_response_fragment(ev), sort_keys=True))
     return cost
 
 
@@ -711,11 +794,17 @@ def truncate_conflicts_within_budget(
     conflicts: list[Conflict], remaining_budget: int
 ) -> tuple[list[Conflict], int]:
     """Real-measured, greedy, original-order truncation of conflicts[] against whatever budget
-    remains after statement+context+evidence assembly. Cost is the real sum of
-    kgmcp_char_heuristic_v1() over each claim's real .value text -- the only prose-bearing field on
-    a Conflict/ConflictClaim -- never a length*constant estimate. Never reorders conflicts; drops
-    the first conflict (and everything after it in list order) that would overflow, mirroring
-    assemble_within_budget()'s own break-on-first-overflow discipline.
+    remains after statement+context+evidence assembly. Cost is the real
+    kgmcp_char_heuristic_v1() measurement of each conflict's REAL serialized response fragment
+    (conflict_response_fragment(), via json.dumps()) -- not just claim.value text, and never a
+    length*constant estimate. Previously undercounted `subject`, `claims[].source_id`/
+    `authority`/`valid_from`/`valid_to`, `automatic_resolution`, `recommended_action`, and JSON
+    structural overhead (TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING); the frozen 7-entry
+    corpus has never observed a real conflict (0/7, per phase3_pilot_acceptance_measurement.md
+    #13), so this fix does not change any measured §21 #12 number today, but closes the same
+    class of latent gap this ticket fixed for statements/context/evidence, consistently. Never
+    reorders conflicts; drops the first conflict (and everything after it in list order) that
+    would overflow, mirroring assemble_within_budget()'s own break-on-first-overflow discipline.
 
     `conflicts[]` is never owned by any single statement (`Conflict.subject` is a
     `source_path`/`symbol` pair string, not linked to any `evidence_id`), so it cannot reuse the
@@ -724,7 +813,7 @@ def truncate_conflicts_within_budget(
     included: list[Conflict] = []
     running_total = 0
     for conflict in conflicts:
-        cost = sum(kgmcp_char_heuristic_v1(claim.value) for claim in conflict.claims)
+        cost = kgmcp_char_heuristic_v1(json.dumps(conflict_response_fragment(conflict), sort_keys=True))
         if running_total + cost <= remaining_budget:
             included.append(conflict)
             running_total += cost

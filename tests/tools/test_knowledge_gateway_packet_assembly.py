@@ -285,6 +285,10 @@ def test_negative_claim_carries_exclusions_or_blind_spots_and_checked_at():
 # ---------------------------------------------------------------------------
 
 def test_budget_returned_computed_by_real_kgmcp_char_heuristic_v1_not_estimate():
+    """TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING: cost is now measured against each
+    statement's real serialized response fragment (statement_response_fragment(), via
+    json.dumps()), not raw statement.text alone -- still a real kgmcp_char_heuristic_v1()
+    measurement, never an estimate, just on the actual bytes the response ships."""
     short = kpa.Statement("stmt-001", "short text", "FACT", ["file:a"], priority_tier=2)
     long = kpa.Statement(
         "stmt-002", "a much longer piece of text than the short statement above", "FACT",
@@ -294,8 +298,12 @@ def test_budget_returned_computed_by_real_kgmcp_char_heuristic_v1_not_estimate()
     _, returned_short = kpa.assemble_within_budget([short], budget_requested=1000)
     _, returned_long = kpa.assemble_within_budget([long], budget_requested=1000)
 
-    assert returned_short == kpa.kgmcp_char_heuristic_v1(short.text)
-    assert returned_long == kpa.kgmcp_char_heuristic_v1(long.text)
+    assert returned_short == kpa.kgmcp_char_heuristic_v1(
+        json.dumps(kpa.statement_response_fragment(short), sort_keys=True)
+    )
+    assert returned_long == kpa.kgmcp_char_heuristic_v1(
+        json.dumps(kpa.statement_response_fragment(long), sort_keys=True)
+    )
     assert returned_long > returned_short
 
 
@@ -327,8 +335,10 @@ def test_assemble_within_budget_accounts_context_and_evidence_bytes_not_just_sta
         path="docs/a.md",
         evidence_hash="deadbeef" * 8,
     )
-    statement_only_cost = kpa.kgmcp_char_heuristic_v1(statement.text)
-    budget = statement_only_cost + 1  # fits the statement text alone, nothing more
+    statement_only_cost = kpa.kgmcp_char_heuristic_v1(
+        json.dumps(kpa.statement_response_fragment(statement), sort_keys=True)
+    )
+    budget = statement_only_cost + 1  # fits the statement's own fragment alone, nothing more
 
     included_legacy, _ = kpa.assemble_within_budget([statement], budget)
     assert included_legacy == [statement]  # 2-arg form: unaware of context/evidence, still fits
@@ -356,7 +366,9 @@ def test_conflicts_are_measured_against_budget_even_though_real_corpus_never_pop
         automatic_resolution=None,
         recommended_action="human review",
     )
-    small_cost = sum(kpa.kgmcp_char_heuristic_v1(c.value) for c in small_conflict.claims)
+    small_cost = kpa.kgmcp_char_heuristic_v1(
+        json.dumps(kpa.conflict_response_fragment(small_conflict), sort_keys=True)
+    )
 
     included, cost = kpa.truncate_conflicts_within_budget(
         [small_conflict, large_conflict], remaining_budget=small_cost
@@ -405,15 +417,20 @@ def test_assemble_within_budget_never_uses_length_times_constant_estimate():
 
     cost_short = kpa._statement_included_content_cost(statement, {ctx.source_id: ctx}, {ev_short.evidence_id: ev_short})
     cost_long = kpa._statement_included_content_cost(statement, {ctx.source_id: ctx}, {ev_long.evidence_id: ev_long})
-    statement_only_cost = kpa.kgmcp_char_heuristic_v1(statement.text)
+    statement_only_cost = kpa.kgmcp_char_heuristic_v1(
+        json.dumps(kpa.statement_response_fragment(statement), sort_keys=True)
+    )
 
     assert cost_long > cost_short
     assert cost_long != cost_short * 2  # not a fixed multiplier of anything
+    # TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING: cost is now the real json.dumps() size
+    # of each fragment (statement/context/evidence), not raw field text summed directly -- still
+    # real kgmcp_char_heuristic_v1() measurements, never a length*constant estimate, just on the
+    # actual serialized bytes each fragment produces (including that fragment's own real JSON
+    # structural overhead, which raw field-text summing could never capture).
     assert cost_short - statement_only_cost == (
-        kpa.kgmcp_char_heuristic_v1(ctx.summary)
-        + kpa.kgmcp_char_heuristic_v1(ev_short.evidence_id)
-        + kpa.kgmcp_char_heuristic_v1(ev_short.path or "")
-        + kpa.kgmcp_char_heuristic_v1(ev_short.evidence_hash)
+        kpa.kgmcp_char_heuristic_v1(json.dumps(kpa.context_response_fragment(ctx), sort_keys=True))
+        + kpa.kgmcp_char_heuristic_v1(json.dumps(kpa.evidence_response_fragment(ev_short), sort_keys=True))
     )
 
 
@@ -438,7 +455,7 @@ def test_deduplication_occurs_before_truncation_not_after():
     dup_b = kpa.Statement("stmt-002", "SAME TEXT", "FACT", ["file:b"], priority_tier=2)
     statements = [dup_a, dup_b]
 
-    cost = kpa.kgmcp_char_heuristic_v1("SAME TEXT")
+    cost = kpa.kgmcp_char_heuristic_v1(json.dumps(kpa.statement_response_fragment(dup_a), sort_keys=True))
     budget = cost + max(cost // 2, 1)  # room for exactly one item's worth of cost, not two
 
     # Correct order: dedup first, then truncate.
@@ -460,10 +477,39 @@ def _tier_statement(tier: int, n: int) -> "kpa.Statement":
     return kpa.Statement(f"stmt-{n:03d}", "X" * 20, "FACT", [f"file:{n}"], priority_tier=tier)
 
 
+def test_previously_uncounted_verification_field_now_affects_cost_and_inclusion():
+    """TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING: Statement.verification is real,
+    serialized response content (response["statements"][i]["verification"]) that the OLD
+    statement.text-only cost formula never counted at all -- two statements with identical text
+    but wildly different verification note lengths cost identically under the old formula. Prove
+    the new fragment-based cost correctly distinguishes them, and that a tight budget fitting the
+    short one excludes the long one -- a real regression the old formula could never have caught,
+    since it was structurally blind to this field."""
+    short_verification = kpa.Statement(
+        "stmt-001", "same text", "FACT", ["file:a"], priority_tier=2, verification="ok",
+    )
+    long_verification = kpa.Statement(
+        "stmt-002", "same text", "FACT", ["file:b"], priority_tier=2,
+        verification="a much longer verification note with real substantive content in it",
+    )
+
+    cost_short = kpa._statement_included_content_cost(short_verification, {}, {})
+    cost_long = kpa._statement_included_content_cost(long_verification, {}, {})
+    assert cost_long > cost_short  # the old text-only formula would have made these equal
+
+    budget = cost_short + 1  # fits the short verification's real cost, not the long one's
+    included, _ = kpa.assemble_within_budget([long_verification], budget)
+    assert included == []  # correctly excluded -- the old formula would have wrongly included it
+
+
 def test_priority_order_invariants_before_facts_before_tests_before_history():
     # Deliberately reversed input order (tier 5 first) — the sort must not depend on input order.
     statements = [_tier_statement(tier, n) for n, tier in enumerate([5, 4, 3, 2, 1], start=1)]
-    cost_each = kpa.kgmcp_char_heuristic_v1("X" * 20)
+    # All 5 statements have identically-shaped fragments (same text/id/evidence_id lengths, only
+    # the numeric suffix differs) so any one's fragment cost applies uniformly to all.
+    cost_each = kpa.kgmcp_char_heuristic_v1(
+        json.dumps(kpa.statement_response_fragment(statements[0]), sort_keys=True)
+    )
     budget = cost_each * 2  # room for exactly 2 of the 5 tiers
 
     included, _ = kpa.assemble_within_budget(statements, budget)

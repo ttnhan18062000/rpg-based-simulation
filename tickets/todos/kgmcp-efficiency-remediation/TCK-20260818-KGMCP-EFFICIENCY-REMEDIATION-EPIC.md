@@ -142,6 +142,17 @@ None directly (epic tier — see child tickets).
 - Assumes the frozen 7-entry corpus (`tools/agent-monitoring/kgmcp_baseline_corpus.py`) remains
   the correct measurement instrument for the re-comparison child ticket — if a child ticket finds
   reason to believe otherwise, that's a finding to report, not something to change unilaterally.
+- **Correction (2026-08-18): the live `context_search` provider is NOT blocked in this sandbox.**
+  `TCK-20260818-KGMCP-BUDGET-JSON-OVERHEAD-ACCOUNTING` initially concluded it was
+  (`ModuleNotFoundError: No module named 'sentence_transformers'`), but that was a false negative
+  from testing with the wrong Python interpreter (bare `python3` on `PATH`, not
+  `.venv/bin/python3`, which has the knowledge-search stack installed and working). That ticket
+  went on to run a real, live, reproducible 7-entry corpus measurement successfully
+  (`.venv/bin/python3`, not bare `python3`) and got a real result: §21 #12 budget-tolerance now
+  7/7 PASS, up from 2/7. `TCK-20260818-KGMCP-POST-CAP-FIX-RECOMPARISON` needs the same live
+  `context_search` provider for its warm-path comparison and should work fine using
+  `.venv/bin/python3` — no special setup expected, but confirm with a quick real call before
+  relying on it for the full measurement, same discipline as always.
 
 ## Implementation Notes
 N/A — epic ticket, no direct implementation.
