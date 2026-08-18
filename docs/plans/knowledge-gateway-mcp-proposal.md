@@ -1591,6 +1591,20 @@ in `phase3_pilot_acceptance_measurement.md`'s own "Further accounting closure" s
 draft of this update wrongly reported this as blocked by a missing knowledge-search stack — that
 check used the wrong Python interpreter; corrected here.)
 
+**Further update (`TCK-20260818-KGMCP-POST-CAP-FIX-RECOMPARISON`):** answers the one comparison
+question no prior ticket ran — does a genuinely *warm* gateway change Phase 4's own paired,
+gateway-vs-direct-tool verdict? Structurally verified genuine cache warmth (zero `assemble_packet`
+calls on the measured call) on all 7 corpus entries, then reran Phase 4's exact comparison
+methodology. Real result: the cost gap narrows substantially versus the cold-cache measurement
+(latency ratios drop from 1.31x-3.76x cold to 1.06x-1.34x warm; token ratios from 1.04x-2.93x cold
+to 1.05x-1.98x warm) but never flips — the gateway is still slower and heavier on tokens than direct
+tool use on all 7 entries, even genuinely warm. Same reviewer-verdict distribution as cold (6/7
+`direct_equal_or_better`, 1/7 `mixed`, 0/7 `gateway_equal_or_better`). Full table and per-entry
+rationale in `phase4_warm_direct_tool_comparison.md`. This is the epic's own decision-support
+deliverable: caching and budget-accounting now work correctly, but the gateway's routing/assembly
+overhead remains large enough that it is not yet cost-competitive with calling the underlying tools
+directly, warm or cold.
+
 ## 22. Representative Use Cases
 
 ### “What is `AuthoritativeState`, and who may mutate it?”
