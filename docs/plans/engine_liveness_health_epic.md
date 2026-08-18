@@ -12,6 +12,22 @@ tags: [observability, engine]
 **Source:** `docs/audits/D23_architecture_resilience.md` §D, §K (R2)
 **Priority:** P0 — the second of the two findings both audits independently rank highest; a silent engine stall behind a healthy-looking process is the worst kind of failure (invisible until someone notices gameplay has stopped).
 
+## Status
+Resolved by `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC`. The Problem section below now describes
+pre-fix history, not current state: `/health` (`src/api/server.py`) now calls
+`V2EngineManager.get_health_status()`, returning `ok`/`degraded`/`unhealthy` computed from the
+background tick thread's `.is_alive()` state and last-tick staleness (pause-aware — a deliberate
+`POST /api/v1/control/pause` no longer reads as unhealthy), and the route maps `unhealthy` to HTTP
+503. `SimulationWatchdog`'s critical escalation (`src/observability/watchdog.py`) now also routes
+a `WatchdogTrip` `AlertEvent` through the existing `AlertsManager`/`AlertRouter`/`WebhookAlertSink`
+stack, using a `run_id` read from `/health`'s new `engine.run_id` field; the webhook sink stays
+disabled by default (new, default-disabled env vars added to `docker-compose.yml`'s `watchdog`
+service) until an operator configures `SIM_ALERTS_WEBHOOK_URL`/`SIM_ALERTS_WEBHOOK_ENABLED`.
+`docs/architecture/simulation_watchdog.md`'s `Status`, file-path, and responsibility claims were
+corrected in the same change. Parity ledger entry `INFRA-358` (`docs/parity_ledger/infrastructure.yaml`)
+tracks this. Left in place (not archived) per this repo's convention that whole-epic archival is a
+separate human decision.
+
 ## Problem
 
 `/health` (`src/api/server.py:126-128`) is a hardcoded stub:

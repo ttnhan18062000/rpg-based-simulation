@@ -20,6 +20,19 @@ at least one child showing real activity evidence, followed by silence past
 the window, is flagged stale. See
 staging_artifacts/TCK-20260710-EPIC-STALENESS-CHECK/plan.md Decision 5.
 
+An epic ticket whose own body `## Status` field reads `BLOCKED` is a
+deliberately governed pause, not neglect — e.g. TCK-20260730-CODEX-RUNTIME-
+ACTIVATION-EPIC, parked pending an explicit owner decision, with a dated
+rationale in its own body. Such a candidate is NEVER flagged stale here
+regardless of how idle its children have gone, and never lands in the
+never-started bucket either — it is classified into a third, "blocked"
+bucket instead. `find_stale_epics` (the hook fire-trigger) never returns a
+blocked candidate. `compute_stale_epics_report` still surfaces blocked
+candidates, separately, in an "Informational: BLOCKED epics" section, so
+genuinely parked work stays visible without re-triggering the idle-activity
+nudge. See docs/plans/epic_staleness_status_aware_epic.md and
+TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC.
+
 Advisory only — mirrors retro_nudge_hook.py's shape (session-scoped state
 file, bare try/except:pass hook wrapper, additionalContext only). Never
 mutates a ticket file, never raises past its own entry points, never blocks
@@ -50,6 +63,7 @@ class EpicCandidate:
     mode: str  # "epic_id" or "folder"
     child_ids: list
     epic_date: Optional[date] = None
+    status: Optional[str] = None  # ticket body "## Status" value, upper-cased; None if unknown
 
 
 # ---------------------------------------------------------------------------
@@ -140,12 +154,14 @@ def discover_candidate_epics(inprogress_dir: Path, todos_dir: Path) -> list:
             epic_id = _frontmatter_field(text, "ticket_id") or ticket_file.stem
             epic_date = _parse_epic_date(_frontmatter_field(text, "date"))
             child_ids = _child_ids_from_text(_section_body(text, "Related Tickets"), epic_id)
+            status_body = _section_body(text, "Status").strip()
             candidates.append(EpicCandidate(
                 epic_id=epic_id,
                 source_path=ticket_file,
                 mode="epic_id",
                 child_ids=child_ids,
                 epic_date=epic_date,
+                status=status_body.upper() if status_body else None,
             ))
 
     if todos_dir.exists():
@@ -171,9 +187,12 @@ def discover_candidate_epics(inprogress_dir: Path, todos_dir: Path) -> list:
             if epic_text is not None:
                 epic_id = _frontmatter_field(epic_text, "ticket_id") or epic_ticket_file.stem
                 epic_date = _parse_epic_date(_frontmatter_field(epic_text, "date"))
+                status_body = _section_body(epic_text, "Status").strip()
+                status = status_body.upper() if status_body else None
             else:
                 epic_id = f"FOLDER-tickets-todos-{subdir.name}"
                 epic_date = None
+                status = None
 
             child_ids = []
             if has_sequence:
@@ -193,6 +212,7 @@ def discover_candidate_epics(inprogress_dir: Path, todos_dir: Path) -> list:
                 mode="folder",
                 child_ids=child_ids,
                 epic_date=epic_date,
+                status=status,
             ))
 
     return _dedupe_candidates_by_epic_id(candidates)
@@ -248,12 +268,18 @@ def resolve_child_activity(
 # Step 3 — staleness decision (no epic_date fallback, per Decision 5)
 # ---------------------------------------------------------------------------
 
+def is_epic_blocked(candidate: EpicCandidate) -> bool:
+    return (candidate.status or "").strip().upper() == "BLOCKED"
+
+
 def is_epic_stale(
     candidate: EpicCandidate,
     most_recent_activity: Optional[datetime],
     now: datetime,
     window_days: int = DEFAULT_STALENESS_WINDOW_DAYS,
 ) -> bool:
+    if is_epic_blocked(candidate):
+        return False
     if not candidate.child_ids:
         return False
     if most_recent_activity is None:
@@ -304,13 +330,16 @@ def _classify_candidates(inprogress_dir, todos_dir, working_log_path, runs_jsonl
 
     stale = []
     never_started = []
+    blocked = []
     for candidate in candidates:
         most_recent = resolve_child_activity(candidate.child_ids, working_log_rows, runs_records)
-        if is_epic_stale(candidate, most_recent, now, window_days):
+        if is_epic_blocked(candidate):
+            blocked.append((candidate, most_recent))
+        elif is_epic_stale(candidate, most_recent, now, window_days):
             stale.append((candidate, most_recent))
         elif is_epic_never_started(candidate, most_recent):
             never_started.append(candidate)
-    return stale, never_started
+    return stale, never_started, blocked
 
 
 def find_stale_epics(
@@ -322,11 +351,12 @@ def find_stale_epics(
     window_days: int = DEFAULT_STALENESS_WINDOW_DAYS,
 ) -> list:
     """The sole function the hook wrapper consults to decide fire/no-fire —
-    never the never-started/informational list, never a string-parse of
-    compute_stale_epics_report's output."""
+    never the never-started/blocked/informational lists, never a string-parse
+    of compute_stale_epics_report's output. A BLOCKED candidate never appears
+    here regardless of idle time (see is_epic_blocked/is_epic_stale)."""
     try:
         now = now or datetime.now(timezone.utc)
-        stale, _ = _classify_candidates(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now, window_days)
+        stale, _, _ = _classify_candidates(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now, window_days)
         return [candidate for candidate, _ in stale]
     except Exception:
         return []
@@ -346,7 +376,7 @@ def compute_stale_epics_report(
 ) -> str:
     try:
         now = now or datetime.now(timezone.utc)
-        stale, never_started = _classify_candidates(
+        stale, never_started, blocked = _classify_candidates(
             inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now, window_days
         )
 
@@ -366,6 +396,19 @@ def compute_stale_epics_report(
                     since_str = f"{(now.date() - candidate.epic_date).days} days since scoped"
                 else:
                     since_str = "date unknown"
+                lines.append(f"  {_format_epic_line(candidate)} — {since_str}")
+        else:
+            lines.append("  none")
+
+        lines.append("")
+        lines.append("Informational: BLOCKED epics (not stale — deliberately parked):")
+        if blocked:
+            for candidate, most_recent in blocked:
+                if most_recent is not None:
+                    days_idle = (now - most_recent).days
+                    since_str = f"{days_idle} days idle"
+                else:
+                    since_str = "no child activity recorded"
                 lines.append(f"  {_format_epic_line(candidate)} — {since_str}")
         else:
             lines.append("  none")

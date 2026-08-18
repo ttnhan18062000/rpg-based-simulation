@@ -150,9 +150,7 @@ The complete production-grade system is deployed via Docker Compose to manage lo
 ### Service Index (`docker-compose.yml`):
 *   **`backend`**: FastAPI REST & WebSockets server serving state read-models.
 *   **`frontend`**: The TypeScript React client served via Nginx.
-*   **`redis`**: Handles live in-memory caching and real-time state broadcasts.
-*   **`rabbitmq`**: High-performance task queue managing background work.
-*   **`kafka` & `zookeeper`**: Telemetry log event bus for high-volume sweeps.
+*   **`redis`**: Handles live in-memory caching and real-time state broadcasts, and is the sole event-stream transport (`RedisStreamConsumer`).
 *   **`ai_worker`**: Scaling pool executing computationally intense AI predictions.
 *   **`prometheus`**: Time-series database scraping runtime TPS and performance counters.
 *   **`grafana`**: Provisioned dashboards showing live simulation metrics.
