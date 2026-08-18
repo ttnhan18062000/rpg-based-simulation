@@ -105,6 +105,10 @@ terminal_statuses:
   kind: literal
   phases:
   - Test
+- value: TEST_SCOPE_COVERAGE_FAILED
+  kind: literal
+  phases:
+  - Test
 - value: DATA_RUNS_CLEAN_FAILED
   kind: literal
   phases:

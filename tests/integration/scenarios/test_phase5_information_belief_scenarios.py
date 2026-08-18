@@ -206,6 +206,12 @@ def test_compiled_urban_political_state_fires_belief_assimilated():
     refined = AuthoritativeApplyPipeline.refine(compiled_state, StateUpdate())
 
     events = EventExtractor.extract(compiled_state, compiled_state, refined, ObservabilityMode.NORMAL)
+    # Since ENABLE_PUSH_EVENT_SHAPERS_PHASE2 defaults ON (TCK-20260806-PUSH-CUTOVER-PHASE2),
+    # belief_assimilated/belief_updated construction lives in StrategyShaper.shape() (Phase 2
+    # push shaper), not EventExtractor.extract()'s own rollback path. Kernel._phase_observability
+    # always merges both sources — mirror that here rather than calling EventExtractor alone.
+    from src.observability.event_shapers import run_shadow_shapers
+    events += run_shadow_shapers(compiled_state, refined, compiled_state.tick, ObservabilityMode.NORMAL)
     belief_events = [
         e for e in events if e.event_type == "belief_assimilated" and e.entity_id == actor_id
     ]
@@ -242,10 +248,16 @@ def test_pending_information_response_fires_exactly_once_not_carried_forward():
 
     assert state.pending_information_responses, "expected the seed to be non-empty at tick 0"
 
+    from src.observability.event_shapers import run_shadow_shapers
+
     total_belief_assimilated = 0
     for i in range(5):
         refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
         events = EventExtractor.extract(state, state, refined, ObservabilityMode.NORMAL)
+        # ENABLE_PUSH_EVENT_SHAPERS_PHASE2 defaults ON — belief_assimilated is delivered via
+        # StrategyShaper.shape(), which Kernel._phase_observability always merges in alongside
+        # EventExtractor's own output (see the sibling scenario test above for the full note).
+        events += run_shadow_shapers(state, refined, state.tick, ObservabilityMode.NORMAL)
         total_belief_assimilated += sum(1 for e in events if e.event_type == "belief_assimilated")
         state = ApplyPath.apply_generation(state, refined)
         if i == 0:

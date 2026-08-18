@@ -58,6 +58,31 @@ limits inline via a `derivation`/`disclosure`/`reason` field — never a silent 
 `docs/parity_ledger/infrastructure.yaml`'s `INFRA-292` entry for exact source line-range
 provenance of each section.
 
+## Knowledge Gateway MCP Phase 0 Measurement Baseline (one-time, separate from both cadences)
+
+`tools/agent-monitoring/kgmcp_baseline_corpus.py` defines a fixed, versioned 7-entry
+representative-query corpus for the Knowledge Gateway MCP proposal's Phase 0 measurement baseline
+(`docs/plans/knowledge-gateway-mcp-proposal.md` §18/§20). The real, recorded-from-a-real-run
+direct-tool baseline (Context Search + Graphify latency, tool-call counts, sources recalled,
+serialized-token estimate per query) is committed at
+`tests/tools/fixtures/kgmcp_measurement_baseline_corpus_results.json`, produced once by
+`tools/agent-monitoring/kgmcp_baseline_runner.py`. This is a **one-time Phase-0 recording**,
+distinct from both `retrieval_baseline_metrics.py`'s periodic snapshot and `generate_retro.py`'s
+recurring weekly cadence above — it must never be described as feeding either of those. See
+`docs/engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract.md` for the 5 latency
+measurement-point definitions, the fixture-derived promotion thresholds, and the repeated-demand
+estimation design.
+
+**2026-08-14 — `search_count`/`raw_investigation_count` now also feed the recurring cadence**
+(`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`). `SEARCH_TOOL_NAMES`,
+`build_search_count_section`, and `build_raw_investigation_count_section` were relocated into
+`generate_retro.py` (this module now re-imports them) to resolve a circular-import constraint and
+let `generate()` render a new `## Search & Investigation Effort` section plus per-week Search
+Calls / Read Calls trend columns on `agent-monitoring/retro/index.md` — see
+`docs/guides/agent_monitoring.md`'s Report Sections table. This shares the underlying *numbers*
+between the two tools; it does not merge the two *cadences* — `retrieval_baseline_metrics.py` still
+never writes into `agent-monitoring/retro/`, and remains the one-off JSON snapshot described above.
+
 ## Security Gate Firing Check
 
 `tools/agent-monitoring/security_gate_firing_check.py` is a separate, read-only pass/fail check
@@ -79,6 +104,22 @@ invoked" by filtering `tools.jsonl` to `tool == 'Skill'` and extracting the skil
 it raises). Reports `per_skill`, `per_skill_per_run`, and an `unparseable` count for any record the
 regex can't match. Built by `TCK-20260805-SKILL-USAGE-METRIC` after this session's own skill-usage
 audit found this question previously required ad hoc regex against raw `tools.jsonl` every time.
+
+**2026-08-15 — `build_skill_usage_section` now also feeds the recurring cadence**
+(`TCK-20260810-SKILL-USAGE-RETRO-TRACKING`). `build_skill_usage_section` was relocated into
+`generate_retro.py` (this module now re-imports it) to resolve the same circular-import constraint
+as the `search_count`/`raw_investigation_count` precedent above. `generate()` now renders a
+`## Skill Usage` section with two subsections of distinct scope: a period-scoped per-skill
+invocation count (trended report-over-report via `agent-monitoring/retro/index.md`'s new Skill
+Invocations column) and an all-time, two-bucket zero-invocation flag
+(`compute_zero_invocation_skill_flags` — `flagged_stale` for skills with a real `date_added` past
+a 14-day grace period, `flagged_unknown_age` for skills with no recorded `date_added`, fail-open by
+design so a skill like `backend-testing`'s real pre-`TCK-20260805-COMMUNITY-SKILL-SWAP-UNDISCLOSED`
+state would have been correctly flaggable). The flag subsection is only computed/rendered when the
+caller explicitly passes `all_tools` to `generate()` — never inferred from the period-scoped
+`tools` argument, so ordinary `--week`/`--days` callers cannot accidentally trigger a real
+`.claude/skills/` filesystem scan. Visibility only — no skill is auto-invoked or auto-deprecated
+based on this flag.
 
 ## Done-Ticket Monitoring Coverage Audit
 

@@ -6,80 +6,104 @@
 
 | Metric | Value |
 |---|---|
-| Total runs | 680 |
-| Completed (DONE) | 585 (86%) |
-| Gate failures | 73 |
-| Avg duration | 114 min |
-| Avg agents per run | 6.1 |
-| Total agent calls | 3458 |
+| Total runs | 1149 |
+| Completed (DONE) | 962 (83%) |
+| Gate failures | 121 |
+| Avg duration | 194 min |
+| Avg agents per run | 6.4 |
+| Total agent calls | 6829 |
 
 ## Gate Failure Breakdown
 
 | Gate | Count | % of runs |
 |---|---|---|
+| DOD_BLOCKED | 21 | 1% |
+| NEEDS_CHANGES | 16 | 1% |
+| NEEDS_HUMAN_INPUT | 14 | 1% |
 | completed | 12 | 1% |
-| success | 10 | 1% |
-| None | 10 | 1% |
-| DOD_BLOCKED | 9 | 1% |
-| complete | 8 | 1% |
-| NEEDS_HUMAN_INPUT | 7 | 1% |
+| success | 10 | 0% |
+| None | 10 | 0% |
+| complete | 8 | 0% |
 | done | 4 | 0% |
-| NEEDS_CHANGES | 4 | 0% |
+| CONFLICTS_DETECTED | 4 | 0% |
 | STOPPED_BY_USER | 3 | 0% |
+| BLOCKED | 3 | 0% |
+| DONE_NO_TICKET | 2 | 0% |
+| DOC_STALENESS_BLOCKED | 2 | 0% |
+| TESTS_FAILED | 2 | 0% |
 | INPROGRESS | 1 | 0% |
 | GATE_FAIL | 1 | 0% |
 | ALL_SCOPED | 1 | 0% |
-| DONE_NO_TICKET | 1 | 0% |
-| BLOCKED | 1 | 0% |
-| CONFLICTS_DETECTED | 1 | 0% |
+| STOPPED_FOR_HUMAN_INPUT | 1 | 0% |
+| VERIFY_WRITE_CYCLE_EVIDENCE | 1 | 0% |
+| BACKLOG | 1 | 0% |
+| NEEDS_TICKET | 1 | 0% |
+| PARITY_INCOMPLETE | 1 | 0% |
+| ANCHORS_STILL_FAILING | 1 | 0% |
+| PAUSED_SESSION_LIMIT | 1 | 0% |
 
 ## Reason Codes
 
 | Reason | Count |
 |---|---|
-| dod_condition_failed | 38 |
+| dod_condition_failed | 81 |
+| needs_changes | 5 |
+| conflicts_detected | 4 |
+| DOD_BLOCKED | 3 |
+| architecture_violation | 3 |
 | needs_human_input | 2 |
-| conflicts_detected | 1 |
+| DOC_STALENESS_BLOCKED | 1 |
+| FRONTMATTER_INVALID | 1 |
+| operational_mistake | 1 |
+| documentation_accuracy | 1 |
 
 ## Tag Breakdown — Subsystem/Topic
 
 | Tag | Runs | DONE rate | Gate failures |
 |---|---|---|---|
-| adventure | 4 | 100% | 0 |
-| agency | 4 | 100% | 0 |
-| cognition | 11 | 81% | 2 |
-| dashboard | 12 | 100% | 0 |
+| adventure | 15 | 100% | 0 |
+| agency | 6 | 100% | 0 |
+| cognition | 35 | 85% | 5 |
+| combat | 34 | 100% | 0 |
+| content | 2 | 100% | 0 |
+| dashboard | 28 | 89% | 2 |
 | ecology | 1 | 100% | 0 |
-| faction | 7 | 100% | 0 |
-| feature-flags | 4 | 100% | 0 |
-| information | 5 | 80% | 1 |
-| observability | 20 | 90% | 2 |
+| economy | 6 | 100% | 0 |
+| engine | 22 | 100% | 0 |
+| faction | 12 | 100% | 0 |
+| feature-flags | 13 | 100% | 0 |
+| information | 6 | 83% | 1 |
+| mcp | 51 | 52% | 0 |
+| observability | 109 | 88% | 12 |
+| progression | 20 | 100% | 0 |
 | resource-registry | 4 | 75% | 1 |
-| self-model | 6 | 66% | 2 |
-| simulation-quality | 55 | 90% | 5 |
-| social | 1 | 100% | 0 |
+| self-model | 7 | 71% | 2 |
+| simulation-quality | 154 | 96% | 6 |
+| social | 3 | 100% | 0 |
 | stasis | 3 | 100% | 0 |
-| world | 22 | 95% | 1 |
+| strategy | 12 | 75% | 3 |
+| testing | 93 | 65% | 17 |
+| world | 51 | 98% | 1 |
 
 ## Tag Breakdown — Process/Skill-signal
 
 | Tag | Runs | Gate Hits |
 |---|---|---|
-| api-design | 6 | N/A — no gate implemented |
-| debugging | 4 | N/A — no gate implemented |
-| performance | 1 | N/A — no gate implemented |
-| security | 1 | 0 |
+| api-design | 8 | N/A — no gate implemented |
+| debugging | 7 | N/A — no gate implemented |
+| performance | 13 | N/A — no gate implemented |
+| security | 17 | 14 |
 
 ## Tier Distribution
 
 | Tier | Count | Scoped | DONE count | DONE rate |
 |---|---|---|---|---|
-| epic | 89 | 20 | 56 | 81% |
+| epic | 128 | 27 | 81 | 80% |
 | epic-batch | 1 | 0 | 1 | 100% |
 | epic_batch | 1 | 1 | 0 | 0% |
-| hotfix | 95 | 0 | 93 | 97% |
-| n/a | 12 | 0 | 12 | 100% |
-| standard | 461 | 0 | 408 | 88% |
+| hotfix | 190 | 0 | 173 | 91% |
+| n/a | 27 | 0 | 27 | 100% |
+| standard | 781 | 0 | 665 | 85% |
 | unknown | 21 | 0 | 15 | 71% |
 
 ## Agent Status Distribution
@@ -87,99 +111,117 @@
 | Agent | Calls | ok | failed | blocked | skipped |
 |---|---|---|---|---|---|
 | ? | 258 | 0 | 0 | 0 | 0 |
-| anchor-updater | 1 | 1 | 0 | 0 | 0 |
-| architecture-reviewer | 379 | 284 | 47 | 0 | 48 |
-| claude | 26 | 25 | 0 | 1 | 0 |
+| anchor-updater | 3 | 2 | 1 | 0 | 0 |
+| architecture-reviewer | 810 | 613 | 109 | 9 | 79 |
+| claude | 314 | 312 | 1 | 1 | 0 |
 | claude-fork-direct | 12 | 12 | 0 | 0 | 0 |
+| claude-orchestrator | 2 | 2 | 0 | 0 | 0 |
 | claude-sonnet | 9 | 9 | 0 | 0 | 0 |
 | claude-sonnet-4-6 | 16 | 16 | 0 | 0 | 0 |
 | concern-investigator | 1 | 1 | 0 | 0 | 0 |
+| context-packet-wrapper | 24 | 24 | 0 | 0 | 0 |
 | coordinator | 1 | 1 | 0 | 0 | 0 |
-| create-tickets | 11 | 11 | 0 | 0 | 0 |
-| doc-syncer | 1 | 1 | 0 | 0 | 0 |
+| create-tickets | 27 | 26 | 1 | 0 | 0 |
+| doc-syncer | 2 | 2 | 0 | 0 | 0 |
+| doc-updater | 129 | 129 | 0 | 0 | 0 |
 | doc-writer | 2 | 2 | 0 | 0 | 0 |
 | dod-verifier | 1 | 1 | 0 | 0 | 0 |
-| done-checker | 282 | 241 | 41 | 0 | 0 |
-| drift-classifier | 1 | 1 | 0 | 0 | 0 |
+| done-checker | 609 | 504 | 97 | 8 | 0 |
+| drift-classifier | 3 | 3 | 0 | 0 | 0 |
 | epic-closure | 1 | 1 | 0 | 0 | 0 |
 | epic-coordinator | 7 | 7 | 0 | 0 | 0 |
 | epic-discoverer | 1 | 1 | 0 | 0 | 0 |
 | epic-loop | 1 | 1 | 0 | 0 | 0 |
+| epic-orchestrator | 2 | 2 | 0 | 0 | 0 |
 | epic-reporter | 1 | 1 | 0 | 0 | 0 |
 | epic-runner | 1 | 1 | 0 | 0 | 0 |
-| finalizer | 250 | 250 | 0 | 0 | 0 |
+| finalizer | 447 | 447 | 0 | 0 | 0 |
+| general-purpose | 1 | 1 | 0 | 0 | 0 |
 | hotfix-agent | 5 | 5 | 0 | 0 | 0 |
 | implement | 1 | 1 | 0 | 0 | 0 |
-| implement-epic | 19 | 19 | 0 | 0 | 0 |
-| implement-ticket | 337 | 325 | 7 | 0 | 0 |
-| implement-ticket-orchestrator | 8 | 8 | 0 | 0 | 0 |
-| implementer | 342 | 339 | 2 | 0 | 1 |
-| investigate:C1 | 10 | 9 | 1 | 0 | 0 |
-| investigate:C2 | 8 | 7 | 1 | 0 | 0 |
-| investigate:C3 | 8 | 7 | 1 | 0 | 0 |
-| investigate:C4 | 7 | 6 | 1 | 0 | 0 |
-| investigate:C5 | 6 | 5 | 1 | 0 | 0 |
-| investigate:C6 | 1 | 1 | 0 | 0 | 0 |
+| implement-epic | 27 | 27 | 0 | 0 | 0 |
+| implement-epic-orchestrator | 1 | 1 | 0 | 0 | 0 |
+| implement-ticket | 419 | 402 | 12 | 0 | 0 |
+| implement-ticket-orchestrator | 146 | 145 | 0 | 0 | 1 |
+| implementer | 634 | 627 | 6 | 0 | 1 |
+| investigate:C1 | 25 | 24 | 1 | 0 | 0 |
+| investigate:C2 | 21 | 20 | 1 | 0 | 0 |
+| investigate:C3 | 21 | 20 | 1 | 0 | 0 |
+| investigate:C4 | 17 | 16 | 1 | 0 | 0 |
+| investigate:C5 | 11 | 10 | 1 | 0 | 0 |
+| investigate:C6 | 6 | 6 | 0 | 0 | 0 |
+| investigate:C7 | 3 | 3 | 0 | 0 | 0 |
+| investigate:C8 | 1 | 1 | 0 | 0 | 0 |
 | investigate:direct | 1 | 1 | 0 | 0 | 0 |
-| investigator | 256 | 224 | 0 | 1 | 31 |
-| link-epic | 4 | 4 | 0 | 0 | 0 |
+| investigator | 476 | 426 | 2 | 2 | 46 |
+| link-epic | 13 | 13 | 0 | 0 | 0 |
 | main | 6 | 6 | 0 | 0 | 0 |
 | manual-hotfix | 3 | 3 | 0 | 0 | 0 |
-| orchestrator | 55 | 54 | 0 | 1 | 0 |
+| orchestrator | 266 | 246 | 0 | 1 | 19 |
 | orchestrator-audit | 1 | 1 | 0 | 0 | 0 |
 | orchestrator-fix | 3 | 3 | 0 | 0 | 0 |
 | parity-checker | 3 | 3 | 0 | 0 | 0 |
-| parity-updater | 237 | 190 | 0 | 0 | 47 |
+| parity-updater | 452 | 329 | 1 | 0 | 122 |
 | plan-expander | 1 | 1 | 0 | 0 | 0 |
 | plan-fixer | 8 | 8 | 0 | 0 | 0 |
-| planner | 257 | 219 | 0 | 7 | 31 |
+| planner | 477 | 415 | 2 | 14 | 46 |
 | planner+implementer | 1 | 1 | 0 | 0 | 0 |
 | reviewer | 4 | 4 | 0 | 0 | 0 |
 | scope-agent | 9 | 9 | 0 | 0 | 0 |
 | scoper | 4 | 4 | 0 | 0 | 0 |
-| structure | 10 | 10 | 0 | 0 | 0 |
+| security-reviewer | 7 | 6 | 1 | 0 | 0 |
+| structure | 25 | 25 | 0 | 0 | 0 |
 | test-runner | 2 | 2 | 0 | 0 | 0 |
-| test-scoper | 251 | 249 | 0 | 1 | 1 |
+| test-scoper | 466 | 459 | 5 | 1 | 1 |
 | tester | 4 | 4 | 0 | 0 | 0 |
-| ticket-scoper | 319 | 318 | 1 | 0 | 0 |
+| ticket-scoper | 556 | 552 | 4 | 0 | 0 |
 | verifier | 2 | 2 | 0 | 0 | 0 |
-| workflow | 2 | 2 | 0 | 0 | 0 |
+| workflow | 11 | 11 | 0 | 0 | 0 |
+| write-sequence | 5 | 5 | 0 | 0 | 0 |
 
 ## Phase Status Distribution
 
 | Phase | Calls | ok | failed | blocked | skipped |
 |---|---|---|---|---|---|
 | ? | 177 | 0 | 0 | 0 | 0 |
-| Architecture-Verify | 95 | 78 | 1 | 0 | 16 |
+| Architecture-Verify | 300 | 249 | 16 | 3 | 32 |
 | Clarification | 1 | 0 | 0 | 1 | 0 |
-| Classify Drift | 1 | 1 | 0 | 0 | 0 |
-| Comprehend | 11 | 11 | 0 | 0 | 0 |
-| Discover | 3 | 3 | 0 | 0 | 0 |
+| Classify Drift | 4 | 4 | 0 | 0 | 0 |
+| Comprehend | 26 | 26 | 0 | 0 | 0 |
+| Discover | 9 | 9 | 0 | 0 | 0 |
+| Doc-Staleness-Gate | 1 | 1 | 0 | 0 | 0 |
+| Document-Update | 160 | 160 | 0 | 0 | 0 |
 | Epic | 1 | 1 | 0 | 0 | 0 |
-| Finalize | 358 | 345 | 0 | 0 | 0 |
-| Implement | 505 | 483 | 7 | 0 | 0 |
+| Finalize | 713 | 700 | 0 | 0 | 0 |
+| Implement | 927 | 896 | 16 | 0 | 0 |
 | Implement+Finalize | 4 | 4 | 0 | 0 | 0 |
-| Investigate | 317 | 280 | 5 | 1 | 31 |
+| Implement-extension | 1 | 1 | 0 | 0 | 0 |
+| Investigate | 664 | 608 | 8 | 2 | 46 |
 | Investigate+Plan+Implement | 1 | 1 | 0 | 0 | 0 |
-| Link | 4 | 4 | 0 | 0 | 0 |
-| Parity | 277 | 224 | 0 | 0 | 48 |
-| Parity Check | 1 | 1 | 0 | 0 | 0 |
-| Plan | 267 | 229 | 0 | 7 | 31 |
+| Investigate-Deepen | 1 | 1 | 0 | 0 | 0 |
+| Link | 13 | 13 | 0 | 0 | 0 |
+| Parity | 559 | 410 | 1 | 0 | 143 |
+| Parity Check | 3 | 3 | 0 | 0 | 0 |
+| Plan | 526 | 464 | 2 | 14 | 46 |
 | Plan+Implement | 1 | 1 | 0 | 0 | 0 |
-| Recalibrate | 1 | 1 | 0 | 0 | 0 |
-| Report | 16 | 16 | 0 | 0 | 0 |
-| Review | 299 | 221 | 46 | 0 | 32 |
-| Scope | 337 | 327 | 1 | 0 | 0 |
+| Recalibrate | 4 | 4 | 0 | 0 | 0 |
+| Report | 25 | 25 | 0 | 0 | 0 |
+| Retrieval | 24 | 24 | 0 | 0 | 0 |
+| Review | 552 | 406 | 93 | 6 | 47 |
+| Scope | 594 | 581 | 4 | 0 | 0 |
+| Security-Review | 7 | 6 | 1 | 0 | 0 |
 | Smoke-Test | 1 | 1 | 0 | 0 | 0 |
-| Structure | 11 | 11 | 0 | 0 | 0 |
-| Sync Docs | 1 | 1 | 0 | 0 | 0 |
-| Test | 307 | 295 | 1 | 1 | 1 |
-| Update Anchors | 1 | 1 | 0 | 0 | 0 |
-| Verify | 319 | 276 | 42 | 1 | 0 |
-| Write | 44 | 44 | 0 | 0 | 0 |
+| Structure | 26 | 26 | 0 | 0 | 0 |
+| Sync Docs | 3 | 3 | 0 | 0 | 0 |
+| Test | 610 | 593 | 6 | 1 | 1 |
+| Update Anchors | 4 | 3 | 1 | 0 | 0 |
+| Verify | 676 | 568 | 99 | 9 | 0 |
+| Verify-fix | 2 | 2 | 0 | 0 | 0 |
+| Write | 111 | 111 | 0 | 0 | 0 |
 | child-ticket-creation | 2 | 2 | 0 | 0 | 0 |
 | context-search | 2 | 2 | 0 | 0 | 0 |
 | discover | 1 | 0 | 0 | 0 | 0 |
+| doc-staleness-gate | 1 | 1 | 0 | 0 | 0 |
 | finalize | 15 | 11 | 0 | 0 | 0 |
 | implement | 22 | 7 | 0 | 0 | 0 |
 | investigate | 8 | 7 | 0 | 0 | 0 |
@@ -196,31 +238,49 @@
 
 | Phase | Events scored | Total | Avg |
 |---|---|---|---|
-| Architecture-Verify | 53 | 3748.0 | 70.7 |
-| Finalize | 55 | 19613.2 | 356.6 |
-| Implement | 57 | 79898.8 | 1401.7 |
-| Investigate | 56 | 88900.4 | 1587.5 |
-| Parity | 46 | 3559.0 | 77.4 |
-| Plan | 56 | 2784.7 | 49.7 |
-| Review | 65 | 4541.3 | 69.9 |
-| Scope | 53 | 35004.5 | 660.5 |
-| Test | 56 | 12372.0 | 220.9 |
-| Verify | 75 | 7342.1 | 97.9 |
+| Architecture-Verify | 258 | 11672.7 | 45.2 |
+| Doc-Staleness-Gate | 1 | 0.0 | 0.0 |
+| Document-Update | 160 | 4456.8 | 27.9 |
+| Finalize | 404 | 27077.2 | 67.0 |
+| Implement | 398 | 103895.1 | 261.0 |
+| Implement-extension | 1 | 0.0 | 0.0 |
+| Investigate | 336 | 107079.2 | 318.7 |
+| Investigate-Deepen | 1 | 0.0 | 0.0 |
+| Parity | 328 | 9521.1 | 29.0 |
+| Plan | 315 | 12800.8 | 40.6 |
+| Report | 2 | 0.0 | 0.0 |
+| Review | 318 | 13380.6 | 42.1 |
+| Scope | 307 | 39150.7 | 127.5 |
+| Security-Review | 7 | 320.9 | 45.8 |
+| Test | 359 | 24044.6 | 67.0 |
+| Verify | 430 | 23098.9 | 53.7 |
+| Verify-fix | 2 | 0.0 | 0.0 |
+| doc-staleness-gate | 1 | 0.0 | 0.0 |
 
 ## Spend Proxy — By Agent
 
 | Agent | Events scored | Total | Avg |
 |---|---|---|---|
-| architecture-reviewer | 118 | 8289.3 | 70.2 |
+| architecture-reviewer | 549 | 23739.1 | 43.2 |
+| claude | 286 | 13399.0 | 46.8 |
 | claude-fork-direct | 3 | 0.0 | 0.0 |
-| done-checker | 74 | 7342.1 | 99.2 |
-| finalizer | 55 | 19613.2 | 356.6 |
-| implementer | 56 | 79898.8 | 1426.8 |
-| investigator | 56 | 88900.4 | 1587.5 |
-| parity-updater | 46 | 3559.0 | 77.4 |
-| planner | 56 | 2784.7 | 49.7 |
-| test-scoper | 56 | 12372.0 | 220.9 |
-| ticket-scoper | 52 | 35004.5 | 673.2 |
+| claude-orchestrator | 2 | 0.0 | 0.0 |
+| doc-updater | 129 | 4178.7 | 32.4 |
+| done-checker | 400 | 22016.8 | 55.0 |
+| epic-orchestrator | 1 | 0.0 | 0.0 |
+| finalizer | 246 | 25174.7 | 102.3 |
+| general-purpose | 1 | 0.0 | 0.0 |
+| implement-epic-orchestrator | 1 | 0.0 | 0.0 |
+| implement-ticket | 1 | 0.0 | 0.0 |
+| implement-ticket-orchestrator | 138 | 7.7 | 0.1 |
+| implementer | 348 | 104215.6 | 299.5 |
+| investigator | 275 | 100910.8 | 366.9 |
+| orchestrator | 211 | 431.8 | 2.0 |
+| parity-updater | 260 | 9244.4 | 35.6 |
+| planner | 276 | 11883.2 | 43.1 |
+| security-reviewer | 7 | 320.9 | 45.8 |
+| test-scoper | 271 | 22680.5 | 83.7 |
+| ticket-scoper | 223 | 38295.4 | 171.7 |
 
 ## Summary Quality
 
@@ -228,88 +288,316 @@
 |---|---|
 | Empty summary (current schema) | 0 |
 | Legacy-format records (summary field not applicable) | 258 |
-| Truncated (>200 chars) | 51 |
+| Truncated (>200 chars) | 58 |
 
 ## Slow Runs (> 30 min)
 
 | run_id | duration | final_status |
 |---|---|---|
+| TCK-20260702-OBSISO-EPIC | 48074 min | DONE |
+| TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC | 10688 min | BACKLOG |
+| FOLDER-tickets-todos-adventure-cognition-merge | 1912 min | DONE |
+| EPIC-TCK-20260814-KNOWLEDGE-GATEWAY-MCP-EPIC | 1801 min | DONE |
 | FOLDER-tickets-todos-simq-scoring-improvement | 839 min | STOPPED_BY_USER |
 | FOLDER-tickets-todos-simq-roadmap-phase2-depth-social | 830 min | DONE |
 | TCK-20260710-SIMQ-DEPTH-SOCIAL | 828 min | DONE |
+| TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP | 630 min | DONE |
+| TCK-20260801-CODEX-PILOT-ORCHESTRATION | 613 min | DONE |
+| TCK-20260801-CODEX-PILOT-ORCHESTRATION | 610 min | NEEDS_CHANGES |
+| TCK-20260801-CODEX-PILOT-ORCHESTRATION | 603 min | NEEDS_CHANGES |
+| FOLDER-tickets-todos-progress-timeline | 603 min | DONE |
+| TCK-20260801-CODEX-PILOT-ORCHESTRATION | 592 min | NEEDS_CHANGES |
 | TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP | 585 min | DONE |
+| TCK-20260719-PHASE-GLOSSARY-DESCRIPTIONS | 576 min | DONE |
 | EPIC-TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC | 548 min | DONE |
 | TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 541 min | STOPPED_BY_USER |
+| TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD | 500 min | DONE |
 | TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 484 min | DONE |
 | TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 483 min | DONE |
+| TCK-20260804-SKILL-CATALOG-MODERNIZATION-EPIC | 480 min | DONE |
+| EPIC-TCK-20260810-AGENT-TOOLING-INTEGRITY-HARDENING-EPIC | 476 min | DONE |
 | TCK-20260710-CURRENT-RUN-SIDECAR-BASH | 475 min | DONE |
 | FOLDER-tickets-todos-agent-ops-dashboard | 440 min | DOD_BLOCKED |
+| TCK-20260801-CODEX-REALREPO-PILOT-HARNESS | 440 min | DONE |
 | FOLDER-tickets-todos-simq-roadmap-phase3-depth-faction-information | 434 min | DONE |
 | TCK-20260719-TAG-COLLISION-DEDUP | 429 min | DONE |
+| TCK-20260720-PROGRESS-TIMELINE-VIEW | 427 min | DONE |
+| FOLDER-cognition-adventure-eligibility | 416 min | DONE |
+| TCK-20260810-MONITORING-NEGATIVE-DURATION-TIMESTAMP-BUG | 399 min | DONE |
+| TCK-20260811-REGION-STABILIZATION-GOAL-SCORER | 396 min | DONE |
 | TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 396 min | DONE |
+| TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP | 390 min | DONE |
+| TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE | 386 min | DONE |
+| EPIC-TCK-20260816-KNOWLEDGE-GATEWAY-MCP-PHASE3-EPIC | 383 min | DONE |
+| TCK-20260802-STORED-ARTIFACT-KIND | 373 min | DONE |
+| TCK-20260720-TIMELINE-RANGE-CONTROL | 369 min | DONE |
+| TCK-20260804-AGENT-DEF-GAP-FIXES | 329 min | DONE |
+| TCK-20260721-MONITORING-WRITER-UNIFICATION | 325 min | DONE |
+| EPIC-TCK-20260721-PROVIDER-AGNOSTIC-EPIC | 323 min | DONE |
+| EPIC-TCK-20260815-KNOWLEDGE-GATEWAY-MCP-PHASE2-EPIC | 321 min | DONE |
+| TCK-20260731-CODEX-PILOT-EXECUTOR | 295 min | DONE |
+| TCK-20260804-EXPANSION-RATE-WIRING | 284 min | DONE |
+| TCK-20260730-CODEX-RUNTIME-SHADOW | 282 min | DONE |
+| TCK-20260730-CODEX-RUNTIME-SHADOW | 276 min | DOD_BLOCKED |
 | TCK-20260718-AGENTOPS-STATS-BOARD-EPIC | 275 min | DONE |
+| TCK-20260811-ADVENTURE-GOAL-SCORER | 266 min | DONE |
 | TCK-20260710-SIMQ-DEPTH-FACTION | 261 min | DONE |
+| EPIC-TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC | 260 min | DONE |
+| EPIC-TCK-20260816-KNOWLEDGE-GATEWAY-MCP-PHASE4-EPIC | 256 min | DONE |
 | FOLDER-tickets-todos-simq-roadmap-phase0-reliability-foundation | 256 min | DONE |
 | TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP | 248 min | DONE |
+| EPIC-TCK-20260815-KNOWLEDGE-GATEWAY-MCP-PHASE1-EPIC | 242 min | DONE |
+| EPIC-TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC | 236 min | DONE |
+| FOLDER-tickets-todos-context-retrieval-phase3 | 231 min | DONE |
+| FOLDER-tickets-todos-context-retrieval-phase5 | 228 min | DONE |
+| TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP | 224 min | DONE |
+| FOLDER-tickets-todos-tag-registry-redesign | 224 min | DONE |
+| TCK-20260721-MONITORING-WRITER-DECISION | 223 min | DONE |
+| TCK-20260811-MULTI-STEP-PLANNING-DESIGN | 211 min | DONE |
+| TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING | 206 min | DONE |
 | TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 204 min | DONE |
+| TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION | 196 min | DONE |
+| TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT | 176 min | DONE |
 | TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 173 min | DONE |
 | TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM | 173 min | DONE |
 | FOLDER-tickets-todos-agent-ops-dashboard-ui-fixes | 173 min | DONE |
+| FOLDER-tickets-todos-agent-monitoring-derived-index | 172 min | DONE |
+| EPIC-TCK-20260810-AGENT-TOOLING-INTEGRITY-HARDENING-EPIC | 172 min | NEEDS_HUMAN_INPUT |
+| TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP | 171 min | NEEDS_HUMAN_INPUT |
 | TCK-20260710-SIMQ-DEPTH-INFORMATION | 171 min | DONE |
 | TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 163 min | DONE |
+| TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS | 158 min | DONE |
+| TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE | 153 min | DONE |
 | TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 152 min | NEEDS_CHANGES |
 | TCK-20260713-SIMQ-SCORE-CEILING-FIX | 152 min | DONE |
 | TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 149 min | DONE |
+| TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY | 149 min | DONE |
 | TCK-20260718-AGENTOPS-STATS-API | 148 min | DONE |
 | TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE | 148 min | DONE |
 | TCK-20260717-CSS-LAYER-PADDING-FIX | 147 min | DONE |
+| TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING | 146 min | DONE |
+| TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION | 145 min | DONE |
 | TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE | 144 min | DONE |
+| TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE | 140 min | DONE |
 | TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS | 136 min | DONE |
+| TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE | 135 min | DONE |
 | FOLDER-tickets-todos-simq-scoring-improvement | 134 min | NEEDS_HUMAN_INPUT |
+| FOLDER-tickets-todos-tag-registry-redesign | 133 min | DOC_STALENESS_BLOCKED |
 | TCK-20260718-RETRO-STATS-REFACTOR | 130 min | DONE |
+| FOLDER-tickets-todos-context-retrieval-phase4 | 130 min | DONE |
 | FOLDER-tickets-todos-agent-ops-dashboard | 127 min | DONE |
+| TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS | 127 min | DONE |
+| FOLDER-tickets-todos-context-efficient-retrieval | 126 min | EPIC_SCOPED |
+| TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY | 124 min | PARITY_INCOMPLETE |
 | FOLDER-tickets-todos-simq-scoring-improvement | 124 min | DONE |
+| TCK-20260721-CODEX-GUIDANCE-FIXTURE-CAPTURE | 122 min | DONE |
 | TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE | 121 min | DONE |
+| TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER | 121 min | DONE |
 | CREATE-TICKETS-DOCS-PLANS-AGENT-OPS-DASHBOARD-PROPOSAL-STATS-BOARD | 119 min | DONE |
+| TCK-20260816-KGMCP-P4-PARITY-ADAPTER | 115 min | DONE |
+| TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE | 115 min | DONE |
+| TCK-20260809-COMBAT-ACTIONSTYLE-WIRING | 115 min | DONE |
 | FOLDER-tickets-todos-agent-ops-dashboard | 111 min | DOD_BLOCKED |
+| TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION | 110 min | DONE |
 | TCK-20260713-SIMQ-EVAL-PROFILE-BUG | 109 min | DONE |
+| TCK-20260721-ORCHESTRATION-CONTRACT-CORE | 109 min | DONE |
+| TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE | 107 min | DONE |
+| TCK-20260702-OBSISO-ISOLATION-PROOF | 106 min | DONE |
 | TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 106 min | DONE |
+| TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY | 105 min | DONE |
+| FOLDER-tickets-todos-placement-legality | 104 min | DONE |
+| TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION | 104 min | DONE |
 | TCK-20260717-GANTT-TIME-AXIS | 103 min | DONE |
+| TCK-20260812-COMMITTED-INTENTION-SEQUENCE | 100 min | DONE |
 | FOLDER-tickets-todos-simq-roadmap-phase1-process-hardening | 98 min | DONE |
+| TCK-20260729-HYBRID-RETRIEVAL-FUSION | 95 min | DONE |
+| TCK-20260702-OBSISO-TRACE-ASYNC | 95 min | DONE |
+| TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION | 95 min | DONE |
+| TCK-20260702-OBSISO-BROKER-CONFIG | 93 min | DONE |
+| TCK-20260721-CODEX-REPLAY-PARITY | 91 min | DONE |
+| TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING | 90 min | DONE |
+| TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE | 90 min | DONE |
+| TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE | 90 min | DONE |
 | FOLDER-tickets-todos-epic-scope-orphan-cleanup | 89 min | DONE |
 | TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT | 89 min | DONE |
+| TCK-20260804-SKILL-DRIFT-DETECTION | 89 min | DONE |
 | TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 88 min | DONE |
+| TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING | 88 min | DONE |
 | TCK-20260719-LIVE-PHASE-AGENT-LABEL | 88 min | DONE |
+| TCK-20260720-TAG-TOUCHPOINT-CLEANUP | 87 min | DONE |
 | TCK-20260718-STATS-TAB-FRONTEND | 86 min | DONE |
+| TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC | 86 min | DONE |
+| TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY | 85 min | DONE |
+| CREATE-TICKETS-DOCS-PLANS-AGENT-OPS-DASHBOARD-PROPOSAL-PROGRESS-TIMELINE | 84 min | DONE |
+| TCK-20260808-SIMQ-CORPUS-WORLD-METADATA-REGISTRY | 83 min | DONE |
+| TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER | 82 min | DONE |
+| TCK-20260803-DOCS-STRUCTURE-AUDIT | 81 min | DONE |
 | TCK-20260713-SIMQ-RAWSCORE-PERSIST | 81 min | DONE |
+| TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT | 81 min | DONE |
 | TCK-20260719-LIVE-PHASE-AGENT-LABEL | 80 min | DOD_BLOCKED |
+| TCK-20260728-EVAL-FIXTURE-REPAIR | 80 min | DOD_BLOCKED |
+| TCK-20260730-CODEX-POSTTOOL-ADAPTER | 79 min | DONE |
+| TCK-20260803-DOC-UPDATER-CORE-WIRING | 78 min | DONE |
+| TCK-20260801-CODEX-LIVE-TRANSPORT | 78 min | DONE |
+| TCK-20260730-CLAUDE-EXECUTION-IDENTITY | 78 min | DONE |
 | TCK-20260718-GLOSSARY-TOOLTIPS-EPIC | 78 min | DONE |
+| TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT | 77 min | DONE |
+| TCK-20260803-DOCS-STRUCTURE-AUDIT | 76 min | DOD_BLOCKED |
+| FOLDER-tickets-todos-simq-pillar-lifecycle-depth | 76 min | DONE |
 | TCK-20260716-AGENTOPS-REPLAY-TIMELINE | 75 min | DONE |
+| TCK-20260721-LIVE-CODEX-PILOT-GUARDRAILS | 73 min | DONE |
+| TCK-20260803-DOC-UPDATER-CORE-WIRING | 72 min | DOD_BLOCKED |
+| TCK-20260812-EVENT-TYPE-COVERAGE-SOURCE-COLUMN-STALENESS | 72 min | DONE |
+| TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION | 72 min | DONE |
 | EPIC-TCK-20260718-CANONICAL-FIELD-ENUMS-EPIC | 70 min | DONE |
+| SIMQ-AUDIT-20260811T111151Z | 70 min | ANCHORS_STILL_FAILING |
+| TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL | 70 min | DONE |
+| TCK-20260806-PUSH-SHAPER-REGISTRY-COMBAT | 70 min | DONE |
+| TCK-20260817-STANDARD-SIMQ-NARRATIVE-EVENT-EMISSION-REGRESSION-FRONTIER | 70 min | BLOCKED |
+| TCK-20260730-CODEX-POSTTOOL-ADAPTER | 69 min | DOD_BLOCKED |
+| TCK-20260815-KGMCP-P1-FAILOPEN-TESTS | 69 min | DONE |
+| TCK-20260720-SKILL-MAPPING-DEDUP | 68 min | DONE |
+| TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON | 67 min | DONE |
+| TCK-20260810-SKILL-USAGE-RETRO-TRACKING | 67 min | DONE |
+| TCK-20260801-CODEX-WORKFLOW-CONTINUATION-POLICY | 66 min | DONE |
 | TCK-20260716-AGENTOPS-TICKETS-VIEW | 65 min | DONE |
+| TCK-20260802-DOC-UPDATE-DISCIPLINE | 65 min | DONE |
+| TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION | 64 min | DONE |
+| TCK-20260720-TAG-RELEVANCE-VERIFY | 63 min | DONE |
 | TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION | 63 min | DONE |
+| TCK-20260731-PARITY-READPATH-GATE | 62 min | DONE |
+| TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING | 62 min | DONE |
 | TCK-20260716-AGENTOPS-DASHBOARD-BACKEND | 62 min | DONE |
+| FOLDER-tickets-todos-context-retrieval-phase2 | 61 min | DONE |
 | TCK-20260718-STATUS-DRIFT-REPAIR | 61 min | DONE |
+| TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH | 60 min | DONE |
+| TCK-20260729-DETERMINISTIC-CODE-INDEX | 60 min | DONE |
+| TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING | 60 min | DONE |
+| TCK-20260811-HARVEST-CRAFT-EVENT-DERIVATION-REGRESSION | 60 min | DONE |
 | CREATE-TICKETS-DOCS-PLANS-SIMQ-SCORING-IMPROVEMENT-ROADMAP | 60 min | DONE |
+| TCK-20260731-PARITY-INDEX-IMPORTER | 60 min | DONE |
+| EPIC-TCK-20260816-KNOWLEDGE-GATEWAY-MCP-PHASE5-EPIC | 60 min | DONE |
+| TCK-20260720-TAG-TOUCHPOINT-CLEANUP | 59 min | DOC_STALENESS_BLOCKED |
+| TCK-20260817-HOTFIX-KGMCP-MISSING-JSONSCHEMA-DEPENDENCY | 59 min | DONE |
+| TCK-20260815-KGMCP-P1-PACKET-ASSEMBLY | 59 min | DONE |
+| SIMQ-AUDIT-20260807T142932Z | 59 min | DONE_NO_TICKET |
+| TCK-20260729-RETRIEVAL-EVENT-SCHEMA-EMIT | 59 min | DONE |
+| TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY | 59 min | DONE |
+| TCK-20260730-CLAUDE-EXECUTION-IDENTITY | 58 min | DOD_BLOCKED |
 | TCK-20260716-AGENTOPS-BUILD-SERVE | 58 min | DONE |
 | TCK-20260716-AGENTOPS-ACTIVITY-GANTT | 57 min | DOD_BLOCKED |
+| TCK-20260806-PUSH-CUTOVER-PHASE2 | 57 min | DONE |
+| TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT | 57 min | DONE |
+| TCK-20260808-CORPUS-REGISTRY-PER-WORLD-VIEW | 57 min | DONE |
+| TCK-20260720-ECHARTS-PHASE-PALETTE | 57 min | DONE |
+| TCK-20260806-PUSH-SHAPER-ECONOMY-FACTION | 55 min | DONE |
+| TCK-20260806-PUSH-SHADOW-VALIDATION-PERF | 55 min | DONE |
+| TCK-20260808-HERO-ADVENTURE-ROUTING-DEFAULT-OFF | 55 min | DONE |
+| TCK-20260809-TACTICAL-DEAD-ACTIONSTYLE-SUBBRANCHES | 55 min | DONE |
+| TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION | 54 min | DONE |
 | TCK-20260717-TICKETS-TABLE-PAGINATION | 54 min | DONE |
 | TCK-20260714-DATA-RUNS-VERIFY-REGEN | 54 min | DONE |
+| TCK-20260815-KGMCP-P1-BASELINE-COMPARISON | 54 min | DONE |
+| TCK-20260808-ENTITY-LIFECYCLE-SCORE-METRICS | 54 min | DONE |
+| TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP | 54 min | DONE |
+| TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE | 53 min | DONE |
+| TCK-20260730-PROVIDER-HOOK-POLICY | 53 min | DONE |
+| TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET | 52 min | DONE |
 | TCK-20260710-EPIC-STALENESS-CHECK | 52 min | DONE |
+| TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE | 52 min | DONE |
+| TCK-20260719-STATS-PHASE-OUTLIERS-EXPOSE | 51 min | DONE |
+| TCK-20260814-KGMCP-MEASUREMENT-BASELINE | 51 min | DONE |
+| TCK-20260810-COGNITION-ELIGIBILITY-BYPASS-DOCS | 51 min | DONE |
+| TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION | 51 min | DONE |
+| TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS | 51 min | DONE |
+| TCK-20260807-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP | 51 min | DONE |
+| TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY | 50 min | DONE |
+| TCK-20260807-COMMITMENT-ABANDONED-PUSH-MIGRATION-GAP | 50 min | DONE |
+| TCK-20260814-KGMCP-CONTRACT-SCHEMAS | 49 min | DONE |
+| TCK-20260716-PLACELEGAL-HARDLAW | 49 min | DONE |
+| TCK-20260815-KGMCP-P1-QUERY-ROUTER | 49 min | DONE |
+| TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON | 48 min | DONE |
+| TCK-20260727-CODEX-SKILL-COMPANION-ASSETS | 48 min | DONE |
+| TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE | 47 min | DONE |
 | TCK-20260719-LIVE-PHASE-AGENT-LABEL | 47 min | NEEDS_CHANGES |
+| TCK-20260721-CODEX-REPLAY-PROOF | 47 min | DONE |
+| TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION | 47 min | DONE |
 | TCK-20260710-TOWN-COUNCIL-HAZARD-DA | 47 min | DONE |
 | TCK-20260711-EPIC-SCOPE-ORPHAN-FIX | 47 min | DONE |
+| TCK-20260810-STATUS-DRIFT-CHECK-WIRING | 46 min | DONE |
+| TCK-20260729-RETRIEVAL-RETRO-VIEWS | 46 min | DONE |
+| TCK-20260804-SKILL-JS-PHASE-SYNC | 45 min | DONE |
+| TCK-20260807-QUEST-EVALUATOR-GATHER-BOUNTY-LIBERATE-GAP | 45 min | DONE |
+| TCK-20260818-STANDARD-PERF-SLOW-CI-FIRST-RUN-CALIBRATION | 45 min | DONE |
+| TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION | 44 min | DOD_BLOCKED |
 | TCK-20260710-FEATURE-FLAGS-GUIDE | 44 min | DONE |
+| TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG | 43 min | DONE |
 | TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION | 43 min | DONE |
+| TCK-20260808-SIMQ-LONG-RUN-LIFECYCLE-OBSERVATION-TIER | 43 min | DONE |
+| TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP | 42 min | DONE |
+| TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE | 41 min | DONE |
 | TCK-20260710-HAZARD-KIND-CORPUS-WIDE | 41 min | DONE |
 | TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH | 41 min | DONE |
+| TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP | 41 min | DONE |
+| TCK-20260804-OBSISO-WORKER-PARITY-HOTFIX | 40 min | DONE |
 | TCK-20260718-STATUS-SUFFIX-TRIM | 40 min | DONE |
 | TCK-20260711-EPIC-STALENESS-DEDUPE-CHECK | 40 min | DONE |
+| TCK-20260805-SKILL-GATE-CONVERSION-DECISION | 40 min | DONE |
+| TCK-20260805-COMMUNITY-SKILL-SWAP-UNDISCLOSED | 40 min | DONE |
+| TCK-20260807-TOWN-RETURN-TARGET-RESOLUTION-BUG | 40 min | DONE |
+| TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD | 40 min | DONE |
+| TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION | 40 min | DONE |
+| TCK-20260818-STANDARD-PERF-THRESHOLD-SOFT-WARNING | 40 min | DONE |
+| TCK-20260731-PARITY-IMPACT-PROOF | 39 min | DONE |
 | TCK-20260716-AGENTOPS-BUILD-SERVE | 39 min | DOD_BLOCKED |
+| TCK-20260713-MONITORING-QUERY-INDEX-MIGRATE | 38 min | DONE |
+| TCK-20260729-SHADOW-PACKET-CALL-SITE | 38 min | DONE |
+| TCK-20260805-PROGRESSION-ENTITIES-SKILL | 38 min | DONE |
 | TCK-20260716-PLAN-GATE-SUBSTRING-FALSEPOS | 37 min | DONE |
+| TCK-20260720-TAG-CATEGORY-REGISTRY | 37 min | DONE |
+| TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION | 36 min | DONE |
+| TCK-20260802-CONTEXT-KIND-PRIORITY | 36 min | DONE |
+| TCK-20260816-KGMCP-P4-WORKFLOW-RECOMMENDATION-EVALUATION | 36 min | DONE |
+| TCK-20260729-RETRIEVAL-CACHE-LEVELS | 35 min | DONE |
 | TCK-20260717-TICKETS-TAG-SEARCH | 35 min | DONE |
+| TCK-20260802-EXACT-LOOKUP-CONVENTION | 35 min | DONE |
+| TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY | 35 min | NEEDS_CHANGES |
+| TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY | 35 min | DONE |
+| TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY | 35 min | DONE |
+| TCK-20260805-SECURITY-GATE-FIRING-MONITOR | 35 min | DONE |
+| TCK-20260806-PUSH-SHAPER-REGISTRY-COMBAT | 35 min | DONE |
+| TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION | 35 min | DONE |
+| TCK-20260807-QUEST-HUNT-TARGET-METADATA-GAP | 35 min | DONE |
+| TCK-20260807-QUEST-EVENT-PUSH-MIGRATION | 35 min | DONE |
+| TCK-20260808-LIFECYCLE-SCORE-WORLD-ARCHETYPE-AWARENESS | 35 min | DONE |
+| TCK-20260817-STANDARD-HUNGER-STARVED-BY-RESOLVE-BLOCKER-FLAT-UTILITY | 35 min | DONE |
+| TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-FRONTIER-BATCH | 35 min | DONE |
+| TCK-20260729-SHADOW-BASELINE-COMPARISON | 34 min | DONE |
+| TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE | 33 min | DOD_BLOCKED |
+| TCK-20260803-RETRO-TOOL-SAFETY-AUDIT | 33 min | TESTS_FAILED |
+| TCK-20260805-OBSERVABILITY-SKILL | 33 min | DONE |
+| TCK-20260805-SIMQ-DEV-SKILL | 33 min | DONE |
+| TCK-20260805-CODEX-EVENT-TRACE-GAP-INVESTIGATION | 33 min | DONE |
+| TCK-20260807-SIMQ-COMBAT-DORMANT-REGRESSION-ROOT-CAUSE | 32 min | DONE |
+| TCK-20260729-CONTEXT-PACKET-ASSEMBLY | 32 min | DONE |
+| TCK-20260720-TAG-CORPUS-REPAIR-SWEEP | 32 min | DONE |
+| TCK-20260810-NAVIGATION-SINGLE-AXIS-STEPPING-DIAGONAL-PURSUIT-DEADLOCK | 32 min | DONE |
+| TCK-20260713-MONITORING-SQLITE-INDEX | 31 min | DONE |
+| TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT | 31 min | DONE |
+| TCK-20260809-COMBAT-READINESS-COOLDOWN-BOTTLENECK | 31 min | DONE |
 | TCK-20260718-GLOSSARY-TOOLTIPS-FRONTEND | 31 min | DONE |
 | TCK-20260719-AGENTOPS-DASHBOARD-DOCS-CLOSURE | 31 min | DONE |
+| TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION | 31 min | DONE |
+| TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE | 31 min | DONE |
+| SIMQ-AUDIT-20260810T032558Z | 31 min | NEEDS_TICKET |
+| TCK-20260731-PARITY-INDEX-BASELINE | 31 min | DONE |
+| TCK-20260808-CONTENT-CATALOG-INVENTORY-REFRESH | 31 min | DONE |
+| TCK-20260808-GROWTH-TRAJECTORY-STILL-NEGATIVE-POST-FIX | 31 min | DONE |
+| TCK-20260809-STALE-DOCS-AI-BRAIN-ARCHITECTURE-AUDIT | 31 min | DONE |
+| TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY | 30 min | NEEDS_HUMAN_INPUT |
+| TCK-20260721-BASELINE-MONITORING-MANIFEST | 30 min | DONE |
+| TCK-20260728-RETRIEVAL-BASELINE-METRICS | 30 min | DONE |
+| TCK-20260809-MONITORING-ZERO-DURATION-COMBAT-RUNS-HOTFIX | 30 min | DONE |
 
 ## Outliers
 
@@ -319,122 +607,614 @@ _Flags a value more than 3x its group's median — a relative visibility signal,
 
 | run_id | tier | duration_s | tier median | ratio |
 |---|---|---|---|---|
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | standard | 49729 | 3142 | 15.8x |
-| TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP | standard | 35107 | 3142 | 11.2x |
-| CREATE-TICKETS-DOCS-PLANS-AGENT-OPS-DASHBOARD-PROPOSAL-STATS-BOARD | n/a | 7189 | 661 | 10.9x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | standard | 32485 | 3142 | 10.3x |
-| TCK-20260717-CSS-LAYER-PADDING-FIX | hotfix | 8827 | 945 | 9.3x |
-| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | standard | 29073 | 3142 | 9.3x |
-| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | standard | 28991 | 3142 | 9.2x |
-| TCK-20260710-CURRENT-RUN-SIDECAR-BASH | standard | 28516 | 3142 | 9.1x |
-| TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS | hotfix | 8185 | 945 | 8.7x |
-| TCK-20260719-TAG-COLLISION-DEDUP | standard | 25786 | 3142 | 8.2x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | standard | 23793 | 3142 | 7.6x |
-| TCK-20260713-SIMQ-EVAL-PROFILE-BUG | hotfix | 6560 | 945 | 6.9x |
-| FOLDER-tickets-todos-simq-scoring-improvement | epic | 50386 | 7849.0 | 6.4x |
-| FOLDER-tickets-todos-simq-roadmap-phase2-depth-social | epic | 49832 | 7849.0 | 6.3x |
-| TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT | hotfix | 5381 | 945 | 5.7x |
-| CREATE-TICKETS-DOCS-PLANS-SIMQ-SCORING-IMPROVEMENT-ROADMAP | n/a | 3626 | 661 | 5.5x |
-| TCK-20260710-SIMQ-DEPTH-FACTION | standard | 15661 | 3142 | 5.0x |
-| TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP | standard | 14911 | 3142 | 4.7x |
-| EPIC-TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC | epic | 32893 | 7849.0 | 4.2x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | standard | 12296 | 3142 | 3.9x |
-| FOLDER-tickets-todos-agent-ops-dashboard | epic | 26444 | 7849.0 | 3.4x |
-| FOLDER-tickets-todos-simq-roadmap-phase3-depth-faction-information | epic | 26096 | 7849.0 | 3.3x |
-| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | standard | 10434 | 3142 | 3.3x |
-| TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM | standard | 10411 | 3142 | 3.3x |
-| TCK-20260710-SIMQ-DEPTH-INFORMATION | standard | 10261 | 3142 | 3.3x |
-| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | standard | 9827 | 3142 | 3.1x |
+| TCK-20260702-OBSISO-EPIC | epic | 2884452 | 8041 | 358.7x |
+| TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC | epic | 641310 | 8041 | 79.8x |
+| TCK-20260810-MONITORING-NEGATIVE-DURATION-TIMESTAMP-BUG | hotfix | 23963 | 699 | 34.3x |
+| TCK-20260710-SIMQ-DEPTH-SOCIAL | standard | 49729 | 2498.5 | 19.9x |
+| TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP | standard | 37834 | 2498.5 | 15.1x |
+| TCK-20260801-CODEX-PILOT-ORCHESTRATION | standard | 36832 | 2498.5 | 14.7x |
+| TCK-20260801-CODEX-PILOT-ORCHESTRATION | standard | 36615 | 2498.5 | 14.7x |
+| TCK-20260801-CODEX-PILOT-ORCHESTRATION | standard | 36222 | 2498.5 | 14.5x |
+| FOLDER-tickets-todos-adventure-cognition-merge | epic | 114727 | 8041 | 14.3x |
+| TCK-20260801-CODEX-PILOT-ORCHESTRATION | standard | 35563 | 2498.5 | 14.2x |
+| TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP | standard | 35107 | 2498.5 | 14.1x |
+| TCK-20260719-PHASE-GLOSSARY-DESCRIPTIONS | standard | 34600 | 2498.5 | 13.8x |
+| EPIC-TCK-20260814-KNOWLEDGE-GATEWAY-MCP-EPIC | epic | 108078 | 8041 | 13.4x |
+| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | standard | 32485 | 2498.5 | 13.0x |
+| TCK-20260717-CSS-LAYER-PADDING-FIX | hotfix | 8827 | 699 | 12.6x |
+| TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD | standard | 30000 | 2498.5 | 12.0x |
+| TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS | hotfix | 8185 | 699 | 11.7x |
+| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | standard | 29073 | 2498.5 | 11.6x |
+| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | standard | 28991 | 2498.5 | 11.6x |
+| TCK-20260710-CURRENT-RUN-SIDECAR-BASH | standard | 28516 | 2498.5 | 11.4x |
+| TCK-20260801-CODEX-REALREPO-PILOT-HARNESS | standard | 26413 | 2498.5 | 10.6x |
+| TCK-20260719-TAG-COLLISION-DEDUP | standard | 25786 | 2498.5 | 10.3x |
+| TCK-20260720-PROGRESS-TIMELINE-VIEW | standard | 25634 | 2498.5 | 10.3x |
+| FOLDER-cognition-adventure-eligibility | standard | 25009 | 2498.5 | 10.0x |
+| TCK-20260811-REGION-STABILIZATION-GOAL-SCORER | standard | 23794 | 2498.5 | 9.5x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | standard | 23793 | 2498.5 | 9.5x |
+| CREATE-TICKETS-DOCS-PLANS-AGENT-OPS-DASHBOARD-PROPOSAL-STATS-BOARD | n/a | 7189 | 762.5 | 9.4x |
+| TCK-20260713-SIMQ-EVAL-PROFILE-BUG | hotfix | 6560 | 699 | 9.4x |
+| TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP | standard | 23400 | 2498.5 | 9.4x |
+| TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE | standard | 23162 | 2498.5 | 9.3x |
+| TCK-20260802-STORED-ARTIFACT-KIND | standard | 22385 | 2498.5 | 9.0x |
+| TCK-20260720-TIMELINE-RANGE-CONTROL | standard | 22182 | 2498.5 | 8.9x |
+| TCK-20260804-AGENT-DEF-GAP-FIXES | standard | 19762 | 2498.5 | 7.9x |
+| TCK-20260721-MONITORING-WRITER-UNIFICATION | standard | 19540 | 2498.5 | 7.8x |
+| TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT | hotfix | 5381 | 699 | 7.7x |
+| TCK-20260731-CODEX-PILOT-EXECUTOR | standard | 17701 | 2498.5 | 7.1x |
+| TCK-20260804-EXPANSION-RATE-WIRING | standard | 17081 | 2498.5 | 6.8x |
+| TCK-20260730-CODEX-RUNTIME-SHADOW | standard | 16974 | 2498.5 | 6.8x |
+| CREATE-TICKETS-DOCS-PLANS-AGENT-OPS-DASHBOARD-PROPOSAL-PROGRESS-TIMELINE | n/a | 5066 | 762.5 | 6.6x |
+| TCK-20260730-CODEX-RUNTIME-SHADOW | standard | 16592 | 2498.5 | 6.6x |
+| TCK-20260811-ADVENTURE-GOAL-SCORER | standard | 16005 | 2498.5 | 6.4x |
+| TCK-20260710-SIMQ-DEPTH-FACTION | standard | 15661 | 2498.5 | 6.3x |
+| FOLDER-tickets-todos-simq-scoring-improvement | epic | 50386 | 8041 | 6.3x |
+| TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION | hotfix | 4353 | 699 | 6.2x |
+| FOLDER-tickets-todos-simq-roadmap-phase2-depth-social | epic | 49832 | 8041 | 6.2x |
+| TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP | standard | 14911 | 2498.5 | 6.0x |
+| TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP | standard | 13482 | 2498.5 | 5.4x |
+| TCK-20260721-MONITORING-WRITER-DECISION | standard | 13426 | 2498.5 | 5.4x |
+| TCK-20260817-HOTFIX-KGMCP-MISSING-JSONSCHEMA-DEPENDENCY | hotfix | 3587 | 699 | 5.1x |
+| TCK-20260811-MULTI-STEP-PLANNING-DESIGN | standard | 12676 | 2498.5 | 5.1x |
+| TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING | standard | 12385 | 2498.5 | 5.0x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | standard | 12296 | 2498.5 | 4.9x |
+| TCK-20260808-CORPUS-REGISTRY-PER-WORLD-VIEW | hotfix | 3436 | 699 | 4.9x |
+| CREATE-TICKETS-DOCS-PLANS-SIMQ-SCORING-IMPROVEMENT-ROADMAP | n/a | 3626 | 762.5 | 4.8x |
+| TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION | standard | 11810 | 2498.5 | 4.7x |
+| FOLDER-tickets-todos-progress-timeline | epic | 36205 | 8041 | 4.5x |
+| TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT | standard | 10587 | 2498.5 | 4.2x |
+| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | standard | 10434 | 2498.5 | 4.2x |
+| TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM | standard | 10411 | 2498.5 | 4.2x |
+| TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP | standard | 10273 | 2498.5 | 4.1x |
+| TCK-20260710-SIMQ-DEPTH-INFORMATION | standard | 10261 | 2498.5 | 4.1x |
+| EPIC-TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC | epic | 32893 | 8041 | 4.1x |
+| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | standard | 9827 | 2498.5 | 3.9x |
+| TCK-20260804-SKILL-JS-PHASE-SYNC | hotfix | 2702 | 699 | 3.9x |
+| TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS | standard | 9530 | 2498.5 | 3.8x |
+| TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE | standard | 9237 | 2498.5 | 3.7x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | standard | 9169 | 2498.5 | 3.7x |
+| TCK-20260713-SIMQ-SCORE-CEILING-FIX | standard | 9141 | 2498.5 | 3.7x |
+| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | standard | 8978 | 2498.5 | 3.6x |
+| TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY | standard | 8960 | 2498.5 | 3.6x |
+| TCK-20260804-SKILL-CATALOG-MODERNIZATION-EPIC | epic | 28800 | 8041 | 3.6x |
+| TCK-20260718-AGENTOPS-STATS-API | standard | 8913 | 2498.5 | 3.6x |
+| TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE | standard | 8889 | 2498.5 | 3.6x |
+| EPIC-TCK-20260810-AGENT-TOOLING-INTEGRITY-HARDENING-EPIC | epic | 28607 | 8041 | 3.6x |
+| TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING | standard | 8792 | 2498.5 | 3.5x |
+| TCK-20260804-OBSISO-WORKER-PARITY-HOTFIX | hotfix | 2457 | 699 | 3.5x |
+| TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION | standard | 8700 | 2498.5 | 3.5x |
+| TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE | standard | 8660 | 2498.5 | 3.5x |
+| TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE | standard | 8426 | 2498.5 | 3.4x |
+| FOLDER-tickets-todos-agent-ops-dashboard | epic | 26444 | 8041 | 3.3x |
+| TCK-20260716-PLAN-GATE-SUBSTRING-FALSEPOS | hotfix | 2278 | 699 | 3.3x |
+| TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE | standard | 8109 | 2498.5 | 3.2x |
+| FOLDER-tickets-todos-simq-roadmap-phase3-depth-faction-information | epic | 26096 | 8041 | 3.2x |
+| TCK-20260718-RETRO-STATS-REFACTOR | standard | 7836 | 2498.5 | 3.1x |
+| TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS | standard | 7654 | 2498.5 | 3.1x |
+| TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY | standard | 7496 | 2498.5 | 3.0x |
 
 ### Cost-proxy-score outliers (by phase)
 
 | run_id | seq | phase | agent | cost_proxy_score | phase median | ratio |
 |---|---|---|---|---|---|---|
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | 2 | Investigate | investigator | 34837.628 | 76.9 | 453.1x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 2 | Investigate | investigator | 28601.745 | 76.9 | 372.0x |
-| TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP | 1 | Scope | ticket-scoper | 19056.244 | 51.5 | 370.3x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 2 | Implement | implementer | 28601.745 | 156.6 | 182.7x |
-| TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE | 1 | Scope | ticket-scoper | 6503.344 | 51.5 | 126.4x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 1 | Scope | ticket-scoper | 5659.732 | 51.5 | 110.0x |
-| TCK-20260710-SIMQ-DEPTH-INFORMATION | 2 | Investigate | investigator | 8243.029 | 76.9 | 107.2x |
-| TCK-20260710-SIMQ-DEPTH-FACTION | 5 | Implement | implementer | 14058.238 | 156.6 | 89.8x |
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | 10 | Finalize | finalizer | 6145.832 | 84.6 | 72.6x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 2 | Investigate | investigator | 4360.288 | 76.9 | 56.7x |
-| TCK-20260717-GANTT-TIME-AXIS | 2 | Investigate | investigator | 4330.635 | 76.9 | 56.3x |
-| TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT | 6 | Finalize | finalizer | 4267.525 | 84.6 | 50.4x |
-| TCK-20260717-CSS-LAYER-PADDING-FIX | 5 | Implement | implementer | 6415.868 | 156.6 | 41.0x |
-| TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE | 1 | Scope | ticket-scoper | 1963.451 | 51.5 | 38.2x |
-| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 7 | Test | test-scoper | 2222.629 | 61.8 | 36.0x |
-| TCK-20260713-SIMQ-EVAL-PROFILE-BUG | 5 | Implement | implementer | 5392.113 | 156.6 | 34.4x |
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | 7 | Test | test-scoper | 2101.762 | 61.8 | 34.0x |
-| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 5 | Implement | implementer | 4994.127 | 156.6 | 31.9x |
-| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 7 | Test | test-scoper | 1478.29 | 61.8 | 23.9x |
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | 5 | Implement | implementer | 3589.04 | 156.6 | 22.9x |
-| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 6 | Implement | implementer | 3227.086 | 156.6 | 20.6x |
-| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 5 | Implement | implementer | 3104.991 | 156.6 | 19.8x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 6 | Verify | done-checker | 1060.682 | 56.3 | 18.8x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 2 | Investigate | investigator | 1383.699 | 76.9 | 18.0x |
-| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 7 | Test | test-scoper | 1099.442 | 61.8 | 17.8x |
-| TCK-20260711-EPIC-STALENESS-DEDUPE-CHECK | 9 | Verify | done-checker | 973.098 | 56.3 | 17.3x |
-| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 4 | Review | architecture-reviewer | 869.171 | 53.5 | 16.3x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 8 | Parity | parity-updater | 909.948 | 56.1 | 16.2x |
-| TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION | 10 | Finalize | finalizer | 1314.544 | 84.6 | 15.5x |
-| TCK-20260717-CSS-LAYER-PADDING-FIX | 7 | Test | test-scoper | 957.445 | 61.8 | 15.5x |
-| TCK-20260710-HAZARD-KIND-CORPUS-WIDE | 4 | Review | architecture-reviewer | 630.599 | 53.5 | 11.8x |
-| TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 5 | Implement | implementer | 1676.257 | 156.6 | 10.7x |
-| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 2 | Investigate | investigator | 802.218 | 76.9 | 10.4x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 6 | Architecture-Verify | architecture-reviewer | 535.464 | 53.0 | 10.1x |
-| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 9 | Finalize | finalizer | 774.179 | 84.6 | 9.1x |
-| TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 7 | Test | test-scoper | 547.336 | 61.8 | 8.9x |
-| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 2 | Investigate | investigator | 617.064 | 76.9 | 8.0x |
-| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 12 | Finalize | finalizer | 675.303 | 84.6 | 8.0x |
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | 8 | Parity | parity-updater | 402.54 | 56.1 | 7.2x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 6 | Implement | implementer | 1059.236 | 156.6 | 6.8x |
-| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 9 | Architecture-Verify | architecture-reviewer | 354.638 | 53.0 | 6.7x |
-| TCK-20260713-SIMQ-RAWSCORE-PERSIST | 2 | Investigate | investigator | 512.132 | 76.9 | 6.7x |
-| TCK-20260714-DATA-RUNS-VERIFY-REGEN | 10 | Finalize | finalizer | 536.0 | 84.6 | 6.3x |
-| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 6 | Architecture-Verify | architecture-reviewer | 333.693 | 53.0 | 6.3x |
-| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 2 | Investigate | investigator | 482.209 | 76.9 | 6.3x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 12 | Finalize | finalizer | 527.988 | 84.6 | 6.2x |
-| TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME | 2 | Investigate | investigator | 475.986 | 76.9 | 6.2x |
-| TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 8 | Parity | parity-updater | 324.288 | 56.1 | 5.8x |
-| TCK-20260710-SIMQ-DEPTH-FACTION | 2 | Investigate | investigator | 438.081 | 76.9 | 5.7x |
-| TCK-20260716-AGENTOPS-TICKETS-VIEW | 7 | Test | test-scoper | 347.36 | 61.8 | 5.6x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 7 | Test | test-scoper | 347.264 | 61.8 | 5.6x |
-| TCK-20260717-TICKETS-TABLE-PAGINATION | 8 | Parity | parity-updater | 304.841 | 56.1 | 5.4x |
-| TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME | 2 | Investigate | investigator | 416.131 | 76.9 | 5.4x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 9 | Verify | done-checker | 303.037 | 56.3 | 5.4x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 9 | Verify | done-checker | 293.789 | 56.3 | 5.2x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 10 | Verify | done-checker | 289.145 | 56.3 | 5.1x |
-| TCK-20260716-PLAN-GATE-SUBSTRING-FALSEPOS | 3 | Test | test-scoper | 311.175 | 61.8 | 5.0x |
-| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 260.409 | 53.5 | 4.9x |
-| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 260.409 | 53.5 | 4.9x |
-| TCK-20260710-TOWN-COUNCIL-HAZARD-DA | 2 | Investigate | investigator | 360.99 | 76.9 | 4.7x |
-| TCK-20260710-HAZARD-KIND-CORPUS-WIDE | 10 | Verify | done-checker | 259.841 | 56.3 | 4.6x |
-| TCK-20260717-GANTT-TIME-AXIS | 11 | Finalize | finalizer | 386.02 | 84.6 | 4.6x |
-| TCK-20260711-EPIC-SCOPE-ORPHAN-FIX | 9 | Verify | done-checker | 252.345 | 56.3 | 4.5x |
-| TCK-20260717-TICKETS-TAG-SEARCH | 9 | Verify | done-checker | 247.557 | 56.3 | 4.4x |
-| TCK-20260717-GANTT-TIME-AXIS | 6 | Architecture-Verify | architecture-reviewer | 232.32 | 53.0 | 4.4x |
-| TCK-20260714-DATA-RUNS-VERIFY-REGEN | 2 | Investigate | investigator | 319.704 | 76.9 | 4.2x |
-| TCK-20260710-SIMQ-DEPTH-INFORMATION | 7 | Test | test-scoper | 254.593 | 61.8 | 4.1x |
-| TCK-20260716-AGENTOPS-ACTIVITY-GANTT | 5 | Finalize | finalizer | 343.786 | 84.6 | 4.1x |
-| TCK-20260717-TICKETS-TABLE-PAGINATION | 11 | Finalize | finalizer | 338.657 | 84.6 | 4.0x |
-| TCK-20260716-AGENTOPS-TICKETS-VIEW | 5 | Implement | implementer | 619.269 | 156.6 | 4.0x |
-| TCK-20260710-CURRENT-RUN-SIDECAR-BASH | 10 | Finalize | finalizer | 330.731 | 84.6 | 3.9x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 11 | Verify | done-checker | 218.014 | 56.3 | 3.9x |
-| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 10 | Finalize | finalizer | 322.315 | 84.6 | 3.8x |
-| TCK-20260711-DOC-STALENESS-GATE-CHECK | 9 | Verify | done-checker | 214.347 | 56.3 | 3.8x |
-| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 202.994 | 53.5 | 3.8x |
-| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 2 | Investigate | investigator | 278.746 | 76.9 | 3.6x |
-| TCK-20260713-SIMQ-RAWSCORE-PERSIST | 7 | Implement | implementer | 559.772 | 156.6 | 3.6x |
-| TCK-20260716-AGENTOPS-DASHBOARD-BACKEND | 10 | Finalize | finalizer | 302.356 | 84.6 | 3.6x |
-| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 2 | Investigate | investigator | 271.207 | 76.9 | 3.5x |
-| TCK-20260710-SIMQ-DEPTH-INFORMATION | 5 | Implement | implementer | 546.789 | 156.6 | 3.5x |
-| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 4 | Review | architecture-reviewer | 184.09 | 53.5 | 3.4x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 5 | Implement | implementer | 528.578 | 156.6 | 3.4x |
-| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 9 | Verify | done-checker | 189.63 | 56.3 | 3.4x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 10 | Finalize | finalizer | 280.802 | 84.6 | 3.3x |
-| TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION | 5 | Implement | implementer | 478.353 | 156.6 | 3.1x |
+| TCK-20260710-SIMQ-DEPTH-SOCIAL | 2 | Investigate | investigator | 34837.628 | 6.2 | 5591.0x |
+| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 2 | Investigate | investigator | 28601.745 | 6.2 | 4590.2x |
+| TCK-20260710-SIMQ-DEPTH-INFORMATION | 2 | Investigate | investigator | 8243.029 | 6.2 | 1322.9x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 2 | Investigate | investigator | 4360.288 | 6.2 | 699.8x |
+| TCK-20260717-GANTT-TIME-AXIS | 2 | Investigate | investigator | 4330.635 | 6.2 | 695.0x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 2 | Investigate | investigator | 1383.699 | 6.2 | 222.1x |
+| TCK-20260716-PLACELEGAL-HARDLAW | 2 | Investigate | investigator | 1001.508 | 6.2 | 160.7x |
+| TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS | 1 | Investigate | claude | 888.051 | 6.2 | 142.5x |
+| TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION | 1 | Investigate | investigator | 860.991 | 6.2 | 138.2x |
+| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 2 | Investigate | investigator | 802.218 | 6.2 | 128.7x |
+| TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP | 1 | Investigate | claude | 692.077 | 6.2 | 111.1x |
+| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 6 | Verify | done-checker | 1060.682 | 10.6 | 99.9x |
+| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 2 | Investigate | investigator | 617.064 | 6.2 | 99.0x |
+| TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION | 1 | Investigate | claude | 602.912 | 6.2 | 96.8x |
+| TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE | 1 | Investigate | investigator | 581.595 | 6.2 | 93.3x |
+| TCK-20260711-EPIC-STALENESS-DEDUPE-CHECK | 9 | Verify | done-checker | 973.098 | 10.6 | 91.7x |
+| TCK-20260713-SIMQ-RAWSCORE-PERSIST | 2 | Investigate | investigator | 512.132 | 6.2 | 82.2x |
+| TCK-20260810-NAVIGATION-SINGLE-AXIS-STEPPING-DIAGONAL-PURSUIT-DEADLOCK | 1 | Investigate | claude | 503.72700000000003 | 6.2 | 80.8x |
+| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 2 | Investigate | investigator | 482.209 | 6.2 | 77.4x |
+| TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION | 1 | Investigate | claude | 476.866 | 6.2 | 76.5x |
+| TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME | 2 | Investigate | investigator | 475.986 | 6.2 | 76.4x |
+| TCK-20260710-SIMQ-DEPTH-FACTION | 2 | Investigate | investigator | 438.081 | 6.2 | 70.3x |
+| TCK-20260809-SIMQ-CALIBRATE-JSONL-MISSING-PUSH-SHAPER-EVENTS | 1 | Investigate | claude | 425.931 | 6.2 | 68.4x |
+| TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME | 2 | Investigate | investigator | 416.131 | 6.2 | 66.8x |
+| TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION | 2 | Investigate | claude | 405.94100000000003 | 6.2 | 65.1x |
+| TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP | 1 | Investigate | investigator | 403.29900000000004 | 6.2 | 64.7x |
+| TCK-20260710-TOWN-COUNCIL-HAZARD-DA | 2 | Investigate | investigator | 360.99 | 6.2 | 57.9x |
+| TCK-20260808-GROWTH-TRAJECTORY-STILL-NEGATIVE-POST-FIX | 1 | Investigate | investigator | 356.40500000000003 | 6.2 | 57.2x |
+| TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT | 1 | Investigate | investigator | 338.936 | 6.2 | 54.4x |
+| TCK-20260714-DATA-RUNS-VERIFY-REGEN | 2 | Investigate | investigator | 319.704 | 6.2 | 51.3x |
+| TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE | 2 | Investigate | claude | 318.337 | 6.2 | 51.1x |
+| TCK-20260815-KGMCP-P1-QUERY-ROUTER | 10 | Verify | done-checker | 496.00100000000003 | 10.6 | 46.7x |
+| TCK-20260808-ENTITY-LIFECYCLE-SCORE-CALIBRATION | 1 | Investigate | investigator | 291.056 | 6.2 | 46.7x |
+| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 2 | Investigate | investigator | 278.746 | 6.2 | 44.7x |
+| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 2 | Investigate | investigator | 271.207 | 6.2 | 43.5x |
+| TCK-20260816-KGMCP-P4-PARITY-ADAPTER | 11 | Verify | done-checker | 433.202 | 10.6 | 40.8x |
+| TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY | 2 | Investigate | claude | 252.69 | 6.2 | 40.6x |
+| TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION | 1 | Investigate | investigator | 248.818 | 6.2 | 39.9x |
+| TCK-20260809-COMBAT-READINESS-COOLDOWN-BOTTLENECK | 1 | Investigate | claude | 248.793 | 6.2 | 39.9x |
+| TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE | 2 | Investigate | claude | 240.983 | 6.2 | 38.7x |
+| TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP | 11 | Verify | done-checker | 378.865 | 10.6 | 35.7x |
+| TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 2 | Investigate | investigator | 220.452 | 6.2 | 35.4x |
+| TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT | 1 | Investigate | investigator | 220.446 | 6.2 | 35.4x |
+| TCK-20260730-PROVIDER-HOOK-POLICY | 2 | Investigate | investigator | 219.3 | 6.2 | 35.2x |
+| TCK-20260728-EVAL-FIXTURE-REPAIR | 9 | Verify | done-checker | 372.169 | 10.6 | 35.1x |
+| TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP | 2 | Investigate | investigator | 214.788 | 6.2 | 34.5x |
+| TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE | 1 | Investigate | claude | 214.196 | 6.2 | 34.4x |
+| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 2 | Investigate | investigator | 211.216 | 6.2 | 33.9x |
+| TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET | 1 | Investigate | claude | 179.53 | 6.2 | 28.8x |
+| TCK-20260810-MONITORING-NEGATIVE-DURATION-TIMESTAMP-BUG | 1 | Investigate | claude | 179.048 | 6.2 | 28.7x |
+| TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON | 11 | Verify | done-checker | 304.471 | 10.6 | 28.7x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 9 | Verify | done-checker | 303.037 | 10.6 | 28.5x |
+| TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION | 12 | Verify | claude | 298.722 | 10.6 | 28.1x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 9 | Verify | done-checker | 293.789 | 10.6 | 27.7x |
+| TCK-20260731-PARITY-INDEX-IMPORTER | 3 | Investigate | investigator | 172.419 | 6.2 | 27.7x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 10 | Verify | done-checker | 289.145 | 10.6 | 27.2x |
+| TCK-20260720-TAG-TOUCHPOINT-CLEANUP | 2 | Investigate | investigator | 167.21800000000002 | 6.2 | 26.8x |
+| TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS | 1 | Investigate | claude | 162.693 | 6.2 | 26.1x |
+| TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE | 11 | Verify | claude | 275.48199999999997 | 10.6 | 25.9x |
+| TCK-20260808-COMBAT-PILLAR-OPPORTUNITY-ATTACK-CREDIT-GAP | 1 | Investigate | investigator | 157.624 | 6.2 | 25.3x |
+| TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION | 2 | Investigate | investigator | 155.606 | 6.2 | 25.0x |
+| TCK-20260730-CLAUDE-EXECUTION-IDENTITY | 2 | Investigate | investigator | 153.907 | 6.2 | 24.7x |
+| TCK-20260710-HAZARD-KIND-CORPUS-WIDE | 10 | Verify | done-checker | 259.841 | 10.6 | 24.5x |
+| TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY | 2 | Investigate | investigator | 151.514 | 6.2 | 24.3x |
+| TCK-20260812-COMMITTED-INTENTION-SEQUENCE | 1 | Investigate | investigator | 151.483 | 6.2 | 24.3x |
+| TCK-20260711-EPIC-SCOPE-ORPHAN-FIX | 9 | Verify | done-checker | 252.345 | 10.6 | 23.8x |
+| TCK-20260809-COMBAT-PURSUIT-NEVER-CLOSES-TO-MELEE-RANGE | 1 | Investigate | claude | 146.59 | 6.2 | 23.5x |
+| TCK-20260717-TICKETS-TAG-SEARCH | 9 | Verify | done-checker | 247.557 | 10.6 | 23.3x |
+| TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE | 17 | Verify | done-checker | 245.342 | 10.6 | 23.1x |
+| TCK-20260717-TICKETS-TABLE-PAGINATION | 2 | Investigate | investigator | 141.842 | 6.2 | 22.8x |
+| TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE | 15 | Verify | done-checker | 230.469 | 10.6 | 21.7x |
+| TCK-20260728-EVAL-FIXTURE-REPAIR | 2 | Investigate | investigator | 133.801 | 6.2 | 21.5x |
+| TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG | 1 | Investigate | investigator | 133.68099999999998 | 6.2 | 21.5x |
+| TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE | 1 | Investigate | investigator | 132.888 | 6.2 | 21.3x |
+| TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK | 2 | Investigate | investigator | 130.12 | 6.2 | 20.9x |
+| TCK-20260816-KGMCP-P4-PARITY-ADAPTER | 12 | Verify | done-checker | 219.001 | 10.6 | 20.6x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 11 | Verify | done-checker | 218.014 | 10.6 | 20.5x |
+| TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT | 11 | Verify | done-checker | 216.851 | 10.6 | 20.4x |
+| TCK-20260711-DOC-STALENESS-GATE-CHECK | 9 | Verify | done-checker | 214.347 | 10.6 | 20.2x |
+| TCK-20260808-HERO-ADVENTURE-ROUTING-DEFAULT-OFF | 1 | Investigate | investigator | 125.657 | 6.2 | 20.2x |
+| TCK-20260730-CODEX-RUNTIME-SHADOW | 2 | Investigate | investigator | 122.313 | 6.2 | 19.6x |
+| TCK-20260809-TACTICAL-DEAD-ACTIONSTYLE-SUBBRANCHES | 2 | Investigate | claude | 121.867 | 6.2 | 19.6x |
+| TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE | 2 | Investigate | investigator | 121.46600000000001 | 6.2 | 19.5x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 2 | Investigate | investigator | 117.608 | 6.2 | 18.9x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 2 | Investigate | investigator | 117.608 | 6.2 | 18.9x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 2 | Investigate | investigator | 117.608 | 6.2 | 18.9x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 2 | Investigate | investigator | 117.608 | 6.2 | 18.9x |
+| TCK-20260808-ENTITY-LIFECYCLE-SCORE-METRICS | 1 | Investigate | investigator | 115.831 | 6.2 | 18.6x |
+| TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE | 13 | Verify | done-checker | 193.411 | 10.6 | 18.2x |
+| TCK-20260815-KGMCP-P1-BASELINE-COMPARISON | 10 | Verify | done-checker | 192.136 | 10.6 | 18.1x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 9 | Verify | done-checker | 189.63 | 10.6 | 17.9x |
+| TCK-20260731-PARITY-INDEX-BASELINE | 12 | Investigate | investigator | 105.90700000000001 | 6.2 | 17.0x |
+| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 4 | Review | architecture-reviewer | 869.171 | 52.1 | 16.7x |
+| TCK-20260816-KGMCP-P5-REPEATED-DEMAND-MEASUREMENT | 2 | Investigate | investigator | 99.566 | 6.2 | 16.0x |
+| TCK-20260719-STATS-PHASE-OUTLIERS-EXPOSE | 9 | Verify | done-checker | 169.024 | 10.6 | 15.9x |
+| TCK-20260731-PARITY-IMPACT-PROOF | 2 | Investigate | investigator | 98.941 | 6.2 | 15.9x |
+| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 9 | Verify | done-checker | 166.731 | 10.6 | 15.7x |
+| TCK-20260730-CLAUDE-EXECUTION-IDENTITY | 2 | Investigate | investigator | 97.23400000000001 | 6.2 | 15.6x |
+| TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT | 10 | Verify | done-checker | 164.058 | 10.6 | 15.5x |
+| TCK-20260730-SHADOW-PROMOTION-GATE-THRESHOLDS | 2 | Investigate | investigator | 93.606 | 6.2 | 15.0x |
+| TCK-20260719-PHASE-GLOSSARY-DESCRIPTIONS | 2 | Investigate | investigator | 92.749 | 6.2 | 14.9x |
+| TCK-20260730-CODEX-POSTTOOL-ADAPTER | 2 | Investigate | investigator | 89.673 | 6.2 | 14.4x |
+| TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING | 2 | Investigate | investigator | 88.932 | 6.2 | 14.3x |
+| TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP | 2 | Investigate | investigator | 88.196 | 6.2 | 14.2x |
+| TCK-20260729-SHADOW-PACKET-CALL-SITE | 13 | Verify | done-checker | 150.21800000000002 | 10.6 | 14.2x |
+| TCK-20260729-SHADOW-PACKET-CALL-SITE | 13 | Verify | done-checker | 150.21800000000002 | 10.6 | 14.2x |
+| TCK-20260729-SHADOW-PACKET-CALL-SITE | 2 | Investigate | investigator | 88.01 | 6.2 | 14.1x |
+| TCK-20260720-TAG-CORPUS-REPAIR-SWEEP | 2 | Investigate | investigator | 87.911 | 6.2 | 14.1x |
+| TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE | 1 | Investigate | investigator | 87.494 | 6.2 | 14.0x |
+| TCK-20260728-RETRIEVAL-BASELINE-METRICS | 2 | Investigate | investigator | 87.19 | 6.2 | 14.0x |
+| TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION | 10 | Verify | done-checker | 147.07999999999998 | 10.6 | 13.9x |
+| TCK-20260803-RETRO-TOOL-SAFETY-AUDIT | 3 | Investigate | investigator | 85.925 | 6.2 | 13.8x |
+| TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE | 1 | Investigate | investigator | 85.8 | 6.2 | 13.8x |
+| TCK-20260803-DOCS-STRUCTURE-AUDIT | 2 | Investigate | investigator | 85.197 | 6.2 | 13.7x |
+| TCK-20260720-TAG-CATEGORY-REGISTRY | 2 | Investigate | investigator | 84.459 | 6.2 | 13.6x |
+| TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING | 1 | Investigate | investigator | 84.041 | 6.2 | 13.5x |
+| TCK-20260720-TAG-RELEVANCE-VERIFY | 2 | Investigate | investigator | 83.638 | 6.2 | 13.4x |
+| TCK-20260730-CODEX-POSTTOOL-ADAPTER | 9 | Verify | done-checker | 142.113 | 10.6 | 13.4x |
+| TCK-20260811-HARVEST-CRAFT-EVENT-DERIVATION-REGRESSION | 1 | Investigate | investigator | 83.39 | 6.2 | 13.4x |
+| TCK-20260802-CONTEXT-KIND-PRIORITY | 2 | Investigate | investigator | 83.029 | 6.2 | 13.3x |
+| TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION | 1 | Investigate | investigator | 82.851 | 6.2 | 13.3x |
+| TCK-20260814-KGMCP-MEASUREMENT-BASELINE | 2 | Investigate | investigator | 82.75 | 6.2 | 13.3x |
+| TCK-20260811-MULTI-STEP-PLANNING-DESIGN | 1 | Investigate | investigator | 82.679 | 6.2 | 13.3x |
+| TCK-20260815-KGMCP-P1-FAILOPEN-TESTS | 10 | Verify | done-checker | 140.543 | 10.6 | 13.2x |
+| TCK-20260728-RETRIEVAL-RETENTION-REDACTION | 2 | Investigate | investigator | 82.411 | 6.2 | 13.2x |
+| TCK-20260803-DOC-UPDATER-CORE-WIRING | 2 | Investigate | investigator | 82.2 | 6.2 | 13.2x |
+| TCK-20260803-RETRO-TOOL-SAFETY-AUDIT | 11 | Verify | done-checker | 140.046 | 10.6 | 13.2x |
+| TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING | 2 | Investigate | investigator | 82.179 | 6.2 | 13.2x |
+| TCK-20260802-STORED-ARTIFACT-KIND | 2 | Investigate | investigator | 81.844 | 6.2 | 13.1x |
+| TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE | 10 | Verify | done-checker | 138.61599999999999 | 10.6 | 13.1x |
+| TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL | 2 | Investigate | investigator | 81.104 | 6.2 | 13.0x |
+| TCK-20260811-ADVENTURE-GOAL-SCORER | 11 | Verify | done-checker | 137.202 | 10.6 | 12.9x |
+| TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING | 16 | Verify | done-checker | 136.16 | 10.6 | 12.8x |
+| TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON | 2 | Investigate | investigator | 79.815 | 6.2 | 12.8x |
+| TCK-20260810-SKILL-USAGE-RETRO-TRACKING | 2 | Investigate | investigator | 79.20400000000001 | 6.2 | 12.7x |
+| TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP | 4 | Investigate | investigator | 79.11 | 6.2 | 12.7x |
+| TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING | 1 | Investigate | investigator | 78.798 | 6.2 | 12.6x |
+| TCK-20260718-STATUS-SUFFIX-TRIM | 2 | Investigate | investigator | 78.567 | 6.2 | 12.6x |
+| TCK-20260716-AGENTOPS-REPLAY-TIMELINE | 2 | Investigate | investigator | 78.317 | 6.2 | 12.6x |
+| TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT | 2 | Investigate | investigator | 78.188 | 6.2 | 12.5x |
+| TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 9 | Verify | done-checker | 132.419 | 10.6 | 12.5x |
+| TCK-20260815-KGMCP-P1-PACKET-ASSEMBLY | 10 | Verify | done-checker | 130.88400000000001 | 10.6 | 12.3x |
+| TCK-20260720-SKILL-MAPPING-DEDUP | 2 | Investigate | investigator | 76.691 | 6.2 | 12.3x |
+| TCK-20260811-REGION-STABILIZATION-GOAL-SCORER | 1 | Investigate | investigator | 76.489 | 6.2 | 12.3x |
+| TCK-20260730-CODEX-RUNTIME-SHADOW | 9 | Verify | done-checker | 129.586 | 10.6 | 12.2x |
+| TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY | 1 | Investigate | investigator | 75.842 | 6.2 | 12.2x |
+| TCK-20260816-KGMCP-P4-PARITY-ADAPTER | 2 | Investigate | investigator | 75.494 | 6.2 | 12.1x |
+| TCK-20260710-HAZARD-KIND-CORPUS-WIDE | 4 | Review | architecture-reviewer | 630.599 | 52.1 | 12.1x |
+| TCK-20260717-DASHBOARD-RESPONSIVE-LAYOUT | 2 | Investigate | investigator | 75.441 | 6.2 | 12.1x |
+| TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER | 1 | Investigate | investigator | 74.964 | 6.2 | 12.0x |
+| TCK-20260809-STALE-DOCS-AI-BRAIN-ARCHITECTURE-AUDIT | 1 | Investigate | claude | 74.90700000000001 | 6.2 | 12.0x |
+| TCK-20260816-KGMCP-P3-PILOT-ACCEPTANCE-MEASUREMENT | 2 | Investigate | investigator | 74.794 | 6.2 | 12.0x |
+| TCK-20260812-EVENT-TYPE-COVERAGE-SOURCE-COLUMN-STALENESS | 1 | Investigate | investigator | 74.745 | 6.2 | 12.0x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 9 | Verify | done-checker | 126.908 | 10.6 | 12.0x |
+| TCK-20260817-HOTFIX-KGMCP-MISSING-JSONSCHEMA-DEPENDENCY | 5 | Verify | done-checker | 126.899 | 10.6 | 12.0x |
+| TCK-20260810-STATUS-DRIFT-CHECK-WIRING | 2 | Investigate | investigator | 74.225 | 6.2 | 11.9x |
+| TCK-20260811-BRAINSTORMING-SPEC-REVIEWER-AGENT-MISSING | 4 | Verify | done-checker | 126.263 | 10.6 | 11.9x |
+| TCK-20260728-CONTEXT-PACKET-SCHEMA | 2 | Investigate | investigator | 74.088 | 6.2 | 11.9x |
+| TCK-20260803-DOC-UPDATER-CORE-WIRING | 9 | Verify | done-checker | 125.309 | 10.6 | 11.8x |
+| TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING | 2 | Investigate | investigator | 72.161 | 6.2 | 11.6x |
+| TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON | 10 | Verify | done-checker | 122.81400000000001 | 10.6 | 11.6x |
+| TCK-20260719-STATS-PHASE-OUTLIERS-EXPOSE | 2 | Investigate | investigator | 72.049 | 6.2 | 11.6x |
+| TCK-20260710-CURRENT-RUN-SIDECAR-BASH | 2 | Investigate | investigator | 71.708 | 6.2 | 11.5x |
+| TCK-20260814-KGMCP-CONTRACT-SCHEMAS | 2 | Investigate | investigator | 71.62700000000001 | 6.2 | 11.5x |
+| TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH | 12 | Verify | done-checker | 121.89 | 10.6 | 11.5x |
+| TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION | 1 | Investigate | investigator | 71.352 | 6.2 | 11.5x |
+| TCK-20260716-AGENTOPS-DASHBOARD-BACKEND | 2 | Investigate | investigator | 71.141 | 6.2 | 11.4x |
+| TCK-20260716-AGENTOPS-BUILD-SERVE | 2 | Investigate | investigator | 71.041 | 6.2 | 11.4x |
+| TCK-20260729-SHADOW-PACKET-CALL-SITE | 6 | Investigate | investigator | 70.985 | 6.2 | 11.4x |
+| TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION | 2 | Investigate | investigator | 70.92 | 6.2 | 11.4x |
+| TCK-20260810-COGNITION-ELIGIBILITY-BYPASS-DOCS | 1 | Investigate | investigator | 70.515 | 6.2 | 11.3x |
+| TCK-20260803-AGENT-MONITORING-INDEX-PHONY-FIX | 9 | Verify | done-checker | 119.905 | 10.6 | 11.3x |
+| TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT | 2 | Investigate | investigator | 69.975 | 6.2 | 11.2x |
+| TCK-20260802-EXACT-LOOKUP-CONVENTION | 2 | Investigate | investigator | 69.777 | 6.2 | 11.2x |
+| TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP | 3 | Investigate | investigator | 69.679 | 6.2 | 11.2x |
+| TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING | 11 | Verify | done-checker | 118.705 | 10.6 | 11.2x |
+| TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION | 1 | Investigate | investigator | 69.029 | 6.2 | 11.1x |
+| TCK-20260716-AGENTOPS-ACTIVITY-GANTT | 2 | Investigate | investigator | 68.952 | 6.2 | 11.1x |
+| TCK-20260729-SHADOW-BASELINE-COMPARISON | 2 | Investigate | investigator | 68.75 | 6.2 | 11.0x |
+| TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS | 2 | Investigate | investigator | 68.74799999999999 | 6.2 | 11.0x |
+| TCK-20260731-PARITY-READPATH-GATE | 2 | Investigate | investigator | 68.467 | 6.2 | 11.0x |
+| TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP | 10 | Verify | done-checker | 116.526 | 10.6 | 11.0x |
+| TCK-20260716-AGENTOPS-TICKETS-VIEW | 2 | Investigate | investigator | 68.281 | 6.2 | 11.0x |
+| TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION | 2 | Investigate | investigator | 68.082 | 6.2 | 10.9x |
+| TCK-20260716-AGENTOPS-ACTIVITY-GANTT | 4 | Verify | done-checker | 115.942 | 10.6 | 10.9x |
+| TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY | 2 | Investigate | investigator | 67.863 | 6.2 | 10.9x |
+| TCK-20260731-PARITY-READPATH-GATE | 10 | Verify | done-checker | 115.46600000000001 | 10.6 | 10.9x |
+| TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY | 2 | Investigate | investigator | 67.715 | 6.2 | 10.9x |
+| TCK-20260811-HARVEST-CRAFT-EVENT-DERIVATION-REGRESSION | 9 | Verify | done-checker | 115.362 | 10.6 | 10.9x |
+| TCK-20260803-DOCS-STRUCTURE-AUDIT | 8 | Verify | done-checker | 115.212 | 10.6 | 10.9x |
+| TCK-20260816-KGMCP-P4-WORKFLOW-RECOMMENDATION-EVALUATION | 2 | Investigate | investigator | 67.595 | 6.2 | 10.8x |
+| TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH | 2 | Investigate | investigator | 67.53399999999999 | 6.2 | 10.8x |
+| TCK-20260717-TICKETS-TAG-SEARCH | 2 | Investigate | investigator | 66.724 | 6.2 | 10.7x |
+| TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON | 2 | Investigate | investigator | 66.485 | 6.2 | 10.7x |
+| TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5 | 1 | Investigate | investigator | 66.39 | 6.2 | 10.7x |
+| TCK-20260731-PARITY-IMPACT-PROOF | 9 | Verify | done-checker | 112.25999999999999 | 10.6 | 10.6x |
+| TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION | 7 | Verify | done-checker | 110.779 | 10.6 | 10.4x |
+| TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION | 2 | Investigate | investigator | 65.017 | 6.2 | 10.4x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 6 | Architecture-Verify | architecture-reviewer | 535.464 | 51.5 | 10.4x |
+| TCK-20260716-AGENTOPS-TICKETS-VIEW | 9 | Verify | done-checker | 109.452 | 10.6 | 10.3x |
+| TCK-20260711-EPIC-STALENESS-DEDUPE-CHECK | 2 | Investigate | investigator | 64.042 | 6.2 | 10.3x |
+| TCK-20260809-COMBAT-TACTICAL-VARIETY-SCORER-GAP-FIX | 6 | Verify | claude | 108.406 | 10.6 | 10.2x |
+| TCK-20260711-EPIC-SCOPE-ORPHAN-FIX | 2 | Investigate | investigator | 62.956 | 6.2 | 10.1x |
+| TCK-20260811-HARVEST-CRAFT-EVENT-DERIVATION-REGRESSION | 11 | Verify | done-checker | 107.102 | 10.6 | 10.1x |
+| TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS | 6 | Verify | claude | 106.632 | 10.6 | 10.0x |
+| TCK-20260813-OBSERVABILITY-IMPORT-BOUNDARY-STALE-OR-VIOLATED | 5 | Verify | done-checker | 105.759 | 10.6 | 10.0x |
+| TCK-20260710-HAZARD-KIND-CORPUS-WIDE | 2 | Investigate | investigator | 62.033 | 6.2 | 10.0x |
+| TCK-20260719-PHASE-GLOSSARY-DESCRIPTIONS | 9 | Verify | done-checker | 104.94 | 10.6 | 9.9x |
+| TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX | 6 | Verify | claude | 102.492 | 10.6 | 9.7x |
+| TCK-20260814-KGMCP-MEASUREMENT-BASELINE | 11 | Verify | done-checker | 102.471 | 10.6 | 9.7x |
+| TCK-20260717-TICKETS-TABLE-PAGINATION | 9 | Verify | done-checker | 99.482 | 10.6 | 9.4x |
+| TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL | 12 | Verify | done-checker | 98.28 | 10.6 | 9.3x |
+| TCK-20260817-STANDARD-PERF-COMBAT-MISSING-SLOW-MARKER | 9 | Verify | done-checker | 96.862 | 10.6 | 9.1x |
+| TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE | 13 | Verify | done-checker | 96.5 | 10.6 | 9.1x |
+| TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING | 10 | Verify | done-checker | 95.975 | 10.6 | 9.0x |
+| TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION | 9 | Verify | done-checker | 94.309 | 10.6 | 8.9x |
+| TCK-20260816-KGMCP-P4-CHANGED-PATH-CONTEXT | 10 | Verify | done-checker | 92.74600000000001 | 10.6 | 8.7x |
+| TCK-20260729-SHADOW-BASELINE-COMPARISON | 9 | Verify | done-checker | 92.226 | 10.6 | 8.7x |
+| TCK-20260815-KGMCP-P1-PACKET-ASSEMBLY | 11 | Verify | done-checker | 91.375 | 10.6 | 8.6x |
+| TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE | 10 | Verify | done-checker | 90.27199999999999 | 10.6 | 8.5x |
+| TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS | 4 | Verify | done-checker | 90.203 | 10.6 | 8.5x |
+| TCK-20260813-ADVENTURE-ROUTE-LAST-ROUTING-FAMILY-RESTORE | 9 | Verify | done-checker | 89.291 | 10.6 | 8.4x |
+| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 11 | Verify | done-checker | 88.194 | 10.6 | 8.3x |
+| TCK-20260718-STATUS-SUFFIX-TRIM | 9 | Verify | done-checker | 87.848 | 10.6 | 8.3x |
+| TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS | 9 | Architecture-Verify | architecture-reviewer | 419.68600000000004 | 51.5 | 8.2x |
+| TCK-20260730-CLAUDE-EXECUTION-IDENTITY | 10 | Verify | done-checker | 86.331 | 10.6 | 8.1x |
+| TCK-20260810-SKILL-USAGE-RETRO-TRACKING | 12 | Verify | done-checker | 86.045 | 10.6 | 8.1x |
+| TCK-20260716-AGENTOPS-BUILD-SERVE | 10 | Verify | done-checker | 85.961 | 10.6 | 8.1x |
+| TCK-20260731-PARITY-INDEX-BASELINE | 19 | Verify | done-checker | 85.90100000000001 | 10.6 | 8.1x |
+| TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT | 7 | Architecture-Verify | architecture-reviewer | 415.861 | 51.5 | 8.1x |
+| TCK-20260810-COGNITION-ELIGIBILITY-BYPASS-DOCS | 14 | Verify | claude | 84.733 | 10.6 | 8.0x |
+| TCK-20260816-HOTFIX-KGMCP-LOCAL-DATA-BOOTSTRAP-DOCS | 5 | Verify | done-checker | 84.568 | 10.6 | 8.0x |
+| TCK-20260802-EXACT-LOOKUP-CONVENTION | 10 | Verify | done-checker | 83.506 | 10.6 | 7.9x |
+| TCK-20260815-KGMCP-P2-CACHE-SCHEMA-MIGRATIONS | 10 | Verify | done-checker | 82.926 | 10.6 | 7.8x |
+| TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION | 11 | Verify | done-checker | 82.038 | 10.6 | 7.7x |
+| TCK-20260717-GANTT-TIME-AXIS | 9 | Verify | done-checker | 81.749 | 10.6 | 7.7x |
+| TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT | 9 | Verify | done-checker | 81.289 | 10.6 | 7.7x |
+| TCK-20260803-RETRIEVAL-EVENT-TS-OVERRIDE | 8 | Verify | done-checker | 81.139 | 10.6 | 7.6x |
+| TCK-20260731-PARITY-INDEX-IMPORTER | 10 | Verify | done-checker | 80.375 | 10.6 | 7.6x |
+| TCK-20260717-DASHBOARD-RESPONSIVE-LAYOUT | 9 | Verify | done-checker | 80.174 | 10.6 | 7.6x |
+| TCK-20260811-HARVEST-CRAFT-EVENT-DERIVATION-REGRESSION | 10 | Verify | done-checker | 79.928 | 10.6 | 7.5x |
+| TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE | 11 | Verify | done-checker | 79.461 | 10.6 | 7.5x |
+| TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD | 8 | Verify | claude | 79.369 | 10.6 | 7.5x |
+| TCK-20260816-KGMCP-P4-WORKFLOW-RECOMMENDATION-EVALUATION | 12 | Verify | done-checker | 79.255 | 10.6 | 7.5x |
+| TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION | 11 | Verify | done-checker | 78.893 | 10.6 | 7.4x |
+| TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION | 5 | Verify | done-checker | 77.923 | 10.6 | 7.3x |
+| TCK-20260720-TAG-RELEVANCE-VERIFY | 9 | Verify | done-checker | 76.068 | 10.6 | 7.2x |
+| TCK-20260812-COMMITTED-INTENTION-SEQUENCE | 9 | Verify | done-checker | 75.708 | 10.6 | 7.1x |
+| TCK-20260811-ADVENTURE-GOAL-SCORER | 12 | Verify | done-checker | 75.69800000000001 | 10.6 | 7.1x |
+| TCK-20260720-TAG-TOUCHPOINT-CLEANUP | 10 | Verify | done-checker | 75.55 | 10.6 | 7.1x |
+| TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION | 11 | Verify | done-checker | 75.504 | 10.6 | 7.1x |
+| TCK-20260730-PROVIDER-HOOK-POLICY | 9 | Verify | done-checker | 75.095 | 10.6 | 7.1x |
+| TCK-20260728-RETRIEVAL-BASELINE-METRICS | 9 | Verify | done-checker | 74.839 | 10.6 | 7.0x |
+| TCK-20260810-COGNITION-ELIGIBILITY-BYPASS-DOCS | 13 | Verify | done-checker | 73.99000000000001 | 10.6 | 7.0x |
+| TCK-20260810-STATUS-DRIFT-CHECK-WIRING | 10 | Verify | done-checker | 73.852 | 10.6 | 7.0x |
+| TCK-20260814-KGMCP-CONTRACT-SCHEMAS | 10 | Verify | done-checker | 73.727 | 10.6 | 6.9x |
+| TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT | 10 | Verify | done-checker | 73.468 | 10.6 | 6.9x |
+| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 9 | Architecture-Verify | architecture-reviewer | 354.638 | 51.5 | 6.9x |
+| TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION | 10 | Verify | done-checker | 73.011 | 10.6 | 6.9x |
+| TCK-20260803-DOCS-STRUCTURE-AUDIT | 9 | Verify | done-checker | 72.937 | 10.6 | 6.9x |
+| TCK-20260730-CODEX-POSTTOOL-ADAPTER | 10 | Verify | done-checker | 72.812 | 10.6 | 6.9x |
+| TCK-20260728-CODE-TEST-INDEX-BOUNDARIES | 9 | Verify | done-checker | 72.595 | 10.6 | 6.8x |
+| TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION | 12 | Verify | done-checker | 72.397 | 10.6 | 6.8x |
+| TCK-20260811-THREAT-RESOLVED-ARBITER-RELOCATION | 11 | Verify | done-checker | 72.239 | 10.6 | 6.8x |
+| TCK-20260803-RETRO-TOOL-SAFETY-AUDIT | 12 | Verify | done-checker | 71.39 | 10.6 | 6.7x |
+| TCK-20260728-PHASE0-PREREQ-CONFIRMATION | 9 | Verify | done-checker | 71.232 | 10.6 | 6.7x |
+| TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5 | 11 | Verify | done-checker | 70.403 | 10.6 | 6.6x |
+| TCK-20260802-CONTEXT-KIND-PRIORITY | 10 | Verify | done-checker | 70.357 | 10.6 | 6.6x |
+| TCK-20260810-HOTFIX-PATH-SEARCH-BEFORE-GREP-GAP | 13 | Verify | done-checker | 70.354 | 10.6 | 6.6x |
+| TCK-20260817-STANDARD-BALANCE-REGRESSION-STALE-SCORING-WEIGHT | 8 | Verify | done-checker | 69.863 | 10.6 | 6.6x |
+| TCK-20260728-RETRIEVAL-RETENTION-REDACTION | 9 | Verify | done-checker | 69.771 | 10.6 | 6.6x |
+| TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING | 11 | Verify | done-checker | 69.706 | 10.6 | 6.6x |
+| TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING | 12 | Verify | done-checker | 69.608 | 10.6 | 6.6x |
+| TCK-20260730-CODEX-RUNTIME-SHADOW | 10 | Verify | done-checker | 69.281 | 10.6 | 6.5x |
+| TCK-20260812-EVENT-TYPE-COVERAGE-SOURCE-COLUMN-STALENESS | 10 | Verify | done-checker | 69.214 | 10.6 | 6.5x |
+| TCK-20260811-REGION-STABILIZATION-GOAL-SCORER | 12 | Verify | done-checker | 69.20400000000001 | 10.6 | 6.5x |
+| TCK-20260810-D22-DORMANT-WIRING-AUDIT | 5 | Verify | done-checker | 68.832 | 10.6 | 6.5x |
+| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 6 | Architecture-Verify | architecture-reviewer | 333.693 | 51.5 | 6.5x |
+| TCK-20260719-PHASE-GLOSSARY-DESCRIPTIONS | 10 | Verify | done-checker | 68.718 | 10.6 | 6.5x |
+| TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP | 12 | Verify | done-checker | 68.62 | 10.6 | 6.5x |
+| TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5 | 12 | Verify | done-checker | 68.563 | 10.6 | 6.5x |
+| TCK-20260720-TAG-CORPUS-REPAIR-SWEEP | 9 | Verify | done-checker | 68.522 | 10.6 | 6.5x |
+| TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE | 14 | Verify | done-checker | 68.467 | 10.6 | 6.4x |
+| TCK-20260710-MECHANICS-AUDITOR-ENFORCEMENT | 9 | Verify | done-checker | 68.185 | 10.6 | 6.4x |
+| TCK-20260730-SHADOW-PROMOTION-GATE-THRESHOLDS | 4 | Verify | done-checker | 68.068 | 10.6 | 6.4x |
+| TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE | 11 | Verify | done-checker | 67.801 | 10.6 | 6.4x |
+| TCK-20260812-DETERMINISM-PARITY-SHADOW-BASELINE-HASH-STALE | 5 | Verify | done-checker | 67.726 | 10.6 | 6.4x |
+| TCK-20260720-CREATE-TICKETS-TAG-SCOPE-FIX | 9 | Verify | done-checker | 67.451 | 10.6 | 6.4x |
+| TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING | 18 | Verify | done-checker | 67.388 | 10.6 | 6.3x |
+| TCK-20260811-ADVENTURE-SHADOW-MIGRATION-GATE | 12 | Verify | done-checker | 67.029 | 10.6 | 6.3x |
+| TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY | 11 | Verify | done-checker | 66.91 | 10.6 | 6.3x |
+| TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH | 9 | Verify | done-checker | 66.618 | 10.6 | 6.3x |
+| TCK-20260803-AGENT-MONITORING-INDEX-PHONY-FIX | 10 | Verify | done-checker | 66.045 | 10.6 | 6.2x |
+| TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER | 11 | Verify | done-checker | 65.935 | 10.6 | 6.2x |
+| TCK-20260803-DOC-UPDATER-CORE-WIRING | 10 | Verify | done-checker | 65.912 | 10.6 | 6.2x |
+| TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG | 10 | Verify | done-checker | 65.907 | 10.6 | 6.2x |
+| TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT | 10 | Verify | done-checker | 65.833 | 10.6 | 6.2x |
+| TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION | 9 | Verify | done-checker | 65.75200000000001 | 10.6 | 6.2x |
+| TCK-20260802-STORED-ARTIFACT-KIND | 11 | Verify | done-checker | 65.601 | 10.6 | 6.2x |
+| TCK-20260728-DEFAULT-PACKET-CRITERIA | 9 | Verify | done-checker | 65.568 | 10.6 | 6.2x |
+| TCK-20260813-HERO-GUILD-SEED456-ECON-PROG-DRIFT | 9 | Verify | done-checker | 65.482 | 10.6 | 6.2x |
+| TCK-20260716-AGENTOPS-DASHBOARD-BACKEND | 9 | Verify | done-checker | 65.363 | 10.6 | 6.2x |
+| TCK-20260807-SIMQ-COMBAT-SCORE-TOLERANCE-DRIFT-INVESTIGATION | 1 | Investigate | investigator | 38.335 | 6.2 | 6.2x |
+| TCK-20260719-STATS-PHASE-OUTLIERS-EXPOSE | 10 | Verify | done-checker | 65.261 | 10.6 | 6.1x |
+| TCK-20260811-MULTI-STEP-PLANNING-DESIGN | 10 | Verify | done-checker | 65.026 | 10.6 | 6.1x |
+| TCK-20260817-HOTFIX-DECISION-TRACE-SELECTED-MOCK-SCORE | 4 | Verify | done-checker | 64.969 | 10.6 | 6.1x |
+| TCK-20260810-COGNITION-STRATEGY-SKILL-BYPASS-SYNC | 4 | Verify | done-checker | 64.663 | 10.6 | 6.1x |
+| TCK-20260728-CONTEXT-PACKET-SCHEMA | 9 | Verify | done-checker | 64.642 | 10.6 | 6.1x |
+| TCK-20260722-CONTRACT-STRUCTURE-TEST-STALE-PATH | 9 | Verify | done-checker | 64.395 | 10.6 | 6.1x |
+| TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY | 9 | Verify | done-checker | 64.068 | 10.6 | 6.0x |
+| TCK-20260803-BRAINSTORM-SKILL-STALE-PATH | 8 | Verify | done-checker | 63.993 | 10.6 | 6.0x |
+| TCK-20260713-SIMQ-RAWSCORE-PERSIST | 11 | Verify | done-checker | 63.903 | 10.6 | 6.0x |
+| TCK-20260811-PUSH-EVENT-SHAPERS-DEFAULT-DEV002-VIOLATION | 5 | Verify | done-checker | 63.125 | 10.6 | 5.9x |
+| TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE | 9 | Verify | done-checker | 63.104 | 10.6 | 5.9x |
+| TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY | 14 | Verify | done-checker | 63.086 | 10.6 | 5.9x |
+| TCK-20260810-COMBAT-BRAVERY-QUARTILE-ENGAGEMENT-INVERSION | 8 | Architecture-Verify | architecture-reviewer | 303.845 | 51.5 | 5.9x |
+| TCK-20260811-ADVENTURE-GOAL-SCORER | 13 | Verify | done-checker | 62.664 | 10.6 | 5.9x |
+| TCK-20260720-TAG-CATEGORY-REGISTRY | 9 | Verify | done-checker | 62.593 | 10.6 | 5.9x |
+| TCK-20260817-HOTFIX-DESIGN-PATTERNS-DOC-CURRENCY-DRIFT | 4 | Verify | done-checker | 62.513999999999996 | 10.6 | 5.9x |
+| TCK-20260720-CREATE-TICKETS-TAG-SCOPE-FIX | 11 | Verify | done-checker | 62.324 | 10.6 | 5.9x |
+| TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY | 12 | Verify | done-checker | 62.247 | 10.6 | 5.9x |
+| TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT | 11 | Verify | done-checker | 61.919 | 10.6 | 5.8x |
+| TCK-20260817-HOTFIX-KGMCP-MISSING-JSONSCHEMA-DEPENDENCY | 6 | Verify | done-checker | 61.396 | 10.6 | 5.8x |
+| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 10 | Verify | done-checker | 61.105 | 10.6 | 5.8x |
+| TCK-20260810-STATUS-DRIFT-CHECK-WIRING | 12 | Verify | done-checker | 61.068 | 10.6 | 5.8x |
+| TCK-20260816-HOTFIX-KGMCP-LOCAL-DATA-BOOTSTRAP-DOCS | 7 | Verify | done-checker | 61.003 | 10.6 | 5.7x |
+| TCK-20260710-TOWN-COUNCIL-HAZARD-DA | 9 | Verify | done-checker | 60.727 | 10.6 | 5.7x |
+| TCK-20260716-AGENTOPS-REPLAY-TIMELINE | 9 | Verify | done-checker | 60.327 | 10.6 | 5.7x |
+| TCK-20260716-AGENTOPS-BUILD-SERVE | 9 | Verify | done-checker | 59.534 | 10.6 | 5.6x |
+| TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG | 9 | Verify | done-checker | 59.236000000000004 | 10.6 | 5.6x |
+| TCK-20260710-CURRENT-RUN-SIDECAR-BASH | 9 | Verify | done-checker | 59.116 | 10.6 | 5.6x |
+| TCK-20260815-KGMCP-P1-MCP-TOOL-SURFACE | 18 | Verify | done-checker | 59.012 | 10.6 | 5.6x |
+| TCK-20260808-LIFECYCLE-SCORE-WORLD-ARCHETYPE-AWARENESS | 1 | Investigate | investigator | 34.624 | 6.2 | 5.6x |
+| TCK-20260714-DATA-RUNS-VERIFY-REGEN | 9 | Verify | done-checker | 58.895 | 10.6 | 5.5x |
+| TCK-20260716-PLAN-GATE-SUBSTRING-FALSEPOS | 5 | Verify | done-checker | 58.796 | 10.6 | 5.5x |
+| TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD | 4 | Review | claude | 286.722 | 52.1 | 5.5x |
+| TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY | 10 | Verify | done-checker | 58.427 | 10.6 | 5.5x |
+| TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY | 15 | Verify | done-checker | 57.293 | 10.6 | 5.4x |
+| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 8 | Verify | done-checker | 57.187 | 10.6 | 5.4x |
+| TCK-20260716-MONITORING-TOOLS-JSONL-WRITE-LOCK | 5 | Verify | done-checker | 56.964 | 10.6 | 5.4x |
+| TCK-20260712-WORKFLOW-FRICTION-FIXES | 9 | Verify | done-checker | 56.509 | 10.6 | 5.3x |
+| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 9 | Verify | done-checker | 56.306 | 10.6 | 5.3x |
+| TCK-20260717-TICKET-TITLE-PARSE-FIX | 9 | Verify | done-checker | 56.244 | 10.6 | 5.3x |
+| TCK-20260710-SIMQ-DEPTH-SOCIAL | 9 | Verify | done-checker | 55.798 | 10.6 | 5.3x |
+| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 10 | Verify | done-checker | 55.73 | 10.6 | 5.2x |
+| TCK-20260716-AGENTOPS-ACTIVITY-GANTT | 9 | Verify | done-checker | 55.615 | 10.6 | 5.2x |
+| TCK-20260814-KGMCP-CONTRACT-SCHEMAS | 12 | Verify | done-checker | 55.385 | 10.6 | 5.2x |
+| TCK-20260808-ENTITY-LIFECYCLE-SCORE-METRICS | 2 | Review | implementer | 268.87 | 52.1 | 5.2x |
+| TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT | 5 | Verify | done-checker | 54.613 | 10.6 | 5.1x |
+| TCK-20260710-SIMQ-DEPTH-INFORMATION | 9 | Verify | done-checker | 54.366 | 10.6 | 5.1x |
+| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 12 | Verify | done-checker | 53.639 | 10.6 | 5.1x |
+| TCK-20260713-SIMQ-RAWSCORE-PERSIST | 12 | Verify | done-checker | 53.609 | 10.6 | 5.0x |
+| TCK-20260710-SIMQ-DEPTH-FACTION | 9 | Verify | done-checker | 53.172 | 10.6 | 5.0x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 260.409 | 52.1 | 5.0x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 260.409 | 52.1 | 5.0x |
+| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 9 | Verify | done-checker | 53.035 | 10.6 | 5.0x |
+| TCK-20260717-TICKETS-TABLE-PAGINATION | 10 | Verify | done-checker | 53.032 | 10.6 | 5.0x |
+| TCK-20260710-TOWN-COUNCIL-HAZARD-DA | 10 | Verify | done-checker | 53.011 | 10.6 | 5.0x |
+| TCK-20260717-CSS-LAYER-PADDING-FIX | 9 | Verify | done-checker | 52.773 | 10.6 | 5.0x |
+| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 11 | Verify | done-checker | 52.569 | 10.6 | 5.0x |
+| TCK-20260713-SIMQ-EVAL-PROFILE-BUG | 9 | Verify | done-checker | 52.485 | 10.6 | 4.9x |
+| TCK-20260717-GANTT-TIME-AXIS | 10 | Verify | done-checker | 51.316 | 10.6 | 4.8x |
+| TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP | 8 | Architecture-Verify | architecture-reviewer | 232.44400000000002 | 51.5 | 4.5x |
+| TCK-20260717-GANTT-TIME-AXIS | 6 | Architecture-Verify | architecture-reviewer | 232.32 | 51.5 | 4.5x |
+| TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE | 1 | Investigate | investigator | 24.923000000000002 | 6.2 | 4.0x |
+| TCK-20260808-GROWTH-TRAJECTORY-STILL-NEGATIVE-POST-FIX | 8 | Verify | done-checker | 42.288000000000004 | 10.6 | 4.0x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 202.994 | 52.1 | 3.9x |
+| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 4 | Review | architecture-reviewer | 184.09 | 52.1 | 3.5x |
+| TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE | 2 | Review | implementer | 181.614 | 52.1 | 3.5x |
+| TCK-20260730-CLAUDE-EXECUTION-IDENTITY | 4 | Review | architecture-reviewer | 172.874 | 52.1 | 3.3x |
+| TCK-20260813-ADVENTURE-ROUTE-UTILITY-SCALE-NEVER-WINS-TIER5 | 4 | Review | architecture-reviewer | 163.813 | 52.1 | 3.1x |
+| TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD | 2 | Investigate | claude | 19.474 | 6.2 | 3.1x |
+| TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY | 1 | Investigate | investigator | 18.852 | 6.2 | 3.0x |
+
+## Retrieval Quality
+
+_Retrieval-event volume reflects test/manual invocations only; visible under `--all`, not `--days`/`--week`, since these run_ids are deliberately unlinked from any `runs.jsonl` row._
+
+### Cache Rates by Level
+
+_No cache-level data this period._
+
+### Noise Indicators
+
+| Signal | Numerator | Denominator | Ratio |
+|---|---|---|---|
+| Candidate → Selected | 0 | 0 | n/a |
+| Selected → Cited | 0 | 0 | n/a |
+
+### Freshness / Authority Distribution
+
+**Authority**
+
+_No authority data this period._
+
+**Freshness**
+
+_No freshness data this period._
+
+### Expansion Rate
+
+**Expansion rate:** 0.0%
+
+## Shadow vs. Baseline Retrieval Comparison
+
+_Compares shadow-packet-covered (real TCK-... run_id) retrieval events against the synthetic/manual-invocation baseline, using the same cache-rate/noise-ratio/freshness-authority/expansion-rate measurement domain as `## Retrieval Quality` above. Comparison data only._
+
+| Metric | Shadow | Baseline |
+|---|---|---|
+| Retrieval event count | 24 | 0 |
+| Candidate → Selected ratio | n/a | n/a |
+| Selected → Cited ratio | n/a | n/a |
+| Expansion rate | 0.0% | 0.0% |
+
+**Cache Rates by Level — Shadow**
+
+_No cache-level data this period._
+
+**Cache Rates by Level — Baseline**
+
+_No cache-level data this period._
+
+**Freshness / Authority — Shadow**
+
+Authority: _none_
+Freshness: _none_
+
+**Freshness / Authority — Baseline**
+
+Authority: _none_
+Freshness: _none_
+
+## Search & Investigation Effort
+
+### Search Calls (Follow-Up Search Tooling)
+
+**Total:** 2605
+
+### Raw Investigation (Read) Calls
+
+**Total:** 25371
+**Read-to-search ratio:** 9.7393
+
+## Tool Safety Audit
+
+### Search-Before-Grep Compliance (Investigate Phase)
+
+**Compliance rate:** 66.4% (158/238 Investigate-phase calls)
+
+### Parity Ledger Write-Safety
+
+**`docs/parity_ledger/*.yaml` edits co-occurring with a same-run `parity_index.py build` call:** 20
+**Unsafe `parity_index.py build` invocations (real repo path):** 50
+
+### Read-Count Correlation (Search-Before-Grep Compliance)
+
+| Group | Pairs | Median Read count | Avg Read count |
+|---|---|---|---|
+| Compliant | 158 | 12.0 | 13.8 |
+| Non-compliant | 80 | 9.5 | 14.8 |
+
+## Parity Index Read-Path Usage
+
+**`entry`/`impact`/`health` call count:** 0/71354 Bash rows scanned
+
+_Counts tools.jsonl rows where tool == "Bash" and input_summary matches parity_index.py followed immediately by entry, impact, or health (path-anchored, so a filename mention alone — e.g. test_parity_index.py, --help, `git log -- ... parity_index.py`, `sed -n '1,60p' tools/parity_index.py` — never counts). bash_rows_scanned is the total Bash-tool row population this detector ran against (the section's own 'N' denominator). Confirmed 0 real call sites as of TCK-20260731-PARITY-READPATH-GATE's Gate A review (reviewed GO, not yet wired into any real workflow call site) — this is the expected, correct value until a future ticket adds a real entry/impact/health call site, not a bug._
+
+## KGMCP Cache Efficiency
+
+_Reflects the full retrieval_cache_access_log corpus regardless of this report's --days/--week/--all period selection — these rows are logged against `.claude/current_run` sidecar attribution at call time, not `runs.jsonl` timestamps._
+
+**Cache Efficiency: NOT IN USE** — Zero KGMCP cache hit/write events recorded against 2605 real search_docs/graphify/ToolSearch calls in this corpus — retrieval work is not touching the cache path at all. This is a bypass, not merely low reuse: the cache cannot be judged efficient or inefficient because it is not being exercised.
+
+| Metric | Value |
+|---|---|
+| Total hits | 0 |
+| Total writes | 0 |
+| Overall reuse rate | n/a |
+| Dead writes (never hit) | 0 |
+| Repeated refetches (within 300s) | 0 |
+| Real search/graphify calls (coverage denominator) | 2605 |
+| Coverage rate (cache events / search calls) | 0.0% |
+
+_Derived from tools/retrieval_cache.py::read_cache_access_log()'s real retrieval_cache_access_log rows (Level 1 provider-result + Level 2 context-packet cache hit/write events only — 'invalidate' is a schema-supported but never-emitted event_type today) plus tools.jsonl's real search_docs/graphify/ToolSearch call volume (via build_search_count_section(), for `coverage` only). reuse_rate = hit / (hit + write) per ticket/agent/overall — the fraction of real access events served from cache rather than re-fetched. repeated_refetches flags a 'write' event for the same real cache row (same cache_level + query_hash/repo_branch_scope, or same cache_level + packet_id) following any prior event for that row within 300s — content re-fetched instead of reused. dead_writes flags a 'write' never followed by a 'hit' before the next write to that same row (or the end of the observed log) — a wasted write, as of what this function can currently see (a row that is still live may yet be hit later; this is not a permanent-deadness claim past the observed data). coverage compares total cache events against real search/graphify tool-call volume — a period with substantial search activity but few/zero cache events means retrieval work is bypassing the cache path, a real, distinct finding from a low reuse_rate. `ticket_id`/`agent` absent on a row (ad-hoc calls or a stale sidecar) are grouped under the literal 'unattributed' key, mirroring build_search_count_section()'s run_id=None convention. `stale_attribution_count` counts rows whose `.claude/current_run` sidecar pointed at an already-closed ticket at log time (tools/retrieval_cache.py::_sidecar_run_is_stale()) — a real, disclosed known limitation of sidecar-based attribution (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD Scope item 6), not a fixed one; these rows are still counted in hit/write/reuse-rate totals above, just flagged rather than silently trusted or dropped. `verdict`/`verdict_explanation` are a rule-based summary of the four signals above (reuse rate, repeated refetches, dead writes, coverage) — every clause is a literal readout of an already-computed number, never a fabricated score._
+
+## Skill Usage
+
+### Per-Skill Invocation Counts (This Period)
+
+| Skill | Invocations |
+|---|---|
+| agent-monitoring-retro | 21 |
+| artifact-design | 3 |
+| brainstorming | 5 |
+| claude-api | 1 |
+| claude-in-chrome | 3 |
+| cognition-strategy | 1 |
+| create-tickets | 31 |
+| dataviz | 3 |
+| fewer-permission-prompts | 2 |
+| graphify | 72 |
+| implement-epic | 18 |
+| implement-ticket | 73 |
+| run | 2 |
+| simq-audit | 8 |
+| update-config | 2 |
+
+**Total:** 245
+
+_Derived from tools.jsonl's literal `tool` field, filtered to `tool == 'Skill'`, with the skill name extracted from `input_summary` via regex (r\"'skill':\s*'([^']*)'\") — never json.loads(), since input_summary is a Python dict-repr string, not JSON. Records where the regex finds no match are counted under `unparseable`, never silently dropped. `unattributed` covers Skill invocations with no run_id (interactive, outside any workflow run). Distinct from generate_retro.py's tag_breakdown_skill aggregate — this is a raw per-skill invocation count, not a tag-driven gate-hit count._
+
+### Zero-Invocation Flags (All-Time, 14-Day Grace Period)
+
+**Flagged (confirmed age past grace period):** api-design-principles, architecture
+**Flagged (unknown age, no `date_added`):** debugging-strategies, doc-coauthoring, frontend-design, prompt-builder, python-performance-optimization, python-testing-patterns, test-driven-development
+
+_All-time (never period-scoped) cross-reference of the real .claude/skills/*/SKILL.md catalog against build_skill_usage_section(tools)'s per_skill counts. A skill with any nonzero invocation count is never flagged, regardless of age. Of the remaining zero-invocation skills: `flagged_stale` requires a real, parseable `date_added` older than the 14-day grace period — a confirmed-age signal. `flagged_unknown_age` covers skills with no (or unparseable) `date_added` and zero invocations — an honest, lower-certainty signal, not proof of staleness, since no authorship date can be established. This fail-open policy on missing date_added is deliberate: it is what makes backend-testing's real pre-TCK-20260805-COMMUNITY-SKILL-SWAP-UNDISCLOSED state (no date_added field at all) correctly flaggable, per TCK-20260810-SKILL-USAGE-RETRO-TRACKING's AC2._
 
 ## Notes
 

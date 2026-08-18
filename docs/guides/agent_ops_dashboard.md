@@ -124,9 +124,21 @@ Two sections, stacked in one scrollable page rather than further nav tabs
   failure and reason-code breakdowns, a 2-series grouped bar chart for tier
   distribution (count vs. done), summary-quality stat tiles, a top-15 table of
   agents by call volume (with per-status counts), a table of slow runs, a
-  table of per-phase status breakdown (Phase Status Distribution), and up to
+  table of per-phase status breakdown (Phase Status Distribution), up to
   two outlier tables (duration-by-tier, cost-proxy-score-by-phase, each shown
-  only when non-empty).
+  only when non-empty), a **Skill usage** subsection (a stat tile for total
+  invocations plus a per-skill magnitude bar chart), and a **KGMCP cache
+  efficiency** subsection: a color-coded verdict callout ("Cache Efficiency:
+  EFFECTIVE/MODERATE/LOW VALUE/NOT IN USE/NO DATA" plus a 1-3 sentence
+  explanation — green/yellow/red respectively) summarizing real
+  `knowledge-index/retrieval_cache.db` hit/write activity, stat tiles (total
+  hits/writes, reuse rate, dead writes, repeated refetches, coverage vs. real
+  `search_docs`/`graphify` call volume), and per-ticket/per-agent tables. A
+  "NOT IN USE" verdict — zero cache events despite real search activity —
+  is a genuine, surfaced finding (the cache path being bypassed entirely),
+  not hidden by an empty section; see
+  `docs/observability/agent_ops_dashboard_contract.md`'s `kgmcp_cache_efficiency`
+  paragraph for the full field list and computation source.
 - **Ticket Corpus** — stat tiles (scanned files, included tickets, skipped,
   artifact-completeness percentage), a 14-day velocity bar chart, and four
   distribution bar charts (tier/type/priority/layer). This is the same data

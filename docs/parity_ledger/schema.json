@@ -41,17 +41,41 @@
         "type": ["string", "null"]
       }
     },
-    "if": {
-      "properties": { "status": { "enum": ["verified", "divergent"] } }
-    },
-    "then": {
-      "required": ["v2_evidence", "test_path"]
-    },
-    "if": {
-      "properties": { "status": { "const": "divergent" } }
-    },
-    "then": {
-      "required": ["divergence_note"]
-    }
+    "allOf": [
+      {
+        "if": {
+          "properties": { "status": { "enum": ["verified", "divergent"] } }
+        },
+        "then": {
+          "properties": {
+            "v2_evidence": { "type": "string" },
+            "test_path": { "type": "string" }
+          },
+          "required": ["v2_evidence", "test_path"]
+        }
+      },
+      {
+        "if": {
+          "properties": { "status": { "const": "divergent" } }
+        },
+        "then": {
+          "properties": {
+            "divergence_note": { "type": "string" }
+          },
+          "required": ["divergence_note"]
+        }
+      },
+      {
+        "if": {
+          "properties": { "priority": { "const": "P0" } }
+        },
+        "then": {
+          "properties": {
+            "test_path": { "type": "string" }
+          },
+          "required": ["test_path"]
+        }
+      }
+    ]
   }
 }

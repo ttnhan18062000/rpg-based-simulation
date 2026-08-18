@@ -4,6 +4,7 @@ import time
 from src.domains.optimization.feature_flags import FeatureFlagManager, FeatureMode
 from src.domains.optimization.rollout_profiles import RolloutProfileManager, HardwareClass
 from src.domains.optimization.budget_manager import PhaseBudgetManager, PhaseBudget
+from tests.tools.perf_assertions import assert_perf_threshold
 
 def run_performance_ticks(entities_count: int, ticks: int, profile_class: HardwareClass):
     ff = FeatureFlagManager()
@@ -40,24 +41,24 @@ def run_performance_ticks(entities_count: int, ticks: int, profile_class: Hardwa
 def test_scenario_10_1_small_full_stack():
     # 30 entities, 10 ticks (shortened for unit test speed)
     elapsed_ms = run_performance_ticks(entities_count=30, ticks=10, profile_class=HardwareClass.CLASS_B)
-    assert elapsed_ms < 1000.0
+    assert_perf_threshold(elapsed_ms, 1000.0, "Scenario 10.1 (30 entities, 10 ticks) elapsed time", op="<")
 
 def test_scenario_10_2_medium_selected_stack():
     # 100 entities, 10 ticks
     elapsed_ms = run_performance_ticks(entities_count=100, ticks=10, profile_class=HardwareClass.CLASS_B)
-    assert elapsed_ms < 1000.0
+    assert_perf_threshold(elapsed_ms, 1000.0, "Scenario 10.2 (100 entities, 10 ticks) elapsed time", op="<")
 
 def test_scenario_10_3_large_conservative():
     # 500 entities, 5 ticks
     elapsed_ms = run_performance_ticks(entities_count=500, ticks=5, profile_class=HardwareClass.CLASS_A)
-    assert elapsed_ms < 1500.0
+    assert_perf_threshold(elapsed_ms, 1500.0, "Scenario 10.3 (500 entities, 5 ticks) elapsed time", op="<")
 
 def test_scenario_10_4_event_heavy_emergence():
     # 100 entities, 10 ticks
     elapsed_ms = run_performance_ticks(entities_count=100, ticks=10, profile_class=HardwareClass.CLASS_C)
-    assert elapsed_ms < 1000.0
+    assert_perf_threshold(elapsed_ms, 1000.0, "Scenario 10.4 (100 entities, 10 ticks) elapsed time", op="<")
 
 def test_scenario_10_5_cooperation_candidate_explosion():
     # 200 entities, 10 ticks
     elapsed_ms = run_performance_ticks(entities_count=200, ticks=10, profile_class=HardwareClass.CLASS_C)
-    assert elapsed_ms < 1000.0
+    assert_perf_threshold(elapsed_ms, 1000.0, "Scenario 10.5 (200 entities, 10 ticks) elapsed time", op="<")

@@ -10,6 +10,7 @@ from src.core.builder import V2EntityBuilder
 from src.observability.config import ObservabilityConfig
 from src.observability.stream.factory import get_event_stream_adapter, reset_event_stream_adapter
 from src.observability.stream.adapters import NullEventStreamAdapter
+from tests.tools.perf_assertions import assert_perf_threshold
 
 
 def test_scale_profile_resolution(monkeypatch):
@@ -76,7 +77,7 @@ def test_scale_performance_and_footprint(monkeypatch):
         duration = time.perf_counter() - start_time
         
         # Assertions
-        assert duration < 1.0, f"Performance bottleneck detected: 10 ticks took {duration:.4f}s"
+        assert_perf_threshold(duration, 1.0, "10 observability ticks wall time (s)", op="<")
         
         # Verify EventRecorder and NullEventStreamAdapter buffers are completely empty
         # (Null adapter drops everything instantly, preserving memory)

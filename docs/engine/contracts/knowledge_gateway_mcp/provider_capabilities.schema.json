@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Knowledge Gateway MCP — ProviderCapabilities Descriptor",
+  "description": "Phase 0 contract-only, shape definition per docs/plans/knowledge-gateway-mcp-proposal.md §8.1. Populated instances live in sibling provider_capabilities_context_search.json and provider_capabilities_graphify.json. The router must never claim a capability a descriptor does not advertise — see knowledge_gateway_mcp_contract.md's capability_allows() contract.",
+  "schema_version": 1,
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "adapter_version",
+    "stable_entity_ids",
+    "evidence_granularities",
+    "fine_grained_fingerprints",
+    "incremental_refresh",
+    "deterministic_relationships",
+    "historical_queries",
+    "negative_knowledge_support",
+    "cancellation",
+    "timeout",
+    "branch_awareness"
+  ],
+  "properties": {
+    "provider_id": {
+      "type": "string"
+    },
+    "adapter_version": {
+      "type": ["string", "null"],
+      "description": "null is the honest value when no adapter code exists yet to report a version — see Design Decision D1 in the plan for why this is not left as a made-up string."
+    },
+    "stable_entity_ids": {
+      "type": "string",
+      "enum": ["NONE", "PARTIAL", "FULL"]
+    },
+    "evidence_granularities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "fine_grained_fingerprints": {
+      "type": "boolean"
+    },
+    "incremental_refresh": {
+      "type": "boolean"
+    },
+    "deterministic_relationships": {
+      "type": "string",
+      "enum": ["NONE", "PARTIAL", "FULL"]
+    },
+    "historical_queries": {
+      "type": "boolean"
+    },
+    "negative_knowledge_support": {
+      "type": "string",
+      "enum": ["NONE", "SCOPED", "COMPLETE"]
+    },
+    "cancellation": {
+      "type": "boolean"
+    },
+    "timeout": {
+      "type": "boolean"
+    },
+    "branch_awareness": {
+      "type": "string",
+      "enum": ["NONE", "CALLER_SCOPED", "PROVIDER_NATIVE"]
+    },
+    "generation_fingerprint": {
+      "type": ["boolean", "null"],
+      "description": "Optional per §8.1's own annotation on this field."
+    }
+  }
+}

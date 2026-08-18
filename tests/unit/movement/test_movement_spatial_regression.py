@@ -163,7 +163,7 @@ def test_retreat_evasion_skips_oa():
 def test_normal_move_triggers_oa():
     """Verify that WANDER move triggers opportunity attacks when engaged."""
     hero = create_mock_entity(1, (1.0, 1.0), role=EntityRole.HERO, mode=MovementMode.WANDER)
-    monster = create_mock_entity(2, (2.0, 1.0), faction=2)
+    monster = create_mock_entity(2, (2.0, 1.0), faction=Faction.MONSTER_HORDE)
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: monster})
     

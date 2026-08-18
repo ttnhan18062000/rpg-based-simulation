@@ -21,18 +21,29 @@ _CONTRACT_PATH = _REPO_ROOT / "docs" / "engine" / "contracts" / "context_packet_
 # changes to any of these files. This is a one-off scope guard for this ticket, not a durable
 # invariant: a future ticket that intentionally changes one of these files should update (or
 # remove) the corresponding constant, not treat a failure here as a regression to work around.
+#
+# tools/parity_index.py removed (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP, 2026-08-17):
+# this file has legitimately changed via unrelated later work since TCK-20260802-CONTEXT-KIND-
+# PRIORITY's own Implementation start (e.g. TCK-20260731-PARITY-READPATH-GATE, TCK-20260810-
+# PARITY-LEDGER-WRITE-SAFETY-TOOL) — confirmed via `git log` that TCK-20260802-CONTEXT-KIND-
+# PRIORITY itself never touched it. This hash snapshot only ever validly reflected that ticket's
+# own committed state at authoring time, not a permanent repo-wide ban. The remaining entries
+# below still correctly protect the files that ticket's own diff actually left untouched.
+#
+# tools/generate_registry.py ALSO removed (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP,
+# 2026-08-17): discovered stale beyond this ticket's own Investigate-phase pytest run, which only
+# ever surfaced the tools/parity_index.py mismatch above because this test's assert-in-a-loop
+# stops at the first failing entry in dict iteration order (parity_index.py was inserted before
+# generate_registry.py) — masking that generate_registry.py had also drifted. Confirmed via
+# `git log` that TCK-20260802-CONTEXT-KIND-PRIORITY never touched tools/generate_registry.py
+# either; its real last-touch commit (29d78798, 2026-08-14) postdates this ticket's own
+# Implementation start (2026-08-02).
 _EXPECTED_TOOLS_HASHES = {
     "tools/context_packet_assembler.py": (
         "003565a6757a929b9560285364b0a6b58569acba783a806a4a56add1cd31fcde"
     ),
     "tools/hybrid_retrieval.py": (
         "da65a5d08c14fc562110786f84d810990b7ecf2d907b6661e00692633489b71e"
-    ),
-    "tools/parity_index.py": (
-        "84c9b064d5cf4201803254d159434fefe8d7ae5fde034eeab7760e9715b42bae"
-    ),
-    "tools/generate_registry.py": (
-        "28125dfedc5b81d936b1f3ccf3f0e6743675256420f0803be5460c927461ee6a"
     ),
 }
 

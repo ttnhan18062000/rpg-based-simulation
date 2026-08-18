@@ -1,7 +1,10 @@
 """
 Anti-drift guard for docs/guidelines/design_patterns.md.
-Ensures the doc does not present V1 GoalScorer/src/ai/goals/ as the V2 extension point.
-TCK-20260626-FIX-DESIGN-PATTERNS.
+Ensures the doc does not present V1 GoalEvaluator/GOAL_REGISTRY as still-current. `GoalScorer` and
+`src/ai/goals/` were archived as V1-only when this guard was authored
+(TCK-20260626-FIX-DESIGN-PATTERNS) but were deliberately revived as the current V2 tier-5 extension
+point in TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE (see design_patterns.md's own primary-section
+prose) — they are intentionally excluded from `v1_symbols` below, not an oversight.
 """
 import re
 
@@ -16,14 +19,14 @@ def _load() -> str:
 
 def test_v1_symbols_not_in_primary_sections():
     """
-    GoalScorer, GoalEvaluator, GOAL_REGISTRY, and src/ai/goals/ must not appear
-    in any primary (H2) section outside the legacy archive section.
+    GoalEvaluator and GOAL_REGISTRY must not appear in any primary (H2) section
+    outside the legacy archive section.
 
     Strategy: split on the legacy section header; check that V1 symbols do not
     appear in the content BEFORE the legacy section header.
     """
     content = _load()
-    v1_symbols = ["GoalScorer", "GoalEvaluator", "GOAL_REGISTRY", "src/ai/goals/"]
+    v1_symbols = ["GoalEvaluator", "GOAL_REGISTRY"]
 
     # Find where the legacy section starts
     legacy_idx = content.find(LEGACY_SECTION_HEADER)

@@ -18,6 +18,7 @@ from src.ai.goals.adventure_scorer import AdventureGoalScorer
 from src.core.builder import V2EntityBuilder
 from src.core.state import CombatComponent, StaminaComponent, BiologicalComponent, PersonalityComponent, AuthoritativeState
 from src.world.providers.requirements import PerformanceBudgets
+from tests.tools.perf_assertions import assert_perf_threshold
 
 
 def _entity(e_id):
@@ -96,4 +97,4 @@ def test_phase3_adventure_decision_perf_budget():
     # route-generation/opportunities cost per hero. The existing 70ms budget already carries
     # real headroom over that steady-state (per this file's own prior 5ms->70ms rebaseline
     # note), so it transfers unchanged -- confirmed by remeasurement, not assumed.
-    assert t_delta_ms < 70.0, f"Adventure goal scorer execution is too slow: {t_delta_ms}ms"
+    assert_perf_threshold(t_delta_ms, 70.0, "Adventure goal scorer execution (105 entities)", op="<")

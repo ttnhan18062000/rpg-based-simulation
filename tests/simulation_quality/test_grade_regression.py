@@ -608,6 +608,8 @@ def test_grade_anchor_file_exists_and_valid(grade_anchors: dict) -> None:
     assert guard_entry["grade"] == "S"
     assert guard_entry["score"] > 2.0
     guard_report = _load_calibration_report(guard_run_key)
+    if guard_report is None:
+        pytest.skip(f"Calibration report not found: data/calibration/{guard_run_key}/quality_report.json")
     assert guard_entry["score"] != guard_report["pillars"][guard_pillar]["raw_score"], (
         f"{guard_run_key}/{guard_pillar}: anchor 'score' matches raw_score — "
         "normalized_score should have been persisted, not raw_score"

@@ -362,7 +362,7 @@ One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joine
 | `agent` | string | Yes | Agent identifier active during this tool call, matching the `agent` literal at the corresponding call site. Same nullability rules as `phase`. |
 | `ts` | ISO 8601 | No | UTC timestamp of the tool call (captured at PostToolUse). |
 | `tool` | string | No | Tool name: `Read`, `Edit`, `Write`, `Bash`, `Agent`, `MultiEdit`, etc. |
-| `input_summary` | string | No | Extracted key identifier from tool input. Per-tool: file path for Read/Edit/Write/MultiEdit; first 80 chars of command for Bash; description/prompt for Agent. Max 120 chars. |
+| `input_summary` | string | No | Extracted key identifier from tool input. Per-tool: file path for Read/Edit/Write/MultiEdit; first 80 chars of command for Bash; description/prompt for Agent; for `Skill`, a Python dict-repr string (e.g. `"{'skill': 'graphify', 'args': None}"`), **not JSON** — `json.loads()` on it raises `json.JSONDecodeError`. The skill name is extracted via regex (`r"'skill':\s*'([^']*)'"`) by `build_skill_usage_section` (`generate_retro.py`, relocated from `skill_usage_metric.py` by `TCK-20260810-SKILL-USAGE-RETRO-TRACKING`). Max 120 chars. |
 | `status` | string | No | `ok` \| `failed`. Derived from the tool response's error flag. |
 | `duration_ms` | int | Yes | Wall-clock milliseconds from PreToolUse to PostToolUse. `null` if the pre-hook temp file was missing. |
 
@@ -402,6 +402,18 @@ Tool calls made outside a workflow (interactive Claude Code session) are still r
 |---|---|
 | `ok` | Tool completed without error. |
 | `failed` | Tool response contained an error flag or `"ERROR"` prefix. |
+
+### Detecting a specific script's subcommand in `Bash` rows
+
+Several `generate_retro.py` predicates (`_is_parity_index_build_call`, and, as of
+`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`, `_is_parity_index_readpath_call`) classify a
+`tool == "Bash"` row by matching `input_summary` against a specific script and subcommand shape,
+rather than a bare substring check — `_is_parity_index_readpath_call` uses a path-anchored regex
+(`(?:^|/)parity_index\.py\s+(entry|impact|health)\b`) so a bare filename mention (`--help`, `git
+log -- ... parity_index.py`, a `pytest`/`sed` command referencing the file by name) is excluded,
+matching only an actual subcommand invocation of that script. This convention is not separately
+documented per-predicate here — see each predicate's own docstring in `generate_retro.py` for its
+exact match rule.
 
 ---
 

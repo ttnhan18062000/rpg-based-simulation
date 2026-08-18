@@ -160,7 +160,7 @@ def test_load_contract_validates_continuation_policy_and_terminal_statuses():
     assert bundle.continuation_policy.mode == "continue_until_terminal_or_hard_gate"
     assert bundle.continuation_policy.instruction.strip()
     assert bundle.continuation_policy.non_gates
-    assert len(bundle.terminal_statuses) == 15
+    assert len(bundle.terminal_statuses) == 16  # was 15; TEST_SCOPE_COVERAGE_FAILED added 2026-08-18
     assert {entry["value"] for entry in bundle.terminal_statuses} >= {
         "DONE", "EPIC_SCOPED", "NEEDS_HUMAN_INPUT", "NEEDS_CHANGES", "BLOCKED",
         "DOD_BLOCKED", "CONFLICTS_DETECTED", "TAGS_NOT_REGISTERED", "SECURITY_BLOCKED",

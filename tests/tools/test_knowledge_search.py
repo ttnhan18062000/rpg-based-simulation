@@ -91,6 +91,31 @@ def _deps_available() -> bool:
     return ok
 
 
+def _numpy_available() -> bool:
+    """Return True if numpy is importable. Not covered by _deps_available()'s
+    sentence-transformers/sqlite-vec check -- cmd_query()'s hybrid-fusion branch imports it
+    separately (tools/knowledge_search.py:998), and it is not installed in CI's lean
+    requirements.txt environment (requirements-knowledge.txt is dev-only, per that file's own
+    header comment; numpy isn't declared in either)."""
+    try:
+        import numpy  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def _bm25_deps_available() -> bool:
+    """Return True if rank_bm25 and numpy are importable. Unlike sentence-transformers/
+    sqlite-vec (requirements-knowledge.txt, local-dev-only per requirements.txt's own
+    header comment), these two are the minimum needed for BM25/hybrid-fusion code paths and
+    are not installed in CI's lean requirements.txt environment either."""
+    try:
+        import rank_bm25  # noqa: F401
+    except ImportError:
+        return False
+    return _numpy_available()
+
+
 # ---------------------------------------------------------------------------
 # Group 1 — Build happy path (AC1)
 # ---------------------------------------------------------------------------
@@ -752,6 +777,77 @@ class TestDocsChunkExtraction:
             assert chunk["source_type"] == "doc_chunk"
             assert chunk["section"] == "mechanics"
 
+    def test_collect_docs_chunks_preserves_full_nested_path(self, tmp_path):
+        """doc_id preserves the full nested relative path under docs_root, not just the
+        immediate subdirectory. Fixes TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION."""
+        docs_root = tmp_path / "docs"
+        nested_dir = docs_root / "engine" / "contracts" / "knowledge_gateway_mcp"
+        nested_dir.mkdir(parents=True)
+        content = "## Overview\n\n" + ("word " * 80) + "\n"
+        (nested_dir / "foo.md").write_text(content, encoding="utf-8")
+
+        chunks = _ks._collect_docs_chunks(docs_root, tmp_path)
+
+        assert len(chunks) >= 1
+        doc_ids = {c["doc_id"] for c in chunks}
+        assert doc_ids == {"engine/contracts/knowledge_gateway_mcp/foo"}, (
+            f"Expected full nested doc_id, got: {doc_ids}"
+        )
+        # Pre-fix (buggy) behavior would have truncated to "engine/foo" — assert that
+        # truncated form is NOT what was produced, proving this test exercises the bug.
+        assert "engine/foo" not in doc_ids
+
+    def test_collect_docs_chunks_no_collision_same_stem_different_subdir(self, tmp_path):
+        """Two docs with the same stem under different nested subdirectories of the same
+        top-level section must produce distinct doc_id values, not collide."""
+        docs_root = tmp_path / "docs"
+        dir_a = docs_root / "engine" / "a"
+        dir_b = docs_root / "engine" / "b"
+        dir_a.mkdir(parents=True)
+        dir_b.mkdir(parents=True)
+        content = "## Overview\n\n" + ("word " * 80) + "\n"
+        (dir_a / "foo.md").write_text(content, encoding="utf-8")
+        (dir_b / "foo.md").write_text(content, encoding="utf-8")
+
+        chunks = _ks._collect_docs_chunks(docs_root, tmp_path)
+
+        doc_ids = {c["doc_id"] for c in chunks}
+        assert doc_ids == {"engine/a/foo", "engine/b/foo"}, (
+            f"Expected distinct doc_ids for same-stem nested docs, got: {doc_ids}"
+        )
+
+    def test_collect_docs_chunks_single_level_path_unchanged(self, tmp_path):
+        """A depth-1 doc still produces the same doc_id shape as before the fix — a strict
+        generalization, not a behavior change, for the common non-nested case."""
+        docs_root = tmp_path / "docs"
+        mech_dir = docs_root / "mechanics"
+        mech_dir.mkdir(parents=True)
+        content = "## Overview\n\n" + ("word " * 80) + "\n"
+        (mech_dir / "02_combat_laws.md").write_text(content, encoding="utf-8")
+
+        chunks = _ks._collect_docs_chunks(docs_root, tmp_path)
+
+        assert len(chunks) >= 1
+        for chunk in chunks:
+            assert chunk["doc_id"] == "mechanics/02_combat_laws"
+
+    def test_chunk_id_anchor_suffix_unaffected_by_nesting_fix(self, tmp_path):
+        """Chunk-level id anchor composition (heading-slug, #, zero-padded seq) stays
+        byte-identical for nested docs — only the pre-# doc_id portion's shape changes."""
+        docs_root = tmp_path / "docs"
+        nested_dir = docs_root / "engine" / "contracts" / "knowledge_gateway_mcp"
+        nested_dir.mkdir(parents=True)
+        content = "## The Overview Section\n\n" + ("word " * 80) + "\n"
+        (nested_dir / "foo.md").write_text(content, encoding="utf-8")
+
+        chunks = _ks._collect_docs_chunks(docs_root, tmp_path)
+
+        assert len(chunks) == 1
+        chunk = chunks[0]
+        expected_doc_id = "engine/contracts/knowledge_gateway_mcp/foo"
+        assert chunk["doc_id"] == expected_doc_id
+        assert chunk["id"] == f"{expected_doc_id}#{_ks._heading_slug('The Overview Section')}-000"
+
     def test_collect_docs_chunks_heading_text(self, tmp_path):
         """Chunk heading field preserves the H2 heading text."""
         docs_root = tmp_path / "docs"
@@ -1288,6 +1384,7 @@ class TestTokenize:
 # Group B — TestBm25BuildLoad (unit, non-slow)
 # ---------------------------------------------------------------------------
 
+@pytest.mark.skipif(not _bm25_deps_available(), reason="rank_bm25/numpy not installed")
 class TestBm25BuildLoad:
     """Unit tests for _build_bm25_index() and _load_bm25()."""
 
@@ -1862,6 +1959,41 @@ class TestManifestHelpers:
         assert result == 0
         assert "up to date" in output.lower() or "0 files changed" in output.lower()
 
+    def test_build_incremental_noop_leaves_stale_doc_id_documented(self, tmp_path, monkeypatch):
+        """Locks in the (now-understood) contract that cmd_build_incremental()'s only
+        change-detection signal is per-path mtime, not corpus content/derivation logic — so an
+        in-process doc_id-scheme change with no corpus-tracked file mtime change is a silent
+        no-op that leaves knowledge.db holding stale doc_id values. This is not a bug being
+        fixed here; it is a guard against a future "optimization" that swaps a required full
+        rebuild for --incremental without a deliberate, scoped change to add scheme versioning.
+        See TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION."""
+        corpus, db = self._make_corpus(tmp_path)
+        _ks._write_manifest(corpus, db)
+        db_bytes_before = b"pre-existing knowledge.db contents"
+        db.write_bytes(db_bytes_before)
+
+        # Simulate a doc_id-scheme change: _collect_corpus now returns different doc_id/id
+        # values for the same on-disk paths (no mtime change), mirroring this ticket's fix.
+        changed_corpus = [
+            {**doc, "id": doc["id"] + "-new-scheme", "doc_id": doc.get("doc_id", doc["id"]) + "-new-scheme"}
+            for doc in corpus
+        ]
+        monkeypatch.setattr(_ks, "_collect_corpus", lambda root: changed_corpus)
+
+        args = types.SimpleNamespace(
+            corpus_root=str(tmp_path),
+            db_path=str(db),
+            incremental=True,
+        )
+        result = _ks.cmd_build_incremental(args)
+
+        assert result == 0
+        assert db.read_bytes() == db_bytes_before, (
+            "cmd_build_incremental() must not rewrite knowledge.db when no tracked path's "
+            "mtime changed, even if in-process derivation logic did — a pure doc_id-scheme "
+            "change requires a full `make knowledge-index` rebuild, not --incremental."
+        )
+
     def test_hook_script_is_executable_shell(self):
         hook = _REPO_ROOT / "tools" / "hooks" / "post-commit-reindex.sh"
         assert hook.exists(), "post-commit-reindex.sh missing"
@@ -1898,6 +2030,8 @@ class TestHybridFusionWiring:
     """
 
     def test_lexical_only_match_surfaced_through_cmd_query(self, tmp_path, monkeypatch, capsys):
+        if not _numpy_available():
+            pytest.skip("numpy not installed")
         fake_db = tmp_path / "knowledge.db"
         conn = sqlite3.connect(str(fake_db))
         conn.execute(

@@ -1377,6 +1377,37 @@ class StrategicIntelligenceSystem:
                         leads_remove=memory_upd.leads_remove
                     )
 
+                # resolve_blocker timeout (TCK-20260817-STANDARD-HUNGER-STARVED-BY-RESOLVE-
+                # BLOCKER-FLAT-UTILITY): unlike hunger/fatigue/harvesting/shopping above, this
+                # GoalKind has no real completion condition -- some blockers (e.g. an "access"
+                # blocker whose subject isn't parseable coordinates) can never actually be
+                # reached, so the project would otherwise stay ACTIVE forever, permanently
+                # occupying current_project_id and starving every other need. 50 ticks matches
+                # this project's own creation-time lock_until_tick ceiling
+                # (min(current_tick+10, current_tick+50), intelligence.py's generic project-
+                # creation branch) -- if it hasn't resolved in that window, it isn't going to.
+                # Abandoning alone isn't enough: ResolveBlockerScorer's utility is flat (80.0,
+                # non-decaying), so an unsuppressed blocker would just re-win the very next
+                # scoring pass and recreate the same project immediately. Suppressing the
+                # specific blocker for 100 ticks (2x the attempt window) gives other needs a
+                # real chance to win before this blocker is reconsidered.
+                if project.kind == "resolve_blocker" and (current_tick - project.created_tick) >= 50:
+                    blocker_updates = []
+                    blocker_id = project.objectives[0].target if project.objectives else None
+                    if blocker_id is not None:
+                        b = strat.blockers.get(blocker_id)
+                        if b and not b.resolved:
+                            blocker_updates.append(replace(b, suppression_until_tick=current_tick + 100))
+                    return StrategicUpdate(
+                        projects_add_or_update=[replace(project, status=ProjectStatus.ABANDONED)],
+                        current_project_id_set="",
+                        current_objective_id_set="",
+                        blockers_add_or_update=blocker_updates,
+                        boredom_delta=boredom_upd,
+                        leads_add_or_update=memory_upd.leads_add_or_update,
+                        leads_remove=memory_upd.leads_remove
+                    )
+
                 # Milestone 8: Shop scarcity feedback
                 if project.kind == "shopping" and project.active_objective_id:
                      target_id_str = project.active_objective_id.split("_")[-1]

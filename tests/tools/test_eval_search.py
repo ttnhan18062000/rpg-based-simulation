@@ -22,11 +22,15 @@ spec.loader.exec_module(_mod)
 
 # Stale doc_ids confirmed (TCK-20260728-EVAL-FIXTURE-REPAIR investigation) to no longer
 # resolve against the live index's actual (buggy but unchanged-here) doc_id scheme.
+#
+# TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION fixed the underlying doc_id derivation
+# (tools/knowledge_search.py::_collect_docs_chunks()) to preserve the full nested path under
+# docs_root instead of truncating to "{section}/{stem}" — this reverses TCK-20260728's repair
+# direction for the 4 docs/engine/contracts/ entries below: "engine/contracts/{stem}" is now
+# the CORRECT, live-index-matching doc_id (it was "stale" only against the pre-fix truncated
+# scheme). Removed from this set accordingly; the remaining 3 entries are unrelated to this
+# fix (archived docs permanently excluded from the index by design) and stay stale.
 _KNOWN_STALE_DOC_IDS = {
-    "engine/contracts/replay_contract",
-    "engine/contracts/scheduler_contract",
-    "engine/contracts/observability_contract",
-    "engine/contracts/infrastructure_overview",
     "architecture/adr-004-simulation-watchdog",
     "architecture/adr-005-performance-optimization",
     "engine/contracts/progression_package",
@@ -111,6 +115,48 @@ class TestQueriesJson:
             assert count >= minimum, f"Need ≥{minimum} {name!r} queries, got {count}"
         unknown = set(categories) - set(_CATEGORY_MINIMUMS)
         assert not unknown, f"Unregistered category values found in queries.json: {unknown}"
+
+
+class TestQueriesFixtureIntegrity:
+    """Fixture-integrity guard (TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION test 7):
+    every expected_doc_ids entry that refers to a real docs/ file must match that file's
+    actual doc_id under the CURRENT _collect_docs_chunks() derivation scheme. Prevents silent
+    fixture drift on any future doc_id-scheme change without deliberately re-running this
+    check and updating queries.json in the same change."""
+
+    @staticmethod
+    def _real_doc_ids():
+        import importlib.util
+        ks_path = _REPO_ROOT / "tools" / "knowledge_search.py"
+        spec = importlib.util.spec_from_file_location("knowledge_search_fixture_check", ks_path)
+        ks = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ks)
+        docs_root = _REPO_ROOT / "docs"
+        chunks = ks._collect_docs_chunks(docs_root, _REPO_ROOT)
+        return {c["doc_id"] for c in chunks}
+
+    def test_expected_doc_ids_match_current_scheme(self):
+        with open(_QUERIES_PATH) as f:
+            data = json.load(f)
+        real_doc_ids = self._real_doc_ids()
+
+        stale = []
+        for entry in data:
+            for doc_id in entry.get("expected_doc_ids", []):
+                # Only check entries shaped like real docs/ paths (contain a "/" and are not
+                # ticket IDs, which use a different, unrelated corpus branch/derivation).
+                if "/" not in doc_id or doc_id.startswith("TCK-"):
+                    continue
+                if doc_id in _KNOWN_STALE_DOC_IDS:
+                    continue
+                if doc_id not in real_doc_ids:
+                    stale.append(doc_id)
+
+        assert not stale, (
+            f"expected_doc_ids entries no longer match the live doc_id derivation scheme: "
+            f"{stale} — update tools/eval/queries.json in the same change as any doc_id "
+            f"derivation fix."
+        )
 
 
 # ── Metrics functions ─────────────────────────────────────────────────────────

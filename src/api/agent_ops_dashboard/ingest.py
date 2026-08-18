@@ -41,6 +41,7 @@ from ticket_field_values import (  # noqa: E402
 )
 import validate  # noqa: E402  (tools/agent-monitoring/validate.py)
 from generate_retro import compute_retro_metrics, current_week, iso_week  # noqa: E402
+from retrieval_cache import read_cache_access_log  # noqa: E402
 from ticket_stats_report import (  # noqa: E402
     collect_done_tickets,
     compute_artifact_completeness,
@@ -62,6 +63,11 @@ from src.api.agent_ops_dashboard.models import (
     GlossaryResponse,
     HealthStatus,
     IncompleteArtifactEntry,
+    KgmcpCacheEfficiencyStats,
+    KgmcpCacheTicketStats,
+    KgmcpCoverageStats,
+    KgmcpDeadWriteEntry,
+    KgmcpRepeatedRefetchEntry,
     OutlierStats,
     RawToolCall,
     RunDetail,
@@ -70,6 +76,7 @@ from src.api.agent_ops_dashboard.models import (
     RunSummaryStats,
     RunTimeline,
     SkillTagStats,
+    SkillUsageSection,
     SlowRunEntry,
     SpendProxyStats,
     SubsystemTagStats,
@@ -472,6 +479,11 @@ class DashboardCache:
 
         self._runs_all: list[dict] = []
         self._events_all: list[dict] = []
+        # Retained (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD) so
+        # get_agent_monitoring_stats() can pass the real tools.jsonl corpus into
+        # compute_retro_metrics()'s `tools` parameter (Skill Usage) — previously _rebuild() below
+        # discarded `tools_all` after building _tools_by_seq/_tools_by_run_recent from it.
+        self._tools_all: list[dict] = []
         self._runs_by_id: dict[str, dict] = {}
         self._tickets_by_id: dict[str, dict] = {}
         self._tools_by_seq: dict = {}
@@ -545,6 +557,7 @@ class DashboardCache:
 
             self._runs_all = runs_all
             self._events_all = events_all
+            self._tools_all = tools_all
             self._runs_by_id = runs_by_id
             self._tickets_by_id = tickets_by_id
             self._tools_by_seq = tools_by_seq
@@ -811,7 +824,22 @@ class DashboardCache:
                 run_ids = {r["run_id"] for r in runs}
                 events = [e for e in self._events_all if e.get("run_id") in run_ids]
 
-            metrics = compute_retro_metrics(runs, events, tickets_root=self._tickets_root)
+            # tools/kgmcp_access_log (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-
+            # USAGE-DASHBOARD): passed as the FULL corpus, never period-sliced to `runs`/`events`
+            # above — mirrors generate_retro.py's own CLI precedent for both `all_tools` (Skill
+            # Usage zero-invocation flags are an all-time question) and `kgmcp_access_log`
+            # (retrieval_cache_access_log rows are attributed via the `.claude/current_run`
+            # sidecar at call time, not any runs.jsonl timestamp this period filter operates on).
+            # read_cache_access_log() never raises (returns [] on a fresh/never-migrated
+            # retrieval_cache.db), so no try/except is needed here, consistent with every other
+            # read in this method.
+            metrics = compute_retro_metrics(
+                runs,
+                events,
+                tickets_root=self._tickets_root,
+                tools=self._tools_all,
+                kgmcp_access_log=read_cache_access_log(),
+            )
 
             # compute_retro_metrics()'s gate_failure_breakdown can carry a literal `None` key
             # (a runs.jsonl record with neither final_status nor status set — _resolve_status()
@@ -860,6 +888,39 @@ class DashboardCache:
                     cost_proxy_score=[
                         CostProxyOutlierEntry(**d) for d in metrics["outliers"]["cost_proxy_score"]
                     ],
+                ),
+                skill_usage=SkillUsageSection(**metrics["skill_usage"]),
+                kgmcp_cache_efficiency=KgmcpCacheEfficiencyStats(
+                    total_hits=metrics["kgmcp_cache_efficiency"]["total_hits"],
+                    total_writes=metrics["kgmcp_cache_efficiency"]["total_writes"],
+                    overall_reuse_rate=metrics["kgmcp_cache_efficiency"]["overall_reuse_rate"],
+                    per_ticket={
+                        t: KgmcpCacheTicketStats(**row)
+                        for t, row in metrics["kgmcp_cache_efficiency"]["per_ticket"].items()
+                    },
+                    per_agent={
+                        a: KgmcpCacheTicketStats(**row)
+                        for a, row in metrics["kgmcp_cache_efficiency"]["per_agent"].items()
+                    },
+                    repeated_refetch_window_seconds=metrics["kgmcp_cache_efficiency"][
+                        "repeated_refetch_window_seconds"
+                    ],
+                    repeated_refetches=[
+                        KgmcpRepeatedRefetchEntry(**r)
+                        for r in metrics["kgmcp_cache_efficiency"]["repeated_refetches"]
+                    ],
+                    dead_writes=[
+                        KgmcpDeadWriteEntry(**d)
+                        for d in metrics["kgmcp_cache_efficiency"]["dead_writes"]
+                    ],
+                    dead_write_count=metrics["kgmcp_cache_efficiency"]["dead_write_count"],
+                    coverage=KgmcpCoverageStats(**metrics["kgmcp_cache_efficiency"]["coverage"]),
+                    verdict=metrics["kgmcp_cache_efficiency"]["verdict"],
+                    verdict_explanation=metrics["kgmcp_cache_efficiency"]["verdict_explanation"],
+                    stale_attribution_count=metrics["kgmcp_cache_efficiency"][
+                        "stale_attribution_count"
+                    ],
+                    derivation=metrics["kgmcp_cache_efficiency"]["derivation"],
                 ),
             )
 

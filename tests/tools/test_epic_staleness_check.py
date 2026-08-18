@@ -8,8 +8,14 @@ Per Decision 5 (staging_artifacts/TCK-20260710-EPIC-STALENESS-CHECK/plan.md):
 an epic whose children have zero activity ever is never flagged stale — it is
 "never started" (informational only). Only an epic with at least one child
 showing real activity evidence, followed by silence past the window, is
-flagged stale. TCK-20260702-OBSISO-EPIC is the repo's real live proof of the
-never-started case, not a stale case.
+flagged stale. TCK-20260702-OBSISO-EPIC was originally the repo's real live
+proof of the never-started case, but its folder (tickets/todos/obs-isolation)
+completed and moved to tickets/done/obs-isolation/ per the standard Finalize
+convention — no live repo path is genuinely "zero child activity ever" as of
+2026-08-17 (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP investigation:
+the only other tickets/todos/ folder, codex-runtime-activation/, has real,
+non-zero child activity and would itself be flagged stale). The never-started
+case is therefore proven via a synthetic tmp_path fixture instead.
 """
 import sys
 from datetime import date, datetime, timezone
@@ -30,12 +36,6 @@ from epic_staleness_check import (  # noqa: E402
     resolve_child_activity,
 )
 
-REAL_INPROGRESS_DIR = Path(__file__).parent.parent.parent / "tickets" / "inprogress"
-REAL_TODOS_DIR = Path(__file__).parent.parent.parent / "tickets" / "todos"
-REAL_WORKING_LOG = Path(__file__).parent.parent.parent / "tickets" / "working_log.csv"
-REAL_RUNS_JSONL = Path(__file__).parent.parent.parent / "agent-monitoring" / "runs.jsonl"
-REAL_OBSISO_DIR = REAL_TODOS_DIR / "obs-isolation"
-
 NOW = datetime(2026, 7, 10, 12, 0, 0, tzinfo=timezone.utc)
 
 
@@ -54,16 +54,56 @@ def _write_ticket(path: Path, ticket_id: str, tier: str, date_str: str, related_
 
 
 # ---------------------------------------------------------------------------
-# 1. Real-data integration — TCK-20260702-OBSISO-EPIC never-started, not stale
+# 1. Synthetic end-to-end integration — never-started folder epic, not stale
+#
+# Replaces the original real-repo-backed test_does_not_flag_never_started_
+# real_obsiso_epic (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP): the
+# real tickets/todos/obs-isolation fixture completed and moved to
+# tickets/done/, so no live repo path is genuinely "zero child activity ever"
+# any more. This synthetic tmp_path fixture exercises the same full
+# find_stale_epics/compute_stale_epics_report real-file-reading pipeline
+# (not just is_epic_stale()/is_epic_never_started() directly, which
+# test_does_not_flag_never_started_epic below already covers at the unit
+# level) against a controlled folder-mode epic with zero rows for its child
+# ID in a synthetic working_log.csv and an empty runs.jsonl.
 # ---------------------------------------------------------------------------
 
-def test_does_not_flag_never_started_real_obsiso_epic():
-    stale = find_stale_epics(REAL_INPROGRESS_DIR, REAL_TODOS_DIR, REAL_WORKING_LOG, REAL_RUNS_JSONL)
-    assert "TCK-20260702-OBSISO-EPIC" not in [c.epic_id for c in stale]
+def _write_synthetic_never_started_folder_epic(todos_dir: Path) -> Path:
+    folder = todos_dir / "synthetic-never-started-epic"
+    folder.mkdir()
+    (folder / "SEQUENCE.md").write_text(
+        "Epic: `TCK-20260701-SYNTH-NEVER-STARTED-EPIC`.\n\n"
+        "| Order | Ticket |\n|---|---|\n"
+        "| 1 | TCK-20260701-SYNTH-NEVER-STARTED-CHILD |\n"
+    )
+    _write_ticket(
+        folder / "TCK-20260701-SYNTH-NEVER-STARTED-EPIC.md",
+        "TCK-20260701-SYNTH-NEVER-STARTED-EPIC", "epic", "2026-07-01",
+    )
+    return folder
 
-    report = compute_stale_epics_report(REAL_INPROGRESS_DIR, REAL_TODOS_DIR, REAL_WORKING_LOG, REAL_RUNS_JSONL)
-    assert "TCK-20260702-OBSISO-EPIC" not in report.split("Informational:")[0]
-    assert "TCK-20260702-OBSISO-EPIC" in report.split("Informational:")[1]
+
+def test_does_not_flag_never_started_synthetic_folder_epic(tmp_path):
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    working_log_path = tmp_path / "working_log.csv"
+    runs_jsonl_path = tmp_path / "runs.jsonl"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    _write_synthetic_never_started_folder_epic(todos_dir)
+    # Zero rows for the child ID anywhere — real, zero activity ever.
+    working_log_path.write_text("timestamp,ticket_id,title,status,summary,artifacts_path\n")
+    runs_jsonl_path.write_text("")
+
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    assert "TCK-20260701-SYNTH-NEVER-STARTED-EPIC" not in [c.epic_id for c in stale]
+
+    report = compute_stale_epics_report(
+        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW
+    )
+    assert "TCK-20260701-SYNTH-NEVER-STARTED-EPIC" not in report.split("Informational:")[0]
+    assert "TCK-20260701-SYNTH-NEVER-STARTED-EPIC" in report.split("Informational:")[1]
 
 
 # ---------------------------------------------------------------------------
@@ -239,14 +279,26 @@ def test_does_not_flag_never_started_epic(tmp_path):
 # 8. Advisory-only — never mutates any ticket file's bytes
 # ---------------------------------------------------------------------------
 
-def test_advisory_only_no_file_mutation():
-    def _hash_dir(directory: Path) -> dict:
-        return {p.name: p.read_bytes() for p in sorted(directory.iterdir()) if p.is_file()}
+def _hash_dir(directory: Path) -> dict:
+    return {p.name: p.read_bytes() for p in sorted(directory.iterdir()) if p.is_file()}
 
-    before = _hash_dir(REAL_OBSISO_DIR)
-    compute_stale_epics_report(REAL_INPROGRESS_DIR, REAL_TODOS_DIR, REAL_WORKING_LOG, REAL_RUNS_JSONL)
-    find_stale_epics(REAL_INPROGRESS_DIR, REAL_TODOS_DIR, REAL_WORKING_LOG, REAL_RUNS_JSONL)
-    after = _hash_dir(REAL_OBSISO_DIR)
+
+def test_advisory_only_no_file_mutation_synthetic(tmp_path):
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    working_log_path = tmp_path / "working_log.csv"
+    runs_jsonl_path = tmp_path / "runs.jsonl"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    folder = _write_synthetic_never_started_folder_epic(todos_dir)
+    working_log_path.write_text("timestamp,ticket_id,title,status,summary,artifacts_path\n")
+    runs_jsonl_path.write_text("")
+
+    before = _hash_dir(folder)
+    compute_stale_epics_report(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    after = _hash_dir(folder)
 
     assert before == after
 

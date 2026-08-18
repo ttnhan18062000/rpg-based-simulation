@@ -1,6 +1,7 @@
 import pytest
 from dataclasses import replace
 from src.perf.scenarios import build_metropolis_state
+from tests.tools.perf_assertions import assert_perf_threshold
 
 @pytest.mark.perf
 def test_perf_metropolis_stress(perf_harness, request):
@@ -24,11 +25,11 @@ def test_perf_metropolis_stress(perf_harness, request):
     
     # Assertions
     # We expect > 3 TPS in this very complex scenario (relaxed due to single-threaded overhead)
-    assert results["avg_tps"] > 3.0
+    assert_perf_threshold(results["avg_tps"], 3.0, "avg TPS (Metropolis 1000 entities)", op=">")
     # p99 should be under 500ms for this high load
-    assert results["tick_ms"]["p99"] < 500.0
+    assert_perf_threshold(results["tick_ms"]["p99"], 500.0, "p99 tick time (Metropolis 1000 entities)", op="<")
     # Memory should be stable
-    assert results["mem_rss_mb"]["max"] < 1024.0
+    assert_perf_threshold(results["mem_rss_mb"]["max"], 1024.0, "max RSS (Metropolis 1000 entities)", op="<")
 
 @pytest.mark.perf
 def test_perf_metropolis_longevity(perf_harness, request):
@@ -47,10 +48,13 @@ def test_perf_metropolis_longevity(perf_harness, request):
     )
     
     request.node.perf_results = results
-    assert results["avg_tps"] > 5.0
+    assert_perf_threshold(results["avg_tps"], 5.0, "avg TPS (Metropolis longevity)", op=">")
     # Check for memory growth
     if "mem_rss_mb" in results and "growth_per_tick" in results["mem_rss_mb"]:
-        assert results["mem_rss_mb"]["growth_per_tick"] < 1.0 
+        assert_perf_threshold(
+            results["mem_rss_mb"]["growth_per_tick"], 1.0,
+            "RSS growth per tick (Metropolis longevity)", op="<",
+        )
 
 @pytest.mark.perf
 def test_perf_chaos_items(perf_harness, request):
@@ -77,4 +81,4 @@ def test_perf_chaos_items(perf_harness, request):
     )
     
     request.node.perf_results = results
-    assert results["tick_ms"]["p99"] < 250.0
+    assert_perf_threshold(results["tick_ms"]["p99"], 250.0, "p99 tick time (Chaos ground items)", op="<")

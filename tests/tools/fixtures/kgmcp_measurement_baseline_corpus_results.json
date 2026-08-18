@@ -1,0 +1,245 @@
+{
+  "corpus_version": 1,
+  "entries": [
+    {
+      "combined": {
+        "derivation": "wall_time_ms = context_search.latency_ms + graphify.latency_ms; tool_call_count = 2 (one context_search call, one graphify call); serialized_tokens_estimate = kgmcp_char_heuristic_v1_token_count(json.dumps(context_search results) + graphify raw stdout).",
+        "serialized_tokens_estimate": 2540,
+        "tool_call_count": 2,
+        "wall_time_ms": 6132.945199031383
+      },
+      "context_search": {
+        "derivation": "tools/search_mcp.py::_run_search(query_text, top_k=8), called directly (not through wrap_hybrid_retrieval/wrap_retrieval_cache_check), timed with time.perf_counter() mirroring tools/retrieval_events.py:175-177's exact pattern.",
+        "latency_ms": 4998.565842863172,
+        "results_count": 8,
+        "sources_recalled": [
+          "simulation/quest_contract#authoritative-status-001",
+          "simulation/domain_ownership_map#authoritative-status-001",
+          "engine/authoritative_pipeline#body-000",
+          "simulation/belief_and_detour_contract#mutation-rules-005",
+          "engine/simulation_kernel_contract#3-authoritative-state-003",
+          "plans/knowledge-gateway-mcp-proposal#22-representative-use-cases-031",
+          "TCK-20260425-PH8-M3",
+          "simulation/motivation_contract#what-it-may-mutate-008"
+        ],
+        "tool_call_count": 1
+      },
+      "graphify": {
+        "derivation": "subprocess.run(['graphify', 'query', query_text]), CLI-shelled per docs/engine/contracts/knowledge_gateway_mcp_contract.md Design Decision D1 (no in-process adapter exists), timed with time.perf_counter() mirroring tools/retrieval_events.py's exact pattern.",
+        "latency_ms": 1134.3793561682105,
+        "raw_stdout_bytes": 6191,
+        "tool_call_count": 1
+      },
+      "id": "Q1_authoritative_state",
+      "query_text": "What is AuthoritativeState, and who may mutate it?",
+      "routing_shape": "definition_terminology_architecture",
+      "use_case": "authoritative_state_ownership"
+    },
+    {
+      "combined": {
+        "derivation": "wall_time_ms = context_search.latency_ms + graphify.latency_ms; tool_call_count = 2 (one context_search call, one graphify call); serialized_tokens_estimate = kgmcp_char_heuristic_v1_token_count(json.dumps(context_search results) + graphify raw stdout).",
+        "serialized_tokens_estimate": 2606,
+        "tool_call_count": 2,
+        "wall_time_ms": 1301.1515806429088
+      },
+      "context_search": {
+        "derivation": "tools/search_mcp.py::_run_search(query_text, top_k=8), called directly (not through wrap_hybrid_retrieval/wrap_retrieval_cache_check), timed with time.perf_counter() mirroring tools/retrieval_events.py:175-177's exact pattern.",
+        "latency_ms": 75.5881043151021,
+        "results_count": 8,
+        "sources_recalled": [
+          "TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC",
+          "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
+          "agent-monitoring/README#what-it-captures-001",
+          "audits/audit_dimensions#group-b-codebase-architecture-006",
+          "TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION",
+          "guides/agent_monitoring#investigate-step-search-before-grep-call-011",
+          "TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE",
+          "architecture/doc_updater_agent#decision-003"
+        ],
+        "tool_call_count": 1
+      },
+      "graphify": {
+        "derivation": "subprocess.run(['graphify', 'query', query_text]), CLI-shelled per docs/engine/contracts/knowledge_gateway_mcp_contract.md Design Decision D1 (no in-process adapter exists), timed with time.perf_counter() mirroring tools/retrieval_events.py's exact pattern.",
+        "latency_ms": 1225.5634763278067,
+        "raw_stdout_bytes": 6216,
+        "tool_call_count": 1
+      },
+      "id": "Q2_symbol_lookup",
+      "query_text": "Where is compute_search_investigation_trend defined, and what functions call it?",
+      "routing_shape": "symbol_lookup_callers_references",
+      "use_case": null
+    },
+    {
+      "combined": {
+        "derivation": "wall_time_ms = context_search.latency_ms + graphify.latency_ms; tool_call_count = 2 (one context_search call, one graphify call); serialized_tokens_estimate = kgmcp_char_heuristic_v1_token_count(json.dumps(context_search results) + graphify raw stdout).",
+        "serialized_tokens_estimate": 2620,
+        "tool_call_count": 2,
+        "wall_time_ms": 1110.513941384852
+      },
+      "context_search": {
+        "derivation": "tools/search_mcp.py::_run_search(query_text, top_k=8), called directly (not through wrap_hybrid_retrieval/wrap_retrieval_cache_check), timed with time.perf_counter() mirroring tools/retrieval_events.py:175-177's exact pattern.",
+        "latency_ms": 61.738168355077505,
+        "results_count": 8,
+        "sources_recalled": [
+          "TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC",
+          "TCK-20260808-CORPUS-DENSITY-METRICS-AND-GUIDE",
+          "TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION",
+          "TCK-20260719-COST-PROXY-CALIBRATION-NOTE",
+          "TCK-20260628-E-NARRATIVE-CONSEQUENCE",
+          "simulation_quality/entity_lifecycle_score#empirical-calibration-tck-20260808-entit-008",
+          "audits/D01_rpg_feature_impact#key-findings-040",
+          "compliance/checklist#audit-standard-001"
+        ],
+        "tool_call_count": 1
+      },
+      "graphify": {
+        "derivation": "subprocess.run(['graphify', 'query', query_text]), CLI-shelled per docs/engine/contracts/knowledge_gateway_mcp_contract.md Design Decision D1 (no in-process adapter exists), timed with time.perf_counter() mirroring tools/retrieval_events.py's exact pattern.",
+        "latency_ms": 1048.7757730297744,
+        "raw_stdout_bytes": 6326,
+        "tool_call_count": 1
+      },
+      "id": "Q3_requirement_completeness",
+      "notes": "docs/plans/knowledge-gateway-mcp-proposal.md \u00a720's own Phase-4 gating states 'Parity Ledger is not required until Phase 4' \u2014 no callable Parity Ledger adapter exists yet at Phase 0, so this entry's direct-tool baseline covers Context Search + Graphify only. This is an honest substitution, not a silent omission.",
+      "query_text": "Is the read_count_correlation feature fully implemented?",
+      "routing_shape": "requirement_completeness_verification",
+      "use_case": "feature_completeness_check"
+    },
+    {
+      "combined": {
+        "derivation": "wall_time_ms = context_search.latency_ms + graphify.latency_ms; tool_call_count = 2 (one context_search call, one graphify call); serialized_tokens_estimate = kgmcp_char_heuristic_v1_token_count(json.dumps(context_search results) + graphify raw stdout).",
+        "serialized_tokens_estimate": 2566,
+        "tool_call_count": 2,
+        "wall_time_ms": 1111.2115341238678
+      },
+      "context_search": {
+        "derivation": "tools/search_mcp.py::_run_search(query_text, top_k=8), called directly (not through wrap_hybrid_retrieval/wrap_retrieval_cache_check), timed with time.perf_counter() mirroring tools/retrieval_events.py:175-177's exact pattern.",
+        "latency_ms": 61.03827711194754,
+        "results_count": 8,
+        "sources_recalled": [
+          "TCK-20260701-WORLDTEMPLATE-REMOVE",
+          "TCK-20260523-WORLD-TEMPLATES",
+          "guidelines/intentional_divergences#221-worldtemplatev1-schema-removal-tck-2-022",
+          "architecture/world_repository_layout#proposed-strategy-layout-003",
+          "plans/knowledge-gateway-mcp-proposal#22-representative-use-cases-031",
+          "TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE",
+          "architecture/world_repository_layout#body-000",
+          "audits/D03_behavioral_emergence#pre-condition-bug-003"
+        ],
+        "tool_call_count": 1
+      },
+      "graphify": {
+        "derivation": "subprocess.run(['graphify', 'query', query_text]), CLI-shelled per docs/engine/contracts/knowledge_gateway_mcp_contract.md Design Decision D1 (no in-process adapter exists), timed with time.perf_counter() mirroring tools/retrieval_events.py's exact pattern.",
+        "latency_ms": 1050.1732570119202,
+        "raw_stdout_bytes": 6186,
+        "tool_call_count": 1
+      },
+      "id": "Q4_historical_rationale",
+      "query_text": "Why was WorldTemplateExpander removed?",
+      "routing_shape": "ticket_historical_rationale",
+      "use_case": "historical_removal_rationale"
+    },
+    {
+      "combined": {
+        "derivation": "wall_time_ms = context_search.latency_ms + graphify.latency_ms; tool_call_count = 2 (one context_search call, one graphify call); serialized_tokens_estimate = kgmcp_char_heuristic_v1_token_count(json.dumps(context_search results) + graphify raw stdout).",
+        "serialized_tokens_estimate": 2489,
+        "tool_call_count": 2,
+        "wall_time_ms": 1159.8277590237558
+      },
+      "context_search": {
+        "derivation": "tools/search_mcp.py::_run_search(query_text, top_k=8), called directly (not through wrap_hybrid_retrieval/wrap_retrieval_cache_check), timed with time.perf_counter() mirroring tools/retrieval_events.py:175-177's exact pattern.",
+        "latency_ms": 52.25128121674061,
+        "results_count": 8,
+        "sources_recalled": [
+          "TCK-20260607-MON-RETRO",
+          "TCK-20260803-RETRO-TOOL-SAFETY-AUDIT",
+          "TCK-20260805-SKILL-USAGE-METRIC",
+          "TCK-20260728-RETRIEVAL-BASELINE-METRICS",
+          "guides/agent_monitoring#how-to-generate-a-report-002",
+          "TCK-20260705-MONITORING-RUNID-JOIN",
+          "TCK-20260720-MONITORING-PIPELINE-BUGFIXES",
+          "TCK-20260705-RETRO-METRIC-ACCURACY"
+        ],
+        "tool_call_count": 1
+      },
+      "graphify": {
+        "derivation": "subprocess.run(['graphify', 'query', query_text]), CLI-shelled per docs/engine/contracts/knowledge_gateway_mcp_contract.md Design Decision D1 (no in-process adapter exists), timed with time.perf_counter() mirroring tools/retrieval_events.py's exact pattern.",
+        "latency_ms": 1107.5764778070152,
+        "raw_stdout_bytes": 6150,
+        "tool_call_count": 1
+      },
+      "id": "Q5_test_impact",
+      "query_text": "What tests must run if tools/agent-monitoring/generate_retro.py changes?",
+      "routing_shape": "test_impact_of_change",
+      "use_case": "test_impact_of_change"
+    },
+    {
+      "combined": {
+        "derivation": "wall_time_ms = context_search.latency_ms + graphify.latency_ms; tool_call_count = 2 (one context_search call, one graphify call); serialized_tokens_estimate = kgmcp_char_heuristic_v1_token_count(json.dumps(context_search results) + graphify raw stdout).",
+        "serialized_tokens_estimate": 2266,
+        "tool_call_count": 2,
+        "wall_time_ms": 1176.30006512627
+      },
+      "context_search": {
+        "derivation": "tools/search_mcp.py::_run_search(query_text, top_k=8), called directly (not through wrap_hybrid_retrieval/wrap_retrieval_cache_check), timed with time.perf_counter() mirroring tools/retrieval_events.py:175-177's exact pattern.",
+        "latency_ms": 62.91555520147085,
+        "results_count": 8,
+        "sources_recalled": [
+          "TCK-20260810-SKILL-USAGE-RETRO-TRACKING",
+          "TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING",
+          "TCK-20260728-CONTEXT-PACKET-SCHEMA",
+          "TCK-20260810-STATUS-DRIFT-CHECK-WIRING",
+          "agent-monitoring/schema#detecting-a-specific-scripts-subcommand--023",
+          "ai/default_packet_scenarios_decision#body-000",
+          "guides/agent_monitoring#report-sections-004",
+          "f037e9a1-43fa-4687-982f-38a78f927cb8"
+        ],
+        "tool_call_count": 1
+      },
+      "graphify": {
+        "derivation": "subprocess.run(['graphify', 'query', query_text]), CLI-shelled per docs/engine/contracts/knowledge_gateway_mcp_contract.md Design Decision D1 (no in-process adapter exists), timed with time.perf_counter() mirroring tools/retrieval_events.py's exact pattern.",
+        "latency_ms": 1113.3845099247992,
+        "raw_stdout_bytes": 5127,
+        "tool_call_count": 1
+      },
+      "id": "Q6_ticket_status",
+      "query_text": "What is the current status of TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING?",
+      "routing_shape": "ticket_work_status",
+      "use_case": null
+    },
+    {
+      "combined": {
+        "derivation": "wall_time_ms = context_search.latency_ms + graphify.latency_ms; tool_call_count = 2 (one context_search call, one graphify call); serialized_tokens_estimate = kgmcp_char_heuristic_v1_token_count(json.dumps(context_search results) + graphify raw stdout).",
+        "serialized_tokens_estimate": 2603,
+        "tool_call_count": 2,
+        "wall_time_ms": 1102.5849389843643
+      },
+      "context_search": {
+        "derivation": "tools/search_mcp.py::_run_search(query_text, top_k=8), called directly (not through wrap_hybrid_retrieval/wrap_retrieval_cache_check), timed with time.perf_counter() mirroring tools/retrieval_events.py:175-177's exact pattern.",
+        "latency_ms": 51.994483917951584,
+        "results_count": 8,
+        "sources_recalled": [
+          "TCK-20260405-LOGFIX",
+          "compliance/checklist#kafka-disabled-mode-behavior-043",
+          "engine/infrastructure_compat_contract#4-divergences-exclusions-004",
+          "logic_checklist_exhaustive#kafka-disabled-mode-behavior-041",
+          "logic_checklist_exhaustive#16-brokerless-recovery-and-degraded-mode-112",
+          "TCK-20260406-RPG-CORE-STABILIZE",
+          "compliance/checklist#disabledmissing-dependency-paths-061",
+          "engine/infrastructure_compat_contract#3-infrastructure-isolation-003"
+        ],
+        "tool_call_count": 1
+      },
+      "graphify": {
+        "derivation": "subprocess.run(['graphify', 'query', query_text]), CLI-shelled per docs/engine/contracts/knowledge_gateway_mcp_contract.md Design Decision D1 (no in-process adapter exists), timed with time.perf_counter() mirroring tools/retrieval_events.py's exact pattern.",
+        "latency_ms": 1050.5904550664127,
+        "raw_stdout_bytes": 6252,
+        "tool_call_count": 1
+      },
+      "id": "Q7_negative_knowledge",
+      "query_text": "Is Kafka currently used in this repository?",
+      "routing_shape": "broad_task_context",
+      "use_case": "negative_knowledge_kafka"
+    }
+  ],
+  "recorded_at_utc": "2026-08-15T05:09:04.120766Z"
+}

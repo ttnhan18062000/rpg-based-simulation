@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Knowledge Gateway MCP — knowledge_context Request",
+  "description": "Phase 0 contract-only, per docs/plans/knowledge-gateway-mcp-proposal.md §9.1. additionalProperties:false plus the explicit absence of provider_weights/cache_level/semantic_threshold/provider_forcing (force_provider)/ranking_policy is the machine-checkable enforcement of §9.1's rule that the public request surface exposes only need-oriented caller options, never provider-internal routing/weighting/threshold controls.",
+  "schema_version": 1,
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["query"],
+  "properties": {
+    "query": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["answer", "task_context"]
+    },
+    "budget_tokens": {
+      "type": "integer"
+    },
+    "changed_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "include_history": {
+      "type": "boolean"
+    },
+    "evidence_detail": {
+      "type": "string",
+      "description": "Deliberately open string, not a closed enum — the proposal shows only one example value ('summary') and gives no closed value set. See Design Decision D3."
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Knowledge Gateway MCP — Evidence Identity Kinds",
+  "description": "Phase 0 contract-only, per docs/plans/knowledge-gateway-mcp-proposal.md §12.1. A closed set of exactly 8 evidence identity kinds. Each kind names a stable_identity_form (the deterministic string identity used to reference an evidence record) and a preferred_fingerprint (the strongest available freshness signal for that kind — content hash, entry-id + fragment hash, etc.). PROVIDER_GENERATION is the sole kind with no finer-grained fingerprint available, which is why docs/engine/contracts/knowledge_gateway_mcp/evidence_cache_identity_contract.md §4 documents it as fallback-only, never a default dependency for the other 7 kinds. normalization_rules covers the four required cases from AC2: rename, delete, duplicate_name, schema_version_change.",
+  "schema_version": 1,
+  "definitions": {
+    "evidence_identity_kind": {
+      "type": "string",
+      "enum": [
+        "DOCUMENT",
+        "DOCUMENT_SECTION",
+        "FILE",
+        "SYMBOL",
+        "TICKET",
+        "PARITY_ENTRY",
+        "REGISTRY_ENTRY",
+        "PROVIDER_GENERATION"
+      ]
+    }
+  },
+  "kinds": {
+    "DOCUMENT": {
+      "stable_identity_form": "doc:<registry-id>",
+      "preferred_fingerprint": "Content hash (sha256) of the full document body, keyed to the doc's docs/REGISTRY.yaml registry-id.",
+      "normalization_rules": {
+        "rename": "A renamed doc file keeps its registry-id as the stable identity (docs/REGISTRY.yaml tracks the current path per registry-id); the content hash is recomputed from the file at its new path, no identity change.",
+        "delete": "A deleted doc's registry-id is tombstoned (not reused for an unrelated future doc); any cached evidence citing it falls back to PROVIDER_GENERATION since no content hash can be recomputed.",
+        "duplicate_name": "docs/REGISTRY.yaml registry-ids are already unique by construction; two docs may share a filename only in different directories, so the full registry-id (not the bare filename) is always the identity — no bare-filename collision is possible.",
+        "schema_version_change": "N/A at the DOCUMENT-kind level — this case applies to REGISTRY_ENTRY/PARITY_ENTRY kinds whose backing schema can version independently of any single document's content."
+      }
+    },
+    "DOCUMENT_SECTION": {
+      "stable_identity_form": "doc:<registry-id>#<section-anchor>",
+      "preferred_fingerprint": "Content hash (sha256) of the section body only, scoped under the parent DOCUMENT's registry-id.",
+      "normalization_rules": {
+        "rename": "A renamed section heading changes the anchor; the identity follows the anchor's ordinal position within the parent document as the secondary lookup key when the anchor text itself changes, else treated as delete+create of the section identity.",
+        "delete": "A removed section's identity is tombstoned under its parent DOCUMENT's registry-id; cached evidence citing it falls back to PROVIDER_GENERATION.",
+        "duplicate_name": "Two sections sharing an anchor text within the same document require full qualification by ordinal position (e.g. the second '## Overview' becomes doc:<registry-id>#overview-2), never a bare anchor lookup.",
+        "schema_version_change": "N/A at the DOCUMENT_SECTION-kind level, same reasoning as DOCUMENT."
+      }
+    },
+    "FILE": {
+      "stable_identity_form": "file:<repo-relative-path>",
+      "preferred_fingerprint": "Content hash (sha256) of the file's current blob contents.",
+      "normalization_rules": {
+        "rename": "A renamed/moved file is identity-tracked via git's own rename detection where available (secondary lookup key: old-path -> new-path); when rename detection is unavailable, treated as delete+create.",
+        "delete": "A deleted file's path identity is tombstoned; any cached evidence citing it falls back to PROVIDER_GENERATION since no content hash can be recomputed from a path that no longer resolves.",
+        "duplicate_name": "The repo-relative path is already the full qualification (e.g. tools/retrieval_cache.py vs. src/retrieval_cache.py are distinct identities); no bare-filename lookup is ever used.",
+        "schema_version_change": "N/A at the FILE-kind level — a file's own content hash already captures any internal format/version change; no separate schema-version dependency is introduced."
+      }
+    },
+    "SYMBOL": {
+      "stable_identity_form": "symbol:<qualified-name>",
+      "preferred_fingerprint": "Content hash (sha256) of the symbol's defining source range (the AST node's source span), keyed to its fully module-qualified name.",
+      "normalization_rules": {
+        "rename": "A renamed symbol is followed via a secondary lookup key (old-qualified-name -> new-qualified-name) only where the underlying provider (e.g. Graphify) supports rename tracking; otherwise treated as delete+create.",
+        "delete": "A deleted symbol's qualified name is tombstoned; cached evidence citing it falls back to PROVIDER_GENERATION.",
+        "duplicate_name": "The identity always uses the full module-qualified name (e.g. tools.retrieval_cache._hash_filters), never a bare unqualified name — two symbols sharing a short name in different modules never collide.",
+        "schema_version_change": "N/A at the SYMBOL-kind level for source-code symbols; if a future provider represents symbols with a versioned schema of its own, that provider's version is tracked via adapter_version_at_validation (evidence_cache_identity_contract.md §2), not this kind's own fingerprint."
+      }
+    },
+    "TICKET": {
+      "stable_identity_form": "ticket:<ticket-id>",
+      "preferred_fingerprint": "Content hash (sha256) of the ticket file body at its current location (tickets/inprogress/<ticket-id>.md or tickets/done/<ticket-id>.md); the ticket-id itself never changes across the move.",
+      "normalization_rules": {
+        "rename": "Tickets are never renamed (ticket_id is immutable per the ticket format); only the directory (inprogress -> done) changes, which is a location change, not an identity change — the content hash is recomputed from the file at its new location.",
+        "delete": "Tickets are not deleted in normal workflow; if a ticket file is removed, its ticket-id is tombstoned and cached evidence citing it falls back to PROVIDER_GENERATION.",
+        "duplicate_name": "ticket_id is unique by construction (TCK-YYYYMMDD-SHORT-SCOPE, enforced by the ticket workflow) — no duplicate-name case exists for this kind.",
+        "schema_version_change": "A change to the required-sections list in the ticket format itself (CLAUDE.md's Ticket Format) is treated as a new PROVIDER_GENERATION epoch for TICKET-kind evidence broadly, since it affects how every ticket file is parsed, not a single ticket's content."
+      }
+    },
+    "PARITY_ENTRY": {
+      "stable_identity_form": "parity:<entry-id>",
+      "preferred_fingerprint": "entry-id plus canonical_fragment_hash, per docs/parity_ledger/schema.json's entries shape (confirmed field name via tools/parity_index.py's _EXPECTED_COLUMNS['entries'], which includes canonical_fragment_hash).",
+      "normalization_rules": {
+        "rename": "Parity entry-ids are immutable identifiers within their shard; a shard file rename does not change any entry-id, so no rename handling is needed at the entry level.",
+        "delete": "A removed parity entry's entry-id is tombstoned (never reused); cached evidence citing it falls back to PROVIDER_GENERATION.",
+        "duplicate_name": "entry-id uniqueness is already enforced across all docs/parity_ledger/*.yaml shards by tools/parity_index.py (DuplicateEntryIdError on import) — no duplicate-entry-id case can reach this contract.",
+        "schema_version_change": "A change to docs/parity_ledger/schema.json's entries shape itself is treated as a new PROVIDER_GENERATION epoch for PARITY_ENTRY-kind evidence broadly, invalidating cached canonical_fragment_hash comparisons until re-derived under the new shape."
+      }
+    },
+    "REGISTRY_ENTRY": {
+      "stable_identity_form": "registry:<registered-name>",
+      "preferred_fingerprint": "The registry row's own content hash/version field where the source registry defines one; else the row's full serialized JSON content, hashed.",
+      "normalization_rules": {
+        "rename": "Registries under registries/ (e.g. layer_registry.jsonl, tag_registry.jsonl) are append-only and never rename an existing registered-name in place; a 'rename' surfaces as a new registration plus the old name remaining valid (not tombstoned) unless the registry's own process deprecates it.",
+        "delete": "Append-only registries do not delete rows; a registered-name that is deprecated by registry process is tombstoned for evidence purposes even though the underlying row remains on disk.",
+        "duplicate_name": "Registered-names are enforced unique at registration time by each registry's own add-tooling (e.g. tools/tag_registry.py add, tools/layer_registry.py add) — no duplicate-name case can reach this contract.",
+        "schema_version_change": "A change to a registry file's own row shape (new required column) is treated as a new PROVIDER_GENERATION epoch for REGISTRY_ENTRY-kind evidence sourced from that registry."
+      }
+    },
+    "PROVIDER_GENERATION": {
+      "stable_identity_form": "generation:<provider-id>@<corpus-generation>",
+      "preferred_fingerprint": "None. No finer-grained fingerprint is available for this kind — this is precisely why evidence_cache_identity_contract.md §4 documents PROVIDER_GENERATION as fallback-only: it is the coarsest, corpus-wide signal, consulted only when a record's own kind-specific fingerprint (from one of the 7 kinds above) is unavailable.",
+      "normalization_rules": {
+        "rename": "N/A — a provider-generation value is not a named/path-addressed entity; there is nothing to rename.",
+        "delete": "N/A — a corpus generation is not individually deleted; a new generation simply supersedes the prior one as the corpus is rebuilt.",
+        "duplicate_name": "N/A — generation identity is provider-id + corpus-generation value, which is unique by construction (corpus-generation is sourced from knowledge-index/manifest.json's built_at field, per tools/retrieval_cache.py's existing _corpus_generation()).",
+        "schema_version_change": "A change to the provider's own generation-fingerprint format (e.g. how built_at is computed) is itself treated as triggering a new PROVIDER_GENERATION epoch, since the fingerprint format change cannot be distinguished from an actual corpus rebuild without finer signals that this kind, by definition, does not have."
+      }
+    }
+  }
+}

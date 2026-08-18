@@ -173,6 +173,14 @@ decide which.
 
 ### 6.3 Malformed-shard handling — a third, previously undocumented behavior
 
+**Status: fixed by `TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL` (2026-08-14).**
+`find_p0_intersection` (`tools/parity_ledger_scan.py`) now wraps its `yaml.safe_load` call in
+`try`/`except yaml.YAMLError`, raising a labeled `ShardParseError` (mirroring
+`tools/parity_index.py`'s own error class for the same failure mode) instead of crashing
+uncaught, with a regression test in `tests/tools/test_parity_ledger_scan.py`. The paragraph below
+is preserved as the original as-of-review finding; it no longer describes current behavior for
+`find_p0_intersection`.
+
 `SYN-MALFORMED-001` discovered that `find_p0_intersection` (`tools/parity_ledger_scan.py:49`)
 has no `try`/`except` around `yaml.safe_load` and **raises an uncaught `yaml.YAMLError`** when
 it reaches a malformed canonical shard — a real fragility beyond `TestEquivalenceFixtures`'s
@@ -180,7 +188,8 @@ original scope (that suite only ever exercised `derive_mapping` against a malfor
 `find_p0_intersection`). Three distinct real behaviors now exist for the same input shape:
 `find_p0_intersection` crashes hard; `derive_mapping` silently skips and continues; the index
 importer aborts the whole build with a labeled `ShardParseError`. None was "fixed" as part of
-this review.
+this review. `derive_mapping`'s silent-skip behavior is unchanged by the above fix and remains a
+live, distinct third behavior — this ticket's Out of Scope did not touch it.
 
 ### 6.4 Single-shard-per-case reconstruction
 

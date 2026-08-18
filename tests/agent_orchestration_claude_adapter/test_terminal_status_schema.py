@@ -34,9 +34,11 @@ def test_real_committed_terminal_statuses_yaml_passes_validation_cleanly():
     validate_terminal_statuses(data)  # must not raise
 
 
-def test_load_terminal_statuses_returns_15_entries_from_real_repo_root():
+def test_load_terminal_statuses_returns_16_entries_from_real_repo_root():
+    """Was 15; TEST_SCOPE_COVERAGE_FAILED added 2026-08-18 by
+    TCK-20260818-KGMCP-TICKET-VERIFY-SCOPED-REGRESSION-GAP — a genuine new terminal status."""
     statuses = load_terminal_statuses(_REPO_ROOT)
-    assert len(statuses) == 15
+    assert len(statuses) == 16
 
 
 def test_missing_schema_version_raises():

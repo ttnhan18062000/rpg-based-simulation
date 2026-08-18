@@ -1,0 +1,58 @@
+---
+status: active
+layer: architecture
+authority: P1
+audience: agent
+tags: [architecture, observability]
+---
+
+# Epic Plan — HTTP-Layer Admission Control & Auth
+
+**Tracking ticket:** `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC`
+**Source:** `docs/audits/D23_architecture_resilience.md` §E, §G, §L (R6)
+**Priority:** P2 — explicitly gate on deployment plans; do not front-load if this system stays on a trusted network.
+
+## Problem
+
+`src/api/server.py` registers only `CORSMiddleware` and `GZipMiddleware` — no rate limiting, no
+authentication, no per-client admission control on any REST endpoint. Separately,
+`CORSMiddleware(allow_origins=["*"], allow_credentials=True)` is a spec-invalid combination
+(browsers reject the actual credentialed-wildcard case, so it's inert today, but it signals
+unreviewed middleware config regardless). Resource governance exists and works well elsewhere in
+the system (the intra-tick `WorkerManager` bulkhead, `RedisStreamAdapter`'s severity-aware
+backpressure) — the gap is specifically that governance stops at the process boundary between the
+engine and the HTTP layer.
+
+## Scope for the eventual `create-tickets` pass
+
+- Fix the CORS `allow_origins`/`allow_credentials` configuration regardless of the broader
+  auth decision — a pure config correctness fix.
+- Add authentication to the API surface before any deployment beyond a trusted network.
+- Add HTTP-layer admission control by extending the observability layer's existing
+  NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary
+  (`docs/architecture/observability_hot_path_safety_contract.md`) to the HTTP layer, rather than
+  inventing a new scheme — full proposed mode design (trigger conditions, per-mode endpoint
+  behavior, hysteresis pattern reusing `PhaseBudgetGovernor`'s threshold-crossing-with-cooldown
+  approach) is in `docs/audits/D23_architecture_resilience.md` §L.
+- A single in-process token-bucket or sliding-window limiter in the FastAPI middleware stack is
+  sufficient at current scale — explicitly not a recommendation to add Kafka, a service mesh, or
+  a generic rate-limiting framework (the RabbitMQ/Kafka situation elsewhere in this same repo is
+  a live cautionary example of infrastructure added ahead of actual need).
+
+## Out of scope
+
+- Any new message broker, service mesh, or distributed rate-limiting infrastructure.
+- Building this before there's an actual deployment plan beyond a trusted network — this epic's
+  own priority is explicitly conditional on that.
+
+## Acceptance signal for this epic (not yet broken into child tickets)
+
+- CORS config no longer uses the spec-invalid wildcard+credentials combination.
+- At least one auth mechanism gates the API surface.
+- HTTP requests are admitted/throttled/shed according to a mode vocabulary consistent with (and
+  ideally reusing) the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL states.
+
+## References
+
+- `docs/plans/architecture_resilience_remediation_roadmap.md` (Epic F)
+- `docs/audits/D23_architecture_resilience.md` (R6, §L full design, Stage 3)

@@ -31,6 +31,11 @@ def _write_events(tmp_path: Path, rows: list[dict]) -> None:
     events_file.write_text("\n".join(json.dumps(e) for e in rows) + "\n")
 
 
+def _write_tools(tmp_path: Path, rows: list[dict]) -> None:
+    tools_file = tmp_path / "agent-monitoring" / "tools.jsonl"
+    tools_file.write_text("\n".join(json.dumps(t) for t in rows) + "\n")
+
+
 _BASE_RUN = {
     "run_id": "TCK-FAKE",
     "start_ts": "2026-07-06T00:00:00Z",
@@ -271,3 +276,97 @@ def test_stats_endpoint_uses_real_compute_retro_metrics_not_reimplemented():
     assert "from generate_retro import" in source
     assert "compute_retro_metrics" in source
     assert "def compute_retro_metrics(" not in source
+
+
+# --- Skill Usage / KGMCP Cache Efficiency (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-
+# SKILL-USAGE-DASHBOARD) ---
+
+def test_stats_endpoint_includes_skill_usage_from_real_tools_jsonl(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    _write_runs(tmp_path, [_BASE_RUN])
+    _write_events(tmp_path, [])
+    _write_tools(tmp_path, [
+        {"run_id": "TCK-FAKE", "seq": 1, "tool": "Skill",
+         "input_summary": "{'skill': 'graphify', 'args': None}", "status": "ok", "ts": "2026-07-06T00:00:01Z"},
+        {"run_id": "TCK-FAKE", "seq": 1, "tool": "Skill",
+         "input_summary": "{'skill': 'graphify', 'args': None}", "status": "ok", "ts": "2026-07-06T00:00:02Z"},
+    ])
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    stats = cache.get_agent_monitoring_stats(all_time=True)
+
+    assert stats.skill_usage.total_skill_invocations == 2
+    assert stats.skill_usage.per_skill == {"graphify": 2}
+    assert stats.skill_usage.derivation
+
+
+def test_stats_endpoint_skill_usage_empty_when_no_skill_tool_calls(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    _write_runs(tmp_path, [])
+    _write_events(tmp_path, [])
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    stats = cache.get_agent_monitoring_stats(all_time=True)
+
+    assert stats.skill_usage.total_skill_invocations == 0
+    assert stats.skill_usage.per_skill == {}
+
+
+def test_stats_endpoint_includes_kgmcp_cache_efficiency_from_real_access_log(tmp_path, monkeypatch):
+    """Monkeypatches ingest.read_cache_access_log (rather than pointing retrieval_cache.CACHE_DB_
+    PATH at tmp_path) since retrieval_cache.py's cache DB is a single fixed relative path, not
+    parameterized by DashboardCache's own repo_root -- a pre-existing, documented limitation of
+    that module (see Implementation Notes), out of this ticket's scope to change. This still
+    proves the real wiring: ingest.py calls the real read_cache_access_log() and feeds its output
+    through compute_retro_metrics() into the typed API response, unmodified."""
+    _init_repo_skeleton(tmp_path)
+    _write_runs(tmp_path, [])
+    _write_events(tmp_path, [])
+
+    fake_rows = [
+        {"cache_level": "level1_provider_result", "event_type": "write", "query_hash": "qh-1",
+         "repo_branch_scope": "repo::main", "packet_id": None, "run_id": "TCK-FAKE", "seq": 1,
+         "phase": "Implement", "agent": "implementer", "execution_id": None, "provider": None,
+         "ticket_id": "TCK-FAKE", "sidecar_stale": 0, "ts": 1000.0},
+        {"cache_level": "level1_provider_result", "event_type": "hit", "query_hash": "qh-1",
+         "repo_branch_scope": "repo::main", "packet_id": None, "run_id": "TCK-FAKE", "seq": 2,
+         "phase": "Implement", "agent": "implementer", "execution_id": None, "provider": None,
+         "ticket_id": "TCK-FAKE", "sidecar_stale": 0, "ts": 1010.0},
+    ]
+    monkeypatch.setattr(ingest, "read_cache_access_log", lambda: fake_rows)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    stats = cache.get_agent_monitoring_stats(all_time=True)
+
+    assert stats.kgmcp_cache_efficiency.total_hits == 1
+    assert stats.kgmcp_cache_efficiency.total_writes == 1
+    assert stats.kgmcp_cache_efficiency.overall_reuse_rate == 0.5
+    assert stats.kgmcp_cache_efficiency.per_ticket["TCK-FAKE"].hit == 1
+    assert stats.kgmcp_cache_efficiency.verdict
+    assert stats.kgmcp_cache_efficiency.derivation
+
+
+def test_stats_endpoint_kgmcp_cache_efficiency_empty_access_log_returns_no_data_verdict(
+    tmp_path, monkeypatch
+):
+    _init_repo_skeleton(tmp_path)
+    _write_runs(tmp_path, [])
+    _write_events(tmp_path, [])
+    monkeypatch.setattr(ingest, "read_cache_access_log", lambda: [])
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    stats = cache.get_agent_monitoring_stats(all_time=True)
+
+    assert stats.kgmcp_cache_efficiency.total_hits == 0
+    assert stats.kgmcp_cache_efficiency.total_writes == 0
+    assert stats.kgmcp_cache_efficiency.verdict == "NO DATA"
+
+
+def test_stats_endpoint_uses_real_read_cache_access_log_not_reimplemented():
+    """Source-text anti-drift guard, mirroring test_stats_endpoint_uses_real_compute_retro_
+    metrics_not_reimplemented's own pattern: ingest.py must import read_cache_access_log from
+    retrieval_cache, never redefine its own copy."""
+    source = Path("src/api/agent_ops_dashboard/ingest.py").read_text(encoding="utf-8")
+    assert "from retrieval_cache import" in source
+    assert "read_cache_access_log" in source
+    assert "def read_cache_access_log(" not in source

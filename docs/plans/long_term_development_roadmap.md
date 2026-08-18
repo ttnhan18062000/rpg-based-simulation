@@ -66,6 +66,12 @@ Everything else can be parallelized around this spine.
 ### P0-1 · CI Test Automation
 **Score: 10 · Effort: S · Source: D18**
 > **DONE (2026-06-25).** `.github/workflows/test.yml` added: 8 parallel domain jobs on every PR + slow-regression job (`--resource-budget large`) gated to PRs targeting `main`. `mypy` step included. See commits `146e5f31`–`63c290dd`.
+>
+> **UPDATED (2026-08-18, TCK-20260818-STANDARD-SLOW-REGRESSION-OFF-PR-PATH):** slow-regression
+> is no longer gated to every PR push — it now runs on `main` push, nightly schedule, and manual
+> dispatch, matching this section's own original "main push only (slow path)" design intent
+> below (the per-PR gating had drifted from that plan; the ~45-90min first-ever-completed run
+> made the drift's iteration-speed cost concrete).
 
 **What:** A single `test.yml` GitHub Actions workflow that runs `make lane-all-fast` + `make gate-expansion` + `pytest tests/docs/` on every PR. `make lane-legacy-regression` on `main` push only (slow path).
 

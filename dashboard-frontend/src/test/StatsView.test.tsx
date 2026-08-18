@@ -39,6 +39,29 @@ function makeAgentStats(overrides: Partial<AgentMonitoringStats> = {}): AgentMon
         },
       ],
     },
+    skill_usage: {
+      total_skill_invocations: 12,
+      unparseable: 0,
+      per_skill: { graphify: 8, 'agent-monitoring-retro': 4 },
+      per_skill_per_run: {},
+      derivation: 'Derived from tools.jsonl Skill-tool rows.',
+    },
+    kgmcp_cache_efficiency: {
+      total_hits: 3,
+      total_writes: 5,
+      overall_reuse_rate: 0.375,
+      per_ticket: { 'TCK-kgmcp-1': { hit: 3, write: 5, reuse_rate: 0.375 } },
+      per_agent: { implementer: { hit: 3, write: 5, reuse_rate: 0.375 } },
+      repeated_refetch_window_seconds: 300,
+      repeated_refetches: [],
+      dead_writes: [],
+      dead_write_count: 0,
+      coverage: { search_calls_total: 10, cache_events_total: 8, coverage_rate: 0.8 },
+      verdict: 'MODERATE',
+      verdict_explanation: 'Only 38% of cache access events were hits.',
+      stale_attribution_count: 0,
+      derivation: 'Derived from retrieval_cache_access_log rows.',
+    },
     ...overrides,
   }
 }
@@ -157,6 +180,18 @@ describe('StatsView', () => {
         phase_status_distribution: {},
         slow_runs: [],
         outliers: { duration_s: [], cost_proxy_score: [] },
+        skill_usage: {
+          total_skill_invocations: 0, unparseable: 0, per_skill: {}, per_skill_per_run: {},
+          derivation: 'Derived from tools.jsonl Skill-tool rows.',
+        },
+        kgmcp_cache_efficiency: {
+          total_hits: 0, total_writes: 0, overall_reuse_rate: null, per_ticket: {}, per_agent: {},
+          repeated_refetch_window_seconds: 300, repeated_refetches: [], dead_writes: [],
+          dead_write_count: 0,
+          coverage: { search_calls_total: 0, cache_events_total: 0, coverage_rate: null },
+          verdict: 'NO DATA', verdict_explanation: 'Nothing to evaluate yet.',
+          stale_attribution_count: 0, derivation: 'Derived from retrieval_cache_access_log rows.',
+        },
       }),
       makeTicketStats({
         scanned_files: 0,
@@ -294,6 +329,68 @@ describe('StatsView', () => {
 
     const costRow = await screen.findByTestId('cost-outlier-row-TCK-cost-outlier-3')
     expect(costRow.querySelector('[data-testid="glossary-hint-icon"]')).not.toBeNull()
+  })
+
+  it('renders the Skill Usage section with real per-skill invocation counts', async () => {
+    mockFetch(makeAgentStats(), makeTicketStats())
+    render(<StatsView />)
+
+    const section = await screen.findByTestId('stats-section-skill-usage')
+    expect(section).toHaveTextContent('Skill usage')
+    expect(screen.getByTestId('stat-tile-Total skill invocations')).toHaveTextContent('12')
+    expect(screen.getByTestId('bar-chart-row-graphify')).toBeInTheDocument()
+  })
+
+  it('renders the Skill Usage section empty state when there are zero invocations', async () => {
+    mockFetch(
+      makeAgentStats({
+        skill_usage: {
+          total_skill_invocations: 0, unparseable: 0, per_skill: {}, per_skill_per_run: {},
+          derivation: 'Derived from tools.jsonl Skill-tool rows.',
+        },
+      }),
+      makeTicketStats(),
+    )
+    render(<StatsView />)
+
+    await screen.findByTestId('stats-section-skill-usage')
+    expect(screen.getByTestId('stat-tile-Total skill invocations')).toHaveTextContent('0')
+  })
+
+  it('renders the KGMCP Cache Efficiency section with the real verdict and headline stats', async () => {
+    mockFetch(makeAgentStats(), makeTicketStats())
+    render(<StatsView />)
+
+    const section = await screen.findByTestId('stats-section-kgmcp-cache-efficiency')
+    expect(section).toHaveTextContent('KGMCP cache efficiency')
+    expect(screen.getByTestId('kgmcp-verdict')).toHaveTextContent('Cache Efficiency: MODERATE')
+    expect(screen.getByTestId('kgmcp-verdict')).toHaveTextContent('Only 38% of cache access events were hits.')
+    expect(screen.getByTestId('stat-tile-Total hits')).toHaveTextContent('3')
+    expect(screen.getByTestId('stat-tile-Total writes')).toHaveTextContent('5')
+    expect(screen.getByTestId('kgmcp-per-ticket-row-TCK-kgmcp-1')).toBeInTheDocument()
+    expect(screen.getByTestId('kgmcp-per-agent-row-implementer')).toBeInTheDocument()
+  })
+
+  it('renders a "NOT IN USE" KGMCP verdict distinctly when there is real search activity but zero cache events', async () => {
+    mockFetch(
+      makeAgentStats({
+        kgmcp_cache_efficiency: {
+          total_hits: 0, total_writes: 0, overall_reuse_rate: null, per_ticket: {}, per_agent: {},
+          repeated_refetch_window_seconds: 300, repeated_refetches: [], dead_writes: [],
+          dead_write_count: 0,
+          coverage: { search_calls_total: 25, cache_events_total: 0, coverage_rate: 0 },
+          verdict: 'NOT IN USE',
+          verdict_explanation: 'Zero KGMCP cache hit/write events recorded against 25 real search calls.',
+          stale_attribution_count: 0, derivation: 'Derived from retrieval_cache_access_log rows.',
+        },
+      }),
+      makeTicketStats(),
+    )
+    render(<StatsView />)
+
+    const verdict = await screen.findByTestId('kgmcp-verdict')
+    expect(verdict).toHaveTextContent('Cache Efficiency: NOT IN USE')
+    expect(verdict).toHaveTextContent('25 real search calls')
   })
 
   it('never hardcodes a glossary description string in its own source — always sourced from the fetched glossary', () => {

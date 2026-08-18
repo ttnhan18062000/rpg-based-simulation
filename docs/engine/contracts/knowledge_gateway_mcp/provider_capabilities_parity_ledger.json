@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "provider_id": "parity_ledger",
+  "adapter_version": null,
+  "stable_entity_ids": "FULL",
+  "evidence_granularities": ["entry"],
+  "fine_grained_fingerprints": true,
+  "incremental_refresh": false,
+  "deterministic_relationships": "PARTIAL",
+  "historical_queries": false,
+  "negative_knowledge_support": "SCOPED",
+  "cancellation": false,
+  "timeout": false,
+  "branch_awareness": "NONE",
+  "generation_fingerprint": true
+}

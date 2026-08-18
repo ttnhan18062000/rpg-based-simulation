@@ -63,7 +63,15 @@ def _classify_runs(record: dict) -> frozenset[str]:
     if "started_at" in record and "finished_at" in record and "phases_completed" in record:
         return frozenset({"shape1_started_finished_notes"})
 
-    if "final_status" in record and "end_ts" not in record:
+    # IN_PROGRESS is a documented current-schema value for an incomplete run-start
+    # record (docs/agent-monitoring/schema.md: "Should not appear in completed
+    # runs") — not a legacy shape. Excluding it here keeps every in-flight
+    # implement-ticket run's start record from being misclassified as legacy.
+    if (
+        "final_status" in record
+        and record.get("final_status") != "IN_PROGRESS"
+        and "end_ts" not in record
+    ):
         return frozenset({"shape2_final_status_no_end_ts"})
 
     if "ts_start" in record and "ts_end" in record and "result" in record:

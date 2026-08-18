@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Knowledge Gateway MCP — knowledge_context Response",
+  "description": "Phase 0 contract-only, per docs/plans/knowledge-gateway-mcp-proposal.md §9.1 (conceptual response), §12/§13 (status/freshness/verification as three distinct dimensions), §14 (CONFLICTED shape). additionalProperties is intentionally NOT restricted at the top level (unlike the request schema) — the ERROR/PARTIAL response shape is underspecified by the source proposal (Design Decision D4). Do not 'fix' this by adding additionalProperties:false here; that would fabricate closure the source proposal does not evidence, and the request schema (which does need closure for the forbidden-field guard) is the one that stays closed.",
+  "schema_version": 1,
+  "type": "object",
+  "required": [
+    "status",
+    "freshness",
+    "verification",
+    "provenance_providers",
+    "providers_consulted_this_call"
+  ],
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": ["answer", "task_context"]
+    },
+    "status": {
+      "$ref": "shared_enums.schema.json#/definitions/status"
+    },
+    "freshness": {
+      "$ref": "shared_enums.schema.json#/definitions/freshness"
+    },
+    "verification": {
+      "$ref": "shared_enums.schema.json#/definitions/verification"
+    },
+    "cache": {
+      "type": "string",
+      "description": "Deliberately open string, not a closed enum — the proposal shows only one example value ('HIT'). See Design Decision D3."
+    },
+    "answer": {
+      "type": "string"
+    },
+    "statements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["statement_id", "text", "classification", "evidence_ids"],
+        "properties": {
+          "statement_id": { "type": "string" },
+          "text": { "type": "string" },
+          "classification": {
+            "$ref": "shared_enums.schema.json#/definitions/statement_classification"
+          },
+          "verification": {
+            "$ref": "shared_enums.schema.json#/definitions/verification"
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": { "type": "string" },
+          "summary": { "type": "string" },
+          "source_id": { "type": "string" },
+          "path": { "type": "string" },
+          "evidence_hash": { "type": "string" },
+          "authority": { "type": "string" }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "evidence_id": { "type": "string" },
+          "source_id": { "type": "string" },
+          "path": { "type": "string" },
+          "evidence_hash": { "type": "string" }
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "description": "Per §14 — each item is one conflict record. §14's top-level example is read as one array-item shape here, not a separate response envelope (Design Decision D2).",
+      "items": {
+        "type": "object",
+        "required": ["subject", "claims", "automatic_resolution", "recommended_action"],
+        "properties": {
+          "subject": { "type": "string" },
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["value", "source_id", "authority", "valid_from", "valid_to"],
+              "properties": {
+                "value": { "type": "string" },
+                "source_id": { "type": "string" },
+                "authority": { "type": "string" },
+                "valid_from": { "type": "string" },
+                "valid_to": { "type": ["string", "null"] }
+              }
+            }
+          },
+          "automatic_resolution": { "type": "string" },
+          "recommended_action": { "type": "string" }
+        }
+      }
+    },
+    "provenance_providers": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "providers_consulted_this_call": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "provider_failures": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Machine-readable, per-provider failure reasons (e.g. 'graphify: subprocess timeout'). Always present as an array (possibly empty) — never a silent omission when a provider fails. See docs/plans/knowledge-gateway-mcp-proposal.md §16 'one provider unavailable' row."
+    },
+    "budget_requested": { "type": "integer" },
+    "budget_returned": { "type": "integer" },
+    "budget_truncated": { "type": "boolean" },
+    "omitted_statement_count": { "type": "integer" },
+    "conflicts_truncated": { "type": "boolean" },
+    "omitted_conflict_count": { "type": "integer" },
+    "cache_key_version": { "type": "integer" },
+    "error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "ERROR" } }
+      },
+      "then": {
+        "required": ["error"]
+      }
+    }
+  ]
+}

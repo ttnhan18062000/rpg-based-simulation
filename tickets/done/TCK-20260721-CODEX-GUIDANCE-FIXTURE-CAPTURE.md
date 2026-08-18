@@ -15,7 +15,7 @@ tags: [ai, workflows, process-improvement, hooks, skills]
 Codex guidance/skills arrangement and real hook-payload fixture capture
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

@@ -38,7 +38,7 @@ def derive_codex_shadow_outcome(fixture: FixtureEnvelope, artifacts_dir: Path) -
     phase_names = [p.phase for p in fixture.phases]
 
     matrix.validate_phase_names(phase_names, supported_matrix)
-    matrix.validate_contract_version(fixture.version, supported_matrix)
+    matrix.validate_contract_version(supported_matrix)
     matrix.validate_tier(fixture.source.get("tier"), supported_matrix)
     phase_order.validate_phase_order(phase_names, supported_matrix)
 

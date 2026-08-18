@@ -8,6 +8,8 @@ from src.perf.scenarios import build_idle_state, build_movement_state, build_com
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
 from calibrate_simq import _load_world_state  # noqa: E402
 
+from tests.tools.perf_assertions import assert_perf_threshold
+
 
 def _load_corpus_world_state(world_name: str, seed: int = 42):
     """Adapter matching the parametrize table's builder_fn(**kwargs) convention —
@@ -63,4 +65,7 @@ def test_regression_vs_baseline(perf_harness, scenario_id, builder_fn, kwargs):
     print(f"Current:  {current_avg:.2f}ms")
     print(f"Limit:    {threshold:.2f}ms")
     
-    assert current_avg <= threshold, f"Performance regression detected in {scenario_id}! {current_avg:.2f}ms > {threshold:.2f}ms"
+    assert_perf_threshold(
+        current_avg, threshold,
+        f"Performance regression check for {scenario_id}", op="<=",
+    )

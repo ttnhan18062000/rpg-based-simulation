@@ -6,14 +6,15 @@ import {
   useGlossary,
   type AgentMonitoringStats,
   type GlossaryTerms,
+  type KgmcpCacheTicketStats,
   type TicketCorpusStats,
 } from '@/api'
 import { BarChart, type BarChartDatum } from '@/components/BarChart'
 import { GlossaryTooltip } from '@/components/GlossaryTooltip'
 import { GroupedBarChart, type GroupedBarChartDatum } from '@/components/GroupedBarChart'
+import { SearchableTable, type SearchableTableColumn } from '@/components/SearchableTable'
 import { StatTile } from '@/components/StatTile'
 
-const TOP_AGENTS_LIMIT = 15
 const VELOCITY_DAYS_LIMIT = 14
 
 function toBarChartData(record: Record<string, number>): BarChartDatum[] {
@@ -52,7 +53,9 @@ interface TopAgentRow {
 }
 
 function topAgentRows(stats: AgentMonitoringStats): TopAgentRow[] {
-  const rows: TopAgentRow[] = Object.entries(stats.agent_status_distribution).map(([agent, statuses]) => {
+  // No slice/sort here — SearchableTable owns sorting (defaultSortKey="total") and pagination,
+  // so every agent is available to search/page through rather than only the top N.
+  return Object.entries(stats.agent_status_distribution).map(([agent, statuses]) => {
     const total = Object.values(statuses).reduce((sum, n) => sum + n, 0)
     return {
       agent,
@@ -63,7 +66,6 @@ function topAgentRows(stats: AgentMonitoringStats): TopAgentRow[] {
       skipped: statuses.skipped ?? 0,
     }
   })
-  return rows.sort((a, b) => b.total - a.total).slice(0, TOP_AGENTS_LIMIT)
 }
 
 interface PhaseStatusRow {
@@ -89,8 +91,109 @@ function phaseStatusRows(stats: AgentMonitoringStats): PhaseStatusRow[] {
   })
 }
 
+interface StatusBreakdownRow {
+  total: number
+  ok: number
+  failed: number
+  blocked: number
+  skipped: number
+}
+
+/** Shared column set for "Top agents by call volume" and "Phase status distribution" — both rows
+ * share the same total/ok/failed/blocked/skipped shape and differ only in the name field's key. */
+function statusBreakdownColumns<T extends StatusBreakdownRow>(
+  nameKey: keyof T,
+  nameHeader: string,
+  glossary: GlossaryTerms,
+): SearchableTableColumn<T>[] {
+  return [
+    {
+      key: String(nameKey),
+      header: nameHeader,
+      accessor: (row) => String(row[nameKey]),
+      render: (row) => (
+        <GlossaryTooltip term={String(row[nameKey])} glossary={glossary}>
+          {String(row[nameKey])}
+        </GlossaryTooltip>
+      ),
+    },
+    { key: 'total', header: 'Total', accessor: (row) => row.total, numeric: true },
+    {
+      key: 'ok',
+      header: (
+        <GlossaryTooltip term="ok" glossary={glossary}>
+          Ok
+        </GlossaryTooltip>
+      ),
+      accessor: (row) => row.ok,
+      numeric: true,
+    },
+    {
+      key: 'failed',
+      header: (
+        <GlossaryTooltip term="failed" glossary={glossary}>
+          Failed
+        </GlossaryTooltip>
+      ),
+      accessor: (row) => row.failed,
+      numeric: true,
+    },
+    {
+      key: 'blocked',
+      header: (
+        <GlossaryTooltip term="blocked" glossary={glossary}>
+          Blocked
+        </GlossaryTooltip>
+      ),
+      accessor: (row) => row.blocked,
+      numeric: true,
+    },
+    {
+      key: 'skipped',
+      header: (
+        <GlossaryTooltip term="skipped" glossary={glossary}>
+          Skipped
+        </GlossaryTooltip>
+      ),
+      accessor: (row) => row.skipped,
+      numeric: true,
+    },
+  ]
+}
+
 function totalSkipped(skipped: Record<string, number>): number {
   return Object.values(skipped).reduce((sum, n) => sum + n, 0)
+}
+
+interface KgmcpTicketRow {
+  key: string
+  hit: number
+  write: number
+  reuse_rate: number | null
+}
+
+function kgmcpTicketRows(record: Record<string, KgmcpCacheTicketStats>): KgmcpTicketRow[] {
+  return Object.entries(record)
+    .map(([key, entry]) => ({ key, hit: entry.hit, write: entry.write, reuse_rate: entry.reuse_rate }))
+    .sort((a, b) => b.hit + b.write - (a.hit + a.write))
+}
+
+function formatPercent(value: number | null): string {
+  return value === null ? '—' : `${Math.round(value * 100)}%`
+}
+
+function kgmcpVerdictColorClass(verdict: string): string {
+  switch (verdict) {
+    case 'EFFECTIVE':
+      return 'text-accent-green'
+    case 'MODERATE':
+      return 'text-accent-yellow'
+    case 'LOW VALUE':
+    case 'NOT IN USE':
+      return 'text-accent-red'
+    default:
+      return 'text-text-secondary'
+  }
 }
 
 export function StatsView() {
@@ -161,9 +264,19 @@ export function StatsView() {
 
         <div className="flex flex-wrap gap-3">
           <StatTile label="Total runs" value={agentStats.run_summary.total} />
-          <StatTile label="Done" value={agentStats.run_summary.done_count} />
+          <StatTile
+            label="Done"
+            value={
+              agentStats.run_summary.total > 0
+                ? `${agentStats.run_summary.done_count} (${Math.round(
+                    (agentStats.run_summary.done_count / agentStats.run_summary.total) * 100,
+                  )}%)`
+                : agentStats.run_summary.done_count
+            }
+          />
           <StatTile label="Gate fails" value={agentStats.run_summary.gate_fail_count} />
           <StatTile label="Avg duration (min)" value={agentStats.run_summary.avg_duration_min} />
+          <StatTile label="Avg agents per run" value={agentStats.run_summary.avg_agents} />
           <StatTile label="Total agent calls" value={agentStats.run_summary.total_agent_calls} />
         </div>
 
@@ -204,138 +317,66 @@ export function StatsView() {
 
         <div className="flex flex-col gap-2">
           <h3 className="text-[11px] font-semibold text-text-secondary uppercase">Top agents by call volume</h3>
-          <table className="text-[11px] w-full border-collapse" data-testid="top-agents-table">
-            <thead>
-              <tr className="text-left text-text-secondary border-b border-border">
-                <th className="py-1 pr-3">Agent</th>
-                <th className="py-1 pr-3">Total</th>
-                <th className="py-1 pr-3">
-                  <GlossaryTooltip term="ok" glossary={glossary}>
-                    Ok
-                  </GlossaryTooltip>
-                </th>
-                <th className="py-1 pr-3">
-                  <GlossaryTooltip term="failed" glossary={glossary}>
-                    Failed
-                  </GlossaryTooltip>
-                </th>
-                <th className="py-1 pr-3">
-                  <GlossaryTooltip term="blocked" glossary={glossary}>
-                    Blocked
-                  </GlossaryTooltip>
-                </th>
-                <th className="py-1 pr-3">
-                  <GlossaryTooltip term="skipped" glossary={glossary}>
-                    Skipped
-                  </GlossaryTooltip>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {topAgentRows(agentStats).map((row) => (
-                <tr key={row.agent} data-testid={`top-agent-row-${row.agent}`} className="border-b border-border">
-                  <td className="py-1 pr-3">
-                    <GlossaryTooltip term={row.agent} glossary={glossary}>
-                      {row.agent}
-                    </GlossaryTooltip>
-                  </td>
-                  <td className="py-1 pr-3 tabular-nums">{row.total}</td>
-                  <td className="py-1 pr-3 tabular-nums">{row.ok}</td>
-                  <td className="py-1 pr-3 tabular-nums">{row.failed}</td>
-                  <td className="py-1 pr-3 tabular-nums">{row.blocked}</td>
-                  <td className="py-1 pr-3 tabular-nums">{row.skipped}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <SearchableTable
+            testId="top-agents-table"
+            rows={topAgentRows(agentStats)}
+            rowKey={(row) => row.agent}
+            rowTestId={(row) => `top-agent-row-${row.agent}`}
+            defaultSortKey="total"
+            defaultSortDir="desc"
+            emptyLabel="No agent data"
+            searchPlaceholder="Search agents…"
+            columns={statusBreakdownColumns<TopAgentRow>('agent', 'Agent', glossary)}
+          />
         </div>
 
         <div className="flex flex-col gap-2">
           <h3 className="text-[11px] font-semibold text-text-secondary uppercase">Phase status distribution</h3>
-          <table className="text-[11px] w-full border-collapse" data-testid="phase-status-table">
-            <thead>
-              <tr className="text-left text-text-secondary border-b border-border">
-                <th className="py-1 pr-3">Phase</th>
-                <th className="py-1 pr-3">Total</th>
-                <th className="py-1 pr-3">
-                  <GlossaryTooltip term="ok" glossary={glossary}>
-                    Ok
-                  </GlossaryTooltip>
-                </th>
-                <th className="py-1 pr-3">
-                  <GlossaryTooltip term="failed" glossary={glossary}>
-                    Failed
-                  </GlossaryTooltip>
-                </th>
-                <th className="py-1 pr-3">
-                  <GlossaryTooltip term="blocked" glossary={glossary}>
-                    Blocked
-                  </GlossaryTooltip>
-                </th>
-                <th className="py-1 pr-3">
-                  <GlossaryTooltip term="skipped" glossary={glossary}>
-                    Skipped
-                  </GlossaryTooltip>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {phaseStatusRows(agentStats).map((row) => (
-                <tr key={row.phase} data-testid={`phase-status-row-${row.phase}`} className="border-b border-border">
-                  <td className="py-1 pr-3">
-                    <GlossaryTooltip term={row.phase} glossary={glossary}>
-                      {row.phase}
-                    </GlossaryTooltip>
-                  </td>
-                  <td className="py-1 pr-3 tabular-nums">{row.total}</td>
-                  <td className="py-1 pr-3 tabular-nums">{row.ok}</td>
-                  <td className="py-1 pr-3 tabular-nums">{row.failed}</td>
-                  <td className="py-1 pr-3 tabular-nums">{row.blocked}</td>
-                  <td className="py-1 pr-3 tabular-nums">{row.skipped}</td>
-                </tr>
-              ))}
-              {Object.keys(agentStats.phase_status_distribution).length === 0 && (
-                <tr>
-                  <td className="py-1 pr-3 text-text-secondary" colSpan={6}>
-                    No phase data
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <SearchableTable
+            testId="phase-status-table"
+            rows={phaseStatusRows(agentStats)}
+            rowKey={(row) => row.phase}
+            rowTestId={(row) => `phase-status-row-${row.phase}`}
+            defaultSortKey="total"
+            defaultSortDir="desc"
+            emptyLabel="No phase data"
+            searchPlaceholder="Search phases…"
+            columns={statusBreakdownColumns<PhaseStatusRow>('phase', 'Phase', glossary)}
+          />
         </div>
 
         <div className="flex flex-col gap-2">
           <h3 className="text-[11px] font-semibold text-text-secondary uppercase">Slow runs</h3>
-          <table className="text-[11px] w-full border-collapse" data-testid="slow-runs-table">
-            <thead>
-              <tr className="text-left text-text-secondary border-b border-border">
-                <th className="py-1 pr-3">Run</th>
-                <th className="py-1 pr-3">Duration (s)</th>
-                <th className="py-1 pr-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {agentStats.slow_runs.map((run) => (
-                <tr key={run.run_id} data-testid={`slow-run-row-${run.run_id}`} className="border-b border-border">
-                  <td className="py-1 pr-3">{run.run_id}</td>
-                  <td className="py-1 pr-3 tabular-nums">{run.duration_s ?? '—'}</td>
-                  <td className="py-1 pr-3">
-                    <GlossaryTooltip term={run.final_status} glossary={glossary}>
-                      {run.final_status}
-                    </GlossaryTooltip>
-                  </td>
-                </tr>
-              ))}
-              {agentStats.slow_runs.length === 0 && (
-                <tr>
-                  <td className="py-1 pr-3 text-text-secondary" colSpan={3}>
-                    No slow runs
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <SearchableTable
+            testId="slow-runs-table"
+            rows={agentStats.slow_runs}
+            rowKey={(run) => run.run_id}
+            rowTestId={(run) => `slow-run-row-${run.run_id}`}
+            defaultSortKey="duration_s"
+            defaultSortDir="desc"
+            emptyLabel="No slow runs"
+            searchPlaceholder="Search runs…"
+            columns={[
+              { key: 'run_id', header: 'Run', accessor: (run) => run.run_id },
+              {
+                key: 'duration_s',
+                header: 'Duration (s)',
+                accessor: (run) => run.duration_s ?? -1,
+                render: (run) => (run.duration_s ?? '—') as React.ReactNode,
+                numeric: true,
+              },
+              {
+                key: 'final_status',
+                header: 'Status',
+                accessor: (run) => run.final_status,
+                render: (run) => (
+                  <GlossaryTooltip term={run.final_status} glossary={glossary}>
+                    {run.final_status}
+                  </GlossaryTooltip>
+                ),
+              },
+            ] satisfies SearchableTableColumn<(typeof agentStats.slow_runs)[number]>[]}
+          />
         </div>
 
         {agentStats.outliers.duration_s.length > 0 || agentStats.outliers.cost_proxy_score.length > 0 ? (
@@ -343,36 +384,38 @@ export function StatsView() {
             {agentStats.outliers.duration_s.length > 0 && (
               <div className="flex flex-col gap-2">
                 <h3 className="text-[11px] font-semibold text-text-secondary uppercase">Duration outliers (by tier)</h3>
-                <table className="text-[11px] w-full border-collapse" data-testid="duration-outliers-table">
-                  <thead>
-                    <tr className="text-left text-text-secondary border-b border-border">
-                      <th className="py-1 pr-3">Run</th>
-                      <th className="py-1 pr-3">Tier</th>
-                      <th className="py-1 pr-3">Duration (s)</th>
-                      <th className="py-1 pr-3">Median</th>
-                      <th className="py-1 pr-3">Ratio</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {agentStats.outliers.duration_s.map((o) => (
-                      <tr
-                        key={o.run_id}
-                        data-testid={`duration-outlier-row-${o.run_id}`}
-                        className="border-b border-border"
-                      >
-                        <td className="py-1 pr-3">{o.run_id}</td>
-                        <td className="py-1 pr-3">
-                          <GlossaryTooltip term={o.tier} glossary={glossary}>
-                            {o.tier}
-                          </GlossaryTooltip>
-                        </td>
-                        <td className="py-1 pr-3 tabular-nums">{o.duration_s}</td>
-                        <td className="py-1 pr-3 tabular-nums">{o.median}</td>
-                        <td className="py-1 pr-3 tabular-nums">{`${o.ratio}x`}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <SearchableTable
+                  testId="duration-outliers-table"
+                  rows={agentStats.outliers.duration_s}
+                  rowKey={(o) => o.run_id}
+                  rowTestId={(o) => `duration-outlier-row-${o.run_id}`}
+                  defaultSortKey="ratio"
+                  defaultSortDir="desc"
+                  emptyLabel="No duration outliers"
+                  searchPlaceholder="Search runs…"
+                  columns={[
+                    { key: 'run_id', header: 'Run', accessor: (o) => o.run_id },
+                    {
+                      key: 'tier',
+                      header: 'Tier',
+                      accessor: (o) => o.tier,
+                      render: (o) => (
+                        <GlossaryTooltip term={o.tier} glossary={glossary}>
+                          {o.tier}
+                        </GlossaryTooltip>
+                      ),
+                    },
+                    { key: 'duration_s', header: 'Duration (s)', accessor: (o) => o.duration_s, numeric: true },
+                    { key: 'median', header: 'Median', accessor: (o) => o.median, numeric: true },
+                    {
+                      key: 'ratio',
+                      header: 'Ratio',
+                      accessor: (o) => o.ratio,
+                      render: (o) => `${o.ratio}x`,
+                      numeric: true,
+                    },
+                  ] satisfies SearchableTableColumn<(typeof agentStats.outliers.duration_s)[number]>[]}
+                />
               </div>
             )}
             {agentStats.outliers.cost_proxy_score.length > 0 && (
@@ -425,6 +468,106 @@ export function StatsView() {
             </p>
           </div>
         )}
+
+        <div data-testid="stats-section-skill-usage" className="flex flex-col gap-2">
+          <h3 className="text-[11px] font-semibold text-text-secondary uppercase">Skill usage</h3>
+          <div className="flex flex-wrap gap-3">
+            <StatTile label="Total skill invocations" value={agentStats.skill_usage.total_skill_invocations} />
+          </div>
+          <BarChart
+            data={toBarChartData(agentStats.skill_usage.per_skill)}
+            emptyLabel="No skill invocations"
+            descriptions={descriptions}
+          />
+        </div>
+
+        <div data-testid="stats-section-kgmcp-cache-efficiency" className="flex flex-col gap-2">
+          <h3 className="text-[11px] font-semibold text-text-secondary uppercase">KGMCP cache efficiency</h3>
+
+          <div
+            data-testid="kgmcp-verdict"
+            className="flex flex-col gap-1 bg-bg-secondary border border-border rounded-md px-3 py-2"
+          >
+            <div className={`text-[11px] font-semibold uppercase ${kgmcpVerdictColorClass(agentStats.kgmcp_cache_efficiency.verdict)}`}>
+              Cache Efficiency: {agentStats.kgmcp_cache_efficiency.verdict}
+            </div>
+            <div className="text-[11px] text-text-secondary">
+              {agentStats.kgmcp_cache_efficiency.verdict_explanation}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <StatTile label="Total hits" value={agentStats.kgmcp_cache_efficiency.total_hits} />
+            <StatTile label="Total writes" value={agentStats.kgmcp_cache_efficiency.total_writes} />
+            <StatTile label="Reuse rate" value={formatPercent(agentStats.kgmcp_cache_efficiency.overall_reuse_rate)} />
+            <StatTile label="Dead writes" value={agentStats.kgmcp_cache_efficiency.dead_write_count} />
+            <StatTile label="Repeated refetches" value={agentStats.kgmcp_cache_efficiency.repeated_refetches.length} />
+            <StatTile
+              label="Coverage (cache vs. search calls)"
+              value={formatPercent(agentStats.kgmcp_cache_efficiency.coverage.coverage_rate)}
+            />
+          </div>
+
+          {(Object.keys(agentStats.kgmcp_cache_efficiency.per_ticket).length > 0 ||
+            Object.keys(agentStats.kgmcp_cache_efficiency.per_agent).length > 0) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Object.keys(agentStats.kgmcp_cache_efficiency.per_ticket).length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-[11px] font-semibold text-text-secondary uppercase">Per ticket</h4>
+                  <table className="text-[11px] w-full border-collapse" data-testid="kgmcp-per-ticket-table">
+                    <thead>
+                      <tr className="text-left text-text-secondary border-b border-border">
+                        <th className="py-1 pr-3">Ticket</th>
+                        <th className="py-1 pr-3">Hits</th>
+                        <th className="py-1 pr-3">Writes</th>
+                        <th className="py-1 pr-3">Reuse rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {kgmcpTicketRows(agentStats.kgmcp_cache_efficiency.per_ticket).map((row) => (
+                        <tr key={row.key} data-testid={`kgmcp-per-ticket-row-${row.key}`} className="border-b border-border">
+                          <td className="py-1 pr-3">{row.key}</td>
+                          <td className="py-1 pr-3 tabular-nums">{row.hit}</td>
+                          <td className="py-1 pr-3 tabular-nums">{row.write}</td>
+                          <td className="py-1 pr-3 tabular-nums">{formatPercent(row.reuse_rate)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {Object.keys(agentStats.kgmcp_cache_efficiency.per_agent).length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-[11px] font-semibold text-text-secondary uppercase">Per agent</h4>
+                  <table className="text-[11px] w-full border-collapse" data-testid="kgmcp-per-agent-table">
+                    <thead>
+                      <tr className="text-left text-text-secondary border-b border-border">
+                        <th className="py-1 pr-3">Agent</th>
+                        <th className="py-1 pr-3">Hits</th>
+                        <th className="py-1 pr-3">Writes</th>
+                        <th className="py-1 pr-3">Reuse rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {kgmcpTicketRows(agentStats.kgmcp_cache_efficiency.per_agent).map((row) => (
+                        <tr key={row.key} data-testid={`kgmcp-per-agent-row-${row.key}`} className="border-b border-border">
+                          <td className="py-1 pr-3">
+                            <GlossaryTooltip term={row.key} glossary={glossary}>
+                              {row.key}
+                            </GlossaryTooltip>
+                          </td>
+                          <td className="py-1 pr-3 tabular-nums">{row.hit}</td>
+                          <td className="py-1 pr-3 tabular-nums">{row.write}</td>
+                          <td className="py-1 pr-3 tabular-nums">{formatPercent(row.reuse_rate)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </section>
 
       <section data-testid="stats-section-ticket-corpus" className="flex flex-col gap-4">

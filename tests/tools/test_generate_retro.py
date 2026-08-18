@@ -8,6 +8,7 @@ tickets changed.
 """
 
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -18,11 +19,19 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
 
 import generate_retro  # noqa: E402
 from generate_retro import (  # noqa: E402
+    build_raw_investigation_count_section,
+    build_search_count_section,
+    build_skill_usage_section,
+    compute_kgmcp_cache_efficiency_metrics,
+    compute_parity_index_readpath_call_count,
     compute_retro_metrics,
     compute_retrieval_metrics,
+    compute_search_investigation_trend,
     compute_shadow_baseline_comparison,
     compute_tool_safety_metrics,
+    compute_zero_invocation_skill_flags,
     generate,
+    _is_parity_index_readpath_call,
     _record_since_cutoff,
     _resolve_status,
     _is_legacy_event,
@@ -440,6 +449,10 @@ def test_compute_retro_metrics_returns_all_documented_keys():
         "tag_breakdown_subsystem", "tag_breakdown_skill", "tier_distribution",
         "agent_status_distribution", "phase_status_distribution", "spend_proxy_by_phase",
         "spend_proxy_by_agent", "summary_quality", "slow_runs", "outliers",
+        # Added by TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD —
+        # both always present (computed over an empty list, not omitted) when `tools`/
+        # `kgmcp_access_log` are omitted, keeping this function's own additive-only contract.
+        "skill_usage", "kgmcp_cache_efficiency",
     }
 
 
@@ -952,14 +965,21 @@ def test_main_loads_via_index_not_direct_jsonl_scan():
     assert "_load_runs_and_events" in source
 
 
-def test_update_index_call_sites_migrated_or_explicitly_documented_as_out_of_scope():
+def test_update_index_signature_change_is_deliberate_and_documented():
+    """Replaces test_update_index_call_sites_migrated_or_explicitly_documented_as_out_of_scope
+    (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING, Design Decision 2): _update_index gained
+    an additional, optional `all_tools` parameter to thread per-week search/read trend data into
+    index.md — a deliberate, disclosed arity change, not a silent regression. The original test's
+    real property — _update_index never bypasses its passed-in data by reading RUNS_FILE directly
+    — is preserved and re-asserted below; only the arity pin itself is consciously updated."""
     import inspect
 
     source = inspect.getsource(generate_retro._update_index)
     assert "load_jsonl(RUNS_FILE)" not in source
 
     sig = inspect.signature(generate_retro._update_index)
-    assert list(sig.parameters) == ["all_runs"]
+    assert list(sig.parameters) == ["all_runs", "all_tools"]
+    assert sig.parameters["all_tools"].default is None
 
 
 _FIXED_CORPUS_RUNS = [
@@ -1047,6 +1067,67 @@ _FIXED_CORPUS_EXPECTED_REPORT = (
     "## Slow Runs (> 30 min)\n"
     "\n"
     "_No slow runs this period._\n"
+    "\n"
+    "## Parity Index Read-Path Usage\n"
+    "\n"
+    "**`entry`/`impact`/`health` call count:** 0/0 Bash rows scanned\n"
+    "\n"
+    "_Counts tools.jsonl rows where tool == \"Bash\" and input_summary matches parity_index.py "
+    "followed immediately by entry, impact, or health (path-anchored, so a filename mention alone "
+    "— e.g. test_parity_index.py, --help, `git log -- ... parity_index.py`, `sed -n '1,60p' "
+    "tools/parity_index.py` — never counts). bash_rows_scanned is the total Bash-tool row "
+    "population this detector ran against (the section's own 'N' denominator). Confirmed 0 real "
+    "call sites as of TCK-20260731-PARITY-READPATH-GATE's Gate A review (reviewed GO, not yet "
+    "wired into any real workflow call site) — this is the expected, correct value until a future "
+    "ticket adds a real entry/impact/health call site, not a bug._\n"
+    "\n"
+    "## KGMCP Cache Efficiency\n"
+    "\n"
+    "_Reflects the full retrieval_cache_access_log corpus regardless of this report's "
+    "--days/--week/--all period selection — these rows are logged against "
+    "`.claude/current_run` sidecar attribution at call time, not `runs.jsonl` timestamps._\n"
+    "\n"
+    "**Cache Efficiency: NO DATA** — No KGMCP cache activity and no search/graphify tool "
+    "calls recorded in this corpus — nothing to evaluate yet.\n"
+    "\n"
+    "| Metric | Value |\n"
+    "|---|---|\n"
+    "| Total hits | 0 |\n"
+    "| Total writes | 0 |\n"
+    "| Overall reuse rate | n/a |\n"
+    "| Dead writes (never hit) | 0 |\n"
+    "| Repeated refetches (within 300s) | 0 |\n"
+    "| Real search/graphify calls (coverage denominator) | 0 |\n"
+    "| Coverage rate (cache events / search calls) | n/a |\n"
+    "\n"
+    "_Derived from tools/retrieval_cache.py::read_cache_access_log()'s real "
+    "retrieval_cache_access_log rows (Level 1 provider-result + Level 2 context-packet "
+    "cache hit/write events only — 'invalidate' is a schema-supported but never-emitted "
+    "event_type today) plus tools.jsonl's real search_docs/graphify/ToolSearch call "
+    "volume (via build_search_count_section(), for `coverage` only). reuse_rate = hit / "
+    "(hit + write) per ticket/agent/overall — the fraction of real access events served "
+    "from cache rather than re-fetched. repeated_refetches flags a 'write' event for the "
+    "same real cache row (same cache_level + query_hash/repo_branch_scope, or same "
+    "cache_level + packet_id) following any prior event for that row within 300s — "
+    "content re-fetched instead of reused. dead_writes flags a 'write' never followed by "
+    "a 'hit' before the next write to that same row (or the end of the observed log) — a "
+    "wasted write, as of what this function can currently see (a row that is still live "
+    "may yet be hit later; this is not a permanent-deadness claim past the observed "
+    "data). coverage compares total cache events against real search/graphify tool-call "
+    "volume — a period with substantial search activity but few/zero cache events means "
+    "retrieval work is bypassing the cache path, a real, distinct finding from a low "
+    "reuse_rate. `ticket_id`/`agent` absent on a row (ad-hoc calls or a stale sidecar) "
+    "are grouped under the literal 'unattributed' key, mirroring "
+    "build_search_count_section()'s run_id=None convention. `stale_attribution_count` "
+    "counts rows whose `.claude/current_run` sidecar pointed at an already-closed ticket "
+    "at log time (tools/retrieval_cache.py::_sidecar_run_is_stale()) — a real, disclosed "
+    "known limitation of sidecar-based attribution "
+    "(TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD Scope item "
+    "6), not a fixed one; these rows are still counted in hit/write/reuse-rate totals "
+    "above, just flagged rather than silently trusted or dropped. "
+    "`verdict`/`verdict_explanation` are a rule-based summary of the four signals above "
+    "(reuse rate, repeated refetches, dead writes, coverage) — every clause is a literal "
+    "readout of an already-computed number, never a fabricated score._\n"
     "\n"
     "## Notes\n"
     "\n"
@@ -1831,3 +1912,715 @@ def test_new_section_omitted_not_rendered_empty_when_no_investigate_tool_data():
 
     report_empty_tools = generate(runs, events, "test-label", tools=[])
     assert "## Tool Safety Audit" not in report_empty_tools
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING
+# ## Search & Investigation Effort (AC1) — trended search/raw-investigation section
+# ---------------------------------------------------------------------------
+
+def test_search_read_investigation_section_wired_into_generate_output():
+    runs = [_BASE_RUN]
+    events = [_ORDINARY_WORKFLOW_EVENT]
+    tools = [
+        _tool_row(tool="mcp__knowledge-search__search_docs", input_summary="q"),
+        _tool_row(tool="Read", input_summary="f1"),
+        _tool_row(tool="Read", input_summary="f2"),
+    ]
+
+    report = generate(runs, events, "test-label", tools=tools)
+
+    assert "## Search & Investigation Effort" in report
+    assert "### Search Calls (Follow-Up Search Tooling)" in report
+    assert "**Total:** 1" in report
+    assert "### Raw Investigation (Read) Calls" in report
+    assert "**Total:** 2" in report
+    assert "**Read-to-search ratio:** 2.0" in report
+
+
+def test_search_read_investigation_section_never_silent_has_derivation():
+    tools = [_tool_row(tool="mcp__knowledge-search__search_docs", input_summary="q")]
+    sit = compute_search_investigation_trend(tools)
+    assert sit["search_count"]["derivation"]
+    assert sit["raw_investigation_count"]["derivation"]
+
+
+def test_search_read_investigation_section_reuses_retrieval_baseline_metrics_not_reimplemented():
+    import ast
+    import inspect
+
+    source = inspect.getsource(compute_search_investigation_trend)
+    tree = ast.parse(source)
+    call_names = {
+        n.func.id for n in ast.walk(tree)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+    }
+    assert "build_search_count_section" in call_names
+    assert "build_raw_investigation_count_section" in call_names
+    assert "for record in tools" not in source
+    assert "SEARCH_TOOL_NAMES" not in source
+
+
+# ---------------------------------------------------------------------------
+# ## Agent Monitoring Retro Index — Search Calls / Read Calls trend columns (AC1)
+# ---------------------------------------------------------------------------
+
+def test_index_md_trends_search_and_read_investigation_columns(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    (tmp_path / "RETRO-2026-W01.md").write_text("placeholder")
+    (tmp_path / "RETRO-2026-W02.md").write_text("placeholder")
+
+    all_runs = [
+        {"run_id": "TCK-W1", "start_ts": "2026-01-01T00:00:00Z", "final_status": "DONE"},
+        {"run_id": "TCK-W2", "start_ts": "2026-01-08T00:00:00Z", "final_status": "DONE"},
+    ]
+    all_tools = [
+        _tool_row(run_id="TCK-W1", tool="mcp__knowledge-search__search_docs", input_summary="q"),
+        _tool_row(run_id="TCK-W1", tool="Read", input_summary="f"),
+        _tool_row(run_id="TCK-W1", tool="Read", input_summary="f2"),
+        _tool_row(run_id="TCK-W1", tool="Skill", input_summary="{'skill': 'graphify'}"),
+        _tool_row(run_id="TCK-W2", tool="Read", input_summary="f"),
+    ]
+
+    generate_retro._update_index(all_runs, all_tools)
+
+    index_text = (tmp_path / "index.md").read_text()
+    assert (
+        "| Report | Runs | DONE | Gate failures | Search Calls | Read Calls | "
+        "Skill Invocations |" in index_text
+    )
+
+    week1_line = next(l for l in index_text.splitlines() if "2026-W01" in l)
+    week2_line = next(l for l in index_text.splitlines() if "2026-W02" in l)
+    assert week1_line.split("|") == [
+        "", " [2026-W01](RETRO-2026-W01.md) ", " 1 ", " 1 ", " 0 ", " 1 ", " 2 ", " 1 ", "",
+    ]
+    assert week2_line.split("|") == [
+        "", " [2026-W02](RETRO-2026-W02.md) ", " 1 ", " 1 ", " 0 ", " 0 ", " 1 ", " 0 ", "",
+    ]
+
+
+def test_index_md_all_tools_default_never_crashes_on_none(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    (tmp_path / "RETRO-ALL.md").write_text("placeholder")
+    generate_retro._update_index([{"run_id": "TCK-A", "start_ts": "2026-01-01T00:00:00Z"}])  # all_tools omitted
+    index_text = (tmp_path / "index.md").read_text()
+    assert "| [ALL]" in index_text
+
+
+# ---------------------------------------------------------------------------
+# ## Tool Safety Audit — Read-Count Correlation subsection (AC2)
+# ---------------------------------------------------------------------------
+
+def test_correlation_computes_read_count_per_investigate_pair():
+    events = [
+        _investigate_event(run_id="TCK-A", seq=1),
+        _investigate_event(run_id="TCK-B", seq=1),
+    ]
+    tools = [
+        # TCK-A: compliant, 2 Read calls
+        _tool_row(run_id="TCK-A", seq=1, tool="mcp__knowledge-search__search_docs", input_summary="q"),
+        _tool_row(run_id="TCK-A", seq=1, tool="Read", input_summary="f1"),
+        _tool_row(run_id="TCK-A", seq=1, tool="Read", input_summary="f2"),
+        # TCK-B: non-compliant, 5 Read calls
+        _tool_row(run_id="TCK-B", seq=1, tool="Grep", input_summary="p"),
+        _tool_row(run_id="TCK-B", seq=1, tool="Read", input_summary="f1"),
+        _tool_row(run_id="TCK-B", seq=1, tool="Read", input_summary="f2"),
+        _tool_row(run_id="TCK-B", seq=1, tool="Read", input_summary="f3"),
+        _tool_row(run_id="TCK-B", seq=1, tool="Read", input_summary="f4"),
+        _tool_row(run_id="TCK-B", seq=1, tool="Read", input_summary="f5"),
+    ]
+    metrics = compute_tool_safety_metrics(events, tools)
+    rcc = metrics["read_count_correlation"]
+    assert rcc["compliant_group"]["count"] == 1
+    assert rcc["compliant_group"]["median"] == 2
+    assert rcc["compliant_group"]["average"] == 2
+    assert rcc["non_compliant_group"]["count"] == 1
+    assert rcc["non_compliant_group"]["median"] == 5
+    assert rcc["non_compliant_group"]["average"] == 5
+
+
+def test_correlation_median_average_split_by_compliance():
+    events = [
+        _investigate_event(run_id="TCK-A", seq=1),
+        _investigate_event(run_id="TCK-B", seq=1),
+        _investigate_event(run_id="TCK-C", seq=1),
+    ]
+    tools = [
+        # TCK-A: compliant, 1 Read
+        _tool_row(run_id="TCK-A", seq=1, tool="mcp__knowledge-search__search_docs", input_summary="q"),
+        _tool_row(run_id="TCK-A", seq=1, tool="Read", input_summary="f1"),
+        # TCK-B: compliant, 9 Reads
+        _tool_row(run_id="TCK-B", seq=1, tool="mcp__knowledge-search__search_docs", input_summary="q"),
+    ] + [
+        _tool_row(run_id="TCK-B", seq=1, tool="Read", input_summary=f"f{i}") for i in range(9)
+    ] + [
+        # TCK-C: non-compliant, 3 Reads
+        _tool_row(run_id="TCK-C", seq=1, tool="Grep", input_summary="p"),
+        _tool_row(run_id="TCK-C", seq=1, tool="Read", input_summary="f1"),
+        _tool_row(run_id="TCK-C", seq=1, tool="Read", input_summary="f2"),
+        _tool_row(run_id="TCK-C", seq=1, tool="Read", input_summary="f3"),
+    ]
+    metrics = compute_tool_safety_metrics(events, tools)
+    rcc = metrics["read_count_correlation"]
+    assert rcc["compliant_group"]["count"] == 2
+    assert rcc["compliant_group"]["median"] == 5  # median of [1, 9]
+    assert rcc["compliant_group"]["average"] == 5  # average of [1, 9]
+    assert rcc["non_compliant_group"]["count"] == 1
+    assert rcc["non_compliant_group"]["median"] == 3
+    assert rcc["non_compliant_group"]["average"] == 3
+
+
+def test_correlation_reuses_per_pair_compliance_not_a_second_pass():
+    import inspect
+
+    source = inspect.getsource(compute_tool_safety_metrics)
+    # The correlation logic must read pair_tool_rows/per_pair_compliance as already computed,
+    # not re-derive Investigate-pair attribution a second time inside the same function.
+    assert source.count("investigate_pairs = {") == 1
+    assert source.count("pair_tool_rows = defaultdict") == 1
+    assert "for row in tools" in source  # the one, original pair_tool_rows population loop
+    assert source.count("for row in tools") == 1
+
+
+def test_correlation_section_omitted_when_no_investigate_pairs():
+    runs = [_BASE_RUN]
+    events = [_ORDINARY_WORKFLOW_EVENT]
+    report = generate(runs, events, "test-label", tools=[])
+    assert "### Read-Count Correlation" not in report
+
+
+def test_correlation_handles_single_group_empty_gracefully():
+    events = [_investigate_event(run_id="TCK-A", seq=1)]
+    tools = [
+        _tool_row(run_id="TCK-A", seq=1, tool="mcp__knowledge-search__search_docs", input_summary="q"),
+        _tool_row(run_id="TCK-A", seq=1, tool="Read", input_summary="f1"),
+    ]
+    metrics = compute_tool_safety_metrics(events, tools)
+    rcc = metrics["read_count_correlation"]
+    assert rcc["compliant_group"]["count"] == 1
+    assert rcc["non_compliant_group"]["count"] == 0
+    assert rcc["non_compliant_group"]["median"] is None
+    assert rcc["non_compliant_group"]["average"] is None
+
+    report = generate([_BASE_RUN], events, "test-label", tools=tools)
+    assert "### Read-Count Correlation" in report
+    assert "| Non-compliant | 0 | n/a | n/a |" in report
+
+
+def test_correlation_real_corpus_produces_a_real_number():
+    real_events = generate_retro.load_jsonl(generate_retro.EVENTS_FILE)
+    real_tools = generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
+    metrics = compute_tool_safety_metrics(real_events, real_tools)
+    rcc = metrics["read_count_correlation"]
+    assert rcc["compliant_group"]["count"] > 0
+    assert rcc["non_compliant_group"]["count"] > 0
+
+
+# ---------------------------------------------------------------------------
+# ## Parity Index Read-Path Usage (AC3)
+# ---------------------------------------------------------------------------
+
+def test_parity_index_readpath_call_count_zero_on_current_corpus():
+    real_tools = generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
+    result = compute_parity_index_readpath_call_count(real_tools)
+    assert result["count"] == 0
+    assert result["derivation"]
+
+
+def test_parity_index_readpath_detection_matches_real_call_when_present():
+    tools = [
+        _tool_row(tool="Bash", input_summary="python3 tools/parity_index.py entry INFRA-292"),
+        _tool_row(tool="Bash", input_summary="python3 tools/parity_index.py impact --changed-path src/foo.py"),
+        _tool_row(tool="Bash", input_summary="python3 tools/parity_index.py health --subsystem combat"),
+    ]
+    result = compute_parity_index_readpath_call_count(tools)
+    assert result["count"] == 3
+    assert len(result["examples"]) == 3
+    assert result["bash_rows_scanned"] == 3
+
+
+def test_parity_index_readpath_detection_false_positive_guards():
+    tools = [
+        _tool_row(tool="Bash", input_summary="python3 tools/parity_index.py --help"),
+        _tool_row(tool="Bash", input_summary="git log -- docs/foo tools/parity_index.py"),
+        _tool_row(tool="Bash", input_summary="pytest tests/tools/test_parity_index.py -k impact"),
+        _tool_row(tool="Bash", input_summary="sed -n '1,60p' tools/parity_index.py"),
+    ]
+    result = compute_parity_index_readpath_call_count(tools)
+    assert result["count"] == 0
+    assert result["examples"] == []
+
+
+def test_parity_index_readpath_section_never_silent_has_derivation():
+    result = compute_parity_index_readpath_call_count([])
+    assert result["derivation"]
+    assert len(result["derivation"]) > 20  # prose, not a bare number or empty marker
+    assert isinstance(result["count"], int)
+
+    report = generate([_BASE_RUN], [_ORDINARY_WORKFLOW_EVENT], "test-label", tools=[])
+    assert "## Parity Index Read-Path Usage" in report
+    assert "0/0 Bash rows scanned" in report
+
+
+# ---------------------------------------------------------------------------
+# Cross-cutting (AC4/AC5)
+# ---------------------------------------------------------------------------
+
+def test_all_new_sections_have_derivation_key(tmp_path):
+    sit = compute_search_investigation_trend([])
+    assert "derivation" in sit["search_count"]
+    assert "derivation" in sit["raw_investigation_count"]
+
+    tool_safety = compute_tool_safety_metrics([_investigate_event()], [_tool_row()])
+    assert "derivation" in tool_safety["read_count_correlation"]
+
+    pircc = compute_parity_index_readpath_call_count([])
+    assert "derivation" in pircc
+
+    assert "derivation" in build_skill_usage_section([])
+    assert "derivation" in compute_zero_invocation_skill_flags([], skills_dir=tmp_path)
+
+
+def test_new_sections_never_write_any_file():
+    import inspect
+
+    for func in (
+        compute_search_investigation_trend,
+        compute_tool_safety_metrics,
+        compute_parity_index_readpath_call_count,
+        build_skill_usage_section,
+        compute_zero_invocation_skill_flags,
+    ):
+        source = inspect.getsource(func)
+        assert "write_lines(" not in source
+        assert "write_line(" not in source
+        assert '"w")' not in source and "'w')" not in source
+        assert '"a")' not in source and "'a')" not in source
+        assert "EVENTS_FILE" not in source
+        assert "RUNS_FILE" not in source
+        assert "DEFAULT_TOOLS_FILE" not in source
+        assert "load_jsonl" not in source
+
+
+# ---------------------------------------------------------------------------
+# ## Skill Usage (AC1/AC2/AC3/AC4) — TCK-20260810-SKILL-USAGE-RETRO-TRACKING
+# ---------------------------------------------------------------------------
+
+def test_generate_retro_imports_build_skill_usage_section_not_a_reimplementation():
+    """AST guard: skill_usage_metric.py now re-imports build_skill_usage_section from
+    generate_retro.py rather than defining it locally (Step 1's relocation)."""
+    import ast
+
+    module_path = _MONITORING_TOOLS_DIR / "skill_usage_metric.py"
+    tree = ast.parse(module_path.read_text())
+
+    imported_names = set()
+    defined_func_names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                imported_names.add(alias.name)
+        if isinstance(node, ast.FunctionDef):
+            defined_func_names.add(node.name)
+
+    assert "build_skill_usage_section" in imported_names
+    assert "build_skill_usage_section" not in defined_func_names
+
+    generate_retro_path = _MONITORING_TOOLS_DIR / "generate_retro.py"
+    generate_retro_tree = ast.parse(generate_retro_path.read_text())
+    generate_retro_func_names = {
+        n.name for n in ast.walk(generate_retro_tree) if isinstance(n, ast.FunctionDef)
+    }
+    assert "build_skill_usage_section" in generate_retro_func_names
+
+
+def test_skill_usage_section_present_in_generated_report():
+    tools = [
+        _tool_row(run_id="TCK-A", tool="Skill", input_summary="{'skill': 'graphify'}"),
+        _tool_row(run_id="TCK-A", tool="Skill", input_summary="{'skill': 'graphify'}"),
+    ]
+    report = generate([_BASE_RUN], [_ORDINARY_WORKFLOW_EVENT], "test-label", tools=tools)
+    assert "## Skill Usage" in report
+    assert "### Per-Skill Invocation Counts (This Period)" in report
+    assert "graphify" in report
+    assert "### Zero-Invocation Flags" not in report
+
+
+def test_skill_usage_section_matches_real_corpus_counts():
+    real_tools = generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
+    expected = build_skill_usage_section(real_tools)
+    report = generate([_BASE_RUN], [_ORDINARY_WORKFLOW_EVENT], "test-label", tools=real_tools)
+    if expected["total_skill_invocations"] > 0:
+        assert "## Skill Usage" in report
+        assert f"**Total:** {expected['total_skill_invocations']}" in report
+        for skill, count in expected["per_skill"].items():
+            assert f"| {skill} | {count} |" in report
+
+
+def test_skill_usage_section_has_derivation():
+    tools = [_tool_row(run_id="TCK-A", tool="Skill", input_summary="{'skill': 'graphify'}")]
+    report = generate([_BASE_RUN], [_ORDINARY_WORKFLOW_EVENT], "test-label", tools=tools)
+    su = build_skill_usage_section(tools)
+    assert su["derivation"] in report
+
+
+def test_skill_usage_section_omitted_when_no_skill_calls_and_no_all_tools():
+    report = generate([_BASE_RUN], [_ORDINARY_WORKFLOW_EVENT], "test-label", tools=[_tool_row()])
+    assert "## Skill Usage" not in report
+
+
+def test_skill_usage_trend_column_in_retro_index(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    (tmp_path / "RETRO-2026-W03.md").write_text("placeholder")
+
+    all_runs = [{"run_id": "TCK-W3", "start_ts": "2026-01-15T00:00:00Z", "final_status": "DONE"}]
+    all_tools = [
+        _tool_row(run_id="TCK-W3", tool="Skill", input_summary="{'skill': 'graphify'}"),
+        _tool_row(run_id="TCK-W3", tool="Skill", input_summary="{'skill': 'graphify'}"),
+        _tool_row(run_id="TCK-W3", tool="Skill", input_summary="{'skill': 'implement-ticket'}"),
+    ]
+    generate_retro._update_index(all_runs, all_tools)
+
+    index_text = (tmp_path / "index.md").read_text()
+    assert "Skill Invocations" in index_text
+    week3_line = next(l for l in index_text.splitlines() if "2026-W03" in l)
+    assert week3_line.strip().endswith("| 3 |")
+
+
+# --- compute_zero_invocation_skill_flags (Step 3) ---
+
+def _write_skill(skills_dir, name, date_added=None, frontmatter_extra=""):
+    skill_dir = skills_dir / name
+    skill_dir.mkdir(parents=True, exist_ok=True)
+    fm_lines = ["---"]
+    if date_added is not None:
+        fm_lines.append(f'date_added: "{date_added}"')
+    if frontmatter_extra:
+        fm_lines.append(frontmatter_extra)
+    fm_lines.append("---")
+    fm_lines.append(f"# {name}")
+    (skill_dir / "SKILL.md").write_text("\n".join(fm_lines) + "\n")
+    return skill_dir
+
+
+def test_zero_invocation_flag_excludes_skill_within_grace_period(tmp_path):
+    _write_skill(tmp_path, "fresh-skill", date_added="2026-08-05")
+    result = compute_zero_invocation_skill_flags(
+        [], skills_dir=tmp_path, today=date(2026, 8, 15)
+    )
+    assert "fresh-skill" not in result["flagged_stale"]
+    assert "fresh-skill" not in result["flagged_unknown_age"]
+
+
+def test_zero_invocation_flag_includes_skill_past_grace_period_with_zero_invocations(tmp_path):
+    _write_skill(tmp_path, "old-skill", date_added="2026-07-01")
+    result = compute_zero_invocation_skill_flags(
+        [], skills_dir=tmp_path, today=date(2026, 8, 15)
+    )
+    assert "old-skill" in result["flagged_stale"]
+    assert "old-skill" not in result["flagged_unknown_age"]
+
+
+def test_zero_invocation_flag_excludes_skill_with_nonzero_invocations_regardless_of_age(tmp_path):
+    _write_skill(tmp_path, "old-but-used", date_added="2026-01-01")
+    tools = [_tool_row(run_id="TCK-A", tool="Skill", input_summary="{'skill': 'old-but-used'}")]
+    result = compute_zero_invocation_skill_flags(tools, skills_dir=tmp_path, today=date(2026, 8, 15))
+    assert "old-but-used" not in result["flagged_stale"]
+    assert "old-but-used" not in result["flagged_unknown_age"]
+
+
+def test_backend_testing_pre_fix_state_would_have_been_flagged(tmp_path):
+    """Sanity check per AC2: backend-testing's real pre-TCK-20260805-COMMUNITY-SKILL-SWAP-
+    UNDISCLOSED state had no date_added/source field at all — reconstructed here as a synthetic
+    fixture (no date_added) with zero invocations."""
+    _write_skill(tmp_path, "backend-testing", date_added=None)
+    result = compute_zero_invocation_skill_flags([], skills_dir=tmp_path, today=date(2026, 8, 15))
+    assert "backend-testing" in result["flagged_unknown_age"]
+    assert "backend-testing" not in result["flagged_stale"]
+
+
+def test_backend_testing_post_fix_state_not_currently_flagged():
+    """Real-corpus check: the actual, current .claude/skills/backend-testing/SKILL.md has a
+    real date_added (2026-08-05, post-fix) — as of this ticket it is within the grace period, so
+    it must not appear in flagged_stale on the real catalog today."""
+    result = compute_zero_invocation_skill_flags(
+        generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
+    )
+    assert "backend-testing" not in result["flagged_stale"]
+
+
+def test_zero_invocation_flag_function_never_crashes_on_malformed_skill_md(tmp_path):
+    skill_dir = tmp_path / "broken-skill"
+    skill_dir.mkdir()
+    (skill_dir / "SKILL.md").write_text("---\nthis line has no colon at all\n---\nbody\n")
+    result = compute_zero_invocation_skill_flags([], skills_dir=tmp_path, today=date(2026, 8, 15))
+    assert "broken-skill" in result["flagged_unknown_age"]
+    assert "broken-skill" in result["catalog_parse_errors"]
+
+
+def test_zero_invocation_flag_catalog_scan_is_pure_no_file_mutation(tmp_path):
+    _write_skill(tmp_path, "some-skill", date_added="2026-01-01")
+    before = (tmp_path / "some-skill" / "SKILL.md").read_text()
+    compute_zero_invocation_skill_flags([], skills_dir=tmp_path, today=date(2026, 8, 15))
+    after = (tmp_path / "some-skill" / "SKILL.md").read_text()
+    assert before == after
+
+
+def test_grace_period_missing_date_added_policy_is_explicit_not_accidental(tmp_path):
+    result = compute_zero_invocation_skill_flags([], skills_dir=tmp_path)
+    assert "flagged_unknown_age" in result["derivation"]
+    assert "flagged_stale" in result["derivation"]
+    assert "backend-testing" in result["derivation"]
+
+
+def test_flagged_skills_list_never_auto_triggers_downstream_action():
+    import inspect
+
+    source = inspect.getsource(compute_zero_invocation_skill_flags)
+    for forbidden in ("deprecat", "auto_invoke", "write_text(", "unlink(", "rmtree("):
+        assert forbidden not in source
+
+
+def test_six_domain_skills_verdict_not_reopened(tmp_path):
+    """Guard against re-litigating TCK-20260705-SIX-SKILLS-INVESTIGATION's settled verdicts —
+    the derivation string must never claim to prove or disprove those verdicts."""
+    result = compute_zero_invocation_skill_flags([], skills_dir=tmp_path)
+    for forbidden in ("correctly redundant", "SIX-SKILLS-INVESTIGATION", "proves"):
+        assert forbidden not in result["derivation"]
+
+
+def test_zero_invocation_flag_current_domain_skills_all_excluded_on_real_corpus():
+    """Real-corpus check (AC2): the 6 domain skills authored by
+    TCK-20260804-SKILL-CATALOG-MODERNIZATION-EPIC must never appear in flagged_stale today —
+    either because they now have >=1 real invocation, or because they are still within the grace
+    period. Never hardcodes "all 6 show zero" (that snapshot has already drifted)."""
+    domain_skills = {
+        "observability", "simq-dev", "systems-economy",
+        "combat-mechanics", "cognition-strategy", "progression-entities",
+    }
+    result = compute_zero_invocation_skill_flags(
+        generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
+    )
+    assert domain_skills.isdisjoint(set(result["flagged_stale"]))
+
+
+def test_zero_invocation_flag_has_derivation(tmp_path):
+    result = compute_zero_invocation_skill_flags([], skills_dir=tmp_path)
+    assert result["derivation"]
+    assert len(result["derivation"]) > 20
+
+
+def test_generate_without_all_tools_never_computes_zero_invocation_flags(monkeypatch):
+    """Direct regression guard for the architecture-review fix (2026-08-15): generate() must
+    never reach compute_zero_invocation_skill_flags unless the caller explicitly passed
+    all_tools — mirrors the calling convention of the 121+ pre-existing test_generate_retro.py
+    calls that pass only tools=/nothing at all."""
+
+    def _boom(*args, **kwargs):
+        raise AssertionError("compute_zero_invocation_skill_flags must not be called without all_tools")
+
+    monkeypatch.setattr(generate_retro, "compute_zero_invocation_skill_flags", _boom)
+
+    tools = [_tool_row(run_id="TCK-A", tool="Skill", input_summary="{'skill': 'graphify'}")]
+    report = generate([_BASE_RUN], [_ORDINARY_WORKFLOW_EVENT], "test-label", tools=tools)
+    assert "### Zero-Invocation Flags" not in report
+
+
+# ---------------------------------------------------------------------------
+# ## KGMCP Cache Efficiency — TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-
+# DASHBOARD
+# ---------------------------------------------------------------------------
+
+def _kgmcp_row(**overrides):
+    row = {
+        "cache_level": "level1_provider_result",
+        "event_type": "hit",
+        "query_hash": "qh1",
+        "repo_branch_scope": "repo@main",
+        "packet_id": None,
+        "run_id": "TCK-KGMCP-FAKE",
+        "seq": 1,
+        "phase": "Investigate",
+        "agent": "investigator",
+        "execution_id": "e1",
+        "provider": "anthropic",
+        "ticket_id": "TCK-KGMCP-FAKE",
+        "sidecar_stale": 0,
+        "ts": 1000.0,
+    }
+    row.update(overrides)
+    return row
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_empty_input_returns_no_data_verdict():
+    result = compute_kgmcp_cache_efficiency_metrics([], tools=[])
+    assert result["total_hits"] == 0
+    assert result["total_writes"] == 0
+    assert result["overall_reuse_rate"] is None
+    assert result["per_ticket"] == {}
+    assert result["per_agent"] == {}
+    assert result["repeated_refetches"] == []
+    assert result["dead_writes"] == []
+    assert result["dead_write_count"] == 0
+    assert result["coverage"] == {
+        "search_calls_total": 0, "cache_events_total": 0, "coverage_rate": None,
+    }
+    assert result["verdict"] == "NO DATA"
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_not_in_use_when_search_activity_but_no_cache_events():
+    tools = [_tool_row(run_id="TCK-A", tool="mcp__knowledge-search__search_docs")]
+    result = compute_kgmcp_cache_efficiency_metrics([], tools=tools)
+    assert result["verdict"] == "NOT IN USE"
+    assert "1 real" in result["verdict_explanation"]
+    assert result["coverage"]["search_calls_total"] == 1
+    assert result["coverage"]["cache_events_total"] == 0
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_computes_hit_write_and_reuse_rate():
+    rows = [
+        _kgmcp_row(event_type="write", ts=1000.0),
+        _kgmcp_row(event_type="hit", ts=1010.0),
+        _kgmcp_row(event_type="hit", ts=1020.0),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert result["total_hits"] == 2
+    assert result["total_writes"] == 1
+    assert result["overall_reuse_rate"] == pytest.approx(2 / 3, abs=1e-4)
+    assert result["per_ticket"]["TCK-KGMCP-FAKE"] == {
+        "hit": 2, "write": 1, "reuse_rate": pytest.approx(2 / 3, abs=1e-4),
+    }
+    assert result["per_agent"]["investigator"] == {
+        "hit": 2, "write": 1, "reuse_rate": pytest.approx(2 / 3, abs=1e-4),
+    }
+    assert result["verdict"] == "EFFECTIVE"
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_detects_repeated_refetch_within_window():
+    rows = [
+        _kgmcp_row(event_type="write", run_id="TCK-A", ticket_id="TCK-A", ts=1000.0),
+        _kgmcp_row(event_type="write", run_id="TCK-B", ticket_id="TCK-B", ts=1100.0),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert len(result["repeated_refetches"]) == 1
+    rf = result["repeated_refetches"][0]
+    assert rf["run_id"] == "TCK-B"
+    assert rf["prior_run_id"] == "TCK-A"
+    assert rf["gap_s"] == pytest.approx(100.0)
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_no_repeated_refetch_outside_window():
+    rows = [
+        _kgmcp_row(event_type="write", run_id="TCK-A", ts=1000.0),
+        _kgmcp_row(event_type="write", run_id="TCK-B", ts=1000.0 + generate_retro.KGMCP_REFETCH_WINDOW_SECONDS + 1),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert result["repeated_refetches"] == []
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_detects_dead_write():
+    # A write with no hit before the next write to the same row is a dead write. Both writes here
+    # qualify: the first has no hit before the second write, and the second (the row's most recent
+    # write) has no hit before the end of the observed log either — see the function's own
+    # docstring on why a still-live row's most recent write is flagged too (not a permanent-
+    # deadness claim, just "no payoff observed yet").
+    rows = [
+        _kgmcp_row(event_type="write", run_id="TCK-A", ts=1000.0),
+        _kgmcp_row(event_type="write", run_id="TCK-B", ts=5000.0),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert result["dead_write_count"] == 2
+    assert {dw["run_id"] for dw in result["dead_writes"]} == {"TCK-A", "TCK-B"}
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_write_followed_by_hit_is_not_dead():
+    rows = [
+        _kgmcp_row(event_type="write", run_id="TCK-A", ts=1000.0),
+        _kgmcp_row(event_type="hit", run_id="TCK-A", ts=1010.0),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert result["dead_write_count"] == 0
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_unattributed_bucket_for_missing_ticket_and_agent():
+    rows = [_kgmcp_row(event_type="hit", ticket_id=None, agent=None)]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert "unattributed" in result["per_ticket"]
+    assert "unattributed" in result["per_agent"]
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_counts_stale_attribution():
+    rows = [
+        _kgmcp_row(event_type="hit", sidecar_stale=1),
+        _kgmcp_row(event_type="hit", sidecar_stale=0),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert result["stale_attribution_count"] == 1
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_has_derivation():
+    result = compute_kgmcp_cache_efficiency_metrics([], tools=[])
+    assert "derivation" in result
+    assert len(result["derivation"]) > 20
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_never_writes_any_file():
+    import inspect
+
+    source = inspect.getsource(compute_kgmcp_cache_efficiency_metrics)
+    assert "write_lines(" not in source
+    assert "write_line(" not in source
+    assert '"w")' not in source and "'w')" not in source
+    assert "CACHE_DB_PATH" not in source
+    assert "_get_connection(" not in source
+    assert "_get_access_log_connection(" not in source
+
+
+def test_compute_retro_metrics_includes_skill_usage_and_kgmcp_when_supplied(tmp_path):
+    tools = [_tool_row(run_id="TCK-FAKE", tool="Skill", input_summary="{'skill': 'graphify'}")]
+    access_log = [_kgmcp_row(event_type="hit")]
+    metrics = compute_retro_metrics(
+        [_BASE_RUN], [], tickets_root=tmp_path, tools=tools, kgmcp_access_log=access_log
+    )
+    assert metrics["skill_usage"]["total_skill_invocations"] == 1
+    assert metrics["kgmcp_cache_efficiency"]["total_hits"] == 1
+
+
+def test_generate_uses_compute_retro_metrics_skill_usage_not_a_second_call(monkeypatch, tmp_path):
+    """generate()'s `su` must be read from compute_retro_metrics()'s own `skill_usage` key, not
+    computed via a second, independent build_skill_usage_section() call — the property this
+    ticket's own Scope item 3 requires ('CLI Markdown report and JSON API stay logically
+    consistent'). Verified by making build_skill_usage_section() raise if called a second time
+    after compute_retro_metrics() has already computed it."""
+    call_count = {"n": 0}
+    real = generate_retro.build_skill_usage_section
+
+    def _counting(*args, **kwargs):
+        call_count["n"] += 1
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(generate_retro, "build_skill_usage_section", _counting)
+    tools = [_tool_row(run_id="TCK-FAKE", tool="Skill", input_summary="{'skill': 'graphify'}")]
+    generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path, tools=tools)
+    assert call_count["n"] == 1
+
+
+def test_generate_kgmcp_section_always_renders_even_when_empty(tmp_path):
+    report = generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path, tools=[], kgmcp_access_log=[])
+    assert "## KGMCP Cache Efficiency" in report
+    assert "Cache Efficiency: NO DATA" in report
+
+
+def test_generate_kgmcp_section_renders_real_verdict_and_table(tmp_path):
+    access_log = [
+        _kgmcp_row(event_type="write", ts=1000.0),
+        _kgmcp_row(event_type="hit", ts=1010.0),
+    ]
+    report = generate(
+        [_BASE_RUN], [], "test-label", tickets_root=tmp_path, tools=[], kgmcp_access_log=access_log
+    )
+    assert "## KGMCP Cache Efficiency" in report
+    assert "Cache Efficiency: EFFECTIVE" in report
+    assert "| Total hits | 1 |" in report
+    assert "| Total writes | 1 |" in report

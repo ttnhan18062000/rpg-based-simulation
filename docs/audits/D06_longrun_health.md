@@ -18,7 +18,7 @@ tags: [audit, long-run, performance, attrition, behavioral-continuity, rejection
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim |
-| **Audit date** | 2026-06-19 (original); 2026-07-09 (F6 added — wall-clock non-determinism finding from `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`) |
+| **Audit date** | 2026-06-19 (original); 2026-07-09 (F6 added — wall-clock non-determinism finding from `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`); 2026-08-18 (F7 added — second, `audit_mode`-immune divergence found from `TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE`) |
 
 **What this dimension answers:** Does the simulation remain healthy, performant, and behaviorally active across 1,000 ticks — or do entities stagnate, the world deplete, or the engine degrade? This is the first long-run observation after the RC1/RC2/RC3 fixes. D03 confirmed behavioral stasis onset by tick 20 under the broken pipeline. This audit confirms the RC fixes restored behavioral activity while revealing new systemic gaps at the 1,000-tick scale.
 
@@ -285,6 +285,59 @@ audit does not have to rediscover the mechanism from scratch.
 > section's own 18-key/3-trial SLOW-tier methodology was not performed (descoped to a representative
 > sample per that ticket's own Acceptance Criteria) — a future audit may still find more affected keys.
 
+### F7 — A second, `audit_mode`-immune divergence in the `metropolis` scenario (not F6)
+
+> **Discovered:** 2026-08-18, `TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE`
+> **Status:** Precisely localized, not yet root-caused to the exact instruction — open, needs a
+> dedicated follow-up ticket
+
+**Score: not scored (determinism/reproducibility finding, same category as F6, not a behavioral-
+emergence gap).**
+
+While root-causing the "Slow regression" CI job's first-ever-completed-run failure of
+`tests/certification/test_cert_long_run_stability.py::test_long_run_determinism_parity`
+(`assert hash1 == hash2` across two same-seed runs of the `metropolis` scenario, 500 entities, seed
+303), confirmed this test's harness method (`LongRunStabilityHarness.verify_determinism_parity()`)
+already sets `audit_mode=True` and always has (since the file's first commit) — i.e. it already
+follows F6's own documented remedy for strict hash-equality tests. Direct reproduction confirmed
+`audit_mode` genuinely suppresses F6's mechanism here (0 watchdog trips / 0 `WatchdogTrip` alerts
+logged) — **yet the hashes still diverge.** This is not F6 and not the mechanism INFRA-273
+documents; it is a second, previously undocumented, deeper divergence.
+
+Isolated the exact divergence point via per-tick `CanonicalStateHasher.get_hash()` diffing across
+two independent runs (standalone script, not the full 1000-tick pytest run, for cheap iteration):
+tick 29 is bit-identical between the two runs; **tick 30 is the first divergence.** A field-level
+diff of the canonical state at tick 30 shows a genuine strategic-cognition decision split, not
+cosmetic reordering — multiple entities (1, 21, 31, 41, ...) are on a `combat_engage_*` project
+(status `ACTIVE`) in run 1 and on a `combat_retreat_town_center` project (status `ACTIVE`, the
+`combat_engage` project `SUSPENDED`) in run 2 for the identical seed/tick. Entity 31 additionally
+carries a `concern_low_hp` (urgency 0.77) present ONLY in run 2 — indicating the entities' actual
+combat/HP state, not just downstream goal selection, already differs by this point.
+
+A separate, contributing, fully-deterministic bug was also found while tracing this:
+`src/perf/scenarios.py::build_metropolis_state()` (lines 375-381) computes each entity's spawn tile
+from `(i % 10, (i // 10) % 10)` relative to its region — a formula that repeats every 100 entities,
+so entities spaced 100/200 apart in builder-iteration order land on the literal same tile (35 such
+pairs confirmed in the 500-entity build, e.g. entity 30 & 130, entity 60 & 260). This overlap is
+itself identical between the two runs (confirmed via a monkeypatch spy on
+`HardLawMonitor.check_occupancy()` — same collision set, same order, at tick 1 in both runs) so it
+is not itself the non-determinism, but is the likely trigger: dozens of entities in identical-tile
+combat contact from tick 1 plausibly creates the conditions for some order-sensitive downstream
+step (combat targeting or budget-constrained candidate selection, most likely in
+`src/domains/combat_engagement/` or `src/cognition/`/`src/strategy/`'s goal evaluation) to resolve
+differently between runs — not proven at the exact line within this finding's investigation budget.
+
+**Not fixed here** (matches this repo's own precedent of reporting rather than guess-fixing a P0/P1
+determinism bug without full certainty — see
+`TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE`). `test_long_run_determinism_parity`
+and its pre-existing `skipif(CI=="true")` guard are left unchanged. Flagged here, per this section's
+own F6 precedent, "so a future audit does not have to rediscover the mechanism from scratch": the
+next ticket should instrument combat targeting / candidate selection between ticks 1-30 of this
+exact repro (`metropolis`, seed 303, 500 entities, `audit_mode=True`) to find the precise
+order-dependent instruction, and separately consider whether `build_metropolis_state()`'s
+entity-position-overlap formula should be fixed on its own merits (it is a scenario-realism defect
+regardless of whether it turns out to be F7's trigger).
+
 ---
 
 ## Key Findings Summary
@@ -296,7 +349,8 @@ audit does not have to rediscover the mechanism from scratch.
 | F3 | 11/15 | Rejection cascade grows to 500K–550K/run at ~650/tick after RC1 fix |
 | F4 | 15/15 | Quest system never activates — no material blockers generated while F1 persists |
 | F5 | 9/15 | Late-run attrition exceeds spawn rate; entity count ends below starting count — **RESOLVED** (P2-B, `SpawnConfig` two-tier cadence); a separately-conflated early-collapse symptom in other worlds fixed 2026-07-04 by `TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` (stale hazard-kind content, unrelated cause) |
-| F6 | N/A | Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle drops resolution work based on real compute time, not seed) — **documented, not fixed** (intentional engine behavior); narrow mitigation applied via a tolerance-based regression guard, `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` (2026-07-09); all 18 shipped long-run anchors re-verified stable against this variance, `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` (2026-07-11); extended to the FAST tier 2026-08-10 (`TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP`) — unlike the SLOW tier, 3 low-event-count (run_key, pillar) pairs found unstable, classified via a new `watchdog_variance` score-ceiling entry rather than fixed |
+| F6 | N/A | Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle drops resolution work based on real compute time, not seed) — **documented, not fixed** (intentional engine behavior); narrow mitigation applied via a tolerance-based regression guard, `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` (2026-07-09); all 18 shipped long-run anchors re-verified stable against this variance, `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` (2026-07-11); extended to the FAST tier 2026-08-10 (`TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP`) — unlike the SLOW tier, 3 low-event-count (run_key, pillar) pairs found unstable, classified via a new `watchdog_variance` score-ceiling entry rather than fixed; for STRICT hash-equality tests (as opposed to F6's own tolerance-banded SimQ-anchor remedy), the correct fix is `audit_mode=True` — applied to `tests/integration/world/test_long_run_stability.py` 2026-08-18 (`TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE`), verified deterministic across 3 repeated runs |
+| F7 | N/A | A second, `audit_mode`-**immune** divergence in the `metropolis` scenario (`test_long_run_determinism_parity`) — NOT the F6 mechanism (0 watchdog trips confirmed with `audit_mode=True`); localized to tick 30 (bit-identical through tick 29), a genuine combat-engage-vs-combat-retreat strategic-goal split. **Not yet root-caused to the exact instruction** — open, needs a dedicated follow-up ticket, `TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE` (2026-08-18) |
 
 **Performance — all green:**
 - Tick compute: 9–15ms avg, stable, well within 50ms budget ✓

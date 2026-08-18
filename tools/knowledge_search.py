@@ -240,8 +240,9 @@ def _collect_docs_chunks(docs_root: Path, corpus_root: Path) -> list[dict]:
     Exclusions: docs/archive/ and docs/lab/ subtrees are never indexed.
 
     Chunk metadata keys per returned dict:
-      id          — "{section}/{stem}#{heading-slug}-{seq:03d}" or "{section}/{stem}#body-000"
-      doc_id      — "{section}/{stem}" (document-level identity, no chunk qualifier)
+      id          — "{doc_id}#{heading-slug}-{seq:03d}" or "{doc_id}#body-000"
+      doc_id      — full relative path under docs_root, minus ".md" suffix (document-level
+                    identity, no chunk qualifier)
       path        — relative path string from corpus_root (e.g. "docs/mechanics/02.md")
       text        — chunk text (never empty)
       source_type — always "doc_chunk"
@@ -276,21 +277,20 @@ def _collect_docs_chunks(docs_root: Path, corpus_root: Path) -> list[dict]:
         if not body.strip():
             continue
 
-        # Determine section: immediate subdirectory of docs_root
-        if len(rel_parts) > 1:
-            section = rel_parts[0]
-        else:
-            section = ""
-
-        stem = md_file.stem
-
         # Derive relative path string from corpus_root
         try:
             path_str = str(md_file.relative_to(corpus_root))
         except ValueError:
             path_str = str(md_file)
 
-        doc_id = f"{section}/{stem}" if section else stem
+        # doc_id preserves the full nested relative path under docs_root, not just
+        # the immediate subdirectory — fixes TCK-20260815-HOTFIX-DOC-ID-NESTED-PATH-TRUNCATION.
+        doc_id = rel.with_suffix("").as_posix()
+
+        # section retained for the existing "section" chunk-metadata field (used by
+        # search_mcp.py's --section post-filter) — still the immediate subdirectory,
+        # unchanged semantics, computed the same way as before.
+        section = rel_parts[0] if len(rel_parts) > 1 else ""
 
         # Split body on H2 headings
         h2_parts = re.split(r"^(## .+)$", body, flags=re.MULTILINE)

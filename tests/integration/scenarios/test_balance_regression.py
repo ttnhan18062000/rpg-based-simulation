@@ -22,9 +22,9 @@ ATTRITION_CAP = 0.60          # E12A: 46.7% (14/30 dead) — 13.3% headroom abov
 ATTRITION_FLOOR = 0.00        # Non-negative sanity bound
 ECONOMIC_GOLD_FLOOR = 0.0     # E12A: 0.0 gold — economic pipeline blocked (routing/nodes)
 BLOCKER_FREQUENCY_E12A = 0.0  # E12A: 0.0 — no blocked routes observed
-# Scoring formula constants (docs/mechanics/04_strategic_cognition.md §6.2)
+# Scoring formula constants (docs/mechanics/04_strategic_cognition.md §6.4, GATHER_RESOURCE/greed)
 CONFIDENCE_BONUS_WEIGHT = 0.15
-PERSONALITY_BIAS_WEIGHT = 0.25
+PERSONALITY_BIAS_WEIGHT = 0.50  # E11C (2026-06-28): raised from 0.25 -- see §6.4 calibration history
 BLOCKER_PENALTY = 2.0
 SEED = 42
 WORLD_ID = "urban_political"
@@ -180,8 +180,9 @@ def test_scoring_formula_constants_stable():
     Behavioral regression for AdventureRouteScorer formula constants.
 
     Verifies: confidence_bonus = confidence × 0.15 (weight 0.15), personality_bias
-    for greed on GATHER_RESOURCE = greed × 0.25 (weight 0.25), and blocker_penalty
-    = 2.0 collapses total score to 0.0 when positive terms sum to ~0.40.
+    for greed on GATHER_RESOURCE = greed × 0.50 (weight 0.50, raised from 0.25 by
+    E11C -- see docs/mechanics/04_strategic_cognition.md §6.4), and blocker_penalty
+    = 2.0 collapses total score to 0.0 when positive terms sum to ~0.65.
 
     Does NOT run a simulation — pure unit test of the scorer.
     """
@@ -195,11 +196,11 @@ def test_scoring_formula_constants_stable():
     # Expected score:
     #   urgency          = 0.0   (no active "gold" or "inventory_space" needs)
     #   benefit          = 0.0
-    #   personality_bias = greed(1.0) × 0.25 = 0.25
+    #   personality_bias = greed(1.0) × 0.50 = 0.50
     #   confidence_bonus = 1.0 × 0.15 = 0.15
     #   risk_penalty     = 0.0 × risk_mult × 0.5 = 0.0
     #   blocker_penalty  = 0.0
-    #   total            = 0.40
+    #   total            = 0.65
     route_unblocked = AdventureRouteOption(
         family=RouteFamily.GATHER_RESOURCE,
         score=0.0,
@@ -211,12 +212,12 @@ def test_scoring_formula_constants_stable():
     scored_unblocked = AdventureRouteScorer.score(entity, route_unblocked)
     expected_score = round(
         PERSONALITY_BIAS_WEIGHT * 1.0 + CONFIDENCE_BONUS_WEIGHT * 1.0, 4
-    )  # 0.25 + 0.15 = 0.40
+    )  # 0.50 + 0.15 = 0.65
     assert abs(scored_unblocked.score - expected_score) < 0.001, (
         f"Expected score {expected_score} (greed×{PERSONALITY_BIAS_WEIGHT} + "
         f"confidence×{CONFIDENCE_BONUS_WEIGHT}), got {scored_unblocked.score}. "
         "Scoring constant weights may have drifted from documented values in "
-        "docs/mechanics/04_strategic_cognition.md §6.2."
+        "docs/mechanics/04_strategic_cognition.md §6.4."
     )
 
     # Same route with a blocker: blocker_penalty=2.0 exceeds 0.40 → clamped to 0.0

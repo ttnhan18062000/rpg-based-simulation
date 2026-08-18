@@ -181,7 +181,7 @@
   },
   {
     "query": "replay contract determinism",
-    "expected_doc_ids": ["engine/replay_contract"],
+    "expected_doc_ids": ["engine/contracts/replay_contract"],
     "category": "exact-term",
     "notes": "exact-term — replay contract doc name plus key topic",
     "allowable_alternatives": [],
@@ -190,7 +190,7 @@
   },
   {
     "query": "scheduler_contract tick scheduling",
-    "expected_doc_ids": ["engine/scheduler_contract"],
+    "expected_doc_ids": ["engine/contracts/scheduler_contract"],
     "category": "exact-term",
     "notes": "exact-term — scheduler contract file and concept",
     "allowable_alternatives": [],
@@ -217,7 +217,7 @@
   },
   {
     "query": "parity_ledger infrastructure status verified",
-    "expected_doc_ids": ["engine/infrastructure_overview"],
+    "expected_doc_ids": ["engine/contracts/infrastructure_overview"],
     "category": "exact-term",
     "notes": "exact-term — parity ledger schema and infrastructure coverage",
     "allowable_alternatives": [],
@@ -307,7 +307,7 @@
   },
   {
     "query": "observability and replay for simulation determinism verification",
-    "expected_doc_ids": ["engine/replay_contract", "engine/observability_contract"],
+    "expected_doc_ids": ["engine/contracts/replay_contract", "engine/contracts/observability_contract"],
     "category": "cross-section",
     "notes": "cross-section — replay and observability both serve determinism verification",
     "allowable_alternatives": [],
@@ -397,7 +397,7 @@
   },
   {
     "query": "engine support matrix grid movement resource interaction official status",
-    "expected_doc_ids": ["engine/supported_gameplay_surface"],
+    "expected_doc_ids": ["engine/contracts/supported_gameplay_surface"],
     "category": "policy-vs-superseded",
     "notes": "policy-vs-superseded — query could plausibly match the historical docs/archive/engine_contracts/support_matrix.md (same Grid Movement/Resource Interaction support-matrix topic), but that doc is archived and unindexed; the live, current answer is supported_gameplay_surface, its verified topical successor.",
     "allowable_alternatives": [],
@@ -496,7 +496,7 @@
   },
   {
     "query": "worker_contract provider execution obligations",
-    "expected_doc_ids": ["engine/worker_contract"],
+    "expected_doc_ids": ["engine/contracts/worker_contract"],
     "category": "provider/workflow/monitoring",
     "notes": "provider/workflow/monitoring — worker_contract is a provider-facing engine contract under docs/engine/contracts/",
     "allowable_alternatives": [],
@@ -505,7 +505,7 @@
   },
   {
     "query": "observability contract signal emission requirements",
-    "expected_doc_ids": ["engine/observability_contract"],
+    "expected_doc_ids": ["engine/contracts/observability_contract"],
     "category": "provider/workflow/monitoring",
     "notes": "provider/workflow/monitoring — observability_contract governs monitoring/telemetry obligations; doc_id corrected in Step 1 of this ticket, reused here as a legitimate target",
     "allowable_alternatives": [],
@@ -514,7 +514,7 @@
   },
   {
     "query": "infrastructure_overview monitoring parity coverage status",
-    "expected_doc_ids": ["engine/infrastructure_overview"],
+    "expected_doc_ids": ["engine/contracts/infrastructure_overview"],
     "category": "provider/workflow/monitoring",
     "notes": "provider/workflow/monitoring — infrastructure_overview covers monitoring/telemetry/worker infrastructure status; doc_id corrected in Step 1 of this ticket, reused here as a legitimate target",
     "allowable_alternatives": [],

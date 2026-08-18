@@ -10,6 +10,7 @@ import pytest
 from src.core.builder import V2EntityBuilder
 from src.core.state import CombatComponent, BiologicalComponent, PersonalityComponent, AuthoritativeState
 from src.domains.combat_engagement.phase import CombatEngagementPhase
+from tests.tools.perf_assertions import assert_perf_threshold
 
 
 def _entity(e_id, x=0.0, y=0.0):
@@ -64,4 +65,4 @@ def test_performance_budget_100_entities():
     # Raised from 5ms → 15ms: single-run no-sampling methodology has high variance
     # on shared VMs; 15ms reflects realistic steady-state cost after warmup while
     # still providing a meaningful upper bound (matches phase3 budget).
-    assert duration_ms < 15.0
+    assert_perf_threshold(duration_ms, 15.0, "CombatEngagementPhase update (100 entities)", op="<")

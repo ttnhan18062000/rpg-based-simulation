@@ -715,6 +715,13 @@ if _auto_discovered:
 def generate_matrix_report() -> str:
     """Generates a clean markdown table representing the content usage matrix."""
     lines = [
+        "---",
+        "status: active",
+        "layer: mechanics",
+        "authority: P1",
+        "audience: developer",
+        "---",
+        "",
         "# Content Usage Matrix Report",
         "",
         "> [!IMPORTANT]",

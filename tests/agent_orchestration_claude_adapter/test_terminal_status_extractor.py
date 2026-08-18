@@ -26,6 +26,7 @@ _EXPECTED_LITERAL_VALUES_MULTISET = [
     "NEEDS_HUMAN_INPUT",
     "DOC_STALENESS_BLOCKED",
     "TESTS_FAILED",
+    "TEST_SCOPE_COVERAGE_FAILED",
     "DATA_RUNS_CLEAN_FAILED",
     "PARITY_INCOMPLETE",
     "SECURITY_BLOCKED",
@@ -36,16 +37,19 @@ _EXPECTED_LITERAL_VALUES_MULTISET = [
 ]
 
 
-def test_terminal_status_extractor_finds_all_13_literal_call_sites():
+def test_terminal_status_extractor_finds_all_14_literal_call_sites():
+    """Was 13 (TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER); TEST_SCOPE_COVERAGE_FAILED added
+    2026-08-18 by TCK-20260818-KGMCP-TICKET-VERIFY-SCOPED-REGRESSION-GAP — a genuine new terminal
+    status, not drift."""
     entries = extract_literal_statuses(_WORKFLOW_JS_PATH)
 
-    assert len(entries) == 13, f"expected 13 literal call sites, found {len(entries)}"
+    assert len(entries) == 14, f"expected 14 literal call sites, found {len(entries)}"
     assert sorted(e["value"] for e in entries) == sorted(_EXPECTED_LITERAL_VALUES_MULTISET)
     assert all(e["kind"] == "literal" for e in entries)
 
     distinct_values = {e["value"] for e in entries}
-    assert len(distinct_values) == 12, (
-        f"expected 12 distinct literal values (FINALIZE_INCOMPLETE deduping to one value from "
+    assert len(distinct_values) == 13, (
+        f"expected 13 distinct literal values (FINALIZE_INCOMPLETE deduping to one value from "
         f"two call sites), got {len(distinct_values)}: {sorted(distinct_values)}"
     )
 
@@ -88,13 +92,13 @@ def test_scope_agent_failed_handling_is_an_explicit_documented_decision():
 def test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count():
     all_statuses = extract_all_terminal_statuses(_WORKFLOW_JS_PATH)
 
-    assert len(all_statuses) == 15, (
-        f"expected 15 distinct terminal-status values (12 literal + 2 verdict-derived + 1 "
+    assert len(all_statuses) == 16, (
+        f"expected 16 distinct terminal-status values (13 literal + 2 verdict-derived + 1 "
         f"bypass), got {len(all_statuses)}: {sorted(e['value'] for e in all_statuses)}"
     )
 
     by_value = {e["value"]: e for e in all_statuses}
-    assert by_value["FINALIZE_INCOMPLETE"]["call_sites"] == [1450, 1462]
+    assert by_value["FINALIZE_INCOMPLETE"]["call_sites"] == [1498, 1510]
     assert by_value["DONE"]["kind"] == "literal"
     assert by_value["NEEDS_CHANGES"]["kind"] == "verdict_derived"
     assert by_value["BLOCKED"]["kind"] == "verdict_derived"

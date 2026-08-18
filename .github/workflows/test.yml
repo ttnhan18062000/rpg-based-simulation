@@ -4,6 +4,12 @@ on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    # Nightly, low-traffic UTC hour — catches slow-lane regressions without
+    # blocking every PR iteration on the ~45-90min slow suite (TCK-20260818-
+    # STANDARD-SLOW-REGRESSION-OFF-PR-PATH).
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}
 
 concurrency:
   group: test-${{ github.ref }}
@@ -36,7 +42,7 @@ jobs:
                  tests/unit/content_semantics \
                  tests/unit/feature_packs \
                  tests/unit/culture \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Unit: gameplay systems ────────────────────────────────────────────────
   unit-gameplay:
@@ -63,7 +69,9 @@ jobs:
                  tests/unit/campaigns \
                  tests/unit/scenarios \
                  tests/unit/systems \
-                 -m "not slow" --tb=short -q
+                 tests/unit/actions \
+                 tests/unit/ai \
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Unit: infra / observability / domains ─────────────────────────────────
   unit-infra:
@@ -92,7 +100,8 @@ jobs:
                  tests/unit/cognition \
                  tests/unit/docs \
                  tests/unit/certification \
-                 -m "not slow" --tb=short -q
+                 tests/unit/tools \
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Integration tests (excluding slow) ────────────────────────────────────
   integration:
@@ -125,7 +134,36 @@ jobs:
                  tests/logging \
                  tests/engine \
                  tests/observability \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
+
+  # ── Agent orchestration / codex / replay ──────────────────────────────────
+  # TCK-20260817-CI-COVERAGE-GAP-16-ORPHANED-TEST-DIRS: these 12 directories (added by commit
+  # 29d78798, "Simulation quality #20") were never wired into any CI job -- 439 of their 440
+  # tests had never run in CI at all until this batch of fixes. Own dedicated job (not folded
+  # into api-tools) given the volume (83 files).
+  agent-orchestration:
+    name: "Agent orchestration / codex / replay"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Run
+        run: |
+          pytest tests/agent_codex_live_transport \
+                 tests/agent_codex_pilot_executor \
+                 tests/agent_codex_pilot_guardrails \
+                 tests/agent_codex_pilot_orchestration \
+                 tests/agent_codex_posttool_adapter \
+                 tests/agent_codex_realrepo_pilot_harness \
+                 tests/agent_codex_runtime_shadow \
+                 tests/agent_orchestration \
+                 tests/agent_orchestration_claude_adapter \
+                 tests/agent_orchestration_codex_adapter \
+                 tests/agent_replay \
+                 tests/agent_replay_codex \
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Simulation quality (SimQ scoring module) ──────────────────────────────
   simulation-quality:
@@ -139,7 +177,7 @@ jobs:
       - name: Run
         run: |
           pytest tests/simulation_quality \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Architecture / docs / static guards ──────────────────────────────────
   arch-docs:
@@ -157,7 +195,7 @@ jobs:
                  tests/integrity \
                  tests/static \
                  tests/refactor \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Perf / certification / arena ─────────────────────────────────────────
   perf-cert-arena:
@@ -173,7 +211,7 @@ jobs:
           pytest tests/perf \
                  tests/certification \
                  tests/arena \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── Migration lanes + expansion gate ─────────────────────────────────────
   migration-lanes:
@@ -209,13 +247,19 @@ jobs:
   slow:
     name: "Slow regression"
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    # TCK-20260818-STANDARD-SLOW-REGRESSION-OFF-PR-PATH: no longer runs on every PR push
+    # (github.base_ref == 'main') -- the ~45-90min slow suite (9021-deselected-tests-heavy)
+    # blocked fast development iteration on every commit. Still runs as a real safety net:
+    # (a) on push to main itself (post-merge), (b) on the nightly schedule, (c) on manual
+    # dispatch when a developer/agent wants pre-merge confidence.
+    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     needs:
       - unit-core-world
       - unit-gameplay
       - unit-infra
       - integration
       - api-tools
+      - agent-orchestration
       - simulation-quality
       - arch-docs
       - perf-cert-arena

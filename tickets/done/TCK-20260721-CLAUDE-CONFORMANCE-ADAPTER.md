@@ -15,7 +15,7 @@ tags: []
 Claude contract conformance adapter and tests, with no behavior change
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

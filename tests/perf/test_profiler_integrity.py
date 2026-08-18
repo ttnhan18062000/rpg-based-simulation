@@ -9,6 +9,7 @@ from src.platform.rng import DeterministicRNG
 from src.config.profiles import RuntimeProfile
 
 from src.perf.profiles import PERF_PROFILES
+from tests.tools.perf_assertions import assert_perf_threshold
 
 @pytest.fixture
 def base_state():
@@ -64,7 +65,11 @@ def test_benchmark_disables_frame_pacing_by_default(base_state, profile):
     # Each tick still takes ~20ms+ on a VM, so 5 ticks ≥ 100ms minimum.
     # The purpose of this assertion is to confirm pacing is disabled (not
     # sleeping 100ms per tick); 500ms gives ample headroom for VM noise.
-    assert elapsed_ms < 500.0 # Confirms pacing is OFF, not that it's a speed target
+    assert_perf_threshold(
+        elapsed_ms, 500.0,
+        "5-tick elapsed time with frame pacing OFF (confirms pacing is disabled, not a speed target)",
+        op="<",
+    )
 
 def test_recorded_tick_compute_includes_all_phases(base_state, profile):
     """

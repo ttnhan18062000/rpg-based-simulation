@@ -23,6 +23,7 @@
 * Every implement-ticket workflow run (including hotfix) must record a run entry and at least one event entry to `agent-monitoring/`. Monitoring write failure must never fail the workflow.
 * **Do not run grep, find, raw file reads, or spawn Explore agents for investigation before first calling `search_docs` (MCP) and `graphify query` for the topic.** These tools traverse inferred relationships and doc registries that raw grep cannot. Grep and file reads are permitted only as follow-up after the semantic search results are in hand.
 * **Never edit an artifact to make an automated gate/check pass instead of fixing the underlying substance.** A gate's blocking result (`NEEDS_CHANGES`, `BLOCKED`, `NEEDS_HUMAN_INPUT`, a failing test, a failing validator, etc.) is correct information to report, not an obstacle to route around — stop and report it truthfully, even if it looks trivially resolvable. This applies at every level of agent delegation, including any sub-agent you spawn to carry out a step.
+* **If you are a dispatched sub-agent (not the top-level orchestrator), never end your turn while your own `run_in_background` command is still running.** You are not auto-resumed the way the top-level orchestrator is — an unfinished background command left running when your turn ends stalls the pipeline until it is manually detected and you are re-prompted, wasting a full round-trip. Either run the command in the foreground, or poll for its own completion within the same turn before returning control. (Confirmed as a repeated real failure mode on 2026-08-17/18: 3 independent `general-purpose` sub-agent dispatches spawned their own background tasks, then stopped to "wait for a notification" they had no mechanism to receive, requiring manual `SendMessage` resumption each time. `implementer.md`/`test-scoper.md` already carried this warning for their own roles; this bullet generalizes it to every dispatched agent, since `general-purpose` and most other project agent roles have no equivalent project-level file to carry it.)
 
 ---
 
@@ -255,7 +256,7 @@ The master index is `project_lawbook_m10.md`. Key contracts:
 | File | Covers |
 |---|---|
 | `kernel.md` | 6-phase deterministic loop (Init → Governance → Scheduling → Packetization → Resolution → Persistence) |
-| `authoritative_pipeline.md` | 32-phase refinement sequence for world mutation |
+| `authoritative_pipeline.md` | 37-phase refinement sequence for world mutation |
 | `authoritative_mutation_pipeline_contract.md` | Mutation rules and apply-path law |
 | `governance_logic.md` | Governance and eligibility rules |
 | `performance_contract.md` | Hardware classes (A/B/C) and scaling limits |

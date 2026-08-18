@@ -196,7 +196,7 @@ lane-strict-matrix: ## [medium] Cumulative world module matrix (end-to-end conte
 	python3 -m pytest tests/ -m "strict_matrix" -v --tb=short
 
 lane-legacy-regression: ## [slow] Arena, certification, legacy compat regression tests
-	python3 -m pytest tests/ -m "legacy_compat" -v --tb=short
+	python3 -m pytest tests/ -m "legacy_compat" --resource-budget large -v --tb=short
 
 regression-baseline: ## Generate/refresh 5k-tick behavioral regression baseline (commit the result)
 	python3 tools/generate_regression_baseline.py
@@ -281,6 +281,9 @@ agent-monitoring-weight-check: ## Required check before proposing a cost_proxy.p
 agent-monitoring-epic-staleness: ## Report open epics with no recent child-ticket activity
 	python3 tools/agent-monitoring/epic_staleness_check.py
 
+status-drift-check: ## Report ## Status body-text drift in tickets/done/ and lowercase final_status in runs.jsonl
+	python3 tools/gate_checks/status_drift_check.py
+
 agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
 	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
 	  tools/agent-monitoring/build_index.py
@@ -312,6 +315,12 @@ knowledge-index-update: ## Incremental reindex — only re-embeds changed/new fi
 	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
 	  tools/knowledge_search.py build --incremental
 
+kgmcp-bootstrap: parity-index knowledge-index ## Rebuild all local, gitignored Knowledge Gateway MCP caches for a fresh environment (see docs/guidelines/agent_working_environment.md)
+	@echo "parity-index/parity.db and knowledge-index/{knowledge.db,bm25.pkl,embeddings_cache.pkl} rebuilt."
+	@echo "knowledge-index/retrieval_cache.db (KGMCP Level 1/2 cache) has no bootstrap step -- it"
+	@echo "self-initializes empty on the first real knowledge_context/knowledge_status call and warms"
+	@echo "up from there. See docs/guidelines/agent_working_environment.md for full detail."
+
 search-server-docker: ## PRIMARY — start knowledge search server in Docker (persistent, survives terminal close)
 	docker compose -f tools/search/docker-compose.yml up -d --build
 	@echo "[search-server] Server starting on http://localhost:8765 (check logs: make search-server-logs)"
@@ -332,9 +341,16 @@ install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ 
 	@echo "[hooks] post-commit hook installed"
 
 eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires knowledge-index)
-	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) tools/eval_search.py
+	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done) tools/eval_search.py
 
-PYTHON := $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done)
+# [ -x "$$py" ] only resolves an absolute/relative path to a literal file -- it never does a
+# PATH lookup for a bare command name, so "python3" alone always failed this check even when a
+# real python3 was on PATH (confirmed: CI has no .venv/bin/python3 and no
+# /home/vboxuser/... path, so this loop silently produced an EMPTY PYTHON on every CI runner,
+# breaking every $(PYTHON)-using target with "sh: 1: -m: not found" -- masked until now because
+# the "slow" CI job's own `needs:` gate had never let it run to completion before).
+# command -v correctly resolves bare "python3" via PATH as well as absolute/relative paths.
+PYTHON := $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done)
 
 evaluate: ## Diff current calibration data against grade anchors (no engine re-run)
 	$(PYTHON) tools/evaluate_simq.py --dry-run

@@ -62,14 +62,32 @@ def _scan_shard(path: Path) -> dict:
 def _schema_coverage_as_parsed() -> dict:
     """Describe docs/parity_ledger/schema.json as it actually parses today.
 
-    The source file contains two top-level "if" keys inside the same `items` object. JSON
-    object keys must be unique, so any standard parser (including `json.loads`, used here)
-    silently keeps only the second "if"/"then" pair and discards the first. This function
-    reports the enforced-as-parsed rule set, not the human-readable source text's apparent
-    intent — read-only, never modifies schema.json.
+    Prior to TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL, the source file declared two
+    top-level "if" keys inside the same `items` object. JSON object keys must be unique, so
+    any standard parser (including `json.loads`, used here) silently kept only the second
+    "if"/"then" pair and discarded the first, leaving the verified/divergent ->
+    v2_evidence+test_path rule unenforced. That ticket restructured both conditionals (plus
+    a third, previously prose-only P0 -> non-null test_path rule) into an `items.allOf`
+    array so all three survive standard parsing. This function is read-only and never
+    modifies schema.json; the pre-fix branch below is kept only as a defensive fallback in
+    case this is ever run against an older git revision of the file.
     """
     schema = json.loads(Path(SCHEMA_PATH).read_text())
     items = schema.get("items", {})
+    all_of = items.get("allOf")
+    if all_of is not None:
+        return {
+            "path": SCHEMA_PATH,
+            "known_defect": None,
+            "note": (
+                "duplicate top-level \"if\" key defect fixed by "
+                "TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL: both conditionals now live inside "
+                "items.allOf, plus a third entry for the previously prose-only P0 -> non-null "
+                "test_path rule"
+            ),
+            "enforced_allof_entry_count": len(all_of),
+        }
+
     surviving_if = items.get("if")
     surviving_then = items.get("then")
     return {

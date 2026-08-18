@@ -6,6 +6,7 @@ resolves to a real entry in the same run's simulation_events.jsonl.
 """
 from __future__ import annotations
 
+import dataclasses
 import json
 import os
 import shutil
@@ -171,11 +172,24 @@ def test_spawn_occupancy_violation_reaches_world_pillar_via_minimal_kernel(minim
 
 
 def test_spawn_occupancy_violation_reaches_world_pillar_via_real_kernel_construction(monkeypatch):
-    """Real-wiring test: constructs a Kernel against the parent ticket's known seed=42
-    unit_information_density collision (entities 6/14 on tile (27, 38)), proving
+    """Real-wiring test: constructs a Kernel against a forced entity-tile collision, proving
     Kernel._run_initial_placement_check() actually emits the InvariantViolation SimulationEvent
     that _translate_invariant()/WorldDynamicsScorer then route into the WORLD pillar — not merely
     reachable via a hand-built envelope or a manually-injected event.
+
+    The collision itself is forced post-compile (dataclasses.replace onto a real compiled
+    world's state, immutably, before Kernel construction) rather than relying on a naturally
+    occurring one: the specific seed=42 `unit_information_density` entity-6/entity-14 collision
+    this test originally used as its fixture was fixed by
+    `TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE` (see
+    `src/worldbuilding/compiler.py`'s `_resolve_entity_spawn_tile()`), so it no longer occurs
+    naturally. This test's own purpose is to verify the EVENT-ROUTING mechanism, not to prove a
+    live placement bug (that's covered by `tests/engine/test_hard_law_monitor.py`'s own
+    `test_check_initial_placement_full_population_scan_unit`, which already forces a synthetic
+    collision on a minimal hand-built `AuthoritativeState` for the same reason) — forcing the
+    collision here still exercises the full real Kernel construction + routing pipeline
+    end-to-end, only the precondition (two entities occupying the same starting tile) is now
+    deliberately constructed rather than an accident of the old buggy RNG.
 
     Regression source: tests/engine/test_hard_law_monitor.py::test_seed42_entity6_entity14_tile_27_38_collision
     """
@@ -188,6 +202,14 @@ def test_spawn_occupancy_violation_reaches_world_pillar_via_real_kernel_construc
     repo = WorldRepository("data/worlds")
     spec = repo.load_world("unit_information_density")
     state, _ = WorldCompiler.compile(spec, seed=42)
+
+    entity_6 = state.entities[6]
+    entity_14 = state.entities[14]
+    entity_14_collided = dataclasses.replace(
+        entity_14,
+        navigation=dataclasses.replace(entity_14.navigation, position=entity_6.navigation.position),
+    )
+    state = dataclasses.replace(state, entities={**state.entities, 14: entity_14_collided})
 
     rng = MagicMock()
     run_id = "simq-traceability-real-wiring-test"

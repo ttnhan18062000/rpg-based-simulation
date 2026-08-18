@@ -15,7 +15,7 @@ tags: [cognition, strategy]
 Generalize interruption-bypass rule from kind-string allowlist to score/urgency check
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

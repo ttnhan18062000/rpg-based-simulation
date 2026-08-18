@@ -79,7 +79,13 @@ def test_hard_law_occupancy_collision():
     assert any(v.law_id == "LAW-OCCUPANCY-COLLISION" for v in violations)
 
 
-def test_observability_modes_and_kernel_integration(monkeypatch):
+def test_observability_modes_and_kernel_integration(request):
+    # ObservabilityConfig's override mode is class-level global state -- reset it on exit
+    # so a DEBUG override set below doesn't leak into later tests/modules run in the same
+    # pytest process (found via a real CI cross-file collision with test_metrics_export.py,
+    # TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL).
+    request.addfinalizer(ObservabilityConfig.clear_all_overrides)
+
     # Set config to OFF mode
     ObservabilityConfig.set_override_mode(ObservabilityMode.OFF)
     assert ObservabilityConfig.get_mode() == ObservabilityMode.OFF
@@ -206,13 +212,27 @@ def test_check_initial_placement_reuses_verify_occupancy_wall_terrain_unit():
 @pytest.mark.regression
 def test_seed42_entity6_entity14_tile_27_38_collision():
     """
-    Regression test for TCK-20260716-PLACELEGAL-HARDLAW.
+    Regression test, originally for TCK-20260716-PLACELEGAL-HARDLAW (detection),
+    updated by TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE (fix).
 
-    WorldCompiler.compile() never validated spawn placement against terrain or
-    occupancy. Compiling `unit_information_density` at seed=42 deterministically
-    spawns entities 6 and 14 on the identical tile (27, 38) — reproduced here
-    directly from a fresh compile, not from stored run data (data/runs/ is
-    routinely cleaned and no longer holds the original evidence run).
+    `WorldCompiler.compile()` originally never validated spawn placement against
+    terrain or occupancy, AND its entity-placement RNG (`compile()` step 6) drew
+    each entity's tile purely as a hash of (seed, entity_id, sub_id) with no
+    occupancy awareness — two distinct entity IDs could legitimately hash to the
+    same tile. Compiling `unit_information_density` at seed=42 deterministically
+    spawned entities 6 and 14 on the identical tile (27, 38) (first caught by
+    TCK-20260716-PLACELEGAL-HARDLAW's new `LAW-SPAWN-OCCUPANCY` law; root-caused
+    and fixed by TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE
+    via `_resolve_entity_spawn_tile()` in `src/worldbuilding/compiler.py`).
+
+    This now asserts the fix holds for the exact originating case: entity 6 keeps
+    its original deterministic tile (the earlier-placed entity of the pair is
+    never perturbed — see `_resolve_entity_spawn_tile()`'s docstring), entity 14
+    is deterministically relocated off of it, and `check_initial_placement()`
+    reports zero `LAW-SPAWN-OCCUPANCY` violations for this world/seed.
+    `test_check_initial_placement_full_population_scan_unit` above continues to
+    cover the detection mechanism itself via a synthetic collision, independent
+    of this real-world case being fixed.
 
     Originating evidence: docs/plans/idea_placement_legality_check.md,
     experiments/placement_integrity/PROPOSAL.md.
@@ -226,13 +246,13 @@ def test_seed42_entity6_entity14_tile_27_38_collision():
 
     violations = HardLawMonitor.check_initial_placement(state)
     spawn_violations = [v for v in violations if v.law_id == "LAW-SPAWN-OCCUPANCY"]
-    assert len(spawn_violations) == 1
+    assert spawn_violations == [], (
+        f"entity 6/14 tile (27, 38) collision regressed: {spawn_violations}"
+    )
 
-    v = spawn_violations[0]
-    assert v.severity == "ERROR"
-    assert v.details["tile"] == (27, 38)
-    assert v.details["object_kind"] == "entity"
-    assert {v.entity_id, v.details["colliding_object_id"]} == {6, 14}
+    assert (int(state.entities[6].navigation.position[0]), int(state.entities[6].navigation.position[1])) == (27, 38)
+    e14_tile = (int(state.entities[14].navigation.position[0]), int(state.entities[14].navigation.position[1]))
+    assert e14_tile != (27, 38)
 
 
 def test_seed137_and_seed999_no_initial_placement_violations():

@@ -16,7 +16,7 @@ Cut over COMBAT/ECONOMY/FACTION event emission from diffing to the validated app
 registry
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

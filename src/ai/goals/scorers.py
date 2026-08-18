@@ -188,7 +188,15 @@ class RecoverScorer(GoalScorer):
 
 class ResolveBlockerScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
-        active_blockers = [b for b in entity.strategic.blockers.values() if not b.resolved]
+        # Blockers a timed-out resolve_blocker project already failed to resolve stay
+        # suppressed for a while (BlockerState.suppression_until_tick) rather than
+        # immediately re-winning at the same flat utility every tick -- without this, a
+        # resolve_blocker project that can never actually complete (e.g. an "access"
+        # blocker with no parseable coordinates) starves every other goal indefinitely.
+        active_blockers = [
+            b for b in entity.strategic.blockers.values()
+            if not b.resolved and b.suppression_until_tick <= state.tick
+        ]
         if not active_blockers:
             return GoalScore(kind=GoalKind.RESOLVE_BLOCKER, utility=0.0)
             

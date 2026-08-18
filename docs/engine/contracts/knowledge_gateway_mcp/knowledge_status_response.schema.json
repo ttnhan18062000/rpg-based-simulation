@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Knowledge Gateway MCP — knowledge_status Response",
+  "description": "Phase 0 contract-only. docs/plans/knowledge-gateway-mcp-proposal.md §9.2 is a prose bullet list, not a JSON example — the property names below are this contract's own best-effort mapping of each prose bullet to a JSON property name, not a proposal-verbatim quotation. reported_schema_version is deliberately named differently from this file's own top-level schema_version key: schema_version versions this schema file itself, reported_schema_version is the schema version a running gateway instance reports at call time — mirroring the retrieval_event_schema_version vs. retrieval_version distinction at tools/retrieval_events.py:44-46. additionalProperties:false is the direct enforcement of §9.2's 'should not expose provider weights, semantic thresholds, internal cache-level controls, or provider-selection switches' rule.",
+  "schema_version": 1,
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gateway_version", "reported_schema_version"],
+  "properties": {
+    "gateway_version": {
+      "type": "string"
+    },
+    "reported_schema_version": {
+      "type": "integer"
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "provider_id": { "type": "string" },
+          "available": { "type": "boolean" },
+          "generation": { "type": "string" }
+        }
+      }
+    },
+    "cache_entry_counts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": { "type": "string" },
+          "freshness": { "type": "string" },
+          "count": { "type": "integer" }
+        }
+      }
+    },
+    "cache_hit_rate": { "type": "number" },
+    "cache_miss_rate": { "type": "number" },
+    "cache_stale_rejection_rate": { "type": "number" },
+    "level2_cache_hit_rate": { "type": "number" },
+    "level2_cache_miss_rate": { "type": "number" },
+    "cache_hit_attribution": {
+      "type": "object",
+      "properties": {
+        "level1_hits": { "type": "integer" },
+        "level2_hits": { "type": "integer" }
+      }
+    },
+    "latency_summary_ms": {
+      "type": "object",
+      "properties": {
+        "lookup": { "type": "number" },
+        "evidence_validation": { "type": "number" },
+        "provider_fallback": { "type": "number" },
+        "packet_assembly": { "type": "number" },
+        "end_to_end": { "type": "number" }
+      }
+    },
+    "provider_fallback_rate": { "type": "number" },
+    "recent_invalidation_reasons": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "branch_scope": {
+      "type": "object",
+      "properties": {
+        "branch": { "type": "string" },
+        "working_tree_dirty": { "type": "boolean" }
+      }
+    },
+    "cache_rebuildable": { "type": "boolean" }
+  }
+}

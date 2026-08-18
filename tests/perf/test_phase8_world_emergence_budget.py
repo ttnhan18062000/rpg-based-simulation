@@ -6,6 +6,7 @@ from src.core.state import AuthoritativeState, RegionState
 from src.core.updates import StateUpdate
 from src.domains.world_emergence.phase import WorldEmergencePhase
 from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
+from tests.tools.perf_assertions import assert_perf_threshold
 
 def test_phase8_performance_budget():
     """Verify that WorldEmergencePhase executes in under 5.0ms for 100+ entities and 100+ events."""
@@ -39,4 +40,7 @@ def test_phase8_performance_budget():
     duration_ms = (time.perf_counter_ns() - t_start) / 1e6
     
     print(f"Phase 8 execution for 100 entities & 100 events took: {duration_ms:.2f} ms")
-    assert duration_ms < 5.0
+    assert_perf_threshold(
+        duration_ms, 5.0,
+        "WorldEmergencePhase execute duration (100 entities & 100 events)", op="<",
+    )

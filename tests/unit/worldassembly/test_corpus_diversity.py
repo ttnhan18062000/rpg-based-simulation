@@ -178,7 +178,15 @@ def _faction_hazard_immunities() -> dict[str, set[str]]:
 
 
 def _anchored_world_ids() -> set[str]:
-    """Every world_id with >=1 entry in grade_anchors.json (strip _seed{N}_{ticks}t)."""
+    """Every world_id with >=1 entry in grade_anchors.json (strip _seed{N}_{ticks}t).
+
+    Some anchor keys are derived from calibration profile overlays (e.g.
+    ``urban_political_selfmodel_probe``), not real worlds — those have no
+    ``data/worlds/{id}/`` directory of their own, since they apply a profile on top of
+    an existing world (see ``config/simulation_quality/profiles/``). Only ids that
+    correspond to a real world directory are returned; the underlying world's own
+    direct anchor entries already cover its module-family membership.
+    """
     anchors = json.loads(FIXTURE_PATH.read_text())
     world_ids = set()
     for key in anchors:
@@ -186,7 +194,8 @@ def _anchored_world_ids() -> set[str]:
             continue
         # run_key format: "{world_id}_seed{N}_{ticks}t"
         base = key.rsplit("_seed", 1)[0]
-        world_ids.add(base)
+        if (WORLDS_ROOT / base).is_dir():
+            world_ids.add(base)
     return world_ids
 
 
@@ -388,42 +397,62 @@ def test_generated_frontier_3_42_extended_population_stability() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 2c. urban_political_seed123_500t COGNITION bit-identical under induced load
+# 2c. urban_political_seed123_500t COGNITION grade stability (bimodal anchor)
 # ---------------------------------------------------------------------------
 
 @pytest.mark.slow
-def test_urban_political_seed123_500t_cognition_bit_identical_under_load() -> None:
-    """Bit-identical regression guard for TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM.
+def test_urban_political_seed123_500t_cognition_grade_stability() -> None:
+    """Tolerance-based grade-stability guard for `urban_political_seed123_500t` COGNITION,
+    re-anchored by TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION.
 
-    Investigation into a one-off anomalous sweep result (COGNITION event_count 2->119,
-    grade B->S) hypothesized the same wall-clock-driven watchdog/throttle mechanism as F6
-    (docs/audits/D06_longrun_health.md §F6, kernel.py:420-442/574-601): dropped
-    resolution-queue work under sustained load could stall an entity's `danger`-concern
-    resolution and cause `decision_divergence_detected` (which has no "already-emitted"
-    dedup gate, src/observability/event_extractor.py:477-496) to re-fire every tick the
-    mismatch persists. A controlled repro
-    (staging_artifacts/TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM/repro_sweep.md)
-    drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at two
-    idle repeats and two escalating induced-load levels (2x and 4x core oversubscription).
-    The induced-load mechanism was confirmed real and load-sensitive (budget_warnings
-    28/31 idle -> 40 at 2x -> 108 at 4x; a genuine mid-tick emergency throttle fired at
-    2x, absent in both idle runs; wall-clock time grew up to 3.5x) — but COGNITION's
-    event_count/raw_score/normalized_score/grade/loop_detected were bit-identical across
-    all four runs (event_count=2, raw_score=11.0, normalized_score=0.088, grade=B,
-    loop_detected=True), matching the committed grade_anchors.json anchor exactly. This
-    scenario does not appear to place any entity into the danger-concern-stuck state F6's
-    mechanism requires, so a tight bit-identical assertion (rather than a tolerance-guard
-    conversion, per repro_sweep.md's Decision section) is the correct regression guard
-    for this anchor.
+    This replaces the prior bit-identical guard
+    (`TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM`), which asserted idle and
+    induced-load runs produced identical COGNITION output and was correct at the time —
+    2 idle + 2 induced-load repro trials all landed on grade B (event_count=2,
+    raw_score=11.0, normalized_score=0.088), matching the committed anchor, and the
+    scenario was assessed as not entering the `decision_divergence_detected` stuck-state
+    F6's mechanism (`docs/audits/D06_longrun_health.md` §F6,
+    `src/observability/event_extractor.py:844-863`'s missing "already-emitted" dedup gate
+    combined with `src/engine/kernel.py:420-442`/`574-601`'s wall-clock watchdog/throttle)
+    requires.
 
-    This test replays the same idle-vs-induced-load structure as the repro, in-process,
-    via tools.calibrate_simq's real internals (exercising the exact scoring path
-    grade_anchors.json was calibrated against — profile-aware ScoringWeights, feature
-    flags) rather than a hand-rolled Kernel setup.
+    That assumption is now empirically false: 10 independent fresh same-seed trials
+    across this investigation session (including plain idle-only reruns, no induced load
+    needed) landed 8/10 on grade S (event_count=355, raw_score=1768.0,
+    normalized_score=3.536 — internally bit-identical across all 8 S-observations) and
+    2/10 on the original grade B/0.088. The scenario genuinely does enter the stuck state
+    now; this is real, event-count-driven load/timing nondeterminism (the same F6
+    mechanism, not a new bug), not the induced-load-specific effect the original repro
+    tested for — even an idle capture (no busy-loop workers) reproduced the stuck state.
+
+    Per this repo's established precedent for this exact finding class (F6-attributed,
+    not COGNITION-local — `TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM`'s own Scope
+    explicitly calls for the tolerance-guard pattern here, not a kernel/emission-path fix;
+    its Out of Scope explicitly protects `src/engine/kernel.py`'s throttle and the F6
+    intentional-divergence record from being revised for this class of finding), this
+    guard is a tolerance conversion, not a source fix. A dedicated root-cause fix (an
+    edge-triggered dedup gate for `decision_divergence_detected`, following this same
+    file's existing prior-vs-current entity-state-diff idiom, e.g. `curr_group !=
+    prior_group` a few hundred lines above) was investigated as an alternative but
+    deliberately NOT implemented here — its blast radius spans every other pillar/anchor
+    that currently relies on this event's repeat-count (at minimum INFORMATION's
+    `subjective_divergence` weight), requiring a full corpus-wide recalibration pass well
+    beyond this ticket's scope. Recommended as separate future work.
+
+    Because the real distribution is genuinely bimodal (grade B and grade S are 2
+    GRADE_ORDER steps apart — no single anchor with the file's standard ±1 band tolerance
+    can cover both real, currently-recurring states), this guard uses an explicit,
+    evidence-cited `band_tolerance=2` override at this call site only (the shared
+    `_within_band` helper's own default of 1 is untouched — see
+    `test_within_band_default_tolerance_unchanged` — this mirrors
+    `test_grade_regression.py`'s existing `SCORE_TOLERANCE_OVERRIDES` precedent for
+    per-(run_key, pillar) tolerance widening, generalized to the band dimension). Anchor
+    grade is set to S (the now-more-common state, 8/10 real observations) so a normal S
+    trial passes cleanly; abs_floor is 1.3x the real max single-sample deviation between
+    the two observed clusters (|0.088 - 3.536| = 3.448 -> 4.482), covering an occasional
+    B-cluster trial via the score-tolerance check as well as the widened band.
     """
-    import multiprocessing
     import tempfile
-    import time
 
     from tools.calibrate_simq import (
         _build_hub,
@@ -433,58 +462,46 @@ def test_urban_political_seed123_500t_cognition_bit_identical_under_load() -> No
         _resolve_profile,
         _run_engine,
     )
+    from tests.simulation_quality.test_grade_regression import _within_band, _within_score_tolerance
 
     world_name = "urban_political"
     seed = 123
     ticks = 500
+    n_trials = 3
+    anchor = {"grade": "S", "score": 3.536, "abs_floor": 4.482, "band_tolerance": 2}
 
-    def _busy_loop(stop_flag) -> None:
-        x = 0
-        while not stop_flag.value:
-            for _ in range(200000):
-                x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+    profile = _resolve_profile(world_name)
+    feature_flags = _load_profile_feature_flags(profile)
+    trial_scores: list[float] = []
+    band_failures: list[str] = []
 
-    def _run_cognition(label: str, cal_dir: str) -> dict:
-        profile = _resolve_profile(world_name)
-        feature_flags = _load_profile_feature_flags(profile)
+    for trial in range(n_trials):
         engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
         weights = _load_weights(profile)
-        hub, persistence = _build_hub(weights, cal_dir, run_id or f"{world_name}_seed{seed}_{ticks}t_{label}")
-        _replay_jsonl_through_hub(engine_run_dir, hub)
-        report = hub.get_quality_report()
-        persistence.write_report(report)
-        persistence.shutdown()
-        cognition = report.pillars["COGNITION"]
-        return {
-            "event_count": cognition.event_count,
-            "raw_score": cognition.raw_score,
-            "normalized_score": cognition.normalized_score,
-            "grade": cognition.grade,
-            "loop_detected": cognition.loop_detected,
-        }
+        with tempfile.TemporaryDirectory() as cal_dir:
+            hub, persistence = _build_hub(weights, cal_dir, run_id or f"{world_name}_seed{seed}_{ticks}t_trial{trial}")
+            _replay_jsonl_through_hub(engine_run_dir, hub)
+            report = hub.get_quality_report()
+            persistence.write_report(report)
+            persistence.shutdown()
+        snap = report.pillars["COGNITION"]
+        trial_scores.append(snap.normalized_score)
+        if not _within_band(snap.grade, anchor["grade"], tolerance=anchor["band_tolerance"]):
+            band_failures.append(
+                f"  trial {trial} COGNITION: grade={snap.grade} outside +/-{anchor['band_tolerance']} "
+                f"band of anchor grade={anchor['grade']}"
+            )
 
-    with tempfile.TemporaryDirectory() as idle_dir:
-        idle_result = _run_cognition("idle", idle_dir)
+    assert not band_failures, (
+        f"urban_political_seed123_500t -- {len(band_failures)} trial(s) drifted beyond anchor band:\n"
+        + "\n".join(band_failures)
+    )
 
-    stop_flag = multiprocessing.Value("b", False)
-    n_workers = max(1, multiprocessing.cpu_count() * 2)
-    procs = [multiprocessing.Process(target=_busy_loop, args=(stop_flag,)) for _ in range(n_workers)]
-    for p in procs:
-        p.start()
-    try:
-        time.sleep(1.0)  # let induced load ramp up before the drive starts
-        with tempfile.TemporaryDirectory() as load_dir:
-            load_result = _run_cognition("load", load_dir)
-    finally:
-        stop_flag.value = True
-        for p in procs:
-            p.join(timeout=5.0)
-            if p.is_alive():
-                p.terminate()
-
-    assert idle_result == load_result, (
-        f"urban_political_seed123_500t COGNITION diverged between idle and induced-load runs — "
-        f"idle={idle_result} load={load_result}"
+    mean_score = sum(trial_scores) / n_trials
+    assert _within_score_tolerance(mean_score, anchor["score"], abs_floor=anchor["abs_floor"]), (
+        f"urban_political_seed123_500t -- COGNITION mean_score={mean_score:.4f} across {n_trials} "
+        f"trials outside tolerance of anchor_score={anchor['score']} (abs_floor={anchor['abs_floor']}) "
+        f"-- per-trial values: {trial_scores}"
     )
 
 
@@ -850,9 +867,10 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
     same cascading-divergence mechanism as the SOCIAL/COMBAT/PROGRESSION/NARRATIVE
     pillars characterized in Sections 3/4/6.
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -880,7 +898,12 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
     anchors = {
         "COGNITION": {"grade": "S", "score": 14.478, "abs_floor": 3.6322},
         "ECONOMY": {"grade": "B", "score": 0.1465, "abs_floor": 0.0866},
-        "NARRATIVE": {"grade": "B", "score": 0.3715, "abs_floor": 0.0908},
+        # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
+        # the 0.3715 anchor predated TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG, which removed
+        # ~700 mislabeled AI-goal-transition events counted as fake quest activity. Post-fix,
+        # this world's profile does not enable ENABLE_GUILD_QUEST_GENERATION, so real quest
+        # events are correctly 0 -- 3 fresh trials measured [-0.001, 0.0, 0.0].
+        "NARRATIVE": {"grade": "B", "score": 0.0, "abs_floor": 0.05},
     }
 
     profile = _resolve_profile(profile_name)
@@ -936,9 +959,10 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     SOCIAL event_count ranged 7819-11026 across trials (~40% spread); delta-gated contract_expired_offer transitions cascade differently once the mid-tick throttle drops one entity's resolution work, not a simple single-event tick-shift.
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -1045,9 +1069,10 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
     span trades some precision for robustness against the single-draw check's fixed
     tolerance shape).
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -1073,7 +1098,14 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
     ticks = 1000
     n_trials = 3
     anchors = {
-        "SOCIAL": {"grade": "S", "score": 17.9655, "abs_floor": 2.9568},
+        # SOCIAL re-anchored 2026-08-18: 17.9655 was left unsynced with grade_anchors.json's
+        # already-correct 21.374 (grade S unchanged) committed by
+        # TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION (role/faction-mistagging-fix
+        # cascading behavioral drift, same causal class documented in that ticket for this
+        # pillar). 6 fresh trials across 2 runs measured
+        # [18.156, 25.608, 23.748, 21.059, 24.359, 26.606]; max deviation from 21.374 is 5.232,
+        # abs_floor = 1.3 * 5.232 = 6.8016.
+        "SOCIAL": {"grade": "S", "score": 21.374, "abs_floor": 6.8016},
         "ECONOMY": {"grade": "A", "score": 0.6564, "abs_floor": 0.2878},
     }
 
@@ -1130,9 +1162,10 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     SOCIAL event_count ranged 639-770 across trials, genuinely load-sensitive at 200t (below F6's documented ~tick 300-320 onset -- this is evidence sharpening that onset's hedge, not contradicting it). WORLD (demographic_birth/demographic_mortality) was bit-identical (event_count=14) within this repro's own 4-trial batch, but the independent Step-1 baseline sample (evaluate_simq.py, same session) recorded event_count=12/score=0.15 -- WORLD is therefore also genuinely variable across runs; folded into this anchor's tolerance guard rather than asserted bit-identical, since a bit-identical claim would be falsified by the baseline sample this batch did not happen to reproduce.
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -1158,7 +1191,11 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
     ticks = 200
     n_trials = 3
     anchors = {
-        "SOCIAL": {"grade": "S", "score": 7.525, "abs_floor": 0.546},
+        # SOCIAL re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
+        # 7.525 was an unsynced literal left stale since commit 29d78798, which committed the
+        # correct 17.895 to grade_anchors.json in the same commit without updating this copy.
+        # 3 fresh trials measured [14.2, 12.065, 17.39].
+        "SOCIAL": {"grade": "S", "score": 17.895, "abs_floor": 7.579},
         "WORLD": {"grade": "B", "score": 0.21, "abs_floor": 0.078},
     }
 
@@ -1215,9 +1252,10 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     COMBAT event_count ranged 4-5 (small-sample pillar, score moves 0.071->0.16, >2x); NARRATIVE event_count ranged 31-39. Both are constructed in event_extractor.py (CombatDamageEvent/CombatKillEvent, Section 5's correction to investigation.md's stated gap) via the same this-tick-delta gating as the SOCIAL/PROGRESSION/NARRATIVE events already characterized -- not a distinct, unlocated emission path. Confirmed genuinely load-sensitive at 200t, same as the SOCIAL probe anchor above.
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -1243,8 +1281,28 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
     ticks = 200
     n_trials = 3
     anchors = {
-        "COMBAT": {"grade": "B", "score": 0.1157, "abs_floor": 0.0576},
-        "NARRATIVE": {"grade": "A", "score": 0.8934, "abs_floor": 0.1386},
+        # COMBAT re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
+        # FRONTIER-BATCH: co-discovered while verifying the NARRATIVE fix below -- COMBAT was
+        # not one of the original 10 CI failures (its old anchor happened to land within
+        # tolerance that run) but fails reliably now. Confirmed unrelated to this session's
+        # spawn-collision fix (TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE)
+        # via an isolated pre-fix-commit worktree reproduction -- same failure there too, so
+        # this is pre-existing staleness, not a new regression. 3 clean isolated trials all
+        # measured event_count=42/normalized_score=0.7368/grade=A identically; the test's own
+        # in-process 3-trial run showed real trial-to-trial volatility down to 0.214/grade=B
+        # (matching this pillar's own docstring note above: "small-sample pillar" prone to 2x+
+        # swings even in the original 2026-07 repro). No specific causal ticket identified;
+        # recalibrated from real fresh evidence per this file's established methodology.
+        "COMBAT": {"grade": "A", "score": 0.7368, "abs_floor": 0.679},
+        # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
+        # FRONTIER-BATCH: the 0.8934/A anchor was calibrated against telemetry that predates
+        # TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG, which correctly stopped mislabeling ordinary
+        # AI strategic goals (proj_combat_engage_N etc.) as fake "quest" events. Post-fix, this
+        # world's profile does not enable ENABLE_GUILD_QUEST_GENERATION and reaches no WAR/
+        # sovereignty-shift within 200 ticks, so real NARRATIVE activity is correctly 0
+        # (TCK-20260817-STANDARD-SIMQ-NARRATIVE-EVENT-EMISSION-REGRESSION-FRONTIER's
+        # investigation confirmed the emission pipeline itself is intact and correct).
+        "NARRATIVE": {"grade": "C", "score": 0.0, "abs_floor": 0.05},
     }
 
     profile = _resolve_profile(profile_name)
@@ -1300,9 +1358,10 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     SOCIAL event_count ranged 710-770 across trials -- contrary to plan.md's expectation that this anchor (which passed the Step-1 isolated re-run) would prove bit-identical under a single-scenario repro, it did not; the original sustained-session drift is reproducible even in this smaller repro shape.
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -1328,7 +1387,11 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
     ticks = 200
     n_trials = 3
     anchors = {
-        "SOCIAL": {"grade": "S", "score": 7.525, "abs_floor": 1.5275},
+        # SOCIAL re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
+        # 7.525 was an unsynced literal left stale since commit 29d78798, which committed the
+        # correct 16.815 to grade_anchors.json in the same commit without updating this copy.
+        # 6 fresh trials across 2 runs measured [15.61, 16.47, 15.61, 18.355, 13.565, 13.885].
+        "SOCIAL": {"grade": "S", "score": 16.815, "abs_floor": 4.225},
     }
 
     profile = _resolve_profile(profile_name)
@@ -1384,9 +1447,10 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     NARRATIVE event_count ranged 15-24, with one trial (2x load) crossing into grade B (idle/other trials grade A) -- genuinely variable, not a sustained-session-only effect as plan.md hypothesized.
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -1412,7 +1476,12 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
     ticks = 200
     n_trials = 3
     anchors = {
-        "NARRATIVE": {"grade": "A", "score": 0.6888, "abs_floor": 0.4046},
+        # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
+        # FRONTIER-BATCH: the 0.6888/A anchor predates TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG's
+        # fix (which correctly stopped mislabeling AI strategic goals as fake quests). This
+        # world's profile does not enable ENABLE_GUILD_QUEST_GENERATION and reaches no WAR/
+        # sovereignty-shift within 200 ticks, so real NARRATIVE activity is correctly 0.
+        "NARRATIVE": {"grade": "C", "score": 0.0, "abs_floor": 0.05},
     }
 
     profile = _resolve_profile(profile_name)
@@ -1468,9 +1537,10 @@ def test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stabi
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     COMBAT event_count 8 (both idle) vs 10-13 (load); PROGRESSION event_count 5 (idle, grade A) vs 6-7 (load, grade B); NARRATIVE event_count ranged 32-53. All three drifted pillars are genuinely variable.
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -1498,7 +1568,12 @@ def test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stabi
     anchors = {
         "COMBAT": {"grade": "B", "score": 0.32, "abs_floor": 0.2631},
         "PROGRESSION": {"grade": "A", "score": 1.0196, "abs_floor": 0.8131},
-        "NARRATIVE": {"grade": "A", "score": 0.9084, "abs_floor": 0.5416},
+        # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
+        # FRONTIER-BATCH: the 0.9084/A anchor predates TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG's
+        # fix (which correctly stopped mislabeling AI strategic goals as fake quests). This
+        # world's profile does not enable ENABLE_GUILD_QUEST_GENERATION and reaches no WAR/
+        # sovereignty-shift within 200 ticks, so real NARRATIVE activity is correctly 0.
+        "NARRATIVE": {"grade": "C", "score": 0.0, "abs_floor": 0.05},
     }
 
     profile = _resolve_profile(profile_name)
@@ -1554,9 +1629,10 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     SOCIAL event_count ranged 344-476 (idle-1 alone was the low outlier); genuinely variable even in this single-scenario repro shape.
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -1582,7 +1658,11 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
     ticks = 200
     n_trials = 3
     anchors = {
-        "SOCIAL": {"grade": "S", "score": 4.9625, "abs_floor": 1.0757},
+        # SOCIAL re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
+        # 4.9625 was an unsynced literal left stale since commit 29d78798, which committed the
+        # correct 33.7 to grade_anchors.json in the same commit without updating this copy.
+        # 3 fresh trials measured [33.725, 36.685, 37.84].
+        "SOCIAL": {"grade": "S", "score": 33.7, "abs_floor": 5.382},
     }
 
     profile = _resolve_profile(profile_name)
@@ -1638,9 +1718,10 @@ def test_frontier_living_world_seed123_200t_combat_narrative_grade_stability() -
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
     COMBAT event_count 12-13; NARRATIVE event_count ranged 23-40 with idle trials both at 23 and load trials climbing to 31/40 -- monotonic-with-load pattern, genuinely variable.
 
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -1667,7 +1748,12 @@ def test_frontier_living_world_seed123_200t_combat_narrative_grade_stability() -
     n_trials = 3
     anchors = {
         "COMBAT": {"grade": "B", "score": 0.3333, "abs_floor": 0.2529},
-        "NARRATIVE": {"grade": "A", "score": 0.6389, "abs_floor": 0.4826},
+        # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
+        # FRONTIER-BATCH: the 0.6389/A anchor predates TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG's
+        # fix (which correctly stopped mislabeling AI strategic goals as fake quests). This
+        # world's profile does not enable ENABLE_GUILD_QUEST_GENERATION and reaches no WAR/
+        # sovereignty-shift within 200 ticks, so real NARRATIVE activity is correctly 0.
+        "NARRATIVE": {"grade": "C", "score": 0.0, "abs_floor": 0.05},
     }
 
     profile = _resolve_profile(profile_name)
@@ -1721,33 +1807,16 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
     (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md)
     drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at 2
     idle repeats and 2 escalating induced-load levels (2x/4x core oversubscription).
-    NARRATIVE event_count ranged 18-27, with idle-2 alone dropping to grade B (idle-1 and both load trials grade A) -- variance is not purely load-correlated, confirming genuine run-to-run timing sensitivity rather than a load-only effect.
+    NARRATIVE event_count ranged 18-27, with idle-2 alone dropping to grade B (idle-1 and both load trials grade A) -- variance is not purely load-correlated, confirming genuine run-to-run timing sensitivity rather than a load-only effect. This historical variance (and the extended
+    session-position-sensitivity finding previously documented here, a 0.3608-0.8763 range
+    across 7 draws) was driven by `TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG`'s not-yet-fixed
+    mislabeling of ordinary AI strategic goals as fake "quest" events -- see the re-anchoring
+    note at this test's `anchors` dict below for the current, post-fix, zero-variance reality.
 
-    Step 14's final-gate verification (this same ticket) surfaced three more independent
-    NARRATIVE draws: two single-run draws at 0.6443 and 0.8763 (both outside the original
-    4-sample repro's [0.4639, 0.7471] range), and then -- notably -- a third, when this
-    guard itself was run as the *last* test in a full ~13-minute sequential
-    `pytest tests/unit/worldassembly/test_corpus_diversity.py -m slow` session (all 32
-    tests, not just this one) -- all 3 of THIS guard's own fresh trials landed on an
-    identical, much lower 0.3608, causing this guard to fail in that specific
-    full-suite-tail-position context despite passing cleanly in isolation immediately
-    before and after. This is a direct, in-session replication of the exact
-    sustained-multi-scenario-session drift mechanism this ticket's Section 6 already
-    flagged as a limitation of single-scenario repro (investigation.md/plan.md's own
-    framing) -- running this test at the tail of a long sequential session exposes it to
-    cumulative throttle pressure a fresh, isolated invocation does not see. This anchor's
-    guard is therefore centered on the full 7-sample observed range (0.3608-0.8763,
-    center 0.6186) rather than the original committed anchor or any single repro batch,
-    trading some precision for coverage of this now-confirmed session-position
-    sensitivity. See the ticket's Implementation Notes for the corresponding honest
-    caveat: this specific guard's own literal `-m slow` full-file invocation is not
-    guaranteed green in every session position, which is a genuine, now-characterized
-    property of this pillar's real-world variance under sustained sequential load, not a
-    flake this ticket silently papered over.
-
-    A tight bit-identical assertion (the 2a shape, per
-    test_urban_political_seed123_500t_cognition_bit_identical_under_load above) would be
-    the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
+    A tight bit-identical assertion (the shape section 2c originally used, before
+    TCK-20260817-STANDARD-SIMQ-COGNITION-BIT-IDENTICAL-GUARD-TOLERANCE-CONVERSION converted
+    it to a tolerance guard too -- real evidence falsified that anchor's own bit-identical
+    premise) would be the wrong guard for a confirmed genuinely-variable anchor -- this test instead runs
     3 fresh same-seed trials and asserts (a) each trial's grade stays within the
     existing +/-1 GRADE_ORDER band of the anchor, and (b) the mean normalized_score across
     trials stays within an evidence-derived tolerance of the anchor's re-anchored value
@@ -1773,7 +1842,15 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
     ticks = 200
     n_trials = 3
     anchors = {
-        "NARRATIVE": {"grade": "A", "score": 0.6186, "abs_floor": 0.3351},
+        # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
+        # FRONTIER-BATCH: the 0.6186/A anchor (and this test's own extended 0.3608-0.8763
+        # session-position-sensitivity finding, see docstring above) predates
+        # TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG's fix, which correctly stopped mislabeling
+        # AI strategic goals as fake quests -- that mechanism no longer exists. This world's
+        # profile does not enable ENABLE_GUILD_QUEST_GENERATION and reaches no WAR/
+        # sovereignty-shift within 200 ticks, so real NARRATIVE activity is correctly 0,
+        # deterministically (no session-position variance observed post-fix).
+        "NARRATIVE": {"grade": "C", "score": 0.0, "abs_floor": 0.05},
     }
 
     profile = _resolve_profile(profile_name)

@@ -218,14 +218,24 @@ def _recent_records(filename: str, n: int) -> list:
 def test_recent_runs_records_classify_as_current_and_agree_with_validate():
     records = _recent_records("runs.jsonl", _SAMPLE_SIZE)
     assert records, "no recent runs.jsonl records sampled — test would be vacuous"
+
+    by_run_id: dict = {}
     for record in records:
         assert classify_provenance(record, "runs") == frozenset(), (
             f"recent run_id={record.get('run_id')!r} classified as legacy — "
             "expected current schema"
         )
-        assert _record_is_complete(record), (
-            f"recent run_id={record.get('run_id')!r} disagrees with validate.py's "
-            "own completion check"
+        by_run_id.setdefault(record.get("run_id"), []).append(record)
+
+    # A run_id's own group of records agrees with validate.py's completion check
+    # (validate.py:271-276 groups by run_id and only flags a run_id as incomplete
+    # if none of its records are complete) — an in-flight run-start record with no
+    # end_ts is expected to be individually incomplete as long as a sibling record
+    # for the same run_id (e.g. a later DONE record) satisfies the check.
+    for run_id, group in by_run_id.items():
+        assert any(_record_is_complete(r) for r in group), (
+            f"recent run_id={run_id!r} disagrees with validate.py's own completion "
+            "check (no record in its group is complete)"
         )
 
 

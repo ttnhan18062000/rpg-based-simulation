@@ -211,6 +211,61 @@ export interface OutlierStats {
   cost_proxy_score: CostProxyOutlierEntry[]
 }
 
+export interface SkillUsageSection {
+  total_skill_invocations: number
+  unparseable: number
+  per_skill: Record<string, number>
+  per_skill_per_run: Record<string, Record<string, number>>
+  derivation: string
+}
+
+export interface KgmcpCacheTicketStats {
+  hit: number
+  write: number
+  reuse_rate: number | null
+}
+
+export interface KgmcpRepeatedRefetchEntry {
+  cache_level: string | null
+  run_id: string | null
+  ticket_id: string
+  agent: string
+  gap_s: number
+  prior_run_id: string | null
+  prior_event_type: string | null
+}
+
+export interface KgmcpDeadWriteEntry {
+  cache_level: string | null
+  run_id: string | null
+  ticket_id: string
+  agent: string
+  ts: number | null
+}
+
+export interface KgmcpCoverageStats {
+  search_calls_total: number
+  cache_events_total: number
+  coverage_rate: number | null
+}
+
+export interface KgmcpCacheEfficiencyStats {
+  total_hits: number
+  total_writes: number
+  overall_reuse_rate: number | null
+  per_ticket: Record<string, KgmcpCacheTicketStats>
+  per_agent: Record<string, KgmcpCacheTicketStats>
+  repeated_refetch_window_seconds: number
+  repeated_refetches: KgmcpRepeatedRefetchEntry[]
+  dead_writes: KgmcpDeadWriteEntry[]
+  dead_write_count: number
+  coverage: KgmcpCoverageStats
+  verdict: string
+  verdict_explanation: string
+  stale_attribution_count: number
+  derivation: string
+}
+
 export interface AgentMonitoringStats {
   run_summary: RunSummaryStats
   gate_failure_breakdown: Record<string, number>
@@ -225,6 +280,8 @@ export interface AgentMonitoringStats {
   summary_quality: SummaryQualityStats
   slow_runs: SlowRunEntry[]
   outliers: OutlierStats
+  skill_usage: SkillUsageSection
+  kgmcp_cache_efficiency: KgmcpCacheEfficiencyStats
 }
 
 export interface VelocityStats {

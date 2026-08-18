@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "provider_id": "context_search",
+  "adapter_version": null,
+  "stable_entity_ids": "PARTIAL",
+  "evidence_granularities": ["chunk"],
+  "fine_grained_fingerprints": false,
+  "incremental_refresh": false,
+  "deterministic_relationships": "NONE",
+  "historical_queries": false,
+  "negative_knowledge_support": "NONE",
+  "cancellation": false,
+  "timeout": false,
+  "branch_awareness": "NONE",
+  "generation_fingerprint": true
+}

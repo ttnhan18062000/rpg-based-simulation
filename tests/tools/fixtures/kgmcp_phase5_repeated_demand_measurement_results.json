@@ -1,0 +1,556 @@
+{
+  "primary": {
+    "conservative_repeated_pair_count": 17,
+    "distinct_tickets_in_repeated_pairs": 30,
+    "intent_distribution": {
+      "completeness_verification": 82,
+      "feasibility_evaluation": 8,
+      "location_lookup": 10,
+      "mechanism_explanation": 198,
+      "other": 174,
+      "root_cause_debugging": 49
+    },
+    "pairs": [
+      {
+        "a": "TCK-20260607-RUNTIME-CONTENT-MODE",
+        "a_text": "File is src/core/registries.py not resolver.py; 3 adapter classes; enum goes in src/core/modes.py",
+        "b": "TCK-20260627-P2N-DEGRADED-FALLBACK",
+        "b_text": "Actual file is src/core/registries.py:541 (not degradation.py). All 9 retirement criteria MET. GracefulDegradationManager has no content-source logic.",
+        "intent": "location_lookup",
+        "shared_camel_or_path": [
+          "src/core/registries.py"
+        ],
+        "shared_identifiers": [
+          "src/core/registries.py"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260610-MEMORY-DEBUG-TOOL",
+        "a_text": "Identified thread name matching strategy for count_drain_workers; confirmed gc.get_objects safe for EventRecorder; documented memray Tracker API",
+        "b": "TCK-20260702-OBSISO-TRACE-ASYNC",
+        "b_text": "Confirmed core bug + found unscoped second violation (DecisionTraceIndex.append_entry() also does sync IO); corrected drifted line numbers; recommended EventRecorder's per-instance worker pattern o...",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "EventRecorder"
+        ],
+        "shared_identifiers": [
+          "EventRecorder"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260619-E21B-REGEN-SERVICE",
+        "a_text": "Found: StateUpdate missing world_events_add, AuthoritativeState missing recent_world_events, ResourceNodeUpdate has no charges_set (use charges_delta), cooldown guard needed, DEPLETED injection poi...",
+        "b": "TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION",
+        "b_text": "Corrected earlier audit: resource-node events need no new instrumentation, ResourceNodeUpdate already exists",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [
+          "ResourceNodeUpdate"
+        ],
+        "shared_identifiers": [
+          "ResourceNodeUpdate"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260619-E22C-REST-API",
+        "a_text": "DecisionTraceIndex.lookup() confirmed, run_dir pattern resolved, INFRA-213 flagged as new parity entry, 3 required tests specified",
+        "b": "TCK-20260702-OBSISO-TRACE-ASYNC",
+        "b_text": "Confirmed core bug + found unscoped second violation (DecisionTraceIndex.append_entry() also does sync IO); corrected drifted line numbers; recommended EventRecorder's per-instance worker pattern o...",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "DecisionTraceIndex"
+        ],
+        "shared_identifiers": [
+          "DecisionTraceIndex"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260619-E31D-REST-API",
+        "a_text": "Investigation complete \u2014 ScenarioRuntimeService properties identified, registry gap found, presenter pattern established",
+        "b": "TCK-20260619-E32C-ORCHESTRATOR",
+        "b_text": "Investigation complete \u2014 CampaignOrchestrator missing, state.py complete, ScenarioRuntimeService needs final_state + initial_state, 6 OQs all resolved",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [
+          "ScenarioRuntimeService"
+        ],
+        "shared_identifiers": [
+          "ScenarioRuntimeService"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260619-E33B-ALERTS-REST",
+        "a_text": "E33A foundation confirmed; alert events must be SimulationEvent subclasses not WorldEvent; REST endpoint pattern identified; region_id on NavigationComponent",
+        "b": "TCK-20260716-PLACELEGAL-SIMQ-SIGNAL",
+        "b_text": "Confirmed law_id unchanged (LAW-SPAWN-OCCUPANCY); found BLOCKING gap: init-time violations never emit a SimulationEvent, so SimQ can never see them under original scope. Raised as a Plan-phase deci...",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "SimulationEvent"
+        ],
+        "shared_identifiers": [
+          "SimulationEvent"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260619-E51A-SIGNIFICANCE",
+        "a_text": "Investigated NarrativeLedgerEntry schema, chronicle domain missing, BASE_SIGNIFICANCE values confirmed from E32D prior work",
+        "b": "TCK-20260619-E51B-GROUPER",
+        "b_text": "Confirmed NarrativeLedgerEntry schema (episode/tick/event_type/subject_id/payload/significance/entry_id); EventSignificanceScorer from E51A available; grouping algorithm designed (INCIDENT_TICK_WINDOW=50, ERA_EPISODE_MIN=3)",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "NarrativeLedgerEntry"
+        ],
+        "shared_identifiers": [
+          "NarrativeLedgerEntry"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "CREATE-TICKETS-DOCS-PLANS-AGENT-OPS-DASHBOARD-PROPOSAL-UI-REVIEW-FINDINGS",
+        "a_text": "Confirmed genuine gap: neither UI_INTERACTION_SPEC.md nor RecentActivityGantt/GanttBar code ever specced or rendered a visible time axis or on-bar labels; standard tier.",
+        "b": "TCK-20260718-STATS-TAB-FRONTEND",
+        "b_text": "Read App.tsx/TicketsView.tsx/RecentActivityGantt.tsx conventions; confirmed no chart library exists; found and corrected the ticket text's false light-theme-exists claim (no .dark class ever applie...",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "RecentActivityGantt"
+        ],
+        "shared_identifiers": [
+          "RecentActivityGantt"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL",
+        "a_text": "Confirmed all 4 canonical enums importable from ticket_field_values.py; found 2 stale claims in existing INFRA-275 parity entry to fix.",
+        "b": "TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY",
+        "b_text": "Confirmed get_glossary layer_registry precedent, INFRA-275 corpus-derived claim, TicketsView.tsx tolerance",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "INFRA-275"
+        ],
+        "shared_ticket_or_parity_id": [
+          "INFRA-275"
+        ]
+      },
+      {
+        "a": "TCK-20260718-STATS-TAB-FRONTEND",
+        "a_text": "Read App.tsx/TicketsView.tsx/RecentActivityGantt.tsx conventions; confirmed no chart library exists; found and corrected the ticket text's false light-theme-exists claim (no .dark class ever applie...",
+        "b": "TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY",
+        "b_text": "Confirmed get_glossary layer_registry precedent, INFRA-275 corpus-derived claim, TicketsView.tsx tolerance",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "TicketsView"
+        ],
+        "shared_identifiers": [
+          "TicketsView"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260805-COMMUNITY-SKILL-SWAP-DISCLOSED",
+        "a_text": "WebSearch found no superior alternative; confirmed rest-api-template.py is genuinely FastAPI-stack-correct; found .agents/ Codex mirror mechanism.",
+        "b": "TCK-20260805-COMMUNITY-SKILL-SWAP-UNDISCLOSED",
+        "b_text": "Confirmed backend-testing bespoke-replace hypothesis against real tests/api/ files; assessed other 3 individually; WebSearch found no swap candidate.",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "WebSearch"
+        ],
+        "shared_identifiers": [
+          "WebSearch"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260807-COMMITMENT-ABANDONED-PUSH-MIGRATION-GAP",
+        "a_text": "Confirmed exact commitment_abandoned construction logic; designed hp/max_hp reconstruction mirroring CombatShaper's own prior-plus-delta pattern; confirmed own dedicated flag needed (not colocated ...",
+        "b": "TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY",
+        "b_text": "Re-confirmed combat-lifecycle architecture (CombatShaper/SHAPER_REGISTRY/run_shadow_shapers, 6 real trigger conditions, entity-snapshot field list) against live source; investigation.md written.",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "CombatShaper"
+        ],
+        "shared_identifiers": [
+          "CombatShaper"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP",
+        "a_text": "Traced real multi-source population-growth mechanism; found connected out-of-scope EntityRole.MONSTER SpawnService bug",
+        "b": "CREATE-TICKETS-DOCS-ARCHITECTURE-2026-08-10-COGNITION-DRIVEN-ADVENTURE-ELIGIBILITY-DESIGN",
+        "b_text": "Confirmed AdventureDecisionPhase.apply() hardcodes EntityRole.HERO; disciplined_guard/trade_pragmatist ARE real non-guessable content, not dead as design worried.",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "EntityRole"
+        ],
+        "shared_identifiers": [
+          "EntityRole"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION",
+        "a_text": "Traced 3 distinct entity-construction paths; confirmed zero race correlation in the live WorldCompiler path via real corpus probes; found WorldEntitySpawner never sets personality at all",
+        "b": "TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION",
+        "b_text": "Refuted the ambiguous-role-id hypothesis via direct compiled-state inspection; traced the real root cause to WorldCompiler.compile() lacking catalog access.",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "WorldCompiler"
+        ],
+        "shared_identifiers": [
+          "WorldCompiler"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION",
+        "a_text": "Traced 2 mechanisms to SUB-384: CombatRewardClassificationService role-keyed reward classification (PROGRESSION), cascading population/RNG-stream behavioral change (SOCIAL/ECONOMY/COGNITION/AGENCY)...",
+        "b": "TCK-20260810-SIMQ-FAST-TIER-DRIFT-AND-RELIABILITY-GAP",
+        "b_text": "Re-confirmed the 12-item REGRESS list; confirmed SUB-384 cause per-world via compile_context.json. Directly checked D06 F6 watchdog hypothesis for finding 2 via captured stdout; sampled 6 FAST-tier...",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "SUB-384"
+        ],
+        "shared_ticket_or_parity_id": [
+          "SUB-384"
+        ]
+      },
+      {
+        "a": "CREATE-TICKETS-DOCS-ARCHITECTURE-2026-08-10-COGNITION-DRIVEN-ADVENTURE-ELIGIBILITY-DESIGN",
+        "a_text": "Confirmed AdventureDecisionPhase.apply() hardcodes EntityRole.HERO; disciplined_guard/trade_pragmatist ARE real non-guessable content, not dead as design worried.",
+        "b": "TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION",
+        "b_text": "Confirmed both design-doc open questions true and sharper: score-scale mismatch worse in practice due to mapper.py:100 hardcoded score=1.0; AdventureDecisionPhase.apply() unconditionally overwrites...",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "AdventureDecisionPhase"
+        ],
+        "shared_identifiers": [
+          "AdventureDecisionPhase"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "CREATE-TICKETS-DOCS-ARCHITECTURE-2026-08-11-ADVENTURE-AS-COGNITION-STRATEGY-SUBCOMPONENT-DESIGN-MD",
+        "a_text": "AdventureGoalScorer/GoalKind.ADVENTURE_ROUTE do not exist yet; materialization bug site confirmed at intelligence.py:1414",
+        "b": "TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE",
+        "b_text": "Confirmed AdventureGoalScorer already wins tier-5 live today - deletion removes waste, not a switch-flip. Found 2 real unported observability gaps (decision-trace-writer, last_defer_reason). Correc...",
+        "intent": "mechanism_explanation",
+        "shared_camel_or_path": [
+          "AdventureGoalScorer"
+        ],
+        "shared_identifiers": [
+          "AdventureGoalScorer"
+        ],
+        "shared_ticket_or_parity_id": []
+      }
+    ],
+    "ref_only_pair_count": 2,
+    "strong_pair_count": 15,
+    "tag_only_pair_count": 427,
+    "total_tickets": 521
+  },
+  "secondary": {
+    "conservative_repeated_pair_count": 372,
+    "distinct_tickets_in_repeated_pairs": 261,
+    "intent_distribution": {
+      "completeness_verification": 517,
+      "feasibility_evaluation": 15,
+      "location_lookup": 12,
+      "mechanism_explanation": 166,
+      "other": 455,
+      "root_cause_debugging": 246
+    },
+    "pairs_sample": [
+      {
+        "a": "TCK-20260401-HARDENING-PERF",
+        "a_text": "Infrastructure Safety & Performance Optimization; Implemented recursive freeze guards and StaticData payload caching.",
+        "b": "TCK-20260401-AOA-STABILIZE",
+        "b_text": "AOA Integrity & Performance; Implemented recursive freeze guards and StaticData payload caching.",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [
+          "StaticData"
+        ],
+        "shared_identifiers": [
+          "StaticData"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260322-BWS_PROTO",
+        "a_text": "Binary WebSocket Protocol; Implemented MessagePack over WebSockets with 95.3% payload reduction. Added GZip middleware.",
+        "b": "TCK-20260519-SIM-OBS-EVENTS",
+        "b_text": "Curated SimulationEvent & Entity Timeline Buffers; Implemented Pydantic event hierarchy O(1) sliding deques in EntityState post-commit event capture in Kernel and `/ws/observe` WebSocket streams with client pacing and filtering.",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [
+          "WebSocket"
+        ],
+        "shared_identifiers": [
+          "WebSocket"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260322-BWS_PROTO",
+        "a_text": "Binary WebSocket Protocol; Implemented MessagePack over WebSockets with 95.3% payload reduction. Added GZip middleware.",
+        "b": "TCK-20260520-SIM-OBS-PHASE5-M24",
+        "b_text": "WebSocket Live Observatory API; Implemented robust lock-guarded send-only loop with concurrent receive-based instant client cleanup and deterministic test endpoint",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [
+          "WebSocket"
+        ],
+        "shared_identifiers": [
+          "WebSocket"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260324-DEBUG_TESTS",
+        "a_text": "Stabilize WorldLoop Test Suite; 100% Unit Test Pass (584/584). Implemented Dynamic Port Isolation & Robust Loki Ingestion infrastructure.",
+        "b": "TCK-20260403-PHASE-DECOMP",
+        "b_text": "WorldLoop Phase Decomposition & Typed Records; Separated Finalization/Persistence phases and implemented structured IntentUpdate records.",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [
+          "WorldLoop"
+        ],
+        "shared_identifiers": [
+          "WorldLoop"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260410-STRAT-REFACTOR",
+        "a_text": "Improvement Phase 1: Strategic Consistency; Reconciled StrategicUpdate schema, eliminated live-mutation exceptions in services",
+        "b": "TCK-20260619-E42A-INFO-NEED",
+        "b_text": "Epic 4.2A \u00b7 InformationNeed from UnknownFact; UnknownFact extended with priority+seeking_project_id fields; ProjectKind.INFORMATION_SEEKING added; new InformationNeedDetector in cognition_extras.py (pure detector >0.5 threshold; highest-priority candidate; StrategicUpdate path); 12 new tests pass; 81 unit + 7 integration zero regressions; STRAT-229 parity ledger",
+        "intent": "root_cause_debugging",
+        "shared_camel_or_path": [
+          "StrategicUpdate"
+        ],
+        "shared_identifiers": [
+          "StrategicUpdate"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260410-STRAT-REFACTOR",
+        "a_text": "Improvement Phase 1: Strategic Consistency; Reconciled StrategicUpdate schema, eliminated live-mutation exceptions in services",
+        "b": "TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY",
+        "b_text": "Build StrategyShaper - AGENCY/COGNITION/INFORMATION event emission moved to apply-layer push (SHADOW); All 14 events confirmed push-ready via a new _current_leads() reconstruction pattern (prior_state full snapshot + this-tick StrategicUpdate deltas). Found and fixed 2 real bugs via real-kernel verification: (1) registering directly into SHAPER_REGISTRY double-fired since ENABLE_PUSH_EVENT_SHAPERS already defaults ON - fixed with a new, separately-defaulted-OFF ENABLE_PUSH_EVENT_SHAPERS_PHASE2 flag + PHASE2_SHAPER_REGISTRY; (2) missing reset_run_state() for new per-run dedup caches - added and wired into Kernel.__init__. Also fixed a pre-existing stale feature_flags.md row and filed a follow-up for a pre-existing unrelated test failure. 968/968 scoped tests pass. New STRAT-247/SOC-239 parity entries.",
+        "intent": "root_cause_debugging",
+        "shared_camel_or_path": [
+          "StrategicUpdate"
+        ],
+        "shared_identifiers": [
+          "StrategicUpdate"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260417-ARENA-PERF-HARDENING",
+        "a_text": "Arena Simulation Performance Hardening; Implemented universal shallow-snapshot and hardened WorkerPool resource cleanup. Established pytest memory hooks.",
+        "b": "TCK-20260418-RESOURCE-CONCURRENCY-M8",
+        "b_text": "Safe Concurrency and Bounded Worker Execution; Implemented WorkerPool with explicit queue bounds and deterministic local fallback.",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [
+          "WorkerPool"
+        ],
+        "shared_identifiers": [
+          "WorkerPool"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260417-COMBAT-MOVEMENT-RULEBOOK",
+        "a_text": "Combat and Movement Rulebook Implementation; Implemented LegalityService and decoupled world-time from entity action turns in the engine loop.",
+        "b": "TCK-20260418-CORE-RULEBOOK-HARDENING",
+        "b_text": "Harden Authoritative Rulebook and Quiet-Tick Lifecycle Contract; Consolidated legality logic into LegalityService and implemented drift guards.",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [
+          "LegalityService"
+        ],
+        "shared_identifiers": [
+          "LegalityService"
+        ],
+        "shared_ticket_or_parity_id": []
+      },
+      {
+        "a": "TCK-20260424-PH11-M1-READINESS",
+        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M2-PROOF",
+        "b_text": "Phase 11 Milestone 2 Preserved Proof complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M1-READINESS",
+        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M3-RATIFICATION",
+        "b_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M1-READINESS",
+        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M4-GOVERNANCE",
+        "b_text": "Phase 11 Milestone 4 Governance Reconciliation complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M1-READINESS",
+        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M5-VERDICT",
+        "b_text": "Phase 11 Milestone 5 Final Verdict complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M1-READINESS",
+        "a_text": "Phase 11 Milestone 1 Readiness Gate complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M6-EXIT",
+        "b_text": "Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M2-PROOF",
+        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M3-RATIFICATION",
+        "b_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M2-PROOF",
+        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M4-GOVERNANCE",
+        "b_text": "Phase 11 Milestone 4 Governance Reconciliation complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M2-PROOF",
+        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M5-VERDICT",
+        "b_text": "Phase 11 Milestone 5 Final Verdict complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M2-PROOF",
+        "a_text": "Phase 11 Milestone 2 Preserved Proof complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M6-EXIT",
+        "b_text": "Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M3-RATIFICATION",
+        "a_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M4-GOVERNANCE",
+        "b_text": "Phase 11 Milestone 4 Governance Reconciliation complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M3-RATIFICATION",
+        "a_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M5-VERDICT",
+        "b_text": "Phase 11 Milestone 5 Final Verdict complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      },
+      {
+        "a": "TCK-20260424-PH11-M3-RATIFICATION",
+        "a_text": "Phase 11 Milestone 3 Non-Preserved Ratification complete; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "b": "TCK-20260424-PH11-M6-EXIT",
+        "b_text": "Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED; stored_artifacts/TCK-20260424-PH11-M1-READINESS/",
+        "intent": "completeness_verification",
+        "shared_camel_or_path": [],
+        "shared_identifiers": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ],
+        "shared_ticket_or_parity_id": [
+          "TCK-20260424-PH11-M1-READINESS"
+        ]
+      }
+    ],
+    "ref_only_pair_count": 90,
+    "strong_pair_count": 282,
+    "tag_only_pair_count": 10347,
+    "total_tickets": 1411
+  }
+}

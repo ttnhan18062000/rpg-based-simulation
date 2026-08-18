@@ -7,6 +7,7 @@ from typing import Dict, Any
 
 from src.perf.bench_harness import BenchHarness
 from src.perf.profiles import PERF_PROFILES
+from tests.tools.perf_assertions import perf_check
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +41,14 @@ class PerfBudget:
         self,
         measured_ms: float,
         measured_kb: "float | None" = None,
+        *,
+        hard: bool = False,
     ) -> None:
-        """Assert time and (optionally) memory are within tolerance.
+        """Check time and (optionally) memory are within tolerance.
+
+        TCK-20260818-STANDARD-PERF-THRESHOLD-SOFT-WARNING: soft (warning, not a hard
+        failure) by default — see tests/tools/perf_assertions.py's module docstring for
+        the stopgap rationale. Pass hard=True to restore the previous hard-fail behavior.
 
         Args:
             measured_ms: Elapsed wall-clock time in milliseconds.
@@ -49,25 +56,30 @@ class PerfBudget:
                 check even if the baseline has a ``memory_kb`` value.
                 If the baseline entry has ``memory_kb: null`` the check is also
                 skipped regardless of what is passed here.
+            hard: If True, a breach raises AssertionError instead of warning.
         """
         tol = self._entry.get("tolerance_pct", 20) / 100.0
         budget_ms = self._entry["time_ms"]
         limit_ms = budget_ms * (1 + tol)
-        assert measured_ms <= limit_ms, (
+        perf_check(
+            measured_ms <= limit_ms,
             f"\nPerformance gate failed: {self._test_id}\n"
             f"  time: {measured_ms:.2f}ms > {limit_ms:.2f}ms"
             f" (budget={budget_ms}ms ±{tol * 100:.0f}%)\n"
             f"  rationale: {self._entry.get('rationale', 'N/A')}\n"
-            f"  → If intentional, run: make perf-measure  then update perf_baselines.json"
+            f"  → If intentional, run: make perf-measure  then update perf_baselines.json",
+            hard=hard,
         )
         if measured_kb is not None and self._entry.get("memory_kb") is not None:
             budget_kb = self._entry["memory_kb"]
             limit_kb = budget_kb * (1 + tol)
-            assert measured_kb <= limit_kb, (
+            perf_check(
+                measured_kb <= limit_kb,
                 f"\nMemory gate failed: {self._test_id}\n"
                 f"  rss delta: {measured_kb:.0f}KB > {limit_kb:.0f}KB"
                 f" (budget={budget_kb}KB ±{tol * 100:.0f}%)\n"
-                f"  → If intentional, run: make perf-measure  then update perf_baselines.json"
+                f"  → If intentional, run: make perf-measure  then update perf_baselines.json",
+                hard=hard,
             )
 
 

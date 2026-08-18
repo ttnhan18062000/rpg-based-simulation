@@ -23,6 +23,25 @@ _DEFAULT_WORKFLOW_YAML_PATH = _REPO_ROOT / "agent-orchestration" / "workflows" /
 _SUPPORTED_TIER = "standard"
 _SUPPORTED_PHASES = ["Scope", "Investigate", "Plan", "Review"]
 
+# The implement-ticket.yaml workflow_version this package's Scope/Investigate/Plan/Review
+# phase/gate logic (matrix.py, shadow_runner.py, phase_order.py, gate_validation.py,
+# required_artifacts.py) was last manually reviewed against. Hardcoded-by-design, same spirit as
+# _SUPPORTED_TIER/_SUPPORTED_PHASES above -- bump only after re-reviewing this package's own
+# assumptions against a real implement-ticket.yaml change, never automatically.
+#
+# TCK-20260817-STANDARD-CODEX-SHADOW-CONTRACT-VERSION-FIXTURE-CONFLATION: this used to be
+# conflated with an individual FixtureEnvelope.version (the replay-fixture-ENVELOPE schema
+# version, a completely different, independently-owned concept -- see
+# docs/ai/replay_fixture_spec.md -- pinned at 1 by TCK-20260721-CODEX-REPLAY-PROOF and asserted
+# so by tests/agent_replay/test_fixture_envelope.py). That conflation broke the moment
+# workflow_version was legitimately bumped for reasons unrelated to this package (continuation_policy,
+# TCK-20260801-CODEX-WORKFLOW-CONTINUATION-POLICY) -- every fixture's own frozen envelope version
+# would need re-stamping forever just to keep pace with orchestrator changes this package's own
+# supported phase/gate slice never actually needs to react to. A contract-version check answers
+# "is THIS PACKAGE's own hardcoded phase/gate contract still what the live orchestrator expects,"
+# which has nothing to do with when any individual fixture was captured.
+_VERIFIED_AGAINST_WORKFLOW_VERSION = 2
+
 
 @dataclass(frozen=True)
 class SupportedMatrix:
@@ -65,9 +84,16 @@ def validate_phase_names(phase_names: list[str], matrix: SupportedMatrix) -> Non
             )
 
 
-def validate_contract_version(declared_version: int, matrix: SupportedMatrix) -> None:
-    if declared_version != matrix.workflow_version:
+def validate_contract_version(matrix: SupportedMatrix) -> None:
+    """Not a per-fixture check -- validates that THIS PACKAGE's own hardcoded phase/gate
+    assumptions (_VERIFIED_AGAINST_WORKFLOW_VERSION) still match the live
+    implement-ticket.yaml's real workflow_version. See _VERIFIED_AGAINST_WORKFLOW_VERSION's own
+    docstring for why this is deliberately decoupled from any individual FixtureEnvelope.version."""
+    if matrix.workflow_version != _VERIFIED_AGAINST_WORKFLOW_VERSION:
         raise ContractVersionMismatchError(
-            f"declared workflow_version {declared_version!r} does not match the real "
-            f"implement-ticket.yaml's workflow_version {matrix.workflow_version!r}"
+            f"this package was last verified against workflow_version "
+            f"{_VERIFIED_AGAINST_WORKFLOW_VERSION!r}, but the real implement-ticket.yaml's "
+            f"workflow_version is now {matrix.workflow_version!r} -- re-review "
+            "tools/agent_codex_runtime_shadow/'s phase/gate assumptions against the real "
+            "orchestrator change before bumping _VERIFIED_AGAINST_WORKFLOW_VERSION"
         )

@@ -9,7 +9,11 @@ _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
-from parity_ledger_scan import find_p0_intersection, CANONICAL_LEDGER_FILES  # noqa: E402
+from parity_ledger_scan import (  # noqa: E402
+    find_p0_intersection,
+    CANONICAL_LEDGER_FILES,
+    ShardParseError,
+)
 
 
 def _write_ledger(tmp_path, filename, entries):
@@ -34,6 +38,15 @@ def test_no_intersection_for_representative_docs_only_change():
     # Negative control against the real 8-file ledger.
     hits = find_p0_intersection(["docs/ai/workflows.md"], ledger_dir="docs/parity_ledger")
     assert hits == []
+
+
+def test_find_p0_intersection_malformed_shard_raises_labeled_error_not_crash(tmp_path):
+    (tmp_path / "substrate.yaml").write_text("id: [unbalanced flow mapping\n")
+    try:
+        find_p0_intersection(["src/core/state.py"], ledger_dir=str(tmp_path))
+        assert False, "expected ShardParseError"
+    except ShardParseError as exc:
+        assert exc.filename == "substrate.yaml"
 
 
 def test_only_scans_canonical_eight_not_faction(tmp_path):

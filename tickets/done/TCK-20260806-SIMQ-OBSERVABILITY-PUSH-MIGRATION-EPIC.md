@@ -16,7 +16,7 @@ Epic: Migrate COMBAT/ECONOMY/FACTION event emission from post-tick diffing to ap
 push-based emission, carefully gated
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic

@@ -98,7 +98,7 @@ physically present at home coordinates.
 
 ## The Authoritative Pipeline Phases This Domain Executes Inside
 
-Source: `docs/engine/authoritative_pipeline.md` (the 32-phase `AuthoritativeApplyPipeline`, the
+Source: `docs/engine/authoritative_pipeline.md` (the 37-phase `AuthoritativeApplyPipeline`, the
 sole mechanism allowed to mutate `AuthoritativeState`). This domain's operations are NOT free-form
 — they execute as specific named phases, in this fixed order, and this skill's logic must not
 contradict that ordering:
@@ -106,9 +106,9 @@ contradict that ordering:
 | Phase # | Name | What it does | Compliance ID |
 |---|---|---|---|
 | 8 | `blacksmith` | Validates crafting/blacksmithing requirements and resource costs | `TOWN-155` |
-| 20 | `quest_rewards` | Authoritatively delivers quest rewards and completion markers | `PROG-084` |
-| 21 | `shop` | Enforces shop prices and trade legality | `TOWN-166` |
-| 22 | `resource_transactions` | Enforces resource conservation and atomic transaction integrity | — |
+| 23 | `quest_rewards` | Authoritatively delivers quest rewards and completion markers | `PROG-084` |
+| 25 | `shop` | Enforces shop prices and trade legality | `TOWN-166` |
+| 27 | `resource_transactions` | Enforces resource conservation and atomic transaction integrity | — |
 
 ## What This Skill Does NOT Cover
 
