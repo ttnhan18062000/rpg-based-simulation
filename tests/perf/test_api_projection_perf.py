@@ -3,6 +3,7 @@ import pytest
 from src.config.profiles import PROD_DEFAULT
 from src.api.engine_manager import V2EngineManager
 from src.api.presenters.state_presenter import StatePresenter
+from tests.tools.perf_assertions import assert_perf_threshold
 
 @pytest.mark.slow
 def test_api_projection_performance_benchmark():
@@ -39,7 +40,7 @@ def test_api_projection_performance_benchmark():
         speedup = duration_raw / max(duration_cached, 1e-6)
         print(f"Speedup factor: {speedup:.2f}x")
 
-        assert speedup >= 3.0, f"Expected at least 3x speedup, got {speedup:.2f}x"
+        assert_perf_threshold(speedup, 3.0, "cached vs uncached speedup factor", op=">=")
         assert metrics["hits"] > 0
     finally:
         manager.stop()

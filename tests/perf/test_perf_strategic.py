@@ -2,6 +2,7 @@ import pytest
 from src.perf.bench_harness import BenchHarness
 from src.perf.profiles import PERF_PROFILES
 from src.perf.scenarios import build_strategic_state
+from tests.tools.perf_assertions import assert_perf_threshold
 
 @pytest.mark.perf
 @pytest.mark.slow
@@ -34,4 +35,9 @@ def test_perf_strategic(entity_count, perf_report_dir):
     # means [100] (measuring well under 150ms) now has much looser effective sensitivity — a
     # pre-existing test-design characteristic (one shared assert for 3 wildly different sizes),
     # not something this ticket redesigns.
-    assert result["p95_tick_compute_ms"] < 1650.0
+    # TCK-20260818-STANDARD-PERF-THRESHOLD-SOFT-WARNING: soft (warning, not hard-fail) —
+    # see tests/tools/perf_assertions.py's module docstring for the stopgap rationale.
+    assert_perf_threshold(
+        result["p95_tick_compute_ms"], 1650.0,
+        f"[{entity_count}] p95 tick compute time", op="<",
+    )

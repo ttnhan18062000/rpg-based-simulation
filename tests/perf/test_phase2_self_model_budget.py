@@ -9,6 +9,7 @@ import time
 from src.core.builder import V2EntityBuilder
 from src.core.state import CombatComponent, StaminaComponent, BiologicalComponent
 from src.cognition.self_model_phase import SelfModelUpdatePhase
+from tests.tools.perf_assertions import assert_perf_threshold
 
 
 def _entity(e_id):
@@ -41,7 +42,7 @@ def test_phase2_self_model_perf_budget_and_dirty_check():
     t_warm_ms = (time.perf_counter_ns() - t0) / 1e6
 
     # Warm budget check: 100 entities warm update should easily complete in under 50ms
-    assert t_warm_ms < 50.0, f"Warm update too slow: {t_warm_ms}ms"
+    assert_perf_threshold(t_warm_ms, 50.0, "Warm self-model update (100 entities)", op="<")
 
     # 3. Benchmark Clean Update (Tick 1 -> Tick 2, dirty-check skips needing update)
     t1 = time.perf_counter_ns()
@@ -51,8 +52,11 @@ def test_phase2_self_model_perf_budget_and_dirty_check():
     t_clean_ms = (time.perf_counter_ns() - t1) / 1e6
 
     # Clean budget check: 100 clean entities should skip and complete in under 5ms
-    assert t_clean_ms < 5.0, f"Clean update too slow: {t_clean_ms}ms"
+    assert_perf_threshold(t_clean_ms, 5.0, "Clean (dirty-check-skip) self-model update (100 entities)", op="<")
 
     # Dirty-check ratio validation: clean run must be significantly faster (at least 5x)
     ratio = t_warm_ms / max(0.01, t_clean_ms)
-    assert ratio >= 5.0, f"Dirty-check did not optimize. Warm: {t_warm_ms}ms, Clean: {t_clean_ms}ms, Ratio: {ratio}x"
+    assert_perf_threshold(
+        ratio, 5.0,
+        f"Dirty-check speedup ratio (warm={t_warm_ms}ms, clean={t_clean_ms}ms)", op=">=",
+    )

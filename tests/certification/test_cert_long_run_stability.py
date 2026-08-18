@@ -8,6 +8,7 @@ import pytest
 
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.perf.long_run_harness import LongRunStabilityHarness, RunMode
+from tests.tools.perf_assertions import perf_check
 
 
 @pytest.fixture
@@ -57,10 +58,17 @@ def test_long_run_pure_stability(harness: LongRunStabilityHarness, tmp_path: Pat
         json.dump(report.to_dict(), f, indent=2)
         
     # Assert Invariants
-    assert report.rss_bounded, f"RSS growth unbounded: Peak {report.peak_rss_mb:.2f}MB vs Warmup {report.warmup_rss_mb:.2f}MB (Ratio {report.rss_growth_ratio:.2f})"
-    assert report.latency_stable, f"Latency drifted beyond envelope: Final p95 {report.final_p95_ms:.2f}ms vs Initial p95 {report.initial_p95_ms:.2f}ms (Ratio {report.latency_drift_ratio:.2f})"
-    assert report.caches_bounded, f"Optimization cache sizes unbounded: Movement cache {report.peak_movement_cache_size}, Read cache {report.peak_read_model_cache_size}"
-    assert report.gc_stable, f"Unstable GC thrashing: {report.total_gc_collections}"
+    # TCK-20260818-STANDARD-PERF-THRESHOLD-SOFT-WARNING: the 4 flags below are genuine
+    # timing/resource-threshold checks (memory growth ratio, latency drift ratio, cache
+    # size ceiling, GC collection count) computed internally by LongRunStabilityHarness —
+    # soft (warning, not hard-fail) per that ticket's explicit scope. `passed_certification`
+    # is left hard: it is the harness's own compound certification flag and this file's
+    # determinism/hash-comparison logic (see test_long_run_determinism_parity below) is
+    # explicitly out of scope for softening.
+    perf_check(report.rss_bounded, f"RSS growth unbounded: Peak {report.peak_rss_mb:.2f}MB vs Warmup {report.warmup_rss_mb:.2f}MB (Ratio {report.rss_growth_ratio:.2f})")
+    perf_check(report.latency_stable, f"Latency drifted beyond envelope: Final p95 {report.final_p95_ms:.2f}ms vs Initial p95 {report.initial_p95_ms:.2f}ms (Ratio {report.latency_drift_ratio:.2f})")
+    perf_check(report.caches_bounded, f"Optimization cache sizes unbounded: Movement cache {report.peak_movement_cache_size}, Read cache {report.peak_read_model_cache_size}")
+    perf_check(report.gc_stable, f"Unstable GC thrashing: {report.total_gc_collections}")
     assert report.passed_certification, "Long-run pure stability certification failed."
 
 

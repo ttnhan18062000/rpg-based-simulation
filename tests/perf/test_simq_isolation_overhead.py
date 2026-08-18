@@ -55,6 +55,7 @@ import pytest
 
 from src.perf.bench_harness import BenchHarness
 from src.config.profiles import PROD_SMALL
+from tests.tools.perf_assertions import assert_perf_threshold
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -363,10 +364,10 @@ def test_inprocess_simq_overhead_within_regression_band(monkeypatch):
         * 100.0
     )
     print(f"\nin-process overhead vs disabled baseline: {overhead_pct:.2f}% (band: {INPROCESS_CPU_OVERHEAD_BAND_PCT}%)")
-    assert overhead_pct < INPROCESS_CPU_OVERHEAD_BAND_PCT, (
-        f"in-process SimQ CPU overhead {overhead_pct:.2f}% exceeds the "
-        f"{INPROCESS_CPU_OVERHEAD_BAND_PCT}% band locked in "
-        "docs/performance/simq_isolation_overhead.md"
+    assert_perf_threshold(
+        overhead_pct, INPROCESS_CPU_OVERHEAD_BAND_PCT,
+        "in-process SimQ CPU overhead vs disabled baseline (band locked in "
+        "docs/performance/simq_isolation_overhead.md)", op="<",
     )
 
 
@@ -388,10 +389,10 @@ def test_broker_mode_engine_cpu_within_disabled_band(monkeypatch, tmp_path):
         * 100.0
     )
     print(f"\nbroker overhead vs disabled baseline: {overhead_pct:.2f}% (band: {BROKER_CPU_OVERHEAD_BAND_PCT}%)")
-    assert overhead_pct < BROKER_CPU_OVERHEAD_BAND_PCT, (
-        f"broker-mode engine-process CPU overhead {overhead_pct:.2f}% exceeds the "
-        f"{BROKER_CPU_OVERHEAD_BAND_PCT}% band locked in "
-        "docs/performance/simq_isolation_overhead.md"
+    assert_perf_threshold(
+        overhead_pct, BROKER_CPU_OVERHEAD_BAND_PCT,
+        "broker-mode engine-process CPU overhead vs disabled baseline (band locked in "
+        "docs/performance/simq_isolation_overhead.md)", op="<",
     )
 
 
@@ -437,10 +438,10 @@ def test_push_shaper_registry_overhead_within_regression_band(monkeypatch):
         * 100.0
     )
     print(f"\npush-shaper-registry overhead vs OFF baseline: {overhead_pct:.2f}% (band: {PUSH_SHAPER_CPU_OVERHEAD_BAND_PCT}%)")
-    assert overhead_pct < PUSH_SHAPER_CPU_OVERHEAD_BAND_PCT, (
-        f"push-shaper-registry CPU overhead {overhead_pct:.2f}% exceeds the "
-        f"{PUSH_SHAPER_CPU_OVERHEAD_BAND_PCT}% band locked in "
-        "docs/performance/simq_isolation_overhead.md"
+    assert_perf_threshold(
+        overhead_pct, PUSH_SHAPER_CPU_OVERHEAD_BAND_PCT,
+        "push-shaper-registry CPU overhead vs OFF baseline (band locked in "
+        "docs/performance/simq_isolation_overhead.md)", op="<",
     )
 
 
@@ -483,8 +484,8 @@ def test_phase2_shaper_registry_overhead_within_regression_band(monkeypatch):
         * 100.0
     )
     print(f"\nPhase 2 shaper-registry overhead vs OFF baseline: {overhead_pct:.2f}% (band: {PHASE2_CPU_OVERHEAD_BAND_PCT}%)")
-    assert overhead_pct < PHASE2_CPU_OVERHEAD_BAND_PCT, (
-        f"Phase 2 shaper-registry CPU overhead {overhead_pct:.2f}% exceeds the "
-        f"{PHASE2_CPU_OVERHEAD_BAND_PCT}% band locked in "
-        "docs/performance/simq_isolation_overhead.md"
+    assert_perf_threshold(
+        overhead_pct, PHASE2_CPU_OVERHEAD_BAND_PCT,
+        "Phase 2 shaper-registry CPU overhead vs OFF baseline (band locked in "
+        "docs/performance/simq_isolation_overhead.md)", op="<",
     )

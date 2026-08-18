@@ -2,6 +2,7 @@ import pytest
 from src.perf.bench_harness import BenchHarness
 from src.perf.profiles import PERF_PROFILES
 from src.perf.scenarios import build_combat_arena_state
+from tests.tools.perf_assertions import assert_perf_threshold
 
 @pytest.mark.slow
 @pytest.mark.perf
@@ -21,4 +22,8 @@ def test_perf_combat(side_count, perf_report_dir):
     # 750ms bound is sized for the [500] case (real measured ~432-500ms across local/CI runs,
     # TCK-20260817-STANDARD-PERF-COMBAT-MISSING-SLOW-MARKER) -- [10]/[50]/[100] (12-68ms measured)
     # have materially looser effective regression sensitivity as a result of sharing this one bound.
-    assert result["p95_tick_compute_ms"] < 750.0 # Combat is more expensive
+    assert_perf_threshold(
+        result["p95_tick_compute_ms"], 750.0,
+        f"[COMBAT {side_count}v{side_count}] p95 tick compute time (Combat is more expensive)",
+        op="<",
+    )

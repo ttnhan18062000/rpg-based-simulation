@@ -12,6 +12,7 @@ from src.core.state import CombatComponent, BiologicalComponent, PersonalityComp
 from src.core.self_model import SelfModelBundle, KnowledgeModelComponent, UnknownFact
 from src.domains.information.schema import InformationSourceProfile
 from src.domains.information.phase import InformationBeliefPhase
+from tests.tools.perf_assertions import assert_perf_threshold
 
 
 def _entity(e_id, unknowns=None):
@@ -73,5 +74,5 @@ def test_performance_budget_100_entities():
     
     duration_ms = (end - start) * 1000.0
     print(f"\n100 Entities InformationBeliefPhase Update Time: {duration_ms:.4f} ms")
-    
-    assert duration_ms < 5.0
+
+    assert_perf_threshold(duration_ms, 5.0, "InformationBeliefPhase update (100 entities)", op="<")

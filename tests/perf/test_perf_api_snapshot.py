@@ -6,6 +6,7 @@ from src.perf.bench_harness import BenchHarness
 from src.perf.profiles import PERF_PROFILES
 from src.perf.scenarios import build_idle_state
 from src.api.presenters.state_presenter import StatePresenter
+from tests.tools.perf_assertions import assert_perf_threshold
 
 def _run_snapshot_benchmark(entity_count, samples, perf_report_dir):
     state = build_idle_state(entity_count=entity_count)
@@ -100,8 +101,8 @@ def test_api_snapshot_performance_comparison(entity_count, perf_report_dir):
     samples = 50 if entity_count <= 100 else 30
     results = _run_snapshot_benchmark(entity_count, samples, perf_report_dir)
     
-    assert results["present_minimal"]["p95"] < 1.5
-    assert results["to_readonly"]["p95"] < 1.5
+    assert_perf_threshold(results["present_minimal"]["p95"], 1.5, f"present_minimal p95 ({entity_count} entities)", op="<")
+    assert_perf_threshold(results["to_readonly"]["p95"], 1.5, f"to_readonly p95 ({entity_count} entities)", op="<")
 
 @pytest.mark.slow
 @pytest.mark.perf
@@ -120,5 +121,7 @@ def test_api_snapshot_performance_stress(entity_count, perf_report_dir):
     """
     samples = 15
     results = _run_snapshot_benchmark(entity_count, samples, perf_report_dir)
-    assert results["present_minimal"]["p95"] < 2.5
-    assert results["to_readonly"]["p95"] < 2.5
+    # TCK-20260818-STANDARD-PERF-THRESHOLD-SOFT-WARNING: soft (warning, not hard-fail) —
+    # see tests/tools/perf_assertions.py's module docstring for the stopgap rationale.
+    assert_perf_threshold(results["present_minimal"]["p95"], 2.5, f"present_minimal p95 ({entity_count} entities)", op="<")
+    assert_perf_threshold(results["to_readonly"]["p95"], 2.5, f"to_readonly p95 ({entity_count} entities)", op="<")

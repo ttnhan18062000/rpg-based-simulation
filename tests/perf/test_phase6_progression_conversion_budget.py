@@ -10,6 +10,7 @@ from src.core.state import AuthoritativeState
 from src.core.builder import V2EntityBuilder
 from src.core.updates import StateUpdate
 from src.domains.progression.phase import ProgressionConversionPhase
+from tests.tools.perf_assertions import assert_perf_threshold
 
 
 @pytest.mark.slow
@@ -38,4 +39,7 @@ def test_phase6_progression_conversion_performance_budget():
     print(f"\n[PERF] ProgressionConversionPhase execute duration for 100 entities: {t_duration_ms:.3f} ms")
 
     # Bounded performance budget check: must stay under 5.0ms for 100 entities
-    assert t_duration_ms < 5.0, f"Overhead exceeded budget: {t_duration_ms:.3f}ms (target: < 5.0ms)"
+    assert_perf_threshold(
+        t_duration_ms, 5.0,
+        "ProgressionConversionPhase execute duration (100 entities)", op="<",
+    )

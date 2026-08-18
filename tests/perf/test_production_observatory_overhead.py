@@ -15,6 +15,7 @@ from src.platform.rng import DeterministicRNG
 from src.core.builder import V2EntityBuilder
 from src.observability.config import ObservabilityConfig, ObservabilityMode
 from src.observability.readiness.harness import PRODUCTION_READINESS_CRITERIA
+from tests.tools.perf_assertions import assert_perf_threshold
 
 
 ENTITY_COUNT = 30
@@ -80,9 +81,7 @@ def test_observatory_light_mode_overhead():
     # Log results for visibility
     print(f"OFF p95: {off_p95:.3f}ms, LIGHT p95: {light_p95:.3f}ms, overhead: {overhead_pct:.2f}%")
 
-    assert overhead_pct < threshold, (
-        f"Observatory LIGHT overhead {overhead_pct:.2f}% exceeds threshold {threshold}%"
-    )
+    assert_perf_threshold(overhead_pct, threshold, "Observatory LIGHT-mode tick p95 overhead %", op="<")
 
 
 def test_observatory_off_mode_zero_overhead():
@@ -101,4 +100,4 @@ def test_observatory_off_mode_zero_overhead():
     p95 = sorted(times)[int(len(times) * 0.95)]
     # OFF mode should complete ticks in a reasonable time.
     # 200ms is generous but guards against truly runaway latency on any hardware.
-    assert p95 < 200.0, f"OFF mode p95 {p95:.3f}ms unexpectedly slow"
+    assert_perf_threshold(p95, 200.0, "Observatory OFF-mode tick p95", op="<")

@@ -2,6 +2,7 @@ import pytest
 from src.certification.harness import CertificationHarness
 from src.certification.scenarios import build_scenario_state, get_scenario_expectations
 from src.config.profiles import RuntimeProfile, HardwareClass
+from tests.tools.perf_assertions import assert_perf_threshold
 
 @pytest.mark.slow
 @pytest.mark.extra_slow
@@ -38,4 +39,6 @@ def test_arena_stress_50v50():
     # regression signal, just CI's shared-runner process baseline running higher. Raised with
     # ~50% headroom above the highest real observed value (CI's own 247.07MB), matching the
     # precedent methodology in TCK-20260817-STANDARD-PERF-COMBAT-MISSING-SLOW-MARKER.
-    assert result.peak_rss_mb < 375.0
+    # TCK-20260818-STANDARD-PERF-THRESHOLD-SOFT-WARNING: soft (warning, not hard-fail) —
+    # see tests/tools/perf_assertions.py's module docstring for the stopgap rationale.
+    assert_perf_threshold(result.peak_rss_mb, 375.0, "Arena 50v50 stress peak RSS", op="<")

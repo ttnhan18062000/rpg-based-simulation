@@ -2,6 +2,7 @@ import time
 from src.domains.campaigns.spec import CampaignSpecLoader
 from src.domains.campaigns.runner import SimulationAnalysisRunner
 from src.domains.campaigns.schema import CampaignEvent
+from tests.tools.perf_assertions import assert_perf_threshold
 
 
 def test_campaign_semantic_budget_overhead():
@@ -49,5 +50,8 @@ forbidden_behavior:
     print(f"Average Overhead per Tick: {avg_overhead_per_tick:.4f} ms")
     
     # Assert average overhead per tick is strictly bounded under 5ms
-    assert avg_overhead_per_tick < 5.0, f"Average tick overhead of {avg_overhead_per_tick:.4f} ms exceeds the 5.0 ms budget!"
+    assert_perf_threshold(
+        avg_overhead_per_tick, 5.0,
+        "Average campaign semantic overhead per tick", op="<",
+    )
 

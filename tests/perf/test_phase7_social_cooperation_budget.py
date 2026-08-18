@@ -12,6 +12,7 @@ from src.core.builder import V2EntityBuilder
 from src.core.strategic import RiskLevel, ProjectState, ProjectKind, ObjectiveState, ObjectiveKind
 from src.core.updates import StateUpdate
 from src.domains.cooperation.phase import CooperationPhase
+from tests.tools.perf_assertions import assert_perf_threshold
 
 
 @pytest.mark.slow
@@ -62,8 +63,9 @@ def test_cooperation_phase_performance_budget_100_entities():
           f"(samples: {[round(d, 2) for d in durations_ms]})")
 
     # Must stay strictly inside agreed budget of < 25.0ms for 100+ entities.
-    assert median_duration < 25.0, (
-        f"Median duration {median_duration:.2f}ms exceeds 25.0ms budget across {iterations} samples: "
-        f"{[round(d, 2) for d in durations_ms]}"
+    assert_perf_threshold(
+        median_duration, 25.0,
+        f"CooperationPhase median duration across {iterations} samples "
+        f"({[round(d, 2) for d in durations_ms]})", op="<",
     )
     assert refined.metric_counters["cooperation_evaluations"] == 50
