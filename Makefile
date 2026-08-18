@@ -196,7 +196,7 @@ lane-strict-matrix: ## [medium] Cumulative world module matrix (end-to-end conte
 	python3 -m pytest tests/ -m "strict_matrix" -v --tb=short
 
 lane-legacy-regression: ## [slow] Arena, certification, legacy compat regression tests
-	python3 -m pytest tests/ -m "legacy_compat" -v --tb=short
+	python3 -m pytest tests/ -m "legacy_compat" --resource-budget large -v --tb=short
 
 regression-baseline: ## Generate/refresh 5k-tick behavioral regression baseline (commit the result)
 	python3 tools/generate_regression_baseline.py
