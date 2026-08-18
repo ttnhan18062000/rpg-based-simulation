@@ -102,6 +102,15 @@ def test_gateway_down_graphify_cli_still_works():
     lines)."""
     if shutil.which("graphify") is None:
         pytest.skip("graphify CLI not installed in this environment")
+    if not (_REPO_ROOT / "graphify-out" / "graph.json").exists():
+        # graphify-out/ is gitignored and no CI step builds it (this file's own docstring and
+        # tests/tools/test_code_test_index.py both establish this suite never depends on the
+        # real, live 41.9MB graphify-out/graph.json). This test's actual purpose (see its own
+        # docstring above) is proving graphify CLI's independence from the Knowledge Gateway,
+        # not proving graphify's own index-building -- skip gracefully rather than treat a
+        # not-yet-built index as this test's own failure, matching the graphify-binary-missing
+        # skip above for the same class of "prerequisite infrastructure isn't present" reason.
+        pytest.skip("graphify-out/graph.json not built in this environment (run /graphify first)")
 
     result = subprocess.run(
         ["graphify", "query", "assemble_packet"],
