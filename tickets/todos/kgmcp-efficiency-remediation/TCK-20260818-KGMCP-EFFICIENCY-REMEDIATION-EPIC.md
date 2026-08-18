@@ -35,7 +35,12 @@ earning its cost:
 - **Phase 2** (`TCK-20260815-KGMCP-P2-BASELINE-RECOMPARISON`): **0/7** corpus entries got a
   genuine cache hit. Every real response payload exceeds the deployed cache's 8192-byte write-size
   cap, so `perform_cache_write()` rejects every write (`"oversized_payload"`). Nothing has ever
-  been cached in a real measured run.
+  been cached in a real measured run. **Correction (2026-08-18, see
+  `TCK-20260818-KGMCP-CACHE-WRITE-SIZE-CAP-FIX`'s Completion Summary): this was already fixed
+  same-day by `TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION`, before this epic was
+  scoped — the cap is now 65536 bytes and a real re-run confirmed 7/7 genuine cache hits. That
+  same hotfix also honestly re-measured §4.1/§4.2 on the now-warm path and found both still
+  FAIL 0/7 — the epic's underlying concern survives the correction, just on updated evidence.**
 - **Phase 3** (`TCK-20260816-KGMCP-BUDGET-TOLERANCE-DEDUP-COVERAGE-CLOSURE`): a real, measured fix
   shrank payloads 11%-22%, but the §21 #12 budget-tolerance pass rate stayed stuck at **2/7** —
   the accounting still doesn't count JSON structural overhead or untouched response fields that
@@ -65,12 +70,13 @@ KGMCP-touching ticket ship with pre-existing tests broken. It does not implement
 ## Scope
 - Scope-only epic: track and sequence the child tickets in
   `tickets/todos/kgmcp-efficiency-remediation/`; no direct implementation in the parent.
-- Fixing the cache write-size cap that causes 0/7 real cache hits (the root blocker — nothing
-  else about KGMCP's value proposition can be honestly re-evaluated while it never actually
-  caches anything).
-- Re-running Phase 2's cold+warm comparison and Phase 4's gateway-vs-direct-tool comparison,
-  honestly, once the cap is fixed, to produce a real go/no-go verdict on keeping KGMCP over
-  direct tool calls.
+- ~~Fixing the cache write-size cap~~ — **already done** before this epic was scoped, by
+  `TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION`. The child ticket that duplicated this
+  (`TCK-20260818-KGMCP-CACHE-WRITE-SIZE-CAP-FIX`) is closed as a no-op with the correction
+  disclosed in its own Completion Summary.
+- Running Phase 4's gateway-vs-direct-tool comparison methodology on a genuinely *warm* gateway
+  (never done — Phase 4 itself was explicitly cold-cache-only) to produce a real go/no-go verdict
+  on keeping KGMCP over direct tool calls, now that caching itself is confirmed working.
 - Closing Phase 3's disclosed JSON-structural-overhead accounting gap in
   `assemble_within_budget()` so the §21 #12 budget-tolerance measurement reflects the real
   `json.dumps(response)` payload size, not an undercount.
@@ -89,11 +95,11 @@ KGMCP-touching ticket ship with pre-existing tests broken. It does not implement
   blocker and measures honestly; it does not pre-judge the outcome.
 
 ## Acceptance Criteria
-- [ ] The cache write-size cap fix child ticket lands and is independently verified to produce
-      real cache hits on at least some of the frozen 7-entry corpus (not assumed from code
-      inspection alone).
+- [x] The cache write-size cap fix child ticket lands — closed as a no-op 2026-08-18: verified
+      already fixed by a pre-existing hotfix, cache hits confirmed 7/7 by that hotfix's own
+      independent verification (not assumed from code inspection alone).
 - [ ] The re-comparison child ticket produces a real, honestly reported go/no-go verdict on
-      KGMCP vs. direct tool calls with the cap fixed — whatever the result, stated plainly.
+      KGMCP vs. direct tool calls on the warm path — whatever the result, stated plainly.
 - [ ] The budget-tolerance accounting gap child ticket either closes the gap (higher §21 #12 pass
       rate, honestly measured) or reports plainly why it still can't, per this project's Gate
       Integrity discipline (no threshold redefined to force a pass).
