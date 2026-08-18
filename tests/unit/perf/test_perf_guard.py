@@ -13,6 +13,8 @@ import pathlib
 
 import pytest
 
+from tests.tools.perf_assertions import PerformanceThresholdWarning
+
 # Import the implementation directly from tests/perf/conftest internals.
 # We import the private helpers and class explicitly to avoid pytest
 # fixture resolution (which needs a live session).
@@ -90,7 +92,14 @@ def test_perf_budget_assert_within_budget_pass():
 # ── 4. assert_within_budget — fail at 13ms ───────────────────────────────────
 
 def test_perf_budget_assert_within_budget_fail():
-    """10ms budget ±20%: limit is 12ms. 13ms must raise AssertionError."""
+    """10ms budget +-20%: limit is 12ms. 13ms breaches the budget.
+
+    TCK-20260818-STANDARD-PERF-THRESHOLD-SOFT-WARNING made PerfBudget.assert_within_budget
+    soft (warning, not a hard failure) by default -- a breach now emits
+    PerformanceThresholdWarning instead of raising. hard=True restores the previous
+    raise-on-breach behavior; both are exercised here so this meta-test covers the real,
+    current behavior of the mechanism rather than its pre-stopgap shape.
+    """
     entry = {
         "time_ms": 10.0,
         "tolerance_pct": 20,
@@ -98,8 +107,10 @@ def test_perf_budget_assert_within_budget_fail():
         "rationale": "test entry",
     }
     budget = PerfBudget(entry, "tests/perf/test_fake.py::test_example")
-    with pytest.raises(AssertionError, match="Performance gate failed"):
+    with pytest.warns(PerformanceThresholdWarning, match="Performance gate failed"):
         budget.assert_within_budget(measured_ms=13.0)
+    with pytest.raises(AssertionError, match="Performance gate failed"):
+        budget.assert_within_budget(measured_ms=13.0, hard=True)
 
 
 # ── 5. memory_kb: null → skip memory assertion ───────────────────────────────
