@@ -18,6 +18,13 @@
 # implement-ticket.js grows; treat this file's `statuses:` data below as authoritative, this header
 # as best-effort provenance only.
 #
+# 2026-08-18 (TCK-20260818-KGMCP-TICKET-VERIFY-SCOPED-REGRESSION-GAP): added TEST_SCOPE_COVERAGE_FAILED
+# (literal, Test phase) — a genuine new terminal status, not a drift correction. Counts above are
+# now stale (14 literal call sites / 13 distinct literal values / 16 distinct values total,
+# non-breaking addition per the README's versioning note — terminal_status_schema_version stays 1)
+# but are left as originally written per this header's own "best-effort provenance only" note;
+# the `statuses:` data below is current and authoritative.
+#
 # `kind` vocabulary:
 #   literal         — single writeMonitoring('STRING') call site (or more than one, for a
 #                     duplicated value like FINALIZE_INCOMPLETE).
@@ -51,6 +58,9 @@ statuses:
     kind: literal
     phases: [Implement]
   - value: TESTS_FAILED
+    kind: literal
+    phases: [Test]
+  - value: TEST_SCOPE_COVERAGE_FAILED
     kind: literal
     phases: [Test]
   - value: DATA_RUNS_CLEAN_FAILED

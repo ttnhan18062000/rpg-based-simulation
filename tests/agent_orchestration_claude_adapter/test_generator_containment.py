@@ -39,7 +39,7 @@ def test_generator_output_matches_representation_schema_shape(tmp_path):
     assert isinstance(data["phase_order"], list) and len(data["phase_order"]) == 12
     assert all(isinstance(p, str) for p in data["phase_order"])
 
-    assert isinstance(data["terminal_statuses"], list) and len(data["terminal_statuses"]) == 15
+    assert isinstance(data["terminal_statuses"], list) and len(data["terminal_statuses"]) == 16  # was 15; TEST_SCOPE_COVERAGE_FAILED added 2026-08-18
     for entry in data["terminal_statuses"]:
         assert {"value", "kind", "phases"} <= entry.keys()
 
