@@ -15,10 +15,10 @@ tags: [observability]
 Fix WebhookAlertSink's backoff/circuit-breaker gap; targeted review of highest-consequence broad-except sites
 
 ## Status
-EPIC_SCOPED
+OPEN
 
 ## Tier
-epic
+standard
 
 ## Type
 repair
@@ -35,12 +35,13 @@ exception taxonomy largely unused by callers — both source audits explicitly c
 blanket sweep; this epic is scoped to a targeted review of the highest-consequence sites only.
 
 ## Scope
-- Scope-only epic: full findings and proposed remediation steps are in
-  `docs/plans/error_handling_hygiene_epic.md`. Detailed, investigated child tickets are not
-  created yet.
-- When work begins: run `create-tickets` against a proposal document scoped to this epic's items
-  (WebhookAlertSink backoff/circuit-breaker fix, targeted broad-except review), producing
-  investigated child tickets in `tickets/todos/error-handling-hygiene/`.
+Full findings are in `docs/plans/error_handling_hygiene_epic.md`. Concrete scope:
+- Fix `WebhookAlertSink`'s misleading "exponential backoff" comment (either correct the comment
+  or implement real exponential backoff+jitter).
+- Add a simple circuit breaker to `WebhookAlertSink` (open after N consecutive failures,
+  half-open retry).
+- A targeted review of the highest-consequence broad-except sites only (state mutation,
+  persistence, replay) — not a repo-wide sweep of all 481 occurrences.
 
 ## Out of Scope
 - Any blanket "replace every broad except" initiative — explicitly not recommended by either
@@ -49,9 +50,11 @@ blanket sweep; this epic is scoped to a targeted review of the highest-consequen
   finds a specific, confirmed need.
 
 ## Acceptance Criteria
-- [ ] `docs/plans/error_handling_hygiene_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] Child tickets are created via `create-tickets` once this epic is chosen for action.
-- [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+- [ ] `WebhookAlertSink`'s backoff behavior matches its own in-code documentation (real
+      exponential+jitter, or an honest comment).
+- [ ] A circuit breaker prevents indefinite full-sequence retries against a dead endpoint.
+- [ ] The targeted broad-except review names specific sites reviewed and their disposition — not
+      a count-reduction metric applied blindly.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
@@ -68,14 +71,17 @@ None yet.
 - src/observability/alerts/sinks.py
 
 ## Assumptions / Open Questions
-- Which specific broad-except sites count as "highest-consequence" (state mutation, persistence,
-  replay per the source audit) needs confirming at Plan time for the eventual child ticket.
+- Which specific broad-except sites count as "highest-consequence" needs confirming at Plan time.
+- **Downgraded from epic to standard tier (2026-08-18):** one of 10 sub-epics under
+  `TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC`; two related, contained threads of work under
+  one "error-handling hygiene" theme — one standard ticket, not a multi-ticket initiative.
+  `staging_artifacts/TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC/` not yet created.
 
 ## Implementation Notes
-(pending — scope-only epic)
+(pending)
 
 ## Test Summary
-(pending — no direct tests; each future child ticket will carry its own)
+(pending)
 
 ## Files Changed
 (pending)

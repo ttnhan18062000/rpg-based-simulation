@@ -15,10 +15,10 @@ tags: [engine, determinism]
 Close (or explicitly label) the audit-mode-only determinism/mutation-guard verification gap
 
 ## Status
-EPIC_SCOPED
+OPEN
 
 ## Tier
-epic
+standard
 
 ## Type
 repair
@@ -36,23 +36,25 @@ lowest-urgency item in the whole roadmap: only worth pursuing if off-path mutati
 actually occurred or are a live concern.
 
 ## Scope
-- Scope-only epic: full findings and proposed remediation steps are in
-  `docs/plans/determinism_verification_gap_epic.md`. Detailed, investigated child tickets are not
-  created yet, and per the source audit's own framing this epic should not be picked up without
-  a specific reason.
-- When work begins (if ever): run `create-tickets` against a proposal document scoped to this
-  epic's items (cheap always-on partial fingerprint, or explicit reduced-verification labeling),
-  producing investigated child tickets in `tickets/todos/determinism-verification-gap/`.
+Full findings are in `docs/plans/determinism_verification_gap_epic.md`. Per the source audit's
+own framing, this is the lowest-urgency item in the whole roadmap — only worth picking up if
+off-path mutation bugs have actually occurred or are a live concern. Concrete scope when picked up:
+- Consider a cheap, always-on partial/sampled fingerprint as an alternative to the current
+  all-or-nothing `audit_mode` gating in `src/engine/kernel.py`.
+- At minimum, if a cheaper always-on check isn't pursued: flag `DEGRADED`/`SURVIVAL` run outputs
+  as "reduced verification" so a consumer of that run's results knows the strongest proof wasn't
+  applied.
 
 ## Out of Scope
 - Making the full Tier-2 fingerprint or canonical hash always-on unconditionally — a genuine
   cost/coverage tradeoff per the source audit, not a bug to eliminate outright.
 
 ## Acceptance Criteria
-- [ ] `docs/plans/determinism_verification_gap_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] A decision is recorded on whether this epic is worth pursuing at all, given its explicitly
-      conditional priority.
-- [ ] Child tickets are created via `create-tickets` only if this epic is chosen for action.
+- [ ] Either a cheap always-on partial fingerprint exists and narrows the current
+      audit-mode-only gap, or `DEGRADED`/`SURVIVAL` run outputs are explicitly labeled as
+      reduced-verification.
+- [ ] The full Tier-2 fingerprint / canonical hash remains conditional (not made unconditionally
+      always-on) — this is a deliberate cost/coverage tradeoff, not a bug to eliminate.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
@@ -71,13 +73,18 @@ None yet.
 
 ## Assumptions / Open Questions
 - Whether off-path mutation bugs have actually occurred or are a live concern is unknown to this
-  ticket — that's the deciding factor for whether this epic should be pursued at all.
+  ticket — that's the deciding factor for whether this ticket should be picked up at all.
+- **Downgraded from epic to standard tier (2026-08-18):** one of 10 sub-epics under
+  `TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC`; a single contained fix to one file
+  (`src/engine/kernel.py`) with two concrete alternative resolutions — one standard ticket, not a
+  multi-ticket initiative. `staging_artifacts/TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC/`
+  not yet created. Still gated on the "is this a live concern" question above before pickup.
 
 ## Implementation Notes
-(pending — scope-only epic)
+(pending)
 
 ## Test Summary
-(pending — no direct tests; each future child ticket will carry its own)
+(pending)
 
 ## Files Changed
 (pending)

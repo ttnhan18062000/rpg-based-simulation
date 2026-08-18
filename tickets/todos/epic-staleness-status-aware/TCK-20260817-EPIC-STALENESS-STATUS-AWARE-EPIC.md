@@ -15,10 +15,10 @@ tags: [ai, process-improvement]
 Teach the epic-staleness hook to check ticket ## Status before flagging BLOCKED epics as stale
 
 ## Status
-EPIC_SCOPED
+OPEN
 
 ## Tier
-epic
+hotfix
 
 ## Type
 repair
@@ -36,21 +36,22 @@ this exact ticket was being written. Small, precisely scoped, high-value fix: te
 read ticket status before flagging.
 
 ## Scope
-- Scope-only epic: full findings and proposed remediation steps are in
-  `docs/plans/epic_staleness_status_aware_epic.md`. Detailed, investigated child tickets are not
-  created yet.
-- When work begins: run `create-tickets` against a proposal document scoped to this epic's item
-  (status-aware staleness check, decide whether BLOCKED epics still surface informationally),
-  producing investigated child tickets in `tickets/todos/epic-staleness-status-aware/`.
+Full findings are in `docs/plans/epic_staleness_status_aware_epic.md`. Concrete scope:
+- Teach the staleness-check script (`tools/agent-monitoring/`) to read the target ticket's
+  `## Status` body field before flagging, and skip (or flag with a different, non-actionable
+  label) any ticket whose status is `BLOCKED` with a stated rationale.
+- Decide whether `BLOCKED` tickets should still surface in the report as an informational
+  "parked" list, rather than disappear entirely.
 
 ## Out of Scope
 - Any change to the 5-day staleness threshold itself.
 - Broader agent-monitoring tooling changes beyond this one hook's status-awareness.
 
 ## Acceptance Criteria
-- [ ] `docs/plans/epic_staleness_status_aware_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] Child tickets are created via `create-tickets` once this epic is chosen for action.
-- [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+- [ ] Running the staleness check against `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` in its
+      current `BLOCKED` state no longer produces the same undifferentiated "stale" flag it does today.
+- [ ] A genuinely stale, non-`BLOCKED` epic still gets flagged correctly (the fix must not weaken
+      the hook's real usefulness).
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
@@ -69,13 +70,17 @@ None yet.
 
 ## Assumptions / Open Questions
 - Whether BLOCKED epics should still appear in the report as an informational "parked" list, or
-  disappear entirely, is an open decision for whoever scopes the child ticket.
+  disappear entirely, is an open decision to resolve during implementation.
+- **Downgraded from epic to hotfix tier (2026-08-18):** the most clear-cut miscall of the 10
+  sub-epics created under `TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC` — this ticket's own
+  Request Summary already described the fix as "small, precisely scoped," which was never
+  epic-shaped to begin with. Hotfix tier needs no staging artifacts, per Tier Routing.
 
 ## Implementation Notes
-(pending — scope-only epic)
+(pending)
 
 ## Test Summary
-(pending — no direct tests; each future child ticket will carry its own)
+(pending)
 
 ## Files Changed
 (pending)

@@ -15,10 +15,10 @@ tags: [testing, architecture]
 Upgrade weak substring-based import-boundary tests to AST; add missing domains/systems boundaries
 
 ## Status
-EPIC_SCOPED
+OPEN
 
 ## Tier
-epic
+standard
 
 ## Type
 refactor
@@ -35,12 +35,16 @@ boundary test exists at all for `domains ↛ observability` or `systems ↛ engi
 fix reuses a pattern already proven in this repo — no new technique to introduce.
 
 ## Scope
-- Scope-only epic: full findings and proposed remediation steps are in
-  `docs/plans/architecture_boundary_hardening_epic.md`. Detailed, investigated child tickets are
-  not created yet.
-- When work begins: run `create-tickets` against a proposal document scoped to this epic's items
-  (AST-ify the two weak tests, add the two missing boundary tests), producing investigated child
-  tickets in `tickets/todos/architecture-boundary-hardening/`.
+Full findings are in `docs/plans/architecture_boundary_hardening_epic.md`. Concrete scope, all
+reusing the AST-visitor pattern `test_api_read_model_guard.py`/`test_phase_domain_permissions.py`
+already establish:
+- Rewrite `test_phase18_import_boundaries.py` and `test_phase19_observability_boundaries.py` from
+  substring-grep to AST inspection.
+- Add the two missing boundary tests: `domains ↛ observability` internals, `systems ↛ engine`
+  internals.
+- Lower priority within this ticket: a Tier-3→Tier-0 `docker-compose.yml` startup-dependency
+  linter (motivated by Epic A's RabbitMQ finding) — a compose-file concern needing a different
+  mechanism than an architecture test.
 
 ## Out of Scope
 - Building a general machine-readable subsystem-ownership manifest for all 38 `src/` packages —
@@ -50,9 +54,10 @@ fix reuses a pattern already proven in this repo — no new technique to introdu
   within this epic.
 
 ## Acceptance Criteria
-- [ ] `docs/plans/architecture_boundary_hardening_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] Child tickets are created via `create-tickets` once this epic is chosen for action.
-- [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+- [ ] The two weak boundary tests use AST inspection, not substring matching.
+- [ ] `domains ↛ observability` and `systems ↛ engine` each have an enforced boundary test.
+- [ ] Each new/upgraded test is confirmed to actually fail against a deliberately-introduced
+      violation (not just pass trivially because nothing violates it yet).
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
@@ -76,12 +81,16 @@ None yet.
 - Whether `domains ↛ observability` or `systems ↛ engine` violations currently exist wasn't
   checked in either source audit — this affects whether the new tests start red or green, and
   needs confirming before implementation.
+- **Downgraded from epic to standard tier (2026-08-18):** one of 10 sub-epics under
+  `TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC`; four items mechanically reusing one already-
+  proven in-repo pattern against a handful of test files — cohesive, one standard ticket.
+  `staging_artifacts/TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC/` not yet created.
 
 ## Implementation Notes
-(pending — scope-only epic)
+(pending)
 
 ## Test Summary
-(pending — no direct tests; each future child ticket will carry its own)
+(pending)
 
 ## Files Changed
 (pending)

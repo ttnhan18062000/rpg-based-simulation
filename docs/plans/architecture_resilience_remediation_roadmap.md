@@ -24,23 +24,29 @@ has been applied yet. `TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC` tracks this
 scoped as investigation/prioritization only — breaking any one epic below into concrete child
 tickets is deferred until that epic is chosen.
 
-**Update (2026-08-17):** every epic below except C now has its own epic-tier tracking ticket and
-dedicated plan document — created 2026-08-17, still scope-only (no `create-tickets` run against
-any of them yet):
+**Update (2026-08-17):** every epic below except C got its own tracking ticket and dedicated plan
+document, created 2026-08-17, initially all epic-tier and scope-only.
 
-| Epic | Ticket | Document |
-|---|---|---|
-| A — Dead Infra Removal | `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` | `docs/plans/dead_infra_removal_epic.md` |
-| B — Engine Liveness & Health | `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` | `docs/plans/engine_liveness_health_epic.md` |
-| C — Doc Drift Reconciliation | *(none — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — |
-| D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | `docs/plans/redis_stream_resilience_epic.md` |
-| E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | `docs/plans/epic_staleness_status_aware_epic.md` |
-| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | `docs/plans/http_admission_control_epic.md` |
-| G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/architecture_boundary_hardening_epic.md` |
-| H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/error_handling_hygiene_epic.md` |
-| I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/determinism_verification_gap_epic.md` |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` |
+**Update (2026-08-18):** audited all 10 sub-epic tickets against this project's actual epic-tier
+bar ("large multi-ticket initiative") and found 8 of 10 had been mechanically split from this
+roadmap's sections without individually re-testing tier fit. Downgraded A, B, D, F, G, H, I to
+standard tier and E to hotfix tier — each now carries a concrete, directly-actionable scope and
+acceptance criteria, no `create-tickets` pass needed. J and K remain epic tier (genuinely
+multi-ticket-shaped). No ticket was removed.
+
+| Epic | Ticket | Document | Tier (as of 2026-08-18) |
+|---|---|---|---|
+| A — Dead Infra Removal | `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` | `docs/plans/dead_infra_removal_epic.md` | standard |
+| B — Engine Liveness & Health | `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` | `docs/plans/engine_liveness_health_epic.md` | standard |
+| C — Doc Drift Reconciliation | *(none — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — |
+| D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | `docs/plans/redis_stream_resilience_epic.md` | standard |
+| E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | `docs/plans/epic_staleness_status_aware_epic.md` | hotfix |
+| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | `docs/plans/http_admission_control_epic.md` | standard |
+| G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/architecture_boundary_hardening_epic.md` | standard |
+| H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/error_handling_hygiene_epic.md` | standard |
+| I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/determinism_verification_gap_epic.md` | standard |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic |
 
 All ten tickets live in their own `tickets/todos/<name>/` folder, not `tickets/inprogress/`.
 

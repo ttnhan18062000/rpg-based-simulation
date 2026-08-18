@@ -59,24 +59,31 @@ doc fix from either audit has been applied yet.
   action, per the original instruction.
 
 ## Sub-epic tickets created (2026-08-17)
-| Epic | Ticket | Priority |
-|---|---|---|
-| A — Dead Infra Removal | `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` | P0 |
-| B — Engine Liveness & Health | `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` | P0 |
-| C — Doc Drift Reconciliation | *(no epic — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — |
-| D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | P1 |
-| E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | P1 |
-| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | P2 |
-| G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | P2 |
-| H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 |
-| I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 |
+| Epic | Ticket | Priority | Tier (as of 2026-08-18) |
+|---|---|---|---|
+| A — Dead Infra Removal | `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` | P0 | standard |
+| B — Engine Liveness & Health | `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` | P0 | standard |
+| C — Doc Drift Reconciliation | *(no epic — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — |
+| D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | P1 | standard |
+| E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | P1 | hotfix |
+| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | P2 | standard |
+| G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | P2 | standard |
+| H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard |
+| I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic |
 
-Once a specific sub-epic is chosen for action, run the `create-tickets` pipeline against a
-dedicated proposal document for that sub-epic only, producing its own investigated child tickets
-in that sub-epic's `tickets/todos/<name>/` folder — that work is out of scope for this ticket and
-will be tracked via that sub-epic's own ticket once its children are created.
+**(2026-08-18)** Audited all 10 sub-epics against this project's actual epic-tier bar ("large
+multi-ticket initiative") and found 8 of 10 had been mechanically split from the roadmap
+document's sections without individually re-testing tier fit. Downgraded A, B, D, F, G, H, I to
+standard tier and E to hotfix tier (each rewritten to a concrete, directly-actionable scope/
+acceptance-criteria — no `create-tickets` pass needed for these 8). J and K remain epic tier —
+both are genuinely multi-ticket-shaped per their source docs. No sub-epic ticket was removed.
+
+Once a specific sub-epic is chosen for action: the 8 standard/hotfix ones go straight to
+implementation against their own ticket; J and K still need a `create-tickets` pass against a
+dedicated proposal document, producing investigated child tickets in their own
+`tickets/todos/<name>/` folder.
 
 ## Out of Scope
 - Implementing any fix from either audit (RabbitMQ/Kafka removal, `/health` fix, Redis DLQ,

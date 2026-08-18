@@ -15,10 +15,10 @@ tags: [observability, engine]
 Make /health reflect real engine liveness; fix watchdog doc/implementation mismatch
 
 ## Status
-EPIC_SCOPED
+OPEN
 
 ## Tier
-epic
+standard
 
 ## Type
 repair
@@ -39,21 +39,24 @@ highest-priority findings across the whole review — a silent engine stall behi
 healthy-looking process is the failure mode with the worst detection latency.
 
 ## Scope
-- Scope-only epic: full findings and proposed remediation steps are in
-  `docs/plans/engine_liveness_health_epic.md`. Detailed, investigated child tickets are not
-  created yet.
-- When work begins: run `create-tickets` against a proposal document scoped to this epic's items
-  (real `/health` liveness check; watchdog doc correction; at least one real external alert
-  channel), producing investigated child tickets in `tickets/todos/engine-liveness-health/`.
+Full findings are in `docs/plans/engine_liveness_health_epic.md`. Concrete scope:
+- Make `/health` check `V2EngineManager` background-thread liveness plus last-tick recency,
+  returning a real degraded/unhealthy status rather than a hardcoded `ok`.
+- Wire at least one real external alert channel for `SimulationWatchdog`'s critical escalation,
+  or explicitly correct the doc to state it's log-only today.
+- Fix `docs/architecture/simulation_watchdog.md`'s file-path claim
+  (`src/utils/watchdog.py` → `src/observability/watchdog.py`) and its `Status: Proposed` header.
 
 ## Out of Scope
 - Container-level auto-restart-on-engine-crash orchestration (a larger deployment decision).
 - A full external alerting integration beyond "at least one real channel wired."
 
 ## Acceptance Criteria
-- [ ] `docs/plans/engine_liveness_health_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] Child tickets are created via `create-tickets` once this epic is chosen for action.
-- [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+- [ ] `/health` returns a status that actually changes when the engine thread is killed/hung in a
+      test scenario.
+- [ ] The watchdog doc's status and file-path claims match the real, running implementation.
+- [ ] At least one critical-escalation path reaches somewhere outside a log line, or the doc
+      explicitly and accurately says it doesn't yet.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
@@ -73,14 +76,17 @@ None yet.
 - src/observability/watchdog.py
 
 ## Assumptions / Open Questions
-- Which external alert channel (webhook, email, etc.) to wire is an open decision for whoever
-  scopes the child ticket.
+- Which external alert channel (webhook, email, etc.) to wire is an open decision for Plan phase.
+- **Downgraded from epic to standard tier (2026-08-18):** one of 10 sub-epics under
+  `TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC`; doesn't meet the "large multi-ticket
+  initiative" bar — a code fix, a doc fix, and one integration, closable in one standard ticket.
+  `staging_artifacts/TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC/` not yet created.
 
 ## Implementation Notes
-(pending — scope-only epic)
+(pending)
 
 ## Test Summary
-(pending — no direct tests; each future child ticket will carry its own)
+(pending)
 
 ## Files Changed
 (pending)

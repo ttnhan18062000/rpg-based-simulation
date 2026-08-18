@@ -15,10 +15,10 @@ tags: [architecture, engine]
 Remove dead & declared-but-unused infrastructure: RabbitMQ/Kafka, src_legacy/, tests_legacy/
 
 ## Status
-EPIC_SCOPED
+OPEN
 
 ## Tier
-epic
+standard
 
 ## Type
 repair
@@ -39,23 +39,22 @@ in either report — the only one that can cause a real outage for a reason unre
 affected subsystem's own function.
 
 ## Scope
-- Scope-only epic: full findings, evidence, and proposed remediation steps are in
-  `docs/plans/dead_infra_removal_epic.md`. Detailed, investigated child tickets are not created
-  yet — this ticket tracks prioritization only, per explicit instruction.
-- When work begins: run `create-tickets` against a proposal document scoped to this epic's items
-  (un-couple `ai_worker` startup from RabbitMQ; decide keep-vs-remove for RabbitMQ/Kafka; delete
-  `src_legacy/`/`tests_legacy/`), producing investigated child tickets in
-  `tickets/todos/dead-infra-removal/`.
+Full findings and evidence are in `docs/plans/dead_infra_removal_epic.md`. Concrete scope:
+- Un-couple `ai_worker`'s startup from RabbitMQ's healthcheck (`docker-compose.yml:70-71`).
+- Decide and record RabbitMQ/Kafka's fate: commit to a real use case and scope it properly, or
+  remove `pika`/`confluent-kafka` from `pyproject.toml`, the `rabbitmq`/`kafka`/`zookeeper`
+  services from `docker-compose.yml`, and associated env vars.
+- Delete `src_legacy/` + `tests_legacy/` after confirming no build/tooling step references them.
 
 ## Out of Scope
 - Building a real RabbitMQ/Kafka use case, if that's the eventual decision instead of removal.
 - Any other dead-code audit beyond the two specifically-confirmed trees.
 
 ## Acceptance Criteria
-- [ ] `docs/plans/dead_infra_removal_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] A decision is made (and tracked) on whether to build or remove RabbitMQ/Kafka.
-- [ ] Child tickets are created via `create-tickets` once this epic is chosen for action.
-- [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+- [ ] `ai_worker`'s container start no longer depends on RabbitMQ's healthcheck.
+- [ ] Either RabbitMQ/Kafka are fully removed (deps, services, env vars) or a real use case is
+      scoped and tracked as separate follow-on work — not left indefinitely provisioned-but-unused.
+- [ ] `src_legacy/`/`tests_legacy/` no longer exist in the repo.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
@@ -80,12 +79,16 @@ None yet.
   neither audit found evidence of one.
 - Confirm `src_legacy/`/`tests_legacy/` are safe to `git rm` (no build/tooling step references
   them) before deletion — not yet independently re-verified beyond the source audits' own checks.
+- **Downgraded from epic to standard tier (2026-08-18):** originally created as one of 10
+  sub-epics under `TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC`, but on review this doesn't meet
+  the "large multi-ticket initiative" bar — it's 2-3 related, mostly mechanical changes that fit
+  one standard ticket's own Investigate→Plan→Implement→Test→Parity→Verify pipeline. `staging_artifacts/TCK-20260817-DEAD-INFRA-REMOVAL-EPIC/` (investigation.md, plan.md, test_plan.md) is still required before implementation, per standard-tier Definition of Done, and has not been created yet.
 
 ## Implementation Notes
-(pending — scope-only epic)
+(pending)
 
 ## Test Summary
-(pending — no direct tests; each future child ticket will carry its own)
+(pending)
 
 ## Files Changed
 (pending)

@@ -15,10 +15,10 @@ tags: [architecture, observability]
 HTTP-layer auth, rate limiting, and admission control — gate on deployment plans
 
 ## Status
-EPIC_SCOPED
+OPEN
 
 ## Tier
-epic
+standard
 
 ## Type
 feature
@@ -36,23 +36,26 @@ explicitly gate this epic's priority on actual deployment plans — do not front
 system stays on a trusted network.
 
 ## Scope
-- Scope-only epic: full findings and proposed remediation steps (including a full mode-vocabulary
-  design reusing the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL states) are
-  in `docs/plans/http_admission_control_epic.md`. Detailed, investigated child tickets are not
-  created yet.
-- When work begins: run `create-tickets` against a proposal document scoped to this epic's items
-  (CORS fix, auth, admission-control mode vocabulary), producing investigated child tickets in
-  `tickets/todos/http-admission-control/`.
+Full findings, including a full mode-vocabulary design reusing the observability layer's existing
+NORMAL/PRESSURE/DEGRADED/SURVIVAL states, are in `docs/plans/http_admission_control_epic.md`.
+Concrete scope:
+- Fix the CORS `allow_origins`/`allow_credentials` configuration regardless of the broader auth
+  decision — a pure config correctness fix.
+- Add authentication to the API surface before any deployment beyond a trusted network.
+- Add HTTP-layer admission control by extending the existing NORMAL/PRESSURE/DEGRADED/SURVIVAL
+  vocabulary to the HTTP layer rather than inventing a new scheme; a single in-process
+  token-bucket/sliding-window limiter is sufficient at current scale.
 
 ## Out of Scope
 - Any new message broker, service mesh, or distributed rate-limiting infrastructure.
 - Starting this work before there's an actual deployment plan beyond a trusted network.
 
 ## Acceptance Criteria
-- [ ] `docs/plans/http_admission_control_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] A deployment-plan decision gates when this epic is actually picked up.
-- [ ] Child tickets are created via `create-tickets` once this epic is chosen for action.
-- [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+- [ ] CORS config no longer uses the spec-invalid wildcard+credentials combination.
+- [ ] At least one auth mechanism gates the API surface.
+- [ ] HTTP requests are admitted/throttled/shed according to a mode vocabulary consistent with
+      the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL states.
+- [ ] A deployment-plan decision gates when this ticket is actually picked up for implementation.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
@@ -72,14 +75,18 @@ None yet.
 ## Assumptions / Open Questions
 - The actual deployment target (trusted network vs. public exposure) determines urgency — not
   yet decided by the requester.
-- Auth mechanism choice (API key, OAuth, etc.) is an open decision for whoever scopes the child
-  ticket.
+- Auth mechanism choice (API key, OAuth, etc.) is an open decision for Plan phase.
+- **Downgraded from epic to standard tier (2026-08-18):** one of 10 sub-epics under
+  `TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC`; the borderline case of the review — bigger than
+  the other downgrades (auth is a real subsystem), but CORS+auth+admission-control-vocabulary
+  still fit one standard ticket, especially since the mode vocabulary explicitly reuses an
+  existing pattern rather than inventing one. `staging_artifacts/TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC/` not yet created.
 
 ## Implementation Notes
-(pending — scope-only epic)
+(pending)
 
 ## Test Summary
-(pending — no direct tests; each future child ticket will carry its own)
+(pending)
 
 ## Files Changed
 (pending)

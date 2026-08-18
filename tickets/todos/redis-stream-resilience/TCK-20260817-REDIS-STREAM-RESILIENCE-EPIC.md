@@ -15,10 +15,10 @@ tags: [observability]
 Redis Stream consumer: differentiate failure handling, add DLQ + PEL reclaim + reconnect backoff
 
 ## Status
-EPIC_SCOPED
+OPEN
 
 ## Tier
-epic
+standard
 
 ## Type
 repair
@@ -37,21 +37,24 @@ anomaly-detection only) — but the data loss is real and currently invisible be
 `logger.error` line.
 
 ## Scope
-- Scope-only epic: full findings and proposed remediation steps are in
-  `docs/plans/redis_stream_resilience_epic.md`. Detailed, investigated child tickets are not
-  created yet.
-- When work begins: run `create-tickets` against a proposal document scoped to this epic's items
-  (failure-type differentiation + DLQ, PEL reclaim, reconnect backoff+jitter), producing
-  investigated child tickets in `tickets/todos/redis-stream-resilience/`.
+Full findings are in `docs/plans/redis_stream_resilience_epic.md`. Concrete scope, all in
+`src/observability/stream/consumer.py`:
+- Separate malformed-payload handling (ack+drop, already correct) from handler-exception handling
+  (bounded retry, then a literal DLQ stream on exhaustion).
+- Add `XCLAIM`/`XPENDING`-based PEL reclaim for a message orphaned by a process death between
+  handler success and ACK.
+- Add backoff+jitter to the ~100ms reconnect loop.
 
 ## Out of Scope
 - Any change to the authoritative gameplay pipeline.
 - Introducing a different message broker or a generic retry framework.
 
 ## Acceptance Criteria
-- [ ] `docs/plans/redis_stream_resilience_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] Child tickets are created via `create-tickets` once this epic is chosen for action.
-- [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+- [ ] A transient handler failure results in a bounded retry, then a DLQ entry — not silent discard.
+- [ ] A malformed payload still results in ack+drop (unchanged, already correct).
+- [ ] A simulated process-death-before-ack scenario results in eventual redelivery via PEL
+      reclaim, not permanent loss.
+- [ ] The reconnect loop backs off with jitter under sustained Redis unavailability.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
@@ -69,14 +72,17 @@ None yet.
 - src/observability/stream/adapters.py
 
 ## Assumptions / Open Questions
-- Exact DLQ stream naming/retention convention is an open decision for whoever scopes the child
-  ticket.
+- Exact DLQ stream naming/retention convention is an open decision for Plan phase.
+- **Downgraded from epic to standard tier (2026-08-18):** one of 10 sub-epics under
+  `TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC`; all three scope items touch one file
+  (`consumer.py`) under one coherent theme — a textbook standard ticket, not a multi-ticket
+  initiative. `staging_artifacts/TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC/` not yet created.
 
 ## Implementation Notes
-(pending — scope-only epic)
+(pending)
 
 ## Test Summary
-(pending — no direct tests; each future child ticket will carry its own)
+(pending)
 
 ## Files Changed
 (pending)
