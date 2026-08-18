@@ -22,6 +22,7 @@ from generate_retro import (  # noqa: E402
     build_raw_investigation_count_section,
     build_search_count_section,
     build_skill_usage_section,
+    compute_kgmcp_cache_efficiency_metrics,
     compute_parity_index_readpath_call_count,
     compute_retro_metrics,
     compute_retrieval_metrics,
@@ -448,6 +449,10 @@ def test_compute_retro_metrics_returns_all_documented_keys():
         "tag_breakdown_subsystem", "tag_breakdown_skill", "tier_distribution",
         "agent_status_distribution", "phase_status_distribution", "spend_proxy_by_phase",
         "spend_proxy_by_agent", "summary_quality", "slow_runs", "outliers",
+        # Added by TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD —
+        # both always present (computed over an empty list, not omitted) when `tools`/
+        # `kgmcp_access_log` are omitted, keeping this function's own additive-only contract.
+        "skill_usage", "kgmcp_cache_efficiency",
     }
 
 
@@ -1075,6 +1080,54 @@ _FIXED_CORPUS_EXPECTED_REPORT = (
     "call sites as of TCK-20260731-PARITY-READPATH-GATE's Gate A review (reviewed GO, not yet "
     "wired into any real workflow call site) — this is the expected, correct value until a future "
     "ticket adds a real entry/impact/health call site, not a bug._\n"
+    "\n"
+    "## KGMCP Cache Efficiency\n"
+    "\n"
+    "_Reflects the full retrieval_cache_access_log corpus regardless of this report's "
+    "--days/--week/--all period selection — these rows are logged against "
+    "`.claude/current_run` sidecar attribution at call time, not `runs.jsonl` timestamps._\n"
+    "\n"
+    "**Cache Efficiency: NO DATA** — No KGMCP cache activity and no search/graphify tool "
+    "calls recorded in this corpus — nothing to evaluate yet.\n"
+    "\n"
+    "| Metric | Value |\n"
+    "|---|---|\n"
+    "| Total hits | 0 |\n"
+    "| Total writes | 0 |\n"
+    "| Overall reuse rate | n/a |\n"
+    "| Dead writes (never hit) | 0 |\n"
+    "| Repeated refetches (within 300s) | 0 |\n"
+    "| Real search/graphify calls (coverage denominator) | 0 |\n"
+    "| Coverage rate (cache events / search calls) | n/a |\n"
+    "\n"
+    "_Derived from tools/retrieval_cache.py::read_cache_access_log()'s real "
+    "retrieval_cache_access_log rows (Level 1 provider-result + Level 2 context-packet "
+    "cache hit/write events only — 'invalidate' is a schema-supported but never-emitted "
+    "event_type today) plus tools.jsonl's real search_docs/graphify/ToolSearch call "
+    "volume (via build_search_count_section(), for `coverage` only). reuse_rate = hit / "
+    "(hit + write) per ticket/agent/overall — the fraction of real access events served "
+    "from cache rather than re-fetched. repeated_refetches flags a 'write' event for the "
+    "same real cache row (same cache_level + query_hash/repo_branch_scope, or same "
+    "cache_level + packet_id) following any prior event for that row within 300s — "
+    "content re-fetched instead of reused. dead_writes flags a 'write' never followed by "
+    "a 'hit' before the next write to that same row (or the end of the observed log) — a "
+    "wasted write, as of what this function can currently see (a row that is still live "
+    "may yet be hit later; this is not a permanent-deadness claim past the observed "
+    "data). coverage compares total cache events against real search/graphify tool-call "
+    "volume — a period with substantial search activity but few/zero cache events means "
+    "retrieval work is bypassing the cache path, a real, distinct finding from a low "
+    "reuse_rate. `ticket_id`/`agent` absent on a row (ad-hoc calls or a stale sidecar) "
+    "are grouped under the literal 'unattributed' key, mirroring "
+    "build_search_count_section()'s run_id=None convention. `stale_attribution_count` "
+    "counts rows whose `.claude/current_run` sidecar pointed at an already-closed ticket "
+    "at log time (tools/retrieval_cache.py::_sidecar_run_is_stale()) — a real, disclosed "
+    "known limitation of sidecar-based attribution "
+    "(TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD Scope item "
+    "6), not a fixed one; these rows are still counted in hit/write/reuse-rate totals "
+    "above, just flagged rather than silently trusted or dropped. "
+    "`verdict`/`verdict_explanation` are a rule-based summary of the four signals above "
+    "(reuse rate, repeated refetches, dead writes, coverage) — every clause is a literal "
+    "readout of an already-computed number, never a fabricated score._\n"
     "\n"
     "## Notes\n"
     "\n"
@@ -2372,3 +2425,202 @@ def test_generate_without_all_tools_never_computes_zero_invocation_flags(monkeyp
     tools = [_tool_row(run_id="TCK-A", tool="Skill", input_summary="{'skill': 'graphify'}")]
     report = generate([_BASE_RUN], [_ORDINARY_WORKFLOW_EVENT], "test-label", tools=tools)
     assert "### Zero-Invocation Flags" not in report
+
+
+# ---------------------------------------------------------------------------
+# ## KGMCP Cache Efficiency — TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-
+# DASHBOARD
+# ---------------------------------------------------------------------------
+
+def _kgmcp_row(**overrides):
+    row = {
+        "cache_level": "level1_provider_result",
+        "event_type": "hit",
+        "query_hash": "qh1",
+        "repo_branch_scope": "repo@main",
+        "packet_id": None,
+        "run_id": "TCK-KGMCP-FAKE",
+        "seq": 1,
+        "phase": "Investigate",
+        "agent": "investigator",
+        "execution_id": "e1",
+        "provider": "anthropic",
+        "ticket_id": "TCK-KGMCP-FAKE",
+        "sidecar_stale": 0,
+        "ts": 1000.0,
+    }
+    row.update(overrides)
+    return row
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_empty_input_returns_no_data_verdict():
+    result = compute_kgmcp_cache_efficiency_metrics([], tools=[])
+    assert result["total_hits"] == 0
+    assert result["total_writes"] == 0
+    assert result["overall_reuse_rate"] is None
+    assert result["per_ticket"] == {}
+    assert result["per_agent"] == {}
+    assert result["repeated_refetches"] == []
+    assert result["dead_writes"] == []
+    assert result["dead_write_count"] == 0
+    assert result["coverage"] == {
+        "search_calls_total": 0, "cache_events_total": 0, "coverage_rate": None,
+    }
+    assert result["verdict"] == "NO DATA"
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_not_in_use_when_search_activity_but_no_cache_events():
+    tools = [_tool_row(run_id="TCK-A", tool="mcp__knowledge-search__search_docs")]
+    result = compute_kgmcp_cache_efficiency_metrics([], tools=tools)
+    assert result["verdict"] == "NOT IN USE"
+    assert "1 real" in result["verdict_explanation"]
+    assert result["coverage"]["search_calls_total"] == 1
+    assert result["coverage"]["cache_events_total"] == 0
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_computes_hit_write_and_reuse_rate():
+    rows = [
+        _kgmcp_row(event_type="write", ts=1000.0),
+        _kgmcp_row(event_type="hit", ts=1010.0),
+        _kgmcp_row(event_type="hit", ts=1020.0),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert result["total_hits"] == 2
+    assert result["total_writes"] == 1
+    assert result["overall_reuse_rate"] == pytest.approx(2 / 3, abs=1e-4)
+    assert result["per_ticket"]["TCK-KGMCP-FAKE"] == {
+        "hit": 2, "write": 1, "reuse_rate": pytest.approx(2 / 3, abs=1e-4),
+    }
+    assert result["per_agent"]["investigator"] == {
+        "hit": 2, "write": 1, "reuse_rate": pytest.approx(2 / 3, abs=1e-4),
+    }
+    assert result["verdict"] == "EFFECTIVE"
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_detects_repeated_refetch_within_window():
+    rows = [
+        _kgmcp_row(event_type="write", run_id="TCK-A", ticket_id="TCK-A", ts=1000.0),
+        _kgmcp_row(event_type="write", run_id="TCK-B", ticket_id="TCK-B", ts=1100.0),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert len(result["repeated_refetches"]) == 1
+    rf = result["repeated_refetches"][0]
+    assert rf["run_id"] == "TCK-B"
+    assert rf["prior_run_id"] == "TCK-A"
+    assert rf["gap_s"] == pytest.approx(100.0)
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_no_repeated_refetch_outside_window():
+    rows = [
+        _kgmcp_row(event_type="write", run_id="TCK-A", ts=1000.0),
+        _kgmcp_row(event_type="write", run_id="TCK-B", ts=1000.0 + generate_retro.KGMCP_REFETCH_WINDOW_SECONDS + 1),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert result["repeated_refetches"] == []
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_detects_dead_write():
+    # A write with no hit before the next write to the same row is a dead write. Both writes here
+    # qualify: the first has no hit before the second write, and the second (the row's most recent
+    # write) has no hit before the end of the observed log either — see the function's own
+    # docstring on why a still-live row's most recent write is flagged too (not a permanent-
+    # deadness claim, just "no payoff observed yet").
+    rows = [
+        _kgmcp_row(event_type="write", run_id="TCK-A", ts=1000.0),
+        _kgmcp_row(event_type="write", run_id="TCK-B", ts=5000.0),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert result["dead_write_count"] == 2
+    assert {dw["run_id"] for dw in result["dead_writes"]} == {"TCK-A", "TCK-B"}
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_write_followed_by_hit_is_not_dead():
+    rows = [
+        _kgmcp_row(event_type="write", run_id="TCK-A", ts=1000.0),
+        _kgmcp_row(event_type="hit", run_id="TCK-A", ts=1010.0),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert result["dead_write_count"] == 0
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_unattributed_bucket_for_missing_ticket_and_agent():
+    rows = [_kgmcp_row(event_type="hit", ticket_id=None, agent=None)]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert "unattributed" in result["per_ticket"]
+    assert "unattributed" in result["per_agent"]
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_counts_stale_attribution():
+    rows = [
+        _kgmcp_row(event_type="hit", sidecar_stale=1),
+        _kgmcp_row(event_type="hit", sidecar_stale=0),
+    ]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+    assert result["stale_attribution_count"] == 1
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_has_derivation():
+    result = compute_kgmcp_cache_efficiency_metrics([], tools=[])
+    assert "derivation" in result
+    assert len(result["derivation"]) > 20
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_never_writes_any_file():
+    import inspect
+
+    source = inspect.getsource(compute_kgmcp_cache_efficiency_metrics)
+    assert "write_lines(" not in source
+    assert "write_line(" not in source
+    assert '"w")' not in source and "'w')" not in source
+    assert "CACHE_DB_PATH" not in source
+    assert "_get_connection(" not in source
+    assert "_get_access_log_connection(" not in source
+
+
+def test_compute_retro_metrics_includes_skill_usage_and_kgmcp_when_supplied(tmp_path):
+    tools = [_tool_row(run_id="TCK-FAKE", tool="Skill", input_summary="{'skill': 'graphify'}")]
+    access_log = [_kgmcp_row(event_type="hit")]
+    metrics = compute_retro_metrics(
+        [_BASE_RUN], [], tickets_root=tmp_path, tools=tools, kgmcp_access_log=access_log
+    )
+    assert metrics["skill_usage"]["total_skill_invocations"] == 1
+    assert metrics["kgmcp_cache_efficiency"]["total_hits"] == 1
+
+
+def test_generate_uses_compute_retro_metrics_skill_usage_not_a_second_call(monkeypatch, tmp_path):
+    """generate()'s `su` must be read from compute_retro_metrics()'s own `skill_usage` key, not
+    computed via a second, independent build_skill_usage_section() call — the property this
+    ticket's own Scope item 3 requires ('CLI Markdown report and JSON API stay logically
+    consistent'). Verified by making build_skill_usage_section() raise if called a second time
+    after compute_retro_metrics() has already computed it."""
+    call_count = {"n": 0}
+    real = generate_retro.build_skill_usage_section
+
+    def _counting(*args, **kwargs):
+        call_count["n"] += 1
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(generate_retro, "build_skill_usage_section", _counting)
+    tools = [_tool_row(run_id="TCK-FAKE", tool="Skill", input_summary="{'skill': 'graphify'}")]
+    generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path, tools=tools)
+    assert call_count["n"] == 1
+
+
+def test_generate_kgmcp_section_always_renders_even_when_empty(tmp_path):
+    report = generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path, tools=[], kgmcp_access_log=[])
+    assert "## KGMCP Cache Efficiency" in report
+    assert "Cache Efficiency: NO DATA" in report
+
+
+def test_generate_kgmcp_section_renders_real_verdict_and_table(tmp_path):
+    access_log = [
+        _kgmcp_row(event_type="write", ts=1000.0),
+        _kgmcp_row(event_type="hit", ts=1010.0),
+    ]
+    report = generate(
+        [_BASE_RUN], [], "test-label", tickets_root=tmp_path, tools=[], kgmcp_access_log=access_log
+    )
+    assert "## KGMCP Cache Efficiency" in report
+    assert "Cache Efficiency: EFFECTIVE" in report
+    assert "| Total hits | 1 |" in report
+    assert "| Total writes | 1 |" in report

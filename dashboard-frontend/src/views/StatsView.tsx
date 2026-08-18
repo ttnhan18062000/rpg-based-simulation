@@ -6,6 +6,7 @@ import {
   useGlossary,
   type AgentMonitoringStats,
   type GlossaryTerms,
+  type KgmcpCacheTicketStats,
   type TicketCorpusStats,
 } from '@/api'
 import { BarChart, type BarChartDatum } from '@/components/BarChart'
@@ -91,6 +92,37 @@ function phaseStatusRows(stats: AgentMonitoringStats): PhaseStatusRow[] {
 
 function totalSkipped(skipped: Record<string, number>): number {
   return Object.values(skipped).reduce((sum, n) => sum + n, 0)
+}
+
+interface KgmcpTicketRow {
+  key: string
+  hit: number
+  write: number
+  reuse_rate: number | null
+}
+
+function kgmcpTicketRows(record: Record<string, KgmcpCacheTicketStats>): KgmcpTicketRow[] {
+  return Object.entries(record)
+    .map(([key, entry]) => ({ key, hit: entry.hit, write: entry.write, reuse_rate: entry.reuse_rate }))
+    .sort((a, b) => b.hit + b.write - (a.hit + a.write))
+}
+
+function formatPercent(value: number | null): string {
+  return value === null ? '—' : `${Math.round(value * 100)}%`
+}
+
+function kgmcpVerdictColorClass(verdict: string): string {
+  switch (verdict) {
+    case 'EFFECTIVE':
+      return 'text-accent-green'
+    case 'MODERATE':
+      return 'text-accent-yellow'
+    case 'LOW VALUE':
+    case 'NOT IN USE':
+      return 'text-accent-red'
+    default:
+      return 'text-text-secondary'
+  }
 }
 
 export function StatsView() {
@@ -425,6 +457,106 @@ export function StatsView() {
             </p>
           </div>
         )}
+
+        <div data-testid="stats-section-skill-usage" className="flex flex-col gap-2">
+          <h3 className="text-[11px] font-semibold text-text-secondary uppercase">Skill usage</h3>
+          <div className="flex flex-wrap gap-3">
+            <StatTile label="Total skill invocations" value={agentStats.skill_usage.total_skill_invocations} />
+          </div>
+          <BarChart
+            data={toBarChartData(agentStats.skill_usage.per_skill)}
+            emptyLabel="No skill invocations"
+            descriptions={descriptions}
+          />
+        </div>
+
+        <div data-testid="stats-section-kgmcp-cache-efficiency" className="flex flex-col gap-2">
+          <h3 className="text-[11px] font-semibold text-text-secondary uppercase">KGMCP cache efficiency</h3>
+
+          <div
+            data-testid="kgmcp-verdict"
+            className="flex flex-col gap-1 bg-bg-secondary border border-border rounded-md px-3 py-2"
+          >
+            <div className={`text-[11px] font-semibold uppercase ${kgmcpVerdictColorClass(agentStats.kgmcp_cache_efficiency.verdict)}`}>
+              Cache Efficiency: {agentStats.kgmcp_cache_efficiency.verdict}
+            </div>
+            <div className="text-[11px] text-text-secondary">
+              {agentStats.kgmcp_cache_efficiency.verdict_explanation}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <StatTile label="Total hits" value={agentStats.kgmcp_cache_efficiency.total_hits} />
+            <StatTile label="Total writes" value={agentStats.kgmcp_cache_efficiency.total_writes} />
+            <StatTile label="Reuse rate" value={formatPercent(agentStats.kgmcp_cache_efficiency.overall_reuse_rate)} />
+            <StatTile label="Dead writes" value={agentStats.kgmcp_cache_efficiency.dead_write_count} />
+            <StatTile label="Repeated refetches" value={agentStats.kgmcp_cache_efficiency.repeated_refetches.length} />
+            <StatTile
+              label="Coverage (cache vs. search calls)"
+              value={formatPercent(agentStats.kgmcp_cache_efficiency.coverage.coverage_rate)}
+            />
+          </div>
+
+          {(Object.keys(agentStats.kgmcp_cache_efficiency.per_ticket).length > 0 ||
+            Object.keys(agentStats.kgmcp_cache_efficiency.per_agent).length > 0) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Object.keys(agentStats.kgmcp_cache_efficiency.per_ticket).length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-[11px] font-semibold text-text-secondary uppercase">Per ticket</h4>
+                  <table className="text-[11px] w-full border-collapse" data-testid="kgmcp-per-ticket-table">
+                    <thead>
+                      <tr className="text-left text-text-secondary border-b border-border">
+                        <th className="py-1 pr-3">Ticket</th>
+                        <th className="py-1 pr-3">Hits</th>
+                        <th className="py-1 pr-3">Writes</th>
+                        <th className="py-1 pr-3">Reuse rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {kgmcpTicketRows(agentStats.kgmcp_cache_efficiency.per_ticket).map((row) => (
+                        <tr key={row.key} data-testid={`kgmcp-per-ticket-row-${row.key}`} className="border-b border-border">
+                          <td className="py-1 pr-3">{row.key}</td>
+                          <td className="py-1 pr-3 tabular-nums">{row.hit}</td>
+                          <td className="py-1 pr-3 tabular-nums">{row.write}</td>
+                          <td className="py-1 pr-3 tabular-nums">{formatPercent(row.reuse_rate)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {Object.keys(agentStats.kgmcp_cache_efficiency.per_agent).length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-[11px] font-semibold text-text-secondary uppercase">Per agent</h4>
+                  <table className="text-[11px] w-full border-collapse" data-testid="kgmcp-per-agent-table">
+                    <thead>
+                      <tr className="text-left text-text-secondary border-b border-border">
+                        <th className="py-1 pr-3">Agent</th>
+                        <th className="py-1 pr-3">Hits</th>
+                        <th className="py-1 pr-3">Writes</th>
+                        <th className="py-1 pr-3">Reuse rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {kgmcpTicketRows(agentStats.kgmcp_cache_efficiency.per_agent).map((row) => (
+                        <tr key={row.key} data-testid={`kgmcp-per-agent-row-${row.key}`} className="border-b border-border">
+                          <td className="py-1 pr-3">
+                            <GlossaryTooltip term={row.key} glossary={glossary}>
+                              {row.key}
+                            </GlossaryTooltip>
+                          </td>
+                          <td className="py-1 pr-3 tabular-nums">{row.hit}</td>
+                          <td className="py-1 pr-3 tabular-nums">{row.write}</td>
+                          <td className="py-1 pr-3 tabular-nums">{formatPercent(row.reuse_rate)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </section>
 
       <section data-testid="stats-section-ticket-corpus" className="flex flex-col gap-4">

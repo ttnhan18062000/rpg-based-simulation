@@ -127,7 +127,26 @@ Ordered migration function list (names are placeholders; bodies are Phase 2/3 wo
    existence check per column, guarded, never touching migrations 1–3 or `LEVEL1_CACHE_COLUMNS`.
    Ordinal 4, the next open ordinal after migration 3. Migration 4's body is real, implemented
    code — added by `TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`;
-   `tools/retrieval_cache.py`. No migration in this ordered list remains a design-only placeholder.
+   `tools/retrieval_cache.py`.
+5. `migration_005_add_cache_access_log_table(conn: sqlite3.Connection) -> None` — adds
+   `retrieval_cache_access_log`, a new, wholly-additive, append-only work-attribution log for
+   Level 1/Level 2 cache `hit`/`write` events (`cache_level`, `query_hash`/`repo_branch_scope`/
+   `packet_id`, `run_id`/`seq`/`phase`/`agent`/`execution_id`/`provider`/`ticket_id` sourced from
+   the same `.claude/current_run` sidecar mechanism `agent-monitoring/tools.jsonl` already uses,
+   `sidecar_stale`, `ts`). Neither Level 1 nor Level 2's own `hit_count`/`last_hit_at`/
+   `last_validated_at` columns carry any run/agent/phase attribution, and both are wiped to
+   0/`NULL` on every `INSERT OR REPLACE` write — this table is append-only history that survives
+   that wipe. Same `CREATE TABLE IF NOT EXISTS` idempotency pattern as migrations 1/2 (a wholly
+   new table, not an `ALTER TABLE`) — stamps `retrieval_cache_generation` with target version `3`
+   (bumping `retrieval_cache_schema_version` 2 -> 3), following migrations 1/2's own
+   stamping-on-new-table-creation precedent (migrations 3/4, both `ALTER TABLE ADD COLUMN`, never
+   stamped this table). Ordinal 5, the next open ordinal after migration 4. Migration 5's body is
+   real, implemented code — added by `TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-
+   USAGE-DASHBOARD`; `tools/retrieval_cache.py`. Instrumented at the 4 real hit/write call sites
+   (`record_provider_result_cache_hit`/`write_provider_result_cache`/
+   `record_context_packet_cache_hit`/`write_context_packet_cache`) via a new `log_cache_access()`
+   function, which never raises (CLAUDE.md: "Monitoring write failure must never fail the
+   workflow"). No migration in this ordered list remains a design-only placeholder.
 
 Each migration function:
 - Is idempotent and individually re-runnable (safe to call again on a database that already has the

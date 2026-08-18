@@ -37,6 +37,15 @@ from tools import retrieval_cache as rc  # noqa: E402
 def _isolated_cache_db(tmp_path, monkeypatch):
     monkeypatch.setattr(rc, "CACHE_DB_PATH", tmp_path / "retrieval_cache.db")
     monkeypatch.setattr(rc, "_MANIFEST_PATH", tmp_path / "manifest.json")
+    # TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD: every
+    # write_provider_result_cache()/record_provider_result_cache_hit()/write_context_packet_cache()/
+    # record_context_packet_cache_hit() call now also calls log_cache_access() internally, which
+    # reads `.claude/current_run` and checks `tickets/{inprogress,done}/` for staleness — pointed
+    # at a nonexistent tmp_path location by default so every pre-existing test in this file (which
+    # never touches the access log at all) stays fully hermetic, never depending on this real
+    # repo's actual sidecar file or ticket corpus.
+    monkeypatch.setattr(rc, "_CURRENT_RUN_SIDECAR_PATH", tmp_path / "current_run")
+    monkeypatch.setattr(rc, "_REPO_ROOT", tmp_path)
     yield
 
 
@@ -1447,3 +1456,296 @@ class TestContextPacketCacheStats:
         rc.record_context_packet_cache_hit("p-a")
         stats = rc.context_packet_cache_stats()
         assert stats == {"total_rows": 2, "total_hits": 2}
+
+
+# ---------------------------------------------------------------------------
+# KGMCP cache-access-log — TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD
+# ---------------------------------------------------------------------------
+
+def _write_sidecar(tmp_path: Path, **fields) -> None:
+    (tmp_path / "current_run").write_text(json.dumps(fields))
+
+
+def _make_inprogress_ticket(tmp_path: Path, ticket_id: str) -> None:
+    d = tmp_path / "tickets" / "inprogress"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / f"{ticket_id}.md").write_text("# fake ticket\n")
+
+
+def _make_done_ticket(tmp_path: Path, ticket_id: str) -> None:
+    d = tmp_path / "tickets" / "done"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / f"{ticket_id}.md").write_text("# fake ticket\n")
+
+
+class TestMigration005CacheAccessLog:
+    def test_migration_applies_cleanly_to_a_fresh_database(self):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_005_add_cache_access_log_table(conn)
+            table_names = {
+                row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
+        finally:
+            conn.close()
+        assert "retrieval_cache_access_log" in table_names
+
+    def test_migration_is_idempotent_when_run_twice(self):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_005_add_cache_access_log_table(conn)
+            rc.migration_005_add_cache_access_log_table(conn)  # must not raise
+            count = conn.execute("SELECT COUNT(*) FROM retrieval_cache_generation").fetchone()[0]
+        finally:
+            conn.close()
+        assert count == 1
+
+    def test_migration_stamps_generation_table_with_version_3(self):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_005_add_cache_access_log_table(conn)
+            version = conn.execute(
+                "SELECT retrieval_cache_schema_version FROM retrieval_cache_generation"
+            ).fetchone()[0]
+        finally:
+            conn.close()
+        assert version == 3
+
+    def test_migration_does_not_touch_existing_marker_only_or_level1_tables(self):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            before = {
+                row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
+            rc.migration_005_add_cache_access_log_table(conn)
+            after = {
+                row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            }
+        finally:
+            conn.close()
+        assert before <= after
+        # sqlite_sequence is SQLite's own internal bookkeeping table, auto-created the first time
+        # any table uses AUTOINCREMENT (retrieval_cache_access_log's `id` column) -- not a table
+        # this migration defines itself, but a real, expected SQLite side effect.
+        assert after - before == {"retrieval_cache_access_log", "sqlite_sequence"}
+
+    def test_access_log_column_set_matches_documented_shape(self):
+        conn = rc._get_connection()
+        try:
+            rc.migration_001_add_level1_tables(conn)
+            rc.migration_005_add_cache_access_log_table(conn)
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(retrieval_cache_access_log)")}
+        finally:
+            conn.close()
+        assert columns == {
+            "id", "cache_level", "event_type", "query_hash", "repo_branch_scope", "packet_id",
+            "run_id", "seq", "phase", "agent", "execution_id", "provider", "ticket_id",
+            "sidecar_stale", "ts",
+        }
+
+    def test_migration_005_never_called_from_check_or_write_functions(self):
+        import inspect
+
+        for func in (
+            rc.check_provider_result_cache, rc.write_provider_result_cache,
+            rc.record_provider_result_cache_hit, rc.check_context_packet_cache,
+            rc.write_context_packet_cache, rc.record_context_packet_cache_hit,
+        ):
+            assert "migration_005" not in inspect.getsource(func)
+
+
+class TestReadCurrentRunSidecar:
+    def test_returns_all_none_and_not_stale_when_sidecar_file_absent(self):
+        result = rc.read_current_run_sidecar()
+        assert result == {
+            "run_id": None, "seq": None, "phase": None, "agent": None, "execution_id": None,
+            "provider": None, "ticket_id": None, "sidecar_stale": False,
+        }
+
+    def test_reads_real_sidecar_fields(self, tmp_path):
+        _write_sidecar(
+            tmp_path, run_id="TCK-A", seq=2, phase="Implement", agent="implementer",
+            execution_id="x1", provider="anthropic",
+        )
+        result = rc.read_current_run_sidecar()
+        assert result["run_id"] == "TCK-A"
+        assert result["seq"] == 2
+        assert result["phase"] == "Implement"
+        assert result["agent"] == "implementer"
+        assert result["execution_id"] == "x1"
+        assert result["provider"] == "anthropic"
+
+    def test_malformed_sidecar_json_fails_silently_to_all_none(self, tmp_path):
+        (tmp_path / "current_run").write_text("{not valid json")
+        result = rc.read_current_run_sidecar()
+        assert result["run_id"] is None
+        assert result["sidecar_stale"] is False
+
+    def test_sidecar_stale_true_when_run_id_ticket_is_already_done_not_inprogress(self, tmp_path):
+        """Reproduces the exact live failure mode this ticket's own Scope item 6 documents:
+        .claude/current_run points at a ticket that has already moved to tickets/done/."""
+        _make_done_ticket(tmp_path, "TCK-20260101-FAKE-CLOSED")
+        _write_sidecar(tmp_path, run_id="TCK-20260101-FAKE-CLOSED", seq=1, phase="Verify", agent="done-checker")
+        result = rc.read_current_run_sidecar()
+        assert result["sidecar_stale"] is True
+
+    def test_sidecar_not_stale_when_ticket_is_genuinely_inprogress(self, tmp_path):
+        _make_inprogress_ticket(tmp_path, "TCK-20260101-FAKE-OPEN")
+        _write_sidecar(tmp_path, run_id="TCK-20260101-FAKE-OPEN", seq=1, phase="Implement", agent="implementer")
+        result = rc.read_current_run_sidecar()
+        assert result["sidecar_stale"] is False
+
+    def test_sidecar_not_stale_when_no_ticket_id_at_all_ad_hoc_work(self, tmp_path):
+        # No run_id starting with TCK- and no explicit ticket_id -- ad-hoc, non-ticket work. This
+        # is honestly "unattributed", not "stale" -- a real, distinct signal (see
+        # compute_kgmcp_cache_efficiency_metrics's own "unattributed" bucket).
+        _write_sidecar(tmp_path, run_id="ad-hoc-session", seq=1, phase="Investigate", agent="claude")
+        result = rc.read_current_run_sidecar()
+        assert result["sidecar_stale"] is False
+
+    def test_explicit_ticket_id_field_used_over_run_id_when_both_present(self, tmp_path):
+        _make_done_ticket(tmp_path, "TCK-20260101-CHILD-CLOSED")
+        _write_sidecar(
+            tmp_path, run_id="EPIC-20260101-PARENT", ticket_id="TCK-20260101-CHILD-CLOSED",
+            seq=1, phase="Implement", agent="implementer",
+        )
+        result = rc.read_current_run_sidecar()
+        assert result["ticket_id"] == "TCK-20260101-CHILD-CLOSED"
+        assert result["sidecar_stale"] is True
+
+
+class TestLogCacheAccess:
+    def test_rejects_unknown_cache_level_silently(self):
+        rc.log_cache_access("bogus_level", "hit")  # must not raise
+        assert rc.read_cache_access_log() == []
+
+    def test_rejects_unknown_event_type_silently(self):
+        rc.log_cache_access("level1_provider_result", "bogus_event")  # must not raise
+        assert rc.read_cache_access_log() == []
+
+    def test_logs_a_real_level1_hit_with_query_hash_and_repo_branch_scope(self, tmp_path):
+        _write_sidecar(tmp_path, run_id="TCK-A", seq=1, phase="Implement", agent="implementer")
+        rc.log_cache_access(
+            "level1_provider_result", "hit", query_hash="qh-1", repo_branch_scope="repo::main"
+        )
+        rows = rc.read_cache_access_log()
+        assert len(rows) == 1
+        assert rows[0]["cache_level"] == "level1_provider_result"
+        assert rows[0]["event_type"] == "hit"
+        assert rows[0]["query_hash"] == "qh-1"
+        assert rows[0]["repo_branch_scope"] == "repo::main"
+        assert rows[0]["run_id"] == "TCK-A"
+        assert rows[0]["agent"] == "implementer"
+        assert rows[0]["sidecar_stale"] == 0
+
+    def test_logs_a_real_level2_write_with_packet_id(self):
+        rc.log_cache_access("level2_context_packet", "write", packet_id="p-1")
+        rows = rc.read_cache_access_log()
+        assert len(rows) == 1
+        assert rows[0]["cache_level"] == "level2_context_packet"
+        assert rows[0]["packet_id"] == "p-1"
+        assert rows[0]["query_hash"] is None
+
+    def test_never_raises_when_sidecar_directory_does_not_exist(self, monkeypatch, tmp_path):
+        monkeypatch.setattr(rc, "_CURRENT_RUN_SIDECAR_PATH", tmp_path / "nonexistent" / "current_run")
+        rc.log_cache_access("level1_provider_result", "hit", query_hash="qh-1")  # must not raise
+        rows = rc.read_cache_access_log()
+        assert len(rows) == 1  # still logged, just with no sidecar attribution
+
+    def test_never_raises_and_logging_failure_does_not_block_caller_when_db_open_fails(
+        self, monkeypatch
+    ):
+        def _boom(*args, **kwargs):
+            raise RuntimeError("simulated DB failure")
+
+        monkeypatch.setattr(rc, "_get_access_log_connection", _boom)
+        rc.log_cache_access("level1_provider_result", "hit", query_hash="qh-1")  # must not raise
+
+    def test_read_cache_access_log_returns_empty_list_on_never_migrated_db(self):
+        assert rc.read_cache_access_log() == []
+
+    def test_read_cache_access_log_orders_by_ts(self):
+        rc.log_cache_access("level1_provider_result", "write", query_hash="qh-2")
+        rc.log_cache_access("level1_provider_result", "write", query_hash="qh-1")
+        rows = rc.read_cache_access_log()
+        assert len(rows) == 2
+        assert rows[0]["ts"] <= rows[1]["ts"]
+
+
+class TestCacheAccessLogInstrumentation:
+    """Integration coverage for the 4 real instrumented call sites (Scope item 1's own
+    tools/retrieval_cache.py:~810/~1025 hit_count sites, ~781/~988 INSERT OR REPLACE write sites)
+    -- proves the access log is populated by the REAL cache read/write path, not just by directly
+    calling log_cache_access() in isolation (already covered above)."""
+
+    def test_write_provider_result_cache_logs_a_write_event(self, tmp_path):
+        _write_sidecar(tmp_path, run_id="TCK-A", seq=1, phase="Implement", agent="implementer")
+        _write_row()
+        rows = rc.read_cache_access_log()
+        assert len(rows) == 1
+        assert rows[0]["cache_level"] == "level1_provider_result"
+        assert rows[0]["event_type"] == "write"
+        assert rows[0]["query_hash"] == "qh-1"
+        assert rows[0]["repo_branch_scope"] == "repo::main"
+
+    def test_record_provider_result_cache_hit_logs_a_hit_event(self, tmp_path):
+        _write_sidecar(tmp_path, run_id="TCK-A", seq=1, phase="Implement", agent="implementer")
+        _write_row()
+        rc.record_provider_result_cache_hit("qh-1", "repo::main")
+        rows = rc.read_cache_access_log()
+        assert len(rows) == 2
+        assert [r["event_type"] for r in rows] == ["write", "hit"]
+
+    def test_write_context_packet_cache_logs_a_write_event(self):
+        _write_level2_row(packet_id="p-1")
+        rows = rc.read_cache_access_log()
+        assert len(rows) == 1
+        assert rows[0]["cache_level"] == "level2_context_packet"
+        assert rows[0]["event_type"] == "write"
+        assert rows[0]["packet_id"] == "p-1"
+
+    def test_record_context_packet_cache_hit_logs_a_hit_event(self):
+        _write_level2_row(packet_id="p-1")
+        rc.record_context_packet_cache_hit("p-1")
+        rows = rc.read_cache_access_log()
+        assert len(rows) == 2
+        assert [r["event_type"] for r in rows] == ["write", "hit"]
+
+    def test_check_provider_result_cache_lookup_alone_never_logs_anything(self):
+        """A bare lookup (check_*) is not itself a genuine hit -- DD9's Non-collapse rule, same
+        distinction record_provider_result_cache_hit()'s own docstring already draws. Only the
+        explicit record_*_hit() call (invoked by the real orchestrator after revalidation) logs a
+        hit event."""
+        _write_row()
+        assert len(rc.read_cache_access_log()) == 1  # the write itself
+        rc.check_provider_result_cache(
+            "qh-1", "repo::main", normalized_intent="what is x", filters_json="{}",
+            budget_class="small", routing_policy_version=1,
+        )
+        assert len(rc.read_cache_access_log()) == 1  # unchanged -- a bare lookup logs nothing
+
+    def test_a_write_that_bumps_hit_count_reset_still_preserves_full_access_history(self):
+        """The core motivating gap this ticket's Request Summary documents: INSERT OR REPLACE
+        hardcodes hit_count=0/last_hit_at=NULL on every refresh, silently discarding prior hit
+        history from the parent cache row itself -- but the access log is append-only, so that
+        history survives here even though it's gone from retrieval_provider_result_cache_rows."""
+        _write_row()
+        rc.record_provider_result_cache_hit("qh-1", "repo::main")
+        rc.record_provider_result_cache_hit("qh-1", "repo::main")
+        _write_row()  # INSERT OR REPLACE -- wipes hit_count/last_hit_at on the parent row
+        conn = rc._get_connection()
+        try:
+            hit_count = conn.execute(
+                "SELECT hit_count FROM retrieval_provider_result_cache_rows WHERE query_hash = ?",
+                ("qh-1",),
+            ).fetchone()[0]
+        finally:
+            conn.close()
+        assert hit_count == 0  # confirmed: the parent row's own hit history really is gone
+        # ...but the access log still has the full 4-event history (write, hit, hit, write).
+        rows = rc.read_cache_access_log()
+        assert [r["event_type"] for r in rows] == ["write", "hit", "hit", "write"]

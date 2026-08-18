@@ -188,6 +188,76 @@ class OutlierStats(BaseModel):
     cost_proxy_score: List[CostProxyOutlierEntry]
 
 
+# --- Skill Usage (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD) ---
+# Field-for-field mirror of tools/agent-monitoring/generate_retro.py::build_skill_usage_section()'s
+# return dict, wired into compute_retro_metrics()'s own `skill_usage` key (see that function's
+# `tools` parameter) — the raw per-skill *invocation* counts the CLI retro report already renders
+# under its own "## Skill Usage" heading, now reaching the dashboard JSON API for the first time.
+
+
+class SkillUsageSection(BaseModel):
+    total_skill_invocations: int
+    unparseable: int
+    per_skill: Dict[str, int]
+    per_skill_per_run: Dict[str, Dict[str, int]]
+    derivation: str
+
+
+# --- KGMCP Cache Efficiency (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-
+# DASHBOARD) ---
+# Field-for-field mirror of tools/agent-monitoring/generate_retro.py::
+# compute_kgmcp_cache_efficiency_metrics()'s return dict — per-ticket/per-agent Level 1/Level 2
+# KGMCP retrieval-cache hit/write counts, reuse rate, repeated-refetch and dead-write detection,
+# real-usage coverage, and a rule-based verdict/explanation summarizing all four signals.
+
+
+class KgmcpCacheTicketStats(BaseModel):
+    hit: int
+    write: int
+    reuse_rate: Optional[float] = None
+
+
+class KgmcpRepeatedRefetchEntry(BaseModel):
+    cache_level: Optional[str] = None
+    run_id: Optional[str] = None
+    ticket_id: str
+    agent: str
+    gap_s: float
+    prior_run_id: Optional[str] = None
+    prior_event_type: Optional[str] = None
+
+
+class KgmcpDeadWriteEntry(BaseModel):
+    cache_level: Optional[str] = None
+    run_id: Optional[str] = None
+    ticket_id: str
+    agent: str
+    ts: Optional[float] = None
+
+
+class KgmcpCoverageStats(BaseModel):
+    search_calls_total: int
+    cache_events_total: int
+    coverage_rate: Optional[float] = None
+
+
+class KgmcpCacheEfficiencyStats(BaseModel):
+    total_hits: int
+    total_writes: int
+    overall_reuse_rate: Optional[float] = None
+    per_ticket: Dict[str, KgmcpCacheTicketStats]
+    per_agent: Dict[str, KgmcpCacheTicketStats]
+    repeated_refetch_window_seconds: int
+    repeated_refetches: List[KgmcpRepeatedRefetchEntry]
+    dead_writes: List[KgmcpDeadWriteEntry]
+    dead_write_count: int
+    coverage: KgmcpCoverageStats
+    verdict: str
+    verdict_explanation: str
+    stale_attribution_count: int
+    derivation: str
+
+
 class AgentMonitoringStats(BaseModel):
     run_summary: RunSummaryStats
     gate_failure_breakdown: Dict[str, int]
@@ -202,6 +272,8 @@ class AgentMonitoringStats(BaseModel):
     summary_quality: SummaryQualityStats
     slow_runs: List[SlowRunEntry]
     outliers: OutlierStats
+    skill_usage: SkillUsageSection
+    kgmcp_cache_efficiency: KgmcpCacheEfficiencyStats
 
 
 # --- Ticket-corpus statistics (TCK-20260718-TICKET-CORPUS-REPORT) ---

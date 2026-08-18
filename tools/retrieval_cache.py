@@ -58,8 +58,12 @@ RETRIEVAL_VERSION: int = 1
 # DDL/table-shape version for this module's migrations (cache_migration_plan.md §1) — distinct
 # from RETRIEVAL_VERSION above (cache-key-derivation logic) and from
 # tools/retrieval_events.py::retrieval_event_schema_version (event-field shape). Bumped once per
-# new migration function added, never aliased to either sibling constant.
-retrieval_cache_schema_version: int = 2
+# new *table-creating* migration function added (migration_001 -> 1, migration_002 -> 2,
+# migration_005_add_cache_access_log_table -> 3) — matching the real established pattern:
+# migration_003/004 (ALTER TABLE ADD COLUMN against an existing table) never bumped this constant
+# or stamped retrieval_cache_generation, only migration_001/002 (CREATE TABLE of a wholly new
+# table) did. Never aliased to either sibling constant.
+retrieval_cache_schema_version: int = 3
 
 # Sentinel-over-fabrication precedent: tools/hybrid_retrieval.py::UNRATED,
 # tools/code_test_index.py's DOCSTRING_GAP/ASSOCIATED_TESTS_GAP. If manifest.json does not exist
@@ -435,6 +439,256 @@ def migration_004_add_level2_write_path_columns(conn: sqlite3.Connection) -> Non
         conn.commit()
 
 
+def migration_005_add_cache_access_log_table(conn: sqlite3.Connection) -> None:
+    """Adds retrieval_cache_access_log — a per-event work-attribution log for the Level 1/Level 2
+    caches (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD, Scope item 1).
+    Neither Level 1's retrieval_provider_result_cache_rows nor Level 2's
+    retrieval_context_packet_cache_rows carries any run_id/agent/phase attribution today, and both
+    tables' own hit_count/last_hit_at columns are wiped to 0/NULL on every INSERT OR REPLACE write
+    (write_provider_result_cache()/write_context_packet_cache() above), silently discarding prior
+    hit history — this table is additive, append-only history that is never itself INSERT OR
+    REPLACE'd, so a row's presence in this log is never lost when its parent cache row is
+    refreshed. CREATE TABLE IF NOT EXISTS only — additive, never touches any of the 5 existing
+    cache tables or the 3 legacy marker-only tables. Idempotent: safe to call again on a database
+    that already has this migration applied. Not called by _get_connection()/_init_schema() or any
+    check_*_cache()/write_*_cache()/prune() function above (mirrors every prior migration's own
+    "never auto-invoked from the hot read/write path" rule) — invoked only from
+    _get_access_log_connection() below. Ordinal 5, the next open ordinal after migration_004 (no
+    migration_005_* exists anywhere in this file before this ticket).
+
+    Column shape: `cache_level` ('level1_provider_result' | 'level2_context_packet') plus
+    event-type-appropriate key columns (query_hash/repo_branch_scope for Level 1, packet_id for
+    Level 2 — both nullable, since only one set is ever populated per row) identify *which* cache
+    row the event concerns; `event_type` ('hit' | 'write' | 'invalidate' — this ticket's own
+    instrumentation only ever writes 'hit'/'write', since neither cache level has a distinct
+    invalidate call site today, see log_cache_access()'s docstring) identifies *what* happened;
+    run_id/seq/phase/agent/execution_id/provider/ticket_id are sourced from the same
+    `.claude/current_run` sidecar mechanism tools/agent-monitoring/post_tool_hook.py:46-63 already
+    uses for tools.jsonl attribution (read_current_run_sidecar() below, not reinvented).
+    `sidecar_stale` is a real, file-existence-checked flag (see _sidecar_run_is_stale()) — TRUE
+    when the sidecar's own ticket points at a ticket that has already moved to tickets/done/ (the
+    exact live failure mode this ticket's own Scope item 6 documents), so a reader can distinguish
+    "no attribution recorded" from "attribution recorded but known-untrustworthy" instead of
+    silently trusting stale data. Every column here stays within the MAY-list vocabulary
+    (docs/observability/retrieval_retention_redaction_policy.md) — IDs, hashes (by reference, never
+    raw content), counts via aggregation, timestamps; no prompt/chunk/payload text.
+    """
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS retrieval_cache_access_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cache_level TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            query_hash TEXT,
+            repo_branch_scope TEXT,
+            packet_id TEXT,
+            run_id TEXT,
+            seq INTEGER,
+            phase TEXT,
+            agent TEXT,
+            execution_id TEXT,
+            provider TEXT,
+            ticket_id TEXT,
+            sidecar_stale INTEGER NOT NULL DEFAULT 0,
+            ts REAL NOT NULL
+        )
+        """
+    )
+    conn.execute("DELETE FROM retrieval_cache_generation")
+    conn.execute(
+        "INSERT INTO retrieval_cache_generation "
+        "(retrieval_cache_schema_version, migrated_at) VALUES (?, ?)",
+        (3, time.time()),
+    )
+    conn.commit()
+
+
+# ---------------------------------------------------------------------------
+# KGMCP cache-access-log — work attribution for Level 1/Level 2 cache hit/write events
+# (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD)
+# ---------------------------------------------------------------------------
+
+# Relative path, matching tools/agent-monitoring/post_tool_hook.py:54's own literal
+# Path(".claude/current_run") — a module attribute (not an inline literal) specifically so tests
+# can monkeypatch it the same way the _isolated_cache_db fixture already monkeypatches
+# CACHE_DB_PATH/_MANIFEST_PATH.
+_CURRENT_RUN_SIDECAR_PATH = Path(".claude/current_run")
+
+_ACCESS_LOG_VALID_CACHE_LEVELS = frozenset({"level1_provider_result", "level2_context_packet"})
+_ACCESS_LOG_VALID_EVENT_TYPES = frozenset({"hit", "write", "invalidate"})
+
+
+def _ticket_file_exists(lifecycle: str, ticket_id: str) -> bool:
+    """True if tickets/{lifecycle}/{ticket_id}.md exists, either directly or nested one level
+    under a todos-style subfolder (tickets/done/{folder}/{ticket_id}.md — CLAUDE.md's own Workflow
+    Rule moves a whole completed folder there). Direct-path stat first (O(1), covers the large
+    majority of tickets, which are flat) — rglob only as a fallback, so the common case never pays
+    a directory-tree-scan cost."""
+    base = _REPO_ROOT / "tickets" / lifecycle
+    if not base.is_dir():
+        return False
+    direct = base / f"{ticket_id}.md"
+    if direct.is_file():
+        return True
+    return any(base.rglob(f"{ticket_id}.md"))
+
+
+def _sidecar_run_is_stale(effective_ticket_id: str | None) -> bool:
+    """Real, file-existence-based staleness check (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-
+    AND-SKILL-USAGE-DASHBOARD Scope item 6) — reproduced live during this ticket's own
+    investigation: `.claude/current_run` held `{"run_id": "TCK-20260817-HOTFIX-DECISION-TRACE-
+    SELECTED-MOCK-SCORE", ...}` while that exact ticket already lived under tickets/done/, not
+    tickets/inprogress/ — a `search_docs` call made during unrelated, ad-hoc investigation would
+    have been silently attributed to that already-closed ticket had this check not existed. Only
+    ever returns True when `effective_ticket_id` is set AND it resolves to a real tickets/done/
+    file AND it does NOT also exist under tickets/inprogress/ — an ad-hoc call with no ticket_id at
+    all (None) is correctly NOT flagged stale (it is simply unattributed, a different and equally
+    honest signal, not a false positive here)."""
+    if not effective_ticket_id:
+        return False
+    if _ticket_file_exists("inprogress", effective_ticket_id):
+        return False
+    return _ticket_file_exists("done", effective_ticket_id)
+
+
+def read_current_run_sidecar() -> dict:
+    """Mirrors tools/agent-monitoring/post_tool_hook.py:46-63's exact `.claude/current_run` read
+    pattern — same file, same key names (run_id/seq/phase/agent/execution_id/provider/ticket_id),
+    same fail-silent-to-None-on-any-error convention — reused, not reinvented (no shared helper
+    previously existed to import; post_tool_hook.py's own version is inlined in a try/except
+    block, not an importable function). Adds one field beyond that mechanism's own scope:
+    `sidecar_stale` (see _sidecar_run_is_stale()) — a run_id starting with "TCK-" is used as the
+    effective ticket_id when the sidecar carries no explicit `ticket_id` of its own (the common
+    case for hotfix/standard workflows, where run_id already *is* the ticket_id — confirmed by
+    direct inspection of the real, live .claude/current_run sidecar during this ticket's own
+    investigation)."""
+    run_id = seq = phase = agent = execution_id = provider = ticket_id = None
+    try:
+        sidecar = json.loads(_CURRENT_RUN_SIDECAR_PATH.read_text())
+        run_id = sidecar.get("run_id") or None
+        seq = sidecar.get("seq") or None
+        phase = sidecar.get("phase") or None
+        agent = sidecar.get("agent") or None
+        execution_id = sidecar.get("execution_id") or None
+        provider = sidecar.get("provider") or None
+        ticket_id = sidecar.get("ticket_id") or None
+    except Exception:
+        pass
+
+    effective_ticket_id = ticket_id or (
+        run_id if run_id and run_id.startswith("TCK-") else None
+    )
+
+    return {
+        "run_id": run_id,
+        "seq": seq,
+        "phase": phase,
+        "agent": agent,
+        "execution_id": execution_id,
+        "provider": provider,
+        "ticket_id": ticket_id,
+        "sidecar_stale": _sidecar_run_is_stale(effective_ticket_id),
+    }
+
+
+def _get_access_log_connection() -> sqlite3.Connection:
+    """Mirrors _get_level1_connection()/_get_level2_connection()'s own connection-tuning mechanics
+    exactly — opens CACHE_DB_PATH via knowledge_gateway_redaction.open_connection_with_limits(),
+    not the plain _get_connection() the 3 legacy tables use. Runs migration_001 first (creates
+    retrieval_cache_generation, a prerequisite migration_005 assumes exists — same ordering
+    constraint _ensure_level2_schema_for_read()'s own docstring already documents for
+    migration_002), then migration_005 itself."""
+    conn = _kgr_redaction.open_connection_with_limits(CACHE_DB_PATH)
+    migration_001_add_level1_tables(conn)
+    migration_005_add_cache_access_log_table(conn)
+    return conn
+
+
+def log_cache_access(
+    cache_level: str,
+    event_type: str,
+    *,
+    query_hash: str | None = None,
+    repo_branch_scope: str | None = None,
+    packet_id: str | None = None,
+) -> None:
+    """Appends one row to retrieval_cache_access_log for a real Level 1/Level 2 cache hit or
+    write. Called from the 4 real instrumented call sites below
+    (record_provider_result_cache_hit/write_provider_result_cache/
+    record_context_packet_cache_hit/write_context_packet_cache) — never from check_*_cache()
+    (a bare lookup is not itself a genuine hit; DD9's Non-collapse rule, same distinction
+    record_provider_result_cache_hit()'s own docstring already draws). No 'invalidate' call site
+    exists yet for either cache level (neither table has a distinct invalidation function today,
+    only INSERT OR REPLACE writes) — 'invalidate' remains a valid, schema-supported event_type for
+    a future caller, never emitted by this ticket's own instrumentation.
+
+    CLAUDE.md hard rule: "Monitoring write failure must never fail the workflow." This function
+    never raises — any failure (malformed sidecar, DB-open failure, disk-full) is swallowed
+    silently, exactly like tools/agent-monitoring/post_tool_hook.py's own top-level try/except,
+    so a logging failure here can never break the real cache write/hit it is instrumenting.
+    """
+    try:
+        if cache_level not in _ACCESS_LOG_VALID_CACHE_LEVELS:
+            return
+        if event_type not in _ACCESS_LOG_VALID_EVENT_TYPES:
+            return
+        sidecar = read_current_run_sidecar()
+        conn = _get_access_log_connection()
+        try:
+            conn.execute(
+                "INSERT INTO retrieval_cache_access_log "
+                "(cache_level, event_type, query_hash, repo_branch_scope, packet_id, run_id, seq, "
+                " phase, agent, execution_id, provider, ticket_id, sidecar_stale, ts) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    cache_level,
+                    event_type,
+                    query_hash,
+                    repo_branch_scope,
+                    packet_id,
+                    sidecar["run_id"],
+                    sidecar["seq"],
+                    sidecar["phase"],
+                    sidecar["agent"],
+                    sidecar["execution_id"],
+                    sidecar["provider"],
+                    sidecar["ticket_id"],
+                    int(sidecar["sidecar_stale"]),
+                    time.time(),
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception:
+        pass
+
+
+def read_cache_access_log() -> list[dict]:
+    """Read-only: every row of retrieval_cache_access_log as a list of dicts, ordered by ts —
+    consumed by tools/agent-monitoring/generate_retro.py::compute_kgmcp_cache_efficiency_metrics().
+    Mirrors provider_result_cache_stats()/context_packet_cache_stats()'s own "never raise on a
+    fresh/never-migrated DB" pattern: returns [] (not an exception) if the table does not exist
+    yet. Never mutates."""
+    conn = _get_connection()
+    try:
+        table_exists = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='retrieval_cache_access_log'"
+        ).fetchone()
+        if table_exists is None:
+            return []
+        rows = conn.execute(
+            "SELECT * FROM retrieval_cache_access_log ORDER BY ts"
+        ).fetchall()
+        columns = [d[0] for d in conn.execute(
+            "SELECT * FROM retrieval_cache_access_log LIMIT 0"
+        ).description]
+    finally:
+        conn.close()
+    return [dict(zip(columns, row)) for row in rows]
+
+
 def _validate_may_list_kwargs(kwargs: dict, *, table: str) -> dict:
     """Single shared enforcement point for all three write_*_cache() functions (AC4) — raises
     ValueError on any kwarg not in MAY_LIST_COLUMNS, loud and immediate since this is new code
@@ -798,6 +1052,12 @@ def write_provider_result_cache(
         conn.commit()
     finally:
         conn.close()
+    # TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD: logged on its own
+    # connection, after the real write has already committed and closed — a logging failure here
+    # can never roll back or block the write above (log_cache_access() also never raises itself).
+    log_cache_access(
+        "level1_provider_result", "write", query_hash=query_hash, repo_branch_scope=repo_branch_scope
+    )
 
 
 def record_provider_result_cache_hit(query_hash: str, repo_branch_scope: str) -> None:
@@ -814,6 +1074,11 @@ def record_provider_result_cache_hit(query_hash: str, repo_branch_scope: str) ->
         conn.commit()
     finally:
         conn.close()
+    # TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD: see write path's
+    # own comment above — logged after the real hit-count update has committed and closed.
+    log_cache_access(
+        "level1_provider_result", "hit", query_hash=query_hash, repo_branch_scope=repo_branch_scope
+    )
 
 
 def provider_result_cache_stats() -> dict:
@@ -1011,6 +1276,10 @@ def write_context_packet_cache(
         conn.commit()
     finally:
         conn.close()
+    # TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD: see Level 1 write
+    # path's own comment (write_provider_result_cache()) — logged after the real write has
+    # already committed and closed.
+    log_cache_access("level2_context_packet", "write", packet_id=packet_id)
 
 
 def record_context_packet_cache_hit(packet_id: str) -> None:
@@ -1028,6 +1297,10 @@ def record_context_packet_cache_hit(packet_id: str) -> None:
         conn.commit()
     finally:
         conn.close()
+    # TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD: see Level 1 hit
+    # path's own comment (record_provider_result_cache_hit()) — logged after the real hit-count
+    # update has committed and closed.
+    log_cache_access("level2_context_packet", "hit", packet_id=packet_id)
 
 
 def context_packet_cache_stats() -> dict:
