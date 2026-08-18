@@ -75,16 +75,25 @@ def test_performance_tag_reminder_names_both_perf_test_dirs():
 def test_does_not_introduce_a_new_blocking_status_for_performance():
     """This must stay a prompt enrichment of the existing Test-phase gate — no new
     `return { status: ... }` block keyed on the performance tag (that would make it a second
-    gate, duplicating Test, which the ticket's own investigation found unnecessary)."""
+    gate, duplicating Test, which the ticket's own investigation found unnecessary).
+
+    TCK-20260818-KGMCP-TICKET-VERIFY-SCOPED-REGRESSION-GAP later added a genuine, separate new
+    Test-phase gate (`TEST_SCOPE_COVERAGE_FAILED`) that now sits between the tag check and
+    TESTS_FAILED's own return — that's fine, it's real and unrelated to the performance tag. This
+    test's actual invariant is narrower than "the very next return block": no return status may
+    be gated specifically on the performance-tag check. Find TESTS_FAILED's own return
+    specifically, and separately confirm nothing between the two re-checks the performance tag."""
     text = _read_js()
     tag_check_idx = text.find("ticketInfo.tags.includes('performance')")
     assert tag_check_idx != -1
-    # The next `return { status:` after the tag check should be TESTS_FAILED's own existing
-    # return (the pre-existing Test-phase gate), not a new performance-specific one.
-    next_return_idx = text.find("return {\n    status:", tag_check_idx)
-    assert next_return_idx != -1
-    next_return_window = text[next_return_idx:next_return_idx + 120]
-    assert "TESTS_FAILED" in next_return_window
+    after_tag_check = tag_check_idx + len("ticketInfo.tags.includes('performance')")
+    tests_failed_return_idx = text.find("return {\n    status: 'TESTS_FAILED'", tag_check_idx)
+    assert tests_failed_return_idx != -1, "TESTS_FAILED's own Test-phase gate return not found"
+    between = text[after_tag_check:tests_failed_return_idx]
+    assert "includes('performance')" not in between, (
+        "a return status between the tag check and TESTS_FAILED appears to be gated on the "
+        "performance tag specifically — that would reintroduce a second gate"
+    )
 
 
 def test_test_scoper_md_documents_the_same_rule():

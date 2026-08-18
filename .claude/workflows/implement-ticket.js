@@ -1019,7 +1019,7 @@ in src/engine/ or src/world/), so the naming-convention mapping in Step 1 alone 
 regression-gate check (PerfRegressionGate, docs/performance/perf_baseline_policy.md §3) this tag
 exists to trigger.` : ''}
 
-Step 1 — Map each changed src/ file to its tests/unit/ counterpart. For changes to src/core/, src/systems/, or src/engine/, also find transitive test dependents via grep.
+Step 1 — Map each changed src/ file to its tests/unit/ counterpart, AND each changed tools/ file to its tests/tools/ (or same-name tests/<subdir>/ mirror) counterpart per .claude/agents/test-scoper.md's Test Directory Map — tools/ is a second, equally-real source tree, not a special case of src/. For changes to src/core/, src/systems/, src/engine/, or any flat tools/*.py file, also find transitive test dependents via grep across the whole tests/ tree.
 
 Step 2 — ${tier !== 'hotfix' ? `Check staging_artifacts/${tid}/test_plan.md: are all required new tests present? List any missing.` : 'For a hotfix, confirm the targeted behavior is tested. No formal test_plan.md required.'}
 
@@ -1030,6 +1030,47 @@ Step 4 — Run the command via Bash. Capture stdout/stderr.
 Step 5 — Report: pytest_command used, pass_count, fail_count, failed_tests (empty if all pass), coverage_gaps (changed files with no test coverage), summary (one sentence: pass/fail result, ≤200 chars).`,
   { label: 'test-scope-and-run', schema: TEST_SCHEMA, agentType: 'test-scoper' }
 )
+
+// ─── Structural test-directory-coverage backstop (TCK-20260818-KGMCP-TICKET-VERIFY-SCOPED- ────
+// REGRESSION-GAP) ───────────────────────────────────────────────────────────────────────────
+// test-scoper's own Test Directory Map previously had no entry at all for tools/ (a second, real
+// source tree — 52 files under tools/*.py, 128 under tests/tools/), which let a legitimate
+// tools/retrieval_cache.py change ship with two pre-existing tests/tools/ tests broken and
+// undetected until real CI failed. The map is fixed (.claude/agents/test-scoper.md), but per this
+// project's preference for a structural guard over discipline alone, this check independently
+// verifies — deterministically, not by trusting the agent's own judgment a second time — that the
+// actual pytest_command really does cover every directory implicated by files_changed. Runs
+// regardless of testResult.passed: a reported PASS with an uncovered directory is a false PASS.
+const filesChangedArgsForTestScope = implementation.files_changed.map(f => `"${f}"`).join(' ')
+const testScopeCheckOutput = await bash(
+  `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.test_scope_coverage_static import check_test_scope_coverage
+print('TEST_SCOPE_CHECK_JSON:' + json.dumps(check_test_scope_coverage(sys.argv[1:], '''${(testResult.pytest_command || '').replace(/'/g, "\\'")}''')))
+" ${filesChangedArgsForTestScope}`
+)
+let testScopeCheckResults = []
+const testScopeMarkerIndex = testScopeCheckOutput.indexOf('TEST_SCOPE_CHECK_JSON:')
+if (testScopeMarkerIndex !== -1) {
+  try { testScopeCheckResults = JSON.parse(testScopeCheckOutput.slice(testScopeMarkerIndex + 'TEST_SCOPE_CHECK_JSON:'.length).trim()) }
+  catch (e) { testScopeCheckResults = [] }
+}
+const testScopeGaps = testScopeCheckResults.filter(r => r.status === 'FAIL')
+
+if (testScopeGaps.length > 0) {
+  const gapDirs = testScopeGaps.map(g => g.condition.replace('test_scope_covers:', '')).join(', ')
+  pushEvent('Test', 'test-scoper', 'failed', `Test-scope coverage gap: pytest_command missing required dir(s): ${gapDirs}`, testTs)
+  log(`Test scope coverage FAILED: pytest_command did not include required test dir(s): ${gapDirs}`)
+  await writeMonitoring('TEST_SCOPE_COVERAGE_FAILED')
+  return {
+    status: 'TEST_SCOPE_COVERAGE_FAILED',
+    ticket_id: tid,
+    pytest_command: testResult.pytest_command,
+    test_scope_gaps: testScopeCheckResults,
+    message: `Re-scope the Test phase to include: ${gapDirs}. Then re-run with ticket_id="` + tid + `".`,
+  }
+}
 
 if (!testResult.passed) {
   pushEvent('Test', 'test-scoper', 'failed', testResult.summary || testResult.fail_count + ' tests failing: ' + testResult.failed_tests.slice(0, 3).join(', '), testTs)

@@ -386,6 +386,28 @@ pytest tests/unit/content_semantics/ tests/unit/combat/ tests/arena/ -v
 
 The agent executes this via Bash and reports results.
 
+**`tools/` is a second, equally-real source tree** (agent tooling, KGMCP, agent-monitoring, gate
+checks, codex adapters — 52 files under `tools/*.py` alone, separate from `src/`). `test-scoper`
+maps `tools/*.py` → `tests/tools/` (whole directory, never a subset — see
+`.claude/agents/test-scoper.md`'s Test Directory Map) and `tools/agent_codex_<x>/` →
+`tests/agent_codex_<x>/` (same-name mirror), alongside the `src/` → `tests/unit/` mapping above.
+
+**Structural test-scope-coverage backstop** (`TCK-20260818-KGMCP-TICKET-VERIFY-SCOPED-REGRESSION-
+GAP`, added after a real incident where a `tools/retrieval_cache.py` change shipped with two
+pre-existing `tests/tools/` tests broken, undetected until real CI failed): immediately after
+`test-scoper` returns, the orchestrator runs
+`tools/gate_checks/test_scope_coverage_static.py::check_test_scope_coverage(files_changed,
+pytest_command)` directly via `bash()` — not trusting the agent's own directory-mapping judgment
+a second time. For every changed file with a known expected test directory, it checks whether the
+reported `pytest_command` references that directory as a **bare, whole-directory token** (e.g.
+`tests/tools/`), not merely a path prefix of specific files named individually — a command that
+lists only a ticket's own new test files inside `tests/tools/` does **not** count as covering it,
+even though the directory string technically appears in the command (this is the exact shape the
+real incident fell into). **Gate:** Returns `TEST_SCOPE_COVERAGE_FAILED` with the missing
+directory list if any gap is found, regardless of whether `test-scoper` itself reported
+`passed: true` — a reported PASS with an uncovered directory is a false PASS. The user re-scopes
+the Test phase to include the missing directory and re-runs with `ticket_id`.
+
 **Gate:** Returns `TESTS_FAILED` with failing test names. The user fixes the tests and re-runs with `ticket_id`. The workflow resumes from the Test phase.
 
 **Post-Test cleanup checkpoint:** Immediately after Test phase completes (before Parity), the
