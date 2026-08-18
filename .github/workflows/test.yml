@@ -4,6 +4,12 @@ on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    # Nightly, low-traffic UTC hour — catches slow-lane regressions without
+    # blocking every PR iteration on the ~45-90min slow suite (TCK-20260818-
+    # STANDARD-SLOW-REGRESSION-OFF-PR-PATH).
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}
 
 concurrency:
   group: test-${{ github.ref }}
@@ -241,7 +247,12 @@ jobs:
   slow:
     name: "Slow regression"
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    # TCK-20260818-STANDARD-SLOW-REGRESSION-OFF-PR-PATH: no longer runs on every PR push
+    # (github.base_ref == 'main') -- the ~45-90min slow suite (9021-deselected-tests-heavy)
+    # blocked fast development iteration on every commit. Still runs as a real safety net:
+    # (a) on push to main itself (post-merge), (b) on the nightly schedule, (c) on manual
+    # dispatch when a developer/agent wants pre-merge confidence.
+    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     needs:
       - unit-core-world
       - unit-gameplay

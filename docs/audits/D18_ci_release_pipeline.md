@@ -101,6 +101,13 @@ None of these targets are invoked by any GitHub Actions workflow. They are devel
 ### F1 — No CI test runner: all 3,292 tests are local-only — Priority: 11 / 15
 
 > **RESOLVED (2026-06-25):** .github/workflows/test.yml added with 8 parallel domain jobs + slow-regression job (--resource-budget large) gated to PRs targeting main. mypy step included.
+>
+> **UPDATED (2026-08-18, TCK-20260818-STANDARD-SLOW-REGRESSION-OFF-PR-PATH):** the
+> slow-regression job's "gated to PRs targeting main" trigger was removed from the per-PR-push
+> path — its first-ever completed run (unblocked by earlier fixes this same week) took
+> ~45-90 minutes, which blocked fast development iteration on every commit. It now runs on
+> push to `main` itself (post-merge safety net), a nightly schedule, and manual
+> `workflow_dispatch` — no longer on every PR-targeting-main push.
 
 | Dimension | Score | Reason |
 |---|---|---|
