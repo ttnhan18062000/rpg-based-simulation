@@ -754,20 +754,25 @@ def test_working_tree_overlap_forces_revalidation_called_unmodified_against_evid
 
 
 def test_no_junction_table_or_new_sqlite_table_introduced_by_this_ticket():
-    """Anti-scope-creep guard (Architecture-Review-corrected — see plan.md's 'Architecture Review
-    Corrections' section). Matches real DDL statements only (`CREATE TABLE IF NOT EXISTS <name> (`)
-    against the live tools/retrieval_cache.py, excluding two docstring occurrences phrased as the
-    literal text 'CREATE TABLE IF NOT EXISTS only -- additive, never...' that a plain \\w+ match
-    would false-positive on. This ticket's own diff never opens tools/retrieval_cache.py at all —
-    the count must equal the pre-ticket baseline of 6 (3 legacy marker-only tables,
-    retrieval_cache_generation, the Level 1 table, the Level 2 table)."""
+    """Anti-scope-creep guard, originally written for TCK-20260816-KNOWLEDGE-GATEWAY-MCP-PHASE3-EPIC
+    (Architecture-Review-corrected — see that ticket's plan.md 'Architecture Review Corrections'
+    section), whose own diff never opened tools/retrieval_cache.py at all. Matches real DDL
+    statements only (`CREATE TABLE IF NOT EXISTS <name> (`) against the live
+    tools/retrieval_cache.py, excluding two docstring occurrences phrased as the literal text
+    'CREATE TABLE IF NOT EXISTS only -- additive, never...' that a plain \\w+ match would
+    false-positive on. Baseline was 6 (3 legacy marker-only tables, retrieval_cache_generation,
+    the Level 1 table, the Level 2 table) through Phase3. TCK-20260818-STANDARD-KGMCP-CACHE-
+    ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD's plan.md (DD1) deliberately added one more —
+    retrieval_cache_access_log, additive/append-only via migration_005 — bringing the accepted
+    baseline to 7. Re-bump this count only alongside an equally deliberate, documented DD in a
+    ticket's plan.md; it still guards against silent, undocumented table sprawl."""
     import re
 
     _RETRIEVAL_CACHE_PATH = _TOOLS_DIR / "retrieval_cache.py"
     source = _RETRIEVAL_CACHE_PATH.read_text()
     matches = re.findall(r"CREATE TABLE IF NOT EXISTS \w+\s*\(", source)
-    assert len(matches) == 6, (
-        f"expected exactly 6 real CREATE TABLE DDL statements in tools/retrieval_cache.py, "
-        f"found {len(matches)}: {matches} -- this ticket must not add a junction table or any "
-        f"new SQLite table"
+    assert len(matches) == 7, (
+        f"expected exactly 7 real CREATE TABLE DDL statements in tools/retrieval_cache.py, "
+        f"found {len(matches)}: {matches} -- table count changed without an accompanying "
+        f"documented design decision in some ticket's plan.md"
     )

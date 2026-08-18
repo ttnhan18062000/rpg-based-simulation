@@ -479,7 +479,10 @@ class TestRedactionPolicyVersion:
     def test_redaction_policy_version_distinct_from_retrieval_version(self):
         assert kgr.redaction_policy_version == 1
         assert rc.RETRIEVAL_VERSION == 1
-        assert rc.retrieval_cache_schema_version == 2
+        # Bumped 2 -> 3 by TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD's
+        # migration_005 (adds retrieval_cache_access_log); the value itself is not what this test
+        # guards -- see the assertion below.
+        assert rc.retrieval_cache_schema_version == 3
         assert re_mod.retrieval_event_schema_version == 1
         # Same value today is a coincidence, not a shared identity -- confirmed by them being
         # four entirely separate module-level names, never imported/aliased from one another.
