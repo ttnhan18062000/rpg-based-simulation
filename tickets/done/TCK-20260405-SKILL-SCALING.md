@@ -11,7 +11,7 @@ tags: [skill, scaling]
 
 # TCK-20260405-SKILL-SCALING: Unified Skill Damage Resolution
 
-## Status: INPROGRESS
+## Status: DONE
 ## Priority: P1
 ## Scope: Unify skill scaling with authoritative DamageResolutionService.
 

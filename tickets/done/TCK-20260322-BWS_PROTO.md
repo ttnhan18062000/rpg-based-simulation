@@ -31,7 +31,7 @@ Implement an opt-in binary WebSocket protocol using MessagePack and positional a
 - `infra-04-realtime-state-streaming` (Legacy streaming)
 - `TCK-20260322-PERF_OPT` (Previous engine optimizations)
 
-## Status: INPROGRESS
+## Status: DONE
 Plan approved. Starting implementation.
 
 **Tier:** standard

@@ -587,6 +587,154 @@ def test_folder_mode_no_epic_ticket_file_leaves_status_none_not_crash(tmp_path):
     assert is_epic_blocked(candidates[0]) is False
 
 
+def test_real_codex_runtime_activation_folder_is_status_aware(tmp_path):
+    """TCK-20260819-HOTFIX-EPIC-STALENESS-FOLDER-BLOCKED-GAP: the folder-mode
+    candidate for tickets/todos/codex-runtime-activation/ (epic_id
+    FOLDER-tickets-todos-codex-runtime-activation) has no epic-tier ticket
+    file inside the subfolder itself — its real governing epic,
+    TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC, lives in tickets/inprogress/
+    instead. Before this fix, that left the folder candidate's status=None,
+    so it could never be classified BLOCKED and fell through to the
+    genuinely-stale bucket despite the governing epic being deliberately
+    parked. Copies the real folder + the real inprogress/ epic ticket into a
+    synthetic tree — read-only, does not touch the live repo tree — to prove
+    the cross-reference now finds the governing epic's BLOCKED status."""
+    real_folder = (
+        Path(__file__).parent.parent.parent
+        / "tickets" / "todos" / "codex-runtime-activation"
+    )
+    real_epic_ticket = (
+        Path(__file__).parent.parent.parent
+        / "tickets" / "inprogress" / "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC.md"
+    )
+    if not real_folder.exists() or not real_epic_ticket.exists():
+        return
+
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    working_log_path = tmp_path / "working_log.csv"
+    runs_jsonl_path = tmp_path / "runs.jsonl"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    (inprogress_dir / real_epic_ticket.name).write_text(real_epic_ticket.read_text())
+    synthetic_folder = todos_dir / real_folder.name
+    synthetic_folder.mkdir()
+    for item in real_folder.iterdir():
+        if item.is_file():
+            (synthetic_folder / item.name).write_text(item.read_text())
+
+    # Old activity for one of the epic's real children, past the 5-day
+    # window, reproducing the exact false-positive shape this ticket was
+    # filed against — the folder candidate must land in BLOCKED, not stale.
+    working_log_path.write_text(
+        "timestamp,ticket_id,title,status,summary,artifacts_path\n"
+        "2026-07-31T00:00:00Z,TCK-20260730-CLAUDE-EXECUTION-IDENTITY,t,DONE,s,none\n"
+    )
+    runs_jsonl_path.write_text("")
+
+    integration_now = datetime(2026, 8, 19, 12, 0, 0, tzinfo=timezone.utc)
+
+    candidates = discover_candidate_epics(inprogress_dir, todos_dir)
+    folder_epic_id = f"FOLDER-tickets-todos-{real_folder.name}"
+    folder_candidate = next(c for c in candidates if c.epic_id == folder_epic_id)
+    assert folder_candidate.mode == "folder"
+    assert folder_candidate.status == "BLOCKED"
+    assert is_epic_blocked(folder_candidate) is True
+
+    stale = find_stale_epics(
+        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=integration_now
+    )
+    assert folder_epic_id not in [c.epic_id for c in stale]
+
+    report = compute_stale_epics_report(
+        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=integration_now
+    )
+    stale_section = report.split("Informational:")[0]
+    assert folder_epic_id not in stale_section
+    blocked_section = report.split("Informational: BLOCKED epics")[1]
+    assert folder_epic_id in blocked_section
+
+
+def test_folder_mode_cross_reference_finds_governing_epic_status(tmp_path):
+    """Unit-level, synthetic version of the codex-runtime-activation shape:
+    a todos_dir subfolder with a SEQUENCE.md but no epic-tier ticket file of
+    its own, whose child IDs are referenced by an epic-tier ticket's own
+    '## Related Tickets' section living in tickets/inprogress/. Proves the
+    cross-reference mechanism generically, not just against the one real
+    repo fixture above."""
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    _write_ticket(
+        inprogress_dir / "TCK-20260701-XREF-GOVERNING-EPIC.md",
+        "TCK-20260701-XREF-GOVERNING-EPIC",
+        "epic",
+        "2026-07-01",
+        related_tickets="TCK-20260701-XREF-CHILD-A, TCK-20260701-XREF-CHILD-B",
+        body_status="BLOCKED",
+    )
+
+    folder = todos_dir / "xref-only-folder"
+    folder.mkdir()
+    (folder / "SEQUENCE.md").write_text(
+        "Epic: `FOLDER-tickets-todos-xref-only-folder`.\n\n"
+        "| Order | Ticket |\n|---|---|\n"
+        "| 1 | TCK-20260701-XREF-CHILD-A |\n"
+        "| 2 | TCK-20260701-XREF-CHILD-B |\n"
+    )
+
+    candidates = discover_candidate_epics(inprogress_dir, todos_dir)
+    folder_candidate = next(
+        c for c in candidates if c.epic_id == "FOLDER-tickets-todos-xref-only-folder"
+    )
+    assert folder_candidate.status == "BLOCKED"
+    assert is_epic_blocked(folder_candidate) is True
+
+
+def test_folder_mode_genuinely_stale_non_blocked_still_flagged_regression_guard(tmp_path):
+    """Acceptance-critical companion to
+    test_genuinely_stale_non_blocked_epic_still_flagged_regression_guard,
+    scoped to folder-mode candidates: the cross-reference fix must not
+    weaken real staleness detection for a folder whose governing epic (found
+    via cross-reference or otherwise) is not BLOCKED and has gone genuinely
+    idle."""
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    working_log_path = tmp_path / "working_log.csv"
+    runs_jsonl_path = tmp_path / "runs.jsonl"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    _write_ticket(
+        inprogress_dir / "TCK-20260601-XREF-OPEN-EPIC.md",
+        "TCK-20260601-XREF-OPEN-EPIC",
+        "epic",
+        "2026-06-01",
+        related_tickets="TCK-20260601-XREF-OPEN-CHILD",
+        body_status="INPROGRESS",
+    )
+
+    folder = todos_dir / "xref-open-folder"
+    folder.mkdir()
+    (folder / "SEQUENCE.md").write_text(
+        "Epic: `FOLDER-tickets-todos-xref-open-folder`.\n\n"
+        "| Order | Ticket |\n|---|---|\n"
+        "| 1 | TCK-20260601-XREF-OPEN-CHILD |\n"
+    )
+
+    working_log_path.write_text(
+        "timestamp,ticket_id,title,status,summary,artifacts_path\n"
+        "2026-07-02T00:00:00Z,TCK-20260601-XREF-OPEN-CHILD,t,DONE,s,none\n"
+    )
+    runs_jsonl_path.write_text("")
+
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    assert "FOLDER-tickets-todos-xref-open-folder" in [c.epic_id for c in stale]
+
+
 def test_real_codex_runtime_activation_epic_is_status_aware(tmp_path):
     """Integration-style confirmation against the real repo ticket that
     motivated this fix, TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC — read-only,
