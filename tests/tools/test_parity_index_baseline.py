@@ -119,14 +119,16 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
                 live_missing += 1
     assert manifest["missing_evidence_health"]["missing_test_path_count"] == live_missing
     # This count naturally drifts downward as parity ledger entries legitimately gain a
-    # `test_path` over time — it is not a frozen invariant. Updated from 1343 to the real,
-    # current count (TCK-20260817-DEAD-INFRA-REMOVAL-EPIC, 2026-08-19: 11 `infrastructure.yaml`
+    # `test_path` over time — it is not a frozen invariant. Updated from 1343 to 1337
+    # (TCK-20260817-DEAD-INFRA-REMOVAL-EPIC, 2026-08-19: 11 `infrastructure.yaml`
     # entries moved from verified/legacy_verified to `unsupported` since no RabbitMQ/Kafka broker
     # code remains to have disabled-mode behavior, removing them from this count entirely; a
-    # 12th, INFRA-174, and the new INFRA-358 both gained real `test_path`s instead). The
+    # 12th, INFRA-174, and the new INFRA-358 both gained real `test_path`s instead), then to 1336
+    # (TCK-20260819-HOTFIX-RNG-BOUNDARY-VIOLATION-BACKOFF-JITTER, 2026-08-19: INFRA-118 gained a
+    # real `test_path` citing its 2 RNG-boundary guard tests, previously `null`). The
     # substantive check is the assertion above (manifest's own count matches a fresh, independent
     # live scan) — this second assertion only guards against a silent, unexplained large swing.
-    assert live_missing == 1337
+    assert live_missing == 1336
 
 
 # ---------------------------------------------------------------------------
