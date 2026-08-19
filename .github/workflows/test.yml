@@ -17,6 +17,10 @@ concurrency:
 
 jobs:
   # ── Unit: core engine + world layer ──────────────────────────────────────
+  # TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK: tests/unit/test_dirty_refresh.py (and two
+  # siblings wired into unit-infra below) sat directly under tests/unit/ with no owning job --
+  # same orphaned-test shape as TCK-20260817's 16 directories, just at file instead of directory
+  # granularity, found by the coverage check this ticket added.
   unit-core-world:
     name: "Unit · core / world"
     runs-on: ubuntu-latest
@@ -40,6 +44,7 @@ jobs:
                  tests/unit/worldmodules \
                  tests/unit/content \
                  tests/unit/content_semantics \
+                 tests/unit/test_dirty_refresh.py \
                  -m "not slow and not extra_slow" --tb=short -q
 
   # ── Unit: gameplay systems ────────────────────────────────────────────────
@@ -95,6 +100,8 @@ jobs:
                  tests/unit/docs \
                  tests/unit/certification \
                  tests/unit/tools \
+                 tests/unit/test_memory_probe.py \
+                 tests/unit/test_queue_worker_singleton.py \
                  -m "not slow and not extra_slow" --tb=short -q
 
   # ── Integration tests (excluding slow) ────────────────────────────────────
