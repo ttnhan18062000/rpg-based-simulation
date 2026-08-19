@@ -3835,10 +3835,10 @@
     assertions did.
   proof_type: regression
   test_path: >
-    tests/unit/optimization/test_movement_candidate_selector.py (4 new tests, all confirmed via
+    tests/unit/domains/optimization/test_movement_candidate_selector.py (4 new tests, all confirmed via
     git-stash bisection to genuinely fail pre-fix -- 3 with AttributeError since the shared
     helper doesn't exist pre-fix, 1 with the exact confirmed candidacy-exclusion bug). Full
-    scoped re-run: tests/unit/optimization/, tests/unit/movement/, tests/unit/combat/,
+    scoped re-run: tests/unit/domains/optimization/, tests/unit/movement/, tests/unit/combat/,
     tests/unit/tactical/, tests/unit/kernel/, tests/unit/core/, tests/unit/engine/,
     tests/unit/actions/, tests/unit/strategic/, tests/unit/observability/, tests/unit/entities/,
     tests/integration/combat/, tests/integration/pipeline/ -- 2047 passed, only the 1

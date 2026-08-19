@@ -205,4 +205,4 @@ Returns era summary with milestone count and name strings.
 | `src/api/routes/chronicle.py` | FastAPI router + registry |
 | `src/api/presenters/chronicle.py` | Pydantic response models |
 | `tests/api/test_chronicle_api.py` | REST API tests (7 tests) |
-| `tests/unit/chronicle/test_chronicle_compiler.py` | Unit tests for pipeline |
+| `tests/unit/domains/chronicle/test_chronicle_compiler.py` | Unit tests for pipeline |

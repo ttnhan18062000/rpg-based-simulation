@@ -1,5 +1,5 @@
 """
-tests/unit/chronicle/test_chronicle_compiler.py
+tests/unit/domains/chronicle/test_chronicle_compiler.py
 ────────────────────────────────────────────────────────────────────────────────
 Unit tests for EventSignificanceScorer (E51A), ChronicleGrouper (E51B),
 ChronicleNamer (E51C), and ChronicleRenderer (E51D).

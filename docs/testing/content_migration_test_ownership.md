@@ -27,6 +27,7 @@ coverage areas, and specifies where new content-migration tests belong.
 | `tests/unit/scenarios/` | unit | SimulationScenarioDefinition, ScenarioSetupResolver, ModifierApplicator, ScenarioSetupContext | — |
 | `tests/unit/core/` | unit | Core dataclasses, registry bootstrapping, mode enum | — |
 | `tests/unit/entities/` | unit | Entity lifecycle, identity resolution, role/faction compat | — |
+| `tests/unit/domains/` | unit | All domain-subpackage suites with test coverage (18 of `src/domains/`'s 19 subpackages): `adventure`, `campaigns`, `chronicle`, `combat_engagement`, `commitment`, `cooperation`, `culture`, `emotion`, `faction`, `feature_packs`, `information`, `memory`, `motivation`, `optimization`, `perception`, `progression`, `time`, `world_emergence` — `demographics` has no test directory (separate, out-of-scope coverage question) | — |
 | `tests/integration/content/` | integration, worldassembly | Strict world matrix (cumulative module loading), active-data-consumer (integration) | — |
 | `tests/integration/worldassembly/` | integration, worldassembly | Real catalog assembly, real module normalization, world compositions | — |
 | `tests/integration/scenarios/` | integration | ScenarioSetupResolver against real catalog, full setup pipeline | — |

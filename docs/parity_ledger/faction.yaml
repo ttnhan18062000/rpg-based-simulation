@@ -14,7 +14,7 @@
     factions dict (not just apply-path persistence of subsequent updates) is covered
     by FAC-012 — see WorldCompiler.compile()/WorldAssemblyResolver.assemble().
   proof_type: parity
-  test_path: tests/unit/faction/test_faction_state.py
+  test_path: tests/unit/domains/faction/test_faction_state.py
   divergence_note: null
   support_boundary: null
 
@@ -28,7 +28,7 @@
   v2_evidence: >
     src/engine/apply.py (tension clamp logic, TCK-20260619-E53Aa-FACTION-STATE)
   proof_type: parity
-  test_path: tests/unit/faction/test_faction_state.py::test_faction_update_apply_tension_delta
+  test_path: tests/unit/domains/faction/test_faction_state.py::test_faction_update_apply_tension_delta
   divergence_note: null
   support_boundary: null
 
@@ -43,7 +43,7 @@
     src/engine/faction_decision.py + src/engine/pipeline.py (faction_decision inline block,
     TCK-20260619-E53Ab-DECISION-PHASE)
   proof_type: parity
-  test_path: tests/unit/faction/test_faction_decision_phase.py
+  test_path: tests/unit/domains/faction/test_faction_decision_phase.py
   divergence_note: null
   support_boundary: null
 - id: FACTION-TENSION-001
@@ -60,7 +60,7 @@
     src/engine/pipeline.py — faction_awareness run_phase block;
     src/engine/apply.py:345 — tension clamped max(0.0, min(1.0, ...))
   proof_type: parity
-  test_path: tests/unit/faction/test_faction_awareness.py
+  test_path: tests/unit/domains/faction/test_faction_awareness.py
   divergence_note: null
   support_boundary: null
 
@@ -79,7 +79,7 @@
     src/core/updates.py (FactionUpdate.diplomatic_relations_set);
     src/engine/apply.py (DiplomaticState coercion in merge)
   proof_type: parity
-  test_path: tests/unit/faction/test_diplomacy.py
+  test_path: tests/unit/domains/faction/test_diplomacy.py
   divergence_note: null
   support_boundary: null
 
@@ -98,7 +98,7 @@
     src/domains/faction/diplomatic_actions.py (DiplomaticActionHandler.handle);
     src/core/updates.py (FactionUpdate.diplomatic_relations_set)
   proof_type: parity
-  test_path: tests/unit/faction/test_diplomacy.py
+  test_path: tests/unit/domains/faction/test_diplomacy.py
   divergence_note: null
   support_boundary: null
 
@@ -116,7 +116,7 @@
     src/domains/faction/diplomatic_state_machine.py (compute_transitions, compute_common_enemy_pairs);
     src/engine/pipeline.py (Phase 8d diplomatic_transitions run_phase block)
   proof_type: parity
-  test_path: tests/unit/faction/test_diplomacy.py
+  test_path: tests/unit/domains/faction/test_diplomacy.py
   divergence_note: null
   support_boundary: null
 
@@ -138,7 +138,7 @@
     src/engine/pipeline.py (Phase 8d world_events_add);
     src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP, _extract_narrative_entries)
   proof_type: parity
-  test_path: tests/unit/faction/test_diplomacy.py
+  test_path: tests/unit/domains/faction/test_diplomacy.py
   divergence_note: null
   support_boundary: null
 
@@ -159,7 +159,7 @@
     _find_contested_region, _find_guard_entities_in_region);
     src/engine/pipeline.py (Phase 8e military_conflict run_phase block)
   proof_type: parity
-  test_path: tests/unit/faction/test_siege_model.py
+  test_path: tests/unit/domains/faction/test_siege_model.py
   divergence_note: null
   support_boundary: null
 
@@ -180,7 +180,7 @@
     service_availability_delta, merge());
     src/engine/apply_plan.py (region apply block lines 125-140)
   proof_type: parity
-  test_path: tests/unit/faction/test_siege_model.py
+  test_path: tests/unit/domains/faction/test_siege_model.py
   divergence_note: null
   support_boundary: null
 
@@ -204,7 +204,7 @@
     src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["TERRITORY_TRANSFERRED"]);
     src/engine/apply.py (lines 328-354, territory_add/remove application)
   proof_type: parity
-  test_path: tests/unit/faction/test_territory_transfer.py; tests/integration/scenarios/test_faction_campaign.py
+  test_path: tests/unit/domains/faction/test_territory_transfer.py; tests/integration/scenarios/test_faction_campaign.py
   divergence_note: >
     RegionState.owner_faction_id not updated on transfer (int vs str type mismatch).
     Authoritative ownership via FactionState.territory only.
@@ -230,7 +230,7 @@
     src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["WAR_ENDED_EXHAUSTION"]);
     src/domains/faction/diplomatic_state_machine.py (compute_transitions WAR→NEUTRAL rule)
   proof_type: parity
-  test_path: tests/unit/faction/test_war_exhaustion.py; tests/integration/scenarios/test_faction_campaign.py::test_war_exhaustion_ends_conflict
+  test_path: tests/unit/domains/faction/test_war_exhaustion.py; tests/integration/scenarios/test_faction_campaign.py::test_war_exhaustion_ends_conflict
   divergence_note: >
     SEEK_PEACE directive (transient FactionDirective) is not implemented — FactionDirective
     cannot flow through StateUpdate. The autonomous Phase 8d WAR→NEUTRAL rule covers the
@@ -286,7 +286,7 @@
     test_no_faction_tension_overrides_matches_current_behavior,
     test_faction_tension_overrides_unknown_faction_raises,
     test_faction_tension_overrides_out_of_range_raises;
-    tests/unit/faction/test_diplomacy.py::test_urban_political_seeded_tension_fires_tense_transition
+    tests/unit/domains/faction/test_diplomacy.py::test_urban_political_seeded_tension_fires_tense_transition
   divergence_note: null
   support_boundary: null
 

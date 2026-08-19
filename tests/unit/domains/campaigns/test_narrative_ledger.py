@@ -1,5 +1,5 @@
 """
-tests/unit/campaigns/test_narrative_ledger.py
+tests/unit/domains/campaigns/test_narrative_ledger.py
 ────────────────────────────────────────────────────────────────────────────────
 Unit tests for NarrativeLedger service and NarrativeLedgerEntry extraction.
 (TCK-20260619-E32D-NARRATIVE-LEDGER)

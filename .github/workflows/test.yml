@@ -40,8 +40,6 @@ jobs:
                  tests/unit/worldmodules \
                  tests/unit/content \
                  tests/unit/content_semantics \
-                 tests/unit/feature_packs \
-                 tests/unit/culture \
                  -m "not slow and not extra_slow" --tb=short -q
 
   # ── Unit: gameplay systems ────────────────────────────────────────────────
@@ -63,10 +61,8 @@ jobs:
                  tests/unit/progression \
                  tests/unit/quest \
                  tests/unit/movement \
-                 tests/unit/faction \
                  tests/unit/motivation \
                  tests/unit/tactical \
-                 tests/unit/campaigns \
                  tests/unit/scenarios \
                  tests/unit/systems \
                  tests/unit/actions \
@@ -86,7 +82,6 @@ jobs:
         run: |
           pytest tests/unit/domains \
                  tests/unit/observability \
-                 tests/unit/optimization \
                  tests/unit/lab \
                  tests/unit/lab_agent \
                  tests/unit/api \
@@ -96,7 +91,6 @@ jobs:
                  tests/unit/perf \
                  tests/unit/entity \
                  tests/unit/entities \
-                 tests/unit/chronicle \
                  tests/unit/cognition \
                  tests/unit/docs \
                  tests/unit/certification \

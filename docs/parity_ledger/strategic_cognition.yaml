@@ -2674,7 +2674,7 @@
     src/engine/faction_decision.py — FactionDecisionPhase.execute() directive emission rules
   proof_type: parity
   test_path: >-
-    tests/unit/faction/test_faction_directive_propagation.py
+    tests/unit/domains/faction/test_faction_directive_propagation.py
   divergence_note: >-
     Urgency deltas (+2.0, +1.5, +3.0) can push total urgency above the prior ~2.0 ceiling.
     This is intentional: faction pressure is designed to override individual need urgency.

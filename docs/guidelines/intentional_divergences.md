@@ -359,7 +359,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
   live conditional behavior change (`AdventureRouteGenerator`/`scoring.py`) require both
   `ENABLE_SELF_MODEL_COGNITION` and `ENABLE_ADVENTURE_ROUTING` ON simultaneously — no shipped
   `config/`/`data/worlds/` runtime profile combines these flags today.
-- **Verification**: `tests/unit/optimization/test_component_patches.py` (6 new `SelfModelPatch`
+- **Verification**: `tests/unit/domains/optimization/test_component_patches.py` (6 new `SelfModelPatch`
   tests — noop detection, merge, apply-sets-changes-key); `tests/integration/optimization/test_component_patch_apply_parity.py::test_self_model_patch_apply_parity_durable_materialization`
   (direct end-to-end regression guard through `ApplyPath.apply_generation()`, full bundle equality);
   `tests/unit/core/test_entity_integrity.py::test_self_model_participates_in_canonical_hash` and
@@ -898,7 +898,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
   breakdown. The remaining illegal reasons are `OUT_OF_RANGE` (now dominant — expected, since
   random sampling catches entities mid-approach) and `FRIENDLY_FIRE_ILLEGAL`. Scoped pytest
   (`tests/unit/movement/`, `tests/unit/combat/`, `tests/unit/core/`, `tests/unit/kernel/`,
-  `tests/unit/tactical/`, `tests/unit/optimization/`, `tests/unit/worldbuilding/`,
+  `tests/unit/tactical/`, `tests/unit/domains/optimization/`, `tests/unit/worldbuilding/`,
   `tests/unit/worldassembly/`, `tests/unit/strategic/`, `tests/unit/entities/`,
   `tests/unit/content/`, `tests/unit/resource/`, `tests/unit/social/`, plus integration combat/
   pipeline/determinism suites): zero new regressions — the only failures present were the 2

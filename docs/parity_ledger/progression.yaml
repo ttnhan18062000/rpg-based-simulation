@@ -1152,7 +1152,7 @@
     CampaignState.progression_plans: Dict[int, ProgressionPlan] field with
     str(k)/int(k) JSON key convention (TCK-20260619-E61A-PLAN-MODEL)
   proof_type: parity
-  test_path: tests/unit/campaigns/test_progression_plan.py
+  test_path: tests/unit/domains/campaigns/test_progression_plan.py
   divergence_note: null
   support_boundary: null
 - id: PROG-111
@@ -1168,7 +1168,7 @@
     drops dead entity plans; _build_initial_state() calls import_plan() for each
     entity with a plan (TCK-20260619-E61B-PLAN-EXPORTER)
   proof_type: parity
-  test_path: tests/unit/campaigns/test_progression_plan_exporter.py, tests/unit/campaigns/test_progression_plan_importer.py, tests/unit/campaigns/test_orchestrator_plan_wiring.py
+  test_path: tests/unit/domains/campaigns/test_progression_plan_exporter.py, tests/unit/domains/campaigns/test_progression_plan_importer.py, tests/unit/domains/campaigns/test_orchestrator_plan_wiring.py
   divergence_note: null
   support_boundary: null
 - id: PROG-112
@@ -1201,7 +1201,7 @@
     Wired in CampaignOrchestrator._build_initial_state() after ProgressionPlanImporter.
     (TCK-20260619-E61D-PLAN-REVISION)
   proof_type: parity
-  test_path: tests/unit/campaigns/test_plan_revision.py, tests/integration/campaigns/test_progression_planner_three_episode.py
+  test_path: tests/unit/domains/campaigns/test_plan_revision.py, tests/integration/campaigns/test_progression_planner_three_episode.py
   divergence_note: null
   support_boundary: null
 - id: PROG-114

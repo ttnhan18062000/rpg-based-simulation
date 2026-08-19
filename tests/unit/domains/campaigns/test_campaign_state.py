@@ -1,5 +1,5 @@
 """
-tests/unit/campaigns/test_campaign_state.py
+tests/unit/domains/campaigns/test_campaign_state.py
 ───────────────────────────────────────────────────────────────────────────────
 Unit tests for CampaignState data model (TCK-20260619-E32B-CAMPAIGN-STATE).
 
@@ -287,7 +287,7 @@ def test_campaign_state_importable():
 # ---------------------------------------------------------------------------
 
 def test_campaign_state_module_has_no_engine_imports():
-    state_path = Path(__file__).parent.parent.parent.parent / "src" / "domains" / "campaigns" / "state.py"
+    state_path = Path(__file__).parent.parent.parent.parent.parent / "src" / "domains" / "campaigns" / "state.py"
     source = state_path.read_text()
     tree = ast.parse(source)
 

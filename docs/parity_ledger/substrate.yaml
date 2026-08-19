@@ -4608,10 +4608,10 @@
     `dungeon_crawl` and `urban_political`.
   proof_type: regression
   test_path: >
-    tests/unit/optimization/test_movement_candidate_selector.py (4 new tests, including
+    tests/unit/domains/optimization/test_movement_candidate_selector.py (4 new tests, including
     test_movement_selector_includes_pursuer_arrived_at_stale_snapshot_but_target_moved, all
     confirmed via git-stash bisection to genuinely fail pre-fix). Full scoped re-run:
-    tests/unit/optimization/, tests/unit/movement/, tests/unit/combat/, tests/unit/tactical/,
+    tests/unit/domains/optimization/, tests/unit/movement/, tests/unit/combat/, tests/unit/tactical/,
     tests/unit/kernel/, tests/unit/core/, tests/unit/engine/, tests/unit/actions/,
     tests/unit/strategic/, tests/unit/observability/, tests/unit/entities/,
     tests/integration/combat/, tests/integration/pipeline/ -- 2047 passed, only the 1

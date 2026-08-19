@@ -1,5 +1,5 @@
 """
-tests/unit/campaigns/test_campaign_orchestrator.py
+tests/unit/domains/campaigns/test_campaign_orchestrator.py
 ────────────────────────────────────────────────────────────────────────────────
 Unit tests for CampaignOrchestrator (TCK-20260619-E32C-ORCHESTRATOR).
 
