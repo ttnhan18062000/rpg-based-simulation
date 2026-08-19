@@ -178,6 +178,19 @@ flagged stale (the motivating case: `TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC`,
 whose 10 child tickets were all DONE before the epic ticket itself was left
 behind in `tickets/todos/`).
 
+**Stale vs. BLOCKED — a third, status-aware bucket.** An epic ticket whose
+own body `## Status` field reads `BLOCKED` is a deliberately governed pause,
+not neglect, regardless of how idle its children have gone —
+`is_epic_blocked()` reads `EpicCandidate.status` (populated at discovery time
+from the ticket's `## Status` section) and routes it into a third bucket that
+never overlaps with stale or never-started. `find_stale_epics` (the hook's
+fire-trigger) never returns a `BLOCKED` candidate; `compute_stale_epics_report`
+still surfaces it, separately, under "Informational: BLOCKED epics (not
+stale — deliberately parked):". `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC`
+is the concrete real example — parked pending an explicit owner decision, with
+a dated rationale in its own body — and is the case that motivated this
+distinction (`TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC`).
+
 Advisory-only and read-only, matching `retro_nudge_hook.py`'s contract: it
 never mutates a ticket file's `Status`/`phase`, never raises past its own
 entry point, and never blocks a tool call.
@@ -190,7 +203,8 @@ A `PostToolUse` hook entry (`epic_staleness_check.py --hook`, wired alongside
 `retro_nudge_hook.py` in `.claude/settings.json`) fires an `additionalContext`
 nudge, at most once per session (own state file,
 `.claude/.epic_staleness_state.json`), only when the **stale** list is
-non-empty — the never-started/informational list never reaches the hook.
+non-empty — the never-started and BLOCKED informational lists never reach
+the hook.
 
 ---
 

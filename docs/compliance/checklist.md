@@ -1399,17 +1399,17 @@ Relevant original source/test evidence:
 
 ### RabbitMQ disabled-mode behavior
 
-- [x] INFRA-007: `DISABLE_RABBITMQ=1` causes RabbitMQ client code to enter explicit disabled mode.
-- [x] INFRA-008: RabbitMQ client imports do not crash when disabled.
-- [x] INFRA-009: RabbitMQ public accessors return safe no-op values (`None`) when disabled.
-- [x] INFRA-010: RabbitMQ disabled-mode behavior remains safe even when broker libraries are missing.
+- [ ] INFRA-007: `DISABLE_RABBITMQ=1` causes RabbitMQ client code to enter explicit disabled mode. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
+- [ ] INFRA-008: RabbitMQ client imports do not crash when disabled. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
+- [ ] INFRA-009: RabbitMQ public accessors return safe no-op values (`None`) when disabled. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
+- [ ] INFRA-010: RabbitMQ disabled-mode behavior remains safe even when broker libraries are missing. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
 
 ### Kafka disabled-mode behavior
 
-- [x] INFRA-011: `DISABLE_KAFKA=1` causes Kafka client code to enter explicit disabled mode.
-- [x] INFRA-012: Kafka client imports do not crash when disabled.
-- [x] INFRA-013: Kafka public accessors return safe no-op values (`None`) when disabled.
-- [x] INFRA-014: Kafka disabled-mode behavior remains safe even when broker libraries are missing.
+- [ ] INFRA-011: `DISABLE_KAFKA=1` causes Kafka client code to enter explicit disabled mode. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
+- [ ] INFRA-012: Kafka client imports do not crash when disabled. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
+- [ ] INFRA-013: Kafka public accessors return safe no-op values (`None`) when disabled. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
+- [ ] INFRA-014: Kafka disabled-mode behavior remains safe even when broker libraries are missing. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
 
 ### Redis disabled / missing-package behavior
 
@@ -1433,12 +1433,12 @@ Relevant original source/test evidence:
 
 ### Worker fallback semantics
 
-- [x] INFRA-017: Worker pool falls back to inline/local execution when broker transport is unavailable. <!-- ID: INFRA-017 SOURCE: src/engine/worker_manager.py TEST: tests/integration/kernel/test_determinism_suite.py PROOF: integration -->
+- [ ] INFRA-017: Worker pool falls back to inline/local execution when broker transport is unavailable. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC) <!-- ID: INFRA-017 SOURCE: src/engine/worker_manager.py TEST: tests/integration/kernel/test_determinism_suite.py PROOF: integration -->
 - [x] INFRA-018: Worker pool does not require live RabbitMQ/Kafka to execute local simulation behavior. <!-- ID: INFRA-018 SOURCE: src/engine/kernel.py TEST: tests/integration/kernel/test_determinism_suite.py PROOF: integration -->
 - [x] INFRA-019: Worker fallback preserves authoritative action generation semantics.
 - [x] INFRA-020: Worker fallback preserves deterministic ordering expectations in local mode.
 - [x] INFRA-021: Worker shutdown remains safe after fallback execution paths.
-- [x] INFRA-022: Missing broker infrastructure does not block minimal simulation startup.
+- [ ] INFRA-022: Missing broker infrastructure does not block minimal simulation startup. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
 
 ### Import/runtime isolation
 
@@ -1538,7 +1538,7 @@ Relevant original source/test evidence:
 ### Operational observability
 
 - [x] INFRA-040: Engine-side metrics remain available without forcing gameplay divergence.
-- [x] INFRA-041: Metrics do not rely on broker-only paths if local/headless execution is supposed to work without brokers.
+- [ ] INFRA-041: Metrics do not rely on broker-only paths if local/headless execution is supposed to work without brokers. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
 - [x] INFRA-042: Monitoring compatibility is verified under realistic stack conditions, not just unit stubs.
 
 ---
@@ -1584,9 +1584,9 @@ Relevant original source/test evidence:
 
 ### Headless execution path
 
-- [x] INFRA-054: A minimal production-like headless run can still execute without optional brokers when disabled.
+- [ ] INFRA-054: A minimal production-like headless run can still execute without optional brokers when disabled. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
 - [x] INFRA-055: Headless run still produces the expected result artifacts (at minimum replay, and where applicable manifest/graph outputs).
-- [x] INFRA-056: Headless runner import remains isolated from optional broker setup.
+- [ ] INFRA-056: Headless runner import remains isolated from optional broker setup. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
 - [x] INFRA-057: Final-system path remains suitable for regression use rather than demo-only use.
 
 ### Artifact consistency
@@ -1603,10 +1603,10 @@ Only include source-grounded unhappy paths.
 
 ### Disabled/missing dependency paths
 
-- [x] INFRA-061: Missing RabbitMQ package with disabled flag does not crash import.
-- [x] INFRA-062: Missing Kafka package with disabled flag does not crash import.
+- [ ] INFRA-061: Missing RabbitMQ package with disabled flag does not crash import. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
+- [ ] INFRA-062: Missing Kafka package with disabled flag does not crash import. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
 - [x] INFRA-063: Missing Redis package does not crash safe initialization paths where optional.
-- [x] INFRA-064: Missing broker dependencies do not block headless runner imports.
+- [ ] INFRA-064: Missing broker dependencies do not block headless runner imports. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC)
 
 ### Runtime degradation paths
 
@@ -2717,12 +2717,12 @@ Add:
 - [x] SUB-304: Overload behavior assertion preserves capacity failure semantics. <!-- ID: SUB-304 SOURCE: src/systems/world_systems/routine.py TEST: tests/unit/systems/test_routine_v2.py PROOF: unit -->
 - [x] SUB-305: Combat arena helper preserves default factions, hostility, tick running, and entity lookup semantics. <!-- ID: SUB-305 SOURCE: src/systems/world_systems/routine.py TEST: tests/unit/systems/test_routine_v2.py PROOF: unit -->
 - [x] SUB-306: Legacy stat helper preserves expected combat math inputs. <!-- ID: SUB-306 SOURCE: src/systems/world_systems/routine.py TEST: tests/unit/systems/test_routine_v2.py PROOF: unit -->
-- [x] INFRA-071: Simulation step runs when brokers are missing. <!-- ID: INFRA-071 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
-- [x] INFRA-072: RabbitMQ missing-package path fails closed or disables cleanly. <!-- ID: INFRA-072 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
-- [x] INFRA-073: Kafka missing-package path fails closed or disables cleanly. <!-- ID: INFRA-073 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
-- [x] INFRA-074: Engine manager recovery handles missing Kafka. <!-- ID: INFRA-074 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
-- [x] INFRA-075: Worker pool RabbitMQ dispatch contract is preserved if broker mode is supported. <!-- ID: INFRA-075 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
-- [x] INFRA-076: Kafka recovery can reconstruct from snapshot plus event stream. <!-- ID: INFRA-076 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
+- [ ] INFRA-071: Simulation step runs when brokers are missing. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC) <!-- ID: INFRA-071 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
+- [ ] INFRA-072: RabbitMQ missing-package path fails closed or disables cleanly. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC) <!-- ID: INFRA-072 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
+- [ ] INFRA-073: Kafka missing-package path fails closed or disables cleanly. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC) <!-- ID: INFRA-073 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
+- [ ] INFRA-074: Engine manager recovery handles missing Kafka. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC) <!-- ID: INFRA-074 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
+- [ ] INFRA-075: Worker pool RabbitMQ dispatch contract is preserved if broker mode is supported. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC) <!-- ID: INFRA-075 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
+- [ ] INFRA-076: Kafka recovery can reconstruct from snapshot plus event stream. (unverified — cited test file does not exist; see TCK-20260817-DEAD-INFRA-REMOVAL-EPIC) <!-- ID: INFRA-076 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
 - [x] INFRA-077: Live-vs-manual replay produces same world state for loot recovery. <!-- ID: INFRA-077 SOURCE: src/engine/executor.py TEST: tests/unit/platform/test_infra_recovery.py PROOF: unit -->
 
 ---

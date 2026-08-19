@@ -9,15 +9,11 @@ services:
     restart: unless-stopped
     environment:
       - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - KAFKA_URL=kafka:29092
     volumes:
       # Optional: mount data directory for persistent game state / config changes
       - ./data:/app/data
     depends_on:
       - redis
-      - rabbitmq
-      - kafka
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
       interval: 10s
@@ -39,21 +35,6 @@ services:
       timeout: 5s
       retries: 5
 
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
-    restart: unless-stopped
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-
   ai_worker:
     build:
       context: .
@@ -62,13 +43,9 @@ services:
     command: python -m src.observability.anomaly.worker
     environment:
       - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - KAFKA_URL=kafka:29092
     depends_on:
       redis:
         condition: service_started
-      rabbitmq:
-        condition: service_healthy
     restart: unless-stopped
     # Use deploy block to easily scale workers: docker compose up --scale ai_worker=3
     deploy:
@@ -117,38 +94,6 @@ services:
     depends_on:
       - prometheus
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    volumes:
-      - zookeeper_data:/var/lib/zookeeper/data
-
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    depends_on:
-      - zookeeper
-    ports:
-      - "${KAFKA_PORT:-9092}:9092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${KAFKA_PORT:-9092}
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_MESSAGE_MAX_BYTES: 10000000
-      KAFKA_REPLICA_FETCH_MAX_BYTES: 10000000
-    volumes:
-      - kafka_data:/var/lib/kafka/data
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
-      interval: 10s
-      timeout: 10s
-      retries: 15
-      start_period: 45s
-
   loki:
     image: grafana/loki:3.0.0
     ports:
@@ -182,6 +127,8 @@ services:
       - LOKI_URL=http://loki:3100
       - POLL_INTERVAL=10
       - LOG_LEVEL=INFO
+      - SIM_ALERTS_WEBHOOK_URL=${SIM_ALERTS_WEBHOOK_URL:-}
+      - SIM_ALERTS_WEBHOOK_ENABLED=${SIM_ALERTS_WEBHOOK_ENABLED:-false}
     depends_on:
       - backend
       - loki
@@ -192,6 +139,3 @@ volumes:
   prometheus_data:
   grafana_data:
   redis_data:
-  rabbitmq_data:
-  zookeeper_data:
-  kafka_data:

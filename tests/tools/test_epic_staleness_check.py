@@ -31,6 +31,7 @@ from epic_staleness_check import (  # noqa: E402
     compute_stale_epics_report,
     discover_candidate_epics,
     find_stale_epics,
+    is_epic_blocked,
     is_epic_never_started,
     is_epic_stale,
     resolve_child_activity,
@@ -39,7 +40,8 @@ from epic_staleness_check import (  # noqa: E402
 NOW = datetime(2026, 7, 10, 12, 0, 0, tzinfo=timezone.utc)
 
 
-def _write_ticket(path: Path, ticket_id: str, tier: str, date_str: str, related_tickets: str = ""):
+def _write_ticket(path: Path, ticket_id: str, tier: str, date_str: str, related_tickets: str = "", body_status: str = ""):
+    status_section = f"## Status\n{body_status}\n\n" if body_status else ""
     path.write_text(
         f"---\n"
         f"status: active\n"
@@ -48,6 +50,7 @@ def _write_ticket(path: Path, ticket_id: str, tier: str, date_str: str, related_
         f"date: {date_str}\n"
         f"---\n\n"
         f"# {ticket_id}\n\n"
+        f"{status_section}"
         f"## Tier\n{tier}\n\n"
         f"## Related Tickets\n{related_tickets}\n"
     )
@@ -441,3 +444,195 @@ def test_dual_presence_prefers_inprogress_candidate(tmp_path):
     survivor = candidates[0]
     assert survivor.mode == "epic_id"
     assert survivor.source_path.parent == inprogress_dir
+
+
+# ---------------------------------------------------------------------------
+# 11. BLOCKED status awareness (TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC)
+#
+# Modeled on the real false-positive case study, TCK-20260730-CODEX-RUNTIME-
+# ACTIVATION-EPIC: an epic ticket whose body `## Status` reads `BLOCKED`,
+# with real child activity that has since gone idle past the window. This
+# must never reach find_stale_epics()'s return (the hook fire-trigger), and
+# must instead surface in compute_stale_epics_report()'s new, separate
+# "Informational: BLOCKED epics" section — never silently dropped.
+# ---------------------------------------------------------------------------
+
+def test_blocked_epic_with_stale_looking_activity_is_never_in_find_stale_epics(tmp_path):
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    working_log_path = tmp_path / "working_log.csv"
+    runs_jsonl_path = tmp_path / "runs.jsonl"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    _write_ticket(
+        inprogress_dir / "TCK-20260601-BLOCKED-EPIC.md",
+        "TCK-20260601-BLOCKED-EPIC",
+        "epic",
+        "2026-06-01",
+        related_tickets="TCK-20260601-BLOCKED-CHILD",
+        body_status="BLOCKED",
+    )
+    # Same 8-day-idle shape as test_epic_with_all_children_stale — proves the
+    # BLOCKED guard suppresses the flag despite genuinely idle child activity,
+    # not because the activity itself is missing or recent.
+    working_log_path.write_text(
+        "timestamp,ticket_id,title,status,summary,artifacts_path\n"
+        "2026-07-02T00:00:00Z,TCK-20260601-BLOCKED-CHILD,t,DONE,s,none\n"
+    )
+    runs_jsonl_path.write_text("")
+
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    assert "TCK-20260601-BLOCKED-EPIC" not in [c.epic_id for c in stale]
+
+    report = compute_stale_epics_report(
+        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW
+    )
+    stale_section, rest = report.split("Informational: never-started epics")
+    assert "TCK-20260601-BLOCKED-EPIC" not in stale_section
+    blocked_section = rest.split("Informational: BLOCKED epics")[1]
+    assert "TCK-20260601-BLOCKED-EPIC" in blocked_section
+    assert "8 days idle" in blocked_section
+
+
+def test_blocked_epic_does_not_land_in_never_started_bucket(tmp_path):
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    working_log_path = tmp_path / "working_log.csv"
+    runs_jsonl_path = tmp_path / "runs.jsonl"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    _write_ticket(
+        inprogress_dir / "TCK-20260601-BLOCKED-NO-ACTIVITY-EPIC.md",
+        "TCK-20260601-BLOCKED-NO-ACTIVITY-EPIC",
+        "epic",
+        "2026-06-01",
+        related_tickets="TCK-20260601-BLOCKED-NO-ACTIVITY-CHILD",
+        body_status="BLOCKED",
+    )
+    working_log_path.write_text("timestamp,ticket_id,title,status,summary,artifacts_path\n")
+    runs_jsonl_path.write_text("")
+
+    report = compute_stale_epics_report(
+        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW
+    )
+    never_started_section, blocked_section = report.split("Informational: BLOCKED epics")
+    assert "TCK-20260601-BLOCKED-NO-ACTIVITY-EPIC" not in never_started_section
+    assert "TCK-20260601-BLOCKED-NO-ACTIVITY-EPIC" in blocked_section
+    assert "no child activity recorded" in blocked_section
+
+
+def test_genuinely_stale_non_blocked_epic_still_flagged_regression_guard(tmp_path):
+    """Acceptance-critical: the BLOCKED fix must not weaken real staleness
+    detection for epics that are simply idle, not deliberately parked."""
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    working_log_path = tmp_path / "working_log.csv"
+    runs_jsonl_path = tmp_path / "runs.jsonl"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    _write_ticket(
+        inprogress_dir / "TCK-20260601-STILL-STALE-EPIC.md",
+        "TCK-20260601-STILL-STALE-EPIC",
+        "epic",
+        "2026-06-01",
+        related_tickets="TCK-20260601-STILL-STALE-CHILD",
+        body_status="INPROGRESS",
+    )
+    working_log_path.write_text(
+        "timestamp,ticket_id,title,status,summary,artifacts_path\n"
+        "2026-07-02T00:00:00Z,TCK-20260601-STILL-STALE-CHILD,t,DONE,s,none\n"
+    )
+    runs_jsonl_path.write_text("")
+
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    assert "TCK-20260601-STILL-STALE-EPIC" in [c.epic_id for c in stale]
+
+
+def test_is_epic_blocked_reads_status_field():
+    blocked = EpicCandidate(
+        epic_id="TCK-X", source_path=Path("."), mode="epic_id", child_ids=[], status="BLOCKED"
+    )
+    open_status = EpicCandidate(
+        epic_id="TCK-Y", source_path=Path("."), mode="epic_id", child_ids=[], status="OPEN"
+    )
+    unknown_status = EpicCandidate(
+        epic_id="TCK-Z", source_path=Path("."), mode="epic_id", child_ids=[], status=None
+    )
+    assert is_epic_blocked(blocked) is True
+    assert is_epic_blocked(open_status) is False
+    assert is_epic_blocked(unknown_status) is False
+
+
+def test_folder_mode_no_epic_ticket_file_leaves_status_none_not_crash(tmp_path):
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    folder = todos_dir / "sequence-only-epic"
+    folder.mkdir()
+    (folder / "SEQUENCE.md").write_text(
+        "Epic: `FOLDER-tickets-todos-sequence-only-epic`.\n\n"
+        "| Order | Ticket |\n|---|---|\n"
+        "| 1 | TCK-20260701-SEQ-ONLY-CHILD |\n"
+    )
+
+    candidates = discover_candidate_epics(inprogress_dir, todos_dir)
+
+    assert len(candidates) == 1
+    assert candidates[0].status is None
+    assert is_epic_blocked(candidates[0]) is False
+
+
+def test_real_codex_runtime_activation_epic_is_status_aware(tmp_path):
+    """Integration-style confirmation against the real repo ticket that
+    motivated this fix, TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC — read-only,
+    copies the real file into a synthetic inprogress_dir rather than pointing
+    the check at the live tickets/ tree (which would be sensitive to
+    unrelated repo state changing over time)."""
+    real_ticket_path = (
+        Path(__file__).parent.parent.parent
+        / "tickets" / "inprogress" / "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC.md"
+    )
+    if not real_ticket_path.exists():
+        return
+
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    working_log_path = tmp_path / "working_log.csv"
+    runs_jsonl_path = tmp_path / "runs.jsonl"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    (inprogress_dir / real_ticket_path.name).write_text(real_ticket_path.read_text())
+    # Old activity for one of the epic's real children, past the 5-day window,
+    # to reproduce the exact false-positive shape this ticket was filed against.
+    working_log_path.write_text(
+        "timestamp,ticket_id,title,status,summary,artifacts_path\n"
+        "2026-07-31T00:00:00Z,TCK-20260730-CLAUDE-EXECUTION-IDENTITY,t,DONE,s,none\n"
+    )
+    runs_jsonl_path.write_text("")
+
+    # The real ticket is dated 2026-07-30; use a "now" after both that date
+    # and the synthetic child activity above, so the idle gap is genuine
+    # rather than an artifact of NOW predating the fixture's own dates.
+    integration_now = datetime(2026, 8, 19, 12, 0, 0, tzinfo=timezone.utc)
+
+    candidates = discover_candidate_epics(inprogress_dir, todos_dir)
+    epic = next(c for c in candidates if c.epic_id == "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC")
+    assert epic.status == "BLOCKED"
+    assert is_epic_blocked(epic) is True
+
+    stale = find_stale_epics(
+        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=integration_now
+    )
+    assert "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC" not in [c.epic_id for c in stale]
+
+    report = compute_stale_epics_report(
+        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=integration_now
+    )
+    blocked_section = report.split("Informational: BLOCKED epics")[1]
+    assert "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC" in blocked_section

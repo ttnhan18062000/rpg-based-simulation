@@ -12,6 +12,17 @@ tags: [architecture, engine]
 **Source:** `docs/audits/D23_architecture_resilience.md` §B, §E, §I (R1); `docs/audits/D24_codebase_health_observatory.md` §B, §C, §I
 **Priority:** P0 — the one finding in either audit that can take down a real subsystem for a reason unrelated to that subsystem's own function.
 
+## Status
+Resolved by `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC`. Both Problem items below now describe
+pre-removal history, not current state: `pika`/`confluent-kafka` were dropped from
+`pyproject.toml`, and the `rabbitmq`/`kafka`/`zookeeper` services (plus their env vars,
+`depends_on` gates, and volumes) were dropped from `docker-compose.yml`. `src_legacy/`/
+`tests_legacy/` were deleted, with the 3 git-tracked, load-bearing oracle `results.json` files
+relocated to `tests/parity/oracles/` first (per the ticket's corrected scope — see its
+Acceptance Criteria — which supersedes this plan's line 37 below, since a literal wholesale
+delete would have broken `tests/integrity/test_parity_guards.py`). Left in place (not archived)
+per this repo's convention that whole-epic archival is a separate human decision.
+
 ## Problem
 
 Two independent, unrelated pieces of dead weight, both confirmed directly:

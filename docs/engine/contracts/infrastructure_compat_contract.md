@@ -29,5 +29,5 @@ The engine follows a strict configuration precedence order:
 - **Disabled-Mode Branching**: When `BROKER_DISABLED=1` is set, the engine bypasses thread pool initialization and executes all work packets synchronously in the kernel thread.
 
 ## 4. Divergences & Exclusions
-- **RabbitMQ/Kafka Integration**: External broker support is not included in the current baseline. All "Broker" interactions are currently handled via the internal `WorkerManager`.
+- **RabbitMQ/Kafka Integration**: External broker support is not included in the current baseline. All "Broker" interactions are currently handled via the internal `WorkerManager`. As of `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC`, this is not merely unused but structurally absent: `pika`/`confluent-kafka` carry no dependency declaration and no `docker-compose.yml` service exists for either broker — there is no disabled-mode client to re-enable, only a possible future re-introduction from scratch.
 - **Database Persistence**: State persistence is handled via JSON-L replay chunks and manifest files, not a live SQL database.

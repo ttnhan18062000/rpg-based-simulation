@@ -12,7 +12,11 @@ This document defines the supported network and system interfaces for the engine
 ## 1. REST API Parity
 - **Base Path**: `/api/v1`
 - **Supported Routes**:
-    - `GET /health`: Health status and version.
+    - `GET /health`: Engine liveness. Returns `status` (`ok` | `degraded` | `unhealthy`), computed
+      from the V2EngineManager background tick thread's liveness and last-tick recency, independent
+      of operator-pause state. Also returns `version`, `timestamp`, and an `engine` object
+      (`thread_alive`, `paused`, `last_tick_age_seconds`, `staleness_threshold_seconds`,
+      `errors_total`, `run_id`). HTTP 503 on `unhealthy` (thread dead); HTTP 200 for `ok`/`degraded`.
     - `GET /api/v1/state`: Current simulation summary (tick, entities count, seed).
     - `POST /api/v1/control/pause`: Pause simulation.
     - `POST /api/v1/control/resume`: Resume simulation.

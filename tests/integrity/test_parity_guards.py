@@ -2,7 +2,7 @@ import pytest
 import json
 import os
 
-ORACLE_ROOT = "tests_legacy/parity"
+ORACLE_ROOT = "tests/parity/oracles"
 REQUIRED_ORACLES = {
     "movement_oracle": "results.json",
     "interaction_oracle": "results.json",
@@ -65,3 +65,13 @@ def test_critical_parity_scenarios_presence():
             interact_data = json.load(f)
             scenarios = {entry["scenario"] for entry in interact_data}
             assert "harvest_done" in scenarios, "PARITY GAP: Interaction oracle missing 'harvest_done' scenario"
+
+
+def test_no_pyc_bytecode_remains_in_legacy_trees():
+    """
+    LAW: src_legacy/ and tests_legacy/ must not exist -- their only load-bearing
+    content (the oracle results.json files) was relocated to ORACLE_ROOT; everything
+    else in either tree was dead bytecode with no surviving .py source.
+    """
+    assert not os.path.exists("src_legacy"), "LEGACY DRIFT: src_legacy/ must not exist"
+    assert not os.path.exists("tests_legacy"), "LEGACY DRIFT: tests_legacy/ must not exist"

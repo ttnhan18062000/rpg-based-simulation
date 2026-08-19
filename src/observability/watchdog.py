@@ -20,6 +20,7 @@ class SimulationWatchdog:
         self.last_tick = -1
         self.consecutive_failures = 0
         self.max_failures = 3
+        self.run_id = "external-watchdog-unknown"
         logger.info("Watchdog initialized. Targets: Backend=%s, Loki=%s", BACKEND_URL, LOKI_URL)
 
     def check_health(self) -> bool:
@@ -27,6 +28,13 @@ class SimulationWatchdog:
         try:
             resp = requests.get(f"{BACKEND_URL}/health", timeout=5)
             if resp.status_code == 200:
+                try:
+                    body = resp.json()
+                    candidate = body.get("engine", {}).get("run_id")
+                    if candidate:
+                        self.run_id = candidate
+                except Exception:
+                    pass
                 return True
             logger.error("Health check failed: HTTP %d", resp.status_code)
         except Exception as e:
@@ -106,6 +114,20 @@ class SimulationWatchdog:
         if self.consecutive_failures >= self.max_failures:
             logger.critical("SYSTEM_CRITICAL: Persistent failure! Reason: %s",
                            status_report, extra={'component': 'watchdog', 'diagnostics': status_report})
+            try:
+                from src.observability.alerts.manager import AlertsManager
+                from src.observability.alerts.models import AlertEvent
+                router = AlertsManager.get_router()
+                tick_value = int(self.last_tick) if self.last_tick and self.last_tick > 0 else 0
+                event = AlertEvent.create_watchdog_trip(
+                    run_id=self.run_id,
+                    tick=tick_value,
+                    message=f"External SimulationWatchdog detected persistent failure: {status_report}",
+                    details=status_report,
+                )
+                router.route(event)
+            except Exception:
+                logger.exception("Failed to dispatch WatchdogTrip alert")
 
     def start(self):
         """Main loop."""

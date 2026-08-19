@@ -332,3 +332,54 @@ class V2EngineManager:
     @property
     def errors_total(self) -> int:
         return self._errors_total
+
+    @property
+    def is_thread_alive(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
+    @property
+    def last_tick_age_seconds(self) -> Optional[float]:
+        now = time.time()
+        with self._state_lock:
+            if self._tick_times:
+                return now - self._tick_times[-1]
+            if self._started_at is not None:
+                return now - self._started_at
+            return None
+
+    def get_health_status(self) -> Dict[str, Any]:
+        """Real engine-liveness computation, independent of operator-pause state."""
+        now = time.time()
+        thread_alive = self.is_thread_alive
+        with self._state_lock:
+            if self._tick_times:
+                last_tick_age = now - self._tick_times[-1]
+            elif self._started_at is not None:
+                last_tick_age = now - self._started_at
+            else:
+                last_tick_age = None
+            errors_total = self._errors_total
+        paused = self.is_paused
+        run_id = self._kernel.run_id if self._kernel is not None else None
+        staleness_threshold = max(3.0, self._tick_rate * 60)
+
+        if not thread_alive:
+            status = "unhealthy"
+        elif not paused and last_tick_age is not None and last_tick_age > staleness_threshold:
+            status = "degraded"
+        else:
+            status = "ok"
+
+        return {
+            "status": status,
+            "version": "v2",
+            "timestamp": now,
+            "engine": {
+                "thread_alive": thread_alive,
+                "paused": paused,
+                "last_tick_age_seconds": last_tick_age,
+                "staleness_threshold_seconds": staleness_threshold,
+                "errors_total": errors_total,
+                "run_id": run_id,
+            },
+        }

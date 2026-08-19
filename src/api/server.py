@@ -1,5 +1,4 @@
 from __future__ import annotations
-import time
 import logging
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict, Optional
@@ -7,7 +6,7 @@ from typing import Any, AsyncIterator, Dict, Optional
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 
 from src.api.dependencies import (
     set_engine_manager, get_engine_manager,
@@ -124,8 +123,10 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
             return Response(content=f"# Error: {e}", status_code=500, media_type="text/plain")
 
     @app.get("/health", response_model=Dict[str, Any])
-    async def health_check():
-        return {"status": "ok", "version": "v2", "timestamp": time.time()}
+    async def health_check(manager: V2EngineManager = Depends(get_engine_manager)):
+        payload = manager.get_health_status()
+        status_code = 503 if payload["status"] == "unhealthy" else 200
+        return JSONResponse(content=payload, status_code=status_code)
 
     @app.get("/api/v1/observability/live/status")
     async def get_live_status():

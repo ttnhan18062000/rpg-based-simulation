@@ -12,6 +12,20 @@ tags: [ai, process-improvement]
 **Source:** `docs/audits/D23_architecture_resilience.md` §F; `docs/audits/D24_codebase_health_observatory.md` §A, §H (full case study)
 **Priority:** P1 — small, precisely scoped, and a live false positive rather than a hypothetical one.
 
+## Status
+Resolved by `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC`. The Problem section below now
+describes pre-fix history, not current state: `tools/agent-monitoring/epic_staleness_check.py`
+reads each candidate epic's body `## Status` field at discovery time (`EpicCandidate.status`), and
+`is_epic_blocked()` routes any candidate whose status is `BLOCKED` into a third classification
+bucket that `find_stale_epics` (the hook fire-trigger) never returns and that
+`compute_stale_epics_report` surfaces separately under "Informational: BLOCKED epics (not stale —
+deliberately parked):" — resolving this doc's open "disappear entirely vs. informational list"
+question in favor of the informational list. `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` no
+longer appears under "Stale epics" while its `BLOCKED` status stands; a genuinely stale,
+non-`BLOCKED` epic is still flagged exactly as before (regression-guarded by
+`test_genuinely_stale_non_blocked_epic_still_flagged_regression_guard`). Left in place (not
+archived) per this repo's convention that whole-epic archival is a separate human decision.
+
 ## Problem
 
 `make agent-monitoring-epic-staleness` measures file-mtime idleness only. It has flagged

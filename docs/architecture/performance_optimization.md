@@ -8,7 +8,11 @@ audience: developer
 # Simulation Performance Optimization
 
 ## Status
-Accepted
+Superseded (historical) for the RabbitMQ-specific mechanism (AI Task Batching, item 3 under
+Decision below). RabbitMQ/Kafka were removed entirely from this repo by
+`TCK-20260817-DEAD-INFRA-REMOVAL-EPIC`; this ADR's other decisions (shallow-copy snapshots, grid
+compression, frontier-scan optimization) remain valid and were separately implemented. This
+document remains a valid historical record of a V1-era optimization design.
 
 ## Context
 The RPG simulation is currently throughput-bottlenecked at 0.45 TPS with 100% CPU on the backend. Profiling identified the `collect` phase (worker dispatch and result collection) as the primary bottleneck (2.1s per tick). 
@@ -42,3 +46,7 @@ We will implement a multi-layered optimization strategy:
 
 ## Revisit Trigger
 - If population exceeds 5,000 entities, the batch message size may exceed RabbitMQ's efficient throughput, requiring sub-batching.
+- **Superseded note (`TCK-20260817-DEAD-INFRA-REMOVAL-EPIC`):** `pika`/`confluent-kafka` were
+  removed from `pyproject.toml` entirely; this trigger's premise (RabbitMQ throughput) no longer
+  applies. Any future AI-task-batching work must be re-scoped against the current Redis-based
+  pipeline (`RedisStreamConsumer`, `src/observability/stream/consumer.py`), not RabbitMQ.

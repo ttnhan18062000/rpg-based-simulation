@@ -8,7 +8,7 @@ audience: developer
 # Persistent Simulation Watchdog
 
 ## Status
-Proposed
+Active
 
 ## Context
 The RPG simulation is a complex, distributed system with 11+ services. While one-off E2E tests provide initial confidence, we need a persistent way to detect failures (crashes, performance degradation, logic "fraud") during long-running production simulations.
@@ -19,13 +19,20 @@ The system already has:
 - A REST API for health checks.
 
 ## Decision
-We will implement a standalone **Simulation Watchdog** service (`src/utils/watchdog.py`).
+We will implement a standalone **Simulation Watchdog** service (`src/observability/watchdog.py`).
 
 ### Key Responsibilities:
 1.  **Metric Pulsing**: Periodically poll the `/metrics` endpoint to ensure `sim_current_tick` is incrementing.
 2.  **Health Check**: Monitor the `/health` endpoint for 200 OK responses.
 3.  **Log Aggregation**: Query Loki for `level="error"` or `level="critical"` across all container jobs.
-4.  **Self-Correction/Alerting**: Emit a "SYSTEM_CRITICAL" log when a failure is detected, which can trigger external alerts (PagerDuty, Discord, etc.).
+4.  **Self-Correction/Alerting**: Emit a "SYSTEM_CRITICAL" log when a failure is detected, and
+    route a `WatchdogTrip` `AlertEvent` through `AlertsManager`'s `AlertRouter`
+    (`src/observability/alerts/`). The router always logs the alert (`LogAlertSink`) and
+    additionally posts it to a webhook (`WebhookAlertSink`) **only if**
+    `SIM_ALERTS_WEBHOOK_URL`/`SIM_ALERTS_WEBHOOK_ENABLED` are configured on the `watchdog`
+    service (disabled by default in `docker-compose.yml`). No PagerDuty/Discord integration
+    exists — the only real external sink type is a generic webhook POST, and it stays
+    effectively log-only until an operator supplies those environment variables.
 
 ## Rationale
 - **Decoupling**: A standalone service ensures that even if the Backend or AI Workers crash, the Monitor remains alive to report the failure.

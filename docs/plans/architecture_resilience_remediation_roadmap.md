@@ -79,6 +79,10 @@ pull evidence directly rather than re-deriving it.
 
 ### Epic A — Dead & Declared-but-Unused Infrastructure Removal
 **Priority: P0** (the one finding that can take down a real subsystem for an unrelated reason)
+**Status: Resolved** by `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` — RabbitMQ/Kafka were removed
+entirely (deps, services, env vars, `depends_on` gates) rather than scoped to a real use case;
+`src_legacy/`/`tests_legacy/` were deleted (with the 3 load-bearing oracle `results.json` files
+relocated first). See `docs/plans/dead_infra_removal_epic.md`'s `## Status` for detail.
 
 - Un-couple `ai_worker`'s startup from RabbitMQ's healthcheck (`docker-compose.yml:70-71`) —
   pure risk-reduction, independent of the broader keep-or-remove decision.
@@ -92,6 +96,14 @@ pull evidence directly rather than re-deriving it.
 
 ### Epic B — Engine Liveness & Real Health Signal
 **Priority: P0**
+**Status: Resolved** by `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` — `/health` now reflects real
+`V2EngineManager` background-thread liveness and last-tick staleness (pause-aware,
+`ok`/`degraded`/`unhealthy`, HTTP 503 on `unhealthy`), and `SimulationWatchdog`'s critical
+escalation now also routes a `WatchdogTrip` `AlertEvent` through `AlertsManager`/`AlertRouter`/
+`WebhookAlertSink` (webhook sink default-disabled via new `docker-compose.yml` env vars until an
+operator configures them). `docs/architecture/simulation_watchdog.md`'s status/path/responsibility
+claims are corrected. Both bullets below now describe pre-fix history. See
+`docs/plans/engine_liveness_health_epic.md`'s `## Status` for detail.
 
 - `/health` (`src/api/server.py:126-128`) is a hardcoded `{"status": "ok"}` with no relationship
   to whether `V2EngineManager`'s background thread is alive or ticking. Make it check
@@ -135,6 +147,12 @@ pull evidence directly rather than re-deriving it.
 
 ### Epic E — Agent-Tooling Fix: Epic-Staleness Status Awareness
 **Priority: P1** (small, precisely scoped, high-value)
+**Status: Resolved** by `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` —
+`tools/agent-monitoring/epic_staleness_check.py` now reads each candidate epic's body `## Status`
+field and routes `BLOCKED` candidates into a new, separate "Informational: BLOCKED epics (not
+stale — deliberately parked)" report section that the hook's fire-trigger (`find_stale_epics`)
+never returns from; `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` no longer surfaces as stale. See
+`docs/plans/epic_staleness_status_aware_epic.md`'s `## Status` for detail.
 
 - `make agent-monitoring-epic-staleness` measures file-mtime idleness only — it has flagged
   `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` as stale throughout this entire session despite
