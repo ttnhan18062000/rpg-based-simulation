@@ -136,6 +136,35 @@ def _child_ids_from_text(text: str, exclude_id: str) -> list:
     return _dedupe_preserve_order(found)
 
 
+def _find_governing_epic_status(inprogress_dir: Path, child_ids: list) -> Optional[str]:
+    """Cross-references tickets/inprogress/ for an epic-tier ticket whose own
+    '## Related Tickets' body references at least one of a todos_dir
+    subfolder's child ticket IDs. Used when the subfolder itself has no
+    epic-tier ticket file (e.g. tickets/todos/codex-runtime-activation/,
+    whose real governing epic TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC
+    lives in tickets/inprogress/ instead), so the folder candidate's status
+    (e.g. BLOCKED) is still discoverable instead of falling through to None.
+    Cross-referencing by child-ID overlap is used rather than a folder-name-
+    to-epic-id string convention because it is anchored on data the two
+    tickets already carry (parent/child references) and survives folder or
+    epic-ticket renames that a name-matching heuristic would not."""
+    if not child_ids or not inprogress_dir.exists():
+        return None
+    child_id_set = set(child_ids)
+    for ticket_file in sorted(inprogress_dir.glob("*.md")):
+        try:
+            text = ticket_file.read_text()
+        except Exception:
+            continue
+        if _section_body(text, "Tier").strip().lower() != "epic":
+            continue
+        related_ids = set(CHILD_ID_PATTERN.findall(_section_body(text, "Related Tickets")))
+        if related_ids & child_id_set:
+            status_body = _section_body(text, "Status").strip()
+            return status_body.upper() if status_body else None
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Step 1 — discovery
 # ---------------------------------------------------------------------------
@@ -205,6 +234,11 @@ def discover_candidate_epics(inprogress_dir: Path, todos_dir: Path) -> list:
                 child_ids = _dedupe_preserve_order(
                     p.stem for p in sibling_files if p.stem != epic_id
                 )
+
+            if epic_text is None:
+                cross_referenced_status = _find_governing_epic_status(inprogress_dir, child_ids)
+                if cross_referenced_status is not None:
+                    status = cross_referenced_status
 
             candidates.append(EpicCandidate(
                 epic_id=epic_id,
