@@ -57,7 +57,16 @@ engine ─────────→ core + domains     │
 observability ──→ engine             │
 api ────────────→ engine + core      │
 lab ────────────→ engine             │
+systems ─────────→ core + engine (pinned exceptions, see Coupling Inventory)
 ```
+
+`src/systems/` had no position in this diagram until
+`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` (2026-08-19) — the 2026-06-18 audit that
+produced this doc never assigned it a layer. It is added here as a freeze-at-baseline: the 13
+`systems → engine` sites found at that ticket's audit are pinned as grandfathered exceptions
+(see Coupling Inventory below), not eliminated. This is not a claim that the boundary is
+cleanly honored — it is 13 sites frozen at their current count, with growth past that count
+blocked by the new test.
 
 `optimization` domain is explicitly permitted cross-cutting — any domain may use it.
 
@@ -224,6 +233,50 @@ core updates type to an engine policy concept.
 
 **Risk:** `core/state.py` is the most-imported file in the codebase. Engine changes to
 `MovementPlanCache` or its constructor will touch core state without a visible dependency signal.
+
+---
+
+### Layer: `src/domains/` — upward dependency into `src/observability/`
+
+`domains` is documented (`domains → core only`, above) as never importing `observability`. 2
+real, currently-shipping violations exist — both lazy, method-body imports of the same pure
+`SimulationEvent` dataclass, guarded by an event-recorder-present check immediately above each
+call site:
+
+| File | Line | Import | Pattern |
+|---|---|---|---|
+| `domains/campaigns/narrative_ledger.py:71` | `src.observability.events.SimulationEvent` | Lazy (inside `emit_chronicle_event`, guarded by `if self._event_recorder is not None:`) |
+| `domains/campaigns/orchestrator.py:319` | `src.observability.events.SimulationEvent` | Lazy (guarded by `if self._event_recorder is None: return` immediately above) |
+
+Both sites are enforced-pinned by
+`tests/architecture/test_phase18_import_boundaries.py::test_domains_do_not_import_observability_outside_pinned_exceptions`
+(added by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`) — a `(file, lineno)`-exact
+grandfather list, not a general allowlist. Expanding this set requires updating both this doc
+and that test together, not a silent addition.
+
+---
+
+### Layer: `src/systems/` — upward dependency into `src/engine/`
+
+`src/systems/` has no documented position prior to this ticket (see Layer Architecture above).
+13 real, currently-shipping `systems → engine` imports exist across 5 files, both module-level
+and lazy:
+
+| File | Lines | Modules |
+|---|---|---|
+| `systems/strategic_systems/intelligence.py` | 69, 75, 78, 83, 664, 829, 833, 905, 958 | `engine.policy`, `engine.spatial_query`, `engine.cadence`, `engine.domain_logic`, `engine.cognition` |
+| `systems/strategic_systems/detour.py` | 22 | `engine.domain.lead_routing` |
+| `systems/strategic_systems/redirection.py` | 23 | `engine.cadence` |
+| `systems/economy_systems/market.py` | 50 | `engine.legality` |
+| `systems/world_systems/routine.py` | 180 | `engine.legality` |
+
+All 13 sites are enforced-pinned by
+`tests/architecture/test_phase18_import_boundaries.py::test_systems_do_not_import_engine_outside_pinned_exceptions`
+(added by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`) — a `(file, lineno)`-exact
+grandfather list, not a general allowlist. This is a freeze-at-baseline, not a clean, fully
+honored boundary: the pinned sites remain exactly as found, no new violation past the pinned 13
+is permitted, and expanding the pinned set requires updating both this doc and that test
+together, not a silent addition.
 
 ---
 

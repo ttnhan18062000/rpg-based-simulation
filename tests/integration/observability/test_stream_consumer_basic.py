@@ -96,3 +96,72 @@ def test_live_stream_consumer_group_lifecycle():
     consumer.close()
     rc.delete(stream_name)
     rc.close()
+
+
+def test_handler_exception_triggers_bounded_retry_then_dlq_live():
+    """
+    A handler that always raises must be retried up to MAX_DELIVERY_ATTEMPTS via real
+    Redis PEL/XCLAIM state, then routed to the derived DLQ stream -- never silently dropped.
+    """
+    stream_name = "integration:test:dlq_stream"
+    group_name = "integration:test:dlq_group"
+
+    import redis
+    rc = redis.from_url("redis://localhost:6379/0", decode_responses=True)
+    rc.delete(stream_name)
+    rc.delete(f"{stream_name}:dlq")
+
+    adapter = RedisStreamAdapter(
+        redis_url="redis://localhost:6379/0",
+        stream_name=stream_name,
+        max_queue_size=10
+    )
+    adapter.publish(make_event("will always fail"))
+    adapter.flush()
+
+    consumer = RedisStreamConsumer(
+        redis_url="redis://localhost:6379/0",
+        stream_name=stream_name,
+        group_name=group_name,
+        consumer_name="test_worker"
+    )
+    consumer.connect()
+    # Reclaim only considers entries idle at least RECLAIM_IDLE_MS; shrink it so the test
+    # doesn't need to sleep 30s per sweep.
+    consumer.RECLAIM_IDLE_MS = 50
+
+    call_count = {"n": 0}
+
+    def failing_handler(event: SimulationEvent):
+        call_count["n"] += 1
+        raise RuntimeError("handler always fails")
+
+    consumer.read_and_process(failing_handler, block_ms=200)
+    assert call_count["n"] == 1
+
+    import time
+    for _ in range(consumer.MAX_DELIVERY_ATTEMPTS - 1):
+        time.sleep(0.06)
+        consumer.read_and_process(failing_handler, block_ms=100)
+
+    assert call_count["n"] == consumer.MAX_DELIVERY_ATTEMPTS
+
+    # One final sweep to route the now-exhausted entry to the DLQ.
+    time.sleep(0.06)
+    consumer.read_and_process(failing_handler, block_ms=100)
+    assert call_count["n"] == consumer.MAX_DELIVERY_ATTEMPTS
+
+    dlq_entries = rc.xrange(f"{stream_name}:dlq")
+    assert len(dlq_entries) == 1
+    dlq_fields = dlq_entries[0][1]
+    assert dlq_fields["message"] == "will always fail"
+    assert dlq_fields["dlq_reason"] == "max delivery attempts exceeded"
+
+    pending = rc.xpending(stream_name, group_name)
+    assert pending["pending"] == 0
+
+    adapter.close()
+    consumer.close()
+    rc.delete(stream_name)
+    rc.delete(f"{stream_name}:dlq")
+    rc.close()

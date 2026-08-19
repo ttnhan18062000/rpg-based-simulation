@@ -180,6 +180,17 @@ never returns from; `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` no longer surfa
 
 ### Epic G — Architecture Boundary Enforcement Hardening
 **Priority: P2**
+**Status: Resolved** by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` (2026-08-19) — both
+weak substring-grep tests were rewritten to AST inspection, reusing the `if TYPE_CHECKING:`
+line-range-collection technique `test_api_read_model_guard.py` already establishes. The two
+missing boundaries (`domains ↛ observability`, `systems ↛ engine`) were added, resolved via a
+pinned-exception model: 2 real `domains → observability` sites and 13 real `systems → engine`
+sites were found currently shipping and are frozen as grandfathered exceptions rather than
+eliminated — not a claim that either boundary is now cleanly, fully honored. No `src/domains/`
+or `src/systems/` production file was touched. The first two bullets below now describe pre-fix
+history; the compose-file linter bullet remains open, unaddressed by this epic. See
+`docs/plans/architecture_boundary_hardening_epic.md`'s `## Status` and
+`docs/audits/D14_coupling_depth.md`'s Coupling Inventory for detail.
 
 - `tests/architecture/test_phase18_import_boundaries.py` and `test_phase19_observability_boundaries.py`
   are plain substring-grep checks (defeatable via `importlib`/aliasing/indirect import) — upgrade
@@ -196,6 +207,17 @@ never returns from; `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` no longer surfa
 
 ### Epic H — Error-Handling Hygiene
 **Priority: P2, explicitly targeted, not a blanket sweep**
+**Status: Resolved** by `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` — `WebhookAlertSink` now
+computes a real capped-exponential-with-jitter backoff (`_compute_backoff_delay`, mirroring
+`RedisStreamConsumer`'s Epic D precedent) in place of the linear sleep, and gates dispatch behind
+a new 3-state (closed/open/half-open) circuit breaker that opens after
+`CIRCUIT_BREAKER_FAILURE_THRESHOLD` consecutive failed full-dispatch cycles and half-open-probes
+after a cooldown; `send()`'s external signature and fire-and-forget semantics are unchanged. A
+targeted broad-except review of six highest-consequence areas (authoritative apply path,
+content-registry adapters, kernel tick loop, replay persistence, worker execution,
+tactical/reward fallbacks) found no site needing a fix — every reviewed site already re-raises
+typed, converts to a typed result, or is an explicitly documented non-authoritative fallback. See
+`docs/plans/error_handling_hygiene_epic.md`'s `## Status` for detail.
 
 - `WebhookAlertSink` (`src/observability/alerts/sinks.py:39-92`) — the only real retry/backoff
   implementation in the codebase — is linear (`time.sleep(0.5 * attempt)`) despite an in-code

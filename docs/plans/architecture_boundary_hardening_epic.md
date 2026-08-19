@@ -12,6 +12,23 @@ tags: [testing, architecture]
 **Source:** `docs/audits/D24_codebase_health_observatory.md` §E, §K, §M Phase 2
 **Priority:** P2
 
+## Status
+Resolved by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`. Both weak substring-grep tests
+(`test_phase18_import_boundaries.py`'s three tests, `test_phase19_observability_boundaries.py`'s
+`test_hot_path_does_not_import_heavy_analyzers`) were rewritten to AST inspection, reusing the
+`if TYPE_CHECKING:` line-range-collection technique already proven in
+`test_api_read_model_guard.py`. The two missing boundaries were added
+(`test_domains_do_not_import_observability_outside_pinned_exceptions`,
+`test_systems_do_not_import_engine_outside_pinned_exceptions`), both resolved via a
+**pinned-exception model** (per this doc's own Scope note that a check was needed first): 2
+real `domains → observability` sites and 13 real `systems → engine` sites were found currently
+shipping, and both counts are frozen as grandfathered exceptions rather than eliminated in this
+ticket — no `src/domains/` or `src/systems/` production file was touched. This is a
+freeze-at-baseline resolution, not a claim that either boundary is now cleanly, fully honored;
+see `docs/audits/D14_coupling_depth.md`'s Coupling Inventory for the pinned site lists and the
+"expand doc + test together" discipline. All 6 upgraded/new tests were confirmed to fail against
+a deliberately-introduced, then-reverted violation (ticket's AC3).
+
 ## Problem
 
 Two architecture boundary tests are genuinely strong (AST-based, hard to evade):

@@ -7,6 +7,20 @@ import random
 from typing import Any, Optional
 from src.core.enums import Domain # Assuming Domain enum exists in src/core/enums.py
 
+
+def new_random_source() -> random.Random:
+    """
+    Returns a fresh, non-deterministic `random.Random` instance for non-gameplay
+    uses (e.g. network retry-backoff jitter, thundering-herd avoidance).
+
+    This is explicitly NOT part of the deterministic/seed-reproducible
+    `DeterministicRNG` API below: it carries no domain/tick/entity_id scoping
+    and is not replay-critical. Use `DeterministicRNG` for anything that touches
+    simulation state, entity behavior, or replay-critical computation.
+    """
+    return random.Random()
+
+
 class DeterministicRNG:
     """
     Enhanced Deterministic RNG with Domain Separation for V2.

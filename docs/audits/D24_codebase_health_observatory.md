@@ -45,7 +45,7 @@ The risk is not in the core — it's in **accumulated peripheral debt and a docu
 - **Two entire top-level directories (`src_legacy/`, `tests_legacy/`, 601 files combined) contain nothing but stale compiled bytecode** — every `.py` source file behind them has already been deleted, leaving only `.pyc` remnants of a pre-`AuthoritativeState` engine generation. Zero functional value, real risk of confusing an agent or a grep-based tool into thinking they're live code.
 - **Documentation drift is real but narrow, not systemic**: two specific docs (the pipeline phase-count trio and the watchdog status/path mismatch, both previously identified) are wrong; a fresh 7-doc spot-check elsewhere came back clean. The actual gap is structural — **nothing in this repo's tooling checks that a file path cited in a doc still exists**, so drift like this can only be caught by a manual audit, never automatically.
 - **A live "stuck workflow" turned out not to be stuck** — the AI-agent staleness hook has flagged `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` as idle throughout this entire session, but the ticket itself explicitly says `BLOCKED`, with a dated rationale, pending a human sign-off it names precisely. The hook has no way to read that — it measures file-mtime idleness, not ticket intent. That's a fixable, concrete AI-agent-safety gap, not a process failure.
-- **Import-boundary enforcement is real but uneven**: two boundary tests are AST-based and hard to evade; two more exist but are plain substring-grep, easy to defeat with an indirect import; several plausible boundary pairs (`domains` ↛ `observability`, `systems` ↛ `engine`) have no enforcement at all.
+- **Import-boundary enforcement is real but uneven**: two boundary tests are AST-based and hard to evade; two more exist but are plain substring-grep, easy to defeat with an indirect import; several plausible boundary pairs (`domains` ↛ `observability`, `systems` ↛ `engine`) have no enforcement at all. *(This finding is point-in-time as of this audit's 2026-08-17 pass — resolved by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` on 2026-08-19; see §K for current state.)*
 
 None of the top findings require a rewrite, a new subsystem, or new infrastructure. Every recommendation below is either a deletion, a doc fix, a test-hardening pass reusing an already-proven pattern in this repo, or a small script.
 
@@ -135,7 +135,7 @@ Two more exist but are weaker:
 - `tests/architecture/test_phase18_import_boundaries.py` — checks `src/core/` never contains the *substring* `"import src.domains"` — string-match, not AST, one directional pair only.
 - `tests/architecture/test_phase19_observability_boundaries.py` — checks the engine hot path doesn't contain substrings like `"observability.anomaly"` — same limitation.
 
-Substring checks are meaningfully weaker than AST checks: they can be defeated by `importlib`, import aliasing, or an indirect import chain, and they don't generalize the way an AST visitor does. **No boundary test was found for `domains` ↛ `observability` internals or `systems` ↛ `engine` internals** specifically — an enforcement gap, not a confirmed violation (whether such imports currently exist wasn't checked in this pass).
+Substring checks are meaningfully weaker than AST checks: they can be defeated by `importlib`, import aliasing, or an indirect import chain, and they don't generalize the way an AST visitor does. **No boundary test was found for `domains` ↛ `observability` internals or `systems` ↛ `engine` internals** specifically — an enforcement gap, not a confirmed violation (whether such imports currently exist wasn't checked in this pass). *(Point-in-time as of this audit's 2026-08-17 pass. `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` (2026-08-19) rewrote both weak tests to AST and added both missing boundary tests via a pinned-exception model — see §K and `docs/audits/D14_coupling_depth.md`'s Coupling Inventory, which confirms the "enforcement gap, not confirmed violation" framing here was wrong: real violations did exist, 2 and 13 sites respectively.)*
 
 **No machine-readable, code-subsystem ownership manifest exists.** `agent-orchestration/` (`contract.yaml`, `skills.yaml`, `hook-surface-policy.yaml`) is real and well-built, but scoped entirely to *agent-workflow process* — it references `src/` paths only inside human-readable skill descriptions, not as an enforced allowed/forbidden-dependency graph. The framework's §13 subsystem-manifest concept (per-subsystem allowed/forbidden deps, invariants, required tests) doesn't exist for `src/`'s 38 packages today; the closest approximations are the four architecture tests above, which are narrow and directional rather than a general manifest.
 
@@ -175,7 +175,7 @@ This is **not** ambiguous ownership, a missing dependency, or silent neglect —
 
 **Repository sprawl adds real orientation cost**, though it's partially mitigated. ~35 top-level directories mix product code, dev tooling, and heavy agent-process meta-infrastructure. `CLAUDE.md` does a fair amount of work directing traffic (its Context Scan mandate, registry pointers), but an agent operating without that context file loaded would face a nontrivial cold-start cost. The two dead trees (`src_legacy/`, `tests_legacy/`, §I) compound this: their names alone give no signal that they're inert, so both a human and a naive grep-based tool could waste real effort on them.
 
-**Boundary enforcement is uneven** (detailed in §E): strong AST guards exist at the API/engine split, but `domains` ↛ `observability` and `systems` ↛ `engine` have no enforced boundary at all — an agent modifying either of those has a materially weaker safety net than one modifying the API layer.
+**Boundary enforcement is uneven** (detailed in §E): strong AST guards exist at the API/engine split, but `domains` ↛ `observability` and `systems` ↛ `engine` have no enforced boundary at all — an agent modifying either of those has a materially weaker safety net than one modifying the API layer. *(Resolved by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`, 2026-08-19 — both boundaries are now enforced via pinned-exception AST tests, not a clean/zero-violation guarantee; see §K.)*
 
 ---
 
@@ -212,14 +212,27 @@ Most of the infrastructure this needs **already exists in some form** — the ga
 **Already enforced, hard invariant, AST-based (strong):**
 - API layer cannot import authoritative mutable state (`test_api_read_model_guard.py`)
 - Only the resolution phase may perform authoritative mutation (`test_phase_domain_permissions.py`)
-
-**Already enforced, hard invariant, substring-based (weak — upgrade candidates):**
-- `core` ↛ `domains` (`test_phase18_import_boundaries.py`)
+- `core` ↛ `domains`, `observability` ↛ `engine` (Kernel-facade only), `observability` ↛ `domains`/`systems` (pinned allowlist) (`test_phase18_import_boundaries.py`)
 - hot path ↛ heavy observability analyzers (`test_phase19_observability_boundaries.py`)
-- **Recommendation**: rewrite both using the AST-visitor pattern the two strong tests already establish in this repo. This is not a new technique to introduce — it's applying a proven, in-repo pattern to two places that currently use a weaker one.
+- `domains` ↛ `observability` internals (2 sites pinned as grandfathered exceptions), `systems` ↛ `engine` internals (13 sites pinned as grandfathered exceptions) (`test_phase18_import_boundaries.py`) — resolved by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` (2026-08-19) as a freeze-at-baseline: the pinned counts are frozen, not eliminated, and no new violation past the pinned sites is permitted. See `docs/audits/D14_coupling_depth.md`'s Coupling Inventory.
 
 **Proposed, not yet enforced:**
-- `domains` ↛ `observability` internals, `systems` ↛ `engine` internals — hard invariant candidates, same AST pattern, no current enforcement (§E).
+- **`src/engine/kernel.py` imports 5 real, currently-shipping heavy observability analyzer
+  submodules** (`observability.reporting`/`.cognition`, lines 129, 277, 278, 289, 1111 — lazy
+  imports) that `test_hot_path_does_not_import_heavy_analyzers` never caught, because the *old*
+  substring-grep version of that test matched only the bare, un-prefixed form
+  (`"observability.anomaly"`, no `src.` prefix), which never matches this codebase's real
+  `from src.observability...` import style. Discovered incidentally during
+  `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`'s AST rewrite (2026-08-19) but deliberately
+  left unfixed and undetected-by-test: `kernel.py` was not named in that ticket's Scope Guards,
+  pinned-exception lists, or Related Code Areas, so the rewritten test preserves the old test's
+  literal (bare-prefix) matching behavior rather than silently catching this and either failing
+  the build or inventing an unreviewed pinned-exception list for `kernel.py`. **Recommended
+  follow-up**: a scoped ticket to either add `kernel.py` to a pinned-exception list (reviewed on
+  its own merits, mirroring the `domains`/`systems` precedent above) or refactor it off the heavy
+  analyzer submodules, then tighten the test to `src.`-aware matching. See
+  `staging_artifacts/TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC/plan.md`'s Deviations
+  section for the full discovery detail.
 - Tier-3 systems cannot become startup dependencies of Tier-0 systems — hard invariant, directly motivated by D23's finding that a Tier-3 observability worker's container startup was hard-blocked by an unused RabbitMQ healthcheck. This is a `docker-compose.yml`-level constraint, not a Python import, so it needs a different mechanism (a small compose-file linter), not an architecture test.
 - Doc-referenced file paths must exist — hard invariant candidate, cheap, directly closes the gap in §G/§J.
 - Source files above a size threshold require review flag — **soft heuristic**, not a CI failure (per the framework's own "do not turn every preference into a failing rule" guidance) — flag files like `src/lab/workflows.py`, don't block on them.
