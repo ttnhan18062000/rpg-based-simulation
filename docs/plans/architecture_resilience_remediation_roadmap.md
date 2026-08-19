@@ -45,7 +45,7 @@ multi-ticket-shaped). No ticket was removed.
 | G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/architecture_boundary_hardening_epic.md` | standard | **Resolved** |
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/error_handling_hygiene_epic.md` | standard | **Resolved** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/determinism_verification_gap_epic.md` | standard | **Resolved** |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic | open (3 of 4 items resolved/extracted, see below) |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic | open (all 4 items resolved/extracted; awaits 2 sibling tickets reaching done) |
 | K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open |
 
 **(2026-08-19)** Three new tickets extend this tree, plus one item resolved without a ticket:
@@ -295,12 +295,20 @@ canonical-hash gate remain deliberately conditional, unchanged by this epic. See
   `tests/unit/domains/` vs. flat domains-subpackage test-dir placement — verified exact split: 13
   of 19 `src/domains/` subpackages nested correctly, 6 (`campaigns`, `chronicle`, `culture`,
   `faction`, `feature_packs`, `optimization`) flat.
-- Verify `pipeline.py`/`tactical.py` test coverage directly — both are simultaneously high-churn
-  (top-5) and high-centrality (god-node-defining) with no exactly-named dedicated unit test file;
-  plausibly covered indirectly via integration/kernel determinism suites, not confirmed either
-  way.
-- Resolve `tests/helpers/` under-utilization (7 of 1,140 sampled test files import it directly) —
-  determine whether reuse happens invisibly via `conftest.py` fixtures instead.
+- **(2026-08-19) Resolved directly, genuinely covered — not a gap.** `pipeline.py`/`tactical.py`
+  test coverage — both are simultaneously high-churn (top-5) and high-centrality (god-node-
+  defining) with no exactly-named dedicated unit test file, but `grep` for actual call sites found
+  `AuthoritativeApplyPipeline.refine()` called by 71 test files and `TacticalDecisionSystem`'s
+  public methods called by 15 more — exercised through this repo's existing distributed
+  per-domain pattern, not untested.
+- **(2026-08-19) Resolved directly, explained not neglected.** `tests/helpers/` under-utilization
+  (7 of 1,140 sampled test files import it directly) — `grep` confirmed zero `conftest.py` files
+  import it (ruling out invisible reuse); 359 test files use `V2EntityBuilder` (the production
+  builder) directly instead, which already covers the same need.
+
+All 4 original items now resolved or extracted; this epic has no remaining unscoped work of its
+own — see `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC`'s Acceptance Criteria for what it's
+still waiting on.
 
 *Evidence: D24 §D, §F, §I.*
 

@@ -70,7 +70,7 @@ doc fix from either audit has been applied yet.
 | G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | P2 | standard | **DONE** |
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard | **DONE** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard | **DONE** |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic | open (3 of 4 items resolved/extracted, see below) |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic | open (all 4 items resolved/extracted; awaits 2 sibling tickets reaching done) |
 | K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | open |
 
 **(2026-08-18)** Audited all 10 sub-epics against this project's actual epic-tier bar ("large
@@ -170,11 +170,11 @@ None yet — staging artifacts for this ticket are in
 - Which sub-epic(s) to formalize first is an open decision for the requester — the roadmap
   recommends A (dead infra) and B (engine liveness) as the only two both audits independently
   rank P0, with no dependency between them.
-- One item remains flagged as needing a closer look before any remediation ticket is written:
-  whether `pipeline.py`/`tactical.py` are genuinely covered indirectly via integration/kernel
-  suites, or represent a real test-coverage gap. (The `src/observability/mining/` naming-overlap
-  question was resolved 2026-08-19 — not duplicative, see `TCK-20260817-CODEBASE-NAVIGABILITY-
-  HYGIENE-EPIC`'s Scope section.)
+- All items flagged as needing a closer look before any remediation ticket is written are now
+  resolved (2026-08-19, see `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC`'s Scope section):
+  `src/observability/mining/` naming overlap — not duplicative; `pipeline.py`/`tactical.py`
+  coverage — genuinely, extensively covered (71 + 15 direct call sites); `tests/helpers/`
+  under-utilization — explained by `V2EntityBuilder` already covering the same need, not neglect.
 - Whether hardware-class (A/B/C) performance budgets are runtime-enforced or configuration-only
   was explicitly not fully traced in D23 and would need a follow-up pass if it matters for a
   future decision.
