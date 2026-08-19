@@ -61,15 +61,16 @@ _FIXTURE = json.loads(_FIXTURE_PATH.read_text())
 # in full while widening the budget-cost accounting — same narrowing precedent as this dict's other
 # entries, see tests/tools/test_kgmcp_phase3_pilot_acceptance_measurement.py's own module docstring
 # "Post-fix update" note for the full disclosure.
+# parity_index.py was further removed (TCK-20260819-STANDARD-PARITY-LEDGER-HYGIENE-SWEEP,
+# 2026-08-19): that ticket's own approved, architecture-reviewed plan legitimately fixed 3 systemic
+# false-positive bugs in parity_index.py's _populate_entry_health() — same narrowing precedent, see
+# TCK-20260820-HOTFIX-PARITY-READPATH-BASELINE-DRIFT.
 _FROZEN_FILE_HASHES = {
     _TOOLS_DIR / "knowledge_gateway_router.py": (
         "25c71f50d37206d11756d52cd146fac85c6516e0b654ab6156cd1781ba886ae3"
     ),
     _TOOLS_DIR / "knowledge_gateway_cache.py": (
         "4b74cef3615bf5325750c40c7feacac1059820833de893a69c63f7003841d0cc"
-    ),
-    _TOOLS_DIR / "parity_index.py": (
-        "d75ceafb9e3604f1ae4f5951f15978df6f9eb8455b7d80a6b8ab2b2d972a7d54"
     ),
     _TOOLS_DIR / "search_mcp.py": (
         "68da54a3d9df57bb9e776b855e5efec5719827470cb1b561315157373974c336"
