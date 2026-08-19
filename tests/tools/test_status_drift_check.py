@@ -88,9 +88,26 @@ def test_legacy_naming_file_ignored_by_pattern(tmp_path):
     assert results[0]["status"] == "PASS"
 
 
-def test_same_line_colon_status_format_not_newly_flagged(tmp_path):
+def test_same_line_colon_status_format_now_flagged(tmp_path):
+    """TCK-20260819-HOTFIX-STATUS-DRIFT-COLON-SUFFIX-GAP: same-line colon-suffixed
+    `## Status: X` used to resolve to `""` via `parse_body_section` (no newline before the value)
+    and was silently skipped. `_extract_status_value`'s colon-suffix fallback now recovers this
+    shape, so a non-DONE colon-suffixed value is real drift and must be flagged like any other."""
     (tmp_path / "TCK-20260101-COLON-FORMAT.md").write_text(
         "---\nstatus: historical\n---\n\n# fixture\n\n## Status: INPROGRESS\n\n## Tier\nstandard\n"
+    )
+    results = check_ticket_status_drift(tmp_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "FAIL"
+    assert "COLON-FORMAT" in results[0]["evidence"]
+    assert "INPROGRESS" in results[0]["evidence"]
+
+
+def test_same_line_colon_status_format_done_passes(tmp_path):
+    """A colon-suffixed `## Status: DONE` ticket must pass cleanly, proving the fallback isn't a
+    blanket rejection of the colon-suffixed shape — only genuinely non-DONE values are flagged."""
+    (tmp_path / "TCK-20260101-COLON-DONE.md").write_text(
+        "---\nstatus: historical\n---\n\n# fixture\n\n## Status: DONE\n\n## Tier\nstandard\n"
     )
     results = check_ticket_status_drift(tmp_path)
     assert len(results) == 1

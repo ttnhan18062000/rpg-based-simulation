@@ -25,13 +25,22 @@ validates the exact same extraction the dashboard performs — eliminating this 
 "checker says clean, dashboard shows garbage" gap by construction rather than by patching in a
 fourth regex for a fourth discovered shape.
 
-**Known, intentional limitation**: same-line colon-suffixed `## Status: X` tickets (12 files
-corpus-wide, 6 non-`DONE` as of 2026-07-18) still resolve to `""` via `parse_body_section` (its
-own regex also requires a newline directly after the heading, so `: X` on the same line never
-matches) and are silently skipped here, exactly as under the old regex. This is unchanged,
-deliberate scope — TCK-20260718-STATUS-DRIFT-REPAIR's plan.md explicitly excluded those 6 files
-(see "Colon-Suffixed Files Decision"), and TCK-20260718-STATUS-MULTILINE-FIX (this ticket) did not
-revisit that exclusion. Candidate for a future, separately-scoped ticket.
+**Colon-suffix fix (TCK-20260819-HOTFIX-STATUS-DRIFT-COLON-SUFFIX-GAP)**: same-line colon-suffixed
+`## Status: X` tickets used to resolve to `""` via `parse_body_section` (its regex requires a
+newline directly after the heading, so `: X` on the same line never matched) and were silently
+skipped — a gap this module's own docstring had documented since TCK-20260718-STATUS-DRIFT-REPAIR
+(12 files corpus-wide, 6 non-`DONE`, as of 2026-07-18) without a follow-up ticket ever landing.
+`_extract_status_value` now falls back to a local `## Status: X` regex when `parse_body_section`
+returns empty, so this format is detected without changing `parse_body_section` itself (other
+callers — `ticket_field_values.py`, `ticket_stats_report.py`, `generate_registry.py`,
+`src/api/agent_ops_dashboard/ingest.py` — all rely on its newline-separated-only behavior for
+other fields, and the ticket's Out of Scope explicitly excluded touching that shared function
+beyond this module's own extraction). Re-measured live corpus at fix time: still 12 files / 6
+non-`DONE` — all 6 were legacy tickets with frontmatter already reading `status: historical,
+phase: done` (predating the current Finalize phase, same root cause as the original
+STATUS-DRIFT-REPAIR corpus) whose body `## Status: INPROGRESS` line was simply never updated;
+fixed to `## Status: DONE` in this same ticket, matching the tool's established
+detect-and-fix-real-drift precedent from its two prior rounds.
 
 Mirrors `doc_staleness_check.py`'s and `workflow_meta_conformance.py`'s shape: aggregate
 `check_*()` functions returning `List[dict]` (`{"status": "PASS"|"FAIL", "evidence": "..."}`), a
@@ -41,6 +50,7 @@ where/whether to call it, matching this directory's own stated precedent.
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 from typing import List
@@ -53,6 +63,30 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from generate_registry import parse_body_section, _strip_frontmatter  # noqa: E402
+
+# Local fallback for the same-line colon-suffixed `## Status: X` shape `parse_body_section` does
+# not match (see module docstring). Deliberately narrow: only the heading line's own value, not
+# the multi-line "capture until next '## ' heading" semantics `parse_body_section` uses for the
+# newline-separated shape — the colon-suffixed corpus only ever puts the value on the heading line
+# itself, and any lines below it are prose/other fields, not part of the status value.
+_COLON_SUFFIX_STATUS_RE = re.compile(r"^## Status\s*:\s*(.+?)\s*$", re.MULTILINE)
+
+
+def _extract_status_value(body: str) -> str:
+    """Extract the `## Status` value, falling back to same-line colon-suffixed extraction.
+
+    Tries `parse_body_section` first (the same extraction the dashboard's `ingest.py` uses) and
+    only falls back to `_COLON_SUFFIX_STATUS_RE` when that returns `""` — so newline-separated
+    files are unaffected and always resolve exactly as before.
+    """
+    value = parse_body_section(body, "Status")
+    if value:
+        return value
+    match = _COLON_SUFFIX_STATUS_RE.search(body)
+    if match:
+        return match.group(1).strip()
+    return ""
+
 
 # Tightened from {"EPIC_SCOPED", "SCOPED"} by TCK-20260718-STATUS-FACET-CANONICAL:
 # TCK-20260718-STATUS-MULTILINE-FIX normalized the corpus's one remaining bare "SCOPED" ticket to
@@ -68,22 +102,22 @@ EPIC_TIER_VALUES = {"EPIC_SCOPED"}
 def check_ticket_status_drift(done_dir: Path = DEFAULT_DONE_DIR) -> List[dict]:
     """Flag `tickets/done/*.md` files whose body `## Status` value is not `DONE`.
 
-    Extracts via `parse_body_section` — the same function `ingest.py` uses for the dashboard's
-    `workflow_status` field — so a file only passes here if the dashboard would also show it as
-    plain `DONE`. Skips (does not flag) three structural exemptions: an empty extraction (same-line
-    colon-suffixed `## Status: X` tickets and any file with no `## Status` heading at all — both
-    return `""` from `parse_body_section` and are out of this check's scope, see module docstring),
-    `## Status` values in `EPIC_TIER_VALUES` (`{"EPIC_SCOPED"}` — the sole canonical epic-tier
-    terminal value; legitimate, not drift), and files whose name does not start with `TCK-`
-    (pre-TCK-naming legacy files, out of scope per project precedent). All three exemptions are
-    value-based / filename-pattern-based,
-    never a hardcoded literal filename list, so a future epic closure or legacy backfill does not
-    require a checker update to stay correctly exempt.
+    Extracts via `_extract_status_value`, which tries `parse_body_section` first — the same
+    function `ingest.py` uses for the dashboard's `workflow_status` field — then falls back to a
+    local same-line colon-suffixed `## Status: X` regex (see module docstring) so a file only
+    passes here if the dashboard would also show it as plain `DONE`, for either heading shape.
+    Skips (does not flag) three structural exemptions: an empty extraction (no `## Status` heading
+    at all — the only remaining case that returns `""`), `## Status` values in `EPIC_TIER_VALUES`
+    (`{"EPIC_SCOPED"}` — the sole canonical epic-tier terminal value; legitimate, not drift), and
+    files whose name does not start with `TCK-` (pre-TCK-naming legacy files, out of scope per
+    project precedent). All three exemptions are value-based / filename-pattern-based, never a
+    hardcoded literal filename list, so a future epic closure or legacy backfill does not require a
+    checker update to stay correctly exempt.
     """
     findings = []
     for path in sorted(done_dir.glob("*.md")):
         text = path.read_text(errors="ignore")
-        value = parse_body_section(_strip_frontmatter(text), "Status")
+        value = _extract_status_value(_strip_frontmatter(text))
         if not value:
             continue
         if value.upper() == "DONE":
