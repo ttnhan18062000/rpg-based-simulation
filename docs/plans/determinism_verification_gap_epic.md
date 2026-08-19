@@ -12,6 +12,29 @@ tags: [engine, determinism]
 **Source:** `docs/audits/D23_architecture_resilience.md` §C, §J (R5)
 **Priority:** P3 — only worth doing if off-path mutation bugs are a live concern; both source audits frame this as conditional, not urgent.
 
+## Status
+Resolved by `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC`, via the "at minimum" branch of the
+Scope section below — `DEGRADED`/`SURVIVAL` run outputs are now explicitly labeled
+reduced-verification rather than left silently indistinguishable from `FULL`-verification runs.
+
+A new cumulative `RuntimeStatus.max_mode_reached` field (`src/engine/runtime_status.py`) tracks
+the worst `RuntimeMode` reached at any point during a run, updated unconditionally inside
+`reset_dwell()` so it is independent of the replay stream and correctly covers `SURVIVAL` mode
+(which emits no `TICK_END` events at all). At shutdown, `Kernel.shutdown()` derives
+`verification_level = "REDUCED" if max_mode_reached >= RuntimeMode.DEGRADED else "FULL"` and
+surfaces it on `ShutdownResult.verification_level` (`src/core/lifecycle.py`),
+`RunManifest.verification_level` (`src/observability/reporting/artifact_repository.py`,
+written to `run_manifest.json`), and `run_report.json`/`.md`'s `metadata.verification_level`
+(`src/observability/reporting/run_report.py`).
+
+The Out-of-scope item below still holds: the Tier-2 `audit_mode` fingerprint gate and the
+DEGRADED/SURVIVAL canonical-hash gate remain deliberately conditional, unchanged by this ticket —
+only a truthful reporting label was added, not a widened always-on check. The cheap always-on
+partial/sampled fingerprint alternative mentioned in Scope was not pursued; the "at minimum"
+labeling branch was judged sufficient. See `docs/engine/known_limitations.md` §2.4 ("Run-level
+`verification_level` label") and parity ledger entry `INFRA-363`
+(`docs/parity_ledger/infrastructure.yaml`) for full derivation detail.
+
 ## Problem
 
 The kernel's mutation-guard and determinism proofs are mode-dependent, not always-on:

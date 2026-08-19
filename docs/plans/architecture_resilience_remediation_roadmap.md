@@ -232,6 +232,16 @@ typed, converts to a typed result, or is an explicitly documented non-authoritat
 
 ### Epic I — Determinism Verification Coverage Gap
 **Priority: P3 — only worth doing if off-path mutation bugs are a live concern**
+**Status: Resolved** by `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` — via the "at minimum"
+branch below: `DEGRADED`/`SURVIVAL` run outputs are now explicitly labeled reduced-verification.
+A new cumulative `RuntimeStatus.max_mode_reached` tracks the worst `RuntimeMode` reached during a
+run; `Kernel.shutdown()` derives `verification_level` (`"FULL"`/`"REDUCED"`) from it and surfaces
+the value on `ShutdownResult`, `RunManifest` (`run_manifest.json`), and `run_report.json`/`.md`.
+The cheap always-on partial/sampled fingerprint alternative was not pursued — the labeling branch
+was judged sufficient. The Tier-2 `audit_mode` fingerprint gate and the DEGRADED/SURVIVAL
+canonical-hash gate remain deliberately conditional, unchanged by this epic. See
+`docs/plans/determinism_verification_gap_epic.md`'s `## Status` and `docs/engine/known_limitations.md`
+§2.4 for detail.
 
 - The Tier-2 SHA-256 fingerprint check that would catch a subtle off-path field mutation during
   a read-only phase is gated behind `audit_mode=True` — invisible in a default production run.

@@ -207,3 +207,64 @@ class TestArchitectureNoDirectHashInNormalTickPath:
                 pass  # pragma: no cover
 
         assert not calls, "CanonicalStateHasher.get_hash was called with replay disabled and no audit mode"
+
+    def test_canonical_hash_still_conditional_on_replay_richness(self):
+        """Architecture guard (TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC): the
+        verification_level reporting field added on top of ShutdownResult/RunManifest
+        must not have widened _phase_persistence()'s hash-computation gate itself.
+        DEGRADED mode must still emit the literal "SKIPPED" sentinel (never a real
+        hash), and SURVIVAL mode must still emit no TICK_END event at all."""
+        from src.core.state import AuthoritativeState, RegionState
+        from src.core.governance import RuntimeMode
+        from src.engine.kernel import Kernel
+        from src.engine.policy import GovernorPolicy
+        from src.config.profiles import RuntimeProfile, HardwareClass
+        from src.platform.rng import DeterministicRNG
+        from src.engine.checkpoint import CanonicalStateHasher
+
+        profile = RuntimeProfile(
+            name="test",
+            hardware_class=HardwareClass.CLASS_C,
+            max_ram_mb=512,
+            max_cpu_percent=50,
+            max_worker_count=0,
+            max_queue_depth=100,
+            max_replay_buffer_kb=1024,
+            max_observability_budget_percent=5,
+            max_tick_budget_ms=100.0,
+            sampling_interval_ticks=1
+        )
+        region = RegionState(
+            id="r1", name="Region 1", kind="FOREST",
+            bounds=(0, 0, 100, 100), hazard_level=0.1
+        )
+        state = AuthoritativeState(
+            tick=1, seed=12345, world_time=0, regions={"r1": region},
+            next_entity_id=1, next_node_id=1000,
+            terrain={(x, y): "FLOOR" for x in range(0, 10) for y in range(0, 10)}
+        )
+
+        # DEGRADED: hash computation must still be skipped (literal "SKIPPED").
+        rng = DeterministicRNG(state.seed)
+        kernel = Kernel(profile, state, rng)
+        kernel._current_policy = GovernorPolicy.from_mode(RuntimeMode.DEGRADED)
+        emitted = []
+        with patch.object(kernel._replay, "emit", side_effect=lambda event, policy: emitted.append(event)), \
+             patch.object(CanonicalStateHasher, "get_hash") as mock_get_hash:
+            kernel._phase_persistence()
+        mock_get_hash.assert_not_called()
+        assert len(emitted) == 1
+        assert emitted[0].payload["hash"] == "SKIPPED"
+        kernel.shutdown()
+
+        # SURVIVAL: no TICK_END event at all (replay_allowed=False).
+        rng2 = DeterministicRNG(state.seed)
+        kernel2 = Kernel(profile, state, rng2)
+        kernel2._current_policy = GovernorPolicy.from_mode(RuntimeMode.SURVIVAL)
+        emitted2 = []
+        with patch.object(kernel2._replay, "emit", side_effect=lambda event, policy: emitted2.append(event)), \
+             patch.object(CanonicalStateHasher, "get_hash") as mock_get_hash2:
+            kernel2._phase_persistence()
+        mock_get_hash2.assert_not_called()
+        assert emitted2 == []
+        kernel2.shutdown()
