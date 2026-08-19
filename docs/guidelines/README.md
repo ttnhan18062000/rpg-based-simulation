@@ -18,6 +18,6 @@ Standards and conventions for developers contributing to the RPG Engine V2.
 ## 🛠️ Contribution Rules
 
 1.  **Authoritative Pipeline**: Never mutate state directly; always propose via `StateUpdate`.
-2.  **Deterministic RNG**: Use `DeterministicRNG` for all stochastic logic.
+2.  **Deterministic RNG**: Use `DeterministicRNG` for all gameplay/simulation stochastic logic. For non-gameplay, non-replay-critical randomness (e.g. network retry-backoff jitter), use `new_random_source()` from `src/platform/rng.py` instead — never a bare `import random` (INFRA-118).
 3.  **Typed Contracts**: Prefer strict enums and dataclasses over raw strings/dicts.
 4.  **Testing First**: Every new logic law must be accompanied by an integrity test.

@@ -1,5 +1,4 @@
 import logging
-import random
 import requests
 import json
 import threading
@@ -8,6 +7,7 @@ from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 from src.observability.alerts.models import AlertEvent
+from src.platform.rng import new_random_source
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ class WebhookAlertSink(AlertSink):
     def _compute_backoff_delay(self, attempt: int, rng: Optional["random.Random"] = None) -> float:
         capped = min(self.BACKOFF_CAP_SECONDS, self.BACKOFF_BASE_SECONDS * (2 ** max(0, attempt - 1)))
         jitter = capped * self.BACKOFF_JITTER_RATIO
-        r = rng or random
+        r = rng or new_random_source()
         return max(0.0, capped + r.uniform(-jitter, jitter))
 
     def _circuit_allows_dispatch(self) -> bool:
