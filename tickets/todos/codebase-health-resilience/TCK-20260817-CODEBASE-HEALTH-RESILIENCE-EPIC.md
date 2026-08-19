@@ -70,7 +70,7 @@ doc fix from either audit has been applied yet.
 | G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | P2 | standard | **DONE** |
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard | **DONE** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard | **DONE** |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic | open (1 of 4 items extracted, see below) |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic | open (3 of 4 items resolved/extracted, see below) |
 | K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | open |
 
 **(2026-08-18)** Audited all 10 sub-epics against this project's actual epic-tier bar ("large
@@ -83,10 +83,13 @@ both are genuinely multi-ticket-shaped per their source docs. No sub-epic ticket
 **(2026-08-19)** 7 of the 8 downgraded tickets (A, B, D, E, G, H, I) have since been implemented
 and closed (see `tickets/done/`, `tickets/working_log.csv`) — see the Status column above. Only F
 remains open, correctly, since its own acceptance criteria explicitly gate it on a deployment-plan
-decision not yet made. J and K are still scope-only epics; J had item 3 (domains test-dir
-placement) extracted into its own standalone standard-tier ticket,
-`TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING`, once concretely verified — the same "extract once
-concrete" pattern used for the original 8 downgrades. A second, independent finding from this
+decision not yet made. J and K are still scope-only epics; J has had 3 of its 4 items resolved
+directly or extracted, same "resolve once concrete" pattern used for the original 8 downgrades:
+item 3 (domains test-dir placement) → `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING`; item 1
+(`src/lab/workflows.py` split) → `TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT`; item 2
+(`observability/mining/` naming overlap) resolved directly within J itself (not duplicative, no
+ticket needed) via an AST-level structural investigation. J's only remaining item is
+`pipeline.py`/`tactical.py` coverage verification. A second, independent finding from this
 session's test-base review (not from the original D23/D24 audits) also produced a new sibling
 ticket, `TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK`.
 
@@ -135,6 +138,7 @@ ticket, `TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK`.
 - TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC
 - TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC
 - TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING (extracted from J item 3, 2026-08-19)
+- TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT (extracted from J item 1, 2026-08-19)
 - TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK (new finding from this session's test-base
   review, not from the original D23/D24 audits)
 
@@ -166,11 +170,11 @@ None yet — staging artifacts for this ticket are in
 - Which sub-epic(s) to formalize first is an open decision for the requester — the roadmap
   recommends A (dead infra) and B (engine liveness) as the only two both audits independently
   rank P0, with no dependency between them.
-- Two items are flagged by the audits themselves as needing a closer look before any remediation
-  ticket is written: (1) whether `pipeline.py`/`tactical.py` are genuinely covered indirectly via
-  integration/kernel suites, or represent a real test-coverage gap; (2) whether
-  `src/observability/mining/`'s three similarly-named orchestration classes are legitimately
-  distinct or partially duplicative.
+- One item remains flagged as needing a closer look before any remediation ticket is written:
+  whether `pipeline.py`/`tactical.py` are genuinely covered indirectly via integration/kernel
+  suites, or represent a real test-coverage gap. (The `src/observability/mining/` naming-overlap
+  question was resolved 2026-08-19 — not duplicative, see `TCK-20260817-CODEBASE-NAVIGABILITY-
+  HYGIENE-EPIC`'s Scope section.)
 - Whether hardware-class (A/B/C) performance budgets are runtime-enforced or configuration-only
   was explicitly not fully traced in D23 and would need a follow-up pass if it matters for a
   future decision.

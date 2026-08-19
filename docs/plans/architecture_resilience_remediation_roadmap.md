@@ -45,15 +45,21 @@ multi-ticket-shaped). No ticket was removed.
 | G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/architecture_boundary_hardening_epic.md` | standard | **Resolved** |
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/error_handling_hygiene_epic.md` | standard | **Resolved** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/determinism_verification_gap_epic.md` | standard | **Resolved** |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic | open (item 3 extracted, see below) |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic | open (3 of 4 items resolved/extracted, see below) |
 | K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open |
 
-**(2026-08-19)** Two new tickets, sourced from this session's own test-base structure review
-rather than the original D23/D24 audits, extend this tree:
+**(2026-08-19)** Three new tickets extend this tree, plus one item resolved without a ticket:
 - `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING` — Epic J's item 3 (domains test-dir placement),
   extracted once concretely verified (13 of 19 `src/domains/` subpackages correctly nested under
   `tests/unit/domains/`, 6 flat: `campaigns`, `chronicle`, `culture`, `faction`, `feature_packs`,
-  `optimization`).
+  `optimization`). Sourced from this session's own test-base structure review, not the D23/D24
+  audits.
+- `TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT` — Epic J's item 1 (`src/lab/workflows.py`
+  split), extracted once concretely investigated via AST structural parsing (8 milestone-numbered
+  pipeline classes + 1 shared helper, 10 facade-preservable import call sites).
+- Epic J's item 2 (`src/observability/mining/` naming overlap) resolved directly within J itself
+  — AST-level investigation found 4 distinct, non-overlapping pipeline-stage classes, not
+  duplicative. No ticket needed.
 - `TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK` — a new finding: `.github/workflows/test.yml`
   enumerates test directories by explicit path with no automated completeness guard, the same
   class of gap `TCK-20260817-CI-COVERAGE-GAP-16-ORPHANED-TEST-DIRS` fixed once (16 dirs, 439
@@ -277,11 +283,14 @@ canonical-hash gate remain deliberately conditional, unchanged by this epic. See
 ### Epic J — Codebase Navigability & Test Hygiene
 **Priority: P3**
 
-- Split `src/lab/workflows.py` (2,694 LoC, 9 `*Workflow` classes) into one file per workflow —
-  mechanical, low-risk, meaningfully improves navigability of the single largest `src/` file.
-- Investigate `src/observability/mining/`'s naming overlap (`MiningExperimentController`,
-  `MiningReviewWorkflow`/`MiningQualityGate`, `AIAgentInvestigationRunner`) — targeted read
-  required before any consolidation; flagged Suspicious, not confirmed duplicative.
+- **(2026-08-19) Extracted to `TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT`.** Split
+  `src/lab/workflows.py` (2,694 LoC, 9 `*Workflow` classes) into one file per workflow —
+  AST-verified: 8 milestone-numbered pipeline classes + 1 shared helper, mechanical, low-risk.
+- **(2026-08-19) Resolved directly, not duplicative — no ticket needed.**
+  `src/observability/mining/`'s naming overlap (`MiningExperimentController`,
+  `MiningReviewWorkflow`/`MiningQualityGate`, `AIAgentInvestigationRunner`) — AST-level structural
+  investigation (signatures + docstrings) found 4 distinct, non-overlapping pipeline-stage
+  responsibilities (execute → AI-investigate → human-review → CI-gate).
 - **(2026-08-19) Extracted to `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING`.** Standardize
   `tests/unit/domains/` vs. flat domains-subpackage test-dir placement — verified exact split: 13
   of 19 `src/domains/` subpackages nested correctly, 6 (`campaigns`, `chronicle`, `culture`,
