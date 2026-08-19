@@ -66,7 +66,7 @@ doc fix from either audit has been applied yet.
 | C — Doc Drift Reconciliation | *(no epic — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — | — |
 | D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | P1 | standard | **DONE** |
 | E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | P1 | hotfix | **DONE** |
-| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | P2 | standard | open (still gated on deployment plans) |
+| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | P2 | standard | open (deployment confirmed trusted-network-only 2026-08-19; auth/admission-control stay deferred; CORS item extracted) |
 | G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | P2 | standard | **DONE** |
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard | **DONE** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard | **DONE** |
@@ -151,6 +151,7 @@ out to be.
 - TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING (extracted from J item 3, 2026-08-19)
 - TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT (extracted from J item 1, 2026-08-19)
 - TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET (extracted from K item 1, 2026-08-19)
+- TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG (extracted from F item 1, 2026-08-19)
 - TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK (new finding from this session's test-base
   review, not from the original D23/D24 audits)
 
