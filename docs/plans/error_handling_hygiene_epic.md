@@ -12,6 +12,35 @@ tags: [observability]
 **Source:** `docs/audits/D23_architecture_resilience.md` §D, §J (R7, R8)
 **Priority:** P2 — explicitly targeted, not a blanket sweep.
 
+## Status
+Resolved by `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC`. Both Problem items below now describe
+pre-fix history, not current state.
+
+1. `WebhookAlertSink` (`src/observability/alerts/sinks.py`) now computes delay via a new
+   `_compute_backoff_delay(attempt, rng=None)` method — capped exponential
+   (`BACKOFF_BASE_SECONDS * 2 ** (attempt - 1)`, capped at `BACKOFF_CAP_SECONDS`) with proportional
+   jitter (`BACKOFF_JITTER_RATIO`), directly mirroring `RedisStreamConsumer`'s Epic D precedent —
+   replacing the old `time.sleep(0.5 * attempt)` linear formula and its misleading comment. A new
+   3-state circuit breaker (`_circuit_state`: `closed`/`open`/`half_open`, instance-scoped, guarded
+   by `_circuit_lock`) opens after `CIRCUIT_BREAKER_FAILURE_THRESHOLD` (5) consecutive failed
+   full-dispatch cycles against the endpoint, and allows exactly one half-open probe per
+   `CIRCUIT_BREAKER_COOLDOWN_SECONDS` (60.0) cooldown; a probe success closes the circuit, a probe
+   failure reopens it. `send(alert: AlertEvent) -> bool`'s external signature, return semantics,
+   and fire-and-forget contract are unchanged — an open circuit makes `send()` return `False`
+   synchronously (same "did not deliver" convention as the existing disabled-sink case), never a
+   silent no-signal drop. Both mechanisms ship as fixed class constants, not new env vars.
+2. The targeted broad-except review (state mutation, persistence, replay) sampled six areas —
+   `src/engine/apply.py`, `src/core/registries.py`, `src/engine/kernel.py`,
+   `src/engine/replay_sink.py`/`replay_manager.py`, `src/engine/worker_manager.py`,
+   `src/engine/tactical.py`/`combat_rewards.py` — and found no site needing a fix: every reviewed
+   site either re-raises as a typed exception, converts the failure into a typed status/result
+   value, or is explicitly documented as an intentional non-authoritative fallback. See the
+   ticket's `## Implementation Notes` for the full per-area disposition. No source file in this
+   list was modified by this ticket. `src/api/` and `src/lab/` were not sampled and remain flagged
+   as the next places to look if a future ticket wants broader confidence.
+
+New parity ledger entry: `INFRA-362` (`docs/parity_ledger/infrastructure.yaml`).
+
 ## Problem
 
 Two distinct findings:

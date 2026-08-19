@@ -10601,3 +10601,46 @@
     tests/api/test_health_liveness.py::test_health_route_wiring_returns_ok_for_healthy_engine,
     tests/unit/observability/test_watchdog.py::test_run_cycle_trip_routes_alert_event
   divergence_note: null
+- id: INFRA-359
+  text: 'RedisStreamConsumer retries a transient handler failure up to MAX_DELIVERY_ATTEMPTS
+    via PEL reclaim, then routes the message to a DLQ stream instead of silent
+    ack+drop -- TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/observability/stream/consumer.py: RedisStreamConsumer._handle_message,
+    RedisStreamConsumer._send_to_dlq, RedisStreamConsumer._reclaim_pending.'
+  test_path: tests/unit/observability/test_stream_consumer_resilience.py::test_handler_exception_triggers_bounded_retry_then_dlq
+  divergence_note: null
+- id: INFRA-360
+  text: 'Orphaned consumer-group PEL entries (handler succeeded but process died before
+    ack) are reclaimed via XPENDING/XCLAIM and redelivered, not lost --
+    TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/observability/stream/consumer.py: RedisStreamConsumer._reclaim_pending.'
+  test_path: tests/integration/observability/test_stream_consumer_pel_reclaim.py::test_orphaned_pel_message_reclaimed_via_xclaim
+  divergence_note: null
+- id: INFRA-361
+  text: 'RedisStreamConsumer.connect() backs off with jitter across consecutive
+    failures under sustained Redis unavailability, capped, and resets after a
+    successful connect -- TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/observability/stream/consumer.py: RedisStreamConsumer.connect,
+    RedisStreamConsumer._compute_backoff_delay.'
+  test_path: tests/unit/observability/test_stream_consumer_resilience.py::test_reconnect_backoff_increases_with_consecutive_failures
+  divergence_note: null
+- id: INFRA-362
+  text: 'WebhookAlertSink retries with capped exponential backoff and jitter, and opens a
+    circuit breaker after consecutive full-dispatch failures against a dead endpoint,
+    half-open-probing after a cooldown -- TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/observability/alerts/sinks.py: WebhookAlertSink._compute_backoff_delay,
+    WebhookAlertSink._circuit_allows_dispatch, WebhookAlertSink._record_outcome.'
+  test_path: tests/unit/observability/test_webhook_alert_sink.py::test_circuit_breaker_opens_after_consecutive_failures
+  divergence_note: null

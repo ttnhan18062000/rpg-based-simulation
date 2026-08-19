@@ -8,7 +8,7 @@ audience: developer
 # Migration CI Lanes
 
 **Status:** Active  
-**Last updated:** 2026-06-09  
+**Last updated:** 2026-08-19  
 **Relates to:** docs/testing/content_migration_test_ownership.md, docs/testing/test_taxonomy.md
 
 This document defines six CI test lanes for targeted execution of content migration tests.
@@ -56,6 +56,65 @@ Each lane maps to a set of pytest markers and a Makefile target.
 5. lane-strict-matrix  (medium, validates full content builds)
 6. lane-legacy-regression  (slow, full regression; runs on PR merge or scheduled)
 ```
+
+---
+
+## Path-Based Skip Condition (CI)
+
+**TCK-20260819-CI-NARROW-PATH-FILTERED-JOBS:** the `migration-lanes` CI job (`.github/workflows/test.yml`)
+now carries a job-level `if:` gated on an upstream `changed-files` job's `run_migration_lanes`
+output. This applies only to `pull_request` events — on `push` to `main`, the nightly `schedule`,
+and `workflow_dispatch`, `migration-lanes` always runs unconditionally, exactly as before.
+
+On a pull request, the `changed-files` gate job computes a three-dot `git diff` (`$BASE...$HEAD`)
+between the PR's base and head commits and matches the changed paths against the following
+trigger set. If none of the changed paths match, `migration-lanes` reports a skipped (no-op
+success) conclusion instead of running `make lane-all-fast` / `make gate-expansion`:
+
+```
+tests/architecture/**
+tests/integration/content/**
+tests/integration/scenarios/**
+tests/integration/worldassembly/**
+tests/integration/certification/**
+tests/integration/runtime/**
+tests/unit/certification/**
+tests/unit/content/**
+tests/unit/runtime/**
+tests/unit/scenarios/**
+tests/unit/worldassembly/**
+tests/conftest.py
+src/core/**
+src/content/**
+src/runtime/**
+src/scenarios/**
+src/worldassembly/**
+src/worldbuilding/**
+src/worldmodules/**
+src/certification/**
+Makefile
+requirements.txt
+.github/workflows/test.yml
+```
+
+Note: the workflow's regex builds this list as a cross product across
+`tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/` — it also
+matches `tests/integration/certification/**` and `tests/integration/runtime/**`, even though no
+marker-tagged test files currently live in those two combinations (the real dependency set found
+during investigation only populated 8 of these 10 slots). This is intentionally over-inclusive,
+not a bug: it can only ever bias the job toward running, never toward a false-negative skip, so
+it was left as-is rather than narrowed to an exact 1:1 match with today's file layout.
+
+The mechanism fails safe: a non-`pull_request` event, a `git diff` command failure, or the
+`changed-files` gate job itself concluding non-`success` all force `migration-lanes` to run
+rather than skip. See `tests/static/test_ci_narrow_path_filtered_jobs.py` for the static
+verification of this behavior.
+
+`perf-cert-arena` has an analogous, independently-computed skip condition (its own trigger path
+set, scoped to `tests/perf/`, `tests/certification/`, `tests/arena/`, and the `src/` dirs those
+suites import) — see the `changed-files` job in `.github/workflows/test.yml` for the full detail;
+it is CI plumbing shared across both jobs, not migration-lane-specific, so it is not duplicated
+here.
 
 ---
 

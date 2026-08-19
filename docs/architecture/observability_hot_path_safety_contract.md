@@ -101,3 +101,58 @@ To ensure compile-time and import-time separation:
 - `src/engine/kernel.py` — `Kernel.shutdown()` (calls `EventRecorder.shutdown()` transitively)
 - `tests/conftest.py` — `_observability_worker_thread_sentinel` (CI regression guard)
 - `tests/tools/memory_probe.py` — `count_drain_workers()`, `snapshot_start/end` (diagnostic helpers)
+
+---
+
+## 7. Consumer-Side Resilience (DLQ, PEL Reclaim, Reconnect Backoff)
+
+`RedisStreamConsumer` (`src/observability/stream/consumer.py`) runs exclusively on
+dedicated background threads (`LiveAnomalyWorker`, `BrokerQualityFeed`) — never inside
+`Engine.tick()` or a phase — so this section's sleep-based backoff and bounded-retry
+logic is contract-compliant with §3's hot-path prohibition on thread sleeps. It is this
+section's own "graceful degradation, drop over block" instance of §4.2's transferable
+principle: the consumer gives up on an unrecoverable message and DLQs it rather than
+blocking or looping indefinitely.
+
+**Failure-handling modes**:
+
+| Failure | Handling |
+|---|---|
+| Malformed payload (missing/unparseable `payload`, or invalid `SimulationEvent`) | ACK + drop immediately — unchanged, never retried. |
+| Handler raises an exception | Left un-ACKed (stays in the consumer group's PEL) for reclaim, up to `MAX_DELIVERY_ATTEMPTS = 3` total delivery attempts (first delivery + reclaim retries), then routed to the DLQ stream and ACKed off the source stream. |
+| Process dies after a successful handler call but before ACK | Message stays in the PEL; a later reclaim sweep (by this or another live consumer in the same group) claims and redelivers it via `XCLAIM`. |
+| Redis connection failure (`connect()`) | Reconnect attempts back off with jitter, capped, reset after a successful connect. |
+
+**DLQ stream convention**: a derived name, `f"{stream_name}:dlq"` — a second Redis
+Stream, not a new broker or message queue technology. Written via
+`xadd(dlq_stream_name, fields, maxlen=1000, approximate=True)`, mirroring
+`RedisStreamAdapter`'s existing `maxlen`/`approximate` retention pattern
+(`src/observability/stream/adapters.py`). DLQ entries carry the original stream fields
+plus `dlq_reason`, `dlq_source_id`, `dlq_delivery_count`, and `dlq_failed_at`. The name
+and retention cap are literal constants, not `ObservabilityConfig`-tunable — this is a
+fixed internal convention, not an operator-facing knob.
+
+**Bounded retry via `XPENDING`, not an in-process counter**: `_reclaim_pending()` reads
+each pending entry's `times_delivered` from `XPENDING`'s detail response
+(`RECLAIM_IDLE_MS = 30000` idle floor, comfortably above both callers' `block_ms`
+so an in-flight, still-processing message on a live-but-slow consumer is never mistaken
+for orphaned). Entries with `times_delivered < MAX_DELIVERY_ATTEMPTS` are claimed via
+`XCLAIM` and retried through the same `_handle_message` path used for freshly-read
+messages; entries at `times_delivered >= MAX_DELIVERY_ATTEMPTS` are routed to the DLQ
+and ACKed. Redis's own delivery counter (not an in-memory dict) is authoritative here
+because a reclaim can be performed by a different `RedisStreamConsumer` instance,
+possibly in a different process, than the one that first read the message — an
+in-process counter would not be visible to that peer.
+
+**Reconnect backoff**: `connect()` sleeps `_compute_backoff_delay(attempt)` before any
+attempt after the first consecutive failure — `BACKOFF_BASE_SECONDS = 0.2`, doubling
+per attempt, capped at `BACKOFF_CAP_SECONDS = 30.0`, with `±20%` jitter
+(`BACKOFF_JITTER_RATIO = 0.2`). The failure counter resets to zero on a successful
+connect. The very first attempt (or the first after a reset) never sleeps, so
+`BrokerQualityFeed.start()`'s "return promptly with `health=unavailable`" contract is
+preserved — it calls `connect()` once and never loops itself.
+
+**Relevant code**: `src/observability/stream/consumer.py` —
+`RedisStreamConsumer._handle_message`, `RedisStreamConsumer._send_to_dlq`,
+`RedisStreamConsumer._reclaim_pending`, `RedisStreamConsumer.connect`,
+`RedisStreamConsumer._compute_backoff_delay`.

@@ -197,10 +197,47 @@ jobs:
                  tests/refactor \
                  -m "not slow and not extra_slow" --tb=short -q
 
+  # ── Changed-files gate (path-based skip for perf-cert-arena / migration-lanes) ──
+  # TCK-20260819-CI-NARROW-PATH-FILTERED-JOBS: always runs (no if: of its own -- a
+  # gate job that could itself be skipped would cascade-skip both downstream jobs via
+  # the needs-success mechanism this ticket exists to avoid). Scoped to pull_request
+  # events only; all other event types force both outputs true unconditionally.
+  changed-files:
+    name: "Changed files (path-filter gate)"
+    runs-on: ubuntu-latest
+    outputs:
+      run_perf_cert_arena: ${{ steps.diff.outputs.run_perf_cert_arena }}
+      run_migration_lanes: ${{ steps.diff.outputs.run_migration_lanes }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: diff
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "run_perf_cert_arena=true" >> "$GITHUB_OUTPUT"
+            echo "run_migration_lanes=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          if ! CHANGED=$(git diff --name-only "$BASE...$HEAD" 2>&1); then
+            echo "::warning::changed-files diff failed ($CHANGED) — failing open, both jobs will run"
+            echo "run_perf_cert_arena=true" >> "$GITHUB_OUTPUT"
+            echo "run_migration_lanes=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$CHANGED"
+          PERF_RE='^(tests/(perf|certification|arena)/|src/(ai|api|certification|cognition|config|core|domains|engine|observability|perf|platform|replay|world|worldbuilding)/|Makefile$|requirements\.txt$|\.github/workflows/test\.yml$)'
+          MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|requirements\.txt$|\.github/workflows/test\.yml$)'
+          echo "run_perf_cert_arena=$(echo "$CHANGED" | grep -qE "$PERF_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "run_migration_lanes=$(echo "$CHANGED" | grep -qE "$MIG_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
   # ── Perf / certification / arena ─────────────────────────────────────────
   perf-cert-arena:
     name: "Perf / cert / arena"
     runs-on: ubuntu-latest
+    needs: [changed-files]
+    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -217,6 +254,8 @@ jobs:
   migration-lanes:
     name: "Migration lanes"
     runs-on: ubuntu-latest
+    needs: [changed-files]
+    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
