@@ -12,6 +12,17 @@ tags: [observability]
 **Source:** `docs/audits/D23_architecture_resilience.md` §D, §G, §K (R3)
 **Priority:** P1
 
+## Status
+Resolved by `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC`. Both Problem items below now describe
+pre-fix history: handler exceptions now retry via Redis's own `XPENDING`/`XCLAIM` PEL-reclaim
+mechanism up to `MAX_DELIVERY_ATTEMPTS = 3` before routing to a derived `{stream_name}:dlq` DLQ
+stream; malformed-payload ack+drop is unchanged; a process-death-before-ack orphaned PEL entry is
+now reclaimed and redelivered rather than lost forever; `connect()` backs off with jitter (base
+0.2s, doubling, capped at 30s, ±20% jitter) across consecutive failures, resetting on success,
+with the first attempt after any reset never sleeping. Parity ledger entries
+`INFRA-359`/`INFRA-360`/`INFRA-361` and a new §7 in `observability_hot_path_safety_contract.md`
+document the new behavior.
+
 ## Problem
 
 `src/observability/stream/consumer.py:79-102`, verified directly:

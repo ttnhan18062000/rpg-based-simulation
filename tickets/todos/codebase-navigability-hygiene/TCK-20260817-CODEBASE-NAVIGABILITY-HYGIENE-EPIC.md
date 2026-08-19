@@ -12,7 +12,7 @@ tags: [testing, architecture]
 # TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC
 
 ## Title
-Split src/lab/workflows.py; investigate mining/ naming overlap; standardize domains test-dir placement; verify pipeline.py/tactical.py coverage
+Split src/lab/workflows.py; investigate mining/ naming overlap; verify pipeline.py/tactical.py coverage
 
 ## Status
 EPIC_SCOPED
@@ -36,14 +36,18 @@ inconsistency that could mislead an agent into thinking coverage is missing when
 `pipeline.py`/`tactical.py` (both top-5 by churn and centrality) have no exactly-named dedicated
 unit test file, plausibly but not confirmed covered indirectly.
 
-## Scope
 - Scope-only epic: full findings and proposed remediation steps are in
   `docs/plans/codebase_navigability_hygiene_epic.md`. Detailed, investigated child tickets are
   not created yet.
-- When work begins: run `create-tickets` against a proposal document scoped to this epic's items
-  (workflows.py split, mining/ targeted read, domains test-dir standardization, pipeline.py/
-  tactical.py coverage verification, tests/helpers/ under-utilization), producing investigated
-  child tickets in `tickets/todos/codebase-navigability-hygiene/`.
+- **(2026-08-19)** Item 3 (`tests/unit/domains/` vs. flat domains-subpackage test-dir placement)
+  extracted into its own standalone standard-tier ticket,
+  `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING`, once the exact split (13 nested / 6 flat) was
+  concretely verified — matching the pattern already used for this parent tree's other
+  now-downgraded siblings. This epic's remaining scope is the other 3 items only.
+- When work begins on the remaining 3 items: run `create-tickets` against a proposal document
+  scoped to `src/lab/workflows.py` split, `mining/` targeted read, `pipeline.py`/`tactical.py`
+  coverage verification (and `tests/helpers/` under-utilization), producing investigated child
+  tickets in `tickets/todos/codebase-navigability-hygiene/`.
 
 ## Out of Scope
 - Any consolidation of `src/observability/mining/`'s classes without first doing the targeted
@@ -70,7 +74,6 @@ None yet.
 ## Related Code Areas
 - src/lab/workflows.py
 - src/observability/mining/
-- tests/unit/domains/
 - tests/unit/engine/ (pipeline.py/tactical.py coverage question)
 - tests/helpers/
 

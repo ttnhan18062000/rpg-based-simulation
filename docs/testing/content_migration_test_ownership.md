@@ -92,3 +92,19 @@ Before creating a new test directory:
 3. If creating a new suite, add it to this doc and to `test_taxonomy.md`.
 4. Never add integration-scope tests to `tests/unit/`.
 5. Architecture tests must be static (no runtime simulation, no catalog load via network).
+6. **Domain-subpackage tests always nest under `tests/unit/domains/<name>/` /
+   `tests/integration/domains/<name>/`**, never as a flat `tests/unit/<name>/` sibling — "domain
+   subpackage" means anything with a same-named counterpart under `src/domains/`. This wasn't a
+   stated rule before 2026-08-19, which let 6 subpackages' tests (`campaigns`, `chronicle`,
+   `culture`, `faction`, `feature_packs`, `optimization`) drift to flat placement; fixed by
+   `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING`. This project's test tree is organized
+   type-first (`tests/<type>/<domain>/`), not domain-first — do not nest by domain at the top
+   level (see that ticket's investigation.md for why a domain-first axis was considered and
+   rejected for this repo specifically).
+7. **New test directories must be added to the correct job's explicit path list in
+   `.github/workflows/test.yml`** — this repo's CI has no glob/auto-discovery; an unreferenced
+   directory silently never runs (real incident:
+   `TCK-20260817-CI-COVERAGE-GAP-16-ORPHANED-TEST-DIRS`, 16 dirs / 439 tests never run in CI until
+   a manual audit caught it). `tests/tools/test_ci_workflow_test_coverage.py` (added by
+   `TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK`) catches an omission after the fact, but does
+   not choose which job/lane a new directory belongs in — still do this step by hand.

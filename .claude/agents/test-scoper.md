@@ -9,6 +9,13 @@ You are a test scoping subagent for the rpg-based-simulation project. Given a se
 
 ## Test Directory Map
 
+**Known inconsistency, pending fix (`TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING`):** 6 of the
+flat entries below — `campaigns`, `chronicle`, `culture`, `faction`, `feature_packs`,
+`optimization` — are domain subpackages (same-named counterpart under `src/domains/`) that should
+nest under `domains/<name>/` like the other 13, not sit as flat top-level siblings. This map
+describes reality as it exists **today**; once that ticket lands, update this map to match
+(remove those 6 as flat entries, confirm coverage moved under `domains/`).
+
 **`src/` (game engine/simulation code):**
 ```
 tests/unit/
