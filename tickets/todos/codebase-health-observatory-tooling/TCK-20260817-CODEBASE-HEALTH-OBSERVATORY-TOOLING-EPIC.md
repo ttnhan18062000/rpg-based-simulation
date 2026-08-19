@@ -12,7 +12,7 @@ tags: [architecture, testing]
 # TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC
 
 ## Title
-Build codebase-health observatory tooling: baseline target, impact command, historical scorecard
+Build codebase-health observatory tooling: impact command, historical scorecard, PR report generator
 
 ## Status
 EPIC_SCOPED
@@ -39,27 +39,36 @@ command design explicitly depends on the boundary tests being hardened first (Ep
   `code-health impact src/engine/pipeline.py` example) are in
   `docs/plans/codebase_health_observatory_tooling_epic.md`. Detailed, investigated child tickets
   are not created yet.
-- When work begins: run `create-tickets` against a proposal document scoped to this epic's items
-  (`make codebase-health-baseline`, `code-health impact <path>` command, historical snapshot
-  file, scorecard), producing investigated child tickets in
+- **(2026-08-19)** Cross-referenced D24's own 11-item master implementation plan (§M) against this
+  session's completed work: Phases 1-2 (7 of 11 items) are now done, and this epic's own stated
+  prerequisite (`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`) is confirmed done — this epic
+  is now genuinely unblocked, not just theoretically scoped. Item 1
+  (`make codebase-health-baseline`) was extracted into its own standalone standard-tier ticket,
+  `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`, once confirmed self-contained (no
+  dependency on the rest of this epic's scope). This epic's remaining scope is the other 3 items
+  only — the `code-health impact <path>` command, historical snapshots/scorecard, and PR/AI report
+  generator — which stay bundled since they are genuinely sequential (impact command → snapshots
+  need its data shape → PR report builds on the impact model), not independently extractable.
+- When work begins on the remaining 3 items: run `create-tickets` against a proposal document
+  scoped to them, producing investigated child tickets in
   `tickets/todos/codebase-health-observatory-tooling/`.
 
 ## Out of Scope
-- Building any of this before `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` lands, since
-  the impact command explicitly depends on those tests being trustworthy.
 - A single aggregate "health score" — trend arrows across multiple dimensions instead, per the
   source audit's own explicit guidance.
 
 ## Acceptance Criteria
-- [ ] `docs/plans/codebase_health_observatory_tooling_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] Sequencing after Epic G (architecture boundary hardening) is respected when this epic is picked up.
-- [ ] Child tickets are created via `create-tickets` once this epic is chosen for action.
-- [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+- [x] Sequencing after Epic G (architecture boundary hardening) is respected — confirmed done,
+      this epic is unblocked.
+- [ ] Child tickets are created via `create-tickets` once the remaining 3-item scope is chosen for
+      action.
+- [ ] This epic is not closed until `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET` and
+      the remaining 3 items' eventual child tickets all reach `tickets/done/`.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
-- TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC (prerequisite — impact command depends on
-  hardened boundary tests)
+- TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC (prerequisite — confirmed done 2026-08-19)
+- TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET (item 1 extracted from here, 2026-08-19)
 
 ## Related Docs
 - docs/plans/codebase_health_observatory_tooling_epic.md

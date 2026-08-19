@@ -71,7 +71,7 @@ doc fix from either audit has been applied yet.
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard | **DONE** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard | **DONE** |
 | J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic | open (all 4 items resolved/extracted; awaits 2 sibling tickets reaching done) |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | open |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | open (unblocked — prerequisite Epic G done; 1 of 4 items extracted) |
 
 **(2026-08-18)** Audited all 10 sub-epics against this project's actual epic-tier bar ("large
 multi-ticket initiative") and found 8 of 10 had been mechanically split from the roadmap
@@ -92,6 +92,17 @@ ticket needed) via an AST-level structural investigation. J's only remaining ite
 `pipeline.py`/`tactical.py` coverage verification. A second, independent finding from this
 session's test-base review (not from the original D23/D24 audits) also produced a new sibling
 ticket, `TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK`.
+
+**(2026-08-19, later same day)** J's remaining item (`pipeline.py`/`tactical.py` coverage, plus
+the bundled `tests/helpers/` question) is also now resolved directly — both genuinely, extensively
+covered/explained, no gap found. All 4 of J's original items now have a disposition; J itself
+stays open only until its 2 extracted sibling tickets reach done. Separately, K was investigated
+for the first time this session: its own stated prerequisite (Epic G) is confirmed done, unblocking
+it, and item 1 (`make codebase-health-baseline`) was extracted into
+`TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET` once confirmed self-contained. K's other 3
+items (impact command, historical snapshots/scorecard, PR report generator) stay bundled — they
+are genuinely sequential, not independently extractable the way this session's other items turned
+out to be.
 
 ## Out of Scope
 - Implementing any fix from either audit (RabbitMQ/Kafka removal, `/health` fix, Redis DLQ,
@@ -139,6 +150,7 @@ ticket, `TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK`.
 - TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC
 - TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING (extracted from J item 3, 2026-08-19)
 - TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT (extracted from J item 1, 2026-08-19)
+- TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET (extracted from K item 1, 2026-08-19)
 - TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK (new finding from this session's test-base
   review, not from the original D23/D24 audits)
 

@@ -24,8 +24,11 @@ over time today.
 
 ## Scope for the eventual `create-tickets` pass
 
-- `make codebase-health-baseline`: a permanent target producing the LoC/churn snapshot this
-  session ran ad hoc, with the append-only-file exclusions baked in from the start.
+- **(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`.**
+  `make codebase-health-baseline`: a permanent target producing the LoC/churn snapshot this
+  session ran ad hoc, with the append-only-file exclusions baked in from the start. Extracted once
+  confirmed self-contained (no dependency on the rest of this epic's scope) — this epic's own
+  prerequisite (Epic G) was also confirmed done at the same time, unblocking the epic as a whole.
 - `code-health impact <path>` command: composable from `graphify-out/`'s existing edge data,
   `tests/architecture/`'s boundary tests (post Epic G hardening), and `docs/REGISTRY.yaml`'s
   existing `related_code_areas` field — full worked design and example (`src/engine/pipeline.py`)
@@ -39,14 +42,17 @@ over time today.
 
 ## Out of scope
 
-- Building any of this before Epic G's boundary-test hardening lands, since the impact command
-  explicitly depends on those tests being trustworthy.
 - A single aggregate "health score" — the source audit explicitly recommends trend arrows across
   multiple dimensions instead.
 
+**(2026-08-19)** Epic G's boundary-test hardening is confirmed done
+(`tickets/done/TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC.md`) — the prerequisite that
+previously gated this epic's remaining scope is cleared.
+
 ## Acceptance signal for this epic (not yet broken into child tickets)
 
-- A repeatable, `make`-invokable LoC/churn baseline exists and excludes known bookkeeping noise.
+- (LoC/churn baseline: see `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`, no longer
+  tracked here.)
 - The `code-health impact <path>` command produces the same shape of output as the worked
   `pipeline.py` example in D24 §L for at least one real path.
 - Metrics persist across at least two runs in an append-only history file.

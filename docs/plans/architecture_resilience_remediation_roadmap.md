@@ -46,7 +46,7 @@ multi-ticket-shaped). No ticket was removed.
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/error_handling_hygiene_epic.md` | standard | **Resolved** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/determinism_verification_gap_epic.md` | standard | **Resolved** |
 | J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic | open (all 4 items resolved/extracted; awaits 2 sibling tickets reaching done) |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open (unblocked — prerequisite Epic G done; 1 of 4 items extracted) |
 
 **(2026-08-19)** Three new tickets extend this tree, plus one item resolved without a ticket:
 - `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING` — Epic J's item 3 (domains test-dir placement),
@@ -314,8 +314,11 @@ still waiting on.
 
 ### Epic K — Codebase Health Observatory Tooling
 **Priority: P3, deliberately built last**
+**(2026-08-19)** Its own prerequisite (Epic G) is confirmed done — this epic is now genuinely
+unblocked, not just theoretically scoped.
 
-- `make codebase-health-baseline`: permanent LoC/churn snapshot target, excluding known
+- **(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`.**
+  `make codebase-health-baseline`: permanent LoC/churn snapshot target, excluding known
   append-only process files (`agent-monitoring/*.jsonl`, `tickets/working_log.csv`,
   `docs/REGISTRY.yaml`) by name/pattern — without this exclusion, every report is dominated by
   expected bookkeeping churn, not real instability signal.
