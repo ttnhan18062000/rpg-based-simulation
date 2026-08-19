@@ -82,6 +82,9 @@ _CONSTRAINT_DOC_PREFIXES = (
 
 _REF_TABLES = ("code_refs", "test_refs", "constraint_refs", "ticket_refs")
 
+_FRONTEND_ROOT = _REPO_ROOT / "dashboard-frontend"
+_FRONTEND_EXTENSIONS = (".ts", ".tsx", ".js", ".jsx")
+
 _STATUS_SEVERITY = {"divergent": 0, "missing": 1, "unsupported": 2, "verified": 3, "legacy_verified": 4}
 _PRIORITY_ORDER = {"P0": 0, "P1": 1, "P2": 2}
 _IMPACT_PATH_TABLES = ("code_refs", "constraint_refs", "ticket_refs")
@@ -343,11 +346,45 @@ def _populate_entry_health(conn: sqlite3.Connection) -> dict:
             )
 
     for table in ("code_refs", "test_refs", "constraint_refs"):
-        for entry_id, path in conn.execute(f"SELECT entry_id, path FROM {table}"):
-            if not (_REPO_ROOT / path).exists():
-                _insert(entry_id, "absent_file", f"{table}:{path}")
+        for entry_id, path, source_field in conn.execute(
+            f"SELECT entry_id, path, source_field FROM {table}"
+        ):
+            # legacy_evidence deliberately documents the pre-V2 (often since-deleted)
+            # implementation location -- that is the field's entire purpose, paired
+            # against v2_evidence's current-location claim. Checking it for
+            # filesystem existence produces a false positive on every entry that
+            # correctly cites a since-removed legacy path (confirmed real cases:
+            # SUB-007, SUB-073, STRAT-257 all cite a legitimately-deleted legacy
+            # file here while their v2_evidence correctly cites the live one).
+            if source_field == "legacy_evidence":
+                continue
+            if _path_resolves(path):
+                continue
+            _insert(entry_id, "absent_file", f"{table}:{path}")
 
     return counts
+
+
+def _path_resolves(path: str) -> bool:
+    """True if `path` exists at the repo root, or -- for a bare `src/...` frontend
+    source path -- under dashboard-frontend/, which is a second, separate package
+    root the ledger's bare `src/...` citation convention doesn't distinguish from
+    the backend's own src/. Confirmed by TCK-20260819-STANDARD-PARITY-LEDGER-HYGIENE-
+    SWEEP's investigation: real frontend code lives at
+    dashboard-frontend/src/App.tsx, cited in the ledger as plain src/App.tsx.
+
+    A declared test_path may carry a `::test_function` pytest node-id suffix (see
+    _TEST_PATH_DECLARED_RE); that suffix is not part of the filesystem path, so it
+    is stripped before the existence check. This module already disclaims
+    symbol-level verification ("no symbol-level reference data" -- see
+    v1_decisions_phase0.md "Path-only links"), so checking only the file component
+    is consistent with its existing, stated scope, not a new leniency."""
+    file_path = path.split("::", 1)[0]
+    if (_REPO_ROOT / file_path).exists():
+        return True
+    if Path(file_path).suffix in _FRONTEND_EXTENSIONS:
+        return (_FRONTEND_ROOT / file_path).exists()
+    return False
 
 
 def _populate_entry_fts(conn: sqlite3.Connection) -> None:

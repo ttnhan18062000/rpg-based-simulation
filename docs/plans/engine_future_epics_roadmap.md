@@ -40,7 +40,7 @@ These are pre-existing, already-flagged issues found during the scan, not new pr
 | `COMB-290` wound threshold doc/code divergence (`damage > max_hp * 0.25` vs. mechanics bible) | `parity_ledger/combat_movement.yaml`, **P1 divergent** | Parity bug, needs doc or code reconciliation |
 | `COMB-133`/`COMB-134` empty ledger stubs ("Phase 8 owns:" / "Phase 9 owns:" with no content) | `parity_ledger/combat_movement.yaml`, **P0 missing** | Documentation gap, not behavior gap — but P0 per ledger rules |
 | `STRAT-164`/`STRAT-177`, `SOC-134` missing parity tests | `parity_ledger/strategic_cognition.yaml`, `social_narrative.yaml`, **P0 missing** | Test debt on otherwise-certified subsystems |
-| `RPG-INFRA-095` ID collision — one ID, two unrelated meanings in `logic_checklist_exhaustive.md` vs. parity ledger | infra fork | Documentation hygiene, could mislead future agents |
+| `RPG-INFRA-095` ID collision — one ID, two unrelated meanings, was in `logic_checklist_exhaustive.md` vs. parity ledger | infra fork | Resolved by `TCK-20260819-STANDARD-PARITY-LEDGER-HYGIENE-SWEEP`: the file (orphaned, unwired from Makefile/CI) is archived to `docs/archive/logic_checklist_exhaustive.md`; `docs/parity_ledger/*.yaml` is the sole authoritative parity-tracking mechanism going forward, so the collision no longer has two live sources |
 | `docs/engine/known_limitations.md` is stale | flagged independently by **3 of 5 forks** | At least one claim (blacksmith-only towns) is already contradicted by done work (`TCK-20260425-PH7-M3-RECOVERY`). Needs a refresh/retire pass before it misleads another investigation — this doc is exactly the kind of authoritative source CLAUDE.md's Context Scan rule tells agents to trust |
 
 ## Candidate Epics

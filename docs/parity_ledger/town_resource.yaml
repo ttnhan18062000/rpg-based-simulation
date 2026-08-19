@@ -436,26 +436,6 @@
   test_path: null
   divergence_note: null
   support_boundary: null
-- id: TOWN-040
-  text: '`test_rng`: Rng.'
-  status: missing
-  priority: P0
-  legacy_evidence: null
-  v2_evidence: null
-  proof_type: null
-  test_path: null
-  divergence_note: null
-  support_boundary: null
-- id: TOWN-041
-  text: '`test_entity`: Entity.'
-  status: missing
-  priority: P0
-  legacy_evidence: null
-  v2_evidence: null
-  proof_type: null
-  test_path: null
-  divergence_note: null
-  support_boundary: null
 - id: TOWN-042
   text: "`test_guild_intel_to_strategy_visible_pipeline`: Guild intel to strategy\
     \ visible pipeline \u2014 Verify that guild intel produces leads/zones that are\
@@ -2093,7 +2073,7 @@
     src/worldbuilding/compiler.py — ResourceNodeState(regen_rate_per_tick=res_spec.regen_rate).
     Verified by TCK-20260628-E21C-COMPILER-REGEN.
   proof_type: parity
-  test_path: tests/unit/worldbuilding/test_compiler.py::test_compiler_resource_node_regen_rate
+  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compiler_resource_node_regen_rate
   divergence_note: >
     Prior to TCK-20260628-E21C-COMPILER-REGEN, compiler-seeded nodes had regen_rate_per_tick=0
     (permanent depletion). This was an unintentional gap — not a design decision.

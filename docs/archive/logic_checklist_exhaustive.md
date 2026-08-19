@@ -1,8 +1,9 @@
 ---
-status: active
+status: archive
+authority: P2
+audience: historical
 layer: guidelines
-authority: P1
-audience: developer
+original_date: 2026-05-04
 ---
 
 # RPG Core Logic Checklist — Fresh V2 Re-Audit

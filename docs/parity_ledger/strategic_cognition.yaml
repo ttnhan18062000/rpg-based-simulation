@@ -60,9 +60,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/detour.py` (`enforce_bandwidth` uses `profile.max_leads`)'
+  v2_evidence: '`src/systems/strategic_systems/detour.py` (`DetourSuggestionSystem.enforce_bandwidth`
+    uses `profile.max_leads`; relocated from `src/systems/detour.py` into the strategic_systems
+    package)'
   proof_type: parity
-  test_path: '`tests_v2/strategic/test_cognition_limits.py`'
+  test_path: '`tests/unit/strategic/test_detour_suggestion.py`'
   divergence_note: null
   support_boundary: null
 - id: STRAT-007
@@ -70,9 +72,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/detour.py` (`enforce_bandwidth` uses `profile.max_concerns`)'
+  v2_evidence: '`src/systems/strategic_systems/detour.py` (`DetourSuggestionSystem.enforce_bandwidth`
+    uses `profile.max_concerns`; relocated from `src/systems/detour.py` into the strategic_systems
+    package)'
   proof_type: parity
-  test_path: '`tests_v2/strategic/test_cognition_limits.py`'
+  test_path: '`tests/unit/strategic/test_detour_suggestion.py`'
   divergence_note: null
   support_boundary: null
 - id: STRAT-008
@@ -80,9 +84,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/detour.py` (`suggest_detours` uses `profile.detour_breadth`)'
+  v2_evidence: '`src/systems/strategic_systems/detour.py` (`DetourSuggestionSystem.suggest_detours`
+    uses `profile.detour_breadth`; relocated from `src/systems/detour.py` into the
+    strategic_systems package)'
   proof_type: parity
-  test_path: '`tests_v2/strategic/test_detour_generation.py`'
+  test_path: '`tests/unit/strategic/test_detour_suggestion.py`'
   divergence_note: null
   support_boundary: null
 - id: STRAT-009
@@ -90,9 +96,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/detour.py` (`suppress_exhausted_leads` marks as `EXHAUSTED`)'
+  v2_evidence: '`src/systems/strategic_systems/detour.py` (`DetourSuggestionSystem.suppress_exhausted_leads`
+    marks as `EXHAUSTED`; relocated from `src/systems/detour.py` into the strategic_systems
+    package)'
   proof_type: parity
-  test_path: '`tests_v2/strategic/test_lead_exhaustion.py`'
+  test_path: '`tests/unit/strategic/test_detour_suggestion.py`'
   divergence_note: null
   support_boundary: null
 - id: STRAT-010
@@ -2454,7 +2462,15 @@
   priority: P0
   legacy_evidence: null
   v2_evidence: >-
-    src/domains/adventure/phase.py — ResourceOpportunityProvider imported at module
+    Addendum (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE): AdventureDecisionPhase was deleted;
+    this exact opportunities -> generate() wiring lives on, byte-equivalent, in
+    src/ai/goals/adventure_scorer.py::AdventureGoalScorer.score() (lines ~110-136 — the same
+    ResourceOpportunityProvider + ServiceOpportunityProvider concatenation before
+    AdventureRouteGenerator.generate(), the module's own comment marks it "Replicates the deleted
+    AdventureDecisionPhase.apply()'s opportunities -> generate -> ..." chain). Original evidence,
+    describing the pre-deletion implementation this was ported from, follows below.
+
+    src/domains/adventure/phase.py (deleted) — ResourceOpportunityProvider imported at module
     level; opportunities fetched per hero before generate() call
     (TCK-20260619-FIX-ADVENTURE-OPPORTUNITY-WIRING). Decision trace writer import
     hoisted to module level in TCK-20260624-FIX-PERF-BUDGETS, eliminating O(n)
@@ -2888,7 +2904,22 @@
   priority: P1
   legacy_evidence: null
   v2_evidence: >
-    src/domains/adventure/phase.py:73-76 — heroes list comprehension now includes
+    Addendum (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE): AdventureDecisionPhase was deleted;
+    the four gates now live in different, non-adventure-specific call sites rather than one
+    up-front "heroes list" comprehension: alive/active is enforced generically for every
+    strategic-intelligence candidate at
+    src/systems/strategic_systems/intelligence.py (`evaluate_all_strategic_intents`'s
+    `if not entity.lifecycle.active or not entity.combat.alive: continue` gate, ~line 913);
+    project-lock gating is `evaluate_project_switch()`'s own locked-branch check (same module,
+    see STRAT-236); the HERO-role criterion is now reached indirectly, through
+    src/ai/goals/adventure_scorer.py::_resolve_cognition_profile_id's tier-3 fallback
+    (`entity.identity.role == EntityRole.HERO`) feeding `_supports_adventure_routing`'s
+    per-entity cognition-profile eligibility check in `AdventureGoalScorer.score()` — a
+    cognition-profile-driven predicate, not a direct role-equality gate, for entities with an
+    explicit `cognition_profile_id`/`role_id`. Original evidence, describing the pre-deletion
+    implementation this was generalized from, follows below.
+
+    src/domains/adventure/phase.py:73-76 (deleted) — heroes list comprehension included
     `e.identity.role == EntityRole.HERO` alongside alive/active checks
     (TCK-20260703-ADVENTURE-ELIGIBILITY-ROLE-FILTER). Previously the role criterion was
     documented in the phase docstring and docs/simulation/domains/adventure_contract.md

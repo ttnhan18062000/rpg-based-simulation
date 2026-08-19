@@ -90,7 +90,7 @@ def main():
     # 1. Checklist Validation
     print("Validating Logic Checklist...")
     try:
-        subprocess.check_call([sys.executable, "scripts/ledger_validator.py"])
+        subprocess.check_call([sys.executable, "scripts/archive/ledger_validator.py"])
         print("[PASS] Checklist is valid.")
     except subprocess.CalledProcessError:
         print("[FAILURE] Logic checklist validation failed.")

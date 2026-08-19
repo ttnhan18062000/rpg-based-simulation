@@ -109,7 +109,13 @@ def test_final_certification_report_generation():
         "active_blockers": 3
     }
     
-    checklist_path = "logic_checklist_exhaustive_v2.md"
+    # Checklist-based coverage scoring is retired (predecessor checklist archived to
+    # docs/archive/logic_checklist_exhaustive.md; docs/parity_ledger/ is the sole
+    # authoritative parity-tracking mechanism today). This path is intentionally
+    # unresolvable so _analyze_checklist()'s os.path.exists guard stays a no-op,
+    # matching this test's pre-existing behavior rather than reactivating scoring
+    # against an archived, no-longer-maintained file.
+    checklist_path = "logic_checklist_exhaustive.md.retired"
     output_path = "tests/scratch/certification_report_test.json"
     os.makedirs("tests/scratch", exist_ok=True)
     

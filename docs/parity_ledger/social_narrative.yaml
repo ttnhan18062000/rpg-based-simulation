@@ -3,10 +3,13 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/social.py` (`evaluate_recruitment_offer` checks `betrayal_count`
-    and per-recruiter `trust`)'
+  v2_evidence: '`src/systems/social_systems/appraisal.py` (`SocialAppraisalSystem.appraise_contract`
+    lines 47-54: `entity.social.betrayal_count > 0` combined with the private `bond.sentiment`-
+    derived `trust_score` gates recruitment before public `source_entity.social.public_reputation`
+    is consulted; relocated from the now-deleted `src/systems/social.py` during the social-systems
+    package split, function renamed from `evaluate_recruitment_offer`)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_social_parity.py`'
+  test_path: '`tests/unit/social/test_betrayal_consequence.py::test_betrayal_trauma_blocks_recruitment`'
   divergence_note: null
   support_boundary: null
 - id: SOC-002
@@ -14,9 +17,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/social.py` (`recalibrate_trust` and `update_familiarity`) '
+  v2_evidence: '`src/systems/social_systems/appraisal.py` (`SocialAppraisalSystem.recalibrate_trust`
+    and `SocialAppraisalSystem.update_familiarity`; relocated from the now-deleted
+    `src/systems/social.py` during the social-systems package split)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_social_parity.py`'
+  test_path: '`tests/unit/social/test_source_trust.py`, `tests/unit/social/test_social_bonds.py`'
   divergence_note: null
   support_boundary: null
 - id: SOC-003
@@ -25,9 +30,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/social.py` (`SocialContract` dataclass and `process_contract_outcome`) '
+  v2_evidence: '`src/systems/social_systems/contracts.py` (`ContractService` class wrapping
+    `ContractState`, and `ContractService.resolve_contract_outcome`; relocated from the now-deleted
+    `src/systems/social.py` during the social-systems package split, `process_contract_outcome`
+    renamed to `resolve_contract_outcome`)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_social_parity.py`'
+  test_path: '`tests/unit/social/test_social_contracts.py::test_social_contract_betrayal_consequences`'
   divergence_note: null
   support_boundary: null
 - id: SOC-004
@@ -35,10 +43,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/social.py` (`process_contract_outcome` returns `SocialUpdate`
-    and `TurningPoint`s)'
+  v2_evidence: '`src/systems/social_systems/contracts.py` (`ContractService.resolve_contract_outcome`
+    returns a `SocialUpdate`/`TurningPointState` pair; relocated from the now-deleted
+    `src/systems/social.py` during the social-systems package split, `process_contract_outcome`
+    renamed to `resolve_contract_outcome`)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_social_parity.py`'
+  test_path: '`tests/unit/social/test_social_contracts.py::test_social_contract_betrayal_consequences`'
   divergence_note: null
   support_boundary: null
 - id: SOC-005
@@ -58,10 +68,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/social.py` (`TurningPoint`s affect recruitment and betrayal
-    feedback)'
+  v2_evidence: '`src/core/strategic.py` (`TurningPointState`/`TurningPointKind`) recorded by
+    `src/systems/social_systems/contracts.py::ContractService.resolve_contract_outcome` on
+    betrayal, feeding recruitment/betrayal feedback; relocated from the now-deleted
+    `src/systems/social.py` during the social-systems package split'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_social_parity.py`'
+  test_path: '`tests/unit/social/test_social_contracts.py::test_social_contract_betrayal_consequences`'
   divergence_note: null
   support_boundary: null
 - id: SOC-007
@@ -83,9 +95,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/social.py` (`calculate_recruitment_cost`, `evaluate_recruitment_offer`)'
+  v2_evidence: '`src/systems/social_systems/appraisal.py` (`SocialAppraisalSystem.calculate_recruitment_cost`,
+    `SocialAppraisalSystem.appraise_contract`/`_appraise_recruitment`; relocated from the
+    now-deleted `src/systems/social.py` during the social-systems package split, function renamed
+    from `evaluate_recruitment_offer`)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_social_parity.py`'
+  test_path: '`tests/unit/social/test_recruitment.py`, `tests/unit/social/test_betrayal_consequence.py::test_betrayal_trauma_blocks_recruitment`'
   divergence_note: null
   support_boundary: null
 - id: SOC-009
@@ -547,10 +562,10 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/groups.py` (`GroupSystem.update_groups` recalculates
-    anchor)'
+  v2_evidence: '`src/systems/world_systems/groups.py` (`GroupSystem.update_groups` recalculates
+    anchor; relocated from `src/systems/groups.py` into the world_systems package)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_group_coordination.py`'
+  test_path: '`tests/unit/social/test_groups.py`'
   divergence_note: null
   support_boundary: null
 - id: SOC-052

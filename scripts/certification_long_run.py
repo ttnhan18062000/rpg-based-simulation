@@ -150,8 +150,14 @@ def run_certification_2000():
     os.makedirs("reports", exist_ok=True)
     
     report = CertificationReporter.generate_report(
-        kernel_results, 
-        "logic_checklist_exhaustive_v2.md", 
+        kernel_results,
+        # Checklist-based coverage scoring is retired: the predecessor checklist system
+        # is archived (docs/archive/logic_checklist_exhaustive.md; docs/parity_ledger/ is
+        # the sole authoritative parity-tracking mechanism today). This intentionally
+        # unresolvable path preserves _analyze_checklist()'s existing os.path.exists
+        # no-op (coverage stays 0/0), rather than pointing at a real file and silently
+        # reactivating checklist-based CERTIFIED/PROVISIONAL scoring.
+        "logic_checklist_exhaustive.md.retired",
         report_path
     )
     

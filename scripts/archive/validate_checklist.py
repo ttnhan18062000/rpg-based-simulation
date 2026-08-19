@@ -3,7 +3,7 @@ import re
 import sys
 from collections import Counter
 
-CHECKLIST = Path("docs/logic_checklist_exhaustive.md")
+CHECKLIST = Path("docs/archive/logic_checklist_exhaustive.md")
 SRC_ROOT = Path("src")
 TEST_ROOT = Path("tests")
 

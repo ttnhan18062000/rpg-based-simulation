@@ -336,6 +336,159 @@ class TestEntryHealth:
         assert finding
         assert report["health_finding_counts"]["missing_test_path"] >= 1
 
+    def test_frontend_only_source_path_does_not_flag_absent_file(self, tmp_path):
+        """dashboard-frontend/src/App.tsx is real, but the ledger's convention cites
+        it as bare src/App.tsx -- _path_resolves() must check the dashboard-frontend/
+        root as a second package root for this extension class, not just repo root."""
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "infrastructure.yaml": [
+                    _entry(
+                        "INFRA-900",
+                        status="verified",
+                        v2_evidence="Dashboard root component at `src/App.tsx`.",
+                        test_path="tests/tools/test_parity_index.py::dummy",
+                    )
+                ]
+            },
+        )
+
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        conn = sqlite3.connect(str(paths["db_path"]))
+        findings = conn.execute(
+            "SELECT finding_type FROM entry_health WHERE entry_id = ? AND finding_type = 'absent_file'",
+            ("INFRA-900",),
+        ).fetchall()
+        conn.close()
+
+        assert findings == []
+
+    def test_genuinely_absent_source_path_still_flags_absent_file(self, tmp_path):
+        """A path that resolves at neither the repo root nor dashboard-frontend/ must
+        still be flagged -- the frontend second-root check must not become a blanket
+        suppression of real absent_file drift."""
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "infrastructure.yaml": [
+                    _entry(
+                        "INFRA-901",
+                        status="verified",
+                        v2_evidence="Removed helper at `src/nonexistent_helper_xyz.tsx`.",
+                        test_path="tests/tools/test_parity_index.py::dummy",
+                    )
+                ]
+            },
+        )
+
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        conn = sqlite3.connect(str(paths["db_path"]))
+        findings = conn.execute(
+            "SELECT finding_type FROM entry_health WHERE entry_id = ? AND finding_type = 'absent_file'",
+            ("INFRA-901",),
+        ).fetchall()
+        conn.close()
+
+        assert findings and findings[0][0] == "absent_file"
+
+    def test_declared_test_path_with_node_id_suffix_does_not_flag_absent_file(self, tmp_path):
+        """A declared test_path like tests/x/test_y.py::test_case is a real pytest
+        node id -- the `::test_case` suffix is not part of the filesystem path.
+        _path_resolves() must strip it before checking existence, or every declared
+        test_path with a function suffix would be wrongly flagged as absent even
+        though the underlying .py file exists."""
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry(
+                        "COMB-900",
+                        status="verified",
+                        v2_evidence="See `src/engine/legality.py`.",
+                        test_path="tests/tools/test_parity_index.py::test_some_function",
+                    )
+                ]
+            },
+        )
+
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        conn = sqlite3.connect(str(paths["db_path"]))
+        findings = conn.execute(
+            "SELECT finding_type FROM entry_health WHERE entry_id = ? AND finding_type = 'absent_file'",
+            ("COMB-900",),
+        ).fetchall()
+        conn.close()
+
+        assert findings == []
+
+    def test_declared_test_path_with_nonexistent_file_still_flags_absent_file(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry(
+                        "COMB-901",
+                        status="verified",
+                        v2_evidence="See `src/engine/legality.py`.",
+                        test_path="tests/tools/test_nonexistent_module_xyz.py::test_some_function",
+                    )
+                ]
+            },
+        )
+
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        conn = sqlite3.connect(str(paths["db_path"]))
+        findings = conn.execute(
+            "SELECT finding_type FROM entry_health WHERE entry_id = ? AND finding_type = 'absent_file'",
+            ("COMB-901",),
+        ).fetchall()
+        conn.close()
+
+        assert findings and findings[0][0] == "absent_file"
+
+    def test_legacy_evidence_absent_path_does_not_flag_absent_file(self, tmp_path):
+        """legacy_evidence exists specifically to document the pre-V2 implementation
+        location, paired against v2_evidence's current-location claim -- it is
+        expected, not anomalous, for that path to no longer exist post-migration.
+        Real repo cases: SUB-007/SUB-073 correctly cite a deleted
+        src/core/entities/entity_builder.py here while v2_evidence correctly cites
+        the live src/core/builder.py."""
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "substrate.yaml": [
+                    _entry(
+                        "SUB-900",
+                        status="verified",
+                        legacy_evidence="src/core/entities/entity_builder_removed_long_ago.py",
+                        v2_evidence="`src/engine/legality.py`",
+                        test_path="tests/tools/test_parity_index.py::dummy",
+                    )
+                ]
+            },
+        )
+
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        conn = sqlite3.connect(str(paths["db_path"]))
+        findings = conn.execute(
+            "SELECT finding_type FROM entry_health WHERE entry_id = ? AND finding_type = 'absent_file'",
+            ("SUB-900",),
+        ).fetchall()
+        conn.close()
+
+        assert findings == []
+
 
 # ---------------------------------------------------------------------------
 # Group 5 — FTS5
