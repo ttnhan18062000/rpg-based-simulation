@@ -59,19 +59,19 @@ doc fix from either audit has been applied yet.
   action, per the original instruction.
 
 ## Sub-epic tickets created (2026-08-17)
-| Epic | Ticket | Priority | Tier (as of 2026-08-18) |
-|---|---|---|---|
-| A — Dead Infra Removal | `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` | P0 | standard |
-| B — Engine Liveness & Health | `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` | P0 | standard |
-| C — Doc Drift Reconciliation | *(no epic — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — |
-| D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | P1 | standard |
-| E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | P1 | hotfix |
-| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | P2 | standard |
-| G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | P2 | standard |
-| H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard |
-| I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic |
+| Epic | Ticket | Priority | Tier | Status (as of 2026-08-19) |
+|---|---|---|---|---|
+| A — Dead Infra Removal | `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` | P0 | standard | **DONE** |
+| B — Engine Liveness & Health | `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` | P0 | standard | **DONE** |
+| C — Doc Drift Reconciliation | *(no epic — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — | — |
+| D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | P1 | standard | **DONE** |
+| E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | P1 | hotfix | **DONE** |
+| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | P2 | standard | open (still gated on deployment plans) |
+| G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | P2 | standard | **DONE** |
+| H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard | **DONE** |
+| I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard | **DONE** |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic | open (all 4 items resolved/extracted; awaits 2 sibling tickets reaching done) |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | open |
 
 **(2026-08-18)** Audited all 10 sub-epics against this project's actual epic-tier bar ("large
 multi-ticket initiative") and found 8 of 10 had been mechanically split from the roadmap
@@ -80,11 +80,18 @@ standard tier and E to hotfix tier (each rewritten to a concrete, directly-actio
 acceptance-criteria — no `create-tickets` pass needed for these 8). J and K remain epic tier —
 both are genuinely multi-ticket-shaped per their source docs. No sub-epic ticket was removed.
 
-Once a specific sub-epic is chosen for action: the 8 standard/hotfix ones go straight to
-implementation against their own ticket (now flat files directly under `tickets/todos/`, no
-subfolder — standard/hotfix tier tickets in this project don't carry one); J and K still need a
-`create-tickets` pass against a dedicated proposal document, producing investigated child tickets
-in their own `tickets/todos/<name>/` folder (kept, since they remain epic tier).
+**(2026-08-19)** 7 of the 8 downgraded tickets (A, B, D, E, G, H, I) have since been implemented
+and closed (see `tickets/done/`, `tickets/working_log.csv`) — see the Status column above. Only F
+remains open, correctly, since its own acceptance criteria explicitly gate it on a deployment-plan
+decision not yet made. J and K are still scope-only epics; J has had 3 of its 4 items resolved
+directly or extracted, same "resolve once concrete" pattern used for the original 8 downgrades:
+item 3 (domains test-dir placement) → `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING`; item 1
+(`src/lab/workflows.py` split) → `TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT`; item 2
+(`observability/mining/` naming overlap) resolved directly within J itself (not duplicative, no
+ticket needed) via an AST-level structural investigation. J's only remaining item is
+`pipeline.py`/`tactical.py` coverage verification. A second, independent finding from this
+session's test-base review (not from the original D23/D24 audits) also produced a new sibling
+ticket, `TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK`.
 
 ## Out of Scope
 - Implementing any fix from either audit (RabbitMQ/Kafka removal, `/health` fix, Redis DLQ,
@@ -130,6 +137,10 @@ in their own `tickets/todos/<name>/` folder (kept, since they remain epic tier).
 - TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC
 - TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC
 - TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC
+- TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING (extracted from J item 3, 2026-08-19)
+- TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT (extracted from J item 1, 2026-08-19)
+- TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK (new finding from this session's test-base
+  review, not from the original D23/D24 audits)
 
 ## Related Docs
 - docs/audits/D23_architecture_resilience.md
@@ -159,11 +170,11 @@ None yet — staging artifacts for this ticket are in
 - Which sub-epic(s) to formalize first is an open decision for the requester — the roadmap
   recommends A (dead infra) and B (engine liveness) as the only two both audits independently
   rank P0, with no dependency between them.
-- Two items are flagged by the audits themselves as needing a closer look before any remediation
-  ticket is written: (1) whether `pipeline.py`/`tactical.py` are genuinely covered indirectly via
-  integration/kernel suites, or represent a real test-coverage gap; (2) whether
-  `src/observability/mining/`'s three similarly-named orchestration classes are legitimately
-  distinct or partially duplicative.
+- All items flagged as needing a closer look before any remediation ticket is written are now
+  resolved (2026-08-19, see `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC`'s Scope section):
+  `src/observability/mining/` naming overlap — not duplicative; `pipeline.py`/`tactical.py`
+  coverage — genuinely, extensively covered (71 + 15 direct call sites); `tests/helpers/`
+  under-utilization — explained by `V2EntityBuilder` already covering the same need, not neglect.
 - Whether hardware-class (A/B/C) performance budgets are runtime-enforced or configuration-only
   was explicitly not fully traced in D23 and would need a follow-up pass if it matters for a
   future decision.

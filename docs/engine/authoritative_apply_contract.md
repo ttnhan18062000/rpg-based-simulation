@@ -34,5 +34,5 @@ Before application, results are processed through the `ComponentPatch` model (`s
 ## 6. Verification
 - `src/engine/patches.py`: Component-level patch hierarchy and extraction.
 - `src/engine/apply.py`: Authoritative ApplyPath implementation.
-- `tests/unit/optimization/test_component_patches.py`: Unit verification of no-op detection, patch merging, and dependency extraction.
+- `tests/unit/domains/optimization/test_component_patches.py`: Unit verification of no-op detection, patch merging, and dependency extraction.
 - `tests/integration/optimization/test_component_patch_apply_parity.py`: Integration proof of exact hash parity with legacy state application.

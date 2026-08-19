@@ -34,19 +34,38 @@ standard tier and E to hotfix tier — each now carries a concrete, directly-act
 acceptance criteria, no `create-tickets` pass needed. J and K remain epic tier (genuinely
 multi-ticket-shaped). No ticket was removed.
 
-| Epic | Ticket | Document | Tier (as of 2026-08-18) |
-|---|---|---|---|
-| A — Dead Infra Removal | `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` | `docs/plans/dead_infra_removal_epic.md` | standard |
-| B — Engine Liveness & Health | `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` | `docs/plans/engine_liveness_health_epic.md` | standard |
-| C — Doc Drift Reconciliation | *(none — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — |
-| D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | `docs/plans/redis_stream_resilience_epic.md` | standard |
-| E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | `docs/plans/epic_staleness_status_aware_epic.md` | hotfix |
-| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | `docs/plans/http_admission_control_epic.md` | standard |
-| G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/architecture_boundary_hardening_epic.md` | standard |
-| H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/error_handling_hygiene_epic.md` | standard |
-| I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/determinism_verification_gap_epic.md` | standard |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic |
+| Epic | Ticket | Document | Tier | Status (as of 2026-08-19) |
+|---|---|---|---|---|
+| A — Dead Infra Removal | `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` | `docs/plans/dead_infra_removal_epic.md` | standard | **Resolved** |
+| B — Engine Liveness & Health | `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` | `docs/plans/engine_liveness_health_epic.md` | standard | **Resolved** |
+| C — Doc Drift Reconciliation | *(none — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — | — |
+| D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | `docs/plans/redis_stream_resilience_epic.md` | standard | **Resolved** |
+| E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | `docs/plans/epic_staleness_status_aware_epic.md` | hotfix | **Resolved** |
+| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | `docs/plans/http_admission_control_epic.md` | standard | open (gated on deployment plans) |
+| G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/architecture_boundary_hardening_epic.md` | standard | **Resolved** |
+| H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/error_handling_hygiene_epic.md` | standard | **Resolved** |
+| I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/determinism_verification_gap_epic.md` | standard | **Resolved** |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic | open (all 4 items resolved/extracted; awaits 2 sibling tickets reaching done) |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open |
+
+**(2026-08-19)** Three new tickets extend this tree, plus one item resolved without a ticket:
+- `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING` — Epic J's item 3 (domains test-dir placement),
+  extracted once concretely verified (13 of 19 `src/domains/` subpackages correctly nested under
+  `tests/unit/domains/`, 6 flat: `campaigns`, `chronicle`, `culture`, `faction`, `feature_packs`,
+  `optimization`). Sourced from this session's own test-base structure review, not the D23/D24
+  audits.
+- `TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT` — Epic J's item 1 (`src/lab/workflows.py`
+  split), extracted once concretely investigated via AST structural parsing (8 milestone-numbered
+  pipeline classes + 1 shared helper, 10 facade-preservable import call sites).
+- Epic J's item 2 (`src/observability/mining/` naming overlap) resolved directly within J itself
+  — AST-level investigation found 4 distinct, non-overlapping pipeline-stage classes, not
+  duplicative. No ticket needed.
+- `TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK` — a new finding: `.github/workflows/test.yml`
+  enumerates test directories by explicit path with no automated completeness guard, the same
+  class of gap `TCK-20260817-CI-COVERAGE-GAP-16-ORPHANED-TEST-DIRS` fixed once (16 dirs, 439
+  tests) without adding lasting protection against recurrence — live re-check found
+  `tests/regression/test_behavioral_5k.py` still uncovered by any explicit path today, saved only
+  by marker-luck.
 
 **(2026-08-18)** The 8 downgraded (standard/hotfix) tickets moved from their own
 `tickets/todos/<name>/` folder to flat `tickets/todos/TCK-*.md` files — standard/hotfix tier
@@ -133,6 +152,14 @@ claims are corrected. Both bullets below now describe pre-fix history. See
 
 ### Epic D — Redis Stream Consumer Resilience
 **Priority: P1**
+**Status: Resolved** by `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` — handler exceptions now
+retry via Redis's own `XPENDING`/`XCLAIM` PEL-reclaim mechanism up to `MAX_DELIVERY_ATTEMPTS = 3`
+before routing to a derived `{stream_name}:dlq` DLQ stream; malformed-payload ack+drop is
+unchanged; a process-death-before-ack orphaned PEL entry is now reclaimed and redelivered rather
+than lost; `connect()` backs off with jitter (base 0.2s, doubling, capped 30s, ±20% jitter),
+resetting on success. Parity ledger entries `INFRA-359`/`INFRA-360`/`INFRA-361` and a new §7 in
+`observability_hot_path_safety_contract.md` document the new behavior. See
+`docs/plans/redis_stream_resilience_epic.md`'s `## Status` for detail.
 
 - `src/observability/stream/consumer.py:79-102` ACKs malformed payloads and transient handler
   failures identically — no DLQ, no retry budget. Separate the two: malformed → ack+drop (already
@@ -256,20 +283,32 @@ canonical-hash gate remain deliberately conditional, unchanged by this epic. See
 ### Epic J — Codebase Navigability & Test Hygiene
 **Priority: P3**
 
-- Split `src/lab/workflows.py` (2,694 LoC, 9 `*Workflow` classes) into one file per workflow —
-  mechanical, low-risk, meaningfully improves navigability of the single largest `src/` file.
-- Investigate `src/observability/mining/`'s naming overlap (`MiningExperimentController`,
-  `MiningReviewWorkflow`/`MiningQualityGate`, `AIAgentInvestigationRunner`) — targeted read
-  required before any consolidation; flagged Suspicious, not confirmed duplicative.
-- Standardize `tests/unit/domains/` vs. flat domains-subpackage test-dir placement — a
-  discoverability fix, not a coverage gap (coverage exists for all 19 `domains` subpackages
-  today, just inconsistently located).
-- Verify `pipeline.py`/`tactical.py` test coverage directly — both are simultaneously high-churn
-  (top-5) and high-centrality (god-node-defining) with no exactly-named dedicated unit test file;
-  plausibly covered indirectly via integration/kernel determinism suites, not confirmed either
-  way.
-- Resolve `tests/helpers/` under-utilization (7 of 1,140 sampled test files import it directly) —
-  determine whether reuse happens invisibly via `conftest.py` fixtures instead.
+- **(2026-08-19) Extracted to `TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT`.** Split
+  `src/lab/workflows.py` (2,694 LoC, 9 `*Workflow` classes) into one file per workflow —
+  AST-verified: 8 milestone-numbered pipeline classes + 1 shared helper, mechanical, low-risk.
+- **(2026-08-19) Resolved directly, not duplicative — no ticket needed.**
+  `src/observability/mining/`'s naming overlap (`MiningExperimentController`,
+  `MiningReviewWorkflow`/`MiningQualityGate`, `AIAgentInvestigationRunner`) — AST-level structural
+  investigation (signatures + docstrings) found 4 distinct, non-overlapping pipeline-stage
+  responsibilities (execute → AI-investigate → human-review → CI-gate).
+- **(2026-08-19) Extracted to `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING`.** Standardize
+  `tests/unit/domains/` vs. flat domains-subpackage test-dir placement — verified exact split: 13
+  of 19 `src/domains/` subpackages nested correctly, 6 (`campaigns`, `chronicle`, `culture`,
+  `faction`, `feature_packs`, `optimization`) flat.
+- **(2026-08-19) Resolved directly, genuinely covered — not a gap.** `pipeline.py`/`tactical.py`
+  test coverage — both are simultaneously high-churn (top-5) and high-centrality (god-node-
+  defining) with no exactly-named dedicated unit test file, but `grep` for actual call sites found
+  `AuthoritativeApplyPipeline.refine()` called by 71 test files and `TacticalDecisionSystem`'s
+  public methods called by 15 more — exercised through this repo's existing distributed
+  per-domain pattern, not untested.
+- **(2026-08-19) Resolved directly, explained not neglected.** `tests/helpers/` under-utilization
+  (7 of 1,140 sampled test files import it directly) — `grep` confirmed zero `conftest.py` files
+  import it (ruling out invisible reuse); 359 test files use `V2EntityBuilder` (the production
+  builder) directly instead, which already covers the same need.
+
+All 4 original items now resolved or extracted; this epic has no remaining unscoped work of its
+own — see `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC`'s Acceptance Criteria for what it's
+still waiting on.
 
 *Evidence: D24 §D, §F, §I.*
 

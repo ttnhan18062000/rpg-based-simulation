@@ -1183,7 +1183,7 @@
     (CultureDriftExporter.export called from _advance_state() in orchestrator.py
     after narrative_ledger.extend())'
   proof_type: parity
-  test_path: tests/unit/culture/test_culture_deriver.py::test_deriver_calamity_raises_fatalism
+  test_path: tests/unit/domains/culture/test_culture_deriver.py::test_deriver_calamity_raises_fatalism
   divergence_note: null
   support_boundary: null
 - id: WORLD-CULT-002
@@ -1198,7 +1198,7 @@
     — returns float only); src/domains/motivation/service.py (culture_values optional
     param — reads CulturalBiasApplicator result, never mutates entity)'
   proof_type: parity
-  test_path: tests/unit/culture/test_culture_applicator.py::test_zero_culture_produces_zero_delta
+  test_path: tests/unit/domains/culture/test_culture_applicator.py::test_zero_culture_produces_zero_delta
   divergence_note: null
   support_boundary: null
 - id: WORLD-CULT-003

@@ -2376,7 +2376,7 @@
     _advance_state wiring). (TCK-20260619-E32D-NARRATIVE-LEDGER)
   proof_type: parity
   test_path: >
-    pytest tests/unit/campaigns/test_narrative_ledger.py -x -v;
+    pytest tests/unit/domains/campaigns/test_narrative_ledger.py -x -v;
     pytest tests/integration/scenarios/test_campaign_runtime.py::test_narrative_ledger_populated_with_cross_episode_events -x -v -m slow
   divergence_note: null
   support_boundary: null
@@ -2636,7 +2636,7 @@
     CHRONICLE_THRESHOLD). (TCK-20260619-E51A-SIGNIFICANCE, TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   proof_type: parity
   test_path: >
-    pytest tests/unit/chronicle/test_significance.py tests/unit/chronicle/test_chronicle_compiler.py -x -v
+    pytest tests/unit/domains/chronicle/test_significance.py tests/unit/domains/chronicle/test_chronicle_compiler.py -x -v
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-002
@@ -2659,7 +2659,7 @@
     (TCK-20260619-E51B-GROUPER)
   proof_type: parity
   test_path: >
-    pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
+    pytest tests/unit/domains/chronicle/test_chronicle_compiler.py -x -v
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-003
@@ -2687,7 +2687,7 @@
     (TCK-20260619-E51C-NAMING, TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   proof_type: parity
   test_path: >
-    pytest tests/unit/chronicle/test_naming.py tests/unit/chronicle/test_chronicle_compiler.py -x -v
+    pytest tests/unit/domains/chronicle/test_naming.py tests/unit/domains/chronicle/test_chronicle_compiler.py -x -v
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-004
@@ -2710,7 +2710,7 @@
     (TCK-20260619-E51D-RENDERER)
   proof_type: parity
   test_path: >
-    pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
+    pytest tests/unit/domains/chronicle/test_chronicle_compiler.py -x -v
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-005
@@ -2752,7 +2752,7 @@
     to name_milestone). (TCK-20260619-E53Dc-COMPILER-INTEGRATION)
   proof_type: parity
   test_path: >
-    pytest tests/unit/chronicle/test_faction_chronicle.py -x -v
+    pytest tests/unit/domains/chronicle/test_faction_chronicle.py -x -v
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-001
@@ -2762,7 +2762,7 @@
   legacy_evidence: null
   v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["war_declared"]=0.95). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   proof_type: parity
-  test_path: tests/unit/chronicle/test_significance.py::test_war_declared_scores_0_95
+  test_path: tests/unit/domains/chronicle/test_significance.py::test_war_declared_scores_0_95
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-002
@@ -2772,7 +2772,7 @@
   legacy_evidence: null
   v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["alliance_formed"]=0.80). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   proof_type: parity
-  test_path: tests/unit/chronicle/test_significance.py::test_alliance_formed_scores_0_80
+  test_path: tests/unit/domains/chronicle/test_significance.py::test_alliance_formed_scores_0_80
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-003
@@ -2782,7 +2782,7 @@
   legacy_evidence: null
   v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["peace_treaty"]=0.75). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   proof_type: parity
-  test_path: tests/unit/chronicle/test_significance.py::test_peace_treaty_scores_0_75
+  test_path: tests/unit/domains/chronicle/test_significance.py::test_peace_treaty_scores_0_75
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-004
@@ -2792,7 +2792,7 @@
   legacy_evidence: null
   v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["betrayal"]=0.85). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   proof_type: parity
-  test_path: tests/unit/chronicle/test_significance.py::test_betrayal_scores_0_85
+  test_path: tests/unit/domains/chronicle/test_significance.py::test_betrayal_scores_0_85
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-005
@@ -2802,7 +2802,7 @@
   legacy_evidence: null
   v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["territory_transferred"]=0.85). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   proof_type: parity
-  test_path: tests/unit/chronicle/test_significance.py::test_territory_transferred_scores_0_85
+  test_path: tests/unit/domains/chronicle/test_significance.py::test_territory_transferred_scores_0_85
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-006
@@ -2812,7 +2812,7 @@
   legacy_evidence: null
   v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["siege_begins"]=0.80). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   proof_type: parity
-  test_path: tests/unit/chronicle/test_significance.py::test_siege_begins_scores_0_80
+  test_path: tests/unit/domains/chronicle/test_significance.py::test_siege_begins_scores_0_80
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-007
@@ -2822,7 +2822,7 @@
   legacy_evidence: null
   v2_evidence: src/engine/military_conflict.py (inside `if reg.siege_state is None:` block, appends WorldEvent(category=SIEGE_BEGINS, subject=contested_region_id)). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
   proof_type: parity
-  test_path: tests/unit/faction/test_siege_ledger.py::test_siege_begins_emitted_on_first_siege_tick
+  test_path: tests/unit/domains/faction/test_siege_ledger.py::test_siege_begins_emitted_on_first_siege_tick
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-008
@@ -2832,7 +2832,7 @@
   legacy_evidence: null
   v2_evidence: src/domains/faction/diplomatic_state_machine.py (betrayal_updates optional param; loop detects ALLIED prior→HOSTILE new, sorted subject pair). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
   proof_type: parity
-  test_path: tests/unit/faction/test_betrayal_ledger.py::test_betrayal_emitted_when_allied_faction_transitions_hostile
+  test_path: tests/unit/domains/faction/test_betrayal_ledger.py::test_betrayal_emitted_when_allied_faction_transitions_hostile
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-009
@@ -2842,7 +2842,7 @@
   legacy_evidence: null
   v2_evidence: src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["SIEGE_BEGINS"]=("siege_begins",0.80); generic _extract_narrative_entries reads world_event.subject as subject_id). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
   proof_type: parity
-  test_path: tests/unit/faction/test_siege_ledger.py::test_orchestrator_converts_siege_begins_to_ledger_entry
+  test_path: tests/unit/domains/faction/test_siege_ledger.py::test_orchestrator_converts_siege_begins_to_ledger_entry
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-010
@@ -2852,7 +2852,7 @@
   legacy_evidence: null
   v2_evidence: src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["BETRAYAL"]=("betrayal",0.85); generic _extract_narrative_entries reads world_event.subject as subject_id). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
   proof_type: parity
-  test_path: tests/unit/faction/test_betrayal_ledger.py::test_orchestrator_converts_betrayal_to_ledger_entry
+  test_path: tests/unit/domains/faction/test_betrayal_ledger.py::test_orchestrator_converts_betrayal_to_ledger_entry
   divergence_note: null
   support_boundary: null
 - id: SOC-ABAND-TYPE-01
@@ -2886,7 +2886,7 @@
     src/domains/campaigns/orchestrator.py — _advance_grief_urgencies() detects + decays;
     episode-start loop applies GriefUrgencyImporter. Verified by TCK-20260628-E43F-GRIEF-URGENCY.
   proof_type: parity
-  test_path: tests/unit/campaigns/test_grief_urgency.py::test_grief_importer_injects_social_threat_concern
+  test_path: tests/unit/domains/campaigns/test_grief_urgency.py::test_grief_importer_injects_social_threat_concern
   divergence_note: >
     New mechanic added by TCK-20260628-E43F-GRIEF-URGENCY. No prior behavior existed —
     ally deaths had no feedback into entity motivation state.
@@ -2916,7 +2916,7 @@
     src/domains/adventure/generator.py — FORM_PARTY route checks SOCIAL blockers for nemesis_ids.
     Verified by TCK-20260628-E43G-NEMESIS-RELATION.
   proof_type: parity
-  test_path: tests/unit/campaigns/test_grief_urgency.py::test_nemesis_detection_creates_relation_at_two_episodes
+  test_path: tests/unit/domains/campaigns/test_grief_urgency.py::test_nemesis_detection_creates_relation_at_two_episodes
   divergence_note: >
     New mechanic added by TCK-20260628-E43G-NEMESIS-RELATION. No prior nemesis tracking existed.
   support_boundary: null

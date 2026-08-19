@@ -12,14 +12,26 @@ You are a test scoping subagent for the rpg-based-simulation project. Given a se
 **`src/` (game engine/simulation code):**
 ```
 tests/unit/
-  api/             campaigns/       cognition/       combat/
-  config/          content/         content_semantics/ core/
-  diagnostics/     domains/         entity/          kernel/
-  lab/             lab_agent/       movement/        observability/
-  optimization/    perf/            platform/        progression/
-  quest/           resource/        social/          strategic/
-  tactical/        views/           world/           worldassembly/
-  worldbuilding/   worldgeneration/ worldmodules/
+  api/             cognition/       combat/          config/
+  content/         content_semantics/ core/          diagnostics/
+  domains/         entity/          kernel/          lab/
+  lab_agent/       movement/        observability/   perf/
+  platform/        progression/     quest/           resource/
+  social/          strategic/       tactical/        views/
+  world/           worldassembly/   worldbuilding/   worldgeneration/
+  worldmodules/
+```
+
+**`tests/unit/domains/` (nested per-subpackage tests, mirroring `src/domains/`'s 19
+subpackages — all 18 that have any test coverage nest here; `demographics` has no test
+directory, a separate out-of-scope coverage question):**
+```
+tests/unit/domains/
+  adventure/       campaigns/       chronicle/       combat_engagement/
+  commitment/      cooperation/     culture/         emotion/
+  faction/         feature_packs/   information/     memory/
+  motivation/      optimization/    perception/      progression/
+  time/            world_emergence/
 ```
 
 **`tools/` (agent tooling, KGMCP, agent-monitoring, gate checks, codex adapters — a second,

@@ -84,7 +84,7 @@ During hot-path execution, merging multiple updates targeting the same entity ca
 
 ### Enforcement & Verification
 - **Automated Verification**: Verified by applying multiple staggered patches to mock entities and asserting bit-identical equality against legacy sequential application.
-- **Test Citation**: `tests/unit/optimization/test_state_update_compactor.py` & `tests/integration/optimization/test_component_patch_apply_parity.py`.
+- **Test Citation**: `tests/unit/domains/optimization/test_state_update_compactor.py` & `tests/integration/optimization/test_component_patch_apply_parity.py`.
 
 ---
 
@@ -119,4 +119,4 @@ When compute latency (p95) exceeds the target envelope (50ms), `PhaseBudgetGover
 
 ### Enforcement & Verification
 - **Automated Verification**: Verified by injecting severe compute debt into the governor and asserting that mortality, transactions, and inventory constraints resolve exactly on schedule.
-- **Test Citation**: `tests/unit/optimization/test_phase_budget_governor.py` & `tests/integration/optimization/test_degraded_mode_correctness.py` (Proves flawless correctness under degraded mode throttling).
+- **Test Citation**: `tests/unit/domains/optimization/test_phase_budget_governor.py` & `tests/integration/optimization/test_degraded_mode_correctness.py` (Proves flawless correctness under degraded mode throttling).

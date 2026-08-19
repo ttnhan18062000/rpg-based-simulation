@@ -17,6 +17,10 @@ concurrency:
 
 jobs:
   # ── Unit: core engine + world layer ──────────────────────────────────────
+  # TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK: tests/unit/test_dirty_refresh.py (and two
+  # siblings wired into unit-infra below) sat directly under tests/unit/ with no owning job --
+  # same orphaned-test shape as TCK-20260817's 16 directories, just at file instead of directory
+  # granularity, found by the coverage check this ticket added.
   unit-core-world:
     name: "Unit · core / world"
     runs-on: ubuntu-latest
@@ -40,8 +44,7 @@ jobs:
                  tests/unit/worldmodules \
                  tests/unit/content \
                  tests/unit/content_semantics \
-                 tests/unit/feature_packs \
-                 tests/unit/culture \
+                 tests/unit/test_dirty_refresh.py \
                  -m "not slow and not extra_slow" --tb=short -q
 
   # ── Unit: gameplay systems ────────────────────────────────────────────────
@@ -63,10 +66,8 @@ jobs:
                  tests/unit/progression \
                  tests/unit/quest \
                  tests/unit/movement \
-                 tests/unit/faction \
                  tests/unit/motivation \
                  tests/unit/tactical \
-                 tests/unit/campaigns \
                  tests/unit/scenarios \
                  tests/unit/systems \
                  tests/unit/actions \
@@ -86,7 +87,6 @@ jobs:
         run: |
           pytest tests/unit/domains \
                  tests/unit/observability \
-                 tests/unit/optimization \
                  tests/unit/lab \
                  tests/unit/lab_agent \
                  tests/unit/api \
@@ -96,11 +96,12 @@ jobs:
                  tests/unit/perf \
                  tests/unit/entity \
                  tests/unit/entities \
-                 tests/unit/chronicle \
                  tests/unit/cognition \
                  tests/unit/docs \
                  tests/unit/certification \
                  tests/unit/tools \
+                 tests/unit/test_memory_probe.py \
+                 tests/unit/test_queue_worker_singleton.py \
                  -m "not slow and not extra_slow" --tb=short -q
 
   # ── Integration tests (excluding slow) ────────────────────────────────────

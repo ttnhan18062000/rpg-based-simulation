@@ -2560,7 +2560,7 @@
   v2_evidence: src/domains/campaigns/state.py::CampaignState + EntityCarryForward
     + FactionCarryForward + EpisodeSummary + WorldTimelineEntry + NarrativeLedgerEntry
   proof_type: feature
-  test_path: tests/unit/campaigns/test_campaign_state.py::test_campaign_state_json_round_trip
+  test_path: tests/unit/domains/campaigns/test_campaign_state.py::test_campaign_state_json_round_trip
   divergence_note: null
   support_boundary: null
 - id: INFRA-218
@@ -2638,14 +2638,14 @@
   status: verified
   priority: P1
   v2_evidence: src/domains/feature_packs/registry.py::FeatureRegistry.list_all
-  test_path: tests/unit/feature_packs/test_registry.py::test_list_all_with_enum_class_canonical_first
+  test_path: tests/unit/domains/feature_packs/test_registry.py::test_list_all_with_enum_class_canonical_first
   divergence_note: null
 - id: INFRA-PACK-002
   text: FeaturePackLoader skips packs whose name is absent from RuntimeProfile.active_pack_names.
   status: verified
   priority: P1
   v2_evidence: src/domains/feature_packs/loader.py::FeaturePackLoader.load
-  test_path: tests/unit/feature_packs/test_loader.py::test_load_skips_pack_not_in_active_names
+  test_path: tests/unit/domains/feature_packs/test_loader.py::test_load_skips_pack_not_in_active_names
   divergence_note: null
 - id: INFRA-PACK-003
   text: Demo escort pack registers ESCORT_DIGNITARY in adventure_routing domain without
@@ -2653,7 +2653,7 @@
   status: verified
   priority: P1
   v2_evidence: content/packs/demo_escort_pack/manifest.yaml + src/domains/feature_packs/loader.py
-  test_path: tests/unit/feature_packs/test_loader.py::test_load_demo_escort_pack_registers_escort_dignitary
+  test_path: tests/unit/domains/feature_packs/test_loader.py::test_load_demo_escort_pack_registers_escort_dignitary
   divergence_note: null
 - id: INFRA-221
   text: 'All 10 Phase 10 feature flags in FeatureFlagManager default to FeatureMode.OFF.
@@ -2792,11 +2792,11 @@
   priority: P2
   legacy_evidence: null
   v2_evidence: 'src/engine/patches.py::ComponentPatch.merge (Self return annotation)
-    + tests/unit/optimization/test_component_patches.py
+    + tests/unit/domains/optimization/test_component_patches.py
 
     '
   proof_type: null
-  test_path: tests/unit/optimization/test_component_patches.py
+  test_path: tests/unit/domains/optimization/test_component_patches.py
   divergence_note: null
   support_boundary: null
 - id: INFRA-227
@@ -3730,10 +3730,10 @@
   legacy_evidence: null
   v2_evidence: src/simulation_quality/scorers/narrative.py::NarrativeScorer.score;
     TCK-20260629-SIMQ-EMIT-NARRATIVE wires chronicle_entry_created to event bus via
-    CampaignOrchestrator._emit_chronicle_events(). Tested in tests/unit/campaigns/test_narrative_ledger.py
+    CampaignOrchestrator._emit_chronicle_events(). Tested in tests/unit/domains/campaigns/test_narrative_ledger.py
     (TC-D16..TC-D19).
   proof_type: null
-  test_path: tests/simulation_quality/test_narrative_scorer.py; tests/unit/campaigns/test_narrative_ledger.py;
+  test_path: tests/simulation_quality/test_narrative_scorer.py; tests/unit/domains/campaigns/test_narrative_ledger.py;
     tests/simulation_quality/test_timegate_penalties.py::TestNarrativeTimegate
   divergence_note: null
   support_boundary: null

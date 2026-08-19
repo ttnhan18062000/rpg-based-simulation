@@ -81,7 +81,16 @@ Before ending your turn, confirm all four are true — do not return until each 
   "Files Changed" below and in your structured output's `implementation_summary`.
 - [ ] **`## Files Changed`** lists every file path you created, edited, or deleted for this ticket
   — not only the "primary" file the plan named, and not only files matching the plan's original
-  guess if the real diff touched more or fewer files.
+  guess if the real diff touched more or fewer files. **This explicitly includes
+  `staging_artifacts/{ticket_id}/investigation.md`, `plan.md`, and `test_plan.md` whenever any of
+  them were created or substantively rewritten during this run's own Investigate/Plan phases —
+  even though you personally did not write them.** They are part of this run's real changeset,
+  and `done-checker` treats their omission as a DoD failure (`dod_condition_failed`) — this is the
+  single most common cause of a wasted Verify-phase round-trip (agent-monitoring, week of
+  2026-08-17: `done-checker` failed 10/32 calls, the highest failure rate of any agent that week,
+  with `dod_condition_failed` behind 7 of 9 total gate failures). Check the real diff/git status
+  for these three paths before writing this section, don't rely on memory of what you personally
+  touched.
 - [ ] **Acceptance Criteria checkboxes** — for each `- [ ]` in the ticket's `## Acceptance
   Criteria`, re-read what you actually implemented and check `- [x]` any AC genuinely satisfied.
   Leave a box unchecked if it is genuinely not yet satisfied — never check a box to make the

@@ -256,7 +256,7 @@ content/packs/<name>/manifest.yaml   ← declares route type or domain hook
 1. Create `content/packs/<name>/manifest.yaml` declaring the route type or hook.
 2. Add the pack name to `RuntimeProfile.active_pack_names` for the target environment.
 3. `FeaturePackLoader` will load and register the pack on next startup.
-4. Add unit tests in `tests/unit/feature_packs/`.
+4. Add unit tests in `tests/unit/domains/feature_packs/`.
 
 ---
 
