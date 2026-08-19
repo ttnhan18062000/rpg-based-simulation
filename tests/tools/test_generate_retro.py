@@ -37,6 +37,7 @@ from generate_retro import (  # noqa: E402
     _is_legacy_event,
     _is_gate_fail,
 )
+from tests.tools.skill_staleness_assertions import SkillStalenessWarning, skill_staleness_check
 
 
 @pytest.fixture(autouse=True)
@@ -2343,11 +2344,18 @@ def test_backend_testing_pre_fix_state_would_have_been_flagged(tmp_path):
 def test_backend_testing_post_fix_state_not_currently_flagged():
     """Real-corpus check: the actual, current .claude/skills/backend-testing/SKILL.md has a
     real date_added (2026-08-05, post-fix) — as of this ticket it is within the grace period, so
-    it must not appear in flagged_stale on the real catalog today."""
+    it must not appear in flagged_stale on the real catalog today. Soft-checked (TCK-20260819-
+    SKILL-STALENESS-SOFT-WARNING): grace-period expiry is calendar-driven, not code-driven, so a
+    miss here warns rather than hard-fails CI — see tests/tools/skill_staleness_assertions.py."""
     result = compute_zero_invocation_skill_flags(
         generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
     )
-    assert "backend-testing" not in result["flagged_stale"]
+    skill_staleness_check(
+        "backend-testing" not in result["flagged_stale"],
+        f"skill 'backend-testing' flagged stale (zero invocations past "
+        f"{result['grace_period_days']}-day grace period): "
+        f"flagged_stale={result['flagged_stale']!r}",
+    )
 
 
 def test_zero_invocation_flag_function_never_crashes_on_malformed_skill_md(tmp_path):
@@ -2394,7 +2402,8 @@ def test_zero_invocation_flag_current_domain_skills_all_excluded_on_real_corpus(
     """Real-corpus check (AC2): the 6 domain skills authored by
     TCK-20260804-SKILL-CATALOG-MODERNIZATION-EPIC must never appear in flagged_stale today —
     either because they now have >=1 real invocation, or because they are still within the grace
-    period. Never hardcodes "all 6 show zero" (that snapshot has already drifted)."""
+    period. Never hardcodes "all 6 show zero" (that snapshot has already drifted). Soft-checked
+    (TCK-20260819-SKILL-STALENESS-SOFT-WARNING): see tests/tools/skill_staleness_assertions.py."""
     domain_skills = {
         "observability", "simq-dev", "systems-economy",
         "combat-mechanics", "cognition-strategy", "progression-entities",
@@ -2402,7 +2411,29 @@ def test_zero_invocation_flag_current_domain_skills_all_excluded_on_real_corpus(
     result = compute_zero_invocation_skill_flags(
         generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
     )
-    assert domain_skills.isdisjoint(set(result["flagged_stale"]))
+    stale_domain_skills = domain_skills.intersection(set(result["flagged_stale"]))
+    skill_staleness_check(
+        not stale_domain_skills,
+        f"domain skill(s) flagged stale (zero invocations past "
+        f"{result['grace_period_days']}-day grace period): {sorted(stale_domain_skills)!r} "
+        f"(full flagged_stale={result['flagged_stale']!r})",
+    )
+
+
+def test_skill_staleness_check_ok_returns_true_no_warning(recwarn):
+    assert skill_staleness_check(True, "unused message") is True
+    assert len(recwarn) == 0
+
+
+def test_skill_staleness_check_warns_not_raises_by_default():
+    with pytest.warns(SkillStalenessWarning, match="some-skill flagged stale"):
+        result = skill_staleness_check(False, "some-skill flagged stale: detail")
+    assert result is False
+
+
+def test_skill_staleness_check_hard_true_raises():
+    with pytest.raises(AssertionError, match="some-skill flagged stale"):
+        skill_staleness_check(False, "some-skill flagged stale: detail", hard=True)
 
 
 def test_zero_invocation_flag_has_derivation(tmp_path):
