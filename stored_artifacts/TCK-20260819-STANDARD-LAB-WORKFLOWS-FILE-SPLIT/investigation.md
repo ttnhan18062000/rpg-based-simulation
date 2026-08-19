@@ -54,10 +54,19 @@ No file imports the module as a whole (`import src.lab.workflows`) or relies on 
 defined in the same file beyond importing them together in one `import` statement — trivially
 preserved by a facade re-export.
 
-`safe_path_resolution()` is used by 3 files: `src/lab/audit.py`, `src/lab/workflows.py` itself,
-and `tests/unit/lab_agent/test_agent_guardrails.py` — a genuine shared helper, not
-workflow-specific; must move to its own module, not become "owned" by whichever workflow file
-happens to keep it.
+**Correction (Review, 2026-08-19):** `safe_path_resolution()` is defined independently in TWO
+places, not shared as one function used by 3 files. `src/lab/audit.py:9-25` has its own,
+separately-written `safe_path_resolution()` with a different signature
+(`target_path_str: str` vs. `workflows.py`'s `target_path: str | Path`) and different error
+message text (`"Path traversal detected: ..."` vs. `workflows.py`'s `"Path traversal blocked:
+..."`) — `audit.py` does NOT import from `workflows.py`; grep confirms no `from src.lab.workflows
+import` anywhere in `audit.py`. The two are historical duplicates that happen to share a name,
+not one genuinely shared helper. `workflows.py`'s own copy is used by itself and by
+`tests/unit/lab_agent/test_agent_guardrails.py` (which imports it from `src.lab.workflows`) — 2
+real usage sites, not 3. `audit.py`'s copy is untouched by this ticket (see plan.md's Out of
+Scope) — moving `workflows.py`'s copy to its own module does not affect `audit.py` at all, and
+consolidating the two duplicates into one is explicitly NOT this ticket's scope (would be a real
+behavior change: different exception message text reaching callers/logs).
 
 ## Related
 - `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` (item 1 extracted from here)

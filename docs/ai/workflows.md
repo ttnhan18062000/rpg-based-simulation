@@ -359,7 +359,7 @@ boundary.
 - Graph update description (new nodes and edges for `graphify-out/`)
 - Audit log JSON (what was included, excluded, approved)
 
-**Revert:** `RevertSimulationKnowledgeWorkflow.run(session_id)` (`src/lab/workflows.py`) reverts the
+**Revert:** `RevertSimulationKnowledgeWorkflow.run(session_id)` (`src/lab/workflows/revert_simulation_knowledge.py`) reverts the
 most recent sync for that session. It removes exactly the insight/known-issue/rule files recorded
 in that sync's `files_written` audit event, matches and removes the corresponding
 `decision_log.jsonl` line by exact content equality (never by timestamp alone), and rejects with
