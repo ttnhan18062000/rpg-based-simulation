@@ -323,15 +323,28 @@ Some tools should be invoked automatically based on the task — the user does n
 | Editing or investigating `src/api/` | `/api-design-principles` — review shape/boundaries before or after the change |
 | Investigating a traceback, test failure, or unexpected runtime error | `/debugging-strategies`; if the failure is specifically in world assembly/content resolution (`src/worldassembly/`, `src/worldbuilding/`, `src/worldmodules/`, `src/content/`, `src/core/registries.py`) use `Agent(subagent_type: "world-debugger")` instead — narrower and more specific for that case |
 | Profiling or investigating a slow simulation tick / high-memory world assembly | `/python-performance-optimization` |
+| A `git push` the user already authorized triggers CI on an open PR | Poll `gh pr checks <PR#>` to completion; on any failure, pull real logs before concluding root cause — see "CI Failure Triage" below |
 
 ### Require explicit user opt-in (never auto-invoke)
 
 | Tool | Why |
 |---|---|
 | `Workflow` (`implement-ticket`, `investigate-simulation-result`, etc.) | Spawns many agents, costs real tokens — user must request the scale |
-| `git push`, PR creation, external service calls | Irreversible or visible to others |
+| `git push`, PR creation, `git checkout`/merge to land a batch | Irreversible or visible to others — the user drives when a batch is ready to push, PR'd, or merged; do not decide this yourself |
 
-The boundary is: **single read/query tools are free to invoke proactively; multi-agent orchestration requires the user to ask**.
+The boundary is: **single read/query tools are free to invoke proactively; multi-agent orchestration and anything that changes shared/remote state requires the user to ask**.
+
+### CI Failure Triage (read-only follow-up to an already-authorized push — no separate opt-in needed to check)
+
+Checking CI status and diagnosing a failure is read-only — do it proactively once a push the user already authorized triggers a run, without asking again just to look. What the check finds determines the next step, which is bounded by the table above (a fix still needs its own ticket/pipeline run; pushing that fix rides on the same standing push authorization already granted for the batch, not a fresh ask each time).
+
+1. **Never conclude root cause from the job name or a guess.** Pull real logs (`gh api repos/{owner}/{repo}/actions/jobs/{id}/logs`) for every failing job. Do not assume it's a known local-sandbox quirk (e.g. bare `python3` lacking `pydantic`) without checking the actual CI log first — CI runs in a clean `actions/setup-python` + `pip install -r requirements.txt` environment and does not share the sandbox's gaps.
+2. **Classify each failure before acting:**
+   - **A real regression caused by this session's own changes** → file a `hotfix`-tier ticket and run it through the full pipeline (Scope → Implement → Test → Parity → Verify → Finalize), same as any other hotfix.
+   - **Matches a category `docs/testing/regression_policy.md` already documents as environment-dependent/flaky** (e.g. live-server subprocess tests) → do not code-fix it; report it as environment noise, let it re-run, and don't touch the test.
+   - **A hardcoded test baseline that this session's own legitimate change caused to drift** (matching an existing documented drift pattern, e.g. `tests/tools/test_parity_index_baseline.py`'s `missing_test_path_count`) → same as the first case: a small hotfix ticket updating the baseline with fresh evidence, never a silent edit outside a ticket.
+3. **Never edit a test's assertion or a gate's logic just to make CI pass without one of the paths above** — this is the same Gate Integrity rule (`.claude/skills/implement-ticket/SKILL.md`) applied to CI as the outermost gate, not just the local pipeline's own gates.
+4. Report the real CI status and the triage conclusion. Don't report a fix as done until CI is confirmed green (or explicitly still-pending, reported as such) — a local test pass is not the same claim as a green CI run.
 
 ---
 

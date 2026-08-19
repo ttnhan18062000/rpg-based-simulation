@@ -2731,7 +2731,11 @@
   legacy_evidence: null
   v2_evidence: "src/engine/kernel.py::Kernel._phase_persistence (tick_hash gate) +\
     \ src/engine/policy.py::GovernorPolicy.from_mode (replay_richness by mode) + src/replay/fingerprint.py::StateFingerprinter\
-    \ + docs/engine/known_limitations.md \xA72.4 (TCK-20260627-P2F-CANON-HASH-DOC)\n"
+    \ + docs/engine/known_limitations.md \xA72.4 (TCK-20260627-P2F-CANON-HASH-DOC).\
+    \ This conditional gate itself remains unchanged; DEGRADED/SURVIVAL run outputs\
+    \ are now explicitly flagged as reduced-verification via ShutdownResult.verification_level\
+    \ / RunManifest.verification_level / run_report metadata.verification_level —\
+    \ see INFRA-363 (TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC).\n"
   proof_type: null
   test_path: tests/integration/kernel/test_determinism_suite.py
   divergence_note: null
@@ -10651,4 +10655,26 @@
   v2_evidence: 'src/observability/alerts/sinks.py: WebhookAlertSink._compute_backoff_delay,
     WebhookAlertSink._circuit_allows_dispatch, WebhookAlertSink._record_outcome.'
   test_path: tests/unit/observability/test_webhook_alert_sink.py::test_circuit_breaker_opens_after_consecutive_failures
+  divergence_note: null
+- id: INFRA-363
+  text: A run that ever reaches DEGRADED or SURVIVAL RuntimeMode is explicitly labeled
+    reduced-verification in its outputs. RuntimeStatus.max_mode_reached tracks the
+    worst RuntimeMode reached across the whole run (updated inside reset_dwell(),
+    independent of the replay stream, so it works even in SURVIVAL where no TICK_END
+    event exists). Kernel.shutdown() derives verification_level = "REDUCED" if
+    max_mode_reached >= RuntimeMode.DEGRADED else "FULL" and surfaces it on
+    ShutdownResult.verification_level, RunManifest.verification_level, and
+    run_report.json/.md metadata.verification_level. The underlying Tier-2 fingerprint
+    (audit_mode gate) and canonical-hash conditional gate (INFRA-222/INFRA-223) are
+    unchanged by this -- only a truthful reporting label was added, not a widened
+    always-on check -- TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/engine/runtime_status.py: RuntimeStatus.max_mode_reached,
+    RuntimeStatus.reset_dwell. src/engine/kernel.py: Kernel.shutdown() verification_level
+    derivation. src/core/lifecycle.py: ShutdownResult.verification_level.
+    src/observability/reporting/artifact_repository.py: RunManifest.verification_level.
+    src/observability/reporting/run_report.py: RunReportGenerator.generate() metadata.'
+  test_path: tests/unit/kernel/test_verification_level.py::test_shutdown_result_flags_reduced_verification_after_degraded_run,tests/unit/kernel/test_verification_level.py::test_shutdown_result_full_verification_on_normal_run,tests/unit/kernel/test_verification_level.py::test_shutdown_result_flags_reduced_verification_after_survival_run
   divergence_note: null

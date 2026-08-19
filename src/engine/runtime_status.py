@@ -30,6 +30,7 @@ class RuntimeStatus:
     total_dropped_work: int = 0
     dropped_work_delta: int = 0  # Replaced every tick
     last_transition_tick: int = 0
+    max_mode_reached: RuntimeMode = RuntimeMode.NORMAL
 
     def record_signals(self, signals: PressureSignals) -> None:
         """Append fresh signals and calculate trends."""
@@ -81,6 +82,7 @@ class RuntimeStatus:
         self.current_mode = new_mode
         self.mode_dwell_ticks = 0
         self.last_transition_tick = current_tick
+        self.max_mode_reached = RuntimeMode(max(self.max_mode_reached, new_mode))
 
     def get_recent_history(self, count: int) -> List[PressureSignals]:
         """Return the last N recorded signal sets."""

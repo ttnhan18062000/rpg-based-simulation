@@ -109,6 +109,7 @@ class RunReportGenerator:
             "final_tick": final_tick,
             "final_hash": final_hash,
             "overall_outcome": overall_outcome,
+            "verification_level": getattr(shutdown_result, "verification_level", "FULL"),
             "health_score": health_score,
             "hard_law_violation_count": hard_law_violations_count,
             "hard_law_violations_count": hard_law_violations_count,

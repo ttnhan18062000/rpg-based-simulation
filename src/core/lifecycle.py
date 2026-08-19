@@ -22,6 +22,7 @@ class ShutdownResult:
     replay_outcome: LifecycleOutcome
     overall_outcome: LifecycleOutcome
     failure_reason: Optional[str] = None
+    verification_level: str = "FULL"
 
 
 @dataclass

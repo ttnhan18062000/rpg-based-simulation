@@ -85,7 +85,14 @@ If a tick exceeds 2x its average duration or the hard cap in `RuntimeProfile`, t
 Collects advisory `pressure_report()` from all owned subsystems (event recorder, replay). Errors per subsystem are swallowed — this is a read-only diagnostic method, never called on the tick hot path.
 
 ### `Kernel.shutdown() → ShutdownResult` + `Kernel.shutdown_report() → ShutdownReport`
-`shutdown()` return type is unchanged (`ShutdownResult`). After shutdown, `shutdown_report()` returns a cached `ShutdownReport` with:
+`shutdown()` return type is unchanged (`ShutdownResult`, `src/core/lifecycle.py`), which carries:
+- `final_tick` / `final_hash` — the run's last tick and its final canonical SHA-256
+- `replay_outcome` / `overall_outcome` — `LifecycleOutcome` (`SUCCESS`/`TIMEOUT`/`SKIPPED`/`FAILED`)
+- `failure_reason` — optional failure detail string
+- `verification_level` — `"FULL"` or `"REDUCED"`; see "State Hashing in Phase 7" below and
+  `docs/engine/known_limitations.md §2.4`
+
+After shutdown, `shutdown_report()` returns a cached `ShutdownReport` with:
 - `workers_started` / `workers_stopped` — lifecycle accounting
 - `pending_replay_flushes` — from `ReplayManager.replay_metrics()`
 - `survival_event_counts` — from `EventRecorder._survival_event_counts`
@@ -124,6 +131,15 @@ chests, home storage, camps, tile indices, work debt, and the RNG checkpoint are
 See `docs/engine/known_limitations.md §2.4` for the mode-by-mode table and the full list
 of fingerprint domain gaps. See `docs/engine/deterministic_execution.md` for the
 determinism contract and divergence detection tools.
+
+These per-tick gates stay deliberately conditional — they are never made unconditionally
+always-on. Instead, `Kernel.shutdown()` derives a run-level `verification_level`
+(`"FULL"` / `"REDUCED"`) from `RuntimeStatus.max_mode_reached`, the worst `RuntimeMode`
+reached at any point in the run, and surfaces it on `ShutdownResult.verification_level`,
+`RunManifest.verification_level`, and `run_report.json`/`.md`'s
+`metadata.verification_level`. See `docs/engine/known_limitations.md §2.4` (subsection
+"Run-level `verification_level` label") for the full derivation and rationale.
+(TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC, INFRA-363.)
 
 ## Phase Domain Permissions
 

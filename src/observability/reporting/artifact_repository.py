@@ -33,6 +33,7 @@ class RunManifest(BaseModel):
     catalog_fingerprint: Optional[str] = None
     module_fingerprints: Optional[Dict[str, str]] = None
     state_hash: Optional[str] = None
+    verification_level: Optional[str] = None
 
 class RunArtifactRepository:
     def __init__(self, base_dir: str = "data/runs"):

@@ -158,8 +158,40 @@ remains the authoritative determinism proof for complete state verification.
 
 Source: D09 Finding 6 (Risk 8/15). Ticket: TCK-20260627-P2F-CANON-HASH-DOC.
 
+#### Run-level `verification_level` label
+
+The conditional gates described above (the Tier-2 `audit_mode` fingerprint gate in §2.3
+and the DEGRADED/SURVIVAL canonical-hash gate above) remain deliberately conditional —
+they are not made unconditionally always-on. Instead, a run's outputs carry an explicit,
+truthful `verification_level` label so a consumer of the run's results knows whether the
+strongest per-tick proof was available throughout the run.
+
+`RuntimeStatus.max_mode_reached` (`src/engine/runtime_status.py`) tracks the **worst**
+`RuntimeMode` reached at any point during the run — updated unconditionally inside
+`RuntimeStatus.reset_dwell()`, so it is independent of the replay stream and correctly
+covers SURVIVAL mode (which emits no `TICK_END` events at all) as well as a run that
+dipped into DEGRADED and later recovered to NORMAL before shutdown.
+
+At shutdown, `Kernel.shutdown()` derives:
+
+```
+verification_level = "REDUCED" if max_mode_reached >= RuntimeMode.DEGRADED else "FULL"
+```
+
+This value is cumulative, not instantaneous — a run that recovered to NORMAL by the time
+`shutdown()` is called still reports `"REDUCED"` if it ever touched DEGRADED or SURVIVAL.
+It surfaces in three places:
+
+- `ShutdownResult.verification_level` (`src/core/lifecycle.py`)
+- `RunManifest.verification_level` (`src/observability/reporting/artifact_repository.py`),
+  written to `run_manifest.json`
+- `run_report.json` / `run_report.md`'s `metadata.verification_level` key
+  (`src/observability/reporting/run_report.py`)
+
+Ticket: TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC. Parity ledger: INFRA-363.
+
 ## 3. Tooling / Observability
 - **Metric Granularity**: Some runtime signals (e.g., per-entity strategic bandwidth) are visible in the engine but not yet exported to the external Prometheus/Grafana baseline.
 
 ---
-*Last updated: 2026-06-27.*
+*Last updated: 2026-08-19.*

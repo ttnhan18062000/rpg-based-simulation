@@ -1160,6 +1160,11 @@ class Kernel:
 
         self._last_shutdown_report = report
 
+        # RuntimeMode is an IntEnum (NORMAL=0 < CONSTRAINED=1 < DEGRADED=2 < SURVIVAL=3);
+        # max_mode_reached tracks the worst mode ever reached, so this reflects reduced
+        # verification even if the run recovered to NORMAL before shutdown.
+        verification_level = "REDUCED" if self._status.max_mode_reached >= RuntimeMode.DEGRADED else "FULL"
+
         # Update manifest status to COMPLETED/FAILED
         if hasattr(self, "_artifact_repo") and self._artifact_repo and self._run_id:
             from datetime import datetime, timezone
@@ -1169,7 +1174,8 @@ class Kernel:
                 status=status,
                 ticks_completed=self._state.tick,
                 ended_at=datetime.now(timezone.utc).isoformat(),
-                state_hash=final_hash
+                state_hash=final_hash,
+                verification_level=verification_level
             )
 
         self._cache_registry.clear_all()
@@ -1177,7 +1183,8 @@ class Kernel:
             final_tick=self._state.tick,
             final_hash=final_hash,
             replay_outcome=replay_outcome,
-            overall_outcome=LifecycleOutcome.SUCCESS if replay_outcome != LifecycleOutcome.FAILED else LifecycleOutcome.FAILED
+            overall_outcome=LifecycleOutcome.SUCCESS if replay_outcome != LifecycleOutcome.FAILED else LifecycleOutcome.FAILED,
+            verification_level=verification_level
         )
 
     def shutdown_report(self):

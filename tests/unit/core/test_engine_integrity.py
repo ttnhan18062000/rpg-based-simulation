@@ -169,6 +169,42 @@ def test_isolation_guard_trigger(base_state):
         kernel.shutdown()
 
 
+def test_tier2_fingerprint_guard_still_audit_mode_gated(base_state):
+    """
+    Architecture guard (TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC): the new
+    verification_level reporting field must not have widened _guard_stability's
+    audit_mode gate — it stays invoked only when audit_mode=True, with
+    _guard_gross_isolation as the always-on fallback in standard mode.
+    """
+    from unittest.mock import patch
+    profile = get_test_profile()
+
+    # Standard (non-audit) mode: _guard_stability must never be called;
+    # _guard_gross_isolation must be called (the Tier 1 always-on fallback).
+    rng = DeterministicRNG(base_state.seed)
+    kernel = Kernel(profile, base_state, rng)
+    try:
+        with patch.object(Kernel, "_guard_stability") as mock_stability, \
+             patch.object(Kernel, "_guard_gross_isolation") as mock_gross:
+            kernel.tick_once()
+        mock_stability.assert_not_called()
+        assert mock_gross.call_count >= 1
+    finally:
+        kernel.shutdown()
+
+    # audit_mode=True: _guard_stability must be invoked.
+    rng2 = DeterministicRNG(base_state.seed)
+    kernel2 = Kernel(profile, base_state, rng2, flags={"audit_mode": True})
+    try:
+        with patch.object(Kernel, "_guard_stability") as mock_stability2, \
+             patch.object(Kernel, "_guard_gross_isolation") as mock_gross2:
+            kernel2.tick_once()
+        assert mock_stability2.call_count >= 1
+        mock_gross2.assert_not_called()
+    finally:
+        kernel2.shutdown()
+
+
 def test_gross_isolation_guard_triggers_on_tick_change(base_state):
     """
     Lightweight gross isolation guard (standard mode) detects tick advancement mid-phase.
