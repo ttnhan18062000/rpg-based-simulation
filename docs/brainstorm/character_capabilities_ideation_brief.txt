@@ -1,0 +1,115 @@
+Ideation Brief: New Ideas for Character Design
+================================================
+
+This is a different task from the last review. Last time, an agent checked
+the Character Capabilities document for internal consistency, clarity, and
+accuracy. That's done. This time: propose NEW ideas only. Do not review,
+critique, or suggest wording/consistency fixes for the existing document --
+that ground has already been covered.
+
+What you're building on
+------------------------
+Character Capabilities, published here:
+https://claude.ai/code/artifact/01a48398-d8e1-4f45-b4b2-ed1dde0672fd
+
+Read it first. It's an accurate, verified, non-technical summary of what a
+fantasy RPG simulation engine currently delivers for individual characters --
+what's live, what's built but inactive, and what doesn't exist yet. Treat
+everything in it as ground truth for "what already exists." Your job is to
+propose what could exist next, not to re-describe or re-flag what's already
+there.
+
+Ideas already on the table (don't duplicate these)
+-----------------------------------------------------
+The following directions have already been proposed and recorded elsewhere
+in this project. Don't resubmit variations on these -- build past them:
+
+ 1. Connect already-built-but-disconnected systems before building new ones
+    (several real systems exist fully built and just aren't switched on or
+    wired up).
+ 2. Make action speed actually vary by character instead of being identical
+    for everyone.
+ 3. Finish the unfinished practice/mastery progression system.
+ 4. Unify the scattered temporary-condition mechanisms into one real system.
+ 5. Let a character's own self-assessment of a fight influence whether they
+    commit to it.
+ 6. Build a teaching/scroll-based skill-learning system on top of the trust
+    relationships that already exist, rather than inventing new state.
+ 7. Extend grudge/rival relationships so they persist across major story
+    breaks, not just within one continuous stretch of play.
+ 8. Either finish or remove a second, currently-empty inner-mental-life
+    system that duplicates ideas already covered elsewhere.
+ 9. Deliberately decide, one by one, whether each currently-inactive system
+    should be turned on or abandoned, rather than leaving it undecided.
+10. Make the existing (but never-firing) inheritance system actually able to
+    fire.
+11. Build a real branching character-build system, reusing existing
+    milestone and transformation mechanics rather than starting from zero.
+12. Route contradiction-detection (catching when a trusted source turns out
+    to be wrong) through an already-live system instead of the switched-off
+    one.
+13. Require the same kind of earned trust/affection that already gates some
+    interactions to also gate trading and forming a party together, which
+    don't exist yet.
+14. Add a species classification layer (an intelligence tier, plus a
+    natural/magical/demonic-style category) that determines which characters
+    get an open-ended, self-directed life path versus a simpler one.
+
+The design vision to aim at
+-----------------------------
+This is the actual goal behind the whole project -- ideas should serve this,
+not just be interesting in isolation:
+
+A simulation with genuinely complex, diverse life paths for characters, and
+enough different kinds of characters interacting with each other to produce
+a believable, lived-in fantasy world. Concretely, this has come up as:
+
+- Humans split into functionally different life paths: some characters are
+  "adventurers" who effectively discover their own path through the world
+  (open-ended, self-directed), while others -- ordinary townspeople -- follow
+  a more fixed, predictable life. That split should generalize: how much of
+  an open-ended life path a character gets should scale with how intelligent
+  they are, not just their species.
+- On top of intelligence, a broader classification (natural creature, magical
+  being, demonic entity, or other typical fantasy categories) should shape
+  what's mechanically available or different for that kind of character.
+- Low-intelligence or monster-like characters should still have a real life
+  path, just a simpler one -- likely growing stronger through direct means
+  like combat or consumption rather than structured training, and
+  reproducing or replacing themselves faster than more complex characters
+  do.
+- Above all: many different kinds of characters, with real differences in
+  how they live and grow, actually interacting with each other -- fighting,
+  trading, forming bonds, competing, cooperating -- is what makes the
+  simulated world feel real.
+
+What makes a good submission
+-------------------------------
+- Genuinely new: not a rewording of the 14 ideas above, and not just
+  restating a known gap from the Character Capabilities document as if it
+  were a proposal.
+- Grounded: something that could plausibly extend what's described in
+  Character Capabilities, not disconnected from how the simulation already
+  works. You don't need to know how it would be built -- just that it makes
+  sense given what already exists.
+- In service of the vision above, or a clear, stated reason why it's a
+  worthwhile idea even if it isn't.
+- Written in the same plain, standalone style as Character Capabilities --
+  no code, file paths, or technical implementation details. Describe the
+  idea the way you'd describe it to someone who will never open the source
+  code.
+
+Submission format
+-------------------
+One idea per entry:
+- A short name for the idea.
+- A paragraph describing what it is and what it would change about how
+  characters behave or grow.
+- Which part of a character it mainly touches: what they do, who they are,
+  how injury/conditions affect them, or how they think and remember.
+- One sentence on why it serves the design vision above (or why it's worth
+  considering even if it doesn't).
+
+No fixed number of ideas expected -- quality over quantity. A handful of
+genuinely new, well-considered directions is worth more than a long list of
+minor variations.
