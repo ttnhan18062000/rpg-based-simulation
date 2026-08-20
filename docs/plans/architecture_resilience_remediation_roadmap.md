@@ -36,16 +36,16 @@ multi-ticket-shaped). No ticket was removed.
 
 | Epic | Ticket | Document | Tier | Status (as of 2026-08-19) |
 |---|---|---|---|---|
-| A — Dead Infra Removal | `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` | `docs/plans/dead_infra_removal_epic.md` | standard | **Resolved** |
-| B — Engine Liveness & Health | `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` | `docs/plans/engine_liveness_health_epic.md` | standard | **Resolved** |
+| A — Dead Infra Removal | `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` | `docs/plans/archive/dead_infra_removal_epic.md` | standard | **Resolved** |
+| B — Engine Liveness & Health | `TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC` | `docs/plans/archive/engine_liveness_health_epic.md` | standard | **Resolved** |
 | C — Doc Drift Reconciliation | *(none — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — | — |
-| D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | `docs/plans/redis_stream_resilience_epic.md` | standard | **Resolved** |
-| E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | `docs/plans/epic_staleness_status_aware_epic.md` | hotfix | **Resolved** |
+| D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | `docs/plans/archive/redis_stream_resilience_epic.md` | standard | **Resolved** |
+| E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | `docs/plans/archive/epic_staleness_status_aware_epic.md` | hotfix | **Resolved** |
 | F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | `docs/plans/http_admission_control_epic.md` | standard | open (deployment confirmed trusted-network-only 2026-08-19; CORS item extracted) |
-| G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/architecture_boundary_hardening_epic.md` | standard | **Resolved** |
-| H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/error_handling_hygiene_epic.md` | standard | **Resolved** |
-| I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/determinism_verification_gap_epic.md` | standard | **Resolved** |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic | open (all 4 items resolved/extracted; awaits 2 sibling tickets reaching done) |
+| G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/archive/architecture_boundary_hardening_epic.md` | standard | **Resolved** |
+| H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/archive/error_handling_hygiene_epic.md` | standard | **Resolved** |
+| I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/archive/determinism_verification_gap_epic.md` | standard | **Resolved** |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/archive/codebase_navigability_hygiene_epic.md` | epic | **Resolved** (2026-08-20 — both extracted sibling tickets reached `tickets/done/`) |
 | K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open (unblocked — prerequisite Epic G done; 2 of 4 items extracted) |
 
 **(2026-08-19)** Three new tickets extend this tree, plus one item resolved without a ticket:
@@ -101,7 +101,7 @@ pull evidence directly rather than re-deriving it.
 **Status: Resolved** by `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` — RabbitMQ/Kafka were removed
 entirely (deps, services, env vars, `depends_on` gates) rather than scoped to a real use case;
 `src_legacy/`/`tests_legacy/` were deleted (with the 3 load-bearing oracle `results.json` files
-relocated first). See `docs/plans/dead_infra_removal_epic.md`'s `## Status` for detail.
+relocated first). See `docs/plans/archive/dead_infra_removal_epic.md`'s `## Status` for detail.
 
 - Un-couple `ai_worker`'s startup from RabbitMQ's healthcheck (`docker-compose.yml:70-71`) —
   pure risk-reduction, independent of the broader keep-or-remove decision.
@@ -122,7 +122,7 @@ escalation now also routes a `WatchdogTrip` `AlertEvent` through `AlertsManager`
 `WebhookAlertSink` (webhook sink default-disabled via new `docker-compose.yml` env vars until an
 operator configures them). `docs/architecture/simulation_watchdog.md`'s status/path/responsibility
 claims are corrected. Both bullets below now describe pre-fix history. See
-`docs/plans/engine_liveness_health_epic.md`'s `## Status` for detail.
+`docs/plans/archive/engine_liveness_health_epic.md`'s `## Status` for detail.
 
 - `/health` (`src/api/server.py:126-128`) is a hardcoded `{"status": "ok"}` with no relationship
   to whether `V2EngineManager`'s background thread is alive or ticking. Make it check
@@ -159,7 +159,7 @@ unchanged; a process-death-before-ack orphaned PEL entry is now reclaimed and re
 than lost; `connect()` backs off with jitter (base 0.2s, doubling, capped 30s, ±20% jitter),
 resetting on success. Parity ledger entries `INFRA-359`/`INFRA-360`/`INFRA-361` and a new §7 in
 `observability_hot_path_safety_contract.md` document the new behavior. See
-`docs/plans/redis_stream_resilience_epic.md`'s `## Status` for detail.
+`docs/plans/archive/redis_stream_resilience_epic.md`'s `## Status` for detail.
 
 - `src/observability/stream/consumer.py:79-102` ACKs malformed payloads and transient handler
   failures identically — no DLQ, no retry budget. Separate the two: malformed → ack+drop (already
@@ -179,7 +179,7 @@ resetting on success. Parity ledger entries `INFRA-359`/`INFRA-360`/`INFRA-361` 
 field and routes `BLOCKED` candidates into a new, separate "Informational: BLOCKED epics (not
 stale — deliberately parked)" report section that the hook's fire-trigger (`find_stale_epics`)
 never returns from; `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` no longer surfaces as stale. See
-`docs/plans/epic_staleness_status_aware_epic.md`'s `## Status` for detail.
+`docs/plans/archive/epic_staleness_status_aware_epic.md`'s `## Status` for detail.
 
 - `make agent-monitoring-epic-staleness` measures file-mtime idleness only — it has flagged
   `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` as stale throughout this entire session despite
@@ -220,7 +220,7 @@ sites were found currently shipping and are frozen as grandfathered exceptions r
 eliminated — not a claim that either boundary is now cleanly, fully honored. No `src/domains/`
 or `src/systems/` production file was touched. The first two bullets below now describe pre-fix
 history; the compose-file linter bullet remains open, unaddressed by this epic. See
-`docs/plans/architecture_boundary_hardening_epic.md`'s `## Status` and
+`docs/plans/archive/architecture_boundary_hardening_epic.md`'s `## Status` and
 `docs/audits/D14_coupling_depth.md`'s Coupling Inventory for detail.
 
 - `tests/architecture/test_phase18_import_boundaries.py` and `test_phase19_observability_boundaries.py`
@@ -248,7 +248,7 @@ targeted broad-except review of six highest-consequence areas (authoritative app
 content-registry adapters, kernel tick loop, replay persistence, worker execution,
 tactical/reward fallbacks) found no site needing a fix — every reviewed site already re-raises
 typed, converts to a typed result, or is an explicitly documented non-authoritative fallback. See
-`docs/plans/error_handling_hygiene_epic.md`'s `## Status` for detail.
+`docs/plans/archive/error_handling_hygiene_epic.md`'s `## Status` for detail.
 
 - `WebhookAlertSink` (`src/observability/alerts/sinks.py:39-92`) — the only real retry/backoff
   implementation in the codebase — is linear (`time.sleep(0.5 * attempt)`) despite an in-code
@@ -271,7 +271,7 @@ the value on `ShutdownResult`, `RunManifest` (`run_manifest.json`), and `run_rep
 The cheap always-on partial/sampled fingerprint alternative was not pursued — the labeling branch
 was judged sufficient. The Tier-2 `audit_mode` fingerprint gate and the DEGRADED/SURVIVAL
 canonical-hash gate remain deliberately conditional, unchanged by this epic. See
-`docs/plans/determinism_verification_gap_epic.md`'s `## Status` and `docs/engine/known_limitations.md`
+`docs/plans/archive/determinism_verification_gap_epic.md`'s `## Status` and `docs/engine/known_limitations.md`
 §2.4 for detail.
 
 - The Tier-2 SHA-256 fingerprint check that would catch a subtle off-path field mutation during
@@ -311,8 +311,8 @@ canonical-hash gate remain deliberately conditional, unchanged by this epic. See
   builder) directly instead, which already covers the same need.
 
 All 4 original items now resolved or extracted; this epic has no remaining unscoped work of its
-own — see `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC`'s Acceptance Criteria for what it's
-still waiting on.
+own. **Closed 2026-08-20** — both extracted sibling tickets reached `tickets/done/`, satisfying
+`TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC`'s own Acceptance Criteria gate.
 
 *Evidence: D24 §D, §F, §I.*
 

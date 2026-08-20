@@ -1,0 +1,91 @@
+Review Brief: Reproduction, Marriage & Coming-of-Age Design
+================================================================
+
+This is a review of a NEW, not-yet-implemented design proposal for a
+fantasy RPG simulation engine -- three connected mechanics: how characters
+are born, how marriage works, and how a child becomes an adult. None of
+this exists in the simulation yet. You're not checking it against reality
+(there's no implementation to check against) -- you're stress-testing
+whether the design itself is sound, complete, and internally consistent.
+
+Where to read it
+-------------------
+The full proposal is written up as three entries (numbered 32, 33, 34) in
+the "Design Ideas & Extensions" section of the engineering atlas:
+https://claude.ai/code/artifact/23feda01-9857-4508-a014-3caa61bdbd07
+
+Read entries 32-34 specifically. The rest of the atlas is there for context
+if you need to understand what a referenced existing system actually does
+(the entries cite real, already-built mechanisms this design reuses), but
+you don't need to read the whole thing end to end.
+
+The design in brief, so you know what you're evaluating
+------------------------------------------------------------
+- Reproduction splits into three paths by species classification: natural
+  creatures reproduce fast via a spawn-camp pattern with no tracked
+  parents; humans/humanoids reproduce through a real, gated event requiring
+  marriage, both parents adult and alive, proximity, and a cooldown;
+  magical/demonic beings are born through non-biological triggers (a
+  ritual, a calamity, a corrupted location) instead of a parent pair.
+- Marriage is a new durable relationship state, entered through a genuine
+  propose/accept exchange -- explicitly the first such handshake anywhere
+  in the simulation's design. It's the actual prerequisite for human/
+  humanoid reproduction.
+- Coming of age: a naturally-born child doesn't get a class/archetype
+  assigned at birth. It's deferred until they transition from a Child life
+  stage to Adult, at which point the choice is made -- weighted by
+  personality, parental occupation, and regional need, not hand-scripted.
+
+The stated design goals to check this against
+--------------------------------------------------
+The person driving this project has been explicit about the target: realistic
+enough to feel meaningful, but NOT simulated in exhausting biological detail
+-- no gestation tracking, no fertility stats, no courtship AI. The one hard
+requirement stated directly: "a child should not [be] born at age 18
+immediately" -- there must be a real growth period, not instant adulthood.
+Keep this balance in mind throughout: flagging "this doesn't model X realistic
+detail" is only a useful note if X is something the stated goals actually
+care about, not a generic realism checklist.
+
+What to actually check
+-----------------------
+1. Internal consistency across the three entries. Do the requirements for
+   birth actually line up with what marriage promises to provide? Does the
+   coming-of-age mechanic's timing make sense given how Life Stage
+   transitions are described?
+2. Completeness of the "requirements" for the gated birth event. Is the
+   listed requirement set (both parents alive, adult, married, same
+   location, cooldown) sufficient to prevent obviously broken outcomes
+   (e.g., runaway population growth, population collapse, orphaned logic
+   states), or is something load-bearing missing?
+3. Whether the three species paths (natural / human / magical) are
+   meaningfully differentiated or just relabeled versions of each other.
+4. The coming-of-age weighting (personality, parental occupation, regional
+   need) -- does this plausibly produce interesting variety, or would it
+   converge on predictable, boring outcomes in practice (e.g., every child
+   in a Guard-heavy region becomes a Guard)?
+5. Edge cases the design doesn't address: What happens to a child if both
+   parents die before coming-of-age? Can a married pair have unlimited
+   children, or is there an implied cap? Does marriage have any purpose
+   beyond gating reproduction, or is it purely a means to an end?
+6. Whether this design leans too far into "too much realism" or not far
+   enough, given the explicit balance requested above.
+
+What NOT to do
+---------------
+- Don't check this against the actual simulation codebase -- there's
+  nothing to check, this hasn't been built. Your job is evaluating the
+  design's own internal logic and completeness.
+- Don't suggest simulating pregnancy, fertility, or courtship in more
+  detail -- that's explicitly the wrong direction per the stated goals.
+- Don't propose an entirely different reproduction system from scratch --
+  the direction is set; the job is to find gaps, inconsistencies, and
+  missing edge cases in this specific proposal, not to redesign it.
+
+How to report back
+-------------------
+For each issue: which of the three entries it's in (32/33/34), what's
+inconsistent, incomplete, or unaddressed, and a suggested resolution if you
+have one. Close with a judgment: does this proposal hang together as a
+coherent design ready to be scoped into real tickets, or does it need
+another brainstorming pass first -- and if so, on what specifically.

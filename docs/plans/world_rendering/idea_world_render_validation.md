@@ -30,7 +30,7 @@ Given the rendering core exists (`idea_world_rendering_core.md`), this consumer 
 
 ### Scope: pure visualization/geometry, zero data-lookup checks
 
-Any check reducing to "does field X belong to allowed-set Y" is explicitly out of scope here, no matter how spatial it sounds — including placement legality (routed to `HardLawMonitor`, see `../idea_placement_legality_check.md`) and biome-resource content correctness (routed to an extension of the existing `CatalogValidator`, which already validates this relationship at the static-catalog level but not at compiled-instance level). A fact you can look up in data should never be approximated by looking at pixels.
+Any check reducing to "does field X belong to allowed-set Y" is explicitly out of scope here, no matter how spatial it sounds — including placement legality (routed to `HardLawMonitor`, see `../archive/idea_placement_legality_check.md` — shipped, archived 2026-08-20) and biome-resource content correctness (routed to an extension of the existing `CatalogValidator`, which already validates this relationship at the static-catalog level but not at compiled-instance level). A fact you can look up in data should never be approximated by looking at pixels.
 
 **Four metric families, all tested against real compiled worlds, not just designed:**
 
@@ -58,13 +58,13 @@ Reuses SimQ's exact grade-band vocabulary (`S`/`A`/`B`/`C`/`D`/`F`, same numeric
 ## Architecture Constraints
 
 - Must not perform any data-lookup validation (biome-resource matching, etc.) — routed to `CatalogValidator`.
-- Must not perform binary placement-legality checks — routed to `HardLawMonitor` (`../idea_placement_legality_check.md`).
+- Must not perform binary placement-legality checks — routed to `HardLawMonitor` (`../archive/idea_placement_legality_check.md` — shipped, archived 2026-08-20).
 - Must reuse the rendering core's already-proven determinism, `DirtySet` incremental caching, and `data/runs/` storage convention (`idea_world_rendering_core.md`) — this consumer adds no new rendering-mechanism requirements of its own.
 - Test classification (`docs/testing/test_taxonomy.md`, checked directly): performance work fits the existing `tests/perf/` + `perf_budget` fixture convention exactly; metric-correctness tests (fill-ratio, connectivity, CV, symmetry) are ordinary `tests/unit/` tests, no `tests/parity/` marker required; the render-determinism golden-hash test (owned by the core doc) is a natural `regression`-marker candidate.
 
 ## Relationship to Planned Tickets
 
-None. Checked directly against the active SimQ roadmap (`docs/plans/simq_scoring_improvement_roadmap.md`) and the one currently in-progress ticket (`TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`, unrelated) — this idea has no dependency on either and can be picked up independently.
+None. Checked directly against the active SimQ roadmap (`docs/plans/archive/simq_scoring_improvement_roadmap.md`) and the one currently in-progress ticket (`TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`, unrelated) — this idea has no dependency on either and can be picked up independently.
 
 ## Open Questions
 
