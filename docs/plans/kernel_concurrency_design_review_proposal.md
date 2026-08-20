@@ -124,6 +124,17 @@ confirmed by absence of a grep match, not a full call-graph trace, so it needs a
 investigation of where (if anywhere) `DeterministicRNG` is actually consumed in the tick, and the
 finding recorded in `docs/engine/kernel.md` or the worker contract either way.
 
+**Update (TCK-20260817-DOC-COLLECTION-RNG-CONSUMPTION, closed 2026-08-21):** resolved with a full
+trace, not just an absence-of-grep-match inference, recorded at
+`docs/engine/contracts/simulation_kernel_contract.md` §7.1 "RNG Consumption in Practice." Finding:
+the Collection-phase worker path (`worker_logic.py`/`domain_logic.py`/`combat.py`/`movement.py`)
+consumes zero RNG, consistent with combat's deterministic-by-design mechanics (`docs/mechanics/
+02_combat_laws.md:11`); the only RNG draw in Collection-phase packet construction is
+`executor.py:301`'s `packet_seed`, confirmed genuinely dead (computed, never read) and explicitly
+deferred rather than silently left undocumented; and the three real downstream RNG consumers
+(`EntityGenerator`, `QuestGenerator`, `GuildAction`) all run in serial `Kernel._phase_resolution()`,
+never `_phase_collection()`.
+
 ## C8 — Audit `docs/engine/`, `docs/architecture/`, and `docs/performance/` for stale/duplicate/
 contradictory content, and propose a structure that prevents this class of drift
 
@@ -242,9 +253,11 @@ Three independent mechanisms:
    kernel thread, after every future has resolved. The one genuinely shared mutable object —
    `WorkerManager`'s inflight/active/peak counters — is protected by an explicit `threading.Lock`.
 
-Open question, not resolved: no `rng.get_*` calls were found in `domain_logic.py`, `combat.py`,
-or `movement.py` — the Collection-phase worker path appears to consume no randomness currently.
-Confirmed only by absence of a grep match; worth a direct trace (see C7 in the parent proposal).
+Open question, now resolved (TCK-20260817-DOC-COLLECTION-RNG-CONSUMPTION, closed 2026-08-21, see
+C7 above): no `rng.get_*` calls were found in `domain_logic.py`, `combat.py`, or `movement.py` —
+the Collection-phase worker path consumes no randomness. This is no longer only an
+absence-of-grep-match inference; a full trace confirmed it and is recorded at
+`docs/engine/contracts/simulation_kernel_contract.md` §7.1.
 
 ## Part 4 — Performance under pressure
 

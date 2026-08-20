@@ -49,6 +49,65 @@ Every tick must execute the following phases in this exact order:
     - Ambient thread/process state.
     - Unordered collection iteration.
 
+### 7.1 RNG Consumption in Practice
+
+Verified 2026-08-21 (TCK-20260817-DOC-COLLECTION-RNG-CONSUMPTION), resolving the open question
+left in `docs/plans/kernel_concurrency_design_review_proposal.md` C7 with a direct trace rather
+than an absence-of-grep-match inference.
+
+**The Collection-phase worker path consumes no RNG.** A grep of `src/engine/worker_logic.py`,
+`src/engine/domain_logic.py`, `src/engine/combat.py`, and `src/engine/movement.py` for
+`rng`/`RNG`/`random.` finds zero matches — no import, no call, in any of the four files. This is
+consistent with mechanics-bible design, not merely un-instrumented: `docs/mechanics/
+02_combat_laws.md:11` states "The simulation follows a deterministic, non-random resolution for
+all primary attacks."
+
+The only RNG draw physically inside Collection-phase packet construction is
+`src/engine/executor.py:301` (`packet_seed = rng.get_int(Domain.DEFAULT, state.tick,
+item.owner_id, 0, 1000000)`), assigned to `WorkerPacket.seed` (`src/core/worker_protocol.py:29`)
+at `executor.py:307`. This value is **dead**: `packet.seed` is never read by `worker_logic.py`,
+`domain_logic.py`, `combat.py`, `movement.py`, or anywhere else under `src/` — it is only ever
+*written*, and only otherwise referenced where test fixtures construct a `WorkerPacket` directly
+(e.g. `tests/unit/kernel/test_worker_integrity.py`, `tests/integration/kernel/
+test_worker_determinism.py`).
+
+**Disposition — deferred, not removed.** `WorkerPacket` is a typed, frozen protocol dataclass
+with `seed` threaded through roughly a dozen test call sites across
+`tests/unit/kernel/test_worker_*.py`, `tests/unit/core/test_no_worker_direct_mutation.py`,
+`tests/unit/core/test_signal_hardening.py`, `tests/unit/core/test_fallback_hardening.py`, and
+`tests/integration/kernel/test_worker_determinism.py`, `test_authoritative_outcome_truth.py`,
+`test_milestone_b_closure.py`, `test_milestone_d_closure.py`. Removing the field is a real (if
+small) protocol-contract change, not the "trivial removal" this documentation-recording hotfix's
+scope allows (see ticket Out of Scope) — left in place, tracked here rather than silently
+ignored, for its own ticket to remove.
+
+**The real RNG consumers all run in serial RESOLUTION, not parallel COLLECTION:**
+
+| Consumer | Constructs `DeterministicRNG` at | Invoked from | Runs during |
+|---|---|---|---|
+| `EntityGenerator` | `src/systems/world_systems/generator.py:27` (`self.rng = DeterministicRNG(seed)`) | `src/engine/pipeline.py:281` (`world_dynamics` phase) / `src/engine/world_dynamics.py:23` | `AuthoritativeApplyPipeline.refine()`, called from `Kernel._phase_resolution()` (`src/engine/kernel.py:648`) |
+| `QuestGenerator` | `src/quests/generator.py:135` (`rng = DeterministicRNG(seed)`, inside `generate()`) | `GuildAction.visit()` (`src/town/guild.py:43,78`) | `GuildVisitPhase.resolve()` (`src/engine/pipeline_phases/guild_visit.py`), wired in at `src/engine/pipeline.py:303-304` — same serial `refine()` call |
+| `GuildAction` (the ticket's "GuildSystem" — the actual class is `GuildAction`) | `src/town/guild.py:43` (`rng = DeterministicRNG(state.seed)`) | `GuildVisitPhase.resolve()` | same as above |
+
+All three are reached exclusively through `AuthoritativeApplyPipeline.refine()`, invoked from
+`Kernel._phase_resolution()` — never from `Kernel._phase_collection()`
+(`src/engine/kernel.py:563`), which only dispatches worker packets via `executor.py`. This matches
+`docs/engine/kernel.md`'s "Phase Domain Permissions" table: COLLECTION's declared write domain is
+`proposals` only; RESOLUTION is the sole phase with `entity`/`world` write access, and it is where
+all of these generators actually run.
+
+**Tension with "singular `DeterministicRNG` interface" above:** `EntityGenerator.__init__`
+(`src/systems/world_systems/generator.py:27`) constructs its own `DeterministicRNG(seed)`
+instance, separate from the instance the `Kernel` holds and passes into `executor.py`'s packet
+construction. This is not a determinism violation — `DeterministicRNG` is stateless per call
+(`src/platform/rng.py`: each `get_*` builds a fresh `random.Random` seeded by a pure hash of
+`(base_seed, domain, tick, entity_id, sub_id)`), so a second instance seeded from the same
+`state.seed` lineage produces identical results regardless of which object issues the call. But it
+means the "singular interface" guarantee holds at the *type* level (one `DeterministicRNG` class,
+one call contract) and not at the *instance* level (more than one live `DeterministicRNG` object
+exists per tick) — worth knowing so a future reader doesn't assume instance-level singularity the
+code doesn't actually provide.
+
 ## 8. Determinism Guarantees
 **Same Seed + Same Runtime Profile + Same Inputs => Bit-Identical Authoritative State Checkpoints.**
 

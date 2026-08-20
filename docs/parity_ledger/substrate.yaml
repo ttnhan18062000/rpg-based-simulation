@@ -913,11 +913,14 @@
   divergence_note: null
   support_boundary: null
 - id: SUB-087
-  text: '`test_default_region_id`: entity navigation.region_id is assigned from spawn region at WorldCompiler.compile() time'
+  text: '`test_default_region_id`: entity navigation.region_id is assigned from spawn
+    region at WorldCompiler.compile() time'
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: 'src/worldbuilding/compiler.py L319 — V2EntityBuilder chain calls .navigation(region_id=region_id) where region_id=pop_spec.spawn_region; fix applied in TCK-20260627-P0C-ENTITY-REGION-ASSIGN'
+  v2_evidence: "src/worldbuilding/compiler.py L319 \u2014 V2EntityBuilder chain calls\
+    \ .navigation(region_id=region_id) where region_id=pop_spec.spawn_region; fix\
+    \ applied in TCK-20260627-P0C-ENTITY-REGION-ASSIGN"
   proof_type: null
   test_path: tests/integration/worldassembly/test_e2e_smoke.py::test_urban_political_all_entities_have_region_id
   divergence_note: null
@@ -2803,11 +2806,30 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: 'src/platform/rng.py (DeterministicRNG -- stateless per-call, seeded
+    by a pure hash of (domain, tick, entity_id, salt) inputs, so repeated calls with
+    identical inputs return identical values). Consumption-in-practice confirmed by
+    real code trace (TCK-20260817-DOC-COLLECTION-RNG-CONSUMPTION, recorded in docs/engine/contracts/simulation_kernel_contract.md
+    section 7.1): worker_logic.py/domain_logic.py/combat.py/movement.py consume zero
+    RNG during parallel Collection-phase worker dispatch (grep-confirmed, zero matches);
+    the only RNG draw physically inside Collection is executor.py:301 packet_seed,
+    computed but never read by any worker path (genuinely dead, not a hidden determinism
+    risk). Real downstream consumers -- EntityGenerator (src/systems/world_systems/generator.py:27,
+    via src/engine/pipeline.py, src/engine/world_dynamics.py), QuestGenerator (src/quests/generator.py:135,
+    via src/town/guild.py, src/engine/pipeline_phases/guild_visit.py) -- all construct/consume
+    DeterministicRNG only inside AuthoritativeApplyPipeline.refine(), called exclusively
+    from Kernel._phase_resolution() (src/engine/kernel.py:648), never from the parallel
+    Kernel._phase_collection() (src/engine/kernel.py:563). This confirms RNG consumption
+    is confined to the serial, single-threaded Resolution phase, which is what makes
+    the seed/domain/entity/tick-keyed repeatability claim hold under the kernel''s
+    parallel-worker Collection architecture.'
+  proof_type: parity
+  test_path: tests/unit/core/test_rng_contract.py::test_rng_reproducibility
   divergence_note: null
-  support_boundary: null
+  support_boundary: Documentation-only finding (TCK-20260817-DOC-COLLECTION-RNG-CONSUMPTION)
+    -- no src/ behavior was changed. executor.py:301's dead packet_seed was left in
+    place (deferred, not removed) since WorkerPacket is a frozen protocol dataclass
+    and removal would touch ~11 test call sites, out of scope for a hotfix.
 - id: SUB-273
   text: RNG domain separation produces different streams for different domains.
   status: verified
@@ -3754,8 +3776,8 @@
   divergence_note: null
   support_boundary: null
 - id: SUB-367
-  text: v2 service_refs from world module contributions are computed in resolve_module_contribution()
-    but not assembled into WorldSpec — WorldSpec has no services field yet.
+  text: "v2 service_refs from world module contributions are computed in resolve_module_contribution()\
+    \ but not assembled into WorldSpec \u2014 WorldSpec has no services field yet."
   status: divergent
   priority: P2
   legacy_evidence: null
@@ -3765,21 +3787,27 @@
   proof_type: null
   test_path: tests/unit/worldassembly/test_resolver.py::test_v2_service_refs_assembly_is_documented_gap
   divergence_note: Intentional deferral until ServiceNodeSpec and WorldSpec.services
-    are defined. See docs/guidelines/intentional_divergences.md entry 2.19. All
-    current modules are worldmodule.v1 so runtime impact is zero.
+    are defined. See docs/guidelines/intentional_divergences.md entry 2.19. All current
+    modules are worldmodule.v1 so runtime impact is zero.
   support_boundary: null
 - id: SUB-368
-  text: WorldEntitySpawner converts CompileContext entity profiles to EntityState via the archetype-native path (EntityArchetypeResolver → resolved_archetype_to_contract → ArchetypeEntityFactory) for profiles with archetype_id; V2EntityBuilder is guarded to an explicit legacy fallback for profiles without archetype_id.
+  text: "WorldEntitySpawner converts CompileContext entity profiles to EntityState\
+    \ via the archetype-native path (EntityArchetypeResolver \u2192 resolved_archetype_to_contract\
+    \ \u2192 ArchetypeEntityFactory) for profiles with archetype_id; V2EntityBuilder\
+    \ is guarded to an explicit legacy fallback for profiles without archetype_id."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/worldassembly/entity_spawner.py WorldEntitySpawner._spawn_archetype_native() and _spawn_legacy_guard()
+  v2_evidence: src/worldassembly/entity_spawner.py WorldEntitySpawner._spawn_archetype_native()
+    and _spawn_legacy_guard()
   proof_type: parity
   test_path: tests/integration/worldassembly/test_world_entity_spawner.py::test_archetype_native_entities_carry_archetype_id
   divergence_note: null
   support_boundary: null
 - id: SUB-369
-  text: CatalogScenarioStateBuilder composes ScenarioSetupResolver + WorldEntitySpawner + AuthoritativeState construction into a single catalog-native pipeline. It does not replace build_scenario_state() or ArenaInjector.
+  text: CatalogScenarioStateBuilder composes ScenarioSetupResolver + WorldEntitySpawner
+    + AuthoritativeState construction into a single catalog-native pipeline. It does
+    not replace build_scenario_state() or ArenaInjector.
   status: verified
   priority: P1
   legacy_evidence: null
@@ -3789,309 +3817,309 @@
   divergence_note: null
   support_boundary: null
 - id: SUBSTRATE-NEW-001
-  text: >
-    WorldBuilding compiler (WORLD-050/051/052) directly produces AuthoritativeState
-    from WorldSpec. Two compilation paths: direct (WorldSpec→AuthoritativeState) and
-    composition (WorldCompositionSpec→CompileContext via WorldAssembly). Validator
-    (WORLD-070/071/072) aborts on ERROR severity — no silent failures.
-    Repository (WORLD-060/061/062) is file-based with path safety guards.
+  text: "WorldBuilding compiler (WORLD-050/051/052) directly produces AuthoritativeState\
+    \ from WorldSpec. Two compilation paths: direct (WorldSpec\u2192AuthoritativeState)\
+    \ and composition (WorldCompositionSpec\u2192CompileContext via WorldAssembly).\
+    \ Validator (WORLD-070/071/072) aborts on ERROR severity \u2014 no silent failures.\
+    \ Repository (WORLD-060/061/062) is file-based with path safety guards.\n"
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    docs/world/compiler_contract.md +
-    src/worldbuilding/compiler.py:1 + src/worldbuilding/schema.py:1 +
-    src/worldbuilding/validator.py:1 + src/worldbuilding/repository.py:1
+  v2_evidence: 'docs/world/compiler_contract.md + src/worldbuilding/compiler.py:1
+    + src/worldbuilding/schema.py:1 + src/worldbuilding/validator.py:1 + src/worldbuilding/repository.py:1
+
+    '
   proof_type: null
   test_path: null
   divergence_note: null
-  support_boundary: "WorldBuilding compiler — world setup only, not tick-path."
+  support_boundary: "WorldBuilding compiler \u2014 world setup only, not tick-path."
 - id: SUBSTRATE-NEW-002
-  text: >
-    WorldProceduralGenerator (WORLD-GEN-003/004) is fully deterministic: uses a
-    DeterministicRNG(seed) instance (src/platform/rng.py) — global random state is
-    never read or written. Same (intent, catalog_repo) inputs produce bit-identical
-    WorldSpec, CompileContext, and ProvenanceManifest (except created_at timestamp).
-    Validation failures (GENERATED_WORLD context) are reported but do NOT abort generation.
+  text: "WorldProceduralGenerator (WORLD-GEN-003/004) is fully deterministic: uses\
+    \ a DeterministicRNG(seed) instance (src/platform/rng.py) \u2014 global random\
+    \ state is never read or written. Same (intent, catalog_repo) inputs produce bit-identical\
+    \ WorldSpec, CompileContext, and ProvenanceManifest (except created_at timestamp).\
+    \ Validation failures (GENERATED_WORLD context) are reported but do NOT abort\
+    \ generation.\n"
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    docs/world/generator_contract.md +
-    src/worldgeneration/generator.py:57 (rng = DeterministicRNG(intent.seed)) +
-    src/platform/rng.py (DeterministicRNG — only allowed RNG source) +
-    TCK-20260619-P0-DETERMINISM (replaced bare random.Random with DeterministicRNG) +
-    tests/unit/worldgeneration/test_generator.py +
-    tests/integration/kernel/test_phase2_determinism.py (lint gate: no bare random. in src/)
-
-    UPDATE 2026-08-08 (TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY): Step 6's population formula and
-    the faction fallback were both changed (area/hazard-aware population sizing, present-faction
-    fallback hardening) -- neither introduces any new RNG call; both are pure arithmetic over
-    already-deterministic inputs (intent fields, region bounds computed earlier in the same
-    deterministic pass, dict iteration order over `factions` which is itself built by iterating
-    `self.catalog_repo.factions` in file-load order). `test_procedural_generator_determinism`
-    (existing, unmodified) re-confirms bit-identical output for same-seed reruns after this
-    change -- not just assumed unaffected.
+  v2_evidence: "docs/world/generator_contract.md + src/worldgeneration/generator.py:57\
+    \ (rng = DeterministicRNG(intent.seed)) + src/platform/rng.py (DeterministicRNG\
+    \ \u2014 only allowed RNG source) + TCK-20260619-P0-DETERMINISM (replaced bare\
+    \ random.Random with DeterministicRNG) + tests/unit/worldgeneration/test_generator.py\
+    \ + tests/integration/kernel/test_phase2_determinism.py (lint gate: no bare random.\
+    \ in src/)\nUPDATE 2026-08-08 (TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY): Step\
+    \ 6's population formula and the faction fallback were both changed (area/hazard-aware\
+    \ population sizing, present-faction fallback hardening) -- neither introduces\
+    \ any new RNG call; both are pure arithmetic over already-deterministic inputs\
+    \ (intent fields, region bounds computed earlier in the same deterministic pass,\
+    \ dict iteration order over `factions` which is itself built by iterating `self.catalog_repo.factions`\
+    \ in file-load order). `test_procedural_generator_determinism` (existing, unmodified)\
+    \ re-confirms bit-identical output for same-seed reruns after this change -- not\
+    \ just assumed unaffected.\n"
   proof_type: null
   test_path: tests/unit/worldgeneration/test_generator.py
-  divergence_note: >
-    created_at in ProvenanceManifest is wall-clock (datetime.now(timezone.utc)) —
-    not seed-controlled. All other output fields are deterministic.
-  support_boundary: "WorldGeneration — world setup only, not tick-path."
+  divergence_note: "created_at in ProvenanceManifest is wall-clock (datetime.now(timezone.utc))\
+    \ \u2014 not seed-controlled. All other output fields are deterministic.\n"
+  support_boundary: "WorldGeneration \u2014 world setup only, not tick-path."
 - id: SUBSTRATE-NEW-003
-  text: >
-    WorldModuleRepository (WORLD-MOD-004/005) rejects duplicate module_id across
-    all loaded files (raises ValueError). topological_sort_modules (WORLD-MOD-006/007)
-    uses Kahn's algorithm with alphabetical tie-breaking — deterministic given same
-    modules_map. Cycle detection raises ValueError. External requires refs (not in
-    modules_map) are silently ignored. WorldModuleAuthoringNormalizer produces
-    NormalizedWorldModule via a single unified code path (no schema_version branching):
-    ref lists → immutable Tuple[str,...], count maps → Dict[str,int] with all counts ≥ 1;
-    duplicates and non-positive counts raise NormalizationError.
-    WorldModuleAssemblyResolver.assemble() uses unconditional count-map merge loops
-    for both resources and buildings — no v2-gated dead branches remain; count-map
-    contributions are always assembled into the CompileContext (previously silently
-    dropped). spawn_region defaults to the first contributed region deterministically
-    when no explicit spawn_region is set (empty-string bug removed). Catalog includes
-    deep_forest, orc_stronghold, and swamp_border_territory regions.
+  text: "WorldModuleRepository (WORLD-MOD-004/005) rejects duplicate module_id across\
+    \ all loaded files (raises ValueError). topological_sort_modules (WORLD-MOD-006/007)\
+    \ uses Kahn's algorithm with alphabetical tie-breaking \u2014 deterministic given\
+    \ same modules_map. Cycle detection raises ValueError. External requires refs\
+    \ (not in modules_map) are silently ignored. WorldModuleAuthoringNormalizer produces\
+    \ NormalizedWorldModule via a single unified code path (no schema_version branching):\
+    \ ref lists \u2192 immutable Tuple[str,...], count maps \u2192 Dict[str,int] with\
+    \ all counts \u2265 1; duplicates and non-positive counts raise NormalizationError.\
+    \ WorldModuleAssemblyResolver.assemble() uses unconditional count-map merge loops\
+    \ for both resources and buildings \u2014 no v2-gated dead branches remain; count-map\
+    \ contributions are always assembled into the CompileContext (previously silently\
+    \ dropped). spawn_region defaults to the first contributed region deterministically\
+    \ when no explicit spawn_region is set (empty-string bug removed). Catalog includes\
+    \ deep_forest, orc_stronghold, and swamp_border_territory regions.\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    docs/world/modules_contract.md +
-    src/worldmodules/repository.py:1 (WORLD-MOD-004/005) +
-    src/worldmodules/utils.py:1 (WORLD-MOD-006/007) +
-    src/worldmodules/normalizer.py +
-    src/worldassembly/resolver.py (`WorldAssemblyResolver.assemble()` — unconditional count-map
-    loops, spawn_region fix; this ledger previously cited a nonexistent src/worldmodules/resolver.py
-    with a "WorldModuleAssemblyResolver" class name that was never real — corrected here to the
-    actual file/class) +
-    TCK-20260614-WORLDMOD-UNIFY (schema unification — schema_version validator removed,
-    v2-gated assemble blocks replaced, spawn_region empty-string bug fixed,
-    3 catalog regions added) +
-    src/worldmodules/evaluator.py (ModuleParameterEvaluator — WORLD-MOD-003 constraint enforcement) +
-    src/worldassembly/resolver.py (AssemblyParameterError + evaluate_field call sites in assemble()) +
-    TCK-20260614-WORLDMOD-PARAMS +
-    TCK-20260614-WORLDDAT-MIGRATE (all 10 real modules migrated to unified schema:
-    schema_version field removed; observability_tags added to all modules;
-    frontier_village_core enriched with relationships=[town_to_merchants,merchants_to_town];
-    old_mine_resource_loop enriched with relationships=[dwarves_to_goblins] and
-    quest_definitions=[mine_fetch_ore type=fetch]; all modules now exercise non-trivial
-    unified schema fields — biomes, ecologies, relationships, observability_tags)
+  v2_evidence: "docs/world/modules_contract.md + src/worldmodules/repository.py:1\
+    \ (WORLD-MOD-004/005) + src/worldmodules/utils.py:1 (WORLD-MOD-006/007) + src/worldmodules/normalizer.py\
+    \ + src/worldassembly/resolver.py (`WorldAssemblyResolver.assemble()` \u2014 unconditional\
+    \ count-map loops, spawn_region fix; this ledger previously cited a nonexistent\
+    \ src/worldmodules/resolver.py with a \"WorldModuleAssemblyResolver\" class name\
+    \ that was never real \u2014 corrected here to the actual file/class) + TCK-20260614-WORLDMOD-UNIFY\
+    \ (schema unification \u2014 schema_version validator removed, v2-gated assemble\
+    \ blocks replaced, spawn_region empty-string bug fixed, 3 catalog regions added)\
+    \ + src/worldmodules/evaluator.py (ModuleParameterEvaluator \u2014 WORLD-MOD-003\
+    \ constraint enforcement) + src/worldassembly/resolver.py (AssemblyParameterError\
+    \ + evaluate_field call sites in assemble()) + TCK-20260614-WORLDMOD-PARAMS +\
+    \ TCK-20260614-WORLDDAT-MIGRATE (all 10 real modules migrated to unified schema:\
+    \ schema_version field removed; observability_tags added to all modules; frontier_village_core\
+    \ enriched with relationships=[town_to_merchants,merchants_to_town]; old_mine_resource_loop\
+    \ enriched with relationships=[dwarves_to_goblins] and quest_definitions=[mine_fetch_ore\
+    \ type=fetch]; all modules now exercise non-trivial unified schema fields \u2014\
+    \ biomes, ecologies, relationships, observability_tags)\n"
   proof_type: null
-  test_path: >
-    tests/unit/worldmodules/test_schema_unified.py +
-    tests/unit/worldmodules/test_modules.py +
-    tests/unit/worldassembly/test_resolver.py +
-    tests/integration/worldassembly/test_count_map_assembly.py +
-    tests/integration/worldassembly/test_real_content_world_modules.py +
-    tests/unit/worldmodules/test_parameter_evaluator.py
+  test_path: 'tests/unit/worldmodules/test_schema_unified.py + tests/unit/worldmodules/test_modules.py
+    + tests/unit/worldassembly/test_resolver.py + tests/integration/worldassembly/test_count_map_assembly.py
+    + tests/integration/worldassembly/test_real_content_world_modules.py + tests/unit/worldmodules/test_parameter_evaluator.py
+
+    '
   divergence_note: null
-  support_boundary: "WorldModules — world setup preprocessing only, not tick-path."
+  support_boundary: "WorldModules \u2014 world setup preprocessing only, not tick-path."
 - id: SUBSTRATE-NEW-004
-  text: >
-    CompileContext.perspectives is populated during WorldAssemblyResolver.assemble()
-    by resolving each ID in WorldCompositionSpec.default_perspectives via
-    SocialDefaultsResolver.resolve_perspective(). An unknown perspective ID raises
-    ResolverError. An empty default_perspectives list produces an empty perspectives
-    dict. Resolved PerspectiveDefinition records are stored as model_dump() dicts
-    keyed by perspective ID. to_dict() includes "perspectives"; from_dict() handles
-    absent "perspectives" key with backward-compat default of {}.
+  text: 'CompileContext.perspectives is populated during WorldAssemblyResolver.assemble()
+    by resolving each ID in WorldCompositionSpec.default_perspectives via SocialDefaultsResolver.resolve_perspective().
+    An unknown perspective ID raises ResolverError. An empty default_perspectives
+    list produces an empty perspectives dict. Resolved PerspectiveDefinition records
+    are stored as model_dump() dicts keyed by perspective ID. to_dict() includes "perspectives";
+    from_dict() handles absent "perspectives" key with backward-compat default of
+    {}.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/worldassembly/context.py::CompileContext.perspectives +
-    src/worldassembly/context.py::CompileContext.register_perspective +
-    src/worldassembly/resolver.py::WorldAssemblyResolver.assemble() +
-    src/content/resolver.py::SocialDefaultsResolver.resolve_perspective
+  v2_evidence: 'src/worldassembly/context.py::CompileContext.perspectives + src/worldassembly/context.py::CompileContext.register_perspective
+    + src/worldassembly/resolver.py::WorldAssemblyResolver.assemble() + src/content/resolver.py::SocialDefaultsResolver.resolve_perspective
+
+    '
   proof_type: null
   test_path: tests/unit/worldassembly/test_perspective_resolution.py
   divergence_note: null
   support_boundary: null
 - id: SUBSTRATE-NEW-005
-  text: >
-    ModuleParameterEvaluator (WORLD-MOD-003) enforces ModuleParameterSpec constraints
+  text: 'ModuleParameterEvaluator (WORLD-MOD-003) enforces ModuleParameterSpec constraints
     at assembly time: required params with no value raise AssemblyParameterError,
     allowed_values/min_value/max_value violations raise AssemblyParameterError naming
-    module_id and param_name. Recipe count fields declared as "{key} * N" string
-    templates are substituted from resolved param values and evaluated via AST-only
-    arithmetic (no eval()). Modules with parameters: [] are zero-overhead fast path.
+    module_id and param_name. Recipe count fields declared as "{key} * N" string templates
+    are substituted from resolved param values and evaluated via AST-only arithmetic
+    (no eval()). Modules with parameters: [] are zero-overhead fast path.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/worldmodules/evaluator.py +
-    src/worldassembly/resolver.py (AssemblyParameterError) +
-    src/worldbuilding/recipe.py (Union[int, str] count fields) +
-    docs/world/modules_contract.md (WORLD-MOD-003)
+  v2_evidence: 'src/worldmodules/evaluator.py + src/worldassembly/resolver.py (AssemblyParameterError)
+    + src/worldbuilding/recipe.py (Union[int, str] count fields) + docs/world/modules_contract.md
+    (WORLD-MOD-003)
+
+    '
   proof_type: null
   test_path: tests/unit/worldmodules/test_parameter_evaluator.py
   divergence_note: null
-  support_boundary: "WorldModules — world setup preprocessing only, not tick-path."
+  support_boundary: "WorldModules \u2014 world setup preprocessing only, not tick-path."
 - id: SUBSTRATE-NEW-006
-  text: >
-    WorldCompositionSpec.pack_refs (List[str]) declares content pack dependencies for
-    a composition. WorldAssemblyResolver.assemble() validates pack_refs at the START
-    of assembly (before module loading): loads each pack's ContentPackManifest from
-    data/content/packs/<pack_id>.yaml, raises AssemblyPackError if a pack is not found
-    or has enabled==False, raises AssemblyPackError if any dependency pack is missing
-    or disabled. Compositions with empty pack_refs skip validation unconditionally
-    (no breaking change). pack_refs is stripped from NormalizedWorldComposition
-    (pre-assembly gate only, not carried into compilation context).
+  text: 'WorldCompositionSpec.pack_refs (List[str]) declares content pack dependencies
+    for a composition. WorldAssemblyResolver.assemble() validates pack_refs at the
+    START of assembly (before module loading): loads each pack''s ContentPackManifest
+    from data/content/packs/<pack_id>.yaml, raises AssemblyPackError if a pack is
+    not found or has enabled==False, raises AssemblyPackError if any dependency pack
+    is missing or disabled. Compositions with empty pack_refs skip validation unconditionally
+    (no breaking change). pack_refs is stripped from NormalizedWorldComposition (pre-assembly
+    gate only, not carried into compilation context).
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/worldassembly/schema.py (WorldCompositionSpec.pack_refs) +
-    src/worldassembly/resolver.py (AssemblyPackError, assemble() pack validation block) +
-    src/content/pack_manifest.py (ContentPackManifest)
+  v2_evidence: 'src/worldassembly/schema.py (WorldCompositionSpec.pack_refs) + src/worldassembly/resolver.py
+    (AssemblyPackError, assemble() pack validation block) + src/content/pack_manifest.py
+    (ContentPackManifest)
+
+    '
   proof_type: null
   test_path: tests/unit/worldassembly/test_pack_validation.py
   divergence_note: null
-  support_boundary: "WorldAssembly — world setup preprocessing only, not tick-path."
+  support_boundary: "WorldAssembly \u2014 world setup preprocessing only, not tick-path."
 - id: SUBSTRATE-NEW-007
-  text: >
-    WorldSpec.quest_definitions (List[QuestDefinition]) replaces the untyped
-    WorldSpec.quests (list[dict]) field. QuestDefinition is a frozen Pydantic model with
-    fields: id, type (Literal["escort","hunt","fetch","explore","defend","investigate"]),
+  text: 'WorldSpec.quest_definitions (List[QuestDefinition]) replaces the untyped
+    WorldSpec.quests (list[dict]) field. QuestDefinition is a frozen Pydantic model
+    with fields: id, type (Literal["escort","hunt","fetch","explore","defend","investigate"]),
     required_participant_tags, required_location_tags, reward_budget (int, ge=0),
     procedural_hints (Dict[str,Any]), tags (List[str]), source_module (Optional[str]).
-    A model_validator(mode="before") migrates legacy YAML with quests: key to
-    quest_definitions: with no silent data loss. The compiler iterates quest_definitions
-    and validates required_location_tags against the semantic tag pool built from all
-    regions: each region contributes its type field (coarse category e.g. wilderness, road,
-    town) and any explicit tags (subtypes e.g. mine, forest, ruins, settlement). A warning
-    is emitted only when a tag matches neither any region type nor any region explicit tag.
-    RegionSpec carries tags: List[str] = [] for this purpose; RegionRecipeSpec carries the
-    same field so module YAML authors can annotate regions during authoring.
+    A model_validator(mode="before") migrates legacy YAML with quests: key to quest_definitions:
+    with no silent data loss. The compiler iterates quest_definitions and validates
+    required_location_tags against the semantic tag pool built from all regions: each
+    region contributes its type field (coarse category e.g. wilderness, road, town)
+    and any explicit tags (subtypes e.g. mine, forest, ruins, settlement). A warning
+    is emitted only when a tag matches neither any region type nor any region explicit
+    tag. RegionSpec carries tags: List[str] = [] for this purpose; RegionRecipeSpec
+    carries the same field so module YAML authors can annotate regions during authoring.
     src/quests/ runtime system is unchanged.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/worldbuilding/schema.py (RegionSpec.tags, QuestDefinition, WorldSpec.quest_definitions,
-    _migrate_quests_field validator) +
-    src/worldbuilding/recipe.py (RegionRecipeSpec.tags, expanded_data propagation) +
-    src/worldbuilding/compiler.py (tag_pool build from spec.regions + quest_definitions loop) +
-    src/worldassembly/resolver.py (RegionSpec construction propagates tags from RegionRecipeSpec) +
-    src/worldbuilding/cli.py (quest_definitions display) +
-    data/content/world_modules/ (regions annotated with tags where type alone is insufficient)
+  v2_evidence: 'src/worldbuilding/schema.py (RegionSpec.tags, QuestDefinition, WorldSpec.quest_definitions,
+    _migrate_quests_field validator) + src/worldbuilding/recipe.py (RegionRecipeSpec.tags,
+    expanded_data propagation) + src/worldbuilding/compiler.py (tag_pool build from
+    spec.regions + quest_definitions loop) + src/worldassembly/resolver.py (RegionSpec
+    construction propagates tags from RegionRecipeSpec) + src/worldbuilding/cli.py
+    (quest_definitions display) + data/content/world_modules/ (regions annotated with
+    tags where type alone is insufficient)
+
+    '
   proof_type: null
-  test_path: >
-    tests/unit/worldbuilding/test_quest_definition.py +
-    tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_matches_region_type +
-    tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_matches_region_explicit_tag +
-    tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_warns_on_genuine_mismatch
-  divergence_note: "TCK-20260630-WORLD-QUEST-LOCATION: fixed compiler to match against region.type + region.tags instead of region.id; all four compiled worlds now have zero quest location warnings."
-  support_boundary: "WorldBuilding authoring layer — world setup only, not tick-path."
+  test_path: 'tests/unit/worldbuilding/test_quest_definition.py + tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_matches_region_type
+    + tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_matches_region_explicit_tag
+    + tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_warns_on_genuine_mismatch
+
+    '
+  divergence_note: 'TCK-20260630-WORLD-QUEST-LOCATION: fixed compiler to match against
+    region.type + region.tags instead of region.id; all four compiled worlds now have
+    zero quest location warnings.'
+  support_boundary: "WorldBuilding authoring layer \u2014 world setup only, not tick-path."
 - id: SUBSTRATE-NEW-008
-  text: >
-    ModuleScorer.score() returns Dict[str, ModuleScore] with normalized scores per
-    intent dimension. Each ModuleScore has module_id, score (0.0–1.0), reasons (non-empty
-    list), and dimensions dict. Required modules always score 1.0. Danger-aligned modules
-    (type conflict/danger_zone or observability_tags containing hostile/conflict/danger_zone)
-    score proportionally to danger_level. Settlement modules are penalised at high danger_level.
+  text: "ModuleScorer.score() returns Dict[str, ModuleScore] with normalized scores\
+    \ per intent dimension. Each ModuleScore has module_id, score (0.0\u20131.0),\
+    \ reasons (non-empty list), and dimensions dict. Required modules always score\
+    \ 1.0. Danger-aligned modules (type conflict/danger_zone or observability_tags\
+    \ containing hostile/conflict/danger_zone) score proportionally to danger_level.\
+    \ Settlement modules are penalised at high danger_level.\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/worldgeneration/scorer.py — ModuleScorer.score()"
+  v2_evidence: "src/worldgeneration/scorer.py \u2014 ModuleScorer.score()"
   proof_type: null
-  test_path: "tests/unit/worldgeneration/test_module_scorer.py"
-  divergence_note: ""
-  support_boundary: "WorldGeneration authoring layer — world setup only, not tick-path."
+  test_path: tests/unit/worldgeneration/test_module_scorer.py
+  divergence_note: ''
+  support_boundary: "WorldGeneration authoring layer \u2014 world setup only, not\
+    \ tick-path."
 - id: SUBSTRATE-NEW-009
-  text: >
-    WorldModuleSpec.quest_definitions (List[QuestDefinition]) allows modules to declare
-    authoring-time quest blueprints. The assembly resolver (WorldAssemblyResolver.assemble())
+  text: 'WorldModuleSpec.quest_definitions (List[QuestDefinition]) allows modules
+    to declare authoring-time quest blueprints. The assembly resolver (WorldAssemblyResolver.assemble())
     collects quest_definitions from each module contribution via resolve_module_contribution(),
-    stamps source_module=module_id on each QuestDefinition via model_copy(), accumulates them
-    in a dict keyed by id, raises AssemblyCollisionError on duplicate id (naming both
-    contributing modules), and populates WorldSpec.quest_definitions with the merged list.
-    ProvenanceRecord entries with recipe_type="quest_definition" are written per quest.
-    NormalizedWorldModule carries quest_definitions as Tuple[QuestDefinition, ...].
-    ResolvedModuleContribution carries quest_definitions as List[QuestDefinition].
+    stamps source_module=module_id on each QuestDefinition via model_copy(), accumulates
+    them in a dict keyed by id, raises AssemblyCollisionError on duplicate id (naming
+    both contributing modules), and populates WorldSpec.quest_definitions with the
+    merged list. ProvenanceRecord entries with recipe_type="quest_definition" are
+    written per quest. NormalizedWorldModule carries quest_definitions as Tuple[QuestDefinition,
+    ...]. ResolvedModuleContribution carries quest_definitions as List[QuestDefinition].
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/worldmodules/schema.py (WorldModuleSpec.quest_definitions) +
-    src/worldmodules/normalizer.py (NormalizedWorldModule.quest_definitions, WorldModuleAuthoringNormalizer.normalize()) +
-    src/worldassembly/schema.py (ResolvedModuleContribution.quest_definitions) +
-    src/worldassembly/resolver.py (AssemblyCollisionError, resolve_module_contribution() step 9, assemble() quest merge loop)
+  v2_evidence: 'src/worldmodules/schema.py (WorldModuleSpec.quest_definitions) + src/worldmodules/normalizer.py
+    (NormalizedWorldModule.quest_definitions, WorldModuleAuthoringNormalizer.normalize())
+    + src/worldassembly/schema.py (ResolvedModuleContribution.quest_definitions) +
+    src/worldassembly/resolver.py (AssemblyCollisionError, resolve_module_contribution()
+    step 9, assemble() quest merge loop)
+
+    '
   proof_type: null
   test_path: tests/unit/worldassembly/test_quest_merge.py
   divergence_note: null
-  support_boundary: "WorldAssembly — world setup only, not tick-path."
+  support_boundary: "WorldAssembly \u2014 world setup only, not tick-path."
 - id: SUBSTRATE-NEW-010
-  text: >
-    ProceduralCompositionGenerator converts a GenerationIntentSpec into a WorldCompositionSpec
-    YAML by scoring, selecting, and dependency-resolving WorldModuleSpec candidates via
-    ModuleScorer.score(). Selection rules: (1) top-scoring terrain module always included;
-    (2) top-scoring settlement module included when settlement_style != "none"; (3) remaining
-    budget slots (default BUDGET=6) filled by highest-scoring non-settlement candidates when
-    settlement_style="none"; (4) dependency modules auto-added via BFS on WorldModuleSpec.requires;
-    (5) fail-fast GenerationCompositionError raised if two selected modules share a provides string.
-    Output written to data/content/world_compositions/generated/{world_id}.yaml.
-    world_id = f"generated_{settlement_style}_{int(danger_level)}_{seed}".
-    Sort is deterministic: (-score, module_id) for tie-breaking.
+  text: 'ProceduralCompositionGenerator converts a GenerationIntentSpec into a WorldCompositionSpec
+    YAML by scoring, selecting, and dependency-resolving WorldModuleSpec candidates
+    via ModuleScorer.score(). Selection rules: (1) top-scoring terrain module always
+    included; (2) top-scoring settlement module included when settlement_style !=
+    "none"; (3) remaining budget slots (default BUDGET=6) filled by highest-scoring
+    non-settlement candidates when settlement_style="none"; (4) dependency modules
+    auto-added via BFS on WorldModuleSpec.requires; (5) fail-fast GenerationCompositionError
+    raised if two selected modules share a provides string. Output written to data/content/world_compositions/generated/{world_id}.yaml.
+    world_id = f"generated_{settlement_style}_{int(danger_level)}_{seed}". Sort is
+    deterministic: (-score, module_id) for tie-breaking.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/worldgeneration/generator.py (ProceduralCompositionGenerator, GenerationCompositionError) +
-    src/worldgeneration/scorer.py (ModuleScorer.score) +
-    src/worldassembly/schema.py (WorldCompositionSpec, ModuleRefSpec)
+  v2_evidence: 'src/worldgeneration/generator.py (ProceduralCompositionGenerator,
+    GenerationCompositionError) + src/worldgeneration/scorer.py (ModuleScorer.score)
+    + src/worldassembly/schema.py (WorldCompositionSpec, ModuleRefSpec)
+
+    '
   proof_type: null
   test_path: tests/unit/worldgeneration/test_composition_generator.py
   divergence_note: null
-  support_boundary: "WorldGeneration — procedural composition pipeline only."
+  support_boundary: "WorldGeneration \u2014 procedural composition pipeline only."
 - id: SUBSTRATE-NEW-011
-  text: >
-    ProceduralCompositionGenerator.generate() performs seed-based parameter sampling after
-    module selection. A fresh DeterministicRNG(intent.seed) (src/platform/rng.py) is
-    initialized per call as param_rng. For each selected module in rank order, for each
-    ModuleParameterSpec in declaration order: (1) if allowed_values is non-empty →
-    param_rng.choice(...); (2) elif min_value and max_value are both set →
-    param_rng.get_int(...) for type="integer", param_rng.get_float(...) otherwise;
-    (3) else → use declared default unchanged (no rng call). Required params with no
-    default and no bounds are left absent from the parameters dict.
-    Same seed + same module selection order → identical ModuleRefSpec.parameters on every call.
+  text: "ProceduralCompositionGenerator.generate() performs seed-based parameter sampling\
+    \ after module selection. A fresh DeterministicRNG(intent.seed) (src/platform/rng.py)\
+    \ is initialized per call as param_rng. For each selected module in rank order,\
+    \ for each ModuleParameterSpec in declaration order: (1) if allowed_values is\
+    \ non-empty \u2192 param_rng.choice(...); (2) elif min_value and max_value are\
+    \ both set \u2192 param_rng.get_int(...) for type=\"integer\", param_rng.get_float(...)\
+    \ otherwise; (3) else \u2192 use declared default unchanged (no rng call). Required\
+    \ params with no default and no bounds are left absent from the parameters dict.\
+    \ Same seed + same module selection order \u2192 identical ModuleRefSpec.parameters\
+    \ on every call.\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/worldgeneration/generator.py:452 (param_rng = DeterministicRNG(intent.seed)) +
-    src/worldmodules/schema.py (ModuleParameterSpec) +
-    src/worldassembly/schema.py (ModuleRefSpec.parameters) +
-    TCK-20260619-P0-DETERMINISM (replaced bare random.Random with DeterministicRNG)
+  v2_evidence: 'src/worldgeneration/generator.py:452 (param_rng = DeterministicRNG(intent.seed))
+    + src/worldmodules/schema.py (ModuleParameterSpec) + src/worldassembly/schema.py
+    (ModuleRefSpec.parameters) + TCK-20260619-P0-DETERMINISM (replaced bare random.Random
+    with DeterministicRNG)
+
+    '
   proof_type: null
   test_path: tests/unit/worldgeneration/test_seed_params.py
   divergence_note: null
-  support_boundary: "WorldGeneration — seed-based parameter sampling only."
+  support_boundary: "WorldGeneration \u2014 seed-based parameter sampling only."
 - id: SUBSTRATE-NEW-012
-  text: >
-    No bare `import random` or `random.` calls are permitted in src/ outside
-    src/platform/rng.py. DeterministicRNG (src/platform/rng.py) is the only allowed
-    RNG source. A CI lint test enforces this: tests/integration/kernel/test_phase2_determinism.py
-    scans src/ at test time and fails if any bare random call is found.
-    Violation files prior to TCK-20260619-P0-DETERMINISM:
-    src/engine/kernel.py, src/worldbuilding/compiler.py,
-    src/worldbuilding/recipe.py, src/worldgeneration/generator.py — all fixed.
+  text: "No bare `import random` or `random.` calls are permitted in src/ outside\
+    \ src/platform/rng.py. DeterministicRNG (src/platform/rng.py) is the only allowed\
+    \ RNG source. A CI lint test enforces this: tests/integration/kernel/test_phase2_determinism.py\
+    \ scans src/ at test time and fails if any bare random call is found. Violation\
+    \ files prior to TCK-20260619-P0-DETERMINISM: src/engine/kernel.py, src/worldbuilding/compiler.py,\
+    \ src/worldbuilding/recipe.py, src/worldgeneration/generator.py \u2014 all fixed.\n"
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    src/platform/rng.py (DeterministicRNG — authoritative RNG) +
-    src/engine/kernel.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
-    src/worldbuilding/compiler.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
-    src/worldbuilding/recipe.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
-    src/worldgeneration/generator.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
-    tests/integration/kernel/test_phase2_determinism.py (lint gate test)
+  v2_evidence: "src/platform/rng.py (DeterministicRNG \u2014 authoritative RNG) +\
+    \ src/engine/kernel.py (bare random replaced, TCK-20260619-P0-DETERMINISM) + src/worldbuilding/compiler.py\
+    \ (bare random replaced, TCK-20260619-P0-DETERMINISM) + src/worldbuilding/recipe.py\
+    \ (bare random replaced, TCK-20260619-P0-DETERMINISM) + src/worldgeneration/generator.py\
+    \ (bare random replaced, TCK-20260619-P0-DETERMINISM) + tests/integration/kernel/test_phase2_determinism.py\
+    \ (lint gate test)\n"
   proof_type: null
   test_path: tests/integration/kernel/test_phase2_determinism.py
   divergence_note: null
-  support_boundary: "All of src/ — enforced by lint test."
+  support_boundary: "All of src/ \u2014 enforced by lint test."
 - id: SUB-370
   text: PersonalityComponent traits (bravery, greed, industry, sociability) are seeded
     per entity using DeterministicRNG sub-seeds at world compilation; no two entities
@@ -4099,14 +4127,12 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/worldbuilding/compiler.py (WorldCompiler.compile() — rng.get_float(Domain.WORLD,
-    0, entity_id, sub_id=10..13), TCK-20260619-P0-ENTITY-INIT)
+  v2_evidence: "src/worldbuilding/compiler.py (WorldCompiler.compile() \u2014 rng.get_float(Domain.WORLD,\
+    \ 0, entity_id, sub_id=10..13), TCK-20260619-P0-ENTITY-INIT)\n"
   proof_type: parity
   test_path: tests/unit/entity/test_entity_initialization.py::test_entity_personality_variance_at_spawn
   divergence_note: null
   support_boundary: null
-
 - id: SUB-371
   text: ConversionOptionGenerator and PersonalityAwareSelector sort candidates by
     (score DESC, kind.value DESC) so ties in score produce a canonical, deterministic
@@ -4114,637 +4140,666 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/domains/progression/generator.py (key=lambda o: (o.score, o.kind.value),
-    TCK-20260619-P0-CODE-INTEGRITY) +
-    src/domains/progression/selector.py (key=lambda pair: (pair[1], pair[0].kind.value),
-    TCK-20260619-P0-CODE-INTEGRITY)
+  v2_evidence: 'src/domains/progression/generator.py (key=lambda o: (o.score, o.kind.value),
+    TCK-20260619-P0-CODE-INTEGRITY) + src/domains/progression/selector.py (key=lambda
+    pair: (pair[1], pair[0].kind.value), TCK-20260619-P0-CODE-INTEGRITY)
+
+    '
   proof_type: parity
   test_path: tests/unit/engine/test_sort_tiebreaker.py::TestGeneratorSortTiebreaker::test_sort_is_stable_on_tied_scores
   divergence_note: null
   support_boundary: null
-
 - id: SUB-372
-  text: >
-    InformationProviderState is a frozen typed record registered in
-    AuthoritativeState.information_providers (Dict[int, InformationProviderState]).
-    to_canonical_dict() produces a deterministic dict with all fields.
-    to_readonly() wraps the dict in ReadOnlyDict.
+  text: 'InformationProviderState is a frozen typed record registered in AuthoritativeState.information_providers
+    (Dict[int, InformationProviderState]). to_canonical_dict() produces a deterministic
+    dict with all fields. to_readonly() wraps the dict in ReadOnlyDict.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/domains/information/providers.py (InformationProviderState,
-    InformationProviderArchetype, TCK-20260619-E42B-INFO-PROVIDER) +
-    src/core/state.py (AuthoritativeState.information_providers field +
-    to_readonly() ReadOnlyDict wrap, TCK-20260619-E42B-INFO-PROVIDER)
+  v2_evidence: 'src/domains/information/providers.py (InformationProviderState, InformationProviderArchetype,
+    TCK-20260619-E42B-INFO-PROVIDER) + src/core/state.py (AuthoritativeState.information_providers
+    field + to_readonly() ReadOnlyDict wrap, TCK-20260619-E42B-INFO-PROVIDER)
+
+    '
   proof_type: parity
   test_path: tests/unit/cognition/test_information_seeking.py::TestInformationProviderState::test_information_provider_registered_in_authoritative_state
   divergence_note: null
   support_boundary: null
-
-# NOTE: Faction authoritative-world-object parity is tracked in a dedicated file.
-# See docs/parity_ledger/faction.yaml for FAC-001 (FactionState durable model in
-# AuthoritativeState) and FAC-002 (tension clamping), added by TCK-20260619-E53Aa-FACTION-STATE.
-
 - id: SUB-373
-  text: >
-    CONTENT_USAGE_MATRIX in src/content/matrix.py is auto-populated at import
-    time with DESIGN_ONLY placeholder entries for any YAML file present in
-    data/content/ that is not already hand-registered. This eliminates the manual
-    registration step for new content families. The ValueError guard in
-    CatalogRepository.load_all(strict=True) (CANONICAL_FAMILIES check) is
-    unaffected and continues to fire for unregistered files.
+  text: 'CONTENT_USAGE_MATRIX in src/content/matrix.py is auto-populated at import
+    time with DESIGN_ONLY placeholder entries for any YAML file present in data/content/
+    that is not already hand-registered. This eliminates the manual registration step
+    for new content families. The ValueError guard in CatalogRepository.load_all(strict=True)
+    (CANONICAL_FAMILIES check) is unaffected and continues to fire for unregistered
+    files.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    src/content/matrix.py (_auto_discover_extra_entries, module-level merge block,
-    TCK-20260627-P2K-CONTENT-MATRIX)
+  v2_evidence: 'src/content/matrix.py (_auto_discover_extra_entries, module-level
+    merge block, TCK-20260627-P2K-CONTENT-MATRIX)
+
+    '
   proof_type: parity
   test_path: tests/unit/content/test_content_usage_matrix.py::test_merged_matrix_covers_all_disk_files
   divergence_note: null
-  support_boundary: >
-    This entry's claim is scoped to `_auto_discover_extra_entries`'s own placeholder-generation
-    behavior for UNREGISTERED content families -- it does not cover ongoing manual maintenance of
-    fields on already hand-registered CONTENT_USAGE_MATRIX rows (e.g. `compile_runtime_consumer`,
-    `runtime_consumer_evidence`), which is a distinct, unautomated editorial action with no
-    auto-discovery involvement. Confirmed via TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY:
-    updating the already-registered `living/cognition_profiles` row's `runtime_consumer_evidence`
-    to reflect a new real runtime consumer (`AdventureDecisionPhase`) touched `matrix.py` without
-    exercising or affecting `_auto_discover_extra_entries` at all -- not a divergence from this
-    entry's own claim, just outside what the claim was ever scoped to describe.
-    Addendum (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE): the same hand-registered
-    `living/cognition_profiles` row's `compile_runtime_consumer` and `runtime_consumer_evidence`
-    fields were edited again, renaming the cited runtime consumer from `AdventureDecisionPhase`
+  support_boundary: 'This entry''s claim is scoped to `_auto_discover_extra_entries`''s
+    own placeholder-generation behavior for UNREGISTERED content families -- it does
+    not cover ongoing manual maintenance of fields on already hand-registered CONTENT_USAGE_MATRIX
+    rows (e.g. `compile_runtime_consumer`, `runtime_consumer_evidence`), which is
+    a distinct, unautomated editorial action with no auto-discovery involvement. Confirmed
+    via TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY: updating the already-registered
+    `living/cognition_profiles` row''s `runtime_consumer_evidence` to reflect a new
+    real runtime consumer (`AdventureDecisionPhase`) touched `matrix.py` without exercising
+    or affecting `_auto_discover_extra_entries` at all -- not a divergence from this
+    entry''s own claim, just outside what the claim was ever scoped to describe. Addendum
+    (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE): the same hand-registered `living/cognition_profiles`
+    row''s `compile_runtime_consumer` and `runtime_consumer_evidence` fields were
+    edited again, renaming the cited runtime consumer from `AdventureDecisionPhase`
     (deleted this ticket, src/domains/adventure/phase.py no longer exists) to `AdventureGoalScorer`
-    (src/ai/goals/adventure_scorer.py, the sole surviving adventure-decision path). Same as the
-    prior addendum: a manual editorial update to an already-registered row, not an
-    `_auto_discover_extra_entries` exercise -- still outside this entry's own scoped claim.
+    (src/ai/goals/adventure_scorer.py, the sole surviving adventure-decision path).
+    Same as the prior addendum: a manual editorial update to an already-registered
+    row, not an `_auto_discover_extra_entries` exercise -- still outside this entry''s
+    own scoped claim.
 
+    '
 - id: SUB-374
-  text: >
-    EntityState.self_model (SelfModelBundle) participates in the authoritative canonical
-    hash. EntityState.to_canonical_dict() unconditionally includes
-    "self_model": self.self_model.to_canonical_dict(), and
-    CanonicalStateHasher.to_canonical_data() calls this same method for every entity when
-    computing the full canonical hash used for determinism/replay/certification. There is
-    no separate hash-only vs. debug-only code path for self_model.
+  text: 'EntityState.self_model (SelfModelBundle) participates in the authoritative
+    canonical hash. EntityState.to_canonical_dict() unconditionally includes "self_model":
+    self.self_model.to_canonical_dict(), and CanonicalStateHasher.to_canonical_data()
+    calls this same method for every entity when computing the full canonical hash
+    used for determinism/replay/certification. There is no separate hash-only vs.
+    debug-only code path for self_model.
+
+    '
   status: divergent
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/core/state.py:750 (EntityState.to_canonical_dict(), unconditional
-    "self_model" key) + src/engine/checkpoint.py:81
-    (CanonicalStateHasher.to_canonical_data(), calls entities[eid].to_canonical_dict()
-    for every entity) + src/core/self_model.py:216-219 (SelfModelBundle docstring,
-    corrected under TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)
+  v2_evidence: 'src/core/state.py:750 (EntityState.to_canonical_dict(), unconditional
+    "self_model" key) + src/engine/checkpoint.py:81 (CanonicalStateHasher.to_canonical_data(),
+    calls entities[eid].to_canonical_dict() for every entity) + src/core/self_model.py:216-219
+    (SelfModelBundle docstring, corrected under TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)
+
+    '
   proof_type: parity
   test_path: tests/unit/core/test_entity_integrity.py::test_self_model_participates_in_canonical_hash
-  divergence_note: >
-    The SelfModelBundle docstring previously claimed self_model was "intentionally excluded
-    from authoritative canonical hash" - this was false and pre-existing, not introduced by
-    TCK-20260703-SIMQ-UPLIFT3-BRANCH-B's self_model_bundle_set materialization fix. The
-    docstring was corrected to match actual code (self_model IS included), rather than
-    changing the hash formula to match the stale docstring - changing hash computation would
-    retroactively alter every existing calibration baseline's hash value across the whole
-    test suite, judged out of scope / too disruptive for this ticket. Because
-    ENABLE_SELF_MODEL_COGNITION is OFF in every shipped profile, self_model stays constant
-    SelfModelBundle.empty() regardless of this fix, so no shipped baseline's hash VALUE
-    changes as a direct result of landing SelfModelPatch.
+  divergence_note: 'The SelfModelBundle docstring previously claimed self_model was
+    "intentionally excluded from authoritative canonical hash" - this was false and
+    pre-existing, not introduced by TCK-20260703-SIMQ-UPLIFT3-BRANCH-B''s self_model_bundle_set
+    materialization fix. The docstring was corrected to match actual code (self_model
+    IS included), rather than changing the hash formula to match the stale docstring
+    - changing hash computation would retroactively alter every existing calibration
+    baseline''s hash value across the whole test suite, judged out of scope / too
+    disruptive for this ticket. Because ENABLE_SELF_MODEL_COGNITION is OFF in every
+    shipped profile, self_model stays constant SelfModelBundle.empty() regardless
+    of this fix, so no shipped baseline''s hash VALUE changes as a direct result of
+    landing SelfModelPatch.
+
+    '
   support_boundary: null
-
 - id: SUB-375
-  text: >
-    TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP -- entity biological pressures
+  text: 'TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP -- entity biological pressures
     (hunger/sleep_debt/rest_pressure, BiologicalComponent) and stamina (StaminaComponent.current
-    vs exhaustion_threshold) were durable state with zero observability coverage
-    (docs/event_ledger/entity.yaml ENTITY-009/ENTITY-017, both previously `status: silent`).
-    Adds two new events to src/observability/event_extractor.py's diff loop:
-    `biological_state_changed` (fires on any real hunger/sleep_debt/rest_pressure delta,
-    severity CRITICAL >=95 / WARNING >=80 / INFO otherwise, using the worst of the three
-    pressures) and `stamina_changed` (fires on any real stamina.current delta, severity WARNING
-    when below the existing `exhaustion_threshold`, INFO otherwise). Full-coverage-by-design
-    (every real delta, not just threshold crossings) per explicit user direction, matching the
-    `movement` event's own existing high-volume-but-real precedent in the same file. Both
-    reuse existing, already-defined thresholds (`StaminaComponent.exhaustion_threshold`,
-    BiologicalComponent's documented 0-100 scale) -- no new numeric constants invented.
-    Suppressed in LIGHT/LONG_RUN observability modes, matching the file's existing volume-control
-    convention for other high-frequency events.
+    vs exhaustion_threshold) were durable state with zero observability coverage (docs/event_ledger/entity.yaml
+    ENTITY-009/ENTITY-017, both previously `status: silent`). Adds two new events
+    to src/observability/event_extractor.py''s diff loop: `biological_state_changed`
+    (fires on any real hunger/sleep_debt/rest_pressure delta, severity CRITICAL >=95
+    / WARNING >=80 / INFO otherwise, using the worst of the three pressures) and `stamina_changed`
+    (fires on any real stamina.current delta, severity WARNING when below the existing
+    `exhaustion_threshold`, INFO otherwise). Full-coverage-by-design (every real delta,
+    not just threshold crossings) per explicit user direction, matching the `movement`
+    event''s own existing high-volume-but-real precedent in the same file. Both reuse
+    existing, already-defined thresholds (`StaminaComponent.exhaustion_threshold`,
+    BiologicalComponent''s documented 0-100 scale) -- no new numeric constants invented.
+    Suppressed in LIGHT/LONG_RUN observability modes, matching the file''s existing
+    volume-control convention for other high-frequency events.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_extractor.py -- `biological_state_changed`/`stamina_changed` diff
-    blocks, guarded by a local `_is_real_number()` isinstance helper (defensive against
-    MagicMock-based test fixtures elsewhere in the suite that don't wire `.biological`/`.stamina`,
-    never true for a real EntityState). Confirmed firing through a real, non-mocked
-    `Kernel.tick_once()` loop over 15 ticks on `sandbox_world` (seed 42) -- not just constructed
-    from hand-built state.
-  proof_type: regression
-  test_path: >
-    tests/unit/observability/test_event_extractor_vitals.py::
-    test_biological_state_changed_fires_through_real_kernel_tick_once,
-    ::test_stamina_changed_fires_through_real_kernel_tick_once,
-    ::test_vitals_events_suppressed_in_light_and_long_run_modes
-  divergence_note: null
-  support_boundary: >
-    Emitted events are classified `unscored_intentional` (docs/simulation_quality/
-    event_type_coverage.md Section 5) -- not wired to any SimQ pillar, a deliberate separate
-    decision, not a residual gap. Wound/scar coverage (the other half of this ticket's scope) is
-    tracked separately under combat_movement.yaml's own entry, since wounds are a CombatUpdate
-    field, not a biological/stamina one.
+  v2_evidence: 'src/observability/event_extractor.py -- `biological_state_changed`/`stamina_changed`
+    diff blocks, guarded by a local `_is_real_number()` isinstance helper (defensive
+    against MagicMock-based test fixtures elsewhere in the suite that don''t wire
+    `.biological`/`.stamina`, never true for a real EntityState). Confirmed firing
+    through a real, non-mocked `Kernel.tick_once()` loop over 15 ticks on `sandbox_world`
+    (seed 42) -- not just constructed from hand-built state.
 
+    '
+  proof_type: regression
+  test_path: 'tests/unit/observability/test_event_extractor_vitals.py:: test_biological_state_changed_fires_through_real_kernel_tick_once,
+    ::test_stamina_changed_fires_through_real_kernel_tick_once, ::test_vitals_events_suppressed_in_light_and_long_run_modes
+
+    '
+  divergence_note: null
+  support_boundary: 'Emitted events are classified `unscored_intentional` (docs/simulation_quality/
+    event_type_coverage.md Section 5) -- not wired to any SimQ pillar, a deliberate
+    separate decision, not a residual gap. Wound/scar coverage (the other half of
+    this ticket''s scope) is tracked separately under combat_movement.yaml''s own
+    entry, since wounds are a CombatUpdate field, not a biological/stamina one.
+
+    '
 - id: SUB-376
-  text: >
-    TCK-20260808-ENTITY-ATTRIBUTES-OBSERVABILITY-GAP -- base attribute changes
-    (STR/AGI/VIT/END/INT/SPI/WIS/PER/CHA, AttributeComponent) were durable state with zero
-    observability coverage (docs/event_ledger/entity.yaml ENTITY-008, previously `status: silent`).
-    Adds one new event to src/observability/event_extractor.py's diff loop: `attribute_changed`
-    (fires on any real delta across the 9 fields; payload carries only the changed fields;
-    severity direction-based -- WARNING on any decline, INFO otherwise -- since no existing
-    numeric "significant attribute change" threshold exists anywhere in the repo to reuse, unlike
-    SUB-375's stamina/biological thresholds). Of the 4 grep-found `AttributeUpdate(` producers in
-    src/, only 1 (`src/engine/evolution.py`'s non-hero level-up) is genuinely live and
-    pipeline-wired; 1 (`src/engine/domain/core_actions.py::execute_allocate_ap`, strength/vitality
-    only) is real, tested, action-router-wired code with no live AI driver -- the one real
-    gap-resolution pipeline that could trigger it (progression/gaps.py's level_gap ->
-    progression/generator.py -> progression/resolver.py's ConversionKind.ALLOCATE_AP) resolves
-    through a separate, cosmetic path that only decrements unspent_ap and never touches
-    AttributeUpdate; 2 (`src/domains/demographics/cohort.py::compute_elder_attribute_update`,
-    `src/actions/attributes.py::AllocateAttributeAction`) are confirmed dead code -- zero real
-    callers anywhere in src/, verified via direct grep, not assumed from their presence.
+  text: 'TCK-20260808-ENTITY-ATTRIBUTES-OBSERVABILITY-GAP -- base attribute changes
+    (STR/AGI/VIT/END/INT/SPI/WIS/PER/CHA, AttributeComponent) were durable state with
+    zero observability coverage (docs/event_ledger/entity.yaml ENTITY-008, previously
+    `status: silent`). Adds one new event to src/observability/event_extractor.py''s
+    diff loop: `attribute_changed` (fires on any real delta across the 9 fields; payload
+    carries only the changed fields; severity direction-based -- WARNING on any decline,
+    INFO otherwise -- since no existing numeric "significant attribute change" threshold
+    exists anywhere in the repo to reuse, unlike SUB-375''s stamina/biological thresholds).
+    Of the 4 grep-found `AttributeUpdate(` producers in src/, only 1 (`src/engine/evolution.py`''s
+    non-hero level-up) is genuinely live and pipeline-wired; 1 (`src/engine/domain/core_actions.py::execute_allocate_ap`,
+    strength/vitality only) is real, tested, action-router-wired code with no live
+    AI driver -- the one real gap-resolution pipeline that could trigger it (progression/gaps.py''s
+    level_gap -> progression/generator.py -> progression/resolver.py''s ConversionKind.ALLOCATE_AP)
+    resolves through a separate, cosmetic path that only decrements unspent_ap and
+    never touches AttributeUpdate; 2 (`src/domains/demographics/cohort.py::compute_elder_attribute_update`,
+    `src/actions/attributes.py::AllocateAttributeAction`) are confirmed dead code
+    -- zero real callers anywhere in src/, verified via direct grep, not assumed from
+    their presence.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_extractor.py -- `attribute_changed` diff block, guarded by the same
-    `_is_real_number()` isinstance helper as SUB-375. Real producer (`evolution.py` non-hero
-    level-up) confirmed too rare to hit within a real, non-mocked 1500-tick `Kernel.tick_once()`
-    loop on `sandbox_world` (zero HERO-role entities among the 8 WORKER/3 GUARD/7 CITIZEN present,
-    none leveled up in that window) -- checked directly, not assumed. Verified instead via real
-    hand-constructed `AttributeComponent` objects passed through the real
-    `EventExtractor.extract()` function directly, same fallback pattern as COMB-296's wound/scar
-    verification.
-  proof_type: regression
-  test_path: >
-    tests/unit/observability/test_event_extractor_attributes.py (6 tests, all passing)
-  divergence_note: null
-  support_boundary: >
-    Emitted event classified `unscored_intentional` (docs/simulation_quality/
-    event_type_coverage.md Section 5) -- not wired to any SimQ pillar. The tangential finding that
-    `AttributePatch.apply` (src/engine/patches.py:557-570) clamps only an upper bound (100) with
-    no lower-bound floor is disclosed in this ticket's own investigation.md but explicitly NOT
-    fixed here -- an apply-pipeline correctness question, out of scope for an observability
-    ticket, and currently unreachable in practice since the only negative-delta producer
-    (`compute_elder_attribute_update`) is dead code. See SUB-375/COMB-296 for the sibling entity
-    entries from the predecessor vitals ticket.
+  v2_evidence: 'src/observability/event_extractor.py -- `attribute_changed` diff block,
+    guarded by the same `_is_real_number()` isinstance helper as SUB-375. Real producer
+    (`evolution.py` non-hero level-up) confirmed too rare to hit within a real, non-mocked
+    1500-tick `Kernel.tick_once()` loop on `sandbox_world` (zero HERO-role entities
+    among the 8 WORKER/3 GUARD/7 CITIZEN present, none leveled up in that window)
+    -- checked directly, not assumed. Verified instead via real hand-constructed `AttributeComponent`
+    objects passed through the real `EventExtractor.extract()` function directly,
+    same fallback pattern as COMB-296''s wound/scar verification.
 
+    '
+  proof_type: regression
+  test_path: 'tests/unit/observability/test_event_extractor_attributes.py (6 tests,
+    all passing)
+
+    '
+  divergence_note: null
+  support_boundary: 'Emitted event classified `unscored_intentional` (docs/simulation_quality/
+    event_type_coverage.md Section 5) -- not wired to any SimQ pillar. The tangential
+    finding that `AttributePatch.apply` (src/engine/patches.py:557-570) clamps only
+    an upper bound (100) with no lower-bound floor is disclosed in this ticket''s
+    own investigation.md but explicitly NOT fixed here -- an apply-pipeline correctness
+    question, out of scope for an observability ticket, and currently unreachable
+    in practice since the only negative-delta producer (`compute_elder_attribute_update`)
+    is dead code. See SUB-375/COMB-296 for the sibling entity entries from the predecessor
+    vitals ticket.
+
+    '
 - id: SUB-377
-  text: >
-    TCK-20260808-ENTITY-EQUIPMENT-OBSERVABILITY-GAP -- equipment slot assignment
-    (EquipmentComponent.slots) and durability (EquipmentComponent.durability) were durable state
-    with zero observability coverage (docs/event_ledger/entity.yaml ENTITY-014, previously
-    `status: silent`). Adds 3 new events to src/observability/event_extractor.py's diff loop:
-    `item_equipped` / `item_unequipped` (per-slot slots diff, `item_equipped` payload includes
-    `previous_item_id` on a swap) and `equipment_durability_changed` (per-slot durability delta;
-    severity INFO for a repair/increase or a decrease staying >= 50.0, WARNING for a decrease
-    below 50.0, CRITICAL for a decrease reaching <= 0.0 -- reusing the same 50% "needs repair"
-    intent already designed into src/domains/progression/gaps.py / src/engine/gold_sink.py, just
-    applied on the field's real 0-100 scale instead of the 0-1 scale those two call sites
-    mistakenly compare against). Of the 7 grep-found `EquipmentUpdate(` producers in src/, only 1
-    (`src/engine/evolution.py`'s goblin-kind species-evolution gear grant, evolution level >= 10)
-    is genuinely live and unconditional; 3 (`src/domains/progression/resolver.py`'s `EQUIP_ITEM`,
-    `src/engine/combat.py`'s durability decay, `src/engine/domain/core_actions.py::execute_repair`)
-    are real, wired code gated off corpus-wide (`ENABLE_PROGRESSION_EVOLUTION` /
-    `ENABLE_COMBAT_ENGAGEMENT`, both OFF in every shipped profile); 2
-    (`src/core/equipment.py::EquipmentService.auto_equip`/`.repair_equipment`) are confirmed dead
-    code -- zero real callers anywhere in src/, verified via direct grep, not assumed.
+  text: 'TCK-20260808-ENTITY-EQUIPMENT-OBSERVABILITY-GAP -- equipment slot assignment
+    (EquipmentComponent.slots) and durability (EquipmentComponent.durability) were
+    durable state with zero observability coverage (docs/event_ledger/entity.yaml
+    ENTITY-014, previously `status: silent`). Adds 3 new events to src/observability/event_extractor.py''s
+    diff loop: `item_equipped` / `item_unequipped` (per-slot slots diff, `item_equipped`
+    payload includes `previous_item_id` on a swap) and `equipment_durability_changed`
+    (per-slot durability delta; severity INFO for a repair/increase or a decrease
+    staying >= 50.0, WARNING for a decrease below 50.0, CRITICAL for a decrease reaching
+    <= 0.0 -- reusing the same 50% "needs repair" intent already designed into src/domains/progression/gaps.py
+    / src/engine/gold_sink.py, just applied on the field''s real 0-100 scale instead
+    of the 0-1 scale those two call sites mistakenly compare against). Of the 7 grep-found
+    `EquipmentUpdate(` producers in src/, only 1 (`src/engine/evolution.py`''s goblin-kind
+    species-evolution gear grant, evolution level >= 10) is genuinely live and unconditional;
+    3 (`src/domains/progression/resolver.py`''s `EQUIP_ITEM`, `src/engine/combat.py`''s
+    durability decay, `src/engine/domain/core_actions.py::execute_repair`) are real,
+    wired code gated off corpus-wide (`ENABLE_PROGRESSION_EVOLUTION` / `ENABLE_COMBAT_ENGAGEMENT`,
+    both OFF in every shipped profile); 2 (`src/core/equipment.py::EquipmentService.auto_equip`/`.repair_equipment`)
+    are confirmed dead code -- zero real callers anywhere in src/, verified via direct
+    grep, not assumed.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_extractor.py -- `item_equipped`/`item_unequipped`/
-    `equipment_durability_changed` diff blocks, guarded by `isinstance(..., dict)` checks on
-    `entity.equipment.slots`/`.durability` and the same `_is_real_number()` helper for durability
-    floats (defensive against MagicMock-based test fixtures elsewhere in the suite). The one live
-    producer (`evolution.py`'s goblin-evolution gear grant) confirmed unreachable in
-    `sandbox_world` -- zero goblin-kind entities present, checked directly via a real, non-mocked
-    1000-tick `Kernel.tick_once()` loop producing zero matching events, not assumed. Verified
-    instead via real hand-constructed `EquipmentComponent` objects passed through the real
-    `EventExtractor.extract()` function directly, same fallback pattern as SUB-375/SUB-376/
-    COMB-296.
-  proof_type: regression
-  test_path: >
-    tests/unit/observability/test_event_extractor_equipment.py (9 tests, all passing)
-  divergence_note: null
-  support_boundary: >
-    Emitted events classified `unscored_intentional` (docs/simulation_quality/
-    event_type_coverage.md Section 5) -- not wired to any SimQ pillar (ECONOMY flagged as a
-    plausible future candidate in the ticket's own Out of Scope, not decided here). The tangential
-    finding that src/domains/progression/gaps.py's `repair_gap` detection and
-    src/engine/gold_sink.py's `_count_degraded_slots` (REPAIR_FEE) both compare durability against
-    a 0-1 scale while the real field uses 0-100 -- silently making both checks unreachable in
-    practice -- is disclosed in this ticket's own investigation.md but explicitly NOT fixed here
-    (an apply/detection-logic correctness question, out of scope for an observability ticket, and
-    currently non-regressive since the producers that would generate a meaningful non-100 value
-    are themselves gated off). See SUB-375/SUB-376/COMB-296 for the sibling entity entries from
-    the predecessor vitals/attributes tickets.
+  v2_evidence: 'src/observability/event_extractor.py -- `item_equipped`/`item_unequipped`/
+    `equipment_durability_changed` diff blocks, guarded by `isinstance(..., dict)`
+    checks on `entity.equipment.slots`/`.durability` and the same `_is_real_number()`
+    helper for durability floats (defensive against MagicMock-based test fixtures
+    elsewhere in the suite). The one live producer (`evolution.py`''s goblin-evolution
+    gear grant) confirmed unreachable in `sandbox_world` -- zero goblin-kind entities
+    present, checked directly via a real, non-mocked 1000-tick `Kernel.tick_once()`
+    loop producing zero matching events, not assumed. Verified instead via real hand-constructed
+    `EquipmentComponent` objects passed through the real `EventExtractor.extract()`
+    function directly, same fallback pattern as SUB-375/SUB-376/ COMB-296.
 
+    '
+  proof_type: regression
+  test_path: 'tests/unit/observability/test_event_extractor_equipment.py (9 tests,
+    all passing)
+
+    '
+  divergence_note: null
+  support_boundary: 'Emitted events classified `unscored_intentional` (docs/simulation_quality/
+    event_type_coverage.md Section 5) -- not wired to any SimQ pillar (ECONOMY flagged
+    as a plausible future candidate in the ticket''s own Out of Scope, not decided
+    here). The tangential finding that src/domains/progression/gaps.py''s `repair_gap`
+    detection and src/engine/gold_sink.py''s `_count_degraded_slots` (REPAIR_FEE)
+    both compare durability against a 0-1 scale while the real field uses 0-100 --
+    silently making both checks unreachable in practice -- is disclosed in this ticket''s
+    own investigation.md but explicitly NOT fixed here (an apply/detection-logic correctness
+    question, out of scope for an observability ticket, and currently non-regressive
+    since the producers that would generate a meaningful non-100 value are themselves
+    gated off). See SUB-375/SUB-376/COMB-296 for the sibling entity entries from the
+    predecessor vitals/attributes tickets.
+
+    '
 - id: SUB-378
-  text: >
-    TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP -- entity role/faction
-    reassignment, recipe learning, and skill cooldowns were durable state with zero observability
-    coverage (docs/event_ledger/entity.yaml ENTITY-007, previously `status: partial`). Adds 4 new
-    events to src/observability/event_extractor.py's diff loop: `entity_role_changed` /
-    `entity_faction_changed` (entity.identity.role/.faction delta), `recipe_learned`
-    (entity.identity.known_recipes set-diff, new entries only), `skill_cooldown_started`
-    (entity.identity.cooldowns new/changed entry). `role_set`/`faction_set` have ZERO real
-    producers anywhere in src/ (confirmed via direct grep, not assumed) -- role/faction
-    reassignment (defection, promotion) is a defined-but-entirely-unimplemented mechanic, not
-    merely gated; the event is wired anyway (future-proof, per explicit user direction to build
-    "even invisible events, maybe we will change the code to make it visible"). `recipe_learned`'s
-    one real producer (`src/engine/blacksmith.py::BlacksmithSystem.enforce`, wholesale recipe
-    grant on a functional-blacksmith-tile visit) is unconditional, not feature-flag-gated --
-    confirmed via `pipeline.py:174`'s `run_phase` call carrying no flag argument, unlike the
-    4-arg gated calls elsewhere. `skill_cooldown_started`'s producer
-    (`src/engine/domain/skill_actions.py`) is real and action-router-wired but has no live AI
-    driver ever selecting the `"SKILL"` action -- same class as `execute_allocate_ap`/
-    `execute_repair` in the sibling attributes/equipment tickets. Separately, `TaskUpdate.
-    work_kind_set` (docs/event_ledger/entity.yaml ENTITY-015) was investigated and given a
-    `deliberately_uncovered` verdict, not an event -- 24 real producers found, overwhelmingly
-    per-tick action-scheduling plumbing (`src/engine/tactical.py`/`executor.py`/`worker_logic.py`,
-    setting `ENTITY_MOVE`/`ENTITY_ACT` for essentially every acting entity every tick), no
-    persistent narrative content, would be `movement`-class volume for zero signal.
+  text: 'TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP -- entity role/faction
+    reassignment, recipe learning, and skill cooldowns were durable state with zero
+    observability coverage (docs/event_ledger/entity.yaml ENTITY-007, previously `status:
+    partial`). Adds 4 new events to src/observability/event_extractor.py''s diff loop:
+    `entity_role_changed` / `entity_faction_changed` (entity.identity.role/.faction
+    delta), `recipe_learned` (entity.identity.known_recipes set-diff, new entries
+    only), `skill_cooldown_started` (entity.identity.cooldowns new/changed entry).
+    `role_set`/`faction_set` have ZERO real producers anywhere in src/ (confirmed
+    via direct grep, not assumed) -- role/faction reassignment (defection, promotion)
+    is a defined-but-entirely-unimplemented mechanic, not merely gated; the event
+    is wired anyway (future-proof, per explicit user direction to build "even invisible
+    events, maybe we will change the code to make it visible"). `recipe_learned`''s
+    one real producer (`src/engine/blacksmith.py::BlacksmithSystem.enforce`, wholesale
+    recipe grant on a functional-blacksmith-tile visit) is unconditional, not feature-flag-gated
+    -- confirmed via `pipeline.py:174`''s `run_phase` call carrying no flag argument,
+    unlike the 4-arg gated calls elsewhere. `skill_cooldown_started`''s producer (`src/engine/domain/skill_actions.py`)
+    is real and action-router-wired but has no live AI driver ever selecting the `"SKILL"`
+    action -- same class as `execute_allocate_ap`/ `execute_repair` in the sibling
+    attributes/equipment tickets. Separately, `TaskUpdate. work_kind_set` (docs/event_ledger/entity.yaml
+    ENTITY-015) was investigated and given a `deliberately_uncovered` verdict, not
+    an event -- 24 real producers found, overwhelmingly per-tick action-scheduling
+    plumbing (`src/engine/tactical.py`/`executor.py`/`worker_logic.py`, setting `ENTITY_MOVE`/`ENTITY_ACT`
+    for essentially every acting entity every tick), no persistent narrative content,
+    would be `movement`-class volume for zero signal.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_extractor.py -- 4 new diff blocks, guarded by the same
-    `_is_real_number()` helper for the int-typed role/faction fields and `isinstance(...,
-    (set,frozenset)/dict)` checks for known_recipes/cooldowns (defensive against MagicMock-based
-    test fixtures elsewhere in the suite). `recipe_learned`'s trigger conditions confirmed met in
-    `sandbox_world` (1 blacksmith building, all 18 entities start with empty known_recipes) via a
-    real, non-mocked 1500-tick `Kernel.tick_once()` loop, but no entity happened to path onto the
-    blacksmith tile within that window -- checked directly, not assumed unreachable.
-    `entity_role_changed`/`entity_faction_changed`/`skill_cooldown_started` verified via real
-    hand-constructed `IdentityComponent` objects passed through the real
-    `EventExtractor.extract()` function directly, same fallback pattern as SUB-375/SUB-376/
-    SUB-377/COMB-296.
-  proof_type: regression
-  test_path: >
-    tests/unit/observability/test_event_extractor_identity.py (9 tests, 8 hard-assert + 1
-    soft-warn for the real-kernel `recipe_learned` attempt, all passing)
-  divergence_note: null
-  support_boundary: >
-    Emitted events classified `unscored_intentional` (docs/simulation_quality/
-    event_type_coverage.md Section 5) -- not wired to any SimQ pillar (the ticket's own Out of
-    Scope flags FACTION pillar as a plausible future candidate for `entity_faction_changed`, not
-    decided here). `entity_role_changed`/`entity_faction_changed` cannot fire in ANY current code
-    path, not just gated worlds -- the underlying mechanic (role/faction reassignment) does not
-    exist anywhere in src/ yet; this differs from every sibling entity ticket's findings so far,
-    which all found at least one gated-but-real producer. See SUB-375/SUB-376/SUB-377/COMB-296 for
-    the sibling entity entries from the predecessor vitals/attributes/equipment tickets.
+  v2_evidence: 'src/observability/event_extractor.py -- 4 new diff blocks, guarded
+    by the same `_is_real_number()` helper for the int-typed role/faction fields and
+    `isinstance(..., (set,frozenset)/dict)` checks for known_recipes/cooldowns (defensive
+    against MagicMock-based test fixtures elsewhere in the suite). `recipe_learned`''s
+    trigger conditions confirmed met in `sandbox_world` (1 blacksmith building, all
+    18 entities start with empty known_recipes) via a real, non-mocked 1500-tick `Kernel.tick_once()`
+    loop, but no entity happened to path onto the blacksmith tile within that window
+    -- checked directly, not assumed unreachable. `entity_role_changed`/`entity_faction_changed`/`skill_cooldown_started`
+    verified via real hand-constructed `IdentityComponent` objects passed through
+    the real `EventExtractor.extract()` function directly, same fallback pattern as
+    SUB-375/SUB-376/ SUB-377/COMB-296.
 
+    '
+  proof_type: regression
+  test_path: 'tests/unit/observability/test_event_extractor_identity.py (9 tests,
+    8 hard-assert + 1 soft-warn for the real-kernel `recipe_learned` attempt, all
+    passing)
+
+    '
+  divergence_note: null
+  support_boundary: 'Emitted events classified `unscored_intentional` (docs/simulation_quality/
+    event_type_coverage.md Section 5) -- not wired to any SimQ pillar (the ticket''s
+    own Out of Scope flags FACTION pillar as a plausible future candidate for `entity_faction_changed`,
+    not decided here). `entity_role_changed`/`entity_faction_changed` cannot fire
+    in ANY current code path, not just gated worlds -- the underlying mechanic (role/faction
+    reassignment) does not exist anywhere in src/ yet; this differs from every sibling
+    entity ticket''s findings so far, which all found at least one gated-but-real
+    producer. See SUB-375/SUB-376/SUB-377/COMB-296 for the sibling entity entries
+    from the predecessor vitals/attributes/equipment tickets.
+
+    '
 - id: SUB-379
-  text: >
-    TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION -- V2EntityBuilder.combat()
+  text: 'TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION -- V2EntityBuilder.combat()
     exposes the new CombatComponent.readiness_speed field (see COMB-298 in combat_movement.yaml
     for the full readiness-regen fix this field belongs to) as a builder kwarg, for
-    test/content-authoring parity with the existing readiness kwarg. Mechanical pass-through, no
-    new formula or construction logic.
+    test/content-authoring parity with the existing readiness kwarg. Mechanical pass-through,
+    no new formula or construction logic.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    src/core/builder.py V2EntityBuilder.combat() -- readiness_speed added to the updates dict
-    alongside the existing readiness kwarg, following the exact same optional-override pattern.
-    All existing .combat(...) call sites that don't pass readiness_speed continue to inherit the
-    CombatComponent dataclass default (10.0) via the builder's self._combat = CombatComponent()
-    initialization -- no call-site changes required.
+  v2_evidence: 'src/core/builder.py V2EntityBuilder.combat() -- readiness_speed added
+    to the updates dict alongside the existing readiness kwarg, following the exact
+    same optional-override pattern. All existing .combat(...) call sites that don''t
+    pass readiness_speed continue to inherit the CombatComponent dataclass default
+    (10.0) via the builder''s self._combat = CombatComponent() initialization -- no
+    call-site changes required.
+
+    '
   proof_type: regression
-  test_path: >
-    tests/unit/combat/test_readiness_regen.py (readiness_speed set via .combat() throughout)
+  test_path: 'tests/unit/combat/test_readiness_regen.py (readiness_speed set via .combat()
+    throughout)
+
+    '
   divergence_note: null
   support_boundary: null
-
 - id: SUB-380
-  text: >
-    TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION -- WorldCompiler.compile()'s per-entity
-    personality seeding (bravery, greed, sociability, industry -- real DeterministicRNG draws,
-    src/worldbuilding/compiler.py) was uncorrelated with race/faction/archetype: a wolf archetype
-    and a town citizen drew bravery from the identical distribution. Real per-entity variance
-    already existed and was already calibrated to matter for strategic route selection
-    (STRAT-226, strategic_cognition.yaml) -- the gap was population-level race correlation, not
-    variance itself.
+  text: 'TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION -- WorldCompiler.compile()''s
+    per-entity personality seeding (bravery, greed, sociability, industry -- real
+    DeterministicRNG draws, src/worldbuilding/compiler.py) was uncorrelated with race/faction/archetype:
+    a wolf archetype and a town citizen drew bravery from the identical distribution.
+    Real per-entity variance already existed and was already calibrated to matter
+    for strategic route selection (STRAT-226, strategic_cognition.yaml) -- the gap
+    was population-level race correlation, not variance itself.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    Added get_bravery_bias(faction_str) -> float, deriving from the real, already-loaded
-    alignment_bucket content field (data/content/social/factions.yaml, via
-    FactionSemanticsService.get_alignment_bucket) rather than a new content schema or a
-    reinterpretation of cognition_profiles.yaml's qualitative fields (resolved with the user via
-    AskUserQuestion). Bias table: wild +0.35, invader +0.25, rival +0.15, defender +0.05, neutral
-    +0.0; additive and clamped to [0.0, 1.0], applied on top of the existing per-entity RNG draw.
-    Real re-verification on live compiled worlds: dungeon_crawl's wild_beast_pack population
-    averages bravery ~0.89 vs. goblin_warband/bandit_company/undead_remnants (invader) ~0.73-0.83;
-    urban_political's bandit_company (invader) ~0.85 > hero_guild/town_council (defender)
-    ~0.61-0.72 > merchant_league (neutral) ~0.49 -- real, ordered, measurable population skew,
+  v2_evidence: 'Added get_bravery_bias(faction_str) -> float, deriving from the real,
+    already-loaded alignment_bucket content field (data/content/social/factions.yaml,
+    via FactionSemanticsService.get_alignment_bucket) rather than a new content schema
+    or a reinterpretation of cognition_profiles.yaml''s qualitative fields (resolved
+    with the user via AskUserQuestion). Bias table: wild +0.35, invader +0.25, rival
+    +0.15, defender +0.05, neutral +0.0; additive and clamped to [0.0, 1.0], applied
+    on top of the existing per-entity RNG draw. Real re-verification on live compiled
+    worlds: dungeon_crawl''s wild_beast_pack population averages bravery ~0.89 vs.
+    goblin_warband/bandit_company/undead_remnants (invader) ~0.73-0.83; urban_political''s
+    bandit_company (invader) ~0.85 > hero_guild/town_council (defender) ~0.61-0.72
+    > merchant_league (neutral) ~0.49 -- real, ordered, measurable population skew,
     individual entity variance preserved within each faction.
+
+    '
   proof_type: regression
-  test_path: >
-    tests/unit/worldbuilding/test_world_compiler.py::
-    test_get_bravery_bias_by_real_alignment_bucket,
-    tests/unit/worldbuilding/test_world_compiler.py::
-    test_compiler_faction_bravery_bias_produces_real_population_skew
+  test_path: 'tests/unit/worldbuilding/test_world_compiler.py:: test_get_bravery_bias_by_real_alignment_bucket,
+    tests/unit/worldbuilding/test_world_compiler.py:: test_compiler_faction_bravery_bias_produces_real_population_skew
+
+    '
   divergence_note: null
-  support_boundary: >
-    A real, separate, unfixed entity-construction path (WorldEntitySpawner/
-    ArchetypeEntityFactory, src/worldassembly/) never sets personality at all -- confirmed via
-    direct source read, disclosed and filed as its own follow-up ticket, not fixed here (its live
-    corpus blast radius is not yet confirmed -- only 1 known caller,
+  support_boundary: 'A real, separate, unfixed entity-construction path (WorldEntitySpawner/
+    ArchetypeEntityFactory, src/worldassembly/) never sets personality at all -- confirmed
+    via direct source read, disclosed and filed as its own follow-up ticket, not fixed
+    here (its live corpus blast radius is not yet confirmed -- only 1 known caller,
     src/scenarios/catalog_state_builder.py).
 
+    '
 - id: SUB-381
-  text: >
-    TCK-20260809-COMBAT-ACTIONSTYLE-WIRING -- ActionStyle (BALANCED/AGGRESSIVE/EVASIVE,
-    src/core/enums.py) has 2 real, already-wired combat-behavior consumers (kiting distance for
-    SKIRMISHER-role entities, opportunity-attack suppression on a deliberate EVASIVE retreat --
-    src/engine/tactical.py, src/engine/movement.py) but every real entity kept the class default
-    (BALANCED) regardless of personality/race, leaving both hooks entirely dormant. Also: this
-    ticket's own SUB-380 sibling entry's hardcoded _BRAVERY_BIAS_BY_ALIGNMENT_BUCKET dict was
-    migrated to real, external data (data/content/social/personality_bias.yaml) per an explicit
-    mid-session user design correction, alongside this ticket's own new action_style_thresholds.
+  text: 'TCK-20260809-COMBAT-ACTIONSTYLE-WIRING -- ActionStyle (BALANCED/AGGRESSIVE/EVASIVE,
+    src/core/enums.py) has 2 real, already-wired combat-behavior consumers (kiting
+    distance for SKIRMISHER-role entities, opportunity-attack suppression on a deliberate
+    EVASIVE retreat -- src/engine/tactical.py, src/engine/movement.py) but every real
+    entity kept the class default (BALANCED) regardless of personality/race, leaving
+    both hooks entirely dormant. Also: this ticket''s own SUB-380 sibling entry''s
+    hardcoded _BRAVERY_BIAS_BY_ALIGNMENT_BUCKET dict was migrated to real, external
+    data (data/content/social/personality_bias.yaml) per an explicit mid-session user
+    design correction, alongside this ticket''s own new action_style_thresholds.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    Added get_action_style_for_bravery(bravery) -> int (src/worldbuilding/compiler.py), reading
-    real thresholds (aggressive_at_or_above: 0.65, evasive_at_or_below: 0.35) from
-    personality_bias.yaml (cached, with an in-code fallback matching the shipped data exactly).
-    Wired into the same personality-seeding call site SUB-380 already touches:
-    action_style=get_action_style_for_bravery(personality.bravery). Also traced ActionStyle's own
-    full real consumption in tactical.py: found and disclosed that an AGGRESSIVE effective-range
-    bonus and an EVASIVE reposition-stub (tactical.py:596-603) are genuinely dead code -- a local
-    variable mutated but never read by the function's own downstream branches -- not fixed here
-    (separate bug, out of this ticket's own scope). Real re-verification on live compiled worlds:
-    dungeon_crawl's wild_beast_pack population (avg bravery ~0.89) -> 5/5 real entities
-    AGGRESSIVE; urban_political's merchant_league (no bias) -> a real, roughly even 3/3/3 split
-    across all 3 ActionStyle values.
-  proof_type: regression
-  test_path: >
-    tests/unit/worldbuilding/test_world_compiler.py::
-    test_get_action_style_for_bravery_thresholds,
-    tests/unit/worldbuilding/test_world_compiler.py::
-    test_compiler_faction_bravery_bias_produces_real_action_style_skew,
-    tests/unit/content_semantics/test_personality.py::
-    test_personality_bias_config_loads_from_real_data_file,
-    tests/unit/content_semantics/test_personality.py::
-    test_personality_bias_config_falls_back_safely_on_bad_file
-  divergence_note: null
-  support_boundary: >
-    tactical.py's own confirmed-dead AGGRESSIVE range-bonus and EVASIVE reposition-stub are not
-    fixed here -- a separate, real bug in that function's own control flow, disclosed not fixed
-    to avoid scope creep into re-auditing every dormant sub-branch of a large, already-dense
-    tactical decision function. UPDATE (TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY, same
-    session): the 2 config-loading tests referenced above moved from test_world_compiler.py to
-    test_personality.py when _load_personality_bias_config/_PERSONALITY_BIAS_FALLBACK were
-    extracted into src/content_semantics/personality.py -- see SUB-382.
+  v2_evidence: 'Added get_action_style_for_bravery(bravery) -> int (src/worldbuilding/compiler.py),
+    reading real thresholds (aggressive_at_or_above: 0.65, evasive_at_or_below: 0.35)
+    from personality_bias.yaml (cached, with an in-code fallback matching the shipped
+    data exactly). Wired into the same personality-seeding call site SUB-380 already
+    touches: action_style=get_action_style_for_bravery(personality.bravery). Also
+    traced ActionStyle''s own full real consumption in tactical.py: found and disclosed
+    that an AGGRESSIVE effective-range bonus and an EVASIVE reposition-stub (tactical.py:596-603)
+    are genuinely dead code -- a local variable mutated but never read by the function''s
+    own downstream branches -- not fixed here (separate bug, out of this ticket''s
+    own scope). Real re-verification on live compiled worlds: dungeon_crawl''s wild_beast_pack
+    population (avg bravery ~0.89) -> 5/5 real entities AGGRESSIVE; urban_political''s
+    merchant_league (no bias) -> a real, roughly even 3/3/3 split across all 3 ActionStyle
+    values.
 
+    '
+  proof_type: regression
+  test_path: 'tests/unit/worldbuilding/test_world_compiler.py:: test_get_action_style_for_bravery_thresholds,
+    tests/unit/worldbuilding/test_world_compiler.py:: test_compiler_faction_bravery_bias_produces_real_action_style_skew,
+    tests/unit/content_semantics/test_personality.py:: test_personality_bias_config_loads_from_real_data_file,
+    tests/unit/content_semantics/test_personality.py:: test_personality_bias_config_falls_back_safely_on_bad_file
+
+    '
+  divergence_note: null
+  support_boundary: 'tactical.py''s own confirmed-dead AGGRESSIVE range-bonus and
+    EVASIVE reposition-stub are not fixed here -- a separate, real bug in that function''s
+    own control flow, disclosed not fixed to avoid scope creep into re-auditing every
+    dormant sub-branch of a large, already-dense tactical decision function. UPDATE
+    (TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY, same session): the 2 config-loading
+    tests referenced above moved from test_world_compiler.py to test_personality.py
+    when _load_personality_bias_config/_PERSONALITY_BIAS_FALLBACK were extracted into
+    src/content_semantics/personality.py -- see SUB-382.
+
+    '
 - id: SUB-382
-  text: >
-    TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY -- ArchetypeEntityFactory.build_entity()
+  text: 'TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY -- ArchetypeEntityFactory.build_entity()
     (src/entities/archetype_factory.py) and WorldEntitySpawner._spawn_legacy_guard()
-    (src/worldassembly/entity_spawner.py) -- the 2 entity-construction branches
-    WorldEntitySpawner.spawn_from_context() itself dispatches to -- never set
-    PersonalityComponent at all, leaving every entity spawned through either at the class's own
-    all-zero default regardless of real race_id/faction_id. Same class of bug as
-    WorldCompiler.compile()'s own earlier all-zero-personality bug (TCK-20260619-P0-ENTITY-INIT),
-    for a separate, newer construction path that fix never covered. Confirmed zero real impact on
-    any currently-scored SimQ pipeline before fixing (this path's only real caller,
-    CatalogScenarioStateBuilder, has zero callers itself outside certification/integration test
-    files) -- fixed anyway as real, disclosed, correctly-scoped technical debt.
+    (src/worldassembly/entity_spawner.py) -- the 2 entity-construction branches WorldEntitySpawner.spawn_from_context()
+    itself dispatches to -- never set PersonalityComponent at all, leaving every entity
+    spawned through either at the class''s own all-zero default regardless of real
+    race_id/faction_id. Same class of bug as WorldCompiler.compile()''s own earlier
+    all-zero-personality bug (TCK-20260619-P0-ENTITY-INIT), for a separate, newer
+    construction path that fix never covered. Confirmed zero real impact on any currently-scored
+    SimQ pipeline before fixing (this path''s only real caller, CatalogScenarioStateBuilder,
+    has zero callers itself outside certification/integration test files) -- fixed
+    anyway as real, disclosed, correctly-scoped technical debt.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    Extracted the shared bravery-bias/ActionStyle helpers (_load_personality_bias_config,
-    _PERSONALITY_BIAS_FALLBACK, get_bravery_bias, get_action_style_for_bravery -- previously
-    module-level in src/worldbuilding/compiler.py, TCK-20260809-COMBAT-PERSONALITY-RACE-
+  v2_evidence: 'Extracted the shared bravery-bias/ActionStyle helpers (_load_personality_bias_config,
+    _PERSONALITY_BIAS_FALLBACK, get_bravery_bias, get_action_style_for_bravery --
+    previously module-level in src/worldbuilding/compiler.py, TCK-20260809-COMBAT-PERSONALITY-RACE-
     CORRELATION/TCK-20260809-COMBAT-ACTIONSTYLE-WIRING) into a new src/content_semantics/
-    personality.py, matching this repo's own established precedent for cross-cutting semantic
-    helpers shared across worldbuilding/worldassembly/engine (content_semantics/faction.py,
-    relation.py, role.py) -- avoids a backward dependency from src/entities/ (used by both
-    worldbuilding and worldassembly paths) onto a specific worldbuilding compiler module.
-    compiler.py re-imports the 2 public functions for its own existing callers -- zero behavior
-    change to its own already-shipped personality seeding. Added
-    build_personality_for_entity(entity_id, faction_id, seed) to the same new module (same
-    DeterministicRNG/Domain.WORLD/sub_id convention WorldCompiler.compile() already uses), shared
-    by both ArchetypeEntityFactory.build_entity() and WorldEntitySpawner._spawn_legacy_guard().
-    Threaded seed: int = 42 (matching CatalogScenarioStateBuilder.build()'s own pre-existing
-    default exactly) through build_entity()'s own signature, spawn_from_context()'s own
-    signature, and wired CatalogScenarioStateBuilder.build()'s own already-existing seed
-    parameter down into spawn_from_context() (previously computed but never passed through).
-    Real, live end-to-end verification (not unit-test-only): CatalogScenarioStateBuilder.build()
+    personality.py, matching this repo''s own established precedent for cross-cutting
+    semantic helpers shared across worldbuilding/worldassembly/engine (content_semantics/faction.py,
+    relation.py, role.py) -- avoids a backward dependency from src/entities/ (used
+    by both worldbuilding and worldassembly paths) onto a specific worldbuilding compiler
+    module. compiler.py re-imports the 2 public functions for its own existing callers
+    -- zero behavior change to its own already-shipped personality seeding. Added
+    build_personality_for_entity(entity_id, faction_id, seed) to the same new module
+    (same DeterministicRNG/Domain.WORLD/sub_id convention WorldCompiler.compile()
+    already uses), shared by both ArchetypeEntityFactory.build_entity() and WorldEntitySpawner._spawn_legacy_guard().
+    Threaded seed: int = 42 (matching CatalogScenarioStateBuilder.build()''s own pre-existing
+    default exactly) through build_entity()''s own signature, spawn_from_context()''s
+    own signature, and wired CatalogScenarioStateBuilder.build()''s own already-existing
+    seed parameter down into spawn_from_context() (previously computed but never passed
+    through). Real, live end-to-end verification (not unit-test-only): CatalogScenarioStateBuilder.build()
     against the real wolf_territory_pressure scenario -- 15/15 real entities get non-zero
     personality; the 3 real wild_beast_pack wolf/spider entities show bravery 0.617-0.989
     (correctly biased high) with 2/3 landing AGGRESSIVE ActionStyle.
-  proof_type: regression
-  test_path: >
-    tests/unit/content_semantics/test_personality.py (9 tests),
-    tests/unit/entities/test_archetype_entity_factory.py::
-    test_build_entity_produces_real_nonzero_personality,
-    tests/unit/entities/test_archetype_entity_factory.py::
-    test_build_entity_action_style_correlates_with_bravery,
-    tests/unit/entities/test_archetype_entity_factory.py::
-    test_build_entity_personality_is_deterministic_given_seed,
-    tests/unit/entities/test_archetype_entity_factory.py::
-    test_build_entity_default_seed_backward_compatible,
-    tests/unit/worldassembly/test_entity_spawner_legacy_guard.py (4 tests),
-    tests/integration/worldassembly/test_world_entity_spawner.py::
-    test_spawned_entities_have_real_nonzero_personality,
-    tests/integration/worldassembly/test_world_entity_spawner.py::
-    test_spawn_from_context_is_deterministic_given_seed,
-    tests/integration/worldassembly/test_world_entity_spawner.py::
-    test_spawn_from_context_different_seeds_differ
-  divergence_note: >
-    See intentional_divergences.md §2.39 (WorldEntitySpawner/ArchetypeEntityFactory Zero
-    Personality, Bug Fix).
-  support_boundary: >
-    Real impact still confirmed limited to certification/integration test infrastructure --
-    CatalogScenarioStateBuilder (the only real caller of WorldEntitySpawner) has zero callers
-    itself in the live SimQ scoring pipeline. This fix does not currently change any real,
-    scored combat outcome or SimQ grade -- it closes a confirmed, real, but currently-dormant
-    gap, matching this ticket's own disclosed scope.
 
+    '
+  proof_type: regression
+  test_path: 'tests/unit/content_semantics/test_personality.py (9 tests), tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_produces_real_nonzero_personality, tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_action_style_correlates_with_bravery, tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_personality_is_deterministic_given_seed, tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_default_seed_backward_compatible, tests/unit/worldassembly/test_entity_spawner_legacy_guard.py
+    (4 tests), tests/integration/worldassembly/test_world_entity_spawner.py:: test_spawned_entities_have_real_nonzero_personality,
+    tests/integration/worldassembly/test_world_entity_spawner.py:: test_spawn_from_context_is_deterministic_given_seed,
+    tests/integration/worldassembly/test_world_entity_spawner.py:: test_spawn_from_context_different_seeds_differ
+
+    '
+  divergence_note: "See intentional_divergences.md \xA72.39 (WorldEntitySpawner/ArchetypeEntityFactory\
+    \ Zero Personality, Bug Fix).\n"
+  support_boundary: 'Real impact still confirmed limited to certification/integration
+    test infrastructure -- CatalogScenarioStateBuilder (the only real caller of WorldEntitySpawner)
+    has zero callers itself in the live SimQ scoring pipeline. This fix does not currently
+    change any real, scored combat outcome or SimQ grade -- it closes a confirmed,
+    real, but currently-dormant gap, matching this ticket''s own disclosed scope.
+
+    '
 - id: SUB-383
-  text: >
-    TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS -- `executor.py`'s own
-    real, sequential `LocalSequentialExecutor.execute()` (used when `profile.max_worker_count==0`)
-    dispatches `ENTITY_MOVE` work items by re-emitting `NavigationUpdate(target_set=...)` every
-    tick a pursuit task is scheduled, reading the SAME static `task.payload["target_position"]`
-    snapshot every time -- confirmed, via live corpus trace, to silently defeat
-    `route_movement_intent`'s own already-correct live-retargeting fix
-    (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE), since that fix's own `has_fresh_decision` check
-    (`target_set is not None`) cannot distinguish a genuine new tactical decision from this
-    dispatcher's own routine re-affirmation of an unchanged, stale value.
+  text: 'TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS -- `executor.py`''s
+    own real, sequential `LocalSequentialExecutor.execute()` (used when `profile.max_worker_count==0`)
+    dispatches `ENTITY_MOVE` work items by re-emitting `NavigationUpdate(target_set=...)`
+    every tick a pursuit task is scheduled, reading the SAME static `task.payload["target_position"]`
+    snapshot every time -- confirmed, via live corpus trace, to silently defeat `route_movement_intent`''s
+    own already-correct live-retargeting fix (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE),
+    since that fix''s own `has_fresh_decision` check (`target_set is not None`) cannot
+    distinguish a genuine new tactical decision from this dispatcher''s own routine
+    re-affirmation of an unchanged, stale value.
+
+    '
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    `LocalSequentialExecutor.execute()`'s own `ENTITY_MOVE` branch now calls the same shared
-    `MovementCandidateSelector.resolve_live_tracking_target()` helper
-    (`src/engine/candidate_selector.py`) used by `route_movement_intent`/`select`, live-refreshing
-    `target` from `task.payload["target_id"]`'s current position (via `readonly_state.entities`,
-    the same bounded, read-only snapshot this executor already receives) before constructing the
-    `NavigationUpdate`. The parallel-worker equivalent (`ConcurrentExecutionAdapter` ->
-    `worker_logic.py`'s `default_simulation_worker`, used when `max_worker_count>0` -- the real
-    dispatch path for `PROD_SMALL`, `HardwareClass.CLASS_C`, confirmed via
-    `Kernel.__init__`'s own executor-selection logic) received the identical fix using
-    `packet.all_entities`, the `WorkerPacket`'s own bounded equivalent. Real corpus re-
-    verification (`dungeon_crawl_seed42_2000t`): two entities previously frozen at a fixed
-    Manhattan distance for 990+ consecutive ticks (confirmed still occurring even with
-    TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE's own fix already merged) now move and diverge
-    from that frozen state; real `combat_resolved`/`entity_killed`/`combat_damage` events (0
-    before this fix, in a fresh post-COMB-309 baseline) now fire non-zero in both
-    `dungeon_crawl` and `urban_political`.
-  proof_type: regression
-  test_path: >
-    tests/unit/domains/optimization/test_movement_candidate_selector.py (4 new tests, including
-    test_movement_selector_includes_pursuer_arrived_at_stale_snapshot_but_target_moved, all
-    confirmed via git-stash bisection to genuinely fail pre-fix). Full scoped re-run:
-    tests/unit/domains/optimization/, tests/unit/movement/, tests/unit/combat/, tests/unit/tactical/,
-    tests/unit/kernel/, tests/unit/core/, tests/unit/engine/, tests/unit/actions/,
-    tests/unit/strategic/, tests/unit/observability/, tests/unit/entities/,
-    tests/integration/combat/, tests/integration/pipeline/ -- 2047 passed, only the 1
-    pre-existing, already-confirmed-unrelated failure (test_normal_move_triggers_oa).
-    tests/integration/kernel/test_determinism_suite.py, test_seed_stability.py,
-    test_authoritative_outcome_truth.py -- 9 passed, no determinism regressions.
-  divergence_note: null
-  support_boundary: >
-    See COMB-310 (docs/parity_ledger/combat_movement.yaml) for the full fix (all 4 real call
-    sites) and root-cause chain. This entry documents specifically the substrate/executor-layer
-    half of the fix (the sequential dispatch path), matching this file's own existing SUB-034
-    citation of executor.py.
+  v2_evidence: '`LocalSequentialExecutor.execute()`''s own `ENTITY_MOVE` branch now
+    calls the same shared `MovementCandidateSelector.resolve_live_tracking_target()`
+    helper (`src/engine/candidate_selector.py`) used by `route_movement_intent`/`select`,
+    live-refreshing `target` from `task.payload["target_id"]`''s current position
+    (via `readonly_state.entities`, the same bounded, read-only snapshot this executor
+    already receives) before constructing the `NavigationUpdate`. The parallel-worker
+    equivalent (`ConcurrentExecutionAdapter` -> `worker_logic.py`''s `default_simulation_worker`,
+    used when `max_worker_count>0` -- the real dispatch path for `PROD_SMALL`, `HardwareClass.CLASS_C`,
+    confirmed via `Kernel.__init__`''s own executor-selection logic) received the
+    identical fix using `packet.all_entities`, the `WorkerPacket`''s own bounded equivalent.
+    Real corpus re- verification (`dungeon_crawl_seed42_2000t`): two entities previously
+    frozen at a fixed Manhattan distance for 990+ consecutive ticks (confirmed still
+    occurring even with TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE''s own fix already
+    merged) now move and diverge from that frozen state; real `combat_resolved`/`entity_killed`/`combat_damage`
+    events (0 before this fix, in a fresh post-COMB-309 baseline) now fire non-zero
+    in both `dungeon_crawl` and `urban_political`.
 
+    '
+  proof_type: regression
+  test_path: 'tests/unit/domains/optimization/test_movement_candidate_selector.py
+    (4 new tests, including test_movement_selector_includes_pursuer_arrived_at_stale_snapshot_but_target_moved,
+    all confirmed via git-stash bisection to genuinely fail pre-fix). Full scoped
+    re-run: tests/unit/domains/optimization/, tests/unit/movement/, tests/unit/combat/,
+    tests/unit/tactical/, tests/unit/kernel/, tests/unit/core/, tests/unit/engine/,
+    tests/unit/actions/, tests/unit/strategic/, tests/unit/observability/, tests/unit/entities/,
+    tests/integration/combat/, tests/integration/pipeline/ -- 2047 passed, only the
+    1 pre-existing, already-confirmed-unrelated failure (test_normal_move_triggers_oa).
+    tests/integration/kernel/test_determinism_suite.py, test_seed_stability.py, test_authoritative_outcome_truth.py
+    -- 9 passed, no determinism regressions.
+
+    '
+  divergence_note: null
+  support_boundary: 'See COMB-310 (docs/parity_ledger/combat_movement.yaml) for the
+    full fix (all 4 real call sites) and root-cause chain. This entry documents specifically
+    the substrate/executor-layer half of the fix (the sequential dispatch path), matching
+    this file''s own existing SUB-034 citation of executor.py.
+
+    '
 - id: SUB-384
-  text: >
-    TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION -- `WorldCompiler.compile()`
-    (`src/worldbuilding/compiler.py`) has no `catalog_repo` parameter of its own; it can only
-    correctly resolve `entity.identity.role`/`.faction` for real, catalog-driven population
-    entries via a pre-populated `context.legacy_roles`/`.legacy_factions` mapping (a
-    `CompileContext` computed once during `WorldAssemblyResolver.assemble()`'s own module
-    resolution and persisted to `resolved/compile_context.json` alongside `world.resolved.yaml`).
-    `WorldRepository.load_world()` never surfaced this file -- every real caller either
-    duplicated the correct load-and-pass logic independently (`src/worldbuilding/cli.py`'s own
-    `compile` subcommand, `src/lab/orchestrator.py`) or silently compiled without it (`src/cli/
-    entry.py` -- the general "run a simulation" CLI entrypoint; `tools/calibrate_simq.py`;
-    `tools/balance_measure.py`; `tools/personality_audit.py`). Without a real `context`,
-    `get_role_enum()`/`get_faction_enum()` (`compiler.py`) fall through to a naive
-    keyword-matching fallback that fails for almost every real archetype role_id/faction_id
-    (e.g. "predator_hunter"/"raider"/"sentinel"/"scout"/"leader" contain none of the literal
-    substrings HERO/SHOP/STORE/MONSTER/CITIZEN/CIVILIAN/WORKER/PEASANT/GUARD it checks for; real
-    faction IDs like "goblin_warband"/"wild_beast_pack"/"undead_remnants" contain none of
-    HERO/GUILD/VILLAGE/MONSTER/HORDE/HOSTILE/COUNCIL/TOWN), silently defaulting role to CITIZEN
-    and faction to NEUTRAL. Confirmed via direct compiled-state inspection
-    (`dungeon_crawl_seed42`): every sampled monster-archetype entity showed `role=CITIZEN`
-    regardless of its own real role_id, including ones roles.yaml correctly maps to MONSTER
-    (predator_hunter/raider/sentinel/leader) -- ruling out the ambiguous-shared-role-id
-    hypothesis this ticket's own filing originally suspected as the sole cause.
+  text: 'TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION -- `WorldCompiler.compile()`
+    (`src/worldbuilding/compiler.py`) has no `catalog_repo` parameter of its own;
+    it can only correctly resolve `entity.identity.role`/`.faction` for real, catalog-driven
+    population entries via a pre-populated `context.legacy_roles`/`.legacy_factions`
+    mapping (a `CompileContext` computed once during `WorldAssemblyResolver.assemble()`''s
+    own module resolution and persisted to `resolved/compile_context.json` alongside
+    `world.resolved.yaml`). `WorldRepository.load_world()` never surfaced this file
+    -- every real caller either duplicated the correct load-and-pass logic independently
+    (`src/worldbuilding/cli.py`''s own `compile` subcommand, `src/lab/orchestrator.py`)
+    or silently compiled without it (`src/cli/ entry.py` -- the general "run a simulation"
+    CLI entrypoint; `tools/calibrate_simq.py`; `tools/balance_measure.py`; `tools/personality_audit.py`).
+    Without a real `context`, `get_role_enum()`/`get_faction_enum()` (`compiler.py`)
+    fall through to a naive keyword-matching fallback that fails for almost every
+    real archetype role_id/faction_id (e.g. "predator_hunter"/"raider"/"sentinel"/"scout"/"leader"
+    contain none of the literal substrings HERO/SHOP/STORE/MONSTER/CITIZEN/CIVILIAN/WORKER/PEASANT/GUARD
+    it checks for; real faction IDs like "goblin_warband"/"wild_beast_pack"/"undead_remnants"
+    contain none of HERO/GUILD/VILLAGE/MONSTER/HORDE/HOSTILE/COUNCIL/TOWN), silently
+    defaulting role to CITIZEN and faction to NEUTRAL. Confirmed via direct compiled-state
+    inspection (`dungeon_crawl_seed42`): every sampled monster-archetype entity showed
+    `role=CITIZEN` regardless of its own real role_id, including ones roles.yaml correctly
+    maps to MONSTER (predator_hunter/raider/sentinel/leader) -- ruling out the ambiguous-shared-role-id
+    hypothesis this ticket''s own filing originally suspected as the sole cause.
+
+    '
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    Added `WorldRepository.load_world_with_context(world_id) -> (WorldSpec, Optional[
-    CompileContext])` (`src/worldbuilding/repository.py`) -- mirrors `load_world()`'s own
-    existing composition-detection logic exactly, additionally loading `resolved/
+  v2_evidence: 'Added `WorldRepository.load_world_with_context(world_id) -> (WorldSpec,
+    Optional[ CompileContext])` (`src/worldbuilding/repository.py`) -- mirrors `load_world()`''s
+    own existing composition-detection logic exactly, additionally loading `resolved/
     compile_context.json` via `CompileContext.from_dict()` when present (returns `context=None`
-    for a non-composition world or a resolved-but-context-less one, matching `load_world()`'s
-    own existing tolerance -- not an error). Updated all 4 real, confirmed-buggy call sites
-    (`src/cli/entry.py`, `tools/calibrate_simq.py`, `tools/balance_measure.py`, `tools/
-    personality_audit.py`) to use it and pass `context=context` into `WorldCompiler.compile()`.
-    Real, direct compiled-state re-verification (`dungeon_crawl_seed42`): zero entities show
-    `role=CITIZEN` post-fix (was ~100% of monster-archetype entities); entities now correctly
-    show MONSTER(=2) or GUARD(=5) matching their real catalog role_id.
-    `urban_political_seed42`: faction distribution moved from `{TOWN_COUNCIL: 14, NEUTRAL: 13,
-    HERO_GUILD: 3}` (zero MONSTER_HORDE at all) to `{TOWN_COUNCIL: 14, NEUTRAL: 9,
-    MONSTER_HORDE: 4, HERO_GUILD: 3}` -- 4 real hostile-faction entities that were previously
-    invisible to hostility detection (tagged NEUTRAL) are now correctly tagged MONSTER_HORDE.
-    Real, material downstream effect measured (see support_boundary): `urban_political`'s own
-    COMBAT pillar SimQ score moved from grade C (norm ~-0.002, 5 events) to grade A (norm
-    ~+1.03, 196 events) -- reproduced twice, consistent both runs.
+    for a non-composition world or a resolved-but-context-less one, matching `load_world()`''s
+    own existing tolerance -- not an error). Updated all 4 real, confirmed-buggy call
+    sites (`src/cli/entry.py`, `tools/calibrate_simq.py`, `tools/balance_measure.py`,
+    `tools/ personality_audit.py`) to use it and pass `context=context` into `WorldCompiler.compile()`.
+    Real, direct compiled-state re-verification (`dungeon_crawl_seed42`): zero entities
+    show `role=CITIZEN` post-fix (was ~100% of monster-archetype entities); entities
+    now correctly show MONSTER(=2) or GUARD(=5) matching their real catalog role_id.
+    `urban_political_seed42`: faction distribution moved from `{TOWN_COUNCIL: 14,
+    NEUTRAL: 13, HERO_GUILD: 3}` (zero MONSTER_HORDE at all) to `{TOWN_COUNCIL: 14,
+    NEUTRAL: 9, MONSTER_HORDE: 4, HERO_GUILD: 3}` -- 4 real hostile-faction entities
+    that were previously invisible to hostility detection (tagged NEUTRAL) are now
+    correctly tagged MONSTER_HORDE. Real, material downstream effect measured (see
+    support_boundary): `urban_political`''s own COMBAT pillar SimQ score moved from
+    grade C (norm ~-0.002, 5 events) to grade A (norm ~+1.03, 196 events) -- reproduced
+    twice, consistent both runs.
+
+    '
   proof_type: regression
-  test_path: >
-    tests/unit/worldbuilding/test_world_repository.py (4 new tests: non-composition returns
-    None context; composition with real compile_context.json returns the correct EntityRole
-    mapping; composition missing compile_context.json degrades gracefully to None; unresolved
-    composition still raises -- all 4 confirmed via git-stash bisection to genuinely fail
-    pre-fix). Full scoped re-run: tests/unit/worldbuilding/, tests/simulation_quality/,
-    tests/unit/content_semantics/, tests/unit/core/, tests/unit/entities/, tests/unit/world/,
-    tests/unit/tactical/, tests/unit/combat/, tests/unit/engine/, tests/unit/kernel/,
-    tests/integration/worldassembly/, tests/integration/kernel/test_determinism_suite.py --
-    1479 passed, 84 skipped, only the 1 pre-existing, already-confirmed-unrelated failure
-    (test_grade_anchor_file_exists_and_valid, missing local calibration-report fixture,
-    confirmed via bisection identical on pristine pre-fix code).
+  test_path: 'tests/unit/worldbuilding/test_world_repository.py (4 new tests: non-composition
+    returns None context; composition with real compile_context.json returns the correct
+    EntityRole mapping; composition missing compile_context.json degrades gracefully
+    to None; unresolved composition still raises -- all 4 confirmed via git-stash
+    bisection to genuinely fail pre-fix). Full scoped re-run: tests/unit/worldbuilding/,
+    tests/simulation_quality/, tests/unit/content_semantics/, tests/unit/core/, tests/unit/entities/,
+    tests/unit/world/, tests/unit/tactical/, tests/unit/combat/, tests/unit/engine/,
+    tests/unit/kernel/, tests/integration/worldassembly/, tests/integration/kernel/test_determinism_suite.py
+    -- 1479 passed, 84 skipped, only the 1 pre-existing, already-confirmed-unrelated
+    failure (test_grade_anchor_file_exists_and_valid, missing local calibration-report
+    fixture, confirmed via bisection identical on pristine pre-fix code).
+
+    '
   divergence_note: null
-  support_boundary: >
-    Real, disclosed, material anchor drift confirmed and NOT silently absorbed:
-    `dungeon_crawl_seed42_2000t` COMBAT norm moved from -0.0096 (post-COMB-310 baseline) to
-    -0.0205 (6->2 events) and WORLD moved from +0.2950 (152 events) to +0.2540 (114 events) --
-    both a modest, expected consequence of `SpawnService.process_spawns()`'s own real
-    monster-density check (`src/world/spawn.py:55`, gated on `entity.identity.role ==
-    EntityRole.MONSTER`) now correctly counting real monsters instead of always seeing ~0 and
-    over-spawning. `urban_political_seed42_2000t` COMBAT moved from grade C to grade A (see
-    v2_evidence) -- a large, real, positive shift, not a regression: previously-invisible
-    hostile pairs are now correctly detected and engaging. `grade_anchors.json` is NOT updated
-    by this ticket (out of its own explicit scope, which is role/faction correctness, not
-    anchor recalibration) -- a follow-up recalibration ticket is warranted given this real,
-    material shift, left for the user's own next direction. `CombatRewardClassificationService`
-    (`src/engine/combat_rewards.py`, keyed by `EntityRole.MONSTER`/`HERO`) is a real, secondary
-    downstream consumer also affected (a previously-mistagged monster fell through to a
-    different, unintended reward classification) -- not separately re-verified at corpus scale
-    here, disclosed as a real, plausible, unconfirmed secondary effect.
-
-    UPDATE (TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION, 2026-08-10): both
-    follow-ups above now confirmed and closed. `CombatRewardClassificationService`'s downstream
-    effect is confirmed real and direct: `progression.py`'s `EVENT_TYPES` includes `xp_granted`,
-    which the service's role-keyed reward classification directly determines -- a
-    previously-mistagged monster now correctly resolves to `MONSTER_KILL` on defeat, changing
-    real `xp_granted` amounts (PROGRESSION drift on 6 run_keys). Corpus-wide recalibration
-    performed: `grade_anchors.json` updated across 17 run_keys / 31 fields total (SOCIAL,
-    ECONOMY, PROGRESSION, COGNITION, AGENCY, plus 2 additional COMBAT keys found while
-    regenerating a guard-fixture gap) -- see `docs/simulation_quality/eval_matrix_results.md`
-    and `docs/audits/D20_simq_integration.md` 2026-08-10 entries for the full list. Remaining
-    SOCIAL/ECONOMY/COGNITION/AGENCY drift (scorers confirmed via grep to never read role/faction
-    directly) attributed to a cascading behavioral change: SUB-384 changes which entities engage
-    in combat and survive from tick 1 onward, altering deterministic RNG-consumption order and
-    population composition for the rest of each run. The 2026-08-07 watchdog-throttle hypothesis
-    (D06 F6) was directly checked (not just cited) and ruled out: 3 independent re-runs of
-    `urban_political_seed42_500t` showed the watchdog firing repeatedly (from tick 25) yet
-    produced a bit-identical SOCIAL score all 3 times -- decisive evidence against that
-    mechanism for this drift. `test_grade_anchor_file_exists_and_valid`'s missing-fixture issue
-    (noted above) is also now resolved: the missing `quality_report.json` was regenerated.
-
-    UPDATE (TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP, 2026-08-13):
-    `lifecycle_full_coverage_world_seed42_200t` added to the set of worlds recalibrated under
-    this cause -- a `FAST_ANCHOR_KEYS` registration gap left it ungated since its own creation
-    (`TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD`), so nobody looked at it during the 2026-08-10
-    recalibration pass above. Registering the key surfaced drift on 8 of its 10 pillars, but the
-    drift here is explicitly **compound, not purely SUB-384**: this world's own profile sets
-    `ENABLE_ADVENTURE_ROUTING: "ON"`, directly exposing it to the separate
-    `TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION` mechanism (commit `3d992dd0`,
-    `docs/guidelines/intentional_divergences.md` §2.40) that zeroed COGNITION/AGENCY, *plus* 3
-    additional tier-5 GoalScorer-consolidation commits
-    (`TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`, `TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER`,
-    `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`) that landed after the audit run which
-    discovered the gap. SUB-384's own role/faction signature was independently re-confirmed for
-    this world (`data/worlds/lifecycle_full_coverage_world/resolved/compile_context.json` shows
-    real `legacy_roles`/`legacy_factions` entries) before folding it into this pass. 8 pillars
-    recalibrated in `grade_anchors.json`: COGNITION, AGENCY, COMBAT, ECONOMY, PROGRESSION,
-    SOCIAL, WORLD, NARRATIVE (ECONOMY was not part of this ticket's originally-named 7-pillar
-    scope; folded in per the same same-anchor/same-causal-cluster precedent this UPDATE block's
-    own 2026-08-10 entry set, above). FACTION and INFORMATION confirmed unchanged, left untouched.
-    See `docs/simulation_quality/eval_matrix_results.md`'s new `lifecycle_full_coverage_world`
-    section for the full before/after table. This UPDATE does not change `status`/`priority` --
-    a calibration-data update, not a new finding about SUB-384's own root cause or fix.
+  support_boundary: "Real, disclosed, material anchor drift confirmed and NOT silently\
+    \ absorbed: `dungeon_crawl_seed42_2000t` COMBAT norm moved from -0.0096 (post-COMB-310\
+    \ baseline) to -0.0205 (6->2 events) and WORLD moved from +0.2950 (152 events)\
+    \ to +0.2540 (114 events) -- both a modest, expected consequence of `SpawnService.process_spawns()`'s\
+    \ own real monster-density check (`src/world/spawn.py:55`, gated on `entity.identity.role\
+    \ == EntityRole.MONSTER`) now correctly counting real monsters instead of always\
+    \ seeing ~0 and over-spawning. `urban_political_seed42_2000t` COMBAT moved from\
+    \ grade C to grade A (see v2_evidence) -- a large, real, positive shift, not a\
+    \ regression: previously-invisible hostile pairs are now correctly detected and\
+    \ engaging. `grade_anchors.json` is NOT updated by this ticket (out of its own\
+    \ explicit scope, which is role/faction correctness, not anchor recalibration)\
+    \ -- a follow-up recalibration ticket is warranted given this real, material shift,\
+    \ left for the user's own next direction. `CombatRewardClassificationService`\
+    \ (`src/engine/combat_rewards.py`, keyed by `EntityRole.MONSTER`/`HERO`) is a\
+    \ real, secondary downstream consumer also affected (a previously-mistagged monster\
+    \ fell through to a different, unintended reward classification) -- not separately\
+    \ re-verified at corpus scale here, disclosed as a real, plausible, unconfirmed\
+    \ secondary effect.\nUPDATE (TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION,\
+    \ 2026-08-10): both follow-ups above now confirmed and closed. `CombatRewardClassificationService`'s\
+    \ downstream effect is confirmed real and direct: `progression.py`'s `EVENT_TYPES`\
+    \ includes `xp_granted`, which the service's role-keyed reward classification\
+    \ directly determines -- a previously-mistagged monster now correctly resolves\
+    \ to `MONSTER_KILL` on defeat, changing real `xp_granted` amounts (PROGRESSION\
+    \ drift on 6 run_keys). Corpus-wide recalibration performed: `grade_anchors.json`\
+    \ updated across 17 run_keys / 31 fields total (SOCIAL, ECONOMY, PROGRESSION,\
+    \ COGNITION, AGENCY, plus 2 additional COMBAT keys found while regenerating a\
+    \ guard-fixture gap) -- see `docs/simulation_quality/eval_matrix_results.md` and\
+    \ `docs/audits/D20_simq_integration.md` 2026-08-10 entries for the full list.\
+    \ Remaining SOCIAL/ECONOMY/COGNITION/AGENCY drift (scorers confirmed via grep\
+    \ to never read role/faction directly) attributed to a cascading behavioral change:\
+    \ SUB-384 changes which entities engage in combat and survive from tick 1 onward,\
+    \ altering deterministic RNG-consumption order and population composition for\
+    \ the rest of each run. The 2026-08-07 watchdog-throttle hypothesis (D06 F6) was\
+    \ directly checked (not just cited) and ruled out: 3 independent re-runs of `urban_political_seed42_500t`\
+    \ showed the watchdog firing repeatedly (from tick 25) yet produced a bit-identical\
+    \ SOCIAL score all 3 times -- decisive evidence against that mechanism for this\
+    \ drift. `test_grade_anchor_file_exists_and_valid`'s missing-fixture issue (noted\
+    \ above) is also now resolved: the missing `quality_report.json` was regenerated.\n\
+    UPDATE (TCK-20260811-SIMQ-COGNITION-BAND-CROSSING-DA-AND-LIFECYCLE-ANCHOR-GAP,\
+    \ 2026-08-13): `lifecycle_full_coverage_world_seed42_200t` added to the set of\
+    \ worlds recalibrated under this cause -- a `FAST_ANCHOR_KEYS` registration gap\
+    \ left it ungated since its own creation (`TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD`),\
+    \ so nobody looked at it during the 2026-08-10 recalibration pass above. Registering\
+    \ the key surfaced drift on 8 of its 10 pillars, but the drift here is explicitly\
+    \ **compound, not purely SUB-384**: this world's own profile sets `ENABLE_ADVENTURE_ROUTING:\
+    \ \"ON\"`, directly exposing it to the separate `TCK-20260810-PROJECT-SWITCH-BYPASS-GENERALIZATION`\
+    \ mechanism (commit `3d992dd0`, `docs/guidelines/intentional_divergences.md` \xA7\
+    2.40) that zeroed COGNITION/AGENCY, *plus* 3 additional tier-5 GoalScorer-consolidation\
+    \ commits (`TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE`, `TCK-20260811-SOCIAL-CONTRACT-GOAL-SCORER`,\
+    \ `TCK-20260811-REGION-STABILIZATION-GOAL-SCORER`) that landed after the audit\
+    \ run which discovered the gap. SUB-384's own role/faction signature was independently\
+    \ re-confirmed for this world (`data/worlds/lifecycle_full_coverage_world/resolved/compile_context.json`\
+    \ shows real `legacy_roles`/`legacy_factions` entries) before folding it into\
+    \ this pass. 8 pillars recalibrated in `grade_anchors.json`: COGNITION, AGENCY,\
+    \ COMBAT, ECONOMY, PROGRESSION, SOCIAL, WORLD, NARRATIVE (ECONOMY was not part\
+    \ of this ticket's originally-named 7-pillar scope; folded in per the same same-anchor/same-causal-cluster\
+    \ precedent this UPDATE block's own 2026-08-10 entry set, above). FACTION and\
+    \ INFORMATION confirmed unchanged, left untouched. See `docs/simulation_quality/eval_matrix_results.md`'s\
+    \ new `lifecycle_full_coverage_world` section for the full before/after table.\
+    \ This UPDATE does not change `status`/`priority` -- a calibration-data update,\
+    \ not a new finding about SUB-384's own root cause or fix.\n"

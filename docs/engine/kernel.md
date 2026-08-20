@@ -156,3 +156,5 @@ Each phase declares allowed read, write, and emit state domains. Declarations ar
 | PERSISTENCE _(non-authoritative)_ | entity, world, events | replay | replay, events |
 
 **Key invariant:** RESOLUTION is the sole phase that declares `entity` and `world` write access. All other phases are structurally prohibited from directly writing authoritative entity/world state.
+
+**RNG consumption matches this table:** `docs/engine/contracts/simulation_kernel_contract.md` §7.1 traces the actual `DeterministicRNG` consumers (`EntityGenerator`, `QuestGenerator`, `GuildAction`) and confirms all of them run inside `Kernel._phase_resolution()`, never `_phase_collection()` — consistent with COLLECTION's `proposals`-only write domain above. The Collection-phase worker path itself consumes no RNG.
