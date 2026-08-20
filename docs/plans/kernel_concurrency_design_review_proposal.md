@@ -310,6 +310,11 @@ degraded-mode ticks into a reported baseline and mask a genuine regression.
 3. Hardware-class definition conflict (already self-flagged): `perf_baseline_policy.md` §2.2 vs.
    `certification_contract.md` §3, per `TCK-20260702-OBSISO-ISOLATION-PROOF`.
 
+**Update (TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT, closed 2026-08-21):** full audit recorded at
+`docs/audits/D25_engine_docs_drift.md`, including a 4th newly-found item (architecture.md's
+inverted hardware-class table) and 2 direct fixes (README.md, CLAUDE.md) folded in beyond this
+list's original 3.
+
 ## References
 
 - `src/engine/kernel.py`, `src/engine/executor.py`, `src/engine/worker_manager.py`,

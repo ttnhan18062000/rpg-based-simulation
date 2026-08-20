@@ -87,7 +87,7 @@ src/
     *   `mining/`: Orchestrates parallel experiment sweeps and analytical datasets (DuckDB/Parquet).
     *   `understanding/`: Generates AI-assisted diagnostic backlogs and root-cause hypotheses.
     *   `alerts/`: Routes in-tick hard law violations directly to logging sinks.
-*   **Deep-Dive Reference**: See [docs/archive/observability/simulation_mining.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/archive/observability/simulation_mining.md) for mining schemas (historical), [docs/archive/observability/simulation_mining_usage.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/archive/observability/simulation_mining_usage.md) for execution templates (historical), and [docs/engine/contracts/sweep_configuration.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/contracts/sweep_configuration.md) for sweep schemas and JSON examples.
+*   **Deep-Dive Reference**: See [docs/archive/observability/simulation_mining.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/archive/observability/simulation_mining.md) for mining schemas (historical), [docs/archive/observability/simulation_mining_usage.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/archive/observability/simulation_mining_usage.md) for execution templates (historical), and [docs/archive/engine_contracts/sweep_configuration.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/archive/engine_contracts/sweep_configuration.md) for sweep schemas and JSON examples.
 
 ---
 

@@ -20,7 +20,7 @@ Tests that pin the worker pool's determinism guarantees, bound enforcement, queu
 ## Verification Commands
 
 ```bash
-pytest tests/engine/test_worker_determinism.py
-pytest tests/engine/test_worker_bounds.py
-pytest tests/engine/test_worker_fallback.py
+pytest tests/integration/kernel/test_worker_determinism.py
+pytest tests/unit/kernel/test_worker_bounds.py
+pytest tests/unit/kernel/test_worker_fallback.py
 ```

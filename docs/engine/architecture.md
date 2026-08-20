@@ -92,6 +92,16 @@ Throughput claims are never made in isolation. The engine certifies its performa
 - **Class B (Consumer)**: Standard profile (20 TPS).
 - **Class C (High-Performance)**: Enhanced observability profiles.
 
+> **Known conflict, not resolved here**: This table's Class A/B/C mapping is inverted relative to
+> `docs/engine/contracts/certification_contract.md` §3 and `docs/performance/perf_baseline_policy.md`
+> §2.2, both of which make Class A the *most* powerful tier (≥16 cores/≥32GB or "High-Performance
+> Server"). This table makes Class A the *least* powerful ("Low-Power," 10 TPS) and Class C the
+> most powerful — an opposite-direction conflict, not just a threshold disagreement. Newly found by
+> TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT; see also the pre-existing, differently-shaped conflict
+> already flagged at `docs/performance/perf_baseline_policy.md`'s own callout box
+> (TCK-20260702-OBSISO-ISOLATION-PROOF). Not fixed here — pending owner decision on which mapping
+> is canonical.
+
 ---
 
 ## 6. Domain-Driven System Organization

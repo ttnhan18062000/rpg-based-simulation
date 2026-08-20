@@ -23,7 +23,7 @@ two runs always produce identical output. All durable state changes go through t
 
 Key entry points:
 - `src/engine/kernel.py` — the 6-phase loop
-- `src/engine/authoritative_pipeline.py` — the 17-phase mutation sequence
+- `src/engine/pipeline.py` — the 17-phase mutation sequence
 - `src/cli/entry.py` — CLI wrapper, crash recovery, event flush on exit
 
 ---

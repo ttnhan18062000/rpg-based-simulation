@@ -81,8 +81,8 @@ The `CanonicalStateHasher` defines the proof of integrity.
 ## 10. Verification Status
 This contract is **FROZEN** for the Gameplay Attachment baseline and verified by the following:
 - **Test Matrix**: `docs/archive/engine_matrices/ma_test_matrix.md`
-- **Closure Guard**: `tests/engine/test_milestone_a_closure.py`
-- **Integrity Guard**: `tests/engine/test_substrate_freeze_m1.py`
+- **Closure Guard**: `tests/integration/kernel/test_milestone_a_closure.py`
+- **Integrity Guard**: `tests/integration/kernel/test_substrate_freeze_m1.py`
 
 ## 11. Divergence Policy
 Any intentional divergence from this baseline must be logged in `docs/guidelines/intentional_divergences.md`.
