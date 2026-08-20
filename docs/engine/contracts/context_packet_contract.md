@@ -123,7 +123,7 @@ entry):
 ### Extension — non-registry-backed source fallback (this ticket's addition, not in the idea doc's original field list)
 
 `tools/generate_registry.py`'s `_SKIP_DOC_SUBDIRS` (`{"archive", "parity_ledger", "scenarios",
-"entity"}`, line 42) and its restriction to `docs/` plus `tickets/done/` mean several `included[]`
+"entity", "brainstorm"}`, line 61) and its restriction to `docs/` plus `tickets/done/` mean several `included[]`
 `kind` values have no `docs/REGISTRY.yaml` entry to read `authority`/`status` from at all:
 
 - **`code_symbol`, `test`, `graphify_node`, or a `tickets/inprogress/` ticket body** carry no

@@ -40,9 +40,13 @@ from validate_frontmatter import extract_frontmatter  # noqa: E402
 
 # Subdirectories under docs/ to skip entirely (not indexed in the registry).
 #
-# - "archive", "parity_ledger" — real exclusions: contain .md files that would
-#   otherwise be indexed by collect_docs()'s docs_dir.rglob("*.md"); skip-list
-#   membership is load-bearing for these two.
+# - "archive", "parity_ledger", "brainstorm" — real exclusions: contain .md files
+#   that would otherwise be indexed by collect_docs()'s docs_dir.rglob("*.md");
+#   skip-list membership is load-bearing for these three. "brainstorm" holds
+#   free-form ideation/external-review prose (added TCK-20260820-HOTFIX-DOCS-
+#   BRAINSTORM-REGISTRY-SKIP) that has never had a frontmatter convention —
+#   forcing one onto it would misrepresent its nature as structured reference
+#   content, which it isn't.
 # - "scenarios", "entity" — currently inert no-ops: as of the audit date below
 #   they contain zero .md files (they hold .yaml/.mmd content instead), so
 #   collect_docs()'s *.md-only rglob already excludes them regardless of this
@@ -54,7 +58,7 @@ from validate_frontmatter import extract_frontmatter  # noqa: E402
 #   references first.
 #
 # Audited and confirmed accurate by TCK-20260803-DOCS-STRUCTURE-AUDIT (2026-08-03).
-_SKIP_DOC_SUBDIRS = {"archive", "parity_ledger", "scenarios", "entity"}
+_SKIP_DOC_SUBDIRS = {"archive", "parity_ledger", "scenarios", "entity", "brainstorm"}
 
 _AUTHORITY_SORT = {"P0": 0, "P1": 1, "P2": 2}
 
