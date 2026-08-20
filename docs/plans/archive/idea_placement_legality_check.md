@@ -1,10 +1,11 @@
 ---
-status: idea
+status: historical
 layer: engine
 authority: P2
 audience: developer
-maturity: idea
+maturity: shipped
 date: 2026-07-16
+archived: 2026-08-20
 tags: [idea, hard-law-monitor, world-generation, simulation-quality, determinism, correctness]
 ---
 
