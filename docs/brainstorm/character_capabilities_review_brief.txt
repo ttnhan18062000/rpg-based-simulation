@@ -1,0 +1,78 @@
+Review Brief: "Character Capabilities" Document
+=================================================
+
+What you're reviewing
+----------------------
+A page called Character Capabilities, published here:
+https://claude.ai/code/artifact/01a48398-d8e1-4f45-b4b2-ed1dde0672fd
+
+It's a non-technical summary of what a fantasy RPG simulation engine currently
+delivers for individual characters -- how they act, who they are, how injury
+marks them, and how they think and remember. It covers the entity/character
+layer only -- not groups, factions, regions, or the wider world.
+
+Who it's for and what it's for
+-------------------------------
+Written for a non-developer audience -- a stakeholder, designer, or reviewer
+with no code access and no need for one. The document is meant to stand
+completely on its own: every claim in it should be understandable and
+checkable using only the page itself, with no need to look anything up
+elsewhere.
+
+By design, the document contains zero references to code, file paths,
+function names, class names, or internal documentation. If you go looking
+for a way to verify a claim against source material and don't find one,
+that's intentional, not an oversight -- do not flag "no citation given" as a
+gap. Judge the document on its own internal terms: is it clear, is it
+consistent with itself, is it honest about what's real versus aspirational.
+
+Legend (how to read a card)
+----------------------------
+Every capability is shown as a card with one of three status tags:
+
+- Live in the simulation today -- this happens right now, in a running
+  simulation, no caveats.
+- Built, not yet switched on -- the underlying mechanism is real and
+  complete, but it doesn't currently run (either switched off, or nothing
+  currently triggers it).
+- Not yet built -- doesn't exist in any form yet.
+
+What to actually check
+-----------------------
+1. Internal consistency. Do the tier labels match what the card's own text
+   says? (A card marked "Live" shouldn't quietly describe something that
+   never happens, and vice versa.)
+2. Clarity for the stated audience. Flag anything that still reads as
+   jargon, is ambiguous, or assumes background knowledge a non-developer
+   wouldn't have.
+3. Honesty about limitations. Several cards describe a real capability and
+   a real gap in the same breath (e.g. a system that's live but uniform
+   across every character, or built but never triggered). Check that the
+   gap is stated as plainly as the capability -- the document should never
+   read as more capable than it actually claims to be.
+4. Numbers that don't add up or feel arbitrary. The document includes
+   concrete figures (thresholds, ranges, counts) rather than vague
+   qualifiers. Flag any number that seems internally contradictory, or any
+   claim that would benefit from a number but doesn't have one.
+5. Overall shape. Four sections -- What Characters Do, Who Each Character
+   Is, Wounds/Scars & Lasting Change, How Characters Think & Remember. Does
+   the balance of content across sections feel right, or does any one
+   section feel thin or padded relative to the others?
+
+What NOT to do
+---------------
+- Don't try to verify claims against the actual simulation codebase -- you
+  don't have access to it, and that's by design for this review.
+- Don't suggest adding code references, file paths, or "see implementation"
+  notes -- that would defeat the purpose of this specific document. (A
+  separate, developer-facing version with full technical citations exists
+  elsewhere; this document is deliberately not that one.)
+- Don't rewrite tone into marketing/sales language -- the intended voice is
+  matter-of-fact and precise, not promotional.
+
+How to report back
+-------------------
+For each issue found, give: the card title, what's wrong (inconsistency,
+unclear phrasing, missing number, tone mismatch, etc.), and a suggested fix
+if you have one. A short summary judgment at the end -- is this document
+ready to hand to a non-developer stakeholder as-is -- is also useful.
