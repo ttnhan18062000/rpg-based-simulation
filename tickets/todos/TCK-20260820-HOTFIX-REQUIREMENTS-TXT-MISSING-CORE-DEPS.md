@@ -40,9 +40,19 @@ particular is a real runtime dependency of `RedisStreamAdapter`/`RedisStreamCons
 (`src/observability/stream/`) — the exact subsystem `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC`
 modified this session.
 
+**Production is confirmed unaffected** — checked directly: `backend.Dockerfile` (used by the
+`backend`, `ai_worker`, and `watchdog` `docker-compose.yml` services) installs via
+`pip install .` against `pyproject.toml`, never touching `requirements.txt` at all. This gap is
+CI/local-dev-only, not a production risk — narrows the blast radius but doesn't remove the need
+to fix it, since CI is meant to be a faithful proxy for the real dependency set.
+
+**Exact pins to add**, sourced from `uv.lock` (the canonical resolver output, not guessed):
+`redis==7.3.0`, `python-json-logger==4.0.0` — both also match what's currently importable in the
+local dev venv.
+
 ## Scope
-- Add `redis` and `python-json-logger` to `requirements.txt`, pinned consistently with the rest
-  of the file's existing pin style (`==` exact versions).
+- Add `redis==7.3.0` and `python-json-logger==4.0.0` to `requirements.txt` (exact pins per
+  `uv.lock`, matching the file's existing `==` pin style).
 - Do a full audit of `requirements.txt` against `pyproject.toml`'s complete core dependency list
   (not just these two) to confirm no other core dependency is similarly missing — this ticket's
   own investigation checked all 11 core deps and found exactly these 2 missing, but a full
@@ -81,7 +91,8 @@ None — hotfix tier, no staging artifacts required.
 - pyproject.toml (reference only, not changed)
 
 ## Assumptions / Open Questions
-- Why this hasn't already caused a visible CI failure is not fully explained — possibly the
+- Why this hasn't already caused a visible CI failure is still not fully explained (production is
+  now confirmed unaffected, see Request Summary, but CI is a separate question) — possibly the
   currently-exercised fast-lane test paths never actually import `redis`/`python-json-logger` at
   collection time, or CI's own venv caching happens to retain a prior install. Not required to
   root-cause the absence of failure, only to close the gap.
