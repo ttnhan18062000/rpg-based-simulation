@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260820-HOTFIX-PHANTOM-TESTCONTAINERS-DEPENDENCY
-phase: open
+phase: done
 date: 2026-08-20
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 testcontainers[redis] is declared in pyproject.toml's dev deps but never referenced anywhere in the codebase
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -53,8 +53,8 @@ declared, presumably anticipating this use, but never actually adopted.
   original intent and is still wanted.
 
 ## Acceptance Criteria
-- [ ] The `git log -S testcontainers` history check is done and its finding documented.
-- [ ] Either the dependency is removed (if confirmed unused and not wanted), or a follow-up
+- [x] The `git log -S testcontainers` history check is done and its finding documented.
+- [x] Either the dependency is removed (if confirmed unused and not wanted), or a follow-up
       ticket is filed for real adoption (if wanted) — not left ambiguous either way.
 
 ## Related Tickets
@@ -77,13 +77,40 @@ None — hotfix tier, no staging artifacts required.
   yet known — resolved by this ticket's own first scope step, not assumed here.
 
 ## Implementation Notes
-(pending)
+`git log -S testcontainers --oneline -- .` returned 4 commits: `bfdf91a6` ("Update stacks", commit
+#1 — the project's very first, foundational commit, which already declared
+`testcontainers[redis]>=4.0.0`), `ff0235a7`/`29d78798` (later `pyproject.toml` touches for
+unrelated reasons, `testcontainers` line untouched in both diffs), and `6927d59a` (this session's
+own earlier PR, which only touched the *ticket text* mentioning "testcontainers", not
+`pyproject.toml`). `git log --all -S "import testcontainers"` and `-S "from testcontainers"` both
+return zero commits — confirming this was **declared and never adopted from day one**, not a
+"used and later abandoned" case. This resolves the ticket's own scope-step 1 finding cleanly:
+removal is safe, no half-finished integration to preserve or complete.
+
+Removed `"testcontainers[redis]>=4.0.0"` from `pyproject.toml`'s `dev` extras. Regenerated
+`uv.lock` via `uv lock` to keep it consistent (single atomic resolve — could not be scoped to only
+this one package). This also surfaced that `uv.lock` had independently drifted beyond just this
+ticket's finding: it still listed `confluent-kafka`, `pika`, and `docker` as resolved packages,
+leftover artifacts from before `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` removed them from
+`pyproject.toml` — the lockfile was never regenerated after that epic closed. `uv lock` removed
+all 5 stale packages in one pass (`confluent-kafka`, `docker`, `pika`, `testcontainers`, `wrapt` —
+the last a transitive dep of the others). Confirmed via grep that none of the 5 removed packages
+have any live import anywhere in the repo (`.venv`/`node_modules` excluded).
 
 ## Test Summary
-(pending)
+Created a genuinely fresh venv and verified both `pip install -e .` (core deps) and
+`pip install -e ".[dev]"` (dev extras, now without `testcontainers`) succeed cleanly with no
+errors. Scratch venv removed after.
 
 ## Files Changed
-(pending)
+- pyproject.toml
+- uv.lock
 
 ## Completion Summary
-(pending)
+Confirmed via `git log -S` (both on `pyproject.toml`'s declaration and on any Python import,
+across full history) that `testcontainers[redis]` was declared in the project's very first commit
+and never actually adopted — a phantom dependency, not an abandoned integration. Removed it from
+`pyproject.toml`'s dev extras and regenerated `uv.lock`, which as a side effect also cleaned up 4
+more stale lockfile entries (`confluent-kafka`, `docker`, `pika`, `wrapt`) left over from an
+earlier epic's `pyproject.toml` removal that never triggered a lockfile regeneration. Verified a
+fresh venv install of both core and dev dependency sets still succeeds.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260820-HOTFIX-REQUIREMENTS-TXT-MISSING-CORE-DEPS
-phase: open
+phase: done
 date: 2026-08-20
 tags: [engine]
 ---
@@ -15,7 +15,7 @@ tags: [engine]
 requirements.txt is missing redis and python-json-logger, both core pyproject.toml dependencies CI never installs any other way
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -76,11 +76,11 @@ against their respective requirements files, not just core:
   is the one that needs to catch up to it.
 
 ## Acceptance Criteria
-- [ ] `redis` and `python-json-logger` are present in `requirements.txt`.
+- [x] `redis` and `python-json-logger` are present in `requirements.txt`.
 - [x] A full audit confirms no other `pyproject.toml` dependency group has a similar gap — done
       2026-08-20, see Scope. Only `testcontainers` surfaced, and it's a different problem (phantom
       dependency), tracked separately.
-- [ ] `pip install -r requirements.txt` in a genuinely clean venv succeeds and both packages
+- [x] `pip install -r requirements.txt` in a genuinely clean venv succeeds and both packages
       import successfully afterward.
 
 ## Related Tickets
@@ -111,13 +111,23 @@ None — hotfix tier, no staging artifacts required.
   root-cause the absence of failure, only to close the gap.
 
 ## Implementation Notes
-(pending)
+Independently re-verified all claims before implementing (not taken on faith): `grep -in "redis\|python-json-logger" requirements.txt` returned zero hits pre-fix; `pyproject.toml`'s `[project.dependencies]` confirmed both as core (`redis>=5.0.0`, `python-json-logger>=2.0.7`); `uv.lock` confirmed the exact resolved pins (`redis==7.3.0`, `python-json-logger==4.0.0`); `.github/workflows/test.yml` confirmed 12 job steps use `pip install -r requirements.txt`, zero use `pip install -e .`/`pip install .`.
+
+Added both entries to `requirements.txt` in alphabetical order matching the file's existing convention: `python-json-logger==4.0.0` between `python-dotenv` and `python-multipart`; `redis==7.3.0` between `PyYAML` and `referencing`.
 
 ## Test Summary
-(pending)
+Created a genuinely fresh venv (`python3 -m venv /tmp/clean_venv_reqcheck`, no local dev venv reuse), ran `pip install -r requirements.txt`, confirmed both packages import successfully afterward: `redis.__version__ == "7.3.0"`, `pythonjsonlogger` imports cleanly. Scratch venv removed after verification.
 
 ## Files Changed
-(pending)
+- requirements.txt
 
 ## Completion Summary
-(pending)
+Added `redis==7.3.0` and `python-json-logger==4.0.0` to `requirements.txt`, matching `uv.lock`'s
+resolved pins exactly. Both are core `pyproject.toml` dependencies that CI's `pip install -r
+requirements.txt`-only install path (confirmed: zero jobs install from `pyproject.toml`) was
+silently missing — `redis` in particular is a real runtime dependency of
+`RedisStreamAdapter`/`RedisStreamConsumer`. Verified via a genuinely clean venv install, not the
+existing local dev venv (which was masking the gap). Full dependency-group audit (dev/knowledge/
+search-mcp extras) confirmed no other similar gap exists; the one other finding
+(`testcontainers[redis]`, unused) is tracked separately in
+`TCK-20260820-HOTFIX-PHANTOM-TESTCONTAINERS-DEPENDENCY`.

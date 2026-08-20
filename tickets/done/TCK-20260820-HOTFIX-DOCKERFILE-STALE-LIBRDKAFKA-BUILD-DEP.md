@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260820-HOTFIX-DOCKERFILE-STALE-LIBRDKAFKA-BUILD-DEP
-phase: open
+phase: done
 date: 2026-08-20
 tags: [architecture]
 ---
@@ -15,7 +15,7 @@ tags: [architecture]
 backend.Dockerfile still installs gcc + librdkafka-dev for confluent-kafka, which Epic A removed entirely
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -58,8 +58,8 @@ C library) for a dependency that no longer exists.
   single, specific finding, not a signal to redo that whole epic's verification.
 
 ## Acceptance Criteria
-- [ ] The `gcc librdkafka-dev` install step is removed from `backend.Dockerfile`.
-- [ ] The `backend` image still builds successfully (verified, not assumed, if a Docker
+- [x] The `gcc librdkafka-dev` install step is removed from `backend.Dockerfile`.
+- [x] The `backend` image still builds successfully (verified, not assumed, if a Docker
       environment is available to the implementer).
 
 ## Related Tickets
@@ -82,13 +82,29 @@ None — hotfix tier, no staging artifacts required.
   unambiguously safe to remove regardless of that answer.
 
 ## Implementation Notes
-(pending)
+Checked `pyproject.toml`'s full core dependency list for anything without a common prebuilt wheel
+before removing `gcc` (not just `librdkafka-dev`): `xxhash`, `fastapi`, `uvicorn[standard]`,
+`pydantic` (pydantic-core ships wheels), `sse-starlette`, `prometheus-client`, `redis`, `psutil`,
+`python-json-logger`, `requests`, `msgpack` — all commonly ship prebuilt wheels for standard Linux
+platforms, none require a C compiler at install time. Removed the entire
+`RUN apt-get update && apt-get install -y --no-install-recommends gcc librdkafka-dev && rm -rf
+/var/lib/apt/lists/*` step and its comment, not just the `librdkafka-dev` package name.
 
 ## Test Summary
-(pending)
+Docker daemon was available in this environment — built the real image end-to-end rather than
+just inspecting the file: `docker build -f backend.Dockerfile -t backend-test-nobuild-deps .`
+completed successfully (pip install step: 19s, zero compiler errors, all packages installed from
+prebuilt wheels). Additionally smoke-ran the built image
+(`docker run --rm -d backend-test-nobuild-deps`) and confirmed the V2 API server starts up
+cleanly (`Uvicorn running on http://0.0.0.0:8000`, `Application startup complete`) — not just a
+successful build, a successful boot. Test image and container removed after verification.
 
 ## Files Changed
-(pending)
+- backend.Dockerfile
 
 ## Completion Summary
-(pending)
+Removed the stale `gcc librdkafka-dev` apt-get install step from `backend.Dockerfile` — a leftover
+from before `TCK-20260817-DEAD-INFRA-REMOVAL-EPIC` removed `confluent-kafka`/`pika` entirely from
+`pyproject.toml`/`docker-compose.yml`. Verified `gcc` itself isn't needed by any other current
+dependency (all ship prebuilt wheels), and confirmed the fix with a real Docker build + boot smoke
+test, not just a file inspection.
