@@ -36,14 +36,32 @@ over time today.
   `agent-monitoring-epic-staleness` precedent this epic's Problem section already cites. Extracted
   once confirmed self-contained (no dependency on the rest of this epic's scope) — this epic's own
   prerequisite (Epic G) was also confirmed done at the same time, unblocking the epic as a whole.
-- **(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`.**
+- ~~**(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`.**
   `code-health impact <path>` command: composable from `graphify-out/`'s existing edge data,
   `tests/architecture/`'s boundary tests (post Epic G hardening), and `docs/REGISTRY.yaml`'s
   existing `related_code_areas` field — full worked design and example (`src/engine/pipeline.py`)
   in `docs/audits/D24_codebase_health_observatory.md` §L. Extracted once each of the 3 data
   sources was individually verified against real, current state — found `graphify` has no
   ready-made "dependents of path X" CLI verb (needs a custom traversal), and
-  `related_code_areas` is only 53.3% filled with sometimes-mixed path/symbol-name shapes.
+  `related_code_areas` is only 53.3% filled with sometimes-mixed path/symbol-name shapes.~~
+  **Resolved** (`TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`, 2026-08-19): built
+  `tools/code_health_impact.py` + `make codebase-health-impact` (`code-health impact <path>`).
+  Dependents lookup reuses `graphify affected "<symbol>" --depth 2` (not a hand-rolled
+  BFS/DFS) after resolving the target file to its `graph.json`-recorded symbol(s);
+  architecture-rule matching against `tests/architecture/`'s 17 boundary test files by
+  subsystem-prefix heuristic; required-test inference combines `docs/REGISTRY.yaml`'s
+  `related_code_areas` (with bare symbol-name/filename resolution via the graph's node
+  index) and the `src/`→`tests/` naming convention from `.claude/agents/test-scoper.md`'s
+  Test Directory Map; criticality tier from churn (extending
+  `codebase_health_baseline.py::compute_churn_lines_changed()` with a new `target_pathspec`
+  parameter, not duplicating it) × graphify edge-degree. Verified against D24 §L's
+  `src/engine/pipeline.py` worked example (confirms `engine/kernel.py` and `engine/apply.py`
+  as dependents) plus a second, differently-profiled real path
+  (`src/observability/reporter.py`). On-demand only, not CI-wired, matching the sibling
+  baseline target's precedent. Independent Test-phase verification also caught and fixed a
+  real display bug: `kernel.py` was present in the internal dependents data but invisible in
+  the truncated CLI output due to plain alphabetical sort — fixed with same-subsystem-first
+  sorting and a widened truncation limit.
 - Historical metric snapshots: an append-only file following the same pattern
   `agent-monitoring/runs.jsonl` already uses, plus a multi-dimension scorecard (trend arrows, not
   a single aggregate score, per the source audit's own explicit guidance against turning this

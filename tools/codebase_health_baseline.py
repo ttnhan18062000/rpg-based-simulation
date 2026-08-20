@@ -198,15 +198,23 @@ def find_unused_core_dependencies(repo_root: Path) -> list:
     return unused
 
 
-def compute_churn_lines_changed(repo_root: Path, exclude_pathspecs: list = None) -> int:
+def compute_churn_lines_changed(
+    repo_root: Path, exclude_pathspecs: list = None, target_pathspec: str = "."
+) -> int:
     """Total insertions+deletions across full history, excluding bookkeeping paths.
 
     Uses a real git pathspec exclusion (`-- . ':!path' ...`), not a post-hoc
     filter — the excluded files' commit history is never walked at all.
+
+    `target_pathspec` (default `"."`, the repo-wide aggregate `build_report()`
+    uses) lets a caller scope the same computation to a single path — added
+    for `tools/code_health_impact.py`'s per-path criticality-tier churn signal
+    (TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND), reusing this function
+    rather than writing a second, parallel `git log --shortstat` implementation.
     """
     if exclude_pathspecs is None:
         exclude_pathspecs = CHURN_EXCLUDE_PATHSPECS
-    args = ["log", "--shortstat", "--pretty=format:", "--", "."] + exclude_pathspecs
+    args = ["log", "--shortstat", "--pretty=format:", "--", target_pathspec] + exclude_pathspecs
     output = _run_git(args, repo_root)
     total = 0
     for line in output.splitlines():

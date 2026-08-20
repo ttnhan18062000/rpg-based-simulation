@@ -287,6 +287,9 @@ status-drift-check: ## Report ## Status body-text drift in tickets/done/ and low
 codebase-health-baseline: ## Print a live LoC/churn/dependency baseline snapshot (on-demand only — not CI)
 	python3 tools/codebase_health_baseline.py
 
+codebase-health-impact: ## Print a change-impact report for a source path (pass ARGS="src/engine/pipeline.py") (on-demand only — not CI)
+	python3 tools/code_health_impact.py $(ARGS)
+
 agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
 	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
 	  tools/agent-monitoring/build_index.py
