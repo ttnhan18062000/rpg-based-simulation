@@ -7,9 +7,12 @@ tool claims to compute has at least one fixture proving it computes correctly,
 not just that it runs without error.
 """
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
@@ -19,6 +22,23 @@ import code_health_impact as chi  # noqa: E402
 import codebase_health_baseline as chb  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
+
+# graphify (the CLI binary, not just graphify-out/graph.json) is a locally-installed
+# dev tool -- confirmed absent from requirements.txt/pyproject.toml/any CI workflow,
+# and graphify-out/ is entirely gitignored (never committed). The 4 real-path tests
+# below invoke the real `graphify affected` subprocess against the real graph.json,
+# both of which are only present in an environment that has separately run
+# `graphify update .` -- not a fresh CI checkout. This mirrors the existing skip
+# pattern for `tools/search_mcp.py`'s tests (skipped when the knowledge index isn't
+# built) rather than requiring graphify as a new CI dependency for what is,
+# by design, an on-demand-only developer/agent tool.
+_GRAPHIFY_AVAILABLE = shutil.which("graphify") is not None and (
+    _REPO_ROOT / "graphify-out" / "graph.json"
+).exists()
+_requires_graphify = pytest.mark.skipif(
+    not _GRAPHIFY_AVAILABLE,
+    reason="graphify CLI and/or graphify-out/graph.json not available in this environment",
+)
 
 
 def _git(args, cwd):
@@ -323,6 +343,7 @@ def test_build_impact_report_degrades_gracefully_with_no_registry_hits():
 # ---------------------------------------------------------------------------
 
 
+@_requires_graphify
 def test_real_path_pipeline_includes_kernel_as_dependent():
     report = chi.build_impact_report(_REPO_ROOT, "src/engine/pipeline.py")
     assert "src/engine/kernel.py" in report["dependents"]
@@ -331,6 +352,7 @@ def test_real_path_pipeline_includes_kernel_as_dependent():
     assert report["criticality_tier"] in ("high", "medium", "low")
 
 
+@_requires_graphify
 def test_real_path_pipeline_kernel_visible_in_formatted_output_not_just_internal_data():
     # Regression guard for a real bug found during independent Test-phase
     # verification: report["dependents"] containing "src/engine/kernel.py" is
@@ -363,6 +385,7 @@ def test_sort_dependents_src_first_prioritizes_same_subsystem():
     ]
 
 
+@_requires_graphify
 def test_real_path_low_centrality_profile_generalizes():
     # A real path with a markedly different (low churn, low centrality)
     # profile than src/engine/pipeline.py, to prove the command isn't
@@ -378,6 +401,7 @@ def test_real_path_low_centrality_profile_generalizes():
     assert report["dependents_degraded"] is False
 
 
+@_requires_graphify
 def test_make_target_runs_successfully_against_real_repo():
     result = subprocess.run(
         ["make", "codebase-health-impact", "ARGS=src/observability/reporter.py"],
