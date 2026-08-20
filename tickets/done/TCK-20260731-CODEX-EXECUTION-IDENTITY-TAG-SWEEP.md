@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260731-CODEX-EXECUTION-IDENTITY-TAG-SWEEP
-phase: open
+phase: done
 date: 2026-07-31
 tags: [ai, workflows, agent-monitoring]
 ---

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260820-STANDARD-FRONTEND-DEPLOYMENT-POSTURE-AUDIT
-phase: open
+phase: done
 date: 2026-08-20
 tags: [architecture]
 ---
