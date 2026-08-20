@@ -8,7 +8,6 @@ export interface EntityMemoryEntry {
   atk: number;
   level: number;
   tick: number;
-  tick: number;
   visible: boolean;
 }
 
