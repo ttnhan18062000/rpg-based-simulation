@@ -61,3 +61,5 @@
 {"added_date": "2026-08-14", "category": "subsystem-topic", "note": "Model Context Protocol / Knowledge Gateway MCP tooling \u2014 first used by TCK-20260814-KGMCP-CONTRACT-SCHEMAS staging artifacts", "tag": "mcp"}
 {"added_date": "2026-08-16", "category": "meta-process", "note": "seed: local dev-environment bootstrap/setup tooling and docs (TCK-20260816-HOTFIX-KGMCP-LOCAL-DATA-BOOTSTRAP-DOCS)", "tag": "setup"}
 {"added_date": "2026-08-17", "category": "subsystem-topic", "note": "ADRs and structural/architectural decisions (mirrors the existing registered layer of the same name); first needed by TCK-20260817-KERNEL-CONCURRENCY-DESIGN-EPIC's child tickets", "tag": "architecture"}
+{"added_date": "2026-08-20", "category": "subsystem-topic", "note": "Server-owned world-rendering core: deterministic PNG/image generation from AuthoritativeState geometry (batch/QA mode first, live-streaming deferred)", "tag": "rendering"}
+{"added_date": "2026-08-20", "category": "subsystem-topic", "note": "Visual/geometric quality validation and agent-review pipeline consuming rendered world imagery (SimQ-sibling scoring, not an 11th pillar)", "tag": "visualization"}
