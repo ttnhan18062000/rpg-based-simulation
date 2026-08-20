@@ -1,0 +1,228 @@
+<title>Character Capabilities</title>
+<style>
+:root {
+  --bg: #EDEEE9;
+  --surface: #FFFFFF;
+  --surface-2: #E3E4DC;
+  --ink: #1F2421;
+  --ink-soft: #4B534E;
+  --border: #D3D5CB;
+  --accent: #A9720C;
+  --accent-soft: #F1E4C8;
+  --live: #2C6E63;
+  --live-soft: #DCEBE7;
+  --built: #2E6E8E;
+  --built-soft: #DCEAF0;
+  --planned: #8B8378;
+  --planned-soft: #EAE8E2;
+  --shadow: 0 1px 2px rgba(31,36,33,0.06), 0 4px 16px rgba(31,36,33,0.06);
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181A;
+    --surface: #1C2124;
+    --surface-2: #232A2D;
+    --ink: #E8E6DF;
+    --ink-soft: #A8AFA9;
+    --border: #313A3D;
+    --accent: #D9A441;
+    --accent-soft: #3A311D;
+    --live: #5FBFAE;
+    --live-soft: #1D3430;
+    --built: #7FB3CC;
+    --built-soft: #1D2E36;
+    --planned: #8A9089;
+    --planned-soft: #262B29;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14181A;
+  --surface: #1C2124;
+  --surface-2: #232A2D;
+  --ink: #E8E6DF;
+  --ink-soft: #A8AFA9;
+  --border: #313A3D;
+  --accent: #D9A441;
+  --accent-soft: #3A311D;
+  --live: #5FBFAE;
+  --live-soft: #1D3430;
+  --built: #7FB3CC;
+  --built-soft: #1D2E36;
+  --planned: #8A9089;
+  --planned-soft: #262B29;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1000px; margin: 0 auto; padding: 56px 24px 96px; }
+
+header.hero { margin-bottom: 40px; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+h1.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(32px, 5vw, 46px);
+  line-height: 1.12;
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+.subtitle { font-size: 17px; color: var(--ink-soft); max-width: 66ch; margin: 0 0 8px; overflow-wrap: anywhere; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.legend-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; font-family: var(--font-mono);
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface);
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.dot.live { background: var(--live); }
+.dot.built { background: var(--built); }
+.dot.planned { border: 1.5px dashed var(--ink-soft); background: transparent; }
+
+nav.toc {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px 22px; box-shadow: var(--shadow); margin-bottom: 40px;
+}
+nav.toc .toc-label {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 0 12px;
+}
+nav.toc ol {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 20px;
+}
+nav.toc li { font-size: 13.5px; }
+nav.toc a {
+  color: var(--ink); text-decoration: none; display: flex; align-items: baseline; gap: 8px;
+  padding: 3px 0; border-bottom: 1px solid transparent;
+}
+nav.toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+nav.toc .toc-num {
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); flex-shrink: 0; width: 1.4em;
+}
+
+section { margin: 56px 0; }
+h2.section-title {
+  font-family: var(--font-display); font-size: 26px; font-weight: 600;
+  margin: 0 0 6px; text-wrap: balance;
+}
+.section-lede { color: var(--ink-soft); font-size: 15px; max-width: 70ch; margin: 0 0 24px; overflow-wrap: anywhere; }
+
+.cluster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px 20px; box-shadow: var(--shadow);
+  min-width: 0;
+}
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.card h3 { font-family: var(--font-display); font-size: 16.5px; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+.badge {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.03em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+}
+.badge.live { background: var(--live-soft); color: var(--live); }
+.badge.built { background: var(--built-soft); color: var(--built); }
+.badge.planned { background: var(--planned-soft); color: var(--ink-soft); }
+
+.card p.desc { font-size: 13.5px; color: var(--ink-soft); margin: 0; overflow-wrap: anywhere; }
+
+footer {
+  margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
+  font-size: 12.5px; color: var(--ink-soft); font-family: var(--font-mono);
+}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">Simulation Capability Overview &middot; Characters</p>
+  <h1 class="title">What Our Simulation Delivers for Characters</h1>
+  <p class="subtitle">A plain-language look at what the simulation engine can actually do today when it comes to individual characters — how they act, who they are, how injury and change mark them, and how they think and remember.</p>
+  <div class="legend">
+    <span class="legend-item"><span class="dot live"></span> Live in the simulation today</span>
+    <span class="legend-item"><span class="dot built"></span> Built, not yet switched on</span>
+    <span class="legend-item"><span class="dot planned"></span> Not yet built</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Table of contents">
+  <p class="toc-label">On this page</p>
+  <ol>
+    <li><a href="#action"><span class="toc-num">01</span> What Characters Do</a></li>
+    <li><a href="#identity"><span class="toc-num">02</span> Who Each Character Is</a></li>
+    <li><a href="#modification"><span class="toc-num">03</span> Wounds, Scars &amp; Lasting Change</a></li>
+    <li><a href="#mind"><span class="toc-num">04</span> How Characters Think &amp; Remember</a></li>
+  </ol>
+</nav>
+
+<section id="action">
+  <h2 class="section-title" data-section-title="action"></h2>
+  <p class="section-lede" data-section-lede="action"></p>
+  <div class="cluster-grid" data-section="action"></div>
+</section>
+
+<section id="identity">
+  <h2 class="section-title" data-section-title="identity"></h2>
+  <p class="section-lede" data-section-lede="identity"></p>
+  <div class="cluster-grid" data-section="identity"></div>
+</section>
+
+<section id="modification">
+  <h2 class="section-title" data-section-title="modification"></h2>
+  <p class="section-lede" data-section-lede="modification"></p>
+  <div class="cluster-grid" data-section="modification"></div>
+</section>
+
+<section id="mind">
+  <h2 class="section-title" data-section-title="mind"></h2>
+  <p class="section-lede" data-section-lede="mind"></p>
+  <div class="cluster-grid" data-section="mind"></div>
+</section>
+
+<footer>
+  A plain-language companion to the internal engineering atlas, covering characters only.
+</footer>
+
+</div>
+
+<script>
+const SECTIONS = [{"id": "action", "title": "What Characters Do", "lede": "Fighting, moving, and interacting with the world — everything a character actively does, moment to moment.", "cards": [{"title": "Combat & Tactics", "tier": "live", "tierLabel": "Live in the simulation", "desc": "Fighting is one of the most fully developed parts of the simulation. Before landing a hit, the engine weighs things like high ground, flanking, being surrounded, taking cover, and fighting alongside a trusted ally. Armor and weapons wear down with use and grow less effective as they take damage. A hero who dies isn't necessarily gone for good — they can be reborn to fight again, up to four times, before death becomes permanent."}, {"title": "In-the-Moment Fight Decisions", "tier": "live", "tierLabel": "Live in the simulation", "desc": "Beyond deciding whether to fight, characters make real tactical choices second by second: who to attack, when to take cover, when to retreat, when to protect a wounded ally, and when to hold a defensive position. A character caught in a losing fight can be swept up by fear and break off an attack rather than fighting to the bitter end."}, {"title": "Sizing Up a Fight Before It Starts", "tier": "built", "tierLabel": "Built, not yet active", "desc": "A system exists for a character to weigh up an opponent and themselves before committing to a fight — deciding whether this is a fight worth having in the first place. It's fully built and ready, but currently switched off in the running simulation."}, {"title": "Moving Around the World", "tier": "live", "tierLabel": "Live in the simulation", "desc": "Movement is a real, weight- and speed-aware system, not a simple coordinate update — a heavily loaded or slower character finds movement genuinely more costly. Two characters trying to swap places at the same moment are handled correctly rather than colliding."}, {"title": "How Often a Character Gets to Act", "tier": "live", "tierLabel": "Live, but not yet varied", "desc": "Every character has to build up readiness before they get to act again, so in principle a faster character should act more often. Right now, though, every character builds up readiness at exactly the same rate — a swift character and a sluggish one currently act equally often."}, {"title": "Gathering, Looting & Opening Chests", "tier": "live", "tierLabel": "Live in the simulation", "desc": "Gathering resources, looting the fallen, and opening chests all take a moment to complete, and get interrupted if the character is hit hard enough, wanders off, or switches to something else mid-action. The engine also checks there's room to actually carry what's found before letting the action finish."}, {"title": "Paying for Information", "tier": "built", "tierLabel": "Built, but never actually triggers", "desc": "A system was designed for characters to pay other characters for information. Checked closely, though: nothing currently in the simulation produces the two ingredients this system needs in order to ever fire. It exists in the simulation, but it has never once actually happened in any world."}, {"title": "Trading or Gifting Directly Between Characters", "tier": "planned", "tierLabel": "Not yet built", "desc": "Two characters can't currently hand items to each other directly. The only way items move between people today is indirectly, by going through a shop."}, {"title": "Asking Someone to Team Up", "tier": "planned", "tierLabel": "Not yet built", "desc": "A character can't currently ask another character to team up and have them accept or decline. Groups are assembled automatically behind the scenes today, rather than through an actual invitation passed between two characters."}]}, {"id": "identity", "title": "Who Each Character Is", "lede": "Stats, race, personality, and how a character changes over a lifetime of play.", "cards": [{"title": "Core Stats & Basic Needs", "tier": "live", "tierLabel": "Live in the simulation", "desc": "Every character has nine core stats (strength, agility, intelligence, and others), plus hunger, sleep, and stamina — each of which builds up over time and has real consequences if left unaddressed."}, {"title": "How Stats Become Real Numbers", "tier": "live", "tierLabel": "Live in the simulation", "desc": "A character's raw stats are converted into the numbers that actually matter in play — health, attack, defense, evasion — plus how costly movement is for them and even their natural role on the battlefield (front-line fighter, skirmisher, protector). All of it is recalculated from gear, skills, and traits together, not just base stats alone."}, {"title": "Race & Starting Template", "tier": "live", "tierLabel": "Live, and foundational", "desc": "A character's race and archetype (\"goblin warrior,\" \"human ranger,\" and so on) is the real starting point for almost everything else about them — their base stats, starting skills, what drives them, and how they think and plan. Race genuinely shapes a character from the ground up, not just their appearance. One small content gap found: a handful of starting skill lists reference skills that don't actually exist in the game yet, leftover references to older content."}, {"title": "Personality", "tier": "live", "tierLabel": "Live, well-integrated", "desc": "Every character is given a real, consistent personality when they're created — how greedy, brave, sociable, and hardworking they are — and it genuinely shapes behavior. Braver characters fight more aggressively and retreat less readily; more sociable characters behave differently under pressure than withdrawn ones."}, {"title": "Different Paths to Power", "tier": "planned", "tierLabel": "Mostly not yet built", "desc": "Two characters of the same class and race grow along an identical numeric path today — the same stat gains, the same skill unlocks, the same formulas — differing only in how far along that path they've gotten, not in which path they took. There's one real exception: adventurer-type characters do pursue their own evolving sequence of longer-term goals (upgrade gear, chase a quest, gather resources), which genuinely diverges between individuals even though the underlying numbers stay identical. A true branching, choose-your-own-build system doesn't exist yet."}, {"title": "Aging, Death & Inheritance", "tier": "live", "tierLabel": "Aging & death are live; inheritance isn't yet", "desc": "Every character ages continuously and can die of old age, separate from dying in combat. A real system exists for a dying character's belongings and treasured items to pass to a chosen heir — but nothing in the simulation currently ever actually chooses an heir, so this inheritance system, while built correctly, has never once triggered. A related system that would make elderly characters mechanically frailer (and wiser) with age exists too, but is likewise never actually switched on — characters die of old age today without first growing weaker."}, {"title": "Genetic Variation", "tier": "built", "tierLabel": "Built, but never applied", "desc": "A real system exists for giving each character subtly different genetic potential in each stat — a natural head start or handicap. It's never actually turned on, though; every character currently gets the same default genetic potential. There's also no birth or reproduction event anywhere in the simulation — population change happens only in the aggregate, not through individual parents having children."}, {"title": "Growing Into a Stronger Form", "tier": "live", "tierLabel": "Live in the simulation", "desc": "As characters level up, some transform into a stronger version of their kind. This isn't a monster-only mechanic — heroes can transform into a legendary form too, through the exact same underlying system."}, {"title": "Learning New Skills", "tier": "live", "tierLabel": "Live, but limited", "desc": "Characters unlock a small, fixed set of new skills as they level up — real, but a short list rather than a deep skill tree. Separately, a character's starting skills come from their race and archetype, not from leveling up."}, {"title": "Experience, Leveling & Mastery", "tier": "live", "tierLabel": "Leveling is live; deeper mastery isn't", "desc": "Characters earn experience and level up in a real, working system, gaining a flat amount of stat points every level regardless of what they actually did to earn it. A deeper \"mastery through practice\" and \"breakthrough\" system was designed but was never finished — it exists in the simulation but currently does nothing."}, {"title": "Occupation & Social Role", "tier": "live", "tierLabel": "Live, and one of the richest systems found", "desc": "Every character has a real, active occupation — hero, shopkeeper, monster, townsperson, laborer, or guard — and it genuinely changes how they behave: what they spend their day doing, what they're able to craft, how movement conflicts between characters get resolved, and even whether they can be permanently killed outright in combat (heroes specifically cannot)."}]}, {"id": "modification", "title": "Wounds, Scars & Lasting Change", "lede": "How injury and temporary conditions leave their mark on a character.", "cards": [{"title": "Wounds & Scars", "tier": "live", "tierLabel": "Live in the simulation", "desc": "A serious hit can leave a character with a lasting Wound, and if that wound heals, it may leave behind a smaller Permanent Scar that keeps a fraction of the original penalty forever. This is the simulation's clearest example of injury having a lasting, meaningful consequence."}, {"title": "Temporary Conditions (Buffs, Debuffs, Freezing & More)", "tier": "built", "tierLabel": "A few real effects exist; no unified system yet", "desc": "A handful of real conditions exist and genuinely affect characters — exhaustion reduces combat power, hunger and lack of sleep dull mental sharpness, and there's a \"Frozen\" state. But there's no single, unified system for temporary conditions yet — each one is currently its own small, separate mechanism rather than one shared system. Skill-granted effects like a temporary speed boost don't exist today."}]}, {"id": "mind", "title": "How Characters Think & Remember", "lede": "Perception, memory, emotion, relationships, and the decision-making that drives everything above.", "cards": [{"title": "How a Character Sees Itself", "tier": "built", "tierLabel": "Built, not yet active", "desc": "A rich system exists for characters to form their own subjective sense of their strengths, weaknesses, and confidence — separate from the objective truth — including an awareness of things they know they don't know. It's fully built and correct, but currently switched off in the running simulation."}, {"title": "A Second, Larger Mental Model", "tier": "planned", "tierLabel": "Designed, not yet filled in", "desc": "An entire second, even richer version of a character's inner mental life is laid out — covering risk perception, recovering from near-death experiences, detailed social relationships, and personal motivation — but almost none of it is actually populated with real data yet."}, {"title": "What a Character Notices", "tier": "live", "tierLabel": "Live in the simulation", "desc": "Characters don't perceive everything happening around them — attention is genuinely limited, and the most relevant things get noticed first while irrelevant details are dropped entirely. A real form of fog-of-war, driven by what a character currently needs."}, {"title": "Emotions", "tier": "built", "tierLabel": "Fully designed, never active", "desc": "A genuinely well-designed emotional system exists — fear, confidence, frustration, curiosity, satisfaction, panic, and boredom, all responding realistically to events like a near-death experience or an easy win. It's never actually switched on anywhere, though — characters don't currently feel any of this in a running simulation."}, {"title": "Relationships & Affection", "tier": "live", "tierLabel": "Live and rich, with a couple of gaps", "desc": "Characters track a real, bounded affection score toward specific other characters, along with trust, grudges, and fear — and it genuinely affects behavior. Allies who like and trust each other fight better together, and an offer from someone deeply distrusted can be refused outright. Repeated serious harm from the same character can elevate them to a formally recognized rival. Two gaps remain: there's no in-between step where two characters need to build up enough rapport before an interaction like a conversation can even start, and affection toward a place, like a home city, is tracked but doesn't influence anything yet."}, {"title": "What Drives a Character", "tier": "built", "tierLabel": "Partially live", "desc": "Characters have real underlying motivations, tied to their class and archetype, that bias the choices they make. A further layer of value-driven bias — like valuing safety over curiosity — exists in the simulation but currently has no real data feeding it, so it has no actual effect yet."}, {"title": "Keeping Promises & Recognizing Betrayal", "tier": "live", "tierLabel": "Mostly live, one final step missing", "desc": "The simulation tracks the growing pressure of an approaching deadline a character has committed to, and classifies how a character abandons a group — whether it was a survival necessity or a greedy betrayal — with real consequences for reputation and future trust. One piece is still missing: the final step that would turn a witnessed betrayal into an actual public reputation label doesn't run yet."}, {"title": "Sense of Time & Deadlines", "tier": "built", "tierLabel": "Minimal, not currently active", "desc": "A very small system exists for characters to feel urgency about an approaching deadline, but it isn't currently active. No calendar, seasons, or day/night cycle exists in this part of the simulation."}, {"title": "Goals, Leads & Obstacles", "tier": "live", "tierLabel": "Live in the simulation", "desc": "Characters maintain a real chain of intent, from a broad goal down to a concrete action, and track both leads (things they've learned about the world) and specific obstacles standing in their way — lacking access, materials, capability, and more. Leads that go unrefreshed gradually become less reliable."}, {"title": "Rumors, Beliefs & Being Proven Wrong", "tier": "live", "tierLabel": "Live in the simulation", "desc": "Characters treat rumors as less certain than things they've witnessed firsthand, and a belief can be gradually undermined by repeated contrary evidence — the mechanism that lets a false rumor be believed at first and slowly fall apart as it's disproven."}, {"title": "Asking Specific People for Information", "tier": "built", "tierLabel": "Built, not yet active", "desc": "A rich, well-designed system exists for a character to seek out the right kind of specialist for a specific question — a guide for directions, a blacksmith for a recipe — pay for the answer, and update how much they trust that source depending on whether the information turned out to be accurate, partially right, wrong, or deliberately deceptive. It only kicks in when a character genuinely needs to know something, never as idle chatter. It's currently switched off in the running simulation, and turning it on alone wouldn't be quite enough — the piece that would actually trigger a specific request for information isn't yet connected in most worlds either."}, {"title": "Memory, Trust Percentages & Limited Capacity", "tier": "live", "tierLabel": "Real in three different forms; only the roughest is live", "desc": "This is a real design goal that's been achieved three separate times, in three different places, at three different levels of completeness — with none of them aware of the other two. One version is live today, but only tracks a rough four-level certainty rating rather than a precise trust percentage. A second, more precise percentage-based version exists and correctly fades in trustworthiness over time if not refreshed, but is currently switched off. A third version — proper short-term memory that discards old information to make room for new, alongside separate long-term memory that only accumulates — is fully built but never runs at all."}, {"title": "Remembering Why Something Went Wrong", "tier": "built", "tierLabel": "Built, never runs", "desc": "A system exists for characters to work out why an attempt failed — lost a fight, failed a search, botched a craft, a group fell apart — and to build up region-by-region familiarity and danger awareness from that experience. Nothing in the running simulation currently triggers it, though, so this kind of learning-from-experience never actually happens today."}, {"title": "Choosing What to Do Next", "tier": "live", "tierLabel": "Live in the simulation", "desc": "Characters choose from a genuinely wide range of activities — combat, gathering, exploring, escorting, and more — richer than a simple fixed quest list, including things like deliberately falling back to regroup with a party."}, {"title": "Big-Picture Decision Making", "tier": "live", "tierLabel": "Live, the largest system in the simulation", "desc": "The single largest, most central piece of decision-making logic in the whole simulation — it's what actually turns a character's goals, group needs, and beliefs into concrete decisions."}, {"title": "Planning Several Steps Ahead", "tier": "built", "tierLabel": "Half-built", "desc": "A system for a character to commit to a short sequence of upcoming actions — train, then craft, then go on a quest — exists and can be read from, but nothing in the simulation currently writes a real multi-step plan into it yet."}, {"title": "Mental Bandwidth & Exhaustion", "tier": "live", "tierLabel": "Live, well-built", "desc": "Smarter, wiser characters can genuinely juggle more goals, remember more leads, and resist distraction more effectively — and being hungry or sleep-deprived measurably shrinks all of that mental bandwidth, exactly as expected."}]}];
+
+function renderCard(c) {
+  return `<div class="card">
+      <div class="card-head"><h3>${c.title}</h3><span class="badge ${c.tier}">${c.tierLabel}</span></div>
+      <p class="desc">${c.desc}</p>
+    </div>`;
+}
+
+SECTIONS.forEach(sec => {
+  const titleEl = document.querySelector(`[data-section-title="${sec.id}"]`);
+  const ledeEl = document.querySelector(`[data-section-lede="${sec.id}"]`);
+  const gridEl = document.querySelector(`[data-section="${sec.id}"]`);
+  if (titleEl) titleEl.textContent = sec.title;
+  if (ledeEl) ledeEl.textContent = sec.lede;
+  if (gridEl) gridEl.innerHTML = sec.cards.map(renderCard).join('\n');
+});
+</script>
