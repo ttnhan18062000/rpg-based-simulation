@@ -47,7 +47,12 @@ engine and the HTTP layer.
 
 ## Acceptance signal for this epic (not yet broken into child tickets)
 
-- CORS config no longer uses the spec-invalid wildcard+credentials combination.
+- ~~CORS config no longer uses the spec-invalid wildcard+credentials combination.~~ **Resolved**
+  (`TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG`, 2026-08-20): `allow_credentials=True`
+  removed from `src/api/server.py`'s `CORSMiddleware` config. Verified no real caller depends on
+  credentialed cross-origin requests — `frontend/`'s `fetch()` calls carry no `credentials`
+  option, and dev traffic is proxied same-origin (`frontend/vite.config.ts`); `dashboard-frontend/`
+  is a separate app targeting a different backend entirely, not this one.
 - At least one auth mechanism gates the API surface.
 - HTTP requests are admitted/throttled/shed according to a mode vocabulary consistent with (and
   ideally reusing) the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL states.

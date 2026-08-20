@@ -69,10 +69,13 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         lifespan=lifespan,
     )
 
+    # allow_credentials intentionally omitted (defaults False): the CORS spec forbids combining
+    # a wildcard origin with credentialed requests, and no real caller sends credentials today
+    # (frontend/'s fetch() calls carry no `credentials` option, and dev traffic is proxied
+    # same-origin) -- see TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
-        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
