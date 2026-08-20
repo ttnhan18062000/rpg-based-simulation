@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: guidelines
 authority: P1
 audience: agent
 ticket_id: TCK-20260820-EXPERIMENTS-PLACEMENT-INTEGRITY-CLEANUP
-phase: open
+phase: done
 date: 2026-08-20
 tags: [documentation, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [documentation, process-improvement]
 Delete fully-shipped `experiments/placement_integrity/` and archive `docs/plans/idea_placement_legality_check.md`
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
