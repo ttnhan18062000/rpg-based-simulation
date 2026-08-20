@@ -1,9 +1,11 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
+maturity: shipped
 date: 2026-07-02
+archived: 2026-08-20
 tags: [observability, simulation-quality, process-isolation, broker-mode, hot-path, decision-trace, epic-proposal]
 ---
 

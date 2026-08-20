@@ -30,7 +30,7 @@ bucket instead. `find_stale_epics` (the hook fire-trigger) never returns a
 blocked candidate. `compute_stale_epics_report` still surfaces blocked
 candidates, separately, in an "Informational: BLOCKED epics" section, so
 genuinely parked work stays visible without re-triggering the idle-activity
-nudge. See docs/plans/epic_staleness_status_aware_epic.md and
+nudge. See docs/plans/archive/epic_staleness_status_aware_epic.md and
 TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC.
 
 Advisory only — mirrors retro_nudge_hook.py's shape (session-scoped state

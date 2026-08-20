@@ -80,7 +80,7 @@ The batch/QA mode doesn't need any of the heavier options yet — the current ap
 
 ## Relationship to Planned Tickets
 
-None. Checked directly against the active SimQ roadmap (`docs/plans/simq_scoring_improvement_roadmap.md`) and the one currently in-progress ticket (`TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`, unrelated) — this idea has no dependency on either and can be picked up independently.
+None. Checked directly against the active SimQ roadmap (`docs/plans/archive/simq_scoring_improvement_roadmap.md`) and the one currently in-progress ticket (`TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`, unrelated) — this idea has no dependency on either and can be picked up independently.
 
 ## Open Questions
 

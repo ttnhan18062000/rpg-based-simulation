@@ -1,10 +1,12 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
+maturity: shipped
 tags: [roadmap, simulation-quality, calibration, corpus, determinism, planning]
 date: 2026-07-13
+archived: 2026-08-20
 source: docs/simulation_quality/current_state.md
 ---
 

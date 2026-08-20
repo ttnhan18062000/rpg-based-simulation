@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC
-phase: open
+phase: done
 date: 2026-08-17
 tags: [testing, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [testing, architecture]
 Codebase navigability & test hygiene: all 4 original items resolved or extracted (2026-08-19)
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -101,7 +101,9 @@ investigated — neither needed an implementation ticket.
       same need).
 - [x] All 4 original items have a documented resolution — 2 extracted to standalone tickets, 2
       resolved directly with no code change needed.
-- [ ] This epic is not closed until the 2 extracted sibling tickets reach `tickets/done/`.
+- [x] This epic is not closed until the 2 extracted sibling tickets reach `tickets/done/` —
+      confirmed 2026-08-20: both `TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT` and
+      `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING` are present in `tickets/done/`.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
@@ -138,5 +140,12 @@ own test plan.
 - This ticket file and `docs/plans/codebase_navigability_hygiene_epic.md` (findings documented)
 
 ## Completion Summary
-(pending — stays open until the 2 extracted sibling tickets reach `tickets/done/`, per this
-ticket's own Acceptance Criteria)
+All 4 original navigability/discoverability items resolved or extracted: item 1
+(`src/lab/workflows.py` split) and item 3 (`tests/unit/domains/` nesting) extracted into
+standalone standard-tier tickets, both now DONE (`TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT`,
+`TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING`); item 2 (`src/observability/mining/` naming
+overlap) and item 4 (`pipeline.py`/`tactical.py` coverage), plus the `tests/helpers/`
+under-utilization question, resolved directly with documented findings, no code change needed.
+Closed 2026-08-20 once the gate condition (both extracted siblings in `tickets/done/`) was
+confirmed satisfied. `docs/plans/codebase_navigability_hygiene_epic.md` archived alongside this
+closure.

@@ -1,9 +1,11 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: developer
+maturity: shipped
 date: 2026-07-30
+archived: 2026-08-20
 tags: [ai, workflows, process-improvement]
 ---
 

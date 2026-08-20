@@ -7,7 +7,7 @@ audience: developer
 
 # SimQ Isolation Overhead — Engine-Process CPU Cost by Mode
 
-TCK-20260702-OBSISO-ISOLATION-PROOF (G5, closing gap of `docs/plans/observability_process_isolation.md`).
+TCK-20260702-OBSISO-ISOLATION-PROOF (G5, closing gap of `docs/plans/archive/observability_process_isolation.md`).
 
 Measures and budgets the engine-process cost of the three SimQ configurations
 Requirement R1 ("engine performance not affected by external components")
@@ -202,7 +202,7 @@ Locked threshold: same 25% band as Phase 1's gate, same margin-above-noise-floor
 
 ## Related
 
-- `docs/plans/observability_process_isolation.md` (G5 — this doc closes it)
+- `docs/plans/archive/observability_process_isolation.md` (G5 — this doc closes it)
 - `docs/parity_ledger/infrastructure.yaml` (`INFRA-318`, `INFRA-319` — the
   routing/scorer-parity fixes this benchmark measures but does not alter)
 - `docs/simulation_quality/quality_scoring_contract.md` line 1410 (reconciled

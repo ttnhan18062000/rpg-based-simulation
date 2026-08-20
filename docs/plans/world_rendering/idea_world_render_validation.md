@@ -64,7 +64,7 @@ Reuses SimQ's exact grade-band vocabulary (`S`/`A`/`B`/`C`/`D`/`F`, same numeric
 
 ## Relationship to Planned Tickets
 
-None. Checked directly against the active SimQ roadmap (`docs/plans/simq_scoring_improvement_roadmap.md`) and the one currently in-progress ticket (`TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`, unrelated) — this idea has no dependency on either and can be picked up independently.
+None. Checked directly against the active SimQ roadmap (`docs/plans/archive/simq_scoring_improvement_roadmap.md`) and the one currently in-progress ticket (`TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`, unrelated) — this idea has no dependency on either and can be picked up independently.
 
 ## Open Questions
 
