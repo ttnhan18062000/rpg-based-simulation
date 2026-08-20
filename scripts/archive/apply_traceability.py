@@ -4,7 +4,7 @@ from pathlib import Path
 from collections import defaultdict
 import subprocess
 
-CHECKLIST = Path("docs/logic_checklist_exhaustive.md")
+CHECKLIST = Path("docs/archive/logic_checklist_exhaustive.md")
 
 def parse_checklist():
     if not CHECKLIST.exists():

@@ -116,7 +116,7 @@ def validate_ledger(file_path):
 
 if __name__ == "__main__":
     # Default to exhaustive checklist
-    checklist_path = "docs/logic_checklist_exhaustive.md"
+    checklist_path = "docs/archive/logic_checklist_exhaustive.md"
     if len(sys.argv) > 1:
         checklist_path = sys.argv[1]
     

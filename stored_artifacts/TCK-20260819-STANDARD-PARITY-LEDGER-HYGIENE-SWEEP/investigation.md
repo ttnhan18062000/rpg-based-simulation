@@ -77,14 +77,21 @@ Confirmed via `git log` + cross-reference, not assumption: this 3,197-line markd
 the direct historical predecessor of today's `docs/parity_ledger/*.yaml` system. Its own already-
 archived design spec, `docs/archive/specs/2026-05-03-checklist-governance-design.md`, describes
 migrating this exact file's legacy items into a `DOMAIN-NNN` stable-ID scheme — the same ID
-pattern (`^[A-Z]+-[0-9]{3}$`) the real ledger's `schema.json` enforces today. Last commit touching
-the checklist file: **2026-07-02** — over 6 weeks stale relative to the parity ledger, which was
-rebuilt again as recently as today. Five support scripts
+pattern (`^[A-Z]+-[0-9]{3}$`) the real ledger's `schema.json` enforces today. **Correction made
+during Review**: this investigation originally claimed the checklist's last commit was 2026-07-02;
+it was actually touched again on 2026-08-19 (commit `280639aa`, unrelated test-path-comment
+updates from `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING` keeping its inline `TEST:` markers
+accurate — see this file's own "Caveat observed live" note below). This does not change the core
+finding: the file received no new content since 2026-05-04, has no Makefile/CI wiring, and is
+superseded by the real ledger. Five support scripts
 (`scripts/validate_checklist.py`, `scripts/ledger_validator.py`, `scripts/remediate_checklist.py`,
 `scripts/report_coverage.py`, `scripts/apply_traceability.py`) are wired into neither `Makefile`
-nor any `.github/workflows/*.yml` job — dead automation. One dangling internal detail:
-`src/engine/rpg_depth.py`'s docstring references `logic_checklist_exhaustive_v2.md` — a filename
-variant that does not exist under that name anywhere in the repo.
+nor any `.github/workflows/*.yml` job — dead automation. **Correction made during Review**: this
+investigation originally claimed one dangling internal reference; the real count, confirmed during
+Review, is **3**: `src/engine/rpg_depth.py`'s docstring, `scripts/certification_long_run.py:154`,
+and `tests/integration/kernel/test_certification_scenarios.py:112` all reference
+`logic_checklist_exhaustive_v2.md` — a filename variant that does not exist under that name
+anywhere in the repo.
 
 **Caveat observed live during this investigation**: the domain-nesting ticket's implementer is
 currently patching `TEST:` path comments inside `logic_checklist_exhaustive.md` to match its test

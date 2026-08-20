@@ -12,7 +12,7 @@ tags: [architecture, testing]
 # TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC
 
 ## Title
-Build codebase-health observatory tooling: baseline target, impact command, historical scorecard
+Build codebase-health observatory tooling: historical scorecard, PR report generator
 
 ## Status
 EPIC_SCOPED
@@ -39,27 +39,44 @@ command design explicitly depends on the boundary tests being hardened first (Ep
   `code-health impact src/engine/pipeline.py` example) are in
   `docs/plans/codebase_health_observatory_tooling_epic.md`. Detailed, investigated child tickets
   are not created yet.
-- When work begins: run `create-tickets` against a proposal document scoped to this epic's items
-  (`make codebase-health-baseline`, `code-health impact <path>` command, historical snapshot
-  file, scorecard), producing investigated child tickets in
+- **(2026-08-19)** Cross-referenced D24's own 11-item master implementation plan (§M) against this
+  session's completed work: Phases 1-2 (7 of 11 items) are now done, and this epic's own stated
+  prerequisite (`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`) is confirmed done — this epic
+  is now genuinely unblocked, not just theoretically scoped. Item 1
+  (`make codebase-health-baseline`) was extracted into its own standalone standard-tier ticket,
+  `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`, once confirmed self-contained (no
+  dependency on the rest of this epic's scope).
+- **(2026-08-19, continued)** Item 2 (`code-health impact <path>` command) was also extracted,
+  into `TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`, once its 3 claimed data sources were
+  individually verified against real, current state (one real implementation gap found — no
+  ready-made graphify CLI verb for "dependents of path X," needs a custom graph traversal; one
+  real data-quality nuance found — `docs/REGISTRY.yaml`'s `related_code_areas` is only 53.3%
+  filled and sometimes holds bare symbol names, not paths). This epic's remaining scope is now
+  only the other 2 items — historical snapshots/scorecard, and the PR/AI report generator — which
+  stay bundled since the report generator is explicitly built on top of the impact command's
+  output shape, and the scorecard's exact dimension set remains an open design decision.
+- When work begins on the remaining 2 items: run `create-tickets` against a proposal document
+  scoped to them, producing investigated child tickets in
   `tickets/todos/codebase-health-observatory-tooling/`.
 
 ## Out of Scope
-- Building any of this before `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` lands, since
-  the impact command explicitly depends on those tests being trustworthy.
 - A single aggregate "health score" — trend arrows across multiple dimensions instead, per the
   source audit's own explicit guidance.
 
 ## Acceptance Criteria
-- [ ] `docs/plans/codebase_health_observatory_tooling_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] Sequencing after Epic G (architecture boundary hardening) is respected when this epic is picked up.
-- [ ] Child tickets are created via `create-tickets` once this epic is chosen for action.
-- [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+- [x] Sequencing after Epic G (architecture boundary hardening) is respected — confirmed done,
+      this epic is unblocked.
+- [ ] Child tickets are created via `create-tickets` once the remaining 2-item scope is chosen for
+      action.
+- [ ] This epic is not closed until `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`,
+      `TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`, and the remaining 2 items' eventual
+      child tickets all reach `tickets/done/`.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
-- TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC (prerequisite — impact command depends on
-  hardened boundary tests)
+- TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC (prerequisite — confirmed done 2026-08-19)
+- TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET (item 1 extracted from here, 2026-08-19)
+- TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND (item 2 extracted from here, 2026-08-19)
 
 ## Related Docs
 - docs/plans/codebase_health_observatory_tooling_epic.md

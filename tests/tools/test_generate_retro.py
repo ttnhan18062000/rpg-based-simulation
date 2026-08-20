@@ -2122,10 +2122,19 @@ def test_correlation_real_corpus_produces_a_real_number():
 # ## Parity Index Read-Path Usage (AC3)
 # ---------------------------------------------------------------------------
 
-def test_parity_index_readpath_call_count_zero_on_current_corpus():
+def test_parity_index_readpath_call_count_matches_real_corpus_state():
+    # Was pinned at 0 (TCK-20260731-PARITY-READPATH-GATE's Gate A review: reviewed GO but not yet
+    # wired into any real call site). compute_parity_index_readpath_call_count()'s own docstring
+    # already anticipated this changing -- "a future real call site needs zero code change here to
+    # start reporting a nonzero number" -- and that happened: TCK-20260819-STANDARD-PARITY-LEDGER-
+    # HYGIENE-SWEEP's implementer and done-checker agents legitimately ran
+    # `tools/parity_index.py health` 3 times via Bash during Implement/Verify (that ticket's whole
+    # subject was the parity-ledger health checker), recording 3 real rows into the committed
+    # agent-monitoring/tools.jsonl corpus this test reads. This is expected drift, not a bug -- see
+    # TCK-20260820-HOTFIX-PARITY-READPATH-BASELINE-DRIFT.
     real_tools = generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
     result = compute_parity_index_readpath_call_count(real_tools)
-    assert result["count"] == 0
+    assert result["count"] == 3
     assert result["derivation"]
 
 

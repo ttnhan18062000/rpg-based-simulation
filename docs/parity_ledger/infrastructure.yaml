@@ -2319,7 +2319,7 @@
 
     '
   proof_type: null
-  test_path: tests/unit/content/test_content_hotpath_guard.py
+  test_path: tests/unit/engine/test_content_hotpath_guard.py
   divergence_note: null
   support_boundary: null
 - id: INFRA-203
@@ -2772,8 +2772,12 @@
   v2_evidence: 'src/lab/results.py (BlockedWorkflowResult, GenerateSimulationSetupResult,
     PrepareSimulationExecutionResult, RegisterSimulationResultResult, CompactSimulationDataResult,
     InvestigateSimulationResultResult, ProposeSimulationEnhancementsResult, UpdateSimulationKnowledgeResult,
-    RevertSimulationKnowledgeResult) + src/lab/workflows.py (all 8 run() signatures
-    annotated with result types)
+    RevertSimulationKnowledgeResult) + src/lab/workflows/generate_simulation_setup.py,
+    src/lab/workflows/prepare_simulation_execution.py, src/lab/workflows/register_simulation_result.py,
+    src/lab/workflows/compact_simulation_data.py, src/lab/workflows/investigate_simulation_result.py,
+    src/lab/workflows/propose_simulation_enhancements.py, src/lab/workflows/update_simulation_knowledge.py,
+    src/lab/workflows/revert_simulation_knowledge.py (all 8 run() signatures annotated
+    with result types)
 
     '
   proof_type: null
@@ -3679,8 +3683,8 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'src/lab/workflows.py::RevertSimulationKnowledgeWorkflow (revert logic,
-    LabKnowledgeRevertError); src/lab/workflows.py::UpdateSimulationKnowledgeWorkflow.run()
+  v2_evidence: 'src/lab/workflows/revert_simulation_knowledge.py::RevertSimulationKnowledgeWorkflow
+    (revert logic, LabKnowledgeRevertError); src/lab/workflows/update_simulation_knowledge.py::UpdateSimulationKnowledgeWorkflow.run()
     (Step 1 files_written/ knowledge_sync_result payload fix: file_hashes dict + decision_log_entry
     echo, the plumbing revert depends on); src/lab/results.py::RevertSimulationKnowledgeResult
 
@@ -4947,9 +4951,12 @@
     \ New dashboard-frontend/src/views/StatsView.tsx renders both domains as stat\
     \ tiles, magnitude bar charts, a 2-series grouped bar chart (tier count vs. done),\
     \ and sortable tables (top agents by call volume, slow runs, incomplete artifacts)\
-    \ \u2014 no new npm dependency added; new src/components/BarChart.tsx/GroupedBarChart.tsx/StatTile.tsx\
-    \ follow the same plain-HTML/CSS convention dashboard-frontend/src/components/GanttBar.tsx\
-    \ already established (no chart library exists in package.json and none was added).\
+    \ \u2014 no new npm dependency added; new `src/components/BarChart.tsx`, `src/components/GroupedBarChart.tsx`,\
+    \ and `src/components/StatTile.tsx` follow the same plain-HTML/CSS convention\
+    \ `dashboard-frontend/src/components/GanttBar.tsx` already established at the time\
+    \ (GanttBar.tsx was later deleted, see INFRA-303's Confirmed-deleted note; the convention\
+    \ it set survives in these three still-live files, no chart library exists in\
+    \ package.json and none was added).\
     \ `Skill(skill: \"dataviz\")` was invoked before any chart component code was\
     \ written; its palette-validation step (scripts/validate_palette.js) was run against\
     \ the dashboard's actual dark chart surface (--color-bg-tertiary #242835, not\

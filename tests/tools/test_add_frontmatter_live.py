@@ -625,10 +625,6 @@ class TestGetFields:
         assert f["status"] == "active"
         assert f["layer"] == "misc"
 
-    def test_loose_logic_checklist(self):
-        f = get_fields(Path("docs/logic_checklist_exhaustive.md"))
-        assert f["layer"] == "guidelines"
-
     def test_loose_optimization_audit_ledger(self):
         f = get_fields(Path("docs/optimization_audit_ledger.md"))
         assert f["layer"] == "performance"

@@ -135,7 +135,6 @@ HEURISTIC_FNS = {
 
 LOOSE_FILES = {
     "docs/README.md":                     dict(status="active", authority="P1", layer="misc",        audience="developer"),
-    "docs/logic_checklist_exhaustive.md": dict(status="active", authority="P1", layer="guidelines",  audience="developer"),
     "docs/optimization_audit_ledger.md":  dict(status="active", authority="P1", layer="performance", audience="developer"),
 }
 

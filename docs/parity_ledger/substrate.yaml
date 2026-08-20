@@ -3862,7 +3862,10 @@
     src/worldmodules/repository.py:1 (WORLD-MOD-004/005) +
     src/worldmodules/utils.py:1 (WORLD-MOD-006/007) +
     src/worldmodules/normalizer.py +
-    src/worldmodules/resolver.py (assemble() — unconditional count-map loops, spawn_region fix) +
+    src/worldassembly/resolver.py (`WorldAssemblyResolver.assemble()` — unconditional count-map
+    loops, spawn_region fix; this ledger previously cited a nonexistent src/worldmodules/resolver.py
+    with a "WorldModuleAssemblyResolver" class name that was never real — corrected here to the
+    actual file/class) +
     TCK-20260614-WORLDMOD-UNIFY (schema unification — schema_version validator removed,
     v2-gated assemble blocks replaced, spawn_region empty-string bug fixed,
     3 catalog regions added) +

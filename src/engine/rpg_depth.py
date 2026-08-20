@@ -5,7 +5,9 @@
 Stamina, Wound/Scar Aftermath, Mob Leash, Terrain Cost, Target Stickiness,
 and Skill Scaling services.
 
-These fill the gaps identified in logic_checklist_exhaustive_v2.md sections:
+These fill the gaps identified in the (now-archived, see docs/archive/logic_checklist_exhaustive.md;
+docs/parity_ledger/ is the sole authoritative parity-tracking mechanism today) predecessor
+checklist's sections:
 - Part 6 Section E (Combat aftermath / wounds / scars / stamina / exhaustion)
 - Section 8 (Mob leash, chase give-up, return-to-camp)
 - Section 7 (Terrain cost in pathfinding)

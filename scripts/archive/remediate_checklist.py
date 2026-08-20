@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-CHECKLIST = Path("docs/logic_checklist_exhaustive.md")
+CHECKLIST = Path("docs/archive/logic_checklist_exhaustive.md")
 
 def remediate():
     if not CHECKLIST.exists():

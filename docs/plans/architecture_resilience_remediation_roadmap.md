@@ -41,12 +41,12 @@ multi-ticket-shaped). No ticket was removed.
 | C — Doc Drift Reconciliation | *(none — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — | — |
 | D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | `docs/plans/redis_stream_resilience_epic.md` | standard | **Resolved** |
 | E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | `docs/plans/epic_staleness_status_aware_epic.md` | hotfix | **Resolved** |
-| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | `docs/plans/http_admission_control_epic.md` | standard | open (gated on deployment plans) |
+| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | `docs/plans/http_admission_control_epic.md` | standard | open (deployment confirmed trusted-network-only 2026-08-19; CORS item extracted) |
 | G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/architecture_boundary_hardening_epic.md` | standard | **Resolved** |
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/error_handling_hygiene_epic.md` | standard | **Resolved** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/determinism_verification_gap_epic.md` | standard | **Resolved** |
 | J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/codebase_navigability_hygiene_epic.md` | epic | open (all 4 items resolved/extracted; awaits 2 sibling tickets reaching done) |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open (unblocked — prerequisite Epic G done; 2 of 4 items extracted) |
 
 **(2026-08-19)** Three new tickets extend this tree, plus one item resolved without a ticket:
 - `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING` — Epic J's item 3 (domains test-dir placement),
@@ -193,10 +193,14 @@ never returns from; `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` no longer surfa
 
 ### Epic F — HTTP-Layer Admission Control & Auth
 **Priority: P2, gate explicitly on deployment plans**
+**(2026-08-19)** Deployment-plan decision confirmed by the requester: this API surface stays on a
+trusted network, no public/untrusted exposure planned. Auth and admission control (the two bullets
+below) stay explicitly deferred, not investigated further, until that changes.
 
 - No rate limiting, no authentication, no per-client admission control on any REST endpoint
   (`src/api/server.py` registers only `CORSMiddleware` + `GZipMiddleware`).
-- `CORSMiddleware(allow_origins=["*"], allow_credentials=True)` is a spec-invalid combination —
+- **(2026-08-19) Extracted to `TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG`.**
+  `CORSMiddleware(allow_origins=["*"], allow_credentials=True)` is a spec-invalid combination —
   fix regardless of exposure plans, since it signals unreviewed middleware config even though
   browsers reject the actual credentialed-wildcard case today.
 - Extend the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary
@@ -314,14 +318,20 @@ still waiting on.
 
 ### Epic K — Codebase Health Observatory Tooling
 **Priority: P3, deliberately built last**
+**(2026-08-19)** Its own prerequisite (Epic G) is confirmed done — this epic is now genuinely
+unblocked, not just theoretically scoped.
 
-- `make codebase-health-baseline`: permanent LoC/churn snapshot target, excluding known
+- **(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`.**
+  `make codebase-health-baseline`: permanent LoC/churn snapshot target, excluding known
   append-only process files (`agent-monitoring/*.jsonl`, `tickets/working_log.csv`,
   `docs/REGISTRY.yaml`) by name/pattern — without this exclusion, every report is dominated by
   expected bookkeeping churn, not real instability signal.
-- `code-health impact <path>` command: composable almost entirely from data that already exists
+- **(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`.**
+  `code-health impact <path>` command: composable almost entirely from data that already exists
   (`graphify-out/` edge data, `tests/architecture/` boundary tests, `docs/REGISTRY.yaml`'s
-  `related_code_areas` field) — full worked design in D24 §L.
+  `related_code_areas` field) — full worked design in D24 §L. Extracted once each data source was
+  individually verified (found `graphify` needs a custom traversal, no ready CLI verb; found
+  `related_code_areas` only 53.3% filled with mixed path/symbol shapes).
 - Historical metric snapshots (append-only file, same pattern as `agent-monitoring/runs.jsonl`)
   + a multi-dimension scorecard (trend arrows, not a single score).
 - PR/AI change-impact report generator, built on top of the impact-model command above.
@@ -340,8 +350,8 @@ still waiting on.
   the one piece of genuinely new scope.
 - **Epic E is small enough to knock out opportunistically** — one hook, one conditional check,
   motivated by a bug this exact session watched fire repeatedly.
-- **Epic F is explicitly gated on deployment plans** by both audits — do not front-load auth/rate
-  work if this system stays on a trusted network.
+- **Epic F is explicitly gated on deployment plans** by both audits — **confirmed 2026-08-19**:
+  this system stays on a trusted network, so auth/rate work stays deferred, not front-loaded.
 - **Epics I, J, K are all P3 and explicitly conditional** in their source audits ("only worth
   doing if...", "targeted read required before...", "deliberately built last") — none should be
   picked before A/B/D/E without a specific reason.

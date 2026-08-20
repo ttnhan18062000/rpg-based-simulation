@@ -1734,7 +1734,7 @@ evidence for this 2026-08-11 snapshot is:
 | Document authority/lifecycle vocabulary | `docs/REGISTRY.yaml`, `tools/generate_registry.py`, `tools/validate_frontmatter.py` |
 | Graphify current graph and extraction mix | `graphify-out/GRAPH_REPORT.md`, `graphify-out/manifest.json` |
 | Existing context-efficient retrieval initiative | `tickets/backlogs/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md` and its linked decision docs |
-| Approved simulation knowledge writes and revert | `src/lab/workflows.py`, `docs/ai/workflows.md` §`update-knowledge-store` |
+| Approved simulation knowledge writes and revert | `src/lab/workflows/` (per-workflow files), `docs/ai/workflows.md` §`update-knowledge-store` |
 
 ## 27. Follow-Up Clarification Map
 

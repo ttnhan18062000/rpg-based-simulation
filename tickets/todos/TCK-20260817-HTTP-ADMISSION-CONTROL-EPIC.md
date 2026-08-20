@@ -38,9 +38,15 @@ system stays on a trusted network.
 ## Scope
 Full findings, including a full mode-vocabulary design reusing the observability layer's existing
 NORMAL/PRESSURE/DEGRADED/SURVIVAL states, are in `docs/plans/http_admission_control_epic.md`.
-Concrete scope:
-- Fix the CORS `allow_origins`/`allow_credentials` configuration regardless of the broader auth
-  decision — a pure config correctness fix.
+
+**(2026-08-19)** Deployment-plan decision confirmed by the requester: this API surface **stays on
+a trusted network**, no public/untrusted exposure planned. Per this ticket's own gating criterion,
+auth and admission control stay explicitly deferred — not investigated further, not scoped into
+child tickets, until that decision changes. The one item that was always independent of the
+deployment question — the CORS config fix — was extracted into
+`TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG`.
+
+Remaining scope (deferred, not actionable until the deployment decision changes):
 - Add authentication to the API surface before any deployment beyond a trusted network.
 - Add HTTP-layer admission control by extending the existing NORMAL/PRESSURE/DEGRADED/SURVIVAL
   vocabulary to the HTTP layer rather than inventing a new scheme; a single in-process
@@ -51,14 +57,17 @@ Concrete scope:
 - Starting this work before there's an actual deployment plan beyond a trusted network.
 
 ## Acceptance Criteria
-- [ ] CORS config no longer uses the spec-invalid wildcard+credentials combination.
-- [ ] At least one auth mechanism gates the API surface.
+- [x] CORS config item extracted — see `TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG`.
+- [ ] At least one auth mechanism gates the API surface — deferred, not actionable until the
+      deployment decision changes.
 - [ ] HTTP requests are admitted/throttled/shed according to a mode vocabulary consistent with
-      the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL states.
-- [ ] A deployment-plan decision gates when this ticket is actually picked up for implementation.
+      the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL states — deferred.
+- [x] Deployment-plan decision confirmed (2026-08-19): trusted network only. This epic stays open
+      but dormant until that changes.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
+- TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG (item 1 extracted from here, 2026-08-19)
 
 ## Related Docs
 - docs/plans/http_admission_control_epic.md
@@ -73,9 +82,10 @@ None yet.
 - src/api/server.py
 
 ## Assumptions / Open Questions
-- The actual deployment target (trusted network vs. public exposure) determines urgency — not
-  yet decided by the requester.
-- Auth mechanism choice (API key, OAuth, etc.) is an open decision for Plan phase.
+- **(2026-08-19) Resolved:** deployment target confirmed as trusted-network-only by the requester.
+  Re-open auth/admission-control investigation only if that changes.
+- Auth mechanism choice (API key, OAuth, etc.) remains an open decision for whenever this epic is
+  actually picked up.
 - **Downgraded from epic to standard tier (2026-08-18):** one of 10 sub-epics under
   `TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC`; the borderline case of the review — bigger than
   the other downgrades (auth is a real subsystem), but CORS+auth+admission-control-vocabulary

@@ -15,6 +15,13 @@ tags: [ai, documentation]
 - The "fully bare entries" SQL scan (all evidence fields NULL) returns 0 rows, down from 2.
 - Existing parity-ledger test suite (`tests/tools/test_parity_index_baseline.py` and any
   `tests/tools/test_parity_*.py`) still passes.
+- **Required, not covered by the above**: run `tools/parity_ledger_writer.py::validate_entry()`
+  (or equivalent schema check) directly against `docs/parity_ledger/town_resource.yaml`'s full
+  entry list after the fix — `build()` does not itself enforce `schema.json`'s `allOf` rules, so
+  passing `build` and the bare-entries scan does not prove schema compliance. If `TOWN-040`/
+  `TOWN-041` were removed, confirm they no longer appear at all (trivially compliant). If either
+  was kept instead, confirm it has a non-null, non-empty `test_path` (mandatory for `priority: P0`
+  regardless of `status`) and that `test_path` points at a real, passing test.
 
 ## Step 2 verification (absent_file triage)
 - Re-run `tools/parity_index.py health` after fixes; `absent_file` count is lower than the
@@ -27,13 +34,24 @@ tags: [ai, documentation]
 
 ## Step 3 verification (archive)
 - `docs/logic_checklist_exhaustive.md` no longer exists at its old path; exists under
-  `docs/archive/`.
+  `docs/archive/`, with frontmatter `status: archive` / `authority: P2` / `audience: historical` /
+  `layer: guidelines` / `original_date: 2026-05-04` (matching every other `docs/archive/*.md`
+  file's convention).
+- `docs/REGISTRY.yaml` (regenerated at Finalize) lists the file at its new path with `status:
+  archive` — not still showing `status: active` at the old path.
 - `grep -rn "logic_checklist_exhaustive"` across the live (non-archive, non-historical-ticket)
   tree returns only the new archive path and legitimately historical references
   (`tickets/done/`, `stored_artifacts/`) — no live script or doc still points at the old path.
+  This must include `tools/add_frontmatter_live.py`'s `LOOSE_FILES` entry and
+  `docs/plans/engine_future_epics_roadmap.md:43` — both confirmed live during Review as
+  additional references investigation.md's original sweep missed.
+- `tests/tools/test_add_frontmatter_live.py::test_loose_logic_checklist` still passes against
+  whatever `add_frontmatter_live.py` change was made (update the test in step, not after).
 - Any script moved to `scripts/archive/` (vs. deleted) still parses as valid Python (no partial
   edit left it broken) even though it's no longer wired to anything.
-- `src/engine/rpg_depth.py`'s `logic_checklist_exhaustive_v2.md` reference no longer dangles.
+- All 3 `logic_checklist_exhaustive_v2.md` references no longer dangle: `src/engine/rpg_depth.py`,
+  `scripts/certification_long_run.py`, `tests/integration/kernel/test_certification_scenarios.py`
+  (investigation.md's original count of 1 was incomplete — confirmed 3 during Review).
 
 ## Acceptance-criteria mapping
 | Acceptance criterion | Verified by |
