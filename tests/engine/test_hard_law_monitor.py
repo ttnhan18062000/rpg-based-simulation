@@ -234,8 +234,9 @@ def test_seed42_entity6_entity14_tile_27_38_collision():
     cover the detection mechanism itself via a synthetic collision, independent
     of this real-world case being fixed.
 
-    Originating evidence: docs/plans/idea_placement_legality_check.md,
-    experiments/placement_integrity/PROPOSAL.md.
+    Originating evidence: docs/plans/archive/idea_placement_legality_check.md
+    (the originating experiments/placement_integrity/ sandbox was deleted after
+    this idea shipped, per TCK-20260820-EXPERIMENTS-PLACEMENT-INTEGRITY-CLEANUP).
     """
     from src.worldbuilding.repository import WorldRepository
     from src.worldbuilding.compiler import WorldCompiler
