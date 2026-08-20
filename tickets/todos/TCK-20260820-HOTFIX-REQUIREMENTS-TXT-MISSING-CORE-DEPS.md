@@ -40,15 +40,33 @@ particular is a real runtime dependency of `RedisStreamAdapter`/`RedisStreamCons
 (`src/observability/stream/`) — the exact subsystem `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC`
 modified this session.
 
+**Production is confirmed unaffected** — checked directly: `backend.Dockerfile` (used by the
+`backend`, `ai_worker`, and `watchdog` `docker-compose.yml` services) installs via
+`pip install .` against `pyproject.toml`, never touching `requirements.txt` at all. This gap is
+CI/local-dev-only, not a production risk — narrows the blast radius but doesn't remove the need
+to fix it, since CI is meant to be a faithful proxy for the real dependency set.
+
+**Exact pins to add**, sourced from `uv.lock` (the canonical resolver output, not guessed):
+`redis==7.3.0`, `python-json-logger==4.0.0` — both also match what's currently importable in the
+local dev venv.
+
 ## Scope
-- Add `redis` and `python-json-logger` to `requirements.txt`, pinned consistently with the rest
-  of the file's existing pin style (`==` exact versions).
-- Do a full audit of `requirements.txt` against `pyproject.toml`'s complete core dependency list
-  (not just these two) to confirm no other core dependency is similarly missing — this ticket's
-  own investigation checked all 11 core deps and found exactly these 2 missing, but a full
-  systematic pass (not manual sampling) should confirm nothing else was missed.
+- Add `redis==7.3.0` and `python-json-logger==4.0.0` to `requirements.txt` (exact pins per
+  `uv.lock`, matching the file's existing `==` pin style).
 - Verify a genuinely fresh install (`pip install -r requirements.txt` in a clean venv, not the
   existing local dev venv) succeeds and the previously-missing packages import correctly.
+
+**(2026-08-20) Full audit now complete** — all of `pyproject.toml`'s dependency groups checked
+against their respective requirements files, not just core:
+- All 11 core deps: exactly `redis`/`python-json-logger` missing (this ticket's original finding).
+- `[dev]` extras: `pytest`/`httpx`/`hypothesis` present in `requirements.txt`; `mypy`'s absence is
+  intentional (CI has its own dedicated `pip install mypy` step in the `typecheck` job);
+  `memray`'s absence is intentional (its own test file's docstring confirms it's deliberately
+  lazy-imported, "importable without memray"); `testcontainers[redis]` is absent but also
+  genuinely unused anywhere in the codebase — a different problem, not a missing-install gap, spun
+  into its own ticket: `TCK-20260820-HOTFIX-PHANTOM-TESTCONTAINERS-DEPENDENCY`.
+- `[knowledge]` extras: fully present in `requirements-knowledge.txt`, no gap.
+- `[search-mcp]` extras (`mcp`): present in `requirements.txt`, no gap.
 
 ## Out of Scope
 - Reconciling `requirements-knowledge.txt`'s separate, deliberately-scoped package list — that
@@ -59,8 +77,9 @@ modified this session.
 
 ## Acceptance Criteria
 - [ ] `redis` and `python-json-logger` are present in `requirements.txt`.
-- [ ] A full audit confirms no other `pyproject.toml` core dependency is missing from
-      `requirements.txt`.
+- [x] A full audit confirms no other `pyproject.toml` dependency group has a similar gap — done
+      2026-08-20, see Scope. Only `testcontainers` surfaced, and it's a different problem (phantom
+      dependency), tracked separately.
 - [ ] `pip install -r requirements.txt` in a genuinely clean venv succeeds and both packages
       import successfully afterward.
 
@@ -69,6 +88,10 @@ modified this session.
   CI failure; context only, this ticket is a new, distinct gap)
 - TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC (the subsystem that made `redis`'s absence from
   `requirements.txt` a live risk, not just a hygiene issue)
+- TCK-20260820-HOTFIX-PHANTOM-TESTCONTAINERS-DEPENDENCY (surfaced by this ticket's own full-audit
+  follow-up, different problem, tracked separately)
+- TCK-20260820-HOTFIX-DOCKERFILE-STALE-LIBRDKAFKA-BUILD-DEP (sibling finding from the same
+  production-vs-CI verification pass)
 
 ## Related Docs
 - docs/guidelines/agent_working_environment.md
@@ -81,7 +104,8 @@ None — hotfix tier, no staging artifacts required.
 - pyproject.toml (reference only, not changed)
 
 ## Assumptions / Open Questions
-- Why this hasn't already caused a visible CI failure is not fully explained — possibly the
+- Why this hasn't already caused a visible CI failure is still not fully explained (production is
+  now confirmed unaffected, see Request Summary, but CI is a separate question) — possibly the
   currently-exercised fast-lane test paths never actually import `redis`/`python-json-logger` at
   collection time, or CI's own venv caching happens to retain a prior install. Not required to
   root-cause the absence of failure, only to close the gap.
