@@ -24,10 +24,17 @@ over time today.
 
 ## Scope for the eventual `create-tickets` pass
 
-- **(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`.**
+- ~~**(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`.**
   `make codebase-health-baseline`: a permanent target producing the LoC/churn snapshot this
-  session ran ad hoc, with the append-only-file exclusions baked in from the start. Extracted once
-  confirmed self-contained (no dependency on the rest of this epic's scope) — this epic's own
+  session ran ad hoc, with the append-only-file exclusions baked in from the start.~~ **Resolved**
+  (`TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`, 2026-08-19): built
+  `tools/codebase_health_baseline.py` + `make codebase-health-baseline`, computing the LoC/churn/
+  dependency table fresh from `git ls-files`/`git log`/the live filesystem on every run, with the
+  `agent-monitoring/*.jsonl`/`tickets/working_log.csv`/`docs/REGISTRY.yaml` churn exclusion
+  implemented as a real git pathspec (not a post-hoc filter) and verified by a synthetic-noise
+  fixture test. On-demand only, not CI-wired, matching the `status-drift-check`/
+  `agent-monitoring-epic-staleness` precedent this epic's Problem section already cites. Extracted
+  once confirmed self-contained (no dependency on the rest of this epic's scope) — this epic's own
   prerequisite (Epic G) was also confirmed done at the same time, unblocking the epic as a whole.
 - **(2026-08-19) Extracted to `TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`.**
   `code-health impact <path>` command: composable from `graphify-out/`'s existing edge data,
