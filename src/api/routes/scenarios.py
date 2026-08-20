@@ -14,6 +14,10 @@ from src.api.presenters.scenarios import ScenarioPresenter
 
 router = APIRouter(prefix="/scenarios", tags=["Scenarios"])
 
+# Allowed base directory for ad-hoc restore spec files, mirroring the
+# repo-relative "checkpoints/" convention used for checkpoint paths below.
+ALLOWED_SPEC_BASE_DIR = Path("scenario_specs")
+
 
 class CheckpointRequest(BaseModel):
     name: str
@@ -21,6 +25,23 @@ class CheckpointRequest(BaseModel):
 
 class RestoreRequest(BaseModel):
     spec_path: Optional[str] = None
+
+
+def _resolve_spec_path(spec_path: str) -> Path:
+    """Resolve spec_path and enforce containment inside ALLOWED_SPEC_BASE_DIR.
+
+    Raises HTTPException(400) before any filesystem existence check, so an
+    out-of-bounds path can't be used as a file-existence oracle.
+    """
+    base_resolved = ALLOWED_SPEC_BASE_DIR.resolve()
+    candidate = Path(spec_path)
+    resolved = (base_resolved / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
+    if not resolved.is_relative_to(base_resolved):
+        raise HTTPException(
+            status_code=400,
+            detail="spec_path must resolve inside the allowed scenario spec directory",
+        )
+    return resolved
 
 
 @router.get("/{scenario_id}/status")
@@ -56,8 +77,9 @@ async def restore_checkpoint(scenario_id: str, checkpoint_name: str, body: Optio
 
     spec_path = body.spec_path if body is not None else None
     if spec_path is not None:
+        resolved_spec_path = _resolve_spec_path(spec_path)
         try:
-            with open(spec_path, "r", encoding="utf-8") as f:
+            with open(resolved_spec_path, "r", encoding="utf-8") as f:
                 raw = yaml.safe_load(f)
             from src.scenarios.schema import SimulationScenarioDefinition
             spec = SimulationScenarioDefinition(**raw)

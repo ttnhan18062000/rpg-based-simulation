@@ -126,6 +126,14 @@ Restores a scenario from a checkpoint file and re-registers the restored service
 
 If `spec_path` is omitted or body is absent, a sentinel `SimulationScenarioDefinition` is constructed from the `scenario_id` path parameter.
 
+**`spec_path` containment:** if provided, `spec_path` is resolved relative to the fixed
+`ALLOWED_SPEC_BASE_DIR` (`scenario_specs/`, repo-root-relative) and must remain inside that
+directory after resolution — a `../`-style traversal or an absolute path pointing outside it is
+rejected with HTTP 400 before any filesystem existence check, so the rejection response does not
+leak whether the target file exists (TCK-20260820-HOTFIX-SPEC-PATH-SANITIZE). This check runs
+before `open()` is ever called; it is a path-containment check, not `sanitize_id()` — `spec_path`
+is a path, not a bare identifier.
+
 **Response (200):**
 ```json
 {
@@ -135,8 +143,8 @@ If `spec_path` is omitted or body is absent, a sentinel `SimulationScenarioDefin
 ```
 
 **Errors:**
-- `400` — Spec file invalid or `spec_id` mismatch (`ValueError` from `ScenarioCheckpointer.restore`).
-- `404` — Spec file not found, or checkpoint file not found (`FileNotFoundError`).
+- `400` — `spec_path` resolves outside `ALLOWED_SPEC_BASE_DIR`, spec file invalid, or `spec_id` mismatch (`ValueError` from `ScenarioCheckpointer.restore`).
+- `404` — Spec file not found (only checked once the path is confirmed in-bounds), or checkpoint file not found (`FileNotFoundError`).
 
 **Post-restore behaviour:** On success, the restored service is re-registered under the same `scenario_id` via `scenario_registry.register()`.
 
