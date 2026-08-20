@@ -2536,14 +2536,26 @@
     \ shapes all responses; no raw domain objects returned (INFRA-134, INFRA-135).\
     \ key_metrics always {} (INFRA-136). Scenario registry (src/engine/scenario_registry.py)\
     \ maps scenario IDs to live ScenarioRuntimeService instances. Restore re-registers\
-    \ restored service under same scenario_id."
+    \ restored service under same scenario_id. restore's spec_path is resolved and\
+    \ checked for containment inside the fixed ALLOWED_SPEC_BASE_DIR (scenario_specs/)\
+    \ before any open() call \u2014 an out-of-bounds path (traversal or absolute)\
+    \ is rejected with HTTP 400 prior to any filesystem existence check, closing the\
+    \ file-existence oracle (TCK-20260820-HOTFIX-SPEC-PATH-SANITIZE, finding D22-F2)."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/api/routes/scenarios.py + src/api/presenters/scenarios.py + src/engine/scenario_registry.py
-    + docs/engine/scenario_runtime_contract.md
+  v2_evidence: 'src/api/routes/scenarios.py::_resolve_spec_path (containment check:
+    Path.resolve() + is_relative_to(ALLOWED_SPEC_BASE_DIR.resolve()), raises HTTPException(400)
+    before any existence check) + src/api/routes/scenarios.py::restore_checkpoint
+    (call site, spec_path None branch unaffected) + src/api/presenters/scenarios.py
+    + src/engine/scenario_registry.py + docs/engine/scenario_runtime_contract.md'
   proof_type: feature
   test_path: tests/api/test_scenario_runtime_api.py::test_status_endpoint_returns_live_state
+    + tests/api/test_scenario_runtime_api.py::test_restore_endpoint_accepts_in_bounds_spec_path
+    + tests/api/test_scenario_runtime_api.py::test_restore_endpoint_rejects_traversal_spec_path
+    + tests/api/test_scenario_runtime_api.py::test_restore_endpoint_rejects_absolute_spec_path_outside_base
+    + tests/api/test_scenario_runtime_api.py::test_restore_endpoint_containment_rejection_closes_existence_oracle
+    + tests/api/test_scenario_runtime_api.py::test_restore_endpoint_default_spec_branch_unaffected_by_containment
   divergence_note: null
   support_boundary: null
 - id: INFRA-217
