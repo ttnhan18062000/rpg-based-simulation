@@ -84,6 +84,78 @@ session notes, not duplicated here). Summary relevant to this epic's design:
   already requires. Proven compatible with real seed-varied terrain generation, not a novel
   constraint being invented here.
 
+## 2026-08-21 Deeper Investigation
+
+Follow-up pass, read-only, into the world-module system beyond the initial root-cause trace above.
+Full detail; corrects two line-number citations above and narrows/refines Scope below.
+
+**Module survey (all 20 real modules under `data/content/world_modules/`, exact counts)**: 3/20
+have more than one region — `forest_warden_grove` (2 regions, both `terrain: forest`, edge-adjacent
+so they union into one contiguous rectangle, not two components), `nomadic_herd` (2 regions,
+`plain`+`forest` — the only multi-region module with >1 distinct terrain), `wolf_den_near_forest` (2
+regions, both `terrain: forest`, bounds `[45,10,90,55]` and `[70,30,105,70]` — these **overlap**,
+not a clean disjoint pair). 2/20 modules declare zero regions (`forest_deep_ecology`,
+`hero_adventurers` — population/resource-only contributions). The remaining 15/20 are strictly
+one-region-one-rectangle. Even the 3 modules already attempting multi-part biomes do it by unioning
+axis-aligned rectangles of one terrain string — never noise — which independently confirms the root
+cause at the content-authoring level, not just the compiler level.
+
+**`WorldModuleSpec`/`ModuleParameterSpec` schema** (`src/worldmodules/schema.py:16-97`) — frozen
+Pydantic models, no enum constraint on `RegionRecipeSpec.terrain`/`RegionSpec.terrain` (plain
+`Optional[str]` in both `src/worldbuilding/recipe.py:14` and `src/worldbuilding/schema.py:33`), so
+heterogeneous per-tile terrain within one region is already schema-legal today — no loosening
+needed beyond adding the new noise-fill field. Grepped the entire
+`worldgeneration`/`worldbuilding`/`worldassembly`/`worldmodules` tree for "noise|variant|shape|
+pattern": zero relevant hits — no existing hook, aspirational or otherwise.
+
+**`ModuleScorer.score()`** (`src/worldgeneration/scorer.py:31-173`) — re-verified line-by-line: pure
+function of `intent` fields and static `module.*` attributes, zero `random`/RNG/seed references.
+Reconfirms deterministic module *selection* precisely, independent of the prior investigation.
+
+**`WorldModuleRepository`** (`src/worldmodules/repository.py`) — loads via unsorted `os.walk`
+(filesystem-order-dependent iteration, though lookup is by `module_id` key so this doesn't affect
+correctness); validates each file, raises on duplicate `module_id`. No RNG. Out of this epic's
+blast radius.
+
+**Biome-resource validator — resolved open question**: `CatalogValidator._validate_biome_relations()`
+(`src/content/validator.py:532-550`) operates only on static catalog-level `biome_id` references
+(theme/material/faction), never on compiled per-tile terrain. **Confirmed: needs no change** for the
+noise-fill mechanism, since it only ever selects among terrain strings already valid in the catalog.
+
+**Real pipeline, generate → resolve → compile, precisely traced**: `ProceduralCompositionGenerator.
+generate()` writes to `data/content/world_compositions/generated/{world_id}.yaml`
+(`src/worldgeneration/generator.py:149-153`). A **manual, non-automatic** step then copies/extends
+that file into `data/worlds/{world_id}/world.yaml` — confirmed via direct diff against
+`generated_frontier_3_42.yaml`, which shows hand-added fields (`faction_tension_overrides`,
+`information_source_profiles`, `pending_information_responses`) absent from the generator's raw
+output. CLI `resolve` (`src/worldbuilding/cli.py:135-174`) then produces
+`data/worlds/{id}/resolved/world.resolved.yaml` + `compile_context.json` via
+`WorldAssemblyResolver.assemble()`; CLI `compile` (`cli.py:217+`) consumes those and calls
+`WorldCompiler.compile(spec, seed, context)`. **Corrected citation**: the flat-fill loop is at
+`src/worldbuilding/compiler.py:205-215` (not 211-221 as first cited) — the real loop also
+bounds-clamps to topology width/height and sets `town_tiles` membership from `r_spec.type=="town"`
+(independent of terrain), both of which any noise-fill change must preserve.
+
+**New open design question this pass surfaced**: `compile()` instantiates exactly one
+`DeterministicRNG(seed)` (`compiler.py` line ~199) shared by the region loop *and* all downstream
+entity/resource-placement draws in the same call. A noise-fill mechanism reusing this RNG (as
+originally planned) must fix precisely where in that draw sequence it consumes randomness, or
+unrelated (non-opted-in) worlds' golden-hash regression tests could shift due to RNG-stream drift.
+This is a real sequencing decision, not a detail — Scope item 2 below is updated to call it out
+explicitly.
+
+**Test coverage**: `tests/unit/worldbuilding/test_world_compiler.py` (29 tests) has no assertion on
+terrain-fill *shape* anywhere; `tests/certification/test_world_compile_determinism.py::
+test_compiler_seeding_determinism` only asserts `state_hash` equality across two same-seed compiles.
+No existing test locks in flat-fill as a contract beyond overall hash determinism — the new
+golden-hash test (Scope item 4) is genuinely new coverage, not a rewrite of anything existing.
+
+**Net effect on scope**: narrows more than it expands. `WorldModuleRepository`, `ModuleScorer`, and
+`CatalogValidator._validate_biome_relations()` are all confirmed out of the noise-fill's blast
+radius — no child ticket needs to touch them. The one real addition is the RNG-draw-sequencing
+decision above, now folded into Scope item 2, plus the `wolf_den_near_forest` region-overlap detail
+folded into Scope item 3.
+
 ## Scope for the eventual `create-tickets` pass
 
 Not created yet — this epic is scope-only. Prospective child tickets:
@@ -94,10 +166,15 @@ Not created yet — this epic is scope-only. Prospective child tickets:
 2. **Extend `WorldCompiler.compile()`'s region-painting loop** to consult a seeded noise field
    (reusing `DeterministicRNG`, already used elsewhere in this pipeline) when a region declares
    variants, thresholding into per-tile terrain types within the region's existing bounds —
-   modeled on Terraria's per-biome noise pass, not a full heightmap rewrite.
+   modeled on Terraria's per-biome noise pass, not a full heightmap rewrite. Must also settle
+   exactly where in `compile()`'s single shared `DeterministicRNG` draw sequence the noise-fill
+   draws happen relative to existing entity/resource-placement draws, so unrelated worlds' golden
+   hashes don't shift (2026-08-21 finding above).
 3. **Update at least one real world module** (e.g. `wolf_den_near_forest`, the FOREST-type module
    the rendering epic's own corpus sweep flagged as the most severe composite-rectangle offender)
-   to use the new mechanism, as a real, verifiable proof rather than a purely synthetic test.
+   to use the new mechanism, as a real, verifiable proof rather than a purely synthetic test. Its
+   two existing regions genuinely overlap (`[45,10,90,55]`, `[70,30,105,70]`) rather than being
+   disjoint — the implementation must handle paint-order/overwrite semantics for this case.
 4. **Golden-hash determinism regression test**: same seed still produces bit-identical terrain
    (the noise fill must be seeded and deterministic, not merely "more random").
 5. **Housekeeping note** (likely a small hotfix, not part of this epic's core scope): investigate
@@ -125,7 +202,8 @@ Not created yet — this epic is scope-only. Prospective child tickets:
   measures exactly the symptom this epic addresses at the root. Cross-reference, not a dependency
   in either direction.
 - `src/worldbuilding/recipe.py` (`RegionRecipeSpec`) — the schema this epic extends.
-- `src/worldbuilding/compiler.py:211-221` — the exact flat-fill loop this epic changes.
+- `src/worldbuilding/compiler.py:205-215` — the exact flat-fill loop this epic changes (corrected
+  line range, 2026-08-21 pass).
 - `src/worldassembly/resolver.py:101,795` — the passthrough this epic's new field must also flow
   through unchanged for modules that don't opt in.
 - `src/worldgeneration/generator.py` (`ProceduralCompositionGenerator`, the real live generator)

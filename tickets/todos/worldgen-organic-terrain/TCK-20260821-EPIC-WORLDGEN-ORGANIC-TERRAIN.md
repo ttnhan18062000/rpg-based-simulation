@@ -37,10 +37,24 @@ root cause is fully traced through live code (not re-investigated here — see
 selects modules deterministically by intent (never by seed) and seed-samples only each module's
 declared numeric/enum parameters, never terrain shape; `WorldAssemblyResolver` passes
 `grid_bounds`/`terrain` straight through unchanged; and `WorldCompiler.compile()`'s region-painting
-loop (`src/worldbuilding/compiler.py:211-221`) flat-fills the entire bounding box with that one
-terrain string — which mechanically guarantees a perfect rectangle given rectangular input. This
+loop (`src/worldbuilding/compiler.py:205-215`, corrected line range from a 2026-08-21 deeper pass —
+see plan doc) flat-fills the entire bounding box with that one terrain string — which mechanically
+guarantees a perfect rectangle given rectangular input. This
 epic is scope-only: it tracks a breakdown of child tickets, each independently scoped and
 investigated when picked up. This ticket does not implement anything itself.
+
+**2026-08-21 deeper investigation** (full report in the plan doc) surveyed all 20 real world
+modules, the full `WorldModuleSpec`/`ModuleScorer`/`WorldModuleRepository` machinery, the
+biome-resource content validator, and the real generate→resolve→compile pipeline end to end.
+Bottom line: confirms the root cause and narrows true scope (no change needed to
+`WorldModuleRepository`, `ModuleScorer`, or `CatalogValidator._validate_biome_relations()` — all
+verified out of the noise-fill's blast radius) while surfacing one real open design question not
+previously called out: `WorldCompiler.compile()` instantiates a single shared `DeterministicRNG`
+before the region loop, consumed by later entity/resource-placement draws in the same call — the
+noise-fill mechanism must fix exactly where in that draw sequence it consumes randomness, or
+golden-hash regression tests for *unrelated, non-opted-in* worlds could shift. See plan doc's
+"2026-08-21 Deeper Investigation" section for full detail, including the exact module survey counts
+and the `wolf_den_near_forest` region-overlap detail Scope item 3 must account for.
 
 External precedent (Dwarf Fortress, RimWorld, Terraria, Caves of Qud — full findings in the plan
 doc) confirms two things: (1) this project's current fully-fixed-geometry approach is a legitimate,
@@ -60,10 +74,16 @@ Prospective child tickets (each independently scoped/investigated later):
 2. **Extend `WorldCompiler.compile()`'s region-painting loop** to consult a seeded noise field
    (reusing `DeterministicRNG`, already used elsewhere in this pipeline) when a region declares
    variants, thresholding into per-tile terrain types within the region's existing bounds — modeled
-   on Terraria's per-biome noise pass, not a full heightmap rewrite.
+   on Terraria's per-biome noise pass, not a full heightmap rewrite. Must also settle exactly where
+   in `compile()`'s single shared `DeterministicRNG` draw sequence the noise-fill draws happen,
+   relative to existing entity/resource-placement draws, so unrelated worlds' golden hashes don't
+   shift (see 2026-08-21 investigation, plan doc).
 3. **Update at least one real world module** (e.g. `wolf_den_near_forest`, the FOREST-type module
-   the rendering epic's own corpus sweep flagged as the most severe composite-rectangle offender)
-   to use the new mechanism, as a real, verifiable proof rather than a purely synthetic test.
+   the rendering epic's own corpus sweep flagged as the most severe composite-rectangle offender) to
+   use the new mechanism, as a real, verifiable proof rather than a purely synthetic test. Note:
+   `wolf_den_near_forest`'s two existing regions (`[45,10,90,55]`, `[70,30,105,70]`) genuinely
+   overlap rather than being disjoint — the noise-fill implementation must handle paint-order/
+   overwrite semantics for this case, not assume disjoint regions.
 4. **Golden-hash determinism regression test**: same seed still produces bit-identical terrain (the
    noise fill must be seeded and deterministic, not merely "more random").
 5. **Housekeeping note** (likely a small, separate hotfix — not this epic's core work): investigate
@@ -122,8 +142,10 @@ for terrain/world_gen/organic-terrain material, no prior hits).
 
 ## Related Code Areas
 - `src/worldbuilding/recipe.py` — `RegionRecipeSpec`, the schema Scope item 1 extends.
-- `src/worldbuilding/compiler.py:211-221` — `WorldCompiler.compile()`'s flat rectangular-fill loop,
-  the exact mechanical cause; Scope item 2 changes this.
+- `src/worldbuilding/compiler.py:205-215` — `WorldCompiler.compile()`'s flat rectangular-fill loop,
+  the exact mechanical cause (corrected line range, 2026-08-21); Scope item 2 changes this. Note the
+  real loop also bounds-clamps to topology width/height and sets `town_tiles` membership based on
+  `r_spec.type == "town"` (independent of terrain value) — both must be preserved.
 - `src/worldassembly/resolver.py:101,795` — `WorldAssemblyResolver`'s passthrough of
   `grid_bounds`/`terrain`, which the new field must also flow through unchanged for modules that
   don't opt in.
@@ -131,8 +153,28 @@ for terrain/world_gen/organic-terrain material, no prior hits).
   sole call site `src/worldbuilding/cli.py:421`) vs. `WorldProceduralGenerator` (confirmed dead
   code, only self-referenced by `tests/unit/worldgeneration/test_generator.py`).
 - `data/content/world_modules/*.yaml` — hand-authored `RegionRecipeSpec` content; Scope item 3
-  updates at least one real module here (e.g. `wolf_den_near_forest`).
+  updates at least one real module here (e.g. `wolf_den_near_forest`). 2026-08-21 survey: 20/20
+  modules read — 3 have >1 region (`forest_warden_grove`, `nomadic_herd`, `wolf_den_near_forest`),
+  only `nomadic_herd` has >1 distinct terrain across its regions; 2 modules have zero regions
+  (population/resource-only contributions); the remaining 15 are strictly one-region-one-rectangle.
+- `data/content/world_compositions/generated/*.yaml`, `data/worlds/{id}/world.yaml`,
+  `data/worlds/{id}/resolved/world.resolved.yaml` — the real pipeline stages between generation and
+  compile (2026-08-21 trace): `ProceduralCompositionGenerator.generate()` writes to
+  `world_compositions/generated/`; a **manual, non-automatic** copy/extend step produces
+  `data/worlds/{id}/world.yaml` (confirmed via diff — the copy adds hand-authored fields like
+  `faction_tension_overrides` not in the generator's raw output); `resolve` then produces
+  `resolved/world.resolved.yaml` + `compile_context.json`, which `compile` consumes. Any noise-fill
+  parameter a module declares must survive this manual copy step (author discipline, not
+  code-enforced) to reach a real playable world.
+- `src/content/validator.py::CatalogValidator._validate_biome_relations()` — verified 2026-08-21:
+  operates only on static catalog-level `biome_id`→theme/material/faction references, never on
+  compiled per-tile terrain. **No change needed here** for the noise-fill mechanism, since it only
+  ever selects among already-catalog-valid terrain strings.
 - `src/platform/rng.py` — `DeterministicRNG`, to be reused (not replaced) for the seeded noise fill.
+  2026-08-21 finding: `WorldCompiler.compile()` already instantiates one `DeterministicRNG(seed)`
+  shared across the whole compile call (region loop + entity/resource placement) — the noise-fill's
+  exact draw-sequence position within that shared stream is an open design decision (see Scope
+  item 2).
 
 ## Assumptions / Open Questions
 - Assumes the exact field name/shape for the noise-fill declaration on `RegionRecipeSpec` (e.g.
