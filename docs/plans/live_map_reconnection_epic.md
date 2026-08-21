@@ -69,6 +69,56 @@ data into the missing shapes, plus a new lightweight per-tick entity-delta broad
 already tracks a `DirtySet` of changed entities each tick — `dirty_set.all_dirty_entities` — so this is
 additive serialization work, not new tracking infrastructure).
 
+## Recoverable Reference Implementation (git archaeology, 2026-08-21)
+
+**This "new work" was already built once, measured, and shipped — then deleted as "legacy" when V2
+replaced V1, and never re-ported.** Commit `677abbfb` ("Update documentation, remove legacy code (#17)")
+deleted an entire working implementation of exactly this contract under `src_legacy/api/`. Every file is
+still fully recoverable via `git show 677abbfb^:<path>`:
+
+- **`src_legacy/api/routes/map.py`** — the real `/api/v1/map` handler: pulls `manager.get_grid()`,
+  RLE-encodes it (`[value, count, value, count, ...]`) exactly matching `useSimulation.ts`'s still-live
+  `decodeRLE()`. 39 lines, complete.
+- **`src_legacy/api/routes/state.py`** — `/api/v1/state?since_tick=&selected=` with those **exact** two
+  query params the current frontend still calls — confirms the frontend's contract was never speculative,
+  it's the real, previously-working V1 API being called against a backend that replaced it without notice.
+- **`src_legacy/api/routes/stream.py`** — the real `/api/v1/stream` **SSE** handler `useSimulation.ts` was
+  built against. `compute_delta()` diffs consecutive slim-entity dicts into exactly
+  `{tick, changed, removed, events}` (byte-for-byte the shape `useSimulation.ts`'s `onmessage` handler
+  still parses today), skips empty ticks except a heartbeat every 20 ticks to bound bandwidth, and used
+  **Redis Streams** (`sim:stream`, `xread`) as a durable pub/sub layer decoupling tick production from SSE
+  consumers — a different (arguably more robust) architecture than V2's current in-process
+  `add_tick_listener()` callback + per-connection `asyncio.Queue`.
+- **`src_legacy/api/presenters/state_presenter.py`** — has a `present_minimal()` method with the **exact
+  same shape** V2's `src/api/presenters/state_presenter.py::present_minimal()` still has today
+  (`{tick, world_time, entities_count, maturity, seed}`) — proof V2's presenter was itself partially
+  ported from this file, but only that one method made the trip; `present_full`, `present_entity`,
+  `present_region`, `present_building`, `present_node` were left behind.
+- **`src_legacy/api/presenters/world_presenter.py`** (`to_world_state_response`, `to_static_data_response`)
+  — the exact assembly logic turning raw world objects into `WorldStateResponse`/`StaticDataResponse`,
+  including the field renames the new V2 presenter will need too (e.g. `chest.guard_id` →
+  `guard_entity_id`).
+- **`src_legacy/api/schemas.py`** (766 lines) — `EntitySlimSchema` (14 fields, matches
+  `frontend/src/types/api.ts`'s `EntitySlim` closely), `RegionSchema` (`region_id, name, terrain,
+  center_x, center_y, radius, difficulty, owner_faction, influence, locations` — **this resolves the
+  Region open question below**: even in V1, this spatial region shape was never part of the authoritative
+  governance state; it came from `WorldState.regions`, a separate world-model collection), and
+  `SimulationStats` (`tick, world_day, alive_count, total_spawned, total_deaths, running, paused` —
+  confirms these are real, previously-computed fields, not a novel ask).
+- **`docs/archive/performance/performance-report-api-payload.md`** — the actual measured results of this
+  V1 implementation: `/state` polling dropped from ~800KB–1.6MB per request to ~75KB (**91% reduction**)
+  via exactly this slim-schema + RLE-map + separate-`/static`-endpoint design, verified against a
+  ~360-entity test world, with **8 dedicated payload tests** (`tests/test_api_payload.py`, itself now also
+  deleted with the rest of `tests_legacy/`).
+
+**What this changes about scope**: child tickets for the new `StatePresenter` methods and REST routes are
+now a **port-and-adapt** task against a concrete, proven reference — not a from-scratch design exercise.
+The one deliberate deviation from directly copying V1: **transport**. V1 used Redis Streams + SSE; this
+epic keeps V2's already-built WebSocket transport (per the "Explicitly ruled out" section below, no new
+transport-layer infrastructure is being introduced) and carries the **payload shape** (`compute_delta()`'s
+`{tick, changed, removed, events}`) over it instead — payload design reused, transport modernized, not the
+reverse.
+
 ## Explicitly ruled out this session
 
 Building a new client against `docs/plans/world_rendering/idea_world_rendering_core.md`'s "Option C"
@@ -87,27 +137,73 @@ Neither epic depends on the other.
 Not created yet — this epic is scope-only. Prospective child tickets, in rough dependency order:
 
 1. **New `StatePresenter` methods**: `present_map(state)` (RLE-encode `state.terrain` into
-   `{width, height, grid}`) and `present_static(state, ...)` (serialize `buildings`/`resource_nodes`/
-   `chests`/`ground_items` into the frontend's `StaticData` shape — field-name mapping required, e.g.
-   `chests` → `treasure_chests`). Spatial `regions` (center/radius/locations/difficulty) sourced from
-   wherever the compiled world spec actually keeps that data (open question — see below).
-2. **New lightweight per-tick entity-delta broadcast.** Extend (or add alongside) the tick-listener path
-   to compute a slim `EntitySlim`-shaped delta (`id, x, y, kind, hp, ...`) for `dirty_set.all_dirty_entities`
-   plus a `removed` list, and push `{tick, changed, removed, events}` — matching the shape
-   `useSimulation.ts`'s existing reducer logic already expects, to minimize total frontend-side change.
-3. **New REST routes**: `/api/v1/map`, `/api/v1/static` wrapping item 1; `/api/v1/stats` (total_spawned /
-   total_deaths / running / paused — exact source of these cumulative counters not yet confirmed, flagged
-   below).
+   `{width, height, grid}` — port `src_legacy/api/routes/map.py`'s RLE loop verbatim, it's
+   transport-agnostic) and `present_static(state, ...)` (serialize `buildings`/`resource_nodes`/`chests`/
+   `ground_items` into the frontend's `StaticData` shape, adapting
+   `src_legacy/api/presenters/world_presenter.py::to_static_data_response`'s field mapping — e.g. `chests`
+   → `treasure_chests`, `guard_id` → `guard_entity_id`). Spatial `regions` sourced per the resolved
+   open-question finding below (compiled world spec, not `AuthoritativeState.regions`).
+2. **New lightweight per-tick entity-delta broadcast.** Port `src_legacy/api/routes/stream.py`'s
+   `compute_delta()` logic (diff consecutive `EntitySlim`-shaped dicts into
+   `{tick, changed, removed, events}`, 20-tick heartbeat on quiet ticks) onto V2's existing
+   `add_tick_listener()`/WebSocket path instead of V1's Redis-Streams/SSE path — reuse the tick loop's
+   already-tracked `DirtySet` (`dirty_set.all_dirty_entities`) as the "what changed" source instead of a
+   full old-vs-new snapshot diff, since V2 already computes it and V1 didn't have it available. See
+   "Real-Time Transfer Design Guidance" below for the delta-encoding/msgpack/interest-management specifics.
+3. **New REST routes**: `/api/v1/map`, `/api/v1/static` wrapping item 1; `/api/v1/stats` — port
+   `src_legacy`'s `SimulationStats` shape (`tick, world_day, alive_count, total_spawned, total_deaths,
+   running, paused`); where V1 itself computed the two cumulative counters is not traced here (left to
+   this item's own child-ticket Investigate phase), but their existence as a real, previously-shipped need
+   is now confirmed, not speculative.
 4. **Frontend rewire (`useSimulation.ts` only, not `GameCanvas.tsx`/`useCanvas.ts`)**: swap `EventSource`
    for a `WebSocket` client speaking the real `/api/v1/ws` handshake protocol; keep the existing
-   `changed`/`removed`/reducer logic if item 2's payload shape matches it; map `sendControl('pause'|'resume')`
-   onto the two real existing routes instead of a generic dispatcher (no generic dispatcher scoped unless a
-   real second caller needs one).
+   `changed`/`removed`/reducer logic unchanged (item 2's payload shape is deliberately designed to match
+   it, minimizing frontend-side change); map `sendControl('pause'|'resume')` onto the two real existing
+   routes instead of a generic dispatcher (no generic dispatcher scoped unless a real second caller needs
+   one).
 5. **Real performance-validation pass, once connected** — an explicit acceptance criterion, not assumed:
-   observe actual FPS/update latency against a real running world at a realistic entity count, reported
+   observe actual FPS/update latency against a real running world, at both `CLASS_B` (2,500 entities,
+   <40ms/tick target) and `CLASS_C` (500 entities, <30ms/tick target) scale per
+   `docs/performance/perf_baseline_policy.md`'s already-registered hardware classes, and confirm broadcast
+   payload size stays near the V1-measured baseline (~75KB per update at ~360 entities, not the
+   pre-optimization ~800KB–1.6MB) as a concrete regression check, not a bare "it feels fast" claim. Report
    with the same scoped-claim discipline `docs/engine/performance_contract.md` requires elsewhere (runtime
-   profile, hardware class, scenario) rather than a bare number. Any real optimization need this surfaces
-   becomes a **separate future ticket**, driven by evidence — not designed speculatively inside this epic.
+   profile, hardware class, scenario). Any real optimization need this surfaces becomes a **separate future
+   ticket**, driven by evidence — not designed speculatively inside this epic.
+
+## Real-Time Transfer & Multi-Client Design Guidance (2026-08-21 research)
+
+Two research passes this session looked at (a) established real-time game-state-streaming patterns and
+(b) how to keep the new broadcast payload reusable by a future second client type. Findings, scoped to
+what's genuinely worth adopting at this project's actual scale (one server, a handful of concurrent
+viewers — not a large multiplayer game):
+
+- **Delta-encode against the tick loop's `DirtySet` (item 2 above)** — this is simultaneously V1's own
+  proven pattern (`compute_delta()`) and the canonical real-time-games pattern (Glenn Fiedler's
+  "Snapshot Compression"/"State Synchronization" — gafferongames.com — and productized identically in
+  Colyseus's `@colyseus/schema` `ChangeTree`). Doubly confirmed, not a new idea.
+- **Actually use the `msgpack` format `src/api/ws/stream.py` already negotiates in its handshake but never
+  sends** — near-free wire-size reduction; the format path exists today, item 2's new payload just needs
+  to be routed through it instead of defaulting to JSON.
+- **Turn the existing client-side vision-range filtering into real server-side interest management** — the
+  minimap already computes a `vision_range`-filtered visible set when spectating an entity
+  (`GameCanvas.tsx`), but purely for cosmetic dimming; the server still ships every entity to every client
+  regardless. Gating what's actually broadcast by vision range is the standard MMO "Area of Interest"
+  pattern, and this codebase already has the filtering logic to reuse server-side — genuinely worth
+  scoping as a follow-up once item 2 ships and is measured (item 5), not before.
+- **Multi-client reusability is a schema-versioning discipline, not a transport or infrastructure
+  decision.** The planned payload (RLE terrain + semantic entity fields, no pixels, no web-specific view
+  logic) is already client-agnostic by nature — a future native/mobile client or a debug/replay tool could
+  consume the identical feed. The one thing worth doing now, cheaply: give the broadcast message an
+  explicit schema-version marker and treat it as additive-only from day one (Protocol Buffers' real lesson
+  isn't "use protobuf," it's this evolution discipline) — inexpensive now, expensive to retrofit once a
+  second client depends on the shape. Full binary-schema frameworks (Colyseus itself, Protobuf, FlatBuffers)
+  and the full "Option C" rendering-core abstraction remain correctly out of scope at this scale — see Out
+  of Scope.
+- **Not worth adopting**: client-side prediction/reconciliation (solves latency-hiding for a
+  player-controlled avatar; this is a spectator view of an autonomous simulation, wrong problem) and
+  priority/update-rate tiering (real technique, but premature before item 5's measurement shows it's
+  needed).
 
 ## Out of Scope
 
@@ -135,19 +231,27 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
 - No implementation happens directly on the epic ticket or this plan doc — both are scope/planning
   artifacts only.
 
-## Open Questions (flagged, not resolved here)
+## Open Questions
 
-- **Where does the frontend's spatial `Region` data (center/radius/locations/difficulty) actually live at
-  runtime?** Not in `AuthoritativeState.regions` (confirmed — that's a governance/political concept).
-  Likely the compiled world spec (`data/worlds/{id}/world.yaml`), loaded once at startup rather than
-  per-tick — needs confirmation before item 1's child ticket is investigated in depth.
-- **Where do cumulative `total_spawned`/`total_deaths` counters come from, if anywhere?** Not found in
-  `V2EngineManager`'s metrics snapshot (`active_entities` is a live count, not a cumulative total) or in
-  `StatePresenter`. May need new counters, or may already exist in a kernel-side metrics module not yet
-  checked — needs confirmation before item 3's `/stats` child ticket is investigated in depth.
+- **Region data source — partially resolved.** Confirmed (via `src_legacy`) that even V1 never sourced its
+  spatial `RegionSchema` (center/radius/locations/difficulty) from authoritative governance state — it came
+  from a separate `WorldState.regions` collection. V1's `WorldState` isn't the same object as V2's
+  `AuthoritativeState`, so the exact V2-equivalent source (most likely the compiled world spec,
+  `data/worlds/{id}/world.yaml`, per this session's separate worldgen investigation) still needs
+  confirming in item 1's own child-ticket Investigate phase — but the *pattern* (spatial regions are a
+  separate, mostly-static collection, never part of governance state) is now confirmed precedent, not a
+  guess.
+- **`total_spawned`/`total_deaths` — partially resolved.** Confirmed these are real, previously-shipped
+  `SimulationStats` fields (not a novel ask) via `src_legacy/api/schemas.py`. Where V1's `EngineManager`
+  computed them, and whether an equivalent counter exists anywhere in V2's kernel/metrics today, was not
+  traced further here — left to item 3's own child-ticket Investigate phase to avoid scope creep at the
+  epic-planning level.
 - Whether item 2's new per-tick delta broadcast should extend the existing `/ws` connection's payload or
-  register as a genuinely separate listener/message type — an implementation-detail decision for that
-  child ticket's own investigation phase, not resolved here.
+  register as a genuinely separate listener/message type remains an implementation-detail decision for
+  that child ticket's own investigation — V1's fully-separate-transport precedent (Redis Streams + SSE, a
+  different connection entirely from its REST API) shows both approaches are legitimate; V2 keeping it on
+  the existing `/ws` connection is the lower-effort default given no separate transport is being
+  introduced, but not mandated here.
 
 ## References
 
@@ -158,10 +262,19 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
   rendering core architecture, explicitly not chosen for this epic.
 - `tickets/done/infra-04-realtime-state-streaming.md` — the historical V1-era ticket whose incomplete
   step 4 ("refactor `useSimulation`") is this epic's direct root cause.
-- `docs/engine/performance_contract.md` — the scoped-claims methodology (Runtime Profile / Hardware Class
-  / Scenario / Execution Mode) item 5's performance-validation acceptance criterion must follow.
+- `docs/engine/performance_contract.md`, `docs/performance/perf_baseline_policy.md` — the scoped-claims
+  methodology and the `CLASS_A`/`CLASS_B`/`CLASS_C` hardware-class targets item 5's performance-validation
+  acceptance criterion must follow.
+- `docs/archive/performance/performance-report-api-payload.md` — the measured V1 payload-size baseline
+  (~75KB post-optimization at ~360 entities) item 5's regression check is grounded against.
 - `src/api/presenters/state_presenter.py`, `src/api/read_model_cache.py`, `src/api/engine_manager.py`,
   `src/api/ws/stream.py`, `src/core/state.py` (`AuthoritativeState`) — the exact backend files this epic's
   child tickets touch.
+- **`src_legacy/api/routes/map.py`, `src_legacy/api/routes/state.py`, `src_legacy/api/routes/stream.py`,
+  `src_legacy/api/presenters/state_presenter.py`, `src_legacy/api/presenters/world_presenter.py`,
+  `src_legacy/api/schemas.py`** (all recoverable via `git show 677abbfb^:<path>`, deleted by `677abbfb`) —
+  the proven V1 reference implementation this epic's child tickets port and adapt from. Not live code, not
+  restorable by a simple revert (V1's `EngineManager`/`WorldState` don't exist in V2), but the concrete
+  shape/logic reference each child ticket should start from rather than designing blind.
 - `frontend/src/hooks/useSimulation.ts`, `frontend/src/types/api.ts` — the exact frontend files item 4
   touches; `GameCanvas.tsx`/`useCanvas.ts` are read-only reference for the target contract, not touched.
