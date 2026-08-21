@@ -21,6 +21,14 @@ the full law text and parity proofs.
 4. **Hardware-Class Honesty**: All claims bind to a specific hardware class (`class_b` baseline).
 5. **Observability Separation**: Runtime telemetry is non-authoritative and must not affect state.
 
+**Precedence**: The pillars above are not equally weighted. Under trade-off, the order is:
+Determinism, then Resource-Safety, then Performance (only within what the first two allow), then
+Auditability (proving the first three held). This order is reconstructed from observed kernel
+mechanisms, not confirmed maintainer intent. See
+`docs/architecture/kernel_concurrency_design_philosophy.md` Part 1 for the full reasoning — that
+section is the single source of truth for this ordering; this is a terse restatement of its
+conclusion, not an independent derivation.
+
 ## Table of Contents
 
 - Architecture overview: `docs/engine/architecture.md`

@@ -131,6 +131,17 @@ be re-derived from code and cross-referencing multiple docs each time. We want t
 whatever the maintainers confirm is actually intended, if our reconstruction is wrong) stated
 explicitly in the lawbook or a doc it links to.
 
+**Update (TCK-20260817-STATE-DESIGN-PRIORITY-ORDER, closed 2026-08-21):** resolved.
+`project_lawbook_m10.md`'s Architectural Pillars section now states the reconstructed order
+(Determinism, then Resource-Safety, then Performance — only within what the first two allow, then
+Auditability — proving the first three held) as a terse rule, cross-linking
+`kernel_concurrency_design_philosophy.md` Part 1 as the single source of truth for the full
+reasoning; the 5-item pillar list itself is unchanged and not mapped term-by-term onto the 4-item
+order. Part 1's own stale "it is not stated as a rule anywhere" sentence was corrected in place to
+confirm the lawbook now carries the terse rule while Part 1 remains the SSOT for the reasoning.
+Four new doc-consistency tests were added to `tests/docs/test_doc_integrity.py` guarding order-term
+verbatim match, cross-link presence, and non-recurrence of the stale sentence.
+
 ## C6 — Document why `concurrency_limit` decreases as `RuntimeMode` escalates
 
 `src/engine/policy.py`'s `GovernorPolicy.from_mode()` sets `concurrency_limit` to 1.0 for NORMAL,

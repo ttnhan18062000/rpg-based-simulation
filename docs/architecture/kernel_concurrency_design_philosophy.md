@@ -25,8 +25,10 @@ goal in its own right. Reading `harness_architecture.md`'s Core Principles (Abso
 State, Non-Blocking Persistence, Progressive Degradation), and `certification_contract.md`'s
 reporting law ("No modification of kernel laws for benchmark vanity") together implies one
 consistent order: Determinism, then Resource-Safety, then Performance (only within what the
-first two allow), then Auditability (proving the first three held). This ordering is implicit,
-reconstructed from three documents plus code — it is not stated as a rule anywhere.
+first two allow), then Auditability (proving the first three held). This ordering is reconstructed
+from three documents plus code. It is now stated as a terse rule
+in `docs/engine/project_lawbook_m10.md`'s Architectural Pillars section, which cross-links here;
+this Part remains the single source of truth for the full reasoning behind that rule.
 
 ```mermaid
 flowchart LR
