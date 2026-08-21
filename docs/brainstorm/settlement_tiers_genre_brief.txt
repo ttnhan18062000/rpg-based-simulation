@@ -26,6 +26,37 @@ same folder as layer_model_discussion_brief.txt and
 layer_model_update_review_brief.txt, but you don't need to read those to
 answer this brief.
 
+What kind of RPG this actually is
+--------------------------------------
+Worth being concrete about, since "fantasy RPG" covers a lot of ground.
+This isn't a hand-authored campaign or a story you play through — it's a
+living world you *watch*. Autonomous characters explore, fight, craft,
+and level up entirely on their own, with no one scripting what happens;
+whatever story shows up is a side effect of the systems colliding, not
+something anyone wrote in advance. The project's own pitch describes it
+as "an ant farm meets Final Fantasy" and gives real examples of what it's
+already produced without anyone directing it: a cautious hero who avoids
+a goblin camp for a long stretch of time, slowly grinding weaker
+creatures in the forest instead, before finally raiding the camp — only
+to find the goblin chief has grown stronger in the meantime, too. A
+reckless, greedy adventurer who charges deep into orc territory for rare
+loot, barely survives, and flees back to town to sell everything off. Two
+factions clashing at a border, where undead push in from a swamp
+(slow but able to soak enormous damage) while bandits from a desert
+scatter under pressure (fast but fragile).
+
+That's the bar this brief is aiming at: not "is a goblin camp mechanically
+distinct from a city," but "would a goblin camp, left running on its own
+for a while with nobody watching, produce a story worth watching." The
+project's own roadmap already names two aspirational pieces directly
+relevant here, neither built yet: a "Dungeon System" (instanced,
+multi-room challenges, where a hero is meant to autonomously judge
+whether it's actually ready before going in) and "Ruins Exploration &
+Lore" (a discovery loop — collecting lore, finding hidden caches, walking
+away with a permanent reward for having explored a specific place). Both
+are just named intentions right now, not designs — which is part of why
+this brief exists.
+
 The question now on the table
 ----------------------------------
 City, as designed, is implicitly a *high-civilization* settlement — a
@@ -147,6 +178,16 @@ What we want your read on
    fighting over who controls a dangerous Site — that this framing is
    currently missing and should at least consider?
 
+6. Given the actual goal is a story worth *watching* unfold with nobody
+   directing it — not a level a designer places for a player to beat —
+   which of the four tiers has the most natural potential to produce a
+   genuinely surprising, emergent moment (a camp's raid arriving at the
+   worst possible time, a Site turning out to hide something nobody
+   expected, a Lair's occupant being smarter or weaker than its threat
+   level implied), and which tier is most at risk of just sitting there
+   being a static, forgettable checkbox on the map if it's built exactly
+   as framed above?
+
 What NOT to do
 -----------------
 - Don't check anything against a codebase — you don't have one, and this
@@ -162,7 +203,7 @@ What NOT to do
 
 How to report back
 ----------------------
-Answer the five questions above directly. If you think the whole framing
+Answer the six questions above directly. If you think the whole framing
 is wrong, say so and explain why — this is meant to be a real second
 opinion, not a rubber stamp. Close with whichever single addition or
 change you think would most improve how authentic this feels, if you can
