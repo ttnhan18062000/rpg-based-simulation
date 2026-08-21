@@ -151,6 +151,17 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
    already-tracked `DirtySet` (`dirty_set.all_dirty_entities`) as the "what changed" source instead of a
    full old-vs-new snapshot diff, since V2 already computes it and V1 didn't have it available. See
    "Real-Time Transfer Design Guidance" below for the delta-encoding/msgpack/interest-management specifics.
+   **Real correctness requirement, found via external review + verified (2026-08-21, see "External Design
+   Review" below)**: the connect sequence must avoid a real race — register the tick-listener callback
+   *before* taking the map/static snapshot, not after (mirrors how database change-data-capture systems
+   atomically pair "record the resume point" with "take the snapshot"). Getting this ordering right means
+   no deltas are ever missed during connect and no buffer-then-discard logic is needed. Each delta message
+   must also carry `tick` and `snapshot_as_of_tick` fields so the client can sanity-check alignment and
+   request a fresh reconnect/resnapshot on mismatch — full sequence/generation-number machinery is not
+   needed at this project's scale. `EntitySlim` fields must stay absolute current values (`x`, `y`, `hp`,
+   ...), never diffs-from-previous — this is what makes it safe for the server to coalesce or drop messages
+   for a slow client under backpressure without any sequence tracking (already true of the ported V1
+   schema; stated here as a hard requirement, not just an implementation detail).
 3. **New REST routes**: `/api/v1/map`, `/api/v1/static` wrapping item 1; `/api/v1/stats` — port
    `src_legacy`'s `SimulationStats` shape (`tick, world_day, alive_count, total_spawned, total_deaths,
    running, paused`). **`total_spawned`/`total_deaths` fully traced now**: V1's `EngineManager` (`git show
@@ -171,16 +182,19 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
    `docs/performance/perf_baseline_policy.md`'s already-registered hardware classes, and confirm broadcast
    payload size stays near the V1-measured baseline (~75KB per update at ~360 entities, not the
    pre-optimization ~800KB–1.6MB) as a concrete regression check, not a bare "it feels fast" claim.
-   **Precise, testable budget (2026-08-21 research, see "Scaling Design" below)**: median client frame time
-   ≤8ms (≥120 FPS capability) under bounded-viewport load, with a documented floor of ≤16.6ms (60 FPS)
-   under stress that must never be silently crossed — a frame-*time* budget, not a frame-*count* target,
-   since `requestAnimationFrame` syncs to the viewer's actual display refresh rate (60/120/144Hz), not a
-   hardcoded 60. Also verify the existing lerp/interpolation math is genuinely delta-time-based (elapsed
-   wall-clock ms since last tick), not frame-count-based — required for it to degrade gracefully rather than
-   visibly stutter below peak frame rate; currently unverified since this frontend has never run against
-   live data. Report with the same scoped-claim discipline `docs/engine/performance_contract.md` requires
-   elsewhere (runtime profile, hardware class, scenario). Any real optimization need this surfaces becomes a
-   **separate future ticket**, driven by evidence — not designed speculatively inside this epic.
+   **Precise, testable budget, revised to percentile-based (2026-08-21, corrected after external review —
+   see "External Design Review" below)**: a flat "median ≤8ms, floor ≤16.6ms never crossed" statement isn't
+   an achievable browser contract (GC pauses, OS scheduling, thermal throttling are real and outside the
+   application's control) — restated as **p50 ≤8ms, p95 ≤12ms, p99 ≤16.6ms under bounded-viewport load**,
+   plus tracking the percentage of frames exceeding 16.6ms rather than asserting it never happens. Still a
+   frame-*time* budget, not a frame-*count* target, since `requestAnimationFrame` syncs to the viewer's
+   actual display refresh rate (60/120/144Hz), not a hardcoded 60. Also verify the existing lerp/
+   interpolation math is genuinely delta-time-based (elapsed wall-clock ms since last tick), not
+   frame-count-based — required for it to degrade gracefully rather than visibly stutter below peak frame
+   rate; currently unverified since this frontend has never run against live data. Report with the same
+   scoped-claim discipline `docs/engine/performance_contract.md` requires elsewhere (runtime profile,
+   hardware class, scenario). Any real optimization need this surfaces becomes a **separate future ticket**,
+   driven by evidence — not designed speculatively inside this epic.
 6. **New `GET /api/v1/manifest` endpoint** (small, backend + `useSimulation.ts` only — see "Scaling Design"
    below for the full design and precedent): fetched once alongside item 3's `/static` call, returning
    `{schema_version, terrain_types: {id:name}, entity_kinds: {id:name}, building_types: {...},
@@ -193,19 +207,29 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
    `useCanvas.ts` are read-only reference... not modified by this epic"). This item scopes the endpoint and
    the fetch; switching the renderer to consume it is left for a fast-follow, not silently declared done
    here.
+7. **Reserve, but do not implement, a spatial-subscription field on the delta message envelope** — e.g. an
+   unused `region`/`chunk` field the client doesn't yet send and the server doesn't yet honor. Added after
+   the bandwidth reassessment below (external review + independent verification) showed interest management
+   is likely necessary at real target scale, not safely deferrable indefinitely as originally scoped —
+   reserving the field now costs nothing and avoids a breaking protocol change later when it's actually
+   implemented. Building real interest-management filtering itself remains out of scope for this epic (see
+   Out of Scope) — this item is the envelope placeholder only.
 
-## Scaling Design: Data Manifest, Layered Rendering, Frame Budget (2026-08-21 deep research)
+## Scaling Design: Data Manifest, Layered Rendering, Frame Budget, Stream Correctness (2026-08-21 deep
+research, externally reviewed)
 
-Following up on the section above, three deeper research passes tied directly to a "what if this needs to
-handle a huge map and thousands of entities" scaling conversation. Each proposes a concrete design tied to
-a cited real precedent — not general survey material. **Scope honesty up front**: item 6 (the manifest) is
-folded into this epic's actual Scope above because it's small and backend-plus-`useSimulation.ts`-only.
-Part B (layered rendering) is **not** folded into this epic's Scope — it requires modifying
-`GameCanvas.tsx`/`useCanvas.ts`, which this epic deliberately keeps untouched, and the epic's own philosophy
-(item 5: "any real optimization need becomes a separate future ticket, driven by evidence") argues against
-speculatively rewriting a renderer that hasn't been measured yet. It's captured here in full so the design
-isn't lost, sequenced as the natural next ticket once item 5's real measurement pass shows whether/where
-it's actually needed.
+Following up on the section above, deeper research tied directly to a "what if this needs to handle a huge
+map and thousands of entities" scaling conversation, **plus (§D) an external, project-blind AI design review
+whose findings were independently verified — not trusted at face value — before being folded in**. Each
+subsection proposes a concrete design tied to a cited real precedent — not general survey material. **Scope
+honesty up front**: item 6 (the manifest) and item 7 (the spatial-subscription envelope placeholder) are
+folded into this epic's actual Scope above because they're small and backend-plus-`useSimulation.ts`-only,
+as is the connect-time race fix folded into item 2. Part B (layered rendering) is **not** folded into this
+epic's Scope — it requires modifying `GameCanvas.tsx`/`useCanvas.ts`, which this epic deliberately keeps
+untouched, and the epic's own philosophy (item 5: "any real optimization need becomes a separate future
+ticket, driven by evidence") argues against speculatively rewriting a renderer that hasn't been measured
+yet. It's captured here in full so the design isn't lost, sequenced as the natural next ticket once item 5's
+real measurement pass shows whether/where it's actually needed.
 
 ### A. Data Manifest — Separating Meaning from Live Data
 
@@ -231,11 +255,19 @@ one place that discipline doesn't hold.
 **Design adopted**: `GET /api/v1/manifest` (Scope item 6 above), fetched once alongside `/static` — same
 lifecycle, not a new connection step. Payload is a versioned ID→meaning lookup table. The live per-tick
 broadcast carries **only IDs, zero self-description** — mirrors both Avro's compact-record principle and
-H.264's per-frame terseness. **Version mismatch handling**: hard reconnect, Source-engine style — not a
-compatibility-negotiation registry (Confluent's approach). At this project's actual scale (single server,
-no live schema evolution expected mid-session), the blunter model is the right fit; a full schema-registry
-service or Protobuf codegen pipeline would be real overkill — the *principle* (ID-indirection, fetched once,
-cached) is what transfers here, not the infrastructure.
+H.264's per-frame terseness. A full schema-registry service or Protobuf codegen pipeline would be real
+overkill at this project's scale — the *principle* (ID-indirection, fetched once, cached) is what transfers
+here, not the infrastructure.
+
+**Corrected after external review (2026-08-21)**: the original "one versioned manifest, hard-reconnect on
+any mismatch" design conflated two genuinely different things that shouldn't share one version number —
+**protocol schema** (the wire message structure/field layout) and **content dictionary** (what terrain ID 3
+or entity-kind ID 7 currently mean). A deployment that relabels a terrain type shouldn't force every
+connected client to hard-disconnect; a change to the message envelope itself should. Revised design: track
+`protocol_version` and `dictionary_version` (or a content hash) separately. On a dictionary-version mismatch,
+fetch the new dictionary and resume — no disconnect needed. Only an incompatible `protocol_version`
+justifies the hard-disconnect-and-reconnect behavior originally proposed wholesale — that behavior is still
+correct, just narrower in scope than first stated.
 
 ### B. Layered, Cache-First Rendering Architecture (design captured, not scoped into this epic)
 
@@ -248,9 +280,21 @@ cached) is what transfers here, not the infrastructure.
   upload cost) — cache deliberately, don't promote everything.
 - **Dirty-rectangle rendering** — a well-established, pre-1995 2D-game-engine technique: track the bounding
   rectangles of only the screen regions actually drawn-to this frame, and blit just those instead of
-  redrawing the full frame. Directly applicable to the entity layer: with thousands of entities where most
-  are idle any given tick, track each moved/changed entity's screen-space bounding box and `clearRect` +
-  redraw only the union of those regions, not the whole entity canvas every frame.
+  redrawing the full frame. **Corrected after external review (2026-08-21)**: the original justification
+  here — "the server's per-tick `DirtySet` is usually sparse, so redraw is cheap" — conflates two different
+  things. The server's `DirtySet` tracks what changed *between authoritative ticks*; it says nothing about
+  what changes *between rendered frames*, and a genuinely moving entity's on-screen position changes on
+  essentially every rendered frame during interpolation, regardless of how sparse the underlying tick data
+  is. Server-tick sparsity does not imply render-frame sparsity — verified as a real, separate-by-design
+  distinction in real-time engine architecture (simulation and presentation are legitimately independent
+  concerns, each with their own notion of "dirty"). The technique is still worth keeping, but only because
+  this project's autonomous entities spend most of their simulated time in genuinely idle states (working,
+  sleeping, standing) — confirmed as the standard behavior shape for this kind of simulation, and matching
+  Pygame's own sprite-rendering library, which explicitly optimizes dirty-rect handling for scenes with many
+  static sprites, not moving ones. **The corrected design tracks two separate client-side buckets** —
+  currently-animating entities (redrawn every frame, no dirty-rect saving possible or expected) vs.
+  genuinely-idle-since-last-frame entities (skipped) — rather than treating the server's `DirtySet` as a
+  proxy for render cost.
 - **PixiJS confirms the same pattern as a first-class, current engine feature** — `cacheAsTexture`
   (v8; `cacheAsBitmap` pre-v8) renders a container to a texture once and reuses it on later frames, explicitly
   documented as best for infrequently-updating content (i.e. exactly the terrain/semi-static-object case).
@@ -265,15 +309,33 @@ cached) is what transfers here, not the infrastructure.
   already proven on this project's own minimap — no engine migration needed to capture the real benefit.
 
 **Proposed layer model** (design for the follow-up ticket, not built here):
-- **Layer 0 — terrain**: off-screen cache, invalidate only on an actual tile-state change (rare) — the
-  pattern already proven on the minimap terrain cache, extended to the main viewport.
+- **Layer 0 — terrain**: **corrected after external review (2026-08-21)** — a single whole-map off-screen
+  bitmap is unsafe at "huge map" scale. Real browser canvas ceilings vary sharply by engine: Chrome/Firefox
+  allow very large canvases (32,767px per dimension, hundreds of millions of px² area), but **Safari is the
+  real binding constraint** — roughly 3-5 total megapixels depending on device RAM, with a further ~384MB
+  total-canvas-memory ceiling across a whole page on iOS Safari historically. `devicePixelRatio` (2×/3× on
+  most modern displays) squares into backing-store pixel count, so a modest-looking canvas can exceed this
+  fast. **Revised design**: chunk terrain into a grid of cached tiles — researched against real web-mapping
+  precedent (Leaflet/Mapbox GL); **512×512 tiles fit this project better than the more common 256×256** web
+  standard, since the 256px convention is driven by HTTP-request-count concerns for *fetched* image tiles,
+  which don't apply here (terrain is generated locally, not fetched) — fewer, larger chunks mean less
+  per-chunk bookkeeping for the same coverage. Retain tiles within a fixed buffer radius around the camera
+  viewport (Leaflet's `keepBuffer` pattern), evicting tiles once they fall outside it — not time-based
+  expiry, since (unlike static map tiles) this project's terrain can genuinely change; invalidate a
+  specific tile only on an actual terrain-change event inside it. A full per-zoom-level tile pyramid (what
+  Leaflet/Mapbox actually maintain) is not needed yet — a single base-resolution tile cache under the
+  existing CSS-transform zoom is sufficient unless far-zoomed views later need simplified/aggregated detail.
 - **Layer 1 — semi-static objects** (buildings, resource nodes, chests): cache, invalidate per-object on the
-  specific state-change event (harvested, destroyed), not a periodic full redraw.
-- **Layer 2 — dynamic entities**: dirty-rect redraw — only the bounding regions of entities that actually
-  moved/changed this frame, not the full visible set.
+  specific state-change event (harvested, destroyed), not a periodic full redraw. If sharing a chunked cache
+  with Layer 0's tiles, invalidating one object requires rebuilding its containing chunk, not just that
+  object — the same chunk-level (not object-level) invalidation Layer 0 uses.
+- **Layer 2 — dynamic entities**: dirty-rect redraw using the two-bucket model above (animating vs. idle) —
+  only the bounding regions of genuinely-idle entities are worth skipping; actively-moving entities are
+  redrawn every frame regardless, and that's expected, not a failure of the technique.
 - **Layer 3 — overlay** (hover, selection): unchanged, already cheap.
 - Compositing all four is already free — they're separate DOM-stacked `<canvas>` elements, and the browser's
-  own GPU compositor combines them without any new code.
+  own GPU compositor combines them without any new code, though each cached layer still has a real GPU
+  memory/upload cost — cache deliberately, not everything.
 
 ### C. Frame-Budget Headroom, Not a 60 FPS Ceiling
 
@@ -291,9 +353,66 @@ against a 16.6ms (60fps) floor, exactly the shape proposed. `requestAnimationFra
 must be a **time** budget, not a **count** target: it syncs to the viewer's actual display refresh rate
 (60/120/144Hz), not a hardcoded 60, so a frame-count-based target is meaningless across real viewers.
 
-**Adopted wording** (folded into Scope item 5 above): median client frame time ≤8ms (≥120 FPS capability)
-under bounded-viewport load, documented floor of ≤16.6ms (60 FPS) under stress, never silently crossed —
-plus explicit verification that the existing lerp is delta-time-based, not frame-count-based.
+**Adopted wording** (folded into Scope item 5 above, **revised to percentile-based after external review —
+see §D below**): p50 ≤8ms, p95 ≤12ms, p99 ≤16.6ms under bounded-viewport load, tracking the percentage of
+frames that exceed 16.6ms rather than asserting it never happens — plus explicit verification that the
+existing lerp is delta-time-based, not frame-count-based.
+
+### D. External Design Review — Findings, Independently Verified (2026-08-21)
+
+The three sections above (A/B/C) were sent, generalized and stripped of all project-specific detail, to an
+external AI reviewer with no project context, specifically to get an outside, unbiased critique before
+implementation starts. **Its findings were not accepted at face value** — each was independently checked
+against real precedent or worked through analytically before being adopted, and at least one of the
+reviewer's own claims was found to be imprecise on closer inspection. Full original review context: the
+review request document and the reviewer's response are not part of this repo (external artifacts); this
+section captures only the verified, adopted outcome.
+
+**Two real correctness/design flaws found, confirmed, and fixed** (not just style preferences):
+
+1. **Connect-time snapshot/delta race** — genuinely missing from the original design (folded into Scope
+   item 2 above): nothing tied a delta message to the exact state it presumed as a starting point, so
+   deltas arriving between "static fetch completes" and "stream subscription starts" would be silently
+   lost. Verified real precedent (database change-data-capture systems solve exactly this by atomically
+   pairing "record the resume point" with "take the snapshot") and adopted the simplest correct fix:
+   register the tick-listener before taking the snapshot, not after — no buffer-then-discard logic needed,
+   simpler than the reviewer's own more elaborate proposed alternative.
+2. **Dirty-rect rendering's stated justification was flawed** (folded into §B above): conflated
+   network-tick sparsity with render-frame sparsity, which are genuinely different things. Verified via
+   research into real 2D-engine sprite architecture that the technique is still worth keeping — corrected
+   to the two-bucket (animating vs. idle) model rather than abandoned.
+
+**Bandwidth/interest-management reassessment — the reviewer's own number checked and refined, not just
+trusted:**
+
+The reviewer projected ~750KB–1.1MB/s per viewer by treating the measured V1 baseline (75KB) as if it were
+already a per-tick delta message size. It wasn't — that figure was a **full-state poll** of all ~360 test
+entities, not an incremental delta of only the entities that changed since the prior tick; a true delta at
+that same test scale would be meaningfully smaller (worked the math directly: even a 100%-everything-changed
+worst case at 360 entities is ~0.9MB/s, not the reviewer's higher estimate). **However**, redoing that same
+math at the actual target scale this epic cites elsewhere (10,000 entities, `CLASS_A`) shows the reviewer's
+underlying warning was right, and arguably more urgent than either of us first stated: even a modest 10-20%
+changed-entity fraction per tick at 10,000 entities produces roughly 1.5-5MB/s per viewer (JSON; somewhat
+less with `msgpack`) — comparable to or larger than the reviewer's original estimate for the much smaller
+old test scale, simply because there are ~28x more entities. **Conclusion**: interest management (filtering
+what's broadcast by what a viewer can actually see) is likely necessary at real target scale, not the
+safely-indefinitely-deferrable nice-to-have this epic originally treated it as. Still correctly out of scope
+to *build* now (no real measurement against a live system exists yet to size it against) — but Scope item 7
+above (reserve an unused spatial-subscription field in the message envelope now) exists specifically because
+of this reassessment, so the protocol doesn't need a breaking change when interest management does get
+built.
+
+**Adopted as real refinements, lower stakes:** the manifest's protocol-version/dictionary-version split
+(§A above); percentile-based frame budgets replacing "median + inviolable floor" (§C above); chunked terrain
+caching with real browser-limit numbers (§B above).
+
+**Explicitly not adopted wholesale**: the reviewer's fuller operational playbook for backpressure/slow
+clients (bounded-queue coalescing policies, randomized reconnect backoff, rolling-deployment manifest-skew
+handling) is real, correct advice — calibrated for a system with many concurrent clients and multi-instance
+deployments. This project's actual stated scale (single server, a handful of concurrent viewers) doesn't
+justify building the full playbook now; the cheap, universally-applicable parts (bounded queue depth, a
+resnapshot-on-fallen-too-far-behind policy) are worth doing regardless of scale and are captured in Scope
+item 2's correctness fix above, but the heavier operational machinery is not being scoped speculatively.
 
 ## Real-Time Transfer & Multi-Client Design Guidance (2026-08-21 research)
 
@@ -313,8 +432,11 @@ viewers — not a large multiplayer game):
   minimap already computes a `vision_range`-filtered visible set when spectating an entity
   (`GameCanvas.tsx`), but purely for cosmetic dimming; the server still ships every entity to every client
   regardless. Gating what's actually broadcast by vision range is the standard MMO "Area of Interest"
-  pattern, and this codebase already has the filtering logic to reuse server-side — genuinely worth
-  scoping as a follow-up once item 2 ships and is measured (item 5), not before.
+  pattern, and this codebase already has the filtering logic to reuse server-side. **Priority raised after
+  §D's bandwidth reassessment below**: originally framed here as "follow-up once measured, not before" —
+  the corrected math at real target scale (10,000 entities) shows this is likely load-bearing, not a nice
+  extra, so Scope item 7 now reserves the protocol field for it even though building the filtering itself
+  stays out of this epic.
 - **Multi-client reusability is a schema-versioning discipline, not a transport or infrastructure
   decision.** The planned payload (RLE terrain + semantic entity fields, no pixels, no web-specific view
   logic) is already client-agnostic by nature — a future native/mobile client or a debug/replay tool could
@@ -390,6 +512,12 @@ viewers — not a large multiplayer game):
   `ParticleContainer`), Glenn Fiedler's "Fix Your Timestep!" (gafferongames.com), and a frame-budget
   calculator/JS-game-loop reference (gamedevcheatsheet.com, aleksandrhovhannisyan.com) — full citations in
   the section itself.
+- **External sources for §D (external review verification)**: Debezium/CDC snapshot+log-position docs
+  (debezium.io, DeepWiki) for the atomic-handoff pattern; Pygame's `sprite`/`DirtySprite` documentation
+  (pygame.org) and a real-time "state stream" engine architecture reference for the network-dirty vs.
+  render-dirty distinction; MapTiler's 256×256-vs-512×512 tile explainer and the Mapbox zoom-level glossary
+  for tile sizing; browser canvas-size-limit references (pqina.nl, Apple Developer Forums, testmuai.com) for
+  the real Chrome/Firefox/Safari ceilings cited in §B's terrain-chunking revision.
 - `docs/engine/contracts/frontend.md` — the existing, still-accurate "Known gap (2026-07-16)" documenting
   the 5 missing REST routes; this epic's investigation extends it with the transport-mismatch and
   broadcast-payload findings that doc didn't cover.

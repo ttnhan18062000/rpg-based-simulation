@@ -58,7 +58,13 @@ design reused as-is). Full trace: `docs/plans/live_map_reconnection_epic.md`.
   carrying `{tick, changed, removed, events}` over the real `/api/v1/ws` WebSocket connection — payload
   design ported from `src_legacy/api/routes/stream.py::compute_delta()`, transport modernized from V1's
   Redis-Streams/SSE to V2's existing WebSocket tick-listener path. Use the already-negotiated-but-unused
-  `msgpack` wire format (`src/api/ws/stream.py`'s handshake already supports it).
+  `msgpack` wire format (`src/api/ws/stream.py`'s handshake already supports it). **Correctness requirement
+  found via external review + independently verified (2026-08-21)**: register the tick-listener callback
+  *before* taking the map/static snapshot on connect, not after — avoids a real race where deltas occurring
+  during the snapshot fetch would otherwise be silently lost. Add `tick`/`snapshot_as_of_tick` fields for
+  client-side alignment checking (reconnect/resnapshot on mismatch); no full sequence/generation-number
+  machinery needed at this scale. `EntitySlim` fields must stay absolute current values, never diffs — what
+  makes backpressure coalescing safe without sequence tracking.
 - New REST routes: `/api/v1/map`, `/api/v1/static`, `/api/v1/stats` (ported `SimulationStats` shape:
   `tick, world_day, alive_count, total_spawned, total_deaths, running, paused`). `total_spawned`/
   `total_deaths` need two new counters on `V2EngineManager` — confirmed absent today; V1's pattern
@@ -76,22 +82,31 @@ design reused as-is). Full trace: `docs/plans/live_map_reconnection_epic.md`.
   (2,500 entities, <40ms/tick) and `CLASS_C` (500 entities, <30ms/tick) per
   `docs/performance/perf_baseline_policy.md`'s registered hardware classes, and confirm broadcast payload
   size lands near the V1-measured ~75KB/update baseline (not the pre-optimization ~800KB–1.6MB) as a
-  concrete regression check. **Precise budget (2026-08-21 research)**: median client frame time ≤8ms (≥120
-  FPS capability) under bounded-viewport load, documented floor of ≤16.6ms (60 FPS) under stress, never
-  silently crossed — a frame-*time* budget, not a frame-*count* target, since `requestAnimationFrame` syncs
-  to the viewer's real display refresh rate. Also verify the existing lerp is genuinely delta-time-based,
-  not frame-count-based (currently unverified). Reported per `docs/engine/performance_contract.md`'s
-  scoped-claims discipline — not assumed, not a bare number. Any real optimization need this surfaces is a
-  separate future ticket.
+  concrete regression check. **Percentile-based budget, corrected after external review (2026-08-21)**:
+  p50 ≤8ms, p95 ≤12ms, p99 ≤16.6ms under bounded-viewport load, tracking the percentage of frames over
+  16.6ms rather than asserting it never happens (a flat "never crossed" claim isn't an achievable browser
+  guarantee — GC pauses, OS scheduling, thermal throttling are real). Also verify the existing lerp is
+  genuinely delta-time-based, not frame-count-based (currently unverified). Reported per
+  `docs/engine/performance_contract.md`'s scoped-claims discipline — not assumed, not a bare number. Any
+  real optimization need this surfaces is a separate future ticket.
 - New `GET /api/v1/manifest` endpoint (backend + `useSimulation.ts` only): fetched once alongside `/static`,
   returning `{schema_version, terrain_types, entity_kinds, building_types, location_types}` — makes the
   backend's own registries the source of truth for ID meaning instead of the frontend's current independent,
-  drift-prone copy (`frontend/src/constants/colors.ts`). Scope boundary: the endpoint + fetch is in-scope;
-  actually retiring `colors.ts` in favor of manifest-driven values touches `GameCanvas.tsx`, which this
-  epic's own scope keeps untouched — left as a fast-follow, not silently declared done here.
+  drift-prone copy (`frontend/src/constants/colors.ts`). **Split, per external review**: track
+  `protocol_version` (wire message structure) and `dictionary_version` (what an ID currently means)
+  separately, not as one combined version — a dictionary change (relabeling a terrain type) shouldn't force
+  every client to hard-disconnect the way an actual protocol change should. Scope boundary: the endpoint +
+  fetch is in-scope; actually retiring `colors.ts` in favor of manifest-driven values touches
+  `GameCanvas.tsx`, which this epic's own scope keeps untouched — left as a fast-follow, not silently
+  declared done here.
 - Give the new broadcast message an explicit schema-version marker and treat its shape as additive-only
   from day one — cheap now, expensive to retrofit once a second client type depends on it (see plan doc's
   "Real-Time Transfer & Multi-Client Design Guidance").
+- **Reserve, don't implement, a spatial-subscription field on the delta message envelope** (e.g. an unused
+  `region`/`chunk` field) — added after an independently-verified bandwidth reassessment showed interest
+  management is likely necessary at real target scale (10,000 entities), not the safely-indefinitely-
+  deferrable item this epic originally treated it as. Costs nothing now; avoids a breaking protocol change
+  later. Building the actual filtering stays out of scope for this epic.
 
 ## Out of Scope
 - Any new UI panel beyond what `GameCanvas.tsx` already renders (its minimap + locations panel is
