@@ -10714,3 +10714,117 @@
     callers (one phasePalette.ts substring false-positive on "author").'
   test_path: tests/api/test_cors_config.py::test_cors_never_combines_wildcard_origin_with_credentials,tests/api/test_cors_config.py::test_cors_preflight_never_combines_wildcard_origin_with_credentials
   divergence_note: null
+- id: INFRA-365
+  text: "GovernorPolicy.from_mode() (src/engine/policy.py:70,91,112,133) sets concurrency_limit\
+    \ to 1.0/1.0/0.5/0.25 across NORMAL/CONSTRAINED/DEGRADED/SURVIVAL \u2014 the active\
+    \ worker pool shrinks as RuntimeMode pressure escalates, rather than growing to\
+    \ clear backlog. This is correct because concurrency is the last shedding lever,\
+    \ not the first: by the time WorkerManager.execute_batch() (src/engine/worker_manager.py)\
+    \ applies concurrency_limit to compute effective_cap, the dispatched batch has\
+    \ already shrunk via phase budgets (PhaseBudgetGovernor.evaluate(), src/engine/phase_governor.py),\
+    \ cadence gating (SystemCadence.should_run(), src/engine/cadence.py), and LOD/scheduling\
+    \ filtering (DeterministicScheduler.select_work(), src/engine/scheduler.py). A\
+    \ smaller worker pool on an already-smaller batch reduces thread/IPC contention\
+    \ rather than adding scheduling noise to an already-stressed system."
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: "src/engine/policy.py::GovernorPolicy.from_mode (concurrency_limit\
+    \ values, lines 70/91/112/133, docstring added by TCK-20260817-DOC-CONCURRENCY-LIMIT-RATIONALE)\
+    \ + src/engine/worker_manager.py::WorkerManager.execute_batch (effective_cap =\
+    \ max(1, ceil(max_workers * concurrency_limit)), line ~103) + src/engine/phase_governor.py::PhaseBudgetGovernor.evaluate\
+    \ + src/engine/cadence.py::SystemCadence.should_run + src/engine/scheduler.py::DeterministicScheduler.select_work\
+    \ + src/engine/lod.py::LODService.should_execute + docs/engine/contracts/bounded_concurrency_contract.md\
+    \ \xA75.1 \"Why concurrency_limit Decreases as RuntimeMode Escalates\" (TCK-20260817-DOC-CONCURRENCY-LIMIT-RATIONALE)\
+    \ Also narrated in docs/architecture/kernel_concurrency_design_philosophy.md (Part\
+    \ 4, \"Performance under pressure\")."
+  proof_type: parity
+  test_path: tests/unit/kernel/test_worker_adaptation.py::test_worker_concurrency_throttling,tests/unit/kernel/test_worker_adaptation.py::test_worker_concurrency_rounding
+  divergence_note: null
+  support_boundary: "Documents/verifies the existing concurrency_limit values and\
+    \ their rationale only \u2014 no production behavior changed (docstring/doc-only\
+    \ ticket, git diff on policy.py shows 16 insertions/0 deletions, no concurrency_limit=\
+    \ value touched). Does not claim anything about resource_governor_contract.md,\
+    \ which explicitly disclaims worker-pool/concurrency scaling as a Non-Goal."
+- id: INFRA-366
+  text: "docs/engine/contracts/simulation_kernel_contract.md \xA79 \"Kernel Boundaries\"\
+    \ stated \"No concurrency or parallel execution\", contradicting docs/engine/kernel.md\
+    \ (Concurrent Collection) and docs/engine/contracts/bounded_concurrency_contract.md\
+    \ (bounded worker pool law) -- both also status: active, authority: P1. Corrected\
+    \ \xA79 to a narrower accurate statement: concurrency is bounded to the COLLECTION\
+    \ phase only (WorkerManager's ThreadPoolExecutor/ProcessPoolExecutor), with RESOLUTION\
+    \ applying all proposals via a single deterministic serial commit order (ConcurrencyLaw),\
+    \ so the three P1 docs and the code now agree."
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: "src/engine/worker_manager.py::WorkerManager (ThreadPoolExecutor/ProcessPoolExecutor,\
+    \ bounded by max_workers) + src/engine/kernel.py::Kernel._phase_collection (line\
+    \ 563, sole caller of the worker pool) + src/engine/kernel.py::Kernel._phase_resolution\
+    \ (line 648, serial AuthoritativeApplyPipeline.refine()) + src/core/concurrency_law.py::ConcurrencyLaw\
+    \ (frozen commit-order priority mapping) + docs/engine/contracts/bounded_concurrency_contract.md\
+    \ \xA73 Deterministic Commit Law Also narrated in docs/architecture/kernel_concurrency_design_philosophy.md\
+    \ (Part 2, \"The tick loop, with Collection expanded\")."
+  proof_type: contract
+  test_path: tests/integration/kernel/test_worker_determinism.py::test_concurrency_determinism_equivalence,tests/integration/kernel/test_worker_determinism.py::test_race_resistance_via_sorting,tests/integration/kernel/test_simulation_kernel_contract.py::test_authoritative_phase_list
+  divergence_note: null
+  support_boundary: "Documentation-only correction (TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION)\
+    \ -- no production code changed. Does not touch simulation_kernel_contract.md\
+    \ \xA79's other three bullets (scheduler optimization, adaptive degradation, external\
+    \ event brokers), deferred to TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT, nor the 6-phase\
+    \ vs 7-phase contradiction (TCK-20260817-FIX-PHASE-COUNT-CONTRADICTION)."
+- id: INFRA-367
+  text: "docs/engine/architecture.md \xA72 and docs/guides/simulation.md stated a\
+    \ fabricated 6-phase kernel loop (INIT, GOVERNANCE, SCHEDULING, PACKETIZATION,\
+    \ RESOLUTION, PERSISTENCE) with two phase names (GOVERNANCE, PACKETIZATION) that\
+    \ do not correspond to any real _phase_* method on Kernel, contradicting docs/engine/kernel.md\
+    \ and docs/engine/contracts/simulation_kernel_contract.md (both already correct\
+    \ at 7 phases: INIT, SCHEDULING, COLLECTION, RESOLUTION, CLEANUP, ADVANCEMENT,\
+    \ PERSISTENCE). Corrected architecture.md and docs/guides/simulation.md to the\
+    \ real 7-phase list and added a cross-reference note to substrate_baseline_contract.md\
+    \ \xA74 reconciling its 6-authoritative- phase framing (PERSISTENCE excluded as\
+    \ non-authoritative) with the 7-phase count used elsewhere."
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/engine/kernel.py::Kernel._tick_once_inner (7 _phase_* calls in
+    order: init line 364, scheduling line 379, collection line 388, resolution line
+    397, cleanup line 403, advancement line 407, persistence line 426) + src/engine/phases.py::TickPhase
+    (7-value IntEnum) and get_authoritative_phases() (6-item authoritative-only subset
+    excluding PERSISTENCE) Also narrated in docs/architecture/kernel_concurrency_design_philosophy.md
+    (Part 2, "The tick loop, with Collection expanded").'
+  proof_type: contract
+  test_path: tests/docs/test_kernel_phase_names_consistent.py::test_no_fabricated_phase_names_in_kernel_docs,tests/integration/kernel/test_simulation_kernel_contract.py::test_authoritative_phase_list
+  divergence_note: null
+  support_boundary: Documentation-only correction (TCK-20260817-FIX-PHASE-COUNT-CONTRADICTION)
+    -- no production code changed. Complements INFRA-366 (TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION),
+    which explicitly deferred this phase-count scope. Does not touch the 17-vs-37
+    mutation-pipeline- count mismatch (docs/guides/simulation.md line 26 vs docs/engine/README.md),
+    a separate pre-existing issue.
+- id: INFRA-368
+  text: 'BenchHarness.run_benchmark() samples kernel.status.current_mode every sampled
+    tick (unthrottled, unlike the periodic RSS sampler) and exposes it as result["mode_sequence"].
+    tests/perf/test_perf_regression_baseline.py::test_regression_vs_baseline asserts
+    no RuntimeMode excursion occurred during the gate window, independent of the avg_tick_compute_ms
+    threshold check, so a benchmark that degrades mid-run cannot have cheaper degraded-mode
+    ticks blended into its average unnoticed. An explicit empirical measurement pass
+    (not assumed) against all 6 live-parametrized scenarios (warmup_ticks=10, sample_ticks=50,
+    simq_corpus_crowded_frontier run twice) found every scenario stayed DEGRADED for
+    all 50 sampled ticks on every run -- traced to WorkerManager.get_stats() defaulting
+    worker_utilization to 1.0 (not 0.0) whenever max_worker_count == 0, which every
+    PERF_*_LOCAL profile sets, tripping ResourceGovernor._get_indicated_mode()''s
+    worker_utilization >= 0.9 DEGRADED threshold unconditionally regardless of real
+    load. _RUNTIME_MODE_HARD_SCENARIOS is therefore empty: all 6 scenarios are gated
+    soft (PerformanceThresholdWarning on excursion) pending a follow-up ticket to
+    fix the WorkerManager/Governor signal defect, per an explicit empirical measurement
+    pass -- TCK-20260817-RUNTIMEMODE-BENCH-SCOPING.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: "src/perf/bench_harness.py: BenchHarness.run_benchmark() mode_samples\
+    \ collection and result[\"mode_sequence\"]. tests/perf/test_perf_regression_baseline.py:\
+    \ _assert_runtime_mode_stayed_normal(), _RUNTIME_MODE_HARD_SCENARIOS (empty, all-soft\
+    \ per empirical measurement). docs/engine/performance_contract.md \xA73.1: RuntimeMode\
+    \ Scoped Claims dimension."
+  test_path: tests/perf/test_bench_harness.py::test_run_benchmark_records_mode_sequence,tests/perf/test_perf_regression_baseline.py::test_perf_regression_baseline_flags_runtime_mode_excursion,tests/perf/test_perf_regression_baseline.py::test_regression_vs_baseline,tests/perf/test_perf_regression_baseline.py::test_performance_contract_lists_runtimemode_scoped_claim
+  divergence_note: null

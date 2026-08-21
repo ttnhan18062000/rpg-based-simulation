@@ -25,7 +25,7 @@ Before application, results are processed through the `ComponentPatch` model (`s
 
 ## 4. Update Consumption Rules
 - **Atomic Application**: All updates within a domain (Entity, World, Building) are applied together or not at all (in case of total tick failure).
-- **Domain Independence**: Rejection of a navigation update must not corrupt an unrelated inventory update (See [Partial Rejection Proof](tests/engine/test_partial_rejection.py)).
+- **Domain Independence**: Rejection of a navigation update must not corrupt an unrelated inventory update (See [Partial Rejection Proof](tests/unit/core/test_partial_rejection.py)).
 
 ## 5. Traceability (Replay-Visible Truth)
 - Every applied update must be emitted as a `REFINED_UPDATE` trace event.

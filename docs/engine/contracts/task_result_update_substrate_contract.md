@@ -70,5 +70,5 @@ The `AuthoritativeApplyPipeline` is the ONLY place where updates are transformed
 ## 5. Verification Path
 This contract is enforced by:
 - `src/core/protocol_validator.py`: Static validation of batches.
-- `tests/engine/test_worker_integrity.py`: Runtime boundary proofs.
-- `tests/engine/test_authoritative_apply.py`: Refinement/Apply correctness.
+- `tests/unit/kernel/test_worker_integrity.py`: Runtime boundary proofs.
+- `tests/integration/pipeline/test_authoritative_apply.py`: Refinement/Apply correctness.

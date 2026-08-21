@@ -54,4 +54,4 @@ Verify separation between control signals and authoritative state.
 | Artifact | Link | Purpose |
 | :--- | :--- | :--- |
 | Signals Contract | [signal_truth_contract.md](../contracts/signal_truth_contract.md) | The Law |
-| Closure Proof | `tests/governance/test_milestone_b_closure.py` | The Gate |
+| Closure Proof | `tests/integration/kernel/test_milestone_b_closure.py` | The Gate |

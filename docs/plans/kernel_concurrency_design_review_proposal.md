@@ -34,6 +34,12 @@ it placed into the docs tree (most likely `docs/architecture/`, alongside the ot
 design docs), cross-linked from `docs/engine/kernel.md` and the three concurrency contracts it
 summarizes, and folded into the knowledge index (`make knowledge-index-update`).
 
+**Update (TCK-20260817-KERNEL-CONCURRENCY-DESIGN-DOC, closed 2026-08-21):** resolved. Landed at
+`docs/architecture/kernel_concurrency_design_philosophy.md` (status: active, authority: P1,
+audience: developer), with all 4 mermaid diagrams (not the 2 this section's own intro implied),
+cross-linked from `kernel.md` and all three concurrency contracts, and the two stale internal
+"Known documentation drift" items updated in place.
+
 ## C2 — Fix the "is Collection concurrent or not" contradiction
 
 `docs/engine/kernel.md` §"Concurrency & The Resolution Bottleneck" states: *"Concurrent
@@ -43,6 +49,13 @@ concurrency or parallel execution."* Both docs carry `status: active, authority:
 claim to be authoritative about the same kernel. The actual code (`src/engine/worker_manager.py`,
 `ThreadPoolExecutor`/`ProcessPoolExecutor`) matches `kernel.md`'s description, not the contract's.
 One of these two docs is stale and needs correcting to match the other and the code.
+
+**Update (TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION, closed 2026-08-21):** resolved.
+§9 "Kernel Boundaries" was corrected to a narrower, accurate statement: concurrency is bounded to
+the COLLECTION phase only (`WorkerManager`'s `ThreadPoolExecutor`/`ProcessPoolExecutor`), with
+RESOLUTION applying all proposals through a single deterministic serial commit order
+(`ConcurrencyLaw`, `src/core/concurrency_law.py`) — kernel.md, simulation_kernel_contract.md, and
+bounded_concurrency_contract.md now agree.
 
 ## C3 — Fix the 6-phase vs. 7-phase contradiction
 
@@ -54,6 +67,13 @@ or PACKETIZATION phases at all. These three P1-authority docs disagree with each
 many phases the kernel actually has and what they're named. Needs reconciliation against the
 actual phase implementation in `src/engine/kernel.py` (`_phase_scheduling`, `_phase_collection`,
 `_phase_resolution`, `_phase_cleanup`, etc.), and the losing description(s) corrected.
+
+**Update (TCK-20260817-FIX-PHASE-COUNT-CONTRADICTION, closed 2026-08-21):** resolved. Corrected
+`architecture.md` §2's fabricated GOVERNANCE/PACKETIZATION table to the real 7-phase list, also
+fixed the identical defect in `docs/guides/simulation.md` (found during this ticket, not in its
+original scope), added a reconciling note to `substrate_baseline_contract.md` §4, and removed the
+`xfail(strict=True)` marker from `tests/docs/test_kernel_phase_names_consistent.py` — the living
+test now genuinely passes for the first time.
 
 ## C4 — Close the benchmarking-integrity gap (RuntimeMode not scoped or enforced)
 
@@ -81,6 +101,18 @@ an enforcement mechanism (assertion or gate) added to `tests/perf/test_perf_regr
 (or wherever the investigation determines is correct) that fails or clearly flags a benchmark run
 if the Governor ever left NORMAL mode during the sampled window.
 
+**Update (TCK-20260817-RUNTIMEMODE-BENCH-SCOPING, closed 2026-08-21):** resolved. `RuntimeMode`
+added as a 5th Scoped-Claims dimension; `BenchHarness.run_benchmark()` now samples
+`kernel.status.current_mode` every tick and exposes `result["mode_sequence"]`;
+`test_regression_vs_baseline` asserts no excursion occurred, independent of the compute-time
+check. An empirical measurement pass (not assumed) against all 6 live-parametrized scenarios
+found a real, unrelated pre-existing defect: `WorkerManager.get_stats()` defaults
+`worker_utilization` to `1.0` (not `0.0`) whenever `max_worker_count == 0`, which every
+`PERF_*_LOCAL` profile sets — this unconditionally trips the Governor's DEGRADED threshold
+regardless of real load, so all 6 scenarios currently show `DEGRADED` for every sampled tick.
+The new gate is correctly soft (warning-only) for all 6 pending a follow-up ticket to fix the
+`WorkerManager`/Governor signal defect itself — not silently loosened or force-fit to pass hard.
+
 ## C5 — State the engine's design-priority order explicitly
 
 `docs/engine/project_lawbook_m10.md` § Architectural Pillars lists five pillars — Determinism,
@@ -99,6 +131,17 @@ be re-derived from code and cross-referencing multiple docs each time. We want t
 whatever the maintainers confirm is actually intended, if our reconstruction is wrong) stated
 explicitly in the lawbook or a doc it links to.
 
+**Update (TCK-20260817-STATE-DESIGN-PRIORITY-ORDER, closed 2026-08-21):** resolved.
+`project_lawbook_m10.md`'s Architectural Pillars section now states the reconstructed order
+(Determinism, then Resource-Safety, then Performance — only within what the first two allow, then
+Auditability — proving the first three held) as a terse rule, cross-linking
+`kernel_concurrency_design_philosophy.md` Part 1 as the single source of truth for the full
+reasoning; the 5-item pillar list itself is unchanged and not mapped term-by-term onto the 4-item
+order. Part 1's own stale "it is not stated as a rule anywhere" sentence was corrected in place to
+confirm the lawbook now carries the terse rule while Part 1 remains the SSOT for the reasoning.
+Four new doc-consistency tests were added to `tests/docs/test_doc_integrity.py` guarding order-term
+verbatim match, cross-link presence, and non-recurrence of the stale sentence.
+
 ## C6 — Document why `concurrency_limit` decreases as `RuntimeMode` escalates
 
 `src/engine/policy.py`'s `GovernorPolicy.from_mode()` sets `concurrency_limit` to 1.0 for NORMAL,
@@ -112,6 +155,13 @@ scheduling noise to an already-stressed system. No doc states this rationale. We
 down next to `GovernorPolicy.from_mode()` or in `docs/engine/governance_logic.md`, so a future
 contributor doesn't "fix" this into scaling the wrong direction.
 
+**Update (TCK-20260817-DOC-CONCURRENCY-LIMIT-RATIONALE, closed 2026-08-21):** resolved. The
+reconstructed rationale above was verified against real code (`PhaseBudgetGovernor.evaluate()`,
+`SystemCadence.should_run()`, `DeterministicScheduler.select_work()`'s LOD/cadence gating) and
+written down in both places: a docstring on `GovernorPolicy.from_mode()`
+(`src/engine/policy.py`) and `docs/engine/contracts/bounded_concurrency_contract.md` §5.1 (not
+`governance_logic.md`, which turned out to cover an unrelated Town Governance concept).
+
 ## C7 — Confirm where (if anywhere) the Collection-phase worker path consumes RNG
 
 A grep across `src/engine/domain_logic.py`, `src/engine/combat.py`, `src/engine/movement.py`, and
@@ -123,6 +173,17 @@ path may currently be fully deterministic-from-state with zero RNG consumption. 
 confirmed by absence of a grep match, not a full call-graph trace, so it needs a definitive
 investigation of where (if anywhere) `DeterministicRNG` is actually consumed in the tick, and the
 finding recorded in `docs/engine/kernel.md` or the worker contract either way.
+
+**Update (TCK-20260817-DOC-COLLECTION-RNG-CONSUMPTION, closed 2026-08-21):** resolved with a full
+trace, not just an absence-of-grep-match inference, recorded at
+`docs/engine/contracts/simulation_kernel_contract.md` §7.1 "RNG Consumption in Practice." Finding:
+the Collection-phase worker path (`worker_logic.py`/`domain_logic.py`/`combat.py`/`movement.py`)
+consumes zero RNG, consistent with combat's deterministic-by-design mechanics (`docs/mechanics/
+02_combat_laws.md:11`); the only RNG draw in Collection-phase packet construction is
+`executor.py:301`'s `packet_seed`, confirmed genuinely dead (computed, never read) and explicitly
+deferred rather than silently left undocumented; and the three real downstream RNG consumers
+(`EntityGenerator`, `QuestGenerator`, `GuildAction`) all run in serial `Kernel._phase_resolution()`,
+never `_phase_collection()`.
 
 ## C8 — Audit `docs/engine/`, `docs/architecture/`, and `docs/performance/` for stale/duplicate/
 contradictory content, and propose a structure that prevents this class of drift
@@ -242,9 +303,11 @@ Three independent mechanisms:
    kernel thread, after every future has resolved. The one genuinely shared mutable object —
    `WorkerManager`'s inflight/active/peak counters — is protected by an explicit `threading.Lock`.
 
-Open question, not resolved: no `rng.get_*` calls were found in `domain_logic.py`, `combat.py`,
-or `movement.py` — the Collection-phase worker path appears to consume no randomness currently.
-Confirmed only by absence of a grep match; worth a direct trace (see C7 in the parent proposal).
+Open question, now resolved (TCK-20260817-DOC-COLLECTION-RNG-CONSUMPTION, closed 2026-08-21, see
+C7 above): no `rng.get_*` calls were found in `domain_logic.py`, `combat.py`, or `movement.py` —
+the Collection-phase worker path consumes no randomness. This is no longer only an
+absence-of-grep-match inference; a full trace confirmed it and is recorded at
+`docs/engine/contracts/simulation_kernel_contract.md` §7.1.
 
 ## Part 4 — Performance under pressure
 
@@ -309,6 +372,11 @@ degraded-mode ticks into a reported baseline and mask a genuine regression.
    `simulation_kernel_contract.md`'s 7-phase framing.
 3. Hardware-class definition conflict (already self-flagged): `perf_baseline_policy.md` §2.2 vs.
    `certification_contract.md` §3, per `TCK-20260702-OBSISO-ISOLATION-PROOF`.
+
+**Update (TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT, closed 2026-08-21):** full audit recorded at
+`docs/audits/D25_engine_docs_drift.md`, including a 4th newly-found item (architecture.md's
+inverted hardware-class table) and 2 direct fixes (README.md, CLAUDE.md) folded in beyond this
+list's original 3.
 
 ## References
 

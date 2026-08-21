@@ -36,6 +36,8 @@ The `Kernel` MUST execute the following 6 phases in strict sequential order. Eac
 ### Observational Boundary
 The **PERSISTENCE** hook and all other hooks (Replay, logging, metrics) are **non-authoritative**. They must NOT modify `AuthoritativeState` and should execute after the tick is logically sealed at the **ADVANCEMENT** phase.
 
+*Cross-reference: this 6-phase authoritative count plus the PERSISTENCE hook together form the 7 phases named in [`docs/engine/kernel.md`](../kernel.md) and [`docs/engine/architecture.md`](../architecture.md) — the two framings are equivalent, not contradictory: this section enumerates only the authoritative-mutation-eligible subset (`get_authoritative_phases()`), while the other docs enumerate all 7 phases the `Kernel` executes per tick.*
+
 ## 5. Authoritative Apply Law
 - **Singular Mutation**: `ApplyPath.apply_generation` is the ONLY entry point for updating `AuthoritativeState`.
 - **Generation-Based**: State transitions produce a new immutable instance (`replace`).
@@ -81,8 +83,8 @@ The `CanonicalStateHasher` defines the proof of integrity.
 ## 10. Verification Status
 This contract is **FROZEN** for the Gameplay Attachment baseline and verified by the following:
 - **Test Matrix**: `docs/archive/engine_matrices/ma_test_matrix.md`
-- **Closure Guard**: `tests/engine/test_milestone_a_closure.py`
-- **Integrity Guard**: `tests/engine/test_substrate_freeze_m1.py`
+- **Closure Guard**: `tests/integration/kernel/test_milestone_a_closure.py`
+- **Integrity Guard**: `tests/integration/kernel/test_substrate_freeze_m1.py`
 
 ## 11. Divergence Policy
 Any intentional divergence from this baseline must be logged in `docs/guidelines/intentional_divergences.md`.

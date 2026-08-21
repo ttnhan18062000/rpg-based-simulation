@@ -97,7 +97,7 @@ When simulation complexity increases (e.g., introducing a new subsystem or expan
 3. **Verify Baseline Parity**:
    Run the verification integration suite to prove the newly generated baseline maintains bit-identical state hash parity against reference runs.
    ```bash
-   pytest tests/integration/optimization/test_perf_regression_gate.py
+   pytest tests/unit/perf/test_perf_regression_gate.py
    ```
 
 4. **Commit and Promote**:

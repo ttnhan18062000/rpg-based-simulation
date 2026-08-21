@@ -79,11 +79,18 @@ class BenchHarness:
 
             # 2. SAMPLING
             rss_samples: List[float] = []
+            mode_samples: List[str] = []
             wall_start_ts = time.perf_counter()
 
             try:
                 for i in range(sample_ticks):
                     kernel.tick_once()
+
+                    # RuntimeMode is a trivial IntEnum read — sample every tick, unlike the
+                    # throttled RSS collector below, so a transient CONSTRAINED/DEGRADED/SURVIVAL
+                    # excursion inside an un-sampled gap can never be missed
+                    # (TCK-20260817-RUNTIMEMODE-BENCH-SCOPING; see plan.md Design Decisions (a)).
+                    mode_samples.append(kernel.status.current_mode.name)
 
                     # Sample memory every 10 ticks to reduce overhead
                     if i % 10 == 0:
@@ -152,7 +159,8 @@ class BenchHarness:
                 "cpu_time_total_delta_s": round(cpu_time_total_delta_s, 4),
                 "replay_enabled": not effective_flags.get("no_replay", False),
                 "frame_pacing_enabled": not effective_flags.get("no_frame_pacing", False),
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "mode_sequence": mode_samples,
             }
 
             # Add flat keys for schema compliance

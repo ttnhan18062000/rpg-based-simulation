@@ -220,7 +220,7 @@ coverage backstop is a separately-scoped decision, not implied here.
      family's existing OKLCH-lightness band, re-validated via the dataviz skill's
      `validate_palette.js` the same three ways this file's own header comment documents. This file
      has **no automated cross-language sync guard** with `vocabulary.py` — it must be hand-updated
-     in the same PR, and its own completeness test (`src/test/phasePalette.test.ts`'s "exports a
+     in the same PR, and its own completeness test (`dashboard-frontend/src/test/phasePalette.test.ts`'s "exports a
      key set exactly equal to the 21 distinct WORKFLOW_PHASES strings" assertion) must be updated
      from 21 to 22 or it fails immediately, by design, as the sync-drift alarm.
   4. `tests/tools/test_validate_agent_monitoring.py::test_canonical_vocabulary_single_sourced`

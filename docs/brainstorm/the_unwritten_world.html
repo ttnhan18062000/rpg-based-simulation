@@ -1,0 +1,300 @@
+<title>The Unwritten World</title>
+<style>
+:root {
+  --bg: #EDEEE9;
+  --surface: #FFFFFF;
+  --surface-2: #E3E4DC;
+  --ink: #1F2421;
+  --ink-soft: #4B534E;
+  --border: #D3D5CB;
+  --accent: #A9720C;
+  --accent-soft: #F1E4C8;
+  --thread: #6B5B95;
+  --thread-soft: #E7E3F1;
+  --fail: #8B5E3C;
+  --fail-soft: #EDE1D2;
+  --shadow: 0 1px 2px rgba(31,36,33,0.06), 0 4px 16px rgba(31,36,33,0.06);
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181A; --surface: #1C2124; --surface-2: #232A2D;
+    --ink: #E8E6DF; --ink-soft: #A8AFA9; --border: #313A3D;
+    --accent: #D9A441; --accent-soft: #3A311D;
+    --thread: #B0A2D9; --thread-soft: #2A2438;
+    --fail: #C99A6C; --fail-soft: #332821;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14181A; --surface: #1C2124; --surface-2: #232A2D;
+  --ink: #E8E6DF; --ink-soft: #A8AFA9; --border: #313A3D;
+  --accent: #D9A441; --accent-soft: #3A311D;
+  --thread: #B0A2D9; --thread-soft: #2A2438;
+  --fail: #C99A6C; --fail-soft: #332821;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body);
+  line-height: 1.65; -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 780px; margin: 0 auto; padding: 64px 24px 120px; }
+
+header.hero { margin-bottom: 56px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 14px;
+}
+h1.title {
+  font-family: var(--font-display); font-weight: 600; font-size: clamp(36px, 6vw, 54px);
+  line-height: 1.08; margin: 0 0 22px; text-wrap: balance;
+}
+.thesis {
+  font-family: var(--font-display); font-size: clamp(18px, 2.4vw, 21px); line-height: 1.6;
+  color: var(--ink); max-width: 62ch; margin: 0 0 12px;
+}
+.thesis-source {
+  font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); margin: 0;
+}
+
+.manifesto {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+  padding: 8px 36px; box-shadow: var(--shadow); margin: 48px 0 64px;
+}
+.manifesto ol { list-style: none; margin: 0; padding: 0; counter-reset: item; }
+.manifesto li {
+  counter-increment: item; padding: 26px 0; border-bottom: 1px solid var(--border);
+  display: grid; grid-template-columns: 40px 1fr; gap: 18px; align-items: baseline;
+}
+.manifesto li:last-child { border-bottom: none; }
+.manifesto li::before {
+  content: counter(item); font-family: var(--font-display); font-size: 22px; font-weight: 600;
+  color: var(--accent);
+}
+.manifesto p {
+  margin: 0; font-family: var(--font-display); font-size: 18px; font-weight: 600;
+  line-height: 1.4; text-wrap: balance;
+}
+
+.overview-note {
+  font-size: 14px; color: var(--ink-soft); text-align: center; margin: -48px 0 56px;
+  font-family: var(--font-mono); letter-spacing: 0.02em;
+}
+
+article.principle { margin: 72px 0; scroll-margin-top: 24px; }
+article.principle h2 {
+  font-family: var(--font-display); font-size: clamp(24px, 3.2vw, 30px); font-weight: 600;
+  margin: 0 0 6px; text-wrap: balance; display: flex; align-items: baseline; gap: 14px;
+}
+article.principle h2 .num {
+  font-family: var(--font-mono); font-size: 15px; color: var(--accent); font-weight: 600;
+}
+article.principle .scale {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-soft); background: var(--surface-2); padding: 3px 10px; border-radius: 999px;
+  display: inline-block; margin-bottom: 22px;
+}
+article.principle p { margin: 0 0 18px; font-size: 16px; max-width: 66ch; }
+article.principle p.lede { font-size: 17px; color: var(--ink); }
+article.principle strong.term { color: var(--accent); }
+
+.vignette {
+  border-left: 3px solid var(--thread); background: var(--thread-soft);
+  border-radius: 0 12px 12px 0; padding: 16px 22px; margin: 22px 0; max-width: 66ch;
+}
+.vignette p { margin: 0; font-size: 14.5px; color: var(--ink); font-style: italic; }
+.vignette .tag {
+  display: block; font-family: var(--font-mono); font-style: normal; font-size: 10.5px;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--thread); margin-bottom: 8px;
+}
+
+.failure {
+  border-left: 3px solid var(--fail); background: var(--fail-soft);
+  border-radius: 0 12px 12px 0; padding: 16px 22px; margin: 22px 0; max-width: 66ch;
+}
+.failure p { margin: 0; font-size: 14.5px; color: var(--ink); }
+.failure .tag {
+  display: block; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--fail); margin-bottom: 8px;
+}
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 64px 0; }
+
+.closing {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+  padding: 32px 36px; box-shadow: var(--shadow); margin-top: 64px;
+}
+.closing h2 { font-family: var(--font-display); font-size: 21px; margin: 0 0 14px; }
+.closing p { font-size: 14.5px; color: var(--ink-soft); margin: 0 0 14px; max-width: 66ch; }
+.closing p:last-child { margin-bottom: 0; }
+
+footer {
+  margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border);
+  font-size: 12.5px; color: var(--ink-soft); font-family: var(--font-mono);
+}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">Creative Direction &middot; RPG Vision, Not Implementation</p>
+  <h1 class="title">The Unwritten World</h1>
+  <p class="thesis">"An RPG world that plays itself &mdash; a deterministic, concurrent simulation engine where hundreds of autonomous entities explore, fight, craft, and form factions across a living world &mdash; while you watch the stories emerge." Think of it as an ant farm meets Final Fantasy: a living world you observe rather than control.</p>
+  <p class="thesis-source">&mdash; the project's own founding pitch</p>
+</header>
+
+<div class="manifesto">
+  <ol>
+    <li><p>No one hands down the story &mdash; it has to be found.</p></li>
+    <li><p>Individuals carry their own trajectory, distinguishable from the aggregate.</p></li>
+    <li><p>Different creatures should be different, not reskinned humans.</p></li>
+    <li><p>No single loyalty wins by default.</p></li>
+    <li><p>Places remember what happened to them.</p></li>
+    <li><p>Nothing sits still forever.</p></li>
+    <li><p>A world that feels lived-in without drowning in bookkeeping.</p></li>
+    <li><p>The world has to tell on itself &mdash; legible from outside, not just correct underneath.</p></li>
+  </ol>
+</div>
+<p class="overview-note">that's the whole thing, at a glance &mdash; everything below is the same eight ideas, gone deep</p>
+
+<article class="principle" id="p1">
+  <h2><span class="num">01</span> No one hands down the story &mdash; it has to be found.</h2>
+  <p class="scale">The governing idea &mdash; everything else answers to this one</p>
+  <p class="lede">If you can point to a single line of authored logic that says "and here is where the story happens," it isn't real yet. It's staged. A real story in this world is what's left over after independent characters, each acting on reasons that make sense only to them, happen to collide.</p>
+  <div class="vignette">
+    <span class="tag">Already true, unplanned</span>
+    <p>A cautious hero avoids a goblin camp for five hundred ticks, grinding weaker creatures in the forest instead. Eventually it raids the camp &mdash; and finds the goblin chief has grown stronger over that same stretch of time. Nobody scripted that irony. Two separate growth curves, running on their own clocks, happened to meet at the worst possible moment.</p>
+  </div>
+  <p>The principle should reach further than combat pacing, though. Picture a border war and a marriage that have nothing to do with each other on paper &mdash; until the war's front line moves and a married couple who were never political suddenly find themselves living on opposite sides of a new border. Nobody wrote "star-crossed lovers." A boundary moved for entirely unrelated military reasons, and a private life got complicated as a side effect. That's the texture this whole world is reaching for: consequence that leaks sideways between systems that were never designed to talk to each other.</p>
+  <p>This changes what a good new idea actually looks like. The right test for any new mechanic isn't "does this produce a satisfying story on its own" &mdash; it's <strong class="term">does this create a new intersection other systems can stumble into</strong>. Narrative satisfaction is what you get afterward, never something you aim at directly.</p>
+  <div class="failure">
+    <span class="tag">What failure looks like</span>
+    <p>A mechanic that produces the same shape of consequence no matter what else is happening around it &mdash; a scripted-feeling beat, or a random event with no thread connecting it to anything the world already knows about that character or that place.</p>
+  </div>
+</article>
+
+<article class="principle" id="p2">
+  <h2><span class="num">02</span> Individuals carry their own trajectory, distinguishable from the aggregate.</h2>
+  <p class="scale">Scale: one character</p>
+  <p class="lede">The world tracks populations &mdash; a region's headcount, a race's numbers &mdash; because it has to; nobody can hand-simulate every wolf. But a name, a face, a specific history must never quietly dissolve back into that aggregate. Two entities built from an identical starting template should still visibly diverge, because of what actually happened to each of them and nothing else.</p>
+  <p>This is already partly true in a small, honest way: personality is assigned once, at the moment a character is created, and never changes afterward &mdash; so two otherwise-identical entities are already walking different paths from day one, before anything has even happened to them yet. The reproduction design pushes this further on purpose: a child's two parents, their birth city, their exact place in a lineage are permanently recorded &mdash; and stay recorded even after both parents die. That fact is never folded back into the anonymous population count the way everyone else's existence is. It stays a fact about <em>that one child</em>, forever.</p>
+  <div class="vignette">
+    <span class="tag">Worth building toward</span>
+    <p>Two adventurers who started identical should be tellable apart without looking at their stat sheets. One has survived three near-deaths and grown visibly warier, slower to trust a new ally, quicker to retreat. The other has had an easy run and still charges in without thinking. Not "higher level" &mdash; a genuinely different shape of person, earned through specific, rememberable events rather than a difficulty slider.</p>
+  </div>
+  <p>Hold the tension honestly rather than resolving it: the aggregate isn't the enemy here. A regional population count is a weather system, and weather systems are allowed to be abstractions. The failure is only in confusing the two &mdash; treating a specific person as if they were interchangeable with the average, or letting "the population trends this way" quietly stand in for what an actual named character would do.</p>
+  <p>Part of what makes a trajectory someone's <em>own</em> is that it isn't just handed to them. A character is never merely acted upon &mdash; whatever happens to them, joining a group, marrying, swearing new allegiance, still has to make sense as something they, specifically, agreed to or resisted, given who they are, not something imposed wholesale by whoever initiated it. Every time this world has had to decide whether a relationship forms silently or through a real decision, the real decision has been the right answer: a recruitment offer a target can refuse based on their own trust and history, a marriage proposal either side is genuinely free to decline. An entity that only ever has things happen <em>to</em> it isn't really an individual in this world's terms, no matter how distinct its stats look.</p>
+  <div class="failure">
+    <span class="tag">What failure looks like</span>
+    <p>Any moment where a named, historied character's behavior is indistinguishable from what the regional average would predict &mdash; where knowing their specific history would never have changed the outcome. Or, just as much a failure of this principle: a relationship or commitment that simply happens to a character, with no point at which their own reasons could have refused it.</p>
+  </div>
+</article>
+
+<article class="principle" id="p3">
+  <h2><span class="num">03</span> Different creatures should be different, not reskinned humans.</h2>
+  <p class="scale">Scale: species and kind</p>
+  <p class="lede">A goblin camp, a wolf's den, and a dwarven city need to feel like fundamentally different kinds of life &mdash; not the same settlement shape wearing three different costumes with three different numbers attached.</p>
+  <p>This already shows up as a real distinction, not just a hoped-for one: some creatures build and cooperate the way people do; some hunt in coordinated packs but never build anything at all; some are barely more than a spreading population with no leader in it whatsoever. A goblin camp, a wolf's den, and a spider nest aren't three tiers of the same idea &mdash; they're three different <em>kinds</em> of answer to "how does this creature exist in the world."</p>
+  <p>The distinction should reach past settlement shape into how a creature relates to its own life. A magical or demonic being doesn't have a childhood at all &mdash; it manifests already at full capability, the moment it comes into existence. That isn't a numbers difference from a human's slow climb through youth; it's an entirely different relationship to time itself. A dragon's life isn't a coming-of-age story with bigger stakes. It's not that kind of story to begin with.</p>
+  <div class="vignette">
+    <span class="tag">Worth pushing on</span>
+    <p>Creature psychology should diverge the same way settlement shape does. A wolf pack's loyalty is territorial instinct &mdash; it has nothing to do with an oath. A goblin's loyalty to its chief is opportunistic, tied to whoever's currently winning. A human's loyalty to a guild can survive the guild losing, because it's not instinct or opportunism, it's something closer to identity. Giving every creature the same "trust" number, just tuned to different thresholds, would quietly undo this whole principle even while looking correct on a spreadsheet.</p>
+  </div>
+  <div class="failure">
+    <span class="tag">What failure looks like</span>
+    <p>A bestiary where every entry is functionally a human with different numbers and a different sprite &mdash; same drives, same social shape, same emotional register, only the paint job differs.</p>
+  </div>
+</article>
+
+<article class="principle" id="p4">
+  <h2><span class="num">04</span> No single loyalty wins by default.</h2>
+  <p class="scale">Scale: relationships and politics</p>
+  <p class="lede">A person can love someone their nation is at war with. A guild can pull a member against their own king. The world should let that tension sit there, unresolved, rather than quietly picking a winner on the character's behalf. The friction <em>is</em> the content &mdash; smoothing it away would be deleting the interesting part, not fixing a bug.</p>
+  <div class="vignette">
+    <span class="tag">Already true, worth protecting</span>
+    <p>A human Guard, loyal to a Country at war with a human Shopkeeper's Country, who nonetheless loves that Shopkeeper personally. Neither loyalty erases the other. A trading company with members living in cities on both sides of that same war, whose entire reason to exist is not taking a side &mdash; an organization defined by the conflict its own members are personally caught inside of.</p>
+  </div>
+  <p>The more interesting version of this principle isn't the dramatic one where a character has to make a big, visible choice between two loyalties. It's the quiet version: most conflicting loyalties in an actual life never erupt into open crisis. They just create small frictions &mdash; a moment's hesitation, a decision that's slightly worse than it should have been, a private grudge nobody else ever hears about &mdash; that accumulate over a long life without ever resolving into a single dramatic scene. A dwarf whose own Clan profits from a war their Country is losing probably doesn't have a breakdown about it. They probably just carry it, unevenly, for years.</p>
+  <p>The craft implication follows directly: don't design a system whose job is to resolve a loyalty conflict into one answer. Design each loyalty to push on its own terms, independently, and let a character's actual behavior land wherever those pushes happen to add up &mdash; even when that's a messy, half-contradictory middle that no single loyalty would have chosen on its own.</p>
+  <div class="failure">
+    <span class="tag">What failure looks like</span>
+    <p>Any system where one layer of loyalty (political, always, is the usual culprit) silently overrides every other one whenever they'd conflict &mdash; so that "who do you love" and "who are you loyal to" always resolve to the same answer, every time, for every character.</p>
+  </div>
+</article>
+
+<article class="principle" id="p5">
+  <h2><span class="num">05</span> Places remember what happened to them.</h2>
+  <p class="scale">Scale: geography and history</p>
+  <p class="lede">A ruin shouldn't just be "the ruins." It should be legible as a specific fallen city, a razed war-camp, a den something else moved into after its original owner died. The scars on the map are the world's own memory of itself &mdash; readable by anyone who knows how to look, the way a real landscape carries the marks of what happened on it.</p>
+  <div class="vignette">
+    <span class="tag">The strongest single idea surfaced so far</span>
+    <p>Goblins establish a camp beside an old battlefield. They grow, and start raiding a nearby city. Heroes destroy the camp. Nobody occupies it afterward. Years later, giant spiders have settled into the abandoned structures, and the place is now remembered as a spider-infested ruin. No quest was authored for any of it. Today's world becomes tomorrow's archaeology &mdash; a place's identity can change entirely, as a direct record of what actually happened there, not as a separately-spawned "ruin" with no relationship to its own past.</p>
+  </div>
+  <p>The principle shouldn't stop at physical structures. Political geography deserves the same memory: a border that's moved five times over the life of a long-running world should leave some visible trace behind, not just its current position. A city that's changed hands between two warring powers three times should feel different from one that's always quietly belonged to the same crown &mdash; contested, uneasy, its loyalties still not fully settled even generations later.</p>
+  <p>And the memory should run in both directions. It isn't only that places remember events &mdash; characters should remember <em>places</em>. A hero who grew up in a city that later fell should carry that loss forward as something specific and real: grief tied to an actual location and its actual history, not an abstract sadness with no address.</p>
+  <div class="failure">
+    <span class="tag">What failure looks like</span>
+    <p>Any place whose entire state can be fully described as "type plus a hazard number" &mdash; indistinguishable from a freshly-generated location that happens to share the same stats, no matter what actually happened there.</p>
+  </div>
+</article>
+
+<article class="principle" id="p6">
+  <h2><span class="num">06</span> Nothing sits still forever.</h2>
+  <p class="scale">Scale: pacing and pressure</p>
+  <p class="lede">Left alone, a threat should get worse, not wait patiently to be dealt with whenever it's convenient. A grudge should fester. An ambition should grow. A quiet, static world is a dead one &mdash; the sense that things are always moving toward <em>something</em>, with or without anyone pushing them, is what makes a world worth continuing to watch.</p>
+  <div class="vignette">
+    <span class="tag">Already true, worth extending</span>
+    <p>A goblin camp's danger climbs the longer it's ignored, until it's dangerous enough to raid outward on its own &mdash; "you should have dealt with this earlier" is the whole feeling in one sentence. The idea worth pursuing further: population pressure building in a crowded city feeds a nation's own ambition to expand, which leads to new places being founded or fought over, which draws population into them in turn, which builds pressure somewhere else. No layer's resting state is actually a rest &mdash; everything is either growing, decaying, or straining toward a change.</p>
+  </div>
+  <p>This shouldn't be limited to territory and threat. Relationships deserve the same restlessness. An unaddressed grudge shouldn't sit at a fixed value forever, waiting to be triggered &mdash; it should be able to fade, or curdle, on its own. A trust score that's never tested by anything shouldn't stay perfectly, permanently trusted by default; an ally you haven't spoken to in years probably isn't owed the same confidence as one you saw yesterday. This is a genuinely open thread, not something already decided &mdash; but it follows the same logic as everything already built: ambient drift, not just reaction to direct events.</p>
+  <div class="failure">
+    <span class="tag">What failure looks like</span>
+    <p>Any system whose entire state is a single number that only ever moves when something directly acts on it &mdash; genuinely static, indefinitely, the moment nobody's paying attention to it.</p>
+  </div>
+</article>
+
+<article class="principle" id="p7">
+  <h2><span class="num">07</span> A world that feels lived-in without drowning in bookkeeping.</h2>
+  <p class="scale">Scale: how much detail actually earns its keep</p>
+  <p class="lede">This is the discipline that keeps the other six from spiraling into simulating everything for its own sake. Enough weight that a wound, a marriage, a death actually costs something real &mdash; without needing to track the underlying biology or logistics behind any of it. Depth should be chosen for what it produces, not for how realistic it sounds on paper.</p>
+  <p>The reproduction design draws this line about as cleanly as it's been drawn anywhere: real parentage, a real birth event, a real requirement that a child grow up before becoming an adult &mdash; and, deliberately, no gestation tracking, no fertility stats, no courtship simulation underneath any of it. Those weren't left out by accident or by running out of time. They were left out because they wouldn't have paid off &mdash; nobody watching this world would ever notice the difference between a simulated pregnancy and an instant one, but everybody would notice a fourteen-year-old suddenly commanding an army.</p>
+  <p>The honest test for any future idea is simple to state and hard to apply consistently: <strong class="term">if this were fully built, would anyone watching ever actually notice the difference?</strong> A wound's severity changing someone's combat odds &mdash; noticed, every time. A fully modeled digestive system &mdash; never noticed by anyone, ever, ranked against the actual production of a watchable story.</p>
+  <div class="failure">
+    <span class="tag">The cautionary tale, already real</span>
+    <p>Somewhere in this world right now sit several genuinely well-designed, fully typed systems &mdash; how a character understands its own strengths and weaknesses, a richer private-trust model, more than one competing memory system &mdash; that were built carefully and then never actually switched on or fed real data. They're precise. They're invisible. They're load-bearing for nothing. That's this principle's failure mode taken to its natural end: depth that never surfaces to anyone might as well not exist &mdash; and worse, it creates the appearance of richness that was never actually delivered. Prefer one coarse signal an observer can actually feel over three precise ones nobody will ever see.</p>
+  </div>
+</article>
+
+<article class="principle" id="p8">
+  <h2><span class="num">08</span> The world has to tell on itself &mdash; legible from outside, not just correct underneath.</h2>
+  <p class="scale">Scale: how it reads to whoever's watching &mdash; cuts across every scale above it</p>
+  <p class="lede">Emergence that nobody can follow is indistinguishable from noise. The founding pitch's own phrase is "a living world you observe" &mdash; and observing requires something to actually notice. A rise, a fall, a rivalry, a betrayal has to be recognizable as it happens, not just true, in principle, somewhere inside the simulation's internal state.</p>
+  <div class="vignette">
+    <span class="tag">Already built for exactly this reason</span>
+    <p>The world writes its own history automatically &mdash; reviewing what happened, picking out which events were actually significant, and producing a real, readable account of them, with nobody authoring it by hand. That system exists because "technically emergent" and "actually noticeable" are two different claims, and only one of them is worth anything to an observer.</p>
+  </div>
+  <p>Reputation and notoriety do the same job one level down, for a single character instead of the whole world. They're not just internal bookkeeping &mdash; they're the mechanism by which one person's history becomes <em>visible to others in the world</em>, not merely true in a record only the engine itself can see. A hero nobody's heard of and a hero whose name makes people flinch might be mechanically similar underneath. Only one of those is a story anyone else in the world could actually tell.</p>
+  <p>This principle should push on every other one from a specific angle: not just "don't build depth nobody notices" (that's the bookkeeping principle's job), but actively ask, for anything new, <strong class="term">how would this actually become visible</strong> &mdash; to a watching observer, or to another character inside the world? A place remembering what happened to it only pays off if that memory can surface somehow: in its name, its terrain, a rumor a passing traveler picks up. A memory that never becomes visible to anyone is a memory in name only.</p>
+  <div class="failure">
+    <span class="tag">What failure looks like</span>
+    <p>Any true, correctly-computed fact about the world with no path to ever becoming visible &mdash; not to an outside observer, not to another character, not even to the world's own auto-generated history. A fact that can never be told might as well not have happened.</p>
+  </div>
+</article>
+
+<hr class="divider">
+
+<div class="closing">
+  <h2>What this document is for</h2>
+  <p>This isn't a technical specification and it isn't a status report &mdash; those already exist, and they're both explicitly about what's built versus what isn't. This is the compass: the thing a new idea should be checked against before asking whether it's feasible to build at all.</p>
+  <p>The intended next step is a wide, unconstrained brainstorming pass &mdash; collecting as many RPG ideas as possible, including from an outside perspective specifically because anyone who's been reasoning inside this project for a long stretch (human or otherwise) stops being a reliable source of genuinely fresh angles. That pass needs to stay anchored to what makes <em>this</em> world's identity distinctive, rather than drifting toward generic RPG ideas that would fit any fantasy game equally well. This document is that anchor. An idea worth pursuing should visibly serve at least one of the eight principles above; an idea that doesn't &mdash; no matter how clever on its own terms &mdash; probably belongs to a different project.</p>
+</div>
+
+<footer>
+  Creative direction only &mdash; no implementation status, no code references. See the engineering atlas and the plain-language capabilities page for what's actually built.
+</footer>
+
+</div>

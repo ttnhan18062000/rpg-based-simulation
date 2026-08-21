@@ -25,7 +25,7 @@ data path listed here must be removed before Phase 13 is declared complete.
 ## Retirement Protocol
 
 1. Verify zero test failures with the component removed (run `pytest -m "not slow"`).
-2. Update `docs/guidelines/v2_intentional_divergences.md` to close the divergence entry.
+2. Update `docs/guidelines/intentional_divergences.md` to close the divergence entry.
 3. Remove the `KNOWN_HARDCODED_BASELINE` entry (if applicable).
 4. Update `data/content/compatibility/migration_map.yaml` to mark the ID `retired`.
 5. Add a `tickets/done/` entry referencing the removal commit.

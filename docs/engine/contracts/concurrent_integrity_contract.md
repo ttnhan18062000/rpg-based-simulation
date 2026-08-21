@@ -10,6 +10,10 @@ audience: developer
 ## Purpose
 This document defines the operational lifecycle laws for the engine. It ensures that startup, persistence, runtime status, and shutdown behave as trustworthy contract paths, maintaining the non-authoritative boundary for all observational work.
 
+See also: [`docs/architecture/kernel_concurrency_design_philosophy.md`](../../architecture/kernel_concurrency_design_philosophy.md)
+Part 4/5, for how this contract's operational-lifecycle laws are a concrete instance of the
+engine's broader Progressive Degradation design.
+
 ## Scope
 - Hardening of the replay lifecycle (staging, rotation, manifest, pressure).
 - Startup profile and operational flag validation.

@@ -23,8 +23,8 @@ Tests that pin the operational lifecycle controls: startup validation, operation
 ## Verification Commands
 
 ```bash
-pytest tests/config/test_startup_validation.py
-pytest tests/engine/test_graceful_shutdown.py
-pytest tests/engine/test_observability_budgets.py
-pytest tests/engine/test_operational_flags.py
+pytest tests/unit/core/test_startup_validation.py
+pytest tests/unit/core/test_graceful_shutdown.py
+pytest tests/unit/core/test_observability_budgets.py
+pytest tests/unit/core/test_operational_flags.py
 ```

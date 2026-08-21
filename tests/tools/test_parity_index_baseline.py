@@ -125,10 +125,13 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # code remains to have disabled-mode behavior, removing them from this count entirely; a
     # 12th, INFRA-174, and the new INFRA-358 both gained real `test_path`s instead), then to 1336
     # (TCK-20260819-HOTFIX-RNG-BOUNDARY-VIOLATION-BACKOFF-JITTER, 2026-08-19: INFRA-118 gained a
-    # real `test_path` citing its 2 RNG-boundary guard tests, previously `null`). The
-    # substantive check is the assertion above (manifest's own count matches a fresh, independent
-    # live scan) — this second assertion only guards against a silent, unexplained large swing.
-    assert live_missing == 1336
+    # real `test_path` citing its 2 RNG-boundary guard tests, previously `null`), then to 1335
+    # (TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION, 2026-08-21: new entry INFRA-366 added with
+    # a real `test_path` from the start, documenting the simulation_kernel_contract.md §9 fix).
+    # The substantive check is the assertion above (manifest's own count matches a fresh,
+    # independent live scan) — this second assertion only guards against a silent, unexplained
+    # large swing.
+    assert live_missing == 1335
 
 
 # ---------------------------------------------------------------------------

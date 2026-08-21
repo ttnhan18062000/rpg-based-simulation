@@ -17,3 +17,4 @@
 {"added_date": "2026-07-18", "layer": "economy", "note": "Atomic conservation, harvesting, trade, crafting laws"}
 {"added_date": "2026-07-18", "layer": "world", "note": "World generation, worldbuilding, region/biome content"}
 {"added_date": "2026-07-18", "layer": "misc", "note": "Fallback only when no other layer keyword matches (per CLAUDE.md's explicit guidance not to overuse this)"}
+{"added_date": "2026-08-21", "layer": "frontend", "note": "Frontend React/TS client code (frontend/src/**) \u2014 hooks, components, App shell; distinct from backend engine/systems layers"}

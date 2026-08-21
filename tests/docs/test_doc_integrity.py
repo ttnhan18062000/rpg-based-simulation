@@ -154,3 +154,59 @@ def test_link_integrity():
             
             if link_path.endswith(".md") or link_path.endswith(".json"):
                  assert os.path.exists(link_path), f"Broken link in {path}: {link} (Resolved to: {link_path})"
+
+def test_lawbook_states_pillar_precedence_order():
+    """
+    TCK-20260817-STATE-DESIGN-PRIORITY-ORDER: project_lawbook_m10.md must state an explicit
+    precedence order among the Architectural Pillars, not just an enumerated list.
+    """
+    lawbook_path = "docs/engine/project_lawbook_m10.md"
+    with open(lawbook_path, "r") as f:
+        content = f.read()
+
+    order_terms = ["Determinism", "Resource-Safety", "Performance", "Auditability"]
+    positions = []
+    search_from = 0
+    for term in order_terms:
+        idx = content.index(term, search_from)
+        positions.append(idx)
+        search_from = idx + len(term)
+    assert positions == sorted(positions), "Pillar precedence order terms are not in stated order"
+
+def test_lawbook_precedence_matches_design_philosophy_verbatim():
+    """
+    Anti-drift guard: the 4 order terms in project_lawbook_m10.md must be character-identical
+    to the terms used in kernel_concurrency_design_philosophy.md Part 1.
+    """
+    lawbook_path = "docs/engine/project_lawbook_m10.md"
+    design_doc_path = "docs/architecture/kernel_concurrency_design_philosophy.md"
+    with open(lawbook_path, "r") as f:
+        lawbook_content = f.read()
+    with open(design_doc_path, "r") as f:
+        design_content = f.read()
+
+    order_terms = ["Determinism", "Resource-Safety", "Performance", "Auditability"]
+    for term in order_terms:
+        assert term in lawbook_content, f"{term} missing from lawbook"
+        assert term in design_content, f"{term} missing from design philosophy doc"
+
+def test_lawbook_cross_links_design_philosophy_doc():
+    """
+    project_lawbook_m10.md must cross-link kernel_concurrency_design_philosophy.md as the single
+    source of truth for the precedence reasoning, rather than restating it independently.
+    """
+    lawbook_path = "docs/engine/project_lawbook_m10.md"
+    with open(lawbook_path, "r") as f:
+        content = f.read()
+    assert "docs/architecture/kernel_concurrency_design_philosophy.md" in content
+
+def test_design_philosophy_part1_not_stale_after_lawbook_states_order():
+    """
+    Regression guard: Part 1's "not stated as a rule anywhere" claim must not reappear now that
+    project_lawbook_m10.md states the order as a rule.
+    """
+    design_doc_path = "docs/architecture/kernel_concurrency_design_philosophy.md"
+    with open(design_doc_path, "r") as f:
+        content = f.read()
+    assert "not stated as a rule anywhere" not in content
+    assert "docs/engine/project_lawbook_m10.md" in content
