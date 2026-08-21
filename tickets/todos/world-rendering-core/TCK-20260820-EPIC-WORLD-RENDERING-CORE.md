@@ -60,13 +60,37 @@ Each child ticket is independently scoped and investigated (standard tier expect
 - **Seed-varied procedural world generation itself** (making world generation actually produce different terrain per seed) — this is the real dependency Scope item 3's multi-seed averaging is designed for, but it is a `src/worldgeneration/`-side capability, not part of this rendering-validation epic. **Flagged, not filed**: no ticket or backlog entry exists yet for this world-generation capability — whether to open one is a separate, undecided call, not assumed here.
 
 ## Acceptance Criteria
-- [ ] A documented, ordered breakdown of child tickets exists in this epic's Scope section (done in this pass) that a later ticket-creation pass can use directly to open the 5 child tickets listed above.
-- [ ] Each child ticket, when opened, references this epic in its `Related Tickets` section.
-- [ ] No implementation work happens directly on this epic ticket — epic tier tracks children only (per CLAUDE.md Tier Routing table: epic tier is "Scope only — tracks child tickets").
-- [ ] The two new tags (`rendering`, `visualization`) are registered in `registries/tag_registry.jsonl` before this ticket is created (done in this pass — verified below).
+- [x] A documented, ordered breakdown of child tickets exists in this epic's Scope section that a later ticket-creation pass can use directly to open the child tickets listed above. **Done 2026-08-21**: `/create-tickets` investigated all 6 scope items (splitting item 2's four metric families into their own tickets) and wrote 9 real, individually-scoped tickets to `tickets/todos/world-rendering-core/`, plus a dependency-ordered `SEQUENCE.md`.
+- [x] Each child ticket, when opened, references this epic in its `Related Tickets` section. Verified directly: all 9 written tickets cite `TCK-20260820-EPIC-WORLD-RENDERING-CORE`.
+- [x] No implementation work happens directly on this epic ticket — epic tier tracks children only (per CLAUDE.md Tier Routing table: epic tier is "Scope only — tracks child tickets"). No code was written; this ticket and its 9 children are scope/planning artifacts only.
+- [x] The two new tags (`rendering`, `visualization`) are registered in `registries/tag_registry.jsonl` before this ticket is created (done 2026-08-20 — verified below).
 
 ## Related Tickets
-None. Verified directly: no ticket in `tickets/inprogress/`, `tickets/done/`, or `tickets/backlogs/` covers world-geometry rendering or visual/geometric quality validation. `TCK-20260619-E51D-RENDERER` (done) is the Chronicle.md/chronicle.json text renderer — a different domain (narrative markdown generation), not spatial/PNG rendering. `TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`, the one ticket both idea docs flagged as "currently in-progress, unrelated," is now confirmed DONE in `tickets/done/` — the idea docs' "no ticket dependency" claim still holds.
+No pre-existing overlap was found when this epic was scoped (2026-08-20): no ticket in
+`tickets/inprogress/`, `tickets/done/`, or `tickets/backlogs/` covered world-geometry rendering or
+visual/geometric quality validation. `TCK-20260619-E51D-RENDERER` (done) is the
+Chronicle.md/chronicle.json text renderer — a different domain (narrative markdown generation),
+not spatial/PNG rendering. `TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`, the one ticket
+both idea docs flagged as "currently in-progress, unrelated," is confirmed DONE in `tickets/done/`
+— the idea docs' "no ticket dependency" claim still holds.
+
+**Child tickets (2026-08-21, via `/create-tickets`, `tickets/todos/world-rendering-core/`):**
+- TCK-20260821-WORLD-RENDER-CORE
+- TCK-20260821-VISUAL-SHAPE-METRIC
+- TCK-20260821-VISUAL-DENSITY-METRIC
+- TCK-20260821-VISUAL-VARIANTS-METRIC
+- TCK-20260821-VISUAL-CONNECTIVITY-METRIC
+- TCK-20260821-VISUAL-GRADE-SCORER
+- TCK-20260821-VISUAL-QUALITY-CALIBRATION
+- TCK-20260821-VISUAL-AGENT-REVIEW
+- TCK-20260821-VISUAL-QUALITY-DOCS
+
+C10 (seed-varied world generation) was investigated but deliberately NOT converted into a child
+ticket — it remains an unfiled, undecided item (see Out of Scope above); the investigation's
+evidence (confirmed via direct code read: `src/worldgeneration/generator.py`'s terrain-carving
+code has zero RNG calls, and `scorer.py`'s `ModuleScorer.score()` has zero RNG in terrain-module
+selection) is preserved in this batch's create-tickets run for whoever eventually decides whether
+to file it.
 
 ## Related Docs
 - `docs/plans/world_rendering_core_epic.md` — this epic's own consolidated plan doc (Problem/Scope/Out of Scope/References), created 2026-08-20 alongside this ticket refinement.
