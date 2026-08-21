@@ -62,6 +62,13 @@ many phases the kernel actually has and what they're named. Needs reconciliation
 actual phase implementation in `src/engine/kernel.py` (`_phase_scheduling`, `_phase_collection`,
 `_phase_resolution`, `_phase_cleanup`, etc.), and the losing description(s) corrected.
 
+**Update (TCK-20260817-FIX-PHASE-COUNT-CONTRADICTION, closed 2026-08-21):** resolved. Corrected
+`architecture.md` §2's fabricated GOVERNANCE/PACKETIZATION table to the real 7-phase list, also
+fixed the identical defect in `docs/guides/simulation.md` (found during this ticket, not in its
+original scope), added a reconciling note to `substrate_baseline_contract.md` §4, and removed the
+`xfail(strict=True)` marker from `tests/docs/test_kernel_phase_names_consistent.py` — the living
+test now genuinely passes for the first time.
+
 ## C4 — Close the benchmarking-integrity gap (RuntimeMode not scoped or enforced)
 
 `docs/engine/performance_contract.md` §3.1 "Scoped Claims" requires a performance claim to bind

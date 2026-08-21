@@ -42,20 +42,21 @@ The engine isolates **Authoritative Mutation** from **Concurrent Deliberation** 
 
 ---
 
-## 2. The 6-Phase Deterministic Kernel Loop
+## 2. The 7-Phase Deterministic Kernel Loop
 
-Every tick executes exactly six phases in a strict, contract-enforced sequence. This "Law of Ticks" is fixed and immutable.
+Every tick executes exactly seven phases in a strict, contract-enforced sequence. This "Law of Ticks" is fixed and immutable.
 
 ### Phase Sequence & Contracts
 
 | Phase | Responsibility | Permissions (READ / MUTATE) |
 | :--- | :--- | :--- |
 | **1. INIT** | Increments simulation clock and resets per-tick buffers. | `state.world_time` / `state.world_time` |
-| **2. GOVERNANCE** | Evaluates resource pressure (RAM/CPU) and calculates the **Degradation Mode**. | `status.signals`, `profile` / `governor.policy` |
-| **3. SCHEDULING** | Identifies entities due to act and selects work based on the **Work Debt** budget. | `state.entities`, `policy` / `tick_work` |
-| **4. PACKETIZATION** | Offloads AI deliberation tasks to the `WorkerPool` using compact packets. | `tick_work`, `policy` / `worker_results` |
-| **5. RESOLUTION** | **Authoritative Update**. Converts results into `StateUpdate` and applies it via `ApplyPath`. | `worker_results` / `state.authoritative` |
-| **6. PERSISTENCE** | **External Phase**. Streams `TraceEvent` records to the `ReplayManager`. | `state.hash`, `policy` / `disk/stream` (I/O only) |
+| **2. SCHEDULING** | Identifies entities due to act and selects work based on the **Work Debt** budget. | `state.entities`, `policy` / `tick_work` |
+| **3. COLLECTION** | Offloads AI deliberation tasks to the `WorkerManager` (bounded concurrent pool) using compact packets. | `entity, schedule` / `proposals` |
+| **4. RESOLUTION** | **Authoritative Update**. Converts results into `StateUpdate` and applies it via `ApplyPath`, incrementing the state generation. | `worker_results` / `state.authoritative` |
+| **5. CLEANUP** | Internal metrics and state finalization. | `platform, infra` / `infra` |
+| **6. ADVANCEMENT** | Signal recording and tick seal (`RuntimeStatus`). | `entity, lifecycle` / `lifecycle, events` |
+| **7. PERSISTENCE** | **External Phase, non-authoritative**. Streams `TraceEvent` records to the `ReplayManager`. | `state.hash`, `policy` / `disk/stream` (I/O only) |
 
 ### Phase Governance
 Runtime integrity is enforced by the **PhaseContract**. Any attempt to access state outside the assigned phase boundary or perform unmanaged mutations results in an immediate simulation halt. This prevents "Semantic Drift" where systems accidentally depend on the side effects of others.

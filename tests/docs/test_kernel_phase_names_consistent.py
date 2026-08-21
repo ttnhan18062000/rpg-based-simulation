@@ -24,15 +24,6 @@ PHASE_NARRATING_DOCS = [
     "CLAUDE.md",
 ]
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "architecture.md still narrates a fabricated 6-phase GOVERNANCE/PACKETIZATION "
-        "loop pending TCK-20260817-FIX-PHASE-COUNT-CONTRADICTION (OPEN); remove this "
-        "marker once that ticket and TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION "
-        "(OPEN) both land and this test passes for real."
-    ),
-)
 def test_no_fabricated_phase_names_in_kernel_docs():
     """GOVERNANCE and PACKETIZATION are not real _phase_* methods in src/engine/kernel.py.
     This exact fabricated pair independently drifted into architecture.md, README.md,

@@ -16,13 +16,13 @@ Engine contracts: [`docs/engine/kernel.md`](../engine/kernel.md).
 
 ## How the engine works
 
-Every simulation run is a deterministic 6-phase loop (Init → Governance → Scheduling →
-Packetization → Resolution → Persistence) repeated per tick. Given the same seed and world,
+Every simulation run is a deterministic 7-phase loop (Init → Scheduling →
+Collection → Resolution → Cleanup → Advancement → Persistence) repeated per tick. Given the same seed and world,
 two runs always produce identical output. All durable state changes go through the
 **authoritative mutation pipeline** — nothing writes world state directly.
 
 Key entry points:
-- `src/engine/kernel.py` — the 6-phase loop
+- `src/engine/kernel.py` — the 7-phase loop
 - `src/engine/pipeline.py` — the 17-phase mutation sequence
 - `src/cli/entry.py` — CLI wrapper, crash recovery, event flush on exit
 
