@@ -150,7 +150,8 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
    `add_tick_listener()`/WebSocket path instead of V1's Redis-Streams/SSE path — reuse the tick loop's
    already-tracked `DirtySet` (`dirty_set.all_dirty_entities`) as the "what changed" source instead of a
    full old-vs-new snapshot diff, since V2 already computes it and V1 didn't have it available. See
-   "Real-Time Transfer Design Guidance" below for the delta-encoding/msgpack/interest-management specifics.
+   "Scaling Design" §D and "Real-Time Transfer & Multi-Client Design Guidance" below for the
+   delta-encoding/msgpack/interest-management specifics (§D has the corrected, load-bearing version).
    **Real correctness requirement, found via external review + verified (2026-08-21, see "External Design
    Review" below)**: the connect sequence must avoid a real race — register the tick-listener callback
    *before* taking the map/static snapshot, not after (mirrors how database change-data-capture systems
@@ -429,6 +430,14 @@ item 2's correctness fix above, but the heavier operational machinery is not bei
 
 ## Real-Time Transfer & Multi-Client Design Guidance (2026-08-21 research)
 
+**Read this after "Scaling Design" and §D above, not instead of them.** This section is the *first* research
+pass done this session, before the deeper "Scaling Design" investigation and the external review that
+follows it. Where the two overlap (delta-encoding, `msgpack`, interest management), §D above contains the
+corrected, more complete, externally-verified treatment — most importantly, §D's bandwidth math is what
+actually justifies interest management's priority, not this section's original framing of it. This section
+is kept because its multi-client-reusability conclusion and its explicit "not worth adopting" list
+(client-side prediction, priority tiering) are not repeated anywhere else and still stand.
+
 Two research passes this session looked at (a) established real-time game-state-streaming patterns and
 (b) how to keep the new broadcast payload reusable by a future second client type. Findings, scoped to
 what's genuinely worth adopting at this project's actual scale (one server, a handful of concurrent
@@ -446,7 +455,9 @@ viewers — not a large multiplayer game):
   (`GameCanvas.tsx`), but purely for cosmetic dimming; the server still ships every entity to every client
   regardless. Gating what's actually broadcast by vision range is the standard MMO "Area of Interest"
   pattern, and this codebase already has the filtering logic to reuse server-side. **Priority raised after
-  §D's bandwidth reassessment below**: originally framed here as "follow-up once measured, not before" —
+  §D's bandwidth reassessment above** (§D precedes this section in the document — see its "Bandwidth/
+  interest-management reassessment" for the actual math): originally framed here as "follow-up once
+  measured, not before" —
   the corrected math at real target scale (10,000 entities) shows this is likely load-bearing, not a nice
   extra, so Scope item 7 now reserves the protocol field for it even though building the filtering itself
   stays out of this epic.
