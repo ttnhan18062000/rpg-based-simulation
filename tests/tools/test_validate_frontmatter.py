@@ -674,6 +674,7 @@ class TestEnumAntiDrift:
             "mechanics", "engine", "testing", "simulation", "ai", "architecture",
             "core", "ticket", "artifact", "guidelines", "observability", "performance",
             "combat", "compliance", "strategy", "systems", "economy", "world", "misc",
+            "frontend",
         }
         assert LAYER_VALUES == expected
 
