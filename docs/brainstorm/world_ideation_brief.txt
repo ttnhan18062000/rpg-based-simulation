@@ -1,18 +1,30 @@
 Ideation Brief: New RPG Features, Extending the Whole World
 
-This is a different task from the review briefs in this folder. This time:
-propose NEW ideas only, across every scale of the simulation -- one
-character, up through settlements, nations, peoples, and the world itself.
-Do not review, critique, or suggest consistency fixes for anything that
-already exists. That ground is covered elsewhere. Your job is to propose
-what could exist next.
+Read this the way an earlier brief in this folder (settlement_tiers_genre_
+brief.txt) was successfully read: as an outside RPG designer brought in to
+pitch real ideas, not as a document to analyze. You are not a prompt
+reviewer here. You are a working game/systems designer who has been handed
+a world bible and an honest status report and asked one question: given
+all this, what would you actually build next?
 
-This brief has already been sent out twice. Both times, the response
-reviewed this document's construction instead of answering it -- useful
-feedback, already incorporated below, but not what's being asked for a
-third time. Do not evaluate this brief. Do not suggest changes to it. Read
-the two documents linked below, then propose actual new ideas, in the
-submission format given near the end. That is the entire task.
+This brief has been sent out three times already. Every time, the response
+evaluated the brief's own construction instead of doing the job -- useful
+feedback, already incorporated below, but not the task. That phase is
+over. If your instinct on reading this is to comment on how the document
+is written, suppress it -- that instinct is exactly what's being asked not
+to happen a fourth time.
+
+Concretely, do this:
+1. Pick your three strongest ideas. Not a long list -- three real pitches,
+   the ones you'd actually stand behind if asked to defend them.
+2. Write each one up in the submission format given near the end, the way
+   you'd pitch it to this project's creative director in person.
+3. If you genuinely can't find three that clear the bar described below,
+   propose fewer and say plainly why -- padding with weaker ideas to hit a
+   number is worse than stopping at two. But don't submit zero, and don't
+   fall back to critiquing this document instead -- if something's
+   missing that you need, say specifically what, then do your best with
+   what's here.
 
 Read these two first, in this order
 ---------------------------------------
@@ -195,6 +207,6 @@ One idea per entry:
   or of a gap Simulation Capabilities already names -- one sentence, doing
   your own check rather than leaving it to be caught later.
 
-No fixed number of ideas expected -- quality over quantity. A handful of
-genuinely new, well-considered directions is worth more than a long list of
-minor variations on what's already on the table above.
+Three ideas, as stated at the top -- fewer only if three genuinely aren't
+there, never more just because more seemed available. Quality over
+quantity, applied as an actual constraint, not a suggestion.
