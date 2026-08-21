@@ -53,10 +53,10 @@ decorator across `src/api/routes/*.py`, `src/api/ws/*.py`, `src/api/server.py`,
    tick-mutated fields. No `StatePresenter` method currently serializes any of them into the RLE/JSON
    shapes `frontend/src/types/api.ts` expects (`MapData`, `StaticData`). `AuthoritativeState.regions`
    (`RegionState`: owner_faction_id/influence/hazard_level — a governance concept) is **not** the same
-   thing as the frontend's spatial `Region` type (center_x/center_y/radius/locations/difficulty) — that
-   spatial data most likely lives only in the compiled world spec (`data/worlds/{id}/world.yaml`, per this
-   session's separate worldgen investigation), not in live tick state. Flagged as an open question below,
-   not resolved here.
+   thing as the frontend's spatial `Region` type (center_x/center_y/radius/locations/difficulty) —
+   **confirmed (see Open Questions) that this spatial shape doesn't exist anywhere in V2 at all**, not even
+   in the compiled world spec's `RegionRecipeSpec` (`grid_bounds` only, no center/radius/locations). A real
+   gap, resolved with a concrete derivation approach below, not an unresolved lookup.
 7. **Root cause / history**: `tickets/done/infra-04-realtime-state-streaming.md` (a historical V1-era
    ticket) planned this exact WS/SSE refactor, including "Refactor the React `useSimulation` hook" as its
    own step 4. Only the backend half shipped, under V2, as WebSocket (not the SSE shape that ticket
@@ -141,8 +141,9 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
    transport-agnostic) and `present_static(state, ...)` (serialize `buildings`/`resource_nodes`/`chests`/
    `ground_items` into the frontend's `StaticData` shape, adapting
    `src_legacy/api/presenters/world_presenter.py::to_static_data_response`'s field mapping — e.g. `chests`
-   → `treasure_chests`, `guard_id` → `guard_entity_id`). Spatial `regions` sourced per the resolved
-   open-question finding below (compiled world spec, not `AuthoritativeState.regions`).
+   → `treasure_chests`, `guard_id` → `guard_entity_id`). Spatial `regions`: derive `center`/`radius` from
+   `RegionRecipeSpec.grid_bounds` at presentation time (no stored field exists — see Open Questions), and
+   either find a source for `locations`/`difficulty`/`name` or drop them from the ported schema.
 2. **New lightweight per-tick entity-delta broadcast.** Port `src_legacy/api/routes/stream.py`'s
    `compute_delta()` logic (diff consecutive `EntitySlim`-shaped dicts into
    `{tick, changed, removed, events}`, 20-tick heartbeat on quiet ticks) onto V2's existing
