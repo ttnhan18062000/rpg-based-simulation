@@ -57,7 +57,7 @@ Each child ticket is independently scoped and investigated (standard tier expect
 - **Elevation-based metrics** — ruled inapplicable; this engine's terrain is a flat categorical classification with no continuous elevation field.
 - **Making this a blocking gate or wiring it into a pytest/CI check.** Report-only, per direct user instruction — never tied to an actual test.
 - **Automatic/scheduled triggering** — on-demand tooling only; not hooked into world-compile or simulation-run completion.
-- **Seed-varied procedural world generation itself** (making world generation actually produce different terrain per seed) — this is the real dependency Scope item 3's multi-seed averaging is designed for, but it is a `src/worldgeneration/`-side capability, not part of this rendering-validation epic. **Flagged, not filed**: no ticket or backlog entry exists yet for this world-generation capability — whether to open one is a separate, undecided call, not assumed here.
+- **Seed-varied procedural world generation itself** (making world generation actually produce different terrain per seed) — this is the real dependency Scope item 3's multi-seed averaging is designed for, but it is a world-generation-side capability, not part of this rendering-validation epic. **Filed as a separate, independent epic 2026-08-21**: `TCK-20260821-EPIC-WORLDGEN-ORGANIC-TERRAIN` — not a dependency of this epic in either direction (see Related Tickets).
 
 ## Acceptance Criteria
 - [x] A documented, ordered breakdown of child tickets exists in this epic's Scope section that a later ticket-creation pass can use directly to open the child tickets listed above. **Done 2026-08-21**: `/create-tickets` investigated all 6 scope items (splitting item 2's four metric families into their own tickets) and wrote 9 real, individually-scoped tickets to `tickets/todos/world-rendering-core/`, plus a dependency-ordered `SEQUENCE.md`.
@@ -85,15 +85,35 @@ both idea docs flagged as "currently in-progress, unrelated," is confirmed DONE 
 - TCK-20260821-VISUAL-AGENT-REVIEW
 - TCK-20260821-VISUAL-QUALITY-DOCS
 
+**Related, independent sibling epic (2026-08-21):**
+- TCK-20260821-EPIC-WORLDGEN-ORGANIC-TERRAIN — root-causes the rectangular-biome finding this
+  epic's `VISUAL-SHAPE-METRIC` child ticket measures; explicitly cross-referenced, not a
+  dependency in either direction (see below).
+
 C10 (seed-varied world generation) was investigated but deliberately NOT converted into a child
-ticket — it remains an unfiled, undecided item (see Out of Scope above); the investigation's
-evidence (confirmed via direct code read: `src/worldgeneration/generator.py`'s terrain-carving
-code has zero RNG calls, and `scorer.py`'s `ModuleScorer.score()` has zero RNG in terrain-module
-selection) is preserved in this batch's create-tickets run for whoever eventually decides whether
-to file it.
+ticket of this epic — instead, per direct user instruction ("treat it as a separate epic"), it
+became its own independent epic: **`TCK-20260821-EPIC-WORLDGEN-ORGANIC-TERRAIN`**
+(`tickets/inprogress/`, plan doc `docs/plans/world_generation_organic_terrain_epic.md`).
+
+**2026-08-21 follow-up investigation corrected and sharpened C10's original finding.** The C10
+investigation above examined `WorldProceduralGenerator` and found zero RNG calls in its
+terrain-carving code — accurate, but that class is now confirmed **dead code**: zero real call
+sites anywhere in `src/`/`tools/`, only referenced by its own unit test. The actually-live
+generator is `ProceduralCompositionGenerator` (`src/worldbuilding/cli.py:421`, the sole real call
+site), and the real root cause traces further downstream than C10 found: real terrain content is
+hand-authored as fixed-rectangle `RegionRecipeSpec` entries in `data/content/world_modules/*.yaml`
+(single `terrain: str` field, no shape/noise mechanism in the schema at all), which
+`WorldCompiler.compile()` (`src/worldbuilding/compiler.py:211-221`) then mechanically flat-fills
+into a perfect rectangle — directly and unavoidably producing the fill-ratio finding this epic's
+own `VISUAL-SHAPE-METRIC` child ticket measures. External research into Dwarf Fortress/RimWorld/
+Terraria/Caves of Qud (full findings in the new epic's plan doc) confirms this project's current
+fixed-geography approach is a legitimate, precedented design point (Caves of Qud does the same,
+deliberately), and that Terraria's "structured randomness" pattern (fixed macro-layout + seed-varied
+noise-fill within it) is a proven, additive-not-rewrite path if the new epic chooses to pursue it.
 
 ## Related Docs
 - `docs/plans/world_rendering_core_epic.md` — this epic's own consolidated plan doc (Problem/Scope/Out of Scope/References), created 2026-08-20 alongside this ticket refinement.
+- `docs/plans/world_generation_organic_terrain_epic.md` — the sibling epic's plan doc (2026-08-21), tracing the real root cause of the rectangular-biome finding through `RegionRecipeSpec`/`WorldCompiler`, plus external research into comparable games' world-generation approaches.
 - `docs/plans/world_rendering/idea_world_rendering_core.md` — parent vision doc: architecture options (Option C — shared core, two modes — chosen), benchmarked performance, architecture constraints.
 - `docs/plans/world_rendering/idea_world_render_validation.md` — validation consumer: four metric families, real corpus findings, scoring design, tiered agent-review pipeline.
 - `docs/engine/contracts/regression_and_verification.md` — Absolute Determinism law (confirmed present, §"Absolute Determinism and Observable AI"), the constraint the renderer must preserve.
