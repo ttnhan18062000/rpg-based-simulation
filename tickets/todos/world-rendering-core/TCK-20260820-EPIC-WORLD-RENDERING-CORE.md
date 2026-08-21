@@ -97,10 +97,23 @@ became its own independent epic: **`TCK-20260821-EPIC-WORLDGEN-ORGANIC-TERRAIN`*
 
 **2026-08-21 follow-up investigation corrected and sharpened C10's original finding.** The C10
 investigation above examined `WorldProceduralGenerator` and found zero RNG calls in its
-terrain-carving code — accurate, but that class is now confirmed **dead code**: zero real call
-sites anywhere in `src/`/`tools/`, only referenced by its own unit test. The actually-live
-generator is `ProceduralCompositionGenerator` (`src/worldbuilding/cli.py:421`, the sole real call
-site), and the real root cause traces further downstream than C10 found: real terrain content is
+terrain-carving code — accurate, but that class has zero real call sites anywhere in `src/`/
+`tools/`, only referenced by its own unit test. The actually-live generator for real terrain is
+`ProceduralCompositionGenerator` (`src/worldbuilding/cli.py:421`, the sole real call site), and the
+real root cause traces further downstream than C10 found (see the root-cause chain below).
+
+**Correction (2026-08-21, later same-day pass):** the sibling epic's own child-ticket investigation
+(`TCK-20260821-PROCEDURAL-GENERATOR-KEPT`) found that "zero call sites" here does **not** mean dead
+code — `docs/world/generator_contract.md` (P1, authoritative) documents `WorldProceduralGenerator`
+as an intentionally preserved "Spec-based (legacy, preserved)" generation path, and
+`docs/parity_ledger/substrate.yaml` carries a live P0 parity entry (`SUBSTRATE-NEW-002`) asserting
+its determinism. Decision: keep the class, not delete it. This is the second time a call-site-only
+grep methodology for "is X dead code" has produced a false lead in this codebase's recent history —
+worth flagging for future investigations of this shape. The root-cause chain below (fixed-rectangle
+`RegionRecipeSpec` → `WorldCompiler` flat-fill) is unaffected by this correction; only the
+"WorldProceduralGenerator is dead code" side-claim was wrong.
+
+Continuing the original root-cause chain: real terrain content is
 hand-authored as fixed-rectangle `RegionRecipeSpec` entries in `data/content/world_modules/*.yaml`
 (single `terrain: str` field, no shape/noise mechanism in the schema at all), which
 `WorldCompiler.compile()` (`src/worldbuilding/compiler.py:211-221`) then mechanically flat-fills

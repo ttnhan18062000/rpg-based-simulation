@@ -60,6 +60,12 @@ today) but it changes *where* that's true and *why* — worth a separate, small 
 (see Related, not scoped as a child ticket here) that `WorldProceduralGenerator` may be dead code
 kept alive only by its own test, which is out of this epic's scope to resolve.
 
+**Superseded (2026-08-21) — see "Housekeeping note — resolved" item below.** The "may be dead
+code" framing above was itself a false lead: `docs/world/generator_contract.md` and a live P0
+parity entry (`SUBSTRATE-NEW-002`) both document `WorldProceduralGenerator` as an intentionally
+preserved legacy path, not dead code left over by accident. Decision is to keep it, not delete it —
+tracked in `TCK-20260821-PROCEDURAL-GENERATOR-KEPT`.
+
 ## External precedent — how comparable games actually handle this
 
 Researched Dwarf Fortress, RimWorld, Terraria, and Caves of Qud (2026-08-21, full findings in
@@ -212,12 +218,14 @@ Not created yet — this epic is scope-only. Prospective child tickets:
   measures exactly the symptom this epic addresses at the root. Cross-reference, not a dependency
   in either direction.
 - `src/worldbuilding/recipe.py` (`RegionRecipeSpec`) — the schema this epic extends.
-- `src/worldbuilding/compiler.py:205-215` — the exact flat-fill loop this epic changes (corrected
+- `src/worldbuilding/compiler.py:211-221` — the exact flat-fill loop this epic changes (corrected
   line range, 2026-08-21 pass).
 - `src/worldassembly/resolver.py:101,795` — the passthrough this epic's new field must also flow
   through unchanged for modules that don't opt in.
 - `src/worldgeneration/generator.py` (`ProceduralCompositionGenerator`, the real live generator)
-  vs. `WorldProceduralGenerator` (confirmed dead code, only self-referenced by its own test).
+  vs. `WorldProceduralGenerator` — intentionally preserved legacy path per
+  `docs/world/generator_contract.md` and parity entry `SUBSTRATE-NEW-002`, kept not deleted; see
+  "Housekeeping note — resolved" above.
 - `docs/engine/contracts/regression_and_verification.md` — the Absolute Determinism law this
   epic's noise-fill mechanism must preserve.
 - `experiments/spatial_rendering/PROPOSAL.md` §5b/§5c — the original rectangular-biome finding and
