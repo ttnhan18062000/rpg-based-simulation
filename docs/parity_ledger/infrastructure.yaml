@@ -10801,3 +10801,30 @@
     which explicitly deferred this phase-count scope. Does not touch the 17-vs-37
     mutation-pipeline- count mismatch (docs/guides/simulation.md line 26 vs docs/engine/README.md),
     a separate pre-existing issue.
+- id: INFRA-368
+  text: 'BenchHarness.run_benchmark() samples kernel.status.current_mode every sampled
+    tick (unthrottled, unlike the periodic RSS sampler) and exposes it as result["mode_sequence"].
+    tests/perf/test_perf_regression_baseline.py::test_regression_vs_baseline asserts
+    no RuntimeMode excursion occurred during the gate window, independent of the avg_tick_compute_ms
+    threshold check, so a benchmark that degrades mid-run cannot have cheaper degraded-mode
+    ticks blended into its average unnoticed. An explicit empirical measurement pass
+    (not assumed) against all 6 live-parametrized scenarios (warmup_ticks=10, sample_ticks=50,
+    simq_corpus_crowded_frontier run twice) found every scenario stayed DEGRADED for
+    all 50 sampled ticks on every run -- traced to WorkerManager.get_stats() defaulting
+    worker_utilization to 1.0 (not 0.0) whenever max_worker_count == 0, which every
+    PERF_*_LOCAL profile sets, tripping ResourceGovernor._get_indicated_mode()''s
+    worker_utilization >= 0.9 DEGRADED threshold unconditionally regardless of real
+    load. _RUNTIME_MODE_HARD_SCENARIOS is therefore empty: all 6 scenarios are gated
+    soft (PerformanceThresholdWarning on excursion) pending a follow-up ticket to
+    fix the WorkerManager/Governor signal defect, per an explicit empirical measurement
+    pass -- TCK-20260817-RUNTIMEMODE-BENCH-SCOPING.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: "src/perf/bench_harness.py: BenchHarness.run_benchmark() mode_samples\
+    \ collection and result[\"mode_sequence\"]. tests/perf/test_perf_regression_baseline.py:\
+    \ _assert_runtime_mode_stayed_normal(), _RUNTIME_MODE_HARD_SCENARIOS (empty, all-soft\
+    \ per empirical measurement). docs/engine/performance_contract.md \xA73.1: RuntimeMode\
+    \ Scoped Claims dimension."
+  test_path: tests/perf/test_bench_harness.py::test_run_benchmark_records_mode_sequence,tests/perf/test_perf_regression_baseline.py::test_perf_regression_baseline_flags_runtime_mode_excursion,tests/perf/test_perf_regression_baseline.py::test_regression_vs_baseline,tests/perf/test_perf_regression_baseline.py::test_performance_contract_lists_runtimemode_scoped_claim
+  divergence_note: null

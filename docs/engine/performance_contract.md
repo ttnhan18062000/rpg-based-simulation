@@ -38,6 +38,8 @@ Performance claims are ONLY valid when combined with:
 - **Hardware Class**: (e.g. `Class_B`)
 - **Scenario**: (e.g. `MOVEMENT_STRESS_100_ACTORS`)
 - **Execution Mode**: (LOCAL vs CONCURRENT)
+- **RuntimeMode**: (NORMAL — see §7 Adaptive Phase Budget Governor for the ladder; a claim
+  measured while the Governor left NORMAL is not a valid baseline claim without stating so)
 
 ### 3.2 measurement Protocol
 - **Warmup**: Benchmarks must run a minimum of 100 warmup ticks before recording starts.

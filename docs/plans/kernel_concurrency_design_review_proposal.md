@@ -101,6 +101,18 @@ an enforcement mechanism (assertion or gate) added to `tests/perf/test_perf_regr
 (or wherever the investigation determines is correct) that fails or clearly flags a benchmark run
 if the Governor ever left NORMAL mode during the sampled window.
 
+**Update (TCK-20260817-RUNTIMEMODE-BENCH-SCOPING, closed 2026-08-21):** resolved. `RuntimeMode`
+added as a 5th Scoped-Claims dimension; `BenchHarness.run_benchmark()` now samples
+`kernel.status.current_mode` every tick and exposes `result["mode_sequence"]`;
+`test_regression_vs_baseline` asserts no excursion occurred, independent of the compute-time
+check. An empirical measurement pass (not assumed) against all 6 live-parametrized scenarios
+found a real, unrelated pre-existing defect: `WorkerManager.get_stats()` defaults
+`worker_utilization` to `1.0` (not `0.0`) whenever `max_worker_count == 0`, which every
+`PERF_*_LOCAL` profile sets — this unconditionally trips the Governor's DEGRADED threshold
+regardless of real load, so all 6 scenarios currently show `DEGRADED` for every sampled tick.
+The new gate is correctly soft (warning-only) for all 6 pending a follow-up ticket to fix the
+`WorkerManager`/Governor signal defect itself — not silently loosened or force-fit to pass hard.
+
 ## C5 — State the engine's design-priority order explicitly
 
 `docs/engine/project_lawbook_m10.md` § Architectural Pillars lists five pillars — Determinism,
