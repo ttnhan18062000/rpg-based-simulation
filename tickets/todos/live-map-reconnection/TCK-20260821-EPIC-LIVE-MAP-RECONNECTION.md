@@ -157,6 +157,16 @@ design reused as-is). Full trace: `docs/plans/live_map_reconnection_epic.md`.
   (M2, rendering-side) and `TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT` (M3, broadcast-filtering-side)
   both depend on this ticket shipping and producing real performance numbers — this ticket does not depend
   on either of them; M2 and M3 are not dependencies of this one, only downstream of it.
+- **Child tickets** (created via `/create-tickets`, see `tickets/todos/live-map-reconnection/SEQUENCE.md`
+  for implementation order):
+- TCK-20260821-PRESENT-MAP-STATIC
+- TCK-20260821-WS-ENTITY-DELTA-BROADCAST
+- TCK-20260821-REST-MAP-STATIC-STATS
+- TCK-20260821-REWIRE-USESIMULATION-WEBSOCKET
+- TCK-20260821-LIVE-MAP-PERF-VALIDATION
+- TCK-20260821-MANIFEST-ID-LOOKUP-ENDPOINT
+- TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD
+- TCK-20260821-PHASED-LOADING-STATE-MACHINE
 
 ## Related Docs
 - `docs/plans/live_map_reconnection_epic.md` — this epic's full plan doc, investigation trail, and the
