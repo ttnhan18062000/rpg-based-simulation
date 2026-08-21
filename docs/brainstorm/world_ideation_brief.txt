@@ -31,6 +31,11 @@ You do not need the technical engineering atlas underneath these two --
 it's real code, file paths, and verification detail, not needed for this
 task. If you want it anyway: https://claude.ai/code/artifact/23feda01-9857-4508-a014-3caa61bdbd07
 
+If either linked artifact above fails to load, stop and say so rather than
+inventing or approximating its contents. Ideas that only pretend to serve
+the eight principles, because the principles were never actually read, are
+worse than no ideas at all.
+
 Ideas already on the table (don't duplicate these)
 -------------------------------------------------------
 The following are already proposed and recorded elsewhere in this project.
@@ -87,6 +92,21 @@ Don't resubmit variations on these -- build past them:
     character through a real request either side can refuse -- both are
     currently automatic or don't exist.
 
+An idea is not new merely because it adds another subsystem, modifier,
+tier, resource, or consequence on top of one of the twenty above -- "camp
+diplomacy," "camp reputation," or "camp upgrade tiers" are all still just
+idea 6 wearing a new hat. To count as new, it has to introduce a genuinely
+different source of emergent behavior, not decorate an existing one.
+
+There's a related, sharper line worth drawing explicitly: building on an
+existing gap in a new direction is allowed; proposing to simply fill that
+gap is not. If conversation between characters is already a known missing
+piece, "build conversation" is a duplicate -- but "a character deliberately
+spreads false information through conversation to manipulate a rival
+settlement" is a genuinely new idea that happens to depend on conversation
+existing. The difference is whether the proposal is the gap itself, or
+something new that would only be possible once the gap is closed.
+
 What makes a good submission
 ---------------------------------
 - Genuinely new: not a rewording of the twenty ideas above, and not just
@@ -103,6 +123,24 @@ What makes a good submission
 - Plain and standalone: no code, file paths, or technical implementation
   detail. Describe it the way you'd describe it to someone who will never
   open the source code.
+- Creates a new possible story, not just a new possible number: the
+  sharpest version of principle 1 (no one hands down the story) is asking,
+  for every idea, what can now happen in the world that couldn't happen
+  before. "Cities get a prosperity rating" is a stat. "A prosperous
+  frontier city starts pulling migrants away from struggling settlements
+  nearby, quietly shifting political power in the process" is a story
+  shape nothing else on this list currently produces. Prefer the second
+  kind every time.
+
+Don't force coverage across every scale for its own sake. The list above
+mentions one character up through the whole world so you know the full
+range is genuinely open -- not as a checklist to fill in. If the strongest
+ideas cluster at two or three scales, that's a better outcome than
+inventing weaker ideas just to cover the rest. The best ideas will often
+start at one scale and ripple into others on their own -- a single
+character's decision that eventually reshapes a Clan, a City, and a
+Country is exactly the kind of cross-scale effect worth finding, not
+something to avoid because it doesn't fit neatly in one row.
 
 Submission format
 ---------------------
@@ -112,9 +150,13 @@ One idea per entry:
 - Which scale it mainly touches: one character, a settlement (city, camp,
   nest, lair, or site), the wider land, a nation, an organization spanning
   borders, a whole people, or the world itself. An idea can touch more than
-  one -- say so if it does.
+  one -- say so if it does, including if it starts at one scale and ripples
+  into others.
 - Which of the eight Unwritten World principles it serves, and one sentence
   on how.
+- Why it isn't a duplicate of anything in the twenty already on the table,
+  or of a gap Simulation Capabilities already names -- one sentence, doing
+  your own check rather than leaving it to be caught later.
 
 No fixed number of ideas expected -- quality over quantity. A handful of
 genuinely new, well-considered directions is worth more than a long list of
