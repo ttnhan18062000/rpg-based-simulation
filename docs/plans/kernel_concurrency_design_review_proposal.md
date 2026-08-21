@@ -34,6 +34,12 @@ it placed into the docs tree (most likely `docs/architecture/`, alongside the ot
 design docs), cross-linked from `docs/engine/kernel.md` and the three concurrency contracts it
 summarizes, and folded into the knowledge index (`make knowledge-index-update`).
 
+**Update (TCK-20260817-KERNEL-CONCURRENCY-DESIGN-DOC, closed 2026-08-21):** resolved. Landed at
+`docs/architecture/kernel_concurrency_design_philosophy.md` (status: active, authority: P1,
+audience: developer), with all 4 mermaid diagrams (not the 2 this section's own intro implied),
+cross-linked from `kernel.md` and all three concurrency contracts, and the two stale internal
+"Known documentation drift" items updated in place.
+
 ## C2 — Fix the "is Collection concurrent or not" contradiction
 
 `docs/engine/kernel.md` §"Concurrency & The Resolution Bottleneck" states: *"Concurrent

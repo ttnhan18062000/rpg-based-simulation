@@ -75,6 +75,10 @@ This rationale does not apply to `docs/engine/contracts/resource_governor_contra
 explicitly disclaims concurrency/worker-pool scaling as a Non-Goal — the Resource Governor only
 decides `RuntimeMode`; this contract's worker pool is what consumes it.
 
+See also: [`docs/architecture/kernel_concurrency_design_philosophy.md`](../../architecture/kernel_concurrency_design_philosophy.md)
+Part 4, for the design-philosophy narrative this section's mechanism sits inside (RuntimeMode
+ladder, PhaseBudgetGovernor, and why concurrency is the last lever pulled, not the first).
+
 ## Non-Goals
 - No distributed topology or external message brokers.
 - No mid-tick result-to-result dependencies (beyond neighbor views).

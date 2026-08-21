@@ -55,6 +55,11 @@ During the **Advancement** phase, before the state is committed and persisted:
 - **Concurrent Collection**: the Deliberation phase is the only window for parallel execution. Workers analyze the world state in parallel using **Immutable Snapshots**.
 - **The Singular Bottleneck**: the Resolution phase is the definitive point of truth. All proposals are sorted (by Class Priority, then Local Priority, then ID) to ensure bit-identical resolution regardless of worker execution order.
 
+See also: [`docs/architecture/kernel_concurrency_design_philosophy.md`](../architecture/kernel_concurrency_design_philosophy.md)
+for the full design-philosophy narrative behind this section — why Collection is fork-join instead
+of asyncio/anyio, how race-safety is structurally enforced, and how the RuntimeMode ladder degrades
+gracefully under load.
+
 ---
 
 ## 📈 Observability & Telemetry

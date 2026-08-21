@@ -10,6 +10,10 @@ audience: developer
 ## Purpose
 This contract defines safe concurrency for the engine. This contract ensures that parallel execution improves throughput without introducing resource blowups (payload leakage) or semantic drift (determinism loss).
 
+See also: [`docs/architecture/kernel_concurrency_design_philosophy.md`](../../architecture/kernel_concurrency_design_philosophy.md)
+Part 3, for why this contract's laws (payload discipline, result semantics, deterministic
+equivalence) structurally prevent race conditions.
+
 ## 1. Payload Discipline (Compact Packets)
 - **Law**: A worker must never receive a clone of the entire world state.
 - **WorkerPacket Structure**:
