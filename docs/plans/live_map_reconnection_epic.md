@@ -152,9 +152,12 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
    "Real-Time Transfer Design Guidance" below for the delta-encoding/msgpack/interest-management specifics.
 3. **New REST routes**: `/api/v1/map`, `/api/v1/static` wrapping item 1; `/api/v1/stats` — port
    `src_legacy`'s `SimulationStats` shape (`tick, world_day, alive_count, total_spawned, total_deaths,
-   running, paused`); where V1 itself computed the two cumulative counters is not traced here (left to
-   this item's own child-ticket Investigate phase), but their existence as a real, previously-shipped need
-   is now confirmed, not speculative.
+   running, paused`). **`total_spawned`/`total_deaths` fully traced now**: V1's `EngineManager` (`git show
+   677abbfb^:src_legacy/api/engine_manager.py`, L73-74/221-222/400-405) tracked these as two plain instance
+   counters (`self._total_spawned`, `self._total_deaths`), incremented each tick by `len(new_ids)`/
+   `len(dead_ids)`, reset to 0 on world load. Confirmed via direct grep that `src/api/engine_manager.py`
+   (`V2EngineManager`) has **zero** equivalent today — not a wiring gap, a genuine missing counter. Item 3's
+   child ticket adds the same simple pattern to `V2EngineManager`, not a novel design.
 4. **Frontend rewire (`useSimulation.ts` only, not `GameCanvas.tsx`/`useCanvas.ts`)**: swap `EventSource`
    for a `WebSocket` client speaking the real `/api/v1/ws` handshake protocol; keep the existing
    `changed`/`removed`/reducer logic unchanged (item 2's payload shape is deliberately designed to match
@@ -233,19 +236,22 @@ viewers — not a large multiplayer game):
 
 ## Open Questions
 
-- **Region data source — partially resolved.** Confirmed (via `src_legacy`) that even V1 never sourced its
-  spatial `RegionSchema` (center/radius/locations/difficulty) from authoritative governance state — it came
-  from a separate `WorldState.regions` collection. V1's `WorldState` isn't the same object as V2's
-  `AuthoritativeState`, so the exact V2-equivalent source (most likely the compiled world spec,
-  `data/worlds/{id}/world.yaml`, per this session's separate worldgen investigation) still needs
-  confirming in item 1's own child-ticket Investigate phase — but the *pattern* (spatial regions are a
-  separate, mostly-static collection, never part of governance state) is now confirmed precedent, not a
-  guess.
-- **`total_spawned`/`total_deaths` — partially resolved.** Confirmed these are real, previously-shipped
-  `SimulationStats` fields (not a novel ask) via `src_legacy/api/schemas.py`. Where V1's `EngineManager`
-  computed them, and whether an equivalent counter exists anywhere in V2's kernel/metrics today, was not
-  traced further here — left to item 3's own child-ticket Investigate phase to avoid scope creep at the
-  epic-planning level.
+- **Region spatial data — now fully resolved, and it's a real gap, not a wiring gap.** Directly confirmed
+  by reading `src/worldbuilding/recipe.py`'s `RegionRecipeSpec` in full: its only fields are `id, type,
+  grid_bounds (min_x,min_y,max_x,max_y), terrain, hazard_level, hazard_kind, tags` — **no `center`,
+  `radius`, `locations`, `difficulty`, or `name` field exists anywhere.** A repo-wide grep for
+  `center_x|center_y|radius|locations` across `src/worldbuilding/`, `src/worldassembly/`, `src/core/state.py`,
+  and the real compiled `data/worlds/sandbox_world/world.yaml` turned up nothing matching this shape either.
+  V1 had the same gap in spirit (its spatial `RegionSchema` came from a separate `WorldState.regions`
+  collection, not governance state) but V1's version actually had the fields; V2 genuinely doesn't. **This
+  means item 1's `present_static` cannot just "look up" region spatial data — it must derive `center`
+  (midpoint of `grid_bounds`) and `radius` (half the larger bound dimension) at presentation time, and
+  either drop `locations`/`difficulty`/`name` from the ported `RegionSchema` or source them from elsewhere
+  not yet identified.** This is real, scoped design work for item 1's child ticket, not a lookup task —
+  flagged precisely so that ticket doesn't get scoped as trivial.
+- **`total_spawned`/`total_deaths` — now fully resolved.** See item 3 above: V1's exact computation
+  pattern found and confirmed absent from V2. Item 3's child ticket adds two simple counters to
+  `V2EngineManager`, following V1's proven pattern.
 - Whether item 2's new per-tick delta broadcast should extend the existing `/ws` connection's payload or
   register as a genuinely separate listener/message type remains an implementation-detail decision for
   that child ticket's own investigation — V1's fully-separate-transport precedent (Redis Streams + SSE, a

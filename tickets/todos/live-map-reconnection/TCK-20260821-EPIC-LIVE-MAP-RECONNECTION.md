@@ -60,7 +60,15 @@ design reused as-is). Full trace: `docs/plans/live_map_reconnection_epic.md`.
   Redis-Streams/SSE to V2's existing WebSocket tick-listener path. Use the already-negotiated-but-unused
   `msgpack` wire format (`src/api/ws/stream.py`'s handshake already supports it).
 - New REST routes: `/api/v1/map`, `/api/v1/static`, `/api/v1/stats` (ported `SimulationStats` shape:
-  `tick, world_day, alive_count, total_spawned, total_deaths, running, paused`).
+  `tick, world_day, alive_count, total_spawned, total_deaths, running, paused`). `total_spawned`/
+  `total_deaths` need two new counters on `V2EngineManager` — confirmed absent today; V1's pattern
+  (`self._total_spawned`/`self._total_deaths`, incremented per tick by `len(new_ids)`/`len(dead_ids)`) is
+  the proven reference.
+- `present_static`'s region serialization needs real design work, not a lookup: `RegionRecipeSpec`
+  (`src/worldbuilding/recipe.py`) has no `center`/`radius`/`locations`/`difficulty`/`name` fields at all —
+  confirmed absent from the entire worldbuilding/worldassembly tree and the real compiled
+  `data/worlds/sandbox_world/world.yaml`. `center`/`radius` must be derived from `grid_bounds` at
+  presentation time; `locations`/`difficulty`/`name` need a source identified or dropped from scope.
 - Rewire `useSimulation.ts` (only) from `EventSource`/`/api/v1/stream` to the real WebSocket protocol at
   `/api/v1/ws`; map its `sendControl` calls onto the two real existing `/control/pause`/`/control/resume`
   routes.
@@ -132,14 +140,16 @@ None.
   `git show 677abbfb^:<path>`; the proven reference implementation each child ticket ports from
 
 ## Assumptions / Open Questions
-- **Region data source — partially resolved.** V1 (per `src_legacy`) never sourced its spatial
-  `RegionSchema` from governance state either — it came from `WorldState.regions`, a separate collection.
-  The exact V2-equivalent (most likely the compiled world spec, `data/worlds/{id}/world.yaml`) still needs
-  confirming in the relevant child ticket's own Investigate phase, but the pattern is now confirmed
-  precedent, not a guess.
-- **`total_spawned`/`total_deaths` — partially resolved.** Confirmed real, previously-shipped
-  `SimulationStats` fields via `src_legacy/api/schemas.py`, not a novel ask. Exact V1 computation site and
-  whether an equivalent exists in V2 today is left to that child ticket's own investigation.
+- **Region spatial data — fully resolved, and it's a real gap.** `RegionRecipeSpec` has no `center`,
+  `radius`, `locations`, `difficulty`, or `name` field — confirmed by reading it in full and grepping the
+  entire worldbuilding/worldassembly tree plus the real compiled `sandbox_world/world.yaml`. V1 had the
+  same *pattern* (spatial regions separate from governance state) but its version actually had these
+  fields; V2 doesn't. The relevant child ticket must derive `center`/`radius` from `grid_bounds` and either
+  find a source for `locations`/`difficulty`/`name` or drop them from the ported schema — real design work,
+  not a lookup.
+- **`total_spawned`/`total_deaths` — fully resolved.** V1's exact pattern found
+  (`src_legacy/api/engine_manager.py` L73-74/221-222/400-405) and confirmed absent from
+  `V2EngineManager` today via direct grep. The relevant child ticket adds the same two simple counters.
 - Whether the new per-tick delta broadcast extends the existing `/ws` payload or registers as a separate
   message type is an implementation-detail decision left to that child ticket's own investigation — V1's
   fully-separate-transport precedent shows both approaches are legitimate.
