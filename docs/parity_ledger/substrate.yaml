@@ -4822,7 +4822,7 @@
   v2_evidence: src/worldbuilding/compiler.py:211-237 (region-painting loop, weighted
     per-tile noise-fill under Domain.INIT when terrain_variants declared)
   proof_type: null
-  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compiler_no_terrain_variants_declared_produces_byte_identical_terrain_dict
+  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compiler_terrain_variants_deterministic_same_seed
   divergence_note: null
   support_boundary: Schema plumbing (RegionRecipeSpec, RegionSpec, WorldAssemblyResolver
     forwarding) plus real WorldCompiler consumption (per-tile weighted noise-fill

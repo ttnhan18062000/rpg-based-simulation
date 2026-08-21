@@ -715,7 +715,8 @@ def test_compiler_terrain_variants_declared_produces_per_tile_variation():
 
 def test_compiler_terrain_variants_deterministic_same_seed():
     """Compiling the same terrain_variants-declaring spec twice with the same seed produces
-    an identical per-tile terrain dict within the region's bounds."""
+    an identical per-tile terrain dict within the region's bounds, and an identical
+    report["state_hash"] as one additional signal (mirroring test_compiler_seeding_determinism)."""
     data = create_base_valid_spec()
     data["regions"][1]["terrain_variants"] = [
         {"terrain": "FOREST", "weight": 1.0},
@@ -723,8 +724,10 @@ def test_compiler_terrain_variants_deterministic_same_seed():
     ]
     spec = WorldSpec.model_validate(data)
 
-    state1, _ = WorldCompiler.compile(spec, seed=42)
-    state2, _ = WorldCompiler.compile(spec, seed=42)
+    state1, report1 = WorldCompiler.compile(spec, seed=42)
+    state2, report2 = WorldCompiler.compile(spec, seed=42)
+
+    assert report1["state_hash"] == report2["state_hash"]
 
     region_tiles_1 = {(x, y): state1.terrain[(x, y)] for x in range(15, 41) for y in range(15, 41)}
     region_tiles_2 = {(x, y): state2.terrain[(x, y)] for x in range(15, 41) for y in range(15, 41)}
