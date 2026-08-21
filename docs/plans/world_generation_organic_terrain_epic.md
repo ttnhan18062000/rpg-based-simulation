@@ -202,6 +202,33 @@ Not created yet — this epic is scope-only. Prospective child tickets:
    to use the new mechanism, as a real, verifiable proof rather than a purely synthetic test. Its
    two existing regions genuinely overlap (`[45,10,90,55]`, `[70,30,105,70]`) rather than being
    disjoint — the implementation must handle paint-order/overwrite semantics for this case.
+
+   **Update (TCK-20260821-WOLF-DEN-NOISE-MIGRATION, closed 2026-08-22):** resolved. Migrated
+   `wolf_den_near_forest.yaml`'s `near_forest` and `wolf_den` regions onto `terrain_variants`
+   (`forest` weight=3.0, `swamp` weight=1.0). The intra-module overlap box (`x:[70,90],
+   y:[30,55]`) resolves to `wolf_den`'s terrain by an explicit, documented decision — `wolf_den`
+   is declared second in `regions:`, so it wins under `WorldCompiler.compile()`'s existing
+   declaration-order paint rule (plain dict-key overwrite, no merge/blend) — rather than relying
+   on incidental YAML list order, since `wolf_den` carries the higher `hazard_level` (2.0 vs 1.0)
+   and is the module's namesake region. Review also surfaced a real, previously-latent
+   **cross-module** overlap: in 5 real world compositions that also include
+   `bandit_road_trade_pressure` and/or `goblin_camp_conflict` (`frontier_marches`,
+   `frontier_extended`, `frontier_living_world`, `lifecycle_full_coverage_world`,
+   `simq_scale_stress_seed42`), `near_forest`/`wolf_den` process last under
+   `topological_sort_modules()`'s alphabetical tie-break, so tiles inside `bandit_road`'s/
+   `goblin_camp`'s own bounds that also fall inside `near_forest`/`wolf_den`'s bounds get
+   forest/swamp noise-fill instead of their own module's flat terrain. This pre-dates the
+   migration (those tiles were already silently overwritten with flat `"forest"`); confirmed
+   cosmetic and legality-inert (`swamp` has no blocking/cover/high-ground effect), not a
+   correctness risk, and accepted rather than fixed — see Decision 3b in this ticket's
+   `investigation.md` (`staging_artifacts/TCK-20260821-WOLF-DEN-NOISE-MIGRATION/investigation.md`,
+   or its `stored_artifacts/` copy after ticket close). 5 new tests added
+   (field-preservation, per-tile variation, overlap-winner identity via exact RNG recomputation,
+   and bit-identical same-seed recompilation); 234 tests across the scoped verification command
+   pass, including every real composition where the cross-module consequence is actually
+   exercised. Parity ledger entry `SUB-386` added and `docs/mechanics/06_worldbuilding_foundation.md`
+   gained a new "Paint Order for Overlapping Regions" bullet (both out of this doc-updater's own
+   scope to re-edit — see those files directly for the authoritative record).
 4. **Golden-hash determinism regression test**: same seed still produces bit-identical terrain
    (the noise fill must be seeded and deterministic, not merely "more random").
 5. **Housekeeping note — resolved by child-ticket investigation (2026-08-21), NOT a deletion
