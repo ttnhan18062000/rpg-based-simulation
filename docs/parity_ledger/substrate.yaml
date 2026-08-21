@@ -4803,3 +4803,25 @@
     \ new `lifecycle_full_coverage_world` section for the full before/after table.\
     \ This UPDATE does not change `status`/`priority` -- a calibration-data update,\
     \ not a new finding about SUB-384's own root cause or fix.\n"
+- id: SUB-385
+  text: 'TCK-20260821-NOISE-FILL-SCHEMA: RegionRecipeSpec (src/worldbuilding/recipe.py)
+    and RegionSpec (src/worldbuilding/schema.py) both accept a new optional terrain_variants
+    field (Optional[List[TerrainVariantSpec]], default None), backed by a single shared
+    TerrainVariantSpec model (terrain: str, weight: float=1.0) defined once in schema.py
+    and imported into recipe.py. The field is explicitly forwarded through WorldAssemblyResolver.resolve_module_contribution()
+    (terrain_variants=getattr(reg, ''terrain_variants'', None)) so it survives the
+    real module normalize()->resolve() pipeline instead of silently dropping -- the
+    same gap class TCK-20260701-HAZARD-KIND-RESOLVER-GAP had to retroactively fix
+    for hazard_kind. The field is fully schema-only and inert: WorldCompiler (src/worldbuilding/compiler.py)
+    is untouched and performs no noise sampling, thresholding, or per-tile painting
+    from this field. This entry is expected to flip to verified when TCK-20260821-COMPILER-NOISE-FILL
+    lands and gives the field real compiler consumption.'
+  status: missing
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: Schema-only plumbing (RegionRecipeSpec, RegionSpec, WorldAssemblyResolver
+    forwarding) -- no WorldCompiler consumption yet.

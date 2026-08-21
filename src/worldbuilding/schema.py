@@ -24,6 +24,12 @@ class TopologySpec(BaseModel):
             raise ValueError("coordinate_system must strictly be 'grid'")
         return v
 
+class TerrainVariantSpec(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    terrain: str = Field(..., min_length=1, description="Terrain type for this variant fill option")
+    weight: float = Field(1.0, gt=0.0, description="Relative sampling weight; consumed by the noise-fill compiler logic added in a later ticket (TCK-20260821-COMPILER-NOISE-FILL) — unused/inert here")
+
 class RegionSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -34,6 +40,7 @@ class RegionSpec(BaseModel):
     hazard_level: Optional[float] = Field(0.0, description="Hazard difficulty factor of the region")
     hazard_kind: Optional[str] = Field("PHYSICAL", description="Semantic type of this region's passive hazard drain (e.g. 'PHYSICAL', 'NATURAL_TERRAIN', 'TOXIC_GAS').")
     tags: List[str] = Field(default_factory=list, description="Semantic labels for quest routing (e.g. mine, forest, ruins, settlement)")
+    terrain_variants: Optional[List[TerrainVariantSpec]] = Field(None, description="Optional set of terrain fill variants for organic in-region terrain; inert until consumed by TCK-20260821-COMPILER-NOISE-FILL")
 
     @model_validator(mode="after")
     def validate_bounds(self) -> RegionSpec:

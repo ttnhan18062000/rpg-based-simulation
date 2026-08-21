@@ -797,6 +797,7 @@ class WorldAssemblyResolver:
                 hazard_level=reg.hazard_level,
                 hazard_kind=getattr(reg, "hazard_kind", "PHYSICAL"),
                 tags=list(getattr(reg, "tags", [])),
+                terrain_variants=getattr(reg, "terrain_variants", None),
             ))
 
         # 2. Resolve Factions
