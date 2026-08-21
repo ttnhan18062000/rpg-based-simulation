@@ -7,6 +7,13 @@ Do not review, critique, or suggest consistency fixes for anything that
 already exists. That ground is covered elsewhere. Your job is to propose
 what could exist next.
 
+This brief has already been sent out twice. Both times, the response
+reviewed this document's construction instead of answering it -- useful
+feedback, already incorporated below, but not what's being asked for a
+third time. Do not evaluate this brief. Do not suggest changes to it. Read
+the two documents linked below, then propose actual new ideas, in the
+submission format given near the end. That is the entire task.
+
 Read these two first, in this order
 ---------------------------------------
 1. The Unwritten World -- the creative direction:
@@ -94,9 +101,28 @@ Don't resubmit variations on these -- build past them:
 20. Letting a character directly hand an item to, or team up with, another
     character through a real request either side can refuse -- both are
     currently automatic or don't exist.
+21. A child starting with an inherited echo of their parents' public
+    reputation -- trusted a little faster, or judged a little harder,
+    before they've done anything themselves.
+22. An organization's own reputation diverging from any single member's --
+    one member's betrayal casting suspicion on every other member, who
+    then has to actively distinguish themselves from their own group.
+23. A grudge that outlives the person who started it, inherited by their
+    lineage the way a name is -- including the possibility of two people
+    falling for each other across a feud that belongs to their parents,
+    not to them.
+24. An isolated settlement's felt loyalty to its distant capital eroding
+    purely through cultural drift over time, with no single event, vote,
+    or rebellion causing it.
+25. The world's own recorded history feeding back into behavior -- a
+    hero's fame, once it's real enough, inspiring other characters who
+    never met them to become adventurers themselves.
+26. A dying character's last spoken intention becoming a real, lasting
+    pull on their heir's motivations -- distinct from inherited traits or
+    inherited possessions.
 
 An idea is not new merely because it adds another subsystem, modifier,
-tier, resource, or consequence on top of one of the twenty above -- "camp
+tier, resource, or consequence on top of one of the twenty-six above -- "camp
 diplomacy," "camp reputation," or "camp upgrade tiers" are all still just
 idea 6 wearing a new hat. To count as new, it has to introduce a genuinely
 different source of emergent behavior, not decorate an existing one.
@@ -120,7 +146,7 @@ the world can actually do.
 
 What makes a good submission
 ---------------------------------
-- Genuinely new: not a rewording of the twenty ideas above, and not just
+- Genuinely new: not a rewording of the twenty-six ideas above, and not just
   restating something Simulation Capabilities already flags as missing or
   inactive as if it were a fresh proposal.
 - Serves the direction: name which of the eight Unwritten World principles
@@ -165,7 +191,7 @@ One idea per entry:
   into others.
 - Which of the eight Unwritten World principles it serves, and one sentence
   on how.
-- Why it isn't a duplicate of anything in the twenty already on the table,
+- Why it isn't a duplicate of anything in the twenty-six already on the table,
   or of a gap Simulation Capabilities already names -- one sentence, doing
   your own check rather than leaving it to be caught later.
 
