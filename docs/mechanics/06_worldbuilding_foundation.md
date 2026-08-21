@@ -31,6 +31,13 @@ Regions partition the world topology into distinct logical zones.
 *   **Topology Alignment**: All region boundaries must lie entirely within the world's topology dimensions.
 *   **Overlap Policy**: By default, regional bounds are strictly disjoint (no overlapping). This is enforced unless `allow_overlapping_regions` is explicitly enabled in the validation spec.
 
+### Noise-Fill Terrain Law
+*   **Variant-Declaring Regions**: A region whose `terrain_variants` list is populated gets its terrain painted per-tile via weighted threshold sampling (`DeterministicRNG.weighted_choice`), keyed under `Domain.INIT` — never `Domain.WORLD` — so the draw cannot collide with or perturb `Domain.WORLD`'s existing entity/resource/building placement sequence. The sampling weight for each declared variant (`TerrainVariantSpec.weight`) is a true relative weight, not treated as uniform.
+*   **Non-Declaring Regions**: A region whose `terrain_variants` is `None` or an empty list (both treated identically) keeps the original single flat-terrain fill (`r_spec.terrain`) for every tile in its bounds — byte-identical to pre-noise-fill behavior.
+*   **Bounds Clamp Unchanged**: In both cases, the existing topology bounds-clamp (`0 <= x < width` and `0 <= y < height`) continues to gate every terrain write identically; noise-fill never writes outside a region's bounds or the topology dimensions.
+*   **`town_tiles` Membership Unaffected**: `town_tiles` membership remains driven solely by `r_spec.type == "town"`, independent of which terrain string a tile is painted with.
+*   **Implementing Code**: `src/worldbuilding/compiler.py` (region-painting loop in `WorldCompiler.compile()`).
+
 ---
 
 ## 3. Entity & Resource Distribution

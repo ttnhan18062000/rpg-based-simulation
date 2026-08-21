@@ -3,7 +3,7 @@ status: authoritative
 layer: engine
 authority: P0
 audience: agent
-last_verified: 2026-06-16
+last_verified: 2026-08-21
 tags: [worldbuilding, compiler, engine, contract, schema]
 ---
 
@@ -50,7 +50,7 @@ AuthoritativeState
 
 **`WorldSpec`** — the root declarative specification for a world. Contains:
 - `TopologySpec` — grid dimensions, region layout
-- `List[RegionSpec]` — region definitions (type, terrain, hazard_level, grid_bounds)
+- `List[RegionSpec]` — region definitions (type, terrain, terrain_variants, hazard_level, grid_bounds)
 - `List[FactionSpec]` — faction definitions and starting parameters
 - `List[PopulationSpec]` — entity population groups per region
 - `List[ResourceNodeSpec]` — resource node placements
@@ -98,6 +98,8 @@ Priority order:
 
 **Determinism:** The compiler uses `random` for some entity placement — callers requiring bit-identical output must seed `random` before calling `compile()`.
 
+**Terrain fill (step 2):** Each region is painted as either a flat single-terrain fill (default — unchanged legacy behavior) or, when the region's `RegionSpec.terrain_variants` is populated, a seeded per-tile noise-fill via `DeterministicRNG.weighted_choice()` keyed under `Domain.INIT` (distinct from `Domain.WORLD`'s entity/resource/building draw order, eliminating RNG-namespace collision by construction). The existing bounds-clamp and `town_tiles` membership rule (`r_spec.type == "town"`) apply identically to both branches. Full law and formula: `docs/mechanics/06_worldbuilding_foundation.md` § Noise-Fill Terrain Law — not duplicated here.
+
 ---
 
 ## Repository Contract (repository.py — WORLD-060, WORLD-061, WORLD-062)
@@ -143,7 +145,7 @@ Priority order:
 
 `RegionRecipeSpec` — a frozen Pydantic model for declaring a region in recipe-driven world building.
 
-Fields: `id`, `type`, `grid_bounds: (min_x, min_y, max_x, max_y)`, `terrain` (default `"GRASS"`), `hazard_level` (default `0.0`).
+Fields: `id`, `type`, `grid_bounds: (min_x, min_y, max_x, max_y)`, `terrain` (default `"GRASS"`), `terrain_variants: Optional[List[TerrainVariantSpec]]` (default `None` — when populated, `WorldCompiler` noise-fills the region per-tile instead of flat-filling with `terrain`; see Compiler Contract below), `hazard_level` (default `0.0`).
 
 **Validation rules (enforced at construction):**
 - `min_x ≤ max_x` — width must be non-negative

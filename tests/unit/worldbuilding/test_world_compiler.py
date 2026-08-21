@@ -696,6 +696,253 @@ def test_get_action_style_for_bravery_thresholds():
     assert get_action_style_for_bravery(0.1) == ActionStyle.EVASIVE
 
 
+def test_compiler_terrain_variants_declared_produces_per_tile_variation():
+    """A region with >=2 terrain_variants produces real per-tile terrain variation,
+    not a degenerate single-value fill (TCK-20260821-COMPILER-NOISE-FILL)."""
+    data = create_base_valid_spec()
+    data["regions"][1]["terrain_variants"] = [
+        {"terrain": "FOREST", "weight": 1.0},
+        {"terrain": "SWAMP", "weight": 1.0},
+    ]
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    region_terrains = {state.terrain[(x, y)] for x in range(15, 41) for y in range(15, 41)}
+    assert len(region_terrains) > 1, (
+        "terrain_variants should produce real per-tile terrain variation, not a single flat value"
+    )
+
+
+def test_compiler_terrain_variants_deterministic_same_seed():
+    """Compiling the same terrain_variants-declaring spec twice with the same seed produces
+    an identical per-tile terrain dict within the region's bounds."""
+    data = create_base_valid_spec()
+    data["regions"][1]["terrain_variants"] = [
+        {"terrain": "FOREST", "weight": 1.0},
+        {"terrain": "SWAMP", "weight": 1.0},
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state1, _ = WorldCompiler.compile(spec, seed=42)
+    state2, _ = WorldCompiler.compile(spec, seed=42)
+
+    region_tiles_1 = {(x, y): state1.terrain[(x, y)] for x in range(15, 41) for y in range(15, 41)}
+    region_tiles_2 = {(x, y): state2.terrain[(x, y)] for x in range(15, 41) for y in range(15, 41)}
+    assert region_tiles_1 == region_tiles_2
+
+
+def test_compiler_terrain_variants_different_seed_differs():
+    """Compiling the same terrain_variants-declaring spec with two different seeds produces a
+    measurably different per-tile terrain distribution within the same bounds."""
+    data = create_base_valid_spec()
+    data["regions"][1]["terrain_variants"] = [
+        {"terrain": "FOREST", "weight": 1.0},
+        {"terrain": "SWAMP", "weight": 1.0},
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state1, _ = WorldCompiler.compile(spec, seed=42)
+    state2, _ = WorldCompiler.compile(spec, seed=99)
+
+    tiles = [(x, y) for x in range(15, 41) for y in range(15, 41)]
+    diff_count = sum(1 for t in tiles if state1.terrain[t] != state2.terrain[t])
+    assert diff_count / len(tiles) > 0.10, (
+        f"different seeds should produce a measurably different terrain distribution "
+        f"({diff_count}/{len(tiles)} tiles differ)"
+    )
+
+
+def test_compiler_terrain_variants_never_writes_outside_bounds():
+    """The existing 0 <= x < width and 0 <= y < height clamp continues to gate the new
+    noise-fill write path exactly as it does the flat-fill path."""
+    data = create_base_valid_spec()
+    data["regions"] = [
+        {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "GRASS"},
+        {
+            "id": "edge_region", "type": "wilderness", "bounds": [45, 45, 60, 60], "terrain": "FOREST",
+            "terrain_variants": [
+                {"terrain": "FOREST", "weight": 1.0},
+                {"terrain": "SWAMP", "weight": 1.0},
+            ],
+        },
+    ]
+    data["entities"] = [
+        {"id": "citizen_group", "count": 5, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"},
+    ]
+    data["resources"] = []
+    data["buildings"] = []
+    data["quest_definitions"] = []
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.terrain) == spec.topology.width * spec.topology.height, (
+        "terrain dict must contain exactly one entry per topology tile, none outside bounds"
+    )
+    assert all(
+        0 <= x < spec.topology.width and 0 <= y < spec.topology.height
+        for (x, y) in state.terrain.keys()
+    )
+
+
+def test_compiler_terrain_variants_town_tiles_membership_unaffected_by_terrain_choice():
+    """A town region declaring terrain_variants still produces town_tiles covering exactly the
+    same tile set as the flat-fill path -- membership is driven solely by r_spec.type == 'town',
+    independent of which terrain string each tile is painted with."""
+    data = create_base_valid_spec()
+    data["regions"][0]["terrain_variants"] = [
+        {"terrain": "GRASS", "weight": 1.0},
+        {"terrain": "DIRT", "weight": 1.0},
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    expected_town_tiles = {(x, y) for x in range(0, 11) for y in range(0, 11)}
+    assert state.town_tiles == expected_town_tiles
+
+
+def test_compiler_no_terrain_variants_declared_produces_byte_identical_terrain_dict():
+    """Load-bearing anti-regression guard: for regions that do not declare terrain_variants,
+    state.terrain must equal the flat-fill r_spec.terrain string for every in-bounds tile,
+    asserted by direct per-tile content -- not state_hash equality, since StateFingerprinter
+    does not read state.terrain at all and cannot detect a terrain-painting regression."""
+    data = create_base_valid_spec()
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    for r_spec in spec.regions:
+        min_x, min_y, max_x, max_y = r_spec.bounds
+        for x in range(min_x, max_x + 1):
+            for y in range(min_y, max_y + 1):
+                if 0 <= x < spec.topology.width and 0 <= y < spec.topology.height:
+                    assert state.terrain[(x, y)] == r_spec.terrain
+
+
+def test_compiler_terrain_variants_reuses_weighted_choice_respects_weight():
+    """A region declaring two variants with a heavily skewed weight (99:1) produces a per-tile
+    terrain distribution dominated by the heavily-weighted terrain -- proves `weight` is
+    actually consumed by rng.weighted_choice, not ignored/uniform."""
+    data = create_base_valid_spec()
+    data["regions"][1]["terrain_variants"] = [
+        {"terrain": "FOREST", "weight": 99.0},
+        {"terrain": "SWAMP", "weight": 1.0},
+    ]
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    tiles = [(x, y) for x in range(15, 41) for y in range(15, 41)]
+    forest_count = sum(1 for t in tiles if state.terrain[t] == "FOREST")
+    assert forest_count / len(tiles) > 0.8, (
+        f"heavily weighted terrain (99:1) should dominate the fill ({forest_count}/{len(tiles)})"
+    )
+
+
+def test_domain_world_entity_resource_building_draws_unaffected_by_terrain_variants_declaration():
+    """Compiling the same spec with terrain_variants populated vs. None must produce identical
+    entity/resource/building positions at the same seed -- proves the new noise-fill draw
+    (Domain.INIT) cannot perturb Domain.WORLD's existing entity/resource/building draw
+    sequence, regardless of draw order."""
+    data_without = create_base_valid_spec()
+    data_with = create_base_valid_spec()
+    data_with["regions"][1]["terrain_variants"] = [
+        {"terrain": "FOREST", "weight": 1.0},
+        {"terrain": "SWAMP", "weight": 1.0},
+    ]
+
+    spec_without = WorldSpec.model_validate(data_without)
+    spec_with = WorldSpec.model_validate(data_with)
+
+    state_without, _ = WorldCompiler.compile(spec_without, seed=42)
+    state_with, _ = WorldCompiler.compile(spec_with, seed=42)
+
+    assert set(state_without.entities.keys()) == set(state_with.entities.keys())
+    for eid, ent in state_without.entities.items():
+        assert ent.navigation.position == state_with.entities[eid].navigation.position
+
+    assert set(state_without.resource_nodes.keys()) == set(state_with.resource_nodes.keys())
+    for rid, node in state_without.resource_nodes.items():
+        assert node.position == state_with.resource_nodes[rid].position
+
+    assert set(state_without.buildings.keys()) == set(state_with.buildings.keys())
+    for bid, bld in state_without.buildings.items():
+        assert bld.position == state_with.buildings[bid].position
+
+
+def test_compiler_terrain_variants_empty_list_behaves_as_not_declared():
+    """terrain_variants=[] (empty list, distinct from None at the schema level) behaves
+    identically to not declaring variants at all -- Python truthiness on `if
+    r_spec.terrain_variants:` already treats [] as falsy, no special-casing needed."""
+    data_empty = create_base_valid_spec()
+    data_empty["regions"][1]["terrain_variants"] = []
+    data_none = create_base_valid_spec()
+    data_none["regions"][1]["terrain_variants"] = None
+
+    spec_empty = WorldSpec.model_validate(data_empty)
+    spec_none = WorldSpec.model_validate(data_none)
+
+    state_empty, _ = WorldCompiler.compile(spec_empty, seed=42)
+    state_none, _ = WorldCompiler.compile(spec_none, seed=42)
+
+    region_tiles_empty = {(x, y): state_empty.terrain[(x, y)] for x in range(15, 41) for y in range(15, 41)}
+    region_tiles_none = {(x, y): state_none.terrain[(x, y)] for x in range(15, 41) for y in range(15, 41)}
+    assert region_tiles_empty == region_tiles_none
+
+
+def test_compiler_terrain_variants_tile_offset_injective_across_wide_regions():
+    """The corrected tile_offset encoding (16 bits per axis) is collision-free for y >= 256 --
+    the original 8-bit-y-packing scheme (x << 8) | y collided on e.g. (x=0, y=256) vs.
+    (x=1, y=0), both producing offset 256. Added during Review to close that bug directly
+    (TCK-20260821-COMPILER-NOISE-FILL).
+
+    Spies on DeterministicRNG.weighted_choice to capture the real entity_id argument compiler.py
+    actually computes and passes for every tile -- a standalone recomputation of the formula in
+    the test body (the original version of this test) would pass unchanged even if compiler.py
+    regressed to the buggy (x << 8) | y encoding, since it never exercises the code under test.
+    This version fails if compiler.py's real per-tile entity_id computation collides."""
+    from unittest.mock import patch
+    from src.platform.rng import DeterministicRNG
+
+    data = create_base_valid_spec()
+    data["topology"]["width"] = 10
+    data["topology"]["height"] = 305
+    data["regions"] = [
+        {
+            "id": "wide_region", "type": "wilderness", "bounds": [0, 0, 5, 300], "terrain": "FOREST",
+            "terrain_variants": [
+                {"terrain": "FOREST", "weight": 1.0},
+                {"terrain": "SWAMP", "weight": 1.0},
+            ],
+        },
+    ]
+    data["entities"] = []
+    data["resources"] = []
+    data["buildings"] = []
+    data["quest_definitions"] = []
+    spec = WorldSpec.model_validate(data)
+
+    captured_entity_ids = []
+    original_weighted_choice = DeterministicRNG.weighted_choice
+
+    def spying_weighted_choice(self, domain, tick, entity_id, seq, weights, sub_id=0):
+        captured_entity_ids.append(entity_id)
+        return original_weighted_choice(self, domain, tick, entity_id, seq, weights, sub_id=sub_id)
+
+    with patch.object(DeterministicRNG, "weighted_choice", spying_weighted_choice):
+        WorldCompiler.compile(spec, seed=42)
+
+    # 6 * 301 in-bounds tiles in the region (x: 0-5, y: 0-300); every tile must have triggered
+    # exactly one weighted_choice call with a distinct entity_id -- a collision would mean two
+    # different tiles produced the same entity_id and therefore drew from the same seeded random
+    # source, silently correlating their terrain assignment.
+    assert len(captured_entity_ids) == 6 * 301
+    assert len(set(captured_entity_ids)) == len(captured_entity_ids), (
+        "compiler.py's real per-tile entity_id computation produced a duplicate for at least one "
+        "(x, y) pair -- this is exactly the class of collision the corrected 16-bits-per-axis "
+        "tile_offset encoding exists to eliminate"
+    )
+
+
 def test_compiler_faction_bravery_bias_produces_real_action_style_skew():
     """A predator faction's real, compiled population should skew toward AGGRESSIVE ActionStyle
     (previously every entity defaulted to BALANCED regardless of faction) -- the real mechanism
