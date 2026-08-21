@@ -74,8 +74,9 @@ been climbing steadily past the unflagged default ceiling.
       post-2026-06-17 content after the fix lands
 
 ## Related Tickets
-None found — first ticket filed against this failure (investigated via `gh run list`/`gh api`
-directly; no prior ticket references this workflow's OOM failure).
+- `TCK-20260821-DOCS-BUILD-LASTUPDATE-METADATA-OVERHEAD` — complementary structural fix (disables
+  per-file git-log metadata cost on the fastest-growing plugins) addressing the same build's memory
+  footprint; this hotfix's heap-limit bump is not a substitute for it.
 
 ## Related Docs
 None.
