@@ -113,6 +113,13 @@ code doesn't actually provide.
 
 ## 9. Kernel Boundaries
 - No scheduler optimization.
-- No concurrency or parallel execution.
+- No concurrency outside the bounded COLLECTION-phase worker pool: `WorkerManager`
+  (`src/engine/worker_manager.py`) dispatches proposal generation across a profile-controlled
+  `ThreadPoolExecutor`/`ProcessPoolExecutor`, per `bounded_concurrency_contract.md`. Every other
+  phase — INIT, SCHEDULING, RESOLUTION, CLEANUP, ADVANCEMENT, PERSISTENCE — executes
+  synchronously, and RESOLUTION collapses all COLLECTION-phase proposals through a single
+  deterministic serial apply order (`ConcurrencyLaw`, `src/core/concurrency_law.py`; Deterministic
+  Commit Law, `bounded_concurrency_contract.md` §3), so concurrent Collection execution never
+  affects tick outcome.
 - No adaptive degradation.
 - No external event brokers.

@@ -10744,3 +10744,29 @@
     \ ticket, git diff on policy.py shows 16 insertions/0 deletions, no concurrency_limit=\
     \ value touched). Does not claim anything about resource_governor_contract.md,\
     \ which explicitly disclaims worker-pool/concurrency scaling as a Non-Goal."
+- id: INFRA-366
+  text: 'docs/engine/contracts/simulation_kernel_contract.md §9 "Kernel Boundaries" stated
+    "No concurrency or parallel execution", contradicting docs/engine/kernel.md (Concurrent
+    Collection) and docs/engine/contracts/bounded_concurrency_contract.md (bounded worker
+    pool law) -- both also status: active, authority: P1. Corrected §9 to a narrower accurate
+    statement: concurrency is bounded to the COLLECTION phase only (WorkerManager''s
+    ThreadPoolExecutor/ProcessPoolExecutor), with RESOLUTION applying all proposals via a
+    single deterministic serial commit order (ConcurrencyLaw), so the three P1 docs and the
+    code now agree.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/engine/worker_manager.py::WorkerManager (ThreadPoolExecutor/ProcessPoolExecutor,
+    bounded by max_workers) + src/engine/kernel.py::Kernel._phase_collection (line 563, sole
+    caller of the worker pool) + src/engine/kernel.py::Kernel._phase_resolution (line 648,
+    serial AuthoritativeApplyPipeline.refine()) + src/core/concurrency_law.py::ConcurrencyLaw
+    (frozen commit-order priority mapping) + docs/engine/contracts/bounded_concurrency_contract.md
+    §3 Deterministic Commit Law'
+  proof_type: contract
+  test_path: tests/integration/kernel/test_worker_determinism.py::test_concurrency_determinism_equivalence,tests/integration/kernel/test_worker_determinism.py::test_race_resistance_via_sorting,tests/integration/kernel/test_simulation_kernel_contract.py::test_authoritative_phase_list
+  divergence_note: null
+  support_boundary: 'Documentation-only correction (TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION)
+    -- no production code changed. Does not touch simulation_kernel_contract.md §9''s other
+    three bullets (scheduler optimization, adaptive degradation, external event brokers),
+    deferred to TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT, nor the 6-phase vs 7-phase contradiction
+    (TCK-20260817-FIX-PHASE-COUNT-CONTRADICTION).'

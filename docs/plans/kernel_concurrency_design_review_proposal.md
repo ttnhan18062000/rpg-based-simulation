@@ -44,6 +44,13 @@ claim to be authoritative about the same kernel. The actual code (`src/engine/wo
 `ThreadPoolExecutor`/`ProcessPoolExecutor`) matches `kernel.md`'s description, not the contract's.
 One of these two docs is stale and needs correcting to match the other and the code.
 
+**Update (TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION, closed 2026-08-21):** resolved.
+§9 "Kernel Boundaries" was corrected to a narrower, accurate statement: concurrency is bounded to
+the COLLECTION phase only (`WorkerManager`'s `ThreadPoolExecutor`/`ProcessPoolExecutor`), with
+RESOLUTION applying all proposals through a single deterministic serial commit order
+(`ConcurrencyLaw`, `src/core/concurrency_law.py`) — kernel.md, simulation_kernel_contract.md, and
+bounded_concurrency_contract.md now agree.
+
 ## C3 — Fix the 6-phase vs. 7-phase contradiction
 
 `docs/engine/architecture.md` §2 describes a 6-phase kernel loop: INIT, GOVERNANCE, SCHEDULING,
