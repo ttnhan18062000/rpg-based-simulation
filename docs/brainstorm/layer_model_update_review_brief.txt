@@ -1,0 +1,154 @@
+Review Brief: City/Region Split, Group & Country Lifecycle Audits, Cross-Wiring
+================================================================================
+
+This is a review, not an open discussion (a discussion brief on the layer
+model already happened and produced real changes -- this checks whether
+those changes and everything since actually hold up). You're evaluating
+whether a set of corrections, investigations, and cross-references made
+since then are internally sound, honestly reported, and not quietly
+overreaching -- not proposing new design work from scratch.
+
+Where to read it
+-------------------
+Everything referenced here lives in the engineering atlas:
+https://claude.ai/code/artifact/23feda01-9857-4508-a014-3caa61bdbd07
+
+Specifically, revisions 37 through 43 (see Revision History at the bottom
+for the exact list). In section terms: "The Layer Model" (top, diagram +
+lede paragraphs), the new "City Layer" section (one card plus three
+diagram-cards: two Mermaid diagrams, two hand-drawn maps, and one
+composite map with a zoomed inset), the "Regional Trauma, Hazards &
+Sovereignty" card (Region Layer), Design Idea 35 (City ownership wiring),
+Design Idea 39 (affiliation change path), Design Idea 40 (Clan lifecycle),
+Design Idea 42 (a real bug, not a proposal), the new "Country Lifecycle"
+card (Faction Layer), the "Party Formation & Lifecycle" card (Group
+Layer), and the "Conversation" card (Entity Action).
+
+What changed and why
+------------------------
+A prior open discussion (see docs/brainstorm/layer_model_discussion_brief.txt
+if you want the original, still in the repo) established Entity -> City ->
+Country -> World as the real spine, with Clan and Race as cross-cutting
+reach rather than containing tiers. That discussion's response flagged a
+naming/scale error: "City" had actually been equated with "Region" in the
+diagram (reasoning that a Region hosting ~20 buildings is city-scale), when
+Region should instead be a biome/geography grouping a City sits inside, at
+a scale comparable to Country and Clan rather than a synonym for City.
+
+Direct investigation followed, and the finding was more specific than
+"we mislabeled something": RegionState.kind already carries a real,
+specially-handled "TOWN" value in the compiler, and a real, already-
+compiled world (data/worlds/urban_political) already runs two
+independently-owned TOWN-kind regions side by side -- proof that a
+"City" concept already exists as data, just conflated with Region as a
+class, not something needing invention from nothing. Alongside that: a
+genuinely separate, already-real bug was found (state.town_center, read
+by five live systems, never actually derived from region data -- Design
+Idea 42) and a naming-variant trap (a real settlement tagged
+type="settlement" instead of "town" silently gets none of the town
+treatment).
+
+Three visual methods were then built to make the corrected topology
+concrete: Mermaid relationship diagrams, hand-drawn SVG maps (shapes and
+borders, no tile grid) drawn to scale from the real urban_political
+bounds, and a composite map extending that same scenario across every
+layer at once (two Regions, two Countries -- one with non-contiguous
+territory -- three Cities, a cross-cutting Clan, schematic Race markers),
+with a zoomed inset explicitly marked as using real building/population
+counts rather than invented ones.
+
+Separately, the same lifecycle/boundary/domain test used earlier for
+Entity, Clan, and Race was applied to two more layers. Group Layer came
+back healthy, but the audit caught a wrong claim made earlier in Design
+Idea 40 ("Group has no invite/accept step at all") -- real recruitment
+turns out to go through an independent, trust-appraisal-based accept
+decision (SocialAppraisalSystem.appraise_contract()), corrected in place.
+Country/Faction came back partially healthy: real, live diplomatic and
+territorial state transitions, but no code anywhere ever founds a new
+Country or dissolves an existing one -- left as an open finding rather
+than a forced design, since (unlike Clan's founding gap) nothing in the
+codebase offers an analogous mechanism to reuse.
+
+The newly-confirmed trust-appraisal mechanism was then cited back into
+two other places that had previously used vaguer language for the same
+idea: Design Idea 39's affiliation-switching proposal, and the
+Conversation card's affection/trust gate.
+
+What to actually check
+--------------------------
+1. Does the corrected topology actually hold together? Entity -> City ->
+   Region ~ Country ~ Clan -> Race -> World, with City nesting inside
+   Region geographically while Region/Country/Clan sit at a comparable,
+   cross-cutting scale. Does this resolve the original City=Region
+   conflation cleanly, or does it just relocate the same ambiguity one
+   level up (e.g., is "Region ~ Country ~ Clan" doing real work, or is it
+   a hedge that avoids committing to a real relationship)?
+
+2. The composite map's central claim: a Country's territory being
+   non-contiguous (two Cities in two different Regions) is presented as
+   already supported by the real data model (FactionState.territory is a
+   tuple, not a single value) and not requiring new design. Is that
+   inference sound, or is there a load-bearing detail the map glosses
+   over?
+
+3. The real-vs-illustrative split across the three City Layer visuals.
+   One diagram/map pair is drawn to scale from real, already-compiled
+   world data; the other extends the same scenario into a hypothetical
+   target model; the composite map's inset mixes a real building/
+   population count with an illustrative surrounding political scenario.
+   Does labeling carry that distinction clearly enough that a reader
+   couldn't mistake the illustrative parts for verified fact, or does the
+   shared visual style (same city names, same map style) blur it?
+
+4. The Group Layer correction to Design Idea 40. The idea originally used
+   "Group has no accept step, Clan needs one" as its reason for Clan
+   diverging from Group's joining pattern. The correction replaces that
+   with "both have an accept step; the real difference is a transactional
+   expiring offer vs. a standing identity relationship." Does that revised
+   reasoning actually still support the original conclusion (reuse
+   Marriage's propose/accept for Clan, not Group's recruitment shape), or
+   does the corrected premise actually weaken the case for treating them
+   differently at all?
+
+5. The Country Lifecycle finding. Check the reasoning, not just the
+   conclusion: is "meaningful state transitions matter more than literal
+   birth/death" a fair standard to apply here, or is a political actor
+   that can never come into existence or cease existing missing something
+   more fundamental than the finding gives it credit for? Separately: is
+   "leave it open, no design proposed" the right call given there's no
+   reusable precedent, or should a genuinely new mechanism have been
+   sketched anyway?
+
+6. The cross-wiring cascade. The same trust-appraisal mechanism
+   (SocialAppraisalSystem.appraise_contract()) is now cited as the shared
+   precedent behind three different proposals: Clan joining, affiliation
+   switching, and Conversation's affection gate. Check whether these are
+   actually the same shape of problem, or whether a single freshly-found
+   mechanism is being overfit onto three situations that don't all need
+   the same solution just because it's convenient and recently verified.
+
+7. Whether the original discussion brief's four open questions (layer
+   model's own lifecycle/boundary/domain test, the relationship-type
+   taxonomy, reproduction/marriage implications, and "what doesn't fit
+   any of the four link types") were actually addressed by any of this,
+   or whether they're still sitting unresolved underneath the new work.
+
+What NOT to do
+-----------------
+- Don't re-litigate the original City=Region correction itself -- that's
+  settled and verified against real code; the question here is whether
+  everything built on top of it since is sound.
+- Don't propose implementing any of this -- it's still explicitly
+  brainstorm-only, no code has been written for any of it.
+- Don't evaluate the SVG/Mermaid markup as code quality -- treat the
+  diagrams purely as communication devices; the question is whether what
+  they communicate is accurate and clear, not how they're built.
+
+How to report back
+----------------------
+For each of the 7 points above: does it hold up, and if not, specifically
+what's shaky and why. Close with an overall judgment -- does this batch of
+work (revisions 37-43) leave the layer model in a stronger, more coherent
+state than the version the original discussion brief reviewed, or did
+something get lost or overreached in the process of investigating and
+wiring it further?
