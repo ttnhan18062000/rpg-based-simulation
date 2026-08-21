@@ -166,10 +166,14 @@ Not created yet — this epic is scope-only. Prospective child tickets:
 2. **Extend `WorldCompiler.compile()`'s region-painting loop** to consult a seeded noise field
    (reusing `DeterministicRNG`, already used elsewhere in this pipeline) when a region declares
    variants, thresholding into per-tile terrain types within the region's existing bounds —
-   modeled on Terraria's per-biome noise pass, not a full heightmap rewrite. Must also settle
-   exactly where in `compile()`'s single shared `DeterministicRNG` draw sequence the noise-fill
-   draws happen relative to existing entity/resource-placement draws, so unrelated worlds' golden
-   hashes don't shift (2026-08-21 finding above).
+   modeled on Terraria's per-biome noise pass, not a full heightmap rewrite. **Corrected by
+   child-ticket investigation (2026-08-21, see `TCK-20260821-COMPILER-NOISE-FILL`)**: the original
+   "settle draw-sequence ordering" framing above was based on a misreading of `DeterministicRNG`'s
+   real API — it's a stateless composite-key hash (`domain, tick, entity_id, sub_id`), not a
+   sequential stream, so draw *order* cannot cause collisions, only key-namespace collisions can. The
+   real, simpler requirement: key noise-fill draws under a distinct `Domain` from `Domain.WORLD`
+   (e.g. `Domain.INIT`, already registered, confirmed collision-free since `compile()`'s RNG instance
+   is distinct from Kernel's own).
 3. **Update at least one real world module** (e.g. `wolf_den_near_forest`, the FOREST-type module
    the rendering epic's own corpus sweep flagged as the most severe composite-rectangle offender)
    to use the new mechanism, as a real, verifiable proof rather than a purely synthetic test. Its
@@ -177,9 +181,15 @@ Not created yet — this epic is scope-only. Prospective child tickets:
    disjoint — the implementation must handle paint-order/overwrite semantics for this case.
 4. **Golden-hash determinism regression test**: same seed still produces bit-identical terrain
    (the noise fill must be seeded and deterministic, not merely "more random").
-5. **Housekeeping note** (likely a small hotfix, not part of this epic's core scope): investigate
-   whether `WorldProceduralGenerator` is safe to delete as dead code, or whether it's intentionally
-   kept for a reason not surfaced by this investigation.
+5. **Housekeeping note — resolved by child-ticket investigation (2026-08-21), NOT a deletion
+   candidate**: this item originally asked whether `WorldProceduralGenerator` is safe to delete as
+   dead code. Deeper investigation (`TCK-20260821-PROCEDURAL-GENERATOR-KEPT`) found this premise was
+   wrong: `docs/world/generator_contract.md` (P1, authoritative) explicitly documents it as the
+   intentionally preserved "Spec-based (legacy, preserved)" generation path, and
+   `docs/parity_ledger/substrate.yaml` carries a live P0 parity entry (`SUBSTRATE-NEW-002`) asserting
+   its determinism. A call-site-only grep methodology for "is X dead code" has now produced this same
+   false-lead pattern twice in this codebase's recent history (see also the sibling rendering epic's
+   C10 investigation above). The decision is to keep the class, not delete it.
 
 ## Out of Scope
 

@@ -74,10 +74,13 @@ Prospective child tickets (each independently scoped/investigated later):
 2. **Extend `WorldCompiler.compile()`'s region-painting loop** to consult a seeded noise field
    (reusing `DeterministicRNG`, already used elsewhere in this pipeline) when a region declares
    variants, thresholding into per-tile terrain types within the region's existing bounds — modeled
-   on Terraria's per-biome noise pass, not a full heightmap rewrite. Must also settle exactly where
-   in `compile()`'s single shared `DeterministicRNG` draw sequence the noise-fill draws happen,
-   relative to existing entity/resource-placement draws, so unrelated worlds' golden hashes don't
-   shift (see 2026-08-21 investigation, plan doc).
+   on Terraria's per-biome noise pass, not a full heightmap rewrite. **Corrected by child-ticket
+   investigation (2026-08-21)**: the original "settle draw-sequence ordering" framing was based on a
+   misreading of `DeterministicRNG`'s real API — it's a stateless composite-key hash
+   (`domain, tick, entity_id, sub_id`), not a sequential stream, so draw *order* cannot cause
+   collisions, only key-namespace collisions can. The real, simpler requirement: key noise-fill draws
+   under a distinct `Domain` from `Domain.WORLD` (e.g. `Domain.INIT`, already registered, confirmed
+   collision-free) — see `TCK-20260821-COMPILER-NOISE-FILL`.
 3. **Update at least one real world module** (e.g. `wolf_den_near_forest`, the FOREST-type module
    the rendering epic's own corpus sweep flagged as the most severe composite-rectangle offender) to
    use the new mechanism, as a real, verifiable proof rather than a purely synthetic test. Note:
@@ -86,11 +89,17 @@ Prospective child tickets (each independently scoped/investigated later):
    overwrite semantics for this case, not assume disjoint regions.
 4. **Golden-hash determinism regression test**: same seed still produces bit-identical terrain (the
    noise fill must be seeded and deterministic, not merely "more random").
-5. **Housekeeping note** (likely a small, separate hotfix — not this epic's core work): investigate
-   whether `WorldProceduralGenerator` (`src/worldgeneration/generator.py`) is safe to delete as
-   dead code (confirmed zero real call sites in `src/`/`tools`/CLI this session, only
-   self-referenced by its own unit test), or whether it's intentionally kept for a reason not
-   surfaced by this investigation.
+5. **Housekeeping note — resolved by child-ticket investigation (2026-08-21), NOT a deletion
+   candidate**: this item originally asked whether `WorldProceduralGenerator`
+   (`src/worldgeneration/generator.py`) is safe to delete as dead code (confirmed zero real call
+   sites in `src/`/`tools`/CLI this session, only self-referenced by its own unit test). Deeper
+   investigation found this premise was wrong: `docs/world/generator_contract.md` (P1, authoritative)
+   explicitly documents it as the intentionally preserved "Spec-based (legacy, preserved)" generation
+   path, and `docs/parity_ledger/substrate.yaml` carries a live P0 parity entry
+   (`SUBSTRATE-NEW-002`) asserting its determinism. A call-site-only grep methodology for "is X dead
+   code" has now produced this same false-lead pattern twice in this codebase's recent history (see
+   also the sibling rendering epic's C10 investigation, referenced above). `TCK-20260821-PROCEDURAL-GENERATOR-KEPT`
+   records this finding and closes the question with a decision to keep the class.
 
 ## Out of Scope
 - **Rewriting the region/module system itself** — this stays additive to `RegionRecipeSpec`, not a
@@ -121,6 +130,16 @@ when:
   direct user instruction, not a parent/child relationship in either direction). Its
   `VISUAL-SHAPE-METRIC` child ticket (`tickets/todos/world-rendering-core/TCK-20260821-VISUAL-SHAPE-METRIC.md`)
   measures exactly the rectangular-biome symptom this epic root-causes and will fix.
+- **Child tickets** (created via `/create-tickets`, see `tickets/todos/worldgen-organic-terrain/SEQUENCE.md`
+  for implementation order):
+- TCK-20260821-NOISE-FILL-SCHEMA
+- TCK-20260821-COMPILER-NOISE-FILL
+- TCK-20260821-WOLF-DEN-NOISE-MIGRATION
+- TCK-20260821-NOISE-FILL-DETERMINISM-TEST
+- TCK-20260821-PROCEDURAL-GENERATOR-KEPT — investigation corrected Scope item 5's own "investigate
+  whether to delete" framing: `WorldProceduralGenerator` is an intentionally preserved legacy path
+  (documented in `docs/world/generator_contract.md`, P1, plus a live P0 parity-ledger entry), not
+  dead code. This ticket records that finding and closes the question with a decision to keep it.
 
 ## Related Docs
 - `docs/plans/world_generation_organic_terrain_epic.md` — the complete epic plan: full root-cause
