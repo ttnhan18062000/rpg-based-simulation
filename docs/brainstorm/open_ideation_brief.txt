@@ -1,0 +1,60 @@
+Open Ideation: What Would You Build?
+
+This is a creative-generation task, not a review. You're being given a
+fantasy RPG simulation's creative direction and a light sense of what it
+already delivers, then asked one open question: given all this, what
+would you actually build next?
+
+Deliberately, you are not being handed a list of ideas the project has
+already had. That's on purpose. The point of asking someone outside this
+project is to get a genuinely independent read, not a set of ideas shaped
+by trying to guess or avoid what's already been thought of internally.
+Don't self-censor for overlap. Propose whatever you actually believe in.
+Filtering for duplicates, fit, and feasibility happens afterward, on our
+side, with full knowledge of the project's history -- not something you
+need to do or guess at here.
+
+Read this first
+-------------------
+The Unwritten World -- the creative direction:
+https://claude.ai/code/artifact/4dcbe5f7-4cea-467e-aaf0-794ee5dc7e3f
+
+Read it and take it seriously -- it's eight principles describing what
+this specific world is trying to be, each with real examples and an
+explicit "what failure looks like." This is the actual compass. An idea
+that's "a cool RPG feature" in the abstract but doesn't fit what this
+particular world is going for probably belongs to a different project.
+You don't need to force-fit every idea to a named principle, but the best
+ones usually will, and it's worth saying which if it's clear.
+
+Optional, for light orientation only
+-----------------------------------------
+Simulation Capabilities -- what already exists:
+https://claude.ai/code/artifact/72b90756-e335-46ce-a2be-9ab757357bd0
+
+A plain-language summary of what the simulation currently delivers, live
+today versus built-but-inactive versus not yet built. Useful for a general
+sense of scale and texture -- one character up through parties, cities,
+nations, peoples, and the world. Not a checklist to avoid. If an idea you
+believe in turns out to already exist in some form, propose it anyway and
+say so if you happen to notice -- that's still useful information, and
+it's not your job to hunt for overlap.
+
+What to send back
+----------------------
+As many ideas as you genuinely believe in -- one exceptional one is worth
+more than ten mediocre ones, but there's no target count either way. Any
+scale: one character, a settlement, a nation, a people, the world itself,
+or something that starts small and ripples outward.
+
+For each idea:
+- A short name.
+- A paragraph describing what it is and what it would actually change
+  about how the world behaves or what stories it can produce.
+- Which of the eight principles it serves, if that's clear to you -- and
+  if it doesn't clearly serve any of them, say why you think it's still
+  worth considering.
+
+Plain language throughout -- no code, no implementation detail, no file
+paths. Describe it the way you'd describe it to someone who will never
+open the source code.
