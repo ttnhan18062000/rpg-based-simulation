@@ -155,6 +155,22 @@ h2.section-title {
 .divider h2 { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin: 0 0 8px; }
 .divider p { color: var(--ink-soft); font-size: 14.5px; max-width: 70ch; margin: 0; }
 
+.glance {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 40px; overflow-x: auto;
+}
+.glance p.glance-note { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 16px; max-width: 68ch; }
+.glance table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.glance th {
+  text-align: left; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--ink-soft); padding: 0 12px 10px 0; border-bottom: 1px solid var(--border);
+}
+.glance td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.glance tr:last-child td { border-bottom: none; }
+.glance .sec-name { font-weight: 600; white-space: nowrap; }
+.glance .sec-name a { color: var(--ink); text-decoration: none; }
+.glance .sec-name a:hover { color: var(--accent); text-decoration: underline; }
+
 footer {
   margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
   font-size: 12.5px; color: var(--ink-soft); font-family: var(--font-mono);
@@ -173,6 +189,27 @@ footer {
     <span class="legend-item"><span class="dot planned"></span> Not yet built</span>
   </div>
 </header>
+
+<div class="glance">
+  <p class="glance-note"><strong>The short version, before the detail.</strong> 14 sections is a lot to read end to end &mdash; this table is the whole thing at a glance. Each row links to its section below for the full picture.</p>
+  <table>
+    <tr><th>Area</th><th>Status</th><th>In short</th></tr>
+    <tr><td class="sec-name"><a href="#action">What Characters Do</a></td><td><span class="badge live">Mostly live</span></td><td>Combat and movement are deep and real; a few things (paying for information, direct trading between characters) don't exist yet.</td></tr>
+    <tr><td class="sec-name"><a href="#identity">Who Each Character Is</a></td><td><span class="badge live">Mixed</span></td><td>Stats, race, and personality are all real; two characters of the same class currently grow along an identical path.</td></tr>
+    <tr><td class="sec-name"><a href="#modification">Injury &amp; Physical Conditions</a></td><td><span class="badge live">Live</span></td><td>Wounds and scars are real and lasting; temporary conditions exist but aren't one unified system yet.</td></tr>
+    <tr><td class="sec-name"><a href="#mind">How Characters Think &amp; Remember</a></td><td><span class="badge built">Mixed, richest section</span></td><td>Perception, goals, and relationships are genuinely deep; several fully-built systems (self-perception, emotions, richer memory) are switched off.</td></tr>
+    <tr><td class="sec-name"><a href="#family">Family, Marriage &amp; Growing Up</a></td><td><span class="badge planned">Planned</span></td><td>A complete, thought-through design for birth, marriage, and growing up &mdash; none of it built yet.</td></tr>
+    <tr><td class="sec-name"><a href="#parties">Working Together: Parties</a></td><td><span class="badge live">Live</span></td><td>Forming and losing a party both work today, including a real accept-or-refuse decision on joining.</td></tr>
+    <tr><td class="sec-name"><a href="#cities">Cities &amp; Settlements</a></td><td><span class="badge live">Mostly live</span></td><td>Real settlements with buildings and services; the game doesn't always correctly recognize when a character has actually reached one.</td></tr>
+    <tr><td class="sec-name"><a href="#land">The Wider Land</a></td><td><span class="badge live">Mixed</span></td><td>Territory and war damage are real; the population-growth system is built but confirmed to never actually run.</td></tr>
+    <tr><td class="sec-name"><a href="#monsters">Goblin Camps, Monster Dens &amp; Ruins</a></td><td><span class="badge planned">Mostly planned</span></td><td>A real goblin-camp system exists but never starts; most of this section is new design for it and its neighbors.</td></tr>
+    <tr><td class="sec-name"><a href="#nations">Nations &amp; Politics</a></td><td><span class="badge live">Mixed</span></td><td>Diplomacy, reputation, and a real day-to-day ambition system are all live; a nation can never be founded or wiped out entirely.</td></tr>
+    <tr><td class="sec-name"><a href="#clans">Organizations Beyond Borders</a></td><td><span class="badge planned">Planned</span></td><td>Confirmed to not exist at all &mdash; no organization spanning more than one city or nation yet.</td></tr>
+    <tr><td class="sec-name"><a href="#races">Peoples &amp; Races</a></td><td><span class="badge live">Mixed</span></td><td>A character's own race matters and is real; nothing tracks a whole people's population or general standing yet.</td></tr>
+    <tr><td class="sec-name"><a href="#world">The Living World</a></td><td><span class="badge live">Mixed</span></td><td>Ongoing campaigns and automatic history-writing are both real and substantial; there's no religion system of any kind.</td></tr>
+    <tr><td class="sec-name"><a href="#objects">Trade, Gear &amp; Crafting</a></td><td><span class="badge live">Mixed</span></td><td>Gear and the economy are both deep; crafting's rules are real but there's very little to actually craft yet.</td></tr>
+  </table>
+</div>
 
 <nav class="toc" aria-label="Table of contents">
   <p class="toc-label">On this page</p>
