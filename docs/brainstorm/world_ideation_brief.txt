@@ -1,0 +1,121 @@
+Ideation Brief: New RPG Features, Extending the Whole World
+
+This is a different task from the review briefs in this folder. This time:
+propose NEW ideas only, across every scale of the simulation -- one
+character, up through settlements, nations, peoples, and the world itself.
+Do not review, critique, or suggest consistency fixes for anything that
+already exists. That ground is covered elsewhere. Your job is to propose
+what could exist next.
+
+Read these two first, in this order
+---------------------------------------
+1. The Unwritten World -- the creative direction:
+   https://claude.ai/code/artifact/4dcbe5f7-4cea-467e-aaf0-794ee5dc7e3f
+   Read this first and take it seriously. It's eight principles describing
+   what this specific world is trying to be, each with real examples and an
+   explicit "what failure looks like." Every idea you propose should serve
+   at least one of these eight, and you should say which. This is the actual
+   filter -- an idea that's "a cool RPG feature" in general but doesn't serve
+   any of the eight probably belongs to a different project.
+
+2. Simulation Capabilities -- what already exists:
+   https://claude.ai/code/artifact/72b90756-e335-46ce-a2be-9ab757357bd0
+   An accurate, plain-language summary of what the simulation currently
+   delivers, from a single character's choices up through parties, cities,
+   nations, peoples, and the living world. Three honest states: live today,
+   built but switched off, or not yet built. Treat this as ground truth for
+   "what already exists" -- your job is what could extend it, not to
+   re-describe or re-flag what's already there.
+
+You do not need the technical engineering atlas underneath these two --
+it's real code, file paths, and verification detail, not needed for this
+task. If you want it anyway: https://claude.ai/code/artifact/23feda01-9857-4508-a014-3caa61bdbd07
+
+Ideas already on the table (don't duplicate these)
+-------------------------------------------------------
+The following are already proposed and recorded elsewhere in this project.
+Don't resubmit variations on these -- build past them:
+
+ 1. A full birth event, split by species kind (natural creatures, humanoids,
+    magical/demonic beings), each maturing differently.
+ 2. Marriage as a genuine propose/accept relationship, required for
+    humanoid reproduction, restricted by species but not by role or class.
+ 3. A child who doesn't get a finished adult identity at birth -- a real
+    childhood, then a coming-of-age choice shaped by upbringing.
+ 4. A second, alternate path to power alongside leveling, gated on a rare
+    material a character has found and is carrying, not just experience.
+ 5. Genuinely divergent growth paths between two characters of the same
+    class, instead of an identical numeric climb for everyone.
+ 6. Goblin/orc-style camps that actually grow, raid outward, and can be
+    found and cleared by an adventurer.
+ 7. A settlement-capacity distinction separating city-building peoples,
+    camp-building peoples, and peoples that never build anything at all --
+    independent of raw intelligence.
+ 8. Leaderless, spreading populations (think spider nests, slime colonies)
+    as their own kind of place, distinct from a led settlement -- nobody
+    plans a raid, but the infestation still spreads if ignored.
+ 9. A single dangerous creature's own claimed territory, defined by and
+    tied to that specific occupant -- meaningfully different once its
+    occupant is gone.
+10. Places that change identity over time as a record of what actually
+    happened to them -- a city destroyed in a siege becoming a ruin, an
+    abandoned camp later occupied by something else entirely.
+11. Wiring exploration to crafting through rare materials tied to specific
+    places, so a specific ruin or biome becomes a real reason to go there.
+12. A nation that can actually be founded or wiped out during play, instead
+    of the set of nations being permanently fixed from world creation.
+13. A real "grow" option for a strong, confident nation -- today a nation
+    already reconsiders its priorities every moment, but has no path to
+    proactively expand, only to defend, trade, or commission quests.
+14. A nation's own population pressure genuinely driving that expansion,
+    and driving new camps or nests to form in unclaimed land nearby.
+15. Organizations spanning more than one city or nation -- a guild, a
+    bloodline, a trading company -- with real membership and real assets,
+    independent of whoever currently rules the land its members stand on.
+16. A whole people's collective population and standing, not just one
+    character's personal race -- is a species growing or shrinking, and how
+    does one people generally regard another, as a baseline under any one
+    individual's personal feelings.
+17. A real religion and pantheon system -- today there is a single unused
+    word suggesting one might exist, and nothing else.
+18. Turning on the world's already-built system for organically generating
+    rumors and quest hooks from what's actually happening, instead of every
+    quest coming from a fixed source.
+19. A meaningfully deeper crafting content library -- the gating system is
+    real, there just isn't much to make yet.
+20. Letting a character directly hand an item to, or team up with, another
+    character through a real request either side can refuse -- both are
+    currently automatic or don't exist.
+
+What makes a good submission
+---------------------------------
+- Genuinely new: not a rewording of the twenty ideas above, and not just
+  restating something Simulation Capabilities already flags as missing or
+  inactive as if it were a fresh proposal.
+- Serves the direction: name which of the eight Unwritten World principles
+  it serves, and how. An idea that doesn't clearly serve any of them needs
+  its own stated reason for being worth considering anyway.
+- Grounded, not disconnected: something that could plausibly extend what
+  Simulation Capabilities describes, at any scale -- one character, a
+  settlement, a nation, a whole people, or the world itself. You don't need
+  to know how it would be built, only that it makes sense given what
+  already exists and what already doesn't.
+- Plain and standalone: no code, file paths, or technical implementation
+  detail. Describe it the way you'd describe it to someone who will never
+  open the source code.
+
+Submission format
+---------------------
+One idea per entry:
+- A short name for the idea.
+- A paragraph describing what it is and what it would change.
+- Which scale it mainly touches: one character, a settlement (city, camp,
+  nest, lair, or site), the wider land, a nation, an organization spanning
+  borders, a whole people, or the world itself. An idea can touch more than
+  one -- say so if it does.
+- Which of the eight Unwritten World principles it serves, and one sentence
+  on how.
+
+No fixed number of ideas expected -- quality over quantity. A handful of
+genuinely new, well-considered directions is worth more than a long list of
+minor variations on what's already on the table above.
