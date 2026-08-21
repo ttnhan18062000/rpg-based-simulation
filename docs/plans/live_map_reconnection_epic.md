@@ -170,10 +170,130 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
    <40ms/tick target) and `CLASS_C` (500 entities, <30ms/tick target) scale per
    `docs/performance/perf_baseline_policy.md`'s already-registered hardware classes, and confirm broadcast
    payload size stays near the V1-measured baseline (~75KB per update at ~360 entities, not the
-   pre-optimization ~800KB–1.6MB) as a concrete regression check, not a bare "it feels fast" claim. Report
-   with the same scoped-claim discipline `docs/engine/performance_contract.md` requires elsewhere (runtime
-   profile, hardware class, scenario). Any real optimization need this surfaces becomes a **separate future
-   ticket**, driven by evidence — not designed speculatively inside this epic.
+   pre-optimization ~800KB–1.6MB) as a concrete regression check, not a bare "it feels fast" claim.
+   **Precise, testable budget (2026-08-21 research, see "Scaling Design" below)**: median client frame time
+   ≤8ms (≥120 FPS capability) under bounded-viewport load, with a documented floor of ≤16.6ms (60 FPS)
+   under stress that must never be silently crossed — a frame-*time* budget, not a frame-*count* target,
+   since `requestAnimationFrame` syncs to the viewer's actual display refresh rate (60/120/144Hz), not a
+   hardcoded 60. Also verify the existing lerp/interpolation math is genuinely delta-time-based (elapsed
+   wall-clock ms since last tick), not frame-count-based — required for it to degrade gracefully rather than
+   visibly stutter below peak frame rate; currently unverified since this frontend has never run against
+   live data. Report with the same scoped-claim discipline `docs/engine/performance_contract.md` requires
+   elsewhere (runtime profile, hardware class, scenario). Any real optimization need this surfaces becomes a
+   **separate future ticket**, driven by evidence — not designed speculatively inside this epic.
+6. **New `GET /api/v1/manifest` endpoint** (small, backend + `useSimulation.ts` only — see "Scaling Design"
+   below for the full design and precedent): fetched once alongside item 3's `/static` call, returning
+   `{schema_version, terrain_types: {id:name}, entity_kinds: {id:name}, building_types: {...},
+   location_types: {...}}`. Makes the backend's own registries the single source of truth for what an ID
+   means, instead of the frontend's current independent, drift-prone hardcoded copy
+   (`frontend/src/constants/colors.ts`'s `TERRAIN_COLORS`/`TILE_COLORS`/`KIND_COLORS`/etc.). **Scope
+   boundary, stated honestly**: fetching and exposing the manifest is in-scope (backend route +
+   `useSimulation.ts`); actually retiring `colors.ts`'s hardcoded maps in favor of manifest-driven values is
+   a `GameCanvas.tsx`/`constants/` change, which crosses this epic's own stated boundary ("`GameCanvas.tsx`/
+   `useCanvas.ts` are read-only reference... not modified by this epic"). This item scopes the endpoint and
+   the fetch; switching the renderer to consume it is left for a fast-follow, not silently declared done
+   here.
+
+## Scaling Design: Data Manifest, Layered Rendering, Frame Budget (2026-08-21 deep research)
+
+Following up on the section above, three deeper research passes tied directly to a "what if this needs to
+handle a huge map and thousands of entities" scaling conversation. Each proposes a concrete design tied to
+a cited real precedent — not general survey material. **Scope honesty up front**: item 6 (the manifest) is
+folded into this epic's actual Scope above because it's small and backend-plus-`useSimulation.ts`-only.
+Part B (layered rendering) is **not** folded into this epic's Scope — it requires modifying
+`GameCanvas.tsx`/`useCanvas.ts`, which this epic deliberately keeps untouched, and the epic's own philosophy
+(item 5: "any real optimization need becomes a separate future ticket, driven by evidence") argues against
+speculatively rewriting a renderer that hasn't been measured yet. It's captured here in full so the design
+isn't lost, sequenced as the natural next ticket once item 5's real measurement pass shows whether/where
+it's actually needed.
+
+### A. Data Manifest — Separating Meaning from Live Data
+
+**The problem, precisely**: `frontend/src/constants/colors.ts` hardcodes `TERRAIN_COLORS`, `TILE_COLORS`,
+`KIND_COLORS`, `LOCATION_TYPE_ICONS`, `DIFFICULTY_BADGES` — independent, frontend-owned copies of what a
+backend terrain-tile-ID or entity-kind-ID *means*. This is architecturally backwards for a project that
+treats registries as the source of truth everywhere else in its backend (`layer_registry.jsonl`,
+`tag_registry.jsonl`, content catalogs) — the frontend maintaining its own parallel, driftable copy is the
+one place that discipline doesn't hold.
+
+**Real precedents, all confirmed and citable, not hypothetical:**
+- **Avro + Confluent Schema Registry** — production-scale precedent for exactly this split. Wire format is
+  a magic byte + 4-byte schema ID + binary data; the schema is never resent, only looked up by ID.
+  Result: 30–70% smaller than self-describing JSON, and per-record overhead drops to 5 bytes.
+- **H.264 SPS/PPS (Sequence/Picture Parameter Sets)** — a fair analogy, not a stretch: parameter sets are
+  sent once, each subsequent unit carries only an index back to them, because the values "do not typically
+  change" once set.
+- **Source Engine's SendTables/DataTables** — the closest real *game*-networking match, and a shipping,
+  decades-proven pattern: on connect, client and server exchange the list of known entity classes; if the
+  client is missing a class the server references, the connection is rejected outright ("Client missing DT
+  class"). No silent renegotiation.
+
+**Design adopted**: `GET /api/v1/manifest` (Scope item 6 above), fetched once alongside `/static` — same
+lifecycle, not a new connection step. Payload is a versioned ID→meaning lookup table. The live per-tick
+broadcast carries **only IDs, zero self-description** — mirrors both Avro's compact-record principle and
+H.264's per-frame terseness. **Version mismatch handling**: hard reconnect, Source-engine style — not a
+compatibility-negotiation registry (Confluent's approach). At this project's actual scale (single server,
+no live schema evolution expected mid-session), the blunter model is the right fit; a full schema-registry
+service or Protobuf codegen pipeline would be real overkill — the *principle* (ID-indirection, fetched once,
+cached) is what transfers here, not the infrastructure.
+
+### B. Layered, Cache-First Rendering Architecture (design captured, not scoped into this epic)
+
+**Precedents, all real and current, not guesses:**
+- **Browser compositor layers — the analogy is exact, not loose.** A DOM element promoted to its own paint
+  surface (via `transform`/`opacity`/`will-change`) has `transform`/`opacity` changes skip layout *and*
+  paint entirely, applied directly on the GPU; anything else forces a real repaint of that layer's texture.
+  This is precisely what the existing CSS-`transform`-based pan/zoom already does correctly — real
+  compositor-only work, not a metaphor. Caveat worth keeping: layers aren't free (GPU memory, per-layer
+  upload cost) — cache deliberately, don't promote everything.
+- **Dirty-rectangle rendering** — a well-established, pre-1995 2D-game-engine technique: track the bounding
+  rectangles of only the screen regions actually drawn-to this frame, and blit just those instead of
+  redrawing the full frame. Directly applicable to the entity layer: with thousands of entities where most
+  are idle any given tick, track each moved/changed entity's screen-space bounding box and `clearRect` +
+  redraw only the union of those regions, not the whole entity canvas every frame.
+- **PixiJS confirms the same pattern as a first-class, current engine feature** — `cacheAsTexture`
+  (v8; `cacheAsBitmap` pre-v8) renders a container to a texture once and reuses it on later frames, explicitly
+  documented as best for infrequently-updating content (i.e. exactly the terrain/semi-static-object case).
+  `ParticleContainer` is a separate, deliberately stripped-down container built for rendering thousands of
+  lightweight objects fast — the closest real-engine analog to this project's entity layer at scale. Worth
+  noting: even PixiJS's culling is opt-in/manually triggered as of v8, not automatic — culling is a real,
+  explicit responsibility in *any* engine, not something adopting one gives you for free.
+- **Adopt an engine (PixiJS/WebGL) vs. extend Canvas2D — extend, don't migrate.** A rendering-engine swap is
+  a different-shaped project (new render loop, new asset pipeline, full draw-logic rewrite, WebGL context
+  management) than incrementally adding caching to working Canvas2D code. All three PixiJS-confirmed
+  patterns above can be manually replicated in plain Canvas2D using the exact off-screen-canvas pattern
+  already proven on this project's own minimap — no engine migration needed to capture the real benefit.
+
+**Proposed layer model** (design for the follow-up ticket, not built here):
+- **Layer 0 — terrain**: off-screen cache, invalidate only on an actual tile-state change (rare) — the
+  pattern already proven on the minimap terrain cache, extended to the main viewport.
+- **Layer 1 — semi-static objects** (buildings, resource nodes, chests): cache, invalidate per-object on the
+  specific state-change event (harvested, destroyed), not a periodic full redraw.
+- **Layer 2 — dynamic entities**: dirty-rect redraw — only the bounding regions of entities that actually
+  moved/changed this frame, not the full visible set.
+- **Layer 3 — overlay** (hover, selection): unchanged, already cheap.
+- Compositing all four is already free — they're separate DOM-stacked `<canvas>` elements, and the browser's
+  own GPU compositor combines them without any new code.
+
+### C. Frame-Budget Headroom, Not a 60 FPS Ceiling
+
+**Precedent**: Glenn Fiedler's "Fix Your Timestep!" (gafferongames.com) is the recognized reference here,
+addressing exactly the real problem of simulation/animation math breaking when tied to variable frame time —
+its fix is an accumulator pattern that decouples simulation step from render frame rate. This validates this
+project's existing design *shape* (12 TPS sim, interpolated render) as the right approach — but requires the
+render loop's interpolation math to use real elapsed delta-time, not an assumed fixed frame count, or it
+silently breaks the moment frame rate drops below the assumed value.
+
+**Frame-budget headroom is real, named practice, not a novel idea**: convention is a 16.7ms budget for 60Hz,
+8.3ms for 120Hz, with teams commonly reserving 10-15% margin within that budget for spikes rather than
+budgeting to the full frame time — directly supporting an 8ms-class budget (120fps-capable) as real slack
+against a 16.6ms (60fps) floor, exactly the shape proposed. `requestAnimationFrame` itself confirms why this
+must be a **time** budget, not a **count** target: it syncs to the viewer's actual display refresh rate
+(60/120/144Hz), not a hardcoded 60, so a frame-count-based target is meaningless across real viewers.
+
+**Adopted wording** (folded into Scope item 5 above): median client frame time ≤8ms (≥120 FPS capability)
+under bounded-viewport load, documented floor of ≤16.6ms (60 FPS) under stress, never silently crossed —
+plus explicit verification that the existing lerp is delta-time-based, not frame-count-based.
 
 ## Real-Time Transfer & Multi-Client Design Guidance (2026-08-21 research)
 
@@ -262,6 +382,14 @@ viewers — not a large multiplayer game):
 
 ## References
 
+- **External sources for the "Scaling Design" section**: Confluent/Avro schema-registry docs
+  (docs.confluent.io — ID-indirection wire format), H.264 SPS/PPS explainers (cardinalpeak.com,
+  doc-kurento.readthedocs.io), Valve's Source Engine networking wiki (developer.valvesoftware.com —
+  SendTables/DataTables), web.dev's "Stick to Compositor-Only Properties" (compositor-layer mechanics),
+  classic dirty-rectangle rendering reference (phatcode.net), PixiJS v8 docs (`cacheAsTexture`,
+  `ParticleContainer`), Glenn Fiedler's "Fix Your Timestep!" (gafferongames.com), and a frame-budget
+  calculator/JS-game-loop reference (gamedevcheatsheet.com, aleksandrhovhannisyan.com) — full citations in
+  the section itself.
 - `docs/engine/contracts/frontend.md` — the existing, still-accurate "Known gap (2026-07-16)" documenting
   the 5 missing REST routes; this epic's investigation extends it with the transport-mismatch and
   broadcast-payload findings that doc didn't cover.

@@ -76,8 +76,19 @@ design reused as-is). Full trace: `docs/plans/live_map_reconnection_epic.md`.
   (2,500 entities, <40ms/tick) and `CLASS_C` (500 entities, <30ms/tick) per
   `docs/performance/perf_baseline_policy.md`'s registered hardware classes, and confirm broadcast payload
   size lands near the V1-measured ~75KB/update baseline (not the pre-optimization ~800KB–1.6MB) as a
-  concrete regression check. Reported per `docs/engine/performance_contract.md`'s scoped-claims discipline
-  — not assumed, not a bare number. Any real optimization need this surfaces is a separate future ticket.
+  concrete regression check. **Precise budget (2026-08-21 research)**: median client frame time ≤8ms (≥120
+  FPS capability) under bounded-viewport load, documented floor of ≤16.6ms (60 FPS) under stress, never
+  silently crossed — a frame-*time* budget, not a frame-*count* target, since `requestAnimationFrame` syncs
+  to the viewer's real display refresh rate. Also verify the existing lerp is genuinely delta-time-based,
+  not frame-count-based (currently unverified). Reported per `docs/engine/performance_contract.md`'s
+  scoped-claims discipline — not assumed, not a bare number. Any real optimization need this surfaces is a
+  separate future ticket.
+- New `GET /api/v1/manifest` endpoint (backend + `useSimulation.ts` only): fetched once alongside `/static`,
+  returning `{schema_version, terrain_types, entity_kinds, building_types, location_types}` — makes the
+  backend's own registries the source of truth for ID meaning instead of the frontend's current independent,
+  drift-prone copy (`frontend/src/constants/colors.ts`). Scope boundary: the endpoint + fetch is in-scope;
+  actually retiring `colors.ts` in favor of manifest-driven values touches `GameCanvas.tsx`, which this
+  epic's own scope keeps untouched — left as a fast-follow, not silently declared done here.
 - Give the new broadcast message an explicit schema-version marker and treat its shape as additive-only
   from day one — cheap now, expensive to retrofit once a second client type depends on it (see plan doc's
   "Real-Time Transfer & Multi-Client Design Guidance").
@@ -91,7 +102,12 @@ design reused as-is). Full trace: `docs/plans/live_map_reconnection_epic.md`.
   their specific information-display needs is deferred per direct user instruction.
 - `/api/v1/speed` UI polish (route wiring can ride along if trivial; no new widget) and `/api/v1/clear_events`
   (route + UI both deferred, tied to the World Log HUD feature).
-- Any speculative rendering-performance rewrite not driven by this epic's own real measurement pass.
+- Any speculative rendering-performance rewrite not driven by this epic's own real measurement pass —
+  **includes the full layered/dirty-rect rendering architecture researched and designed in the plan doc's
+  "Scaling Design" §B**: a real, well-precedented design (browser compositor layers, classic dirty-rect
+  rendering, PixiJS's `cacheAsTexture`/`ParticleContainer` as confirmation), but it modifies `GameCanvas.tsx`/
+  `useCanvas.ts`, which this epic keeps untouched — captured in full for a natural follow-up ticket once
+  this epic's own performance-validation pass (Scope) shows whether/where it's actually needed.
 - Building a new client against `docs/plans/world_rendering/idea_world_rendering_core.md`'s "Option C"
   server-owned rendering core — explicitly ruled out this session in favor of reconnecting the existing
   frontend.
