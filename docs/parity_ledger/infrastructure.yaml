@@ -10714,3 +10714,33 @@
     callers (one phasePalette.ts substring false-positive on "author").'
   test_path: tests/api/test_cors_config.py::test_cors_never_combines_wildcard_origin_with_credentials,tests/api/test_cors_config.py::test_cors_preflight_never_combines_wildcard_origin_with_credentials
   divergence_note: null
+- id: INFRA-365
+  text: "GovernorPolicy.from_mode() (src/engine/policy.py:70,91,112,133) sets concurrency_limit\
+    \ to 1.0/1.0/0.5/0.25 across NORMAL/CONSTRAINED/DEGRADED/SURVIVAL \u2014 the active\
+    \ worker pool shrinks as RuntimeMode pressure escalates, rather than growing to\
+    \ clear backlog. This is correct because concurrency is the last shedding lever,\
+    \ not the first: by the time WorkerManager.execute_batch() (src/engine/worker_manager.py)\
+    \ applies concurrency_limit to compute effective_cap, the dispatched batch has\
+    \ already shrunk via phase budgets (PhaseBudgetGovernor.evaluate(), src/engine/phase_governor.py),\
+    \ cadence gating (SystemCadence.should_run(), src/engine/cadence.py), and LOD/scheduling\
+    \ filtering (DeterministicScheduler.select_work(), src/engine/scheduler.py). A\
+    \ smaller worker pool on an already-smaller batch reduces thread/IPC contention\
+    \ rather than adding scheduling noise to an already-stressed system."
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: "src/engine/policy.py::GovernorPolicy.from_mode (concurrency_limit\
+    \ values, lines 70/91/112/133, docstring added by TCK-20260817-DOC-CONCURRENCY-LIMIT-RATIONALE)\
+    \ + src/engine/worker_manager.py::WorkerManager.execute_batch (effective_cap =\
+    \ max(1, ceil(max_workers * concurrency_limit)), line ~103) + src/engine/phase_governor.py::PhaseBudgetGovernor.evaluate\
+    \ + src/engine/cadence.py::SystemCadence.should_run + src/engine/scheduler.py::DeterministicScheduler.select_work\
+    \ + src/engine/lod.py::LODService.should_execute + docs/engine/contracts/bounded_concurrency_contract.md\
+    \ \xA75.1 \"Why concurrency_limit Decreases as RuntimeMode Escalates\" (TCK-20260817-DOC-CONCURRENCY-LIMIT-RATIONALE)"
+  proof_type: parity
+  test_path: tests/unit/kernel/test_worker_adaptation.py::test_worker_concurrency_throttling,tests/unit/kernel/test_worker_adaptation.py::test_worker_concurrency_rounding
+  divergence_note: null
+  support_boundary: "Documents/verifies the existing concurrency_limit values and\
+    \ their rationale only \u2014 no production behavior changed (docstring/doc-only\
+    \ ticket, git diff on policy.py shows 16 insertions/0 deletions, no concurrency_limit=\
+    \ value touched). Does not claim anything about resource_governor_contract.md,\
+    \ which explicitly disclaims worker-pool/concurrency scaling as a Non-Goal."

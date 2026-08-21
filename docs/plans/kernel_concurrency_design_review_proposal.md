@@ -112,6 +112,13 @@ scheduling noise to an already-stressed system. No doc states this rationale. We
 down next to `GovernorPolicy.from_mode()` or in `docs/engine/governance_logic.md`, so a future
 contributor doesn't "fix" this into scaling the wrong direction.
 
+**Update (TCK-20260817-DOC-CONCURRENCY-LIMIT-RATIONALE, closed 2026-08-21):** resolved. The
+reconstructed rationale above was verified against real code (`PhaseBudgetGovernor.evaluate()`,
+`SystemCadence.should_run()`, `DeterministicScheduler.select_work()`'s LOD/cadence gating) and
+written down in both places: a docstring on `GovernorPolicy.from_mode()`
+(`src/engine/policy.py`) and `docs/engine/contracts/bounded_concurrency_contract.md` §5.1 (not
+`governance_logic.md`, which turned out to cover an unrelated Town Governance concept).
+
 ## C7 — Confirm where (if anywhere) the Collection-phase worker path consumes RNG
 
 A grep across `src/engine/domain_logic.py`, `src/engine/combat.py`, `src/engine/movement.py`, and

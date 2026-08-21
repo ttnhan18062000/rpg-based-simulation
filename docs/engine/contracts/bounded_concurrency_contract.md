@@ -46,6 +46,35 @@ This contract covers the transition of the concurrency layer from a prototype to
 - **Inflight Limit**: Profile-controlled.
 - **Saturation**: If queue is full, the engine MUST fall back to local execution for remaining items in that batch, maintaining the same commit order.
 
+### 5.1 Why `concurrency_limit` Decreases as `RuntimeMode` Escalates
+`GovernorPolicy.from_mode()` (`src/engine/policy.py:70,91,112,133`) sets `concurrency_limit`
+to 1.0 for NORMAL, 1.0 for CONSTRAINED, 0.5 for DEGRADED, and 0.25 for SURVIVAL — the active
+worker pool *shrinks* as pressure rises. This is not self-evidently correct: naively, more
+pressure might suggest more parallel workers to clear a backlog faster. It does the opposite
+because concurrency is the last lever pulled, not the first, and by the time it is throttled
+every earlier lever has already shrunk the batch being dispatched:
+
+- **Phase budgets** (`PhaseBudgetGovernor.evaluate()`, `src/engine/phase_governor.py`) cut
+  `candidate_budget`/`strategic_budget`/`movement_budget` and tighten `scan_policy`
+  (FULL → THROTTLED → EXACT_DIRTY) as `RuntimeMode` escalates — e.g. `candidate_budget` goes
+  1000 → 500 → 200 → 50 across NORMAL → CONSTRAINED → DEGRADED → SURVIVAL.
+- **Cadence gating** (`SystemCadence`, `src/engine/cadence.py`) staggers how often
+  per-entity/global subsystems re-evaluate at all (`should_run()`); cadence intervals widen
+  as `RuntimeMode` escalates (e.g. `strategic_intelligence` runs every 10 ticks in NORMAL,
+  every 100 in SURVIVAL).
+- **Scheduling** (`DeterministicScheduler.select_work()`, `src/engine/scheduler.py`) filters
+  candidates through readiness gating, LOD (`LODService.should_execute`, `src/engine/lod.py`
+  — entities far from focus points skip), and the cadence gate above, before any work item is
+  handed to the executor.
+
+By the time `WorkerManager.execute_batch()` (`src/engine/worker_manager.py`) applies
+`concurrency_limit` to compute `effective_cap`, the batch it is dispatching is already smaller
+under pressure than it was in NORMAL. A smaller worker pool applied to an already-smaller batch
+reduces thread/IPC contention rather than adding scheduling noise to an already-stressed system.
+This rationale does not apply to `docs/engine/contracts/resource_governor_contract.md`, which
+explicitly disclaims concurrency/worker-pool scaling as a Non-Goal — the Resource Governor only
+decides `RuntimeMode`; this contract's worker pool is what consumes it.
+
 ## Non-Goals
 - No distributed topology or external message brokers.
 - No mid-tick result-to-result dependencies (beyond neighbor views).

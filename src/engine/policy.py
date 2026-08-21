@@ -59,6 +59,22 @@ class GovernorPolicy:
     def from_mode(cls, mode: RuntimeMode) -> GovernorPolicy:
         """
         Policy Waterfall according to Milestone 5/6 Degradation Matrix.
+
+        `concurrency_limit` goes DOWN as `mode` escalates (1.0 / 1.0 / 0.5 / 0.25
+        for NORMAL / CONSTRAINED / DEGRADED / SURVIVAL below) — this is not a typo
+        and should not be "fixed" to scale the other way. Naively, more pressure
+        might suggest more parallel workers to clear a backlog faster. But by the
+        time concurrency is throttled, every other lever has already shrunk the
+        scheduled batch for this tick: PhaseBudgetGovernor.evaluate() (phase_governor.py)
+        cuts candidate/strategic/movement budgets and tightens scan_policy as `mode`
+        escalates; SystemCadence gates re-evaluation frequency per subsystem
+        (cadence.py:should_run); and DeterministicScheduler.select_work()
+        (scheduler.py) filters candidates through LOD (LODService.should_execute,
+        lod.py) and cadence gating before dispatch. A smaller worker pool applied to
+        an already-smaller batch reduces thread/IPC contention instead of adding
+        scheduling noise to an already-stressed system. See
+        docs/engine/contracts/bounded_concurrency_contract.md §5.1 for the full
+        write-up.
         """
         budgets = PhaseBudgetGovernor.evaluate(None, None, mode, 0)
         if mode == RuntimeMode.NORMAL:
