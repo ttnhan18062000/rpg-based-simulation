@@ -214,6 +214,19 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
    reserving the field now costs nothing and avoids a breaking protocol change later when it's actually
    implemented. Building real interest-management filtering itself remains out of scope for this epic (see
    Out of Scope) — this item is the envelope placeholder only.
+8. **Explicit, phased loading state — don't conflate "fetching initial data" with "now live," and don't
+   ship one opaque loading state.** Confirmed real, not hypothetical: `useSimulation.ts`'s `SimStatus` type
+   today has only `'CONNECTING'` covering the *entire* pre-live sequence (map/static/manifest fetch, WS
+   handshake, first-snapshot receipt, all one bucket); its fetch-failure path retries silently forever with
+   no visible error (`setTimeout(loadInitial, 1000)`); `GameCanvas.tsx` shows one generic "Loading map..."
+   string with no phase information at all. Item 8 replaces this with a real state machine matching the
+   actual sequence — `INITIALIZING → FETCHING_WORLD_DATA → CONNECTING_LIVE → SYNCING → READY`, each a
+   distinct status — plus a visible error state after repeated failures instead of infinite silent retry.
+   `SYNCING` corresponds exactly to item 2's connect-time atomic-handoff window (listener registered,
+   waiting for/applying the first snapshot) — the same correctness fix, now with a real, user-visible phase
+   attached to it. The loading screen is a small, self-contained addition shown *instead of* `GameCanvas`
+   while not yet `READY` — doesn't touch `GameCanvas.tsx`/`useCanvas.ts` themselves, so it doesn't cross
+   this epic's stated boundary on those files.
 
 ## Scaling Design: Data Manifest, Layered Rendering, Frame Budget, Stream Correctness (2026-08-21 deep
 research, externally reviewed)

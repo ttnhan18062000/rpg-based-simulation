@@ -100,6 +100,12 @@ None.
 - Real browser canvas/memory limits (Safari's tighter ~3-5 megapixel / ~384MB ceiling vs. Chrome/Firefox's
   much larger ones) were researched analytically this session, not measured against this project's actual
   target devices — worth a real confirmation pass once this epic is unblocked.
+- **Forward connection to M1's phased-loading state machine** (`TCK-20260821-EPIC-LIVE-MAP-RECONNECTION`
+  Scope item 8): once this epic's chunked terrain cache exists, the loading experience could naturally
+  extend from "one binary ready/not-ready state" to genuinely progressive loading — showing a coarse view
+  as nearby chunks arrive rather than waiting for the whole visible area. Not scoped here, just flagged so
+  the connection isn't lost — M1's phased state machine is deliberately generic enough to accommodate a
+  finer-grained "loading progress" state later without redesigning it now.
 
 ## Implementation Notes
 

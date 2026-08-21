@@ -107,6 +107,22 @@ design reused as-is). Full trace: `docs/plans/live_map_reconnection_epic.md`.
   management is likely necessary at real target scale (10,000 entities), not the safely-indefinitely-
   deferrable item this epic originally treated it as. Costs nothing now; avoids a breaking protocol change
   later. Building the actual filtering stays out of scope for this epic.
+- **Explicit, phased loading state — don't conflate "fetching initial data" with "now live," and don't ship
+  a single opaque loading state.** Confirmed the current code does exactly the thing being corrected here:
+  `useSimulation.ts`'s `SimStatus` type has only `'CONNECTING'` covering the *entire* pre-live sequence
+  (map/static/manifest fetch, WS handshake, first-snapshot receipt all collapsed into one bucket), its fetch
+  failure path retries silently forever with no visible error (`setTimeout(loadInitial, 1000)`, no user
+  feedback), and `GameCanvas.tsx` shows one generic "Loading map..." string with no phase information. This
+  item replaces that with a real state machine covering the actual sequence:
+  `INITIALIZING → FETCHING_WORLD_DATA → CONNECTING_LIVE → SYNCING → READY`, each a distinct, inspectable
+  status (not just `CONNECTING`), plus a visible error state after repeated fetch/connect failures instead
+  of an infinite silent retry. `SYNCING` corresponds exactly to the connect-time atomic-handoff window (tick
+  listener registered, waiting for/applying the first snapshot) — the same correctness fix above, now with
+  a real UI phase attached to it rather than being invisible to the user. The loading screen itself is a
+  small, self-contained UI addition (a phase-aware loading component), not the full `GameCanvas.tsx` render
+  path — does not conflict with the "`GameCanvas.tsx`/`useCanvas.ts` untouched" boundary stated elsewhere,
+  since the loading screen is shown *instead of* `GameCanvas` while not yet `READY`, not a modification to
+  `GameCanvas` itself.
 
 ## Out of Scope
 - Any new UI panel beyond what `GameCanvas.tsx` already renders (its minimap + locations panel is
