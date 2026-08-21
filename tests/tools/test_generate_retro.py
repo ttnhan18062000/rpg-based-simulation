@@ -2131,10 +2131,13 @@ def test_parity_index_readpath_call_count_matches_real_corpus_state():
     # `tools/parity_index.py health` 3 times via Bash during Implement/Verify (that ticket's whole
     # subject was the parity-ledger health checker), recording 3 real rows into the committed
     # agent-monitoring/tools.jsonl corpus this test reads. This is expected drift, not a bug -- see
-    # TCK-20260820-HOTFIX-PARITY-READPATH-BASELINE-DRIFT.
+    # TCK-20260820-HOTFIX-PARITY-READPATH-BASELINE-DRIFT. It then drifted a 2nd time (3 -> 4) when
+    # TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION's parity-updater phase legitimately ran
+    # `tools/parity_index.py entry INFRA-366` (2026-08-21T02:30:02Z), recording a 4th real row --
+    # again expected drift, not a bug -- see TCK-20260821-HOTFIX-PARITY-READPATH-BASELINE-DRIFT-2.
     real_tools = generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
     result = compute_parity_index_readpath_call_count(real_tools)
-    assert result["count"] == 3
+    assert result["count"] == 4
     assert result["derivation"]
 
 
