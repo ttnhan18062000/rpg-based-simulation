@@ -137,6 +137,10 @@ design reused as-is). Full trace: `docs/plans/live_map_reconnection_epic.md`.
 - `TCK-20260820-EPIC-WORLD-RENDERING-CORE` — a distinct, unrelated sibling system (server-side batch/QA
   measurement renderer for visual-quality scoring, not a player-facing live view). Neither epic depends on
   the other.
+- **This ticket is M1 of `docs/plans/live_map_scaling_roadmap.md`.** `TCK-20260821-EPIC-LIVE-MAP-RENDERING-PERFORMANCE`
+  (M2, rendering-side) and `TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT` (M3, broadcast-filtering-side)
+  both depend on this ticket shipping and producing real performance numbers — this ticket does not depend
+  on either of them; M2 and M3 are not dependencies of this one, only downstream of it.
 
 ## Related Docs
 - `docs/plans/live_map_reconnection_epic.md` — this epic's full plan doc, investigation trail, and the

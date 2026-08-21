@@ -504,6 +504,9 @@ viewers — not a large multiplayer game):
 
 ## References
 
+- `docs/plans/live_map_scaling_roadmap.md` — this epic is M1 of that roadmap; §B above is M2's
+  (`TCK-20260821-EPIC-LIVE-MAP-RENDERING-PERFORMANCE`) design source, §D's bandwidth reassessment is M3's
+  (`TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT`) design source. Both are gated on this epic shipping.
 - **External sources for the "Scaling Design" section**: Confluent/Avro schema-registry docs
   (docs.confluent.io — ID-indirection wire format), H.264 SPS/PPS explainers (cardinalpeak.com,
   doc-kurento.readthedocs.io), Valve's Source Engine networking wiki (developer.valvesoftware.com —
