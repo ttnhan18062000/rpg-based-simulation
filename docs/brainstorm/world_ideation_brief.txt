@@ -34,7 +34,10 @@ task. If you want it anyway: https://claude.ai/code/artifact/23feda01-9857-4508-
 If either linked artifact above fails to load, stop and say so rather than
 inventing or approximating its contents. Ideas that only pretend to serve
 the eight principles, because the principles were never actually read, are
-worse than no ideas at all.
+worse than no ideas at all. Before proposing anything, briefly confirm
+that both documents were actually read -- not for ceremony, it's the
+signal that the grounding step genuinely happened rather than reading the
+first closely and skimming or skipping the second.
 
 Ideas already on the table (don't duplicate these)
 -------------------------------------------------------
@@ -106,6 +109,14 @@ spreads false information through conversation to manipulate a rival
 settlement" is a genuinely new idea that happens to depend on conversation
 existing. The difference is whether the proposal is the gap itself, or
 something new that would only be possible once the gap is closed.
+
+Also avoid ideas whose main value is added content volume -- more classes,
+more monsters, more recipes, more building types -- unless that new
+content creates a qualitatively different world behavior, not just more
+of the same behavior. "Seasonal monsters," "more occupations," "more
+dungeon types," and "more faction archetypes" are all still content
+expansion dressed as ideation unless something about them changes what
+the world can actually do.
 
 What makes a good submission
 ---------------------------------
