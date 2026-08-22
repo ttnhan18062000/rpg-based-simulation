@@ -77,6 +77,8 @@ command design explicitly depends on the boundary tests being hardened first (Ep
 - TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC (prerequisite — confirmed done 2026-08-19)
 - TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET (item 1 extracted from here, 2026-08-19)
 - TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND (item 2 extracted from here, 2026-08-19)
+- TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD (item 3 extracted from here, 2026-08-22)
+- TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR (item 4 extracted from here, 2026-08-22; depends on TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD, see SEQUENCE.md)
 
 ## Related Docs
 - docs/plans/codebase_health_observatory_tooling_epic.md
