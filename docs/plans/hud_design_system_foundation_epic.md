@@ -1,16 +1,15 @@
 ---
 status: active
-layer: architecture
+layer: frontend
 authority: P1
 audience: developer
-maturity: idea
 date: 2026-08-22
-tags: [idea, frontend, hud, design-system]
+tags: [architecture, hud, design-system]
 ---
 
 # Epic Plan — HUD Design System Foundation
 
-**Tracking ticket:** none yet (this doc precedes epic ticket creation)
+**Tracking ticket:** `TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION`
 **Source:** direct conversation, following the research pass into `docs/plans/live_map_reconnection_epic.md`'s
 deferred "no HUD/info-display work" scope item.
 **Priority:** P1 — precedes and structurally constrains all future HUD content work (the panels researched in
