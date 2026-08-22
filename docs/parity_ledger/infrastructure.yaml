@@ -10837,3 +10837,13 @@
   test_path: tests/unit/rendering/test_render_core.py::test_render_golden_hash_bit_identical_across_three_independent_runs
   divergence_note: null
   proof_type: parity
+- id: INFRA-370
+  text: BFS whole-map walkable-region connectivity (terrain != WALL minus blocked_tiles)
+    reproduces documented walkable-tile count, connected-component count, and
+    percent-reachable deterministically from AuthoritativeState.terrain + blocked_tiles.
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/connectivity.py
+  test_path: tests/unit/rendering/test_connectivity.py::test_dungeon_crawl_matches_documented_evidence
+  divergence_note: null
+  proof_type: parity
