@@ -4803,3 +4803,47 @@
     \ new `lifecycle_full_coverage_world` section for the full before/after table.\
     \ This UPDATE does not change `status`/`priority` -- a calibration-data update,\
     \ not a new finding about SUB-384's own root cause or fix.\n"
+- id: SUB-385
+  text: 'RegionRecipeSpec (src/worldbuilding/recipe.py) and RegionSpec (src/worldbuilding/schema.py)
+    both accept an optional terrain_variants field (Optional[List[TerrainVariantSpec]],
+    default None), backed by a single shared TerrainVariantSpec model (terrain: str,
+    weight: float=1.0) defined once in schema.py and imported into recipe.py (TCK-20260821-NOISE-FILL-SCHEMA).
+    The field is explicitly forwarded through WorldAssemblyResolver.resolve_module_contribution()
+    so it survives the real module normalize()->resolve() pipeline instead of silently
+    dropping. WorldCompiler.compile() (src/worldbuilding/compiler.py:211-237) now
+    consumes the field for real: when a region declares terrain_variants, per-tile
+    terrain is sampled via DeterministicRNG.weighted_choice() keyed under Domain.INIT
+    (never Domain.WORLD), using a 16-bits-per-axis tile-offset encoding proven collision-free
+    for realistic topology sizes; a region that does not declare terrain_variants
+    keeps the original flat single-terrain fill byte-for-byte (TCK-20260821-COMPILER-NOISE-FILL).'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/worldbuilding/compiler.py:211-237 (region-painting loop, weighted
+    per-tile noise-fill under Domain.INIT when terrain_variants declared)
+  proof_type: null
+  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compiler_terrain_variants_deterministic_same_seed
+  divergence_note: null
+  support_boundary: Schema plumbing (RegionRecipeSpec, RegionSpec, WorldAssemblyResolver
+    forwarding) plus real WorldCompiler consumption (per-tile weighted noise-fill
+    under Domain.INIT); real world-module content migration to declare terrain_variants
+    is a separate, not-yet-landed ticket (TCK-20260821-WOLF-DEN-NOISE-MIGRATION).
+- id: SUB-386
+  text: 'wolf_den_near_forest.yaml''s near_forest and wolf_den regions (data/content/world_modules/wolf_den_near_forest.yaml)
+    are the first real content module regions to declare terrain_variants in production
+    (forest weight=3.0, swamp weight=1.0, ~75%/25%), exercising the SUB-385 compiler
+    mechanism for the first time with real content instead of synthetic test fixtures.
+    The two regions'' bounds genuinely overlap in x:[70,90],y:[30,55]; wolf_den is
+    declared second in the module''s regions: list, so per WorldCompiler.compile()''s
+    declaration-order paint rule its terrain (flat or noise-sampled) wins every tile
+    in the shared box, documented explicitly via a YAML comment above the regions:
+    list and via the Mechanics Bible''s Noise-Fill Terrain Law ''Paint Order for Overlapping
+    Regions'' bullet.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: data/content/world_modules/wolf_den_near_forest.yaml (terrain_variants
+    on both near_forest and wolf_den regions)
+  proof_type: null
+  test_path: tests/integration/worldassembly/test_wolf_den_noise_migration.py::test_wolf_den_overlap_box_resolves_to_wolf_den_terrain
+  divergence_note: null

@@ -213,10 +213,25 @@ class WorldCompiler:
             
             # Default to "GRASS" if terrain not specified on RegionSpec
             r_terrain = getattr(r_spec, "terrain", "GRASS")
+            region_hash = 0
+            if r_spec.terrain_variants:
+                for ch in r_spec.id:
+                    region_hash = (region_hash * 31 + ord(ch)) & 0xFFFFFFFF
             for x in range(min_x, max_x + 1):
                 for y in range(min_y, max_y + 1):
                     if 0 <= x < spec.topology.width and 0 <= y < spec.topology.height:
-                        terrain[(x, y)] = r_terrain
+                        if r_spec.terrain_variants:
+                            tile_offset = ((x & 0xFFFF) << 16) | (y & 0xFFFF)
+                            entity_id = (region_hash ^ tile_offset) & 0xFFFFFFFF
+                            tile_terrain = rng.weighted_choice(
+                                Domain.INIT, tick=0, entity_id=entity_id,
+                                seq=[v.terrain for v in r_spec.terrain_variants],
+                                weights=[v.weight for v in r_spec.terrain_variants],
+                                sub_id=1,
+                            )
+                        else:
+                            tile_terrain = r_terrain
+                        terrain[(x, y)] = tile_terrain
                         if r_spec.type == "town":
                             town_tiles.add((x, y))
 

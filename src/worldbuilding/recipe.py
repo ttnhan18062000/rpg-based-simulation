@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import Optional, Any, List, Union
 from pydantic import BaseModel, Field, model_validator, ConfigDict
 
+from src.worldbuilding.schema import TerrainVariantSpec
+
 
 class RegionRecipeSpec(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -15,6 +17,7 @@ class RegionRecipeSpec(BaseModel):
     hazard_level: Optional[float] = Field(0.0, description="Hazard difficulty rating")
     hazard_kind: Optional[str] = Field("PHYSICAL", description="Semantic type of this region's passive hazard drain (e.g. 'PHYSICAL', 'NATURAL_TERRAIN', 'TOXIC_GAS').")
     tags: List[str] = Field(default_factory=list, description="Semantic labels for quest routing (e.g. mine, forest, ruins, settlement)")
+    terrain_variants: Optional[List[TerrainVariantSpec]] = Field(None, description="Optional set of terrain fill variants for organic in-region terrain; inert until consumed by TCK-20260821-COMPILER-NOISE-FILL")
 
     @model_validator(mode="after")
     def validate_bounds(self) -> RegionRecipeSpec:

@@ -143,6 +143,103 @@ def test_hazard_kind_survives_module_pipeline(repos):
     assert all(r.hazard_kind == "PHYSICAL" for r in default_contribution.regions)
 
 
+def test_terrain_variants_survive_module_pipeline(repos):
+    """TCK-20260821-NOISE-FILL-SCHEMA regression: terrain_variants authored on a
+    RegionRecipeSpec must survive the full worldcomposition.v1 pipeline (synthetic
+    WorldModuleSpec -> WorldModuleAuthoringNormalizer.normalize() ->
+    WorldAssemblyResolver.resolve_module_contribution() -> resolved RegionSpec), not
+    just direct object construction. Mirrors test_hazard_kind_survives_module_pipeline
+    to prevent the exact TCK-20260701-HAZARD-KIND-RESOLVER-GAP failure mode from
+    recurring for this field.
+    """
+    from src.worldmodules.schema import WorldModuleSpec
+    from src.worldbuilding.recipe import RegionRecipeSpec
+    from src.worldbuilding.schema import TerrainVariantSpec
+
+    cat, mod = repos
+    resolver = WorldAssemblyResolver(cat, mod)
+
+    declared_variants = [
+        TerrainVariantSpec(terrain="FOREST", weight=2.0),
+        TerrainVariantSpec(terrain="GRASS", weight=1.0),
+    ]
+    declared_spec = WorldModuleSpec(
+        schema_version="worldmodule.v1",
+        module_id="terrain_variants_declared_module",
+        module_type="terrain",
+        display_name="Terrain Variants Declared Module",
+        regions=[
+            RegionRecipeSpec(
+                id="hometown",
+                type="town",
+                grid_bounds=(0, 0, 5, 5),
+                terrain_variants=declared_variants,
+            )
+        ],
+    )
+    declared_normalized = WorldModuleAuthoringNormalizer.normalize(declared_spec)
+    declared_contribution = resolver.resolve_module_contribution(declared_normalized)
+    resolved_variants = {r.id: r.terrain_variants for r in declared_contribution.regions}
+    assert resolved_variants == {"hometown": declared_variants}
+
+    # A module that does not author terrain_variants must still resolve, defaulting to
+    # None (i.e. the field is optional end-to-end, not just at the RegionRecipeSpec layer).
+    default_module_id = "frontier_village_core"
+    default_spec = mod.get_module(default_module_id)
+    default_normalized = WorldModuleAuthoringNormalizer.normalize(default_spec)
+    default_contribution = resolver.resolve_module_contribution(default_normalized)
+    assert all(r.terrain_variants is None for r in default_contribution.regions)
+
+
+def test_wolf_den_near_forest_declares_terrain_variants(repos):
+    """TCK-20260821-WOLF-DEN-NOISE-MIGRATION: wolf_den_near_forest's two regions must
+    declare a non-empty terrain_variants list (the noise-fill migration), while keeping
+    their flat terrain field and all non-terrain fields exactly as authored pre-migration.
+    """
+    cat, mod = repos
+
+    module_id = "wolf_den_near_forest"
+    spec = mod.get_module(module_id)
+    regions_by_id = {r.id: r for r in spec.regions}
+
+    assert set(regions_by_id) == {"near_forest", "wolf_den"}
+    for region_id, region in regions_by_id.items():
+        assert region.terrain_variants, f"{region_id} must declare a non-empty terrain_variants list"
+        assert region.terrain == "forest"
+        assert region.type == "wilderness"
+        assert region.tags == ["forest"]
+
+    assert regions_by_id["near_forest"].hazard_level == 1.0
+    assert regions_by_id["wolf_den"].hazard_level == 2.0
+    assert regions_by_id["near_forest"].hazard_kind == "NATURAL_TERRAIN"
+    assert regions_by_id["wolf_den"].hazard_kind == "NATURAL_TERRAIN"
+
+
+def test_wolf_den_near_forest_module_regions_preserve_non_terrain_fields(repos):
+    """TCK-20260821-WOLF-DEN-NOISE-MIGRATION: narrower, faster duplicate of part of
+    test_wolf_den_near_forest_declares_terrain_variants's field-preservation assertions on
+    the resolved contribution (post resolve_module_contribution()), kept separate so a
+    future terrain-only regression and a future field-drift regression fail independently.
+    """
+    cat, mod = repos
+    resolver = WorldAssemblyResolver(cat, mod)
+
+    module_id = "wolf_den_near_forest"
+    spec = mod.get_module(module_id)
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+    contribution = resolver.resolve_module_contribution(normalized)
+
+    hazard_levels = {r.id: r.hazard_level for r in contribution.regions}
+    hazard_kinds = {r.id: r.hazard_kind for r in contribution.regions}
+    tags = {r.id: r.tags for r in contribution.regions}
+    types = {r.id: r.type for r in contribution.regions}
+
+    assert hazard_levels == {"near_forest": 1.0, "wolf_den": 2.0}
+    assert hazard_kinds == {"near_forest": "NATURAL_TERRAIN", "wolf_den": "NATURAL_TERRAIN"}
+    assert tags == {"near_forest": ["forest"], "wolf_den": ["forest"]}
+    assert types == {"near_forest": "wilderness", "wolf_den": "wilderness"}
+
+
 def test_real_world_modules_reference_graph_edges_exist(repos):
     """Verify that references and relationships in modules build typed reference edges correctly."""
     cat, mod = repos

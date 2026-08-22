@@ -229,7 +229,7 @@ jobs:
           fi
           echo "$CHANGED"
           PERF_RE='^(tests/(perf|certification|arena)/|src/(ai|api|certification|cognition|config|core|domains|engine|observability|perf|platform|replay|world|worldbuilding)/|Makefile$|requirements\.txt$|\.github/workflows/test\.yml$)'
-          MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|requirements\.txt$|\.github/workflows/test\.yml$)'
+          MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|platform|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|requirements\.txt$|\.github/workflows/test\.yml$)'
           echo "run_perf_cert_arena=$(echo "$CHANGED" | grep -qE "$PERF_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "run_migration_lanes=$(echo "$CHANGED" | grep -qE "$MIG_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
 

@@ -7,10 +7,37 @@ requires: ["frontier_village_core"]
 biomes: ["near_forest", "wolf_den"]
 ecologies: ["wolf_den_ecology"]
 regions:
+  # Overlap-resolution rule (deliberate, not incidental): wolf_den is declared after
+  # near_forest, so per WorldCompiler.compile()'s declaration-order paint rule
+  # (src/worldbuilding/compiler.py:211-236 — plain dict-key overwrite, last region in
+  # spec.regions wins, no merge/blend), wolf_den's terrain (flat or noise-sampled) wins
+  # every tile in the two regions' shared box x:[70,90], y:[30,55]. This is intentional:
+  # wolf_den has the higher hazard_level (2.0 vs 1.0) and is the module's namesake
+  # region, so the overlap zone should read as "den territory," not merely "near the
+  # forest." Do not reorder these two entries without re-reading Decision 3 in
+  # staging_artifacts/TCK-20260821-WOLF-DEN-NOISE-MIGRATION/investigation.md (or its
+  # stored_artifacts copy after this ticket closes) — reordering flips which region's
+  # terrain wins the overlap and contradicts this rationale.
+  #
+  # Cross-module overlap (also deliberate, see Decision 3b in the same investigation.md):
+  # in real compositions that also include bandit_road_trade_pressure and/or
+  # goblin_camp_conflict (frontier_marches, frontier_extended, frontier_living_world,
+  # lifecycle_full_coverage_world, simq_scale_stress_seed42), near_forest/wolf_den
+  # process last (topological_sort_modules()'s alphabetical tie-break), so tiles in
+  # bandit_road's and goblin_camp's own bounds that fall inside near_forest/wolf_den's
+  # bounds get forest/swamp noise-fill instead of their own module's flat terrain. This
+  # pre-dates this migration (those tiles were already silently overwritten with flat
+  # "forest"); swamp is legality-inert (no blocking/cover/high-ground), so this is a
+  # cosmetic, accepted consequence, not a correctness risk.
   - id: "near_forest"
     type: "wilderness"
     grid_bounds: [45, 10, 90, 55]
     terrain: "forest"
+    terrain_variants:
+      - terrain: "forest"
+        weight: 3.0
+      - terrain: "swamp"
+        weight: 1.0
     hazard_level: 1.0
     hazard_kind: "NATURAL_TERRAIN"
     tags: [forest]
@@ -18,6 +45,11 @@ regions:
     type: "wilderness"
     grid_bounds: [70, 30, 105, 70]
     terrain: "forest"
+    terrain_variants:
+      - terrain: "forest"
+        weight: 3.0
+      - terrain: "swamp"
+        weight: 1.0
     hazard_level: 2.0
     hazard_kind: "NATURAL_TERRAIN"
     tags: [forest]

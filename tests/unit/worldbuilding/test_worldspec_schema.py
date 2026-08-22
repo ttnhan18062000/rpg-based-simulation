@@ -275,3 +275,12 @@ def test_world_spec_defaults_pending_self_model_information_events_to_empty_list
     }
     spec = WorldSpec.model_validate(data)
     assert spec.pending_self_model_information_events == []
+
+
+def test_region_spec_terrain_variants_default_none():
+    """TCK-20260821-NOISE-FILL-SCHEMA: RegionSpec's terrain_variants field defaults to
+    None when not declared, matching RegionRecipeSpec's own default."""
+    from src.worldbuilding.schema import RegionSpec
+
+    spec = RegionSpec(id="hometown", type="town", bounds=(0, 0, 5, 5))
+    assert spec.terrain_variants is None

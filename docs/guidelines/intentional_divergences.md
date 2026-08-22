@@ -1317,6 +1317,42 @@ This document is the canonical record of intentional behavior shifts in `src` co
 
 ---
 
+### 2.46 Noise-Fill Terrain Draws Namespaced Under Domain.INIT, Not Domain.WORLD (TCK-20260821-COMPILER-NOISE-FILL)
+- **Subsystem**: Worldbuilding / WorldCompiler
+- **Old Behavior**: `WorldCompiler.compile()`'s region-painting loop (`src/worldbuilding/compiler.py`)
+  only ever performed a single flat-terrain fill per region (`terrain[(x, y)] = r_terrain`). No
+  per-tile RNG draw existed in this loop at all, so there was no Domain-namespacing question to
+  answer.
+- **New Behavior**: A region declaring a populated `terrain_variants` list now gets per-tile
+  terrain sampled via `DeterministicRNG.weighted_choice()`, keyed under `Domain.INIT` rather than
+  sequenced within `Domain.WORLD`'s existing entity/resource/building draw order (which uses
+  `entity_id`/`sub_id` conventions of 0/1 for position, 10-14 for personality/class, ≥100 for
+  reroll). The noise-fill draw's `entity_id` is `(region_hash ^ tile_offset) & 0xFFFFFFFF` (a
+  string-hash of the region's `id` XORed with a 16-bits-per-axis tile offset) and `sub_id=1`,
+  distinct from any existing `Domain.WORLD` key convention.
+- **Rationale**: **Bounded**. `DeterministicRNG` is a stateless composite-key hash — each of
+  `get_float`/`get_int`/`choice`/`weighted_choice`/`sample` constructs a fresh `random.Random(seed)`
+  per call from `(base_seed, domain, tick, entity_id, sub_id)`, with no sequential stream to
+  reorder (`src/platform/rng.py:85-108`). Namespacing the new noise-fill draw under a distinct
+  `Domain` (`Domain.INIT`) eliminates composite-key collision risk with `Domain.WORLD`'s existing
+  draws by construction, rather than requiring careful entity_id/sub_id coordination to avoid
+  collision within the same Domain. `Domain.INIT`'s one existing production consumer
+  (`Kernel.__init__`'s run-suffix draw, `src/engine/kernel.py:122`,
+  `get_int(Domain.INIT, 0, 0, 1000, 9999)`, implicit `sub_id=0`) is structurally isolated from this
+  ticket's draws both by call-ordering (`compile()` always finishes and returns before any `Kernel`
+  is constructed in every real call path) and by RNG statelessness (each call builds its own
+  independent `random.Random` instance, so no shared mutable state exists even if their keys
+  happened to coincide). This is a scoping/collision-avoidance choice, not a behavior-correctness
+  fix — there was no bug in `Domain.INIT`'s prior single use.
+- **Verification**:
+  `tests/unit/worldbuilding/test_world_compiler.py::test_domain_world_entity_resource_building_draws_unaffected_by_terrain_variants_declaration`
+  — compiles the same spec with `terrain_variants` populated vs. `None` at the same seed and
+  asserts every entity/resource node/building position is identical, proving the new `Domain.INIT`
+  draw cannot perturb `Domain.WORLD`'s existing draw sequence.
+- **Status**: ACTIVE
+
+---
+
 ## 3. Unsupported / Retired Behavior
 
 The following legacy behaviors have been intentionally omitted or retired.

@@ -1,4 +1,5 @@
 # Compliance IDs: WORLD-ASM-TEST
+import pydantic
 import pytest
 from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
@@ -996,6 +997,34 @@ def test_v2_module_resolution_and_heuristics(repos):
 
     # Assert default perspectives survived normalization
     assert bundle.provenance_manifest.composition_fingerprint != ""
+
+
+def test_region_recipe_spec_accepts_terrain_variants_and_defaults_to_none():
+    """TCK-20260821-NOISE-FILL-SCHEMA: RegionRecipeSpec accepts an optional
+    terrain_variants field, defaults to None when omitted, round-trips a declared
+    value, and extra="forbid" remains enforced after the field addition.
+    """
+    from src.worldbuilding.schema import TerrainVariantSpec
+
+    no_kwarg_spec = RegionRecipeSpec(id="hometown", type="town", grid_bounds=(0, 0, 5, 5))
+    assert no_kwarg_spec.terrain_variants is None
+
+    declared_variants = [TerrainVariantSpec(terrain="FOREST")]
+    declared_spec = RegionRecipeSpec(
+        id="hometown",
+        type="town",
+        grid_bounds=(0, 0, 5, 5),
+        terrain_variants=declared_variants,
+    )
+    assert declared_spec.terrain_variants == declared_variants
+
+    with pytest.raises(pydantic.ValidationError):
+        RegionRecipeSpec(
+            id="hometown",
+            type="town",
+            grid_bounds=(0, 0, 5, 5),
+            bogus_field=1,
+        )
 
 
 def test_unknown_field_in_real_world_module_fails():
