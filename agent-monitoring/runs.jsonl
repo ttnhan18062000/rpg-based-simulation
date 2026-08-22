@@ -1211,3 +1211,4 @@
 {"run_id":"CREATE-TICKETS-DOCS-PLANS-IDEA-PRESSURE-PROPAGATION-ECONOMY","start_ts":"2026-08-22T05:01:09Z","end_ts":"2026-08-22T05:19:44Z","workflow":"create-tickets","tier":"n/a","final_status":"DONE","agent_count":10,"duration_s":1115}
 {"run_id":"CREATE-TICKETS-DOCS-PLANS-IDEA-SEMANTIC-ENTITY-INDEX","start_ts":"2026-08-22T05:21:06Z","end_ts":"2026-08-22T05:42:55Z","workflow":"create-tickets","tier":"n/a","final_status":"DONE","agent_count":10,"duration_s":1309}
 {"run_id":"CREATE-TICKETS-DOCS-PLANS-IDEA-WORLD-GRAMMAR-SEMANTIC-CONSTRAINTS","start_ts":"2026-08-22T05:43:39Z","end_ts":"2026-08-22T05:55:41Z","workflow":"create-tickets","tier":"n/a","final_status":"DONE","agent_count":6,"duration_s":722}
+{"run_id":"CREATE-TICKETS-DOCS-PLANS-AGENT-INFRASTRUCTURE-IDEA-AGENT-MONITORING-ACTIVE-DURATION","start_ts":"2026-08-22T05:56:22Z","end_ts":"2026-08-22T06:12:07Z","workflow":"create-tickets","tier":"n/a","final_status":"DONE","agent_count":7,"duration_s":945}
