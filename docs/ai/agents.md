@@ -457,6 +457,44 @@ deserialization, or file-path handling, even outside the automated workflow.
 
 ---
 
+### `world-render-reviewer`
+
+**Role:** Tiered visual/geometric quality review of a rendered world state — Tier 0 pure-data
+scoring by default, escalating to the annotated/gridlined render only when Tier 0/1 flags an
+anomaly. Cites tile coordinates from the annotated image, never the plain render.
+
+**Scope:** A pure geometry/statistics review — connectivity, terrain shape, entity density, and
+the composite grade produced by `src/rendering/review_pipeline.py::run_tier0_tier1_pipeline`. No
+relationship to the Mechanics Bible (`docs/mechanics/`); none of its findings cite a Mechanics
+Bible chapter, because none apply to this domain. For gameplay-balance or mechanics-law review of
+a completed simulation run, use `simulation-analyst` instead — a different job over different
+data.
+
+**What it does:**
+- Always reads the `Tier1Digest` JSON first (`review_pipeline.py::digest_to_json`) — connectivity
+  (`connectivity_component_count`/`connectivity_percent_reachable`), terrain shape
+  (`flagged_shape_components`), entity density (`entity_count`), and the composite `grade`/
+  `combined_score`
+- Reads the annotated/gridlined render at `Tier1Digest.annotated_render_path` only when the
+  digest's `escalate` field is `True` (set by `should_escalate`: any failed hard rule, or
+  `grade` in `D`/`F`) — `plain_render_path` exists for unrelated human-requested general health
+  checks only and is never substituted as an escalation image
+- Cites tile-coordinate evidence only from the annotated image when one was read, never invented
+  from the digest alone
+
+**Inputs:** A `Tier1Digest` produced by `run_tier0_tier1_pipeline`.
+
+**Outputs:** One-line summary, digest summary (grade/combined score/escalate flag), findings
+table (dimension | severity | description | evidence | related digest field), a
+Tier-0-verifiable-vs-annotated-image-required breakdown, and recommended next steps. Severity:
+`CRITICAL`/`HIGH`/`MEDIUM`/`LOW`.
+
+**When to invoke directly:** After `run_tier0_tier1_pipeline` produces a `Tier1Digest` for a
+rendered world state that needs a spatial/geometric quality read. Report-only — never a blocking
+gate, matching this ticket's own Out of Scope.
+
+---
+
 ## Agent Summary Table
 
 | Agent | Phase in lifecycle | Primary output |
@@ -476,3 +514,4 @@ deserialization, or file-path handling, even outside the automated workflow.
 | `security-reviewer` | Conditional gate (security-tagged tickets only) | APPROVED/NEEDS_CHANGES/BLOCKED verdict |
 | `world-debugger` | Debugging | Root cause + fix recommendation |
 | `simulation-analyst` | Analysis | Anomaly table + severity |
+| `world-render-reviewer` | Analysis | Findings table + grade/escalate summary |

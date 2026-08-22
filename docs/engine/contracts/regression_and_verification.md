@@ -22,6 +22,11 @@ The `HeadlessRunner` (`src/testing/headless_regression_runner.py`) is the author
 4.  **Renders (`renders/*.png`)**: Deterministic, hash-verified world-state snapshots produced by
     `src/rendering/render.py::render(state, out_path)`. Stored under
     `data/runs/{run_id}/renders/`. See §4 below for the render-specific determinism guarantee.
+    When Tier 0/1 visual-quality scoring (`src/rendering/review_pipeline.py::
+    run_tier0_tier1_pipeline`) flags an anomaly, an additional annotated/gridlined variant is
+    produced at the same `renders/` location with an `_annotated` filename suffix
+    (`src/rendering/render_annotated.py::render_annotated`) — written only on escalation, not
+    on every frame.
 
 ---
 
@@ -73,6 +78,13 @@ would not catch a render regression). Enforced via
 A `DirtySet`-incremental render (`src/rendering/incremental.py::IncrementalRenderer`) must produce
 pixel-identical output to a full non-incremental `render()` of the same final state, enforced via
 `tests/unit/rendering/test_render_incremental.py::test_dirty_set_incremental_render_pixel_identical_to_full_rerender`.
+
+**Tier 1 digest determinism**: the Tier 1 digest
+(`src/rendering/review_pipeline.py::Tier1Digest`/`digest_to_json`) is a pure, read-only function of
+`AuthoritativeState` content and the already-tested `grading.py`/sibling-metric outputs — three
+independent `run_tier0_tier1_pipeline` calls against content-equal state produce a byte-identical
+JSON digest (`sort_keys=True` serialization), enforced via `tests/unit/rendering/
+test_review_pipeline.py::test_tier1_digest_golden_hash_field_identical_across_three_independent_runs`.
 
 ---
 

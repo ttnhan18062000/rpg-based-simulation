@@ -10909,3 +10909,18 @@
   test_path: tests/unit/rendering/test_grading.py::test_grade_assignment_boundaries
   divergence_note: null
   proof_type: parity
+- id: INFRA-375
+  text: Tiered Tier 0/Tier 1/Tier 2 agent-review pipeline (src/rendering/review_pipeline.py)
+    composes grading.py's HardRuleResult/grade output into a deterministic escalation
+    decision (should_escalate) and a JSON-serializable Tier1Digest (sort_keys=True,
+    hashed for byte-identical determinism across independent runs). The annotated/
+    gridlined render (src/rendering/render_annotated.py, ported from experiments/
+    spatial_rendering/prototype/render_annotated.py) is written to disk only when
+    should_escalate returns True -- structurally enforcing that zero image exists to
+    read in the non-escalating case, rather than relying on agent tool-use discipline.
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/review_pipeline.py, src/rendering/render_annotated.py
+  test_path: tests/unit/rendering/test_review_pipeline.py::test_tier0_tier1_pipeline_writes_digest_without_writing_annotated_png_when_not_escalated
+  divergence_note: null
+  proof_type: parity

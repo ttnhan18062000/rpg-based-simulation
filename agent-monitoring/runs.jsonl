@@ -1216,3 +1216,4 @@
 {"run_id":"TCK-20260821-VISUAL-SHAPE-METRIC","start_ts":"2026-08-22T16:58:11Z","end_ts":"2026-08-22T17:35:11Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":13,"duration_s":2220}
 {"run_id":"TCK-20260821-VISUAL-VARIANTS-METRIC","start_ts":"2026-08-22T17:52:41Z","end_ts":"2026-08-22T18:29:35Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":2214}
 {"run_id":"TCK-20260821-VISUAL-GRADE-SCORER","start_ts":"2026-08-22T18:31:20Z","end_ts":"2026-08-22T19:14:51Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":2611}
+{"run_id":"TCK-20260821-VISUAL-AGENT-REVIEW","start_ts":"2026-08-22T19:16:19Z","end_ts":"2026-08-22T20:13:38Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":3439}
