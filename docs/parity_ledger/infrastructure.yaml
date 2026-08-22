@@ -10858,3 +10858,19 @@
   test_path: tests/unit/rendering/test_density.py::test_dungeon_crawl_reproduces_documented_cv
   divergence_note: null
   proof_type: parity
+- id: INFRA-372
+  text: Connected-component-aware fill-ratio (per-terrain-type BFS labeling, tiles /
+    bounding_box_area per component) plus 90-degree rotation/repetition detection
+    (transposed-coordinate set match) reproduces documented dungeon_crawl evidence
+    (FOREST=2 components of 1,116 tiles each; CAVE=0.980, FOREST-c0/c1=1.000,
+    RUIN=1.000; FOREST component 1 is component 0 rotated 90 degrees) deterministically
+    from AuthoritativeState.terrain at seed 42, tick 0. A corpus-wide sweep across the
+    current data/worlds corpus confirms every component scoring below the 0.95
+    reference threshold is FOREST type -- the 0.95 threshold itself is uncalibrated
+    and provisional, tracked separately (TCK-20260821-VISUAL-QUALITY-CALIBRATION).
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/shape.py
+  test_path: tests/unit/rendering/test_shape.py::test_dungeon_crawl_forest_is_two_components_of_1116_tiles_each
+  divergence_note: null
+  proof_type: parity
