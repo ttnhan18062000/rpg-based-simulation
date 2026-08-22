@@ -87,6 +87,7 @@ jobs:
         run: |
           pytest tests/unit/domains \
                  tests/unit/observability \
+                 tests/unit/rendering \
                  tests/unit/lab \
                  tests/unit/lab_agent \
                  tests/unit/api \
