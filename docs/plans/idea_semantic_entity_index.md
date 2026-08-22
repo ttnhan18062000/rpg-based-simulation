@@ -12,6 +12,28 @@ tags: [idea, entity-index, semantic-search, information-seeking, performance, sp
 
 > **Maturity: IDEA** — Not scheduled. Must precede E42 Information Seeking and E53 Faction Diplomacy at scale.
 
+> **Status review (2026-08-22):** re-investigated for staleness. E42 and E53 both shipped DONE within 2 days
+> of this idea being raised (2026-06-21/22) — before this doc could be acted on. Neither defined the
+> `ProviderLocator`/`TerritorialObserver` interfaces this doc recommended as the drop-in seam (confirmed:
+> zero hits repo-wide for either name). The O(N)/O(N×M) scan cost this doc warned about shipped exactly as
+> predicted and is still live today: `src/api/... paid_information.py:92,112` — a nested
+> `for entity in sorted(state.entities.values()...)` × `for pid in sorted(providers.keys())` scan, sorted
+> for determinism, no index. **This changes the recommendation, not just the facts**: retrofitting the
+> index now means touching the already-shipped consumer call sites directly (`paid_information.py`,
+> `src/domains/faction/`) rather than substituting behind an interface those tickets never built — a bigger,
+> riskier change than "drop-in upgrade" as originally framed below.
+>
+> Separately, `docs/engine/performance_contract.md` §7 now documents a `scan_policy`
+> (`FULL`/`THROTTLED`/`EXACT_DIRTY`) + `DirtySet` mechanism that already exists engine-wide as a generic
+> mitigation for O(N) scan cost under pressure. It doesn't replace a semantic index (it doesn't provide
+> role/region/faction-keyed lookup) but it already reduces the urgency this doc assumed was unmitigated.
+> Current real benchmark scale (`docs/engine/performance_contract.md`'s `MOVEMENT_STRESS_100_ACTORS`) is
+> still close to this doc's own "acceptable at 10-30, degrades as it scales" framing — not yet past it.
+>
+> A ticket scoping this should target the retrofit shape (index built against real shipped call sites,
+> reconciled with the existing `scan_policy`/`DirtySet` mitigation), not the original "define the interface
+> in E42/E53 first" plan in the sections below, which is no longer available.
+
 ---
 
 ## Problem
@@ -74,7 +96,7 @@ Index contents must be deterministically reproducible from the same authoritativ
 
 ## Relationship to Planned Tickets
 
-### E42-INFO-SEEKING (performance dependency)
+### E42-INFO-SEEKING (performance dependency) — historical, E42 shipped DONE 2026-06-21 without the recommended interface
 
 E42 plans: *"InformationNeed as first-class belief state; InformationProvider archetypes: MERCHANT, GUILD_MASTER, ELDER — each with `reliability_score` and `knowledge_age`; can answer queries about resource locations, faction tensions, entity whereabouts."*
 
@@ -86,7 +108,7 @@ A role+class+region index reduces this to O(k) where k is the count of providers
 
 **Recommendation**: E42 should define the `ProviderLocator` interface. The semantic index implements it. This makes the index a drop-in upgrade, not a refactor.
 
-### E53-FACTION-DIPLOMACY (performance dependency)
+### E53-FACTION-DIPLOMACY (performance dependency) — historical, E53 shipped DONE 2026-06-22 without the recommended interface
 
 E53 plans: *"Faction awareness: factions observe world events (resource depletion, calamity, entity deaths) and update tension levels; `FactionDecisionPhase`: runs at governance layer; produces faction-level directives (expand territory, seek alliance, respond to threat)."*
 
