@@ -12,6 +12,30 @@ tags: [idea, cognition-graph, observability, analytics, visualization, tuning, d
 
 > **Maturity: IDEA** — Not scheduled. Recommend before or alongside E12 Balance Baseline and E22 Decision Explanation.
 
+> **Status review (2026-08-22):** re-investigated for staleness. The gap this doc describes (cognition
+> artifacts never reach `AnalyticsDatasetBuilder`/Parquet/DuckDB) is confirmed still 100% open — zero
+> references to "cognition" anywhere in `src/observability/analytics/{dataset,exporter,query}.py`. Two
+> things changed since this doc was written, both load-bearing for a re-scope:
+>
+> 1. **New cost constraint, not accounted for below.** `TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP`
+>    (done) broadened `CognitionCapturePolicy.should_capture()` so NORMAL/FULL/RESEARCH modes now capture
+>    cognition-graph state changes (previously DEBUG/CERTIFICATION only) — but it also measured real
+>    corpus storage cost (5.9MB per 150-tick run, 143MB per 2000-tick run) and explicitly judged
+>    corpus-wide capture too expensive for `tools/calibrate_simq.py`'s calibration harness, which was left
+>    unchanged. Any ticket built from this idea needs a storage-cost budget for the proposed Parquet
+>    tables — this doc has none today.
+> 2. **"Relationship to Planned Tickets" below is written forward-looking about work that has since
+>    shipped.** E22-DECISION-EXPLAIN, E12-BALANCE-BASELINE, and E11D-SCORING-CAL are all in
+>    `tickets/done/` now. E22 shipped `decision_trace_writer.py` + a tick-index sidecar — matching this
+>    doc's own anticipated shape, and its §3c prerequisite (`decision_trace.jsonl` existing) is genuinely
+>    satisfied today, unlike at write time. But E12 already ran its measurement pass *without* cognition
+>    data, so the doc's closing recommendation ("wire before E12 measurement begins") describes a window
+>    that already closed — read §"E12-BALANCE-BASELINE" below as a missed-opportunity record, not a live
+>    recommendation, and treat any real ticket as retroactive wiring rather than a pre-measurement gate.
+>
+> The core technical proposal (Layers 1-3 below) is otherwise still accurate and worth scoping — this is a
+> rewrite-before-ticketing, not a superseded idea.
+
 ---
 
 ## Problem
@@ -189,7 +213,7 @@ This closes the causal loop: which scoring terms coincide with high-churn entiti
 
 ## Relationship to Planned Tickets
 
-### E22-DECISION-EXPLAIN (additive — shared artifact pipeline)
+### E22-DECISION-EXPLAIN (additive — shared artifact pipeline) — historical, E22 shipped DONE, prerequisite now satisfied
 
 E22 plans: *"Write snapshots to `decision_trace.jsonl` in LIGHT observability mode; Add tick-index sidecar mapping tick → byte offset for O(1) lookup."*
 
@@ -197,7 +221,7 @@ E22 produces `decision_trace.jsonl`. This idea adds it to `ArtifactExporter` map
 
 **Impact on E22**: additive. E22 should define the artifact type key (`"decision_trace"`) in its writer so `ArtifactExporter` can reference it by name. The Parquet conversion for `decision_trace.jsonl` is straightforward given the schema E22 defines.
 
-### E12-BALANCE-BASELINE (gap — measurement without cognition data)
+### E12-BALANCE-BASELINE (gap — measurement without cognition data) — historical, E12 already shipped DONE, measured without this wiring; missed-opportunity record
 
 E12 plans: *"Run D04 completion: 1000-tick `urban_political` runs measuring gold accumulation rate, harvesting frequency per entity-hour, quest completion rate; Audit `blocker_penalty = 2.0` in `src/domains/adventure/scoring.py`."*
 
