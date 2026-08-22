@@ -10847,3 +10847,14 @@
   test_path: tests/unit/rendering/test_connectivity.py::test_dungeon_crawl_matches_documented_evidence
   divergence_note: null
   proof_type: parity
+- id: INFRA-371
+  text: Entity nearest-neighbor coefficient of variation (population standard deviation
+    divided by mean of per-entity nearest Euclidean distance, active entities only)
+    reproduces documented sandbox_world (~0.648) and dungeon_crawl (~0.678) values
+    deterministically from AuthoritativeState.entities at seed 42, tick 0.
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/density.py
+  test_path: tests/unit/rendering/test_density.py::test_dungeon_crawl_reproduces_documented_cv
+  divergence_note: null
+  proof_type: parity
