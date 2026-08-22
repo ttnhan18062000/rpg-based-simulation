@@ -19,6 +19,9 @@ The `HeadlessRunner` (`src/testing/headless_regression_runner.py`) is the author
 1.  **Replay (`replay.json`)**: A tick-by-tick record of all action proposals and world state hashes.
 2.  **Cognition Graphs (`cognition_e[id].json`)**: A JSON export of the "Mind Map" for tracked entities.
 3.  **Manifest (`manifest.json`)**: A summary of the run duration, seed, and success status.
+4.  **Renders (`renders/*.png`)**: Deterministic, hash-verified world-state snapshots produced by
+    `src/rendering/render.py::render(state, out_path)`. Stored under
+    `data/runs/{run_id}/renders/`. See §4 below for the render-specific determinism guarantee.
 
 ---
 
@@ -59,6 +62,17 @@ To verify that the engine remains deterministic across code changes:
 3. The Replay hashes **MUST** be byte-identical.
 
 We enforce this via `TestStrategicRegression::test_headless_run_determinism`.
+
+**Render-specific instance**: `src/rendering/render.py::render(state, out_path)` is a pure,
+read-only function of `AuthoritativeState` content — no wall-clock dependency, no reliance on
+hash-randomized ordering. Three independent `render()` calls against content-equal state produce
+byte-identical PNG output, verified by hashing the rendered PNG bytes directly (`state.terrain` is
+excluded from both `StateFingerprinter` and `CanonicalStateHasher`, so a `state_hash`-based check
+would not catch a render regression). Enforced via
+`tests/unit/rendering/test_render_core.py::test_render_golden_hash_bit_identical_across_three_independent_runs`.
+A `DirtySet`-incremental render (`src/rendering/incremental.py::IncrementalRenderer`) must produce
+pixel-identical output to a full non-incremental `render()` of the same final state, enforced via
+`tests/unit/rendering/test_render_incremental.py::test_dirty_set_incremental_render_pixel_identical_to_full_rerender`.
 
 ---
 
