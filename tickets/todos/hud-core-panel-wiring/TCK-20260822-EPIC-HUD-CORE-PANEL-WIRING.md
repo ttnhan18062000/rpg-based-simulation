@@ -12,8 +12,8 @@ tags: [architecture, hud]
 # TCK-20260822-EPIC-HUD-CORE-PANEL-WIRING
 
 ## Title
-Wire Sidebar's always-available core tabs (info/inspect/events) into the M1 skeleton and theme, fix
-EntityList's missing search/filter — gated on M1
+One real end-to-end entity-investigation workflow through Sidebar/InspectPanel/EntityList/EventLog, using
+only M1's thin foundation — gated on M1 (M2 of `docs/plans/hud_delivery_roadmap.md`, revised)
 
 ## Status
 OPEN
@@ -28,38 +28,53 @@ feature
 P2
 
 ## Request Summary
-`TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION` (M1 of `docs/plans/hud_delivery_roadmap.md`) builds the
-navigation map, layout skeleton, theme-token system, and component-slot wiring convention. This epic exists
-to track re-plugging `Sidebar.tsx`'s core, always-available tabs — `info`, `inspect` (backed by
-`InspectPanel.tsx`'s 7 sub-tabs: Stats/Class/Events/Quests/Effects/AI/Narrative), and `events` (backed by
-`EventLog.tsx`) — into that chassis once it exists, as its own milestone (M2), separate from M1 since it
-touches content these panels render, not the chassis itself.
+`TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION` (M1) ships a thin foundation only — two-tier tokens, a
+minimal layout wrapper, durable selection state, `EntityList` basic search. This epic exists to ship the
+first real HUD content: not a batch of independently-wired panels, but **one complete, real, end-to-end
+observer workflow**, built through the always-available core panels (`Sidebar.tsx`, `InspectPanel.tsx`,
+`EntityList.tsx`, `EventLog.tsx`).
+
+**Revision (2026-08-22):** originally scoped as "wire all of Sidebar's core tabs independently." An
+external design review (`tmp/hud_review.md`) argued this risks validating each panel in isolation without
+ever proving whether the actual cross-panel *workflow* an observer needs (notice something → find it →
+understand it → follow it → return) actually works end-to-end. Revised to a single vertical slice instead:
+this epic now produces the real evidence `TCK-20260822-EPIC-HUD-CONTEXTUAL-PANEL-WIRING` (M3) extracts its
+chassis pieces from, rather than each panel being wired ad hoc.
 
 ## Scope
 Not created yet — this epic is scope-only, gated, and not to be broken into child tickets until M1 ships
-(see Assumptions / Open Questions). Prospective scope:
-- Re-plug `Sidebar.tsx`'s tab system into M1's named-slot skeleton, replacing whatever ad-hoc positioning
-  it currently has inside `App.tsx`'s hardcoded row.
-- Migrate `Sidebar.tsx`, `InspectPanel.tsx`, `EntityList.tsx`, `EventLog.tsx` from M1's Layer-1-shaped
-  Tailwind classes (`bg-bg-secondary`, `text-accent-blue`, etc.) to M1's new Layer-2 semantic tokens.
-- Fix the concrete gap already identified: `EntityList.tsx` (`frontend/src/components/EntityList.tsx`) has
-  zero search or filter state — `EntityListProps` carries only `entities`, `selectedEntityId`, `onSelect`,
-  with a hardcoded hero-first/ID sort over a flat scrolling list. Add search/filter, sized for this
-  project's ~10,000-entity target scale, and measured against M1's own navigation-search-success metric
-  once that rubric exists.
-- Verify each tab's underlying data path against whatever the live-map reconnection effort
-  (`TCK-20260821-EPIC-LIVE-MAP-RECONNECTION`) has shipped by the time this epic starts — `/api/v1/state`
-  already returns full entity/event data today (unfiltered, full-snapshot), so this is a real-data-source
-  verification pass, not a from-scratch backend integration.
+(see Assumptions / Open Questions). Prospective scope — implement this one workflow, real and complete, not
+simulated or stubbed:
+
+1. **Notice** — an event or anomaly appears in `EventLog.tsx` (or the map).
+2. **Locate** — find the entities involved, via `EntityList.tsx`'s search/filter and its
+   volatility-ranked default view (both from M1) — not a flat alphabetical scan.
+3. **Inspect** — open the entity in `InspectPanel.tsx`, see current and recent state (Stats/Events/Effects
+   tabs at minimum).
+4. **Follow** — navigate from that entity to a related entity, event, or location (a real relationship or
+   causal link, not a placeholder), using M1's durable selection/navigation state.
+5. **Return** — get back to the prior context (map position, selection, filters) with nothing silently
+   lost — this step is the direct test of M1's durable-state fix for the `isBuildingView`/`isLootView`/
+   `isSpectating` context-destruction failure mode.
+
+Data-path note: verify each step's underlying data path against whatever the live-map reconnection effort
+(`TCK-20260821-EPIC-LIVE-MAP-RECONNECTION`) has shipped by the time this epic starts — `/api/v1/state`
+already returns full entity/event data today (unfiltered, full-snapshot), so this is a real-data-source
+verification pass, not a from-scratch backend integration.
 
 ## Out of Scope
 - Everything in M1's own scope (`TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION`) — this epic starts only
   after M1 ships.
+- Wiring every remaining tab/sub-tab independently of the slice (e.g. `InspectPanel`'s Class/Quests/AI/
+  Narrative tabs not touched by the workflow above) — those get wired in
+  `TCK-20260822-EPIC-HUD-CONTEXTUAL-PANEL-WIRING` (M3), informed by what this slice proves, not duplicated
+  here speculatively.
 - The mode-triggered contextual panels (`BuildingPanel.tsx`, `LootPanel.tsx`, `ClassHallPanel.tsx`,
-  `ControlPanel.tsx`, `Legend.tsx`) — that's `TCK-20260822-EPIC-HUD-CONTEXTUAL-PANEL-WIRING` (M3), a
-  separate, independent epic with no dependency on this one.
-- Measuring the finished result against M1's rubric, or a systematic progressive-disclosure polish pass —
-  that's `TCK-20260822-EPIC-HUD-CONTENT-POLISH-MEASUREMENT` (M4), gated on this epic plus M3.
+  `ControlPanel.tsx`, `Legend.tsx`) and any chassis extraction (named-slot engine, component tokens) — both
+  `TCK-20260822-EPIC-HUD-CONTEXTUAL-PANEL-WIRING` (M3), which now starts *after* this epic, not in
+  parallel with it.
+- Measuring the finished result against M1's baseline, or a systematic progressive-disclosure polish pass —
+  that's `TCK-20260822-EPIC-HUD-CONTENT-POLISH-MEASUREMENT` (M4), gated on M3.
 - Building any new backend endpoint beyond what the live-map reconnection effort already ships; if this
   epic's data-path verification finds a genuine gap, that becomes its own future ticket, not silently
   absorbed here.
@@ -68,22 +83,28 @@ Not created yet — this epic is scope-only, gated, and not to be broken into ch
 - [ ] Not started until `TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION` (M1) is DONE
 - [ ] A documented, ordered child-ticket breakdown exists before implementation begins (not created yet)
 - [ ] Each child ticket, when opened, references this epic and `docs/plans/hud_delivery_roadmap.md`
-- [ ] `EntityList.tsx` search/filter is explicitly one of the child tickets, not silently dropped
+- [ ] The five-step workflow (notice/locate/inspect/follow/return) is implemented as one real, connected
+      path — not five independently-testable panels with no proof they compose
+- [ ] The "return" step is explicitly verified against M1's baseline: no lost scroll position, active tab,
+      or entity context
 - [ ] No implementation happens directly on this epic ticket
 
 ## Related Tickets
 - `TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION` — M1, a hard prerequisite (not a soft reference): this
   epic does not start, and should not even be broken into child tickets, until M1 ships.
-- `TCK-20260822-EPIC-HUD-CONTEXTUAL-PANEL-WIRING` — M3, an independent sibling epic (also gated on M1, no
-  dependency between M2 and M3 in either direction).
-- `TCK-20260822-EPIC-HUD-CONTENT-POLISH-MEASUREMENT` — M4, gated on this epic plus M3.
+- `TCK-20260822-EPIC-HUD-CONTEXTUAL-PANEL-WIRING` — M3, now a downstream dependent, not an independent
+  sibling (revised from the original parallel M2/M3 shape): M3 extracts its chassis pieces from what this
+  epic's slice proves.
+- `TCK-20260822-EPIC-HUD-CONTENT-POLISH-MEASUREMENT` — M4, gated on M3, which is itself gated on this epic.
 - `TCK-20260821-EPIC-LIVE-MAP-RECONNECTION` — separate effort; its real-time entity broadcast (once
   shipped) benefits this epic's data-path quality but is not a hard dependency.
 
 ## Related Docs
-- `docs/plans/hud_delivery_roadmap.md` — the milestone sequencing this epic is M2 of
-- `docs/plans/hud_design_system_foundation_epic.md` — M1's design source (skeleton slots, semantic tokens,
-  component-slot convention) this epic's wiring depends on
+- `docs/plans/hud_delivery_roadmap.md` — the revised milestone sequencing this epic is M2 of
+- `docs/plans/hud_design_system_foundation_epic.md` — M1's original design source; scope has since
+  narrowed per the revision above
+- `tmp/hud_review.md` — the external design review that prompted this epic's revision to a single vertical
+  slice
 
 ## Related Stored Artifacts
 None.
