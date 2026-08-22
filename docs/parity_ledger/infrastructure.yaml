@@ -10924,3 +10924,22 @@
   test_path: tests/unit/rendering/test_review_pipeline.py::test_tier0_tier1_pipeline_writes_digest_without_writing_annotated_png_when_not_escalated
   divergence_note: null
   proof_type: parity
+- id: INFRA-376
+  text: tools/calibrate_rendering.py's run-integrity guard (CalibrationIntegrityError)
+    fails loud when a calibration run's WorldCompiler.compile() report contains any
+    warnings, or entity_count == 0, or region_count == 0 -- adapted from
+    calibrate_simq.py's CalibrationIntegrityError/INFRA-320 queue-drop/SURVIVAL-mode
+    guard to this script's real single-compile-call architecture (no Kernel/
+    EventRecorder queue exists in this code path; compute_trail_activity, the one
+    family half that would need one, is deferred to a future ticket -- see
+    staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/plan.md Decision 2/8). A
+    compile_health.json sidecar is written atomically before the raise, mirroring
+    calibrate_simq.py's write-before-raise ordering. This ticket's Out of Scope
+    forbids any CI-gating or decision-consumption of the calibrated numeric output
+    itself -- only this guard's own pass/fail behavior is covered by this entry.
+  status: verified
+  priority: P2
+  v2_evidence: tools/calibrate_rendering.py
+  test_path: tests/tools/test_calibrate_rendering.py::test_calibration_run_integrity_guard_fails_loud_on_corrupted_compile
+  divergence_note: null
+  proof_type: regression
