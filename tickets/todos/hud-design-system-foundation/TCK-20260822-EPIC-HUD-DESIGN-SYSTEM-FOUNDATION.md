@@ -112,6 +112,11 @@ hybrid: ship only what's justified immediately regardless of sequencing.
 - `TCK-20260822-EPIC-HUD-CONTENT-POLISH-MEASUREMENT` — M4, gated on M2 + M3, not directly on this epic
 - `TCK-20260821-EPIC-LIVE-MAP-RECONNECTION` (M1 of the separate live-map roadmap) — independent effort, no
   file overlap; noted only because both are player-facing frontend work landing around the same time
+- `TCK-20260822-SEMANTIC-TOKEN-LAYER` — child ticket, scope item 1 (two-tier semantic token layer)
+- `TCK-20260822-APP-LAYOUT-WRAPPER` — child ticket, scope item 2 (minimal layout wrapper)
+- `TCK-20260822-DURABLE-SELECTION-STATE` — child ticket, scope item 3 (durable selection/navigation state)
+- `TCK-20260822-ENTITY-LIST-SEARCH-RANK` — child ticket, scope item 4 (EntityList search/filter + ranking)
+- `TCK-20260822-HUD-BASELINE-MEASUREMENT` — child ticket, scope item 5 (baseline usability measurement)
 
 ## Related Docs
 - `docs/plans/hud_design_system_foundation_epic.md` — this epic's original full plan doc (problem
