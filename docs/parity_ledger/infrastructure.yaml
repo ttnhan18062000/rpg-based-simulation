@@ -10893,3 +10893,19 @@
   test_path: tests/unit/rendering/test_variants.py::test_total_variation_distance_same_spec_different_seed_is_zero_for_dungeon_crawl
   divergence_note: null
   proof_type: parity
+- id: INFRA-374
+  text: Rendering-quality grade-band scorer assigns S/A/B/C/D/F using SimQ's exact
+    threshold values (S=2.0 A=0.5 B=0.0 C=-0.5 D=-1.0), sourced from its own config file
+    (config/rendering/grade_thresholds.toml, copied by value, not imported from
+    config/simulation_quality/), combining binary hard-rule and non-monotonic
+    trapezoidal soft-rule deltas via a plain additive sum before assignment. This
+    architecturally-independent code path is distinct from SIMQ-CALIBRATED-001 (which
+    covers SimQ's own threshold-value calibration status) and INFRA-255 (which covers
+    SimQ's own normalized_score time-division formula) -- neither entry covers this
+    module's separate grade-assignment code path.
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/grading.py
+  test_path: tests/unit/rendering/test_grading.py::test_grade_assignment_boundaries
+  divergence_note: null
+  proof_type: parity

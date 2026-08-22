@@ -1,0 +1,42 @@
+# Rendering-quality grade-band scorer config (TCK-20260821-VISUAL-GRADE-SCORER).
+#
+# grade_thresholds below are copied BY VALUE from config/simulation_quality/
+# grade_thresholds.yaml (S=2.0 A=0.5 B=0.0 C=-0.5 D=-1.0, confirmed identical by direct
+# read) -- this file does NOT import or reference that file. This is a deliberate
+# architectural-independence boundary (docs/parity_ledger/infrastructure.yaml INFRA-374;
+# staging_artifacts/TCK-20260821-VISUAL-GRADE-SCORER/investigation.md "Parity Ledger
+# Overlap"). If SIMQ-CALIBRATED-001 is ever recalibrated, this file must be updated
+# manually to match -- there is no code coupling that keeps the two in sync.
+#
+# Format is TOML, not YAML, deliberately: src/rendering/ is guarded stdlib-only by
+# tests/architecture/test_rendering_zero_new_dependency_guard.py, and PyYAML ("yaml")
+# is NOT a stdlib module (confirmed: 'yaml' not in sys.stdlib_module_names) even though
+# it is a real project dependency elsewhere (requirements.txt, src/simulation_quality/
+# weights.py) -- that guard's scope is src/rendering/ specifically, stricter than the
+# repo at large. tomllib IS stdlib (Python 3.11+, this repo runs 3.12.3) and supports
+# the same nested-table + comment shape YAML would have given. See plan.md Decision 2.
+[grade_thresholds]
+S = 2.0
+A = 0.5
+B = 0.0
+C = -0.5
+D = -1.0
+
+# Hard rules: binary pass/fail facts. No gradient -- a fixed delta on pass, a fixed
+# (typically negative) delta on fail. Illustrative values only, NOT calibrated --
+# calibration is TCK-20260821-VISUAL-QUALITY-CALIBRATION's scope.
+[hard_rules.fully_connected]
+pass_delta = 1.0
+fail_delta = -1.0
+
+# Soft rules: gradient, healthy-band-shaped (trapezoidal), non-monotonic in the raw
+# metric. peak_delta inside [healthy_low, healthy_high]; ramps linearly down to
+# min_delta across [low, healthy_low] and [healthy_high, high]; held at min_delta at
+# and beyond low/high. Illustrative values only, NOT calibrated.
+[soft_rules.fill_ratio_healthy_band]
+low = 0.0
+healthy_low = 0.3
+healthy_high = 0.85
+high = 1.0
+peak_delta = 1.0
+min_delta = -1.0
