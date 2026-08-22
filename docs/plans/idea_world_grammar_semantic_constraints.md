@@ -12,6 +12,25 @@ tags: [idea, world-grammar, semantic-constraints, content-validation, quest-gene
 
 > **Maturity: IDEA** — Not scheduled. Consider before or alongside E13 Content Foundation.
 
+> **Status review (2026-08-22):** re-investigated for staleness — **strengthened, not weakened.** E13 and
+> E23 (plus E23A/B/C) are all DONE now, so the "gate E13 before it starts" framing below is moot: that
+> window closed. But the exact "silent dead content" failure this doc predicted actually happened, twice,
+> discovered only via expensive live-kernel multi-thousand-tick runs, months after E13/E23 shipped with no
+> gate: `TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING` (the real `QuestState` construction path,
+> `GuildAction.visit()`, had zero live callers — quests never actually got created in real play, despite
+> compiling and parsing without error) and `TCK-20260807-QUEST-HUNT-TARGET-METADATA-GAP`
+> (`QuestGenerator` never populated fields `QuestResolutionSystem` checks, so every HUNT quest was
+> permanently stuck `ACTIVE`). Both are well-formed-but-functionally-dead content — exactly this doc's
+> thesis, now with real cost evidence instead of a hypothetical risk. Quest content also grew since this
+> doc's baseline: 5+ world modules now carry quest content (up from "only 3" cited below).
+>
+> **Reframe for ticketing**: this is no longer a pre-authoring gate ahead of E13/E23 — it's retrofit
+> validation plus regression prevention against content that already shipped and already broke twice the
+> way this doc predicted. Scope at minimum the `reachability` rule the doc itself recommends as the floor,
+> run it against the current 5+ modules as a regression check, not a build-time-only gate. No competing
+> solution has been built since — only reactive post-hoc diagnostics exist today
+> (`src/observability/understanding/domain/quest.py`, the SimQ narrative scorer).
+
 ---
 
 ## Problem
@@ -76,7 +95,7 @@ WorldCompiler.compile() → AuthoritativeWorldState
 
 ## Relationship to Planned Tickets
 
-### E13-CONTENT-FOUNDATION (gap — authoring without feedback)
+### E13-CONTENT-FOUNDATION (gap — authoring without feedback) — historical, E13 shipped DONE without this gate; see Status review above for what happened as a result
 
 E13 plans: *"Author 30+ quest definitions covering at least 8 world modules (currently only 3 have any)."*
 
@@ -86,7 +105,7 @@ Authoring 30 quest definitions without semantic feedback is high-risk. A quest t
 
 **Risk level: HIGH.** If E13 ships without this, the 30 quest definitions become a maintenance liability — individually valid but collectively incoherent.
 
-### E23-QUEST-GENERATION (gap — generator correctness)
+### E23-QUEST-GENERATION (gap — generator correctness) — historical, E23 shipped DONE without this check; TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING and TCK-20260807-QUEST-HUNT-TARGET-METADATA-GAP are the real-world instances this section predicted
 
 E23 plans: *"QuestOpportunity as new OpportunityType; QuestOpportunityGenerator triggered by: resource depletion events (Epic 2.1), faction tension thresholds, calamity aftermath signals, entity needs unsatisfied for N ticks; wire into adventure decision pipeline for HERO entities."*
 
