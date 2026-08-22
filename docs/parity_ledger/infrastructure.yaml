@@ -10828,3 +10828,12 @@
     \ Scoped Claims dimension."
   test_path: tests/perf/test_bench_harness.py::test_run_benchmark_records_mode_sequence,tests/perf/test_perf_regression_baseline.py::test_perf_regression_baseline_flags_runtime_mode_excursion,tests/perf/test_perf_regression_baseline.py::test_regression_vs_baseline,tests/perf/test_perf_regression_baseline.py::test_performance_contract_lists_runtimemode_scoped_claim
   divergence_note: null
+- id: INFRA-369
+  text: Batch world rendering to PNG from AuthoritativeState is deterministic -- bit-identical
+    SHA256 across independent runs of the same state.
+  status: verified
+  priority: P0
+  v2_evidence: src/rendering/render.py
+  test_path: tests/unit/rendering/test_render_core.py::test_render_golden_hash_bit_identical_across_three_independent_runs
+  divergence_note: null
+  proof_type: parity
