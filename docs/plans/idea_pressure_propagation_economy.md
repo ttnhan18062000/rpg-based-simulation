@@ -12,6 +12,10 @@ tags: [idea, pressure-propagation, economy, resource-ecology, regional-signals, 
 
 > **Maturity: IDEA** — Not scheduled. Must precede E33 Macro-Economy Monitor; consider alongside E21 Resource Ecology.
 
+> **Status review (2026-08-22):** re-investigated for staleness. E21's depletion signal and E33's monitor
+> both shipped since this idea was raised, but not as unified below implies — see "Status review" note
+> inside Relationship to Planned Tickets for what actually happened and what's still real.
+
 ---
 
 ## Problem
@@ -64,7 +68,34 @@ Pressure propagation runs as a **governance phase step**, after `EconomyHealthMo
 
 ## Relationship to Planned Tickets
 
-### E21-RESOURCE-ECOLOGY (missing link — signals created but not routed)
+**Status review (2026-08-22).** Both tickets below have since shipped — read this note before either section,
+since the original "missing link" framing describes a gap that no longer exists in the form predicted:
+
+- `TCK-20260628-E21E-CROSS-REGION-PRESSURE` (DONE, 2026-06-28) shipped resource-scarcity propagation, via
+  `RegionalPressureModel.propagate_cross_region()` (`src/domains/world_emergence/models.py:148-235`). It is
+  narrower than this doc's design: bounding-box gap adjacency (`ADJACENCY_GAP=50`) rather than the
+  sovereignty-graph edges this doc assumed, a flat `PROPAGATION_FACTOR=0.30` rather than
+  `decay_factor^hop_count`, and single-hop only — no multi-hop chain. `AuthoritativeState.pressure_signals`
+  (still at `src/core/state.py:1144`) remains the unused stub this doc described; the real implementation
+  writes typed `RegionalPressure`/`ServicePressure` records instead, not that dict.
+- `TCK-20260619-E33A-HEALTH-MONITOR` (DONE) shipped `EconomyHealthMonitor` (`src/economy/health_monitor.py`).
+  **Confirmed by direct grep: `health_monitor.py` never references `RegionalPressure`,
+  `propagate_cross_region`, or `pressure_signals`.** The monitor and the propagation layer were built
+  independently, in the same repo, and were never wired together — this doc's predicted "HIGH RISK if E33
+  ships before propagation is wired" happened almost exactly as warned, just silently rather than as a
+  blocking failure.
+
+**What's still real and worth a ticket:** (1) wire `RegionalPressureModel`'s existing `resource` propagation
+output into `EconomyHealthMonitor` so Gini/velocity metrics gain a causal explanation — this is a much
+smaller task than the "build propagation from scratch" framing below implies; (2) the `economic_stress`,
+`migration_pressure`, and `calamity_aftermath` signal types in the table above were never built — only
+`resource_scarcity` shipped, and only as an unwired signal.
+
+The two subsections below are kept as originally written for their diagnostic value (the exact language
+that predicted the gap correctly), but their "planned ticket" framing is now historical — read them as
+"what was predicted, and what actually happened" rather than as current planning.
+
+### E21-RESOURCE-ECOLOGY (missing link — signals created but not routed) — historical, E21 shipped 2026-06-28
 
 E21 plans: *"Add durable fields to `ResourceNodeState`: `current_charges`, `max_charges`, `regen_rate_per_tick`, `last_harvested_tick`; Wire `ResourceEcologyService` to apply depletion on harvest and regeneration on world tick."*
 
@@ -74,7 +105,7 @@ E21 creates the authoritative depletion signal. Without propagation, that signal
 
 **Risk level: LOW for E21 independently. HIGH if E33 ships before propagation is wired.** The EconomyHealthMonitor will see regional metrics that are causally disconnected, making its Gini/velocity signals uninterpretable.
 
-### E33-MACRO-ECONOMY (missing link — monitor without causality)
+### E33-MACRO-ECONOMY (missing link — monitor without causality) — historical, E33A shipped, still disconnected today
 
 E33 plans: *"EconomyHealthMonitor: runs as governance phase step; samples gold distribution, transaction volume, price indices per region per tick-window; Metrics: Gini coefficient, transaction velocity, average price index per commodity, gold creation vs destruction rate."*
 
