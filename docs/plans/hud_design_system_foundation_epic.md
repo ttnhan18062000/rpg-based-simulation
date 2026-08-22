@@ -1,30 +1,21 @@
 ---
 status: active
-layer: frontend
+layer: architecture
 authority: P1
 audience: developer
+maturity: idea
 date: 2026-08-22
-tags: [architecture, hud, design-system]
+tags: [idea, frontend, hud, design-system]
 ---
 
 # Epic Plan — HUD Design System Foundation
 
-**Tracking ticket:** `TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION`
+**Tracking ticket:** none yet (this doc precedes epic ticket creation)
 **Source:** direct conversation, following the research pass into `docs/plans/live_map_reconnection_epic.md`'s
 deferred "no HUD/info-display work" scope item.
 **Priority:** P1 — precedes and structurally constrains all future HUD content work (the panels researched in
 the companion investigation below cannot be safely built until this chassis exists, or every new panel
 re-litigates layout/theme decisions from scratch).
-
-> **Superseded by revision (2026-08-22):** the full five-part chassis below (navigation-map redesign,
-> formal scoring rubric, named-slot skeleton engine, mandatory three-tier tokens) is no longer the
-> as-scoped plan. An external design review (`tmp/hud_review.md`) made a well-grounded case against
-> building the full chassis before any real HUD content validates it — see `docs/plans/hud_delivery_roadmap.md`
-> for the current, user-approved hybrid sequencing (thin foundation → one real vertical slice → extract
-> chassis from evidence → migrate + measure) and `TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION`'s own
-> revised Scope for what M1 actually ships now. This doc is kept as the original research record — the
-> panel inventory, current-state findings, and RimWorld/CK3 research below are still accurate as
-> investigation, just no longer the plan as originally proposed.
 
 ---
 
