@@ -1,0 +1,376 @@
+<title>Design Merit Scorecard</title>
+<style>
+:root {
+  --paper: #f7f8f6;
+  --card: #ffffff;
+  --ink: #1c2321;
+  --ink-soft: #5b655f;
+  --ink-faint: #8b948e;
+  --border: #dde3df;
+  --accent: #2f6e63;
+  --accent-soft: #e4efe9;
+  --accent-ink: #1e4a42;
+  --warn: #9a6a2f;
+  --warn-soft: #f4ead9;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121615;
+    --card: #191f1d;
+    --ink: #e8ece9;
+    --ink-soft: #a3b0a8;
+    --ink-faint: #6c7873;
+    --border: #2a3330;
+    --accent: #5fb3a3;
+    --accent-soft: #1c2e2a;
+    --accent-ink: #8fd4c6;
+    --warn: #d8a765;
+    --warn-soft: #2e2517;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121615;
+  --card: #191f1d;
+  --ink: #e8ece9;
+  --ink-soft: #a3b0a8;
+  --ink-faint: #6c7873;
+  --border: #2a3330;
+  --accent: #5fb3a3;
+  --accent-soft: #1c2e2a;
+  --accent-ink: #8fd4c6;
+  --warn: #d8a765;
+  --warn-soft: #2e2517;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.55;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 56px 24px 96px; }
+header.hero { margin-bottom: 40px; }
+p.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--font-display);
+  font-size: 42px;
+  line-height: 1.1;
+  margin: 0 0 16px;
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+}
+p.thesis {
+  font-size: 18px;
+  color: var(--ink-soft);
+  max-width: 68ch;
+  margin: 0;
+}
+section { margin: 56px 0; }
+h2.section-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  margin: 0 0 8px;
+  letter-spacing: -0.005em;
+}
+p.section-lede {
+  color: var(--ink-soft);
+  max-width: 72ch;
+  margin: 0 0 28px;
+  font-size: 15px;
+}
+.grounding {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 20px 24px;
+  margin: 28px 0;
+}
+.grounding p { margin: 0 0 10px; font-size: 15px; }
+.grounding p:last-child { margin-bottom: 0; }
+.grounding blockquote {
+  margin: 0 0 12px;
+  padding-left: 14px;
+  border-left: 2px solid var(--border);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+.grounding .cite {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.axis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.axis-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 22px;
+}
+.axis-card .axis-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+.axis-card h3 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+.axis-card .question {
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+.axis-card .scale {
+  font-size: 13.5px;
+  margin: 0 0 10px;
+}
+.axis-card .scale b { color: var(--accent-ink); }
+.axis-card .source {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+table.examples {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+table.examples th, table.examples td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+table.examples th {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  background: var(--accent-soft);
+}
+table.examples tr:last-child td { border-bottom: none; }
+table.examples td.score {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+table.examples td.idea-title { min-width: 220px; }
+table.examples td.idea-title .num {
+  font-family: var(--font-mono);
+  color: var(--accent-ink);
+  font-size: 12px;
+}
+table.examples td.take {
+  color: var(--ink-soft);
+  font-style: italic;
+  min-width: 260px;
+}
+.overflow-x { overflow-x: auto; }
+ol.reshape {
+  padding-left: 22px;
+  margin: 0;
+}
+ol.reshape li {
+  margin-bottom: 14px;
+  font-size: 15px;
+}
+ol.reshape li b { color: var(--accent-ink); }
+.closing {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">v1 &middot; expect this to be reshaped</p>
+    <h1>Design Merit Scorecard</h1>
+    <p class="thesis">A way to judge whether an RPG design idea is actually good &mdash; before any of it runs. Not a replacement for Simulation Quality (SimQ), which measures a <em>running</em> world. This measures the <em>design</em>, from the documents alone.</p>
+  </header>
+
+  <section id="why">
+    <h2 class="section-title">Why this needs to exist</h2>
+    <p class="section-lede">SimQ already draws the boundary that makes this necessary &mdash; it explicitly refuses to answer the question this scorecard is for.</p>
+    <div class="grounding">
+      <blockquote>&ldquo;This module scores simulation health: whether each subsystem is alive, balanced, and producing emergent output. It does not score correctness (that is <code>hard_law_monitor</code>), performance (that is <code>perf_baseline_policy.md</code>), or <strong>content quality (human judgment)</strong>.&rdquo;</blockquote>
+      <p class="cite">docs/simulation_quality/quality_scoring_contract.md &sect;1, Purpose &amp; Scope</p>
+      <p>SimQ measures 10 real pillars (Cognition, Agency, Combat, Faction, Economy, Progression, Social, Information, World Dynamics, Narrative) by counting events from an actual run &mdash; <code class="inline">belief_updated</code>, <code class="inline">route_selected</code>, <code class="inline">commitment_complete</code>, and so on. That machinery is real, live, and exactly right for what it does. It cannot help decide whether a <em>proposed</em> feature is worth building, because nothing has run yet to produce events.</p>
+      <p>This scorecard is the structured version of the &ldquo;human judgment&rdquo; SimQ hands off to &mdash; applied consistently across 65 design ideas instead of once per idea, ad hoc, in whoever's head happened to be reading that day.</p>
+    </div>
+  </section>
+
+  <section id="axes">
+    <h2 class="section-title">The seven axes</h2>
+    <p class="section-lede">Each idea gets scored on all seven, independently &mdash; deliberately not collapsed into one number. Three axes reuse data already sitting in <code class="inline">rpg_feature_atlas.html</code>; four are new. All except Pillar Reach run 0&ndash;5, low to high.</p>
+    <div class="axis-grid">
+      <div class="axis-card">
+        <span class="axis-num">1 &middot; new</span>
+        <h3>Direction Fit</h3>
+        <p class="question">Does this idea's core mechanism embody one of The Unwritten World's 8 principles &mdash; not just brush against it?</p>
+        <p class="scale"><b>5</b> = the idea only makes sense because of a principle. <b>0</b> = no real connection, could belong to any RPG.</p>
+        <p class="source">source: re-read against the_unwritten_world.html</p>
+      </div>
+      <div class="axis-card">
+        <span class="axis-num">2 &middot; new</span>
+        <h3>Narrative Generativity</h3>
+        <p class="question">Does this create a genuinely new <em>shape</em> of story, or deepen a loop that already exists? (The &ldquo;new story, not new number&rdquo; test.)</p>
+        <p class="scale"><b>5</b> = enables stories that were structurally impossible before. <b>0</b> = purely mechanical, no narrative surface at all.</p>
+        <p class="source">source: judgment call, cross-checked against existing Design Ideas for duplication</p>
+      </div>
+      <div class="axis-card">
+        <span class="axis-num">3 &middot; reused</span>
+        <h3>Groundedness</h3>
+        <p class="question">How much of this idea rests on verified, cited code &mdash; versus how much is still speculation?</p>
+        <p class="scale"><b>5</b> = every claim checked against real source, corrections folded in where wrong. <b>0</b> = untested assertion.</p>
+        <p class="source">source: badge tier (done/partial/gap/gated/orphan) + Cross-Cutting Risk correction history</p>
+      </div>
+      <div class="axis-card">
+        <span class="axis-num">4 &middot; new</span>
+        <h3>Pillar Reach</h3>
+        <p class="question">How many of SimQ's 10 real pillars would this idea strengthen once it's actually built and running?</p>
+        <p class="scale">Raw count, 0&ndash;10 &mdash; deliberately not normalized to the 0&ndash;5 scale yet (see Reshape Notes). The bridge back to eventual runtime measurement.</p>
+        <p class="source">source: cross-reference against quality_scoring_contract.md &sect;5's Pillar Metadata table</p>
+      </div>
+      <div class="axis-card">
+        <span class="axis-num">5 &middot; reused</span>
+        <h3>Efficiency</h3>
+        <p class="question">Is this cheap to build because it reuses something real, or does it need to be built from nothing?</p>
+        <p class="scale"><b>5</b> = rides an existing live system almost as-is. <b>0</b> = no reuse shortcut found anywhere.</p>
+        <p class="source">source: Shared Implementation Opportunities section</p>
+      </div>
+      <div class="axis-card">
+        <span class="axis-num">6 &middot; reused</span>
+        <h3>Risk-Adjusted Cost</h3>
+        <p class="question">Higher score means safer &mdash; low blast radius, low chance of a silent regression.</p>
+        <p class="scale"><b>5</b> = contained, low-risk, no flag needed. <b>0</b> = wide blast radius, correctness-severity concerns, needs staged rollout.</p>
+        <p class="source">source: Cross-Cutting Risk + Implementation Patterns flag recommendation</p>
+      </div>
+      <div class="axis-card">
+        <span class="axis-num">7 &middot; reused</span>
+        <h3>Leverage</h3>
+        <p class="question">How many other ideas depend on this one landing first?</p>
+        <p class="scale"><b>5</b> = a hub other ideas cite repeatedly. <b>0</b> = a leaf, nothing downstream needs it.</p>
+        <p class="source">source: Suggested Build Order in-degree</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="worked-examples">
+    <h2 class="section-title">Worked examples</h2>
+    <p class="section-lede">Four ideas, chosen to show range &mdash; not a full pass over all 65 yet. The point here is to sanity-check that the rubric actually discriminates, not to score everything.</p>
+    <div class="overflow-x">
+      <table class="examples">
+        <tr>
+          <th>Idea</th>
+          <th>Direction<br>Fit</th>
+          <th>Narrative<br>Gen.</th>
+          <th>Ground&shy;edness</th>
+          <th>Pillar<br>Reach</th>
+          <th>Effic&shy;iency</th>
+          <th>Risk-Adj.<br>Cost</th>
+          <th>Lever&shy;age</th>
+          <th>The take</th>
+        </tr>
+        <tr>
+          <td class="idea-title"><span class="num">43.</span> Seed population_cohorts</td>
+          <td class="score">2</td>
+          <td class="score">1</td>
+          <td class="score">5</td>
+          <td class="score">2/10</td>
+          <td class="score">4</td>
+          <td class="score">2</td>
+          <td class="score">5</td>
+          <td class="take">The cheapest, most foundational ticket on the whole roadmap &mdash; and the riskiest kind of cheap: a guard that's never once fired against real data.</td>
+        </tr>
+        <tr>
+          <td class="idea-title"><span class="num">32.</span> Reproduction</td>
+          <td class="score">4</td>
+          <td class="score">5</td>
+          <td class="score">4</td>
+          <td class="score">5/10</td>
+          <td class="score">1</td>
+          <td class="score">1</td>
+          <td class="score">4</td>
+          <td class="take">The single highest narrative-value idea in the set &mdash; and correspondingly the most expensive and riskiest one to get wrong.</td>
+        </tr>
+        <tr>
+          <td class="idea-title"><span class="num">61.</span> Settlements Develop Personalities</td>
+          <td class="score">4</td>
+          <td class="score">4</td>
+          <td class="score">3</td>
+          <td class="score">3/10</td>
+          <td class="score">4</td>
+          <td class="score">3</td>
+          <td class="score">2</td>
+          <td class="take">A good idea that initially cited the wrong precedent, later corrected. Groundedness docked slightly on principle &mdash; exactly the kind of mistake this scorecard exists to catch earlier next time.</td>
+        </tr>
+        <tr>
+          <td class="idea-title"><span class="num">9.</span> Decide the eight rollout flags</td>
+          <td class="score">0</td>
+          <td class="score">0</td>
+          <td class="score">5</td>
+          <td class="score">0/10</td>
+          <td class="score">3</td>
+          <td class="score">3</td>
+          <td class="score">3</td>
+          <td class="take">Not a feature at all &mdash; a governance decision. Near-zero on every RPG-facing axis, which is the <em>correct</em> answer, not a flaw in the rubric.</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="reshape">
+    <h2 class="section-title">Reshape notes</h2>
+    <p class="section-lede">Explicit open questions, not settled decisions. This is a v1 built to be argued with.</p>
+    <ol class="reshape">
+      <li><b>Should Pillar Reach be normalized to 0&ndash;5,</b> or does keeping it a raw count (out of 10) matter for something the other axes don't capture?</li>
+      <li><b>Should the seven axes ever collapse into one composite score?</b> Leaning no &mdash; this project has real history with SimQ score-gaming (a documented ceiling-fix, a standing rule against forcing an unrealistic route just to move a number) and a single Merit Score would invite the same failure mode. An unweighted, always-visible scorecard is probably the safer default, permanently, not just for v1.</li>
+      <li><b>Who scores Direction Fit and Narrative Generativity?</b> These are the two genuinely subjective axes. Worth deciding whether they need a second, independent read before being treated as settled &mdash; the same discipline already applied to Cross-Cutting Risk's own findings.</li>
+      <li><b>Should pure investigation/governance ideas (9, and the resolved 15&ndash;19) be excluded from scoring entirely,</b> rather than scored and landing near zero on every RPG-facing axis? Idea 9's row above argues a low score is still informative &mdash; but it's a real question whether &ldquo;doesn't apply&rdquo; should be a distinct state from &ldquo;scores badly.&rdquo;</li>
+      <li><b>Not yet applied to all 65</b> &mdash; only four worked examples exist. Full application, if this framework survives contact with more ideas unchanged, is separate follow-up work.</li>
+    </ol>
+  </section>
+
+  <div class="closing">
+    This document lives in <code class="inline" style="font-family: var(--font-mono);">docs/brainstorm/</code> alongside the atlas, the plain-language companion, and The Unwritten World &mdash; a fourth, distinct lens on the same 65 ideas. Nothing here is final.
+  </div>
+</div>
