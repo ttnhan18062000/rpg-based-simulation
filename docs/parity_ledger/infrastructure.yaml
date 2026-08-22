@@ -10874,3 +10874,22 @@
   test_path: tests/unit/rendering/test_shape.py::test_dungeon_crawl_forest_is_two_components_of_1116_tiles_each
   divergence_note: null
   proof_type: parity
+- id: INFRA-373
+  text: total_variation_distance(h1, h2) over normalized terrain-type-proportion
+    histograms reproduces the documented TVD(sandbox_world, dungeon_crawl) ==
+    0.23161981243456373 cross-spec anchor at seed 42 (rounds to the PROPOSAL.md-cited
+    0.2315). Same-spec/different-seed TVD is exactly 0.0 for dungeon_crawl (seeds 42 and
+    137) -- structurally seed-invariant, since none of its four composed modules
+    (ruins_mystery_quest, goblin_camp_conflict, old_mine_resource_loop,
+    scalable_bandit_camp) declare terrain_variants. sandbox_world is deliberately NOT
+    used as a same-spec-seed-invariance anchor -- its current seed-invariance is an
+    artifact of a stale resolved/world.resolved.yaml cache predating
+    wolf_den_near_forest.yaml's terrain_variants field (TCK-20260821-WOLF-DEN-NOISE-MIGRATION),
+    not a structural property of its composition -- see
+    stored_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/variants.py
+  test_path: tests/unit/rendering/test_variants.py::test_total_variation_distance_same_spec_different_seed_is_zero_for_dungeon_crawl
+  divergence_note: null
+  proof_type: parity
