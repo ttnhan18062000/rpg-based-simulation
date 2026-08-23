@@ -48,6 +48,10 @@ Create explicit, separated durable state for active workspace, camera position, 
 
 ## Related Tickets
 - TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION
+- TCK-20260821-REWIRE-USESIMULATION-WEBSOCKET — a hard-recommended sequencing dependency (not this ticket's
+  own epic, a separate one): that ticket rewrites `useSimulation.ts`'s internal transport and reducer shape
+  wholesale. This ticket's own migration of `useSimulation.ts`'s `selectedEntityId` state into the shared
+  model should land after that rewrite, not before or in parallel — see this ticket's own Assumptions below.
 
 ## Related Docs
 - docs/plans/hud_delivery_roadmap.md
@@ -69,6 +73,18 @@ None.
 - No scroll-position state exists anywhere today, so "preserved" requires introducing new state to capture it, not just protecting existing state.
 - No writable Context/Zustand/Redux pattern exists yet in the frontend; this ticket establishes the first one, a genuinely new pattern for this codebase.
 - Soft sequencing note: TCK-20260822-ENTITY-LIST-SEARCH-RANK (a sibling child ticket of the same parent epic) introduces its own local search/filter query state independently; if both tickets are implemented, doing this one first lets that one plug its query state directly into this model's filter/search slot instead of needing a later migration — not a hard blocking dependency, just a recommended order if both are picked up close together.
+- **Cross-epic file collision (2026-08-23), found while reconciling this batch against the live-map
+  reconnection epic's own child tickets**: this ticket's own Scope explicitly touches
+  `frontend/src/hooks/useSimulation.ts` (extracting `selectedEntityId`) and `frontend/src/components/GameCanvas.tsx`
+  (extracting `pan`/`zoom`). `TCK-20260821-REWIRE-USESIMULATION-WEBSOCKET` (a separate epic,
+  `TCK-20260821-EPIC-LIVE-MAP-RECONNECTION`) rewrites `useSimulation.ts`'s internals wholesale and explicitly
+  states `GameCanvas.tsx`/`useCanvas.ts` stay untouched by that epic — meaning this ticket is the one that
+  will actually first modify `GameCanvas.tsx`'s internals, something the reconnection epic's own scope
+  assumed wouldn't happen yet. Recommended order: let `TCK-20260821-REWIRE-USESIMULATION-WEBSOCKET` land
+  first (avoids redoing the `useSimulation.ts` extraction against pre-rewire internals); this ticket's
+  `GameCanvas.tsx` pan/zoom migration has no equivalent hard blocker but should still be done with awareness
+  that the reconnection epic's own "read-only reference" assumption about that file no longer holds once
+  this ticket lands.
 
 ## Implementation Notes
 
