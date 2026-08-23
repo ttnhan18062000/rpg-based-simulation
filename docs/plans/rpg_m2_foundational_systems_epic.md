@@ -32,7 +32,11 @@ Highest-leverage first, per the atlas's own Build Order in-degree ranking:
    fired against real data in any compiled world.
 2. **Idea 14 — Species Classification layer.** Cross-Cutting Risk resolved the prior open question: this
    does NOT duplicate the already-shipped `TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY` work — a
-   genuinely separate system, safe to ticket as scoped.
+   genuinely separate system, safe to ticket as scoped. **Content note:** the obvious anchor for
+   `intelligence_tier` (the qualitative `attribute_tendencies.intelligence` field) is a false friend —
+   goblin/orc are `medium_low` intelligence but are clearly intended as high-tier per this idea's own
+   framing. Use `natural_traits` containing `tool_user` instead (see Content & Balance Requirements in the
+   atlas for the full 13-race breakdown).
 3. **Idea 35 — City ownership wiring.** Confirmed wider blast radius than originally scoped: 8 real
    consumer files, not one implementation-time call.
 4. **Idea 36 — Clan as Faction's shape.** `FactionState`'s shape reused almost verbatim.
@@ -44,7 +48,12 @@ Highest-leverage first, per the atlas's own Build Order in-degree ranking:
    explicitly reuse the ad-hoc `CapabilityContext` precedent from `TCK-20260811-CAPABILITY-CONFIDENCE-
    ADVENTURE-SCORING` rather than re-deriving it. Idea 8 is a keep/cut decision, not new code.
 7. **Ideas 2, 23, 27, 28, 30, 37 — standalone, no cross-idea dependency.** Idea 37 is a textbook orphan
-   (plumbing 100% done, lookup table missing). Idea 30 is flagged in Infrastructure Gaps as the one idea in
+   (plumbing 100% done, lookup table missing) — **and the single highest-risk content decision in the whole
+   65-idea roadmap**: its race-relations hostility matrix needs values for up to 156 directed race pairs
+   with zero existing signal anywhere to anchor them, feeding directly into already-live combat/legality
+   checks. Scope this ticket to include running it through the real (but never-yet-used) metamorphic
+   balance lab (`src/lab/metamorphic.py`) before landing, not just a correctness test — see Content &
+   Balance Requirements in the atlas. Idea 30 is flagged in Infrastructure Gaps as the one idea in
    the whole set needing genuinely new per-instance-identity infrastructure — scope it knowing that, not as
    a small addition.
 

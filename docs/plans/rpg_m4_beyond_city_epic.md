@@ -24,7 +24,12 @@ in the roadmap: Shared Implementation Opportunities found real consolidation acr
 
 1. **Ideas 44 + 45 + 46 — Settlement population/identity, consolidated.** Confirmed real: collapses to
    roughly 2 tickets, not 3 — one `CampService` extension covers Camp seeding/texture and Nest as a variant
-   swapping the raid branch for a spread branch.
+   swapping the raid branch for a spread branch. **Content note:** idea 44's own city/camp/nest heuristic
+   doesn't fully reproduce itself against real race data (goblin has `social_humanoid`, contradicting the
+   card's claim) and leaves 5 of the 13 real races unclassified — resolve that judgment call before ticketing,
+   not during. 45/46's Camp features (totem, stockpile, palisade) reuse real, already-tuned constants
+   (`RAID_MATURITY_THRESHOLD`, spawn cap, raid cost) for the mechanism but still need new, unanchored
+   magnitudes for the features themselves — see Content & Balance Requirements in the atlas.
 2. **Idea 47 — Lair.** Confirmed a genuinely separate ticket, correctly NOT a Camp variant — but its real
    precedent is Boss's entity-anchor idempotency pattern (`boss_region_id`), not Camp's shape, a correction
    from the original card.

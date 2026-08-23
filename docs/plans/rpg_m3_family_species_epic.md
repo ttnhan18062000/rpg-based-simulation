@@ -27,6 +27,10 @@ Build order within the milestone, confirmed by Phase Placement & Testing Strateg
 
 1. **Idea 34 — Coming of Age.** The single most depended-on idea in the entire late-game chain (Leverage
    5/5). Fires alongside M1's idea 20 (Life Stages) and needs idea 32's birth record to exist first.
+   **Content note:** the personality/occupation/regional-need archetype-choice weighting has no existing
+   numeric precedent — a free judgment call. Guard the known convergence-risk bug class this card itself
+   flags (children in the same regional shortage all converging on one occupation) with a metamorphic rule:
+   increasing the regional-need weight should push the distribution, not collapse its variance to zero.
 2. **Idea 33 — Marriage.** The first genuine two-party propose/accept handshake anywhere in the codebase —
    fits Contracts' existing offer/accept shape better than a new phase.
 3. **Idea 31 — Personal Dependents & Responsibility.** Small, well-precedented — gives `heir_entity_id`'s
@@ -35,7 +39,11 @@ Build order within the milestone, confirmed by Phase Placement & Testing Strateg
    mechanic, magical/demonic beings reuse the calamity substrate, human/humanoid needs a genuinely new
    cadence-gated sub-phase). The single highest-cost, highest-risk idea in the whole 65-idea set per the
    Merit Scorecard (Efficiency 1/5, Risk-Adjusted Cost 1/5) — explicitly not a "quick" milestone item
-   despite M3's small idea count.
+   despite M3's small idea count. **Content note:** the population-pressure gate has a real, concrete
+   numeric anchor already coded (`migration_threshold: float = 0.7` in `demographics/cohort.py`) — the best
+   candidate in the whole roadmap for the real (never-yet-used) metamorphic balance lab once the
+   births-don't-feed-back-into-the-gating-signal gap this card names is closed. Birth cooldowns and the
+   genetic-inheritance multiplier range have no comparable existing anchor.
 5. **Idea 38 — Close the reproduction population-pressure feedback loop.** Depends on idea 32 landing
    first; the signal it nudges doesn't exist without M2's idea 43 either.
 
