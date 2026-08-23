@@ -83,8 +83,24 @@ over time today.
   anywhere in either the structured scorecard dict or its printed text — enforced by a dedicated
   test (`test_scorecard_output_has_no_aggregate_or_combined_score_field`) that audits both. Full
   field/schema documentation: `docs/agent-monitoring/codebase_health_history_schema.md`.
-- PR/AI change-impact report generator, built on top of the impact-model command above — the
-  last item in sequence, since it depends on everything before it.
+- ~~PR/AI change-impact report generator, built on top of the impact-model command above — the
+  last item in sequence, since it depends on everything before it.~~ **Resolved**
+  (`TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR`, 2026-08-23): built `tools/pr_impact_report.py`
+  (`build_pr_impact_report()` / `format_pr_impact_report()` / `main()`) + one new on-demand
+  Makefile target, `codebase-health-pr-impact`. Corrects this bullet's own "built on top of the
+  impact-model command above" phrasing: this ticket is built specifically on top of the Phase 3
+  impact command (`tools/code_health_impact.py::build_impact_report()`), matching D24 §M item
+  11's own literal wording ("built on top of Phase 3's impact model") — not on top of the Phase 4
+  historical-snapshot mechanism (`tools/codebase_health_snapshot.py`). No snapshot-history
+  dependency was required or built; the investigation confirmed no real per-path join key exists
+  between a single-path impact report and the snapshot mechanism's repo-wide aggregates. All 13
+  real `build_impact_report()` fields are rendered per target path, batched across one or more
+  paths with per-path failure isolation (one degraded or failing path never aborts the whole
+  batch); `dependents_degraded`, `dependents_degradation_reason`, and `unresolved_symbols` are
+  preserved verbatim in both Markdown and JSON output modes; and no aggregate/combined score
+  field exists anywhere in either output mode — enforced by
+  `test_report_output_has_no_aggregate_or_combined_score_field` and the standing architecture
+  guard `test_report_generator_has_no_import_of_codebase_health_snapshot_module`.
 
 ## Out of scope
 

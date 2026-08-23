@@ -71,7 +71,7 @@ doc fix from either audit has been applied yet.
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard | **DONE** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard | **DONE** |
 | J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic | open (all 4 items resolved/extracted; awaits 2 sibling tickets reaching done) |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | open (unblocked — prerequisite Epic G done; 3 of 4 items resolved/extracted) |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | open (unblocked — prerequisite Epic G done; all 4 items resolved/extracted; awaits final child ticket `TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR` reaching `tickets/done/`) |
 
 **(2026-08-18)** Audited all 10 sub-epics against this project's actual epic-tier bar ("large
 multi-ticket initiative") and found 8 of 10 had been mechanically split from the roadmap
@@ -112,10 +112,16 @@ out to be.
 directly via `TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD` — `tools/codebase_health_snapshot.py`,
 `make codebase-health-snapshot`/`make codebase-health-scorecard`, and
 `docs/agent-monitoring/codebase_health_history_schema.md`; full detail in
-`docs/plans/codebase_health_observatory_tooling_epic.md`'s own Resolved note for this item. K now
-has 3 of its original 4 items resolved/extracted; only item 4 (PR/AI change-impact report
-generator, which explicitly depends on the now-resolved impact command) remains open and
-unstarted.
+`docs/plans/codebase_health_observatory_tooling_epic.md`'s own Resolved note for this item.
+
+**(2026-08-23, same day)** K item 4 (PR/AI change-impact report generator) also resolved, via
+`TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR` — `tools/pr_impact_report.py` +
+`make codebase-health-pr-impact`, built on top of the Phase 3 impact command
+(`tools/code_health_impact.py::build_impact_report()`) per D24 §M item 11's literal wording, with
+no dependency on item 3's snapshot-history mechanism (no real per-path join key exists between
+them). All 4 of K's original items now have a resolution/extraction. K itself stays open, same
+pattern as J before it, only until this last child ticket reaches `tickets/done/` — it is currently
+in `tickets/inprogress/`, mid-pipeline (Document-Update phase).
 
 ## Out of Scope
 - Implementing any fix from either audit (RabbitMQ/Kafka removal, `/health` fix, Redis DLQ,
@@ -166,6 +172,8 @@ unstarted.
 - TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET (extracted from K item 1, 2026-08-19)
 - TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND (extracted from K item 2, 2026-08-19)
 - TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD (resolved K item 3, 2026-08-23)
+- TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR (resolved K item 4, 2026-08-23; last of K's 4
+  items — still in `tickets/inprogress/` as of this note)
 - TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG (extracted from F item 1, 2026-08-19)
 - TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK (new finding from this session's test-base
   review, not from the original D23/D24 audits)

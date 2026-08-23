@@ -58,6 +58,14 @@ command design explicitly depends on the boundary tests being hardened first (Ep
 - When work begins on the remaining 2 items: run `create-tickets` against a proposal document
   scoped to them, producing investigated child tickets in
   `tickets/todos/codebase-health-observatory-tooling/`.
+- **(2026-08-22/23)** Both remaining items were extracted and resolved. Item 3 (historical
+  snapshots/scorecard) → `TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD`, done and in
+  `tickets/done/`. Item 4 (PR/AI change-impact report generator) → `TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR`,
+  built on top of the Phase 3 impact command per D24 §M item 11's literal wording (not on top of
+  item 3's snapshot-history mechanism — no real per-path join key exists between them); still in
+  `tickets/inprogress/` as of this note (Document-Update phase), not yet in `tickets/done/`. All 4
+  of this epic's original scope items now have a resolution; this epic itself stays open only
+  until this last child ticket reaches `tickets/done/`.
 
 ## Out of Scope
 - A single aggregate "health score" — trend arrows across multiple dimensions instead, per the
@@ -66,11 +74,16 @@ command design explicitly depends on the boundary tests being hardened first (Ep
 ## Acceptance Criteria
 - [x] Sequencing after Epic G (architecture boundary hardening) is respected — confirmed done,
       this epic is unblocked.
-- [ ] Child tickets are created via `create-tickets` once the remaining 2-item scope is chosen for
-      action.
+- [x] Child tickets are created via `create-tickets` — all 4 items now have child tickets
+      (`TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`,
+      `TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`,
+      `TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD`,
+      `TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR`).
 - [ ] This epic is not closed until `TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET`,
-      `TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`, and the remaining 2 items' eventual
-      child tickets all reach `tickets/done/`.
+      `TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND`, and
+      `TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD` (done) and
+      `TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR` (still in `tickets/inprogress/`) all reach
+      `tickets/done/`.
 
 ## Related Tickets
 - TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC (parent tracking epic)
