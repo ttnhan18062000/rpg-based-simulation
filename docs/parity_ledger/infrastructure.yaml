@@ -10943,3 +10943,30 @@
   test_path: tests/tools/test_calibrate_rendering.py::test_calibration_run_integrity_guard_fails_loud_on_corrupted_compile
   divergence_note: null
   proof_type: regression
+- id: INFRA-377
+  text: Per-client API-key authentication (src/api/auth.py) gates every route in
+    src/api/server.py except /health (liveness probe, the sole exemption) via
+    dependencies=[Depends(require_api_key)] at 9 of 10 app.include_router() call
+    sites and on 14 of 18 inline routes. Keys are stored hashed-at-rest (SHA-256)
+    in RuntimeProfile.api_key_hashes (a plain str of comma-separated
+    'client_id:sha256hex' pairs, loaded via ConfigLoader's CLI>Env>YAML>Defaults
+    chain / RPG_API_KEY_HASHES env var / --api-key-hashes CLI flag) and compared
+    via hmac.compare_digest (never ==). stream.router's 3 WebSocket routes use a
+    dedicated require_api_key_ws dependency that raises WebSocketException
+    instead of HTTPException, since FastAPI's websocket dependency resolution
+    (fastapi/routing.py get_websocket_app) runs before websocket.accept() and
+    only WebSocketException is safely converted to a clean websocket.close() by
+    Starlette's ExceptionMiddleware. The 3 browser-facing dashboard routes
+    (/api/v1/observability/ui and its 2 redirects) and the 3 WebSocket routes
+    additionally accept a 'key' query-param as a documented, narrower-scoped
+    auth channel (keys can appear in URLs/access logs/browser history) since a
+    plain browser fetch()/WebSocket() cannot attach a custom header. The
+    resolved ClientIdentity (frozen, hashable, with a client_id string field) is a reusable
+    identity object for the sibling per-client admission-control ticket
+    (TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL).
+  status: verified
+  priority: P1
+  v2_evidence: src/api/auth.py, src/api/server.py
+  test_path: tests/api/test_api_key_auth.py::test_missing_api_key_returns_401_on_protected_route
+  divergence_note: null
+  proof_type: contract

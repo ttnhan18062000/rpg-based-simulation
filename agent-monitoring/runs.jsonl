@@ -1220,3 +1220,4 @@
 {"run_id":"TCK-20260821-VISUAL-QUALITY-CALIBRATION","start_ts":"2026-08-22T20:15:01Z","end_ts":"2026-08-22T20:56:39Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":2498}
 {"run_id":"TCK-20260821-VISUAL-QUALITY-DOCS","start_ts":"2026-08-22T20:58:01Z","end_ts":"2026-08-22T21:36:09Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9,"duration_s":2288}
 {"run_id":"TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC","start_ts":"2026-08-23T09:31:31Z","end_ts":"2026-08-23T09:41:32Z","workflow":"implement-ticket","tier":"epic","final_status":"EPIC_SCOPED","agent_count":2,"duration_s":601}
+{"run_id":"TCK-20260823-HTTP-API-KEY-AUTH","start_ts":"2026-08-23T09:42:29Z","end_ts":"2026-08-23T11:23:50Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":14,"duration_s":6081}

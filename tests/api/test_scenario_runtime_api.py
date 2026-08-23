@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,10 @@ from fastapi.testclient import TestClient
 
 from src.engine.scenario_runtime import ScenarioObjectiveState
 import src.engine.scenario_registry as registry
+
+_TEST_CLIENT_ID = "scenario-runtime-test-client"
+_TEST_RAW_KEY = "scenario-runtime-test-key"
+_TEST_KEY_HASH = hashlib.sha256(_TEST_RAW_KEY.encode("utf-8")).hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -40,9 +45,10 @@ def client(mock_scenario_svc):
         max_replay_buffer_kb=64,
         max_observability_budget_percent=5.0,
         max_tick_budget_ms=200.0,
+        api_key_hashes=f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}",
     )
     app = create_v2_app(profile=profile)
-    with TestClient(app, raise_server_exceptions=True) as c:
+    with TestClient(app, raise_server_exceptions=True, headers={"X-API-Key": _TEST_RAW_KEY}) as c:
         yield c
 
     registry.unregister("test-scenario")
