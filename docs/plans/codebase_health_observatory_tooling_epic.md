@@ -61,7 +61,15 @@ over time today.
   baseline target's precedent. Independent Test-phase verification also caught and fixed a
   real display bug: `kernel.py` was present in the internal dependents data but invisible in
   the truncated CLI output due to plain alphabetical sort — fixed with same-subsystem-first
-  sorting and a widened truncation limit.
+  sorting and a widened truncation limit. **(2026-08-23 correction, see
+  `TCK-20260823-HOTFIX-CODE-HEALTH-IMPACT-APPLY-PY-STALE-DEPENDENT`):** `engine/apply.py` is
+  no longer a real dependent of `engine/pipeline.py` in the current codebase — there is no
+  import edge between them in either direction. `engine/kernel.py` (which does import
+  `apply.py`) remains a correct, still-verified dependent. This does not indicate a bug in
+  `tools/code_health_impact.py`'s dependents resolution; the underlying import graph drifted
+  after this verification note was originally written. The test suite's second-dependent
+  worked example was updated to `engine/scenario_checkpoint.py`, the current real second
+  dependent, in `tests/tools/test_code_health_impact.py`.
 - ~~Historical metric snapshots: an append-only file following the same pattern
   `agent-monitoring/runs.jsonl` already uses, plus a multi-dimension scorecard (trend arrows, not
   a single aggregate score, per the source audit's own explicit guidance against turning this
