@@ -164,6 +164,23 @@ their affected tickets.
   field anywhere — only qualitative strings. Any idea introducing a new per-race numeric constant (idea 32's
   cooldowns, idea 37's matrix) is extending a schema that has never carried a number before, not following
   an established numeric-content pattern.
+- **The 6 Mechanics Bible chapters have no social/relationship/reputation/political chapter.** Mapping all
+  65 ideas against the Bible and the 8 parity ledger files (see the atlas's new Mechanics Bible & Parity
+  Ledger Mapping section) found that `social_narrative.yaml` — the second-largest ledger, 265 entries — has
+  no chapter home at all, affecting roughly a third of the roadmap's ideas. Whoever scopes a ticket touching
+  Clan, faction diplomacy, Chronicle, grief/nemesis, or reputation should expect to update the ledger entry
+  with no corresponding Bible chapter section to point it at — that gap is not a defect in any single idea's
+  ticket, it's a standing hole in the Bible's own structure worth its own follow-up ticket eventually. Idea
+  39 (M6, affiliation change) is the single widest cross-ledger idea in the whole set (5 of 8 ledger files);
+  ideas 53/54/60 all touch `entity.social.public_reputation`, which is included in the deterministic replay
+  hash (`replay/fingerprint.py`) — a determinism concern layered on top of the ordinary parity-ledger one.
+- **Cross-epic file-conflict check (2026-08-17): no near-term risk.** This roadmap's only PR so far changes
+  zero `src/`/`tests/` files and nothing is ticketed yet, so there is nothing to conflict with today. The one
+  real historical near-hit — a merged `worldgen-organic-terrain` epic that touched `src/worldbuilding/compiler.py`,
+  the exact file M8 (World Corpus/Generation) centers on — already landed and settled before M8's own
+  investigation was written, so M8's picture of that file is accurate, not stale. Re-run this check
+  specifically against `src/worldbuilding/compiler.py` when M8 actually gets ticketed — it's a contended,
+  high-blast-radius file for world-gen work generally, not just for this roadmap.
 
 ## References
 
