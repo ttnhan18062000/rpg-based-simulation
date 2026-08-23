@@ -66,7 +66,7 @@ doc fix from either audit has been applied yet.
 | C — Doc Drift Reconciliation | *(no epic — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — | — |
 | D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | P1 | standard | **DONE** |
 | E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | P1 | hotfix | **DONE** |
-| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | P1 (was P2) | epic (reverted from standard 2026-08-23) | open (deployment plan changed 2026-08-23 — now public/multi-tenant; split into 2 child tickets: auth done, admission control implementation-complete/mid-pipeline) |
+| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | P1 (was P2) | epic (reverted from standard 2026-08-23) | **DONE** (2026-08-23 — both extracted sibling tickets reached `tickets/done/`; epic itself closed) |
 | G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | P2 | standard | **DONE** |
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard | **DONE** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard | **DONE** |
@@ -114,6 +114,13 @@ API-key auth, implemented, reached `tickets/done/` 2026-08-23) and
 still mid-pipeline as of this writing). F closes once the second child ticket also reaches
 `tickets/done/`. See `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` and
 `docs/plans/http_admission_control_epic.md` for full detail.
+
+**(2026-08-23, later same day) F closed.** `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`
+reached `tickets/done/`, confirming both of F's extracted sibling tickets are done. F's own
+tracking ticket, `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC`, closed and its folder moved to
+`tickets/done/http-admission-control/`. Per this ticket's own table above (as tracked on this
+branch): A, B, D, E, F, G, H, I are now **DONE** (8 of 10 sub-epics, C having no epic of its own);
+J remains open pending its 2 extracted sibling tickets; K remains open, unrelated to this batch.
 
 ## Out of Scope
 - Implementing any fix from either audit (RabbitMQ/Kafka removal, `/health` fix, Redis DLQ,
