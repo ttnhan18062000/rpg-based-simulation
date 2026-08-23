@@ -92,6 +92,17 @@ least-validated milestone: its Direction/Narrative scores are strong in the Meri
 Placement entry names a real, currently-unbuilt substrate (the history/culture-drift engine) as a shared
 blocker with parts of M4 and M5.
 
+### M7 — Simulation Quality Pillar Integration (follow-up, gated on M1-M6)
+
+**Tracking epic**: `TCK-20260823-EPIC-RPG-M7-SIMQ-INTEGRATION` (not yet created, scope-only — see
+`docs/plans/rpg_m7_simq_pillar_integration_epic.md`).
+
+Not a new RPG feature — a consolidated audit-and-registration pass ensuring every real event type the other
+six milestones introduce actually gets registered into SimQ's per-pillar scoring rules, using the Merit
+Scorecard's Pillar Reach axis (expanded from a count into named pillars first) as the checklist that nothing
+gets missed. Deliberately sequenced as one follow-up epic after the rest of the roadmap ships, not
+distributed as per-milestone acceptance criteria — see that epic's own Problem statement for why.
+
 ## Sequencing rules
 
 - **M1 has no gate — it's ready today.** Nothing else in this roadmap blocks it, and nothing in M1 blocks on
@@ -103,6 +114,9 @@ blocker with parts of M4 and M5.
   parallel.
 - **M5 needs both M2 and M3.** **M6 needs effectively everything before it** — it's the one milestone this
   roadmap explicitly does not recommend starting early, even speculatively.
+- **M7 gates on M1 through M6 as a whole, not on any single one of them.** It's a consolidated audit, not a
+  feature — starting it early against a partial roadmap would mean re-running the same audit later against
+  the rest, defeating the point of doing it once.
 - **Detailed child-ticket breakdown beyond M1 is deliberately not done yet.** M2 through M6 are scope-only
   epics for now — this roadmap and the sibling epic tickets exist to capture milestone structure and
   sequencing intent, not to fully plan implementation ahead of M1 shipping and M2's flag-governance
