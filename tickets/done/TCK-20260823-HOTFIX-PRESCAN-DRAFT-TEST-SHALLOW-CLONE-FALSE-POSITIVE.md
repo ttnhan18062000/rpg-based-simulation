@@ -108,10 +108,12 @@ of the prior issue, and not something the prior ticket's own test evidence could
 - [x] The same test still runs its real `git diff --stat` assertion (does not skip) and still
       hard-fails if the pinned commit range were ever shown to have touched
       `CLAUDE.md`/`.claude/agents/*.md`, when run against a full (non-shallow) local clone.
-- [ ] `.github/workflows/test.yml`'s `arch-docs` job passes end-to-end in real CI (verified via a
+- [x] `.github/workflows/test.yml`'s `arch-docs` job passes end-to-end in real CI (verified via a
       pushed branch/PR's CI run per the CI Failure Triage process — a local repro alone is not
-      sufficient to close this ticket). Not yet verified: no branch has been pushed/PR'd for this
-      ticket as part of this implementation pass.
+      sufficient to close this ticket). Verified 2026-08-23: pushed to `worktree-codebase-health-
+      observatory-tooling` (commit `873a21a7`), PR #62's `pull_request`-triggered run
+      (32651498264) shows `Architecture / docs / static: success` — the same job that
+      deterministically failed with `CalledProcessError` before this fix.
 - [x] No other test in `tests/docs/test_prescan_mandate_instruction_draft.py` regresses
       (`pytest tests/docs/test_prescan_mandate_instruction_draft.py -v` — all 5 tests pass or, for
       the one in scope, pass/skip per the criteria above).
