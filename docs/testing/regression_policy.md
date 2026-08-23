@@ -59,7 +59,7 @@ These test groups are important but do not block merge on failure. Failures are 
 
 | Test Group | Location | Reason for Soft Status |
 |---|---|---|
-| Live observability tests | `tests/api/test_live_health_api.py`, `tests/api/test_live_observability_status.py` | Require a running server; environment-dependent; failures indicate deployment issues, not code regressions |
+| Live observability tests | `tests/api/test_live_health_api.py`, `tests/api/test_live_observability_status.py` | Require a running server; environment-dependent; failures indicate deployment issues, not code regressions — **except** a 401/403 response, which means the test's own `subprocess.Popen` server env is missing a valid `RPG_API_KEY_HASHES` entry (see `docs/architecture/http_api_key_authentication.md`), a test-config gap, not a deployment issue. `TCK-20260823-LIVE-TEST-API-KEY-AUTH` fixed this file set once already after two prior tickets misdiagnosed the same 401/403 failures as this row's generic "environment-dependent" case. |
 | Integration observability flows | `tests/integration/observability/` (phase20–28, warehouse, streams) | Exercising telemetry pipelines that are infrastructure-dependent |
 | Scenario tests | `tests/scenarios/`, `tests/certification/test_cert_long_run_stability.py` | Long-running; infrastructure-sensitive; failures are investigated but don't block fast iteration |
 | Performance perf suite (non-gate scenarios) | `tests/perf/test_perf_metropolis.py`, `test_perf_idle.py`, `test_perf_stress.py` | Benchmarks that measure but do not enforce thresholds (advisory only) |

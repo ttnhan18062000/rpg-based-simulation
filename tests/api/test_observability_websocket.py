@@ -1,3 +1,4 @@
+import hashlib
 import pytest
 import asyncio
 import json
@@ -7,25 +8,31 @@ import websockets
 import os
 import requests
 
+_TEST_CLIENT_ID = "observability-websocket-test-client"
+_TEST_RAW_KEY = "observability-websocket-test-key"
+_TEST_KEY_HASH = hashlib.sha256(_TEST_RAW_KEY.encode("utf-8")).hexdigest()
+
 @pytest.mark.anyio
 async def test_observability_websocket_suite():
     """Exhaustively verify WebSocket live events API handshake, filtering, heartbeats, and limits."""
     port = 8019
     env = os.environ.copy()
     env["SIM_OBS_MODE"] = "DEBUG"
-    
+    env["RPG_API_KEY_HASHES"] = f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"
+    headers = {"X-API-Key": _TEST_RAW_KEY}
+
     log_file = open("uvicorn_ws_obs.log", "w")
-    
+
     # Start the V2 API server uvicorn subprocess
     cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "INFO"]
     server = subprocess.Popen(cmd, env=env, stdout=log_file, stderr=log_file)
     time.sleep(4.0)  # Wait for uvicorn server to initialize completely
-    
+
     try:
         base_url = f"ws://127.0.0.1:{port}/api/v1/ws/observability/events"
 
         # 1. Test Valid Handshake, Ack, and Heartbeat
-        async with websockets.connect(base_url) as ws:
+        async with websockets.connect(base_url, additional_headers=headers) as ws:
             # Check subscription_ack message
             resp = await asyncio.wait_for(ws.recv(), timeout=3.0)
             data = json.loads(resp)
@@ -50,7 +57,7 @@ async def test_observability_websocket_suite():
             assert has_heartbeat, "Did not receive keep-alive heartbeat message"
 
         # 2. Test Parameter Validation & Reject Unknown Parameters
-        async with websockets.connect(f"{base_url}?unknown_param=hello") as ws:
+        async with websockets.connect(f"{base_url}?unknown_param=hello", additional_headers=headers) as ws:
             resp = await asyncio.wait_for(ws.recv(), timeout=3.0)
             data = json.loads(resp)
             assert data["type"] == "error"
@@ -60,7 +67,7 @@ async def test_observability_websocket_suite():
             assert exc_info.value.code == 1003
 
         # 3. Test Parameter Validation & Reject Invalid Severity
-        async with websockets.connect(f"{base_url}?severity_min=DUMMY") as ws:
+        async with websockets.connect(f"{base_url}?severity_min=DUMMY", additional_headers=headers) as ws:
             resp = await asyncio.wait_for(ws.recv(), timeout=3.0)
             data = json.loads(resp)
             assert data["type"] == "error"
@@ -70,7 +77,7 @@ async def test_observability_websocket_suite():
             assert exc_info.value.code == 1003
 
         # 4. Test Parameter Validation & Reject Invalid Entity ID Format
-        async with websockets.connect(f"{base_url}?entity_id=abc") as ws:
+        async with websockets.connect(f"{base_url}?entity_id=abc", additional_headers=headers) as ws:
             resp = await asyncio.wait_for(ws.recv(), timeout=3.0)
             data = json.loads(resp)
             assert data["type"] == "error"
@@ -80,7 +87,7 @@ async def test_observability_websocket_suite():
             assert exc_info.value.code == 1003
 
         # 5. Test Live Event Delivery and Filtering
-        async with websockets.connect(f"{base_url}?severity_min=INFO&category=movement") as ws:
+        async with websockets.connect(f"{base_url}?severity_min=INFO&category=movement", additional_headers=headers) as ws:
             # Check subscription_ack
             resp = await asyncio.wait_for(ws.recv(), timeout=3.0)
             data = json.loads(resp)
@@ -97,7 +104,7 @@ async def test_observability_websocket_suite():
                 "source_system": "navigation",
                 "message": "Hero moves to new location"
             }
-            resp_post = requests.post(f"http://127.0.0.1:{port}/api/v1/test/publish_event", json=ev_payload)
+            resp_post = requests.post(f"http://127.0.0.1:{port}/api/v1/test/publish_event", json=ev_payload, headers=headers)
             assert resp_post.status_code == 200
 
             # Check that we receive the movement category event. The live simulation keeps
@@ -131,7 +138,7 @@ async def test_observability_websocket_suite():
         try:
             # Open 10 valid connections
             for i in range(10):
-                ws_client = await websockets.connect(base_url)
+                ws_client = await websockets.connect(base_url, additional_headers=headers)
                 # Read the initial subscription_ack to complete the connection process
                 resp = await asyncio.wait_for(ws_client.recv(), timeout=3.0)
                 data = json.loads(resp)
@@ -139,7 +146,7 @@ async def test_observability_websocket_suite():
                 clients.append(ws_client)
 
             # Try to connect the 11th subscriber
-            async with websockets.connect(base_url) as ws11:
+            async with websockets.connect(base_url, additional_headers=headers) as ws11:
                 resp = await asyncio.wait_for(ws11.recv(), timeout=3.0)
                 data = json.loads(resp)
                 assert data["type"] == "error"
