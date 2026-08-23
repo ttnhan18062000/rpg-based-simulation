@@ -140,7 +140,7 @@ tickets/inprogress/TCK-20260606-COMBAT-RELATION.md
 staging_artifacts/TCK-20260606-COMBAT-RELATION/
 ```
 
-**Gate:** If conflicts are detected, the workflow returns `CONFLICTS_DETECTED` with a list. The user resolves (adjust scope, close duplicate, etc.) and re-runs.
+**Gate:** If conflicts are detected, the workflow returns `CONFLICTS_DETECTED` with a list. The user resolves (adjust scope, close duplicate, etc.) and re-runs. `conflicts` is reserved for genuine blocking duplicate/contradictory work only — good-faith informational disclosure (e.g. a related prior ticket that is not duplicate work, a mechanic/parity note worth surfacing) is returned separately via the optional `related_context` field, which is logged for visibility but never gates the pipeline (`TCK-20260824-HOTFIX-CONFLICTS-BLOCKING-SPLIT`).
 
 **Gate (tag registry):** After the agent call returns, the orchestrator runs
 `tools/tag_registry.py::check_tags_registered` against the ticket's tags (via `bash()` — not

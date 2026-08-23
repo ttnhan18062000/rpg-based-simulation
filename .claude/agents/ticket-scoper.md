@@ -9,7 +9,7 @@ You are a pre-work scoping subagent for the rpg-based-simulation project. Given 
 
 ## Mandatory Scan (Do All of These)
 
-1. **`tickets/`** — search `inprogress/`, `done/`, and `backlogs/` for overlapping scope or prior attempts at this work. A hit in `backlogs/` means the work was already investigated and deliberately deprioritized (not abandoned) — flag it as a conflict/duplicate candidate rather than re-scoping from scratch; the requester may want to promote the backlogged ticket instead of creating a new one.
+1. **`tickets/`** — search `inprogress/`, `done/`, and `backlogs/` for overlapping scope or prior attempts at this work. A hit in `backlogs/` means the work was already investigated and deliberately deprioritized (not abandoned) — flag it as `related_context` (non-blocking) rather than re-scoping from scratch, unless it is a genuine blocking duplicate of this exact request, in which case flag it as a `conflicts` entry; the requester may want to promote the backlogged ticket instead of creating a new one.
 2. **`docs/`** — check the Mechanics Bible (`docs/mechanics/`) and Engine Contracts (`docs/engine/`) for any laws that constrain the implementation.
 3. **`stored_artifacts/`** — look for prior investigations or plans covering the same area.
 4. **Relevant source files** — read the affected code to understand current behavior.
@@ -80,7 +80,7 @@ P1
 ## Output
 
 1. The completed ticket markdown.
-2. A short conflict report: any duplicates, mechanic constraints, or parity entries the implementer must know about.
+2. A conflict report split into two fields: `conflicts` — ONLY genuine blocking duplicate/contradictory work that should stop the pipeline for human review before proceeding (empty array if none); `related_context` — informational findings worth surfacing (e.g. related tickets, mechanic constraints, or parity entries the implementer should know about) that do NOT block the pipeline (empty array if none, never omit the field).
 3. The path where the ticket should be written: `tickets/inprogress/{ticket_id}.md`.
 4. A `summary` field (one sentence ≤200 chars): what was scoped and any conflicts found. This goes into the agent monitoring event record.
 5. A `suggested_skills` list: Run `python3 tools/tag_registry.py skill-mapping` and match the

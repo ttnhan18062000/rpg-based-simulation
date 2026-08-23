@@ -79,6 +79,7 @@ const TICKET_SCHEMA = {
     todos_source_path: { type: 'string', description: 'Path of the original file under tickets/todos/ if the ticket originated there; empty string otherwise.' },
     status: { type: 'string', enum: ['CREATED', 'EXISTING'] },
     conflicts: { type: 'array', items: { type: 'string' } },
+    related_context: { type: 'array', items: { type: 'string' }, description: 'Non-blocking informational disclosure — e.g. a related prior ticket that is not duplicate work, or a mechanic/parity note worth surfacing — that must NOT trigger CONFLICTS_DETECTED. Empty array if none, never omitted.' },
     tier: { type: 'string', enum: ['hotfix', 'standard', 'epic'] },
     tags: { type: 'array', items: { type: 'string' }, description: 'The ticket frontmatter tags list, read directly — required so the Security-Review gate trigger (Step 2) has a ground-truth fallback independent of the derived suggested_skills field.' },
     suggested_skills: { type: 'array', items: { type: 'string' }, description: 'Mapped skill(s) for Process/Skill-signal tags on this ticket; empty array if none.' },
@@ -117,9 +118,12 @@ filter or transform it — this is the ground-truth list the Security-Review gat
 
 Step 3b — check for a security mis-tag: if the ticket's "Related Code Areas" section contains any path or filename matching one of: \`credential\`, \`secret\`, \`password\`, \`api_key\`, \`private_key\`, \`.env\`, \`oauth\`, \`jwt\` (case-insensitive substring match; do NOT match \`auth\`, \`cert\`, \`key\`, \`token\`, or \`session\` bare — those collide with this codebase's own \`AuthoritativeState\`/\`authoritative_pipeline\`/\`certification\`/\`LabSessionStore\` vocabulary), AND the ticket's tags do NOT include \`security\` — set mistag_warning=true. Otherwise mistag_warning=false.
 
+conflicts vs. related_context: conflicts is ONLY for a genuine blocking duplicate/contradictory-work finding that should stop the pipeline for human review before proceeding (e.g. the ticket-file-not-found case below). related_context is for any other informational finding worth surfacing (e.g. a related prior ticket that is not duplicate work) that must NOT block the pipeline — empty array if none, never omit the field.
+
 Return: ticket_id="${ticketId}", ticket_path=(the ticket_path value stated above),
 todos_source_path=(the todos_source_path value stated above),
 status="EXISTING", conflicts=(["ticket file not found for ${ticketId}"] if ticket_path is empty, else []),
+related_context=(any non-blocking informational findings noticed while loading the ticket, [] if none),
 tier=(the tier value stated above),
 tags=(from step 3a, the ticket's actual frontmatter tags list),
 suggested_skills=(computed list from step 3, [] if none),
@@ -136,7 +140,7 @@ Step 0b (context warm-start — REQUIRED before any file reads):
 Request: ${request}
 
 Steps:
-1. Scan tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts. A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as a conflict/duplicate candidate rather than re-scoping from scratch.
+1. Scan tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts. A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as related_context (non-blocking) rather than re-scoping from scratch, unless it is a genuine blocking duplicate of this exact request, in which case flag it as a conflicts entry.
 2. Scan docs/ (mechanics Bible chapters, engine contracts) for constraints on the request.
 3. Scan stored_artifacts/ for prior investigations in the same area.
 4. Read relevant source files to understand current state.
@@ -164,7 +168,8 @@ Steps:
 Step 8 — check for a security mis-tag against the just-drafted ticket: if the ticket's "Related Code Areas" section contains any path or filename matching one of: \`credential\`, \`secret\`, \`password\`, \`api_key\`, \`private_key\`, \`.env\`, \`oauth\`, \`jwt\` (case-insensitive substring match; do NOT match \`auth\`, \`cert\`, \`key\`, \`token\`, or \`session\` bare — those collide with this codebase's own \`AuthoritativeState\`/\`authoritative_pipeline\`/\`certification\`/\`LabSessionStore\` vocabulary), AND the ticket's tags do NOT include \`security\` — set mistag_warning=true. Otherwise mistag_warning=false.
 
 Return: ticket_id (the full TCK-... ID), ticket_path, status="CREATED",
-conflicts (list of any duplicates or conflicts found — empty array if none),
+conflicts (ONLY genuine blocking duplicate/contradictory work that should stop the pipeline for human review before proceeding — empty array if none),
+related_context (informational findings worth surfacing that do NOT block the pipeline, e.g. "a related prior ticket exists but this is not duplicate work" or "this ticket's fix is for a bug introduced by ticket X" — empty array if none, never omit the field),
 tier (the tier value written into the ticket),
 tags (the tags array written into the new ticket's own frontmatter — the same ground-truth reasoning as the Load-existing branch),
 suggested_skills (from the mapping table in your Output contract, [] if none),
@@ -413,6 +418,10 @@ if (ticketInfo.suggested_skills && ticketInfo.suggested_skills.length > 0) {
 
 if (ticketInfo.mistag_warning) {
   log('WARNING: Related Code Areas suggests auth/secrets/credential-adjacent paths but no `security` tag was assigned — verify tagging is correct.')
+}
+
+if (ticketInfo.related_context && ticketInfo.related_context.length > 0) {
+  log(`Related context (non-blocking): ${ticketInfo.related_context.join(' | ')}`)
 }
 
 if (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) {
