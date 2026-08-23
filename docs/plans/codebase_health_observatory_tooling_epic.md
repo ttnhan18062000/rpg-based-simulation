@@ -62,10 +62,27 @@ over time today.
   real display bug: `kernel.py` was present in the internal dependents data but invisible in
   the truncated CLI output due to plain alphabetical sort — fixed with same-subsystem-first
   sorting and a widened truncation limit.
-- Historical metric snapshots: an append-only file following the same pattern
+- ~~Historical metric snapshots: an append-only file following the same pattern
   `agent-monitoring/runs.jsonl` already uses, plus a multi-dimension scorecard (trend arrows, not
   a single aggregate score, per the source audit's own explicit guidance against turning this
-  into a single number).
+  into a single number).~~ **Resolved** (`TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD`,
+  2026-08-23): built `tools/codebase_health_snapshot.py` + two new on-demand Makefile targets,
+  `codebase-health-snapshot` (appends one `build_report()` snapshot to the new append-only
+  `agent-monitoring/codebase_health_history.jsonl`, reusing `tools/agent-monitoring/writer.py::write_line`
+  rather than a plain unlocked append) and `codebase-health-scorecard` (reads the history file and
+  renders a per-dimension trend view). A frozen `EXPECTED_SNAPSHOT_KEYS` allowlist plus a
+  `snapshot_schema_version` field (`build_snapshot_record`) make any future `build_report()` shape
+  change a loud `RuntimeError` at write time instead of silent drift. The scorecard trends 11
+  scalar dimensions with `↑`/`↓`/`→` + Δ (mirroring `personality_audit.py`'s own convention),
+  folds `registry_size_bytes`/`registry_size_lines` into one rendered row, and shows
+  `unused_core_dependencies` as a raw value/count rather than forcing it through the arrow logic
+  since it's a list, not a scalar — always comparing only the two most recent snapshots. Zero- and
+  one-snapshot reads degrade gracefully (an explicit "no snapshots yet" message, and an explicit
+  "no trend data yet" label per dimension, respectively) rather than crashing or fabricating a
+  trend. Per this epic's own "Out of scope" bullet below, no aggregate/combined score field exists
+  anywhere in either the structured scorecard dict or its printed text — enforced by a dedicated
+  test (`test_scorecard_output_has_no_aggregate_or_combined_score_field`) that audits both. Full
+  field/schema documentation: `docs/agent-monitoring/codebase_health_history_schema.md`.
 - PR/AI change-impact report generator, built on top of the impact-model command above — the
   last item in sequence, since it depends on everything before it.
 

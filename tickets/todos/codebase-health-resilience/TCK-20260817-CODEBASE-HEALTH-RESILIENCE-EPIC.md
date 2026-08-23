@@ -71,7 +71,7 @@ doc fix from either audit has been applied yet.
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard | **DONE** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard | **DONE** |
 | J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic | open (all 4 items resolved/extracted; awaits 2 sibling tickets reaching done) |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | open (unblocked — prerequisite Epic G done; 2 of 4 items extracted) |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | open (unblocked — prerequisite Epic G done; 3 of 4 items resolved/extracted) |
 
 **(2026-08-18)** Audited all 10 sub-epics against this project's actual epic-tier bar ("large
 multi-ticket initiative") and found 8 of 10 had been mechanically split from the roadmap
@@ -103,6 +103,19 @@ it, and item 1 (`make codebase-health-baseline`) was extracted into
 items (impact command, historical snapshots/scorecard, PR report generator) stay bundled — they
 are genuinely sequential, not independently extractable the way this session's other items turned
 out to be.
+
+**(2026-08-19, same day)** K item 2 (impact command) also extracted, into
+`TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND` — see that ticket and
+`docs/plans/codebase_health_observatory_tooling_epic.md`'s own Resolved note for detail.
+
+**(2026-08-23)** K item 3 (historical metric snapshots + per-dimension trend scorecard) resolved
+directly via `TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD` — `tools/codebase_health_snapshot.py`,
+`make codebase-health-snapshot`/`make codebase-health-scorecard`, and
+`docs/agent-monitoring/codebase_health_history_schema.md`; full detail in
+`docs/plans/codebase_health_observatory_tooling_epic.md`'s own Resolved note for this item. K now
+has 3 of its original 4 items resolved/extracted; only item 4 (PR/AI change-impact report
+generator, which explicitly depends on the now-resolved impact command) remains open and
+unstarted.
 
 ## Out of Scope
 - Implementing any fix from either audit (RabbitMQ/Kafka removal, `/health` fix, Redis DLQ,
@@ -152,6 +165,7 @@ out to be.
 - TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT (extracted from J item 1, 2026-08-19)
 - TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET (extracted from K item 1, 2026-08-19)
 - TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND (extracted from K item 2, 2026-08-19)
+- TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD (resolved K item 3, 2026-08-23)
 - TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG (extracted from F item 1, 2026-08-19)
 - TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK (new finding from this session's test-base
   review, not from the original D23/D24 audits)

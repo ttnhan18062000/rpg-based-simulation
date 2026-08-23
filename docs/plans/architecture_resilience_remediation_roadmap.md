@@ -46,7 +46,7 @@ multi-ticket-shaped). No ticket was removed.
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/archive/error_handling_hygiene_epic.md` | standard | **Resolved** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/archive/determinism_verification_gap_epic.md` | standard | **Resolved** |
 | J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/archive/codebase_navigability_hygiene_epic.md` | epic | **Resolved** (2026-08-20 — both extracted sibling tickets reached `tickets/done/`) |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open (unblocked — prerequisite Epic G done; 2 of 4 items extracted) |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open (unblocked — prerequisite Epic G done; 3 of 4 items resolved/extracted) |
 
 **(2026-08-19)** Three new tickets extend this tree, plus one item resolved without a ticket:
 - `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING` — Epic J's item 3 (domains test-dir placement),
@@ -332,8 +332,12 @@ unblocked, not just theoretically scoped.
   `related_code_areas` field) — full worked design in D24 §L. Extracted once each data source was
   individually verified (found `graphify` needs a custom traversal, no ready CLI verb; found
   `related_code_areas` only 53.3% filled with mixed path/symbol shapes).
-- Historical metric snapshots (append-only file, same pattern as `agent-monitoring/runs.jsonl`)
-  + a multi-dimension scorecard (trend arrows, not a single score).
+- **(2026-08-23) Resolved via `TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD`.** Historical
+  metric snapshots (append-only file, same pattern as `agent-monitoring/runs.jsonl`) + a
+  multi-dimension scorecard (trend arrows, not a single score). Built
+  `tools/codebase_health_snapshot.py` + `make codebase-health-snapshot`/`make codebase-health-scorecard`;
+  full detail in `docs/plans/codebase_health_observatory_tooling_epic.md`'s own Resolved note and
+  `docs/agent-monitoring/codebase_health_history_schema.md`.
 - PR/AI change-impact report generator, built on top of the impact-model command above.
 
 *Evidence: D24 §J, §L, §M Phase 3-4.*
