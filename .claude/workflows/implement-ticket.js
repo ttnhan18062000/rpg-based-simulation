@@ -159,7 +159,7 @@ Steps:
    Related Tickets, Related Docs, Related Stored Artifacts, Related Code Areas,
    Assumptions/Open Questions, Implementation Notes (blank), Test Summary (blank),
    Files Changed (blank), Completion Summary (blank).
-7. Create the staging directory: staging_artifacts/{ticket_id}/
+7. If the Tier you inferred in step 6 is hotfix: skip this step entirely — do NOT create staging_artifacts/{ticket_id}/. Hotfix tickets skip Investigate/Plan/Review, so nothing ever writes into that directory. Otherwise (standard or epic tier): create the staging directory staging_artifacts/{ticket_id}/.
 
 Step 8 — check for a security mis-tag against the just-drafted ticket: if the ticket's "Related Code Areas" section contains any path or filename matching one of: \`credential\`, \`secret\`, \`password\`, \`api_key\`, \`private_key\`, \`.env\`, \`oauth\`, \`jwt\` (case-insensitive substring match; do NOT match \`auth\`, \`cert\`, \`key\`, \`token\`, or \`session\` bare — those collide with this codebase's own \`AuthoritativeState\`/\`authoritative_pipeline\`/\`certification\`/\`LabSessionStore\` vocabulary), AND the ticket's tags do NOT include \`security\` — set mistag_warning=true. Otherwise mistag_warning=false.
 

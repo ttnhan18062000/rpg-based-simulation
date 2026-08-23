@@ -37,7 +37,7 @@ above). Every gate-branch edge below is labeled with the exact return status tha
 flowchart TD
     Start([Request]) --> Scope
 
-    Scope["Scope<br/><i>ticket-scoper</i><br/>→ tickets/inprogress/{id}.md<br/>→ staging_artifacts/{id}/"]
+    Scope["Scope<br/><i>ticket-scoper</i><br/>→ tickets/inprogress/{id}.md<br/>→ staging_artifacts/{id}/ (standard/epic only)"]
     Scope -- CONFLICTS_DETECTED --> ScopeFix[/"Human resolves, re-run"/]
     Scope -- TAGS_NOT_REGISTERED --> ScopeTagFix[/"Register tag(s) via tag_registry.py add,<br/>or edit ticket to use an existing tag, re-run"/]
     Scope -- "tier=epic" --> EpicDone(["EPIC_SCOPED"])
@@ -128,7 +128,11 @@ Workflow({ name: 'implement-ticket', args: {
 - Scans `stored_artifacts/` for prior investigations
 - Reads relevant source files
 - Produces the ticket at `tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md`
-- Creates `staging_artifacts/{ticket_id}/`
+- Creates `staging_artifacts/{ticket_id}/` — **standard/epic tier only**. Hotfix tier skips this:
+  Investigate/Plan/Review (the phases that would populate it with `investigation.md`/`plan.md`/
+  `test_plan.md`) never run for hotfix, so the directory would otherwise sit empty for the ticket's
+  whole life and get flagged as a leftover by `done-checker`'s "repo state is consistent" condition
+  at Verify (`TCK-20260824-HOTFIX-STAGING-DIR-SCOPE-GAP`).
 
 **Example output:**
 ```
