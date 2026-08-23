@@ -84,6 +84,7 @@ Decision recorded in `docs/guidelines/intentional_divergences.md` § DEV-002
 
 ### 2.2 System Contention
 - **Deterministic Resolution**: Contention for limited resources (e.g., two entities looting the same corpse) is resolved by deterministic registration order. Complex social negotiation or "roll-off" logic is not yet implemented.
+- **HTTP Admission Control — Single-Process Only**: Per-client HTTP admission control now exists (`src/api/admission_control.py`, `INFRA-378`), resolving the previously-unbounded "no rate limiting on the HTTP API surface" boundary this doc tracked. It is scoped to single-process in-memory state — there is no distributed/multi-worker-process rate-limit coordination. An operator running `src/api/server.py` behind multiple worker processes (e.g. `uvicorn --workers N`) gets independent per-process admission state, not a shared per-client limit across the whole deployment.
 
 ### 2.3 Phase Isolation Detection
 

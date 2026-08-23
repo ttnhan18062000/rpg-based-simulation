@@ -10839,8 +10839,8 @@
   proof_type: parity
 - id: INFRA-370
   text: BFS whole-map walkable-region connectivity (terrain != WALL minus blocked_tiles)
-    reproduces documented walkable-tile count, connected-component count, and
-    percent-reachable deterministically from AuthoritativeState.terrain + blocked_tiles.
+    reproduces documented walkable-tile count, connected-component count, and percent-reachable
+    deterministically from AuthoritativeState.terrain + blocked_tiles.
   status: verified
   priority: P2
   v2_evidence: src/rendering/connectivity.py
@@ -10859,15 +10859,15 @@
   divergence_note: null
   proof_type: parity
 - id: INFRA-372
-  text: Connected-component-aware fill-ratio (per-terrain-type BFS labeling, tiles /
-    bounding_box_area per component) plus 90-degree rotation/repetition detection
+  text: Connected-component-aware fill-ratio (per-terrain-type BFS labeling, tiles
+    / bounding_box_area per component) plus 90-degree rotation/repetition detection
     (transposed-coordinate set match) reproduces documented dungeon_crawl evidence
-    (FOREST=2 components of 1,116 tiles each; CAVE=0.980, FOREST-c0/c1=1.000,
-    RUIN=1.000; FOREST component 1 is component 0 rotated 90 degrees) deterministically
-    from AuthoritativeState.terrain at seed 42, tick 0. A corpus-wide sweep across the
-    current data/worlds corpus confirms every component scoring below the 0.95
-    reference threshold is FOREST type -- the 0.95 threshold itself is uncalibrated
-    and provisional, tracked separately (TCK-20260821-VISUAL-QUALITY-CALIBRATION).
+    (FOREST=2 components of 1,116 tiles each; CAVE=0.980, FOREST-c0/c1=1.000, RUIN=1.000;
+    FOREST component 1 is component 0 rotated 90 degrees) deterministically from AuthoritativeState.terrain
+    at seed 42, tick 0. A corpus-wide sweep across the current data/worlds corpus
+    confirms every component scoring below the 0.95 reference threshold is FOREST
+    type -- the 0.95 threshold itself is uncalibrated and provisional, tracked separately
+    (TCK-20260821-VISUAL-QUALITY-CALIBRATION).
   status: verified
   priority: P2
   v2_evidence: src/rendering/shape.py
@@ -10875,18 +10875,16 @@
   divergence_note: null
   proof_type: parity
 - id: INFRA-373
-  text: total_variation_distance(h1, h2) over normalized terrain-type-proportion
-    histograms reproduces the documented TVD(sandbox_world, dungeon_crawl) ==
-    0.23161981243456373 cross-spec anchor at seed 42 (rounds to the PROPOSAL.md-cited
-    0.2315). Same-spec/different-seed TVD is exactly 0.0 for dungeon_crawl (seeds 42 and
-    137) -- structurally seed-invariant, since none of its four composed modules
-    (ruins_mystery_quest, goblin_camp_conflict, old_mine_resource_loop,
-    scalable_bandit_camp) declare terrain_variants. sandbox_world is deliberately NOT
-    used as a same-spec-seed-invariance anchor -- its current seed-invariance is an
-    artifact of a stale resolved/world.resolved.yaml cache predating
+  text: total_variation_distance(h1, h2) over normalized terrain-type-proportion histograms
+    reproduces the documented TVD(sandbox_world, dungeon_crawl) == 0.23161981243456373
+    cross-spec anchor at seed 42 (rounds to the PROPOSAL.md-cited 0.2315). Same-spec/different-seed
+    TVD is exactly 0.0 for dungeon_crawl (seeds 42 and 137) -- structurally seed-invariant,
+    since none of its four composed modules (ruins_mystery_quest, goblin_camp_conflict,
+    old_mine_resource_loop, scalable_bandit_camp) declare terrain_variants. sandbox_world
+    is deliberately NOT used as a same-spec-seed-invariance anchor -- its current
+    seed-invariance is an artifact of a stale resolved/world.resolved.yaml cache predating
     wolf_den_near_forest.yaml's terrain_variants field (TCK-20260821-WOLF-DEN-NOISE-MIGRATION),
-    not a structural property of its composition -- see
-    stored_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
+    not a structural property of its composition -- see stored_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
   status: verified
   priority: P2
   v2_evidence: src/rendering/variants.py
@@ -10895,14 +10893,14 @@
   proof_type: parity
 - id: INFRA-374
   text: Rendering-quality grade-band scorer assigns S/A/B/C/D/F using SimQ's exact
-    threshold values (S=2.0 A=0.5 B=0.0 C=-0.5 D=-1.0), sourced from its own config file
-    (config/rendering/grade_thresholds.toml, copied by value, not imported from
-    config/simulation_quality/), combining binary hard-rule and non-monotonic
-    trapezoidal soft-rule deltas via a plain additive sum before assignment. This
-    architecturally-independent code path is distinct from SIMQ-CALIBRATED-001 (which
-    covers SimQ's own threshold-value calibration status) and INFRA-255 (which covers
-    SimQ's own normalized_score time-division formula) -- neither entry covers this
-    module's separate grade-assignment code path.
+    threshold values (S=2.0 A=0.5 B=0.0 C=-0.5 D=-1.0), sourced from its own config
+    file (config/rendering/grade_thresholds.toml, copied by value, not imported from
+    config/simulation_quality/), combining binary hard-rule and non-monotonic trapezoidal
+    soft-rule deltas via a plain additive sum before assignment. This architecturally-independent
+    code path is distinct from SIMQ-CALIBRATED-001 (which covers SimQ's own threshold-value
+    calibration status) and INFRA-255 (which covers SimQ's own normalized_score time-division
+    formula) -- neither entry covers this module's separate grade-assignment code
+    path.
   status: verified
   priority: P2
   v2_evidence: src/rendering/grading.py
@@ -10916,8 +10914,8 @@
     hashed for byte-identical determinism across independent runs). The annotated/
     gridlined render (src/rendering/render_annotated.py, ported from experiments/
     spatial_rendering/prototype/render_annotated.py) is written to disk only when
-    should_escalate returns True -- structurally enforcing that zero image exists to
-    read in the non-escalating case, rather than relying on agent tool-use discipline.
+    should_escalate returns True -- structurally enforcing that zero image exists
+    to read in the non-escalating case, rather than relying on agent tool-use discipline.
   status: verified
   priority: P2
   v2_evidence: src/rendering/review_pipeline.py, src/rendering/render_annotated.py
@@ -10927,16 +10925,15 @@
 - id: INFRA-376
   text: tools/calibrate_rendering.py's run-integrity guard (CalibrationIntegrityError)
     fails loud when a calibration run's WorldCompiler.compile() report contains any
-    warnings, or entity_count == 0, or region_count == 0 -- adapted from
-    calibrate_simq.py's CalibrationIntegrityError/INFRA-320 queue-drop/SURVIVAL-mode
-    guard to this script's real single-compile-call architecture (no Kernel/
-    EventRecorder queue exists in this code path; compute_trail_activity, the one
-    family half that would need one, is deferred to a future ticket -- see
-    staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/plan.md Decision 2/8). A
-    compile_health.json sidecar is written atomically before the raise, mirroring
-    calibrate_simq.py's write-before-raise ordering. This ticket's Out of Scope
-    forbids any CI-gating or decision-consumption of the calibrated numeric output
-    itself -- only this guard's own pass/fail behavior is covered by this entry.
+    warnings, or entity_count == 0, or region_count == 0 -- adapted from calibrate_simq.py's
+    CalibrationIntegrityError/INFRA-320 queue-drop/SURVIVAL-mode guard to this script's
+    real single-compile-call architecture (no Kernel/ EventRecorder queue exists in
+    this code path; compute_trail_activity, the one family half that would need one,
+    is deferred to a future ticket -- see staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/plan.md
+    Decision 2/8). A compile_health.json sidecar is written atomically before the
+    raise, mirroring calibrate_simq.py's write-before-raise ordering. This ticket's
+    Out of Scope forbids any CI-gating or decision-consumption of the calibrated numeric
+    output itself -- only this guard's own pass/fail behavior is covered by this entry.
   status: verified
   priority: P2
   v2_evidence: tools/calibrate_rendering.py
@@ -10944,29 +10941,64 @@
   divergence_note: null
   proof_type: regression
 - id: INFRA-377
-  text: Per-client API-key authentication (src/api/auth.py) gates every route in
-    src/api/server.py except /health (liveness probe, the sole exemption) via
-    dependencies=[Depends(require_api_key)] at 9 of 10 app.include_router() call
-    sites and on 14 of 18 inline routes. Keys are stored hashed-at-rest (SHA-256)
-    in RuntimeProfile.api_key_hashes (a plain str of comma-separated
-    'client_id:sha256hex' pairs, loaded via ConfigLoader's CLI>Env>YAML>Defaults
-    chain / RPG_API_KEY_HASHES env var / --api-key-hashes CLI flag) and compared
-    via hmac.compare_digest (never ==). stream.router's 3 WebSocket routes use a
-    dedicated require_api_key_ws dependency that raises WebSocketException
-    instead of HTTPException, since FastAPI's websocket dependency resolution
-    (fastapi/routing.py get_websocket_app) runs before websocket.accept() and
-    only WebSocketException is safely converted to a clean websocket.close() by
-    Starlette's ExceptionMiddleware. The 3 browser-facing dashboard routes
-    (/api/v1/observability/ui and its 2 redirects) and the 3 WebSocket routes
-    additionally accept a 'key' query-param as a documented, narrower-scoped
-    auth channel (keys can appear in URLs/access logs/browser history) since a
-    plain browser fetch()/WebSocket() cannot attach a custom header. The
-    resolved ClientIdentity (frozen, hashable, with a client_id string field) is a reusable
-    identity object for the sibling per-client admission-control ticket
-    (TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL).
+  text: 'Per-client API-key authentication (src/api/auth.py) gates every route in
+    src/api/server.py except /health (liveness probe, the sole exemption). Auth is
+    the first-resolved dependency at all 27 protected route sites: directly via dependencies=[Depends(require_api_key)]
+    or its _ws/_header_or_query variant at 4 sites (stream.router''s WebSocket wiring
+    site and the 3 browser-facing dashboard routes, each of which also carries the
+    sibling per-client admission-control dependency alongside it -- see INFRA-378),
+    and indirectly, as require_admission/require_admission_header_or_query/require_admission_ws''s
+    own chained first parameter, at the remaining 23 sites once the sibling admission-control
+    ticket (INFRA-378, TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL) replaced the
+    bare require_api_key dependency in place there. Either way the API-key check always
+    resolves before admission control runs. Keys are stored hashed-at-rest (SHA-256)
+    in RuntimeProfile.api_key_hashes (a plain str of comma-separated ''client_id:sha256hex''
+    pairs, loaded via ConfigLoader''s CLI>Env>YAML>Defaults chain / RPG_API_KEY_HASHES
+    env var / --api-key-hashes CLI flag) and compared via hmac.compare_digest (never
+    ==). stream.router''s 3 WebSocket routes use a dedicated require_api_key_ws dependency
+    that raises WebSocketException instead of HTTPException, since FastAPI''s websocket
+    dependency resolution (fastapi/routing.py get_websocket_app) runs before websocket.accept()
+    and only WebSocketException is safely converted to a clean websocket.close() by
+    Starlette''s ExceptionMiddleware. The 3 browser-facing dashboard routes (/api/v1/observability/ui
+    and its 2 redirects) and the 3 WebSocket routes additionally accept a ''key''
+    query-param as a documented, narrower-scoped auth channel (keys can appear in
+    URLs/access logs/browser history) since a plain browser fetch()/WebSocket() cannot
+    attach a custom header. The resolved ClientIdentity (frozen, hashable, with a
+    client_id string field) is a reusable identity object for the sibling per-client
+    admission-control ticket (TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL).'
   status: verified
   priority: P1
-  v2_evidence: src/api/auth.py, src/api/server.py
+  v2_evidence: src/api/auth.py, src/api/server.py, src/api/admission_control.py
   test_path: tests/api/test_api_key_auth.py::test_missing_api_key_returns_401_on_protected_route
+  divergence_note: null
+  proof_type: contract
+- id: INFRA-378
+  text: Per-client HTTP admission control (src/api/admission_control.py) extends ObservabilityMode's
+    NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary (imported from src.observability.event_recorder,
+    never modified) to the HTTP layer, keyed by the ClientIdentity INFRA-377's auth
+    mechanism resolves. A per-client in-memory token bucket (30-token capacity, 3
+    tokens/second refill) produces a 0.0-1.0+ fill_ratio signal, fed into a hysteresis
+    state machine mirroring ResourceGovernor's real escalation/recovery pattern (src/engine/governor.py
+    evaluate()/_can_recover(), NOT PhaseBudgetGovernor, which has no hysteresis of
+    its own) -- escalation is immediate, recovery requires RuntimeProfile.dwell_time_ticks
+    admission-evaluation calls plus confidence_window_ticks consecutive low-pressure
+    readings, stepping down one mode level at a time. Only SURVIVAL rejects a request
+    (HTTP 429 with a Retry-After header; WebSocket close code 1013 on stream.router's
+    3 routes) -- NORMAL/PRESSURE/DEGRADED all admit. Per-client state is bounded by
+    a lazy idle-TTL prune-on-access (1800 seconds, mirroring AlertDeduplicator.prune())
+    plus a 1000-entry max-entries LRU hard cap (mirroring CacheStrategy's dict-plus-
+    list idiom). require_admission/require_admission_header_or_query/ require_admission_ws
+    compose with require_api_key/require_api_key_header_or_query/ require_api_key_ws
+    via a Depends() parameter chain -- 23 of server.py's 27 protected route sites
+    replace the auth-only dependency in place; the 4 sites using the weaker header-or-query/WebSocket
+    auth channel (3 dashboard routes, 1 stream.router wiring site backing 3 WebSocket
+    routes) append the admission dependency alongside the original auth dependency
+    instead, to keep test_only_dashboard_and_websocket_routes_use_weaker_auth_channel's
+    top-level dependant-graph introspection passing unmodified -- see plan.md's Deviations
+    section. /health remains the sole exemption.
+  status: verified
+  priority: P1
+  v2_evidence: src/api/admission_control.py, src/api/server.py
+  test_path: tests/api/test_admission_control.py::test_first_request_from_new_client_is_admitted
   divergence_note: null
   proof_type: contract

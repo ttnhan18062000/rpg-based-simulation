@@ -36,8 +36,11 @@ engine and the HTTP layer.
   NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary
   (`docs/architecture/observability_hot_path_safety_contract.md`) to the HTTP layer, rather than
   inventing a new scheme — full proposed mode design (trigger conditions, per-mode endpoint
-  behavior, hysteresis pattern reusing `PhaseBudgetGovernor`'s threshold-crossing-with-cooldown
-  approach) is in `docs/audits/D23_architecture_resilience.md` §L.
+  behavior, hysteresis pattern reusing `ResourceGovernor.evaluate()`/`_can_recover()`'s real
+  escalation/recovery pattern, `src/engine/governor.py` -- **not** `PhaseBudgetGovernor`, which
+  has no hysteresis of its own; the source doc's original text mis-attributed this to
+  `PhaseBudgetGovernor`, corrected here by `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`) is
+  in `docs/audits/D23_architecture_resilience.md` §L.
 - A single in-process token-bucket or sliding-window limiter in the FastAPI middleware stack is
   sufficient at current scale — explicitly not a recommendation to add Kafka, a service mesh, or
   a generic rate-limiting framework (the RabbitMQ/Kafka situation elsewhere in this same repo is
@@ -70,8 +73,16 @@ implementation complete, in the pipeline) and `TCK-20260823-HTTP-PER-CLIENT-ADMI
   classification, and `docs/parity_ledger/infrastructure.yaml` `INFRA-377` for verification
   evidence. The `ClientIdentity` object this ticket establishes is designed for the next bullet's
   admission-control layer to key off directly.
-- HTTP requests are admitted/throttled/shed according to a mode vocabulary consistent with (and
-  ideally reusing) the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL states.
+- ~~HTTP requests are admitted/throttled/shed according to a mode vocabulary consistent with (and
+  ideally reusing) the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL states.~~
+  **Resolved** (`TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`, 2026-08-23): per-client HTTP
+  admission control now gates every protected route in `src/api/server.py::create_v2_app()`,
+  extending `ObservabilityMode`'s NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary
+  (`src/observability/event_recorder.py`, imported not modified) via a per-client token-bucket
+  signal fed through a hysteresis state machine mirroring `ResourceGovernor`'s real
+  escalation/recovery pattern. Only `SURVIVAL` rejects (`429`/WebSocket `1013`); `/health` remains
+  the sole exemption. See `docs/architecture/http_admission_control.md` for the full mechanism and
+  `docs/parity_ledger/infrastructure.yaml` `INFRA-378` for verification evidence.
 
 ## References
 

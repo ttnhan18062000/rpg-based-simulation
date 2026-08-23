@@ -11,6 +11,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from src.api.auth import (
     configure_api_keys, require_api_key, require_api_key_header_or_query, require_api_key_ws,
 )
+from src.api.admission_control import (
+    configure_admission_control, require_admission,
+    require_admission_header_or_query, require_admission_ws,
+)
 from src.api.dependencies import (
     set_engine_manager, get_engine_manager,
     set_quality_hub, set_quality_persistence,
@@ -24,6 +28,7 @@ logger = logging.getLogger(__name__)
 def create_v2_app(profile: RuntimeProfile) -> FastAPI:
     """Build and return the V2 FastAPI application."""
     configure_api_keys(profile)
+    configure_admission_control(profile)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -87,39 +92,39 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=512)
 
     from src.api.ws import stream
-    app.include_router(stream.router, prefix="/api/v1", dependencies=[Depends(require_api_key_ws)])
+    app.include_router(stream.router, prefix="/api/v1", dependencies=[Depends(require_api_key_ws), Depends(require_admission_ws)])
 
     from src.api.routes import history
-    app.include_router(history.router, prefix="/api/v1", dependencies=[Depends(require_api_key)])
+    app.include_router(history.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.api.routes import search
-    app.include_router(search.router, prefix="/api/v1", dependencies=[Depends(require_api_key)])
+    app.include_router(search.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.api.routes import behavior
-    app.include_router(behavior.router, prefix="/api/v1", dependencies=[Depends(require_api_key)])
+    app.include_router(behavior.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.api.routes import decisions
-    app.include_router(decisions.router, prefix="/api/v1", dependencies=[Depends(require_api_key)])
+    app.include_router(decisions.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.api.routes import scenarios
-    app.include_router(scenarios.router, prefix="/api/v1", dependencies=[Depends(require_api_key)])
+    app.include_router(scenarios.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.api.routes import campaigns
-    app.include_router(campaigns.router, prefix="/api/v1", dependencies=[Depends(require_api_key)])
+    app.include_router(campaigns.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.api.routes import chronicle
-    app.include_router(chronicle.router, prefix="/api/v1", dependencies=[Depends(require_api_key)])
+    app.include_router(chronicle.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.api.routes import economy
-    app.include_router(economy.router, prefix="/api/v1", dependencies=[Depends(require_api_key)])
+    app.include_router(economy.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.simulation_quality.api import routes as quality_routes
-    app.include_router(quality_routes.router, prefix="/api/v1", dependencies=[Depends(require_api_key)])
+    app.include_router(quality_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
     from fastapi import Response
 
-    @app.get("/metrics", dependencies=[Depends(require_api_key)])
+    @app.get("/metrics", dependencies=[Depends(require_admission)])
     async def get_metrics(manager: V2EngineManager = Depends(get_engine_manager)):
         """Expose Prometheus text format metrics from V2EngineManager."""
         try:
@@ -135,7 +140,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         status_code = 503 if payload["status"] == "unhealthy" else 200
         return JSONResponse(content=payload, status_code=status_code)
 
-    @app.get("/api/v1/observability/live/status", dependencies=[Depends(require_api_key)])
+    @app.get("/api/v1/observability/live/status", dependencies=[Depends(require_admission)])
     async def get_live_status():
         try:
             manager = get_engine_manager()
@@ -145,7 +150,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         from src.observability.live.snapshot_provider import LiveSnapshotProvider
         return LiveSnapshotProvider.get_status(manager)
 
-    @app.get("/api/v1/observability/live/snapshot", dependencies=[Depends(require_api_key)])
+    @app.get("/api/v1/observability/live/snapshot", dependencies=[Depends(require_admission)])
     async def get_live_snapshot():
         try:
             manager = get_engine_manager()
@@ -155,7 +160,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         from src.observability.live.snapshot_provider import LiveSnapshotProvider
         return LiveSnapshotProvider.get_snapshot(manager)
 
-    @app.get("/api/v1/observability/live/entities/{entity_id}", dependencies=[Depends(require_api_key)])
+    @app.get("/api/v1/observability/live/entities/{entity_id}", dependencies=[Depends(require_admission)])
     async def inspect_live_entity(entity_id: int, timeline_limit: int = 20):
         try:
             manager = get_engine_manager()
@@ -169,14 +174,14 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
             raise HTTPException(status_code=404, detail=f"Entity {entity_id} not found or engine idle")
         return snapshot
 
-    @app.get("/api/v1/state", response_model=Dict[str, Any], dependencies=[Depends(require_api_key)])
+    @app.get("/api/v1/state", response_model=Dict[str, Any], dependencies=[Depends(require_admission)])
     async def get_state(manager: V2EngineManager = Depends(get_engine_manager)):
         state = manager.get_state()
         if not state:
             return {"error": "State not available"}
         return state
 
-    @app.get("/api/v1/inspect", response_model=Dict[str, Any], dependencies=[Depends(require_api_key)])
+    @app.get("/api/v1/inspect", response_model=Dict[str, Any], dependencies=[Depends(require_admission)])
     async def inspect_state(manager: V2EngineManager = Depends(get_engine_manager)):
         """Complete state view (Deprecated: Use granular endpoints for large worlds)."""
         snapshot = manager.get_full_snapshot()
@@ -184,7 +189,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
             return {"error": "State not available"}
         return snapshot
 
-    @app.get("/api/v1/entities", response_model=Dict[str, Any], dependencies=[Depends(require_api_key)])
+    @app.get("/api/v1/entities", response_model=Dict[str, Any], dependencies=[Depends(require_admission)])
     async def get_entities(
         offset: int = 0, 
         limit: int = 100, 
@@ -193,7 +198,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         """Paged entity retrieval."""
         return manager.get_entities_paged(offset, limit)
 
-    @app.get("/api/v1/entities/{entity_id}", response_model=Optional[Dict[str, Any]], dependencies=[Depends(require_api_key)])
+    @app.get("/api/v1/entities/{entity_id}", response_model=Optional[Dict[str, Any]], dependencies=[Depends(require_admission)])
     async def get_entity(
         entity_id: int, 
         manager: V2EngineManager = Depends(get_engine_manager)
@@ -204,17 +209,17 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
             return {"error": f"Entity {entity_id} not found"}
         return entity
 
-    @app.post("/api/v1/control/pause", response_model=Dict[str, Any], dependencies=[Depends(require_api_key)])
+    @app.post("/api/v1/control/pause", response_model=Dict[str, Any], dependencies=[Depends(require_admission)])
     async def pause_sim(manager: V2EngineManager = Depends(get_engine_manager)):
         manager.pause()
         return {"status": "paused"}
 
-    @app.post("/api/v1/control/resume", response_model=Dict[str, Any], dependencies=[Depends(require_api_key)])
+    @app.post("/api/v1/control/resume", response_model=Dict[str, Any], dependencies=[Depends(require_admission)])
     async def resume_sim(manager: V2EngineManager = Depends(get_engine_manager)):
         manager.resume()
         return {"status": "resumed"}
 
-    @app.post("/api/v1/test/publish_event", response_model=Dict[str, Any], dependencies=[Depends(require_api_key)])
+    @app.post("/api/v1/test/publish_event", response_model=Dict[str, Any], dependencies=[Depends(require_admission)])
     async def publish_test_event(event_data: dict):
         from src.observability.events import SimulationEvent
         from src.observability.live.event_publisher import LiveEventPublisher
@@ -236,7 +241,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         LiveEventPublisher.get_instance().publish(event)
         return {"status": "published"}
 
-    @app.get("/api/v1/observability/live/health", response_model=Dict[str, Any], dependencies=[Depends(require_api_key)])
+    @app.get("/api/v1/observability/live/health", response_model=Dict[str, Any], dependencies=[Depends(require_admission)])
     async def get_live_health():
         try:
             manager = get_engine_manager()
@@ -247,13 +252,13 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         counter = LiveAnomalyCounter.get_instance()
         return counter.calculate_health(manager)
 
-    @app.get("/api/v1/observability/live/stream-health", response_model=Dict[str, Any], dependencies=[Depends(require_api_key)])
+    @app.get("/api/v1/observability/live/stream-health", response_model=Dict[str, Any], dependencies=[Depends(require_admission)])
     async def get_stream_health():
         from src.observability.stream.factory import get_event_stream_adapter
         adapter = get_event_stream_adapter()
         return adapter.health()
 
-    @app.get("/api/v1/observability/history/runs/{run_id}/report", dependencies=[Depends(require_api_key)])
+    @app.get("/api/v1/observability/history/runs/{run_id}/report", dependencies=[Depends(require_admission)])
     async def get_run_report(run_id: str):
         """Helper endpoint to dynamically retrieve compile run report markdown."""
         try:
@@ -277,7 +282,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
             from fastapi import Response
             return Response(content=f"# Error\n\nFailed to load run report: {e}", media_type="text/markdown")
 
-    @app.get("/api/v1/observability/ui", response_class=HTMLResponse, dependencies=[Depends(require_api_key_header_or_query)])
+    @app.get("/api/v1/observability/ui", response_class=HTMLResponse, dependencies=[Depends(require_api_key_header_or_query), Depends(require_admission_header_or_query)])
     async def get_observability_ui():
         html_content = """<!DOCTYPE html>
 <html lang="en">
@@ -2372,11 +2377,11 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
 """
         return HTMLResponse(content=html_content, status_code=200)
 
-    @app.get("/observability/ui", dependencies=[Depends(require_api_key_header_or_query)])
+    @app.get("/observability/ui", dependencies=[Depends(require_api_key_header_or_query), Depends(require_admission_header_or_query)])
     async def redirect_ui():
         return RedirectResponse(url="/api/v1/observability/ui")
 
-    @app.get("/api/v1/observability/live/ui", dependencies=[Depends(require_api_key_header_or_query)])
+    @app.get("/api/v1/observability/live/ui", dependencies=[Depends(require_api_key_header_or_query), Depends(require_admission_header_or_query)])
     async def redirect_live_ui():
         return RedirectResponse(url="/api/v1/observability/ui")
 
