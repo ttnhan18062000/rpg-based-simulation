@@ -1,8 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
+maturity: shipped
+archived: 2026-08-23
 tags: [architecture, testing]
 ---
 

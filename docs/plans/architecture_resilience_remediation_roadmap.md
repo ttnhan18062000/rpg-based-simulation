@@ -46,7 +46,7 @@ multi-ticket-shaped). No ticket was removed.
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/archive/error_handling_hygiene_epic.md` | standard | **Resolved** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/archive/determinism_verification_gap_epic.md` | standard | **Resolved** |
 | J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/archive/codebase_navigability_hygiene_epic.md` | epic | **Resolved** (2026-08-20 — both extracted sibling tickets reached `tickets/done/`) |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open (unblocked — prerequisite Epic G done; all 4 items resolved/extracted; awaits final child ticket `TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR` reaching `tickets/done/`) |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/archive/codebase_health_observatory_tooling_epic.md` | epic | **Resolved** (2026-08-23 — all 4 extracted sibling tickets reached `tickets/done/`) |
 
 **(2026-08-19)** Three new tickets extend this tree, plus one item resolved without a ticket:
 - `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING` — Epic J's item 3 (domains test-dir placement),
@@ -336,17 +336,20 @@ unblocked, not just theoretically scoped.
   metric snapshots (append-only file, same pattern as `agent-monitoring/runs.jsonl`) + a
   multi-dimension scorecard (trend arrows, not a single score). Built
   `tools/codebase_health_snapshot.py` + `make codebase-health-snapshot`/`make codebase-health-scorecard`;
-  full detail in `docs/plans/codebase_health_observatory_tooling_epic.md`'s own Resolved note and
-  `docs/agent-monitoring/codebase_health_history_schema.md`.
+  full detail in `docs/plans/archive/codebase_health_observatory_tooling_epic.md`'s own Resolved
+  note and `docs/agent-monitoring/codebase_health_history_schema.md`.
 - **(2026-08-23) Resolved via `TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR`.** PR/AI change-impact
   report generator, built specifically on top of the Phase 3 impact command
   (`tools/code_health_impact.py::build_impact_report()`), not the Phase 4 snapshot-history
   mechanism — the investigation found no real per-path join key between a single-path impact
   report and the snapshot mechanism's repo-wide aggregates. Built `tools/pr_impact_report.py` +
   `make codebase-health-pr-impact`; full detail in
-  `docs/plans/codebase_health_observatory_tooling_epic.md`'s own Resolved note for this item. All
-  4 of Epic K's original items now have a resolution; the epic's own status line above stays
-  "open" only until this last child ticket reaches `tickets/done/`.
+  `docs/plans/archive/codebase_health_observatory_tooling_epic.md`'s own Resolved note for this
+  item.
+
+All 4 original items now resolved or extracted; this epic has no remaining unscoped work of its
+own. **Closed 2026-08-23** — all 4 extracted sibling tickets reached `tickets/done/`, satisfying
+`TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`'s own Acceptance Criteria gate.
 
 *Evidence: D24 §J, §L, §M Phase 3-4.*
 

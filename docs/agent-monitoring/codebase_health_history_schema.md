@@ -123,7 +123,7 @@ records — 11 scalar dimensions get a Δ + `↑`/`↓`/`→` arrow, the registr
 fold renders `registry_size_lines` only, and `unused_core_dependencies`
 renders as a raw value/count. There is no aggregate/combined score anywhere
 in the scorecard's structured output or printed text — see
-`docs/plans/codebase_health_observatory_tooling_epic.md`'s "Out of scope"
+`docs/plans/archive/codebase_health_observatory_tooling_epic.md`'s "Out of scope"
 bullet and the source audit
 (`docs/audits/D24_codebase_health_observatory.md` §J/§M) this decision comes
 from.
