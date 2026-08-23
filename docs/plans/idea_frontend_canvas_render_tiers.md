@@ -120,6 +120,16 @@ technical problem (temporal/animation, not a static-draw-call question) from ico
 
 ## Relationship to Planned Tickets
 
+- **`TCK-20260821-EPIC-LIVE-MAP-RECONNECTION` (M1 of `docs/plans/live_map_scaling_roadmap.md`) is a hard
+  prerequisite this idea was missing an explicit note on.** Confirmed by reading that epic directly: it
+  explicitly keeps `GameCanvas.tsx`/`useCanvas.ts` untouched (data-layer reconnection only —
+  `useSimulation.ts` and backend routes/broadcast) and, as of 2026-08-23, is still `OPEN` in
+  `tickets/todos/`, not started. Until M1 ships, `GameCanvas.tsx` renders nothing live — there is no real
+  entity/building data flowing to apply any render tier to yet. This idea is not blocked in the sense of
+  needing M1's own scope changed (no conflict — M1's untouched-`GameCanvas.tsx` boundary is exactly
+  compatible with this idea living as a separate, later effort), but it is premature to sequence before M1,
+  the same "measure/ship the data path before the visual layer" ordering the HUD roadmap already applies
+  elsewhere in this repo.
 - `docs/plans/hud_delivery_roadmap.md` — explicitly does not cover `GameCanvas.tsx`; this idea fills that
   gap without proposing changes to that roadmap's own scope.
 - `docs/plans/live_map_scaling_roadmap.md` — M2 (Rendering Performance at Scale, gated on M1) is about
