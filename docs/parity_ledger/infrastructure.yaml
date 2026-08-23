@@ -11002,3 +11002,23 @@
   test_path: tests/api/test_admission_control.py::test_first_request_from_new_client_is_admitted
   divergence_note: null
   proof_type: contract
+- id: INFRA-379
+  text: 'CI job summary reporting: each of the 9 fast-lane pytest jobs in .github/workflows/test.yml
+    emits --junit-xml=reports/junit/<job-key>.xml, and a subsequent if: always() ''Job
+    summary'' step pipes tools/ci_junit_summary.py''s markdown output (pass/fail/error/skip
+    counts plus duration) into $GITHUB_STEP_SUMMARY. main() always returns 0 so the
+    summary step can never become a second failure gate independent of the pytest
+    job''s own exit code. The slow and migration-lanes jobs are deliberately left
+    untouched since neither shares the fast-lane jobs'' single pytest-line shape.
+    (TCK-20260823-CI-STEP-SUMMARY-REPORTING)
+
+    '
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: '.github/workflows/test.yml (9 fast-lane jobs: --junit-xml flag + Job
+    summary step) + tools/ci_junit_summary.py'
+  proof_type: null
+  test_path: tests/tools/test_ci_junit_summary.py + tests/static/test_ci_step_summary_reporting.py
+  divergence_note: null
+  support_boundary: null

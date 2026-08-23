@@ -45,7 +45,11 @@ jobs:
                  tests/unit/content \
                  tests/unit/content_semantics \
                  tests/unit/test_dirty_refresh.py \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-core-world.xml
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/unit-core-world.xml" "unit-core-world" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Unit: gameplay systems ────────────────────────────────────────────────
   unit-gameplay:
@@ -72,7 +76,11 @@ jobs:
                  tests/unit/systems \
                  tests/unit/actions \
                  tests/unit/ai \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-gameplay.xml
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/unit-gameplay.xml" "unit-gameplay" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Unit: infra / observability / domains ─────────────────────────────────
   unit-infra:
@@ -103,7 +111,11 @@ jobs:
                  tests/unit/tools \
                  tests/unit/test_memory_probe.py \
                  tests/unit/test_queue_worker_singleton.py \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra.xml
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/unit-infra.xml" "unit-infra" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Integration tests (excluding slow) ────────────────────────────────────
   integration:
@@ -117,7 +129,11 @@ jobs:
       - name: Run
         run: |
           pytest tests/integration \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/integration.xml
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/integration.xml" "integration" >> "$GITHUB_STEP_SUMMARY"
 
   # ── API / CLI / tools ─────────────────────────────────────────────────────
   api-tools:
@@ -136,7 +152,11 @@ jobs:
                  tests/logging \
                  tests/engine \
                  tests/observability \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-tools.xml
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/api-tools.xml" "api-tools" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Agent orchestration / codex / replay ──────────────────────────────────
   # TCK-20260817-CI-COVERAGE-GAP-16-ORPHANED-TEST-DIRS: these 12 directories (added by commit
@@ -165,7 +185,11 @@ jobs:
                  tests/agent_orchestration_codex_adapter \
                  tests/agent_replay \
                  tests/agent_replay_codex \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/agent-orchestration.xml
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/agent-orchestration.xml" "agent-orchestration" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Simulation quality (SimQ scoring module) ──────────────────────────────
   simulation-quality:
@@ -179,7 +203,11 @@ jobs:
       - name: Run
         run: |
           pytest tests/simulation_quality \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/simulation-quality.xml
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/simulation-quality.xml" "simulation-quality" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Architecture / docs / static guards ──────────────────────────────────
   arch-docs:
@@ -197,7 +225,11 @@ jobs:
                  tests/integrity \
                  tests/static \
                  tests/refactor \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/arch-docs.xml
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/arch-docs.xml" "arch-docs" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Changed-files gate (path-based skip for perf-cert-arena / migration-lanes) ──
   # TCK-20260819-CI-NARROW-PATH-FILTERED-JOBS: always runs (no if: of its own -- a
@@ -250,7 +282,11 @@ jobs:
           pytest tests/perf \
                  tests/certification \
                  tests/arena \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/perf-cert-arena.xml
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/perf-cert-arena.xml" "perf-cert-arena" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Migration lanes + expansion gate ─────────────────────────────────────
   migration-lanes:
