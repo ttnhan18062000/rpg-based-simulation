@@ -13,12 +13,18 @@ Test 4 verifies the historical fact that TCK-20260814's own commit (`59b4bede`, 
 `12f773c8`) never touched `CLAUDE.md` or `.claude/agents/*.md` — it diffs that pinned commit
 range, not the live working tree, so it cannot false-positive on unrelated uncommitted edits to
 those files made by other sessions/tickets (see
-TCK-20260823-HOTFIX-PRESCAN-DRAFT-TEST-LIVE-DIFF-FALSE-POSITIVE).
+TCK-20260823-HOTFIX-PRESCAN-DRAFT-TEST-LIVE-DIFF-FALSE-POSITIVE). It first confirms both pinned
+commits are resolvable in the current checkout and skips (rather than raising
+`subprocess.CalledProcessError`) when they are not, since a shallow CI clone
+(`actions/checkout@v4` with no `fetch-depth` override, i.e. `fetch-depth: 1`) never fetches those
+commit objects (see TCK-20260823-HOTFIX-PRESCAN-DRAFT-TEST-SHALLOW-CLONE-FALSE-POSITIVE).
 """
 from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+
+import pytest
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _DRAFT_DOC = _REPO_ROOT / "docs" / "ai" / "claude_md_prescan_mandate_relaxation_draft.md"
@@ -98,6 +104,20 @@ def test_draft_does_not_modify_claude_md_or_agent_md_files():
     # "this specific ticket didn't touch these files" guarantee should ever assert about.
     _TICKET_COMMIT = "59b4bede"
     _TICKET_COMMIT_PARENT = "12f773c8"
+
+    for sha in (_TICKET_COMMIT_PARENT, _TICKET_COMMIT):
+        check = subprocess.run(
+            ["git", "cat-file", "-e", sha],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+        )
+        if check.returncode != 0:
+            pytest.skip(
+                f"pinned commit {sha} not resolvable in this checkout (shallow clone?) -- "
+                "cannot verify historical diff here; see "
+                "TCK-20260823-HOTFIX-PRESCAN-DRAFT-TEST-SHALLOW-CLONE-FALSE-POSITIVE"
+            )
+
     result = subprocess.run(
         ["git", "diff", "--stat", f"{_TICKET_COMMIT_PARENT}..{_TICKET_COMMIT}",
          "--", "CLAUDE.md", ".claude/agents/*.md"],
