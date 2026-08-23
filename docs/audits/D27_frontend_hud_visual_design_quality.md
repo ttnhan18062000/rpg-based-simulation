@@ -80,14 +80,39 @@ abstract:
   citation verified) is named in the idea doc but no simulation has actually been executed against this
   project's real palette values yet. This is the single largest unexecuted piece of the expected checklist.
 
+### From `docs/plans/idea_frontend_canvas_render_tiers.md` (2026-08-23) — the live-canvas gap
+
+**Neither D26 nor this dimension's original scope covers the live player-facing canvas's own visual
+quality — added here as a real, previously-missing checklist item.** `D26_visual_quality_integration.md`
+(the concurrent session's real, completed audit) is explicitly server-side only — it scores the batch/QA
+renderer's geometric quality (terrain shape, entity density, connectivity) against `AuthoritativeState`,
+with zero mention of `GameCanvas.tsx` or any frontend file. This dimension's own original scope only
+reached HUD chrome (tokens, layout, panel-icon consistency), not the map canvas itself. What that later idea
+doc found, not yet audited:
+- **Zero icon/sprite rendering on the live canvas today** — confirmed by reading every draw call in
+  `GameCanvas.tsx`/`useCanvas.ts`; all `arc()`/`fillRect()`/`fillText()` primitives, one `drawImage()` for
+  the cached minimap only.
+- **Render-tier architecture is entirely unbuilt** — no measurement/current/polish tier distinction exists;
+  there's only the one "current" tier that already ships.
+- **A stale claim already corrected once** — a sibling doc (`idea_world_rendering_core.md`) asserted the
+  frontend "already has entity icons"; verified false against the real code. Worth re-checking that doc
+  itself got fixed, not just noted, once this dimension is actually run.
+- **Effects (glow/pulse/transitions)** — technique researched (cached-texture + tweening), but nothing
+  built or auditable yet.
+
 ### Not yet covered by either existing idea doc — genuinely open
 
 - **Asset consistency beyond color** — icon usage (`lucide-react`, confirmed in 10 files) was checked for
   *existence* but not for *consistency*: is the same icon used for the same concept across every panel that
   references it? Not investigated.
-- **Typography, spacing, and density conventions** — neither idea doc investigated whether font sizes,
-  spacing units, or information density follow any consistent scale across the ~9 HUD panel components.
-  A real gap in what's been checked so far, not just an omission from this summary.
+- **Typography, spacing, and density conventions — partially checked, not a clean gap.** A quick sweep
+  across all HUD components (`grep` for Tailwind text-size/spacing utility classes) found `text-xs`/`text-sm`
+  dominant (32 + 10 uses vs. 1 each of `text-lg`/`text-xl`) and spacing values clustered in Tailwind's
+  default low-numeric range — no wild arbitrary values turned up. This is a reassuring signal, not a
+  confirmed pass: it only checked *usage frequency*, not whether the scale is applied *consistently to the
+  same kind of information* across panels, and it used no verified methodology the way the WCAG-contrast
+  check did. Downgraded from "not investigated" to "spot-checked, looks reasonable, not yet rigorously
+  audited."
 - **Responsive/viewport behavior** — neither idea doc investigated what happens at different screen sizes
   beyond noting it as an open question for the simulated-interaction-testing idea. Not investigated at all
   for the *existing*, already-shipped HUD.
@@ -111,5 +136,7 @@ scoring shape prematurely.
 |---|---|
 | `docs/plans/idea_hud_quality_measurement.md` | Source of the Findability/Detection/Context-Preservation/Density-Legibility expected checklist above |
 | `docs/plans/idea_hud_color_asset_system.md` | Source of the color/palette expected checklist above, including already-confirmed findings |
+| `docs/plans/idea_frontend_canvas_render_tiers.md` | Source of the live-canvas checklist item above — the one piece of "visual audit" neither this dimension's original scope nor D26 covers |
+| `docs/audits/D26_visual_quality_integration.md` | The real, completed sibling audit for the *server-side* batch renderer's geometric quality — explicitly out of this dimension's scope, cited here only to make the boundary explicit |
 | `docs/plans/hud_delivery_roadmap.md` | The active roadmap (M1–M4) this audit dimension would eventually measure against, once M2–M4 ship real content |
 | `docs/audits/audit_dimensions.md` | The original 18-dimension audit programme's master index — this file intentionally does not add an entry there, matching the precedent already set by D19–D25, which also exist as standalone files outside that index |
