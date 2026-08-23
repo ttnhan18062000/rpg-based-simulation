@@ -111,6 +111,38 @@ TCK-YYYYMMDD-SHORT-SCOPE: Brief description of change
 
 ---
 
+## Worktree & Branch Isolation
+
+**Default: one git worktree per unit of work**, not committing into a shared directory's current
+branch. This is what lets multiple sessions (and multiple concurrent tickets within one session)
+work in parallel without stepping on each other's commits — the repo already runs this way today:
+`git worktree list` typically shows several active worktrees on different branches at once,
+alongside the main checkout, each independently on its own branch.
+
+- Prefer `EnterWorktree(name: "<unit-of-work>")` to get a fresh, isolated directory + branch off
+  `origin/<default-branch>`.
+- **Known tool limitation**: `EnterWorktree` refuses to create a *new* worktree while the session
+  is already inside one (`"Must not already be in a worktree session when creating a new
+  worktree"`), and `ExitWorktree` should not be called proactively — only when the user asks. So a
+  session already inside worktree A that picks up a second, unrelated unit of work (e.g. a
+  different ticket/feature area) cannot get a second, separate directory mid-session.
+- **Accepted fallback in that situation**: stay in the same worktree directory, but switch to a
+  fresh branch off `origin/<default-branch>` for the new unit of work (`git fetch origin
+  <default-branch> && git checkout -b <new-branch> origin/<default-branch>`). This still keeps the
+  two units of work fully isolated at the branch/commit level — separate branch, separate PR later
+  — it just shares the filesystem directory rather than getting its own. Commit and push each unit
+  of work to its own branch as usual; never mix commits from two unrelated units of work onto one
+  branch.
+- Watch for the shared-directory monitoring auto-write race when switching branches this way:
+  `agent-monitoring/tools.jsonl` is rewritten by a hook on nearly every tool call, so a plain `git
+  checkout -b` can fail with "local changes would be overwritten" if that file is dirty from the
+  immediately preceding tool call. Chain the commit and the checkout in one Bash invocation
+  (`git add agent-monitoring/tools.jsonl && git commit -m "..." && git checkout -b <branch>
+  origin/<default-branch>`) to close the race window, rather than issuing them as separate tool
+  calls.
+
+---
+
 ## Ticket Format
 
 **File name:** `TCK-YYYYMMDD-SHORT-SCOPE.md` (uppercase, hyphen-separated)

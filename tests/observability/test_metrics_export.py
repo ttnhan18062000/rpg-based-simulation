@@ -1,3 +1,5 @@
+import hashlib
+import os
 import pytest
 import time
 import subprocess
@@ -8,6 +10,10 @@ from src.api.server import create_v2_app
 from src.api.engine_manager import V2EngineManager
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.core.governance import RuntimeMode
+
+_TEST_CLIENT_ID = "metrics-integration-test-client"
+_TEST_RAW_KEY = "metrics-integration-test-key"
+_TEST_KEY_HASH = hashlib.sha256(_TEST_RAW_KEY.encode("utf-8")).hexdigest()
 
 def test_prometheus_metrics_registry_and_structure():
     """Verify that V2EngineManager creates and populates the custom metric registry correctly."""
@@ -153,14 +159,18 @@ def test_metrics_endpoint_integration():
     """Verify the /metrics API endpoint over HTTP using a background server subprocess."""
     port = 8011
     cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
-    server = subprocess.Popen(cmd)
-    
+    env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
+    server = subprocess.Popen(cmd, env=env)
+
     # Wait for server startup
     time.sleep(3)
-    
+
     try:
         # Scrape metrics over HTTP
-        resp = requests.get(f"http://127.0.0.1:{port}/metrics")
+        resp = requests.get(
+            f"http://127.0.0.1:{port}/metrics",
+            headers={"X-API-Key": _TEST_RAW_KEY},
+        )
         assert resp.status_code == 200
         assert "text/plain" in resp.headers["content-type"]
         

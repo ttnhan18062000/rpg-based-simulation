@@ -83,6 +83,8 @@ To ensure compile-time and import-time separation:
 
 **Accessors**: `observability_status() -> dict` (mode, queue_fill_ratio, events_dropped, survival_counts); `reset_mode()` for test cleanup.
 
+The HTTP layer (`src/api/admission_control.py`) is now also a consumer of this vocabulary and of `ObservabilityController`'s pure `evaluate()` function, extending it to per-client HTTP admission control (`TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`, `INFRA-378`). It does so via a **separate instance** (`_controller = ObservabilityController()`), never `EventRecorder`'s own singleton, so this contract's hot-path rules (§1-§4) continue to apply only to the engine's own `EventRecorder` usage and do not newly constrain the HTTP layer's own (non-hot-path) usage. See `docs/architecture/http_admission_control.md` for the full design.
+
 ---
 
 ## 6. Worker Lifecycle Contract
