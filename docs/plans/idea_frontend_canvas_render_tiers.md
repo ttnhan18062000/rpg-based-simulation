@@ -79,6 +79,37 @@ logic* (which tiles/entities are visible, what to composite over what) stays ide
 This is the concrete mechanism for "reuse, not triplicate": one iteration/selection layer, pluggable draw
 functions per tier.
 
+### A more fundamental gap than icons: there is no per-frame render loop at all today
+
+**Found while investigating rendering-performance testing, not originally part of this doc**: confirmed by
+reading both files directly — `GameCanvas.tsx`/`useCanvas.ts` contain zero `requestAnimationFrame` calls
+anywhere. The canvas redraws only inside React `useEffect` hooks, meaning a redraw happens only when new
+entity data arrives from the backend, not on a continuous animation loop. `TCK-20260821-LIVE-MAP-PERF-VALIDATION`'s
+own investigation independently confirms the consequence: *"entities currently snap to latest position on
+each data update, with no interpolation"* — zero `lerp`/`deltaTime`/`requestAnimationFrame` hits anywhere in
+`frontend/src/`. This is more foundational than the icon/effects gap above: it's not "icons are missing,"
+it's "the rendering model itself is redraw-on-data-arrival, not redraw-every-frame" — icons, effects, and
+smooth motion all eventually want a real per-frame loop to exist, not just their own individual draw calls.
+
+**The real, standard technique for this — entity interpolation, not invented here.** Confirmed against
+established real-time multiplayer game-networking practice (Gabriel Gambetta's widely-cited "Fast-Paced
+Multiplayer" reference, and consistent with Source engine/Photon Fusion's documented approaches): render
+slightly in the past, interpolating position between the last two received server snapshots — safe, no
+misprediction, since it only uses real received data. Extrapolation (predicting *forward* past the latest
+known state, a.k.a. dead reckoning) is a related but riskier technique, standard practice caps it around
+~0.25s of missing updates before prediction error compounds too far — relevant here only if the delta
+broadcast's actual real-world tick cadence (not yet measured) turns out slow enough that interpolation alone
+leaves visible gaps.
+
+**Why this matters at this project's actual update cadence, not asserted abstractly**: entity positions
+update once per delta broadcast, which fires on the simulation's own tick cadence
+(`TCK-20260821-WS-ENTITY-DELTA-BROADCAST`) — not once per render frame. If that cadence is meaningfully
+slower than 60fps (unmeasured; `TCK-20260821-LIVE-MAP-PERF-VALIDATION` measures frame time, not tick-to-tick
+data-arrival interval), entities would visibly snap/teleport between positions without interpolation,
+regardless of how good the icons or effects layered on top look. This is a real, concrete case for building
+the render loop (and basic position interpolation on it) as part of establishing the tier architecture
+itself, not a nice-to-have deferred indefinitely alongside effects.
+
 ### Icons don't have to cost performance — verified, not assumed
 
 The naive assumption ("primitives are cheap, images are expensive") is backwards at scale for canvas
@@ -152,6 +183,11 @@ reason to abandon dirty-region rendering discipline.
   compatible with this idea living as a separate, later effort), but it is premature to sequence before M1,
   the same "measure/ship the data path before the visual layer" ordering the HUD roadmap already applies
   elsewhere in this repo.
+- `TCK-20260821-LIVE-MAP-PERF-VALIDATION` (also M1, gated the same way) — a real, previously-independent
+  finding of this ticket's own investigation (no interpolation exists today) is what this doc's new
+  interpolation section builds on. That ticket only measures frame time/payload size and explicitly reports
+  the no-interpolation finding as a fact, not a thing it builds — this doc is where the actual proposal to
+  build interpolation now lives, not that one.
 - `docs/plans/hud_delivery_roadmap.md` — explicitly does not cover `GameCanvas.tsx`; this idea fills that
   gap without proposing changes to that roadmap's own scope.
 - `docs/plans/live_map_scaling_roadmap.md` — M2 (Rendering Performance at Scale, gated on M1) is about
@@ -173,6 +209,13 @@ reason to abandon dirty-region rendering discipline.
   (Python) and the frontend (TypeScript), or stay two independent implementations of the same simple
   flat-fill logic in two languages — a real architecture decision given the two are different runtimes,
   not resolved here.
+- The actual delta-broadcast tick cadence (how often `TCK-20260821-WS-ENTITY-DELTA-BROADCAST` fires) is
+  unmeasured — whether basic interpolation alone is sufficient, or whether extrapolation/dead-reckoning is
+  also needed to mask gaps, depends on a real number this doc doesn't have. `TCK-20260821-LIVE-MAP-PERF-VALIDATION`
+  measures render frame time, not data-arrival interval — a real, currently-unfilled measurement gap.
+- Whether interpolation belongs inside this doc's own "Current" tier (fixing a rendering-correctness gap
+  that exists regardless of icons/effects) or only in "Polish" — not decided here; the case for "Current"
+  is that snapping is arguably a bug independent of visual polish, not a missing nice-to-have.
 - Real performance measurement of pre-rendered-sprite icon rendering at this project's actual target scale
   is unexecuted — the "icons aren't necessarily slower" finding above is grounded in general canvas-
   performance research, not this project's own benchmark.
@@ -205,6 +248,12 @@ reason to abandon dirty-region rendering discipline.
 - Canvas 2D visual-effects research (glow/bloom technique surveys, canvas-layering performance guidance) —
   basis for the Effects section's cached-texture-plus-tweening technique and the "WebGL for real shader
   effects, not Canvas 2D" ceiling.
+- `TCK-20260821-LIVE-MAP-PERF-VALIDATION` — read directly; the source of the "no interpolation exists today"
+  finding this doc's new interpolation section is built on, discovered independently by that ticket's own
+  investigation, not by this doc.
+- Gabriel Gambetta's "Fast-Paced Multiplayer" (entity interpolation/extrapolation for networked games),
+  cross-checked against Source engine and Photon Fusion's documented approaches for consistency — the
+  standard, real technique basis for the interpolation/extrapolation section above.
 
 *Raised: 2026-08-23, directly following investigation into `docs/plans/idea_hud_color_asset_system.md`,
 extended per direct user request to cover canvas/map visual rendering rather than just HUD chrome and
