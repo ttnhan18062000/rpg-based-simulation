@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC
-phase: open
+phase: done
 date: 2026-08-17
 tags: [architecture, engine, observability, testing, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, engine, observability, testing, documentation]
 Codebase health & architectural resilience: investigate and prioritize two independent audits before scoping remediation epics
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 epic
@@ -286,4 +286,15 @@ None yet — staging artifacts for this ticket are in
   (amended — two new evidence pieces folded into existing scope, not duplicated)
 
 ## Completion Summary
-(pending)
+**(2026-08-23/24) Closed.** Both source audits (D23, D24) are durably preserved in `docs/audits/`,
+the remediation roadmap groups every risk item into 11 named epics, and 10 sub-epic tickets (all
+candidates except C, amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT`) were created and, as of
+this closure, all DONE: A, B, D, E, G, H, I resolved 2026-08-19; J closed independently via PR #31
+(`f500736a`, predating this session); K closed 2026-08-23 on its own branch
+(`worktree-codebase-health-observatory-tooling`, commits `4843fccd`/`6673afff`, PR #62); F closed
+2026-08-23 on a separate branch (`http-admission-control`, PR #61) after its deployment-plan gate
+fired (public internet, multi-tenant). Both PR #61 and PR #62 are merged into `main` as of this
+closure, resolving the one remaining structural blocker (a single commit history reflecting both
+epics' closures together). All 5 top-level Acceptance Criteria are satisfied. This epic ticket
+itself closes — the roadmap, preserved audits, and the 10 scoped/resolved sub-epics are the
+deliverable, per this ticket's own AC #5.
