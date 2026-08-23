@@ -70,8 +70,8 @@ doc fix from either audit has been applied yet.
 | G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | P2 | standard | **DONE** |
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | P2 | standard | **DONE** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | P3 | standard | **DONE** |
-| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic | **DONE** (row was stale — closed via PR #31, `f500736a`, well before this session's work; see `tickets/done/codebase-navigability-hygiene/`) |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | **DONE** (2026-08-23 — all 4 items resolved/extracted, epic closed; commits `4843fccd`/`6673afff` on branch `worktree-codebase-health-observatory-tooling`, not yet merged to `main` as of this writing — see Reconciliation Note below) |
+| J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | P3 | epic | **DONE** (closed via PR #31, `f500736a`, well before this session's work; row was stale here until corrected 2026-08-23 — see `tickets/done/codebase-navigability-hygiene/`) |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | P3 | epic | **DONE** (2026-08-23 — all 4 items resolved/extracted, epic closed; commits `4843fccd`/`6673afff`) |
 
 **(2026-08-18)** Audited all 10 sub-epics against this project's actual epic-tier bar ("large
 multi-ticket initiative") and found 8 of 10 had been mechanically split from the roadmap
@@ -104,15 +104,37 @@ items (impact command, historical snapshots/scorecard, PR report generator) stay
 are genuinely sequential, not independently extractable the way this session's other items turned
 out to be.
 
-**(2026-08-23)** Epic F's deployment-plan gate fired: the requester confirmed the API surface now
+**(2026-08-19, same day)** K item 2 (impact command) also extracted, into
+`TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND` — see that ticket and
+`docs/plans/codebase_health_observatory_tooling_epic.md`'s own Resolved note for detail.
+
+**(2026-08-23)** K item 3 (historical metric snapshots + per-dimension trend scorecard) resolved
+directly via `TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD` — `tools/codebase_health_snapshot.py`,
+`make codebase-health-snapshot`/`make codebase-health-scorecard`, and
+`docs/agent-monitoring/codebase_health_history_schema.md`; full detail in
+`docs/plans/codebase_health_observatory_tooling_epic.md`'s own Resolved note for this item.
+
+**(2026-08-23, same day)** K item 4 (PR/AI change-impact report generator) also resolved, via
+`TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR` — `tools/pr_impact_report.py` +
+`make codebase-health-pr-impact`, built on top of the Phase 3 impact command
+(`tools/code_health_impact.py::build_impact_report()`) per D24 §M item 11's literal wording, with
+no dependency on item 3's snapshot-history mechanism (no real per-path join key exists between
+them). All 4 of K's original items now have a resolution/extraction.
+
+**(2026-08-23, later same day) K closed.** `TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR` reached
+`tickets/done/`, confirming all 4 of K's extracted sibling tickets are done. K's own tracking
+ticket, `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`, closed and its folder moved to
+`tickets/done/codebase-health-observatory-tooling/`; its plan doc moved to
+`docs/plans/archive/codebase_health_observatory_tooling_epic.md` (the two dated entries above
+still cite the pre-move path — accurate as of when they were written, not retroactively rewritten).
+
+**(2026-08-23) Epic F's deployment-plan gate fired:** the requester confirmed the API surface now
 goes on the public internet, multi-tenant (superseding the 2026-08-19 trusted-network-only
 confirmation referenced above). This reopened F's deferred scope, reverted its tier from standard
 back to epic, and split it into 2 child tickets — `TCK-20260823-HTTP-API-KEY-AUTH` (per-client
-API-key auth, implemented, reached `tickets/done/` 2026-08-23) and
-`TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL` (per-client admission control extending
-`ObservabilityMode`'s NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary, implementation-complete but
-still mid-pipeline as of this writing). F closes once the second child ticket also reaches
-`tickets/done/`. See `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` and
+API-key auth) and `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL` (per-client admission control
+extending `ObservabilityMode`'s NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary). Both reached
+`tickets/done/` 2026-08-23. See `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` and
 `docs/plans/http_admission_control_epic.md` for full detail.
 
 **(2026-08-23, later same day) F closed.** `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`
@@ -120,28 +142,16 @@ reached `tickets/done/`, confirming both of F's extracted sibling tickets are do
 tracking ticket, `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC`, closed and its folder moved to
 `tickets/done/http-admission-control/`.
 
-**(2026-08-23, reconciliation) Full state across branches.** This ticket exists on two separate,
-unmerged branches right now, each carrying a different half of this session's own work — neither
-branch's local view was individually complete, corrected here:
-- **`http-admission-control`** (this branch): carries Epic F's own closure (commits above).
-- **`worktree-codebase-health-observatory-tooling`** (a separate branch, not yet merged to
-  `main`): carries Epic K's own closure (`TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`,
-  commits `4843fccd`/`6673afff`) — all 4 of K's items resolved/extracted, that epic closed too.
-- **J was already closed independently**, via PR #31 (`f500736a`), well before this session —
-  its "open" status in the table above was pre-existing stale documentation, unrelated to either
-  batch, corrected here on discovery.
-
-Taken together (once both branches eventually merge): **all 10 of this ticket's tracked sub-epics
-are DONE** (A, B, D, E, F, G, H, I, J, K — C never had its own epic, amended into existing work
-instead). Every candidate epic identified 2026-08-17 now has a resolution, and all 5 of this
-ticket's own top-level Acceptance Criteria are satisfied (verified/checked on this branch above,
-including AC #5, whose own condition — a decision made on which sub-epics to formalize — is now
-true for all 10, not just some). Satisfying the ACs is a separate fact from this ticket itself
-being ready to close, though: the one remaining blocker to actually moving this ticket to
-`tickets/done/` is structural, not substantive: **both branches above must be merged to `main`**
-so a single commit history reflects K's closure alongside F's — this branch alone cannot mark this
-ticket `DONE` and move it to `tickets/done/` without falsely implying K's own commits are already
-part of this branch's history, when they are not.
+**(2026-08-23, reconciliation) Merged.** K's closure and F's closure were developed independently
+on two separate branches (`worktree-codebase-health-observatory-tooling` and
+`http-admission-control`) that had diverged from `main` before either finished — J's closure
+predates both (PR #31, `f500736a`, unrelated to this session). This merge brings both branches'
+work together into a single history: **all 10 of this ticket's tracked sub-epics are now DONE**
+(A, B, D, E, F, G, H, I, J, K — C never had its own epic, amended into existing work instead).
+Every candidate epic identified 2026-08-17 now has a resolution, and all 5 of this ticket's own
+top-level Acceptance Criteria are satisfied (see checklist below, including AC #5, whose own
+condition — a decision made on which sub-epics to formalize — is now true for all 10, not just
+some).
 
 ## Out of Scope
 - Implementing any fix from either audit (RabbitMQ/Kafka removal, `/health` fix, Redis DLQ,
@@ -153,33 +163,34 @@ part of this branch's history, when they are not.
 
 ## Acceptance Criteria
 - [x] Both source audits are durably preserved under `docs/audits/` as `D23`/`D24`, since their
-      origin in `tmp/` is gitignored and would otherwise be lost. Verified 2026-08-23 (this
-      branch): `docs/audits/D23_architecture_resilience.md` and
-      `docs/audits/D24_codebase_health_observatory.md` both exist, committed.
+      origin in `tmp/` is gitignored and would otherwise be lost. Verified 2026-08-23:
+      `docs/audits/D23_architecture_resilience.md` and `docs/audits/D24_codebase_health_observatory.md`
+      both exist, committed.
 - [x] `docs/plans/architecture_resilience_remediation_roadmap.md` groups every risk item from
       both audits into a named, evidence-cited epic (A-K), each tagged with the source audit's
-      own priority tier. Verified 2026-08-23 (this branch): 11 named `### Epic <letter>` sections
-      present.
+      own priority tier. Verified 2026-08-23: 11 named `### Epic <letter>` sections present, each
+      with its own `*Evidence: ...*` citation line.
 - [x] The overlap between this roadmap's Epic C and the already-existing
       `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` ticket is explicitly documented, with the two new
       pieces of evidence (the `CLAUDE.md` "32-phase" claim, `docs/guides/simulation.md`'s
       nonexistent-file citation) identified as scope to fold into that existing ticket rather
-      than duplicate. Verified 2026-08-23 (this branch): both pieces of evidence present verbatim
-      in `tickets/done/TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT.md`.
+      than duplicate. Verified 2026-08-23: both pieces of evidence are present verbatim in
+      `tickets/done/TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT.md` (now DONE, moved out of
+      `tickets/todos/kernel-concurrency-design-review/` — the Files Changed section below cites
+      its pre-move path, accurate as of when written).
 - [x] Ten sub-epic tickets (all candidate epics except C, which was amended into existing work
       instead) are created in their own `tickets/todos/<name>/` folders, each with its own
       `docs/plans/<name>_epic.md` and staging artifacts.
 - [x] This epic remains open (not closed) until a decision is made on which sub-epic(s) to
       actually formalize into investigated child tickets via `create-tickets` — closing this
       ticket is not itself the deliverable; the roadmap, preserved audits, and the 10 scoped
-      sub-epics are. Verified 2026-08-23 (this branch): that decision has now been made and
-      executed for all 10 scoped sub-epics, not just some — the status table above shows A, B, D,
-      E, F, G, H, I, J, K all **DONE** (C was never its own epic; amended into
-      `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` instead, per AC #3 above). This AC's own condition is
-      about the *decision and formalization* being complete, which this table now shows — it is
-      explicitly not a claim that this tracking ticket itself is ready to move to `tickets/done/`;
-      see the Reconciliation Note below for the separate, still-open structural blocker on that
-      (F's and K's DONE status each live on their own unmerged branch, not yet on `main`).
+      sub-epics are. Verified 2026-08-23: that decision has now been made and executed for all 10
+      scoped sub-epics, not just some — the status table above shows A, B, D, E, F, G, H, I, J, K
+      all **DONE** (C was never its own epic; amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT`
+      instead, per AC #3 above). This AC's own condition — the decision and formalization being
+      complete — is satisfied, and per the Reconciliation Note above, the one structural blocker
+      to actually closing this tracking ticket (both branches merging into a single history) is
+      resolved by this same merge.
 
 ## Related Tickets
 - TCK-20260817-KERNEL-CONCURRENCY-DESIGN-EPIC (Epic C in the roadmap extends this epic's
@@ -202,6 +213,9 @@ part of this branch's history, when they are not.
 - TCK-20260819-STANDARD-LAB-WORKFLOWS-FILE-SPLIT (extracted from J item 1, 2026-08-19)
 - TCK-20260819-STANDARD-CODEBASE-HEALTH-BASELINE-TARGET (extracted from K item 1, 2026-08-19)
 - TCK-20260819-STANDARD-CODE-HEALTH-IMPACT-COMMAND (extracted from K item 2, 2026-08-19)
+- TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD (resolved K item 3, 2026-08-23)
+- TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR (resolved K item 4, 2026-08-23; last of K's 4
+  items — reached `tickets/done/`, closing K)
 - TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG (extracted from F item 1, 2026-08-19)
 - TCK-20260819-HOTFIX-CI-TEST-DIR-COVERAGE-CHECK (new finding from this session's test-base
   review, not from the original D23/D24 audits)

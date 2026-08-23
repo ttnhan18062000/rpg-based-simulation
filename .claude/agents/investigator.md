@@ -74,17 +74,49 @@ no doc anywhere needs to change; this is a deliberate judgment call, not a lazy 
 new logic/features/settings the same as modifications to existing behavior — a brand-new feature
 still needs a doc describing it.
 
-**Required format** (machine-parsed by `done-checker`'s static coverage check,
-`tools/gate_checks/done_checker_static.py::check_docs_to_update_coverage` —
+There are two distinct, non-interchangeable formats below. Which one to use depends on whether the
+doc genuinely must change, or was only considered and excluded — using the wrong one for the wrong
+case is a known, previously-hit false-positive trigger (see "Why the distinction matters" below).
+
+**Format 1 — a doc that MUST be updated** (machine-parsed by `done-checker`'s static coverage
+check, `tools/gate_checks/done_checker_static.py::check_docs_to_update_coverage` —
 TCK-20260802-DOC-COVERAGE-CHECK): one bullet per path, in this exact form, with the path
 backtick-wrapped and immediately following `- `:
 ```
 - `docs/mechanics/03_economic_laws.md`: one-line reason
 - `docs/parity_ledger/town_resource.yaml`: one-line reason
 ```
-If none apply, write exactly: `None.` (no bullets). Do not use any other format — a non-bullet
-paragraph or an un-backticked path will not parse and is treated as a format regression, not a
-clean "nothing required" case.
+This leading-bullet shape is reserved **exclusively** for docs that genuinely must change as part
+of this ticket. Never use it for a doc you considered and decided *not* to touch — see Format 2.
+
+**Format 2 — a doc that was considered but explicitly excluded**: prose only, with no leading
+`` - `docs/...` `` bullet. State the doc's path inline (still backtick-wrapped, since it's still
+worth naming precisely) but do not start the line with `- `. For example (real pattern, from
+`stored_artifacts/TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD/investigation.md`'s own "Docs
+Requiring Update" section):
+```
+The `docs/agent-monitoring/schema.md` doc (path: `docs/agent-monitoring/schema.md`, under
+`docs/`) is not required to change for this ticket: it documents `agent-monitoring/*.jsonl`, a
+separate file family from this ticket's new history file, and this ticket does not modify it.
+```
+
+**Why the distinction matters**: `check_docs_to_update_coverage` parses this section with
+`_DOCS_BULLET_RE = re.compile(r"^-\s+\`(docs/[^\`]+?)(?::\d+)?\`", re.MULTILINE)`. This regex only
+reads the leading backtick-wrapped path at the start of a bulleted line — it never reads the
+reasoning text that follows the colon. So if an excluded doc is written using Format 1's bullet
+shape (even with prose right after explaining it's excluded), the parser cannot distinguish it from
+a doc that must change: it extracts the path, expects `git status` to later show that path
+modified, and fails with `git status shows no changes to these path(s)` when the doc was
+deliberately left untouched. This exact false positive has already been hit and manually worked
+around on `TCK-20260821-VISUAL-VARIANTS-METRIC` (caught reactively at Verify, cost a
+BLOCKED→fix→re-verify round trip) and `TCK-20260821-VISUAL-GRADE-SCORER` (caught pre-emptively
+before Verify). Using Format 2's prose-only shape for excluded docs keeps them invisible to the
+regex entirely, so only genuinely-required paths are ever machine-parsed.
+
+If no doc requires updating at all (Format 1 has zero entries), write exactly: `None.` (no
+bullets). Do not invent a third format — a required doc written as a non-bullet paragraph, or an
+un-backticked path, will not parse and is treated as a format regression, not a clean "nothing
+required" case.
 
 ## Parity Ledger Overlap
 List entry IDs and current status from docs/parity_ledger/ that this work touches.
