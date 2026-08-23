@@ -181,6 +181,11 @@ design reused as-is). Full trace: `docs/plans/live_map_reconnection_epic.md`.
   (~75KB post-optimization) this epic's own performance criterion is grounded against
 - `tickets/done/infra-04-realtime-state-streaming.md` — the historical ticket whose incomplete step 4 is
   this epic's root cause
+- `docs/plans/idea_frontend_canvas_render_tiers.md` — a later idea doc (2026-08-23) proposing render-tier/
+  icon work for `GameCanvas.tsx`/`useCanvas.ts`, explicitly noting this epic as a hard prerequisite (no real
+  entity/building data flows to those files until this epic ships) — not a dependency of this epic, purely
+  a forward-pointer for whoever picks this epic up, since that idea didn't exist when this ticket was
+  originally scoped
 
 ## Related Stored Artifacts
 None.

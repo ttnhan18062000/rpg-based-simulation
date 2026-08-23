@@ -50,6 +50,11 @@ Add basic text search/filter to EntityList.tsx, and replace the hardcoded hero-f
 - TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION
 - TCK-20260822-EPIC-HUD-CORE-PANEL-WIRING
 - TCK-20260822-EPIC-HUD-CONTENT-POLISH-MEASUREMENT
+- TCK-20260821-REWIRE-USESIMULATION-WEBSOCKET — a soft-recommended sequencing dependency (not this ticket's
+  own epic, a separate one): that ticket rewrites `useSimulation.ts`'s internal data shape wholesale. This
+  ticket's volatility-ranking diff logic reads from `useSimulation.ts`'s entity data, so implementing it
+  against the pre-rewire shape risks rework once that ticket lands — see this ticket's own Assumptions
+  below.
 
 ## Related Docs
 None.
@@ -70,6 +75,12 @@ None.
 - Wiring a "currently-visible" signal is real cross-component plumbing (the fog-of-war concept lives in useCanvas.ts/GameCanvas.tsx, not threaded into EntityList today) and may be scoped out of this ticket.
 - No EntityList-specific test file exists yet; one must be added, not assumed to already exist.
 - Soft sequencing note: TCK-20260822-DURABLE-SELECTION-STATE (a sibling child ticket of the same parent epic) introduces a durable state slot for filter/search query. If that ticket is implemented first, this ticket's search-query state should plug into it directly instead of using local component state; not a hard blocking dependency, just a recommended order if both are picked up close together.
+- **Cross-epic file collision (2026-08-23)**, same finding as `TCK-20260822-DURABLE-SELECTION-STATE`'s own
+  Assumptions section: this ticket's own volatility-ranking diff logic reads `useSimulation.ts`'s entity
+  data (per the "client-side diffing... via useRef in EntityList/useSimulation" assumption above), and
+  `TCK-20260821-REWIRE-USESIMULATION-WEBSOCKET` (a separate epic) rewrites that hook's internal data shape
+  wholesale. Recommended: implement this ticket's diffing logic against the post-rewire shape, not the
+  current pre-rewire one, to avoid redoing the work.
 
 ## Implementation Notes
 
