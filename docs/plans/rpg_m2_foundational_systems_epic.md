@@ -43,7 +43,9 @@ validation step ahead of the highest-risk content item (see the roadmap's Sequen
    `intelligence_tier` (the qualitative `attribute_tendencies.intelligence` field) is a false friend —
    goblin/orc are `medium_low` intelligence but are clearly intended as high-tier per this idea's own
    framing. Use `natural_traits` containing `tool_user` instead (see Content & Balance Requirements in the
-   atlas for the full 13-race breakdown).
+   atlas for the full 13-race breakdown). **World-generation note (M8):** `settlement_capacity` doesn't
+   exist anywhere at the schema level yet — this ticket needs to add the actual field, not extend one that
+   already exists. Read `docs/plans/rpg_m8_world_corpus_generation_epic.md` before scoping this ticket.
 3. **Idea 35 — City ownership wiring.** Confirmed wider blast radius than originally scoped: 8 real
    consumer files, not one implementation-time call.
 4. **Idea 36 — Clan as Faction's shape.** `FactionState`'s shape reused almost verbatim.

@@ -103,6 +103,19 @@ Scorecard's Pillar Reach axis (expanded from a count into named pillars first) a
 gets missed. Deliberately sequenced as one follow-up epic after the rest of the roadmap ships, not
 distributed as per-milestone acceptance criteria — see that epic's own Problem statement for why.
 
+### M8 — World Corpus, Generation & Modules (informs M1-M6, doesn't block them)
+
+**Tracking epic**: `TCK-20260823-EPIC-RPG-M8-WORLD-CORPUS` (not yet created, scope-only — see
+`docs/plans/rpg_m8_world_corpus_generation_epic.md`).
+
+Also not a new RPG feature — checks whether the real world-generation/compilation pipeline and the 6 named
+test-corpus profiles actually have a place for each idea's content to enter a running world. Found two real
+scope corrections (ideas 45 and 14 both need new schema/compiler work, deeper than originally scoped),
+confirmed three corpus profiles already have what idea 44 needs with zero new authoring, and confirmed
+ideas 39/51 and 32 can't be corpus-tested at all until their own upstream mechanisms exist. Unlike M7, this
+one's findings feed directly back into M2/M3/M4's own scope — read it before, not after, those epics start
+their affected tickets.
+
 ## Sequencing rules
 
 - **M1 has no gate — it's ready today.** Nothing else in this roadmap blocks it, and nothing in M1 blocks on
@@ -117,6 +130,10 @@ distributed as per-milestone acceptance criteria — see that epic's own Problem
 - **M7 gates on M1 through M6 as a whole, not on any single one of them.** It's a consolidated audit, not a
   feature — starting it early against a partial roadmap would mean re-running the same audit later against
   the rest, defeating the point of doing it once.
+- **M8 is different from M7: read it early, not late.** It has no hard gate of its own, but its findings
+  change M2's idea 14 ticket and M4's idea 45 ticket before they start, not after — treat M8 as a
+  prerequisite read for whoever scopes those two specific tickets, even though the epic itself can run in
+  parallel with anything.
 - **Detailed child-ticket breakdown beyond M1 is deliberately not done yet.** M2 through M6 are scope-only
   epics for now — this roadmap and the sibling epic tickets exist to capture milestone structure and
   sequencing intent, not to fully plan implementation ahead of M1 shipping and M2's flag-governance

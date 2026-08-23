@@ -43,7 +43,11 @@ Build order within the milestone, confirmed by Phase Placement & Testing Strateg
    numeric anchor already coded (`migration_threshold: float = 0.7` in `demographics/cohort.py`) — the best
    candidate in the whole roadmap for the real (never-yet-used) metamorphic balance lab once the
    births-don't-feed-back-into-the-gating-signal gap this card names is closed. Birth cooldowns and the
-   genetic-inheritance multiplier range have no comparable existing anchor.
+   genetic-inheritance multiplier range have no comparable existing anchor. **World-generation note (M8):**
+   this idea cannot be corpus-tested in any real profile today, for two stacked reasons — `population_cohorts`
+   is unseeded everywhere (same root cause as M2's idea 43), and no reproduction/capacity-gating mechanism
+   exists in code at all. Sequence any real corpus-testing work for this idea strictly after idea 43 (M2)
+   and this ticket itself both ship — see `docs/plans/rpg_m8_world_corpus_generation_epic.md`.
 5. **Idea 38 — Close the reproduction population-pressure feedback loop.** Depends on idea 32 landing
    first; the signal it nudges doesn't exist without M2's idea 43 either.
 

@@ -119,8 +119,9 @@ Idea 16 (Ranger doctrine) needs no ticket — already answered by a separate, al
 
 ## Out of Scope
 
-- Any idea numbered 2, 4-6, 8, 11, 14, 23, 27, 28, 30-65 — all belong to Milestones 2 through 6, tracked in
-  their own sibling epics per `docs/plans/rpg_design_roadmap.md`.
+- Any idea numbered 2, 4-6, 8, 11, 14, 23, 27, 28, 30-41, 43-65 — all belong to Milestones 2 through 6,
+  tracked in their own sibling epics per `docs/plans/rpg_design_roadmap.md`. (Idea 42 is in M1's own scope,
+  section D above — deliberately excluded from this range, not an oversight.)
 - Actually flipping any of the 8 flags idea 9 evaluates — that's the outcome of item 1's ticket, not a
   decision made in this planning doc.
 - Fixing `MotivationModel.values`/`ValuePreferenceProfile`'s dead-on-arrival state (item 18's real

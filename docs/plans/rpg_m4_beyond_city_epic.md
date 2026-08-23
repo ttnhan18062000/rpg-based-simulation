@@ -30,6 +30,12 @@ in the roadmap: Shared Implementation Opportunities found real consolidation acr
    not during. 45/46's Camp features (totem, stockpile, palisade) reuse real, already-tuned constants
    (`RAID_MATURITY_THRESHOLD`, spawn cap, raid cost) for the mechanism but still need new, unanchored
    magnitudes for the features themselves — see Content & Balance Requirements in the atlas.
+   **World-generation note (M8):** idea 45's "seed CampState" framing understates the real gap —
+   `CampState` is never constructed in production anywhere, and there's no schema field or compiler step
+   for it at all. This ticket needs a new `WorldModuleSpec` field plus a new `WorldCompiler` step, not a
+   data-seed call into an existing pattern. Read `docs/plans/rpg_m8_world_corpus_generation_epic.md` before
+   scoping. Good news from the same epic: 3 of the 6 real test-corpus profiles already have City+hostile-camp
+   content coexisting, so testing this needs zero new corpus authoring once the mechanism exists.
 2. **Idea 47 — Lair.** Confirmed a genuinely separate ticket, correctly NOT a Camp variant — but its real
    precedent is Boss's entity-anchor idempotency pattern (`boss_region_id`), not Camp's shape, a correction
    from the original card.
