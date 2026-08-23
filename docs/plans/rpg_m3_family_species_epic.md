@@ -57,6 +57,12 @@ Build order within the milestone, confirmed by Phase Placement & Testing Strateg
 - All 5 ideas exist as child tickets in the build order above.
 - Idea 32's population-growth risk (explicitly named in its own atlas card and independently in Cross-
   Cutting Risk) has an owner and a concrete mitigation before this milestone ships, not just a flag.
+- **The individual-births-don't-feed-back-into-the-aggregate-signal gap (idea 32's own card, idea 38) is
+  closed and a real metamorphic-lab result exists** for "increasing population-pressure threshold should not
+  increase birth rate" before this milestone is considered balanced, not just functionally correct. Reuses
+  the M2 pilot's proven lab setup rather than validating the tool a second time.
+- Idea 34's archetype-choice weighting has a metamorphic check in place against the convergence-risk bug
+  class its own card names — not just a manual spot-check at review time.
 
 ## Open Questions
 

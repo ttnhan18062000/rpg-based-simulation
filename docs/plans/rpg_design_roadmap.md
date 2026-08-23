@@ -107,6 +107,16 @@ blocker with parts of M4 and M5.
   epics for now — this roadmap and the sibling epic tickets exist to capture milestone structure and
   sequencing intent, not to fully plan implementation ahead of M1 shipping and M2's flag-governance
   precedent being set.
+- **Content/balance validation is a real gate, not an afterthought, wherever Content & Balance Requirements
+  flags an unanchored numeric decision.** The atlas's own content-risk table names idea 37 (M2, race-relations
+  hostility matrix) as the single highest-risk unanchored number in the entire roadmap. Before idea 37's
+  ticket is considered done, it must be run through `src/lab/metamorphic.py`'s real metamorphic-rule engine,
+  not just pass a correctness test. **That tool has never been run against real content — zero recorded
+  sessions in `data/lab_sessions/`.** Do not let idea 37 be the first real-world exercise of an unproven
+  tool: M2's scope should include a small, low-stakes metamorphic-lab pilot (e.g. against an already-live,
+  already-tuned numeric surface like `CampService`'s maturity constants) *before* idea 37's matrix is
+  validated through it, so a tooling failure and a bad balance decision aren't discovered at the same time,
+  on the highest-risk idea in the set.
 
 ## Known open items, inherited from the atlas (not re-litigated here)
 
@@ -119,6 +129,10 @@ blocker with parts of M4 and M5.
   discoveries later.
 - The Design Merit Scorecard's own single-pass calibration (all 65 ideas scored in one batch) is unverified
   without an independent second read of a sample — noted, not blocking any milestone above.
+- The real race roster is 13 entries (`data/content/living/races.yaml`), and `RaceDefinition` has no numeric
+  field anywhere — only qualitative strings. Any idea introducing a new per-race numeric constant (idea 32's
+  cooldowns, idea 37's matrix) is extending a schema that has never carried a number before, not following
+  an established numeric-content pattern.
 
 ## References
 

@@ -25,8 +25,15 @@ Building this milestone out of order means every downstream milestone redoes ass
 
 ## Scope (not yet broken into child tickets)
 
-Highest-leverage first, per the atlas's own Build Order in-degree ranking:
+Highest-leverage first, per the atlas's own Build Order in-degree ranking — with one explicit tooling-
+validation step ahead of the highest-risk content item (see the roadmap's Sequencing rules):
 
+0. **Metamorphic-lab pilot (new, not an atlas idea — a process step).** `src/lab/metamorphic.py` is real
+   and CI-tested but has never been run against real content (`data/lab_sessions/` is empty). Before idea
+   37's race-relations matrix is validated through it, run one small, low-stakes pilot rule against an
+   already-live, already-tuned numeric surface (e.g. `CampService`'s maturity/spawn/raid constants) to
+   confirm the tool actually works end-to-end on this codebase's real data shapes. This is a tooling-trust
+   step, not a design decision — keep it small and throwaway, not a general lab-adoption ticket.
 1. **Idea 43 — Seed `population_cohorts` at world-compile time.** Cited by 5 later ideas; also the single
    highest-uncertainty item in the whole roadmap per Cross-Cutting Risk — the guard it activates has never
    fired against real data in any compiled world.
@@ -68,6 +75,13 @@ Highest-leverage first, per the atlas's own Build Order in-degree ranking:
 - All 16 ideas exist as child tickets, each citing this epic and referencing whichever Cross-Cutting Risk /
   Shared Implementation Opportunities finding corrected or grounded it.
 - Idea 43 and idea 14 land before any M3/M4/M5/M6 ticket that depends on them starts.
+- **The metamorphic-lab pilot (item 0) lands and passes before idea 37's ticket is started, not just before
+  it's merged.** Idea 37 is not considered done on a correctness test alone — it needs a real metamorphic-
+  rule result (e.g. "increasing a pair's hostility value does not decrease engagement rate between that
+  pair") checked into its own ticket, not deferred to a future balance pass.
+- Idea 14's `intelligence_tier` assignment uses the `tool_user`-trait anchor, not the qualitative
+  intelligence attribute — verifiable directly against the 13-race roster, not left to individual judgment
+  at ticket time.
 
 ## Open Questions
 
