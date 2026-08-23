@@ -1,9 +1,9 @@
 ---
-status: idea
+status: historical
 layer: world
 authority: P2
 audience: developer
-maturity: idea
+maturity: shipped
 date: 2026-07-16
 tags: [idea, rendering, world-generation, simulation-quality, visualization, agent-review, determinism]
 ---
@@ -11,6 +11,8 @@ tags: [idea, rendering, world-generation, simulation-quality, visualization, age
 # Idea: Visual/Geometric Quality Validation — a Consumer of the World Rendering Core
 
 > **Maturity: IDEA** — Not scheduled. Standalone from the SimQ roadmap; see `experiments/spatial_rendering/PROPOSAL.md` for the full investigation trail and prototype code this doc distills. **This is one major use case built on top of `idea_world_rendering_core.md`** (same folder) — it is not the whole of that vision. See the core doc for the rendering mechanism itself (architecture options, real technical grounding, benchmarked performance, drawing-tool options); this doc covers only the validation-specific scope: what "good" and "bad" mean geometrically, how it's scored, and how an agent reviews it.
+
+> **Status update (2026-08-23) — SHIPPED, superseded by the real docs below.** The scope this idea describes — four metric families (shape, density, variants, connectivity), an S/A/B/C/D/F scoring ladder reused from SimQ, and a Tier 0/1/2 agent-review pipeline — is now real, implemented, and tested as `src/rendering/` (built across the `world-rendering-core` batch, `TCK-20260821-WORLD-RENDER-CORE` through `TCK-20260821-VISUAL-QUALITY-DOCS`, all `status: DONE`). The authoritative reference for the real system is now `docs/visual_quality/scoring_contract.md` (the contract), `docs/visual_quality/current_state.md` (calibration status — the metric/grading *mechanism* is complete, but the healthy-band *threshold values* in `config/rendering/grade_thresholds.toml` remain illustrative/uncalibrated, exactly as this idea's own Open Questions section below anticipated), and `docs/visual_quality/audit_workflow.md` (the real entry points); see also `docs/audits/D26_visual_quality_integration.md` for the first audit pass. This doc's own content below is left in place as the historical record that motivated the real system — it is not rewritten, and it is not moved to `docs/plans/archive/`, since that migration is a separate, whole-batch decision and not made here (compare `docs/plans/archive/idea_placement_legality_check.md`, an already-archived sibling idea doc from this same shipped-idea class).
 
 ---
 

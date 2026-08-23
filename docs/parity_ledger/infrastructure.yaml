@@ -10847,3 +10847,99 @@
   test_path: tests/unit/rendering/test_connectivity.py::test_dungeon_crawl_matches_documented_evidence
   divergence_note: null
   proof_type: parity
+- id: INFRA-371
+  text: Entity nearest-neighbor coefficient of variation (population standard deviation
+    divided by mean of per-entity nearest Euclidean distance, active entities only)
+    reproduces documented sandbox_world (~0.648) and dungeon_crawl (~0.678) values
+    deterministically from AuthoritativeState.entities at seed 42, tick 0.
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/density.py
+  test_path: tests/unit/rendering/test_density.py::test_dungeon_crawl_reproduces_documented_cv
+  divergence_note: null
+  proof_type: parity
+- id: INFRA-372
+  text: Connected-component-aware fill-ratio (per-terrain-type BFS labeling, tiles /
+    bounding_box_area per component) plus 90-degree rotation/repetition detection
+    (transposed-coordinate set match) reproduces documented dungeon_crawl evidence
+    (FOREST=2 components of 1,116 tiles each; CAVE=0.980, FOREST-c0/c1=1.000,
+    RUIN=1.000; FOREST component 1 is component 0 rotated 90 degrees) deterministically
+    from AuthoritativeState.terrain at seed 42, tick 0. A corpus-wide sweep across the
+    current data/worlds corpus confirms every component scoring below the 0.95
+    reference threshold is FOREST type -- the 0.95 threshold itself is uncalibrated
+    and provisional, tracked separately (TCK-20260821-VISUAL-QUALITY-CALIBRATION).
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/shape.py
+  test_path: tests/unit/rendering/test_shape.py::test_dungeon_crawl_forest_is_two_components_of_1116_tiles_each
+  divergence_note: null
+  proof_type: parity
+- id: INFRA-373
+  text: total_variation_distance(h1, h2) over normalized terrain-type-proportion
+    histograms reproduces the documented TVD(sandbox_world, dungeon_crawl) ==
+    0.23161981243456373 cross-spec anchor at seed 42 (rounds to the PROPOSAL.md-cited
+    0.2315). Same-spec/different-seed TVD is exactly 0.0 for dungeon_crawl (seeds 42 and
+    137) -- structurally seed-invariant, since none of its four composed modules
+    (ruins_mystery_quest, goblin_camp_conflict, old_mine_resource_loop,
+    scalable_bandit_camp) declare terrain_variants. sandbox_world is deliberately NOT
+    used as a same-spec-seed-invariance anchor -- its current seed-invariance is an
+    artifact of a stale resolved/world.resolved.yaml cache predating
+    wolf_den_near_forest.yaml's terrain_variants field (TCK-20260821-WOLF-DEN-NOISE-MIGRATION),
+    not a structural property of its composition -- see
+    stored_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/variants.py
+  test_path: tests/unit/rendering/test_variants.py::test_total_variation_distance_same_spec_different_seed_is_zero_for_dungeon_crawl
+  divergence_note: null
+  proof_type: parity
+- id: INFRA-374
+  text: Rendering-quality grade-band scorer assigns S/A/B/C/D/F using SimQ's exact
+    threshold values (S=2.0 A=0.5 B=0.0 C=-0.5 D=-1.0), sourced from its own config file
+    (config/rendering/grade_thresholds.toml, copied by value, not imported from
+    config/simulation_quality/), combining binary hard-rule and non-monotonic
+    trapezoidal soft-rule deltas via a plain additive sum before assignment. This
+    architecturally-independent code path is distinct from SIMQ-CALIBRATED-001 (which
+    covers SimQ's own threshold-value calibration status) and INFRA-255 (which covers
+    SimQ's own normalized_score time-division formula) -- neither entry covers this
+    module's separate grade-assignment code path.
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/grading.py
+  test_path: tests/unit/rendering/test_grading.py::test_grade_assignment_boundaries
+  divergence_note: null
+  proof_type: parity
+- id: INFRA-375
+  text: Tiered Tier 0/Tier 1/Tier 2 agent-review pipeline (src/rendering/review_pipeline.py)
+    composes grading.py's HardRuleResult/grade output into a deterministic escalation
+    decision (should_escalate) and a JSON-serializable Tier1Digest (sort_keys=True,
+    hashed for byte-identical determinism across independent runs). The annotated/
+    gridlined render (src/rendering/render_annotated.py, ported from experiments/
+    spatial_rendering/prototype/render_annotated.py) is written to disk only when
+    should_escalate returns True -- structurally enforcing that zero image exists to
+    read in the non-escalating case, rather than relying on agent tool-use discipline.
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/review_pipeline.py, src/rendering/render_annotated.py
+  test_path: tests/unit/rendering/test_review_pipeline.py::test_tier0_tier1_pipeline_writes_digest_without_writing_annotated_png_when_not_escalated
+  divergence_note: null
+  proof_type: parity
+- id: INFRA-376
+  text: tools/calibrate_rendering.py's run-integrity guard (CalibrationIntegrityError)
+    fails loud when a calibration run's WorldCompiler.compile() report contains any
+    warnings, or entity_count == 0, or region_count == 0 -- adapted from
+    calibrate_simq.py's CalibrationIntegrityError/INFRA-320 queue-drop/SURVIVAL-mode
+    guard to this script's real single-compile-call architecture (no Kernel/
+    EventRecorder queue exists in this code path; compute_trail_activity, the one
+    family half that would need one, is deferred to a future ticket -- see
+    staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/plan.md Decision 2/8). A
+    compile_health.json sidecar is written atomically before the raise, mirroring
+    calibrate_simq.py's write-before-raise ordering. This ticket's Out of Scope
+    forbids any CI-gating or decision-consumption of the calibrated numeric output
+    itself -- only this guard's own pass/fail behavior is covered by this entry.
+  status: verified
+  priority: P2
+  v2_evidence: tools/calibrate_rendering.py
+  test_path: tests/tools/test_calibrate_rendering.py::test_calibration_run_integrity_guard_fails_loud_on_corrupted_compile
+  divergence_note: null
+  proof_type: regression
