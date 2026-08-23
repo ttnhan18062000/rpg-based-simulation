@@ -91,6 +91,38 @@ ticket(s) → a calibration ticket (measured across representative workload band
 workload-band suggestion) → a grade-scorer ticket. Not proposed as tickets now — M4 stays gated on M3 per
 `docs/plans/hud_delivery_roadmap.md`'s own sequencing rules; this is the shape to draw from once it isn't.
 
+### The grade-scorer engine already has a real, shipped reference implementation to draw from
+
+`TCK-20260821-VISUAL-GRADE-SCORER` is now DONE (`src/rendering/grading.py`, merged after this doc's first
+draft) — not just a sibling ticket to point at anymore, a real, tested engine whose actual shape maps almost
+exactly onto this doc's own monotonic-vs-healthy-band distinction (§ above), read directly from the real
+code rather than inferred:
+
+- **Hard rules** (`evaluate_hard_rule`) are a binary pass/fail delta from a config-sourced
+  `HardRuleConfig(pass_delta, fail_delta)` — the exact shape for this doc's monotonic families (Findability,
+  Detection, Context Preservation): either the observer succeeded or didn't, no gradient needed.
+- **Soft rules** (`evaluate_soft_rule` / `_trapezoidal_delta`) implement the healthy-band shape precisely:
+  a `SoftRuleConfig(low, healthy_low, healthy_high, high, peak_delta, min_delta)` — flat at `peak_delta`
+  inside `[healthy_low, healthy_high]`, ramping linearly down to `min_delta` outside `[low, high]`, with
+  linear interpolation in between. This is the exact real-code shape Density Legibility's "too sparse wastes
+  space, too dense overwhelms" healthy-band description above was gesturing at conceptually — the real
+  implementation already exists, just needs the right threshold values for HUD metrics instead of geometric
+  ones.
+- **Config-driven, never hardcoded**: thresholds load from `config/rendering/grade_thresholds.toml` via a
+  fail-loud loader (missing/wrong-typed keys raise immediately, not silently default) — the same discipline
+  this doc's own Calibration section already calls for.
+- **Deliberately architecture-independent, same pattern as this doc's own Part A precedent**: `grading.py`
+  does not import `src.simulation_quality`, does not subclass its `PillarScorer`, and does not register a
+  `PillarId` — it copies SimQ's exact grade-threshold *values* by value, not by import, specifically to stay
+  structurally independent while staying numerically consistent. If a HUD grade-scorer gets built, this is
+  the concrete precedent for doing the same thing a second time, not reinventing the "how do we stay
+  consistent without coupling" question from scratch.
+
+Not proposed as an implementation plan here — `grading.py` operates on `AuthoritativeState` geometry in
+Python; a HUD scorer would run against DOM/canvas measurements in TypeScript, a different runtime with no
+direct code-sharing path. What transfers is the *engine shape* (hard-rule/soft-rule/config-driven/
+architecture-independent), not the code itself.
+
 ## Idea, Part B — Simulated player interaction: a genuinely new direction for this project
 
 Beyond adapting the two existing precedents, there is real, current, external research for going further

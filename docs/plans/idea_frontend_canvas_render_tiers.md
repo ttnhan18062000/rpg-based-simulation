@@ -100,11 +100,33 @@ than introducing a second icon library or a sprite-sheet asset pipeline this pro
 (confirmed: no image/SVG asset files exist in `frontend/src` or `frontend/public`, per the sibling color-
 system investigation). This keeps "assets" a non-gap, consistent with what that investigation already found.
 
-### Effects — genuinely open, not researched in this pass
+### Effects — researched, and a real Canvas 2D limitation confirmed, not just assumed
 
-"Effect" (glow, transitions, particle-style flourishes) wasn't investigated in this pass — flagged as a
-real, separate follow-up rather than bundled into this doc's icon findings, since effects are a different
-technical problem (temporal/animation, not a static-draw-call question) from icons.
+**Verification note (2026-08-23):** an earlier draft of this doc flagged effects as entirely unresearched.
+Now checked directly: Canvas 2D genuinely cannot do shader-based bloom/glow well — real per-pixel glow
+requires GPU shader access (WebGL), out of scope for this doc's Canvas-2D-only tiers per the Architecture
+Constraints above. That's a real ceiling, not a gap in this investigation.
+
+**What Canvas 2D *can* do cheaply, confirmed as a real technique**: pre-rendered effect textures (a glow
+sprite rendered once to an off-screen canvas, the same caching pattern this doc's icon section and the
+existing minimap cache already use) combined with tweening — cycling opacity/scale on the cached texture
+frame-to-frame for a "breathing" pulse, rather than recomputing any glow math per frame. This is directly
+compatible with the shared-pipeline proposal above: effects become another per-layer, per-tier toggle
+(Polish tier draws a cached glow texture under/over an entity; Measurement and Current tiers skip the call
+entirely), not a separate rendering path.
+
+**A real, independently-sourced confirmation of this project's own architecture direction**: canvas-layering
+(separating background, static objects, and dynamic objects into different canvases/off-screen buffers) is
+cited in real web-performance research as "especially effective for games with static backgrounds" — this
+project's existing minimap terrain cache already does exactly this, for a different layer. The Polish tier's
+effects layer should extend that same pattern rather than introduce a new one.
+
+**The one hard rule this research surfaces**: effects must not "disrupt core layout geometry or trigger
+expensive repaints" — concretely, an effect implementation that forces a full-canvas redraw (rather than a
+small, bounded region around the affected entity) would undermine the `DirtySet`-based incremental-rendering
+work this project's server-side renderer already proved out (10.87x speedup) and the frontend performance
+work `live_map_scaling_roadmap.md` M2 targets. Effects are additive to the Polish tier's draw calls, not a
+reason to abandon dirty-region rendering discipline.
 
 ## Architecture Constraints
 
@@ -154,7 +176,9 @@ technical problem (temporal/animation, not a static-draw-call question) from ico
 - Real performance measurement of pre-rendered-sprite icon rendering at this project's actual target scale
   is unexecuted — the "icons aren't necessarily slower" finding above is grounded in general canvas-
   performance research, not this project's own benchmark.
-- Effects (glow, transitions, particles) are entirely unresearched in this pass, flagged but not scoped.
+- Effects technique (cached-texture + tweening, dirty-region discipline) is now researched, but no specific
+  effect (which entities/events get glow, what triggers a pulse) is designed — that's real product/UX
+  design work, not investigated here.
 - Whether `idea_world_rendering_core.md`'s "Already has entity icons" claim should be corrected in that doc
   directly, given this investigation found it doesn't hold — a small fix, not done here since it's a
   different doc's content, flagged for whoever picks either idea up next.
@@ -175,6 +199,12 @@ technical problem (temporal/animation, not a static-draw-call question) from ico
 - Canvas 2D performance research (MDN's Optimizing Canvas guide and related sources) — verified finding that
   path-based primitives are CPU-bound per-call while cached `drawImage()` blits are comparatively cheap,
   the basis for "icons aren't necessarily a performance cost."
+- `src/rendering/grading.py` (`TCK-20260821-VISUAL-GRADE-SCORER`, DONE) — read directly; confirms this
+  project's own `DirtySet`-based incremental rendering discipline the Effects section's "no full-canvas
+  redraw" rule is grounded against.
+- Canvas 2D visual-effects research (glow/bloom technique surveys, canvas-layering performance guidance) —
+  basis for the Effects section's cached-texture-plus-tweening technique and the "WebGL for real shader
+  effects, not Canvas 2D" ceiling.
 
 *Raised: 2026-08-23, directly following investigation into `docs/plans/idea_hud_color_asset_system.md`,
 extended per direct user request to cover canvas/map visual rendering rather than just HUD chrome and
