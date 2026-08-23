@@ -140,16 +140,22 @@ are DONE.
   this epic is to scope and prioritize first, then focus into one sub-epic at a time.
 
 ## Acceptance Criteria
-- [ ] Both source audits are durably preserved under `docs/audits/` as `D23`/`D24`, since their
-      origin in `tmp/` is gitignored and would otherwise be lost.
-- [ ] `docs/plans/architecture_resilience_remediation_roadmap.md` groups every risk item from
+- [x] Both source audits are durably preserved under `docs/audits/` as `D23`/`D24`, since their
+      origin in `tmp/` is gitignored and would otherwise be lost. Verified 2026-08-23:
+      `docs/audits/D23_architecture_resilience.md` and `docs/audits/D24_codebase_health_observatory.md`
+      both exist, committed.
+- [x] `docs/plans/architecture_resilience_remediation_roadmap.md` groups every risk item from
       both audits into a named, evidence-cited epic (A-K), each tagged with the source audit's
-      own priority tier.
-- [ ] The overlap between this roadmap's Epic C and the already-existing
+      own priority tier. Verified 2026-08-23: 11 named `### Epic <letter>` sections present, each
+      with its own `*Evidence: ...*` citation line.
+- [x] The overlap between this roadmap's Epic C and the already-existing
       `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` ticket is explicitly documented, with the two new
       pieces of evidence (the `CLAUDE.md` "32-phase" claim, `docs/guides/simulation.md`'s
       nonexistent-file citation) identified as scope to fold into that existing ticket rather
-      than duplicate.
+      than duplicate. Verified 2026-08-23: both pieces of evidence are present verbatim in
+      `tickets/done/TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT.md` (now DONE, moved out of
+      `tickets/todos/kernel-concurrency-design-review/` — the Files Changed section below cites
+      its pre-move path, accurate as of when written).
 - [x] Ten sub-epic tickets (all candidate epics except C, which was amended into existing work
       instead) are created in their own `tickets/todos/<name>/` folders, each with its own
       `docs/plans/<name>_epic.md` and staging artifacts.
