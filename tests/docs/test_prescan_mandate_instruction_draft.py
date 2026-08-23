@@ -8,6 +8,12 @@ disclaimer fragments, required content coverage) and non-regression of the three
 surfaces this draft must not touch — never runtime behavior — mirroring the static-assertion
 pattern `tests/docs/test_redaction_retention_policy_doc.py` uses for its own not-yet-ratified
 sibling artifact.
+
+Test 4 verifies the historical fact that TCK-20260814's own commit (`59b4bede`, parent
+`12f773c8`) never touched `CLAUDE.md` or `.claude/agents/*.md` — it diffs that pinned commit
+range, not the live working tree, so it cannot false-positive on unrelated uncommitted edits to
+those files made by other sessions/tickets (see
+TCK-20260823-HOTFIX-PRESCAN-DRAFT-TEST-LIVE-DIFF-FALSE-POSITIVE).
 """
 from __future__ import annotations
 
@@ -80,20 +86,29 @@ def test_draft_preserves_investigator_and_skill_callouts_verbatim():
 
 
 # ---------------------------------------------------------------------------
-# Test 4 — CLAUDE.md and .claude/agents/*.md are byte-unchanged by this ticket
+# Test 4 — CLAUDE.md and .claude/agents/*.md were byte-unchanged by
+# TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT's own historical commit
 # ---------------------------------------------------------------------------
 
 def test_draft_does_not_modify_claude_md_or_agent_md_files():
+    # Pinned to TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT's own actual commit,
+    # not live HEAD -- see TCK-20260823-HOTFIX-PRESCAN-DRAFT-TEST-LIVE-DIFF-FALSE-POSITIVE
+    # for why: checking live uncommitted `git diff HEAD` state made this test fail for any
+    # UNRELATED session with an uncommitted edit to these files, which is not what a
+    # "this specific ticket didn't touch these files" guarantee should ever assert about.
+    _TICKET_COMMIT = "59b4bede"
+    _TICKET_COMMIT_PARENT = "12f773c8"
     result = subprocess.run(
-        ["git", "diff", "--stat", "HEAD", "--", "CLAUDE.md", ".claude/agents/*.md"],
+        ["git", "diff", "--stat", f"{_TICKET_COMMIT_PARENT}..{_TICKET_COMMIT}",
+         "--", "CLAUDE.md", ".claude/agents/*.md"],
         cwd=_REPO_ROOT,
         capture_output=True,
         text=True,
         check=True,
     )
     assert result.stdout.strip() == "", (
-        "this ticket must not modify CLAUDE.md or any .claude/agents/*.md file; "
-        f"git diff --stat shows:\n{result.stdout}"
+        "TCK-20260814-KGMCP-PRESCAN-MANDATE-INSTRUCTION-DRAFT's own commit must not have "
+        f"modified CLAUDE.md or any .claude/agents/*.md file; git diff --stat shows:\n{result.stdout}"
     )
 
 

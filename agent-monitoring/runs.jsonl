@@ -1223,3 +1223,4 @@
 {"run_id":"TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR","start_ts":"2026-08-23T06:09:34Z","end_ts":"2026-08-23T06:56:10Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":2796}
 {"run_id":"TCK-20260823-HOTFIX-INVESTIGATOR-EXCLUDED-DOC-BULLET-TEMPLATE-GAP","start_ts":"2026-08-23T07:13:06Z","end_ts":"2026-08-23T07:23:24Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":4,"duration_s":618}
 {"run_id":"TCK-20260823-HOTFIX-CODE-HEALTH-IMPACT-APPLY-PY-STALE-DEPENDENT","start_ts":"2026-08-23T07:24:35Z","end_ts":"2026-08-23T07:40:00Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":4,"duration_s":925}
+{"run_id":"TCK-20260823-HOTFIX-PRESCAN-DRAFT-TEST-LIVE-DIFF-FALSE-POSITIVE","start_ts":"2026-08-23T07:50:53Z","end_ts":"2026-08-23T08:02:22Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":4,"duration_s":689}
