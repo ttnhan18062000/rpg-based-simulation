@@ -174,12 +174,23 @@ to carry). `investigation.md`'s own template gained a matching `## Docs Requirin
 between `Mechanics/Engine Constraints` and `Parity Ledger Overlap`. `docs_to_update` feeds the
 Implement phase's doc-relevance advisory check below — it is not itself a gate.
 
-**Required bullet format (tightened by `TCK-20260802-DOC-COVERAGE-CHECK`):** one bullet per path,
-backtick-wrapped, immediately after `- ` (e.g. `` - `docs/mechanics/03_economic_laws.md`: reason ``),
-or exactly `None.` if nothing applies. This isn't just style — `done-checker`'s
-`docs_to_update_coverage` static check (Verify phase, below) machine-parses this exact section to
-independently re-verify coverage; a non-bullet paragraph or an un-backticked path fails that check
-as a format regression, not a clean "nothing required" case.
+**Two distinct formats (Format 2 added by `TCK-20260823-HOTFIX-INVESTIGATOR-EXCLUDED-DOC-BULLET-TEMPLATE-GAP`,
+after the format was tightened by `TCK-20260802-DOC-COVERAGE-CHECK`):**
+- **Format 1 — a doc that must change:** one bullet per path, backtick-wrapped, immediately after
+  `- ` (e.g. `` - `docs/mechanics/03_economic_laws.md`: reason ``). Reserved exclusively for docs
+  that genuinely must be touched by this ticket.
+- **Format 2 — a doc that was considered but explicitly excluded:** prose only, no leading `- `
+  bullet, path still backtick-wrapped inline (e.g. "The `docs/X.md` doc is not required because...").
+- If nothing applies at all, write exactly `None.` (no bullets).
+
+This isn't just style — `done-checker`'s `docs_to_update_coverage` static check (Verify phase,
+below) machine-parses this exact section via `_DOCS_BULLET_RE`, which only reads the leading
+backtick-wrapped path on a bulleted line and never reads the reasoning text after it. A required
+doc written as a non-bullet paragraph, or an un-backticked path, fails that check as a format
+regression rather than a clean "nothing required" case — and, symmetrically, an *excluded* doc
+mistakenly written in Format 1's bullet shape is indistinguishable from a required one to the
+parser and fails Verify with a spurious `git status shows no changes to these path(s)` error (the
+false positive this ticket's investigator.md fix now guards against).
 
 ---
 
