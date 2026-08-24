@@ -125,12 +125,17 @@ Also not a new RPG feature, and distinct from both M7 and M8: M7 asks whether Si
 event once it fires; M8 asks whether the compiler can *seed* an idea's content into a world at all. M9 asks
 the question in between — once an idea ships, does a real SimQ corpus world (Unit/End-to-end/Stress/
 Regression, per `docs/simulation_quality/corpus_tier_taxonomy.md`) actually exist to *exercise* it, or does
-one need authoring. Classified all 32 stateful/behavioral ideas against the real corpus tier taxonomy.
-Headline findings: 4 ideas (53, 55, 58, 62) can only be tested by a real multi-episode Campaign run, not any
-static corpus world — a distinct test-infrastructure category the other milestones haven't accounted for;
-idea 66's Region/Place rebuild has corpus-wide blast radius across all 21 worlds and 84 committed grade
-anchors, needing its own budgeted recalibration pass; and several ideas (32, 43, 48) already have live SimQ
-scoring rules sitting idle, waiting only for the event to fire — a narrower job than M7's general premise.
+one need authoring. Classified all 32 stateful/behavioral ideas against the real corpus tier taxonomy, then
+specified each one concretely on direct follow-up request — real world names, module compositions,
+entity/region counts, trigger sequences, and assertable checks, not tier labels alone. Headline findings:
+4 ideas (53, 55, 58, 62) can only be tested by a real multi-episode Campaign run, and
+`CampaignScorecardEvaluator` itself has zero fields today that would even catch a failure in any of them —
+a distinct test-infrastructure gap, not just a missing world; idea 66's Region/Place rebuild has
+corpus-wide blast radius across all 21 worlds and 84 committed grade anchors, with a concrete 2-stage pilot
+plan and a `state_hash`-based recalibration procedure now specified; the long-run observation tool's
+default 5000-tick run would never even reach the real 7000-tick elder-attribute threshold idea 20 needs,
+a timing bug that would have silently produced a false-negative test; and several ideas (32, 43, 48)
+already have live SimQ scoring rules sitting idle, waiting only for the event to fire.
 
 
 
