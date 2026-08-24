@@ -53,6 +53,20 @@ class RuntimeProfile(BaseModel):
     # Optimization (Milestone 7)
     lod_enabled: bool = Field(True, description="Enable adaptive Level of Detail for entity simulation")
 
+    # Security (HTTP API-key auth, TCK-20260823-HTTP-API-KEY-AUTH)
+    api_key_hashes: str = Field(
+        default="",
+        description=(
+            "Comma-separated 'client_id:sha256hex' pairs. Must stay a plain str -- "
+            "ConfigLoader's env-var loop (src/config/loader.py:54-70) only handles "
+            "scalar field types and raises an uncaught TypeError on List/Dict "
+            "annotations. Parsed into a {hash: client_id} mapping by "
+            "src/api/auth.py::configure_api_keys(), never on this model (frozen). "
+            "Empty string means no keys configured -- every protected route then "
+            "401s for every caller (fail-closed default)."
+        ),
+    )
+
     @field_validator("name")
     @classmethod
     def name_must_not_be_empty(cls, v: str) -> str:

@@ -7656,6 +7656,7 @@
     Comparison" and before "## Notes", gated on investigate_pair_count being nonzero
     -- omitted entirely, not rendered empty, when zero.
 
+
     '
   status: verified
   priority: P2
@@ -7670,6 +7671,7 @@
     it alongside runs/events).
 
 
+
     Addendum (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING, 2026-08-14): compute_tool_safety_metrics(events,
     tools) gains a third top-level return key, read_count_correlation -- {compliant_group:
     {count, median, average}, non_compliant_group: {count, median, average}, derivation},
@@ -7680,7 +7682,23 @@
     ...}. generate() renders a third subsection, ''### Read-Count Correlation (Search-Before-Grep
     Compliance)'', appended after the existing ''### Parity Ledger Write-Safety''
     subsection, inside the same gated ''## Tool Safety Audit'' block (still gated
-    on investigate_pair_count being nonzero -- no new gate).'
+    on investigate_pair_count being nonzero -- no new gate).
+
+
+
+    Addendum (TCK-20260824-RETRO-METRIC-CAVEATS, 2026-08-24): compute_tool_safety_metrics()''s
+    docstring (tools/agent-monitoring/generate_retro.py:1393-1400) gains an explanatory
+    paragraph stating that `search_before_grep.compliance_rate` only sees the orchestrating
+    run''s own direct tools.jsonl rows for each (run_id, seq) pair -- it has no visibility
+    into a dispatched sub-agent''s (e.g. `investigator`) own tool calls, so a pair
+    marked non-compliant may reflect an orchestrator-level incidental call rather
+    than the real investigation''s own behavior, and the true compliance rate for
+    delegated investigation work is unknown and plausibly higher than the reported
+    number. generate() (:1949-1956) renders the identical caveat as a new italicized
+    paragraph immediately under the ''### Search-Before-Grep Compliance (Investigate
+    Phase)'' heading, before the existing ''**Compliance rate:**'' line. Explanatory
+    text only -- no change to compute_tool_safety_metrics()''s counting/aggregation
+    logic, return shape, or the compliance_rate formula itself.'
   proof_type: regression
   test_path: tests/tools/test_generate_retro.py
   divergence_note: null
@@ -10839,8 +10857,8 @@
   proof_type: parity
 - id: INFRA-370
   text: BFS whole-map walkable-region connectivity (terrain != WALL minus blocked_tiles)
-    reproduces documented walkable-tile count, connected-component count, and
-    percent-reachable deterministically from AuthoritativeState.terrain + blocked_tiles.
+    reproduces documented walkable-tile count, connected-component count, and percent-reachable
+    deterministically from AuthoritativeState.terrain + blocked_tiles.
   status: verified
   priority: P2
   v2_evidence: src/rendering/connectivity.py
@@ -10859,15 +10877,15 @@
   divergence_note: null
   proof_type: parity
 - id: INFRA-372
-  text: Connected-component-aware fill-ratio (per-terrain-type BFS labeling, tiles /
-    bounding_box_area per component) plus 90-degree rotation/repetition detection
+  text: Connected-component-aware fill-ratio (per-terrain-type BFS labeling, tiles
+    / bounding_box_area per component) plus 90-degree rotation/repetition detection
     (transposed-coordinate set match) reproduces documented dungeon_crawl evidence
-    (FOREST=2 components of 1,116 tiles each; CAVE=0.980, FOREST-c0/c1=1.000,
-    RUIN=1.000; FOREST component 1 is component 0 rotated 90 degrees) deterministically
-    from AuthoritativeState.terrain at seed 42, tick 0. A corpus-wide sweep across the
-    current data/worlds corpus confirms every component scoring below the 0.95
-    reference threshold is FOREST type -- the 0.95 threshold itself is uncalibrated
-    and provisional, tracked separately (TCK-20260821-VISUAL-QUALITY-CALIBRATION).
+    (FOREST=2 components of 1,116 tiles each; CAVE=0.980, FOREST-c0/c1=1.000, RUIN=1.000;
+    FOREST component 1 is component 0 rotated 90 degrees) deterministically from AuthoritativeState.terrain
+    at seed 42, tick 0. A corpus-wide sweep across the current data/worlds corpus
+    confirms every component scoring below the 0.95 reference threshold is FOREST
+    type -- the 0.95 threshold itself is uncalibrated and provisional, tracked separately
+    (TCK-20260821-VISUAL-QUALITY-CALIBRATION).
   status: verified
   priority: P2
   v2_evidence: src/rendering/shape.py
@@ -10875,18 +10893,16 @@
   divergence_note: null
   proof_type: parity
 - id: INFRA-373
-  text: total_variation_distance(h1, h2) over normalized terrain-type-proportion
-    histograms reproduces the documented TVD(sandbox_world, dungeon_crawl) ==
-    0.23161981243456373 cross-spec anchor at seed 42 (rounds to the PROPOSAL.md-cited
-    0.2315). Same-spec/different-seed TVD is exactly 0.0 for dungeon_crawl (seeds 42 and
-    137) -- structurally seed-invariant, since none of its four composed modules
-    (ruins_mystery_quest, goblin_camp_conflict, old_mine_resource_loop,
-    scalable_bandit_camp) declare terrain_variants. sandbox_world is deliberately NOT
-    used as a same-spec-seed-invariance anchor -- its current seed-invariance is an
-    artifact of a stale resolved/world.resolved.yaml cache predating
+  text: total_variation_distance(h1, h2) over normalized terrain-type-proportion histograms
+    reproduces the documented TVD(sandbox_world, dungeon_crawl) == 0.23161981243456373
+    cross-spec anchor at seed 42 (rounds to the PROPOSAL.md-cited 0.2315). Same-spec/different-seed
+    TVD is exactly 0.0 for dungeon_crawl (seeds 42 and 137) -- structurally seed-invariant,
+    since none of its four composed modules (ruins_mystery_quest, goblin_camp_conflict,
+    old_mine_resource_loop, scalable_bandit_camp) declare terrain_variants. sandbox_world
+    is deliberately NOT used as a same-spec-seed-invariance anchor -- its current
+    seed-invariance is an artifact of a stale resolved/world.resolved.yaml cache predating
     wolf_den_near_forest.yaml's terrain_variants field (TCK-20260821-WOLF-DEN-NOISE-MIGRATION),
-    not a structural property of its composition -- see
-    stored_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
+    not a structural property of its composition -- see stored_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
   status: verified
   priority: P2
   v2_evidence: src/rendering/variants.py
@@ -10895,14 +10911,14 @@
   proof_type: parity
 - id: INFRA-374
   text: Rendering-quality grade-band scorer assigns S/A/B/C/D/F using SimQ's exact
-    threshold values (S=2.0 A=0.5 B=0.0 C=-0.5 D=-1.0), sourced from its own config file
-    (config/rendering/grade_thresholds.toml, copied by value, not imported from
-    config/simulation_quality/), combining binary hard-rule and non-monotonic
-    trapezoidal soft-rule deltas via a plain additive sum before assignment. This
-    architecturally-independent code path is distinct from SIMQ-CALIBRATED-001 (which
-    covers SimQ's own threshold-value calibration status) and INFRA-255 (which covers
-    SimQ's own normalized_score time-division formula) -- neither entry covers this
-    module's separate grade-assignment code path.
+    threshold values (S=2.0 A=0.5 B=0.0 C=-0.5 D=-1.0), sourced from its own config
+    file (config/rendering/grade_thresholds.toml, copied by value, not imported from
+    config/simulation_quality/), combining binary hard-rule and non-monotonic trapezoidal
+    soft-rule deltas via a plain additive sum before assignment. This architecturally-independent
+    code path is distinct from SIMQ-CALIBRATED-001 (which covers SimQ's own threshold-value
+    calibration status) and INFRA-255 (which covers SimQ's own normalized_score time-division
+    formula) -- neither entry covers this module's separate grade-assignment code
+    path.
   status: verified
   priority: P2
   v2_evidence: src/rendering/grading.py
@@ -10916,8 +10932,8 @@
     hashed for byte-identical determinism across independent runs). The annotated/
     gridlined render (src/rendering/render_annotated.py, ported from experiments/
     spatial_rendering/prototype/render_annotated.py) is written to disk only when
-    should_escalate returns True -- structurally enforcing that zero image exists to
-    read in the non-escalating case, rather than relying on agent tool-use discipline.
+    should_escalate returns True -- structurally enforcing that zero image exists
+    to read in the non-escalating case, rather than relying on agent tool-use discipline.
   status: verified
   priority: P2
   v2_evidence: src/rendering/review_pipeline.py, src/rendering/render_annotated.py
@@ -10927,19 +10943,232 @@
 - id: INFRA-376
   text: tools/calibrate_rendering.py's run-integrity guard (CalibrationIntegrityError)
     fails loud when a calibration run's WorldCompiler.compile() report contains any
-    warnings, or entity_count == 0, or region_count == 0 -- adapted from
-    calibrate_simq.py's CalibrationIntegrityError/INFRA-320 queue-drop/SURVIVAL-mode
-    guard to this script's real single-compile-call architecture (no Kernel/
-    EventRecorder queue exists in this code path; compute_trail_activity, the one
-    family half that would need one, is deferred to a future ticket -- see
-    staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/plan.md Decision 2/8). A
-    compile_health.json sidecar is written atomically before the raise, mirroring
-    calibrate_simq.py's write-before-raise ordering. This ticket's Out of Scope
-    forbids any CI-gating or decision-consumption of the calibrated numeric output
-    itself -- only this guard's own pass/fail behavior is covered by this entry.
+    warnings, or entity_count == 0, or region_count == 0 -- adapted from calibrate_simq.py's
+    CalibrationIntegrityError/INFRA-320 queue-drop/SURVIVAL-mode guard to this script's
+    real single-compile-call architecture (no Kernel/ EventRecorder queue exists in
+    this code path; compute_trail_activity, the one family half that would need one,
+    is deferred to a future ticket -- see staging_artifacts/TCK-20260821-VISUAL-QUALITY-CALIBRATION/plan.md
+    Decision 2/8). A compile_health.json sidecar is written atomically before the
+    raise, mirroring calibrate_simq.py's write-before-raise ordering. This ticket's
+    Out of Scope forbids any CI-gating or decision-consumption of the calibrated numeric
+    output itself -- only this guard's own pass/fail behavior is covered by this entry.
   status: verified
   priority: P2
   v2_evidence: tools/calibrate_rendering.py
   test_path: tests/tools/test_calibrate_rendering.py::test_calibration_run_integrity_guard_fails_loud_on_corrupted_compile
   divergence_note: null
   proof_type: regression
+- id: INFRA-377
+  text: 'Per-client API-key authentication (src/api/auth.py) gates every route in
+    src/api/server.py except /health (liveness probe, the sole exemption). Auth is
+    the first-resolved dependency at all 27 protected route sites: directly via dependencies=[Depends(require_api_key)]
+    or its _ws/_header_or_query variant at 4 sites (stream.router''s WebSocket wiring
+    site and the 3 browser-facing dashboard routes, each of which also carries the
+    sibling per-client admission-control dependency alongside it -- see INFRA-378),
+    and indirectly, as require_admission/require_admission_header_or_query/require_admission_ws''s
+    own chained first parameter, at the remaining 23 sites once the sibling admission-control
+    ticket (INFRA-378, TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL) replaced the
+    bare require_api_key dependency in place there. Either way the API-key check always
+    resolves before admission control runs. Keys are stored hashed-at-rest (SHA-256)
+    in RuntimeProfile.api_key_hashes (a plain str of comma-separated ''client_id:sha256hex''
+    pairs, loaded via ConfigLoader''s CLI>Env>YAML>Defaults chain / RPG_API_KEY_HASHES
+    env var / --api-key-hashes CLI flag) and compared via hmac.compare_digest (never
+    ==). stream.router''s 3 WebSocket routes use a dedicated require_api_key_ws dependency
+    that raises WebSocketException instead of HTTPException, since FastAPI''s websocket
+    dependency resolution (fastapi/routing.py get_websocket_app) runs before websocket.accept()
+    and only WebSocketException is safely converted to a clean websocket.close() by
+    Starlette''s ExceptionMiddleware. The 3 browser-facing dashboard routes (/api/v1/observability/ui
+    and its 2 redirects) and the 3 WebSocket routes additionally accept a ''key''
+    query-param as a documented, narrower-scoped auth channel (keys can appear in
+    URLs/access logs/browser history) since a plain browser fetch()/WebSocket() cannot
+    attach a custom header. The resolved ClientIdentity (frozen, hashable, with a
+    client_id string field) is a reusable identity object for the sibling per-client
+    admission-control ticket (TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL).'
+  status: verified
+  priority: P1
+  v2_evidence: src/api/auth.py, src/api/server.py, src/api/admission_control.py
+  test_path: tests/api/test_api_key_auth.py::test_missing_api_key_returns_401_on_protected_route
+  divergence_note: null
+  proof_type: contract
+- id: INFRA-378
+  text: Per-client HTTP admission control (src/api/admission_control.py) extends ObservabilityMode's
+    NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary (imported from src.observability.event_recorder,
+    never modified) to the HTTP layer, keyed by the ClientIdentity INFRA-377's auth
+    mechanism resolves. A per-client in-memory token bucket (30-token capacity, 3
+    tokens/second refill) produces a 0.0-1.0+ fill_ratio signal, fed into a hysteresis
+    state machine mirroring ResourceGovernor's real escalation/recovery pattern (src/engine/governor.py
+    evaluate()/_can_recover(), NOT PhaseBudgetGovernor, which has no hysteresis of
+    its own) -- escalation is immediate, recovery requires RuntimeProfile.dwell_time_ticks
+    admission-evaluation calls plus confidence_window_ticks consecutive low-pressure
+    readings, stepping down one mode level at a time. Only SURVIVAL rejects a request
+    (HTTP 429 with a Retry-After header; WebSocket close code 1013 on stream.router's
+    3 routes) -- NORMAL/PRESSURE/DEGRADED all admit. Per-client state is bounded by
+    a lazy idle-TTL prune-on-access (1800 seconds, mirroring AlertDeduplicator.prune())
+    plus a 1000-entry max-entries LRU hard cap (mirroring CacheStrategy's dict-plus-
+    list idiom). require_admission/require_admission_header_or_query/ require_admission_ws
+    compose with require_api_key/require_api_key_header_or_query/ require_api_key_ws
+    via a Depends() parameter chain -- 23 of server.py's 27 protected route sites
+    replace the auth-only dependency in place; the 4 sites using the weaker header-or-query/WebSocket
+    auth channel (3 dashboard routes, 1 stream.router wiring site backing 3 WebSocket
+    routes) append the admission dependency alongside the original auth dependency
+    instead, to keep test_only_dashboard_and_websocket_routes_use_weaker_auth_channel's
+    top-level dependant-graph introspection passing unmodified -- see plan.md's Deviations
+    section. /health remains the sole exemption.
+  status: verified
+  priority: P1
+  v2_evidence: src/api/admission_control.py, src/api/server.py
+  test_path: tests/api/test_admission_control.py::test_first_request_from_new_client_is_admitted
+  divergence_note: null
+  proof_type: contract
+- id: INFRA-379
+  text: 'TCK-20260824-RETRO-METRIC-CAVEATS -- compute_kgmcp_cache_efficiency_metrics()/_kgmcp_verdict()
+    and generate()''s ''## KGMCP Cache Efficiency'' section gain an explanatory caveat
+    (docstring paragraphs in both functions, plus a new rendered Markdown paragraph)
+    stating that a low `coverage_rate` is architectural, not a fixable cache inefficiency:
+    tools/retrieval_cache.py::log_cache_access() is wired only into tools/knowledge_gateway_mcp.py''s
+    knowledge_context/knowledge_status tools, while the hard-rule-mandated mcp__knowledge-search__search_docs
+    tool -- the actual bulk of real search volume feeding search_calls_total -- is
+    served by a completely separate, uninstrumented implementation (tools/knowledge_search.py,
+    confirmed zero references to retrieval_cache/knowledge_gateway_cache) that never
+    touches this cache path at all. A near-zero coverage number therefore reflects
+    two independently-implemented tools, only one of which is cache-instrumented,
+    not evidence the cache is being underused where it applies. This is the first
+    parity-ledger entry anywhere in this shard to cite compute_kgmcp_cache_efficiency_metrics()/_kgmcp_verdict()/the
+    ''## KGMCP Cache Efficiency'' section at all -- no prior INFRA-* entry existed
+    to update instead (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD''s
+    own ticket explicitly deferred authoring one; that ticket''s own citation of ''~line
+    8561'' for this concept turned out on inspection to actually belong to the unrelated
+    INFRA-332 entry). No numeric/formula logic changed in either function or in the
+    coverage_rate computation itself -- explanatory text only.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'tools/agent-monitoring/generate_retro.py:705-711 (`_kgmcp_verdict()`
+    docstring addendum stating the low-coverage clause reflects two independently-implemented
+    tools, not cache underperformance), :771-774 (the low-coverage explanation string
+    itself, appended to the existing ''Coverage is low: ...'' clause: ''This reflects
+    two independently-implemented tools (only knowledge_context/knowledge_status are
+    cache-instrumented; search_docs is served by a separate, uninstrumented implementation),
+    not a fixable inefficiency in the cache itself.''). tools/agent-monitoring/generate_retro.py:815-824
+    (`compute_kgmcp_cache_efficiency_metrics()` docstring addendum, same architectural-fact
+    framing, citing tools/knowledge_gateway_mcp.py and tools/knowledge_search.py by
+    path). tools/agent-monitoring/generate_retro.py:2034-2040 (`generate()` -- new
+    italicized paragraph appended under the ''## KGMCP Cache Efficiency'' heading,
+    after the existing ''_Reflects the full retrieval_cache_access_log corpus...''
+    paragraph and before the ''**Cache Efficiency: {verdict}**'' line; always rendered,
+    matching this section''s existing never-gated convention). tests/tools/test_generate_retro.py''s
+    _FIXED_CORPUS_EXPECTED_REPORT golden string (~line 1091-1096) was updated in the
+    same commit to include the new paragraph''s exact text, proving generate()''s
+    rendered output actually contains it.'
+  proof_type: regression
+  test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
+  divergence_note: null
+- id: INFRA-380
+  text: 'CI job summary reporting: each of the 9 fast-lane pytest jobs in .github/workflows/test.yml
+    emits --junit-xml=reports/junit/<job-key>.xml, and a subsequent if: always() ''Job
+    summary'' step pipes tools/ci_junit_summary.py''s markdown output (pass/fail/error/skip
+    counts plus duration) into $GITHUB_STEP_SUMMARY. main() always returns 0 so the
+    summary step can never become a second failure gate independent of the pytest
+    job''s own exit code. The slow and migration-lanes jobs are deliberately left
+    untouched since neither shares the fast-lane jobs'' single pytest-line shape.
+    (TCK-20260823-CI-STEP-SUMMARY-REPORTING)
+
+
+    Extended by TCK-20260824-CI-NEW-EXISTING-TEST-SPLIT: on pull_request runs only (if:
+    github.event_name == ''pull_request''), each of the 9 jobs gains two additional steps
+    after Run -- a ''Fetch base branch for collect-only diff'' step (git fetch origin
+    "${{ github.base_ref }}" --depth=1 then git worktree add /tmp/base-checkout FETCH_HEAD,
+    each guarded by its own fail-open ''if ! ...; then ...; exit 0; fi'') and a ''Base branch
+    test collection'' step (cd /tmp/base-checkout && pytest <job''s own path list> -m "not
+    slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true, run only
+    if the worktree directory exists). The cd-prefixed form is deliberate: a bare pytest
+    ...  line would be independently tokenized by
+    tools/gate_checks/ci_workflow_test_coverage.py::_extract_pytest_paths. tools/ci_junit_summary.py
+    gains parse_testcase_records() (per-testcase classname::name + pass/fail/error/skip status
+    from the head JUnit XML), parse_collect_only_ids()/_normalize_collect_only_node_id()
+    (parses and normalizes the base branch''s collect-only listing to the same classname::name
+    form), and classify_new_vs_existing() (splits head test IDs into new-vs-existing buckets,
+    each with its own passed/failed/errors/skipped counts, errors broken out as its own column
+    to match the existing all-tests row''s shape). render_markdown_table() and main() both gain
+    an optional, default-None breakdown/base_collect_only_path parameter -- omitted or None
+    output is byte-for-byte identical to the pre-extension behavior. The Job summary step now
+    unconditionally passes "/tmp/base-collect.txt" as a third CLI argument; on a non-PR run
+    (push/schedule/workflow_dispatch) or any git fetch/worktree/collection failure, that file
+    never exists, main() treats a missing/empty path as base_ids=None, and
+    classify_new_vs_existing() returns None -- the single fallback path that covers both "no PR
+    to diff against" and "PR present but base-branch collection failed," rendering only the
+    pre-existing single-row table with no error or broken output. Known limitation (not fixed
+    by this ticket): the base-branch collect-only pass reuses the head job''s already-installed
+    requirements.txt environment rather than a fresh base-branch install, so dependency drift
+    between base and head can cause some base-branch tests to fail to collect -- this degrades
+    to over-counting tests as "new" (fail-open), never a hard failure.
+    (TCK-20260824-CI-NEW-EXISTING-TEST-SPLIT)
+
+    '
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: '.github/workflows/test.yml (9 fast-lane jobs: --junit-xml flag + Job
+    summary step + Fetch base branch for collect-only diff step + Base branch test collection
+    step) + tools/ci_junit_summary.py (parse_testcase_records, parse_collect_only_ids,
+    _normalize_collect_only_node_id, classify_new_vs_existing, NewExistingBreakdown,
+    TestCaseRecord)'
+  proof_type: null
+  test_path: tests/tools/test_ci_junit_summary.py + tests/static/test_ci_step_summary_reporting.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-381
+  text: 'TCK-20260824-PARITY-NEXT-ID-LOOKUP -- added next_available_id(shard_filename)
+    and search_existing_entries(query, ...) to tools/gate_checks/parity_updater_static.py,
+    giving the parity-updater agent (and the Parity-phase orchestrator step) deterministic
+    lookups instead of eyeballing the shard''s own entry list. next_available_id derives
+    prefix and zero-pad width from the shard''s own existing ids (mirroring _ID_PATTERN
+    / docs/parity_ledger/schema.json''s id format) and returns max-numeric-suffix
+    + 1, not entry-count + 1 -- shards have gaps (INFRA-379 is the real-world precedent:
+    384 entries, highest id 379), so a count-based next-id would collide. Raises ValueError
+    when the shard has no entry with a valid id, since there is nothing to derive
+    a prefix from. search_existing_entries is a plain case-insensitive substring search
+    over each entry''s text/v2_evidence fields (not fuzzy/semantic), scoped to one
+    shard or all of CANONICAL_LEDGER_FILES, returning one {id, shard, matched_field,
+    excerpt} dict per field match. .claude/workflows/implement-ticket.js''s Parity
+    phase now runs a second orchestrator bash() call reusing expected_subsystems_for_files''
+    own candidate-shard output, calling next_available_id once per distinct candidate
+    shard and injecting the result as a new ''Next available ID per candidate shard''
+    prompt hint line (a shard with no valid id is reported as ''unavailable: <reason>''
+    rather than failing the phase). search_existing_entries is documented in .claude/agents/parity-updater.md
+    as an agent-invoked Bash tool only -- not auto-wired into the orchestrator, since
+    there is no automatic query string to feed it. This entry originally dogfooded
+    next_available_id(''infrastructure.yaml'') to pick its own id at authoring time
+    (INFRA-380), and search_existing_entries(''parity_updater_static'', shard_filename=''infrastructure.yaml'')
+    confirmed no pre-existing entry covered this concern before writing. Renumbered
+    to INFRA-381 during a merge with origin/main, which had independently landed
+    an unrelated INFRA-380 entry (TCK-20260823-CI-STEP-SUMMARY-REPORTING) in the
+    time between this entry''s authoring and this branch merging -- a real, expected
+    consequence of next_available_id() computing against each branch''s own
+    pre-merge view of the shard, not a bug in the function itself. No src/ files
+    changed -- pure Claude-agent-workflow orchestration tooling.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'tools/gate_checks/parity_updater_static.py:134-163 (next_available_id
+    -- walks every id matching _ID_PATTERN, tracks max numeric suffix per shard, derives
+    prefix/width from the shard''s own ids, raises ValueError if none match), :166-203
+    (search_existing_entries -- case-insensitive substring match over text/v2_evidence,
+    {id, shard, matched_field, excerpt} results, scoped to shard_filename or all CANONICAL_LEDGER_FILES).
+    .claude/workflows/implement-ticket.js:1213-1232 (Parity-phase nextIdOutput bash()
+    call, one next_available_id lookup per distinct candidate shard from expectedSubsystemsOutput,
+    ValueError caught per-shard as "unavailable: <reason>"), :1244 (injected as the
+    "Next available ID per candidate shard" prompt hint line). .claude/agents/parity-updater.md:10-37
+    (Step 0 -- documents both functions for agent use; next_available_id via the injected
+    hint or direct Bash call, search_existing_entries as a direct Bash call only,
+    not auto-wired).'
+  proof_type: null
+  test_path: tests/tools/test_parity_updater_static.py::test_next_available_id_uses_max_suffix_not_count
+  divergence_note: null
+  support_boundary: Claude-agent-workflow orchestration tooling only -- no simulation
+    behavior is involved (mirrors INFRA-263/264/265/315/379's support_boundary pattern
+    for pure workflow-tooling entries in this shard). Does not touch, extend, or duplicate
+    INFRA-263 (Finalize-phase registry-regen gate), INFRA-264 (CI registry-drift backstop),
+    INFRA-265 (Scope-phase ticket-location resolution), or INFRA-379 (retro-report
+    KGMCP caveat text); this is a distinct guarantee scoped to Parity-phase id-lookup
+    and existing-entry search determinism.

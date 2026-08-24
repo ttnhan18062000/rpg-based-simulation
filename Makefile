@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact
 
 # Default
 help: ## Show available commands
@@ -289,6 +289,15 @@ codebase-health-baseline: ## Print a live LoC/churn/dependency baseline snapshot
 
 codebase-health-impact: ## Print a change-impact report for a source path (pass ARGS="src/engine/pipeline.py") (on-demand only — not CI)
 	python3 tools/code_health_impact.py $(ARGS)
+
+codebase-health-snapshot: ## Append a codebase-health metrics snapshot to agent-monitoring/codebase_health_history.jsonl (on-demand only — not CI)
+	python3 tools/codebase_health_snapshot.py snapshot $(ARGS)
+
+codebase-health-scorecard: ## Print a per-dimension trend scorecard over codebase-health history (on-demand only — not CI)
+	python3 tools/codebase_health_snapshot.py scorecard $(ARGS)
+
+codebase-health-pr-impact: ## Print a batched PR/AI change-impact report for one or more source paths (pass ARGS="path1 path2 ...") (on-demand only — not CI)
+	python3 tools/pr_impact_report.py $(ARGS)
 
 agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
 	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \

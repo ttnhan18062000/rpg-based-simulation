@@ -25,8 +25,8 @@ jobs:
     name: "Unit · core / world"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Run
@@ -45,15 +45,50 @@ jobs:
                  tests/unit/content \
                  tests/unit/content_semantics \
                  tests/unit/test_dirty_refresh.py \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-core-world.xml
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/unit/core \
+                   tests/unit/kernel \
+                   tests/unit/engine \
+                   tests/unit/config \
+                   tests/unit/runtime \
+                   tests/unit/platform \
+                   tests/unit/world \
+                   tests/unit/worldassembly \
+                   tests/unit/worldbuilding \
+                   tests/unit/worldgeneration \
+                   tests/unit/worldmodules \
+                   tests/unit/content \
+                   tests/unit/content_semantics \
+                   tests/unit/test_dirty_refresh.py \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/unit-core-world.xml" "unit-core-world" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Unit: gameplay systems ────────────────────────────────────────────────
   unit-gameplay:
     name: "Unit · gameplay"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Run
@@ -72,15 +107,50 @@ jobs:
                  tests/unit/systems \
                  tests/unit/actions \
                  tests/unit/ai \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-gameplay.xml
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/unit/strategic \
+                   tests/unit/combat \
+                   tests/unit/social \
+                   tests/unit/economy \
+                   tests/unit/resource \
+                   tests/unit/progression \
+                   tests/unit/quest \
+                   tests/unit/movement \
+                   tests/unit/motivation \
+                   tests/unit/tactical \
+                   tests/unit/scenarios \
+                   tests/unit/systems \
+                   tests/unit/actions \
+                   tests/unit/ai \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/unit-gameplay.xml" "unit-gameplay" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Unit: infra / observability / domains ─────────────────────────────────
   unit-infra:
     name: "Unit · infra / observability"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Run
@@ -103,29 +173,90 @@ jobs:
                  tests/unit/tools \
                  tests/unit/test_memory_probe.py \
                  tests/unit/test_queue_worker_singleton.py \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra.xml
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/unit/domains \
+                   tests/unit/observability \
+                   tests/unit/rendering \
+                   tests/unit/lab \
+                   tests/unit/lab_agent \
+                   tests/unit/api \
+                   tests/unit/cli \
+                   tests/unit/views \
+                   tests/unit/diagnostics \
+                   tests/unit/perf \
+                   tests/unit/entity \
+                   tests/unit/entities \
+                   tests/unit/cognition \
+                   tests/unit/docs \
+                   tests/unit/certification \
+                   tests/unit/tools \
+                   tests/unit/test_memory_probe.py \
+                   tests/unit/test_queue_worker_singleton.py \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/unit-infra.xml" "unit-infra" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Integration tests (excluding slow) ────────────────────────────────────
   integration:
     name: "Integration"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Run
         run: |
           pytest tests/integration \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/integration.xml
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/integration \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/integration.xml" "integration" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── API / CLI / tools ─────────────────────────────────────────────────────
   api-tools:
     name: "API / tools / logging"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Run
@@ -136,7 +267,34 @@ jobs:
                  tests/logging \
                  tests/engine \
                  tests/observability \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-tools.xml
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/api \
+                   tests/cli \
+                   tests/tools \
+                   tests/logging \
+                   tests/engine \
+                   tests/observability \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/api-tools.xml" "api-tools" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Agent orchestration / codex / replay ──────────────────────────────────
   # TCK-20260817-CI-COVERAGE-GAP-16-ORPHANED-TEST-DIRS: these 12 directories (added by commit
@@ -147,8 +305,8 @@ jobs:
     name: "Agent orchestration / codex / replay"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Run
@@ -165,29 +323,84 @@ jobs:
                  tests/agent_orchestration_codex_adapter \
                  tests/agent_replay \
                  tests/agent_replay_codex \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/agent-orchestration.xml
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/agent_codex_live_transport \
+                   tests/agent_codex_pilot_executor \
+                   tests/agent_codex_pilot_guardrails \
+                   tests/agent_codex_pilot_orchestration \
+                   tests/agent_codex_posttool_adapter \
+                   tests/agent_codex_realrepo_pilot_harness \
+                   tests/agent_codex_runtime_shadow \
+                   tests/agent_orchestration \
+                   tests/agent_orchestration_claude_adapter \
+                   tests/agent_orchestration_codex_adapter \
+                   tests/agent_replay \
+                   tests/agent_replay_codex \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/agent-orchestration.xml" "agent-orchestration" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Simulation quality (SimQ scoring module) ──────────────────────────────
   simulation-quality:
     name: "Simulation quality"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Run
         run: |
           pytest tests/simulation_quality \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/simulation-quality.xml
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/simulation_quality \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/simulation-quality.xml" "simulation-quality" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Architecture / docs / static guards ──────────────────────────────────
   arch-docs:
     name: "Architecture / docs / static"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Run
@@ -197,7 +410,33 @@ jobs:
                  tests/integrity \
                  tests/static \
                  tests/refactor \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/arch-docs.xml
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/architecture \
+                   tests/docs \
+                   tests/integrity \
+                   tests/static \
+                   tests/refactor \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/arch-docs.xml" "arch-docs" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Changed-files gate (path-based skip for perf-cert-arena / migration-lanes) ──
   # TCK-20260819-CI-NARROW-PATH-FILTERED-JOBS: always runs (no if: of its own -- a
@@ -211,7 +450,7 @@ jobs:
       run_perf_cert_arena: ${{ steps.diff.outputs.run_perf_cert_arena }}
       run_migration_lanes: ${{ steps.diff.outputs.run_migration_lanes }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
       - id: diff
         run: |
@@ -241,8 +480,8 @@ jobs:
     needs: [changed-files]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Run
@@ -250,7 +489,31 @@ jobs:
           pytest tests/perf \
                  tests/certification \
                  tests/arena \
-                 -m "not slow and not extra_slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/perf-cert-arena.xml
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/perf \
+                   tests/certification \
+                   tests/arena \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/perf-cert-arena.xml" "perf-cert-arena" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Migration lanes + expansion gate ─────────────────────────────────────
   migration-lanes:
@@ -259,8 +522,8 @@ jobs:
     needs: [changed-files]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Fast lanes
@@ -273,8 +536,8 @@ jobs:
     name: "Type check (informational)"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - run: pip install mypy
@@ -306,8 +569,8 @@ jobs:
       - perf-cert-arena
       - migration-lanes
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
       - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
