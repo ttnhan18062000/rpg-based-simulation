@@ -134,6 +134,15 @@ their affected tickets.
   change M2's idea 14 ticket and M4's idea 45 ticket before they start, not after — treat M8 as a
   prerequisite read for whoever scopes those two specific tickets, even though the epic itself can run in
   parallel with anything.
+- **Idea 66 (Region Contains Multiple Places, scoped under M8) is a real sequencing gate, not just a read.**
+  Unlike the rest of M8, this is a foundational rebuild of the Region/City data model itself — City isn't a
+  place inside a Region today, it IS a Region (`RegionSpec.bounds` is a single box; real world-modules
+  contribute flat sibling regions with no containment). Idea 66 replaces that with a real `Place` hierarchy
+  and directly subsumes ideas 45 (Camp) and 46 (Nest), reshapes idea 47 (Lair), and gives the previously-
+  unscoped Ruins/Mines gap a home. **Recommendation: land idea 66 before ticketing M2's idea 35
+  (sovereignty) or M4's ideas 45/46/47** — each of those would otherwise be built against the flat model and
+  need reworking once (or if) idea 66 lands, the same rework M8's own idea-45 finding already flagged as a
+  real cost once.
 - **Detailed child-ticket breakdown beyond M1 is deliberately not done yet.** M2 through M6 are scope-only
   epics for now — this roadmap and the sibling epic tickets exist to capture milestone structure and
   sequencing intent, not to fully plan implementation ahead of M1 shipping and M2's flag-governance

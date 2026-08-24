@@ -35,7 +35,9 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
 2. **Idea 45's insertion point — confirmed deeper than the atlas originally scoped.** `CampState` is never
    constructed anywhere in production code, `WorldModuleSpec` has no `camp_recipes` field, and the compiler
    has no camp step at all. This ticket needs a new schema field plus a new compiler step, not a data-seed
-   call into an existing pattern — re-scope idea 45's own M4 ticket estimate accordingly.
+   call into an existing pattern — re-scope idea 45's own M4 ticket estimate accordingly. **Superseded by
+   scope item 9 below if idea 66 lands first**: a real `Place` hierarchy would give Camp a proper insertion
+   point instead of a bespoke schema field.
 3. **Idea 14/44's `settlement_capacity` — confirmed not-yet-built at the schema level**, not merely
    unwired. Doesn't exist anywhere in `src/` or `docs/` except this atlas's own prose. M2's ticket for idea
    14 needs to include the actual schema addition, not assume one exists to extend.
@@ -69,6 +71,19 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
    `RegionRecipeSpec.tags`, used today only for quest-routing. Idea 48 (place-type transitions) can reuse
    this existing tag vocabulary as a starting point rather than inventing a new one, even though no
    place-type-transition mechanism sits on top of it yet.
+9. **Idea 66 — Region Contains Multiple Places, a foundational rebuild — should be sequenced first in this
+   epic, not last despite its list position.** Confirmed directly: `RegionSpec.bounds` is a single
+   rectangular box and real world-modules contribute flat sibling regions (`hometown`, `old_mine`,
+   `goblin_camp`) with zero containment between them — a City isn't a place inside a Region today, it IS a
+   Region. This idea replaces that with `Place` as the atomic point-of-interest object (kinds: `CITY`,
+   `CAMP`, `NEST`, `LAIR`, `RUIN`, `DUNGEON`) positioned within a Region's larger bounds. It directly
+   subsumes items 2 (Camp's schema gap) and 6 above (the location-tag vocabulary becomes real `Place.kind`
+   values instead of freeform tags), and gives idea 47 (Lair) and the previously-unscoped Ruins/Mines gap a
+   proper home instead of each inventing its own bespoke shape. **Recommendation: scope and land idea 66
+   before ticketing idea 45 (Camp) or idea 47 (Lair) in M4** — building those on today's flat model first
+   means redoing both once (or if) this rebuild lands, and this epic's own item 2 already found Camp's
+   current insertion point deeper than originally scoped, which is exactly the kind of rework idea 66 would
+   prevent.
 
 ## Out of Scope
 
