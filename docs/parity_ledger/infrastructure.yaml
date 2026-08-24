@@ -11104,6 +11104,27 @@
     to over-counting tests as "new" (fail-open), never a hard failure.
     (TCK-20260824-CI-NEW-EXISTING-TEST-SPLIT)
 
+
+    Fixed by TCK-20260824-HOTFIX-COLLECTONLY-CLASS-NORMALIZE:
+    _normalize_collect_only_node_id() previously normalized only the leading file-path
+    segment of a collect-only node ID, leaving every class-name segment (including nested
+    classes) as its own separate ''::''-delimited piece -- e.g.
+    "path/to/file.py::TestFoo::test_bar" normalized to "path.to.file::TestFoo::test_bar"
+    (two ''::''). JUnit XML''s own classname attribute instead folds the file path AND every
+    class level into one dotted string, leaving only the method name after a single ''::''
+    (classname="path.to.file.TestFoo" name="test_bar", i.e. "path.to.file.TestFoo::test_bar",
+    one ''::''). The two forms never matched, so classify_new_vs_existing() misclassified
+    every class-based test (including nested classes) as "new" regardless of whether it
+    actually changed -- confirmed via direct local reproduction of PR #68''s real CI job,
+    where a PR adding only 2 new test files reported 933 "new" out of 2659 total tests.
+    _normalize_collect_only_node_id() now dot-joins the normalized file segment together
+    with every intervening class segment (not just the file path), keeping only the final
+    method-name segment after the single trailing ''::'', for any nesting depth --
+    "path/to/file.py::ClassA::ClassB::test_method" now normalizes to
+    "path.to.file.ClassA.ClassB::test_method". The no-class case
+    ("path/to/file.py::test_method" -> "path.to.file::test_method") is unchanged.
+    (TCK-20260824-HOTFIX-COLLECTONLY-CLASS-NORMALIZE)
+
     '
   status: verified
   priority: P2
@@ -11111,8 +11132,9 @@
   v2_evidence: '.github/workflows/test.yml (9 fast-lane jobs: --junit-xml flag + Job
     summary step + Fetch base branch for collect-only diff step + Base branch test collection
     step) + tools/ci_junit_summary.py (parse_testcase_records, parse_collect_only_ids,
-    _normalize_collect_only_node_id, classify_new_vs_existing, NewExistingBreakdown,
-    TestCaseRecord)'
+    _normalize_collect_only_node_id -- now dot-joins all class segments (including nested
+    classes) into the classname, not just the file path, matching JUnit''s classname::name
+    convention -- classify_new_vs_existing, NewExistingBreakdown, TestCaseRecord)'
   proof_type: null
   test_path: tests/tools/test_ci_junit_summary.py + tests/static/test_ci_step_summary_reporting.py
   divergence_note: null

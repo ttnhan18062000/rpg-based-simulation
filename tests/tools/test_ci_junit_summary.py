@@ -151,7 +151,16 @@ def test_id_normalization_reconciles_collect_only_nodeid_with_junit_classname() 
     )
     assert (
         _normalize_collect_only_node_id("tests/unit/core/test_b.py::TestFoo::test_bar")
-        == "tests.unit.core.test_b::TestFoo::test_bar"
+        == "tests.unit.core.test_b.TestFoo::test_bar"
+    )
+
+
+def test_id_normalization_dot_joins_nested_class_segments() -> None:
+    assert (
+        _normalize_collect_only_node_id(
+            "tests/unit/core/test_b.py::Outer::Inner::test_method"
+        )
+        == "tests.unit.core.test_b.Outer.Inner::test_method"
     )
 
 
@@ -163,6 +172,27 @@ def test_parse_collect_only_ids_skips_non_nodeid_lines() -> None:
 def test_parse_collect_only_ids_garbage_input_resolves_to_empty_set() -> None:
     assert parse_collect_only_ids("") == set()
     assert parse_collect_only_ids("not a node id\nneither is this\n") == set()
+
+
+def test_parse_collect_only_ids_dot_joins_nested_class_segments() -> None:
+    text = "tests/unit/core/test_b.py::Outer::Inner::test_method\n\n1 tests collected in 0.01s\n"
+    assert parse_collect_only_ids(text) == {"tests.unit.core.test_b.Outer.Inner::test_method"}
+
+
+def test_classify_new_vs_existing_matches_class_based_tests_as_existing() -> None:
+    head_records = parse_testcase_records(_FIXTURES / "head_with_class_testcases.xml")
+    base_ids = parse_collect_only_ids(
+        (_FIXTURES / "base_collect_only_with_classes.txt").read_text()
+    )
+    breakdown = classify_new_vs_existing(head_records, base_ids)
+
+    assert breakdown is not None
+    # tests.tools.test_x.TestFoo::test_bar (single-level class) and
+    # tests.tools.test_y.Outer.Inner::test_method (nested class) both appear in the base
+    # collect-only listing and must classify as existing, not new.
+    assert breakdown.existing_total == 2
+    # tests.tools.test_z.TestBrandNew::test_never_seen_before has no base-branch match.
+    assert breakdown.new_total == 1
 
 
 def test_classify_new_vs_existing_splits_by_base_collect_only_ids() -> None:

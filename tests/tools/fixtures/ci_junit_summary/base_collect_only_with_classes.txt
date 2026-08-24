@@ -1,0 +1,4 @@
+tests/tools/test_x.py::TestFoo::test_bar
+tests/tools/test_y.py::Outer::Inner::test_method
+
+2 tests collected in 0.12s
