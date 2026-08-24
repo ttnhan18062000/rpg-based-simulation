@@ -11063,3 +11063,57 @@
   proof_type: regression
   test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
   divergence_note: null
+- id: INFRA-380
+  text: 'CI job summary reporting: each of the 9 fast-lane pytest jobs in .github/workflows/test.yml
+    emits --junit-xml=reports/junit/<job-key>.xml, and a subsequent if: always() ''Job
+    summary'' step pipes tools/ci_junit_summary.py''s markdown output (pass/fail/error/skip
+    counts plus duration) into $GITHUB_STEP_SUMMARY. main() always returns 0 so the
+    summary step can never become a second failure gate independent of the pytest
+    job''s own exit code. The slow and migration-lanes jobs are deliberately left
+    untouched since neither shares the fast-lane jobs'' single pytest-line shape.
+    (TCK-20260823-CI-STEP-SUMMARY-REPORTING)
+
+
+    Extended by TCK-20260824-CI-NEW-EXISTING-TEST-SPLIT: on pull_request runs only (if:
+    github.event_name == ''pull_request''), each of the 9 jobs gains two additional steps
+    after Run -- a ''Fetch base branch for collect-only diff'' step (git fetch origin
+    "${{ github.base_ref }}" --depth=1 then git worktree add /tmp/base-checkout FETCH_HEAD,
+    each guarded by its own fail-open ''if ! ...; then ...; exit 0; fi'') and a ''Base branch
+    test collection'' step (cd /tmp/base-checkout && pytest <job''s own path list> -m "not
+    slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true, run only
+    if the worktree directory exists). The cd-prefixed form is deliberate: a bare pytest
+    ...  line would be independently tokenized by
+    tools/gate_checks/ci_workflow_test_coverage.py::_extract_pytest_paths. tools/ci_junit_summary.py
+    gains parse_testcase_records() (per-testcase classname::name + pass/fail/error/skip status
+    from the head JUnit XML), parse_collect_only_ids()/_normalize_collect_only_node_id()
+    (parses and normalizes the base branch''s collect-only listing to the same classname::name
+    form), and classify_new_vs_existing() (splits head test IDs into new-vs-existing buckets,
+    each with its own passed/failed/errors/skipped counts, errors broken out as its own column
+    to match the existing all-tests row''s shape). render_markdown_table() and main() both gain
+    an optional, default-None breakdown/base_collect_only_path parameter -- omitted or None
+    output is byte-for-byte identical to the pre-extension behavior. The Job summary step now
+    unconditionally passes "/tmp/base-collect.txt" as a third CLI argument; on a non-PR run
+    (push/schedule/workflow_dispatch) or any git fetch/worktree/collection failure, that file
+    never exists, main() treats a missing/empty path as base_ids=None, and
+    classify_new_vs_existing() returns None -- the single fallback path that covers both "no PR
+    to diff against" and "PR present but base-branch collection failed," rendering only the
+    pre-existing single-row table with no error or broken output. Known limitation (not fixed
+    by this ticket): the base-branch collect-only pass reuses the head job''s already-installed
+    requirements.txt environment rather than a fresh base-branch install, so dependency drift
+    between base and head can cause some base-branch tests to fail to collect -- this degrades
+    to over-counting tests as "new" (fail-open), never a hard failure.
+    (TCK-20260824-CI-NEW-EXISTING-TEST-SPLIT)
+
+    '
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: '.github/workflows/test.yml (9 fast-lane jobs: --junit-xml flag + Job
+    summary step + Fetch base branch for collect-only diff step + Base branch test collection
+    step) + tools/ci_junit_summary.py (parse_testcase_records, parse_collect_only_ids,
+    _normalize_collect_only_node_id, classify_new_vs_existing, NewExistingBreakdown,
+    TestCaseRecord)'
+  proof_type: null
+  test_path: tests/tools/test_ci_junit_summary.py + tests/static/test_ci_step_summary_reporting.py
+  divergence_note: null
+  support_boundary: null
