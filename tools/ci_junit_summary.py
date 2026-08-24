@@ -141,16 +141,22 @@ def parse_testcase_records(path: Path) -> list[TestCaseRecord]:
 
 
 def _normalize_collect_only_node_id(node_id: str) -> str:
-    """`pytest --collect-only -q` prints slash-form file paths with `.py` intact
-    (`path/to/test_file.py::TestClass::test_name`); JUnit XML's `classname` attribute is a
-    dotted module path with `.py` stripped. Normalize only the leading file-path segment so
-    both sides land on the same `classname::name` canonical form."""
+    """`pytest --collect-only -q` prints slash-form file paths with `.py` intact and each
+    class level (including nested classes) as its own `::`-segment
+    (`path/to/test_file.py::TestClass::TestNested::test_name`). JUnit XML's `classname`
+    attribute folds the file path AND every class level into one dotted string, leaving only
+    the method name after `::` (`classname="path.to.test_file.TestClass.TestNested"
+    name="test_name"`). Normalize the file-path segment *and* dot-join it with every
+    intervening class segment so both sides land on the same `classname::name` canonical
+    form -- a class-based node ID must produce exactly one `::`, regardless of nesting depth."""
     segments = node_id.split("::")
     file_segment = segments[0].replace("/", ".")
     if file_segment.endswith(".py"):
         file_segment = file_segment[: -len(".py")]
-    segments[0] = file_segment
-    return "::".join(segments)
+    if len(segments) <= 2:
+        return "::".join([file_segment, *segments[1:]])
+    classname = ".".join([file_segment, *segments[1:-1]])
+    return f"{classname}::{segments[-1]}"
 
 
 def parse_collect_only_ids(text: str) -> set[str]:

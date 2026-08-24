@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+<testsuite name="pytest" errors="0" failures="0" skipped="0" tests="3" time="0.300" timestamp="2026-08-24T00:00:00" hostname="runner">
+<testcase classname="tests.tools.test_x.TestFoo" name="test_bar" time="0.100" />
+<testcase classname="tests.tools.test_y.Outer.Inner" name="test_method" time="0.100" />
+<testcase classname="tests.tools.test_z.TestBrandNew" name="test_never_seen_before" time="0.100" />
+</testsuite>
+</testsuites>
