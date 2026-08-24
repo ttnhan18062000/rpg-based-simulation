@@ -141,9 +141,12 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
    transport-agnostic) and `present_static(state, ...)` (serialize `buildings`/`resource_nodes`/`chests`/
    `ground_items` into the frontend's `StaticData` shape, adapting
    `src_legacy/api/presenters/world_presenter.py::to_static_data_response`'s field mapping — e.g. `chests`
-   → `treasure_chests`, `guard_id` → `guard_entity_id`). Spatial `regions`: derive `center`/`radius` from
-   `RegionRecipeSpec.grid_bounds` at presentation time (no stored field exists — see Open Questions), and
-   either find a source for `locations`/`difficulty`/`name` or drop them from the ported schema.
+   → `treasure_chests`, `guard_id` → `guard_entity_id`). Spatial `regions`: derive `center`/`radius`
+   from `RegionState.bounds` — durable state, populated at world-compile time
+   (`src/worldbuilding/compiler.py:246`), not `RegionRecipeSpec.grid_bounds` (a config/spec object;
+   see Open Questions for the correction history) — and either find a source for
+   `locations`/`difficulty` or drop them from the ported schema (`name` is available via
+   `region.kind`).
 2. **New lightweight per-tick entity-delta broadcast.** Port `src_legacy/api/routes/stream.py`'s
    `compute_delta()` logic (diff consecutive `EntitySlim`-shaped dicts into
    `{tick, changed, removed, events}`, 20-tick heartbeat on quiet ticks) onto V2's existing
