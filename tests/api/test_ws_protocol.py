@@ -103,6 +103,76 @@ async def test_ws_msgpack_delta_payload_shape():
             assert isinstance(data["changed"], list)
             assert isinstance(data["removed"], list)
             assert data["snapshot_as_of_tick"] == initial["tick"]
+            assert "region_id" in data
+            assert data["region_id"] is None
+
+    finally:
+        server.terminate()
+        server.wait()
+
+
+@pytest.mark.anyio
+async def test_ws_delta_envelope_includes_null_spatial_placeholder_field():
+    """Verify the per-tick entity-delta broadcast carries the reserved, always-null region_id
+    placeholder over the json format too (TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD)."""
+    port = 8007
+    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
+    server = subprocess.Popen(cmd, env=env)
+    time.sleep(3)
+
+    try:
+        async with websockets.connect(
+            f"ws://127.0.0.1:{port}/api/v1/ws", additional_headers={"X-API-Key": _TEST_RAW_KEY}
+        ) as ws:
+            await ws.send(json.dumps({"type": "handshake", "format": "json"}))
+
+            # Initial connect-time minimal-summary payload -- unchanged shape, not the delta.
+            resp = await ws.recv()
+            initial = json.loads(resp)
+            assert "tick" in initial
+
+            # First real per-tick delta message.
+            resp = await asyncio.wait_for(ws.recv(), timeout=5.0)
+            data = json.loads(resp)
+
+            assert "region_id" in data
+            assert data["region_id"] is None
+
+    finally:
+        server.terminate()
+        server.wait()
+
+
+@pytest.mark.anyio
+async def test_ws_delta_envelope_new_field_does_not_change_existing_field_semantics():
+    """Verify the new region_id placeholder is purely additive -- tick/changed/removed/events/
+    snapshot_as_of_tick keep their pre-existing types and values (TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD)."""
+    port = 8008
+    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
+    server = subprocess.Popen(cmd, env=env)
+    time.sleep(3)
+
+    try:
+        async with websockets.connect(
+            f"ws://127.0.0.1:{port}/api/v1/ws", additional_headers={"X-API-Key": _TEST_RAW_KEY}
+        ) as ws:
+            await ws.send(json.dumps({"type": "handshake", "format": "json"}))
+
+            resp = await ws.recv()
+            initial = json.loads(resp)
+            assert "tick" in initial
+
+            resp = await asyncio.wait_for(ws.recv(), timeout=5.0)
+            data = json.loads(resp)
+
+            assert isinstance(data["tick"], int)
+            assert isinstance(data["changed"], list)
+            assert isinstance(data["removed"], list)
+            assert isinstance(data["events"], list)
+            assert data["snapshot_as_of_tick"] == initial["tick"]
+            assert data["region_id"] is None
 
     finally:
         server.terminate()

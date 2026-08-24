@@ -71,6 +71,7 @@ async def stream_ws(
             # concurrent connections don't race on snapshot_as_of_tick.
             out_payload = dict(payload)
             out_payload["snapshot_as_of_tick"] = snapshot_as_of_tick
+            out_payload["region_id"] = None
 
             if fmt == "msgpack":
                 await websocket.send_bytes(msgpack.packb(jsonable_encoder(out_payload)))

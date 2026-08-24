@@ -11258,49 +11258,63 @@
     disclosed-limitation pattern.'
   support_boundary: null
 - id: INFRA-384
-  text: 'GET /api/v1/map, /api/v1/static, /api/v1/stats are real registered routes (src/api/routes/map.py,
-    static.py, stats.py), wrapping StatePresenter.present_map/present_static/present_stats
-    (TCK-20260821-PRESENT-MAP-STATIC, TCK-20260821-REST-MAP-STATIC-STATS). V2EngineManager gains
-    _total_spawned/_total_deaths counters incremented once per tick via a new_ids/dead_ids
-    set-diff on state.entities.keys() (ported from V1s alive_before/alive_after pattern) and
-    explicitly zeroed in reset(). stats.world_day = tick // 2400 per docs/mechanics/05_world_evolution.md
-    Sec 1 (Certified Level 1), a deliberate divergence from V1s legacy tick // 100. alive_count
-    filters by combat.alive, matching src/api/presenters/economy.py present_health precedent.'
+  text: GET /api/v1/map, /api/v1/static, /api/v1/stats are real registered routes
+    (src/api/routes/map.py, static.py, stats.py), wrapping StatePresenter.present_map/present_static/present_stats
+    (TCK-20260821-PRESENT-MAP-STATIC, TCK-20260821-REST-MAP-STATIC-STATS). V2EngineManager
+    gains _total_spawned/_total_deaths counters incremented once per tick via a new_ids/dead_ids
+    set-diff on state.entities.keys() (ported from V1s alive_before/alive_after pattern)
+    and explicitly zeroed in reset(). stats.world_day = tick // 2400 per docs/mechanics/05_world_evolution.md
+    Sec 1 (Certified Level 1), a deliberate divergence from V1s legacy tick // 100.
+    alive_count filters by combat.alive, matching src/api/presenters/economy.py present_health
+    precedent.
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/api/routes/map.py + static.py + stats.py + src/api/presenters/state_presenter.py + src/api/engine_manager.py
+  v2_evidence: src/api/routes/map.py + static.py + stats.py + src/api/presenters/state_presenter.py
+    + src/api/engine_manager.py
   proof_type: null
   test_path: tests/api/test_rest_parity.py::test_api_rest_parity
-  divergence_note: world_day uses tick // 2400 (Mechanics Bible canonical day length), not V1's
-    tick // 100 -- see docs/engine/contracts/frontend.md and staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/plan.md
+  divergence_note: world_day uses tick // 2400 (Mechanics Bible canonical day length),
+    not V1's tick // 100 -- see docs/engine/contracts/frontend.md and staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/plan.md
     Design Decisions for rationale.
   support_boundary: null
 - id: INFRA-385
-  text: '/api/v1/ws now broadcasts a per-tick entity delta ({tick, changed, removed, events,
-    snapshot_as_of_tick}) alongside the pre-existing minimal-summary connect payload
-    (TCK-20260821-WS-ENTITY-DELTA-BROADCAST). StatePresenter.present_entity_slim projects each
-    entity to a 9-field slim dict (id, kind, x, y, hp, max_hp, level, faction, weapon_range), always
-    reading live component values, never a diff. ReadModelCache.compute_tick_delta classifies
-    DirtySet.all_dirty_entities into changed (present in state.entities and combat.alive) vs.
-    removed (absent from state.entities entirely, i.e. a real apply.py pop, not a combat.alive=False
-    flip on a still-present entity) and suppresses the message on a quiet, non-heartbeat tick
-    (tick % 20 != 0 and nothing changed/removed/eventful), ported from V1s compute_delta() but
-    driven off the tick loops DirtySet instead of a stored prior-snapshot diff. V2EngineManager
-    computes the delta once per tick in _update_latest_state and only calls _notify_listeners when
-    it is non-None. stream_ws attaches a per-connection snapshot_as_of_tick field to each dequeued
-    delta by copying the dict before mutating it, since the same dict object is fanned out by
-    reference to every connected listeners queue. The events field ships permanently empty
-    ([]) this ticket -- not wired to real SimulationEvent content (see plan.mds Open Design
-    Question 1); state, tier, combat_target_id, loot_progress, loot_duration have no confirmed V2
-    source and are dropped from EntitySlim (see plan.mds Open Design Question 2).'
+  text: /api/v1/ws now broadcasts a per-tick entity delta ({tick, changed, removed,
+    events, snapshot_as_of_tick, region_id}) alongside the pre-existing minimal-summary
+    connect payload (TCK-20260821-WS-ENTITY-DELTA-BROADCAST). StatePresenter.present_entity_slim
+    projects each entity to a 9-field slim dict (id, kind, x, y, hp, max_hp, level,
+    faction, weapon_range), always reading live component values, never a diff. ReadModelCache.compute_tick_delta
+    classifies DirtySet.all_dirty_entities into changed (present in state.entities
+    and combat.alive) vs. removed (absent from state.entities entirely, i.e. a real
+    apply.py pop, not a combat.alive=False flip on a still-present entity) and suppresses
+    the message on a quiet, non-heartbeat tick (tick % 20 != 0 and nothing changed/removed/eventful),
+    ported from V1s compute_delta() but driven off the tick loops DirtySet instead
+    of a stored prior-snapshot diff. V2EngineManager computes the delta once per tick
+    in _update_latest_state and only calls _notify_listeners when it is non-None.
+    stream_ws attaches a per-connection snapshot_as_of_tick field to each dequeued
+    delta by copying the dict before mutating it, since the same dict object is fanned
+    out by reference to every connected listeners queue. The events field ships permanently
+    empty ([]) this ticket -- not wired to real SimulationEvent content (see plan.mds
+    Open Design Question 1); state, tier, combat_target_id, loot_progress, loot_duration
+    have no confirmed V2 source and are dropped from EntitySlim (see plan.mds Open
+    Design Question 2). TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD adds a region_id
+    key to the same per-connection attachment site (immediately after snapshot_as_of_tick),
+    always the literal None/null on every message -- reserved wire space for the future
+    M3 interest-management epic (TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT);
+    compute_tick_delta itself is untouched, so the field carries no filtering or subscription
+    meaning yet.
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/api/presenters/state_presenter.py + src/api/read_model_cache.py + src/api/engine_manager.py + src/api/ws/stream.py
+  v2_evidence: src/api/presenters/state_presenter.py + src/api/read_model_cache.py
+    + src/api/engine_manager.py + src/api/ws/stream.py (out_payload["region_id"] =
+    None)
   proof_type: null
-  test_path: tests/unit/api/test_read_model_cache.py::test_compute_tick_delta_changed_includes_only_dirty_and_alive_entities
+  test_path: tests/unit/api/test_read_model_cache.py::test_compute_tick_delta_changed_includes_only_dirty_and_alive_entities,tests/api/test_ws_protocol.py::test_ws_delta_envelope_includes_null_spatial_placeholder_field,tests/api/test_ws_protocol.py::test_ws_delta_envelope_new_field_does_not_change_existing_field_semantics
   divergence_note: null
-  support_boundary: events field is always [] this ticket -- real SimulationEvent content and
-    spatial-subscription/region filtering are explicitly out of scope (separate follow-up tickets
-    if ever needed).
+  support_boundary: events field is always [] this ticket -- real SimulationEvent
+    content and spatial-subscription/region filtering are explicitly out of scope
+    (separate follow-up tickets if ever needed). region_id is now reserved on the
+    envelope (always null) per TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD, but actual
+    spatial-subscription/region filtering remains out of scope, still deferred to
+    TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT.
