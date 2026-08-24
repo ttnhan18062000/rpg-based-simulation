@@ -1914,20 +1914,26 @@
   divergence_note: null
   support_boundary: "Doc tooling only \u2014 no simulation behavior is involved."
 - id: INFRA-181
-  text: 'Docusaurus 3 site scaffold at website/ with four plugin-content-docs instances
-    indexing docs/, tickets/done/, stored_artifacts/, docs/archive/. Makefile targets
-    docs-serve and docs-build available.
+  text: 'Docusaurus 3 site scaffold at website/ with a single plugin-content-docs
+    instance (the classic preset''s docs block, path docs/) publishing the approved
+    developer-facing subset; its exclude list drops superpowers/, specs/, parity_ledger/,
+    scenarios/, entity/, archive/, plans/, audits/, and optimization_audit_ledger.md.
+    The tickets/done, stored_artifacts, and agent-monitoring/retro plugin-content-docs
+    instances (and their sidebars-*.js files) were removed entirely, along with the
+    matching navbar items and the search-local theme''s docsRouteBasePath entries, per
+    TCK-20260821-DOCS-BUILD-LASTUPDATE-METADATA-OVERHEAD. Makefile targets docs-serve
+    and docs-build available.
 
     '
   status: verified
   priority: P2
   legacy_evidence: null
   v2_evidence: 'website/docusaurus.config.js + website/package.json + Makefile (docs-serve,
-    docs-build targets)
+    docs-build targets), refreshed 2026-08-24 for TCK-20260821-DOCS-BUILD-LASTUPDATE-METADATA-OVERHEAD
 
     '
   proof_type: null
-  test_path: null
+  test_path: tests/static/test_docs_build_content_scope.py
   divergence_note: null
   support_boundary: "Doc tooling only \u2014 no simulation behavior is involved."
 - id: INFRA-182
