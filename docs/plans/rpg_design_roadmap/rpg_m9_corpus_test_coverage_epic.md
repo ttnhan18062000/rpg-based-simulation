@@ -9,7 +9,7 @@ tags: [testing, simulation-quality, corpus]
 # Epic Plan — RPG Design Roadmap, Milestone 9: World Corpus Test Coverage for New Features
 
 **Tracking ticket:** `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (not yet created — scope-only, per
-`docs/plans/rpg_design_roadmap.md`)
+`docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
 **Source:** Direct investigation of `docs/simulation_quality/corpus_tier_taxonomy.md`,
 `config/simulation_quality/corpus_registry.yaml`'s `_worlds` key (21 real worlds), `data/worlds/*/world.yaml`
 and `data/worlds/*/world_compile_report.json`, `data/content/world_modules/*.yaml` (20 real modules),
@@ -18,7 +18,7 @@ and `data/worlds/*/world_compile_report.json`, `data/content/world_modules/*.yam
 `src/domains/demographics/cohort.py` (real age-bracket thresholds), `tests/integration/scenarios/
 test_campaign_runtime.py` and `CampaignScorecardEvaluator` (real Campaign test infrastructure),
 `docs/brainstorm/rpg_expected_schemas.html` ("RPG Schema Registry", all 32 stateful ideas), and
-`docs/plans/rpg_m8_world_corpus_generation_epic.md`.
+`docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md`.
 **Gate:** informs M1-M8 rather than blocking them — like M8, most findings are cheap reuse rather than
 scope corrections; two findings (idea 66, ideas 53/55/58/62) are real gates for their own tickets, named
 explicitly below and in the roadmap's Sequencing rules.
@@ -324,6 +324,6 @@ not tier labels with a one-line gesture.
   infrastructure used in item 1's shared test plan
 - `src/domains/demographics/cohort.py` — real age-bracket thresholds used in idea 20/34's spec
 - `docs/brainstorm/rpg_expected_schemas.html` ("RPG Schema Registry") — per-idea proposed schemas
-- `docs/plans/rpg_m7_simq_pillar_integration_epic.md`, `docs/plans/rpg_m8_world_corpus_generation_epic.md` —
+- `docs/plans/rpg_design_roadmap/rpg_m7_simq_pillar_integration_epic.md`, `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md` —
   the two sibling epics this one sits between
-- `docs/plans/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`

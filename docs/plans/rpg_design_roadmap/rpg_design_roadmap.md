@@ -42,7 +42,7 @@ Each milestone epic below cites specific idea numbers; look them up in the atlas
 ### M1 — Quick Wins & Housekeeping (ready to ticket now)
 
 **Tracking epic**: `TCK-20260823-EPIC-RPG-M1-QUICK-WINS` (not yet created — see
-`docs/plans/rpg_m1_quick_wins_epic.md`, fully scoped, 20 ideas).
+`docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md`, fully scoped, 20 ideas).
 
 No dependencies on anything else in this roadmap. Finishes half-built mechanisms, resolves 5 formerly-open
 technical questions (now answered), and fixes 2 confirmed real bugs. The atlas's own Roadmap section
@@ -95,7 +95,7 @@ blocker with parts of M4 and M5.
 ### M7 — Simulation Quality Pillar Integration (follow-up, gated on M1-M6)
 
 **Tracking epic**: `TCK-20260823-EPIC-RPG-M7-SIMQ-INTEGRATION` (not yet created, scope-only — see
-`docs/plans/rpg_m7_simq_pillar_integration_epic.md`).
+`docs/plans/rpg_design_roadmap/rpg_m7_simq_pillar_integration_epic.md`).
 
 Not a new RPG feature — a consolidated audit-and-registration pass ensuring every real event type the other
 six milestones introduce actually gets registered into SimQ's per-pillar scoring rules, using the Merit
@@ -106,7 +106,7 @@ distributed as per-milestone acceptance criteria — see that epic's own Problem
 ### M8 — World Corpus, Generation & Modules (informs M1-M6, doesn't block them)
 
 **Tracking epic**: `TCK-20260823-EPIC-RPG-M8-WORLD-CORPUS` (not yet created, scope-only — see
-`docs/plans/rpg_m8_world_corpus_generation_epic.md`).
+`docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md`).
 
 Also not a new RPG feature — checks whether the real world-generation/compilation pipeline and the 6 named
 test-corpus profiles actually have a place for each idea's content to enter a running world. Found two real
@@ -119,7 +119,7 @@ their affected tickets.
 ### M9 — World Corpus Test Coverage for New Features (follow-up, informs M1-M8, doesn't block them)
 
 **Tracking epic**: `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (not yet created, scope-only — see
-`docs/plans/rpg_m9_corpus_test_coverage_epic.md`).
+`docs/plans/rpg_design_roadmap/rpg_m9_corpus_test_coverage_epic.md`).
 
 Also not a new RPG feature, and distinct from both M7 and M8: M7 asks whether SimQ knows how to *grade* an
 event once it fires; M8 asks whether the compiler can *seed* an idea's content into a world at all. M9 asks

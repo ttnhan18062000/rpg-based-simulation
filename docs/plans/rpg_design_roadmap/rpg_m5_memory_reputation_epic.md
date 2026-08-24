@@ -9,7 +9,7 @@ tags: [architecture, content, feature-flags]
 # Epic Plan — RPG Design Roadmap, Milestone 5: Memory, Reputation & Legacy
 
 **Tracking ticket:** `TCK-20260823-EPIC-RPG-M5-MEMORY-REPUTATION` (not yet created — scope-only, per
-`docs/plans/rpg_design_roadmap.md`)
+`docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Design Ideas 53, 54, 55, 57, 58, 60, 62, 63.
 **Gate:** M2's idea 36 (Clan) for organization-shaped ideas, M3's idea 32 (Reproduction) for
 inheritance-shaped ideas.
@@ -63,4 +63,4 @@ milestone converges on.
 - `docs/brainstorm/rpg_feature_atlas.html` — Shared Implementation Opportunities, Cross-Cutting Risk & Blast
   Radius (including the determinism-fingerprint finding on `public_reputation`), Phase Placement & Testing
   Strategy (`LEGACY_PROPAGATION_ARENA` scenario design)
-- `docs/plans/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`

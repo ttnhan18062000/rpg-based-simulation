@@ -9,7 +9,7 @@ tags: [architecture, content, feature-flags]
 # Epic Plan — RPG Design Roadmap, Milestone 2: Foundational Systems
 
 **Tracking ticket:** `TCK-20260823-EPIC-RPG-M2-FOUNDATIONAL-SYSTEMS` (not yet created — scope-only, per
-`docs/plans/rpg_design_roadmap.md`)
+`docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Design Ideas 2, 4, 5, 6, 8, 11, 14, 23, 27, 28, 30, 35,
 36, 37, 43, 48.
 **Gate:** M1's idea 9 (flag-governance decision) should land first — not a hard technical dependency, but
@@ -45,7 +45,7 @@ validation step ahead of the highest-risk content item (see the roadmap's Sequen
    framing. Use `natural_traits` containing `tool_user` instead (see Content & Balance Requirements in the
    atlas for the full 13-race breakdown). **World-generation note (M8):** `settlement_capacity` doesn't
    exist anywhere at the schema level yet — this ticket needs to add the actual field, not extend one that
-   already exists. Read `docs/plans/rpg_m8_world_corpus_generation_epic.md` before scoping this ticket.
+   already exists. Read `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md` before scoping this ticket.
 3. **Idea 35 — City ownership wiring.** Confirmed wider blast radius than originally scoped: 8 real
    consumer files, not one implementation-time call. **Depth-audit note, corrected after direct
    re-verification:** the sovereignty ownership-flip math this idea wires into is `DEATH_INFLUENCE_SHIFT =
@@ -105,4 +105,4 @@ validation step ahead of the highest-risk content item (see the roadmap's Sequen
 
 - `docs/brainstorm/rpg_feature_atlas.html` — Build Order, Cross-Cutting Risk & Blast Radius, Shared
   Implementation Opportunities, Infrastructure Gaps
-- `docs/plans/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`

@@ -9,7 +9,7 @@ tags: [architecture, content, feature-flags]
 # Epic Plan — RPG Design Roadmap, Milestone 1: Quick Wins & Housekeeping
 
 **Tracking ticket:** `TCK-20260823-EPIC-RPG-M1-QUICK-WINS` (not yet created — this epic is scope-only,
-per `docs/plans/rpg_design_roadmap.md`)
+per `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Rev 60+ (Design Ideas 1, 3, 7, 9, 10, 12, 13, 15-19, 20,
 21, 22, 24, 25, 26, 29, 42), cross-checked against Cross-Cutting Risk, Shared Implementation Opportunities,
 Phase Placement & Testing Strategy, and `docs/brainstorm/design_merit_scorecard.html`.
@@ -125,7 +125,7 @@ Idea 16 (Ranger doctrine) needs no ticket — already answered by a separate, al
 ## Out of Scope
 
 - Any idea numbered 2, 4-6, 8, 11, 14, 23, 27, 28, 30-41, 43-65 — all belong to Milestones 2 through 6,
-  tracked in their own sibling epics per `docs/plans/rpg_design_roadmap.md`. (Idea 42 is in M1's own scope,
+  tracked in their own sibling epics per `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`. (Idea 42 is in M1's own scope,
   section D above — deliberately excluded from this range, not an oversight.)
 - Actually flipping any of the 8 flags idea 9 evaluates — that's the outcome of item 1's ticket, not a
   decision made in this planning doc.
@@ -157,4 +157,4 @@ Idea 16 (Ranger doctrine) needs no ticket — already answered by a separate, al
 - `docs/brainstorm/rpg_feature_atlas.html` — ideas 1, 3, 7, 9, 10, 12, 13, 15-22, 24-26, 29, 42; Cross-Cutting
   Risk & Blast Radius; Shared Implementation Opportunities; Phase Placement & Testing Strategy
 - `docs/brainstorm/design_merit_scorecard.html` — per-idea scores
-- `docs/plans/rpg_design_roadmap.md` — parent roadmap, sequencing rules
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, sequencing rules

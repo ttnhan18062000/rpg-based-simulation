@@ -9,7 +9,7 @@ tags: [content, architecture]
 # Epic Plan — RPG Design Roadmap, Milestone 8: World Corpus, Generation & Modules
 
 **Tracking ticket:** `TCK-20260823-EPIC-RPG-M8-WORLD-CORPUS` (not yet created — scope-only, per
-`docs/plans/rpg_design_roadmap.md`)
+`docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
 **Source:** Direct investigation of `src/worldbuilding/compiler.py`, `src/worldmodules/`,
 `data/content/world_modules/*.yaml` (20 files), `data/worlds/*/world.yaml` (21 compiled worlds),
 `docs/world/compiler_contract.md`, `docs/world/generator_contract.md`,
@@ -111,4 +111,4 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
 - `docs/mechanics/regional_sovereignty.md`
 - `tickets/done/TCK-20260630-WORLD-DEPLOY-MODULES.md`
 - `docs/brainstorm/rpg_feature_atlas.html` — ideas 14, 32, 39, 43, 44, 45, 48, 51
-- `docs/plans/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`

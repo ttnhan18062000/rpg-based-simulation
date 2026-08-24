@@ -9,7 +9,7 @@ tags: [architecture, content, feature-flags]
 # Epic Plan — RPG Design Roadmap, Milestone 6: Political Identity & Belonging
 
 **Tracking ticket:** `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (not yet created — scope-only, per
-`docs/plans/rpg_design_roadmap.md`)
+`docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Design Ideas 39, 56, 59, 65.
 **Gate:** effectively everything above — the deepest single dependency chain in the whole 65-idea roadmap.
 The roadmap explicitly does not recommend starting this milestone early, even speculatively.
@@ -65,4 +65,4 @@ investigation ran — several real corrections landed here that changed scope, n
 - `docs/brainstorm/rpg_feature_atlas.html` — Cross-Cutting Risk & Blast Radius, Shared Implementation
   Opportunities, Phase Placement & Testing Strategy (`POLITICAL_IDENTITY_ARENA` scenario design)
 - `docs/brainstorm/design_merit_scorecard.html`
-- `docs/plans/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`

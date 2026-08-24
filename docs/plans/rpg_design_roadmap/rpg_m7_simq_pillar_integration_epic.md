@@ -9,7 +9,7 @@ tags: [content, architecture]
 # Epic Plan — RPG Design Roadmap, Milestone 7: Simulation Quality Pillar Integration
 
 **Tracking ticket:** `TCK-20260823-EPIC-RPG-M7-SIMQ-INTEGRATION` (not yet created — scope-only, per
-`docs/plans/rpg_design_roadmap.md`)
+`docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
 **Source:** `docs/simulation_quality/quality_scoring_contract.md` §1 (Purpose &amp; Scope, 3 stated goals
 including regression detection) and §5 (the 10 real pillars), cross-referenced against
 `docs/brainstorm/design_merit_scorecard.html`'s Pillar Reach axis for all 65 ideas.
@@ -81,4 +81,4 @@ exist is both more honest about sequencing and harder to accidentally miss piece
 - `docs/simulation_quality/quality_scoring_contract.md` — §1 Purpose &amp; Scope, §5 The 10 Pillars, §4.8
   Data-Driven Scoring Weights
 - `docs/brainstorm/design_merit_scorecard.html` — Pillar Reach axis, all 65 ideas
-- `docs/plans/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`

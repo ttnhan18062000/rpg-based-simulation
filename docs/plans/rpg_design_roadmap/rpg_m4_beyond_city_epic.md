@@ -9,7 +9,7 @@ tags: [architecture, content, feature-flags]
 # Epic Plan — RPG Design Roadmap, Milestone 4: Beyond the City & the Layer Model
 
 **Tracking ticket:** `TCK-20260823-EPIC-RPG-M4-BEYOND-CITY` (not yet created — scope-only, per
-`docs/plans/rpg_design_roadmap.md`)
+`docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Design Ideas 40, 41, 44, 45, 46, 47, 49, 50, 51, 52, 61,
 64.
 **Gate:** M2's idea 35 (City ownership), idea 36 (Clan's shape), and idea 48 (place-type transitions).
@@ -33,7 +33,7 @@ in the roadmap: Shared Implementation Opportunities found real consolidation acr
    **World-generation note (M8):** idea 45's "seed CampState" framing understates the real gap —
    `CampState` is never constructed in production anywhere, and there's no schema field or compiler step
    for it at all. This ticket needs a new `WorldModuleSpec` field plus a new `WorldCompiler` step, not a
-   data-seed call into an existing pattern. Read `docs/plans/rpg_m8_world_corpus_generation_epic.md` before
+   data-seed call into an existing pattern. Read `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md` before
    scoping. Good news from the same epic: 3 of the 6 real test-corpus profiles already have City+hostile-camp
    content coexisting, so testing this needs zero new corpus authoring once the mechanism exists.
 2. **Idea 47 — Lair.** Confirmed a genuinely separate ticket, correctly NOT a Camp variant — but its real
@@ -45,7 +45,7 @@ in the roadmap: Shared Implementation Opportunities found real consolidation acr
    precedent (idea 48) was wrong; the actual live match is Culture Drift's `CultureDeriver`/
    `CulturalBiasApplicator` — which has zero live callers anywhere. **This idea is blocked until that
    substrate is wired**, the same blocker three other clusters across this roadmap share (see
-   `docs/plans/rpg_design_roadmap.md`'s "Known open items").
+   `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`'s "Known open items").
 4. **Ideas 49 + 50 — Ambition/expansion, small shared helper only.** Both gate on "does this entity
    possess/consume material X" — worth one shared predicate, not a ticket merge. Idea 49 also carries a
    real naming-collision footgun: two unrelated classes both named `RecipeRegistry`.
@@ -80,4 +80,4 @@ in the roadmap: Shared Implementation Opportunities found real consolidation acr
 - `docs/brainstorm/rpg_feature_atlas.html` — Shared Implementation Opportunities, Cross-Cutting Risk & Blast
   Radius, Phase Placement & Testing Strategy (`SETTLEMENT_TIER_ARENA`, `AMBITION_LOOP_ARENA`,
   `CLAN_LIFECYCLE_ARENA`, `EMPTY_CHAIR_ARENA` scenario designs)
-- `docs/plans/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`

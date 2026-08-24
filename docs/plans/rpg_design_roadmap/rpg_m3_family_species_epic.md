@@ -9,7 +9,7 @@ tags: [architecture, content, feature-flags]
 # Epic Plan — RPG Design Roadmap, Milestone 3: Family, Species & the Adult Life
 
 **Tracking ticket:** `TCK-20260823-EPIC-RPG-M3-FAMILY-SPECIES` (not yet created — scope-only, per
-`docs/plans/rpg_design_roadmap.md`)
+`docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Design Ideas 31, 32, 33, 34, 38.
 **Gate:** hard dependency on M2's idea 14 (Species Classification) and idea 43 (population seeding) — both
 confirmed as real blockers, not soft preferences, in Cross-Cutting Risk.
@@ -47,7 +47,7 @@ Build order within the milestone, confirmed by Phase Placement & Testing Strateg
    this idea cannot be corpus-tested in any real profile today, for two stacked reasons — `population_cohorts`
    is unseeded everywhere (same root cause as M2's idea 43), and no reproduction/capacity-gating mechanism
    exists in code at all. Sequence any real corpus-testing work for this idea strictly after idea 43 (M2)
-   and this ticket itself both ship — see `docs/plans/rpg_m8_world_corpus_generation_epic.md`.
+   and this ticket itself both ship — see `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md`.
 5. **Idea 38 — Close the reproduction population-pressure feedback loop.** Depends on idea 32 landing
    first; the signal it nudges doesn't exist without M2's idea 43 either.
 
@@ -79,4 +79,4 @@ Build order within the milestone, confirmed by Phase Placement & Testing Strateg
   Strategy (`LINEAGE_ARENA` scenario design + explicit long-run-cost caveat for population-pressure
   convergence)
 - `docs/brainstorm/design_merit_scorecard.html`
-- `docs/plans/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
