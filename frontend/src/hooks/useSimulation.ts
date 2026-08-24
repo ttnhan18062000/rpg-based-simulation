@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, GameEvent, GroundItem, Building, ResourceNode, TreasureChest, Region, StaticData, Manifest } from '@/types/api';
+import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, WireEntitySlim, GameEvent, GroundItem, Building, ResourceNode, TreasureChest, Region, StaticData, Manifest } from '@/types/api';
 
 const API_BASE = '/api/v1';
+
+function wsBase(): string {
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${proto}//${window.location.host}${API_BASE}`;
+}
 
 async function fetchJSON<T>(path: string): Promise<T> {
   const res = await fetch(API_BASE + path);
@@ -115,40 +120,71 @@ export function useSimulation(): SimulationState {
     return () => { cancelled = true; };
   }, []);
 
-  // EventSource stream loop
+  // WebSocket stream loop
   useEffect(() => {
     if (!mapLoadedRef.current && !mapData) return;
 
-    let evtSource: EventSource | null = null;
+    let ws: WebSocket | null = null;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
     let pollingStatus = false;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    const connectStream = () => {
-      evtSource = new EventSource(`${API_BASE}/stream`);
-      
-      evtSource.onmessage = (event) => {
+    const scheduleReconnect = () => {
+      if (reconnectTimeout) return;
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null;
+        connectWS();
+      }, 2000);
+    };
+
+    const connectWS = () => {
+      ws = new WebSocket(`${wsBase()}/ws`);
+
+      ws.onopen = () => {
+        ws!.send(JSON.stringify({ type: 'handshake', format: 'json' }));
+      };
+
+      ws.onmessage = (event) => {
         try {
-          const delta = JSON.parse(event.data);
-          
-          if (delta.error) {
-            console.error('Stream error:', delta.error);
+          const data = JSON.parse(event.data);
+
+          if (data.error) {
+            console.error('Stream error:', data.error);
             return;
           }
 
-          setTick(delta.tick);
+          const isDelta = Array.isArray(data.changed) && Array.isArray(data.removed);
+          if (!isDelta) {
+            // Initial post-handshake message: manager.get_state() minimal-summary shape
+            // ({tick, world_time, entities_count, maturity, seed}), not a delta. No entity/event
+            // state to reduce here.
+            return;
+          }
+
+          setTick(data.tick);
 
           setEntities((prev: EntitySlim[]) => {
             // Convert array to map for fast updates
             const entMap = new Map(prev.map(e => [e.id, e]));
 
             // Remove dead
-            for (const id of delta.removed) {
+            for (const id of data.removed) {
               entMap.delete(id);
             }
 
             // Upsert changed
-            for (const upd of delta.changed) {
-              entMap.set(upd.id, upd);
+            for (const upd of data.changed as WireEntitySlim[]) {
+              // present_entity_slim never sends state/loot_progress/loot_duration — '' never
+              // matches 'LOOTING', so this default stays inert, not a fabricated value.
+              const full: EntitySlim = {
+                ...upd,
+                state: upd.state ?? '',
+                tier: upd.tier ?? 0,
+                combat_target_id: upd.combat_target_id ?? null,
+                loot_progress: upd.loot_progress ?? 0,
+                loot_duration: upd.loot_duration ?? 0,
+              };
+              entMap.set(full.id, full);
             }
 
             const next = Array.from(entMap.values());
@@ -156,25 +192,29 @@ export function useSimulation(): SimulationState {
             return next;
           });
 
-          if (delta.events && delta.events.length > 0) {
+          if (data.events && data.events.length > 0) {
             setEvents((prev: GameEvent[]) => {
               const existingKeys = new Set(prev.map(e => `${e.tick}:${e.message}`));
-              const fresh = delta.events.filter((e: GameEvent) => !existingKeys.has(`${e.tick}:${e.message}`));
+              const fresh = data.events.filter((e: GameEvent) => !existingKeys.has(`${e.tick}:${e.message}`));
               return fresh.length > 0 ? [...prev, ...fresh] : prev;
             });
           }
         } catch (err) {
-          console.error('Failed to parse SSE payload:', err);
+          console.error('Failed to parse WS payload:', err);
         }
       };
 
-      evtSource.onerror = () => {
-        evtSource?.close();
-        setTimeout(connectStream, 2000); // Reconnect on failure
+      ws.onclose = () => {
+        scheduleReconnect();
+      };
+
+      ws.onerror = () => {
+        ws?.close();
+        scheduleReconnect();
       };
     };
 
-    connectStream();
+    connectWS();
 
     // Secondary slow-poll: 1) fetches full selected_entity data, 2) fetches stats (total spawns, status)
     // Runs every 500ms instead of 80ms
@@ -262,14 +302,21 @@ export function useSimulation(): SimulationState {
     pollInterval = setInterval(fallbackPoll, 500);
 
     return () => {
-      if (evtSource) evtSource.close();
+      if (ws) ws.close();
       if (pollInterval) clearInterval(pollInterval);
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
     };
   }, [mapData]);
 
   const sendControl = useCallback(async (action: string) => {
     try {
-      await fetch(`${API_BASE}/control/${action}`, { method: 'POST' });
+      if (action === 'pause') {
+        await fetch(`${API_BASE}/control/pause`, { method: 'POST' });
+      } else if (action === 'resume') {
+        await fetch(`${API_BASE}/control/resume`, { method: 'POST' });
+      } else {
+        console.error(`Unsupported control action: ${action}`);
+      }
     } catch (e) {
       console.error('Control error:', e);
     }
