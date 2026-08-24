@@ -78,6 +78,11 @@ would not catch a render regression). Enforced via
 A `DirtySet`-incremental render (`src/rendering/incremental.py::IncrementalRenderer`) must produce
 pixel-identical output to a full non-incremental `render()` of the same final state, enforced via
 `tests/unit/rendering/test_render_incremental.py::test_dirty_set_incremental_render_pixel_identical_to_full_rerender`.
+This includes an entity that dies in place (no position change, only `combat.alive` flips to
+`False`): `IncrementalRenderer` mirrors `render()`'s own alive/dead color branch
+(`ENTITY_COLOR_ALIVE`/`ENTITY_COLOR_DEAD`) in both its initial frame seed and its per-tick
+`update()`, gated on `lifecycle.active` alone, enforced via `tests/unit/rendering/
+test_render_incremental.py::test_incremental_render_repaints_entity_that_dies_in_place`.
 
 **Tier 1 digest determinism**: the Tier 1 digest
 (`src/rendering/review_pipeline.py::Tier1Digest`/`digest_to_json`) is a pure, read-only function of
