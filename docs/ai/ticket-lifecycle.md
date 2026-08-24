@@ -37,7 +37,7 @@ above). Every gate-branch edge below is labeled with the exact return status tha
 flowchart TD
     Start([Request]) --> Scope
 
-    Scope["Scope<br/><i>ticket-scoper</i><br/>→ tickets/inprogress/{id}.md<br/>→ staging_artifacts/{id}/"]
+    Scope["Scope<br/><i>ticket-scoper</i><br/>→ tickets/inprogress/{id}.md<br/>→ staging_artifacts/{id}/ (standard/epic only)"]
     Scope -- CONFLICTS_DETECTED --> ScopeFix[/"Human resolves, re-run"/]
     Scope -- TAGS_NOT_REGISTERED --> ScopeTagFix[/"Register tag(s) via tag_registry.py add,<br/>or edit ticket to use an existing tag, re-run"/]
     Scope -- "tier=epic" --> EpicDone(["EPIC_SCOPED"])
@@ -128,7 +128,11 @@ Workflow({ name: 'implement-ticket', args: {
 - Scans `stored_artifacts/` for prior investigations
 - Reads relevant source files
 - Produces the ticket at `tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md`
-- Creates `staging_artifacts/{ticket_id}/`
+- Creates `staging_artifacts/{ticket_id}/` — **standard/epic tier only**. Hotfix tier skips this:
+  Investigate/Plan/Review (the phases that would populate it with `investigation.md`/`plan.md`/
+  `test_plan.md`) never run for hotfix, so the directory would otherwise sit empty for the ticket's
+  whole life and get flagged as a leftover by `done-checker`'s "repo state is consistent" condition
+  at Verify (`TCK-20260824-HOTFIX-STAGING-DIR-SCOPE-GAP`).
 
 **Example output:**
 ```
@@ -136,7 +140,7 @@ tickets/inprogress/TCK-20260606-COMBAT-RELATION.md
 staging_artifacts/TCK-20260606-COMBAT-RELATION/
 ```
 
-**Gate:** If conflicts are detected, the workflow returns `CONFLICTS_DETECTED` with a list. The user resolves (adjust scope, close duplicate, etc.) and re-runs.
+**Gate:** If conflicts are detected, the workflow returns `CONFLICTS_DETECTED` with a list. The user resolves (adjust scope, close duplicate, etc.) and re-runs. `conflicts` is reserved for genuine blocking duplicate/contradictory work only — good-faith informational disclosure (e.g. a related prior ticket that is not duplicate work, a mechanic/parity note worth surfacing) is returned separately via the optional `related_context` field, which is logged for visibility but never gates the pipeline (`TCK-20260824-HOTFIX-CONFLICTS-BLOCKING-SPLIT`).
 
 **Gate (tag registry):** After the agent call returns, the orchestrator runs
 `tools/tag_registry.py::check_tags_registered` against the ticket's tags (via `bash()` — not
