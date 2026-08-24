@@ -31,8 +31,8 @@ _FASTLANE_JOBS = [
 ]
 
 _PRE_EXISTING_USES = {
-    "actions/checkout@v4",
-    "actions/setup-python@v5",
+    "actions/checkout@v5",
+    "actions/setup-python@v6",
     "actions/upload-artifact@v4",
 }
 
@@ -45,8 +45,8 @@ runs-on: ubuntu-latest
 needs: [changed-files]
 if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') }}
 steps:
-  - uses: actions/checkout@v4
-  - uses: actions/setup-python@v5
+  - uses: actions/checkout@v5
+  - uses: actions/setup-python@v6
     with: { python-version: "3.13", cache: pip }
   - run: pip install -r requirements.txt
   - name: Fast lanes
@@ -71,8 +71,8 @@ needs:
   - perf-cert-arena
   - migration-lanes
 steps:
-  - uses: actions/checkout@v4
-  - uses: actions/setup-python@v5
+  - uses: actions/checkout@v5
+  - uses: actions/setup-python@v6
     with: { python-version: "3.13", cache: pip }
   - run: pip install -r requirements.txt
   - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
