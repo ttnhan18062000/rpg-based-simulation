@@ -60,10 +60,18 @@ That undersold connection is not unique to idea 1. Full audit of all 10 ideas sc
 | 3. Finish BreakthroughService bonuses | 1 | "Real bonuses sitting in a registry, applied by a function that does nothing." | 7 — idea 1's shape, in miniature |
 | 42. Fix town_center pointer bug | 1 | "Every consumer has been silently checking distance from (0,0)." | 5/6 — idea 56 measures a City's isolation *by distance*; this bug has been silently corrupting an already-designed Principle-6 mechanism |
 | 17. Wound/Scar penalty mechanics | 0 | "No wound has ever healed." | 2 — a working scar system is a body carrying visible evidence of what happened to it (weaker case; the card's own framing is mostly about a wrong constant, not an unwired system) |
+| 8. Prune or finish the dead cognition schema | 0 | "Cleanup, not a feature." | 7, conditionally — see correction below |
 
-Ideas 8, 9, 15, 16, 18, 19 remain correctly low — pure governance/formula/doc-drift items the takes
-themselves describe as having no principle surface (idea 8: "correctly" near-zero, an explicit self-
-assessment in its own card).
+**Correction (found while preparing the drafts in Section F, before this doc was merged):** idea 8 was
+initially treated as correctly-low alongside 9/15/16/18/19. It isn't a clean case. Idea 8's own card is
+exactly `core/cognition.py`'s orphaned model, framed as a binary "prune or finish" decision — DF=0 is a fair
+score for the card *as written*, since it's a governance choice, not a mechanism, same shape as idea 9. But
+the "finish" branch, if taken, is a direct Principle-7 remediation on the same footing as ideas 1/3/42 — and
+nothing in the card or its score currently signals that one of its two branches carries real principle weight
+and the other doesn't. See Section E for the precise scope of what's actually orphaned.
+
+Ideas 9, 15, 16, 18, 19 remain correctly low — pure governance/formula/doc-drift items the takes themselves
+describe as having no principle surface.
 
 **Idea 66 (Region Contains Multiple Places) is the only idea absent from the Scorecard's table** — added
 after the full 65-idea scoring pass, never run through Direction Fit or any of the other 6 axes.
@@ -123,28 +131,41 @@ already-known trust/grudge-decay gap. Checked each against current idea coverage
   source document: an untested trust or grudge score between two living parties shouldn't sit at a fixed
   value forever. **Not addressed** — idea 55 only decays *inherited* feuds across generations; idea 56 only
   decays *population-scale* political allegiance. No idea touches two-party living-relationship decay.
-- **Principle 7 — a second, independent, un-ticketed orphan.** The document's own worked cautionary example
-  ("a self-model, a richer private-trust model, more than one competing memory system... built carefully and
+- **Principle 7 — an existing idea's card undersells the document's own worked cautionary example.**
+  ("A self-model, a richer private-trust model, more than one competing memory system... built carefully and
   then never actually switched on") is not hypothetical — it names, almost verbatim, a real system already in
-  the codebase: `core/cognition.py`'s ~565-line "Declared Cognition Schema" (risk beliefs, trauma recovery, a
-  full private-trust/public-reputation/betrayal relationship model, a 7-value motivation profile), which the
-  atlas's own Infrastructure Gaps section already tags "orphaned." **This is distinct from idea 1's nine
-  orphans** (GeneticsSystem, EmotionalModel, EvolutionService, InformationNeedDetector,
+  the codebase: `core/cognition.py`. **Correction to an earlier draft of this section:** this system is not
+  un-ticketed — it *is* idea 8 (Prune or finish the dead cognition schema), distinct from idea 1's nine
+  orphans (GeneticsSystem, EmotionalModel, EvolutionService, InformationNeedDetector,
   evaluate_social_consequence, SabotageAction, MemoryUpdatePhase, ReputationUpdateService,
-  compute_elder_attribute_update) — it has no idea number and is not in idea 1's remediation scope. It is the
-  single most direction-relevant un-owned finding in this whole audit.
+  compute_elder_attribute_update). Checking `core/cognition.py` directly, rather than trusting the atlas's
+  summary, also narrows the claim: not all ~40 declared dataclasses are orphaned — roughly two-thirds
+  (`CommitmentEntry`, `PublicReputationProfile`, `HabitMemory`, `EmotionalModel`, `IdentityDoctrine`,
+  `RecoveryState`, `RoleFitPreference`, `PerceptionModel`, three time-tracking entries, `CausalMemoryEntry`)
+  have real consumers in `src/domains/`. The genuinely orphaned subset — `SelfModel`, `RiskModel`,
+  `SubjectiveModel`, `TrustEntry`, `RelationshipModel`, `PartnerMemory`, `CommitmentModel`, `MotivationModel`,
+  `AmbitionProfile`, `ValuePreferenceProfile`, `MoralPreferenceProfile` — is narrower but is still exactly the
+  private-trust/relationship/self-model shape Principle 7 names, and `domains/culture/applicator.py`'s own
+  docstring explicitly documents skipping `ValuePreferenceProfile` and `MotivationModel` — a system
+  consciously declining to feed this data, which sharpens the finding rather than weakening it. The real gap
+  isn't a missing idea number, it's that idea 8's DF=0 score treats "prune" and "finish" as equivalent when
+  only one of the two branches serves the principle (see Section B's correction).
 
 ## F. Recommended next steps
 
-1. **Two candidate new ideas, drafted here for review — not yet added to the atlas or given idea numbers:**
-   - *Cognition Schema Wiring* — decide whether `core/cognition.py`'s orphaned model should be wired into a
-     real consumer, folded into idea 1's scope as a tenth orphan, or explicitly deferred with a documented
-     reason. Given Section E's finding that this is the document's own named worked example, deferring it
-     silently would repeat the exact failure Principle 7 warns against.
+1. **One candidate new idea, drafted here for review — not yet added to the atlas or given an idea number:**
    - *Living Relationship Decay* — a mechanism for two living parties' trust/grudge score to drift toward
      neutral (or curdle further) from time and inattention alone, distinct from idea 55's generational
      inheritance and idea 56's population-scale allegiance. Likely depends on whichever schema idea 37
      (currently underspecified) ultimately settles on for relationship state.
+   - *Cognition Schema Wiring is not a new idea — idea 8 already covers this decision.* An earlier draft of
+     this section proposed it as a new candidate before checking whether an idea already existed; it doesn't
+     need one. What's actually missing is a correction to idea 8 itself: its "finish" branch is a real
+     Principle-7 remediation (the genuinely orphaned subset is `SelfModel`, `RiskModel`, `SubjectiveModel`,
+     `TrustEntry`, `RelationshipModel`, `PartnerMemory`, `CommitmentModel`, `MotivationModel`,
+     `AmbitionProfile`, `ValuePreferenceProfile`, `MoralPreferenceProfile` — see Section E), and its DF=0
+     score doesn't distinguish that branch from "prune," which carries no such weight. Recommend a note on
+     idea 8's atlas card and Scorecard row splitting the two branches' Direction Fit, rather than a new idea.
 2. **Scope extensions to existing ideas** (not new ideas — spec additions to already-approved ones), pending
    review before folding into their atlas cards:
    - Idea 14: require genuinely divergent per-species behavioral logic in acceptance criteria, not a single
@@ -153,9 +174,10 @@ already-known trust/grudge-decay gap. Checked each against current idea coverage
      prior-owner trail, not just current kind/pointer, to satisfy Principle 5's political-geography and
      personal-memory asks.
 3. **Small credit corrections**, low-risk, can ride in the same pass as the scope extensions: cite Principle
-   7 explicitly on ideas 1, 3, 42's atlas cards; cite Principle 2 (lower confidence) on idea 17's; add the
-   sixth Reshape note to the Scorecard (Section C); tag the Known Open Items rows in Section D with their
-   principle numbers directly in `rpg_design_roadmap.md`.
+   7 explicitly on ideas 1, 3, 42's atlas cards; cite Principle 2 (lower confidence) on idea 17's; split idea
+   8's "prune" vs. "finish" branches on its own card and Scorecard row so only "finish" carries Principle-7
+   credit; add the sixth Reshape note to the Scorecard (Section C); tag the Known Open Items rows in Section D
+   with their principle numbers directly in `rpg_design_roadmap.md`.
 4. Re-run Direction Fit (and the other 6 axes) on idea 66 the next time the Scorecard is revisited, so it
    isn't the one idea in the set that's never been checked against the creative direction at all.
 

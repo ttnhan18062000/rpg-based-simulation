@@ -195,10 +195,11 @@ already have live SimQ scoring rules sitting idle, waiting only for the event to
   `docs/plans/rpg_design_roadmap/rpg_direction_alignment_audit.md`. Headline: no idea contradicts a
   principle — drift found is by omission, not commission. Surfaced three more "idea 1"-shaped undersold
   fixes (ideas 3, 42, 17), tied five items already in this list to specific principles they weren't credited
-  for, found a second and independent un-ticketed orphan (`core/cognition.py`'s Declared Cognition Schema —
-  the source document's own named worked example, distinct from idea 1's nine orphans), and named two
-  candidate new ideas (Cognition Schema Wiring, Living Relationship Decay) plus two scope extensions (idea
-  14's per-species logic, idea 59/66's place-history tracking) — all drafted, none yet added to the atlas.
+  for, and found that idea 8 ("Prune or finish the dead cognition schema") already covers `core/cognition.py`
+  — the source document's own named worked example of the Principle-7 failure mode — but its DF=0 score
+  doesn't distinguish idea 8's principle-serving "finish" branch from its inert "prune" one. Named one
+  candidate new idea (Living Relationship Decay) plus two scope extensions (idea 14's per-species logic, idea
+  59/66's place-history tracking) — all drafted, none yet added to the atlas.
 - Idea 30 (Possessions With Personal History, part of no milestone above's critical path but flagged in
   Infrastructure Gaps) needs genuinely new per-instance-identity infrastructure this codebase doesn't have
   anywhere today — the one idea of 65 with no real precedent to build on.
