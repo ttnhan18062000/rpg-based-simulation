@@ -32,6 +32,9 @@ decision already made.
    principles for the same undersold-connection pattern.
 5. Hunted `the_unwritten_world.html` for every place it poses an open question or names a craft-implication
    without resolving it, and checked whether any of the 66 current ideas answers it.
+6. Extended coverage to structural/framing surfaces beyond the atlas: the roadmap's Sequencing rules section,
+   all 9 M1–M9 epic docs' own scoping/acceptance-criteria language, the Simulation Wiring Map, and the
+   Milestone Map artifact (Section F).
 
 ## A. Confirmed strong alignments (no drift — worth naming, not fixing)
 
@@ -149,9 +152,59 @@ already-known trust/grudge-decay gap. Checked each against current idea coverage
   docstring explicitly documents skipping `ValuePreferenceProfile` and `MotivationModel` — a system
   consciously declining to feed this data, which sharpens the finding rather than weakening it. The real gap
   isn't a missing idea number, it's that idea 8's DF=0 score treats "prune" and "finish" as equivalent when
-  only one of the two branches serves the principle (see Section B's correction).
+  only one of the two branches serves the principle (see Section B's correction). **Naming note:** this
+  `SelfModel` is `core/cognition.py`'s orphaned dataclass — a different class from `core/self_model.py`'s
+  live `SelfModelBundle` gated by idea 9's `ENABLE_SELF_MODEL_COGNITION` flag (see Section F, finding 1).
 
-## F. Recommended next steps
+## F. Coverage extension: sequencing rules, epic docs, and companion artifacts
+
+Beyond the atlas and Scorecard, checked four more direction-adjacent surfaces for *structural* drift (not
+re-scoring individual ideas, already done in B/D/E): the roadmap's Sequencing rules section, all 9 M1–M9
+epic docs' own scoping/acceptance-criteria language, the Simulation Wiring Map
+(`rpg_simulation_wiring_map.html`), and the Milestone Map artifact.
+
+**Clean results, no structural drift:**
+- Sequencing rules' dependency gating (M2 load-bearing, M3/M4 independent, M6 gated on everything) is purely
+  data-model-prerequisite logic — a feature needing a schema that doesn't exist yet — not narrative
+  foreclosure.
+- The Wiring Map's Lifecycle Arc (T1–T20) is a state-space an entity moves through unpredictably (branches on
+  live combat outcomes, several transitions loop, several are dashed/proposed), not an authored plot order.
+  Ambient drift is represented, not just reactive triggers (hunger/sleep/stamina decay every tick, Cultural
+  Drift). The one apparent "loyalty conflict" (`owner_faction_id` vs. `FactionState.territory` disagreeing on
+  region ownership) is redundant bookkeeping drifting out of sync, not a genuine Principle-4 case — correctly
+  out of scope.
+- The Milestone Map's dependency flowchart honestly matches the real DAG (M1 shown independent, M3/M4 shown
+  parallel, M7–9 shown as informs-only dotted edges), and every card's "delivers" line stays at capability
+  level without overclaiming legibility the underlying epic doesn't scope.
+
+**New finding 1 — a real naming collision between a live system and an orphaned one.** Idea 9's
+`ENABLE_SELF_MODEL_COGNITION` flag gates a genuinely live, wired system: `src/cognition/self_model_phase.py`'s
+`SelfModelUpdatePhase`, operating on `core/self_model.py`'s `SelfModelBundle`, already called from
+`src/engine/pipeline.py`. This is a different class from `core/cognition.py`'s orphaned `SelfModel` dataclass
+that Section E's Principle-7 finding is about (idea 8). Two near-identically-named "self-model" systems — one
+live, one dead — and nothing in M1's epic doc distinguishes them. Real risk: whoever scopes idea 8 or idea 9
+next could conflate the two.
+
+**New finding 2 — M7's own Acceptance Signal doesn't require observer legibility.** M7 (Simulation Quality
+Pillar Integration)'s three acceptance-criteria bullets (pillar mapping, a signal rule or documented exclusion
+per event, a recorded calibration run) could be fully satisfied while leaving Principle 8's actual ask —
+legible to another character or an outside observer, not just an engine telemetry pillar — completely
+unaddressed. This is the SimQ-visibility-≠-observer-legibility gap (Section E / the Expected Events section
+of the Schema Registry) baked directly into an epic's own written definition of done, which makes it
+actionable in a way the earlier, idea-level version of this finding wasn't.
+
+**New finding 3 — the Wiring Map's badge system generalizes the same gap one level.** LIVE/GATED/ORPHANED/
+PROPOSED answers "does this run in production," not "is this legible to a player." Several LIVE-tagged
+mechanisms (Belief Cycle, Self-Model, internal AI reasoning) are confirmed executing with no check anywhere
+on whether their effects ever surface to an observer.
+
+**Process note, not a principle finding:** the Milestone Map (published as a Claude artifact this session)
+was never committed to the repo — it exists only as a local scratchpad file, unlike every other artifact from
+this session (Wiring Map, Schema Registry). Its M1 card also predates this audit and doesn't mention ideas 3,
+42, or 8, or any of the 8 principles — expected staleness, not new drift, but worth resyncing if the map is
+meant to stay a living reference rather than a one-off snapshot.
+
+## G. Recommended next steps
 
 1. **One candidate new idea, drafted here for review — not yet added to the atlas or given an idea number:**
    - *Living Relationship Decay* — a mechanism for two living parties' trust/grudge score to drift toward
@@ -180,6 +233,16 @@ already-known trust/grudge-decay gap. Checked each against current idea coverage
    with their principle numbers directly in `rpg_design_roadmap.md`.
 4. Re-run Direction Fit (and the other 6 axes) on idea 66 the next time the Scorecard is revisited, so it
    isn't the one idea in the set that's never been checked against the creative direction at all.
+5. **Disambiguate the two "self-model" systems in M1's epic doc** (Section F, finding 1): a one-line note
+   distinguishing idea 8's orphaned `core/cognition.py::SelfModel` from idea 9's live, wired
+   `core/self_model.py::SelfModelBundle`, so neither gets scoped assuming it's the other.
+6. **Add an explicit in-world legibility criterion to M7's Acceptance Signal** (Section F, finding 2): a
+   fourth bullet requiring every new SimQ-visible event type to also have a stated Chronicle/rumor/reputation
+   surfacing path, or an explicit documented reason one isn't needed — closing the SimQ-visibility-≠-
+   observer-legibility gap at the point where it's actually actionable, not just noted.
+7. **Decide the Milestone Map's status** (Section F, process note): commit it to the repo as a living,
+   version-controlled reference (and resync its M1 card with this audit's findings), or explicitly treat it
+   as a one-off snapshot — currently implicit either way.
 
 None of the above blocks any milestone above. This audit closes the "review the direction" pass; items 1–3
-are proposals awaiting your go-ahead before they change any published page.
+and 5–7 are proposals awaiting your go-ahead before they change any published page.

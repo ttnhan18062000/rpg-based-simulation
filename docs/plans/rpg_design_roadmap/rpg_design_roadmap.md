@@ -199,7 +199,11 @@ already have live SimQ scoring rules sitting idle, waiting only for the event to
   — the source document's own named worked example of the Principle-7 failure mode — but its DF=0 score
   doesn't distinguish idea 8's principle-serving "finish" branch from its inert "prune" one. Named one
   candidate new idea (Living Relationship Decay) plus two scope extensions (idea 14's per-species logic, idea
-  59/66's place-history tracking) — all drafted, none yet added to the atlas.
+  59/66's place-history tracking) — all drafted, none yet added to the atlas. Extended coverage to the
+  Sequencing rules section, all 9 epic docs, the Simulation Wiring Map, and the Milestone Map found a real
+  naming collision (idea 8's orphaned `core/cognition.py::SelfModel` vs. idea 9's live
+  `core/self_model.py::SelfModelBundle`) and a gap in M7's own Acceptance Signal (SimQ-visibility isn't the
+  same as in-world observer legibility) — both actionable, neither blocking.
 - Idea 30 (Possessions With Personal History, part of no milestone above's critical path but flagged in
   Infrastructure Gaps) needs genuinely new per-instance-identity infrastructure this codebase doesn't have
   anywhere today — the one idea of 65 with no real precedent to build on.
