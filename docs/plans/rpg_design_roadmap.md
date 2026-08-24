@@ -199,19 +199,22 @@ their affected tickets.
   these block any milestone above, but whoever picks up a ticket touching Reputation, Perception, Goal
   Hierarchy, or town Buildings should read that section first — the badge alone will overstate confidence.
 - **Idea 66 surfaced a real process gap: prose descriptions of proposed state let ambiguity slip through
-  that a schema would have caught.** `docs/brainstorm/rpg_expected_schemas.html` gives field-level schemas —
-  not prose — for all 30 proposed ideas that introduce new durable state, plus a distinct second dimension:
-  ~13 hardcoded/flat values already in the live codebase (`readiness_speed=10.0`, `max_perceived=10`, the
-  sovereignty ownership-flip constants, `RecipeRegistry`'s 3-recipe dict) that behave like schema-driven
-  state but are Python literals today, most with no idea currently targeting them. Three schemas (ideas 30,
-  60, 63) are marked explicitly as genuinely underspecified rather than presenting invented fields as
-  settled. Whoever scopes a ticket for any idea introducing new state should start from that document, not
-  re-derive field shapes from the atlas's prose.
+  that a schema would have caught.** `docs/brainstorm/rpg_expected_schemas.html` (page titled "RPG Schema
+  Registry" — the tracking page for every RPG feature's schema, current and planned) gives field-level
+  schemas — not prose — for all 30 proposed ideas that introduce new durable state, the *existing* live
+  schemas for every layer (Entity, Group/Guild, Faction, Region, Camp, World, World Objects, Clan/Race —
+  even fields with no proposed change), and a third dimension: ~13 hardcoded/flat values already in the live
+  codebase (`readiness_speed=10.0`, `max_perceived=10`, the sovereignty ownership-flip constants,
+  `RecipeRegistry`'s 3-recipe dict) that behave like schema-driven state but are Python literals today, most
+  with no idea currently targeting them. Three proposed schemas (ideas 30, 60, 63) are marked explicitly as
+  genuinely underspecified rather than presenting invented fields as settled. Whoever scopes a ticket for
+  any idea — new state or a change to existing state — should start from that document, not re-derive field
+  shapes from the atlas's prose.
 
 ## References
 
 - `docs/brainstorm/rpg_feature_atlas.html` (all sections cited above)
-- `docs/brainstorm/rpg_expected_schemas.html` (field-level schemas for 9 load-bearing proposed ideas)
+- `docs/brainstorm/rpg_expected_schemas.html` ("RPG Schema Registry" — existing + proposed schemas for every layer)
 - `docs/brainstorm/design_merit_scorecard.html`
 - `docs/brainstorm/the_unwritten_world.html`
 - `docs/brainstorm/simulation_capabilities.html` (plain-language companion, for non-technical review)

@@ -1,4 +1,4 @@
-<title>Expected Data Schemas</title>
+<title>RPG Schema Registry</title>
 <style>
 :root {
   --bg: #EDEEE9;
@@ -389,9 +389,9 @@ nav.toc li.toc-sub a { padding-left: 1.4em; font-size: 13px; color: var(--ink-so
 
 <header class="hero">
   <p class="eyebrow">Implementation Planning &middot; RPG Feature Atlas Companion</p>
-  <h1 class="title">Expected Data Schemas</h1>
+  <h1 class="title">RPG Schema Registry</h1>
   <p class="subtitle">Field-level schemas for the atlas's proposed ideas &mdash; not prose descriptions of target behavior, but the actual typed shape each feature needs, so ambiguity like "is City a kind of Region or does Region contain Cities?" gets caught before a ticket is written, not after.</p>
-  <p class="subtitle note">Prompted directly by that exact ambiguity surfacing in idea 66. Covers all 29 proposed ideas that introduce new durable state, plus a second dimension: hardcoded values already in the live codebase that behave like they should be schema-driven instead of Python literals.</p>
+  <p class="subtitle note">Prompted directly by that exact ambiguity surfacing in idea 66, then expanded twice on direct request: first to cover all 30 proposed ideas that introduce new durable state (not just the highest-leverage 9), then to also track the <em>existing</em> live schemas &mdash; even the ones with no proposed change &mdash; so this is the one page to check for any RPG feature&rsquo;s real current shape, plus what&rsquo;s planned to change about it. A third dimension catalogues hardcoded values in the live codebase that behave like they should be schema-driven instead of Python literals.</p>
   <div class="legend">
     <span class="legend-item"><span class="dot gated"></span> New &mdash; no equivalent exists in code today</span>
     <span class="legend-item"><span class="dot done"></span> Reused &mdash; an existing real class/field, unchanged</span>
@@ -403,41 +403,158 @@ nav.toc li.toc-sub a { padding-left: 1.4em; font-size: 13px; color: var(--ink-so
 <nav class="toc">
   <p class="toc-label">Contents</p>
   <ol>
-    <li><a href="#schema-66"><span class="toc-num">01</span> Region &amp; Place (idea 66)</a></li>
-    <li><a href="#schema-36"><span class="toc-num">02</span> Clan (ideas 36, 40)</a></li>
-    <li><a href="#schema-37"><span class="toc-num">03</span> Race Relations (idea 37)</a></li>
-    <li><a href="#schema-32"><span class="toc-num">04</span> Reproduction (idea 32)</a></li>
-    <li><a href="#schema-33"><span class="toc-num">05</span> Marriage (idea 33)</a></li>
-    <li><a href="#schema-20"><span class="toc-num">06</span> Life Stages (idea 20)</a></li>
-    <li><a href="#schema-44"><span class="toc-num">07</span> Settlement Capacity (idea 44)</a></li>
-    <li><a href="#schema-4"><span class="toc-num">08</span> Unified Modification (idea 4)</a></li>
-    <li><a href="#schema-13"><span class="toc-num">09</span> Trade &amp; Team-Up (idea 13)</a></li>
-    <li><a href="#schema-14"><span class="toc-num">10</span> Species Classification (14)</a></li>
-    <li><a href="#schema-10"><span class="toc-num">11</span> Heir Assignment (10)</a></li>
-    <li><a href="#schema-22"><span class="toc-num">12</span> Relationship Roles (22)</a></li>
-    <li><a href="#schema-30"><span class="toc-num">13</span> Possessions With History (30)</a></li>
-    <li><a href="#schema-34"><span class="toc-num">14</span> Coming of Age (34)</a></li>
-    <li><a href="#schema-39"><span class="toc-num">15</span> Affiliation Change (39)</a></li>
-    <li><a href="#schema-48"><span class="toc-num">16</span> Place-Type Transitions (48)</a></li>
-    <li><a href="#schema-49"><span class="toc-num">17</span> Place-Tied Crafting (49)</a></li>
-    <li><a href="#schema-50"><span class="toc-num">18</span> Material-Gated Evolution (50)</a></li>
-    <li><a href="#schema-51"><span class="toc-num">19</span> Country EXPAND (51)</a></li>
-    <li><a href="#schema-52"><span class="toc-num">20</span> Population-Driven Expansion (52)</a></li>
-    <li><a href="#schema-53"><span class="toc-num">21</span> Inherited Reputation (53)</a></li>
-    <li><a href="#schema-54"><span class="toc-num">22</span> Guilt by Association (54)</a></li>
-    <li><a href="#schema-55"><span class="toc-num">23</span> Inherited Feuds (55)</a></li>
-    <li><a href="#schema-57"><span class="toc-num">24</span> Living Legend Loop (57)</a></li>
-    <li><a href="#schema-58"><span class="toc-num">25</span> Dying Wish (58)</a></li>
-    <li><a href="#schema-60"><span class="toc-num">26</span> Reputations Are Local (60)</a></li>
-    <li><a href="#schema-62"><span class="toc-num">27</span> Generations Misremember (62)</a></li>
-    <li><a href="#schema-63"><span class="toc-num">28</span> Belief &amp; Religion (63)</a></li>
-    <li><a href="#schema-64"><span class="toc-num">29</span> The Empty Chair (64)</a></li>
-    <li><a href="#schema-65"><span class="toc-num">30</span> Named Refugee Threads (65)</a></li>
-    <li><a href="#hardcoded-logic"><span class="toc-num">31</span> Hardcoded Logic &rarr; Schema</a></li>
-    <li><a href="#not-yet-scoped"><span class="toc-num">32</span> Coverage Note</a></li>
+    <li class="toc-sub"><a href="#existing-schemas-intro"><span class="toc-num">01</span> Existing (Live) Schemas &mdash; overview</a></li>
+    <li class="toc-sub"><a href="#existing-entity"><span class="toc-num">02</span> Entity &mdash; Core State</a></li>
+    <li class="toc-sub"><a href="#existing-social"><span class="toc-num">03</span> Entity &mdash; Social &amp; Relationships</a></li>
+    <li class="toc-sub"><a href="#existing-group"><span class="toc-num">04</span> Group &amp; Guild</a></li>
+    <li class="toc-sub"><a href="#existing-faction"><span class="toc-num">05</span> Faction</a></li>
+    <li class="toc-sub"><a href="#existing-region"><span class="toc-num">06</span> Region (pre-idea-66)</a></li>
+    <li class="toc-sub"><a href="#existing-beyond-city"><span class="toc-num">07</span> Camp (pre-idea-66)</a></li>
+    <li class="toc-sub"><a href="#existing-world"><span class="toc-num">08</span> World</a></li>
+    <li class="toc-sub"><a href="#existing-worldobject"><span class="toc-num">09</span> World Objects</a></li>
+    <li class="toc-sub"><a href="#existing-clan-race"><span class="toc-num">10</span> Clan &amp; Race (no schema)</a></li>
+    <li><a href="#schema-66"><span class="toc-num">11</span> Region &amp; Place (idea 66)</a></li>
+    <li><a href="#schema-36"><span class="toc-num">12</span> Clan (ideas 36, 40)</a></li>
+    <li><a href="#schema-37"><span class="toc-num">13</span> Race Relations (idea 37)</a></li>
+    <li><a href="#schema-32"><span class="toc-num">14</span> Reproduction (idea 32)</a></li>
+    <li><a href="#schema-33"><span class="toc-num">15</span> Marriage (idea 33)</a></li>
+    <li><a href="#schema-20"><span class="toc-num">16</span> Life Stages (idea 20)</a></li>
+    <li><a href="#schema-44"><span class="toc-num">17</span> Settlement Capacity (idea 44)</a></li>
+    <li><a href="#schema-4"><span class="toc-num">18</span> Unified Modification (idea 4)</a></li>
+    <li><a href="#schema-13"><span class="toc-num">19</span> Trade &amp; Team-Up (idea 13)</a></li>
+    <li><a href="#schema-14"><span class="toc-num">20</span> Species Classification (14)</a></li>
+    <li><a href="#schema-10"><span class="toc-num">21</span> Heir Assignment (10)</a></li>
+    <li><a href="#schema-22"><span class="toc-num">22</span> Relationship Roles (22)</a></li>
+    <li><a href="#schema-30"><span class="toc-num">23</span> Possessions With History (30)</a></li>
+    <li><a href="#schema-34"><span class="toc-num">24</span> Coming of Age (34)</a></li>
+    <li><a href="#schema-39"><span class="toc-num">25</span> Affiliation Change (39)</a></li>
+    <li><a href="#schema-48"><span class="toc-num">26</span> Place-Type Transitions (48)</a></li>
+    <li><a href="#schema-49"><span class="toc-num">27</span> Place-Tied Crafting (49)</a></li>
+    <li><a href="#schema-50"><span class="toc-num">28</span> Material-Gated Evolution (50)</a></li>
+    <li><a href="#schema-51"><span class="toc-num">29</span> Country EXPAND (51)</a></li>
+    <li><a href="#schema-52"><span class="toc-num">30</span> Population-Driven Expansion (52)</a></li>
+    <li><a href="#schema-53"><span class="toc-num">31</span> Inherited Reputation (53)</a></li>
+    <li><a href="#schema-54"><span class="toc-num">32</span> Guilt by Association (54)</a></li>
+    <li><a href="#schema-55"><span class="toc-num">33</span> Inherited Feuds (55)</a></li>
+    <li><a href="#schema-57"><span class="toc-num">34</span> Living Legend Loop (57)</a></li>
+    <li><a href="#schema-58"><span class="toc-num">35</span> Dying Wish (58)</a></li>
+    <li><a href="#schema-60"><span class="toc-num">36</span> Reputations Are Local (60)</a></li>
+    <li><a href="#schema-62"><span class="toc-num">37</span> Generations Misremember (62)</a></li>
+    <li><a href="#schema-63"><span class="toc-num">38</span> Belief &amp; Religion (63)</a></li>
+    <li><a href="#schema-64"><span class="toc-num">39</span> The Empty Chair (64)</a></li>
+    <li><a href="#schema-65"><span class="toc-num">40</span> Named Refugee Threads (65)</a></li>
+    <li><a href="#hardcoded-logic"><span class="toc-num">41</span> Hardcoded Logic &rarr; Schema</a></li>
+    <li><a href="#not-yet-scoped"><span class="toc-num">42</span> Coverage Note</a></li>
   </ol>
 </nav>
 
+<section id="existing-schemas-intro">
+  <h2 class="section-title">Existing (Live) Schemas</h2>
+  <p class="section-lede">This document's first pass only covered proposed state. Per direct request, it's now the tracking page for all RPG feature schemas &mdash; the real, already-live classes too, even the ones with no proposed change at all, so nothing has to be re-derived from the atlas's prose to know a class's actual current shape. Grounded in this session's own direct code reads, not re-verified fresh for this pass &mdash; treat as accurate as of this session, not a live sync with the codebase.</p>
+</section>
+
+<section id="existing-entity"><h2 class="section-title">Entity &mdash; Core State</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">Attributes: STR, AGI, VIT, END, INT, SPI, WIS, PER, CHA</code></td><td><code class="inline">float &times; 9</code></td><td>9 core attributes, real and live</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">Hunger, sleep_debt, Stamina</code></td><td><code class="inline">float</code></td><td>Biological pressures with defined penalty thresholds</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">identity.class_id</code></td><td><code class="inline">enum: Novice | Warrior | Mage | Rogue</code></td><td>4 total, drives auto-equip scoring and combat doctrine</td><td>None planned; idea 16 investigates a Ranger-doctrine inconsistency without proposing a 5th class</td></tr>
+      <tr><td><code class="inline">identity.role</code></td><td><code class="inline">EntityRole: HERO | SHOPKEEPER | MONSTER | CITIZEN | WORKER | GUARD</code></td><td>Read by &ge;6 independent systems for behavior bias</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">identity.faction</code></td><td><code class="inline">str</code></td><td>Political allegiance, currently frozen at spawn for the entity's whole life</td><td>Idea 39 proposes a real change path</td></tr>
+      <tr><td><code class="inline">age_ticks, max_age_ticks</code></td><td><code class="inline">int</code></td><td>Unconditional aging clock; default max 10,000</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">generation, is_permadeath</code></td><td><code class="inline">int, bool</code></td><td>Hero rebirth/permadeath tracking, up to 4 generations</td><td>None planned to the schema; a real bug exists in the deactivation logic that consumes <code class="inline">is_permadeath</code>, see Depth Beneath &ldquo;Done&rdquo; in the atlas</td></tr>
+      <tr><td><code class="inline">heir_entity_id</code></td><td><code class="inline">Optional[str]</code></td><td>Real field, full apply-path support, never written by any code today</td><td>Idea 10 proposes the write logic</td></tr>
+      <tr><td><code class="inline">CombatComponent: hp, max_hp, atk, def_stat, attack_range, alive, readiness, action_style</code></td><td><code class="inline">mixed</code></td><td>The real combat stat block, constructed at spawn via <code class="inline">V2EntityBuilder.combat()</code></td><td>None to the fields themselves; idea 2 proposes changing how <code class="inline">readiness_speed</code> is derived (see Hardcoded Logic section)</td></tr>
+      <tr><td><code class="inline">PersonalityComponent: greed, bravery, sociability, industry</code></td><td><code class="inline">float, 0.0&ndash;1.0</code></td><td>Seeded deterministically at construction; bravery has real data-driven faction-alignment bias</td><td>None &mdash; already data-driven, just never retuned</td></tr>
+      <tr><td><code class="inline">AptitudeComponent</code></td><td><code class="inline">class, currently zero-arg</code></td><td>Real class, but every entity gets identical default aptitude &mdash; no populated values exist anywhere</td><td>Idea 32 (Reproduction) wires this as a byproduct</td></tr>
+      <tr><td><code class="inline">EmotionalModel: fear, confidence, frustration, curiosity, satisfaction, panic, boredom</code></td><td><code class="inline">float &times; 7</code></td><td>A genuine, well-designed typed model with a real event-driven update service</td><td>Idea 1's orphan-wiring cluster proposes giving the write path a live caller</td></tr>
+      <tr><td><code class="inline">Perception budget: max_perceived</code></td><td><code class="inline">int, flat 10</code></td><td>Budget-limited signal filtering, zero-salience signals dropped</td><td>Unscoped &mdash; see Hardcoded Logic section</td></tr>
+      <tr><td><code class="inline">Cognition Capacity: max_projects, max_leads, max_concerns, detour breadth/depth</code></td><td><code class="inline">derived from INT/WIS/PER + personality</code></td><td>Real derivation service, fatigue-coupled (sleep debt/hunger cut limits 20&ndash;50%)</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">Goal Hierarchy: Directive &rarr; Project &rarr; Objective &rarr; Action</code></td><td><code class="inline">hierarchy</code></td><td>Real, live decision structure</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">Leads: subject, location, certainty (decaying)</code></td><td><code class="inline">class</code></td><td>Real knowledge-and-obstacle system alongside 6 Blocker kinds</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">Committed Intentions</code></td><td><code class="inline">queue, capped at 3</code></td><td>Multi-step planning, read side only</td><td>Unscoped &mdash; no idea proposes the write path</td></tr>
+      <tr><td><code class="inline">Motivation &amp; Doctrine: 3 class doctrines</code></td><td><code class="inline">warrior | ranger | mage, each with preferred/avoided route tags + cooperation bias</code></td><td>Real, confirmed live via always-on route scoring</td><td>Ideas 6, 24 extend usage; the doctrine set itself has no proposed expansion</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-social"><h2 class="section-title">Entity &mdash; Social &amp; Relationships</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">SocialBond: familiarity, sentiment, last_interaction_tick</code></td><td><code class="inline">float, float, int</code></td><td>Exactly 3 fields today &mdash; the whole per-target-entity directed relationship record</td><td>Idea 22 proposes adding a 4th, <code class="inline">role</code></td></tr>
+      <tr><td><code class="inline">public_reputation, heroism_score, notoriety_score</code></td><td><code class="inline">float</code></td><td>Aggregate per-entity reputation, authoritatively managed by <code class="inline">RelationshipService.process_update()</code></td><td>Ideas 53, 54, 60 all propose extensions &mdash; all three touch the same field, coordinate before building any one</td></tr>
+      <tr><td><code class="inline">Per-pair trust/familiarity/debt/fear/grudge/salience histories</code></td><td><code class="inline">dicts on SocialComponent</code></td><td>Richer relationship data, structurally separate from SocialBond itself</td><td>Idea 22 flags this split as an open question</td></tr>
+      <tr><td><code class="inline">nemesis_ids</code></td><td><code class="inline">bucket, promoted at grudge &ge; 3.0</code></td><td>Real derived-role precedent idea 22 cites directly</td><td>Idea 55 proposes making nemesis relationships transferable on death</td></tr>
+      <tr><td><code class="inline">Trauma &mdash; Wound: severity-scaled penalty</code></td><td><code class="inline">up to ~3 ATK / 2 DEF / 2 SPD / 10 max-HP at max severity</code></td><td>Real formula, confirmed from actual code</td><td>None to the formula; idea 4 proposes unifying its storage shape with Status Effects</td></tr>
+      <tr><td><code class="inline">Trauma &mdash; Scar: residual def_penalty</code></td><td><code class="inline">&times; 0.3 of the healed wound</code></td><td>Permanent residual after partial healing</td><td>Idea 17 proposes documenting the currently-undocumented odds/exact formula</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-group"><h2 class="section-title">Group &amp; Guild</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">GroupService.calculate_cohesion()</code></td><td><code class="inline">scoring function</code></td><td>Fraction of members within the group's cohesion radius of its anchor &mdash; shared with Tactical Decision's regrouping check</td><td>None &mdash; stable as-is; ideas 36/40 (Clan) reuse this precedent directly rather than modifying it</td></tr>
+      <tr><td><code class="inline">Guild module</code></td><td><code class="inline">town/guild.py, social_systems/guilds.py, ~90 lines</code></td><td>Single-location action + intel-service; no membership/cross-location asset concept</td><td>None &mdash; Clan (ideas 36/40) is proposed as a separate layer rather than an extension of Guild</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-faction"><h2 class="section-title">Faction</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">FactionState.tension_level</code></td><td><code class="inline">float</code></td><td>Real, already-tuned constant range</td><td>Idea 36 (Clan) reuses this exact field's shape directly &mdash; the lowest-risk numeric decision in the whole roadmap because of it</td></tr>
+      <tr><td><code class="inline">Diplomatic state machine</code></td><td><code class="inline">class</code></td><td>Real, live, the one piece that lives in <code class="inline">domains/faction/</code> itself</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">FactionDecisionPhase directives: COMMISSION_QUEST, DEFEND_BORDER, TRADE_ROUTE</code></td><td><code class="inline">enum, evaluated every tick</code></td><td>A real, if simple, ambition system already running</td><td>Idea 51 proposes a 4th value, EXPAND_TERRITORY</td></tr>
+      <tr><td><code class="inline">IdentityUpdate.faction_set</code></td><td><code class="inline">Optional[str]</code></td><td>Real, fully-typed, full apply-path support &mdash; nobody constructs one today</td><td>Idea 39 proposes the trigger conditions to actually use it</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-region"><h2 class="section-title">Region (Pre-Idea-66 Baseline)</h2><p class="section-lede">The current shape, before idea 66's proposed Place hierarchy (schema above). Kept here so the delta between "today" and "proposed" is explicit rather than only visible by cross-referencing.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">RegionSpec: id, type, bounds, terrain, hazard_level, hazard_kind, tags, terrain_variants</code></td><td><code class="inline">Pydantic BaseModel, frozen</code></td><td>The authoring-time spec &mdash; <code class="inline">bounds</code> is a single rectangular box per region</td><td>Idea 66 proposes Region keeps bounds but becomes a territory container; individual Places get their own smaller bounds/point</td></tr>
+      <tr><td><code class="inline">RegionState.kind</code></td><td><code class="inline">str, e.g. "TOWN"</code></td><td>Compiled-time value; <code class="inline">compiler.py</code> special-cases <code class="inline">kind=="TOWN"</code> to mark town_tiles/town_entities</td><td>Idea 66 moves this concept onto <code class="inline">PlaceState.kind</code> instead of the whole Region</td></tr>
+      <tr><td><code class="inline">RegionState.owner_faction_id</code></td><td><code class="inline">Optional[str]</code></td><td>The dynamically-updating sovereignty field, hardcoded to a 2-faction Hero Guild/Monster Horde tug-of-war</td><td>Idea 35 proposes generalizing to N factions; idea 66 proposes Places can override the Region-level value</td></tr>
+      <tr><td><code class="inline">RegionState.trauma_score</code></td><td><code class="inline">float, default 0.0</code></td><td>Runtime-accrued, correctly unseeded by design</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">RegionState.population_cohorts</code></td><td><code class="inline">Dict[str, CohortState], defaults empty</code></td><td>Real field, never populated by any compiler or generator path in any world today</td><td>Idea 43 proposes the seeding fix</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-beyond-city"><h2 class="section-title">Camp (Pre-Idea-66 Baseline)</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">CampState: point, kind (string), maturity (float, grows over time), faction</code></td><td><code class="inline">class, deliberately thinner than City</code></td><td>Real, purpose-built, not a reused Region &mdash; monster spawning already scales to its maturity, hardcoded species per kind</td><td>Idea 66 proposes this becomes <code class="inline">PlaceState</code> with <code class="inline">kind==CAMP</code>; idea 45 proposes real texture beyond the maturity float</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-world"><h2 class="section-title">World</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">Campaign carry-forward: XP, level, equipment, reputation, lifecycle state</code></td><td><code class="inline">cross-episode</code></td><td>Real, 3,200 lines/17 files &mdash; the single largest domain in the codebase</td><td>Idea 7 depends on its trigger points; no change to the carry-forward mechanism itself</td></tr>
+      <tr><td><code class="inline">Chronicle: event ledger &rarr; scored/grouped significant events &rarr; markdown/JSON</code></td><td><code class="inline">pipeline</code></td><td>Real, live automated history generator; confirmed strictly one-way, nothing reads it back</td><td>Ideas 57, 62 both propose consuming Chronicle output for the first time</td></tr>
+      <tr><td><code class="inline">CultureDeriver / CulturalBiasApplicator</code></td><td><code class="inline">class</code></td><td>Real, 389 lines/5 files, matches Mechanics Bible ch.5 &sect;7 &mdash; but has zero live callers anywhere</td><td>Ideas 56, 61 depend on this substrate getting a live caller; no schema change proposed, a wiring gap</td></tr>
+      <tr><td><code class="inline">Calamities: Maturity/Trauma-triggered boss spawns, faction raids, threat evolution</code></td><td><code class="inline">trigger logic</code></td><td>Real and live</td><td>None &mdash; stable as-is; idea 47 (Lair) extends the boss-anchor precedent, not this trigger</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-worldobject"><h2 class="section-title">World Objects</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">GroundItemState, ItemStack: item_id, quantity</code></td><td><code class="inline">stackable type references</code></td><td>No per-instance identity anywhere &mdash; "an iron sword" not "this specific sword"</td><td>Idea 30 proposes a new ItemInstance layer for significant items only</td></tr>
+      <tr><td><code class="inline">Atomic Conservation Law</code></td><td><code class="inline">13 distinct failure codes</code></td><td>Governs every transfer, real and parity-verified</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">ResourceTransferIntent.source_kind</code></td><td><code class="inline">enum: NODE, GROUND_ITEM, CORPSE, CRAFTING, SHOP_BUY, SHOP_SELL</code></td><td>No entity-to-entity kind exists &mdash; direct trading between two entities is impossible even in principle today</td><td>Idea 13 proposes adding ENTITY as a 7th value</td></tr>
+      <tr><td><code class="inline">RecipeRegistry</code></td><td><code class="inline">hardcoded dict, exactly 3 recipes</code></td><td>iron_sword, iron_shield, health_potion &mdash; the crafting gate itself is real and live, the content is thin</td><td>Idea 49 wires place-tied materials into recipe requirements; the base catalog's own expansion is unscoped &mdash; see Hardcoded Logic</td></tr>
+      <tr><td><code class="inline">ItemDefinition</code></td><td><code class="inline">class</code></td><td>No rarity, item class, or tier field anywhere</td><td>Unscoped &mdash; no idea currently proposes adding these</td></tr>
+      <tr><td><code class="inline">Buildings registry: 9 building files</code></td><td><code class="inline">class</code></td><td>Real town-service registry (inn, blacksmith, class-hall, home storage, church)</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">CHURCH.services</code></td><td><code class="inline">List[str], literally ["BLESSING", "RESURRECTION"]</code></td><td>Two string tokens, zero dispatch code anywhere reads either one</td><td>Unscoped &mdash; see Hardcoded Logic section for the proposed typed-record fix</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-clan-race"><h2 class="section-title">Clan &amp; Race (No Existing Schema)</h2><p class="section-lede">Included for completeness of this tracking page, not because there's anything to document &mdash; both are confirmed structurally absent above the entity level, not merely thin.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">Clan</code></td><td><code class="inline">&mdash;</code></td><td>No membership-spanning, multi-location organization schema exists anywhere in the codebase today. 2 of 16 real factions are literally named orc_clan/dwarven_mine_clan in content, with no mechanism behind the name</td><td>Ideas 36, 40 (schema above) propose the first real ClanState</td></tr>
+      <tr><td><code class="inline">Race as a collective force</code></td><td><code class="inline">&mdash;</code></td><td>No race-population aggregate, collective racial state, or inter-race relationship schema exists &mdash; Race is purely a per-entity field (race_id) plus static content (RaceDefinition.attribute_tendencies, compatible_roles)</td><td>Idea 37 (schema above) proposes a pairwise race_relations matrix &mdash; still not a collective-population layer, no idea proposes that</td></tr>
+    </table>
+  </div></section>
 <section id="schema-66">
   <h2 class="section-title">Region &amp; Place</h2>
   <p class="section-lede">Idea 66. Replaces today's flat model &mdash; where a City <em>is</em> a Region, not a place inside one &mdash; with Region as a territory container holding zero or more Places. This is the schema that triggered this whole document, so it's worked out in the most detail.</p>
