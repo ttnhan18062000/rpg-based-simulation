@@ -50,6 +50,7 @@ jobs:
         env:
           DOCS_URL: https://ttnhan18062000.github.io
           DOCS_BASE_URL: /rpg-based-simulation/
+          NODE_OPTIONS: --max-old-space-size=8192
         run: cd website && npm run build
 
       - name: Configure Pages
