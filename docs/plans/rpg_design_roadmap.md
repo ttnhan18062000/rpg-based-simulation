@@ -116,6 +116,24 @@ ideas 39/51 and 32 can't be corpus-tested at all until their own upstream mechan
 one's findings feed directly back into M2/M3/M4's own scope — read it before, not after, those epics start
 their affected tickets.
 
+### M9 — World Corpus Test Coverage for New Features (follow-up, informs M1-M8, doesn't block them)
+
+**Tracking epic**: `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (not yet created, scope-only — see
+`docs/plans/rpg_m9_corpus_test_coverage_epic.md`).
+
+Also not a new RPG feature, and distinct from both M7 and M8: M7 asks whether SimQ knows how to *grade* an
+event once it fires; M8 asks whether the compiler can *seed* an idea's content into a world at all. M9 asks
+the question in between — once an idea ships, does a real SimQ corpus world (Unit/End-to-end/Stress/
+Regression, per `docs/simulation_quality/corpus_tier_taxonomy.md`) actually exist to *exercise* it, or does
+one need authoring. Classified all 32 stateful/behavioral ideas against the real corpus tier taxonomy.
+Headline findings: 4 ideas (53, 55, 58, 62) can only be tested by a real multi-episode Campaign run, not any
+static corpus world — a distinct test-infrastructure category the other milestones haven't accounted for;
+idea 66's Region/Place rebuild has corpus-wide blast radius across all 21 worlds and 84 committed grade
+anchors, needing its own budgeted recalibration pass; and several ideas (32, 43, 48) already have live SimQ
+scoring rules sitting idle, waiting only for the event to fire — a narrower job than M7's general premise.
+
+
+
 ## Sequencing rules
 
 - **M1 has no gate — it's ready today.** Nothing else in this roadmap blocks it, and nothing in M1 blocks on
@@ -143,6 +161,13 @@ their affected tickets.
   (sovereignty) or M4's ideas 45/46/47** — each of those would otherwise be built against the flat model and
   need reworking once (or if) idea 66 lands, the same rework M8's own idea-45 finding already flagged as a
   real cost once.
+- **M9, like M8, should be read early rather than treated as a strict post-ship follow-up — but it's lighter
+  than M7.** Most of its findings are cheap reuse ("idea 22 needs no new world, extend `highland_traverse`'s
+  existing SOCIAL calibration"), not blocking scope corrections. Two exceptions are real gates: idea 66's
+  ticket must budget a full `grade_anchors.json` recalibration pass across all 21 worlds as part of its own
+  deliverable, not discover it mid-implementation when regression tests start failing corpus-wide; and ideas
+  53/55/58/62 need a real multi-episode Campaign test plan decided before their tickets are scoped, since no
+  static corpus world can exercise them at all.
 - **Detailed child-ticket breakdown beyond M1 is deliberately not done yet.** M2 through M6 are scope-only
   epics for now — this roadmap and the sibling epic tickets exist to capture milestone structure and
   sequencing intent, not to fully plan implementation ahead of M1 shipping and M2's flag-governance
@@ -220,3 +245,5 @@ their affected tickets.
 - `docs/brainstorm/simulation_capabilities.html` (plain-language companion, for non-technical review)
 - `docs/plans/live_map_scaling_roadmap.md`, `docs/plans/hud_design_system_foundation_epic.md`'s sibling-epic
   roadmap (the two structural precedents this doc follows)
+- `docs/simulation_quality/corpus_tier_taxonomy.md` — the real Unit/End-to-end/Stress/Regression corpus
+  framework M9 classifies all 32 stateful ideas against, rather than reinventing
