@@ -199,11 +199,14 @@ their affected tickets.
   these block any milestone above, but whoever picks up a ticket touching Reputation, Perception, Goal
   Hierarchy, or town Buildings should read that section first — the badge alone will overstate confidence.
 - **Idea 66 surfaced a real process gap: prose descriptions of proposed state let ambiguity slip through
-  that a schema would have caught.** `docs/brainstorm/rpg_expected_schemas.html` (new) gives field-level
-  schemas — not prose — for the 9 most load-bearing proposed ideas, starting with idea 66's own
-  Region/PlaceState/PlaceKind shape. Not yet extended to the remaining ~21 ideas that will eventually need
-  it; that document's own "Not Yet Scoped" section lists them honestly. Whoever scopes a ticket for one of
-  the 9 covered ideas should start from that schema, not re-derive field shapes from the atlas's prose.
+  that a schema would have caught.** `docs/brainstorm/rpg_expected_schemas.html` gives field-level schemas —
+  not prose — for all 30 proposed ideas that introduce new durable state, plus a distinct second dimension:
+  ~13 hardcoded/flat values already in the live codebase (`readiness_speed=10.0`, `max_perceived=10`, the
+  sovereignty ownership-flip constants, `RecipeRegistry`'s 3-recipe dict) that behave like schema-driven
+  state but are Python literals today, most with no idea currently targeting them. Three schemas (ideas 30,
+  60, 63) are marked explicitly as genuinely underspecified rather than presenting invented fields as
+  settled. Whoever scopes a ticket for any idea introducing new state should start from that document, not
+  re-derive field shapes from the atlas's prose.
 
 ## References
 
