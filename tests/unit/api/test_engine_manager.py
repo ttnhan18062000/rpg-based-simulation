@@ -218,6 +218,43 @@ def test_engine_manager_reset_zeroes_spawn_death_counters():
         manager.stop()
 
 
+def test_tick_listener_registered_before_snapshot_loses_no_tick():
+    """Regression guard for stream_ws's registration-before-snapshot ordering
+    (TCK-20260821-WS-ENTITY-DELTA-BROADCAST AC #3): a tick fired in the window between
+    add_tick_listener and the initial get_state() snapshot must still be observed by the listener,
+    not silently dropped."""
+    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    received = []
+    try:
+        # Mirrors stream_ws's own call order: register listener, then a tick fires, then
+        # get_state() is read as the connect-time baseline snapshot.
+        manager.add_tick_listener(lambda payload: received.append(payload))
+
+        manager.start()
+        assert _poll_until(lambda: len(received) > 0)
+
+        _ = manager.get_state()
+        assert len(received) > 0
+    finally:
+        manager.stop()
+
+
+def test_delta_payload_is_none_or_dict_and_notify_listeners_receives_it():
+    """The one call site of _notify_listeners in _run_loop must only fire with a non-None delta
+    payload -- a quiet non-heartbeat tick must not invoke registered listeners at all."""
+    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    received = []
+    try:
+        manager.add_tick_listener(lambda payload: received.append(payload))
+        manager.start()
+        assert _poll_until(lambda: len(received) > 0)
+        for payload in received:
+            assert isinstance(payload, dict)
+            assert "changed" in payload and "removed" in payload and "tick" in payload
+    finally:
+        manager.stop()
+
+
 def test_stats_counters_non_decreasing_across_ticks():
     manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
     remaining_ids = iter([999903, 999904, 999905])

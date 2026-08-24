@@ -9,7 +9,7 @@ audience: developer
 
 The WorldLoop Frontend is a high-performance React application built with **Vite** and **TypeScript**. It utilizes the **HTML5 Canvas API** to render thousands of entities and world objects at 60 FPS.
 
-> **Known gap (2026-07-16), narrowed 2026-08-24:** the frontend's `useSimulation.ts` hook (§2 below) calls `/map`, `/static`, `/stats`, `/speed`, `/clear_events`. As of `TCK-20260821-REST-MAP-STATIC-STATS`, `/map`, `/static`, and `/stats` exist as real routes in `src/api/server.py`. `/speed` and `/clear_events` remain missing (explicitly out of scope for that ticket, deferred to HUD-tied scope). See `docs/plans/world_rendering/idea_world_rendering_core.md` for a proposed server-owned rendering core that would either reconnect this frontend (implementing its remaining missing routes) or supersede it with a new client — not yet decided.
+> **Known gap (2026-07-16), narrowed 2026-08-24, narrowed further 2026-08-24:** the frontend's `useSimulation.ts` hook (§2 below) calls `/map`, `/static`, `/stats`, `/speed`, `/clear_events`, and connects to `/api/v1/stream` (SSE) for delta sync. As of `TCK-20260821-REST-MAP-STATIC-STATS`, `/map`, `/static`, and `/stats` exist as real routes in `src/api/server.py`. `/speed` and `/clear_events` remain missing (explicitly out of scope for that ticket, deferred to HUD-tied scope). As of `TCK-20260821-WS-ENTITY-DELTA-BROADCAST`, the backend half of the delta-sync gap is also closed: a real per-tick entity-delta broadcast (`changed`/`removed`/`tick`/`snapshot_as_of_tick`) now exists — but on the already-live `/api/v1/ws` WebSocket connection, not the `/api/v1/stream` SSE route §B describes, which does not exist in the real backend. `useSimulation.ts` itself is not yet rewired to consume it (separate ticket `TCK-20260821-REWIRE-USESIMULATION-WEBSOCKET`). See `docs/plans/world_rendering/idea_world_rendering_core.md` for a proposed server-owned rendering core that would either reconnect this frontend (implementing its remaining missing routes) or supersede it with a new client — not yet decided.
 
 ---
 
@@ -42,6 +42,14 @@ On mount, the hook performs three critical fetch calls, joined into one `Promise
 Once the base data is loaded, it connects to `/api/v1/stream`.
 - **`onmessage`**: Receives a JSON delta containing `changed` and `removed` entity lists.
 - **State Reconciliation**: A `Map` is used to efficiently upsert changed entities into the local React state, minimizing re-renders.
+
+> `/api/v1/stream` (SSE) itself does not exist in the real backend. As of
+> `TCK-20260821-WS-ENTITY-DELTA-BROADCAST`, the equivalent capability this section describes —
+> `changed`/`removed` entity lists per tick, plus `tick`/`snapshot_as_of_tick` for drift detection —
+> is real and live on `/api/v1/ws` (the same WebSocket connection §A's `/api/v1/manifest` fetch
+> complements), not on a separate SSE route. This closes the backend-capability half of this gap;
+> the frontend side (rewiring this hook off SSE onto the WS delta messages) is tracked separately
+> (`TCK-20260821-REWIRE-USESIMULATION-WEBSOCKET`).
 
 ### C. Inspection Polling
 When a user selects an entity, a secondary slow-poll (500ms) is triggered:

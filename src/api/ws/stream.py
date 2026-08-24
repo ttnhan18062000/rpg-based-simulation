@@ -60,14 +60,22 @@ async def stream_ws(
             else:
                 await websocket.send_json(jsonable_encoder(initial_payload))
 
+        snapshot_as_of_tick = initial_payload.get("tick", 0) if initial_payload else 0
+
         while True:
             # Wait for next tick from queue
             payload = await queue.get()
-            
+
+            # payload is the same dict object handed to every registered listener
+            # (_notify_listeners fans it out by reference) -- copy before mutating so
+            # concurrent connections don't race on snapshot_as_of_tick.
+            out_payload = dict(payload)
+            out_payload["snapshot_as_of_tick"] = snapshot_as_of_tick
+
             if fmt == "msgpack":
-                await websocket.send_bytes(msgpack.packb(jsonable_encoder(payload)))
+                await websocket.send_bytes(msgpack.packb(jsonable_encoder(out_payload)))
             else:
-                await websocket.send_json(jsonable_encoder(payload))
+                await websocket.send_json(jsonable_encoder(out_payload))
                 
     except WebSocketDisconnect:
         logger.info("V2 WebSocket client disconnected")

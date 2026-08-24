@@ -2,6 +2,7 @@
 from __future__ import annotations
 from typing import Dict, Any, List
 from src.core.state import AuthoritativeState, EntityState, RegionState
+from src.core.enums import Faction
 
 class StatePresenter:
     """
@@ -126,6 +127,34 @@ class StatePresenter:
                     "transaction_id": r.transaction_id
                 } for r in entity.identity.latest_intent_results
             ]
+        }
+
+    @staticmethod
+    def present_entity_slim(entity: EntityState) -> Dict[str, Any]:
+        """Lightweight per-entity projection for the WS entity-delta broadcast.
+
+        9 fields with a confirmed direct or lightly-mapped V2 source (see
+        staging_artifacts/TCK-20260821-WS-ENTITY-DELTA-BROADCAST/plan.md Open Design Question 2 for
+        the full drop-vs-derive rationale against V1's EntitySlimSchema): state, tier,
+        combat_target_id, loot_progress, loot_duration, display_name have no confirmed V2 source and
+        are dropped. Always reads live component values -- never a diff against a prior snapshot.
+        """
+        x, y = entity.position
+        try:
+            faction = Faction(entity.identity.faction).name.lower()
+        except ValueError:
+            faction = str(entity.identity.faction)
+
+        return {
+            "id": entity.id,
+            "kind": entity.kind,
+            "x": x,
+            "y": y,
+            "hp": entity.combat.hp,
+            "max_hp": entity.combat.max_hp,
+            "level": entity.identity.evolution_level,
+            "faction": faction,
+            "weapon_range": entity.combat.range,
         }
 
     @staticmethod
