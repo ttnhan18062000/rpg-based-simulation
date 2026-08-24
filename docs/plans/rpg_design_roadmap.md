@@ -240,6 +240,26 @@ already have live SimQ scoring rules sitting idle, waiting only for the event to
   genuinely underspecified rather than presenting invented fields as settled. Whoever scopes a ticket for
   any idea — new state or a change to existing state — should start from that document, not re-derive field
   shapes from the atlas's prose.
+- **Two real bugs found this session have no ticket yet — neither is any of the 66 design ideas, so neither
+  had a natural home to land in until now.** (1) Generation-4+ Hero "permadeath" doesn't actually work:
+  `combat.py` sets `outcome_kind="PERMADEATH"`, but `LifecycleSystem.resolve_lifecycle()` only deactivates
+  an entity on `outcome_kind=="KILL"` — a "permadead" Hero stays `active=True` and keeps acting in the
+  simulation (see the Simulation Wiring Map's T14). Expected fix: route `"PERMADEATH"` through the same
+  deactivation check as `"KILL"`. (2) `docs/mechanics/README.md` line 77 is stale — it still describes idea
+  15's wound-threshold question as an open divergence ("Chapter 02 requires correction") after the real
+  parity ledger entry (`COMB-290`) was already fixed to `status: verified` and ch02 already corrected; a
+  small doc-only hotfix. Both are candidates for a real `hotfix`-tier ticket each, independent of this
+  roadmap's own milestones — file them as bugs, not folded into any idea's scope.
+- **Two design gaps flagged repeatedly across multiple passes, not yet resolved by any of them.** Idea 63
+  (Belief/Religion) has come back "too underspecified to be concrete" in the schema, event, and
+  data-configuration passes alike — worth its own dedicated ideation/grounding session before it's touched
+  again as a side note. Idea 37's race-diversity corpus gap (no registry dimension tracks race composition
+  per world, M9's own finding) still has no owner. Neither blocks anything shipping today; both will keep
+  resurfacing as a caveat on someone else's finding until addressed directly.
+- **One possible duplicate system, not yet reconciled.** `get_age_bracket()`'s string-based age tiers
+  (young/adult/elder, `cohort.py`) and `LifeStage`'s enum (CHILD/ADULT/ELDER, `IdentityComponent`) may be two
+  overlapping representations of the same concept — flagged in M9, not resolved there or here. Whoever scopes
+  idea 20 should settle this first, not discover it mid-ticket.
 
 ## References
 
