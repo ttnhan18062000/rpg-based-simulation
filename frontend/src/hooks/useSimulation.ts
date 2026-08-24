@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, GameEvent, GroundItem, Building, ResourceNode, TreasureChest, Region, StaticData } from '@/types/api';
+import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, GameEvent, GroundItem, Building, ResourceNode, TreasureChest, Region, StaticData, Manifest } from '@/types/api';
 
 const API_BASE = '/api/v1';
 
@@ -28,6 +28,7 @@ export interface SimulationState {
   resourceNodes: ResourceNode[];
   treasureChests: TreasureChest[];
   regions: Region[];
+  manifest: Manifest | null;
   tick: number;
   aliveCount: number;
   totalSpawned: number;
@@ -64,6 +65,7 @@ export function useSimulation(): SimulationState {
   const [resourceNodes, setResourceNodes] = useState<ResourceNode[]>([]);
   const [treasureChests, setTreasureChests] = useState<TreasureChest[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
+  const [manifest, setManifest] = useState<Manifest | null>(null);
   const [tick, setTick] = useState(0);
   const [aliveCount, setAliveCount] = useState(0);
   const [totalSpawned, setTotalSpawned] = useState(0);
@@ -85,9 +87,10 @@ export function useSimulation(): SimulationState {
     let cancelled = false;
     const loadInitial = async () => {
       try {
-        const [rawMap, staticData] = await Promise.all([
+        const [rawMap, staticData, manifestData] = await Promise.all([
           fetchJSON<MapData>('/map'),
           fetchJSON<StaticData>('/static'),
+          fetchJSON<Manifest>('/manifest'),
         ]);
         if (!cancelled) {
           const decoded: DecodedMapData = {
@@ -100,6 +103,7 @@ export function useSimulation(): SimulationState {
           setResourceNodes(staticData.resource_nodes || []);
           setTreasureChests(staticData.treasure_chests || []);
           setRegions(staticData.regions || []);
+          setManifest(manifestData);
           mapLoadedRef.current = true;
           staticLoadedRef.current = true;
         }
@@ -303,6 +307,7 @@ export function useSimulation(): SimulationState {
     resourceNodes,
     treasureChests,
     regions,
+    manifest,
     tick,
     aliveCount,
     totalSpawned,

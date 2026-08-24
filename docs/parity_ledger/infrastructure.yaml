@@ -1920,8 +1920,8 @@
     scenarios/, entity/, archive/, plans/, audits/, and optimization_audit_ledger.md.
     The tickets/done, stored_artifacts, and agent-monitoring/retro plugin-content-docs
     instances (and their sidebars-*.js files) were removed entirely, along with the
-    matching navbar items and the search-local theme''s docsRouteBasePath entries, per
-    TCK-20260821-DOCS-BUILD-LASTUPDATE-METADATA-OVERHEAD. Makefile targets docs-serve
+    matching navbar items and the search-local theme''s docsRouteBasePath entries,
+    per TCK-20260821-DOCS-BUILD-LASTUPDATE-METADATA-OVERHEAD. Makefile targets docs-serve
     and docs-build available.
 
     '
@@ -11082,54 +11082,53 @@
     (TCK-20260823-CI-STEP-SUMMARY-REPORTING)
 
 
-    Extended by TCK-20260824-CI-NEW-EXISTING-TEST-SPLIT: on pull_request runs only (if:
-    github.event_name == ''pull_request''), each of the 9 jobs gains two additional steps
-    after Run -- a ''Fetch base branch for collect-only diff'' step (git fetch origin
-    "${{ github.base_ref }}" --depth=1 then git worktree add /tmp/base-checkout FETCH_HEAD,
-    each guarded by its own fail-open ''if ! ...; then ...; exit 0; fi'') and a ''Base branch
-    test collection'' step (cd /tmp/base-checkout && pytest <job''s own path list> -m "not
-    slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true, run only
-    if the worktree directory exists). The cd-prefixed form is deliberate: a bare pytest
-    ...  line would be independently tokenized by
-    tools/gate_checks/ci_workflow_test_coverage.py::_extract_pytest_paths. tools/ci_junit_summary.py
-    gains parse_testcase_records() (per-testcase classname::name + pass/fail/error/skip status
-    from the head JUnit XML), parse_collect_only_ids()/_normalize_collect_only_node_id()
+    Extended by TCK-20260824-CI-NEW-EXISTING-TEST-SPLIT: on pull_request runs only
+    (if: github.event_name == ''pull_request''), each of the 9 jobs gains two additional
+    steps after Run -- a ''Fetch base branch for collect-only diff'' step (git fetch
+    origin "${{ github.base_ref }}" --depth=1 then git worktree add /tmp/base-checkout
+    FETCH_HEAD, each guarded by its own fail-open ''if ! ...; then ...; exit 0; fi'')
+    and a ''Base branch test collection'' step (cd /tmp/base-checkout && pytest <job''s
+    own path list> -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt
+    2>&1 || true, run only if the worktree directory exists). The cd-prefixed form
+    is deliberate: a bare pytest ...  line would be independently tokenized by tools/gate_checks/ci_workflow_test_coverage.py::_extract_pytest_paths.
+    tools/ci_junit_summary.py gains parse_testcase_records() (per-testcase classname::name
+    + pass/fail/error/skip status from the head JUnit XML), parse_collect_only_ids()/_normalize_collect_only_node_id()
     (parses and normalizes the base branch''s collect-only listing to the same classname::name
-    form), and classify_new_vs_existing() (splits head test IDs into new-vs-existing buckets,
-    each with its own passed/failed/errors/skipped counts, errors broken out as its own column
-    to match the existing all-tests row''s shape). render_markdown_table() and main() both gain
-    an optional, default-None breakdown/base_collect_only_path parameter -- omitted or None
-    output is byte-for-byte identical to the pre-extension behavior. The Job summary step now
-    unconditionally passes "/tmp/base-collect.txt" as a third CLI argument; on a non-PR run
-    (push/schedule/workflow_dispatch) or any git fetch/worktree/collection failure, that file
-    never exists, main() treats a missing/empty path as base_ids=None, and
-    classify_new_vs_existing() returns None -- the single fallback path that covers both "no PR
-    to diff against" and "PR present but base-branch collection failed," rendering only the
-    pre-existing single-row table with no error or broken output. Known limitation (not fixed
-    by this ticket): the base-branch collect-only pass reuses the head job''s already-installed
-    requirements.txt environment rather than a fresh base-branch install, so dependency drift
-    between base and head can cause some base-branch tests to fail to collect -- this degrades
-    to over-counting tests as "new" (fail-open), never a hard failure.
+    form), and classify_new_vs_existing() (splits head test IDs into new-vs-existing
+    buckets, each with its own passed/failed/errors/skipped counts, errors broken
+    out as its own column to match the existing all-tests row''s shape). render_markdown_table()
+    and main() both gain an optional, default-None breakdown/base_collect_only_path
+    parameter -- omitted or None output is byte-for-byte identical to the pre-extension
+    behavior. The Job summary step now unconditionally passes "/tmp/base-collect.txt"
+    as a third CLI argument; on a non-PR run (push/schedule/workflow_dispatch) or
+    any git fetch/worktree/collection failure, that file never exists, main() treats
+    a missing/empty path as base_ids=None, and classify_new_vs_existing() returns
+    None -- the single fallback path that covers both "no PR to diff against" and
+    "PR present but base-branch collection failed," rendering only the pre-existing
+    single-row table with no error or broken output. Known limitation (not fixed by
+    this ticket): the base-branch collect-only pass reuses the head job''s already-installed
+    requirements.txt environment rather than a fresh base-branch install, so dependency
+    drift between base and head can cause some base-branch tests to fail to collect
+    -- this degrades to over-counting tests as "new" (fail-open), never a hard failure.
     (TCK-20260824-CI-NEW-EXISTING-TEST-SPLIT)
 
 
-    Fixed by TCK-20260824-HOTFIX-COLLECTONLY-CLASS-NORMALIZE:
-    _normalize_collect_only_node_id() previously normalized only the leading file-path
-    segment of a collect-only node ID, leaving every class-name segment (including nested
-    classes) as its own separate ''::''-delimited piece -- e.g.
-    "path/to/file.py::TestFoo::test_bar" normalized to "path.to.file::TestFoo::test_bar"
-    (two ''::''). JUnit XML''s own classname attribute instead folds the file path AND every
-    class level into one dotted string, leaving only the method name after a single ''::''
-    (classname="path.to.file.TestFoo" name="test_bar", i.e. "path.to.file.TestFoo::test_bar",
-    one ''::''). The two forms never matched, so classify_new_vs_existing() misclassified
-    every class-based test (including nested classes) as "new" regardless of whether it
-    actually changed -- confirmed via direct local reproduction of PR #68''s real CI job,
-    where a PR adding only 2 new test files reported 933 "new" out of 2659 total tests.
-    _normalize_collect_only_node_id() now dot-joins the normalized file segment together
-    with every intervening class segment (not just the file path), keeping only the final
-    method-name segment after the single trailing ''::'', for any nesting depth --
-    "path/to/file.py::ClassA::ClassB::test_method" now normalizes to
-    "path.to.file.ClassA.ClassB::test_method". The no-class case
+    Fixed by TCK-20260824-HOTFIX-COLLECTONLY-CLASS-NORMALIZE: _normalize_collect_only_node_id()
+    previously normalized only the leading file-path segment of a collect-only node
+    ID, leaving every class-name segment (including nested classes) as its own separate
+    ''::''-delimited piece -- e.g. "path/to/file.py::TestFoo::test_bar" normalized
+    to "path.to.file::TestFoo::test_bar" (two ''::''). JUnit XML''s own classname
+    attribute instead folds the file path AND every class level into one dotted string,
+    leaving only the method name after a single ''::'' (classname="path.to.file.TestFoo"
+    name="test_bar", i.e. "path.to.file.TestFoo::test_bar", one ''::''). The two forms
+    never matched, so classify_new_vs_existing() misclassified every class-based test
+    (including nested classes) as "new" regardless of whether it actually changed
+    -- confirmed via direct local reproduction of PR #68''s real CI job, where a PR
+    adding only 2 new test files reported 933 "new" out of 2659 total tests. _normalize_collect_only_node_id()
+    now dot-joins the normalized file segment together with every intervening class
+    segment (not just the file path), keeping only the final method-name segment after
+    the single trailing ''::'', for any nesting depth -- "path/to/file.py::ClassA::ClassB::test_method"
+    now normalizes to "path.to.file.ClassA.ClassB::test_method". The no-class case
     ("path/to/file.py::test_method" -> "path.to.file::test_method") is unchanged.
     (TCK-20260824-HOTFIX-COLLECTONLY-CLASS-NORMALIZE)
 
@@ -11138,11 +11137,12 @@
   priority: P2
   legacy_evidence: null
   v2_evidence: '.github/workflows/test.yml (9 fast-lane jobs: --junit-xml flag + Job
-    summary step + Fetch base branch for collect-only diff step + Base branch test collection
-    step) + tools/ci_junit_summary.py (parse_testcase_records, parse_collect_only_ids,
-    _normalize_collect_only_node_id -- now dot-joins all class segments (including nested
-    classes) into the classname, not just the file path, matching JUnit''s classname::name
-    convention -- classify_new_vs_existing, NewExistingBreakdown, TestCaseRecord)'
+    summary step + Fetch base branch for collect-only diff step + Base branch test
+    collection step) + tools/ci_junit_summary.py (parse_testcase_records, parse_collect_only_ids,
+    _normalize_collect_only_node_id -- now dot-joins all class segments (including
+    nested classes) into the classname, not just the file path, matching JUnit''s
+    classname::name convention -- classify_new_vs_existing, NewExistingBreakdown,
+    TestCaseRecord)'
   proof_type: null
   test_path: tests/tools/test_ci_junit_summary.py + tests/static/test_ci_step_summary_reporting.py
   divergence_note: null
@@ -11171,12 +11171,12 @@
     next_available_id(''infrastructure.yaml'') to pick its own id at authoring time
     (INFRA-380), and search_existing_entries(''parity_updater_static'', shard_filename=''infrastructure.yaml'')
     confirmed no pre-existing entry covered this concern before writing. Renumbered
-    to INFRA-381 during a merge with origin/main, which had independently landed
-    an unrelated INFRA-380 entry (TCK-20260823-CI-STEP-SUMMARY-REPORTING) in the
-    time between this entry''s authoring and this branch merging -- a real, expected
-    consequence of next_available_id() computing against each branch''s own
-    pre-merge view of the shard, not a bug in the function itself. No src/ files
-    changed -- pure Claude-agent-workflow orchestration tooling.'
+    to INFRA-381 during a merge with origin/main, which had independently landed an
+    unrelated INFRA-380 entry (TCK-20260823-CI-STEP-SUMMARY-REPORTING) in the time
+    between this entry''s authoring and this branch merging -- a real, expected consequence
+    of next_available_id() computing against each branch''s own pre-merge view of
+    the shard, not a bug in the function itself. No src/ files changed -- pure Claude-agent-workflow
+    orchestration tooling.'
   status: verified
   priority: P2
   legacy_evidence: null
@@ -11214,9 +11214,9 @@
     last wrote the shared sidecar. Scoped files older than 24h are pruned opportunistically
     on every hook invocation. Historical tools.jsonl rows from before this fix are
     not corrected or flagged (no-backfill precedent). Renumbered to INFRA-382 during
-    a merge with origin/main, which had independently landed INFRA-377 through
-    INFRA-381 (unrelated tickets) in the time between this entry''s authoring and
-    this branch merging -- the same expected consequence TCK-20260824-PARITY-NEXT-ID-LOOKUP''s
+    a merge with origin/main, which had independently landed INFRA-377 through INFRA-381
+    (unrelated tickets) in the time between this entry''s authoring and this branch
+    merging -- the same expected consequence TCK-20260824-PARITY-NEXT-ID-LOOKUP''s
     own INFRA-381 entry already documents for itself.'
   status: verified
   priority: P2
@@ -11224,3 +11224,36 @@
   test_path: tests/tools/test_post_tool_hook.py::test_two_concurrent_sessions_each_attributed_correctly
   divergence_note: null
   proof_type: regression
+- id: INFRA-383
+  text: 'GET /api/v1/manifest returns a versioned ID-to-meaning content dictionary
+    (terrain_types, entity_kinds, building_types), backed by a CatalogRepository singleton
+    loaded once at server startup and wired into the FastAPI DI graph (src/api/dependencies.py).
+    protocol_version is a fixed response-shape-contract literal, independent of dictionary_version
+    (CatalogRepository.fingerprint, content-derived, changes when catalog YAML content
+    changes). terrain_types is keyed by the same live, per-loaded-state int codes
+    StatePresenter.present_map emits (StatePresenter.terrain_code_map, widened from
+    private in this same ticket) rather than a static CatalogRepository.terrain passthrough,
+    since present_map assigns codes over the actual runtime state.terrain value set,
+    which includes uncataloged uppercase defaults ("PLAIN", "GRASS" from src/worldbuilding/compiler.py
+    and recipe.py) with no CatalogRepository.terrain key at all. Display names resolve
+    via a case-insensitive catalog lookup with a title()-cased fallback for uncataloged
+    values (matching present_static''s existing b.kind.title() precedent). entity_kinds/building_types
+    are direct {id: display_name} projections of CatalogRepository.entity_archetypes/.buildings
+    -- confirmed clean 1:1 catalog matches. location_types is intentionally omitted
+    from the response (not an empty placeholder): no LocationDefinition/CatalogRepository.locations
+    registry exists anywhere in src/content/schema.py.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/api/routes/manifest.py, src/api/presenters/manifest_presenter.py,
+    src/api/dependencies.py, src/api/presenters/state_presenter.py (terrain_code_map)
+  proof_type: unit
+  test_path: tests/api/test_manifest_api.py
+  divergence_note: 'Known, accepted limitation: dictionary_version is derived purely
+    from CatalogRepository._compute_fingerprint() (catalog-content-only), so it does
+    NOT change if a different world with a different terrain-value distribution is
+    loaded, even though terrain_types'' actual payload would differ for that world
+    -- terrain_types is state-dependent while dictionary_version is catalog-content-only.
+    Disclosed rather than silently left unstated, matching this ledger''s existing
+    disclosed-limitation pattern.'
+  support_boundary: null

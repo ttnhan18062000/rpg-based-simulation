@@ -142,7 +142,7 @@ class StatePresenter:
         }
 
     @staticmethod
-    def _terrain_code_map(state: AuthoritativeState) -> Dict[str, int]:
+    def terrain_code_map(state: AuthoritativeState) -> Dict[str, int]:
         """Deterministic terrain-type-string -> int code, for the live map's RLE grid.
 
         No terrain-type enum exists in this codebase (recipe-declared free-form strings). Codes are
@@ -166,7 +166,7 @@ class StatePresenter:
 
         width = max(x for x, _ in state.terrain.keys()) + 1
         height = max(y for _, y in state.terrain.keys()) + 1
-        code_map = StatePresenter._terrain_code_map(state)
+        code_map = StatePresenter.terrain_code_map(state)
 
         grid: List[int] = []
         cur_val = None
@@ -197,7 +197,7 @@ class StatePresenter:
         guard/tier/looted, region terrain/difficulty/locations) — none are stored on the
         corresponding state class, so each is either derived from an existing field or dropped.
         """
-        code_map = StatePresenter._terrain_code_map(state)
+        code_map = StatePresenter.terrain_code_map(state)
 
         buildings = [
             {

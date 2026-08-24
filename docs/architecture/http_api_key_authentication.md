@@ -63,7 +63,7 @@ from that default only with a documented reason added to this table.
 
 | Surface | Dependency | Reasoning |
 |---|---|---|
-| 9 of 10 `include_router()` calls (`history`, `search`, `behavior`, `decisions`, `scenarios`, `campaigns`, `chronicle`, `economy`, `quality_routes`) | `require_api_key` | Ordinary REST sub-routers |
+| 10 of 11 `include_router()` calls (`history`, `search`, `behavior`, `decisions`, `scenarios`, `campaigns`, `chronicle`, `economy`, `manifest`, `quality_routes`) | `require_api_key` | Ordinary REST sub-routers |
 | `stream.router` (`include_router()`) | `require_api_key_ws` | Contains only `@router.websocket(...)` routes — see Section 4 |
 | `/health` | none (exempt) | Liveness probe; infra-orchestration caller, not a tenant client |
 | `/metrics` | `require_api_key` | Sensitive operational data (gold/hard-law/entity metrics); no repo precedent for treating it as infra-only, especially once exposed on the public internet |

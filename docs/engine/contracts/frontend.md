@@ -28,9 +28,15 @@ The WorldLoop Frontend is a high-performance React application built with **Vite
 Central to the frontend is the `useSimulation` custom hook, which manages the lifecycle of the simulation connection.
 
 ### A. Initial Load (Full State)
-On mount, the hook performs two critical fetch calls:
+On mount, the hook performs three critical fetch calls, joined into one `Promise.all`:
 1.  **`/api/v1/map`**: Fetches the RLE-encoded tile grid.
 2.  **`/api/v1/static`**: Fetches all persistent world objects (Buildings, Resource Nodes, Treasure Chests).
+3.  **`/api/v1/manifest`**: Fetches the versioned ID-to-meaning lookup table (`terrain_types`,
+    `entity_kinds`, `building_types`; `location_types` intentionally omitted — no backend registry
+    exists for it, see `stored_artifacts/TCK-20260821-MANIFEST-ID-LOOKUP-ENDPOINT/investigation.md`
+    and `plan.md`). `terrain_types` is keyed by the same int codes `/api/v1/map`'s RLE grid uses.
+    The fetched value is stored in hook state (`manifest`) but not yet consumed by any
+    rendering/color logic — retiring `colors.ts`'s hardcoded maps to consume it is a fast-follow.
 
 ### B. Delta Sync (SSE)
 Once the base data is loaded, it connects to `/api/v1/stream`.

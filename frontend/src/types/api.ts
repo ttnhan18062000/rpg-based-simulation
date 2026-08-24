@@ -351,6 +351,14 @@ export interface MapData {
   grid: number[];  // RLE-encoded: [value, count, value, count, ...]
 }
 
+export interface Manifest {
+  protocol_version: string;
+  dictionary_version: string;
+  terrain_types: Record<string, string>;  // keyed by present_map's int codes, stringified
+  entity_kinds: Record<string, string>;
+  building_types: Record<string, string>;
+}
+
 export interface SimulationConfig {
   world_seed: number;
   grid_width: number;
