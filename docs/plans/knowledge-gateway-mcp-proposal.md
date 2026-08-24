@@ -1716,6 +1716,11 @@ production-promotion decision) should be weighed against these real numbers, not
 optimistic framing in this section's original text above. See
 `docs/engine/contracts/knowledge_gateway_mcp/audit_phase0_5.md` for the full consolidated audit.
 
+**Status update (2026-08-24):** the repository owner has ratified a decision against these numbers
+— keep the gateway as-is, no further investment. See
+`docs/engine/contracts/knowledge_gateway_mcp/keep_or_deprecate_decision.md` for the full record.
+No Phase 5+/Phase 6 work is authorized by this ratification.
+
 ## 26. Repository Evidence Map
 
 The proposal's current-state claims should be revalidated when Phase 0 starts. The inspected
