@@ -11,48 +11,14 @@ const config = {
     format: 'md',
   },
 
-  plugins: [
-    [
-      '@docusaurus/plugin-content-docs',
-      {
-        id: 'tickets',
-        path: '../tickets/done',
-        routeBasePath: 'tickets',
-        sidebarPath: require.resolve('./sidebars-tickets.js'),
-        showLastUpdateTime: true,
-        showLastUpdateAuthor: true,
-      },
-    ],
-    [
-      '@docusaurus/plugin-content-docs',
-      {
-        id: 'artifacts',
-        path: '../stored_artifacts',
-        routeBasePath: 'artifacts',
-        sidebarPath: require.resolve('./sidebars-artifacts.js'),
-        showLastUpdateTime: true,
-        showLastUpdateAuthor: true,
-      },
-    ],
-    [
-      '@docusaurus/plugin-content-docs',
-      {
-        id: 'agent-monitoring',
-        path: '../agent-monitoring/retro',
-        routeBasePath: 'agent-monitoring',
-        sidebarPath: require.resolve('./sidebars-agent-monitoring.js'),
-        showLastUpdateTime: true,
-        showLastUpdateAuthor: true,
-      },
-    ],
-  ],
+  plugins: [],
 
   themes: [
     [
       require.resolve('@easyops-cn/docusaurus-search-local'),
       {
         hashed: false,
-        docsRouteBasePath: ['docs', 'tickets', 'artifacts', 'agent-monitoring'],
+        docsRouteBasePath: ['docs'],
         indexBlog: false,
       },
     ],
@@ -65,7 +31,17 @@ const config = {
         docs: {
           path: '../docs',
           routeBasePath: 'docs',
-          exclude: ['superpowers/**', 'specs/**', 'parity_ledger/**', 'scenarios/**', 'entity/**'],
+          exclude: [
+            'superpowers/**',
+            'specs/**',
+            'parity_ledger/**',
+            'scenarios/**',
+            'entity/**',
+            'archive/**',
+            'plans/**',
+            'audits/**',
+            'optimization_audit_ledger.md',
+          ],
           sidebarPath: require.resolve('./sidebars.js'),
           showLastUpdateTime: true,
           showLastUpdateAuthor: true,
@@ -81,10 +57,6 @@ const config = {
       title: 'RPG Simulation Docs',
       items: [
         { to: '/docs/', label: 'Docs', position: 'left' },
-        { to: '/tickets/', label: 'Tickets', position: 'left' },
-        { to: '/artifacts/', label: 'Artifacts', position: 'left' },
-        { to: '/docs/archive/', label: 'Archive', position: 'left' },
-        { to: '/agent-monitoring/', label: 'Agent Monitoring', position: 'left' },
       ],
     },
   },
