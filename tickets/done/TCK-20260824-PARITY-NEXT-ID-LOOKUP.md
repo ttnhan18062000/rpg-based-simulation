@@ -183,7 +183,16 @@ sibling file.
   `Next available ID per candidate shard` line in the `parity-updater` prompt, alongside the existing
   `Expected parity-ledger files per changed src/ file` line. Verified end-to-end against the real
   ledger (`src/core/builder.py`, `src/core/state.py` as inputs) — produced correct `max+1` values for
-  every candidate shard, e.g. `INFRA-380` (one past the confirmed `INFRA-379` highest id).
+  every candidate shard, e.g. `INFRA-380` (one past the confirmed `INFRA-379` highest id) at the
+  time this smoke test ran. **Post-merge update**: this ticket's own Parity-phase entry, originally
+  authored as `INFRA-380`, was renumbered to `INFRA-381` when merging with `origin/main` — a
+  concurrent session had independently landed its own, unrelated `INFRA-380` entry
+  (`TCK-20260823-CI-STEP-SUMMARY-REPORTING`) in the gap between this ticket's authoring and its
+  merge. Confirmed via direct `next_available_id('infrastructure.yaml')` re-run against the merged
+  state that `INFRA-382` is the next real available id, i.e. `INFRA-381` was correctly free. This is
+  the exact, expected race the function's own docstring already disclaims (it computes against
+  whatever local view of the shard is passed to it at call time) — not a bug, and not something a
+  single-branch smoke test could have caught before the merge.
 - Did NOT wire `search_existing_entries` into the orchestrator flow, per ticket scope (no automatic
   query-string source) — instead documented it in `.claude/agents/parity-updater.md`'s Step 0 section
   as an agent-invoked Bash call, and updated Step 3's "next available ID" line to point back to the
@@ -271,11 +280,19 @@ command directly rather than trusting the earlier summary).
   this session — flagged in Test Summary as a real, generalizable test-design fragility worth its
   own future ticket (redesign to an invariant check, not literal line numbers), not fixed at that
   root cause here.
-- docs/parity_ledger/infrastructure.yaml — added `INFRA-380`, a new entry documenting the
+- docs/parity_ledger/infrastructure.yaml — added a new entry documenting the
   `next_available_id`/`search_existing_entries` functions and their orchestrator/agent wiring
   (pure workflow-tooling entry, same pattern as `INFRA-263`/`264`/`265`/`315`/`379`). Authored by
-  dogfooding this ticket's own new functions during the Parity phase; independently re-verified
-  via `yaml.safe_load` that no other entry in the shard lost any field in the process.
+  dogfooding this ticket's own new functions during the Parity phase as `INFRA-380`; independently
+  re-verified via `yaml.safe_load` that no other entry in the shard lost any field in the process.
+  **Renumbered to `INFRA-381` during the merge with `origin/main`**: a concurrent session had
+  independently authored its own, unrelated `INFRA-380` entry in the interim — a real ID collision
+  across branches, not a bug in the new lookup functions (they correctly compute the next-available
+  id against whichever local shard state is passed in; two branches computing independently before
+  either merges can legitimately collide once one lands first). Resolved by keeping the
+  concurrent session's `INFRA-380` as-is and renumbering this ticket's own entry to `INFRA-381`
+  (confirmed correct by re-running `next_available_id` against the merged state, which returned
+  `INFRA-382` as the next free id).
 - tickets/inprogress/TCK-20260824-PARITY-NEXT-ID-LOOKUP.md (this ticket — Implementation Notes, Test
   Summary, Files Changed, Completion Summary, Acceptance Criteria, Status)
 
