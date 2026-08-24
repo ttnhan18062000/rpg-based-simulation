@@ -347,7 +347,7 @@ def test_build_impact_report_degrades_gracefully_with_no_registry_hits():
 def test_real_path_pipeline_includes_kernel_as_dependent():
     report = chi.build_impact_report(_REPO_ROOT, "src/engine/pipeline.py")
     assert "src/engine/kernel.py" in report["dependents"]
-    assert "src/engine/apply.py" in report["dependents"]
+    assert "src/engine/scenario_checkpoint.py" in report["dependents"]
     assert report["dependents_degraded"] is False
     assert report["criticality_tier"] in ("high", "medium", "low")
 
@@ -363,10 +363,18 @@ def test_real_path_pipeline_kernel_visible_in_formatted_output_not_just_internal
     # sorting (sort_dependents_src_first) plus a wider truncation window fixed
     # this -- this test locks in the fix against the actual printed text, not
     # just the internal data structure the AC test above already covers.
+    #
+    # TCK-20260823-HOTFIX-CODE-HEALTH-IMPACT-APPLY-PY-STALE-DEPENDENT: the
+    # second-dependent example used here was updated from
+    # "src/engine/apply.py" to "src/engine/scenario_checkpoint.py" because
+    # apply.py no longer has any import relationship (direct or within the
+    # tool's affected-depth) to pipeline.py -- the original narrative above
+    # about the truncation-window fix is still accurate, only the specific
+    # example path was stale.
     report = chi.build_impact_report(_REPO_ROOT, "src/engine/pipeline.py")
     formatted = chi.format_impact_report(report)
     assert "src/engine/kernel.py" in formatted
-    assert "src/engine/apply.py" in formatted
+    assert "src/engine/scenario_checkpoint.py" in formatted
 
 
 def test_sort_dependents_src_first_prioritizes_same_subsystem():

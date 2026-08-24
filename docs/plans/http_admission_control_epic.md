@@ -10,7 +10,11 @@ tags: [architecture, observability]
 
 **Tracking ticket:** `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC`
 **Source:** `docs/audits/D23_architecture_resilience.md` §E, §G, §L (R6)
-**Priority:** P2 — explicitly gate on deployment plans; do not front-load if this system stays on a trusted network.
+**Priority:** P1 — the gating deployment-plan decision fired 2026-08-23: this API surface now goes
+public internet, multi-tenant (was trusted-network-only). Originally P2, gated on that decision not
+being made yet; now active, no longer front-loaded speculatively. See
+`tickets/todos/http-admission-control/TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC.md` for the full
+2026-08-23 investigation and split into child tickets.
 
 ## Problem
 
@@ -32,8 +36,11 @@ engine and the HTTP layer.
   NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary
   (`docs/architecture/observability_hot_path_safety_contract.md`) to the HTTP layer, rather than
   inventing a new scheme — full proposed mode design (trigger conditions, per-mode endpoint
-  behavior, hysteresis pattern reusing `PhaseBudgetGovernor`'s threshold-crossing-with-cooldown
-  approach) is in `docs/audits/D23_architecture_resilience.md` §L.
+  behavior, hysteresis pattern reusing `ResourceGovernor.evaluate()`/`_can_recover()`'s real
+  escalation/recovery pattern, `src/engine/governor.py` -- **not** `PhaseBudgetGovernor`, which
+  has no hysteresis of its own; the source doc's original text mis-attributed this to
+  `PhaseBudgetGovernor`, corrected here by `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`) is
+  in `docs/audits/D23_architecture_resilience.md` §L.
 - A single in-process token-bucket or sliding-window limiter in the FastAPI middleware stack is
   sufficient at current scale — explicitly not a recommendation to add Kafka, a service mesh, or
   a generic rate-limiting framework (the RabbitMQ/Kafka situation elsewhere in this same repo is
@@ -45,7 +52,12 @@ engine and the HTTP layer.
 - Building this before there's an actual deployment plan beyond a trusted network — this epic's
   own priority is explicitly conditional on that.
 
-## Acceptance signal for this epic (not yet broken into child tickets)
+## Acceptance signal for this epic
+
+**Broken into child tickets as of 2026-08-23:** `TCK-20260823-HTTP-API-KEY-AUTH` (auth,
+implementation complete, in the pipeline) and `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`
+(admission control, depends on the first, not yet started — see
+`tickets/todos/http-admission-control/`).
 
 - ~~CORS config no longer uses the spec-invalid wildcard+credentials combination.~~ **Resolved**
   (`TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG`, 2026-08-20): `allow_credentials=True`
@@ -53,9 +65,24 @@ engine and the HTTP layer.
   credentialed cross-origin requests — `frontend/`'s `fetch()` calls carry no `credentials`
   option, and dev traffic is proxied same-origin (`frontend/vite.config.ts`); `dashboard-frontend/`
   is a separate app targeting a different backend entirely, not this one.
-- At least one auth mechanism gates the API surface.
-- HTTP requests are admitted/throttled/shed according to a mode vocabulary consistent with (and
-  ideally reusing) the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL states.
+- ~~At least one auth mechanism gates the API surface.~~ **Resolved**
+  (`TCK-20260823-HTTP-API-KEY-AUTH`, 2026-08-23): per-client API-key authentication now gates
+  every route in `src/api/server.py::create_v2_app()` except `/health` (documented liveness-probe
+  exemption). Keys are hashed-at-rest and compared via `hmac.compare_digest`. See
+  `docs/architecture/http_api_key_authentication.md` for the full mechanism and route
+  classification, and `docs/parity_ledger/infrastructure.yaml` `INFRA-377` for verification
+  evidence. The `ClientIdentity` object this ticket establishes is designed for the next bullet's
+  admission-control layer to key off directly.
+- ~~HTTP requests are admitted/throttled/shed according to a mode vocabulary consistent with (and
+  ideally reusing) the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL states.~~
+  **Resolved** (`TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`, 2026-08-23): per-client HTTP
+  admission control now gates every protected route in `src/api/server.py::create_v2_app()`,
+  extending `ObservabilityMode`'s NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary
+  (`src/observability/event_recorder.py`, imported not modified) via a per-client token-bucket
+  signal fed through a hysteresis state machine mirroring `ResourceGovernor`'s real
+  escalation/recovery pattern. Only `SURVIVAL` rejects (`429`/WebSocket `1013`); `/health` remains
+  the sole exemption. See `docs/architecture/http_admission_control.md` for the full mechanism and
+  `docs/parity_ledger/infrastructure.yaml` `INFRA-378` for verification evidence.
 
 ## References
 

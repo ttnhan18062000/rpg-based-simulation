@@ -176,6 +176,103 @@ def test_concurrent_writers_produce_no_interleaved_or_truncated_lines(tmp_path):
     assert seen_commands == expected_commands
 
 
+def test_scoped_sidecar_preferred_over_stale_unscoped_sidecar(tmp_path):
+    # TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: the unscoped file may hold a stale/foreign value
+    # (another concurrent session's last write, or an already-closed ticket's leftover state) — the
+    # scoped file for THIS session must win.
+    sidecar_dir = tmp_path / ".claude"
+    sidecar_dir.mkdir()
+    (sidecar_dir / "current_run").write_text(
+        json.dumps({"run_id": "TCK-STALE-FOREIGN", "seq": 99, "phase": "Finalize", "agent": "implementer"})
+    )
+    (sidecar_dir / "current_run.sess-1").write_text(
+        json.dumps({"run_id": "TCK-REAL", "seq": 3, "phase": "Implement", "agent": "implementer"})
+    )
+
+    result = _run_hook(tmp_path, _payload(session_id="sess-1"))
+    assert result.returncode == 0
+
+    record = json.loads(_tools_lines(tmp_path)[0])
+    assert record["run_id"] == "TCK-REAL"
+    assert record["seq"] == 3
+    assert record["phase"] == "Implement"
+
+
+def test_two_concurrent_sessions_each_attributed_correctly(tmp_path):
+    sidecar_dir = tmp_path / ".claude"
+    sidecar_dir.mkdir()
+    # Simulate the unscoped file mid-race, holding whichever session wrote last — irrelevant once
+    # each session's own scoped file exists.
+    (sidecar_dir / "current_run").write_text(
+        json.dumps({"run_id": "TCK-B", "seq": 5, "phase": "Verify", "agent": "done-checker"})
+    )
+    (sidecar_dir / "current_run.sess-a").write_text(
+        json.dumps({"run_id": "TCK-A", "seq": 1, "phase": "Investigate", "agent": "investigator"})
+    )
+    (sidecar_dir / "current_run.sess-b").write_text(
+        json.dumps({"run_id": "TCK-B", "seq": 5, "phase": "Verify", "agent": "done-checker"})
+    )
+
+    result_a = _run_hook(tmp_path, _payload(session_id="sess-a", command="cmd-a"))
+    result_b = _run_hook(tmp_path, _payload(session_id="sess-b", command="cmd-b"))
+    assert result_a.returncode == 0
+    assert result_b.returncode == 0
+
+    lines = _tools_lines(tmp_path)
+    assert len(lines) == 2
+    by_command = {json.loads(line)["input_summary"]: json.loads(line) for line in lines}
+
+    assert by_command["cmd-a"]["run_id"] == "TCK-A"
+    assert by_command["cmd-a"]["phase"] == "Investigate"
+    assert by_command["cmd-b"]["run_id"] == "TCK-B"
+    assert by_command["cmd-b"]["phase"] == "Verify"
+
+
+def test_foreign_scoped_sidecar_not_read_by_different_session(tmp_path):
+    sidecar_dir = tmp_path / ".claude"
+    sidecar_dir.mkdir()
+    (sidecar_dir / "current_run").write_text(
+        json.dumps({"run_id": "TCK-UNSCOPED", "seq": 1, "phase": "Scope", "agent": "ticket-scoper"})
+    )
+    (sidecar_dir / "current_run.sess-other").write_text(
+        json.dumps({"run_id": "TCK-OTHER", "seq": 9, "phase": "Finalize", "agent": "finalizer"})
+    )
+
+    result = _run_hook(tmp_path, _payload(session_id="sess-1"))
+    assert result.returncode == 0
+
+    record = json.loads(_tools_lines(tmp_path)[0])
+    # No scoped file for "sess-1" — must fall back to the unscoped file, never read sess-other's.
+    assert record["run_id"] == "TCK-UNSCOPED"
+    assert record["phase"] == "Scope"
+
+
+def test_stale_scoped_sidecar_pruned(tmp_path):
+    import os
+
+    sidecar_dir = tmp_path / ".claude"
+    sidecar_dir.mkdir()
+    stale = sidecar_dir / "current_run.sess-old"
+    stale.write_text(json.dumps({"run_id": "TCK-OLD", "seq": 1, "phase": "Implement", "agent": "implementer"}))
+    old_time = __import__("time").time() - (25 * 3600)
+    os.utime(stale, (old_time, old_time))
+
+    result = _run_hook(tmp_path, _payload(session_id="sess-new"))
+    assert result.returncode == 0
+    assert not stale.exists()
+
+
+def test_fresh_scoped_sidecar_not_pruned(tmp_path):
+    sidecar_dir = tmp_path / ".claude"
+    sidecar_dir.mkdir()
+    fresh = sidecar_dir / "current_run.sess-fresh"
+    fresh.write_text(json.dumps({"run_id": "TCK-FRESH", "seq": 1, "phase": "Implement", "agent": "implementer"}))
+
+    result = _run_hook(tmp_path, _payload(session_id="sess-new"))
+    assert result.returncode == 0
+    assert fresh.exists()
+
+
 def test_locking_failure_does_not_propagate(tmp_path):
     # Once post_tool_hook.py routes through writer.write_line (no longer imports
     # fcntl directly), an fcntl-shim no longer exercises anything real. Instead,

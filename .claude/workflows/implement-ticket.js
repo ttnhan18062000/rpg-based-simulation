@@ -60,10 +60,15 @@ const resolveSeqOffset = async (id) => {
 let seqOffset = 0
 if (ticketId) {
   seqOffset = await resolveSeqOffset(ticketId)
+  // TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: same additive session-scoped write as writeSidecar()
+  // below — see that helper's comment for the full rationale.
   await bash(
     `python3 -c "
-import json, sys
+import json, sys, os
 open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': 'Scope', 'agent': 'ticket-scoper'}))
+sid = os.environ.get('CLAUDE_CODE_SESSION_ID', '')
+if sid:
+    open('.claude/current_run.' + sid, 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': 'Scope', 'agent': 'ticket-scoper'}))
 " "${ticketId}" "${seqOffset + 1}" 2>/dev/null || true`
   )
 } else {
@@ -79,6 +84,7 @@ const TICKET_SCHEMA = {
     todos_source_path: { type: 'string', description: 'Path of the original file under tickets/todos/ if the ticket originated there; empty string otherwise.' },
     status: { type: 'string', enum: ['CREATED', 'EXISTING'] },
     conflicts: { type: 'array', items: { type: 'string' } },
+    related_context: { type: 'array', items: { type: 'string' }, description: 'Non-blocking informational disclosure — e.g. a related prior ticket that is not duplicate work, or a mechanic/parity note worth surfacing — that must NOT trigger CONFLICTS_DETECTED. Empty array if none, never omitted.' },
     tier: { type: 'string', enum: ['hotfix', 'standard', 'epic'] },
     tags: { type: 'array', items: { type: 'string' }, description: 'The ticket frontmatter tags list, read directly — required so the Security-Review gate trigger (Step 2) has a ground-truth fallback independent of the derived suggested_skills field.' },
     suggested_skills: { type: 'array', items: { type: 'string' }, description: 'Mapped skill(s) for Process/Skill-signal tags on this ticket; empty array if none.' },
@@ -117,9 +123,12 @@ filter or transform it — this is the ground-truth list the Security-Review gat
 
 Step 3b — check for a security mis-tag: if the ticket's "Related Code Areas" section contains any path or filename matching one of: \`credential\`, \`secret\`, \`password\`, \`api_key\`, \`private_key\`, \`.env\`, \`oauth\`, \`jwt\` (case-insensitive substring match; do NOT match \`auth\`, \`cert\`, \`key\`, \`token\`, or \`session\` bare — those collide with this codebase's own \`AuthoritativeState\`/\`authoritative_pipeline\`/\`certification\`/\`LabSessionStore\` vocabulary), AND the ticket's tags do NOT include \`security\` — set mistag_warning=true. Otherwise mistag_warning=false.
 
+conflicts vs. related_context: conflicts is ONLY for a genuine blocking duplicate/contradictory-work finding that should stop the pipeline for human review before proceeding (e.g. the ticket-file-not-found case below). related_context is for any other informational finding worth surfacing (e.g. a related prior ticket that is not duplicate work) that must NOT block the pipeline — empty array if none, never omit the field.
+
 Return: ticket_id="${ticketId}", ticket_path=(the ticket_path value stated above),
 todos_source_path=(the todos_source_path value stated above),
 status="EXISTING", conflicts=(["ticket file not found for ${ticketId}"] if ticket_path is empty, else []),
+related_context=(any non-blocking informational findings noticed while loading the ticket, [] if none),
 tier=(the tier value stated above),
 tags=(from step 3a, the ticket's actual frontmatter tags list),
 suggested_skills=(computed list from step 3, [] if none),
@@ -136,7 +145,7 @@ Step 0b (context warm-start — REQUIRED before any file reads):
 Request: ${request}
 
 Steps:
-1. Scan tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts. A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as a conflict/duplicate candidate rather than re-scoping from scratch.
+1. Scan tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts. A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as related_context (non-blocking) rather than re-scoping from scratch, unless it is a genuine blocking duplicate of this exact request, in which case flag it as a conflicts entry.
 2. Scan docs/ (mechanics Bible chapters, engine contracts) for constraints on the request.
 3. Scan stored_artifacts/ for prior investigations in the same area.
 4. Read relevant source files to understand current state.
@@ -159,12 +168,13 @@ Steps:
    Related Tickets, Related Docs, Related Stored Artifacts, Related Code Areas,
    Assumptions/Open Questions, Implementation Notes (blank), Test Summary (blank),
    Files Changed (blank), Completion Summary (blank).
-7. Create the staging directory: staging_artifacts/{ticket_id}/
+7. If the Tier you inferred in step 6 is hotfix: skip this step entirely — do NOT create staging_artifacts/{ticket_id}/. Hotfix tickets skip Investigate/Plan/Review, so nothing ever writes into that directory. Otherwise (standard or epic tier): create the staging directory staging_artifacts/{ticket_id}/.
 
 Step 8 — check for a security mis-tag against the just-drafted ticket: if the ticket's "Related Code Areas" section contains any path or filename matching one of: \`credential\`, \`secret\`, \`password\`, \`api_key\`, \`private_key\`, \`.env\`, \`oauth\`, \`jwt\` (case-insensitive substring match; do NOT match \`auth\`, \`cert\`, \`key\`, \`token\`, or \`session\` bare — those collide with this codebase's own \`AuthoritativeState\`/\`authoritative_pipeline\`/\`certification\`/\`LabSessionStore\` vocabulary), AND the ticket's tags do NOT include \`security\` — set mistag_warning=true. Otherwise mistag_warning=false.
 
 Return: ticket_id (the full TCK-... ID), ticket_path, status="CREATED",
-conflicts (list of any duplicates or conflicts found — empty array if none),
+conflicts (ONLY genuine blocking duplicate/contradictory work that should stop the pipeline for human review before proceeding — empty array if none),
+related_context (informational findings worth surfacing that do NOT block the pipeline, e.g. "a related prior ticket exists but this is not duplicate work" or "this ticket's fix is for a bug introduced by ticket X" — empty array if none, never omit the field),
 tier (the tier value written into the ticket),
 tags (the tags array written into the new ticket's own frontmatter — the same ground-truth reasoning as the Load-existing branch),
 suggested_skills (from the mapping table in your Output contract, [] if none),
@@ -253,11 +263,23 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
 // documented at implement-ticket.js:756-763 — embedding JSON directly in a double-quoted python3 -c
 // string corrupts the script on nested unescaped quotes). Fail-open per CLAUDE.md's "monitoring write
 // failure must never fail the workflow" rule — keeps the existing `2>/dev/null || true` suffix.
+// TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: additionally writes a per-session-scoped copy
+// (`.claude/current_run.<CLAUDE_CODE_SESSION_ID>`) alongside the existing unscoped file — the
+// unscoped file alone is silently overwritten by every concurrent session's own writeSidecar()
+// call, misattributing tools.jsonl rows across sessions. CLAUDE_CODE_SESSION_ID is a stable,
+// process-level env var the harness sets once per session (confirmed present in every Bash
+// subprocess), not a shared mutable file, so reading it here introduces no new race. The unscoped
+// write is kept unchanged for tools/retrieval_cache.py and .claude/settings.json's inline
+// sidecar-check hook, both explicitly deferred (see investigation.md) rather than migrated here.
 const writeSidecar = async (seq, phase, agent) => {
   await bash(
     `python3 -c "
-import json, sys
-open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4], 'execution_id': sys.argv[5], 'provider': sys.argv[6]}))
+import json, sys, os
+data = json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4], 'execution_id': sys.argv[5], 'provider': sys.argv[6]})
+open('.claude/current_run', 'w').write(data)
+sid = os.environ.get('CLAUDE_CODE_SESSION_ID', '')
+if sid:
+    open('.claude/current_run.' + sid, 'w').write(data)
 " "${tid}" "${seq}" "${phase}" "${agent}" "${executionId}" "${PROVIDER}" 2>/dev/null || true`
   )
 }
@@ -413,6 +435,10 @@ if (ticketInfo.suggested_skills && ticketInfo.suggested_skills.length > 0) {
 
 if (ticketInfo.mistag_warning) {
   log('WARNING: Related Code Areas suggests auth/secrets/credential-adjacent paths but no `security` tag was assigned — verify tagging is correct.')
+}
+
+if (ticketInfo.related_context && ticketInfo.related_context.length > 0) {
+  log(`Related context (non-blocking): ${ticketInfo.related_context.join(' | ')}`)
 }
 
 if (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) {
@@ -1201,6 +1227,27 @@ print(json.dumps(expected_subsystems_for_files(sys.argv[1:])))
 " ${filesChangedArgs}`
   )
 
+  // Reuses expectedSubsystemsOutput's own computation rather than re-deriving candidate shards —
+  // one next_available_id lookup per distinct candidate shard named across all changed files.
+  // A shard with no entry with a valid id (next_available_id raises ValueError) is reported as
+  // "unavailable: <reason>" rather than failing the phase — this is a hint for the agent, not a gate.
+  const nextIdOutput = await bash(
+    `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.parity_updater_static import next_available_id
+expected = json.loads(sys.argv[1])
+shards = sorted({s for candidates in expected.values() if candidates for s in candidates})
+result = {}
+for shard in shards:
+    try:
+        result[shard] = next_available_id(shard)
+    except ValueError as e:
+        result[shard] = f'unavailable: {e}'
+print(json.dumps(result))
+" '${expectedSubsystemsOutput}'`
+  )
+
   const parityTs = await captureTs()
   await writeSidecar(events.length + 1 + seqOffset, 'Parity', 'parity-updater')
   const parity = await agent(
@@ -1211,6 +1258,7 @@ Parity subsystems affected: ${(implementation.parity_subsystems || []).join(', '
 Parity entries from architecture review: ${review.parity_entries_affected.join(', ') || 'none pre-identified'}
 Implementation: ${implementation.implementation_summary}
 Expected parity-ledger files per changed src/ file (NA = no existing citation found): ${expectedSubsystemsOutput}
+Next available ID per candidate shard (max-numeric-suffix + 1, not count + 1 — shards have gaps): ${nextIdOutput}
 
 ${implementation.behavior_changed
   ? `Update docs/parity_ledger/ entries (files: substrate.yaml, combat_movement.yaml, strategic_cognition.yaml, town_resource.yaml, progression.yaml, social_narrative.yaml, world_dynamics.yaml, infrastructure.yaml).
