@@ -455,10 +455,12 @@ later-phase (Parity/Verify) regeneration.
 **Step 0:** When the full agent call is not skipped, the orchestrator runs
 `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files(implementation.files_changed)`
 via `bash()` before the agent call and injects the resulting `src/` file → expected ledger file(s)
-todo-list into the prompt preamble (`NA` = no existing `v2_evidence` citation found). After the agent
-call returns, the orchestrator runs `::cross_reference_touched` against the actual `git status` diff
-of `docs/parity_ledger/` and includes any untouched-mapped-subsystem miss in the pushed event —
-visibility only, no new blocking status.
+todo-list into the prompt preamble (`NA` = no existing `v2_evidence` citation found). The same `bash()`
+step also runs `::next_available_id` for each candidate shard that todo-list named, injecting a
+`Next available ID per candidate shard` hint (`max-numeric-suffix + 1`, not `entry-count + 1` — ids
+are not dense). After the agent call returns, the orchestrator runs `::cross_reference_touched`
+against the actual `git status` diff of `docs/parity_ledger/` and includes any
+untouched-mapped-subsystem miss in the pushed event — visibility only, no new blocking status.
 
 **For the example task:** `behavior_changed: true`, subsystem: `combat_movement`
 

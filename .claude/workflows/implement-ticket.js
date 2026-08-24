@@ -1210,6 +1210,27 @@ print(json.dumps(expected_subsystems_for_files(sys.argv[1:])))
 " ${filesChangedArgs}`
   )
 
+  // Reuses expectedSubsystemsOutput's own computation rather than re-deriving candidate shards —
+  // one next_available_id lookup per distinct candidate shard named across all changed files.
+  // A shard with no entry with a valid id (next_available_id raises ValueError) is reported as
+  // "unavailable: <reason>" rather than failing the phase — this is a hint for the agent, not a gate.
+  const nextIdOutput = await bash(
+    `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.parity_updater_static import next_available_id
+expected = json.loads(sys.argv[1])
+shards = sorted({s for candidates in expected.values() if candidates for s in candidates})
+result = {}
+for shard in shards:
+    try:
+        result[shard] = next_available_id(shard)
+    except ValueError as e:
+        result[shard] = f'unavailable: {e}'
+print(json.dumps(result))
+" '${expectedSubsystemsOutput}'`
+  )
+
   const parityTs = await captureTs()
   await writeSidecar(events.length + 1 + seqOffset, 'Parity', 'parity-updater')
   const parity = await agent(
@@ -1220,6 +1241,7 @@ Parity subsystems affected: ${(implementation.parity_subsystems || []).join(', '
 Parity entries from architecture review: ${review.parity_entries_affected.join(', ') || 'none pre-identified'}
 Implementation: ${implementation.implementation_summary}
 Expected parity-ledger files per changed src/ file (NA = no existing citation found): ${expectedSubsystemsOutput}
+Next available ID per candidate shard (max-numeric-suffix + 1, not count + 1 — shards have gaps): ${nextIdOutput}
 
 ${implementation.behavior_changed
   ? `Update docs/parity_ledger/ entries (files: substrate.yaml, combat_movement.yaml, strategic_cognition.yaml, town_resource.yaml, progression.yaml, social_narrative.yaml, world_dynamics.yaml, infrastructure.yaml).
