@@ -38,7 +38,9 @@ in the roadmap: Shared Implementation Opportunities found real consolidation acr
    content coexisting, so testing this needs zero new corpus authoring once the mechanism exists.
 2. **Idea 47 — Lair.** Confirmed a genuinely separate ticket, correctly NOT a Camp variant — but its real
    precedent is Boss's entity-anchor idempotency pattern (`boss_region_id`), not Camp's shape, a correction
-   from the original card.
+   from the original card. **Depth-audit note:** boss-spawn logic itself has zero dedicated test files
+   ("boss" appears in none of them) — this ticket is extending an untested precedent, budget test-writing
+   for the base mechanism, not just the extension.
 3. **Idea 61 — Settlements Develop Personalities.** Re-scoped by a real correction: its original cited
    precedent (idea 48) was wrong; the actual live match is Culture Drift's `CultureDeriver`/
    `CulturalBiasApplicator` — which has zero live callers anywhere. **This idea is blocked until that
@@ -51,7 +53,8 @@ in the roadmap: Shared Implementation Opportunities found real consolidation acr
    EXPAND directive, not a separate mechanism.
 6. **Idea 40 — Clan lifecycle.** Real correction found in Phase Placement: `party_lifecycle.py`'s SOC-228
    doesn't fire on death as originally assumed — which would have silently killed cross-generational Clans
-   if built as first scoped.
+   if built as first scoped. **Depth-audit note:** the Party Formation & Lifecycle precedent this idea (and
+   M2's idea 36) reuses spans 5 files but has exactly 1 test file — see Depth Beneath "Done" in the atlas.
 7. **Idea 64 — The Empty Chair.** Confirmed genuinely unrelated to idea 40 (correctly not forced into a
    cluster) — the real remaining half after heir-assignment split off to M1's idea 10. No code precedent
    anywhere for the economic-vacancy signal it needs.

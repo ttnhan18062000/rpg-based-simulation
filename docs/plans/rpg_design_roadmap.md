@@ -181,6 +181,14 @@ their affected tickets.
   investigation was written, so M8's picture of that file is accurate, not stale. Re-run this check
   specifically against `src/worldbuilding/compiler.py` when M8 actually gets ticketed — it's a contended,
   high-blast-radius file for world-gen work generally, not just for this roadmap.
+- **"Done" isn't the same as tested, content-reachable, balance-checked, or SimQ-visible.** Four parallel
+  audits of the 37 `done`-badged existing mechanics (new Depth Beneath "Done" atlas section) found real gaps
+  on three of four axes not owned by any of the 65 ideas: the `CHURCH` building's Blessing/Resurrection
+  services are fully coded and placed in zero worlds; `ReputationService` has zero tests despite a done
+  badge that conflates it with a different, tested class; and four content categories (Sense/Drive/Need/
+  Cognition profiles, 6-7 entries each) cap the real behavioral range of three done, live mechanics. None of
+  these block any milestone above, but whoever picks up a ticket touching Reputation, Perception, Goal
+  Hierarchy, or town Buildings should read that section first — the badge alone will overstate confidence.
 
 ## References
 

@@ -47,8 +47,16 @@ validation step ahead of the highest-risk content item (see the roadmap's Sequen
    exist anywhere at the schema level yet — this ticket needs to add the actual field, not extend one that
    already exists. Read `docs/plans/rpg_m8_world_corpus_generation_epic.md` before scoping this ticket.
 3. **Idea 35 — City ownership wiring.** Confirmed wider blast radius than originally scoped: 8 real
-   consumer files, not one implementation-time call.
-4. **Idea 36 — Clan as Faction's shape.** `FactionState`'s shape reused almost verbatim.
+   consumer files, not one implementation-time call. **Depth-audit note:** the sovereignty ownership-flip
+   math this idea wires into (±1.0 per death, ±50.0 per stronghold destruction, flip past ±100) already
+   runs in every live sim today with zero balance validation ever — and is the direct cause of the atlas's
+   own documented "conquest always shows as Monster Horde" distortion. This ticket should not just attribute
+   ownership to the real faction; it inherits an unvalidated numeric surface that a metamorphic-lab pass
+   should probably touch too (see Depth Beneath "Done" in the atlas).
+4. **Idea 36 — Clan as Faction's shape.** `FactionState`'s shape reused almost verbatim. **Depth-audit
+   note:** the Party Formation & Lifecycle precedent this and idea 40 (M4) both cite spans 5 files but has
+   exactly 1 test file — budget a review of that existing test's actual coverage before assuming the
+   precedent is solid ground to build on.
 5. **Idea 48 — Place-type state transitions.** Confirmed cheaper than originally scoped: extends the
    already-live `TransformationService` threshold-table engine rather than building from scratch — but
    also had a real bug in its own first draft (a proposed `.tags` field that doesn't exist at runtime).

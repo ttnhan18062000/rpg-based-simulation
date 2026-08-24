@@ -65,7 +65,12 @@ Idea 16 (Ranger doctrine) needs no ticket — already answered by a separate, al
    with real attribute bonuses already sit in the registry, earned but never applied.
 8. **Idea 7 — Extend Grief/Nemesis past episode boundaries.** `GriefUrgencyImporter`/`NemesisRelationImporter`
    are real and live, called only from `CampaignOrchestrator._build_initial_state()` — extend the same
-   trigger to fire on an in-episode death, not just at Campaign start.
+   trigger to fire on an in-episode death, not just at Campaign start. **Depth-audit correction:** this idea
+   fails on three axes at once, not just the trigger-point gap above — Campaign mode has zero scenario
+   content wiring it in anywhere (may only ever run via manual CLI), no SimQ event type exists for it (this
+   idea's own success can't be measured once built), and `check_nemesis_promotion()`/`tick_place_attachment()`
+   (the functions doing the real work) have zero test coverage. Scope this ticket as "make it reachable,
+   measurable, and tested, then extend it" — see Depth Beneath "Done" in the atlas and this idea's own card.
 9. **Idea 12 — Wire contradiction detection into the live Leads system.** Skips the flag trap by hanging
    off `BeliefContradictionService` directly — but Phase Placement & Testing Strategy found a sibling
    orphan (`LeadContradictionSystem`) that must be wired in the same ticket, or 3 of 4 lead kinds stay
