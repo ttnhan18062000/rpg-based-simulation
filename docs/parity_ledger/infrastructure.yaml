@@ -11172,3 +11172,25 @@
     INFRA-265 (Scope-phase ticket-location resolution), or INFRA-379 (retro-report
     KGMCP caveat text); this is a distinct guarantee scoped to Parity-phase id-lookup
     and existing-entry search determinism.
+- id: INFRA-382
+  text: 'Fix cross-session contamination of the shared .claude/current_run sidecar:
+    writeSidecar() (implement-ticket.js) and the Scope-phase resume branch now additionally
+    write a per-session-scoped copy, .claude/current_run.<CLAUDE_CODE_SESSION_ID>,
+    alongside the existing unscoped file (kept for tools/retrieval_cache.py and .claude/settings.json''s
+    inline sidecar-check hook, both deferred not migrated). post_tool_hook.py prefers
+    the session-scoped file (keyed by the session_id it already reads from its own
+    hook payload), falling back to the unscoped file when absent -- confirmed live:
+    a session''s tool calls no longer get attributed to whichever concurrent session
+    last wrote the shared sidecar. Scoped files older than 24h are pruned opportunistically
+    on every hook invocation. Historical tools.jsonl rows from before this fix are
+    not corrected or flagged (no-backfill precedent). Renumbered to INFRA-382 during
+    a merge with origin/main, which had independently landed INFRA-377 through
+    INFRA-381 (unrelated tickets) in the time between this entry''s authoring and
+    this branch merging -- the same expected consequence TCK-20260824-PARITY-NEXT-ID-LOOKUP''s
+    own INFRA-381 entry already documents for itself.'
+  status: verified
+  priority: P2
+  v2_evidence: tools/agent-monitoring/post_tool_hook.py, .claude/workflows/implement-ticket.js
+  test_path: tests/tools/test_post_tool_hook.py::test_two_concurrent_sessions_each_attributed_correctly
+  divergence_note: null
+  proof_type: regression

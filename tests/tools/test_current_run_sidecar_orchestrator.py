@@ -453,3 +453,57 @@ def test_scope_agent_failed_and_resume_pre_tid_paths_stay_identity_less():
 
 def test_record_run_required_fields_unchanged():
     assert RUN_REQUIRED == {"run_id", "start_ts", "workflow", "tier", "final_status", "agent_count"}
+
+
+# ---------------------------------------------------------------------------
+# 11. TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE — writeSidecar() and the Scope-phase resume
+#     branch additionally write a per-session-scoped copy, keyed by CLAUDE_CODE_SESSION_ID,
+#     alongside the existing unscoped write (never replacing it).
+# ---------------------------------------------------------------------------
+
+
+def test_write_sidecar_also_writes_session_scoped_copy():
+    source = _read_workflow_source()
+    helper_match = re.search(
+        r"const writeSidecar = async \(seq, phase, agent\) => \{.*?\n\}\n",
+        source,
+        re.DOTALL,
+    )
+    assert helper_match is not None
+    helper_body = helper_match.group(0)
+
+    assert "os.environ.get('CLAUDE_CODE_SESSION_ID', '')" in helper_body
+    assert "open('.claude/current_run.' + sid, 'w')" in helper_body
+    # The existing unscoped write is preserved, not replaced.
+    assert "open('.claude/current_run', 'w')" in helper_body
+
+
+def test_scope_resume_branch_also_writes_session_scoped_copy():
+    source = _read_workflow_source()
+    phase_scope_idx = source.index("phase('Scope')")
+    scope_start = source.index("const ticketInfo = await agent(")
+    pre_scope_region = source[phase_scope_idx:scope_start]
+
+    assert "os.environ.get('CLAUDE_CODE_SESSION_ID', '')" in pre_scope_region
+    assert "open('.claude/current_run.' + sid, 'w')" in pre_scope_region
+    # The exact pre-existing unscoped-write line (asserted by test_scope_phase_has_sidecar_coverage)
+    # is preserved unchanged, not replaced by the additive scoped write.
+    assert (
+        "open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], "
+        "'seq': int(sys.argv[2]), 'phase': 'Scope', 'agent': 'ticket-scoper'}))"
+    ) in pre_scope_region
+
+
+def test_record_run_events_seq_offset_never_read_sidecar():
+    # C3 verification, folded into this ticket per its own investigation recommendation: none of
+    # these three writers should ever OPEN/READ the sidecar file (they take run_id explicitly via
+    # --data). record_events.py's own docstring mentions ".claude/current_run" in prose (explaining
+    # *why* tool_call_count is only computed for implement-ticket run_ids) without ever opening it —
+    # legitimate documentation, not a dependency, so this guards actual file access, not the bare
+    # substring.
+    monitoring_dir = _REPO_ROOT / "tools" / "agent-monitoring"
+    for filename in ("record_run.py", "record_events.py", "seq_offset.py"):
+        source = (monitoring_dir / filename).read_text(encoding="utf-8")
+        assert not re.search(r"(?:open|Path)\([^)]*current_run", source), (
+            f"{filename} unexpectedly opens/reads the sidecar file"
+        )
