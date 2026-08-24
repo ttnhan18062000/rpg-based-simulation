@@ -265,6 +265,9 @@ already have live SimQ scoring rules sitting idle, waiting only for the event to
 
 - `docs/brainstorm/rpg_feature_atlas.html` (all sections cited above)
 - `docs/brainstorm/rpg_expected_schemas.html` ("RPG Schema Registry" — existing + proposed schemas for every layer)
+- `docs/brainstorm/rpg_simulation_wiring_map.html` ("Simulation Wiring Map" — high-level layer model and
+  wiring diagram: Entity/Group/Faction/Region/World/World Objects, expected/current/proposed status per
+  connection, plus an Entity-level operating-loop and lifecycle-arc drill-down)
 - `docs/brainstorm/design_merit_scorecard.html`
 - `docs/brainstorm/the_unwritten_world.html`
 - `docs/brainstorm/simulation_capabilities.html` (plain-language companion, for non-technical review)

@@ -1,0 +1,697 @@
+<title>Simulation Wiring Map</title>
+<style>
+:root{
+  --bg:#f7f5ef;
+  --surface:#ffffff;
+  --surface-2:#efece2;
+  --ink:#232019;
+  --ink-dim:#5c584c;
+  --border:#ddd8c9;
+  --live:#3f7d5c;
+  --live-bg:#e4efe6;
+  --proposed:#4a5fc1;
+  --proposed-bg:#e7e9f8;
+  --bug:#b0392f;
+  --bug-bg:#f7e4e1;
+  --gated:#9a6b0c;
+  --gated-bg:#f7ecd2;
+  --code-bg:#efece2;
+  --shadow: 0 1px 2px rgba(35,32,25,0.06), 0 4px 16px rgba(35,32,25,0.05);
+  --think:#6d5a9e;
+  --act:#b06a2e;
+  --buildup:#2e7a8a;
+  --serif: "Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+  --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono: ui-monospace,"SFMono-Regular","Menlo","Consolas",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1a16;
+    --surface:#242219;
+    --surface-2:#2c2a1f;
+    --ink:#ece7d8;
+    --ink-dim:#a6a08c;
+    --border:#3c392b;
+    --live:#7fc79a;
+    --live-bg:#22322a;
+    --proposed:#9db0ff;
+    --proposed-bg:#242847;
+    --bug:#e88478;
+    --bug-bg:#3a231f;
+    --code-bg:#2c2a1f;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1a16;
+  --surface:#242219;
+  --surface-2:#2c2a1f;
+  --ink:#ece7d8;
+  --ink-dim:#a6a08c;
+  --border:#3c392b;
+  --live:#7fc79a;
+  --live-bg:#22322a;
+  --proposed:#9db0ff;
+  --proposed-bg:#242847;
+  --bug:#e88478;
+  --bug-bg:#3a231f;
+  --code-bg:#2c2a1f;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  margin:0;
+  padding:0 24px 80px;
+  line-height:1.55;
+}
+.wrap{max-width:980px;margin:0 auto;}
+header{padding:56px 0 28px;}
+.eyebrow{
+  font-family:var(--sans);
+  text-transform:uppercase;
+  letter-spacing:0.09em;
+  font-size:0.72rem;
+  font-weight:600;
+  color:var(--ink-dim);
+  margin:0 0 14px;
+}
+h1{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:clamp(2rem,4vw,2.9rem);
+  margin:0 0 16px;
+  text-wrap:balance;
+  letter-spacing:-0.01em;
+}
+.thesis{
+  font-size:1.05rem;
+  color:var(--ink-dim);
+  max-width:66ch;
+  margin:0 0 6px;
+}
+.methodology{
+  font-size:0.92rem;
+  color:var(--ink-dim);
+  max-width:70ch;
+  margin-top:18px;
+  padding:14px 18px;
+  background:var(--surface-2);
+  border-radius:8px;
+  border:1px solid var(--border);
+}
+.methodology strong{color:var(--ink);}
+
+section{margin:40px 0;}
+h2{
+  font-family:var(--serif);
+  font-size:1.5rem;
+  font-weight:600;
+  margin:0 0 6px;
+  letter-spacing:-0.005em;
+}
+.section-sub{color:var(--ink-dim);font-size:0.95rem;margin:0 0 20px;max-width:70ch;}
+
+.legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 22px;
+  padding:16px 20px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  box-shadow:var(--shadow);
+  margin-bottom:24px;
+  font-size:0.88rem;
+}
+.legend-item{display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.swatch{width:14px;height:14px;border-radius:4px;flex:none;}
+.swatch.live{background:var(--live-bg);border:2px solid var(--live);}
+.swatch.proposed{background:var(--proposed-bg);border:2px dashed var(--proposed);}
+.swatch.bug{background:var(--bug-bg);border:2px solid var(--bug);}
+.swatch.gated{background:var(--gated-bg);border:2px dashed var(--gated);}
+
+.diagram-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  box-shadow:var(--shadow);
+  padding:20px;
+  overflow-x:auto;
+}
+.diagram-card pre.mermaid{margin:0;display:flex;justify-content:center;min-width:760px;}
+
+.callout{
+  display:flex;
+  gap:16px;
+  background:var(--bug-bg);
+  border:1px solid var(--bug);
+  border-radius:10px;
+  padding:18px 20px;
+  margin-top:24px;
+}
+.callout .tag{
+  flex:none;
+  font-family:var(--sans);
+  font-weight:700;
+  font-size:0.7rem;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  color:#fff;
+  background:var(--bug);
+  border-radius:6px;
+  padding:5px 9px;
+  height:fit-content;
+}
+.callout p{margin:0 0 8px;font-size:0.95rem;}
+.callout p:last-child{margin-bottom:0;}
+.callout code{background:rgba(0,0,0,0.08);}
+:root:not([data-theme="light"]) .callout code{background:rgba(255,255,255,0.1);}
+
+code{
+  font-family:var(--mono);
+  background:var(--code-bg);
+  padding:0.12em 0.4em;
+  border-radius:4px;
+  font-size:0.86em;
+}
+
+.table-wrap{
+  overflow-x:auto;
+  border:1px solid var(--border);
+  border-radius:10px;
+  box-shadow:var(--shadow);
+  background:var(--surface);
+}
+table{border-collapse:collapse;width:100%;font-size:0.86rem;min-width:820px;}
+thead th{
+  text-align:left;
+  font-size:0.7rem;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  color:var(--ink-dim);
+  font-weight:600;
+  padding:12px 14px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface-2);
+  position:sticky;
+  top:0;
+}
+tbody td{
+  padding:12px 14px;
+  border-bottom:1px solid var(--border);
+  vertical-align:top;
+}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--surface-2);}
+.tid{font-family:var(--mono);font-size:0.82em;color:var(--ink-dim);}
+.badge{
+  display:inline-block;
+  font-size:0.68rem;
+  font-weight:700;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  padding:3px 8px;
+  border-radius:5px;
+  white-space:nowrap;
+}
+.badge.live{background:var(--live-bg);color:var(--live);border:1px solid var(--live);}
+.badge.proposed{background:var(--proposed-bg);color:var(--proposed);border:1px solid var(--proposed);}
+.badge.bug{background:var(--bug-bg);color:var(--bug);border:1px solid var(--bug);}
+.badge.gated{background:var(--gated-bg);color:var(--gated);border:1px solid var(--gated);}
+.layer-label{
+  display:inline-block;
+  font-family:var(--sans);
+  font-weight:700;
+  font-size:0.7rem;
+  letter-spacing:0.07em;
+  text-transform:uppercase;
+  padding:4px 10px;
+  border-radius:6px;
+  margin-bottom:10px;
+}
+.layer-label.think{background:color-mix(in srgb, var(--think) 14%, transparent);color:var(--think);}
+.layer-label.act{background:color-mix(in srgb, var(--act) 14%, transparent);color:var(--act);}
+.layer-label.buildup{background:color-mix(in srgb, var(--buildup) 14%, transparent);color:var(--buildup);}
+
+.evidence{color:var(--ink-dim);font-size:0.85em;}
+
+footer{
+  margin-top:56px;
+  padding-top:20px;
+  border-top:1px solid var(--border);
+  color:var(--ink-dim);
+  font-size:0.82rem;
+}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">RPG Simulation &middot; High-Level System Overview</p>
+  <h1>How Every Layer of the Simulation Actually Wires Together</h1>
+  <p class="thesis">A grounded, high-level map of the whole system &mdash; Entity, Group, Faction, Region, City, Race, Clan, World, World Objects &mdash; and the real connections between them, followed by a drill-down into one layer (Entity) showing its own tick-by-tick loop and lifecycle arc in detail. Built from the real codebase, not the design docs' word alone.</p>
+  <div class="methodology">
+    <strong>How this was built.</strong> A read-only investigation traced every real transition and mechanism in the codebase &mdash; several claims in the docs turned out stale against the actual code, and are corrected here. Every node and edge below is tagged <strong>LIVE</strong> (runs in production sims today), <strong>PROPOSED</strong> (a design idea, not yet built), <strong>GATED</strong> (coded but behind a feature flag defaulting OFF), or <strong>ORPHANED/BROKEN</strong> (code exists but has zero callers, is structurally empty, or doesn't do what it looks like it does) &mdash; and every non-LIVE claim is cited to a real file and line.
+  </div>
+</header>
+
+<section>
+  <h2>Legend</h2>
+  <div class="legend">
+    <span class="legend-item"><span class="swatch live"></span> LIVE &mdash; runs in every sim today</span>
+    <span class="legend-item"><span class="swatch gated"></span> GATED &mdash; coded, flag defaults OFF</span>
+    <span class="legend-item"><span class="swatch bug"></span> ORPHANED / BROKEN &mdash; doesn't actually fire or work as intended</span>
+    <span class="legend-item"><span class="swatch proposed"></span> PROPOSED &mdash; a design idea, not yet built</span>
+  </div>
+</section>
+
+<section>
+  <h2>The layer model &mdash; system overview</h2>
+  <p class="section-sub">Four tiers, from one entity up to the whole world, and the real connections between them. This is the map to read first &mdash; everything below it drills into one tier (Entity) in detail.</p>
+  <div class="diagram-card">
+<pre class="mermaid">
+flowchart TB
+    classDef live fill:#e4efe6,stroke:#3f7d5c,stroke-width:2px,color:#232019
+    classDef bug fill:#f7e4e1,stroke:#b0392f,stroke-width:2px,color:#232019
+
+    subgraph L1["INDIVIDUAL"]
+      ENT["Entity<br/>attributes, cognition, action — see detail below"]
+    end
+
+    subgraph L2["ORGANIZATION"]
+      GRP["Group / Party<br/>composition scoring, cohesion radius"]
+      GLD["Guild<br/>single-location only — checked, has no cross-city membership"]
+      FAC["Faction = Country<br/>diplomacy, sovereignty — same underlying class, no separate Country state"]
+      CLN["'Clan'<br/>NAMED IN CONTENT ONLY — 2 factions are literally called *_clan, but no cross-location membership mechanism exists anywhere"]:::bug
+    end
+
+    subgraph L3["GEOGRAPHY"]
+      REG["Region<br/>owns sovereignty, trauma, hazards"]
+      CTY["'City'<br/>= Region.kind=='TOWN' special-cased — not a separate class"]
+      BYC["Camp / Nest / Lair / Ruins<br/>CampState + Region.tags — real, but thinner than City, not fully separate"]
+    end
+
+    subgraph L4["WORLD"]
+      WLD["World<br/>Campaigns, Chronicle, Cultural Drift, Calamities, Generation"]
+      WOB["World Objects<br/>Equipment, Inventory, Buildings, Crafting"]
+    end
+
+    RACE["Race<br/>a per-entity field + static content only — ZERO collective state anywhere above the entity"]:::bug
+
+    ENT ==>|GroupService composition scoring| GRP
+    GRP -.->|checked: Guild has no cross-location membership| GLD
+    ENT ==>|identity.faction, fixed at spawn/compile — no runtime founding or dissolution| FAC
+    ENT ==>|RelationshipService rolls entity-level grudges into faction memory, survives the entity's death| FAC
+    ENT -.->|race_id is static, no aggregate ever computed| RACE
+    ENT -.->|no membership-spanning org exists for this| CLN
+    CLN -.->|content names 2 factions *_clan, but they're ordinary Factions underneath| FAC
+    FAC ==>|owner_faction_id: ±5.0/death, flip at ±50 influence — two parallel systems that disagree| REG
+    REG ==>|kind=='TOWN' special case| CTY
+    REG ==>|CampState / RegionSpec.tags| BYC
+    REG ==>|topological assembly, per-region trauma feeds Calamities| WLD
+    WLD ==>|Campaign orchestration carries XP/reputation/lifecycle across episodes| ENT
+    WOB ==>|equipped, crafted, harvested by| ENT
+    WOB ==>|located in| CTY
+
+    class ENT,GRP,GLD,FAC,REG,CTY,BYC,WLD,WOB live
+</pre>
+  </div>
+  <p class="section-sub" style="margin-top:14px;">The two red boxes are layers the atlas names as their own tier but that turned out, on direct investigation, to have no real mechanism above the individual entity or faction level &mdash; not thin, structurally absent. Bold arrows are the load-bearing wiring; dotted arrows are checked-and-confirmed-absent connections, shown so the gap itself is visible rather than silently missing from the map.</p>
+</section>
+
+<section>
+  <h2>Full feature inventory &mdash; every non-entity layer card</h2>
+  <p class="section-sub">Every card the atlas has for Group, Faction, Region, City, Beyond-City, World, World Objects, Clan, and Race &mdash; the complete current-plus-expected picture, not a curated highlight reel.</p>
+
+  <p class="layer-label act">Group layer &mdash; 2 cards</p>
+  <div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Feature</th><th>What's real</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Party Formation &amp; Lifecycle</td><td>Composition scoring, lifecycle management, reward distribution across 5 files; cohesion radius shared with Tactical Decision's regrouping check</td><td><span class="badge live">Live</span></td><td>Ideas 36/40 (Clan) reuse this precedent directly</td><td class="evidence">Full lifecycle audit confirmed healthy end-to-end, traced step by step</td></tr>
+      <tr><td>Guilds</td><td>One real 90-line module &mdash; a building you visit for guild-flavored services, not an organization with cross-location members/holdings</td><td><span class="badge live">Live, narrow</span></td><td>Not extended by any idea &mdash; that role goes to Clan instead</td><td class="evidence"><code>town/guild.py</code>, <code>social_systems/guilds.py</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label act">Faction layer &mdash; 8 cards</p>
+  <div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Feature</th><th>What's real</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Diplomacy</td><td>Real state machine plus diplomatic actions</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">The one piece that does live in <code>domains/faction/</code> itself</td></tr>
+      <tr><td>Betrayal, Siege &amp; War Exhaustion</td><td>Real logic, but lives in engine and core layers, not the faction domain package</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">Corrected from revision 1, which cited only the domain package</td></tr>
+      <tr><td>Social Contracts</td><td>330 lines &mdash; the single largest module in the social-systems package</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">Real, substantial</td></tr>
+      <tr><td>Reputation</td><td>Authoritatively via <code>RelationshipService.process_update()</code>: <code>public_reputation</code>, <code>heroism_score</code>, <code>notoriety_score</code>, plus per-pair trust/familiarity/debt/fear/grudge histories, directed SocialBonds, nemesis promotion</td><td><span class="badge live">Live</span></td><td>Complete as built; a separate small duplicate write path is one of idea 1's orphans</td><td class="evidence">Two small named "reputation.py" files are real but minor next to the actual primary engine</td></tr>
+      <tr><td>Social Memory (witnessed events)</td><td>A distinct 52-line module for tracking witnessed events, not the entity-layer Memory system despite the similar name</td><td><span class="badge live">Live</span></td><td>Unscoped &mdash; no idea names this module as a build target</td><td class="evidence">Feeds Cross-Episode Social Consequences below</td></tr>
+      <tr><td>Cross-Episode Social Consequences</td><td>Persistence is real and live (<code>SocialMemoryExporter</code>/<code>Importer</code> at every episode boundary; faction-level grudges survive the offending individual's death)</td><td><span class="badge bug">Orphaned narrative layer</span></td><td>Idea 1 &mdash; <code>evaluate_social_consequence()</code> is named directly in the orphan-wiring cluster</td><td class="evidence">The narrative-event conversion layer (LEGENDARY_ARRIVAL, KNOWN_TRAITOR_SPOTTED, OLD_DEBT_COLLECTED) is what's orphaned, not the underlying memory</td></tr>
+      <tr><td>Cross-Episode Grief &amp; Nemesis</td><td>Confirmed live, called from the Campaign orchestrator: a dead ally injects a decaying grief concern; repeated betrayal injects a party-formation blocker against the antagonist</td><td><span class="badge live">Live, narrow trigger</span></td><td>Idea 7 &mdash; extend the same trigger to fire in-episode, not just at Campaign start (see the atlas's Depth Beneath "Done" for 3 real gaps in this extension's own reachability)</td><td class="evidence"><code>GriefUrgencyImporter</code>/<code>NemesisRelationImporter</code></td></tr>
+      <tr><td>Country Lifecycle</td><td>Real state transitions, but founding/dissolution edges are unmodeled &mdash; checked directly, every <code>FactionUpdate</code> construction site targets an already-known <code>faction_id</code></td><td><span class="badge bug">Gap</span></td><td>Idea 51/52 add an EXPAND directive and population-driven expansion, but neither proposes runtime founding or dissolution &mdash; unscoped</td><td class="evidence">"Country" and "Faction" are the same underlying class, not two separate ones</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label act">Region layer &mdash; 2 cards</p>
+  <div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Feature</th><th>What's real</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Regional Trauma, Hazards &amp; Sovereignty</td><td>Declarative boundaries and sovereignty rules; <code>RegionState.owner_faction_id</code> is the dynamically-updating one. <strong>Corrected, verified directly:</strong> influence shifts &plusmn;5.0 per relevant death (<code>DEATH_INFLUENCE_SHIFT</code>), conquest/liberation trigger at &plusmn;50.0 (not a flip past &plusmn;100, which is only the clamp bound), no stronghold-destruction delta exists (unimplemented comment) &mdash; and a separate parallel ownership system (<code>FactionState.territory</code>) doesn't fully agree with it</td><td><span class="badge live">Live, buggy</span></td><td>Idea 35 &mdash; wire ownership through one system, attributed to the real faction</td><td class="evidence">Also never balance-validated despite running in every live sim &mdash; see the RPG Feature Atlas's Depth Beneath "Done"</td></tr>
+      <tr><td>Demographic Cohort Cycle</td><td>Previously badged Done &mdash; corrected on direct re-investigation</td><td><span class="badge bug">Never runs</span></td><td>Idea 43 &mdash; seed <code>population_cohorts</code> at world-compile time, the named fix</td><td class="evidence"><code>RegionState.population_cohorts</code> defaults empty; neither <code>worldbuilding/compiler.py</code> nor <code>worldgeneration/generator.py</code> ever assigns it</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label act">City layer &mdash; 1 card</p>
+  <div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Feature</th><th>What's real</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>City</td><td>Already real as data, never named or separated as its own class &mdash; today a City <em>is</em> a Region, not a place inside one</td><td><span class="badge live">Live, conflated</span></td><td>Idea 66 (new, proposed) &mdash; a foundational rebuild, not an extension: <code>Place</code> becomes the atomic point-of-interest object positioned within a Region's larger bounds, with <code>CITY</code> as one <code>Place.kind</code> among several (size is a scalar property, not a separate Town kind)</td><td class="evidence"><code>RegionState.kind=="TOWN"</code> is specially handled in <code>worldbuilding/compiler.py</code> &mdash; tiles marked <code>town_tiles</code>, entities marked <code>town_entities</code>; real world-modules already contribute flat sibling regions with zero containment</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label act">Beyond the City &mdash; 3 cards</p>
+  <div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Feature</th><th>What's real</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Camp</td><td><code>CampState</code> is a genuinely separate, purpose-built class (point + <code>kind</code> + growing <code>maturity</code> + faction) &mdash; deliberately thinner than City, no building list or population roster; monster spawning already scales to its maturity</td><td><span class="badge live">Live, thin</span></td><td>Idea 45 (give it real texture) &mdash; recommended to land <em>after</em> idea 66, which would make Camp a <code>CAMP</code>-kind Place instead of a bespoke schema field</td><td class="evidence">A genuinely separate, purpose-built class, not a reused Region</td></tr>
+      <tr><td>Nest</td><td>Not yet built &mdash; the target reuses Camp's real shape almost verbatim, leaderless and pressure-spreading</td><td><span class="badge proposed">Proposed</span></td><td>Idea 46, same idea-66 sequencing note as Camp</td><td class="evidence">No current code; the target design is explicitly grounded in Camp's precedent</td></tr>
+      <tr><td>Lair</td><td>Not yet built &mdash; tied to its occupant's identity, not a population; real precedent is Boss's <code>boss_region_id</code> entity-anchor idempotency pattern, not Camp's shape</td><td><span class="badge proposed">Proposed</span></td><td>Idea 47 (correction already applied: not a Camp variant), same idea-66 sequencing note</td><td class="evidence">Boss-spawn logic itself has zero dedicated test files, per the RPG Feature Atlas's Depth Beneath "Done"</td></tr>
+      <tr><td>Ruins, mines &amp; battlefields</td><td>Real in content (<code>haunted_battlefield</code>, <code>old_mine</code>, tagged), but flattened into ordinary Region tags &mdash; the same conflation City had before it split off</td><td><span class="badge bug">Gap</span></td><td>Idea 66 (new, proposed) &mdash; these become <code>RUIN</code>/<code>DUNGEON</code>-kind Places under the same rebuild that fixes Camp/Nest/Lair and City, instead of a permanently unscoped gap</td><td class="evidence"><code>haunted_battlefield</code> carries hazard 3.5, notably higher than any town region</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label act">World layer &mdash; 7 cards</p>
+  <div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Feature</th><th>What's real</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Campaigns</td><td>The single largest domain in the codebase (3,200 lines, 17 files); XP/level/equipment/reputation/lifecycle carry forward between episodes</td><td><span class="badge live">Live</span></td><td>Complete as built; idea 7 depends on its trigger points</td><td class="evidence">Missing entirely from revision 1</td></tr>
+      <tr><td>Chronicle (auto-narrative)</td><td>Load event ledger &rarr; score/group significant events &rarr; render as markdown/JSON, the automated history-book generator</td><td><span class="badge live">Live</span></td><td>Idea 57 &mdash; feed Chronicle's own output back into who becomes an adventurer (nothing reads it back today)</td><td class="evidence">A real pipeline</td></tr>
+      <tr><td>Opportunity &amp; Rumor Seeds</td><td>World-emergence Phase 8 generates quest/rumor seeds and an "exposure bridge" &mdash; real, substantial (433-line services.py)</td><td><span class="badge gated">Gated</span></td><td>Unscoped &mdash; no idea proposes turning <code>ENABLE_WORLD_EMERGENCE</code> on</td><td class="evidence">OFF by default, same rollout-gate chain as Self-Model</td></tr>
+      <tr><td>Cultural Drift</td><td>389 lines across 5 files, matches Mechanics Bible ch.5 &sect;7</td><td><span class="badge live">Live</span></td><td>Ideas 56/61/62 all depend on this substrate having a live caller</td><td class="evidence"><code>CultureDeriver</code>/<code>CulturalBiasApplicator</code> have zero live callers &mdash; the substrate itself is real but unwired, a shared blocker for 3 separate ideas</td></tr>
+      <tr><td>Calamities &amp; Boss Spawns</td><td>Triggered by combined Maturity/Trauma scores: boss spawns, faction raids, threat evolution</td><td><span class="badge live">Live</span></td><td>Complete as built; idea 47 (Lair) extends the boss-anchor precedent</td><td class="evidence">The boss half has zero dedicated tests, per Depth Beneath "Done"</td></tr>
+      <tr><td>World Generation &amp; Content Packs</td><td>Declarative topology, Kahn's-topological-sort assembly, budget-bounded procedural specs, integrity validation with severity gates</td><td><span class="badge live">Live</span></td><td>Complete as built; M8 (World Corpus epic) covers extending the content this consumes</td><td class="evidence">The sole real content-seeding insertion point, per M8's investigation</td></tr>
+      <tr><td>Gods, Pantheon &amp; Blessings</td><td>No system exists &mdash; the only trace anywhere is a <code>CHURCH</code> building offering a literal <code>"BLESSING"</code> string, one token, not a mechanic</td><td><span class="badge bug">Absent</span></td><td>Intentionally excluded &mdash; idea 63 explicitly proposes religion as an emergent institution from real history, "not an authored pantheon"</td><td class="evidence">Not a gap to fill, a deliberate design choice already made</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label act">World Objects layer &mdash; 5 cards</p>
+  <div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Feature</th><th>What's real</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Equipment Scoring &amp; Auto-Gear AI</td><td><code>EquipmentService</code> scores gear, ranks candidates, decides replacement, auto-equips &mdash; a real 283-line optimization AI</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">Not a flat slot manager</td></tr>
+      <tr><td>Inventory, Trade &amp; Atomic Conservation</td><td>Atomic Conservation Law, 13 distinct failure codes, governs every transfer; harvesting, market pricing, home storage all live and parity-verified</td><td><span class="badge live">Live</span></td><td>Idea 13 adds the missing entity-to-entity transfer kind on top of this</td><td class="evidence">No entity-to-entity kind exists in the schema &mdash; see Entity Act table above</td></tr>
+      <tr><td>Crafting</td><td><code>CraftingSystem.craft()</code> is live, gated (recipe must be learned, role/skill-gated, checks materials/gold/capacity)</td><td><span class="badge live">Live, thin content</span></td><td>Idea 49 wires exploration to crafting through place-tied materials, reusing this gate</td><td class="evidence"><code>RecipeRegistry</code> is a hardcoded 3-recipe dict; a naming collision exists with a second, unrelated <code>RecipeRegistry</code> class</td></tr>
+      <tr><td>Buildings &amp; Town Services</td><td>Real registry spanning 9 building files: inn rest, blacksmith repair, class-hall training, home storage, and the Church's Blessing/Resurrection</td><td><span class="badge live">Live</span></td><td>Unscoped &mdash; no idea proposes placing Church content into any world</td><td class="evidence">Church's services are coded and placed in zero worlds, per Depth Beneath "Done"</td></tr>
+      <tr><td>Building Sabotage</td><td>A genuine, novel, live mechanic &mdash; <code>BuildingSabotageSystem.resolve()</code>, unflagged, correctly wired</td><td><span class="badge live">Live, thin content</span></td><td>Unscoped for content expansion &mdash; only 1 of 20 world modules references sabotage at all</td><td class="evidence">Revision 5 wrongly graded this orphaned after finding an unrelated, genuinely-orphaned helper of the same name</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label act">Clan layer &mdash; 1 card</p>
+  <div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Feature</th><th>What's real</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Clan</td><td>No membership-spanning, multi-location organization exists anywhere &mdash; checked directly, not assumed thin</td><td><span class="badge bug">Structurally absent</span></td><td>Idea 36 (wire Clan as Faction's shape, membership instead of territory) + idea 40 (Clan lifecycle, reusing Group's defection/leadership-election precedent) &mdash; both fully scoped, neither built yet</td><td class="evidence">2 of 16 real factions are literally named <code>orc_clan</code>/<code>dwarven_mine_clan</code> with no mechanism behind the name</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label act">Race layer &mdash; 1 card</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Feature</th><th>What's real</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Race as a collective force</td><td>Searched directly for any race-population aggregate, collective racial state, or inter-race relationship tracking &mdash; found none. Race is purely a per-entity field plus static content</td><td><span class="badge bug">Structurally absent</span></td><td>Idea 37 (wire a pairwise <code>race_relations</code> hostility matrix) is the one real, grounded planned addition &mdash; it adds static inter-race data, not a dynamic collective-population layer; no idea proposes the latter</td><td class="evidence">No way today to ask "is the elf population growing, globally" or "are goblins and dwarves at war as peoples"</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Entity detail: the operating loop</h2>
+  <p class="section-sub">The Layer Model above shows how Entity connects outward. This section and the next drill into the Entity layer itself.</p>
+  <p class="section-sub">What an entity does every tick, in three layers: <strong style="color:var(--think)">THINK</strong> (perceive, recall, decide), <strong style="color:var(--act)">ACT</strong> (once readiness allows it), and <strong style="color:var(--buildup)">BUILDUP</strong> &mdash; the slow accumulation from Act's outcomes that feeds back into how the entity thinks and acts next time. Follow the loop: THINK &rarr; ACT &rarr; BUILDUP &rarr; back into THINK.</p>
+  <div class="diagram-card">
+<pre class="mermaid">
+flowchart TD
+    classDef live fill:#e4efe6,stroke:#3f7d5c,stroke-width:2px,color:#232019
+    classDef gated fill:#f7ecd2,stroke:#9a6b0c,stroke-width:2px,stroke-dasharray: 3 3,color:#232019
+    classDef bug fill:#f7e4e1,stroke:#b0392f,stroke-width:2px,color:#232019
+
+    subgraph THINK["THINK — every tick"]
+      direction TB
+      PER["Perceive<br/>budget = 10 signals, flat for everyone"]
+      SELF["Self-Model<br/>needs, confidence, stress from HP/gear gaps"]
+      BEL["Belief Cycle<br/>rumors vs. observations, contradiction decay"]
+      MEM["Causal & Spatial Memory<br/>why an action failed — ORPHANED, 0 callers"]:::bug
+      GOAL["Goal Hierarchy<br/>Directive → Project → Objective → Action"]
+      INT["Committed Intentions<br/>read-side plan queue — no write path exists"]:::bug
+      MOT["Motivation & Doctrine<br/>class-biased route scoring"]
+      CAPT["Capacity Gate<br/>INT/WIS/PER bandwidth; fatigue cuts 50%/20%"]
+      DEC["Decide Route<br/>15 RouteFamily values"]
+      PER --> SELF --> BEL
+      BEL --> MEM
+      BEL --> GOAL --> INT
+      GOAL --> MOT --> CAPT --> DEC
+    end
+
+    subgraph ACT["ACT — once readiness = 100"]
+      direction TB
+      RDY["Readiness Gate — ATB<br/>flat 10.0/tick for every entity, ignores AGI"]
+      ENG["Pre-Combat Engagement<br/>GATED OFF by default"]:::gated
+      TAC["Tactical Decision<br/>focus-fire, positioning, anti-stalemate"]
+      CMB["Combat Resolution<br/>damage formula, wound threshold"]
+      MOV["Movement<br/>weight/AGI-scaled terrain cost"]
+      ITX["Interaction Channeling<br/>harvest / loot / chest"]
+      CNV["Conversation<br/>paid info only — narrow scope"]
+      TRD["Entity-to-Entity Trade<br/>NO SCHEMA KIND EXISTS — impossible today"]:::bug
+      TUP["Team-Up Invite/Accept<br/>DOESN'T EXIST — AI silently composes groups"]:::bug
+      RDY --> ENG --> TAC --> CMB
+      RDY --> MOV
+      RDY --> ITX
+      RDY --> CNV
+      RDY --> TRD
+      RDY --> TUP
+    end
+
+    subgraph BUILDUP["BUILDUP — accumulates over many ticks"]
+      direction TB
+      XP["XP → Level → Attribute Points"]
+      BRK["Breakthrough Bonuses<br/>apply_bonuses() is a literal stub"]:::bug
+      REL["Relationships<br/>SocialBond sentiment + familiarity"]
+      REP["Reputation<br/>witnessed-event → labels"]
+      EMO["Emotion<br/>fear/confidence/frustration — write path ORPHANED"]:::bug
+      TRM["Trauma<br/>Wound → Scar"]
+      COM["Commitment Pressure<br/>urgency ramp — gates Cooperation, GATED OFF"]:::gated
+      XP --> BRK
+    end
+
+    DEC ==> RDY
+    CMB -.->|damage taken| TRM
+    CMB -.->|xp reward| XP
+    CMB -.->|abandonment/betrayal| COM
+    TAC -.->|combat events, if wired| EMO
+    ITX -.->|trade/team-up outcomes| REL
+    MOV -.->|witnessed events| REP
+    TRM ==>|HP/gear gap, next tick| SELF
+    REL ==>|sentiment, next tick| MOT
+    REP ==>|labels, next tick| GOAL
+    CAPT ==>|fatigue cuts bandwidth, next tick| PER
+
+    class PER,SELF,BEL,GOAL,MOT,CAPT,DEC,RDY,TAC,CMB,MOV,ITX,CNV,XP,REL,REP,TRM live
+</pre>
+  </div>
+  <p class="section-sub" style="margin-top:14px;">Dotted arrows are one-shot consequences of a single action; bold arrows are the feedback that actually shapes the <em>next</em> tick's thinking. Several of BUILDUP's feedback arrows are real in principle but starved in practice &mdash; Emotion's write path is orphaned, so the EMO&rarr;SELF feedback rarely fires even though the code for both ends exists.</p>
+</section>
+
+<section>
+  <h2>Operating loop mechanisms, in detail</h2>
+  <p class="section-sub">Every card the atlas has for Entity &middot; Action and Entity &middot; Cognition, grouped by layer, each with its current status and, where one is planned, the specific idea expected to complete it.</p>
+
+  <p class="layer-label think">Think &mdash; all 18 Entity &middot; Cognition cards</p>
+  <div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Node</th><th>Mechanism</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Perceive</td><td>Budget-limited signal filtering; candidates scored, sorted, truncated at <code>budget.max_perceived</code>; zero-salience signals dropped</td><td><span class="badge live">Live</span></td><td>Unscoped &mdash; no idea proposes deriving <code>max_perceived</code> from PER</td><td class="evidence">Flat 10 for every entity today</td></tr>
+      <tr><td>Self-Model</td><td><code>SelfAssessmentService</code> derives weaknesses/strengths/confidence/stress from HP, stamina, hunger, gear/weapon-vs-level gaps; <code>NeedInterpretationService</code> prioritizes needs</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">A domain the atlas's own first four revisions missed entirely</td></tr>
+      <tr><td>Declared Cognition Schema</td><td>A second, richer subjective-model hierarchy on <code>EntityState.cognition</code> (565 lines): Risk beliefs, trauma Recovery, Spatial/Combat/Habit/Social Memory, private-Trust/public-Reputation/betrayal Relationship model, 7-value Motivation profile</td><td><span class="badge bug">Orphaned</span></td><td>Idea 8 &mdash; explicit keep/finish-or-cut decision</td><td class="evidence">Structurally similar to Self-Model but never wired anywhere</td></tr>
+      <tr><td>Belief Cycle</td><td>Rumors recorded with lower initial certainty than direct observations; contradicting evidence degrades certainty on both source lead and matching belief</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">Called from Strategic Intelligence and, cross-domain, from Guilds</td></tr>
+      <tr><td>Causal &amp; Spatial Memory</td><td>Interprets why an action failed (4 trigger kinds), updates per-region familiarity/danger</td><td><span class="badge bug">Orphaned</span></td><td>Idea 26 &mdash; the specific fix already scoped: give it a live consumer via Adventure Route scoring</td><td class="evidence"><code>MemoryUpdatePhase</code>, the only caller, has zero call sites in <code>engine/pipeline.py</code></td></tr>
+      <tr><td>Memory Capacity &amp; Trustfulness</td><td>Three unconnected implementations of "trust decays, capacity is limited" at three completion levels: Leads (Tier 1, live), entity Memory (Tier 2), the Declared Schema's richer model (Tier 3, orphaned)</td><td><span class="badge bug">Fragmented</span></td><td>Unscoped &mdash; no idea proposes unifying the three tiers</td><td class="evidence">None of the three tiers is aware of the other two</td></tr>
+      <tr><td>Information Sourcing, Trust &amp; Deception</td><td>Named source archetypes (guide/guild/blacksmith/traveler), durable per-entity <code>InformationProviderState</code> with reliability score and staleness tracking</td><td><span class="badge gated">Gated</span></td><td>Idea 25 depends on it but inherits the gate rather than fixing it &mdash; unscoped as its own fix</td><td class="evidence">A complete, well-designed system, currently flag-gated OFF</td></tr>
+      <tr><td>Time / Temporal Pressure</td><td><code>TemporalPressureService</code> computes urgency ratings against deadlines; a richer <code>TemporalModel</code> (deadlines, cooldowns, stale-fact tracking) also exists</td><td><span class="badge bug">Orphaned</span></td><td>Likely folded into idea 1's orphan-wiring cluster, not individually numbered</td><td class="evidence">Only ever invoked from the also-orphaned <code>MemoryUpdatePhase</code></td></tr>
+      <tr><td>Goal Hierarchy &amp; Leads/Blockers</td><td>Directive &rarr; Project &rarr; Objective &rarr; Action; Leads (decaying certainty) and 6 Blocker kinds</td><td><span class="badge live">Live</span></td><td>Complete as built; idea 12 wires a sibling contradiction-detection orphan into it</td><td class="evidence">A dedicated <code>LeadService</code> exists but has zero callers &mdash; superseded by inline creation, a minor orphan</td></tr>
+      <tr><td>Committed Intentions</td><td>Multi-step planning (train &rarr; craft &rarr; quest), capped at 3 queued intentions, read side only</td><td><span class="badge bug">Orphaned</span></td><td>Unscoped &mdash; no idea proposes building the write path</td><td class="evidence">The Mechanics Bible itself flags no production code path writes one yet</td></tr>
+      <tr><td>Adventure Routing</td><td>15 real <code>RouteFamily</code> values &mdash; the choosing half of "what does an entity do next"</td><td><span class="badge live">Live</span></td><td>Idea 18 catalogs the remaining route kinds and corrects a stale doc</td><td class="evidence">Deliberately separate from Quest Sourcing (where options come from)</td></tr>
+      <tr><td>Quest Generation &amp; Sourcing</td><td>Hub-based system (<code>GuildNeedScorer</code>) gives entities real incentive to travel to a specific building for new quest-worthy leads</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">Never previously documented in this atlas despite being real since as far back as revision 7</td></tr>
+      <tr><td>Motivation &amp; Doctrine</td><td>3 class doctrines (warrior/ranger/mage) with preferred/avoided route tags and a cooperation bias</td><td><span class="badge live">Live</span></td><td>Idea 6 (teaching on trust) and idea 24 (personal economic ambition) both extend this</td><td class="evidence">Confirmed live via the always-on route scoring path; Cooperation/Progression call sites are separately gated OFF</td></tr>
+      <tr><td>Emotion</td><td><code>EmotionalModel</code> (fear/confidence/frustration/curiosity/satisfaction/panic/boredom); <code>EmotionUpdateService.update_on_event()</code> is a genuine event-driven state machine</td><td><span class="badge bug">Orphaned</span></td><td>Idea 1 &mdash; named directly in the nine-orphans wiring cluster</td><td class="evidence">Write path has no production caller</td></tr>
+      <tr><td>Affection &amp; Relationship Bonds</td><td>Directed <code>SocialBond</code> per target entity: sentiment and familiarity, moved by combat/team-up/trading</td><td><span class="badge live">Live</span></td><td>Idea 22 (Relationship Roles) is the planned extension</td><td class="evidence">Confirmed live via <code>RelationshipService</code></td></tr>
+      <tr><td>Commitment &amp; Betrayal</td><td>Real gating pressure (urgency ramp, survival override); <code>AbandonmentEvaluator</code> classifies survival/greedy_desertion/voluntary_quit</td><td><span class="badge gated">Gated</span></td><td>Unscoped fix for the gate itself &mdash; its intended Cooperation call site is flag-gated OFF</td><td class="evidence">Live via unflagged route-scoring, but the documented gating call site is inactive</td></tr>
+      <tr><td>Strategic Intelligence Core</td><td>1,708-line core &mdash; materializes party composition, work-queue routing, detours, belief updates into concrete decisions</td><td><span class="badge live">Live</span></td><td>Complete as built; the single largest file in <code>systems/</code></td><td class="evidence">Calls both Belief Cycle and Detour Suggestion directly</td></tr>
+      <tr><td>Cognition Capacity &amp; Fatigue</td><td>Max active projects/leads/concerns/detour breadth scale with INT/WIS/PER; sleep debt/hunger &gt;70% cuts every limit 50%, &gt;40% cuts 20%</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">A second, independent enforcement path also exists in <code>DetourSuggestionSystem.enforce_bandwidth()</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label act">Act &mdash; all 9 Entity &middot; Action cards</p>
+  <div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Node</th><th>Mechanism</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Readiness Gate (ATB)</td><td><code>CombatComponent.readiness</code> accumulates by <code>readiness_speed</code> every tick; acting requires readiness at 100.0</td><td><span class="badge live">Live</span></td><td>Unscoped &mdash; no idea proposes deriving pacing from AGI/speed</td><td class="evidence">Flat 10.0 for every entity, set once at spawn</td></tr>
+      <tr><td>Pre-Combat Engagement</td><td>Opponent perception, self-estimate, and posture selection before committing to a fight</td><td><span class="badge gated">Gated</span></td><td>Idea 5 &mdash; "let subjective capability drive engagement" is the planned activation</td><td class="evidence"><code>ENABLE_COMBAT_ENGAGEMENT</code>, OFF by default</td></tr>
+      <tr><td>Tactical Decision</td><td>Focus-fire weighted by trust/hysteresis/pressure; anti-stalemate detection; cover-seeking, bracketing, guard-the-wounded logic</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">Distinct from both Strategic Intelligence and Combat Resolution</td></tr>
+      <tr><td>Combat Resolution</td><td>5 ordered tactical modifiers, fractional armor mitigation, per-slot durability decay, faction-aware AoE, hero rebirth/permadeath</td><td><span class="badge live">Live</span></td><td>Idea 15 &mdash; already resolved (25% is verified live, matches the Mechanics Bible, <code>COMB-290</code> status <code>verified</code>); real cleanup item is a dead 40% threshold constant sitting unused in <code>rpg_depth.py</code></td><td class="evidence">Genuinely the deepest mechanism in the engine</td></tr>
+      <tr><td>Movement</td><td><code>move_cost = max(5.0, 10.0 + weight/5.0 - agility&times;0.1)</code></td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">Weight/AGI-scaled terrain traversal and collision</td></tr>
+      <tr><td>Interaction Channeling</td><td>Progress toward resource/item/corpse/chest, reset on movement/target-switch/&gt;5% HP damage</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">Real capacity/weight pre-check, unflagged, live every tick</td></tr>
+      <tr><td>Conversation</td><td>Paid information request only &mdash; pay gold, ask a specific question</td><td><span class="badge live">Live, narrow</span></td><td>Full vision (quest assignment/report, specialist consultation) is described but not yet a numbered idea</td><td class="evidence">Narrower than the originally envisioned scope</td></tr>
+      <tr><td>Entity-to-Entity Trade</td><td><code>ResourceTransferIntent</code> has no entity-to-entity kind in its schema at all</td><td><span class="badge bug">Broken</span></td><td>Idea 13 &mdash; gates missing interactions (including trade) on affection</td><td class="evidence">Only indirect trade through a shop is possible today</td></tr>
+      <tr><td>Team-Up Invite/Accept</td><td><code>GroupPhase.resolve()</code> contains no request/invite/accept step &mdash; AI silently composes groups</td><td><span class="badge bug">Broken</span></td><td>Idea 13 &mdash; same gate covers Team-Up</td><td class="evidence">Not even a stub exists for a player/AI-facing invite action</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label buildup">Buildup &mdash; social/growth accumulation</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Node</th><th>Mechanism</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>XP &rarr; Level</td><td>XP curve, level cap 99, 4 base classes &mdash; entry point into evolution and breakthroughs</td><td><span class="badge live">Live</span></td><td>Idea 11 (build diversity) and idea 29 (injury changes attribute growth)</td><td class="evidence">Flat +5 attribute points every level regardless of what the entity did</td></tr>
+      <tr><td>Breakthrough Bonuses</td><td>3 real breakthroughs with real attribute bonuses sit in the registry, earned but never applied</td><td><span class="badge bug">Stub</span></td><td>Idea 3 &mdash; finish <code>apply_bonuses()</code>, the specific named fix</td><td class="evidence">A literal <code>pass</code></td></tr>
+      <tr><td>Relationships</td><td>Directed <code>SocialBond</code>: sentiment + familiarity, moved by combat/team-up/trading</td><td><span class="badge live">Live</span></td><td>Idea 22 &mdash; Relationship Roles beyond a bare score</td><td class="evidence">Feeds Motivation's scoring bias next tick</td></tr>
+      <tr><td>Reputation</td><td>Witnessed-event &rarr; reputation labels, authoritatively via <code>RelationshipService.process_update()</code></td><td><span class="badge live">Live</span></td><td>Complete as built; a duplicate write path is one of idea 1's orphans</td><td class="evidence"><code>public_reputation</code>/<code>heroism_score</code>/<code>notoriety_score</code></td></tr>
+      <tr><td>Trauma</td><td>Wound: flat 5.0 penalty to attack/defense (live). Scar: 30%-chance residual, but the heal path that creates it (<code>heal_wound()</code>) has zero production callers</td><td><span class="badge bug">Wound live, Scar orphaned</span></td><td>Idea 17 &mdash; wire <code>heal_wound()</code> into live combat, or redesign the healing trigger</td><td class="evidence">See Lifecycle arc T6/T7 below</td></tr>
+      <tr><td>Status Effects &amp; Buffs/Debuffs</td><td>Several unconnected mechanisms (biological&rarr;multiplier links are real) rather than one system; the only live "status effect," Frozen, is stored as a free-form untyped dict key</td><td><span class="badge bug">Fragmented</span></td><td>Idea 4 &mdash; Unify Modification into one typed record</td><td class="evidence">A direct Durable State Rule violation as currently stored</td></tr>
+      <tr><td>Commitment Pressure</td><td>Urgency ramp, survival override; <code>AbandonmentEvaluator</code> classification</td><td><span class="badge gated">Gated</span></td><td>Unscoped &mdash; its Cooperation call site is gated OFF with no idea proposing activation</td><td class="evidence">Live via unflagged route-scoring, gated via its documented use case</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="layer-label buildup">Profile &amp; Growth &mdash; remaining Entity &middot; Profile cards</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Node</th><th>Mechanism</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Attributes &amp; Biology</td><td>9 core attributes; Hunger/Sleep/Stamina decay with defined penalty thresholds</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">"Joy-Sanity" has no populated equivalent &mdash; see the orphaned Emotion card</td></tr>
+      <tr><td>Derived Stats</td><td>6-step recalculation pipeline, formula-for-formula matching Mechanics Bible ch.1 &sect;2</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence"><code>recalculate_combat_stats()</code></td></tr>
+      <tr><td>Race &amp; Archetype</td><td>The composition root &mdash; <code>entity_archetypes.yaml</code> resolves race/faction/role/traits into 5 separate real catalogs</td><td><span class="badge live">Live</span></td><td>Complete as built; idea 34 proposes deferring this choice to a coming-of-age moment</td><td class="evidence">Several already-cited cards get their starting values here without saying so explicitly</td></tr>
+      <tr><td>Class</td><td>4 total (Novice/Warrior/Mage/Rogue) &mdash; drives auto-equip gear-scoring and combat doctrine resolution</td><td><span class="badge live">Live, locked</span></td><td>Idea 16 investigates a Ranger-doctrine-without-a-Ranger-class inconsistency</td><td class="evidence">Genuinely real, two live consumers confirmed this pass</td></tr>
+      <tr><td>Personality (OCEAN)</td><td>greed/bravery/sociability/industry, seeded deterministically at construction; bravery gets real faction-alignment bias, data-driven for retuning</td><td><span class="badge live">Live</span></td><td>Unscoped for retuning itself &mdash; built for it, never exercised (see the RPG Feature Atlas's Depth Beneath "Done")</td><td class="evidence"><code>data/content/social/personality_bias.yaml</code></td></tr>
+      <tr><td>Build Diversity</td><td>An entity's build is fully determined at spawn and never branches &mdash; no class change, no tier advancement</td><td><span class="badge bug">Gap</span></td><td>Idea 11 &mdash; a real branching path from three existing pieces</td><td class="evidence">Repo-wide search found zero <code>class_id_set</code> mutations; the stale V1 doc's breakthrough-trait milestones have zero live trace</td></tr>
+      <tr><td>Skill Unlocks</td><td>3 level-gated unlocks (power_strike@2, swift_reflexes@5, fireball@10) &mdash; a small fixed list, not a tree</td><td><span class="badge bug">Gap</span></td><td>Unscoped &mdash; no idea proposes expanding this into a tree</td><td class="evidence">Starting skills instead come from archetype composition</td></tr>
+      <tr><td>Entity Role</td><td><code>EntityRole</code> (HERO/SHOPKEEPER/MONSTER/CITIZEN/WORKER/GUARD), read by at least 6 independent systems biasing behavior per role</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence">Missing entirely from every prior atlas revision until found this pass</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Entity detail: the lifecycle arc</h2>
+  <p class="section-sub">The macro frame the operating loop runs inside, from spawn to a terminal state. Solid boxes are real, live states. Dashed boxes are proposed, not built. The red box is real but structurally broken &mdash; see the finding below.</p>
+  <div class="diagram-card">
+<pre class="mermaid">
+flowchart LR
+    classDef live fill:#e4efe6,stroke:#3f7d5c,stroke-width:2px,color:#232019
+    classDef proposed fill:#e7e9f8,stroke:#4a5fc1,stroke-width:2px,stroke-dasharray: 4 3,color:#232019
+    classDef bug fill:#f7e4e1,stroke:#b0392f,stroke-width:3px,color:#232019
+
+    NX([Non-existent])
+    AL[Spawned / Alive]
+    WD[Wounded]
+    SC[Scarred — ORPHANED, heal_wound&#40;&#41; never called live]
+    EV[Evolved]
+    RB[Rebirthed]
+    PD[Permadeath-flagged]
+    DD([Dead / Inactive — terminal])
+    LS[/Life Stage tiers — enum + consumer EXIST, never triggered/]
+    BR[/Runtime Birth/]
+    MR[/Married/]
+
+    NX -->|"T1 world-compile seed · race+archetype+class assigned"| AL
+    BR -.->|"T18 PROPOSED idea 32"| AL
+    NX -.->|"T18 not built"| BR
+    AL -->|"T6 wound if dmg ≥25% max HP"| WD
+    WD -.->|"T7 heal_wound() — ORPHANED, 0 production callers"| SC
+    WD -->|"T7 heal_wound() — full (also orphaned)"| AL
+    SC -->|already healed| AL
+    AL -->|"T9 XP crosses 10 / 25 / 50"| EV
+    EV -->|"T9 next stage"| EV
+    AL -->|"T11 age_ticks ≥ max_age"| DD
+    AL -->|"T12 combat KILL, not rebirth-eligible"| DD
+    WD -->|"T12 combat KILL"| DD
+    AL -->|"T13 combat lethal, Hero gen &lt; 4"| RB
+    RB -->|"generation += 1, persists"| AL
+    AL -->|"T14 combat lethal, Hero gen ≥ 4"| PD
+    PD -->|"BUG: is_permadeath=True but active stays True"| PD
+    AL -.->|"T17 PROPOSED idea 20"| LS
+    AL -.->|"T19 PROPOSED idea 33"| MR
+
+    class NX,AL,WD,EV,RB,DD live
+    class BR,MR proposed
+    class PD,SC,LS bug
+</pre>
+  </div>
+
+  <div class="callout">
+    <span class="tag">New finding</span>
+    <div>
+      <p><strong>Permadeath doesn't actually end an entity.</strong> When a Hero at generation 4+ takes a lethal hit, <code>combat.py:187&ndash;188</code> sets <code>outcome_kind="PERMADEATH"</code> and writes <code>is_permadeath=True</code> &mdash; but <code>LifecycleSystem.resolve_lifecycle()</code> (<code>lifecycle.py:43</code>) only deactivates an entity when <code>outcome_kind=="KILL"</code>. <code>"PERMADEATH"</code> never reaches that check.</p>
+      <p>Net effect: the entity keeps <code>lifecycle.active=True</code> and keeps acting in the simulation. <code>is_permadeath</code> is written once and never read anywhere else in the codebase. No HP reset, no deactivation, and succession (heir transfer, T15) never triggers &mdash; it's gated on the same dead-check that only fires for old age or an ordinary kill.</p>
+      <p>This wasn't previously documented anywhere in this session's investigation &mdash; found while tracing the lifecycle graph specifically, not while auditing combat.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Full lifecycle transition table</h2>
+  <p class="section-sub">Every T-code from the map, with its trigger condition, current status, and &mdash; where one exists &mdash; the specific idea expected to complete or fix it. "Unscoped" means a real gap with no idea currently assigned to it, which is itself useful planning information, not a missing citation.</p>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Trigger</th><th>Transition</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="tid">T1</td><td>World-compile seeding</td><td>Non-existent &rarr; Spawned/Alive</td><td><span class="badge live">Live</span></td><td>T18 (idea 32) adds a second, runtime path alongside this one</td><td class="evidence"><code>V2EntityBuilder</code>, <code>src/core/builder.py</code></td></tr>
+      <tr><td class="tid">T2</td><td>At spawn: race/archetype/class assignment</td><td>(within T1)</td><td><span class="badge live">Live</span></td><td>T20 (idea 34) defers this choice to a coming-of-age moment</td><td class="evidence"><code>content/resolver.py</code></td></tr>
+      <tr><td class="tid">T3</td><td>At spawn: genetic multiplier assignment</td><td>(within T1)</td><td><span class="badge bug">Orphaned</span></td><td>Idea 32 &mdash; wired as a natural byproduct of building Reproduction</td><td class="evidence"><code>GeneticsSystem.generate_profile_from_seed()</code>/<code>apply_genetic_profile()</code> &mdash; 0 callers repo-wide. The lifecycle contract doc claims this is live; it isn't.</td></tr>
+      <tr><td class="tid">T4</td><td>At spawn: aptitude assignment</td><td>(within T1)</td><td><span class="badge bug">Orphaned (stub)</span></td><td>Unscoped &mdash; no idea proposes populating real aptitude values</td><td class="evidence"><code>AptitudeComponent()</code> built with zero args, <code>builder.py:105</code> &mdash; every entity gets identical default aptitude</td></tr>
+      <tr><td class="tid">T5</td><td>Every tick: hunger +0.5, sleep_debt +0.3</td><td>Alive &rarr; (HP damage if thresholds crossed)</td><td><span class="badge live">Live</span> (Hero/Villager only)</td><td>Complete as built</td><td class="evidence"><code>BiologicalSystem.update()</code>, <code>lifecycle_systems/biological.py</code></td></tr>
+      <tr><td class="tid">T6</td><td>Damage &gt; 25% max HP (verified live, matches Mechanics Bible, <code>COMB-290</code> status <code>verified</code>)</td><td>Alive &rarr; Wounded</td><td><span class="badge live">Live</span></td><td>Already resolved; real cleanup is a dead 40% threshold constant unused in <code>rpg_depth.py</code></td><td class="evidence"><code>CombatResolutionSystem._get_wound_infliction()</code>, <code>combat.py</code> &mdash; corrected: not <code>WoundService.create_wound()</code>, which is dead code with zero callers. Flat penalty=5.0 to atk/def only, no severity scaling</td></tr>
+      <tr><td class="tid">T7</td><td><code>heal_wound()</code></td><td>Wounded &rarr; Scarred or fully healed</td><td><span class="badge bug">Orphaned &mdash; zero production callers</span></td><td>Idea 17 &mdash; wire <code>heal_wound()</code> into live combat, or redesign the healing trigger</td><td class="evidence"><code>rpg_depth.py:187</code>, only called from unit tests. Mechanics Bible documents a real 30%-chance formula for the Scar; the code path that would apply it is never reached in production</td></tr>
+      <tr><td class="tid">T8</td><td><code>age_ticks</code> crosses elder threshold</td><td>Alive &rarr; Elder attribute shift (not a hard state)</td><td><span class="badge live">Live</span></td><td>Idea 20 (T17) wraps this into a formal Life Stage tier system</td><td class="evidence"><code>compute_elder_attribute_update()</code></td></tr>
+      <tr><td class="tid">T9</td><td>XP/level crosses 10, 25, or 50 (EVO-001)</td><td>Alive &rarr; Evolved (<code>kind</code> changes, e.g. GOBLIN&rarr;GOBLIN_WARRIOR&rarr;ORC_SCOUT)</td><td><span class="badge live">Live</span></td><td>Ideas 14/50 add alternate evolution paths (T9b) alongside this one</td><td class="evidence"><code>EvolutionSystem.evaluate()</code>, <code>engine/evolution.py:14&ndash;160</code>, wired via <code>pipeline.py:316</code>. Non-Hero attribute growth is nominally aptitude-scaled but T4 makes that scaling a no-op today.</td></tr>
+      <tr><td class="tid">T9b</td><td>Species-keyed or material-gated evolution</td><td>Alt. evolution path</td><td><span class="badge proposed">Proposed</span></td><td>Ideas 14, 50</td><td class="evidence"><code>progression/evolution.py</code>'s <code>EvolutionService</code> is a fully orphaned duplicate of T9, 0 callers</td></tr>
+      <tr><td class="tid">T10</td><td>Breakthrough milestone reached</td><td>Evolved/Alive &rarr; bonus application</td><td><span class="badge bug">Orphaned (stub)</span></td><td>Idea 3 &mdash; finish <code>apply_bonuses()</code>, the specific named fix</td><td class="evidence"><code>BreakthroughService.apply_bonuses()</code> is a literal <code>pass</code>, <code>progression/breakthroughs.py:34&ndash;40</code></td></tr>
+      <tr><td class="tid">T11</td><td><code>age_ticks &gt;= max_age_ticks</code></td><td>Alive &rarr; Dead/Inactive</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence"><code>LifecycleSystem.resolve_lifecycle()</code>, <code>lifecycle_systems/lifecycle.py:36&ndash;40</code></td></tr>
+      <tr><td class="tid">T12</td><td>Lethal hit, defender not rebirth-eligible (not Hero)</td><td>Alive/Wounded &rarr; Dead/Inactive (<code>outcome_kind="KILL"</code>)</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence"><code>combat.py:171&ndash;172</code>; only <code>"KILL"</code> triggers deactivation, <code>lifecycle.py:43</code></td></tr>
+      <tr><td class="tid">T13</td><td>Lethal hit, defender is Hero, generation &lt; 4</td><td>Alive &rarr; Rebirthed (<code>generation += 1</code>, persists)</td><td><span class="badge live">Live</span></td><td>Complete as built</td><td class="evidence"><code>combat.py:182&ndash;186</code>; ported into the real dominant kill path (opportunity-attack via <code>movement.py</code>) per done ticket <code>TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION</code>. Not yet ported to <code>resolve_skill_usage</code>/<code>resolve_aoe_attack</code> (0 real corpus calls to either observed).</td></tr>
+      <tr><td class="tid">T14</td><td>Lethal hit, defender is Hero, generation &ge; 4</td><td>Alive &rarr; Permadeath-flagged</td><td><span class="badge bug">Live but broken</span></td><td>Unscoped &mdash; a real bug found this session, not yet an idea or ticket. Expected fix: route <code>"PERMADEATH"</code> through the same deactivation check as <code>"KILL"</code></td><td class="evidence"><code>combat.py:187&ndash;188</code>. <code>outcome_kind="PERMADEATH"</code> bypasses the deactivation check entirely &mdash; entity stays active and keeps acting. See callout above.</td></tr>
+      <tr><td class="tid">T15</td><td>Death (T11/T12 only) with <code>heir_entity_id</code> set</td><td>Dead &rarr; inventory/heirlooms transfer to heir</td><td><span class="badge bug">Live, unreachable</span></td><td>Idea 10 &mdash; assign heirs from what already exists, the missing piece that makes this reachable</td><td class="evidence"><code>lifecycle.py:58&ndash;80</code>; <code>heir_entity_id</code> is never written anywhere in real code</td></tr>
+      <tr><td class="tid">T16</td><td>Death (T11/T12)</td><td>Dead &rarr; faction influence shift, conquest lifecycle eval</td><td><span class="badge live">Live</span></td><td>Idea 35 &mdash; wire ownership through one system instead of two disagreeing ones</td><td class="evidence"><code>FactionInfluenceService.process_influence_shift()</code></td></tr>
+      <tr><td class="tid">T17</td><td>Age-gated stage transition (child/adult/elder rites)</td><td>Alive &rarr; Life Stage tier</td><td><span class="badge proposed">Proposed</span></td><td>Idea 20</td><td class="evidence">T8 (Elder shift) is the only real age-gated transition today; no child/adult tiering exists</td></tr>
+      <tr><td class="tid">T18</td><td>Runtime birth from two parents</td><td>Non-existent &rarr; Spawned/Alive</td><td><span class="badge proposed">Proposed</span></td><td>Idea 32</td><td class="evidence">No live precedent &mdash; all spawning today is compile-time (T1)</td></tr>
+      <tr><td class="tid">T19</td><td>Propose/accept relationship event</td><td>Alive &rarr; Married</td><td><span class="badge proposed">Proposed</span></td><td>Idea 33</td><td class="evidence">"The simulation's first real propose/accept event" &mdash; zero precedent exists today</td></tr>
+      <tr><td class="tid">T20</td><td>Deferred archetype choice at maturity</td><td>Spawned (fixed archetype) &rarr; Spawned (chosen archetype)</td><td><span class="badge proposed">Proposed</span></td><td>Idea 34</td><td class="evidence">Archetype is fixed at T2 today; no deferred-choice path exists</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<footer>
+  Grounded in a read-only investigation of the live codebase (not documentation alone &mdash; <code>docs/simulation/lifecycle_systems_contract.md</code> was found stale on the genetics-assignment claim). Companion to the RPG Feature Atlas. Non-entity layers are summarized at the level the atlas's own layer-model sections cover; the Entity drill-down goes deeper because that was the original scope of this investigation. Status effects/buffs beyond Wound/Scar and a full per-mechanism pass on Group/Faction/Region/World/World-Object internals are natural next extensions, not yet done here.
+</footer>
+</div>
+
