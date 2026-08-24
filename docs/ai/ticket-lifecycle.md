@@ -37,7 +37,7 @@ above). Every gate-branch edge below is labeled with the exact return status tha
 flowchart TD
     Start([Request]) --> Scope
 
-    Scope["Scope<br/><i>ticket-scoper</i><br/>→ tickets/inprogress/{id}.md<br/>→ staging_artifacts/{id}/"]
+    Scope["Scope<br/><i>ticket-scoper</i><br/>→ tickets/inprogress/{id}.md<br/>→ staging_artifacts/{id}/ (standard/epic only)"]
     Scope -- CONFLICTS_DETECTED --> ScopeFix[/"Human resolves, re-run"/]
     Scope -- TAGS_NOT_REGISTERED --> ScopeTagFix[/"Register tag(s) via tag_registry.py add,<br/>or edit ticket to use an existing tag, re-run"/]
     Scope -- "tier=epic" --> EpicDone(["EPIC_SCOPED"])
@@ -128,7 +128,11 @@ Workflow({ name: 'implement-ticket', args: {
 - Scans `stored_artifacts/` for prior investigations
 - Reads relevant source files
 - Produces the ticket at `tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md`
-- Creates `staging_artifacts/{ticket_id}/`
+- Creates `staging_artifacts/{ticket_id}/` — **standard/epic tier only**. Hotfix tier skips this:
+  Investigate/Plan/Review (the phases that would populate it with `investigation.md`/`plan.md`/
+  `test_plan.md`) never run for hotfix, so the directory would otherwise sit empty for the ticket's
+  whole life and get flagged as a leftover by `done-checker`'s "repo state is consistent" condition
+  at Verify (`TCK-20260824-HOTFIX-STAGING-DIR-SCOPE-GAP`).
 
 **Example output:**
 ```
@@ -136,7 +140,7 @@ tickets/inprogress/TCK-20260606-COMBAT-RELATION.md
 staging_artifacts/TCK-20260606-COMBAT-RELATION/
 ```
 
-**Gate:** If conflicts are detected, the workflow returns `CONFLICTS_DETECTED` with a list. The user resolves (adjust scope, close duplicate, etc.) and re-runs.
+**Gate:** If conflicts are detected, the workflow returns `CONFLICTS_DETECTED` with a list. The user resolves (adjust scope, close duplicate, etc.) and re-runs. `conflicts` is reserved for genuine blocking duplicate/contradictory work only — good-faith informational disclosure (e.g. a related prior ticket that is not duplicate work, a mechanic/parity note worth surfacing) is returned separately via the optional `related_context` field, which is logged for visibility but never gates the pipeline (`TCK-20260824-HOTFIX-CONFLICTS-BLOCKING-SPLIT`).
 
 **Gate (tag registry):** After the agent call returns, the orchestrator runs
 `tools/tag_registry.py::check_tags_registered` against the ticket's tags (via `bash()` — not
@@ -174,12 +178,23 @@ to carry). `investigation.md`'s own template gained a matching `## Docs Requirin
 between `Mechanics/Engine Constraints` and `Parity Ledger Overlap`. `docs_to_update` feeds the
 Implement phase's doc-relevance advisory check below — it is not itself a gate.
 
-**Required bullet format (tightened by `TCK-20260802-DOC-COVERAGE-CHECK`):** one bullet per path,
-backtick-wrapped, immediately after `- ` (e.g. `` - `docs/mechanics/03_economic_laws.md`: reason ``),
-or exactly `None.` if nothing applies. This isn't just style — `done-checker`'s
-`docs_to_update_coverage` static check (Verify phase, below) machine-parses this exact section to
-independently re-verify coverage; a non-bullet paragraph or an un-backticked path fails that check
-as a format regression, not a clean "nothing required" case.
+**Two distinct formats (Format 2 added by `TCK-20260823-HOTFIX-INVESTIGATOR-EXCLUDED-DOC-BULLET-TEMPLATE-GAP`,
+after the format was tightened by `TCK-20260802-DOC-COVERAGE-CHECK`):**
+- **Format 1 — a doc that must change:** one bullet per path, backtick-wrapped, immediately after
+  `- ` (e.g. `` - `docs/mechanics/03_economic_laws.md`: reason ``). Reserved exclusively for docs
+  that genuinely must be touched by this ticket.
+- **Format 2 — a doc that was considered but explicitly excluded:** prose only, no leading `- `
+  bullet, path still backtick-wrapped inline (e.g. "The `docs/X.md` doc is not required because...").
+- If nothing applies at all, write exactly `None.` (no bullets).
+
+This isn't just style — `done-checker`'s `docs_to_update_coverage` static check (Verify phase,
+below) machine-parses this exact section via `_DOCS_BULLET_RE`, which only reads the leading
+backtick-wrapped path on a bulleted line and never reads the reasoning text after it. A required
+doc written as a non-bullet paragraph, or an un-backticked path, fails that check as a format
+regression rather than a clean "nothing required" case — and, symmetrically, an *excluded* doc
+mistakenly written in Format 1's bullet shape is indistinguishable from a required one to the
+parser and fails Verify with a spurious `git status shows no changes to these path(s)` error (the
+false positive this ticket's investigator.md fix now guards against).
 
 ---
 
@@ -440,10 +455,12 @@ later-phase (Parity/Verify) regeneration.
 **Step 0:** When the full agent call is not skipped, the orchestrator runs
 `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files(implementation.files_changed)`
 via `bash()` before the agent call and injects the resulting `src/` file → expected ledger file(s)
-todo-list into the prompt preamble (`NA` = no existing `v2_evidence` citation found). After the agent
-call returns, the orchestrator runs `::cross_reference_touched` against the actual `git status` diff
-of `docs/parity_ledger/` and includes any untouched-mapped-subsystem miss in the pushed event —
-visibility only, no new blocking status.
+todo-list into the prompt preamble (`NA` = no existing `v2_evidence` citation found). The same `bash()`
+step also runs `::next_available_id` for each candidate shard that todo-list named, injecting a
+`Next available ID per candidate shard` hint (`max-numeric-suffix + 1`, not `entry-count + 1` — ids
+are not dense). After the agent call returns, the orchestrator runs `::cross_reference_touched`
+against the actual `git status` diff of `docs/parity_ledger/` and includes any
+untouched-mapped-subsystem miss in the pushed event — visibility only, no new blocking status.
 
 **For the example task:** `behavior_changed: true`, subsystem: `combat_movement`
 

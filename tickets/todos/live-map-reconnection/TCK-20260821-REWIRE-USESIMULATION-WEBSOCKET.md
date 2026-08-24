@@ -72,6 +72,7 @@ None.
 ## Assumptions / Open Questions
 - msgpack vs json handshake format choice is open -- this ticket should pick one explicitly and document why
 - sendControl's current generic signature is used only for pause/resume today per scope, but call sites in GameCanvas.tsx/ControlPanel.tsx should be grepped before removing the generic path, even though those files aren't edited
+- **Cross-epic sequencing note (2026-08-23), found while reconciling this batch against `TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION`'s child tickets**: `TCK-20260822-DURABLE-SELECTION-STATE` and `TCK-20260822-ENTITY-LIST-SEARCH-RANK` (a separate epic, unrelated to this one in scope) both also list `frontend/src/hooks/useSimulation.ts` under their own Related Code Areas -- one extracts `selectedEntityId` state out of it into a shared model, the other reads/diffs its data for entity ranking. Neither of those tickets existed when this one was scoped. This ticket should land first: it rewrites `useSimulation.ts`'s internal transport and reducer shape (EventSource->WebSocket, old delta shape->new `{tick,changed,removed,events,snapshot_as_of_tick}` shape) wholesale, including a full rewrite of its test file -- any of that pair's work done against the pre-rewire hook would need re-doing against the post-rewire internals. Not a scope change to this ticket itself, just a recommended implementation order for whoever picks up either batch.
 
 ## Implementation Notes
 

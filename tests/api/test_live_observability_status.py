@@ -1,21 +1,29 @@
 from __future__ import annotations
+import hashlib
+import os
 import subprocess
 import requests
 import time
 import pytest
 
+_TEST_CLIENT_ID = "live-observability-status-test-client"
+_TEST_RAW_KEY = "live-observability-status-test-key"
+_TEST_KEY_HASH = hashlib.sha256(_TEST_RAW_KEY.encode("utf-8")).hexdigest()
+
 def test_live_observability_endpoints():
     """Verify live status and snapshot endpoints under running server."""
     port = 8011
     cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
-    server = subprocess.Popen(cmd)
-    
+    env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
+    server = subprocess.Popen(cmd, env=env)
+    headers = {"X-API-Key": _TEST_RAW_KEY}
+
     # Wait for server to boot
     time.sleep(3)
-    
+
     try:
         # 1. Verify status endpoint returns RUNNING or PAUSED and the correct health status
-        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/observability/live/status")
+        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/observability/live/status", headers=headers)
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] in ("RUNNING", "PAUSED")
@@ -23,35 +31,35 @@ def test_live_observability_endpoints():
         assert "observability_mode" in data
         assert data["governor_mode"] in ("NORMAL", "CONSTRAINED", "DEGRADED", "CRITICAL")
         assert data["health_state"] in ("HEALTHY", "WARNING", "DEGRADED", "CRITICAL")
-        
+
         # 2. Verify snapshot endpoint returns the correct categories
-        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/observability/live/snapshot")
+        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/observability/live/snapshot", headers=headers)
         assert resp.status_code == 200
         snapshot_data = resp.json()
         assert "run_status" in snapshot_data
         assert "latest_world_metrics" in snapshot_data
         assert "latest_runtime_status" in snapshot_data
-        
+
         # 3. Verify pause control transitions status to PAUSED
-        resp = requests.post(f"http://127.0.0.1:{port}/api/v1/control/pause")
+        resp = requests.post(f"http://127.0.0.1:{port}/api/v1/control/pause", headers=headers)
         assert resp.status_code == 200
         time.sleep(0.5)
-        
-        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/observability/live/status")
+
+        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/observability/live/status", headers=headers)
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "PAUSED"
-        
+
         # 4. Verify resume control transitions status back to RUNNING
-        resp = requests.post(f"http://127.0.0.1:{port}/api/v1/control/resume")
+        resp = requests.post(f"http://127.0.0.1:{port}/api/v1/control/resume", headers=headers)
         assert resp.status_code == 200
         time.sleep(0.5)
-        
-        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/observability/live/status")
+
+        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/observability/live/status", headers=headers)
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "RUNNING"
-        
+
     finally:
         server.terminate()
         server.wait()

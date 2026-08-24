@@ -26,6 +26,11 @@ def _build_parser():
     srv.add_argument("--entities", type=int, default=None)
     srv.add_argument("--workers", type=int, default=None)
     srv.add_argument("--log-level", type=str, default="INFO")
+    srv.add_argument(
+        "--api-key-hashes", type=str, default=None,
+        help="Comma-separated 'client_id:sha256hex' pairs for API-key auth "
+             "(RPG_API_KEY_HASHES env var also supported)"
+    )
 
     # CLI mode
     cli = sub.add_parser("cli", help="Headless CLI simulation")
@@ -270,14 +275,15 @@ def _run_serve(args):
     setup_v2_logging(level=args.log_level, json_format=args.json_logs)
     
     cli_overrides = {
-        "max_worker_count": args.workers
+        "max_worker_count": args.workers,
+        "api_key_hashes": args.api_key_hashes,
     }
     profile = ConfigLoader.load_profile(
         profile_name="cli_default",
         config_path=args.config,
         cli_overrides=cli_overrides
     )
-    
+
     app = create_v2_app(profile)
     
     logger.info(f"Starting V2 server on {args.host}:{args.port}")

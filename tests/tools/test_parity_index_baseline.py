@@ -226,7 +226,7 @@ def test_no_database_or_gitignore_or_make_target_created():
     if verify.returncode != 0:
         # The commit object genuinely lives on a different branch (simulation_quality),
         # not an ancestor of every branch this test runs on. A shallow/single-branch
-        # checkout (CI's default actions/checkout@v4 behavior) won't have fetched it --
+        # checkout (CI's default actions/checkout@v5 behavior) won't have fetched it --
         # that's an environment/topology gap, not evidence the assertion is false.
         pytest.skip(
             f"commit {baseline_commit} not present in this checkout's object database "

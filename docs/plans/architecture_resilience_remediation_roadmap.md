@@ -41,12 +41,12 @@ multi-ticket-shaped). No ticket was removed.
 | C — Doc Drift Reconciliation | *(none — amended into `TCK-20260817-AUDIT-ENGINE-DOCS-DRIFT` directly)* | — | — | — |
 | D — Redis Stream Resilience | `TCK-20260817-REDIS-STREAM-RESILIENCE-EPIC` | `docs/plans/archive/redis_stream_resilience_epic.md` | standard | **Resolved** |
 | E — Epic-Staleness Status-Aware | `TCK-20260817-EPIC-STALENESS-STATUS-AWARE-EPIC` | `docs/plans/archive/epic_staleness_status_aware_epic.md` | hotfix | **Resolved** |
-| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | `docs/plans/http_admission_control_epic.md` | standard | open (deployment confirmed trusted-network-only 2026-08-19; CORS item extracted) |
+| F — HTTP Admission Control | `TCK-20260817-HTTP-ADMISSION-CONTROL-EPIC` | `docs/plans/http_admission_control_epic.md` | epic (reverted from standard 2026-08-23) | open (deployment plan changed 2026-08-23 — now public internet/multi-tenant; split into 2 child tickets: auth done, admission control implementation-complete/mid-pipeline) |
 | G — Architecture Boundary Hardening | `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` | `docs/plans/archive/architecture_boundary_hardening_epic.md` | standard | **Resolved** |
 | H — Error-Handling Hygiene | `TCK-20260817-ERROR-HANDLING-HYGIENE-EPIC` | `docs/plans/archive/error_handling_hygiene_epic.md` | standard | **Resolved** |
 | I — Determinism Verification Gap | `TCK-20260817-DETERMINISM-VERIFICATION-GAP-EPIC` | `docs/plans/archive/determinism_verification_gap_epic.md` | standard | **Resolved** |
 | J — Codebase Navigability Hygiene | `TCK-20260817-CODEBASE-NAVIGABILITY-HYGIENE-EPIC` | `docs/plans/archive/codebase_navigability_hygiene_epic.md` | epic | **Resolved** (2026-08-20 — both extracted sibling tickets reached `tickets/done/`) |
-| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/codebase_health_observatory_tooling_epic.md` | epic | open (unblocked — prerequisite Epic G done; 2 of 4 items extracted) |
+| K — Codebase Health Observatory Tooling | `TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC` | `docs/plans/archive/codebase_health_observatory_tooling_epic.md` | epic | **Resolved** (2026-08-23 — all 4 extracted sibling tickets reached `tickets/done/`) |
 
 **(2026-08-19)** Three new tickets extend this tree, plus one item resolved without a ticket:
 - `TCK-20260819-STANDARD-DOMAIN-TEST-DIR-NESTING` — Epic J's item 3 (domains test-dir placement),
@@ -197,15 +197,26 @@ never returns from; `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` no longer surfa
 trusted network, no public/untrusted exposure planned. Auth and admission control (the two bullets
 below) stay explicitly deferred, not investigated further, until that changes.
 
+**(2026-08-23) Superseded — the gate fired.** The requester confirmed the API surface now goes on
+the **public internet, multi-tenant**, reversing the 2026-08-19 trusted-network-only confirmation.
+Priority is now **P1**. The deferred scope was investigated and split into 2 child tickets, per
+`docs/plans/http_admission_control_epic.md`'s own updated Acceptance signal section:
+`TCK-20260823-HTTP-API-KEY-AUTH` (per-client API-key auth, implemented — reached `tickets/done/`
+2026-08-23) and `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL` (per-client admission control
+below — implementation-complete but still mid-pipeline as of this writing).
+
 - No rate limiting, no authentication, no per-client admission control on any REST endpoint
-  (`src/api/server.py` registers only `CORSMiddleware` + `GZipMiddleware`).
+  (`src/api/server.py` registers only `CORSMiddleware` + `GZipMiddleware`). Auth resolved by
+  `TCK-20260823-HTTP-API-KEY-AUTH`; admission control implementation-complete by
+  `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL` (mid-pipeline).
 - **(2026-08-19) Extracted to `TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG`.**
   `CORSMiddleware(allow_origins=["*"], allow_credentials=True)` is a spec-invalid combination —
   fix regardless of exposure plans, since it signals unreviewed middleware config even though
-  browsers reject the actual credentialed-wildcard case today.
+  browsers reject the actual credentialed-wildcard case today. **Resolved** 2026-08-20.
 - Extend the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary
   (`docs/architecture/observability_hot_path_safety_contract.md`) to the HTTP layer instead of
-  inventing a new scheme — full proposed mode design already in D23 §L.
+  inventing a new scheme — full proposed mode design already in D23 §L. Implementation-complete
+  by `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL` (mid-pipeline, not yet in `tickets/done/`).
 
 *Evidence: D23 §E, §G, §L (R6).*
 
@@ -332,9 +343,24 @@ unblocked, not just theoretically scoped.
   `related_code_areas` field) — full worked design in D24 §L. Extracted once each data source was
   individually verified (found `graphify` needs a custom traversal, no ready CLI verb; found
   `related_code_areas` only 53.3% filled with mixed path/symbol shapes).
-- Historical metric snapshots (append-only file, same pattern as `agent-monitoring/runs.jsonl`)
-  + a multi-dimension scorecard (trend arrows, not a single score).
-- PR/AI change-impact report generator, built on top of the impact-model command above.
+- **(2026-08-23) Resolved via `TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD`.** Historical
+  metric snapshots (append-only file, same pattern as `agent-monitoring/runs.jsonl`) + a
+  multi-dimension scorecard (trend arrows, not a single score). Built
+  `tools/codebase_health_snapshot.py` + `make codebase-health-snapshot`/`make codebase-health-scorecard`;
+  full detail in `docs/plans/archive/codebase_health_observatory_tooling_epic.md`'s own Resolved
+  note and `docs/agent-monitoring/codebase_health_history_schema.md`.
+- **(2026-08-23) Resolved via `TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR`.** PR/AI change-impact
+  report generator, built specifically on top of the Phase 3 impact command
+  (`tools/code_health_impact.py::build_impact_report()`), not the Phase 4 snapshot-history
+  mechanism — the investigation found no real per-path join key between a single-path impact
+  report and the snapshot mechanism's repo-wide aggregates. Built `tools/pr_impact_report.py` +
+  `make codebase-health-pr-impact`; full detail in
+  `docs/plans/archive/codebase_health_observatory_tooling_epic.md`'s own Resolved note for this
+  item.
+
+All 4 original items now resolved or extracted; this epic has no remaining unscoped work of its
+own. **Closed 2026-08-23** — all 4 extracted sibling tickets reached `tickets/done/`, satisfying
+`TCK-20260817-CODEBASE-HEALTH-OBSERVATORY-TOOLING-EPIC`'s own Acceptance Criteria gate.
 
 *Evidence: D24 §J, §L, §M Phase 3-4.*
 
@@ -350,8 +376,11 @@ unblocked, not just theoretically scoped.
   the one piece of genuinely new scope.
 - **Epic E is small enough to knock out opportunistically** — one hook, one conditional check,
   motivated by a bug this exact session watched fire repeatedly.
-- **Epic F is explicitly gated on deployment plans** by both audits — **confirmed 2026-08-19**:
-  this system stays on a trusted network, so auth/rate work stays deferred, not front-loaded.
+- **Epic F was gated on deployment plans** by both audits — deferred per the 2026-08-19
+  confirmation (trusted-network-only), then **the gate fired 2026-08-23**: the requester confirmed
+  public internet, multi-tenant exposure. Split into 2 child tickets — auth
+  (`TCK-20260823-HTTP-API-KEY-AUTH`, done) and per-client admission control
+  (`TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`, implementation-complete, mid-pipeline).
 - **Epics I, J, K are all P3 and explicitly conditional** in their source audits ("only worth
   doing if...", "targeted read required before...", "deliberately built last") — none should be
   picked before A/B/D/E without a specific reason.

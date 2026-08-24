@@ -1,8 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
+maturity: shipped
+archived: 2026-08-23
 tags: [architecture, testing]
 ---
 
@@ -61,13 +63,54 @@ over time today.
   baseline target's precedent. Independent Test-phase verification also caught and fixed a
   real display bug: `kernel.py` was present in the internal dependents data but invisible in
   the truncated CLI output due to plain alphabetical sort — fixed with same-subsystem-first
-  sorting and a widened truncation limit.
-- Historical metric snapshots: an append-only file following the same pattern
+  sorting and a widened truncation limit. **(2026-08-23 correction, see
+  `TCK-20260823-HOTFIX-CODE-HEALTH-IMPACT-APPLY-PY-STALE-DEPENDENT`):** `engine/apply.py` is
+  no longer a real dependent of `engine/pipeline.py` in the current codebase — there is no
+  import edge between them in either direction. `engine/kernel.py` (which does import
+  `apply.py`) remains a correct, still-verified dependent. This does not indicate a bug in
+  `tools/code_health_impact.py`'s dependents resolution; the underlying import graph drifted
+  after this verification note was originally written. The test suite's second-dependent
+  worked example was updated to `engine/scenario_checkpoint.py`, the current real second
+  dependent, in `tests/tools/test_code_health_impact.py`.
+- ~~Historical metric snapshots: an append-only file following the same pattern
   `agent-monitoring/runs.jsonl` already uses, plus a multi-dimension scorecard (trend arrows, not
   a single aggregate score, per the source audit's own explicit guidance against turning this
-  into a single number).
-- PR/AI change-impact report generator, built on top of the impact-model command above — the
-  last item in sequence, since it depends on everything before it.
+  into a single number).~~ **Resolved** (`TCK-20260822-CODEBASE-HEALTH-SNAPSHOT-SCORECARD`,
+  2026-08-23): built `tools/codebase_health_snapshot.py` + two new on-demand Makefile targets,
+  `codebase-health-snapshot` (appends one `build_report()` snapshot to the new append-only
+  `agent-monitoring/codebase_health_history.jsonl`, reusing `tools/agent-monitoring/writer.py::write_line`
+  rather than a plain unlocked append) and `codebase-health-scorecard` (reads the history file and
+  renders a per-dimension trend view). A frozen `EXPECTED_SNAPSHOT_KEYS` allowlist plus a
+  `snapshot_schema_version` field (`build_snapshot_record`) make any future `build_report()` shape
+  change a loud `RuntimeError` at write time instead of silent drift. The scorecard trends 11
+  scalar dimensions with `↑`/`↓`/`→` + Δ (mirroring `personality_audit.py`'s own convention),
+  folds `registry_size_bytes`/`registry_size_lines` into one rendered row, and shows
+  `unused_core_dependencies` as a raw value/count rather than forcing it through the arrow logic
+  since it's a list, not a scalar — always comparing only the two most recent snapshots. Zero- and
+  one-snapshot reads degrade gracefully (an explicit "no snapshots yet" message, and an explicit
+  "no trend data yet" label per dimension, respectively) rather than crashing or fabricating a
+  trend. Per this epic's own "Out of scope" bullet below, no aggregate/combined score field exists
+  anywhere in either the structured scorecard dict or its printed text — enforced by a dedicated
+  test (`test_scorecard_output_has_no_aggregate_or_combined_score_field`) that audits both. Full
+  field/schema documentation: `docs/agent-monitoring/codebase_health_history_schema.md`.
+- ~~PR/AI change-impact report generator, built on top of the impact-model command above — the
+  last item in sequence, since it depends on everything before it.~~ **Resolved**
+  (`TCK-20260822-CHANGE-IMPACT-REPORT-GENERATOR`, 2026-08-23): built `tools/pr_impact_report.py`
+  (`build_pr_impact_report()` / `format_pr_impact_report()` / `main()`) + one new on-demand
+  Makefile target, `codebase-health-pr-impact`. Corrects this bullet's own "built on top of the
+  impact-model command above" phrasing: this ticket is built specifically on top of the Phase 3
+  impact command (`tools/code_health_impact.py::build_impact_report()`), matching D24 §M item
+  11's own literal wording ("built on top of Phase 3's impact model") — not on top of the Phase 4
+  historical-snapshot mechanism (`tools/codebase_health_snapshot.py`). No snapshot-history
+  dependency was required or built; the investigation confirmed no real per-path join key exists
+  between a single-path impact report and the snapshot mechanism's repo-wide aggregates. All 13
+  real `build_impact_report()` fields are rendered per target path, batched across one or more
+  paths with per-path failure isolation (one degraded or failing path never aborts the whole
+  batch); `dependents_degraded`, `dependents_degradation_reason`, and `unresolved_symbols` are
+  preserved verbatim in both Markdown and JSON output modes; and no aggregate/combined score
+  field exists anywhere in either output mode — enforced by
+  `test_report_output_has_no_aggregate_or_combined_score_field` and the standing architecture
+  guard `test_report_generator_has_no_import_of_codebase_health_snapshot_module`.
 
 ## Out of scope
 

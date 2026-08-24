@@ -14,11 +14,15 @@ _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
+import pytest
+
 from gate_checks.parity_updater_static import (  # noqa: E402
     CANONICAL_LEDGER_FILES,
     cross_reference_touched,
     derive_mapping,
     expected_subsystems_for_files,
+    next_available_id,
+    search_existing_entries,
 )
 
 
@@ -192,3 +196,83 @@ def test_unmapped_file_is_not_a_failure(tmp_path):
     by_file = {r["file"]: r for r in results}
     assert by_file["src/never/cited.py"]["status"] == "NA"
     assert by_file["src/never/cited.py"]["status"] != "FAIL"
+
+
+# ---------------------------------------------------------------------------
+# next_available_id
+# ---------------------------------------------------------------------------
+
+
+def test_next_available_id_uses_max_suffix_not_count(tmp_path):
+    # IDs are not dense — INFRA-379 is the real-world precedent (384 entries, highest id 379).
+    # Reproduced here with a small gapped shard: 3 entries, but the max suffix is 7.
+    _write_ledger(tmp_path, "infrastructure.yaml", [
+        {"id": "INFRA-001", "text": "a", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+        {"id": "INFRA-003", "text": "b", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+        {"id": "INFRA-007", "text": "c", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+    ])
+
+    assert next_available_id("infrastructure.yaml", ledger_dir=tmp_path) == "INFRA-008"
+
+
+def test_next_available_id_derives_prefix_and_width_from_shard(tmp_path):
+    _write_ledger(tmp_path, "town_resource.yaml", [
+        {"id": "TOWN-041", "text": "a", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+    ])
+
+    assert next_available_id("town_resource.yaml", ledger_dir=tmp_path) == "TOWN-042"
+
+
+def test_next_available_id_raises_on_shard_with_no_valid_ids(tmp_path):
+    _write_ledger(tmp_path, "combat_movement.yaml", [])
+
+    with pytest.raises(ValueError):
+        next_available_id("combat_movement.yaml", ledger_dir=tmp_path)
+
+
+# ---------------------------------------------------------------------------
+# search_existing_entries
+# ---------------------------------------------------------------------------
+
+
+def test_search_existing_entries_finds_case_insensitive_substring_hit(tmp_path):
+    _write_ledger(tmp_path, "combat_movement.yaml", [
+        {"id": "COMB-001", "text": "Damage formula uses TCK-20260824-PARITY-NEXT-ID-LOOKUP logic",
+         "status": "verified", "priority": "P1",
+         "v2_evidence": "src/engine/foo.py", "test_path": "tests/unit/test_foo.py"},
+    ])
+
+    results = search_existing_entries("tck-20260824-parity-next-id-lookup", ledger_dir=tmp_path)
+    assert len(results) == 1
+    assert results[0]["id"] == "COMB-001"
+    assert results[0]["shard"] == "combat_movement.yaml"
+    assert results[0]["matched_field"] == "text"
+    assert "TCK-20260824-PARITY-NEXT-ID-LOOKUP" in results[0]["excerpt"]
+
+
+def test_search_existing_entries_returns_empty_on_clean_miss(tmp_path):
+    _write_ledger(tmp_path, "combat_movement.yaml", [
+        {"id": "COMB-001", "text": "Damage formula", "status": "verified", "priority": "P1",
+         "v2_evidence": "src/engine/foo.py", "test_path": "tests/unit/test_foo.py"},
+    ])
+
+    assert search_existing_entries("no-such-query-string", ledger_dir=tmp_path) == []
+
+
+def test_search_existing_entries_scoped_to_single_shard(tmp_path):
+    _write_ledger(tmp_path, "combat_movement.yaml", [
+        {"id": "COMB-001", "text": "shared marker", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+    ])
+    _write_ledger(tmp_path, "town_resource.yaml", [
+        {"id": "TOWN-001", "text": "shared marker", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+    ])
+
+    results = search_existing_entries("shared marker", ledger_dir=tmp_path, shard_filename="combat_movement.yaml")
+    assert len(results) == 1
+    assert results[0]["shard"] == "combat_movement.yaml"

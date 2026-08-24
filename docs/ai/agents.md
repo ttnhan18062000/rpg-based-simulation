@@ -271,11 +271,20 @@ Notes ("left for a future ticket if a dedicated DoD-list entry for this check is
 **Step 0 — static pre-check:** The orchestrator runs
 `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` (via `bash()`) *before*
 this agent is invoked, injecting the resulting `src/` file → expected ledger file(s) todo-list into
-the prompt's preamble (`NA` = no existing `v2_evidence` citation found). After this agent's turn
-ends, the orchestrator runs `::cross_reference_touched` (via `bash()`) against the actual `git
-status` diff of `docs/parity_ledger/` and records any discrepancy in `agent-monitoring/events.jsonl`
-— visibility only, not a blocking gate. The agent self-reports which of its findings were informed
-by the injected context vs. independent judgment in a `verified_by` field.
+the prompt's preamble (`NA` = no existing `v2_evidence` citation found). The same `bash()` step also
+runs `::next_available_id` for every shard `expected_subsystems_for_files` named as a candidate,
+injecting a `Next available ID per candidate shard` hint line (`max-numeric-suffix + 1`, never
+`entry-count + 1` — shards have gaps). After this agent's turn ends, the orchestrator runs
+`::cross_reference_touched` (via `bash()`) against the actual `git status` diff of
+`docs/parity_ledger/` and records any discrepancy in `agent-monitoring/events.jsonl` — visibility
+only, not a blocking gate. The agent self-reports which of its findings were informed by the
+injected context vs. independent judgment in a `verified_by` field.
+
+The agent can also call `::search_existing_entries` itself via Bash — a case-insensitive substring
+search (not fuzzy/semantic) across every entry's `text`/`v2_evidence` fields, scoped to one shard or
+all of them — to check whether an entry already exists for the concern at hand before constructing a
+new one. Unlike the two functions above, this is not auto-injected (there is no automatic query
+string to feed it); it's a tool the agent invokes on demand.
 
 **Ledger files it manages:**
 

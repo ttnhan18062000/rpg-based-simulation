@@ -19,6 +19,14 @@ import it directly rather than deriving a second, possibly-inconsistent mapping.
 
 Mirrors `tools/parity_ledger_scan.py` / `tools/gate_checks/done_checker_static.py`'s shape: plain
 functions, plain tuple/dict returns, no argparse/CLI — consumed exclusively via `python3 -c "..."`.
+
+TCK-20260824-PARITY-NEXT-ID-LOOKUP added `next_available_id` and `search_existing_entries`: the
+Parity phase previously made `parity-updater` grep the raw YAML by hand for both "what's the next
+free ID in this shard" and "does an entry already exist for this concern" — purely mechanical
+lookups now done deterministically instead. `next_available_id` is wired into the Parity phase's
+existing Step 0 orchestrator `bash()` call, same as `expected_subsystems_for_files`.
+`search_existing_entries` is not auto-wired (there is no automatic query string to feed it) — it is
+documented for the `parity-updater` agent to call directly via Bash when it needs one.
 """
 
 import re
@@ -34,6 +42,10 @@ if str(_TOOLS_DIR) not in sys.path:
 from parity_ledger_scan import CANONICAL_LEDGER_FILES  # noqa: E402
 
 _SRC_PATH_RE = re.compile(r"src/[\w\-./]+\.py")
+
+# mirrors tools/parity_ledger_writer.py's _ID_PATTERN (docs/parity_ledger/schema.json:9-11
+# properties.id.pattern), with prefix/suffix captured for arithmetic instead of a bare match
+_ID_PATTERN = re.compile(r"^([A-Z]+)-([0-9]{3})$")
 
 
 def derive_mapping(ledger_dir: "Path | str" = "docs/parity_ledger") -> dict:
@@ -116,4 +128,76 @@ def cross_reference_touched(files_changed, touched_ledger_files, ledger_dir="doc
                 "status": "FAIL",
                 "evidence": f"mapped to {candidates}, none touched",
             })
+    return results
+
+
+def next_available_id(shard_filename: str, ledger_dir="docs/parity_ledger") -> str:
+    """Return `{prefix}-{max_suffix + 1}` (zero-padded to the shard's own observed width) for the
+    next available ID in shard_filename.
+
+    IDs are not dense — a shard's highest entry_id suffix can sit well below its entry count — so
+    this walks every id and tracks the maximum numeric suffix rather than using len(entries) + 1.
+    Prefix and zero-pad width are derived from the shard's own existing ids, never a hardcoded
+    shard->prefix table. Raises ValueError if the shard has no entry with an id matching
+    _ID_PATTERN — there is nothing to derive a prefix from.
+    """
+    path = Path(ledger_dir) / shard_filename
+    entries = yaml.safe_load(path.read_text()) if path.exists() else []
+    entries = entries or []
+
+    prefix = None
+    width = None
+    max_suffix = -1
+    for entry in entries:
+        match = _ID_PATTERN.match(entry.get("id") or "")
+        if not match:
+            continue
+        entry_prefix, suffix_str = match.groups()
+        prefix = entry_prefix
+        width = len(suffix_str)
+        max_suffix = max(max_suffix, int(suffix_str))
+
+    if prefix is None:
+        raise ValueError(f"{shard_filename} has no entry with an id matching {_ID_PATTERN.pattern!r}")
+
+    return f"{prefix}-{max_suffix + 1:0{width}d}"
+
+
+def search_existing_entries(query: str, ledger_dir="docs/parity_ledger", shard_filename=None) -> list:
+    """Case-insensitive substring search of every entry's `text`/`v2_evidence` fields.
+
+    A plain substring grep, not fuzzy/semantic — consistent with this module's deterministic
+    character. Returns one {"id", "shard", "matched_field", "excerpt"} dict per field match (an
+    entry matching in both fields produces two results). Scoped to shard_filename if given,
+    otherwise searches every CANONICAL_LEDGER_FILES shard. A shard that doesn't exist or fails to
+    parse is skipped, mirroring derive_mapping's legacy-data tolerance.
+    """
+    shards = [shard_filename] if shard_filename else CANONICAL_LEDGER_FILES
+    query_lower = query.lower()
+    excerpt_radius = 40
+    ledger_path = Path(ledger_dir)
+    results = []
+
+    for filename in shards:
+        path = ledger_path / filename
+        if not path.exists():
+            continue
+        try:
+            entries = yaml.safe_load(path.read_text()) or []
+        except Exception:
+            continue
+        for entry in entries:
+            for field in ("text", "v2_evidence"):
+                value = entry.get(field) or ""
+                index = value.lower().find(query_lower)
+                if index == -1:
+                    continue
+                start = max(0, index - excerpt_radius)
+                end = min(len(value), index + len(query) + excerpt_radius)
+                results.append({
+                    "id": entry.get("id"),
+                    "shard": filename,
+                    "matched_field": field,
+                    "excerpt": value[start:end],
+                })
     return results
