@@ -11257,3 +11257,22 @@
     Disclosed rather than silently left unstated, matching this ledger''s existing
     disclosed-limitation pattern.'
   support_boundary: null
+- id: INFRA-384
+  text: 'GET /api/v1/map, /api/v1/static, /api/v1/stats are real registered routes (src/api/routes/map.py,
+    static.py, stats.py), wrapping StatePresenter.present_map/present_static/present_stats
+    (TCK-20260821-PRESENT-MAP-STATIC, TCK-20260821-REST-MAP-STATIC-STATS). V2EngineManager gains
+    _total_spawned/_total_deaths counters incremented once per tick via a new_ids/dead_ids
+    set-diff on state.entities.keys() (ported from V1s alive_before/alive_after pattern) and
+    explicitly zeroed in reset(). stats.world_day = tick // 2400 per docs/mechanics/05_world_evolution.md
+    Sec 1 (Certified Level 1), a deliberate divergence from V1s legacy tick // 100. alive_count
+    filters by combat.alive, matching src/api/presenters/economy.py present_health precedent.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/api/routes/map.py + static.py + stats.py + src/api/presenters/state_presenter.py + src/api/engine_manager.py
+  proof_type: null
+  test_path: tests/api/test_rest_parity.py::test_api_rest_parity
+  divergence_note: world_day uses tick // 2400 (Mechanics Bible canonical day length), not V1's
+    tick // 100 -- see docs/engine/contracts/frontend.md and staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/plan.md
+    Design Decisions for rationale.
+  support_boundary: null

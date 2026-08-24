@@ -127,6 +127,15 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
     from src.api.routes import manifest
     app.include_router(manifest.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
+    from src.api.routes import map as map_routes
+    app.include_router(map_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+
+    from src.api.routes import static as static_routes
+    app.include_router(static_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+
+    from src.api.routes import stats as stats_routes
+    app.include_router(stats_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+
     from src.simulation_quality.api import routes as quality_routes
     app.include_router(quality_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 

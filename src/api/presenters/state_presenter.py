@@ -259,3 +259,36 @@ class StatePresenter:
             "treasure_chests": treasure_chests,
             "regions": regions,
         }
+
+    @staticmethod
+    def present_stats(
+        state: AuthoritativeState,
+        total_spawned: int,
+        total_deaths: int,
+        running: bool,
+        paused: bool,
+    ) -> Dict[str, Any]:
+        """Live simulation counters: {tick, world_day, alive_count, total_spawned, total_deaths, running, paused}.
+
+        world_day = tick // 2400 per docs/mechanics/05_world_evolution.md:15-22 ("1 Day = 2400 ticks",
+        Certified Level 1) -- NOT V1's legacy tick // 100, NOT src/world/raid.py's unrelated
+        RaidService.TICKS_PER_DAY=100 (see staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/plan.md
+        Design Decisions).
+        alive_count filters state.entities by combat.alive, ported from V1's exact semantics and
+        matching the in-repo precedent at src/api/presenters/economy.py's EconomyPresenter
+        .present_health filter -- not len(state.entities) (see plan.md Design Decisions for the
+        revisit condition).
+        total_spawned/total_deaths/running/paused are V2EngineManager-level telemetry, passed through
+        unchanged -- this keeps the method a pure function of its arguments, consistent with the M12
+        Law docstring at the top of this file: "API presenters MUST NOT mutate authoritative state."
+        """
+        alive_count = sum(1 for e in state.entities.values() if e.combat.alive)
+        return {
+            "tick": state.tick,
+            "world_day": state.tick // 2400,
+            "alive_count": alive_count,
+            "total_spawned": total_spawned,
+            "total_deaths": total_deaths,
+            "running": running,
+            "paused": paused,
+        }

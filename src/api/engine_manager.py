@@ -53,6 +53,8 @@ class V2EngineManager:
         self._metrics_collector = PrometheusMetricsCollector(self)
         self._metrics_registry.register(self._metrics_collector)
         self._errors_total = 0
+        self._total_spawned = 0
+        self._total_deaths = 0
         self._started_at: Optional[float] = None
         
         self._build()
@@ -268,6 +270,9 @@ class V2EngineManager:
     def reset(self):
         self.stop()
         self._build()
+        with self._state_lock:
+            self._total_spawned = 0
+            self._total_deaths = 0
         logger.info("V2EngineManager reset.")
 
     def _run_loop(self):
@@ -283,9 +288,15 @@ class V2EngineManager:
                 
             # Execute one tick
             try:
+                alive_before = set(self._kernel.state.entities.keys())
                 self._kernel.tick_once()
+                alive_after = set(self._kernel.state.entities.keys())
+                new_ids = alive_after - alive_before
+                dead_ids = alive_before - alive_after
                 with self._state_lock:
                     self._tick_times.append(time.time())
+                    self._total_spawned += len(new_ids)
+                    self._total_deaths += len(dead_ids)
                 self._update_latest_state(self._kernel.state)
                 self._notify_listeners(self._latest_snapshot)
             except Exception as e:
@@ -332,6 +343,14 @@ class V2EngineManager:
     @property
     def errors_total(self) -> int:
         return self._errors_total
+
+    @property
+    def total_spawned(self) -> int:
+        return self._total_spawned
+
+    @property
+    def total_deaths(self) -> int:
+        return self._total_deaths
 
     @property
     def is_thread_alive(self) -> bool:
