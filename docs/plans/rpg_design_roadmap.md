@@ -198,10 +198,17 @@ their affected tickets.
   Cognition profiles, 6-7 entries each) cap the real behavioral range of three done, live mechanics. None of
   these block any milestone above, but whoever picks up a ticket touching Reputation, Perception, Goal
   Hierarchy, or town Buildings should read that section first — the badge alone will overstate confidence.
+- **Idea 66 surfaced a real process gap: prose descriptions of proposed state let ambiguity slip through
+  that a schema would have caught.** `docs/brainstorm/rpg_expected_schemas.html` (new) gives field-level
+  schemas — not prose — for the 9 most load-bearing proposed ideas, starting with idea 66's own
+  Region/PlaceState/PlaceKind shape. Not yet extended to the remaining ~21 ideas that will eventually need
+  it; that document's own "Not Yet Scoped" section lists them honestly. Whoever scopes a ticket for one of
+  the 9 covered ideas should start from that schema, not re-derive field shapes from the atlas's prose.
 
 ## References
 
 - `docs/brainstorm/rpg_feature_atlas.html` (all sections cited above)
+- `docs/brainstorm/rpg_expected_schemas.html` (field-level schemas for 9 load-bearing proposed ideas)
 - `docs/brainstorm/design_merit_scorecard.html`
 - `docs/brainstorm/the_unwritten_world.html`
 - `docs/brainstorm/simulation_capabilities.html` (plain-language companion, for non-technical review)
