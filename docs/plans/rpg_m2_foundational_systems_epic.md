@@ -47,12 +47,15 @@ validation step ahead of the highest-risk content item (see the roadmap's Sequen
    exist anywhere at the schema level yet — this ticket needs to add the actual field, not extend one that
    already exists. Read `docs/plans/rpg_m8_world_corpus_generation_epic.md` before scoping this ticket.
 3. **Idea 35 — City ownership wiring.** Confirmed wider blast radius than originally scoped: 8 real
-   consumer files, not one implementation-time call. **Depth-audit note:** the sovereignty ownership-flip
-   math this idea wires into (±1.0 per death, ±50.0 per stronghold destruction, flip past ±100) already
-   runs in every live sim today with zero balance validation ever — and is the direct cause of the atlas's
-   own documented "conquest always shows as Monster Horde" distortion. This ticket should not just attribute
-   ownership to the real faction; it inherits an unvalidated numeric surface that a metamorphic-lab pass
-   should probably touch too (see Depth Beneath "Done" in the atlas).
+   consumer files, not one implementation-time call. **Depth-audit note, corrected after direct
+   re-verification:** the sovereignty ownership-flip math this idea wires into is `DEATH_INFLUENCE_SHIFT =
+   5.0` per relevant death, conquest at influence ≤ -50.0, liberation at influence ≥ +50.0
+   (`src/world/influence.py`) — ±100 is only the influence value's clamp bound, not a trigger, and
+   stronghold destruction does NOT trigger liberation (that direction is an unimplemented code comment).
+   This already runs in every live sim today with zero balance validation ever — and is the direct cause of
+   the atlas's own documented "conquest always shows as Monster Horde" distortion. This ticket should not
+   just attribute ownership to the real faction; it inherits an unvalidated numeric surface that a
+   metamorphic-lab pass should probably touch too (see Depth Beneath "Done" in the atlas).
 4. **Idea 36 — Clan as Faction's shape.** `FactionState`'s shape reused almost verbatim. **Depth-audit
    note:** the Party Formation & Lifecycle precedent this and idea 40 (M4) both cite spans 5 files but has
    exactly 1 test file — budget a review of that existing test's actual coverage before assuming the
