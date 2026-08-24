@@ -1,0 +1,1011 @@
+<title>RPG Schema Registry</title>
+<style>
+:root {
+  --bg: #EDEEE9;
+  --surface: #FFFFFF;
+  --surface-2: #E3E4DC;
+  --ink: #1F2421;
+  --ink-soft: #4B534E;
+  --border: #D3D5CB;
+  --accent: #A9720C;
+  --accent-soft: #F1E4C8;
+  --done: #2C6E63;
+  --done-soft: #DCEBE7;
+  --partial: #B8860B;
+  --partial-soft: #F3E7C9;
+  --skeleton: #7A5C3E;
+  --skeleton-soft: #EDE1D2;
+  --gap: #8B8378;
+  --gap-soft: #EAE8E2;
+  --orphan: #6B5B95;
+  --orphan-soft: #E7E3F1;
+  --gated: #2E6E8E;
+  --gated-soft: #DCEAF0;
+  --map-parchment: #F3ECD9;
+  --map-parchment-edge: #C9BA92;
+  --map-ink: #4A3B25;
+  --map-a: #B8860B;
+  --map-b: #2E6E8E;
+  --map-wild: #8B5E3C;
+  --map-c: #A5333B;
+  --map-d: #35618F;
+  --map-biome: #6E8B5A;
+  --map-biome-soft: #DCE6D1;
+  --map-biome2: #B8763A;
+  --map-biome2-soft: #F0DDBF;
+  --code-bg: #1F2421;
+  --code-ink: #E8E6DF;
+  --shadow: 0 1px 2px rgba(31,36,33,0.06), 0 4px 16px rgba(31,36,33,0.06);
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181A;
+    --surface: #1C2124;
+    --surface-2: #232A2D;
+    --ink: #E8E6DF;
+    --ink-soft: #A8AFA9;
+    --border: #313A3D;
+    --accent: #D9A441;
+    --accent-soft: #3A311D;
+    --done: #5FBFAE;
+    --done-soft: #1D3430;
+    --partial: #D9A441;
+    --partial-soft: #3A311D;
+    --skeleton: #C99A6C;
+    --skeleton-soft: #332821;
+    --gap: #8A9089;
+    --gap-soft: #262B29;
+    --orphan: #B0A2D9;
+    --orphan-soft: #2A2438;
+    --gated: #7FB3CC;
+    --gated-soft: #1D2E36;
+    --map-parchment: #241F17;
+    --map-parchment-edge: #46381F;
+    --map-ink: #D8C9A3;
+    --map-a: #D9A441;
+    --map-b: #7FB3CC;
+    --map-wild: #C99A6C;
+    --map-c: #E28086;
+    --map-d: #7FA8D9;
+    --map-biome: #7FA06B;
+    --map-biome-soft: #2A3324;
+    --map-biome2: #D99A5C;
+    --map-biome2-soft: #3A2E1E;
+    --code-bg: #0E1113;
+    --code-ink: #D7D4C8;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14181A;
+  --surface: #1C2124;
+  --surface-2: #232A2D;
+  --ink: #E8E6DF;
+  --ink-soft: #A8AFA9;
+  --border: #313A3D;
+  --accent: #D9A441;
+  --accent-soft: #3A311D;
+  --done: #5FBFAE;
+  --done-soft: #1D3430;
+  --partial: #D9A441;
+  --partial-soft: #3A311D;
+  --skeleton: #C99A6C;
+  --skeleton-soft: #332821;
+  --gap: #8A9089;
+  --gap-soft: #262B29;
+  --orphan: #B0A2D9;
+  --orphan-soft: #2A2438;
+  --gated: #7FB3CC;
+  --gated-soft: #1D2E36;
+  --map-parchment: #241F17;
+  --map-parchment-edge: #46381F;
+  --map-ink: #D8C9A3;
+  --map-a: #D9A441;
+  --map-b: #7FB3CC;
+  --map-wild: #C99A6C;
+  --map-c: #E28086;
+  --map-d: #7FA8D9;
+  --map-biome: #7FA06B;
+  --map-biome-soft: #2A3324;
+  --map-biome2: #D99A5C;
+  --map-biome2-soft: #3A2E1E;
+  --code-bg: #0E1113;
+  --code-ink: #D7D4C8;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+code.inline {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  background: var(--code-bg);
+  color: var(--code-ink);
+  padding: 2px 6px;
+  border-radius: 5px;
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  box-sizing: border-box;
+  vertical-align: top;
+}
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 56px 24px 96px; }
+
+header.hero { margin-bottom: 40px; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+h1.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(32px, 5vw, 46px);
+  line-height: 1.12;
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+.subtitle { font-size: 17px; color: var(--ink-soft); max-width: 66ch; margin: 0 0 8px; }
+.subtitle.note { font-size: 14px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.legend-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; font-family: var(--font-mono);
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface);
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.dot.done { background: var(--done); }
+.dot.partial { background: var(--partial); }
+.dot.skeleton { background: var(--skeleton); }
+.dot.gap { border: 1.5px dashed var(--ink-soft); background: transparent; }
+.dot.orphan { background: var(--orphan); }
+.dot.gated { background: var(--gated); }
+
+section { margin: 56px 0; }
+h2.section-title {
+  font-family: var(--font-display); font-size: 26px; font-weight: 600;
+  margin: 0 0 6px; text-wrap: balance;
+}
+h3.layer-title {
+  font-family: var(--font-display); font-size: 20px; font-weight: 600;
+  margin: 40px 0 4px; text-wrap: balance;
+  display: flex; align-items: baseline; gap: 10px;
+}
+.layer-scope {
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft);
+  background: var(--surface-2); padding: 2px 9px; border-radius: 999px;
+}
+.section-lede { color: var(--ink-soft); font-size: 15px; max-width: 70ch; margin: 0 0 24px; }
+.layer-lede { color: var(--ink-soft); font-size: 13.5px; max-width: 72ch; margin: 0 0 16px; }
+
+.diagram-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px; box-shadow: var(--shadow); overflow-x: auto;
+}
+.diagram-card pre.mermaid { margin: 0; min-width: 640px; }
+
+.map-card {
+  background: var(--map-parchment); border: 1px solid var(--map-parchment-edge); border-radius: 14px;
+  padding: 20px; box-shadow: var(--shadow); overflow-x: auto;
+}
+.map-card svg { display: block; margin: 10px auto 0; max-width: 100%; height: auto; }
+.map-frame { fill: none; stroke: var(--map-parchment-edge); stroke-width: 2; }
+.map-region { stroke: var(--map-ink); stroke-width: 2; fill-opacity: 0.75; }
+.map-region.map-a { fill: var(--map-a); }
+.map-region.map-b { fill: var(--map-b); }
+.map-region.map-wild { fill: var(--map-wild); fill-opacity: 0.55; stroke-dasharray: 5 4; }
+.map-biome { fill: var(--map-biome-soft); stroke: var(--map-biome); stroke-width: 2.5; }
+.map-border { fill-opacity: 0.08; stroke-width: 3; stroke-dasharray: 9 6; }
+.map-border.map-c { stroke: var(--map-c); fill: var(--map-c); }
+.map-border.map-d { stroke: var(--map-d); fill: var(--map-d); }
+.map-a-icon rect, .map-a-icon polygon { fill: var(--map-a); stroke: var(--map-ink); stroke-width: 1.5; }
+.map-b-icon rect, .map-b-icon polygon { fill: var(--map-b); stroke: var(--map-ink); stroke-width: 1.5; }
+.map-c-icon rect, .map-c-icon polygon { fill: var(--map-c); stroke: var(--map-ink); stroke-width: 1.5; }
+.map-d-icon rect, .map-d-icon polygon { fill: var(--map-d); stroke: var(--map-ink); stroke-width: 1.5; }
+.map-wild-icon { fill: var(--map-wild); stroke: var(--map-ink); stroke-width: 1.5; }
+.map-label { font-family: var(--font-display); font-size: 15px; font-weight: 600; fill: var(--map-ink); }
+.map-sublabel { font-family: var(--font-mono); font-size: 10px; fill: var(--map-ink); opacity: 0.75; }
+.map-biome-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .02em; fill: var(--map-ink); opacity: 0.85; }
+.map-clan-line { stroke: var(--orphan); stroke-width: 2; stroke-dasharray: 3 5; }
+.map-clan-label { font-family: var(--font-mono); font-size: 10.5px; fill: var(--orphan); }
+.map-warlabel { font-family: var(--font-mono); font-size: 10.5px; fill: var(--map-c); }
+.map-compass circle { fill: none; stroke: var(--map-ink); stroke-width: 1.5; }
+.map-compass line { stroke: var(--map-ink); stroke-width: 1.5; }
+.map-compass text { font-family: var(--font-mono); font-size: 11px; fill: var(--map-ink); }
+.map-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-family: var(--font-mono); font-size: 11.5px; color: var(--map-ink); }
+.map-legend .swatch { display: inline-flex; align-items: center; gap: 6px; }
+.map-legend .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.map-legend .dot.map-a { background: var(--map-a); }
+.map-legend .dot.map-b { background: var(--map-b); }
+.map-legend .dot.map-wild { background: var(--map-wild); }
+.map-legend .dot.map-c { background: var(--map-c); }
+.map-legend .dot.map-d { background: var(--map-d); }
+.map-legend .dot.map-biome-dot { background: var(--map-biome-soft); border: 1.5px solid var(--map-biome); }
+.map-legend .dot.map-clan-dot { background: var(--orphan); }
+.map-biome2 { fill: var(--map-biome2-soft); stroke: var(--map-biome2); stroke-width: 2.5; }
+.map-legend .dot.map-biome2-dot { background: var(--map-biome2-soft); border: 1.5px solid var(--map-biome2); }
+.map-legend .dot.map-group-dot { background: var(--gated); }
+.map-group-loop { fill: none; stroke: var(--gated); stroke-width: 2; stroke-dasharray: 2 4; }
+.map-building { fill: var(--map-parchment-edge); stroke: var(--map-ink); stroke-width: 1.5; }
+.map-building-label { font-family: var(--font-mono); font-size: 9.5px; fill: var(--map-ink); text-anchor: middle; }
+.map-entity { stroke: var(--map-ink); stroke-width: 1; }
+.map-entity.role-worker { fill: var(--map-wild); }
+.map-entity.role-guard { fill: var(--map-c); }
+.map-entity.role-merchant { fill: var(--map-b); }
+.map-entity.role-blacksmith { fill: var(--map-a); }
+.map-race-dot.race-human { fill: var(--map-a); }
+.map-race-dot.race-elf { fill: var(--map-b); }
+.map-race-dot.race-dwarf { fill: var(--map-wild); }
+.map-race-dot { stroke: var(--map-ink); stroke-width: 0.75; }
+
+.cluster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px 20px; box-shadow: var(--shadow);
+  min-width: 0;
+}
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.card h4 { font-family: var(--font-display); font-size: 16.5px; font-weight: 600; margin: 0; }
+.badges { display: flex; gap: 5px; flex-wrap: wrap; }
+.badge {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.03em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+}
+.badge.done { background: var(--done-soft); color: var(--done); }
+.badge.partial { background: var(--partial-soft); color: var(--partial); }
+.badge.skeleton { background: var(--skeleton-soft); color: var(--skeleton); }
+.badge.gap { background: var(--gap-soft); color: var(--ink-soft); }
+.badge.orphan { background: var(--orphan-soft); color: var(--orphan); }
+.badge.gated { background: var(--gated-soft); color: var(--gated); }
+
+.card p.desc { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 10px; overflow-wrap: anywhere; }
+.card .from-note { font-size: 12px; color: var(--ink-soft); font-style: italic; margin: 0 0 8px; overflow-wrap: anywhere; }
+.card h4 { overflow-wrap: anywhere; }
+.src { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+
+.loop-note {
+  background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+  padding: 14px 18px; font-size: 14px; color: var(--ink); margin-top: 18px;
+}
+.correction-note {
+  background: var(--skeleton-soft); border-left: 3px solid var(--skeleton); border-radius: 0 10px 10px 0;
+  padding: 14px 18px; font-size: 13.5px; color: var(--ink); margin: 24px 0;
+  overflow-wrap: anywhere;
+}
+.section-lede, .layer-lede, .subtitle, .loop-note { overflow-wrap: anywhere; }
+
+.revision-history {
+  margin: 40px 0;
+}
+.revision-history summary {
+  cursor: pointer; list-style: none; display: flex; align-items: baseline; gap: 10px;
+}
+.revision-history summary::-webkit-details-marker { display: none; }
+.revision-history summary::before {
+  content: "▸"; color: var(--accent); font-size: 15px; transition: transform 0.15s ease;
+}
+.revision-history[open] summary::before,
+.revision-history details[open] summary::before {
+  transform: rotate(90deg);
+}
+.revision-history summary h2 { display: inline; margin: 0; }
+.revision-history .colophon {
+  font-size: 12.5px; color: var(--ink-soft); font-family: var(--font-mono);
+  margin: 10px 0 18px; overflow-wrap: anywhere;
+}
+.revision-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.revision-entry {
+  display: grid; grid-template-columns: 72px 1fr; gap: 14px;
+  padding: 12px 16px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; font-size: 13.5px; line-height: 1.55;
+}
+.revision-num {
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 600;
+  color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.revision-text { color: var(--ink); overflow-wrap: anywhere; }
+
+
+footer {
+  margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
+  font-size: 12.5px; color: var(--ink-soft); font-family: var(--font-mono);
+}
+
+nav.toc {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px 22px; box-shadow: var(--shadow); margin-bottom: 40px;
+}
+nav.toc .toc-label {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 0 12px;
+}
+nav.toc ol {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 20px;
+}
+nav.toc li { font-size: 13.5px; }
+nav.toc a {
+  color: var(--ink); text-decoration: none; display: flex; align-items: baseline; gap: 8px;
+  padding: 3px 0; border-bottom: 1px solid transparent;
+}
+nav.toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+nav.toc .toc-num {
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); flex-shrink: 0; width: 1.4em;
+}
+nav.toc li.toc-sub a { padding-left: 1.4em; font-size: 13px; color: var(--ink-soft); }
+
+.exec-summary {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 40px; overflow-x: auto;
+}
+.exec-summary p.exec-note { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 16px; max-width: 72ch; }
+.exec-summary table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.exec-summary th {
+  text-align: left; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--ink-soft); padding: 0 12px 10px 0; border-bottom: 1px solid var(--border);
+}
+.exec-summary td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.exec-summary tr:last-child td { border-bottom: none; }
+.exec-summary .layer-name { font-weight: 600; white-space: nowrap; }
+.exec-summary .badge { display: inline-block; }
+
+.idea-index {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 24px; overflow-x: auto;
+}
+.idea-index table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.idea-index th {
+  text-align: left; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--ink-soft); padding: 0 12px 10px 0; border-bottom: 1px solid var(--border);
+}
+.idea-index td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.idea-index tr:last-child td { border-bottom: none; }
+.idea-index .theme-link { font-weight: 600; color: var(--accent); text-decoration: none; }
+.idea-index .theme-link:hover { text-decoration: underline; }
+.idea-index .idea-range { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+</style>
+
+<header class="hero">
+  <p class="eyebrow">Implementation Planning &middot; RPG Feature Atlas Companion</p>
+  <h1 class="title">RPG Schema Registry</h1>
+  <p class="subtitle">Field-level schemas for the atlas's proposed ideas &mdash; not prose descriptions of target behavior, but the actual typed shape each feature needs, so ambiguity like "is City a kind of Region or does Region contain Cities?" gets caught before a ticket is written, not after.</p>
+  <p class="subtitle note">Prompted directly by that exact ambiguity surfacing in idea 66, then expanded twice on direct request: first to cover all 30 proposed ideas that introduce new durable state (not just the highest-leverage 9), then to also track the <em>existing</em> live schemas &mdash; even the ones with no proposed change &mdash; so this is the one page to check for any RPG feature&rsquo;s real current shape, plus what&rsquo;s planned to change about it. A third dimension catalogues hardcoded values in the live codebase that behave like they should be schema-driven instead of Python literals. A fourth, added on direct request, specifies the expected runtime <em>events</em> each idea should emit &mdash; real event names, payloads, triggers, and SimQ pillar/scenario mapping &mdash; the layer between durable state and being actually gradeable, which neither M7 nor M9 pre-specifies. A fifth, its counterpart, distinguishes what should be real YAML config (catalog-shaped, multi-instance) from what belongs in Hardcoded Logic instead (single tunable scalars) &mdash; a real, code-confirmed dividing line, not an arbitrary split.</p>
+  <div class="legend">
+    <span class="legend-item"><span class="dot gated"></span> New &mdash; no equivalent exists in code today</span>
+    <span class="legend-item"><span class="dot done"></span> Reused &mdash; an existing real class/field, unchanged</span>
+    <span class="legend-item"><span class="dot partial"></span> Extended &mdash; an existing field/enum gains a new value</span>
+    <span class="legend-item"><span class="dot gap"></span> Open question &mdash; a real design decision not yet made</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <p class="toc-label">Contents</p>
+  <ol>
+    <li class="toc-sub"><a href="#existing-schemas-intro"><span class="toc-num">01</span> Existing (Live) Schemas &mdash; overview</a></li>
+    <li class="toc-sub"><a href="#existing-entity"><span class="toc-num">02</span> Entity &mdash; Core State</a></li>
+    <li class="toc-sub"><a href="#existing-social"><span class="toc-num">03</span> Entity &mdash; Social &amp; Relationships</a></li>
+    <li class="toc-sub"><a href="#existing-group"><span class="toc-num">04</span> Group &amp; Guild</a></li>
+    <li class="toc-sub"><a href="#existing-faction"><span class="toc-num">05</span> Faction</a></li>
+    <li class="toc-sub"><a href="#existing-region"><span class="toc-num">06</span> Region (pre-idea-66)</a></li>
+    <li class="toc-sub"><a href="#existing-beyond-city"><span class="toc-num">07</span> Camp (pre-idea-66)</a></li>
+    <li class="toc-sub"><a href="#existing-world"><span class="toc-num">08</span> World</a></li>
+    <li class="toc-sub"><a href="#existing-worldobject"><span class="toc-num">09</span> World Objects</a></li>
+    <li class="toc-sub"><a href="#existing-clan-race"><span class="toc-num">10</span> Clan &amp; Race (no schema)</a></li>
+    <li><a href="#schema-66"><span class="toc-num">11</span> Region &amp; Place (idea 66)</a></li>
+    <li><a href="#schema-36"><span class="toc-num">12</span> Clan (ideas 36, 40)</a></li>
+    <li><a href="#schema-37"><span class="toc-num">13</span> Race Relations (idea 37)</a></li>
+    <li><a href="#schema-32"><span class="toc-num">14</span> Reproduction (idea 32)</a></li>
+    <li><a href="#schema-33"><span class="toc-num">15</span> Marriage (idea 33)</a></li>
+    <li><a href="#schema-20"><span class="toc-num">16</span> Life Stages (idea 20)</a></li>
+    <li><a href="#schema-44"><span class="toc-num">17</span> Settlement Capacity (idea 44)</a></li>
+    <li><a href="#schema-4"><span class="toc-num">18</span> Unified Modification (idea 4)</a></li>
+    <li><a href="#schema-13"><span class="toc-num">19</span> Trade &amp; Team-Up (idea 13)</a></li>
+    <li><a href="#schema-14"><span class="toc-num">20</span> Species Classification (14)</a></li>
+    <li><a href="#schema-10"><span class="toc-num">21</span> Heir Assignment (10)</a></li>
+    <li><a href="#schema-22"><span class="toc-num">22</span> Relationship Roles (22)</a></li>
+    <li><a href="#schema-30"><span class="toc-num">23</span> Possessions With History (30)</a></li>
+    <li><a href="#schema-34"><span class="toc-num">24</span> Coming of Age (34)</a></li>
+    <li><a href="#schema-39"><span class="toc-num">25</span> Affiliation Change (39)</a></li>
+    <li><a href="#schema-48"><span class="toc-num">26</span> Place-Type Transitions (48)</a></li>
+    <li><a href="#schema-49"><span class="toc-num">27</span> Place-Tied Crafting (49)</a></li>
+    <li><a href="#schema-50"><span class="toc-num">28</span> Material-Gated Evolution (50)</a></li>
+    <li><a href="#schema-51"><span class="toc-num">29</span> Country EXPAND (51)</a></li>
+    <li><a href="#schema-52"><span class="toc-num">30</span> Population-Driven Expansion (52)</a></li>
+    <li><a href="#schema-53"><span class="toc-num">31</span> Inherited Reputation (53)</a></li>
+    <li><a href="#schema-54"><span class="toc-num">32</span> Guilt by Association (54)</a></li>
+    <li><a href="#schema-55"><span class="toc-num">33</span> Inherited Feuds (55)</a></li>
+    <li><a href="#schema-57"><span class="toc-num">34</span> Living Legend Loop (57)</a></li>
+    <li><a href="#schema-58"><span class="toc-num">35</span> Dying Wish (58)</a></li>
+    <li><a href="#schema-60"><span class="toc-num">36</span> Reputations Are Local (60)</a></li>
+    <li><a href="#schema-62"><span class="toc-num">37</span> Generations Misremember (62)</a></li>
+    <li><a href="#schema-63"><span class="toc-num">38</span> Belief &amp; Religion (63)</a></li>
+    <li><a href="#schema-64"><span class="toc-num">39</span> The Empty Chair (64)</a></li>
+    <li><a href="#schema-65"><span class="toc-num">40</span> Named Refugee Threads (65)</a></li>
+    <li class="toc-sub"><a href="#data-configured-logic"><span class="toc-num">41</span> Data-Configured Logic</a></li>
+    <li><a href="#hardcoded-logic"><span class="toc-num">42</span> Hardcoded Logic &rarr; Schema</a></li>
+    <li class="toc-sub"><a href="#expected-events"><span class="toc-num">43</span> Expected Events</a></li>
+    <li><a href="#not-yet-scoped"><span class="toc-num">44</span> Coverage Note</a></li>
+  </ol>
+</nav>
+
+<section id="existing-schemas-intro">
+  <h2 class="section-title">Existing (Live) Schemas</h2>
+  <p class="section-lede">This document's first pass only covered proposed state. Per direct request, it's now the tracking page for all RPG feature schemas &mdash; the real, already-live classes too, even the ones with no proposed change at all, so nothing has to be re-derived from the atlas's prose to know a class's actual current shape. Grounded in this session's own direct code reads, not re-verified fresh for this pass &mdash; treat as accurate as of this session, not a live sync with the codebase.</p>
+</section>
+
+<section id="existing-entity"><h2 class="section-title">Entity &mdash; Core State</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">Attributes: STR, AGI, VIT, END, INT, SPI, WIS, PER, CHA</code></td><td><code class="inline">int &times; 9, default 5</code></td><td>9 core attributes, real and live</td><td>None &mdash; stable as-is. <em>Corrected: verified as <code class="inline">int</code>, not <code class="inline">float</code>, in <code class="inline">AttributeComponent</code>.</em></td></tr>
+      <tr><td><code class="inline">Hunger, sleep_debt, Stamina</code></td><td><code class="inline">float</code></td><td>Biological pressures with defined penalty thresholds</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">identity.class_id</code></td><td><code class="inline">str, default "NOVICE"</code></td><td>4 real values in practice (Novice/Warrior/Mage/Rogue), drives auto-equip scoring and combat doctrine &mdash; <em>corrected: this is a plain string field, not an enforced enum</em></td><td>None planned; idea 16 investigates a Ranger-doctrine inconsistency without proposing a 5th class</td></tr>
+      <tr><td><code class="inline">identity.role</code></td><td><code class="inline">EntityRole: HERO | SHOPKEEPER | MONSTER | CITIZEN | WORKER | GUARD</code></td><td>Read by &ge;6 independent systems for behavior bias</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">identity.faction</code></td><td><code class="inline">int</code> (IntEnum-backed <code class="inline">Faction</code>)</td><td>Political allegiance, currently frozen at spawn for the entity's whole life &mdash; <em>corrected: verified as <code class="inline">int</code>, not <code class="inline">str</code></em></td><td>Idea 39 proposes a real change path</td></tr>
+      <tr><td><code class="inline">identity.life_stage</code></td><td><code class="inline">LifeStage(str, Enum): CHILD | ADULT | ELDER</code></td><td><strong>Correction: this already exists, it is not new.</strong> Default <code class="inline">ADULT</code>. Has a real, live consumer &mdash; <code class="inline">LifeStageService.get_goal_multipliers()</code>. But nothing anywhere ever constructs an entity with <code class="inline">CHILD</code> or <code class="inline">ELDER</code> &mdash; confirmed by grep, zero assignment sites outside the multiplier table itself. Wired, but never triggered.</td><td>Idea 20 was originally scoped as "propose a new LifeStage enum" &mdash; the real scope is "build the trigger that actually assigns CHILD/ELDER," not the enum itself. See the corrected schema-20 below.</td></tr>
+      <tr><td><code class="inline">age_ticks, max_age_ticks</code></td><td><code class="inline">int</code></td><td>Unconditional aging clock; default max 10,000</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">generation, is_permadeath</code></td><td><code class="inline">int, bool</code></td><td>Hero rebirth/permadeath tracking, up to 4 generations</td><td>None planned to the schema; a real bug exists in the deactivation logic that consumes <code class="inline">is_permadeath</code>, see Depth Beneath &ldquo;Done&rdquo; in the atlas</td></tr>
+      <tr><td><code class="inline">heir_entity_id</code></td><td><code class="inline">Optional[int]</code></td><td>Real field, full apply-path support, never written by any code today &mdash; <em>corrected: verified as <code class="inline">Optional[int]</code>, not <code class="inline">Optional[str]</code></em></td><td>Idea 10 proposes the write logic</td></tr>
+      <tr><td><code class="inline">CombatComponent: hp, max_hp, atk, def_stat, range, alive, readiness, speed, evasion, move_cost, tactical_role, wounds, scars, action_style</code></td><td><code class="inline">mixed</code></td><td>The real combat stat block, constructed at spawn via <code class="inline">V2EntityBuilder.combat()</code> &mdash; <em>corrected: the range field is named <code class="inline">range</code>, not <code class="inline">attack_range</code>; the original row also omitted <code class="inline">speed</code>/<code class="inline">evasion</code>/<code class="inline">move_cost</code>/<code class="inline">tactical_role</code>/<code class="inline">wounds</code>/<code class="inline">scars</code></em></td><td>None to the fields themselves; idea 2 proposes changing how <code class="inline">readiness_speed</code> is derived (see Hardcoded Logic section)</td></tr>
+      <tr><td><code class="inline">PersonalityComponent: greed, bravery, sociability, industry</code></td><td><code class="inline">float, 0.0&ndash;1.0</code></td><td>Seeded deterministically at construction; bravery has real data-driven faction-alignment bias</td><td>None &mdash; already data-driven, just never retuned</td></tr>
+      <tr><td><code class="inline">AptitudeComponent</code></td><td><code class="inline">class, currently zero-arg</code></td><td>Real class, but every entity gets identical default aptitude &mdash; no populated values exist anywhere</td><td>Idea 32 (Reproduction) wires this as a byproduct</td></tr>
+      <tr><td><code class="inline">EmotionalModel: fear, confidence, frustration, curiosity, satisfaction, panic, boredom</code></td><td><code class="inline">float &times; 7</code></td><td>A genuine, well-designed typed model with a real event-driven update service</td><td>Idea 1's orphan-wiring cluster proposes giving the write path a live caller</td></tr>
+      <tr><td><code class="inline">Perception budget: max_perceived</code></td><td><code class="inline">int, flat 10</code></td><td>Budget-limited signal filtering, zero-salience signals dropped</td><td>Unscoped &mdash; see Hardcoded Logic section</td></tr>
+      <tr><td><code class="inline">Cognition Capacity: max_projects, max_leads, max_concerns, detour breadth/depth</code></td><td><code class="inline">derived from INT/WIS/PER + personality</code></td><td>Real derivation service, fatigue-coupled (sleep debt/hunger cut limits 20&ndash;50%)</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">Goal Hierarchy: Directive &rarr; Project &rarr; Objective &rarr; Action</code></td><td><code class="inline">hierarchy</code></td><td>Real, live decision structure</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">Leads: subject, location, certainty (decaying)</code></td><td><code class="inline">class</code></td><td>Real knowledge-and-obstacle system alongside 6 Blocker kinds</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">Committed Intentions</code></td><td><code class="inline">queue, capped at 3</code></td><td>Multi-step planning, read side only</td><td>Unscoped &mdash; no idea proposes the write path</td></tr>
+      <tr><td><code class="inline">Motivation &amp; Doctrine: 3 class doctrines</code></td><td><code class="inline">warrior | ranger | mage, each with preferred/avoided route tags + cooperation bias</code></td><td>Real, confirmed live via always-on route scoring</td><td>Ideas 6, 24 extend usage; the doctrine set itself has no proposed expansion</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-social"><h2 class="section-title">Entity &mdash; Social &amp; Relationships</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">SocialBond: target_id, familiarity, sentiment, last_interaction_tick</code></td><td><code class="inline">str, float, float, int</code></td><td>4 fields today (corrected &mdash; <code class="inline">target_id</code> is the directed-relationship key, was undercounted as 3), the whole per-target-entity directed relationship record</td><td>Idea 22 proposes adding a 5th, <code class="inline">role</code></td></tr>
+      <tr><td><code class="inline">public_reputation, heroism_score, notoriety_score</code></td><td><code class="inline">float</code></td><td>Aggregate per-entity reputation, authoritatively managed by <code class="inline">RelationshipService.process_update()</code></td><td>Ideas 53, 54, 60 all propose extensions &mdash; all three touch the same field, coordinate before building any one</td></tr>
+      <tr><td><code class="inline">Per-pair trust/familiarity/debt/fear/grudge/salience histories</code></td><td><code class="inline">dicts on SocialComponent</code></td><td>Richer relationship data, structurally separate from SocialBond itself</td><td>Idea 22 flags this split as an open question</td></tr>
+      <tr><td><code class="inline">nemesis_ids</code></td><td><code class="inline">bucket, promoted at grudge &ge; 3.0</code></td><td>Real derived-role precedent idea 22 cites directly</td><td>Idea 55 proposes making nemesis relationships transferable on death</td></tr>
+      <tr><td><code class="inline">Trauma &mdash; Wound: penalty</code></td><td><code class="inline">flat 5.0 to atk_penalty and def_penalty only</code></td><td><strong>Corrected, verified directly:</strong> live combat (<code class="inline">combat.py</code>&rsquo;s <code class="inline">_get_wound_infliction()</code>) applies a flat 5.0 to attack and defense, nothing else. The severity-scaled formula (up to ~3 ATK/2 DEF/2 SPD/10 max-HP) is real code but dead &mdash; <code class="inline">rpg_depth.py</code>&rsquo;s <code class="inline">create_wound()</code> has zero production callers.</td><td>Idea 4 proposes unifying storage shape with Status Effects; idea 17 proposes deciding whether to wire the dead formula in or delete it</td></tr>
+      <tr><td><code class="inline">Trauma &mdash; Scar: residual atk/def/speed_penalty</code></td><td><code class="inline">&times; 0.3 of the healed wound, all three fields</code></td><td><strong>Corrected, verified directly &mdash; this mechanic is orphaned, not live.</strong> <code class="inline">heal_wound()</code> (the only function that creates a Scar) has zero production callers anywhere in <code class="inline">src/</code>, only unit tests call it. In real play, a Wound is inflicted and never heals, so no Scar is ever created. The Mechanics Bible (<code class="inline">02_combat_laws.md</code>) does document a real 30%-chance formula for this &mdash; the doc is accurate, the live code just never reaches the path that would apply it.</td><td>Idea 17 proposes deciding whether to wire <code class="inline">heal_wound()</code> in or redesign the healing trigger from scratch</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-group"><h2 class="section-title">Group &amp; Guild</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">GroupService.calculate_cohesion()</code></td><td><code class="inline">scoring function</code></td><td>Fraction of members within the group's cohesion radius of its anchor &mdash; shared with Tactical Decision's regrouping check</td><td>None &mdash; stable as-is; ideas 36/40 (Clan) reuse this precedent directly rather than modifying it</td></tr>
+      <tr><td><code class="inline">Guild module</code></td><td><code class="inline">town/guild.py, social_systems/guilds.py, ~90 lines</code></td><td>Single-location action + intel-service; no membership/cross-location asset concept</td><td>None &mdash; Clan (ideas 36/40) is proposed as a separate layer rather than an extension of Guild</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-faction"><h2 class="section-title">Faction</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">FactionState.tension_level</code></td><td><code class="inline">float</code></td><td>Real, already-tuned constant range</td><td>Idea 36 (Clan) reuses this exact field's shape directly &mdash; the lowest-risk numeric decision in the whole roadmap because of it</td></tr>
+      <tr><td><code class="inline">Diplomatic state machine</code></td><td><code class="inline">class</code></td><td>Real, live, the one piece that lives in <code class="inline">domains/faction/</code> itself</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">FactionDecisionPhase directives: COMMISSION_QUEST, DEFEND_BORDER, TRADE_ROUTE</code></td><td><code class="inline">enum, evaluated every tick</code></td><td>A real, if simple, ambition system already running</td><td>Idea 51 proposes a 4th value, EXPAND_TERRITORY</td></tr>
+      <tr><td><code class="inline">IdentityUpdate.faction_set</code></td><td><code class="inline">Optional[str]</code></td><td>Real, fully-typed, full apply-path support &mdash; nobody constructs one today</td><td>Idea 39 proposes the trigger conditions to actually use it</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-region"><h2 class="section-title">Region (Pre-Idea-66 Baseline)</h2><p class="section-lede">The current shape, before idea 66's proposed Place hierarchy (schema above). Kept here so the delta between "today" and "proposed" is explicit rather than only visible by cross-referencing.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">RegionSpec: id, type, bounds, terrain, hazard_level, hazard_kind, tags, terrain_variants</code></td><td><code class="inline">Pydantic BaseModel, frozen</code></td><td>The authoring-time spec &mdash; <code class="inline">bounds</code> is a single rectangular box per region</td><td>Idea 66 proposes Region keeps bounds but becomes a territory container; individual Places get their own smaller bounds/point</td></tr>
+      <tr><td><code class="inline">RegionState.kind</code></td><td><code class="inline">str, e.g. "TOWN"</code></td><td>Compiled-time value; <code class="inline">compiler.py</code> special-cases <code class="inline">kind=="TOWN"</code> to mark town_tiles/town_entities</td><td>Idea 66 moves this concept onto <code class="inline">PlaceState.kind</code> instead of the whole Region</td></tr>
+      <tr><td><code class="inline">RegionState.owner_faction_id</code></td><td><code class="inline">Optional[int]</code></td><td>The dynamically-updating sovereignty field &mdash; <em>corrected: verified as <code class="inline">Optional[int]</code>, not <code class="inline">Optional[str]</code></em>. Conquest always assigns the literal <code class="inline">Faction.MONSTER_HORDE</code> enum value regardless of which invader faction actually drove it (protector/invader semantics, not a literal "Hero Guild" faction)</td><td>Idea 35 proposes generalizing conquest attribution to name the real invader faction; idea 66 proposes Places can override the Region-level value</td></tr>
+      <tr><td><code class="inline">RegionState.influence</code></td><td><code class="inline">float, clamped [-100.0, 100.0]</code></td><td><strong>Corrected: previously omitted, a real separate field.</strong> Shifted by <code class="inline">DEATH_INFLUENCE_SHIFT = 5.0</code> per relevant death; conquest fires at <code class="inline">CONQUEST_THRESHOLD = -50.0</code>, liberation at <code class="inline">LIBERATION_THRESHOLD = 50.0</code> (<code class="inline">src/world/influence.py</code>). &plusmn;100 is only this field's clamp bound, not a trigger. Stronghold destruction does NOT trigger liberation &mdash; that direction is an unimplemented code comment.</td><td>Idea 35 (see above)</td></tr>
+      <tr><td><code class="inline">RegionState.trauma_score</code></td><td><code class="inline">float, default 0.0</code></td><td>Runtime-accrued, correctly unseeded by design</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">RegionState.population_cohorts</code></td><td><code class="inline">Dict[str, CohortState], defaults empty</code></td><td>Real field, never populated by any compiler or generator path in any world today</td><td>Idea 43 proposes the seeding fix</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-beyond-city"><h2 class="section-title">Camp (Pre-Idea-66 Baseline)</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">CampState: position, kind (string), maturity, faction, active, last_raid_tick</code></td><td><code class="inline">class, deliberately thinner than City</code></td><td>Real, purpose-built, not a reused Region &mdash; monster spawning already scales to its maturity, hardcoded species per kind. <em>Corrected: real field is <code class="inline">position: tuple[float,float]</code>, not <code class="inline">point</code>; the original row also omitted the real <code class="inline">active: bool</code> and <code class="inline">last_raid_tick: int</code> fields</em></td><td>Idea 66 proposes this becomes <code class="inline">PlaceState</code> with <code class="inline">kind==CAMP</code>; idea 45 proposes real texture beyond the maturity float</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-world"><h2 class="section-title">World</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">Campaign carry-forward: XP, level, equipment, reputation, lifecycle state</code></td><td><code class="inline">cross-episode</code></td><td>Real, 3,200 lines/17 files &mdash; the single largest domain in the codebase</td><td>Idea 7 depends on its trigger points; no change to the carry-forward mechanism itself</td></tr>
+      <tr><td><code class="inline">Chronicle: event ledger &rarr; scored/grouped significant events &rarr; markdown/JSON</code></td><td><code class="inline">pipeline</code></td><td>Real, live automated history generator; confirmed strictly one-way, nothing reads it back</td><td>Ideas 57, 62 both propose consuming Chronicle output for the first time</td></tr>
+      <tr><td><code class="inline">CultureDeriver / CulturalBiasApplicator</code></td><td><code class="inline">class</code></td><td>Real, 389 lines/5 files, matches Mechanics Bible ch.5 &sect;7 &mdash; but has zero live callers anywhere</td><td>Ideas 56, 61 depend on this substrate getting a live caller; no schema change proposed, a wiring gap</td></tr>
+      <tr><td><code class="inline">Calamities: Maturity/Trauma-triggered boss spawns, faction raids, threat evolution</code></td><td><code class="inline">trigger logic</code></td><td>Real and live</td><td>None &mdash; stable as-is; idea 47 (Lair) extends the boss-anchor precedent, not this trigger</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-worldobject"><h2 class="section-title">World Objects</h2>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">GroundItemState, ItemStack: item_id, quantity</code></td><td><code class="inline">stackable type references</code></td><td>No per-instance identity anywhere &mdash; "an iron sword" not "this specific sword"</td><td>Idea 30 proposes a new ItemInstance layer for significant items only</td></tr>
+      <tr><td><code class="inline">Atomic Conservation Law</code></td><td><code class="inline">13 distinct failure codes</code></td><td>Governs every transfer, real and parity-verified</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">ResourceTransferIntent.source_kind</code></td><td><code class="inline">enum: NODE, GROUND_ITEM, CORPSE, CRAFTING, SHOP_BUY, SHOP_SELL, COMBAT, QUEST, HOME_STORAGE</code></td><td>9 real values &mdash; <em>corrected: the original row undercounted this as 6, omitting COMBAT/QUEST/HOME_STORAGE</em>. No entity-to-entity kind exists in any of the 9 &mdash; direct trading between two entities is impossible even in principle today, that core claim still holds</td><td>Idea 13 proposes adding ENTITY as a 10th value</td></tr>
+      <tr><td><code class="inline">RecipeRegistry</code></td><td><code class="inline">hardcoded dict, exactly 3 recipes</code></td><td>iron_sword, iron_shield, health_potion &mdash; the crafting gate itself is real and live, the content is thin</td><td>Idea 49 wires place-tied materials into recipe requirements; the base catalog's own expansion is unscoped &mdash; see Hardcoded Logic</td></tr>
+      <tr><td><code class="inline">ItemDefinition</code></td><td><code class="inline">class</code></td><td>No rarity, item class, or tier field anywhere</td><td>Unscoped &mdash; no idea currently proposes adding these</td></tr>
+      <tr><td><code class="inline">Buildings registry: 9 building files</code></td><td><code class="inline">class</code></td><td>Real town-service registry (inn, blacksmith, class-hall, home storage, church)</td><td>None &mdash; stable as-is</td></tr>
+      <tr><td><code class="inline">CHURCH.services</code></td><td><code class="inline">List[str], literally ["BLESSING", "RESURRECTION"]</code></td><td>Two string tokens, zero dispatch code anywhere reads either one</td><td>Unscoped &mdash; see Hardcoded Logic section for the proposed typed-record fix</td></tr>
+    </table>
+  </div></section>
+
+<section id="existing-clan-race"><h2 class="section-title">Clan &amp; Race (No Existing Schema)</h2><p class="section-lede">Included for completeness of this tracking page, not because there's anything to document &mdash; both are confirmed structurally absent above the entity level, not merely thin.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Proposed change</th></tr>
+      <tr><td><code class="inline">Clan</code></td><td><code class="inline">&mdash;</code></td><td>No membership-spanning, multi-location organization schema exists anywhere in the codebase today. 2 of 16 real factions are literally named orc_clan/dwarven_mine_clan in content, with no mechanism behind the name</td><td>Ideas 36, 40 (schema above) propose the first real ClanState</td></tr>
+      <tr><td><code class="inline">Race as a collective force</code></td><td><code class="inline">&mdash;</code></td><td>No race-population aggregate, collective racial state, or inter-race relationship schema exists &mdash; Race is purely a per-entity field (race_id) plus static content (RaceDefinition.attribute_tendencies, compatible_roles)</td><td>Idea 37 (schema above) proposes a pairwise race_relations matrix &mdash; still not a collective-population layer, no idea proposes that</td></tr>
+    </table>
+  </div></section>
+<section id="schema-66">
+  <h2 class="section-title">Region &amp; Place</h2>
+  <p class="section-lede">Idea 66. Replaces today's flat model &mdash; where a City <em>is</em> a Region, not a place inside one &mdash; with Region as a territory container holding zero or more Places. This is the schema that triggered this whole document, so it's worked out in the most detail.</p>
+  <h3 class="layer-title">RegionState <span class="layer-scope">revised</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">id</code></td><td><code class="inline">str</code></td><td>Unique region identifier</td><td><span class="badge done">Reused</span></td></tr>
+      <tr><td><code class="inline">bounds</code></td><td><code class="inline">tuple[int,int,int,int]</code></td><td>Territory bounding box &mdash; now covers a contiguous area that may hold several Places, not one settlement's footprint</td><td><span class="badge partial">Extended</span></td></tr>
+      <tr><td><code class="inline">owner_faction_id</code></td><td><code class="inline">Optional[str]</code></td><td>Sovereignty at the territory level; individual Places may override (see PlaceState)</td><td><span class="badge done">Reused, semantics clarified</span></td></tr>
+      <tr><td><code class="inline">trauma_score</code></td><td><code class="inline">float</code></td><td>Existing, unseeded/runtime-accrued</td><td><span class="badge done">Reused</span></td></tr>
+      <tr><td><code class="inline">hazard_level, hazard_kind</code></td><td><code class="inline">float, str</code></td><td>Base hazard for the territory; a Place (e.g. RUIN) may carry its own local override</td><td><span class="badge done">Reused</span></td></tr>
+      <tr><td><code class="inline">population_cohorts</code></td><td><code class="inline">Dict[str, CohortState]</code></td><td>Existing field, target of idea 43</td><td><span class="badge done">Reused</span></td></tr>
+      <tr><td><code class="inline">places</code></td><td><code class="inline">List[str]</code></td><td>Ordered list of <code class="inline">place_id</code> references contained in this region</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">tags</code></td><td><code class="inline">List[str]</code></td><td>Semantic labels describing the territory as a whole (biome/ecology), not a single settlement</td><td><span class="badge partial">Extended</span></td></tr>
+    </table>
+  </div>
+  <h3 class="layer-title">PlaceState <span class="layer-scope">new</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">place_id</code></td><td><code class="inline">str</code></td><td>Unique identifier</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">region_id</code></td><td><code class="inline">str</code></td><td>Parent Region reference</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">kind</code></td><td><code class="inline">PlaceKind</code></td><td>CITY | CAMP | NEST | LAIR | RUIN | DUNGEON | LANDMARK</td><td><span class="badge gated">New enum</span></td></tr>
+      <tr><td><code class="inline">position</code></td><td><code class="inline">tuple[int,int]</code></td><td>Point location within the region's bounds</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">footprint</code></td><td><code class="inline">Optional[tuple[int,int,int,int]]</code></td><td>Sub-bounds within the region, used by multi-tile CITY-kind places; point-only kinds (Lair, Nest) can omit this</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">owner_faction_id</code></td><td><code class="inline">Optional[str]</code></td><td>Overrides the parent Region's sovereignty when set &mdash; e.g. a contested Lair inside otherwise-friendly territory</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">scale</code></td><td><code class="inline">Optional[float]</code></td><td>CITY-kind only: settlement size (population/building-footprint proxy). Replaces the idea of a separate &ldquo;Town&rdquo; kind &mdash; size is a scalar, not a taxonomy split</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">maturity</code></td><td><code class="inline">Optional[float]</code></td><td>CAMP/NEST-kind: growth-over-time value</td><td><span class="badge done">Reused from CampState.maturity</span></td></tr>
+      <tr><td><code class="inline">occupant_entity_id</code></td><td><code class="inline">Optional[str]</code></td><td>LAIR-kind: anchors to a specific boss/creature</td><td><span class="badge done">Reused from today's real boss_region_id pattern</span></td></tr>
+      <tr><td><code class="inline">hazard_level</code></td><td><code class="inline">Optional[float]</code></td><td>RUIN/DUNGEON-kind: local hazard override &mdash; already real in content (haunted_battlefield: 3.5) but currently stored as a Region-level tag</td><td><span class="badge partial">Moves from Region tag to Place field</span></td></tr>
+      <tr><td><code class="inline">building_ids, entity_ids</code></td><td><code class="inline">List[str]</code></td><td>CITY-kind: today's town_tiles/town_entities equivalent, scoped to this Place, not the whole Region</td><td><span class="badge partial">Extended, re-scoped</span></td></tr>
+    </table>
+  </div>
+  <p class="loop-note"><strong>Open question:</strong> does membership work as <code class="inline">Region.places: List[str]</code> only, or does each entity/building also need a direct <code class="inline">place_id</code> field for fast lookup without a Region-side scan? The Durable State Rule (CLAUDE.md) argues for a registry index either way &mdash; worth deciding before idea 66 gets ticketed, not during implementation.</p>
+</section>
+
+<section id="schema-36">
+  <h2 class="section-title">Clan</h2>
+  <p class="section-lede">Ideas 36 (wire Clan as Faction's shape) and 40 (Clan lifecycle, reusing Group's defection/leadership-election precedent) &mdash; one schema, since both ideas target the same underlying class.</p>
+  <h3 class="layer-title">ClanState <span class="layer-scope">new</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">clan_id</code></td><td><code class="inline">str</code></td><td>Unique identifier</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">name</code></td><td><code class="inline">str</code></td><td>Display name</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">member_entity_ids</code></td><td><code class="inline">List[str]</code></td><td>The actual membership list &mdash; confirmed absent from both Guild and Faction today</td><td><span class="badge gated">New, the core gap this fixes</span></td></tr>
+      <tr><td><code class="inline">home_region_ids</code></td><td><code class="inline">List[str]</code></td><td>Cross-location holdings &mdash; the exact thing checked and found genuinely absent everywhere (Guild is single-location only)</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">tension_level</code></td><td><code class="inline">float</code></td><td>Idea 36's own citation: the lowest-risk numeric decision in the set, because it copies an already-tuned constant directly</td><td><span class="badge done">Reused from FactionState.tension_level</span></td></tr>
+      <tr><td><code class="inline">leader_entity_id</code></td><td><code class="inline">Optional[str]</code></td><td>Reuses Group's real leadership-election precedent</td><td><span class="badge done">Reused pattern from Group layer</span></td></tr>
+      <tr><td><code class="inline">founded_tick</code></td><td><code class="inline">int</code></td><td>Lifecycle start</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">dissolved_tick</code></td><td><code class="inline">Optional[int]</code></td><td>Lifecycle end &mdash; idea 40's own real correction: party_lifecycle.py's SOC-228 does NOT fire on death as originally assumed, must be handled explicitly or cross-generational Clans silently break</td><td><span class="badge gated">New, correction already applied</span></td></tr>
+    </table>
+  </div>
+  <p class="loop-note"><strong>Open question:</strong> is clan membership tracked only from ClanState's side (<code class="inline">member_entity_ids</code>), or does <code class="inline">EntityState.identity</code> also need a <code class="inline">clan_id</code> field for O(1) lookup? Group/Party already faces this exact tradeoff &mdash; check how it resolved it before deciding here, per Architecture Rule ("shared world behavior should go through systems/registries, not scattered local hacks").</p>
+</section>
+
+<section id="schema-37">
+  <h2 class="section-title">Race Relations</h2>
+  <p class="section-lede">Idea 37 &mdash; wires race into the hostility scoring that already reads it. Flagged elsewhere in this atlas as the single highest-risk unanchored number in the whole roadmap: up to 156 directed pairs (13 real races) with zero existing signal anywhere in the content catalog to anchor them.</p>
+  <h3 class="layer-title">RaceRelations <span class="layer-scope">new, static content</span></h3>
+  <p class="section-lede" style="margin-top:-8px;"><strong>Corrected shape, verified directly:</strong> the field table below originally proposed <code class="inline">Dict[Tuple[str,str], float]</code> — a raw numeric matrix. That doesn't match this repo's real convention for exactly this kind of pairwise relationship data. <code class="inline">data/content/social/faction_relationships.yaml</code> is the real, live sibling structure (75 real entries): a flat list of records, each with <code class="inline">id</code>/<code class="inline">source_faction</code>/<code class="inline">target_faction</code>/<code class="inline">relationship_model</code>/<code class="inline">axes: {qualitative labels}</code> (e.g. <code class="inline">hostility: "medium_contextual"</code>, not a raw float). See the Data-Configured Logic section below for the corrected target file and structure.</p>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">race_relations</code></td><td><code class="inline">List[RaceRelationRecord]</code></td><td>Corrected: a flat list, not a raw dict &mdash; each record has <code class="inline">source_race</code>/<code class="inline">target_race</code>/<code class="inline">relationship_model</code>/<code class="inline">axes</code> (qualitative labels), matching <code class="inline">faction_relationships.yaml</code>'s real shape. Up to 13&times;12 = 156 directed pairs for the real 13-race catalog</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">axes values</code></td><td><code class="inline">str (qualitative)</code></td><td>Corrected: qualitative labels (e.g. <code class="inline">"none"</code>/<code class="inline">"low"</code>/<code class="inline">"medium"</code>/<code class="inline">"high"</code>), not a raw float &mdash; matching the real sibling file's convention exactly, not a numeric range decision</td><td><span class="badge gap">Open question: exact label vocabulary</span></td></tr>
+      <tr><td><code class="inline">default_relation</code></td><td><code class="inline">str (qualitative)</code></td><td>What two races with no explicit entry default to (e.g. <code class="inline">"neutral"</code>) &mdash; needed since authoring all 156 pairs by hand for launch is unrealistic</td><td><span class="badge gap">Open question</span></td></tr>
+    </table>
+  </div>
+  <p class="loop-note">Storage location is itself undecided: a field on <code class="inline">RaceDefinition</code> can't hold pairwise data cleanly (it's inherently a relationship between two races, not an attribute of one) &mdash; more likely a standalone <code class="inline">RaceRelationsRegistry</code>, the same shape as the existing faction-relationship matrix already backing Diplomacy. Consumed by <code class="inline">engine/legality.py</code>'s existing hostility scoring, which already reads race but has no data source to read from yet.</p>
+</section>
+
+<section id="schema-32">
+  <h2 class="section-title">Reproduction</h2>
+  <p class="section-lede">Idea 32 &mdash; the atlas's own read: "the most numerically loaded idea in the set." Strictly sequenced after idea 43 (population_cohorts seeding), since individual births need to feed back into the aggregate signal that gates them.</p>
+  <h3 class="layer-title">BirthEvent <span class="layer-scope">new</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">parent_a_entity_id, parent_b_entity_id</code></td><td><code class="inline">str</code></td><td>The two parents</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">birth_cooldown_ticks</code></td><td><code class="inline">int</code></td><td>Per-parent cooldown &mdash; no existing precedent for the value, though the hard-requirement-check shape matches harvesting/contracts</td><td><span class="badge gap">New, free creative territory</span></td></tr>
+      <tr><td><code class="inline">population_pressure_gate</code></td><td><code class="inline">float</code></td><td>Whether the region can support a birth right now</td><td><span class="badge done">Reused: migration_threshold = 0.7, already coded in demographics/cohort.py</span></td></tr>
+      <tr><td><code class="inline">genetic_inheritance_weight</code></td><td><code class="inline">float</code></td><td>How much of each parent's attributes the child inherits</td><td><span class="badge partial">Reused but never-tuned: the real 0.8&ndash;1.3 multiplier range in the orphaned GeneticsSystem</span></td></tr>
+      <tr><td><code class="inline">child_entity_id</code></td><td><code class="inline">str</code></td><td>The newly constructed entity</td><td><span class="badge gated">New</span></td></tr>
+    </table>
+  </div>
+  <p class="loop-note"><strong>Real unresolved gap, not just an open question:</strong> until idea 43 ships, this event has nothing to gate against &mdash; <code class="inline">population_cohorts</code> is empty in every world today, so <code class="inline">population_pressure_gate</code> would always read a null signal. Idea 32 cannot be corpus-tested until both idea 43 and itself exist, confirmed by M8's own investigation.</p>
+</section>
+
+<section id="schema-33">
+  <h2 class="section-title">Marriage</h2>
+  <p class="section-lede">Idea 33 &mdash; the simulation's first real propose/accept relationship event. Same interaction shape as idea 13's Team-Up invite/accept (see schema 9) &mdash; worth building both on one shared pattern rather than two bespoke ones.</p>
+  <h3 class="layer-title">MarriageState <span class="layer-scope">new</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">proposer_entity_id, target_entity_id</code></td><td><code class="inline">str</code></td><td>The two entities</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">status</code></td><td><code class="inline">enum</code></td><td>PROPOSED | ACCEPTED | REJECTED</td><td><span class="badge gated">New enum</span></td></tr>
+      <tr><td><code class="inline">married_tick</code></td><td><code class="inline">Optional[int]</code></td><td>Set when status becomes ACCEPTED</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">eligibility_gate</code></td><td><code class="inline">float</code></td><td>Minimum SocialBond.sentiment/familiarity required before a proposal can even be attempted</td><td><span class="badge done">Reused as the gate; reads existing entity.social state</span></td></tr>
+    </table>
+  </div>
+  <p class="loop-note"><strong>Shared-implementation opportunity:</strong> the propose/accept/reject state machine here is structurally identical to idea 13's Team-Up Invite/Accept below &mdash; same three states, same affection-gate pattern. Worth a single shared <code class="inline">ProposalState</code> base shape rather than two independent implementations, even though the domains differ.</p>
+</section>
+
+<section id="schema-14"><h2 class="section-title">Species Classification</h2><p class="section-lede">Idea 14 &mdash; a shared sibling to <a href="#schema-44">Settlement Capacity (idea 44)</a> below on the same RaceDefinition class. Cross-Cutting Risk already confirmed this does NOT duplicate the shipped cognition-profile-adventure-eligibility work.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">RaceDefinition.intelligence_tier</code></td><td><code class="inline">enum: high | low</code></td><td>Gates coming-of-age eligibility and Progression Planner access</td><td><span class="badge gated">New field</span></td></tr>
+      <tr><td><code class="inline">anchor field</code></td><td><code class="inline">natural_traits containing tool_user</code></td><td>The obvious anchor (attribute_tendencies.intelligence) is a false friend &mdash; goblin/orc read medium_low but are clearly high-tier by design intent; natural_traits is the correct real anchor, already in the 13-race catalog</td><td><span class="badge partial">Real anchor found, correction already applied</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-20">
+  <h2 class="section-title">Life Stages</h2>
+  <p class="section-lede"><strong>Major correction, verified directly against the running code:</strong> idea 20 was originally scoped here as "propose a new LifeStage enum." That's wrong &mdash; <code class="inline">LifeStage(str, Enum)</code> with values <code class="inline">CHILD</code>/<code class="inline">ADULT</code>/<code class="inline">ELDER</code> already exists on <code class="inline">IdentityComponent.life_stage</code> (default <code class="inline">ADULT</code>), and it already has a real, live consumer: <code class="inline">LifeStageService.get_goal_multipliers()</code>. The real gap is narrower and different in kind: nothing anywhere ever constructs an entity with <code class="inline">CHILD</code> or <code class="inline">ELDER</code> &mdash; confirmed by grep, zero assignment sites outside the multiplier table itself that reads it. This is the same orphaned-write-path pattern found repeatedly elsewhere in this investigation (Genetics, Emotion, Memory), just not previously caught for Life Stages.</p>
+  <h3 class="layer-title">LifeStage <span class="layer-scope">existing, wired but never triggered &mdash; not new</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">LifeStage</code></td><td><code class="inline">enum(str)</code></td><td>CHILD | ADULT | ELDER &mdash; 3 values, not 4; there is no separate ADOLESCENT value</td><td><span class="badge done">Existing, live</span></td></tr>
+      <tr><td><code class="inline">identity.life_stage</code></td><td><code class="inline">LifeStage, default ADULT</code></td><td>Existing field on IdentityComponent, has a real consumer</td><td><span class="badge done">Existing, live</span></td></tr>
+      <tr><td><code class="inline">LifeStageService.get_goal_multipliers()</code></td><td><code class="inline">consumer service</code></td><td>Reads <code class="inline">identity.life_stage</code> and biases goal scoring &mdash; real and live, just never receives anything other than ADULT</td><td><span class="badge done">Existing, live</span></td></tr>
+      <tr><td>Trigger to assign CHILD/ELDER</td><td><code class="inline">stage_transition_ticks: Dict[LifeStage, int]</code></td><td>The actual missing piece: an age-gated (or reproduction-gated, for CHILD) transition that writes <code class="inline">identity.life_stage</code>. The ADULT&rarr;ELDER boundary should reuse today's real elder-attribute-shift threshold rather than inventing a new one</td><td><span class="badge gated">New &mdash; this, not the enum, is idea 20's real scope</span></td></tr>
+      <tr><td><code class="inline">rite_of_passage_event</code></td><td><code class="inline">Optional[...]</code></td><td>Fires at the CHILD&rarr;ADULT transition, the trigger point idea 34 (deferred archetype choice) hooks into</td><td><span class="badge gap">New, open question</span></td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="schema-44">
+  <h2 class="section-title">Settlement Capacity</h2>
+  <p class="section-lede">Idea 44 &mdash; formalizes settlement capacity as its own axis, separate from Species Classification's intelligence_tier (idea 14). M8's investigation confirmed this doesn't exist anywhere in src/ or docs/ except the atlas's own prose.</p>
+  <h3 class="layer-title">settlement_capacity <span class="layer-scope">new field</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">settlement_capacity</code></td><td><code class="inline">float | enum</code></td><td>Not yet decided which &mdash; a scalar (0.0&ndash;1.0 capability) or a tier enum (NONE/CAMP_ONLY/FULL_SETTLEMENT)</td><td><span class="badge gap">New, open question</span></td></tr>
+      <tr><td><code class="inline">location</code></td><td><code class="inline">RaceDefinition field</code></td><td>Grounded in real content already: every race carries a natural_traits list &mdash; tool_user + social_humanoid (human/elf/dwarf/goblin) vs. tool_user only (orc) vs. neither (wolf/spider/slime) is already a real, independent axis in the 13-race catalog, just never named as one</td><td><span class="badge partial">New field, but the underlying data signal already exists</span></td></tr>
+    </table>
+  </div>
+  <p class="loop-note">Directly consumed by idea 66's <code class="inline">Place.kind==CITY</code> eligibility &mdash; which races/entities can found or grow a CITY-kind Place versus only ever supporting a CAMP-kind one.</p>
+</section>
+
+<section id="schema-4">
+  <h2 class="section-title">Unified Modification</h2>
+  <p class="section-lede">Idea 4 &mdash; replaces the current fragmented shape (Trauma's real Wound/Scar system plus Status Effects' one live "Frozen" status, stored as a free-form untyped dict key, a direct Durable State Rule violation) with one typed record.</p>
+  <h3 class="layer-title">ModificationRecord <span class="layer-scope">new, replaces untyped storage</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">modification_id</code></td><td><code class="inline">str</code></td><td>Unique identifier</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">entity_id</code></td><td><code class="inline">str</code></td><td>Target entity</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">kind</code></td><td><code class="inline">enum</code></td><td>WOUND | SCAR | STATUS_FROZEN | BUFF | DEBUFF &mdash; unifies Trauma's two real stages with Status Effects' one real live status</td><td><span class="badge gated">New enum, unifying two existing mechanisms</span></td></tr>
+      <tr><td><code class="inline">magnitude</code></td><td><code class="inline">float</code></td><td>Severity/strength</td><td><span class="badge done">Reused shape from Wound's existing severity-scaled penalty</span></td></tr>
+      <tr><td><code class="inline">applied_tick, expires_tick</code></td><td><code class="inline">int, Optional[int]</code></td><td>Lifecycle window</td><td><span class="badge gated">New (Frozen today has no typed expiry, just a dict key check)</span></td></tr>
+      <tr><td><code class="inline">source</code></td><td><code class="inline">enum</code></td><td>What caused it &mdash; combat / environmental / social</td><td><span class="badge gap">New</span></td></tr>
+    </table>
+  </div>
+  <p class="loop-note">Direct fix for a named Architecture Rule violation: <code class="inline">entity.identity.properties.get("status_frozen")</code> is exactly the "durable meaning in free-form metadata" pattern CLAUDE.md's Durable State Rule prohibits.</p>
+</section>
+
+<section id="schema-13">
+  <h2 class="section-title">Trade &amp; Team-Up</h2>
+  <p class="section-lede">Idea 13 &mdash; gates two missing interactions (confirmed impossible even in principle today) on affection the entity already has.</p>
+  <h3 class="layer-title">ResourceTransferIntent <span class="layer-scope">extend existing schema</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">source_kind</code></td><td><code class="inline">enum</code></td><td>Add ENTITY as a new value alongside the existing NODE/GROUND_ITEM/CORPSE/CRAFTING/SHOP_BUY/SHOP_SELL</td><td><span class="badge partial">Extended enum</span></td></tr>
+      <tr><td><code class="inline">source_entity_id</code></td><td><code class="inline">Optional[str]</code></td><td>Populated when source_kind==ENTITY</td><td><span class="badge gated">New field</span></td></tr>
+      <tr><td><code class="inline">affection_gate_threshold</code></td><td><code class="inline">float</code></td><td>Minimum SocialBond.sentiment required &mdash; idea 13's own framing: gate the interaction on affection already tracked, don't invent new trust state</td><td><span class="badge done">Reads existing entity.social state</span></td></tr>
+    </table>
+  </div>
+  <h3 class="layer-title">TeamUpInvite <span class="layer-scope">new</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">inviter_entity_id, invitee_entity_id</code></td><td><code class="inline">str</code></td><td>The two entities</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">status</code></td><td><code class="inline">enum</code></td><td>PENDING | ACCEPTED | DECLINED &mdash; same shape as MarriageState above</td><td><span class="badge gated">New enum</span></td></tr>
+      <tr><td><code class="inline">affection_gate_threshold</code></td><td><code class="inline">float</code></td><td>Same gating pattern as Trade above</td><td><span class="badge done">Reads existing entity.social state</span></td></tr>
+    </table>
+  </div>
+  <p class="loop-note">See the shared-implementation note under Marriage (schema 5) &mdash; this and MarriageState are structurally the same propose/accept pattern and worth a common base shape.</p>
+</section>
+
+<section id="schema-10"><h2 class="section-title">Heir Assignment</h2><p class="section-lede">Idea 10 &mdash; no new state class needed, this is a service-only fix on top of an existing unwritten field.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">heir_entity_id</code></td><td><code class="inline">Optional[str]</code></td><td>Already exists on the entity, full apply-path support, but never written anywhere in real code today</td><td><span class="badge partial">Reused, unwritten</span></td></tr>
+      <tr><td><code class="inline">HeirSelectionService</code></td><td><code class="inline">new service, no new fields</code></td><td>Runs on death, before LifecycleSystem.resolve_lifecycle() checks for an heir; picks strongest living SocialBond by default, CommitmentModel obligations as tie-breaker</td><td><span class="badge gated">New logic only</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-22"><h2 class="section-title">Relationship Roles</h2><p class="section-lede">Idea 22 &mdash; SocialBond has exactly three fields today; adding a derived role is a clean, small addition with a real precedent (the existing nemesis_ids bucket is already this shape).</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">SocialBond.role</code></td><td><code class="inline">Optional[enum]</code></td><td>Derived classification &mdash; rival/mentor/ally/etc, same pattern as the existing nemesis_ids promotion (grudge &ge; 3.0)</td><td><span class="badge gated">New field on an existing 3-field class</span></td></tr>
+      <tr><td><code class="inline">familiarity, sentiment, last_interaction_tick</code></td><td><code class="inline">float, float, int</code></td><td>The three existing fields, unchanged</td><td><span class="badge done">Reused</span></td></tr>
+    </table>
+  </div><p class="loop-note"><strong>Open question:</strong> the richer trust/fear/grudge/debt data actually lives in separate per-entity dicts on SocialComponent, not inside SocialBond itself &mdash; decide whether role classification reads across that split or whether the split gets unified first.</p></section>
+<section id="schema-30"><h2 class="section-title">Possessions With Personal History</h2><p class="section-lede">Idea 30 &mdash; confirmed the one idea of 65 with no real precedent anywhere in this codebase to build on. GroundItemState/ItemStack are stackable type references (item_id + quantity) with no per-instance identity today.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">ItemInstance</code></td><td><code class="inline">new class</code></td><td>Per-instance identity for significant items only, not every stackable item in the game</td><td><span class="badge gated">New, genuinely new infrastructure</span></td></tr>
+      <tr><td><code class="inline">instance_id</code></td><td><code class="inline">str</code></td><td>Unique per physical item</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">item_id</code></td><td><code class="inline">str</code></td><td>Base type reference into the existing item catalog</td><td><span class="badge done">Reused</span></td></tr>
+      <tr><td><code class="inline">owner_history</code></td><td><code class="inline">List[str]</code></td><td>Entity IDs who've owned it, in order</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">acquired_tick, acquired_method</code></td><td><code class="inline">int, enum</code></td><td>LOOT / CRAFTED / GIFT / INHERITED</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">significance_flag</code></td><td><code class="inline">bool</code></td><td>Most items never get an ItemInstance at all &mdash; only ones flagged significant at creation</td><td><span class="badge gap">New, open question on trigger criteria</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-34"><h2 class="section-title">Coming of Age</h2><p class="section-lede">Idea 34 &mdash; "the highest-value piece of this whole exchange." Today every entity gets its full archetype assigned once at construction with zero choice anywhere.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">entity.archetype_locked</code></td><td><code class="inline">bool</code></td><td>False until a coming-of-age event fires; while false, race is fixed but class/archetype is genuinely undecided</td><td><span class="badge gated">New field</span></td></tr>
+      <tr><td><code class="inline">coming_of_age_tick</code></td><td><code class="inline">Optional[int]</code></td><td>When the deferred choice resolved</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">trigger</code></td><td><code class="inline">Life Stage transition</code></td><td>CHILD&rarr;ADULT boundary, reusing the trigger proposed in <a href="#schema-20">Life Stages (idea 20)</a> above</td><td><span class="badge gap">Depends on idea 20 landing first</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-39"><h2 class="section-title">Affiliation Change Path</h2><p class="section-lede">Idea 39 &mdash; identity.faction never changes after spawn today. IdentityUpdate.faction_set is already a real, fully-typed field with full apply-path support; nobody constructs one.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">IdentityUpdate.faction_set</code></td><td><code class="inline">Optional[str]</code></td><td>Already exists, exactly like role_set was before Occupation's write-path was found</td><td><span class="badge partial">Reused, unwritten</span></td></tr>
+      <tr><td><code class="inline">affiliation_change_trigger</code></td><td><code class="inline">enum, TBD</code></td><td>NOT automatic on City conquest (idea 39's own explicit call) &mdash; exact trigger conditions still an open design question</td><td><span class="badge gap">Open question</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-48"><h2 class="section-title">Place-Type State Transitions</h2><p class="section-lede">Idea 48 &mdash; "needs no new state class, just a rule for when fields that are already mutable today change value." Directly extends idea 66's Place model.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">Place.kind</code></td><td><code class="inline">PlaceKind</code></td><td>Already mutable at compile time (schema 1); this idea proposes it becomes mutable at runtime too &mdash; e.g. a CITY destroyed in a siege flips to RUIN</td><td><span class="badge partial">Reused field, new runtime mutability</span></td></tr>
+      <tr><td><code class="inline">Place.active</code></td><td><code class="inline">bool</code></td><td>Already exists on CampState as a boolean; could gate whether a cleared Camp is available for later re-occupation</td><td><span class="badge done">Reused</span></td></tr>
+      <tr><td><code class="inline">TransformationTrigger</code></td><td><code class="inline">new rule table</code></td><td>The conditions that fire a kind change (siege destroys City, Camp cleared and left vacant)</td><td><span class="badge gated">New logic, reuses live TransformationService engine</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-49"><h2 class="section-title">Place-Tied Crafting Materials</h2><p class="section-lede">Idea 49 &mdash; wires exploration to crafting through real, already-authored place-tied materials sitting unused (moon_resin, frost_shard, beast_fang, wolf_pelt).</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">Place.material_tags</code></td><td><code class="inline">List[str]</code></td><td>Which rare materials a given Place can yield, keyed to its biome/creature content</td><td><span class="badge partial">Extends idea 66's Place model with existing content</span></td></tr>
+      <tr><td><code class="inline">recipe requirement</code></td><td><code class="inline">material_id reference</code></td><td>Recipes gain a place-tied-material requirement alongside the existing gold/inventory checks</td><td><span class="badge partial">Extends RecipeRegistry (see Hardcoded Logic below)</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-50"><h2 class="section-title">Material-Gated Evolution</h2><p class="section-lede">Idea 50 &mdash; a second, optional evolution branch alongside the existing XP-only path (EvolutionSystem.evaluate() at levels 10/25/50).</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">required_material_id</code></td><td><code class="inline">Optional[str]</code></td><td>On an evolution-chain definition: consuming/carrying this material at the XP-threshold moment unlocks an alternate outcome</td><td><span class="badge gated">New field</span></td></tr>
+      <tr><td><code class="inline">alt_outcome_kind</code></td><td><code class="inline">str</code></td><td>The alternate evolved <code class="inline">kind</code> value, reusing idea 49's material vocabulary</td><td><span class="badge gated">New</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-51"><h2 class="section-title">Country EXPAND Directive</h2><p class="section-lede">Idea 51 &mdash; FactionDecisionPhase.execute() already runs every tick with 3 real directives (COMMISSION_QUEST, DEFEND_BORDER, TRADE_ROUTE); this adds the missing fourth.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">FactionDirective</code></td><td><code class="inline">enum</code></td><td>Add EXPAND_TERRITORY alongside the 3 existing live values</td><td><span class="badge partial">Extended enum</span></td></tr>
+      <tr><td><code class="inline">expand_target_region_id</code></td><td><code class="inline">Optional[str]</code></td><td>The chosen target once EXPAND_TERRITORY fires</td><td><span class="badge gated">New field</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-52"><h2 class="section-title">Population-Driven Expansion</h2><p class="section-lede">Idea 52 &mdash; not a new mechanism, a wiring proposal chaining idea 43 into idea 51.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">(no new fields)</code></td><td><code class="inline">&mdash;</code></td><td>Idea 43's regional-scarcity/migration-threshold signal becomes the trigger condition for idea 51's EXPAND_TERRITORY directive; unclaimed wilderness under population pressure (once idea 45/46 exist) becomes a valid expansion target</td><td><span class="badge gap">Pure wiring across 3 existing/proposed schemas</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-53"><h2 class="section-title">Inherited Reputation</h2><p class="section-lede">Idea 53 &mdash; extends <a href="#schema-32">Reproduction (idea 32)</a>'s BirthEvent above. Determinism note: touches public_reputation, part of the replay hash.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">BirthEvent.inherited_reputation_seed</code></td><td><code class="inline">float</code></td><td>A small fraction of the newborn's public_reputation, seeded from the parents' averaged standing at birth</td><td><span class="badge gated">New field on schema 4's BirthEvent</span></td></tr>
+      <tr><td><code class="inline">reputation_decay_rate</code></td><td><code class="inline">float</code></td><td>How fast the inherited echo decays toward neutral as the child's own actions accumulate real reputation</td><td><span class="badge gap">New, no existing anchor</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-54"><h2 class="section-title">Guilt by Association</h2><p class="section-lede">Idea 54 &mdash; extends <a href="#schema-36">Clan (ideas 36, 40)</a> above. Deliberately not a reason to build Clan sooner; only meaningful once Clan is real.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">ClanState.clan_reputation</code></td><td><code class="inline">float</code></td><td>Tracked the same way an individual's already is, separate from any one member's</td><td><span class="badge gated">New field on schema 2's ClanState</span></td></tr>
+      <tr><td><code class="inline">reputation_weight_on_stranger_judgment</code></td><td><code class="inline">float</code></td><td>How much clan reputation biases judging a member a stranger has never personally met</td><td><span class="badge gap">New, open question</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-55"><h2 class="section-title">Inherited Feuds</h2><p class="section-lede">Idea 55 &mdash; extends the real, live NemesisRelationImporter. Today strictly same-individual, doesn't survive that entity's death.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">NemesisRecord.transferable_on_death</code></td><td><code class="inline">bool</code></td><td>Whether this grudge transfers when the holder dies</td><td><span class="badge partial">New field on existing live record</span></td></tr>
+      <tr><td><code class="inline">inherited_weight_decay</code></td><td><code class="inline">float</code></td><td>The weakened version of hostility passed to the heir (schema for idea 10) or living children (schema 4's parent record)</td><td><span class="badge gap">New</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-57"><h2 class="section-title">Living Legend Feedback Loop</h2><p class="section-lede">Idea 57 &mdash; Chronicle is real and live but confirmed strictly one-way: nothing reads its output back into anything, anywhere.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">LegendFact</code></td><td><code class="inline">new class</code></td><td>Once Chronicle-recorded fame (from real heroism_score) crosses a threshold, it becomes a discoverable fact</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">fame_threshold</code></td><td><code class="inline">float</code></td><td>The crossing point</td><td><span class="badge gap">New, no existing anchor</span></td></tr>
+      <tr><td><code class="inline">discoverable_via</code></td><td><code class="inline">Perception system reference</code></td><td>Reuses the real, budget-capped Perception system rather than inventing a new propagation mechanism</td><td><span class="badge done">Reused</span></td></tr>
+      <tr><td><code class="inline">feeds</code></td><td><code class="inline">Motivation &amp; Doctrine bias</code></td><td>A Townsperson's coming-of-age choice (idea 34) can lean toward becoming an adventurer because of a perceived legend</td><td><span class="badge gated">New wiring</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-58"><h2 class="section-title">Dying Wish</h2><p class="section-lede">Idea 58 &mdash; proposed alongside idea 10 (heir assignment), not instead of it. Distinct from Coming of Age and Reproduction, which shape a child passively; this is a single, specific, explicit purpose.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">heir.dying_wish_intention</code></td><td><code class="inline">new field on Motivation &amp; Doctrine profile</code></td><td>Seeded onto the heir at the moment heir_entity_id resolves (schema for idea 10)</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">intention_type</code></td><td><code class="inline">enum</code></td><td>AVENGE / PROTECT / FINISH_QUEST, or similar &mdash; exact taxonomy an open question</td><td><span class="badge gap">New, open question</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-60"><h2 class="section-title">Reputations Are Local</h2><p class="section-lede">Idea 60 &mdash; entity.social.public_reputation is a single unscoped float today, read identically everywhere it's consumed, no location/observer/region parameter anywhere. Shares this field with ideas 53 and 54 &mdash; needs coordinated design.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">public_reputation</code></td><td><code class="inline">float &rarr; Dict[region_id, float] or a decay-by-distance function</code></td><td>The core representation change &mdash; genuinely undecided between two shapes</td><td><span class="badge gap">Extended, open question on shape</span></td></tr>
+      <tr><td><code class="inline">determinism note</code></td><td><code class="inline">&mdash;</code></td><td>public_reputation is part of the deterministic replay hash (replay/fingerprint.py) &mdash; any shape change here needs a replay-determinism-aware pass, not just a field edit</td><td><span class="badge gap">Hard constraint, not optional</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-62"><h2 class="section-title">Generations Misremember</h2><p class="section-lede">Idea 62 &mdash; distinct from idea 57 (legend causing future behavior); this is the record itself losing fidelity as it passes down generations. Sequence alongside idea 57, same Chronicle substrate.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">ChronicleRecord.fidelity</code></td><td><code class="inline">float</code></td><td>Degrades over generational time &mdash; a personally-witnessed battle becomes a simplified story, then a distorted myth</td><td><span class="badge gated">New field on existing Chronicle output</span></td></tr>
+      <tr><td><code class="inline">distortion_function</code></td><td><code class="inline">new logic</code></td><td>How fidelity decays per generation passed; no existing anchor</td><td><span class="badge gap">New, open question</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-63"><h2 class="section-title">Belief Grows Around Real History</h2><p class="section-lede">Idea 63 &mdash; confirmed stronger a gap than described going in: CHURCH's "BLESSING"/"RESURRECTION" strings are two tokens, not a mechanic, and zero religion/deity code exists anywhere. <strong>Genuinely underspecified &mdash; this schema carries real open questions, not settled fields.</strong></p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">BeliefInstitution</code></td><td><code class="inline">new class, speculative</code></td><td>Organizes around a real historical event the world witnessed, not an authored pantheon</td><td><span class="badge gap">New, free creative territory</span></td></tr>
+      <tr><td><code class="inline">origin_event_id</code></td><td><code class="inline">str</code></td><td>Reference into the real event ledger/Chronicle &mdash; the actual thing this belief formed around</td><td><span class="badge gap">New</span></td></tr>
+      <tr><td><code class="inline">adherent_entity_ids</code></td><td><code class="inline">List[str]</code></td><td>Who believes it</td><td><span class="badge gap">New</span></td></tr>
+      <tr><td><code class="inline">belief_strength</code></td><td><code class="inline">float</code></td><td>No existing anchor of any kind</td><td><span class="badge gap">New, open question</span></td></tr>
+    </table>
+  </div><p class="loop-note">Whether an actual god/supernatural effect exists is explicitly left open by the idea itself &mdash; this schema deliberately doesn't resolve that either.</p></section>
+<section id="schema-64"><h2 class="section-title">The Empty Chair</h2><p class="section-lede">Idea 64 &mdash; the heir-assignment half is idea 10, unchanged. What's left has no code precedent found anywhere in src/: the economic hole an ordinary death leaves behind.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">EconomicVacancyEvent</code></td><td><code class="inline">new class</code></td><td>Fires when an entity with a unique economic role (e.g. a City's only blacksmith) dies</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">vacated_role</code></td><td><code class="inline">EntityRole</code></td><td>Reuses the existing EntityRole enum</td><td><span class="badge done">Reused</span></td></tr>
+      <tr><td><code class="inline">location_place_id</code></td><td><code class="inline">str</code></td><td>Reuses idea 66's Place model</td><td><span class="badge done">Reused</span></td></tr>
+      <tr><td><code class="inline">filled_by_entity_id</code></td><td><code class="inline">Optional[str]</code></td><td>Apprentice auto-promotion, import trigger, or left vacant &mdash; open question on resolution logic</td><td><span class="badge gap">New, open question</span></td></tr>
+    </table>
+  </div></section>
+<section id="schema-65"><h2 class="section-title">Named Refugee Threads</h2><p class="section-lede">Idea 65 &mdash; depends on idea 43 (population headcount fix) landing first, and idea 59's home_region_id field existing to have anything to carry.</p>  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">entity.home_region_id</code></td><td><code class="inline">str</code></td><td>Reused from idea 59 &mdash; populating an already-existing field, not inventing one</td><td><span class="badge done">Reused</span></td></tr>
+      <tr><td><code class="inline">displaced_tick</code></td><td><code class="inline">int</code></td><td>When this entity fled</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">origin_place_id</code></td><td><code class="inline">str</code></td><td>Reuses idea 66's Place model &mdash; where they actually came from, not an abstract headcount</td><td><span class="badge gated">New, reuses schema 1</span></td></tr>
+      <tr><td><code class="inline">return_wish_strength</code></td><td><code class="inline">float</code></td><td>Whether/how strongly they want to go back &mdash; may never resolve</td><td><span class="badge gap">New, open question</span></td></tr>
+    </table>
+  </div></section>
+<section id="data-configured-logic">
+  <h2 class="section-title">Data-Configured Logic</h2>
+  <p class="section-lede">The counterpart to Hardcoded Logic above, not a duplicate of it. Checked directly, not assumed: this codebase draws a real, consistent line between the two categories. <strong>Multi-instance catalogs with real per-entity variation get a YAML file</strong> (<code class="inline">races.yaml</code>, <code class="inline">factions.yaml</code>, <code class="inline">faction_relationships.yaml</code>, <code class="inline">personality_bias.yaml</code>). <strong>Single tunable scalars stay as Python dataclass defaults, even when clearly balance-sensitive</strong> &mdash; confirmed: <code class="inline">migration_threshold: float = 0.7</code> in <code class="inline">cohort.py</code> is a plain Python default; no <code class="inline">data/content/*demographic*</code> or <code class="inline">*tuning*</code>/<code class="inline">*balance*</code> YAML file exists anywhere in this repo. So "does this idea need config" isn't just "does it need a number" &mdash; it's specifically whether the idea is catalog-shaped. Several ideas that look like config candidates at first are actually single-scalar cases that belong in the Hardcoded Logic section instead, noted below rather than duplicated as a second entry.</p>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Idea</th><th>Target file</th><th>Real structure</th><th>Anchor check</th></tr>
+      <tr><td class="idea-range">4, 10, 30</td><td><em>no config needed</em></td><td>&mdash;</td><td>Pure logic/refactor ideas &mdash; nothing to author. 30's item-instance model is a data-modeling problem, not a balance question, per the atlas's own Content &amp; Balance finding.</td></tr>
+      <tr><td class="idea-range">13</td><td>Extend <code class="inline">data/content/defaults.yaml</code> (real, existing home for single tunable constants)</td><td>New keys: <code class="inline">trade_affection_gate: 0.5</code>, <code class="inline">team_up_affection_gate: 0.5</code></td><td>No real anchor for the exact value &mdash; free judgment, same caution the atlas gives idea 34</td></tr>
+      <tr><td class="idea-range">14, 44</td><td>Extend <code class="inline">data/content/living/races.yaml</code> (confirmed real, 13 entries)</td><td>New sibling field to <code class="inline">natural_traits</code>/<code class="inline">attribute_tendencies</code> per race: <code class="inline">intelligence_tier</code> (14), <code class="inline">settlement_capacity</code> (44)</td><td>14: real anchor &mdash; <code class="inline">natural_traits</code> containing <code class="inline">tool_user</code>. 44: <strong>no race in this file carries any numeric field today</strong> &mdash; every value is a qualitative string; introducing a number here extends a schema that's never carried one before.</td></tr>
+      <tr><td class="idea-range">20</td><td><em>Overlaps Hardcoded Logic, not a new file</em></td><td><code class="inline">stage_transition_ticks</code> should reuse the real Python constants already in <code class="inline">cohort.py</code>'s <code class="inline">get_age_bracket()</code> (young&lt;3000, adult&lt;7000, elder&ge;7000) rather than re-deriving new ones</td><td>Real anchor exists in code; open question is whether it should be <em>extracted</em> into shared config so both the age-bracket read and the LifeStage trigger read one source instead of two hardcoded copies</td></tr>
+      <tr><td class="idea-range">22</td><td>New: <code class="inline">data/content/social/relationship_roles.yaml</code></td><td>Mirrors <code class="inline">faction_relationships.yaml</code>'s real <code class="inline">id</code>/<code class="inline">relationship_model</code>/<code class="inline">axes</code> shape, keyed per role label (<code class="inline">rival</code>/<code class="inline">mentor</code>/<code class="inline">ally</code>) instead of per-faction-pair</td><td>Real anchor: the existing <code class="inline">nemesis_ids</code> grudge&ge;3.0 threshold (a Python constant &mdash; same Hardcoded Logic overlap as idea 20)</td></tr>
+      <tr><td class="idea-range">32</td><td><em>No catalog</em> &mdash; constants are Hardcoded Logic, not Data-Configured</td><td><code class="inline">genetic_inheritance_weight</code> (0.8&ndash;1.3) and <code class="inline">migration_threshold=0.7</code> are Python constants in <code class="inline">cohort.py</code>, not YAML</td><td><code class="inline">birth_cooldown_ticks</code> has zero anchor of any kind, in code or content</td></tr>
+      <tr><td class="idea-range">36 / 40</td><td>Extend <code class="inline">factions.yaml</code>, not a new <code class="inline">clans.yaml</code></td><td>Optional new fields on existing faction entries: <code class="inline">is_clan: bool</code>, <code class="inline">clan_home_regions: []</code></td><td>Real precedent: 2 factions (<code class="inline">orc_clan</code>, <code class="inline">dwarven_mine_clan</code>) already live as ordinary <code class="inline">factions.yaml</code> entries. A separate file would fork a catalog idea 36 itself says should stay unified with FactionState's shape.</td></tr>
+      <tr><td class="idea-range">37</td><td>New: <code class="inline">data/content/living/race_relations.yaml</code></td><td>Corrected this pass &mdash; matches <code class="inline">faction_relationships.yaml</code>'s real flat-list/qualitative-axes shape, not a raw float matrix. See the corrected schema above.</td><td>Zero existing signal for the actual 156 pair values &mdash; this risk finding is unchanged, only the file shape was wrong before</td></tr>
+      <tr><td class="idea-range">39, 51/52, 53, 54, 55, 57, 62</td><td><em>No catalog</em> &mdash; all are single tunable scalars, Hardcoded Logic candidates</td><td>Each needs one new Python default (e.g. <code class="inline">reputation_decay_rate</code>, <code class="inline">fame_threshold</code>, <code class="inline">inherited_weight_decay</code>), matching the real <code class="inline">migration_threshold=0.7</code> pattern &mdash; confirmed no per-instance catalog data these ideas would need</td><td>See the Hardcoded Logic section below for the actual entries; not repeated here to avoid duplicating one finding across two sections</td></tr>
+      <tr><td class="idea-range">43</td><td><em>No new config</em></td><td>Compiler seeding reads the already-real <code class="inline">data/content/entities/populations.yaml</code> (<code class="inline">members: {{unit_id: count}}</code> + <code class="inline">preferred_regions</code> per population group)</td><td>Not a content gap &mdash; a compile-step fix, matches M8's own finding</td></tr>
+      <tr><td class="idea-range">48</td><td><em>No new catalog</em></td><td>Reuses each world-module's existing <code class="inline">regions: [{{id, type, grid_bounds, terrain, hazard_level, tags}}]</code> entries &mdash; <code class="inline">type</code>/<code class="inline">tags</code> are already the mutable fields a transition would flip at runtime</td><td>A logic gap, not an authoring gap</td></tr>
+      <tr><td class="idea-range">49</td><td><em>No new catalog, a wiring gap</em></td><td>Both real catalogs already exist and already overlap: <code class="inline">mountain_pass.yaml</code>'s real <code class="inline">resources: {{iron_vein: 4, frost_shard_cluster: 2}}</code>, cross-referenced against real recipe ingredient lists that already require <code class="inline">frost_shard: 2</code></td><td>The question is whether crafting checks the entity's <em>location</em> against the material's source, not whether the content exists</td></tr>
+      <tr><td class="idea-range">50</td><td>New file needed, or extend evolution-chain content (not located this pass)</td><td>Would pair a <code class="inline">required_material_id</code> with each race's existing XP-threshold evolution stages</td><td>Unconfirmed &mdash; the file currently defining evolution thresholds/chains wasn't located in this investigation, flagged as open rather than guessed</td></tr>
+      <tr><td class="idea-range">66</td><td><code class="inline">WorldModuleSpec.regions</code> (<code class="inline">src/worldmodules/schema.py:49,68</code>) needs a new nested field</td><td>A new <code class="inline">places: List[PlaceRecipeSpec]</code> under each region entry, or a parallel top-level <code class="inline">places:</code> list keyed to <code class="inline">region_id</code> &mdash; a real schema class addition, not just new YAML content</td><td><strong>Pilot candidate confirmed</strong>: <code class="inline">hero_guild_routing</code>'s real 5-module composition (City + wilderness + ruins) already has the right mixed content to serve as the first hand-authored Place-hierarchy-native module once the schema exists &mdash; no new content authoring needed for the pilot itself</td></tr>
+    </table>
+  </div>
+
+  <p class="section-lede" style="margin-top:16px;"><strong>Real finding caught and verified before propagating, not left as a fork's unverified claim:</strong> one fork reported <code class="inline">RecipeRegistry</code>'s "exactly 3 recipes" claim (Hardcoded Logic section) as wrong, citing a 25-recipe <code class="inline">data/content/world/recipes.yaml</code> catalog. Checked directly before correcting anything: <code class="inline">CraftingSystem.craft()</code> (the real, live crafting gate) imports <code class="inline">RecipeRegistry</code> from <code class="inline">src/core/recipes.py</code> &mdash; the one with exactly 3 hardcoded recipes. The original claim was right. The 25-recipe YAML file is real, but confirmed (by grep across <code class="inline">src/</code>) to be loaded into the generic content repository and consumed by nothing &mdash; a <strong>third, separate, fully orphaned recipe catalog</strong>, on top of the already-known 2-class naming collision (<code class="inline">core/recipes.py</code> vs. <code class="inline">core/registries.py</code>, both named <code class="inline">RecipeRegistry</code>). Real, richly-authored content sitting completely unused &mdash; the same dormant-richness pattern found repeatedly elsewhere in this investigation, just not previously caught for recipes specifically.</p>
+</section>
+
+<section id="hardcoded-logic">
+  <h2 class="section-title">Hardcoded Logic &rarr; Schema Candidates</h2>
+  <p class="section-lede">A second, distinct dimension from the proposed-idea schemas above: values baked directly into code as Python literals today, that behave like they should be data-driven state instead. Some already have an idea targeting them; most don't &mdash; found across this session's audits (Entity Action/Cognition/Profile tables, Depth Beneath "Done") rather than freshly investigated for this document.</p>
+  <div class="idea-index">
+    <table>
+      <tr><th>Hardcoded value</th><th>Where it lives</th><th>Proposed schema fix</th><th>Related idea</th></tr>
+      <tr><td><code class="inline">readiness_speed = 10.0</code></td><td>CombatComponent, set once at spawn, flat for every entity regardless of build</td><td>Derive from AGI/speed stat via a real formula</td><td>Idea 2 targets exactly this</td></tr>
+      <tr><td><code class="inline">max_perceived = 10</code></td><td>Perception budget, flat for every entity</td><td>Derive from PER stat</td><td>Unscoped &mdash; no idea proposes this yet</td></tr>
+      <tr><td><code class="inline">Attribute points +5 / level</code></td><td>Leveling, flat regardless of what the entity did</td><td>Scale by build/injury history</td><td>Ideas 11 (build diversity), 29 (injury changes growth)</td></tr>
+      <tr><td><code class="inline">AptitudeComponent() zero-arg default</code></td><td>Every entity gets identical default aptitude</td><td>Populate from GeneticsSystem output</td><td>Idea 32's Reproduction wires this as a byproduct</td></tr>
+      <tr><td><code class="inline">Sovereignty: DEATH_INFLUENCE_SHIFT=5.0, CONQUEST_THRESHOLD=-50.0, LIBERATION_THRESHOLD=50.0</code></td><td><strong>Corrected, verified directly</strong> (<code class="inline">src/world/influence.py</code>) &mdash; previously mis-stated as &plusmn;1.0/&plusmn;50.0/flip-past-&plusmn;100. No stronghold-destruction delta exists at all; that direction is an unimplemented code comment. &plusmn;100 is only the influence value's clamp bound</td><td>Generalize to N-faction <code class="inline">Dict[faction_id, float]</code> influence map, and make conquest attribution name the real invader faction instead of always <code class="inline">Faction.MONSTER_HORDE</code></td><td>Idea 35 targets this, already flagged as never balance-validated</td></tr>
+      <tr><td><code class="inline">Trauma Scar: heal_wound() has zero production callers</code></td><td><strong>Corrected, verified directly</strong> &mdash; not "no formula exists." The Mechanics Bible (<code class="inline">02_combat_laws.md</code>) documents a real 30%-chance <code class="inline">scar_penalty = wound_penalty * 0.3</code> formula. The real gap is that the code path that would apply it (<code class="inline">heal_wound()</code>) is never called in production &mdash; a Wound is inflicted and never heals in live play, so no Scar is ever created</td><td>Wire <code class="inline">heal_wound()</code> into the live combat path, or redesign the healing trigger from scratch</td><td>Idea 17, unscoped fix</td></tr>
+      <tr><td><code class="inline">RecipeRegistry: exactly 3 recipes</code></td><td>Hardcoded dict (iron_sword, iron_shield, health_potion), <code class="inline">src/core/recipes.py</code> &mdash; confirmed still accurate for the live crafting gate (<code class="inline">CraftingSystem.craft()</code> imports this exact class)</td><td>Real content-driven recipe catalog. <strong>Related finding, verified directly:</strong> a separate 25-recipe <code class="inline">data/content/world/recipes.yaml</code> catalog exists and loads into the content repository, but is consumed by nothing &mdash; a third, fully orphaned recipe system, see Data-Configured Logic above</td><td>Idea 49 extends usage; the base catalog's own expansion is unscoped</td></tr>
+      <tr><td><code class="inline">Class doctrines: 3 hardcoded (warrior/ranger/mage)</code></td><td>Inline code, preferred/avoided route tags per class</td><td>Data-driven per-class doctrine records</td><td>Related to idea 16's Ranger-without-a-class investigation, otherwise unscoped</td></tr>
+      <tr><td><code class="inline">CHURCH's &ldquo;BLESSING&rdquo;/&ldquo;RESURRECTION&rdquo;</code></td><td>Literal strings in a services list, zero dispatch code reads either</td><td>Typed BuildingService records (duration/cost/effect fields)</td><td>Unscoped &mdash; related to idea 63's finding, not covered by it</td></tr>
+      <tr><td><code class="inline">move_cost formula constants (5.0, 10.0, /5.0, &times;0.1)</code></td><td>Hardcoded in Movement's move_cost formula</td><td>Schema-tunable balance constants</td><td>Unscoped</td></tr>
+      <tr><td><code class="inline">WOUND_THRESHOLD_RATIO = 0.40, in rpg_depth.py, dead code</code></td><td><strong>Corrected, verified directly &mdash; not a doc divergence.</strong> <code class="inline">COMB-290</code> is <code class="inline">status: verified</code>; code (<code class="inline">combat.py</code>) and the Mechanics Bible both say 25%, and agree. The real finding is a separate, dead 40% threshold constant (<code class="inline">rpg_depth.py</code>) with zero callers, sitting alongside the live 25% one</td><td>Delete the dead constant and its unreachable function, or leave it and document why it's unreachable</td><td>Idea 15 &mdash; already resolved as a dead-code cleanup decision, not an open threshold question</td></tr>
+      <tr><td><code class="inline">Elder attribute deltas: &plusmn;30/50%</code></td><td>Hardcoded in compute_elder_attribute_update()</td><td>Schema-tunable per-attribute aging curve</td><td>Unscoped</td></tr>
+      <tr><td><code class="inline">Personality bravery-bias weights</code></td><td>The one real counter-example &mdash; already data-driven via personality_bias.yaml, built specifically for retuning</td><td>Nothing to fix structurally; the gap is that it's never been exercised, not that it's hardcoded</td><td>Depth Beneath "Done" already flagged this as unused-for-its-purpose infrastructure</td></tr>
+    </table>
+  </div>
+</section>
+<section id="expected-events">
+  <h2 class="section-title">Expected Events</h2>
+  <p class="section-lede">The third dimension this registry is missing until now: durable <em>state</em> (above) is what an idea persists; an <strong>event</strong> is the runtime signal SimQ actually counts to score it. M7 deliberately defers naming real event types until after M1-M6 ship ("speculating against code that hasn't been written"); M9 names which <em>pillar</em> each idea should register against but never the actual event name or payload. This section closes that gap ahead of implementation, the same way the State sections above closed it for durable fields &mdash; grounded directly in the real event system: every event is a <code class="inline">SimulationEvent</code> (<code class="inline">src/observability/events.py</code>), snake_case <code class="inline">event_type</code>, a fixed <code class="inline">EventCategory</code> enum, plus <code class="inline">tick</code>/<code class="inline">entity_id</code>/<code class="inline">related_entity_ids</code>/<code class="inline">severity</code>/<code class="inline">source_system</code> and event-specific typed fields; scoring reads a flat <code class="inline">payload: dict</code> via <code class="inline">.get()</code> (<code class="inline">src/simulation_quality/score_record.py</code>).</p>
+  <p class="section-lede" style="margin-top:-8px;"><strong>Do any of these need a genuinely new SimQ pillar, not just a new scenario within an existing one?</strong> Checked directly, not assumed: every one of the 32 ideas maps onto the existing 10 pillars (COMBAT, PROGRESSION, ECONOMY, FACTION, SOCIAL, INFORMATION, AGENCY&amp;ACTION, COGNITION, WORLD DYNAMICS, NARRATIVE). Five need a genuinely new <em>scenario</em> entry within an existing pillar (SQ-25 through SQ-29, below) &mdash; none need an 11th pillar. The one idea that could plausibly have forced a new pillar &mdash; 63 (Belief/Religion) &mdash; is too underspecified to build one around responsibly; that's a door worth leaving open for later, once the idea itself has real shape, not forcing now on spec.</p>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Idea</th><th>Event type(s)</th><th>Payload</th><th>Trigger</th><th>Pillar / rule verdict</th></tr>
+      <tr><td class="idea-range">4</td><td><code class="inline"><em>none</em></code></td><td>&mdash;</td><td>&mdash;</td><td>No new event — pure storage refactor of already-exercised behavior</td></tr>
+      <tr><td class="idea-range">10</td><td><code class="inline"><code class="inline">heir_assigned</code></code></td><td>deceased_entity_id, heir_entity_id, inherited_item_ids</td><td>Fires in the death-resolution path, where heir_entity_id is read and inventory-transfer is constructed</td><td>New rule needed — NARRATIVE, same shape as existing milestone_sovereignty/milestone_boss_kill (+6&ndash;8)</td></tr>
+      <tr><td class="idea-range">13</td><td><code class="inline"><code class="inline">entity_trade_executed</code> + <code class="inline">team_up_accepted</code></code></td><td>giver_id/receiver_id/item_ids/affection_gate_value; inviter_id/invitee_id/group_id</td><td>ResourceTransferIntent(source_kind=ENTITY) resolves; TeamUpInvite.status&rarr;ACCEPTED</td><td>Reuses existing rule shapes exactly — trade_executed (ECONOMY, +3) and group_joined (SOCIAL, +2). No new rule.</td></tr>
+      <tr><td class="idea-range">14</td><td><code class="inline"><em>none</em></code></td><td>&mdash;</td><td>&mdash;</td><td>No new event — a static compile-time classification consumed by other systems' events, not itself an emittable signal</td></tr>
+      <tr><td class="idea-range">20</td><td><code class="inline"><code class="inline">life_stage_transitioned</code></code></td><td>entity_id, from_stage, to_stage, age_ticks</td><td>identity.life_stage write at the CHILD&rarr;ADULT or ADULT&rarr;ELDER boundary (age_ticks 3000/7000)</td><td>New rule needed &mdash; PROGRESSION, matches level_milestone's +8 shape. Share one rule bucket with idea 34, same trigger tick.</td></tr>
+      <tr><td class="idea-range">22</td><td><code class="inline"><code class="inline">relationship_role_assigned</code></code></td><td>entity_id, target_id, role, trigger_grudge_value</td><td>SocialBond.role set, reusing the real nemesis_ids promotion pattern (grudge &ge; 3.0)</td><td>New rule needed &mdash; SOCIAL, sibling to social_memory_created/relationship_depth (+2)</td></tr>
+      <tr><td class="idea-range">30</td><td><code class="inline"><code class="inline">item_ownership_transferred</code></code></td><td>item_instance_id, from_entity_id, to_entity_id, acquired_method</td><td>Any ItemInstance.owner_history append</td><td>ECONOMY (transfer half) reuses gold_transaction shape; NARRATIVE (attachment half) needs genuine new design, no existing rule matches. Uses the real <code class="inline">inventory</code> EventCategory, which exists but is scored by zero pillars today.</td></tr>
+      <tr><td class="idea-range">32 / 43</td><td><code class="inline"><code class="inline">demographic_birth</code> / <code class="inline">demographic_mortality</code></code></td><td>already real, unchanged</td><td>Compiler seeds population_cohorts, then normal cohort turnover</td><td>Already registered and scored (WORLD DYNAMICS, +2/+1, demographics_dormant &minus;8 penalty). Job is making the compiler seed cohorts so the event can fire &mdash; no new event design.</td></tr>
+      <tr><td class="idea-range">33</td><td><code class="inline"><code class="inline">marriage_proposed</code> / <code class="inline">marriage_accepted</code></code></td><td>proposer_entity_id, target_entity_id, status</td><td>highland_traverse scenario, propose at familiarity &ge; 0.6</td><td><strong>New SQ-25</strong> &mdash; SOCIAL. No existing scenario covers lasting personal bonds beyond friendship; don't conflate with SQ-13 (contracts).</td></tr>
+      <tr><td class="idea-range">36 / 40</td><td><code class="inline"><code class="inline">clan_member_joined</code> / <code class="inline">clan_member_defected</code></code></td><td>clan_id, entity_id, member_count_after</td><td>frontier_marches retargeting scenario</td><td><strong>New SQ-26</strong> &mdash; FACTION primary / SOCIAL secondary, mirrors group_joined/group_expelled and SQ-06's alliance pattern</td></tr>
+      <tr><td class="idea-range">37</td><td><code class="inline"><em>none</em></code></td><td>&mdash;</td><td>&mdash;</td><td>No new event &mdash; a static data input (race_relations matrix) modifying existing engine/legality.py hostility scoring, which already feeds COMBAT's existing events</td></tr>
+      <tr><td class="idea-range">39</td><td><code class="inline"><code class="inline">affiliation_changed</code></code></td><td>entity_id, old_faction, new_faction, trigger_reason</td><td>frontier_marches IdentityUpdate(faction_set=...) scenario</td><td><strong>New SQ-27</strong> &mdash; FACTION. Distinct from region_ownership_changed (territory vs. personal allegiance).</td></tr>
+      <tr><td class="idea-range">44</td><td><code class="inline"><em>none</em></code></td><td>&mdash;</td><td>&mdash;</td><td>No new event &mdash; a static resolved Place-level classification (FULL_SETTLEMENT/NONE/CAMP_ONLY) read by other systems, not a state change worth its own event</td></tr>
+      <tr><td class="idea-range">45 / 46 / 47 / 66</td><td><code class="inline"><code class="inline">place_constructed</code> (proposed, generalizes the dead camp_constructed)</code></td><td>place_id, kind, region_id, tick</td><td>Only relevant if idea 66+48 make Place-kind CAMP/NEST/LAIR runtime-constructible, not just pre-placed at world-gen</td><td>camp_constructed is confirmed permanently non-emittable by design (no_engine_path) &mdash; don't resurrect it; a generalized 6-kind event is the right shape if runtime construction is ever built. Idea 66 itself emits no event; downstream region_transformed/region_ownership_changed need a place_id payload field added.</td></tr>
+      <tr><td class="idea-range">48</td><td><code class="inline"><code class="inline">region_transformed</code></code></td><td>already real; generalize to place_id-scoped once idea 66 lands</td><td>Sustained faction_tension_overrides drive a CITY&rarr;RUIN flip in lifecycle_full_coverage_world</td><td>Already registered and scored (WORLD DYNAMICS, +6, world_static &minus;6 penalty). Payload field change, not a new event or rule.</td></tr>
+      <tr><td class="idea-range">49</td><td><code class="inline"><code class="inline">resource_harvested</code> / <code class="inline">item_crafted</code></code></td><td>already real; add place_tag / material_source_place_id field</td><td>Harvest of a place-tied material (frost_shard_cluster at mountain_pass_zone)</td><td>Already registered and scored (ECONOMY, +3/+4). One new payload field, not a new event.</td></tr>
+      <tr><td class="idea-range">50</td><td><code class="inline"><code class="inline">entity_evolved</code> (new &mdash; real standalone gap)</code></td><td>entity_id, from_kind, to_kind, trigger (xp_threshold | material_gated), tick</td><td>XP/level threshold (10/25/50) or material-gated alternate path</td><td><strong>Real gap independent of idea 50</strong>: no evolution event exists today, even for the already-shipped XP-only path. New rule needed &mdash; PROGRESSION, matching level_up's +8/level_milestone shape.</td></tr>
+      <tr><td class="idea-range">51 / 52</td><td><code class="inline"><code class="inline">territory_expansion_declared</code> (new) &rarr; <code class="inline">territory_ownership_changed</code> (existing)</code></td><td>faction_id, target_region_id, trigger=population_pressure</td><td>frontier_marches scenario, once idea 43 unblocks</td><td>Maps to existing SQ-05 once land is claimed &mdash; new precursor event feeding an already-owned one, no new scenario</td></tr>
+      <tr><td class="idea-range">53</td><td><code class="inline"><em>Campaign-only, not a ScoreRecord event</em></code></td><td>New CampaignScorecard field: <code class="inline">reputation_inheritance_check: bool</code></td><td>M9 Episode 2 &mdash; death-with-live-heir results in inherited_reputation_seed being set</td><td>Campaign evaluator field addition, not a SimQ pillar/event</td></tr>
+      <tr><td class="idea-range">54</td><td><code class="inline"><code class="inline">organization_reputation_delta</code></code></td><td>clan_id, delta, source_member_entity_id, witnessed_by</td><td>2-clan witnessed-betrayal scenario</td><td><strong>New SQ-28</strong> &mdash; FACTION primary / SOCIAL secondary, same dual-pillar shape as Clan</td></tr>
+      <tr><td class="idea-range">55</td><td><code class="inline"><em>Campaign-only</em></code></td><td>New CampaignScorecard field: <code class="inline">nemesis_transfer_check: bool</code></td><td>M9 Episode 2 &mdash; nemesis-holder's death transfers the relation to the heir at reduced weight</td><td>Campaign evaluator field addition</td></tr>
+      <tr><td class="idea-range">57</td><td><code class="inline"><code class="inline">legend_perceived</code></code></td><td>source_entity_id, perceiver_entity_id, fame_value</td><td>lifecycle_full_coverage_world long-run scenario, heroism_score crosses threshold</td><td>Maps to existing SQ-20 as a new event type under it &mdash; NARRATIVE primary / COGNITION secondary</td></tr>
+      <tr><td class="idea-range">58</td><td><code class="inline"><em>Campaign-only (full cross-generational form)</em></code></td><td>New CampaignScorecard field: <code class="inline">dying_wish_check: bool</code></td><td>M9 Episode 3 &mdash; dying_wish_intention is non-null and targets the correct entity</td><td>Campaign evaluator field addition</td></tr>
+      <tr><td class="idea-range">60</td><td><code class="inline"><em>none</em> &mdash; extends <code class="inline">reputation_delta</code></code></td><td>add region_id field to the existing event</td><td>Per-region public_reputation read</td><td>No new event &mdash; SQ-14 already owns reputation-change scoring exclusively</td></tr>
+      <tr><td class="idea-range">62</td><td><code class="inline"><em>Campaign-only</em></code></td><td>New CampaignScorecard field: <code class="inline">chronicle_fidelity_check: bool</code></td><td>M9 Episode 4 &mdash; ChronicleRecord.fidelity for the tracked death event is measurably below 1.0</td><td>Campaign evaluator field addition</td></tr>
+      <tr><td class="idea-range">63</td><td><code class="inline"><em>not proposable</em></code></td><td>&mdash;</td><td>&mdash;</td><td>Too underspecified to name a concrete event without inventing unfounded structure &mdash; consistent with every other finding on this idea</td></tr>
+      <tr><td class="idea-range">64</td><td><code class="inline"><code class="inline">economic_vacancy_created</code> / <code class="inline">economic_vacancy_filled</code></code></td><td>role, place_id, vacated_by_entity_id, filled_by_entity_id</td><td>Single-SHOPKEEPER Unit-tier world, entity dies mid-run</td><td><strong>New SQ-29</strong> &mdash; ECONOMY. Distinct from SQ-09 (inflation); no existing scenario covers single-point-of-failure vacancy.</td></tr>
+      <tr><td class="idea-range">65</td><td><code class="inline"><code class="inline">entity_displaced</code></code></td><td>entity_id, origin_region_id, destination_region_id, displaced_tick</td><td>crowded_frontier hostile-pressure scenario</td><td>Maps to existing SQ-17 as a new event type under it &mdash; WORLD DYNAMICS primary, SOCIAL secondary</td></tr>
+    </table>
+  </div>
+
+  <p class="section-lede" style="margin-top:16px;"><strong>5 new SQ scenarios needed</strong> (existing pillars, no new pillar): SQ-25 Marriage (SOCIAL &mdash; lasting personal bonds beyond friendship), SQ-26 Clan (FACTION/SOCIAL &mdash; membership-spanning political formation), SQ-27 Affiliation Change (FACTION &mdash; personal allegiance, distinct from territory ownership), SQ-28 Guilt by Association (FACTION/SOCIAL &mdash; organization-level reputation), SQ-29 The Empty Chair (ECONOMY &mdash; single-point-of-failure economic vacancy, distinct from SQ-09's inflation).</p>
+  <p class="section-lede"><strong>4 ideas need new <code class="inline">CampaignScorecard</code> boolean fields, not SimQ events at all</strong> (53, 55, 58, 62) &mdash; confirmed the evaluator has zero fields today that would catch any of them failing. All four trigger points are already specified in the M9 epic's shared 4-episode Campaign test plan.</p>
+  <p class="section-lede"><strong>Real standalone gap found, independent of any single idea:</strong> no <code class="inline">entity_evolved</code> event exists anywhere today &mdash; not just for idea 50's proposed material-gated branch, but for the already-shipped XP-only evolution path too. Whoever scopes idea 50's ticket should budget for wiring the base path to SimQ as well, not just the new branch.</p>
+</section>
+
+<section id="not-yet-scoped">
+  <h2 class="section-title">Coverage Note</h2>
+  <p class="section-lede">All 30 proposed ideas that introduce new durable state now have a field-level schema above (idea 66 plus 29 others, up from the original 9). Three remain genuinely underspecified rather than settled &mdash; idea 30 (Possessions), idea 63 (Belief/Religion), and parts of idea 60 (Reputations Are Local, blocked on a determinism-aware pass) &mdash; their sections above say so explicitly rather than presenting invented fields as decided. Ideas that are pure logic/wiring fixes with no new state (9, 12, 16, 18, 19, 21, 23, 24, 25, 26, 28, 31, 38, 41, 42, 46, 47, 56, 59, 61) aren't repeated here since they don't need a schema, only the behavior change already described in the atlas. <strong>Correction: idea 27 (Learning by Watching &amp; Choosing Role Models) was wrongly listed here in an earlier pass</strong> &mdash; its own atlas card states outright that it needs "genuinely new state (who a character watches or admires) and new logic from scratch." It needs a schema and doesn't have one yet; flagged honestly as a real gap in this document's own coverage rather than silently left miscategorized.</p>
+</section>
+
+<footer>
+  Companion to the RPG Feature Atlas and the Simulation Wiring Map. Extend this document idea-by-idea as each gets ticketed, following the field-table format established above &mdash; don't defer schema work to inside a ticket's own plan.md if the shape is genuinely ambiguous before then, the way City/Region was.
+</footer>
