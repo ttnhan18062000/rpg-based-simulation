@@ -2,11 +2,32 @@
 """PostToolUse hook: appends one tool-call record to agent-monitoring/tools.jsonl."""
 import json
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from writer import write_line  # noqa: E402
+
+# TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: a per-session scoped sidecar file is new durable
+# state and needs a defined lifecycle (CLAUDE.md's Durable State Rule) — there is no "session
+# end" hook in this repo to delete it precisely, so any subsequent hook invocation from any
+# session opportunistically sweeps up scoped files this old, bounding growth.
+_SIDECAR_STALE_SECONDS = 24 * 3600
+
+
+def _prune_stale_scoped_sidecars() -> None:
+    try:
+        claude_dir = Path(".claude")
+        now = time.time()
+        for path in claude_dir.glob("current_run.*"):
+            try:
+                if now - path.stat().st_mtime > _SIDECAR_STALE_SECONDS:
+                    path.unlink()
+            except OSError:
+                pass
+    except Exception:
+        pass
 
 
 def _input_summary(tool_name: str, tool_input: dict) -> str:
@@ -42,7 +63,14 @@ try:
     except Exception:
         pass
 
-    # Read workflow sidecar for run_id / seq
+    # Read workflow sidecar for run_id / seq. TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: prefer a
+    # per-session scoped file (`.claude/current_run.<session_id>`) over the shared unscoped file —
+    # the shared file is overwritten by every concurrent session's own writeSidecar() call, so
+    # reading it unconditionally silently misattributes tool calls to whichever session wrote it
+    # last (confirmed live: a closed ticket kept absorbing another session's tool-call rows for two
+    # days). Falls back to the unscoped file when no scoped file exists for this session, so callers
+    # that haven't adopted the per-session write yet degrade to the prior (still-imperfect but not
+    # worse) behavior rather than losing attribution entirely.
     run_id = None
     seq = None
     phase = None
@@ -50,8 +78,11 @@ try:
     execution_id = None
     provider = None
     ticket_id = None
+    sidecar_path = Path(f".claude/current_run.{session_id}") if session_id else None
+    if sidecar_path is None or not sidecar_path.exists():
+        sidecar_path = Path(".claude/current_run")
     try:
-        sidecar = json.loads(Path(".claude/current_run").read_text())
+        sidecar = json.loads(sidecar_path.read_text())
         run_id = sidecar.get("run_id") or None
         seq = sidecar.get("seq") or None
         phase = sidecar.get("phase") or None
@@ -61,6 +92,8 @@ try:
         ticket_id = sidecar.get("ticket_id") or None
     except Exception:
         pass
+
+    _prune_stale_scoped_sidecars()
 
     # Determine status from tool response
     status = "ok"

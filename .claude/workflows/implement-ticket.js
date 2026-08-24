@@ -60,10 +60,15 @@ const resolveSeqOffset = async (id) => {
 let seqOffset = 0
 if (ticketId) {
   seqOffset = await resolveSeqOffset(ticketId)
+  // TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: same additive session-scoped write as writeSidecar()
+  // below — see that helper's comment for the full rationale.
   await bash(
     `python3 -c "
-import json, sys
+import json, sys, os
 open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': 'Scope', 'agent': 'ticket-scoper'}))
+sid = os.environ.get('CLAUDE_CODE_SESSION_ID', '')
+if sid:
+    open('.claude/current_run.' + sid, 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': 'Scope', 'agent': 'ticket-scoper'}))
 " "${ticketId}" "${seqOffset + 1}" 2>/dev/null || true`
   )
 } else {
@@ -253,11 +258,23 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
 // documented at implement-ticket.js:756-763 — embedding JSON directly in a double-quoted python3 -c
 // string corrupts the script on nested unescaped quotes). Fail-open per CLAUDE.md's "monitoring write
 // failure must never fail the workflow" rule — keeps the existing `2>/dev/null || true` suffix.
+// TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: additionally writes a per-session-scoped copy
+// (`.claude/current_run.<CLAUDE_CODE_SESSION_ID>`) alongside the existing unscoped file — the
+// unscoped file alone is silently overwritten by every concurrent session's own writeSidecar()
+// call, misattributing tools.jsonl rows across sessions. CLAUDE_CODE_SESSION_ID is a stable,
+// process-level env var the harness sets once per session (confirmed present in every Bash
+// subprocess), not a shared mutable file, so reading it here introduces no new race. The unscoped
+// write is kept unchanged for tools/retrieval_cache.py and .claude/settings.json's inline
+// sidecar-check hook, both explicitly deferred (see investigation.md) rather than migrated here.
 const writeSidecar = async (seq, phase, agent) => {
   await bash(
     `python3 -c "
-import json, sys
-open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4], 'execution_id': sys.argv[5], 'provider': sys.argv[6]}))
+import json, sys, os
+data = json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4], 'execution_id': sys.argv[5], 'provider': sys.argv[6]})
+open('.claude/current_run', 'w').write(data)
+sid = os.environ.get('CLAUDE_CODE_SESSION_ID', '')
+if sid:
+    open('.claude/current_run.' + sid, 'w').write(data)
 " "${tid}" "${seq}" "${phase}" "${agent}" "${executionId}" "${PROVIDER}" 2>/dev/null || true`
   )
 }
