@@ -173,6 +173,13 @@ pause, or scope the gateway down to a narrower use case than originally proposed
 reviewer's call, made against the real numbers in §2 above, not against this document's own framing
 of them.
 
+**Status update (2026-08-24):** that call has now been made. See
+`keep_or_deprecate_decision.md` for the full record — the repository owner ratified "keep as-is, no
+further investment" (Option A of that document's three), against the warm-cache re-comparison
+(`phase4_warm_direct_tool_comparison.md`, gateway still losing on all 7/7 entries even warm) and
+the efficiency-remediation epic's own net verdict (`TCK-20260818-KGMCP-EFFICIENCY-REMEDIATION-EPIC`).
+No Phase 5+/further investment is authorized by this ratification.
+
 ## 6. Related tickets and docs
 
 Phase 3: `TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`,
