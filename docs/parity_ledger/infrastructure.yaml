@@ -11063,3 +11063,53 @@
   proof_type: regression
   test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
   divergence_note: null
+- id: INFRA-380
+  text: 'TCK-20260824-PARITY-NEXT-ID-LOOKUP -- added next_available_id(shard_filename)
+    and search_existing_entries(query, ...) to tools/gate_checks/parity_updater_static.py,
+    giving the parity-updater agent (and the Parity-phase orchestrator step) deterministic
+    lookups instead of eyeballing the shard''s own entry list. next_available_id derives
+    prefix and zero-pad width from the shard''s own existing ids (mirroring _ID_PATTERN
+    / docs/parity_ledger/schema.json''s id format) and returns max-numeric-suffix
+    + 1, not entry-count + 1 -- shards have gaps (INFRA-379 is the real-world precedent:
+    384 entries, highest id 379), so a count-based next-id would collide. Raises ValueError
+    when the shard has no entry with a valid id, since there is nothing to derive
+    a prefix from. search_existing_entries is a plain case-insensitive substring search
+    over each entry''s text/v2_evidence fields (not fuzzy/semantic), scoped to one
+    shard or all of CANONICAL_LEDGER_FILES, returning one {id, shard, matched_field,
+    excerpt} dict per field match. .claude/workflows/implement-ticket.js''s Parity
+    phase now runs a second orchestrator bash() call reusing expected_subsystems_for_files''
+    own candidate-shard output, calling next_available_id once per distinct candidate
+    shard and injecting the result as a new ''Next available ID per candidate shard''
+    prompt hint line (a shard with no valid id is reported as ''unavailable: <reason>''
+    rather than failing the phase). search_existing_entries is documented in .claude/agents/parity-updater.md
+    as an agent-invoked Bash tool only -- not auto-wired into the orchestrator, since
+    there is no automatic query string to feed it. This entry is itself dogfooding:
+    its own id was produced by next_available_id(''infrastructure.yaml''), and search_existing_entries(''parity_updater_static'',
+    shard_filename=''infrastructure.yaml'') confirmed no pre-existing entry covered
+    this concern before writing. No src/ files changed -- pure Claude-agent-workflow
+    orchestration tooling.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'tools/gate_checks/parity_updater_static.py:134-163 (next_available_id
+    -- walks every id matching _ID_PATTERN, tracks max numeric suffix per shard, derives
+    prefix/width from the shard''s own ids, raises ValueError if none match), :166-203
+    (search_existing_entries -- case-insensitive substring match over text/v2_evidence,
+    {id, shard, matched_field, excerpt} results, scoped to shard_filename or all CANONICAL_LEDGER_FILES).
+    .claude/workflows/implement-ticket.js:1213-1232 (Parity-phase nextIdOutput bash()
+    call, one next_available_id lookup per distinct candidate shard from expectedSubsystemsOutput,
+    ValueError caught per-shard as "unavailable: <reason>"), :1244 (injected as the
+    "Next available ID per candidate shard" prompt hint line). .claude/agents/parity-updater.md:10-37
+    (Step 0 -- documents both functions for agent use; next_available_id via the injected
+    hint or direct Bash call, search_existing_entries as a direct Bash call only,
+    not auto-wired).'
+  proof_type: null
+  test_path: tests/tools/test_parity_updater_static.py::test_next_available_id_uses_max_suffix_not_count
+  divergence_note: null
+  support_boundary: Claude-agent-workflow orchestration tooling only -- no simulation
+    behavior is involved (mirrors INFRA-263/264/265/315/379's support_boundary pattern
+    for pure workflow-tooling entries in this shard). Does not touch, extend, or duplicate
+    INFRA-263 (Finalize-phase registry-regen gate), INFRA-264 (CI registry-drift backstop),
+    INFRA-265 (Scope-phase ticket-location resolution), or INFRA-379 (retro-report
+    KGMCP caveat text); this is a distinct guarantee scoped to Parity-phase id-lookup
+    and existing-entry search determinism.
