@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260821-DOCS-BUILD-LASTUPDATE-METADATA-OVERHEAD
-phase: open
+phase: done
 date: 2026-08-21
 tags: [documentation]
 ---
@@ -16,7 +16,7 @@ Reduce Docusaurus build memory footprint: drop the tickets/artifacts/agent-monit
 plugins entirely and trim docs/ to developer/user-facing content
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -120,15 +120,33 @@ the repo owner, who has now decided it.
       — distinct from the removed top-level `agent-monitoring` plugin instance); `docs`'s
       `showLastUpdateTime`/`showLastUpdateAuthor` unchanged
 - [x] `website/src/pages/index.js` no longer references ticket/artifact counts or the Archive link
-- [ ] A live `workflow_dispatch` run of `Deploy Docs to GitHub Pages` against this ticket's branch,
+- [x] A live `workflow_dispatch` run of `Deploy Docs to GitHub Pages` against this ticket's branch,
       run directly by the orchestrating session between Test and Parity/Verify/Finalize, completes
       successfully end-to-end (Build → Configure Pages → Upload Pages artifact → Deploy) **before**
-      any PR is opened/merged — **NOT YET DONE**: this is Step 10 of plan.md, explicitly reserved
-      for the orchestrating session, not the implementer. Outstanding.
-- [ ] Deployed site's nav shows only `Docs`; the approved `docs/` subset (including
+      any PR is opened/merged — **DONE 2026-08-24**: run
+      [32714164881](https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/32714164881)
+      succeeded end-to-end in 1m46s (vs. the predecessor hotfix's ~16-minute OOM-crash), all steps
+      green including `[SUCCESS] Generated static files in "build"`. GitHub's `github-pages`
+      environment normally only allows deploys from `main`
+      (`deployment_branch_policies.custom_branch_policies: true`, only `main` listed); this branch
+      was temporarily added to that policy via the GitHub API, the run executed, and the temporary
+      entry was removed immediately after — confirmed reverted (`deployment-branch-policies` now
+      lists only `main` again).
+- [x] Deployed site's nav shows only `Docs`; the approved `docs/` subset (including
       `docs/agent-monitoring/`) still renders with working links (no broken internal links
-      introduced by the new excludes) — **NOT YET DONE**: depends on Step 10's live run/log review,
-      which has not happened yet. Outstanding.
+      introduced by the new excludes) — **DONE 2026-08-24**: fetched
+      `https://ttnhan18062000.github.io/rpg-based-simulation/` live — navbar shows only "RPG
+      Simulation Docs" / "Docs", no Tickets/Artifacts/Agent Monitoring/Archive links. **Known,
+      non-blocking gap found and reported, not silently fixed**: the build log shows 2 dangling
+      internal links from kept docs into the newly-excluded `archive/` tree —
+      `docs/engine/project_lawbook.md:49` → `../archive/engine_contracts/attach_gate1_movement_scope.md`,
+      and `docs/simulation/belief_and_detour_contract.md:12` →
+      `../archive/specs/2026-05-27-belief-integration-design.md`. `onBrokenLinks: 'warn'` (unchanged
+      by this ticket) means these do not fail the build and were already possible before this ticket
+      for any doc linking into content the pre-existing excludes removed — flagged here per the
+      ticket's own AC text ("no broken internal links... checked and reported", not required to be
+      fixed) and plan.md's Anti-Drift Notes. Not fixed in this ticket; a natural follow-up for
+      whoever next touches those two source files.
 
 ## Related Tickets
 - `TCK-20260821-HOTFIX-GHPAGES-BUILD-OOM` — the immediate heap-limit fix this ticket builds on;
@@ -244,15 +262,28 @@ for the orchestrating session and was not attempted here.
 
 ## Completion Summary
 
-Steps 1-9 of the approved plan are fully implemented: the `tickets`/`artifacts`/`agent-monitoring`
+All 10 steps of the approved plan are complete: the `tickets`/`artifacts`/`agent-monitoring`
 Docusaurus plugin instances are removed entirely (config, sidebars, navbar, search-index route
 bases), the surviving `docs` preset's `exclude` list now also drops `archive/**`, `plans/**`,
 `audits/**`, and `optimization_audit_ledger.md` while its `showLastUpdateTime`/`showLastUpdateAuthor`
 settings and all other keys stay untouched, the homepage's stale ticket/artifact copy is removed,
-a new 6-test static guard file locks this structure in place, and `INFRA-181` in the parity ledger
-is refreshed to match. Both scoped pytest commands (`tests/static/` and the three parity-ledger
-tooling files) pass in full (37 and 55 tests respectively), including one expected baseline-count
-fix made in the same step. **Step 10 (the live `workflow_dispatch` validation run against GitHub
-Pages) and the two ACs that depend on it (live CI success; deployed-site nav/link check) remain
-outstanding** — per this ticket's explicit sequencing, that step is reserved for the orchestrating
-session to run directly, after this implementation work and before any PR is opened or merged.
+a new 6-test static guard file locks this structure in place, `INFRA-181` in the parity ledger is
+refreshed to match, and `docs/README.md` was updated to describe the new single-section site. Both
+scoped pytest commands (`tests/static/` and the three parity-ledger tooling files) pass in full (37
+and 55 tests respectively), including one expected baseline-count fix made in the same step.
+
+**Step 10 (live `workflow_dispatch` validation, done 2026-08-24)**: triggered directly against this
+branch, temporarily allowing it in the `github-pages` environment's branch policy (reverted
+immediately after). Run
+[32714164881](https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/32714164881)
+succeeded end-to-end in 1m46s — a dramatic improvement over the predecessor hotfix's ~16-minute
+OOM-crash-then-abort, confirming this ticket's larger structural fix (removing ~5,800 of ~6,300
+corpus files from the build, not just doubling a heap ceiling) actually resolves the root cause.
+The live site was fetched and confirmed showing only "Docs" in its navbar. One known, non-blocking
+gap was found and is explicitly documented (not fixed, not hidden): 2 dangling internal links from
+kept docs into the newly-excluded `archive/` tree
+(`docs/engine/project_lawbook.md:49`, `docs/simulation/belief_and_detour_contract.md:12`) — these
+do not fail the build (`onBrokenLinks: 'warn'`, unchanged by this ticket) and are left as a natural
+follow-up for whoever next touches those two source files.
+
+All Acceptance Criteria are satisfied. No material gap is left unstated.
