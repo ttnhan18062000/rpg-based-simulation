@@ -7656,6 +7656,7 @@
     Comparison" and before "## Notes", gated on investigate_pair_count being nonzero
     -- omitted entirely, not rendered empty, when zero.
 
+
     '
   status: verified
   priority: P2
@@ -7670,6 +7671,7 @@
     it alongside runs/events).
 
 
+
     Addendum (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING, 2026-08-14): compute_tool_safety_metrics(events,
     tools) gains a third top-level return key, read_count_correlation -- {compliant_group:
     {count, median, average}, non_compliant_group: {count, median, average}, derivation},
@@ -7680,7 +7682,23 @@
     ...}. generate() renders a third subsection, ''### Read-Count Correlation (Search-Before-Grep
     Compliance)'', appended after the existing ''### Parity Ledger Write-Safety''
     subsection, inside the same gated ''## Tool Safety Audit'' block (still gated
-    on investigate_pair_count being nonzero -- no new gate).'
+    on investigate_pair_count being nonzero -- no new gate).
+
+
+
+    Addendum (TCK-20260824-RETRO-METRIC-CAVEATS, 2026-08-24): compute_tool_safety_metrics()''s
+    docstring (tools/agent-monitoring/generate_retro.py:1393-1400) gains an explanatory
+    paragraph stating that `search_before_grep.compliance_rate` only sees the orchestrating
+    run''s own direct tools.jsonl rows for each (run_id, seq) pair -- it has no visibility
+    into a dispatched sub-agent''s (e.g. `investigator`) own tool calls, so a pair
+    marked non-compliant may reflect an orchestrator-level incidental call rather
+    than the real investigation''s own behavior, and the true compliance rate for
+    delegated investigation work is unknown and plausibly higher than the reported
+    number. generate() (:1949-1956) renders the identical caveat as a new italicized
+    paragraph immediately under the ''### Search-Before-Grep Compliance (Investigate
+    Phase)'' heading, before the existing ''**Compliance rate:**'' line. Explanatory
+    text only -- no change to compute_tool_safety_metrics()''s counting/aggregation
+    logic, return shape, or the compliance_rate formula itself.'
   proof_type: regression
   test_path: tests/tools/test_generate_retro.py
   divergence_note: null
@@ -11002,3 +11020,46 @@
   test_path: tests/api/test_admission_control.py::test_first_request_from_new_client_is_admitted
   divergence_note: null
   proof_type: contract
+- id: INFRA-379
+  text: 'TCK-20260824-RETRO-METRIC-CAVEATS -- compute_kgmcp_cache_efficiency_metrics()/_kgmcp_verdict()
+    and generate()''s ''## KGMCP Cache Efficiency'' section gain an explanatory caveat
+    (docstring paragraphs in both functions, plus a new rendered Markdown paragraph)
+    stating that a low `coverage_rate` is architectural, not a fixable cache inefficiency:
+    tools/retrieval_cache.py::log_cache_access() is wired only into tools/knowledge_gateway_mcp.py''s
+    knowledge_context/knowledge_status tools, while the hard-rule-mandated mcp__knowledge-search__search_docs
+    tool -- the actual bulk of real search volume feeding search_calls_total -- is
+    served by a completely separate, uninstrumented implementation (tools/knowledge_search.py,
+    confirmed zero references to retrieval_cache/knowledge_gateway_cache) that never
+    touches this cache path at all. A near-zero coverage number therefore reflects
+    two independently-implemented tools, only one of which is cache-instrumented,
+    not evidence the cache is being underused where it applies. This is the first
+    parity-ledger entry anywhere in this shard to cite compute_kgmcp_cache_efficiency_metrics()/_kgmcp_verdict()/the
+    ''## KGMCP Cache Efficiency'' section at all -- no prior INFRA-* entry existed
+    to update instead (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD''s
+    own ticket explicitly deferred authoring one; that ticket''s own citation of ''~line
+    8561'' for this concept turned out on inspection to actually belong to the unrelated
+    INFRA-332 entry). No numeric/formula logic changed in either function or in the
+    coverage_rate computation itself -- explanatory text only.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'tools/agent-monitoring/generate_retro.py:705-711 (`_kgmcp_verdict()`
+    docstring addendum stating the low-coverage clause reflects two independently-implemented
+    tools, not cache underperformance), :771-774 (the low-coverage explanation string
+    itself, appended to the existing ''Coverage is low: ...'' clause: ''This reflects
+    two independently-implemented tools (only knowledge_context/knowledge_status are
+    cache-instrumented; search_docs is served by a separate, uninstrumented implementation),
+    not a fixable inefficiency in the cache itself.''). tools/agent-monitoring/generate_retro.py:815-824
+    (`compute_kgmcp_cache_efficiency_metrics()` docstring addendum, same architectural-fact
+    framing, citing tools/knowledge_gateway_mcp.py and tools/knowledge_search.py by
+    path). tools/agent-monitoring/generate_retro.py:2034-2040 (`generate()` -- new
+    italicized paragraph appended under the ''## KGMCP Cache Efficiency'' heading,
+    after the existing ''_Reflects the full retrieval_cache_access_log corpus...''
+    paragraph and before the ''**Cache Efficiency: {verdict}**'' line; always rendered,
+    matching this section''s existing never-gated convention). tests/tools/test_generate_retro.py''s
+    _FIXED_CORPUS_EXPECTED_REPORT golden string (~line 1091-1096) was updated in the
+    same commit to include the new paragraph''s exact text, proving generate()''s
+    rendered output actually contains it.'
+  proof_type: regression
+  test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
+  divergence_note: null
