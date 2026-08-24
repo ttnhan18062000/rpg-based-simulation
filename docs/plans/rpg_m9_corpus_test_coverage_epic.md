@@ -111,7 +111,13 @@ not tier labels with a one-line gesture.
 3. **Several ideas already have a live SimQ scoring rule sitting idle.** WORLD DYNAMICS' event table already
    scores `demographic_birth`/`demographic_mortality` (idea 32, gated on idea 43) and `region_transformed`
    (idea 48) with real deltas and dormancy penalties defined — these rules exist today with nothing to
-   score. For these, the work is "make the event fire," not "design a new rule."
+   score. For these, the work is "make the event fire," not "design a new rule." **The full expected-event
+   registry — real event names, payloads, triggers, and pillar/scenario mapping for all 32 ideas — now lives
+   in `docs/brainstorm/rpg_expected_schemas.html`'s "Expected Events" section, not duplicated here.** That
+   section also answers whether any idea needs a genuinely new SimQ pillar (checked directly: no — 5 new
+   scenario entries within existing pillars are needed, SQ-25 through SQ-29, but no 11th pillar), and found
+   one standalone gap independent of this epic's own ideas: no `entity_evolved` event exists today even for
+   the already-shipped XP-only evolution path.
 
 4. **Per-idea corpus-tier classification and concrete world spec.**
 
@@ -308,6 +314,8 @@ not tier labels with a one-line gesture.
 
 ## References
 
+- `docs/brainstorm/rpg_expected_schemas.html`'s "Expected Events" section — the full event-type/payload/
+  trigger/pillar registry for all 32 ideas, referenced but not duplicated in item 3 above
 - `docs/simulation_quality/corpus_tier_taxonomy.md` — the real tier framework this epic classifies against
 - `config/simulation_quality/corpus_registry.yaml`, `tests/simulation_quality/fixtures/grade_anchors.json`,
   `data/worlds/*/world_compile_report.json` (real `state_hash` field used in idea 66's recalibration plan)
