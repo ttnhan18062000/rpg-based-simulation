@@ -701,6 +701,14 @@ def _kgmcp_verdict(
     not just a table of numbers a reader has to interpret themselves. Every clause here is a
     direct, literal readout of an already-computed number — no fabricated score, no LLM judgment
     call, just a rule-based label over real counts. Returns (verdict_label, explanation_text).
+
+    A low `coverage_rate` is architectural, not a fixable cache inefficiency: this cache
+    (`retrieval_cache.py::log_cache_access()`) is wired only into `knowledge_gateway_mcp.py`'s
+    `knowledge_context`/`knowledge_status` tools, while the hard-rule-mandated
+    `mcp__knowledge-search__search_docs` is served by a completely separate, uninstrumented
+    implementation (`knowledge_search.py`) that never touches this cache path at all. The
+    low-coverage clause appended below says so explicitly rather than implying the cache itself
+    is underperforming (TCK-20260824-RETRO-METRIC-CAVEATS).
     """
     total_events = total_hits + total_writes
 
@@ -760,7 +768,10 @@ def _kgmcp_verdict(
                 f"Coverage is low: {total_events} cache event(s) against {search_calls_total} "
                 f"real search/graphify calls ({coverage_rate * 100:.0f}% coverage) — much "
                 "retrieval activity bypasses the cache path entirely, so even a high reuse rate "
-                "on the events that DO reach the cache understates the real gap."
+                "on the events that DO reach the cache understates the real gap. This reflects "
+                "two independently-implemented tools (only knowledge_context/knowledge_status "
+                "are cache-instrumented; search_docs is served by a separate, uninstrumented "
+                "implementation), not a fixable inefficiency in the cache itself."
             )
             if verdict == "EFFECTIVE":
                 verdict = "MODERATE"
@@ -800,6 +811,17 @@ def compute_kgmcp_cache_efficiency_metrics(
     `verdict`/`verdict_explanation` (see _kgmcp_verdict()) fold all four signals into one
     glanceable label + 1-3 sentence explanation, so a reader is never left to eyeball a table of
     numbers to answer "is this good or bad."
+
+    A low `coverage_rate` (`coverage["coverage_rate"]`) is an architectural fact, not a fixable
+    cache inefficiency: this cache (`retrieval_cache.py::log_cache_access()`) is wired only into
+    `tools/knowledge_gateway_mcp.py`'s `knowledge_context`/`knowledge_status` tools, while the
+    hard-rule-mandated `mcp__knowledge-search__search_docs` — the actual bulk of real search
+    volume feeding `search_calls_total` above — is served by a completely separate,
+    uninstrumented implementation (`tools/knowledge_search.py`, confirmed zero references to
+    `retrieval_cache`/`knowledge_gateway_cache`) that never touches this cache path at all. A
+    near-zero coverage number therefore reflects two independently-implemented tools, only one
+    of which is cache-instrumented, not evidence the cache is being underused where it applies
+    (TCK-20260824-RETRO-METRIC-CAVEATS).
 
     `ticket_id`/`agent` absent on a row (ad-hoc, non-workflow calls, or a stale/unmigrated sidecar
     — see tools/retrieval_cache.py::read_current_run_sidecar()) are grouped under the literal
@@ -1367,6 +1389,15 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
     tools.jsonl rows with seq: null or seq <= 0 (shadow-packet rows) are structurally excluded
     by never matching an Investigate-phase key derived from events.jsonl (whose seq is
     non-nullable and >= 1 for real phase events) — no explicit skip branch is needed.
+
+    `search_before_grep.compliance_rate` only sees the orchestrating run's own direct tools.jsonl
+    rows for each (run_id, seq) pair — it has no visibility into a dispatched sub-agent's (e.g.
+    `investigator`) own tool calls, which are logged, if at all, outside this pair's key. When
+    Investigate is properly delegated to a real sub-agent (the standard, correct pattern), that
+    sub-agent's own search_docs/grep sequence is invisible here; a pair marked non-compliant may
+    reflect an orchestrator-level incidental call rather than the real investigation's own
+    behavior. The true compliance rate for delegated investigation work is unknown and plausibly
+    higher than this number (TCK-20260824-RETRO-METRIC-CAVEATS).
     """
     investigate_pairs = {
         (e.get("run_id"), e.get("seq"))
@@ -1915,6 +1946,15 @@ def generate(
 
         lines.append("### Search-Before-Grep Compliance (Investigate Phase)")
         lines.append("")
+        lines.append(
+            "_Only the orchestrating run's own direct tools.jsonl rows are visible to this "
+            "detector — a dispatched sub-agent's (e.g. `investigator`) own search/grep calls are "
+            "not attributed back to this pair, so a 'non-compliant' pair may reflect an "
+            "orchestrator-level incidental call rather than the real investigation's own "
+            "behavior. The true compliance rate for delegated investigation work is unknown and "
+            "plausibly higher than the rate below._"
+        )
+        lines.append("")
         rate = sbg["compliance_rate"]
         rate_str = "n/a" if rate is None else f"{rate * 100:.1f}%"
         lines.append(
@@ -1989,6 +2029,14 @@ def generate(
         "_Reflects the full retrieval_cache_access_log corpus regardless of this report's "
         "--days/--week/--all period selection — these rows are logged against "
         "`.claude/current_run` sidecar attribution at call time, not `runs.jsonl` timestamps._"
+    )
+    lines.append("")
+    lines.append(
+        "_A low coverage rate is architectural, not a fixable cache inefficiency: only "
+        "`knowledge_gateway_mcp.py`'s `knowledge_context`/`knowledge_status` tools are wired "
+        "into this cache; the hard-rule-mandated `mcp__knowledge-search__search_docs` is served "
+        "by a completely separate, uninstrumented implementation (`knowledge_search.py`) that "
+        "never touches this cache path at all._"
     )
     lines.append("")
     lines.append(f"**Cache Efficiency: {kce['verdict']}** — {kce['verdict_explanation']}")
