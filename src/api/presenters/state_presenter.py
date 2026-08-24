@@ -140,3 +140,122 @@ class StatePresenter:
             "kind": region.kind,
             "weather": region.weather
         }
+
+    @staticmethod
+    def _terrain_code_map(state: AuthoritativeState) -> Dict[str, int]:
+        """Deterministic terrain-type-string -> int code, for the live map's RLE grid.
+
+        No terrain-type enum exists in this codebase (recipe-declared free-form strings). Codes are
+        assigned 0..n-1 over the alphabetically-sorted distinct values actually present in
+        state.terrain, so the same terrain-type set always maps to the same codes regardless of dict
+        insertion order. Computed fresh per call (never cached/stored) since terrain can change
+        between calls.
+        """
+        return {t: i for i, t in enumerate(sorted(set(state.terrain.values())))}
+
+    @staticmethod
+    def present_map(state: AuthoritativeState) -> Dict[str, Any]:
+        """Terrain grid as an RLE-encoded payload: {width, height, grid}.
+
+        AuthoritativeState has no stored width/height; state.terrain is populated densely over the
+        full world topology at compile time, so the populated extent (max key + 1) is the real
+        width/height. RLE walk matches src_legacy's ported _idx(x,y)=y*width+x row-major order.
+        """
+        if not state.terrain:
+            return {"width": 0, "height": 0, "grid": []}
+
+        width = max(x for x, _ in state.terrain.keys()) + 1
+        height = max(y for _, y in state.terrain.keys()) + 1
+        code_map = StatePresenter._terrain_code_map(state)
+
+        grid: List[int] = []
+        cur_val = None
+        cur_count = 0
+        for y in range(height):
+            for x in range(width):
+                v = code_map.get(state.terrain.get((x, y)), 0)
+                if v == cur_val:
+                    cur_count += 1
+                else:
+                    if cur_val is not None:
+                        grid.append(cur_val)
+                        grid.append(cur_count)
+                    cur_val = v
+                    cur_count = 1
+        if cur_val is not None:
+            grid.append(cur_val)
+            grid.append(cur_count)
+
+        return {"width": width, "height": height, "grid": grid}
+
+    @staticmethod
+    def present_static(state: AuthoritativeState) -> Dict[str, Any]:
+        """Static world objects (buildings, resource nodes, treasure chests, regions).
+
+        See staging_artifacts/TCK-20260821-PRESENT-MAP-STATIC/investigation.md for the field-level
+        drop-vs-derive decisions (building name/owner, resource-node name/terrain, chest
+        guard/tier/looted, region terrain/difficulty/locations) — none are stored on the
+        corresponding state class, so each is either derived from an existing field or dropped.
+        """
+        code_map = StatePresenter._terrain_code_map(state)
+
+        buildings = [
+            {
+                "building_id": str(b.id),
+                "name": b.kind.title(),
+                "x": b.position[0],
+                "y": b.position[1],
+                "building_type": b.kind,
+                "owner_entity_id": None,
+            }
+            for b in state.buildings.values()
+        ]
+
+        resource_nodes = [
+            {
+                "node_id": n.id,
+                "resource_type": n.kind,
+                "name": n.kind.title(),
+                "x": n.position[0],
+                "y": n.position[1],
+                "terrain": code_map.get(state.terrain.get((int(n.position[0]), int(n.position[1]))), 0),
+                "yields_item": n.yields_item,
+                "max_harvests": n.max_charges,
+                "respawn_cooldown": n.respawn_cooldown,
+                "harvest_ticks": n.required_ticks,
+            }
+            for n in state.resource_nodes.values()
+        ]
+
+        treasure_chests = [
+            {
+                "chest_id": c.id,
+                "x": c.position[0],
+                "y": c.position[1],
+                "tier": 1,
+                "looted": len(c.items) == 0,
+                "guard_entity_id": None,
+            }
+            for c in state.chests.values()
+        ]
+
+        regions = []
+        for region in state.regions.values():
+            min_x, min_y, max_x, max_y = region.bounds
+            regions.append({
+                "region_id": region.id,
+                "name": region.name,
+                "terrain": code_map.get(region.kind, 0),
+                "center_x": (min_x + max_x) / 2,
+                "center_y": (min_y + max_y) / 2,
+                "radius": max(max_x - min_x, max_y - min_y) / 2,
+                "difficulty": region.hazard_level,
+                "locations": [],
+            })
+
+        return {
+            "buildings": buildings,
+            "resource_nodes": resource_nodes,
+            "treasure_chests": treasure_chests,
+            "regions": regions,
+        }

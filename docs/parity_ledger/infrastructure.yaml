@@ -2418,7 +2418,9 @@
 - id: INFRA-210
   text: All API read paths are shaped through ReadModelService / ReadModelCache /
     StatePresenter; no API route, ws handler, or server file imports AuthoritativeState
-    or EntityState outside TYPE_CHECKING.
+    or EntityState outside TYPE_CHECKING. StatePresenter's present_map/present_static
+    (TCK-20260821-PRESENT-MAP-STATIC, 2026-08-24) follow the same shape (plain dict
+    returns, read-only, no raw domain object exposure).
   status: verified
   priority: P1
   legacy_evidence: null

@@ -516,6 +516,19 @@ viewers — not a large multiplayer game):
   either drop `locations`/`difficulty`/`name` from the ported `RegionSchema` or source them from elsewhere
   not yet identified.** This is real, scoped design work for item 1's child ticket, not a lookup task —
   flagged precisely so that ticket doesn't get scoped as trivial.
+
+  **Correction (`TCK-20260821-PRESENT-MAP-STATIC`, implemented)**: this analysis's grep pattern
+  (`center_x|center_y|radius|locations`) looked for *pre-computed* spatial fields and correctly found
+  none — but missed that `RegionState` (the durable state class, `src/core/state.py:236-259`, distinct
+  from the `RegionRecipeSpec` this analysis read) already carries a raw `bounds: tuple[int,int,int,int]`
+  field, genuinely populated at world-compile time (`src/worldbuilding/compiler.py:243-252`). The
+  derive-at-presentation-time approach this doc anticipated was correct; the source was not — the
+  implemented `present_static` derives `center_x`/`center_y`/`radius` from `region.bounds` (already on
+  the entity being presented) rather than looking up `RegionRecipeSpec.grid_bounds` (a separate config
+  object), since presenters read state, not specs. `region.name` also already exists and needed no
+  drop/re-source decision either. `locations` is dropped (`[]`, no location/POI concept exists in V2 at
+  all); `difficulty` is derived from `region.hazard_level`, `region.kind` derives a `terrain` code — see
+  `stored_artifacts/TCK-20260821-PRESENT-MAP-STATIC/investigation.md` for the full decision record.
 - **`total_spawned`/`total_deaths` — now fully resolved.** See item 3 above: V1's exact computation
   pattern found and confirmed absent from V2. Item 3's child ticket adds two simple counters to
   `V2EngineManager`, following V1's proven pattern.
