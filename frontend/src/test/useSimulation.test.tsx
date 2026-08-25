@@ -107,8 +107,141 @@ describe('useSimulation hook', () => {
 
     expect(result.current.tick).toBe(0)
     expect(result.current.entities).toEqual([])
-    expect(result.current.status).toBe('CONNECTING')
+    // The real useState initial value is 'INITIALIZING', but loadInitial()'s synchronous
+    // setStatus('FETCHING_WORLD_DATA') call is already flushed by act() inside renderHook()
+    // before this assertion runs (React 19 + RTL 16 act() semantics) — see plan.md Step 3.
+    expect(result.current.status).toBe('FETCHING_WORLD_DATA')
     expect(result.current.aliveCount).toBe(0)
+  })
+
+  it('starts at FETCHING_WORLD_DATA immediately (INITIALIZING is not observable post-renderHook in this harness)', () => {
+    const { result } = renderHook(() => useSimulation())
+
+    expect(result.current.status).toBe('FETCHING_WORLD_DATA')
+  })
+
+  it("transitions through FETCHING_WORLD_DATA while loadInitial's fetches are in flight", () => {
+    // Hold the /map fetch open indefinitely (never resolved) so the assertion below observes
+    // status strictly while the Promise.all in loadInitial() is still pending. Cleanup's unmount
+    // sets loadInitial's `cancelled` flag, so the never-resolved promise cannot leak a state
+    // update into a later test.
+    mockFetch.mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/map')) {
+        return new Promise(() => {})
+      }
+      return defaultMockFetch(input)
+    })
+
+    const { result } = renderHook(() => useSimulation())
+
+    expect(result.current.status).toBe('FETCHING_WORLD_DATA')
+  })
+
+  it('transitions to CONNECTING_LIVE once map/static/manifest load and the WS connection attempt begins', async () => {
+    const { result } = renderHook(() => useSimulation())
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/map')
+    })
+
+    await waitFor(() => {
+      expect(vi.mocked(globalThis.WebSocket).mock.instances.length).toBeGreaterThan(0)
+    })
+
+    expect(result.current.status).toBe('CONNECTING_LIVE')
+  })
+
+  it('transitions to SYNCING on WS open (handshake sent), stays SYNCING through the non-delta initial summary message', async () => {
+    const { result, mockWS } = await renderConnectedHook()
+
+    expect(result.current.status).toBe('SYNCING')
+
+    const initialSummary = {
+      tick: 0,
+      world_time: 0,
+      entities_count: 0,
+      maturity: 'young',
+      seed: 42,
+    }
+
+    act(() => {
+      mockWS.onmessage?.({ data: JSON.stringify(initialSummary) })
+    })
+
+    expect(result.current.status).toBe('SYNCING')
+  })
+
+  it('transitions to READY exactly on the first isDelta-shaped message, not before', async () => {
+    const { result, mockWS } = await renderConnectedHook()
+
+    expect(result.current.status).toBe('SYNCING')
+
+    const delta = {
+      tick: 5,
+      changed: [{ id: 1, kind: 'Hero', x: 1, y: 1, hp: 10, max_hp: 10, level: 1, faction: 'player', weapon_range: 1 }],
+      removed: [],
+      events: [],
+      snapshot_as_of_tick: 5,
+      region_id: null,
+    }
+
+    act(() => {
+      mockWS.onmessage?.({ data: JSON.stringify(delta) })
+    })
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('READY')
+    })
+  })
+
+  it("loadInitial's fetch-retry loop is bounded and transitions to LOAD_ERROR after N failures", async () => {
+    vi.useFakeTimers()
+    mockFetch.mockImplementation(() => Promise.resolve({ ok: false, status: 500, json: async () => ({}) }))
+
+    const { result } = renderHook(() => useSimulation())
+
+    // Flush the initial synchronous loadInitial() attempt's rejection.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+
+    // 4 more attempts at the existing fixed 1000ms retry delay reach the N=5 limit.
+    for (let i = 0; i < 4; i++) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000)
+      })
+    }
+
+    expect(result.current.status).toBe('LOAD_ERROR')
+  })
+
+  it('LOAD_ERROR is terminal and does not auto-recover even once fetches would succeed', async () => {
+    vi.useFakeTimers()
+    mockFetch.mockImplementation(() => Promise.resolve({ ok: false, status: 500, json: async () => ({}) }))
+
+    const { result } = renderHook(() => useSimulation())
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    for (let i = 0; i < 4; i++) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000)
+      })
+    }
+
+    expect(result.current.status).toBe('LOAD_ERROR')
+    const callCountAtError = mockFetch.mock.calls.length
+
+    mockFetch.mockImplementation(defaultMockFetch)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000)
+    })
+
+    expect(mockFetch.mock.calls.length).toBe(callCountAtError)
+    expect(result.current.status).toBe('LOAD_ERROR')
   })
 
   it('sends handshake as the first outgoing message before processing any data', async () => {

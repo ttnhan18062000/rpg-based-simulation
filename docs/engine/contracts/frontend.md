@@ -28,7 +28,9 @@ The WorldLoop Frontend is a high-performance React application built with **Vite
 Central to the frontend is the `useSimulation` custom hook, which manages the lifecycle of the simulation connection.
 
 ### A. Initial Load (Full State)
-On mount, the hook performs three critical fetch calls, joined into one `Promise.all`:
+On mount, the hook's `status` starts at `INITIALIZING` (`useState<SimStatus>('INITIALIZING')`).
+`loadInitial()` sets `status` to `FETCHING_WORLD_DATA` as its first synchronous action, before any
+fetch is issued, then performs three critical fetch calls joined into one `Promise.all`:
 1.  **`/api/v1/map`**: Fetches the RLE-encoded tile grid.
 2.  **`/api/v1/static`**: Fetches all persistent world objects (Buildings, Resource Nodes, Treasure Chests).
 3.  **`/api/v1/manifest`**: Fetches the versioned ID-to-meaning lookup table (`terrain_types`,
@@ -37,6 +39,13 @@ On mount, the hook performs three critical fetch calls, joined into one `Promise
     and `plan.md`). `terrain_types` is keyed by the same int codes `/api/v1/map`'s RLE grid uses.
     The fetched value is stored in hook state (`manifest`) but not yet consumed by any
     rendering/color logic — retiring `colors.ts`'s hardcoded maps to consume it is a fast-follow.
+
+**Bounded retry / failure (`TCK-20260821-PHASED-LOADING-STATE-MACHINE`)**: if any of the three
+fetches fails, `loadInitial()` retries at a fixed 1000ms delay, tracked by a `retryCountRef` counter.
+After `LOAD_RETRY_LIMIT` (5) consecutive failures, `status` transitions to the terminal `LOAD_ERROR`
+value and `loadInitial` is never invoked again for the lifetime of the mount — there is no retry
+button and no automatic recovery short of a full page reload (which remounts the hook and resets the
+counter).
 
 ### B. Delta Sync (WebSocket)
 Once the base data is loaded, the hook opens a `WebSocket` to `/api/v1/ws` (derived from
@@ -62,7 +71,22 @@ cannot resolve a bare relative path).
   five fields (`'' `/`0`/`null` as appropriate) when constructing the `EntitySlim` object it stores,
   so downstream consumers (`useCanvas.ts`) keep seeing a fully-populated shape.
 - **Reconnect**: on `onclose` or `onerror`, the hook closes the socket (if not already closed) and
-  reconnects after 2000ms, mirroring the prior SSE reconnect behavior.
+  reconnects after 2000ms, mirroring the prior SSE reconnect behavior. This reconnect loop is
+  **deliberately left unbounded** by `TCK-20260821-PHASED-LOADING-STATE-MACHINE` — unlike
+  `loadInitial()`'s new bounded retry (§2.A above), there is no `LOAD_ERROR`-equivalent terminal
+  status for repeated WS reconnect failures. This is a stated, reviewed asymmetry: `loadInitial()` is
+  a one-shot initial load where silent infinite retry is a real defect, while `scheduleReconnect()` is
+  the steady-state reconnect path for an already-running live-view client, where indefinite background
+  retry is the correct behavior.
+
+**Status wiring (`TCK-20260821-PHASED-LOADING-STATE-MACHINE`)**: `SimStatus` transitions are now
+tied directly to this lifecycle — `status` becomes `CONNECTING_LIVE` at the start of `connectWS()`
+(before the socket is constructed), `SYNCING` on `onopen` immediately after the handshake is sent,
+and `READY` on the first message that passes the `isDelta` shape-guard above (unconditionally on
+every subsequent delta too, not gated behind a first-time-only flag — the reducer's own delta
+detection is the sole trigger, not a separately invented one). `READY` is a transient handoff
+marker, not a permanent status: the secondary `fallbackPoll` (§2.C) overwrites it with
+`RUNNING`/`PAUSED`/`STOPPED` within its next 500ms tick once `/stats` confirms simulation state.
 
 > Two real, disclosed blockers prevent live verification of this connection against a running dev
 > server today, neither fixed by `TCK-20260821-REWIRE-USESIMULATION-WEBSOCKET`: fail-closed
@@ -91,6 +115,13 @@ The `useCanvas` hook manages the main 2D viewport.
 
 ## 4. UI Components
 
+- **Loading Gate**: `GameCanvas` is mounted inside `SimulationLoadingGate`
+  (`frontend/src/components/SimulationLoadingGate.tsx`, added by
+  `TCK-20260821-PHASED-LOADING-STATE-MACHINE`), which renders phase-specific loading text for
+  `INITIALIZING`/`FETCHING_WORLD_DATA`/`CONNECTING_LIVE`/`SYNCING`, a distinct error UI for
+  `LOAD_ERROR`, and `GameCanvas` itself (via `children`) for every other status
+  (`READY`/`RUNNING`/`PAUSED`/`STOPPED`) — gated on a loading-status allowlist rather than literal
+  `status === 'READY'` equality, since `READY` is transient (see §2.B).
 - **Control Bar**: Allows the user to `PAUSE`, `RESUME`, and adjust the `TPS` (Ticks Per Second).
   Only `pause`/`resume` map to real backend routes (`POST /api/v1/control/pause`,
   `POST /api/v1/control/resume`) — `ControlPanel.tsx`'s `start`/`step`/`reset` buttons have no

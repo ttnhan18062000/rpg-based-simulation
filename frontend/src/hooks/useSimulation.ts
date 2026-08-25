@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, WireEntitySlim, GameEvent, GroundItem, Building, ResourceNode, TreasureChest, Region, StaticData, Manifest } from '@/types/api';
 
 const API_BASE = '/api/v1';
+const LOAD_RETRY_LIMIT = 5;
 
 function wsBase(): string {
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -14,7 +15,16 @@ async function fetchJSON<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export type SimStatus = 'CONNECTING' | 'RUNNING' | 'PAUSED' | 'STOPPED';
+export type SimStatus =
+  | 'INITIALIZING'
+  | 'FETCHING_WORLD_DATA'
+  | 'CONNECTING_LIVE'
+  | 'SYNCING'
+  | 'READY'
+  | 'RUNNING'
+  | 'PAUSED'
+  | 'STOPPED'
+  | 'LOAD_ERROR';
 
 // Decoded map data with 2D grid (decoded from RLE on load)
 export interface DecodedMapData {
@@ -75,7 +85,7 @@ export function useSimulation(): SimulationState {
   const [aliveCount, setAliveCount] = useState(0);
   const [totalSpawned, setTotalSpawned] = useState(0);
   const [totalDeaths, setTotalDeaths] = useState(0);
-  const [status, setStatus] = useState<SimStatus>('CONNECTING');
+  const [status, setStatus] = useState<SimStatus>('INITIALIZING');
   const [selectedEntityId, setSelectedEntityId] = useState<number | null>(null);
 
   const lastTickRef = useRef(0);
@@ -83,6 +93,7 @@ export function useSimulation(): SimulationState {
   const staticLoadedRef = useRef(false);
   const selectedIdRef = useRef<number | null>(null);
   const lastSelKeyRef = useRef('');
+  const retryCountRef = useRef(0);
 
   // Ref is synced immediately in selectEntity callback (not via useEffect)
   // to ensure the very next poll includes the ?selected= param
@@ -91,6 +102,7 @@ export function useSimulation(): SimulationState {
   useEffect(() => {
     let cancelled = false;
     const loadInitial = async () => {
+      setStatus('FETCHING_WORLD_DATA');
       try {
         const [rawMap, staticData, manifestData] = await Promise.all([
           fetchJSON<MapData>('/map'),
@@ -113,7 +125,13 @@ export function useSimulation(): SimulationState {
           staticLoadedRef.current = true;
         }
       } catch {
-        if (!cancelled) setTimeout(loadInitial, 1000);
+        if (cancelled) return;
+        retryCountRef.current += 1;
+        if (retryCountRef.current >= LOAD_RETRY_LIMIT) {
+          setStatus('LOAD_ERROR');
+        } else {
+          setTimeout(loadInitial, 1000);
+        }
       }
     };
     loadInitial();
@@ -129,6 +147,9 @@ export function useSimulation(): SimulationState {
     let pollingStatus = false;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
+    // Deliberately unbounded: unlike loadInitial()'s one-shot retry (see LOAD_ERROR below), this is
+    // the steady-state live-view reconnect path and should keep retrying indefinitely in the
+    // background. Decision recorded in TCK-20260821-PHASED-LOADING-STATE-MACHINE.
     const scheduleReconnect = () => {
       if (reconnectTimeout) return;
       reconnectTimeout = setTimeout(() => {
@@ -138,10 +159,12 @@ export function useSimulation(): SimulationState {
     };
 
     const connectWS = () => {
+      setStatus('CONNECTING_LIVE');
       ws = new WebSocket(`${wsBase()}/ws`);
 
       ws.onopen = () => {
         ws!.send(JSON.stringify({ type: 'handshake', format: 'json' }));
+        setStatus('SYNCING');
       };
 
       ws.onmessage = (event) => {
@@ -160,6 +183,8 @@ export function useSimulation(): SimulationState {
             // state to reduce here.
             return;
           }
+
+          setStatus('READY');
 
           setTick(data.tick);
 
