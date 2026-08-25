@@ -94,6 +94,24 @@ None.
 
 ## Implementation Notes
 
+**Post-Finalize correction (found via real CI, PR #77, before merge)**: the new `frontend` job
+tripped 5 real, pinned CI-structure static-guard tests belonging to two older, already-closed
+tickets (`TCK-20260823-CI-STEP-SUMMARY-REPORTING`'s `tests/static/test_ci_step_summary_reporting.py`
+and `TCK-20260824-CI-NEW-EXISTING-TEST-SPLIT`'s shared job-set/`needs:` assertions in the same
+file, plus `tests/static/test_ci_narrow_path_filtered_jobs.py`'s `_EXPECTED_SLOW_NEEDS`). Local
+verification before this fix had run against the wrong branch (`main`, missing this ticket's own
+commits) and passed cleanly, masking the real failure until CI itself caught it twice. Root cause:
+those two tickets' own static guards pin the exact job set and the `_PRE_EXISTING_USES`
+Action-allowlist as of *their* time — genuinely correct behavior for baseline drift detection, not
+a rule this ticket violated. Fix: `frontend` is a non-pytest (npm/vitest) job, so it correctly
+joins the *exempt* set (`migration-lanes`/`typecheck`/`slow`), not `_FASTLANE_JOBS` (which requires
+`--junit-xml`/base-branch-collect-only wiring `frontend` has no pytest-shaped equivalent for);
+`actions/setup-node@v4` added to `_PRE_EXISTING_USES` as a legitimate new Action (mirrors
+`deploy-docs.yml`'s own existing use); `_EXPECTED_SLOW_YAML`/`_EXPECTED_SLOW_NEEDS` updated to
+include `frontend` in `slow`'s `needs:` list, matching the real, intentional change. Re-verified:
+`tests/architecture tests/docs tests/integrity tests/static tests/refactor` full re-run, 170/170
+passing (same count as before this ticket's own change), confirming no other regression.
+
 Added a new `frontend` job to `.github/workflows/test.yml` (after `arch-docs`, before the
 `changed-files` gate), matching `deploy-docs.yml`'s existing `actions/setup-node@v4` pattern
 (`node-version: 20`, `cache: npm`, `cache-dependency-path: frontend/package-lock.json` --
@@ -138,14 +156,27 @@ PR is the actual confirmation for that Assumption, not a separate investigation 
   cleanly, `frontend` job present in the parsed job list alongside all 12 pre-existing jobs
   (unchanged).
 - Real CI confirmation: this ticket's own PR (#77) is itself the live test -- `gh pr checks 77`
-  after this commit lands shows whether the new `Frontend` job actually appears and passes in a
-  real GitHub Actions run, not just local `npx`/`npm` invocations.
+  confirmed the new `Frontend` job genuinely appears and passes in a real GitHub Actions run, not
+  just local `npx`/`npm` invocations. That same real CI run also caught the 5 pinned-baseline
+  failures described in the post-Finalize correction above (Architecture / docs / static job,
+  2 real, reproducible failures across 2 CI attempts -- not flaky, since the first "clean" local
+  check had run against the wrong branch).
+- Post-correction: `.venv/bin/python3 -m pytest tests/architecture tests/docs tests/integrity
+  tests/static tests/refactor -m "not slow and not extra_slow" -q` -- **170/170 passed** (verified
+  against the exact PR #77 commit, in a temporary `git worktree add` at that SHA, not the working
+  branch -- the mistake that caused the original false-clean local result).
 
 ## Files Changed
 
 - `.github/workflows/test.yml` -- added the `frontend` job (checkout, Node 20 setup with npm
   cache, `npm ci`, `npx vitest run`, `npm run build`); added `frontend` to the `slow` job's
   `needs:` list. No existing job's steps, triggers, or `if:` conditions changed.
+- `tests/static/test_ci_narrow_path_filtered_jobs.py` -- `_EXPECTED_SLOW_NEEDS` updated to include
+  `"frontend"`.
+- `tests/static/test_ci_step_summary_reporting.py` -- `_PRE_EXISTING_USES` gained
+  `"actions/setup-node@v4"`; `_EXPECTED_SLOW_YAML`'s `needs:` list gained `frontend`;
+  `test_no_cross_job_aggregate_step_or_job_added`'s `expected_job_names` gained `"frontend"` in the
+  exempt (non-`_FASTLANE_JOBS`) set.
 
 ## Completion Summary
 

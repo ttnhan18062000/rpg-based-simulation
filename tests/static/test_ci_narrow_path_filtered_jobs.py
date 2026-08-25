@@ -41,6 +41,7 @@ _EXPECTED_SLOW_NEEDS = [
     "agent-orchestration",
     "simulation-quality",
     "arch-docs",
+    "frontend",
     "perf-cert-arena",
     "migration-lanes",
 ]
