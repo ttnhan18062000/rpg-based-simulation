@@ -27,7 +27,7 @@ _EXISTING_RECIPE_SNAPSHOT = {
         '\t@echo "Open http://localhost:5173 to view the live map."\n'
         '\t@echo "Press Ctrl+C to stop both."\n'
         "\t@trap 'kill 0' INT; \\\n"
-        "\t\tpython3 -m src serve --port 8000 & \\\n"
+        '\t\tpython3 -m src serve --port 8000 --api-key-hashes "dev:3e90488c475fb2c2997525497f1e72e82dec6d68b5738dc7cebba4371f9f0ee2" & \\\n'
         "\t\t(cd frontend && npm run dev) & \\\n"
         "\t\twait\n"
     ),
