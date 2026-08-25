@@ -190,6 +190,20 @@ already have live SimQ scoring rules sitting idle, waiting only for the event to
 
 ## Known open items, inherited from the atlas (not re-litigated here)
 
+- **Direction alignment (2026-08-24):** a full re-read of `the_unwritten_world.html`'s 8 principles against
+  the Design Merit Scorecard's Direction Fit axis and this list itself, in
+  `docs/plans/rpg_design_roadmap/rpg_direction_alignment_audit.md`. Headline: no idea contradicts a
+  principle — drift found is by omission, not commission. Surfaced three more "idea 1"-shaped undersold
+  fixes (ideas 3, 42, 17), tied five items already in this list to specific principles they weren't credited
+  for, and found that idea 8 ("Prune or finish the dead cognition schema") already covers `core/cognition.py`
+  — the source document's own named worked example of the Principle-7 failure mode — but its DF=0 score
+  doesn't distinguish idea 8's principle-serving "finish" branch from its inert "prune" one. Named one
+  candidate new idea (Living Relationship Decay) plus two scope extensions (idea 14's per-species logic, idea
+  59/66's place-history tracking) — all drafted, none yet added to the atlas. Extended coverage to the
+  Sequencing rules section, all 9 epic docs, the Simulation Wiring Map, and the Milestone Map found a real
+  naming collision (idea 8's orphaned `core/cognition.py::SelfModel` vs. idea 9's live
+  `core/self_model.py::SelfModelBundle`) and a gap in M7's own Acceptance Signal (SimQ-visibility isn't the
+  same as in-world observer legibility) — both actionable, neither blocking.
 - Idea 30 (Possessions With Personal History, part of no milestone above's critical path but flagged in
   Infrastructure Gaps) needs genuinely new per-instance-identity infrastructure this codebase doesn't have
   anywhere today — the one idea of 65 with no real precedent to build on.
@@ -273,5 +287,7 @@ already have live SimQ scoring rules sitting idle, waiting only for the event to
 - `docs/brainstorm/simulation_capabilities.html` (plain-language companion, for non-technical review)
 - `docs/plans/live_map_scaling_roadmap.md`, `docs/plans/hud_design_system_foundation_epic.md`'s sibling-epic
   roadmap (the two structural precedents this doc follows)
+- `docs/plans/rpg_design_roadmap/rpg_direction_alignment_audit.md` (direction-level cross-check of this
+  roadmap against the 8 principles, 2026-08-24)
 - `docs/simulation_quality/corpus_tier_taxonomy.md` — the real Unit/End-to-end/Stress/Regression corpus
   framework M9 classifies all 32 stateful ideas against, rather than reinventing
