@@ -58,22 +58,31 @@ def _run_writer_tool(path: Path, args: list[str], cwd: Path) -> None:
     assert result.returncode == 0, result.stderr
 
 
-def _write_sidecar(cwd: Path, *, run_id, seq, phase, agent, execution_id, provider, ticket_id) -> None:
+def _write_sidecar(
+    cwd: Path, *, run_id, seq, phase, agent, execution_id, provider, ticket_id, session_id
+) -> None:
+    """Mirrors the REAL current writeSidecar() shape (TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE):
+    writes both the unscoped `.claude/current_run` file and a per-session-scoped copy at
+    `.claude/current_run.<session_id>`. The scoped copy is required as of
+    TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION: post_tool_hook.py no longer falls back to the
+    unscoped file when no scoped file exists for the calling session_id (it writes null
+    attribution instead) — a caller must write the scoped file itself, same as real
+    ticket-workflow sessions do."""
     claude_dir = cwd / ".claude"
     claude_dir.mkdir(parents=True, exist_ok=True)
-    (claude_dir / "current_run").write_text(
-        json.dumps(
-            {
-                "run_id": run_id,
-                "seq": seq,
-                "phase": phase,
-                "agent": agent,
-                "execution_id": execution_id,
-                "provider": provider,
-                "ticket_id": ticket_id,
-            }
-        )
+    data = json.dumps(
+        {
+            "run_id": run_id,
+            "seq": seq,
+            "phase": phase,
+            "agent": agent,
+            "execution_id": execution_id,
+            "provider": provider,
+            "ticket_id": ticket_id,
+        }
     )
+    (claude_dir / "current_run").write_text(data)
+    (claude_dir / f"current_run.{session_id}").write_text(data)
 
 
 def _run_post_tool_hook(cwd: Path, *, session_id: str, command: str) -> None:
@@ -144,6 +153,7 @@ def _perform_one_simulated_execution(cwd: Path, *, ticket_id: str, seq_start: in
     }
     _run_writer_tool(_RECORD_RUN_PATH, ["--data", json.dumps(run_record)], cwd=cwd)
 
+    session_id = f"sess-{execution_id}"
     _write_sidecar(
         cwd,
         run_id=ticket_id,
@@ -153,8 +163,9 @@ def _perform_one_simulated_execution(cwd: Path, *, ticket_id: str, seq_start: in
         execution_id=execution_id,
         provider=provider,
         ticket_id=ticket_id,
+        session_id=session_id,
     )
-    _run_post_tool_hook(cwd, session_id=f"sess-{execution_id}", command="pytest tests/")
+    _run_post_tool_hook(cwd, session_id=session_id, command="pytest tests/")
 
     return {"execution_id": execution_id, "provider": provider, "ticket_id": ticket_id}
 
