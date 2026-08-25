@@ -11279,3 +11279,35 @@
   v2_evidence: tools/retrieval_cache.py, tools/agent-monitoring/post_tool_hook.py
   test_path: tests/tools/test_retrieval_cache.py::TestReadCurrentRunSidecar::test_scoped_sidecar_wins_over_stale_unscoped_when_both_exist
   divergence_note: null
+- id: INFRA-386
+  text: 'tools/agent_orchestration_claude_adapter/terminal_status_extractor.py''s
+    extract_literal_statuses()/extract_all_terminal_statuses() gained a content-based
+    distinctness marker: each literal writeMonitoring() call site now also carries
+    a ''context'' field (the nearby message: ''...'' string-literal prefix, within
+    a 400-char lookahead window, None if not found), and extract_all_terminal_statuses()''s
+    aggregated per-value dict gained a parallel ''contexts'' list alongside the existing
+    ''call_sites'' list. This closes a recurring drift: two tests (test_terminal_status_extractor.py::test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count,
+    test_terminal_status_conformance.py::test_terminal_status_conformance_finalize_incomplete_appears_once_on_both_sides)
+    used to hardcode FINALIZE_INCOMPLETE''s two call-site line numbers as an exact
+    literal list, breaking on any implement-ticket.js edit that shifted lines above
+    them -- 8 separate hotfix tickets since 2026-08-02. Both tests now assert structural
+    invariants (exactly 2 distinct, ascending call sites; 2 distinct non-None context
+    markers) instead, verified line-position-independent by a new synthetic-fixture
+    test. call_sites'' own list[int] shape is unchanged (backward compatible); contexts
+    is purely additive. Renumbered to INFRA-386 during consolidation-branch cherry-pick,
+    which had already landed INFRA-384/385 (unrelated sidecar-ad-hoc and retrieval_cache
+    tickets) from a sibling branch merged first.'
+  status: verified
+  priority: P2
+  v2_evidence: tools/agent_orchestration_claude_adapter/terminal_status_extractor.py
+    (_MESSAGE_CONTEXT_RE, _CONTEXT_WINDOW_CHARS, context field on extract_literal_statuses(),
+    contexts list on extract_all_terminal_statuses()), tests/agent_orchestration_claude_adapter/test_terminal_status_extractor.py
+    (test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count, new
+    test_call_site_detection_tolerates_unrelated_line_insertion_above), tests/agent_orchestration_claude_adapter/test_terminal_status_conformance.py
+    (test_terminal_status_conformance_finalize_incomplete_appears_once_on_both_sides)
+  test_path: tests/agent_orchestration_claude_adapter/test_terminal_status_extractor.py::test_call_site_detection_tolerates_unrelated_line_insertion_above
+  divergence_note: null
+  proof_type: regression
+  support_boundary: Claude-agent-workflow orchestration tooling only -- no simulation
+    behavior is involved (mirrors INFRA-263/264/265/315/379/381's support_boundary
+    pattern for pure workflow-tooling entries in this shard).
