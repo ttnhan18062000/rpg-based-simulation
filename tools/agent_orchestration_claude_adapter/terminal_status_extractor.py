@@ -25,6 +25,15 @@ from pathlib import Path
 
 _LITERAL_STATUS_RE = re.compile(r"writeMonitoring\('([^']+)'\)")
 _VERDICT_DERIVED_CALL_SITE_RE = re.compile(r"writeMonitoring\(\w+\.verdict\)")
+# TCK-20260824-TERMINAL-STATUS-STRUCTURAL-FIX: a stable, content-based distinctness marker for
+# call sites that share the same status value (currently only FINALIZE_INCOMPLETE, with two call
+# sites). Line numbers alone can't tell "two genuinely different code paths" apart from "the same
+# call site counted twice" after a structural-invariant rewrite removes exact-line-number
+# assertions — this regex captures each call site's nearby `message: '...'` string-literal prefix
+# (stopping at the first closing quote, so a `+ variable` concatenation suffix is harmlessly
+# ignored) as a semantically meaningful, line-position-independent marker.
+_MESSAGE_CONTEXT_RE = re.compile(r"message:\s*'([^']*)'")
+_CONTEXT_WINDOW_CHARS = 400
 # Excludes `$` from the captured value: the same `record_run.py --data` payload shape is also
 # quoted, with `"final_status":"${finalStatus}"` templated, inside writeMonitoring()'s own prompt
 # text (documenting the *normal* call, not a bypass) — only a bare string literal (no `${...}`
@@ -47,12 +56,20 @@ def extract_literal_statuses(workflow_js_path: Path) -> list[dict]:
 
     Returns one entry per call site (not deduped) — `FINALIZE_INCOMPLETE`'s two call sites yield
     two separate entries here; deduping by value happens only in `extract_all_terminal_statuses`.
+
+    Each entry also carries `context`: the nearby `message: '...'` string-literal prefix (within
+    `_CONTEXT_WINDOW_CHARS` characters after the call site), or `None` if no such literal is found
+    in the window. This is a distinctness marker, not a replacement for `line` — see
+    `_MESSAGE_CONTEXT_RE`'s comment.
     """
     text = workflow_js_path.read_text(encoding="utf-8")
     entries = []
     for match in _LITERAL_STATUS_RE.finditer(text):
         line = text.count("\n", 0, match.start()) + 1
-        entries.append({"value": match.group(1), "kind": "literal", "line": line})
+        window = text[match.end():match.end() + _CONTEXT_WINDOW_CHARS]
+        context_match = _MESSAGE_CONTEXT_RE.search(window)
+        context = context_match.group(1) if context_match else None
+        entries.append({"value": match.group(1), "kind": "literal", "line": line, "context": context})
     return entries
 
 
@@ -100,25 +117,33 @@ def extract_bypass_statuses(workflow_js_path: Path) -> list[dict]:
 def extract_all_terminal_statuses(workflow_js_path: Path) -> list[dict]:
     """Aggregate literal, verdict-derived, and bypass statuses, deduped by `value`.
 
-    Returns one entry per distinct `value`: `{"value": str, "kind": str, "call_sites": [int, ...]}`.
-    `call_sites` is empty for verdict-derived entries (no source-literal call site to record).
+    Returns one entry per distinct `value`: `{"value": str, "kind": str, "call_sites": [int, ...],
+    "contexts": [str | None, ...]}`. `call_sites`/`contexts` are empty for verdict-derived entries
+    (no source-literal call site to record). `contexts` is only populated (non-empty) for literal
+    entries — it parallels `call_sites` index-for-index and exists so a status value with more than
+    one call site (currently only `FINALIZE_INCOMPLETE`) can be checked for genuine distinctness
+    between its call sites without depending on absolute line position (TCK-20260824-TERMINAL-STATUS-STRUCTURAL-FIX).
     """
     aggregated: dict[str, dict] = {}
 
     for entry in extract_literal_statuses(workflow_js_path):
         bucket = aggregated.setdefault(
-            entry["value"], {"value": entry["value"], "kind": "literal", "call_sites": []}
+            entry["value"],
+            {"value": entry["value"], "kind": "literal", "call_sites": [], "contexts": []},
         )
         bucket["call_sites"].append(entry["line"])
+        bucket["contexts"].append(entry["context"])
 
     for entry in extract_bypass_statuses(workflow_js_path):
         aggregated.setdefault(
-            entry["value"], {"value": entry["value"], "kind": "bypass", "call_sites": []}
+            entry["value"],
+            {"value": entry["value"], "kind": "bypass", "call_sites": [], "contexts": []},
         )["call_sites"].append(entry["line"])
 
     for entry in extract_verdict_derived_statuses():
         aggregated.setdefault(
-            entry["value"], {"value": entry["value"], "kind": "verdict_derived", "call_sites": []}
+            entry["value"],
+            {"value": entry["value"], "kind": "verdict_derived", "call_sites": [], "contexts": []},
         )
 
     return list(aggregated.values())

@@ -31,7 +31,7 @@ dev: ## Start backend + frontend dev server with live map (hot reload)
 	@echo "Open http://localhost:5173 to view the live map."
 	@echo "Press Ctrl+C to stop both."
 	@trap 'kill 0' INT; \
-		python3 -m src serve --port 8000 & \
+		python3 -m src serve --port 8000 --api-key-hashes "dev:3e90488c475fb2c2997525497f1e72e82dec6d68b5738dc7cebba4371f9f0ee2" & \
 		(cd frontend && npm run dev) & \
 		wait
 

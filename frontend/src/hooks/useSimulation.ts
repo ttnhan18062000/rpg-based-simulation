@@ -4,13 +4,28 @@ import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, WireEnti
 const API_BASE = '/api/v1';
 const LOAD_RETRY_LIMIT = 5;
 
+// Dev-only: when set (frontend/.env.development), sent as X-API-Key on every REST call and as
+// ?key= on the WS connect, matching the fixed dev key `make dev` configures on the backend
+// (see TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX). Unset in any build that doesn't define
+// it -- no header, no query param -- so this is a no-op for deployments with their own key story.
+const API_KEY = import.meta.env.VITE_API_KEY as string | undefined;
+
 function wsBase(): string {
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${proto}//${window.location.host}${API_BASE}`;
 }
 
+function wsUrl(path: string): string {
+  const base = `${wsBase()}${path}`;
+  return API_KEY ? `${base}?key=${encodeURIComponent(API_KEY)}` : base;
+}
+
+function authHeaders(): HeadersInit | undefined {
+  return API_KEY ? { 'X-API-Key': API_KEY } : undefined;
+}
+
 async function fetchJSON<T>(path: string): Promise<T> {
-  const res = await fetch(API_BASE + path);
+  const res = await fetch(API_BASE + path, { headers: authHeaders() });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
@@ -160,7 +175,7 @@ export function useSimulation(): SimulationState {
 
     const connectWS = () => {
       setStatus('CONNECTING_LIVE');
-      ws = new WebSocket(`${wsBase()}/ws`);
+      ws = new WebSocket(wsUrl('/ws'));
 
       ws.onopen = () => {
         ws!.send(JSON.stringify({ type: 'handshake', format: 'json' }));
@@ -336,9 +351,9 @@ export function useSimulation(): SimulationState {
   const sendControl = useCallback(async (action: string) => {
     try {
       if (action === 'pause') {
-        await fetch(`${API_BASE}/control/pause`, { method: 'POST' });
+        await fetch(`${API_BASE}/control/pause`, { method: 'POST', headers: authHeaders() });
       } else if (action === 'resume') {
-        await fetch(`${API_BASE}/control/resume`, { method: 'POST' });
+        await fetch(`${API_BASE}/control/resume`, { method: 'POST', headers: authHeaders() });
       } else {
         console.error(`Unsupported control action: ${action}`);
       }
@@ -349,7 +364,7 @@ export function useSimulation(): SimulationState {
 
   const setSpeed = useCallback(async (tps: number) => {
     try {
-      await fetch(`${API_BASE}/speed?tps=${tps}`, { method: 'POST' });
+      await fetch(`${API_BASE}/speed?tps=${tps}`, { method: 'POST', headers: authHeaders() });
     } catch {
       // ignore
     }
@@ -362,7 +377,7 @@ export function useSimulation(): SimulationState {
 
   const clearEvents = useCallback(async () => {
     try {
-      await fetch(`${API_BASE}/clear_events`, { method: 'POST' });
+      await fetch(`${API_BASE}/clear_events`, { method: 'POST', headers: authHeaders() });
       setEvents([]);
     } catch (e) {
       console.error('Clear events error:', e);
