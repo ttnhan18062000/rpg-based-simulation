@@ -52,7 +52,7 @@ In an optimized engine, allowing individual gameplay handlers or external system
 
 ### Enforcement & Verification
 - **Automated Verification**: Enforced statically by the architectural AST verification suite.
-- **Test Citation**: `tests/integration/optimization/test_static_dirtyset_guard.py` (Proves zero direct dirty set references exist across all gameplay systems).
+- **Test Citation**: `tests/static/test_no_direct_dirtyset_candidate_selection.py` (Proves zero direct dirty set references exist across `src/engine/pipeline_phases`, `src/systems`, and `src/ai`).
 
 ---
 
