@@ -145,6 +145,11 @@ before in `TCK-20260825-FORCE-FULL-SCAN-DEAD-CODE`).
 values, rather than always passing all three, so `V2EngineManager`'s own class defaults (not a
 duplicated set of defaults in `create_v2_app`) remain the single source of truth.
 
+The parity ledger entry was originally authored as `INFRA-389`; merging this branch with
+`origin/main` (which had, in the meantime, independently landed `INFRA-389`/`390`/`391` from a
+concurrent session) surfaced the exact next-available-id collision `INFRA-391`'s own text already
+documents as a known, expected pattern -- renumbered to `INFRA-392`, real content unaffected.
+
 ## Test Summary
 - `tests/unit/api/test_engine_manager.py` -- 12/12 passing (7.26s)
 - `tests/api/` (full suite) -- 120/120 passing (68.13s)
@@ -159,7 +164,7 @@ duplicated set of defaults in `create_v2_app`) remain the single source of truth
   command -- passes. Screenshot evidence (`frontend/e2e-artifacts/live_map_render.png`, not
   committed) shows a real rendered map, a live-incrementing tick counter, and a real 10-entity
   roster with HP bars, through an actual headless Chromium browser.
-- `docs/parity_ledger/infrastructure.yaml`'s `INFRA-389` entry added and validated
+- `docs/parity_ledger/infrastructure.yaml`'s `INFRA-392` entry added and validated
   (`tools/parity_index.py build` succeeded, `tests/tools/test_parity_ledger_schema.py` and
   `tests/integrity/test_parity_guards.py` pass).
 
@@ -167,7 +172,7 @@ duplicated set of defaults in `create_v2_app`) remain the single source of truth
 - `src/api/engine_manager.py`
 - `src/api/server.py`
 - `src/cli/entry.py`
-- `docs/parity_ledger/infrastructure.yaml` (`INFRA-389` added)
+- `docs/parity_ledger/infrastructure.yaml` (`INFRA-392` added)
 
 ## Completion Summary
 Fixed the real root cause of the live map's terrain never rendering: `V2EngineManager` never

@@ -11348,6 +11348,85 @@
     spatial-subscription/region filtering remains out of scope, still deferred to
     TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT.
 - id: INFRA-389
+  text: 'Fix ad-hoc/non-ticket sessions inheriting a stale foreign ticket identity
+    in agent-monitoring/tools.jsonl: tools/agent-monitoring/post_tool_hook.py no longer
+    falls back to the shared unscoped .claude/current_run file when no session-scoped
+    sidecar exists for the calling session_id. Instead it writes a null-valued sentinel
+    to .claude/current_run.<session_id> (create-if-absent) and reports null run_id/seq/phase/agent/ticket_id
+    for that call and any subsequent call in the same session, until a real writeSidecar()
+    write for that session_id unconditionally overwrites the sentinel with real values.
+    Investigation confirmed every real sidecar writer in .claude/workflows/implement-ticket.js
+    and .claude/skills/implement-ticket/SKILL.md already writes the scoped and unscoped
+    files together, so no real workflow ever legitimately needed the removed unscoped-fallback
+    path. The sentinel is an ordinary current_run.* file, swept by the existing 24h
+    _prune_stale_scoped_sidecars() mechanism with no new cleanup path. Historically
+    misattributed tools.jsonl rows from before this fix are accepted as a documented
+    caveat (no backfill), matching this repo existing precedent for the same class
+    of problem.'
+  status: verified
+  priority: P2
+  v2_evidence: tools/agent-monitoring/post_tool_hook.py
+  test_path: tests/tools/test_post_tool_hook.py::test_second_call_in_ad_hoc_session_reads_own_sentinel_not_unscoped_file
+  divergence_note: null
+- id: INFRA-390
+  text: tools/retrieval_cache.py read_current_run_sidecar() now prefers a per-session
+    scoped sidecar file (.claude/current_run.<CLAUDE_CODE_SESSION_ID>, derived from
+    _CURRENT_RUN_SIDECAR_PATH so tests relocation-transparent) over the unscoped .claude/current_run
+    file when a scoped file exists, mirroring tools/agent-monitoring/post_tool_hook.py
+    own scoped-file preference (INFRA-377/382). Deliberately does NOT adopt post_tool_hook.py
+    null-sentinel-on-absence write behavior when no scoped file exists -- falls back
+    to the unscoped file instead, since (1) this is a read-only CLI/library function
+    with no session payload to key a sentinel write by, giving it a new write side
+    effect was out of scope, and (2) this function already carries its own sidecar_stale
+    safeguard for the worst failure mode (attribution to an already-closed ticket),
+    unlike tools.jsonl which had none. _sidecar_run_is_stale() (file-existence based)
+    is unchanged -- kept semantically separate from post_tool_hook.py mtime-based
+    scoped-file pruning, which retrieval_cache.py does not replicate. Cross-referencing
+    comments added at both read sites. A pre-existing static guard test (test_no_pragma_busy_timeout_chmod_or_os_import_introduced_by_level2_migration)
+    blanket-banned importing os anywhere in this file as an overly broad proxy for
+    no os.chmod usage -- narrowed to drop only that redundant proxy clause; the direct
+    chmod/busy_timeout string checks it also contains remain fully enforced unchanged.
+  status: verified
+  priority: P2
+  v2_evidence: tools/retrieval_cache.py, tools/agent-monitoring/post_tool_hook.py
+  test_path: tests/tools/test_retrieval_cache.py::TestReadCurrentRunSidecar::test_scoped_sidecar_wins_over_stale_unscoped_when_both_exist
+  divergence_note: null
+- id: INFRA-391
+  text: 'tools/agent_orchestration_claude_adapter/terminal_status_extractor.py''s
+    extract_literal_statuses()/extract_all_terminal_statuses() gained a content-based
+    distinctness marker: each literal writeMonitoring() call site now also carries
+    a ''context'' field (the nearby message: ''...'' string-literal prefix, within
+    a 400-char lookahead window, None if not found), and extract_all_terminal_statuses()''s
+    aggregated per-value dict gained a parallel ''contexts'' list alongside the existing
+    ''call_sites'' list. This closes a recurring drift: two tests (test_terminal_status_extractor.py::test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count,
+    test_terminal_status_conformance.py::test_terminal_status_conformance_finalize_incomplete_appears_once_on_both_sides)
+    used to hardcode FINALIZE_INCOMPLETE''s two call-site line numbers as an exact
+    literal list, breaking on any implement-ticket.js edit that shifted lines above
+    them -- 8 separate hotfix tickets since 2026-08-02. Both tests now assert structural
+    invariants (exactly 2 distinct, ascending call sites; 2 distinct non-None context
+    markers) instead, verified line-position-independent by a new synthetic-fixture
+    test. call_sites'' own list[int] shape is unchanged (backward compatible); contexts
+    is purely additive. Renumbered to INFRA-391 (previously INFRA-386, before that
+    INFRA-384) after two successive merges with origin/main each independently landed
+    unrelated entries claiming the same next-available id at authoring time -- a real,
+    expected consequence of next_available_id() computing against each branch own
+    pre-merge view of the shard, mirroring INFRA-381 own documented precedent for the
+    identical class of collision.'
+  status: verified
+  priority: P2
+  v2_evidence: tools/agent_orchestration_claude_adapter/terminal_status_extractor.py
+    (_MESSAGE_CONTEXT_RE, _CONTEXT_WINDOW_CHARS, context field on extract_literal_statuses(),
+    contexts list on extract_all_terminal_statuses()), tests/agent_orchestration_claude_adapter/test_terminal_status_extractor.py
+    (test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count, new
+    test_call_site_detection_tolerates_unrelated_line_insertion_above), tests/agent_orchestration_claude_adapter/test_terminal_status_conformance.py
+    (test_terminal_status_conformance_finalize_incomplete_appears_once_on_both_sides)
+  test_path: tests/agent_orchestration_claude_adapter/test_terminal_status_extractor.py::test_call_site_detection_tolerates_unrelated_line_insertion_above
+  divergence_note: null
+  proof_type: regression
+  support_boundary: Claude-agent-workflow orchestration tooling only -- no simulation
+    behavior is involved (mirrors INFRA-263/264/265/315/379/381's support_boundary
+    pattern for pure workflow-tooling entries in this shard).
+- id: INFRA-392
   text: V2EngineManager._build() now compiles a real world (terrain, regions, resource
     nodes, buildings) via WorldCompiler.compile()/WorldRepository before constructing
     its boot AuthoritativeState, fixing a live-reproduced bug (TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX's
@@ -11365,7 +11444,11 @@
     seed/entities_count/world_id override parameters (None-default, backward compatible
     with every pre-existing caller) and the CLI serve subcommand's pre-existing-but-silently-ignored
     --seed/--entities flags plus a new --world flag are now actually threaded through
-    (src/cli/entry.py::_run_serve).
+    (src/cli/entry.py::_run_serve). Renumbered to INFRA-392 (originally authored as
+    INFRA-389) after merging with origin/main independently landed an unrelated entry
+    already claiming that id -- the identical class of collision INFRA-391's own text
+    documents, next_available_id() computed against each branch's own pre-merge view
+    of the shard.
   status: verified
   priority: P0
   legacy_evidence: null
