@@ -23,16 +23,38 @@ tags: [idea, entity-index, semantic-search, information-seeking, performance, sp
 > `src/domains/faction/`) rather than substituting behind an interface those tickets never built — a bigger,
 > riskier change than "drop-in upgrade" as originally framed below.
 >
-> Separately, `docs/engine/performance_contract.md` §7 now documents a `scan_policy`
-> (`FULL`/`THROTTLED`/`EXACT_DIRTY`) + `DirtySet` mechanism that already exists engine-wide as a generic
+> Separately, `docs/engine/performance_contract.md` §7 documents a `scan_policy`
+> (`FULL`/`THROTTLED`/`EXACT_DIRTY`) + `DirtySet` mechanism that exists engine-wide as a generic
 > mitigation for O(N) scan cost under pressure. It doesn't replace a semantic index (it doesn't provide
-> role/region/faction-keyed lookup) but it already reduces the urgency this doc assumed was unmitigated.
-> Current real benchmark scale (`docs/engine/performance_contract.md`'s `MOVEMENT_STRESS_100_ACTORS`) is
-> still close to this doc's own "acceptable at 10-30, degrades as it scales" framing — not yet past it.
+> role/region/faction-keyed lookup) — and, re-verified 2026-08-22, it does not currently gate the
+> `paid_information.py` hotspot at all: `src/engine/pipeline_phases/paid_information.py` has zero
+> references to `scan_policy` or `DirtySet` anywhere in the file. The nested scan at lines 92/112 runs
+> unconditionally every tick regardless of `RuntimeMode` or dirty state, so today's `scan_policy`/`DirtySet`
+> mechanism is engine-wide precedent that this call site could adopt, not an applied fix already in place
+> at this call site.
+>
+> The `MOVEMENT_STRESS_100_ACTORS` benchmark scenario cited in an earlier revision of this note is not a
+> real wired scenario: `src/perf/scenarios.py`'s `SCENARIO_BUILDERS` registers only `idle`, `movement`,
+> `resource`, `combat`, `strategic`, `mixed`, `metropolis` (each parameterized by `entity_count`, not a
+> fixed 100-actor preset), and a repo-wide grep finds zero hits for `MOVEMENT_STRESS_100_ACTORS` in
+> `src/perf/scenarios.py` or `tests/` — it exists only as a name referenced in doc prose
+> (`docs/engine/performance_contract.md`, `docs/performance/perf_baseline_policy.md`), not as code. No
+> verified current benchmark scale is available to compare against this doc's own "acceptable at 10-30,
+> degrades as it scales" framing — treat that framing as still open, not confirmed either way.
 >
 > A ticket scoping this should target the retrofit shape (index built against real shipped call sites,
 > reconciled with the existing `scan_policy`/`DirtySet` mitigation), not the original "define the interface
 > in E42/E53 first" plan in the sections below, which is no longer available.
+>
+> **Known follow-up, not fixed here:** `CacheInvalidationPolicy.invalidated_indexes()`
+> (`src/engine/world_index.py`) adds `"region_index"` to its invalidation set whenever `dirty.region_ids`
+> is populated, and `should_invalidate("regions", ...)` checks for that same key — but `WorldIndexes` (same
+> file) has no `region_index` field, and `WorldIndexService.get_indexes()` never calls
+> `should_invalidate("regions", ...)` in the first place. The unit test
+> (`tests/unit/domains/optimization/test_cache_invalidation_policy.py::test_region_dirty_invalidates_region_index`)
+> passes because it only asserts set membership, not that a corresponding index field exists. This is
+> dead/phantom-field code unrelated to the semantic-index gap this doc tracks — flagged here for a separate
+> future ticket, intentionally not fixed in this pass.
 
 ---
 

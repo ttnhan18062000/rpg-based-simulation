@@ -229,10 +229,10 @@ out real raid/combat cadence in real time.
   2026-08-24) follow the same shape...") documents the *presenter* half of this work but not the
   *route* half — no existing entry documents `/api/v1/map`, `/api/v1/static`, `/api/v1/stats` as real
   registered routes, nor the new `_total_spawned`/`_total_deaths` counters. The next available ID
-  (highest existing is `INFRA-383`, added by ticket 2 for `/api/v1/manifest`) is `INFRA-384`. This
-  should follow the exact shape of `INFRA-383` (`test_path: tests/api/test_rest_parity.py` plus the
+  (highest existing is `INFRA-386`, added by ticket 2 for `/api/v1/manifest`) is `INFRA-387`. This
+  should follow the exact shape of `INFRA-386` (`test_path: tests/api/test_rest_parity.py` plus the
   new unit test file(s), `status: verified`, priority left to the parity-updater phase to set
-  consistently with `INFRA-210`/`INFRA-383` — both are `P1`, and this is the same subsystem, so `P1`
+  consistently with `INFRA-210`/`INFRA-386` — both are `P1`, and this is the same subsystem, so `P1`
   is the natural default rather than `P2`).
 
 Nothing else requires updating. `docs/mechanics/05_world_evolution.md` (path:
@@ -250,13 +250,13 @@ awareness only, not proposing a doc change here.
   themselves (the presenter layer this ticket wraps). Not modified by this ticket, but directly
   relevant context: this ticket's new routes are the "wiring" half of what `INFRA-210`'s text already
   calls out as already-compliant with the read-model-only architecture.
-- `INFRA-383` (`status: verified`, `priority: P2`, `test_path: tests/api/test_manifest_api.py`) —
+- `INFRA-386` (`status: verified`, `priority: P2`, `test_path: tests/api/test_manifest_api.py`) —
   documents `/api/v1/manifest`, the immediately-preceding sibling route this ticket's routes should
   match in registration pattern. Not modified by this ticket.
 - No P0 entries in `infrastructure.yaml` overlap this ticket's scope (confirmed by the greps above —
   no existing entry's `text` mentions `/api/v1/map`, `/api/v1/static`, `/api/v1/stats`, or
   `total_spawned`/`total_deaths`).
-- A new entry (`INFRA-384`, see Docs Requiring Update) is required once implementation lands.
+- A new entry (`INFRA-387`, see Docs Requiring Update) is required once implementation lands.
 
 ## Prior Work
 

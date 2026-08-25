@@ -76,7 +76,7 @@ a full scan.
   whose `changed` list contains every live entity (the exact gap `TCK-20260821-LIVE-MAP-PERF-VALIDATION`'s
   own harness worked around with a synthetic in-process estimate instead of a live capture, because
   no live capture was possible).
-- Update `docs/parity_ledger/infrastructure.yaml`'s `INFRA-385` entry (or add a new entry) reflecting
+- Update `docs/parity_ledger/infrastructure.yaml`'s `INFRA-388` entry (or add a new entry) reflecting
   whichever end state investigation concludes is correct (wired-and-working vs. formally removed).
 
 ## Out of Scope
@@ -98,19 +98,19 @@ a full scan.
 - [ ] `V2EngineManager._update_latest_state`'s `getattr(self._kernel.status, "force_full_scan", False)`
       read is fixed to actually reflect the Kernel's boot-time `force_full_scan` flag, or is removed if
       the overall mechanism is deprecated instead
-- [ ] `docs/parity_ledger/infrastructure.yaml`'s `INFRA-385` (or a new entry) reflects the true,
+- [ ] `docs/parity_ledger/infrastructure.yaml`'s `INFRA-388` (or a new entry) reflects the true,
       post-fix end state
 
 ## Related Tickets
 - TCK-20260821-LIVE-MAP-PERF-VALIDATION (origin of this finding -- AC4 Finding 1)
-- TCK-20260821-WS-ENTITY-DELTA-BROADCAST (introduced `compute_tick_delta`/`INFRA-385`)
+- TCK-20260821-WS-ENTITY-DELTA-BROADCAST (introduced `compute_tick_delta`/`INFRA-388`)
 
 ## Related Docs
 - docs/core/dirty_state_and_dependency.md
 - docs/core/update_intents.md
 - docs/engine/candidate_selection.md
 - docs/performance/optimization_invariants.md
-- docs/parity_ledger/infrastructure.yaml (INFRA-385)
+- docs/parity_ledger/infrastructure.yaml (INFRA-388)
 
 ## Related Stored Artifacts
 - stored_artifacts/TCK-20260821-LIVE-MAP-PERF-VALIDATION (report.md's AC4 Finding 1 has the full

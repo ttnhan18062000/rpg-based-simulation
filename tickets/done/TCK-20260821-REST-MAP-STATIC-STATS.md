@@ -110,8 +110,8 @@ deviations from the plan's design decisions:
 7. Narrowed `docs/engine/contracts/frontend.md`'s Known-gap callout (line 12) to state that `/map`,
    `/static`, `/stats` now exist as real routes, with `/speed`/`/clear_events` still missing
    (out of scope).
-8. Appended `INFRA-384` to `docs/parity_ledger/infrastructure.yaml` (re-verified immediately before
-   writing it that `INFRA-383` was still the highest existing ID — confirmed via
+8. Appended `INFRA-387` to `docs/parity_ledger/infrastructure.yaml` (re-verified immediately before
+   writing it that `INFRA-386` was still the highest existing ID — confirmed via
    `grep -o 'INFRA-[0-9]*' ... | sort -t- -k2 -n | uniq | tail -5`, no concurrent claim).
 
 **One fix beyond the plan's literal text, within Step 5's scope**: while running the new
@@ -126,8 +126,8 @@ after `reset()`. This is a test-hygiene fix within the same test this step was a
 change to `V2EngineManager.reset()` itself (which is correct as specified in the plan — `reset()`
 zeroing the counters was never the bug; the test's own cleanup was incomplete).
 
-**INFRA-384's `test_path`**: set to `tests/api/test_rest_parity.py::test_api_rest_parity` (the
-end-to-end smoke test), matching `INFRA-383`'s convention of pointing to the integration test rather
+**INFRA-387's `test_path`**: set to `tests/api/test_rest_parity.py::test_api_rest_parity` (the
+end-to-end smoke test), matching `INFRA-386`'s convention of pointing to the integration test rather
 than enumerating every unit test file.
 
 ## Test Summary
@@ -177,7 +177,7 @@ unmodified (only new tests were appended to `test_engine_manager.py`).
 - `tests/api/test_rest_parity.py` — extended `test_api_rest_parity` with map/static/stats assertions.
 - `docs/engine/contracts/frontend.md` — narrowed the Known-gap callout (line 12) to reflect that
   `/map`, `/static`, `/stats` now exist.
-- `docs/parity_ledger/infrastructure.yaml` — appended `INFRA-384`.
+- `docs/parity_ledger/infrastructure.yaml` — appended `INFRA-387`.
 - `staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/investigation.md`,
   `staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/plan.md`,
   `staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/test_plan.md` — pre-existing this run's own
@@ -202,5 +202,5 @@ deliberate divergence from V1's legacy `tick // 100`), and `alive_count` filters
 matching the `EconomyPresenter.present_health` precedent. All three routers are registered in
 `server.py`, 12 new unit tests were added (all passing, no regressions), `test_api_rest_parity` was
 extended with the three new endpoint assertions (no new subprocess test), and both
-`docs/engine/contracts/frontend.md` and `docs/parity_ledger/infrastructure.yaml` (new `INFRA-384`
+`docs/engine/contracts/frontend.md` and `docs/parity_ledger/infrastructure.yaml` (new `INFRA-387`
 entry) were updated in the same pass.

@@ -137,11 +137,11 @@ inconsistency) is optional, not required — left for the planner to decide whet
   `snapshot_as_of_tick`) — this is the exact wire-envelope contract this ticket adds a key to; must
   gain a one-line mention of the new reserved, always-null field and a pointer to the future M3
   interest-management epic that will eventually populate it.
-- `docs/parity_ledger/infrastructure.yaml`: the `INFRA-385` entry (added by ticket 4, `status:
+- `docs/parity_ledger/infrastructure.yaml`: the `INFRA-388` entry (added by ticket 4, `status:
   verified`, `priority: P1`) already documents this exact envelope shape in its `text`, and its
   `support_boundary` field already explicitly anticipates this: "spatial-subscription/region
   filtering are explicitly out of scope (separate follow-up tickets if ever needed)." This ticket
-  changes the envelope shape INFRA-385 describes and should update `text`/`v2_evidence`/
+  changes the envelope shape INFRA-388 describes and should update `text`/`v2_evidence`/
   `support_boundary` (add `src/api/ws/stream.py`'s new line to `v2_evidence` if not already covered,
   and note the placeholder field's addition) rather than opening a new entry, since it's the same
   behavior being amended, not a new one.
@@ -169,7 +169,7 @@ either, so there is no legacy-vs-V2 behavior gap to record.
 
 ## Parity Ledger Overlap
 
-- `INFRA-385` (`docs/parity_ledger/infrastructure.yaml`, `status: verified`, `priority: P1`,
+- `INFRA-388` (`docs/parity_ledger/infrastructure.yaml`, `status: verified`, `priority: P1`,
   `test_path: tests/unit/api/test_read_model_cache.py::
   test_compute_tick_delta_changed_includes_only_dirty_and_alive_entities`) — directly overlapping,
   see "Docs Requiring Update" above. Not `P0`, so no new mandatory passing `test_path` is forced by
@@ -177,7 +177,7 @@ either, so there is no legacy-vs-V2 behavior gap to record.
   currently documents the envelope as `{tick, changed, removed, events, snapshot_as_of_tick}` with no
   sixth field.
 - No other `docs/parity_ledger/*.yaml` entry references `compute_tick_delta`, `present_entity_slim`,
-  or `stream_ws` (grep confirmed only `INFRA-385` names these symbols).
+  or `stream_ws` (grep confirmed only `INFRA-388` names these symbols).
 
 ## Prior Work
 

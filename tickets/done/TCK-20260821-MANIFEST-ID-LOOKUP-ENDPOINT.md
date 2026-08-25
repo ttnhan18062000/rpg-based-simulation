@@ -128,7 +128,7 @@ Implemented all 10 plan.md steps in order, verified sound (no deviations from ar
    `loadInitial()` fetch call, noting it's joined into the same `Promise.all`, its `terrain_types` id
    space matches `/api/v1/map`'s, `location_types` is omitted, and the fetched value isn't yet
    consumed by rendering (fast-follow).
-10. **`docs/parity_ledger/infrastructure.yaml`** — added `INFRA-383` (next ID allocated via
+10. **`docs/parity_ledger/infrastructure.yaml`** — added `INFRA-386` (next ID allocated via
     `tools/gate_checks/parity_updater_static.py`'s `next_available_id()`, confirmed no existing entry
     overlaps via `search_existing_entries()`), `status: verified`, `priority: P2`,
     `test_path: tests/api/test_manifest_api.py`, `divergence_note` documenting the
@@ -192,7 +192,7 @@ one `Promise.all` (not sequential awaits, not moved into the separate `fallbackP
 - `frontend/src/hooks/useSimulation.ts` — `/manifest` fetch in `loadInitial()`'s `Promise.all`;
   `manifest` state added to `SimulationState` and the hook's return object (see Deviation above)
 - `docs/engine/contracts/frontend.md` — §2A updated to list the third `loadInitial()` fetch call
-- `docs/parity_ledger/infrastructure.yaml` — new `INFRA-383` entry
+- `docs/parity_ledger/infrastructure.yaml` — new `INFRA-386` entry
 - `tests/api/test_manifest_api.py` (new)
 - `tests/unit/api/test_dependencies.py` (new)
 - `staging_artifacts/TCK-20260821-MANIFEST-ID-LOOKUP-ENDPOINT/plan.md` — added Deviations section

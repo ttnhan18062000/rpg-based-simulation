@@ -101,7 +101,7 @@ deviations.
    - `docs/engine/contracts/api_protocol_contract.md` Section 2 — added a sentence noting the new
      `region_id` field, always `null` today, reserved for
      `TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT`.
-   - `docs/parity_ledger/infrastructure.yaml`, entry `INFRA-385` (amended in place, no new entry) —
+   - `docs/parity_ledger/infrastructure.yaml`, entry `INFRA-388` (amended in place, no new entry) —
      updated `text` to mention the envelope now includes `region_id` and to describe this ticket's
      addition; updated `v2_evidence` to note the exact `stream.py` assignment;
      updated `support_boundary` to note `region_id` is now reserved (always null) but
@@ -146,7 +146,7 @@ where it can succeed.
   `test_ws_delta_envelope_new_field_does_not_change_existing_field_semantics`).
 - `docs/engine/contracts/api_protocol_contract.md` — one-sentence addition to Section 2 documenting
   the new reserved `region_id` field.
-- `docs/parity_ledger/infrastructure.yaml` — amended `INFRA-385`'s `text`, `v2_evidence`, and
+- `docs/parity_ledger/infrastructure.yaml` — amended `INFRA-388`'s `text`, `v2_evidence`, and
   `support_boundary` in place (no new entry created).
 - `staging_artifacts/TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD/plan.md` — no substantive rewrite
   required; plan was followed exactly with zero deviations (see plan.md's own note, added this run).
@@ -167,6 +167,6 @@ exhaustive-key-set test required no edit. Extended/added three integration tests
 `tests/api/test_ws_protocol.py` (json + msgpack + existing-field-unchanged, all using `is None`
 identity checks). Both scoped AC #3 verification greps (write-site and read-site) confirmed no
 server-side code anywhere reads or acts on the new field. Updated
-`docs/engine/contracts/api_protocol_contract.md` and amended `INFRA-385` in
+`docs/engine/contracts/api_protocol_contract.md` and amended `INFRA-388` in
 `docs/parity_ledger/infrastructure.yaml` in place. All 54 scoped unit/architecture tests and all 5
 scoped WS-protocol integration tests pass.

@@ -24,7 +24,7 @@ method (state-derived `tick`/`world_day`/`alive_count`, manager-supplied `total_
 `state.entities.keys()` (V1's exact ported pattern) and explicitly zeroed in `reset()`. Two design
 decisions flagged as open by investigation.md are resolved explicitly below (`world_day` divisor,
 `alive_count` filter semantics) rather than left ambiguous. Docs (`docs/engine/contracts/frontend.md`'s
-Known-gap callout, a new `INFRA-384` parity ledger entry) are updated in the same pass per the
+Known-gap callout, a new `INFRA-387` parity ledger entry) are updated in the same pass per the
 project's Parity Rule.
 
 ## Design Decisions (resolving investigation.md's flagged open questions)
@@ -409,17 +409,17 @@ backend-only ticket, frontend already calls these three routes in their expected
 **Verify:** No automated test — doc-only change, confirmed by direct re-read of the edited line
 against the actual route registration list in `server.py` after Step 4.
 
-### Step 8 — Add parity ledger entry `INFRA-384`
+### Step 8 — Add parity ledger entry `INFRA-387`
 
 **Files:** `docs/parity_ledger/infrastructure.yaml`
 
-**Change:** Append a new entry, following `INFRA-383`'s exact shape (read directly at
+**Change:** Append a new entry, following `INFRA-386`'s exact shape (read directly at
 `docs/parity_ledger/infrastructure.yaml:11227-11239`, appended at the end of the file — confirmed
 this is the file's chronological-append convention, matching `INFRA-210` at line 2418 for the earlier,
 unrelated presenter-layer entry):
 
 ```yaml
-- id: INFRA-384
+- id: INFRA-387
   text: 'GET /api/v1/map, /api/v1/static, /api/v1/stats are real registered routes (src/api/routes/map.py,
     static.py, stats.py), wrapping StatePresenter.present_map/present_static/present_stats
     (TCK-20260821-PRESENT-MAP-STATIC, TCK-20260821-REST-MAP-STATIC-STATS). V2EngineManager gains
@@ -439,18 +439,18 @@ unrelated presenter-layer entry):
     Design Decisions for rationale.
   support_boundary: null
 ```
-`priority: P1` matches the subsystem's existing `INFRA-210`/`INFRA-383` entries (both `P1`), per
+`priority: P1` matches the subsystem's existing `INFRA-210`/`INFRA-386` entries (both `P1`), per
 investigation.md's recommendation.
 
 **Every other writer to this file:** `docs/parity_ledger/infrastructure.yaml` is a shared, append-only
-file every closed infrastructure-layer ticket writes to. `INFRA-383` was the highest existing ID at
-investigation time (2026-08-24). **Re-verify `INFRA-384` is still the next available ID immediately
+file every closed infrastructure-layer ticket writes to. `INFRA-386` was the highest existing ID at
+investigation time (2026-08-24). **Re-verify `INFRA-387` is still the next available ID immediately
 before writing this entry** (e.g. `grep -c '^- id: INFRA-' docs/parity_ledger/infrastructure.yaml` or
 equivalent) — another concurrently-running ticket in this shared worktree could have claimed it first,
 per this project's documented shared-directory concurrency risk pattern (CLAUDE.md's Worktree &
 Branch Isolation section).
 
-**Do NOT touch:** any existing entry, including `INFRA-210` and `INFRA-383` — both remain
+**Do NOT touch:** any existing entry, including `INFRA-210` and `INFRA-386` — both remain
 `status: verified` and unmodified; this ticket only adds a new entry.
 
 **Verify:** No automated test enforces parity ledger shape beyond `validate_frontmatter.py`-adjacent
@@ -530,7 +530,7 @@ Steps 1 and 2 can be implemented in either order or in parallel; everything down
   `EconomyPresenter.present_health` precedent (`src/api/presenters/economy.py:27-29`). This would still
   pass the AST-only import guard test even done inline, but violates the project's actual "routes
   present shaped read models through presenters" architecture rule.
-- **`INFRA-384` is a shared, append-only file's next ID as of investigation time (2026-08-24)** — the
+- **`INFRA-387` is a shared, append-only file's next ID as of investigation time (2026-08-24)** — the
   implementer must re-verify it is still unclaimed immediately before writing Step 8's entry, since
   other concurrent tickets in this shared worktree can append to the same file.
 - **This is a real addition to the hot tick path** (`_run_loop`'s per-tick set-diff on

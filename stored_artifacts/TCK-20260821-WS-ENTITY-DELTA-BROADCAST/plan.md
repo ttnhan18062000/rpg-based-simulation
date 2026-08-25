@@ -482,9 +482,9 @@ transient connectivity error before reaching Step 7):
   guarding against, and a function-local import for a plain `IntEnum` lookup is an unnecessary
   abstraction under this project's code-quality rules. No behavior change.
 
-Step 7 (parity ledger entry `INFRA-385`) and the ticket's closing sections (Implementation Notes,
+Step 7 (parity ledger entry `INFRA-388`) and the ticket's closing sections (Implementation Notes,
 Test Summary, Files Changed, Completion Summary, Acceptance Criteria checkboxes) were completed
 exactly as this plan specified — re-verifying the next available `INFRA-NNN` ID directly against the
-file at write time (found `INFRA-384` as the last existing entry, added `INFRA-385`) rather than
+file at write time (found `INFRA-387` as the last existing entry, added `INFRA-388`) rather than
 trusting any earlier count, per the plan's own "Other writers to this file" note about this being a
 shared, append-only file.

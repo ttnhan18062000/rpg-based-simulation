@@ -11225,6 +11225,19 @@
   divergence_note: null
   proof_type: regression
 - id: INFRA-383
+  text: IncrementalRenderer must repaint an entity that dies in place (lifecycle.active
+    stays True, combat.alive flips False, position unchanged) with ENTITY_COLOR_DEAD,
+    matching render()'s own alive/dead branch -- not silently revert the cell to background.
+  status: verified
+  priority: P2
+  v2_evidence: src/rendering/incremental.py IncrementalRenderer.__init__ (frame-seeding
+    loop, line ~88) and IncrementalRenderer.update() (per-dirty-entity draw, line
+    ~118) both gate on lifecycle.active alone and choose ENTITY_COLOR_ALIVE/ENTITY_COLOR_DEAD
+    by combat.alive, mirroring render() exactly.
+  test_path: tests/unit/rendering/test_render_incremental.py::test_incremental_render_repaints_entity_that_dies_in_place
+  divergence_note: null
+  proof_type: parity
+- id: INFRA-386
   text: 'GET /api/v1/manifest returns a versioned ID-to-meaning content dictionary
     (terrain_types, entity_kinds, building_types), backed by a CatalogRepository singleton
     loaded once at server startup and wired into the FastAPI DI graph (src/api/dependencies.py).
@@ -11241,7 +11254,13 @@
     are direct {id: display_name} projections of CatalogRepository.entity_archetypes/.buildings
     -- confirmed clean 1:1 catalog matches. location_types is intentionally omitted
     from the response (not an empty placeholder): no LocationDefinition/CatalogRepository.locations
-    registry exists anywhere in src/content/schema.py.'
+    registry exists anywhere in src/content/schema.py. Renumbered from its originally-authored
+    INFRA-383 to INFRA-386 during a merge with origin/main, which had independently
+    landed its own INFRA-383 (TCK-20260822-HOTFIX-INCREMENTAL-DEATH-RECOLOR-GAP) in
+    the time between this entry''s authoring and this branch merging -- same expected
+    consequence TCK-20260824-PARITY-NEXT-ID-LOOKUP''s own INFRA-381/382 entries already
+    document for themselves. INFRA-384/385 (this same ticket batch) renumbered to
+    INFRA-387/388 for the same reason.'
   status: verified
   priority: P2
   legacy_evidence: null
@@ -11257,7 +11276,7 @@
     Disclosed rather than silently left unstated, matching this ledger''s existing
     disclosed-limitation pattern.'
   support_boundary: null
-- id: INFRA-384
+- id: INFRA-387
   text: GET /api/v1/map, /api/v1/static, /api/v1/stats are real registered routes
     (src/api/routes/map.py, static.py, stats.py), wrapping StatePresenter.present_map/present_static/present_stats
     (TCK-20260821-PRESENT-MAP-STATIC, TCK-20260821-REST-MAP-STATIC-STATS). V2EngineManager
@@ -11278,7 +11297,7 @@
     not V1's tick // 100 -- see docs/engine/contracts/frontend.md and staging_artifacts/TCK-20260821-REST-MAP-STATIC-STATS/plan.md
     Design Decisions for rationale.
   support_boundary: null
-- id: INFRA-385
+- id: INFRA-388
   text: /api/v1/ws now broadcasts a per-tick entity delta ({tick, changed, removed,
     events, snapshot_as_of_tick, region_id}) alongside the pre-existing minimal-summary
     connect payload (TCK-20260821-WS-ENTITY-DELTA-BROADCAST). StatePresenter.present_entity_slim

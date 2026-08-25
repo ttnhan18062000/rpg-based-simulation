@@ -60,6 +60,17 @@ The automated Continuous Integration (CI) pipeline enforces strict regression ch
 
 ### 3.1 Compute Latency Thresholds
 When executing standard scenarios (e.g., `MOVEMENT_STRESS_100_ACTORS` or `COMBAT_ARENA_STRESS`), the CI gate compares runtime tick latency against the established baseline.
+
+**Correction (2026-08-22, `TCK-20260822-SCAN-POLICY-DOC-FIX`):** `MOVEMENT_STRESS_100_ACTORS` is not
+a real wired scenario name — a repo-wide grep finds zero hits in `src/perf/scenarios.py` (whose
+`SCENARIO_BUILDERS` registers `idle`, `movement`, `resource`, `combat`, `strategic`, `mixed`,
+`metropolis`, each parameterized by `entity_count`, not a fixed 100-actor preset) or in
+`src/certification/scenarios.py` (whose real registered movement/combat scenario ids are
+`MVM_PATH_20` and `COMBAT_ARENA_STRESS_50V50`, not `MOVEMENT_STRESS_100_ACTORS` or
+`COMBAT_ARENA_STRESS`). Same underlying inaccuracy independently found in
+`docs/engine/performance_contract.md` §3.1 and `docs/plans/idea_semantic_entity_index.md` during the
+same investigation; corrected there too. This sentence is retained as illustrative prose, not a
+verified scenario identifier.
 - **p50 (Median) Latency**: Must not exceed baseline by more than **5.0%**.
 - **p95 Latency**: Must not exceed baseline by more than **10.0%**.
 - **p99 Latency**: Must not exceed baseline by more than **15.0%**.

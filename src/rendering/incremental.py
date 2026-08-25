@@ -15,6 +15,7 @@ from src.rendering.render import (
     BLOCKED_OUTLINE,
     BUILDING_COLOR,
     DEFAULT_TERRAIN_COLOR,
+    ENTITY_COLOR_DEAD,
     terrain_color,
 )
 
@@ -71,17 +72,21 @@ class IncrementalRenderer:
         self.frame = list(self.background)  # current live pixel buffer
         self.last_entity_pos: dict[int, tuple[int, int]] = {}
 
-        # I-frame completion: seed every currently-alive entity's position onto the
-        # frame at construction time. Without this, an entity that never becomes
+        # I-frame completion: seed every currently-active entity's position onto the
+        # frame at construction time, alive or dead (TCK-20260822-HOTFIX-INCREMENTAL-
+        # DEATH-RECOLOR-GAP: a corpse present at construction must render
+        # ENTITY_COLOR_DEAD, matching render()'s own alive/dead branch, not be
+        # silently dropped to background). Without this, an entity that never becomes
         # movement/lifecycle-dirty for the lifetime of the renderer would never be
         # drawn at all, since update() only touches ids present in a dirty set --
         # the initial snapshot must be a complete frame (matching render()'s
         # unconditional per-entity draw), not just the static background.
         for eid, ent in state.entities.items():
-            if getattr(ent.lifecycle, "active", True) and ent.combat.alive:
+            if getattr(ent.lifecycle, "active", True):
                 x, y = ent.navigation.position
                 gx, gy = int(x) - self.min_x, int(y) - self.min_y
-                self._blit_cell(gx, gy, ENTITY_COLOR_ALIVE)
+                color = ENTITY_COLOR_ALIVE if ent.combat.alive else ENTITY_COLOR_DEAD
+                self._blit_cell(gx, gy, color)
                 self.last_entity_pos[eid] = (int(x), int(y))
 
     def _blit_cell(self, gx: int, gy: int, color: tuple) -> None:
@@ -107,10 +112,11 @@ class IncrementalRenderer:
             old_pos = self.last_entity_pos.get(eid)
             if old_pos is not None:
                 self._restore_background_cell(old_pos[0] - self.min_x, old_pos[1] - self.min_y)
-            if ent is not None and getattr(ent.lifecycle, "active", True) and ent.combat.alive:
+            if ent is not None and getattr(ent.lifecycle, "active", True):
                 x, y = ent.navigation.position
                 gx, gy = int(x) - self.min_x, int(y) - self.min_y
-                self._blit_cell(gx, gy, ENTITY_COLOR_ALIVE)
+                color = ENTITY_COLOR_ALIVE if ent.combat.alive else ENTITY_COLOR_DEAD
+                self._blit_cell(gx, gy, color)
                 self.last_entity_pos[eid] = (int(x), int(y))
             else:
                 self.last_entity_pos.pop(eid, None)

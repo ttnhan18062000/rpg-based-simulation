@@ -253,18 +253,18 @@ Test Summary at Finalize — not the bare whole-repo grep.
   enumerated fields (`changed`/`removed`/`tick`/`events`/`snapshot_as_of_tick`), noting it is
   currently unpopulated and reserved for the future M3 interest-management epic
   (`TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT`).
-- `docs/parity_ledger/infrastructure.yaml`, entry `INFRA-385`: this is the same behavior being
+- `docs/parity_ledger/infrastructure.yaml`, entry `INFRA-388`: this is the same behavior being
   amended (the entry's `text` already documents this exact envelope shape and its
   `support_boundary` field already anticipates "spatial-subscription/region filtering are
-  explicitly out of scope"), so update `INFRA-385`'s `text`/`v2_evidence`/`support_boundary` rather
+  explicitly out of scope"), so update `INFRA-388`'s `text`/`v2_evidence`/`support_boundary` rather
   than opening a new entry. Add `src/api/ws/stream.py`'s new line to `v2_evidence` and note the
-  placeholder field's addition in `text`. `INFRA-385` is `priority: P1`, not `P0`, so no new
+  placeholder field's addition in `text`. `INFRA-388` is `priority: P1`, not `P0`, so no new
   mandatory test_path is forced beyond what already exists.
 
 **Other writers to this shared resource:** `docs/parity_ledger/infrastructure.yaml` is written to
 by any ticket touching infrastructure/observability parity entries; per investigation.md's grep
 confirmation, no other `docs/parity_ledger/*.yaml` entry references `compute_tick_delta`,
-`present_entity_slim`, or `stream_ws`, so `INFRA-385` is the sole entry in play — no collision with
+`present_entity_slim`, or `stream_ws`, so `INFRA-388` is the sole entry in play — no collision with
 a concurrent writer to the same entry is expected within this ticket's scope. This step should run
 via the `parity-updater` agent per project convention, in the same session as implementation.
 
@@ -277,7 +277,7 @@ via the `parity-updater` agent per project convention, in the same session as im
   legacy behavior (neither ever had a spatial-subscription field); no entry needed.
 
 **Verify:** Doc diff reviewed for accuracy against the actual code change in Step 1; no new
-parity-ledger entry created (only `INFRA-385` amended).
+parity-ledger entry created (only `INFRA-388` amended).
 
 ## Scope Guards
 

@@ -425,7 +425,7 @@ known-gap callout — both are already merged/done, so there is no concurrent-ed
 edits the frontend-consumption half of the same callout that those two left for this ticket to
 close out.
 **Do NOT touch:** `docs/parity_ledger/infrastructure.yaml` — investigation.md confirms no new/
-updated parity-ledger entry is required (`INFRA-383`/`384`/`385` already fully document the backend
+updated parity-ledger entry is required (`INFRA-386`/`384`/`385` already fully document the backend
 contracts this ticket only consumes; this ticket makes zero backend-behavior changes). Do not add
 an entry here to "be thorough" — it would be an unrequired, unscoped edit.
 **Verify:** No automated test covers doc content; verify by re-reading the updated section against

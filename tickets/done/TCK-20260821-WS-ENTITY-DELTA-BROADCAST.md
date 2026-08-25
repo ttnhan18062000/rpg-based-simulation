@@ -116,11 +116,11 @@ Verification of the prior turn's diff against `staging_artifacts/TCK-20260821-WS
   No changes needed.
 
 This turn's own work (Step 7 and closing):
-- Added `INFRA-385` to `docs/parity_ledger/infrastructure.yaml` (re-checked the file directly for
+- Added `INFRA-388` to `docs/parity_ledger/infrastructure.yaml` (re-checked the file directly for
   the next available ID at time of writing, per the shared-worktree caution in the task -- last
-  existing entry was `INFRA-384`). Did not touch `INFRA-047`/`048`/`049`'s pre-existing
+  existing entry was `INFRA-387`). Did not touch `INFRA-047`/`048`/`049`'s pre-existing
   `test_path: null` gap (confirmed out of scope) or the pre-existing unrelated `proof_type: unit`
-  schema violation on `INFRA-383` (discovered incidentally while schema-validating the new entry;
+  schema violation on `INFRA-386` (discovered incidentally while schema-validating the new entry;
   not introduced by this ticket, not touched).
 - Ran the full scoped test suite: `tests/unit/api/`, `tests/architecture/test_api_read_model_guard.py`
   (54 passed) and `tests/api/test_ws_protocol.py` (3 passed, including the new msgpack delta
@@ -161,7 +161,7 @@ have been treated as real regressions per the Gate Integrity rule.
   description replaced (was stale "tick-by-tick state updates" one-liner) with the real
   conditional delta shape and 20-tick heartbeat suppression behavior (caught by Document-Update,
   originally missed from this list -- Architecture-Verify flagged the traceability gap)
-- `docs/parity_ledger/infrastructure.yaml` -- new `INFRA-385` entry (this turn)
+- `docs/parity_ledger/infrastructure.yaml` -- new `INFRA-388` entry (this turn)
 - `tickets/inprogress/TCK-20260821-WS-ENTITY-DELTA-BROADCAST.md` -- Status, Acceptance Criteria,
   Implementation Notes, Test Summary, Files Changed, Completion Summary (this turn)
 - `staging_artifacts/TCK-20260821-WS-ENTITY-DELTA-BROADCAST/plan.md` -- Deviations section added
@@ -174,7 +174,7 @@ Added a per-tick entity-delta broadcast to the existing `/api/v1/ws` connection:
 with V1's 20-tick quiet-tick suppression rule, `V2EngineManager` computes this delta once per tick
 and only notifies listeners when it's non-`None`, and `stream_ws` attaches a per-connection
 `snapshot_as_of_tick` field via a dict copy to avoid a cross-connection mutation race. All 5
-acceptance criteria are met and verified by new tests; the parity ledger gained `INFRA-385`
+acceptance criteria are met and verified by new tests; the parity ledger gained `INFRA-388`
 tracking this behavior. Implementation spanned two agent turns due to a transient connectivity
 failure in the first turn's test retry; this turn verified the first turn's diff against plan.md
 line-by-line, fixed one minor import-placement issue, completed the parity-ledger step, and ran the

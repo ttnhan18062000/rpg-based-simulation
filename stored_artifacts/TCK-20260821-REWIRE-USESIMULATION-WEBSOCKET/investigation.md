@@ -143,7 +143,7 @@ spec for this file's expected behavior.
   this ticket, but worth being honest about in the doc since this ticket is what defines the real
   `sendControl` contract going forward).
 
-The `docs/parity_ledger/infrastructure.yaml` entries `INFRA-383`/`INFRA-384`/`INFRA-385` (path:
+The `docs/parity_ledger/infrastructure.yaml` entries `INFRA-386`/`INFRA-387`/`INFRA-388` (path:
 `docs/parity_ledger/infrastructure.yaml`, under `docs/`) are not required to change for this ticket:
 they already fully document the backend contracts (manifest, REST routes, WS delta broadcast) this
 ticket is purely a *consumer* of — this ticket makes zero backend-behavior changes, and the parity
@@ -160,12 +160,12 @@ diff.
 
 ## Parity Ledger Overlap
 
-- `INFRA-383` (P2, `verified`) — `GET /api/v1/manifest`. This ticket's `loadInitial()` already
+- `INFRA-386` (P2, `verified`) — `GET /api/v1/manifest`. This ticket's `loadInitial()` already
   fetches it (landed by ticket 2); no change needed to this entry.
-- `INFRA-384` (P1, `verified`) — `/api/v1/map`, `/api/v1/static`, `/api/v1/stats`. `loadInitial()`
+- `INFRA-387` (P1, `verified`) — `/api/v1/map`, `/api/v1/static`, `/api/v1/stats`. `loadInitial()`
   already fetches `/map`/`/static`; `fallbackPoll` already fetches `/stats` — both untouched by this
   ticket's Scope. No change needed.
-- `INFRA-385` (P1, `verified`) — `/api/v1/ws` per-tick delta broadcast
+- `INFRA-388` (P1, `verified`) — `/api/v1/ws` per-tick delta broadcast
   (`{tick,changed,removed,events,snapshot_as_of_tick,region_id}`), including the documented
   `state`/`tier`/`combat_target_id`/`loot_progress`/`loot_duration` drop from `EntitySlim`. This is
   the exact payload shape this ticket's rewired `onmessage` handler must consume. No P0 entries are

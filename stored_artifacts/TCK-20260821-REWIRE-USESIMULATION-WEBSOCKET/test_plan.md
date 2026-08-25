@@ -58,7 +58,7 @@ backend pytest command is required for this ticket's own verification. If a futu
 ticket accidentally touches any backend file, that is itself a scope violation to flag, not a
 regression surface to test around — but as a defensive minimum in that case, re-run
 `tests/unit/api/ tests/api/test_ws_protocol.py tests/api/test_manifest_api.py
-tests/architecture/test_api_read_model_guard.py` (the suites covering `INFRA-383`/`384`/`385`) to
+tests/architecture/test_api_read_model_guard.py` (the suites covering `INFRA-386`/`384`/`385`) to
 confirm the backend contract this hook depends on is unchanged.
 
 ## New Tests Required

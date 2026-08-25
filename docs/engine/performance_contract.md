@@ -36,7 +36,10 @@ The engine must report the cost of each authoritative phase separately:
 Performance claims are ONLY valid when combined with:
 - **Runtime Profile**: (e.g. `standard_gaming`)
 - **Hardware Class**: (e.g. `Class_B`)
-- **Scenario**: (e.g. `MOVEMENT_STRESS_100_ACTORS`)
+- **Scenario**: (e.g. `movement` parameterized by `entity_count=100` — see `src/perf/scenarios.py`'s
+  `SCENARIO_BUILDERS`; the previously-cited `MOVEMENT_STRESS_100_ACTORS` name is not a real wired
+  scenario anywhere in `src/perf/scenarios.py` or `tests/`, corrected 2026-08-22 per
+  `TCK-20260822-SCAN-POLICY-DOC-FIX`)
 - **Execution Mode**: (LOCAL vs CONCURRENT)
 - **RuntimeMode**: (NORMAL — see §7 Adaptive Phase Budget Governor for the ladder; a claim
   measured while the Governor left NORMAL is not a valid baseline claim without stating so)
