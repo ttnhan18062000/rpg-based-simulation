@@ -4,6 +4,32 @@ import type {
   AttributesData, BuildingsData, ResourcesData, RecipesData,
 } from '@/types/metadata';
 
+// Fallback when /api/v1/metadata/* is unavailable (currently unimplemented backend-side --
+// see TCK-20260825-METADATA-API-BACKEND-MISSING). All-empty, correctly-shaped GameMetadata so
+// consuming panels (BuildingPanel, LootPanel, ClassHallPanel, InspectPanel) render with no
+// item/class/trait names looked up rather than crashing on `useMetadata()`'s null-context throw.
+// Deliberately does not block the rest of the app (the live map, sidebar, controls) from
+// rendering just because this optional detail-lookup data isn't available.
+const EMPTY_METADATA: GameMetadata = {
+  enums: {
+    materials: [], ai_states: [], tiers: [], rarities: [], item_types: [],
+    damage_types: [], elements: [], entity_roles: [], factions: [],
+    faction_relations: [], entity_kinds: [],
+  },
+  items: { items: [] },
+  classes: {
+    classes: [], skills: [], race_skills: {}, scaling_grades: [],
+    mastery_tiers: [], skill_targets: [],
+  },
+  traits: { traits: [] },
+  attributes: { attributes: [] },
+  buildings: { building_types: [] },
+  resources: { resource_types: [] },
+  recipes: { recipes: [] },
+  itemMap: {}, traitMap: {}, skillMap: {}, classMap: {}, aiStateMap: {}, buildingTypeMap: {},
+  attrKeys: [], attrLabels: [],
+};
+
 const API = import.meta.env.VITE_API_URL || '';
 
 async function fetchJson<T>(path: string): Promise<T> {
@@ -54,7 +80,6 @@ const MetadataContext = createContext<GameMetadata | null>(null);
 
 export function MetadataProvider({ children }: { children: ReactNode }) {
   const [metadata, setMetadata] = useState<GameMetadata | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,18 +99,14 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch(err => {
-        if (!cancelled) setError(String(err));
+        // Non-blocking: log for visibility, but never prevent the rest of the app (live map,
+        // sidebar, controls) from rendering just because this optional detail-lookup data isn't
+        // available. See EMPTY_METADATA's comment for why.
+        console.error('Failed to load game metadata, continuing with empty metadata:', err);
+        if (!cancelled) setMetadata(EMPTY_METADATA);
       });
     return () => { cancelled = true; };
   }, []);
-
-  if (error) {
-    return (
-      <div style={{ color: '#f87171', padding: 24, fontFamily: 'monospace' }}>
-        Failed to load game metadata: {error}
-      </div>
-    );
-  }
 
   if (!metadata) {
     return (

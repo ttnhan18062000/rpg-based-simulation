@@ -34,6 +34,10 @@ _PRE_EXISTING_USES = {
     "actions/checkout@v5",
     "actions/setup-python@v6",
     "actions/upload-artifact@v4",
+    # actions/setup-node@v4 added by TCK-20260825-CI-FRONTEND-TEST-COVERAGE-GAP for the new
+    # 'frontend' job -- a legitimate, expected new Action (mirrors deploy-docs.yml's existing
+    # actions/setup-node@v4 usage), not scope creep on this ticket's own dependency guard.
+    "actions/setup-node@v4",
 }
 
 _BANNED_REQUIREMENTS_ENTRIES = ("pytest-cov", "pytest-html")
@@ -68,6 +72,7 @@ needs:
   - agent-orchestration
   - simulation-quality
   - arch-docs
+  - frontend
   - perf-cert-arena
   - migration-lanes
 steps:
@@ -334,12 +339,17 @@ def test_new_steps_gated_on_pull_request_event_only() -> None:
 
 
 def test_no_cross_job_aggregate_step_or_job_added() -> None:
+    # 'frontend' (TCK-20260825-CI-FRONTEND-TEST-COVERAGE-GAP) is a deliberate new job, added to
+    # close a real CI coverage gap -- it joins the exempt set alongside migration-lanes/typecheck/
+    # slow (all non-pytest or pytest-reporting-exempt jobs), not _FASTLANE_JOBS, since it runs
+    # npm/vitest, not pytest, and has no --junit-xml/base-branch-collect-only wiring to match.
     expected_job_names = set(_FASTLANE_JOBS) | {
         "changed-files",
         "perf-cert-arena",
         "migration-lanes",
         "typecheck",
         "slow",
+        "frontend",
     }
     assert set(_jobs().keys()) == expected_job_names, (
         "job set changed -- this ticket must not add a new CI job (no cross-job aggregate "
