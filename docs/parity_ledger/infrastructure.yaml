@@ -11347,3 +11347,34 @@
     envelope (always null) per TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD, but actual
     spatial-subscription/region filtering remains out of scope, still deferred to
     TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT.
+- id: INFRA-389
+  text: V2EngineManager._build() now compiles a real world (terrain, regions, resource
+    nodes, buildings) via WorldCompiler.compile()/WorldRepository before constructing
+    its boot AuthoritativeState, fixing a live-reproduced bug (TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX's
+    own Playwright e2e check) where GET /api/v1/map always returned width=0/height=0/grid=[]
+    -- _build() previously constructed AuthoritativeState(tick=0, seed=self._seed,
+    entities=entities) with no terrain argument at all, defaulting to an empty dict,
+    so the real running API server never had any terrain regardless of any WS/auth/proxy
+    fix. A new world_id constructor parameter (str, defaulting to "dungeon_crawl")
+    selects the world spec; the compiled world's own entities (quest-givers, NPCs,
+    etc.) are deliberately
+    discarded via dataclasses.replace(compiled_state, tick=0, seed=self._seed, entities=entities)
+    in favor of the pre-existing hero+goblin-diagonal spawn logic (TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL),
+    which is left untouched -- only the terrain/regions/statics layer was missing,
+    entity-spawning behavior/contract is unchanged. create_v2_app() gained optional
+    seed/entities_count/world_id override parameters (None-default, backward compatible
+    with every pre-existing caller) and the CLI serve subcommand's pre-existing-but-silently-ignored
+    --seed/--entities flags plus a new --world flag are now actually threaded through
+    (src/cli/entry.py::_run_serve).
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src/api/engine_manager.py (V2EngineManager._build(), __init__'s world_id
+    param) + src/api/server.py (create_v2_app's seed/entities_count/world_id params)
+    + src/cli/entry.py (serve subcommand's --world flag, _run_serve threading --seed/--entities/--world
+    through)
+  proof_type: null
+  test_path: tests/unit/api/test_engine_manager.py,tests/unit/api/test_map_route.py::test_map_endpoint_returns_200_with_rle_shape,frontend/e2e/live_map.spec.ts::live
+    map renders real terrain and live ticking data through make dev
+  divergence_note: null
+  support_boundary: null

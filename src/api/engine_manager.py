@@ -1,4 +1,5 @@
 from __future__ import annotations
+import dataclasses
 import logging
 import threading
 import time
@@ -11,6 +12,8 @@ from src.platform.rng import DeterministicRNG
 from src.config.profiles import RuntimeProfile
 from src.systems.world_systems.generator import EntityGenerator
 from src.api.read_model_cache import ReadModelCache
+from src.worldbuilding.compiler import WorldCompiler
+from src.worldbuilding.repository import WorldRepository
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +22,11 @@ class V2EngineManager:
     V2 drop-in replacement for legacy EngineManager.
     Wraps the V2 Kernel and manages the background execution loop.
     """
-    def __init__(self, profile: RuntimeProfile, seed: int = 42, entities_count: int = 10):
+    def __init__(self, profile: RuntimeProfile, seed: int = 42, entities_count: int = 10, world_id: str = "dungeon_crawl"):
         self._profile = profile
         self._seed = seed
         self._entities_count = entities_count
+        self._world_id = world_id
         
         self._kernel: Optional[Kernel] = None
         self._thread: Optional[threading.Thread] = None
@@ -109,11 +113,27 @@ class V2EngineManager:
                     logger.exception("Error in tick listener")
 
     def _build(self):
-        """Construct the initial kernel and state."""
+        """Construct the initial kernel and state.
+
+        Loads and compiles a real world (terrain, regions, resource nodes, buildings) via
+        WorldCompiler -- previously this constructed a bare AuthoritativeState with no terrain
+        argument at all (terrain defaulting to an empty dict), so every route/consumer reading
+        state.terrain (e.g. GET /api/v1/map) always saw an empty map, live-confirmed via
+        TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX's Playwright e2e check. The compiled
+        world's own entities (quest-givers, NPCs, etc.) are deliberately discarded in favor of
+        the existing hero+goblin-diagonal spawn logic below -- that logic's entities_count
+        semantics and spawn-collision fix (TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-
+        MONSTER-DIAGONAL) are an established, tested contract this change must not disturb; only
+        the terrain/regions/statics layer was missing.
+        """
         from src.api.presenters.state_presenter import StatePresenter
-        
+
         rng = DeterministicRNG(self._seed)
         gen = EntityGenerator(self._seed)
+
+        repo = WorldRepository("data/worlds")
+        spec = repo.load_world(self._world_id)
+        compiled_state, _compile_report = WorldCompiler.compile(spec, seed=self._seed)
 
         entities = {}
         # Spawn hero at center
@@ -138,13 +158,14 @@ class V2EngineManager:
             monster = gen.spawn_goblin(pos)
             entities[monster.id] = monster
             placed += 1
-            
-        state = AuthoritativeState(
+
+        state = dataclasses.replace(
+            compiled_state,
             tick=0,
             seed=self._seed,
-            entities=entities
+            entities=entities,
         )
-        
+
         self._kernel = Kernel(profile=self._profile, state=state, rng=rng)
         self._kernel._event_listeners = self._event_listeners
         self._update_latest_state(state)

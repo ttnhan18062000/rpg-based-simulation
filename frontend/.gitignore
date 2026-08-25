@@ -27,3 +27,8 @@ dist-ssr
 data/runs/*
 reports/release_proof/*
 
+# Playwright local run artifacts (screenshots, HTML reports, traces) -- regenerated every run
+test-results/
+e2e-artifacts/
+playwright-report/
+
