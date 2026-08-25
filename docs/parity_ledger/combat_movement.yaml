@@ -3753,6 +3753,29 @@
     test_ws_events_stream) confirmed pre-existing via git-stash bisection, unrelated to this
     change (missing local calibration-report fixture and refused localhost connections,
     respectively).
+
+- id: COMB-311
+  text: >
+    TCK-20260826-HOTFIX-PERMADEATH-LIFECYCLE-FIX -- `LifecycleSystem.resolve_lifecycle()`'s combat-death
+    check (`docs/parity_ledger/combat_movement.yaml` COMB-309's own cited authoritative
+    `death_reason=="COMBAT"` writer) only matched `outcome_kind=="KILL"`, never `"PERMADEATH"` --
+    the more final outcome `src/engine/combat.py` sets when a rebirth-eligible target (a Hero)
+    dies at `generation >= 4` (no more rebirth generations available). A "permanently dead" Hero
+    therefore never actually deactivated (`lifecycle.active` stayed `True`) and kept acting in
+    the simulation. Fixed by checking `outcome_kind in ("KILL", "PERMADEATH")` -- both route
+    through the identical deactivation/death_reason="COMBAT" path, so COMB-309's own fallback
+    event-crediting gate (`death_reason=="COMBAT"`) now correctly fires for PERMADEATH deaths
+    too, with no change needed to that gate itself. `CombatShaper` (`src/observability/event_shapers.py`)
+    keeps its own `outcome_kind=="KILL"`-only ownership boundary unchanged by design --
+    PERMADEATH deaths are not "shaper-owned," so they correctly fall through to the COMB-309
+    fallback path for event/reward crediting, not a second gap needing its own fix.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/systems/lifecycle_systems/lifecycle.py (resolve_lifecycle's combat-death check)
+  proof_type: regression
+  test_path: tests/unit/progression/test_lifecycle.py::test_permadeath_death_classification
+  divergence_note: null
   divergence_note: null
   support_boundary: >
     Does not address WHY genuine `combat_engagement_ended` activity in this corpus never

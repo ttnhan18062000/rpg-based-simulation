@@ -74,8 +74,6 @@ The following companion docs extend the Mechanics Bible chapters with formula de
 | [`damage_formula_contract.md`](damage_formula_contract.md) | Chapter 02 | Fractional armor mitigation formula, 7 tactical modifiers in exact application order, durability decay, wound infliction (25% source-authoritative), AoE splash, kill rewards |
 | [`attribute_progression_contract.md`](attribute_progression_contract.md) | Chapter 01 | XP threshold formula, level-up execution, +5 AP per level, skill unlocks, 6-phase stat recalc order, skill scaling by type, breakthrough placeholder status |
 
-> **Parity note:** `damage_formula_contract.md` documents wound infliction threshold as **25%** (source-authoritative). Chapter 02 states 40%. This divergence is recorded in `docs/parity_ledger/combat_movement.yaml` entry COMB-290 as `status: divergent`. Chapter 02 requires correction in a parity-repair ticket.
-
 ---
 
 ## Compliance Status

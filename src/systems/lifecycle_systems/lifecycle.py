@@ -39,8 +39,12 @@ class LifecycleSystem:
                 is_dead = True
                 death_reason = "OLD_AGE"
             
-            # Check for combat death
-            if ent_upd and ent_upd.combat and ent_upd.combat.outcome_kind == "KILL":
+            # Check for combat death -- PERMADEATH (a rebirth-eligible Hero at generation cap,
+            # src/engine/combat.py) is a more final outcome than KILL, not a separate one; it must
+            # route through the same deactivation path or the entity never actually deactivates
+            # and keeps acting despite being narratively permanently dead (TCK-20260826-HOTFIX-
+            # PERMADEATH-LIFECYCLE-FIX).
+            if ent_upd and ent_upd.combat and ent_upd.combat.outcome_kind in ("KILL", "PERMADEATH"):
                 is_dead = True
                 death_reason = "COMBAT"
             

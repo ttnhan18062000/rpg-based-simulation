@@ -50,10 +50,30 @@ def test_combat_death_classification():
     update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, combat=kill_upd)})
     
     refined = LifecycleSystem.resolve_lifecycle(state, update)
-    
+
     ent_upd = refined.entity_updates[1]
     assert ent_upd.active is False
     assert ent_upd.lifecycle.death_reason_set == "COMBAT"
+
+def test_permadeath_death_classification():
+    """A PERMADEATH outcome (a rebirth-eligible Hero at generation cap, src/engine/combat.py)
+    must deactivate the entity the same as a KILL outcome -- regression for a real bug where
+    resolve_lifecycle only checked outcome_kind=="KILL", leaving a "permanently dead" Hero
+    active=True and still acting."""
+    ent = (V2EntityBuilder(1)
+           .location(0.0, 0.0)
+           .build())
+    state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
+
+    permadeath_upd = CombatUpdate(outcome_kind="PERMADEATH", is_lethal=True)
+    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, combat=permadeath_upd)})
+
+    refined = LifecycleSystem.resolve_lifecycle(state, update)
+
+    ent_upd = refined.entity_updates[1]
+    assert ent_upd.active is False
+    assert ent_upd.lifecycle.death_reason_set == "COMBAT"
+    assert ent_upd.lifecycle.is_permadeath_set is True
 
 def test_succession_and_heirloom_transfer():
     """Verify that heirlooms are transferred to the heir upon death."""
