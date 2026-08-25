@@ -24,6 +24,7 @@ _EXISTING_RECIPE_SNAPSHOT = {
     "build": "\tcd frontend && npm run build\n",
     "dev": (
         '\t@echo "Starting backend on :8000 and frontend on :5173..."\n'
+        '\t@echo "Open http://localhost:5173 to view the live map."\n'
         '\t@echo "Press Ctrl+C to stop both."\n'
         "\t@trap 'kill 0' INT; \\\n"
         "\t\tpython3 -m src serve --port 8000 & \\\n"
