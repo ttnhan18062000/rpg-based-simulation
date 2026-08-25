@@ -150,3 +150,26 @@ raises an uncaught `TypeError` the moment a non-scalar-typed env var is set.
 All structured parsing of the delimited format stays in `src/api/auth.py`,
 never on `RuntimeProfile` itself (frozen; parsing logic does not belong in a
 resource-envelope contract).
+
+---
+
+## 6. Local Dev: `make dev`'s Fixed Dev Key
+
+`TCK-20260823-HTTP-API-KEY-AUTH` fail-closes with no key configured (Section
+1) — this initially left `make dev`'s live map non-functional, since
+`frontend/src/hooks/useSimulation.ts` sent no key anywhere and the Makefile's
+`dev` target passed no `--api-key-hashes` flag, live-confirmed and fixed by
+`TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX`.
+
+`make dev` now passes a fixed dev-only client/hash pair
+(`--api-key-hashes "dev:3e90488c..."`) to the backend, and
+`frontend/.env.development` (Vite's standard `VITE_*` convention, loaded
+automatically in dev mode) holds the matching raw key as `VITE_API_KEY`.
+`useSimulation.ts` reads it once at module load and attaches it as an
+`X-API-Key` header on every REST call and a `?key=` query param on the WS
+connect — a deliberate no-op (no header, no param) when the env var is
+unset, so any build without it defined behaves exactly as before this
+ticket. This raw key is **not a real secret** — fixed, committed in
+plaintext, local-dev-only by design. It has no bearing on, and does not
+substitute for, a real production key-provisioning story, which remains
+unbuilt.
