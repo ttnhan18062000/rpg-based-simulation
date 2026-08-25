@@ -11321,15 +11321,25 @@
     always the literal None/null on every message -- reserved wire space for the future
     M3 interest-management epic (TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT);
     compute_tick_delta itself is untouched, so the field carries no filtering or subscription
-    meaning yet.
+    meaning yet. TCK-20260825-FORCE-FULL-SCAN-DEAD-CODE fixes force_full_scan=True
+    to genuinely produce an all-entities changed list end-to-end -- AuthoritativeApplyPipeline.refine()
+    now overrides the final DirtySet's nine entity/town domains to full coverage when
+    update.force_full_scan is true (previously dead code, AuthoritativeApplyPipeline._refresh_dirty_set,
+    was never called), and RuntimeStatus gained a declared force_full_scan field populated
+    once at Kernel.__init__ from the boot-time flag, so V2EngineManager._update_latest_state's
+    getattr(self._kernel.status, "force_full_scan", False) read (previously always
+    False regardless of how the Kernel was booted) now correctly reflects it before
+    being threaded into compute_tick_delta.
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: src/api/presenters/state_presenter.py + src/api/read_model_cache.py
     + src/api/engine_manager.py + src/api/ws/stream.py (out_payload["region_id"] =
-    None)
+    None) + src/engine/pipeline.py (AuthoritativeApplyPipeline.refine() final force_full_scan
+    dirty_set override) + src/engine/runtime_status.py (RuntimeStatus.force_full_scan
+    field) + src/engine/kernel.py (Kernel.__init__ populates self._status.force_full_scan)
   proof_type: null
-  test_path: tests/unit/api/test_read_model_cache.py::test_compute_tick_delta_changed_includes_only_dirty_and_alive_entities,tests/api/test_ws_protocol.py::test_ws_delta_envelope_includes_null_spatial_placeholder_field,tests/api/test_ws_protocol.py::test_ws_delta_envelope_new_field_does_not_change_existing_field_semantics
+  test_path: tests/unit/api/test_read_model_cache.py::test_compute_tick_delta_changed_includes_only_dirty_and_alive_entities,tests/api/test_ws_protocol.py::test_ws_delta_envelope_includes_null_spatial_placeholder_field,tests/api/test_ws_protocol.py::test_ws_delta_envelope_new_field_does_not_change_existing_field_semantics,tests/integration/optimization/test_force_full_scan_dirty_set_completeness.py::test_refine_forces_full_dirty_set_when_force_full_scan_true_with_no_entity_updates,tests/integration/optimization/test_force_full_scan_dirty_set_completeness.py::test_refine_does_not_force_full_dirty_set_when_force_full_scan_false,tests/integration/optimization/test_force_full_scan_dirty_set_completeness.py::test_v2_engine_manager_ws_delta_changed_includes_every_alive_entity_under_force_full_scan,tests/unit/engine/test_runtime_status.py::test_kernel_status_exposes_force_full_scan_from_boot_flag
   divergence_note: null
   support_boundary: events field is always [] this ticket -- real SimulationEvent
     content and spatial-subscription/region filtering are explicitly out of scope

@@ -351,27 +351,10 @@ class AuthoritativeApplyPipeline:
         # Final dirty set for result application
         dirty_builder.mark_from_update(state, update)
         update = update.replace(dirty_set=dirty_builder.build())
-        t8 = time.perf_counter_ns()
-        costs["final_integrity"] = (t8 - t_start) / 1e6
-        if state.tick in (10, 20, 30, 40, 50) and len(state.entities) >= 500:
-            logger.debug(f"[Tick {state.tick}] final_integrity breakdown (ms): dirty1={(t1-t0)/1e6:.2f}, fused={(t2-t1)/1e6:.2f}, hardening={(t3-t2)/1e6:.2f}, occupancy={(t4-t3)/1e6:.2f}, lifecycle={(t5-t4)/1e6:.2f}, groups={(t6-t5)/1e6:.2f}, capacity={(t7-t6)/1e6:.2f}, dirty2={(t8-t7)/1e6:.2f}")
-
-        final_metrics = dict(update.metric_counters) if getattr(update, "metric_counters", None) is not None else {}
-        final_metrics.update(metric_counters)
-        return update.replace(sub_phase_costs=costs, metric_counters=final_metrics)
-    @staticmethod
-    def _refresh_dirty_set(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
-        """
-        Hardening Phase: Ensure DirtySet is always current.
-        Logic ID: PERF-006-REFRESH
-        M7 Optimization: Incremental derivation.
-        """
-        from src.core.dirty import DirtySet
-        
-        # Phase 17 Law: If force_full_scan is True, the dirty set must include ALL entities.
         if update.force_full_scan:
             all_ids = set(state.entities.keys())
-            new_dirty = DirtySet(
+            update = update.replace(dirty_set=replace(
+                update.dirty_set,
                 movement_entities=all_ids,
                 combat_entities=all_ids,
                 inventory_entities=all_ids,
@@ -381,12 +364,16 @@ class AuthoritativeApplyPipeline:
                 town_entities=state.town_entity_ids,
                 biological_entities=all_ids,
                 attribute_entities=all_ids
-            )
-            return update.replace(dirty_set=new_dirty)
-            
-        new_dirty = DirtySet.from_update(state, update, base_dirty=update.dirty_set)
-        return update.replace(dirty_set=new_dirty)
-    
+            ))
+        t8 = time.perf_counter_ns()
+        costs["final_integrity"] = (t8 - t_start) / 1e6
+        if state.tick in (10, 20, 30, 40, 50) and len(state.entities) >= 500:
+            logger.debug(f"[Tick {state.tick}] final_integrity breakdown (ms): dirty1={(t1-t0)/1e6:.2f}, fused={(t2-t1)/1e6:.2f}, hardening={(t3-t2)/1e6:.2f}, occupancy={(t4-t3)/1e6:.2f}, lifecycle={(t5-t4)/1e6:.2f}, groups={(t6-t5)/1e6:.2f}, capacity={(t7-t6)/1e6:.2f}, dirty2={(t8-t7)/1e6:.2f}")
+
+        final_metrics = dict(update.metric_counters) if getattr(update, "metric_counters", None) is not None else {}
+        final_metrics.update(metric_counters)
+        return update.replace(sub_phase_costs=costs, metric_counters=final_metrics)
+
     @staticmethod
     def _strip_untrusted_world_effects(update: StateUpdate) -> StateUpdate:
         from src.engine.pipeline_phases.trust import TrustBoundaryPhase

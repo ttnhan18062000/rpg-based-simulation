@@ -185,7 +185,9 @@ Callers that use `DirtySet.from_update()` directly (rather than `DirtySetBuilder
 
 ### `force_full_scan` fallback
 
-When `StateUpdate.force_full_scan=True` or `StateUpdate.dirty_set is None`, both `CandidateSelector.entities()` and `get_relevant_entity_ids()` return all entity IDs from `state.entities` regardless of dirty flags. This is the global re-evaluation path used for initial ticks, calamity events, and any scenario where the full entity pool must be re-evaluated. The dirty set is still computed and attached — it is just not used for filtering.
+When `StateUpdate.force_full_scan=True` or `StateUpdate.dirty_set is None`, both `CandidateSelector.entities()` and `get_relevant_entity_ids()` return all entity IDs from `state.entities` regardless of dirty flags. This is the global re-evaluation path used for initial ticks, calamity events, and any scenario where the full entity pool must be re-evaluated. This routing bypass is unaffected by the dirty set's content — a phase never consults `dirty_set` to decide whether force-full-scan is active, only `update.force_full_scan`/`state._force_full_scan` directly.
+
+For `force_full_scan=False` ticks, the dirty set `AuthoritativeApplyPipeline.refine()` finally returns is exactly what `DirtySetBuilder` computed from real mutations — the dirty set is still computed and attached, it is just not used for filtering. For `force_full_scan=True` ticks, `refine()`'s final "Final dirty set for result application" block (`pipeline.py`) additionally replaces the nine entity/town domain fields of the returned `DirtySet` with the full entity population (`dataclasses.replace(update.dirty_set, movement_entities=all_ids, ..., town_entities=state.town_entity_ids)`), preserving the eight non-entity fields (`group_ids`, `region_ids`, `resource_node_ids`, `building_ids`, `chest_ids`, `ground_item_ids`, `corpse_ids`, `camp_ids`) verbatim. This ensures downstream consumers outside `refine()` — `ReadModelCache.compute_tick_delta`/`.update()`, the `/api/v1/ws` broadcast — also observe full entity coverage, not just the in-pipeline phases that were already correctly widened by the routing bypass above. `Kernel.status.force_full_scan` (a declared `RuntimeStatus` field, populated once at `Kernel.__init__` from the boot-time flag) is what lets `V2EngineManager._update_latest_state` see this correctly in every observability mode, including `OFF`.
 
 ### Lifecycle event conservative marking
 
@@ -241,6 +243,7 @@ Cross-reference: `docs/core/state.md` (Immutability Law — why `DirtySet` is fr
 | `tests/perf/test_dirty_set_integrity.py` | `DirtySet.from_update()` tracks movement, combat, world objects correctly; `DirtySetLeakError` fires on undeclared mutations; incremental merge correctness via `DirtySet.merge()` |
 | `tests/perf/test_dirty_parity.py::test_dirty_set_vs_full_scan_parity` | Bit-identical state hash between dirty-set-optimized path and `force_full_scan=True` reference path over 100 ticks (`@pytest.mark.slow`) |
 | `tests/integration/pipeline/test_authoritative_apply.py` | `apply_generation()` isolation (prior state not mutated), deterministic apply order, resource delta correctness |
+| `tests/integration/optimization/test_force_full_scan_dirty_set_completeness.py` | `refine()`'s final `DirtySet` covers every entity across all nine entity/town domains under `force_full_scan=True`, even with zero real `EntityUpdate`s that tick; the eight non-entity domains (`building_ids` etc.) already computed by `DirtySetBuilder` survive the override untouched; the override does not fire when `force_full_scan=False`; a `force_full_scan=True`-booted `Kernel`'s WS delta (`ReadModelCache.compute_tick_delta`) `changed` list contains every live entity |
 
 ## Extension rules
 

@@ -65,10 +65,11 @@ Optimization heuristics (e.g., spatial bounding, dirty filtering) carry the inhe
 1. All 7 authoritative simulation phases (`Init`, `Scheduling`, `Locomotion`, `Interaction`, `Social`, `Strategic`, `Advancement`) must check `state._force_full_scan` or `flags.get("force_full_scan")`.
 2. When `force_full_scan` is active, systems must evaluate all entities in the simulation without exception, bypassing candidate selectors and phase skipping logic.
 3. The resulting state hash of a full-scan run must exactly match the state hash of a correctly optimized run.
+4. The `StateUpdate.dirty_set` that `refine()` returns when `force_full_scan` is active must itself contain every live entity across all nine domain sets — not merely have permitted every phase to evaluate every entity internally — so that consumers outside the pipeline (`ReadModelCache.compute_tick_delta`, the `/api/v1/ws` broadcast) also observe full coverage.
 
 ### Enforcement & Verification
 - **Automated Verification**: Verified across multi-tick scenarios comparing full-scan execution against dirty-filtered execution.
-- **Test Citation**: `tests/integration/optimization/test_force_full_scan_phase_compliance.py` (Verifies perfect state hash equivalence across all 7 authoritative phases).
+- **Test Citation**: `tests/integration/optimization/test_force_full_scan_phase_compliance.py` (Verifies perfect state hash equivalence across all 7 authoritative phases); `tests/integration/optimization/test_force_full_scan_dirty_set_completeness.py` (Verifies Rule 4 — the downstream `DirtySet` covers every entity under `force_full_scan=True` and is left untouched when `False`).
 
 ---
 
