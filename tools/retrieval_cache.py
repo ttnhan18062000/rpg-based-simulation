@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sqlite3
 import sys
 import time
@@ -552,19 +553,42 @@ def _sidecar_run_is_stale(effective_ticket_id: str | None) -> bool:
 
 
 def read_current_run_sidecar() -> dict:
-    """Mirrors tools/agent-monitoring/post_tool_hook.py:46-63's exact `.claude/current_run` read
-    pattern — same file, same key names (run_id/seq/phase/agent/execution_id/provider/ticket_id),
-    same fail-silent-to-None-on-any-error convention — reused, not reinvented (no shared helper
-    previously existed to import; post_tool_hook.py's own version is inlined in a try/except
-    block, not an importable function). Adds one field beyond that mechanism's own scope:
-    `sidecar_stale` (see _sidecar_run_is_stale()) — a run_id starting with "TCK-" is used as the
-    effective ticket_id when the sidecar carries no explicit `ticket_id` of its own (the common
-    case for hotfix/standard workflows, where run_id already *is* the ticket_id — confirmed by
-    direct inspection of the real, live .claude/current_run sidecar during this ticket's own
-    investigation)."""
+    """Mirrors tools/agent-monitoring/post_tool_hook.py's `.claude/current_run` read pattern —
+    same key names (run_id/seq/phase/agent/execution_id/provider/ticket_id), same fail-silent-to-
+    None-on-any-error convention — reused, not reinvented (no shared helper module previously
+    existed to import; post_tool_hook.py's own version is inlined in a try/except block, not an
+    importable function). Adds one field beyond that mechanism's own scope: `sidecar_stale` (see
+    _sidecar_run_is_stale()) — a run_id starting with "TCK-" is used as the effective ticket_id
+    when the sidecar carries no explicit `ticket_id` of its own (the common case for hotfix/
+    standard workflows, where run_id already *is* the ticket_id).
+
+    TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY: prefers the per-session scoped sidecar
+    (`<_CURRENT_RUN_SIDECAR_PATH>.<CLAUDE_CODE_SESSION_ID>`) over the unscoped file when a scoped
+    file exists for this process's session, mirroring post_tool_hook.py's own scoped-file
+    preference (TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE). Deliberately does NOT adopt
+    post_tool_hook.py's later null-sentinel-on-absence behavior (TCK-20260824-SIDECAR-ADHOC-NULL-
+    ATTRIBUTION) when no scoped file exists — falls back to the unscoped file instead, same as
+    before that ticket. Two reasons, not an oversight: (1) this function is called from CLI/
+    library contexts with no session_id to key a sentinel by other than the env var, and giving a
+    read-only function a new write side effect (writing a sentinel file) is exactly the kind of
+    expanded responsibility this ticket's own Out of Scope excludes; (2) unlike tools.jsonl (which
+    had no staleness signal at all until fixed), this function already carries its own adequate
+    safeguard for the single worst failure mode — attribution to an already-closed ticket — via
+    `sidecar_stale` below, so blind unscoped-fallback here is materially less risky than it was
+    for post_tool_hook.py."""
+    session_id = os.environ.get("CLAUDE_CODE_SESSION_ID", "")
+    scoped_path = (
+        _CURRENT_RUN_SIDECAR_PATH.parent / f"{_CURRENT_RUN_SIDECAR_PATH.name}.{session_id}"
+        if session_id
+        else None
+    )
+    sidecar_path = (
+        scoped_path if scoped_path is not None and scoped_path.exists() else _CURRENT_RUN_SIDECAR_PATH
+    )
+
     run_id = seq = phase = agent = execution_id = provider = ticket_id = None
     try:
-        sidecar = json.loads(_CURRENT_RUN_SIDECAR_PATH.read_text())
+        sidecar = json.loads(sidecar_path.read_text())
         run_id = sidecar.get("run_id") or None
         seq = sidecar.get("seq") or None
         phase = sidecar.get("phase") or None

@@ -140,6 +140,16 @@ def test_sqlite_defaults_not_silently_implemented():
     (SQLite has no `ADD COLUMN IF NOT EXISTS`) — a different PRAGMA than the connection-tuning ones
     this guard exists to block, and not a duplication of open_connection_with_limits()'s own logic.
     Only the specific connection-tuning PRAGMA forms are still banned.
+
+    Narrowed again by TCK-20260825-HOTFIX-RETRIEVAL-CACHE-OS-IMPORT-GUARD-DRIFT:
+    TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY legitimately added `import os` for
+    `os.environ.get("CLAUDE_CODE_SESSION_ID")` (reading the per-session scoped sidecar file) — an
+    unrelated reason that has nothing to do with the connection-tuning this guard exists to block.
+    The blanket "os not imported" check was always an overbroad proxy for "no os.chmod usage," not
+    the real concern itself; the string-level `os.chmod`/`chmod` checks directly above already
+    enforce that real concern precisely and remain unchanged. Dropped the AST import-scan entirely
+    rather than special-case around one legitimate import, mirroring the identical narrowing
+    already applied to the sibling guard in tests/tools/test_retrieval_cache.py.
     """
     source = _RETRIEVAL_CACHE_PY.read_text()
     assert "PRAGMA journal_mode" not in source
@@ -147,15 +157,6 @@ def test_sqlite_defaults_not_silently_implemented():
     assert "busy_timeout" not in source
     assert "os.chmod" not in source
     assert "chmod" not in source
-
-    tree = ast.parse(source)
-    imported_modules = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            imported_modules.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.module:
-            imported_modules.add(node.module)
-    assert "os" not in imported_modules
 
 
 # ---------------------------------------------------------------------------

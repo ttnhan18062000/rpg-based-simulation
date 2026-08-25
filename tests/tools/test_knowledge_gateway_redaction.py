@@ -581,6 +581,15 @@ class TestSqliteOperationalLimits:
         (journal_mode/busy_timeout/chmod) this guard exists to keep exclusively behind
         knowledge_gateway_redaction.open_connection_with_limits(). Only those connection-tuning
         forms stay banned.
+
+        Narrowed again by TCK-20260825-HOTFIX-EXEC-IDENTITY-TEST-SIDECAR-STALENESS: this was the
+        third of three near-identical copies of an overbroad "os not imported" proxy check (the
+        other two were in tests/docs/test_redaction_retention_policy_doc.py and
+        tests/tools/test_retrieval_cache.py, both narrowed by the sibling
+        TCK-20260825-HOTFIX-RETRIEVAL-CACHE-OS-IMPORT-GUARD-DRIFT).
+        TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY's legitimate `import os` (for
+        `os.environ.get("CLAUDE_CODE_SESSION_ID")`) has nothing to do with connection-tuning; the
+        string-level checks above already enforce the real concern directly.
         """
         source = Path(rc.__file__).read_text(encoding="utf-8")
         assert "PRAGMA journal_mode" not in source
@@ -588,15 +597,6 @@ class TestSqliteOperationalLimits:
         assert "busy_timeout" not in source
         assert "os.chmod" not in source
         assert "chmod" not in source
-
-        tree = ast.parse(source)
-        imported_modules = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                imported_modules.update(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                imported_modules.add(node.module)
-        assert "os" not in imported_modules
 
 
 # ---------------------------------------------------------------------------

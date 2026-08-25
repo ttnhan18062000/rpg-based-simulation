@@ -279,4 +279,5 @@ website/.docusaurus/
 .claude/.tool_start
 .claude/.current_session_id
 .claude/current_run
+.claude/current_run.*
 .claude/.retro_nudge_state.json

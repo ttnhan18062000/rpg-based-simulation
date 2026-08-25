@@ -77,9 +77,13 @@ def test_single_writer_produces_one_well_formed_line(tmp_path):
 
 
 def test_phase_and_agent_included_when_sidecar_present(tmp_path):
+    # TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION: writes to the session-SCOPED path
+    # (current_run.sess-1, matching _payload()'s default session_id), not the unscoped file —
+    # since that ticket, a session with no scoped file of its own no longer falls back to the
+    # unscoped file's contents, so this test's original unscoped-only setup would now read null.
     sidecar = tmp_path / ".claude"
     sidecar.mkdir()
-    (sidecar / "current_run").write_text(
+    (sidecar / "current_run.sess-1").write_text(
         json.dumps({"run_id": "TCK-X", "seq": 3, "phase": "Implement", "agent": "implementer"})
     )
 
@@ -96,9 +100,11 @@ def test_phase_and_agent_included_when_sidecar_present(tmp_path):
 
 
 def test_execution_identity_fields_included_when_sidecar_present(tmp_path):
+    # TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION: scoped path, see comment in
+    # test_phase_and_agent_included_when_sidecar_present above.
     sidecar = tmp_path / ".claude"
     sidecar.mkdir()
-    (sidecar / "current_run").write_text(
+    (sidecar / "current_run.sess-1").write_text(
         json.dumps(
             {
                 "run_id": "TCK-X",
@@ -124,9 +130,11 @@ def test_execution_identity_fields_included_when_sidecar_present(tmp_path):
 
 
 def test_phase_and_agent_default_to_none_on_partial_sidecar(tmp_path):
+    # TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION: scoped path, see comment in
+    # test_phase_and_agent_included_when_sidecar_present above.
     sidecar = tmp_path / ".claude"
     sidecar.mkdir()
-    (sidecar / "current_run").write_text(json.dumps({"run_id": "TCK-X", "seq": 3}))
+    (sidecar / "current_run.sess-1").write_text(json.dumps({"run_id": "TCK-X", "seq": 3}))
 
     result = _run_hook(tmp_path, _payload())
     assert result.returncode == 0
@@ -229,6 +237,11 @@ def test_two_concurrent_sessions_each_attributed_correctly(tmp_path):
 
 
 def test_foreign_scoped_sidecar_not_read_by_different_session(tmp_path):
+    # TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION: this test's original assertion (fall back to
+    # the unscoped file's real values when no scoped file exists for this session) was exactly
+    # the bug that ticket fixed — every real writer now writes the scoped and unscoped files
+    # together, so a session with no scoped file has no real attribution to report, and must
+    # never silently inherit the unscoped file's contents OR a different session's scoped file.
     sidecar_dir = tmp_path / ".claude"
     sidecar_dir.mkdir()
     (sidecar_dir / "current_run").write_text(
@@ -242,9 +255,89 @@ def test_foreign_scoped_sidecar_not_read_by_different_session(tmp_path):
     assert result.returncode == 0
 
     record = json.loads(_tools_lines(tmp_path)[0])
-    # No scoped file for "sess-1" — must fall back to the unscoped file, never read sess-other's.
-    assert record["run_id"] == "TCK-UNSCOPED"
-    assert record["phase"] == "Scope"
+    # No scoped file for "sess-1" — must read neither the unscoped file nor sess-other's.
+    assert record["run_id"] is None
+    assert record["phase"] is None
+
+    # The hook must have self-written a null-valued scoped sentinel for sess-1, not touched the
+    # unscoped file or sess-other's file.
+    sentinel = json.loads((sidecar_dir / "current_run.sess-1").read_text())
+    assert sentinel["run_id"] is None
+    assert json.loads((sidecar_dir / "current_run").read_text())["run_id"] == "TCK-UNSCOPED"
+    assert json.loads((sidecar_dir / "current_run.sess-other").read_text())["run_id"] == "TCK-OTHER"
+
+
+def test_second_call_in_ad_hoc_session_reads_own_sentinel_not_unscoped_file(tmp_path):
+    # Proves the SECOND call in the same ad-hoc session reads its own self-written sentinel,
+    # not the unscoped file — by changing the unscoped file's content between the two calls. If
+    # the hook incorrectly fell back to the unscoped file on the second call, it would pick up
+    # the new foreign value; it must not.
+    sidecar_dir = tmp_path / ".claude"
+    sidecar_dir.mkdir()
+    (sidecar_dir / "current_run").write_text(
+        json.dumps({"run_id": "TCK-FOREIGN-1", "seq": 1, "phase": "Scope", "agent": "ticket-scoper"})
+    )
+
+    result_1 = _run_hook(tmp_path, _payload(session_id="sess-adhoc", command="cmd-1"))
+    assert result_1.returncode == 0
+
+    # Simulate a different concurrent session overwriting the shared unscoped file in between.
+    (sidecar_dir / "current_run").write_text(
+        json.dumps({"run_id": "TCK-FOREIGN-2", "seq": 2, "phase": "Verify", "agent": "done-checker"})
+    )
+
+    result_2 = _run_hook(tmp_path, _payload(session_id="sess-adhoc", command="cmd-2"))
+    assert result_2.returncode == 0
+
+    lines = _tools_lines(tmp_path)
+    assert len(lines) == 2
+    for line in lines:
+        record = json.loads(line)
+        assert record["run_id"] is None
+        assert record["phase"] is None
+
+
+def test_real_writesidecar_overwrites_earlier_ad_hoc_sentinel(tmp_path):
+    # A session makes an ad-hoc call before any ticket work starts (gets a null sentinel), then
+    # a real writeSidecar()-equivalent write lands for that same session_id (ticket work begins),
+    # then a subsequent tool call must read the real values, not the earlier null sentinel.
+    sidecar_dir = tmp_path / ".claude"
+    sidecar_dir.mkdir()
+
+    result_adhoc = _run_hook(tmp_path, _payload(session_id="sess-later-real", command="ad-hoc-cmd"))
+    assert result_adhoc.returncode == 0
+    assert json.loads((sidecar_dir / "current_run.sess-later-real").read_text())["run_id"] is None
+
+    # Simulate the real writeSidecar() call: unconditional overwrite of the same scoped path.
+    (sidecar_dir / "current_run.sess-later-real").write_text(
+        json.dumps({"run_id": "TCK-REAL-LATER", "seq": 4, "phase": "Implement", "agent": "implementer"})
+    )
+
+    result_real = _run_hook(tmp_path, _payload(session_id="sess-later-real", command="real-cmd"))
+    assert result_real.returncode == 0
+
+    lines = _tools_lines(tmp_path)
+    real_record = json.loads(lines[1])
+    assert real_record["run_id"] == "TCK-REAL-LATER"
+    assert real_record["phase"] == "Implement"
+
+
+def test_ad_hoc_sentinel_pruned_identically_to_any_scoped_file(tmp_path):
+    import os
+
+    sidecar_dir = tmp_path / ".claude"
+    sidecar_dir.mkdir()
+    stale_sentinel = sidecar_dir / "current_run.sess-stale-adhoc"
+    stale_sentinel.write_text(json.dumps({
+        "run_id": None, "seq": None, "phase": None, "agent": None,
+        "execution_id": None, "provider": None, "ticket_id": None,
+    }))
+    old_time = __import__("time").time() - (25 * 3600)
+    os.utime(stale_sentinel, (old_time, old_time))
+
+    result = _run_hook(tmp_path, _payload(session_id="sess-new"))
+    assert result.returncode == 0
+    assert not stale_sentinel.exists()
 
 
 def test_stale_scoped_sidecar_pruned(tmp_path):
