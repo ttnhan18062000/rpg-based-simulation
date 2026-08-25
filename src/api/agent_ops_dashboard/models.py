@@ -84,6 +84,11 @@ class RunSummary(BaseModel):
     final_status: str
     start_ts: Optional[str] = None
     end_ts: Optional[str] = None
+    # TCK-20260822-DASHBOARD-DURATION-GAP-AWARE: a SECOND, independent raw-duration passthrough
+    # from _build_run_summary() (ingest.py), distinct from SlowRunEntry/DurationOutlierEntry's own
+    # duration_s below -- currently unused by any frontend render site. Flagged, not fixed: if a
+    # future view starts rendering this field directly, it would bypass this ticket's
+    # active_duration_s/idle_gap_s fix entirely.
     duration_s: Optional[int] = None
     agent_count: int
     is_inferred_active: bool
@@ -163,6 +168,12 @@ class SlowRunEntry(BaseModel):
     run_id: str
     duration_s: Optional[int] = None
     final_status: str
+    # TCK-20260822-DASHBOARD-DURATION-GAP-AWARE: additive, backward-compatible fields sourced
+    # strictly from the sibling TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT's shared
+    # duration_utils.compute_active_idle_split() via compute_retro_metrics() -- never
+    # independently computed here. None when a row's start_ts/end_ts couldn't be parsed.
+    active_duration_s: Optional[float] = None
+    idle_gap_s: Optional[float] = None
 
 
 class DurationOutlierEntry(BaseModel):
@@ -171,6 +182,9 @@ class DurationOutlierEntry(BaseModel):
     duration_s: int
     median: float
     ratio: float
+    # See SlowRunEntry's identical fields above for provenance/None-handling.
+    active_duration_s: Optional[float] = None
+    idle_gap_s: Optional[float] = None
 
 
 class CostProxyOutlierEntry(BaseModel):

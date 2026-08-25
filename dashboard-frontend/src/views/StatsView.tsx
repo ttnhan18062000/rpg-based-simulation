@@ -366,6 +366,22 @@ export function StatsView() {
                 numeric: true,
               },
               {
+                key: 'active_duration_s',
+                header: 'Active',
+                accessor: (run) => run.active_duration_s ?? -1,
+                render: (run) =>
+                  run.active_duration_s != null ? `${Math.round(run.active_duration_s / 60)} min` : '—',
+                numeric: true,
+              },
+              {
+                key: 'idle_gap_s',
+                header: 'Idle',
+                accessor: (run) => run.idle_gap_s ?? -1,
+                render: (run) =>
+                  run.idle_gap_s != null ? `${Math.round(run.idle_gap_s / 60)} min` : '—',
+                numeric: true,
+              },
+              {
                 key: 'final_status',
                 header: 'Status',
                 accessor: (run) => run.final_status,
@@ -412,6 +428,21 @@ export function StatsView() {
                       header: 'Ratio',
                       accessor: (o) => o.ratio,
                       render: (o) => `${o.ratio}x`,
+                      numeric: true,
+                    },
+                    {
+                      key: 'active_duration_s',
+                      header: 'Active',
+                      accessor: (o) => o.active_duration_s ?? -1,
+                      render: (o) =>
+                        o.active_duration_s != null ? `${Math.round(o.active_duration_s / 60)} min` : '—',
+                      numeric: true,
+                    },
+                    {
+                      key: 'idle_gap_s',
+                      header: 'Idle',
+                      accessor: (o) => o.idle_gap_s ?? -1,
+                      render: (o) => (o.idle_gap_s != null ? `${Math.round(o.idle_gap_s / 60)} min` : '—'),
                       numeric: true,
                     },
                   ] satisfies SearchableTableColumn<(typeof agentStats.outliers.duration_s)[number]>[]}
