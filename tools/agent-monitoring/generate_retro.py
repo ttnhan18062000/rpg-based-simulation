@@ -34,6 +34,7 @@ from validate_frontmatter import (  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from vocabulary import WORKFLOW_AGENTS, WORKFLOW_PHASES, infer_workflow  # noqa: E402
+from duration_utils import compute_active_idle_split  # noqa: E402
 
 # Read-only reference imports for TCK-20260729-RETRIEVAL-RETRO-VIEWS's retrieval-quality views —
 # anti-drift: compute_retrieval_metrics() must never re-literal these values (see
@@ -1126,6 +1127,27 @@ def compute_retro_metrics(runs, events, tickets_root=None, tools=None, kgmcp_acc
     legacy_event_count = len(legacy_events)
     long_summaries = sum(1 for e in events if len(e.get("summary", "")) > 200)
 
+    # Active/idle duration split (TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT): a run's raw duration_s
+    # (end_ts - start_ts) doesn't distinguish real working time from idle gaps between phase
+    # transitions, which distorts what "slow" means below. duration_utils.compute_active_idle_split
+    # is the single shared, pure computation (never reimplemented here) — indexed once by run_id
+    # since it needs that run's own events.jsonl rows, ordered strictly by ts (not seq).
+    events_by_run_id = defaultdict(list)
+    for e in events:
+        rid = e.get("run_id")
+        if rid:
+            events_by_run_id[rid].append(e)
+
+    def _duration_split_fields(run_row: dict) -> dict:
+        split = compute_active_idle_split(
+            run_row.get("start_ts"),
+            run_row.get("end_ts"),
+            events_by_run_id.get(run_row.get("run_id", ""), []),
+        )
+        if split is None:
+            return {}
+        return {"active_duration_s": split["active_duration_s"], "idle_gap_s": split["idle_gap_s"]}
+
     # Slow runs (> 30 min = 1800s) — sorted here (a data concern), not left to the renderer.
     slow_runs = sorted(
         (r for r in runs if (r.get("duration_s") or 0) > 1800),
@@ -1137,6 +1159,7 @@ def compute_retro_metrics(runs, events, tickets_root=None, tools=None, kgmcp_acc
             "run_id": r.get("run_id", ""),
             "duration_s": r.get("duration_s", 0),
             "final_status": r.get("final_status", ""),
+            **_duration_split_fields(r),
         }
         for r in slow_runs
     ]
@@ -1163,6 +1186,7 @@ def compute_retro_metrics(runs, events, tickets_root=None, tools=None, kgmcp_acc
             "duration_s": value,
             "median": round(median, 1),
             "ratio": round(value / median, 1),
+            **_duration_split_fields(item),
         }
         for item, value, median, group_key in duration_outliers
     ]
@@ -1701,11 +1725,31 @@ def generate(
     lines.append("## Slow Runs (> 30 min)")
     lines.append("")
     if metrics["slow_runs"]:
-        lines.append("| run_id | duration | final_status |")
-        lines.append("|---|---|---|")
+        lines.append("| run_id | duration | active | idle | final_status |")
+        lines.append("|---|---|---|---|---|")
+        idle_dominated_count = 0
         for r in metrics["slow_runs"]:
-            dur_min = (r.get("duration_s", 0) or 0) // 60
-            lines.append(f"| {r.get('run_id','')} | {dur_min} min | {r.get('final_status','')} |")
+            dur_s = r.get("duration_s", 0) or 0
+            dur_min = dur_s // 60
+            active_s, idle_s = r.get("active_duration_s"), r.get("idle_gap_s")
+            if active_s is None or idle_s is None:
+                active_str, idle_str = "—", "—"
+            else:
+                active_str, idle_str = f"{active_s // 60:g} min", f"{idle_s // 60:g} min"
+                if dur_s > 0 and idle_s >= dur_s / 2:
+                    idle_dominated_count += 1
+            lines.append(
+                f"| {r.get('run_id','')} | {dur_min} min | {active_str} | {idle_str} | "
+                f"{r.get('final_status','')} |"
+            )
+        if idle_dominated_count:
+            lines.append("")
+            lines.append(
+                f"_{idle_dominated_count} of the runs above spend at least half their reported "
+                "duration idle (gaps ≥ 30 min between phase transitions, e.g. waiting on human "
+                "review) rather than in active work — see `active`/`idle` columns; \"slow\" here "
+                "does not mean \"took a long time to actively work on.\"_"
+            )
     else:
         lines.append("_No slow runs this period._")
     lines.append("")
@@ -1726,11 +1770,28 @@ def generate(
         if outliers["duration_s"]:
             lines.append("### Duration outliers (by tier)")
             lines.append("")
-            lines.append("| run_id | tier | duration_s | tier median | ratio |")
-            lines.append("|---|---|---|---|---|")
+            lines.append("| run_id | tier | duration_s | tier median | ratio | active | idle |")
+            lines.append("|---|---|---|---|---|---|---|")
+            duration_outlier_idle_dominated = 0
             for o in outliers["duration_s"]:
+                active_s, idle_s = o.get("active_duration_s"), o.get("idle_gap_s")
+                if active_s is None or idle_s is None:
+                    active_str, idle_str = "—", "—"
+                else:
+                    active_str, idle_str = f"{active_s // 60:g} min", f"{idle_s // 60:g} min"
+                    if o["duration_s"] > 0 and idle_s >= o["duration_s"] / 2:
+                        duration_outlier_idle_dominated += 1
                 lines.append(
-                    f"| {o['run_id']} | {o['tier']} | {o['duration_s']} | {o['median']} | {o['ratio']}x |"
+                    f"| {o['run_id']} | {o['tier']} | {o['duration_s']} | {o['median']} | "
+                    f"{o['ratio']}x | {active_str} | {idle_str} |"
+                )
+            if duration_outlier_idle_dominated:
+                lines.append("")
+                lines.append(
+                    f"_{duration_outlier_idle_dominated} of the duration outliers above spend at "
+                    "least half their reported duration idle rather than in active work — see "
+                    "`active`/`idle` columns; a large ratio here does not mean \"took unusually "
+                    "long to actively work on.\"_"
                 )
             lines.append("")
         if outliers["cost_proxy_score"]:

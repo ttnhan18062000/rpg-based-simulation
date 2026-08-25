@@ -24,9 +24,21 @@ function makeAgentStats(overrides: Partial<AgentMonitoringStats> = {}): AgentMon
     spend_proxy_by_phase: {},
     spend_proxy_by_agent: {},
     summary_quality: { empty_summaries_current: 0, legacy_event_count: 5, long_summaries: 1 },
-    slow_runs: [{ run_id: 'TCK-slow-1', duration_s: 9000, final_status: 'DONE' }],
+    slow_runs: [
+      { run_id: 'TCK-slow-1', duration_s: 9000, final_status: 'DONE', active_duration_s: 600, idle_gap_s: 8400 },
+    ],
     outliers: {
-      duration_s: [{ run_id: 'TCK-dur-outlier', tier: 'standard', duration_s: 5000, median: 1000, ratio: 5 }],
+      duration_s: [
+        {
+          run_id: 'TCK-dur-outlier',
+          tier: 'standard',
+          duration_s: 5000,
+          median: 1000,
+          ratio: 5,
+          active_duration_s: 4200,
+          idle_gap_s: 800,
+        },
+      ],
       cost_proxy_score: [
         {
           run_id: 'TCK-cost-outlier',
@@ -302,6 +314,36 @@ describe('StatsView', () => {
     expect(screen.getByTestId('duration-outlier-row-TCK-dur-outlier')).toBeInTheDocument()
     expect(screen.getByTestId('cost-outliers-table')).toBeInTheDocument()
     expect(screen.getByTestId('cost-outlier-row-TCK-cost-outlier-3')).toBeInTheDocument()
+  })
+
+  it('renders the active/idle duration split in both the Slow Runs and Duration Outliers tables (TCK-20260822-DASHBOARD-DURATION-GAP-AWARE)', async () => {
+    mockFetch(makeAgentStats(), makeTicketStats())
+    render(<StatsView />)
+
+    await screen.findByTestId('slow-run-row-TCK-slow-1')
+    const slowRunRow = screen.getByTestId('slow-run-row-TCK-slow-1')
+    expect(slowRunRow).toHaveTextContent('10 min') // active_duration_s: 600
+    expect(slowRunRow).toHaveTextContent('140 min') // idle_gap_s: 8400
+
+    await screen.findByTestId('duration-outlier-row-TCK-dur-outlier')
+    const outlierRow = screen.getByTestId('duration-outlier-row-TCK-dur-outlier')
+    expect(outlierRow).toHaveTextContent('70 min') // active_duration_s: 4200
+    expect(outlierRow).toHaveTextContent('13 min') // idle_gap_s: 800 (rounds to 13.33 -> 13)
+  })
+
+  it('renders a "—" placeholder for active/idle columns when the split is unavailable (null)', async () => {
+    mockFetch(
+      makeAgentStats({
+        slow_runs: [
+          { run_id: 'TCK-slow-nosplit', duration_s: 9000, final_status: 'DONE', active_duration_s: null, idle_gap_s: null },
+        ],
+      }),
+      makeTicketStats(),
+    )
+    render(<StatsView />)
+
+    await screen.findByTestId('slow-run-row-TCK-slow-nosplit')
+    expect(screen.getByTestId('slow-run-row-TCK-slow-nosplit')).toHaveTextContent('—')
   })
 
   it('renders a graceful "no outliers" state when both outlier lists are empty, not a broken table', async () => {

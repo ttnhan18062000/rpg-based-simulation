@@ -210,28 +210,59 @@ def test_baseline_report_raw_investigation_count_plausible_on_real_corpus():
 # AC3 — phase-duration, flagged pause-contaminated
 # ---------------------------------------------------------------------------
 
-def test_baseline_report_flags_duration_as_pause_contaminated_when_no_gap_aware_view_exists():
+def test_baseline_report_flags_duration_pause_contaminated_only_when_a_real_gap_is_found():
+    # TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT: real gap-aware computation via duration_utils.py,
+    # not an unconditional flag on every row. TCK-A has a genuine >=30min idle gap (flagged);
+    # TCK-D has the same 120s span fully covered by frequent events (not flagged, real active
+    # time); TCK-B (duration_s=0) and TCK-C (no duration_s at all) are still excluded entirely.
     runs = [
-        {"run_id": "TCK-A", "duration_s": 120},
+        {
+            "run_id": "TCK-A",
+            "duration_s": 3600,
+            "start_ts": "2026-01-01T00:00:00Z",
+            "end_ts": "2026-01-01T01:00:00Z",
+        },
         {"run_id": "TCK-B", "duration_s": 0},
         {"run_id": "TCK-C"},
+        {
+            "run_id": "TCK-D",
+            "duration_s": 120,
+            "start_ts": "2026-01-01T00:00:00Z",
+            "end_ts": "2026-01-01T00:02:00Z",
+        },
     ]
-    section = build_duration_section(runs)
-    assert len(section["rows"]) == 1
-    row = section["rows"][0]
-    assert row["run_id"] == "TCK-A"
-    assert row["duration_s"] == 120
-    assert row["flag"] == "pause-contaminated"
-    assert "duration_utils.py" in row["note"]
+    events = [
+        {"run_id": "TCK-D", "seq": 1, "ts": "2026-01-01T00:00:00Z", "phase": "Scope", "agent": "ticket-scoper"},
+        {"run_id": "TCK-D", "seq": 2, "ts": "2026-01-01T00:01:00Z", "phase": "Implement", "agent": "implementer"},
+    ]
+    section = build_duration_section(runs, events)
+    assert len(section["rows"]) == 2
+    rows_by_id = {r["run_id"]: r for r in section["rows"]}
+
+    row_a = rows_by_id["TCK-A"]
+    assert row_a["duration_s"] == 3600
+    assert row_a["idle_gap_s"] == 3600.0  # zero events -> entire 1hr span idle
+    assert row_a["active_duration_s"] == 0.0
+    assert row_a["flag"] == "pause-contaminated"
+    assert "duration_utils.py" in row_a["note"]
+
+    row_d = rows_by_id["TCK-D"]
+    assert row_d["idle_gap_s"] == 0.0  # all gaps under the 30min pause threshold
+    assert row_d["active_duration_s"] == 120.0
+    assert "flag" not in row_d
 
 
-def test_baseline_report_would_prefer_gap_aware_view_if_available():
+def test_baseline_report_duration_section_uses_duration_utils_when_available():
+    # Retired trip-wire (formerly test_baseline_report_would_prefer_gap_aware_view_if_available,
+    # which asserted duration_utils.py did NOT exist and was designed to go red once it did,
+    # forcing this exact update). Now a real positive assertion that build_duration_section
+    # actually calls the shared duration_utils.compute_active_idle_split rather than reimplementing
+    # gap detection inline.
     duration_utils_path = _MONITORING_TOOLS_DIR / "duration_utils.py"
-    assert not duration_utils_path.exists(), (
-        "duration_utils.py now exists — retrieval_baseline_metrics.build_duration_section must be "
-        "updated to prefer a gap-aware active-duration view instead of always flagging "
-        "'pause-contaminated'; this test's failure is the intended trigger for that update."
-    )
+    assert duration_utils_path.exists()
+    source = _MODULE_PATH.read_text(encoding="utf-8")
+    assert "from duration_utils import compute_active_idle_split" in source
+    assert "compute_active_idle_split(" in source
 
 
 # ---------------------------------------------------------------------------

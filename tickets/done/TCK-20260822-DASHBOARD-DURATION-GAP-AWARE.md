@@ -15,7 +15,7 @@ tags: [dashboard, agent-monitoring, api-design]
 Surface the active/idle duration split in the agent-ops dashboard
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -42,10 +42,10 @@ The agent-ops dashboard was originally treated as a secondary consumer of run du
 - Starting implementation before the sibling ticket's duration_utils.py exists and generate_retro.py's output shape is finalized -- this ticket is strictly sequenced behind it.
 
 ## Acceptance Criteria
-- [ ] After the sibling ticket ships, GET /api/stats (ingest.py::get_agent_monitoring_stats) does not raise on the new compute_retro_metrics() output shape -- SlowRunEntry/DurationOutlierEntry/RunSummaryStats in models.py declare whatever new field(s) were added, existing duration_s fields remain populated unchanged (backward compatible).
-- [ ] dashboard-frontend/src/api.ts TS interfaces for the same 3 shapes are updated to match the new Pydantic shape.
-- [ ] StatsView.tsx's Slow Runs and Duration Outliers tables surface the active/idle distinction visibly (additional column or visual flag), not just carried silently in the API payload.
-- [ ] The dashboard continues to source duration data exclusively via compute_retro_metrics() -- no independent duration/gap computation added to ingest.py, preserving the single-shared-utility constraint.
+- [x] After the sibling ticket ships, GET /api/stats (ingest.py::get_agent_monitoring_stats) does not raise on the new compute_retro_metrics() output shape -- SlowRunEntry/DurationOutlierEntry/RunSummaryStats in models.py declare whatever new field(s) were added, existing duration_s fields remain populated unchanged (backward compatible).
+- [x] dashboard-frontend/src/api.ts TS interfaces for the same 3 shapes are updated to match the new Pydantic shape.
+- [x] StatsView.tsx's Slow Runs and Duration Outliers tables surface the active/idle distinction visibly (additional column or visual flag), not just carried silently in the API payload.
+- [x] The dashboard continues to source duration data exclusively via compute_retro_metrics() -- no independent duration/gap computation added to ingest.py, preserving the single-shared-utility constraint.
 
 ## Related Tickets
 - TCK-20260709-AGENT-MONITORING-DURATION
@@ -74,9 +74,60 @@ None.
 - Scope must stay strictly sequenced behind the sibling ticket -- attempting dashboard-side changes before duration_utils.py exists and generate_retro.py's output shape is finalized means guessing the shape twice.
 
 ## Implementation Notes
+Corrected an overstated claim in this ticket's own original text during investigation: it claimed
+`SlowRunEntry(**r)`-style kwargs unpacking "breaks outright" on the sibling ticket's new fields.
+Empirically false, verified directly before writing any code — neither `SlowRunEntry` nor
+`DurationOutlierEntry` declares `model_config = ConfigDict(extra="forbid")`, so Pydantic's default
+`extra="ignore"` already silently dropped the new keys rather than raising.
+`tests/tools/test_agent_ops_dashboard_stats.py` (17/17) already passed against the sibling
+ticket's shipped shape before this ticket began. This doesn't change the real scope (the fields
+should still be surfaced, not silently discarded) — it changes the severity framing from "prevents
+a crash" to "surfaces data that was being silently dropped." Disclosed here rather than carried
+forward silently.
+
+No change needed at `ingest.py`'s construction site itself (`SlowRunEntry(**r)`/
+`DurationOutlierEntry(**d)`, L857-892) — it already forwards whatever keys the dict contains;
+adding the fields to the Pydantic models was sufficient for them to be captured and returned by
+the real API. Verified end-to-end (not just at the model-unit level) via a new test writing real
+runs.jsonl/events.jsonl fixtures and reading the split back out through
+`ingest.DashboardCache.get_agent_monitoring_stats()`.
+
+`RunSummary.duration_s` (ingest.py L349-383, a second, independent raw-duration passthrough)
+confirmed genuinely dormant — no `.tsx` file references it — flagged with an inline comment per
+scope, not touched.
+
+`dashboard-frontend/` has no committed `node_modules/` in a fresh worktree; symlinked to the main
+checkout's already-installed one (gitignored, not committed) to run `npm test`/`tsc -b` for real
+rather than skipping frontend verification.
 
 ## Test Summary
+- `pytest tests/tools/test_agent_ops_dashboard_stats.py -q` → 19 passed (17 pre-existing + 2 new).
+- `npm test -- StatsView` (vitest) → 23 passed (21 pre-existing/updated fixture + 2 new).
+- `npx tsc -b` → exit 0, clean compile (the new required TS interface fields don't break any
+  existing fixture literal after the one pre-existing fixture at the top of the test file was
+  updated to include them).
+- Broader backend surface: `pytest tests/tools/test_agent_ops_dashboard_stats.py
+  tests/tools/test_duration_utils.py tests/tools/test_generate_retro.py
+  tests/tools/test_retrieval_baseline_metrics.py -q` → 210 passed.
 
 ## Files Changed
+- `src/api/agent_ops_dashboard/models.py` — `SlowRunEntry`/`DurationOutlierEntry` gain
+  `active_duration_s`/`idle_gap_s` (Optional[float]=None); `RunSummary` gains a dormant-field
+  comment on its own separate `duration_s`.
+- `dashboard-frontend/src/api.ts` — matching TS interface fields.
+- `dashboard-frontend/src/views/StatsView.tsx` — Active/Idle columns on both tables.
+- `tests/tools/test_agent_ops_dashboard_stats.py` — 2 new end-to-end tests.
+- `dashboard-frontend/src/test/StatsView.test.tsx` — 1 fixture updated, 2 new tests.
+- `docs/parity_ledger/infrastructure.yaml` — new entry `INFRA-393`.
 
 ## Completion Summary
+Surfaced the sibling ticket's active/idle duration split through the Agent Ops Dashboard: Pydantic
+models, TypeScript interfaces, and both Slow Runs/Duration Outliers tables now carry
+`active_duration_s`/`idle_gap_s` end-to-end, verified through the real API pipeline (not just a
+model-level unit test) and a real rendered-table assertion. No independent duration/gap
+computation added to `ingest.py` — it consumes the sibling ticket's shared `compute_retro_metrics()`
+output exclusively, as scoped. This ticket's own original claim that the coupling would "break
+outright" was checked empirically and found overstated (Pydantic's default already tolerated the
+new fields); corrected rather than carried forward. This is the last ticket in the
+`agent-monitoring-active-duration` batch — the shared folder (with its `SEQUENCE.md`) moves to
+`tickets/done/` as part of this ticket's own Finalize step.
