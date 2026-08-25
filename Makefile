@@ -26,17 +26,25 @@ build: ## Build frontend for production
 
 # ── Development ──────────────────────────────────────────
 
+# Auto-discovers a pydantic-capable python3: a local .venv (relative, works from the main
+# checkout), then worktree-independent absolute paths for known dev machines (u24desktop,
+# vboxuser), then bare python3 last. Needed because git worktrees don't get their own .venv/ --
+# bare python3 lacks pydantic there, so `serve`/`dev` would silently crash at backend startup
+# with no indication other than every API call refusing to connect (TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX's
+# own Playwright e2e webServer hit exactly this while starting `make dev` as a subprocess).
+PYTHON3 := $(shell for py in .venv/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done)
+
 dev: ## Start backend + frontend dev server with live map (hot reload)
 	@echo "Starting backend on :8000 and frontend on :5173..."
 	@echo "Open http://localhost:5173 to view the live map."
 	@echo "Press Ctrl+C to stop both."
 	@trap 'kill 0' INT; \
-		python3 -m src serve --port 8000 --api-key-hashes "dev:3e90488c475fb2c2997525497f1e72e82dec6d68b5738dc7cebba4371f9f0ee2" & \
+		$(PYTHON3) -m src serve --port 8000 --api-key-hashes "dev:3e90488c475fb2c2997525497f1e72e82dec6d68b5738dc7cebba4371f9f0ee2" & \
 		(cd frontend && npm run dev) & \
 		wait
 
 dev-backend: ## Start only the backend server
-	python3 -m src serve --port 8000
+	$(PYTHON3) -m src serve --port 8000
 
 dev-frontend: ## Start only the frontend dev server
 	cd frontend && npm run dev
@@ -44,10 +52,10 @@ dev-frontend: ## Start only the frontend dev server
 # ── Production ───────────────────────────────────────────
 
 serve: build ## Build frontend + start production server
-	python3 -m src serve --port 8000
+	$(PYTHON3) -m src serve --port 8000
 
 serve-only: ## Start production server (assumes frontend already built)
-	python3 -m src serve --port 8000
+	$(PYTHON3) -m src serve --port 8000
 
 # ── Agent Ops Dashboard ──────────────────────────────────
 

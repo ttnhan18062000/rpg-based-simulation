@@ -24,6 +24,8 @@ def _build_parser():
     srv.add_argument("--port", type=int, default=8000)
     srv.add_argument("--seed", type=int, default=None)
     srv.add_argument("--entities", type=int, default=None)
+    srv.add_argument("--world", type=str, default=None,
+                      help="World spec id to compile and serve (default: V2EngineManager's own default)")
     srv.add_argument("--workers", type=int, default=None)
     srv.add_argument("--log-level", type=str, default="INFO")
     srv.add_argument(
@@ -284,8 +286,8 @@ def _run_serve(args):
         cli_overrides=cli_overrides
     )
 
-    app = create_v2_app(profile)
-    
+    app = create_v2_app(profile, seed=args.seed, entities_count=args.entities, world_id=args.world)
+
     logger.info(f"Starting V2 server on {args.host}:{args.port}")
     uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level.lower())
 
