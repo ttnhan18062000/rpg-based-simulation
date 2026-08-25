@@ -145,7 +145,8 @@ established precedent for retiring served-their-purpose trip-wire guards.
 - `tests/tools/test_generate_retro.py` — 4 new rendering tests.
 - `tests/tools/test_retrieval_baseline_metrics.py` — 1 test rewritten for the real shape, the
   trip-wire test retired and replaced with a real positive assertion.
-- `docs/parity_ledger/infrastructure.yaml` — new entry `INFRA-392`.
+- `docs/parity_ledger/infrastructure.yaml` — new entry `INFRA-394` (renumbered from `INFRA-392`
+  after merging `origin/main` independently landed an unrelated entry already claiming that id).
 
 ## Completion Summary
 Added `tools/agent-monitoring/duration_utils.py` as the single shared, pure, read-time
