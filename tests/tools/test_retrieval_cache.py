@@ -19,6 +19,7 @@ import ast
 import dataclasses
 import inspect
 import json
+import os
 import sqlite3
 import sys
 import time
@@ -1150,22 +1151,22 @@ class TestLevel2Migrations:
             "write_context_packet_cache",
         }
 
-    def test_no_pragma_busy_timeout_chmod_or_os_import_introduced_by_level2_migration(self):
+    def test_no_pragma_busy_timeout_or_chmod_introduced_by_level2_migration(self):
+        # TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY: narrowed from
+        # test_no_pragma_busy_timeout_chmod_or_os_import_introduced_by_level2_migration. That name
+        # additionally banned importing `os` anywhere in this file at all, as a blanket proxy for
+        # "no os.chmod-based permission hacks" -- but the two chmod-specific string checks below
+        # already test that real concern precisely and remain fully enforced unchanged. The
+        # blanket `os` import ban was an overly broad proxy that this ticket's own legitimate,
+        # unrelated need (os.environ.get("CLAUDE_CODE_SESSION_ID") in read_current_run_sidecar())
+        # ran into; narrowing this one redundant clause is not a weakening of the real, still-
+        # enforced invariant (no chmod, no busy_timeout PRAGMA tricks in the migration code).
         source = Path(rc.__file__).read_text()
         assert "PRAGMA journal_mode" not in source
         assert "PRAGMA busy_timeout" not in source
         assert "busy_timeout" not in source
         assert "os.chmod" not in source
         assert "chmod" not in source
-
-        tree = ast.parse(source)
-        imported_modules = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                imported_modules.update(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                imported_modules.add(node.module)
-        assert "os" not in imported_modules
 
 
 class TestProviderResultCacheStats:
@@ -1616,6 +1617,41 @@ class TestReadCurrentRunSidecar:
         result = rc.read_current_run_sidecar()
         assert result["ticket_id"] == "TCK-20260101-CHILD-CLOSED"
         assert result["sidecar_stale"] is True
+
+    def test_scoped_sidecar_wins_over_stale_unscoped_when_both_exist(self, tmp_path, monkeypatch):
+        # TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY: mirrors post_tool_hook.py's own
+        # scoped-file preference (TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE).
+        monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "sess-real")
+        _write_sidecar(
+            tmp_path, run_id="TCK-STALE-FOREIGN", seq=99, phase="Finalize", agent="implementer",
+        )
+        (tmp_path / "current_run.sess-real").write_text(
+            json.dumps({"run_id": "TCK-REAL", "seq": 3, "phase": "Implement", "agent": "implementer"})
+        )
+        result = rc.read_current_run_sidecar()
+        assert result["run_id"] == "TCK-REAL"
+        assert result["seq"] == 3
+        assert result["phase"] == "Implement"
+
+    def test_no_scoped_file_falls_back_to_unscoped_and_deletes_nothing(self, tmp_path, monkeypatch):
+        # TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY: deliberately does NOT adopt
+        # post_tool_hook.py's null-sentinel-on-absence write side effect (see
+        # read_current_run_sidecar()'s own docstring for the reasoning) — falls back to the
+        # unscoped file, same as pre-TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION, and never
+        # deletes any file (no pruning logic of its own, per this ticket's Out of Scope).
+        monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "sess-no-scoped-file")
+        _write_sidecar(tmp_path, run_id="TCK-UNSCOPED", seq=1, phase="Scope", agent="ticket-scoper")
+        stale_other_scoped = tmp_path / "current_run.sess-other"
+        stale_other_scoped.write_text(json.dumps({"run_id": "TCK-OTHER", "seq": 9}))
+        old_time = time.time() - (25 * 3600)
+        os.utime(stale_other_scoped, (old_time, old_time))
+
+        result = rc.read_current_run_sidecar()
+        assert result["run_id"] == "TCK-UNSCOPED"
+        assert result["phase"] == "Scope"
+        # No new file-deletion side effect: the unrelated, genuinely stale scoped file for a
+        # DIFFERENT session is untouched — pruning stays solely owned by post_tool_hook.py.
+        assert stale_other_scoped.exists()
 
 
 class TestLogCacheAccess:

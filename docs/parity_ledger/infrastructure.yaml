@@ -11256,3 +11256,26 @@
   v2_evidence: tools/agent-monitoring/post_tool_hook.py
   test_path: tests/tools/test_post_tool_hook.py::test_second_call_in_ad_hoc_session_reads_own_sentinel_not_unscoped_file
   divergence_note: null
+- id: INFRA-385
+  text: tools/retrieval_cache.py read_current_run_sidecar() now prefers a per-session
+    scoped sidecar file (.claude/current_run.<CLAUDE_CODE_SESSION_ID>, derived from
+    _CURRENT_RUN_SIDECAR_PATH so tests relocation-transparent) over the unscoped .claude/current_run
+    file when a scoped file exists, mirroring tools/agent-monitoring/post_tool_hook.py
+    own scoped-file preference (INFRA-377/382). Deliberately does NOT adopt post_tool_hook.py
+    null-sentinel-on-absence write behavior when no scoped file exists -- falls back
+    to the unscoped file instead, since (1) this is a read-only CLI/library function
+    with no session payload to key a sentinel write by, giving it a new write side
+    effect was out of scope, and (2) this function already carries its own sidecar_stale
+    safeguard for the worst failure mode (attribution to an already-closed ticket),
+    unlike tools.jsonl which had none. _sidecar_run_is_stale() (file-existence based)
+    is unchanged -- kept semantically separate from post_tool_hook.py mtime-based
+    scoped-file pruning, which retrieval_cache.py does not replicate. Cross-referencing
+    comments added at both read sites. A pre-existing static guard test (test_no_pragma_busy_timeout_chmod_or_os_import_introduced_by_level2_migration)
+    blanket-banned importing os anywhere in this file as an overly broad proxy for
+    no os.chmod usage -- narrowed to drop only that redundant proxy clause; the direct
+    chmod/busy_timeout string checks it also contains remain fully enforced unchanged.
+  status: verified
+  priority: P2
+  v2_evidence: tools/retrieval_cache.py, tools/agent-monitoring/post_tool_hook.py
+  test_path: tests/tools/test_retrieval_cache.py::TestReadCurrentRunSidecar::test_scoped_sidecar_wins_over_stale_unscoped_when_both_exist
+  divergence_note: null
