@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useSimulation } from '@/hooks/useSimulation';
 import { Header, type PageView } from '@/components/Header';
 import { GameCanvas } from '@/components/GameCanvas';
+import { SimulationLoadingGate } from '@/components/SimulationLoadingGate';
 import { Sidebar } from '@/components/Sidebar';
 import { ApiDocsPage } from '@/components/ApiDocsPage';
 import type { Building, GroundItem } from '@/types/api';
@@ -45,19 +46,21 @@ function App() {
       />
       {currentPage === 'simulation' ? (
         <div className="flex flex-1 min-h-0">
-          <GameCanvas
-            mapData={sim.mapData}
-            entities={sim.entities}
-            selectedEntity={sim.selectedEntity}
-            groundItems={sim.groundItems}
-            buildings={sim.buildings}
-            resourceNodes={sim.resourceNodes}
-            regions={sim.regions}
-            selectedEntityId={sim.selectedEntityId}
-            onEntityClick={handleSelectEntity}
-            onGroundItemClick={handleGroundItemClick}
-            onBuildingClick={handleBuildingClick}
-          />
+          <SimulationLoadingGate status={sim.status}>
+            <GameCanvas
+              mapData={sim.mapData}
+              entities={sim.entities}
+              selectedEntity={sim.selectedEntity}
+              groundItems={sim.groundItems}
+              buildings={sim.buildings}
+              resourceNodes={sim.resourceNodes}
+              regions={sim.regions}
+              selectedEntityId={sim.selectedEntityId}
+              onEntityClick={handleSelectEntity}
+              onGroundItemClick={handleGroundItemClick}
+              onBuildingClick={handleBuildingClick}
+            />
+          </SimulationLoadingGate>
           <Sidebar
             entities={sim.entities}
             selectedEntity={sim.selectedEntity}

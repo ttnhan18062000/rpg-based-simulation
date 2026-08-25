@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 from src.api.engine_manager import V2EngineManager
+from src.content.repository import CatalogRepository
 
 if TYPE_CHECKING:
     from src.simulation_quality.quality_hub import QualityHub
@@ -9,6 +10,7 @@ if TYPE_CHECKING:
 _engine_manager: Optional[V2EngineManager] = None
 _quality_hub: Optional["QualityHub"] = None
 _quality_persistence: Optional["QualityPersistence"] = None
+_catalog_repository: Optional[CatalogRepository] = None
 
 def set_engine_manager(manager: V2EngineManager):
     global _engine_manager
@@ -32,3 +34,10 @@ def set_quality_persistence(persistence: "QualityPersistence") -> None:
 
 def get_quality_persistence() -> Optional["QualityPersistence"]:
     return _quality_persistence
+
+def set_catalog_repository(catalog: CatalogRepository) -> None:
+    global _catalog_repository
+    _catalog_repository = catalog
+
+def get_catalog_repository() -> Optional[CatalogRepository]:
+    return _catalog_repository

@@ -44,6 +44,35 @@ def test_api_rest_parity():
         assert resp.status_code == 200
         assert resp.json()["status"] == "resumed"
 
+        # 4. Map check
+        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/map", headers=headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "width" in data
+        assert "height" in data
+        assert "grid" in data
+
+        # 5. Static check
+        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/static", headers=headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "buildings" in data
+        assert "resource_nodes" in data
+        assert "treasure_chests" in data
+        assert "regions" in data
+
+        # 6. Stats check
+        resp = requests.get(f"http://127.0.0.1:{port}/api/v1/stats", headers=headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "tick" in data
+        assert "world_day" in data
+        assert "alive_count" in data
+        assert "total_spawned" in data
+        assert "total_deaths" in data
+        assert "running" in data
+        assert "paused" in data
+
     finally:
         server.terminate()
         server.wait()

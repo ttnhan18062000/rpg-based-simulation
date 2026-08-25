@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, GameEvent, GroundItem, Building, ResourceNode, TreasureChest, Region, StaticData } from '@/types/api';
+import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, WireEntitySlim, GameEvent, GroundItem, Building, ResourceNode, TreasureChest, Region, StaticData, Manifest } from '@/types/api';
 
 const API_BASE = '/api/v1';
+const LOAD_RETRY_LIMIT = 5;
+
+function wsBase(): string {
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${proto}//${window.location.host}${API_BASE}`;
+}
 
 async function fetchJSON<T>(path: string): Promise<T> {
   const res = await fetch(API_BASE + path);
@@ -9,7 +15,16 @@ async function fetchJSON<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export type SimStatus = 'CONNECTING' | 'RUNNING' | 'PAUSED' | 'STOPPED';
+export type SimStatus =
+  | 'INITIALIZING'
+  | 'FETCHING_WORLD_DATA'
+  | 'CONNECTING_LIVE'
+  | 'SYNCING'
+  | 'READY'
+  | 'RUNNING'
+  | 'PAUSED'
+  | 'STOPPED'
+  | 'LOAD_ERROR';
 
 // Decoded map data with 2D grid (decoded from RLE on load)
 export interface DecodedMapData {
@@ -28,6 +43,7 @@ export interface SimulationState {
   resourceNodes: ResourceNode[];
   treasureChests: TreasureChest[];
   regions: Region[];
+  manifest: Manifest | null;
   tick: number;
   aliveCount: number;
   totalSpawned: number;
@@ -64,11 +80,12 @@ export function useSimulation(): SimulationState {
   const [resourceNodes, setResourceNodes] = useState<ResourceNode[]>([]);
   const [treasureChests, setTreasureChests] = useState<TreasureChest[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
+  const [manifest, setManifest] = useState<Manifest | null>(null);
   const [tick, setTick] = useState(0);
   const [aliveCount, setAliveCount] = useState(0);
   const [totalSpawned, setTotalSpawned] = useState(0);
   const [totalDeaths, setTotalDeaths] = useState(0);
-  const [status, setStatus] = useState<SimStatus>('CONNECTING');
+  const [status, setStatus] = useState<SimStatus>('INITIALIZING');
   const [selectedEntityId, setSelectedEntityId] = useState<number | null>(null);
 
   const lastTickRef = useRef(0);
@@ -76,6 +93,7 @@ export function useSimulation(): SimulationState {
   const staticLoadedRef = useRef(false);
   const selectedIdRef = useRef<number | null>(null);
   const lastSelKeyRef = useRef('');
+  const retryCountRef = useRef(0);
 
   // Ref is synced immediately in selectEntity callback (not via useEffect)
   // to ensure the very next poll includes the ?selected= param
@@ -84,10 +102,12 @@ export function useSimulation(): SimulationState {
   useEffect(() => {
     let cancelled = false;
     const loadInitial = async () => {
+      setStatus('FETCHING_WORLD_DATA');
       try {
-        const [rawMap, staticData] = await Promise.all([
+        const [rawMap, staticData, manifestData] = await Promise.all([
           fetchJSON<MapData>('/map'),
           fetchJSON<StaticData>('/static'),
+          fetchJSON<Manifest>('/manifest'),
         ]);
         if (!cancelled) {
           const decoded: DecodedMapData = {
@@ -100,51 +120,96 @@ export function useSimulation(): SimulationState {
           setResourceNodes(staticData.resource_nodes || []);
           setTreasureChests(staticData.treasure_chests || []);
           setRegions(staticData.regions || []);
+          setManifest(manifestData);
           mapLoadedRef.current = true;
           staticLoadedRef.current = true;
         }
       } catch {
-        if (!cancelled) setTimeout(loadInitial, 1000);
+        if (cancelled) return;
+        retryCountRef.current += 1;
+        if (retryCountRef.current >= LOAD_RETRY_LIMIT) {
+          setStatus('LOAD_ERROR');
+        } else {
+          setTimeout(loadInitial, 1000);
+        }
       }
     };
     loadInitial();
     return () => { cancelled = true; };
   }, []);
 
-  // EventSource stream loop
+  // WebSocket stream loop
   useEffect(() => {
     if (!mapLoadedRef.current && !mapData) return;
 
-    let evtSource: EventSource | null = null;
+    let ws: WebSocket | null = null;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
     let pollingStatus = false;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    const connectStream = () => {
-      evtSource = new EventSource(`${API_BASE}/stream`);
-      
-      evtSource.onmessage = (event) => {
+    // Deliberately unbounded: unlike loadInitial()'s one-shot retry (see LOAD_ERROR below), this is
+    // the steady-state live-view reconnect path and should keep retrying indefinitely in the
+    // background. Decision recorded in TCK-20260821-PHASED-LOADING-STATE-MACHINE.
+    const scheduleReconnect = () => {
+      if (reconnectTimeout) return;
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null;
+        connectWS();
+      }, 2000);
+    };
+
+    const connectWS = () => {
+      setStatus('CONNECTING_LIVE');
+      ws = new WebSocket(`${wsBase()}/ws`);
+
+      ws.onopen = () => {
+        ws!.send(JSON.stringify({ type: 'handshake', format: 'json' }));
+        setStatus('SYNCING');
+      };
+
+      ws.onmessage = (event) => {
         try {
-          const delta = JSON.parse(event.data);
-          
-          if (delta.error) {
-            console.error('Stream error:', delta.error);
+          const data = JSON.parse(event.data);
+
+          if (data.error) {
+            console.error('Stream error:', data.error);
             return;
           }
 
-          setTick(delta.tick);
+          const isDelta = Array.isArray(data.changed) && Array.isArray(data.removed);
+          if (!isDelta) {
+            // Initial post-handshake message: manager.get_state() minimal-summary shape
+            // ({tick, world_time, entities_count, maturity, seed}), not a delta. No entity/event
+            // state to reduce here.
+            return;
+          }
+
+          setStatus('READY');
+
+          setTick(data.tick);
 
           setEntities((prev: EntitySlim[]) => {
             // Convert array to map for fast updates
             const entMap = new Map(prev.map(e => [e.id, e]));
 
             // Remove dead
-            for (const id of delta.removed) {
+            for (const id of data.removed) {
               entMap.delete(id);
             }
 
             // Upsert changed
-            for (const upd of delta.changed) {
-              entMap.set(upd.id, upd);
+            for (const upd of data.changed as WireEntitySlim[]) {
+              // present_entity_slim never sends state/loot_progress/loot_duration — '' never
+              // matches 'LOOTING', so this default stays inert, not a fabricated value.
+              const full: EntitySlim = {
+                ...upd,
+                state: upd.state ?? '',
+                tier: upd.tier ?? 0,
+                combat_target_id: upd.combat_target_id ?? null,
+                loot_progress: upd.loot_progress ?? 0,
+                loot_duration: upd.loot_duration ?? 0,
+              };
+              entMap.set(full.id, full);
             }
 
             const next = Array.from(entMap.values());
@@ -152,25 +217,29 @@ export function useSimulation(): SimulationState {
             return next;
           });
 
-          if (delta.events && delta.events.length > 0) {
+          if (data.events && data.events.length > 0) {
             setEvents((prev: GameEvent[]) => {
               const existingKeys = new Set(prev.map(e => `${e.tick}:${e.message}`));
-              const fresh = delta.events.filter((e: GameEvent) => !existingKeys.has(`${e.tick}:${e.message}`));
+              const fresh = data.events.filter((e: GameEvent) => !existingKeys.has(`${e.tick}:${e.message}`));
               return fresh.length > 0 ? [...prev, ...fresh] : prev;
             });
           }
         } catch (err) {
-          console.error('Failed to parse SSE payload:', err);
+          console.error('Failed to parse WS payload:', err);
         }
       };
 
-      evtSource.onerror = () => {
-        evtSource?.close();
-        setTimeout(connectStream, 2000); // Reconnect on failure
+      ws.onclose = () => {
+        scheduleReconnect();
+      };
+
+      ws.onerror = () => {
+        ws?.close();
+        scheduleReconnect();
       };
     };
 
-    connectStream();
+    connectWS();
 
     // Secondary slow-poll: 1) fetches full selected_entity data, 2) fetches stats (total spawns, status)
     // Runs every 500ms instead of 80ms
@@ -258,14 +327,21 @@ export function useSimulation(): SimulationState {
     pollInterval = setInterval(fallbackPoll, 500);
 
     return () => {
-      if (evtSource) evtSource.close();
+      if (ws) ws.close();
       if (pollInterval) clearInterval(pollInterval);
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
     };
   }, [mapData]);
 
   const sendControl = useCallback(async (action: string) => {
     try {
-      await fetch(`${API_BASE}/control/${action}`, { method: 'POST' });
+      if (action === 'pause') {
+        await fetch(`${API_BASE}/control/pause`, { method: 'POST' });
+      } else if (action === 'resume') {
+        await fetch(`${API_BASE}/control/resume`, { method: 'POST' });
+      } else {
+        console.error(`Unsupported control action: ${action}`);
+      }
     } catch (e) {
       console.error('Control error:', e);
     }
@@ -303,6 +379,7 @@ export function useSimulation(): SimulationState {
     resourceNodes,
     treasureChests,
     regions,
+    manifest,
     tick,
     aliveCount,
     totalSpawned,

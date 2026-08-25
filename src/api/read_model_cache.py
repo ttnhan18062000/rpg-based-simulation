@@ -115,6 +115,41 @@ class ReadModelCache(ICacheable):
             self._invalidations += len(invalidated) + len(deleted_ids)
             return invalidated
 
+    def compute_tick_delta(
+        self,
+        state: AuthoritativeState,
+        dirty_set: Optional[DirtySet],
+        force_full_scan: bool,
+        tick: int,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Per-tick entity delta for the WS broadcast: {tick, changed, removed, events}, or None on a
+        quiet (non-heartbeat) tick. Ported from V1's compute_delta(), driven by DirtySet instead of
+        a stored prior-snapshot diff. Deliberately uncached -- does not read from or write into
+        _entity_dtos, which is present_entity's (heavy DTO) cache, not this method's.
+        """
+        from src.api.presenters.state_presenter import StatePresenter
+
+        candidate_ids = ReadModelInvalidationPolicy.get_dirty_entity_ids(
+            dirty_set, set(state.entities.keys()), force_full_scan
+        )
+
+        changed: List[Dict[str, Any]] = []
+        removed: List[int] = []
+        for eid in candidate_ids:
+            entity = state.entities.get(eid)
+            if entity is None:
+                removed.append(eid)
+            elif entity.combat.alive:
+                changed.append(StatePresenter.present_entity_slim(entity))
+
+        events: List[Any] = []
+
+        if not changed and not removed and not events and tick % 20 != 0:
+            return None
+
+        return {"tick": tick, "changed": changed, "removed": removed, "events": events}
+
     def get_minimal_summary(self, state: Optional[AuthoritativeState] = None) -> Dict[str, Any]:
         """Returns the cached minimal world summary."""
         from src.api.presenters.state_presenter import StatePresenter

@@ -54,7 +54,11 @@ LAYER_VALUES = _layer_values()
 AUTHORITY_VALUES = {"P0", "P1", "P2"}
 AUDIENCE_VALUES = {"developer", "agent", "designer", "historical"}
 PHASE_VALUES = {"open", "inprogress", "blocked", "done", "backlog"}
-ARTIFACT_TYPE_VALUES = {"investigation", "plan", "test_plan"}
+ARTIFACT_TYPE_VALUES = {"investigation", "plan", "test_plan", "report"}
+# "report" added TCK-20260821-LIVE-MAP-PERF-VALIDATION -- first staging_artifacts/ deliverable for a
+# measurement-and-reporting-only ticket (no investigation/plan/test_plan file is itself the final
+# output; the report is). Distinct from the three existing values, which are all pre-implementation
+# planning artifacts -- report.md is a post-implementation findings/measurement deliverable.
 
 _TICKET_ID_DATE_PATTERN = re.compile(r"^TCK-(\d{8})-")
 

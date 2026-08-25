@@ -102,6 +102,18 @@ export interface EntitySlim {
   loot_duration: number;
 }
 
+// Raw WS delta payload shape: present_entity_slim omits state/tier/combat_target_id/
+// loot_progress/loot_duration (no confirmed V2 source). EntitySlim itself stays fully required
+// for existing consumers (useCanvas.ts); the merge logic in useSimulation.ts defaults these
+// fields before constructing an EntitySlim.
+export type WireEntitySlim = Omit<EntitySlim, 'state' | 'tier' | 'combat_target_id' | 'loot_progress' | 'loot_duration'> & {
+  state?: string;
+  tier?: number;
+  combat_target_id?: number | null;
+  loot_progress?: number;
+  loot_duration?: number;
+};
+
 // Full entity (only sent for the selected/inspected entity)
 export interface Entity {
   id: number;
@@ -349,6 +361,14 @@ export interface MapData {
   width: number;
   height: number;
   grid: number[];  // RLE-encoded: [value, count, value, count, ...]
+}
+
+export interface Manifest {
+  protocol_version: string;
+  dictionary_version: string;
+  terrain_types: Record<string, string>;  // keyed by present_map's int codes, stringified
+  entity_kinds: Record<string, string>;
+  building_types: Record<string, string>;
 }
 
 export interface SimulationConfig {

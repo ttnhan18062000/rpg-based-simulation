@@ -16,7 +16,7 @@ Reconnect the existing player-facing live map renderer to the real V2 backend (m
 static objects, live entity positions, pause/resume) — no HUD/info-display work
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -144,10 +144,10 @@ design reused as-is). Full trace: `docs/plans/live_map_reconnection_epic.md`.
   frontend.
 
 ## Acceptance Criteria
-- [ ] A documented, ordered child-ticket breakdown exists (this ticket + its plan doc) that a later
+- [x] A documented, ordered child-ticket breakdown exists (this ticket + its plan doc) that a later
       `/create-tickets` pass can use directly
-- [ ] Each child ticket, when opened, references this epic and `docs/plans/live_map_reconnection_epic.md`
-- [ ] No implementation happens directly on this epic ticket or its plan doc
+- [x] Each child ticket, when opened, references this epic and `docs/plans/live_map_reconnection_epic.md`
+- [x] No implementation happens directly on this epic ticket or its plan doc
 
 ## Related Tickets
 - `TCK-20260820-EPIC-WORLD-RENDERING-CORE` — a distinct, unrelated sibling system (server-side batch/QA
@@ -222,8 +222,60 @@ None.
 
 ## Implementation Notes
 
+Scope-only epic per its own Tier; no direct implementation on this ticket or its plan doc. All 8
+child tickets (see Related Tickets) executed via the full standard implement-ticket pipeline in
+`docs/plans/live_map_reconnection_epic.md`'s recommended sequence
+(`tickets/todos/live-map-reconnection/SEQUENCE.md`), each independently Scoped, Investigated,
+Planned, multi-round Reviewed, Implemented, Architecture-Verified, Tested, and Verified before
+Finalize.
+
 ## Test Summary
+
+Each child ticket carries its own full test/build verification record in its own
+`stored_artifacts/` entry. No epic-level test run applies (Scope-only tier, zero direct code
+changes on this ticket).
 
 ## Files Changed
 
+None directly on this ticket. See each child ticket's own Files Changed section for the real
+implementation diffs (backend: `src/api/presenters/state_presenter.py`,
+`src/api/read_model_cache.py`, `src/api/engine_manager.py`, `src/api/ws/stream.py`,
+`src/api/dependencies.py`, `src/api/server.py`, new `src/api/routes/{manifest,map,static,stats}.py`,
+new `tools/perf/live_map_ws_payload_measure.py`; frontend:
+`frontend/src/hooks/useSimulation.ts`, `frontend/src/types/api.ts`,
+`frontend/src/components/{Header,SimulationLoadingGate}.tsx`, `frontend/src/App.tsx`, new
+`frontend/perf/live_map_render_timing.mjs`).
+
 ## Completion Summary
+
+All 8 child tickets are DONE: `PRESENT-MAP-STATIC`, `MANIFEST-ID-LOOKUP-ENDPOINT`,
+`REST-MAP-STATIC-STATS`, `WS-ENTITY-DELTA-BROADCAST`, `DELTA-ENVELOPE-SPATIAL-FIELD`,
+`REWIRE-USESIMULATION-WEBSOCKET`, `LIVE-MAP-PERF-VALIDATION`, `PHASED-LOADING-STATE-MACHINE`. The
+existing `GameCanvas.tsx`/`useCanvas.ts` renderer is now genuinely reconnected to the real V2
+backend: live map/static/manifest data over REST, per-tick entity deltas over the real
+`/api/v1/ws` WebSocket (ported from the deleted V1 `src_legacy` implementation as this epic's own
+investigation predicted), pause/resume control, and a real phased loading state machine replacing
+the old opaque single `CONNECTING` bucket. `GameCanvas.tsx`/`useCanvas.ts` themselves remain
+untouched across all 8 child tickets, exactly as this epic's own scope boundary required.
+
+One planned criterion was not fully achieved for reasons outside this epic's control, honestly
+disclosed rather than silently dropped: `LIVE-MAP-PERF-VALIDATION`'s live-browser render-FPS
+measurement (this epic's own Scope bullet on `CLASS_B`/`CLASS_C` percentile frame-time budgets)
+could not obtain live data in the implementing sandbox — Playwright's Chromium download was
+blocked by a network filter (confirmed via TLS inspection, not assumed), and `CLASS_B` (2500
+entities) was correctly not attempted per its own resource guard given the sandbox's severe memory
+contention. Backend WS payload-size measurement at `CLASS_C` (500 entities) WAS fully obtained
+live and compared against the V1 baseline. The frontend render-timing harness itself was fully
+built and is ready to run once a suitable environment is available.
+
+Two real engine bugs were discovered during this epic's own performance-validation work (not
+pre-existing knowledge, found and independently verified 3+ times) and filed as concrete follow-up
+tickets rather than left as vague findings: `TCK-20260825-FORCE-FULL-SCAN-DEAD-CODE` (the
+`force_full_scan`/`_refresh_dirty_set` full-entity-scan mechanism the WS broadcast layer was
+designed to use is dead code end-to-end) and `TCK-20260825-LIVE-MAP-TPS-BUDGET-RECHECK` (a
+~7.9-TPS-vs-20-TPS-nominal throughput finding needing re-measurement on uncontended hardware to
+separate genuine engine cost from sandbox noise). Neither blocks this epic's own closure — both
+are scoped as independent follow-up investigations.
+
+Folder `tickets/todos/live-map-reconnection/` moves to `tickets/done/live-map-reconnection/` as
+part of this epic's own Finalize, preserving `SEQUENCE.md`.

@@ -27,6 +27,7 @@ All responses must be shaped through this service or the equivalent `V2EngineMan
 | `entity_status(entity_id)` | Shaped entity DTO or `None` | O(1) cache | `ReadModelCache.get_entity_dto()` |
 | `entity_timeline(entity_id)` | List of serialized timeline events or `[]` | O(k events) | `entity.timeline` via manager method |
 | `entities_paged(offset, limit)` | Paged entity list with metadata | O(page) cache | `ReadModelCache.get_entities_paged()` |
+| `tick_delta` — computed by `V2EngineManager._update_latest_state()` (direct call, not proxied via `ReadModelService`; see Purpose above) | Per-tick entity delta (`changed`/`removed`/`tick`/`events`) or `None` on a quiet tick | O(dirty) | `ReadModelCache.compute_tick_delta()` |
 
 ## Architecture Law
 

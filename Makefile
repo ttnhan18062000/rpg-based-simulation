@@ -26,8 +26,9 @@ build: ## Build frontend for production
 
 # ── Development ──────────────────────────────────────────
 
-dev: ## Start backend + frontend dev server (hot reload)
+dev: ## Start backend + frontend dev server with live map (hot reload)
 	@echo "Starting backend on :8000 and frontend on :5173..."
+	@echo "Open http://localhost:5173 to view the live map."
 	@echo "Press Ctrl+C to stop both."
 	@trap 'kill 0' INT; \
 		python3 -m src serve --port 8000 & \
