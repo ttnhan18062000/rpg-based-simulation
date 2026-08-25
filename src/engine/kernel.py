@@ -107,6 +107,7 @@ class Kernel:
         self._scheduler = scheduler or DefaultScheduler()
         self._governor = governor or DefaultGovernor()
         self._status = status or DefaultStatus()
+        self._status.force_full_scan = self._force_full_scan
         self._collector = SignalCollector(profile.name)
         self._platform_signals = {"rss_mb": 0.0, "cpu_percent": 0.0}
         self._worker_manager = WorkerManager(

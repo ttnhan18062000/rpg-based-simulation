@@ -31,6 +31,7 @@ class RuntimeStatus:
     dropped_work_delta: int = 0  # Replaced every tick
     last_transition_tick: int = 0
     max_mode_reached: RuntimeMode = RuntimeMode.NORMAL
+    force_full_scan: bool = False
 
     def record_signals(self, signals: PressureSignals) -> None:
         """Append fresh signals and calculate trends."""
