@@ -11410,8 +11410,8 @@
     INFRA-384) after two successive merges with origin/main each independently landed
     unrelated entries claiming the same next-available id at authoring time -- a real,
     expected consequence of next_available_id() computing against each branch own
-    pre-merge view of the shard, mirroring INFRA-381 own documented precedent for the
-    identical class of collision.'
+    pre-merge view of the shard, mirroring INFRA-381 own documented precedent for
+    the identical class of collision.'
   status: verified
   priority: P2
   v2_evidence: tools/agent_orchestration_claude_adapter/terminal_status_extractor.py
@@ -11426,3 +11426,26 @@
   support_boundary: Claude-agent-workflow orchestration tooling only -- no simulation
     behavior is involved (mirrors INFRA-263/264/265/315/379/381's support_boundary
     pattern for pure workflow-tooling entries in this shard).
+- id: INFRA-392
+  text: 'tools/agent-monitoring/duration_utils.py::compute_active_idle_split() computes
+    a read-time-only active_duration_s/idle_gap_s split per run from its own events.jsonl
+    rows (ordered strictly by ts, never seq), never mutating runs.jsonl/events.jsonl.
+    Two documented judgment calls: pause threshold = 1800s (30min), reusing generate_retro.py''s
+    own existing Slow Runs absolute threshold; start_ts/end_ts ARE included as timeline
+    boundaries (not just strict inter-event gaps), required by the module''s own active+idle==total
+    invariant. Wired additively into generate_retro.py''s Slow Runs and Duration outliers
+    sections (new active/idle columns, plus an idle-dominated disclaimer) and retrieval_baseline_metrics.py''s
+    build_duration_section (real per-row flag/note replacing the prior unconditional
+    pause-contaminated flag). Real-corpus reproduction confirmed exact for TCK-20260710-SIMQ-DEPTH-SOCIAL
+    (idle_gap_s captures the ~590.6 min Investigate->Plan gap; active_duration_s ~15.5
+    min vs raw 828.8 min duration_s).'
+  status: verified
+  priority: P2
+  v2_evidence: tools/agent-monitoring/duration_utils.py, tools/agent-monitoring/generate_retro.py
+    (compute_retro_metrics slow_runs_list/outliers_duration_s, Slow Runs/Duration
+    outliers rendering), tools/agent-monitoring/retrieval_baseline_metrics.py (build_duration_section)
+  test_path: tests/tools/test_duration_utils.py::test_real_corpus_simq_depth_social_reproduces_documented_gap
+  divergence_note: null
+  proof_type: regression
+  support_boundary: Claude-agent-workflow monitoring/observability tooling only --
+    no simulation behavior is involved.

@@ -80,6 +80,8 @@ One record per workflow invocation.
 
 **Tool call counts** per agent are also not recorded. They could be self-reported (each agent counts its own tool calls and includes the total in its return value), but this is not currently implemented. Use `agent_count` as a coarse proxy for run complexity.
 
+**`duration_s` is naive wall-clock time** (`end_ts - start_ts`), with no awareness of idle gaps between phase transitions — a run paused for hours awaiting human review reports the same inflated `duration_s` as one that spent that whole span in real active work. `tools/agent-monitoring/duration_utils.py::compute_active_idle_split()` (TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT) computes a read-time-only `active_duration_s`/`idle_gap_s` split per run from its own `events.jsonl` rows (never mutating `runs.jsonl`/`events.jsonl` themselves), surfaced additively alongside raw `duration_s` in `generate_retro.py`'s Slow Runs and Duration outliers sections and in `retrieval_baseline_metrics.py`'s one-off snapshot — `duration_s` itself is not corrected or reinterpreted anywhere.
+
 ### `final_status` values
 
 | Value | Meaning |

@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality, documentation]
 Compute active/idle duration split for Slow Runs and Duration outliers reporting
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -47,14 +47,14 @@ runs.jsonl's duration_s and generate_retro.py's Slow Runs / Duration outliers se
 - Dashboard-side changes (models.py, api.ts, StatsView.tsx) -- those belong to the sibling dashboard ticket, sequenced behind this one.
 
 ## Acceptance Criteria
-- [ ] tools/agent-monitoring/duration_utils.py exists, exporting a pure function taking a run's start_ts/end_ts plus its events.jsonl rows (sorted by ts, not seq) and returning active_duration_s + idle_gap_s (per chosen pause threshold) that sum to the run's total wall-clock span, plus which phase boundary the largest gap fell at.
-- [ ] generate_retro.py's Slow Runs and Duration outliers sections both import and call that single shared function, rendering active_duration_s/idle_gap_s alongside raw duration_s in both tables.
-- [ ] Running updated retro generation against real corpus data reproduces the documented finding for TCK-20260710-SIMQ-DEPTH-SOCIAL (idle_gap_s captures the ~590.6 min Investigate->Plan gap, active_duration_s materially smaller than raw 828 min duration_s).
-- [ ] Given events with a seq collision, duration_utils.py still produces a correct non-negative split because it orders strictly by ts.
-- [ ] test_baseline_report_would_prefer_gap_aware_view_if_available is explicitly addressed -- either retrieval_baseline_metrics.build_duration_section is updated to consume the new shared view, or the ticket explicitly declares that consumer out of scope and documents the now-red canary as expected/tracked.
-- [ ] docs/agent-monitoring/schema.md's "### What is not recorded" subsection (not the unrelated "## Known Limitations" H2) gains a new bullet disclosing duration_s's naive-wall-clock limitation, in the same voice as the existing Token-counts bullet, cross-referencing the new active/idle fields by name.
-- [ ] generate_retro.py's rendered Slow Runs/Duration outliers sections carry a visible note distinguishing active vs idle time for any run whose reported duration is dominated by an idle gap, matching the existing conditional-disclaimer style already used for the outlier-ratio caveat.
-- [ ] Existing historical agent-monitoring/retro/RETRO-*.md reports are explicitly NOT rewritten by this ticket.
+- [x] tools/agent-monitoring/duration_utils.py exists, exporting a pure function taking a run's start_ts/end_ts plus its events.jsonl rows (sorted by ts, not seq) and returning active_duration_s + idle_gap_s (per chosen pause threshold) that sum to the run's total wall-clock span, plus which phase boundary the largest gap fell at.
+- [x] generate_retro.py's Slow Runs and Duration outliers sections both import and call that single shared function, rendering active_duration_s/idle_gap_s alongside raw duration_s in both tables.
+- [x] Running updated retro generation against real corpus data reproduces the documented finding for TCK-20260710-SIMQ-DEPTH-SOCIAL (idle_gap_s captures the ~590.6 min Investigate->Plan gap, active_duration_s materially smaller than raw 828 min duration_s).
+- [x] Given events with a seq collision, duration_utils.py still produces a correct non-negative split because it orders strictly by ts.
+- [x] test_baseline_report_would_prefer_gap_aware_view_if_available is explicitly addressed -- either retrieval_baseline_metrics.build_duration_section is updated to consume the new shared view, or the ticket explicitly declares that consumer out of scope and documents the now-red canary as expected/tracked.
+- [x] docs/agent-monitoring/schema.md's "### What is not recorded" subsection (not the unrelated "## Known Limitations" H2) gains a new bullet disclosing duration_s's naive-wall-clock limitation, in the same voice as the existing Token-counts bullet, cross-referencing the new active/idle fields by name.
+- [x] generate_retro.py's rendered Slow Runs/Duration outliers sections carry a visible note distinguishing active vs idle time for any run whose reported duration is dominated by an idle gap, matching the existing conditional-disclaimer style already used for the outlier-ratio caveat.
+- [x] Existing historical agent-monitoring/retro/RETRO-*.md reports are explicitly NOT rewritten by this ticket.
 
 ## Related Tickets
 - TCK-20260728-RETRIEVAL-BASELINE-METRICS
@@ -91,9 +91,71 @@ None.
 - The idea doc's own open question (flag high-idle runs vs. fully re-rank Slow Runs by active_duration_s) remains unresolved beyond this ticket's additive/flagging choice.
 
 ## Implementation Notes
+Two open judgment calls resolved and documented (see staging_artifacts/.../investigation.md for
+full reasoning):
+1. **Pause threshold = 1800s (30 min)** — reuses generate_retro.py's own existing Slow Runs
+   absolute threshold verbatim, for conceptual consistency; falls inside the ticket's own p90-p95
+   data-backed range.
+2. **start_ts/end_ts ARE included as timeline boundaries**, not just strict inter-event gaps —
+   forced by the module's own active+idle==total invariant, which a boundary-adjacent gap would
+   otherwise silently vanish from. `active_duration_s` is defined as the complement of
+   `idle_gap_s` within the known total span (not independently re-summed), so the invariant holds
+   by construction regardless of data messiness.
+
+Verified by hand against the real corpus before trusting the unit test: `TCK-20260710-SIMQ-DEPTH-SOCIAL`'s
+10 events broken into individual gaps confirm exactly 4 gaps (Plan 590.58min, Architecture-Verify
+80.75min, Parity 36.1min, Finalize 105.85min) sum to the computed `idle_gap_s` (813.28min), and
+the remaining 5 small gaps sum to `active_duration_s` (15.53min) — matches AC3 exactly.
+
+Corrected one inaccuracy in ticket 2's own text while investigating the shared-shape coupling: it
+claims `SlowRunEntry(**r)`-style unpacking "breaks outright" on new keys — empirically false, since
+`src/api/agent_ops_dashboard/models.py`'s Pydantic models declare no `extra="forbid"`, so Pydantic's
+default `extra="ignore"` silently drops unrecognized kwargs rather than raising.
+`tests/tools/test_agent_ops_dashboard_stats.py` (17/17) already confirmed no regression before
+ticket 2 begins. Flagged for ticket 2's own Investigate phase to re-verify and correct, not
+silently trusted from the original ticket text.
+
+The retired trip-wire test (`test_baseline_report_would_prefer_gap_aware_view_if_available`) is
+replaced, not deleted — a real positive assertion now confirms `build_duration_section` actually
+imports and calls the shared `duration_utils.compute_active_idle_split`, mirroring this repo's own
+established precedent for retiring served-their-purpose trip-wire guards.
 
 ## Test Summary
+- `pytest tests/tools/test_duration_utils.py -q` → 13 passed (new file).
+- `pytest tests/tools/test_generate_retro.py -q` → 160 passed (156 pre-existing + 4 new).
+- `pytest tests/tools/test_retrieval_baseline_metrics.py -q` → 18 passed (16 pre-existing,
+  unmodified + 2 rewritten for the new real-computation shape).
+- Broader surface: `pytest tests/tools/test_duration_utils.py tests/tools/test_generate_retro.py
+  tests/tools/test_retrieval_baseline_metrics.py tests/docs/ -q` → 236 passed, 1 skipped,
+  1 xfailed (pre-existing, unrelated).
+- `pytest tests/tools/test_agent_ops_dashboard_stats.py -q` → 17 passed (confirms the sibling
+  dashboard ticket's own consumer is not broken by this ticket's additive shape change, ahead of
+  that ticket even starting).
 
 ## Files Changed
+- `tools/agent-monitoring/duration_utils.py` (new) — shared pure active/idle computation.
+- `tools/agent-monitoring/generate_retro.py` — imports and wires `compute_active_idle_split` into
+  `compute_retro_metrics()`'s Slow Runs/Duration outliers construction and their Markdown
+  rendering (new columns + conditional idle-dominated disclaimer).
+- `tools/agent-monitoring/retrieval_baseline_metrics.py` — `build_duration_section(runs, events)`
+  now computes a real per-row split instead of an unconditional static flag; caller updated.
+- `docs/agent-monitoring/schema.md` — new "What is not recorded" bullet on `duration_s`'s
+  naive-wall-clock limitation.
+- `tests/tools/test_duration_utils.py` (new) — 13 unit tests.
+- `tests/tools/test_generate_retro.py` — 4 new rendering tests.
+- `tests/tools/test_retrieval_baseline_metrics.py` — 1 test rewritten for the real shape, the
+  trip-wire test retired and replaced with a real positive assertion.
+- `docs/parity_ledger/infrastructure.yaml` — new entry `INFRA-392`.
 
 ## Completion Summary
+Added `tools/agent-monitoring/duration_utils.py` as the single shared, pure, read-time
+active/idle duration computation, resolving both judgment calls the ticket flagged as open
+(pause threshold, start/end-boundary treatment) with documented reasoning. Wired additively into
+`generate_retro.py`'s Slow Runs and Duration outliers sections and into
+`retrieval_baseline_metrics.py`'s one-off snapshot, retiring that module's trip-wire test with a
+real positive replacement. Real-corpus reproduction for `TCK-20260710-SIMQ-DEPTH-SOCIAL` confirmed
+exact by hand before trusting the automated test. No write-path mutation of `runs.jsonl`/
+`events.jsonl`; no historical `RETRO-*.md` rewritten; no dashboard file touched (sibling ticket 2's
+scope) — confirmed via `git status --short` matching the ticket's own scope exactly. Ticket 2's
+own claim about the dashboard coupling being an outright break was checked and found overstated;
+corrected here rather than carried forward silently.
