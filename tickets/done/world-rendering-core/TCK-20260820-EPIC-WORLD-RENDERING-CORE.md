@@ -15,7 +15,7 @@ tags: [rendering, visualization, world, simulation-quality, architecture, determ
 Epic: Server-Owned World Rendering Core, with Visual/Geometric Quality Validation as First Consumer
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -161,12 +161,41 @@ Carried forward verbatim from the two idea docs — genuinely still open, to be 
 - **Exact naming for the new `docs/visual_quality/`-style subfolder** (2026-08-20) — not decided; "mirrors `docs/simulation_quality/`'s shape" is the only constraint stated so far.
 
 ## Implementation Notes
+All 9 child tickets listed under Related Tickets are confirmed `DONE` in `tickets/done/`:
+`WORLD-RENDER-CORE`, `VISUAL-SHAPE-METRIC`, `VISUAL-DENSITY-METRIC`, `VISUAL-VARIANTS-METRIC`,
+`VISUAL-CONNECTIVITY-METRIC`, `VISUAL-GRADE-SCORER`, `VISUAL-QUALITY-CALIBRATION`,
+`VISUAL-AGENT-REVIEW`, `VISUAL-QUALITY-DOCS`. Real deliverables verified present on disk:
+`src/rendering/` (renderer core, 4 metric modules, `grading.py`, `review_pipeline.py`,
+`render_annotated.py`), `docs/visual_quality/` (`scoring_contract.md`, `current_state.md`,
+`audit_workflow.md`), `docs/audits/D26_visual_quality_integration.md`,
+`.claude/agents/world-render-reviewer.md`, `config/rendering/grade_thresholds.toml`,
+`tools/calibrate_rendering.py`. This epic ticket's own 4 acceptance criteria were already checked
+off at scoping time (2026-08-21) — the epic's only job (per its `epic` tier: "scope only, tracks
+child tickets, no direct implementation") was producing the child-ticket breakdown, which it did.
+This close-out just catches up the ticket's own `Status`/location to match reality: the folder was
+never moved to `tickets/done/` after the last child ticket finished, an oversight caught while
+answering a status question, not during the epic's own close (this ticket did no direct
+implementation, so there was no natural "last phase" to trigger the move).
 
+**Known, deliberately out-of-epic-scope caveat carried forward** (see `docs/visual_quality/current_state.md`):
+the scoring *mechanism* is real, finished, and tested; the healthy-band *threshold values* it
+operates on are still illustrative placeholders, not calibrated — `tools/calibrate_rendering.py`
+exists and works but no `calibration_report_*.json` has ever been generated/committed, and
+`compute_trail_activity` has zero calibration evidence at all. This was `VISUAL-QUALITY-CALIBRATION`'s
+own honestly-stated outcome, not a regression introduced by this close-out.
 
 ## Test Summary
-
+No new code in this ticket (epic tier, scope-only, per its own AC #3). Verified each of the 9
+child tickets' own Test Summary sections report real passing tests before treating them as done.
 
 ## Files Changed
-
+- `tickets/todos/world-rendering-core/` → `tickets/done/world-rendering-core/` (folder move,
+  preserving `SEQUENCE.md`)
 
 ## Completion Summary
+All 9 child tickets of this epic are done and their real deliverables verified present on disk.
+This ticket closes out the epic's own bookkeeping (`Status: OPEN` → `DONE`, folder moved to
+`tickets/done/`) to match that reality — no implementation work was owed or done directly on this
+epic ticket, consistent with its `epic` tier. The one open, explicitly-flagged caveat —
+uncalibrated threshold values — remains open as its own known, non-blocking gap (on-demand tooling
+by design, never wired to CI/pass-fail), not something this close-out silently resolved.
