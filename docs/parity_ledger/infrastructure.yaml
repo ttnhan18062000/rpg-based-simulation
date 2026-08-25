@@ -11235,3 +11235,24 @@
   test_path: tests/unit/rendering/test_render_incremental.py::test_incremental_render_repaints_entity_that_dies_in_place
   divergence_note: null
   proof_type: parity
+- id: INFRA-384
+  text: 'Fix ad-hoc/non-ticket sessions inheriting a stale foreign ticket identity
+    in agent-monitoring/tools.jsonl: tools/agent-monitoring/post_tool_hook.py no longer
+    falls back to the shared unscoped .claude/current_run file when no session-scoped
+    sidecar exists for the calling session_id. Instead it writes a null-valued sentinel
+    to .claude/current_run.<session_id> (create-if-absent) and reports null run_id/seq/phase/agent/ticket_id
+    for that call and any subsequent call in the same session, until a real writeSidecar()
+    write for that session_id unconditionally overwrites the sentinel with real values.
+    Investigation confirmed every real sidecar writer in .claude/workflows/implement-ticket.js
+    and .claude/skills/implement-ticket/SKILL.md already writes the scoped and unscoped
+    files together, so no real workflow ever legitimately needed the removed unscoped-fallback
+    path. The sentinel is an ordinary current_run.* file, swept by the existing 24h
+    _prune_stale_scoped_sidecars() mechanism with no new cleanup path. Historically
+    misattributed tools.jsonl rows from before this fix are accepted as a documented
+    caveat (no backfill), matching this repo existing precedent for the same class
+    of problem.'
+  status: verified
+  priority: P2
+  v2_evidence: tools/agent-monitoring/post_tool_hook.py
+  test_path: tests/tools/test_post_tool_hook.py::test_second_call_in_ad_hoc_session_reads_own_sentinel_not_unscoped_file
+  divergence_note: null

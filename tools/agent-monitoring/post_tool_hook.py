@@ -68,9 +68,21 @@ try:
     # the shared file is overwritten by every concurrent session's own writeSidecar() call, so
     # reading it unconditionally silently misattributes tool calls to whichever session wrote it
     # last (confirmed live: a closed ticket kept absorbing another session's tool-call rows for two
-    # days). Falls back to the unscoped file when no scoped file exists for this session, so callers
-    # that haven't adopted the per-session write yet degrade to the prior (still-imperfect but not
-    # worse) behavior rather than losing attribution entirely.
+    # days).
+    #
+    # TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION: when NO scoped file exists yet for this
+    # session, do not fall back to the unscoped file — write a null-valued sentinel instead and
+    # report null attribution. Every real writer (writeSidecar() in implement-ticket.js, and
+    # hand-orchestration per .claude/skills/implement-ticket/SKILL.md) writes the scoped file and
+    # the unscoped file together, atomically — so a session with no scoped file genuinely has no
+    # real ticket attribution to report yet, and falling back to the unscoped file would silently
+    # inherit whatever foreign (possibly long-closed) ticket another concurrent session last wrote
+    # there, which is the exact bug this ticket fixes. The sentinel write is create-if-absent only:
+    # if a real writeSidecar() call for this same session_id lands later, it unconditionally
+    # overwrites this same path with real values (it does not check for an existing file), so the
+    # sentinel never clobbers real attribution — it only fills the window before the first real
+    # write. The sentinel is a normal `current_run.*` file, so `_prune_stale_scoped_sidecars()`
+    # below sweeps it identically to any other scoped file, with no separate cleanup path.
     run_id = None
     seq = None
     phase = None
@@ -78,8 +90,23 @@ try:
     execution_id = None
     provider = None
     ticket_id = None
-    sidecar_path = Path(f".claude/current_run.{session_id}") if session_id else None
-    if sidecar_path is None or not sidecar_path.exists():
+    scoped_path = Path(f".claude/current_run.{session_id}") if session_id else None
+    if scoped_path is not None and scoped_path.exists():
+        sidecar_path = scoped_path
+    elif scoped_path is not None:
+        try:
+            scoped_path.parent.mkdir(parents=True, exist_ok=True)
+            scoped_path.write_text(json.dumps({
+                "run_id": None, "seq": None, "phase": None, "agent": None,
+                "execution_id": None, "provider": None, "ticket_id": None,
+            }))
+        except Exception:
+            pass
+        sidecar_path = scoped_path
+    else:
+        # No session_id in the hook payload at all (defensive — real Claude Code hooks always
+        # supply one). Degrade to the pre-TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION behavior
+        # rather than losing attribution entirely for a case this repo has never actually hit.
         sidecar_path = Path(".claude/current_run")
     try:
         sidecar = json.loads(sidecar_path.read_text())
