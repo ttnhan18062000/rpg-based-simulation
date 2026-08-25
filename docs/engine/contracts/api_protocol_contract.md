@@ -27,7 +27,14 @@ This document defines the supported network and system interfaces for the engine
 - **Handshake**: Clients must send `{"type": "handshake", "format": "json" | "msgpack"}` upon connection.
 - **Payloads**:
     - **Initial**: Full state summary.
-    - **Streaming**: Tick-by-tick state updates.
+    - **Streaming**: Per-tick entity delta (`changed`/`removed`/`tick`/`events`, plus a
+      `snapshot_as_of_tick` field attached per-connection) — not an unconditional full-state
+      resend. Suppressed on quiet ticks (no changed/removed entities) except a 20-tick heartbeat.
+      See `docs/observability/read_model_service_contract.md`'s `tick_delta` row for the presenter
+      chain. Also carries a `region_id` field, always `null` today — reserved, unpopulated wire
+      space for the future M3 interest-management epic
+      (`TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT`); no server-side filtering reads or acts on
+      it yet.
 - **Serialization**: Supports JSON and MessagePack (binary).
 
 ## 3. Transport & Compression

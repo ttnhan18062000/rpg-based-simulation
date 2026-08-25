@@ -18,6 +18,7 @@ from src.api.admission_control import (
 from src.api.dependencies import (
     set_engine_manager, get_engine_manager,
     set_quality_hub, set_quality_persistence,
+    set_catalog_repository,
 )
 from src.api.engine_manager import V2EngineManager
 from src.api.schemas import WorldStateResponse, EntityPageResponse, EntityDetailResponse
@@ -35,6 +36,11 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         manager = V2EngineManager(profile)
         set_engine_manager(manager)
         manager.start()
+
+        from src.content.repository import CatalogRepository
+        catalog = CatalogRepository()
+        catalog.load_all()
+        set_catalog_repository(catalog)
 
         # G2 fix: wire quality hub into dependency container after kernel is ready
         _k = manager.kernel
@@ -117,6 +123,18 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
 
     from src.api.routes import economy
     app.include_router(economy.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+
+    from src.api.routes import manifest
+    app.include_router(manifest.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+
+    from src.api.routes import map as map_routes
+    app.include_router(map_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+
+    from src.api.routes import static as static_routes
+    app.include_router(static_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+
+    from src.api.routes import stats as stats_routes
+    app.include_router(stats_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.simulation_quality.api import routes as quality_routes
     app.include_router(quality_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])

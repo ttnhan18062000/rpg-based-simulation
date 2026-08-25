@@ -6,12 +6,15 @@ import { useSimulation } from '../hooks/useSimulation'
 const mockFetch = vi.fn()
 globalThis.fetch = mockFetch
 
-// Mock EventSource
-class MockEventSource {
+// Mock WebSocket
+class MockWebSocket {
   url: string
-  onmessage: ((event: any) => void) | null = null
-  onerror: ((event: any) => void) | null = null
+  send = vi.fn()
   close = vi.fn()
+  onopen: (() => void) | null = null
+  onmessage: ((event: any) => void) | null = null
+  onclose: (() => void) | null = null
+  onerror: (() => void) | null = null
 
   constructor(url: string) {
     this.url = url
@@ -19,100 +22,387 @@ class MockEventSource {
 }
 
 // Ensure the mock is spyable by Vitest but retains newable constructor signature
-globalThis.EventSource = vi.fn(function(this: MockEventSource, url: string) {
+globalThis.WebSocket = vi.fn(function (this: MockWebSocket, url: string) {
   this.url = url
-  this.onmessage = null
-  this.onerror = null
+  this.send = vi.fn()
   this.close = vi.fn()
+  this.onopen = null
+  this.onmessage = null
+  this.onclose = null
+  this.onerror = null
 }) as any
+
+function defaultMockFetch(input: RequestInfo | URL) {
+  const url = String(input)
+  if (url.includes('/map')) {
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({ width: 10, height: 10, grid: [] }),
+    })
+  }
+  if (url.includes('/static')) {
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({ buildings: [], resource_nodes: [], treasure_chests: [], regions: [] }),
+    })
+  }
+  if (url.includes('/manifest')) {
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({
+        protocol_version: '1',
+        dictionary_version: '1',
+        terrain_types: {},
+        entity_kinds: {},
+        building_types: {},
+      }),
+    })
+  }
+  return Promise.resolve({
+    ok: true,
+    json: async () => ({
+      total_spawned: 10,
+      total_deaths: 5,
+      running: true,
+      paused: false,
+    }),
+  })
+}
+
+async function renderConnectedHook() {
+  const { result } = renderHook(() => useSimulation())
+
+  await waitFor(() => {
+    expect(mockFetch).toHaveBeenCalledWith('/api/v1/map')
+  })
+
+  await waitFor(() => {
+    expect(vi.mocked(globalThis.WebSocket).mock.instances.length).toBeGreaterThan(0)
+  })
+
+  const wsInstances = vi.mocked(globalThis.WebSocket).mock.instances
+  const mockWS = wsInstances[wsInstances.length - 1] as unknown as MockWebSocket
+
+  act(() => {
+    mockWS.onopen?.()
+  })
+
+  return { result, mockWS }
+}
 
 describe('useSimulation hook', () => {
   beforeEach(() => {
     mockFetch.mockReset()
-    vi.mocked(globalThis.EventSource).mockClear()
-
-    
-    // Default fetch mocks for the fallback loop
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        total_spawned: 10,
-        total_deaths: 5,
-        running: true,
-        paused: false,
-      })
-    })
+    mockFetch.mockImplementation(defaultMockFetch)
+    vi.mocked(globalThis.WebSocket).mockClear()
   })
 
   afterEach(() => {
     vi.clearAllTimers()
+    vi.useRealTimers()
   })
 
   it('initializes with default values', () => {
     const { result } = renderHook(() => useSimulation())
-    
+
     expect(result.current.tick).toBe(0)
     expect(result.current.entities).toEqual([])
-    expect(result.current.status).toBe('CONNECTING')
+    // The real useState initial value is 'INITIALIZING', but loadInitial()'s synchronous
+    // setStatus('FETCHING_WORLD_DATA') call is already flushed by act() inside renderHook()
+    // before this assertion runs (React 19 + RTL 16 act() semantics) — see plan.md Step 3.
+    expect(result.current.status).toBe('FETCHING_WORLD_DATA')
     expect(result.current.aliveCount).toBe(0)
   })
 
-  it('connects to SSE and processes entity streams correctly', async () => {
-    // Mock the mapData response so the hook will start
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        width: 10,
-        height: 10,
-        grid: [],
-        static_data: { buildings: [] }
-      })
+  it('starts at FETCHING_WORLD_DATA immediately (INITIALIZING is not observable post-renderHook in this harness)', () => {
+    const { result } = renderHook(() => useSimulation())
+
+    expect(result.current.status).toBe('FETCHING_WORLD_DATA')
+  })
+
+  it("transitions through FETCHING_WORLD_DATA while loadInitial's fetches are in flight", () => {
+    // Hold the /map fetch open indefinitely (never resolved) so the assertion below observes
+    // status strictly while the Promise.all in loadInitial() is still pending. Cleanup's unmount
+    // sets loadInitial's `cancelled` flag, so the never-resolved promise cannot leak a state
+    // update into a later test.
+    mockFetch.mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/map')) {
+        return new Promise(() => {})
+      }
+      return defaultMockFetch(input)
     })
 
     const { result } = renderHook(() => useSimulation())
 
-    // Initial state
-    expect(result.current.entities.length).toBe(0)
+    expect(result.current.status).toBe('FETCHING_WORLD_DATA')
+  })
 
-    // Wait for the hook to finish its initial map fetch and construct EventSource
+  it('transitions to CONNECTING_LIVE once map/static/manifest load and the WS connection attempt begins', async () => {
+    const { result } = renderHook(() => useSimulation())
+
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith('/api/v1/map')
     })
-    
-    // We expect EventSource to have been initialized
+
     await waitFor(() => {
-        expect(vi.mocked(globalThis.EventSource).mock.instances.length).toBeGreaterThan(0)
+      expect(vi.mocked(globalThis.WebSocket).mock.instances.length).toBeGreaterThan(0)
     })
 
-    // Grab our mocked EventSource instance
-    const esInstances = vi.mocked(globalThis.EventSource).mock.instances
-    const mockES = esInstances[0] as unknown as MockEventSource
-    expect(mockES.url).toBe('/api/v1/stream')
+    expect(result.current.status).toBe('CONNECTING_LIVE')
+  })
 
-    // Simulate an incoming SSE message with 2 new/changed entities and 1 removed
-    const payload = {
-      tick: 150,
-      changed: [
-        { id: 1, kind: 'Hero', hp: 10 },
-        { id: 2, kind: 'Slime', hp: 5 }
-      ],
-      removed: [3],
-      events: []
+  it('transitions to SYNCING on WS open (handshake sent), stays SYNCING through the non-delta initial summary message', async () => {
+    const { result, mockWS } = await renderConnectedHook()
+
+    expect(result.current.status).toBe('SYNCING')
+
+    const initialSummary = {
+      tick: 0,
+      world_time: 0,
+      entities_count: 0,
+      maturity: 'young',
+      seed: 42,
     }
 
-    // Trigger the onmessage handler directly
-    if (mockES.onmessage) {
-      act(() => {
-        mockES.onmessage!({ data: JSON.stringify(payload) })
+    act(() => {
+      mockWS.onmessage?.({ data: JSON.stringify(initialSummary) })
+    })
+
+    expect(result.current.status).toBe('SYNCING')
+  })
+
+  it('transitions to READY exactly on the first isDelta-shaped message, not before', async () => {
+    const { result, mockWS } = await renderConnectedHook()
+
+    expect(result.current.status).toBe('SYNCING')
+
+    const delta = {
+      tick: 5,
+      changed: [{ id: 1, kind: 'Hero', x: 1, y: 1, hp: 10, max_hp: 10, level: 1, faction: 'player', weapon_range: 1 }],
+      removed: [],
+      events: [],
+      snapshot_as_of_tick: 5,
+      region_id: null,
+    }
+
+    act(() => {
+      mockWS.onmessage?.({ data: JSON.stringify(delta) })
+    })
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('READY')
+    })
+  })
+
+  it("loadInitial's fetch-retry loop is bounded and transitions to LOAD_ERROR after N failures", async () => {
+    vi.useFakeTimers()
+    mockFetch.mockImplementation(() => Promise.resolve({ ok: false, status: 500, json: async () => ({}) }))
+
+    const { result } = renderHook(() => useSimulation())
+
+    // Flush the initial synchronous loadInitial() attempt's rejection.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+
+    // 4 more attempts at the existing fixed 1000ms retry delay reach the N=5 limit.
+    for (let i = 0; i < 4; i++) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000)
       })
     }
 
-    // Hook state should now be updated mapping to array
+    expect(result.current.status).toBe('LOAD_ERROR')
+  })
+
+  it('LOAD_ERROR is terminal and does not auto-recover even once fetches would succeed', async () => {
+    vi.useFakeTimers()
+    mockFetch.mockImplementation(() => Promise.resolve({ ok: false, status: 500, json: async () => ({}) }))
+
+    const { result } = renderHook(() => useSimulation())
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    for (let i = 0; i < 4; i++) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000)
+      })
+    }
+
+    expect(result.current.status).toBe('LOAD_ERROR')
+    const callCountAtError = mockFetch.mock.calls.length
+
+    mockFetch.mockImplementation(defaultMockFetch)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000)
+    })
+
+    expect(mockFetch.mock.calls.length).toBe(callCountAtError)
+    expect(result.current.status).toBe('LOAD_ERROR')
+  })
+
+  it('sends handshake as the first outgoing message before processing any data', async () => {
+    const { mockWS } = await renderConnectedHook()
+
+    expect(mockWS.send).toHaveBeenCalledTimes(1)
+    expect(mockWS.send).toHaveBeenNthCalledWith(
+      1,
+      JSON.stringify({ type: 'handshake', format: 'json' })
+    )
+  })
+
+  it('opens WebSocket to /api/v1/ws, not EventSource', async () => {
+    expect((globalThis as any).EventSource).toBeUndefined()
+
+    const { mockWS } = await renderConnectedHook()
+
+    expect(mockWS.url).toMatch(/\/api\/v1\/ws$/)
+  })
+
+  it('ignores/threads the initial full-state message distinctly from delta messages', async () => {
+    const { result, mockWS } = await renderConnectedHook()
+
+    const initialSummary = {
+      tick: 0,
+      world_time: 0,
+      entities_count: 0,
+      maturity: 'young',
+      seed: 42,
+    }
+
+    act(() => {
+      mockWS.onmessage?.({ data: JSON.stringify(initialSummary) })
+    })
+
+    // No entity/tick state should have been touched by the non-delta message
+    expect(result.current.entities.length).toBe(0)
+    expect(result.current.tick).toBe(0)
+
+    const delta = {
+      tick: 5,
+      changed: [{ id: 1, kind: 'Hero', x: 1, y: 1, hp: 10, max_hp: 10, level: 1, faction: 'player', weapon_range: 1 }],
+      removed: [],
+      events: [],
+      snapshot_as_of_tick: 5,
+      region_id: null,
+    }
+
+    act(() => {
+      mockWS.onmessage?.({ data: JSON.stringify(delta) })
+    })
+
+    await waitFor(() => {
+      expect(result.current.tick).toBe(5)
+      expect(result.current.entities.length).toBe(1)
+      expect(result.current.aliveCount).toBe(1)
+    })
+  })
+
+  it('reduces a real {tick,changed,removed,events,snapshot_as_of_tick,region_id} delta correctly', async () => {
+    const { result, mockWS } = await renderConnectedHook()
+
+    const payload = {
+      tick: 150,
+      changed: [
+        { id: 1, kind: 'Hero', x: 1, y: 1, hp: 10, max_hp: 10, level: 1, faction: 'player', weapon_range: 1 },
+        { id: 2, kind: 'Slime', x: 2, y: 2, hp: 5, max_hp: 5, level: 1, faction: 'monster', weapon_range: 1 },
+      ],
+      removed: [3],
+      events: [],
+      snapshot_as_of_tick: 150,
+      region_id: null,
+    }
+
+    act(() => {
+      mockWS.onmessage?.({ data: JSON.stringify(payload) })
+    })
+
     await waitFor(() => {
       expect(result.current.tick).toBe(150)
       expect(result.current.entities.length).toBe(2)
       expect(result.current.entities[0].id).toBe(1)
       expect(result.current.aliveCount).toBe(2)
+    })
+  })
+
+  it('sendControl(pause) POSTs exactly to /api/v1/control/pause, sendControl(resume) POSTs exactly to /api/v1/control/resume', async () => {
+    const { result } = await renderConnectedHook()
+
+    mockFetch.mockClear()
+
+    await act(async () => {
+      await result.current.sendControl('pause')
+    })
+    expect(mockFetch).toHaveBeenCalledWith('/api/v1/control/pause', { method: 'POST' })
+
+    mockFetch.mockClear()
+
+    await act(async () => {
+      await result.current.sendControl('resume')
+    })
+    expect(mockFetch).toHaveBeenCalledWith('/api/v1/control/resume', { method: 'POST' })
+  })
+
+  it('sendControl with an unrecognized action does not construct a generic /api/v1/control/{action} URL', async () => {
+    const { result } = await renderConnectedHook()
+
+    mockFetch.mockClear()
+
+    for (const action of ['start', 'step', 'reset']) {
+      await act(async () => {
+        await result.current.sendControl(action)
+      })
+    }
+
+    for (const call of mockFetch.mock.calls) {
+      expect(String(call[0])).not.toMatch(/\/control\/(start|step|reset)/)
+    }
+  })
+
+  it('reconnects after WebSocket close', async () => {
+    const { mockWS } = await renderConnectedHook()
+    vi.useFakeTimers()
+
+    const priorInstanceCount = vi.mocked(globalThis.WebSocket).mock.instances.length
+
+    act(() => {
+      mockWS.onclose?.()
+    })
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+
+    expect(vi.mocked(globalThis.WebSocket).mock.instances.length).toBe(priorInstanceCount + 1)
+  })
+
+  it('reconnects after WebSocket error', async () => {
+    const { mockWS } = await renderConnectedHook()
+    vi.useFakeTimers()
+
+    const priorInstanceCount = vi.mocked(globalThis.WebSocket).mock.instances.length
+
+    act(() => {
+      mockWS.onerror?.()
+    })
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+
+    expect(vi.mocked(globalThis.WebSocket).mock.instances.length).toBe(priorInstanceCount + 1)
+  })
+
+  it('loadInitial still fetches /map, /static, /manifest via one Promise.all', async () => {
+    renderHook(() => useSimulation())
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/map')
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/static')
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/manifest')
     })
   })
 })

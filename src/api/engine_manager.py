@@ -35,6 +35,7 @@ class V2EngineManager:
         
         self._latest_state: Optional[AuthoritativeState] = None
         self._latest_snapshot: Dict[str, Any] = {}
+        self._latest_delta_payload: Optional[Dict[str, Any]] = None
         self._read_cache = ReadModelCache()
         self._state_lock = threading.Lock()
         
@@ -53,6 +54,8 @@ class V2EngineManager:
         self._metrics_collector = PrometheusMetricsCollector(self)
         self._metrics_registry.register(self._metrics_collector)
         self._errors_total = 0
+        self._total_spawned = 0
+        self._total_deaths = 0
         self._started_at: Optional[float] = None
         
         self._build()
@@ -153,6 +156,9 @@ class V2EngineManager:
             force_full = getattr(self._kernel.status, "force_full_scan", False) if self._kernel else False
             self._read_cache.update(state, dirty_set, force_full)
             self._latest_snapshot = self._read_cache.get_minimal_summary()
+            self._latest_delta_payload = self._read_cache.compute_tick_delta(
+                state, dirty_set, force_full, state.tick
+            )
             
             # Extract and update current snapshot for Prometheus metrics in an thread-safe manner
             from src.engine.metrics import MetricsService
@@ -268,6 +274,9 @@ class V2EngineManager:
     def reset(self):
         self.stop()
         self._build()
+        with self._state_lock:
+            self._total_spawned = 0
+            self._total_deaths = 0
         logger.info("V2EngineManager reset.")
 
     def _run_loop(self):
@@ -283,11 +292,18 @@ class V2EngineManager:
                 
             # Execute one tick
             try:
+                alive_before = set(self._kernel.state.entities.keys())
                 self._kernel.tick_once()
+                alive_after = set(self._kernel.state.entities.keys())
+                new_ids = alive_after - alive_before
+                dead_ids = alive_before - alive_after
                 with self._state_lock:
                     self._tick_times.append(time.time())
+                    self._total_spawned += len(new_ids)
+                    self._total_deaths += len(dead_ids)
                 self._update_latest_state(self._kernel.state)
-                self._notify_listeners(self._latest_snapshot)
+                if self._latest_delta_payload is not None:
+                    self._notify_listeners(self._latest_delta_payload)
             except Exception as e:
                 logger.exception("V2 Kernel tick failed: %s", e)
                 with self._state_lock:
@@ -332,6 +348,14 @@ class V2EngineManager:
     @property
     def errors_total(self) -> int:
         return self._errors_total
+
+    @property
+    def total_spawned(self) -> int:
+        return self._total_spawned
+
+    @property
+    def total_deaths(self) -> int:
+        return self._total_deaths
 
     @property
     def is_thread_alive(self) -> bool:

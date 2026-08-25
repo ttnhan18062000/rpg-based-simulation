@@ -1,17 +1,22 @@
 """
 Unit tests for V2EngineManager's engine-liveness accessors and health computation
-(TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC).
+(TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC), plus total_spawned/total_deaths counters
+(TCK-20260821-REST-MAP-STATIC-STATS).
 
 Covers:
 - `is_thread_alive` reflecting the real background thread's lifecycle.
 - `get_health_status()`'s three states: unhealthy (dead thread), degraded (stale tick while
   alive and not paused), ok (healthy, or paused-but-stale which must NOT be degraded).
+- `total_spawned`/`total_deaths` incremented once per tick via a new_ids/dead_ids set-diff on
+  `state.entities.keys()`, and zeroed by `reset()`.
 """
+import dataclasses
 import time
 from unittest.mock import patch
 
 from src.api.engine_manager import V2EngineManager
 from src.config.profiles import PROD_DEFAULT
+from src.core.builder import V2EntityBuilder
 from src.engine.kernel import Kernel
 
 
@@ -120,5 +125,159 @@ def test_get_health_status_paused_stays_ok():
         status = manager.get_health_status()
         assert status["status"] == "ok"
         assert status["engine"]["paused"] is True
+    finally:
+        manager.stop()
+
+
+def _make_entity(eid: int):
+    return (
+        V2EntityBuilder(eid)
+        .kind("goblin")
+        .location(0.0, 0.0)
+        .combat(hp=10, max_hp=10, atk=1, def_stat=1, attack_range=1, alive=True, readiness=100.0)
+        .inventory(gold=0)
+        .build()
+    )
+
+
+def test_engine_manager_total_spawned_incremented_on_new_entity():
+    """Kernel.tick_once must be patched at the class level, not the instance -- Kernel uses
+    __slots__ (see test_get_health_status_killed_thread_reports_unhealthy_realistic above)."""
+    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    spawned = {"done": False}
+
+    def _side_effect():
+        old = manager._kernel._state
+        if not spawned["done"]:
+            spawned["done"] = True
+            entities = dict(old.entities)
+            entities[999901] = _make_entity(999901)
+            manager._kernel._state = dataclasses.replace(old, entities=entities, tick=old.tick + 1)
+        else:
+            manager._kernel._state = dataclasses.replace(old, tick=old.tick + 1)
+
+    try:
+        with patch.object(Kernel, "tick_once", side_effect=_side_effect):
+            manager.start()
+            assert _poll_until(lambda: manager.total_spawned >= 1)
+            assert manager.total_spawned == 1
+            assert manager.total_deaths == 0
+    finally:
+        manager.stop()
+
+
+def test_engine_manager_total_deaths_incremented_on_removed_entity():
+    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    removed = {"done": False}
+
+    def _side_effect():
+        old = manager._kernel._state
+        if not removed["done"]:
+            removed["done"] = True
+            removed_id = next(iter(old.entities))
+            entities = {k: v for k, v in old.entities.items() if k != removed_id}
+            manager._kernel._state = dataclasses.replace(old, entities=entities, tick=old.tick + 1)
+        else:
+            manager._kernel._state = dataclasses.replace(old, tick=old.tick + 1)
+
+    try:
+        with patch.object(Kernel, "tick_once", side_effect=_side_effect):
+            manager.start()
+            assert _poll_until(lambda: manager.total_deaths >= 1)
+            assert manager.total_deaths == 1
+            assert manager.total_spawned == 0
+    finally:
+        manager.stop()
+
+
+def test_engine_manager_reset_zeroes_spawn_death_counters():
+    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    spawned = {"done": False}
+
+    def _side_effect():
+        old = manager._kernel._state
+        if not spawned["done"]:
+            spawned["done"] = True
+            entities = dict(old.entities)
+            entities[999902] = _make_entity(999902)
+            manager._kernel._state = dataclasses.replace(old, entities=entities, tick=old.tick + 1)
+        else:
+            manager._kernel._state = dataclasses.replace(old, tick=old.tick + 1)
+
+    try:
+        with patch.object(Kernel, "tick_once", side_effect=_side_effect):
+            manager.start()
+            assert _poll_until(lambda: manager.total_spawned >= 1)
+
+        manager.reset()
+        assert manager.total_spawned == 0
+        assert manager.total_deaths == 0
+    finally:
+        # reset()'s _build() constructs a fresh Kernel (new QueueDrainWorker threads) --
+        # must stop() again or those threads leak past this test.
+        manager.stop()
+
+
+def test_tick_listener_registered_before_snapshot_loses_no_tick():
+    """Regression guard for stream_ws's registration-before-snapshot ordering
+    (TCK-20260821-WS-ENTITY-DELTA-BROADCAST AC #3): a tick fired in the window between
+    add_tick_listener and the initial get_state() snapshot must still be observed by the listener,
+    not silently dropped."""
+    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    received = []
+    try:
+        # Mirrors stream_ws's own call order: register listener, then a tick fires, then
+        # get_state() is read as the connect-time baseline snapshot.
+        manager.add_tick_listener(lambda payload: received.append(payload))
+
+        manager.start()
+        assert _poll_until(lambda: len(received) > 0)
+
+        _ = manager.get_state()
+        assert len(received) > 0
+    finally:
+        manager.stop()
+
+
+def test_delta_payload_is_none_or_dict_and_notify_listeners_receives_it():
+    """The one call site of _notify_listeners in _run_loop must only fire with a non-None delta
+    payload -- a quiet non-heartbeat tick must not invoke registered listeners at all."""
+    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    received = []
+    try:
+        manager.add_tick_listener(lambda payload: received.append(payload))
+        manager.start()
+        assert _poll_until(lambda: len(received) > 0)
+        for payload in received:
+            assert isinstance(payload, dict)
+            assert "changed" in payload and "removed" in payload and "tick" in payload
+    finally:
+        manager.stop()
+
+
+def test_stats_counters_non_decreasing_across_ticks():
+    manager = V2EngineManager(PROD_DEFAULT, seed=42, entities_count=3)
+    remaining_ids = iter([999903, 999904, 999905])
+
+    def _side_effect():
+        old = manager._kernel._state
+        new_id = next(remaining_ids, None)
+        if new_id is None:
+            manager._kernel._state = dataclasses.replace(old, tick=old.tick + 1)
+            return
+        entities = dict(old.entities)
+        entities[new_id] = _make_entity(new_id)
+        manager._kernel._state = dataclasses.replace(old, entities=entities, tick=old.tick + 1)
+
+    try:
+        with patch.object(Kernel, "tick_once", side_effect=_side_effect):
+            manager.start()
+            samples = []
+            for _ in range(3):
+                last = samples[-1] if samples else -1
+                assert _poll_until(lambda: manager.total_spawned > last)
+                samples.append(manager.total_spawned)
+            assert samples == sorted(samples)
+            assert samples[-1] == 3
     finally:
         manager.stop()

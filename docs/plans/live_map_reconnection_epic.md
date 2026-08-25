@@ -141,9 +141,12 @@ Not created yet — this epic is scope-only. Prospective child tickets, in rough
    transport-agnostic) and `present_static(state, ...)` (serialize `buildings`/`resource_nodes`/`chests`/
    `ground_items` into the frontend's `StaticData` shape, adapting
    `src_legacy/api/presenters/world_presenter.py::to_static_data_response`'s field mapping — e.g. `chests`
-   → `treasure_chests`, `guard_id` → `guard_entity_id`). Spatial `regions`: derive `center`/`radius` from
-   `RegionRecipeSpec.grid_bounds` at presentation time (no stored field exists — see Open Questions), and
-   either find a source for `locations`/`difficulty`/`name` or drop them from the ported schema.
+   → `treasure_chests`, `guard_id` → `guard_entity_id`). Spatial `regions`: derive `center`/`radius`
+   from `RegionState.bounds` — durable state, populated at world-compile time
+   (`src/worldbuilding/compiler.py:246`), not `RegionRecipeSpec.grid_bounds` (a config/spec object;
+   see Open Questions for the correction history) — and either find a source for
+   `locations`/`difficulty` or drop them from the ported schema (`name` is available via
+   `region.kind`).
 2. **New lightweight per-tick entity-delta broadcast.** Port `src_legacy/api/routes/stream.py`'s
    `compute_delta()` logic (diff consecutive `EntitySlim`-shaped dicts into
    `{tick, changed, removed, events}`, 20-tick heartbeat on quiet ticks) onto V2's existing
@@ -516,6 +519,19 @@ viewers — not a large multiplayer game):
   either drop `locations`/`difficulty`/`name` from the ported `RegionSchema` or source them from elsewhere
   not yet identified.** This is real, scoped design work for item 1's child ticket, not a lookup task —
   flagged precisely so that ticket doesn't get scoped as trivial.
+
+  **Correction (`TCK-20260821-PRESENT-MAP-STATIC`, implemented)**: this analysis's grep pattern
+  (`center_x|center_y|radius|locations`) looked for *pre-computed* spatial fields and correctly found
+  none — but missed that `RegionState` (the durable state class, `src/core/state.py:236-259`, distinct
+  from the `RegionRecipeSpec` this analysis read) already carries a raw `bounds: tuple[int,int,int,int]`
+  field, genuinely populated at world-compile time (`src/worldbuilding/compiler.py:243-252`). The
+  derive-at-presentation-time approach this doc anticipated was correct; the source was not — the
+  implemented `present_static` derives `center_x`/`center_y`/`radius` from `region.bounds` (already on
+  the entity being presented) rather than looking up `RegionRecipeSpec.grid_bounds` (a separate config
+  object), since presenters read state, not specs. `region.name` also already exists and needed no
+  drop/re-source decision either. `locations` is dropped (`[]`, no location/POI concept exists in V2 at
+  all); `difficulty` is derived from `region.hazard_level`, `region.kind` derives a `terrain` code — see
+  `stored_artifacts/TCK-20260821-PRESENT-MAP-STATIC/investigation.md` for the full decision record.
 - **`total_spawned`/`total_deaths` — now fully resolved.** See item 3 above: V1's exact computation
   pattern found and confirmed absent from V2. Item 3's child ticket adds two simple counters to
   `V2EngineManager`, following V1's proven pattern.

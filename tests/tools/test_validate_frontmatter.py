@@ -685,7 +685,7 @@ class TestEnumAntiDrift:
         assert AUDIENCE_VALUES == {"developer", "agent", "designer", "historical"}
 
     def test_enum_values_artifact_type(self):
-        assert ARTIFACT_TYPE_VALUES == {"investigation", "plan", "test_plan"}
+        assert ARTIFACT_TYPE_VALUES == {"investigation", "plan", "test_plan", "report"}
 
     def test_enum_values_phase(self):
         assert PHASE_VALUES == {"open", "inprogress", "blocked", "done", "backlog"}

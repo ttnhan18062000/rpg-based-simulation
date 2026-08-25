@@ -14,10 +14,15 @@ interface HeaderProps {
 }
 
 const STATUS_COLORS: Record<SimStatus, string> = {
-  CONNECTING: 'text-accent-yellow',
+  INITIALIZING: 'text-accent-yellow',
+  FETCHING_WORLD_DATA: 'text-accent-yellow',
+  CONNECTING_LIVE: 'text-accent-yellow',
+  SYNCING: 'text-accent-yellow',
+  READY: 'text-accent-green',
   RUNNING: 'text-accent-green',
   PAUSED: 'text-accent-yellow',
   STOPPED: 'text-accent-red',
+  LOAD_ERROR: 'text-accent-red',
 };
 
 export function Header({ tick, aliveCount, totalSpawned, totalDeaths, status, currentPage, onPageChange }: HeaderProps) {
