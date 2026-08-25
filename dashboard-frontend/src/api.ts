@@ -186,6 +186,11 @@ export interface SlowRunEntry {
   run_id: string
   duration_s: number | null
   final_status: string
+  // TCK-20260822-DASHBOARD-DURATION-GAP-AWARE: sourced strictly from the sibling
+  // TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT's shared duration_utils computation — never
+  // independently computed here. null when unavailable (e.g. unparseable start_ts/end_ts).
+  active_duration_s: number | null
+  idle_gap_s: number | null
 }
 
 export interface DurationOutlierEntry {
@@ -194,6 +199,9 @@ export interface DurationOutlierEntry {
   duration_s: number
   median: number
   ratio: number
+  // See SlowRunEntry's identical fields above for provenance/null-handling.
+  active_duration_s: number | null
+  idle_gap_s: number | null
 }
 
 export interface CostProxyOutlierEntry {

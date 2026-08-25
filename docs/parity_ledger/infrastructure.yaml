@@ -11449,3 +11449,25 @@
   proof_type: regression
   support_boundary: Claude-agent-workflow monitoring/observability tooling only --
     no simulation behavior is involved.
+- id: INFRA-393
+  text: "Agent Ops Dashboard surfaces the active/idle duration split from the sibling\
+    \ TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT: SlowRunEntry/DurationOutlierEntry (src/api/agent_ops_dashboard/models.py)\
+    \ gain additive, backward-compatible active_duration_s/idle_gap_s fields (Optional[float]=None),\
+    \ populated automatically via ingest.py's existing **kwargs passthrough from compute_retro_metrics()\
+    \ -- no independent duration/gap computation added to ingest.py. dashboard-frontend/src/api.ts\
+    \ TS interfaces and StatsView.tsx's Slow Runs / Duration Outliers tables gain\
+    \ matching Active/Idle columns (minutes, \"\u2014\" placeholder when null). Corrected\
+    \ an overstated claim in this ticket's own original text during investigation:\
+    \ Pydantic's default extra=\"ignore\" (neither model declared extra=\"forbid\"\
+    ) already silently tolerated the new fields rather than raising -- this ticket's\
+    \ real contribution is surfacing previously-silently-dropped data, not preventing\
+    \ an outright crash that was never actually happening."
+  status: verified
+  priority: P2
+  v2_evidence: src/api/agent_ops_dashboard/models.py (SlowRunEntry, DurationOutlierEntry,
+    RunSummary dormant-field comment), dashboard-frontend/src/api.ts, dashboard-frontend/src/views/StatsView.tsx
+  test_path: tests/tools/test_agent_ops_dashboard_stats.py::test_slow_run_and_duration_outlier_carry_active_idle_split
+  divergence_note: null
+  proof_type: regression
+  support_boundary: Claude-agent-workflow monitoring/observability dashboard tooling
+    only -- no simulation behavior is involved.
