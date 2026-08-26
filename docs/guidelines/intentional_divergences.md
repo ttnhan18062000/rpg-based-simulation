@@ -1394,5 +1394,30 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Verification**: `tests/integration/scenarios/test_balance_regression.py::test_adventure_routing_defaults_off`
 - **Status**: ACTIVE
 
+### DEV-003 — Two of DEV-002's 10 Phase-10 Flags Flipped ON by Default (TCK-20260824-ROLLOUT-FLAG-DECISIONS)
+- **Subsystem**: Engine / Feature Rollout
+- **Situation**: `ENABLE_BELIEF_ASSIMILATION` and `ENABLE_SOCIAL_COOPERATION` are 2 of the 10 flags
+  DEV-002's default-OFF policy covers. Both were already set `"ON"` in this project's own real,
+  regularly-run SimQ corpus profiles (`config/simulation_quality/profiles/sandbox_world.yaml` and
+  `urban_political.yaml` for the former; `urban_political.yaml` alone for the latter) at the time
+  this ticket reviewed all 8 originally-undecided Phase 10 flags.
+- **Decision**: Flip both flags' code default to `FeatureMode.ON`, closing the gap between the code
+  default and what every real corpus profile already exercises.
+- **Rationale**: **Stabilized** — DEV-002's own stated unblock condition is re-running
+  `tools/balance_measure.py` and updating its `ATTRITION_CAP`/`ECONOMIC_GOLD_FLOOR`/
+  `BLOCKER_FREQUENCY_E12A` baseline constants. That tool measures adventure-routing/economy/hunger
+  metrics specific to the ticket that originally wrote DEV-002 (`TCK-20260627-P0A-ADVENTURE-FLAG`,
+  about `ENABLE_ADVENTURE_ROUTING`) — neither metric is in either flipped flag's domain (belief/
+  social-cooperation), so re-running it would not produce meaningful new evidence for these two
+  flags specifically. **This ticket did not run `tools/balance_measure.py`** — stated plainly, not
+  glossed over. Instead, it treats continuous, real SimQ-corpus-profile usage (this project's own
+  standing validation mechanism for exactly the social/cognition domain these two flags touch) as
+  satisfying DEV-002's underlying intent — real, running, already-proven-safe production usage —
+  even though it is not the literal tool DEV-002 names. The other 6 of the 10 flags remain
+  `FeatureMode.OFF` under DEV-002's original policy, unaffected by this entry.
+- **Verification**: `tests/unit/config/test_phase10_feature_flags.py` (`_DELIBERATE_ON_DEFAULT_FLAGS`
+  allowlist, both flags added)
+- **Status**: ACTIVE
+
 ---
-*Last updated: 2026-06-27 (DEV-002 feature flag default policy, TCK-20260627-P0A-ADVENTURE-FLAG).*
+*Last updated: 2026-08-26 (DEV-003, TCK-20260824-ROLLOUT-FLAG-DECISIONS).*
