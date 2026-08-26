@@ -110,6 +110,34 @@ Validation rules are categorized into dynamic severity levels to allow flexible 
 *   **WARNING**: Non-critical inconsistencies (e.g., sub-optimal resource density, unpopulated faction starting vaults) that are logged for developer visibility but do not halt compilation.
 *   **Gating Profiles**: Production compilation profiles elevate warnings to errors, whereas development/procedural-testing profiles operate under relaxed warning tolerance.
 
+### Participant Reachability Rule (`WORLD-REACH-001`)
+A semantic Level 2 rule (`ParticipantReachabilityRule`, `src/worldbuilding/validator.py`) checks
+that each `QuestDefinition.required_participant_tags` is satisfiable by at least one population
+reachable in the world, via the chain `PopulationSpec.archetype_id -> EntityArchetypeDefinition.role
+-> RoleDefinition.compatible_traits` (`src/worldbuilding/reachability.py` holds the reusable,
+`WorldSpec`-independent matching predicate). Its `applicable_contexts` are
+`ValidationContext.WORLD`, `COMPILE`, and `EXPERIMENT` — the same narrowed set as
+`RegionBoundsWithinTopologyRule` — excluding `ASSEMBLY`/`GENERATED_WORLD` (in the default rule set)
+and `MODULE` (never in the default rule set) because `quest_definitions` is populated exclusively on
+the final composed spec, never on the per-module `dummy_spec` validated at
+`ValidationContext.MODULE`. Default severity is WARNING, gated the same way as every other rule
+via `severity_overrides`/`get_severity(context)`; a `catalog_repo=None` caller (every
+`WorldValidator()` construction site except `WorldAssemblyValidator.validate()`) degrades to zero
+issues rather than crashing or emitting a false violation, since "no catalog" means "cannot verify,"
+not "invalid."
+
+`compatible_traits` is the only real catalog vocabulary with meaningful overlap against authored
+`required_participant_tags` values (`EntityArchetypeDefinition.tags` is 0% populated in the real
+corpus; `RoleDefinition.role_family` matches none of them). It does not cover every real
+value: `opportunistic` (goblin/bandit-flavored quests) and `beast` (wolf-flavored quests) appear in
+neither `compatible_traits`, `role_family`, nor any populated `tags` field anywhere in the catalog
+today, and a handful of `spiritual`/`undead` quests reference archetypes whose actual role trait
+doesn't match the tag the quest author chose. This is a known, accepted content-authoring
+vocabulary gap — documented as the standing regression baseline in
+`tests/fixtures/world_grammar_reachability_baseline.json` and
+`tests/unit/worldbuilding/test_corpus_reachability_baseline.py` — not a defect in the rule to be
+worked around by loosening the check or backfilling catalog content.
+
 ---
 
 ## 8. Sidecar Provenance Manifests & Telemetry Joins

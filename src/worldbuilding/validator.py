@@ -5,6 +5,8 @@ from enum import Enum
 from typing import Optional, Any
 from pydantic import BaseModel, ConfigDict, Field
 from src.worldbuilding.schema import WorldSpec, load_world_spec_from_yaml, InvalidWorldSpecError
+from src.worldbuilding.reachability import is_reachable, build_available_participant_tags
+from src.content.repository import CatalogRepository
 
 class ValidationContext(str, Enum):
     """Scoped contexts mapping different validator evaluation scopes."""
@@ -25,6 +27,8 @@ class ValidationIssue(BaseModel):
     severity: str  # "ERROR", "WARNING", "INFO"
     message: str
     path: Optional[str] = None
+    source_entity: Optional[str] = None
+    source_file: Optional[str] = None
 
 class WorldValidationRule:
     """Base class for all pluggable world specification validation rules."""
@@ -330,13 +334,49 @@ class BudgetGuardrailRule(WorldValidationRule):
 
         return issues
 
+class ParticipantReachabilityRule(WorldValidationRule):
+    rule_id = "WORLD-REACH-001"
+    severity = "WARNING"
+    description = (
+        "Verify each quest's required_participant_tags is satisfiable by at least "
+        "one reachable population archetype's compatible_traits."
+    )
+    applicable_contexts = {
+        ValidationContext.WORLD,
+        ValidationContext.COMPILE,
+        ValidationContext.EXPERIMENT,
+    }
+
+    def __init__(self, catalog_repo: Optional[CatalogRepository] = None):
+        super().__init__()
+        self.catalog_repo = catalog_repo
+
+    def validate(self, spec: WorldSpec, context: ValidationContext = ValidationContext.WORLD) -> list[ValidationIssue]:
+        issues = []
+        sev = self.get_severity(context)
+        available = build_available_participant_tags(spec, self.catalog_repo)
+        for i, quest in enumerate(spec.quest_definitions):
+            if not is_reachable(quest.required_participant_tags, available):
+                issues.append(ValidationIssue(
+                    rule_id=self.rule_id,
+                    severity=sev,
+                    message=(
+                        f"Quest '{quest.id}' required_participant_tags {quest.required_participant_tags} "
+                        f"not satisfiable by any reachable population's compatible_traits."
+                    ),
+                    path=f"quest_definitions.{i}.required_participant_tags",
+                    source_entity=quest.id,
+                    source_file=quest.source_module,
+                ))
+        return issues
+
 class WorldValidator:
     """
     Orchestrates validation rules against a loaded WorldSpec, verifying integrity,
     categorizing issues by severity, and blocking compilation when failures occur.
     """
 
-    def __init__(self, rules: list[WorldValidationRule] = None, profile: str = "local_dev"):
+    def __init__(self, rules: list[WorldValidationRule] = None, profile: str = "local_dev", catalog_repo: Optional[CatalogRepository] = None):
         self.profile = profile
         if rules is None:
             self.rules = [
@@ -347,7 +387,8 @@ class WorldValidator:
                 RegionBoundsWithinTopologyRule(),
                 NoResourcesWarningRule(),
                 HighEntityDensityWarningRule(),
-                BudgetGuardrailRule(profile=profile)
+                BudgetGuardrailRule(profile=profile),
+                ParticipantReachabilityRule(catalog_repo=catalog_repo)
             ]
         else:
             self.rules = rules

@@ -4847,3 +4847,42 @@
   proof_type: null
   test_path: tests/integration/worldassembly/test_wolf_den_noise_migration.py::test_wolf_den_overlap_box_resolves_to_wolf_den_terrain
   divergence_note: null
+- id: SUB-387
+  text: 'TCK-20260822-WORLD-GRAMMAR-REACHABILITY-VALIDATOR -- new `ParticipantReachabilityRule`
+    (`rule_id="WORLD-REACH-001"`, `src/worldbuilding/validator.py`) checks each
+    `QuestDefinition.required_participant_tags` against the reachable-population tag
+    pool built by `src/worldbuilding/reachability.py` from the chain
+    `PopulationSpec.archetype_id -> EntityArchetypeDefinition.role -> RoleDefinition.compatible_traits`
+    -- the only real catalog vocabulary covering a majority (5 of 6) of real
+    `required_participant_tags` value-sets (`EntityArchetypeDefinition.tags` is 0%
+    populated; `RoleDefinition.role_family` matches none). Runs at
+    `ValidationContext.WORLD`/`COMPILE`/`EXPERIMENT` only (excludes `MODULE`, whose
+    `dummy_spec` never populates `quest_definitions`). `WorldValidator.__init__` gained
+    an optional `catalog_repo: Optional[CatalogRepository] = None` parameter, wired
+    only at the one real WORLD-context call site (`WorldAssemblyValidator.validate()`,
+    `src/worldassembly/resolver.py`, reusing its own already-held `CatalogRepository`);
+    all 6 other real `WorldValidator()` call sites are unchanged and remain
+    catalog-blind by design, producing zero new issues. `ValidationIssue` gained two
+    additive optional fields, `source_entity`/`source_file`, populated from the quest
+    id and `QuestDefinition.source_module`.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/worldbuilding/validator.py (ParticipantReachabilityRule, ValidationIssue.source_entity/source_file,
+    WorldValidator.__init__ catalog_repo param), src/worldbuilding/reachability.py
+    (is_reachable, resolve_population_tags, build_available_participant_tags), src/worldassembly/resolver.py
+    (WorldAssemblyValidator.validate() catalog_repo wiring + world_report source_entity/source_file)
+  proof_type: regression
+  test_path: tests/unit/worldbuilding/test_corpus_reachability_baseline.py::test_full_corpus_reachability_regression
+  divergence_note: 'The chosen matching field (`compatible_traits`) does not cover
+    the `opportunistic` (goblin/bandit quests, 3 world modules) or `beast` (wolf quests,
+    1 world module) vocabulary used by real authored quest content, nor a handful of
+    `spiritual`/`undead` quests whose referenced archetype''s actual role trait
+    doesn''t match the tag the quest author chose -- confirmed via the corpus-wide
+    regression baseline (75 violations across 16 of 21 real composed worlds,
+    `tests/fixtures/world_grammar_reachability_baseline.json`). This is an accepted
+    content-authoring vocabulary gap, not a defect in the rule; backfilling catalog
+    content to close it is explicitly out of this ticket''s scope. `compiled_quests`
+    (`src/worldbuilding/compiler.py`) remains fully dead code with no live
+    `AuthoritativeState` consumer, so this baseline reflects authoring-time content
+    quality, not currently-live runtime behavior.'
