@@ -2553,9 +2553,27 @@
     (TCK-20260619-E21C-SCORING-WIRE, 2026-06-20). E12A measurement:
     blocker_frequency=0.0 → blocker constant retained (TCK-20260619-E12B-BLOCKER-RECAL).
     memory_adjustment = ±1.0 fixed magnitude, boolean-gated per advice string, entity's own
-    subjective causal-memory belief only, not yet observable in a live run since
-    MemoryUpdatePhase has zero pipeline call sites (TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING).
-    confidence_bonus capability-driven source for GATHER_RESOURCE/
+    subjective causal-memory belief only. MemoryUpdatePhase now has a real pipeline
+    call site for the first time (previously zero call sites):
+    src/engine/pipeline.py's AuthoritativeApplyPipeline.refine() registers a
+    "memory_update" phase between actor_validity and self_model
+    (src/engine/pipeline.py:145-159), invoking MemoryUpdatePhase.apply()
+    (src/domains/memory/phase.py) which writes entity.cognition.memory.causal via
+    the typed EntityUpdate.cognition_bundle_set → CognitionPatch authoritative-apply
+    path (src/core/updates.py, src/engine/patches.py) -- mirrors
+    SelfModelUpdatePhase.apply() and never mutates state.entities directly. Trigger
+    events are sourced from a new WorldEventCategory.COMBAT_LOSS producer in
+    ActionRoutingPhase.route() (src/engine/pipeline_phases/actions.py:169-188; see
+    docs/parity_ledger/combat_movement.yaml::COMB-312), threaded via the existing
+    one-tick-lagged state.recent_world_events channel. The memory_update phase
+    itself is gated by ENABLE_MEMORY_UPDATE, default OFF per DEV-002's rollout
+    policy (docs/guidelines/intentional_divergences.md) -- consistent with every
+    other Phase-10-era cognition phase; the underlying scoring formula is unchanged
+    and still verified. This ticket (TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING)
+    closes the TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING gap and proves
+    entity.cognition.memory.causal.entries becomes non-empty with avoid_enemy
+    advice end-to-end through the real pipeline. confidence_bonus capability-driven
+    source for GATHER_RESOURCE/
     CRAFT_UPGRADE, ad-hoc CapabilityEstimateService.estimate() call, SelfModelUpdatePhase.apply()
     still never passes capability_context (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING).
   proof_type: parity
@@ -2563,7 +2581,8 @@
     tests/unit/domains/adventure/test_phase3_route_scoring.py;
     tests/unit/domains/adventure/test_depletion_scoring.py;
     tests/unit/domains/adventure/test_memory_informed_scoring.py;
-    tests/unit/domains/adventure/test_capability_confidence_scoring.py
+    tests/unit/domains/adventure/test_capability_confidence_scoring.py;
+    tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-228

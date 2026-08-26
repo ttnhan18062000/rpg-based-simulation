@@ -3883,3 +3883,35 @@
     combat resolution for pursuit pairs whose own geometry doesn't hit that specific oscillation
     (confirmed via the non-zero combat_resolved/entity_killed counts above) -- not a claim that
     all pursuit now converges reliably.
+- id: COMB-312
+  text: >-
+    ActionRoutingPhase.route() emits a WorldEvent(category=WorldEventCategory.COMBAT_LOSS)
+    whenever an entity's ATTACK action resolves against a defender that survives
+    (combat_upd.alive_set is not False) and takes damage (combat_upd.damage_taken > 0).
+    The event carries tick=state.tick, region_id=defender's navigation.region_id,
+    subject=str(defender_entity_id). Deliberately not tied to NearDeathHardeningPhase's
+    hp_pct<=10% threshold, which would structurally guarantee hp_pct<0.3 on every
+    firing and starve CausalAttributionService's avoid_enemy fallback branch. Emission
+    is unconditional -- not gated by any feature flag -- so COMBAT_LOSS events populate
+    state.recent_world_events in every real run via the existing one-tick-lagged
+    world-events channel, independent of whether any downstream consumer (e.g.
+    MemoryUpdatePhase) is enabled.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/engine/pipeline_phases/actions.py:169-188 (ActionRoutingPhase.route(),
+    TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING). WorldEventCategory.COMBAT_LOSS
+    (src/domains/world_emergence/schema.py) is a new enum value added by this
+    ticket with this producer as its first and only source -- previously no code
+    path emitted this category. Consumed by MemoryUpdatePhase (see
+    docs/parity_ledger/strategic_cognition.yaml::STRAT-227) once ENABLE_MEMORY_UPDATE
+    is ON; the event's own emission is not flag-gated.
+  proof_type: parity
+  test_path: tests/unit/actions/test_action_routing_combat_loss_world_event.py
+  divergence_note: >-
+    New mechanic added by TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING. Previously
+    WorldEventCategory.COMBAT_LOSS did not exist and no WorldEvent was emitted
+    when a defender survived a damaging ATTACK -- that outcome was invisible to
+    state.recent_world_events and to any tick-boundary consumer.
+  support_boundary: null

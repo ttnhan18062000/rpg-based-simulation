@@ -84,6 +84,7 @@ class ActionRoutingPhase:
             return payload.get("target_id") or payload.get("target_pos") or payload.get("target_position")
 
         refined_entity_updates = dict(update.entity_updates)
+        new_world_events_add = list(update.world_events_add)
 
         # Optimization: Identify actors with ENTITY_ACT tasks early
         actors_with_tasks = [
@@ -138,7 +139,7 @@ class ActionRoutingPhase:
                     tick=state.tick, actor_id=eid, action_kind=action, reason=reason,
                     target_id=payload.get("target_id") or payload.get("target_pos")
                 ))
-                update = replace(update, entity_updates=refined_entity_updates, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta)
+                update = replace(update, entity_updates=refined_entity_updates, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta, world_events_add=new_world_events_add)
                 continue
 
             if not is_survival:
@@ -156,7 +157,7 @@ class ActionRoutingPhase:
                     refined_entity_updates[eid] = replace(ent_upd, task=failed_task, strategic=StrategicUpdate(
                         blockers_add_or_update=[BlockerState(id=f"blocker_nav_{reason_value}", kind="capability", subject=reason_value)]
                     ))
-                    update = replace(update, entity_updates=refined_entity_updates, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta)
+                    update = replace(update, entity_updates=refined_entity_updates, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta, world_events_add=new_world_events_add)
                     continue
 
             action_updates = SimulationDomainLogic.execute_action(
@@ -164,6 +165,27 @@ class ActionRoutingPhase:
                 neighbor_view=SimulationDomainLogic.get_neighbor_view(sliding_state, working_entity, radius=10.0),
                 context=sliding_state
             )
+
+            # TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING: emit a COMBAT_LOSS WorldEvent for a
+            # defender who survives and takes damage -- deliberately NOT tied to
+            # NearDeathHardeningPhase's hp_pct<=10% threshold, which would structurally
+            # guarantee hp_pct<0.3 on every firing and starve CausalAttributionService's
+            # avoid_enemy fallback branch (see plan.md Step 4).
+            if action == "ATTACK":
+                from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
+                for action_eid, action_upd in action_updates.items():
+                    if action_eid == eid or action_upd.combat is None:
+                        continue
+                    combat_upd = action_upd.combat
+                    if combat_upd.alive_set is not False and combat_upd.damage_taken > 0:
+                        defender_entity = state.entities.get(action_eid)
+                        defender_region_id = defender_entity.navigation.region_id if defender_entity else None
+                        new_world_events_add.append(WorldEvent(
+                            category=WorldEventCategory.COMBAT_LOSS,
+                            tick=state.tick,
+                            region_id=defender_region_id,
+                            subject=str(action_eid),
+                        ))
 
             actor_action_upd = action_updates.get(eid)
             outcome = "SUCCESS"
@@ -184,7 +206,7 @@ class ActionRoutingPhase:
                 new_rejection_events.append(RejectionEvent(
                     tick=state.tick, actor_id=eid, action_kind=action, reason=audit_reason, target_id=_target_for_action(payload)
                 ))
-                update = replace(update, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta)
+                update = replace(update, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta, world_events_add=new_world_events_add)
 
             reason_value = failure_reason.value if hasattr(failure_reason, "value") else failure_reason
             # Survival actions reset the task to idle on success so the brain
@@ -242,9 +264,10 @@ class ActionRoutingPhase:
             if eid not in action_updates:
                 refined_entity_updates[eid] = replace(ent_upd, task=annotated_task)
 
-            update = replace(update, entity_updates=refined_entity_updates)
+            update = replace(update, entity_updates=refined_entity_updates, world_events_add=new_world_events_add)
 
         return replace(
             update,
             entity_updates=refined_entity_updates,
+            world_events_add=new_world_events_add,
         )

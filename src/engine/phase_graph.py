@@ -59,6 +59,7 @@ class PhaseDependencyGraph:
         "capacity_enforcement": PhaseMetadata("capacity_enforcement", {"all"}, {"all"}, must_run_every_tick=True),
         
         # Phase 2-8 Enhanced RPG cognitive & world emergence loop integration
+        "memory_update": PhaseMetadata("memory_update", {"combat", "strategic"}, {"strategic"}),
         "self_model": PhaseMetadata("self_model", {"strategic", "attributes"}, {"strategic"}),
         "information_belief": PhaseMetadata("information_belief", {"strategic", "social"}, {"strategic"}),
         "information_intent_execution": PhaseMetadata("information_intent_execution", {"strategic"}, {"strategic", "inventory"}),

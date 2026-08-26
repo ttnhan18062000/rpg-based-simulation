@@ -1352,6 +1352,46 @@ This document is the canonical record of intentional behavior shifts in `src` co
   draw cannot perturb `Domain.WORLD`'s existing draw sequence.
 - **Status**: ACTIVE
 
+### 2.47 `MemoryUpdatePhase` Gains Its First Pipeline Call Site (TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING)
+- **Subsystem**: Engine / Cognition
+- **Old Behavior**: `MemoryUpdatePhase.run()`/`.apply()` (`src/domains/memory/phase.py`) existed
+  and was unit-tested in isolation, but `AuthoritativeApplyPipeline.refine()`
+  (`src/engine/pipeline.py`) had zero call sites for it (`TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING`).
+  `entity.cognition.memory.causal` could never become non-empty in a real run, so
+  `AdventureRouteScorer.score()`'s `memory_adjustment` term (`docs/parity_ledger/strategic_cognition.yaml::STRAT-227`)
+  was formula-verified by unit test but not observable end-to-end. `run()`'s trigger-event
+  parameter was also a single `trigger_event` dict, unable to represent more than one entity
+  triggering a memory update in the same tick.
+- **New Behavior**: `AuthoritativeApplyPipeline.refine()` registers a `"memory_update"` phase
+  between `actor_validity` and `self_model` (`src/engine/pipeline.py:145-159`), gated by a new
+  flag `ENABLE_MEMORY_UPDATE`, calling `MemoryUpdatePhase.apply(state, u, _memory_trigger_events)`.
+  `run()`'s signature changed from a single `trigger_event` dict to a `trigger_events` list matched
+  by `entity_id`, so multiple entities triggering in the same tick are all updated. `.apply()`
+  writes via the typed `EntityUpdate.cognition_bundle_set` -> new `CognitionPatch`
+  (`src/core/updates.py`, `src/engine/patches.py`) authoritative-apply path, structurally mirroring
+  `SelfModelUpdatePhase.apply()` — it never mutates `state.entities` directly. Trigger events are
+  now sourced from a real producer: a new `WorldEventCategory.COMBAT_LOSS` `WorldEvent`, emitted
+  unconditionally by `ActionRoutingPhase.route()` whenever a defender survives a damaging ATTACK
+  (`src/engine/pipeline_phases/actions.py:169-188`; see `docs/parity_ledger/combat_movement.yaml::COMB-312`),
+  threaded through the existing one-tick-lagged `state.recent_world_events` channel.
+- **Rationale**: **Bug Fix**. This is a missing apply-path wiring for an existing typed cognition
+  subsystem (memory), completing Pattern 2 (Decision/Mutation Separation via Typed Update Records,
+  `docs/guidelines/design_patterns.md`) for `cognition_bundle_set` — not a new pattern or a design
+  tradeoff. The phase itself defaults `OFF` per DEV-002's established rollout policy for
+  Phase-10-era cognition phases (`ENABLE_MEMORY_UPDATE` follows the same convention as
+  `ENABLE_SELF_MODEL_COGNITION`, `ENABLE_BELIEF_ASSIMILATION`, etc.) — the default-OFF gating is
+  not itself a new divergence, it is DEV-002's policy applied to a new flag. The `COMBAT_LOSS`
+  `WorldEvent` producer is **not** flag-gated and is unconditional in every real run, independent
+  of `ENABLE_MEMORY_UPDATE`.
+- **Verification**: `tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py` (3-tick
+  scenario driving the real pipeline end-to-end: `entity.cognition.memory.causal.entries` becomes
+  non-empty with `avoid_enemy` advice, and `AdventureRouteScorer.score()` produces the documented
+  `-1.0` `memory_adjustment` for `HUNT_WEAK_ENEMY`);
+  `tests/unit/actions/test_action_routing_combat_loss_world_event.py` (COMBAT_LOSS producer);
+  `tests/integration/domains/memory/test_memory_update_phase_apply_trigger_events.py`
+  (`trigger_events` list, multi-entity matching by `entity_id`).
+- **Status**: ACTIVE
+
 ---
 
 ## 3. Unsupported / Retired Behavior

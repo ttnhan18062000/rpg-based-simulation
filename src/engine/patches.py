@@ -658,6 +658,26 @@ class SelfModelPatch(ComponentPatch):
             changes["self_model"] = self.self_model_bundle_set
 
 
+@dataclass(frozen=True, slots=True)
+class CognitionPatch(ComponentPatch):
+    cognition_bundle_set: Optional[Any] = None  # CognitionModel
+
+    def is_noop(self) -> bool:
+        return self.cognition_bundle_set is None
+
+    def merge(self, other: CognitionPatch) -> CognitionPatch:
+        if not other or other.is_noop():
+            return self
+        return CognitionPatch(
+            entity_id=self.entity_id,
+            cognition_bundle_set=other.cognition_bundle_set if other.cognition_bundle_set is not None else self.cognition_bundle_set,
+        )
+
+    def apply(self, entity: EntityState, changes: Dict[str, Any]) -> None:
+        if self.cognition_bundle_set is not None:
+            changes["cognition"] = self.cognition_bundle_set
+
+
 def extract_patches(entity_id: int, update: EntityUpdate) -> List[ComponentPatch]:
     """
     Extracts all active component patches from a monolithic EntityUpdate.
@@ -716,5 +736,8 @@ def extract_patches(entity_id: int, update: EntityUpdate) -> List[ComponentPatch
         if not p.is_noop(): patches.append(p)
     if update.self_model_bundle_set is not None:
         p = SelfModelPatch(entity_id, self_model_bundle_set=update.self_model_bundle_set)
+        if not p.is_noop(): patches.append(p)
+    if update.cognition_bundle_set is not None:
+        p = CognitionPatch(entity_id, cognition_bundle_set=update.cognition_bundle_set)
         if not p.is_noop(): patches.append(p)
     return patches

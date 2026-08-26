@@ -137,6 +137,27 @@ class AuthoritativeApplyPipeline:
 
         costs["trust_validity"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Enhanced RPG Phase 2.5: Causal Memory Update ---
+        # recent_world_events reflects last tick's window -- one-tick lag is inherent (state
+        # frozen), same as faction_awareness below: a COMBAT_LOSS event produced during this
+        # tick's action_routing (which runs later in this same tick) is only visible here
+        # starting next tick.
+        t_start = time.perf_counter_ns()
+        from src.domains.memory.phase import MemoryUpdatePhase
+        from src.domains.world_emergence.schema import WorldEventCategory
+        _recent_events_for_memory = getattr(state, "recent_world_events", [])
+        _memory_trigger_events = [
+            {"entity_id": int(e.subject), "kind": "combat_loss", "id": f"combat_loss_{e.tick}_{e.subject}", "region_id": e.region_id}
+            for e in _recent_events_for_memory
+            if e.category == WorldEventCategory.COMBAT_LOSS and e.subject is not None
+        ]
+        update = run_phase(
+            "memory_update", update,
+            lambda u: MemoryUpdatePhase.apply(state, u, _memory_trigger_events),
+            "ENABLE_MEMORY_UPDATE",
+        )
+        costs["memory_update"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 2: Self Model Cognition ---
         t_start = time.perf_counter_ns()
         from src.cognition import SelfModelUpdatePhase

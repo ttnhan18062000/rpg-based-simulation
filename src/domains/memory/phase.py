@@ -7,7 +7,7 @@ Orchestrates temporal calculation updates and causal attribution additions.
 """
 
 from __future__ import annotations
-from typing import Sequence, List, Optional
+from typing import Sequence, List, Optional, Any
 from dataclasses import replace
 
 from src.core.state import EntityState
@@ -27,13 +27,39 @@ class MemoryUpdatePhase:
     def __init__(self) -> None:
         pass
 
+    @staticmethod
+    def apply(
+        state: Any,  # AuthoritativeState
+        update: Any,  # StateUpdate
+        trigger_events: Optional[List[dict]] = None,
+    ) -> Any:  # StateUpdate
+        """
+        Routes MemoryUpdatePhase.run()'s output through the typed EntityUpdate/CognitionPatch
+        apply path, mirroring SelfModelUpdatePhase.apply() -- never mutates state.entities.
+        """
+        from src.core.updates import EntityUpdate
+
+        active_entities = [
+            e for e in state.entities.values()
+            if e.lifecycle.active and e.combat.alive
+        ]
+        updated = MemoryUpdatePhase().run(active_entities, tick=state.tick, trigger_events=trigger_events)
+
+        new_entity_updates = dict(update.entity_updates)
+        for new_entity in updated:
+            entity_up = new_entity_updates.get(new_entity.id, EntityUpdate(entity_id=new_entity.id))
+            new_entity_updates[new_entity.id] = replace(entity_up, cognition_bundle_set=new_entity.cognition)
+
+        return replace(update, entity_updates=new_entity_updates)
+
     def run(
         self,
         entities: Sequence[EntityState],
         tick: int = 0,
-        trigger_event: Optional[dict] = None
+        trigger_events: Optional[List[dict]] = None
     ) -> List[EntityState]:
         updated_entities: List[EntityState] = []
+        trigger_by_entity = {t["entity_id"]: t for t in (trigger_events or [])}
 
         for entity in entities:
             # Skip inactive/dead
@@ -54,10 +80,11 @@ class MemoryUpdatePhase:
             new_causal_entries = list(memory.causal.entries)
             new_spatial = memory.spatial
 
-            if trigger_event and trigger_event.get("entity_id") == entity.id:
-                evt_kind = trigger_event.get("kind")
-                evt_id = trigger_event.get("id", "evt_unknown")
-                region_id = trigger_event.get("region_id")
+            trigger = trigger_by_entity.get(entity.id)
+            if trigger:
+                evt_kind = trigger.get("kind")
+                evt_id = trigger.get("id", "evt_unknown")
+                region_id = trigger.get("region_id")
 
                 # Process Causal Attribution
                 entry = CausalAttributionService.attribute(

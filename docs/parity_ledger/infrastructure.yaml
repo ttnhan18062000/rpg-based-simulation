@@ -11436,9 +11436,9 @@
     so the real running API server never had any terrain regardless of any WS/auth/proxy
     fix. A new world_id constructor parameter (str, defaulting to "dungeon_crawl")
     selects the world spec; the compiled world's own entities (quest-givers, NPCs,
-    etc.) are deliberately
-    discarded via dataclasses.replace(compiled_state, tick=0, seed=self._seed, entities=entities)
-    in favor of the pre-existing hero+goblin-diagonal spawn logic (TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL),
+    etc.) are deliberately discarded via dataclasses.replace(compiled_state, tick=0,
+    seed=self._seed, entities=entities) in favor of the pre-existing hero+goblin-diagonal
+    spawn logic (TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL),
     which is left untouched -- only the terrain/regions/statics layer was missing,
     entity-spawning behavior/contract is unchanged. create_v2_app() gained optional
     seed/entities_count/world_id override parameters (None-default, backward compatible
@@ -11509,3 +11509,27 @@
   proof_type: regression
   support_boundary: Claude-agent-workflow monitoring/observability dashboard tooling
     only -- no simulation behavior is involved.
+- id: INFRA-395
+  text: PhaseDependencyGraph.PHASES (src/engine/phase_graph.py) registers a PhaseMetadata("memory_update",
+    {"combat", "strategic"}, {"strategic"}) entry, mirroring every other pipeline
+    phase's registration pattern in the same dict, enabling PhaseDependencyGraph.should_run_phase()
+    to resolve dependency/cadence rules for the memory_update phase now wired into
+    AuthoritativeApplyPipeline.refine() between actor_validity and self_model (see
+    strategic_cognition.yaml::STRAT-227 and combat_movement.yaml::COMB-312 for the
+    phase's own behavior). Same as INFRA-270's information_intent_execution precedent,
+    this registration is cosmetic for current behavior -- update.dirty_set is None
+    for the entire early-refine() section memory_update runs in, so should_run_phase()
+    would return True via the not-in-PHASES fallback (phase_graph.py lines 82-83)
+    whether or not the phase is registered here -- but it establishes the correct
+    dependency-graph metadata (input_domains={combat, strategic}, output_domains={strategic})
+    for any future cadence/dirty-set gating of this phase.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/phase_graph.py (PhaseDependencyGraph.PHASES gains a "memory_update":
+    PhaseMetadata("memory_update", {"combat", "strategic"}, {"strategic"}) entry,
+    line 62); src/engine/pipeline.py (run_phase("memory_update", update, ...) call
+    site between the actor_validity and self_model run_phase calls).'
+  proof_type: parity
+  test_path: tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py::test_combat_loss_end_to_end_produces_nonzero_memory_adjustment_next_tick
+  divergence_note: null

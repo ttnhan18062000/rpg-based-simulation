@@ -542,11 +542,12 @@ still produces exactly one ±1.0 adjustment per mapped family, never a growing s
 **Magnitude rationale:** ±1.0 sits below `blocker_penalty` (2.0, §6.5) so a blocked route is never
 rescued by a favorable memory adjustment, and above `confidence_bonus` (max 0.15, §6.2) and
 `personality_bias` (max 0.50, §6.4) so the effect is unambiguously measurable, comparable in order
-of magnitude to `plan_advance_bonus` (flat 1.5, §6.2). This constant is **undertuned** — no live-run
-measurement is possible until `MemoryUpdatePhase` is wired into the pipeline (see the "Not yet live"
-callout below) — the same honest disclosure pattern §6.5 already uses for `blocker_penalty`.
-Symmetric magnitude (not asymmetric suppress-vs-promote weighting) is chosen because there is no
-empirical basis yet to justify asymmetry.
+of magnitude to `plan_advance_bonus` (flat 1.5, §6.2). This constant remains **undertuned** — as of
+`TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING`, `MemoryUpdatePhase` is wired into the pipeline (see
+"Pipeline wiring status" below) but the gating `ENABLE_MEMORY_UPDATE` flag defaults to OFF, so no
+live-run measurement has occurred yet — the same honest disclosure pattern §6.5 already uses for
+`blocker_penalty`. Symmetric magnitude (not asymmetric suppress-vs-promote weighting) is chosen
+because there is no empirical basis yet to justify asymmetry.
 
 **Deliberately left unmapped in this pass:** `heal_first` / `rest_often` / `repair_weapon`
 (`combat_loss`, non-fallback branches), `seek_trusted_guide` / `verify_intel` (`failed_search`),
@@ -554,13 +555,17 @@ empirical basis yet to justify asymmetry.
 real, reachable advice strings, deferred to a future ticket with product/design input on the
 correct `RouteFamily` target, not guessed at here.
 
-**Not yet live:** This term is real, reachable code in `AdventureRouteScorer.score()`, but
-`CausalMemoryEntry` records are never created in a live simulation run today — `MemoryUpdatePhase`
-(`src/domains/memory/phase.py`), the only code that populates
-`entity.cognition.memory.causal.entries`, has zero call sites in `src/engine/pipeline.py` or
-anywhere else outside its own file and tests. This term is exercised only by unit tests with
-manually-constructed `CausalMemoryEntry` fixtures until a separate ticket wires `MemoryUpdatePhase`
-into the live pipeline.
+**Pipeline wiring status:** This term is real, reachable code in `AdventureRouteScorer.score()`.
+As of `TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING`, `MemoryUpdatePhase` (`src/domains/memory/phase.py`),
+the only code that populates `entity.cognition.memory.causal.entries`, is now registered as the
+`memory_update` phase in `AuthoritativeApplyPipeline.refine()` (between `actor_validity` and
+`self_model`; see `docs/engine/authoritative_pipeline.md`), wired to a real `WorldEventCategory.COMBAT_LOSS`
+trigger producer built in `ActionRoutingPhase.route()` (fires when a defender survives an `ATTACK`
+and takes damage). This call site is gated by the `ENABLE_MEMORY_UPDATE` feature flag, which
+**defaults to OFF** — so the term is wired but not yet enabled by default, not "always active in
+production." Until a rollout decision turns the flag on for a corpus/production profile, this term
+is exercised live only in tests that explicitly enable `ENABLE_MEMORY_UPDATE` (plus the existing
+unit tests using manually-constructed `CausalMemoryEntry` fixtures).
 
 **Dead-code caveat:** `AdventureRouteGenerator.generate()` never emits a `HUNT_WEAK_ENEMY` candidate
 (confirmed zero emission sites) — the `avoid_enemy` suppression is provably correct at the

@@ -17,6 +17,11 @@ class FeatureFlagManager:
             # no SHADOW-validation history exists. Follow-up:
             # TCK-20260826-SELF-MODEL-COGNITION-FLAG-VALIDATION.
             "ENABLE_SELF_MODEL_COGNITION": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING): wires
+            # MemoryUpdatePhase into refine() for the first time (previously zero call sites).
+            # DEV-002 default-OFF policy applies -- no corpus profile turns this on yet and no
+            # SHADOW-validation history exists.
+            "ENABLE_MEMORY_UPDATE": FeatureMode.OFF,
             "ENABLE_ADVENTURE_ROUTING": FeatureMode.OFF,
             # Keep OFF, deferred (TCK-20260824-ROLLOUT-FLAG-DECISIONS): a real bug
             # (TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS) was already

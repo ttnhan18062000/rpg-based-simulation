@@ -647,6 +647,7 @@ class EntityUpdate:
     wound_update: Optional[WoundUpdate] = None
     group_id_set: Optional[int] = None
     self_model_bundle_set: Optional[Any] = None
+    cognition_bundle_set: Optional[Any] = None
     intent_results: List[IntentResult] = field(default_factory=list)
     property_updates: Dict[str, Any] = field(default_factory=dict)
 
@@ -669,7 +670,8 @@ class EntityUpdate:
                 (self.task is None or self.task.is_noop()) and 
                 (self.stamina_update is None or self.stamina_update.is_noop()) and 
                 (self.wound_update is None or self.wound_update.is_noop()) and 
-                self.group_id_set is None and self.self_model_bundle_set is None and not self.intent_results and 
+                self.group_id_set is None and self.self_model_bundle_set is None and
+                self.cognition_bundle_set is None and not self.intent_results and
                 not self.property_updates)
 
     def merge(self, other: EntityUpdate) -> EntityUpdate:
@@ -704,6 +706,7 @@ class EntityUpdate:
         if other.wound_update: changes["wound_update"] = self.wound_update.merge(other.wound_update) if self.wound_update else other.wound_update
         if other.group_id_set is not None: changes["group_id_set"] = other.group_id_set
         if other.self_model_bundle_set is not None: changes["self_model_bundle_set"] = other.self_model_bundle_set
+        if other.cognition_bundle_set is not None: changes["cognition_bundle_set"] = other.cognition_bundle_set
         if other.intent_results: changes["intent_results"] = self.intent_results + other.intent_results
         if other.property_updates: changes["property_updates"] = {**self.property_updates, **other.property_updates}
         return replace(self, **changes)
