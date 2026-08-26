@@ -17,6 +17,7 @@ from src.domains.world_emergence.services import (
     WorldOpportunityPressureService, DynamicQuestSeedService, RumorSeedService,
     WorldToEntitySignalBridge, QuestOpportunityGenerator, QuestLifecycleService
 )
+from src.domains.world_emergence import quest_grammar
 
 class WorldEmergencePhase:
     """
@@ -73,6 +74,16 @@ class WorldEmergencePhase:
                 if opp is not None:
                     quest_opps.append(opp)
 
+        # 5b(ii). Pre-emit grammar validation: filter quest_opps before admission into
+        # quest_registry_add. result.quest_opportunities (line 94) stays unfiltered.
+        admitted_quest_opps = []
+        rejected_count = 0
+        for opp in quest_opps:
+            if quest_grammar.validate_quest_opportunity(opp, state) is None:
+                admitted_quest_opps.append(opp)
+            else:
+                rejected_count += 1
+
         # 5c. Quest lifecycle: expire stale opportunities
         lifecycle_upd = QuestLifecycleService.tick(state)
         if not lifecycle_upd.is_noop():
@@ -125,11 +136,12 @@ class WorldEmergencePhase:
         metric_counters = dict(update.metric_counters) if getattr(update, "metric_counters", None) is not None else {}
         metric_counters["world_emergence_ms"] = duration_ms
         metric_counters["aggregates_generated"] = len(aggregates)
+        metric_counters["quest_opportunities_rejected"] = rejected_count
 
         return replace(
             update,
             entity_updates=new_entity_updates,
             world_updates=new_world_updates,
             metric_counters=metric_counters,
-            quest_registry_add=list(quest_opps),
+            quest_registry_add=list(admitted_quest_opps),
         ), result

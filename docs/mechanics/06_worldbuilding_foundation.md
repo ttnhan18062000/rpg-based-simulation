@@ -189,6 +189,52 @@ Defines items, structures, and regional ecologies:
 
 ---
 
+## 10. Runtime Pre-Emit Validation
+This gate runs inside `WorldEmergencePhase` (a live per-tick engine phase), not the
+WorldSpec → Compile pipeline described in §7. It is a distinct, sibling gate — not an extension of
+§7's build-time gate ladder or the `WORLD-REACH-001` rule — because it checks live
+`AuthoritativeState` drift (a faction losing territory, a resource depleting after play) that a
+build-time, `WorldSpec`-only check cannot observe.
+
+### Purpose
+Before a procedurally-generated `QuestOpportunity` (`QuestOpportunityGenerator`,
+`src/domains/world_emergence/services.py`) is admitted into `StateUpdate.quest_registry_add`,
+`quest_grammar.validate_quest_opportunity()` (`src/domains/world_emergence/quest_grammar.py`)
+checks it against two runtime grammar rules:
+
+*   **Faction coherence**: if the opportunity names a `faction_source`, that faction must have
+    current territorial presence (`FactionState.territory` non-empty in `state.factions`). A
+    faction absent from `state.factions` entirely is treated identically to one present with empty
+    territory — both reject. `faction_source=None` (the current default for both live generator
+    methods) makes no faction claim and auto-passes; there is nothing to verify.
+*   **Resource availability**: for each `"fetch:<resource>:<qty>"` token in the opportunity's
+    `objective_chain`, if at least one `ResourceNodeState` in `state.resource_nodes` yields that
+    resource (`yields_item` match) and *every* matching node is fully depleted
+    (`remaining_charges == 0`), the opportunity is rejected. If **no** node yields that resource at
+    all, the check treats this as cannot-verify, not depleted, and passes — mirroring the
+    `is_reachable`/`available_tags is None` "no catalog to verify against" pattern from §7's
+    reachability predicate. Non-`fetch` tokens (e.g. `"eliminate:<subject>:1"`) carry no
+    resource-availability claim and are skipped.
+
+An opportunity failing either check is excluded from `quest_registry_add` and counted in
+`metric_counters["quest_opportunities_rejected"]`; it never contaminates `quest_registry`. The
+check does not filter `WorldEmergenceResult.quest_opportunities` — that field remains every
+opportunity `QuestOpportunityGenerator` produced this tick, independent of admission.
+
+### Design Notes
+This is a runtime reinterpretation of two rule classes described conceptually in
+`docs/plans/idea_world_grammar_semantic_constraints.md`, not a literal implementation of that
+doc's wording: the idea doc envisions "faction tension" between **two** factions and resource
+**existence at authoring time**; `QuestOpportunity` only ever carries a single `faction_source`,
+and this gate checks current **depletion state** of an already-existing node (existence at
+authoring time is `WORLD-REACH-001`'s build-time job, already covered by §7).
+
+Both predicates and their combinator are pure functions of `(QuestOpportunity, AuthoritativeState)`
+— no `uuid()`, no time/clock reads, no RNG, no state mutation — matching `QuestOpportunityGenerator`'s
+own documented read-only/deterministic contract one call further down the same chain.
+
+---
+
 ## 📜 Compliance Status
 
 | Chapter | Status | Last Action |
