@@ -17,10 +17,16 @@ within one epic.
 
 ## Milestones
 
-### M1 — Core Reconnection (ships a real, working, connected map)
+### M1 — Core Reconnection (ships a real, working, connected map) (DONE)
 
-**Tracking epic**: `TCK-20260821-EPIC-LIVE-MAP-RECONNECTION` (already fully scoped — 7 scope items, full
-plan doc at `docs/plans/live_map_reconnection_epic.md`).
+**Tracking epic**: `TCK-20260821-EPIC-LIVE-MAP-RECONNECTION` — **DONE** (all 8 child tickets landed;
+full plan doc at `docs/plans/live_map_reconnection_epic.md`, now `status: historical`). The existing
+`GameCanvas.tsx`/`useCanvas.ts` renderer is genuinely reconnected to the real V2 backend: live
+map/static/manifest data over REST, per-tick entity deltas over the real `/api/v1/ws` WebSocket,
+pause/resume control, and a real phased loading state machine. One planned criterion was not fully
+achieved for reasons outside the epic's control, honestly disclosed in its own Completion Summary
+rather than silently dropped: live-browser render-FPS measurement couldn't obtain live data in the
+implementing sandbox (Playwright's Chromium download was unavailable there).
 
 Ships: new `StatePresenter` methods (map/static serialization), the entity-delta broadcast (with the
 externally-reviewed and independently-verified connect-time snapshot/handoff correctness fix), 3 new REST
