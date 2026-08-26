@@ -331,12 +331,12 @@ content-inventory: ## Regenerate config/content_inventory.json from real data/co
 knowledge-index: ## Build local semantic knowledge index (developer env only — not CI)
 	@echo "Building knowledge index (requires: pip install -e '.[knowledge]')..."
 	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs \
-	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
+	  $(PYTHON3) \
 	  tools/knowledge_search.py build
 
 knowledge-index-update: ## Incremental reindex — only re-embeds changed/new files (fast)
 	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs \
-	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
+	  $(PYTHON3) \
 	  tools/knowledge_search.py build --incremental
 
 kgmcp-bootstrap: parity-index knowledge-index ## Rebuild all local, gitignored Knowledge Gateway MCP caches for a fresh environment (see docs/guidelines/agent_working_environment.md)

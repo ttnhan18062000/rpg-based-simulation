@@ -89,6 +89,25 @@ def test_existing_targets_unmodified():
         )
 
 
+def test_knowledge_index_targets_use_python3_variable():
+    """Guards TCK-20260826-KNOWLEDGE-INDEX-PYTHON3-FIX: knowledge-index/knowledge-index-update
+    must consume the top-level $(PYTHON3) variable, matching dev/serve, not their own inline
+    python3-discovery loop (which resolves empty from any git worktree, since worktrees have no
+    .venv/ of their own).
+    """
+    text = _makefile_text()
+
+    for target in ("knowledge-index", "knowledge-index-update"):
+        recipe = _extract_recipe(text, target)
+        assert "$(PYTHON3)" in recipe, f"expected {target}'s recipe to use $(PYTHON3)"
+        assert "for py in" not in recipe, (
+            f"expected {target}'s recipe to have no inline python3-discovery loop"
+        )
+        assert "$(shell" not in recipe, (
+            f"expected {target}'s recipe to have no inline $(shell ...) python3 resolution"
+        )
+
+
 def test_dashboard_serve_recipe_has_no_npm_or_node():
     text = _makefile_text()
 
