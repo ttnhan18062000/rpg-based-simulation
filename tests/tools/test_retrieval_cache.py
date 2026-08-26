@@ -1608,6 +1608,17 @@ class TestReadCurrentRunSidecar:
         result = rc.read_current_run_sidecar()
         assert result["sidecar_stale"] is False
 
+    def test_run_id_only_sidecar_reports_effective_ticket_id_not_none(self, tmp_path):
+        """TCK-20260826-KGMCP-CACHE-TICKET-ATTRIBUTION: the real shape every sidecar writer
+        produces (run_id only, no explicit ticket_id key) must resolve 'ticket_id' to the run_id
+        fallback, not raw None — this is exactly why per-ticket cache-efficiency breakdown was
+        100% 'unattributed' before this fix."""
+        _write_sidecar(
+            tmp_path, run_id="TCK-20260101-REAL-WORK", seq=1, phase="Implement", agent="implementer",
+        )
+        result = rc.read_current_run_sidecar()
+        assert result["ticket_id"] == "TCK-20260101-REAL-WORK"
+
     def test_explicit_ticket_id_field_used_over_run_id_when_both_present(self, tmp_path):
         _make_done_ticket(tmp_path, "TCK-20260101-CHILD-CLOSED")
         _write_sidecar(
@@ -1677,6 +1688,33 @@ class TestLogCacheAccess:
         assert rows[0]["run_id"] == "TCK-A"
         assert rows[0]["agent"] == "implementer"
         assert rows[0]["sidecar_stale"] == 0
+        # TCK-20260826-KGMCP-CACHE-TICKET-ATTRIBUTION: run_id-only sidecar (no explicit
+        # ticket_id key -- the real shape every sidecar writer produces) must still land a
+        # real ticket_id in the persisted row, not NULL.
+        assert rows[0]["ticket_id"] == "TCK-A"
+
+    def test_run_id_only_sidecar_writes_real_ticket_id_into_per_ticket_kgmcp_breakdown(
+        self, tmp_path
+    ):
+        """TCK-20260826-KGMCP-CACHE-TICKET-ATTRIBUTION end-to-end: a real log_cache_access() call
+        under a run_id-only sidecar (no explicit ticket_id) must produce a retrieval_cache_access_
+        log row that generate_retro.py's compute_kgmcp_cache_efficiency_metrics() groups under the
+        real ticket_id key, not 'unattributed'."""
+        import sys as _sys
+        from pathlib import Path as _Path
+
+        _monitoring_tools_dir = _Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
+        if str(_monitoring_tools_dir) not in _sys.path:
+            _sys.path.insert(0, str(_monitoring_tools_dir))
+        from generate_retro import compute_kgmcp_cache_efficiency_metrics
+
+        _write_sidecar(tmp_path, run_id="TCK-20260101-REAL-WORK", seq=1, phase="Implement", agent="implementer")
+        rc.log_cache_access("level1_provider_result", "hit", query_hash="qh-real")
+
+        rows = rc.read_cache_access_log()
+        result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
+        assert "TCK-20260101-REAL-WORK" in result["per_ticket"]
+        assert "unattributed" not in result["per_ticket"]
 
     def test_logs_a_real_level2_write_with_packet_id(self):
         rc.log_cache_access("level2_context_packet", "write", packet_id="p-1")

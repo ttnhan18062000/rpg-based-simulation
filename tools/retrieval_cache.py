@@ -558,9 +558,16 @@ def read_current_run_sidecar() -> dict:
     None-on-any-error convention — reused, not reinvented (no shared helper module previously
     existed to import; post_tool_hook.py's own version is inlined in a try/except block, not an
     importable function). Adds one field beyond that mechanism's own scope: `sidecar_stale` (see
-    _sidecar_run_is_stale()) — a run_id starting with "TCK-" is used as the effective ticket_id
-    when the sidecar carries no explicit `ticket_id` of its own (the common case for hotfix/
-    standard workflows, where run_id already *is* the ticket_id).
+    _sidecar_run_is_stale()).
+
+    TCK-20260826-KGMCP-CACHE-TICKET-ATTRIBUTION: the returned `ticket_id` key is the *effective*
+    ticket ID, not the sidecar's raw `ticket_id` field — an explicit `ticket_id` wins when present,
+    otherwise `run_id` is used when it starts with "TCK-" (the common case for hotfix/standard
+    workflows, where run_id already *is* the ticket_id). Before this fix, the raw `sidecar.get(
+    "ticket_id")` was returned instead (always None, since no sidecar writer ever sets that
+    distinct explicit key) while the effective/fallback value was computed but only used
+    internally for the `sidecar_stale` check below — silently leaving every real caller's
+    `ticket_id` field null. `log_cache_access()` is this function's sole production consumer.
 
     TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY: prefers the per-session scoped sidecar
     (`<_CURRENT_RUN_SIDECAR_PATH>.<CLAUDE_CODE_SESSION_ID>`) over the unscoped file when a scoped
@@ -610,7 +617,7 @@ def read_current_run_sidecar() -> dict:
         "agent": agent,
         "execution_id": execution_id,
         "provider": provider,
-        "ticket_id": ticket_id,
+        "ticket_id": effective_ticket_id,
         "sidecar_stale": _sidecar_run_is_stale(effective_ticket_id),
     }
 
