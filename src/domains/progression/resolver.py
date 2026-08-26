@@ -80,7 +80,10 @@ class ConversionIntentResolver:
             )
 
         elif kind == ConversionKind.ALLOCATE_AP:
-            # Map ALLOCATE_AP to IdentityUpdate unspent_ap delta decrease
+            # Known, intentional divergence (DEV-004, docs/guidelines/intentional_divergences.md):
+            # this branch decrements unspent_ap but grants zero attribute delta. Currently unreachable
+            # in any live run — ProgressionConversionPhase is gated by ENABLE_PROGRESSION_EVOLUTION
+            # (FeatureMode.OFF, DEV-003).
             update = EntityUpdate(
                 entity_id=entity.id,
                 identity=IdentityUpdate(

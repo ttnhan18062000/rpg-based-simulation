@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-08-26
 tags: [attribute-progression, xp, leveling, derived-stats, skill-scaling, breakthrough]
 related_chapter: 01_entity_anatomy.md
 ---
@@ -111,11 +111,17 @@ XP source is traceable via `trace["REWARD_SOURCE"]` in `CombatUpdate`.
 
 ### Attribute Point Allocation Gates
 
-AP spend is validated in the apply path with four gates:
-1. `PROG-067`: entity has sufficient unspent AP
-2. `PROG-068`: attribute name is valid
-3. `PROG-069`: aptitude multiplier applied (entity class/race may modify AP efficiency)
-4. `PROG-070`: attribute value cap of 99 enforced
+AP spend is validated across two layers, not uniformly "in the apply path" — each gate's actual
+current enforcement location (see `DEV-004`, `docs/guidelines/intentional_divergences.md`):
+1. `PROG-067`: entity has sufficient unspent AP — enforced in the domain-handler layer,
+   `core_actions.py::execute_allocate_ap`, not the apply path.
+2. `PROG-068`: attribute name is valid — **not enforced on the live path** (see the corrected
+   `PROG-068` entry in `docs/parity_ledger/progression.yaml`).
+3. `PROG-069`: aptitude multiplier applied (entity class/race may modify AP efficiency) — **not
+   enforced on the live path** (see the corrected `PROG-069` entry in
+   `docs/parity_ledger/progression.yaml`).
+4. `PROG-070`: attribute value cap of 100 enforced in the apply path, `AttributePatch.apply`
+   (`src/engine/patches.py:570-585`).
 
 ### Derived Stat Recalculation Order
 
@@ -240,7 +246,7 @@ Progression evaluation runs in the **lifecycle systems phase** after combat reso
 |---|---|
 | Entity at level cap (99) gains XP | `evolution_points_delta` recorded, no level-up fires |
 | XP carry-over meets next threshold | Second level-up fires on next evaluation cycle, not in same call |
-| Attribute reaches cap (99) + AP spend attempted | Gate PROG-070 rejects; unspent AP unchanged |
+| Attribute reaches cap (100) + AP spend attempted | Gate PROG-070 rejects; unspent AP unchanged |
 | Equipment breaks during combat | `durability <= 0` → stat contribution zeroed on next `recalculate_combat_stats()` call |
 | Passive skill (`swift_reflexes`) equipped before level-up | Evasion bonus applies in Step 3 of recalc on the next stat recalculation |
 | Role score tie (e.g. VANGUARD and PROTECTOR equal) | `max()` returns first matched key — tie-breaking is implementation-defined by dict iteration order |

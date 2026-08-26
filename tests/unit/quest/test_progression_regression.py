@@ -53,7 +53,22 @@ def test_attribute_allocation():
     assert hero_up.identity.unspent_ap_delta == -3
     assert hero_up.attributes.strength_delta == 3
     # Derived combat stat boost? (e.g. Strength increases ATK)
-    # In a clean system, AttributeComponent.strength_delta should be committed, 
+    # In a clean system, AttributeComponent.strength_delta should be committed,
     # and then another system calculates derived stats.
     # OR SimulationDomainLogic does it immediately.
     assert hero_up.combat.atk_delta > 0
+
+def test_execute_allocate_ap_silently_no_ops_for_unhandled_attribute():
+    """Documents DEV-004 (docs/guidelines/intentional_divergences.md): execute_allocate_ap only
+    branches on strength/vitality; AP is still spent for the other 7 attribute names, but no
+    attribute delta is granted."""
+    hero = create_mock_entity(1)
+    hero = replace(hero, identity=replace(hero.identity, unspent_ap=5))
+
+    payload = {"action": "ALLOCATE_AP", "attribute": "agility", "amount": 3}
+
+    result = SimulationDomainLogic.execute_action(hero, payload=payload, current_tick=1)
+
+    hero_up = result[1]
+    assert hero_up.identity.unspent_ap_delta == -3
+    assert hero_up.attributes.is_noop() is True

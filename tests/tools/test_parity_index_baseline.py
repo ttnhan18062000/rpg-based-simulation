@@ -129,11 +129,15 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # (TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION, 2026-08-21: new entry INFRA-366 added with
     # a real `test_path` from the start, documenting the simulation_kernel_contract.md §9 fix), then
     # to 1334 (TCK-20260821-DOCS-BUILD-LASTUPDATE-METADATA-OVERHEAD, 2026-08-24: INFRA-181 gained a
-    # real `test_path` citing tests/static/test_docs_build_content_scope.py, previously `null`).
+    # real `test_path` citing tests/static/test_docs_build_content_scope.py, previously `null`), then
+    # to 1332 (TCK-20260824-ALLOCATE-AP-BRANCH-DECISION, 2026-08-26: PROG-068 and PROG-069 moved from
+    # `verified` with `test_path: null` to `divergent` with a real `test_path` citing
+    # tests/unit/quest/test_progression_regression.py::test_execute_allocate_ap_silently_no_ops_for_unhandled_attribute,
+    # documenting that the live ALLOCATE_AP path does not honor either gate; see DEV-004).
     # The substantive check is the assertion above (manifest's own count matches a fresh,
     # independent live scan) — this second assertion only guards against a silent, unexplained
     # large swing.
-    assert live_missing == 1334
+    assert live_missing == 1332
 
 
 # ---------------------------------------------------------------------------

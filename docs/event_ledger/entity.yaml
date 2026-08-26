@@ -64,7 +64,7 @@
   status: observed
   evidence: "src/observability/event_extractor.py (attribute_changed diff block); verified via real hand-constructed AttributeComponent objects — the one real producer (src/engine/evolution.py non-hero level-up) confirmed too rare to hit within a real 1500-tick Kernel.tick_once() loop on sandbox_world"
   event_types: ["attribute_changed"]
-  notes: "Fixed by TCK-20260808-ENTITY-ATTRIBUTES-OBSERVABILITY-GAP. Emitted (unscored_intentional), not wired to any SimQ pillar. Of the 4 grep-found AttributeUpdate producers, only 1 (evolution.py) is genuinely live; 1 (core_actions.py::execute_allocate_ap) is wired but has no live AI driver; 2 (cohort.py::compute_elder_attribute_update, actions/attributes.py::AllocateAttributeAction) are confirmed dead code — see the ticket's own investigation.md."
+  notes: "Fixed by TCK-20260808-ENTITY-ATTRIBUTES-OBSERVABILITY-GAP. Emitted (unscored_intentional), not wired to any SimQ pillar. Of the 4 grep-found AttributeUpdate producers, only 1 (evolution.py) is genuinely live; 1 (core_actions.py::execute_allocate_ap) is wired but has no live AI driver; 2 (cohort.py::compute_elder_attribute_update, actions/attributes.py::AllocateAttributeAction) were confirmed dead code — see the ticket's own investigation.md. TCK-20260824-ALLOCATE-AP-BRANCH-DECISION (DEV-004, docs/guidelines/intentional_divergences.md) subsequently ratified execute_allocate_ap's dormant status and deleted actions/attributes.py::AllocateAttributeAction as dead code."
 
 - id: ENTITY-009
   mutation_source: "EntityUpdate.biological (BiologicalUpdate)"

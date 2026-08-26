@@ -37,6 +37,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Cognition-Strategy** | Adventure-Route Defer-Reason Observability Gap | **Bounded** | RATIFIED |
 | **Strategic Cognition / Regional Danger** | Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot | **Enforced** | RATIFIED |
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
+| **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
 
 ---
 
@@ -1419,5 +1420,46 @@ The following legacy behaviors have been intentionally omitted or retired.
   allowlist, both flags added)
 - **Status**: ACTIVE
 
+### DEV-004 — ALLOCATE_AP Action-Router Branch Kept Dormant (TCK-20260824-ALLOCATE-AP-BRANCH-DECISION)
+- **Subsystem**: Engine / Progression
+- **Situation**: `CoreActions.execute_allocate_ap` (`src/engine/domain/core_actions.py:146-176`) is
+  dispatched from `ActionRouter.execute_action` (`src/engine/domain/action_router.py:49-50`) and
+  reachable via two live call chains (`SimulationDomainLogic.execute_action` and
+  `ActionIntentAdapter.execute`'s router-payload fallback), but no code anywhere in `src/` ever
+  constructs an `{"action": "ALLOCATE_AP", ...}` payload — the only such payload constructor in the
+  repo is a test fixture (`tests/unit/quest/test_progression_regression.py`). The one real
+  gap-resolution pipeline that could drive AP spending (`gaps.py` → `generator.py` →
+  `ConversionIntentResolver.resolve`'s `ConversionKind.ALLOCATE_AP` branch,
+  `src/domains/progression/resolver.py:82-89`) never calls `ActionRouter` at all — it returns an
+  `EntityUpdate` directly (`src/domains/progression/phase.py:73`) — and that whole
+  `ProgressionConversionPhase` is gated behind `ENABLE_PROGRESSION_EVOLUTION`, which defaults to
+  `FeatureMode.OFF` per DEV-003's standing policy, with an already-filed, not-yet-run follow-up
+  (`tickets/todos/TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION.md`).
+- **Decision**: Keep `execute_allocate_ap` wired but dormant. No new producer is built by this
+  ticket.
+  - `resolver.py`'s `ConversionKind.ALLOCATE_AP` branch (`src/domains/progression/resolver.py:82-89`)
+    stays a decrement-only, zero-attribute-gain no-op. This is **documented, not fixed** — fixing it
+    is a change to the aptitude-multiplier gap resolution pipeline outside this ticket's scope, and
+    it is unreachable today regardless of correctness since the whole phase sits behind the
+    `FeatureMode.OFF` flag from DEV-003.
+  - `AllocateAttributeAction` (`src/actions/attributes.py`) is **deleted** as dead code (zero `src/`
+    callers outside its own file and its own test file). It held the only correct PROG-015/PROG-069
+    aptitude-multiplier logic in the repo (`src/actions/attributes.py:39-43`). A follow-up ticket
+    porting that logic into `core_actions.execute_allocate_ap` and correcting the resulting
+    PROG-068/069/015 parity gap is **recommended but not created** by this ticket.
+- **Rationale**: **Bounded** — building a real producer requires either flipping
+  `ENABLE_PROGRESSION_EVOLUTION` ON (which duplicates the scope/evidence-gathering job of the
+  already-filed `TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION`, per DEV-003's own standing
+  "defer, don't wire yet, wait for real evidence" policy) or building an entirely new AI/goal
+  producer (new-feature scope beyond a decide-the-fate chore ticket). Cites `SUB-376`
+  (`docs/parity_ledger/substrate.yaml`) and `ENTITY-008` (`docs/event_ledger/entity.yaml`) as the
+  prior investigation that first established this exact reachability finding — this entry ratifies,
+  not re-derives, their conclusion.
+- **Verification**: `tests/unit/quest/test_progression_regression.py::test_execute_allocate_ap_silently_no_ops_for_unhandled_attribute`
+  (documents the live-path's current buggy-but-decided-dormant behavior) and
+  `tests/integration/progression/test_allocate_ap_dormancy.py::test_allocate_ap_unreachable_via_real_kernel_tick`
+  (proves zero `attribute_changed` events are attributable to either path in a real tick today).
+- **Status**: ACTIVE
+
 ---
-*Last updated: 2026-08-26 (DEV-003, TCK-20260824-ROLLOUT-FLAG-DECISIONS).*
+*Last updated: 2026-08-26 (DEV-004, TCK-20260824-ALLOCATE-AP-BRANCH-DECISION).*

@@ -704,23 +704,41 @@
   support_boundary: null
 - id: PROG-068
   text: Attribute allocation checks valid attribute name.
-  status: verified
+  status: divergent
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
-  divergence_note: null
+  v2_evidence: >-
+    src/engine/domain/core_actions.py::execute_allocate_ap (the live, ActionRouter-wired path,
+    lines 146-176) only branches on "strength"/"vitality"; the other 7 attribute names
+    (agility, endurance, intelligence, spirit, wisdom, perception, charisma) fall through both
+    branches with a zero AttributeUpdate, while the unspent_ap decrement at line 173 is still
+    applied unconditionally. The only implementation that ever validated attribute names
+    (AllocateAttributeAction, src/actions/attributes.py) was dead code (zero src/ callers) and
+    was deleted per DEV-004.
+  proof_type: regression
+  test_path: >-
+    tests/unit/quest/test_progression_regression.py::test_execute_allocate_ap_silently_no_ops_for_unhandled_attribute
+  divergence_note: >-
+    See DEV-004 (docs/guidelines/intentional_divergences.md) -- the ALLOCATE_AP action-router
+    branch is kept wired-but-dormant; this gate is not enforced on the live path today.
   support_boundary: null
 - id: PROG-069
   text: Attribute allocation applies aptitude multiplier or explicit divergence.
-  status: verified
+  status: divergent
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
-  divergence_note: null
+  v2_evidence: >-
+    src/engine/domain/core_actions.py::execute_allocate_ap applies amount as a flat delta with no
+    aptitude lookup anywhere in the function. The only implementation that applied the
+    PROG-015-style aptitude multiplier (AllocateAttributeAction, src/actions/attributes.py:39-43,
+    points_to_add = max(1, int(1 * apt_val))) was dead code (zero src/ callers) and was deleted
+    per DEV-004.
+  proof_type: regression
+  test_path: >-
+    tests/unit/quest/test_progression_regression.py::test_execute_allocate_ap_silently_no_ops_for_unhandled_attribute
+  divergence_note: >-
+    See DEV-004 (docs/guidelines/intentional_divergences.md) -- the ALLOCATE_AP action-router
+    branch is kept wired-but-dormant; this gate is not enforced on the live path today.
   support_boundary: null
 - id: PROG-070
   text: Attribute caps are enforced.
