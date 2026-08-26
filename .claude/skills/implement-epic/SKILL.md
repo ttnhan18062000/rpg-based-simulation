@@ -19,6 +19,11 @@ Parse the user's input to extract one of:
 - `request` — natural language description of a new epic (creates the epic ticket, then returns)
 - `tier_override` — optional, overrides the tier for every child ticket (`hotfix`/`standard`)
 
+`folder` mode only: `SEQUENCE.md` may declare an optional `tracking_doc: <path>` line (plain text,
+anywhere in the file) naming a roadmap/plan doc whose status block should be kept in sync as the
+batch progresses — see "Tracking doc status block" below. No `epic_id`-mode equivalent: an epic
+ticket is already its own tracking surface.
+
 If the input is ambiguous (no prefix), treat as a folder path if it contains `/` or starts with `tickets/`, otherwise as a natural language request.
 
 ## Action
@@ -42,6 +47,23 @@ If the input is ambiguous (no prefix), treat as a folder path if it contains `/`
 | **Report** | Summarise: DONE count, gate failures, remaining tickets |
 
 After the Implement phase, write the batch monitoring record (the block at the bottom of the Implement phase in the JS). Then, if `batchStatus === 'DONE'` and mode is `folder`, move the entire `tickets/todos/{folder}/` to `tickets/done/{folder}/` — this preserves SEQUENCE.md and any folder-level metadata. Then move to Report.
+
+### Tracking doc status block (folder mode only, TCK-20260826-IMPLEMENT-EPIC-ROADMAP-DOC-STALENESS-GAP)
+
+At the start of Report, if Discover found a `tracking_doc:` declaration in `SEQUENCE.md`, run
+`tools/gate_checks/epic_tracking_doc_static.py::update_tracking_doc_status_block` (via `bash()`)
+with the real done/total/remaining counts. This runs on **every** batch invocation, not only when
+`batchStatus === 'DONE'` — a batch that stops partway on a gate failure still gets its counts
+refreshed. It replaces only the content strictly between two literal markers,
+`<!-- IMPLEMENT-EPIC-STATUS:BEGIN -->` / `<!-- IMPLEMENT-EPIC-STATUS:END -->`, that must already
+exist in the tracking doc — placed manually once by whoever authors it, wherever the block should
+render. Never free-form prose rewriting, never a guessed insertion point.
+
+**Explicit no-op when undeclared**: if Discover found no `tracking_doc:` line (the common case
+today — no `SEQUENCE.md`, or a `SEQUENCE.md` without the line), this step does not run at all — no
+Python call, no file touched. If a `tracking_doc:` is declared but the doc has no markers yet (or
+they're malformed/reversed), the update reports `markers_missing` instead of silently doing
+nothing, so the gap is visible rather than invisible.
 
 ## Notes
 
