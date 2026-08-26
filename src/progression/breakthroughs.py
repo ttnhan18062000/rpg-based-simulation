@@ -1,5 +1,7 @@
 from __future__ import annotations
+import dataclasses
 from typing import Dict, Any, Set
+from src.core.state import AttributeComponent
 
 class BreakthroughService:
     """
@@ -31,10 +33,26 @@ class BreakthroughService:
         return BreakthroughService.REGISTRY.get(b_id)
 
     @staticmethod
-    def apply_bonuses(breakthrough_ids: Set[str], current_attributes: Any) -> Any:
+    def apply_bonuses(breakthrough_ids: Set[str], current_attributes: AttributeComponent) -> AttributeComponent:
         """
-        In a real implementation, this might return a derived stat proxy.
-        For Phase 8, we might just use this to calculate totals.
+        Sums each known breakthrough's attribute_bonuses and applies them to
+        current_attributes, returning a new AttributeComponent. Unknown ids are
+        ignored. Non-attribute bonus keys (e.g. fleet_foot's evasion_flat) are
+        not part of attribute_bonuses and are not applied here.
         """
-        # Placeholder for complex synergy logic
-        pass
+        if not breakthrough_ids:
+            return current_attributes
+        deltas: Dict[str, int] = {}
+        for b_id in breakthrough_ids:
+            entry = BreakthroughService.REGISTRY.get(b_id)
+            if not entry:
+                continue
+            for attr_name, amount in entry.get("attribute_bonuses", {}).items():
+                deltas[attr_name] = deltas.get(attr_name, 0) + amount
+        if not deltas:
+            return current_attributes
+        updated = {
+            attr_name: getattr(current_attributes, attr_name) + amount
+            for attr_name, amount in deltas.items()
+        }
+        return dataclasses.replace(current_attributes, **updated)

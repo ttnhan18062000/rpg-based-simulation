@@ -10,13 +10,13 @@ related_chapter: 01_entity_anatomy.md
 
 # Attribute Progression Contract
 
-Companion sub-contract to `01_entity_anatomy.md`. That chapter covers the biological and physical foundation of entities; this doc gives the exact XP threshold formula, level-up execution steps, derived stat recalculation order, skill advancement scaling, and breakthrough placeholder status needed to safely implement or modify progression logic.
+Companion sub-contract to `01_entity_anatomy.md`. That chapter covers the biological and physical foundation of entities; this doc gives the exact XP threshold formula, level-up execution steps, derived stat recalculation order, skill advancement scaling, and breakthrough bonus-application rules needed to safely implement or modify progression logic.
 
 ---
 
 ## Purpose
 
-Define the complete attribute progression law: how entities accumulate XP, when and how level-ups fire, how derived stats are recalculated, how skills scale with attributes, and what the current implementation status of breakthroughs is.
+Define the complete attribute progression law: how entities accumulate XP, when and how level-ups fire, how derived stats are recalculated, how skills scale with attributes, and how breakthrough attribute bonuses are applied.
 
 ---
 
@@ -125,7 +125,12 @@ current enforcement location (see `DEV-004`, `docs/guidelines/intentional_diverg
 
 ### Derived Stat Recalculation Order
 
-`LevelingService.recalculate_combat_stats()` executes the following steps in strict order:
+`LevelingService.recalculate_combat_stats()` executes the following steps in strict order. When
+called via `SkillScalingService.get_effective_stats()` (the live apply-path entry point), the
+`attributes` argument it receives is **already breakthrough-bonus-adjusted** —
+`get_effective_stats()` calls `BreakthroughService.apply_bonuses(active_breakthroughs, attributes)`
+first and passes the result in. `recalculate_combat_stats()` itself has no breakthrough awareness;
+Step 1 below reads whatever `attributes` it is given.
 
 **Step 1 — Base Attributes:**
 ```python
@@ -211,7 +216,29 @@ Biological pressures affect combat multipliers but do **not** alter base stat va
 | `fleet_foot` | +3 agility, +0.05 flat evasion |
 | `titan_grip` | +4 strength |
 
-**Current status:** `apply_bonuses()` is a placeholder — full synergy logic is **not yet implemented**. A placeholder comment in `src/progression/breakthroughs.py` confirms this is deferred work. Breakthroughs should not be cited as active gameplay mechanics until `apply_bonuses()` is implemented. Agents extending this area must implement it before relying on breakthrough effects.
+**Current status:** `apply_bonuses(breakthrough_ids, current_attributes) -> AttributeComponent` is
+implemented (`src/progression/breakthroughs.py`). It is a pure function: given a set of
+breakthrough IDs and a base `AttributeComponent`, it sums each active breakthrough's
+`attribute_bonuses` and returns a new `AttributeComponent` via `dataclasses.replace()`. Unknown
+IDs are ignored; an empty ID set returns `current_attributes` unchanged.
+
+It is wired into the live effective-stats path: `SkillScalingService.get_effective_stats()`
+(`src/engine/rpg_depth.py`) takes an `active_breakthroughs` parameter, calls `apply_bonuses()` on
+it before calling `recalculate_combat_stats()` (see Derived Stat Recalculation Order above), and
+`ApplyPath._apply_entity_update_to_dict()` (`src/engine/apply.py`) passes the entity's
+post-patch `identity.active_breakthroughs` into that call.
+
+**Known gap:** `fleet_foot`'s `evasion_flat: 0.05` bonus is **not applied** — it targets the
+derived evasion stat directly rather than `attribute_bonuses`, and `apply_bonuses()`'s signature
+(`Set[str], AttributeComponent -> AttributeComponent`) has no channel for a derived-stat bonus.
+Only `fleet_foot`'s `attribute_bonuses: {agility: 3}` portion is applied. This is a scoped,
+intentional gap (TCK-20260824-BREAKTHROUGH-BONUS-APPLICATION), not a defect.
+
+**Separately unimplemented:** nothing in production/gameplay code constructs
+`IdentityUpdate(breakthroughs_add=[...])` — the mechanic that grants a breakthrough (populating
+`identity.active_breakthroughs`) is fully wired end-to-end (`IdentityUpdate` → `IdentityPatch` →
+state) but is never invoked outside tests (see `TCK-20260808-TRAIT-EXPRESSED-PRODUCER-INVESTIGATION`).
+Bonus *application* (this section) is independent of bonus *granting* and does not require it.
 
 ---
 
@@ -220,7 +247,7 @@ Biological pressures affect combat multipliers but do **not** alter base stat va
 Progression evaluation runs in the **lifecycle systems phase** after combat resolution:
 - XP grants are emitted as `IdentityUpdate(evolution_points_delta=...)` from combat/quest resolution
 - `LevelingService` evaluates accumulated XP against threshold — level-up fires if threshold crossed
-- `recalculate_combat_stats()` is triggered by the apply path after any `IdentityUpdate` that modifies `evolution_level`, `attributes`, or equipment
+- `recalculate_combat_stats()` is triggered by the apply path (`ApplyPath._apply_entity_update_to_dict`'s `stats_dirty` gate) after any `IdentityUpdate` that modifies `evolution_level`, `attributes`, equipment, `learned_skills`, `traits_add`/`traits_remove`, or `breakthroughs_add`
 
 ---
 
@@ -250,7 +277,10 @@ Progression evaluation runs in the **lifecycle systems phase** after combat reso
 | Equipment breaks during combat | `durability <= 0` → stat contribution zeroed on next `recalculate_combat_stats()` call |
 | Passive skill (`swift_reflexes`) equipped before level-up | Evasion bonus applies in Step 3 of recalc on the next stat recalculation |
 | Role score tie (e.g. VANGUARD and PROTECTOR equal) | `max()` returns first matched key — tie-breaking is implementation-defined by dict iteration order |
-| Breakthrough triggered at level-up | `apply_bonuses()` placeholder returns without applying bonuses — no effect until implemented |
+| Entity has `active_breakthroughs` populated | `apply_bonuses()` sums matching registry `attribute_bonuses` and applies them before `recalculate_combat_stats()` runs |
+| `active_breakthroughs` is empty or `None` | `apply_bonuses()` returns `current_attributes` unchanged (no-op) |
+| Unknown breakthrough ID in `active_breakthroughs` | Ignored, no error raised |
+| `fleet_foot` active | Its `agility +3` is applied; its `evasion_flat: 0.05` is not (unwired, see Breakthroughs section) |
 
 ---
 
@@ -308,7 +338,7 @@ Step 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
 |---|---|
 | `src/progression/leveling.py` | `LevelingService` — threshold formula, level-up execution, stat recalc |
 | `src/progression/skills.py` | `SkillScalingService` — attribute-driven skill power scaling |
-| `src/progression/breakthroughs.py` | `BreakthroughService` — registry + placeholder `apply_bonuses()` |
+| `src/progression/breakthroughs.py` | `BreakthroughService` — registry + `apply_bonuses()` (implemented) |
 | `src/progression/evolution.py` | Entity evolution on level cap events |
 | `src/systems/lifecycle_systems/` | Lifecycle system invoking LevelingService per tick |
 
@@ -324,6 +354,8 @@ Step 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
 | Parity ledger `progression.yaml` | `xp_threshold_formula` (verified), `level_cap_enforced` (verified) |
 | Parity ledger `progression.yaml` PROG-067–PROG-070 | AP allocation gates |
 | `tests_v2/test_skill_scaling.py` | PHYSICAL/MAGICAL/ELEMENTAL scaling formulas |
+| `tests/unit/progression/test_breakthroughs.py` | `apply_bonuses()` sum/empty/unknown/mixed-ID behavior; parity ledger PROG-024 |
+| `tests/unit/core/test_rpg_depth.py` | `active_breakthroughs` wiring through `get_effective_stats()` and the apply path's `stats_dirty` gate |
 
 ---
 
@@ -337,9 +369,13 @@ To add a new skill unlock:
 5. Add regression tests covering: unlock fires at correct level, stat contribution applies, scaling formula verified
 6. Update this doc and `01_entity_anatomy.md` if the skill changes progression gameplay
 
-To implement breakthroughs:
-1. Replace the placeholder in `BreakthroughService.apply_bonuses()` with actual attribute delta logic
-2. Hook `apply_bonuses()` into the level-up or event trigger path
-3. Add a `recalculate_combat_stats()` call after breakthrough application
-4. Update this doc's Breakthroughs section from "placeholder" to "authoritative"
-5. Add parity ledger entries in `progression.yaml` with `status: verified`
+To add a new breakthrough:
+1. Register the ID in `BreakthroughService.REGISTRY` (`src/progression/breakthroughs.py`) with
+   an `attribute_bonuses` dict keyed by `AttributeComponent` field name
+2. If the bonus targets a derived stat rather than a base attribute (like `fleet_foot`'s
+   `evasion_flat`), it will **not** apply automatically — `apply_bonuses()` only sums
+   `attribute_bonuses` onto `AttributeComponent`; a derived-stat bonus needs its own wiring
+   (currently unimplemented, see the Breakthroughs section's Known gap above)
+3. Update the Breakthroughs section's registry table above and `01_entity_anatomy.md`
+   Section 5's Breakthroughs subsection
+4. Add or update parity ledger entries in `progression.yaml` with a real `test_path`

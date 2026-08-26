@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-19
+last_verified: 2026-08-26
 ---
 
 # Chapter 1: Entity Anatomy
@@ -100,6 +100,22 @@ XP_Required = int(100 * (level ** 1.5))
     *   Level 2: `power_strike`
     *   Level 5: `swift_reflexes`
     *   Level 10: `fireball`
+
+### Breakthroughs (Passive Perks)
+Breakthroughs are milestone-earned passive perks, keyed by breakthrough ID rather than
+level, registered in `BreakthroughService.REGISTRY` (`src/progression/breakthroughs.py`):
+
+*   **`iron_will`**: `spirit +2`, `wisdom +2`.
+*   **`fleet_foot`**: `agility +3`, plus a separate non-attribute `evasion_flat: 0.05` bonus.
+    The `evasion_flat` bonus targets the derived evasion stat directly rather than a base
+    attribute, and is not yet wired into the effective-stats path described below.
+*   **`titan_grip`**: `strength +4`.
+
+**Application rule**: an entity's active breakthrough IDs' `attribute_bonuses` are summed and
+applied to its base `AttributeComponent` — via `BreakthroughService.apply_bonuses` — before
+combat-stat derivation (Section 2's formulas). Bonus-adjusted attributes then flow into
+`LevelingService.recalculate_combat_stats` the same way base attributes do; the formulas in
+Section 2 are unchanged, only the attribute values feeding them are pre-adjusted.
 
 ---
 

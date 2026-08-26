@@ -461,9 +461,10 @@ class ApplyPath:
             update.attributes is not None or 
             update.equipment is not None or 
             (update.identity is not None and (
-                update.identity.learned_skills or 
-                update.identity.traits_add or 
+                update.identity.learned_skills or
+                update.identity.traits_add or
                 update.identity.traits_remove or
+                update.identity.breakthroughs_add or
                 (update.identity.evolution_level_set is not None and update.identity.evolution_level_set > entity.identity.evolution_level)
             )) or
             (curr_id.evolution_level > entity.identity.evolution_level) or
@@ -481,7 +482,8 @@ class ApplyPath:
                 wounds=new_com.wounds, scars=new_com.scars,
                 learned_skills=new_id.learned_skills,
                 traits=new_id.traits,
-                current_role=new_com.tactical_role
+                current_role=new_com.tactical_role,
+                active_breakthroughs=new_id.active_breakthroughs
             )
             
             new_com = replace(new_com,

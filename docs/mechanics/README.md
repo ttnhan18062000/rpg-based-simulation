@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-06
+last_verified: 2026-08-26
 ---
 
 # Simulation Mechanics Bible
@@ -72,7 +72,7 @@ The following companion docs extend the Mechanics Bible chapters with formula de
 | [`resource_conservation_contract.md`](resource_conservation_contract.md) | Chapter 03 | Atomic law 4-gate sequence, all 13 failure codes, loot vs regular node, home storage, crafting atomicity, market pricing, concurrent reservation |
 | [`adventure_routing_contract.md`](adventure_routing_contract.md) | Chapter 04 | 13 RouteFamily values, opportunity inputs, blocker handling, scoring formula, personality bias, candidate cap, fallback guarantee, ObjectiveIntentResolver |
 | [`damage_formula_contract.md`](damage_formula_contract.md) | Chapter 02 | Fractional armor mitigation formula, 7 tactical modifiers in exact application order, durability decay, wound infliction (25% source-authoritative), AoE splash, kill rewards |
-| [`attribute_progression_contract.md`](attribute_progression_contract.md) | Chapter 01 | XP threshold formula, level-up execution, +5 AP per level, skill unlocks, 6-phase stat recalc order, skill scaling by type, breakthrough placeholder status |
+| [`attribute_progression_contract.md`](attribute_progression_contract.md) | Chapter 01 | XP threshold formula, level-up execution, +5 AP per level, skill unlocks, 6-phase stat recalc order, skill scaling by type, breakthrough bonus application |
 
 ---
 

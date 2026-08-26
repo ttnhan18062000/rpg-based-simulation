@@ -494,6 +494,21 @@ class TestEffectiveStats:
         stats = SkillScalingService.get_effective_stats(attrs)
         assert stats["evasion"] <= 0.95
 
+    def test_get_effective_stats_applies_breakthrough_attribute_bonus(self):
+        """active_breakthroughs reaches apply_bonuses and surfaces in derived atk."""
+        attrs = AttributeComponent(strength=10, vitality=10, agility=10, endurance=10)
+        clean_stats = SkillScalingService.get_effective_stats(attrs)
+        boosted_stats = SkillScalingService.get_effective_stats(attrs, active_breakthroughs={"titan_grip"})
+        assert boosted_stats["atk"] > clean_stats["atk"]
+
+    def test_get_effective_stats_no_breakthroughs_unchanged(self):
+        """Omitted, None, and empty-set active_breakthroughs all produce identical output."""
+        attrs = AttributeComponent(strength=10, vitality=10, agility=10, endurance=10)
+        stats_omitted = SkillScalingService.get_effective_stats(attrs)
+        stats_none = SkillScalingService.get_effective_stats(attrs, active_breakthroughs=None)
+        stats_empty = SkillScalingService.get_effective_stats(attrs, active_breakthroughs=set())
+        assert stats_omitted == stats_none == stats_empty
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # APPLY PATH INTEGRATION TESTS
@@ -599,3 +614,42 @@ class TestPassiveStaminaRegen:
         new_state = ApplyPath.apply_generation(state, update, next_tick=2)
         # Regen should have increased stamina
         assert new_state.entities[1].stamina.current > 50.0
+
+
+class TestBreakthroughApplyIntegration:
+    def test_apply_path_recomputes_combat_stats_from_active_breakthroughs(self):
+        """An entity with active_breakthroughs shows the bonus in recomputed combat stats."""
+        from src.engine.apply import ApplyPath
+        from src.core.updates import IdentityUpdate
+
+        boosted_entity = make_entity(strength=10)
+        boosted_entity = replace(
+            boosted_entity,
+            identity=replace(boosted_entity.identity, active_breakthroughs={"titan_grip"})
+        )
+        plain_entity = make_entity(strength=10)
+
+        update = EntityUpdate(
+            entity_id=1,
+            identity=IdentityUpdate(learned_skills=["swift_reflexes"])
+        )
+        boosted_result = ApplyPath._apply_entity_update(boosted_entity, update)
+        plain_result = ApplyPath._apply_entity_update(plain_entity, update)
+
+        assert boosted_result.combat.atk > plain_result.combat.atk
+
+    def test_apply_path_stats_dirty_triggers_on_breakthroughs_add_alone(self):
+        """An IdentityUpdate with only breakthroughs_add still recomputes combat stats."""
+        from src.engine.apply import ApplyPath
+        from src.core.updates import IdentityUpdate
+
+        entity = make_entity(strength=10)
+        before = ApplyPath._apply_entity_update(entity, EntityUpdate(entity_id=1))
+
+        update = EntityUpdate(
+            entity_id=1,
+            identity=IdentityUpdate(breakthroughs_add=["titan_grip"])
+        )
+        result = ApplyPath._apply_entity_update(entity, update)
+
+        assert result.combat.atk > before.combat.atk
