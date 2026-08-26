@@ -1661,3 +1661,46 @@ class EventExtractor:
                     ))
 
         return events
+
+    @staticmethod
+    def detect_grief_triggers(
+        prior_state: AuthoritativeState,
+        current_state: AuthoritativeState,
+    ) -> List[Any]:
+        """Detect mid-tick grief-urgency triggers from a live ally's death.
+
+        Re-walks the same lifecycle.active True→False transition condition used above
+        (line ~483's death-detection block) independently, as a second bounded pass over
+        current_state.entities — EventExtractor.extract()'s own List[SimulationEvent]
+        return type must not change (regression risk to its many callers/tests), so this
+        lives as a sibling method rather than folded into extract() itself.
+
+        Returns (griever_id, dead_ally_id, urgency) triples for every currently-alive
+        entity whose entity.social.trust_history toward the newly-dead entity meets
+        ALLY_TRUST_THRESHOLD. Urgency uses the exact same formula as
+        CampaignOrchestrator._advance_grief_urgencies() (min(1.0, trust * 0.8)) so the
+        mid-episode and episode-boundary trigger paths cannot drift apart.
+
+        Called from Kernel._phase_observability, immediately after this class's own
+        extract() call (TCK-20260824-GRIEF-NEMESIS-REACHABILITY) — the caller builds
+        GriefUrgencyTriggeredEvent from each triple and queues the triple onto
+        Kernel._pending_grief_triggers for a later tick's _phase_resolution to drain
+        through StrategicPatch/ApplyPath.
+        """
+        from src.core.social_constants import ALLY_TRUST_THRESHOLD
+
+        triggers: List[Any] = []
+        for eid, entity in current_state.entities.items():
+            prior_ent = prior_state.entities.get(eid)
+            if prior_ent is None:
+                continue
+            if not (prior_ent.lifecycle.active and not entity.lifecycle.active):
+                continue
+            for other_id, other in current_state.entities.items():
+                if other_id == eid or not other.lifecycle.active:
+                    continue
+                trust = getattr(other.social, "trust_history", {}).get(eid, 0.0)
+                if trust >= ALLY_TRUST_THRESHOLD:
+                    urgency = round(min(1.0, trust * 0.8), 6)
+                    triggers.append((other_id, eid, urgency))
+        return triggers

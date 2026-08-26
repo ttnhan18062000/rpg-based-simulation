@@ -71,6 +71,29 @@ def _load_profile_feature_flags(profile: str) -> dict:
         return {}
 
 
+def _load_profile_campaign_episodes(profile: str) -> int:
+    """Read the optional ``campaign_episodes:`` key from a scoring profile YAML.
+
+    Returns 0 (selecting the single-episode ``_run_engine()`` path) if the profile file
+    does not exist, has no ``campaign_episodes:`` key, or the value is not a positive
+    int. A profile with ``campaign_episodes: N`` (N > 0) selects ``_run_campaign_engine()``
+    instead — see main() (TCK-20260824-GRIEF-NEMESIS-REACHABILITY).
+    """
+    profile_path = os.path.join(
+        "config", "simulation_quality", "profiles", f"{profile}.yaml"
+    )
+    if not os.path.exists(profile_path):
+        return 0
+    try:
+        import yaml
+        with open(profile_path, encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh) or {}
+        return int(raw.get("campaign_episodes", 0) or 0)
+    except Exception as exc:
+        logger.warning("Could not read campaign_episodes from profile '%s': %s", profile, exc)
+        return 0
+
+
 def _load_weights(profile: str = "default"):
     from src.simulation_quality.weights import ScoringWeights
     return ScoringWeights.load(
@@ -338,6 +361,83 @@ def _run_engine(
     return run_dir, elapsed, run_id or ""
 
 
+def _run_campaign_engine(
+    name: str,
+    seed: int,
+    ticks: int,
+    episodes: int,
+    entity_count: int = 10,
+    extra_flags: dict | None = None,
+    cal_dir: str | None = None,
+) -> tuple[str, float, str]:
+    """Drive CampaignOrchestrator.run_episode() N times; return (run_dir, elapsed_sec, run_id).
+
+    Parallel to _run_engine() (same (run_dir, elapsed, run_id) return contract) but for
+    campaign-mode profiles (``campaign_episodes > 0`` in the profile YAML, selected by
+    main() via _load_profile_campaign_episodes()). Establishes a real production entry
+    point for CampaignOrchestrator.run_episode() — previously reachable only from test
+    scaffolding (TCK-20260824-GRIEF-NEMESIS-REACHABILITY).
+
+    Each episode runs its own Kernel (via ScenarioRuntimeService inside
+    CampaignOrchestrator) and writes its own ``data/runs/{episode_run_id}/
+    simulation_events.jsonl``. After all episodes complete, those per-episode JSONL
+    files are appended onto the campaign-level EventRecorder's own JSONL file so that
+    main()'s existing _replay_jsonl_through_hub() sees every episode's mid-tick events
+    (including grief_urgency_triggered) plus the campaign-level events
+    (nemesis_relation_formed, chronicle_entry_created) in one replay pass.
+
+    ``extra_flags`` is accepted for signature parity with _run_engine() but not applied
+    here — campaign-mode profiles set feature flags via CampaignOrchestrator's own
+    AuthoritativeState construction path, not a single upfront Kernel construction.
+    """
+    from src.domains.campaigns.orchestrator import CampaignManifest, CampaignOrchestrator
+    from src.observability.event_recorder import EventRecorder
+    from src.scenarios.schema import SimulationScenarioDefinition
+
+    campaign_run_id = f"campaign_{name}_{int(time.time())}"
+    campaign_run_dir = os.path.join("data", "runs", campaign_run_id)
+
+    manifest = CampaignManifest(
+        id=name,
+        episodes=[
+            SimulationScenarioDefinition(
+                id=f"{name}_ep{i}",
+                world_composition="frontier_living_world",
+                perspective="hero_guild_perspective",
+                victory_conditions=[{"kind": "tick_limit", "value": ticks}],
+            )
+            for i in range(episodes)
+        ],
+        base_seed=seed,
+    )
+
+    campaign_recorder = EventRecorder(run_dir=campaign_run_dir, max_events=5000, enabled=True)
+    orchestrator = CampaignOrchestrator(manifest, event_recorder=campaign_recorder)
+
+    start = time.perf_counter()
+    episode_run_ids: list[str] = []
+    for _ in range(episodes):
+        summary = orchestrator.run_episode()
+        if summary.run_id:
+            episode_run_ids.append(summary.run_id)
+    elapsed = time.perf_counter() - start
+
+    campaign_recorder.shutdown()
+    time.sleep(0.3)
+
+    if campaign_recorder.filepath:
+        with open(campaign_recorder.filepath, "a", encoding="utf-8") as out_fh:
+            for episode_run_id in episode_run_ids:
+                episode_jsonl = os.path.join(
+                    "data", "runs", episode_run_id, "simulation_events.jsonl"
+                )
+                if os.path.exists(episode_jsonl):
+                    with open(episode_jsonl, encoding="utf-8") as in_fh:
+                        out_fh.write(in_fh.read())
+
+    return campaign_run_dir, elapsed, campaign_run_id
+
+
 def _replay_jsonl_through_hub(run_dir: str, hub) -> int:
     """Read simulation_events.jsonl from run_dir and replay each event through hub."""
     from src.observability.events import ObservabilityEventEnvelope
@@ -425,10 +525,18 @@ def main():
         print(f"[calibrate_simq] Profile feature flags: {profile_feature_flags}")
 
     print(f"[calibrate_simq] Running engine: {run_tag} entities={args.entities} profile={profile}")
-    engine_run_dir, elapsed, run_id = _run_engine(
-        args.name, args.seed, args.ticks, args.entities,
-        extra_flags=profile_feature_flags, cal_dir=cal_dir,
-    )
+    campaign_episodes = _load_profile_campaign_episodes(profile)
+    if campaign_episodes > 0:
+        print(f"[calibrate_simq] Campaign-mode profile: {campaign_episodes} episode(s)")
+        engine_run_dir, elapsed, run_id = _run_campaign_engine(
+            args.name, args.seed, args.ticks, campaign_episodes, args.entities,
+            extra_flags=profile_feature_flags, cal_dir=cal_dir,
+        )
+    else:
+        engine_run_dir, elapsed, run_id = _run_engine(
+            args.name, args.seed, args.ticks, args.entities,
+            extra_flags=profile_feature_flags, cal_dir=cal_dir,
+        )
     print(f"[calibrate_simq] Engine done in {elapsed:.2f}s. JSONL at: {engine_run_dir}")
 
     weights = _load_weights(profile)

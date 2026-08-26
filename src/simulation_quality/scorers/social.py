@@ -28,6 +28,8 @@ class SocialScorer(PillarScorer):
         "contract_expired_offer",
         "reputation_delta",
         "social_memory_created",
+        "grief_urgency_triggered",
+        "nemesis_relation_formed",
     )
 
     def __init__(self, weights: ScoringWeights) -> None:
@@ -113,5 +115,11 @@ class SocialScorer(PillarScorer):
 
         if et == "social_memory_created":
             return _rec(self.weights["relationship_depth"], "social memory created for significant interaction", ("relationship_depth",))
+
+        if et == "grief_urgency_triggered":
+            return _rec(self.weights["grief_urgency_triggered"], "grief urgency injected from ally death", ("grief_urgency",))
+
+        if et == "nemesis_relation_formed":
+            return _rec(self.weights["nemesis_relation_formed"], "nemesis relation formed from repeated antagonism", ("nemesis_relation",))
 
         return None

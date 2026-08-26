@@ -121,6 +121,26 @@ class TestSocialMemory:
         assert rec.delta == scoring_weights["relationship_depth"]
 
 
+class TestGriefNemesis:
+    def test_social_scorer_scores_grief_urgency_triggered(
+        self, scorer: SocialScorer, scoring_weights: ScoringWeights
+    ) -> None:
+        rec = scorer.score(_env("grief_urgency_triggered"), _ctx())
+        assert rec is not None
+        assert rec.pillar == PillarId.SOCIAL
+        assert rec.delta == scoring_weights["grief_urgency_triggered"]
+        assert "grief_urgency" in rec.tags
+
+    def test_social_scorer_scores_nemesis_relation_formed(
+        self, scorer: SocialScorer, scoring_weights: ScoringWeights
+    ) -> None:
+        rec = scorer.score(_env("nemesis_relation_formed"), _ctx())
+        assert rec is not None
+        assert rec.pillar == PillarId.SOCIAL
+        assert rec.delta == scoring_weights["nemesis_relation_formed"]
+        assert "nemesis_relation" in rec.tags
+
+
 class TestAllianceExclusion:
     def test_alliance_formed_not_in_event_types(self, scorer: SocialScorer) -> None:
         """SocialScorer must NOT score alliance_formed — that belongs to FactionScorer."""

@@ -284,6 +284,46 @@ class TestAliveEntityCount:
             svc.abort()
 
 
+# ── run_id (TCK-20260824-GRIEF-NEMESIS-REACHABILITY, Step 1a) ─────────────────
+
+class TestRunId:
+    def test_returns_none_before_start(self):
+        svc = _make_service()
+        assert svc.run_id is None
+
+    def test_returns_kernel_run_id_after_start(self):
+        svc = _make_service()
+        try:
+            svc.start(tick_limit=1)
+            assert svc.run_id == svc._kernel._run_id
+            assert svc.run_id is not None
+        finally:
+            svc.abort()
+
+
+class TestFlushPendingGriefTriggers:
+    def test_noop_when_kernel_not_built(self):
+        """flush_pending_grief_triggers() must not raise when the kernel was never started."""
+        svc = _make_service()
+        svc.flush_pending_grief_triggers()  # no exception
+
+    def test_delegates_to_kernel(self, monkeypatch):
+        svc = _make_service()
+        try:
+            svc.start(tick_limit=1)
+            called = []
+            # Kernel uses __slots__ — patch the class method, not an instance attribute.
+            monkeypatch.setattr(
+                type(svc._kernel),
+                "drain_pending_triggers_at_teardown",
+                lambda self: called.append(True),
+            )
+            svc.flush_pending_grief_triggers()
+            assert called == [True]
+        finally:
+            svc.abort()
+
+
 # ── victory_conditions schema ─────────────────────────────────────────────────
 
 class TestVictoryConditionsSchema:

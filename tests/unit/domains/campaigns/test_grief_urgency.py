@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import pytest
 from dataclasses import replace as dc_replace
+from unittest.mock import MagicMock
 
 from src.domains.campaigns.state import (
     GriefUrgencyModifier, NarrativeLedgerEntry, CampaignState, NemesisRelation,
@@ -350,3 +351,166 @@ def test_campaign_state_from_dict_missing_nemesis():
     d = {"campaign_id": "x", "episode_index": 0}
     state = CampaignState.from_dict(d)
     assert state.nemesis_relations == {}
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260824-GRIEF-NEMESIS-REACHABILITY — Step 2: StrategicUpdate-returning builders
+# ---------------------------------------------------------------------------
+
+def test_grief_urgency_importer_returns_strategic_update():
+    """AC3: build_strategic_update() returns a StrategicUpdate(concerns_add_or_update=[...])
+    with the same concern_id/urgency shape apply() would have injected, for the
+    mid-episode (live Kernel tick) caller."""
+    from src.core.updates import StrategicUpdate
+    from src.core.strategic import ConcernKind
+
+    modifier = _grief_modifier(entity_id=1, dead_ally_id=42, urgency=0.7)
+    update = GriefUrgencyImporter.build_strategic_update(modifier)
+
+    assert isinstance(update, StrategicUpdate)
+    assert len(update.concerns_add_or_update) == 1
+    concern = update.concerns_add_or_update[0]
+    assert concern.id == "grief_ally_42"
+    assert concern.kind == ConcernKind.SOCIAL_THREAT
+    assert concern.urgency == pytest.approx(0.7)
+
+    # Same concern id/kind/urgency shape as the episode-boundary apply() path.
+    entity = _entity(1)
+    applied = GriefUrgencyImporter.apply(entity, modifier)
+    applied_concern = applied.strategic.concerns["grief_ally_42"]
+    assert concern.id == applied_concern.id
+    assert concern.kind == applied_concern.kind
+    assert concern.urgency == pytest.approx(applied_concern.urgency)
+
+
+def test_grief_urgency_build_strategic_update_does_not_mutate_anything():
+    modifier = _grief_modifier(entity_id=1, dead_ally_id=55, urgency=0.5)
+    update1 = GriefUrgencyImporter.build_strategic_update(modifier)
+    update2 = GriefUrgencyImporter.build_strategic_update(modifier)
+    assert update1.concerns_add_or_update[0].id == update2.concerns_add_or_update[0].id
+    assert update1 is not update2
+
+
+def test_nemesis_relation_importer_returns_strategic_update():
+    """Step 2 architectural symmetry: NemesisRelationImporter.build_strategic_update()
+    returns a StrategicUpdate(blockers_add_or_update=[...]) matching apply()'s shape.
+    Not wired to any live call site (see grief_urgency.py docstring) — tested here only
+    for the builder's own correctness."""
+    from src.core.updates import StrategicUpdate
+    from src.core.strategic import BlockerKind
+
+    rel = _nemesis(protagonist_id=1, antagonist_id=9)
+    update = NemesisRelationImporter.build_strategic_update(rel)
+
+    assert isinstance(update, StrategicUpdate)
+    assert len(update.blockers_add_or_update) == 1
+    blocker = update.blockers_add_or_update[0]
+    assert blocker.id == "nemesis_9"
+    assert blocker.kind == BlockerKind.SOCIAL
+    assert blocker.subject == "9"
+
+    entity = _entity(1)
+    applied = NemesisRelationImporter.apply(entity, rel)
+    applied_blocker = applied.strategic.blockers["nemesis_9"]
+    assert blocker.id == applied_blocker.id
+    assert blocker.kind == applied_blocker.kind
+    assert blocker.subject == applied_blocker.subject
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260824-GRIEF-NEMESIS-REACHABILITY — Step 6: episode-boundary event emission
+# ---------------------------------------------------------------------------
+
+def test_advance_grief_urgencies_emits_event_only_for_newly_created():
+    """grief_urgency_triggered fires only for new-death-triggered modifiers, not for
+    every decayed-but-still-positive existing modifier."""
+    from src.domains.campaigns.orchestrator import CampaignOrchestrator
+
+    existing = {2: _grief_modifier(entity_id=2, dead_ally_id=77, urgency=0.6)}
+    mem = SocialMemoryRecord(entity_id=1, relationship_scores={99: 0.8})
+    state = _make_campaign_state(grief_urgencies=existing, social_memories={1: mem})
+
+    spy_recorder = MagicMock()
+    orch = object.__new__(CampaignOrchestrator)
+    orch._state = state
+    orch._event_recorder = spy_recorder
+
+    entries = [_death_entry(dead_id=99, episode=1)]
+    orch._advance_grief_urgencies(entries, episode_index=1, tick=42)
+
+    recorded_types = [
+        call.args[0].event_type for call in spy_recorder.record.call_args_list
+    ]
+    assert recorded_types.count("grief_urgency_triggered") == 1
+    grief_events = [
+        call.args[0] for call in spy_recorder.record.call_args_list
+        if call.args[0].event_type == "grief_urgency_triggered"
+    ]
+    assert grief_events[0].entity_id == 1
+    assert grief_events[0].event_category == "social"
+    assert grief_events[0].payload["dead_ally_id"] == 99
+    assert grief_events[0].tick == 42
+
+
+def test_advance_grief_urgencies_noop_recorder_when_none():
+    from src.domains.campaigns.orchestrator import CampaignOrchestrator
+
+    mem = SocialMemoryRecord(entity_id=1, relationship_scores={99: 0.8})
+    state = _make_campaign_state(social_memories={1: mem})
+    orch = object.__new__(CampaignOrchestrator)
+    orch._state = state
+    orch._event_recorder = None
+
+    entries = [_death_entry(dead_id=99, episode=0)]
+    orch._advance_grief_urgencies(entries, episode_index=0, tick=1)  # must not raise
+
+
+def test_advance_nemesis_relations_emits_event_only_once_per_new_relation():
+    """nemesis_relation_formed fires exactly once per newly-formed relation, not on
+    every episode a pre-existing relation is merely refreshed."""
+    from src.domains.campaigns.orchestrator import CampaignOrchestrator
+
+    mem = SocialMemoryRecord(
+        entity_id=1,
+        interaction_history=(
+            _interaction(other_id=99, kind="betrayed", episode=0),
+            _interaction(other_id=99, kind="conflict", episode=1),
+        ),
+    )
+    state = _make_campaign_state(social_memories={1: mem})
+    spy_recorder = MagicMock()
+    orch = object.__new__(CampaignOrchestrator)
+    orch._state = state
+    orch._event_recorder = spy_recorder
+
+    # First call — relation newly formed, must emit exactly once.
+    orch._advance_nemesis_relations(episode_index=2, tick=10)
+    assert spy_recorder.record.call_count == 1
+    first_event = spy_recorder.record.call_args_list[0].args[0]
+    assert first_event.event_type == "nemesis_relation_formed"
+    assert first_event.entity_id == 1
+    assert first_event.event_category == "social"
+    assert first_event.payload["antagonist_id"] == 99
+
+    # Second call — same relation refreshed (not newly-formed) — must not re-emit.
+    spy_recorder.reset_mock()
+    orch._advance_nemesis_relations(episode_index=3, tick=11)
+    assert spy_recorder.record.call_count == 0
+
+
+def test_advance_nemesis_relations_noop_recorder_when_none():
+    from src.domains.campaigns.orchestrator import CampaignOrchestrator
+
+    mem = SocialMemoryRecord(
+        entity_id=1,
+        interaction_history=(
+            _interaction(other_id=99, kind="betrayed", episode=0),
+            _interaction(other_id=99, kind="conflict", episode=1),
+        ),
+    )
+    state = _make_campaign_state(social_memories={1: mem})
+    orch = object.__new__(CampaignOrchestrator)
+    orch._state = state
+    orch._event_recorder = None
+
+    orch._advance_nemesis_relations(episode_index=2, tick=1)  # must not raise

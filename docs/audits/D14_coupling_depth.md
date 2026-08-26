@@ -246,7 +246,7 @@ call site:
 | File | Line | Import | Pattern |
 |---|---|---|---|
 | `domains/campaigns/narrative_ledger.py:71` | `src.observability.events.SimulationEvent` | Lazy (inside `emit_chronicle_event`, guarded by `if self._event_recorder is not None:`) |
-| `domains/campaigns/orchestrator.py:319` | `src.observability.events.SimulationEvent` | Lazy (guarded by `if self._event_recorder is None: return` immediately above) |
+| `domains/campaigns/orchestrator.py:418` | `src.observability.events.SimulationEvent` | Lazy (inside shared helper `_emit_domain_event()`, guarded by `if self._event_recorder is None: return` at each of its 3 callers — `_emit_chronicle_events()`, `_emit_grief_urgency_events()`, `_emit_nemesis_event()` — before every call) |
 
 Both sites are enforced-pinned by
 `tests/architecture/test_phase18_import_boundaries.py::test_domains_do_not_import_observability_outside_pinned_exceptions`

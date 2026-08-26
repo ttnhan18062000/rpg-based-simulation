@@ -346,3 +346,105 @@ def test_campaign_state_importable_alongside_orchestrator():
 
     assert CampaignState is not None
     assert CampaignOrchestrator is not None
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260824-GRIEF-NEMESIS-REACHABILITY — Step 1a: run_id plumbing
+# ---------------------------------------------------------------------------
+
+def test_episode_summary_carries_run_id():
+    """Step 1a: run_episode() captures svc.run_id into EpisodeSummary.run_id."""
+    manifest = _make_manifest(n_episodes=1)
+    orch = CampaignOrchestrator(manifest)
+
+    mock_svc = MagicMock()
+    mock_svc.final_state = _make_mock_final_state(entities={})
+    mock_svc.tick = 10
+    mock_svc.run_id = "run_12345_abcd"
+
+    with patch(
+        "src.engine.scenario_runtime.ScenarioRuntimeService",
+        return_value=mock_svc,
+    ):
+        summary = orch.run_episode()
+
+    assert summary.run_id == "run_12345_abcd"
+    assert orch.state.episode_history[0].run_id == "run_12345_abcd"
+
+
+def test_episode_summary_run_id_defaults_empty_when_svc_run_id_none():
+    """Step 1a: a falsy svc.run_id (e.g. None) must not propagate as None — EpisodeSummary.run_id
+    stays a str, defaulting to ''."""
+    manifest = _make_manifest(n_episodes=1)
+    orch = CampaignOrchestrator(manifest)
+
+    mock_svc = MagicMock()
+    mock_svc.final_state = _make_mock_final_state(entities={})
+    mock_svc.tick = 10
+    mock_svc.run_id = None
+
+    with patch(
+        "src.engine.scenario_runtime.ScenarioRuntimeService",
+        return_value=mock_svc,
+    ):
+        summary = orch.run_episode()
+
+    assert summary.run_id == ""
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260824-GRIEF-NEMESIS-REACHABILITY — Step 1b: event_recorder wiring
+# ---------------------------------------------------------------------------
+
+def test_run_episode_passes_event_recorder_to_scenario_runtime():
+    """Step 1b: run_episode() must wire self._event_recorder through to
+    ScenarioRuntimeService — previously silently dropped at orchestrator.py:172."""
+    manifest = _make_manifest(n_episodes=1)
+    spy_recorder = MagicMock()
+    orch = CampaignOrchestrator(manifest, event_recorder=spy_recorder)
+
+    mock_svc = MagicMock()
+    mock_svc.final_state = _make_mock_final_state(entities={})
+    mock_svc.tick = 10
+    mock_svc.run_id = "run_x"
+
+    with patch(
+        "src.engine.scenario_runtime.ScenarioRuntimeService",
+        return_value=mock_svc,
+    ) as mock_ctor:
+        orch.run_episode()
+
+    _, kwargs = mock_ctor.call_args
+    assert kwargs.get("event_recorder") is spy_recorder
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260824-GRIEF-NEMESIS-REACHABILITY — Step 5b: episode-teardown flush ordering
+# ---------------------------------------------------------------------------
+
+def test_run_episode_flushes_pending_grief_triggers_before_reading_final_state():
+    """Step 5b: flush_pending_grief_triggers() must be called after svc.start() and
+    strictly before final_state is read (final_state returns a live-at-read-time
+    reference that the flush reassigns)."""
+    manifest = _make_manifest(n_episodes=1)
+    orch = CampaignOrchestrator(manifest)
+
+    call_order = []
+    mock_svc = MagicMock()
+    mock_svc.start.side_effect = lambda *a, **k: call_order.append("start")
+    mock_svc.flush_pending_grief_triggers.side_effect = lambda: call_order.append("flush")
+    type(mock_svc).final_state = property(
+        lambda self: call_order.append("read_final_state") or _make_mock_final_state(entities={})
+    )
+    mock_svc.tick = 5
+    mock_svc.run_id = "run_y"
+
+    with patch(
+        "src.engine.scenario_runtime.ScenarioRuntimeService",
+        return_value=mock_svc,
+    ):
+        orch.run_episode()
+
+    assert call_order.index("start") < call_order.index("flush") < call_order.index(
+        "read_final_state"
+    )

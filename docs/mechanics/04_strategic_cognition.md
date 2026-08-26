@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-12
+last_verified: 2026-08-26
 ---
 
 # Chapter 4: Strategic Cognition
@@ -101,6 +101,83 @@ A `Blocker` is a reason why a goal cannot be achieved. The `BlockerKind` enum (`
 *   **`capability`**: Action or navigation is blocked due to entity capability limits (e.g., entity cannot perform the required action type).
 *   **`social`**: Goal blocked by social relationship constraints.
 *   **`group`**: Goal blocked by group composition or group-level requirements.
+
+### Grief Urgency & Nemesis Relations: Two Injection Paths (TCK-20260824-GRIEF-NEMESIS-REACHABILITY)
+
+Grief-urgency `ConcernState`s and nemesis-relation `BlockerState`s (E43F/E43G) are injected via
+two structurally different paths, distinguished by whether a live `Kernel`/`ApplyPath` exists at
+injection time.
+
+**Path 1 — Episode boundary (pre-existing, both mechanisms).** At the start of each campaign
+episode, `CampaignOrchestrator._build_initial_state()` calls `GriefUrgencyImporter.apply()` /
+`NemesisRelationImporter.apply()` (`src/domains/campaigns/grief_urgency.py:65-79`,
+`:124-133`) for every `GriefUrgencyModifier`/`NemesisRelation` carried forward in
+`CampaignState.grief_urgencies`/`.nemesis_relations`. Both `apply()` methods return a **new**
+`EntityState` with the concern/blocker merged directly into `entity.strategic.concerns`/
+`.blockers` — a direct-return mutation shape, not a `StrategicUpdate`. This is only
+architecturally safe because it runs before any `Kernel` instance (and therefore any
+`ApplyPath`) exists for the episode; there is no live tick to bypass. `CampaignState.grief_
+urgencies`/`.nemesis_relations` are themselves populated at the *previous* episode's teardown by
+`CampaignOrchestrator._advance_grief_urgencies()`/`_advance_nemesis_relations()`
+(`src/domains/campaigns/orchestrator.py:214-221`), which detect new grief from `entity_death`
+narrative entries and scan cumulative social-memory interaction history for repeated antagonism,
+respectively.
+
+**Path 2 — Mid-episode, tick-time (new, grief only).** A live ally death detected *during* a
+running episode now injects the same `grief_ally_{dead_ally_id}` `SOCIAL_THREAT` concern within
+the same episode, through the authoritative pipeline rather than a direct `EntityState` return:
+
+1. `EventExtractor.detect_grief_triggers()` (`src/observability/event_extractor.py:1665-1706`)
+   is called from `Kernel._phase_observability()` (`src/engine/kernel.py:1009`), immediately
+   after that phase's own `EventExtractor.extract()` call. It re-walks the same
+   `lifecycle.active: True→False` transition condition used for death detection and returns
+   `(griever_id, dead_ally_id, urgency)` triples for every currently-alive entity whose
+   `entity.social.trust_history` toward the newly-dead entity meets `ALLY_TRUST_THRESHOLD`
+   (`0.30`, `src/core/social_constants.py` — re-exported by `grief_urgency.py` for its own
+   callers). `urgency = round(min(1.0, trust * 0.8), 6)` — the identical
+   formula `CampaignOrchestrator._advance_grief_urgencies()` uses, so the two paths cannot
+   diverge in value.
+2. Because Observability runs *after* that tick's own `ApplyPath` pass in the 7-phase kernel loop
+   (`docs/engine/kernel.md`), the resulting mutation cannot land in the same tick that detected
+   the death. `Kernel._phase_observability()` records a `GriefUrgencyTriggeredEvent` immediately
+   (`kernel.py:1008-1012`) and queues each triple onto `Kernel._pending_grief_triggers`
+   (`kernel.py:1013`).
+3. On the *next* tick's `_phase_resolution()`, `Kernel._drain_pending_grief_triggers()`
+   (`kernel.py:692-730`) converts each queued triple into a `StrategicUpdate` via
+   `GriefUrgencyImporter.build_strategic_update()` (`grief_urgency.py:81-91`) — built from the
+   same `_build_grief_concern()` helper (`grief_urgency.py:45-63`) Path 1's `apply()` uses, so
+   the concern id/shape cannot drift between the two paths. The `StrategicUpdate` is merged into
+   that tick's `entity_updates` (`EntityUpdate.merge()`, preserving any decision system's own
+   update for the same entity) and committed through the normal `AuthoritativeApplyPipeline.
+   refine()` / `ApplyPath` route (`kernel.py:635`, `:659-664`) — the same authoritative route
+   `src/engine/tactical.py` already uses for its own `StrategicUpdate`s. This is the durable-state
+   rule this mechanism now satisfies for any mid-tick caller, which the Path 1 direct-`EntityState`
+   -return shape could not.
+4. **Last-tick edge case:** a death on an episode's *final* tick has no subsequent tick to drain
+   into. `Kernel.drain_pending_triggers_at_teardown()` (`kernel.py:732-754`) is a one-shot
+   resolution+apply flush against the current (final) state — reusing
+   `_drain_pending_grief_triggers()` and the same `AuthoritativeApplyPipeline.refine()` +
+   `ApplyPath.apply_generation()` commit route, but running none of the other 6 kernel phases and
+   not advancing `tick`/`world_time`. `ScenarioRuntimeService.flush_pending_grief_triggers()`
+   (`src/engine/scenario_runtime.py:264`) invokes it, and `CampaignOrchestrator.run_episode()`
+   (`src/domains/campaigns/orchestrator.py:178`) calls that before reading `svc.final_state` —
+   guaranteeing the same-episode injection guarantee holds even on the terminal tick.
+
+**Nemesis relations do not (yet) have a mid-episode path.** `NemesisRelationImporter.
+build_strategic_update()` (`grief_urgency.py:135-150`) exists for architectural symmetry with
+`GriefUrgencyImporter`'s pair, but is not wired to any live call site: nemesis-relation formation
+requires `NEMESIS_EPISODE_COUNT >= 2` (`grief_urgency.py:28`) distinct *episodes* of antagonism
+history — a cross-episode aggregate that cannot be evaluated from a single live episode's data —
+so there is no natural mid-episode trigger condition for it, unlike grief (a single death event).
+
+**Reachability.** `CampaignOrchestrator.run_episode()` — the entry point both paths above
+ultimately run under — is now reachable from a real production entry point for the first time:
+`tools/calibrate_simq.py`'s new `campaign_life_arc` SimQ profile drives a new
+`_run_campaign_engine()` branch (`tools/calibrate_simq.py:364-415`) that constructs a
+`CampaignOrchestrator` and calls `run_episode()` in a loop, previously reachable only from tests.
+Both `grief_urgency_triggered` and `nemesis_relation_formed` `SimulationEvent`s
+(`event_category="social"`) are scored by the SOCIAL SimQ pillar
+(`src/simulation_quality/scorers/social.py`).
 
 ---
 

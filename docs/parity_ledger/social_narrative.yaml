@@ -3407,3 +3407,39 @@
     selection existed anywhere in the codebase; heir_entity_id was only ever set manually, and the
     transfer mechanic (src/engine/patches.py:84) had no writer for the unassigned case.
   support_boundary: null
+
+- id: SOC-246
+  text: >
+    SimQ SOCIAL pillar wiring for grief/nemesis events (TCK-20260824-GRIEF-NEMESIS-REACHABILITY,
+    AC2): grief_urgency_triggered (src/observability/events.py::GRIEF_URGENCY_TRIGGERED, emitted as
+    GriefUrgencyTriggeredEvent from both the episode-boundary path
+    (CampaignOrchestrator._emit_grief_urgency_events(), source_system="campaign_orchestrator") and
+    the mid-episode path (Kernel._phase_observability, source_system="event_extractor")) and
+    nemesis_relation_formed (src/observability/events.py::NEMESIS_RELATION_FORMED, emitted as
+    NemesisRelationFormedEvent from CampaignOrchestrator._emit_nemesis_event(), episode-boundary
+    only) are both event_category="social" SimulationEvents queryable by SocialPillarScorer
+    (src/simulation_quality/scorers/social.py): SocialPillarScorer.EVENT_TYPES includes both
+    event_type strings, and SocialPillarScorer.score() returns a ScoreRecord keyed
+    "grief_urgency"/"nemesis_relation" respectively, weighted by
+    ScoringWeights["grief_urgency_triggered"]/["nemesis_relation_formed"]. Both orchestrator
+    emission sites route through a shared _emit_domain_event() helper (constructs the base
+    SimulationEvent + payload dict) rather than duplicating envelope construction per call site.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/events.py — GRIEF_URGENCY_TRIGGERED/NEMESIS_RELATION_FORMED constants,
+    GriefUrgencyTriggeredEvent/NemesisRelationFormedEvent (event_category="social").
+    src/simulation_quality/scorers/social.py — SocialPillarScorer.EVENT_TYPES, .score()
+    grief_urgency_triggered/nemesis_relation_formed branches. src/domains/campaigns/orchestrator.py
+    — _emit_grief_urgency_events(), _emit_nemesis_event(), _emit_domain_event() (shared envelope
+    helper). src/engine/kernel.py — Kernel._phase_observability mid-tick GriefUrgencyTriggeredEvent
+    recording. Verified by TCK-20260824-GRIEF-NEMESIS-REACHABILITY.
+  proof_type: parity
+  test_path: tests/simulation_quality/test_social_scorer.py::TestGriefNemesis::test_social_scorer_scores_grief_urgency_triggered,
+    tests/simulation_quality/test_social_scorer.py::TestGriefNemesis::test_social_scorer_scores_nemesis_relation_formed
+  divergence_note: >
+    New mechanic added by TCK-20260824-GRIEF-NEMESIS-REACHABILITY. No prior parity entry covered
+    SOCIAL pillar scoring of grief/nemesis events (SOC-231/SOC-232 cover the domain-state mechanics
+    only, not the SimQ observability/scoring wiring).
+  support_boundary: null

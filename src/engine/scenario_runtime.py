@@ -254,6 +254,19 @@ class ScenarioRuntimeService:
             return None
         return self._kernel.state
 
+    @property
+    def run_id(self) -> Optional[str]:
+        """The underlying Kernel's run_id, or None if not yet started."""
+        if self._kernel is None:
+            return None
+        return getattr(self._kernel, "_run_id", None)
+
+    def flush_pending_grief_triggers(self) -> None:
+        """Drain any Kernel-queued grief trigger detected on the episode's final tick, before
+        final_state is read. No-op if the kernel was never built or nothing is queued."""
+        if self._kernel is not None:
+            self._kernel.drain_pending_triggers_at_teardown()
+
     # ── internal ───────────────────────────────────────────────────────────────
 
     def _run_loop(self, tick_limit: int) -> None:
