@@ -39,10 +39,16 @@ Each milestone epic below cites specific idea numbers; look them up in the atlas
 
 ## Milestones
 
-### M1 — Quick Wins & Housekeeping (ready to ticket now)
+### M1 — Quick Wins & Housekeeping (IN PROGRESS)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M1-QUICK-WINS` (not yet created — see
-`docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md`, fully scoped, 20 ideas).
+**Tracking**: no separate `TCK-...-EPIC-RPG-M1-QUICK-WINS` ticket was created — the batch is tracked
+directly via the ticket folder `tickets/todos/m1-quick-wins/` (`SEQUENCE.md` sets implementation order),
+draining into `tickets/done/` one ticket at a time as each clears its own full standard-tier pipeline
+(`docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md` remains the scope source, 20 ideas / 21
+tickets). All work lands on a single branch, `m1-quick-wins`, as one commit per ticket — not yet pushed or
+PR'd. **Live progress**: check `ls tickets/done/TCK-20260824-*.md tickets/done/TCK-20260826-*.md` and
+`tickets/todos/m1-quick-wins/` for the current split; `tickets/working_log.csv`'s bottom rows have the
+one-paragraph summary of each ticket actually landed, in order.
 
 No dependencies on anything else in this roadmap. Finishes half-built mechanisms, resolves 5 formerly-open
 technical questions (now answered), and fixes 2 confirmed real bugs. The atlas's own Roadmap section
