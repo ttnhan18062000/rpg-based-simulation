@@ -46,9 +46,14 @@ directly via the ticket folder `tickets/todos/m1-quick-wins/` (`SEQUENCE.md` set
 draining into `tickets/done/` one ticket at a time as each clears its own full standard-tier pipeline
 (`docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md` remains the scope source, 20 ideas / 21
 tickets). All work lands on a single branch, `m1-quick-wins`, as one commit per ticket — not yet pushed or
-PR'd. **Live progress**: check `ls tickets/done/TCK-20260824-*.md tickets/done/TCK-20260826-*.md` and
-`tickets/todos/m1-quick-wins/` for the current split; `tickets/working_log.csv`'s bottom rows have the
-one-paragraph summary of each ticket actually landed, in order.
+PR'd.
+
+<!-- IMPLEMENT-EPIC-STATUS:BEGIN -->
+**Live progress** (auto-updated by implement-epic, last run: 2026-08-26T07:21:27Z): 4/21 tickets done, 17 remaining. Tracking: m1-quick-wins batch, folder-based via tickets/todos/m1-quick-wins/SEQUENCE.md.
+<!-- IMPLEMENT-EPIC-STATUS:END -->
+
+`tickets/working_log.csv`'s bottom rows have the one-paragraph summary of each ticket actually landed,
+in order.
 
 No dependencies on anything else in this roadmap. Finishes half-built mechanisms, resolves 5 formerly-open
 technical questions (now answered), and fixes 2 confirmed real bugs. The atlas's own Roadmap section

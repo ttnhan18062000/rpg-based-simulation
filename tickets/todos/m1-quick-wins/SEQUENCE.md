@@ -3,6 +3,8 @@
 Tickets must be implemented in this order. Generated automatically from intra-batch
 dependency analysis. `implement-epic` reads this file to override alphabetical order.
 
+tracking_doc: docs/plans/rpg_design_roadmap/rpg_design_roadmap.md
+
 ## Order
 
 1. TCK-20260824-ROLLOUT-FLAG-DECISIONS  (no deps in this batch — moved to position 1, per
