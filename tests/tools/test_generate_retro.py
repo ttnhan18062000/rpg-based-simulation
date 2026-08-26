@@ -2683,6 +2683,40 @@ def test_compute_kgmcp_cache_efficiency_metrics_write_followed_by_hit_is_not_dea
     assert result["dead_write_count"] == 0
 
 
+def test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_window_matched_via_all_tools():
+    """TCK-20260826-KGMCP-COVERAGE-RATE-OVERFLOW: access_log_rows is always the all-time corpus
+    (main() never period-slices kgmcp_access_log), so pairing it against a period-scoped `tools`
+    denominator can push coverage_rate over 100% for a reason that has nothing to do with real
+    cache coverage. Reproduces the exact mismatch shape: 5 all-time cache events vs only 1
+    period-scoped search call (would be 500% uncorrected) against 10 all-time search calls (the
+    real, window-matched picture) once all_tools is supplied — must land at 50%, not > 100%."""
+    rows = [_kgmcp_row(event_type="hit", ts=1000.0 + i) for i in range(5)]
+    period_scoped_tools = [_tool_row(tool="mcp__knowledge-search__search_docs", run_id="TCK-THIS-WEEK")]
+    all_time_tools = [
+        _tool_row(tool="mcp__knowledge-search__search_docs", run_id=f"TCK-{i}") for i in range(10)
+    ]
+
+    uncorrected = compute_kgmcp_cache_efficiency_metrics(rows, tools=period_scoped_tools)
+    assert uncorrected["coverage"]["coverage_rate"] > 1.0
+
+    corrected = compute_kgmcp_cache_efficiency_metrics(
+        rows, tools=period_scoped_tools, all_tools=all_time_tools
+    )
+    assert corrected["coverage"]["search_calls_total"] == 10
+    assert corrected["coverage"]["cache_events_total"] == 5
+    assert corrected["coverage"]["coverage_rate"] == pytest.approx(0.5)
+
+
+def test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_never_capped_even_when_over_one():
+    """Whichever direction reconciles the window mismatch, a genuinely-uncapped ratio (all-time
+    numerator vs all-time denominator, where cache events truly do outnumber search calls) must
+    still render its real raw value, not be silently clamped to 1.0/100%."""
+    rows = [_kgmcp_row(event_type="hit", ts=1000.0 + i) for i in range(5)]
+    all_time_tools = [_tool_row(tool="mcp__knowledge-search__search_docs", run_id="TCK-ONLY-ONE")]
+    result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[], all_tools=all_time_tools)
+    assert result["coverage"]["coverage_rate"] == pytest.approx(5.0)
+
+
 def test_compute_kgmcp_cache_efficiency_metrics_unattributed_bucket_for_missing_ticket_and_agent():
     rows = [_kgmcp_row(event_type="hit", ticket_id=None, agent=None)]
     result = compute_kgmcp_cache_efficiency_metrics(rows, tools=[])
@@ -2725,6 +2759,40 @@ def test_compute_retro_metrics_includes_skill_usage_and_kgmcp_when_supplied(tmp_
     )
     assert metrics["skill_usage"]["total_skill_invocations"] == 1
     assert metrics["kgmcp_cache_efficiency"]["total_hits"] == 1
+
+
+def test_compute_retro_metrics_threads_all_tools_into_coverage_denominator(tmp_path):
+    """TCK-20260826-KGMCP-COVERAGE-RATE-OVERFLOW: all_tools must reach
+    compute_kgmcp_cache_efficiency_metrics()'s coverage denominator through compute_retro_metrics(),
+    not just the unit-level function call — this is the real wiring main()/generate() rely on."""
+    access_log = [_kgmcp_row(event_type="hit", ts=1000.0 + i) for i in range(5)]
+    period_scoped_tools = [_tool_row(tool="mcp__knowledge-search__search_docs", run_id="TCK-THIS-WEEK")]
+    all_time_tools = [
+        _tool_row(tool="mcp__knowledge-search__search_docs", run_id=f"TCK-{i}") for i in range(10)
+    ]
+    metrics = compute_retro_metrics(
+        [_BASE_RUN], [], tickets_root=tmp_path, tools=period_scoped_tools,
+        kgmcp_access_log=access_log, all_tools=all_time_tools,
+    )
+    assert metrics["kgmcp_cache_efficiency"]["coverage"]["search_calls_total"] == 10
+    assert metrics["kgmcp_cache_efficiency"]["coverage"]["coverage_rate"] == pytest.approx(0.5)
+
+
+def test_generate_kgmcp_coverage_uses_all_tools_denominator_not_period_scoped_tools(tmp_path):
+    """End-to-end through generate(): a real report call with a small period-scoped `tools` and a
+    larger `all_tools` must render the all-time-reconciled coverage percentage, not the
+    period-scoped-denominator one that could exceed 100%."""
+    access_log = [_kgmcp_row(event_type="hit", ts=1000.0 + i) for i in range(5)]
+    period_scoped_tools = [_tool_row(tool="mcp__knowledge-search__search_docs", run_id="TCK-THIS-WEEK")]
+    all_time_tools = [
+        _tool_row(tool="mcp__knowledge-search__search_docs", run_id=f"TCK-{i}") for i in range(10)
+    ]
+    report = generate(
+        [_BASE_RUN], [], "test-label", tickets_root=tmp_path, tools=period_scoped_tools,
+        kgmcp_access_log=access_log, all_tools=all_time_tools,
+    )
+    assert "50.0%" in report
+    assert "500.0%" not in report
 
 
 def test_generate_uses_compute_retro_metrics_skill_usage_not_a_second_call(monkeypatch, tmp_path):
