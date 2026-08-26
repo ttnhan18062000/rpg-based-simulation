@@ -11067,7 +11067,39 @@
     matching this section''s existing never-gated convention). tests/tools/test_generate_retro.py''s
     _FIXED_CORPUS_EXPECTED_REPORT golden string (~line 1091-1096) was updated in the
     same commit to include the new paragraph''s exact text, proving generate()''s
-    rendered output actually contains it.'
+    rendered output actually contains it.
+
+    TCK-20260826-KGMCP-COVERAGE-RATE-OVERFLOW (distinct, later root cause, same metric):
+    coverage_rate''s numerator (access_log_rows -- always the all-time corpus, since main()
+    never period-slices kgmcp_access_log) was being divided by a denominator
+    (search_calls_total) built from the period-scoped `tools` list, producing values over
+    100% (e.g. 1059.3% on a one-week report) that reflected a time-window mismatch, not
+    real coverage. Fix: compute_kgmcp_cache_efficiency_metrics() gained an `all_tools`
+    parameter; search_calls_total now prefers `all_tools` (the same unfiltered, all-time
+    tools.jsonl corpus already loaded once in main() for the Zero-Invocation Skill Flags
+    section) over `tools` when supplied, reconciling both sides of the ratio to the same
+    all-time window. Falls back to `tools` when `all_tools` is not supplied, preserving
+    exact prior behavior for direct unit-test callers. coverage_rate is never capped/floored
+    in either code path -- a genuinely-uncapped ratio still renders its real raw value.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'tools/agent-monitoring/generate_retro.py:783-846 (`compute_kgmcp_cache_efficiency_metrics()`
+    gains `all_tools` parameter; docstring addendum explaining the window-mismatch root
+    cause and the all_tools-preferred/tools-fallback resolution). tools/agent-monitoring/generate_retro.py:994-997
+    (`compute_retro_metrics()` threads `all_tools` through). tools/agent-monitoring/generate_retro.py:1573-1576
+    (`generate()` forwards its own existing `all_tools` parameter into compute_retro_metrics()).
+    tests/tools/test_generate_retro.py::test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_window_matched_via_all_tools,
+    ::test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_never_capped_even_when_over_one,
+    ::test_compute_retro_metrics_threads_all_tools_into_coverage_denominator,
+    ::test_generate_kgmcp_coverage_uses_all_tools_denominator_not_period_scoped_tools
+    -- prove the exact 500%-uncorrected/50%-corrected reconciliation end-to-end through
+    generate(), and that an uncapped ratio still renders its real value (500%) when both
+    sides are genuinely all-time. src/api/agent_ops_dashboard/ingest.py''s own
+    compute_retro_metrics() call was inspected and confirmed unaffected: it already passes
+    `tools=self._tools_all` (the all-time corpus, not period-scoped) for its own
+    period-selection semantics, so its coverage_rate was already all-time-vs-all-time before
+    this fix and needed no change.'
   proof_type: regression
   test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
   divergence_note: null

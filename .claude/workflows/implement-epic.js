@@ -65,6 +65,11 @@ const DISCOVER_SCHEMA = {
     epic_ticket_path: { type: 'string', description: 'Path of the epic ticket, if created or found' },
     summary: { type: 'string', description: 'One sentence: how many tickets found and how many to implement (≤200 chars)' },
     ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` run at start of Discover phase' },
+    tracking_doc: {
+      type: 'string',
+      description: 'folder mode only (TCK-20260826-IMPLEMENT-EPIC-ROADMAP-DOC-STALENESS-GAP): the '
+        + 'path from an optional `tracking_doc:` line in SEQUENCE.md, or "" if none/not folder mode',
+    },
   },
 }
 
@@ -101,11 +106,17 @@ Step 4 — check which are already done:
   Run: ls tickets/done/
   A ticket is already done if tickets/done/{ticket_id}.md exists.
 
+Step 4b — check for an optional tracking_doc declaration (TCK-20260826-IMPLEMENT-EPIC-ROADMAP-
+DOC-STALENESS-GAP). Skip entirely if SEQUENCE.md was not found in Step 2.
+  Run: python3 -c "import sys; sys.path.insert(0,'tools'); from gate_checks.epic_tracking_doc_static import parse_tracking_doc_from_sequence; print(parse_tracking_doc_from_sequence(open('${folder}SEQUENCE.md').read()) or '')"
+  The printed value (may be empty) is tracking_doc.
+
 Step 5 — return:
   mode="folder"
   ticket_ids = ordered list of ticket IDs NOT yet done (SEQUENCE.md order if available, else alphabetical)
   already_done = ticket IDs that ARE already in tickets/done/
   epic_ticket_path = "" (no epic ticket for folder mode)
+  tracking_doc = the value from Step 4b, or "" if SEQUENCE.md was not found / no declaration present
   summary = one sentence noting order source, e.g. "Found 5 tickets in folder (SEQUENCE.md order), 3 to implement, 2 already done."
 
 Do not implement anything. Discovery only.`
@@ -130,6 +141,8 @@ Step 4 — return:
   ticket_ids = ordered list of child ticket IDs NOT yet done
   already_done = child ticket IDs already in tickets/done/
   epic_ticket_path = path of the epic ticket found in step 1
+  tracking_doc = "" (epic_id mode has no SEQUENCE.md; the epic ticket itself is its own tracking
+    surface — see TCK-20260826-IMPLEMENT-EPIC-ROADMAP-DOC-STALENESS-GAP's Out of Scope)
   summary = one sentence: e.g. "Epic has 4 child tickets, 4 to implement, 0 already done."`
 
     : `Create an epic ticket for this request, then return ticket IDs to implement.
@@ -327,6 +340,39 @@ phase('Report')
 
 const remaining = ticketIds.slice(results.length)
 
+// ─── Tracking-doc status block (folder mode only, TCK-20260826-IMPLEMENT-EPIC-ROADMAP-DOC-
+// STALENESS-GAP) ────────────────────────────────────────────────────────────────────────────
+// Runs on every batch invocation, not gated on batchStatus === 'DONE' — a batch that stops
+// partway on a gate failure still gets its done/remaining counts refreshed ("after each batch
+// run", per this ticket's own wording). True no-op (no agent() call at all) when Discover found
+// no tracking_doc declared — folder mode's own SEQUENCE.md convention (see
+// tools/gate_checks/epic_tracking_doc_static.py::parse_tracking_doc_from_sequence).
+let trackingDocUpdate = null
+if (discovery.mode === 'folder' && discovery.tracking_doc) {
+  const modeDescription = `folder-based batch at \`${folder}\``
+  const trackingDocResult = await agent(
+    `Update the tracking-doc status block for this batch. This is bookkeeping — do NOT fail the
+workflow if anything goes wrong.
+
+Step 1 — get current timestamp:
+  Run: date -u +%Y-%m-%dT%H:%M:%SZ
+  Save as TS.
+
+Step 2 — update the status block (replace <TS> with the value from Step 1):
+  python3 -c "import sys; sys.path.insert(0,'tools'); from gate_checks.epic_tracking_doc_static import update_tracking_doc_status_block; import json; print(json.dumps(update_tracking_doc_status_block('${discovery.tracking_doc}', done_count=${doneCount}, total_count=${ticketIds.length}, remaining_count=${remaining.length}, description='${modeDescription}', ts='<TS>')))"
+
+Step 3 — report the parsed JSON result's "status" field (one of: updated, markers_missing,
+doc_not_found). If it is "markers_missing", print "WARNING: tracking_doc '${discovery.tracking_doc}'
+declared in SEQUENCE.md but has no <!-- IMPLEMENT-EPIC-STATUS:BEGIN/END --> markers — status block
+not updated." If "doc_not_found", print an analogous warning. Never raise either way.
+
+Return the parsed JSON object from Step 2 (status/doc_path/line fields) as your result.`,
+    { label: 'tracking-doc-update' }
+  )
+  trackingDocUpdate = trackingDocResult || { status: 'agent_error' }
+  log(`Tracking doc (${discovery.tracking_doc}): ${trackingDocUpdate.status}`)
+}
+
 const reportLines = [
   `Batch: ${batchStatus === 'DONE' ? 'ALL DONE' : 'STOPPED — ' + batchStatus}`,
   `Progress: ${doneCount}/${ticketIds.length} implemented`,
@@ -336,6 +382,7 @@ const reportLines = [
     `  ${r.status === 'DONE' ? 'DONE' : 'FAIL'} ${r.ticket_id}${r.status !== 'DONE' ? ' — ' + r.status : ''}`
   ),
   ...(remaining.length > 0 ? ['', 'Not started:', ...remaining.map(t => '  SKIP ' + t)] : []),
+  ...(trackingDocUpdate ? ['', `Tracking doc (${discovery.tracking_doc}): ${trackingDocUpdate.status}`] : []),
 ]
 
 log(reportLines.join('\n'))
@@ -349,6 +396,7 @@ return {
   results,
   stopped_at: stoppedAt,
   remaining: remaining,
+  tracking_doc_update: trackingDocUpdate,
   message: batchStatus === 'DONE'
     ? `All ${doneCount} ticket(s) implemented successfully.`
     : `Batch stopped at ${stoppedAt} (${batchStatus}). Fix the issue and re-run with folder/epic_id to continue — already-done tickets will be skipped.`,
