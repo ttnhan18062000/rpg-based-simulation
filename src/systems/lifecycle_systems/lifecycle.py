@@ -16,6 +16,22 @@ class LifecycleSystem:
     """
 
     @staticmethod
+    def _select_default_heir(state: AuthoritativeState, deceased: EntityState) -> Optional[int]:
+        candidates = []
+        for target_id, bond in deceased.social.bonds.items():
+            if target_id == deceased.id:
+                continue
+            candidate = state.entities.get(target_id)
+            if candidate is None or not candidate.lifecycle.active:
+                continue
+            score = 0.6 * bond.familiarity + 0.4 * ((bond.sentiment + 1.0) / 2.0)
+            candidates.append((score, bond.last_interaction_tick, target_id))
+        if not candidates:
+            return None
+        candidates.sort(key=lambda c: (-c[0], -c[1], c[2]))
+        return candidates[0][2]
+
+    @staticmethod
     def resolve_lifecycle(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         """
         Identify entities that have died and process succession/permadeath.
@@ -63,8 +79,15 @@ class LifecycleSystem:
                 )
                 
                 # Process Succession / Heirlooms
-                if entity.lifecycle.heir_entity_id is not None:
-                    heir_id = entity.lifecycle.heir_entity_id
+                heir_id = entity.lifecycle.heir_entity_id
+                if heir_id is None:
+                    heir_id = LifecycleSystem._select_default_heir(state, entity)
+                    if heir_id is not None:
+                        life_upd2 = refined_entity_updates[e_id].lifecycle or LifecycleUpdate()
+                        refined_entity_updates[e_id] = replace(refined_entity_updates[e_id],
+                            lifecycle=replace(life_upd2, heir_entity_id_set=heir_id)
+                        )
+                if heir_id is not None:
                     heir = state.entities.get(heir_id)
                     if heir:
                         heir_upd = refined_entity_updates.get(heir_id, EntityUpdate(entity_id=heir_id))

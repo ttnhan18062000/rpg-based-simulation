@@ -3381,3 +3381,29 @@
     composition). This is a pre-existing bug in the source, not introduced or fixed by this ticket;
     SOC-244 is a genuinely new id, not a continuation of either.
   support_boundary: null
+
+- id: SOC-245
+  text: >
+    LifecycleSystem.resolve_lifecycle() (src/systems/lifecycle_systems/lifecycle.py) now assigns a
+    default heir when an active entity dies with heir_entity_id is None and at least one live bonded
+    candidate exists in SocialComponent.bonds. Candidates are filtered to targets present in
+    state.entities with lifecycle.active is True (stricter than the pre-existing manual-heir-transfer
+    path's existence-only check, which is unchanged). Score = 0.6 * familiarity + 0.4 *
+    ((sentiment + 1.0) / 2.0); ties broken by highest last_interaction_tick then lowest target_id.
+    Zero eligible candidates results in no heir assigned, no exception. Selected heir is recorded via
+    LifecycleUpdate.heir_entity_id_set and used locally within the same tick to drive the existing
+    heirloom-transfer ResourceTransferIntent. Full formula documented in
+    docs/mechanics/05_world_evolution.md §5 (Succession — Default Heir Assignment subsection).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/lifecycle_systems/lifecycle.py — LifecycleSystem._select_default_heir(),
+    LifecycleSystem.resolve_lifecycle(). Verified by TCK-20260824-DEFAULT-HEIR-ASSIGNMENT.
+  proof_type: parity
+  test_path: tests/unit/progression/test_lifecycle.py::test_default_heir_tie_break_deterministic
+  divergence_note: >
+    New mechanic added by TCK-20260824-DEFAULT-HEIR-ASSIGNMENT. Prior to this ticket, no default-heir
+    selection existed anywhere in the codebase; heir_entity_id was only ever set manually, and the
+    transfer mechanic (src/engine/patches.py:84) had no writer for the unassigned case.
+  support_boundary: null
