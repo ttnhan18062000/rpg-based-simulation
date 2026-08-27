@@ -1993,6 +1993,10 @@
   legacy_evidence: null
   v2_evidence: >
     src/engine/pipeline_phases/paid_information.py — PaidInformationTransactionSystem;
+    provider selection now reads a sorted_provider_ids local hoisted once at the top
+    of enforce() (TCK-20260822-PAID-INFO-INDEX-RETROFIT), computed once per enforce()
+    call rather than resorted per seeker — selection semantics (smallest non-self
+    entity_id) unchanged;
     src/core/conservation.py L255 — INFORMATION_PURCHASE added to fee resolver branch;
     src/engine/pipeline.py — paid_information phase registered before resource_transactions;
     src/domains/information/providers.py — InformationProviderState.reliability_score.
