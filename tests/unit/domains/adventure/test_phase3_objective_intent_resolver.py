@@ -51,3 +51,21 @@ def test_resolves_buy_item_to_buy_item():
     assert intent.target_id == "potion_merchant"
     assert intent.payload.get("item_id") == "health_potion"
     assert intent.payload.get("gold_cost") == 50
+
+
+def test_resolves_change_occupation_to_change_occupation():
+    """TCK-20260824-OCCUPATION-CHANGE-TRIGGER, plan.md Step 6."""
+    obj = ObjectiveState(
+        id="obj.career.1",
+        kind=ObjectiveKind.CHANGE_OCCUPATION,
+        target="role_1",
+        target_position=(3.0, 4.0),
+        status=ObjectiveStatus.UNRESOLVED,
+        blocker_ids=[],
+    )
+
+    intent = ObjectiveIntentResolver.resolve(entity_id=42, objective=obj, payload={})
+
+    assert intent.kind == "CHANGE_OCCUPATION"
+    assert intent.actor_id == 42
+    assert intent.target_id == "role_1"

@@ -111,3 +111,51 @@ def test_request_craft_missing_materials():
     traces = ActionIntentAdapter.get_traces()
     assert len(traces) == 1
     assert "FAILED_REQUIREMENTS" in traces[0].execution_result
+
+
+def test_occupation_change_completion_issues_role_set_identity_update():
+    """TCK-20260824-OCCUPATION-CHANGE-TRIGGER, plan.md Step 7 / test_plan.md test 6."""
+    ActionIntentAdapter.clear_traces()
+    ent = (V2EntityBuilder(1)
+        .kind("citizen")
+        .build())
+
+    intent = ActionIntent(
+        kind="CHANGE_OCCUPATION",
+        actor_id=ent.id,
+        target_id="role_4",
+        source_opportunity_id="obj_career_town_t0",
+        reason="taking an open worker slot",
+    )
+
+    updates = ActionIntentAdapter.execute(ent, intent)
+
+    assert ent.id in updates
+    assert updates[ent.id].identity.role_set == 4
+
+    traces = ActionIntentAdapter.get_traces()
+    assert len(traces) == 1
+    assert traces[0].execution_result == "SUCCESS"
+
+
+def test_occupation_change_unparseable_target_is_a_noop():
+    ActionIntentAdapter.clear_traces()
+    ent = (V2EntityBuilder(1)
+        .kind("citizen")
+        .build())
+
+    intent = ActionIntent(
+        kind="CHANGE_OCCUPATION",
+        actor_id=ent.id,
+        target_id="not_a_role_target",
+        reason="taking an open worker slot",
+    )
+
+    updates = ActionIntentAdapter.execute(ent, intent)
+
+    assert updates[ent.id].identity is None
+    assert updates[ent.id].readiness_delta == 0.0
+
+    traces = ActionIntentAdapter.get_traces()
+    assert len(traces) == 1
+    assert "FAILED_REQUIREMENTS" in traces[0].execution_result

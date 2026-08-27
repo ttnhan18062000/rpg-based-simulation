@@ -116,6 +116,9 @@ class ObjectiveKind(str, Enum):
     ACCEPT_QUEST = "accept_quest"
     REST = "rest"
     RETURN_TOWN = "return_town"
+    CHANGE_OCCUPATION = "change_occupation"  # TCK-20260824-OCCUPATION-CHANGE-TRIGGER: none of the
+    # 13 pre-existing values represent a role/occupation transition (verified against the full
+    # list above this session).
 
 
 class GoalKind(str, Enum):
@@ -145,6 +148,15 @@ class GoalKind(str, Enum):
     # "social_contract"/"town_return"/"z_adventure_route" (wins ties against a routine social
     # contract or adventuring) under intelligence.py:1408's
     # `sort(key=lambda x: (-x.utility, x.kind))` tie-break.
+    OCCUPATION_CHANGE = "occupation_change"  # TCK-20260824-OCCUPATION-CHANGE-TRIGGER: does not
+    # collide with any existing GoalKind/ProjectKind/ObjectiveKind value (verified against
+    # strategic.py:104-167 in full this session). Under intelligence.py:1495's
+    # `sort(key=lambda x: (-x.utility, x.kind))` tie-break, "occupation_change" sorts
+    # alphabetically after "combat_engage"/"combat_retreat"/"fatigue"/"guild"/"harvesting"/
+    # "hunger" (loses ties to those six -- consistent with this codebase's existing pairwise, not
+    # strict-tier, tie-break scheme: "harvesting" already precedes "hunger" today) and before
+    # "recover"/"region_stabilization"/"resolve_blocker"/"social"/"social_contract"/"town_return"/
+    # "z_adventure_route" (wins ties against those seven).
 
 
 class ProjectKind(str, Enum):
@@ -165,6 +177,9 @@ class ProjectKind(str, Enum):
     # already used, mirrors DirectiveKind.STABILIZE's existing naming (strategic.py:89) -- a
     # different, unrelated enum class, no cross-validation, confirmed harmless (ProjectState.kind is
     # never assigned a DirectiveKind value anywhere in this codebase).
+    CAREER_CHANGE = "career_change"  # TCK-20260824-OCCUPATION-CHANGE-TRIGGER: none of the 12
+    # pre-existing values fit a discrete role/occupation transition (verified against the full
+    # list above this session); does not collide with any existing GoalKind/ObjectiveKind value.
 
 
 class ConcernKind(str, Enum):

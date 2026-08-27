@@ -176,6 +176,11 @@ class PartnerFitEvaluator:
         # Cost penalty check
         cost = 0
         poor_penalty = 0.0
+        # TODO(TCK-20260824-OCCUPATION-CHANGE-TRIGGER): EntityRole(1) is SHOPKEEPER
+        # (src/core/enums.py:8), not a distinct "Hireling"/"Guild Merchant" role. Now that
+        # role_set is runtime-reachable (OccupationChangeGoalScorer), any entity that
+        # transitions into SHOPKEEPER is silently charged a hireling cost here. Disclosed,
+        # not fixed -- out of that ticket's scope.
         # If candidate has HIRE_SUPPORT posture in mind, they want pay
         if candidate.identity.role == 1: # Guild Merchant/Hireling
             cost = 20

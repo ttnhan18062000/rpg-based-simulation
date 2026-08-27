@@ -48,6 +48,11 @@ class PartnerCandidateProvider:
                 
             # Exclude hostiles
             if cand.identity.faction != entity.identity.faction:
+                # TODO(TCK-20260824-OCCUPATION-CHANGE-TRIGGER): EntityRole(1) is SHOPKEEPER
+                # (src/core/enums.py:8), not a distinct "Hireling"/"Guild Merchant" role. Now
+                # that role_set is runtime-reachable (OccupationChangeGoalScorer), any entity
+                # that transitions into SHOPKEEPER is silently treated as a Hireling here for
+                # cooperation-partner selection. Disclosed, not fixed -- out of that ticket's scope.
                 # Unless special hireling or merchant
                 if cand.identity.role != 1: # Let role 1 (Hireling) pass regardless of faction (or if faction matches)
                     continue
@@ -85,6 +90,11 @@ class PartnerCandidateProvider:
                 elif cand.combat.tactical_role == "VANGUARD":
                     role_fit = 0.7
                     
+                # TODO(TCK-20260824-OCCUPATION-CHANGE-TRIGGER): EntityRole(1) is SHOPKEEPER
+                # (src/core/enums.py:8), not a distinct "Hireling"/"Guild Merchant" role. Now
+                # that role_set is runtime-reachable (OccupationChangeGoalScorer), any entity
+                # that transitions into SHOPKEEPER is silently charged a hireling cost here.
+                # Disclosed, not fixed -- out of that ticket's scope.
                 cost = 20 if cand.identity.role == 1 else 0
                 
                 # Grudge penalty

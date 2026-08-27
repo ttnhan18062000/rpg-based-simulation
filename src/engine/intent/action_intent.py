@@ -3,7 +3,7 @@ from typing import Mapping, Any, Dict, Optional, Tuple
 from collections.abc import Mapping as MappingType
 
 from src.core.state import EntityState, ItemStack
-from src.core.updates import EntityUpdate, NavigationUpdate, InventoryUpdate, BiologicalUpdate, ResourceTransferIntent
+from src.core.updates import EntityUpdate, NavigationUpdate, InventoryUpdate, BiologicalUpdate, ResourceTransferIntent, IdentityUpdate
 from src.world.providers.requirements import Requirement, RequirementEvaluator
 from src.engine.domain.action_router import ActionRouter
 from src.core.registries import RecipeRegistry, ItemRegistry, ResourceRegistry
@@ -12,7 +12,7 @@ from src.town.shop import ShopService
 
 @dataclass(frozen=True, slots=True)
 class ActionIntent:
-    kind: str  # MOVE_TO, ASK_INFORMATION, BUY_ITEM, SELL_ITEM, REQUEST_CRAFT, REPAIR_GEAR, ACCEPT_QUEST, HARVEST_RESOURCE, ATTACK_TARGET, REST_AT_INN, RETURN_TOWN
+    kind: str  # MOVE_TO, ASK_INFORMATION, BUY_ITEM, SELL_ITEM, REQUEST_CRAFT, REPAIR_GEAR, ACCEPT_QUEST, HARVEST_RESOURCE, ATTACK_TARGET, REST_AT_INN, RETURN_TOWN, CHANGE_OCCUPATION
     actor_id: int
     target_id: Optional[str | int] = None
     payload: Mapping[str, Any] = field(default_factory=dict)
@@ -253,6 +253,31 @@ class ActionIntentAdapter:
             )
             cls._traces.append(trace)
             return {entity.id: result.entity_updates[entity.id]}
+
+        elif intent.kind == "CHANGE_OCCUPATION":
+            # Sole new producer of IdentityUpdate(role_set=...) in the codebase -- a plain
+            # EntityUpdate, the same typed-update shape every other branch in this function
+            # already returns. Does not call replace() on EntityState/IdentityComponent directly
+            # and does not construct an IdentityPatch itself: extract_patches()
+            # (src/engine/patches.py:700-702) and IdentityPatch.apply() (patches.py:170-228)
+            # remain the only code that ever builds or applies an IdentityPatch.
+            role_str = intent.target_id.removeprefix("role_") if isinstance(intent.target_id, str) else None
+            valid = bool(role_str) and role_str.isdigit()
+            trace = IntentTrace(
+                intent_kind=intent.kind,
+                actor_id=intent.actor_id,
+                why_selected=intent.reason or "change occupation",
+                opportunity_source_id=intent.source_opportunity_id,
+                requirements_checked=tuple(reqs),
+                execution_result="SUCCESS" if valid else "FAILED_REQUIREMENTS: unparseable_role_target",
+            )
+            cls._traces.append(trace)
+            if not valid:
+                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                identity=IdentityUpdate(role_set=int(role_str)),
+            )}
 
         else:
             router_payload["action"] = intent.kind

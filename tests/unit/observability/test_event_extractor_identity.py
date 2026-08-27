@@ -1,13 +1,16 @@
 """TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP — entity_role_changed/
 entity_faction_changed/recipe_learned/skill_cooldown_started event coverage.
 
-`entity_role_changed`/`entity_faction_changed`/`skill_cooldown_started` have no live trigger of
-any kind in the current codebase (role/faction reassignment is defined but never mutated
-anywhere; skill-use cooldowns are real, wired code with no live AI driver — see this ticket's own
-investigation.md) — verified via this repo's own precedented hand-built-state pattern, same as
-the sibling vitals/attributes/equipment tickets. `recipe_learned` IS reachable through a real
-Kernel.tick_once() loop (BlacksmithSystem.enforce is an unconditional pipeline phase) and is
-verified that way.
+`entity_faction_changed`/`skill_cooldown_started` have no live trigger of any kind in the current
+codebase (faction reassignment is defined but never mutated anywhere; skill-use cooldowns are
+real, wired code with no live AI driver — see this ticket's own investigation.md) — verified via
+this repo's own precedented hand-built-state pattern, same as the sibling vitals/attributes/
+equipment tickets. `recipe_learned` IS reachable through a real Kernel.tick_once() loop
+(BlacksmithSystem.enforce is an unconditional pipeline phase) and is verified that way.
+`entity_role_changed` is ALSO now reachable through a real Kernel.tick_once() loop as of
+TCK-20260824-OCCUPATION-CHANGE-TRIGGER (OccupationChangeGoalScorer -> ActionIntentAdapter's
+CHANGE_OCCUPATION branch -> the authoritative IdentityPatch.apply path) -- see
+test_entity_role_changed_event_fires_on_real_occupation_transition below.
 """
 import sys
 from dataclasses import replace
@@ -16,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 from tools.calibrate_simq import _load_world_state  # noqa: E402
 from src.config.profiles import PROD_SMALL  # noqa: E402
+from src.core.enums import EntityRole  # noqa: E402
 from src.engine.kernel import Kernel  # noqa: E402
 from src.observability.event_extractor import EventExtractor  # noqa: E402
 from src.platform.rng import DeterministicRNG  # noqa: E402
@@ -154,3 +158,73 @@ def test_recipe_learned_fires_through_real_kernel_tick_once():
             "no entity happened to visit a functional blacksmith tile with empty known_recipes "
             "in this window; diff logic itself is covered by test_recipe_learned_fires_on_new_entry"
         )
+
+
+def test_entity_role_changed_event_fires_on_real_occupation_transition():
+    """TCK-20260824-OCCUPATION-CHANGE-TRIGGER, plan.md Step 8 / test_plan.md test 9.
+
+    entity_role_changed now has a real, live-reachable producer
+    (OccupationChangeGoalScorer -> ActionIntentAdapter's CHANGE_OCCUPATION branch -> the
+    authoritative IdentityPatch.apply path) -- this proves the event fires through it, using the
+    same deterministic small-world construction as
+    tests/integration/strategic/test_occupation_change_reachability.py rather than sandbox_world,
+    for the same reliability reason documented there.
+    """
+    from dataclasses import replace as _replace
+
+    from src.config.profiles import RuntimeProfile, HardwareClass
+    from src.core.builder import V2EntityBuilder
+    from src.core.state import AuthoritativeState, RegionState
+
+    profile = RuntimeProfile(
+        name="occupation-change-event-test",
+        hardware_class=HardwareClass.CLASS_B,
+        max_ram_mb=512,
+        max_cpu_percent=100.0,
+        max_worker_count=1,
+        max_queue_depth=500,
+        max_replay_buffer_kb=0,
+        max_observability_budget_percent=0.0,
+        max_tick_budget_ms=500.0,
+    )
+    entity = (
+        V2EntityBuilder(1)
+        .kind("citizen")
+        .location(5.0, 5.0)
+        .identity(role=EntityRole.CITIZEN)
+        .combat(readiness=100.0)
+        .build()
+    )
+    # kind="TOWN" (not the RegionState default "FOREST") is load-bearing -- see the matching
+    # comment in tests/integration/strategic/test_occupation_change_reachability.py's
+    # _state_with_lone_citizen(), whose real-Kernel world-construction pattern this test mirrors:
+    # the default "FOREST" kind lets SpawnService.process_spawns seed a MONSTER whose tactical
+    # INTERCEPT response permanently preempts the CHANGE_OCCUPATION objective before it can
+    # complete, so entity_role_changed never fires within the tick budget below.
+    region = RegionState(id="town", name="Town", bounds=(0, 0, 20, 20), kind="TOWN")
+    state = AuthoritativeState(
+        tick=0, seed=42, world_time=0,
+        entities={1: entity}, regions={"town": region},
+    )
+
+    rng = DeterministicRNG(state.seed)
+    kernel = Kernel(profile=profile, state=state, rng=rng, flags={"no_frame_pacing": True, "no_replay": True})
+    try:
+        extractor = EventExtractor()
+        prior = kernel.state
+        matches = []
+        for _ in range(200):
+            kernel.tick_once()
+            events = extractor.extract(prior, kernel.state, None, mode=None)
+            matches = [e for e in events if e.event_type == "entity_role_changed"]
+            if matches:
+                break
+            prior = kernel.state
+    finally:
+        kernel.shutdown()
+
+    assert len(matches) == 1
+    assert matches[0].payload["previous_role"] == EntityRole.CITIZEN
+    assert matches[0].payload["role"] in (
+        EntityRole.SHOPKEEPER, EntityRole.WORKER, EntityRole.GUARD,
+    )

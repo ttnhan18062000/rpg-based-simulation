@@ -71,6 +71,9 @@ ALLOWED_MODULES: FrozenSet[str] = frozenset({
     "engine/legality.py",
     "engine/occupancy_snapshot.py",
     "engine/evolution.py",
+    # TCK-20260824-OCCUPATION-CHANGE-TRIGGER — reads EntityRole.CITIZEN/SHOPKEEPER/WORKER/GUARD
+    # directly to gate and pick the occupation-change destination role.
+    "ai/goals/occupation_change_scorer.py",
 })
 
 # ---------------------------------------------------------------------------

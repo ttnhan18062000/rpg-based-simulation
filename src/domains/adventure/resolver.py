@@ -76,7 +76,10 @@ class ObjectiveIntentResolver:
             
         elif objective.kind == ObjectiveKind.RETURN_TOWN:
             kind = "RETURN_TOWN"
-            
+
+        elif objective.kind == ObjectiveKind.CHANGE_OCCUPATION:
+            kind = "CHANGE_OCCUPATION"
+
         else:
             kind = "MOVE_TO"
 
