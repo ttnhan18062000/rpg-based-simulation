@@ -73,7 +73,7 @@ async function renderConnectedHook() {
   const { result } = renderHook(() => useSimulation())
 
   await waitFor(() => {
-    expect(mockFetch).toHaveBeenCalledWith('/api/v1/map')
+    expect(mockFetch).toHaveBeenCalledWith('/api/v1/map', { headers: undefined })
   })
 
   await waitFor(() => {
@@ -142,7 +142,7 @@ describe('useSimulation hook', () => {
     const { result } = renderHook(() => useSimulation())
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/map')
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/map', { headers: undefined })
     })
 
     await waitFor(() => {
@@ -336,14 +336,14 @@ describe('useSimulation hook', () => {
     await act(async () => {
       await result.current.sendControl('pause')
     })
-    expect(mockFetch).toHaveBeenCalledWith('/api/v1/control/pause', { method: 'POST' })
+    expect(mockFetch).toHaveBeenCalledWith('/api/v1/control/pause', { method: 'POST', headers: undefined })
 
     mockFetch.mockClear()
 
     await act(async () => {
       await result.current.sendControl('resume')
     })
-    expect(mockFetch).toHaveBeenCalledWith('/api/v1/control/resume', { method: 'POST' })
+    expect(mockFetch).toHaveBeenCalledWith('/api/v1/control/resume', { method: 'POST', headers: undefined })
   })
 
   it('sendControl with an unrecognized action does not construct a generic /api/v1/control/{action} URL', async () => {
@@ -400,9 +400,60 @@ describe('useSimulation hook', () => {
     renderHook(() => useSimulation())
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/map')
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/static')
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/manifest')
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/map', { headers: undefined })
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/static', { headers: undefined })
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/manifest', { headers: undefined })
     })
+  })
+})
+
+// VITE_API_KEY is read once at module-evaluation time (a module-level const, not re-read per
+// call), so each case here stubs the env var and re-imports the module fresh via
+// vi.resetModules() -- a plain re-render with the already-loaded module would still see the
+// first import's captured value. TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX.
+describe('dev-only API key wiring (VITE_API_KEY)', () => {
+  beforeEach(() => {
+    mockFetch.mockReset()
+    mockFetch.mockImplementation(defaultMockFetch)
+    vi.mocked(globalThis.WebSocket).mockClear()
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.resetModules()
+  })
+
+  it('omits X-API-Key header and ?key= query param when VITE_API_KEY is unset', async () => {
+    vi.stubEnv('VITE_API_KEY', '')
+    vi.resetModules()
+    const { useSimulation: freshUseSimulation } = await import('../hooks/useSimulation')
+
+    renderHook(() => freshUseSimulation())
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/map', { headers: undefined })
+    })
+    await waitFor(() => {
+      expect(vi.mocked(globalThis.WebSocket).mock.instances.length).toBeGreaterThan(0)
+    })
+    const wsInstance = vi.mocked(globalThis.WebSocket).mock.instances[0] as unknown as { url: string }
+    expect(wsInstance.url).not.toContain('?key=')
+  })
+
+  it('sends X-API-Key header and ?key= query param when VITE_API_KEY is set', async () => {
+    vi.stubEnv('VITE_API_KEY', 'test-key-123')
+    vi.resetModules()
+    const { useSimulation: freshUseSimulation } = await import('../hooks/useSimulation')
+
+    renderHook(() => freshUseSimulation())
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/map', { headers: { 'X-API-Key': 'test-key-123' } })
+    })
+    await waitFor(() => {
+      expect(vi.mocked(globalThis.WebSocket).mock.instances.length).toBeGreaterThan(0)
+    })
+    const wsInstance = vi.mocked(globalThis.WebSocket).mock.instances[0] as unknown as { url: string }
+    expect(wsInstance.url).toContain('?key=test-key-123')
   })
 })

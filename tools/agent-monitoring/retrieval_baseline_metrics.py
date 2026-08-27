@@ -37,6 +37,7 @@ from generate_retro import (  # noqa: E402
 )
 from legacy_reader import classify_provenance  # noqa: E402
 from manifest import _assert_safe_output_path  # noqa: E402
+from duration_utils import compute_active_idle_split  # noqa: E402
 
 # Deliberately narrower than generate_retro.py's _is_gate_fail — that predicate also covers
 # TESTS_FAILED/DOD_BLOCKED (Test/Verify-phase gate fails), which are not "review rework".
@@ -61,21 +62,42 @@ def build_context_tokens_section() -> dict:
     }
 
 
-def build_duration_section(runs: list) -> dict:
+def build_duration_section(runs: list, events: list) -> dict:
+    """TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT: rows now carry a real, computed active/idle split
+    via the shared tools/agent-monitoring/duration_utils.py — never reimplemented here. A row is
+    only flagged "pause-contaminated" when its own real idle_gap_s is nonzero (some computed gap
+    met the pause threshold), not unconditionally for every row as before that ticket landed.
+    """
+    events_by_run_id = defaultdict(list)
+    for e in events:
+        rid = e.get("run_id")
+        if rid:
+            events_by_run_id[rid].append(e)
+
     rows = []
     for r in runs:
         duration_s = r.get("duration_s")
         if not duration_s:
             continue
-        rows.append({
-            "run_id": r.get("run_id"),
-            "duration_s": duration_s,
-            "flag": "pause-contaminated",
-            "note": "raw duration_s includes session-pause/idle gaps; a gap-aware active-duration "
-                    "view does not exist in this repo today "
-                    "(tools/agent-monitoring/duration_utils.py is absent) — see "
-                    "docs/plans/agent_infrastructure/idea_agent_monitoring_active_duration.md",
-        })
+        split = compute_active_idle_split(
+            r.get("start_ts"), r.get("end_ts"), events_by_run_id.get(r.get("run_id"), [])
+        )
+        row = {"run_id": r.get("run_id"), "duration_s": duration_s}
+        if split is None:
+            row["active_duration_s"] = None
+            row["idle_gap_s"] = None
+            row["note"] = "start_ts/end_ts unparseable — gap-aware split unavailable for this row"
+        else:
+            row["active_duration_s"] = split["active_duration_s"]
+            row["idle_gap_s"] = split["idle_gap_s"]
+            if split["idle_gap_s"] > 0:
+                row["flag"] = "pause-contaminated"
+                row["note"] = (
+                    f"{split['idle_gap_s']:.0f}s of this run's duration_s is idle gap time "
+                    f"(largest: {split['largest_gap_from']} -> {split['largest_gap_to']}, "
+                    f"{split['largest_gap_s']:.0f}s) — see tools/agent-monitoring/duration_utils.py"
+                )
+        rows.append(row)
     return {"rows": rows}
 
 
@@ -147,7 +169,7 @@ def build_baseline_report(runs: list, events: list, tools: list) -> dict:
         "context_tokens": build_context_tokens_section(),
         "search_count": build_search_count_section(tools),
         "raw_investigation_count": build_raw_investigation_count_section(tools),
-        "duration": build_duration_section(runs),
+        "duration": build_duration_section(runs, events),
         "gate_outcome": build_gate_outcome_section(runs),
         "review_rework": build_review_rework_section(runs),
         "legacy_schema_notes": build_legacy_schema_notes(runs, events, tools),

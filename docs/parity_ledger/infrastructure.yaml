@@ -11051,23 +11051,21 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'tools/agent-monitoring/generate_retro.py:705-711 (`_kgmcp_verdict()`
-    docstring addendum stating the low-coverage clause reflects two independently-implemented
-    tools, not cache underperformance), :771-774 (the low-coverage explanation string
-    itself, appended to the existing ''Coverage is low: ...'' clause: ''This reflects
-    two independently-implemented tools (only knowledge_context/knowledge_status are
-    cache-instrumented; search_docs is served by a separate, uninstrumented implementation),
-    not a fixable inefficiency in the cache itself.''). tools/agent-monitoring/generate_retro.py:815-824
-    (`compute_kgmcp_cache_efficiency_metrics()` docstring addendum, same architectural-fact
-    framing, citing tools/knowledge_gateway_mcp.py and tools/knowledge_search.py by
-    path). tools/agent-monitoring/generate_retro.py:2034-2040 (`generate()` -- new
-    italicized paragraph appended under the ''## KGMCP Cache Efficiency'' heading,
-    after the existing ''_Reflects the full retrieval_cache_access_log corpus...''
-    paragraph and before the ''**Cache Efficiency: {verdict}**'' line; always rendered,
-    matching this section''s existing never-gated convention). tests/tools/test_generate_retro.py''s
-    _FIXED_CORPUS_EXPECTED_REPORT golden string (~line 1091-1096) was updated in the
-    same commit to include the new paragraph''s exact text, proving generate()''s
-    rendered output actually contains it.'
+  v2_evidence: 'tools/agent-monitoring/generate_retro.py:783-846 (`compute_kgmcp_cache_efficiency_metrics()`
+    gains `all_tools` parameter; docstring addendum explaining the window-mismatch
+    root cause and the all_tools-preferred/tools-fallback resolution). tools/agent-monitoring/generate_retro.py:994-997
+    (`compute_retro_metrics()` threads `all_tools` through). tools/agent-monitoring/generate_retro.py:1573-1576
+    (`generate()` forwards its own existing `all_tools` parameter into compute_retro_metrics()).
+    tests/tools/test_generate_retro.py::test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_window_matched_via_all_tools,
+    ::test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_never_capped_even_when_over_one,
+    ::test_compute_retro_metrics_threads_all_tools_into_coverage_denominator, ::test_generate_kgmcp_coverage_uses_all_tools_denominator_not_period_scoped_tools
+    -- prove the exact 500%-uncorrected/50%-corrected reconciliation end-to-end through
+    generate(), and that an uncapped ratio still renders its real value (500%) when
+    both sides are genuinely all-time. src/api/agent_ops_dashboard/ingest.py''s own
+    compute_retro_metrics() call was inspected and confirmed unaffected: it already
+    passes `tools=self._tools_all` (the all-time corpus, not period-scoped) for its
+    own period-selection semantics, so its coverage_rate was already all-time-vs-all-time
+    before this fix and needed no change.'
   proof_type: regression
   test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
   divergence_note: null
@@ -11323,7 +11321,7 @@
     compute_tick_delta itself is untouched, so the field carries no filtering or subscription
     meaning yet. TCK-20260825-FORCE-FULL-SCAN-DEAD-CODE fixes force_full_scan=True
     to genuinely produce an all-entities changed list end-to-end -- AuthoritativeApplyPipeline.refine()
-    now overrides the final DirtySet's nine entity/town domains to full coverage when
+    now overrides the final DirtySet's ten entity/town domains to full coverage when
     update.force_full_scan is true (previously dead code, AuthoritativeApplyPipeline._refresh_dirty_set,
     was never called), and RuntimeStatus gained a declared force_full_scan field populated
     once at Kernel.__init__ from the boot-time flag, so V2EngineManager._update_latest_state's
@@ -11347,3 +11345,291 @@
     envelope (always null) per TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD, but actual
     spatial-subscription/region filtering remains out of scope, still deferred to
     TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT.
+- id: INFRA-389
+  text: 'Fix ad-hoc/non-ticket sessions inheriting a stale foreign ticket identity
+    in agent-monitoring/tools.jsonl: tools/agent-monitoring/post_tool_hook.py no longer
+    falls back to the shared unscoped .claude/current_run file when no session-scoped
+    sidecar exists for the calling session_id. Instead it writes a null-valued sentinel
+    to .claude/current_run.<session_id> (create-if-absent) and reports null run_id/seq/phase/agent/ticket_id
+    for that call and any subsequent call in the same session, until a real writeSidecar()
+    write for that session_id unconditionally overwrites the sentinel with real values.
+    Investigation confirmed every real sidecar writer in .claude/workflows/implement-ticket.js
+    and .claude/skills/implement-ticket/SKILL.md already writes the scoped and unscoped
+    files together, so no real workflow ever legitimately needed the removed unscoped-fallback
+    path. The sentinel is an ordinary current_run.* file, swept by the existing 24h
+    _prune_stale_scoped_sidecars() mechanism with no new cleanup path. Historically
+    misattributed tools.jsonl rows from before this fix are accepted as a documented
+    caveat (no backfill), matching this repo existing precedent for the same class
+    of problem.'
+  status: verified
+  priority: P2
+  v2_evidence: tools/agent-monitoring/post_tool_hook.py
+  test_path: tests/tools/test_post_tool_hook.py::test_second_call_in_ad_hoc_session_reads_own_sentinel_not_unscoped_file
+  divergence_note: null
+- id: INFRA-390
+  text: tools/retrieval_cache.py read_current_run_sidecar() now prefers a per-session
+    scoped sidecar file (.claude/current_run.<CLAUDE_CODE_SESSION_ID>, derived from
+    _CURRENT_RUN_SIDECAR_PATH so tests relocation-transparent) over the unscoped .claude/current_run
+    file when a scoped file exists, mirroring tools/agent-monitoring/post_tool_hook.py
+    own scoped-file preference (INFRA-377/382). Deliberately does NOT adopt post_tool_hook.py
+    null-sentinel-on-absence write behavior when no scoped file exists -- falls back
+    to the unscoped file instead, since (1) this is a read-only CLI/library function
+    with no session payload to key a sentinel write by, giving it a new write side
+    effect was out of scope, and (2) this function already carries its own sidecar_stale
+    safeguard for the worst failure mode (attribution to an already-closed ticket),
+    unlike tools.jsonl which had none. _sidecar_run_is_stale() (file-existence based)
+    is unchanged -- kept semantically separate from post_tool_hook.py mtime-based
+    scoped-file pruning, which retrieval_cache.py does not replicate. Cross-referencing
+    comments added at both read sites. A pre-existing static guard test (test_no_pragma_busy_timeout_chmod_or_os_import_introduced_by_level2_migration)
+    blanket-banned importing os anywhere in this file as an overly broad proxy for
+    no os.chmod usage -- narrowed to drop only that redundant proxy clause; the direct
+    chmod/busy_timeout string checks it also contains remain fully enforced unchanged.
+  status: verified
+  priority: P2
+  v2_evidence: tools/retrieval_cache.py, tools/agent-monitoring/post_tool_hook.py
+  test_path: tests/tools/test_retrieval_cache.py::TestReadCurrentRunSidecar::test_scoped_sidecar_wins_over_stale_unscoped_when_both_exist
+  divergence_note: null
+- id: INFRA-391
+  text: 'tools/agent_orchestration_claude_adapter/terminal_status_extractor.py''s
+    extract_literal_statuses()/extract_all_terminal_statuses() gained a content-based
+    distinctness marker: each literal writeMonitoring() call site now also carries
+    a ''context'' field (the nearby message: ''...'' string-literal prefix, within
+    a 400-char lookahead window, None if not found), and extract_all_terminal_statuses()''s
+    aggregated per-value dict gained a parallel ''contexts'' list alongside the existing
+    ''call_sites'' list. This closes a recurring drift: two tests (test_terminal_status_extractor.py::test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count,
+    test_terminal_status_conformance.py::test_terminal_status_conformance_finalize_incomplete_appears_once_on_both_sides)
+    used to hardcode FINALIZE_INCOMPLETE''s two call-site line numbers as an exact
+    literal list, breaking on any implement-ticket.js edit that shifted lines above
+    them -- 8 separate hotfix tickets since 2026-08-02. Both tests now assert structural
+    invariants (exactly 2 distinct, ascending call sites; 2 distinct non-None context
+    markers) instead, verified line-position-independent by a new synthetic-fixture
+    test. call_sites'' own list[int] shape is unchanged (backward compatible); contexts
+    is purely additive. Renumbered to INFRA-391 (previously INFRA-386, before that
+    INFRA-384) after two successive merges with origin/main each independently landed
+    unrelated entries claiming the same next-available id at authoring time -- a real,
+    expected consequence of next_available_id() computing against each branch own
+    pre-merge view of the shard, mirroring INFRA-381 own documented precedent for
+    the identical class of collision.'
+  status: verified
+  priority: P2
+  v2_evidence: tools/agent_orchestration_claude_adapter/terminal_status_extractor.py
+    (_MESSAGE_CONTEXT_RE, _CONTEXT_WINDOW_CHARS, context field on extract_literal_statuses(),
+    contexts list on extract_all_terminal_statuses()), tests/agent_orchestration_claude_adapter/test_terminal_status_extractor.py
+    (test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count, new
+    test_call_site_detection_tolerates_unrelated_line_insertion_above), tests/agent_orchestration_claude_adapter/test_terminal_status_conformance.py
+    (test_terminal_status_conformance_finalize_incomplete_appears_once_on_both_sides)
+  test_path: tests/agent_orchestration_claude_adapter/test_terminal_status_extractor.py::test_call_site_detection_tolerates_unrelated_line_insertion_above
+  divergence_note: null
+  proof_type: regression
+  support_boundary: Claude-agent-workflow orchestration tooling only -- no simulation
+    behavior is involved (mirrors INFRA-263/264/265/315/379/381's support_boundary
+    pattern for pure workflow-tooling entries in this shard).
+- id: INFRA-392
+  text: V2EngineManager._build() now compiles a real world (terrain, regions, resource
+    nodes, buildings) via WorldCompiler.compile()/WorldRepository before constructing
+    its boot AuthoritativeState, fixing a live-reproduced bug (TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX's
+    own Playwright e2e check) where GET /api/v1/map always returned width=0/height=0/grid=[]
+    -- _build() previously constructed AuthoritativeState(tick=0, seed=self._seed,
+    entities=entities) with no terrain argument at all, defaulting to an empty dict,
+    so the real running API server never had any terrain regardless of any WS/auth/proxy
+    fix. A new world_id constructor parameter (str, defaulting to "dungeon_crawl")
+    selects the world spec; the compiled world's own entities (quest-givers, NPCs,
+    etc.) are deliberately discarded via dataclasses.replace(compiled_state, tick=0,
+    seed=self._seed, entities=entities) in favor of the pre-existing hero+goblin-diagonal
+    spawn logic (TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL),
+    which is left untouched -- only the terrain/regions/statics layer was missing,
+    entity-spawning behavior/contract is unchanged. create_v2_app() gained optional
+    seed/entities_count/world_id override parameters (None-default, backward compatible
+    with every pre-existing caller) and the CLI serve subcommand's pre-existing-but-silently-ignored
+    --seed/--entities flags plus a new --world flag are now actually threaded through
+    (src/cli/entry.py::_run_serve). Renumbered to INFRA-392 (originally authored as
+    INFRA-389) after merging with origin/main independently landed an unrelated entry
+    already claiming that id -- the identical class of collision INFRA-391's own text
+    documents, next_available_id() computed against each branch's own pre-merge view
+    of the shard.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src/api/engine_manager.py (V2EngineManager._build(), __init__'s world_id
+    param) + src/api/server.py (create_v2_app's seed/entities_count/world_id params)
+    + src/cli/entry.py (serve subcommand's --world flag, _run_serve threading --seed/--entities/--world
+    through)
+  proof_type: null
+  test_path: tests/unit/api/test_engine_manager.py,tests/unit/api/test_map_route.py::test_map_endpoint_returns_200_with_rle_shape,frontend/e2e/live_map.spec.ts::live
+    map renders real terrain and live ticking data through make dev
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-394
+  text: 'tools/agent-monitoring/duration_utils.py::compute_active_idle_split() computes
+    a read-time-only active_duration_s/idle_gap_s split per run from its own events.jsonl
+    rows (ordered strictly by ts, never seq), never mutating runs.jsonl/events.jsonl.
+    Two documented judgment calls: pause threshold = 1800s (30min), reusing generate_retro.py''s
+    own existing Slow Runs absolute threshold; start_ts/end_ts ARE included as timeline
+    boundaries (not just strict inter-event gaps), required by the module''s own active+idle==total
+    invariant. Wired additively into generate_retro.py''s Slow Runs and Duration outliers
+    sections (new active/idle columns, plus an idle-dominated disclaimer) and retrieval_baseline_metrics.py''s
+    build_duration_section (real per-row flag/note replacing the prior unconditional
+    pause-contaminated flag). Real-corpus reproduction confirmed exact for TCK-20260710-SIMQ-DEPTH-SOCIAL
+    (idle_gap_s captures the ~590.6 min Investigate->Plan gap; active_duration_s ~15.5
+    min vs raw 828.8 min duration_s). Renumbered to INFRA-394 (originally INFRA-392)
+    after merging with origin/main independently landed an unrelated entry (V2EngineManager
+    terrain-loading fix) already claiming that id -- the same class of collision INFRA-391/392''s
+    own text already documents for this shard.'
+  status: verified
+  priority: P2
+  v2_evidence: tools/agent-monitoring/duration_utils.py, tools/agent-monitoring/generate_retro.py
+    (compute_retro_metrics slow_runs_list/outliers_duration_s, Slow Runs/Duration
+    outliers rendering), tools/agent-monitoring/retrieval_baseline_metrics.py (build_duration_section)
+  test_path: tests/tools/test_duration_utils.py::test_real_corpus_simq_depth_social_reproduces_documented_gap
+  divergence_note: null
+  proof_type: regression
+  support_boundary: Claude-agent-workflow monitoring/observability tooling only --
+    no simulation behavior is involved.
+- id: INFRA-393
+  text: "Agent Ops Dashboard surfaces the active/idle duration split from the sibling\
+    \ TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT: SlowRunEntry/DurationOutlierEntry (src/api/agent_ops_dashboard/models.py)\
+    \ gain additive, backward-compatible active_duration_s/idle_gap_s fields (Optional[float]=None),\
+    \ populated automatically via ingest.py's existing **kwargs passthrough from compute_retro_metrics()\
+    \ -- no independent duration/gap computation added to ingest.py. dashboard-frontend/src/api.ts\
+    \ TS interfaces and StatsView.tsx's Slow Runs / Duration Outliers tables gain\
+    \ matching Active/Idle columns (minutes, \"\u2014\" placeholder when null). Corrected\
+    \ an overstated claim in this ticket's own original text during investigation:\
+    \ Pydantic's default extra=\"ignore\" (neither model declared extra=\"forbid\"\
+    ) already silently tolerated the new fields rather than raising -- this ticket's\
+    \ real contribution is surfacing previously-silently-dropped data, not preventing\
+    \ an outright crash that was never actually happening."
+  status: verified
+  priority: P2
+  v2_evidence: src/api/agent_ops_dashboard/models.py (SlowRunEntry, DurationOutlierEntry,
+    RunSummary dormant-field comment), dashboard-frontend/src/api.ts, dashboard-frontend/src/views/StatsView.tsx
+  test_path: tests/tools/test_agent_ops_dashboard_stats.py::test_slow_run_and_duration_outlier_carry_active_idle_split
+  divergence_note: null
+  proof_type: regression
+  support_boundary: Claude-agent-workflow monitoring/observability dashboard tooling
+    only -- no simulation behavior is involved.
+- id: INFRA-395
+  text: 'SemanticEntityIndexes/SemanticEntityIndexService/SemanticEntityQuery (src/engine/semantic_entity_index.py,
+    TCK-20260822-SEMANTIC-ENTITY-INDEX) add a non-authoritative, derived, always-rebuildable
+    index over 5 entity dimensions -- role+class_id, region_id, faction, entity_needs
+    (hunger/sleep_debt/rest_pressure biological-pressure thresholds sourced from docs/mechanics/01_entity_anatomy.md:
+    HUNGER_NEED_THRESHOLD=95.0, SLEEP_DEBT_NEED_THRESHOLD=98.0; rest_pressure has
+    no Mechanics Bible penalty threshold and reuses the existing forced-rest cutoff
+    of 70.0 already shipped in src/domains/combat_engagement/perception.py and src/systems/world_systems/routine.py),
+    and knowledge_domain -- giving strategic/governance layers O(1)/O(k) lookups instead
+    of O(N) entity scans. SemanticEntityIndexService.get_indexes follows WorldIndexService''s
+    (src/engine/world_index.py) lazy pull-based, CacheInvalidationPolicy/DirtySet-driven
+    lifecycle in spirit, but (as of TCK-20260827-SEMANTIC-INDEX-PARTIAL-BUILD) has
+    no same-tick full-object fast-path return: state.semantic_entity_indexes is carried
+    forward across ticks (mirroring world_indexes) and every call, partial or full,
+    independently resolves each of the 5 dimensions -- reusing a dimension already
+    resolved earlier this tick (resolved_dimensions), skipping a dimension the caller
+    did not request via an optional dimensions parameter, or rebuilding a dimension
+    whose domain CacheInvalidationPolicy.should_invalidate() flags dirty -- and reuses
+    stale-but-valid dimension buckets otherwise. The result is attached to AuthoritativeState
+    via object.__setattr__ under a new semantic_entity_indexes attribute, mirroring
+    the existing world_indexes/_node_map_cache derived-cache attachment pattern --
+    never written through StateUpdate/replace(). It is excluded from CanonicalStateHasher
+    by omission (no checkpoint.py change), consistent with world_indexes'' own exclusion.
+    CacheInvalidationPolicy (src/engine/world_index.py) gained 3 new additive domains
+    for should_invalidate(): ''identity'' (semantic_identity_index, keyed off the
+    new DirtySet.identity_entities tag), ''region'' (semantic_region_index, reuses
+    the existing dirty.region_ids signal under a distinct index name so it never collides
+    with the pre-existing region_index phantom-field bug), and ''needs'' (semantic_needs_index,
+    keyed off dirty.biological_entities); ''knowledge'' is always-invalidate since
+    information_providers mutations carry no dedicated DirtySet tag today (out of
+    scope to invent one). DirtySet gained a new identity_entities tag (src/core/dirty.py)
+    wired through every real construction site including the production apply path
+    -- DirtySetBuilder, ApplyPlanBuilder.build_plan (src/engine/apply_plan.py, the
+    actual path AuthoritativeApplyPipeline/ApplyPath.apply_generation use, not just
+    the lower-level DirtySet.from_update/merge helpers), and the all_dirty_entities
+    union property. SemanticEntityQuery''s methods (by_role_class, by_region, by_faction,
+    by_need, by_knowledge_domain) all return Tuple[int, ...] entity IDs only, never
+    EntityState/component objects.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/semantic_entity_index.py (SemanticEntityIndexes, SemanticEntityIndexService.get_indexes/_build_role_class_index/_build_region_index/_build_faction_index/_build_needs_index/_build_knowledge_domain_index,
+    SemanticEntityQuery) + src/engine/world_index.py (CacheInvalidationPolicy.invalidated_indexes/should_invalidate
+    identity/region/needs/knowledge domains) + src/core/dirty.py (DirtySet.identity_entities
+    tag, all_dirty_entities union) + src/engine/apply_plan.py (ApplyPlanBuilder.build_plan
+    wiring identity_entities into the built DirtySet) + src/core/state.py (AuthoritativeState.semantic_entity_indexes
+    attachment point via object.__setattr__) Extended by TCK-20260827-SEMANTIC-INDEX-PARTIAL-BUILD:
+    (a) src/engine/apply.py''s ApplyPath.apply_generation now carries semantic_entity_indexes=getattr(prior_state,
+    "semantic_entity_indexes", None) forward across ticks in the new AuthoritativeState(...)
+    constructor call, mirroring the existing world_indexes carry-forward line exactly
+    -- closing the prior full-rebuild-every-tick gap. (b) SemanticEntityIndexService.get_indexes
+    gained an optional dimensions: Optional[Set[str]] = None parameter (None means
+    all 5, preserving every pre-existing call signature) that lets a caller skip rebuilding
+    an invalidated-but-unrequested dimension. (c) SemanticEntityIndexes gained a 6th
+    field, resolved_dimensions: FrozenSet[str] (default frozenset()), tracking which
+    dimensions have already had their invalidation question settled this tick -- a
+    dimension already in resolved_dimensions is reused by any later same-tick call
+    requesting it without re-consulting CacheInvalidationPolicy.should_invalidate(),
+    so repeated same-tick requests for the same invalidated dimension trigger at most
+    one rebuild. This bookkeeping is consulted on every call to get_indexes (partial
+    or full) -- the prior same-tick "existing.tick == state.tick" fast-path early
+    return was removed entirely, since it could return a stale value for a dimension
+    a same-tick partial request had not yet resolved; every call now always runs the
+    full per-field resolution logic. (d) SemanticEntityQuery''s 5 methods (by_role_class,
+    by_region, by_faction, by_need, by_knowledge_domain) now each pass their own single-dimension
+    dimensions={...} set to get_indexes -- their own public method signatures are
+    unchanged. The knowledge domain''s unconditional always-invalidate-on-first-request-per-tick
+    behavior (CacheInvalidationPolicy.should_invalidate("knowledge", ...) unconditionally
+    True) is untouched -- only repeated same-tick requests for knowledge_domain now
+    avoid redundant rebuilds via resolved_dimensions.'
+  proof_type: parity
+  test_path: tests/unit/domains/optimization/test_semantic_entity_index.py::test_by_role_class_matches_naive_scan,tests/unit/domains/optimization/test_semantic_entity_index.py::test_by_region_matches_naive_scan,tests/unit/domains/optimization/test_semantic_entity_index.py::test_by_faction_matches_naive_scan,tests/unit/domains/optimization/test_semantic_entity_index.py::test_by_entity_needs_matches_naive_scan_against_biological_thresholds,tests/unit/domains/optimization/test_semantic_entity_index.py::test_by_knowledge_domain_matches_naive_scan,tests/unit/domains/optimization/test_semantic_entity_index.py::test_index_reflects_dirty_set_change_without_full_rebuild,tests/unit/domains/optimization/test_semantic_entity_index.py::test_incremental_index_bit_identical_to_full_rebuild,tests/unit/domains/optimization/test_semantic_entity_index.py::test_delete_and_rebuild_index_matches_incremental_across_all_dimensions,tests/unit/domains/optimization/test_semantic_entity_index.py::test_semantic_index_excluded_from_canonical_state_hash,tests/unit/domains/optimization/test_semantic_entity_index.py::test_identity_update_sets_identity_entities_tag,tests/unit/domains/optimization/test_semantic_entity_index.py::test_identity_only_update_appears_in_all_dirty_entities,tests/unit/domains/optimization/test_semantic_entity_index.py::test_identity_only_update_does_not_raise_dirty_set_leak_error,tests/static/test_semantic_entity_index_no_stateupdate_write.py::test_semantic_index_never_written_via_stateupdate,tests/static/test_semantic_entity_index_returns_ids_only.py::test_query_methods_return_only_entity_ids_not_objects,tests/unit/domains/optimization/test_cache_invalidation_policy.py::test_cache_invalidation_policy_unrelated_domains_unaffected,tests/unit/domains/optimization/test_dirty_dependency_graph.py::test_dirty_dependency_identity_passes_through_without_implied_domains,tests/unit/domains/optimization/test_semantic_entity_index.py::test_semantic_entity_indexes_carried_forward_across_ticks,tests/unit/domains/optimization/test_semantic_entity_index.py::test_get_indexes_only_rebuilds_dirty_domains_across_ticks,tests/unit/domains/optimization/test_semantic_entity_index.py::test_single_dimension_query_does_not_rebuild_unrequested_invalidated_dimension,tests/unit/domains/optimization/test_semantic_entity_index.py::test_knowledge_domain_still_always_rebuilds_when_requested,tests/unit/domains/optimization/test_semantic_entity_index.py::test_apply_generation_semantic_index_carry_forward_bit_identical_to_full_rebuild,tests/unit/domains/optimization/test_semantic_entity_index.py::test_semantic_entity_indexes_carry_forward_survives_dirty_set_audit,tests/unit/domains/optimization/test_semantic_entity_index.py::test_partial_dimension_request_does_not_reuse_stale_same_tick_object,tests/unit/domains/optimization/test_semantic_entity_index.py::test_repeated_same_tick_request_for_same_invalidated_dimension_builds_once,tests/unit/domains/optimization/test_semantic_entity_index.py::test_full_request_after_partial_same_tick_rebuilds_invalidated_unresolved_dimension
+  divergence_note: null
+  support_boundary: 'knowledge_domain invalidation has no dedicated DirtySet tag and
+    is always treated as dirty (always-invalidate, not incrementally cached) -- out
+    of scope to invent one for this ticket per the plan''s stated AC #3 boundary (role/region/faction
+    incremental invalidation only). Query methods return entity IDs only, never component
+    objects, by design.'
+- id: INFRA-396
+  text: 'TCK-20260826-PARITY-FACTION-CANONICAL-SCAN -- added "faction.yaml" as the
+    9th element of tools/parity_ledger_scan.py''s single-source-of-truth CANONICAL_LEDGER_FILES
+    tuple. docs/parity_ledger/faction.yaml is a real, actively-maintained parity shard
+    (15 entries, FAC-XXX/FACTION-TENSION-XXX ids, same schema.json shape as the other
+    8 shards) that had been deliberately excluded by TCK-20260705-WORKFLOW-PARITY-SKIP
+    on the premise that it had "0 P0 entries" -- a premise no longer true once faction.yaml''s
+    FAC-013 entry became priority: P0, which left find_p0_intersection''s deterministic
+    Parity-phase P0 safeguard scan structurally blind to a real P0 regression risk
+    on any src/ path cited in FAC-013''s v2_evidence. Because parity_updater_static.py''s
+    derive_mapping/expected_subsystems_for_files/cross_reference_touched/next_available_id/search_existing_entries
+    and mechanics_auditor_static.py''s find_entry all import CANONICAL_LEDGER_FILES
+    by reference rather than duplicating the file list, the single tuple edit fixed
+    all five functions at once -- no production code changes were needed in either
+    gate_checks module. Also updated the matching hardcoded file-list prose in .claude/workflows/implement-ticket.js''s
+    Parity-phase prompt (now lists all 9 canonical files) and rewrote 7 pre-existing
+    tests (across tests/tools/test_parity_ledger_scan.py, test_parity_updater_static.py,
+    test_parity_index.py, test_parity_index_baseline.py, test_gate_a_readpath_review.py)
+    that had pinned the old exclusion as correct behavior, plus added 4 new positive-control
+    tests proving the fix against the real, non-synthetic ledger (not just a synthetic
+    fixture). tools/parity_index.py (the SQLite-backed index) was already unaffected
+    -- it globs all 9 shards independent of CANONICAL_LEDGER_FILES and needed no change.
+    No src/ files were changed by this ticket -- pure Claude-agent-workflow gate-check
+    tooling, mirroring INFRA-381/382''s precedent for this shard.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/parity_ledger_scan.py:32-42 (CANONICAL_LEDGER_FILES tuple, faction.yaml
+    appended as 9th element; module and find_p0_intersection docstrings corrected
+    to drop the stale "faction.yaml excluded / 0 P0 entries" claim). .claude/workflows/implement-ticket.js
+    (Parity-phase prompt file-list string, ~line 1264, now lists faction.yaml alongside
+    the other 8). tests/tools/test_parity_ledger_scan.py::test_scans_canonical_nine_including_faction,
+    ::test_detects_real_fac013_p0_intersection (against the real docs/parity_ledger
+    directory and the real FAC-013 P0 entry). tests/tools/test_parity_updater_static.py::test_includes_faction_yaml,
+    ::test_expected_subsystems_includes_faction_for_real_ledger_path. tests/tools/test_mechanics_auditor_static.py::test_find_entry_locates_real_fac013_in_faction_yaml.
+  proof_type: regression
+  test_path: tests/tools/test_parity_ledger_scan.py::test_scans_canonical_nine_including_faction;
+    tests/tools/test_parity_ledger_scan.py::test_detects_real_fac013_p0_intersection;
+    tests/tools/test_parity_updater_static.py::test_includes_faction_yaml; tests/tools/test_parity_updater_static.py::test_expected_subsystems_includes_faction_for_real_ledger_path;
+    tests/tools/test_mechanics_auditor_static.py::test_find_entry_locates_real_fac013_in_faction_yaml;
+    tests/tools/test_parity_prompt_ledger_file_list.py
+  divergence_note: null
+  support_boundary: Claude-agent-workflow orchestration/gate-check tooling only --
+    no simulation behavior is involved (mirrors INFRA-263/264/265/315/379/381/382's
+    support_boundary pattern for pure workflow-tooling entries in this shard). Does
+    not touch, extend, or duplicate FAC-013's own content, or INFRA-381/382 (Parity-phase
+    id-lookup / sidecar-attribution determinism) -- this is a distinct guarantee scoped
+    to the CANONICAL_LEDGER_FILES file-set itself.

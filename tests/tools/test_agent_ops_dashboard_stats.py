@@ -370,3 +370,60 @@ def test_stats_endpoint_uses_real_read_cache_access_log_not_reimplemented():
     assert "from retrieval_cache import" in source
     assert "read_cache_access_log" in source
     assert "def read_cache_access_log(" not in source
+
+
+def test_slow_run_and_duration_outlier_carry_active_idle_split(tmp_path):
+    """TCK-20260822-DASHBOARD-DURATION-GAP-AWARE: SlowRunEntry/DurationOutlierEntry surface the
+    sibling TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT's active_duration_s/idle_gap_s fields
+    end-to-end through the real API pipeline (compute_retro_metrics -> ingest.py's **kwargs
+    passthrough -> the typed Pydantic response) -- not just a unit test of the model in isolation.
+    """
+    _init_repo_skeleton(tmp_path)
+    slow_run = dict(
+        _BASE_RUN,
+        run_id="TCK-SLOW-DASHBOARD",
+        start_ts="2026-07-06T00:00:00Z",
+        end_ts="2026-07-06T02:00:00Z",
+        duration_s=7200,
+    )
+    _write_runs(tmp_path, [slow_run])
+    _write_events(
+        tmp_path,
+        [
+            {"run_id": "TCK-SLOW-DASHBOARD", "seq": 1, "ts": "2026-07-06T00:00:00Z", "phase": "Scope", "agent": "ticket-scoper"},
+            {"run_id": "TCK-SLOW-DASHBOARD", "seq": 2, "ts": "2026-07-06T00:10:00Z", "phase": "Implement", "agent": "implementer"},
+        ],
+    )
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    stats = cache.get_agent_monitoring_stats(all_time=True)
+
+    assert len(stats.slow_runs) == 1
+    row = stats.slow_runs[0]
+    assert row.run_id == "TCK-SLOW-DASHBOARD"
+    assert row.active_duration_s == 600.0  # 10 min active gap
+    assert row.idle_gap_s == 6600.0  # 110 min idle gap
+
+
+def test_slow_run_active_idle_split_none_when_start_ts_unparseable(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    _write_runs(
+        tmp_path,
+        [
+            dict(
+                _BASE_RUN,
+                run_id="TCK-SLOW-BADTS",
+                start_ts="not-a-timestamp",
+                end_ts="2026-07-06T02:00:00Z",
+                duration_s=7200,
+            )
+        ],
+    )
+    _write_events(tmp_path, [])
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    stats = cache.get_agent_monitoring_stats(all_time=True)
+
+    assert len(stats.slow_runs) == 1
+    assert stats.slow_runs[0].active_duration_s is None
+    assert stats.slow_runs[0].idle_gap_s is None

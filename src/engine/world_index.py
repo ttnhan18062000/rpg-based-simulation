@@ -30,6 +30,16 @@ class CacheInvalidationPolicy:
             invalidated.add("corpse_index")
         if dirty.region_ids:
             invalidated.add("region_index")
+        # PERF-010 (Semantic Entity Indexes): additive domains, distinctly named so they never
+        # collide with the pre-existing "region_index" phantom-field bug above (WorldIndexes has
+        # no region_index field and WorldIndexService never checks for it -- tracked separately,
+        # not fixed here).
+        if dirty.identity_entities:
+            invalidated.add("semantic_identity_index")
+        if dirty.region_ids:
+            invalidated.add("semantic_region_index")
+        if dirty.biological_entities:
+            invalidated.add("semantic_needs_index")
         return invalidated
 
     @staticmethod
@@ -49,6 +59,18 @@ class CacheInvalidationPolicy:
             return "corpse_index" in idx
         if domain == "regions":
             return "region_index" in idx
+        # PERF-010 (Semantic Entity Indexes): additive domains for SemanticEntityIndexService.
+        if domain == "identity":
+            return "semantic_identity_index" in idx
+        if domain == "region":
+            return "semantic_region_index" in idx
+        if domain == "needs":
+            return "semantic_needs_index" in idx
+        if domain == "knowledge":
+            # information_providers mutations carry no dedicated DirtySet tag today (out of scope
+            # to invent one -- AC #3 only requires role/region/faction incremental invalidation).
+            # Conservatively always invalidate rather than risk a stale knowledge_domain index.
+            return True
         return True
 
 

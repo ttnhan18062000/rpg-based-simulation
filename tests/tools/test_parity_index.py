@@ -1026,7 +1026,7 @@ class TestEquivalenceFixtures:
         assert report["failure_class"] == "ShardParseError"
         assert not paths["db_path"].exists()
 
-    def test_faction_evidence_case_present_in_new_index_despite_legacy_exclusion(self, tmp_path):
+    def test_faction_evidence_case_present_in_both_legacy_and_new_index(self, tmp_path):
         paths = _make_corpus(
             tmp_path,
             {
@@ -1041,13 +1041,14 @@ class TestEquivalenceFixtures:
             },
         )
 
-        # Legacy exclusion: both comparison targets never see faction.yaml at all.
+        # find_p0_intersection now scans faction.yaml too, but FAC-801 is priority P1, so the
+        # P0-only filter still excludes it -- unrelated to which files are scanned.
         legacy_hits = find_p0_intersection(
             ["src/factions/diplomacy.py"], ledger_dir=str(paths["ledger_dir"])
         )
         assert legacy_hits == []
         legacy_mapping = derive_mapping(paths["ledger_dir"])
-        assert "src/factions/diplomacy.py" not in legacy_mapping
+        assert legacy_mapping["src/factions/diplomacy.py"] == {"faction.yaml"}
 
         # New index: faction.yaml is included like any other shard.
         report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
@@ -1187,3 +1188,33 @@ class TestCheckStaleness:
             capture_output=True, text=True, cwd=str(_REPO_ROOT),
         )
         assert result.returncode == 1
+
+
+# ---------------------------------------------------------------------------
+# Group 15 — real-ledger CI collision guard (TCK-20260826-REGISTRY-PARITY-CONFLICT-GUARDS)
+# ---------------------------------------------------------------------------
+
+
+class TestRealLedgerCollisionGuard:
+    """Wires the existing DuplicateEntryIdError detector (build(), via _populate_shards()) into
+    CI against the real, live docs/parity_ledger/*.yaml corpus — not a synthetic fixture. Before
+    this ticket, the detector was only exercised by test_duplicate_cross_shard_id_rejected_at_import
+    (a tmp_path fixture proving the LOGIC works) and by `make parity-index`, explicitly marked
+    "(on-demand only — not CI)" in the Makefile and never referenced in
+    .github/workflows/test.yml — so a real cross-shard ID collision reaching main (the exact
+    failure mode this session hit three times) would never fail a CI job. This test carries no
+    @pytest.mark.slow marker, so it runs inside the api-tools CI job's existing
+    `pytest tests/tools -m "not slow"` invocation with zero .github/workflows/test.yml edits —
+    same zero-new-CI-wiring pattern TCK-20260709-REGISTRY-DRIFT-CHECK-GATE already established
+    for docs/REGISTRY.yaml's own real-corpus drift check
+    (TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry in
+    tests/tools/test_generate_registry.py)."""
+
+    def test_build_against_real_docs_parity_ledger_has_no_duplicate_ids(self, tmp_path):
+        report = _pi.build(
+            ledger_dir=_REPO_ROOT / "docs" / "parity_ledger", db_path=tmp_path / "real_ledger.db"
+        )
+        assert report["status"] == "ok", (
+            f"Real docs/parity_ledger/*.yaml corpus failed to build cleanly — "
+            f"{report.get('failure_class')}: {report.get('detail')}"
+        )

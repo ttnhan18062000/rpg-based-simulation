@@ -26,14 +26,32 @@ from src.config.profiles import RuntimeProfile
 
 logger = logging.getLogger(__name__)
 
-def create_v2_app(profile: RuntimeProfile) -> FastAPI:
-    """Build and return the V2 FastAPI application."""
+def create_v2_app(
+    profile: RuntimeProfile,
+    seed: Optional[int] = None,
+    entities_count: Optional[int] = None,
+    world_id: Optional[str] = None,
+) -> FastAPI:
+    """Build and return the V2 FastAPI application.
+
+    seed/entities_count/world_id are optional overrides for V2EngineManager's own defaults --
+    None (the default here, matching every existing caller) means "use V2EngineManager's class
+    default for that field," so this stays a fully backward-compatible signature extension.
+    """
     configure_api_keys(profile)
     configure_admission_control(profile)
 
+    manager_kwargs: Dict[str, Any] = {}
+    if seed is not None:
+        manager_kwargs["seed"] = seed
+    if entities_count is not None:
+        manager_kwargs["entities_count"] = entities_count
+    if world_id is not None:
+        manager_kwargs["world_id"] = world_id
+
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        manager = V2EngineManager(profile)
+        manager = V2EngineManager(profile, **manager_kwargs)
         set_engine_manager(manager)
         manager.start()
 

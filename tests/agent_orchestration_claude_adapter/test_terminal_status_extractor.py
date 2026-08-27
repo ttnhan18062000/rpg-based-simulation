@@ -98,8 +98,86 @@ def test_extract_all_terminal_statuses_dedupes_by_value_not_call_site_count():
     )
 
     by_value = {e["value"]: e for e in all_statuses}
-    assert by_value["FINALIZE_INCOMPLETE"]["call_sites"] == [1546, 1558]
+
+    # TCK-20260824-TERMINAL-STATUS-STRUCTURAL-FIX: structural invariants, not a literal line-number
+    # list — this exact drift (implement-ticket.js edits shifting FINALIZE_INCOMPLETE's call-site
+    # line numbers) has forced 8 separate hotfix tickets since 2026-08-02. Line position may drift
+    # freely; the real invariants are (a) exactly 2 distinct, ascending call sites, and (b) the two
+    # sites are genuinely different code paths, not an accidental duplicate of the same one.
+    finalize_incomplete_sites = by_value["FINALIZE_INCOMPLETE"]["call_sites"]
+    assert len(finalize_incomplete_sites) == 2, (
+        f"expected exactly 2 distinct FINALIZE_INCOMPLETE call sites, found "
+        f"{len(finalize_incomplete_sites)}: {finalize_incomplete_sites}"
+    )
+    assert finalize_incomplete_sites == sorted(finalize_incomplete_sites), (
+        "call sites must be in strictly ascending source order"
+    )
+    assert len(set(finalize_incomplete_sites)) == 2, "call sites must be distinct, not duplicated"
+
+    finalize_incomplete_contexts = by_value["FINALIZE_INCOMPLETE"]["contexts"]
+    assert len(finalize_incomplete_contexts) == 2
+    assert all(c is not None for c in finalize_incomplete_contexts), (
+        f"expected a message-literal context marker at both call sites, got "
+        f"{finalize_incomplete_contexts}"
+    )
+    assert len(set(finalize_incomplete_contexts)) == 2, (
+        f"the two FINALIZE_INCOMPLETE call sites must be genuinely distinct code paths (different "
+        f"message text), not an accidental duplicate of the same branch: "
+        f"{finalize_incomplete_contexts}"
+    )
+
     assert by_value["DONE"]["kind"] == "literal"
     assert by_value["NEEDS_CHANGES"]["kind"] == "verdict_derived"
     assert by_value["BLOCKED"]["kind"] == "verdict_derived"
     assert by_value["SCOPE_AGENT_FAILED"]["kind"] == "bypass"
+
+
+def test_call_site_detection_tolerates_unrelated_line_insertion_above(tmp_path):
+    """TCK-20260824-TERMINAL-STATUS-STRUCTURAL-FIX: proves the structural invariants above survive
+    an unrelated line inserted above both FINALIZE_INCOMPLETE call sites — the exact class of edit
+    that broke the old literal-line-number assertions 8 times since 2026-08-02."""
+    base_fixture = """\
+if (finalizeResults === null) {
+  pushEvent('Finalize', 'finalizer', 'failed', 'parse failed')
+  await writeMonitoring('FINALIZE_INCOMPLETE')
+  return {
+    status: 'FINALIZE_INCOMPLETE',
+    message: 'Finalize self-check output could not be parsed — treating as incomplete.',
+  }
+}
+
+const finalizeFailures = finalizeResults.filter(r => r.status === 'FAIL')
+if (finalizeFailures.length > 0) {
+  await writeMonitoring('FINALIZE_INCOMPLETE')
+  return {
+    status: 'FINALIZE_INCOMPLETE',
+    message: 'Finalize completed its steps but the post-migration self-check found a discrepancy.',
+  }
+}
+"""
+    shifted_fixture = "// an unrelated comment line inserted above everything\n" + base_fixture
+
+    def _finalize_incomplete_invariants(fixture_text: str) -> tuple[list[int], list[str | None]]:
+        fixture_path = tmp_path / "fixture.js"
+        fixture_path.write_text(fixture_text, encoding="utf-8")
+        statuses = extract_all_terminal_statuses(fixture_path)
+        by_value = {e["value"]: e for e in statuses}
+        return by_value["FINALIZE_INCOMPLETE"]["call_sites"], by_value["FINALIZE_INCOMPLETE"]["contexts"]
+
+    base_sites, base_contexts = _finalize_incomplete_invariants(base_fixture)
+    shifted_sites, shifted_contexts = _finalize_incomplete_invariants(shifted_fixture)
+
+    # The raw line numbers DO shift (proving the fixture setup itself is meaningful) ...
+    assert shifted_sites != base_sites
+    assert all(s + 1 == b for s, b in zip(base_sites, shifted_sites)), (
+        "expected the inserted line to shift every call site down by exactly 1"
+    )
+    # ... but the structural invariants a real test would assert do NOT change.
+    for sites, contexts in ((base_sites, base_contexts), (shifted_sites, shifted_contexts)):
+        assert len(sites) == 2
+        assert sites == sorted(sites)
+        assert len(set(sites)) == 2
+        assert len(contexts) == 2
+        assert all(c is not None for c in contexts)
+        assert len(set(contexts)) == 2
+    assert base_contexts == shifted_contexts, "context markers themselves must be line-position-independent"

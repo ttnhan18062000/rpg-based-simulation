@@ -70,6 +70,7 @@ class DirtySetBuilder:
             self.lifecycle = set(base.lifecycle_entities)
             self.biological = set(base.biological_entities)
             self.attributes = set(base.attribute_entities)
+            self.identity = set(base.identity_entities)
             self.town = set(base.town_entities)
             self.groups = set(base.group_ids)
             self.regions = set(base.region_ids)
@@ -88,6 +89,7 @@ class DirtySetBuilder:
             self.lifecycle = set()
             self.biological = set()
             self.attributes = set()
+            self.identity = set()
             self.town = set()
             self.groups = set()
             self.regions = set()
@@ -108,6 +110,7 @@ class DirtySetBuilder:
             elif tag == "lifecycle": self.lifecycle.add(e_id)
             elif tag == "biological": self.biological.add(e_id)
             elif tag == "attributes": self.attributes.add(e_id)
+            elif tag == "identity": self.identity.add(e_id)
 
     def mark_from_update(self, state: AuthoritativeState, update: StateUpdate):
         """Incremental update from a StateUpdate."""
@@ -174,7 +177,10 @@ class DirtySetBuilder:
                 
             if e_upd.attributes or e_upd.reward:
                 self.attributes.add(e_id)
-                
+
+            if e_upd.identity:
+                self.identity.add(e_id)
+
             ent = state.entities.get(e_id)
             if ent and ent.identity.group_id is not None:
                 self.groups.add(ent.identity.group_id)
@@ -189,6 +195,7 @@ class DirtySetBuilder:
             lifecycle_entities=self.lifecycle,
             biological_entities=self.biological,
             attribute_entities=self.attributes,
+            identity_entities=self.identity,
             town_entities=self.town,
             group_ids=self.groups,
             region_ids=self.regions,
@@ -217,7 +224,8 @@ class DirtySet:
     town_entities: Set[int] = field(default_factory=set)
     biological_entities: Set[int] = field(default_factory=set)
     attribute_entities: Set[int] = field(default_factory=set)
-    
+    identity_entities: Set[int] = field(default_factory=set)
+
     group_ids: Set[int] = field(default_factory=set)
     region_ids: Set[str] = field(default_factory=set)
     resource_node_ids: Set[int] = field(default_factory=set)
@@ -229,9 +237,9 @@ class DirtySet:
 
     @property
     def all_dirty_entities(self) -> Set[int]:
-        return (self.movement_entities | self.combat_entities | self.inventory_entities | 
-                self.strategic_entities | self.social_entities | self.lifecycle_entities | 
-                self.biological_entities | self.attribute_entities)
+        return (self.movement_entities | self.combat_entities | self.inventory_entities |
+                self.strategic_entities | self.social_entities | self.lifecycle_entities |
+                self.biological_entities | self.attribute_entities | self.identity_entities)
 
     @staticmethod
     def from_update(state: AuthoritativeState, update: StateUpdate, base_dirty: Optional[DirtySet] = None) -> DirtySet:
@@ -249,6 +257,7 @@ class DirtySet:
             lifecycle = set()
             biological = set()
             attributes = set()
+            identity = set()
             groups = set()
             regions = set()
             nodes = set()
@@ -268,6 +277,7 @@ class DirtySet:
             lifecycle = set(base_dirty.lifecycle_entities)
             biological = set(base_dirty.biological_entities)
             attributes = set(base_dirty.attribute_entities)
+            identity = set(base_dirty.identity_entities)
             groups = set(base_dirty.group_ids)
             regions = set(base_dirty.region_ids)
             nodes = set(base_dirty.resource_node_ids)
@@ -341,7 +351,10 @@ class DirtySet:
                 
             if e_upd.attributes or e_upd.reward:
                 attributes.add(e_id)
-                
+
+            if e_upd.identity:
+                identity.add(e_id)
+
             ent = state.entities.get(e_id)
             if ent and ent.identity.group_id is not None:
                 groups.add(ent.identity.group_id)
@@ -363,6 +376,7 @@ class DirtySet:
             lifecycle_entities=lifecycle | union_ids,
             biological_entities=biological | union_ids,
             attribute_entities=attributes | union_ids,
+            identity_entities=identity | union_ids,
             town_entities=town,
             group_ids=groups,
             region_ids=regions,
@@ -394,7 +408,8 @@ class DirtySet:
             corpse_ids=self.corpse_ids | other.corpse_ids,
             camp_ids=self.camp_ids | other.camp_ids,
             biological_entities=self.biological_entities | other.biological_entities,
-            attribute_entities=self.attribute_entities | other.attribute_entities
+            attribute_entities=self.attribute_entities | other.attribute_entities,
+            identity_entities=self.identity_entities | other.identity_entities
         )
         return DirtyDependencyGraph.expand(ds)
 
@@ -415,6 +430,7 @@ class DirtyDependencyGraph:
         town = set(dirty.town_entities)
         biological = set(dirty.biological_entities)
         attributes = set(dirty.attribute_entities)
+        identity = set(dirty.identity_entities)
 
         # 1. Movement implies strategic (positional proximity/pathfinding) and social (encounters)
         if movement:
@@ -446,6 +462,7 @@ class DirtyDependencyGraph:
             town_entities=town,
             biological_entities=biological,
             attribute_entities=attributes,
+            identity_entities=identity,
             group_ids=set(dirty.group_ids),
             region_ids=set(dirty.region_ids),
             resource_node_ids=set(dirty.resource_node_ids),

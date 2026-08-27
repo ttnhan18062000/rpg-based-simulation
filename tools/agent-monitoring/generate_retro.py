@@ -34,6 +34,7 @@ from validate_frontmatter import (  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from vocabulary import WORKFLOW_AGENTS, WORKFLOW_PHASES, infer_workflow  # noqa: E402
+from duration_utils import compute_active_idle_split  # noqa: E402
 
 # Read-only reference imports for TCK-20260729-RETRIEVAL-RETRO-VIEWS's retrieval-quality views —
 # anti-drift: compute_retrieval_metrics() must never re-literal these values (see
@@ -780,7 +781,8 @@ def _kgmcp_verdict(
 
 
 def compute_kgmcp_cache_efficiency_metrics(
-    access_log_rows: list[dict], tools: list[dict] | None = None
+    access_log_rows: list[dict], tools: list[dict] | None = None,
+    all_tools: list[dict] | None = None,
 ) -> dict:
     """Pure, read-only computation over `access_log_rows` — tools/retrieval_cache.py::
     read_cache_access_log()'s real output, or a fixture list in the same row shape in tests —
@@ -822,6 +824,15 @@ def compute_kgmcp_cache_efficiency_metrics(
     near-zero coverage number therefore reflects two independently-implemented tools, only one
     of which is cache-instrumented, not evidence the cache is being underused where it applies
     (TCK-20260824-RETRO-METRIC-CAVEATS).
+
+    `search_calls_total` (the coverage denominator) is deliberately computed from `all_tools`
+    when the caller supplies it, not the period-scoped `tools` (TCK-20260826-KGMCP-COVERAGE-RATE-
+    OVERFLOW). `access_log_rows` (the numerator's source) is always the all-time corpus — main()
+    never period-slices `kgmcp_access_log` (see generate()'s own docstring) — so pairing that
+    all-time numerator against a period-scoped `tools` denominator produced values like 1059.3%
+    on a one-week report: not a real coverage signal, just a time-window mismatch. Falls back to
+    `tools` when `all_tools` is not supplied (e.g. a direct unit-test call with only `tools` set),
+    preserving prior behavior exactly for those callers.
 
     `ticket_id`/`agent` absent on a row (ad-hoc, non-workflow calls, or a stale/unmigrated sidecar
     — see tools/retrieval_cache.py::read_current_run_sidecar()) are grouped under the literal
@@ -909,7 +920,18 @@ def compute_kgmcp_cache_efficiency_metrics(
                     }
                 )
 
-    search_calls_total = build_search_count_section(tools or [])["total"]
+    # TCK-20260826-KGMCP-COVERAGE-RATE-OVERFLOW: access_log_rows (the numerator's source) is
+    # always the all-time corpus (see generate()'s own docstring on kgmcp_access_log never being
+    # period-sliced) — so the denominator must also be all-time, or coverage_rate compares two
+    # different time windows and can exceed 100% for a reason that has nothing to do with real
+    # cache coverage (e.g. 1059.3% on a --week report: all-time cache events over one week's
+    # worth of search calls). `all_tools` (already loaded once, unfiltered, in main() for the
+    # Zero-Invocation Skill Flags section) is preferred when the caller explicitly supplies it;
+    # `tools` remains the fallback so every pre-existing direct call/test with only `tools` set
+    # keeps its exact prior behavior.
+    search_calls_total = build_search_count_section(
+        all_tools if all_tools is not None else (tools or [])
+    )["total"]
     total_events = total_hits + total_writes
     coverage_rate = (total_events / search_calls_total) if search_calls_total else None
 
@@ -969,7 +991,9 @@ def compute_kgmcp_cache_efficiency_metrics(
     }
 
 
-def compute_retro_metrics(runs, events, tickets_root=None, tools=None, kgmcp_access_log=None) -> dict:
+def compute_retro_metrics(
+    runs, events, tickets_root=None, tools=None, kgmcp_access_log=None, all_tools=None,
+) -> dict:
     """Pure computation over `runs`/`events` — the same metrics `generate()` has always rendered
     to Markdown, extracted (TCK-20260718-RETRO-STATS-REFACTOR) so a JSON API
     (TCK-20260718-AGENTOPS-STATS-API) can consume them without duplicating this logic. Returns a
@@ -1126,6 +1150,27 @@ def compute_retro_metrics(runs, events, tickets_root=None, tools=None, kgmcp_acc
     legacy_event_count = len(legacy_events)
     long_summaries = sum(1 for e in events if len(e.get("summary", "")) > 200)
 
+    # Active/idle duration split (TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT): a run's raw duration_s
+    # (end_ts - start_ts) doesn't distinguish real working time from idle gaps between phase
+    # transitions, which distorts what "slow" means below. duration_utils.compute_active_idle_split
+    # is the single shared, pure computation (never reimplemented here) — indexed once by run_id
+    # since it needs that run's own events.jsonl rows, ordered strictly by ts (not seq).
+    events_by_run_id = defaultdict(list)
+    for e in events:
+        rid = e.get("run_id")
+        if rid:
+            events_by_run_id[rid].append(e)
+
+    def _duration_split_fields(run_row: dict) -> dict:
+        split = compute_active_idle_split(
+            run_row.get("start_ts"),
+            run_row.get("end_ts"),
+            events_by_run_id.get(run_row.get("run_id", ""), []),
+        )
+        if split is None:
+            return {}
+        return {"active_duration_s": split["active_duration_s"], "idle_gap_s": split["idle_gap_s"]}
+
     # Slow runs (> 30 min = 1800s) — sorted here (a data concern), not left to the renderer.
     slow_runs = sorted(
         (r for r in runs if (r.get("duration_s") or 0) > 1800),
@@ -1137,6 +1182,7 @@ def compute_retro_metrics(runs, events, tickets_root=None, tools=None, kgmcp_acc
             "run_id": r.get("run_id", ""),
             "duration_s": r.get("duration_s", 0),
             "final_status": r.get("final_status", ""),
+            **_duration_split_fields(r),
         }
         for r in slow_runs
     ]
@@ -1163,6 +1209,7 @@ def compute_retro_metrics(runs, events, tickets_root=None, tools=None, kgmcp_acc
             "duration_s": value,
             "median": round(median, 1),
             "ratio": round(value / median, 1),
+            **_duration_split_fields(item),
         }
         for item, value, median, group_key in duration_outliers
     ]
@@ -1230,7 +1277,7 @@ def compute_retro_metrics(runs, events, tickets_root=None, tools=None, kgmcp_acc
         # did before this ticket) and the JSON API never seeing it at all.
         "skill_usage": build_skill_usage_section(tools or []),
         "kgmcp_cache_efficiency": compute_kgmcp_cache_efficiency_metrics(
-            kgmcp_access_log or [], tools=tools or []
+            kgmcp_access_log or [], tools=tools or [], all_tools=all_tools
         ),
     }
 
@@ -1524,7 +1571,8 @@ def generate(
     runs.jsonl timestamp this function's period filters already operate on.
     """
     metrics = compute_retro_metrics(
-        runs, events, tickets_root, tools=tools, kgmcp_access_log=kgmcp_access_log
+        runs, events, tickets_root, tools=tools, kgmcp_access_log=kgmcp_access_log,
+        all_tools=all_tools,
     )
     retrieval_metrics = compute_retrieval_metrics(events)
     shadow_comparison = compute_shadow_baseline_comparison(events)
@@ -1701,11 +1749,31 @@ def generate(
     lines.append("## Slow Runs (> 30 min)")
     lines.append("")
     if metrics["slow_runs"]:
-        lines.append("| run_id | duration | final_status |")
-        lines.append("|---|---|---|")
+        lines.append("| run_id | duration | active | idle | final_status |")
+        lines.append("|---|---|---|---|---|")
+        idle_dominated_count = 0
         for r in metrics["slow_runs"]:
-            dur_min = (r.get("duration_s", 0) or 0) // 60
-            lines.append(f"| {r.get('run_id','')} | {dur_min} min | {r.get('final_status','')} |")
+            dur_s = r.get("duration_s", 0) or 0
+            dur_min = dur_s // 60
+            active_s, idle_s = r.get("active_duration_s"), r.get("idle_gap_s")
+            if active_s is None or idle_s is None:
+                active_str, idle_str = "—", "—"
+            else:
+                active_str, idle_str = f"{active_s // 60:g} min", f"{idle_s // 60:g} min"
+                if dur_s > 0 and idle_s >= dur_s / 2:
+                    idle_dominated_count += 1
+            lines.append(
+                f"| {r.get('run_id','')} | {dur_min} min | {active_str} | {idle_str} | "
+                f"{r.get('final_status','')} |"
+            )
+        if idle_dominated_count:
+            lines.append("")
+            lines.append(
+                f"_{idle_dominated_count} of the runs above spend at least half their reported "
+                "duration idle (gaps ≥ 30 min between phase transitions, e.g. waiting on human "
+                "review) rather than in active work — see `active`/`idle` columns; \"slow\" here "
+                "does not mean \"took a long time to actively work on.\"_"
+            )
     else:
         lines.append("_No slow runs this period._")
     lines.append("")
@@ -1726,11 +1794,28 @@ def generate(
         if outliers["duration_s"]:
             lines.append("### Duration outliers (by tier)")
             lines.append("")
-            lines.append("| run_id | tier | duration_s | tier median | ratio |")
-            lines.append("|---|---|---|---|---|")
+            lines.append("| run_id | tier | duration_s | tier median | ratio | active | idle |")
+            lines.append("|---|---|---|---|---|---|---|")
+            duration_outlier_idle_dominated = 0
             for o in outliers["duration_s"]:
+                active_s, idle_s = o.get("active_duration_s"), o.get("idle_gap_s")
+                if active_s is None or idle_s is None:
+                    active_str, idle_str = "—", "—"
+                else:
+                    active_str, idle_str = f"{active_s // 60:g} min", f"{idle_s // 60:g} min"
+                    if o["duration_s"] > 0 and idle_s >= o["duration_s"] / 2:
+                        duration_outlier_idle_dominated += 1
                 lines.append(
-                    f"| {o['run_id']} | {o['tier']} | {o['duration_s']} | {o['median']} | {o['ratio']}x |"
+                    f"| {o['run_id']} | {o['tier']} | {o['duration_s']} | {o['median']} | "
+                    f"{o['ratio']}x | {active_str} | {idle_str} |"
+                )
+            if duration_outlier_idle_dominated:
+                lines.append("")
+                lines.append(
+                    f"_{duration_outlier_idle_dominated} of the duration outliers above spend at "
+                    "least half their reported duration idle rather than in active work — see "
+                    "`active`/`idle` columns; a large ratio here does not mean \"took unusually "
+                    "long to actively work on.\"_"
                 )
             lines.append("")
         if outliers["cost_proxy_score"]:

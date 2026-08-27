@@ -1,7 +1,7 @@
 # Compliance IDs: WORLD-070, WORLD-071, WORLD-072
 import pytest
 from src.worldbuilding.schema import WorldSpec, InvalidWorldSpecError
-from src.worldbuilding.validator import WorldValidator, ValidationContext
+from src.worldbuilding.validator import WorldValidator, ValidationContext, ValidationIssue
 
 def create_valid_base_spec() -> dict:
     return {
@@ -185,3 +185,28 @@ def test_validator_custom_context_overrides():
     
     # 2. Under MODULE, severity should override to (ERROR)
     assert rule.get_severity(ValidationContext.MODULE) == "ERROR"
+
+def test_validation_issue_source_entity_and_source_file_round_trip():
+    issue = ValidationIssue(
+        rule_id="WORLD-REACH-001",
+        severity="WARNING",
+        message="Quest 'q1' required_participant_tags not satisfiable.",
+        path="quest_definitions.0.required_participant_tags",
+        source_entity="q1",
+        source_file="some_module",
+    )
+    dumped = issue.model_dump()
+    restored = ValidationIssue.model_validate(dumped)
+
+    assert restored.source_entity == "q1"
+    assert restored.source_file == "some_module"
+
+    # Pre-existing rules that never set the new fields remain None-safe.
+    legacy_issue = ValidationIssue(
+        rule_id="WORLD-WARN-001",
+        severity="WARNING",
+        message="World spec defines zero resource nodes.",
+        path="resources",
+    )
+    assert legacy_issue.source_entity is None
+    assert legacy_issue.source_file is None

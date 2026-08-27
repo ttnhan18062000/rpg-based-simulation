@@ -27,14 +27,14 @@ _EXISTING_RECIPE_SNAPSHOT = {
         '\t@echo "Open http://localhost:5173 to view the live map."\n'
         '\t@echo "Press Ctrl+C to stop both."\n'
         "\t@trap 'kill 0' INT; \\\n"
-        "\t\tpython3 -m src serve --port 8000 & \\\n"
+        '\t\t$(PYTHON3) -m src serve --port 8000 --api-key-hashes "dev:3e90488c475fb2c2997525497f1e72e82dec6d68b5738dc7cebba4371f9f0ee2" & \\\n'
         "\t\t(cd frontend && npm run dev) & \\\n"
         "\t\twait\n"
     ),
-    "dev-backend": "\tpython3 -m src serve --port 8000\n",
+    "dev-backend": "\t$(PYTHON3) -m src serve --port 8000\n",
     "dev-frontend": "\tcd frontend && npm run dev\n",
-    "serve": "\tpython3 -m src serve --port 8000\n",
-    "serve-only": "\tpython3 -m src serve --port 8000\n",
+    "serve": "\t$(PYTHON3) -m src serve --port 8000\n",
+    "serve-only": "\t$(PYTHON3) -m src serve --port 8000\n",
     "clean": (
         "\trm -rf frontend/dist\n"
         "\trm -rf frontend/node_modules/.tmp\n"
@@ -86,6 +86,25 @@ def test_existing_targets_unmodified():
         actual = _extract_recipe(text, target)
         assert actual == expected_recipe, (
             f"recipe for {target}: changed from snapshot\nexpected: {expected_recipe!r}\nactual: {actual!r}"
+        )
+
+
+def test_knowledge_index_targets_use_python3_variable():
+    """Guards TCK-20260826-KNOWLEDGE-INDEX-PYTHON3-FIX: knowledge-index/knowledge-index-update
+    must consume the top-level $(PYTHON3) variable, matching dev/serve, not their own inline
+    python3-discovery loop (which resolves empty from any git worktree, since worktrees have no
+    .venv/ of their own).
+    """
+    text = _makefile_text()
+
+    for target in ("knowledge-index", "knowledge-index-update"):
+        recipe = _extract_recipe(text, target)
+        assert "$(PYTHON3)" in recipe, f"expected {target}'s recipe to use $(PYTHON3)"
+        assert "for py in" not in recipe, (
+            f"expected {target}'s recipe to have no inline python3-discovery loop"
+        )
+        assert "$(shell" not in recipe, (
+            f"expected {target}'s recipe to have no inline $(shell ...) python3 resolution"
         )
 
 

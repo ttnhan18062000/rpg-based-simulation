@@ -278,3 +278,141 @@ def test_military_conflict_noop_when_no_war():
     state = _FakeState(factions=factions, regions={}, tick=1)
     result = MilitaryConflictPhase.execute(state)
     assert result.is_noop()
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260822-GUARD-SCAN-INDEX-RETROFIT: guard index parity + reinforcement
+# + squad-commitment coverage (AC #1, #2, #3)
+# ---------------------------------------------------------------------------
+
+def _make_entity(eid, role, region_id):
+    from src.core.state import EntityState, IdentityComponent, NavigationComponent
+    return EntityState(
+        id=eid,
+        kind="npc",
+        identity=IdentityComponent(role=role),
+        navigation=NavigationComponent(region_id=region_id),
+    )
+
+
+def _naive_find_guard_entities_in_region(state, region_id):
+    """Reference copy of the pre-retrofit full O(N) scan, kept local to this test only."""
+    from src.core.enums import EntityRole
+    result = []
+    for eid, entity in state.entities.items():
+        nav = getattr(entity, "navigation", None)
+        if nav is None or nav.region_id != region_id:
+            continue
+        identity = getattr(entity, "identity", None)
+        if identity is None:
+            continue
+        if identity.role == EntityRole.GUARD:
+            result.append(eid)
+    return sorted(result)
+
+
+def test_guard_index_matches_naive_full_scan():
+    """The hoisted per-region index returns identical output to the pre-retrofit scan (AC #1)."""
+    from src.core.enums import EntityRole
+    from src.core.state import EntityState
+    from src.engine.military_conflict import MilitaryConflictPhase
+
+    entities = {
+        1: _make_entity(1, EntityRole.GUARD, "r1"),
+        2: _make_entity(2, EntityRole.GUARD, "r1"),
+        3: _make_entity(3, EntityRole.HERO, "r1"),
+        4: _make_entity(4, EntityRole.MONSTER, "r2"),
+        5: _make_entity(5, EntityRole.GUARD, "r2"),
+        6: _make_entity(6, EntityRole.WORKER, "r3"),
+        # Real EntityState always has non-None identity/navigation (default_factory);
+        # this exercises the defensive getattr(..., None) branch as dead-but-safe code.
+        7: EntityState(id=7, kind="npc"),
+    }
+    state = _FakeState(entities=entities, tick=1)
+
+    for region_id in ("r1", "r2", "r3"):
+        expected = _naive_find_guard_entities_in_region(state, region_id)
+        actual = MilitaryConflictPhase._find_guard_entities_in_region(state, region_id)
+        assert actual == expected
+
+    assert MilitaryConflictPhase._find_guard_entities_in_region(state, "r1") == [1, 2]
+    assert MilitaryConflictPhase._find_guard_entities_in_region(state, "r2") == [5]
+    assert MilitaryConflictPhase._find_guard_entities_in_region(state, "r3") == []
+
+
+def _make_war_state_with_guards(guard_ids, tick=3):
+    from src.core.enums import DiplomaticState as DS, EntityRole
+    factions = {
+        "fa": _make_faction("fa", relations={"fb": DS.WAR}),
+        "fb": _make_faction("fb", territory=["r2"], relations={"fa": DS.WAR}),
+    }
+    regions = {"r2": _make_region("r2")}
+    entities = {eid: _make_entity(eid, EntityRole.GUARD, "r2") for eid in guard_ids}
+    return _FakeState(factions=factions, regions=regions, entities=entities, tick=tick)
+
+
+def test_military_conflict_reinforcement_fires_at_three_guards():
+    from src.engine.military_conflict import (
+        MilitaryConflictPhase,
+        _SIEGE_SVC_DELTA,
+        _SIEGE_PROGRESS_DELTA,
+        _DEF_SVC_DELTA,
+        _DEF_PROGRESS_DELTA,
+    )
+
+    state = _make_war_state_with_guards([101, 102, 103])
+    result = MilitaryConflictPhase.execute(state)
+    wu = result.world_updates["r2"]
+    assert math.isclose(
+        wu.service_availability_delta, _SIEGE_SVC_DELTA + _DEF_SVC_DELTA, abs_tol=1e-9
+    )
+    assert math.isclose(
+        wu.siege_progress_delta, _SIEGE_PROGRESS_DELTA + _DEF_PROGRESS_DELTA, abs_tol=1e-9
+    )
+
+
+def test_military_conflict_reinforcement_does_not_fire_below_threshold():
+    from src.engine.military_conflict import (
+        MilitaryConflictPhase,
+        _SIEGE_SVC_DELTA,
+        _SIEGE_PROGRESS_DELTA,
+    )
+
+    state = _make_war_state_with_guards([101, 102])
+    result = MilitaryConflictPhase.execute(state)
+    wu = result.world_updates["r2"]
+    assert math.isclose(wu.service_availability_delta, _SIEGE_SVC_DELTA, abs_tol=1e-9)
+    assert math.isclose(wu.siege_progress_delta, _SIEGE_PROGRESS_DELTA, abs_tol=1e-9)
+
+
+def test_military_conflict_squad_commitment_capped_at_five():
+    from src.engine.military_conflict import MilitaryConflictPhase
+
+    guard_ids = [107, 106, 105, 104, 103, 102, 101]  # non-sequential order
+    state = _make_war_state_with_guards(guard_ids)
+    result = MilitaryConflictPhase.execute(state)
+    assert len(result.groups_add_or_update) == 1
+    group = result.groups_add_or_update[0]
+    assert len(group.member_ids) == 5
+    expected_five = {101, 102, 103, 104, 105}
+    assert group.member_ids == expected_five
+    assert group.roles == {eid: "FACTION_SQUAD" for eid in expected_five}
+
+
+def test_military_conflict_squad_commitment_no_truncation_at_five():
+    from src.engine.military_conflict import MilitaryConflictPhase
+
+    guard_ids = [101, 102, 103, 104, 105]
+    state = _make_war_state_with_guards(guard_ids)
+    result = MilitaryConflictPhase.execute(state)
+    assert len(result.groups_add_or_update) == 1
+    group = result.groups_add_or_update[0]
+    assert group.member_ids == set(guard_ids)
+
+
+def test_military_conflict_squad_commitment_empty_when_no_guards():
+    from src.engine.military_conflict import MilitaryConflictPhase
+
+    state = _make_war_state_with_guards([])
+    result = MilitaryConflictPhase.execute(state)
+    assert result.groups_add_or_update == []
