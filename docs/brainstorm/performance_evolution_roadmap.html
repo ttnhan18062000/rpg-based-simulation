@@ -1,0 +1,523 @@
+<title>Performance Evolution Roadmap</title>
+<style>
+:root {
+  --paper: #f7f8f6;
+  --card: #ffffff;
+  --ink: #1c2321;
+  --ink-soft: #5b655f;
+  --ink-faint: #8b948e;
+  --border: #dde3df;
+  --accent: #2f6e63;
+  --accent-soft: #e4efe9;
+  --accent-ink: #1e4a42;
+  --implemented: #2f6e63;
+  --implemented-soft: #e4efe9;
+  --partial: #9a6a2f;
+  --partial-soft: #f4ead9;
+  --candidate: #b5563f;
+  --candidate-soft: #f5e3dc;
+  --open: #2e6e8e;
+  --open-soft: #dceaf0;
+  --na: #8b948e;
+  --na-soft: #eef0ed;
+  --unconfirmed: #8b5fa8;
+  --unconfirmed-soft: #ece3f2;
+  --risk-low: #2f6e63;
+  --risk-medium: #9a6a2f;
+  --risk-higher: #a3453a;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121615;
+    --card: #191f1d;
+    --ink: #e8ece9;
+    --ink-soft: #a3b0a8;
+    --ink-faint: #6c7873;
+    --border: #2a3330;
+    --accent: #5fb3a3;
+    --accent-soft: #1c2e2a;
+    --accent-ink: #8fd4c6;
+    --implemented: #5fb3a3;
+    --implemented-soft: #1c2e2a;
+    --partial: #d8a765;
+    --partial-soft: #2e2517;
+    --candidate: #e0917d;
+    --candidate-soft: #3a2620;
+    --open: #7fb3cc;
+    --open-soft: #1d2e36;
+    --na: #8a9089;
+    --na-soft: #232928;
+    --unconfirmed: #c19fdb;
+    --unconfirmed-soft: #2a2130;
+    --risk-low: #5fb3a3;
+    --risk-medium: #d8a765;
+    --risk-higher: #d98f83;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121615;
+  --card: #191f1d;
+  --ink: #e8ece9;
+  --ink-soft: #a3b0a8;
+  --ink-faint: #6c7873;
+  --border: #2a3330;
+  --accent: #5fb3a3;
+  --accent-soft: #1c2e2a;
+  --accent-ink: #8fd4c6;
+  --implemented: #5fb3a3;
+  --implemented-soft: #1c2e2a;
+  --partial: #d8a765;
+  --partial-soft: #2e2517;
+  --candidate: #e0917d;
+  --candidate-soft: #3a2620;
+  --open: #7fb3cc;
+  --open-soft: #1d2e36;
+  --na: #8a9089;
+  --na-soft: #232928;
+  --unconfirmed: #c19fdb;
+  --unconfirmed-soft: #2a2130;
+  --risk-low: #5fb3a3;
+  --risk-medium: #d8a765;
+  --risk-higher: #d98f83;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1040px; margin: 0 auto; padding: 56px 24px 96px; }
+header.hero { margin-bottom: 32px; }
+p.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.1;
+  margin: 0 0 16px;
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+}
+p.thesis { font-size: 17.5px; color: var(--ink-soft); max-width: 72ch; margin: 0 0 8px; overflow-wrap: anywhere; }
+p.thesis + p.thesis { margin-top: 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 22px; }
+.legend-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px;
+  padding: 5px 11px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--ink-soft);
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.dot.implemented { background: var(--implemented); }
+.dot.partial { background: var(--partial); }
+.dot.candidate { background: var(--candidate); }
+.dot.open { background: var(--open); }
+.dot.na { border: 1.5px dashed var(--ink-faint); background: transparent; }
+.dot.unconfirmed { background: var(--unconfirmed); }
+
+.glance {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); margin: 32px 0 40px; overflow-x: auto;
+}
+.glance p.glance-note { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 16px; max-width: 72ch; }
+.glance table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.glance th {
+  text-align: left; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--ink-soft); padding: 0 12px 10px 0; border-bottom: 1px solid var(--border);
+}
+.glance td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.glance tr:last-child td { border-bottom: none; }
+.glance .sec-name a { color: var(--ink); text-decoration: none; font-weight: 600; }
+.glance .sec-name a:hover { color: var(--accent); text-decoration: underline; }
+
+nav.toc {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px 22px; margin-bottom: 40px;
+}
+nav.toc .toc-label {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 0 12px;
+}
+nav.toc ol {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px 20px;
+}
+nav.toc li { font-size: 13.5px; }
+nav.toc a {
+  color: var(--ink); text-decoration: none; display: flex; align-items: baseline; gap: 8px;
+  padding: 3px 0; border-bottom: 1px solid transparent;
+}
+nav.toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.toc-num { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); flex-shrink: 0; width: 1.6em; }
+
+section { margin: 52px 0; scroll-margin-top: 20px; }
+h2.section-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; margin: 0 0 6px; text-wrap: balance; }
+.section-lede { color: var(--ink-soft); font-size: 14.5px; max-width: 76ch; margin: 0 0 6px; overflow-wrap: anywhere; }
+.section-count { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-faint); margin: 0 0 20px; }
+
+.cluster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 18px; min-width: 0;
+}
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.card h3 { font-family: var(--font-display); font-size: 15.5px; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+.badge {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.03em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+}
+.badge.implemented { background: var(--implemented-soft); color: var(--implemented); }
+.badge.partial { background: var(--partial-soft); color: var(--partial); }
+.badge.candidate { background: var(--candidate-soft); color: var(--candidate); }
+.badge.open { background: var(--open-soft); color: var(--open); }
+.badge.na { background: var(--na-soft); color: var(--ink-faint); }
+.badge.unconfirmed { background: var(--unconfirmed-soft); color: var(--unconfirmed); }
+
+.card p.desc { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; overflow-wrap: anywhere; }
+.card p.source {
+  font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-faint);
+  border-top: 1px solid var(--border); padding-top: 8px; margin: 0; overflow-wrap: anywhere;
+}
+
+.priority-wrap { overflow-x: auto; }
+table.priority { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+table.priority th, table.priority td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.priority th { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); background: var(--accent-soft); }
+table.priority tr:last-child td { border-bottom: none; }
+table.priority td.rank { font-family: var(--font-mono); font-weight: 600; color: var(--accent-ink); text-align: center; }
+table.priority td[class^="risk-"] { font-family: var(--font-mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
+table.priority td.risk-none { color: var(--ink-faint); }
+table.priority td.risk-low { color: var(--risk-low); }
+table.priority td.risk-medium { color: var(--risk-medium); }
+table.priority td.risk-higher { color: var(--risk-higher); }
+
+.callout {
+  background: var(--accent-soft); border: 1px solid var(--border); border-radius: 14px;
+  padding: 22px 26px; margin: 40px 0;
+}
+.callout h2 { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin: 0 0 10px; color: var(--accent-ink); }
+.callout p { font-size: 14.5px; color: var(--ink); max-width: 76ch; margin: 0 0 10px; }
+.callout p:last-child { margin-bottom: 0; }
+.callout code { font-family: var(--font-mono); font-size: 0.92em; background: var(--card); padding: 1px 5px; border-radius: 4px; }
+.callout ul { margin: 0 0 10px; padding-left: 22px; }
+.callout li { font-size: 14.5px; margin-bottom: 6px; }
+
+blockquote.rule {
+  font-family: var(--font-display); font-size: 17px; font-style: italic; color: var(--accent-ink);
+  border-left: 3px solid var(--accent); margin: 20px 0; padding: 4px 0 4px 18px;
+}
+
+footer {
+  margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--ink-faint); font-family: var(--font-mono); line-height: 1.7;
+}
+footer a { color: var(--ink-faint); }
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">Architecture reference &middot; v1 &middot; companion to the design taxonomy</p>
+  <h1>What's Actually Left to Optimize</h1>
+  <p class="thesis">An external AI, asked how it would optimize this engine's performance while preserving determinism, produced 20 concrete ideas (22 of them individually checked here). The premise of that note was sound &mdash; sacrifice freshness, fidelity-for-low-value-entities, and immediacy before ever touching determinism or the single-writer model. But checking each idea against the actual code turned up something the note couldn't have known without reading it: a large fraction of what it proposes building is already built.</p>
+  <p class="thesis">This isn't a rubber stamp on that note, and it isn't a dismissal of it either &mdash; it's what's left standing after checking, plus my own read on what to actually do next.</p>
+  <div class="legend">
+    <span class="legend-item"><span class="dot implemented"></span> Already built — Verified in production code today — proposing this as new work would be redundant.</span>
+    <span class="legend-item"><span class="dot partial"></span> Partially built — A real mechanism exists and helps, but doesn't cover the full idea as proposed.</span>
+    <span class="legend-item"><span class="dot candidate"></span> Architecture-enabled — The safety precondition or building block is verified real; nothing built for this specific use yet.</span>
+    <span class="legend-item"><span class="dot open"></span> Genuinely open — Checked — this does not exist yet. A real, unclaimed opportunity.</span>
+    <span class="legend-item"><span class="dot na"></span> Correctly out of scope — Would solve a problem this single-authority engine doesn't have; agreed.</span>
+    <span class="legend-item"><span class="dot unconfirmed"></span> Unconfirmed — Plausible but not verified this pass.</span>
+  </div>
+</header>
+
+<div class="glance">
+  <p class="glance-note"><strong>The headline number.</strong> Of 22 performance ideas checked: 8 are already built and running, 4 are partially covered by an existing mechanism, 2 have a verified enabling primitive but no feature built on it, 7 are genuinely open, and 1 are correctly out of scope by the review's own reasoning.</p>
+  <table>
+    <tr><th>Group</th><th>Count</th></tr>
+    <tr><td class="sec-name"><a href="#already">Already running in production</a></td><td>8 items</td></tr>
+    <tr><td class="sec-name"><a href="#partial">Partially there — the idea is real, the coverage isn't complete</a></td><td>4 items</td></tr>
+    <tr><td class="sec-name"><a href="#candidate">Architecture-enabled — the primitive is real, nothing is built on it yet</a></td><td>2 items</td></tr>
+    <tr><td class="sec-name"><a href="#open">Genuinely open — checked, and these really are unclaimed</a></td><td>7 items</td></tr>
+    <tr><td class="sec-name"><a href="#agreed-scope">Correctly ruled out — agreed, not re-litigated</a></td><td>1 items</td></tr>
+  </table>
+</div>
+
+  <nav class="toc">
+    <p class="toc-label">On this page</p>
+    <ol>
+      <li><span class="toc-num">01</span><a href="#already">Already running in production</a></li>
+      <li><span class="toc-num">02</span><a href="#partial">Partially there — the idea is real, the coverage isn't complete</a></li>
+      <li><span class="toc-num">03</span><a href="#candidate">Architecture-enabled — the primitive is real, nothing is built on it yet</a></li>
+      <li><span class="toc-num">04</span><a href="#open">Genuinely open — checked, and these really are unclaimed</a></li>
+      <li><span class="toc-num">05</span><a href="#agreed-scope">Correctly ruled out — agreed, not re-litigated</a></li>
+      <li><span class="toc-num">06</span><a href="#priority">Revised priority order</a></li>
+      <li><span class="toc-num">07</span><a href="#my-take">Where I'd add to this</a></li>
+    </ol>
+  </nav>
+
+  <section id="already">
+    <h2 class="section-title">Already running in production</h2>
+    <p class="section-lede">The single biggest finding of this pass: several of the review's proposals aren't proposals. They're already load-bearing, documented, tested mechanisms — checked directly against the code, not assumed from either document.</p>
+    <p class="section-count">8 already built</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Dirty / affected-set processing (idea #2)</h3>
+          <span class="badge implemented">Already built</span>
+        </div>
+        <p class="desc">The dirty-flag system's own doc calls it &ldquo;the primary optimization layer in the tick pipeline.&rdquo; CandidateSelector.entities() already returns only the relevant entity IDs per phase and skips clean ones — PERF-005 through PERF-015, with 10 causal expansion edges. Not a future direction; the current one.</p>
+        <p class="source">docs/core/dirty_state_and_dependency.md; docs/engine/candidate_selection.md Tier 2</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Deterministic multi-rate scheduling (idea #3)</h3>
+          <span class="badge implemented">Already built</span>
+        </div>
+        <p class="desc">DeterministicScheduler.select_work() already gates on tick % entity.strategic_cadence == 0. MovementCandidateSelector already throttles wandering entities on tick % wander_modulo == 0. Both are exactly the &ldquo;tick % N == entity_phase&rdquo; deterministic temporal partitioning the review proposed building.</p>
+        <p class="source">docs/engine/candidate_selection.md Tiers 1 &amp; 3</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Deterministic simulation LOD (idea #5)</h3>
+          <span class="badge implemented">Already built</span>
+        </div>
+        <p class="desc">DeterministicScheduler.select_work() already carries an explicit LOD tier (A/B/C) that gates full vs. simplified work items by distance/priority. This one also corrects the design-taxonomy document itself, which had marked LOD Unconfirmed — fixed there too, same pass.</p>
+        <p class="source">docs/engine/candidate_selection.md Tier 1</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Readiness / demand-driven gating</h3>
+          <span class="badge implemented">Already built</span>
+        </div>
+        <p class="desc">Entities below entity.readiness &gt;= 100 receive no work item at all this tick. The taxonomy document had marked Demand-Driven Simulation Not Applicable — also wrong, also fixed.</p>
+        <p class="source">docs/engine/candidate_selection.md Tier 1</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Frozen-snapshot caching (part of idea #9)</h3>
+          <span class="badge implemented">Already built</span>
+        </div>
+        <p class="desc">Collection-phase freezing is not a fresh deep-copy every tick: get_frozen() caches each frozen object keyed by Python id(), and only re-freezes when the underlying object's identity actually changed. The &ldquo;if freezing means deep-copy the world&rdquo; premise behind idea #9 doesn't hold as stated.</p>
+        <p class="source">src/engine/executor.py (CORE-PERF-020)</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Full-hash rate limiting (part of idea #14)</h3>
+          <span class="badge implemented">Already built</span>
+        </div>
+        <p class="desc">A full SHA-256 canonical hash is already rate-limited to a budget per 100-tick sliding window, falling back to a stale cached hash and logging a WARNING when the budget is exhausted — plus a separate guard that rejects FULL-hash calls outside sanctioned boundaries (start-of-run, shutdown, certification/audit/replay). The &ldquo;hashing the whole world every tick is a hidden cost&rdquo; framing undersells what's already there.</p>
+        <p class="source">src/engine/checkpoint.py (BudgetedCanonicalHasher)</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Type-batched Resolution (idea #15, structurally)</h3>
+          <span class="badge implemented">Already built</span>
+        </div>
+        <p class="desc">The 37 named phases (movement_routing, action_routing, resource_transactions, ...) already partition Resolution by intent type at the macro level — each phase touches only its own kind of proposal. The idea as &ldquo;batch by type instead of one giant undifferentiated loop&rdquo; is the existing shape of the pipeline, not a change to it.</p>
+        <p class="source">docs/engine/authoritative_pipeline.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Semantic vs. execution determinism (idea #17)</h3>
+          <span class="badge implemented">Already built</span>
+        </div>
+        <p class="desc">Already the documented philosophy, word for word in spirit: &ldquo;same seed + same profile + same inputs =&gt; bit-identical state,&rdquo; defined over the canonical sorted output, never over which thread executed which entity. This is the existing design rationale, not a new principle to adopt.</p>
+        <p class="source">docs/architecture/kernel_concurrency_design_philosophy.md</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="partial">
+    <h2 class="section-title">Partially there — the idea is real, the coverage isn't complete</h2>
+    <p class="section-lede">Verified mechanisms exist, but each stops short of the review's full proposal in a specific, checkable way.</p>
+    <p class="section-count">4 partially built</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Structural sharing across the whole world (idea #8/#9)</h3>
+          <span class="badge partial">Partially built</span>
+        </div>
+        <p class="desc">The per-collection-object freeze cache (regions, resource_nodes, buildings, groups, corpses, ground_items, terrain) already avoids re-freezing unchanged objects. What's not confirmed: copy-on-write / persistent-tree structural sharing across the whole AuthoritativeState on every Resolution commit, which is what idea #8's generation-swap diagram actually describes.</p>
+        <p class="source">src/engine/executor.py (CORE-PERF-020)</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Reducing hashing's per-call cost (rest of idea #14)</h3>
+          <span class="badge partial">Partially built</span>
+        </div>
+        <p class="desc">BudgetedCanonicalHasher controls how often a full hash runs, not how expensive each call is — CanonicalStateHasher.to_canonical_data() still walks and JSON-serializes every entity/region/node/building/corpse/item every time it does run. Hierarchical/Merkle-style incremental hashing (only rehash dirty leaves) is still a real, unclaimed idea for the calls that do happen.</p>
+        <p class="source">src/engine/checkpoint.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Precompute static tables (idea #19)</h3>
+          <span class="badge partial">Partially built</span>
+        </div>
+        <p class="desc">ContentWarmupService.warmup() confirmed eager-loading all content singletons before tick 1, specifically to keep the tick hot path free of lazy loads. Whether every table the review lists (terrain movement costs, region adjacency, probability tables) is specifically precomputed wasn't checked item-by-item this pass.</p>
+        <p class="source">docs/engine/kernel.md §Content Hot-Path Guard</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Separate simulation rate from broadcast rate (idea #13)</h3>
+          <span class="badge partial">Partially built</span>
+        </div>
+        <p class="desc">WS deltas are already suppressed entirely on quiet ticks (except a 20-tick heartbeat) — so broadcast frequency already diverges from simulation frequency when nothing changed. Per-client or per-distance broadcast-rate tiering (nearby entities at 12&nbsp;Hz, far entities at 2&nbsp;Hz) specifically is not confirmed.</p>
+        <p class="source">docs/engine/contracts/api_protocol_contract.md §2</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="candidate">
+    <h2 class="section-title">Architecture-enabled — the primitive is real, nothing is built on it yet</h2>
+    <p class="section-lede">Same status tier introduced in the design-taxonomy document's own revision, for the same reason: a verified building block exists, but no feature was built from it.</p>
+    <p class="section-count">2 architecture-enabled</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Dynamic work-stealing among Collection workers (idea #16)</h3>
+          <span class="badge candidate">Architecture-enabled</span>
+        </div>
+        <p class="desc">The safety precondition the review names — worker completion order must never influence semantic application order — already holds today, verified: Resolution sorts every result by (class_priority, -local_priority, entity_id) before applying anything. But WorkerManager.execute_batch() currently slices packets into static contiguous chunks (packets[i:i+chunk_size]), not a work-stealing queue. Safe to build; not built.</p>
+        <p class="source">src/engine/worker_manager.py; docs/architecture/kernel_concurrency_design_philosophy.md Part 3</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Branch/checkpoint-based tooling (idea #12 in the review's priority table)</h3>
+          <span class="badge candidate">Architecture-enabled</span>
+        </div>
+        <p class="desc">Directly reuses the finding from the design-taxonomy document's external-review response: save()/restore() already round-trip full AuthoritativeState + tick + RNG through a live, resumable Kernel, over a tested REST API. What-if/branch/shadow-simulation tooling built on top of it doesn't exist yet — but for a performance roadmap specifically, the more immediate use is cheap, repeatable before/after benchmarking from a fixed checkpoint, which needs no new tooling to start doing today.</p>
+        <p class="source">src/engine/scenario_checkpoint.py (ScenarioCheckpointer)</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="open">
+    <h2 class="section-title">Genuinely open — checked, and these really are unclaimed</h2>
+    <p class="section-lede">No existing mechanism found for any of these. Real opportunities, not restatements of what's already there.</p>
+    <p class="section-count">7 genuinely open</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Data-Oriented hot-path projections / SoA (idea #1 &amp; #11 &amp; #18)</h3>
+          <span class="badge open">Genuinely open</span>
+        </div>
+        <p class="desc">Entity state stays OO (EntityState objects) all the way through Collection — no SoA/array projection layer for hot fields (position, health, goal_id) was found. The review's own hedge (&ldquo;you do not need to convert the whole engine to ECS&rdquo;) is the right framing: a narrow, opt-in hot-view projection for Collection's tightest loops, not a rewrite.</p>
+        <p class="source">src/entities/; src/engine/executor.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Spatial domain decomposition as the parallelism unit (idea #6)</h3>
+          <span class="badge open">Genuinely open</span>
+        </div>
+        <p class="desc">Confirmed: chunk_size = max(1, len(packets) // max_workers), then packets[i:i+chunk_size] — a flat index-range split, not region-aware. Assigning whole regions to workers instead is a real, unclaimed change, and composes cleanly with the spatial grid that already exists for proximity queries.</p>
+        <p class="source">src/engine/worker_manager.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Hierarchical / aggregate simulation for distant regions (idea #4)</h3>
+          <span class="badge open">Genuinely open</span>
+        </div>
+        <p class="desc">Region/world layers exist conceptually (sovereignty, regional trauma) but nothing aggregates a whole region's population into a cheaper macro-model when it's not being observed. Highest ceiling of anything on this list; also the most invasive and the easiest to get wrong deterministically.</p>
+        <p class="source">docs/mechanics/06_worldbuilding_foundation.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Job / task-graph for independent subsystems (idea #7)</h3>
+          <span class="badge open">Genuinely open</span>
+        </div>
+        <p class="desc">The 37 phases run strictly sequentially today. Some are provably independent of each other's inputs within a tick (e.g. weather vs. shop pricing) and could run concurrently before their outputs merge — but nothing does this yet, and proving independence correctly is the hard part.</p>
+        <p class="source">docs/engine/authoritative_pipeline.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Deterministic memoization by input signature (idea #10)</h3>
+          <span class="badge open">Genuinely open</span>
+        </div>
+        <p class="desc">No evidence of a signature-keyed memoization layer for expensive pure functions (pathfinding, utility scoring, perception queries). Determinism makes this unusually safe to add — same input genuinely does mean same output here — but nothing does it yet.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Hierarchical / incremental (Merkle-style) hashing (idea #14, the remaining part)</h3>
+          <span class="badge open">Genuinely open</span>
+        </div>
+        <p class="desc">See the Partial entry above: the rate limiter controls frequency, not per-call cost. Rehashing only dirty entities/regions and propagating up a tree, instead of re-serializing the whole world every time a full hash does run, is real and unclaimed.</p>
+        <p class="source">src/engine/checkpoint.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Deterministic approximation (idea #20)</h3>
+          <span class="badge open">Genuinely open</span>
+        </div>
+        <p class="desc">No evidence checked for approximate-but-deterministic substitutes (shortlist-then-evaluate utility scoring, cached-path-plus-local-correction movement) anywhere in the pipeline.</p>
+        <p class="source">—</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="agreed-scope">
+    <h2 class="section-title">Correctly ruled out — agreed, not re-litigated</h2>
+    <p class="section-lede">The review's own &ldquo;what I would NOT add&rdquo; list matches this project's existing architecture-boundary decisions exactly. No new checking needed — this is the same ground the design-taxonomy document already covers under Distribution &amp; Multi-Node.</p>
+    <p class="section-count">1 correctly out of scope</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>CRDT / eventual consistency / distributed writers / P2P / optimistic rollback / actor-owned mutable state</h3>
+          <span class="badge na">Correctly out of scope</span>
+        </div>
+        <p class="desc">Already marked Not Applicable there, for the same reason the review gives here: single-authority determinism is the load-bearing invariant, and every one of these solves a multi-writer problem this engine doesn't have.</p>
+        <p class="source">docs/brainstorm/simulation_design_taxonomy.html §distribution</p>
+      </div>
+    </div>
+  </section>
+
+<div class="callout" id="priority">
+  <h2>Revised priority order</h2>
+  <p>The review's own priority table ranked dirty-set processing and multi-rate scheduling #2 and #3 by likely benefit. Both are already built, which changes what actually belongs at the top of a real roadmap. This list only contains items confirmed <span class="badge open" style="display:inline">Genuinely open</span> or <span class="badge candidate" style="display:inline">Architecture-enabled</span> above &mdash; nothing that's already running made the cut twice.</p>
+  <div class="priority-wrap">
+    <table class="priority">
+      <tr><th>#</th><th>Move</th><th>Why this order</th><th>Risk to determinism</th></tr>
+    <tr><td class="rank">1</td><td>Profile by phase <em>and</em> by LOD tier / cadence bucket</td><td>The review's own #1 pick, sharpened: since the load-bearing optimization already lives in the readiness/cadence/LOD gates (not in raw phase timing alone), a regression or a bad default there would hide inside &ldquo;Collection took 30&nbsp;ms&rdquo; without ever showing up as a phase-cost anomaly. Profile the gates, not just the phases around them.</td><td class="risk-none">None</td></tr>
+    <tr><td class="rank">2</td><td>Measure the real post-filter working set before committing to anything else</td><td>Every remaining idea below assumes some working-set size. But dirty-set + readiness + cadence + LOD gates may already cut a nominal &ldquo;10,000 entities&rdquo; tick down to a few hundred actually-processed ones — which changes the ROI of DOD/SoA work materially. <code>TickAudit</code> already exists for phase costs; get the entities-actually-processed number from it before the next line item.</td><td class="risk-none">None</td></tr>
+    <tr><td class="rank">3</td><td>Spatial domain decomposition as the parallelism unit</td><td>Confirmed open, confirmed low-risk (packets are already read-only + canonically sorted post-hoc, so which worker owns which region doesn't affect determinism), and reuses spatial indexing that already exists for other purposes.</td><td class="risk-low">Low</td></tr>
+    <tr><td class="rank">4</td><td>DOD hot-path projection for Collection's tightest loops</td><td>Confirmed open. Scope it narrowly per the review's own hedge — a projection, not an ECS rewrite — and only after step 2 shows the working set is actually large enough for this to matter.</td><td class="risk-low">Low</td></tr>
+    <tr><td class="rank">5</td><td>Deterministic memoization by input signature</td><td>Confirmed open, unusually safe given the determinism guarantee, good candidate for pathfinding/utility scoring specifically.</td><td class="risk-low">Low</td></tr>
+    <tr><td class="rank">6</td><td>Hierarchical / incremental hashing for the calls that do happen</td><td>Confirmed open. Only worth doing once step 1's profiling shows the rate-limited full hash is actually showing up as a cost — the budget mechanism may already be enough.</td><td class="risk-low">Low</td></tr>
+    <tr><td class="rank">7</td><td>Job graph for provably-independent phases</td><td>Confirmed open, real ceiling at scale, but correctness-proving the independence claims is real work — do this after the cheaper wins above, not before.</td><td class="risk-medium">Medium</td></tr>
+    <tr><td class="rank">8</td><td>Hierarchical / aggregate simulation for distant regions</td><td>Confirmed open, the review's own &ldquo;potentially enormous&rdquo; ceiling, and the review's own caution about getting the aggregate-vs-individual switch wrong deterministically is well placed. Last on this list on purpose.</td><td class="risk-higher">Higher</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="callout" id="my-take">
+  <h2>Where I'd add to this</h2>
+  <p>Two things beyond adjudicating the review's list:</p>
+  <p><strong>Measure before you build DOD.</strong> The review calls hybrid Data-Oriented Design &ldquo;probably one of your highest-value changes,&rdquo; using a mental model of &ldquo;10,000 entities&rdquo; hitting Collection every tick. But the readiness/cadence/LOD gates already verified above mean the real per-tick working set is very likely far smaller than the full population &mdash; and DOD's payoff scales with how large and uniform that working set actually is. <code>TickAudit</code> already records phase costs; get the actually-processed-entity count out of it before committing to an SoA rewrite. It's possible the gates already did most of this optimization's job.</p>
+  <p><strong>The review didn't know about <code>ScenarioCheckpointer</code>, and that changes its own recommendations.</strong> It correctly points out that measuring <code>serial_fraction = (T_sort + T_resolution + T_hash) / T_tick</code> matters more than worker count &mdash; but the tool to actually gather that number cheaply and repeatably already exists: checkpoint a running scenario, restore it, and benchmark from a fixed, reproducible starting point instead of a fresh cold-start every time. That's available today, with no new engineering, before any of the 8 items in the priority table above.</p>
+</div>
+
+<footer>
+  <p>Source note: a session-local file (<code>tmp/design_performance_suggestion.md</code>, not committed), written in response to a direct question about performance-optimization design, itself written after reading <a href="simulation_design_taxonomy.html">simulation_design_taxonomy.html</a>. This document is the durable, checked record of that note.</p>
+  <p>Primary sources verified against: <code>docs/engine/candidate_selection.md</code>, <code>docs/core/dirty_state_and_dependency.md</code>, <code>src/engine/executor.py</code>, <code>src/engine/worker_manager.py</code>, <code>src/engine/checkpoint.py</code>, <code>src/engine/scenario_checkpoint.py</code>, <code>docs/engine/authoritative_pipeline.md</code>, <code>docs/architecture/kernel_concurrency_design_philosophy.md</code>. This same pass also corrected five misclassified patterns (Multi-Rate Simulation, Dependency Graph Simulation, Level of Detail Simulation, Adaptive Resolution Simulation, Demand-Driven Simulation) back in <a href="simulation_design_taxonomy.html">simulation_design_taxonomy.html</a> &mdash; see that document's own revision footer.</p>
+  <p>Compiled 2026-08-25. This file lives in <code>docs/brainstorm/</code> &mdash; free-form ideation prose, exempt from the frontmatter/registry convention per <code>tests/tools/test_generate_registry.py::TestRealDocsTree</code>.</p>
+</footer>
+
+</div>

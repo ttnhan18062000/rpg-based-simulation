@@ -1,0 +1,1254 @@
+<title>Simulation Design Taxonomy</title>
+<style>
+:root {
+  --paper: #f7f8f6;
+  --card: #ffffff;
+  --ink: #1c2321;
+  --ink-soft: #5b655f;
+  --ink-faint: #8b948e;
+  --border: #dde3df;
+  --accent: #2f6e63;
+  --accent-soft: #e4efe9;
+  --accent-ink: #1e4a42;
+  --implemented: #2f6e63;
+  --implemented-soft: #e4efe9;
+  --partial: #9a6a2f;
+  --partial-soft: #f4ead9;
+  --planned: #2e6e8e;
+  --planned-soft: #dceaf0;
+  --candidate: #b5563f;
+  --candidate-soft: #f5e3dc;
+  --na: #8b948e;
+  --na-soft: #eef0ed;
+  --unconfirmed: #8b5fa8;
+  --unconfirmed-soft: #ece3f2;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121615;
+    --card: #191f1d;
+    --ink: #e8ece9;
+    --ink-soft: #a3b0a8;
+    --ink-faint: #6c7873;
+    --border: #2a3330;
+    --accent: #5fb3a3;
+    --accent-soft: #1c2e2a;
+    --accent-ink: #8fd4c6;
+    --implemented: #5fb3a3;
+    --implemented-soft: #1c2e2a;
+    --partial: #d8a765;
+    --partial-soft: #2e2517;
+    --planned: #7fb3cc;
+    --planned-soft: #1d2e36;
+    --candidate: #e0917d;
+    --candidate-soft: #3a2620;
+    --na: #8a9089;
+    --na-soft: #232928;
+    --unconfirmed: #c19fdb;
+    --unconfirmed-soft: #2a2130;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121615;
+  --card: #191f1d;
+  --ink: #e8ece9;
+  --ink-soft: #a3b0a8;
+  --ink-faint: #6c7873;
+  --border: #2a3330;
+  --accent: #5fb3a3;
+  --accent-soft: #1c2e2a;
+  --accent-ink: #8fd4c6;
+  --implemented: #5fb3a3;
+  --implemented-soft: #1c2e2a;
+  --partial: #d8a765;
+  --partial-soft: #2e2517;
+  --planned: #7fb3cc;
+  --planned-soft: #1d2e36;
+  --candidate: #e0917d;
+  --candidate-soft: #3a2620;
+  --na: #8a9089;
+  --na-soft: #232928;
+  --unconfirmed: #c19fdb;
+  --unconfirmed-soft: #2a2130;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1040px; margin: 0 auto; padding: 56px 24px 96px; }
+header.hero { margin-bottom: 32px; }
+p.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.1;
+  margin: 0 0 16px;
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+}
+p.thesis { font-size: 17.5px; color: var(--ink-soft); max-width: 72ch; margin: 0 0 8px; overflow-wrap: anywhere; }
+p.thesis + p.thesis { margin-top: 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 22px; }
+.legend-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px;
+  padding: 5px 11px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--ink-soft);
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.dot.implemented { background: var(--implemented); }
+.dot.partial { background: var(--partial); }
+.dot.planned { background: var(--planned); }
+.dot.candidate { background: var(--candidate); }
+.dot.na { border: 1.5px dashed var(--ink-faint); background: transparent; }
+.dot.unconfirmed { background: var(--unconfirmed); }
+
+.glance {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); margin: 32px 0 40px; overflow-x: auto;
+}
+.glance p.glance-note { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 16px; max-width: 72ch; }
+.glance table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.glance th {
+  text-align: left; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--ink-soft); padding: 0 12px 10px 0; border-bottom: 1px solid var(--border);
+}
+.glance td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.glance tr:last-child td { border-bottom: none; }
+.glance .sec-name a { color: var(--ink); text-decoration: none; font-weight: 600; }
+.glance .sec-name a:hover { color: var(--accent); text-decoration: underline; }
+
+nav.toc {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px 22px; margin-bottom: 40px;
+}
+nav.toc .toc-label {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 0 12px;
+}
+nav.toc ol {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px 20px;
+}
+nav.toc li { font-size: 13.5px; }
+nav.toc a {
+  color: var(--ink); text-decoration: none; display: flex; align-items: baseline; gap: 8px;
+  padding: 3px 0; border-bottom: 1px solid transparent;
+}
+nav.toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.toc-num { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); flex-shrink: 0; width: 1.6em; }
+
+section { margin: 52px 0; scroll-margin-top: 20px; }
+h2.section-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; margin: 0 0 6px; text-wrap: balance; }
+.section-lede { color: var(--ink-soft); font-size: 14.5px; max-width: 74ch; margin: 0 0 6px; overflow-wrap: anywhere; }
+.section-count { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-faint); margin: 0 0 20px; }
+
+.cluster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 18px; min-width: 0;
+}
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.card h3 { font-family: var(--font-display); font-size: 15.5px; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+.badge {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.03em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+}
+.badge.implemented { background: var(--implemented-soft); color: var(--implemented); }
+.badge.partial { background: var(--partial-soft); color: var(--partial); }
+.badge.planned { background: var(--planned-soft); color: var(--planned); }
+.badge.candidate { background: var(--candidate-soft); color: var(--candidate); }
+.badge.na { background: var(--na-soft); color: var(--ink-faint); }
+.badge.unconfirmed { background: var(--unconfirmed-soft); color: var(--unconfirmed); }
+
+.card p.desc { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; overflow-wrap: anywhere; }
+.card p.source {
+  font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-faint);
+  border-top: 1px solid var(--border); padding-top: 8px; margin: 0; overflow-wrap: anywhere;
+}
+
+.callout {
+  background: var(--accent-soft); border: 1px solid var(--border); border-radius: 14px;
+  padding: 22px 26px; margin: 40px 0;
+}
+.callout h2 { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin: 0 0 10px; color: var(--accent-ink); }
+.callout p { font-size: 14.5px; color: var(--ink); max-width: 76ch; margin: 0 0 10px; }
+.callout p:last-child { margin-bottom: 0; }
+.callout code { font-family: var(--font-mono); font-size: 0.92em; background: var(--card); padding: 1px 5px; border-radius: 4px; }
+
+.divider { margin: 64px 0 0; padding-top: 28px; border-top: 1px solid var(--border); }
+
+footer {
+  margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--ink-faint); font-family: var(--font-mono); line-height: 1.7;
+}
+footer a { color: var(--ink-faint); }
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">Architecture reference &middot; v3, revised against external review and a performance follow-up</p>
+  <h1>Where the Engine Sits in the Simulation Design Space</h1>
+  <p class="thesis">A pattern-by-pattern audit of this engine's actual, documented architecture against the general taxonomy of simulation-architecture design patterns used across games, robotics, physics engines, digital twins, and distributed simulation (108 named patterns, grouped into 12 concern categories).</p>
+  <p class="thesis">The goal is threefold: give the patterns already in use here their established names (several are real, strong matches the engine docs never actually name), separate genuine architectural gaps from things that are simply out of scope for a single-authority, non-distributed, non-physics engine, and keep an honest record of what wasn't verified rather than guessing.</p>
+  <div class="legend">
+    <span class="legend-item"><span class="dot implemented"></span> Implemented — Live and documented in the engine as it stands today.</span>
+    <span class="legend-item"><span class="dot partial"></span> Partial — Real overlap with the pattern, but not a clean, full match.</span>
+    <span class="legend-item"><span class="dot planned"></span> Planned gap — Documented as intended, wired for, or ticketed — not built yet.</span>
+    <span class="legend-item"><span class="dot candidate"></span> Architecture-enabled — Not built as this pattern, but a verified primitive elsewhere in the codebase would combine into it with real, modest new work.</span>
+    <span class="legend-item"><span class="dot na"></span> Not applicable — Out of scope for a single-authority, non-distributed, non-physics engine — not a defect.</span>
+    <span class="legend-item"><span class="dot unconfirmed"></span> Unconfirmed — Plausible but not verified against docs in this pass — flagged for follow-up, not claimed.</span>
+  </div>
+</header>
+
+<div class="glance">
+  <p class="glance-note"><strong>The short version, before the detail.</strong> 108 patterns across 12 categories is a lot to read end to end &mdash; this table is the whole thing at a glance. Totals: 36 implemented, 14 partial, 1 planned gap, 4 architecture-enabled, 6 unconfirmed, 47 not applicable.</p>
+  <table>
+    <tr><th>Category</th><th>Count</th><th>Breakdown</th></tr>
+    <tr><td class="sec-name"><a href="#determinism">Determinism &amp; Consistency</a></td><td>6 patterns</td><td>2 implemented &middot; 1 partial &middot; 3 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#time">Time &amp; Tick Model</a></td><td>13 patterns</td><td>6 implemented &middot; 1 unconfirmed &middot; 6 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#state">State &amp; Persistence Model</a></td><td>15 patterns</td><td>8 implemented &middot; 5 partial &middot; 2 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#networking">Networking &amp; Client Sync</a></td><td>11 patterns</td><td>4 implemented &middot; 7 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#distribution">Distribution &amp; Multi-Node</a></td><td>8 patterns</td><td>8 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#concurrency">Concurrency &amp; Scheduling Architecture</a></td><td>12 patterns</td><td>6 implemented &middot; 2 partial &middot; 1 planned gap &middot; 3 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#communication">Communication &amp; Component Style</a></td><td>6 patterns</td><td>3 implemented &middot; 1 partial &middot; 2 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#agent">Agent Behavior &amp; AI</a></td><td>9 patterns</td><td>3 implemented &middot; 2 partial &middot; 3 unconfirmed &middot; 1 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#physical">Physical Modeling</a></td><td>6 patterns</td><td>1 partial &middot; 5 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#fidelity">Fidelity &amp; External Integration</a></td><td>9 patterns</td><td>1 implemented &middot; 8 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#recovery">Recovery &amp; Replay</a></td><td>9 patterns</td><td>2 implemented &middot; 1 partial &middot; 4 architecture-enabled &middot; 2 not applicable</td></tr>
+    <tr><td class="sec-name"><a href="#testing">Testing &amp; Verification</a></td><td>4 patterns</td><td>1 implemented &middot; 1 partial &middot; 2 unconfirmed</td></tr>
+  </table>
+</div>
+
+  <nav class="toc">
+    <p class="toc-label">On this page</p>
+    <ol>
+      <li><span class="toc-num">01</span><a href="#determinism">Determinism &amp; Consistency</a></li>
+      <li><span class="toc-num">02</span><a href="#time">Time &amp; Tick Model</a></li>
+      <li><span class="toc-num">03</span><a href="#state">State &amp; Persistence Model</a></li>
+      <li><span class="toc-num">04</span><a href="#networking">Networking &amp; Client Sync</a></li>
+      <li><span class="toc-num">05</span><a href="#distribution">Distribution &amp; Multi-Node</a></li>
+      <li><span class="toc-num">06</span><a href="#concurrency">Concurrency &amp; Scheduling Architecture</a></li>
+      <li><span class="toc-num">07</span><a href="#communication">Communication &amp; Component Style</a></li>
+      <li><span class="toc-num">08</span><a href="#agent">Agent Behavior &amp; AI</a></li>
+      <li><span class="toc-num">09</span><a href="#physical">Physical Modeling</a></li>
+      <li><span class="toc-num">10</span><a href="#fidelity">Fidelity &amp; External Integration</a></li>
+      <li><span class="toc-num">11</span><a href="#recovery">Recovery &amp; Replay</a></li>
+      <li><span class="toc-num">12</span><a href="#testing">Testing &amp; Verification</a></li>
+    </ol>
+  </nav>
+
+  <section id="determinism">
+    <h2 class="section-title">Determinism &amp; Consistency</h2>
+    <p class="section-lede">The load-bearing pillar everything else in this table is judged against.</p>
+    <p class="section-count">2 implemented &middot; 1 partial &middot; 3 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Deterministic Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">“same seed + same initial AuthoritativeState → same CanonicalStateHasher.get_hash()” — Pillar #1 of project_lawbook_m10.md, never traded away under load.</p>
+        <p class="source">docs/engine/deterministic_execution.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Causal Consistency</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">Revised after external review, verified independently: the underlying behavior is real and strong — the “Sliding State” rule means if Actor A kills Target T this tick, Actor B (later in the queue) sees T as dead and gets no kill reward. But “Causal Consistency” has a specific distributed-systems meaning (independent replicas observing causally-related updates in the same order) that doesn't strictly fit a single-authority system with no replicas at all. The more accurate name for what's actually built is Deterministic Sequential Resolution — canonically ordered (class priority, then local priority, then entity ID), applied one proposal at a time within Resolution, each seeing the effects of everything already applied ahead of it that tick.</p>
+        <p class="source">docs/engine/authoritative_pipeline.md §Action Routing</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Logical Time</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">The tick counter is the sole ordering unit, decoupled from wall clock — the same engine runs headless “as fast as possible” or live-coupled to a serving loop.</p>
+        <p class="source">docs/engine/kernel.md §Advancement</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Lamport Clocks / Vector Clocks</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Single-writer authority. No concurrent writers exist whose causal order needs reconciling.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Eventual Consistency</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">The architecture's entire point is one authoritative state that never diverges into replicas needing to converge.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>CRDT-Based State Convergence</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Same reasoning as Eventual Consistency — there is no concurrent-write-merge problem here.</p>
+        <p class="source">—</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="time">
+    <h2 class="section-title">Time &amp; Tick Model</h2>
+    <p class="section-lede">How the simulation clock itself is built.</p>
+    <p class="section-count">6 implemented &middot; 1 unconfirmed &middot; 6 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Fixed-Timestep Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Every tick advances a constant, deterministic increment.</p>
+        <p class="source">docs/engine/kernel.md §The 7-Phase Kernel Loop</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Variable-Timestep Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Would directly break the hash-determinism guarantee — explicitly the opposite of what's built.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Semi-Fixed / Accumulator Loop</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">The frontend decouples render rate from sim rate via interpolation, not an accumulator feeding the simulation step itself.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Discrete-Event Simulation (DES)</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Every tick advances regardless of whether anything happened; there is no event-to-event time jump.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Continuous Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No differential-equation state exists anywhere in the engine.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Hybrid Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Follows from Continuous and Discrete-Event both being not applicable.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Multi-Rate Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Corrected during a later performance-focused pass — this was undersold: it's not just the 12 TPS sim / 60 FPS render split. Inside the simulation itself, DeterministicScheduler.select_work() gates strategic re-evaluation on tick % entity.strategic_cadence == 0, and MovementCandidateSelector throttles wandering entities on tick % wander_modulo == 0 — real, deterministic, per-entity multi-rate scheduling already runs in production, not just at the presentation boundary.</p>
+        <p class="source">docs/engine/contracts/frontend.md §3; docs/engine/candidate_selection.md Tiers 1 &amp; 3</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Real-Time Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Each tick is expected to complete within a budget (max_tick_budget_ms).</p>
+        <p class="source">docs/engine/kernel.md §Emergency Throttling</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Soft Real-Time Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">A budget violation degrades the Governor to DEGRADED mode and drops queued work — it never hard-fails the run.</p>
+        <p class="source">docs/engine/kernel.md §Emergency Throttling</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Hard Real-Time Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Deadline misses degrade gracefully by design; only a HardLawMonitor correctness violation halts the run, and that's an invariant breach, not a missed deadline.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Time-Dilated Simulation</h3>
+          <span class="badge unconfirmed">Unconfirmed</span>
+        </div>
+        <p class="desc">No doc read this pass states a wall-time scale factor distinct from headless vs. live-coupled modes.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>As-Fast-As-Possible Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Headless CLI / certification runs (python3 -m src cli) are not wall-clock throttled.</p>
+        <p class="source">docs/engine/project_lawbook_m10.md §Release-Readiness</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Wall-Clock-Coupled Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">The live API server runs the kernel on a background tick thread at a set live rate for the connected frontend.</p>
+        <p class="source">docs/engine/contracts/frontend.md</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="state">
+    <h2 class="section-title">State &amp; Persistence Model</h2>
+    <p class="section-lede">How durable state is shaped, held, and changed.</p>
+    <p class="section-count">8 implemented &middot; 5 partial &middot; 2 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>State-Machine Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Frontend SimStatus (INITIALIZING → … → RUNNING/PAUSED/STOPPED) and the backend RuntimeMode ladder (NORMAL/CONSTRAINED/DEGRADED/SURVIVAL) are both explicit state machines.</p>
+        <p class="source">docs/engine/contracts/frontend.md §2; kernel.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Entity-Component-System (ECS)</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Real mismatch, worth naming: EntityState is an OO object with fields (wounds/scars/inventory), not components processed by systems over contiguous arrays. This is a deliberate difference from ECS, not an oversight.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Data-Oriented Design (DOD)</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">Frozen/deep-frozen state and identity-cached objects give cache-friendly, allocation-light reads for Collection — but entity state itself is OO, not laid out for batch/columnar processing.</p>
+        <p class="source">docs/architecture/kernel_concurrency_design_philosophy.md Part 3</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Object-Oriented Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">EntityState objects with wounds/scars/inventory as first-class fields move through the pipeline as objects, not decomposed data streams.</p>
+        <p class="source">src/entities/</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Functional Core / Imperative Shell</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Collection is a pure computation over a frozen, read-only snapshot (functional core); only the AuthoritativeApplyPipeline in Resolution commits (imperative shell). Textbook match — see the naming note below.</p>
+        <p class="source">docs/architecture/kernel_concurrency_design_philosophy.md Parts 2–3</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Event Sourcing</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">The replay/hash trail proves and detects divergence, but state is not reconstructed by replaying a command log from an empty start — it's verification infrastructure, not the source of truth.</p>
+        <p class="source">docs/engine/deterministic_execution.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Command Log / Input Log</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">TICK_END replay events exist for divergence comparison; same caveat as Event Sourcing above — not used to regenerate state from scratch.</p>
+        <p class="source">docs/engine/kernel.md §State Hashing in Phase 7</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Checkpointing / Snapshotting</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Revised after external review flagged the original citation as a hash, not a real checkpoint — correct on that distinction, but the conclusion (downgrade to unconfirmed) turned out wrong once the actual code was checked: ScenarioCheckpointer.save()/.restore() pickle the full AuthoritativeState plus tick and RNG checkpoint to a file and reconstruct a live, resumable Kernel from it — exposed via POST /api/v1/scenarios/{id}/checkpoint and /restore/{name}, and covered by tests. Scoped to ScenarioRuntimeService (certification/scenario contexts, INFRA-215/E31C), not the live API-served world. This is a genuinely different mechanism from the per-tick SHA-256 hash cited under Deterministic Replay below, which proves state identity but cannot reconstruct state on its own — the two were conflated in the first pass of this document.</p>
+        <p class="source">src/engine/scenario_checkpoint.py (ScenarioCheckpointer); docs/engine/scenario_runtime_contract.md; tests/unit/engine/test_scenario_checkpointer.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Undo / Memento Architecture</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">Mechanically a Memento — ScenarioCheckpointer captures an external snapshot of AuthoritativeState and restores it later — but built for process-restart resumption (E31C), not interactive undo; there's no “roll back one step” UX or API.</p>
+        <p class="source">src/engine/scenario_checkpoint.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Memoization / State Caching</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">ReadModelCache in the API layer, plus identity-cached frozen region/node/building objects inside the kernel.</p>
+        <p class="source">src/api/read_model_cache.py; kernel_concurrency_design_philosophy.md Part 3</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Incremental Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Rendering and WS broadcast both work off what changed, not a full recompute.</p>
+        <p class="source">src/rendering/incremental.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Differential / Delta Propagation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Per-tick WS payload is changed/removed entity lists, not a resend of full state.</p>
+        <p class="source">docs/engine/contracts/api_protocol_contract.md §2</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Reactive Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Phases run in one fixed, declared, synchronous order; nothing auto-propagates off a dependency graph.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Dependency Graph Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Corrected during a later performance-focused pass — originally undersold as just a write-authorization contract. The doc's own words: “the dirty-flag system is the primary optimization layer in the tick pipeline.” CandidateSelector.entities() is the authoritative read-side — pipeline phases call it to receive only the relevant entity IDs and skip clean entities, with DirtyDependencyGraph.expand() deriving implied dirtiness through 10 causal edges (PERF-005 through PERF-015).</p>
+        <p class="source">docs/core/dirty_state_and_dependency.md; docs/engine/candidate_selection.md Tier 2</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Constraint-Based Simulation</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">HardLawMonitor validates invariants post-hoc against the refined state; it doesn't derive state by solving constraints in the first place.</p>
+        <p class="source">docs/engine/kernel.md §Hard Law Compliance Guard</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="networking">
+    <h2 class="section-title">Networking &amp; Client Sync</h2>
+    <p class="section-lede">How the one authoritative state reaches the one real client (the frontend).</p>
+    <p class="section-count">4 implemented &middot; 7 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Lockstep Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No peer clients advance in lockstep with each other; one authority computes, clients only ever receive.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Deterministic Lockstep</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Same reasoning — there's nothing resembling peer input-transmission here.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Rollback Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">audit_mode halts immediately on a detected divergence rather than restoring and replaying — a stricter, not a rollback, response.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Prediction and Reconciliation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">The client has no inputs of its own to predict against — it's a pure spectator on server-decided state, not a participant reconciling its own guesses.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Dead Reckoning</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">The client interpolates between two real received snapshots; it never extrapolates beyond the last known one. Distinct from Snapshot Interpolation below — don't conflate the two.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>State Synchronization</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">The server periodically transmits authoritative state (deltas); the client never reproduces simulation logic to derive it independently.</p>
+        <p class="source">docs/engine/contracts/api_protocol_contract.md §2</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Snapshot Interpolation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Sim ticks at 12 TPS; useCanvas lerps entity positions to a smooth 60 FPS between real snapshots.</p>
+        <p class="source">docs/engine/contracts/frontend.md §3</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Snapshot + Delta Compression</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">One full-state-shaped summary on connect, then changed/removed deltas per tick, suppressed entirely on quiet ticks except a 20-tick heartbeat.</p>
+        <p class="source">docs/engine/contracts/frontend.md §2</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Client-Server Authoritative Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">The whole frontend/backend split: the kernel is sole authority, the client renders and never simulates.</p>
+        <p class="source">docs/engine/contracts/frontend.md; api_protocol_contract.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Peer-to-Peer Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No peer topology exists — one server, one authoritative state.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Replicated State Machine</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">One authoritative process, not N replicas independently processing the same ordered command stream to stay in sync.</p>
+        <p class="source">—</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="distribution">
+    <h2 class="section-title">Distribution &amp; Multi-Node</h2>
+    <p class="section-lede">Patterns for coordinating simulation state across multiple independent nodes.</p>
+    <p class="section-count">8 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Federated Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No independently-built simulations participate together — one engine, one authority.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>HLA (High-Level Architecture)</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No federated distributed-simulation standard is in use or needed at this scale.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>FMI / Functional Mock-up Interface</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No dynamic-model exchange/co-simulation surface exists.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Co-Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No second specialized simulator runs alongside this one exchanging data.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Parallel Discrete-Event Simulation (PDES)</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Follows directly from Discrete-Event Simulation itself being not applicable — there's no distributed event-time-jump workload to parallelize.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Time Warp</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No optimistic distributed rollback protocol exists; not needed at single-node scale.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Conservative Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">A PDES time-management technique for distributed nodes; the engine solves “don't process too early” structurally via the single-node BSP barrier instead (see Concurrency &amp; Scheduling below).</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Actor Model</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Real mismatch, worth naming: workers are stateless, transient, per-tick computations dispatched into a pool — not long-lived actors that own state and exchange messages over time.</p>
+        <p class="source">—</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="concurrency">
+    <h2 class="section-title">Concurrency &amp; Scheduling Architecture</h2>
+    <p class="section-lede">How the one tick actually uses multiple cores without breaking determinism.</p>
+    <p class="section-count">6 implemented &middot; 2 partial &middot; 1 planned gap &middot; 3 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Job System</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">WorkerManager dispatches Collection-phase work into a bounded ThreadPoolExecutor/ProcessPoolExecutor.</p>
+        <p class="source">docs/architecture/kernel_concurrency_design_philosophy.md Part 2</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Bulk-Synchronous Parallel (BSP)</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Collection is a parallel superstep; future.result() is the global barrier; Resolution is the serial synchronization phase that sorts and applies. Textbook BSP — see the naming note below.</p>
+        <p class="source">docs/architecture/kernel_concurrency_design_philosophy.md Part 2</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Task-Graph Architecture</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Dispatched packets are homogeneous per-entity chunks of the same workload, not a scheduled dependency graph of heterogeneous task types.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Domain Decomposition</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">Entities are chunked into packets for parallel dispatch — decomposition by entity, not by spatial region.</p>
+        <p class="source">docs/architecture/kernel_concurrency_design_philosophy.md Part 2</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Spatial Partitioning</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">grid.get_entities_in_radius gives O(K) local-density collision/proximity checks instead of O(N) full scans.</p>
+        <p class="source">docs/engine/authoritative_pipeline.md §Locomotion Routing</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Interest Management</h3>
+          <span class="badge planned">Planned gap</span>
+        </div>
+        <p class="desc">The WS wire format already reserves a region_id field — always null today, no server-side filtering reads or acts on it yet. Explicitly deferred to TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT. The one pattern in this whole table the docs themselves flag as planned-but-unbuilt.</p>
+        <p class="source">docs/engine/contracts/api_protocol_contract.md §2</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Level of Detail (LOD) Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Corrected during a later performance-focused pass — this was real and simply not found the first time. DeterministicScheduler.select_work() gates on an explicit LOD tier (A/B/C): “distant/low-priority entities may get simplified work items.” It's a genuine per-entity fidelity mechanism, not just the global RuntimeMode ladder cited under Adaptive Resolution below.</p>
+        <p class="source">docs/engine/candidate_selection.md Tier 1</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Hierarchical Simulation</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">Entity / region / world layers exist conceptually (sovereignty, regional trauma), but this isn't architected as coarse models containing detailed submodels in the DES sense.</p>
+        <p class="source">docs/mechanics/06_worldbuilding_foundation.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Adaptive Resolution Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Strengthened during a later performance-focused pass: the per-entity LOD tier (A/B/C, see the LOD card above) is a direct fidelity-reduction mechanism, on top of the global RuntimeMode ladder (NORMAL/CONSTRAINED/DEGRADED/SURVIVAL) that reduces overall scope of work under pressure. The engine's own name for the global version is “Progressive Degradation” (kernel_concurrency_design_philosophy.md Part 1).</p>
+        <p class="source">docs/engine/candidate_selection.md Tier 1; docs/engine/kernel.md §Emergency Throttling</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Lazy Evaluation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Deliberately the opposite inside a tick: ContentWarmupService eagerly loads all content singletons before the first tick specifically so nothing lazy-loads mid-tick (ContentHotPathViolation guard, docs/engine/kernel.md §Content Hot-Path Guard).</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Demand-Driven Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Corrected during a later performance-focused pass — this was wrong. DeterministicScheduler.select_work() applies three real gates before an entity gets a WorkItem this tick: a readiness threshold (entity.readiness >= 100), LOD tier, and strategic cadence (tick % entity.strategic_cadence == 0). Entities failing any gate are skipped, not scheduled — advancement is already conditional on being ready/affected/due, not unconditional every tick.</p>
+        <p class="source">docs/engine/candidate_selection.md Tier 1</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Speculative Execution</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No probable-future-state precomputation exists; the barrier before Resolution exists precisely to avoid needing this.</p>
+        <p class="source">—</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="communication">
+    <h2 class="section-title">Communication &amp; Component Style</h2>
+    <p class="section-lede">How subsystems within one tick talk to each other and to the state.</p>
+    <p class="section-count">3 implemented &middot; 1 partial &middot; 2 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Observer / Publish-Subscribe Architecture</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">StateBroadcaster / V2EngineManager listeners feed the WS stream without the kernel knowing who's listening.</p>
+        <p class="source">docs/engine/contracts/api_protocol_contract.md §5</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Event-Driven Architecture</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">Used for the non-authoritative observability/streaming layer; the core tick loop itself is synchronous and phase-driven, not event-driven.</p>
+        <p class="source">src/api/ws/stream.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Message-Passing Architecture</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Components read shared frozen state rather than exchanging explicit messages to coordinate simulation logic.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Blackboard Architecture</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">The 37 phases run in one fixed, declared order — nothing reads/writes a shared board in arbitrary, unordered fashion.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Shared-World / World-State Architecture</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">One central AuthoritativeState, written only inside Resolution.</p>
+        <p class="source">docs/engine/authoritative_pipeline.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Pipeline Architecture</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">The 37-phase AuthoritativeApplyPipeline is a direct, named instance of this pattern.</p>
+        <p class="source">docs/engine/authoritative_pipeline.md</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="agent">
+    <h2 class="section-title">Agent Behavior &amp; AI</h2>
+    <p class="section-lede">How individual entities decide what to do.</p>
+    <p class="section-count">3 implemented &middot; 2 partial &middot; 3 unconfirmed &middot; 1 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Agent-Based Modeling (ABM)</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">Independent entities acting on local rules/goals and interacting is the engine's core premise, not a bolted-on feature.</p>
+        <p class="source">docs/mechanics/04_strategic_cognition.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Cellular Automata</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">The spatial grid is used for indexing/partitioning (see Spatial Partitioning above), not for local-neighbor-rule state evolution.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Rule-Based Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">The 37 phases are explicitly documented as “Laws” — condition/action rules, not continuous equations.</p>
+        <p class="source">docs/engine/authoritative_pipeline.md</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Behavior Trees</h3>
+          <span class="badge unconfirmed">Unconfirmed</span>
+        </div>
+        <p class="desc">Not evidenced in the docs read this pass; strategic cognition appears to use goal/utility scoring instead, but a BT layer elsewhere isn't ruled out.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Utility AI</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">A goal-switch requires a score margin of interruption_resistance × resistance_multiplier — scored-alternative decision-making, though not confirmed as the sole mechanism across all of strategic cognition.</p>
+        <p class="source">docs/engine/authoritative_pipeline.md §Cognitive Refinement</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>GOAP (Goal-Oriented Action Planning)</h3>
+          <span class="badge unconfirmed">Unconfirmed</span>
+        </div>
+        <p class="desc">Goal hierarchy and “leads” resemble planning toward goals; this pass didn't verify a search/plan-construction mechanism specifically.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Planner-Based Simulation</h3>
+          <span class="badge unconfirmed">Unconfirmed</span>
+        </div>
+        <p class="desc">Same caveat as GOAP above.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Steering Behaviors</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">Movement routing does terrain-cost and “dynamic collision avoidance,” but classic seek/flee/pursue/flock primitives specifically weren't confirmed this pass.</p>
+        <p class="source">docs/engine/authoritative_pipeline.md §Locomotion Routing</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Swarm / Emergent Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">SimQ explicitly scores whether each subsystem is “alive, balanced, and producing emergent output” — emergent behavior is a named design goal, not an accident.</p>
+        <p class="source">docs/brainstorm/design_merit_scorecard.html citing quality_scoring_contract.md §1</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="physical">
+    <h2 class="section-title">Physical Modeling</h2>
+    <p class="section-lede">There is no physics-engine layer in this codebase — this whole category is a deliberate scope boundary, not a gap.</p>
+    <p class="section-count">1 partial &middot; 5 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Position-Based Dynamics (PBD)</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No physical constraint solver of any kind exists.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Impulse-Based Physics</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Combat/movement resolve through discrete rule application, not impulse resolution.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Force-Based Physics</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No force/integration model exists.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Numerical Integration Architectures</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No Euler/Verlet/Runge–Kutta integration exists anywhere in the tick.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Broad Phase / Narrow Phase Collision Architecture</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">The spatial grid gives a broad-phase candidate set for movement/proximity; there's no physics-style narrow-phase resolver behind it — resolution is rule-based, not geometric.</p>
+        <p class="source">docs/engine/authoritative_pipeline.md §Locomotion Routing</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Solver-Based Architecture</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No system of equations/constraints is solved iteratively anywhere in the pipeline.</p>
+        <p class="source">—</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="fidelity">
+    <h2 class="section-title">Fidelity &amp; External Integration</h2>
+    <p class="section-lede">What kind of model this is, and what (if anything) it connects to outside itself.</p>
+    <p class="section-count">1 implemented &middot; 8 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Black-Box Model</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">The opposite of the design philosophy — see White-Box below.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>White-Box / Mechanistic Model</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">The Mechanics Bible exists specifically to document every formula and causal mechanism as the authoritative, bit-verified source — the textbook definition of white-box modeling.</p>
+        <p class="source">docs/mechanics/ (per project CLAUDE.md)</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Surrogate Model / Reduced-Order Model</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No cheaper approximation stands in for an expensive full simulation anywhere.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Digital Twin Architecture</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Nothing here synchronizes against a real-world asset.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Model-in-the-Loop (MIL)</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No algorithm-under-test runs against this as a plant model in that sense.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Software-in-the-Loop (SIL)</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Not applicable — this is the production simulation itself, not a stand-in for one.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Hardware-in-the-Loop (HIL)</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No real hardware interacts with this simulator in real time.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Monte Carlo Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">Stochastic sampling exists inside mechanics (DeterministicRNG rolls for loot, combat, etc.), but it's not used as a repeated-sampling technique to estimate an output distribution.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>System Dynamics</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">The economy has stocks and flows conceptually (docs/mechanics/03_economic_laws.md) but isn't architected as a System Dynamics stock-flow model.</p>
+        <p class="source">—</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="recovery">
+    <h2 class="section-title">Recovery &amp; Replay</h2>
+    <p class="section-lede">What happens after a tick, for verification rather than gameplay.</p>
+    <p class="section-count">2 implemented &middot; 1 partial &middot; 4 architecture-enabled &middot; 2 not applicable</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Replay Architecture</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">ReplayManager and TICK_END replay events exist specifically to make a run reproducible from recorded state.</p>
+        <p class="source">docs/engine/kernel.md §State Hashing in Phase 7</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Deterministic Replay</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">A reference run's tick_hash sequence is compared against a regression run's, both re-executed in full from the same seed; first mismatch pinpoints the divergent tick. This is determinism verification by full re-execution, not reconstruction from a persisted log — see Record-and-Replay below for the distinction.</p>
+        <p class="source">docs/engine/deterministic_execution.md §Divergence detection tools</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Record-and-Replay</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">Revised after external review questioned whether this is really record-and-replay: ReplayManager's persisted TraceEvent chunks are used for hash comparison and offline analysis, not fed back in to reconstruct a run — checked replay_manager.py directly, it has no restore/load path. The genuine record-and-continue capability is ScenarioCheckpointer: save() captures state+tick+RNG, restore() reconstructs a live Kernel that can .resume(tick_limit=N) — but that's full-state snapshot + continuation, not input-log replay, and it's scoped to ScenarioRuntimeService.</p>
+        <p class="source">src/engine/replay_manager.py; src/engine/scenario_checkpoint.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Optimistic Simulation</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">No speculative-advance-then-rollback protocol exists (see Rollback Simulation above).</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Reconciliation Loops</h3>
+          <span class="badge na">Not applicable</span>
+        </div>
+        <p class="desc">HardLawMonitor validates and halts/logs on violation; it doesn't compare desired-vs-actual state and auto-repair a divergence.</p>
+        <p class="source">—</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Shadow Simulation</h3>
+          <span class="badge candidate">Architecture-enabled</span>
+        </div>
+        <p class="desc">Revised after external review raised checkpointed branching as a natural fit for this architecture, verified independently: ScenarioCheckpointer.restore() can load the same checkpoint into a second, independent Kernel instance while the first keeps running — the structural shape of shadow simulation. No tooling exists that actually does this today; nothing was built for it specifically.</p>
+        <p class="source">src/engine/scenario_checkpoint.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>What-If Simulation</h3>
+          <span class="badge candidate">Architecture-enabled</span>
+        </div>
+        <p class="desc">Same verified primitive as Shadow Simulation above: restore() the same checkpoint file into a fresh Kernel and diverge it from there. Real and tested as a checkpoint/resume mechanism; no branch-exploration workflow built on top of it was found.</p>
+        <p class="source">src/engine/scenario_checkpoint.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Branching Simulation</h3>
+          <span class="badge candidate">Architecture-enabled</span>
+        </div>
+        <p class="desc">Restoring one checkpoint into N independent Kernel instances, each resumed with a different spec/policy, would produce exactly this — the primitive is real (save/restore/resume, tested), the N-way orchestration on top of it is not.</p>
+        <p class="source">src/engine/scenario_checkpoint.py</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Counterfactual Simulation</h3>
+          <span class="badge candidate">Architecture-enabled</span>
+        </div>
+        <p class="desc">Comparing an observed run's outcome against a restored-and-diverged run from the same checkpoint is a direct application of the same primitive; no comparison tooling for it exists yet.</p>
+        <p class="source">src/engine/scenario_checkpoint.py</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="testing">
+    <h2 class="section-title">Testing &amp; Verification</h2>
+    <p class="section-lede">How correctness and resilience are actually checked.</p>
+    <p class="section-count">1 implemented &middot; 1 partial &middot; 2 unconfirmed</p>
+    <div class="cluster-grid">
+      <div class="card">
+        <div class="card-head">
+          <h3>Property-Based Simulation Testing</h3>
+          <span class="badge partial">Partial</span>
+        </div>
+        <p class="desc">HardLawMonitor's invariant checks against live state are property-style assertions; a generator (e.g. Hypothesis) driving many scenarios against them wasn't confirmed this pass.</p>
+        <p class="source">docs/engine/kernel.md §Hard Law Compliance Guard</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Scenario-Based Simulation</h3>
+          <span class="badge implemented">Implemented</span>
+        </div>
+        <p class="desc">The class_b certification scenario suite is described as “the primary compliance surface.”</p>
+        <p class="source">docs/engine/project_lawbook_m10.md §Release-Readiness</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Fault-Injection Simulation</h3>
+          <span class="badge unconfirmed">Unconfirmed</span>
+        </div>
+        <p class="desc">A resilience-audit artifact exists in this session's scratch directory but wasn't opened to verify fault-injection tooling specifically — flagged, not claimed.</p>
+        <p class="source">tmp/architecture_resilience_audit.md (exists, not read this pass)</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Chaos / Resilience Simulation</h3>
+          <span class="badge unconfirmed">Unconfirmed</span>
+        </div>
+        <p class="desc">Same caveat as Fault-Injection above.</p>
+        <p class="source">tmp/architecture_resilience_audit.md (exists, not read this pass)</p>
+      </div>
+    </div>
+  </section>
+
+<div class="callout" id="naming">
+  <h2>Named in the taxonomy, unnamed in our own docs</h2>
+  <p>Two patterns above are strong, deliberate matches for how the kernel actually works, but <code>docs/architecture/kernel_concurrency_design_philosophy.md</code> reconstructs the same reasoning from scratch each time rather than pointing at the established vocabulary:</p>
+  <p><strong>Bulk-Synchronous Parallel (BSP)</strong> &mdash; Collection is a parallel superstep, <code>future.result()</code> is the global barrier, Resolution is the serial synchronization phase. This is the textbook BSP loop.</p>
+  <p><strong>Functional Core / Imperative Shell</strong> &mdash; Collection computes against frozen, read-only snapshots (the functional core); only the <code>AuthoritativeApplyPipeline</code> in Resolution commits (the imperative shell).</p>
+  <p>Cross-referencing both terms in that doc costs one line each, gives future readers the established name for free, and changes no behavior.</p>
+</div>
+
+<div class="callout" id="real-gaps">
+  <h2>The genuine gaps, separated from &ldquo;not applicable&rdquo;</h2>
+  <p><strong>Interest Management</strong> is the one pattern in this table the project's own docs already flag as planned-but-unbuilt &mdash; the WS wire format reserves a <code>region_id</code> field today, unpopulated, explicitly deferred to <code>TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT</code>.</p>
+  <p><strong>ECS</strong> and the <strong>Actor Model</strong> are real, named mismatches &mdash; not gaps to close, just worth being precise that this engine is neither of those things despite surface resemblance (entity-like objects; per-tick worker dispatch).</p>
+  <p><strong>Event Sourcing</strong> and <strong>Command/Input Log</strong> are partial: the replay/hash trail is real and does its verification job well, but it proves and detects divergence rather than being the mechanism state is actually reconstructed from.</p>
+  <p>Everything marked <span class="badge unconfirmed" style="display:inline">Unconfirmed</span> above (Behavior Trees, GOAP, Fault-Injection/Chaos testing, LOD, Time-Dilation) is a genuine open question for a future pass, not a claimed absence &mdash; the relevant docs simply weren't opened this session.</p>
+</div>
+
+<div class="callout" id="external-review">
+  <h2>Checked against an external review &mdash; and not taken on faith</h2>
+  <p>An external AI reviewed v1 of this document (session-local note, <code>tmp/design_taxonomy_review.md</code>, not committed) and proposed several reclassifications. Each concrete, checkable claim was verified against the actual code and tests before anything here changed &mdash; not applied because the review sounded confident. Results were mixed, which is the point of checking:</p>
+  <p><strong>Right, and adopted:</strong> the review argued the per-tick SHA-256 hash cited for <strong>Checkpointing / Snapshotting</strong> proves state identity but can't reconstruct state, so it isn't really a checkpoint. That distinction is correct. Its suggested fix &mdash; downgrade the pattern to unconfirmed &mdash; was <em>not</em> adopted, because grepping the codebase for a real one instead of assuming it didn't exist turned up <code>ScenarioCheckpointer</code> (<code>src/engine/scenario_checkpoint.py</code>): it pickles the full <code>AuthoritativeState</code> plus tick and RNG checkpoint, restores a live resumable <code>Kernel</code> from that file, is exposed over REST (<code>POST /api/v1/scenarios/{id}/checkpoint</code> and <code>/restore/{name}</code>), and is covered by tests. The pattern stays Implemented, cited correctly now instead of conflated with the hash.</p>
+  <p>That same discovery validated the review's separate, more speculative claim that checkpointed branching is a natural extension of this architecture: restoring one checkpoint into multiple independent <code>Kernel</code> instances is a real, tested primitive, so <strong>Shadow</strong>, <strong>What-If</strong>, <strong>Branching</strong>, and <strong>Counterfactual Simulation</strong> moved from Not Applicable to a new <span class="badge candidate" style="display:inline">Architecture-enabled</span> status &mdash; the primitive exists, the orchestration on top of it doesn't.</p>
+  <p><strong>Right on its own terms:</strong> the review's objection to calling the Sliding State rule &ldquo;<strong>Causal Consistency</strong>&rdquo; is a fair terminology correction &mdash; that term has a specific distributed-replicas meaning this single-authority engine doesn't have occasion to use. Downgraded to Partial with the more accurate name (Deterministic Sequential Resolution) noted in its card.</p>
+  <p><strong>Prompted a closer look, revised more narrowly than proposed:</strong> the review questioned whether <strong>Record-and-Replay</strong> was really implemented. Checking <code>replay_manager.py</code> directly confirmed it has no restore/reconstruct path &mdash; its persisted events are for offline comparison, not reconstruction. But the review's framing implied nothing like real record-and-continue existed; <code>ScenarioCheckpointer</code>'s save/restore/resume is exactly that, just via full-state snapshot rather than an input log. Downgraded to Partial, with the corrected mechanism cited.</p>
+  <p><strong>Noted, not adopted into the grid:</strong> the review's broader reframings &mdash; naming the whole architecture <strong>Two-Phase Simulation / Intent-Resolution</strong>, elevating <strong>Single-Writer Principle</strong> as its own named invariant, an Amdahl's-law serial-fraction framing of the Resolution-phase bottleneck, and splitting <strong>Presentation LOD</strong> from <strong>Simulation LOD</strong> &mdash; are reasonable synthesis and worth a future pass, but they're this reviewer's interpretive framing rather than checkable facts about what's built, so they aren't reflected as verdicts above. Worth reading the original note directly if you want that layer of commentary.</p>
+</div>
+
+<footer>
+  <p>Source taxonomy: a session-local note (<code>tmp/popular_design.md</code>, not committed) enumerating simulation-architecture patterns across games, robotics, physics engines, digital twins, and distributed simulation. This document is the durable, sourced record of that comparison against the actual engine.</p>
+  <p>Primary sources cited above: <code>docs/engine/kernel.md</code>, <code>docs/engine/authoritative_pipeline.md</code>, <code>docs/engine/project_lawbook_m10.md</code>, <code>docs/engine/deterministic_execution.md</code>, <code>docs/architecture/kernel_concurrency_design_philosophy.md</code>, <code>docs/engine/contracts/frontend.md</code>, <code>docs/engine/contracts/api_protocol_contract.md</code>, <code>docs/core/dirty_state_and_dependency.md</code>, <code>docs/mechanics/</code>, <code>src/engine/scenario_checkpoint.py</code>, <code>src/engine/replay_manager.py</code>, <code>docs/engine/scenario_runtime_contract.md</code>.</p>
+  <p>Compiled 2026-08-25, revised 2026-08-25 against external review, revised again 2026-08-25 after a performance-optimization follow-up (see <a href="performance_evolution_roadmap.html">performance_evolution_roadmap.html</a>) surfaced five misclassifications in the Scheduling/LOD/dirty-set machinery that a deeper read of <code>docs/engine/candidate_selection.md</code> corrected. This file lives in <code>docs/brainstorm/</code> &mdash; free-form ideation prose, exempt from the frontmatter/registry convention per <code>tests/tools/test_generate_registry.py::TestRealDocsTree</code>.</p>
+</footer>
+
+</div>
