@@ -2625,23 +2625,32 @@
 - id: STRAT-230
   text: >-
     When an entity's lead destination is inconsistent with world state (depleted
-    resource node, dead person target), the lead is marked FAILURE/EXHAUSTED,
-    the originating provider's reliability_score is decremented by 0.1 (floored
-    at 0.1) via StateUpdate.information_providers_update, an UnknownFact
-    (priority=0.7) is regenerated for replanning, a belief_contradiction
+    resource node, dead person target, absent ground-item/chest object for OBJECT
+    leads, no matching local scar for EVENT leads), the lead is marked
+    FAILURE/EXHAUSTED, the originating provider's reliability_score is decremented
+    by 0.1 (floored at 0.1) via StateUpdate.information_providers_update, an
+    UnknownFact (priority=0.7) is regenerated for replanning, a belief_contradiction
     SimulationEvent is emitted, and a lead_contradiction_resolved SimulationEvent
-    is emitted for the resolved lead. (E42D; TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS)
+    is emitted for the resolved lead. This check runs every tick as the
+    "lead_contradiction" phase in AuthoritativeApplyPipeline.refine(), between
+    strategic_intelligence and near_death_hardening. (E42D;
+    TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS; TCK-20260824-LEAD-CONTRADICTION-WIRING)
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >-
     src/engine/pipeline_phases/lead_contradiction.py — LeadContradictionSystem.enforce();
     src/core/updates.py — StateUpdate.information_providers_update field;
-    src/cognition/knowledge_model.py — effective_certainty() staleness decay utility
+    src/cognition/knowledge_model.py — effective_certainty() staleness decay utility;
+    src/engine/pipeline.py — run_phase("lead_contradiction", ...) call in refine();
+    src/domains/information/phase.py — InformationBeliefPhase.apply()'s observation-synthesis
+    branch (claim_failed_search/region_danger_seen) that routes untested leads through
+    BeliefContradictionService.detect() via ObservationBeliefBridge.process_observation()
   proof_type: parity
   test_path: >-
     tests/unit/cognition/test_information_seeking.py::TestLeadContradiction::test_belief_contradiction_fires_on_depleted_lead;
-    tests/unit/cognition/test_information_seeking.py::TestLeadContradiction
+    tests/unit/cognition/test_information_seeking.py::TestLeadContradiction;
+    tests/unit/cognition/test_information_seeking.py::TestLeadContradiction::test_pipeline_refine_produces_lead_contradiction_matching_isolated_enforce
   divergence_note: null
   support_boundary: null
 - id: STRAT-231

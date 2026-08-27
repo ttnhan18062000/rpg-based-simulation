@@ -8,11 +8,11 @@ audience: developer
 # Authoritative Refinement Pipeline
 
 > [!IMPORTANT]
-> **The Singular Bottleneck Law**: All state transitions must pass through this pipeline. No system, worker, or external process may mutate the `AuthoritativeState` directly. All changes must be represented as a `StateUpdate` and refined through these 38 phases.
+> **The Singular Bottleneck Law**: All state transitions must pass through this pipeline. No system, worker, or external process may mutate the `AuthoritativeState` directly. All changes must be represented as a `StateUpdate` and refined through these 39 phases.
 
 The `AuthoritativeApplyPipeline` ensures that concurrent "intents" from workers are resolved into a deterministic, causally-consistent state update.
 
-## The 38 Phases of Refinement
+## The 39 Phases of Refinement
 
 Phase names match the `run_phase()` call identifiers in `src/engine/pipeline.py:refine()`. Phases may be skipped if their associated feature flag is disabled.
 
@@ -49,13 +49,14 @@ Phase names match the `run_phase()` call identifiers in `src/engine/pipeline.py:
 | 29 | `evolution` | Applies entity evolution and stat boosts. |
 | 30 | `progression_conversion` | Enhanced RPG: converts progression points to levels/skills (`ENABLE_PROGRESSION_EVOLUTION`). |
 | 31 | `strategic_intelligence` | Updates strategic blockers, leads, and project markers (`STRAT-002`). |
-| 32 | `near_death_hardening` | Finalizes near-death state and damage-mitigation logic (`COMB-121`). |
-| 33 | `occupancy_resolution` | Resolves spatial occupancy conflicts between entities. |
-| 34 | `lifecycle` | Commits death and lifecycle status changes. |
-| 35 | `groups` | Updates group membership and party composition. |
-| 36 | `active_contracts` | Enforces active social and economic contract obligations. |
-| 37 | `expired_offers` | Clears stale trade and social offers past their TTL. |
-| 38 | `capacity_enforcement` | Final inventory and carrying-capacity enforcement pass. |
+| 32 | `lead_contradiction` | Detects world-state-inconsistent leads (depleted resource, dead person, absent object, inactive event) and marks them EXHAUSTED with provider reliability penalty (`E42D`; `TCK-20260824-LEAD-CONTRADICTION-WIRING`). |
+| 33 | `near_death_hardening` | Finalizes near-death state and damage-mitigation logic (`COMB-121`). |
+| 34 | `occupancy_resolution` | Resolves spatial occupancy conflicts between entities. |
+| 35 | `lifecycle` | Commits death and lifecycle status changes. |
+| 36 | `groups` | Updates group membership and party composition. |
+| 37 | `active_contracts` | Enforces active social and economic contract obligations. |
+| 38 | `expired_offers` | Clears stale trade and social offers past their TTL. |
+| 39 | `capacity_enforcement` | Final inventory and carrying-capacity enforcement pass. |
 
 ---
 
@@ -95,6 +96,7 @@ Phase names match the `run_phase()` call identifiers in `src/engine/pipeline.py:
 **File**: `src/systems/strategic_systems/intelligence.py`  
 **Responsibility**: Updates the character's internal mental model.
 - **Interruption Resistance**: Switching projects requires a score margin defined by `interruption_resistance * resistance_multiplier`.
+- **Adjacent Phase**: The immediately following `lead_contradiction` phase (`E42D`) tests leads produced/refreshed here against current world state and marks the inconsistent ones EXHAUSTED — see `docs/mechanics/04_strategic_cognition.md` §3 for the mechanic itself.
 
 ---
 

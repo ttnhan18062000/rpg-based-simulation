@@ -803,6 +803,43 @@ class EventExtractor:
                                 "lead_active": entity.strategic.current_project_id is not None,
                             },
                         ))
+                    # belief_contradiction / lead_contradiction_resolved (this ticket): fires when
+                    # LeadContradictionSystem.enforce() (run_phase "lead_contradiction") has just
+                    # transitioned this lead to EXHAUSTED + test_outcome="FAILURE" this tick. Mirrors
+                    # the exact payload shape LeadContradictionSystem.enforce() itself builds so a
+                    # refine()-driven test observes identical events to a direct .enforce() call.
+                    _prior_failed = (
+                        prior_lead is not None
+                        and getattr(prior_lead, "test_outcome", None) == "FAILURE"
+                        and getattr(prior_lead.certainty, "value", str(prior_lead.certainty)) == "EXHAUSTED"
+                    )
+                    _curr_failed = (
+                        getattr(lead, "test_outcome", None) == "FAILURE"
+                        and getattr(lead.certainty, "value", str(lead.certainty)) == "EXHAUSTED"
+                    )
+                    if prior_lead is not None and _curr_failed and not _prior_failed:
+                        events.append(SimulationEvent(
+                            event_type="belief_contradiction", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="lead_contradiction_system", message="",
+                            payload={
+                                "lead_id": lid,
+                                "provider_id": getattr(lead, "source_entity_id", None),
+                                "subject": lead.subject,
+                                "old_certainty": getattr(prior_lead.certainty, "value", str(prior_lead.certainty)),
+                                "failure_count": lead.failure_count,
+                            },
+                        ))
+                        events.append(SimulationEvent(
+                            event_type="lead_contradiction_resolved", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="lead_contradiction_system", message="",
+                            payload={
+                                "lead_id": lid,
+                                "subject": lead.subject,
+                                "failure_count": lead.failure_count,
+                            },
+                        ))
                     # belief_stale: lead dormant for > threshold ticks without certainty update
                     # Uses discovered_tick as staleness proxy (last_updated_tick not tracked on LeadState)
                     _cert_str = getattr(lead.certainty, "value", str(lead.certainty))

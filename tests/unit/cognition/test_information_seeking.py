@@ -724,6 +724,89 @@ class TestLeadContradiction:
         assert len(events) == 0
         assert not updated.entity_updates
 
+    def test_pipeline_refine_produces_lead_contradiction_matching_isolated_enforce(self):
+        """
+        AC1 (TCK-20260824-LEAD-CONTRADICTION-WIRING): a full
+        AuthoritativeApplyPipeline.refine() tick produces the same lead/provider
+        mutations as a direct LeadContradictionSystem.enforce() call on the same
+        input state, and EventExtractor.extract() on the resulting state
+        transition yields belief_contradiction/lead_contradiction_resolved events
+        with payloads matching what .enforce() returns directly (Decisions Log,
+        Option A: refine() cannot carry List[SimulationEvent] out itself, so the
+        events are re-derived from the state diff instead).
+        """
+        from dataclasses import replace as dc_replace
+
+        from src.core.strategic import LeadCertainty
+        from src.core.updates import StateUpdate
+        from src.engine.apply import ApplyPath
+        from src.engine.pipeline import AuthoritativeApplyPipeline
+        from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
+        from src.observability.config import ObservabilityMode
+        from src.observability.event_extractor import EventExtractor
+
+        entity = self._make_entity_with_lead(
+            entity_id=1,
+            lead_id="lead_resin",
+            subject="moon_resin",
+            lead_kind="location",
+            provider_id=99,
+        )
+        depleted_node = self._make_resource_node(
+            node_id=10, yields_item="moon_resin", remaining_charges=0
+        )
+        provider = self._make_provider(entity_id=99, reliability=0.8)
+        state = self._make_state(
+            entities={1: entity},
+            resource_nodes={10: depleted_node},
+            providers={99: provider},
+        )
+        # EventExtractor's own belief_contradiction diff rule lives behind the
+        # ENABLE_PUSH_EVENT_SHAPERS_PHASE2 flag-off rollback path (see
+        # event_extractor.py's `_push_shapers_phase2_active` gate) -- this is the
+        # human-confirmed Decisions Log resolution, not a workaround.
+        state = dc_replace(state, feature_flags={"ENABLE_PUSH_EVENT_SHAPERS_PHASE2": "OFF"})
+
+        isolated_update, isolated_events = LeadContradictionSystem.enforce(state, StateUpdate())
+        refined_update = AuthoritativeApplyPipeline.refine(state, StateUpdate())
+
+        isolated_lead = next(
+            l for l in isolated_update.entity_updates[1].strategic.leads_add_or_update
+            if l.id == "lead_resin"
+        )
+        refined_lead = next(
+            l for l in refined_update.entity_updates[1].strategic.leads_add_or_update
+            if l.id == "lead_resin"
+        )
+        assert refined_lead.certainty == isolated_lead.certainty == LeadCertainty.EXHAUSTED
+        assert refined_lead.test_outcome == isolated_lead.test_outcome == "FAILURE"
+        assert refined_lead.failure_count == isolated_lead.failure_count == 1
+
+        assert (
+            refined_update.information_providers_update[99].reliability_score
+            == isolated_update.information_providers_update[99].reliability_score
+        )
+
+        post_state = ApplyPath.apply_generation(state, refined_update)
+        events = EventExtractor.extract(state, post_state, refined_update, ObservabilityMode.NORMAL)
+
+        contradiction_evts = [e for e in events if e.event_type == "belief_contradiction"]
+        resolved_evts = [e for e in events if e.event_type == "lead_contradiction_resolved"]
+        assert len(contradiction_evts) == 1
+        assert len(resolved_evts) == 1
+
+        isolated_contradiction = next(
+            e for e in isolated_events if e.event_type == "belief_contradiction"
+        )
+        isolated_resolved = next(
+            e for e in isolated_events if e.event_type == "lead_contradiction_resolved"
+        )
+
+        for key in ("lead_id", "subject", "failure_count", "old_certainty", "provider_id"):
+            assert contradiction_evts[0].payload[key] == isolated_contradiction.payload[key]
+        for key in ("lead_id", "subject", "failure_count"):
+            assert resolved_evts[0].payload[key] == isolated_resolved.payload[key]
+
     def test_already_exhausted_lead_skipped(self):
         """EXHAUSTED leads are not re-contradicted."""
         from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
@@ -742,6 +825,120 @@ class TestLeadContradiction:
         updated, events = LeadContradictionSystem.enforce(state, StateUpdate())
 
         assert len(events) == 0
+
+    # ── AC3: OBJECT / EVENT / CONCEPT lead coverage ──────────────────────────
+
+    def test_object_lead_contradicted_when_item_absent_from_world(self):
+        """OBJECT lead whose subject matches no ground item / chest item → contradicted."""
+        from src.engine.pipeline_phases.lead_contradiction import _is_lead_contradicted
+        from src.core.strategic import LeadState, LeadCertainty
+        from src.core.state import AuthoritativeState
+
+        lead = LeadState(
+            id="lead_obj", kind="object", subject="ancient_amulet",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+        state = AuthoritativeState(tick=1, seed=0)
+        assert _is_lead_contradicted(lead, state) is True
+
+    def test_object_lead_not_contradicted_when_item_present(self):
+        """OBJECT lead present as a ground item, and separately as a chest item → not contradicted."""
+        from dataclasses import replace as dc_replace
+        from src.engine.pipeline_phases.lead_contradiction import _is_lead_contradicted
+        from src.core.strategic import LeadState, LeadCertainty
+        from src.core.state import AuthoritativeState, GroundItemState, ChestState
+        from src.core.models.inventory import ItemStack
+
+        lead = LeadState(
+            id="lead_obj", kind="object", subject="ancient_amulet",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+        state = AuthoritativeState(tick=1, seed=0)
+
+        ground_state = dc_replace(state, ground_items={
+            1: GroundItemState(id=1, item_id="ancient_amulet", quantity=1, position=(0.0, 0.0))
+        })
+        assert _is_lead_contradicted(lead, ground_state) is False
+
+        chest_state = dc_replace(state, chests={
+            1: ChestState(id=1, position=(0.0, 0.0), items=[ItemStack("ancient_amulet", 1)])
+        })
+        assert _is_lead_contradicted(lead, chest_state) is False
+
+    def test_event_lead_contradicted_when_world_event_no_longer_active(self):
+        """EVENT lead whose subject matches no local scar's source_event_id → contradicted."""
+        from src.engine.pipeline_phases.lead_contradiction import _is_lead_contradicted
+        from src.core.strategic import LeadState, LeadCertainty
+        from src.core.state import AuthoritativeState
+
+        lead = LeadState(
+            id="lead_evt", kind="event", subject="bandit_raid_42",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+        state = AuthoritativeState(tick=1, seed=0)
+        assert _is_lead_contradicted(lead, state) is True
+
+    def test_event_lead_not_contradicted_when_event_still_active(self):
+        """EVENT lead whose subject matches a live local scar's source_event_id → not contradicted."""
+        from dataclasses import replace as dc_replace
+        from src.engine.pipeline_phases.lead_contradiction import _is_lead_contradicted
+        from src.core.strategic import LeadState, LeadCertainty
+        from src.core.state import AuthoritativeState, LocalScarState
+
+        lead = LeadState(
+            id="lead_evt", kind="event", subject="bandit_raid_42",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+        state = AuthoritativeState(tick=1, seed=0)
+        state = dc_replace(state, local_scars={
+            1: LocalScarState(
+                id=1, position=(5.0, 5.0), kind="RAID_DAMAGE",
+                source_event_id="bandit_raid_42",
+            )
+        })
+        assert _is_lead_contradicted(lead, state) is False
+
+    def test_concept_lead_contradicted_when_no_provider_knows_domain(self):
+        """CONCEPT leads are always a no-op in _is_lead_contradicted() -- contradiction for
+        CONCEPT is observation-shaped (BeliefContradictionService), not a state scan."""
+        from src.engine.pipeline_phases.lead_contradiction import _is_lead_contradicted
+        from src.core.strategic import LeadState, LeadCertainty
+        from src.core.state import AuthoritativeState
+
+        lead = LeadState(
+            id="lead_concept", kind="concept", subject="alchemy_recipe",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+        state = AuthoritativeState(tick=1, seed=0)
+        assert _is_lead_contradicted(lead, state) is False
+
+    def test_is_lead_contradicted_resource_literal_remains_dead_code(self):
+        """Regression guard: "location"/"person" behavior is unchanged by the
+        OBJECT/EVENT/CONCEPT extension, and the dead "resource" literal still
+        behaves exactly as before (never contradicted when no matching node)."""
+        from src.engine.pipeline_phases.lead_contradiction import _is_lead_contradicted
+        from src.core.strategic import LeadState, LeadCertainty
+        from src.core.state import AuthoritativeState
+
+        state = AuthoritativeState(tick=1, seed=0)
+
+        resource_lead = LeadState(
+            id="lead_res", kind="resource", subject="moon_resin",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+        assert _is_lead_contradicted(resource_lead, state) is False
+
+        location_lead = LeadState(
+            id="lead_loc", kind="location", subject="moon_resin",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+        assert _is_lead_contradicted(location_lead, state) is False
+
+        person_lead = LeadState(
+            id="lead_person", kind="person", subject="not_a_number",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+        assert _is_lead_contradicted(person_lead, state) is False
 
 
 # ─── E42D: KnowledgeFact staleness decay tests ────────────────────────────────

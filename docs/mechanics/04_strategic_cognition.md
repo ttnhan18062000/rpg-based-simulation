@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-26
+last_verified: 2026-08-27
 ---
 
 # Chapter 4: Strategic Cognition
@@ -91,6 +91,34 @@ A `Lead` is a stored piece of information about a resource or location.
 *   **Subject**: What the lead is about (e.g., "Iron Ore").
 *   **Detail**: Where it is located (e.g., `(45, 12)`).
 *   **Certainty**: High, Medium, or Low. Certainty decays over time if the information is not refreshed.
+
+### Lead Contradiction Testing (E42D; TCK-20260824-LEAD-CONTRADICTION-WIRING)
+Beyond time-based decay (§5), a lead can also be invalidated *immediately* when its claimed
+destination is inconsistent with current world state. `LeadContradictionSystem.enforce()`
+(`src/engine/pipeline_phases/lead_contradiction.py`) runs as the `lead_contradiction` phase of
+`AuthoritativeApplyPipeline.refine()` (phase 32, between `strategic_intelligence` and
+`near_death_hardening` — see `docs/engine/authoritative_pipeline.md`), scanning every alive
+entity's non-`EXHAUSTED` leads in deterministic sorted order every tick.
+
+Contradiction testing is per-`LeadKind`, via `_is_lead_contradicted()`:
+
+| `LeadKind` | Contradiction test | Coverage mechanism |
+| :--- | :--- | :--- |
+| `location` / `resource` | Subject resolves to a resource node whose `remaining_charges <= 0`. | State-scanned in `_is_lead_contradicted()`. |
+| `person` | Subject's entity id is absent from `state.entities`, or resolves to a non-`alive` entity. | State-scanned in `_is_lead_contradicted()`. |
+| `object` | Subject does not match any ground item's or chest item's `item_id` (absence is the failure signal — opposite polarity from `location`/`resource`). | State-scanned in `_is_lead_contradicted()`. |
+| `event` | Subject does not match any `local_scars` entry's `source_event_id`. | State-scanned in `_is_lead_contradicted()`. |
+| `concept` | Not state-scanned — always returns "not contradicted" from this phase (explicit no-op, same shape as the pre-existing `information` kind). | Routed instead through `BeliefContradictionService.detect()` at the observation call site (`ObservationBeliefBridge.process_observation()`, `src/domains/information/bridge.py`, for `claim_failed_search`/`region_danger_seen` observation kinds) and `InformationBeliefPhase.apply()` (`src/domains/information/phase.py`), not the world-state scan above. |
+
+On contradiction, the lead is marked `certainty=EXHAUSTED`, `test_outcome="FAILURE"`,
+`failure_count += 1`. The originating `InformationProvider.reliability_score` is decremented by
+`0.1`, floored at `0.1`. A new `UnknownFact(subject=lead.subject, reason="lead_contradicted",
+priority=0.7)` is regenerated so the `InformationNeedDetector` fires a replanning
+`INFORMATION_SEEKING` project next tick. A `belief_contradiction` `SimulationEvent` and a
+`lead_contradiction_resolved` `SimulationEvent` are emitted for both kinds. All mutations are
+typed `StrategicUpdate`/`EntityUpdate` records merged through the authoritative pipeline — no
+direct state writes. See `docs/parity_ledger/strategic_cognition.yaml` (`STRAT-230`) for parity
+status.
 
 ### Blockers (Problems)
 A `Blocker` is a reason why a goal cannot be achieved. The `BlockerKind` enum (`src/core/strategic.py`) defines the authoritative set of blocker kinds:

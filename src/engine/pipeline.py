@@ -353,6 +353,7 @@ class AuthoritativeApplyPipeline:
         
         update = run_phase("strategic_intelligence", update, lambda u: StrategicIntelligenceSystem.fused_strategic_pass(state, u, cadence=cadence))
         t2 = time.perf_counter_ns()
+        update = run_phase("lead_contradiction", update, lambda u: AuthoritativeApplyPipeline._enforce_lead_contradiction(state, u))
         update = run_phase("near_death_hardening", update, lambda u: AuthoritativeApplyPipeline._apply_near_death_hardening(state, u))
         t3 = time.perf_counter_ns()
         update = run_phase("occupancy_resolution", update, lambda u: AuthoritativeApplyPipeline._resolve_occupancy_conflicts(state, u))
@@ -441,6 +442,17 @@ class AuthoritativeApplyPipeline:
     ) -> StateUpdate:
         from src.engine.pipeline_phases.hardening import NearDeathHardeningPhase
         return NearDeathHardeningPhase.apply(state, update)
+
+    @staticmethod
+    def _enforce_lead_contradiction(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
+        from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
+        new_update, _events = LeadContradictionSystem.enforce(state, update)
+        # _events intentionally discarded at this boundary -- refine() has no StateUpdate
+        # field that can carry List[SimulationEvent] out (same limitation
+        # WorldEmergencePhase.execute()[0] already lives with at pipeline.py:311). The
+        # equivalent events are re-derived from the resulting state diff by
+        # EventExtractor.extract() instead (see docs/parity_ledger Decisions Log, Option A).
+        return new_update
     
     @staticmethod
     def _resolve_quest_rewards(

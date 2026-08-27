@@ -3,7 +3,7 @@ status: authoritative
 layer: ai
 authority: P1
 audience: agent
-last_verified: 2026-06-21
+last_verified: 2026-08-27
 tags: [domains, information, belief, trust, contract]
 ---
 
@@ -87,18 +87,33 @@ The Information / Belief Processing stage calls `router.py` for each entity that
 `LeadState.kind` is now the formal `LeadKind(str, Enum)` defined in `src/core/strategic.py`.
 All five kinds and their routing behaviour:
 
-| Kind | Value | Routing | Target |
-|---|---|---|---|
-| `LOCATION` | `"location"` | `REACH_LOCATION` | `lead.detail` or `lead.subject` |
-| `OBJECT` | `"object"` | `INVESTIGATE` | `lead.subject` |
-| `EVENT` | `"event"` | `INVESTIGATE` | `lead.subject` |
-| `PERSON` | `"person"` | `INVESTIGATE` | `lead.subject` (entity_id string) |
-| `CONCEPT` | `"concept"` | `ASK_INFORMATION` | `lead.subject` (domain string) |
+| Kind | Value | Routing | Target | Contradiction Coverage (E42D; TCK-20260824-LEAD-CONTRADICTION-WIRING) |
+|---|---|---|---|---|
+| `LOCATION` | `"location"` | `REACH_LOCATION` | `lead.detail` or `lead.subject` | State-scanned — `LeadContradictionSystem._is_lead_contradicted()` |
+| `OBJECT` | `"object"` | `INVESTIGATE` | `lead.subject` | State-scanned — `LeadContradictionSystem._is_lead_contradicted()` |
+| `EVENT` | `"event"` | `INVESTIGATE` | `lead.subject` | State-scanned — `LeadContradictionSystem._is_lead_contradicted()` |
+| `PERSON` | `"person"` | `INVESTIGATE` | `lead.subject` (entity_id string) | State-scanned — `LeadContradictionSystem._is_lead_contradicted()` |
+| `CONCEPT` | `"concept"` | `ASK_INFORMATION` | `lead.subject` (domain string) | Observation-shaped — `BeliefContradictionService.detect()`, not state-scanned |
+
+As of `TCK-20260824-LEAD-CONTRADICTION-WIRING`, `LeadContradictionSystem.enforce()` runs every
+tick as the `lead_contradiction` phase of `AuthoritativeApplyPipeline.refine()` (between
+`strategic_intelligence` and `near_death_hardening` — see
+`docs/engine/authoritative_pipeline.md`), so `LOCATION`/`OBJECT`/`EVENT`/`PERSON` contradiction
+testing is now operationally live in production, not just implemented-but-unwired. `CONCEPT`
+leads are never scanned by this phase — their contradiction path is
+`ObservationBeliefBridge.process_observation()` (`bridge.py`) calling
+`BeliefContradictionService.detect()` for `claim_failed_search`/`region_danger_seen` observation
+kinds, plus the observation-synthesis branch in `InformationBeliefPhase.apply()` (`phase.py`)
+that derives those two observation kinds from existing typed navigation/objective fields. See
+`docs/mechanics/04_strategic_cognition.md` §3 ("Lead Contradiction Testing") for the full
+per-kind mechanic and `docs/parity_ledger/strategic_cognition.yaml` (`STRAT-230`) for parity
+status.
 
 ### PERSON Lead Routing
 Entity navigates toward the entity identified by `lead.subject` (a numeric entity_id string).
 On arrival: if the entity is alive → test outcome SUCCESS.
-If the entity is dead or absent → `belief_contradiction` event (handled by `LeadContradictionSystem`).
+If the entity is dead or absent → `belief_contradiction` event (handled by `LeadContradictionSystem`,
+now live-wired into `refine()` — see the Contradiction Coverage column above).
 Routing is resolved by `LeadRoutingSystem.resolve_objective_kind()` in `src/engine/domain/lead_routing.py`.
 
 ### CONCEPT Lead Routing

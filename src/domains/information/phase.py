@@ -11,7 +11,9 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Any
 
 from src.core.state import AuthoritativeState, EntityState
+from src.core.strategic import LeadCertainty
 from src.core.updates import StateUpdate, EntityUpdate
+from src.domains.information.bridge import ObservationBeliefBridge
 from src.domains.information.schema import InformationQuery, InformationSourceProfile
 from src.domains.information.router import InformationQueryRouter
 from src.domains.information.normalizer import InformationResponseNormalizer
@@ -104,6 +106,64 @@ class InformationBeliefPhase:
                             )
                             break
                         # else: InformationResponse(answer_kind="insufficient_gold", ...) — try next candidate
+
+            # 4. Synthesize claim_failed_search / region_danger_seen observations for
+            # untested leads and route them through BeliefContradictionService via the
+            # bridge. Not gated on branches (2)/(3) already having written this actor --
+            # merge into whatever EntityUpdate they may have produced instead of a bare
+            # assignment (see EntityUpdate.merge()'s self_model_bundle_set hazard note below).
+            for lead in actor.strategic.leads.values():
+                if lead.tested or lead.certainty == LeadCertainty.EXHAUSTED:
+                    continue
+
+                obs_event: Optional[Dict[str, Any]] = None
+
+                if actor.navigation.last_failure_reason is not None:
+                    project = actor.strategic.projects.get(actor.strategic.current_project_id)
+                    objective = None
+                    if project is not None:
+                        objective = next(
+                            (o for o in project.objectives if o.id == actor.strategic.current_objective_id),
+                            None,
+                        )
+                    if objective is not None and objective.target == lead.subject:
+                        obs_event = {
+                            "kind": "claim_failed_search",
+                            "subject": lead.subject,
+                            "lead_id": lead.id,
+                            "location_searched": lead.detail,
+                            "details": {},
+                        }
+
+                if obs_event is None and lead.kind == "location" and lead.certainty in (
+                    LeadCertainty.VAGUE, LeadCertainty.APPROXIMATE
+                ) and lead.detail == actor.navigation.region_id:
+                    region_id = actor.navigation.region_id
+                    region = state.regions.get(region_id) if region_id else None
+                    has_active_scar = False
+                    if region is not None:
+                        x_min, y_min, x_max, y_max = region.bounds
+                        for scar in state.local_scars.values():
+                            sx, sy = scar.position
+                            if x_min <= sx <= x_max and y_min <= sy <= y_max:
+                                has_active_scar = True
+                                break
+                    if has_active_scar:
+                        obs_event = {
+                            "kind": "region_danger_seen",
+                            "subject": lead.subject,
+                            "region_id": region_id,
+                            "details": {},
+                        }
+
+                if obs_event is None:
+                    continue
+
+                assim = ObservationBeliefBridge.process_observation(actor, obs_event, state)
+                if assim.strategic_update is not None:
+                    new_ent_upd = EntityUpdate(entity_id=actor.id, strategic=assim.strategic_update)
+                    existing = entity_updates.get(actor.id)
+                    entity_updates[actor.id] = existing.merge(new_ent_upd) if existing is not None else new_ent_upd
 
         if entity_updates:
             update = StateUpdate(entity_updates=entity_updates)
