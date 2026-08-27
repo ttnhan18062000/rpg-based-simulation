@@ -119,22 +119,35 @@ class MilitaryConflictPhase:
         return best_rid
 
     @staticmethod
-    def _find_guard_entities_in_region(
+    def _build_guard_index_by_region(
         state: AuthoritativeState,
-        region_id: str,
-    ) -> List[int]:
-        """Return sorted list of entity IDs with EntityRole.GUARD in the given region."""
-        result: List[int] = []
+    ) -> Dict[str, List[int]]:
+        """Bucket every EntityRole.GUARD entity ID by region_id in a single pass.
+
+        Hoisted out of the per-WAR-pair siege loop so `execute()` scans
+        `state.entities` once per tick instead of once per WAR pair.
+        """
+        result: Dict[str, List[int]] = {}
         for eid, entity in state.entities.items():
             nav = getattr(entity, "navigation", None)
-            if nav is None or nav.region_id != region_id:
+            if nav is None:
                 continue
             identity = getattr(entity, "identity", None)
             if identity is None:
                 continue
             if identity.role == EntityRole.GUARD:
-                result.append(eid)
-        return sorted(result)
+                result.setdefault(nav.region_id, []).append(eid)
+        for region_id in result:
+            result[region_id].sort()
+        return result
+
+    @staticmethod
+    def _find_guard_entities_in_region(
+        state: AuthoritativeState,
+        region_id: str,
+    ) -> List[int]:
+        """Return sorted list of entity IDs with EntityRole.GUARD in the given region."""
+        return MilitaryConflictPhase._build_guard_index_by_region(state).get(region_id, [])
 
     @staticmethod
     def execute(state: AuthoritativeState) -> StateUpdate:
@@ -168,6 +181,10 @@ class MilitaryConflictPhase:
 
         from src.core.state import GroupRecord, SiegeState
         from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
+
+        guard_ids_by_region: Dict[str, List[int]] = (
+            MilitaryConflictPhase._build_guard_index_by_region(state)
+        )
 
         world_updates: Dict[str, WorldUpdate] = {}
         faction_updates: List[FactionUpdate] = []
@@ -302,9 +319,7 @@ class MilitaryConflictPhase:
                 ))
 
                 # Defender reinforcement: ≥ 3 GUARD entities offset attacker progress
-                guard_ids = MilitaryConflictPhase._find_guard_entities_in_region(
-                    state, contested_region_id
-                )
+                guard_ids = guard_ids_by_region.get(contested_region_id, [])
                 if len(guard_ids) >= _DEF_ENTITY_THRESHOLD:
                     wu = wu.merge(WorldUpdate(
                         region_id=contested_region_id,

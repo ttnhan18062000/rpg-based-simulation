@@ -487,6 +487,92 @@ class TestPaidInformationTransaction:
 
         assert 5 not in update.entity_updates or not update.entity_updates[5].resource_transfers
 
+    # ── performance / determinism (TCK-20260822-PAID-INFO-INDEX-RETROFIT) ──────
+
+    @staticmethod
+    def _count_provider_sorts(state, providers: dict) -> int:
+        """Run enforce() once and count calls to sorted() over exactly the
+        provider-id key set, isolating the provider sort from the unrelated,
+        unconditional entity-scan sort at paid_information.py's seeker loop."""
+        import builtins
+        from unittest.mock import patch
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.updates import StateUpdate
+
+        real_sorted = builtins.sorted
+        provider_key_set = set(providers.keys())
+        calls = []
+
+        def _spy(iterable, *args, **kwargs):
+            items = list(iterable)
+            try:
+                matches_providers = set(items) == provider_key_set
+            except TypeError:
+                matches_providers = False
+            if matches_providers:
+                calls.append(items)
+            return real_sorted(items, *args, **kwargs)
+
+        with patch("builtins.sorted", side_effect=_spy):
+            PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        return len(calls)
+
+    def test_sorted_providers_computed_once_per_enforce_call(self):
+        """AC #2: sorted(providers.keys())-equivalent work runs at most once
+        per enforce() call, not once per seeker."""
+        seekers = {
+            i: self._make_seeker(entity_id=i, gold=50)
+            for i in (1, 2, 3)
+        }
+        providers = {
+            10: self._make_provider(entity_id=10, reliability=0.9),
+            11: self._make_provider(entity_id=11, reliability=0.5),
+        }
+        state = self._make_state(entities=seekers, providers=providers)
+
+        assert self._count_provider_sorts(state, providers) == 1
+
+    def test_paid_information_enforce_scales_with_providers_not_seekers_times_providers(self):
+        """AC #2: the provider sort count does not grow with seeker count."""
+        providers = {
+            10: self._make_provider(entity_id=10, reliability=0.9),
+            11: self._make_provider(entity_id=11, reliability=0.5),
+        }
+
+        seekers_small = {1: self._make_seeker(entity_id=1, gold=50)}
+        state_small = self._make_state(entities=seekers_small, providers=providers)
+
+        seekers_large = {
+            i: self._make_seeker(entity_id=i, gold=50)
+            for i in range(1, 6)
+        }
+        state_large = self._make_state(entities=seekers_large, providers=providers)
+
+        assert self._count_provider_sorts(state_small, providers) == 1
+        assert self._count_provider_sorts(state_large, providers) == 1
+
+    def test_enforce_is_deterministic_across_repeated_calls(self):
+        """AC #3: two enforce() calls on byte-identical state produce
+        byte-identical StateUpdate.entity_updates."""
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.updates import StateUpdate
+
+        seekers = {
+            1: self._make_seeker(entity_id=1, gold=50, subject="moon_resin.source"),
+            2: self._make_seeker(entity_id=2, gold=200, subject="quest.cave_location"),
+        }
+        providers = {
+            10: self._make_provider(entity_id=10, reliability=0.9),
+            11: self._make_provider(entity_id=11, reliability=0.4),
+        }
+        state = self._make_state(entities=seekers, providers=providers)
+
+        update_a = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+        update_b = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        assert update_a.entity_updates == update_b.entity_updates
+
 
 # ─── E42D: LeadContradictionSystem + effective_certainty tests ────────────────
 

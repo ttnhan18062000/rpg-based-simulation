@@ -50,6 +50,21 @@ def test_dirty_dependency_biological_and_attributes_mark_strategic_and_lifecycle
     assert expanded.lifecycle_entities == {6, 7}
 
 
+def test_dirty_dependency_identity_passes_through_without_implied_domains():
+    """
+    TCK-20260822-SEMANTIC-ENTITY-INDEX: identity_entities is a new tag with no dependency
+    implications -- it must pass through expand() unchanged and must NOT imply strategic or
+    lifecycle the way biological/attributes do (no existing consumer requires that inference).
+    """
+    initial = DirtySet(identity_entities={8})
+    expanded = DirtyDependencyGraph.expand(initial)
+
+    assert expanded.identity_entities == {8}
+    assert expanded.strategic_entities == set()
+    assert expanded.lifecycle_entities == set()
+    assert expanded.social_entities == set()
+
+
 def test_dirty_dependency_expansion_is_idempotent():
     """
     expand(expand(dirty)) must equal expand(dirty).

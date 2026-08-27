@@ -337,10 +337,10 @@ class _Adjudications:
         "an error."
     )
     FACTION_EXCLUSION = (
-        "faction.yaml is not a member of CANONICAL_LEDGER_FILES (tools/parity_ledger_scan.py:24-33) "
-        "-- both legacy surfaces are structurally blind to every faction.yaml entry regardless of "
-        "priority (matches TestEquivalenceFixtures's FAC-801 shape); impact() includes faction.yaml "
-        "like any other shard."
+        "faction.yaml was historically excluded from CANONICAL_LEDGER_FILES (fixed by "
+        "TCK-20260826-PARITY-FACTION-CANONICAL-SCAN); legacy surfaces now see faction.yaml like any "
+        "other canonical shard (matches TestEquivalenceFixtures's FAC-801 shape); impact() included "
+        "faction.yaml like any other shard even before that fix."
     )
     SRC_ONLY_SCOPE = (
         "derive_mapping's _SRC_PATH_RE (tools/gate_checks/parity_updater_static.py:36) only ever "

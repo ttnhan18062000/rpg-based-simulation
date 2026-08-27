@@ -49,7 +49,7 @@ def test_find_p0_intersection_malformed_shard_raises_labeled_error_not_crash(tmp
         assert exc.filename == "substrate.yaml"
 
 
-def test_only_scans_canonical_eight_not_faction(tmp_path):
+def test_scans_canonical_nine_including_faction(tmp_path):
     _write_ledger(tmp_path, "faction.yaml", [
         {
             "id": "FAC-001", "text": "x", "status": "verified", "priority": "P0",
@@ -58,5 +58,12 @@ def test_only_scans_canonical_eight_not_faction(tmp_path):
         },
     ])
     hits = find_p0_intersection(["src/factions/diplomacy.py"], ledger_dir=str(tmp_path))
-    assert hits == []
-    assert "faction.yaml" not in CANONICAL_LEDGER_FILES
+    assert hits == [("faction.yaml", "FAC-001", "src/factions/diplomacy.py")]
+    assert "faction.yaml" in CANONICAL_LEDGER_FILES
+
+
+def test_detects_real_fac013_p0_intersection():
+    hits = find_p0_intersection(
+        ["src/observability/event_extractor.py"], ledger_dir="docs/parity_ledger"
+    )
+    assert ("faction.yaml", "FAC-013", "src/observability/event_extractor.py") in hits
