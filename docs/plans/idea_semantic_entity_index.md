@@ -10,6 +10,15 @@ tags: [idea, entity-index, semantic-search, information-seeking, performance, sp
 
 # Idea: Semantic Entity Index for World Queries
 
+> **Superseded (2026-08-26):** implemented by `TCK-20260822-SEMANTIC-ENTITY-INDEX`
+> (`src/engine/semantic_entity_index.py`, `SemanticEntityIndexes`/`SemanticEntityIndexService`/
+> `SemanticEntityQuery`) as a lazy, pull-based, `CacheInvalidationPolicy`-driven derived index
+> mirroring `WorldIndexService` -- not the eager Persistence-phase write this doc originally
+> proposed (see `docs/engine/performance_contract.md`'s "Semantic Entity Indexes" subsection for the
+> shipped lifecycle). Retrofitting `paid_information.py`/faction call sites onto the new index
+> remains unscheduled (`TCK-20260822-PAID-INFO-INDEX-RETROFIT`,
+> `TCK-20260822-GUARD-SCAN-INDEX-RETROFIT`).
+
 > **Maturity: IDEA** — Not scheduled. Must precede E42 Information Seeking and E53 Faction Diplomacy at scale.
 
 > **Status review (2026-08-22):** re-investigated for staleness. E42 and E53 both shipped DONE within 2 days
