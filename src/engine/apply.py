@@ -404,6 +404,7 @@ class ApplyPath:
             _has_contracts_cache=pass_contracts,
             movement_cache=m_cache,
             world_indexes=getattr(prior_state, "world_indexes", None),
+            semantic_entity_indexes=getattr(prior_state, "semantic_entity_indexes", None),
             _index_hits=getattr(prior_state, "_index_hits", 0),
             _index_misses=getattr(prior_state, "_index_misses", 0),
             _opt_profile=getattr(prior_state, "_opt_profile", None),

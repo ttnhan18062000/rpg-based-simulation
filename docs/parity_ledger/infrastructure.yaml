@@ -11051,55 +11051,21 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'tools/agent-monitoring/generate_retro.py:705-711 (`_kgmcp_verdict()`
-    docstring addendum stating the low-coverage clause reflects two independently-implemented
-    tools, not cache underperformance), :771-774 (the low-coverage explanation string
-    itself, appended to the existing ''Coverage is low: ...'' clause: ''This reflects
-    two independently-implemented tools (only knowledge_context/knowledge_status are
-    cache-instrumented; search_docs is served by a separate, uninstrumented implementation),
-    not a fixable inefficiency in the cache itself.''). tools/agent-monitoring/generate_retro.py:815-824
-    (`compute_kgmcp_cache_efficiency_metrics()` docstring addendum, same architectural-fact
-    framing, citing tools/knowledge_gateway_mcp.py and tools/knowledge_search.py by
-    path). tools/agent-monitoring/generate_retro.py:2034-2040 (`generate()` -- new
-    italicized paragraph appended under the ''## KGMCP Cache Efficiency'' heading,
-    after the existing ''_Reflects the full retrieval_cache_access_log corpus...''
-    paragraph and before the ''**Cache Efficiency: {verdict}**'' line; always rendered,
-    matching this section''s existing never-gated convention). tests/tools/test_generate_retro.py''s
-    _FIXED_CORPUS_EXPECTED_REPORT golden string (~line 1091-1096) was updated in the
-    same commit to include the new paragraph''s exact text, proving generate()''s
-    rendered output actually contains it.
-
-    TCK-20260826-KGMCP-COVERAGE-RATE-OVERFLOW (distinct, later root cause, same metric):
-    coverage_rate''s numerator (access_log_rows -- always the all-time corpus, since main()
-    never period-slices kgmcp_access_log) was being divided by a denominator
-    (search_calls_total) built from the period-scoped `tools` list, producing values over
-    100% (e.g. 1059.3% on a one-week report) that reflected a time-window mismatch, not
-    real coverage. Fix: compute_kgmcp_cache_efficiency_metrics() gained an `all_tools`
-    parameter; search_calls_total now prefers `all_tools` (the same unfiltered, all-time
-    tools.jsonl corpus already loaded once in main() for the Zero-Invocation Skill Flags
-    section) over `tools` when supplied, reconciling both sides of the ratio to the same
-    all-time window. Falls back to `tools` when `all_tools` is not supplied, preserving
-    exact prior behavior for direct unit-test callers. coverage_rate is never capped/floored
-    in either code path -- a genuinely-uncapped ratio still renders its real raw value.'
-  status: verified
-  priority: P2
-  legacy_evidence: null
   v2_evidence: 'tools/agent-monitoring/generate_retro.py:783-846 (`compute_kgmcp_cache_efficiency_metrics()`
-    gains `all_tools` parameter; docstring addendum explaining the window-mismatch root
-    cause and the all_tools-preferred/tools-fallback resolution). tools/agent-monitoring/generate_retro.py:994-997
+    gains `all_tools` parameter; docstring addendum explaining the window-mismatch
+    root cause and the all_tools-preferred/tools-fallback resolution). tools/agent-monitoring/generate_retro.py:994-997
     (`compute_retro_metrics()` threads `all_tools` through). tools/agent-monitoring/generate_retro.py:1573-1576
     (`generate()` forwards its own existing `all_tools` parameter into compute_retro_metrics()).
     tests/tools/test_generate_retro.py::test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_window_matched_via_all_tools,
     ::test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_never_capped_even_when_over_one,
-    ::test_compute_retro_metrics_threads_all_tools_into_coverage_denominator,
-    ::test_generate_kgmcp_coverage_uses_all_tools_denominator_not_period_scoped_tools
+    ::test_compute_retro_metrics_threads_all_tools_into_coverage_denominator, ::test_generate_kgmcp_coverage_uses_all_tools_denominator_not_period_scoped_tools
     -- prove the exact 500%-uncorrected/50%-corrected reconciliation end-to-end through
-    generate(), and that an uncapped ratio still renders its real value (500%) when both
-    sides are genuinely all-time. src/api/agent_ops_dashboard/ingest.py''s own
-    compute_retro_metrics() call was inspected and confirmed unaffected: it already passes
-    `tools=self._tools_all` (the all-time corpus, not period-scoped) for its own
-    period-selection semantics, so its coverage_rate was already all-time-vs-all-time before
-    this fix and needed no change.'
+    generate(), and that an uncapped ratio still renders its real value (500%) when
+    both sides are genuinely all-time. src/api/agent_ops_dashboard/ingest.py''s own
+    compute_retro_metrics() call was inspected and confirmed unaffected: it already
+    passes `tools=self._tools_all` (the all-time corpus, not period-scoped) for its
+    own period-selection semantics, so its coverage_rate was already all-time-vs-all-time
+    before this fix and needed no change.'
   proof_type: regression
   test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
   divergence_note: null
@@ -11355,7 +11321,7 @@
     compute_tick_delta itself is untouched, so the field carries no filtering or subscription
     meaning yet. TCK-20260825-FORCE-FULL-SCAN-DEAD-CODE fixes force_full_scan=True
     to genuinely produce an all-entities changed list end-to-end -- AuthoritativeApplyPipeline.refine()
-    now overrides the final DirtySet's nine entity/town domains to full coverage when
+    now overrides the final DirtySet's ten entity/town domains to full coverage when
     update.force_full_scan is true (previously dead code, AuthoritativeApplyPipeline._refresh_dirty_set,
     was never called), and RuntimeStatus gained a declared force_full_scan field populated
     once at Kernel.__init__ from the boot-time flag, so V2EngineManager._update_latest_state's
@@ -11468,9 +11434,9 @@
     so the real running API server never had any terrain regardless of any WS/auth/proxy
     fix. A new world_id constructor parameter (str, defaulting to "dungeon_crawl")
     selects the world spec; the compiled world's own entities (quest-givers, NPCs,
-    etc.) are deliberately
-    discarded via dataclasses.replace(compiled_state, tick=0, seed=self._seed, entities=entities)
-    in favor of the pre-existing hero+goblin-diagonal spawn logic (TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL),
+    etc.) are deliberately discarded via dataclasses.replace(compiled_state, tick=0,
+    seed=self._seed, entities=entities) in favor of the pre-existing hero+goblin-diagonal
+    spawn logic (TCK-20260817-STANDARD-SPAWN-PLACEMENT-COLLISION-HERO-MONSTER-DIAGONAL),
     which is left untouched -- only the terrain/regions/statics layer was missing,
     entity-spawning behavior/contract is unchanged. create_v2_app() gained optional
     seed/entities_count/world_id override parameters (None-default, backward compatible
@@ -11541,3 +11507,129 @@
   proof_type: regression
   support_boundary: Claude-agent-workflow monitoring/observability dashboard tooling
     only -- no simulation behavior is involved.
+- id: INFRA-395
+  text: 'SemanticEntityIndexes/SemanticEntityIndexService/SemanticEntityQuery (src/engine/semantic_entity_index.py,
+    TCK-20260822-SEMANTIC-ENTITY-INDEX) add a non-authoritative, derived, always-rebuildable
+    index over 5 entity dimensions -- role+class_id, region_id, faction, entity_needs
+    (hunger/sleep_debt/rest_pressure biological-pressure thresholds sourced from docs/mechanics/01_entity_anatomy.md:
+    HUNGER_NEED_THRESHOLD=95.0, SLEEP_DEBT_NEED_THRESHOLD=98.0; rest_pressure has
+    no Mechanics Bible penalty threshold and reuses the existing forced-rest cutoff
+    of 70.0 already shipped in src/domains/combat_engagement/perception.py and src/systems/world_systems/routine.py),
+    and knowledge_domain -- giving strategic/governance layers O(1)/O(k) lookups instead
+    of O(N) entity scans. SemanticEntityIndexService.get_indexes follows WorldIndexService''s
+    (src/engine/world_index.py) lazy pull-based, CacheInvalidationPolicy/DirtySet-driven
+    lifecycle in spirit, but (as of TCK-20260827-SEMANTIC-INDEX-PARTIAL-BUILD) has
+    no same-tick full-object fast-path return: state.semantic_entity_indexes is carried
+    forward across ticks (mirroring world_indexes) and every call, partial or full,
+    independently resolves each of the 5 dimensions -- reusing a dimension already
+    resolved earlier this tick (resolved_dimensions), skipping a dimension the caller
+    did not request via an optional dimensions parameter, or rebuilding a dimension
+    whose domain CacheInvalidationPolicy.should_invalidate() flags dirty -- and reuses
+    stale-but-valid dimension buckets otherwise. The result is attached to AuthoritativeState
+    via object.__setattr__ under a new semantic_entity_indexes attribute, mirroring
+    the existing world_indexes/_node_map_cache derived-cache attachment pattern --
+    never written through StateUpdate/replace(). It is excluded from CanonicalStateHasher
+    by omission (no checkpoint.py change), consistent with world_indexes'' own exclusion.
+    CacheInvalidationPolicy (src/engine/world_index.py) gained 3 new additive domains
+    for should_invalidate(): ''identity'' (semantic_identity_index, keyed off the
+    new DirtySet.identity_entities tag), ''region'' (semantic_region_index, reuses
+    the existing dirty.region_ids signal under a distinct index name so it never collides
+    with the pre-existing region_index phantom-field bug), and ''needs'' (semantic_needs_index,
+    keyed off dirty.biological_entities); ''knowledge'' is always-invalidate since
+    information_providers mutations carry no dedicated DirtySet tag today (out of
+    scope to invent one). DirtySet gained a new identity_entities tag (src/core/dirty.py)
+    wired through every real construction site including the production apply path
+    -- DirtySetBuilder, ApplyPlanBuilder.build_plan (src/engine/apply_plan.py, the
+    actual path AuthoritativeApplyPipeline/ApplyPath.apply_generation use, not just
+    the lower-level DirtySet.from_update/merge helpers), and the all_dirty_entities
+    union property. SemanticEntityQuery''s methods (by_role_class, by_region, by_faction,
+    by_need, by_knowledge_domain) all return Tuple[int, ...] entity IDs only, never
+    EntityState/component objects.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/semantic_entity_index.py (SemanticEntityIndexes, SemanticEntityIndexService.get_indexes/_build_role_class_index/_build_region_index/_build_faction_index/_build_needs_index/_build_knowledge_domain_index,
+    SemanticEntityQuery) + src/engine/world_index.py (CacheInvalidationPolicy.invalidated_indexes/should_invalidate
+    identity/region/needs/knowledge domains) + src/core/dirty.py (DirtySet.identity_entities
+    tag, all_dirty_entities union) + src/engine/apply_plan.py (ApplyPlanBuilder.build_plan
+    wiring identity_entities into the built DirtySet) + src/core/state.py (AuthoritativeState.semantic_entity_indexes
+    attachment point via object.__setattr__) Extended by TCK-20260827-SEMANTIC-INDEX-PARTIAL-BUILD:
+    (a) src/engine/apply.py''s ApplyPath.apply_generation now carries semantic_entity_indexes=getattr(prior_state,
+    "semantic_entity_indexes", None) forward across ticks in the new AuthoritativeState(...)
+    constructor call, mirroring the existing world_indexes carry-forward line exactly
+    -- closing the prior full-rebuild-every-tick gap. (b) SemanticEntityIndexService.get_indexes
+    gained an optional dimensions: Optional[Set[str]] = None parameter (None means
+    all 5, preserving every pre-existing call signature) that lets a caller skip rebuilding
+    an invalidated-but-unrequested dimension. (c) SemanticEntityIndexes gained a 6th
+    field, resolved_dimensions: FrozenSet[str] (default frozenset()), tracking which
+    dimensions have already had their invalidation question settled this tick -- a
+    dimension already in resolved_dimensions is reused by any later same-tick call
+    requesting it without re-consulting CacheInvalidationPolicy.should_invalidate(),
+    so repeated same-tick requests for the same invalidated dimension trigger at most
+    one rebuild. This bookkeeping is consulted on every call to get_indexes (partial
+    or full) -- the prior same-tick "existing.tick == state.tick" fast-path early
+    return was removed entirely, since it could return a stale value for a dimension
+    a same-tick partial request had not yet resolved; every call now always runs the
+    full per-field resolution logic. (d) SemanticEntityQuery''s 5 methods (by_role_class,
+    by_region, by_faction, by_need, by_knowledge_domain) now each pass their own single-dimension
+    dimensions={...} set to get_indexes -- their own public method signatures are
+    unchanged. The knowledge domain''s unconditional always-invalidate-on-first-request-per-tick
+    behavior (CacheInvalidationPolicy.should_invalidate("knowledge", ...) unconditionally
+    True) is untouched -- only repeated same-tick requests for knowledge_domain now
+    avoid redundant rebuilds via resolved_dimensions.'
+  proof_type: parity
+  test_path: tests/unit/domains/optimization/test_semantic_entity_index.py::test_by_role_class_matches_naive_scan,tests/unit/domains/optimization/test_semantic_entity_index.py::test_by_region_matches_naive_scan,tests/unit/domains/optimization/test_semantic_entity_index.py::test_by_faction_matches_naive_scan,tests/unit/domains/optimization/test_semantic_entity_index.py::test_by_entity_needs_matches_naive_scan_against_biological_thresholds,tests/unit/domains/optimization/test_semantic_entity_index.py::test_by_knowledge_domain_matches_naive_scan,tests/unit/domains/optimization/test_semantic_entity_index.py::test_index_reflects_dirty_set_change_without_full_rebuild,tests/unit/domains/optimization/test_semantic_entity_index.py::test_incremental_index_bit_identical_to_full_rebuild,tests/unit/domains/optimization/test_semantic_entity_index.py::test_delete_and_rebuild_index_matches_incremental_across_all_dimensions,tests/unit/domains/optimization/test_semantic_entity_index.py::test_semantic_index_excluded_from_canonical_state_hash,tests/unit/domains/optimization/test_semantic_entity_index.py::test_identity_update_sets_identity_entities_tag,tests/unit/domains/optimization/test_semantic_entity_index.py::test_identity_only_update_appears_in_all_dirty_entities,tests/unit/domains/optimization/test_semantic_entity_index.py::test_identity_only_update_does_not_raise_dirty_set_leak_error,tests/static/test_semantic_entity_index_no_stateupdate_write.py::test_semantic_index_never_written_via_stateupdate,tests/static/test_semantic_entity_index_returns_ids_only.py::test_query_methods_return_only_entity_ids_not_objects,tests/unit/domains/optimization/test_cache_invalidation_policy.py::test_cache_invalidation_policy_unrelated_domains_unaffected,tests/unit/domains/optimization/test_dirty_dependency_graph.py::test_dirty_dependency_identity_passes_through_without_implied_domains,tests/unit/domains/optimization/test_semantic_entity_index.py::test_semantic_entity_indexes_carried_forward_across_ticks,tests/unit/domains/optimization/test_semantic_entity_index.py::test_get_indexes_only_rebuilds_dirty_domains_across_ticks,tests/unit/domains/optimization/test_semantic_entity_index.py::test_single_dimension_query_does_not_rebuild_unrequested_invalidated_dimension,tests/unit/domains/optimization/test_semantic_entity_index.py::test_knowledge_domain_still_always_rebuilds_when_requested,tests/unit/domains/optimization/test_semantic_entity_index.py::test_apply_generation_semantic_index_carry_forward_bit_identical_to_full_rebuild,tests/unit/domains/optimization/test_semantic_entity_index.py::test_semantic_entity_indexes_carry_forward_survives_dirty_set_audit,tests/unit/domains/optimization/test_semantic_entity_index.py::test_partial_dimension_request_does_not_reuse_stale_same_tick_object,tests/unit/domains/optimization/test_semantic_entity_index.py::test_repeated_same_tick_request_for_same_invalidated_dimension_builds_once,tests/unit/domains/optimization/test_semantic_entity_index.py::test_full_request_after_partial_same_tick_rebuilds_invalidated_unresolved_dimension
+  divergence_note: null
+  support_boundary: 'knowledge_domain invalidation has no dedicated DirtySet tag and
+    is always treated as dirty (always-invalidate, not incrementally cached) -- out
+    of scope to invent one for this ticket per the plan''s stated AC #3 boundary (role/region/faction
+    incremental invalidation only). Query methods return entity IDs only, never component
+    objects, by design.'
+- id: INFRA-396
+  text: 'TCK-20260826-PARITY-FACTION-CANONICAL-SCAN -- added "faction.yaml" as the
+    9th element of tools/parity_ledger_scan.py''s single-source-of-truth CANONICAL_LEDGER_FILES
+    tuple. docs/parity_ledger/faction.yaml is a real, actively-maintained parity shard
+    (15 entries, FAC-XXX/FACTION-TENSION-XXX ids, same schema.json shape as the other
+    8 shards) that had been deliberately excluded by TCK-20260705-WORKFLOW-PARITY-SKIP
+    on the premise that it had "0 P0 entries" -- a premise no longer true once faction.yaml''s
+    FAC-013 entry became priority: P0, which left find_p0_intersection''s deterministic
+    Parity-phase P0 safeguard scan structurally blind to a real P0 regression risk
+    on any src/ path cited in FAC-013''s v2_evidence. Because parity_updater_static.py''s
+    derive_mapping/expected_subsystems_for_files/cross_reference_touched/next_available_id/search_existing_entries
+    and mechanics_auditor_static.py''s find_entry all import CANONICAL_LEDGER_FILES
+    by reference rather than duplicating the file list, the single tuple edit fixed
+    all five functions at once -- no production code changes were needed in either
+    gate_checks module. Also updated the matching hardcoded file-list prose in .claude/workflows/implement-ticket.js''s
+    Parity-phase prompt (now lists all 9 canonical files) and rewrote 7 pre-existing
+    tests (across tests/tools/test_parity_ledger_scan.py, test_parity_updater_static.py,
+    test_parity_index.py, test_parity_index_baseline.py, test_gate_a_readpath_review.py)
+    that had pinned the old exclusion as correct behavior, plus added 4 new positive-control
+    tests proving the fix against the real, non-synthetic ledger (not just a synthetic
+    fixture). tools/parity_index.py (the SQLite-backed index) was already unaffected
+    -- it globs all 9 shards independent of CANONICAL_LEDGER_FILES and needed no change.
+    No src/ files were changed by this ticket -- pure Claude-agent-workflow gate-check
+    tooling, mirroring INFRA-381/382''s precedent for this shard.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/parity_ledger_scan.py:32-42 (CANONICAL_LEDGER_FILES tuple, faction.yaml
+    appended as 9th element; module and find_p0_intersection docstrings corrected
+    to drop the stale "faction.yaml excluded / 0 P0 entries" claim). .claude/workflows/implement-ticket.js
+    (Parity-phase prompt file-list string, ~line 1264, now lists faction.yaml alongside
+    the other 8). tests/tools/test_parity_ledger_scan.py::test_scans_canonical_nine_including_faction,
+    ::test_detects_real_fac013_p0_intersection (against the real docs/parity_ledger
+    directory and the real FAC-013 P0 entry). tests/tools/test_parity_updater_static.py::test_includes_faction_yaml,
+    ::test_expected_subsystems_includes_faction_for_real_ledger_path. tests/tools/test_mechanics_auditor_static.py::test_find_entry_locates_real_fac013_in_faction_yaml.
+  proof_type: regression
+  test_path: tests/tools/test_parity_ledger_scan.py::test_scans_canonical_nine_including_faction;
+    tests/tools/test_parity_ledger_scan.py::test_detects_real_fac013_p0_intersection;
+    tests/tools/test_parity_updater_static.py::test_includes_faction_yaml; tests/tools/test_parity_updater_static.py::test_expected_subsystems_includes_faction_for_real_ledger_path;
+    tests/tools/test_mechanics_auditor_static.py::test_find_entry_locates_real_fac013_in_faction_yaml;
+    tests/tools/test_parity_prompt_ledger_file_list.py
+  divergence_note: null
+  support_boundary: Claude-agent-workflow orchestration/gate-check tooling only --
+    no simulation behavior is involved (mirrors INFRA-263/264/265/315/379/381/382's
+    support_boundary pattern for pure workflow-tooling entries in this shard). Does
+    not touch, extend, or duplicate FAC-013's own content, or INFRA-381/382 (Parity-phase
+    id-lookup / sidecar-attribution determinism) -- this is a distinct guarantee scoped
+    to the CANONICAL_LEDGER_FILES file-set itself.
