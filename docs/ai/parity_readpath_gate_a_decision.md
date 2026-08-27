@@ -50,7 +50,7 @@ run). This table cites them by path rather than re-embedding the JSON.
 
 | Case | Pin | Priority / Status | Query path | Expected obligations | Recall | Adjudication summary |
 |---|---|---|---|---|---|---|
-| `FAC-012` | `68f168ff` | P1 / verified | `src/worldbuilding/compiler.py` | `FAC-012` | **1.0** | Faction-exclusion — `faction.yaml` is not in `CANONICAL_LEDGER_FILES`; both legacy surfaces are structurally blind regardless of priority. |
+| `FAC-012` | `68f168ff` | P1 / verified | `src/worldbuilding/compiler.py` | `FAC-012` | **1.0** | Faction-exclusion (historical, at this pin) — `faction.yaml` was not in `CANONICAL_LEDGER_FILES` at commit `68f168ff`, so both legacy surfaces were structurally blind regardless of priority. Fixed by `TCK-20260826-PARITY-FACTION-CANONICAL-SCAN`: `faction.yaml` is now the 9th member of `CANONICAL_LEDGER_FILES`, so legacy surfaces see it like any other canonical shard going forward. |
 | `INFRA-296` | `ab06fc10` | P2 / verified | `tools/context_packet_assembler.py` | `INFRA-296`, `INFRA-299` | **1.0** | P0-only filter + `derive_mapping`'s src/\*.py-only scope — legacy can never answer a `tools/` query at all. |
 | `INFRA-297` | `ab06fc10` | P2 / verified | `tools/retrieval_events.py` | `INFRA-297`, `INFRA-299` | **1.0** | Same as `INFRA-296`. |
 | `INFRA-299` | `ab06fc10` | P1 / verified | `.claude/workflows/implement-ticket.js` | 7 entries (`INFRA-263/265/274/281/282/288/299`) | **0.0** | **Shared blind spot, not an index regression** — see §6.2. |

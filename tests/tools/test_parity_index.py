@@ -1026,7 +1026,7 @@ class TestEquivalenceFixtures:
         assert report["failure_class"] == "ShardParseError"
         assert not paths["db_path"].exists()
 
-    def test_faction_evidence_case_present_in_new_index_despite_legacy_exclusion(self, tmp_path):
+    def test_faction_evidence_case_present_in_both_legacy_and_new_index(self, tmp_path):
         paths = _make_corpus(
             tmp_path,
             {
@@ -1041,13 +1041,14 @@ class TestEquivalenceFixtures:
             },
         )
 
-        # Legacy exclusion: both comparison targets never see faction.yaml at all.
+        # find_p0_intersection now scans faction.yaml too, but FAC-801 is priority P1, so the
+        # P0-only filter still excludes it -- unrelated to which files are scanned.
         legacy_hits = find_p0_intersection(
             ["src/factions/diplomacy.py"], ledger_dir=str(paths["ledger_dir"])
         )
         assert legacy_hits == []
         legacy_mapping = derive_mapping(paths["ledger_dir"])
-        assert "src/factions/diplomacy.py" not in legacy_mapping
+        assert legacy_mapping["src/factions/diplomacy.py"] == {"faction.yaml"}
 
         # New index: faction.yaml is included like any other shard.
         report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])

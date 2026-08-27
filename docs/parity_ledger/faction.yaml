@@ -157,9 +157,25 @@
   v2_evidence: >
     src/engine/military_conflict.py (MilitaryConflictPhase.get_war_pairs, execute,
     _find_contested_region, _find_guard_entities_in_region);
+    _find_guard_entities_in_region is now a thin wrapper around
+    _build_guard_index_by_region, a single-pass region_id -> sorted [GUARD entity id]
+    hoist computed once at the top of execute() (TCK-20260822-GUARD-SCAN-INDEX-RETROFIT),
+    replacing a per-WAR-pair O(N) rescan with one O(N) pass per tick regardless of
+    war_pair_count — not routed through SemanticEntityQuery.by_region (see that
+    ticket's plan.md Design Decision: SemanticEntityIndexService.get_indexes() has
+    no partial-dimension build path and would pay a ~5x rebuild cost as the index's
+    first production caller for no same-tick amortization in any shipped scenario);
+    selection semantics (identity.role == EntityRole.GUARD filter, per-region sort)
+    unchanged;
     src/engine/pipeline.py (Phase 8e military_conflict run_phase block)
   proof_type: parity
-  test_path: tests/unit/domains/faction/test_siege_model.py
+  test_path: >
+    tests/unit/domains/faction/test_siege_model.py::test_guard_index_matches_naive_full_scan;
+    tests/unit/domains/faction/test_siege_model.py::test_military_conflict_reinforcement_fires_at_three_guards;
+    tests/unit/domains/faction/test_siege_model.py::test_military_conflict_reinforcement_does_not_fire_below_threshold;
+    tests/unit/domains/faction/test_siege_model.py::test_military_conflict_squad_commitment_capped_at_five;
+    tests/unit/domains/faction/test_siege_model.py::test_military_conflict_squad_commitment_no_truncation_at_five;
+    tests/unit/domains/faction/test_siege_model.py::test_military_conflict_squad_commitment_empty_when_no_guards
   divergence_note: null
   support_boundary: null
 
