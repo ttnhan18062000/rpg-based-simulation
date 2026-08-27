@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional
 from dataclasses import replace
-from src.core.updates import StateUpdate, EntityUpdate, LifecycleUpdate, InventoryUpdate
+from src.core.updates import StateUpdate, EntityUpdate, LifecycleUpdate, InventoryUpdate, IdentityUpdate
+from src.ai.life_stage import LifeStageService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,18 @@ class LifecycleSystem:
                 continue
             
             ent_upd = refined_entity_updates.get(e_id)
-            
+
+            # Age-based life-stage transition (TCK-20260824-LIFE-STAGE-TRANSITIONS). Monotonic
+            # forward-only: every world-generated entity starts at age_ticks=0 with life_stage=ADULT
+            # already correct (construction default, not a "just born" fact) -- an unconditional
+            # recompute-and-overwrite would misclassify every entity as CHILD at tick 1.
+            target_stage = LifeStageService.get_stage_for_age(entity.lifecycle.age_ticks)
+            if LifeStageService.is_forward_transition(entity.identity.life_stage, target_stage):
+                ent_upd = ent_upd or EntityUpdate(entity_id=e_id)
+                existing_identity = ent_upd.identity or IdentityUpdate()
+                ent_upd = replace(ent_upd, identity=replace(existing_identity, life_stage_set=target_stage))
+                refined_entity_updates[e_id] = ent_upd
+
             # Check for natural death (old age)
             is_dead = False
             death_reason = None

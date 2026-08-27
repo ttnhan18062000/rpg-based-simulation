@@ -3915,3 +3915,32 @@
     when a defender survived a damaging ATTACK -- that outcome was invisible to
     state.recent_world_events and to any tick-boundary consumer.
   support_boundary: null
+- id: COMB-313
+  text: >-
+    TCK-20260824-LIFE-STAGE-TRANSITIONS -- LifecycleSystem.resolve_lifecycle() now emits a
+    deterministic, monotonic forward-only age-based life-stage transition for every active
+    entity, each tick: age_ticks < 3000 -> LifeStage.CHILD, 3000 <= age_ticks < 7000 ->
+    LifeStage.ADULT, age_ticks >= 7000 -> LifeStage.ELDER (thresholds intentionally duplicated
+    from get_age_bracket()'s numeric law, docs/parity_ledger/world_dynamics.yaml::WORLD-DEMO-003,
+    as literal constants in LifeStageService.get_stage_for_age() -- separate vocabularies for
+    separate subsystems, per-entity strategic cognition vs. cohort-level aggregate demographics,
+    aligned only on the underlying tick boundaries). The transition only ever fires forward
+    (LifeStageService.is_forward_transition(), ordinal CHILD(0) < ADULT(1) < ELDER(2)), never
+    demoting an entity -- every world-generated entity starts at age_ticks=0 with
+    life_stage=ADULT already correct as a construction default, not a literal newborn fact, so an
+    unconditional recompute-and-overwrite would misclassify every entity in the simulation as
+    CHILD at tick 1. The typed result is set via IdentityUpdate.life_stage_set and applied
+    through IdentityPatch.apply()'s existing replace() branch -- the only path that field can
+    reach, since a populated IdentityUpdate always forces that branch over
+    ApplyPath._fast_replace_identity.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/systems/lifecycle_systems/lifecycle.py (resolve_lifecycle's life-stage transition check);
+    src/ai/life_stage.py (LifeStageService.get_stage_for_age, LifeStageService.is_forward_transition);
+    src/core/updates.py (IdentityUpdate.life_stage_set); src/engine/patches.py (IdentityPatch.apply()).
+  proof_type: regression
+  test_path: tests/unit/progression/test_lifecycle.py::test_life_stage_flips_at_age_boundary
+  divergence_note: null
+  support_boundary: null

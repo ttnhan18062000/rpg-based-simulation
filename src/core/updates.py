@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     )
     from src.engine.policy import GovernorPolicy
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
-from src.core.state import ItemStack, EquipSlot, AttributeComponent
+from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode, DiplomaticState
 from src.core.update_models.inventory import InventoryUpdate
@@ -224,6 +224,7 @@ class IdentityUpdate:
     recipes_learned: list[str] = field(default_factory=list)
     craft_target: Optional[str] = None
     evolution_level_set: Optional[int] = None
+    life_stage_set: Optional[LifeStage] = None
     evolution_points_delta: int = 0
     veterancy_points_delta: int = 0
     breakthroughs_add: list[str] = field(default_factory=list)
@@ -235,11 +236,12 @@ class IdentityUpdate:
     cooldown_updates: Dict[str, int] = field(default_factory=dict) # skill_id -> tick_ready
     
     def is_noop(self) -> bool:
-        return (self.role_set is None and self.faction_set is None and not self.recipes_learned and 
-                self.craft_target is None and self.evolution_level_set is None and 
-                self.evolution_points_delta == 0 and self.veterancy_points_delta == 0 and 
-                not self.breakthroughs_add and self.unspent_ap_delta == 0 and 
-                self.unspent_ap_set is None and not self.learned_skills and 
+        return (self.role_set is None and self.faction_set is None and not self.recipes_learned and
+                self.craft_target is None and self.evolution_level_set is None and
+                self.life_stage_set is None and
+                self.evolution_points_delta == 0 and self.veterancy_points_delta == 0 and
+                not self.breakthroughs_add and self.unspent_ap_delta == 0 and
+                self.unspent_ap_set is None and not self.learned_skills and
                 not self.traits_add and not self.traits_remove and not self.cooldown_updates)
 
     def merge(self, other: IdentityUpdate) -> IdentityUpdate:
@@ -251,6 +253,7 @@ class IdentityUpdate:
         if other.recipes_learned: changes["recipes_learned"] = list(set(self.recipes_learned + other.recipes_learned))
         if other.craft_target is not None: changes["craft_target"] = other.craft_target
         if other.evolution_level_set is not None: changes["evolution_level_set"] = other.evolution_level_set
+        if other.life_stage_set is not None: changes["life_stage_set"] = other.life_stage_set
         if other.evolution_points_delta != 0: changes["evolution_points_delta"] = self.evolution_points_delta + other.evolution_points_delta
         if other.veterancy_points_delta != 0: changes["veterancy_points_delta"] = self.veterancy_points_delta + other.veterancy_points_delta
         if other.breakthroughs_add: changes["breakthroughs_add"] = list(set(self.breakthroughs_add + other.breakthroughs_add))

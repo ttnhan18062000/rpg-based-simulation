@@ -3,7 +3,7 @@ import pytest
 from src.core.state import (
     AuthoritativeState, EntityState, NavigationComponent, CombatComponent,
     BiologicalComponent, LifecycleComponent, StaminaComponent, StrategicComponent,
-    AttributeComponent, IdentityComponent, InventoryComponent
+    AttributeComponent, IdentityComponent, InventoryComponent, LifeStage
 )
 from src.core.self_model import SelfModelBundle, KnowledgeModelComponent, KnowledgeFact, UnknownFact
 from src.core.updates import (
@@ -68,6 +68,21 @@ def test_component_patch_apply_parity():
     assert new_state.entities[2].combat.readiness == 100.0 # 100 + 15 clamped to 100.0
     assert new_state.entities[3].attributes.strength == 15
     assert new_state.entities[4].identity.role == "PALADIN"
+
+
+def test_life_stage_set_survives_full_apply_pipeline():
+    """TCK-20260824-LIFE-STAGE-TRANSITIONS: mirrors the existing role_set -> 'PALADIN' pattern
+    above, but for IdentityUpdate.life_stage_set, run through the full ApplyPath.apply_generation()
+    pipeline (not just IdentityPatch.apply() in isolation) to catch a replace()-kwarg-omission bug."""
+    entity = EntityState(id=1, kind="HERO", identity=IdentityComponent(life_stage=LifeStage.ADULT))
+    state = AuthoritativeState(tick=1, seed=1, world_time=100, entities={1: entity})
+
+    e_upd = EntityUpdate(entity_id=1, identity=IdentityUpdate(life_stage_set=LifeStage.ELDER))
+    update = StateUpdate(entity_updates={1: e_upd}, force_full_scan=True)
+
+    new_state = ApplyPath.apply_generation(state, update, next_tick=2, cadence=SystemCadence())
+
+    assert new_state.entities[1].identity.life_stage == LifeStage.ELDER
 
 
 def test_self_model_patch_apply_parity_durable_materialization():

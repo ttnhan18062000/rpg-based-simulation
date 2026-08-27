@@ -49,7 +49,7 @@ tickets). All work lands on a single branch, `m1-quick-wins`, as one commit per 
 PR'd.
 
 <!-- IMPLEMENT-EPIC-STATUS:BEGIN -->
-**Live progress** (auto-updated by implement-epic, last run: 2026-08-27T05:18:32Z): 7/21 tickets done, 14 remaining. Tracking: m1-quick-wins batch, folder-based via tickets/todos/m1-quick-wins/SEQUENCE.md.
+**Live progress** (auto-updated by implement-epic, last run: 2026-08-27T06:37:13Z): 8/21 tickets done, 13 remaining. Tracking: m1-quick-wins batch, folder-based via tickets/todos/m1-quick-wins/SEQUENCE.md.
 <!-- IMPLEMENT-EPIC-STATUS:END -->
 
 `tickets/working_log.csv`'s bottom rows have the one-paragraph summary of each ticket actually landed,
@@ -281,10 +281,16 @@ already have live SimQ scoring rules sitting idle, waiting only for the event to
   again as a side note. Idea 37's race-diversity corpus gap (no registry dimension tracks race composition
   per world, M9's own finding) still has no owner. Neither blocks anything shipping today; both will keep
   resurfacing as a caveat on someone else's finding until addressed directly.
-- **One possible duplicate system, not yet reconciled.** `get_age_bracket()`'s string-based age tiers
-  (young/adult/elder, `cohort.py`) and `LifeStage`'s enum (CHILD/ADULT/ELDER, `IdentityComponent`) may be two
-  overlapping representations of the same concept — flagged in M9, not resolved there or here. Whoever scopes
-  idea 20 should settle this first, not discover it mid-ticket.
+- **Resolved: duplicate-representation question (`get_age_bracket()` vs. `LifeStage`).**
+  `TCK-20260824-LIFE-STAGE-TRANSITIONS` settled this: `get_age_bracket()`'s string-based age tiers
+  (young/adult/elder, `cohort.py`, cohort-level aggregate demographics) and `LifeStage`'s enum
+  (CHILD/ADULT/ELDER, `IdentityComponent`, per-entity strategic cognition) stay two separate
+  vocabularies for two genuinely different subsystems/consumers — not merged or reconciled into one
+  representation. Only the underlying numeric age boundaries (3000/7000 ticks) are aligned:
+  `LifeStageService.get_stage_for_age()` (`src/ai/life_stage.py`) duplicates those literals rather
+  than importing `cohort.py`. See `docs/parity_ledger/combat_movement.yaml::COMB-313` and
+  `stored_artifacts/TCK-20260824-LIFE-STAGE-TRANSITIONS/investigation.md` (Design Decision 1) for
+  the full rationale.
 
 ## References
 

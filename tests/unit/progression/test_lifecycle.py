@@ -1,6 +1,6 @@
 import pytest
 from dataclasses import replace
-from src.core.state import EntityState, LifecycleComponent, AuthoritativeState, CombatComponent
+from src.core.state import EntityState, LifecycleComponent, AuthoritativeState, CombatComponent, LifeStage
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, InventoryUpdate
 from src.systems.lifecycle import LifecycleSystem
 from src.engine.apply import ApplyPath
@@ -311,6 +311,66 @@ def test_default_heir_does_not_override_manual_heir_entity_id():
 
     life_upd = refined.entity_updates[1].lifecycle
     assert life_upd.heir_entity_id_set in (None, 2)
+
+def test_life_stage_flips_at_age_boundary():
+    """TCK-20260824-LIFE-STAGE-TRANSITIONS: age_ticks=6999 must not transition; age_ticks=7000
+    (the boundary, inclusive per get_age_bracket()'s numeric law) must transition to ELDER."""
+    below_boundary = (V2EntityBuilder(1)
+                       .location(0.0, 0.0)
+                       .identity(life_stage=LifeStage.ADULT)
+                       .lifecycle(age_ticks=6999, max_age_ticks=100000)
+                       .build())
+    state_below = AuthoritativeState(tick=100, seed=42, entities={1: below_boundary})
+    refined_below = LifecycleSystem.resolve_lifecycle(state_below, StateUpdate())
+    ent_upd_below = refined_below.entity_updates.get(1)
+    assert ent_upd_below is None or ent_upd_below.identity is None or ent_upd_below.identity.life_stage_set is None
+
+    at_boundary = (V2EntityBuilder(1)
+                   .location(0.0, 0.0)
+                   .identity(life_stage=LifeStage.ADULT)
+                   .lifecycle(age_ticks=7000, max_age_ticks=100000)
+                   .build())
+    state_at = AuthoritativeState(tick=100, seed=42, entities={1: at_boundary})
+    refined_at = LifecycleSystem.resolve_lifecycle(state_at, StateUpdate())
+    ent_upd_at = refined_at.entity_updates[1]
+    assert ent_upd_at.identity.life_stage_set == LifeStage.ELDER
+
+
+def test_life_stage_transition_is_monotonic_forward_only():
+    """An already-ADULT entity at age_ticks=0 (a construction-time bookkeeping default, not a
+    literal newborn fact) must NOT be demoted to CHILD. A CHILD entity correctly promotes to
+    ADULT at 3000 and to ELDER at 7000."""
+    already_adult = (V2EntityBuilder(1)
+                      .location(0.0, 0.0)
+                      .identity(life_stage=LifeStage.ADULT)
+                      .lifecycle(age_ticks=0, max_age_ticks=100000)
+                      .build())
+    state = AuthoritativeState(tick=100, seed=42, entities={1: already_adult})
+    refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+    ent_upd = refined.entity_updates.get(1)
+    assert ent_upd is None or ent_upd.identity is None or ent_upd.identity.life_stage_set is None
+
+    child = (V2EntityBuilder(2)
+             .location(0.0, 0.0)
+             .identity(life_stage=LifeStage.CHILD)
+             .lifecycle(age_ticks=0, max_age_ticks=100000)
+             .build())
+
+    state_child_at_0 = AuthoritativeState(tick=100, seed=42, entities={2: child})
+    refined_at_0 = LifecycleSystem.resolve_lifecycle(state_child_at_0, StateUpdate())
+    ent_upd_at_0 = refined_at_0.entity_updates.get(2)
+    assert ent_upd_at_0 is None or ent_upd_at_0.identity is None or ent_upd_at_0.identity.life_stage_set is None
+
+    child_at_3000 = replace(child, lifecycle=replace(child.lifecycle, age_ticks=3000))
+    state_at_3000 = AuthoritativeState(tick=100, seed=42, entities={2: child_at_3000})
+    refined_at_3000 = LifecycleSystem.resolve_lifecycle(state_at_3000, StateUpdate())
+    assert refined_at_3000.entity_updates[2].identity.life_stage_set == LifeStage.ADULT
+
+    child_at_7000 = replace(child, lifecycle=replace(child.lifecycle, age_ticks=7000))
+    state_at_7000 = AuthoritativeState(tick=100, seed=42, entities={2: child_at_7000})
+    refined_at_7000 = LifecycleSystem.resolve_lifecycle(state_at_7000, StateUpdate())
+    assert refined_at_7000.entity_updates[2].identity.life_stage_set == LifeStage.ELDER
+
 
 def test_near_death_hardening_logic():
     """Directly test the hardening logic in the pipeline."""
