@@ -45,7 +45,13 @@ class ActionRouter:
 
         if action == "RECRUIT":
             return CoreActions.execute_recruit(entity, payload, current_tick, neighbor_view, context)
-            
+
+        if action == "TEAM_UP":
+            return CoreActions.execute_team_up(entity, payload, current_tick, neighbor_view, context)
+
+        if action == "TRADE":
+            return CoreActions.execute_trade(entity, payload, current_tick, neighbor_view, context)
+
         if action == "ALLOCATE_AP":
             return CoreActions.execute_allocate_ap(entity, payload)
             

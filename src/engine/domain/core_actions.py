@@ -144,6 +144,154 @@ class CoreActions:
             return {entity.id: attacker_up, target_id: target_up}
 
     @staticmethod
+    def execute_team_up(
+        entity: EntityState,
+        payload: Dict[str, Any],
+        current_tick: int,
+        neighbor_view: List[tuple[int, EntityState]],
+        context: Any
+    ) -> Dict[int, EntityUpdate]:
+        target_id = payload.get("target_id")
+        target = None
+        if neighbor_view:
+            for eid, ent in neighbor_view:
+                if eid == target_id:
+                    target = ent
+                    break
+        if not target and context and hasattr(context, "entities"):
+            target = context.entities.get(target_id)
+
+        if not target:
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND")
+            )}
+
+        from src.systems.social_systems.appraisal import SocialAppraisalSystem
+        from src.core.strategic import ContractState, ContractKind, ContractStatus
+        from src.core.updates import SocialUpdate, StrategicUpdate
+
+        temp_contract = ContractState(
+            id="temp_eval",
+            kind=ContractKind.TEAM_UP,
+            source_id=entity.id,
+            target_id=target.id,
+            terms={"risk_level": payload.get("risk_level", "NORMAL")},
+            status=ContractStatus.OFFERED,
+            created_tick=current_tick
+        )
+        status, reason, _ = SocialAppraisalSystem.appraise_contract(target, temp_contract, context)
+
+        if status == ContractStatus.ACCEPTED:
+            contract_id = f"contract_team_up_{entity.id}_{target_id}_{current_tick}"
+            contract = ContractState(
+                id=contract_id,
+                kind=ContractKind.TEAM_UP,
+                source_id=entity.id,
+                target_id=target_id,
+                status=ContractStatus.ACTIVE,
+                terms={"risk_level": payload.get("risk_level", "NORMAL")}
+            )
+
+            attacker_up = EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-100.0,
+                strategic=StrategicUpdate(contracts_add_or_update=[contract])
+            )
+            target_up = EntityUpdate(
+                entity_id=target_id,
+                social=SocialUpdate(last_offer_tick_set=current_tick),
+                strategic=StrategicUpdate(contracts_add_or_update=[contract])
+            )
+            return {entity.id: attacker_up, target_id: target_up}
+        else:
+            attacker_up = EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-50.0,
+                task=replace(entity.task, payload={**payload, "outcome": "FAILURE", "reason": status.value})
+            )
+            target_up = EntityUpdate(
+                entity_id=target_id,
+                social=SocialUpdate(rejection_increment={entity.id: 1}, last_offer_tick_set=current_tick)
+            )
+            return {entity.id: attacker_up, target_id: target_up}
+
+    @staticmethod
+    def execute_trade(
+        entity: EntityState,
+        payload: Dict[str, Any],
+        current_tick: int,
+        neighbor_view: List[tuple[int, EntityState]],
+        context: Any
+    ) -> Dict[int, EntityUpdate]:
+        target_id = payload.get("target_id")
+        price = payload.get("price", 0)
+        item_value = payload.get("item_value", price)
+        target = None
+        if neighbor_view:
+            for eid, ent in neighbor_view:
+                if eid == target_id:
+                    target = ent
+                    break
+        if not target and context and hasattr(context, "entities"):
+            target = context.entities.get(target_id)
+
+        if not target:
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND")
+            )}
+
+        from src.systems.social_systems.appraisal import SocialAppraisalSystem
+        from src.core.strategic import ContractState, ContractKind, ContractStatus
+        from src.core.updates import SocialUpdate, StrategicUpdate
+
+        temp_contract = ContractState(
+            id="temp_eval",
+            kind=ContractKind.MERCHANT,
+            source_id=entity.id,
+            target_id=target.id,
+            terms={"price": price, "item_value": item_value},
+            status=ContractStatus.OFFERED,
+            created_tick=current_tick
+        )
+        status, reason, _ = SocialAppraisalSystem.appraise_contract(target, temp_contract, context)
+
+        if status == ContractStatus.ACCEPTED:
+            contract_id = f"contract_trade_{entity.id}_{target_id}_{current_tick}"
+            contract = ContractState(
+                id=contract_id,
+                kind=ContractKind.MERCHANT,
+                source_id=entity.id,
+                target_id=target_id,
+                status=ContractStatus.ACTIVE,
+                terms={"price": price, "item_value": item_value}
+            )
+
+            attacker_up = EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-100.0,
+                strategic=StrategicUpdate(contracts_add_or_update=[contract])
+            )
+            target_up = EntityUpdate(
+                entity_id=target_id,
+                social=SocialUpdate(last_offer_tick_set=current_tick),
+                strategic=StrategicUpdate(contracts_add_or_update=[contract])
+            )
+            return {entity.id: attacker_up, target_id: target_up}
+        else:
+            attacker_up = EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-50.0,
+                task=replace(entity.task, payload={**payload, "outcome": "FAILURE", "reason": status.value})
+            )
+            target_up = EntityUpdate(
+                entity_id=target_id,
+                social=SocialUpdate(rejection_increment={entity.id: 1}, last_offer_tick_set=current_tick)
+            )
+            return {entity.id: attacker_up, target_id: target_up}
+
+    @staticmethod
     def execute_allocate_ap(
         entity: EntityState,
         payload: Dict[str, Any]

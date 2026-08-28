@@ -121,7 +121,13 @@ def test_social_contract_goal_scorer_no_active_contracts_returns_zero_utility_no
 
 
 def test_social_contract_protection_merchant_position_swap_never_spawn_a_project():
-    for kind in (ContractKind.PROTECTION, ContractKind.MERCHANT, ContractKind.POSITION_SWAP):
+    for kind in (
+        ContractKind.PROTECTION,
+        ContractKind.MERCHANT,
+        ContractKind.POSITION_SWAP,
+        ContractKind.TEAM_UP,
+        ContractKind.PAID_INFORMATION,
+    ):
         contract = ContractState(
             id=f"c_{kind.value}", kind=kind, source_id=2, target_id=1,
             status=ContractStatus.ACTIVE,

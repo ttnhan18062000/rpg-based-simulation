@@ -68,7 +68,16 @@ class SocialAppraisalSystem:
                 contract,
                 state,
             )
-            
+
+        elif contract.kind == ContractKind.MERCHANT:
+            return SocialAppraisalSystem._appraise_trade(entity, contract, trust_score)
+
+        elif contract.kind == ContractKind.TEAM_UP:
+            return SocialAppraisalSystem._appraise_team_up(entity, contract, trust_score)
+
+        elif contract.kind == ContractKind.PAID_INFORMATION:
+            return SocialAppraisalSystem._appraise_paid_information(entity, contract, trust_score)
+
         return ContractStatus.CANCELLED, ReasonCode.UNKNOWN, {}
 
     @staticmethod
@@ -253,7 +262,66 @@ class SocialAppraisalSystem:
                     return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}
 
         return ContractStatus.ACCEPTED, ReasonCode.POSITION_SWAP_ACCEPTED, {}
-    
+
+    @staticmethod
+    def _appraise_trade(
+        entity: EntityState,
+        contract: ContractState,
+        trust_score: float
+    ) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:
+        """Terms schema: {"price": int, "item_value": int}. Mirrors _appraise_recruitment's
+        utility-vs-risk-then-haggle shape, using price/item_value in place of pay/expected_pay."""
+        price = contract.terms.get("price", 0)
+        item_value = contract.terms.get("item_value", price)
+
+        if item_value <= 0:
+            return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}
+
+        utility = price / max(1, item_value)
+        if utility < 0.5:
+            return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}
+
+        score = (trust_score * 0.4) + (min(1.0, utility) * 0.6)
+
+        if score >= 0.6:
+            return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}
+
+        if score >= 0.4 and contract.negotiation_count < 2:
+            counter_terms = dict(contract.terms)
+            counter_terms["price"] = int(item_value)
+            return ContractStatus.COUNTERED, ReasonCode.HAGGLING_FOR_PAY, counter_terms
+
+        return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}
+
+    @staticmethod
+    def _appraise_team_up(
+        entity: EntityState,
+        contract: ContractState,
+        trust_score: float
+    ) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:
+        """No pay/utility dimension -- pure trust gate plus the same HIGH-risk/low-HP hard
+        rejection _appraise_recruitment uses (lines 119-120)."""
+        risk = contract.terms.get("risk_level", "NORMAL")
+        hp_pct = entity.combat.hp / entity.combat.max_hp
+
+        if risk == "HIGH" and hp_pct < 0.5:
+            return ContractStatus.FAILED, ReasonCode.LOW_HP_RETREAT, {}
+
+        if trust_score >= 0.6:
+            return ContractStatus.ACCEPTED, ReasonCode.TEAM_UP_ACCEPTED, {}
+
+        return ContractStatus.CANCELLED, ReasonCode.TEAM_UP_DECLINED, {}
+
+    @staticmethod
+    def _appraise_paid_information(
+        entity: EntityState,
+        contract: ContractState,
+        trust_score: float
+    ) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:
+        """The shared prelude (trust<0.2, sentiment<-0.8, betrayal-history) already expresses
+        the entire gate PaidInformationTransactionSystem.enforce() needs; reaching this method
+        means the prelude already passed, so it always accepts."""
+        return ContractStatus.ACCEPTED, ReasonCode.INFORMATION_SALE_ACCEPTED, {}
 
     @staticmethod
     def process_betrayal(

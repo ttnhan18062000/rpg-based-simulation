@@ -448,6 +448,53 @@ class TestPaidInformationTransaction:
         lead = intent.strategic_upd.leads_add_or_update[0]
         assert lead.subject == "quest.cave_location"
 
+    # ── TCK-20260824-AFFECTION-CONTRACT-GATE: shared appraisal gate ────────────
+
+    def test_paid_information_gated_on_shared_helper(self):
+        """
+        Default-trust seeker (no bond toward the provider) gate-passes and still
+        emits the intent exactly as before. A seeker with a hostile bond
+        (sentiment < -0.8) toward the provider is suppressed by the shared
+        appraise_contract() prelude -- no intent, no state mutation.
+        """
+        from dataclasses import replace as dc_replace
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.state import SocialBond
+        from src.core.updates import StateUpdate
+
+        seeker = self._make_seeker(entity_id=1, gold=50)
+        provider = self._make_provider(entity_id=2, reliability=0.9)
+        state = self._make_state(entities={1: seeker}, providers={2: provider})
+        update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+        assert len(update.entity_updates[1].resource_transfers) == 1
+
+        hostile_seeker = dc_replace(
+            seeker,
+            social=dc_replace(seeker.social, bonds={2: SocialBond(target_id=2, sentiment=-0.9)}),
+        )
+        hostile_state = self._make_state(entities={1: hostile_seeker}, providers={2: provider})
+        hostile_update = PaidInformationTransactionSystem.enforce(hostile_state, StateUpdate())
+        assert 1 not in hostile_update.entity_updates or not hostile_update.entity_updates[1].resource_transfers
+
+    def test_paid_information_enforce_still_decision_only(self):
+        """enforce() must keep returning a StateUpdate-only result -- no direct
+        AuthoritativeState mutation -- now that the gate check has been added."""
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.updates import StateUpdate
+
+        seeker = self._make_seeker(entity_id=1, gold=50)
+        provider = self._make_provider(entity_id=2, reliability=0.9)
+        state = self._make_state(entities={1: seeker}, providers={2: provider})
+        snapshot_entities = dict(state.entities)
+        snapshot_providers = dict(state.information_providers)
+
+        result = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        assert state.entities == snapshot_entities
+        assert state.information_providers == snapshot_providers
+        assert result is not state
+        assert result.entity_updates[1].resource_transfers
+
     # ── edge cases ────────────────────────────────────────────────────────────
 
     def test_no_provider_no_intent(self):

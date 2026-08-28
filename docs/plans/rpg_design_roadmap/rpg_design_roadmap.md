@@ -49,7 +49,7 @@ tickets). All work lands on a single branch, `m1-quick-wins`, as one commit per 
 PR'd.
 
 <!-- IMPLEMENT-EPIC-STATUS:BEGIN -->
-**Live progress** (auto-updated by implement-epic, last run: 2026-08-28T17:12:21Z): 16/22 tickets done, 6 remaining. Tracking: m1-quick-wins batch, folder-based via tickets/todos/m1-quick-wins/SEQUENCE.md.
+**Live progress** (auto-updated by implement-epic, last run: 2026-08-28T18:30:59Z): 17/22 tickets done, 5 remaining. Tracking: m1-quick-wins batch, folder-based via tickets/todos/m1-quick-wins/SEQUENCE.md.
 <!-- IMPLEMENT-EPIC-STATUS:END -->
 
 `tickets/working_log.csv`'s bottom rows have the one-paragraph summary of each ticket actually landed,

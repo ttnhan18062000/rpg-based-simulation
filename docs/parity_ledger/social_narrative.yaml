@@ -2154,9 +2154,13 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: "`src/systems/social_systems/appraisal.py` (`SocialAppraisalSystem.appraise_contract`\
+    \ lines 39-45: shared prelude \u2014 private `bond.sentiment` takes priority over\
+    \ `entity.social.trust_history`-blended-with-`public_reputation` when computing\
+    \ `trust_score`; this prelude is now reused, unchanged, across RECRUITMENT/LOAN/POSITION_SWAP/MERCHANT/TEAM_UP/PAID_INFORMATION\
+    \ dispatch added in TCK-20260824-AFFECTION-CONTRACT-GATE)"
+  proof_type: parity
+  test_path: '`tests/unit/social/test_appraisal_logic.py::test_appraise_recruitment_high_trust`'
   divergence_note: null
   support_boundary: null
 - id: SOC-205
@@ -2184,9 +2188,13 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: "`src/systems/social_systems/appraisal.py` (`SocialAppraisalSystem.appraise_contract`\
+    \ lines 48-54: hard-cancel thresholds `trust_score < 0.2`, `bond.sentiment < -0.8`,\
+    \ and `entity.social.betrayal_count > 0` combined with `trust_score < 0.4` \u2014\
+    \ same shared prelude now reused across MERCHANT/TEAM_UP/PAID_INFORMATION kinds\
+    \ added in TCK-20260824-AFFECTION-CONTRACT-GATE)"
+  proof_type: parity
+  test_path: '`tests/unit/social/test_betrayal_consequence.py::TestBetrayalOverridesReputation::test_betrayal_trauma_blocks_recruitment`'
   divergence_note: null
   support_boundary: null
 - id: SOC-208
@@ -2288,9 +2296,15 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: "`src/engine/domain/core_actions.py` (`CoreActions.execute_team_up`,\
+    \ `CoreActions.execute_trade`) and `src/engine/pipeline_phases/paid_information.py`\
+    \ (`PaidInformationTransactionSystem.enforce`) all route appraisal outcomes through\
+    \ typed `EntityUpdate`/`StrategicUpdate`/`StateUpdate` records (`EntityUpdate.strategic=StrategicUpdate(contracts_add_or_update=[...])`,\
+    \ `ResourceTransferIntent.strategic_upd`) \u2014 no direct `AuthoritativeState`/`EntityState`\
+    \ mutation during appraisal, mirroring `execute_recruit`'s existing pattern (added\
+    \ TCK-20260824-AFFECTION-CONTRACT-GATE)"
+  proof_type: parity
+  test_path: '`tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_paid_information_enforce_still_decision_only`'
   divergence_note: null
   support_boundary: null
 - id: SOC-218
@@ -2622,11 +2636,11 @@
     \ Wired into a real call site: CampaignOrchestrator._build_initial_state() calls\
     \ evaluate_social_consequence() once per spawned entity, iterating sorted(entities.keys())\
     \ for deterministic emission order, with faction_id = f\"faction_{entity.identity.faction}\"\
-    \ (matching _extract_faction_carry_forwards()'s existing convention). Returned events\
-    \ are emitted via self._event_recorder.record() directly (SimulationEvent, not WorldEvent\
-    \ \u2014 this constructor call site has no StateUpdate/ApplyPath world_events_add merge\
-    \ step available). Read-only: never mutates entity, campaign_state, or the entities dict;\
-    \ no-ops safely when no event_recorder is injected.\n"
+    \ (matching _extract_faction_carry_forwards()'s existing convention). Returned\
+    \ events are emitted via self._event_recorder.record() directly (SimulationEvent,\
+    \ not WorldEvent \u2014 this constructor call site has no StateUpdate/ApplyPath\
+    \ world_events_add merge step available). Read-only: never mutates entity, campaign_state,\
+    \ or the entities dict; no-ops safely when no event_recorder is injected.\n"
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2643,8 +2657,7 @@
   test_path: 'pytest tests/unit/social/test_social_memory.py::test_known_traitor_event_fires_on_encounter
     tests/unit/social/test_social_memory.py::test_faction_memory_survives_episode_without_member_npcs
     tests/unit/social/test_social_memory.py::test_all_three_event_kinds_importable
-    tests/unit/social/test_social_memory.py -x -v -m "not slow"
-    tests/integration/scenarios/test_social_memory.py::test_consequence_events_fire_at_episode_entity_spawn
+    tests/unit/social/test_social_memory.py -x -v -m "not slow" tests/integration/scenarios/test_social_memory.py::test_consequence_events_fire_at_episode_entity_spawn
     tests/integration/scenarios/test_social_memory.py::test_consequence_events_noop_without_event_recorder
 
     '
@@ -3535,5 +3548,74 @@
   proof_type: parity
   test_path: tests/unit/engine/test_near_death_hardening_emotion.py::test_near_death_hardening_updates_emotional_model
     tests/unit/engine/test_near_death_hardening_emotion.py::test_near_death_hardening_preserves_same_tick_cognition_bundle_set
+  divergence_note: null
+  support_boundary: null
+- id: SOC-249
+  text: "Trade appraisal via ContractKind.MERCHANT routes through the shared bond.sentiment-priority-else-trust_history\
+    \ prelude (hard-cancel at trust_score<0.2 / bond.sentiment<-0.8 / betrayal-history)\
+    \ before a dedicated price-vs-item_value utility/haggle appraiser. Affection is\
+    \ represented by the existing SocialBond.sentiment field (no new field added).\
+    \ Built narrowly for Team-Up/Trade/Paid-Information only \u2014 appraise_contract()\
+    \ is generic over ContractKind but M6/Conversation-adjacent consumers remain out\
+    \ of scope."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "`src/systems/social_systems/appraisal.py::SocialAppraisalSystem._appraise_trade`\
+    \ (price/item_value utility scoring, haggle counter at score>=0.4, accept at score>=0.6)\
+    \ and `src/engine/domain/core_actions.py::CoreActions.execute_trade` (temp_contract-then-appraise-then-branch,\
+    \ ACCEPTED attaches ContractState via EntityUpdate.strategic, no ResourceTransferIntent)\
+    \ \u2014 both added TCK-20260824-AFFECTION-CONTRACT-GATE"
+  proof_type: parity
+  test_path: '`tests/unit/social/test_trade.py::test_execute_trade_accepts_on_fair_price`,
+    `tests/unit/social/test_trade.py::test_execute_trade_rejects_on_low_trust_bond`,
+    `tests/unit/social/test_appraisal_logic.py::test_trade_merchant_kind_appraisal`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-250
+  text: "Team-Up appraisal via the new ContractKind.TEAM_UP routes through the shared\
+    \ bond.sentiment-priority-else-trust_history prelude before a dedicated pure-trust-gate\
+    \ appraiser (plus the same HIGH-risk/low-HP hard rejection _appraise_recruitment\
+    \ uses). Affection is represented by the existing SocialBond.sentiment field (no\
+    \ new field added). Built narrowly for Team-Up/Trade/Paid-Information only \u2014\
+    \ appraise_contract() is generic over ContractKind but M6/Conversation-adjacent\
+    \ consumers remain out of scope."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "`src/systems/social_systems/appraisal.py::SocialAppraisalSystem._appraise_team_up`\
+    \ (trust_score>=0.6 accepts, else CANCELLED/TEAM_UP_DECLINED; HIGH risk + hp_pct<0.5\
+    \ -> FAILED/LOW_HP_RETREAT) and `src/engine/domain/core_actions.py::CoreActions.execute_team_up`\
+    \ (temp_contract-then-appraise-then-branch, ACCEPTED attaches ContractState via\
+    \ EntityUpdate.strategic, no ResourceTransferIntent) \u2014 both added TCK-20260824-AFFECTION-CONTRACT-GATE"
+  proof_type: parity
+  test_path: '`tests/unit/social/test_team_up.py::test_execute_team_up_accepts_on_high_trust_bond`,
+    `tests/unit/social/test_team_up.py::test_execute_team_up_rejects_on_low_trust_bond`,
+    `tests/unit/social/test_appraisal_logic.py::test_team_up_kind_appraisal`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-251
+  text: "Paid-Information gating via the new ContractKind.PAID_INFORMATION routes\
+    \ through the shared bond.sentiment-priority-else-trust_history prelude before\
+    \ a pass-through appraiser that always ACCEPTs once the prelude clears; PaidInformationTransactionSystem.enforce()\
+    \ now synthesizes a transient ContractState after provider resolution and skips\
+    \ ResourceTransferIntent emission entirely when the gate's outcome is not ACCEPTED.\
+    \ Affection is represented by the existing SocialBond.sentiment field (no new\
+    \ field added). Built narrowly for Team-Up/Trade/Paid-Information only \u2014\
+    \ appraise_contract() is generic over ContractKind but M6/Conversation-adjacent\
+    \ consumers remain out of scope."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "`src/systems/social_systems/appraisal.py::SocialAppraisalSystem._appraise_paid_information`\
+    \ (always ACCEPTED/INFORMATION_SALE_ACCEPTED once the shared prelude passes) and\
+    \ `src/engine/pipeline_phases/paid_information.py::PaidInformationTransactionSystem.enforce`\
+    \ (lines ~128-141: synthesizes `ContractState(kind=ContractKind.PAID_INFORMATION,\
+    \ ...)` per seeker/provider pair, calls `SocialAppraisalSystem.appraise_contract`,\
+    \ `continue`s \u2014 skipping ResourceTransferIntent emission \u2014 when gate_status\
+    \ != ContractStatus.ACCEPTED) \u2014 both added TCK-20260824-AFFECTION-CONTRACT-GATE"
+  proof_type: parity
+  test_path: '`tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_paid_information_gated_on_shared_helper`,
+    `tests/unit/social/test_appraisal_logic.py::test_paid_information_kind_appraisal_accepts_once_prelude_passes`'
   divergence_note: null
   support_boundary: null

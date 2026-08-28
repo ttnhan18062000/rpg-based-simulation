@@ -80,7 +80,10 @@ class ContractKind(str, Enum):
     # Movement/social coordination:
     # One entity asks another to swap adjacent positions.
     POSITION_SWAP = "POSITION_SWAP"
-    
+
+    TEAM_UP = "TEAM_UP"
+    PAID_INFORMATION = "PAID_INFORMATION"
+
 
 class DirectiveKind(str, Enum):
     """Types of strategic directives."""
