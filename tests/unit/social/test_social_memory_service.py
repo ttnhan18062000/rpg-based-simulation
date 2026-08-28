@@ -20,6 +20,7 @@ Coverage:
 """
 
 from src.core.state import RegionState
+from src.core.models.social import SocialBond, RelationshipRole
 from src.core.updates import SocialUpdate
 from src.systems.social_systems.memory import SocialMemoryService
 from tests.helpers.entities import make_entity, make_state, with_navigation, with_social
@@ -135,6 +136,27 @@ def test_check_nemesis_promotion_mixed_entries_only_new_qualifying_promoted():
     result = SocialMemoryService.check_nemesis_promotion(entity)
 
     assert result.nemesis_promotion == [103]
+
+
+def test_check_nemesis_promotion_rival_role_below_grudge_threshold_not_promoted():
+    """
+    RelationshipRole.RIVAL is a lightweight categorical tag on SocialBond,
+    independent of nemesis_ids/grudge_history (docs/simulation/social_systems_contract.md:84,
+    "nemesis promotion" -- grudge_history >= 3.0). A RIVAL-tagged bond with no
+    accumulated grudge must not be nemesis-promoted, and check_nemesis_promotion()
+    must never read role. Logic ID: SOC-247.
+    """
+    entity = make_entity(grudge_history={99: 2.9})
+    entity = with_social(
+        entity,
+        nemesis_ids=set(),
+        bonds={99: SocialBond(target_id=99, sentiment=0.8, role=RelationshipRole.RIVAL)},
+    )
+
+    result = SocialMemoryService.check_nemesis_promotion(entity)
+
+    assert result is None
+    assert 99 not in entity.social.nemesis_ids
 
 
 def test_social_memory_service_functions_are_pure_and_do_not_mutate_entity():

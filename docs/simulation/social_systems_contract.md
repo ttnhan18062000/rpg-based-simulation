@@ -67,7 +67,7 @@ Compliance IDs: SOC-193–SOC-196, SOC-217
 
 ### Social bonds
 
-`SocialBond` is a richer directional relationship: `familiarity`, `sentiment` (−1.0 to 1.0), `last_interaction_tick`. Bonds are formed for entities with high familiarity or strong sentiment. Bond sentiment takes priority over trust_history in appraisal.
+`SocialBond` is a richer directional relationship: `familiarity`, `sentiment` (−1.0 to 1.0), `last_interaction_tick`, `role` (`RelationshipRole`: `NEUTRAL` default / `FRIEND` / `RIVAL`, SOC-247). Bonds are formed for entities with high familiarity or strong sentiment. Bond sentiment takes priority over trust_history in appraisal. `role` is settable only through the authoritative `SocialBondUpdate.role_set` → `RelationshipService.process_update()` path, and `RIVAL` is independent of `nemesis_ids`/`grudge_history`-driven nemesis promotion below.
 
 ### Decay
 
@@ -141,12 +141,14 @@ divergence_note for the pre-existing SOC-231/SOC-232 docstring mis-citation, not
 `PartyCompositionScorer.score(entities, actor=None)` scores a candidate pool's party-formation
 quality, 0.0–1.0: `0.6 × role_diversity + 0.4 × OCEAN_compatibility` (TANK/HEALER/DPS/SUPPORT role
 coverage; bravery/sociability variance). When `actor` (the entity forming the party) is supplied,
-an additional `0.15 ×` mean directed trust/bond term is added and the result clamped to
-`[0.0, 1.0]` — see `docs/mechanics/04_strategic_cognition.md` §7. Bond sentiment takes priority
-over `trust_history` when both exist for a candidate, matching the Relationships section's rule
-above. Used by `AdventureRouteGenerator`'s FORM_PARTY route (`src/domains/adventure/`) and by
-`GroupSystem`'s ally-cohesion group formation (`src/systems/world_systems/groups.py`, which never
-passes `actor` and is unaffected by the trust/bonds term).
+an additional `0.15 ×` mean directed trust/bond term is added, plus a `0.10 ×` mean directed
+`RelationshipRole` affinity term (`FRIEND` → +1.0, `RIVAL` → −1.0, `NEUTRAL`/no bond → 0.0, SOC-247),
+and the result clamped to `[0.0, 1.0]` — see `docs/mechanics/04_strategic_cognition.md` §7. Bond
+sentiment takes priority over `trust_history` when both exist for a candidate, matching the
+Relationships section's rule above. Used by `AdventureRouteGenerator`'s FORM_PARTY route
+(`src/domains/adventure/`) and by `GroupSystem`'s ally-cohesion group formation
+(`src/systems/world_systems/groups.py`, which never passes `actor` and is unaffected by the
+trust/bonds or role-affinity terms).
 
 ---
 

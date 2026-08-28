@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from src.engine.policy import GovernorPolicy
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
 from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage
+from src.core.models.social import RelationshipRole
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode, DiplomaticState
 from src.core.update_models.inventory import InventoryUpdate
@@ -272,6 +273,7 @@ class SocialBondUpdate:
     familiarity_delta: float = 0.0
     sentiment_delta: float = 0.0
     last_interaction_tick_set: Optional[int] = None
+    role_set: Optional[RelationshipRole] = None
 
 @dataclass(frozen=True, slots=True)
 class SocialUpdate:

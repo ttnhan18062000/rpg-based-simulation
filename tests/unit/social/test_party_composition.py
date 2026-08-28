@@ -11,7 +11,7 @@ import pytest
 
 from src.systems.social_systems.party_composition import PartyCompositionScorer, PartyRole
 from src.core.enums import EntityRole, Faction
-from src.core.models.social import SocialBond
+from src.core.models.social import SocialBond, RelationshipRole
 
 
 # ---------------------------------------------------------------------------
@@ -270,3 +270,58 @@ def test_form_party_route_benefit_and_confidence_differ_with_candidate_trust():
 
     assert fp_low.expected_benefit != fp_high.expected_benefit
     assert fp_low.confidence != fp_high.confidence
+
+
+# ---------------------------------------------------------------------------
+# Role-affinity scoring (SOC-247, TCK-20260824-RELATIONSHIP-ROLE-FIELD)
+# ---------------------------------------------------------------------------
+
+
+def test_party_composition_score_reflects_candidate_role():
+    pool = [_entity(2, kind="guard"), _entity(3, kind="mage")]
+
+    def _actor(role):
+        return _entity(
+            1, kind="hero",
+            bonds={2: SocialBond(target_id=2, sentiment=0.2, role=role)},
+        )
+
+    score_friend = PartyCompositionScorer.score(pool, actor=_actor(RelationshipRole.FRIEND))
+    score_neutral = PartyCompositionScorer.score(pool, actor=_actor(RelationshipRole.NEUTRAL))
+    score_rival = PartyCompositionScorer.score(pool, actor=_actor(RelationshipRole.RIVAL))
+
+    assert score_friend > score_neutral > score_rival
+
+
+def test_party_composition_score_role_term_is_zero_for_all_neutral_pool():
+    pool = [_entity(2, kind="guard"), _entity(3, kind="mage")]
+    actor = _entity(
+        1, kind="hero",
+        bonds={
+            2: SocialBond(target_id=2, role=RelationshipRole.NEUTRAL),
+            3: SocialBond(target_id=3, role=RelationshipRole.NEUTRAL),
+        },
+    )
+    assert PartyCompositionScorer.score_role_affinity(actor, pool) == 0.0
+
+
+def test_party_composition_score_role_term_requires_actor():
+    pool = [_entity(2, kind="guard"), _entity(3, kind="mage")]
+    actor = _entity(
+        1, kind="hero",
+        bonds={2: SocialBond(target_id=2, sentiment=0.2, role=RelationshipRole.FRIEND)},
+    )
+
+    score_with_actor = PartyCompositionScorer.score(pool, actor=actor)
+    score_without_actor = PartyCompositionScorer.score(pool)
+
+    role_div = PartyCompositionScorer.score_role_diversity(pool)
+    ocean_compat = PartyCompositionScorer.score_ocean_compatibility(pool)
+    base_score = round(
+        PartyCompositionScorer.ROLE_DIVERSITY_WEIGHT * role_div
+        + PartyCompositionScorer.OCEAN_COMPAT_WEIGHT * ocean_compat,
+        4,
+    )
+
+    assert score_without_actor == base_score
+    assert score_with_actor != score_without_actor

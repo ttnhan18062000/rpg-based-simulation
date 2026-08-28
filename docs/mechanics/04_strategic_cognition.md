@@ -756,3 +756,28 @@ This is entirely generation-time (`AdventureRouteGenerator`), not scoring-time �
 **Source:** `src/systems/social_systems/party_composition.py`, `src/domains/adventure/generator.py`
 (TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY, 2026-08-11)
 
+### 7.3 Role-Affinity Adjustment (TCK-20260824-RELATIONSHIP-ROLE-FIELD)
+
+`SocialBond` gains an additive `role: RelationshipRole` field (`NEUTRAL` default / `FRIEND` /
+`RIVAL`), settable only through the authoritative `SocialBondUpdate.role_set` →
+`RelationshipService.process_update()` path (`src/systems/social_systems/relationships.py`). When
+`PartyCompositionScorer.score(entities, actor=acting_entity)` is called with `actor` supplied, this
+role tag contributes a second additive term alongside §7.2's trust/bonds term:
+
+score = clamp(base_score + TRUST_BONUS_WEIGHT(0.15) × score_trust_bonds(actor, entities) + ROLE_AFFINITY_WEIGHT(0.10) × score_role_affinity(actor, entities), 0.0, 1.0)
+
+`score_role_affinity` is the mean, across the candidate pool, of each candidate's directed
+`RelationshipRole` value as seen from `actor`'s own `SocialComponent`: `FRIEND` → `+1.0`, `RIVAL` →
+`−1.0`, `NEUTRAL` or no bond → `0.0`. Range −1.0 to 1.0; `0.0` for an unknown/never-met candidate or
+when `actor` is omitted. `RelationshipRole.RIVAL` is fully independent of `nemesis_ids`/
+`grudge_history`-driven nemesis promotion (§Social Systems Contract, "Nemesis promotion") — it never
+reads or writes either field.
+
+This term is purely additive: §7.1's `ROLE_DIVERSITY_WEIGHT`/`OCEAN_COMPAT_WEIGHT` base-score weights
+and §7.2's `TRUST_BONUS_WEIGHT` term stay bit-identical. Omitting `actor` reproduces §7.1's base score
+exactly, same as before this change.
+
+**Source:** `src/systems/social_systems/party_composition.py`, `src/core/models/social.py`,
+`src/systems/social_systems/relationships.py` (SOC-247, TCK-20260824-RELATIONSHIP-ROLE-FIELD,
+2026-08-27)
+
