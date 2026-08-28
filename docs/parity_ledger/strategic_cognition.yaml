@@ -3770,3 +3770,29 @@
     (confirmed via grep, TCK-20260824-OCCUPATION-CHANGE-TRIGGER investigation.md).
     This entry documents the first occupation-change trigger and the first role_set
     producer end-to-end.'
+- id: STRAT-260
+  text: 'StrategicRedirectionSystem.enforce()''s "Return to Town" fallback and StrategicIntelligenceSystem''s
+    routine-blocker pass (both "has-items, return to town" fallback blocks in fused_strategic_pass())
+    now target the town tile nearest to the requesting entity via a new shared, pure
+    src/systems/strategic_systems/town_targeting.py::nearest_town_tile(town_tiles,
+    position) helper (deterministic (dist_sq, x, y) min()-based tie-break), replacing
+    the prior arbitrary whole-world sorted(list(state.town_tiles))[0] / next(iter(state.town_tiles))
+    picks -- both fall back to state.town_center when town_tiles is empty. Separately,
+    the dead-duplicate WorkerPacket.town_center field (written every tick, never read
+    anywhere in src/ or tests/) was removed from src/core/worker_protocol.py and its
+    sole producer in src/engine/executor.py. Cross-reference: distinct from and unaffected
+    by STRAT-249, which covers TacticalDecisionSystem._resolve_target_position()''s
+    reach_location fallback -- a different mechanism.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/systems/strategic_systems/town_targeting.py (nearest_town_tile()),
+    src/systems/strategic_systems/redirection.py (StrategicRedirectionSystem.enforce()'s
+    Case 3 "Return to Town" fallback, per-entity nearest_town_tile() call), src/systems/strategic_systems/intelligence.py
+    (fused_strategic_pass()'s two "has-items, return to town" fallback blocks), src/core/worker_protocol.py
+    and src/engine/executor.py (WorkerPacket.town_center field and its sole producer
+    keyword argument removed)
+  proof_type: parity
+  test_path: tests/unit/strategic/test_redirection.py::test_redirection_enforce_targets_nearest_town_tile_not_arbitrary_sort
+  divergence_note: null
+  support_boundary: null

@@ -205,6 +205,68 @@ def test_town_return_project_now_produces_real_navigation():
     )
 
 
+def test_town_return_navigates_to_real_compiled_town_center():
+    """End-to-end regression guard (TCK-20260824-TOWN-CENTER-POINTER-FIX): starting from a real
+    WorldCompiler.compile() output (not a hand-built AuthoritativeState with an explicit
+    town_center=(0.0, 0.0) fixture value), the chain WorldCompiler.compile() -> TownScorer /
+    evaluate_strategic_intent() -> TacticalDecisionSystem.evaluate_entity_intent() must produce a
+    NavigationUpdate toward the real compiled town location, not (0.0, 0.0) by coincidence."""
+    from src.worldbuilding.schema import WorldSpec
+    from src.worldbuilding.compiler import WorldCompiler
+    from src.engine.tactical import TacticalDecisionSystem
+
+    spec_data = {
+        "schema_version": "worldspec.v1",
+        "world_id": "town_nav_test",
+        "name": "Town Nav Test",
+        "topology": {"width": 100, "height": 100, "coordinate_system": "grid"},
+        "regions": [
+            {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "GRASS"},
+        ],
+        "factions": [{"id": "villagers", "type": "civilian"}],
+        "entities": [],
+    }
+    spec = WorldSpec.model_validate(spec_data)
+    compiled_state, _ = WorldCompiler.compile(spec, seed=42)
+    assert compiled_state.town_center == (5.0, 5.0), (
+        "sanity check: compiled town_center must be real, not (0.0, 0.0)"
+    )
+
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .location(50.0, 50.0)
+              .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+              .lifecycle(active=True)
+              .biological(hunger=90.0, sleep_debt=90.0)
+              .build())
+    state = replace(compiled_state, entities={1: entity})
+
+    strat_upd = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity)
+    assert strat_upd.projects_add_or_update, "TownScorer should have won and created a project"
+    project = strat_upd.projects_add_or_update[0]
+    assert project.kind == GoalKind.TOWN_RETURN
+    obj = project.objectives[0]
+    assert obj.target == "town_center"
+    assert obj.target_position == compiled_state.town_center
+
+    entity_with_project = (V2EntityBuilder(1)
+                            .kind("hero")
+                            .location(50.0, 50.0)
+                            .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+                            .lifecycle(active=True)
+                            .biological(hunger=90.0, sleep_debt=90.0)
+                            .strategic(projects={project.id: project}, current_project_id=project.id,
+                                       current_objective_id=obj.id)
+                            .build())
+    state2 = replace(compiled_state, entities={1: entity_with_project})
+
+    tac_upd = TacticalDecisionSystem.evaluate_entity_intent(state2, entity_with_project, neighbors=[])
+    assert tac_upd.navigation is not None and tac_upd.navigation.target_set == compiled_state.town_center, (
+        "town_return objective did not resolve navigation toward the real compiled town_center"
+    )
+    assert tac_upd.navigation.target_set != (0.0, 0.0)
+
+
 def test_deterministic_tie_breaking(base_state):
     # Setup state
     entity = (V2EntityBuilder(1)

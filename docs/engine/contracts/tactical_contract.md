@@ -65,3 +65,11 @@ scope for this ticket: it fixes "does the entity ever navigate there," not "what
 arrives" — extending arrival-dispatch for `TOWN_RETURN`/`RECOVER`/`RESOLVE_BLOCKER` project kinds
 (mirroring the `GUILD` kind's own dedicated `GuildVisitPhase`,
 `TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING`) is a separate, not-yet-filed follow-up.
+
+**Note (`TCK-20260824-TOWN-CENTER-POINTER-FIX`):** As of this ticket, `WorldCompiler.compile()`
+sets `state.town_center` to a real compiled value (the centroid of the first `type=="town"`
+region in declaration order — see `docs/world/compiler_contract.md` step 2a and
+`docs/mechanics/06_worldbuilding_foundation.md` § Town Center Derivation) rather than always
+leaving it at the `(0.0, 0.0)` dataclass default. Nothing above this note asserted anything
+factually false under the old behavior, but the examples and resolution logic in this section
+should now be read as describing a real-value world, not a `(0,0)`-only one.

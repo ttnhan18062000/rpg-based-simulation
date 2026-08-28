@@ -3,7 +3,7 @@ status: authoritative
 layer: engine
 authority: P0
 audience: agent
-last_verified: 2026-08-21
+last_verified: 2026-08-28
 tags: [worldbuilding, compiler, engine, contract, schema]
 ---
 
@@ -83,6 +83,7 @@ All sub-specs are validated by Pydantic at construction time. `InvalidWorldSpecE
 **Compilation sequence:**
 1. Create empty `AuthoritativeState`
 2. Instantiate `RegionState` objects from `TopologySpec` and `List[RegionSpec]`
+2a. Derive `town_center` as the centroid of the first `RegionSpec` with `type == "town"` encountered in `spec.regions` order; left at the `AuthoritativeState` default `(0.0, 0.0)` if no town-type region exists.
 3. Spawn entities from `PopulationSpec` using `V2EntityBuilder` (or archetype-native if `context` provided)
 4. Instantiate `BuildingState` objects from `List[BuildingSpec]`
 5. Instantiate `ResourceNodeState` objects from `List[ResourceNodeSpec]`

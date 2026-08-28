@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-27
+last_verified: 2026-08-28
 ---
 
 # Chapter 6: Worldbuilding Foundation
@@ -38,6 +38,11 @@ Regions partition the world topology into distinct logical zones.
 *   **Bounds Clamp Unchanged**: In both cases, the existing topology bounds-clamp (`0 <= x < width` and `0 <= y < height`) continues to gate every terrain write identically; noise-fill never writes outside a region's bounds or the topology dimensions.
 *   **`town_tiles` Membership Unaffected**: `town_tiles` membership remains driven solely by `r_spec.type == "town"`, independent of which terrain string a tile is painted with.
 *   **Implementing Code**: `src/worldbuilding/compiler.py` (region-painting loop in `WorldCompiler.compile()`).
+
+### Town Center Derivation
+*   **Derivation Rule**: `AuthoritativeState.town_center` is set by `WorldCompiler.compile()`, after the region-compilation loop, to the centroid of the first `type=="town"` region encountered in declaration order in `spec.regions` — computed from that region's own `bounds` (`((min_x + max_x) / 2.0, (min_y + max_y) / 2.0)`), not a centroid of the union of all town-type regions across the spec. If no `type=="town"` region exists in `spec.regions`, `town_center` is left unset and keeps the `AuthoritativeState` dataclass default `(0.0, 0.0)`.
+*   **Kept Single-Valued By Design**: `town_center` remains a single-value pointer rather than being deprecated or replaced by a per-region lookup/registry. The two consumers where "which town" precision actually matters operationally — `StrategicRedirectionSystem.enforce()` and `StrategicIntelligenceSystem`'s routine-blocker pass — resolve the tile nearest to the *requesting entity* directly from `state.town_tiles` (already a multi-town-aware flat set, unioned from every `type=="town"` region), so per-entity nearest-town correctness is delivered without requiring `town_center` itself to become multi-valued. Remaining consumers (goal scorers, the scheduler's LOD focus points, the long-range navigation waypoint) treat "the town" as a single approximate anchor and only needed a *real* value instead of `(0.0, 0.0)` — not a "nearest of several towns" answer. A world composed of multiple town-type regions therefore under-serves the second-and-later towns for those remaining consumers specifically; this is a disclosed, known limitation of this design, not an oversight (`TCK-20260824-TOWN-CENTER-POINTER-FIX`) — a per-region town-center registry is deferred to a future ticket if that precision is later needed.
+*   **Implementing Code**: `src/worldbuilding/compiler.py` (`WorldCompiler.compile()`, post region-compilation-loop derivation block).
 
 ---
 
@@ -170,6 +175,6 @@ Defines items, structures, and regional ecologies:
 | 03 Economic Laws | Verified | Corrected: weight limit 50.0 kg, selling formula static 50% (TCK-20260627-P3C-DOC-CURRENCY) |
 | 04 Strategic Cognition | Verified | Corrected: interruption formula uses resistance_multiplier (TCK-20260619-P0-DOC-REPAIR); blocker kinds, perception radius 10.0, info decay 50 ticks (TCK-20260627-P3C-DOC-CURRENCY) |
 | 05 World Evolution | Partially verified | 2 uncertain claims remain: resource respawn interval, trauma delta per death (not traced to source) |
-| 06 Worldbuilding Foundation | Verified | Structural claims confirmed (TCK-20260619-P0-DOC-REPAIR, TCK-20260627-P3C-DOC-CURRENCY) |
+| 06 Worldbuilding Foundation | Verified | Structural claims confirmed (TCK-20260619-P0-DOC-REPAIR, TCK-20260627-P3C-DOC-CURRENCY); town_center derivation rule documented (TCK-20260824-TOWN-CENTER-POINTER-FIX) |
 
 Chapters 01–04 and 06 are **Certified Level 1 (Authoritative)** as of 2026-06-27. Chapter 05 is **Partially Verified** — structural mechanics confirmed, 2 numeric constants unverified against source.

@@ -146,9 +146,12 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: src/systems/world_systems/navigation.py (FlowFieldService.get_flow_direction()'s
+    target_kind=="TOWN" branch sets anchors=[state.town_center] directly, using the
+    real compiled town location instead of the hardcoded ANCHORS["TOWN"] two-waypoint
+    literal)
   proof_type: null
-  test_path: null
+  test_path: tests/unit/movement/test_flow_field_navigation.py::test_get_flow_direction_town_uses_real_town_center_not_hardcoded_anchor
   divergence_note: null
   support_boundary: null
 - id: SUB-015
@@ -4847,3 +4850,21 @@
   proof_type: null
   test_path: tests/integration/worldassembly/test_wolf_den_noise_migration.py::test_wolf_den_overlap_box_resolves_to_wolf_den_terrain
   divergence_note: null
+- id: SUB-387
+  text: 'WorldCompiler.compile() derives AuthoritativeState.town_center as a real
+    value: the centroid ((min_x+max_x)/2.0, (min_y+max_y)/2.0) of the first type=="town"
+    region encountered in spec.regions declaration order (same deterministic order
+    already used to build terrain/town_tiles/regions). If no town-type region exists,
+    town_center stays at the AuthoritativeState dataclass default (0.0, 0.0) -- unchanged
+    behavior for that edge case. Fixes the prior bug where town_center was never set
+    by compile() and silently stayed at (0.0, 0.0) for every real generated world.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/worldbuilding/compiler.py (post-region-loop "2a" block deriving
+    town_center from the first r_spec.type=="town" region's bounds, passed into the
+    AuthoritativeState(...) constructor call)
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compile_sets_real_town_center_from_town_region
+  divergence_note: null
+  support_boundary: null

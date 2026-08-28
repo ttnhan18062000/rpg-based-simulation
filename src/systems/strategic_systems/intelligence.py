@@ -91,6 +91,7 @@ from src.systems.strategic_systems.detour import DetourSuggestionSystem
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
 from src.core.dirty import get_dirty_set
 from src.systems.strategic_systems.belief import BeliefCycleSystem
+from src.systems.strategic_systems.town_targeting import nearest_town_tile
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -332,11 +333,6 @@ class StrategicIntelligenceSystem:
             try: object.__setattr__(state, "_has_hostiles_or_dead_cache", has_hostiles_or_dead)
             except: pass
 
-        town_target = state.town_center
-        if not town_target and state.town_tiles:
-            town_pos = next(iter(state.town_tiles))
-            town_target = (float(town_pos[0]), float(town_pos[1]))
-
         # Evaluation of routine blockers and concerns must run across candidate entities
         # Logic ID: PERF-006 (Dirty Entity Tracking for specific sub-phases, but routine pass is global)
         fast_hits = 0
@@ -382,6 +378,7 @@ class StrategicIntelligenceSystem:
                                 nav_changed = True
                 if not nav_changed and not proj_resolved:
                     if not (curr_proj_id and project and project.status == ProjectStatus.ACTIVE and active_obj and getattr(active_obj, 'target_position', None) is not None):
+                        town_target = nearest_town_tile(state.town_tiles, entity.navigation.position) or state.town_center
                         if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target and entity.navigation.target != town_target:
                             if ent_upd:
                                 refined_entity_updates[e_id] = replace(ent_upd,
@@ -617,6 +614,7 @@ class StrategicIntelligenceSystem:
                                  ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
             
             if not has_nav_update:
+                town_target = nearest_town_tile(state.town_tiles, entity.navigation.position) or state.town_center
                 if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target:
                     if entity.navigation.target != town_target:
                         has_nav_update = True
