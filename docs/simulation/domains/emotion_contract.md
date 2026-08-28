@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-08-28
 ---
 
 # Emotion Domain Contract
@@ -37,12 +37,12 @@ This domain does not schedule or initiate actions. It responds to events and pro
 
 Emotion updates are **not** driven by a scheduled per-tick phase runner. They are triggered by specific engine events via synchronous callbacks:
 
-- `near_death` event → `EmotionUpdateService.update_on_event` + `RecoveryReadinessService.register_near_death`
-- `easy_win` event → `EmotionUpdateService.update_on_event`
-- `repeated_failure` event → `EmotionUpdateService.update_on_event`
-- `new_unknown` event → `EmotionUpdateService.update_on_event`
-- `successful_goal` event → `EmotionUpdateService.update_on_event`
-- `stagnation` event → `EmotionUpdateService.update_on_event`
+- `near_death` event → `EmotionUpdateService.update_on_event` + `RecoveryReadinessService.register_near_death`, called from `NearDeathHardeningPhase.apply()` (`src/engine/pipeline_phases/hardening.py`) — the only event of this group with a confirmed production call site
+- `easy_win` event → `EmotionUpdateService.update_on_event` (delta rule defined; no production call site wired yet)
+- `repeated_failure` event → `EmotionUpdateService.update_on_event` (delta rule defined; no production call site wired yet)
+- `new_unknown` event → `EmotionUpdateService.update_on_event` (delta rule defined; no production call site wired yet)
+- `successful_goal` event → `EmotionUpdateService.update_on_event` (delta rule defined; no production call site wired yet)
+- `stagnation` event → `EmotionUpdateService.update_on_event` (delta rule defined; no production call site wired yet)
 - Action outcome (success/failure) → `HabitBiasService.record_outcome`
 
 The domain has no `phase.py` — it is invoked by event handlers in the engine, not by the phase scheduler.
@@ -186,7 +186,7 @@ Updates are **not** routed through `EntityUpdate` or the authoritative mutation 
 | **Perception domain** (Perception Update stage) | Reads emotion outputs | `fear` and `curiosity` from `EmotionalModel` are read by `SignalSalienceEvaluator` to modulate threat and novelty salience |
 | **Adventure domain** | Reads emotion outputs | `confidence` affects route scoring; `RecoveryReadinessService.is_ready_to_retry()` gates combat/high-risk route eligibility |
 | **Commitment domain** (inline utility, see commitment_contract.md) | Reads emotion outputs | Near-death emotion state (fear, panic) informs survival abandonment classification |
-| **Engine event handlers** | Triggers | Engine fires event callbacks on specific game outcomes; emotion domain is called synchronously within those handlers |
+| **Engine event handlers** | Triggers | Engine fires event callbacks on specific game outcomes; emotion domain is called synchronously within those handlers. Confirmed production call site: `NearDeathHardeningPhase.apply()` (`src/engine/pipeline_phases/hardening.py`) for the `near_death` event — the other five event kinds (`easy_win`, `repeated_failure`, `new_unknown`, `successful_goal`, `stagnation`) have delta rules defined but no production call site yet |
 
 ---
 

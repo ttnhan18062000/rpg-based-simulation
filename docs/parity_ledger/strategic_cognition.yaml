@@ -2586,18 +2586,24 @@
   divergence_note: null
   support_boundary: null
 - id: STRAT-229
-  text: UnknownFact entries with priority > 0.5 and no existing seeking_project_id
-    trigger automatic generation of an INFORMATION_SEEKING ProjectState via InformationNeedDetector.
-    The highest-priority candidate is selected deterministically (priority desc, subject
-    asc as tiebreaker).
+  text: 'UnknownFact entries with priority > 0.5 and no existing seeking_project_id
+    trigger automatic generation of an INFORMATION_SEEKING ProjectState via InformationNeedDetector,
+    wired into CognitionDomain.execute_brain() between the Emotional Appraisal and
+    Tactical Intent steps. The highest-priority candidate is selected deterministically
+    (priority desc, subject asc as tiebreaker). Additive only: proposes the project
+    via StrategicUpdate.projects_add_or_update (list-concatenated by StrategicUpdate.merge());
+    goal choice/arbitration remains exclusively StrategicIntelligenceSystem.fused_strategic_pass()''s
+    job.'
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: "src/core/self_model.py \u2014 UnknownFact.priority and seeking_project_id\
     \ fields; src/core/strategic.py \u2014 ProjectKind.INFORMATION_SEEKING; src/engine/domain/cognition_extras.py\
-    \ \u2014 InformationNeedDetector.detect_and_generate()"
+    \ \u2014 InformationNeedDetector.detect_and_generate(); src/engine/domain/cognition.py\
+    \ \u2014 CognitionDomain.execute_brain() call site (TCK-20260824-WIRE-ORPHANED-MECHANISMS)"
   proof_type: parity
   test_path: tests/unit/cognition/test_information_seeking.py::TestInformationNeedDetectorNormalFlow::test_unknown_fact_generates_seeking_project
+    tests/integration/scenarios/test_information_seeking_wiring.py::test_information_need_detector_fires_from_execute_brain
   divergence_note: null
   support_boundary: null
 - id: STRAT-230

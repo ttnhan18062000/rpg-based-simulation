@@ -707,6 +707,19 @@ class CampaignOrchestrator:
                 self._emit_chronicle_events([ledger_entry], tick=0)
                 existing_entry_ids.add(ledger_entry.entry_id)
 
+        # E43E: evaluate cross-episode social consequences at episode-entity-spawn time.
+        # Read-only — evaluate_social_consequence() never mutates entities/campaign_state;
+        # emitted via self._event_recorder.record() (SimulationEvent, not WorldEvent —
+        # this constructor call has no StateUpdate/ApplyPath merge step available).
+        from src.systems.social_systems.consequence_events import evaluate_social_consequence
+
+        if self._event_recorder is not None:
+            for eid in sorted(entities.keys()):
+                entity = entities[eid]
+                faction_id = f"faction_{entity.identity.faction}"
+                for event in evaluate_social_consequence(entity, faction_id, self._state, tick=0):
+                    self._event_recorder.record(event)
+
         return AuthoritativeState(tick=0, seed=episode_seed, entities=entities)
 
     # ── spawn helpers ──────────────────────────────────────────────────────────

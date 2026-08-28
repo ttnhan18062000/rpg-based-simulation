@@ -15,7 +15,10 @@ class CognitionDomain:
 
     SYSTEM BOUNDARIES:
     - 1. Strategic Planning (Authoritative): Strategic project and goal choice occurs exclusively
-      inside the pipeline-level `StrategicIntelligenceSystem.fused_strategic_pass()`.
+      inside the pipeline-level `StrategicIntelligenceSystem.fused_strategic_pass()`. May
+      additionally propose `INFORMATION_SEEKING` project candidates via `InformationNeedDetector`
+      (non-authoritative — additive only); goal choice/arbitration remains exclusively
+      `fused_strategic_pass()`'s job.
     - 2. Emotional Appraisal: Handled by `AppraisalSystem` to evaluate emotional state based on
       tactical context, regional trauma, and sensory filters.
     - 3. Tactical Decision: Handled by `TacticalDecisionSystem` to evaluate tactical intent/actions
@@ -36,6 +39,7 @@ class CognitionDomain:
         """
         from src.engine.cognition import SensoryFilter, AppraisalSystem
         from src.engine.tactical import TacticalDecisionSystem
+        from src.engine.domain.cognition_extras import InformationNeedDetector
         
         is_idle = entity.task.work_kind == "IDLE"
         has_project = bool(entity.strategic.current_project_id)
@@ -66,10 +70,12 @@ class CognitionDomain:
             social_context=entity.social
         )
              
+        info_update = InformationNeedDetector.detect_and_generate(entity, state.tick)
+
         # 2. Tactical Intent
         tactical_up = TacticalDecisionSystem.evaluate_entity_intent(readonly_state, entity, salient_neighbors, trauma)
-        
-        return {entity.id: replace(tactical_up, 
-            strategic=None, 
+
+        return {entity.id: replace(tactical_up,
+            strategic=info_update,
             readiness_delta=0.0
         )}

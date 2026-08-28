@@ -1143,15 +1143,22 @@
 - id: WORLD-DEMO-004
   text: 'Elder entities (age_ticks ≥ 7000) receive attribute modifiers via AttributeUpdate:
     combat_effectiveness *= 0.7 (STR/AGI -30%), mortality_rate *= 2.0 (VIT/END -50%),
-    knowledge_reputation_weight *= 1.3 (WIS/CHA +30%). Applied via compute_elder_attribute_update
-    — never via direct mutation of frozen EntityState.'
+    knowledge_reputation_weight *= 1.3 (WIS/CHA +30%). Applied via compute_elder_attribute_update,
+    called once per aging-cycle tick from LifecycleSystem.resolve_lifecycle(), gated on the
+    same forward ADULT->ELDER life_stage transition edge that is_forward_transition() already
+    computes — never via direct mutation of frozen EntityState, and never reapplied on
+    subsequent ticks once the transition has fired.'
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: 'src/domains/demographics/cohort.py (compute_elder_attribute_update);
-    src/core/updates.py (AttributeUpdate, EntityUpdate)'
+    src/core/updates.py (AttributeUpdate, EntityUpdate); src/systems/lifecycle_systems/lifecycle.py
+    (LifecycleSystem.resolve_lifecycle() call site, gated on is_forward_transition())
+    (TCK-20260824-WIRE-ORPHANED-MECHANISMS)'
   proof_type: parity
   test_path: tests/unit/world/test_demographics.py::test_elder_modifier_reduces_combat_effectiveness
+    tests/unit/world/test_demographics.py::TestLifecycleSystemElderWiring::test_elder_attribute_modifier_applies_once_on_bracket_transition
+    tests/unit/world/test_demographics.py::TestLifecycleSystemElderWiring::test_elder_attribute_modifier_does_not_reapply_every_tick
   divergence_note: null
   support_boundary: null
 - id: WORLD-DEMO-005

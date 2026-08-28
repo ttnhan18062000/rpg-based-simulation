@@ -117,6 +117,28 @@ combat-stat derivation (Section 2's formulas). Bonus-adjusted attributes then fl
 `LevelingService.recalculate_combat_stats` the same way base attributes do; the formulas in
 Section 2 are unchanged, only the attribute values feeding them are pre-adjusted.
 
+### Elder Attribute Modifiers
+When an entity's age (`lifecycle.age_ticks`) crosses the elder bracket threshold
+(`age_ticks >= 7000`), `LifecycleSystem.resolve_lifecycle()` applies a one-time attribute
+modifier via `compute_elder_attribute_update()` (`src/domains/demographics/cohort.py`), gated on
+the same forward-transition edge that flips `identity.life_stage` to `ELDER` — the modifier fires
+exactly once, on the tick of the transition, never again on subsequent ticks:
+
+```python
+# combat_effectiveness *= 0.7
+strength_delta  = -int(attrs.strength * 0.3)
+agility_delta   = -int(attrs.agility  * 0.3)
+# mortality_rate *= 2.0 (increased biological mortality pressure)
+vitality_delta  = -int(attrs.vitality  * 0.5)
+endurance_delta = -int(attrs.endurance * 0.5)
+# knowledge_reputation_weight *= 1.3
+wisdom_delta    = int(attrs.wisdom   * 0.3)
+charisma_delta  = int(attrs.charisma * 0.3)
+```
+
+All deltas are integer-truncated toward zero and applied via a typed `AttributeUpdate` merged
+into the entity's `EntityUpdate` — never a direct mutation of the frozen `EntityState`.
+
 ---
 
 ## 6. Trauma: Wounds & Scars

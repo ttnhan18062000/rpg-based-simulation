@@ -2618,7 +2618,15 @@
     \ sorted key for determinism). Function never mutates entity, campaign_state,\
     \ or any registry. Does not import from src.engine or src.core.state. Events are\
     \ SimulationEvent subclasses (Pydantic BaseModel) \u2014 not raw domain objects.\
-    \ All three event kind string constants are importable directly from src.observability.events.\n"
+    \ All three event kind string constants are importable directly from src.observability.events.\
+    \ Wired into a real call site: CampaignOrchestrator._build_initial_state() calls\
+    \ evaluate_social_consequence() once per spawned entity, iterating sorted(entities.keys())\
+    \ for deterministic emission order, with faction_id = f\"faction_{entity.identity.faction}\"\
+    \ (matching _extract_faction_carry_forwards()'s existing convention). Returned events\
+    \ are emitted via self._event_recorder.record() directly (SimulationEvent, not WorldEvent\
+    \ \u2014 this constructor call site has no StateUpdate/ApplyPath world_events_add merge\
+    \ step available). Read-only: never mutates entity, campaign_state, or the entities dict;\
+    \ no-ops safely when no event_recorder is injected.\n"
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2628,12 +2636,16 @@
     social\", source_system=\"social_consequence_evaluator\"). src/systems/social_systems/consequence_events.py\
     \ (evaluate_social_consequence(), LEGENDARY_REP_THRESHOLD=0.9, TRAITOR_HOSTILITY_THRESHOLD=0.5,\
     \ OLD_DEBT_SCORE_THRESHOLD=0.5; ordered: traitor -> legendary -> debt; one OLD_DEBT\
-    \ per encounter). (TCK-20260619-E43E-CONSEQUENCE-EVENTS)\n"
+    \ per encounter). (TCK-20260619-E43E-CONSEQUENCE-EVENTS). src/domains/campaigns/orchestrator.py\
+    \ (CampaignOrchestrator._build_initial_state() call site, self._event_recorder.record())\
+    \ (TCK-20260824-WIRE-ORPHANED-MECHANISMS)\n"
   proof_type: parity
   test_path: 'pytest tests/unit/social/test_social_memory.py::test_known_traitor_event_fires_on_encounter
     tests/unit/social/test_social_memory.py::test_faction_memory_survives_episode_without_member_npcs
     tests/unit/social/test_social_memory.py::test_all_three_event_kinds_importable
     tests/unit/social/test_social_memory.py -x -v -m "not slow"
+    tests/integration/scenarios/test_social_memory.py::test_consequence_events_fire_at_episode_entity_spawn
+    tests/integration/scenarios/test_social_memory.py::test_consequence_events_noop_without_event_recorder
 
     '
   divergence_note: 'Ticket pseudocode specified hostility threshold > 3.0; actual
@@ -3499,4 +3511,29 @@
     two. This independence is directly covered by tests/unit/social/test_social_memory_service.py::test_check_nemesis_promotion_rival_role_below_grudge_threshold_not_promoted,
     which proves a RelationshipRole.RIVAL-tagged bond below the grudge-history promotion
     threshold is not promoted to nemesis status by virtue of the role tag alone.'
+  support_boundary: null
+- id: SOC-248
+  text: 'EmotionUpdateService.update_on_event() is wired into NearDeathHardeningPhase.apply()
+    for the "near_death" event_kind: when an entity survives a hit with projected
+    HP <= 10% of current max HP, fear and panic increase (+0.4/+0.5, capped at 1.0)
+    and confidence decreases (-0.3, floored at 0.0) on EmotionalModel. The updated
+    model is written via a nested replace() into entity.cognition.subjective.emotion
+    and staged on EntityUpdate.cognition_bundle_set alongside the existing max_hp_delta=5
+    hardening effect (both set together, neither dropped). Same-tick collision handling:
+    if an earlier phase (e.g. MemoryUpdatePhase) already set cognition_bundle_set
+    for this entity this tick, the emotion update is built on top of that already-updated
+    bundle, not the stale pre-tick entity.cognition, so earlier same-tick cognition
+    changes are never clobbered by the whole-bundle EntityUpdate.merge() last-writer-wins
+    semantics. Distinct from the unrelated AppraisalSystem.evaluate_emotional_state()
+    per-tick tactical appraisal.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/emotion/emotion_service.py (EmotionUpdateService.update_on_event());
+    src/engine/pipeline_phases/hardening.py (NearDeathHardeningPhase.apply() call
+    site) (TCK-20260824-WIRE-ORPHANED-MECHANISMS)
+  proof_type: parity
+  test_path: tests/unit/engine/test_near_death_hardening_emotion.py::test_near_death_hardening_updates_emotional_model
+    tests/unit/engine/test_near_death_hardening_emotion.py::test_near_death_hardening_preserves_same_tick_cognition_bundle_set
+  divergence_note: null
   support_boundary: null

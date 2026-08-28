@@ -780,3 +780,70 @@ class TestComputePopulationDensity:
         density_pop = compute_population_density(region_pop)
         multiplier_pop = 1.0 + (density_pop * 0.5)
         assert multiplier_pop > 1.0
+
+
+# ---------------------------------------------------------------------------
+# E52C / TCK-20260824-WIRE-ORPHANED-MECHANISMS: compute_elder_attribute_update
+# wired into LifecycleSystem.resolve_lifecycle(), gated on the forward
+# ADULT->ELDER life_stage transition edge.
+# ---------------------------------------------------------------------------
+
+class TestLifecycleSystemElderWiring:
+    def _make_entity(self, entity_id: int, age_ticks: int, life_stage=None):
+        from src.core.builder import V2EntityBuilder
+        from src.core.state import LifeStage
+
+        builder = (
+            V2EntityBuilder(entity_id)
+            .kind("hero")
+            .location(0.0, 0.0)
+            .attributes(strength=10, agility=10, vitality=10, endurance=10, wisdom=10, charisma=10)
+            .lifecycle(active=True, age_ticks=age_ticks, max_age_ticks=99999)
+        )
+        if life_stage is not None:
+            builder = builder.identity(life_stage=life_stage)
+        return builder.build()
+
+    def test_elder_attribute_modifier_applies_once_on_bracket_transition(self):
+        """
+        An entity crossing age_ticks >= 7000 for the first time (life_stage still
+        ADULT) receives the elder attribute deltas exactly once via
+        resolve_lifecycle(), merged onto the same EntityUpdate that also sets
+        identity.life_stage_set = ELDER.
+        """
+        from src.systems.lifecycle_systems.lifecycle import LifecycleSystem
+        from src.core.state import LifeStage
+
+        entity = self._make_entity(1, age_ticks=7000)
+        state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
+
+        refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+
+        upd = refined.entity_updates[1]
+        assert upd.identity is not None
+        assert upd.identity.life_stage_set == LifeStage.ELDER
+        assert upd.attributes is not None
+        assert upd.attributes.strength_delta == -3
+        assert upd.attributes.agility_delta == -3
+        assert upd.attributes.vitality_delta == -5
+        assert upd.attributes.endurance_delta == -5
+        assert upd.attributes.wisdom_delta == 3
+        assert upd.attributes.charisma_delta == 3
+
+    def test_elder_attribute_modifier_does_not_reapply_every_tick(self):
+        """
+        An already-elder entity (life_stage already ELDER) does NOT receive the
+        elder deltas again on a subsequent tick — is_forward_transition() gates
+        the modifier off once the transition has already happened, preventing
+        the deltas from compounding every tick.
+        """
+        from src.systems.lifecycle_systems.lifecycle import LifecycleSystem
+        from src.core.state import LifeStage
+
+        entity = self._make_entity(1, age_ticks=8000, life_stage=LifeStage.ELDER)
+        state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
+
+        refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+
+        upd = refined.entity_updates.get(1)
+        assert upd is None or upd.attributes is None

@@ -4,6 +4,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from src.core.updates import CombatUpdate
+from src.domains.emotion.emotion_service import EmotionUpdateService
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -33,6 +34,10 @@ class NearDeathHardeningPhase:
 
         Effect:
             - CombatUpdate.max_hp_delta += 5
+            - EmotionalModel updated via EmotionUpdateService.update_on_event(..., "near_death")
+              (fear/panic increase, confidence decreases), merged into the entity's
+              cognition_bundle_set alongside any cognition changes already staged earlier
+              in the same tick
 
         Why this runs in the pipeline:
             This is not a worker reward. It is an authoritative consequence of
@@ -84,9 +89,21 @@ class NearDeathHardeningPhase:
                 )
             )
 
+            base_cognition = (
+                entity_update.cognition_bundle_set
+                if entity_update.cognition_bundle_set is not None
+                else entity.cognition
+            )
+            updated_emotion = EmotionUpdateService.update_on_event(
+                base_cognition.subjective.emotion, "near_death"
+            )
+            new_subjective = replace(base_cognition.subjective, emotion=updated_emotion)
+            new_cognition = replace(base_cognition, subjective=new_subjective)
+
             refined_entity_updates[entity_id] = replace(
                 entity_update,
                 combat=hardened_combat,
+                cognition_bundle_set=new_cognition,
             )
 
         return replace(

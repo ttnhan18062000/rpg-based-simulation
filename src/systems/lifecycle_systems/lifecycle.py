@@ -2,7 +2,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional
 from dataclasses import replace
 from src.core.updates import StateUpdate, EntityUpdate, LifecycleUpdate, InventoryUpdate, IdentityUpdate
+from src.core.state import LifeStage
 from src.ai.life_stage import LifeStageService
+from src.domains.demographics.cohort import compute_elder_attribute_update
 import logging
 
 logger = logging.getLogger(__name__)
@@ -57,6 +59,14 @@ class LifecycleSystem:
                 ent_upd = ent_upd or EntityUpdate(entity_id=e_id)
                 existing_identity = ent_upd.identity or IdentityUpdate()
                 ent_upd = replace(ent_upd, identity=replace(existing_identity, life_stage_set=target_stage))
+
+                if target_stage == LifeStage.ELDER:
+                    elder_update = compute_elder_attribute_update(
+                        e_id, entity.attributes, entity.lifecycle.age_ticks
+                    )
+                    if elder_update is not None:
+                        ent_upd = ent_upd.merge(elder_update)
+
                 refined_entity_updates[e_id] = ent_upd
 
             # Check for natural death (old age)

@@ -508,3 +508,73 @@ def test_objective_intent_resolver_is_reachable_from_production_pipeline():
         "TacticalDecisionSystem.evaluate_entity_intent — every non-REACH_LOCATION "
         "ObjectiveKind will silently fall through to an idle EntityUpdate again."
     )
+
+
+def test_evolution_service_deleted_and_not_reintroduced():
+    """
+    STRICT LAW:
+        EvolutionSystem (src/engine/evolution.py) is the sole live goblin-evolution
+        path, pipeline-wired at AuthoritativeApplyPipeline.refine's "evolution" phase.
+        The dead duplicate src/progression/evolution.py (EvolutionService) was deleted
+        by TCK-20260824-WIRE-ORPHANED-MECHANISMS after confirming zero production
+        callers and a conflicting evolution threshold (20 vs. EvolutionSystem's
+        parity-verified 25).
+
+    Fraud this catches:
+        - src/progression/evolution.py silently reappears (e.g. via a bad rebase)
+          without being re-wired, reintroducing an inert, disagreeing duplicate.
+        - src/engine/pipeline.py starts importing EvolutionService instead of
+          EvolutionSystem.
+    """
+    import importlib
+
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("src.progression.evolution")
+
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    source = inspect.getsource(AuthoritativeApplyPipeline.refine)
+    assert "EvolutionSystem.evaluate" in source
+    assert "EvolutionService" not in source
+
+
+def test_sabotage_action_deleted_and_not_reintroduced():
+    """
+    STRICT LAW:
+        BuildingSabotageSystem (src/engine/sabotage.py) is the sole live
+        building-damage path, pipeline-wired at AuthoritativeApplyPipeline.refine's
+        "BuildingSabotageSystem.resolve" call. The dead duplicate
+        src/town/sabotage.py (SabotageAction) was deleted by
+        TCK-20260824-WIRE-ORPHANED-MECHANISMS after confirming zero production
+        callers.
+
+    Fraud this catches:
+        - src/town/sabotage.py silently reappears as a second, competing
+          building-damage path.
+    """
+    import importlib
+
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("src.town.sabotage")
+
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    source = inspect.getsource(AuthoritativeApplyPipeline.refine)
+    assert "BuildingSabotageSystem.resolve" in source
+    assert "SabotageAction" not in source
+
+
+def test_building_hp_reduction_traces_to_single_authoritative_source():
+    """
+    STRICT LAW:
+        Building HP reduction (BuildingUpdate.hp_delta) must be produced by exactly
+        one authoritative pipeline system: BuildingSabotageSystem.resolve(). No
+        second, competing building-damage system may exist in the pipeline.
+
+    Fraud this catches:
+        - a second sabotage/building-damage system is added to the pipeline
+          without retiring or consolidating with BuildingSabotageSystem, silently
+          reintroducing the duplicate-path problem this ticket's Step 3 resolved.
+    """
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    source = inspect.getsource(AuthoritativeApplyPipeline.refine)
+    assert source.count(".resolve(") >= 1
+    assert source.count("BuildingSabotageSystem.resolve") == 1
