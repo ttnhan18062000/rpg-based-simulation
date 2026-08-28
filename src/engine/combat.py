@@ -605,18 +605,14 @@ class CombatResolutionSystem:
     def _get_wound_infliction(attacker: EntityState, defender: EntityState, damage: float, tick: int, alive: bool) -> Optional[WoundUpdate]:
         """Calculates and returns a WoundUpdate if damage is sufficient."""
         if damage > defender.combat.max_hp * 0.25 and alive:
-            from src.core.state import WoundState
             from src.core.updates import WoundUpdate
-            from src.core.enums import EntityRole
+            from src.engine.rpg_depth import WoundService
             w_id = f"w_{attacker.id}_{defender.id}_{tick}"
-            penalty = 5.0
-            wound = WoundState(
-                id=w_id,
-                kind="SLASH" if attacker.identity.role == EntityRole.HERO else "CRUSH",
-                severity=damage / defender.combat.max_hp,
-                tick_inflicted=tick,
-                atk_penalty=penalty,
-                def_penalty=penalty
+            wound = WoundService.create_wound(
+                damage=int(damage),
+                max_hp=defender.combat.max_hp,
+                tick=tick,
+                wound_id=w_id,
             )
             return WoundUpdate(wounds_add=[wound])
         return None

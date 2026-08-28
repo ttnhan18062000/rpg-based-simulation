@@ -49,7 +49,7 @@ tickets). All work lands on a single branch, `m1-quick-wins`, as one commit per 
 PR'd.
 
 <!-- IMPLEMENT-EPIC-STATUS:BEGIN -->
-**Live progress** (auto-updated by implement-epic, last run: 2026-08-28T16:40:29Z): 15/22 tickets done, 7 remaining. Tracking: m1-quick-wins batch, folder-based via tickets/todos/m1-quick-wins/SEQUENCE.md (batch grew to 22 tickets after TCK-20260824-WIRE-ORPHANED-MECHANISMS split out TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING).
+**Live progress** (auto-updated by implement-epic, last run: 2026-08-28T17:12:21Z): 16/22 tickets done, 6 remaining. Tracking: m1-quick-wins batch, folder-based via tickets/todos/m1-quick-wins/SEQUENCE.md.
 <!-- IMPLEMENT-EPIC-STATUS:END -->
 
 `tickets/working_log.csv`'s bottom rows have the one-paragraph summary of each ticket actually landed,

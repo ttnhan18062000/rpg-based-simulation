@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-09
+last_verified: 2026-08-28
 ---
 
 # Chapter 2: Combat Laws
@@ -72,9 +72,16 @@ A **Wound** is inflicted on a surviving defender when a single hit deals damage 
 ```python
 is_wound = damage > (defender.max_hp * 0.25) and defender.alive
 ```
-- Wound type: `SLASH` for Hero attackers, `CRUSH` otherwise.
-- Wound severity: `damage / defender.max_hp` (proportional).
-- Wound penalty: −5 ATK, −5 DEF (applied as long as wound is active).
+- Wound severity: `severity = min(1.0, damage / defender.max_hp)` (proportional, capped at 1.0).
+- Wound type: derived from severity, not attacker role — `CRUSH` if `severity >= 0.8`, `SLASH` if
+  `severity >= 0.6`, otherwise `PIERCE` (`WoundService.create_wound`, `src/engine/rpg_depth.py`).
+- Wound penalty: severity-scaled, not a flat value — `atk_penalty = int(severity * 3)`,
+  `def_penalty = int(severity * 2)`, `speed_penalty = int(severity * 2)`,
+  `max_hp_penalty = int(severity * 10)` (applied as long as the wound is active). `atk_penalty`,
+  `def_penalty`, and `max_hp_penalty` are subtracted from effective ATK/DEF/Max HP by
+  `SkillScalingService.get_effective_stats()`; `speed_penalty` is computed and stored on the wound
+  but is **not yet read** by `get_effective_stats()` — no move-cost/speed stat is currently reduced
+  by wounds (tracked as a separate follow-up, not a bug in this formula).
 - Permanent Scars: when a wound heals, it has a 30% chance to leave a scar (`scar_penalty = wound_penalty * 0.3`).
 
 ---

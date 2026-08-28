@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-26
+last_verified: 2026-08-28
 ---
 
 # Chapter 1: Entity Anatomy
@@ -150,6 +150,21 @@ A **Wound** is inflicted if a single hit deals damage **strictly greater than 25
 WOUND_THRESHOLD_RATIO = 0.25
 is_wound = damage > (max_hp * WOUND_THRESHOLD_RATIO)  # strict >, only if defender survives
 ```
+
+### Wound Penalty
+A wound's stat penalty is **severity-scaled**, not a flat value. Severity is the proportion of Max HP
+dealt by the inflicting hit, capped at 1.0:
+```python
+severity = min(1.0, damage / max_hp)
+atk_penalty = int(severity * 3)
+def_penalty = int(severity * 2)
+speed_penalty = int(severity * 2)
+max_hp_penalty = int(severity * 10)
+```
+`atk_penalty`, `def_penalty`, and `max_hp_penalty` reduce the entity's effective ATK, DEF, and Max HP
+for as long as the wound is active (`SkillScalingService.get_effective_stats()`, `src/engine/rpg_depth.py`).
+`speed_penalty` is computed and stored on the wound but is **not yet applied** to any effective
+stat — wiring it into `get_effective_stats()` is a tracked follow-up, not part of this formula.
 
 ### Permanent Scars
 When a wound is healed, it has a chance to leave a **Permanent Scar**, which carries **30%** of the original wound's stat penalties indefinitely.
