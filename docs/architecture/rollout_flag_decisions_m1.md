@@ -30,7 +30,7 @@ this precedent governs.
 | `ENABLE_SELF_MODEL_COGNITION` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-SELF-MODEL-COGNITION-FLAG-VALIDATION` ran 2 fresh corpus-profile trials on top of 2 prior real trials already on file (a shipped-ON Unit-tier world, `INFRA-266`'s real-world generalization split verdict) — still no shipped archetype-world default profile, and the fresh trial surfaced a real, undisclosed anchor drift requiring its own follow-up. See "ENABLE_SELF_MODEL_COGNITION — Validation Trial Result" below. |
 | `ENABLE_WORLD_EMERGENCE` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-WORLD-EMERGENCE-FLAG-VALIDATION` ran a real 4-leg corpus trial — no suppression regression, real phase execution/telemetry/entity-signal exposure confirmed, but zero shipped profiles turn this flag on and neither trial world produced a single `RESOURCE_DEPLETED`/`ENTITY_DEATH`/`CAMP_RAID` event, leaving quest-registry growth specifically unconfirmed. See "ENABLE_WORLD_EMERGENCE — Validation Trial Result" below. |
 | `ENABLE_PROGRESSION_EVOLUTION` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION` ran a real 4-leg corpus trial — both ON legs deterministically crashed the real `Kernel` pipeline (`CanonicalStateHasher.get_hash()` cannot serialize the raw `ProgressionDecisionResult` the phase stores in `property_updates`), a stronger "keep OFF" finding than any of the 3 sibling flags produced, on top of the already-predicted reward-ledger producer gap. See "ENABLE_PROGRESSION_EVOLUTION — Validation Trial Result" below. |
-| `ENABLE_INFORMATION_INTENT_EXECUTION` | **Kept OFF, deferred** | No production evidence; distinct system from the now-ON `ENABLE_BELIEF_ASSIMILATION` despite shared domain. Follow-up: `TCK-20260826-INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION`. |
+| `ENABLE_INFORMATION_INTENT_EXECUTION` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION` ran a real single-variable OFF-vs-ON corpus trial against `urban_political` with `ENABLE_BELIEF_ASSIMILATION` held ON in both legs — no suppression regression, the distinction from `ENABLE_BELIEF_ASSIMILATION` (production vs execution of Branch B's `ActionIntent`) confirmed by direct code read and by trial data, but zero shipped profiles turn this flag on and Branch B did not route a query in either leg of this trial's corpus/seed/window, matching `INFRA-270`'s and `INFRA-266`'s prior findings. See "ENABLE_INFORMATION_INTENT_EXECUTION — Validation Trial Result" below. |
 
 ## ENABLE_COMBAT_ENGAGEMENT — Validation Trial Result (TCK-20260826)
 
@@ -425,6 +425,84 @@ does not create a divergence from the Mechanics Bible, and no chapter governs th
 crash disclosed above, and separately (b) wiring a real reward-ledger producer (or accepting that
 decision-logic safety under real reward flow stays untested indefinitely) — both concrete, named
 prerequisites, not "someday" items.
+
+## ENABLE_INFORMATION_INTENT_EXECUTION — Validation Trial Result (TCK-20260826)
+
+`TCK-20260826-INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION` is the follow-up this table's own
+`ENABLE_INFORMATION_INTENT_EXECUTION` row named. **This is the 5th and final of the 5 flags
+originally deferred by `TCK-20260824-ROLLOUT-FLAG-DECISIONS`** (`ENABLE_COMBAT_ENGAGEMENT`,
+`ENABLE_SELF_MODEL_COGNITION`, `ENABLE_WORLD_EMERGENCE`, `ENABLE_PROGRESSION_EVOLUTION`, and now
+this flag) — all 5 now carry real trial evidence on file. Full raw tally:
+`staging_artifacts/TCK-20260826-INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION/trial_evidence.md`
+(moved to `stored_artifacts/` at ticket close).
+
+**The distinction from `ENABLE_BELIEF_ASSIMILATION` — confirmed by direct code read, not
+assumed.** Both flags live in the `information`/belief domain but gate different phases:
+`ENABLE_BELIEF_ASSIMILATION` gates `InformationBeliefPhase`, whose Branch 3 ("route new query")
+*produces* a raw `ActionIntent` into `EntityUpdate.intent_results` when the actor has an
+unresolved unknown; `ENABLE_INFORMATION_INTENT_EXECUTION` gates
+`InformationIntentExecutionPhase`, which *executes* that already-produced `ActionIntent` via
+`ActionIntentAdapter.execute()`. With `ENABLE_BELIEF_ASSIMILATION` ON (its own now-flipped default)
+and `ENABLE_INFORMATION_INTENT_EXECUTION` OFF, Branch B's `ActionIntent` is routed but sits inert
+— confirmed by `test_action_intent_execution_phase_off_by_default_is_a_noop`. Flipping
+`ENABLE_BELIEF_ASSIMILATION` ON alone does not activate this flag's own call site; both must be ON
+for the loop to close.
+
+**World tested**: `urban_political` (real compiled state, `entities=10`, confirmed via each run's
+successful load), seed 42, 200 ticks, OFF leg (temporary probe, `ENABLE_INFORMATION_INTENT_EXECUTION`
+omitted entirely so it falls through to its code-level default OFF) vs. ON leg (the existing
+permanent `urban_political_selfmodel_execution_probe.yaml` fixture). `ENABLE_BELIEF_ASSIMILATION`
+held ON in both legs throughout, per this ticket's own Out of Scope (never re-litigated, never
+toggled off to isolate the flag artificially).
+
+**Commands**:
+```
+python3 tools/calibrate_simq.py --ticks 200 --seed 42 --name urban_political \
+  --profile urban_political_information_intent_execution_off_probe \
+  --output data/calibration/urban_political_information_intent_execution_off_probe_seed42_200t
+python3 tools/calibrate_simq.py --ticks 200 --seed 42 --name urban_political \
+  --profile urban_political_selfmodel_execution_probe \
+  --output data/calibration/urban_political_selfmodel_execution_probe_seed42_200t
+```
+
+**Evidence tally**: `action_intent`/`ActionIntentAdapter` trace count is **0 in both legs** —
+Branch B does not route a query in this corpus/seed/window regardless of which leg, matching
+`INFRA-270`'s own `support_boundary` and `INFRA-266`'s prior "does NOT generalize to
+`urban_political` at seed 42" finding. Pillar-level differences between the two legs are small
+(≤13-event, ≤10%) downstream-cascade deltas from the toggled flag's effect on tick-by-tick
+decision ordering — no pillar collapsed toward zero on the ON leg (no-suppression check passes).
+`test_information_intent_execution_fires_through_kernel_tick_once` (the deterministic hand-built
+scenario, INFRA-270's own guaranteed proof `ActionIntentAdapter.execute()` fires through a real
+`Kernel.tick_once()` loop) passed in both the pre-trial and post-trial pytest runs.
+
+**Honest gap — reproduces an already-filed, still-open anchor drift, does not introduce a new
+one.** The ON leg's fresh run reproduces `SOCIAL: actual_score=13.35` vs. `grade_anchors.json`'s
+anchored `16.815` on `urban_political_selfmodel_execution_probe_seed42_200t` — byte-identical to
+the number already reported in the still-`OPEN`
+`TCK-20260829-SELFMODEL-PROBE-GRADE-ANCHOR-DRIFT-INVESTIGATION` (filed from the
+`SELF-MODEL-COGNITION` sibling ticket's own trial). `lookup_ceiling()` returns `None` for
+`SOCIAL` on this run key — no existing ceiling classification covers it. `INFORMATION` itself does
+**not** drift on this specific run key (exact match, `B/0.2` both actual and anchored) —
+consistent with the drift ticket's own filing text, which only reported `INFORMATION` drift on the
+sibling `urban_political_selfmodel_probe` (materialization-only) run key. This ticket's own
+independent re-run confirms the `SOCIAL` drift is deterministic and reproducible, not run-to-run
+noise — disclosed here as confirmation, not investigated or fixed (that remains
+`TCK-20260829-SELFMODEL-PROBE-GRADE-ANCHOR-DRIFT-INVESTIGATION`'s own separately-tracked job, not
+this ticket's). Separately, `tools/calibrate_simq.py`'s `_KNOWN_FLAGS` allowlist
+(`calibrate_simq.py:243-250`) does not include `ENABLE_INFORMATION_INTENT_EXECUTION` — a bare
+env-var override would silently no-op for this flag; this trial avoided the trap by using
+`--profile`-level `feature_flags:` overrides for both legs. Not fixed here — a real, disclosed
+tooling gap, out of this ticket's scope.
+
+**Recommendation: Keep OFF, deferred.** `grep -rl "ENABLE_INFORMATION_INTENT_EXECUTION"
+config/simulation_quality/profiles/` returns only the non-shipped probe fixture — zero shipped
+production profiles turn this flag on today, the same DEV-003 gap all 4 prior sibling flags share.
+No new `docs/guidelines/intentional_divergences.md` entry is added — the flag's behavior versus the
+Mechanics Bible is unchanged either way, and no Mechanics Bible chapter governs this Phase-10-era
+infrastructure flag regardless. If a future ticket wants to re-open this: either (a) a shipped
+SimQ corpus profile begins using `ENABLE_INFORMATION_INTENT_EXECUTION=ON` in production, matching
+the DEV-003 precedent directly, or (b) a higher-`unknowns`-density world/seed independently
+confirms Branch B routing a query through a real (not hand-built) corpus run.
 
 ## RolloutProfileManager — Cut
 
