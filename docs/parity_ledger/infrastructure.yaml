@@ -4761,8 +4761,8 @@
     \ reason as Phase 1's own cutover. See stored_artifacts/TCK-20260806-PUSH-CUTOVER-PHASE2/investigation.md\
     \ for the full repro.\n"
 - id: INFRA-274
-  text: 'Plan-phase "unresolved questions" gate false-positive fix (TCK-20260716-PLAN-GATE-SUBSTRING-
-    FALSEPOS): the orchestrator''s Plan-phase gate previously tested `planText.toLowerCase().includes(''unresolved
+  text: 'Plan-phase "unresolved questions" gate false-positive fix (TCK-20260716-PLAN-GATE-SUBSTRING-FALSEPOS):
+    the orchestrator''s Plan-phase gate previously tested `planText.toLowerCase().includes(''unresolved
     question'')` against the planner agent''s free-text return summary, which false-triggered
     `NEEDS_HUMAN_INPUT` whenever that prose contained a phrase like "No unresolved
     questions: ..." (the plural "questions" substring-matches "question" even when
@@ -4778,6 +4778,22 @@
     pipeline takes) -- no simulation engine, mechanics, or determinism behavior is
     involved.
 
+
+    UPDATE (TCK-20260827-PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS): `plan_has_unresolved_questions_heading()`
+    was heading-presence-only, which still false-triggered `NEEDS_HUMAN_INPUT` for
+    a genuinely resolved plan, because the planner agent''s own prompt always writes
+    the `## Unresolved Questions` heading, filling it with "None." when there is nothing
+    to flag rather than omitting it (found live during TCK-20260824-OCCUPATION-CHANGE-TRIGGER).
+    Fixed by making the check content-aware: it now inspects the section body (from
+    immediately after the heading to the next `##` H2 heading or EOF). An empty/whitespace-only
+    body, or a body whose first non-blank line starts with the word "None" (case-insensitive,
+    word-boundary matched -- "Nonetheless, ..." does NOT count as "None") returns
+    `False` (no gate). Any other body content still returns `True`, same `NEEDS_HUMAN_INPUT`
+    gating as before this fix. Same function name/signature (`plan_path: str -> bool`);
+    both real call sites (`.claude/workflows/implement-ticket.js`''s Plan-gate ~line
+    654-680, and `tools/agent_replay/runner.py::replay_slice()`) needed zero changes.
+
+
     '
   status: verified
   priority: P1
@@ -4792,6 +4808,20 @@
     convention of calling a testable function rather than inlining untestable regex
     logic in the `-c` string.
 
+
+    UPDATE (TCK-20260827-PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS): `tools/gate_checks/plan_gate_static.py::plan_has_unresolved_questions_heading()`
+    now parses the section body (heading to next H2 or EOF) instead of only checking
+    heading presence; an empty/whitespace-only body, or a body whose first non-blank
+    line starts with the word "None" (word-boundary, case-insensitive) returns `False`.
+    Verified against the real, already-closed TCK-20260824-OCCUPATION-CHANGE-TRIGGER''s
+    own `stored_artifacts/TCK-20260824-OCCUPATION-CHANGE-TRIGGER/plan.md` (whose `##
+    Unresolved Questions` body reads "None. The one question investigation.md flagged
+    ... was checked directly during planning and resolved: it does not apply.") --
+    now returns `False`, previously returned `True`. Both call sites (`.claude/workflows/implement-ticket.js`
+    ~line 654-680, `tools/agent_replay/runner.py::replay_slice()`) required zero changes
+    -- same function name/signature.
+
+
     '
   proof_type: null
   test_path: 'tests/tools/test_plan_gate_static.py (6/6 passing -- dedicated regression
@@ -4802,6 +4832,16 @@
     (6/6 passing) additionally confirms the surrounding planTs/writeSidecar/plan=await
     agent(...)/planText adjacency block was left structurally intact.
 
+
+    UPDATE (TCK-20260827-PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS): tests/tools/test_plan_gate_static.py
+    now 14/14 passing (6 pre-existing + 8 new content-aware tests): test_heading_with_bare_none_and_period_returns_false,
+    test_heading_with_bare_none_no_trailing_punctuation_returns_false, test_heading_with_none_and_explanation_returns_false
+    (the exact real-world TCK-20260824-OCCUPATION-CHANGE-TRIGGER scenario), test_heading_with_none_case_insensitive_returns_false,
+    test_heading_with_only_whitespace_body_before_next_heading_returns_false, test_heading_with_only_whitespace_body_to_eof_returns_false,
+    test_heading_with_real_content_still_returns_true, test_heading_with_none_prefixed_word_not_treated_as_resolved
+    (guards against a "Nonetheless, ..." false negative).
+
+
     '
   divergence_note: null
   support_boundary: 'Agent-orchestration workflow tooling only -- no simulation behavior
@@ -4810,6 +4850,11 @@
     INFRA-263 (Finalize-phase registry-regen gate), INFRA-264 (CI registry-drift backstop),
     or INFRA-265 (Scope-phase ticket-location resolution); this is a fourth, distinct
     gate-logic guarantee scoped to the Plan phase''s unresolved-questions check specifically.
+    UPDATE (TCK-20260827-PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS): scope unchanged
+    -- this update only makes the same gate content-aware instead of heading-presence-only;
+    it remains the single Plan-phase unresolved-questions guarantee, not a new/fifth
+    one.
+
 
     '
 - id: INFRA-275
@@ -11051,55 +11096,21 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'tools/agent-monitoring/generate_retro.py:705-711 (`_kgmcp_verdict()`
-    docstring addendum stating the low-coverage clause reflects two independently-implemented
-    tools, not cache underperformance), :771-774 (the low-coverage explanation string
-    itself, appended to the existing ''Coverage is low: ...'' clause: ''This reflects
-    two independently-implemented tools (only knowledge_context/knowledge_status are
-    cache-instrumented; search_docs is served by a separate, uninstrumented implementation),
-    not a fixable inefficiency in the cache itself.''). tools/agent-monitoring/generate_retro.py:815-824
-    (`compute_kgmcp_cache_efficiency_metrics()` docstring addendum, same architectural-fact
-    framing, citing tools/knowledge_gateway_mcp.py and tools/knowledge_search.py by
-    path). tools/agent-monitoring/generate_retro.py:2034-2040 (`generate()` -- new
-    italicized paragraph appended under the ''## KGMCP Cache Efficiency'' heading,
-    after the existing ''_Reflects the full retrieval_cache_access_log corpus...''
-    paragraph and before the ''**Cache Efficiency: {verdict}**'' line; always rendered,
-    matching this section''s existing never-gated convention). tests/tools/test_generate_retro.py''s
-    _FIXED_CORPUS_EXPECTED_REPORT golden string (~line 1091-1096) was updated in the
-    same commit to include the new paragraph''s exact text, proving generate()''s
-    rendered output actually contains it.
-
-    TCK-20260826-KGMCP-COVERAGE-RATE-OVERFLOW (distinct, later root cause, same metric):
-    coverage_rate''s numerator (access_log_rows -- always the all-time corpus, since main()
-    never period-slices kgmcp_access_log) was being divided by a denominator
-    (search_calls_total) built from the period-scoped `tools` list, producing values over
-    100% (e.g. 1059.3% on a one-week report) that reflected a time-window mismatch, not
-    real coverage. Fix: compute_kgmcp_cache_efficiency_metrics() gained an `all_tools`
-    parameter; search_calls_total now prefers `all_tools` (the same unfiltered, all-time
-    tools.jsonl corpus already loaded once in main() for the Zero-Invocation Skill Flags
-    section) over `tools` when supplied, reconciling both sides of the ratio to the same
-    all-time window. Falls back to `tools` when `all_tools` is not supplied, preserving
-    exact prior behavior for direct unit-test callers. coverage_rate is never capped/floored
-    in either code path -- a genuinely-uncapped ratio still renders its real raw value.'
-  status: verified
-  priority: P2
-  legacy_evidence: null
   v2_evidence: 'tools/agent-monitoring/generate_retro.py:783-846 (`compute_kgmcp_cache_efficiency_metrics()`
-    gains `all_tools` parameter; docstring addendum explaining the window-mismatch root
-    cause and the all_tools-preferred/tools-fallback resolution). tools/agent-monitoring/generate_retro.py:994-997
+    gains `all_tools` parameter; docstring addendum explaining the window-mismatch
+    root cause and the all_tools-preferred/tools-fallback resolution). tools/agent-monitoring/generate_retro.py:994-997
     (`compute_retro_metrics()` threads `all_tools` through). tools/agent-monitoring/generate_retro.py:1573-1576
     (`generate()` forwards its own existing `all_tools` parameter into compute_retro_metrics()).
     tests/tools/test_generate_retro.py::test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_window_matched_via_all_tools,
     ::test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_never_capped_even_when_over_one,
-    ::test_compute_retro_metrics_threads_all_tools_into_coverage_denominator,
-    ::test_generate_kgmcp_coverage_uses_all_tools_denominator_not_period_scoped_tools
+    ::test_compute_retro_metrics_threads_all_tools_into_coverage_denominator, ::test_generate_kgmcp_coverage_uses_all_tools_denominator_not_period_scoped_tools
     -- prove the exact 500%-uncorrected/50%-corrected reconciliation end-to-end through
-    generate(), and that an uncapped ratio still renders its real value (500%) when both
-    sides are genuinely all-time. src/api/agent_ops_dashboard/ingest.py''s own
-    compute_retro_metrics() call was inspected and confirmed unaffected: it already passes
-    `tools=self._tools_all` (the all-time corpus, not period-scoped) for its own
-    period-selection semantics, so its coverage_rate was already all-time-vs-all-time before
-    this fix and needed no change.'
+    generate(), and that an uncapped ratio still renders its real value (500%) when
+    both sides are genuinely all-time. src/api/agent_ops_dashboard/ingest.py''s own
+    compute_retro_metrics() call was inspected and confirmed unaffected: it already
+    passes `tools=self._tools_all` (the all-time corpus, not period-scoped) for its
+    own period-selection semantics, so its coverage_rate was already all-time-vs-all-time
+    before this fix and needed no change.'
   proof_type: regression
   test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
   divergence_note: null

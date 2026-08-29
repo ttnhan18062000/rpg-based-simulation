@@ -237,7 +237,7 @@ Step 5 — Legacy regression
   Verify: test_legacy_monster_fallback_still_hostile, test_old_is_hostile_semantics_still_pass
 ```
 
-**Gate:** If plan.md contains an "Unresolved Questions" section, the workflow returns `NEEDS_HUMAN_INPUT`. The user reads `staging_artifacts/{id}/plan.md`, resolves the questions (editing the plan directly), and re-runs with `ticket_id`.
+**Gate:** The workflow returns `NEEDS_HUMAN_INPUT` if plan.md's `## Unresolved Questions` section body has real content — the check is content-aware, not heading-presence-only. A heading followed by an empty/whitespace-only body, or by a first non-blank line starting with the word "None" (case-insensitive, word-boundary matched — "Nonetheless..." does not count), is treated as resolved and does not gate (`tools/gate_checks/plan_gate_static.py::plan_has_unresolved_questions_heading`). Any other body content still gates. The user reads `staging_artifacts/{id}/plan.md`, resolves the questions (editing the plan directly), and re-runs with `ticket_id`.
 
 ---
 
