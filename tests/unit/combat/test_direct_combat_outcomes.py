@@ -145,3 +145,19 @@ def test_severe_wound_max_hp_penalty_reduces_effective_max_hp_through_apply_path
     # subtraction from the pre-recompute combat.max_hp), so only assert the direction and
     # magnitude of the wound's own effect, not an exact post-recompute value.
     assert result.combat.max_hp < before_max_hp
+
+
+def test_wound_infliction_below_live_threshold_produces_no_wound():
+    """
+    [TCK-20260824-WOUND-THRESHOLD-DECISION] Negative-boundary companion to
+    test_wound_penalties_scale_with_severity_through_live_combat_path: damage at or below
+    max_hp * 0.25 (the live strict `>` gate in _get_wound_infliction) must not produce a
+    wound, through the real resolve_attack() entry point.
+    """
+    attacker = create_mock_entity(1, faction=Faction.HERO_GUILD, atk=10, dfn=5)
+    defender = create_mock_entity(2, faction=Faction.MONSTER_HORDE, atk=5, dfn=5, hp=100)
+    state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender})
+    update = CombatResolutionSystem.resolve_attack(attacker, defender, state=state)
+
+    assert update.damage_taken <= defender.combat.max_hp * 0.25
+    assert update.wound_update is None

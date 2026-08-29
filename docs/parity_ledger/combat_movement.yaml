@@ -1110,7 +1110,7 @@
     delegates to src/engine/rpg_depth.py WoundService.create_wound(damage=int(damage),
     max_hp=defender.combat.max_hp, tick=tick, wound_id=w_id) (fixed in TCK-20260824-WOUND-PENALTY-FORMULA-WIRING).
   proof_type: parity
-  test_path: tests/unit/core/test_rpg_depth.py::TestWoundInfliction::test_wound_infliction_massive_hit
+  test_path: tests/unit/combat/test_direct_combat_outcomes.py::test_wound_penalties_scale_with_severity_through_live_combat_path
   divergence_note: null
   support_boundary: null
 - id: COMB-103
@@ -3027,12 +3027,12 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/engine/combat.py _get_wound_infliction() line 583 \u2014 `damage\
-    \ > defender.combat.max_hp * 0.25 and alive`. docs/mechanics/01_entity_anatomy.md\
+  v2_evidence: "src/engine/combat.py CombatResolutionSystem._get_wound_infliction()\
+    \ lines 604-618 \u2014 `damage > defender.combat.max_hp * 0.25 and alive`. docs/mechanics/01_entity_anatomy.md\
     \ Section 6 updated to match (TCK-20260619-PARITY-P0-BUGS). docs/mechanics/02_combat_laws.md\
     \ Section 5 added wound threshold (TCK-20260619-PARITY-P0-BUGS).\n"
   proof_type: parity
-  test_path: tests/unit/combat/test_combat_matrix.py
+  test_path: tests/unit/combat/test_direct_combat_outcomes.py::test_wound_penalties_scale_with_severity_through_live_combat_path
   divergence_note: 'Previously divergent: Chapter 02 stated 40%, entity_anatomy stated
     40%, code used 25%. Resolved in TCK-20260619-PARITY-P0-BUGS: docs corrected to
     match source-authoritative 25% value.

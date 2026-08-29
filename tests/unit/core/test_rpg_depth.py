@@ -37,7 +37,7 @@ from src.core.builder import V2EntityBuilder
 from src.engine.rpg_depth import (
     StaminaService, WoundService, LeashService, TerrainCostService,
     TargetStickinessService, SkillScalingService, ATTRIBUTE_CAP,
-    enforce_attribute_caps, WOUND_THRESHOLD_RATIO, LEASH_CHASE_MULTIPLIER,
+    enforce_attribute_caps, LEASH_CHASE_MULTIPLIER,
     TARGET_SWITCH_MARGIN
 )
 
@@ -191,15 +191,6 @@ class TestExhaustion:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestWoundInfliction:
-    # Logic ID: COMB-102
-
-    def test_wound_infliction_massive_hit(self):
-        """test_wound_infliction_massive_hit: 40%+ max HP in one hit creates wound."""
-        # VERIFIED v2: wound_infliction_massive_hit
-        assert WoundService.should_inflict_wound(40, 100)  # exactly 40%
-        assert WoundService.should_inflict_wound(60, 100)  # above 40%
-        assert not WoundService.should_inflict_wound(30, 100)  # below 40%
-
     # Logic ID: COMB-103
 
     def test_wound_stat_impact(self):

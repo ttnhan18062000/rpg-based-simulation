@@ -147,8 +147,8 @@ Massive hits cause lasting physical trauma.
 ### Wound Infliction
 A **Wound** is inflicted if a single hit deals damage **strictly greater than 25% of Max HP** (on a surviving defender).
 ```python
-WOUND_THRESHOLD_RATIO = 0.25
-is_wound = damage > (max_hp * WOUND_THRESHOLD_RATIO)  # strict >, only if defender survives
+WOUND_INFLICTION_RATIO = 0.25
+is_wound = damage > (max_hp * WOUND_INFLICTION_RATIO)  # strict >, only if defender survives
 ```
 
 ### Wound Penalty

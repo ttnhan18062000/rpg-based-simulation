@@ -39,10 +39,14 @@ Not created yet — this epic is scope-only. Prospective child tickets, grouped 
 
 ### B — Now-resolved technical questions (each needs a real fix or an explicit keep-as-is decision, not just documentation)
 
-2. **Idea 15 — Wound threshold: 25% is the live value, 40% is dead code.** Decide: delete
-   `WoundService.should_inflict_wound()`'s unreachable branch, or leave it and correct
-   `docs/mechanics/02_combat_laws.md` and `01_entity_anatomy.md`'s cross-reference so the divergence isn't
-   re-discovered later.
+2. ~~**Idea 15 — Wound threshold: 25% is the live value, 40% is dead code.**~~ **Resolved** by
+   `TCK-20260824-WOUND-THRESHOLD-DECISION` (done): `WoundService.should_inflict_wound()` and
+   `WOUND_THRESHOLD_RATIO` deleted as confirmed zero-real-caller dead code — the live 25% gate in
+   `src/engine/combat.py` was never touched. `docs/mechanics/01_entity_anatomy.md`'s pseudocode
+   identifier renamed `WOUND_THRESHOLD_RATIO` → `WOUND_INFLICTION_RATIO` (value unchanged, 0.25);
+   `docs/mechanics/02_combat_laws.md` needed no change (already used the raw `0.25` literal, no
+   identifier collision). No `intentional_divergences.md` entry — deleting dead code that never
+   diverged from documented law is not itself a divergence.
 3. **Idea 17 — Wound/Scar penalty mechanics.** The severity-scaled formula this card originally described
    is dead code; live combat uses a flat `penalty=5.0` for attack/defense only, and no wound has ever
    healed in production (`WoundUpdate.wounds_heal` has zero producers). Two real decisions bundled: wire

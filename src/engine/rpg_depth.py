@@ -108,18 +108,8 @@ class StaminaService:
 
 # ─── Wound / Scar Aftermath Service ──────────────────────────────────────────
 
-WOUND_THRESHOLD_RATIO = 0.40  # 40% of max HP in a single hit triggers wound
-
 class WoundService:
     """Generates wounds from massive hits and transitions them to scars."""
-
-    @staticmethod
-    def should_inflict_wound(damage: int, max_hp: int) -> bool:
-        """Check if a single hit is massive enough to cause a wound."""
-        # VERIFIED v2: wound_infliction_massive_hit
-        if max_hp <= 0:
-            return False
-        return damage >= (max_hp * WOUND_THRESHOLD_RATIO)
 
     @staticmethod
     def create_wound(damage: int, max_hp: int, tick: int, wound_id: str) -> WoundState:
