@@ -15,7 +15,6 @@ checklist's sections:
 - Z10 (Skill scaling math, attribute caps)
 """
 from __future__ import annotations
-from dataclasses import replace
 from typing import TYPE_CHECKING, Optional, Dict, Any, List, Set, Tuple
 from src.core.state import TERRAIN_COST
 
@@ -183,22 +182,6 @@ class WoundService:
             "speed_penalty": total_speed,
         }
 
-    @staticmethod
-    def heal_wound(wound) -> Tuple:
-        """Heal a wound and create a scar. Returns (healed_wound, scar)."""
-        # VERIFIED v2: scar_permanence_logic
-        from src.core.state import WoundState, ScarState
-        healed = replace(wound, healed=True, scar_created=True)
-        scar = ScarState(
-            id=f"scar_{wound.id}",
-            wound_kind=wound.kind,
-            tick_created=wound.tick_inflicted,
-            atk_penalty=wound.atk_penalty * 0.3,
-            def_penalty=wound.def_penalty * 0.3,
-            speed_penalty=wound.speed_penalty * 0.3,
-        )
-        return healed, scar
-
 
 # ─── Mob Leash Service ────────────────────────────────────────────────────────
 
@@ -268,18 +251,6 @@ class DiscoveryService:
         VERIFIED v2: perception_discovery_math
         """
         return 0.05 + (per * 0.02) # Base 5% + 2% per perception point
-
-class MedicalService:
-    """Wisdom-based medical diagnosis and healing quality."""
-    
-    @staticmethod
-    def get_diagnosis_quality(wis: int) -> float:
-        """
-        Calculate diagnosis accuracy (0.0 to 1.0).
-        VERIFIED v2: wisdom_diagnosis_math
-        """
-        # Linear scaling: 10 Wisdom = 50% accuracy, 20 Wisdom = 100%
-        return min(1.0, wis * 0.05)
 
 
 # ─── Terrain Cost Service ────────────────────────────────────────────────────

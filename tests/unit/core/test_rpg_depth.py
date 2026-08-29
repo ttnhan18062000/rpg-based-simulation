@@ -235,7 +235,14 @@ class TestScarPermanence:
         """test_scar_permanence: scars persist after wound heals."""
         # VERIFIED v2: scar_permanence_logic
         wound = WoundService.create_wound(80, 100, tick=5, wound_id="w1")
-        healed_wound, scar = WoundService.heal_wound(wound)
+        # No production producer exists for wound healing (TCK-20260824-WOUND-HEALING-DECISION);
+        # hand-construct the WoundState->ScarState transition to exercise the data model.
+        healed_wound = replace(wound, healed=True, scar_created=True)
+        scar = ScarState(
+            id=f"scar_{wound.id}", wound_kind=wound.kind, tick_created=wound.tick_inflicted,
+            atk_penalty=wound.atk_penalty * 0.3, def_penalty=wound.def_penalty * 0.3,
+            speed_penalty=wound.speed_penalty * 0.3,
+        )
         assert healed_wound.healed
         assert healed_wound.scar_created
         assert scar.id == "scar_w1"
@@ -244,7 +251,11 @@ class TestScarPermanence:
     def test_scar_lesser_penalty(self):
         """Scar penalties are 30% of original wound penalties."""
         wound = WoundService.create_wound(80, 100, tick=5, wound_id="w1")
-        _, scar = WoundService.heal_wound(wound)
+        scar = ScarState(
+            id=f"scar_{wound.id}", wound_kind=wound.kind, tick_created=wound.tick_inflicted,
+            atk_penalty=wound.atk_penalty * 0.3, def_penalty=wound.def_penalty * 0.3,
+            speed_penalty=wound.speed_penalty * 0.3,
+        )
         assert abs(scar.atk_penalty - wound.atk_penalty * 0.3) < 0.01
         assert abs(scar.def_penalty - wound.def_penalty * 0.3) < 0.01
 
@@ -252,8 +263,16 @@ class TestScarPermanence:
         """Multiple scars stack their lesser penalties."""
         w1 = WoundService.create_wound(50, 100, tick=1, wound_id="w1")
         w2 = WoundService.create_wound(60, 100, tick=2, wound_id="w2")
-        _, s1 = WoundService.heal_wound(w1)
-        _, s2 = WoundService.heal_wound(w2)
+        s1 = ScarState(
+            id=f"scar_{w1.id}", wound_kind=w1.kind, tick_created=w1.tick_inflicted,
+            atk_penalty=w1.atk_penalty * 0.3, def_penalty=w1.def_penalty * 0.3,
+            speed_penalty=w1.speed_penalty * 0.3,
+        )
+        s2 = ScarState(
+            id=f"scar_{w2.id}", wound_kind=w2.kind, tick_created=w2.tick_inflicted,
+            atk_penalty=w2.atk_penalty * 0.3, def_penalty=w2.def_penalty * 0.3,
+            speed_penalty=w2.speed_penalty * 0.3,
+        )
         penalties = WoundService.get_scar_stat_penalties([s1, s2])
         assert penalties["atk_penalty"] == s1.atk_penalty + s2.atk_penalty
 
@@ -479,7 +498,13 @@ class TestEffectiveStats:
             id="w1", kind="SLASH", severity=0.8, tick_inflicted=1,
             atk_penalty=3.0, def_penalty=2.0, max_hp_penalty=8.0
         )
-        _, scar = WoundService.heal_wound(wound)
+        # No production producer exists for wound healing (TCK-20260824-WOUND-HEALING-DECISION);
+        # hand-construct the WoundState->ScarState transition to exercise the data model.
+        scar = ScarState(
+            id=f"scar_{wound.id}", wound_kind=wound.kind, tick_created=wound.tick_inflicted,
+            atk_penalty=wound.atk_penalty * 0.3, def_penalty=wound.def_penalty * 0.3,
+            speed_penalty=wound.speed_penalty * 0.3,
+        )
         stats_scar = SkillScalingService.get_effective_stats(attrs, scars=[scar])
         stats_wound = SkillScalingService.get_effective_stats(attrs, wounds=[wound])
         stats_clean = SkillScalingService.get_effective_stats(attrs)

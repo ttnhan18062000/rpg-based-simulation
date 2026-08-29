@@ -573,7 +573,7 @@ flowchart TD
       <tr><td>Breakthrough Bonuses</td><td>3 real breakthroughs with real attribute bonuses sit in the registry, earned but never applied</td><td><span class="badge bug">Stub</span></td><td>Idea 3 &mdash; finish <code>apply_bonuses()</code>, the specific named fix</td><td class="evidence">A literal <code>pass</code></td></tr>
       <tr><td>Relationships</td><td>Directed <code>SocialBond</code>: sentiment + familiarity, moved by combat/team-up/trading</td><td><span class="badge live">Live</span></td><td>Idea 22 &mdash; Relationship Roles beyond a bare score</td><td class="evidence">Feeds Motivation's scoring bias next tick</td></tr>
       <tr><td>Reputation</td><td>Witnessed-event &rarr; reputation labels, authoritatively via <code>RelationshipService.process_update()</code></td><td><span class="badge live">Live</span></td><td>Complete as built; a duplicate write path is one of idea 1's orphans</td><td class="evidence"><code>public_reputation</code>/<code>heroism_score</code>/<code>notoriety_score</code></td></tr>
-      <tr><td>Trauma</td><td>Wound: flat 5.0 penalty to attack/defense (live). Scar: 30%-chance residual, but the heal path that creates it (<code>heal_wound()</code>) has zero production callers</td><td><span class="badge bug">Wound live, Scar orphaned</span></td><td>Idea 17 &mdash; wire <code>heal_wound()</code> into live combat, or redesign the healing trigger</td><td class="evidence">See Lifecycle arc T6/T7 below</td></tr>
+      <tr><td>Trauma</td><td>Wound: flat 5.0 penalty to attack/defense (live), now confirmed permanent by design &mdash; no code path heals a wound. Scar: the 30%-chance residual formula lived only in <code>heal_wound()</code>, which had zero production callers and was deleted as dead code</td><td><span class="badge proposed">Wound live/permanent, Scar deferred</span></td><td>Idea 17 superseded &mdash; <code>DEV-005</code> decided wounds are permanent by design, not merely unwired; <code>heal_wound()</code> and <code>get_diagnosis_quality()</code> are deleted, not wired in. Scar formation, if built, is a separate future mechanic (<code>TCK-20260824-TACTICAL-WOUND-SCAR-WIRING</code>), not a revival of this function</td><td class="evidence">See Lifecycle arc T6/T7 below; see <code>docs/guidelines/intentional_divergences.md</code> DEV-005</td></tr>
       <tr><td>Status Effects &amp; Buffs/Debuffs</td><td>Several unconnected mechanisms (biological&rarr;multiplier links are real) rather than one system; the only live "status effect," Frozen, is stored as a free-form untyped dict key</td><td><span class="badge bug">Fragmented</span></td><td>Idea 4 &mdash; Unify Modification into one typed record</td><td class="evidence">A direct Durable State Rule violation as currently stored</td></tr>
       <tr><td>Commitment Pressure</td><td>Urgency ramp, survival override; <code>AbandonmentEvaluator</code> classification</td><td><span class="badge gated">Gated</span></td><td>Unscoped &mdash; its Cooperation call site is gated OFF with no idea proposing activation</td><td class="evidence">Live via unflagged route-scoring, gated via its documented use case</td></tr>
     </tbody>
@@ -611,7 +611,7 @@ flowchart LR
     NX([Non-existent])
     AL[Spawned / Alive]
     WD[Wounded]
-    SC[Scarred — ORPHANED, heal_wound&#40;&#41; never called live]
+    SC[Scarred — NOT BUILT, heal_wound&#40;&#41; deleted; wounds decided permanent, DEV-005]
     EV[Evolved]
     RB[Rebirthed]
     PD[Permadeath-flagged]
@@ -624,9 +624,7 @@ flowchart LR
     BR -.->|"T18 PROPOSED idea 32"| AL
     NX -.->|"T18 not built"| BR
     AL -->|"T6 wound if dmg ≥25% max HP"| WD
-    WD -.->|"T7 heal_wound() — ORPHANED, 0 production callers"| SC
-    WD -->|"T7 heal_wound() — full (also orphaned)"| AL
-    SC -->|already healed| AL
+    WD -.->|"T7 PROPOSED — scar formation not yet built (TCK-20260824-TACTICAL-WOUND-SCAR-WIRING); heal_wound() deleted, wounds decided permanent (DEV-005)"| SC
     AL -->|"T9 XP crosses 10 / 25 / 50"| EV
     EV -->|"T9 next stage"| EV
     AL -->|"T11 age_ticks ≥ max_age"| DD
@@ -640,8 +638,8 @@ flowchart LR
     AL -.->|"T19 PROPOSED idea 33"| MR
 
     class NX,AL,WD,EV,RB,DD live
-    class BR,MR proposed
-    class PD,SC,LS bug
+    class BR,MR,SC proposed
+    class PD,LS bug
 </pre>
   </div>
 
@@ -670,7 +668,7 @@ flowchart LR
       <tr><td class="tid">T4</td><td>At spawn: aptitude assignment</td><td>(within T1)</td><td><span class="badge bug">Orphaned (stub)</span></td><td>Unscoped &mdash; no idea proposes populating real aptitude values</td><td class="evidence"><code>AptitudeComponent()</code> built with zero args, <code>builder.py:105</code> &mdash; every entity gets identical default aptitude</td></tr>
       <tr><td class="tid">T5</td><td>Every tick: hunger +0.5, sleep_debt +0.3</td><td>Alive &rarr; (HP damage if thresholds crossed)</td><td><span class="badge live">Live</span> (Hero/Villager only)</td><td>Complete as built</td><td class="evidence"><code>BiologicalSystem.update()</code>, <code>lifecycle_systems/biological.py</code></td></tr>
       <tr><td class="tid">T6</td><td>Damage &gt; 25% max HP (verified live, matches Mechanics Bible, <code>COMB-290</code> status <code>verified</code>)</td><td>Alive &rarr; Wounded</td><td><span class="badge live">Live</span></td><td>Already resolved; real cleanup is a dead 40% threshold constant unused in <code>rpg_depth.py</code></td><td class="evidence"><code>CombatResolutionSystem._get_wound_infliction()</code>, <code>combat.py</code> &mdash; corrected: not <code>WoundService.create_wound()</code>, which is dead code with zero callers. Flat penalty=5.0 to atk/def only, no severity scaling</td></tr>
-      <tr><td class="tid">T7</td><td><code>heal_wound()</code></td><td>Wounded &rarr; Scarred or fully healed</td><td><span class="badge bug">Orphaned &mdash; zero production callers</span></td><td>Idea 17 &mdash; wire <code>heal_wound()</code> into live combat, or redesign the healing trigger</td><td class="evidence"><code>rpg_depth.py:187</code>, only called from unit tests. Mechanics Bible documents a real 30%-chance formula for the Scar; the code path that would apply it is never reached in production</td></tr>
+      <tr><td class="tid">T7</td><td><code>heal_wound()</code> &mdash; deleted</td><td>Wounded &rarr; (no transition; wounds are permanent)</td><td><span class="badge proposed">Superseded &mdash; function deleted, DEV-005</span></td><td>Idea 17 superseded, not built &mdash; <code>TCK-20260824-WOUND-HEALING-DECISION</code> formally decided wounds are permanent by design and deleted <code>heal_wound()</code>/<code>get_diagnosis_quality()</code> as dead code (zero production callers). Scar formation, if it arrives, is a separate future mechanic (<code>TCK-20260824-TACTICAL-WOUND-SCAR-WIRING</code>), not a revival of this function</td><td class="evidence">Formerly <code>rpg_depth.py:187</code>, only ever called from unit tests, now deleted. Permanence stated explicitly in Mechanics Bible ch.02 &sect;5 / ch.01 &sect;6 (<code>docs/mechanics/02_combat_laws.md</code>, <code>docs/mechanics/01_entity_anatomy.md</code>) and proven by a real <code>Kernel.tick_once()</code> integration test (<code>tests/integration/combat/test_wound_healing_permanence.py</code>)</td></tr>
       <tr><td class="tid">T8</td><td><code>age_ticks</code> crosses elder threshold</td><td>Alive &rarr; Elder attribute shift (not a hard state)</td><td><span class="badge live">Live</span></td><td>Idea 20 (T17) wraps this into a formal Life Stage tier system</td><td class="evidence"><code>compute_elder_attribute_update()</code></td></tr>
       <tr><td class="tid">T9</td><td>XP/level crosses 10, 25, or 50 (EVO-001)</td><td>Alive &rarr; Evolved (<code>kind</code> changes, e.g. GOBLIN&rarr;GOBLIN_WARRIOR&rarr;ORC_SCOUT)</td><td><span class="badge live">Live</span></td><td>Ideas 14/50 add alternate evolution paths (T9b) alongside this one</td><td class="evidence"><code>EvolutionSystem.evaluate()</code>, <code>engine/evolution.py:14&ndash;160</code>, wired via <code>pipeline.py:316</code>. Non-Hero attribute growth is nominally aptitude-scaled but T4 makes that scaling a no-op today.</td></tr>
       <tr><td class="tid">T9b</td><td>Species-keyed or material-gated evolution</td><td>Alt. evolution path</td><td><span class="badge proposed">Proposed</span></td><td>Ideas 14, 50</td><td class="evidence"><code>progression/evolution.py</code>'s <code>EvolutionService</code> is a fully orphaned duplicate of T9, 0 callers</td></tr>

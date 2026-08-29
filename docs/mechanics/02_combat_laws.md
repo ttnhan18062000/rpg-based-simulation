@@ -82,7 +82,14 @@ is_wound = damage > (defender.max_hp * 0.25) and defender.alive
   `SkillScalingService.get_effective_stats()`; `speed_penalty` is computed and stored on the wound
   but is **not yet read** by `get_effective_stats()` — no move-cost/speed stat is currently reduced
   by wounds (tracked as a separate follow-up, not a bug in this formula).
-- Permanent Scars: when a wound heals, it has a 30% chance to leave a scar (`scar_penalty = wound_penalty * 0.3`).
+- Wound Permanence: Wounds are permanent. No code path currently heals a wound — verified: the
+  only production constructor of `WoundUpdate` is `CombatResolutionSystem._get_wound_infliction()`
+  (`src/engine/combat.py:605-617`), which always builds `WoundUpdate(wounds_add=[wound])` and never
+  populates `wounds_heal` or `scars_add`; `WoundUpdate.wounds_heal`/`scars_add` both default to `[]`
+  (`src/core/updates.py:604-609`). A wound's penalty applies for as long as the wound exists on the
+  entity. Permanent Scars — a lesser, persistent penalty replacing a healed wound — are planned to
+  form via a separate mechanic, tracked by `TCK-20260824-TACTICAL-WOUND-SCAR-WIRING` (not yet
+  implemented); until that lands, `scars_add` also has zero production producers.
 
 ---
 

@@ -3216,30 +3216,53 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py -- `wound_sustained`/`wound_healed`/`scar_gained`
-    diff blocks, guarded by `isinstance(..., list)` checks against `entity.combat.wounds`/`.scars`
-    (defensive against MagicMock-based test fixtures elsewhere in the suite, never
-    true for a real EntityState). Verified via real, non-mocked `WoundState`/`ScarState`
-    objects constructed by hand and passed through the real `EventExtractor.extract()`
-    function directly (not through a live `Kernel.tick_once()` loop) -- ENABLE_COMBAT_ENGAGEMENT
-    is corpus-wide gated off (TCK-20260806-SIMQ-COMBAT-ENGAGEMENT-GATE-CORPUS-VALIDITY),
-    so no shipped calibration world can currently produce a wound through a real tick
-    loop. Matches this repo''s own precedented pattern for verifying gated mechanics
-    without a live trigger path (see test_information_intent_execution_fires_through_kernel_tick_once).
+  v2_evidence: '`wound_sustained` has a real production producer (`CombatResolutionSystem._get_wound_infliction`,
+    `src/engine/combat.py:605-617`), gated only by `ENABLE_COMBAT_ENGAGEMENT` -- confirmed
+    via a real, non-mocked `Kernel.tick_once()` integration test (`tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers`)
+    that observes a real wound land in `kernel.state.entities[...].combat.wounds`
+    (authoritative state, not events) at tick 9 of a deterministic 40-tick run at
+    seed 42. `wound_healed` and `scar_gained` have zero production producers, independent
+    of `ENABLE_COMBAT_ENGAGEMENT`''s gate state: the only production constructor of
+    `WoundUpdate` anywhere in `src/` (`combat.py:617`) never populates `wounds_heal`
+    or `scars_add` (re-confirmed by full-repo grep this session), and the same 40-tick
+    real-Kernel run never observes a `healed: False -> True` transition or a `ScarState`
+    addition, in authoritative state, across the whole run -- see `TCK-20260824-WOUND-HEALING-DECISION`
+    (wounds are declared intentionally permanent; no healing trigger is built).
+
+
+    Separately, `src/observability/event_extractor.py`''s wound/scar diff blocks (lines
+    ~280-281, ~302-303) have their own, independent bug (`isinstance(x, list)` instead
+    of `isinstance(x, (list, tuple))`) that silently drops event emission for all
+    three events -- `wound_sustained`, `wound_healed`, and `scar_gained` -- once state
+    is committed as a tuple by the real apply path (which it always is in production).
+    This means none of the three events currently fire through the real event-observability
+    layer, regardless of gate state, for a reason unrelated to whether a producer
+    exists. Tracked and owned separately by `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`,
+    which will correct `wound_sustained`''s (and, if one is ever added, `scar_gained`''s)
+    event-layer reachability claim here once its own fix lands -- this entry''s `wound_healed`/`scar_gained`
+    producer-status correction is independent of that fix and does not require it.
+
 
     '
   proof_type: regression
   test_path: 'tests/unit/observability/test_event_extractor_vitals.py:: test_wound_sustained_severity_mapping,
-    ::test_wound_healed_fires, ::test_scar_gained_fires
+    ::test_wound_healed_fires, ::test_scar_gained_fires; tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers
+
 
     '
   divergence_note: null
-  support_boundary: 'Emitted events are classified `unscored_intentional` (docs/simulation_quality/
-    event_type_coverage.md Section 5) -- not wired to any SimQ pillar. Code path is
-    real and tested but currently unreachable in any shipped calibration world since
-    combat engagement is corpus-wide off; will begin firing naturally once a future
-    ticket re-enables it. See SUB-375 for the sibling biological/stamina entry from
-    the same ticket.
+  support_boundary: 'Emitted events are classified `unscored_intentional` (docs/simulation_quality/event_type_coverage.md
+    Section 5) -- not wired to any SimQ pillar. `wound_sustained`''s underlying producer
+    is real and tested at the state level, gated only by `ENABLE_COMBAT_ENGAGEMENT`,
+    but its event-layer emission is currently blocked by a separate, independently-tracked
+    bug (see `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`) -- do not
+    assume it ''will begin firing naturally once re-enabled'' until that fix lands.
+    `wound_healed`/`scar_gained` will not begin firing under any circumstance, gate
+    state or event-layer fix included, because no code anywhere constructs a non-empty
+    `wounds_heal`/`scars_add` -- this is a permanent design decision (`TCK-20260824-WOUND-HEALING-DECISION`),
+    not a temporary gate limitation. See SUB-375 for the sibling biological/stamina
+    entry from the same ticket.
+
 
     '
 - id: COMB-297

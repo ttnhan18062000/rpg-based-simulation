@@ -167,7 +167,14 @@ for as long as the wound is active (`SkillScalingService.get_effective_stats()`,
 stat — wiring it into `get_effective_stats()` is a tracked follow-up, not part of this formula.
 
 ### Permanent Scars
-When a wound is healed, it has a chance to leave a **Permanent Scar**, which carries **30%** of the original wound's stat penalties indefinitely.
+Wounds are permanent under the current implementation — no code path heals a wound.
+`WoundState.healed` never transitions `False → True` in production: the only `WoundUpdate`
+constructor (`CombatResolutionSystem._get_wound_infliction()`, `src/engine/combat.py:605-617`)
+never populates `wounds_heal`, and `WoundUpdate.wounds_heal`/`scars_add` both default to an empty
+list (`src/core/updates.py:604-609`). A wound's penalty applies indefinitely unless a future
+Scar-formation mechanic — tracked by `TCK-20260824-TACTICAL-WOUND-SCAR-WIRING`, not yet built —
+converts it into a **Permanent Scar**, a lesser, persistent penalty:
 ```python
 scar_penalty = wound_penalty * 0.3
 ```
+This formula describes the intended future scar mechanic, not currently active behavior.

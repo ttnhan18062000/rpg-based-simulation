@@ -38,6 +38,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Strategic Cognition / Regional Danger** | Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot | **Enforced** | RATIFIED |
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
 | **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
+| **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
 
 ---
 
@@ -1501,5 +1502,64 @@ The following legacy behaviors have been intentionally omitted or retired.
   (proves zero `attribute_changed` events are attributable to either path in a real tick today).
 - **Status**: ACTIVE
 
+### DEV-005 — Wounds Are Permanent; heal_wound()/get_diagnosis_quality() Removed (TCK-20260824-WOUND-HEALING-DECISION)
+- **Subsystem**: Engine / Combat
+- **Situation**: `WoundService.heal_wound()` (`src/engine/rpg_depth.py`, deleted by this ticket) had
+  zero `src/` callers — its only 5 references were 4 unit tests in
+  `tests/unit/core/test_rpg_depth.py` that directly exercised the dead function itself.
+  `MedicalService.get_diagnosis_quality()` (`src/engine/rpg_depth.py`, also deleted) had zero
+  callers anywhere, including tests. The only production constructor of `WoundUpdate`
+  (`CombatResolutionSystem._get_wound_infliction()`, `src/engine/combat.py:605-617`) never
+  populates `wounds_heal` or `scars_add` — confirmed zero production producers for wound healing
+  and scar formation, independent of `ENABLE_COMBAT_ENGAGEMENT`'s gate state, by both a full-repo
+  grep of `WoundUpdate(` constructors (`src/` has exactly one, and it never passes `wounds_heal`/
+  `scars_add`) and a real, non-mocked `Kernel.tick_once()` integration test
+  (`tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers`)
+  that reads authoritative state directly across a deterministic 40-tick run: a real wound is
+  inflicted at tick 9, and across the whole run no wound ever transitions `healed: False -> True`
+  and no `ScarState` is ever added. `MedicalService.get_diagnosis_quality()`'s only plausible
+  consumer, by name/docstring ("diagnosis accuracy", "healing quality"), was a hypothetical
+  WIS-gated heal-success roll feeding `heal_wound()` — it is an unfinished half of the same
+  never-wired healing pipeline, not a separately-dead subsystem.
+  - **Note on how this was verified**: this ticket's Step 4 was originally planned to prove the
+    above via `wound_sustained`/`wound_healed`/`scar_gained` *events*
+    (`src/observability/event_extractor.py`), but building that test surfaced a separate,
+    independently-discovered bug — `event_extractor.py`'s wound/scar diff blocks are
+    `isinstance(x, list)`-gated, while the real apply path always commits wounds/scars as tuples,
+    so none of the three events currently fire through any real `Kernel.tick_once()` run,
+    regardless of producer existence. That bug is unrelated to the healing-permanence decision (it
+    affects `wound_sustained` too, which does have a real producer) and is tracked separately by
+    `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`. Step 4 was re-scoped to prove
+    zero `wounds_heal`/`scars_add` producers at the authoritative-state level instead — reading
+    `kernel.state.entities[...].combat.wounds`/`.scars` directly — which does not depend on that
+    separate bug being fixed first.
+- **Decision**: Wounds are declared permanent. No healing trigger is built. Both
+  `heal_wound()` and `get_diagnosis_quality()` (plus the now-empty `MedicalService` class) are
+  **deleted**, not annotated dormant — following the `DEV-004` precedent of deletion for
+  zero-caller dead code (`AllocateAttributeAction`). Their 4 dependent unit tests
+  (`TestScarPermanence`'s 3 tests, `TestEffectiveStats::test_effective_stats_with_scars`) are
+  rewritten to hand-construct the `WoundState`→`ScarState` transition inline, preserving their
+  coverage of `WoundService.get_scar_stat_penalties()` and `SkillScalingService.get_effective_stats()`
+  with scars. Scar formation is deferred to a separate, later mechanic tracked by
+  `TCK-20260824-TACTICAL-WOUND-SCAR-WIRING` (not yet implemented as of this entry — that ticket's
+  current scope only reads existing `ScarState` data, it does not itself build a scar-formation
+  producer; flagged for the ticket owner, not a blocker for this decision).
+- **Rationale**: **Bug Fix** / dead-code removal. `heal_wound()`'s and `get_diagnosis_quality()`'s
+  zero-caller status (confirmed by full-repo search) matches the same evidentiary bar `DEV-004`
+  used for `AllocateAttributeAction`'s deletion — no live or planned call site references either
+  function today, and no test beyond the 4 rewritten fixture-builders exercised them.
+- **Verification**: `tests/unit/core/test_rpg_depth.py::TestScarPermanence` (3 tests, rewritten),
+  `::TestEffectiveStats::test_effective_stats_with_scars` (rewritten),
+  `::TestSkillScaling::test_wound_heal_through_apply` (unchanged — apply-path consumer regression
+  guard, proves `WoundUpdate.wounds_heal` plumbing still works even though nothing produces it);
+  `tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers`
+  (proves, via a real `Kernel.tick_once()` run reading authoritative state directly, that a wound
+  is genuinely inflicted while `healed` never flips and no `ScarState` is ever added, in the same
+  run). See `docs/parity_ledger/combat_movement.yaml::COMB-296` and
+  `docs/event_ledger/entity.yaml::ENTITY-018` for the corrected reachability record (`wound_healed`/
+  `scar_gained` scope only — `wound_sustained`'s separate event-layer bug is owned by
+  `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`, not corrected here).
+- **Status**: ACTIVE
+
 ---
-*Last updated: 2026-08-26 (DEV-004, TCK-20260824-ALLOCATE-AP-BRANCH-DECISION).*
+*Last updated: 2026-08-29 (DEV-005, TCK-20260824-WOUND-HEALING-DECISION).*
