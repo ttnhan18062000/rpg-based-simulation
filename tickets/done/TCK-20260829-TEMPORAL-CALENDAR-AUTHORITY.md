@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY
-phase: open
+phase: done
 date: 2026-08-29
 tags: [temporal, determinism, world]
 ---
@@ -15,7 +15,7 @@ tags: [temporal, determinism, world]
 Calendar Authority & Universal Duration Formula — Investigation and Decision Record
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -93,7 +93,7 @@ decision to a documented, evidence-backed recommendation for the plan owner, not
 
 ## Related Stored Artifacts
 
-- None yet — this ticket's own staging artifacts are the first.
+- `stored_artifacts/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY/{investigation,plan,test_plan}.md`
 
 ## Related Code Areas
 
@@ -105,26 +105,58 @@ decision to a documented, evidence-backed recommendation for the plan owner, not
 
 ## Assumptions / Open Questions
 
-- Which of the four live tick conventions (if any) becomes canonical, vs. whether some are legitimately
-  named sub-cadences that should stay distinct from "one day" — not decided here, see `plan.md`'s options.
-- Whether the universal duration formula generalizes from movement's existing `move_cost`/`readiness_speed`
-  pattern, or needs its own shape — not decided here.
-- Whether this decision's authoritative home is `rpg_design_roadmap.md`'s Temporal axis section or a new
-  `docs/mechanics/` chapter (the roadmap's own Known Open Items already flag that the Mechanics Bible has no
-  social/relationship chapter home for a related gap — the same question may apply here).
+Resolved by plan-owner sign-off, 2026-08-29 (all four recommendations in `plan.md` accepted as written):
+
+- **Which tick convention is canonical:** the World Evolution Bible's 2,400 ticks/day (36s/tick). Raid's
+  100-tick alias and the cohort/ecology 200-tick interval are named sub-cadences, not rival calendars.
+- **Universal duration formula shape:** generalizes movement's existing `move_cost`/`readiness_speed`
+  readiness-cost pattern (`base_cost × modifier / rate`), not a new shape.
+- **Authoritative home for the decision:** `rpg_design_roadmap.md`'s "Temporal axis" section — no new
+  `docs/mechanics/` chapter needed for this decision record itself; `docs/mechanics/05_world_evolution.md`
+  already states the 2,400-ticks/day authority this decision affirms, so a future implementation ticket only
+  needs to fix its contradicted cross-references (raid.py, cohort.py), not add new Bible content.
+
+Still genuinely open (not this ticket's scope, downstream of this decision): exact life-stage boundaries and
+lifespan distribution, fantasy-calendar duration of pregnancy/recovery/education/apprenticeship,
+modifier-stacking rules, and which processes qualify for safe interval advancement — all still flagged in
+`rpg_design_roadmap.md`'s "Temporal axis" section under "Still open, per the proposal's own §17."
 
 ## Implementation Notes
 
-(none yet — investigation-only ticket at this stage)
+No `src/` changes in this ticket by design — it is a decision record only. The actual migration (renaming
+`src/world/raid.py`'s `TICKS_PER_DAY` constant, documenting `cohort.py`'s `COHORT_INTERVAL` as a named
+sub-cadence, cross-reference cleanup in `docs/mechanics/05_world_evolution.md`, and building the universal
+duration formula for combat/craft/harvest) is left for a dedicated future ticket, most likely landing inside
+M3 once its own ticketing starts.
 
 ## Test Summary
 
-(none yet — no code changes; see `test_plan.md` for how the decision record itself will be verified)
+No automated tests apply (no code changed). Verification performed:
+- All four staging-artifact/ticket frontmatter files passed `tools/validate_frontmatter.py` with zero
+  violations.
+- `docs/REGISTRY.yaml` regenerated after this ticket and the roadmap edit; `tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry`
+  passed (no drift).
+- Every citation in `investigation.md` (file:line references) was pulled directly from the real, current
+  repo state at investigation time, not inferred.
+- Full `Tests` CI workflow green on the PR this ticket rides in (all jobs passed after an earlier,
+  unrelated-to-this-ticket registry-drift fix on the same branch).
 
 ## Files Changed
 
-(none yet)
+- `tickets/inprogress/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md` → `tickets/done/` (this file)
+- `staging_artifacts/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY/{investigation,plan,test_plan}.md` →
+  `stored_artifacts/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY/`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — "Temporal axis" and "Known open items" sections
+  updated with the decision
+- `registries/tag_registry.jsonl` — registered `temporal` (subsystem-topic)
+- `docs/REGISTRY.yaml` — regenerated
+- `tickets/working_log.csv` — closure entry appended
 
 ## Completion Summary
 
-(not yet complete)
+Investigated and quantified the temporal-axis proposal's flagged calendar-convention conflict with real
+numbers (four incompatible tick conventions, not two; a 4.17-day maximum lifespan under the documented
+calendar; movement as the only subsystem with a real duration formula). Presented four decisions as options
+with recommendations; plan owner accepted all four recommendations as written on 2026-08-29. Decision
+recorded in `rpg_design_roadmap.md`'s "Temporal axis" section as the authoritative home. No code changed —
+implementing the migration is explicitly left to a future ticket.

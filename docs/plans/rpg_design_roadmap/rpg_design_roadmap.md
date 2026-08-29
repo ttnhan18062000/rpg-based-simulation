@@ -222,15 +222,35 @@ the extent of recording which of its decisions are accepted-in-brainstorm versus
 
 **Still open, per the proposal's own §17** — not resolved by this review pass: exact human life-stage
 boundaries and lifespan distribution; fantasy-calendar duration of pregnancy/recovery/education/
-apprenticeship; whether the current tick length remains the final minor time quantum; modifier-stacking
-rules; which processes first qualify for safe interval advancement. These require their own dedicated
-balance/design-authority review before any M3+ ticket bakes in a specific number.
+apprenticeship; modifier-stacking rules; which processes first qualify for safe interval advancement. These
+require their own dedicated balance/design-authority review before any M3+ ticket bakes in a specific
+number.
 
-**Calendar-authority investigation opened, 2026-08-29** (`tickets/inprogress/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`):
-confirmed the above with exact numbers — four incompatible tick conventions live in code today (not two),
-and the current age math produces a 4.17-day maximum lifespan under the documented calendar. See "Known open
-items" below for the full finding and the ticket's own `plan.md` for the concrete options awaiting
-plan-owner decision.
+**Calendar authority — decided, 2026-08-29** (`tickets/done/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`,
+plan-owner sign-off recorded in that ticket's `plan.md`, `stored_artifacts/`):
+confirmed the proposal's §9.1/§9.2 conflicts with exact numbers — four incompatible tick conventions live in
+code (not two: `docs/mechanics/05_world_evolution.md`'s 2,400 ticks/day, `src/world/raid.py`'s
+`TICKS_PER_DAY=100`, and a previously-unnamed `src/domains/demographics/cohort.py`'s `COHORT_INTERVAL=200`
+cycle), and current age math (`max_age_ticks=10000`, elder `≥7000`) produces a 4.17-day maximum lifespan
+under the documented calendar. Decided:
+1. **The World Evolution Bible's 2,400 ticks/day (36s/tick) is the sole calendar authority.** Raid's
+   100-tick alias and the cohort/ecology 200-tick interval are named sub-cadences, not rival calendars — the
+   tick length itself is settled, no longer open.
+2. **Age representation migrates to fantasy-year units once that migration is implemented**, rather than
+   patching `max_age_ticks`/cohort thresholds under the current regime — avoids a second migration. Exact
+   life-stage boundaries and lifespan distribution remain open (§17, above), only the migration *approach*
+   is decided.
+3. **The universal duration formula generalizes movement's existing `move_cost`/`readiness_speed`
+   readiness-cost pattern** (`base_cost × modifier / rate`) rather than a new shape — the only existing
+   pattern in the engine, reused rather than replaced.
+4. **A metamorphic-lab pilot (`src/lab/metamorphic.py`, currently zero recorded sessions) runs against an
+   already-tuned numeric surface before any Decision 1-3 number is treated as balanced** — same precedent
+   already established for Idea 37 (M2).
+
+**None of this is implemented yet** — the actual migration (renaming `raid.py`'s constant, documenting the
+cohort/ecology interval, the universal duration formula's real code, the metamorphic pilot itself) is
+deliberately out of this decision ticket's scope and awaits a dedicated implementation ticket, most likely
+inside M3 once its own ticketing starts (see M3's epic doc).
 
 **Suggested integration, by milestone** (per the proposal's §13 — read as a lens on M2-M9, not a new
 milestone or a mandate to start now):
@@ -400,10 +420,11 @@ by this section — it is a pointer for whoever next scopes M2-M9 ticket-level w
   Movement (`move_cost`/`readiness_speed`, `src/core/state.py`/`src/engine/legality.py`) is the only
   subsystem in the engine with a real, working duration formula (nets to 1 tile/tick on plain terrain);
   combat, crafting, and harvesting have no duration/cost concept at all to generalize a universal formula
-  from. `src/lab/metamorphic.py` (the balance-testing tool) has zero recorded real sessions. This blocks any
-  M3+ balance decision, not just a documentation nicety — see the ticket's `investigation.md` and `plan.md`
-  for the concrete calendar-authority/duration-formula options and recommendations awaiting plan-owner
-  sign-off.
+  from. `src/lab/metamorphic.py` (the balance-testing tool) has zero recorded real sessions. **Decided by the
+  plan owner, 2026-08-29** — see "Temporal axis" above for the four resolved decisions (calendar authority,
+  age-migration approach, duration-formula shape, metamorphic-pilot sequencing); the ticket is closed
+  (`tickets/done/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`) as a decision record only — implementing the
+  migration is still open, future work.
 
 ## References
 
