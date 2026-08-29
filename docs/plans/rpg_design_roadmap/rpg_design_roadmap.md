@@ -226,6 +226,12 @@ apprenticeship; whether the current tick length remains the final minor time qua
 rules; which processes first qualify for safe interval advancement. These require their own dedicated
 balance/design-authority review before any M3+ ticket bakes in a specific number.
 
+**Calendar-authority investigation opened, 2026-08-29** (`tickets/inprogress/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`):
+confirmed the above with exact numbers — four incompatible tick conventions live in code today (not two),
+and the current age math produces a 4.17-day maximum lifespan under the documented calendar. See "Known open
+items" below for the full finding and the ticket's own `plan.md` for the concrete options awaiting
+plan-owner decision.
+
 **Suggested integration, by milestone** (per the proposal's §13 — read as a lens on M2-M9, not a new
 milestone or a mandate to start now):
 - M2 features should declare their timing/spatial-reach assumptions (population, Place transitions,
@@ -383,6 +389,21 @@ by this section — it is a pointer for whoever next scopes M2-M9 ticket-level w
   (young/adult/elder, `cohort.py`) and `LifeStage`'s enum (CHILD/ADULT/ELDER, `IdentityComponent`) may be two
   overlapping representations of the same concept — flagged in M9, not resolved there or here. Whoever scopes
   idea 20 should settle this first, not discover it mid-ticket.
+- **Four incompatible tick/calendar conventions confirmed live in code, not two — and the current age math is
+  broken by 2-3 orders of magnitude, quantified.** (2026-08-29, `TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY`.)
+  The temporal-axis proposal's §9.1 named two conflicting conventions (`docs/mechanics/05_world_evolution.md`'s
+  2,400 ticks/day vs. `src/world/raid.py`'s `TICKS_PER_DAY = 100`); direct investigation found a third,
+  previously-unnamed one — `src/domains/demographics/cohort.py`'s `COHORT_INTERVAL = 200` ticks, the
+  birth/death/ecology re-evaluation cycle, unrelated to either "day." Computed against the Bible's own
+  authority: `max_age_ticks=10000` and the `≥7000` elder threshold (`cohort.py`) produce a **4.17-day maximum
+  lifespan** and an elder threshold at **2.92 days** — not an approximation, what the code does today.
+  Movement (`move_cost`/`readiness_speed`, `src/core/state.py`/`src/engine/legality.py`) is the only
+  subsystem in the engine with a real, working duration formula (nets to 1 tile/tick on plain terrain);
+  combat, crafting, and harvesting have no duration/cost concept at all to generalize a universal formula
+  from. `src/lab/metamorphic.py` (the balance-testing tool) has zero recorded real sessions. This blocks any
+  M3+ balance decision, not just a documentation nicety — see the ticket's `investigation.md` and `plan.md`
+  for the concrete calendar-authority/duration-formula options and recommendations awaiting plan-owner
+  sign-off.
 
 ## References
 
