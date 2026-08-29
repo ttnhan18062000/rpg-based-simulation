@@ -264,9 +264,9 @@ and lazy:
 
 | File | Lines | Modules |
 |---|---|---|
-| `systems/strategic_systems/intelligence.py` | 69, 75, 78, 83, 664, 829, 833, 905, 958 | `engine.policy`, `engine.spatial_query`, `engine.cadence`, `engine.domain_logic`, `engine.cognition` |
+| `systems/strategic_systems/intelligence.py` | 70, 76, 79, 84, 663, 828, 832, 904, 957 | `engine.policy`, `engine.spatial_query`, `engine.cadence`, `engine.domain_logic`, `engine.cognition` |
 | `systems/strategic_systems/detour.py` | 22 | `engine.domain.lead_routing` |
-| `systems/strategic_systems/redirection.py` | 23 | `engine.cadence` |
+| `systems/strategic_systems/redirection.py` | 25 | `engine.cadence` |
 | `systems/economy_systems/market.py` | 50 | `engine.legality` |
 | `systems/world_systems/routine.py` | 180 | `engine.legality` |
 

@@ -5,10 +5,10 @@ from dataclasses import replace
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
+    from src.engine.cadence import SystemCadence
 from src.core.movement_modes import MovementMode
 from src.core.strategic import ProjectStatus, ObjectiveStatus
 from src.core.updates import EntityUpdate, NavigationUpdate, StrategicUpdate, InteractionUpdate
-from src.engine.cadence import SystemCadence
 from src.systems.strategic_systems.town_targeting import nearest_town_tile
 
 class StrategicRedirectionSystem:
@@ -22,7 +22,7 @@ class StrategicRedirectionSystem:
         """
         Scan entities for blockers and propose navigation targets to resolve them.
         """
-        from src.engine.cadence import should_run
+        from src.engine.cadence import SystemCadence, should_run
         cadence = cadence or SystemCadence()
 
         refined_entity_updates = dict(update.entity_updates)
