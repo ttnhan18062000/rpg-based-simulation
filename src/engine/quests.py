@@ -161,7 +161,8 @@ class QuestResolutionSystem:
         from dataclasses import replace
         from src.core.quests import QuestStatus
         from src.quests.service import QuestService
-        
+        from src.domains.commitment.reputation import ReputationUpdateService
+
         refined_entity_updates = dict(update.entity_updates)
         
         # Phase 9 Fix: Sort by entity ID for deterministic reward intent emission
@@ -177,7 +178,8 @@ class QuestResolutionSystem:
             
             current_quest_updates = []
             current_resource_transfers = list(ent_upd.resource_transfers)
-            
+            reputation_cognition_update = None
+
             for qu in q_updates:
                 q_id = qu.quest_id
                 project = entity.strategic.projects.get(q_id)
@@ -215,6 +217,22 @@ class QuestResolutionSystem:
                     # Transition to REWARD_PENDING (if not already)
                     current_resource_transfers.append(reward_intent)
                     current_quest_updates.append(replace(qu, status_set=QuestStatus.REWARD_PENDING))
+
+                    if is_newly_completed and project.quest_kind == QuestKind.ESCORT:
+                        base_cognition = (
+                            reputation_cognition_update
+                            if reputation_cognition_update is not None
+                            else (
+                                ent_upd.cognition_bundle_set
+                                if ent_upd.cognition_bundle_set is not None
+                                else entity.cognition
+                            )
+                        )
+                        new_profile = ReputationUpdateService.process_witnessed_event(
+                            base_cognition.relationships.public_reputation, "successful_escort"
+                        )
+                        new_relationships = replace(base_cognition.relationships, public_reputation=new_profile)
+                        reputation_cognition_update = replace(base_cognition, relationships=new_relationships)
                 else:
                     current_quest_updates.append(qu)
 
@@ -223,9 +241,13 @@ class QuestResolutionSystem:
             for i in range(1, len(current_quest_updates)):
                 new_q_upd = new_q_upd.merge(current_quest_updates[i])
                 
-            refined_entity_updates[e_id] = replace(ent_upd, 
+            replace_kwargs = dict(
                 resource_transfers=current_resource_transfers,
-                quest=new_q_upd
+                quest=new_q_upd,
             )
+            if reputation_cognition_update is not None:
+                replace_kwargs["cognition_bundle_set"] = reputation_cognition_update
+
+            refined_entity_updates[e_id] = replace(ent_upd, **replace_kwargs)
                 
         return replace(update, entity_updates=refined_entity_updates)

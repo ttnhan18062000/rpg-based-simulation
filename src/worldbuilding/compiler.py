@@ -95,6 +95,8 @@ def get_quest_kind(kind_str: str) -> QuestKind:
         return QuestKind.LIBERATE
     elif "BOUNTY" in k:
         return QuestKind.BOUNTY
+    elif "ESCORT" in k:
+        return QuestKind.ESCORT
     return QuestKind.EXPLORE
 
 

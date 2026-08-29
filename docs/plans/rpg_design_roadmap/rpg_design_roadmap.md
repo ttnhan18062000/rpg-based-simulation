@@ -39,7 +39,7 @@ Each milestone epic below cites specific idea numbers; look them up in the atlas
 
 ## Milestones
 
-### M1 — Quick Wins & Housekeeping (IN PROGRESS)
+### M1 — Quick Wins & Housekeeping (DONE)
 
 **Tracking**: no separate `TCK-...-EPIC-RPG-M1-QUICK-WINS` ticket was created — the batch is tracked
 directly via the ticket folder `tickets/todos/m1-quick-wins/` (`SEQUENCE.md` sets implementation order),
@@ -49,7 +49,7 @@ tickets). All work lands on a single branch, `m1-quick-wins`, as one commit per 
 PR'd.
 
 <!-- IMPLEMENT-EPIC-STATUS:BEGIN -->
-**Live progress** (auto-updated by implement-epic, last run: 2026-08-29T06:36:52Z): 21/22 tickets done, 1 remaining. Tracking: m1-quick-wins batch, folder-based via tickets/todos/m1-quick-wins/SEQUENCE.md.
+**Live progress** (auto-updated by implement-epic, last run: 2026-08-29T07:48:23Z): 22/22 tickets done, 0 remaining. Tracking: m1-quick-wins batch COMPLETE -- folder archived to tickets/done/m1-quick-wins/ (SEQUENCE.md preserved).
 <!-- IMPLEMENT-EPIC-STATUS:END -->
 
 `tickets/working_log.csv`'s bottom rows have the one-paragraph summary of each ticket actually landed,

@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-08-29
 ---
 
 # Commitment Domain Contract
@@ -41,7 +41,7 @@ There is no `phase.py`. The four services are called inline by:
 
 - **Cooperation phase** — calls `CommitmentPressureService.compute_pressure()` to gate help-request eligibility; calls `CommitmentReputationRouteImpact.apply_partner_fit_bias()` when scoring party candidates.
 - **Adventure domain** — calls `CommitmentReputationRouteImpact.apply_route_bias()` during route scoring; calls `AbandonmentEvaluator.evaluate_abandonment()` when a route-exit event occurs.
-- **Engine event handlers** — call `ReputationUpdateService.process_witnessed_event()` when a social event is witnessed.
+- **`QuestResolutionSystem.enforce()`** (`src/engine/quests.py`, `quest_rewards` pipeline phase) — calls `ReputationUpdateService.process_witnessed_event()` with `event_kind="successful_escort"` when a `QuestKind.ESCORT` quest transitions ACTIVE→COMPLETED. `betrayal` and `clear_camp` remain unwired — no live production event source calls `process_witnessed_event()` with those event kinds today.
 
 ---
 
@@ -158,7 +158,7 @@ Returns a new `PublicReputationProfile` via `dataclasses.replace`. The input pro
 
 All other services return computed scalars or classification dicts — they produce no durable state.
 
-**Mutation path note:** `ReputationUpdateService` returns a new `PublicReputationProfile` directly (not via `EntityUpdate`). Verify at integration point whether the caller routes this through the authoritative pipeline or applies it as a direct replace. This is the one durable-state-adjacent output of the domain and should be treated with the same care as other cognition state replacements.
+**Mutation path note:** `ReputationUpdateService` returns a new `PublicReputationProfile` directly (not via `EntityUpdate`). At the one live integration point (`QuestResolutionSystem.enforce()`, `src/engine/quests.py`, `successful_escort`), the caller routes the returned profile through the authoritative pipeline: it stages the updated `CognitionModel` via `EntityUpdate.cognition_bundle_set`, reading `entity_update.cognition_bundle_set` as the merge base (falling back to `entity.cognition` only if unset) rather than `entity.cognition` directly — the same merge-safe pattern `NearDeathHardeningPhase.apply()` uses (`src/engine/pipeline_phases/hardening.py:91-99`) — so it does not clobber `MemoryUpdatePhase`'s same-tick cognition writes. This is the one durable-state-adjacent output of the domain and should be treated with the same care as other cognition state replacements; any future caller wiring `betrayal`/`clear_camp` must follow the same pattern.
 
 ---
 
@@ -182,7 +182,7 @@ All other services return computed scalars or classification dicts — they prod
 | **Cooperation domain** | Calls into commitment | Commitment pressure gates help-request eligibility; partner fit bias applies during party candidate scoring |
 | **Adventure domain** | Calls into commitment | Route bias from active commitments applied during route scoring; abandonment evaluator called on route-exit events |
 | **Emotion domain** (event-driven, see emotion_contract.md) | Reads emotion outputs | Near-death emotion state (high fear/panic) contextually informs survival abandonment; `hp_ratio` is the formal signal, not direct emotion field reads |
-| **Engine event handlers** | Calls into commitment | `ReputationUpdateService.process_witnessed_event()` called when social events (escort, betrayal, camp_clear) are witnessed |
+| **`QuestResolutionSystem.enforce()`** (`src/engine/quests.py`) | Calls into commitment | `ReputationUpdateService.process_witnessed_event()` called with `event_kind="successful_escort"` when a `QuestKind.ESCORT` quest transitions ACTIVE→COMPLETED; `betrayal`/`clear_camp` remain unwired |
 
 ---
 
@@ -193,7 +193,7 @@ All other services return computed scalars or classification dicts — they prod
 | `tests/unit/domains/commitment/test_phase15_abandonment_evaluator.py` | All three abandonment types; hp boundary (< 0.2); greedy_desertion conditions; penalty values |
 | `tests/unit/domains/commitment/test_phase15_reputation_update.py` | Label deltas per event_kind; clamping to [0.0, 1.0]; unrecognised event no-op; immutability |
 | `tests/unit/domains/commitment/test_phase15_route_impact.py` | Route bias boost formula; partner fit penalty with betrayer/reliable labels; max(0.0) floor |
-| `tests/integration/scenarios/test_phase15_commitment_reputation_scenarios.py` | Scenario-level: greedy desertion cascade → betrayal reputation → partner fit penalty; survival abandonment with no penalty |
+| `tests/integration/scenarios/test_phase15_commitment_reputation_scenarios.py` | Scenario-level: greedy desertion cascade → betrayal reputation → partner fit penalty; survival abandonment with no penalty; `QuestKind.ESCORT` completion → `successful_escort` reputation update via `QuestResolutionSystem.enforce()`; regression guard that this write preserves `MemoryUpdatePhase`'s same-tick `cognition_bundle_set` staging |
 | `tests/integration/scenarios/test_phase18_cognition_hierarchy_e2e.py` | End-to-end: commitment pressure gating cooperation decisions in full cognition hierarchy |
 
 ---

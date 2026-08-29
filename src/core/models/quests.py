@@ -10,6 +10,7 @@ class QuestKind(Enum):
     EXPLORE = auto()
     LIBERATE = auto()
     BOUNTY = auto()
+    ESCORT = auto()
 
 class QuestStatus(Enum):
     ACTIVE = 1

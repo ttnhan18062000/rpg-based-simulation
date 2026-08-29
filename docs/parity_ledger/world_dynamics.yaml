@@ -288,33 +288,34 @@
   priority: P0
   legacy_evidence: EnvironmentService handles hazard_level and calamity_intensity
     scaling.
-  v2_evidence: src/world/environment.py::EnvironmentService.calculate_hazard_drain resolves
-    the entity's catalog faction id (get_faction_id_str) and, via
-    FactionSemanticsService.get_hazard_immunities, exempts entities whose faction endures
-    the region's hazard_kind (RegionState.hazard_kind) from drain; all other entities take
-    the unchanged hazard_level/calamity_intensity-scaled drain. See
-    src/engine/world_dynamics.py for the per-tick call site.
-    TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS extended this corpus-wide, 7 modules
-    (orc_clan_territory, bandit_road_trade_pressure, old_mine_resource_loop,
-    forest_warden_grove, undead_battlefield, nomadic_herd, sunken_swamp_border) / 6 factions
-    now declare hazard_kind/hazard_immunities, exercised across the 5 newly-anchored worlds
-    (frontier_extended, frontier_living_world, wilderness_survival, highland_traverse,
-    swamp_border_world), not only wolf_den_near_forest/goblin_camp_conflict.
-    TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE closed the remaining corpus gap — 3 more
-    modules (ruins_mystery_quest, scalable_bandit_camp, trading_company_hub) now declare
-    hazard_kind matching their populating faction's hazard_immunities (undead_remnants gains
-    no new immunity — UNDEAD_CORRUPTION already existed; merchant_league gains a new
-    NATURAL_TERRAIN hazard_immunities entry), and urban_political's stale compiled artifact
-    (predating bandit_road_trade_pressure.yaml's already-landed hazard_kind fix) was
-    refreshed via a recompile — exercised by dungeon_crawl, hero_guild_routing, and
-    urban_political.
-    TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE closed the last remaining
-    module gap — moon_cult_ruins's moon_cave region now declares a new hazard_kind,
-    "ARCANE_CORRUPTION", matching a new arcane_circle hazard_immunities entry (arcane_circle
-    previously had zero hazard_immunities, same pattern as merchant_league's prior fix) —
-    exercised by generated_frontier_3_42, the sole world composing moon_cult_ruins.
+  v2_evidence: "src/world/environment.py::EnvironmentService.calculate_hazard_drain\
+    \ resolves the entity's catalog faction id (get_faction_id_str) and, via FactionSemanticsService.get_hazard_immunities,\
+    \ exempts entities whose faction endures the region's hazard_kind (RegionState.hazard_kind)\
+    \ from drain; all other entities take the unchanged hazard_level/calamity_intensity-scaled\
+    \ drain. See src/engine/world_dynamics.py for the per-tick call site. TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS\
+    \ extended this corpus-wide, 7 modules (orc_clan_territory, bandit_road_trade_pressure,\
+    \ old_mine_resource_loop, forest_warden_grove, undead_battlefield, nomadic_herd,\
+    \ sunken_swamp_border) / 6 factions now declare hazard_kind/hazard_immunities,\
+    \ exercised across the 5 newly-anchored worlds (frontier_extended, frontier_living_world,\
+    \ wilderness_survival, highland_traverse, swamp_border_world), not only wolf_den_near_forest/goblin_camp_conflict.\
+    \ TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE closed the remaining corpus gap\
+    \ \u2014 3 more modules (ruins_mystery_quest, scalable_bandit_camp, trading_company_hub)\
+    \ now declare hazard_kind matching their populating faction's hazard_immunities\
+    \ (undead_remnants gains no new immunity \u2014 UNDEAD_CORRUPTION already existed;\
+    \ merchant_league gains a new NATURAL_TERRAIN hazard_immunities entry), and urban_political's\
+    \ stale compiled artifact (predating bandit_road_trade_pressure.yaml's already-landed\
+    \ hazard_kind fix) was refreshed via a recompile \u2014 exercised by dungeon_crawl,\
+    \ hero_guild_routing, and urban_political. TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE\
+    \ closed the last remaining module gap \u2014 moon_cult_ruins's moon_cave region\
+    \ now declares a new hazard_kind, \"ARCANE_CORRUPTION\", matching a new arcane_circle\
+    \ hazard_immunities entry (arcane_circle previously had zero hazard_immunities,\
+    \ same pattern as merchant_league's prior fix) \u2014 exercised by generated_frontier_3_42,\
+    \ the sole world composing moon_cult_ruins."
   proof_type: parity
-  test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py::test_hazard_kind_matches_populating_faction_immunity, tests/unit/worldassembly/test_corpus_diversity.py::test_population_stability, tests/unit/worldassembly/test_corpus_diversity.py::test_generated_frontier_3_42_extended_population_stability, tests/unit/worldbuilding/test_world_compiler.py::test_urban_political_resolved_bandit_road_hazard_kind_matches_source
+  test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py::test_hazard_kind_matches_populating_faction_immunity,
+    tests/unit/worldassembly/test_corpus_diversity.py::test_population_stability,
+    tests/unit/worldassembly/test_corpus_diversity.py::test_generated_frontier_3_42_extended_population_stability,
+    tests/unit/worldbuilding/test_world_compiler.py::test_urban_political_resolved_bandit_road_hazard_kind_matches_source
   divergence_note: null
   support_boundary: null
 - id: WORLD-060
@@ -322,29 +323,31 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: src/world/environment.py::EnvironmentService.calculate_hazard_drain — drain
-    is hazard_level * (1.0 + calamity_intensity) * 10, scaled by MIASMA, EXCEPT an entity
-    whose resolved faction (FactionDefinition.hazard_immunities) declares endurance to the
-    region's hazard_kind (RegionState.hazard_kind), which takes zero drain unconditionally.
-    Endurance is faction-declared, not derived from hostility-to-hero or from a legacy
-    faction bucket (TCK-20260701-HAZARD-NATIVE-IMMUNITY).
-    TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS extended this mechanism corpus-wide (7 modules,
-    6 factions, including a new "UNDEAD_CORRUPTION" hazard_kind for undead_battlefield /
-    undead_remnants), exercised across 5 newly-anchored worlds instead of only
-    wolf_den_near_forest/goblin_camp_conflict.
-    TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE fixed 3 remaining never-anchored modules
-    (ruins_mystery_quest, scalable_bandit_camp, trading_company_hub) that had never declared
-    hazard_kind at all — the resolver's PHYSICAL default (nothing immune) was silently
-    draining their populating factions unconditionally, reproducing the exact
-    population-collapse pattern this parity entry guards against. urban_political's
-    compiled artifact was also refreshed to pick up bandit_road_trade_pressure.yaml's
-    already-fixed hazard_kind (stale-compile bug, same class, separate cause).
-    TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE fixed the last remaining
-    never-declared module, moon_cult_ruins (moon_cave region), gaining a new "ARCANE_CORRUPTION"
-    hazard_kind matched by a new arcane_circle hazard_immunities entry — exercised by
-    generated_frontier_3_42.
+  v2_evidence: "src/world/environment.py::EnvironmentService.calculate_hazard_drain\
+    \ \u2014 drain is hazard_level * (1.0 + calamity_intensity) * 10, scaled by MIASMA,\
+    \ EXCEPT an entity whose resolved faction (FactionDefinition.hazard_immunities)\
+    \ declares endurance to the region's hazard_kind (RegionState.hazard_kind), which\
+    \ takes zero drain unconditionally. Endurance is faction-declared, not derived\
+    \ from hostility-to-hero or from a legacy faction bucket (TCK-20260701-HAZARD-NATIVE-IMMUNITY).\
+    \ TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS extended this mechanism corpus-wide (7\
+    \ modules, 6 factions, including a new \"UNDEAD_CORRUPTION\" hazard_kind for undead_battlefield\
+    \ / undead_remnants), exercised across 5 newly-anchored worlds instead of only\
+    \ wolf_den_near_forest/goblin_camp_conflict. TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE\
+    \ fixed 3 remaining never-anchored modules (ruins_mystery_quest, scalable_bandit_camp,\
+    \ trading_company_hub) that had never declared hazard_kind at all \u2014 the resolver's\
+    \ PHYSICAL default (nothing immune) was silently draining their populating factions\
+    \ unconditionally, reproducing the exact population-collapse pattern this parity\
+    \ entry guards against. urban_political's compiled artifact was also refreshed\
+    \ to pick up bandit_road_trade_pressure.yaml's already-fixed hazard_kind (stale-compile\
+    \ bug, same class, separate cause). TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE\
+    \ fixed the last remaining never-declared module, moon_cult_ruins (moon_cave region),\
+    \ gaining a new \"ARCANE_CORRUPTION\" hazard_kind matched by a new arcane_circle\
+    \ hazard_immunities entry \u2014 exercised by generated_frontier_3_42."
   proof_type: parity
-  test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py::test_hazard_kind_matches_populating_faction_immunity, tests/unit/worldassembly/test_corpus_diversity.py::test_population_stability, tests/unit/worldassembly/test_corpus_diversity.py::test_generated_frontier_3_42_extended_population_stability, tests/unit/worldbuilding/test_world_compiler.py::test_urban_political_resolved_bandit_road_hazard_kind_matches_source
+  test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py::test_hazard_kind_matches_populating_faction_immunity,
+    tests/unit/worldassembly/test_corpus_diversity.py::test_population_stability,
+    tests/unit/worldassembly/test_corpus_diversity.py::test_generated_frontier_3_42_extended_population_stability,
+    tests/unit/worldbuilding/test_world_compiler.py::test_urban_political_resolved_bandit_road_hazard_kind_matches_source
   divergence_note: null
   support_boundary: null
 - id: WORLD-061
@@ -743,14 +746,13 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >-
-    Implementation proven via exhaustive checklist audit Phase 1-11. Gap closed by
-    TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP: ResourceEcologyService.process_ecology
+  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11. Gap
+    closed by TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP: ResourceEcologyService.process_ecology
     (src/world/ecology.py:124-138) previously emitted hardcoded uppercase literals
-    ("WOOD"/"STONE"/"IRON") not present in ResourceRegistry, contradicting this entry's claim.
-    Now selects real catalog ids (wood_node/iron_vein/stone_outcrop, the latter newly authored in
-    data/content/world/resources.yaml) and derives yields_item via
-    ResourceRegistry.get(kind).yield_item instead of hand-computed suffixing.
+    ("WOOD"/"STONE"/"IRON") not present in ResourceRegistry, contradicting this entry''s
+    claim. Now selects real catalog ids (wood_node/iron_vein/stone_outcrop, the latter
+    newly authored in data/content/world/resources.yaml) and derives yields_item via
+    ResourceRegistry.get(kind).yield_item instead of hand-computed suffixing.'
   proof_type: parity
   test_path: tests/unit/world/test_resource_ecology.py::test_process_ecology_never_emits_unregistered_kind
   divergence_note: null
@@ -810,36 +812,40 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    Root cause fixed by TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE:
-    WorldCompiler.compile() step 6 (src/worldbuilding/compiler.py) drew each entity's spawn tile
-    purely as a hash of (seed, entity_id, sub_id) via DeterministicRNG.get_int(), with no
-    occupancy awareness -- confirmed as the exact cause of the entity-6/entity-14 tile-(27,38)
-    collision this entry previously flagged as divergent. Fix: compile() now tracks
-    occupied_entity_tiles (seeded from blocked_tiles/buildings and resource_node positions,
-    updated as each entity is placed) and, only when a drawn tile actually collides, calls the
-    new _resolve_entity_spawn_tile() helper to deterministically re-roll (bumped sub_id, still a
-    pure function of seed/entity_id/sub_id) or, as a last resort, raster-scan the region's
-    bounding box for a free tile. Entities that never collided are never perturbed --
-    verified: a full corpus sweep (all 18 worlds x seeds 42/137/999 = 63 combos) recompiled
-    before/after the fix confirms zero entity positions changed except the 39 combos that had a
-    real collision (all 39 now resolved), and 3 repeated compiles of the same world/seed produce
-    a bit-identical state_hash.
+  v2_evidence: 'Root cause fixed by TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE:
+    WorldCompiler.compile() step 6 (src/worldbuilding/compiler.py) drew each entity''s
+    spawn tile purely as a hash of (seed, entity_id, sub_id) via DeterministicRNG.get_int(),
+    with no occupancy awareness -- confirmed as the exact cause of the entity-6/entity-14
+    tile-(27,38) collision this entry previously flagged as divergent. Fix: compile()
+    now tracks occupied_entity_tiles (seeded from blocked_tiles/buildings and resource_node
+    positions, updated as each entity is placed) and, only when a drawn tile actually
+    collides, calls the new _resolve_entity_spawn_tile() helper to deterministically
+    re-roll (bumped sub_id, still a pure function of seed/entity_id/sub_id) or, as
+    a last resort, raster-scan the region''s bounding box for a free tile. Entities
+    that never collided are never perturbed -- verified: a full corpus sweep (all
+    18 worlds x seeds 42/137/999 = 63 combos) recompiled before/after the fix confirms
+    zero entity positions changed except the 39 combos that had a real collision (all
+    39 now resolved), and 3 repeated compiles of the same world/seed produce a bit-identical
+    state_hash.
+
+    '
   proof_type: parity
   test_path: tests/engine/test_hard_law_monitor.py::test_seed42_entity6_entity14_tile_27_38_collision
-  divergence_note: >
-    Historical record (not deleted, per the INFRA-270 lineage convention): this entry was
-    flipped to divergent by TCK-20260716-PLACELEGAL-HARDLAW after its regression test showed
-    compiling unit_information_density at seed=42 deterministically spawned entities 6 and 14 on
-    the identical tile (27, 38), and a re-verification during that ticket's implementation found
-    the same collision class (different entity pairs) at seeds 137/999 across most of the
-    18-world corpus. That ticket's HardLawMonitor.check_initial_placement() (LAW-SPAWN-OCCUPANCY)
-    detected and recorded the violation but deliberately did not fix the underlying spawn RNG,
-    noting "Flip back to verified once a future ticket fixes the underlying collision and
-    re-verification is possible." TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE
-    is that future ticket: root-caused and fixed the collision (see v2_evidence above); the
-    original claim now holds and re-verification (63/63 combos, zero LAW-SPAWN-OCCUPANCY
+  divergence_note: 'Historical record (not deleted, per the INFRA-270 lineage convention):
+    this entry was flipped to divergent by TCK-20260716-PLACELEGAL-HARDLAW after its
+    regression test showed compiling unit_information_density at seed=42 deterministically
+    spawned entities 6 and 14 on the identical tile (27, 38), and a re-verification
+    during that ticket''s implementation found the same collision class (different
+    entity pairs) at seeds 137/999 across most of the 18-world corpus. That ticket''s
+    HardLawMonitor.check_initial_placement() (LAW-SPAWN-OCCUPANCY) detected and recorded
+    the violation but deliberately did not fix the underlying spawn RNG, noting "Flip
+    back to verified once a future ticket fixes the underlying collision and re-verification
+    is possible." TCK-20260817-STANDARD-SPAWN-OCCUPANCY-COLLISION-RNG-ROOT-CAUSE is
+    that future ticket: root-caused and fixed the collision (see v2_evidence above);
+    the original claim now holds and re-verification (63/63 combos, zero LAW-SPAWN-OCCUPANCY
     violations) is complete.
+
+    '
   support_boundary: null
 - id: WORLD-077
   text: Camp placement is deterministic.
@@ -1052,109 +1058,122 @@
   divergence_note: null
   support_boundary: null
 - id: WORLD-098
-  text: QuestOpportunity is generated deterministically from RESOURCE_DEPLETED events via QuestOpportunityGenerator.from_resource_depleted().
+  text: QuestOpportunity is generated deterministically from RESOURCE_DEPLETED events
+    via QuestOpportunityGenerator.from_resource_depleted().
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/domains/world_emergence/services.py (QuestOpportunityGenerator.from_resource_depleted); src/core/models/quests.py (QuestOpportunity)
+  v2_evidence: src/domains/world_emergence/services.py (QuestOpportunityGenerator.from_resource_depleted);
+    src/core/models/quests.py (QuestOpportunity)
   proof_type: parity
   test_path: tests/unit/quest/test_quest_generation.py::test_resource_crisis_quest_generated_on_depletion
   divergence_note: null
   support_boundary: null
 - id: WORLD-099
-  text: Same WorldEvent input + same tick + same seed → identical QuestOpportunity.id (determinism guarantee).
+  text: "Same WorldEvent input + same tick + same seed \u2192 identical QuestOpportunity.id\
+    \ (determinism guarantee)."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/domains/world_emergence/services.py (QuestOpportunityGenerator.from_resource_depleted; id formula f"{kind}_{source_event_id}_{tick % 10000}")
+  v2_evidence: src/domains/world_emergence/services.py (QuestOpportunityGenerator.from_resource_depleted;
+    id formula f"{kind}_{source_event_id}_{tick % 10000}")
   proof_type: parity
   test_path: tests/unit/quest/test_quest_generation.py::test_quest_generation_determinism
   divergence_note: null
   support_boundary: null
 - id: WORLD-100
-  text: AuthoritativeState.quest_registry (Dict[str, QuestOpportunity]) persists OFFERED and ACTIVE quests across ticks; COMPLETED/FAILED/EXPIRED quests are removed and not retained in the registry.
+  text: AuthoritativeState.quest_registry (Dict[str, QuestOpportunity]) persists OFFERED
+    and ACTIVE quests across ticks; COMPLETED/FAILED/EXPIRED quests are removed and
+    not retained in the registry.
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/core/state.py (AuthoritativeState.quest_registry field, to_readonly() ReadOnlyDict wrap); src/engine/apply.py (apply_generation new_quest_registry logic)
+  v2_evidence: src/core/state.py (AuthoritativeState.quest_registry field, to_readonly()
+    ReadOnlyDict wrap); src/engine/apply.py (apply_generation new_quest_registry logic)
   proof_type: parity
   test_path: tests/unit/quest/test_quest_lifecycle.py::test_quest_registry_field_on_authoritative_state
   divergence_note: null
   support_boundary: null
 - id: WORLD-101
-  text: QuestOpportunity with status=OFFERED and tick > expiry_ticks is removed from quest_registry via authoritative expiry sweep (QuestLifecycleService.tick); expiry iterates sorted(registry.keys()) for determinism.
+  text: QuestOpportunity with status=OFFERED and tick > expiry_ticks is removed from
+    quest_registry via authoritative expiry sweep (QuestLifecycleService.tick); expiry
+    iterates sorted(registry.keys()) for determinism.
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/domains/world_emergence/services.py (QuestLifecycleService.tick); src/engine/apply.py (quest_registry_remove apply path)
+  v2_evidence: src/domains/world_emergence/services.py (QuestLifecycleService.tick);
+    src/engine/apply.py (quest_registry_remove apply path)
   proof_type: parity
   test_path: tests/unit/quest/test_quest_lifecycle.py::test_quest_expires_after_expiry_ticks
   divergence_note: null
   support_boundary: null
 - id: WORLD-102
-  text: QuestOpportunity objects produced by WorldEmergencePhase are added to quest_registry via StateUpdate.quest_registry_add through the authoritative apply path, keyed by QuestOpportunity.id; addition is idempotent (duplicate IDs are skipped).
+  text: QuestOpportunity objects produced by WorldEmergencePhase are added to quest_registry
+    via StateUpdate.quest_registry_add through the authoritative apply path, keyed
+    by QuestOpportunity.id; addition is idempotent (duplicate IDs are skipped).
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/domains/world_emergence/phase.py (execute() quest_registry_add=list(quest_opps)); src/engine/apply.py (idempotent add guard)
+  v2_evidence: src/domains/world_emergence/phase.py (execute() quest_registry_add=list(quest_opps));
+    src/engine/apply.py (idempotent add guard)
   proof_type: parity
   test_path: tests/unit/domains/world_emergence/test_quest_registry_wiring.py::test_world_emergence_populates_quest_registry
   divergence_note: null
   support_boundary: null
 - id: WORLD-DEMO-001
-  text: 'When regional scarcity > cohort.migration_threshold (default 0.7), 30% of
+  text: When regional scarcity > cohort.migration_threshold (default 0.7), 30% of
     that cohort (min 1) emigrates to the lowest-scarcity adjacent region; migration
-    is deterministic (sorted by region id as tiebreaker).'
+    is deterministic (sorted by region id as tiebreaker).
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/domains/demographics/cohort.py (_check_migration, compute_regional_scarcity,
+  v2_evidence: src/domains/demographics/cohort.py (_check_migration, compute_regional_scarcity,
     find_adjacent_regions); DemographicCycleService.process_demographics() runs migration
-    pass after birth/death at COHORT_INTERVAL multiples'
+    pass after birth/death at COHORT_INTERVAL multiples
   proof_type: parity
   test_path: tests/unit/world/test_demographics.py::TestMigrationPressure::test_migration_pressure_triggers_on_scarcity_threshold
   divergence_note: null
   support_boundary: null
 - id: WORLD-DEMO-002
-  text: 'Migration emits a POPULATION_MIGRATION WorldEvent per cohort movement. Source
+  text: Migration emits a POPULATION_MIGRATION WorldEvent per cohort movement. Source
     region count is reduced by emigrant_count (floored at 0). Target region count
-    is increased (new bracket created if absent).'
+    is increased (new bracket created if absent).
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/domains/demographics/cohort.py (_check_migration WorldEvent emission);
-    src/domains/world_emergence/schema.py (WorldEventCategory.POPULATION_MIGRATION)'
+  v2_evidence: src/domains/demographics/cohort.py (_check_migration WorldEvent emission);
+    src/domains/world_emergence/schema.py (WorldEventCategory.POPULATION_MIGRATION)
   proof_type: parity
   test_path: tests/integration/scenarios/test_demographics.py::test_cohort_migrates_on_scarcity
   divergence_note: null
   support_boundary: null
 - id: WORLD-DEMO-003
-  text: 'get_age_bracket(age_ticks) returns "young" for age_ticks < 3000, "adult"
-    for 3000 ≤ age_ticks < 7000, and "elder" for age_ticks ≥ 7000. Pure deterministic
-    function with no side effects.'
+  text: "get_age_bracket(age_ticks) returns \"young\" for age_ticks < 3000, \"adult\"\
+    \ for 3000 \u2264 age_ticks < 7000, and \"elder\" for age_ticks \u2265 7000. Pure\
+    \ deterministic function with no side effects."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/domains/demographics/cohort.py (get_age_bracket)'
+  v2_evidence: src/domains/demographics/cohort.py (get_age_bracket)
   proof_type: parity
   test_path: tests/unit/world/test_demographics.py::test_age_bracket_returns_correct_bracket
   divergence_note: null
   support_boundary: null
 - id: WORLD-DEMO-004
-  text: 'Elder entities (age_ticks ≥ 7000) receive attribute modifiers via AttributeUpdate:
-    combat_effectiveness *= 0.7 (STR/AGI -30%), mortality_rate *= 2.0 (VIT/END -50%),
-    knowledge_reputation_weight *= 1.3 (WIS/CHA +30%). Applied via compute_elder_attribute_update,
-    called once per aging-cycle tick from LifecycleSystem.resolve_lifecycle(), gated on the
-    same forward ADULT->ELDER life_stage transition edge that is_forward_transition() already
-    computes — never via direct mutation of frozen EntityState, and never reapplied on
-    subsequent ticks once the transition has fired.'
+  text: "Elder entities (age_ticks \u2265 7000) receive attribute modifiers via AttributeUpdate:\
+    \ combat_effectiveness *= 0.7 (STR/AGI -30%), mortality_rate *= 2.0 (VIT/END -50%),\
+    \ knowledge_reputation_weight *= 1.3 (WIS/CHA +30%). Applied via compute_elder_attribute_update,\
+    \ called once per aging-cycle tick from LifecycleSystem.resolve_lifecycle(), gated\
+    \ on the same forward ADULT->ELDER life_stage transition edge that is_forward_transition()\
+    \ already computes \u2014 never via direct mutation of frozen EntityState, and\
+    \ never reapplied on subsequent ticks once the transition has fired."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/domains/demographics/cohort.py (compute_elder_attribute_update);
+  v2_evidence: src/domains/demographics/cohort.py (compute_elder_attribute_update);
     src/core/updates.py (AttributeUpdate, EntityUpdate); src/systems/lifecycle_systems/lifecycle.py
     (LifecycleSystem.resolve_lifecycle() call site, gated on is_forward_transition())
-    (TCK-20260824-WIRE-ORPHANED-MECHANISMS)'
+    (TCK-20260824-WIRE-ORPHANED-MECHANISMS)
   proof_type: parity
   test_path: tests/unit/world/test_demographics.py::test_elder_modifier_reduces_combat_effectiveness
     tests/unit/world/test_demographics.py::TestLifecycleSystemElderWiring::test_elder_attribute_modifier_applies_once_on_bracket_transition
@@ -1162,48 +1181,47 @@
   divergence_note: null
   support_boundary: null
 - id: WORLD-DEMO-005
-  text: 'Population density feeds into RegionalPressureModel as a demand signal.
-    demand_multiplier = 1.0 + (population_density * 0.5), where population_density
-    = total_cohort_count / max(1, region_area). Applied to resource pressure intensity:
-    res_intensity = min(1.0, base_intensity * demand_multiplier). Zero-population
-    regions receive demand_multiplier = 1.0 (no amplification).'
+  text: 'Population density feeds into RegionalPressureModel as a demand signal. demand_multiplier
+    = 1.0 + (population_density * 0.5), where population_density = total_cohort_count
+    / max(1, region_area). Applied to resource pressure intensity: res_intensity =
+    min(1.0, base_intensity * demand_multiplier). Zero-population regions receive
+    demand_multiplier = 1.0 (no amplification).'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/domains/demographics/cohort.py (compute_population_density);
-    src/domains/world_emergence/models.py (RegionalPressureModel.evaluate — resource
-    pressure section)'
+  v2_evidence: "src/domains/demographics/cohort.py (compute_population_density); src/domains/world_emergence/models.py\
+    \ (RegionalPressureModel.evaluate \u2014 resource pressure section)"
   proof_type: parity
   test_path: tests/integration/scenarios/test_demographics.py::test_high_population_region_higher_resource_demand
   divergence_note: null
   support_boundary: null
 - id: WORLD-CULT-001
-  text: 'CultureState is derived only from ChronicleHierarchy events at episode
-    boundary (CultureDriftExporter called from _advance_state() only) — never
-    mutated during the tick loop. Four axes (fatalism, hero_veneration,
-    resource_scarcity_memory, faction_conflict_exposure) each normalised to [0.0, 1.0]
-    via min(1.0, raw_sum / 3.0).'
+  text: "CultureState is derived only from ChronicleHierarchy events at episode boundary\
+    \ (CultureDriftExporter called from _advance_state() only) \u2014 never mutated\
+    \ during the tick loop. Four axes (fatalism, hero_veneration, resource_scarcity_memory,\
+    \ faction_conflict_exposure) each normalised to [0.0, 1.0] via min(1.0, raw_sum\
+    \ / 3.0)."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/domains/culture/deriver.py (CultureDeriver.derive); src/domains/culture/exporter.py
-    (CultureDriftExporter.export called from _advance_state() in orchestrator.py
-    after narrative_ledger.extend())'
+  v2_evidence: src/domains/culture/deriver.py (CultureDeriver.derive); src/domains/culture/exporter.py
+    (CultureDriftExporter.export called from _advance_state() in orchestrator.py after
+    narrative_ledger.extend())
   proof_type: parity
   test_path: tests/unit/domains/culture/test_culture_deriver.py::test_deriver_calamity_raises_fatalism
   divergence_note: null
   support_boundary: null
 - id: WORLD-CULT-002
-  text: 'Cultural bias overlay is transient — CulturalBiasApplicator.compute_culture_delta()
-    returns a float additive delta bounded to [-0.5, 1.0] that is added to
-    MotivationBiasService result; it never writes to entity durable state
-    (MotivationModel, ValuePreferenceProfile, EntityState).'
+  text: "Cultural bias overlay is transient \u2014 CulturalBiasApplicator.compute_culture_delta()\
+    \ returns a float additive delta bounded to [-0.5, 1.0] that is added to MotivationBiasService\
+    \ result; it never writes to entity durable state (MotivationModel, ValuePreferenceProfile,\
+    \ EntityState)."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/domains/culture/applicator.py (CulturalBiasApplicator.compute_culture_delta
-    — returns float only); src/domains/motivation/service.py (culture_values optional
-    param — reads CulturalBiasApplicator result, never mutates entity)'
+  v2_evidence: "src/domains/culture/applicator.py (CulturalBiasApplicator.compute_culture_delta\
+    \ \u2014 returns float only); src/domains/motivation/service.py (culture_values\
+    \ optional param \u2014 reads CulturalBiasApplicator result, never mutates entity)"
   proof_type: parity
   test_path: tests/unit/domains/culture/test_culture_applicator.py::test_zero_culture_produces_zero_delta
   divergence_note: null
@@ -1211,22 +1229,22 @@
 - id: WORLD-CULT-003
   text: 'Two regions with different narrative histories produce measurably different
     mean motivation multipliers for the same route tag after 5 synthetic episodes.
-    Specifically: calamity_region.fatalism > hero_region.fatalism + 0.3, and
-    caution-tag delta for calamity_region exceeds hero_region by at least 0.1.'
+    Specifically: calamity_region.fatalism > hero_region.fatalism + 0.3, and caution-tag
+    delta for calamity_region exceeds hero_region by at least 0.1.'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/domains/culture/deriver.py + src/domains/culture/applicator.py;
+  v2_evidence: src/domains/culture/deriver.py + src/domains/culture/applicator.py;
     acceptance test verifies measurable axis divergence and behavioral delta divergence
-    between calamity-history and hero-history regions'
+    between calamity-history and hero-history regions
   proof_type: parity
   test_path: tests/integration/culture/test_culture_drift_acceptance.py::test_two_regions_diverge_after_5_episodes
   divergence_note: null
 - id: WORLD-103
-  text: 'SpawnService two-tier cadence: before late_spawn_threshold_tick (default 500)
-    spawn base_spawn_batch_size (default 1) entities per below-density region per
-    50-tick interval; at or after the threshold spawn late_spawn_batch_size (default 2)
-    per region per interval to compensate late-run combat attrition. Batch is always
+  text: 'SpawnService two-tier cadence: before late_spawn_threshold_tick (default
+    500) spawn base_spawn_batch_size (default 1) entities per below-density region
+    per 50-tick interval; at or after the threshold spawn late_spawn_batch_size (default
+    2) per region per interval to compensate late-run combat attrition. Batch is always
     capped by the density deficit (target_count - current_count) so target is never
     exceeded. Batch index 0 uses original RNG keys (preserving early-game determinism);
     subsequent batch entries use suffixed keys (e.g. "{r_id}_b1"). Implemented in
@@ -1234,301 +1252,341 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/world/spawn.py L34-45 (batch_size selection by tick); L58-82
-    (batch loop with indexed RNG keys); src/world/spawn_config.py (SpawnConfig
-    dataclass with base_spawn_batch_size=1, late_spawn_threshold_tick=500,
-    late_spawn_batch_size=2; DEFAULT_SPAWN_CONFIG instance)'
+  v2_evidence: src/world/spawn.py L34-45 (batch_size selection by tick); L58-82 (batch
+    loop with indexed RNG keys); src/world/spawn_config.py (SpawnConfig dataclass
+    with base_spawn_batch_size=1, late_spawn_threshold_tick=500, late_spawn_batch_size=2;
+    DEFAULT_SPAWN_CONFIG instance)
   proof_type: parity
   test_path: tests/unit/world/test_spawn_cadence.py::TestLateGameCadence::test_late_game_spawns_two_per_region_at_threshold
   divergence_note: null
   support_boundary: null
-
 - id: WORLD-104
-  text: >
-    Regional resource scarcity pressure propagates to adjacent regions (E21E). After
-    per-region resource pressure is computed, RegionalPressureModel.propagate_cross_region()
-    adds PROPAGATION_FACTOR (0.30) × neighbor resource intensity to each adjacent region's
-    resource pressure. Two regions are adjacent when their bounding boxes are within
-    ADJACENCY_GAP (50 units) of each other. Propagated pressure is bidirectional and
-    capped at 1.0. Regions with no native resource pressure that receive spread from
-    neighbours get a new resource pressure entry at confidence=0.65.
+  text: "Regional resource scarcity pressure propagates to adjacent regions (E21E).\
+    \ After per-region resource pressure is computed, RegionalPressureModel.propagate_cross_region()\
+    \ adds PROPAGATION_FACTOR (0.30) \xD7 neighbor resource intensity to each adjacent\
+    \ region's resource pressure. Two regions are adjacent when their bounding boxes\
+    \ are within ADJACENCY_GAP (50 units) of each other. Propagated pressure is bidirectional\
+    \ and capped at 1.0. Regions with no native resource pressure that receive spread\
+    \ from neighbours get a new resource pressure entry at confidence=0.65.\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/domains/world_emergence/models.py — RegionalPressureModel.ADJACENCY_GAP=50.0,
-    PROPAGATION_FACTOR=0.30; _are_adjacent(); propagate_cross_region().
-    src/domains/world_emergence/phase.py — step 2b calls propagate_cross_region after
-    RegionalPressureModel.evaluate(). Verified by TCK-20260628-E21E-CROSS-REGION-PRESSURE.
+  v2_evidence: "src/domains/world_emergence/models.py \u2014 RegionalPressureModel.ADJACENCY_GAP=50.0,\
+    \ PROPAGATION_FACTOR=0.30; _are_adjacent(); propagate_cross_region(). src/domains/world_emergence/phase.py\
+    \ \u2014 step 2b calls propagate_cross_region after RegionalPressureModel.evaluate().\
+    \ Verified by TCK-20260628-E21E-CROSS-REGION-PRESSURE.\n"
   proof_type: parity
   test_path: tests/unit/domains/world_emergence/test_phase8_regional_pressure_model.py::test_propagate_cross_region_adjacent_regions_receive_spread
-  divergence_note: >
-    New mechanic added by TCK-20260628-E21E-CROSS-REGION-PRESSURE. No prior behavior
-    existed — resource pressure was evaluated per-region in isolation.
+  divergence_note: "New mechanic added by TCK-20260628-E21E-CROSS-REGION-PRESSURE.\
+    \ No prior behavior existed \u2014 resource pressure was evaluated per-region\
+    \ in isolation.\n"
   support_boundary: null
-  support_boundary: null
-
 - id: WORLD-105
-  text: >
-    Seasonal calamity pressure propagation (E52E): every SEASONAL_PROPAGATION_INTERVAL=500
+  text: 'Seasonal calamity pressure propagation (E52E): every SEASONAL_PROPAGATION_INTERVAL=500
     ticks, each region with calamity_intensity >= PROPAGATION_THRESHOLD=0.10 spreads
     intensity to adjacent regions (adjacency defined by RegionalPressureModel._are_adjacent,
     ADJACENCY_GAP=50 units). Propagated amount = source.calamity_intensity * PROPAGATION_FACTOR=0.15,
-    capped at 1.0. Per-neighbor update takes the maximum proposed value across all source
-    regions (prevents runaway amplification). Source region is never self-updated. Wired into
-    WorldDynamicsSystem step 3.8 under the world_dynamics cadence gate.
+    capped at 1.0. Per-neighbor update takes the maximum proposed value across all
+    source regions (prevents runaway amplification). Source region is never self-updated.
+    Wired into WorldDynamicsSystem step 3.8 under the world_dynamics cadence gate.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/world/calamity.py — CalamityPressurePropagator.propagate_seasonal().
-    src/engine/world_dynamics.py — step 3.8 seasonal_update merge.
-    Reuses RegionalPressureModel._are_adjacent() from src/domains/world_emergence/models.py.
-    Verified by TCK-20260628-E52E-SEASONAL-PROPAGATION.
+  v2_evidence: "src/world/calamity.py \u2014 CalamityPressurePropagator.propagate_seasonal().\
+    \ src/engine/world_dynamics.py \u2014 step 3.8 seasonal_update merge. Reuses RegionalPressureModel._are_adjacent()\
+    \ from src/domains/world_emergence/models.py. Verified by TCK-20260628-E52E-SEASONAL-PROPAGATION.\n"
   proof_type: parity
   test_path: tests/unit/world/test_calamity_pressure_propagator.py::test_adjacent_region_receives_propagated_intensity
-  divergence_note: >
-    New mechanic added by TCK-20260628-E52E-SEASONAL-PROPAGATION. No prior calamity
-    intensity propagation between regions existed.
-  support_boundary: null
+  divergence_note: 'New mechanic added by TCK-20260628-E52E-SEASONAL-PROPAGATION.
+    No prior calamity intensity propagation between regions existed.
 
+    '
+  support_boundary: null
 - id: WORLD-106
-  text: >
-    Trauma region concern injection (E52F): when an active, alive entity has
+  text: 'Trauma region concern injection (E52F): when an active, alive entity has
     navigation.region_id pointing to a region with trauma_score > TRAUMA_CONCERN_THRESHOLD=0.5,
     a ConcernState(kind=DANGER, id="regional_trauma_{region_id}") is injected into
     entity.strategic.concerns via StrategicUpdate.concerns_add_or_update in WorldDynamicsSystem
-    step 2.3. Urgency = min(1.0, trauma_score / URGENCY_SCALE=50.0). Concern appears on the
-    same tick that trauma crosses the threshold, satisfying the <100-tick requirement.
+    step 2.3. Urgency = min(1.0, trauma_score / URGENCY_SCALE=50.0). Concern appears
+    on the same tick that trauma crosses the threshold, satisfying the <100-tick requirement.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/domains/world_emergence/services.py — TraumaRegionConcernBridge.inject_concerns().
-    src/engine/world_dynamics.py — step 2.3 TraumaRegionConcernBridge wiring.
-    Verified by TCK-20260628-E52F-TRAUMA-MOTIVATION.
+  v2_evidence: "src/domains/world_emergence/services.py \u2014 TraumaRegionConcernBridge.inject_concerns().\
+    \ src/engine/world_dynamics.py \u2014 step 2.3 TraumaRegionConcernBridge wiring.\
+    \ Verified by TCK-20260628-E52F-TRAUMA-MOTIVATION.\n"
   proof_type: parity
   test_path: tests/unit/domains/world_emergence/test_phase8_trauma_concern_bridge.py::test_concern_appears_within_one_tick_of_threshold_crossing
-  divergence_note: >
-    New mechanic added by TCK-20260628-E52F-TRAUMA-MOTIVATION. Previously, trauma only
-    indirectly produced entity motivation effects through hazard_level escalation at
-    trauma_score > 50, requiring ~3500 ticks to reach hazard_level > 0.7.
-  support_boundary: null
+  divergence_note: 'New mechanic added by TCK-20260628-E52F-TRAUMA-MOTIVATION. Previously,
+    trauma only indirectly produced entity motivation effects through hazard_level
+    escalation at trauma_score > 50, requiring ~3500 ticks to reach hazard_level >
+    0.7.
 
+    '
+  support_boundary: null
 - id: WORLD-107
-  text: >
-    Sovereignty shift WorldEvent (E52G): when a region's influence crosses +100 (HERO_GUILD takeover)
-    or -100 (MONSTER_HORDE takeover), a WorldEvent(category=SOVEREIGNTY_SHIFT, severity=0.9) is
-    emitted into StateUpdate.world_events_add. The event carries region_id, subject (new owner
-    faction name), tick, and payload={"influence": <current>, "prev_owner": <prior>}.
-    Events are flushed into recent_world_events via the authoritative apply pipeline, making
-    sovereignty shifts observable in WorldEmergencePhase.execute() subsequent ticks.
-    No event is emitted when the region is already owned by the winning faction.
+  text: 'Sovereignty shift WorldEvent (E52G): when a region''s influence crosses +100
+    (HERO_GUILD takeover) or -100 (MONSTER_HORDE takeover), a WorldEvent(category=SOVEREIGNTY_SHIFT,
+    severity=0.9) is emitted into StateUpdate.world_events_add. The event carries
+    region_id, subject (new owner faction name), tick, and payload={"influence": <current>,
+    "prev_owner": <prior>}. Events are flushed into recent_world_events via the authoritative
+    apply pipeline, making sovereignty shifts observable in WorldEmergencePhase.execute()
+    subsequent ticks. No event is emitted when the region is already owned by the
+    winning faction.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/domains/world_emergence/schema.py — WorldEventCategory.SOVEREIGNTY_SHIFT added.
-    src/engine/world_dynamics.py — step 2.2 collects sovereignty_events; step 2.2b flushes
-    them via update.replace(world_events_add=...). Verified by TCK-20260628-E52G-SOVEREIGNTY-EVENTS.
+  v2_evidence: "src/domains/world_emergence/schema.py \u2014 WorldEventCategory.SOVEREIGNTY_SHIFT\
+    \ added. src/engine/world_dynamics.py \u2014 step 2.2 collects sovereignty_events;\
+    \ step 2.2b flushes them via update.replace(world_events_add=...). Verified by\
+    \ TCK-20260628-E52G-SOVEREIGNTY-EVENTS.\n"
   proof_type: parity
   test_path: tests/unit/world/test_sovereignty_events.py::test_sovereignty_shift_event_emitted_on_hero_takeover
-  divergence_note: >
-    New mechanic added by TCK-20260628-E52G-SOVEREIGNTY-EVENTS. Previously, ownership changes
-    produced WorldUpdate.owner_faction_id_set but no WorldEvent was emitted — shifts were
-    invisible to the WorldEmergencePhase and agent observability systems.
+  divergence_note: "New mechanic added by TCK-20260628-E52G-SOVEREIGNTY-EVENTS. Previously,\
+    \ ownership changes produced WorldUpdate.owner_faction_id_set but no WorldEvent\
+    \ was emitted \u2014 shifts were invisible to the WorldEmergencePhase and agent\
+    \ observability systems.\n"
   support_boundary: null
 - id: WORLD-108
-  text: >
-    ecology_cycle_completed is emitted once per region at every tick divisible by 200,
-    signalling the completion of a full ecological turnover cycle. Detected in
-    EventExtractor by tick % 200 == 0 over current_state.regions. No world domain
+  text: 'ecology_cycle_completed is emitted once per region at every tick divisible
+    by 200, signalling the completion of a full ecological turnover cycle. Detected
+    in EventExtractor by tick % 200 == 0 over current_state.regions. No world domain
     change is required. (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_extractor.py — ecology_cycle_completed block;
-    tick % 200 == 0 guard iterating current_state.regions.
-    As of the push-shaper migrations, this event is also derived by the live-default
-    apply-layer WorldDynamicsShaper (src/observability/event_shapers.py);
-    event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)
-    rollback path, not the sole terminus.
+  v2_evidence: "src/observability/event_extractor.py \u2014 ecology_cycle_completed\
+    \ block; tick % 200 == 0 guard iterating current_state.regions. As of the push-shaper\
+    \ migrations, this event is also derived by the live-default apply-layer WorldDynamicsShaper\
+    \ (src/observability/event_shapers.py); event_extractor.py's block above is now\
+    \ the flag-gated (_push_shapers_phase2_active) rollback path, not the sole terminus.\n"
   proof_type: parity
-  test_path: >-
-    tests/unit/observability/test_event_extractor_world_dynamics.py::TestEcologyCycleCompleted
+  test_path: tests/unit/observability/test_event_extractor_world_dynamics.py::TestEcologyCycleCompleted
   divergence_note: null
   support_boundary: null
 - id: WORLD-109
-  text: >
-    spawn_cadence_fired is emitted when tick % 50 == 0 and StateUpdate.entities_add
-    contains at least one non-excluded entity kind (world_boss, ancient_sentinel,
-    goblin_raider are excluded as non-cadence spawns).
-    node_recharged is emitted when a resource node's remaining_charges transitions
-    from 0 to > 0 (complements resource_node_regenerated which is unscored).
-    threat_evolved is emitted when world_update.trauma_delta > 0 and
-    prior_trauma + trauma_delta crosses a threshold in {25, 50, 75, 100}.
-    camp_constructed remains blocked — CampService has no event recorder.
-    (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)
+  text: "spawn_cadence_fired is emitted when tick % 50 == 0 and StateUpdate.entities_add\
+    \ contains at least one non-excluded entity kind (world_boss, ancient_sentinel,\
+    \ goblin_raider are excluded as non-cadence spawns). node_recharged is emitted\
+    \ when a resource node's remaining_charges transitions from 0 to > 0 (complements\
+    \ resource_node_regenerated which is unscored). threat_evolved is emitted when\
+    \ world_update.trauma_delta > 0 and prior_trauma + trauma_delta crosses a threshold\
+    \ in {25, 50, 75, 100}. camp_constructed remains blocked \u2014 CampService has\
+    \ no event recorder. (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_extractor.py — spawn_cadence_fired block (tick%50,
-    kind exclusion set); node_recharged block inside resource_node_regenerated guard
-    (remaining_charges 0→>0 only); threat_evolved block with threshold crossing logic
-    in world_updates loop with try/except for MagicMock safety.
-    As of the push-shaper migrations, spawn_cadence_fired and threat_evolved are also
-    derived by the live-default apply-layer WorldDynamicsShaper
-    (src/observability/event_shapers.py); node_recharged, despite sitting in this same
-    entry alongside its two siblings, is derived by the separate
-    DeferredInstrumentationShaper (src/observability/event_shapers.py), not
-    WorldDynamicsShaper. event_extractor.py's block above is now the flag-gated
-    (_push_shapers_phase2_active) rollback path for all three, not the sole terminus.
+  v2_evidence: "src/observability/event_extractor.py \u2014 spawn_cadence_fired block\
+    \ (tick%50, kind exclusion set); node_recharged block inside resource_node_regenerated\
+    \ guard (remaining_charges 0\u2192>0 only); threat_evolved block with threshold\
+    \ crossing logic in world_updates loop with try/except for MagicMock safety. As\
+    \ of the push-shaper migrations, spawn_cadence_fired and threat_evolved are also\
+    \ derived by the live-default apply-layer WorldDynamicsShaper (src/observability/event_shapers.py);\
+    \ node_recharged, despite sitting in this same entry alongside its two siblings,\
+    \ is derived by the separate DeferredInstrumentationShaper (src/observability/event_shapers.py),\
+    \ not WorldDynamicsShaper. event_extractor.py's block above is now the flag-gated\
+    \ (_push_shapers_phase2_active) rollback path for all three, not the sole terminus.\n"
   proof_type: parity
-  test_path: >-
-    tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
+  test_path: tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestNodeRecharged;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestThreatEvolved
-  divergence_note: >
-    camp_constructed has no viable engine path under the current camp lifecycle model:
-    camps are pre-placed at world generation and CampService (src/world/camp.py) only
-    evolves existing camps (maturity, raids) — there is no dynamic construction
-    mechanic to emit from. Not pending/future work; confirmed by TCK-20260701-SIMQ-EMIT-CAMP.
+  divergence_note: "camp_constructed has no viable engine path under the current camp\
+    \ lifecycle model: camps are pre-placed at world generation and CampService (src/world/camp.py)\
+    \ only evolves existing camps (maturity, raids) \u2014 there is no dynamic construction\
+    \ mechanic to emit from. Not pending/future work; confirmed by TCK-20260701-SIMQ-EMIT-CAMP.\n"
   support_boundary: null
-
 - id: WORLD-110
-  text: >
-    WORLD pillar grade stability under normalized_score formula change — see INFRA-255
-    (infrastructure.yaml) for the cross-pillar formula. WORLD-specific: dungeon_crawl seed42
-    500t (re-measured post TCK-20260713-SIMQ-SCORE-CEILING-FIX's weight raise) has
-    raw_score=76.0/event_count=20/last_event_tick=400; floor=499//4=124; 400 > 124 so
-    last_event_tick wins; norm=76/400=0.19 → B. Grade is correct — WORLD was genuinely active
-    up to tick 400 but at this event density even the recalibrated weights (x2, TCK-20260713-
-    SIMQ-SCORE-CEILING-FIX) don't cross the A threshold (0.5) for this specific run; that ticket
-    found the pillar's ceiling itself was the real defect (max normalized_score across the whole
-    72-scenario corpus was 0.30, never reachable A/S under any real content), not this scenario's
-    B grade, which reflects genuine density fairly at either weight scale.
-    frontier_marches_seed123_200t (38 WORLD events, raw_score=120.0 post-fix, norm=0.6) is the
-    scenario that now demonstrates the pillar can reach A under real corpus content — this
-    entry's dungeon_crawl_seed42_500t example staying at B is the expected, non-uniform outcome
-    the fix's positive-only per-event weight raise (not a blanket multiplier or threshold change)
-    was designed to produce: genuinely denser runs cross into A, less-dense runs correctly do not.
-    WORLD does not receive S-inflation because its events fire continuously throughout the run.
-    (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY; TCK-20260713-SIMQ-SCORE-CEILING-FIX)
+  text: "WORLD pillar grade stability under normalized_score formula change \u2014\
+    \ see INFRA-255 (infrastructure.yaml) for the cross-pillar formula. WORLD-specific:\
+    \ dungeon_crawl seed42 500t (re-measured post TCK-20260713-SIMQ-SCORE-CEILING-FIX's\
+    \ weight raise) has raw_score=76.0/event_count=20/last_event_tick=400; floor=499//4=124;\
+    \ 400 > 124 so last_event_tick wins; norm=76/400=0.19 \u2192 B. Grade is correct\
+    \ \u2014 WORLD was genuinely active up to tick 400 but at this event density even\
+    \ the recalibrated weights (x2, TCK-20260713- SIMQ-SCORE-CEILING-FIX) don't cross\
+    \ the A threshold (0.5) for this specific run; that ticket found the pillar's\
+    \ ceiling itself was the real defect (max normalized_score across the whole 72-scenario\
+    \ corpus was 0.30, never reachable A/S under any real content), not this scenario's\
+    \ B grade, which reflects genuine density fairly at either weight scale. frontier_marches_seed123_200t\
+    \ (38 WORLD events, raw_score=120.0 post-fix, norm=0.6) is the scenario that now\
+    \ demonstrates the pillar can reach A under real corpus content \u2014 this entry's\
+    \ dungeon_crawl_seed42_500t example staying at B is the expected, non-uniform\
+    \ outcome the fix's positive-only per-event weight raise (not a blanket multiplier\
+    \ or threshold change) was designed to produce: genuinely denser runs cross into\
+    \ A, less-dense runs correctly do not. WORLD does not receive S-inflation because\
+    \ its events fire continuously throughout the run. (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY;\
+    \ TCK-20260713-SIMQ-SCORE-CEILING-FIX)\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "see INFRA-255 in infrastructure.yaml; config/simulation_quality/scoring_weights.yaml WORLD section (x2 positive-weight raise)"
+  v2_evidence: see INFRA-255 in infrastructure.yaml; config/simulation_quality/scoring_weights.yaml
+    WORLD section (x2 positive-weight raise)
   proof_type: parity
   test_path: tests/simulation_quality/test_grade_regression.py::test_grade_within_anchor_band[frontier_marches_seed123_200t]
-  divergence_note: >
-    Secondary ref — primary entry is INFRA-255 in infrastructure.yaml.
-    WORLD holds B on dungeon_crawl_seed42_500t post-fix as expected (event density there
-    doesn't cross the recalibrated A threshold); the formula change does not affect pillars
-    that are active throughout the run (last_event_tick ≈ current_tick >> floor). The pillar's
-    ceiling itself was raised by TCK-20260713-SIMQ-SCORE-CEILING-FIX's positive-weight recalibration,
-    confirmed reachable on frontier_marches_seed123_200t (A, was B pre-fix).
+  divergence_note: "Secondary ref \u2014 primary entry is INFRA-255 in infrastructure.yaml.\
+    \ WORLD holds B on dungeon_crawl_seed42_500t post-fix as expected (event density\
+    \ there doesn't cross the recalibrated A threshold); the formula change does not\
+    \ affect pillars that are active throughout the run (last_event_tick \u2248 current_tick\
+    \ >> floor). The pillar's ceiling itself was raised by TCK-20260713-SIMQ-SCORE-CEILING-FIX's\
+    \ positive-weight recalibration, confirmed reachable on frontier_marches_seed123_200t\
+    \ (A, was B pre-fix).\n"
   support_boundary: null
-
 - id: WORLD-111
-  text: Building sabotage emits a scored building_sabotaged WORLD-pillar observability signal.
+  text: Building sabotage emits a scored building_sabotaged WORLD-pillar observability
+    signal.
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: "EventExtractor.extract() building_updates diff block (hp_delta < 0) + WorldDynamicsScorer infrastructure_damaged branch; TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL"
+  v2_evidence: EventExtractor.extract() building_updates diff block (hp_delta < 0)
+    + WorldDynamicsScorer infrastructure_damaged branch; TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL
   proof_type: parity
   test_path: tests/simulation_quality/test_world_dynamics_scorer.py::TestBuildingSabotage::test_building_sabotaged_scored_by_world_dynamics
   divergence_note: null
   support_boundary: null
 - id: WORLD-112
-  text: Initial spawn placement (entities, buildings, resource nodes) is checked for occupancy/terrain legality once at Kernel construction, independent of the per-tick DirtySet-gated occupancy check.
+  text: Initial spawn placement (entities, buildings, resource nodes) is checked for
+    occupancy/terrain legality once at Kernel construction, independent of the per-tick
+    DirtySet-gated occupancy check.
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "HardLawMonitor.check_initial_placement() (src/observability/hard_law_monitor.py) -- new law LAW-SPAWN-OCCUPANCY, unconditional full-population scan (entities + buildings + resource nodes) reusing LegalityServiceV2.verify_occupancy()'s WALL/blocked_tiles/building_tiles/transient_claims/occupancy rule plus a multi-occupant tile scan; called once from Kernel._run_initial_placement_check() (src/engine/kernel.py), invoked near the end of Kernel.__init__ after ContentWarmupService.warmup(). TCK-20260716-PLACELEGAL-HARDLAW."
+  v2_evidence: HardLawMonitor.check_initial_placement() (src/observability/hard_law_monitor.py)
+    -- new law LAW-SPAWN-OCCUPANCY, unconditional full-population scan (entities +
+    buildings + resource nodes) reusing LegalityServiceV2.verify_occupancy()'s WALL/blocked_tiles/building_tiles/transient_claims/occupancy
+    rule plus a multi-occupant tile scan; called once from Kernel._run_initial_placement_check()
+    (src/engine/kernel.py), invoked near the end of Kernel.__init__ after ContentWarmupService.warmup().
+    TCK-20260716-PLACELEGAL-HARDLAW.
   proof_type: parity
   test_path: tests/engine/test_hard_law_monitor.py::test_seed42_entity6_entity14_tile_27_38_collision
   divergence_note: null
   support_boundary: null
 - id: WORLD-113
-  text: LAW-SPAWN-OCCUPANCY hard-law violations (WORLD-112) are routed into SimQ's WORLD DYNAMICS pillar as a frequency-scored signal (spawn_occupancy_violation, weight -30.0) -- a correctness fault, not a health gradient in itself; SimQ scores how often it occurs, not whether one placement is legal (HardLawMonitor's job).
+  text: LAW-SPAWN-OCCUPANCY hard-law violations (WORLD-112) are routed into SimQ's
+    WORLD DYNAMICS pillar as a frequency-scored signal (spawn_occupancy_violation,
+    weight -30.0) -- a correctness fault, not a health gradient in itself; SimQ scores
+    how often it occurs, not whether one placement is legal (HardLawMonitor's job).
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: "src/simulation_quality/quality_hub.py::_translate_invariant() -- new law_id.startswith('LAW-SPAWN-OCCUPANCY') branch routing InvariantViolation events to spawn_occupancy_violation; src/simulation_quality/scorers/world_dynamics.py::WorldDynamicsScorer -- spawn_occupancy_violation added to EVENT_TYPES and score(); config/simulation_quality/scoring_weights.yaml WORLD: spawn_occupancy_violation: -30.0. Kernel._run_initial_placement_check() (src/engine/kernel.py) extended to construct and record an InvariantViolation SimulationEvent (payload['law_id']=v.law_id merged explicitly -- HardLawViolation.details never carries law_id) per violation, making the dispatcher branch reachable from a real Kernel construction, not just hand-built envelopes. TCK-20260716-PLACELEGAL-SIMQ-SIGNAL."
+  v2_evidence: 'src/simulation_quality/quality_hub.py::_translate_invariant() -- new
+    law_id.startswith(''LAW-SPAWN-OCCUPANCY'') branch routing InvariantViolation events
+    to spawn_occupancy_violation; src/simulation_quality/scorers/world_dynamics.py::WorldDynamicsScorer
+    -- spawn_occupancy_violation added to EVENT_TYPES and score(); config/simulation_quality/scoring_weights.yaml
+    WORLD: spawn_occupancy_violation: -30.0. Kernel._run_initial_placement_check()
+    (src/engine/kernel.py) extended to construct and record an InvariantViolation
+    SimulationEvent (payload[''law_id'']=v.law_id merged explicitly -- HardLawViolation.details
+    never carries law_id) per violation, making the dispatcher branch reachable from
+    a real Kernel construction, not just hand-built envelopes. TCK-20260716-PLACELEGAL-SIMQ-SIGNAL.'
   proof_type: parity
-  test_path: >
-    tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_spawn_occupancy_law;
+  test_path: 'tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_spawn_occupancy_law;
     tests/simulation_quality/test_world_dynamics_scorer.py::TestSpawnOccupancyViolation::test_spawn_occupancy_violation_scores_negative;
     tests/simulation_quality/test_traceability_path.py::test_spawn_occupancy_violation_reaches_world_pillar_via_real_kernel_construction
+
+    '
   divergence_note: null
   support_boundary: null
 - id: WORLD-114
-  text: >
-    Of the 7 real HardLawMonitor laws, only LAW-SPAWN-OCCUPANCY (WORLD-113) was bridged into SimQ.
-    The other 6 fell through _translate_invariant() untranslated. LAW-HP-NONNEGATIVE and
-    LAW-READINESS-NONNEGATIVE (combat-domain, DirtySet.combat_entities) now route to the existing
-    combat_hard_law_violation signal (CombatScorer); LAW-GOLD-NONNEGATIVE (economic invariant)
-    routes to the existing conservation_law_violated signal (EconomyScorer); LAW-STAMINA-NONNEGATIVE,
-    LAW-POSITION-FINITE, and LAW-OCCUPANCY-COLLISION (biological/movement domain, no existing
-    generic signal fit) route to a new world_hard_law_violation signal (WorldDynamicsScorer,
-    weight -30.0, same tier as spawn_occupancy_violation and combat_hard_law).
+  text: 'Of the 7 real HardLawMonitor laws, only LAW-SPAWN-OCCUPANCY (WORLD-113) was
+    bridged into SimQ. The other 6 fell through _translate_invariant() untranslated.
+    LAW-HP-NONNEGATIVE and LAW-READINESS-NONNEGATIVE (combat-domain, DirtySet.combat_entities)
+    now route to the existing combat_hard_law_violation signal (CombatScorer); LAW-GOLD-NONNEGATIVE
+    (economic invariant) routes to the existing conservation_law_violated signal (EconomyScorer);
+    LAW-STAMINA-NONNEGATIVE, LAW-POSITION-FINITE, and LAW-OCCUPANCY-COLLISION (biological/movement
+    domain, no existing generic signal fit) route to a new world_hard_law_violation
+    signal (WorldDynamicsScorer, weight -30.0, same tier as spawn_occupancy_violation
+    and combat_hard_law).
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: "src/simulation_quality/quality_hub.py::_translate_invariant() -- new _LAW_ID_TO_EVENT_TYPE exact-match dict routing LAW-HP-NONNEGATIVE/LAW-READINESS-NONNEGATIVE -> combat_hard_law_violation, LAW-GOLD-NONNEGATIVE -> conservation_law_violated, LAW-STAMINA-NONNEGATIVE/LAW-POSITION-FINITE/LAW-OCCUPANCY-COLLISION -> world_hard_law_violation; src/simulation_quality/scorers/world_dynamics.py::WorldDynamicsScorer -- world_hard_law_violation added to EVENT_TYPES and score(); config/simulation_quality/scoring_weights.yaml WORLD: world_hard_law: -30.0. The pre-existing COMBAT*/CONSERVATION* prefix branches were left in place (git history confirmed neither was ever matched by a real law) rather than repurposed -- out of scope to rename the 6 real LAW-* laws. TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP."
+  v2_evidence: 'src/simulation_quality/quality_hub.py::_translate_invariant() -- new
+    _LAW_ID_TO_EVENT_TYPE exact-match dict routing LAW-HP-NONNEGATIVE/LAW-READINESS-NONNEGATIVE
+    -> combat_hard_law_violation, LAW-GOLD-NONNEGATIVE -> conservation_law_violated,
+    LAW-STAMINA-NONNEGATIVE/LAW-POSITION-FINITE/LAW-OCCUPANCY-COLLISION -> world_hard_law_violation;
+    src/simulation_quality/scorers/world_dynamics.py::WorldDynamicsScorer -- world_hard_law_violation
+    added to EVENT_TYPES and score(); config/simulation_quality/scoring_weights.yaml
+    WORLD: world_hard_law: -30.0. The pre-existing COMBAT*/CONSERVATION* prefix branches
+    were left in place (git history confirmed neither was ever matched by a real law)
+    rather than repurposed -- out of scope to rename the 6 real LAW-* laws. TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP.'
   proof_type: parity
-  test_path: >
-    tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_hp_nonnegative_routes_to_combat_hard_law;
+  test_path: 'tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_hp_nonnegative_routes_to_combat_hard_law;
     tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_readiness_nonnegative_routes_to_combat_hard_law;
     tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_gold_nonnegative_routes_to_conservation_violated;
     tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_stamina_position_occupancy_route_to_world_hard_law;
     tests/simulation_quality/test_world_dynamics_scorer.py::TestWorldHardLawViolation::test_world_hard_law_violation_scores_negative
+
+    '
   divergence_note: null
   support_boundary: null
 - id: WORLD-115
-  text: >-
-    14 WORLD dynamics (+ demographic + NARRATIVE co-fire) event types (demographic_birth,
+  text: '14 WORLD dynamics (+ demographic + NARRATIVE co-fire) event types (demographic_birth,
     demographic_mortality, ecology_cycle_completed, spawn_cadence_fired, threat_evolved,
     building_sabotaged, region_ownership_changed, region_transformed, region_trauma_delta,
-    calamity_spawned, boss_spawned, raid_party_spawned, narrative_milestone,
-    world_emergence_event) are available via an apply-layer WorldDynamicsShaper
-    (src/observability/event_shapers.py), reading StateUpdate.entities_add/entities_remove,
-    WorldUpdate.trauma_delta/owner_faction_id_set/kind_set, building_updates,
-    last_calamity_tick_set, and world_events_add directly -- no post-apply current_state read
-    required. demographic_mortality closes Phase 1's own INFRA-324 deferral (StateUpdate.
-    entities_remove + the shared _real_combat_update() helper give the same signal without new
-    instrumentation). narrative_milestone/world_emergence_event read the same world_events_add
-    record FactionShaper already migrated -- left "out of scope" by Phase 1 only because
-    NARRATIVE wasn't that ticket's domain, not because they weren't push-ready.
-    building_sabotaged substitutes prior_state for current_state in its
-    SpatialQueryService.get_building_region() call, confirmed equivalent (building positions are
-    durable, sabotage never changes them). Registered in PHASE2_SHAPER_REGISTRY, gated by
-    ENABLE_PUSH_EVENT_SHAPERS_PHASE2 (shared with StrategyShaper/ProgressionShaper). SHADOW-only
-    in this ticket. Verified via real kernel runs across 3 worlds (dungeon_crawl,
-    urban_political, hero_guild_routing, 500 ticks): exact 1:1 parity between event_extractor and
-    event_shapers source counts for every event type that fired. (TCK-20260806-PUSH-SHAPER-
-    REGISTRY-WORLD-DYNAMICS)
+    calamity_spawned, boss_spawned, raid_party_spawned, narrative_milestone, world_emergence_event)
+    are available via an apply-layer WorldDynamicsShaper (src/observability/event_shapers.py),
+    reading StateUpdate.entities_add/entities_remove, WorldUpdate.trauma_delta/owner_faction_id_set/kind_set,
+    building_updates, last_calamity_tick_set, and world_events_add directly -- no
+    post-apply current_state read required. demographic_mortality closes Phase 1''s
+    own INFRA-324 deferral (StateUpdate. entities_remove + the shared _real_combat_update()
+    helper give the same signal without new instrumentation). narrative_milestone/world_emergence_event
+    read the same world_events_add record FactionShaper already migrated -- left "out
+    of scope" by Phase 1 only because NARRATIVE wasn''t that ticket''s domain, not
+    because they weren''t push-ready. building_sabotaged substitutes prior_state for
+    current_state in its SpatialQueryService.get_building_region() call, confirmed
+    equivalent (building positions are durable, sabotage never changes them). Registered
+    in PHASE2_SHAPER_REGISTRY, gated by ENABLE_PUSH_EVENT_SHAPERS_PHASE2 (shared with
+    StrategyShaper/ProgressionShaper). SHADOW-only in this ticket. Verified via real
+    kernel runs across 3 worlds (dungeon_crawl, urban_political, hero_guild_routing,
+    500 ticks): exact 1:1 parity between event_extractor and event_shapers source
+    counts for every event type that fired. (TCK-20260806-PUSH-SHAPER- REGISTRY-WORLD-DYNAMICS)'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >-
-    src/observability/event_shapers.py — WorldDynamicsShaper, PHASE2_SHAPER_REGISTRY["world_dynamics"];
-    real, non-mocked kernel runs across 3 worlds confirmed exact parity for ecology_cycle_completed/
-    region_trauma_delta (the events that fired within 500 ticks on these worlds); SHADOW mode
-    confirmed 0 WorldDynamics-specific deliveries
+  v2_evidence: "src/observability/event_shapers.py \u2014 WorldDynamicsShaper, PHASE2_SHAPER_REGISTRY[\"\
+    world_dynamics\"]; real, non-mocked kernel runs across 3 worlds confirmed exact\
+    \ parity for ecology_cycle_completed/ region_trauma_delta (the events that fired\
+    \ within 500 ticks on these worlds); SHADOW mode confirmed 0 WorldDynamics-specific\
+    \ deliveries"
   proof_type: parity
-  test_path: >-
-    tests/unit/observability/test_event_shapers_world_dynamics.py (25 tests, all passing)
+  test_path: tests/unit/observability/test_event_shapers_world_dynamics.py (25 tests,
+    all passing)
   divergence_note: null
-  support_boundary: >-
-    SHADOW-mode construction only — live delivery is a separate, later Phase 2 cutover ticket's
-    scope. See docs/parity_ledger/infrastructure.yaml's INFRA-324 update for the
-    demographic_mortality deferral closure specifically.
-  update_2026_08_07: >-
-    TCK-20260806-PUSH-CUTOVER-PHASE2: cut over to live delivery. ENABLE_PUSH_EVENT_SHAPERS_PHASE2
-    default flipped OFF->ON; event_extractor.py's legacy WORLD_DYNAMICS branches individually
-    flag-gated behind the new _push_shapers_phase2_active. See STRAT-247's update note and
-    infrastructure.yaml INFRA-326 for the run_shadow_shapers() default-lockstep bug found and
-    fixed during this cutover, verified fixed via real 5-world runs.
+  support_boundary: "SHADOW-mode construction only \u2014 live delivery is a separate,\
+    \ later Phase 2 cutover ticket's scope. See docs/parity_ledger/infrastructure.yaml's\
+    \ INFRA-324 update for the demographic_mortality deferral closure specifically."
+  update_2026_08_07: 'TCK-20260806-PUSH-CUTOVER-PHASE2: cut over to live delivery.
+    ENABLE_PUSH_EVENT_SHAPERS_PHASE2 default flipped OFF->ON; event_extractor.py''s
+    legacy WORLD_DYNAMICS branches individually flag-gated behind the new _push_shapers_phase2_active.
+    See STRAT-247''s update note and infrastructure.yaml INFRA-326 for the run_shadow_shapers()
+    default-lockstep bug found and fixed during this cutover, verified fixed via real
+    5-world runs.'
+- id: WORLD-116
+  text: 'QuestKind gained an ESCORT member (appended after BOUNTY, not inserted --
+    enum ordinal stability preserved for any positional/serialized use). The world-content
+    compiler''s get_quest_kind() string-to-enum mapper now has an explicit "ESCORT"
+    in k branch so world-content-authored quest_definitions with type: "escort" (6
+    real world_modules/*.yaml files author this type) resolve to QuestKind.ESCORT;
+    previously that branch was absent and the function''s catch-all fallthrough silently
+    miscompiled every authored escort quest to QuestKind.EXPLORE.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/core/models/quests.py:13 -- QuestKind.ESCORT = auto(), appended
+    as the 6th member after BOUNTY; src/worldbuilding/compiler.py::get_quest_kind()
+    lines 85-100 -- new elif "ESCORT" in k: return QuestKind.ESCORT branch added before
+    the return QuestKind.EXPLORE fallthrough, so type: "escort" content no longer
+    falls through to EXPLORE. TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING.'
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_helper_enum_mappers
+    (assert get_quest_kind("escort") == QuestKind.ESCORT); tests/unit/quest/test_quest_system.py::test_quest_kind_escort_enum_value_is_new_member_only
+    (enum-membership/ordinal-stability guard)
+  divergence_note: null
+  support_boundary: null

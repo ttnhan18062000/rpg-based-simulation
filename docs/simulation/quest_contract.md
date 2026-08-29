@@ -3,7 +3,7 @@ status: authoritative
 layer: systems
 authority: P1
 audience: agent
-last_verified: 2026-06-20
+last_verified: 2026-08-29
 tags: [quests, lifecycle, rewards, contract, progression]
 ---
 
@@ -30,6 +30,7 @@ tags: [quests, lifecycle, rewards, contract, progression]
 | `EXPLORE` | Visit a specific location or region |
 | `LIBERATE` | Clear and hold an outpost or camp |
 | `BOUNTY` | Defeat a named target entity |
+| `ESCORT` | Protect/accompany a target to a destination (TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING) |
 
 ---
 
@@ -130,8 +131,17 @@ populated `metadata` for any kind, making every generated quest permanently unco
   (`data/content/entities/entity_archetypes.yaml`), so this quest stays honestly uncompletable
   rather than matching against a fabricated kind string. When set, `generate()` sets
   `metadata={"target_kind": template.target_kind}` for HUNT templates.
-- **GATHER/BOUNTY/LIBERATE remain uncompletable**: they have no `evaluate_*` method in
-  `QuestResolutionSystem` at all (out of scope for both tickets above).
+- **GATHER/BOUNTY/LIBERATE/ESCORT remain uncompletable**: they have no `evaluate_*` method in
+  `QuestResolutionSystem` at all (out of scope for both tickets above). `ESCORT`
+  (TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING) is architecturally different from the other
+  three, though: `QuestResolutionSystem.enforce()` reacts to an ESCORT quest's generic
+  ACTIVE→COMPLETED transition (the same `is_newly_completed` check every kind gets) by calling
+  `ReputationUpdateService.process_witnessed_event(..., "successful_escort")` — it does not itself
+  *detect* completion the way HUNT/EXPLORE's evaluators do. No live driver (generator template or
+  world-content compiler) currently advances `current_value` toward `goal_value` for a compiled or
+  generated ESCORT quest, so this reaction is real and correctly wired but not yet reachable in a
+  live simulation run — see `docs/simulation/domains/commitment_contract.md`'s "Engine Pipeline
+  Phase" section for the reputation side of this wiring.
 
 **Built-in templates by tier:**
 

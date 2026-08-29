@@ -561,6 +561,7 @@ def test_helper_enum_mappers():
     assert get_quest_kind("hunt") == QuestKind.HUNT
     assert get_quest_kind("gather") == QuestKind.GATHER
     assert get_quest_kind("explore") == QuestKind.EXPLORE
+    assert get_quest_kind("escort") == QuestKind.ESCORT
 
 
 def test_compiler_resource_node_regen_rate():
