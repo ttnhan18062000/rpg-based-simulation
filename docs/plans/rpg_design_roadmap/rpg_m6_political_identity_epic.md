@@ -17,21 +17,34 @@ The roadmap explicitly does not recommend starting this milestone early, even sp
 ## Problem
 
 Four ideas, a strict sequential chain (39 &rarr; 56 &rarr; 59 &rarr; 65): a real path for allegiance to
-change, a City that can drift away from its nation without a single triggering event, a person's own bond
+change, a Place (City or otherwise, now that Idea 66 is promoted — see the parent roadmap) that can drift
+away from its nation without a single triggering event, a person's own bond
 to a specific place, and refugees who carry that bond somewhere new. High Direction Fit and Narrative
 Generativity scores in the Merit Scorecard, but the least code-validated milestone in the roadmap until this
 investigation ran — several real corrections landed here that changed scope, not just risk.
 
+**Temporal axis (see the parent roadmap's "Temporal axis" section):** once ticketed, M6 owns the time needed
+for affiliation, loyalty, attachment, and refugee identity to change, per the temporal-axis proposal's §13
+integration plan. Not resolved or required by this review pass; a forward pointer for whoever scopes these
+tickets.
+
 ## Scope (not yet broken into child tickets)
 
-1. **Idea 39 — Affiliation's real change path.** Confirmed the entire apply-path already exists and is
-   waiting on a single writer (`IdentityUpdate.faction_set`, a fully wired dormant `entity_faction_changed`
-   observability event). Real risk: `identity.faction` is read directly by combat/action legality itself
-   (`engine/legality.py`, 6 confirmed call sites) — not just diplomatic flavor.
-2. **Idea 56 — Drifting Loyalty.** Confirmed genuinely different mechanism kind from idea 39 (continuous
-   background pressure vs. discrete event) — stays a separate ticket, sequenced before or alongside idea
-   39 so 39's trust gate can read 56's drift signal as an input. Blocked on the same `CultureDeriver`
-   substrate as M4's idea 61 and M5's ideas 57/62.
+**Confirmed single contract** (plan-owner decision, 2026-08-29 — resolves a prior sequencing ambiguity
+between "Drifting Loyalty before any affiliation change" and "affiliation primitive first"): idea 39 is not
+split into a separate mutation-primitive/voluntary-trigger pair.
+
+1. **Idea 39 — Affiliation's real change path.** Establishes the mutation primitive first. Confirmed the
+   entire apply-path already exists and is waiting on a single writer (`IdentityUpdate.faction_set`, a fully
+   wired dormant `entity_faction_changed` observability event). Real risk: `identity.faction` is read
+   directly by combat/action legality itself (`engine/legality.py`, 6 confirmed call sites) — not just
+   diplomatic flavor.
+2. **Idea 56 — Drifting Loyalty.** Derives gradual loyalty pressure that may request or influence idea 39's
+   mutation. Confirmed genuinely different mechanism kind from idea 39 (continuous background pressure vs.
+   discrete event) — stays a separate ticket, sequenced before or alongside idea 39 so 39's trust gate can
+   read 56's drift signal as an input. **Blocked on M4's `CultureDeriver` activation** (owner assigned
+   2026-08-29 — see `docs/plans/rpg_design_roadmap/rpg_m4_beyond_city_epic.md`), the same substrate M5's
+   ideas 57/62 also consume; M6 does not wire it itself.
 3. **Idea 59 — Home, Exile & Return.** The single largest correction in this whole investigation: its
    central claim (no per-entity place-attachment field exists) was flatly wrong.
    `StrategicComponent.home_region_id` already exists, typed, with a live consumer already wired
@@ -44,8 +57,8 @@ investigation ran — several real corrections landed here that changed scope, n
 ## Out of Scope
 
 - Anything from Milestones 1 through 5.
-- Wiring `CultureDeriver`/`CulturalBiasApplicator` — the shared blocker idea 56 surfaces, owned wherever
-  M4/M5's identical blocker gets resolved, not duplicated here.
+- Wiring `CultureDeriver`/`CulturalBiasApplicator` — the shared blocker idea 56 surfaces. **Owned by M4**
+  (plan-owner decision, 2026-08-29); M5's ideas 57/62 are the other consumer. Not duplicated here.
 
 ## Acceptance Signal
 
@@ -65,4 +78,6 @@ investigation ran — several real corrections landed here that changed scope, n
 - `docs/brainstorm/rpg_feature_atlas.html` — Cross-Cutting Risk & Blast Radius, Shared Implementation
   Opportunities, Phase Placement & Testing Strategy (`POLITICAL_IDENTITY_ARENA` scenario design)
 - `docs/brainstorm/design_merit_scorecard.html`
-- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, Idea 66 promotion, temporal axis
+- `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — single-contract and
+  `CultureDeriver` ownership decisions, 2026-08-29

@@ -8,13 +8,22 @@ tags: [architecture, content, feature-flags]
 
 # Epic Plan — RPG Design Roadmap, Milestone 1: Quick Wins & Housekeeping
 
-**Tracking ticket:** `TCK-20260823-EPIC-RPG-M1-QUICK-WINS` (not yet created — this epic is scope-only,
-per `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
+**Tracking ticket:** `TCK-20260823-EPIC-RPG-M1-QUICK-WINS` (not yet created as a formal epic ticket — but
+its 21 child tickets already exist and are in flight under `tickets/todos/m1-quick-wins/`, with
+`tickets/todos/m1-quick-wins/SEQUENCE.md` as the executable ordering authority)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Rev 60+ (Design Ideas 1, 3, 7, 9, 10, 12, 13, 15-19, 20,
 21, 22, 24, 25, 26, 29, 42), cross-checked against Cross-Cutting Risk, Shared Implementation Opportunities,
 Phase Placement & Testing Strategy, and `docs/brainstorm/design_merit_scorecard.html`.
 **Priority:** P1 — this is the milestone the roadmap itself has zero dependencies on; every other milestone
 gates on something upstream of it.
+
+**2026-08-29 review note**: this section was reconciled against
+`docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` for documentation accuracy
+only (ticket count, lane grouping, idea 16/7/17 bookkeeping below). **No ticket content, scope, or sequence
+was changed** — the 21 tickets already in flight under `tickets/todos/m1-quick-wins/` are being implemented
+as originally scoped, and this review deliberately did not touch them. The confirmed final-permadeath
+lifecycle defect is explicitly **not** part of this batch — see the parent roadmap's M5 section for its
+owner.
 
 ## Problem
 
@@ -24,10 +33,20 @@ questions that were genuinely unresolved until a follow-up trace answered them d
 new mechanism design; all of it needs someone to actually build the small thing the investigation already
 specified. This epic exists to turn "well-understood gap" into "ticketed."
 
-## Scope for the eventual `create-tickets` pass
+## Scope
 
-Not created yet — this epic is scope-only. Prospective child tickets, grouped by shape, not build order
-(see Acceptance Signal below for the one real sequencing note):
+**21 child tickets now exist** under `tickets/todos/m1-quick-wins/` for 19 of these 20 ideas (idea 16
+required no behavior-change ticket — see item B below); ideas 7 and 17 were each split into two tickets by
+responsibility. Grouped by shape below (see Acceptance Signal for the one real sequencing note), and by
+these four execution lanes for review/scheduling purposes only (the committed build order remains
+`SEQUENCE.md`, not this grouping):
+
+- **Correctness repairs** — items 2-5 (wound threshold/penalty, route count) and 11-12 (heir assignment,
+  town center) below.
+- **Activation and governance** — item 1 (flag decisions) and items 6-10 (wiring the real orphans).
+- **Player-visible RPG improvements** — items 13-17 (affection gate, life stages, occupations, relationship
+  roles, wound/scar wiring).
+- **Scope-only decisions** — items 18-19 (personal economy, secrets disclosure — both blocked, see section F).
 
 ### A — Governance decision (do this first within M1)
 
@@ -132,16 +151,18 @@ Idea 16 (Ranger doctrine) needs no ticket — already answered by a separate, al
 - Fixing `MotivationModel.values`/`ValuePreferenceProfile`'s dead-on-arrival state (item 18's real
   blocker) — that's a prerequisite this epic surfaces, not a task it owns.
 
-## Acceptance Signal for This Epic (not yet broken into child tickets)
+## Acceptance Signal for This Epic
 
-- All 19 prospective tickets above exist in `tickets/` (18, since idea 16 needs none), each referencing this
-  epic and its source idea number in the atlas.
+- All 21 child tickets exist under `tickets/todos/m1-quick-wins/` (19 ideas, with ideas 7 and 17 each split
+  into two tickets; idea 16 needs none), each referencing its source idea number in the atlas — **confirmed
+  as of 2026-08-29**.
 - Idea 9's flag-governance ticket lands before any other M1 ticket that adds new flag-gated behavior, per
-  the sequencing note in section A.
+  the sequencing note in section A and `SEQUENCE.md`.
 - Items 24 and 25 (section F) are either explicitly deferred with their blocker ticket referenced, or their
   blocker is resolved first — not silently built on a foundation already known to be broken.
-- `docs/brainstorm/rpg_feature_atlas.html`'s own Roadmap section estimate (roughly 18 tickets for this
-  milestone) holds, or the discrepancy is explained.
+- `docs/brainstorm/rpg_feature_atlas.html`'s own Roadmap section estimate (roughly 18 tickets) was superseded
+  by the real 21-ticket split once idea 7 and idea 17 were each broken into two tickets by responsibility —
+  not a discrepancy, an expected refinement.
 
 ## Open Questions
 
@@ -157,4 +178,7 @@ Idea 16 (Ranger doctrine) needs no ticket — already answered by a separate, al
 - `docs/brainstorm/rpg_feature_atlas.html` — ideas 1, 3, 7, 9, 10, 12, 13, 15-22, 24-26, 29, 42; Cross-Cutting
   Risk & Blast Radius; Shared Implementation Opportunities; Phase Placement & Testing Strategy
 - `docs/brainstorm/design_merit_scorecard.html` — per-idea scores
-- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, sequencing rules
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, sequencing rules, temporal axis
+- `tickets/todos/m1-quick-wins/SEQUENCE.md` — the real, executable ticket ordering
+- `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — documentation-sync review
+  this section was reconciled against, 2026-08-29 (scope/tickets unchanged)

@@ -20,6 +20,13 @@ milestone is ready to ship, not before.
 
 ## Problem
 
+**2026-08-29 review note:** Idea 66 is promoted (plan-owner decision, see the parent roadmap and item 9
+below) — its own implementation ticket owns the world-schema migration and corpus-wide grade-anchor impact
+directly, rather than deferring that cost to this epic as a later audit finding. If the temporal-axis
+proposal's calendar/lifecycle work (see the parent roadmap's "Temporal axis") reaches ticket scope, this
+epic's job extends to confirming that calendar, lifecycle, routine, and seasonal configuration can actually
+enter compiled worlds — the same question this epic already asks of every other idea's content.
+
 Every prior milestone in this roadmap answered "is the mechanism correct" and "what data does it need."
 Neither answers a third question: **does the engine's real world-generation/compilation pipeline actually
 have a place for this content to enter a running world, and do the existing test corpora actually exercise
@@ -111,4 +118,6 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
 - `docs/mechanics/regional_sovereignty.md`
 - `tickets/done/TCK-20260630-WORLD-DEPLOY-MODULES.md`
 - `docs/brainstorm/rpg_feature_atlas.html` — ideas 14, 32, 39, 43, 44, 45, 48, 51
-- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, Idea 66 promotion, temporal axis
+- `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — Idea 66 schema-migration
+  ownership clarification, 2026-08-29

@@ -32,6 +32,17 @@ Distributing "also register this with SimQ" across 6 separate epics also risks i
 whichever epic is under the most time pressure — a single, consolidated sweep after the mechanisms actually
 exist is both more honest about sequencing and harder to accidentally miss piece by piece.
 
+**2026-08-29 revision — M7 is not the first owner of missing event contracts.** Each behavior-changing
+feature ticket in M2-M6 should itself define, before that ticket is done: its authoritative update and
+observable event; a deterministic or corpus scenario that causes it to fire; a SimQ pillar/rule mapping or
+an explicit exclusion; and an observer-facing legibility path (Chronicle, rumor, reputation, UI, or an
+explicit reason none is required) — closing the gap the direction-alignment audit separately flagged, where
+M7's own acceptance criteria could be satisfied while leaving observer legibility (not just engine
+telemetry) unaddressed. M7's job stays what's described above: verify completeness and calibrate the
+aggregate rules across everything that shipped, not backfill missing per-feature contracts one epic later.
+It should also require temporal/observer legibility for time-scoped features, once the temporal axis (see
+the parent roadmap) reaches per-feature ticket scoping.
+
 ## Scope (not yet broken into child tickets)
 
 1. **Expand Pillar Reach from a count into named pillars, per idea.** The Merit Scorecard's Pillar Reach
@@ -81,4 +92,6 @@ exist is both more honest about sequencing and harder to accidentally miss piece
 - `docs/simulation_quality/quality_scoring_contract.md` — §1 Purpose &amp; Scope, §5 The 10 Pillars, §4.8
   Data-Driven Scoring Weights
 - `docs/brainstorm/design_merit_scorecard.html` — Pillar Reach axis, all 65 ideas
-- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, temporal axis
+- `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — feature-ticket-owns-events
+  reconciliation, 2026-08-29
