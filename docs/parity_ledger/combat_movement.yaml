@@ -3230,41 +3230,44 @@
     (wounds are declared intentionally permanent; no healing trigger is built).
 
 
-    Separately, `src/observability/event_extractor.py`''s wound/scar diff blocks (lines
-    ~280-281, ~302-303) have their own, independent bug (`isinstance(x, list)` instead
-    of `isinstance(x, (list, tuple))`) that silently drops event emission for all
-    three events -- `wound_sustained`, `wound_healed`, and `scar_gained` -- once state
-    is committed as a tuple by the real apply path (which it always is in production).
-    This means none of the three events currently fire through the real event-observability
-    layer, regardless of gate state, for a reason unrelated to whether a producer
-    exists. Tracked and owned separately by `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`,
-    which will correct `wound_sustained`''s (and, if one is ever added, `scar_gained`''s)
-    event-layer reachability claim here once its own fix lands -- this entry''s `wound_healed`/`scar_gained`
-    producer-status correction is independent of that fix and does not require it.
+    `src/observability/event_extractor.py`''s wound/scar diff blocks (lines ~280-281,
+    ~302-303) previously had an independent bug (`isinstance(x, list)` instead of
+    `isinstance(x, (list, tuple))`) that silently dropped event emission for all three
+    events -- `wound_sustained`, `wound_healed`, and `scar_gained` -- once state was
+    committed as a tuple by the real apply path (which it always is in production).
+    This bug is now fixed by `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`:
+    both checks now read `isinstance(x, (list, tuple))`, matching the pre-existing
+    correct pattern already used elsewhere in the same file (`src/observability/event_extractor.py:1499`,
+    `:1583`). `wound_sustained` now genuinely fires through the real event-observability
+    layer, confirmed via a new real, non-mocked `Kernel.tick_once()` regression test
+    (`tests/integration/observability/test_kernel_event_recording.py::test_wound_sustained_fires_through_real_tick_once_loop`)
+    that observes the event land in `kernel._event_recorder.events` at tick 9 of the
+    same deterministic 40-tick fixture, produced by the same real production wound.
+    `wound_healed`/`scar_gained` event-layer reachability is fixed uniformly by the
+    same change, but this does not make either event fire in production: no code anywhere
+    constructs a non-empty `wounds_heal`/`scars_add` (see the zero-producer proof
+    above), so there is nothing left for the now-correct diff blocks to detect.
 
 
     '
   proof_type: regression
   test_path: 'tests/unit/observability/test_event_extractor_vitals.py:: test_wound_sustained_severity_mapping,
-    ::test_wound_healed_fires, ::test_scar_gained_fires; tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers
-
+    ::test_wound_healed_fires, ::test_scar_gained_fires; tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers;
+    tests/integration/observability/test_kernel_event_recording.py::test_wound_sustained_fires_through_real_tick_once_loop
 
     '
   divergence_note: null
-  support_boundary: 'Emitted events are classified `unscored_intentional` (docs/simulation_quality/event_type_coverage.md
-    Section 5) -- not wired to any SimQ pillar. `wound_sustained`''s underlying producer
-    is real and tested at the state level, gated only by `ENABLE_COMBAT_ENGAGEMENT`,
-    but its event-layer emission is currently blocked by a separate, independently-tracked
-    bug (see `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`) -- do not
-    assume it ''will begin firing naturally once re-enabled'' until that fix lands.
-    `wound_healed`/`scar_gained` will not begin firing under any circumstance, gate
-    state or event-layer fix included, because no code anywhere constructs a non-empty
-    `wounds_heal`/`scars_add` -- this is a permanent design decision (`TCK-20260824-WOUND-HEALING-DECISION`),
-    not a temporary gate limitation. See SUB-375 for the sibling biological/stamina
+  support_boundary: Emitted events are classified `unscored_intentional` (docs/simulation_quality/event_type_coverage.md
+    Section 5) -- not wired to any SimQ pillar. `wound_sustained` now has both a real
+    production producer (gated only by `ENABLE_COMBAT_ENGAGEMENT`) and confirmed real
+    event-layer reachability, fixed by `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`
+    (the prior `isinstance(x, list)` bug that silently dropped all wound/scar event
+    diffing against real, tuple-shaped authoritative state is corrected). `wound_healed`/`scar_gained`
+    will still not begin firing under any circumstance, gate state or event-layer
+    fix included, because no code anywhere constructs a non-empty `wounds_heal`/`scars_add`
+    -- this is a permanent design decision (`TCK-20260824-WOUND-HEALING-DECISION`),
+    not a temporary gate or event-layer limitation. See SUB-375 for the sibling biological/stamina
     entry from the same ticket.
-
-
-    '
 - id: COMB-297
   text: 'TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION -- Hero''s Journey
     rebirth/permadeath branching (`classification.rebirth_eligible` -> `generation_delta`/`is_permadeath_set`)
@@ -4074,16 +4077,16 @@
   divergence_note: null
   support_boundary: null
 - id: COMB-315
-  text: Wound/scar severity affects tactical decision-making (cover-seeking, retreat threshold, and
-    PROTECTOR guard priority), independent of and in addition to raw hp_percent/hp_ratio checks.
+  text: Wound/scar severity affects tactical decision-making (cover-seeking, retreat
+    threshold, and PROTECTOR guard priority), independent of and in addition to raw
+    hp_percent/hp_ratio checks.
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "TacticalDecisionSystem.evaluate_entity_intent wires\
-    \ WoundService.get_wound_stat_penalties/get_scar_stat_penalties into the cover-seeking/retreat\
-    \ gate (src/engine/tactical.py:483-494) and the PROTECTOR guard-wounded-ally branch\
-    \ (src/engine/tactical.py:542-582), additive to the pre-existing hp_percent/hp_ratio-only\
-    \ checks. Landed in TCK-20260824-TACTICAL-WOUND-SCAR-WIRING."
+  v2_evidence: TacticalDecisionSystem.evaluate_entity_intent wires WoundService.get_wound_stat_penalties/get_scar_stat_penalties
+    into the cover-seeking/retreat gate (src/engine/tactical.py:483-494) and the PROTECTOR
+    guard-wounded-ally branch (src/engine/tactical.py:542-582), additive to the pre-existing
+    hp_percent/hp_ratio-only checks. Landed in TCK-20260824-TACTICAL-WOUND-SCAR-WIRING.
   proof_type: unit
   test_path: tests/unit/combat/test_tactical_wound_scar_wiring.py
   divergence_note: null

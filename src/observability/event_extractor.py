@@ -277,8 +277,8 @@ class EventExtractor:
                         },
                     ))
 
-                entity_wounds = entity.combat.wounds if isinstance(entity.combat.wounds, list) else []
-                prior_wounds = prior_ent.combat.wounds if isinstance(prior_ent.combat.wounds, list) else []
+                entity_wounds = entity.combat.wounds if isinstance(entity.combat.wounds, (list, tuple)) else []
+                prior_wounds = prior_ent.combat.wounds if isinstance(prior_ent.combat.wounds, (list, tuple)) else []
                 prior_wound_ids = {w.id for w in prior_wounds}
                 for wound in entity_wounds:
                     if wound.id not in prior_wound_ids:
@@ -299,8 +299,8 @@ class EventExtractor:
                             source_system="event_extractor", message="",
                             payload={"wound_id": wound.id, "kind": wound.kind},
                         ))
-                entity_scars = entity.combat.scars if isinstance(entity.combat.scars, list) else []
-                prior_scars = prior_ent.combat.scars if isinstance(prior_ent.combat.scars, list) else []
+                entity_scars = entity.combat.scars if isinstance(entity.combat.scars, (list, tuple)) else []
+                prior_scars = prior_ent.combat.scars if isinstance(prior_ent.combat.scars, (list, tuple)) else []
                 prior_scar_ids = {s.id for s in prior_scars}
                 for scar in entity_scars:
                     if scar.id not in prior_scar_ids:
