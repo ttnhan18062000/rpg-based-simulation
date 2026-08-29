@@ -1544,6 +1544,12 @@ The following legacy behaviors have been intentionally omitted or retired.
   `TCK-20260824-TACTICAL-WOUND-SCAR-WIRING` (not yet implemented as of this entry — that ticket's
   current scope only reads existing `ScarState` data, it does not itself build a scar-formation
   producer; flagged for the ticket owner, not a blocker for this decision).
+  - **Update (2026-08-29, TCK-20260824-TACTICAL-WOUND-SCAR-WIRING)**: that ticket has now landed,
+    confirming the prediction above — it wires `WoundService.get_wound_stat_penalties()`/
+    `get_scar_stat_penalties()` into `TacticalDecisionSystem` (`src/engine/tactical.py`) as three
+    new read-only decision signals, and still does not construct any `ScarState` or populate
+    `WoundUpdate.scars_add`; scar formation remains a zero-producer follow-up, unchanged by this
+    ticket. See `docs/mechanics/02_combat_laws.md` Section 5 for the documented tactical behavior.
 - **Rationale**: **Bug Fix** / dead-code removal. `heal_wound()`'s and `get_diagnosis_quality()`'s
   zero-caller status (confirmed by full-repo search) matches the same evidentiary bar `DEV-004`
   used for `AllocateAttributeAction`'s deletion — no live or planned call site references either
@@ -1562,4 +1568,4 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Status**: ACTIVE
 
 ---
-*Last updated: 2026-08-29 (DEV-005, TCK-20260824-WOUND-HEALING-DECISION).*
+*Last updated: 2026-08-29 (DEV-005 update, TCK-20260824-TACTICAL-WOUND-SCAR-WIRING).*

@@ -15,10 +15,52 @@ from src.core.strategic import ProjectStatus, ObjectiveKind
 from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
 from src.core.skills import SKILL_REGISTRY
+from src.engine.rpg_depth import WoundService
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
     from src.core.strategic import ObjectiveState
+
+# See TCK-20260824-TACTICAL-WOUND-SCAR-WIRING plan.md "Resolved Design Decisions" for full derivation.
+# WOUND_DISTRESS_COVER_THRESHOLD = summed WoundService.get_wound_stat_penalties() output for a
+# single active wound at severity == 0.6 -- the exact boundary WoundService.create_wound()
+# (rpg_depth.py:120-123) already uses to select "SLASH" as the wound kind:
+# atk_penalty=int(0.6*3)=1, def_penalty=int(0.6*2)=1, speed_penalty=int(0.6*2)=1,
+# max_hp_penalty=int(0.6*10)=6, sum = 9.0.
+WOUND_DISTRESS_COVER_THRESHOLD = 9.0
+# PROTECTOR_GUARD_DISTRESS_THRESHOLD = the same style of boundary at severity == 0.4 (a softer
+# threshold than WOUND_DISTRESS_COVER_THRESHOLD since guarding a teammate is a softer response
+# than fleeing): atk_penalty=int(0.4*3)=1, def_penalty=int(0.4*2)=0, speed_penalty=int(0.4*2)=0,
+# max_hp_penalty=int(0.4*10)=4, sum = 5.0.
+PROTECTOR_GUARD_DISTRESS_THRESHOLD = 5.0
+# SCAR_DISTRESS_HP_THRESHOLD_BUMP_PER_POINT / _CAP: a capped, per-scar-point bump to the
+# cover-seeking gate's hp_percent threshold (ScarState has no `severity` field, src/core/state.py,
+# so this proxies "scar severity" via the same aggregator-summed distress scalar as wounds).
+SCAR_DISTRESS_HP_THRESHOLD_BUMP_PER_POINT = 0.01
+SCAR_DISTRESS_HP_THRESHOLD_BUMP_CAP = 0.10
+
+
+def _wound_distress(wounds) -> float:
+    """Single distress scalar from active wound penalties.
+    Reuses WoundService.get_wound_stat_penalties (rpg_depth.py:139-157) -- sums its
+    returned dict, never re-derives w.atk_penalty/etc. inline."""
+    return sum(WoundService.get_wound_stat_penalties(wounds).values())
+
+
+def _scar_distress(scars) -> float:
+    """Single distress scalar from scar penalties.
+    Reuses WoundService.get_scar_stat_penalties (rpg_depth.py:159-173) -- sums its
+    returned dict. Note the dict has no 'max_hp_penalty' key (ScarState has no such
+    field, src/core/state.py:104-112); summing .values() never indexes by key name,
+    so that asymmetry cannot KeyError here."""
+    return sum(WoundService.get_scar_stat_penalties(scars).values())
+
+
+def _combined_wound_scar_distress(wounds, scars) -> float:
+    """Combined wound + scar distress signal, used only by the PROTECTOR guard
+    branch (AC #2's 'ally wound/scar severity as an additional signal')."""
+    return _wound_distress(wounds) + _scar_distress(scars)
+
 
 class TacticalDecisionSystem:
     """
@@ -440,7 +482,17 @@ class TacticalDecisionSystem:
         # Ranged threats trigger cover seeking for Skirmishers or wounded entities
         # Logic ID: COMB-268 (Low HP affects tactical choice)
         hp_percent = entity.combat.hp / max(1, entity.combat.max_hp)
-        if (role == "SKIRMISHER" or hp_percent < 0.4):
+        wound_distress = _wound_distress(entity.combat.wounds)
+        scar_distress = _scar_distress(entity.combat.scars)
+        scar_hp_bump = min(
+            SCAR_DISTRESS_HP_THRESHOLD_BUMP_CAP,
+            scar_distress * SCAR_DISTRESS_HP_THRESHOLD_BUMP_PER_POINT,
+        )
+        if (
+            role == "SKIRMISHER"
+            or hp_percent < (0.4 + scar_hp_bump)
+            or wound_distress >= WOUND_DISTRESS_COVER_THRESHOLD
+        ):
              # Logic ID: COMB-269 (Threat level affects tactical choice)
              ranged_threats = [h for h in hostiles if h.combat.range > 2]
              if ranged_threats:
@@ -494,17 +546,29 @@ class TacticalDecisionSystem:
              ally_ids = [eid for eid in group.member_ids if eid != entity.id]
              allies = [state.entities[eid] for eid in ally_ids if eid in state.entities]
              
-             # Priority 1: Guard Leader if they are interacting or low HP
+             # Priority 1: Guard Leader if they are interacting, low HP, or wound/scar-distressed
              leader = state.entities.get(group.leader_id)
              wounded_ally = None
              if leader and leader.id != entity.id:
                   hp_ratio = leader.combat.hp / max(1, leader.combat.max_hp)
-                  if leader.interaction.target_node_id is not None or hp_ratio < 0.8:
+                  leader_distress = _combined_wound_scar_distress(leader.combat.wounds, leader.combat.scars)
+                  if (
+                      leader.interaction.target_node_id is not None
+                      or hp_ratio < 0.8
+                      or leader_distress >= PROTECTOR_GUARD_DISTRESS_THRESHOLD
+                  ):
                        wounded_ally = leader
-             
-             # Priority 2: Guard any other wounded ally
+
+             # Priority 2: Guard any other wounded or wound/scar-distressed ally
              if not wounded_ally:
-                  wounded_ally = next((a for a in allies if a.combat.hp / max(1, a.combat.max_hp) < 0.7), None)
+                  wounded_ally = next(
+                      (
+                          a for a in allies
+                          if a.combat.hp / max(1, a.combat.max_hp) < 0.7
+                          or _combined_wound_scar_distress(a.combat.wounds, a.combat.scars) >= PROTECTOR_GUARD_DISTRESS_THRESHOLD
+                      ),
+                      None,
+                  )
              
              if wounded_ally:
                   guard_pos = PositioningService.find_guard_position(entity, wounded_ally, target, state)

@@ -87,9 +87,25 @@ is_wound = damage > (defender.max_hp * 0.25) and defender.alive
   (`src/engine/combat.py:605-617`), which always builds `WoundUpdate(wounds_add=[wound])` and never
   populates `wounds_heal` or `scars_add`; `WoundUpdate.wounds_heal`/`scars_add` both default to `[]`
   (`src/core/updates.py:604-609`). A wound's penalty applies for as long as the wound exists on the
-  entity. Permanent Scars — a lesser, persistent penalty replacing a healed wound — are planned to
-  form via a separate mechanic, tracked by `TCK-20260824-TACTICAL-WOUND-SCAR-WIRING` (not yet
-  implemented); until that lands, `scars_add` also has zero production producers.
+  entity. Permanent Scars — a lesser, persistent penalty replacing a healed wound — remain a
+  data-model concept only: `scars_add` has zero production producers, and no mechanic currently
+  creates a `ScarState` from a healed wound (this remains a settled, open follow-up, not
+  implemented by any landed ticket).
+- Tactical consequence (`TCK-20260824-TACTICAL-WOUND-SCAR-WIRING`): `TacticalDecisionSystem`
+  (`src/engine/tactical.py`) reads the structured wound/scar penalty data — never re-deriving it —
+  as an additional, independent decision-making signal alongside the existing raw `hp_percent`/
+  `hp_ratio` checks:
+  - Cover-seeking/retreat gate (`tactical.py:483-494`): an entity whose active wounds sum to
+    `WoundService.get_wound_stat_penalties(...)` `>= 9.0` (equivalent to a single wound at
+    `severity >= 0.6`) enters the cover-seeking/retreat branch independently of `hp_percent`.
+  - The same gate's `hp_percent` threshold (`tactical.py:483-494`) is raised by `0.01` per
+    aggregate scar-penalty point (`WoundService.get_scar_stat_penalties(...)` summed), capped at
+    `+0.10` — a scarred entity seeks cover/retreats at a durably higher HP than an otherwise
+    identical unscarred entity at the same `hp_ratio`.
+  - PROTECTOR guard-wounded-ally branch (`tactical.py:542-582`): an ally (or the group leader)
+    with combined wound+scar distress `>= 5.0` (equivalent to a single wound at `severity >= 0.4`)
+    becomes an additional guard-priority qualifier, alongside the existing `hp_ratio < 0.8`/`< 0.7`
+    checks.
 
 ---
 
