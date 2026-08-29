@@ -29,7 +29,7 @@ this precedent governs.
 | `ENABLE_COMBAT_ENGAGEMENT` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION` ran a real 4-leg corpus trial — no suppression regression, the TCK-20260809 `u.merge(...)` fix holds, but zero shipped profiles turn this flag on and real combat-activity signal stayed thin. See "ENABLE_COMBAT_ENGAGEMENT — Validation Trial Result" below. |
 | `ENABLE_SELF_MODEL_COGNITION` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-SELF-MODEL-COGNITION-FLAG-VALIDATION` ran 2 fresh corpus-profile trials on top of 2 prior real trials already on file (a shipped-ON Unit-tier world, `INFRA-266`'s real-world generalization split verdict) — still no shipped archetype-world default profile, and the fresh trial surfaced a real, undisclosed anchor drift requiring its own follow-up. See "ENABLE_SELF_MODEL_COGNITION — Validation Trial Result" below. |
 | `ENABLE_WORLD_EMERGENCE` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-WORLD-EMERGENCE-FLAG-VALIDATION` ran a real 4-leg corpus trial — no suppression regression, real phase execution/telemetry/entity-signal exposure confirmed, but zero shipped profiles turn this flag on and neither trial world produced a single `RESOURCE_DEPLETED`/`ENTITY_DEATH`/`CAMP_RAID` event, leaving quest-registry growth specifically unconfirmed. See "ENABLE_WORLD_EMERGENCE — Validation Trial Result" below. |
-| `ENABLE_PROGRESSION_EVOLUTION` | **Kept OFF, deferred** | No production evidence; thinnest test coverage of the 5 deferred flags (2 files) — the follow-up must assess coverage depth before trusting any trial. Follow-up: `TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION`. |
+| `ENABLE_PROGRESSION_EVOLUTION` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION` ran a real 4-leg corpus trial — both ON legs deterministically crashed the real `Kernel` pipeline (`CanonicalStateHasher.get_hash()` cannot serialize the raw `ProgressionDecisionResult` the phase stores in `property_updates`), a stronger "keep OFF" finding than any of the 3 sibling flags produced, on top of the already-predicted reward-ledger producer gap. See "ENABLE_PROGRESSION_EVOLUTION — Validation Trial Result" below. |
 | `ENABLE_INFORMATION_INTENT_EXECUTION` | **Kept OFF, deferred** | No production evidence; distinct system from the now-ON `ENABLE_BELIEF_ASSIMILATION` despite shared domain. Follow-up: `TCK-20260826-INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION`. |
 
 ## ENABLE_COMBAT_ENGAGEMENT — Validation Trial Result (TCK-20260826)
@@ -303,6 +303,128 @@ shipped SimQ corpus profile begins using `ENABLE_WORLD_EMERGENCE=ON` in producti
 DEV-003 precedent directly, or (b) a fresh trial on a world/seed/tick-count combination
 independently confirmed to produce real `RESOURCE_DEPLETED`/`ENTITY_DEATH`/`CAMP_RAID` baseline
 activity closes the Honest Gap above.
+
+## ENABLE_PROGRESSION_EVOLUTION — Validation Trial Result (TCK-20260826)
+
+`TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION` is the follow-up this table's own
+`ENABLE_PROGRESSION_EVOLUTION` row named. Like `ENABLE_WORLD_EMERGENCE` above, this flag had zero
+prior real-world evidence before this ticket. Unlike any of the 3 prior siblings, this ticket's
+trial did **not** produce a clean pass — it surfaced a real, deterministic pipeline crash. Full
+raw tally: `staging_artifacts/TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION/trial_evidence.md`
+(moved to `stored_artifacts/` at ticket close).
+
+**Test coverage depth assessed first (per this ticket's own Scope, ahead of trusting the
+trial)**: domain-logic coverage is deep — 10 dedicated `test_phase6_*.py` files exercise every
+constituent service (`possession.py`/`gaps.py`/`interpretation.py`/`generator.py`/`selector.py`/
+`resolver.py`) individually and through 7 integrated scenarios — but every one of them calls
+`ProgressionConversionPhase.execute()` directly, bypassing `src/engine/pipeline.py`'s flag gate
+and `Kernel`'s persistence phase entirely. Pipeline-wiring coverage is thin: only 2 files
+reference the flag by name, and the one real-kernel-loop test
+(`test_allocate_ap_dormancy.py`) only proves the OFF state over 150 ticks, never toggling ON. This
+gap in coverage is precisely why the crash below went undetected until this ticket's real corpus
+trial.
+
+**Worlds tested**: `dungeon_crawl` (32 entities, `monster_only_gauntlet` archetype, seed 42, 2000
+ticks requested) and `frontier_extended` (59 entities, `civilian_settlement` archetype, seed 42,
+1000 ticks requested, using its own dedicated scoring profile — `calibrate_simq.py`'s
+`_resolve_profile()` auto-resolves to it since the profile file exists, no `--profile default`
+needed here unlike `WORLD_EMERGENCE`'s `resource_dense_basin` leg). Both worlds confirmed to load
+their real compiled world spec (`dungeon_crawl`'s tick-0 `entity_count=32` and `state_hash`
+identical across OFF/ON; `frontier_extended` OFF's tick-0 `entity_count=59`; `frontier_extended`
+ON confirmed indirectly via 1 real tick of faction-named `diplomatic_transition` events before it
+crashed, since `_load_world_state()` raises rather than silently falling back).
+
+**Commands**:
+```
+python3 tools/calibrate_simq.py --name dungeon_crawl --seed 42 --ticks 2000 \
+  --output data/calibration/dungeon_crawl_seed42_2000t_progression_evolution_OFF
+ENABLE_PROGRESSION_EVOLUTION=ON python3 tools/calibrate_simq.py --name dungeon_crawl --seed 42 --ticks 2000 \
+  --output data/calibration/dungeon_crawl_seed42_2000t_progression_evolution_ON
+
+python3 tools/calibrate_simq.py --name frontier_extended --seed 42 --ticks 1000 \
+  --output data/calibration/frontier_extended_seed42_1000t_progression_evolution_OFF
+ENABLE_PROGRESSION_EVOLUTION=ON python3 tools/calibrate_simq.py --name frontier_extended --seed 42 --ticks 1000 \
+  --output data/calibration/frontier_extended_seed42_1000t_progression_evolution_ON
+```
+
+**Headline finding: both ON legs deterministically crash the real pipeline.** `dungeon_crawl` ON
+crashed at loop iteration ~120 of 2000 requested; `frontier_extended` ON crashed at tick 1 of 1000
+requested (its `civilian_settlement` archetype produces a combat/attribute-dirty entity almost
+immediately). Both crash with the identical traceback:
+```
+File "src/engine/kernel.py", line 1162, in _phase_persistence
+    tick_hash = CanonicalStateHasher.get_hash(self._state)
+File "src/engine/checkpoint.py", line 60, in to_canonical_json
+    return json.dumps(data, sort_keys=True, separators=(",", ":"))
+TypeError: Object of type ProgressionDecisionResult is not JSON serializable
+```
+Root cause: `ProgressionConversionPhase.execute()` (`src/domains/progression/phase.py:80`) stores
+the raw `ProgressionDecisionResult` dataclass (already documented as a "debug trace property" in
+`docs/simulation/domains/progression_contract.md:62`) directly into
+`property_updates["last_progression_decision"]`. The next tick's `_phase_persistence()` calls
+`CanonicalStateHasher.get_hash()` whenever `replay_richness == "FULL"` (the policy
+`calibrate_simq.py`'s `PROD_SMALL` profile runs under), which recursively JSON-serializes the
+entire `AuthoritativeState` with no `default=` handler for arbitrary dataclasses. Reproduced 4
+independent times (2x `dungeon_crawl` ON via `calibrate_simq.py`, 1x `frontier_extended` ON via
+`calibrate_simq.py`, 1x a read-only diagnostic replay of the same `Kernel`/world-loading setup
+used to sample the decision distribution below) — not a fluke.
+
+**Evidence tally**:
+
+| Signal | dungeon_crawl OFF (2000t, full) | dungeon_crawl ON (crashed ~t120) | frontier_extended OFF (1000t, full) | frontier_extended ON (crashed t1) |
+|---|---|---|---|---|
+| Completed ticks | 2000 | ~120 | 1000 | 1 |
+| `item_equipped`/`item_unequipped`/`equipment_durability_changed`/`progression_conversion_applied` events | 0 | 0 | 0 | 0 |
+| `last_progression_decision.selected` kind distribution (32/32 `dungeon_crawl` entities sampled via diagnostic replay at the crash point) | n/a | 100% `SAVE_FOR_LATER` | not sampled | not sampled (crashed tick 1) |
+| Process exit code | 0 | 1 (crash) | 0 | 1 (crash) |
+
+**Signal 3 — 100% `SAVE_FOR_LATER` convergence, confirmed directly.** All 32 `dungeon_crawl`
+entities' stored decision at the crash tick selected only `SAVE_FOR_LATER`, with the identical
+reason string `"Do nothing, keep gold and resources for later."` — exactly the outcome
+investigation.md predicted from the reward-ledger producer gap (see Honest Gap below).
+
+**No-suppression check: inconclusive at the intended tick budget, superseded by the crash.**
+`progression_conversion`'s `PhaseMetadata` is dirty-set-gated (`input_domains={"attributes",
+"combat"}`), not `must_run_every_tick=True` like `world_emergence`/`self_model` — so its
+`skip_progression_conversion` counter cannot on its own distinguish "flag OFF" from "flag ON, no
+dirty entity this tick," unlike the clean 100%/0% splits the 3 sibling trials found for their own
+flags. The diagnostic replay resolves this: the phase did activate and write real decisions once a
+dirty tick occurred, confirming the flag does gate live execution (no silent starvation) — but a
+same-world OFF-vs-ON event-count comparison at the full 2000/1000-tick budget (the method all 3
+sibling trials used) is not possible, since both ON legs terminate far short of it. Within the
+ticks that did complete before each crash, no other domain's signal collapsed (`dungeon_crawl`
+ON's partial 116-line event log shows ordinary cooperation/contract/diplomatic activity right up
+to the crash tick). This is a materially more severe failure mode than the suppression class the
+sibling checks are designed to catch: a hard process crash halting every domain simultaneously,
+not a silent per-domain signal collapse.
+
+**Honest Gap — two separate, disclosed gaps, not conflated.** (1) The reward-ledger producer gap,
+predicted by investigation.md and confirmed directly by Signal 3: `RewardLedgerService` has zero
+live callers anywhere in `src/`, so `ledger.entries` is always empty and
+`ConversionOptionGenerator` only ever emits `SAVE_FOR_LATER`. Per the ticket's own framing, this
+means wiring is safe with respect to option-generation logic (the phase falls back correctly
+rather than misbehaving on empty input) but behavioral safety under real reward flow remains
+genuinely untested — not a blanket "no risk observed." (2) The canonical-hashing crash, a new
+finding this trial surfaced (investigation.md had flagged the raw-dataclass storage as an
+architecture smell adjacent to the Durable State Rule, but not that it deterministically crashes
+`Kernel` persistence). This is disclosed here, not fixed — `src/domains/progression/phase.py` was
+not touched by this ticket, per its Scope Guards. A follow-up ticket to make
+`last_progression_decision` a JSON-serializable typed structure (or strip it before persistence,
+matching `docs/engine/state_update_compaction.md`'s existing precedent for stripping cosmetic
+debug properties) is a concrete, named blocking prerequisite for any future flip-ON decision —
+stronger and more actionable than the reward-ledger gap alone.
+
+**Recommendation: Keep OFF, deferred — a stronger "keep OFF" signal than any of the 3 prior
+sibling flags.** `grep -rl "ENABLE_PROGRESSION_EVOLUTION" config/simulation_quality/profiles/`
+returns nothing — zero shipped production profiles turn this flag on today, the same gap the 3
+sibling flags share, but this flag does not even clear the lower "no suppression regression, real
+execution confirmed" bar those trials met: it crashes the real pipeline in both worlds tested. No
+new `docs/guidelines/intentional_divergences.md` entry is added — a "keep OFF, deferred" outcome
+does not create a divergence from the Mechanics Bible, and no chapter governs this Phase-6/Phase-
+10-era subsystem regardless. Re-opening this requires first (a) fixing the JSON-serialization
+crash disclosed above, and separately (b) wiring a real reward-ledger producer (or accepting that
+decision-logic safety under real reward flow stays untested indefinitely) — both concrete, named
+prerequisites, not "someday" items.
 
 ## RolloutProfileManager — Cut
 

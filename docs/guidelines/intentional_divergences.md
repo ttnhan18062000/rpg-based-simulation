@@ -1488,6 +1488,19 @@ The following legacy behaviors have been intentionally omitted or retired.
     aptitude-multiplier logic in the repo (`src/actions/attributes.py:39-43`). A follow-up ticket
     porting that logic into `core_actions.execute_allocate_ap` and correcting the resulting
     PROG-068/069/015 parity gap is **recommended but not created** by this ticket.
+  - **Update (2026-08-30, TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION)**: that follow-up has
+    now run a real 4-leg corpus trial (see `docs/architecture/rollout_flag_decisions_m1.md` §
+    "ENABLE_PROGRESSION_EVOLUTION — Validation Trial Result") — no longer "not-yet-run" as this
+    entry originally described it. It confirms the `resolver.py` `ALLOCATE_AP` branch is unreachable
+    today for two independent reasons, not one: the flag stays OFF (unchanged), and separately its
+    only trigger path (a ledger XP entry) has no live producer anywhere in `src/`
+    (`RewardLedgerService` has zero callers) — a diagnostic replay showed 100% of sampled decisions
+    converging on `SAVE_FOR_LATER`. The trial also surfaced a new, disclosed defect independent of
+    this dormancy question: flipping the flag ON deterministically crashes
+    `CanonicalStateHasher.get_hash()` (`property_updates["last_progression_decision"]` stores a
+    non-JSON-serializable raw `ProgressionDecisionResult`), a concrete blocking prerequisite for any
+    future flip-ON decision, on top of the reward-ledger gap. This decision (keep dormant) and the
+    flag's default are unchanged by this update.
 - **Rationale**: **Bounded** — building a real producer requires either flipping
   `ENABLE_PROGRESSION_EVOLUTION` ON (which duplicates the scope/evidence-gathering job of the
   already-filed `TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION`, per DEV-003's own standing
@@ -1568,4 +1581,4 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Status**: ACTIVE
 
 ---
-*Last updated: 2026-08-29 (DEV-005 update, TCK-20260824-TACTICAL-WOUND-SCAR-WIRING).*
+*Last updated: 2026-08-30 (DEV-004 update, TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION).*
