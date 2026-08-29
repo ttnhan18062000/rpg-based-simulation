@@ -18,10 +18,25 @@ decision is meant to set the precedent it follows.
 
 ## Problem
 
-16 ideas with no dependency on each other, but the highest-leverage tier of the whole 65-idea set — Species
-Classification (14), City ownership (35), Clan's shape (36), population seeding (43), and place-type
-transitions (48) are each cited as a hard prerequisite by multiple ideas in Milestones 3 through 6.
-Building this milestone out of order means every downstream milestone redoes assumptions later.
+16 ideas, the highest-leverage tier of the whole 65-idea set — Species Classification (14), City ownership
+(35), Clan's shape (36), population seeding (43), and place-type transitions (48) are each cited as a hard
+prerequisite by multiple ideas in Milestones 3 through 6. Building this milestone out of order means every
+downstream milestone redoes assumptions later.
+
+**Not mutually independent** (plan-owner review, 2026-08-29 — replaces the earlier "no dependency on each
+other" framing): the 16 ideas split into five branches — entity foundations (2, 4, 5, 8, 11, 14, 23, 27, 28,
+30), independent institution/species foundations (36, 37), population foundation (43), place-dependent
+foundations (35, 48), and interaction capability (6). **Idea 66 (Region/Place architecture) is promoted with
+a narrow gate**: if it lands, ideas 35 and 48 must wait for it (otherwise the accepted replacement
+Place/ownership boundary must be complete first); ideas 36, 37, and 43 are explicitly not blocked by it —
+population seeding in particular stays a shared foundation independent of the Place migration. Idea 6 may
+reuse the appraisal-policy helper M1's idea 13 builds, but its teaching outcome remains its own
+domain-specific authoritative `StateUpdate`, not a shared generic mutation.
+
+**Temporal axis (see the parent roadmap's "Temporal axis" section):** once ticketed, M2 features should
+declare their timing and spatial-reach assumptions — especially population (43), Place transitions (35, 48),
+cognition-adjacent ideas, property, and relationships — per the temporal-axis proposal's §13 integration
+plan. Not resolved or required by this review pass; a forward pointer for whoever scopes these tickets.
 
 ## Scope (not yet broken into child tickets)
 
@@ -105,4 +120,6 @@ validation step ahead of the highest-risk content item (see the roadmap's Sequen
 
 - `docs/brainstorm/rpg_feature_atlas.html` — Build Order, Cross-Cutting Risk & Blast Radius, Shared
   Implementation Opportunities, Infrastructure Gaps
-- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, Idea 66 gate, temporal axis
+- `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — dependency-branch and
+  Idea 66 gate reconciliation, 2026-08-29

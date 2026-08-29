@@ -22,6 +22,25 @@ generic propagation engine — since that system decays one entity's own record 
 not entity-to-entity transfer. What's real instead is two existing choke points every idea in this
 milestone converges on.
 
+**Three independent branches** (plan-owner review, 2026-08-29), proceeding in parallel once each branch's
+own prerequisites clear rather than as one linear chain: **reputation** (idea 60 before ideas 53/54, per its
+own field-shape constraint below); **death and lineage** (ideas 55/58, after Reproduction, heir assignment,
+and correct death dispatch exist — see the permadeath repair immediately below); **history and belief**
+(idea 62 before idea 57, then idea 63).
+
+**M5 owns the final-permadeath repair** (plan-owner decision, 2026-08-29 — explicitly not part of M1's
+in-flight 21-ticket batch, see `docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md`). Combat already
+emits `outcome_kind="PERMADEATH"`, but `LifecycleSystem.resolve_lifecycle()` only deactivates an entity on
+`outcome_kind=="KILL"` — a "permadead" entity stays `active=True` and keeps acting. The death-and-lineage
+branch above already assumes "correct death dispatch" as a precondition; this repair is what makes that
+true. Scope is narrow: recognize the terminal outcome and preserve the intended succession/death
+consequences through the existing authoritative pipeline, nothing beyond that.
+
+**Temporal axis (see the parent roadmap's "Temporal axis" section):** once ticketed, M5 owns persistence,
+decay, testimony, generational transfer, and historical-memory horizons, per the temporal-axis proposal's
+§13 integration plan. Not resolved or required by this review pass; a forward pointer for whoever scopes
+these tickets.
+
 ## Scope (not yet broken into child tickets)
 
 1. **Ideas 55 + 58 — one on-death dispatch hook, two thin handlers.** Both fire at the identical trigger
@@ -48,8 +67,8 @@ milestone converges on.
 
 - Anything from Milestones 1, 2, 3, 4, or 6.
 - Wiring `CultureDeriver`/`CulturalBiasApplicator` for the first time — a prerequisite this epic's ideas 57
-  and 62 surface, shared with M4's idea 61 and M6's idea 56 (see parent roadmap's "Known open items"), not
-  owned by any single ticket inside this epic.
+  and 62 surface, shared with M4's idea 61 and M6's idea 56. **Owned by M4** (plan-owner decision,
+  2026-08-29) — this epic consumes the activation, it does not build it.
 
 ## Acceptance Signal
 
@@ -57,10 +76,14 @@ milestone converges on.
   individually), each citing which choke point (write-side `RelationshipService.process_update()` or
   read-side `SocialAppraisalSystem`) it touches.
 - Idea 60 is sequenced before or alongside idea 53/54, not after.
+- The final-permadeath repair (a bug, not one of the 8 design ideas) lands before or alongside ideas 55/58,
+  since both assume correct death dispatch already exists.
 
 ## References
 
 - `docs/brainstorm/rpg_feature_atlas.html` — Shared Implementation Opportunities, Cross-Cutting Risk & Blast
   Radius (including the determinism-fingerprint finding on `public_reputation`), Phase Placement & Testing
   Strategy (`LEGACY_PROPAGATION_ARENA` scenario design)
-- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, permadeath ownership, temporal axis
+- `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — branch split and permadeath
+  ownership decision, 2026-08-29

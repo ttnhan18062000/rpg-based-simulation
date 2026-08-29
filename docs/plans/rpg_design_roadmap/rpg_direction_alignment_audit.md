@@ -8,6 +8,13 @@ tags: [architecture, content]
 
 # Direction Alignment Audit — RPG Design Roadmap vs. The Unwritten World
 
+**2026-08-29 cross-link:** a separate, later documentation-consistency review
+(`docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md`) and a temporal-axis
+brainstorm (`docs/brainstorm/codex/2026-08-28-core-rpg-temporal-axis-proposal.md`) have since been
+reconciled into `rpg_design_roadmap.md` and the M1-M9 epics — see that roadmap's dated review notes. This
+audit's own recommendations (Section G, items 1-3 and 5-7) remain a separate, still-open decision set this
+pass did not act on.
+
 **Purpose**: for work this large, re-reviewing every one of 65 investigated ideas against the creative
 direction is slower and noisier than reviewing the direction itself once and tracing it back through what's
 already scored. This audit does the latter: a full re-read of `docs/brainstorm/the_unwritten_world.html` (the
