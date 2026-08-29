@@ -28,7 +28,7 @@ this precedent governs.
 | `ENABLE_GUILD_QUEST_GENERATION` | **Kept OFF** | Already had a deliberate, documented DEV-002-policy rationale in `feature_flags.py`'s own comment before this ticket — formalized, not re-litigated. |
 | `ENABLE_COMBAT_ENGAGEMENT` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION` ran a real 4-leg corpus trial — no suppression regression, the TCK-20260809 `u.merge(...)` fix holds, but zero shipped profiles turn this flag on and real combat-activity signal stayed thin. See "ENABLE_COMBAT_ENGAGEMENT — Validation Trial Result" below. |
 | `ENABLE_SELF_MODEL_COGNITION` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-SELF-MODEL-COGNITION-FLAG-VALIDATION` ran 2 fresh corpus-profile trials on top of 2 prior real trials already on file (a shipped-ON Unit-tier world, `INFRA-266`'s real-world generalization split verdict) — still no shipped archetype-world default profile, and the fresh trial surfaced a real, undisclosed anchor drift requiring its own follow-up. See "ENABLE_SELF_MODEL_COGNITION — Validation Trial Result" below. |
-| `ENABLE_WORLD_EMERGENCE` | **Kept OFF, deferred** | No production evidence. Follow-up: `TCK-20260826-WORLD-EMERGENCE-FLAG-VALIDATION`. |
+| `ENABLE_WORLD_EMERGENCE` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-WORLD-EMERGENCE-FLAG-VALIDATION` ran a real 4-leg corpus trial — no suppression regression, real phase execution/telemetry/entity-signal exposure confirmed, but zero shipped profiles turn this flag on and neither trial world produced a single `RESOURCE_DEPLETED`/`ENTITY_DEATH`/`CAMP_RAID` event, leaving quest-registry growth specifically unconfirmed. See "ENABLE_WORLD_EMERGENCE — Validation Trial Result" below. |
 | `ENABLE_PROGRESSION_EVOLUTION` | **Kept OFF, deferred** | No production evidence; thinnest test coverage of the 5 deferred flags (2 files) — the follow-up must assess coverage depth before trusting any trial. Follow-up: `TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION`. |
 | `ENABLE_INFORMATION_INTENT_EXECUTION` | **Kept OFF, deferred** | No production evidence; distinct system from the now-ON `ENABLE_BELIEF_ASSIMILATION` despite shared domain. Follow-up: `TCK-20260826-INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION`. |
 
@@ -200,6 +200,109 @@ corpus profile begins using `ENABLE_SELF_MODEL_COGNITION=ON` in production, matc
 precedent directly. Separately, the fresh trial's `INFORMATION`/`SOCIAL` anchor drift (Honest Gap
 above) is a real, disclosed finding needing its own follow-up ticket before these two grade
 anchors can be trusted as regression guards again — not addressed by this ticket.
+
+## ENABLE_WORLD_EMERGENCE — Validation Trial Result (TCK-20260826)
+
+`TCK-20260826-WORLD-EMERGENCE-FLAG-VALIDATION` is the follow-up this table's own
+`ENABLE_WORLD_EMERGENCE` row named. Unlike either sibling flag above, `ENABLE_WORLD_EMERGENCE` had
+**zero** prior real-world evidence of any kind before this ticket — no shipped-ON profile, no bug-
+fix history, no prior generalization trial. This ticket's own trial is that flag's first and only
+standing real-corpus evidence. Full raw tally:
+`staging_artifacts/TCK-20260826-WORLD-EMERGENCE-FLAG-VALIDATION/trial_evidence.md` (moved to
+`stored_artifacts/` at ticket close).
+
+**Worlds tested**: `dungeon_crawl` (32 entities, `monster_only_gauntlet` archetype, seed 42, 2000
+ticks) and `resource_dense_basin` (23 entities, `civilian_settlement` archetype, highest shipped
+`resource_density` of any world at 2.3333, seed 42, 1000 ticks, `--profile default` since it has
+no dedicated scoring profile — extended beyond its shipped 200-tick run_keys to reduce
+near-zero-baseline risk), both run OFF then ON. Both worlds confirmed to load their real compiled
+`data/worlds/{name}/resolved/world.resolved.yaml` spec: `dungeon_crawl`'s tick-0
+`entity_count=32` (grepped directly from each run's own `chunk_0000.json`) matches
+`corpus_registry.yaml`'s documented scale exactly; `resource_dense_basin`'s successful exit-0 load
+against `--name resource_dense_basin` is itself sufficient proof per `calibrate_simq.py`'s own
+`_load_world_state()`, which raises `FileNotFoundError` for any unresolvable name rather than
+silently falling back to the generic hero+goblins world.
+
+**Commands**:
+```
+python3 tools/calibrate_simq.py --name dungeon_crawl --seed 42 --ticks 2000 \
+  --output data/calibration/dungeon_crawl_seed42_2000t_world_emergence_OFF
+ENABLE_WORLD_EMERGENCE=ON python3 tools/calibrate_simq.py --name dungeon_crawl --seed 42 --ticks 2000 \
+  --output data/calibration/dungeon_crawl_seed42_2000t_world_emergence_ON
+
+python3 tools/calibrate_simq.py --name resource_dense_basin --seed 42 --ticks 1000 --profile default \
+  --output data/calibration/resource_dense_basin_seed42_1000t_world_emergence_OFF
+ENABLE_WORLD_EMERGENCE=ON python3 tools/calibrate_simq.py --name resource_dense_basin --seed 42 --ticks 1000 --profile default \
+  --output data/calibration/resource_dense_basin_seed42_1000t_world_emergence_ON
+```
+
+**Evidence tally** (5 signal groups x 4 legs — using `metric_counters`/`quest_registry_add`/entity
+`property_updates`, never `world_emergence_event` counts in `simulation_events.jsonl`, which
+investigation.md confirmed is produced by other pipeline phases via `world_events_add` and is not
+gated by this flag at all):
+
+| Signal | dungeon_crawl OFF | dungeon_crawl ON | resource_dense_basin OFF | resource_dense_basin ON |
+|---|---|---|---|---|
+| `run_world_emergence` / `skip_world_emergence` (summed) | skip=1836 | run=1837 (100%) | skip=931 | run=908 (100%) |
+| `world_emergence_ms` / `aggregates_generated` | absent | 883.31ms / 89 | absent | 431.83ms / 182 |
+| Distinct `quest_registry_add` ids | 0 | 0 | 0 | 0 |
+| `exposed_world_signals` / `force_route_reevaluation` property-update count | 0 / 0 | 33869 / 33869 | 0 / 0 | 18518 / 6563 |
+| `RESOURCE_DEPLETED`/`ENTITY_DEATH`/`CAMP_RAID` `WorldEvent` count (OFF-baseline activity) | 0 | 0 | 0 | 0 |
+
+**No-suppression check: passes in both worlds, on both halves.** Structurally, the 100%/0%
+run/skip split confirms `WorldEmergencePhase` runs on effectively every eligible tick once ON, not
+starved by `PhaseDependencyGraph.should_run_phase()`. Empirically, no domain-independent signal
+collapsed toward zero on either ON leg relative to OFF in the same world: `dungeon_crawl`'s total
+`simulation_events.jsonl` count shifted 22395→20261 (SOCIAL-domain contract/cooperation events
+moved ±13%, all staying in the thousands — ordinary cascading divergence from entities reacting to
+`force_route_reevaluation`, not suppression); `resource_dense_basin`'s total count *increased*
+3707→5468, with every changed domain-independent signal (combat, cooperation, contracts, XP, gold)
+moving up, including new activity (`entity_killed` 0→1) rather than collapsing. Confirms
+`WorldEmergencePhase.execute()`'s `dataclasses.replace(update, ...)` pattern (not a fresh
+`StateUpdate()`) really does carry forward prior phases' work in a real run, not just by static
+code reading.
+
+**Honest gap: quest-registry growth (the durable `quest_registry_add` signal) is untestable from
+this trial, not just zero.** Both trial worlds were chosen specifically for their expected
+event-producing profile per the corpus registry's own archetype/density metadata, but neither
+produced a single `RESOURCE_DEPLETED`, `ENTITY_DEATH`, or `CAMP_RAID` `WorldEvent` in any leg — the
+only `world_events_add` category observed anywhere in this trial was `COMBAT_LOSS` (1-3
+occurrences per leg), which `QuestOpportunityGenerator` does not read. This means the `0`
+quest-registry growth on every leg (including both ON legs) is neither evidence of suppression nor
+evidence the mechanism is broken (its own parity-ledger tests, `WORLD-098`/`WORLD-099`/`WORLD-102`,
+independently cover it and passed in this ticket's own regression run) — it is evidence that this
+trial's two worlds, at these seeds/tick-counts, never crossed the precondition this specific
+pathway needs to fire. Disclosed as a genuine limitation, not fixed or compensated for with a third
+trial world inline, per Scope Guards.
+
+**`ENABLE_WORLD_CAPABILITY_LAYER` combination — resolved, static analysis only, zero live gating
+call site anywhere.** `grep -rn "ENABLE_WORLD_CAPABILITY_LAYER" src/ tools/ tests/ config/` returns
+only its own registration (`feature_flags.py:14`, default OFF), a test-scaffold `pressure_signals`
+dict entry in `src/testing/scenario_runner.py:101` that maps to nothing (no phase names this flag
+in a `run_phase(..., feature_flag=...)` call), and two known-flag allowlist references
+(`calibrate_simq.py`, `test_scenario_feature_flag_defaults.py`) — no live gating call site. A
+separate grep for a `WorldCapabilityLayer` class/module anywhere in `src/` returns zero matches —
+no such phase or service exists in the codebase at all, a stronger inertness finding than
+`ENABLE_ADVENTURE_ROUTING`'s own case (which used to gate a real, now-deleted phase). Combining it
+`ON` with `ENABLE_WORLD_EMERGENCE=ON` is structurally impossible to produce any interaction — there
+is no runtime path for its value to reach any code. No empirical combination trial was run. A new
+durable regression guard, `tests/architecture/test_world_capability_layer_flag_inert.py::
+test_enable_world_capability_layer_has_no_live_gating_call_site`, was added mirroring the sibling
+`ENABLE_ADVENTURE_ROUTING` guard exactly — `2 passed` (both the new guard and the pre-existing
+sibling guard) when run this session.
+
+**Recommendation: Keep OFF, deferred.** `grep -rl "ENABLE_WORLD_EMERGENCE"
+config/simulation_quality/profiles/` returns nothing — zero shipped production profiles turn this
+flag on today, the same gap that kept both sibling flags at "keep OFF, deferred" despite each
+having its own clean trial. Per "The Precedent This Sets" below: this trial is a real, necessary
+"no suppression regression" confirmation, but is not on its own sufficient to meet the "flip ON"
+bar (standing shipped-profile production evidence). No new
+`docs/guidelines/intentional_divergences.md` entry is added — the flag's behavior versus the
+Mechanics Bible is unchanged either way. If a future ticket wants to re-open this: either (a) a
+shipped SimQ corpus profile begins using `ENABLE_WORLD_EMERGENCE=ON` in production, matching the
+DEV-003 precedent directly, or (b) a fresh trial on a world/seed/tick-count combination
+independently confirmed to produce real `RESOURCE_DEPLETED`/`ENTITY_DEATH`/`CAMP_RAID` baseline
+activity closes the Honest Gap above.
 
 ## RolloutProfileManager — Cut
 
