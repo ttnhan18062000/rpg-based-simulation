@@ -1,6 +1,6 @@
 ---
 status: active
-layer: social
+layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20260830-COOPERATION-OFFER-RETRY-COOLDOWN-MISSING
