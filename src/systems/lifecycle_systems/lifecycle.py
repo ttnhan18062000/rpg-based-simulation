@@ -117,9 +117,14 @@ class LifecycleSystem:
                         from src.core.updates import ResourceTransferIntent
                         from src.core.state import ItemStack
                         
-                        # Combine inventory and specific heirlooms
+                        # Combine inventory and specific heirlooms. entity.inventory.items is a
+                        # list on a live/authoritative entity but a tuple when entity is a
+                        # to_readonly() view (src/core/state.py's immutability optimization) --
+                        # normalize to list before concatenating with heirloom_stacks (always a
+                        # list) so this works for either source (TCK-20260829-LIFECYCLE-HEIRLOOM-
+                        # INVENTORY-TUPLE-TYPEERROR).
                         heirloom_stacks = [ItemStack(item_id=hid, quantity=1) for hid in entity.lifecycle.heirlooms]
-                        all_transfer_items = entity.inventory.items + heirloom_stacks
+                        all_transfer_items = list(entity.inventory.items) + heirloom_stacks
                         
                         if all_transfer_items:
                             intent = ResourceTransferIntent(

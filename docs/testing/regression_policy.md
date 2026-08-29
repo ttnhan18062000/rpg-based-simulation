@@ -163,3 +163,16 @@ Performance regression thresholds are defined in `docs/performance/perf_baseline
 | RSS delta (tick 100 → 1000) | Must not exceed 15% of starting baseline |
 
 If a performance gate fires due to a legitimate architectural change, follow the baseline re-calibration procedure in `docs/performance/perf_baseline_policy.md` §4 before merging.
+
+---
+
+## 9. TCK-20260824/TCK-20260828 Re-Baseline (Worked Example)
+
+Concrete worked example of §6's "hardcoded test baseline that this session's own legitimate change caused to drift" row: `TCK-20260824-TOWN-CENTER-POINTER-FIX` made entities correctly navigate to the real compiled town location (previously they never reached a real town — they navigated to `(0,0)` or two hardcoded fake waypoints). This genuinely, correctly increases combat/hazard exposure for several corpus worlds, tripping `tests/unit/worldassembly/test_corpus_diversity.py`'s hardcoded population-stability and grade-stability floors — the pre-fix "passing" state of those floors was itself an artifact of the pointer bug, not evidence of genuine balance.
+
+`TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-REFRESH` re-verified all 13 tests the fix's own Test-gate disclosed as failing, using real Kernel-driven runs (not guessed values), and found the "all 13 are floor drift" assumption held for only 3 of them:
+
+- **Genuinely re-baselined** (3 tests): real floor/tolerance drift, confirmed via multiple independent evidence batches per this file's own established tolerance-band methodology (see `test_corpus_diversity.py`'s own module docstring §5 for the full per-test evidence and derivation).
+- **NOT touched, deferred to follow-up tickets** (10 tests): each failed for a reason a floor value cannot fix — a real, pre-existing, unrelated `src/` bug (`TCK-20260829-LIFECYCLE-HEIRLOOM-INVENTORY-TUPLE-TYPEERROR`, fixed) and a test-invocation resource-budget cap masking a real observability-backpressure issue (`TCK-20260829-SIMQ-PERSISTENCE-BACKPRESSURE-PERF-INVESTIGATION`, filed for investigation). Force-fitting a floor edit onto a crash or a timeout would have been a Gate Integrity violation — no threshold value makes a `TypeError` or a `TimeoutError` pass.
+
+**Lesson for future re-baseline tickets**: before re-baselining any failing test after a legitimate upstream fix, verify with a fresh, isolated re-run *why* it is failing — a batch of assertion failures after a real code change is not guaranteed to be homogeneous. Some may be genuine floor drift (re-baseline-able); others may be unrelated bugs or environment/resource limits that a floor edit cannot fix and that deserve their own ticket instead.

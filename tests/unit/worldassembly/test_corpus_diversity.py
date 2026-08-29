@@ -20,6 +20,72 @@ calibration world corpus:
 4. ``test_module_family_anchored`` — the 10 previously-never-anchored world
    modules this ticket brought into the anchored corpus stay anchored, leaving
    only ``moon_cult_ruins`` outside any anchored world's module list.
+
+5. **TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-REFRESH re-baseline
+   (2026-08-29)** — TCK-20260824-TOWN-CENTER-POINTER-FIX made ``WorldCompiler.compile()``
+   derive a real ``AuthoritativeState.town_center`` and ``FlowFieldService`` navigate to it
+   (previously entities never reached a real town — they navigated to ``(0.0, 0.0)`` or two
+   hardcoded fake waypoints). That ticket's own Test-gate re-verification disclosed 13 failed
+   + 1 error in this file, accepted as the fix's intended consequence (the pre-fix "passing"
+   state of those 13 was itself an artifact of the pointer bug, not evidence of genuine
+   balance). This follow-up ticket investigated all 13 with fresh evidence and found the
+   ticket's own founding assumption ("all 13 are floor-value drift") held for only 3 of them:
+
+   - **Re-baselined here** (genuine floor/tolerance drift, evidence-backed):
+     ``test_population_stability[highland_traverse]`` (new per-world floor override, see
+     ``POPULATION_STABILITY_FLOOR_OVERRIDES``), ``test_frontier_extended_seed42_200t_narrative_grade_stability``,
+     ``test_frontier_living_world_seed42_200t_social_grade_stability`` (both re-centered
+     anchors, see each test's own docstring for the fresh 3-trial evidence and derivation).
+   - **Deliberately NOT touched here** (10 of the 13) — each fails for a reason other than a
+     calibratable floor value, confirmed by isolated clean re-runs, not guessed:
+     - ``test_population_stability[generated_frontier_3_42]``,
+       ``test_simq_routing_test_seed42_500t_cognition_grade_stability`` — did not reproduce as
+       failures at all in a clean re-run; no action needed.
+     - ``test_generated_frontier_3_42_extended_population_stability``,
+       ``test_frontier_marches_seed42_200t_narrative_grade_stability`` — crash with
+       ``TypeError: can only concatenate tuple (not "list") to tuple`` at
+       ``src/systems/lifecycle_systems/lifecycle.py:122`` (death/heir succession's
+       ``entity.inventory.items + heirloom_stacks``, where ``items`` is a frozen tuple view).
+       Confirmed via ``git blame`` (commit ``56211688``, 2026-05-18) to be a real, pre-existing
+       bug unrelated to town_center — only newly *triggered* because entities now travel real
+       hazardous distance and die (with a live heir) more often. No floor can fix a crash; see
+       the tracking ticket filed for this bug.
+     - ``test_simq_routing_test_seed42_1000t_cognition_grade_stability``,
+       ``test_hero_guild_routing_seed42_1000t_cognition_grade_stability``,
+       ``test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_stability``,
+       ``test_urban_political_seed42_1000t_social_grade_stability``,
+       ``test_urban_political_seed123_1000t_social_economy_grade_stability`` — hit
+       ``tests/conftest.py``'s default ``--resource-budget medium`` 60s SIGALRM cap
+       (confirmed reproducible in complete isolation, not contention-specific). With the cap
+       removed (``--resource-budget large``), the same scenario instead fails with
+       ``tools.calibrate_simq.CalibrationIntegrityError`` (observability queue overflow /
+       SURVIVAL mode-shed) — a real perf/backpressure issue, not a floor value either. See the
+       tracking ticket filed for this finding.
+     - ``test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stability`` — same
+       ``CalibrationIntegrityError`` class as above.
+
+   - **The 1 associated ERROR** (``QueueDrainWorker thread leak detected`` at pytest
+     session-teardown, attributed to whichever test happens to be running/torn-down last —
+     ``test_resolver.py::test_resolve_module_contribution_rejects_raw_spec`` in one run,
+     ``test_trading_company_hub_composed[swamp_border_world]`` in another): confirmed, not a
+     floor-value problem. Root cause traced: a ``TimeoutError``/``CalibrationIntegrityError``
+     mid-``_run_engine()`` (the resource-budget/backpressure finding above) skips whatever
+     ``kernel.shutdown()`` cleanup would normally fire, leaking that run's
+     ``QueueDrainWorker`` background thread; a later, unrelated test's session-teardown sentinel
+     then reports the leak against itself. Reproduced independently (2 threads leaked) in a
+     single isolated test run that itself hit the resource-budget timeout. This is fully
+     explained by, and does not need its own ticket beyond, the backpressure ticket above.
+
+   - **16-vs-13 standalone-vs-bundled variance**: confirmed genuine, not an artifact of this
+     ticket's own work. A standalone re-run of this file alone produced 14 failed (not a stable
+     16 or 13), with the *same test* showing a *different* failure mode
+     (``TimeoutError`` vs. ``CalibrationIntegrityError``) across two of this session's own runs.
+     This matches the already-known, already-deferred finding that ``Kernel``'s wall-clock
+     mid-tick throttle breaks strict determinism under variable system load
+     (``audit_mode=False``) — tracked separately, not a new issue; no new ticket filed for it.
+
+   See ``docs/testing/regression_policy.md``'s "TCK-20260824/TCK-20260828 Re-Baseline" note for
+   the same summary in policy-doc form.
 """
 from __future__ import annotations
 
@@ -241,6 +307,30 @@ def test_distinct_populated_factions(world_id: str, expected: int) -> None:
 # 2. Population stability (>=60% alive floor, 300 ticks, seed 42)
 # ---------------------------------------------------------------------------
 
+# Per-world population-stability floor overrides (fraction of starting entity_count).
+# Default remains 0.6 (60%) for every world not listed here. TCK-20260828-CORPUS-
+# DIVERSITY-TOWN-CENTER-BASELINE-REFRESH re-baselined `highland_traverse` from fresh
+# evidence collected after TCK-20260824-TOWN-CENTER-POINTER-FIX made entities correctly
+# navigate to the real compiled town_center (previously they never actually reached a
+# real town — the pre-fix "60% for every world" floor was itself an artifact of that
+# bug: entities exposed to little/no real hazard along the way). highland_traverse's
+# population now genuinely stabilizes at 55.6% (10/18) from tick 150 through tick 300 —
+# confirmed via 4 independent same-seed(42) runs (one pytest run captured in this
+# ticket's investigation, two more standalone pytest reruns, one full 300-tick
+# trajectory probe outside pytest's early-exit), all landing on the identical alive
+# count at every checkpoint from tick 150 onward. This is a stable plateau, not a
+# runaway collapse toward extinction — consistent with the fix's own accepted,
+# disclosed consequence (real navigation now routes entities through real hazard
+# exposure on the way to town). New floor 0.50 (50%) sits ~1 entity below the observed
+# stable value (9 vs the observed 10 of 18), keeping this a real regression guard
+# (a further drop still fails) without flaking on normal run-to-run variance.
+# See docs/testing/regression_policy.md's "TCK-20260824/TCK-20260828 Re-Baseline" note
+# for the full list of what was and wasn't touched by this re-baseline.
+POPULATION_STABILITY_FLOOR_OVERRIDES: dict[str, float] = {
+    "highland_traverse": 0.50,
+}
+
+
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "world_id",
@@ -261,7 +351,8 @@ def test_population_stability(world_id: str) -> None:
 
     Drives Kernel.tick_once() for 300 ticks at seed 42, sampling alive_count at
     every 50-tick checkpoint. Floor: alive_count >= 60% of the starting
-    entity_count at every checkpoint.
+    entity_count at every checkpoint, unless overridden per-world in
+    POPULATION_STABILITY_FLOOR_OVERRIDES (see that dict's own comment for rationale).
     """
     from src.worldbuilding.repository import WorldRepository
     from src.worldbuilding.compiler import WorldCompiler
@@ -274,7 +365,8 @@ def test_population_stability(world_id: str) -> None:
     spec = repo.load_world(world_id)
     state, report = WorldCompiler.compile(spec, seed)
     starting = report["entity_count"]
-    floor = 0.6 * starting
+    floor_fraction = POPULATION_STABILITY_FLOOR_OVERRIDES.get(world_id, 0.6)
+    floor = floor_fraction * starting
 
     rng = DeterministicRNG(seed)
     kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True})
@@ -285,7 +377,8 @@ def test_population_stability(world_id: str) -> None:
                 alive = sum(1 for e in kernel._state.entities.values() if e.combat.alive)
                 assert alive >= floor, (
                     f"{world_id}: population collapsed at tick {tick} — "
-                    f"alive={alive}/{starting} ({alive / starting:.1%}), floor is 60% ({floor:.1f})"
+                    f"alive={alive}/{starting} ({alive / starting:.1%}), "
+                    f"floor is {floor_fraction:.0%} ({floor:.1f})"
                 )
     finally:
         try:
@@ -1457,6 +1550,26 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
     (tolerance = 1.3x the largest single-sample deviation observed in the repro, floored
     at the standard SCORE_TOLERANCE_ABS_FLOOR=0.05 -- derived from repro_sweep.md's actual
     trial-to-trial spread, not invented).
+
+    NARRATIVE re-anchored again by TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-REFRESH:
+    the 0.0/C anchor above predates TCK-20260824-TOWN-CENTER-POINTER-FIX, which made entities
+    correctly navigate to the real compiled town_center instead of (0,0)/two hardcoded fake
+    waypoints. A first batch of 3 fresh same-seed trials under the fixed navigation measured
+    [0.07058823529411765, 0.08695652173913043, 0.06741573033707865] (mean 0.075) -- a small but
+    consistent nonzero NARRATIVE score, not noise around 0: entities now genuinely traveling the
+    real route to town appear to trigger real narrative-eligible events en route (arrival/hazard
+    encounters) that never fired when navigation was a no-op. Re-verifying with abs_floor=0.05
+    against that first batch's mean promptly proved insufficient: a second, independent batch of
+    3 fresh trials measured [0.08695652173913043, 0.23376623376623376, 0.07792207792207792]
+    (mean 0.1329, including one clear outlier at 0.234), landing outside the first batch's
+    narrow tolerance. Per this file's own established precedent for exactly this situation
+    (`urban_political_seed123_1000t`/SOCIAL: "derived from 11 independent fresh draws combined
+    across two sessions... not this latter session's 8 draws alone"), this anchor is
+    re-calibrated from the combined 6-draw pool
+    (0.0706, 0.0870, 0.0674, 0.0870, 0.2338, 0.0779), not either batch alone: mean=0.1039,
+    max single-draw deviation from that mean = 0.1298 (the outlier draw), abs_floor =
+    max(0.05, 1.3*0.1298) = 0.1688. Both historical batch means (0.075 and 0.1329) fall inside
+    this widened tolerance. Grade unchanged at C (band check passed cleanly in all 6 draws).
     """
     import tempfile
 
@@ -1476,12 +1589,14 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
     ticks = 200
     n_trials = 3
     anchors = {
-        # NARRATIVE re-anchored by TCK-20260817-STANDARD-SIMQ-NARRATIVE-ANCHOR-RECALIBRATION-
-        # FRONTIER-BATCH: the 0.6888/A anchor predates TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG's
-        # fix (which correctly stopped mislabeling AI strategic goals as fake quests). This
-        # world's profile does not enable ENABLE_GUILD_QUEST_GENERATION and reaches no WAR/
-        # sovereignty-shift within 200 ticks, so real NARRATIVE activity is correctly 0.
-        "NARRATIVE": {"grade": "C", "score": 0.0, "abs_floor": 0.05},
+        # NARRATIVE re-anchored by TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-REFRESH
+        # (see docstring above): entities now genuinely reach town via real navigation, which
+        # triggers real, non-zero, genuinely variable narrative activity en route. Calibrated
+        # from 2 combined batches of 3 fresh trials each (6 draws total):
+        # [0.07058823529411765, 0.08695652173913043, 0.06741573033707865, 0.08695652173913043,
+        # 0.23376623376623376, 0.07792207792207792]. mean=0.1039, abs_floor=0.1688 (1.3x the
+        # 0.1298 max single-draw deviation from that mean).
+        "NARRATIVE": {"grade": "C", "score": 0.1039, "abs_floor": 0.1688},
     }
 
     profile = _resolve_profile(profile_name)
@@ -1639,6 +1754,26 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
     (tolerance = 1.3x the largest single-sample deviation observed in the repro, floored
     at the standard SCORE_TOLERANCE_ABS_FLOOR=0.05 -- derived from repro_sweep.md's actual
     trial-to-trial spread, not invented).
+
+    SOCIAL re-anchored again by TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-REFRESH:
+    the 33.7/S anchor above predates TCK-20260824-TOWN-CENTER-POINTER-FIX. A first batch of 3
+    fresh same-seed trials under the fixed navigation measured [16.98, 21.31, 17.56], mean=18.6167
+    -- a genuine, consistent ~45% drop from the old anchor, not a single-draw fluke (all 3 trials
+    landed well below 33.7). Mechanically plausible and consistent with the fix's own disclosed,
+    accepted consequence: SOCIAL correlates with live entities actually present and interacting
+    in/around town, and this world's population is also down (real hazard exposure along the
+    now-real route), so fewer live entities produce fewer SOCIAL interaction events. Re-verifying
+    with abs_floor=3.5013 against that first batch's mean promptly proved insufficient: a second,
+    independent batch of 3 fresh trials measured [24.985, 20.515, 32.53] (mean 26.01, including a
+    high outlier at 32.53), landing outside the first batch's tolerance. Per this file's own
+    established precedent for exactly this situation (`urban_political_seed123_1000t`/SOCIAL:
+    "derived from 11 independent fresh draws combined across two sessions... not this latter
+    session's 8 draws alone"), this anchor is re-calibrated from the combined 6-draw pool
+    (16.98, 21.31, 17.56, 24.985, 20.515, 32.53), not either batch alone: mean=22.3133, max
+    single-draw deviation from that mean = 10.2167 (the 32.53 outlier), abs_floor =
+    max(0.05, 1.3*10.2167) = 13.2817. Both historical batch means (18.6167 and 26.01) fall inside
+    this widened tolerance. The grade band check passed cleanly in both batches (all 6 draws
+    stayed within +/-1 of S), so grade is left unchanged -- only score/abs_floor move.
     """
     import tempfile
 
@@ -1658,11 +1793,14 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
     ticks = 200
     n_trials = 3
     anchors = {
-        # SOCIAL re-anchored by TCK-20260817-STANDARD-SIMQ-STALE-ANCHOR-RECALIBRATION-BATCH:
-        # 4.9625 was an unsynced literal left stale since commit 29d78798, which committed the
-        # correct 33.7 to grade_anchors.json in the same commit without updating this copy.
-        # 3 fresh trials measured [33.725, 36.685, 37.84].
-        "SOCIAL": {"grade": "S", "score": 33.7, "abs_floor": 5.382},
+        # SOCIAL re-anchored by TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-REFRESH
+        # (see docstring above): real navigation now exposes entities to real hazard en route
+        # to town, reducing live population and SOCIAL interaction volume, and this pillar is
+        # genuinely variable trial-to-trial post-fix. Calibrated from 2 combined batches of 3
+        # fresh trials each (6 draws total): [16.98, 21.31, 17.56, 24.985, 20.515, 32.53].
+        # mean=22.3133, abs_floor=13.2817 (1.3x the 10.2167 max single-draw deviation from
+        # that mean).
+        "SOCIAL": {"grade": "S", "score": 22.3133, "abs_floor": 13.2817},
     }
 
     profile = _resolve_profile(profile_name)

@@ -3430,7 +3430,12 @@
   priority: P1
   legacy_evidence: null
   v2_evidence: "src/systems/lifecycle_systems/lifecycle.py \u2014 LifecycleSystem._select_default_heir(),\
-    \ LifecycleSystem.resolve_lifecycle(). Verified by TCK-20260824-DEFAULT-HEIR-ASSIGNMENT.\n"
+    \ LifecycleSystem.resolve_lifecycle(). Verified by TCK-20260824-DEFAULT-HEIR-ASSIGNMENT.\
+    \ TCK-20260829-LIFECYCLE-HEIRLOOM-INVENTORY-TUPLE-TYPEERROR fixed a pre-existing\
+    \ TypeError (tuple + list) in the heirloom-transfer line this mechanism drives,\
+    \ which crashed resolve_lifecycle() whenever the dying entity was a to_readonly()\
+    \ view -- the default-heir-assignment logic itself was already correct and unaffected;\
+    \ only the downstream transfer line needed a list(...) normalization.\n"
   proof_type: parity
   test_path: tests/unit/progression/test_lifecycle.py::test_default_heir_tie_break_deterministic
   divergence_note: 'New mechanic added by TCK-20260824-DEFAULT-HEIR-ASSIGNMENT. Prior
@@ -3619,20 +3624,19 @@
     `tests/unit/social/test_appraisal_logic.py::test_paid_information_kind_appraisal_accepts_once_prelude_passes`'
   divergence_note: null
   support_boundary: null
-
 - id: SOC-252
-  text: Successful escort-quest completion is a witnessed event that updates the
-    completing entity's public reputation profile (reliable label).
+  text: Successful escort-quest completion is a witnessed event that updates the completing
+    entity's public reputation profile (reliable label).
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "`src/engine/quests.py::QuestResolutionSystem.enforce()` (ESCORT-completion\
-    \ branch, gated on `project.quest_kind == QuestKind.ESCORT` and `is_newly_completed`)\
-    \ calls `src/domains/commitment/reputation.py::ReputationUpdateService.process_witnessed_event()`\
-    \ with event_kind=\"successful_escort\" and stages the result via `EntityUpdate.cognition_bundle_set`,\
-    \ following the merge-safe base-cognition pattern established by `NearDeathHardeningPhase.apply()`\
-    \ (`src/engine/pipeline_phases/hardening.py:91-99`) so same-tick cognition writes\
-    \ staged earlier by MemoryUpdatePhase are never clobbered."
+  v2_evidence: '`src/engine/quests.py::QuestResolutionSystem.enforce()` (ESCORT-completion
+    branch, gated on `project.quest_kind == QuestKind.ESCORT` and `is_newly_completed`)
+    calls `src/domains/commitment/reputation.py::ReputationUpdateService.process_witnessed_event()`
+    with event_kind="successful_escort" and stages the result via `EntityUpdate.cognition_bundle_set`,
+    following the merge-safe base-cognition pattern established by `NearDeathHardeningPhase.apply()`
+    (`src/engine/pipeline_phases/hardening.py:91-99`) so same-tick cognition writes
+    staged earlier by MemoryUpdatePhase are never clobbered.'
   proof_type: parity
   test_path: '`tests/integration/scenarios/test_phase15_commitment_reputation_scenarios.py::test_successful_escort_completion_updates_reputation`,
     `tests/integration/scenarios/test_phase15_commitment_reputation_scenarios.py::test_quest_reward_phase_preserves_memory_update_cognition_writes`'

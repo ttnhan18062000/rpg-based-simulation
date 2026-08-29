@@ -51,6 +51,13 @@ On death:
 
 If `entity.lifecycle.heir_entity_id` is set, the deceased entity's inventory and designated heirlooms transfer to the heir via `ResourceTransferIntent` (source_kind="CHEST"). This is a transactional transfer — if the heir's inventory is full, the transfer may partially fail per the atomic conservation law.
 
+The deceased entity's `inventory.items` is normalized to `list` before combining with the
+heirloom stacks (`list(entity.inventory.items) + heirloom_stacks`) — `items` is a `list` on a
+live/authoritative entity but a `tuple` when the entity passed in is a `to_readonly()` view
+(`src/core/state.py`'s immutability optimization); concatenating a tuple with a list raises
+`TypeError` (fixed by `TCK-20260829-LIFECYCLE-HEIRLOOM-INVENTORY-TUPLE-TYPEERROR`, a pre-existing
+bug from 2026-05-18 only newly exposed by increased death frequency post-navigation-fix).
+
 ### Engine phase
 
 `LifecycleSystem.resolve_lifecycle()` runs inside the authoritative apply pipeline. It receives the `StateUpdate` from workers and returns a refined `StateUpdate` with death processing added.
