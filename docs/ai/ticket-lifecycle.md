@@ -196,6 +196,23 @@ mistakenly written in Format 1's bullet shape is indistinguishable from a requir
 parser and fails Verify with a spurious `git status shows no changes to these path(s)` error (the
 false positive this ticket's investigator.md fix now guards against).
 
+**A third, distinct case (added by `TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED`):**
+a Format 1 bullet whose need genuinely depended on an *implementation-time* choice not yet made at
+investigation time (e.g. "only if the implementer routes X through Y") is still written in Format
+1's bullet shape as originally scoped — never rewritten to Format 2 after the fact. If the
+implementer confirms the condition was never met, the bullet's own body (anywhere after the path,
+including inside bold/em-dash prose or across a line wrap) gets the marker phrase "Resolved during
+implementation, condition not met" (case-insensitive, whitespace-tolerant —
+`_RESOLVED_CONDITION_MARKER_RE`, matched via `_bullet_blocks()` splitting each bullet into
+`(path, body)`). `_parse_docs_to_update` excludes any bullet carrying the marker from
+`required_docs`; `_parse_resolved_not_applicable_docs` returns the complement for PASS evidence.
+`check_docs_to_update_coverage` then PASSes the resolved bullet without requiring its doc be
+touched, while still hard-failing any *sibling* unconditional bullet in the same section — the
+exemption never leaks across bullets. This differs from Format 2 in *when* the exclusion decision
+was made: Format 2 is decided and written as plain prose at investigation time; this marker is
+added to an already-correctly-written Format 1 bullet after an implementation-time choice resolves
+it as not-applicable.
+
 ---
 
 ### Plan

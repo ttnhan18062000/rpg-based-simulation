@@ -11576,3 +11576,47 @@
   proof_type: parity
   test_path: tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py::test_combat_loss_end_to_end_produces_nonzero_memory_adjustment_next_tick
   divergence_note: null
+- id: INFRA-396
+  text: 'Verify-phase docs-coverage gate resolved-conditional-bullet marker fix (TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED):
+    tools/gate_checks/done_checker_static.py''s check_docs_to_update_coverage() previously
+    did pure literal path-diff matching against every backtick-wrapped path bullet
+    in investigation.md''s ''Docs Requiring Update'' section, with no way to recognize
+    a conditional bullet (''only if the implementer chooses X'') that was genuinely
+    evaluated during implementation and resolved as not-applicable -- it returned
+    DOD_BLOCKED for a genuinely correct, fully-substantiated implementation (found
+    live during TCK-20260824-AFFECTION-CONTRACT-GATE). Fixed by adding a recognized
+    marker phrase, ''Resolved during implementation, condition not met'' (case-insensitive,
+    whitespace-tolerant across line wraps, matched inside a bullet''s own reason/continuation
+    text via a new _bullet_blocks() (path, body) splitter): _parse_docs_to_update()
+    now excludes any bullet carrying the marker from its required-docs list (signature/return
+    type unchanged); a new _parse_resolved_not_applicable_docs() returns the complement
+    for PASS evidence; check_docs_to_update_coverage() PASSes a section whose non-empty
+    bullets are all resolved-marker bullets, while still hard-failing any untouched
+    sibling unconditional bullet in the same section -- the exemption never leaks
+    across bullets. This is a distinct, third case from the pre-existing Format 2
+    mechanism (TCK-20260823-HOTFIX-INVESTIGATOR-EXCLUDED-DOC-BULLET-TEMPLATE-GAP,
+    an investigation-time exclusion written as plain prose) -- Format 2 is untouched.
+    Sibling bug/fix to TCK-20260827-PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS''s INFRA-274
+    (same bug class -- a static gate blind to resolved-vs-unresolved content -- one
+    layer down, a different file and function). Real regression check: run directly
+    against the already-closed TCK-20260824-AFFECTION-CONTRACT-GATE''s real investigation.md
+    -- the previously-blind docs/mechanics/04_strategic_cognition.md bullet now correctly
+    lands in the resolved set and is excluded from required_docs, while the ticket''s
+    other two genuinely-required doc bullets remain enforced.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'tools/gate_checks/done_checker_static.py: _RESOLVED_CONDITION_MARKER_RE,
+    _DOCS_BULLET_BLOCK_RE, _bullet_blocks() (new helper splitting a Docs Requiring
+    Update section into per-bullet (path, body) pairs); _parse_docs_to_update() (now
+    excludes marker-bearing bullets); _parse_resolved_not_applicable_docs() (new,
+    returns the excluded complement); check_docs_to_update_coverage() (restructured
+    to compute both required_docs and resolved_docs, PASS a resolved-only section
+    without requiring its doc touched, never exempting a sibling unconditional bullet).'
+  proof_type: regression
+  test_path: tests/tools/test_done_checker_static.py::test_docs_coverage_resolved_conditional_bullet_untouched_passes
+  divergence_note: null
+  support_boundary: Claude-agent-workflow orchestration/gate-check tooling only --
+    this is which of three investigation.md bullet-parsing branches done_checker_static.py's
+    Verify-phase static gate takes; no simulation engine, mechanics, or determinism
+    behavior is involved.

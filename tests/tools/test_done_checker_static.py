@@ -21,6 +21,7 @@ from gate_checks.done_checker_static import (  # noqa: E402
     _frontmatter_has_unregistered_tags,
     _git_touched_paths,
     _parse_docs_to_update,
+    _parse_resolved_not_applicable_docs,
     _path_touched,
     check_data_runs_clean,
     check_docs_to_update_coverage,
@@ -1259,6 +1260,51 @@ def test_parse_docs_does_not_strip_comma_range_suffix():
 
 
 # ---------------------------------------------------------------------------
+# Resolved-conditional bullet marker (TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED)
+# ---------------------------------------------------------------------------
+
+
+def test_parse_docs_excludes_resolved_conditional_bullet():
+    section = (
+        "- `docs/mechanics/04_strategic_cognition.md`: **Resolved during implementation, "
+        "condition not met — this doc does not need updating.** Team-Up was scoped as "
+        "appraisal-only.\n"
+    )
+    assert _parse_docs_to_update(section) == []
+
+
+def test_parse_resolved_not_applicable_docs_extracts_marked_bullet():
+    section = (
+        "- `docs/mechanics/04_strategic_cognition.md`: **Resolved during implementation, "
+        "condition not met — this doc does not need updating.** Team-Up was scoped as "
+        "appraisal-only.\n"
+    )
+    assert _parse_resolved_not_applicable_docs(section) == [
+        "docs/mechanics/04_strategic_cognition.md"
+    ]
+
+
+def test_parse_docs_marker_tolerates_line_wrap_and_extra_whitespace():
+    section = (
+        "- `docs/mechanics/04_strategic_cognition.md`: Resolved during\n"
+        "  implementation, condition   not met. No further action needed.\n"
+    )
+    assert _parse_docs_to_update(section) == []
+    assert _parse_resolved_not_applicable_docs(section) == [
+        "docs/mechanics/04_strategic_cognition.md"
+    ]
+
+
+def test_parse_docs_mixed_unconditional_and_resolved_bullets():
+    section = (
+        "- `docs/mechanics/x.md`: unconditional, must update\n"
+        "- `docs/mechanics/y.md`: Resolved during implementation, condition not met.\n"
+    )
+    assert _parse_docs_to_update(section) == ["docs/mechanics/x.md"]
+    assert _parse_resolved_not_applicable_docs(section) == ["docs/mechanics/y.md"]
+
+
+# ---------------------------------------------------------------------------
 # _git_touched_paths (TCK-20260802-DOC-COVERAGE-CHECK)
 # ---------------------------------------------------------------------------
 
@@ -1458,6 +1504,81 @@ def test_docs_coverage_missing_flagged_path_fails(tmp_path, monkeypatch):
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
     assert status == "FAIL"
     assert "docs/mechanics/x.md" in evidence
+
+
+def test_docs_coverage_resolved_conditional_bullet_untouched_passes(tmp_path, monkeypatch):
+    # Core new case (TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED): a bullet
+    # correctly written in Format 1 at investigation time because its need depended on an
+    # implementation-time choice, then genuinely resolved as not-applicable, must PASS even though
+    # its doc was never touched.
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    # docs/mechanics/04_strategic_cognition.md deliberately never created — nothing touches it.
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(
+        base,
+        "TCK-FAKE",
+        "- `docs/mechanics/04_strategic_cognition.md`: **Resolved during implementation, "
+        "condition not met — this doc does not need updating.** Team-Up was scoped as "
+        "appraisal-only.",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    assert status == "PASS"
+    assert "docs/mechanics/04_strategic_cognition.md" in evidence
+
+
+def test_docs_coverage_resolved_conditional_bullet_touched_anyway_still_passes(tmp_path, monkeypatch):
+    # The marker must not somehow break the already-touched case.
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    (tmp_path / "docs" / "mechanics").mkdir(parents=True)
+    (tmp_path / "docs" / "mechanics" / "04_strategic_cognition.md").write_text(
+        "content", encoding="utf-8"
+    )
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(
+        base,
+        "TCK-FAKE",
+        "- `docs/mechanics/04_strategic_cognition.md`: Resolved during implementation, "
+        "condition not met, but touched anyway for an unrelated reason.",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    assert status == "PASS"
+
+
+def test_docs_coverage_resolved_marker_does_not_exempt_sibling_unconditional_bullet(
+    tmp_path, monkeypatch
+):
+    # Proves the marker doesn't leak exemption to sibling bullets in the same section: the
+    # unconditional bullet's doc is untouched and must still FAIL, even though the resolved-marker
+    # bullet in the same section correctly requires nothing.
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    # docs/mechanics/x.md (unconditional) deliberately never created.
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(
+        base,
+        "TCK-FAKE",
+        "- `docs/mechanics/x.md`: unconditional, must update\n"
+        "- `docs/mechanics/04_strategic_cognition.md`: Resolved during implementation, "
+        "condition not met.",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    assert status == "FAIL"
+    assert "docs/mechanics/x.md" in evidence
+    assert "docs/mechanics/04_strategic_cognition.md" not in evidence
 
 
 def test_docs_coverage_ignores_behavior_changed_entirely():

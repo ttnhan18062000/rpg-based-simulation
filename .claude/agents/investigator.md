@@ -118,6 +118,20 @@ bullets). Do not invent a third format — a required doc written as a non-bulle
 un-backticked path, will not parse and is treated as a format regression, not a clean "nothing
 required" case.
 
+**Resolving a Format 1 bullet whose need depended on an implementation-time choice
+(`TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED`):** if you write a Format 1
+bullet for a doc that must change *only if* the implementer makes a specific choice not yet made
+at investigation time (e.g. "only if the implementer routes X through Y"), leave it in Format 1 —
+do not rewrite it as Format 2 after the fact. If the implementer confirms the condition was never
+met, whoever resolves it (implementer or doc-updater) should add the phrase "Resolved during
+implementation, condition not met" anywhere in the bullet's own reason/continuation text (case-
+insensitive, tolerates line wraps and markdown bold/em-dash). `done-checker`'s
+`check_docs_to_update_coverage` recognizes this marker (`_RESOLVED_CONDITION_MARKER_RE` via
+`_bullet_blocks()`) and PASSes the bullet without requiring its doc be touched, while still
+hard-failing any sibling unconditional bullet in the same section. This is distinct from Format 2:
+Format 2 is a doc considered and excluded at investigation time itself; this marker resolves a
+bullet that was correctly conditional at investigation time and only became resolvable later.
+
 ## Parity Ledger Overlap
 List entry IDs and current status from docs/parity_ledger/ that this work touches.
 Flag any P0 entries — they require a passing test_path after changes.
