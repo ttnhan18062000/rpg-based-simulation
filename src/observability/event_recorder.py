@@ -309,16 +309,31 @@ class EventRecorder:
 
     def shutdown(self) -> None:
         """Shuts down and flushes any active file descriptors."""
-        # 1. Stop background drain worker
+        # 1. Stop background drain worker. This blocks (joins, timeout=1.0s) until the
+        # worker's thread has exited, so no further _run() loop iteration can race the
+        # final drain below or QualityPersistence.shutdown() in Kernel.shutdown() (which
+        # must run strictly after this method returns — see
+        # TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD).
         if self._worker:
             self._worker.stop()
-            
-        # 2. Final synchronous flush of any remaining queue elements
+
+        # 2. Final synchronous drain of any remaining queue elements — events pushed
+        # after the worker's last loop iteration but before .stop() took effect. Mirrors
+        # QueueDrainWorker._run()'s per-envelope dispatch (file write, stream publish,
+        # quality_fn) so nothing queued in this final window is silently dropped from
+        # quality scoring/persistence either; each callback's exception is isolated so a
+        # bad quality_fn record can't skip file/stream writes for the rest.
         try:
             remaining = self.queue.drain()
+            quality_fn = self._worker.quality_fn if self._worker else None
             for env in remaining:
                 self._write_envelope_to_file(env)
                 self._publish_envelope_to_stream(env)
+                if quality_fn:
+                    try:
+                        quality_fn(env)
+                    except Exception as e:
+                        logger.error(f"Error calling quality_fn during final shutdown drain: {e}")
         except Exception as e:
             logger.error(f"Error during final queue flush on shutdown: {e}")
 

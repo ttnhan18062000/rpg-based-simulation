@@ -1185,6 +1185,17 @@ class Kernel:
             except Exception:
                 logger.warning("SimQ feed stop failed (non-fatal)")
 
+        # EventRecorder's background drain worker calls quality_fn (-> QualityPersistence.write)
+        # asynchronously on its own thread. It MUST be fully stopped (and its own final
+        # synchronous drain completed) before QualityPersistence.shutdown() closes the
+        # persistence file handle below — otherwise an in-flight write from the drain
+        # worker's thread can race persistence teardown and silently no-op instead of
+        # persisting or erroring loudly. See
+        # TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD.
+        if hasattr(self, "_event_recorder") and self._event_recorder:
+            self._event_recorder.shutdown()
+            workers_stopped += 1
+
         if hasattr(self, "_quality_hub") and self._quality_hub is not None:
             try:
                 _quality_report = self._quality_hub.get_quality_report()
@@ -1194,10 +1205,6 @@ class Kernel:
                     _persistence.shutdown()
             except Exception:
                 logger.warning("SimQ final report write failed during shutdown (non-fatal)")
-
-        if hasattr(self, "_event_recorder") and self._event_recorder:
-            self._event_recorder.shutdown()
-            workers_stopped += 1
 
         if hasattr(self, "_metric_recorder") and self._metric_recorder:
             self._metric_recorder.shutdown(self._state.tick)

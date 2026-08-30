@@ -3778,17 +3778,25 @@
     \ to EventRecorder's QueueDrainWorker when obs_mode != OFF and QUALITY_SCORING_DISABLED\
     \ is unset. InProcessQualityFeed.start() is a lifecycle-only registrar \u2014\
     \ it does not create a second QueueDrainWorker. quality_report.json written at\
-    \ Kernel.shutdown() via QualityPersistence.write_report(). (TCK-20260630-SIMQ-WIRE-KERNEL)\n"
+    \ Kernel.shutdown() via QualityPersistence.write_report(). (TCK-20260630-SIMQ-WIRE-KERNEL)\
+    \ Kernel.shutdown() calls EventRecorder.shutdown() (stops the drain worker + runs\
+    \ its own final synchronous drain, now routed through quality_fn too) strictly\
+    \ BEFORE QualityPersistence.shutdown() closes its file handle, so an in-flight\
+    \ quality write racing shutdown is reliably persisted rather than silently no-op'ing;\
+    \ QualityPersistence.write() also logs a loud warning as a backstop if ever called\
+    \ after its handle has closed. (TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD)\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/engine/kernel.py (SimQ hub construction block in __init__ + shutdown())
-    + src/simulation_quality/feed.py::InProcessQualityFeed (lifecycle-only after G3
-    fix)
-
-    '
+  v2_evidence: src/engine/kernel.py::Kernel.shutdown (EventRecorder.shutdown() called
+    before the _quality_hub/_persistence block) + src/observability/event_recorder.py::EventRecorder.shutdown
+    (final manual drain now calls quality_fn per envelope) + src/simulation_quality/persistence.py::QualityPersistence.write
+    (loud warning when called after shutdown) + src/simulation_quality/feed.py::InProcessQualityFeed
+    (lifecycle-only after G3 fix)
   proof_type: null
-  test_path: tests/simulation_quality/test_kernel_simq_integration.py::test_20_tick_run_produces_nonzero_tick_count
+  test_path: tests/simulation_quality/test_kernel_simq_integration.py::test_20_tick_run_produces_nonzero_tick_count;
+    tests/simulation_quality/test_kernel_simq_integration.py::test_kernel_shutdown_persists_in_flight_quality_write;
+    tests/unit/observability/test_event_recorder_quality_fn.py::test_event_recorder_shutdown_final_drain_still_calls_quality_fn
   divergence_note: null
   support_boundary: null
 - id: INFRA-250

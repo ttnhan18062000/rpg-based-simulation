@@ -29,6 +29,16 @@ class QualityPersistence:
 
     def write(self, record: ScoreRecord) -> None:
         if self._file_handle is None:
+            # Backstop for TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD:
+            # under correct shutdown ordering (EventRecorder's drain worker fully stopped
+            # before this instance's shutdown() runs) this should never fire. Log loudly
+            # rather than silently no-op'ing, so a future ordering regression surfaces
+            # instead of vanishing.
+            logger.warning(
+                "QualityPersistence.write: called after shutdown() closed the file handle "
+                "— record dropped (event_id=%s, pillar=%s, tick=%s)",
+                record.event_id, getattr(record.pillar, "value", record.pillar), record.tick,
+            )
             return
         try:
             data = {

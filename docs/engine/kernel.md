@@ -107,6 +107,20 @@ After shutdown, `shutdown_report()` returns a cached `ShutdownReport` with:
 
 `BehaviorWorker` threads (named `"behavior-normalization-worker"`) are joined with a 1-second timeout during shutdown. Non-stop generates `outcome = "PARTIAL"` and a warning entry.
 
+**Shutdown ordering (EventRecorder before QualityPersistence)**: `EventRecorder.shutdown()`
+(which stops its `QueueDrainWorker` background thread and runs its own final synchronous drain)
+MUST complete before the SimQ `QualityHub`'s `QualityPersistence.shutdown()` runs. The drain
+worker calls `quality_fn` (`QualityHub.on_envelope` → `QualityPersistence.write()`) on a
+background thread; if `QualityPersistence.shutdown()` closed its file handle first, an in-flight
+write racing that teardown would previously find `self._file_handle is None` and silently no-op
+rather than persisting or erroring. `Kernel.shutdown()` now calls `_event_recorder.shutdown()`
+strictly before the `_quality_hub`/`_persistence` block; `EventRecorder.shutdown()`'s final manual
+drain also routes each remaining envelope through `quality_fn` (not just file/stream writes), and
+`QualityPersistence.write()` logs a loud warning (rather than staying silent) if a write is ever
+still attempted after its file handle has closed. See
+`TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD` and
+`docs/parity_ledger/infrastructure.yaml`'s `INFRA-249`.
+
 ---
 
 ## State Hashing in Phase 7 (Persistence)
