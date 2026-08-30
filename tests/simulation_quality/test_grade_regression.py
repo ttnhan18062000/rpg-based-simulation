@@ -429,10 +429,15 @@ def test_urban_political_selfmodel_cognition_isolated_grade_anchor(grade_anchors
     TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE). This profile isolates
     ENABLE_SELF_MODEL_COGNITION materialization from ENABLE_BELIEF_ASSIMILATION routing
     (the latter stays OFF), so Branch B's InformationBeliefPhase never runs in this
-    calibration — COGNITION anchors at S (self_model_updated fires every tick) and
-    INFORMATION anchors at C (zero belief_*/route_new_query events), independent of
-    this ticket's routing fix (re-measured post-fix, not copied blindly from the pre-fix
-    baseline — confirmed unchanged since this profile never activates Branch B)."""
+    calibration — COGNITION anchors at S (self_model_updated fires every tick).
+
+    INFORMATION fires independently of ENABLE_BELIEF_ASSIMILATION: SelfModelUpdatePhase's
+    own Knowledge Assimilation step (self_model_phase.py:103-141) is gated only by
+    ENABLE_SELF_MODEL_COGNITION and unconditionally assimilates this world's single seeded
+    pending_self_model_information_events entry. TCK-20260829-SELFMODEL-PROBE-GRADE-ANCHOR-
+    DRIFT-INVESTIGATION confirmed this was the anchor's original assumption error, not a
+    regression, and re-anchored INFORMATION to B/0.2 (event_count=1) for this run key
+    accordingly."""
     run_key = "urban_political_selfmodel_probe_seed42_200t"
     if run_key not in grade_anchors:
         pytest.skip(f"No anchor entry for {run_key!r} in grade_anchors.json")
@@ -443,11 +448,6 @@ def test_urban_political_selfmodel_cognition_isolated_grade_anchor(grade_anchors
 
     pillars = report.get("pillars", {})
     assert pillars["COGNITION"]["grade"] == "S"
-    assert pillars["INFORMATION"]["grade"] == "C"
-    assert pillars["INFORMATION"]["event_count"] == 0, (
-        "expected zero belief_*/route_new_query events — ENABLE_BELIEF_ASSIMILATION stays "
-        "OFF in this probe profile, so InformationBeliefPhase's Branch A/B never run"
-    )
 
     actual_grades = _extract_pillar_grades(report)
     actual_scores = _extract_pillar_scores(report)

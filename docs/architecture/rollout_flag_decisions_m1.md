@@ -153,25 +153,42 @@ transitioned from `skipped` to actually asserting, but did **not** cleanly pass 
 below). The other 4 `selfmodel`-matched tests remain skipped (require `unit_selfmodel_pilot`'s own
 separate calibration reports, out of this ticket's scope to regenerate).
 
-**Honest gap: `INFORMATION` and `SOCIAL` drifted from their committed `grade_anchors.json` values
-on both probe run keys, with no existing `known ceiling` classification covering either pillar.**
-`urban_political_selfmodel_probe_seed42_200t`'s `INFORMATION` anchor is `C/0.0`; the fresh run
-measured `B/0.2` (`event_count=1`, not `0`). Traced to source: both legs' single
-`belief_assimilated`/`belief_updated` event pair (subject `bandit_road_danger`, actor 22, tick 1)
-comes from `SelfModelUpdatePhase.run()`'s own Step 1 knowledge-assimilation
-(`self_model_phase.py:103-141`, via `KnowledgeModelService.assimilate()` against a seeded
-`pending_self_model_information_events` entry) — gated only by `ENABLE_SELF_MODEL_COGNITION`, not
-`ENABLE_BELIEF_ASSIMILATION`. It fired identically in both legs, so this is reproducible, not
-run-to-run noise; the anchor evidently predates whatever seeded-content or code-path change now
-causes it to fire once within this 200-tick window. `SOCIAL` also drifted beyond score tolerance
-on both run keys (13.35 actual vs 17.895/16.815 anchored) — not traced further, out of this
-ticket's scope. This is disclosed as a genuine new finding requiring its own follow-up ticket to
-either re-anchor or investigate as a regression — not fixed or re-anchored here (Scope Guards:
-"do not fix any new bug the trial might surface inline"). It does not itself change the
-recommendation below, since the DEV-003 bar was already unmet independent of anchor cleanliness.
-`COMBAT`/`ECONOMY`/`PROGRESSION` also drifted on the execution-probe run key, but each carries an
-existing, pre-existing `known tick_budget` ceiling classification from `tools/simq_ceiling.py`
-(200-tick-window threshold noise, unrelated to this flag) — not a new finding.
+**Honest gap (updated — see follow-up below): `INFORMATION` and `SOCIAL` drifted from their
+committed `grade_anchors.json` values on both probe run keys, with no existing `known ceiling`
+classification covering either pillar.** `urban_political_selfmodel_probe_seed42_200t`'s
+`INFORMATION` anchor was `C/0.0`; the fresh run measured `B/0.2` (`event_count=1`, not `0`). Traced
+to source: both legs' single `belief_assimilated`/`belief_updated` event pair (subject
+`bandit_road_danger`, actor 22, tick 1) comes from `SelfModelUpdatePhase.run()`'s own Step 1
+knowledge-assimilation (`self_model_phase.py:103-141`, via `KnowledgeModelService.assimilate()`
+against a seeded `pending_self_model_information_events` entry) — gated only by
+`ENABLE_SELF_MODEL_COGNITION`, not `ENABLE_BELIEF_ASSIMILATION`. It fired identically in both legs,
+so this is reproducible, not run-to-run noise.
+`TCK-20260829-SELFMODEL-PROBE-GRADE-ANCHOR-DRIFT-INVESTIGATION` subsequently confirmed, via `git
+log`/`git blame` on `self_model_phase.py`, that this Knowledge Assimilation step has never, in its
+entire history, referenced `ENABLE_BELIEF_ASSIMILATION` (2 total commits, neither touching this
+logic after original authorship) — the original anchor's assumption that this step was gated by
+`ENABLE_BELIEF_ASSIMILATION` was simply incorrect from the start, not a later regression or
+code-path change. `INFORMATION` has accordingly been re-anchored to `B/0.2`/`event_count=1` for
+`urban_political_selfmodel_probe_seed42_200t` (the `_execution_probe` run key's `INFORMATION`
+anchor was already correct at `B/0.2` and is unchanged). `SOCIAL` also drifted beyond score
+tolerance on both run keys (13.35 actual vs 17.895/16.815 anchored at trial time).
+`TCK-20260829-SELFMODEL-PROBE-GRADE-ANCHOR-DRIFT-INVESTIGATION` has since traced `SOCIAL`'s root
+cause to `CooperationPhase`'s cooperation-offer retry-without-cooldown gap
+(`src/domains/cooperation/phase.py`/`services.py`) — the same mechanism separately ticketed as
+`TCK-20260830-COOPERATION-OFFER-RETRY-COOLDOWN-MISSING` for `highland_traverse_seed42_200t`, now
+known to also affect both `urban_political_selfmodel*_probe` run keys. This is **not** related to
+`SelfModelUpdatePhase`/`ENABLE_SELF_MODEL_COGNITION` at all — a structurally independent mechanism
+from `INFORMATION`'s drift. `SOCIAL` has deliberately **not** been re-anchored (the coordinator's
+Option A decision, recorded in
+`staging_artifacts/TCK-20260829-SELFMODEL-PROBE-GRADE-ANCHOR-DRIFT-INVESTIGATION/plan.md`'s
+Unresolved Questions section, moved to `stored_artifacts/` at that ticket's close), pending either
+the cooperation-domain retry-cooldown fix landing and `SOCIAL` being re-measured post-fix, or a
+future deliberate, disclosed pre-fix re-anchor decision — it is root-caused, not fixed. This does
+not itself change the recommendation below, since the DEV-003 bar was already unmet independent of
+anchor cleanliness. `COMBAT`/`ECONOMY`/`PROGRESSION` also drifted on the execution-probe run key,
+but each carries an existing, pre-existing `known tick_budget` ceiling classification from
+`tools/simq_ceiling.py` (200-tick-window threshold noise, unrelated to this flag) — not a new
+finding.
 
 **`ENABLE_ADVENTURE_ROUTING` combination — resolved, static analysis only.** `grep -rn
 "ENABLE_ADVENTURE_ROUTING" src/ tools/` returns zero live `is_enabled(...)`/`get_flag_mode(...)`/
@@ -198,8 +215,14 @@ same class of outcome as `ENABLE_COMBAT_ENGAGEMENT` above. No new
 Mechanics Bible is unchanged either way. If a future ticket wants to re-open this: a shipped SimQ
 corpus profile begins using `ENABLE_SELF_MODEL_COGNITION=ON` in production, matching the DEV-003
 precedent directly. Separately, the fresh trial's `INFORMATION`/`SOCIAL` anchor drift (Honest Gap
-above) is a real, disclosed finding needing its own follow-up ticket before these two grade
-anchors can be trusted as regression guards again — not addressed by this ticket.
+above) was a real, disclosed finding needing its own follow-up ticket before these two grade
+anchors could be trusted as regression guards again. That follow-up,
+`TCK-20260829-SELFMODEL-PROBE-GRADE-ANCHOR-DRIFT-INVESTIGATION`, has now run: `INFORMATION` is
+resolved (re-anchored to `B/0.2`/`event_count=1` for `urban_political_selfmodel_probe_seed42_200t`,
+confirmed as the original anchor's own incorrect assumption rather than a regression). `SOCIAL`
+remains open — root-caused to `CooperationPhase`'s retry-without-cooldown gap
+(`TCK-20260830-COOPERATION-OFFER-RETRY-COOLDOWN-MISSING`) and disclosed, but deliberately not yet
+re-anchored, pending that cooperation-domain fix landing and a post-fix re-measurement.
 
 ## ENABLE_WORLD_EMERGENCE — Validation Trial Result (TCK-20260826)
 
