@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-27
+last_verified: 2026-08-30
 ---
 
 # Chapter 4: Strategic Cognition
@@ -264,6 +264,40 @@ head is ever read), and (c) a bounded retry count for a permanently-unresolvable
 (currently: a `None` `target_hint` never clears the arbiter's own target-floor check, so it
 retries forever, harmlessly, since nothing in this ticket's scope can ever produce one in
 production).
+
+### Cooperation Offer Retry Cooldown (TCK-20260830-COOPERATION-OFFER-RETRY-COOLDOWN-MISSING)
+Unlike Committed Intentions' deliberately unbounded retry-forever pattern above, a cooperation
+offer that expires unaccepted is throttled with a genuine bounded cooldown before the proposing
+entity may propose again — this prevents the same entity from re-proposing a cooperation offer
+to any target on the tick(s) immediately following a prior offer's expiry.
+
+- **Key**: `"cooperation_offer_retry"`, a fixed, namespaced string entry in the same
+  `IdentityComponent.cooldowns: Dict[str, int]` map used for skill cooldowns
+  (`src/core/state.py`) — reused rather than adding a new `EntityState` field. It never collides
+  with a real `skill_id`.
+- **Scope**: per-entity blanket, not per-(entity, partner) pair — the cooldown blocks proposing to
+  *any* target for its duration, not just the partner whose offer just expired.
+- **Set point**: `ContractService.reap_expired_offers()` (`src/systems/social_systems/contracts.py`).
+  When a reaped `OFFERED` contract has `kind == ContractKind.RECRUITMENT` (i.e. a cooperation
+  offer, not a `LOAN` or other contract kind), the entity's `EntityUpdate.identity` is merged with
+  `IdentityUpdate(cooldown_updates={"cooperation_offer_retry": current_tick + COOPERATION_OFFER_COOLDOWN_TICKS})`,
+  alongside the existing `strategic.contracts_remove` write, in the same authoritative
+  `StateUpdate` — going through the same authoritative apply path as skill cooldowns.
+- **Constant**: `COOPERATION_OFFER_COOLDOWN_TICKS = 15` (module-level constant,
+  `src/systems/social_systems/contracts.py`). Offer duration is 10 ticks, so a 15-tick post-expiry
+  cooldown puts the next allowed proposal roughly 25 ticks after the failed attempt's creation.
+- **Check point**: `CooperationDecisionService.select()` (`src/domains/cooperation/services.py`).
+  Near the top of the method: `on_offer_cooldown = state.tick < entity.identity.cooldowns.get("cooperation_offer_retry", 0)`.
+  This is read-only — decision logic reads state, it does not mutate it (Core Boundaries rule).
+  The "good partner exists" branch is gated with `if best_report and not on_offer_cooldown:`, so a
+  cooldown-gated entity falls through unchanged to the existing `solo_score >= 0.5` /
+  `DEFER_NO_PARTNER` fallback logic — the same fallback path already used when no suitable partner
+  exists. `CooperationIntentBridge.map_decision()` is unchanged: while on cooldown it never
+  receives a `REQUEST_HELP`/`HIRE_SUPPORT` decision, so no new contract is created.
+- **Not a Committed-Intentions-style retry**: this is a genuinely different, bounded-cooldown
+  mechanic. Committed Intentions' Retry-on-loss (above) is deliberately retry-forever with no
+  cooldown; the cooperation-offer-retry cooldown here is a fixed 15-tick durable suppression
+  window applied specifically to cooperation-offer proposal, not multi-step project arbitration.
 
 ---
 

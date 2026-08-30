@@ -46,6 +46,8 @@ class CooperationDecisionService:
                 trace={"reason": "No help needs detected."}
             )
 
+        on_offer_cooldown = state.tick < entity.identity.cooldowns.get("cooperation_offer_retry", 0)
+
         # personality effects
         pers = entity.identity.personality
         sociability = pers.sociability
@@ -87,7 +89,7 @@ class CooperationDecisionService:
                 best_report = rep
 
         # 3. Select posture based on scores
-        if best_report:
+        if best_report and not on_offer_cooldown:
             # Good partner exists
             best_cand = next(c for c in candidates if c.entity_id == best_report.candidate_id)
             trace["best_partner"] = best_report.candidate_id

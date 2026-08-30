@@ -55,7 +55,7 @@ Phase names match the `run_phase()` call identifiers in `src/engine/pipeline.py:
 | 35 | `lifecycle` | Commits death and lifecycle status changes. |
 | 36 | `groups` | Updates group membership and party composition. |
 | 37 | `active_contracts` | Enforces active social and economic contract obligations. |
-| 38 | `expired_offers` | Clears stale trade and social offers past their TTL. |
+| 38 | `expired_offers` | Clears stale trade and social offers past their TTL. Reaping an `OFFERED` `RECRUITMENT` contract also sets a `cooperation_offer_retry` cooldown (`current_tick + COOPERATION_OFFER_COOLDOWN_TICKS`, 15 ticks) on the proposing entity's `identity.cooldowns` (`ContractService.reap_expired_offers()`, `src/systems/social_systems/contracts.py`; see `docs/mechanics/04_strategic_cognition.md` §4). |
 | 39 | `capacity_enforcement` | Final inventory and carrying-capacity enforcement pass. |
 
 ---

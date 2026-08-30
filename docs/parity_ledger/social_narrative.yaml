@@ -3642,3 +3642,27 @@
     `tests/integration/scenarios/test_phase15_commitment_reputation_scenarios.py::test_quest_reward_phase_preserves_memory_update_cognition_writes`'
   divergence_note: null
   support_boundary: null
+- id: SOC-253
+  text: 'Cooperation-offer retry cooldown: when ContractService.reap_expired_offers()
+    reaps an expired OFFERED contract of kind RECRUITMENT, the offering entity''s
+    identity.cooldowns["cooperation_offer_retry"] is set to current_tick + COOPERATION_OFFER_COOLDOWN_TICKS
+    (15). CooperationDecisionService.select() checks this cooldown (state.tick < cooldowns.get("cooperation_offer_retry",
+    0)) and, while active, gates off the good-partner-exists branch so the entity
+    falls through to the existing SOLO/DEFER_NO_PARTNER fallback instead of immediately
+    re-proposing a new cooperation offer to any target on the tick(s) right after
+    a prior offer expired unaccepted.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/systems/social_systems/contracts.py:11 (COOPERATION_OFFER_COOLDOWN_TICKS
+    = 15 module constant); ContractService.reap_expired_offers() (contracts.py:~316-343,
+    sets IdentityUpdate(cooldown_updates={"cooperation_offer_retry": current_tick
+    + COOPERATION_OFFER_COOLDOWN_TICKS}) merged into the EntityUpdate alongside contracts_remove,
+    only when the reaped OFFERED contract''s kind == ContractKind.RECRUITMENT). src/domains/cooperation/services.py:49
+    (CooperationDecisionService.select() reads on_offer_cooldown = state.tick < entity.identity.cooldowns.get("cooperation_offer_retry",
+    0) and gates the good-partner branch on it). (TCK-20260830-COOPERATION-OFFER-RETRY-COOLDOWN-MISSING)'
+  proof_type: parity
+  test_path: tests/unit/domains/cooperation/test_phase7_cooperation_decision_service.py::test_cooperation_offer_retry_blocked_within_cooldown_window;
+    tests/unit/domains/cooperation/test_phase7_cooperation_decision_service.py::test_cooperation_offer_retry_allowed_after_cooldown_expires
+  divergence_note: null
+  support_boundary: null
