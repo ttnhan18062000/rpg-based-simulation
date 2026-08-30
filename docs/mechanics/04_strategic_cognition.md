@@ -299,6 +299,38 @@ to any target on the tick(s) immediately following a prior offer's expiry.
   cooldown; the cooperation-offer-retry cooldown here is a fixed 15-tick durable suppression
   window applied specifically to cooperation-offer proposal, not multi-step project arbitration.
 
+### Cooperation Offer Pending-Duplicate Gate (TCK-20260830-COOPERATION-OFFER-CONCURRENT-DUPLICATE-BURST)
+The retry cooldown above only throttles re-proposing *after* a prior offer has expired. It does
+not stop the same entity from creating several simultaneous un-expired offers on consecutive
+ticks *before* the first one ever expires — real corpus evidence
+(`highland_traverse_seed42_200t`) showed an entity creating a new `RECRUITMENT` offer on every
+single tick a decision persisted (up to 11-13 simultaneous pending offers) until the first one
+finally expired and set the retry cooldown. This gate closes that gap by checking for an
+already-pending offer at decision time, not just a post-expiry cooldown.
+
+- **Check point**: `CooperationDecisionService.select()` (`src/domains/cooperation/services.py`).
+  Immediately after the existing `on_offer_cooldown` read: `has_pending_recruitment_offer = any(c.kind
+  == ContractKind.RECRUITMENT and c.status == ContractStatus.OFFERED and (c.expiry_tick <= 0 or
+  c.expiry_tick > state.tick) for c in entity.strategic.contracts.values())` — read-only, scans the
+  entity's own already-materialized `strategic.contracts` map (never mutates it).
+- **Scope**: per-entity blanket, mirroring the retry cooldown's own scope — any pending
+  `RECRUITMENT` offer blocks a new one regardless of target, not just a pending offer to the same
+  candidate.
+- **Boundary semantics**: `c.expiry_tick > state.tick` (strict, not `>=`) intentionally matches
+  `ContractService.reap_expired_offers()`'s own reap condition (`0 < contract.expiry_tick <=
+  current_tick`) — a contract at its exact expiry tick is treated as already-expired by both, so
+  this gate never disagrees with the reaper about when an offer stops counting as pending.
+- **Gate site**: the same "good partner exists" branch the retry cooldown gates:
+  `if best_report and not on_offer_cooldown and not has_pending_recruitment_offer:`. While gated,
+  execution falls through unchanged to the existing `solo_score >= 0.5` / `DEFER_NO_PARTNER`
+  fallback — identical fallback behavior to the retry-cooldown case.
+- **Verified**: real A/B corpus trial (`tools/evaluate_simq.py --scenario
+  highland_traverse_seed42_200t`, deterministic seed 42) confirmed the fix. Pre-fix, every one of 8
+  offer-creating entities showed a consecutive per-tick creation burst (84 total burst instances,
+  e.g. entity 7 created 11 offers on ticks 19-29 with no gaps); post-fix, zero burst instances
+  across all entities and every offer is spaced by a full 10-tick offer lifetime or more. SOCIAL
+  pillar `normalized_score` improved from 5.636 to 6.020 (grade stayed `S`, anchor unchanged).
+
 ---
 
 ## 5. Perception & Salience

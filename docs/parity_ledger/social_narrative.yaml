@@ -3689,3 +3689,18 @@
   test_path: tests/unit/domains/faction/test_siege_model.py::test_guard_index_matches_naive_full_scan
   divergence_note: null
   support_boundary: null
+- id: SOC-255
+  text: 'Cooperation-offer pending-duplicate gate: CooperationDecisionService.select()
+    checks entity.strategic.contracts for an already-pending (status OFFERED, kind
+    RECRUITMENT, expiry_tick > state.tick) offer before proposing a new one. The good-partner-exists
+    branch is gated with "if best_report and not on_offer_cooldown and not has_pending_recruitment_offer:"
+    -- while a pending offer exists, the entity falls through to the existing SOLO/DEFER_NO_PARTNER
+    fallback instead of creating a second simultaneous RECRUITMENT offer on the same
+    or a later tick before the first one expires.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/cooperation/services.py:51-56,103 (has_pending_recruitment_offer
+    computed and gate applied)
+  test_path: tests/unit/domains/cooperation/test_phase7_cooperation_decision_service.py::test_cooperation_offer_creation_blocked_while_pending_offer_unexpired
+  divergence_note: null
