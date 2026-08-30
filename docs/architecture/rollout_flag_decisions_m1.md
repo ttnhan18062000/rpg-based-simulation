@@ -29,7 +29,7 @@ this precedent governs.
 | `ENABLE_COMBAT_ENGAGEMENT` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION` ran a real 4-leg corpus trial — no suppression regression, the TCK-20260809 `u.merge(...)` fix holds, but zero shipped profiles turn this flag on and real combat-activity signal stayed thin. See "ENABLE_COMBAT_ENGAGEMENT — Validation Trial Result" below. |
 | `ENABLE_SELF_MODEL_COGNITION` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-SELF-MODEL-COGNITION-FLAG-VALIDATION` ran 2 fresh corpus-profile trials on top of 2 prior real trials already on file (a shipped-ON Unit-tier world, `INFRA-266`'s real-world generalization split verdict) — still no shipped archetype-world default profile, and the fresh trial surfaced a real, undisclosed anchor drift requiring its own follow-up. See "ENABLE_SELF_MODEL_COGNITION — Validation Trial Result" below. |
 | `ENABLE_WORLD_EMERGENCE` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-WORLD-EMERGENCE-FLAG-VALIDATION` ran a real 4-leg corpus trial — no suppression regression, real phase execution/telemetry/entity-signal exposure confirmed, but zero shipped profiles turn this flag on and neither trial world produced a single `RESOURCE_DEPLETED`/`ENTITY_DEATH`/`CAMP_RAID` event, leaving quest-registry growth specifically unconfirmed. See "ENABLE_WORLD_EMERGENCE — Validation Trial Result" below. |
-| `ENABLE_PROGRESSION_EVOLUTION` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION` ran a real 4-leg corpus trial — both ON legs deterministically crashed the real `Kernel` pipeline (`CanonicalStateHasher.get_hash()` cannot serialize the raw `ProgressionDecisionResult` the phase stores in `property_updates`), a stronger "keep OFF" finding than any of the 3 sibling flags produced, on top of the already-predicted reward-ledger producer gap. See "ENABLE_PROGRESSION_EVOLUTION — Validation Trial Result" below. |
+| `ENABLE_PROGRESSION_EVOLUTION` | **Kept OFF, deferred (crash prerequisite now fixed; reward-ledger gap remains)** | `TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION` ran a real 4-leg corpus trial — both ON legs deterministically crashed the real `Kernel` pipeline (`CanonicalStateHasher.get_hash()` cannot serialize the raw `ProgressionDecisionResult` the phase stores in `property_updates`), a stronger "keep OFF" finding than any of the 3 sibling flags produced, on top of the already-predicted reward-ledger producer gap. `TCK-20260830-HOTFIX-PROGRESSION-DECISION-CANONICAL-HASH-CRASH` has since fixed the crash (verified via a real flag-ON 300-tick trial, exit 0, no `TypeError`) — that blocking prerequisite is resolved, but the flag's default stays OFF pending the separate reward-ledger producer gap (DEV-004). See "ENABLE_PROGRESSION_EVOLUTION — Validation Trial Result" below. |
 | `ENABLE_INFORMATION_INTENT_EXECUTION` | **Kept OFF, deferred (real trial evidence now on file)** | `TCK-20260826-INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION` ran a real single-variable OFF-vs-ON corpus trial against `urban_political` with `ENABLE_BELIEF_ASSIMILATION` held ON in both legs — no suppression regression, the distinction from `ENABLE_BELIEF_ASSIMILATION` (production vs execution of Branch B's `ActionIntent`) confirmed by direct code read and by trial data, but zero shipped profiles turn this flag on and Branch B did not route a query in either leg of this trial's corpus/seed/window, matching `INFRA-270`'s and `INFRA-266`'s prior findings. See "ENABLE_INFORMATION_INTENT_EXECUTION — Validation Trial Result" below. |
 
 ## ENABLE_COMBAT_ENGAGEMENT — Validation Trial Result (TCK-20260826)
@@ -425,6 +425,19 @@ does not create a divergence from the Mechanics Bible, and no chapter governs th
 crash disclosed above, and separately (b) wiring a real reward-ledger producer (or accepting that
 decision-logic safety under real reward flow stays untested indefinitely) — both concrete, named
 prerequisites, not "someday" items.
+
+**Post-fix status update (TCK-20260830-HOTFIX-PROGRESSION-DECISION-CANONICAL-HASH-CRASH,
+2026-08-30).** Prerequisite (a) above is now resolved: `ProgressionConversionPhase.execute()`
+(`src/domains/progression/phase.py`) converts `ProgressionDecisionResult` to a plain dict via
+`dataclasses.asdict()` before storing it in `property_updates["last_progression_decision"]`, so
+`CanonicalStateHasher.to_canonical_json()`/`get_hash()` no longer raises `TypeError`. Re-verified
+against this section's own repro shape — `ENABLE_PROGRESSION_EVOLUTION=ON`, `dungeon_crawl` seed
+42 (300 ticks instead of the original 2000, since the original crash reproduced by tick ~120) —
+exit code 0, all ticks completed, no `TypeError` in stdout or run logs. This ticket did **not**
+flip the flag's default and did not touch prerequisite (b): `RewardLedgerService` still has zero
+live callers (DEV-004 in `docs/guidelines/intentional_divergences.md`), so option-generation still
+converges on `SAVE_FOR_LATER` under real reward flow being genuinely untested remains true. The
+flag's default therefore stays OFF pending (b).
 
 ## ENABLE_INFORMATION_INTENT_EXECUTION — Validation Trial Result (TCK-20260826)
 

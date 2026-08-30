@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-08-26
+last_verified: 2026-08-30
 ---
 
 # Progression Domain Contract
@@ -59,7 +59,13 @@ Entities failing either lifecycle check are skipped. The phase accepts an incomi
 - **Possession understanding**: a per-tick evaluation of what the entity currently holds and what state it is in
 - **Growth gap evaluation**: what equipment, skills, or capabilities the entity is missing relative to its class doctrine
 - **Conversion option generation and selection**: which of up to 10 typed options (EQUIP_ITEM, REPAIR_GEAR, SELL_LOOT, CRAFT_ITEM, ALLOCATE_AP, ASK_ITEM_USE, SAVE_FOR_LATER) best serves the entity this tick
-- **Debug trace property**: `last_progression_decision` written to `entity.identity.properties`
+- **Debug trace property**: `last_progression_decision` written to `entity.identity.properties`,
+  stored as a plain JSON-serializable dict (`dataclasses.asdict(decision)`), never the raw
+  `ProgressionDecisionResult` dataclass — `CanonicalStateHasher.to_canonical_json()`
+  (`src/engine/checkpoint.py`) serializes `entity.identity.properties` via plain `json.dumps()`
+  with no custom encoder, so a raw dataclass there crashes `Kernel`'s persistence phase (fixed by
+  `TCK-20260830-HOTFIX-PROGRESSION-DECISION-CANONICAL-HASH-CRASH`; regression test:
+  `tests/unit/domains/progression/test_progression_decision_canonical_hash.py`)
 
 ---
 
@@ -121,7 +127,7 @@ Selects the highest-scoring `ConversionOption` from the generated list. `SAVE_FO
 
 ### Step 6 — Intent Resolution (`ConversionIntentResolver.resolve`)
 
-Maps the selected `ConversionOption` to a typed `EntityUpdate`. The resolved update is merged with any existing entity update from prior phases. A debug trace property `last_progression_decision` is written for observability.
+Maps the selected `ConversionOption` to a typed `EntityUpdate`. The resolved update is merged with any existing entity update from prior phases. A debug trace property `last_progression_decision` is written for observability — as a plain dict (`asdict(decision)`), not the raw `ProgressionDecisionResult` dataclass, so it survives `CanonicalStateHasher`'s canonical-hash pass. Do not write the raw dataclass back into `property_updates` here; that reintroduces the `TypeError: Object of type ProgressionDecisionResult is not JSON serializable` crash fixed in `TCK-20260830-HOTFIX-PROGRESSION-DECISION-CANONICAL-HASH-CRASH`.
 
 ---
 

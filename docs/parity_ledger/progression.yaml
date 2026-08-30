@@ -1444,3 +1444,17 @@
     HUNT quests were never completable in any scored scenario before this fix, so
     no existing baseline grade reflects a "HUNT quests complete" state to shift away
     from.'
+- id: PROG-121
+  text: ProgressionConversionPhase.execute() writes the per-tick debug trace 'last_progression_decision'
+    into entity_update.property_updates as a plain JSON-serializable dict (via dataclasses.asdict(decision)),
+    not the raw ProgressionDecisionResult dataclass instance, because property_updates
+    flows into entity.identity.properties which CanonicalStateHasher.to_canonical_json()
+    serializes via plain json.dumps() with no custom encoder for dataclasses.
+  status: verified
+  priority: P0
+  v2_evidence: src/domains/progression/phase.py:83 (prop_upd["last_progression_decision"]
+    = asdict(decision)); fixes deterministic TypeError previously raised by CanonicalStateHasher.to_canonical_json()/get_hash()
+    when a raw dataclass instance was stored under entity.identity.properties
+  test_path: tests/unit/domains/progression/test_progression_decision_canonical_hash.py
+  divergence_note: null
+  proof_type: regression
