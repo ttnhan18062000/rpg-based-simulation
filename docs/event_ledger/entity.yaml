@@ -150,6 +150,13 @@
   event_types: ["self_model_updated"]
   notes: "Observed (0 calibration_hits in all shipped profiles since ENABLE_SELF_MODEL_COGNITION defaults OFF — a flag_gated ceiling, not an observability gap; see TCK-20260808-SIMQ-SCORE-CEILING-PROVENANCE)."
 
+- id: ENTITY-021
+  mutation_source: "EntityUpdate.cognition_bundle_set"
+  status: silent
+  evidence: "grep -n \"cognition_bundle_set\\|\\.cognition\\b\\|CognitionModel\" src/observability/event_extractor.py -- 0 matches. 3 real production write sites: src/domains/memory/phase.py:51 (entity-spawn cognition inheritance), src/engine/quests.py:249 (QuestKind.ESCORT completion, reputation wiring, TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING), src/engine/pipeline_phases/hardening.py:106 (near-death hardening cognition update, TCK-20260824-WIRE-ORPHANED-MECHANISMS)."
+  event_types: []
+  notes: "TCK-20260830-ENTITY-EVENT-LEDGER-COGNITION-BUNDLE-SET-MISSING: no observability event exists for cognition_bundle_set mutations from any of its 3 real write sites — a real, disclosed observability gap, not a documentation-only oversight. The downstream, already-observed effects that trigger these writes (reputation changes, near-death hardening) may surface through their own separate event paths (e.g. reputation_updated); this entry covers cognition_bundle_set's own mutation specifically, which itself has no dedicated event. Wiring a new event, if warranted, is out of this ticket's scope — disclosed here as a stated finding, not fixed."
+
 # Excluded from this audit (docs/core/update_intents.md's own framing):
 # - EntityUpdate.intent_results: explicitly non-durable feedback, "not applied to durable state."
 # - EntityUpdate.property_updates: generic catch-all, too broad to classify as observed/silent.
