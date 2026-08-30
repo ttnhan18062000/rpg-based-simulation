@@ -3,7 +3,7 @@ status: active
 layer: testing
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-08-30
 ---
 
 # Regression Policy
@@ -173,7 +173,7 @@ Concrete worked example of §6's "hardcoded test baseline that this session's ow
 `TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-REFRESH` re-verified all 13 tests the fix's own Test-gate disclosed as failing, using real Kernel-driven runs (not guessed values), and found the "all 13 are floor drift" assumption held for only 3 of them:
 
 - **Genuinely re-baselined** (3 tests): real floor/tolerance drift, confirmed via multiple independent evidence batches per this file's own established tolerance-band methodology (see `test_corpus_diversity.py`'s own module docstring §5 for the full per-test evidence and derivation).
-- **NOT touched, deferred to follow-up tickets** (10 tests): each failed for a reason a floor value cannot fix — a real, pre-existing, unrelated `src/` bug (`TCK-20260829-LIFECYCLE-HEIRLOOM-INVENTORY-TUPLE-TYPEERROR`, fixed) and a test-invocation resource-budget cap masking a real observability-backpressure issue (`TCK-20260829-SIMQ-PERSISTENCE-BACKPRESSURE-PERF-INVESTIGATION`, filed for investigation). Force-fitting a floor edit onto a crash or a timeout would have been a Gate Integrity violation — no threshold value makes a `TypeError` or a `TimeoutError` pass.
+- **NOT touched, deferred to follow-up tickets** (10 tests): each failed for a reason a floor value cannot fix — a real, pre-existing, unrelated `src/` bug (`TCK-20260829-LIFECYCLE-HEIRLOOM-INVENTORY-TUPLE-TYPEERROR`, fixed) and a test-invocation resource-budget cap masking a real observability-backpressure issue (`TCK-20260829-SIMQ-PERSISTENCE-BACKPRESSURE-PERF-INVESTIGATION`, resolved: relocated `ReplayManager._rotate_chunk()`'s redundant synchronous budget-check pre-check into the already-async `_execute_persistence()`, batched `QualityPersistence.write()`/`EventRecorder._write_envelope_to_file()` from per-record `flush()` to a deterministic batch-of-50, and added a `resource_budget_large` pytest marker forcing `--resource-budget large` for the 6 affected tests regardless of CLI default. 5 of the 6 now pass; the 6th, `test_urban_political_seed42_1000t_social_grade_stability`, completes without `CalibrationIntegrityError`/`TimeoutError` — confirming the backpressure root cause is fixed — but surfaces a genuine, separately-scoped SOCIAL floor/tolerance drift (`mean_score=36.8373` vs. `anchor_score=15.45`, tolerance `abs_floor=6.5052`) needing its own re-baseline follow-up ticket, left unmodified here per Gate Integrity). Force-fitting a floor edit onto a crash or a timeout would have been a Gate Integrity violation — no threshold value makes a `TypeError` or a `TimeoutError` pass.
 
 **Lesson for future re-baseline tickets**: before re-baselining any failing test after a legitimate upstream fix, verify with a fresh, isolated re-run *why* it is failing — a batch of assertion failures after a real code change is not guaranteed to be homogeneous. Some may be genuine floor drift (re-baseline-able); others may be unrelated bugs or environment/resource limits that a floor edit cannot fix and that deserve their own ticket instead.
 

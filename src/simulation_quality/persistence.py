@@ -14,9 +14,12 @@ logger = logging.getLogger(__name__)
 class QualityPersistence:
     """Non-blocking file writer for quality score records and reports."""
 
+    _FLUSH_INTERVAL: int = 50
+
     def __init__(self, run_dir: str) -> None:
         self._run_dir = run_dir
         self._file_handle = None
+        self._pending_writes: int = 0
         try:
             os.makedirs(run_dir, exist_ok=True)
             jsonl_path = os.path.join(run_dir, "quality_scores.jsonl")
@@ -40,7 +43,10 @@ class QualityPersistence:
                 "tags": list(record.tags),
             }
             self._file_handle.write(json.dumps(data) + "\n")
-            self._file_handle.flush()
+            self._pending_writes += 1
+            if self._pending_writes >= self._FLUSH_INTERVAL:
+                self._file_handle.flush()
+                self._pending_writes = 0
         except Exception as exc:
             logger.warning("QualityPersistence.write: failed to write record: %s", exc)
 

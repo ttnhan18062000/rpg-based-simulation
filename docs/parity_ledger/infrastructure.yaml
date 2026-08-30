@@ -11620,3 +11620,25 @@
     this is which of three investigation.md bullet-parsing branches done_checker_static.py's
     Verify-phase static gate takes; no simulation engine, mechanics, or determinism
     behavior is involved.
+- id: INFRA-397
+  text: QualityPersistence.write() and EventRecorder._write_envelope_to_file() batch
+    flush() calls at a deterministic interval (_FLUSH_INTERVAL=50 records) instead
+    of flushing on every write, tracked via a per-instance pending-write counter (_pending_writes
+    / _pending_envelope_writes) reset to 0 on each flush. flush() is still called
+    unconditionally on shutdown (QualityPersistence.shutdown()) and on file-handle
+    close (EventRecorder shutdown path) regardless of counter state, so no pending
+    data is lost on a clean shutdown. On an unclean crash (process kill, OS crash)
+    between batch boundaries, up to _FLUSH_INTERVAL-1 (49) unflushed records for that
+    writer may be lost, versus near-zero loss under the prior per-record flush. This
+    is non-authoritative telemetry (SimQ score records, observability event envelopes),
+    not durable simulation state.
+  status: verified
+  priority: P2
+  v2_evidence: src/simulation_quality/persistence.py::QualityPersistence.write (_FLUSH_INTERVAL=50,
+    _pending_writes counter, lines ~17-49) and ::QualityPersistence.shutdown (unconditional
+    flush, lines ~81-89); src/observability/event_recorder.py::EventRecorder._write_envelope_to_file
+    (_FLUSH_INTERVAL=50, _pending_envelope_writes counter, lines ~58-131) and its
+    shutdown path unconditional flush-before-close (line ~326).
+  test_path: tests/simulation_quality/test_persistence.py::test_quality_persistence_write_does_not_flush_every_record,tests/unit/observability/test_event_recorder.py::test_event_recorder_write_envelope_does_not_flush_every_record
+  divergence_note: null
+  proof_type: regression

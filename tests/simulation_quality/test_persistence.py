@@ -32,14 +32,16 @@ def test_write_appends_jsonl_line(tmp_path, scoring_weights):
         persistence.write(record)
         jsonl_path = os.path.join(run_dir, "quality_scores.jsonl")
         assert os.path.exists(jsonl_path)
-        with open(jsonl_path, "r") as fh:
-            line = fh.readline()
-        data = json.loads(line)
-        assert data["event_id"] == "e1"
-        assert data["delta"] == pytest.approx(3.0)
-        assert data["pillar"] == "ECONOMY"
     finally:
+        # Records are batch-flushed every _FLUSH_INTERVAL writes (not per-write) —
+        # shutdown() flushes any remainder, so read the file only after it.
         persistence.shutdown()
+    with open(jsonl_path, "r") as fh:
+        line = fh.readline()
+    data = json.loads(line)
+    assert data["event_id"] == "e1"
+    assert data["delta"] == pytest.approx(3.0)
+    assert data["pillar"] == "ECONOMY"
 
 
 def test_write_multiple_appends_multiple_lines(tmp_path, scoring_weights):
@@ -49,11 +51,13 @@ def test_write_multiple_appends_multiple_lines(tmp_path, scoring_weights):
         for i in range(5):
             persistence.write(_make_record(f"e{i}", float(i)))
         jsonl_path = os.path.join(run_dir, "quality_scores.jsonl")
-        with open(jsonl_path, "r") as fh:
-            lines = fh.readlines()
-        assert len(lines) == 5
     finally:
+        # Records are batch-flushed every _FLUSH_INTERVAL writes (not per-write) —
+        # shutdown() flushes any remainder, so read the file only after it.
         persistence.shutdown()
+    with open(jsonl_path, "r") as fh:
+        lines = fh.readlines()
+    assert len(lines) == 5
 
 
 def test_write_report_creates_json_file(tmp_path, scoring_weights):
@@ -114,3 +118,57 @@ def test_write_to_correct_path(tmp_path, scoring_weights):
         assert os.path.exists(os.path.join(run_dir, "quality_scores.jsonl"))
     finally:
         persistence.shutdown()
+
+
+def test_quality_persistence_write_does_not_flush_every_record(tmp_path, scoring_weights):
+    run_dir = str(tmp_path / "run6")
+    persistence = QualityPersistence(run_dir)
+    try:
+        flush_calls = {"count": 0}
+        real_flush = persistence._file_handle.flush
+
+        def _spy_flush():
+            flush_calls["count"] += 1
+            real_flush()
+
+        persistence._file_handle.flush = _spy_flush
+
+        write_count = persistence._FLUSH_INTERVAL - 1
+        for i in range(write_count):
+            persistence.write(_make_record(f"e{i}", float(i)))
+
+        assert flush_calls["count"] < write_count
+        assert flush_calls["count"] == 0
+
+        # Crossing the flush interval triggers exactly one flush and resets the counter.
+        persistence.write(_make_record("e_boundary", 1.0))
+        assert flush_calls["count"] == 1
+        assert persistence._pending_writes == 0
+    finally:
+        persistence.shutdown()
+
+
+def test_quality_persistence_shutdown_flushes_remaining_records(tmp_path, scoring_weights):
+    run_dir = str(tmp_path / "run7")
+    persistence = QualityPersistence(run_dir)
+    flush_calls = {"count": 0}
+    real_flush = persistence._file_handle.flush
+
+    def _spy_flush():
+        flush_calls["count"] += 1
+        real_flush()
+
+    persistence._file_handle.flush = _spy_flush
+
+    persistence.write(_make_record("e1", 1.0))
+    assert flush_calls["count"] == 0
+
+    persistence.shutdown()
+    # shutdown() explicitly flushes before close(), and TextIOWrapper.close()
+    # itself flushes internally too — assert "at least one", not an exact count.
+    assert flush_calls["count"] >= 1
+
+    jsonl_path = os.path.join(run_dir, "quality_scores.jsonl")
+    with open(jsonl_path, "r") as fh:
+        lines = fh.readlines()
+    assert len(lines) == 1

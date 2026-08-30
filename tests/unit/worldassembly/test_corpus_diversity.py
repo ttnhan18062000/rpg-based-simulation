@@ -740,6 +740,7 @@ def test_simq_routing_test_seed42_500t_cognition_grade_stability() -> None:
 
 
 @pytest.mark.slow
+@pytest.mark.resource_budget_large
 def test_simq_routing_test_seed42_1000t_cognition_grade_stability() -> None:
     """Tolerance-based grade-stability guard for `simq_routing_test_seed42_1000t`
     COGNITION (TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT).
@@ -840,6 +841,7 @@ def test_simq_routing_test_seed42_1000t_cognition_grade_stability() -> None:
 
 
 @pytest.mark.slow
+@pytest.mark.resource_budget_large
 def test_hero_guild_routing_seed42_1000t_cognition_grade_stability() -> None:
     """Tolerance-based grade-stability guard for `hero_guild_routing_seed42_1000t`
     COGNITION (TCK-20260813-SIMQ-ADVENTURE-ROUTING-AGENCY-COGNITION-DRIFT).
@@ -940,6 +942,7 @@ def test_hero_guild_routing_seed42_1000t_cognition_grade_stability() -> None:
 
 
 @pytest.mark.slow
+@pytest.mark.resource_budget_large
 def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_stability() -> None:
     """Tolerance-based grade-stability guard for `unit_selfmodel_pilot_seed42_1000t`
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
@@ -1042,6 +1045,7 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
 
 
 @pytest.mark.slow
+@pytest.mark.resource_budget_large
 def test_urban_political_seed42_1000t_social_grade_stability() -> None:
     """Tolerance-based grade-stability guard for `urban_political_seed42_1000t`
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
@@ -1127,6 +1131,7 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
 
 
 @pytest.mark.slow
+@pytest.mark.resource_budget_large
 def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
     """Tolerance-based grade-stability guard for `urban_political_seed123_1000t`
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
@@ -1245,6 +1250,7 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
 
 
 @pytest.mark.slow
+@pytest.mark.resource_budget_large
 def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stability() -> None:
     """Tolerance-based grade-stability guard for `urban_political_selfmodel_probe_seed42_200t`
     (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).

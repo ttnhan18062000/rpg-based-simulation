@@ -94,3 +94,64 @@ def test_event_recorder_bounds_and_eviction(run_dir):
     with open(jsonl_path, "r") as f:
         lines = f.readlines()
         assert len(lines) == 5  # All recorded events were written to JSONL regardless of in-memory evictions!
+
+
+def test_event_recorder_write_envelope_does_not_flush_every_record(run_dir):
+    recorder = EventRecorder(run_dir=run_dir, max_events=1000, enabled=True)
+    recorder.queue.max_size = 1000
+    try:
+        flush_calls = {"count": 0}
+        real_flush = recorder._file_handle.flush
+
+        def _spy_flush():
+            flush_calls["count"] += 1
+            real_flush()
+
+        recorder._file_handle.flush = _spy_flush
+
+        from src.observability.events import ObservabilityEventEnvelope
+
+        write_count = recorder._FLUSH_INTERVAL - 1
+        for i in range(write_count):
+            ev = SimulationEvent(
+                event_type="info_event", event_category="combat", tick=i, severity="INFO",
+                source_system="test", message=f"info {i}", entity_id=i,
+            )
+            recorder._write_envelope_to_file(ObservabilityEventEnvelope.from_simulation_event(ev))
+
+        assert flush_calls["count"] == 0
+
+        ev_boundary = SimulationEvent(
+            event_type="info_event", event_category="combat", tick=write_count, severity="INFO",
+            source_system="test", message="boundary", entity_id=write_count,
+        )
+        from src.observability.events import ObservabilityEventEnvelope
+        recorder._write_envelope_to_file(ObservabilityEventEnvelope.from_simulation_event(ev_boundary))
+        assert flush_calls["count"] == 1
+        assert recorder._pending_envelope_writes == 0
+    finally:
+        recorder.shutdown()
+
+
+def test_event_recorder_shutdown_flushes_remaining_writes(run_dir):
+    recorder = EventRecorder(run_dir=run_dir, max_events=1000, enabled=True)
+    recorder.queue.max_size = 1000
+    flush_calls = {"count": 0}
+    real_flush = recorder._file_handle.flush
+
+    def _spy_flush():
+        flush_calls["count"] += 1
+        real_flush()
+
+    recorder._file_handle.flush = _spy_flush
+
+    from src.observability.events import ObservabilityEventEnvelope
+    ev = SimulationEvent(
+        event_type="info_event", event_category="combat", tick=1, severity="INFO",
+        source_system="test", message="info 1", entity_id=1,
+    )
+    recorder._write_envelope_to_file(ObservabilityEventEnvelope.from_simulation_event(ev))
+    assert flush_calls["count"] == 0
+
+    recorder.shutdown()
+    assert flush_calls["count"] >= 1

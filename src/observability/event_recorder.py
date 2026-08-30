@@ -55,6 +55,9 @@ class ObservabilityController:
 
 class EventRecorder:
     """Manages thread-safe, memory-bounded SimulationEvent recording and JSONL persistence."""
+
+    _FLUSH_INTERVAL: int = 50
+
     def __init__(
         self,
         run_dir: Optional[str] = None,
@@ -71,6 +74,7 @@ class EventRecorder:
         self.event_count_by_type: Dict[str, int] = {}
         self._file_handle = None
         self.filepath = None
+        self._pending_envelope_writes: int = 0
         # Subsystem budget for advisory pressure reporting (INFRA-194).
         # Independent of max_events — budget.max_queue_items is checked against
         # the queue size, not the in-memory buffer.
@@ -124,7 +128,10 @@ class EventRecorder:
                 "related_entity_ids": list(envelope.related_entity_ids)
             }
             self._file_handle.write(json.dumps(data) + "\n")
-            self._file_handle.flush()
+            self._pending_envelope_writes += 1
+            if self._pending_envelope_writes >= self._FLUSH_INTERVAL:
+                self._file_handle.flush()
+                self._pending_envelope_writes = 0
 
     def _publish_envelope_to_stream(self, envelope: ObservabilityEventEnvelope) -> None:
         try:
@@ -316,6 +323,7 @@ class EventRecorder:
         # 3. Close file handle
         if self._file_handle:
             try:
+                self._file_handle.flush()
                 self._file_handle.close()
             except Exception as e:
                 logger.error(f"Error closing simulation_events.jsonl handle: {e}")
