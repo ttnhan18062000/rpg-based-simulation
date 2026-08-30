@@ -11,7 +11,7 @@ This directory documents the engine's deterministic heart and the pipeline that 
 
 ## Core Loop
 - [Simulation Kernel](../engine/kernel.md): The 7-phase orchestrator (Init, Scheduling, Collection, Resolution, Cleanup, Advancement, Persistence).
-- [Authoritative Pipeline](../engine/authoritative_pipeline.md): The 37-phase refinement sequence for world mutation.
+- [Authoritative Pipeline](../engine/authoritative_pipeline.md): The 39-phase refinement sequence for world mutation.
 
 ## Architectural Standards
 - [High-Level Architecture](../engine/architecture.md): System context and threading model.

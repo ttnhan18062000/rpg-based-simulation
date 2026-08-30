@@ -91,7 +91,7 @@ no splash damage from their own teammates.
 ## The Authoritative Pipeline Phases — and the Sliding State Rule
 
 Source: `docs/engine/authoritative_pipeline.md`. Combat logic executes as specific named phases
-inside the 37-phase `AuthoritativeApplyPipeline`, in this fixed order:
+inside the 39-phase `AuthoritativeApplyPipeline`, in this fixed order:
 
 | Phase # | Name | What it does | Compliance ID |
 |---|---|---|---|

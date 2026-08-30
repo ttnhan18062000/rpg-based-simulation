@@ -56,7 +56,7 @@ Not created yet — this epic is scope-only.
    concurrent with these phases.
 4. **Decide enforcement strength** — the existing 7-phase-level file's own comment says its
    declarations are "declarative only, no runtime enforcement," checked by test rather than
-   mechanically. Decide whether the 37-phase version should match that (test-guarded) or go
+   mechanically. Decide whether the 39-phase version should match that (test-guarded) or go
    further (a runtime guard that raises if a sub-phase touches an undeclared domain, mirroring how
    `ContentHotPathViolation` enforces the content hot-path rule mechanically rather than by
    convention).
