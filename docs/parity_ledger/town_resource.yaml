@@ -1998,14 +1998,19 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/engine/pipeline_phases/paid_information.py \u2014 PaidInformationTransactionSystem;\
-    \ src/core/conservation.py L255 \u2014 INFORMATION_PURCHASE added to fee resolver\
-    \ branch; src/engine/pipeline.py \u2014 paid_information phase registered before\
-    \ resource_transactions; src/domains/information/providers.py \u2014 InformationProviderState.reliability_score.\
-    \ src/engine/pipeline_phases/paid_information.py::PaidInformationTransactionSystem.enforce\
-    \ (lines ~128-141) \u2014 new eligibility gate call site: synthesizes a transient\
-    \ ContractState and calls SocialAppraisalSystem.appraise_contract() before emitting\
-    \ the intent (TCK-20260824-AFFECTION-CONTRACT-GATE)."
+  v2_evidence: >
+    src/engine/pipeline_phases/paid_information.py — PaidInformationTransactionSystem;
+    provider selection now reads a sorted_provider_ids local hoisted once at the top
+    of enforce() (TCK-20260822-PAID-INFO-INDEX-RETROFIT), computed once per enforce()
+    call rather than resorted per seeker — selection semantics (smallest non-self
+    entity_id) unchanged;
+    src/core/conservation.py L255 — INFORMATION_PURCHASE added to fee resolver branch;
+    src/engine/pipeline.py — paid_information phase registered before resource_transactions;
+    src/domains/information/providers.py — InformationProviderState.reliability_score.
+    src/engine/pipeline_phases/paid_information.py::PaidInformationTransactionSystem.enforce
+    (lines ~128-141) — new eligibility gate call site: synthesizes a transient
+    ContractState and calls SocialAppraisalSystem.appraise_contract() before emitting
+    the intent (TCK-20260824-AFFECTION-CONTRACT-GATE).
   proof_type: parity
   test_path: 'tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_paid_transaction_transfers_gold_and_lead;
 

@@ -25,6 +25,15 @@ explicitly below and in the roadmap's Sequencing rules.
 
 ## Problem
 
+**2026-08-29 review note:** this epic's own finding under item 4 (Ideas 20/34) — the long-run tool's default
+5000-tick run can't even reach the real 7000-tick elder threshold — is the same class of gap the
+temporal-axis proposal names in its own §9.7 (existing 5,000-tick runs can't observe elder thresholds, let
+alone a 72,000-tick season or 288,000-tick year, once fantasy-year-scaled aging lands). If that proposal's
+calendar work reaches ticket scope, this epic's scenario horizons should extend to daily/seasonal/annual/
+lifespan/multi-generation coverage rather than relying on one fixed tick count — see the parent roadmap's
+"Temporal axis" section. Not resolved here; flagged as a forward-looking extension of this epic's existing
+mandate.
+
 M7 asks whether SimQ knows how to *grade* an event once it fires. M8 asks whether the world compiler can
 *seed* an idea's content into a world at all. Neither asks the question in between: once an idea ships,
 does a real SimQ corpus world actually exist to *exercise* it — end-to-end, in isolation, at scale, or as a
@@ -326,4 +335,6 @@ not tier labels with a one-line gesture.
 - `docs/brainstorm/rpg_expected_schemas.html` ("RPG Schema Registry") — per-idea proposed schemas
 - `docs/plans/rpg_design_roadmap/rpg_m7_simq_pillar_integration_epic.md`, `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md` —
   the two sibling epics this one sits between
-- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, temporal axis
+- `docs/brainstorm/codex/2026-08-28-core-rpg-temporal-axis-proposal.md` — §9.7 test-horizon conflict,
+  echoing this epic's own 5000-tick/elder-threshold finding

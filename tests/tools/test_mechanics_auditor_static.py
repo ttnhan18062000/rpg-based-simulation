@@ -16,12 +16,20 @@ if str(_TOOLS_DIR) not in sys.path:
 from gate_checks.mechanics_auditor_static import (  # noqa: E402
     audit_verified_by_claims,
     check_test_path,
+    find_entry,
     verify_entry_test_path,
 )
 
 
 def _write_ledger(tmp_path, filename, entries):
     (tmp_path / filename).write_text(yaml.safe_dump(entries))
+
+
+def test_find_entry_locates_real_fac013_in_faction_yaml():
+    entry, filename = find_entry("FAC-013", ledger_dir="docs/parity_ledger")
+    assert filename == "faction.yaml"
+    assert entry is not None
+    assert entry["id"] == "FAC-013"
 
 
 def test_test_path_existence_check_passes_for_real_passing_test(tmp_path):

@@ -23,19 +23,10 @@ sequencing of any milestone this size.
 
 ## Scope (not yet broken into child tickets)
 
-Build order within the milestone, confirmed by Phase Placement & Testing Strategy:
+**Build order (revised, plan-owner decision 2026-08-29): Marriage is decoupled from Reproduction.** Idea 33
+is no longer a gate — it proceeds independently once its own proposal-lifecycle prerequisites clear. Order:
 
-1. **Idea 34 — Coming of Age.** The single most depended-on idea in the entire late-game chain (Leverage
-   5/5). Fires alongside M1's idea 20 (Life Stages) and needs idea 32's birth record to exist first.
-   **Content note:** the personality/occupation/regional-need archetype-choice weighting has no existing
-   numeric precedent — a free judgment call. Guard the known convergence-risk bug class this card itself
-   flags (children in the same regional shortage all converging on one occupation) with a metamorphic rule:
-   increasing the regional-need weight should push the distribution, not collapse its variance to zero.
-2. **Idea 33 — Marriage.** The first genuine two-party propose/accept handshake anywhere in the codebase —
-   fits Contracts' existing offer/accept shape better than a new phase.
-3. **Idea 31 — Personal Dependents & Responsibility.** Small, well-precedented — gives `heir_entity_id`'s
-   real write-path a reason to fire.
-4. **Idea 32 — Reproduction.** Splits three ways by species (natural creatures reuse Camp's maturity
+1. **Idea 32 — Reproduction.** Splits three ways by species (natural creatures reuse Camp's maturity
    mechanic, magical/demonic beings reuse the calamity substrate, human/humanoid needs a genuinely new
    cadence-gated sub-phase). The single highest-cost, highest-risk idea in the whole 65-idea set per the
    Merit Scorecard (Efficiency 1/5, Risk-Adjusted Cost 1/5) — explicitly not a "quick" milestone item
@@ -48,8 +39,26 @@ Build order within the milestone, confirmed by Phase Placement & Testing Strateg
    is unseeded everywhere (same root cause as M2's idea 43), and no reproduction/capacity-gating mechanism
    exists in code at all. Sequence any real corpus-testing work for this idea strictly after idea 43 (M2)
    and this ticket itself both ship — see `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md`.
-5. **Idea 38 — Close the reproduction population-pressure feedback loop.** Depends on idea 32 landing
-   first; the signal it nudges doesn't exist without M2's idea 43 either.
+2. **Idea 38 — Close the reproduction population-pressure feedback loop.** Depends on idea 32 landing
+   first, immediately after or atomically with it; the signal it nudges doesn't exist without M2's idea 43
+   either. The acceptance text forbids exposing repeatable births before this loop can incorporate them into
+   the aggregate pressure signal.
+3. **Idea 31 — Personal Dependents & Responsibility.** Small, well-precedented — gives `heir_entity_id`'s
+   real write-path a reason to fire.
+4. **Idea 34 — Coming of Age.** The single most depended-on idea in the entire late-game chain (Leverage
+   5/5). Fires alongside M1's idea 20 (Life Stages) and needs idea 32's birth record to exist first — this
+   plan must not place Coming of Age before that birth record. **Content note:** the personality/occupation/
+   regional-need archetype-choice weighting has no existing numeric precedent — a free judgment call. Guard
+   the known convergence-risk bug class this card itself flags (children in the same regional shortage all
+   converging on one occupation) with a metamorphic rule: increasing the regional-need weight should push
+   the distribution, not collapse its variance to zero.
+
+**Idea 33 — Marriage (independent).** The first genuine two-party propose/accept handshake anywhere in the
+codebase — fits Contracts' existing offer/accept shape better than a new phase. May be ticketed and built in
+parallel with 32/38/31/34 once its own prerequisites clear; it is no longer a precondition for Reproduction.
+This milestone also owns concrete human/species lifecycle durations and fantasy-year aging once the
+temporal-axis calendar authority is settled (see the parent roadmap's "Temporal axis" section) — no numeric
+threshold here is changed by this review pass.
 
 ## Out of Scope
 
@@ -79,4 +88,6 @@ Build order within the milestone, confirmed by Phase Placement & Testing Strateg
   Strategy (`LINEAGE_ARENA` scenario design + explicit long-run-cost caveat for population-pressure
   convergence)
 - `docs/brainstorm/design_merit_scorecard.html`
-- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, temporal axis
+- `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — Marriage/Reproduction
+  decoupling decision, 2026-08-29

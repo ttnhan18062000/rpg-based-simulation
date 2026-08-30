@@ -90,6 +90,8 @@ class PaidInformationTransactionSystem:
         if not providers:
             return update
 
+        sorted_provider_ids = sorted(providers.keys())
+
         entity_updates = dict(update.entity_updates)
 
         # Iterate seekers in sorted order for determinism
@@ -113,7 +115,7 @@ class PaidInformationTransactionSystem:
             # Find the best provider (deterministic: smallest entity_id,
             # skip self-provision)
             provider_record = None
-            for pid in sorted(providers.keys()):
+            for pid in sorted_provider_ids:
                 if pid == entity.id:
                     continue
                 provider_record = providers[pid]

@@ -20,6 +20,23 @@ The settlement-capacity tier below City (Camp, Nest, Lair), plus the rest of the
 where places stop being static and start having texture. 12 ideas, the most internally clustered milestone
 in the roadmap: Shared Implementation Opportunities found real consolidation across most of it.
 
+**Three branches with different gating** (plan-owner review, 2026-08-29): **place-shaped ecology and
+settlements** (ideas 44-47, 61) satisfy Idea 66's gate first if it's promoted (it is — see the parent
+roadmap), otherwise the accepted replacement Place boundary must be resolved first; **material exploration
+and national expansion** (ideas 49-52) apply the Idea 66 gate only to outcomes that authoritatively use
+Place identity/containment, at ticket scope, not milestone-wide; **institutions and economic signals**
+(ideas 40, 41, 64) keep their own Clan-lifecycle, information-activation, and vacancy-signal prerequisites
+and are not blocked on Idea 66 at all.
+
+**M4 owns the `CultureDeriver`/`CulturalBiasApplicator` activation** (plan-owner decision, 2026-08-29) as
+the single prerequisite for idea 61 here and the shared blocker M5 (ideas 57, 62) and M6 (idea 56) also
+depend on — wired once here rather than independently in each of Ideas 56, 57, 61, and 62.
+
+**Temporal axis (see the parent roadmap's "Temporal axis" section):** once ticketed, M4 owns seasonal
+settlement, economy, vacancy, apprenticeship, and travel cadence, per the temporal-axis proposal's §13
+integration plan. Not resolved or required by this review pass; a forward pointer for whoever scopes these
+tickets.
+
 ## Scope (not yet broken into child tickets)
 
 1. **Ideas 44 + 45 + 46 — Settlement population/identity, consolidated.** Confirmed real: collapses to
@@ -64,9 +81,10 @@ in the roadmap: Shared Implementation Opportunities found real consolidation acr
 ## Out of Scope
 
 - Anything from Milestones 1, 2, 3, 5, or 6.
-- Wiring `CultureDeriver`/`CulturalBiasApplicator` itself — that's a prerequisite this epic surfaces (for
-  idea 61), owned by whichever ticket resolves the cross-milestone blocker named in the parent roadmap, not
-  built speculatively inside this epic.
+- **Update, 2026-08-29:** wiring `CultureDeriver`/`CulturalBiasApplicator` for the first time is now IN
+  scope for this epic (see Problem above) rather than out of it — M4 is its assigned owner, shared with M5's
+  ideas 57/62 and M6's idea 56 as consumers. Scope it as its own small prerequisite ticket inside this epic,
+  landed before or alongside idea 61, not built speculatively ahead of idea 61 needing it.
 
 ## Acceptance Signal
 
@@ -80,4 +98,6 @@ in the roadmap: Shared Implementation Opportunities found real consolidation acr
 - `docs/brainstorm/rpg_feature_atlas.html` — Shared Implementation Opportunities, Cross-Cutting Risk & Blast
   Radius, Phase Placement & Testing Strategy (`SETTLEMENT_TIER_ARENA`, `AMBITION_LOOP_ARENA`,
   `CLAN_LIFECYCLE_ARENA`, `EMPTY_CHAIR_ARENA` scenario designs)
-- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, Idea 66 gate, temporal axis
+- `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — branch split and
+  `CultureDeriver` ownership decision, 2026-08-29

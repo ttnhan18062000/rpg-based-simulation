@@ -86,7 +86,7 @@ class WorldAssemblyValidator:
         # 2. Module Validation
         from src.worldbuilding.validator import WorldValidator, ValidationContext
         from src.worldbuilding.schema import TopologySpec, RegionSpec, PopulationSpec, ResourceNodeSpec, BuildingSpec
-        world_validator = WorldValidator()
+        world_validator = WorldValidator(catalog_repo=self.catalog_repo)
         module_reports = {}
         for m_id, module in graph_map.items():
             # Build a default param context so parametric template fields (e.g. "{merchant_count}")
@@ -135,7 +135,14 @@ class WorldAssemblyValidator:
         # 4. Assembly & World Validation
         world_issues = world_validator.validate(world_spec, context=ValidationContext.WORLD)
         world_report = [
-            {"severity": issue.severity, "rule_id": issue.rule_id, "message": issue.message, "path": issue.path}
+            {
+                "severity": issue.severity,
+                "rule_id": issue.rule_id,
+                "message": issue.message,
+                "path": issue.path,
+                "source_entity": issue.source_entity,
+                "source_file": issue.source_file,
+            }
             for issue in world_issues
         ]
 

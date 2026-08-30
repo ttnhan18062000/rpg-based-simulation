@@ -87,7 +87,7 @@ def test_derive_mapping_skips_malformed_yaml_file(tmp_path):
     assert mapping["src/town/harvest.py"] == {"town_resource.yaml"}
 
 
-def test_excludes_faction_yaml(tmp_path):
+def test_includes_faction_yaml(tmp_path):
     _write_ledger(tmp_path, "faction.yaml", [
         {
             "id": "FAC-001", "text": "x", "status": "verified", "priority": "P1",
@@ -96,7 +96,7 @@ def test_excludes_faction_yaml(tmp_path):
     ])
 
     mapping = derive_mapping(tmp_path)
-    assert "src/factions/diplomacy.py" not in mapping
+    assert mapping["src/factions/diplomacy.py"] == {"faction.yaml"}
 
 
 def test_reuses_canonical_ledger_files_constant():
@@ -124,6 +124,14 @@ def test_non_src_paths_ignored(tmp_path):
     assert "tests/unit/test_foo.py" not in result
     assert "docs/ai/workflows.md" not in result
     assert result["src/engine/foo.py"] == ["combat_movement.yaml"]
+
+
+def test_expected_subsystems_includes_faction_for_real_ledger_path():
+    result = expected_subsystems_for_files(
+        ["src/observability/event_extractor.py"], ledger_dir="docs/parity_ledger"
+    )
+    assert result["src/observability/event_extractor.py"] is not None
+    assert "faction.yaml" in result["src/observability/event_extractor.py"]
 
 
 # ---------------------------------------------------------------------------

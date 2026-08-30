@@ -385,7 +385,8 @@ class AuthoritativeApplyPipeline:
                 lifecycle_entities=all_ids,
                 town_entities=state.town_entity_ids,
                 biological_entities=all_ids,
-                attribute_entities=all_ids
+                attribute_entities=all_ids,
+                identity_entities=all_ids
             ))
         t8 = time.perf_counter_ns()
         costs["final_integrity"] = (t8 - t_start) / 1e6

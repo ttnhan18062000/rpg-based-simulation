@@ -1,0 +1,109 @@
+{
+  "crowded_frontier": [
+    "bandit_hunt_road_captain",
+    "bandit_investigate_ambush_source",
+    "goblin_defend_village_perimeter",
+    "goblin_fetch_stolen_goods",
+    "goblin_hunt_warlord"
+  ],
+  "dungeon_crawl": [
+    "goblin_defend_village_perimeter",
+    "goblin_fetch_stolen_goods",
+    "goblin_hunt_warlord",
+    "sbandit_defend_road_checkpoint",
+    "sbandit_fetch_stolen_cache",
+    "sbandit_hunt_camp_leader",
+    "spirit_source_trace"
+  ],
+  "frontier_extended": [
+    "bandit_hunt_road_captain",
+    "bandit_investigate_ambush_source",
+    "goblin_defend_village_perimeter",
+    "goblin_fetch_stolen_goods",
+    "goblin_hunt_warlord",
+    "wolf_explore_forest_trail",
+    "wolf_hunt_alpha_pack"
+  ],
+  "frontier_living_world": [
+    "bandit_hunt_road_captain",
+    "bandit_investigate_ambush_source",
+    "goblin_defend_village_perimeter",
+    "goblin_fetch_stolen_goods",
+    "goblin_hunt_warlord",
+    "undead_hunt_wraith_patrol",
+    "wolf_explore_forest_trail",
+    "wolf_hunt_alpha_pack"
+  ],
+  "frontier_marches": [
+    "bandit_hunt_road_captain",
+    "bandit_investigate_ambush_source",
+    "goblin_defend_village_perimeter",
+    "goblin_fetch_stolen_goods",
+    "goblin_hunt_warlord",
+    "undead_hunt_wraith_patrol",
+    "wolf_explore_forest_trail",
+    "wolf_hunt_alpha_pack"
+  ],
+  "generated_frontier_3_42": [
+    "bandit_hunt_road_captain",
+    "bandit_investigate_ambush_source",
+    "goblin_defend_village_perimeter",
+    "goblin_fetch_stolen_goods",
+    "goblin_hunt_warlord"
+  ],
+  "hero_guild_routing": [
+    "goblin_defend_village_perimeter",
+    "goblin_fetch_stolen_goods",
+    "goblin_hunt_warlord",
+    "spirit_source_trace"
+  ],
+  "lifecycle_full_coverage_world": [
+    "goblin_defend_village_perimeter",
+    "goblin_fetch_stolen_goods",
+    "goblin_hunt_warlord",
+    "spirit_source_trace",
+    "wolf_explore_forest_trail",
+    "wolf_hunt_alpha_pack"
+  ],
+  "quest_dense_frontier": [
+    "explore_mountain_route",
+    "hunt_mountain_predator",
+    "spirit_source_trace",
+    "survey_river_route"
+  ],
+  "sandbox_world": [
+    "wolf_explore_forest_trail",
+    "wolf_hunt_alpha_pack"
+  ],
+  "simq_routing_test": [
+    "goblin_defend_village_perimeter",
+    "goblin_fetch_stolen_goods",
+    "goblin_hunt_warlord"
+  ],
+  "simq_scale_stress_seed42": [
+    "bandit_hunt_road_captain",
+    "bandit_investigate_ambush_source",
+    "goblin_defend_village_perimeter",
+    "goblin_fetch_stolen_goods",
+    "goblin_hunt_warlord",
+    "wolf_explore_forest_trail",
+    "wolf_hunt_alpha_pack"
+  ],
+  "swamp_border_world": [
+    "wolf_explore_forest_trail",
+    "wolf_hunt_alpha_pack"
+  ],
+  "unit_faction_tension": [
+    "wolf_explore_forest_trail",
+    "wolf_hunt_alpha_pack"
+  ],
+  "urban_political": [
+    "bandit_hunt_road_captain",
+    "bandit_investigate_ambush_source"
+  ],
+  "wilderness_survival": [
+    "undead_hunt_wraith_patrol",
+    "wolf_explore_forest_trail",
+    "wolf_hunt_alpha_pack"
+  ]
+}

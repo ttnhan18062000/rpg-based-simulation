@@ -115,6 +115,34 @@ Validation rules are categorized into dynamic severity levels to allow flexible 
 *   **WARNING**: Non-critical inconsistencies (e.g., sub-optimal resource density, unpopulated faction starting vaults) that are logged for developer visibility but do not halt compilation.
 *   **Gating Profiles**: Production compilation profiles elevate warnings to errors, whereas development/procedural-testing profiles operate under relaxed warning tolerance.
 
+### Participant Reachability Rule (`WORLD-REACH-001`)
+A semantic Level 2 rule (`ParticipantReachabilityRule`, `src/worldbuilding/validator.py`) checks
+that each `QuestDefinition.required_participant_tags` is satisfiable by at least one population
+reachable in the world, via the chain `PopulationSpec.archetype_id -> EntityArchetypeDefinition.role
+-> RoleDefinition.compatible_traits` (`src/worldbuilding/reachability.py` holds the reusable,
+`WorldSpec`-independent matching predicate). Its `applicable_contexts` are
+`ValidationContext.WORLD`, `COMPILE`, and `EXPERIMENT` — the same narrowed set as
+`RegionBoundsWithinTopologyRule` — excluding `ASSEMBLY`/`GENERATED_WORLD` (in the default rule set)
+and `MODULE` (never in the default rule set) because `quest_definitions` is populated exclusively on
+the final composed spec, never on the per-module `dummy_spec` validated at
+`ValidationContext.MODULE`. Default severity is WARNING, gated the same way as every other rule
+via `severity_overrides`/`get_severity(context)`; a `catalog_repo=None` caller (every
+`WorldValidator()` construction site except `WorldAssemblyValidator.validate()`) degrades to zero
+issues rather than crashing or emitting a false violation, since "no catalog" means "cannot verify,"
+not "invalid."
+
+`compatible_traits` is the only real catalog vocabulary with meaningful overlap against authored
+`required_participant_tags` values (`EntityArchetypeDefinition.tags` is 0% populated in the real
+corpus; `RoleDefinition.role_family` matches none of them). It does not cover every real
+value: `opportunistic` (goblin/bandit-flavored quests) and `beast` (wolf-flavored quests) appear in
+neither `compatible_traits`, `role_family`, nor any populated `tags` field anywhere in the catalog
+today, and a handful of `spiritual`/`undead` quests reference archetypes whose actual role trait
+doesn't match the tag the quest author chose. This is a known, accepted content-authoring
+vocabulary gap — documented as the standing regression baseline in
+`tests/fixtures/world_grammar_reachability_baseline.json` and
+`tests/unit/worldbuilding/test_corpus_reachability_baseline.py` — not a defect in the rule to be
+worked around by loosening the check or backfilling catalog content.
+
 ---
 
 ## 8. Sidecar Provenance Manifests & Telemetry Joins
@@ -163,6 +191,52 @@ Defines items, structures, and regional ecologies:
 *   **Items & Recipes**: The item database and crafting recipe requirements (gold cost, inputs, outputs, services).
 *   **Terrain, Biomes, & Ecologies**: Topographical tile properties, biome templates, and creature population densities.
 *   **Buildings & Services**: Structural blueprints and settlement affordances (craft, rest, trade).
+
+---
+
+## 10. Runtime Pre-Emit Validation
+This gate runs inside `WorldEmergencePhase` (a live per-tick engine phase), not the
+WorldSpec → Compile pipeline described in §7. It is a distinct, sibling gate — not an extension of
+§7's build-time gate ladder or the `WORLD-REACH-001` rule — because it checks live
+`AuthoritativeState` drift (a faction losing territory, a resource depleting after play) that a
+build-time, `WorldSpec`-only check cannot observe.
+
+### Purpose
+Before a procedurally-generated `QuestOpportunity` (`QuestOpportunityGenerator`,
+`src/domains/world_emergence/services.py`) is admitted into `StateUpdate.quest_registry_add`,
+`quest_grammar.validate_quest_opportunity()` (`src/domains/world_emergence/quest_grammar.py`)
+checks it against two runtime grammar rules:
+
+*   **Faction coherence**: if the opportunity names a `faction_source`, that faction must have
+    current territorial presence (`FactionState.territory` non-empty in `state.factions`). A
+    faction absent from `state.factions` entirely is treated identically to one present with empty
+    territory — both reject. `faction_source=None` (the current default for both live generator
+    methods) makes no faction claim and auto-passes; there is nothing to verify.
+*   **Resource availability**: for each `"fetch:<resource>:<qty>"` token in the opportunity's
+    `objective_chain`, if at least one `ResourceNodeState` in `state.resource_nodes` yields that
+    resource (`yields_item` match) and *every* matching node is fully depleted
+    (`remaining_charges == 0`), the opportunity is rejected. If **no** node yields that resource at
+    all, the check treats this as cannot-verify, not depleted, and passes — mirroring the
+    `is_reachable`/`available_tags is None` "no catalog to verify against" pattern from §7's
+    reachability predicate. Non-`fetch` tokens (e.g. `"eliminate:<subject>:1"`) carry no
+    resource-availability claim and are skipped.
+
+An opportunity failing either check is excluded from `quest_registry_add` and counted in
+`metric_counters["quest_opportunities_rejected"]`; it never contaminates `quest_registry`. The
+check does not filter `WorldEmergenceResult.quest_opportunities` — that field remains every
+opportunity `QuestOpportunityGenerator` produced this tick, independent of admission.
+
+### Design Notes
+This is a runtime reinterpretation of two rule classes described conceptually in
+`docs/plans/idea_world_grammar_semantic_constraints.md`, not a literal implementation of that
+doc's wording: the idea doc envisions "faction tension" between **two** factions and resource
+**existence at authoring time**; `QuestOpportunity` only ever carries a single `faction_source`,
+and this gate checks current **depletion state** of an already-existing node (existence at
+authoring time is `WORLD-REACH-001`'s build-time job, already covered by §7).
+
+Both predicates and their combinator are pure functions of `(QuestOpportunity, AuthoritativeState)`
+— no `uuid()`, no time/clock reads, no RNG, no state mutation — matching `QuestOpportunityGenerator`'s
+own documented read-only/deterministic contract one call further down the same chain.
 
 ---
 

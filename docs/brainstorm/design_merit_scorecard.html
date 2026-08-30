@@ -660,7 +660,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">1</td>
           <td class="score">1</td>
           <td class="score">4</td>
-          <td class="take">The single highest narrative-value idea in the set &mdash; and correspondingly the most expensive and riskiest one to get wrong.</td>
+          <td class="take">The single highest narrative-value idea in the set &mdash; and correspondingly the most expensive and riskiest one to get wrong. <strong>Implementation warning, preserved as of the 2026-08-29 plan-owner review:</strong> Efficiency 1 / Risk-Adjusted Cost 1 is the worst pairing in the whole 65-idea set, not softened by this idea's high Direction Fit/Narrative scores &mdash; whoever scopes M3's idea-32 ticket should treat that pairing as a real cost signal, not an artifact of high ambition.</td>
         </tr>
         <tr>
           <td class="idea-title"><span class="num">33.</span> Marriage</td>
@@ -1027,6 +1027,9 @@ ol.reshape li b { color: var(--accent-ink); }
         </tr>
       </table>
     </div>
+    <div class="grounding" style="margin-top:20px;">
+      <p><strong>Idea 66 (Region Contains Multiple Places) is deliberately not scored on this table.</strong> It was added to the roadmap after this scorecard's original 65-idea calibration pass and, unlike every row above, is an architectural-foundation rebuild (the Region/City data model itself) rather than a player-facing feature or mechanism &mdash; the seven axes here (especially Direction Fit and Narrative Generativity, both keyed to a principle-serving <em>mechanism</em>) don't have a clean, defensible anchor to score it against without risking an invented number. It was promoted with a narrow implementation gate on 2026-08-29 (plan-owner decision &mdash; see <code class="inline">docs/plans/rpg_design_roadmap/rpg_design_roadmap.md</code>) on architectural and dependency grounds independent of this scorecard, not on a Merit Score. Re-running the full seven-axis rubric against it, with the calibration care the other 65 rows got, remains open the next time this scorecard is revisited.</p>
+    </div>
   </section>
 
   <section id="reshape">
@@ -1038,6 +1041,14 @@ ol.reshape li b { color: var(--accent-ink); }
       <li><b>Who scores Direction Fit and Narrative Generativity?</b> These are the two genuinely subjective axes. Worth deciding whether they need a second, independent read before being treated as settled &mdash; the same discipline already applied to Cross-Cutting Risk's own findings.</li>
       <li><b>Should pure investigation/governance ideas (9, and the resolved 15&ndash;19) be excluded from scoring entirely,</b> rather than scored and landing near zero on every RPG-facing axis? Idea 9's row above argues a low score is still informative &mdash; but it's a real question whether &ldquo;doesn't apply&rdquo; should be a distinct state from &ldquo;scores badly.&rdquo;</li>
       <li><b>Now applied to all 65</b> &mdash; the full pass was run as one calibrated batch (not scored idea-by-idea across separate sessions) specifically to avoid drift in what a &ldquo;3&rdquo; means from one idea to the next. <b>A real independent-read check has since happened, partially</b> &mdash; a follow-up trace blind-scored 8 already-scored ideas (14, 21, 30, 34, 37, 48, 53, 59) from scratch, without seeing the existing numbers first. Most axes landed within 1 point, but two showed real, meaningful drift: Leverage on idea 34 (existing 5, independent re-score 2 &mdash; a 3-point gap on an idea whose Build Order in-degree is independently well-documented, worth a closer look at why the re-score under-weighted it) and Groundedness on idea 21 (existing 3, independent 5) and idea 59 (existing 2, independent 4 &mdash; plausibly because idea 59's card has since accumulated more correction notes that read as &ldquo;well-corrected&rdquo; on a fresh read rather than &ldquo;was wrong, carries risk history,&rdquo; a real philosophical ambiguity in what Groundedness is supposed to measure, not just noise). Leverage and Groundedness are the two axes worth a wider re-check first if this gets revisited.</li>
+      <li><b>Priority also depends on more than the seven axes below</b> (added 2026-08-29, per the plan-owner
+      review reconciling this scorecard against <code class="inline">docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md</code>):
+      prerequisite leverage (does landing this idea unblock several others, beyond what the Leverage axis's
+      raw in-degree count captures on its own), whether it closes a lifecycle loop rather than extending one
+      that already works, and whether it creates earned character divergence &mdash; individual lives turning
+      out differently from accumulated choices and history, not a shared stat curve. This is a qualitative
+      lens for reading the table, not an eighth axis or a composite score; the seven visible axes above
+      remain the actual evidence.</li>
     </ol>
   </section>
 

@@ -3664,5 +3664,28 @@
   proof_type: parity
   test_path: tests/unit/domains/cooperation/test_phase7_cooperation_decision_service.py::test_cooperation_offer_retry_blocked_within_cooldown_window;
     tests/unit/domains/cooperation/test_phase7_cooperation_decision_service.py::test_cooperation_offer_retry_allowed_after_cooldown_expires
+- id: SOC-254
+  text: 'Cross-reference only: src/engine/military_conflict.py''s GUARD-entity reinforcement
+    scan (TCK-20260822-GUARD-SCAN-INDEX-RETROFIT) is canonically tracked at FAC-008
+    in docs/parity_ledger/faction.yaml -- not duplicated here. This entry was originally
+    added as a workaround because the file-to-shard cross-reference check at the time
+    scanned only 8 CANONICAL_LEDGER_FILES and did not recognize faction.yaml as a
+    valid touch target, so a change documented only at FAC-008 would otherwise fail
+    the gate. TCK-20260826-PARITY-FACTION-CANONICAL-SCAN added faction.yaml as the
+    9th element of tools/parity_ledger_scan.py''s CANONICAL_LEDGER_FILES, so the cross-reference
+    check now recognizes faction.yaml directly and this workaround is no longer functionally
+    required for the gate to pass. Left in place (not removed) since its content remains
+    accurate and removing entries is out of scope for that ticket; retained here as
+    a historical cross-reference, not a fabricated second description of behavior
+    already documented at FAC-008.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'See docs/parity_ledger/faction.yaml FAC-008 for the authoritative
+    v2_evidence (src/engine/military_conflict.py: _build_guard_index_by_region, _find_guard_entities_in_region).
+    tools/parity_ledger_scan.py CANONICAL_LEDGER_FILES now includes faction.yaml as
+    its 9th element (TCK-20260826-PARITY-FACTION-CANONICAL-SCAN).'
+  proof_type: parity
+  test_path: tests/unit/domains/faction/test_siege_model.py::test_guard_index_matches_naive_full_scan
   divergence_note: null
   support_boundary: null

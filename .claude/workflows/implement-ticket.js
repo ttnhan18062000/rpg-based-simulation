@@ -1261,7 +1261,7 @@ Expected parity-ledger files per changed src/ file (NA = no existing citation fo
 Next available ID per candidate shard (max-numeric-suffix + 1, not count + 1 — shards have gaps): ${nextIdOutput}
 
 ${implementation.behavior_changed
-  ? `Update docs/parity_ledger/ entries (files: substrate.yaml, combat_movement.yaml, strategic_cognition.yaml, town_resource.yaml, progression.yaml, social_narrative.yaml, world_dynamics.yaml, infrastructure.yaml).
+  ? `Update docs/parity_ledger/ entries (files: substrate.yaml, combat_movement.yaml, strategic_cognition.yaml, town_resource.yaml, progression.yaml, social_narrative.yaml, world_dynamics.yaml, infrastructure.yaml, faction.yaml).
 
 Rules:
 - behavior matches Mechanics Bible → status=verified, update v2_evidence (file:line), set test_path

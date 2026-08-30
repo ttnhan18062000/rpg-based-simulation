@@ -1108,16 +1108,13 @@
   divergence_note: null
   support_boundary: null
 - id: WORLD-102
-  text: QuestOpportunity objects produced by WorldEmergencePhase are added to quest_registry
-    via StateUpdate.quest_registry_add through the authoritative apply path, keyed
-    by QuestOpportunity.id; addition is idempotent (duplicate IDs are skipped).
+  text: QuestOpportunity objects produced by WorldEmergencePhase are added to quest_registry via StateUpdate.quest_registry_add through the authoritative apply path, keyed by QuestOpportunity.id; addition is idempotent (duplicate IDs are skipped). Since TCK-20260822-QUEST-OPPORTUNITY-PREEMIT-VALIDATION, quest_registry_add only contains opportunities that pass quest_grammar.validate_quest_opportunity() — a runtime faction-coherence and resource-availability pre-emit gate; rejected opportunities are excluded and counted in metric_counters["quest_opportunities_rejected"], and never reach quest_registry.
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/domains/world_emergence/phase.py (execute() quest_registry_add=list(quest_opps));
-    src/engine/apply.py (idempotent add guard)
+  v2_evidence: src/domains/world_emergence/phase.py (execute() step 5b filters quest_opps via quest_grammar.validate_quest_opportunity() before quest_registry_add=list(admitted_quest_opps)); src/domains/world_emergence/quest_grammar.py (check_faction_coherence, check_resource_availability, validate_quest_opportunity); src/engine/apply.py (idempotent add guard)
   proof_type: parity
-  test_path: tests/unit/domains/world_emergence/test_quest_registry_wiring.py::test_world_emergence_populates_quest_registry
+  test_path: tests/unit/domains/world_emergence/test_quest_registry_wiring.py::test_world_emergence_populates_quest_registry, tests/unit/domains/world_emergence/test_quest_opportunity_preemit_validation.py::test_passing_opportunity_reaches_quest_registry_add_unfiltered, tests/unit/domains/world_emergence/test_quest_opportunity_preemit_validation.py::test_rejected_opportunity_excluded_from_quest_registry_add
   divergence_note: null
   support_boundary: null
 - id: WORLD-DEMO-001

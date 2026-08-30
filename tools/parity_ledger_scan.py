@@ -4,9 +4,9 @@ Built for TCK-20260705-WORKFLOW-PARITY-SKIP: the Parity phase in `.claude/workfl
 skips its `parity-updater` agent call when a ticket touches no `src/` file and reports no behavior
 change. Before that skip is allowed to fire, `find_p0_intersection` checks that no P0 ledger entry's
 `v2_evidence` text already depends on one of the ticket's changed files — protecting a P0 entry from
-silently going stale. Scans only the 8 canonical parity-ledger files the Parity phase prompt itself
-lists (`implement-ticket.js` Parity agent call); `faction.yaml` is excluded — not one of the 8, and has
-0 P0 entries today (see investigation.md's Parity Ledger Overlap table).
+silently going stale. Scans all 9 canonical parity-ledger files the Parity phase prompt itself lists
+(`implement-ticket.js` Parity agent call), including `faction.yaml` (added by
+TCK-20260826-PARITY-FACTION-CANONICAL-SCAN once its `FAC-013` entry became `priority: P0`).
 
 This check is empirically inert today (no P0 `v2_evidence` currently cites a non-`src/`/non-`tests/`
 path — see investigation.md), but must still be implemented for real: it protects against future ledger
@@ -38,6 +38,7 @@ CANONICAL_LEDGER_FILES = (
     "social_narrative.yaml",
     "world_dynamics.yaml",
     "infrastructure.yaml",
+    "faction.yaml",
 )
 
 
@@ -46,7 +47,7 @@ def find_p0_intersection(files_changed, ledger_dir="docs/parity_ledger"):
     text contains one of `files_changed` as a substring. Empty list means no P0 entry depends on any
     changed file — the caller may safely skip the Parity agent call.
 
-    Only scans CANONICAL_LEDGER_FILES — never `faction.yaml` or any other file under `ledger_dir`.
+    Only scans CANONICAL_LEDGER_FILES — never a file under `ledger_dir` outside that tuple.
     """
     ledger_path = Path(ledger_dir)
     hits = []

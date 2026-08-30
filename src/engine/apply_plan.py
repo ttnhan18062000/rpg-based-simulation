@@ -342,6 +342,7 @@ class ApplyPlanBuilder:
             if "lifecycle" in changes: tags.append("lifecycle")
             if "inventory" in changes: tags.append("inventory")
             if "attributes" in changes: tags.append("attribute")
+            if "identity" in changes: tags.append("identity")
             plan.dirty_tags_by_entity[e_id] = tags
 
         return plan

@@ -81,9 +81,9 @@ def test_manifest_records_both_historical_and_current_entry_counts():
     assert manifest["drift"]["delta"] == live_count - 1936
 
 
-def test_manifest_records_legacy_eight_shard_faction_gap():
+def test_manifest_records_no_legacy_shard_gap():
     manifest = build_manifest(str(LEDGER_DIR))
-    assert manifest["excluded_from_legacy_scan"] == ["faction.yaml"]
+    assert manifest["excluded_from_legacy_scan"] == []
 
 
 # ---------------------------------------------------------------------------
@@ -148,7 +148,7 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
 def test_faction_fixture_matches_live_legacy_scan_output():
     fixture_dir = FIXTURES_DIR / "faction_case"
     hits = find_p0_intersection(["src/factions/diplomacy.py"], ledger_dir=str(fixture_dir))
-    assert hits == []
+    assert hits == [("faction.yaml", "FAC-001", "src/factions/diplomacy.py")]
 
 
 def test_unmapped_path_fixture_matches_live_legacy_scan_output():
@@ -170,15 +170,15 @@ def test_malformed_yaml_fixture_matches_live_legacy_scan_output():
     assert "src/engine" not in str(mapping.keys())
 
 
-def test_faction_yaml_included_in_manifest_shard_list_but_excluded_from_legacy_fixture():
+def test_faction_yaml_included_in_manifest_shard_list_and_legacy_fixture():
     manifest = build_manifest(str(LEDGER_DIR))
     filenames = {shard["filename"] for shard in manifest["shards"]}
     assert "faction.yaml" in filenames
 
     fixture_dir = FIXTURES_DIR / "faction_case"
     hits = find_p0_intersection(["src/factions/diplomacy.py"], ledger_dir=str(fixture_dir))
-    assert hits == []
-    assert "faction.yaml" not in CANONICAL_LEDGER_FILES
+    assert hits == [("faction.yaml", "FAC-001", "src/factions/diplomacy.py")]
+    assert "faction.yaml" in CANONICAL_LEDGER_FILES
 
 
 # ---------------------------------------------------------------------------
