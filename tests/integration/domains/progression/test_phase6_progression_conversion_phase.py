@@ -52,4 +52,6 @@ def test_phase_runs_and_outputs_correct_intent():
     # Dominant gap is weapon_gap, fallback decision selected should be SAVE_FOR_LATER (no direct action maps to it)
     assert "last_progression_decision" in ent_up.property_updates
     decision = ent_up.property_updates["last_progression_decision"]
-    assert decision.selected[0].kind.value == "SAVE_FOR_LATER"
+    # last_progression_decision is stored via dataclasses.asdict() (TCK-20260830-HOTFIX-
+    # PROGRESSION-DECISION-CANONICAL-HASH-CRASH) so it's a plain dict, not the dataclass.
+    assert decision["selected"][0]["kind"] == "SAVE_FOR_LATER"

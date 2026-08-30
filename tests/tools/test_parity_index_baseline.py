@@ -133,11 +133,16 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # to 1332 (TCK-20260824-ALLOCATE-AP-BRANCH-DECISION, 2026-08-26: PROG-068 and PROG-069 moved from
     # `verified` with `test_path: null` to `divergent` with a real `test_path` citing
     # tests/unit/quest/test_progression_regression.py::test_execute_allocate_ap_silently_no_ops_for_unhandled_attribute,
-    # documenting that the live ALLOCATE_AP path does not honor either gate; see DEV-004).
+    # documenting that the live ALLOCATE_AP path does not honor either gate; see DEV-004), then to
+    # 1322 (TCK-20260830-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT, 2026-08-30: the
+    # M1-batch and its follow-up tickets added several new entries with real `test_path`s from the
+    # start and gave existing entries real `test_path`s during the m1-quick-wins/main merge
+    # conflict resolution — e.g. PROG-121, INFRA-397/398/399, WORLD-117, SOC-245's cooldown
+    # evidence — a 10-entry net drop, re-verified via a fresh live scan).
     # The substantive check is the assertion above (manifest's own count matches a fresh,
     # independent live scan) — this second assertion only guards against a silent, unexplained
     # large swing.
-    assert live_missing == 1332
+    assert live_missing == 1322
 
 
 # ---------------------------------------------------------------------------

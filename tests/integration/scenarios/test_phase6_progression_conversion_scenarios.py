@@ -213,7 +213,9 @@ def test_scenario_6_7_personality_biases():
     dec1 = refined.entity_updates[1].property_updates["last_progression_decision"]
     dec2 = refined.entity_updates[2].property_updates["last_progression_decision"]
     
+    # last_progression_decision is stored via dataclasses.asdict() (TCK-20260830-HOTFIX-
+    # PROGRESSION-DECISION-CANONICAL-HASH-CRASH) so it's a plain dict, not the dataclass.
     # Greedy likes SAVE_FOR_LATER or SELL_LOOT
-    assert dec1.selected[0].kind.value in ("SAVE_FOR_LATER", "SELL_LOOT")
+    assert dec1["selected"][0]["kind"] in ("SAVE_FOR_LATER", "SELL_LOOT")
     # Industrious prefers CRAFT_ITEM or keeping
-    assert dec2.selected[0].kind.value == "CRAFT_ITEM"
+    assert dec2["selected"][0]["kind"] == "CRAFT_ITEM"
