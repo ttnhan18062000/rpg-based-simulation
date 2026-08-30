@@ -11621,27 +11621,37 @@
     Verify-phase static gate takes; no simulation engine, mechanics, or determinism
     behavior is involved.
 - id: INFRA-397
-  text: QualityPersistence.write() and EventRecorder._write_envelope_to_file() batch
-    flush() calls at a deterministic interval (_FLUSH_INTERVAL=50 records) instead
-    of flushing on every write, tracked via a per-instance pending-write counter (_pending_writes
-    / _pending_envelope_writes) reset to 0 on each flush. flush() is still called
-    unconditionally on shutdown (QualityPersistence.shutdown()) and on file-handle
-    close (EventRecorder shutdown path) regardless of counter state, so no pending
-    data is lost on a clean shutdown. On an unclean crash (process kill, OS crash)
-    between batch boundaries, up to _FLUSH_INTERVAL-1 (49) unflushed records for that
-    writer may be lost, versus near-zero loss under the prior per-record flush. This
-    is non-authoritative telemetry (SimQ score records, observability event envelopes),
-    not durable simulation state.
+  text: "QualityPersistence.write() still batches flush() calls at a deterministic\
+    \ interval (_FLUSH_INTERVAL=50 records, per-instance _pending_writes counter reset\
+    \ to 0 on each flush) \u2014 unchanged. EventRecorder no longer uses a per-record\
+    \ counter/threshold at all (TCK-20260830-HOTFIX-EVENT-RECORDER-BATCH-FLUSH-VISIBILITY-REGRESSION):\
+    \ _write_envelope_to_file() never flushes directly; QueueDrainWorker (src/observability/queue.py)\
+    \ gained an optional flush_fn callback invoked once after each non-empty drain\
+    \ cycle, wired to EventRecorder._flush_file(). This fixes a real regression the\
+    \ original _FLUSH_INTERVAL=50 counter introduced: a single low-volume event written\
+    \ between drain cycles never became visible on disk until 50 records accumulated\
+    \ or shutdown, breaking any consumer reading simulation_events.jsonl mid-run (confirmed\
+    \ via 4 real test failures in tests/simulation_quality/test_traceability_path.py).\
+    \ flush() is still called unconditionally on shutdown for both writers (QualityPersistence.shutdown(),\
+    \ EventRecorder shutdown path), so no pending data is lost on a clean shutdown.\
+    \ On an unclean crash between batch boundaries, QualityPersistence may still lose\
+    \ up to 49 unflushed records; EventRecorder now loses at most one drain cycle\
+    \ worth (~_worker.interval_sec, 0.01s by default) regardless of record volume.\
+    \ This is non-authoritative telemetry (SimQ score records, observability event\
+    \ envelopes), not durable simulation state."
   status: verified
   priority: P2
+  legacy_evidence: null
   v2_evidence: src/simulation_quality/persistence.py::QualityPersistence.write (_FLUSH_INTERVAL=50,
-    _pending_writes counter, lines ~17-49) and ::QualityPersistence.shutdown (unconditional
-    flush, lines ~81-89); src/observability/event_recorder.py::EventRecorder._write_envelope_to_file
-    (_FLUSH_INTERVAL=50, _pending_envelope_writes counter, lines ~58-131) and its
-    shutdown path unconditional flush-before-close (line ~326).
-  test_path: tests/simulation_quality/test_persistence.py::test_quality_persistence_write_does_not_flush_every_record,tests/unit/observability/test_event_recorder.py::test_event_recorder_write_envelope_does_not_flush_every_record
-  divergence_note: null
+    _pending_writes counter, unchanged) and ::QualityPersistence.shutdown (unconditional
+    flush). src/observability/queue.py::QueueDrainWorker.__init__/_run (new flush_fn
+    param, invoked once per non-empty drain cycle after the envelopes for-loop). src/observability/event_recorder.py::EventRecorder.__init__
+    (wires flush_fn=self._flush_file), ::EventRecorder._write_envelope_to_file (no
+    longer flushes directly), ::EventRecorder._flush_file (new), and its shutdown
+    path unconditional flush-before-close.
   proof_type: regression
+  test_path: tests/simulation_quality/test_persistence.py::test_quality_persistence_write_does_not_flush_every_record,tests/unit/observability/test_event_recorder.py::test_event_recorder_write_envelope_does_not_flush_directly,tests/unit/observability/test_event_recorder.py::test_event_recorder_drain_worker_flushes_once_per_nonempty_cycle,tests/simulation_quality/test_traceability_path.py::test_worst_event_id_resolves_in_simulation_events_jsonl
+  divergence_note: null
 - id: INFRA-398
   text: 'SemanticEntityIndexes/SemanticEntityIndexService/SemanticEntityQuery (src/engine/semantic_entity_index.py,
     TCK-20260822-SEMANTIC-ENTITY-INDEX) add a non-authoritative, derived, always-rebuildable

@@ -56,8 +56,6 @@ class ObservabilityController:
 class EventRecorder:
     """Manages thread-safe, memory-bounded SimulationEvent recording and JSONL persistence."""
 
-    _FLUSH_INTERVAL: int = 50
-
     def __init__(
         self,
         run_dir: Optional[str] = None,
@@ -74,7 +72,6 @@ class EventRecorder:
         self.event_count_by_type: Dict[str, int] = {}
         self._file_handle = None
         self.filepath = None
-        self._pending_envelope_writes: int = 0
         # Subsystem budget for advisory pressure reporting (INFRA-194).
         # Independent of max_events — budget.max_queue_items is checked against
         # the queue size, not the in-memory buffer.
@@ -106,6 +103,7 @@ class EventRecorder:
             file_write_fn=self._write_envelope_to_file,
             stream_publish_fn=self._publish_envelope_to_stream,
             quality_fn=quality_fn,
+            flush_fn=self._flush_file,
         )
         if self.enabled:
             self._worker.start()
@@ -128,10 +126,14 @@ class EventRecorder:
                 "related_entity_ids": list(envelope.related_entity_ids)
             }
             self._file_handle.write(json.dumps(data) + "\n")
-            self._pending_envelope_writes += 1
-            if self._pending_envelope_writes >= self._FLUSH_INTERVAL:
-                self._file_handle.flush()
-                self._pending_envelope_writes = 0
+
+    def _flush_file(self) -> None:
+        """Flush the file handle. Called once per non-empty QueueDrainWorker drain cycle
+        (not per-record) — batches disk I/O within a cycle's writes while keeping newly
+        drained records visible on the next cycle (~_worker.interval_sec later), rather than
+        deferring visibility until an arbitrary record-count threshold or shutdown."""
+        if self._file_handle:
+            self._file_handle.flush()
 
     def _publish_envelope_to_stream(self, envelope: ObservabilityEventEnvelope) -> None:
         try:
