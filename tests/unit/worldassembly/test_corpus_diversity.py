@@ -86,6 +86,15 @@ calibration world corpus:
 
    See ``docs/testing/regression_policy.md``'s "TCK-20260824/TCK-20260828 Re-Baseline" note for
    the same summary in policy-doc form.
+
+6. **TCK-20260829/TCK-20260830 follow-up** — the backpressure/timeout issue this section
+   (§5) deferred to ``TCK-20260829-SIMQ-PERSISTENCE-BACKPRESSURE-PERF-INVESTIGATION`` is
+   now fixed. Of the 5 tests that ticket's own fix unblocked,
+   ``test_urban_political_seed42_1000t_social_grade_stability`` has been separately
+   re-baselined against fresh evidence by
+   ``TCK-20260830-URBAN-POLITICAL-SOCIAL-1000T-FLOOR-DRIFT-REBASELINE`` (see that test's own
+   docstring for the full derivation) — the other 4 are not touched by that ticket and
+   remain their own separate, already-tracked concern.
 """
 from __future__ import annotations
 
@@ -1066,6 +1075,32 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
     (tolerance = 1.3x the largest single-sample deviation observed in the repro, floored
     at the standard SCORE_TOLERANCE_ABS_FLOOR=0.05 -- derived from repro_sweep.md's actual
     trial-to-trial spread, not invented).
+
+    **TCK-20260830-URBAN-POLITICAL-SOCIAL-1000T-FLOOR-DRIFT-REBASELINE re-baseline
+    (2026-08-30)**: `TCK-20260829-SIMQ-PERSISTENCE-BACKPRESSURE-PERF-INVESTIGATION` fixed
+    the persistence-phase backpressure bug that previously made this test time out /
+    raise `CalibrationIntegrityError` before reaching this assertion; with that fix, the
+    test completes cleanly but drifted well past the anchor above
+    (`mean_score=36.8373` vs. `anchor_score=15.45`, per-trial `[32.3, 34.424, 43.788]`,
+    measured by that ticket before the two cooperation-offer fixes below had landed). This
+    ticket re-measured fresh, on top of both `TCK-20260830-COOPERATION-OFFER-RETRY-
+    COOLDOWN-MISSING` (bounded an unbounded re-offer loop) and
+    `TCK-20260830-COOPERATION-OFFER-CONCURRENT-DUPLICATE-BURST` (deduped simultaneous
+    duplicate-offer creation) — both directly gate `contract_offer_created`/
+    `contract_expired_offer` volume, SOCIAL's two highest-frequency scored event types in
+    this scenario (`src/simulation_quality/scorers/social.py`). 9 independent fresh trials
+    across 3 batches of 3 (following `TCK-20260828-CORPUS-DIVERSITY-TOWN-CENTER-BASELINE-
+    REFRESH`'s established "2 batches combined for the anchor, 3rd batch as independent
+    verification" methodology) all landed grade S with `normalized_score` in
+    `[33.151, 36.539]` (~10% spread) and `event_count` in `[8484, 9381]` (~10% spread) --
+    both dramatically tighter than the ~40%/~31% spreads this docstring already documents
+    for the pre-cooperation-fix era, exactly as expected from bounding a previously-
+    unbounded re-offer loop and deduping a duplicate-creation burst. Combined 6-draw pool
+    (batches 1+2) mean = 35.1038, largest single-sample deviation from that mean = 1.9528
+    (batch 2 trial 1) -> `abs_floor = 1.3 * 1.9528 = 2.5387`. Verified against the held-out
+    3rd batch (mean 35.0767, delta 0.0271 from the derived anchor -- comfortably within
+    tolerance). Grade stays S (unchanged). No `CalibrationIntegrityError`/timeout in 9/9
+    trials, confirming the backpressure root cause remains fixed.
     """
     import tempfile
 
@@ -1085,7 +1120,7 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
     ticks = 1000
     n_trials = 3
     anchors = {
-        "SOCIAL": {"grade": "S", "score": 15.45, "abs_floor": 6.5052},
+        "SOCIAL": {"grade": "S", "score": 35.1038, "abs_floor": 2.5387},
     }
 
     profile = _resolve_profile(profile_name)
