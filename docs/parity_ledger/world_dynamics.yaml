@@ -1590,3 +1590,30 @@
     (enum-membership/ordinal-stability guard)
   divergence_note: null
   support_boundary: null
+- id: WORLD-117
+  text: 'WorldEmergencePhase.execute() (Phase 8) is gated by exactly one live mechanism:
+    the ENABLE_WORLD_EMERGENCE feature flag, checked at its sole call site inside
+    pipeline.py''s generic run_phase() helper (feature_flag="ENABLE_WORLD_EMERGENCE"
+    argument) -- when the flag resolves to FeatureMode.OFF, run_phase() returns the
+    update unchanged and WorldEmergencePhase.execute() is never invoked for that tick;
+    SHADOW mode invokes it but discards its aspect mutations. The phase body itself
+    now contains no internal gate. Before TCK-20260830-HOTFIX-WORLD-EMERGENCE-VESTIGIAL-GATE-CLEANUP,
+    execute() also carried a second, dead internal gate (getattr(state, "world_emergence_enabled",
+    True) plus a periodic_due_ticks["world_emergence_disabled"] magic-string sentinel)
+    with no live production writer anywhere in src/ -- it never actually diverged
+    from the real flag in practice, but its presence was an undocumented free-form
+    state channel (Durable State Rule violation) and has now been removed, leaving
+    ENABLE_WORLD_EMERGENCE as the phase''s sole, authoritative gate.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/world_emergence/phase.py -- WorldEmergencePhase.execute()
+    (post-cleanup: no internal feature-flag/state-sentinel check remains in the method
+    body); src/engine/pipeline.py:311 -- run_phase("world_emergence", update, lambda
+    u: WorldEmergencePhase.execute(state, u, recent_world_events)[0], "ENABLE_WORLD_EMERGENCE"),
+    the sole gate, using the generic run_phase() OFF-skip/SHADOW-discard mechanism
+    defined at pipeline.py:102-131. TCK-20260830-HOTFIX-WORLD-EMERGENCE-VESTIGIAL-GATE-CLEANUP.'
+  proof_type: parity
+  test_path: tests/integration/domains/test_fused_loop.py::test_feature_shadow_mode_preserves_authoritative_hash
+  divergence_note: null
+  support_boundary: null

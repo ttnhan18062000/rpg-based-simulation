@@ -6,19 +6,6 @@ from src.core.updates import StateUpdate
 from src.domains.world_emergence.phase import WorldEmergencePhase
 from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
 
-def test_phase_respects_feature_flag():
-    # Use AuthoritativeState params or periodic_due_ticks representation for feature disabling to avoid direct mutations
-    state = AuthoritativeState(entities={}, tick=0, seed=0, periodic_due_ticks={"world_emergence_disabled"})
-    
-    update = StateUpdate()
-    events = [
-        WorldEvent(category=WorldEventCategory.ENTITY_DEATH, tick=5, region_id="north_ruin")
-    ]
-    
-    # We must adjust WorldEmergencePhase to look at periodic_due_ticks or state parameters carefully
-    res_upd, result = WorldEmergencePhase.execute(state, update, events)
-    assert len(result.pressures) == 0
-
 def test_phase_outputs_world_signals_not_direct_entity_action():
     regions = {"north_ruin": RegionState(id="north_ruin", name="North Ruin", bounds=(0, 0, 10, 10))}
     entity = (V2EntityBuilder(1)
