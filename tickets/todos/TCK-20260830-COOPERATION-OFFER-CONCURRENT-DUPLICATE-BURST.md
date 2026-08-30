@@ -1,7 +1,7 @@
 ---
 status: active
 layer: simulation
-authority: P3
+authority: P2
 audience: agent
 ticket_id: TCK-20260830-COOPERATION-OFFER-CONCURRENT-DUPLICATE-BURST
 phase: open
