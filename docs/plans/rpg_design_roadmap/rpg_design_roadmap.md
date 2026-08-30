@@ -56,8 +56,10 @@ Each milestone epic below cites specific idea numbers; look them up in the atlas
 directly via the ticket folder `tickets/todos/m1-quick-wins/` (`SEQUENCE.md` sets implementation order),
 draining into `tickets/done/` one ticket at a time as each clears its own full standard-tier pipeline
 (`docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md` remains the scope source, 20 ideas / 21
-tickets). All work lands on a single branch, `m1-quick-wins`, as one commit per ticket — not yet pushed or
-PR'd.
+tickets, and now also carries the full Implementation Summary). All work landed on a single branch,
+`m1-quick-wins`, one commit per ticket, PR'd as
+[#90](https://github.com/ttnhan18062000/rpg-based-simulation/pull/90) — all 13 CI checks green as of
+2026-08-31; merge is a human call, not yet landed.
 
 <!-- IMPLEMENT-EPIC-STATUS:BEGIN -->
 **Live progress** (auto-updated by implement-epic, last run: 2026-08-29T07:48:23Z): 22/22 tickets done, 0 remaining. Tracking: m1-quick-wins batch COMPLETE -- folder archived to tickets/done/m1-quick-wins/ (SEQUENCE.md preserved).
@@ -73,6 +75,16 @@ responsibility starting at M2, never at M1, and the update-request's plan-owner 
 content sound as-is (only the surrounding documentation was stale, since fixed). The confirmed final-permadeath
 lifecycle defect (`PERMADEATH` bypasses `LifecycleSystem.resolve_lifecycle()`'s deactivation check) is a related
 correctness bug but was **not** part of this batch — see M5 below for its owner.
+
+**Post-batch hardening (2026-08-30/31)**: the 22-ticket batch's own real behavior changes (2 flags
+flipped ON by default, several previously-dormant mechanisms wired live) surfaced real findings once
+exercised for real — a SimQ corpus-wide grade-anchor staleness (never re-baselined against the batch's
+own changes), a real pipeline crash (`ProgressionConversionPhase` + `CanonicalStateHasher`), a
+cooperation-offer retry/duplicate-burst bug pair, an `EventRecorder` shutdown-ordering hazard, and
+several smaller gate-checker/tooling gaps. All were investigated and fixed as their own separate,
+traceable tickets (not folded into the M1 batch's own scope) — see
+`docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md`'s Implementation Summary for the full list.
+This is also the work that produced PR #90's first-ever green CI run.
 
 ### M2 — Foundational Systems (gated on M1's flag-governance decision, idea 9)
 
