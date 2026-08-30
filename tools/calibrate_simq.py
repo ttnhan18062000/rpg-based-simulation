@@ -234,19 +234,20 @@ def _run_engine(
         state = AuthoritativeState(tick=0, seed=seed, entities=entities)
 
     # Inject feature-flag overrides from the calibration profile YAML and environment variables.
-    # Recognized flags: ENABLE_ADVENTURE_ROUTING, ENABLE_COMBAT_ENGAGEMENT,
-    # ENABLE_SOCIAL_COOPERATION, ENABLE_WORLD_EMERGENCE, ENABLE_BELIEF_ASSIMILATION,
-    # ENABLE_PROGRESSION_EVOLUTION, ENABLE_LIFE_ARC_CAMPAIGNS, etc.
+    # Recognized flags: see _KNOWN_FLAGS below (kept in sync with FeatureFlagManager's live
+    # registry in src/domains/optimization/feature_flags.py).
     # Profile YAML feature_flags are applied first; env vars override profile values.
     # Example: ENABLE_ADVENTURE_ROUTING=ON python3 tools/calibrate_simq.py ...
     from src.domains.optimization.feature_flags import FeatureMode
     _KNOWN_FLAGS = [
         "ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL_COGNITION",
-        "ENABLE_ADVENTURE_ROUTING", "ENABLE_COMBAT_ENGAGEMENT",
-        "ENABLE_BELIEF_ASSIMILATION", "ENABLE_PROGRESSION_EVOLUTION",
-        "ENABLE_SOCIAL_COOPERATION", "ENABLE_WORLD_EMERGENCE",
+        "ENABLE_MEMORY_UPDATE", "ENABLE_ADVENTURE_ROUTING", "ENABLE_COMBAT_ENGAGEMENT",
+        "ENABLE_BELIEF_ASSIMILATION", "ENABLE_INFORMATION_INTENT_EXECUTION",
+        "ENABLE_PROGRESSION_EVOLUTION", "ENABLE_SOCIAL_COOPERATION", "ENABLE_WORLD_EMERGENCE",
         "ENABLE_LIFE_ARC_CAMPAIGNS", "ENABLE_ENHANCED_TRACE_EVENTS",
-        "ENABLE_PUSH_EVENT_SHAPERS",
+        "ENABLE_PUSH_EVENT_SHAPERS", "ENABLE_PUSH_EVENT_SHAPERS_PHASE2",
+        "ENABLE_GUILD_QUEST_GENERATION", "ENABLE_PUSH_EVENT_SHAPERS_QUEST",
+        "ENABLE_PUSH_EVENT_SHAPERS_AGENCY",
     ]
 
     def _parse_flag_value(raw: str) -> FeatureMode | None:
@@ -275,6 +276,16 @@ def _run_engine(
         if mode is not None:
             combined_flag_overrides[flag] = mode
             logger.info("Feature flag override from env: %s=%s", flag, mode)
+
+    # 3. Warn on unrecognized ENABLE_* env vars so a future _KNOWN_FLAGS drift (like
+    # TCK-20260830-HOTFIX-CALIBRATE-SIMQ-KNOWN-FLAGS-MISSING-ENTRIES) is self-diagnosing
+    # instead of silently dropping the override.
+    for env_key in os.environ:
+        if env_key.startswith("ENABLE_") and env_key not in _KNOWN_FLAGS:
+            logger.warning(
+                "Env var %s starts with ENABLE_ but is not in _KNOWN_FLAGS — "
+                "it will NOT be applied as a feature-flag override.", env_key,
+            )
 
     if combined_flag_overrides:
         existing = dict(getattr(state, "feature_flags", None) or {})
