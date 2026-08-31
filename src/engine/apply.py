@@ -523,6 +523,7 @@ class ApplyPath:
         object.__setattr__(res, "veterancy_points", id_comp.veterancy_points)
         object.__setattr__(res, "veterancy_rank", id_comp.veterancy_rank)
         object.__setattr__(res, "unspent_ap", id_comp.unspent_ap)
+        object.__setattr__(res, "territory_maturity", id_comp.territory_maturity)
         object.__setattr__(res, "class_id", id_comp.class_id)
         object.__setattr__(res, "learned_skills", id_comp.learned_skills)
         object.__setattr__(res, "traits", id_comp.traits)

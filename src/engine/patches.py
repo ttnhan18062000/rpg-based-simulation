@@ -182,6 +182,7 @@ class IdentityPatch(ComponentPatch):
         vp = new_id.veterancy_points
         vrank = new_id.veterancy_rank
         ap = new_id.unspent_ap
+        tm = new_id.territory_maturity
         sk = set(new_id.learned_skills)
         tr = set(new_id.traits)
         brk = set(new_id.active_breakthroughs)
@@ -205,6 +206,7 @@ class IdentityPatch(ComponentPatch):
                 vrank = proc_id.veterancy_rank
             if u_id.unspent_ap_set is not None: ap = u_id.unspent_ap_set
             else: ap += u_id.unspent_ap_delta
+            tm += u_id.territory_maturity_delta
             sk |= set(u_id.learned_skills)
             tr = (tr | set(u_id.traits_add)) - set(u_id.traits_remove)
             brk |= set(u_id.breakthroughs_add)
@@ -225,7 +227,8 @@ class IdentityPatch(ComponentPatch):
             changes["identity"] = replace(new_id, role=rl, faction=fac, known_recipes=frozenset(rec),
                                           craft_target=tgt, evolution_level=lvl, life_stage=ls, class_id=cls_id,
                                           evolution_points=ep,
-                                          veterancy_points=vp, veterancy_rank=vrank, unspent_ap=ap, learned_skills=frozenset(sk),
+                                          veterancy_points=vp, veterancy_rank=vrank, unspent_ap=ap,
+                                          territory_maturity=tm, learned_skills=frozenset(sk),
                                           traits=frozenset(tr), active_breakthroughs=frozenset(brk),
                                           cooldowns=ReadOnlyDict(cds), group_id=gid, properties=ReadOnlyDict(props),
                                           latest_intent_results=intents)

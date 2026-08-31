@@ -479,6 +479,7 @@ class IdentityComponent:
     veterancy_points: int = 0
     veterancy_rank: int = 0
     unspent_ap: int = 0
+    territory_maturity: float = 0.0
     class_id: str = "NOVICE"
     learned_skills: Set[str] = field(default_factory=set)
     traits: Set[str] = field(default_factory=set)
@@ -502,6 +503,7 @@ class IdentityComponent:
             "evolution_points": self.evolution_points,
             "veterancy_rank": self.veterancy_rank,
             "unspent_ap": self.unspent_ap,
+            "territory_maturity": self.territory_maturity,
             "known_recipes": sorted(list(self.known_recipes)),
             "learned_skills": sorted(list(self.learned_skills)),
             "active_breakthroughs": sorted(list(self.active_breakthroughs)),

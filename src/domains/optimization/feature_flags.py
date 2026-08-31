@@ -113,6 +113,11 @@ class FeatureFlagManager:
             # both events remain in the codebase, flag-gated to fire only when this is NOT "ON"
             # -- a real, working rollback to pre-migration behavior.
             "ENABLE_PUSH_EVENT_SHAPERS_AGENCY": FeatureMode.ON,
+            # New gameplay behavior (TCK-20260831-CREATURE-TERRITORY-LIFECYCLE): wires
+            # CreatureTerritoryService into world_dynamics.py's macro-dynamics block for the
+            # first time. DEV-002 default-OFF policy applies -- brand-new mechanic, no corpus
+            # profile turns this on and no SHADOW-validation history exists.
+            "ENABLE_CREATURE_TERRITORY_LIFECYCLE": FeatureMode.OFF,
         }
         if overrides:
             for k, v in overrides.items():

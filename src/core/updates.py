@@ -236,7 +236,8 @@ class IdentityUpdate:
     traits_add: list[str] = field(default_factory=list)
     traits_remove: list[str] = field(default_factory=list)
     cooldown_updates: Dict[str, int] = field(default_factory=dict) # skill_id -> tick_ready
-    
+    territory_maturity_delta: float = 0.0
+
     def is_noop(self) -> bool:
         return (self.role_set is None and self.faction_set is None and not self.recipes_learned and
                 self.craft_target is None and self.evolution_level_set is None and
@@ -244,7 +245,8 @@ class IdentityUpdate:
                 self.evolution_points_delta == 0 and self.veterancy_points_delta == 0 and
                 not self.breakthroughs_add and self.unspent_ap_delta == 0 and
                 self.unspent_ap_set is None and not self.learned_skills and
-                not self.traits_add and not self.traits_remove and not self.cooldown_updates)
+                not self.traits_add and not self.traits_remove and not self.cooldown_updates and
+                self.territory_maturity_delta == 0.0)
 
     def merge(self, other: IdentityUpdate) -> IdentityUpdate:
         if not other or other.is_noop():
@@ -266,6 +268,7 @@ class IdentityUpdate:
         if other.traits_add: changes["traits_add"] = list(set(self.traits_add + other.traits_add))
         if other.traits_remove: changes["traits_remove"] = list(set(self.traits_remove + other.traits_remove))
         if other.cooldown_updates: changes["cooldown_updates"] = {**self.cooldown_updates, **other.cooldown_updates}
+        if other.territory_maturity_delta != 0: changes["territory_maturity_delta"] = self.territory_maturity_delta + other.territory_maturity_delta
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
