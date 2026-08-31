@@ -247,7 +247,7 @@ Bonus *application* (this section) is independent of bonus *granting* and does n
 Progression evaluation runs in the **lifecycle systems phase** after combat resolution:
 - XP grants are emitted as `IdentityUpdate(evolution_points_delta=...)` from combat/quest resolution
 - `LevelingService` evaluates accumulated XP against threshold — level-up fires if threshold crossed
-- `recalculate_combat_stats()` is triggered by the apply path (`ApplyPath._apply_entity_update_to_dict`'s `stats_dirty` gate) after any `IdentityUpdate` that modifies `evolution_level`, `attributes`, equipment, `learned_skills`, `traits_add`/`traits_remove`, or `breakthroughs_add`
+- `recalculate_combat_stats()` is triggered by the apply path (`ApplyPath._apply_entity_update_to_dict`'s `stats_dirty` gate) after any `IdentityUpdate` that modifies `evolution_level`, `attributes`, equipment, `learned_skills`, `traits_add`/`traits_remove`, `breakthroughs_add`, or `class_id_set` (TCK-20260831-CLASS-TIER-BRANCHING — `class_id_set` mutates `class_id` via `IdentityPatch.apply()`, and `ClassTierService.apply_bonuses()` live-recomputes any matching class-tier `attribute_bonuses` on every `get_effective_stats()` call, mirroring `BreakthroughService.apply_bonuses()`)
 
 ---
 
@@ -339,6 +339,7 @@ Step 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
 | `src/progression/leveling.py` | `LevelingService` — threshold formula, level-up execution, stat recalc |
 | `src/progression/skills.py` | `SkillScalingService` — attribute-driven skill power scaling |
 | `src/progression/breakthroughs.py` | `BreakthroughService` — registry + `apply_bonuses()` (implemented) |
+| `src/progression/class_tiers.py` | `ClassTierService` — `CLASS_TIER_REGISTRY` lookup + `apply_bonuses()`, live-recomputed from `class_id` every `get_effective_stats()` call (mirrors `BreakthroughService`) |
 | `src/progression/evolution.py` | Entity evolution on level cap events |
 | `src/systems/lifecycle_systems/` | Lifecycle system invoking LevelingService per tick |
 
@@ -356,6 +357,8 @@ Step 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
 | `tests_v2/test_skill_scaling.py` | PHYSICAL/MAGICAL/ELEMENTAL scaling formulas |
 | `tests/unit/progression/test_breakthroughs.py` | `apply_bonuses()` sum/empty/unknown/mixed-ID behavior; parity ledger PROG-024 |
 | `tests/unit/core/test_rpg_depth.py` | `active_breakthroughs` wiring through `get_effective_stats()` and the apply path's `stats_dirty` gate |
+| `tests/unit/progression/test_class_tiers.py` | `CLASS_TIER_REGISTRY` branching options; `class_id_set` apply-path wiring (`is_noop()`/`merge()`); tier bonus survives a subsequent unrelated `stats_dirty` event; parity ledger PROG-122 |
+| `tests/integration/combat/test_class_tier_win_rate.py` | Tier bonus does not decrease average combat win-rate vs. a fixed opponent roster (AC #4) |
 
 ---
 

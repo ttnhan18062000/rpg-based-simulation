@@ -226,6 +226,7 @@ class IdentityUpdate:
     craft_target: Optional[str] = None
     evolution_level_set: Optional[int] = None
     life_stage_set: Optional[LifeStage] = None
+    class_id_set: Optional[str] = None
     evolution_points_delta: int = 0
     veterancy_points_delta: int = 0
     breakthroughs_add: list[str] = field(default_factory=list)
@@ -239,7 +240,7 @@ class IdentityUpdate:
     def is_noop(self) -> bool:
         return (self.role_set is None and self.faction_set is None and not self.recipes_learned and
                 self.craft_target is None and self.evolution_level_set is None and
-                self.life_stage_set is None and
+                self.life_stage_set is None and self.class_id_set is None and
                 self.evolution_points_delta == 0 and self.veterancy_points_delta == 0 and
                 not self.breakthroughs_add and self.unspent_ap_delta == 0 and
                 self.unspent_ap_set is None and not self.learned_skills and
@@ -255,6 +256,7 @@ class IdentityUpdate:
         if other.craft_target is not None: changes["craft_target"] = other.craft_target
         if other.evolution_level_set is not None: changes["evolution_level_set"] = other.evolution_level_set
         if other.life_stage_set is not None: changes["life_stage_set"] = other.life_stage_set
+        if other.class_id_set is not None: changes["class_id_set"] = other.class_id_set
         if other.evolution_points_delta != 0: changes["evolution_points_delta"] = self.evolution_points_delta + other.evolution_points_delta
         if other.veterancy_points_delta != 0: changes["veterancy_points_delta"] = self.veterancy_points_delta + other.veterancy_points_delta
         if other.breakthroughs_add: changes["breakthroughs_add"] = list(set(self.breakthroughs_add + other.breakthroughs_add))

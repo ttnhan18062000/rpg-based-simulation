@@ -187,6 +187,7 @@ class IdentityPatch(ComponentPatch):
         brk = set(new_id.active_breakthroughs)
         cds = dict(new_id.cooldowns)
         ls = new_id.life_stage
+        cls_id = new_id.class_id
 
         if self.identity:
             u_id = self.identity
@@ -196,6 +197,7 @@ class IdentityPatch(ComponentPatch):
             if u_id.craft_target is not None: tgt = u_id.craft_target
             if u_id.evolution_level_set is not None: lvl = u_id.evolution_level_set
             if u_id.life_stage_set is not None: ls = u_id.life_stage_set
+            if u_id.class_id_set is not None: cls_id = u_id.class_id_set
             ep += u_id.evolution_points_delta
             if u_id.veterancy_points_delta != 0:
                 proc_id = VeterancyService.process_points(new_id, u_id.veterancy_points_delta)
@@ -221,7 +223,8 @@ class IdentityPatch(ComponentPatch):
             changes["identity"] = ApplyPath._fast_replace_identity(new_id, intents)
         else:
             changes["identity"] = replace(new_id, role=rl, faction=fac, known_recipes=frozenset(rec),
-                                          craft_target=tgt, evolution_level=lvl, life_stage=ls, evolution_points=ep,
+                                          craft_target=tgt, evolution_level=lvl, life_stage=ls, class_id=cls_id,
+                                          evolution_points=ep,
                                           veterancy_points=vp, veterancy_rank=vrank, unspent_ap=ap, learned_skills=frozenset(sk),
                                           traits=frozenset(tr), active_breakthroughs=frozenset(brk),
                                           cooldowns=ReadOnlyDict(cds), group_id=gid, properties=ReadOnlyDict(props),

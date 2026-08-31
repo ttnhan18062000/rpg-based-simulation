@@ -40,6 +40,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
 | **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
 | **Social/Clan** | Clan Succession-on-Death | **Intentional Gameplay Change** | DEFERRED |
+| **Engine / Progression** | Post-Spawn `class_id` Mutation via `class_id_set` (DEV-006) | **Intentional Gameplay Change** | ACTIVE |
 
 ---
 
@@ -1423,6 +1424,55 @@ This document is the canonical record of intentional behavior shifts in `src` co
   test path and flip the Summary Table Status from `DEFERRED` to `RATIFIED`.
 - **Status**: DEFERRED
 
+### 2.49 Post-Spawn `class_id` Mutation via `class_id_set` Diverges from PROG-108's Spawn-Only Framing (TCK-20260831-CLASS-TIER-BRANCHING) — cross-referenced as **DEV-006**
+- **Subsystem**: Engine / Progression
+- **Old Behavior**: `IdentityComponent.class_id` (`src/core/state.py:482`) was assigned exactly once,
+  at world-compile time, by `V2EntityBuilder.identity(class_id=...)` (`src/core/builder.py:176,198`)
+  from `spawn_tables.yaml`'s `classtable.v1` entry. `PROG-108`
+  (`docs/parity_ledger/progression.yaml`) records this as verified law: "Entity class_id is
+  assigned by role from spawn_tables.yaml at world compilation." No apply-path file ever wrote
+  `class_id` after spawn — confirmed by a full-repo search across every `*Update`/`*Patch` class.
+- **New Behavior**: `IdentityUpdate.class_id_set: Optional[str]` (`src/core/updates.py`) is a new
+  last-write-wins field, following the exact shape of `role_set`/`life_stage_set`, that is wired
+  into `IdentityPatch.apply()` (`src/engine/patches.py`) — reading `class_id_set` into a local
+  `cls_id` var and passing `class_id=cls_id` into the component's final `replace()` call. This
+  makes `IdentityPatch.apply()` a real, live, currently-tested post-spawn writer of `class_id`,
+  generalized from (but not copying) `EvolutionSystem`'s hardcoded, linear `kind_set` mapping
+  (`src/engine/evolution.py::_get_evolved_kind`) — `CLASS_TIER_REGISTRY`
+  (`src/core/classes.py`) defines >=2 mutually-exclusive next-tier options per base class
+  (`WARRIOR` -> `WARRIOR_CHAMPION` | `WARRIOR_GUARDIAN`; `MAGE` -> `MAGE_ARCHMAGE` |
+  `MAGE_STORMWEAVER`), so this is a branch choice, not a single linear chain. A new
+  `ClassTierService.apply_bonuses()` (`src/progression/class_tiers.py`) applies each tier's
+  `attribute_bonuses` live, recomputed from the durable `class_id` on every
+  `SkillScalingService.get_effective_stats()` call — mirroring `BreakthroughService.apply_bonuses()`'s
+  exact live-recompute mechanism, not a one-time stored delta, to survive subsequent unrelated
+  `stats_dirty` recomputes (see `docs/mechanics/attribute_progression_contract.md` "Derived Stat
+  Recalculation Order").
+- **Rationale**: **Intentional Gameplay Change**. This is a deliberate new mechanic (mutually-exclusive
+  class-tier branching), not a correction or hardening of existing behavior. PROG-108's spawn-time
+  claim remains true and its `status` stays `verified` — the new fact (class_id can *also* mutate
+  post-spawn via `class_id_set`) is additive, not a falsification; `docs/parity_ledger/progression.yaml`
+  PROG-108's `divergence_note` cross-references this entry, and a new `PROG-122` entry records the
+  branching mechanism itself.
+- **Verification**: `tests/unit/progression/test_class_tiers.py::test_branch_selection_diverges_class_id`
+  (two entities, identical starting `class_id="WARRIOR"`/attributes, diverge in `identity.class_id`
+  and derived combat stats purely from different `class_id_set` inputs — same "identical starting
+  state, diverging input" shape as `test_goblin_evolution`);
+  `::test_class_id_set_applies_via_identity_patch` (apply-path wiring, `is_noop()`/`merge()`
+  last-write-wins); `::test_tier_bonus_survives_subsequent_stats_dirty_event` (tier bonus is not
+  silently wiped by the next unrelated `stats_dirty` event); `tests/integration/combat/test_class_tier_win_rate.py::test_tier_bonus_does_not_decrease_win_rate`
+  (a tier's stat bonuses do not decrease average combat win-rate against a fixed opponent roster).
+  `tests/unit/entity/test_entity_archetypes.py::test_hero_archetypes_cover_combat_mage_rogue`
+  (PROG-108's own `test_path`) is unaffected — it only exercises `WorldCompiler.compile()`, no
+  ticks/apply-path, so it cannot observe `class_id_set` regardless.
+- **Scope note**: This ticket ships the registry, the typed field, and the apply-path wiring only.
+  No live AI/decision producer calls `class_id_set` in production gameplay code yet — a
+  fully-wired-but-uninvoked-in-production end state accepted by this project's own precedent
+  (`TCK-20260808-TRAIT-EXPRESSED-PRODUCER-INVESTIGATION`, `breakthroughs_add`/`traits_add`). That
+  "wired but not yet invoked by production code" state does not make this divergence itself
+  deferred — the mechanism is active, tested, and callable today.
+- **Status**: ACTIVE
+
 ---
 
 ## 3. Unsupported / Retired Behavior
@@ -1611,4 +1661,4 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Status**: ACTIVE
 
 ---
-*Last updated: 2026-08-30 (DEV-004 update, TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION).*
+*Last updated: 2026-08-31 (DEV-006 / §2.49 added, TCK-20260831-CLASS-TIER-BRANCHING).*

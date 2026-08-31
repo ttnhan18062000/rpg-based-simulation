@@ -49,3 +49,24 @@ CLASS_REGISTRY: Dict[str, ClassDefinition] = {
         starting_gear={"MAIN_HAND": "iron_dagger"}
     ),
 }
+
+@dataclass(frozen=True)
+class ClassTierOption:
+    tier_id: str
+    name: str
+    attribute_bonuses: Dict[str, int] = field(default_factory=dict)
+
+CLASS_TIER_REGISTRY: Dict[str, List[ClassTierOption]] = {
+    "WARRIOR": [
+        ClassTierOption(tier_id="WARRIOR_CHAMPION", name="Champion",
+                         attribute_bonuses={"strength": 4, "vitality": 2}),
+        ClassTierOption(tier_id="WARRIOR_GUARDIAN", name="Guardian",
+                         attribute_bonuses={"vitality": 4, "endurance": 3}),
+    ],
+    "MAGE": [
+        ClassTierOption(tier_id="MAGE_ARCHMAGE", name="Archmage",
+                         attribute_bonuses={"intelligence": 4, "spirit": 2}),
+        ClassTierOption(tier_id="MAGE_STORMWEAVER", name="Stormweaver",
+                         attribute_bonuses={"spirit": 4, "wisdom": 3}),
+    ],
+}

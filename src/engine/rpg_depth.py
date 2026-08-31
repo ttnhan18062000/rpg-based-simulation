@@ -351,7 +351,8 @@ class SkillScalingService:
         base_atk: int = 10,
         base_def: int = 5,
         base_evasion: float = 0.05,
-        active_breakthroughs: Optional[Set[str]] = None
+        active_breakthroughs: Optional[Set[str]] = None,
+        class_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Full effective stat recomputation:
@@ -362,7 +363,9 @@ class SkillScalingService:
         # VERIFIED v2: scar_detection_logic
         from src.progression.leveling import LevelingService
         from src.progression.breakthroughs import BreakthroughService
+        from src.progression.class_tiers import ClassTierService
         effective_attributes = BreakthroughService.apply_bonuses(active_breakthroughs or set(), attributes)
+        effective_attributes = ClassTierService.apply_bonuses(class_id, effective_attributes)
         base_stats = LevelingService.recalculate_combat_stats(
             effective_attributes, equipment, learned_skills, traits,
             current_role=current_role,

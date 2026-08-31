@@ -466,6 +466,7 @@ class ApplyPath:
                 update.identity.traits_add or
                 update.identity.traits_remove or
                 update.identity.breakthroughs_add or
+                update.identity.class_id_set is not None or
                 (update.identity.evolution_level_set is not None and update.identity.evolution_level_set > entity.identity.evolution_level)
             )) or
             (curr_id.evolution_level > entity.identity.evolution_level) or
@@ -484,7 +485,8 @@ class ApplyPath:
                 learned_skills=new_id.learned_skills,
                 traits=new_id.traits,
                 current_role=new_com.tactical_role,
-                active_breakthroughs=new_id.active_breakthroughs
+                active_breakthroughs=new_id.active_breakthroughs,
+                class_id=new_id.class_id
             )
             
             new_com = replace(new_com,
