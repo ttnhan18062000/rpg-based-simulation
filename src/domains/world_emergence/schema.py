@@ -47,6 +47,8 @@ class WorldEventCategory(str, Enum):
     BETRAYAL = "BETRAYAL"
     # E52G: Sovereignty boundary shift (ownership change via influence threshold)
     SOVEREIGNTY_SHIFT = "SOVEREIGNTY_SHIFT"
+    # TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING: real combat_loss trigger for MemoryUpdatePhase
+    COMBAT_LOSS = "COMBAT_LOSS"
 
 @dataclass(frozen=True, slots=True)
 class WorldEvent:

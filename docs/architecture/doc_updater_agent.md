@@ -28,7 +28,14 @@ live in `.claude/workflows/implement-ticket.js` for every tier including hotfix.
    status`, ignoring the Implement agent's self-reported `files_changed`/`behavior_changed`
    entirely. This is the actual backstop: it caught two real gate failures in the session that
    motivated this design (an unchecked-but-satisfied Acceptance Criteria list, and an
-   unparseable `## Docs Requiring Update` section with trailing prose).
+   unparseable `## Docs Requiring Update` section with trailing prose). Later extended by
+   `TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED` (after this design shipped,
+   independent of it) to recognize a third bullet case: a Format 1 bullet whose requirement
+   depended on an implementation-time choice, then genuinely resolved as not-applicable and
+   marked with a recognized phrase in its own body ("Resolved during implementation, condition
+   not met") — such a bullet PASSes without its doc being touched, while sibling unconditional
+   bullets in the same section still hard-fail if untouched. See `docs/ai/ticket-lifecycle.md`'s
+   "Two distinct formats" subsection for the full contract.
 
 What's missing is not enforcement — it's *execution quality*. Doc edits are currently made by
 the generalist `implementer` agent (`.claude/agents/implementer.md`), which has zero doc-specific
@@ -197,7 +204,11 @@ coverage backstop is a separately-scoped decision, not implied here.
   `.claude/workflows/implement-ticket.js`, following the existing `parity-updater`
   call-site/event-push/monitoring pattern.
 - `investigation.md`'s `## Docs Requiring Update` format and `check_docs_to_update_coverage` are
-  unchanged — doc-updater is a new consumer of an existing contract, not a new producer.
+  unchanged **by this design** — doc-updater is a new consumer of an existing contract, not a new
+  producer. (The contract itself was later extended, independent of this ADR, by
+  `TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED` to recognize a resolved-
+  conditional bullet marker — see Context above. That extension does not change doc-updater's
+  consumer-only relationship to the contract.)
 - No change to `parity-updater`, `finalizer`, `planner`, or `plan.md`'s shape.
 - **Monitoring/retro/dashboard registration — five concrete, hand-maintained touch points, none
   automatic.** Confirmed by reading the actual registration mechanisms, not assumed:

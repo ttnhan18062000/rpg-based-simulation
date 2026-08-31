@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-09
+last_verified: 2026-08-28
 ---
 
 # Chapter 2: Combat Laws
@@ -72,10 +72,40 @@ A **Wound** is inflicted on a surviving defender when a single hit deals damage 
 ```python
 is_wound = damage > (defender.max_hp * 0.25) and defender.alive
 ```
-- Wound type: `SLASH` for Hero attackers, `CRUSH` otherwise.
-- Wound severity: `damage / defender.max_hp` (proportional).
-- Wound penalty: −5 ATK, −5 DEF (applied as long as wound is active).
-- Permanent Scars: when a wound heals, it has a 30% chance to leave a scar (`scar_penalty = wound_penalty * 0.3`).
+- Wound severity: `severity = min(1.0, damage / defender.max_hp)` (proportional, capped at 1.0).
+- Wound type: derived from severity, not attacker role — `CRUSH` if `severity >= 0.8`, `SLASH` if
+  `severity >= 0.6`, otherwise `PIERCE` (`WoundService.create_wound`, `src/engine/rpg_depth.py`).
+- Wound penalty: severity-scaled, not a flat value — `atk_penalty = int(severity * 3)`,
+  `def_penalty = int(severity * 2)`, `speed_penalty = int(severity * 2)`,
+  `max_hp_penalty = int(severity * 10)` (applied as long as the wound is active). `atk_penalty`,
+  `def_penalty`, and `max_hp_penalty` are subtracted from effective ATK/DEF/Max HP by
+  `SkillScalingService.get_effective_stats()`; `speed_penalty` is computed and stored on the wound
+  but is **not yet read** by `get_effective_stats()` — no move-cost/speed stat is currently reduced
+  by wounds (tracked as a separate follow-up, not a bug in this formula).
+- Wound Permanence: Wounds are permanent. No code path currently heals a wound — verified: the
+  only production constructor of `WoundUpdate` is `CombatResolutionSystem._get_wound_infliction()`
+  (`src/engine/combat.py:605-617`), which always builds `WoundUpdate(wounds_add=[wound])` and never
+  populates `wounds_heal` or `scars_add`; `WoundUpdate.wounds_heal`/`scars_add` both default to `[]`
+  (`src/core/updates.py:604-609`). A wound's penalty applies for as long as the wound exists on the
+  entity. Permanent Scars — a lesser, persistent penalty replacing a healed wound — remain a
+  data-model concept only: `scars_add` has zero production producers, and no mechanic currently
+  creates a `ScarState` from a healed wound (this remains a settled, open follow-up, not
+  implemented by any landed ticket).
+- Tactical consequence (`TCK-20260824-TACTICAL-WOUND-SCAR-WIRING`): `TacticalDecisionSystem`
+  (`src/engine/tactical.py`) reads the structured wound/scar penalty data — never re-deriving it —
+  as an additional, independent decision-making signal alongside the existing raw `hp_percent`/
+  `hp_ratio` checks:
+  - Cover-seeking/retreat gate (`tactical.py:483-494`): an entity whose active wounds sum to
+    `WoundService.get_wound_stat_penalties(...)` `>= 9.0` (equivalent to a single wound at
+    `severity >= 0.6`) enters the cover-seeking/retreat branch independently of `hp_percent`.
+  - The same gate's `hp_percent` threshold (`tactical.py:483-494`) is raised by `0.01` per
+    aggregate scar-penalty point (`WoundService.get_scar_stat_penalties(...)` summed), capped at
+    `+0.10` — a scarred entity seeks cover/retreats at a durably higher HP than an otherwise
+    identical unscarred entity at the same `hp_ratio`.
+  - PROTECTOR guard-wounded-ally branch (`tactical.py:542-582`): an ally (or the group leader)
+    with combined wound+scar distress `>= 5.0` (equivalent to a single wound at `severity >= 0.4`)
+    becomes an additional guard-priority qualifier, alongside the existing `hp_ratio < 0.8`/`< 0.7`
+    checks.
 
 ---
 

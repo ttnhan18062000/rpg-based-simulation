@@ -8,9 +8,16 @@ tags: [architecture, content, feature-flags]
 
 # Epic Plan — RPG Design Roadmap, Milestone 1: Quick Wins & Housekeeping
 
-**Tracking ticket:** `TCK-20260823-EPIC-RPG-M1-QUICK-WINS` (not yet created as a formal epic ticket — but
-its 21 child tickets already exist and are in flight under `tickets/todos/m1-quick-wins/`, with
-`tickets/todos/m1-quick-wins/SEQUENCE.md` as the executable ordering authority)
+**Status: DONE (2026-08-30).** 22/22 child tickets complete, folder archived to
+`tickets/done/m1-quick-wins/` (`SEQUENCE.md` preserved). All work landed on branch `m1-quick-wins`,
+PR'd as [#90](https://github.com/ttnhan18062000/rpg-based-simulation/pull/90) with all 13 CI checks
+green as of 2026-08-31. See **Implementation Summary** below for what actually shipped, what was
+decided, and what real follow-up work the batch's own changes surfaced. The rest of this document
+(Problem/Scope/sections A-F onward) is preserved as the original planning record — read the
+Implementation Summary first for the current, authoritative picture.
+
+**Tracking ticket:** `TCK-20260823-EPIC-RPG-M1-QUICK-WINS` (never created as a formal epic ticket — the
+batch was tracked directly via the ticket folder instead, per the note above)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Rev 60+ (Design Ideas 1, 3, 7, 9, 10, 12, 13, 15-19, 20,
 21, 22, 24, 25, 26, 29, 42), cross-checked against Cross-Cutting Risk, Shared Implementation Opportunities,
 Phase Placement & Testing Strategy, and `docs/brainstorm/design_merit_scorecard.html`.
@@ -24,6 +31,93 @@ was changed** — the 21 tickets already in flight under `tickets/todos/m1-quick
 as originally scoped, and this review deliberately did not touch them. The confirmed final-permadeath
 lifecycle defect is explicitly **not** part of this batch — see the parent roadmap's M5 section for its
 owner.
+
+## Implementation Summary (2026-08-31)
+
+**Final count**: 22 tickets done (19 scoped ideas, idea 7 and idea 17 each split into two tickets by
+responsibility, idea 16 needed none) — matches the epic's own Acceptance Signal exactly. Full landed
+list (chronological): `ROLLOUT-FLAG-DECISIONS`, `ALLOCATE-AP-BRANCH-DECISION`,
+`BREAKTHROUGH-BONUS-APPLICATION`, `CAUSAL-MEMORY-ROUTE-SCORING`, `DEFAULT-HEIR-ASSIGNMENT`,
+`GRIEF-NEMESIS-REACHABILITY`, `LEAD-CONTRADICTION-WIRING`, `LIFE-STAGE-TRANSITIONS`,
+`NEMESIS-MEMORY-UNIT-TESTS`, `OCCUPATION-CHANGE-TRIGGER`, `RELATIONSHIP-ROLE-FIELD`,
+`ROUTE-KIND-COUNT-FIX`, `SECRETS-DISCLOSURE-SCOPE-SEQ`, `TOWN-CENTER-POINTER-FIX`,
+`WIRE-ORPHANED-MECHANISMS`, `WOUND-PENALTY-FORMULA-WIRING`, `AFFECTION-CONTRACT-GATE`,
+`PERSONAL-ECONOMY-SCOPE-BLOCK`, `WOUND-HEALING-DECISION`, `WOUND-THRESHOLD-DECISION`,
+`TACTICAL-WOUND-SCAR-WIRING`, and `TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING` (all
+`TCK-20260824-*` unless noted). One-paragraph summaries for each are in `tickets/working_log.csv`.
+
+**Key governance decisions actually made:**
+- **Idea 9 (flag governance)**: of the 8 flags reviewed, `ENABLE_BELIEF_ASSIMILATION` and
+  `ENABLE_SOCIAL_COOPERATION` were flipped **ON** by default with real corpus evidence (DEV-003);
+  1 (`ENABLE_ADVENTURE_ROUTING`) kept OFF with a formalized existing rationale (later confirmed
+  structurally inert — zero live gating call sites — by follow-up work); 5 (`ENABLE_COMBAT_ENGAGEMENT`,
+  `ENABLE_SELF_MODEL_COGNITION`, `ENABLE_WORLD_EMERGENCE`, `ENABLE_PROGRESSION_EVOLUTION`,
+  `ENABLE_INFORMATION_INTENT_EXECUTION`) kept OFF pending real trial evidence — all 5 were
+  subsequently validated by dedicated follow-up tickets (below), each confirmed **keep OFF,
+  deferred** with real corpus-trial evidence on file.
+- **Idea 17 (wound/scar)**: severity-scaled penalty formula wired in for real
+  (`WOUND-PENALTY-FORMULA-WIRING`), and wounds were decided to be **permanent until scarred** — no
+  healing mechanism exists or was added (`WOUND-HEALING-DECISION`).
+- **Idea 15 (wound threshold)**: confirmed the live 25% gate was correct; the dead 40% code path was
+  deleted, not reconciled (`WOUND-THRESHOLD-DECISION`).
+- **Idea 24/25 (personal economy, secrets disclosure)**: both correctly scope-blocked as planned
+  (section F) rather than built on an acknowledged-broken foundation.
+
+**Real bugs found and fixed along the way** (not part of the original 19-idea scope, discovered while
+implementing it): `event_extractor.py`'s wound/scar event blocks were `isinstance(x, list)`-blind to
+tuple-shaped state (`HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`); an import-boundary pin drifted
+across two files from the same root commit (`HOTFIX-REDIRECTION-CADENCE-IMPORT-BOUNDARY-VIOLATION`,
+`HOTFIX-INTELLIGENCE-CADENCE-PIN-LINENO-DRIFT`); a pre-existing `TypeError` in heirloom transfer for
+tuple-typed inventories (`LIFECYCLE-HEIRLOOM-INVENTORY-TUPLE-TYPEERROR`); two static gate-checker
+functions were pattern-presence-blind rather than content-aware, the same bug class in two different
+files (`PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS`, `DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED`).
+
+**Follow-up tickets the batch's own real behavior changes required** (all landed on the same
+`m1-quick-wins` branch, 2026-08-26 through 2026-08-31, after the 22-ticket batch itself closed):
+- **5 flag-validation tickets** (`COMBAT-ENGAGEMENT`, `SELF-MODEL-COGNITION`, `WORLD-EMERGENCE`,
+  `PROGRESSION-EVOLUTION`, `INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION`) — each ran a real
+  corpus-profile trial and confirmed **keep OFF, deferred** for its flag, per idea 9's own named
+  follow-up requirement. The `PROGRESSION-EVOLUTION` trial found and disclosed a real pipeline crash
+  (below); the `SELF-MODEL-COGNITION` trial found and disclosed a real grade-anchor drift (below).
+- **`M1-BATCH-CORPUS-GRADE-ANCHOR-REBASELINE`** — the batch's own real behavior changes (flags now ON,
+  several dormant mechanisms now wired live) made 63/71 fast-tier SimQ corpus tests fail against
+  never-updated anchors; re-baselined with fresh evidence, 0 confirmed real regressions among the 61
+  investigated.
+- **`SELFMODEL-PROBE-GRADE-ANCHOR-DRIFT-INVESTIGATION`** — re-anchored the 2 `urban_political_selfmodel*`
+  probe run keys the corpus rebaseline above deliberately excluded (a distinct root cause).
+- **`URBAN-POLITICAL-SOCIAL-1000T-FLOOR-DRIFT-REBASELINE`** — re-baselined the one slow-tier (1000t)
+  test the persistence-backpressure fix (below) unblocked.
+- **`HOTFIX-PROGRESSION-DECISION-CANONICAL-HASH-CRASH`** — real crash fix: `ProgressionConversionPhase`
+  stored a raw dataclass where `CanonicalStateHasher` needed JSON-serializable data.
+- **`HOTFIX-WORLD-EMERGENCE-VESTIGIAL-GATE-CLEANUP`** — removed a dead, undocumented second feature
+  gate that violated the project's Durable State Rule.
+- **`HOTFIX-CALIBRATE-SIMQ-KNOWN-FLAGS-MISSING-ENTRIES`** — the SimQ calibration tool's env-var
+  override allowlist was silently dropping overrides for 6 of 17 live flags.
+- **`SIMQ-PERSISTENCE-BACKPRESSURE-PERF-INVESTIGATION`** — root-caused and fixed a real persistence-
+  phase I/O bottleneck (a redundant synchronous re-serialization, and unconditional per-record
+  flushing) that was causing real calibration-integrity failures on long/heavy runs.
+- **`COOPERATION-OFFER-RETRY-COOLDOWN-MISSING`** / **`COOPERATION-OFFER-CONCURRENT-DUPLICATE-BURST`**
+  — a cooperation-offer bug pair (no post-expiry retry cooldown, no pending-offer creation gate) found
+  via SimQ grade-anchor investigation; both fixed with real corpus-trial evidence.
+- **`KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD`** — `Kernel.shutdown()` stopped
+  `QualityPersistence` before `EventRecorder`'s drain worker, risking silently-dropped in-flight
+  writes; reordered, with a loud-warning backstop.
+- **`HOTFIX-EVENT-RECORDER-BATCH-FLUSH-VISIBILITY-REGRESSION`** — the persistence-backpressure fix's
+  own flush-batching change broke low-volume-writer visibility (a real regression, caught via CI);
+  fixed by moving to a per-drain-cycle flush.
+- **`HOTFIX-AGENTS-MD-37-TO-39-PHASE-COUNT-DRIFT`** / **`STALE-37-PHASE-REFERENCES-SWEEP`** — the
+  authoritative pipeline's real phase count grew from 37 to 39 across this batch's work; synced
+  `AGENTS.md` and its generator (CI-blocking) plus 9 other live docs/skills (non-blocking sweep).
+- **`ENTITY-EVENT-LEDGER-COGNITION-BUNDLE-SET-MISSING`** — `EntityUpdate.cognition_bundle_set` had no
+  event-ledger entry; documented as genuinely silent (no observed event exists), not fixed.
+- **`HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT`** — a hardcoded parity-ledger test baseline
+  drifted from this batch's own real `test_path` additions; updated with fresh evidence.
+
+**Verification**: PR #90 ran CI for the first time ever on 2026-08-31 (previously zero runs across its
+whole lifetime) after the `origin/main` merge triggered it; all 13 checks are green. The 2 real
+regressions CI surfaced (the flush-visibility bug and the phase-count drift) were both found and fixed
+the same day, alongside the sole remaining real (non-environment) gap
+(`cognition_bundle_set`'s missing ledger entry).
 
 ## Problem
 
@@ -58,10 +152,14 @@ these four execution lanes for review/scheduling purposes only (the committed bu
 
 ### B — Now-resolved technical questions (each needs a real fix or an explicit keep-as-is decision, not just documentation)
 
-2. **Idea 15 — Wound threshold: 25% is the live value, 40% is dead code.** Decide: delete
-   `WoundService.should_inflict_wound()`'s unreachable branch, or leave it and correct
-   `docs/mechanics/02_combat_laws.md` and `01_entity_anatomy.md`'s cross-reference so the divergence isn't
-   re-discovered later.
+2. ~~**Idea 15 — Wound threshold: 25% is the live value, 40% is dead code.**~~ **Resolved** by
+   `TCK-20260824-WOUND-THRESHOLD-DECISION` (done): `WoundService.should_inflict_wound()` and
+   `WOUND_THRESHOLD_RATIO` deleted as confirmed zero-real-caller dead code — the live 25% gate in
+   `src/engine/combat.py` was never touched. `docs/mechanics/01_entity_anatomy.md`'s pseudocode
+   identifier renamed `WOUND_THRESHOLD_RATIO` → `WOUND_INFLICTION_RATIO` (value unchanged, 0.25);
+   `docs/mechanics/02_combat_laws.md` needed no change (already used the raw `0.25` literal, no
+   identifier collision). No `intentional_divergences.md` entry — deleting dead code that never
+   diverged from documented law is not itself a divergence.
 3. **Idea 17 — Wound/Scar penalty mechanics.** The severity-scaled formula this card originally described
    is dead code; live combat uses a flat `penalty=5.0` for attack/defense only, and no wound has ever
    healed in production (`WoundUpdate.wounds_heal` has zero producers). Two real decisions bundled: wire

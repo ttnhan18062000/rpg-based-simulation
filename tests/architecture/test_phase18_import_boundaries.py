@@ -170,7 +170,7 @@ _DOMAINS_OBSERVABILITY_PINNED = {
     ("src/domains/campaigns/narrative_ledger.py", 71): (
         "src.observability.events", ("SimulationEvent",),
     ),
-    ("src/domains/campaigns/orchestrator.py", 319): (
+    ("src/domains/campaigns/orchestrator.py", 418): (
         "src.observability.events", ("SimulationEvent",),
     ),
 }
@@ -208,38 +208,38 @@ def test_domains_do_not_import_observability_outside_pinned_exceptions():
 # Expanding this set requires updating both this test and
 # docs/audits/D14_coupling_depth.md's Coupling Inventory together -- not a silent addition.
 _SYSTEMS_ENGINE_PINNED = {
-    ("src/systems/strategic_systems/intelligence.py", 69): (
+    ("src/systems/strategic_systems/intelligence.py", 70): (
         "src.engine.policy", ("GovernorPolicy",),
     ),
-    ("src/systems/strategic_systems/intelligence.py", 75): (
+    ("src/systems/strategic_systems/intelligence.py", 76): (
         "src.engine.spatial_query", ("SpatialQueryService",),
     ),
-    ("src/systems/strategic_systems/intelligence.py", 78): (
+    ("src/systems/strategic_systems/intelligence.py", 79): (
         "src.engine.cadence", ("SystemCadence", "should_run"),
     ),
-    ("src/systems/strategic_systems/intelligence.py", 83): (
+    ("src/systems/strategic_systems/intelligence.py", 84): (
         "src.engine.domain_logic", ("SimulationDomainLogic",),
     ),
-    ("src/systems/strategic_systems/intelligence.py", 664): (
+    ("src/systems/strategic_systems/intelligence.py", 663): (
         "src.engine.cadence", ("should_run",),
     ),
-    ("src/systems/strategic_systems/intelligence.py", 829): (
+    ("src/systems/strategic_systems/intelligence.py", 828): (
         "src.engine.domain_logic", ("SimulationDomainLogic",),
     ),
-    ("src/systems/strategic_systems/intelligence.py", 833): (
+    ("src/systems/strategic_systems/intelligence.py", 832): (
         "src.engine.cadence", ("SystemCadence as DefaultCadence", "should_run"),
     ),
-    ("src/systems/strategic_systems/intelligence.py", 905): (
+    ("src/systems/strategic_systems/intelligence.py", 904): (
         "src.engine.cadence", ("SystemCadence as DefaultCadence", "should_run"),
     ),
-    ("src/systems/strategic_systems/intelligence.py", 958): (
+    ("src/systems/strategic_systems/intelligence.py", 957): (
         "src.engine.cognition", ("AppraisalSystem",),
     ),
     ("src/systems/strategic_systems/detour.py", 22): (
         "src.engine.domain.lead_routing", ("LeadRoutingSystem",),
     ),
-    ("src/systems/strategic_systems/redirection.py", 23): (
-        "src.engine.cadence", ("should_run",),
+    ("src/systems/strategic_systems/redirection.py", 25): (
+        "src.engine.cadence", ("SystemCadence", "should_run"),
     ),
     ("src/systems/economy_systems/market.py", 50): (
         "src.engine.legality", ("LegalityServiceV2",),

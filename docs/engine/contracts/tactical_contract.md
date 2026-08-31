@@ -65,3 +65,33 @@ scope for this ticket: it fixes "does the entity ever navigate there," not "what
 arrives" — extending arrival-dispatch for `TOWN_RETURN`/`RECOVER`/`RESOLVE_BLOCKER` project kinds
 (mirroring the `GUILD` kind's own dedicated `GuildVisitPhase`,
 `TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING`) is a separate, not-yet-filed follow-up.
+
+**Note (`TCK-20260824-TOWN-CENTER-POINTER-FIX`):** As of this ticket, `WorldCompiler.compile()`
+sets `state.town_center` to a real compiled value (the centroid of the first `type=="town"`
+region in declaration order — see `docs/world/compiler_contract.md` step 2a and
+`docs/mechanics/06_worldbuilding_foundation.md` § Town Center Derivation) rather than always
+leaving it at the `(0.0, 0.0)` dataclass default. Nothing above this note asserted anything
+factually false under the old behavior, but the examples and resolution logic in this section
+should now be read as describing a real-value world, not a `(0,0)`-only one.
+
+## 8. Wound/Scar Tactical Signals (TCK-20260824-TACTICAL-WOUND-SCAR-WIRING)
+
+`evaluate_entity_intent` reads the structured wound/scar penalty aggregates already exposed by
+`WoundService` (never re-deriving them) as additional, strictly additive OR-conditions layered on
+top of the existing `hp_percent`/`hp_ratio` checks in this contract's §4 and §6:
+
+- **Cover-seeking/retreat gate** (`tactical.py:483-494`): fires independently of `hp_percent` when
+  summed active-wound penalties (`WoundService.get_wound_stat_penalties(...)`) reach `>= 9.0`
+  (equivalent to a single wound at `severity >= 0.6`). Separately, the gate's own `hp_percent`
+  threshold is raised by `0.01` per aggregate scar-penalty point
+  (`WoundService.get_scar_stat_penalties(...)` summed), capped at `+0.10`.
+- **Guarding logic, PROTECTOR role** (`tactical.py:542-582`): an ally (or the group leader)
+  qualifies as guard-priority when combined wound+scar distress reaches `>= 5.0` (equivalent to a
+  single wound at `severity >= 0.4`), alongside the existing `hp_ratio < 0.8` (leader) /
+  `< 0.7` (other allies) checks.
+
+Both are pure read-only decision signals over already-committed authoritative wound/scar state —
+they do not create, heal, or otherwise mutate any `WoundState`/`ScarState`. For zero-wound/
+zero-scar entities both reduce to exactly the pre-ticket `hp_percent`/`hp_ratio`-only behavior.
+See `docs/mechanics/02_combat_laws.md` § 5 for the full formula derivation and
+`docs/parity_ledger/combat_movement.yaml` for parity status.

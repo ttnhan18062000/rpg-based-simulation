@@ -7,7 +7,7 @@ The bounded authoritative engine phase that runs the progression loop.
 """
 
 from __future__ import annotations
-from dataclasses import replace
+from dataclasses import asdict, replace
 
 from src.core.state import AuthoritativeState
 from src.core.updates import StateUpdate, EntityUpdate
@@ -77,7 +77,10 @@ class ProgressionConversionPhase:
             
             # Store trace / properties for observation
             prop_upd = dict(merged_upd.property_updates)
-            prop_upd["last_progression_decision"] = decision
+            # asdict(): property_updates flows into entity.identity.properties, which
+            # CanonicalStateHasher.to_canonical_json() serializes via plain json.dumps() with
+            # no custom encoder -- the raw dataclass instance is not JSON-serializable.
+            prop_upd["last_progression_decision"] = asdict(decision)
             
             merged_upd = replace(
                 merged_upd,

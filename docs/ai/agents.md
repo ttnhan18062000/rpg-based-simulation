@@ -132,7 +132,7 @@ Use `investigator` when a ticket already exists and you need file-based artifact
 
 **When to invoke directly:** When the investigation is done but the plan needs revision without re-investigating.
 
-**Critical rule:** If plan.md contains "Unresolved Questions", the `implement-ticket` workflow pauses for human input before proceeding to implementation.
+**Critical rule:** If plan.md's `## Unresolved Questions` section body has real content — not empty/whitespace-only, and not a first non-blank line starting with the word "None" (case-insensitive, word-boundary matched) — the `implement-ticket` workflow pauses for human input before proceeding to implementation. The check is content-aware, not heading-presence-only: a heading followed by an empty body or a genuine "None." does not gate (`tools/gate_checks/plan_gate_static.py::plan_has_unresolved_questions_heading`).
 
 ---
 

@@ -429,3 +429,60 @@ class OldDebtCollectedEvent(SimulationEvent):
                 f"(bond={score:.2f})"
             )
         super().__init__(**data)
+
+
+# ---------------------------------------------------------------------------
+# Grief/nemesis reachability events (TCK-20260824-GRIEF-NEMESIS-REACHABILITY)
+# ---------------------------------------------------------------------------
+
+GRIEF_URGENCY_TRIGGERED: str = "grief_urgency_triggered"
+NEMESIS_RELATION_FORMED: str = "nemesis_relation_formed"
+
+
+class GriefUrgencyTriggeredEvent(SimulationEvent):
+    """Emitted when a grief-urgency SOCIAL_THREAT concern is injected for an ally's
+    death — either mid-episode (event_extractor.py lifecycle-transition detection,
+    source_system="event_extractor") or at episode boundary
+    (CampaignOrchestrator._advance_grief_urgencies(), source_system="campaign_orchestrator").
+    """
+    dead_ally_id: int = 0
+    urgency: float = 0.0
+    event_type: str = GRIEF_URGENCY_TRIGGERED
+    event_category: EventCategory = "social"
+    severity: EventSeverity = "INFO"
+    source_system: str = "event_extractor"
+    message: str = ""
+
+    def __init__(self, **data: Any) -> None:
+        if "message" not in data or not data["message"]:
+            eid = data.get("entity_id")
+            did = data.get("dead_ally_id", 0)
+            urgency = data.get("urgency", 0.0)
+            data["message"] = (
+                f"Entity {eid} grieves ally {did}'s death (urgency={urgency:.2f})"
+            )
+        super().__init__(**data)
+
+
+class NemesisRelationFormedEvent(SimulationEvent):
+    """Emitted when a new NemesisRelation is formed at episode boundary
+    (CampaignOrchestrator._advance_nemesis_relations()).
+    """
+    antagonist_id: int = 0
+    strength: float = 0.0
+    event_type: str = NEMESIS_RELATION_FORMED
+    event_category: EventCategory = "social"
+    severity: EventSeverity = "INFO"
+    source_system: str = "campaign_orchestrator"
+    message: str = ""
+
+    def __init__(self, **data: Any) -> None:
+        if "message" not in data or not data["message"]:
+            eid = data.get("entity_id")
+            aid = data.get("antagonist_id", 0)
+            strength = data.get("strength", 0.0)
+            data["message"] = (
+                f"Entity {eid} forms a nemesis relation with entity {aid} "
+                f"(strength={strength:.2f})"
+            )
+        super().__init__(**data)

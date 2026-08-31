@@ -1,6 +1,14 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Dict, List, Set, Optional
+
+
+class RelationshipRole(str, Enum):
+    """Categorical relationship tag on a directed SocialBond. Independent of nemesis_ids/grudge_history."""
+    NEUTRAL = "neutral"
+    FRIEND = "friend"
+    RIVAL = "rival"
 
 @dataclass(frozen=True, slots=True)
 class SocialBond:
@@ -9,6 +17,7 @@ class SocialBond:
     familiarity: float = 0.0 # Interaction depth (0.0 to 1.0)
     sentiment: float = 0.0   # Bias/Liking (-1.0 to 1.0)
     last_interaction_tick: int = 0
+    role: RelationshipRole = RelationshipRole.NEUTRAL
 
 @dataclass(frozen=True, slots=True)
 class BetrayalRecord:

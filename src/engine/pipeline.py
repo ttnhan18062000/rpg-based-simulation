@@ -137,6 +137,27 @@ class AuthoritativeApplyPipeline:
 
         costs["trust_validity"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Enhanced RPG Phase 2.5: Causal Memory Update ---
+        # recent_world_events reflects last tick's window -- one-tick lag is inherent (state
+        # frozen), same as faction_awareness below: a COMBAT_LOSS event produced during this
+        # tick's action_routing (which runs later in this same tick) is only visible here
+        # starting next tick.
+        t_start = time.perf_counter_ns()
+        from src.domains.memory.phase import MemoryUpdatePhase
+        from src.domains.world_emergence.schema import WorldEventCategory
+        _recent_events_for_memory = getattr(state, "recent_world_events", [])
+        _memory_trigger_events = [
+            {"entity_id": int(e.subject), "kind": "combat_loss", "id": f"combat_loss_{e.tick}_{e.subject}", "region_id": e.region_id}
+            for e in _recent_events_for_memory
+            if e.category == WorldEventCategory.COMBAT_LOSS and e.subject is not None
+        ]
+        update = run_phase(
+            "memory_update", update,
+            lambda u: MemoryUpdatePhase.apply(state, u, _memory_trigger_events),
+            "ENABLE_MEMORY_UPDATE",
+        )
+        costs["memory_update"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 2: Self Model Cognition ---
         t_start = time.perf_counter_ns()
         from src.cognition import SelfModelUpdatePhase
@@ -332,6 +353,7 @@ class AuthoritativeApplyPipeline:
         
         update = run_phase("strategic_intelligence", update, lambda u: StrategicIntelligenceSystem.fused_strategic_pass(state, u, cadence=cadence))
         t2 = time.perf_counter_ns()
+        update = run_phase("lead_contradiction", update, lambda u: AuthoritativeApplyPipeline._enforce_lead_contradiction(state, u))
         update = run_phase("near_death_hardening", update, lambda u: AuthoritativeApplyPipeline._apply_near_death_hardening(state, u))
         t3 = time.perf_counter_ns()
         update = run_phase("occupancy_resolution", update, lambda u: AuthoritativeApplyPipeline._resolve_occupancy_conflicts(state, u))
@@ -421,6 +443,17 @@ class AuthoritativeApplyPipeline:
     ) -> StateUpdate:
         from src.engine.pipeline_phases.hardening import NearDeathHardeningPhase
         return NearDeathHardeningPhase.apply(state, update)
+
+    @staticmethod
+    def _enforce_lead_contradiction(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
+        from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
+        new_update, _events = LeadContradictionSystem.enforce(state, update)
+        # _events intentionally discarded at this boundary -- refine() has no StateUpdate
+        # field that can carry List[SimulationEvent] out (same limitation
+        # WorldEmergencePhase.execute()[0] already lives with at pipeline.py:311). The
+        # equivalent events are re-derived from the resulting state diff by
+        # EventExtractor.extract() instead (see docs/parity_ledger Decisions Log, Option A).
+        return new_update
     
     @staticmethod
     def _resolve_quest_rewards(

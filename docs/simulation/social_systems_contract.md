@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-08-29
 ---
 
 # Social Systems Contract
@@ -41,6 +41,23 @@ Compliance IDs: SOC-001, SOC-002, SOC-004, SOC-008, STRAT-071, STRAT-073
 | RECRUITMENT | Social fatigue check; checks entity's current party commitment; employment cost evaluation |
 | LOAN | Simple trust threshold; no counter-terms |
 | POSITION_SWAP | Spatial proximity check; validates both parties can reach the target position |
+| MERCHANT | `_appraise_trade`: utility = `price / item_value` (hard-cancel to `INSUFFICIENT_INCENTIVE` if `item_value <= 0` or utility `< 0.5`); score = `trust_score × 0.4 + min(1.0, utility) × 0.6`; `>= 0.6` → ACCEPTED (`FAIR_COMPENSATION`); `>= 0.4` and `negotiation_count < 2` → COUNTERED at `price = item_value` (`HAGGLING_FOR_PAY`); else CANCELLED |
+| TEAM_UP | `_appraise_team_up`: pure trust gate, no utility/pay dimension — reuses `_appraise_recruitment`'s HIGH-risk/low-HP hard rejection (`FAILED, LOW_HP_RETREAT`); `trust_score >= 0.6` → ACCEPTED (`TEAM_UP_ACCEPTED`), else CANCELLED (`TEAM_UP_DECLINED`); no counter-terms |
+| PAID_INFORMATION | `_appraise_paid_information`: always ACCEPTED (`INFORMATION_SALE_ACCEPTED`) once the shared trust/hard-cancel prelude passes — the prelude alone is the entire gate. `PaidInformationTransactionSystem.enforce()` synthesizes a transient (non-persisted) `ContractState(kind=PAID_INFORMATION)` per seeker/provider pair, mirroring `execute_recruit()`'s `temp_contract` pattern, purely to gate whether it emits a `ResourceTransferIntent` — see `docs/engine/authoritative_pipeline.md`'s Economy & Evolution phase |
+
+All three added kinds route through the same shared trust/hard-cancel prelude above (steps 1–4)
+before kind dispatch — no behavior change to that prelude. `CoreActions.execute_team_up()` and
+`execute_trade()` (`src/engine/domain/core_actions.py`) mirror `execute_recruit()`'s
+temp-contract-then-appraise-then-branch shape; on ACCEPTED, both attach the resulting
+`ContractState` via `EntityUpdate.strategic` with **no `ResourceTransferIntent`** — no gold changes
+hands on TEAM_UP formation, and MERCHANT/Trade's `price` is recorded in the contract's `terms` but
+not itself resolved as a transfer by these handlers. `TEAM_UP` is a distinct mechanism from
+`party.py`'s COOPERATION/RECRUITMENT-only party-assembly condition (see Party section below) — an
+ACTIVE `TEAM_UP` contract does not itself trigger `PartyRecord` formation. `ContractKind.MERCHANT`
+was previously declared but unhandled (fell through to `CANCELLED, UNKNOWN`); it is now live via
+`_appraise_trade`. Affection/liking continues to be represented entirely by the existing
+`SocialBond.sentiment` field (see Relationships section) — no new field was added for any of the
+three new kinds.
 
 ### Re-appraisal triggers
 
@@ -67,7 +84,7 @@ Compliance IDs: SOC-193–SOC-196, SOC-217
 
 ### Social bonds
 
-`SocialBond` is a richer directional relationship: `familiarity`, `sentiment` (−1.0 to 1.0), `last_interaction_tick`. Bonds are formed for entities with high familiarity or strong sentiment. Bond sentiment takes priority over trust_history in appraisal.
+`SocialBond` is a richer directional relationship: `familiarity`, `sentiment` (−1.0 to 1.0), `last_interaction_tick`, `role` (`RelationshipRole`: `NEUTRAL` default / `FRIEND` / `RIVAL`, SOC-247). Bonds are formed for entities with high familiarity or strong sentiment. Bond sentiment takes priority over trust_history in appraisal. `role` is settable only through the authoritative `SocialBondUpdate.role_set` → `RelationshipService.process_update()` path, and `RIVAL` is independent of `nemesis_ids`/`grudge_history`-driven nemesis promotion below.
 
 ### Decay
 
@@ -141,12 +158,14 @@ divergence_note for the pre-existing SOC-231/SOC-232 docstring mis-citation, not
 `PartyCompositionScorer.score(entities, actor=None)` scores a candidate pool's party-formation
 quality, 0.0–1.0: `0.6 × role_diversity + 0.4 × OCEAN_compatibility` (TANK/HEALER/DPS/SUPPORT role
 coverage; bravery/sociability variance). When `actor` (the entity forming the party) is supplied,
-an additional `0.15 ×` mean directed trust/bond term is added and the result clamped to
-`[0.0, 1.0]` — see `docs/mechanics/04_strategic_cognition.md` §7. Bond sentiment takes priority
-over `trust_history` when both exist for a candidate, matching the Relationships section's rule
-above. Used by `AdventureRouteGenerator`'s FORM_PARTY route (`src/domains/adventure/`) and by
-`GroupSystem`'s ally-cohesion group formation (`src/systems/world_systems/groups.py`, which never
-passes `actor` and is unaffected by the trust/bonds term).
+an additional `0.15 ×` mean directed trust/bond term is added, plus a `0.10 ×` mean directed
+`RelationshipRole` affinity term (`FRIEND` → +1.0, `RIVAL` → −1.0, `NEUTRAL`/no bond → 0.0, SOC-247),
+and the result clamped to `[0.0, 1.0]` — see `docs/mechanics/04_strategic_cognition.md` §7. Bond
+sentiment takes priority over `trust_history` when both exist for a candidate, matching the
+Relationships section's rule above. Used by `AdventureRouteGenerator`'s FORM_PARTY route
+(`src/domains/adventure/`) and by `GroupSystem`'s ally-cohesion group formation
+(`src/systems/world_systems/groups.py`, which never passes `actor` and is unaffected by the
+trust/bonds or role-affinity terms).
 
 ---
 

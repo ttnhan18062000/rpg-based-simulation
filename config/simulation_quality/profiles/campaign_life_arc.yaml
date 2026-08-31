@@ -1,0 +1,6 @@
+# TCK-20260824-GRIEF-NEMESIS-REACHABILITY -- campaign-aware SimQ profile. campaign_episodes
+# selects the new _run_campaign_engine() branch in tools/calibrate_simq.py instead of the
+# single-episode _run_engine() Kernel.tick_once() loop.
+campaign_episodes: 3
+feature_flags:
+  ENABLE_LIFE_ARC_CAMPAIGNS: "ON"

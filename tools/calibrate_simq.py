@@ -71,6 +71,29 @@ def _load_profile_feature_flags(profile: str) -> dict:
         return {}
 
 
+def _load_profile_campaign_episodes(profile: str) -> int:
+    """Read the optional ``campaign_episodes:`` key from a scoring profile YAML.
+
+    Returns 0 (selecting the single-episode ``_run_engine()`` path) if the profile file
+    does not exist, has no ``campaign_episodes:`` key, or the value is not a positive
+    int. A profile with ``campaign_episodes: N`` (N > 0) selects ``_run_campaign_engine()``
+    instead — see main() (TCK-20260824-GRIEF-NEMESIS-REACHABILITY).
+    """
+    profile_path = os.path.join(
+        "config", "simulation_quality", "profiles", f"{profile}.yaml"
+    )
+    if not os.path.exists(profile_path):
+        return 0
+    try:
+        import yaml
+        with open(profile_path, encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh) or {}
+        return int(raw.get("campaign_episodes", 0) or 0)
+    except Exception as exc:
+        logger.warning("Could not read campaign_episodes from profile '%s': %s", profile, exc)
+        return 0
+
+
 def _load_weights(profile: str = "default"):
     from src.simulation_quality.weights import ScoringWeights
     return ScoringWeights.load(
@@ -211,19 +234,20 @@ def _run_engine(
         state = AuthoritativeState(tick=0, seed=seed, entities=entities)
 
     # Inject feature-flag overrides from the calibration profile YAML and environment variables.
-    # Recognized flags: ENABLE_ADVENTURE_ROUTING, ENABLE_COMBAT_ENGAGEMENT,
-    # ENABLE_SOCIAL_COOPERATION, ENABLE_WORLD_EMERGENCE, ENABLE_BELIEF_ASSIMILATION,
-    # ENABLE_PROGRESSION_EVOLUTION, ENABLE_LIFE_ARC_CAMPAIGNS, etc.
+    # Recognized flags: see _KNOWN_FLAGS below (kept in sync with FeatureFlagManager's live
+    # registry in src/domains/optimization/feature_flags.py).
     # Profile YAML feature_flags are applied first; env vars override profile values.
     # Example: ENABLE_ADVENTURE_ROUTING=ON python3 tools/calibrate_simq.py ...
     from src.domains.optimization.feature_flags import FeatureMode
     _KNOWN_FLAGS = [
         "ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL_COGNITION",
-        "ENABLE_ADVENTURE_ROUTING", "ENABLE_COMBAT_ENGAGEMENT",
-        "ENABLE_BELIEF_ASSIMILATION", "ENABLE_PROGRESSION_EVOLUTION",
-        "ENABLE_SOCIAL_COOPERATION", "ENABLE_WORLD_EMERGENCE",
+        "ENABLE_MEMORY_UPDATE", "ENABLE_ADVENTURE_ROUTING", "ENABLE_COMBAT_ENGAGEMENT",
+        "ENABLE_BELIEF_ASSIMILATION", "ENABLE_INFORMATION_INTENT_EXECUTION",
+        "ENABLE_PROGRESSION_EVOLUTION", "ENABLE_SOCIAL_COOPERATION", "ENABLE_WORLD_EMERGENCE",
         "ENABLE_LIFE_ARC_CAMPAIGNS", "ENABLE_ENHANCED_TRACE_EVENTS",
-        "ENABLE_PUSH_EVENT_SHAPERS",
+        "ENABLE_PUSH_EVENT_SHAPERS", "ENABLE_PUSH_EVENT_SHAPERS_PHASE2",
+        "ENABLE_GUILD_QUEST_GENERATION", "ENABLE_PUSH_EVENT_SHAPERS_QUEST",
+        "ENABLE_PUSH_EVENT_SHAPERS_AGENCY",
     ]
 
     def _parse_flag_value(raw: str) -> FeatureMode | None:
@@ -252,6 +276,16 @@ def _run_engine(
         if mode is not None:
             combined_flag_overrides[flag] = mode
             logger.info("Feature flag override from env: %s=%s", flag, mode)
+
+    # 3. Warn on unrecognized ENABLE_* env vars so a future _KNOWN_FLAGS drift (like
+    # TCK-20260830-HOTFIX-CALIBRATE-SIMQ-KNOWN-FLAGS-MISSING-ENTRIES) is self-diagnosing
+    # instead of silently dropping the override.
+    for env_key in os.environ:
+        if env_key.startswith("ENABLE_") and env_key not in _KNOWN_FLAGS:
+            logger.warning(
+                "Env var %s starts with ENABLE_ but is not in _KNOWN_FLAGS — "
+                "it will NOT be applied as a feature-flag override.", env_key,
+            )
 
     if combined_flag_overrides:
         existing = dict(getattr(state, "feature_flags", None) or {})
@@ -336,6 +370,83 @@ def _run_engine(
         run_dir = dirs[0] if dirs else ""
 
     return run_dir, elapsed, run_id or ""
+
+
+def _run_campaign_engine(
+    name: str,
+    seed: int,
+    ticks: int,
+    episodes: int,
+    entity_count: int = 10,
+    extra_flags: dict | None = None,
+    cal_dir: str | None = None,
+) -> tuple[str, float, str]:
+    """Drive CampaignOrchestrator.run_episode() N times; return (run_dir, elapsed_sec, run_id).
+
+    Parallel to _run_engine() (same (run_dir, elapsed, run_id) return contract) but for
+    campaign-mode profiles (``campaign_episodes > 0`` in the profile YAML, selected by
+    main() via _load_profile_campaign_episodes()). Establishes a real production entry
+    point for CampaignOrchestrator.run_episode() — previously reachable only from test
+    scaffolding (TCK-20260824-GRIEF-NEMESIS-REACHABILITY).
+
+    Each episode runs its own Kernel (via ScenarioRuntimeService inside
+    CampaignOrchestrator) and writes its own ``data/runs/{episode_run_id}/
+    simulation_events.jsonl``. After all episodes complete, those per-episode JSONL
+    files are appended onto the campaign-level EventRecorder's own JSONL file so that
+    main()'s existing _replay_jsonl_through_hub() sees every episode's mid-tick events
+    (including grief_urgency_triggered) plus the campaign-level events
+    (nemesis_relation_formed, chronicle_entry_created) in one replay pass.
+
+    ``extra_flags`` is accepted for signature parity with _run_engine() but not applied
+    here — campaign-mode profiles set feature flags via CampaignOrchestrator's own
+    AuthoritativeState construction path, not a single upfront Kernel construction.
+    """
+    from src.domains.campaigns.orchestrator import CampaignManifest, CampaignOrchestrator
+    from src.observability.event_recorder import EventRecorder
+    from src.scenarios.schema import SimulationScenarioDefinition
+
+    campaign_run_id = f"campaign_{name}_{int(time.time())}"
+    campaign_run_dir = os.path.join("data", "runs", campaign_run_id)
+
+    manifest = CampaignManifest(
+        id=name,
+        episodes=[
+            SimulationScenarioDefinition(
+                id=f"{name}_ep{i}",
+                world_composition="frontier_living_world",
+                perspective="hero_guild_perspective",
+                victory_conditions=[{"kind": "tick_limit", "value": ticks}],
+            )
+            for i in range(episodes)
+        ],
+        base_seed=seed,
+    )
+
+    campaign_recorder = EventRecorder(run_dir=campaign_run_dir, max_events=5000, enabled=True)
+    orchestrator = CampaignOrchestrator(manifest, event_recorder=campaign_recorder)
+
+    start = time.perf_counter()
+    episode_run_ids: list[str] = []
+    for _ in range(episodes):
+        summary = orchestrator.run_episode()
+        if summary.run_id:
+            episode_run_ids.append(summary.run_id)
+    elapsed = time.perf_counter() - start
+
+    campaign_recorder.shutdown()
+    time.sleep(0.3)
+
+    if campaign_recorder.filepath:
+        with open(campaign_recorder.filepath, "a", encoding="utf-8") as out_fh:
+            for episode_run_id in episode_run_ids:
+                episode_jsonl = os.path.join(
+                    "data", "runs", episode_run_id, "simulation_events.jsonl"
+                )
+                if os.path.exists(episode_jsonl):
+                    with open(episode_jsonl, encoding="utf-8") as in_fh:
+                        out_fh.write(in_fh.read())
+
+    return campaign_run_dir, elapsed, campaign_run_id
 
 
 def _replay_jsonl_through_hub(run_dir: str, hub) -> int:
@@ -425,10 +536,18 @@ def main():
         print(f"[calibrate_simq] Profile feature flags: {profile_feature_flags}")
 
     print(f"[calibrate_simq] Running engine: {run_tag} entities={args.entities} profile={profile}")
-    engine_run_dir, elapsed, run_id = _run_engine(
-        args.name, args.seed, args.ticks, args.entities,
-        extra_flags=profile_feature_flags, cal_dir=cal_dir,
-    )
+    campaign_episodes = _load_profile_campaign_episodes(profile)
+    if campaign_episodes > 0:
+        print(f"[calibrate_simq] Campaign-mode profile: {campaign_episodes} episode(s)")
+        engine_run_dir, elapsed, run_id = _run_campaign_engine(
+            args.name, args.seed, args.ticks, campaign_episodes, args.entities,
+            extra_flags=profile_feature_flags, cal_dir=cal_dir,
+        )
+    else:
+        engine_run_dir, elapsed, run_id = _run_engine(
+            args.name, args.seed, args.ticks, args.entities,
+            extra_flags=profile_feature_flags, cal_dir=cal_dir,
+        )
     print(f"[calibrate_simq] Engine done in {elapsed:.2f}s. JSONL at: {engine_run_dir}")
 
     weights = _load_weights(profile)

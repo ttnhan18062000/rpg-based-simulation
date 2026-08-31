@@ -277,8 +277,8 @@ class EventExtractor:
                         },
                     ))
 
-                entity_wounds = entity.combat.wounds if isinstance(entity.combat.wounds, list) else []
-                prior_wounds = prior_ent.combat.wounds if isinstance(prior_ent.combat.wounds, list) else []
+                entity_wounds = entity.combat.wounds if isinstance(entity.combat.wounds, (list, tuple)) else []
+                prior_wounds = prior_ent.combat.wounds if isinstance(prior_ent.combat.wounds, (list, tuple)) else []
                 prior_wound_ids = {w.id for w in prior_wounds}
                 for wound in entity_wounds:
                     if wound.id not in prior_wound_ids:
@@ -299,8 +299,8 @@ class EventExtractor:
                             source_system="event_extractor", message="",
                             payload={"wound_id": wound.id, "kind": wound.kind},
                         ))
-                entity_scars = entity.combat.scars if isinstance(entity.combat.scars, list) else []
-                prior_scars = prior_ent.combat.scars if isinstance(prior_ent.combat.scars, list) else []
+                entity_scars = entity.combat.scars if isinstance(entity.combat.scars, (list, tuple)) else []
+                prior_scars = prior_ent.combat.scars if isinstance(prior_ent.combat.scars, (list, tuple)) else []
                 prior_scar_ids = {s.id for s in prior_scars}
                 for scar in entity_scars:
                     if scar.id not in prior_scar_ids:
@@ -801,6 +801,43 @@ class EventExtractor:
                                 "lead_id": lid,
                                 "certainty_delta": round(_curr_cv - _prior_cv, 4),
                                 "lead_active": entity.strategic.current_project_id is not None,
+                            },
+                        ))
+                    # belief_contradiction / lead_contradiction_resolved (this ticket): fires when
+                    # LeadContradictionSystem.enforce() (run_phase "lead_contradiction") has just
+                    # transitioned this lead to EXHAUSTED + test_outcome="FAILURE" this tick. Mirrors
+                    # the exact payload shape LeadContradictionSystem.enforce() itself builds so a
+                    # refine()-driven test observes identical events to a direct .enforce() call.
+                    _prior_failed = (
+                        prior_lead is not None
+                        and getattr(prior_lead, "test_outcome", None) == "FAILURE"
+                        and getattr(prior_lead.certainty, "value", str(prior_lead.certainty)) == "EXHAUSTED"
+                    )
+                    _curr_failed = (
+                        getattr(lead, "test_outcome", None) == "FAILURE"
+                        and getattr(lead.certainty, "value", str(lead.certainty)) == "EXHAUSTED"
+                    )
+                    if prior_lead is not None and _curr_failed and not _prior_failed:
+                        events.append(SimulationEvent(
+                            event_type="belief_contradiction", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="lead_contradiction_system", message="",
+                            payload={
+                                "lead_id": lid,
+                                "provider_id": getattr(lead, "source_entity_id", None),
+                                "subject": lead.subject,
+                                "old_certainty": getattr(prior_lead.certainty, "value", str(prior_lead.certainty)),
+                                "failure_count": lead.failure_count,
+                            },
+                        ))
+                        events.append(SimulationEvent(
+                            event_type="lead_contradiction_resolved", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="lead_contradiction_system", message="",
+                            payload={
+                                "lead_id": lid,
+                                "subject": lead.subject,
+                                "failure_count": lead.failure_count,
                             },
                         ))
                     # belief_stale: lead dormant for > threshold ticks without certainty update
@@ -1661,3 +1698,46 @@ class EventExtractor:
                     ))
 
         return events
+
+    @staticmethod
+    def detect_grief_triggers(
+        prior_state: AuthoritativeState,
+        current_state: AuthoritativeState,
+    ) -> List[Any]:
+        """Detect mid-tick grief-urgency triggers from a live ally's death.
+
+        Re-walks the same lifecycle.active True→False transition condition used above
+        (line ~483's death-detection block) independently, as a second bounded pass over
+        current_state.entities — EventExtractor.extract()'s own List[SimulationEvent]
+        return type must not change (regression risk to its many callers/tests), so this
+        lives as a sibling method rather than folded into extract() itself.
+
+        Returns (griever_id, dead_ally_id, urgency) triples for every currently-alive
+        entity whose entity.social.trust_history toward the newly-dead entity meets
+        ALLY_TRUST_THRESHOLD. Urgency uses the exact same formula as
+        CampaignOrchestrator._advance_grief_urgencies() (min(1.0, trust * 0.8)) so the
+        mid-episode and episode-boundary trigger paths cannot drift apart.
+
+        Called from Kernel._phase_observability, immediately after this class's own
+        extract() call (TCK-20260824-GRIEF-NEMESIS-REACHABILITY) — the caller builds
+        GriefUrgencyTriggeredEvent from each triple and queues the triple onto
+        Kernel._pending_grief_triggers for a later tick's _phase_resolution to drain
+        through StrategicPatch/ApplyPath.
+        """
+        from src.core.social_constants import ALLY_TRUST_THRESHOLD
+
+        triggers: List[Any] = []
+        for eid, entity in current_state.entities.items():
+            prior_ent = prior_state.entities.get(eid)
+            if prior_ent is None:
+                continue
+            if not (prior_ent.lifecycle.active and not entity.lifecycle.active):
+                continue
+            for other_id, other in current_state.entities.items():
+                if other_id == eid or not other.lifecycle.active:
+                    continue
+                trust = getattr(other.social, "trust_history", {}).get(eid, 0.0)
+                if trust >= ALLY_TRUST_THRESHOLD:
+                    urgency = round(min(1.0, trust * 0.8), 6)
+                    triggers.append((other_id, eid, urgency))
+        return triggers

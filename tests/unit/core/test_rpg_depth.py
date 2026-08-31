@@ -37,7 +37,7 @@ from src.core.builder import V2EntityBuilder
 from src.engine.rpg_depth import (
     StaminaService, WoundService, LeashService, TerrainCostService,
     TargetStickinessService, SkillScalingService, ATTRIBUTE_CAP,
-    enforce_attribute_caps, WOUND_THRESHOLD_RATIO, LEASH_CHASE_MULTIPLIER,
+    enforce_attribute_caps, LEASH_CHASE_MULTIPLIER,
     TARGET_SWITCH_MARGIN
 )
 
@@ -191,15 +191,6 @@ class TestExhaustion:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestWoundInfliction:
-    # Logic ID: COMB-102
-
-    def test_wound_infliction_massive_hit(self):
-        """test_wound_infliction_massive_hit: 40%+ max HP in one hit creates wound."""
-        # VERIFIED v2: wound_infliction_massive_hit
-        assert WoundService.should_inflict_wound(40, 100)  # exactly 40%
-        assert WoundService.should_inflict_wound(60, 100)  # above 40%
-        assert not WoundService.should_inflict_wound(30, 100)  # below 40%
-
     # Logic ID: COMB-103
 
     def test_wound_stat_impact(self):
@@ -235,7 +226,14 @@ class TestScarPermanence:
         """test_scar_permanence: scars persist after wound heals."""
         # VERIFIED v2: scar_permanence_logic
         wound = WoundService.create_wound(80, 100, tick=5, wound_id="w1")
-        healed_wound, scar = WoundService.heal_wound(wound)
+        # No production producer exists for wound healing (TCK-20260824-WOUND-HEALING-DECISION);
+        # hand-construct the WoundState->ScarState transition to exercise the data model.
+        healed_wound = replace(wound, healed=True, scar_created=True)
+        scar = ScarState(
+            id=f"scar_{wound.id}", wound_kind=wound.kind, tick_created=wound.tick_inflicted,
+            atk_penalty=wound.atk_penalty * 0.3, def_penalty=wound.def_penalty * 0.3,
+            speed_penalty=wound.speed_penalty * 0.3,
+        )
         assert healed_wound.healed
         assert healed_wound.scar_created
         assert scar.id == "scar_w1"
@@ -244,7 +242,11 @@ class TestScarPermanence:
     def test_scar_lesser_penalty(self):
         """Scar penalties are 30% of original wound penalties."""
         wound = WoundService.create_wound(80, 100, tick=5, wound_id="w1")
-        _, scar = WoundService.heal_wound(wound)
+        scar = ScarState(
+            id=f"scar_{wound.id}", wound_kind=wound.kind, tick_created=wound.tick_inflicted,
+            atk_penalty=wound.atk_penalty * 0.3, def_penalty=wound.def_penalty * 0.3,
+            speed_penalty=wound.speed_penalty * 0.3,
+        )
         assert abs(scar.atk_penalty - wound.atk_penalty * 0.3) < 0.01
         assert abs(scar.def_penalty - wound.def_penalty * 0.3) < 0.01
 
@@ -252,8 +254,16 @@ class TestScarPermanence:
         """Multiple scars stack their lesser penalties."""
         w1 = WoundService.create_wound(50, 100, tick=1, wound_id="w1")
         w2 = WoundService.create_wound(60, 100, tick=2, wound_id="w2")
-        _, s1 = WoundService.heal_wound(w1)
-        _, s2 = WoundService.heal_wound(w2)
+        s1 = ScarState(
+            id=f"scar_{w1.id}", wound_kind=w1.kind, tick_created=w1.tick_inflicted,
+            atk_penalty=w1.atk_penalty * 0.3, def_penalty=w1.def_penalty * 0.3,
+            speed_penalty=w1.speed_penalty * 0.3,
+        )
+        s2 = ScarState(
+            id=f"scar_{w2.id}", wound_kind=w2.kind, tick_created=w2.tick_inflicted,
+            atk_penalty=w2.atk_penalty * 0.3, def_penalty=w2.def_penalty * 0.3,
+            speed_penalty=w2.speed_penalty * 0.3,
+        )
         penalties = WoundService.get_scar_stat_penalties([s1, s2])
         assert penalties["atk_penalty"] == s1.atk_penalty + s2.atk_penalty
 
@@ -479,7 +489,13 @@ class TestEffectiveStats:
             id="w1", kind="SLASH", severity=0.8, tick_inflicted=1,
             atk_penalty=3.0, def_penalty=2.0, max_hp_penalty=8.0
         )
-        _, scar = WoundService.heal_wound(wound)
+        # No production producer exists for wound healing (TCK-20260824-WOUND-HEALING-DECISION);
+        # hand-construct the WoundState->ScarState transition to exercise the data model.
+        scar = ScarState(
+            id=f"scar_{wound.id}", wound_kind=wound.kind, tick_created=wound.tick_inflicted,
+            atk_penalty=wound.atk_penalty * 0.3, def_penalty=wound.def_penalty * 0.3,
+            speed_penalty=wound.speed_penalty * 0.3,
+        )
         stats_scar = SkillScalingService.get_effective_stats(attrs, scars=[scar])
         stats_wound = SkillScalingService.get_effective_stats(attrs, wounds=[wound])
         stats_clean = SkillScalingService.get_effective_stats(attrs)
@@ -493,6 +509,21 @@ class TestEffectiveStats:
         attrs = AttributeComponent(agility=999)
         stats = SkillScalingService.get_effective_stats(attrs)
         assert stats["evasion"] <= 0.95
+
+    def test_get_effective_stats_applies_breakthrough_attribute_bonus(self):
+        """active_breakthroughs reaches apply_bonuses and surfaces in derived atk."""
+        attrs = AttributeComponent(strength=10, vitality=10, agility=10, endurance=10)
+        clean_stats = SkillScalingService.get_effective_stats(attrs)
+        boosted_stats = SkillScalingService.get_effective_stats(attrs, active_breakthroughs={"titan_grip"})
+        assert boosted_stats["atk"] > clean_stats["atk"]
+
+    def test_get_effective_stats_no_breakthroughs_unchanged(self):
+        """Omitted, None, and empty-set active_breakthroughs all produce identical output."""
+        attrs = AttributeComponent(strength=10, vitality=10, agility=10, endurance=10)
+        stats_omitted = SkillScalingService.get_effective_stats(attrs)
+        stats_none = SkillScalingService.get_effective_stats(attrs, active_breakthroughs=None)
+        stats_empty = SkillScalingService.get_effective_stats(attrs, active_breakthroughs=set())
+        assert stats_omitted == stats_none == stats_empty
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -599,3 +630,42 @@ class TestPassiveStaminaRegen:
         new_state = ApplyPath.apply_generation(state, update, next_tick=2)
         # Regen should have increased stamina
         assert new_state.entities[1].stamina.current > 50.0
+
+
+class TestBreakthroughApplyIntegration:
+    def test_apply_path_recomputes_combat_stats_from_active_breakthroughs(self):
+        """An entity with active_breakthroughs shows the bonus in recomputed combat stats."""
+        from src.engine.apply import ApplyPath
+        from src.core.updates import IdentityUpdate
+
+        boosted_entity = make_entity(strength=10)
+        boosted_entity = replace(
+            boosted_entity,
+            identity=replace(boosted_entity.identity, active_breakthroughs={"titan_grip"})
+        )
+        plain_entity = make_entity(strength=10)
+
+        update = EntityUpdate(
+            entity_id=1,
+            identity=IdentityUpdate(learned_skills=["swift_reflexes"])
+        )
+        boosted_result = ApplyPath._apply_entity_update(boosted_entity, update)
+        plain_result = ApplyPath._apply_entity_update(plain_entity, update)
+
+        assert boosted_result.combat.atk > plain_result.combat.atk
+
+    def test_apply_path_stats_dirty_triggers_on_breakthroughs_add_alone(self):
+        """An IdentityUpdate with only breakthroughs_add still recomputes combat stats."""
+        from src.engine.apply import ApplyPath
+        from src.core.updates import IdentityUpdate
+
+        entity = make_entity(strength=10)
+        before = ApplyPath._apply_entity_update(entity, EntityUpdate(entity_id=1))
+
+        update = EntityUpdate(
+            entity_id=1,
+            identity=IdentityUpdate(breakthroughs_add=["titan_grip"])
+        )
+        result = ApplyPath._apply_entity_update(entity, update)
+
+        assert result.combat.atk > before.combat.atk

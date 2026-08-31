@@ -76,6 +76,8 @@ _DELIBERATE_ON_DEFAULT_FLAGS = frozenset({
     "ENABLE_PUSH_EVENT_SHAPERS_PHASE2",  # TCK-20260806-PUSH-CUTOVER-PHASE2
     "ENABLE_PUSH_EVENT_SHAPERS_QUEST",   # TCK-20260807-QUEST-EVENT-PUSH-MIGRATION
     "ENABLE_PUSH_EVENT_SHAPERS_AGENCY",  # TCK-20260807-COMMITMENT-ABANDONED-PUSH-MIGRATION-GAP / TCK-20260807-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP
+    "ENABLE_BELIEF_ASSIMILATION",        # TCK-20260824-ROLLOUT-FLAG-DECISIONS (DEV-003) -- already ON in real corpus profiles
+    "ENABLE_SOCIAL_COOPERATION",         # TCK-20260824-ROLLOUT-FLAG-DECISIONS (DEV-003) -- already ON in real corpus profile
 })
 
 
@@ -174,26 +176,31 @@ def test_all_flags_default_off_for_every_loaded_scenario(
     scenario_id: str, scenario: Dict[str, Any]
 ):
     """
-    All 10 Phase 10 FeatureMode flags are OFF by default for every loaded scenario.
+    All 10 Phase 10 FeatureMode flags are OFF by default for every loaded scenario, except the
+    explicit, named, documented _DELIBERATE_ON_DEFAULT_FLAGS exceptions (real cutovers, not
+    accidental defaults).
 
-    A fresh FeatureFlagManager constructed without overrides must have every flag
+    A fresh FeatureFlagManager constructed without overrides must have every non-allowlisted flag
     at FeatureMode.OFF. This is the intentional DEV-002 policy (Stabilized) recorded
-    in docs/guidelines/intentional_divergences.md and docs/engine/known_limitations.md §1.5.
+    in docs/guidelines/intentional_divergences.md and docs/engine/known_limitations.md §1.5 --
+    DEV-003 documents the 2 flags that graduated out of it.
 
-    If a flag is not OFF here, either feature_flags.py was accidentally modified or a
-    module-level side-effect has mutated the default. In both cases balance measurement
+    If a non-allowlisted flag is not OFF here, either feature_flags.py was accidentally modified
+    or a module-level side-effect has mutated the default. In both cases balance measurement
     baselines (TCK-20260619-E12A-BALANCE-MEASURE) would be invalidated.
     """
     manager = FeatureFlagManager()
-    not_off = [
-        flag for flag in _ALL_FLAG_NAMES
-        if manager.get_flag_mode(flag) != FeatureMode.OFF
-    ]
-    assert not not_off, (
-        f"[scenario={scenario_id!r}] Expected all Phase 10 flags to be FeatureMode.OFF by "
-        f"default, but the following are not OFF: {not_off}. "
-        "If this is intentional, update known_limitations.md §1.5 and re-run "
-        "tools/balance_measure.py to re-establish the E12A baseline."
+    wrong = []
+    for flag in _ALL_FLAG_NAMES:
+        mode = manager.get_flag_mode(flag)
+        expected = FeatureMode.ON if flag in _DELIBERATE_ON_DEFAULT_FLAGS else FeatureMode.OFF
+        if mode != expected:
+            wrong.append((flag, mode.value, expected.value))
+    assert not wrong, (
+        f"[scenario={scenario_id!r}] Flag default mismatch (flag, actual, expected): {wrong}. "
+        "If this is intentional, update known_limitations.md §1.5, add a documented "
+        "intentional_divergences.md entry, and re-run tools/balance_measure.py to re-establish "
+        "the E12A baseline if the flag's domain is measured by it."
     )
 
 
@@ -313,19 +320,22 @@ def test_non_adventure_flags_unchanged_by_routing_override():
     Enabling ENABLE_ADVENTURE_ROUTING does not alter any other flag.
 
     Verifies override isolation — a single-flag override must not cascade to the
-    remaining 9 flags. Each of the other 9 flags must remain FeatureMode.OFF.
+    remaining 9 flags. Each of the other 9 flags must remain at its own real default
+    (FeatureMode.OFF, except the documented _DELIBERATE_ON_DEFAULT_FLAGS exceptions).
     """
     manager = FeatureFlagManager(
         overrides={"ENABLE_ADVENTURE_ROUTING": FeatureMode.ON}
     )
     other_flags = [f for f in _ALL_FLAG_NAMES if f != "ENABLE_ADVENTURE_ROUTING"]
-    not_off = [
-        flag for flag in other_flags
-        if manager.get_flag_mode(flag) != FeatureMode.OFF
-    ]
-    assert not not_off, (
-        f"Enabling ENABLE_ADVENTURE_ROUTING should not alter other flags, "
-        f"but these are non-OFF: {not_off}. "
+    wrong = []
+    for flag in other_flags:
+        mode = manager.get_flag_mode(flag)
+        expected = FeatureMode.ON if flag in _DELIBERATE_ON_DEFAULT_FLAGS else FeatureMode.OFF
+        if mode != expected:
+            wrong.append((flag, mode.value, expected.value))
+    assert not wrong, (
+        f"Enabling ENABLE_ADVENTURE_ROUTING should not alter other flags' own defaults, "
+        f"but these mismatched (flag, actual, expected): {wrong}. "
         "Override must be isolated to the specified flag only."
     )
 

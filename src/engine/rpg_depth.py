@@ -15,8 +15,7 @@ checklist's sections:
 - Z10 (Skill scaling math, attribute caps)
 """
 from __future__ import annotations
-from dataclasses import replace
-from typing import TYPE_CHECKING, Optional, Dict, Any, List, Tuple
+from typing import TYPE_CHECKING, Optional, Dict, Any, List, Set, Tuple
 from src.core.state import TERRAIN_COST
 
 if TYPE_CHECKING:
@@ -109,18 +108,8 @@ class StaminaService:
 
 # ─── Wound / Scar Aftermath Service ──────────────────────────────────────────
 
-WOUND_THRESHOLD_RATIO = 0.40  # 40% of max HP in a single hit triggers wound
-
 class WoundService:
     """Generates wounds from massive hits and transitions them to scars."""
-
-    @staticmethod
-    def should_inflict_wound(damage: int, max_hp: int) -> bool:
-        """Check if a single hit is massive enough to cause a wound."""
-        # VERIFIED v2: wound_infliction_massive_hit
-        if max_hp <= 0:
-            return False
-        return damage >= (max_hp * WOUND_THRESHOLD_RATIO)
 
     @staticmethod
     def create_wound(damage: int, max_hp: int, tick: int, wound_id: str) -> WoundState:
@@ -182,22 +171,6 @@ class WoundService:
             "def_penalty": total_def,
             "speed_penalty": total_speed,
         }
-
-    @staticmethod
-    def heal_wound(wound) -> Tuple:
-        """Heal a wound and create a scar. Returns (healed_wound, scar)."""
-        # VERIFIED v2: scar_permanence_logic
-        from src.core.state import WoundState, ScarState
-        healed = replace(wound, healed=True, scar_created=True)
-        scar = ScarState(
-            id=f"scar_{wound.id}",
-            wound_kind=wound.kind,
-            tick_created=wound.tick_inflicted,
-            atk_penalty=wound.atk_penalty * 0.3,
-            def_penalty=wound.def_penalty * 0.3,
-            speed_penalty=wound.speed_penalty * 0.3,
-        )
-        return healed, scar
 
 
 # ─── Mob Leash Service ────────────────────────────────────────────────────────
@@ -268,18 +241,6 @@ class DiscoveryService:
         VERIFIED v2: perception_discovery_math
         """
         return 0.05 + (per * 0.02) # Base 5% + 2% per perception point
-
-class MedicalService:
-    """Wisdom-based medical diagnosis and healing quality."""
-    
-    @staticmethod
-    def get_diagnosis_quality(wis: int) -> float:
-        """
-        Calculate diagnosis accuracy (0.0 to 1.0).
-        VERIFIED v2: wisdom_diagnosis_math
-        """
-        # Linear scaling: 10 Wisdom = 50% accuracy, 20 Wisdom = 100%
-        return min(1.0, wis * 0.05)
 
 
 # ─── Terrain Cost Service ────────────────────────────────────────────────────
@@ -389,7 +350,8 @@ class SkillScalingService:
         base_hp: int = 100,
         base_atk: int = 10,
         base_def: int = 5,
-        base_evasion: float = 0.05
+        base_evasion: float = 0.05,
+        active_breakthroughs: Optional[Set[str]] = None
     ) -> Dict[str, Any]:
         """
         Full effective stat recomputation:
@@ -399,8 +361,10 @@ class SkillScalingService:
         # VERIFIED v2: stat_recalculation_parity
         # VERIFIED v2: scar_detection_logic
         from src.progression.leveling import LevelingService
+        from src.progression.breakthroughs import BreakthroughService
+        effective_attributes = BreakthroughService.apply_bonuses(active_breakthroughs or set(), attributes)
         base_stats = LevelingService.recalculate_combat_stats(
-            attributes, equipment, learned_skills, traits,
+            effective_attributes, equipment, learned_skills, traits,
             current_role=current_role,
             base_hp=base_hp, base_atk=base_atk, base_def=base_def,
             base_evasion=base_evasion

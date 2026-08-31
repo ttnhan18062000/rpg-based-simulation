@@ -13,13 +13,19 @@ from src.observability.config import ObservabilityMode
 from src.observability.event_extractor import EventExtractor
 
 
-def _lead(certainty: str = "VAGUE", discovered_tick: int = 0, kind: str = "location"):
+def _lead(certainty: str = "VAGUE", discovered_tick: int = 0, kind: str = "location",
+          test_outcome: str | None = None, failure_count: int = 0,
+          subject: str = "moon_resin", source_entity_id: int | None = None):
     l = MagicMock()
     l.certainty = MagicMock()
     l.certainty.value = certainty
     l.certainty.__str__ = lambda s: certainty
     l.discovered_tick = discovered_tick
     l.kind = kind
+    l.test_outcome = test_outcome
+    l.failure_count = failure_count
+    l.subject = subject
+    l.source_entity_id = source_entity_id
     return l
 
 
@@ -122,6 +128,54 @@ class TestLeadCertaintyUpdated:
         entity = _entity(leads={"l1": lead})
         events = EventExtractor.extract(_state({1: entity}), _state({1: entity}), _update(1), ObservabilityMode.NORMAL)
         assert "lead_certainty_updated" not in _types(events)
+
+
+# ── belief_contradiction / lead_contradiction_resolved ─────────────────────────
+
+class TestBeliefContradictionEvents:
+    def test_fires_when_lead_transitions_to_failed_exhausted(self):
+        prior_lead = _lead("APPROXIMATE", test_outcome=None, subject="moon_resin",
+                            source_entity_id=99)
+        curr_lead = _lead("EXHAUSTED", test_outcome="FAILURE", failure_count=1,
+                           subject="moon_resin", source_entity_id=99)
+        prior = _entity(leads={"l1": prior_lead})
+        curr = _entity(leads={"l1": curr_lead})
+        events = EventExtractor.extract(_state({1: prior}), _state({1: curr}), _update(1), ObservabilityMode.NORMAL)
+        types = _types(events)
+        assert "belief_contradiction" in types
+        assert "lead_contradiction_resolved" in types
+
+        contradiction_evt = next(e for e in events if e.event_type == "belief_contradiction")
+        assert contradiction_evt.payload["lead_id"] == "l1"
+        assert contradiction_evt.payload["provider_id"] == 99
+        assert contradiction_evt.payload["subject"] == "moon_resin"
+        assert contradiction_evt.payload["old_certainty"] == "APPROXIMATE"
+        assert contradiction_evt.payload["failure_count"] == 1
+
+        resolved_evt = next(e for e in events if e.event_type == "lead_contradiction_resolved")
+        assert resolved_evt.payload["lead_id"] == "l1"
+        assert resolved_evt.payload["subject"] == "moon_resin"
+        assert resolved_evt.payload["failure_count"] == 1
+
+    def test_not_fired_when_already_failed_exhausted_last_tick(self):
+        prior_lead = _lead("EXHAUSTED", test_outcome="FAILURE", failure_count=1)
+        curr_lead = _lead("EXHAUSTED", test_outcome="FAILURE", failure_count=1)
+        prior = _entity(leads={"l1": prior_lead})
+        curr = _entity(leads={"l1": curr_lead})
+        events = EventExtractor.extract(_state({1: prior}), _state({1: curr}), _update(1), ObservabilityMode.NORMAL)
+        types = _types(events)
+        assert "belief_contradiction" not in types
+        assert "lead_contradiction_resolved" not in types
+
+    def test_not_fired_when_certainty_changed_without_failure(self):
+        prior_lead = _lead("VAGUE", test_outcome=None)
+        curr_lead = _lead("EXHAUSTED", test_outcome=None)
+        prior = _entity(leads={"l1": prior_lead})
+        curr = _entity(leads={"l1": curr_lead})
+        events = EventExtractor.extract(_state({1: prior}), _state({1: curr}), _update(1), ObservabilityMode.NORMAL)
+        types = _types(events)
+        assert "belief_contradiction" not in types
+        assert "lead_contradiction_resolved" not in types
 
 
 # ── belief_stale ───────────────────────────────────────────────────────────────

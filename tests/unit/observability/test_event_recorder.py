@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 import shutil
+import time
 import pytest
 from src.observability.events import SimulationEvent
 from src.observability.event_recorder import EventRecorder
@@ -94,3 +95,85 @@ def test_event_recorder_bounds_and_eviction(run_dir):
     with open(jsonl_path, "r") as f:
         lines = f.readlines()
         assert len(lines) == 5  # All recorded events were written to JSONL regardless of in-memory evictions!
+
+
+def test_event_recorder_write_envelope_does_not_flush_directly(run_dir):
+    """_write_envelope_to_file() (called per-record by QueueDrainWorker inside a drain cycle)
+    never flushes on its own — flushing is the drain cycle's own responsibility (once per
+    non-empty cycle, via QueueDrainWorker's flush_fn), not tied to a per-record counter.
+    TCK-20260830 (post-merge regression fix): the earlier every-50-records counter deferred
+    visibility of low-volume writers (e.g. a single injected test event) past any real drain
+    cycle, breaking any consumer that reads simulation_events.jsonl mid-run without a shutdown."""
+    recorder = EventRecorder(run_dir=run_dir, max_events=1000, enabled=True)
+    recorder.queue.max_size = 1000
+    try:
+        flush_calls = {"count": 0}
+        real_flush = recorder._file_handle.flush
+
+        def _spy_flush():
+            flush_calls["count"] += 1
+            real_flush()
+
+        recorder._file_handle.flush = _spy_flush
+
+        from src.observability.events import ObservabilityEventEnvelope
+
+        for i in range(5):
+            ev = SimulationEvent(
+                event_type="info_event", event_category="combat", tick=i, severity="INFO",
+                source_system="test", message=f"info {i}", entity_id=i,
+            )
+            recorder._write_envelope_to_file(ObservabilityEventEnvelope.from_simulation_event(ev))
+
+        assert flush_calls["count"] == 0
+    finally:
+        recorder.shutdown()
+
+
+def test_event_recorder_drain_worker_flushes_once_per_nonempty_cycle(run_dir):
+    """A single low-volume event enqueued via the real record()/queue/worker path becomes
+    visible in simulation_events.jsonl after one drain-worker cycle (~_worker.interval_sec),
+    without needing 50 accumulated records or a shutdown() call."""
+    recorder = EventRecorder(run_dir=run_dir, max_events=1000, enabled=True)
+    recorder.queue.max_size = 1000
+    try:
+        ev = SimulationEvent(
+            event_type="info_event", event_category="combat", tick=1, severity="INFO",
+            source_system="test", message="single low-volume event", entity_id=1,
+        )
+        recorder.record(ev)
+        deadline = time.monotonic() + 2.0
+        lines = []
+        while time.monotonic() < deadline:
+            with open(recorder.filepath, "r", encoding="utf-8") as f:
+                lines = [ln for ln in f if ln.strip()]
+            if lines:
+                break
+            time.sleep(0.02)
+        assert lines, "single event never became visible on disk within 2s of a real drain cycle"
+    finally:
+        recorder.shutdown()
+
+
+def test_event_recorder_shutdown_flushes_remaining_writes(run_dir):
+    recorder = EventRecorder(run_dir=run_dir, max_events=1000, enabled=True)
+    recorder.queue.max_size = 1000
+    flush_calls = {"count": 0}
+    real_flush = recorder._file_handle.flush
+
+    def _spy_flush():
+        flush_calls["count"] += 1
+        real_flush()
+
+    recorder._file_handle.flush = _spy_flush
+
+    from src.observability.events import ObservabilityEventEnvelope
+    ev = SimulationEvent(
+        event_type="info_event", event_category="combat", tick=1, severity="INFO",
+        source_system="test", message="info 1", entity_id=1,
+    )
+    recorder._write_envelope_to_file(ObservabilityEventEnvelope.from_simulation_event(ev))
+    assert flush_calls["count"] == 0
+
+    recorder.shutdown()
+    assert flush_calls["count"] >= 1

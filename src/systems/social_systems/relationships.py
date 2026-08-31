@@ -57,7 +57,8 @@ class RelationshipService:
                 bond,
                 familiarity=max(0.0, min(1.0, bond.familiarity + b_upd.familiarity_delta)),
                 sentiment=max(-1.0, min(1.0, bond.sentiment + b_upd.sentiment_delta)),
-                last_interaction_tick=b_upd.last_interaction_tick_set if b_upd.last_interaction_tick_set is not None else bond.last_interaction_tick
+                last_interaction_tick=b_upd.last_interaction_tick_set if b_upd.last_interaction_tick_set is not None else bond.last_interaction_tick,
+                role=b_upd.role_set if b_upd.role_set is not None else bond.role
             )
 
         new_betrayals = list(social.betrayal_records)

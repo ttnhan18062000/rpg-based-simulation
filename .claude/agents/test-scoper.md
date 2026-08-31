@@ -82,6 +82,16 @@ under `tests/` before falling back to `tests/tools/`.
 ## Scoping Rules
 
 - Scope to the domain under modification first.
+- **Once a test directory is in scope, always pass its bare directory path — never individual
+  file names within it.** This applies unconditionally to every directory named by the mapping,
+  the cross-cutting-expansion rule below, or any other step here — not just the `tools/*.py` case
+  called out separately below. Cherry-picking files within an otherwise-correctly-identified
+  directory is the single most common `test_scope_coverage_static` failure across this project's
+  history (recurred 8+ times in the single 2026-08-24→2026-08-31 window alone —
+  `agent-monitoring/retro/RETRO-2026-W35.md` § "What to change?" item 3), always caught and
+  re-scoped correctly, but always after a wasted round-trip. Do not try to guess which files
+  "actually matter" within a directory by filename — the whole directory runs well within the
+  resource budget, and the cost of guessing wrong is a real blocked gate.
 - Expand to cross-cutting tests only when the change touches shared infrastructure (`src/core/`,
   `src/systems/`, `src/engine/`, or **any `tools/*.py` file directly under `tools/` with no
   subdirectory** — those are disproportionately likely to define shared constants/schema that

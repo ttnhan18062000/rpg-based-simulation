@@ -186,7 +186,8 @@ class IdentityPatch(ComponentPatch):
         tr = set(new_id.traits)
         brk = set(new_id.active_breakthroughs)
         cds = dict(new_id.cooldowns)
-        
+        ls = new_id.life_stage
+
         if self.identity:
             u_id = self.identity
             if u_id.role_set is not None: rl = u_id.role_set
@@ -194,6 +195,7 @@ class IdentityPatch(ComponentPatch):
             rec |= set(u_id.recipes_learned)
             if u_id.craft_target is not None: tgt = u_id.craft_target
             if u_id.evolution_level_set is not None: lvl = u_id.evolution_level_set
+            if u_id.life_stage_set is not None: ls = u_id.life_stage_set
             ep += u_id.evolution_points_delta
             if u_id.veterancy_points_delta != 0:
                 proc_id = VeterancyService.process_points(new_id, u_id.veterancy_points_delta)
@@ -219,7 +221,7 @@ class IdentityPatch(ComponentPatch):
             changes["identity"] = ApplyPath._fast_replace_identity(new_id, intents)
         else:
             changes["identity"] = replace(new_id, role=rl, faction=fac, known_recipes=frozenset(rec),
-                                          craft_target=tgt, evolution_level=lvl, evolution_points=ep,
+                                          craft_target=tgt, evolution_level=lvl, life_stage=ls, evolution_points=ep,
                                           veterancy_points=vp, veterancy_rank=vrank, unspent_ap=ap, learned_skills=frozenset(sk),
                                           traits=frozenset(tr), active_breakthroughs=frozenset(brk),
                                           cooldowns=ReadOnlyDict(cds), group_id=gid, properties=ReadOnlyDict(props),
@@ -658,6 +660,26 @@ class SelfModelPatch(ComponentPatch):
             changes["self_model"] = self.self_model_bundle_set
 
 
+@dataclass(frozen=True, slots=True)
+class CognitionPatch(ComponentPatch):
+    cognition_bundle_set: Optional[Any] = None  # CognitionModel
+
+    def is_noop(self) -> bool:
+        return self.cognition_bundle_set is None
+
+    def merge(self, other: CognitionPatch) -> CognitionPatch:
+        if not other or other.is_noop():
+            return self
+        return CognitionPatch(
+            entity_id=self.entity_id,
+            cognition_bundle_set=other.cognition_bundle_set if other.cognition_bundle_set is not None else self.cognition_bundle_set,
+        )
+
+    def apply(self, entity: EntityState, changes: Dict[str, Any]) -> None:
+        if self.cognition_bundle_set is not None:
+            changes["cognition"] = self.cognition_bundle_set
+
+
 def extract_patches(entity_id: int, update: EntityUpdate) -> List[ComponentPatch]:
     """
     Extracts all active component patches from a monolithic EntityUpdate.
@@ -716,5 +738,8 @@ def extract_patches(entity_id: int, update: EntityUpdate) -> List[ComponentPatch
         if not p.is_noop(): patches.append(p)
     if update.self_model_bundle_set is not None:
         p = SelfModelPatch(entity_id, self_model_bundle_set=update.self_model_bundle_set)
+        if not p.is_noop(): patches.append(p)
+    if update.cognition_bundle_set is not None:
+        p = CognitionPatch(entity_id, cognition_bundle_set=update.cognition_bundle_set)
         if not p.is_noop(): patches.append(p)
     return patches

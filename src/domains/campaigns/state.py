@@ -168,14 +168,19 @@ class EpisodeSummary:
 
     episode_index   — 0-based index of the completed episode
     completed_tick  — final tick of the completed episode
+    run_id          — the episode's underlying Kernel run_id, used by SimQ tooling
+                      to locate that episode's simulation_events.jsonl. Empty
+                      string for legacy records / episodes run without a Kernel.
     """
     episode_index: int
     completed_tick: int
+    run_id: str = ""
 
     def to_dict(self) -> dict:
         return {
             "episode_index": self.episode_index,
             "completed_tick": self.completed_tick,
+            "run_id": self.run_id,
         }
 
     @classmethod
@@ -183,6 +188,7 @@ class EpisodeSummary:
         return cls(
             episode_index=d["episode_index"],
             completed_tick=d["completed_tick"],
+            run_id=d.get("run_id", ""),
         )
 
 

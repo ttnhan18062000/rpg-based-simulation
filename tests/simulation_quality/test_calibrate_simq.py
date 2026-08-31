@@ -16,6 +16,7 @@ import os
 import pytest
 
 import tools.calibrate_simq as cal_mod
+from src.domains.optimization.feature_flags import FeatureMode
 from src.simulation_quality.run_health import RunHealthRecord
 
 
@@ -139,6 +140,71 @@ class TestSurvivalModeGuard:
         assert record.dropped_count == 0, (
             "SURVIVAL preempts try_push() entirely once the queue is at capacity — "
             "dropped_count must stay 0, proving this is a distinct loss mechanism"
+        )
+
+
+class TestKnownFlagsEnvVarOverrides:
+    """Regression coverage for TCK-20260830-HOTFIX-CALIBRATE-SIMQ-KNOWN-FLAGS-MISSING-ENTRIES:
+    _KNOWN_FLAGS was missing 6 of the 17 live flags in FeatureFlagManager's registry, so an
+    env-var override for any of them was silently dropped with no warning.
+    """
+
+    def test_information_intent_execution_env_override_takes_effect(self, monkeypatch, tmp_path):
+        captured = {}
+
+        def _hook(kernel):
+            captured["feature_flags"] = dict(kernel.state.feature_flags)
+
+        _patch_kernel_with_hook(monkeypatch, _hook)
+        monkeypatch.setenv("ENABLE_INFORMATION_INTENT_EXECUTION", "ON")
+
+        cal_dir = str(tmp_path / "cal_out")
+        os.makedirs(cal_dir, exist_ok=True)
+        cal_mod._run_engine("generic", seed=42, ticks=2, entity_count=4, cal_dir=cal_dir)
+
+        assert captured["feature_flags"]["ENABLE_INFORMATION_INTENT_EXECUTION"] == FeatureMode.ON
+
+    def test_push_event_shapers_agency_env_override_takes_effect(self, monkeypatch, tmp_path):
+        """Proves the audit fix covers more than the single flag named in the ticket title."""
+        captured = {}
+
+        def _hook(kernel):
+            captured["feature_flags"] = dict(kernel.state.feature_flags)
+
+        _patch_kernel_with_hook(monkeypatch, _hook)
+        monkeypatch.setenv("ENABLE_PUSH_EVENT_SHAPERS_AGENCY", "SHADOW")
+
+        cal_dir = str(tmp_path / "cal_out")
+        os.makedirs(cal_dir, exist_ok=True)
+        cal_mod._run_engine("generic", seed=42, ticks=2, entity_count=4, cal_dir=cal_dir)
+
+        assert captured["feature_flags"]["ENABLE_PUSH_EVENT_SHAPERS_AGENCY"] == FeatureMode.SHADOW
+
+    def test_unrecognized_env_var_is_not_applied(self, monkeypatch, tmp_path):
+        captured = {}
+
+        def _hook(kernel):
+            captured["feature_flags"] = dict(kernel.state.feature_flags)
+
+        _patch_kernel_with_hook(monkeypatch, _hook)
+        monkeypatch.setenv("ENABLE_SOMETHING_MADE_UP", "ON")
+
+        cal_dir = str(tmp_path / "cal_out")
+        os.makedirs(cal_dir, exist_ok=True)
+        cal_mod._run_engine("generic", seed=42, ticks=2, entity_count=4, cal_dir=cal_dir)
+
+        assert "ENABLE_SOMETHING_MADE_UP" not in captured["feature_flags"]
+
+    def test_unrecognized_enable_prefixed_env_var_logs_warning(self, monkeypatch, tmp_path, caplog):
+        monkeypatch.setenv("ENABLE_SOMETHING_MADE_UP", "ON")
+
+        cal_dir = str(tmp_path / "cal_out")
+        os.makedirs(cal_dir, exist_ok=True)
+        with caplog.at_level("WARNING", logger="calibrate_simq"):
+            cal_mod._run_engine("generic", seed=42, ticks=2, entity_count=4, cal_dir=cal_dir)
+
+        assert any(
+            "ENABLE_SOMETHING_MADE_UP" in record.getMessage() for record in caplog.records
         )
 
 

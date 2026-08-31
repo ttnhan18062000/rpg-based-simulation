@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import MagicMock
 from src.core.updates import EntityUpdate, CombatUpdate, NavigationUpdate, AttributeUpdate, IdentityUpdate, WoundUpdate
-from src.core.state import EntityState, CombatComponent, NavigationComponent, AttributeComponent, IdentityComponent
+from src.core.state import EntityState, CombatComponent, NavigationComponent, AttributeComponent, IdentityComponent, LifeStage
 from src.core.self_model import SelfModelBundle, KnowledgeModelComponent, UnknownFact
 from src.engine.patches import (
     extract_patches, CombatPatch, NavigationPatch, AttributePatch, IdentityPatch, WoundPatch, KindPatch,
@@ -63,6 +63,21 @@ def test_order_sensitivity():
 # ─────────────────────────────────────────────────────────────────────────────
 # SelfModelPatch (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B supplementary fix)
 # ─────────────────────────────────────────────────────────────────────────────
+
+def test_identity_patch_apply_sets_life_stage():
+    """TCK-20260824-LIFE-STAGE-TRANSITIONS: life_stage_set must reach IdentityComponent.life_stage
+    through IdentityPatch.apply()'s replace() branch -- not silently dropped as new_id.life_stage
+    (the OLD value) would be if that call omitted the life_stage kwarg. property_updates={} and
+    intent_results=[] left empty makes the _fast_replace_identity guard condition trivially false
+    regardless, so this test is unambiguous about which apply() branch actually ran."""
+    entity = EntityState(id=1, kind="HERO", identity=IdentityComponent(life_stage=LifeStage.ADULT))
+    identity_patch = IdentityPatch(entity_id=1, identity=IdentityUpdate(life_stage_set=LifeStage.ELDER))
+
+    changes = {}
+    identity_patch.apply(entity, changes)
+
+    assert changes["identity"].life_stage == LifeStage.ELDER
+
 
 def test_self_model_patch_noop_detection():
     smp_noop = SelfModelPatch(entity_id=1, self_model_bundle_set=None)

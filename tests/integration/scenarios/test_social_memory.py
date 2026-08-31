@@ -206,3 +206,69 @@ def test_social_memories_serialized_in_campaign_state():
     # All values must be SocialMemoryRecord
     for v in restored.social_memories.values():
         assert isinstance(v, SocialMemoryRecord)
+
+
+# ── TCK-20260824-WIRE-ORPHANED-MECHANISMS Step 6: consequence_events wiring ───
+
+
+def test_consequence_events_fire_at_episode_entity_spawn():
+    """
+    evaluate_social_consequence() is called per spawned entity in
+    CampaignOrchestrator._build_initial_state(); a LEGENDARY_ARRIVAL-qualifying
+    social memory record (faction_reputation["default"] >= 0.9) produces an
+    event that reaches self._event_recorder.record() — not silently dropped.
+
+    Also proves the read-only contract: _build_initial_state() does not mutate
+    campaign_state or the newly-built entities dict beyond what the existing
+    (pre-Step-6) construction already does.
+    """
+    from src.domains.campaigns.orchestrator import CampaignManifest, CampaignOrchestrator
+    from src.domains.campaigns.state import EntityCarryForward
+    from src.domains.campaigns.social_memory import SocialMemoryRecord
+    from src.observability.event_recorder import EventRecorder
+
+    spec0 = _make_spec("ep0", tick_limit=5)
+    manifest = CampaignManifest(id="test_consequence_campaign", episodes=[spec0])
+    recorder = EventRecorder()
+    try:
+        orchestrator = CampaignOrchestrator(manifest, event_recorder=recorder)
+
+        orchestrator._state.persistent_entities[1] = EntityCarryForward(
+            entity_id=1, level=5, xp=100, equipment={}, reputation=0.95, alive=True,
+        )
+        orchestrator._state.social_memories[1] = SocialMemoryRecord(
+            entity_id=1,
+            faction_reputation={"default": 0.95},
+        )
+
+        initial_state = orchestrator._build_initial_state(episode_seed=1)
+
+        assert 1 in initial_state.entities
+        legendary_events = [e for e in recorder.events if e.event_type == "LEGENDARY_ARRIVAL"]
+        assert len(legendary_events) == 1
+        assert legendary_events[0].entity_id == 1
+    finally:
+        recorder.shutdown()
+
+
+def test_consequence_events_noop_without_event_recorder():
+    """When no event_recorder is injected, _build_initial_state() must not raise
+    even when a spawned entity qualifies for a consequence event."""
+    from src.domains.campaigns.orchestrator import CampaignManifest, CampaignOrchestrator
+    from src.domains.campaigns.state import EntityCarryForward
+    from src.domains.campaigns.social_memory import SocialMemoryRecord
+
+    spec0 = _make_spec("ep0", tick_limit=5)
+    manifest = CampaignManifest(id="test_consequence_campaign_noop", episodes=[spec0])
+    orchestrator = CampaignOrchestrator(manifest)
+
+    orchestrator._state.persistent_entities[1] = EntityCarryForward(
+        entity_id=1, level=5, xp=100, equipment={}, reputation=0.95, alive=True,
+    )
+    orchestrator._state.social_memories[1] = SocialMemoryRecord(
+        entity_id=1,
+        faction_reputation={"default": 0.95},
+    )
+
+    initial_state = orchestrator._build_initial_state(episode_seed=1)
+    assert 1 in initial_state.entities

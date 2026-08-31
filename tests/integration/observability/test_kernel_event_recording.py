@@ -135,6 +135,65 @@ def test_calamity_spawned_fires_through_real_tick_once_loop():
         ObservabilityConfig.set_override_mode(None)
 
 
+def test_wound_sustained_fires_through_real_tick_once_loop():
+    """event_extractor.py's wound/scar diff blocks (lines ~280-281, ~302-303) gated
+    entity_wounds/entity_scars with `isinstance(x, list)` -- but the real, authoritative apply
+    path (WoundPatch.apply, src/engine/patches.py:639; AuthoritativeState's freeze logic,
+    src/core/state.py:846) always commits wounds/scars as tuples, so the check was always False
+    and wound_sustained never fired through any real Kernel.tick_once() loop
+    (TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND). Reuses the exact deterministic
+    combat fixture from
+    tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers
+    (attacker ATK 80 vs. defender max_hp 100, hostile factions, adjacent,
+    ENABLE_COMBAT_ENGAGEMENT ON, seed 42) that reliably inflicts a real wound at tick 9 through
+    the full production combat-resolution path -- proving, after the isinstance(x, (list, tuple))
+    fix, that wound_sustained now genuinely reaches the event-observability layer, not just
+    authoritative state."""
+    from dataclasses import replace as dataclass_replace
+    from src.core.enums import Faction
+    from src.core.state import EntityRole
+    from src.config.profiles import PROD_SMALL
+    from src.platform.rng import DeterministicRNG as _RNG
+
+    def _make_combatant(eid, pos, faction_id, faction_enum, atk, hp=100, def_stat=1):
+        return (
+            V2EntityBuilder(eid)
+            .kind("actor")
+            .location(*pos)
+            .identity(faction=faction_enum, role=EntityRole.HERO, properties={"faction_id": faction_id})
+            .combat(hp=hp, max_hp=hp, atk=atk, def_stat=def_stat, attack_range=2, readiness=100.0, alive=True)
+            .lifecycle(active=True)
+            .build()
+        )
+
+    attacker = _make_combatant(1, (1.0, 1.0), "hero_guild", Faction.HERO_GUILD, atk=80, hp=100, def_stat=1)
+    defender = _make_combatant(2, (2.0, 1.0), "goblin_warband", Faction.MONSTER_HORDE, atk=1, hp=100, def_stat=1)
+
+    state = AuthoritativeState(tick=0, seed=42, entities={1: attacker, 2: defender})
+    state = dataclass_replace(state, feature_flags={"ENABLE_COMBAT_ENGAGEMENT": "ON"})
+
+    ObservabilityConfig.set_override_mode(ObservabilityMode.NORMAL)
+    rng = _RNG(42)
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True, "no_replay": True})
+    try:
+        for _ in range(40):
+            kernel.tick_once()
+
+        wound_events = [
+            ev for ev in kernel._event_recorder.events
+            if getattr(ev, "event_type", None) == "wound_sustained"
+        ]
+        assert wound_events, (
+            "wound_sustained never fired through the real Kernel.tick_once() event-observability "
+            "layer -- the isinstance(x, (list, tuple)) fix at event_extractor.py:280-281 regressed"
+        )
+        assert wound_events[0].entity_id == 2
+        assert wound_events[0].payload["wound_id"]
+    finally:
+        kernel.shutdown()
+        ObservabilityConfig.set_override_mode(None)
+
+
 def test_governor_mode_changed_fires_through_real_tick_once_loop():
     """Kernel tick-alignment fix (kernel.py:836, compares against
     prior_state.tick instead of the post-advance tick): GovernorModeChanged had

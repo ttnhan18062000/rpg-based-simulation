@@ -51,7 +51,14 @@ def _is_lead_contradicted(lead: LeadState, state: "AuthoritativeState") -> bool:
                       apply the same charge check (location leads from providers
                       point to resource subjects)
       - "person"    → subject maps to an entity id; entity must be alive
-      - Other kinds → not checked (not contradicted)
+      - "object"    → subject must match a ground item or chest item's item_id
+                      (absence, not presence, is the failure signal here --
+                      opposite polarity from "location"/"resource")
+      - "event"     → subject must match a local scar's source_event_id
+      - "concept"   → not checked here; CONCEPT contradiction is observation-
+                      shaped (failed paid-information query), routed through
+                      BeliefContradictionService.detect() instead
+      - "information" → not checked here (see BeliefContradictionService)
 
     The subject field may be a plain string like "moon_resin" or a namespaced
     key like "material.moon_resin.source".  We scan by partial match against
@@ -86,6 +93,29 @@ def _is_lead_contradicted(lead: LeadState, state: "AuthoritativeState") -> bool:
         if target is None:
             return True  # Person gone from world
         return not getattr(target.combat, "alive", True)
+
+    if lead_kind == "object":
+        for gi in state.ground_items.values():
+            if gi.item_id == subject:
+                return False
+        for chest in state.chests.values():
+            for item in chest.items:
+                if item.item_id == subject:
+                    return False
+        return True
+
+    if lead_kind == "event":
+        for scar in state.local_scars.values():
+            if scar.source_event_id == subject:
+                return False
+        return True
+
+    if lead_kind == "concept":
+        # CONCEPT contradiction is observation-shaped (tied to a failed paid-information
+        # query outcome), not state-scan-shaped like the branches above. Deliberately routed
+        # through BeliefContradictionService.detect() instead (see bridge.py/phase.py) --
+        # this mirrors the existing "information"-kind no-op above. Not an oversight.
+        return False
 
     if lead_kind == "information":
         # Information leads from PaidInformationTransactionSystem — these are

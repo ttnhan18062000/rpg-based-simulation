@@ -157,6 +157,53 @@ new_count  = max(0, cohort.count + net_change)
 ```
 Default rates: `birth_rate = 0.02`, `mortality_rate = 0.01` → net +1% per 200 ticks.
 
+### Succession — Default Heir Assignment (TCK-20260824-DEFAULT-HEIR-ASSIGNMENT)
+
+`LifecycleSystem.resolve_lifecycle()` (`src/systems/lifecycle_systems/lifecycle.py`). When an active
+entity dies (`OLD_AGE` or `COMBAT`) with `heir_entity_id is None`, a default heir is selected from
+the deceased's `SocialComponent.bonds` before the same-tick heirloom-transfer step runs.
+
+**Candidate filter:** every `target_id` in `deceased.social.bonds` where `target_id != deceased.id`,
+`state.entities.get(target_id)` exists, AND `target.lifecycle.active is True`. This filter is
+strictly stricter than the pre-existing manual-heir-transfer path's liveness check (existence only,
+not `.active`) — the manual path is unchanged by this mechanic.
+
+**Score:**
+
+score = 0.6 × familiarity + 0.4 × ((sentiment + 1.0) / 2.0)
+
+- `familiarity` (native range 0.0–1.0) is weighted 0.6 — the primary signal, since how much the
+  deceased actually knew/interacted with a candidate is the more direct proxy for "who they would
+  leave things to" than bare positive regard.
+- `sentiment` (native range −1.0–1.0) is normalized to 0.0–1.0 before weighting at 0.4 — a
+  secondary signal. Negative-sentiment bonds are not excluded, only down-weighted: a hostile bond
+  contributes 0.0 to this term rather than disqualifying the candidate outright.
+- Combined score range: 0.0–1.0.
+
+**Tie-break (explicit total order, no hash/dict-iteration-order dependence):** candidates are
+ordered by `(-score, -last_interaction_tick, target_id)` — highest score wins; ties broken by most
+recent `last_interaction_tick` (higher tick = more recent, since it is an absolute tick number, not
+a delta); remaining ties broken by lowest `target_id`.
+
+**No-candidate case:** if the candidate set is empty (zero bonds, or every bonded target is dead or
+missing), no heir is assigned and no exception is raised — inventory/heirlooms remain untransferred,
+identical to today's `heir_entity_id is None` behavior.
+
+**Selection result flow:** the selected id is recorded via `LifecycleUpdate.heir_entity_id_set` on
+the dying entity's own `EntityUpdate` (never a direct field mutation), applied authoritatively by
+`LifecyclePatch.apply()` (`src/engine/patches.py:84`). The same selected id is used locally within
+the same `resolve_lifecycle` call to drive the same-tick heirloom-transfer `ResourceTransferIntent`,
+matching the pre-existing manual-heir-set + same-tick-transfer behavior.
+
+This is unrelated to §7.2's `TRUST_BONUS_WEIGHT`/`score_trust_bonds()` in
+`docs/mechanics/04_strategic_cognition.md` — that mechanic computes a trust-bonus overlay for
+`PartyCompositionScorer`/`AdventureRouteGenerator` FORM_PARTY generation confidence, a
+cognition-layer use case with a different base score and a different chapter; no constant or
+function is shared between the two.
+
+**Source:** `src/systems/lifecycle_systems/lifecycle.py` (`LifecycleSystem._select_default_heir`,
+`LifecycleSystem.resolve_lifecycle`) (TCK-20260824-DEFAULT-HEIR-ASSIGNMENT, 2026-08-26)
+
 ### Migration Law
 When `scarcity(region) > cohort.migration_threshold` (default 0.7), **30%** of that cohort (min 1) emigrates to the lowest-scarcity adjacent region. Adjacency requires a shared boundary edge with non-degenerate overlap on the other axis.
 

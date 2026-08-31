@@ -51,7 +51,7 @@ tick-latency and memory-stability thresholds against baselines
 (`docs/performance/perf_baseline_policy.md` §3). Any profiling work aimed at fixing a real
 regression should be verified against that gate, not just against ad-hoc `cProfile` output.
 
-The actual hot path most performance work in this repo touches is the tick loop's 37-phase
+The actual hot path most performance work in this repo touches is the tick loop's 39-phase
 `AuthoritativeApplyPipeline` (`docs/engine/authoritative_pipeline.md`) and its `DirtySet`
 optimization layer (`docs/core/dirty_state_and_dependency.md`, `src/core/dirty.py`) — the
 mechanism that avoids an O(N) full-entity-population scan every phase. Before assuming a

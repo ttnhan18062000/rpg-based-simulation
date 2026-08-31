@@ -30,21 +30,21 @@ class FlowFieldService:
         Returns a normalized direction vector towards the target kind using
         weighted anchor interpolation.
         """
-        anchors = FlowFieldService.ANCHORS.get(target_kind, [])
-        if not anchors:
-            # Fallback to dynamic entity if it's a world boss
-            if target_kind == "WORLD_BOSS":
-                for e in state.entities.values():
-                    if e.kind == "world_boss":
-                        anchors = [e.navigation.position]
-                        break
-            
+        if target_kind == "TOWN":
+            anchors = [state.town_center]
+        else:
+            anchors = FlowFieldService.ANCHORS.get(target_kind, [])
             if not anchors:
-                if target_kind == "TOWN":
-                    anchors = [state.town_center]
-                else:
+                # Fallback to dynamic entity if it's a world boss
+                if target_kind == "WORLD_BOSS":
+                    for e in state.entities.values():
+                        if e.kind == "world_boss":
+                            anchors = [e.navigation.position]
+                            break
+
+                if not anchors:
                     return None
-            
+
         # Bilinear-inspired weighted interpolation towards the 'best' anchor
         # In a real flow field, this would be a pre-baked vector grid.
         # For V2 hardening, we ensure deterministic selection of the nearest waypoint.

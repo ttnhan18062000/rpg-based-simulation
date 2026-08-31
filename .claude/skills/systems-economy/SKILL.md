@@ -100,7 +100,7 @@ physically present at home coordinates.
 
 ## The Authoritative Pipeline Phases This Domain Executes Inside
 
-Source: `docs/engine/authoritative_pipeline.md` (the 37-phase `AuthoritativeApplyPipeline`, the
+Source: `docs/engine/authoritative_pipeline.md` (the 39-phase `AuthoritativeApplyPipeline`, the
 sole mechanism allowed to mutate `AuthoritativeState`). This domain's operations are NOT free-form
 — they execute as specific named phases, in this fixed order, and this skill's logic must not
 contradict that ordering:

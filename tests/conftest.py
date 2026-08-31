@@ -76,6 +76,13 @@ def pytest_runtest_setup(item):
     if budget == "off":
         return
 
+    # resource_budget_large: some tests (multi-trial, 500-1000 real-tick calibration
+    # runs) cannot complete under any budget shorter than "large" regardless of the
+    # CLI default — force it here rather than relying on callers to remember an
+    # explicit --resource-budget large flag.
+    if item.get_closest_marker("resource_budget_large") is not None:
+        budget = "large"
+
     # Define limits based on selection
     if budget == "small":
         mem_limit = 1024 * 1024 * 1024  # 1 GB

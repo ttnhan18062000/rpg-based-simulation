@@ -309,6 +309,30 @@ _DOCS_BULLET_RE = re.compile(r"^-\s+`(docs/[^`]+?)(?::\d+)?`", re.MULTILINE)
 _DOCS_NONE_PHRASES = {"", "none", "none.", "n/a"}
 _DOCS_NONE_PREFIX_RE = re.compile(r"^(none|n/a)\.?\s*", re.IGNORECASE)
 
+# TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED: word-sequence match (not a
+# single exact-line match) so it tolerates a line wrap or surrounding markdown bold (`**...**`)
+# around the phrase — see that bullet's own docstring note below for why this is a THIRD case,
+# distinct from Format 2 (investigation-time exclusion, plain prose, no bullet at all).
+_RESOLVED_CONDITION_MARKER_RE = re.compile(
+    r"resolved\s+during\s+implementation,\s*condition\s+not\s+met", re.IGNORECASE
+)
+
+# Captures a Format-1 docs/ bullet's path AND its own body text (reason + any continuation
+# lines), up to the next Format-1 bullet or end of section — the marker can appear anywhere in
+# the bullet's reason/continuation text, not just on the path's own line.
+_DOCS_BULLET_BLOCK_RE = re.compile(
+    r"^-\s+`(docs/[^`]+?)(?::\d+)?`(.*?)(?=\n-\s+`docs/|\Z)",
+    re.MULTILINE | re.DOTALL,
+)
+
+
+def _bullet_blocks(section_text: str) -> list[tuple[str, str]]:
+    """Split section_text into (path, body) pairs per Format-1 docs/ bullet, where body is the
+    bullet's own reason text plus any continuation lines, up to the next Format-1 bullet or end
+    of section. Used to inspect per-bullet content (e.g. the resolved-conditional marker) beyond
+    just the leading path token `_DOCS_BULLET_RE` alone captures."""
+    return _DOCS_BULLET_BLOCK_RE.findall(section_text)
+
 
 def _is_none_section(section_text: str) -> bool:
     """True if section_text should be treated as "no docs/ paths flagged."
@@ -399,10 +423,40 @@ def _parse_docs_to_update(section_text: str) -> list[str]:
     real corpus — `` `docs/parity_ledger/x.yaml::WORLD-103` `` (compliance-ID suffix) and
     `` `docs/x.md:3,5` `` (comma-separated range) — are deliberately left uncut, since neither is a
     single-`:digits` line-number suffix.
+
+    Excludes any bullet whose own body (reason/continuation text) carries the
+    `_RESOLVED_CONDITION_MARKER_RE` phrase — a bullet correctly written in Format 1 at
+    investigation time because its need depended on an implementation-time choice not yet made,
+    then genuinely resolved as "condition not met" once that choice was made
+    (TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED). This is distinct from Format
+    2 (a doc excluded at investigation time, written as plain prose with no leading bullet at all,
+    from TCK-20260823-HOTFIX-INVESTIGATOR-EXCLUDED-DOC-BULLET-TEMPLATE-GAP) — that case never
+    reaches `_DOCS_BULLET_RE` in the first place. See `_parse_resolved_not_applicable_docs` for the
+    complement (paths excluded here).
     """
     if _is_none_section(section_text):
         return []
-    return _DOCS_BULLET_RE.findall(section_text)
+    return [
+        path
+        for path, body in _bullet_blocks(section_text)
+        if not _RESOLVED_CONDITION_MARKER_RE.search(body)
+    ]
+
+
+def _parse_resolved_not_applicable_docs(section_text: str) -> list[str]:
+    """Complement of `_parse_docs_to_update`'s new exclusion: the `docs/` paths of Format-1
+    bullets whose body carries the resolved-conditional marker (`_RESOLVED_CONDITION_MARKER_RE`)
+    — a conditional doc requirement that was evaluated during/after implementation and found
+    not-applicable. Used by `check_docs_to_update_coverage` purely for evidence/reporting; these
+    paths are never required to be touched (TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED).
+    """
+    if _is_none_section(section_text):
+        return []
+    return [
+        path
+        for path, body in _bullet_blocks(section_text)
+        if _RESOLVED_CONDITION_MARKER_RE.search(body)
+    ]
 
 
 def check_docs_to_update_coverage(
@@ -425,8 +479,18 @@ def check_docs_to_update_coverage(
     A missing `investigation.md` for standard/epic tier is a `FAIL` — it must exist by Verify time.
     An empty/"None." section is a valid, deliberate judgment call — `PASS`, not `NA`: the section
     itself is still required to exist and be read, just found to have nothing flagged.
-    A non-empty section that fails to parse any path is treated as a format regression (`FAIL`),
-    not silently passed — this also enforces the tightened bullet format going forward.
+    A non-empty section that fails to parse any path AND has no resolved-conditional bullet either
+    is treated as a format regression (`FAIL`), not silently passed — this also enforces the
+    tightened bullet format going forward.
+
+    A bullet carrying the resolved-conditional marker (`_RESOLVED_CONDITION_MARKER_RE`, e.g.
+    "Resolved during implementation, condition not met") is excluded from `required_docs` by
+    `_parse_docs_to_update` and reported separately via `_parse_resolved_not_applicable_docs` —
+    such a bullet was correctly written in Format 1 at investigation time because its need
+    depended on an implementation-time choice not yet made, then genuinely resolved as
+    not-applicable; it must PASS without being touched, while never weakening the requirement on
+    any sibling unconditional bullet in the same section
+    (TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED).
     """
     if tier == "hotfix":
         return ("NA", "hotfix tier — no investigation.md, no Docs Requiring Update section")
@@ -441,8 +505,9 @@ def check_docs_to_update_coverage(
     text = investigation_path.read_text(encoding="utf-8")
     section_text = _extract_section_text(text, "Docs Requiring Update")
     required_docs = _parse_docs_to_update(section_text)
+    resolved_docs = _parse_resolved_not_applicable_docs(section_text)
 
-    if not required_docs:
+    if not required_docs and not resolved_docs:
         if _is_none_section(section_text):
             return ("PASS", "no docs/ paths flagged as requiring update")
         return (
@@ -450,6 +515,13 @@ def check_docs_to_update_coverage(
             f"'## Docs Requiring Update' section is non-empty but no docs/ path could be parsed "
             f"from it — expected one bullet per path (e.g. '- `docs/x.md`: reason'); "
             f"got: {section_text[:200]!r}",
+        )
+
+    if not required_docs:
+        return (
+            "PASS",
+            f"no docs/ paths require update — {len(resolved_docs)} conditional bullet(s) "
+            f"resolved not-applicable: {resolved_docs}",
         )
 
     touched = _git_touched_paths()
@@ -460,7 +532,10 @@ def check_docs_to_update_coverage(
             f"investigation.md flagged {missing} as requiring an update but git status shows no "
             f"changes to these path(s)",
         )
-    return ("PASS", f"all {len(required_docs)} flagged doc path(s) touched: {required_docs}")
+    evidence = f"all {len(required_docs)} flagged doc path(s) touched: {required_docs}"
+    if resolved_docs:
+        evidence += f"; {len(resolved_docs)} resolved-not-applicable: {resolved_docs}"
+    return ("PASS", evidence)
 
 
 def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list[dict]:

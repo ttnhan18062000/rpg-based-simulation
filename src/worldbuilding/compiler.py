@@ -95,6 +95,8 @@ def get_quest_kind(kind_str: str) -> QuestKind:
         return QuestKind.LIBERATE
     elif "BOUNTY" in k:
         return QuestKind.BOUNTY
+    elif "ESCORT" in k:
+        return QuestKind.ESCORT
     return QuestKind.EXPLORE
 
 
@@ -250,6 +252,16 @@ class WorldCompiler:
                 hazard_level=getattr(r_spec, "hazard_level", 0.0),
                 hazard_kind=getattr(r_spec, "hazard_kind", "PHYSICAL")
             )
+
+        # 2a. Derive town_center as the centroid of the first type=="town" region in
+        # spec.regions declaration order (SUB-387; docs/mechanics/06_worldbuilding_foundation.md).
+        # Left unset (dataclass default (0.0, 0.0)) if no town-type region exists.
+        town_center: Optional[tuple[float, float]] = None
+        for r_spec in spec.regions:
+            if r_spec.type == "town":
+                min_x, min_y, max_x, max_y = r_spec.bounds
+                town_center = ((min_x + max_x) / 2.0, (min_y + max_y) / 2.0)
+                break
 
         # 3. Compile factions (Initialize starting vaults in global_resources)
         global_resources: Dict[str, float] = {}
@@ -602,6 +614,7 @@ class WorldCompiler:
             global_resources=global_resources,
             blocked_tiles=blocked_tiles,
             town_tiles=town_tiles,
+            town_center=town_center if town_center is not None else (0.0, 0.0),
             town_entity_ids=town_entity_ids,
             factions=factions,
             information_source_profiles=information_source_profiles,

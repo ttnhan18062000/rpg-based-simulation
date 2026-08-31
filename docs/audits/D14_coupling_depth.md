@@ -246,7 +246,7 @@ call site:
 | File | Line | Import | Pattern |
 |---|---|---|---|
 | `domains/campaigns/narrative_ledger.py:71` | `src.observability.events.SimulationEvent` | Lazy (inside `emit_chronicle_event`, guarded by `if self._event_recorder is not None:`) |
-| `domains/campaigns/orchestrator.py:319` | `src.observability.events.SimulationEvent` | Lazy (guarded by `if self._event_recorder is None: return` immediately above) |
+| `domains/campaigns/orchestrator.py:418` | `src.observability.events.SimulationEvent` | Lazy (inside shared helper `_emit_domain_event()`, guarded by `if self._event_recorder is None: return` at each of its 3 callers — `_emit_chronicle_events()`, `_emit_grief_urgency_events()`, `_emit_nemesis_event()` — before every call) |
 
 Both sites are enforced-pinned by
 `tests/architecture/test_phase18_import_boundaries.py::test_domains_do_not_import_observability_outside_pinned_exceptions`
@@ -264,9 +264,9 @@ and lazy:
 
 | File | Lines | Modules |
 |---|---|---|
-| `systems/strategic_systems/intelligence.py` | 69, 75, 78, 83, 664, 829, 833, 905, 958 | `engine.policy`, `engine.spatial_query`, `engine.cadence`, `engine.domain_logic`, `engine.cognition` |
+| `systems/strategic_systems/intelligence.py` | 70, 76, 79, 84, 663, 828, 832, 904, 957 | `engine.policy`, `engine.spatial_query`, `engine.cadence`, `engine.domain_logic`, `engine.cognition` |
 | `systems/strategic_systems/detour.py` | 22 | `engine.domain.lead_routing` |
-| `systems/strategic_systems/redirection.py` | 23 | `engine.cadence` |
+| `systems/strategic_systems/redirection.py` | 25 | `engine.cadence` |
 | `systems/economy_systems/market.py` | 50 | `engine.legality` |
 | `systems/world_systems/routine.py` | 180 | `engine.legality` |
 

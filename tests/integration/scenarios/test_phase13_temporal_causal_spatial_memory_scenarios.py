@@ -22,7 +22,7 @@ def test_lost_to_wolf_then_repairs_before_retry():
     }
 
     phase = MemoryUpdatePhase()
-    updated = phase.run([entity], tick=150, trigger_event=trigger)
+    updated = phase.run([entity], tick=150, trigger_events=[trigger])
     new_entity = updated[0]
 
     memory = new_entity.cognition.memory

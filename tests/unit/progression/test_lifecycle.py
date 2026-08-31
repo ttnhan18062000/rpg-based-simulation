@@ -1,11 +1,12 @@
 import pytest
 from dataclasses import replace
-from src.core.state import EntityState, LifecycleComponent, AuthoritativeState, CombatComponent
+from src.core.state import EntityState, LifecycleComponent, AuthoritativeState, CombatComponent, LifeStage
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, InventoryUpdate
 from src.systems.lifecycle import LifecycleSystem
 from src.engine.apply import ApplyPath
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
+from src.core.models.social import SocialBond
 
 def test_aging_per_tick():
     """Verify that entities age by 1 tick every generation."""
@@ -50,10 +51,30 @@ def test_combat_death_classification():
     update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, combat=kill_upd)})
     
     refined = LifecycleSystem.resolve_lifecycle(state, update)
-    
+
     ent_upd = refined.entity_updates[1]
     assert ent_upd.active is False
     assert ent_upd.lifecycle.death_reason_set == "COMBAT"
+
+def test_permadeath_death_classification():
+    """A PERMADEATH outcome (a rebirth-eligible Hero at generation cap, src/engine/combat.py)
+    must deactivate the entity the same as a KILL outcome -- regression for a real bug where
+    resolve_lifecycle only checked outcome_kind=="KILL", leaving a "permanently dead" Hero
+    active=True and still acting."""
+    ent = (V2EntityBuilder(1)
+           .location(0.0, 0.0)
+           .build())
+    state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
+
+    permadeath_upd = CombatUpdate(outcome_kind="PERMADEATH", is_lethal=True)
+    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, combat=permadeath_upd)})
+
+    refined = LifecycleSystem.resolve_lifecycle(state, update)
+
+    ent_upd = refined.entity_updates[1]
+    assert ent_upd.active is False
+    assert ent_upd.lifecycle.death_reason_set == "COMBAT"
+    assert ent_upd.lifecycle.is_permadeath_set is True
 
 def test_succession_and_heirloom_transfer():
     """Verify that heirlooms are transferred to the heir upon death."""
@@ -88,6 +109,268 @@ def test_succession_and_heirloom_transfer():
     # Logic ID: SOC-042
 
     # Logic ID: SOC-042
+
+def test_manual_heir_entity_id_transfers_even_if_heir_inactive():
+    """The pre-existing manual-heir-transfer liveness check only tests existence, not
+    .lifecycle.active -- default-heir selection's stricter filter must not have tightened
+    this pre-existing behavior."""
+    parent = (V2EntityBuilder(1)
+              .location(0.0, 0.0)
+              .build())
+    parent_life = LifecycleComponent(
+        age_ticks=100, max_age_ticks=100,
+        heir_entity_id=2,
+        heirlooms=["Excalibur"]
+    )
+    parent = replace(parent, lifecycle=parent_life)
+
+    heir = (V2EntityBuilder(2)
+            .location(1.0, 1.0)
+            .lifecycle(active=False)
+            .build())
+
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir})
+
+    update = StateUpdate()
+    refined = LifecycleSystem.resolve_lifecycle(state, update)
+
+    heir_upd = refined.entity_updates[2]
+    assert len(heir_upd.resource_transfers) > 0
+    transfer = heir_upd.resource_transfers[0]
+    assert any(stack.item_id == "Excalibur" for stack in transfer.items_add)
+
+def test_default_heir_selected_from_strongest_bond():
+    """When heir_entity_id is None, a default heir is selected from the deceased's live bonds."""
+    bond = SocialBond(target_id=2, familiarity=0.8, sentiment=0.5, last_interaction_tick=10)
+    parent = (V2EntityBuilder(1)
+              .location(0.0, 0.0)
+              .social(bonds={2: bond})
+              .build())
+    parent_life = LifecycleComponent(
+        age_ticks=100, max_age_ticks=100,
+        heir_entity_id=None,
+        heirlooms=["Excalibur"]
+    )
+    parent = replace(parent, lifecycle=parent_life)
+
+    heir = (V2EntityBuilder(2)
+            .location(1.0, 1.0)
+            .build())
+
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir})
+
+    update = StateUpdate()
+    refined = LifecycleSystem.resolve_lifecycle(state, update)
+
+    assert refined.entity_updates[1].lifecycle.heir_entity_id_set == 2
+
+    heir_upd = refined.entity_updates[2]
+    assert len(heir_upd.resource_transfers) > 0
+    transfer = heir_upd.resource_transfers[0]
+    assert any(stack.item_id == "Excalibur" for stack in transfer.items_add)
+
+def test_default_heir_prefers_strongest_bond_among_multiple_candidates():
+    """The higher-scoring candidate (familiarity=0.9,sentiment=0.0 -> 0.74) is selected over
+    a lower-scoring one (familiarity=0.2,sentiment=1.0 -> 0.52)."""
+    bond_a = SocialBond(target_id=2, familiarity=0.9, sentiment=0.0, last_interaction_tick=10)
+    bond_b = SocialBond(target_id=3, familiarity=0.2, sentiment=1.0, last_interaction_tick=10)
+    parent = (V2EntityBuilder(1)
+              .location(0.0, 0.0)
+              .social(bonds={2: bond_a, 3: bond_b})
+              .build())
+    parent_life = LifecycleComponent(age_ticks=100, max_age_ticks=100, heir_entity_id=None)
+    parent = replace(parent, lifecycle=parent_life)
+
+    candidate_a = (V2EntityBuilder(2).location(1.0, 1.0).build())
+    candidate_b = (V2EntityBuilder(3).location(2.0, 2.0).build())
+
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: candidate_a, 3: candidate_b})
+
+    update = StateUpdate()
+    refined = LifecycleSystem.resolve_lifecycle(state, update)
+
+    assert refined.entity_updates[1].lifecycle.heir_entity_id_set == 2
+
+def test_default_heir_zero_bonds_no_heir_assigned():
+    """Zero bonds -> no heir assigned, no exception raised."""
+    parent = (V2EntityBuilder(1).location(0.0, 0.0).build())
+    parent_life = LifecycleComponent(age_ticks=100, max_age_ticks=100, heir_entity_id=None)
+    parent = replace(parent, lifecycle=parent_life)
+
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent})
+
+    update = StateUpdate()
+    refined = LifecycleSystem.resolve_lifecycle(state, update)
+
+    assert refined.entity_updates[1].lifecycle.heir_entity_id_set is None
+    for ent_upd in refined.entity_updates.values():
+        assert len(ent_upd.resource_transfers) == 0
+
+def test_default_heir_all_bonded_targets_dead_or_missing_no_heir_assigned():
+    """Every bonded target is either present-but-inactive or absent entirely -> no heir assigned."""
+    bond_dead = SocialBond(target_id=2, familiarity=0.9, sentiment=0.9, last_interaction_tick=10)
+    bond_missing = SocialBond(target_id=3, familiarity=0.9, sentiment=0.9, last_interaction_tick=10)
+    parent = (V2EntityBuilder(1)
+              .location(0.0, 0.0)
+              .social(bonds={2: bond_dead, 3: bond_missing})
+              .build())
+    parent_life = LifecycleComponent(age_ticks=100, max_age_ticks=100, heir_entity_id=None)
+    parent = replace(parent, lifecycle=parent_life)
+
+    dead_candidate = (V2EntityBuilder(2)
+                       .location(1.0, 1.0)
+                       .lifecycle(active=False)
+                       .build())
+
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: dead_candidate})
+
+    update = StateUpdate()
+    refined = LifecycleSystem.resolve_lifecycle(state, update)
+
+    assert refined.entity_updates[1].lifecycle.heir_entity_id_set is None
+
+def test_default_heir_selection_deterministic_across_repeated_calls():
+    """Reversed bond-dict insertion order must not change the selected heir."""
+    bond_a = SocialBond(target_id=2, familiarity=0.9, sentiment=0.0, last_interaction_tick=10)
+    bond_b = SocialBond(target_id=3, familiarity=0.2, sentiment=1.0, last_interaction_tick=10)
+
+    def build_and_run(bonds):
+        parent = (V2EntityBuilder(1)
+                  .location(0.0, 0.0)
+                  .social(bonds=bonds)
+                  .build())
+        parent_life = LifecycleComponent(age_ticks=100, max_age_ticks=100, heir_entity_id=None)
+        parent = replace(parent, lifecycle=parent_life)
+        candidate_a = (V2EntityBuilder(2).location(1.0, 1.0).build())
+        candidate_b = (V2EntityBuilder(3).location(2.0, 2.0).build())
+        state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: candidate_a, 3: candidate_b})
+        refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+        return refined.entity_updates[1].lifecycle.heir_entity_id_set
+
+    heir_forward = build_and_run({2: bond_a, 3: bond_b})
+    heir_reversed = build_and_run({3: bond_b, 2: bond_a})
+
+    assert heir_forward == heir_reversed == 2
+
+def test_default_heir_tie_break_deterministic():
+    """Score ties break on highest last_interaction_tick, then lowest target_id."""
+    bond_older = SocialBond(target_id=2, familiarity=0.5, sentiment=0.5, last_interaction_tick=5)
+    bond_newer = SocialBond(target_id=3, familiarity=0.5, sentiment=0.5, last_interaction_tick=50)
+    parent = (V2EntityBuilder(1)
+              .location(0.0, 0.0)
+              .social(bonds={2: bond_older, 3: bond_newer})
+              .build())
+    parent_life = LifecycleComponent(age_ticks=100, max_age_ticks=100, heir_entity_id=None)
+    parent = replace(parent, lifecycle=parent_life)
+    candidate_a = (V2EntityBuilder(2).location(1.0, 1.0).build())
+    candidate_b = (V2EntityBuilder(3).location(2.0, 2.0).build())
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: candidate_a, 3: candidate_b})
+    refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+    assert refined.entity_updates[1].lifecycle.heir_entity_id_set == 3
+
+    bond_low_id = SocialBond(target_id=2, familiarity=0.5, sentiment=0.5, last_interaction_tick=10)
+    bond_high_id = SocialBond(target_id=3, familiarity=0.5, sentiment=0.5, last_interaction_tick=10)
+    parent2 = (V2EntityBuilder(4)
+               .location(0.0, 0.0)
+               .social(bonds={2: bond_low_id, 3: bond_high_id})
+               .build())
+    parent2_life = LifecycleComponent(age_ticks=100, max_age_ticks=100, heir_entity_id=None)
+    parent2 = replace(parent2, lifecycle=parent2_life)
+    state2 = AuthoritativeState(tick=100, seed=42, entities={4: parent2, 2: candidate_a, 3: candidate_b})
+    refined2 = LifecycleSystem.resolve_lifecycle(state2, StateUpdate())
+    assert refined2.entity_updates[4].lifecycle.heir_entity_id_set == 2
+
+def test_default_heir_does_not_override_manual_heir_entity_id():
+    """A manually-set heir_entity_id must win even when a higher-scoring bonded candidate exists."""
+    bond_high = SocialBond(target_id=3, familiarity=1.0, sentiment=1.0, last_interaction_tick=999)
+    parent = (V2EntityBuilder(1)
+              .location(0.0, 0.0)
+              .social(bonds={3: bond_high})
+              .build())
+    parent_life = LifecycleComponent(
+        age_ticks=100, max_age_ticks=100,
+        heir_entity_id=2,
+        heirlooms=["Excalibur"]
+    )
+    parent = replace(parent, lifecycle=parent_life)
+
+    heir = (V2EntityBuilder(2).location(1.0, 1.0).build())
+    other_candidate = (V2EntityBuilder(3).location(2.0, 2.0).build())
+
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir, 3: other_candidate})
+
+    update = StateUpdate()
+    refined = LifecycleSystem.resolve_lifecycle(state, update)
+
+    heir_upd = refined.entity_updates[2]
+    assert len(heir_upd.resource_transfers) > 0
+    transfer = heir_upd.resource_transfers[0]
+    assert any(stack.item_id == "Excalibur" for stack in transfer.items_add)
+
+    assert 3 not in refined.entity_updates or len(refined.entity_updates[3].resource_transfers) == 0
+
+    life_upd = refined.entity_updates[1].lifecycle
+    assert life_upd.heir_entity_id_set in (None, 2)
+
+def test_life_stage_flips_at_age_boundary():
+    """TCK-20260824-LIFE-STAGE-TRANSITIONS: age_ticks=6999 must not transition; age_ticks=7000
+    (the boundary, inclusive per get_age_bracket()'s numeric law) must transition to ELDER."""
+    below_boundary = (V2EntityBuilder(1)
+                       .location(0.0, 0.0)
+                       .identity(life_stage=LifeStage.ADULT)
+                       .lifecycle(age_ticks=6999, max_age_ticks=100000)
+                       .build())
+    state_below = AuthoritativeState(tick=100, seed=42, entities={1: below_boundary})
+    refined_below = LifecycleSystem.resolve_lifecycle(state_below, StateUpdate())
+    ent_upd_below = refined_below.entity_updates.get(1)
+    assert ent_upd_below is None or ent_upd_below.identity is None or ent_upd_below.identity.life_stage_set is None
+
+    at_boundary = (V2EntityBuilder(1)
+                   .location(0.0, 0.0)
+                   .identity(life_stage=LifeStage.ADULT)
+                   .lifecycle(age_ticks=7000, max_age_ticks=100000)
+                   .build())
+    state_at = AuthoritativeState(tick=100, seed=42, entities={1: at_boundary})
+    refined_at = LifecycleSystem.resolve_lifecycle(state_at, StateUpdate())
+    ent_upd_at = refined_at.entity_updates[1]
+    assert ent_upd_at.identity.life_stage_set == LifeStage.ELDER
+
+
+def test_life_stage_transition_is_monotonic_forward_only():
+    """An already-ADULT entity at age_ticks=0 (a construction-time bookkeeping default, not a
+    literal newborn fact) must NOT be demoted to CHILD. A CHILD entity correctly promotes to
+    ADULT at 3000 and to ELDER at 7000."""
+    already_adult = (V2EntityBuilder(1)
+                      .location(0.0, 0.0)
+                      .identity(life_stage=LifeStage.ADULT)
+                      .lifecycle(age_ticks=0, max_age_ticks=100000)
+                      .build())
+    state = AuthoritativeState(tick=100, seed=42, entities={1: already_adult})
+    refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+    ent_upd = refined.entity_updates.get(1)
+    assert ent_upd is None or ent_upd.identity is None or ent_upd.identity.life_stage_set is None
+
+    child = (V2EntityBuilder(2)
+             .location(0.0, 0.0)
+             .identity(life_stage=LifeStage.CHILD)
+             .lifecycle(age_ticks=0, max_age_ticks=100000)
+             .build())
+
+    state_child_at_0 = AuthoritativeState(tick=100, seed=42, entities={2: child})
+    refined_at_0 = LifecycleSystem.resolve_lifecycle(state_child_at_0, StateUpdate())
+    ent_upd_at_0 = refined_at_0.entity_updates.get(2)
+    assert ent_upd_at_0 is None or ent_upd_at_0.identity is None or ent_upd_at_0.identity.life_stage_set is None
+
+    child_at_3000 = replace(child, lifecycle=replace(child.lifecycle, age_ticks=3000))
+    state_at_3000 = AuthoritativeState(tick=100, seed=42, entities={2: child_at_3000})
+    refined_at_3000 = LifecycleSystem.resolve_lifecycle(state_at_3000, StateUpdate())
+    assert refined_at_3000.entity_updates[2].identity.life_stage_set == LifeStage.ADULT
+
+    child_at_7000 = replace(child, lifecycle=replace(child.lifecycle, age_ticks=7000))
+    state_at_7000 = AuthoritativeState(tick=100, seed=42, entities={2: child_at_7000})
+    refined_at_7000 = LifecycleSystem.resolve_lifecycle(state_at_7000, StateUpdate())
+    assert refined_at_7000.entity_updates[2].identity.life_stage_set == LifeStage.ELDER
+
 
 def test_near_death_hardening_logic():
     """Directly test the hardening logic in the pipeline."""

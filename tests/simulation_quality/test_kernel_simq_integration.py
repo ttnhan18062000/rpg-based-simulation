@@ -124,6 +124,73 @@ def _build_kernel(monkeypatch, tmp_path, feed_mode=None, scoring_disabled=False,
     return kernel
 
 
+def test_kernel_shutdown_persists_in_flight_quality_write(monkeypatch, tmp_path):
+    """Regression test for TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD.
+
+    Kernel.shutdown() previously called QualityPersistence.shutdown() (closing its file
+    handle) BEFORE EventRecorder.shutdown() had stopped the background drain worker /
+    run its own final drain. Any event still sitting in EventRecorder's queue at that
+    point would only reach QualityPersistence.write() once the drain path processed it —
+    by which point the file handle was already closed, so the write silently no-op'd
+    (QualityPersistence.write returns early when self._file_handle is None) and the
+    record never reached quality_scores.jsonl.
+
+    Reproduced deterministically (no sleep/race): the drain worker is stopped before the
+    event is ever pushed, so it can only be handled by EventRecorder.shutdown()'s own
+    final manual drain — exactly the step that must complete before
+    QualityPersistence.shutdown() runs. quality_fn is pointed straight at
+    persistence.write() with a known record so the assertion isn't dependent on real
+    scorer-dispatch details, which are out of scope for this ordering hazard.
+    """
+    import json
+    import shutil
+    from src.observability.events import SimulationEvent
+    from src.simulation_quality.pillars import PillarId
+    from src.simulation_quality.score_record import ScoreRecord
+
+    kernel = _build_kernel(
+        monkeypatch, tmp_path, feed_mode="inprocess", run_id="kernel-shutdown-ordering-hazard-test",
+    )
+    recorder = kernel._event_recorder
+    hub = kernel._quality_hub
+    assert hub is not None, "test setup requires a wired QualityHub (feed_mode=inprocess)"
+    persistence = hub._persistence
+    run_dir = persistence._run_dir
+
+    record = ScoreRecord(
+        tick=1, event_id="in-flight-write", pillar=PillarId.ECONOMY, delta=1.0,
+        reason="test", event_type="test_event", entity_id=1, region_id="r1",
+        tags=("t",),
+    )
+    recorder._worker.quality_fn = lambda env: persistence.write(record)
+
+    # Halt the background drain worker before anything is queued so the injected event
+    # can only be handled by EventRecorder.shutdown()'s own final drain.
+    recorder._worker.stop()
+    assert not recorder._worker.is_alive()
+
+    recorder.record(SimulationEvent(
+        event_type="entity_action", event_category="combat", tick=1, severity="INFO",
+        source_system="test", message="in-flight write during shutdown", entity_id=1,
+    ))
+    assert recorder.queue.get_size() == 1, "event should still be sitting unprocessed in the queue"
+
+    try:
+        kernel.shutdown()
+
+        scores_path = os.path.join(run_dir, "quality_scores.jsonl")
+        assert os.path.exists(scores_path), "quality_scores.jsonl was never created"
+        with open(scores_path, "r", encoding="utf-8") as fh:
+            lines = [json.loads(line) for line in fh if line.strip()]
+        assert any(l.get("event_id") == "in-flight-write" for l in lines), (
+            "in-flight write during shutdown was silently dropped: QualityPersistence's file "
+            "handle closed before EventRecorder's drain path reached QualityPersistence.write() "
+            "for the queued event"
+        )
+    finally:
+        shutil.rmtree(run_dir, ignore_errors=True)
+
+
 def test_kernel_broker_mode_builds_zero_quality_hub(monkeypatch, tmp_path):
     """TCK-20260702-OBSISO-BROKER-CONFIG G3: broker mode must not construct a QualityHub."""
     kernel = _build_kernel(monkeypatch, tmp_path, feed_mode="broker")

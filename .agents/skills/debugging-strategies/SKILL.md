@@ -28,7 +28,7 @@ specific failure class (CLAUDE.md's Proactive Tool Use table).
 
 For any tick-level or state-mutation failure, ground the generic strategies below in this repo's
 real deterministic-tick model first: `docs/engine/kernel.md` (the 7-phase tick loop — Resolution
-is the only phase allowed to write state) and `docs/engine/authoritative_pipeline.md` (the 37-phase
+is the only phase allowed to write state) and `docs/engine/authoritative_pipeline.md` (the 39-phase
 `AuthoritativeApplyPipeline` every durable mutation actually flows through). A bug that looks like
 non-determinism is far more often a `StateUpdate`/`DirtySet` ordering issue than a genuine race.
 

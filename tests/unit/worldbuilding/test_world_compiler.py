@@ -514,6 +514,41 @@ def test_urban_political_resolved_bandit_road_hazard_kind_matches_source():
     )
 
 
+def test_compile_sets_real_town_center_from_town_region():
+    """WorldCompiler.compile() derives AuthoritativeState.town_center as the centroid of the
+    town-type region's own bounds, instead of leaving it at the dataclass default (0.0, 0.0)
+    (TCK-20260824-TOWN-CENTER-POINTER-FIX)."""
+    data = create_base_valid_spec()
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    # town_square region bounds = [0, 0, 10, 10] -> centroid (5.0, 5.0)
+    assert state.town_center == (5.0, 5.0)
+    assert state.town_center != (0.0, 0.0)
+
+
+def test_compile_town_center_derivation_with_multiple_town_regions():
+    """With more than one type=='town' region compiled into a world (mirroring
+    urban_political.yaml's real two-town-region shape), town_center is the centroid of the
+    FIRST town-type region in spec.regions declaration order -- not a union/average across
+    every town region, and not the last one declared."""
+    data = create_base_valid_spec()
+    data["regions"] = [
+        {"id": "town_square", "type": "town", "bounds": [0, 0, 10, 10], "terrain": "GRASS"},
+        {"id": "trading_post", "type": "town", "bounds": [45, 10, 80, 45], "terrain": "GRASS"},
+        {"id": "wilds", "type": "wilderness", "bounds": [15, 15, 40, 40], "terrain": "FOREST"},
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    # First-declared town region (town_square, bounds [0,0,10,10]) centroid -> (5.0, 5.0).
+    # trading_post's own centroid would be (62.5, 27.5) -- asserting against that value would
+    # catch a regression that picked the second/last region instead of the first.
+    assert state.town_center == (5.0, 5.0)
+
+
 def test_helper_enum_mappers():
     assert get_role_enum("hero") == EntityRole.HERO
     assert get_role_enum("worker") == EntityRole.WORKER
@@ -526,6 +561,7 @@ def test_helper_enum_mappers():
     assert get_quest_kind("hunt") == QuestKind.HUNT
     assert get_quest_kind("gather") == QuestKind.GATHER
     assert get_quest_kind("explore") == QuestKind.EXPLORE
+    assert get_quest_kind("escort") == QuestKind.ESCORT
 
 
 def test_compiler_resource_node_regen_rate():

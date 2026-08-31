@@ -4,11 +4,13 @@ PartyCompositionScorer — evaluate candidate party composition quality.
 Ticket: TCK-20260628-E41F-PARTY-SCORER
 Logic IDs: SOC-231 (role diversity), SOC-232 (OCEAN compatibility)
 Logic ID: SOC-244 (trust/bonds-aware composition + confidence, TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY)
+Logic ID: SOC-247 (RelationshipRole affinity term, TCK-20260824-RELATIONSHIP-ROLE-FIELD)
 
 Score combines:
 - Role diversity (TANK/HEALER/DPS/SUPPORT coverage): 60% weight
 - OCEAN complementarity (bravery + sociability variance): 40% weight
 - Trust/bonds directed sentiment (optional, when actor supplied): weight 0.15, additive
+- RelationshipRole affinity (optional, when actor supplied): weight 0.10, additive
 
 Result (0.0–1.0) feeds into the FORM_PARTY route's expected_benefit so that
 sociable entities prefer forming parties when the candidate pool is balanced.
@@ -17,6 +19,8 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import TYPE_CHECKING, List, Optional
+
+from src.core.models.social import RelationshipRole
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
@@ -40,6 +44,7 @@ class PartyCompositionScorer:
     ROLE_DIVERSITY_WEIGHT: float = 0.6
     OCEAN_COMPAT_WEIGHT: float = 0.4
     TRUST_BONUS_WEIGHT: float = 0.15
+    ROLE_AFFINITY_WEIGHT: float = 0.10
 
     @staticmethod
     def infer_party_role(entity: "EntityState") -> PartyRole:
@@ -134,6 +139,34 @@ class PartyCompositionScorer:
         ]
         return round(sum(values) / len(values), 4)
 
+    @staticmethod
+    def _candidate_role_value(actor: "EntityState", candidate: "EntityState") -> float:
+        """
+        Directed RelationshipRole value the acting entity holds toward one specific
+        candidate: FRIEND -> +1.0, RIVAL -> -1.0, NEUTRAL or no bond -> 0.0.
+        """
+        bond = actor.social.bonds.get(candidate.id)
+        if bond is None:
+            return 0.0
+        if bond.role == RelationshipRole.FRIEND:
+            return 1.0
+        if bond.role == RelationshipRole.RIVAL:
+            return -1.0
+        return 0.0
+
+    @staticmethod
+    def score_role_affinity(actor: "EntityState", entities: "List[EntityState]") -> float:
+        """
+        Mean directed RelationshipRole affinity the acting entity holds toward each
+        candidate in the pool. Range: -1.0 to 1.0. Empty pool -> 0.0.
+        """
+        if not entities:
+            return 0.0
+        values = [
+            PartyCompositionScorer._candidate_role_value(actor, e) for e in entities
+        ]
+        return round(sum(values) / len(values), 4)
+
     @classmethod
     def score(
         cls, entities: "List[EntityState]", *, actor: "Optional[EntityState]" = None
@@ -156,4 +189,16 @@ class PartyCompositionScorer:
         if actor is None:
             return round(base_score, 4)
         trust_term = cls.score_trust_bonds(actor, entities)
-        return round(max(0.0, min(1.0, base_score + cls.TRUST_BONUS_WEIGHT * trust_term)), 4)
+        role_term = cls.score_role_affinity(actor, entities)
+        return round(
+            max(
+                0.0,
+                min(
+                    1.0,
+                    base_score
+                    + cls.TRUST_BONUS_WEIGHT * trust_term
+                    + cls.ROLE_AFFINITY_WEIGHT * role_term,
+                ),
+            ),
+            4,
+        )

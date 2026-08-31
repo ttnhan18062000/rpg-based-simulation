@@ -12,13 +12,48 @@ class FeatureFlagManager:
     def __init__(self, overrides: Dict[str, FeatureMode] = None) -> None:
         self._flags: Dict[str, FeatureMode] = {
             "ENABLE_WORLD_CAPABILITY_LAYER": FeatureMode.OFF,
+            # Keep OFF, deferred (TCK-20260824-ROLLOUT-FLAG-DECISIONS): real call site
+            # (self_model_phase.py) and 10 test files, but no corpus profile turns this on and
+            # no SHADOW-validation history exists. Follow-up:
+            # TCK-20260826-SELF-MODEL-COGNITION-FLAG-VALIDATION.
             "ENABLE_SELF_MODEL_COGNITION": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING): wires
+            # MemoryUpdatePhase into refine() for the first time (previously zero call sites).
+            # DEV-002 default-OFF policy applies -- no corpus profile turns this on yet and no
+            # SHADOW-validation history exists.
+            "ENABLE_MEMORY_UPDATE": FeatureMode.OFF,
             "ENABLE_ADVENTURE_ROUTING": FeatureMode.OFF,
+            # Keep OFF, deferred (TCK-20260824-ROLLOUT-FLAG-DECISIONS): a real bug
+            # (TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS) was already
+            # found and fixed here via live corpus A/B testing, but that was a one-off
+            # investigation, not a standing production validation -- no corpus profile defaults
+            # this on today. Follow-up: TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION.
             "ENABLE_COMBAT_ENGAGEMENT": FeatureMode.OFF,
-            "ENABLE_BELIEF_ASSIMILATION": FeatureMode.OFF,
+            # Default ON (TCK-20260824-ROLLOUT-FLAG-DECISIONS): real, live production evidence --
+            # already ON in both config/simulation_quality/profiles/sandbox_world.yaml and
+            # urban_political.yaml, this project's own real SimQ corpus profiles. Flipped the
+            # global default to match already-proven-safe production usage rather than leaving
+            # the code default OFF while every real profile that exercises it overrides ON.
+            "ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON,
+            # Keep OFF, deferred (TCK-20260824-ROLLOUT-FLAG-DECISIONS): real call site
+            # (information_intent_execution.py) and 5 test files, but no corpus profile turns
+            # this on and no SHADOW-validation history exists. Follow-up:
+            # TCK-20260826-INFORMATION-INTENT-EXECUTION-FLAG-VALIDATION.
             "ENABLE_INFORMATION_INTENT_EXECUTION": FeatureMode.OFF,
+            # Keep OFF, deferred (TCK-20260824-ROLLOUT-FLAG-DECISIONS): real call site
+            # (progression_conversion phase) and 2 test files, but no corpus profile turns this
+            # on and no SHADOW-validation history exists. Follow-up:
+            # TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION.
             "ENABLE_PROGRESSION_EVOLUTION": FeatureMode.OFF,
-            "ENABLE_SOCIAL_COOPERATION": FeatureMode.OFF,
+            # Default ON (TCK-20260824-ROLLOUT-FLAG-DECISIONS): real, live production evidence --
+            # already ON in config/simulation_quality/profiles/urban_political.yaml, this
+            # project's own real SimQ corpus profile. Flipped the global default to match
+            # already-proven-safe production usage.
+            "ENABLE_SOCIAL_COOPERATION": FeatureMode.ON,
+            # Keep OFF, deferred (TCK-20260824-ROLLOUT-FLAG-DECISIONS): real call site
+            # (world_emergence phase) and 3 test files, but no corpus profile turns this on and
+            # no SHADOW-validation history exists. Follow-up:
+            # TCK-20260826-WORLD-EMERGENCE-FLAG-VALIDATION.
             "ENABLE_WORLD_EMERGENCE": FeatureMode.OFF,
             "ENABLE_LIFE_ARC_CAMPAIGNS": FeatureMode.OFF,
             "ENABLE_ENHANCED_TRACE_EVENTS": FeatureMode.OFF,
@@ -50,7 +85,9 @@ class FeatureFlagManager:
             # and the guild_visit pipeline phase (src/engine/pipeline.py, checked via
             # FeatureFlagManager/run_phase) — belt-and-suspenders so a stale kind=="guild" project
             # from before a flag flip can't silently complete even if the scorer alone were somehow
-            # bypassed.
+            # bypassed. Formalized, not re-litigated, by TCK-20260824-ROLLOUT-FLAG-DECISIONS's own
+            # keep-OFF verdict — this is the one flag of the 8 it reviewed that already had a
+            # deliberate, documented rationale.
             "ENABLE_GUILD_QUEST_GENERATION": FeatureMode.OFF,
             # Default ON (not OFF): validated via real-kernel checks in both SHADOW
             # (construct-only) and ON (deliver, no double-fire against event_extractor.py's own

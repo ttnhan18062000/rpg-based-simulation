@@ -3,10 +3,12 @@ from __future__ import annotations
 from typing import Dict, Any, List, Optional, Tuple, TYPE_CHECKING
 from dataclasses import replace
 from src.core.strategic import ContractState, ContractKind, ContractStatus, RiskLevel, DirectiveKind, DirectivePriority
-from src.core.updates import StrategicUpdate, SocialBondUpdate, EntityUpdate, StateUpdate, SocialUpdate
+from src.core.updates import StrategicUpdate, SocialBondUpdate, EntityUpdate, StateUpdate, SocialUpdate, IdentityUpdate
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
+
+COOPERATION_OFFER_COOLDOWN_TICKS = 15
 
 class SocialContractSystem:
     """
@@ -314,18 +316,28 @@ class ContractService:
         
         for e_id, entity in state.entities.items():
             expired_ids = []
+            expired_recruitment = False
             for c_id, contract in entity.strategic.contracts.items():
                 if contract.status == ContractStatus.OFFERED and 0 < contract.expiry_tick <= current_tick:
                     expired_ids.append(c_id)
-            
+                    if contract.kind == ContractKind.RECRUITMENT:
+                        expired_recruitment = True
+
             if expired_ids:
                 ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                 strat_up = ent_upd.strategic or StrategicUpdate()
-                
+
+                identity_upd = ent_upd.identity
+                if expired_recruitment:
+                    identity_upd = IdentityUpdate(
+                        cooldown_updates={"cooperation_offer_retry": current_tick + COOPERATION_OFFER_COOLDOWN_TICKS}
+                    )
+
                 refined_entity_updates[e_id] = replace(ent_upd,
                     strategic=replace(strat_up,
                         contracts_remove=list(strat_up.contracts_remove) + expired_ids
-                    )
+                    ),
+                    identity=identity_upd
                 )
-                
+
         return replace(update, entity_updates=refined_entity_updates)

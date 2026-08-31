@@ -14,9 +14,12 @@ logger = logging.getLogger(__name__)
 class QualityPersistence:
     """Non-blocking file writer for quality score records and reports."""
 
+    _FLUSH_INTERVAL: int = 50
+
     def __init__(self, run_dir: str) -> None:
         self._run_dir = run_dir
         self._file_handle = None
+        self._pending_writes: int = 0
         try:
             os.makedirs(run_dir, exist_ok=True)
             jsonl_path = os.path.join(run_dir, "quality_scores.jsonl")
@@ -26,6 +29,16 @@ class QualityPersistence:
 
     def write(self, record: ScoreRecord) -> None:
         if self._file_handle is None:
+            # Backstop for TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD:
+            # under correct shutdown ordering (EventRecorder's drain worker fully stopped
+            # before this instance's shutdown() runs) this should never fire. Log loudly
+            # rather than silently no-op'ing, so a future ordering regression surfaces
+            # instead of vanishing.
+            logger.warning(
+                "QualityPersistence.write: called after shutdown() closed the file handle "
+                "— record dropped (event_id=%s, pillar=%s, tick=%s)",
+                record.event_id, getattr(record.pillar, "value", record.pillar), record.tick,
+            )
             return
         try:
             data = {
@@ -40,7 +53,10 @@ class QualityPersistence:
                 "tags": list(record.tags),
             }
             self._file_handle.write(json.dumps(data) + "\n")
-            self._file_handle.flush()
+            self._pending_writes += 1
+            if self._pending_writes >= self._FLUSH_INTERVAL:
+                self._file_handle.flush()
+                self._pending_writes = 0
         except Exception as exc:
             logger.warning("QualityPersistence.write: failed to write record: %s", exc)
 

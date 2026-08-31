@@ -61,3 +61,36 @@ def test_event_recorder_quality_fn_exception_does_not_crash_worker():
 
     assert recorder._worker.is_alive(), "Drain worker crashed after quality_fn exception"
     recorder.shutdown()
+
+
+def test_event_recorder_shutdown_final_drain_still_calls_quality_fn():
+    """Regression test for TCK-20260830-KERNEL-SHUTDOWN-PERSISTENCE-DRAIN-ORDERING-HAZARD.
+
+    EventRecorder.shutdown()'s own final synchronous drain (step 2) handles any envelope
+    pushed into the queue after the background QueueDrainWorker's last loop iteration but
+    before .stop() took effect. Before this fix that final drain wrote to file/stream but
+    never invoked quality_fn, so an event caught in that window would never reach quality
+    scoring/persistence at all — a silent drop distinct from (but adjacent to) the
+    Kernel-level ordering hazard. Reproduced deterministically (no sleep/race) by stopping
+    the worker before the event is ever pushed, forcing it to only be picked up by
+    shutdown()'s manual final drain.
+    """
+    received = []
+    recorder = EventRecorder(enabled=True, quality_fn=lambda env: received.append(env))
+
+    # Permanently halt the background worker before anything is queued, so the event
+    # pushed below can only be handled by shutdown()'s own final drain, not the worker's
+    # normal _run() loop.
+    recorder._worker.stop()
+    assert not recorder._worker.is_alive()
+
+    recorder.record(_make_event(tick=1))
+    assert recorder.queue.get_size() == 1, "event should still be sitting unprocessed in the queue"
+
+    recorder.shutdown()
+
+    assert len(received) == 1, (
+        "quality_fn was not called for an event stranded in the queue when the worker "
+        "already stopped — EventRecorder.shutdown()'s final manual drain must still route "
+        "through quality_fn, not just file/stream writes"
+    )

@@ -318,7 +318,6 @@ class ConcurrentExecutionAdapter:
                         groups=frozen_groups,
                         corpses=frozen_corpses,
                         ground_items=frozen_ground_items,
-                        town_center=state.town_center,
                         terrain=frozen_terrain,
                         all_entities=state.entities, # Full state (efficient in Mega-Chunks)
                         spatial_grid=frozen_grid,

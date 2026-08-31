@@ -21,6 +21,9 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from src.core.strategic import (
+    ContractKind,
+    ContractState,
+    ContractStatus,
     LeadCertainty,
     LeadState,
     ProjectKind,
@@ -29,6 +32,7 @@ from src.core.strategic import (
 )
 from src.core.updates import EntityUpdate, StrategicUpdate
 from src.core.update_models.resources import ResourceTransferIntent
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -122,6 +126,21 @@ class PaidInformationTransactionSystem:
 
             provider_id = provider_record.entity_id
             reliability = provider_record.reliability_score
+
+            temp_contract = ContractState(
+                id=f"temp_info_gate_{entity.id}_{provider_id}",
+                kind=ContractKind.PAID_INFORMATION,
+                source_id=provider_id,
+                target_id=entity.id,
+                terms={},
+                status=ContractStatus.OFFERED,
+                created_tick=state.tick,
+            )
+            gate_status, _gate_reason, _gate_terms = SocialAppraisalSystem.appraise_contract(
+                entity, temp_contract, state
+            )
+            if gate_status != ContractStatus.ACCEPTED:
+                continue
 
             cost = _transaction_cost(reliability)
             certainty = _lead_certainty_for_reliability(reliability)

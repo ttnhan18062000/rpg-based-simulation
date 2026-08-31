@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-19
+last_verified: 2026-08-28
 ---
 
 # Chapter 1: Entity Anatomy
@@ -101,6 +101,44 @@ XP_Required = int(100 * (level ** 1.5))
     *   Level 5: `swift_reflexes`
     *   Level 10: `fireball`
 
+### Breakthroughs (Passive Perks)
+Breakthroughs are milestone-earned passive perks, keyed by breakthrough ID rather than
+level, registered in `BreakthroughService.REGISTRY` (`src/progression/breakthroughs.py`):
+
+*   **`iron_will`**: `spirit +2`, `wisdom +2`.
+*   **`fleet_foot`**: `agility +3`, plus a separate non-attribute `evasion_flat: 0.05` bonus.
+    The `evasion_flat` bonus targets the derived evasion stat directly rather than a base
+    attribute, and is not yet wired into the effective-stats path described below.
+*   **`titan_grip`**: `strength +4`.
+
+**Application rule**: an entity's active breakthrough IDs' `attribute_bonuses` are summed and
+applied to its base `AttributeComponent` — via `BreakthroughService.apply_bonuses` — before
+combat-stat derivation (Section 2's formulas). Bonus-adjusted attributes then flow into
+`LevelingService.recalculate_combat_stats` the same way base attributes do; the formulas in
+Section 2 are unchanged, only the attribute values feeding them are pre-adjusted.
+
+### Elder Attribute Modifiers
+When an entity's age (`lifecycle.age_ticks`) crosses the elder bracket threshold
+(`age_ticks >= 7000`), `LifecycleSystem.resolve_lifecycle()` applies a one-time attribute
+modifier via `compute_elder_attribute_update()` (`src/domains/demographics/cohort.py`), gated on
+the same forward-transition edge that flips `identity.life_stage` to `ELDER` — the modifier fires
+exactly once, on the tick of the transition, never again on subsequent ticks:
+
+```python
+# combat_effectiveness *= 0.7
+strength_delta  = -int(attrs.strength * 0.3)
+agility_delta   = -int(attrs.agility  * 0.3)
+# mortality_rate *= 2.0 (increased biological mortality pressure)
+vitality_delta  = -int(attrs.vitality  * 0.5)
+endurance_delta = -int(attrs.endurance * 0.5)
+# knowledge_reputation_weight *= 1.3
+wisdom_delta    = int(attrs.wisdom   * 0.3)
+charisma_delta  = int(attrs.charisma * 0.3)
+```
+
+All deltas are integer-truncated toward zero and applied via a typed `AttributeUpdate` merged
+into the entity's `EntityUpdate` — never a direct mutation of the frozen `EntityState`.
+
 ---
 
 ## 6. Trauma: Wounds & Scars
@@ -109,12 +147,34 @@ Massive hits cause lasting physical trauma.
 ### Wound Infliction
 A **Wound** is inflicted if a single hit deals damage **strictly greater than 25% of Max HP** (on a surviving defender).
 ```python
-WOUND_THRESHOLD_RATIO = 0.25
-is_wound = damage > (max_hp * WOUND_THRESHOLD_RATIO)  # strict >, only if defender survives
+WOUND_INFLICTION_RATIO = 0.25
+is_wound = damage > (max_hp * WOUND_INFLICTION_RATIO)  # strict >, only if defender survives
 ```
 
+### Wound Penalty
+A wound's stat penalty is **severity-scaled**, not a flat value. Severity is the proportion of Max HP
+dealt by the inflicting hit, capped at 1.0:
+```python
+severity = min(1.0, damage / max_hp)
+atk_penalty = int(severity * 3)
+def_penalty = int(severity * 2)
+speed_penalty = int(severity * 2)
+max_hp_penalty = int(severity * 10)
+```
+`atk_penalty`, `def_penalty`, and `max_hp_penalty` reduce the entity's effective ATK, DEF, and Max HP
+for as long as the wound is active (`SkillScalingService.get_effective_stats()`, `src/engine/rpg_depth.py`).
+`speed_penalty` is computed and stored on the wound but is **not yet applied** to any effective
+stat — wiring it into `get_effective_stats()` is a tracked follow-up, not part of this formula.
+
 ### Permanent Scars
-When a wound is healed, it has a chance to leave a **Permanent Scar**, which carries **30%** of the original wound's stat penalties indefinitely.
+Wounds are permanent under the current implementation — no code path heals a wound.
+`WoundState.healed` never transitions `False → True` in production: the only `WoundUpdate`
+constructor (`CombatResolutionSystem._get_wound_infliction()`, `src/engine/combat.py:605-617`)
+never populates `wounds_heal`, and `WoundUpdate.wounds_heal`/`scars_add` both default to an empty
+list (`src/core/updates.py:604-609`). A wound's penalty applies indefinitely unless a future
+Scar-formation mechanic — tracked by `TCK-20260824-TACTICAL-WOUND-SCAR-WIRING`, not yet built —
+converts it into a **Permanent Scar**, a lesser, persistent penalty:
 ```python
 scar_penalty = wound_penalty * 0.3
 ```
+This formula describes the intended future scar mechanic, not currently active behavior.

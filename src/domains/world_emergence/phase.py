@@ -32,13 +32,6 @@ class WorldEmergencePhase:
         update: StateUpdate,
         recent_events: Sequence[WorldEvent],
     ) -> tuple[StateUpdate, WorldEmergenceResult]:
-        # Feature-flagged validation
-        flag = getattr(state, "world_emergence_enabled", True)
-        if hasattr(state, "periodic_due_ticks") and "world_emergence_disabled" in state.periodic_due_ticks:
-            flag = False
-        if not flag:
-            return update, WorldEmergenceResult()
-
         t_start = time.perf_counter_ns()
         
         # 1. Aggregate recent event streams

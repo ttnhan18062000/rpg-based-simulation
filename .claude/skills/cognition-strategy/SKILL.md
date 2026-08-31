@@ -127,7 +127,7 @@ CURRENT_SCORE + switch_margin` — prevents thrashing.
 ## The Authoritative Pipeline Phases
 
 Source: `docs/engine/authoritative_pipeline.md`. This domain's operations execute as 4 specific
-named phases in the 37-phase `AuthoritativeApplyPipeline`:
+named phases in the 39-phase `AuthoritativeApplyPipeline`:
 
 | Phase # | Name | What it does | Flag/Compliance ID |
 |---|---|---|---|

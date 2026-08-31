@@ -50,7 +50,6 @@ class WorkerPacket:
     groups: Dict[int, Any] = field(default_factory=dict)
     corpses: Dict[int, Any] = field(default_factory=dict)
     ground_items: Dict[int, Any] = field(default_factory=dict)
-    town_center: Tuple[float, float] = (0.0, 0.0)
     all_entities: Dict[int, EntityState] = field(default_factory=dict)
     spatial_grid: Optional[Any] = None
     occupancy_map: Optional[Dict[Tuple[int, int], int]] = None

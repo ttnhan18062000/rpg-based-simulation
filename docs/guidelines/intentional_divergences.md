@@ -37,6 +37,8 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Cognition-Strategy** | Adventure-Route Defer-Reason Observability Gap | **Bounded** | RATIFIED |
 | **Strategic Cognition / Regional Danger** | Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot | **Enforced** | RATIFIED |
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
+| **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
+| **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
 
 ---
 
@@ -1351,6 +1353,46 @@ This document is the canonical record of intentional behavior shifts in `src` co
   draw cannot perturb `Domain.WORLD`'s existing draw sequence.
 - **Status**: ACTIVE
 
+### 2.47 `MemoryUpdatePhase` Gains Its First Pipeline Call Site (TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING)
+- **Subsystem**: Engine / Cognition
+- **Old Behavior**: `MemoryUpdatePhase.run()`/`.apply()` (`src/domains/memory/phase.py`) existed
+  and was unit-tested in isolation, but `AuthoritativeApplyPipeline.refine()`
+  (`src/engine/pipeline.py`) had zero call sites for it (`TCK-20260811-MEMORY-INFORMED-ROUTE-SCORING`).
+  `entity.cognition.memory.causal` could never become non-empty in a real run, so
+  `AdventureRouteScorer.score()`'s `memory_adjustment` term (`docs/parity_ledger/strategic_cognition.yaml::STRAT-227`)
+  was formula-verified by unit test but not observable end-to-end. `run()`'s trigger-event
+  parameter was also a single `trigger_event` dict, unable to represent more than one entity
+  triggering a memory update in the same tick.
+- **New Behavior**: `AuthoritativeApplyPipeline.refine()` registers a `"memory_update"` phase
+  between `actor_validity` and `self_model` (`src/engine/pipeline.py:145-159`), gated by a new
+  flag `ENABLE_MEMORY_UPDATE`, calling `MemoryUpdatePhase.apply(state, u, _memory_trigger_events)`.
+  `run()`'s signature changed from a single `trigger_event` dict to a `trigger_events` list matched
+  by `entity_id`, so multiple entities triggering in the same tick are all updated. `.apply()`
+  writes via the typed `EntityUpdate.cognition_bundle_set` -> new `CognitionPatch`
+  (`src/core/updates.py`, `src/engine/patches.py`) authoritative-apply path, structurally mirroring
+  `SelfModelUpdatePhase.apply()` — it never mutates `state.entities` directly. Trigger events are
+  now sourced from a real producer: a new `WorldEventCategory.COMBAT_LOSS` `WorldEvent`, emitted
+  unconditionally by `ActionRoutingPhase.route()` whenever a defender survives a damaging ATTACK
+  (`src/engine/pipeline_phases/actions.py:169-188`; see `docs/parity_ledger/combat_movement.yaml::COMB-312`),
+  threaded through the existing one-tick-lagged `state.recent_world_events` channel.
+- **Rationale**: **Bug Fix**. This is a missing apply-path wiring for an existing typed cognition
+  subsystem (memory), completing Pattern 2 (Decision/Mutation Separation via Typed Update Records,
+  `docs/guidelines/design_patterns.md`) for `cognition_bundle_set` — not a new pattern or a design
+  tradeoff. The phase itself defaults `OFF` per DEV-002's established rollout policy for
+  Phase-10-era cognition phases (`ENABLE_MEMORY_UPDATE` follows the same convention as
+  `ENABLE_SELF_MODEL_COGNITION`, `ENABLE_BELIEF_ASSIMILATION`, etc.) — the default-OFF gating is
+  not itself a new divergence, it is DEV-002's policy applied to a new flag. The `COMBAT_LOSS`
+  `WorldEvent` producer is **not** flag-gated and is unconditional in every real run, independent
+  of `ENABLE_MEMORY_UPDATE`.
+- **Verification**: `tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py` (3-tick
+  scenario driving the real pipeline end-to-end: `entity.cognition.memory.causal.entries` becomes
+  non-empty with `avoid_enemy` advice, and `AdventureRouteScorer.score()` produces the documented
+  `-1.0` `memory_adjustment` for `HUNT_WEAK_ENEMY`);
+  `tests/unit/actions/test_action_routing_combat_loss_world_event.py` (COMBAT_LOSS producer);
+  `tests/integration/domains/memory/test_memory_update_phase_apply_trigger_events.py`
+  (`trigger_events` list, multi-entity matching by `entity_id`).
+- **Status**: ACTIVE
+
 ---
 
 ## 3. Unsupported / Retired Behavior
@@ -1394,5 +1436,149 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Verification**: `tests/integration/scenarios/test_balance_regression.py::test_adventure_routing_defaults_off`
 - **Status**: ACTIVE
 
+### DEV-003 — Two of DEV-002's 10 Phase-10 Flags Flipped ON by Default (TCK-20260824-ROLLOUT-FLAG-DECISIONS)
+- **Subsystem**: Engine / Feature Rollout
+- **Situation**: `ENABLE_BELIEF_ASSIMILATION` and `ENABLE_SOCIAL_COOPERATION` are 2 of the 10 flags
+  DEV-002's default-OFF policy covers. Both were already set `"ON"` in this project's own real,
+  regularly-run SimQ corpus profiles (`config/simulation_quality/profiles/sandbox_world.yaml` and
+  `urban_political.yaml` for the former; `urban_political.yaml` alone for the latter) at the time
+  this ticket reviewed all 8 originally-undecided Phase 10 flags.
+- **Decision**: Flip both flags' code default to `FeatureMode.ON`, closing the gap between the code
+  default and what every real corpus profile already exercises.
+- **Rationale**: **Stabilized** — DEV-002's own stated unblock condition is re-running
+  `tools/balance_measure.py` and updating its `ATTRITION_CAP`/`ECONOMIC_GOLD_FLOOR`/
+  `BLOCKER_FREQUENCY_E12A` baseline constants. That tool measures adventure-routing/economy/hunger
+  metrics specific to the ticket that originally wrote DEV-002 (`TCK-20260627-P0A-ADVENTURE-FLAG`,
+  about `ENABLE_ADVENTURE_ROUTING`) — neither metric is in either flipped flag's domain (belief/
+  social-cooperation), so re-running it would not produce meaningful new evidence for these two
+  flags specifically. **This ticket did not run `tools/balance_measure.py`** — stated plainly, not
+  glossed over. Instead, it treats continuous, real SimQ-corpus-profile usage (this project's own
+  standing validation mechanism for exactly the social/cognition domain these two flags touch) as
+  satisfying DEV-002's underlying intent — real, running, already-proven-safe production usage —
+  even though it is not the literal tool DEV-002 names. The other 6 of the 10 flags remain
+  `FeatureMode.OFF` under DEV-002's original policy, unaffected by this entry.
+- **Verification**: `tests/unit/config/test_phase10_feature_flags.py` (`_DELIBERATE_ON_DEFAULT_FLAGS`
+  allowlist, both flags added)
+- **Status**: ACTIVE
+
+### DEV-004 — ALLOCATE_AP Action-Router Branch Kept Dormant (TCK-20260824-ALLOCATE-AP-BRANCH-DECISION)
+- **Subsystem**: Engine / Progression
+- **Situation**: `CoreActions.execute_allocate_ap` (`src/engine/domain/core_actions.py:146-176`) is
+  dispatched from `ActionRouter.execute_action` (`src/engine/domain/action_router.py:49-50`) and
+  reachable via two live call chains (`SimulationDomainLogic.execute_action` and
+  `ActionIntentAdapter.execute`'s router-payload fallback), but no code anywhere in `src/` ever
+  constructs an `{"action": "ALLOCATE_AP", ...}` payload — the only such payload constructor in the
+  repo is a test fixture (`tests/unit/quest/test_progression_regression.py`). The one real
+  gap-resolution pipeline that could drive AP spending (`gaps.py` → `generator.py` →
+  `ConversionIntentResolver.resolve`'s `ConversionKind.ALLOCATE_AP` branch,
+  `src/domains/progression/resolver.py:82-89`) never calls `ActionRouter` at all — it returns an
+  `EntityUpdate` directly (`src/domains/progression/phase.py:73`) — and that whole
+  `ProgressionConversionPhase` is gated behind `ENABLE_PROGRESSION_EVOLUTION`, which defaults to
+  `FeatureMode.OFF` per DEV-003's standing policy, with an already-filed, not-yet-run follow-up
+  (`tickets/todos/TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION.md`).
+- **Decision**: Keep `execute_allocate_ap` wired but dormant. No new producer is built by this
+  ticket.
+  - `resolver.py`'s `ConversionKind.ALLOCATE_AP` branch (`src/domains/progression/resolver.py:82-89`)
+    stays a decrement-only, zero-attribute-gain no-op. This is **documented, not fixed** — fixing it
+    is a change to the aptitude-multiplier gap resolution pipeline outside this ticket's scope, and
+    it is unreachable today regardless of correctness since the whole phase sits behind the
+    `FeatureMode.OFF` flag from DEV-003.
+  - `AllocateAttributeAction` (`src/actions/attributes.py`) is **deleted** as dead code (zero `src/`
+    callers outside its own file and its own test file). It held the only correct PROG-015/PROG-069
+    aptitude-multiplier logic in the repo (`src/actions/attributes.py:39-43`). A follow-up ticket
+    porting that logic into `core_actions.execute_allocate_ap` and correcting the resulting
+    PROG-068/069/015 parity gap is **recommended but not created** by this ticket.
+  - **Update (2026-08-30, TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION)**: that follow-up has
+    now run a real 4-leg corpus trial (see `docs/architecture/rollout_flag_decisions_m1.md` §
+    "ENABLE_PROGRESSION_EVOLUTION — Validation Trial Result") — no longer "not-yet-run" as this
+    entry originally described it. It confirms the `resolver.py` `ALLOCATE_AP` branch is unreachable
+    today for two independent reasons, not one: the flag stays OFF (unchanged), and separately its
+    only trigger path (a ledger XP entry) has no live producer anywhere in `src/`
+    (`RewardLedgerService` has zero callers) — a diagnostic replay showed 100% of sampled decisions
+    converging on `SAVE_FOR_LATER`. The trial also surfaced a new, disclosed defect independent of
+    this dormancy question: flipping the flag ON deterministically crashes
+    `CanonicalStateHasher.get_hash()` (`property_updates["last_progression_decision"]` stores a
+    non-JSON-serializable raw `ProgressionDecisionResult`), a concrete blocking prerequisite for any
+    future flip-ON decision, on top of the reward-ledger gap. This decision (keep dormant) and the
+    flag's default are unchanged by this update.
+- **Rationale**: **Bounded** — building a real producer requires either flipping
+  `ENABLE_PROGRESSION_EVOLUTION` ON (which duplicates the scope/evidence-gathering job of the
+  already-filed `TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION`, per DEV-003's own standing
+  "defer, don't wire yet, wait for real evidence" policy) or building an entirely new AI/goal
+  producer (new-feature scope beyond a decide-the-fate chore ticket). Cites `SUB-376`
+  (`docs/parity_ledger/substrate.yaml`) and `ENTITY-008` (`docs/event_ledger/entity.yaml`) as the
+  prior investigation that first established this exact reachability finding — this entry ratifies,
+  not re-derives, their conclusion.
+- **Verification**: `tests/unit/quest/test_progression_regression.py::test_execute_allocate_ap_silently_no_ops_for_unhandled_attribute`
+  (documents the live-path's current buggy-but-decided-dormant behavior) and
+  `tests/integration/progression/test_allocate_ap_dormancy.py::test_allocate_ap_unreachable_via_real_kernel_tick`
+  (proves zero `attribute_changed` events are attributable to either path in a real tick today).
+- **Status**: ACTIVE
+
+### DEV-005 — Wounds Are Permanent; heal_wound()/get_diagnosis_quality() Removed (TCK-20260824-WOUND-HEALING-DECISION)
+- **Subsystem**: Engine / Combat
+- **Situation**: `WoundService.heal_wound()` (`src/engine/rpg_depth.py`, deleted by this ticket) had
+  zero `src/` callers — its only 5 references were 4 unit tests in
+  `tests/unit/core/test_rpg_depth.py` that directly exercised the dead function itself.
+  `MedicalService.get_diagnosis_quality()` (`src/engine/rpg_depth.py`, also deleted) had zero
+  callers anywhere, including tests. The only production constructor of `WoundUpdate`
+  (`CombatResolutionSystem._get_wound_infliction()`, `src/engine/combat.py:605-617`) never
+  populates `wounds_heal` or `scars_add` — confirmed zero production producers for wound healing
+  and scar formation, independent of `ENABLE_COMBAT_ENGAGEMENT`'s gate state, by both a full-repo
+  grep of `WoundUpdate(` constructors (`src/` has exactly one, and it never passes `wounds_heal`/
+  `scars_add`) and a real, non-mocked `Kernel.tick_once()` integration test
+  (`tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers`)
+  that reads authoritative state directly across a deterministic 40-tick run: a real wound is
+  inflicted at tick 9, and across the whole run no wound ever transitions `healed: False -> True`
+  and no `ScarState` is ever added. `MedicalService.get_diagnosis_quality()`'s only plausible
+  consumer, by name/docstring ("diagnosis accuracy", "healing quality"), was a hypothetical
+  WIS-gated heal-success roll feeding `heal_wound()` — it is an unfinished half of the same
+  never-wired healing pipeline, not a separately-dead subsystem.
+  - **Note on how this was verified**: this ticket's Step 4 was originally planned to prove the
+    above via `wound_sustained`/`wound_healed`/`scar_gained` *events*
+    (`src/observability/event_extractor.py`), but building that test surfaced a separate,
+    independently-discovered bug — `event_extractor.py`'s wound/scar diff blocks are
+    `isinstance(x, list)`-gated, while the real apply path always commits wounds/scars as tuples,
+    so none of the three events currently fire through any real `Kernel.tick_once()` run,
+    regardless of producer existence. That bug is unrelated to the healing-permanence decision (it
+    affects `wound_sustained` too, which does have a real producer) and is tracked separately by
+    `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`. Step 4 was re-scoped to prove
+    zero `wounds_heal`/`scars_add` producers at the authoritative-state level instead — reading
+    `kernel.state.entities[...].combat.wounds`/`.scars` directly — which does not depend on that
+    separate bug being fixed first.
+- **Decision**: Wounds are declared permanent. No healing trigger is built. Both
+  `heal_wound()` and `get_diagnosis_quality()` (plus the now-empty `MedicalService` class) are
+  **deleted**, not annotated dormant — following the `DEV-004` precedent of deletion for
+  zero-caller dead code (`AllocateAttributeAction`). Their 4 dependent unit tests
+  (`TestScarPermanence`'s 3 tests, `TestEffectiveStats::test_effective_stats_with_scars`) are
+  rewritten to hand-construct the `WoundState`→`ScarState` transition inline, preserving their
+  coverage of `WoundService.get_scar_stat_penalties()` and `SkillScalingService.get_effective_stats()`
+  with scars. Scar formation is deferred to a separate, later mechanic tracked by
+  `TCK-20260824-TACTICAL-WOUND-SCAR-WIRING` (not yet implemented as of this entry — that ticket's
+  current scope only reads existing `ScarState` data, it does not itself build a scar-formation
+  producer; flagged for the ticket owner, not a blocker for this decision).
+  - **Update (2026-08-29, TCK-20260824-TACTICAL-WOUND-SCAR-WIRING)**: that ticket has now landed,
+    confirming the prediction above — it wires `WoundService.get_wound_stat_penalties()`/
+    `get_scar_stat_penalties()` into `TacticalDecisionSystem` (`src/engine/tactical.py`) as three
+    new read-only decision signals, and still does not construct any `ScarState` or populate
+    `WoundUpdate.scars_add`; scar formation remains a zero-producer follow-up, unchanged by this
+    ticket. See `docs/mechanics/02_combat_laws.md` Section 5 for the documented tactical behavior.
+- **Rationale**: **Bug Fix** / dead-code removal. `heal_wound()`'s and `get_diagnosis_quality()`'s
+  zero-caller status (confirmed by full-repo search) matches the same evidentiary bar `DEV-004`
+  used for `AllocateAttributeAction`'s deletion — no live or planned call site references either
+  function today, and no test beyond the 4 rewritten fixture-builders exercised them.
+- **Verification**: `tests/unit/core/test_rpg_depth.py::TestScarPermanence` (3 tests, rewritten),
+  `::TestEffectiveStats::test_effective_stats_with_scars` (rewritten),
+  `::TestSkillScaling::test_wound_heal_through_apply` (unchanged — apply-path consumer regression
+  guard, proves `WoundUpdate.wounds_heal` plumbing still works even though nothing produces it);
+  `tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers`
+  (proves, via a real `Kernel.tick_once()` run reading authoritative state directly, that a wound
+  is genuinely inflicted while `healed` never flips and no `ScarState` is ever added, in the same
+  run). See `docs/parity_ledger/combat_movement.yaml::COMB-296` and
+  `docs/event_ledger/entity.yaml::ENTITY-018` for the corrected reachability record (`wound_healed`/
+  `scar_gained` scope only — `wound_sustained`'s separate event-layer bug is owned by
+  `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`, not corrected here).
+- **Status**: ACTIVE
+
 ---
-*Last updated: 2026-06-27 (DEV-002 feature flag default policy, TCK-20260627-P0A-ADVENTURE-FLAG).*
+*Last updated: 2026-08-30 (DEV-004 update, TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION).*

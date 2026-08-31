@@ -119,6 +119,8 @@ SOCIAL:
   social_structure_static: -8.0
   reputation_flat: -10.0
   social_isolation: -2.0
+  grief_urgency_triggered: 3.0
+  nemesis_relation_formed: 3.0
 
 INFORMATION:
   # Positive per-event weights raised x5 (TCK-20260713-SIMQ-SCORE-CEILING-FIX): the

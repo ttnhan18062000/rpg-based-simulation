@@ -119,9 +119,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/core/conservation.py` (`ResourceTransactionResolver.resolve` checks `can_add_items` against pending state)'
+  v2_evidence: '`src/core/conservation.py` (`ResourceTransactionResolver.resolve`
+    checks `can_add_items` against pending state)'
   proof_type: parity
-  test_path: '`tests/rpg/test_resource_conservation_v2.py` (proves node is not depleted if inventory is full)'
+  test_path: '`tests/rpg/test_resource_conservation_v2.py` (proves node is not depleted
+    if inventory is full)'
   divergence_note: null
   support_boundary: null
 - id: TOWN-012
@@ -129,7 +131,8 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/core/conservation.py` (`ResourceTransactionResolver.resolve` checks `can_add_items` against pending state)'
+  v2_evidence: '`src/core/conservation.py` (`ResourceTransactionResolver.resolve`
+    checks `can_add_items` against pending state)'
   proof_type: parity
   test_path: '`tests/rpg/test_resource_conservation_v2.py`'
   divergence_note: null
@@ -169,21 +172,21 @@
   support_boundary: null
 - id: TOWN-016
   text: Shop visits resolve bounded buy/sell behavior using inventory/gold truth.
-    Reputation discount (TOWN-181) is applied symmetrically in both proposal and
-    enforcement layers before the gold_cost validation guard.
+    Reputation discount (TOWN-181) is applied symmetrically in both proposal and enforcement
+    layers before the gold_cost validation guard.
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    `src/engine/shop.py` (`ShopSystem.enforce`) — enforcement guard now applies
-    `apply_reputation_discount(legal_total, entity.social.public_reputation)` before
-    the gold_cost < legal_total check; `src/town/shop.py` (`ShopService.buy_item`)
-    — proposal layer applies same discount after DynamicPriceService; both layers
-    import from `src/systems/economy_systems/reputation_discount.py` (TCK-20260619-E33D-REP-DISCOUNTS).
+  v2_evidence: "`src/engine/shop.py` (`ShopSystem.enforce`) \u2014 enforcement guard\
+    \ now applies `apply_reputation_discount(legal_total, entity.social.public_reputation)`\
+    \ before the gold_cost < legal_total check; `src/town/shop.py` (`ShopService.buy_item`)\
+    \ \u2014 proposal layer applies same discount after DynamicPriceService; both\
+    \ layers import from `src/systems/economy_systems/reputation_discount.py` (TCK-20260619-E33D-REP-DISCOUNTS).\n"
   proof_type: parity
-  test_path: >
-    `tests_v2/parity/test_town_resolution_parity.py` (covers shop scenarios);
+  test_path: '`tests_v2/parity/test_town_resolution_parity.py` (covers shop scenarios);
     `tests/integration/scenarios/test_macro_economy.py::test_reputation_discount_applies`
+
+    '
   divergence_note: null
   support_boundary: null
 - id: TOWN-017
@@ -1419,7 +1422,7 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: "src/world/ecology.py:process_ecology (line 20) — regen loop increments\
+  v2_evidence: "src/world/ecology.py:process_ecology (line 20) \u2014 regen loop increments\
     \ remaining_charges by regen_rate_per_tick each ecology tick, capped at max_charges;\
     \ deterministic per-tick delta emitted as ResourceNodeUpdate"
   proof_type: parity
@@ -1597,14 +1600,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >-
-    Implementation proven via exhaustive checklist audit Phase 1-11;
-    src/engine/pipeline_phases/quest_opportunity_rewards.py::QuestOpportunityRewardSystem.enforce()
-    — quest opportunity reward is gated through QuestRewardPhase.resolve(), which
-    reads from state.quest_registry and routes reward delivery through
-    ResourceTransferIntent rather than direct inventory mutation; quest removal
-    is also deferred until transaction confirmation, preventing standalone
-    completion bypasses (TCK-20260619-E23C-QUEST-REWARDS)
+  v2_evidence: "Implementation proven via exhaustive checklist audit Phase 1-11; src/engine/pipeline_phases/quest_opportunity_rewards.py::QuestOpportunityRewardSystem.enforce()\
+    \ \u2014 quest opportunity reward is gated through QuestRewardPhase.resolve(),\
+    \ which reads from state.quest_registry and routes reward delivery through ResourceTransferIntent\
+    \ rather than direct inventory mutation; quest removal is also deferred until\
+    \ transaction confirmation, preventing standalone completion bypasses (TCK-20260619-E23C-QUEST-REWARDS)"
   proof_type: null
   test_path: tests/unit/quest/test_quest_rewards.py::test_no_direct_entity_mutation_from_quest_opportunity
   divergence_note: null
@@ -1762,18 +1762,19 @@
   divergence_note: null
   support_boundary: null
 - id: TOWN-170
-  text: PopulationRecipeResolver supports three resolution cases — (1) recipe ID expands
-    to full member list, (2) bare archetype ID is a supported single-entity shorthand
-    returning count=1 with no preferred regions, (3) unknown ID raises ResolverError.
+  text: "PopulationRecipeResolver supports three resolution cases \u2014 (1) recipe\
+    \ ID expands to full member list, (2) bare archetype ID is a supported single-entity\
+    \ shorthand returning count=1 with no preferred regions, (3) unknown ID raises\
+    \ ResolverError."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >-
-    src/content/resolver.py PopulationRecipeResolver.resolve() — case 2 fallback validated
-    against entity_archetypes catalog before returning shorthand result; case 3 raises
-    ResolverError. As of TCK-20260607-ARCHETYPE-METADATA-EXPLICIT, the returned
-    ResolvedEntityArchetype.archetype_id is the authoritative identity; downstream callers
-    read PopulationSpec.archetype_id directly instead of inferring from string suffix.
+  v2_evidence: "src/content/resolver.py PopulationRecipeResolver.resolve() \u2014\
+    \ case 2 fallback validated against entity_archetypes catalog before returning\
+    \ shorthand result; case 3 raises ResolverError. As of TCK-20260607-ARCHETYPE-METADATA-EXPLICIT,\
+    \ the returned ResolvedEntityArchetype.archetype_id is the authoritative identity;\
+    \ downstream callers read PopulationSpec.archetype_id directly instead of inferring\
+    \ from string suffix."
   proof_type: parity
   test_path: tests/unit/content/test_resolvers.py::TestPopulationRecipeResolver::test_case2_direct_archetype_id_returns_single_entity
   divergence_note: null
@@ -1787,207 +1788,213 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >-
-    src/world/providers/requirements.py::RequirementEvaluator.evaluate (near_service
-    branch) — replaces "hometown" hardcode with real TownNavigation lookup
-    (TCK-20260619-FIX-NEAR-SERVICE-REGION).
+  v2_evidence: "src/world/providers/requirements.py::RequirementEvaluator.evaluate\
+    \ (near_service branch) \u2014 replaces \"hometown\" hardcode with real TownNavigation\
+    \ lookup (TCK-20260619-FIX-NEAR-SERVICE-REGION)."
   proof_type: parity
   test_path: tests/unit/strategic/test_requirements.py::test_near_service_passes_when_building_within_range
   divergence_note: null
   support_boundary: null
 - id: TOWN-172
-  text: 'Crafting recipe catalog has ≥ 25 entries covering all service types (blacksmith,
-    healer, arcane, general_store) with a complete gather→craft chain: iron_ore → steel
-    → ember_axe.'
+  text: "Crafting recipe catalog has \u2265 25 entries covering all service types\
+    \ (blacksmith, healer, arcane, general_store) with a complete gather\u2192craft\
+    \ chain: iron_ore \u2192 steel \u2192 ember_axe."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >-
-    data/content/world/recipes.yaml (25 entries, TCK-20260619-E13C-RECIPES):
-    smelt_iron_to_steel (iron_ore×3 → steel) and craft_ember_axe (steel + ember_core
-    → ember_axe) establish the authoritative metal progression chain.
-    All 4 service types represented. All ingredient/output IDs verified against items.yaml.
+  v2_evidence: "data/content/world/recipes.yaml (25 entries, TCK-20260619-E13C-RECIPES):\
+    \ smelt_iron_to_steel (iron_ore\xD73 \u2192 steel) and craft_ember_axe (steel\
+    \ + ember_core \u2192 ember_axe) establish the authoritative metal progression\
+    \ chain. All 4 service types represented. All ingredient/output IDs verified against\
+    \ items.yaml."
   proof_type: parity
   test_path: tests/unit/content/test_recipe_catalog_expansion.py::test_gather_craft_chain_iron_to_steel
   divergence_note: null
   support_boundary: null
 - id: TOWN-173
-  text: "RESOURCE_DEPLETED WorldEvent is emitted when a harvest reduces node remaining_charges\
-    \ to 0 (guard: only when old_charges > 0)"
+  text: 'RESOURCE_DEPLETED WorldEvent is emitted when a harvest reduces node remaining_charges
+    to 0 (guard: only when old_charges > 0)'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/engine/economy.py:_apply_world_effects — fires WorldEvent(RESOURCE_DEPLETED)\
+  v2_evidence: "src/engine/economy.py:_apply_world_effects \u2014 fires WorldEvent(RESOURCE_DEPLETED)\
     \ at line 127 when new_charges <= 0 and node.remaining_charges > 0; deduplicated\
     \ via depleted_nodes set per tick"
   proof_type: parity
   test_path: tests/unit/world/test_resource_ecology.py::test_depleted_event_emitted_when_last_charge_harvested
   divergence_note: null
-  support_boundary: "archetype-blocked in dungeon_crawl: no entity has a harvesting behavioral profile; 3 resource nodes exist as world dressing only (behavioral_profile: null on all entity groups)"
+  support_boundary: 'archetype-blocked in dungeon_crawl: no entity has a harvesting
+    behavioral profile; 3 resource nodes exist as world dressing only (behavioral_profile:
+    null on all entity groups)'
 - id: TOWN-174
-  text: "RESOURCE_RECOVERED WorldEvent is emitted when ecology regen brings a fully-depleted\
-    \ node above 0 charges"
+  text: RESOURCE_RECOVERED WorldEvent is emitted when ecology regen brings a fully-depleted
+    node above 0 charges
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/world/ecology.py:process_ecology — fires WorldEvent(RESOURCE_RECOVERED)\
+  v2_evidence: "src/world/ecology.py:process_ecology \u2014 fires WorldEvent(RESOURCE_RECOVERED)\
     \ at line 45 when was_depleted (remaining_charges == 0) and delta > 0"
   proof_type: parity
   test_path: tests/unit/world/test_resource_ecology.py::test_recovered_event_emitted_when_depleted_node_regens
   divergence_note: null
   support_boundary: null
 - id: TOWN-175
-  text: "Ecology regen loop caps at max_charges, skips nodes with cooldown_remaining\
-    \ > 0 or regen_rate_per_tick == 0"
+  text: Ecology regen loop caps at max_charges, skips nodes with cooldown_remaining
+    > 0 or regen_rate_per_tick == 0
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/world/ecology.py:process_ecology — guards at lines 31/33/35:\
+  v2_evidence: "src/world/ecology.py:process_ecology \u2014 guards at lines 31/33/35:\
     \ regen_rate_per_tick <= 0 skip (line 31), remaining_charges >= max_charges skip\
-    \ (line 33), cooldown_remaining > 0 skip (line 35); cap via min(max_charges,\
-    \ remaining + rate) at line 38"
+    \ (line 33), cooldown_remaining > 0 skip (line 35); cap via min(max_charges, remaining\
+    \ + rate) at line 38"
   proof_type: parity
   test_path: tests/unit/world/test_resource_ecology.py::test_regen_capped_at_max_charges
   divergence_note: null
   support_boundary: null
 - id: TOWN-176
-  text: "End-to-end depletion+recovery integration: RESOURCE_DEPLETED and RESOURCE_RECOVERED\
-    \ both appear in a 1000-tick ecology run; RegionalPressureModel and ScarcityModel\
-    \ both produce non-zero outputs when RESOURCE_DEPLETED events are present in\
-    \ the 100-tick window."
+  text: 'End-to-end depletion+recovery integration: RESOURCE_DEPLETED and RESOURCE_RECOVERED
+    both appear in a 1000-tick ecology run; RegionalPressureModel and ScarcityModel
+    both produce non-zero outputs when RESOURCE_DEPLETED events are present in the
+    100-tick window.'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/world/ecology.py:process_ecology (RESOURCE_RECOVERED at line\
-    \ 44); src/engine/economy.py (RESOURCE_DEPLETED emitter); src/domains/world_emergence/models.py:\
-    \ RegionalPressureModel.evaluate (dep_cnt * 0.15 → res_intensity) and ScarcityModel.evaluate\
-    \ (depl * 0.25 → scarcity) consume RESOURCE_DEPLETED aggregates from 100-tick\
+  v2_evidence: "src/world/ecology.py:process_ecology (RESOURCE_RECOVERED at line 44);\
+    \ src/engine/economy.py (RESOURCE_DEPLETED emitter); src/domains/world_emergence/models.py:\
+    \ RegionalPressureModel.evaluate (dep_cnt * 0.15 \u2192 res_intensity) and ScarcityModel.evaluate\
+    \ (depl * 0.25 \u2192 scarcity) consume RESOURCE_DEPLETED aggregates from 100-tick\
     \ window"
   proof_type: integration
-  test_path: "tests/integration/scenarios/test_resource_depletion.py::test_depletion_and_recovery_in_1000_tick_run;\
-    \ tests/integration/scenarios/test_resource_depletion.py::test_regional_scarcity_rises_after_depletion"
+  test_path: tests/integration/scenarios/test_resource_depletion.py::test_depletion_and_recovery_in_1000_tick_run;
+    tests/integration/scenarios/test_resource_depletion.py::test_regional_scarcity_rises_after_depletion
   divergence_note: null
   support_boundary: null
 - id: TOWN-177
-  text: >
-    EconomyHealthMonitor samples gold distribution read-only once per WINDOW_SIZE
+  text: 'EconomyHealthMonitor samples gold distribution read-only once per WINDOW_SIZE
     ticks and writes EconomyHealthSnapshot (gini_coefficient, transaction_velocity,
-    avg_price_index) into metric_windows.jsonl economy fields without mutating
-    AuthoritativeState.
+    avg_price_index) into metric_windows.jsonl economy fields without mutating AuthoritativeState.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/economy/health_monitor.py — EconomyHealthMonitor.sample() reads
-    e.inventory.gold and e.combat.alive; never writes to state; result passed via
-    MetricWindowRecorder into metric_windows.jsonl. check_alerts() (E33B) also
-    reads snapshot read-only and returns new SimulationEvent instances without
-    mutating state.
+  v2_evidence: "src/economy/health_monitor.py \u2014 EconomyHealthMonitor.sample()\
+    \ reads e.inventory.gold and e.combat.alive; never writes to state; result passed\
+    \ via MetricWindowRecorder into metric_windows.jsonl. check_alerts() (E33B) also\
+    \ reads snapshot read-only and returns new SimulationEvent instances without mutating\
+    \ state.\n"
   proof_type: parity
   test_path: tests/unit/economy/test_economy_health_monitor.py::test_gini_coefficient_computed_correctly
   divergence_note: null
   support_boundary: null
 - id: TOWN-178
-  text: >
-    EconomyHealthMonitor.check_alerts() emits SimulationEvent alert instances
-    (INFLATION_SPIRAL when gini>0.7, GOLD_HOARDING when gini>0.8) via kernel
-    _event_listeners callbacks at WINDOW_SIZE tick boundaries. Alerts are not
-    stored in AuthoritativeState; ECONOMIC_COLLAPSE and DEFLATION_RISK are
-    defined but deferred to E33C (transaction_velocity is stub=0.0).
+  text: 'EconomyHealthMonitor.check_alerts() emits SimulationEvent alert instances
+    (INFLATION_SPIRAL when gini>0.7, GOLD_HOARDING when gini>0.8) via kernel _event_listeners
+    callbacks at WINDOW_SIZE tick boundaries. Alerts are not stored in AuthoritativeState;
+    ECONOMIC_COLLAPSE and DEFLATION_RISK are defined but deferred to E33C (transaction_velocity
+    is stub=0.0).
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/economy/health_monitor.py:EconomyHealthMonitor.check_alerts() L25-54;
-    src/engine/kernel.py — alert dispatch inside existing metric_recorder block
-    (PERSISTENCE phase hook); src/observability/events.py — InflationSpiralEvent,
-    GoldHoardingEvent, DeflationRiskEvent, EconomicCollapseEvent subclasses.
+  v2_evidence: "src/economy/health_monitor.py:EconomyHealthMonitor.check_alerts()\
+    \ L25-54; src/engine/kernel.py \u2014 alert dispatch inside existing metric_recorder\
+    \ block (PERSISTENCE phase hook); src/observability/events.py \u2014 InflationSpiralEvent,\
+    \ GoldHoardingEvent, DeflationRiskEvent, EconomicCollapseEvent subclasses.\n"
   proof_type: parity
-  test_path: >
-    tests/unit/economy/test_economy_alerts.py::test_inflation_spiral_fires_above_gini_threshold;
+  test_path: 'tests/unit/economy/test_economy_alerts.py::test_inflation_spiral_fires_above_gini_threshold;
     tests/integration/scenarios/test_macro_economy.py::test_inflation_spiral_alert_emitted
+
+    '
   divergence_note: null
-  support_boundary: "archetype-blocked in dungeon_crawl: symmetric combat looting keeps Gini well below INFLATION_SPIRAL_GINI_THRESHOLD (0.7); no merchant NPC accumulates disproportionate gold"
+  support_boundary: 'archetype-blocked in dungeon_crawl: symmetric combat looting
+    keeps Gini well below INFLATION_SPIRAL_GINI_THRESHOLD (0.7); no merchant NPC accumulates
+    disproportionate gold'
 - id: TOWN-179
-  text: >
-    GoldSinkSystem injects REPAIR_FEE, SERVICE_FEE, and TAX ResourceTransferIntents
-    at WINDOW_SIZE tick boundaries when Gini > 0.7 (INFLATION_SPIRAL threshold).
-    All intents are resolved through ResourceTransactionSystem (authoritative pipeline)
-    — no direct state mutation. REPAIR_FEE: 1 gold per degraded (<50% durability)
-    equipment slot. SERVICE_FEE: flat 1 gold per alive entity with gold > 0. TAX:
-    5% of entity gold for entities above 1.5× mean, clamped [1, 50] gold.
+  text: "GoldSinkSystem injects REPAIR_FEE, SERVICE_FEE, and TAX ResourceTransferIntents\
+    \ at WINDOW_SIZE tick boundaries when Gini > 0.7 (INFLATION_SPIRAL threshold).\
+    \ All intents are resolved through ResourceTransactionSystem (authoritative pipeline)\
+    \ \u2014 no direct state mutation. REPAIR_FEE: 1 gold per degraded (<50% durability)\
+    \ equipment slot. SERVICE_FEE: flat 1 gold per alive entity with gold > 0. TAX:\
+    \ 5% of entity gold for entities above 1.5\xD7 mean, clamped [1, 50] gold.\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/gold_sink.py — GoldSinkSystem.apply() reads EconomyHealthMonitor
-    snapshot, emits ResourceTransferIntents for REPAIR_FEE/SERVICE_FEE/TAX;
-    src/core/conservation.py — REPAIR_FEE and SERVICE_FEE added to existing
-    TOWN_SERVICE/TAX resolver block (L255); src/engine/pipeline.py — gold_sink
-    run_phase wired in Phase 5 after town_resolution.
+  v2_evidence: "src/engine/gold_sink.py \u2014 GoldSinkSystem.apply() reads EconomyHealthMonitor\
+    \ snapshot, emits ResourceTransferIntents for REPAIR_FEE/SERVICE_FEE/TAX; src/core/conservation.py\
+    \ \u2014 REPAIR_FEE and SERVICE_FEE added to existing TOWN_SERVICE/TAX resolver\
+    \ block (L255); src/engine/pipeline.py \u2014 gold_sink run_phase wired in Phase\
+    \ 5 after town_resolution.\n"
   proof_type: parity
-  test_path: >
-    tests/unit/economy/test_gold_sink.py (TC-C01 through TC-C12);
-    tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
+  test_path: 'tests/unit/economy/test_gold_sink.py (TC-C01 through TC-C12); tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
+
+    '
   divergence_note: null
-  support_boundary: "archetype-blocked in dungeon_crawl: gold_sink_fired calibration_hits=0 across all runs; no service buildings (blacksmith/inn/healer_hut) and no traveling_merchant entity exist in this world archetype"
+  support_boundary: 'archetype-blocked in dungeon_crawl: gold_sink_fired calibration_hits=0
+    across all runs; no service buildings (blacksmith/inn/healer_hut) and no traveling_merchant
+    entity exist in this world archetype'
 - id: TOWN-180
-  text: >
-    Gold sink conservation invariant: gold drained from entities via REPAIR_FEE,
+  text: 'Gold sink conservation invariant: gold drained from entities via REPAIR_FEE,
     SERVICE_FEE, and TAX intents uses gold_cost only (gold_delta=0). The resolver
-    rejects intents where entity gold < gold_cost (ACTION_EXHAUSTION), ensuring
-    no gold is created or destroyed. Sink cycles tracked in
-    global_resources["metric_gold_sink_ticks"].
+    rejects intents where entity gold < gold_cost (ACTION_EXHAUSTION), ensuring no
+    gold is created or destroyed. Sink cycles tracked in global_resources["metric_gold_sink_ticks"].
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/gold_sink.py — all intents set gold_delta=0, gold_cost=fee_amount;
-    src/core/conservation.py L255-272 — resolver returns gold_delta=-gold_cost net
-    for REPAIR_FEE/SERVICE_FEE/TAX; rejects on ACTION_EXHAUSTION when insufficient.
-    src/engine/apply.py L288-289 — resource_updates["metric_gold_sink_ticks"]
-    accumulated into state.global_resources.
+  v2_evidence: "src/engine/gold_sink.py \u2014 all intents set gold_delta=0, gold_cost=fee_amount;\
+    \ src/core/conservation.py L255-272 \u2014 resolver returns gold_delta=-gold_cost\
+    \ net for REPAIR_FEE/SERVICE_FEE/TAX; rejects on ACTION_EXHAUSTION when insufficient.\
+    \ src/engine/apply.py L288-289 \u2014 resource_updates[\"metric_gold_sink_ticks\"\
+    ] accumulated into state.global_resources.\n"
   proof_type: parity
-  test_path: >
-    tests/unit/economy/test_gold_sink.py::test_conservation_invariant;
-    tests/unit/economy/test_gold_sink.py::test_conservation_resolver_handles_repair_fee_rejected;
+  test_path: 'tests/unit/economy/test_gold_sink.py::test_conservation_invariant; tests/unit/economy/test_gold_sink.py::test_conservation_resolver_handles_repair_fee_rejected;
     tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
+
+    '
   divergence_note: null
-  support_boundary: "archetype-blocked in dungeon_crawl: upstream gold_sink_fired trigger archetype-blocked (see TOWN-179); conservation invariant vacuously holds (no gold sink transactions occur)"
+  support_boundary: 'archetype-blocked in dungeon_crawl: upstream gold_sink_fired
+    trigger archetype-blocked (see TOWN-179); conservation invariant vacuously holds
+    (no gold sink transactions occur)'
 - id: TOWN-181
-  text: >
-    Shop purchases apply a reputation-based discount: up to 20% off at maximum
-    public_reputation (2.0), scaling linearly from 0% at rep=0.0, floored to
-    1 gold minimum. Applied symmetrically in proposal layer (ShopService.buy_item)
-    and enforcement layer (ShopSystem.enforce) to ensure discounted intents pass
-    the gold_cost validation guard. Faction cross-check deferred (DEV-001).
+  text: 'Shop purchases apply a reputation-based discount: up to 20% off at maximum
+    public_reputation (2.0), scaling linearly from 0% at rep=0.0, floored to 1 gold
+    minimum. Applied symmetrically in proposal layer (ShopService.buy_item) and enforcement
+    layer (ShopSystem.enforce) to ensure discounted intents pass the gold_cost validation
+    guard. Faction cross-check deferred (DEV-001).
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/systems/economy_systems/reputation_discount.py — apply_reputation_discount()
-    pure function; src/town/shop.py::ShopService.buy_item — proposal layer wiring;
-    src/engine/shop.py::ShopSystem.enforce — enforcement layer wiring;
-    docs/mechanics/03_economic_laws.md §4.1 — formula documented.
+  v2_evidence: "src/systems/economy_systems/reputation_discount.py \u2014 apply_reputation_discount()\
+    \ pure function; src/town/shop.py::ShopService.buy_item \u2014 proposal layer\
+    \ wiring; src/engine/shop.py::ShopSystem.enforce \u2014 enforcement layer wiring;\
+    \ docs/mechanics/03_economic_laws.md \xA74.1 \u2014 formula documented.\n"
   proof_type: parity
-  test_path: >
-    tests/integration/scenarios/test_macro_economy.py::test_reputation_discount_applies
-  divergence_note: >
-    Faction-scoped discount gating (ticket pseudocode had faction_id != shop_faction
-    guard) not implemented — no per-faction reputation dict on SocialComponent.
-    Discount applied universally based on public_reputation. Declared as DEV-001
-    in TCK-20260619-E33D-REP-DISCOUNTS plan. See docs/guidelines/v2_intentional_divergences.md.
+  test_path: 'tests/integration/scenarios/test_macro_economy.py::test_reputation_discount_applies
+
+    '
+  divergence_note: "Faction-scoped discount gating (ticket pseudocode had faction_id\
+    \ != shop_faction guard) not implemented \u2014 no per-faction reputation dict\
+    \ on SocialComponent. Discount applied universally based on public_reputation.\
+    \ Declared as DEV-001 in TCK-20260619-E33D-REP-DISCOUNTS plan. See docs/guidelines/v2_intentional_divergences.md.\n"
   support_boundary: null
 - id: TOWN-182
-  text: >
-    Paid information transactions deduct gold via ResourceTransferIntent
-    (source_kind="INFORMATION_PURCHASE") through the authoritative
-    ResourceTransactionResolver. Gold cost = int(10 / max(0.1, reliability_score)).
-    Conservation law (Chapter 03) applies: gold is never destroyed, only
-    transferred. The resolver rejects intents where entity gold < gold_cost.
-    LeadState certainty is derived from provider reliability: PRECISE (>=0.8),
-    APPROXIMATE (0.5–0.8), VAGUE (<0.5). Project removal and lead delivery are
-    contingent on transaction acceptance via strategic_upd.
+  text: "Paid information transactions deduct gold via ResourceTransferIntent (source_kind=\"\
+    INFORMATION_PURCHASE\") through the authoritative ResourceTransactionResolver.\
+    \ Gold cost = int(10 / max(0.1, reliability_score)). Conservation law (Chapter\
+    \ 03) applies: gold is never destroyed, only transferred. The resolver rejects\
+    \ intents where entity gold < gold_cost. LeadState certainty is derived from provider\
+    \ reliability: PRECISE (>=0.8), APPROXIMATE (0.5\u20130.8), VAGUE (<0.5). Project\
+    \ removal and lead delivery are contingent on transaction acceptance via strategic_upd.\
+    \ As of TCK-20260824-AFFECTION-CONTRACT-GATE, enforce() first gates each seeker/provider\
+    \ pair through the shared SocialAppraisalSystem.appraise_contract() helper (via\
+    \ a transient ContractKind.PAID_INFORMATION ContractState) and skips ResourceTransferIntent\
+    \ emission entirely when that helper's outcome is not ACCEPTED."
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2000,262 +2007,269 @@
     src/core/conservation.py L255 — INFORMATION_PURCHASE added to fee resolver branch;
     src/engine/pipeline.py — paid_information phase registered before resource_transactions;
     src/domains/information/providers.py — InformationProviderState.reliability_score.
+    src/engine/pipeline_phases/paid_information.py::PaidInformationTransactionSystem.enforce
+    (lines ~128-141) — new eligibility gate call site: synthesizes a transient
+    ContractState and calls SocialAppraisalSystem.appraise_contract() before emitting
+    the intent (TCK-20260824-AFFECTION-CONTRACT-GATE).
   proof_type: parity
-  test_path: >
-    tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_paid_transaction_transfers_gold_and_lead;
+  test_path: 'tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_paid_transaction_transfers_gold_and_lead;
+
     tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_vague_lead_for_low_reliability;
-    tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_transaction_cost_formula_high_reliability
-  divergence_note: >
-    Ticket specified LeadCertainty.EXACT for reliability>=0.8 but the canonical
-    enum in src/core/strategic.py uses PRECISE (not EXACT). Implementation uses
-    PRECISE to maintain enum consistency. Ticket EXACT intent is equivalent.
+
+    tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_transaction_cost_formula_high_reliability;
+
+    tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_paid_information_gated_on_shared_helper'
+  divergence_note: Ticket specified LeadCertainty.EXACT for reliability>=0.8 but the
+    canonical enum in src/core/strategic.py uses PRECISE (not EXACT). Implementation
+    uses PRECISE to maintain enum consistency. Ticket EXACT intent is equivalent.
   support_boundary: null
 - id: TOWN-183
-  text: >
-    urban_political world compiles with >= 3 resource nodes. frontier_village_core
+  text: 'urban_political world compiles with >= 3 resource nodes. frontier_village_core
     module contributes wood_node (8 charges, hometown) and herb_patch (5 charges,
     hometown) via resource_recipes. trading_company_hub module contributes iron_vein
-    (6 charges, trading_hometown when namespace=trading) via resource_recipes.
-    ResourceOpportunityProvider.get_opportunities() iterates state.resource_nodes;
-    zero nodes blocks all economic opportunity generation regardless of routing.
+    (6 charges, trading_hometown when namespace=trading) via resource_recipes. ResourceOpportunityProvider.get_opportunities()
+    iterates state.resource_nodes; zero nodes blocks all economic opportunity generation
+    regardless of routing.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    data/content/world_modules/frontier_village_core.yaml — resource_recipes: wood_node/herb_patch;
-    data/content/world_modules/trading_company_hub.yaml — resource_recipes: iron_vein;
-    data/worlds/urban_political/world_compile_report.json — resource_node_count: 3.
+  v2_evidence: "data/content/world_modules/frontier_village_core.yaml \u2014 resource_recipes:\
+    \ wood_node/herb_patch; data/content/world_modules/trading_company_hub.yaml \u2014\
+    \ resource_recipes: iron_vein; data/worlds/urban_political/world_compile_report.json\
+    \ \u2014 resource_node_count: 3.\n"
   proof_type: parity
-  test_path: >
-    tests/integration/worldassembly/test_e2e_smoke.py::test_smoke_urban_political_compiles_to_authoritative_state
+  test_path: 'tests/integration/worldassembly/test_e2e_smoke.py::test_smoke_urban_political_compiles_to_authoritative_state
     (asserts report["resource_node_count"] >= 3 and len(state.resource_nodes) >= 3)
+
+    '
   divergence_note: null
   support_boundary: null
 - id: TOWN-184
-  text: >
-    InventoryComponent defaults: max_slots=16, max_weight=50.0 kg. Entities cannot carry
-    more than 16 distinct item types or exceed 50.0 kg total carry weight.
+  text: 'InventoryComponent defaults: max_slots=16, max_weight=50.0 kg. Entities cannot
+    carry more than 16 distinct item types or exceed 50.0 kg total carry weight.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/core/models/inventory.py:44-45 — max_slots: int = 16, max_weight: float = 50.0.
-    Verified by TCK-20260627-P3C-DOC-CURRENCY; docs/mechanics/03_economic_laws.md corrected
-    from 100.0 kg to 50.0 kg.
+  v2_evidence: "src/core/models/inventory.py:44-45 \u2014 max_slots: int = 16, max_weight:\
+    \ float = 50.0. Verified by TCK-20260627-P3C-DOC-CURRENCY; docs/mechanics/03_economic_laws.md\
+    \ corrected from 100.0 kg to 50.0 kg.\n"
   proof_type: parity
   test_path: null
   divergence_note: null
   support_boundary: null
 - id: TOWN-185
-  text: >
-    Selling price = Item_Base_Value * 0.5 (static 50%). Dynamic selling prices are
-    out of scope (E5.6). DynamicPriceService.calculate_sell_price applies no market
-    multiplier. ShopSystem.get_sell_price applies a regional trauma surcharge
-    (1.0 + region_trauma / 10.0) to its own item base table, separate path.
+  text: 'Selling price = Item_Base_Value * 0.5 (static 50%). Dynamic selling prices
+    are out of scope (E5.6). DynamicPriceService.calculate_sell_price applies no market
+    multiplier. ShopSystem.get_sell_price applies a regional trauma surcharge (1.0
+    + region_trauma / 10.0) to its own item base table, separate path.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/systems/economy_systems/economy.py:56 — return max(1, int(base_value * 0.5)).
-    src/engine/shop.py:139-140 — modifier = 1.0 + (region_trauma / 10.0).
-    Verified by TCK-20260627-P3C-DOC-CURRENCY; docs/mechanics/03_economic_laws.md
-    corrected to remove Market_Multiplier reference.
+  v2_evidence: "src/systems/economy_systems/economy.py:56 \u2014 return max(1, int(base_value\
+    \ * 0.5)). src/engine/shop.py:139-140 \u2014 modifier = 1.0 + (region_trauma /\
+    \ 10.0). Verified by TCK-20260627-P3C-DOC-CURRENCY; docs/mechanics/03_economic_laws.md\
+    \ corrected to remove Market_Multiplier reference.\n"
   proof_type: parity
   test_path: null
   divergence_note: null
   support_boundary: null
 - id: TOWN-186
-  text: >
-    Compiler-seeded resource nodes have regen_rate_per_tick=1 by default (from
+  text: 'Compiler-seeded resource nodes have regen_rate_per_tick=1 by default (from
     ResourceNodeSpec.regen_rate default=1), enabling ecology-cycle charge regeneration.
-    World authors may set regen_rate: 0 for intentionally static (non-regenerating) nodes.
+    World authors may set regen_rate: 0 for intentionally static (non-regenerating)
+    nodes.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/worldbuilding/schema.py — ResourceNodeSpec.regen_rate: int = Field(1, ge=0);
-    src/worldbuilding/compiler.py — ResourceNodeState(regen_rate_per_tick=res_spec.regen_rate).
-    Verified by TCK-20260628-E21C-COMPILER-REGEN.
+  v2_evidence: "src/worldbuilding/schema.py \u2014 ResourceNodeSpec.regen_rate: int\
+    \ = Field(1, ge=0); src/worldbuilding/compiler.py \u2014 ResourceNodeState(regen_rate_per_tick=res_spec.regen_rate).\
+    \ Verified by TCK-20260628-E21C-COMPILER-REGEN.\n"
   proof_type: parity
   test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compiler_resource_node_regen_rate
-  divergence_note: >
-    Prior to TCK-20260628-E21C-COMPILER-REGEN, compiler-seeded nodes had regen_rate_per_tick=0
-    (permanent depletion). This was an unintentional gap — not a design decision.
+  divergence_note: "Prior to TCK-20260628-E21C-COMPILER-REGEN, compiler-seeded nodes\
+    \ had regen_rate_per_tick=0 (permanent depletion). This was an unintentional gap\
+    \ \u2014 not a design decision.\n"
   support_boundary: null
-
 - id: TOWN-187
-  text: >
-    Resource regeneration is density-dependent: nodes in heavily populated regions regenerate
-    slower, creating scarcity pressure that drives entity migration and territorial competition.
-    effective_regen = max(1, round(regen_rate_per_tick * density_mod)) where
-    density_mod = max(0.25, 1.0 - entity_count/16 * 0.75) (linear from 1.0 at 0 entities
-    to 0.25 at ≥16 entities). Effective regen is always at least 1 charge per ecology cycle.
+  text: "Resource regeneration is density-dependent: nodes in heavily populated regions\
+    \ regenerate slower, creating scarcity pressure that drives entity migration and\
+    \ territorial competition. effective_regen = max(1, round(regen_rate_per_tick\
+    \ * density_mod)) where density_mod = max(0.25, 1.0 - entity_count/16 * 0.75)\
+    \ (linear from 1.0 at 0 entities to 0.25 at \u226516 entities). Effective regen\
+    \ is always at least 1 charge per ecology cycle.\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/world/ecology.py — ResourceEcologyService.DENSITY_CAP=16, DENSITY_FLOOR=0.25;
-    _density_modifier(entity_count) → linear interpolation; process_ecology() calls
-    _region_entity_counts(state) once per cycle and applies density_mod per node.
-    Verified by TCK-20260628-E21D-DENSITY-REGEN.
+  v2_evidence: "src/world/ecology.py \u2014 ResourceEcologyService.DENSITY_CAP=16,\
+    \ DENSITY_FLOOR=0.25; _density_modifier(entity_count) \u2192 linear interpolation;\
+    \ process_ecology() calls _region_entity_counts(state) once per cycle and applies\
+    \ density_mod per node. Verified by TCK-20260628-E21D-DENSITY-REGEN.\n"
   proof_type: parity
   test_path: tests/unit/world/test_resource_ecology.py::test_crowded_region_reduces_effective_regen
-  divergence_note: >
-    New mechanic introduced in TCK-20260628-E21D-DENSITY-REGEN. No prior behavior existed —
-    regen was flat (regen_rate_per_tick per cycle regardless of entity density).
+  divergence_note: "New mechanic introduced in TCK-20260628-E21D-DENSITY-REGEN. No\
+    \ prior behavior existed \u2014 regen was flat (regen_rate_per_tick per cycle\
+    \ regardless of entity density).\n"
   support_boundary: null
-
 - id: TOWN-188
-  text: >
-    wood_node and herb_patch resource nodes placed in the hometown region (by
-    frontier_village_core.yaml, used by both simq_routing_test and urban_political) now correctly
-    yield gather_resource opportunities for entities standing in hometown.
+  text: 'wood_node and herb_patch resource nodes placed in the hometown region (by
+    frontier_village_core.yaml, used by both simq_routing_test and urban_political)
+    now correctly yield gather_resource opportunities for entities standing in hometown.
     ResourceOpportunityProvider.get_opportunities() gates on a global, catalog-wide,
-    per-resource-kind source_region_tags allowlist (not the node's own placement region);
-    wood_node/herb_patch's catalog entries previously omitted "hometown" from that allowlist despite
-    both kinds already being physically placed there, so the gate silently never fired for
-    hometown-standing entities of any role.
+    per-resource-kind source_region_tags allowlist (not the node''s own placement
+    region); wood_node/herb_patch''s catalog entries previously omitted "hometown"
+    from that allowlist despite both kinds already being physically placed there,
+    so the gate silently never fired for hometown-standing entities of any role.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    data/content/world/resources.yaml — wood_node/herb_patch metadata.source_region_tags now
-    additively include "hometown"; src/core/registries.py CatalogToResourceRegistryAdapter.adapt()
-    precedence (metadata override > preferred_biomes > legacy_id heuristic); src/world/providers/
-    resources.py:69 ResourceOpportunityProvider.get_opportunities() gating check.
+  v2_evidence: "data/content/world/resources.yaml \u2014 wood_node/herb_patch metadata.source_region_tags\
+    \ now additively include \"hometown\"; src/core/registries.py CatalogToResourceRegistryAdapter.adapt()\
+    \ precedence (metadata override > preferred_biomes > legacy_id heuristic); src/world/providers/\
+    \ resources.py:69 ResourceOpportunityProvider.get_opportunities() gating check.\n"
   proof_type: parity
-  test_path: >
-    tests/unit/core/test_registry_bridge.py; tests/unit/strategic/test_opportunities.py
-  divergence_note: >
-    Content-authoring gap, not a decision-logic or scoring bug: frontier_village_core.yaml's
+  test_path: 'tests/unit/core/test_registry_bridge.py; tests/unit/strategic/test_opportunities.py
+
+    '
+  divergence_note: 'Content-authoring gap, not a decision-logic or scoring bug: frontier_village_core.yaml''s
     resource_recipes already placed both node kinds in hometown (TCK-20260627-P0B-URBAN-RESOURCE-NODES),
-    but that placement was never reflected in the global catalog's per-kind gating tags until this fix
-    (TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP).
+    but that placement was never reflected in the global catalog''s per-kind gating
+    tags until this fix (TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP).
+
+    '
   support_boundary: null
 - id: TOWN-189
-  text: >
-    wood_node, iron_vein, herb_patch, healing_flower_patch, and spirit_wisp resource nodes placed in
-    orc_stronghold, sacred_grove, swamp_border_territory, haunted_battlefield, and trading_hometown
-    (by orc_clan_territory.yaml, forest_warden_grove.yaml, sunken_swamp_border.yaml,
-    undead_battlefield.yaml, and trading_company_hub.yaml respectively) now correctly yield
-    gather_resource opportunities for entities standing in those regions. Same root mechanism as
-    TOWN-188 (hometown): ResourceOpportunityProvider.get_opportunities() gates on a global,
-    catalog-wide, per-resource-kind source_region_tags allowlist, not the node's own placement
-    region; these 5 kinds previously omitted the relevant region id(s) from that allowlist despite
-    nodes already being physically placed there.
+  text: 'wood_node, iron_vein, herb_patch, healing_flower_patch, and spirit_wisp resource
+    nodes placed in orc_stronghold, sacred_grove, swamp_border_territory, haunted_battlefield,
+    and trading_hometown (by orc_clan_territory.yaml, forest_warden_grove.yaml, sunken_swamp_border.yaml,
+    undead_battlefield.yaml, and trading_company_hub.yaml respectively) now correctly
+    yield gather_resource opportunities for entities standing in those regions. Same
+    root mechanism as TOWN-188 (hometown): ResourceOpportunityProvider.get_opportunities()
+    gates on a global, catalog-wide, per-resource-kind source_region_tags allowlist,
+    not the node''s own placement region; these 5 kinds previously omitted the relevant
+    region id(s) from that allowlist despite nodes already being physically placed
+    there.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    data/content/world/resources.yaml — wood_node/iron_vein/herb_patch's metadata.source_region_tags
-    additively extended; healing_flower_patch/spirit_wisp gained new metadata.source_region_tags
-    blocks (previously relied on the node_flower legacy_id heuristic or resolved to zero tags,
-    respectively). src/core/registries.py CatalogToResourceRegistryAdapter.adapt() precedence unchanged.
-    src/world/providers/resources.py:69 gating check unchanged.
+  v2_evidence: "data/content/world/resources.yaml \u2014 wood_node/iron_vein/herb_patch's\
+    \ metadata.source_region_tags additively extended; healing_flower_patch/spirit_wisp\
+    \ gained new metadata.source_region_tags blocks (previously relied on the node_flower\
+    \ legacy_id heuristic or resolved to zero tags, respectively). src/core/registries.py\
+    \ CatalogToResourceRegistryAdapter.adapt() precedence unchanged. src/world/providers/resources.py:69\
+    \ gating check unchanged.\n"
   proof_type: parity
-  test_path: >
-    tests/unit/strategic/test_opportunities.py; tests/unit/core/test_registry_bridge.py;
+  test_path: 'tests/unit/strategic/test_opportunities.py; tests/unit/core/test_registry_bridge.py;
     tests/integration/content/test_resource_region_coverage_corpus.py
-  divergence_note: >
-    Content-authoring gap, not a decision-logic or scoring bug, identical root cause to TOWN-188.
-    zero hero-role entities affected in the live corpus prior to this fix (confirmed in
-    investigation.md §2 — every hero-role entity corpus-wide spawns in hometown, already covered).
-  support_boundary: null
 
+    '
+  divergence_note: "Content-authoring gap, not a decision-logic or scoring bug, identical\
+    \ root cause to TOWN-188. zero hero-role entities affected in the live corpus\
+    \ prior to this fix (confirmed in investigation.md \xA72 \u2014 every hero-role\
+    \ entity corpus-wide spawns in hometown, already covered).\n"
+  support_boundary: null
 - id: TOWN-190
-  text: >
-    TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION -- cuts ECONOMY observability event emission
-    (resource_harvested, item_crafted, shop_transaction, trade_executed, quest_reward_dispensed,
-    gold_sink_fired, paid_information_transaction, paid_info_transaction, paid_info_changed_goal)
-    over to `EconomyShaper` (src/observability/event_shapers.py, built by
-    TCK-20260806-PUSH-SHAPER-ECONOMY-FACTION / INFRA-325) as the live default path, same flag-
-    gated mutual-exclusion mechanism as COMB-295 (`ENABLE_PUSH_EVENT_SHAPERS` default now "ON";
-    the old `event_extractor.py` intent_results loop is flag-gated, not deleted -- real rollback
-    via setting the flag away from "ON"). Unlike COMBAT's entity_killed, every ECONOMY event in
-    the old extractor's `intent_results` loop maps 1:1 to a shaper-migrated event with no broader
-    old-extractor scope to preserve -- confirmed during this ticket's Investigate phase before
-    implementation, so the entire loop could be guarded as one unit (`for ir in ([] if
-    _push_shapers_active else (...intent_results...)):`) rather than needing per-branch narrowing.
-    `gold_transaction`/`gold_transferred`, `resource_node_depleted`/`regenerated`, `node_recharged`,
-    and `conservation_law_verified` (all deferred, per INFRA-325) are in separate code locations
-    entirely, untouched by this cutover, unaffected by the flag either way.
+  text: 'TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION -- cuts ECONOMY observability
+    event emission (resource_harvested, item_crafted, shop_transaction, trade_executed,
+    quest_reward_dispensed, gold_sink_fired, paid_information_transaction, paid_info_transaction,
+    paid_info_changed_goal) over to `EconomyShaper` (src/observability/event_shapers.py,
+    built by TCK-20260806-PUSH-SHAPER-ECONOMY-FACTION / INFRA-325) as the live default
+    path, same flag- gated mutual-exclusion mechanism as COMB-295 (`ENABLE_PUSH_EVENT_SHAPERS`
+    default now "ON"; the old `event_extractor.py` intent_results loop is flag-gated,
+    not deleted -- real rollback via setting the flag away from "ON"). Unlike COMBAT''s
+    entity_killed, every ECONOMY event in the old extractor''s `intent_results` loop
+    maps 1:1 to a shaper-migrated event with no broader old-extractor scope to preserve
+    -- confirmed during this ticket''s Investigate phase before implementation, so
+    the entire loop could be guarded as one unit (`for ir in ([] if _push_shapers_active
+    else (...intent_results...)):`) rather than needing per-branch narrowing. `gold_transaction`/`gold_transferred`,
+    `resource_node_depleted`/`regenerated`, `node_recharged`, and `conservation_law_verified`
+    (all deferred, per INFRA-325) are in separate code locations entirely, untouched
+    by this cutover, unaffected by the flag either way.
+
+    '
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_extractor.py's economy `intent_results` loop, guarded via the same
-    `_push_shapers_active` flag read as COMB-295. Verified via real kernel run
-    (`dungeon_crawl_seed42_500t`, default flag state): 0 economy-category events attributed to
-    `event_extractor` in the real event stream; all combat/economy/faction events (39 total)
-    attributed to `event_shapers` instead. See COMB-295's v2_evidence for the shared kernel.py
-    delivery-path change.
+  v2_evidence: 'src/observability/event_extractor.py''s economy `intent_results` loop,
+    guarded via the same `_push_shapers_active` flag read as COMB-295. Verified via
+    real kernel run (`dungeon_crawl_seed42_500t`, default flag state): 0 economy-category
+    events attributed to `event_extractor` in the real event stream; all combat/economy/faction
+    events (39 total) attributed to `event_shapers` instead. See COMB-295''s v2_evidence
+    for the shared kernel.py delivery-path change.
+
+    '
   proof_type: regression
-  test_path: >
-    tests/unit/observability/test_event_shapers_economy_faction.py (20 tests, unchanged by this
-    cutover — EconomyShaper's own logic was not modified, only its delivery path).
+  test_path: "tests/unit/observability/test_event_shapers_economy_faction.py (20 tests,\
+    \ unchanged by this cutover \u2014 EconomyShaper's own logic was not modified,\
+    \ only its delivery path).\n"
   divergence_note: null
-  support_boundary: >
-    ECONOMY domain only — see COMB-295 (combat) and FAC-013 (faction) for the sibling cutover
-    entries. Deferred events (gold_transferred, resource_node_depleted/regenerated, node_recharged,
-    conservation_law_verified) remain entirely on the old diffing path, unaffected by this flag.
-
-    UPDATE 2026-08-06 (TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION): the
-    resource_node_depleted/resource_node_regenerated/node_recharged deferral above is now closed
-    — the original "no typed per-node record" classification was wrong, found by tracing the real
-    mutation site (src/engine/apply_plan.py:152-177): StateUpdate.node_updates: Dict[int,
-    ResourceNodeUpdate] already existed, with charges_delta giving exactly the needed signal, no
-    new instrumentation required. Migrated via DeferredInstrumentationShaper
-    (src/observability/event_shapers.py), registered in PHASE2_SHAPER_REGISTRY, gated by
-    ENABLE_PUSH_EVENT_SHAPERS_PHASE2 (default OFF) — SHADOW-only in this ticket, cutover is a
-    separate, later Phase 2 child. conservation_law_verified also closed, implemented as a
-    cross-shaper aggregation step inside run_shadow_shapers() itself (checks the tick's combined
-    Phase 1 shaper output for any of 5 economy event types, tick%50 throttled — the same "check
-    already-constructed events" pattern the old extractor's own version uses). gold_transferred/
-    gold_transaction remains the one genuinely still-deferred ECONOMY event — no typed record
-    exists for entity.inventory.gold's raw diff, not scoped to this ticket. See
-    stored_artifacts/TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION/investigation.md for the
-    full trace and the deliberately-preserved faction_extinct dead-HP-check finding (FAC-013).
-
-    UPDATE 2026-08-07 (TCK-20260806-PUSH-CUTOVER-PHASE2): the SHADOW-only status above for
-    resource_node_depleted/regenerated/node_recharged/conservation_law_verified is now closed too
-    — ENABLE_PUSH_EVENT_SHAPERS_PHASE2 default flipped OFF->ON, event_extractor.py's legacy
-    resource-node and conservation_law_verified branches individually flag-gated behind the new
-    _push_shapers_phase2_active. gold_transferred/gold_transaction remains the one genuinely
-    still-deferred ECONOMY event (no typed record exists), confirmed still out of scope. See
-    STRAT-247's update note and infrastructure.yaml INFRA-326 for the run_shadow_shapers()
-    default-lockstep bug found and fixed during this cutover, verified fixed via real 5-world
-    runs.
-
+  support_boundary: "ECONOMY domain only \u2014 see COMB-295 (combat) and FAC-013\
+    \ (faction) for the sibling cutover entries. Deferred events (gold_transferred,\
+    \ resource_node_depleted/regenerated, node_recharged, conservation_law_verified)\
+    \ remain entirely on the old diffing path, unaffected by this flag.\nUPDATE 2026-08-06\
+    \ (TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION): the resource_node_depleted/resource_node_regenerated/node_recharged\
+    \ deferral above is now closed \u2014 the original \"no typed per-node record\"\
+    \ classification was wrong, found by tracing the real mutation site (src/engine/apply_plan.py:152-177):\
+    \ StateUpdate.node_updates: Dict[int, ResourceNodeUpdate] already existed, with\
+    \ charges_delta giving exactly the needed signal, no new instrumentation required.\
+    \ Migrated via DeferredInstrumentationShaper (src/observability/event_shapers.py),\
+    \ registered in PHASE2_SHAPER_REGISTRY, gated by ENABLE_PUSH_EVENT_SHAPERS_PHASE2\
+    \ (default OFF) \u2014 SHADOW-only in this ticket, cutover is a separate, later\
+    \ Phase 2 child. conservation_law_verified also closed, implemented as a cross-shaper\
+    \ aggregation step inside run_shadow_shapers() itself (checks the tick's combined\
+    \ Phase 1 shaper output for any of 5 economy event types, tick%50 throttled \u2014\
+    \ the same \"check already-constructed events\" pattern the old extractor's own\
+    \ version uses). gold_transferred/ gold_transaction remains the one genuinely\
+    \ still-deferred ECONOMY event \u2014 no typed record exists for entity.inventory.gold's\
+    \ raw diff, not scoped to this ticket. See stored_artifacts/TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION/investigation.md\
+    \ for the full trace and the deliberately-preserved faction_extinct dead-HP-check\
+    \ finding (FAC-013).\nUPDATE 2026-08-07 (TCK-20260806-PUSH-CUTOVER-PHASE2): the\
+    \ SHADOW-only status above for resource_node_depleted/regenerated/node_recharged/conservation_law_verified\
+    \ is now closed too \u2014 ENABLE_PUSH_EVENT_SHAPERS_PHASE2 default flipped OFF->ON,\
+    \ event_extractor.py's legacy resource-node and conservation_law_verified branches\
+    \ individually flag-gated behind the new _push_shapers_phase2_active. gold_transferred/gold_transaction\
+    \ remains the one genuinely still-deferred ECONOMY event (no typed record exists),\
+    \ confirmed still out of scope. See STRAT-247's update note and infrastructure.yaml\
+    \ INFRA-326 for the run_shadow_shapers() default-lockstep bug found and fixed\
+    \ during this cutover, verified fixed via real 5-world runs.\n"
 - id: TOWN-191
-  text: >-
-    herb_patch resource nodes placed in river_ford (by river_crossing.yaml, composed by
-    highland_traverse and quest_dense_frontier) now correctly yield gather_resource
-    opportunities for entities standing in that region. Same root mechanism as TOWN-189: a
-    catalog-authoring gap in herb_patch's source_region_tags allowlist that surfaced via a fresh
-    corpus-wide re-verification (TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP), prompted by
-    GuildAction.visit() becoming a live, role-agnostic consumer of the same gating mechanism
-    (TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING) -- the corpus had drifted with 3 new regions
-    since TOWN-189/TOWN-190's 2026-07-06 audit.
+  text: 'herb_patch resource nodes placed in river_ford (by river_crossing.yaml, composed
+    by highland_traverse and quest_dense_frontier) now correctly yield gather_resource
+    opportunities for entities standing in that region. Same root mechanism as TOWN-189:
+    a catalog-authoring gap in herb_patch''s source_region_tags allowlist that surfaced
+    via a fresh corpus-wide re-verification (TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP),
+    prompted by GuildAction.visit() becoming a live, role-agnostic consumer of the
+    same gating mechanism (TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING) -- the corpus
+    had drifted with 3 new regions since TOWN-189/TOWN-190''s 2026-07-06 audit.'
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >-
-    data/content/world/resources.yaml -- herb_patch's metadata.source_region_tags additively
-    extended with "river_ford". src/core/registries.py CatalogToResourceRegistryAdapter.adapt()
+  v2_evidence: 'data/content/world/resources.yaml -- herb_patch''s metadata.source_region_tags
+    additively extended with "river_ford". src/core/registries.py CatalogToResourceRegistryAdapter.adapt()
     precedence unchanged. src/world/providers/resources.py:69 gating check unchanged.
-    src/town/guild.py::GuildAction.visit()'s own parallel scarcity computation (STRAT-244)
-    verified directly: an entity in river_ford now computes scarcity=0.8 from a real herb_patch
-    node's charge ratio, vs. the pre-fix scarcity=0.0 false-abundant reading.
+    src/town/guild.py::GuildAction.visit()''s own parallel scarcity computation (STRAT-244)
+    verified directly: an entity in river_ford now computes scarcity=0.8 from a real
+    herb_patch node''s charge ratio, vs. the pre-fix scarcity=0.0 false-abundant reading.'
   proof_type: parity
-  test_path: >-
-    tests/unit/strategic/test_opportunities.py::test_resource_opportunities_river_ford_herb_patch;
+  test_path: tests/unit/strategic/test_opportunities.py::test_resource_opportunities_river_ford_herb_patch;
     tests/integration/content/test_resource_region_coverage_corpus.py::test_no_entity_of_any_role_spawns_in_an_unresolved_region_corpus_wide
-  divergence_note: >-
-    Content-authoring gap, not a decision-logic or scoring bug, identical root cause to TOWN-189/
-    TOWN-188. Additionally documents 2 new zero-content regions found in the same re-scan
-    (deep_forest, survivor_outpost) -- both extend the existing accepted-gap disposition
-    (docs/guidelines/intentional_divergences.md #2.29) rather than needing a catalog fix, since
-    neither has any resource node physically placed there (confirmed by tracing the placing
-    module's flat resources: dict and the compiler's first-declared-region-only placement rule,
-    same methodology as the original audit).
+  divergence_note: 'Content-authoring gap, not a decision-logic or scoring bug, identical
+    root cause to TOWN-189/ TOWN-188. Additionally documents 2 new zero-content regions
+    found in the same re-scan (deep_forest, survivor_outpost) -- both extend the existing
+    accepted-gap disposition (docs/guidelines/intentional_divergences.md #2.29) rather
+    than needing a catalog fix, since neither has any resource node physically placed
+    there (confirmed by tracing the placing module''s flat resources: dict and the
+    compiler''s first-declared-region-only placement rule, same methodology as the
+    original audit).'
   support_boundary: null

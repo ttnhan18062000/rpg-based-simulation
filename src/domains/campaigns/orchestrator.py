@@ -18,7 +18,7 @@ Both AuthoritativeState.seed and DeterministicRNG use this value (INFRA-101/102)
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -169,9 +169,13 @@ class CampaignOrchestrator:
         # Deferred import avoids circular import and module-level engine construction.
         from src.engine.scenario_runtime import ScenarioRuntimeService
 
-        svc = ScenarioRuntimeService(spec, initial_state=initial_state)
+        svc = ScenarioRuntimeService(
+            spec, initial_state=initial_state, event_recorder=self._event_recorder
+        )
         try:
             svc.start()
+            episode_run_id = svc.run_id
+            svc.flush_pending_grief_triggers()  # last-tick death: drain before final_state read
             final = svc.final_state  # AuthoritativeState after terminal tick
             completed_tick = svc.tick
         finally:
@@ -180,6 +184,7 @@ class CampaignOrchestrator:
         summary = EpisodeSummary(
             episode_index=idx,
             completed_tick=completed_tick,
+            run_id=episode_run_id or "",
         )
         self._advance_state(final, summary)
         return summary
@@ -207,9 +212,13 @@ class CampaignOrchestrator:
         self._state.social_memories.update(social_memories)
         self._state.progression_plans.update(progression_plans)
         # E43F: grief urgency — detect new grief from entity_death entries, decay existing.
-        self._advance_grief_urgencies(narrative_entries, summary.episode_index)
+        self._advance_grief_urgencies(
+            narrative_entries, summary.episode_index, tick=getattr(summary, "completed_tick", 0)
+        )
         # E43G: nemesis relations — scan social memories for repeated antagonism.
-        self._advance_nemesis_relations(summary.episode_index)
+        self._advance_nemesis_relations(
+            summary.episode_index, tick=getattr(summary, "completed_tick", 0)
+        )
         # Remove plans for entities that died this episode.
         dead_ids = [eid for eid, cf in entity_cfs.items() if not cf.alive]
         for eid in dead_ids:
@@ -225,6 +234,7 @@ class CampaignOrchestrator:
         self,
         new_entries: List[NarrativeLedgerEntry],
         episode_index: int,
+        tick: int = 0,
     ) -> None:
         """Detect new grief from entity_death events and decay existing modifiers (E43F).
 
@@ -232,6 +242,11 @@ class CampaignOrchestrator:
         2. For each new entity_death entry, find alive entities with trust_score > threshold
            toward the dead entity → create GriefUrgencyModifier for that entity.
            New entries overwrite decayed ones (fresh grief is never diminished).
+
+        Emits grief_urgency_triggered only for newly-created modifiers (Step 2), not for
+        every decayed-but-still-positive existing modifier (Step 1) — giving the
+        episode-boundary path the same event visibility the mid-episode path gets from
+        EventExtractor.detect_grief_triggers() (TCK-20260824-GRIEF-NEMESIS-REACHABILITY).
         """
         # Step 1 — decay existing grief
         decayed: Dict[int, GriefUrgencyModifier] = {}
@@ -247,6 +262,7 @@ class CampaignOrchestrator:
                 )
 
         # Step 2 — detect new grief from entity_death entries
+        newly_created: Dict[int, GriefUrgencyModifier] = {}
         for entry in new_entries:
             if entry.event_type != "entity_death":
                 continue
@@ -258,16 +274,43 @@ class CampaignOrchestrator:
                 trust = mem.relationship_scores.get(dead_id, 0.0)
                 if trust >= ALLY_TRUST_THRESHOLD:
                     urgency = round(min(1.0, trust * 0.8), 6)
-                    decayed[eid] = GriefUrgencyModifier(
+                    gum = GriefUrgencyModifier(
                         entity_id=eid,
                         dead_ally_id=dead_id,
                         episode=episode_index,
                         urgency=urgency,
                     )
+                    decayed[eid] = gum
+                    newly_created[eid] = gum
 
         self._state.grief_urgencies = decayed
+        self._emit_grief_urgency_events(newly_created, tick)
 
-    def _advance_nemesis_relations(self, episode_index: int) -> None:
+    def _emit_grief_urgency_events(
+        self,
+        modifiers: Dict[int, GriefUrgencyModifier],
+        tick: int,
+    ) -> None:
+        """Emit grief_urgency_triggered for each newly-created modifier.
+
+        No-op when event_recorder is None (production default when no recorder injected,
+        and the case for a test double built via object.__new__() without __init__).
+        """
+        if getattr(self, "_event_recorder", None) is None:
+            return
+        for eid, gum in modifiers.items():
+            self._emit_domain_event(
+                event_type="grief_urgency_triggered",
+                event_category="social",
+                tick=tick,
+                entity_id=eid,
+                payload={
+                    "dead_ally_id": gum.dead_ally_id,
+                    "urgency": gum.urgency,
+                },
+            )
+
+    def _advance_nemesis_relations(self, episode_index: int, tick: int = 0) -> None:
         """Detect nemesis relations from cumulative social memory interaction history (E43G).
 
         For each entity's SocialMemoryRecord, count distinct episodes where a negative
@@ -277,10 +320,14 @@ class CampaignOrchestrator:
         Existing nemesis relations are retained unless the interaction count drops
         (which cannot happen — interaction_history is append-only). New relations
         are added; updated relations refresh strength and antagonism_count.
+
+        Emits nemesis_relation_formed exactly once per newly-formed relation (not on
+        every episode a pre-existing relation is merely refreshed).
         """
         from collections import defaultdict
 
-        new_relations: Dict[str, NemesisRelation] = dict(self._state.nemesis_relations)
+        prior_relations = self._state.nemesis_relations
+        new_relations: Dict[str, NemesisRelation] = dict(prior_relations)
 
         for eid, mem in self._state.social_memories.items():
             # Count distinct episodes per other_entity for negative interactions
@@ -303,7 +350,29 @@ class CampaignOrchestrator:
                         strength=strength,
                     )
 
+        newly_formed = {k: v for k, v in new_relations.items() if k not in prior_relations}
         self._state.nemesis_relations = new_relations
+        for relation in newly_formed.values():
+            self._emit_nemesis_event(relation, tick)
+
+    def _emit_nemesis_event(self, relation: NemesisRelation, tick: int) -> None:
+        """Emit nemesis_relation_formed for a newly-formed NemesisRelation.
+
+        No-op when event_recorder is None (production default when no recorder injected,
+        and the case for a test double built via object.__new__() without __init__).
+        """
+        if getattr(self, "_event_recorder", None) is None:
+            return
+        self._emit_domain_event(
+            event_type="nemesis_relation_formed",
+            event_category="social",
+            tick=tick,
+            entity_id=relation.protagonist_id,
+            payload={
+                "antagonist_id": relation.antagonist_id,
+                "strength": relation.strength,
+            },
+        )
 
     def _emit_chronicle_events(
         self,
@@ -316,16 +385,12 @@ class CampaignOrchestrator:
         """
         if self._event_recorder is None:
             return
-        from src.observability.events import SimulationEvent
         for entry in entries:
-            self._event_recorder.record(SimulationEvent(
+            self._emit_domain_event(
                 event_type="chronicle_entry_created",
                 event_category="lifecycle",
                 tick=tick,
                 entity_id=None,
-                severity="INFO",
-                source_system="campaign_orchestrator",
-                message="",
                 payload={
                     "entry_id": entry.entry_id,
                     "event_type": entry.event_type,
@@ -333,7 +398,34 @@ class CampaignOrchestrator:
                     "episode": entry.episode,
                     "subject_id": entry.subject_id,
                 },
-            ))
+            )
+
+    def _emit_domain_event(
+        self,
+        event_type: str,
+        event_category: str,
+        tick: int,
+        entity_id: Optional[int],
+        payload: Dict[str, Any],
+    ) -> None:
+        """Construct and record a base SimulationEvent envelope.
+
+        Single shared import site for the domains -> observability pinned exception
+        (tests/architecture/test_phase18_import_boundaries.py's
+        _DOMAINS_OBSERVABILITY_PINNED) -- route all campaign-orchestrator event
+        emission through here instead of adding new per-call-site imports.
+        """
+        from src.observability.events import SimulationEvent
+        self._event_recorder.record(SimulationEvent(
+            event_type=event_type,
+            event_category=event_category,
+            tick=tick,
+            entity_id=entity_id,
+            severity="INFO",
+            source_system="campaign_orchestrator",
+            message="",
+            payload=payload,
+        ))
 
     def _extract_entity_carry_forwards(
         self,
@@ -614,6 +706,19 @@ class CampaignOrchestrator:
                 self._state.narrative_ledger.append(ledger_entry)
                 self._emit_chronicle_events([ledger_entry], tick=0)
                 existing_entry_ids.add(ledger_entry.entry_id)
+
+        # E43E: evaluate cross-episode social consequences at episode-entity-spawn time.
+        # Read-only — evaluate_social_consequence() never mutates entities/campaign_state;
+        # emitted via self._event_recorder.record() (SimulationEvent, not WorldEvent —
+        # this constructor call has no StateUpdate/ApplyPath merge step available).
+        from src.systems.social_systems.consequence_events import evaluate_social_consequence
+
+        if self._event_recorder is not None:
+            for eid in sorted(entities.keys()):
+                entity = entities[eid]
+                faction_id = f"faction_{entity.identity.faction}"
+                for event in evaluate_social_consequence(entity, faction_id, self._state, tick=0):
+                    self._event_recorder.record(event)
 
         return AuthoritativeState(tick=0, seed=episode_seed, entities=entities)
 

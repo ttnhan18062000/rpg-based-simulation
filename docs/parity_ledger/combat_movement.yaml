@@ -54,14 +54,13 @@
   support_boundary: null
 - id: COMB-006
   text: AoE legality is split into impact-center legality and radius application.
-    Impact-center is validated by verify_aoe_legality (range + LoS to center).
-    Radius application filters only living, active, enemy-faction entities within the radius.
+    Impact-center is validated by verify_aoe_legality (range + LoS to center). Radius
+    application filters only living, active, enemy-faction entities within the radius.
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/combat.py resolve_aoe_attack — verify_aoe_legality for center; radius
-    loop guards alive/active before applying splash (TCK-20260619-PARITY-P0-BUGS)
+  v2_evidence: "src/engine/combat.py resolve_aoe_attack \u2014 verify_aoe_legality\
+    \ for center; radius loop guards alive/active before applying splash (TCK-20260619-PARITY-P0-BUGS)\n"
   proof_type: parity
   test_path: tests/unit/combat/test_parity_comb_006.py::TestAoERadiusLegality::test_aoe_splash_skips_dead_entities
   divergence_note: null
@@ -82,11 +81,10 @@
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/apply.py` (`ApplyPath.apply_generation` ages entities,
-    increases hunger/sleep debt, applies hazard damage, and -- as of
-    TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION, see COMB-298 --
-    regenerates readiness via `readiness_speed`). Note: prior to that ticket this entry''s
-    own "gains readiness" claim did not match source (no readiness regen existed anywhere);
-    corrected here rather than left silently inaccurate.'
+    increases hunger/sleep debt, applies hazard damage, and -- as of TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION,
+    see COMB-298 -- regenerates readiness via `readiness_speed`). Note: prior to that
+    ticket this entry''s own "gains readiness" claim did not match source (no readiness
+    regen existed anywhere); corrected here rather than left silently inaccurate.'
   proof_type: parity
   test_path: '`tests_v2/test_substrate_hardening.py`'
   divergence_note: null
@@ -520,18 +518,18 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >-
-    Re-verified 2026-08-08 (TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE):
-    the direct ATTACK-action kill-reward path (combat.py::resolve_attack ->
-    combat_actions.py::execute_attack) was already correctly wired. A separate, previously
-    unverified path — MovementSystem.resolve_move's opportunity-attack branch
-    (src/engine/movement.py, resolve_multi_attack) — was found to silently orphan its own
-    kill reward (attached to the victim's EntityUpdate, never lifted to the top-level
-    resource_transfers field ResourceTransactionSystem.resolve_all() reads) and is now fixed.
-    See docs/guidelines/intentional_divergences.md §2.33.
+  v2_evidence: "Re-verified 2026-08-08 (TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE):\
+    \ the direct ATTACK-action kill-reward path (combat.py::resolve_attack -> combat_actions.py::execute_attack)\
+    \ was already correctly wired. A separate, previously unverified path \u2014 MovementSystem.resolve_move's\
+    \ opportunity-attack branch (src/engine/movement.py, resolve_multi_attack) \u2014\
+    \ was found to silently orphan its own kill reward (attached to the victim's EntityUpdate,\
+    \ never lifted to the top-level resource_transfers field ResourceTransactionSystem.resolve_all()\
+    \ reads) and is now fixed. See docs/guidelines/intentional_divergences.md \xA7\
+    2.33."
   proof_type: null
   test_path: tests/unit/movement/test_tactical_movement.py::test_opportunity_attack_lethal_grants_resource_transfers_to_attacker
-  divergence_note: 'See intentional_divergences.md §2.33 (Opportunity-Attack Kill Reward Orphaned on the Victim, Bug Fix)'
+  divergence_note: "See intentional_divergences.md \xA72.33 (Opportunity-Attack Kill\
+    \ Reward Orphaned on the Victim, Bug Fix)"
   support_boundary: null
 - id: COMB-050
   text: '`test_no_reward_on_non_lethal_hit`: No reward on non lethal hit.'
@@ -767,9 +765,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: src/engine/combat.py CombatResolutionSystem._get_wound_infliction()
+    now delegates entirely to src/engine/rpg_depth.py WoundService.create_wound(),
+    which computes severity-scaled atk_penalty/def_penalty/speed_penalty/max_hp_penalty
+    (fixed in TCK-20260824-WOUND-PENALTY-FORMULA-WIRING; previously the live path
+    hand-built WoundState with a hardcoded flat atk_penalty=5.0/def_penalty=5.0 and
+    never set speed_penalty/max_hp_penalty).
+  proof_type: parity
+  test_path: tests/unit/core/test_rpg_depth.py::TestWoundInfliction::test_wound_stat_impact
   divergence_note: null
   support_boundary: null
 - id: COMB-073
@@ -778,9 +781,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: src/engine/combat.py CombatResolutionSystem._get_wound_infliction()
+    now delegates entirely to src/engine/rpg_depth.py WoundService.create_wound()
+    for wound construction, including scar id assignment (fixed in TCK-20260824-WOUND-PENALTY-FORMULA-WIRING).
+  proof_type: parity
+  test_path: tests/unit/core/test_rpg_depth.py::TestWoundInfliction::test_scar_permanence
   divergence_note: null
   support_boundary: null
 - id: COMB-074
@@ -1001,7 +1006,7 @@
   proof_type: null
   test_path: null
   divergence_note: "src/ai/score_modifiers.py is live code (imported by intelligence.py)\
-    \ — not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
+    \ \u2014 not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
     \ test_path intentionally null."
   support_boundary: null
 - id: COMB-094
@@ -1013,7 +1018,7 @@
   proof_type: null
   test_path: null
   divergence_note: "src/ai/score_modifiers.py is live code (imported by intelligence.py)\
-    \ — not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
+    \ \u2014 not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
     \ test_path intentionally null."
   support_boundary: null
 - id: COMB-095
@@ -1025,7 +1030,7 @@
   proof_type: null
   test_path: null
   divergence_note: "src/ai/score_modifiers.py is live code (imported by intelligence.py)\
-    \ — not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
+    \ \u2014 not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
     \ test_path intentionally null."
   support_boundary: null
 - id: COMB-096
@@ -1037,7 +1042,7 @@
   proof_type: null
   test_path: null
   divergence_note: "src/ai/score_modifiers.py is live code (imported by intelligence.py)\
-    \ — not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
+    \ \u2014 not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
     \ test_path intentionally null."
   support_boundary: null
 - id: COMB-097
@@ -1049,7 +1054,7 @@
   proof_type: null
   test_path: null
   divergence_note: "src/ai/score_modifiers.py is live code (imported by intelligence.py)\
-    \ — not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
+    \ \u2014 not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
     \ test_path intentionally null."
   support_boundary: null
 - id: COMB-098
@@ -1061,7 +1066,7 @@
   proof_type: null
   test_path: null
   divergence_note: "src/ai/score_modifiers.py is live code (imported by intelligence.py)\
-    \ — not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
+    \ \u2014 not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
     \ test_path intentionally null."
   support_boundary: null
 - id: COMB-099
@@ -1073,7 +1078,7 @@
   proof_type: null
   test_path: null
   divergence_note: "src/ai/score_modifiers.py is live code (imported by intelligence.py)\
-    \ — not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
+    \ \u2014 not a V1 orphan. No dedicated V2 unit test exists for this specific behavior;\
     \ test_path intentionally null."
   support_boundary: null
 - id: COMB-100
@@ -1101,9 +1106,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: src/engine/combat.py CombatResolutionSystem._get_wound_infliction()
+    delegates to src/engine/rpg_depth.py WoundService.create_wound(damage=int(damage),
+    max_hp=defender.combat.max_hp, tick=tick, wound_id=w_id) (fixed in TCK-20260824-WOUND-PENALTY-FORMULA-WIRING).
+  proof_type: parity
+  test_path: tests/unit/combat/test_direct_combat_outcomes.py::test_wound_penalties_scale_with_severity_through_live_combat_path
   divergence_note: null
   support_boundary: null
 - id: COMB-103
@@ -1111,9 +1118,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: src/engine/combat.py CombatResolutionSystem._get_wound_infliction()
+    now delegates to src/engine/rpg_depth.py WoundService.create_wound(), which derives
+    severity = min(1.0, damage/max_hp) and atk_penalty=int(severity*3), def_penalty=int(severity*2),
+    speed_penalty=int(severity*2), max_hp_penalty=int(severity*10) (fixed in TCK-20260824-WOUND-PENALTY-FORMULA-WIRING;
+    the live path previously used a hardcoded flat atk_penalty=5.0/def_penalty=5.0
+    and never set speed_penalty/max_hp_penalty).
+  proof_type: parity
+  test_path: tests/unit/core/test_rpg_depth.py::TestWoundInfliction::test_wound_stat_impact
   divergence_note: null
   support_boundary: null
 - id: COMB-104
@@ -1121,9 +1133,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: src/engine/combat.py CombatResolutionSystem._get_wound_infliction()
+    now delegates entirely to src/engine/rpg_depth.py WoundService.create_wound()
+    (fixed in TCK-20260824-WOUND-PENALTY-FORMULA-WIRING).
+  proof_type: parity
+  test_path: tests/unit/core/test_rpg_depth.py::TestWoundInfliction::test_scar_permanence
   divergence_note: null
   support_boundary: null
 - id: COMB-105
@@ -1412,32 +1426,36 @@
   divergence_note: null
   support_boundary: null
 - id: COMB-133
-  text: >
-    Phase 8 owns: (stub — pre-planned placeholder for Phase 8 combat milestone behaviors).
-    Combat milestone documentation currently ends at M7. Phase 8 combat behaviors are not yet defined.
+  text: "Phase 8 owns: (stub \u2014 pre-planned placeholder for Phase 8 combat milestone\
+    \ behaviors). Combat milestone documentation currently ends at M7. Phase 8 combat\
+    \ behaviors are not yet defined.\n"
   status: unsupported
   priority: P0
   legacy_evidence: null
   v2_evidence: null
   proof_type: null
   test_path: null
-  divergence_note: >
-    Stub entry was created for a future Phase 8 combat milestone. No M8 combat milestone
-    documentation exists as of TCK-20260619-PARITY-P0-BUGS. Mark unsupported until M8 is scoped.
+  divergence_note: 'Stub entry was created for a future Phase 8 combat milestone.
+    No M8 combat milestone documentation exists as of TCK-20260619-PARITY-P0-BUGS.
+    Mark unsupported until M8 is scoped.
+
+    '
   support_boundary: null
 - id: COMB-134
-  text: >
-    Phase 9 owns: (stub — pre-planned placeholder for Phase 9 combat milestone behaviors).
-    Combat milestone documentation currently ends at M7. Phase 9 combat behaviors are not yet defined.
+  text: "Phase 9 owns: (stub \u2014 pre-planned placeholder for Phase 9 combat milestone\
+    \ behaviors). Combat milestone documentation currently ends at M7. Phase 9 combat\
+    \ behaviors are not yet defined.\n"
   status: unsupported
   priority: P0
   legacy_evidence: null
   v2_evidence: null
   proof_type: null
   test_path: null
-  divergence_note: >
-    Stub entry was created for a future Phase 9 combat milestone. No M9 combat milestone
-    documentation exists as of TCK-20260619-PARITY-P0-BUGS. Mark unsupported until M9 is scoped.
+  divergence_note: 'Stub entry was created for a future Phase 9 combat milestone.
+    No M9 combat milestone documentation exists as of TCK-20260619-PARITY-P0-BUGS.
+    Mark unsupported until M9 is scoped.
+
+    '
   support_boundary: null
 - id: COMB-135
   text: "No Part 7 item should be left implicit under a generic bucket like \u201C\
@@ -2899,17 +2917,18 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify_defeated_target()`
-    — step 1: `FactionSemanticsService.is_hostile_compat()` via relation projection; step 2:
-    legacy `EntityRole` fallback for non-hostile-faction cases; `classify()` retained as
-    compatibility wrapper), `src/engine/combat.py` (`resolve_attack`, `resolve_skill_usage`,
-    `resolve_multi_attack`). TCK-20260610-REWARD-RELATION-CLASSIFY.'
+  v2_evidence: "`src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify_defeated_target()`\
+    \ \u2014 step 1: `FactionSemanticsService.is_hostile_compat()` via relation projection;\
+    \ step 2: legacy `EntityRole` fallback for non-hostile-faction cases; `classify()`\
+    \ retained as compatibility wrapper), `src/engine/combat.py` (`resolve_attack`,\
+    \ `resolve_skill_usage`, `resolve_multi_attack`). TCK-20260610-REWARD-RELATION-CLASSIFY."
   proof_type: null
   test_path: tests/unit/combat/test_combat_rewards.py
   divergence_note: 'MONSTER_HORDE faction shortcut replaced with FactionSemanticsService.is_hostile_compat().
-    Behavior change: MONSTER_HORDE attacker defeating HERO_GUILD defender now gives HOSTILE_CREATURE
-    (source=relation_projection) instead of HERO_KILL (source=EntityRole.HERO). HERO_KILL is still
-    reachable via EntityRole fallback when attacker faction is not hostile (e.g. NEUTRAL).'
+    Behavior change: MONSTER_HORDE attacker defeating HERO_GUILD defender now gives
+    HOSTILE_CREATURE (source=relation_projection) instead of HERO_KILL (source=EntityRole.HERO).
+    HERO_KILL is still reachable via EntityRole fallback when attacker faction is
+    not hostile (e.g. NEUTRAL).'
   support_boundary: null
 - id: COMB-281
   text: Combat result can trigger social/narrative consequence when applicable.
@@ -3002,861 +3021,1073 @@
   divergence_note: null
   support_boundary: null
 - id: COMB-290
-  text: Wound infliction threshold — damage > max_hp * 0.25 (strict greater-than, 25%) triggers
-    a wound on a surviving defender. Applies only if defender is alive after the hit.
+  text: "Wound infliction threshold \u2014 damage > max_hp * 0.25 (strict greater-than,\
+    \ 25%) triggers a wound on a surviving defender. Applies only if defender is alive\
+    \ after the hit."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/combat.py _get_wound_infliction() line 583 — `damage > defender.combat.max_hp * 0.25 and alive`.
-    docs/mechanics/01_entity_anatomy.md Section 6 updated to match (TCK-20260619-PARITY-P0-BUGS).
-    docs/mechanics/02_combat_laws.md Section 5 added wound threshold (TCK-20260619-PARITY-P0-BUGS).
+  v2_evidence: "src/engine/combat.py CombatResolutionSystem._get_wound_infliction()\
+    \ lines 604-618 \u2014 `damage > defender.combat.max_hp * 0.25 and alive`. docs/mechanics/01_entity_anatomy.md\
+    \ Section 6 updated to match (TCK-20260619-PARITY-P0-BUGS). docs/mechanics/02_combat_laws.md\
+    \ Section 5 added wound threshold (TCK-20260619-PARITY-P0-BUGS).\n"
   proof_type: parity
-  test_path: tests/unit/combat/test_combat_matrix.py
-  divergence_note: >
-    Previously divergent: Chapter 02 stated 40%, entity_anatomy stated 40%, code used 25%.
-    Resolved in TCK-20260619-PARITY-P0-BUGS: docs corrected to match source-authoritative 25% value.
+  test_path: tests/unit/combat/test_direct_combat_outcomes.py::test_wound_penalties_scale_with_severity_through_live_combat_path
+  divergence_note: 'Previously divergent: Chapter 02 stated 40%, entity_anatomy stated
+    40%, code used 25%. Resolved in TCK-20260619-PARITY-P0-BUGS: docs corrected to
+    match source-authoritative 25% value.
+
+    '
   support_boundary: null
 - id: COMB-291
-  text: Grudge state (grudge_history, nemesis_ids, combat_loss_counts) is run-scoped only. Cross-episode persistence is now available via CampaignState.persistent_entities (EntityCarryForward) introduced in TCK-20260619-E32B-CAMPAIGN-STATE; grudge carry-forward is E32C scope.
+  text: Grudge state (grudge_history, nemesis_ids, combat_loss_counts) is run-scoped
+    only. Cross-episode persistence is now available via CampaignState.persistent_entities
+    (EntityCarryForward) introduced in TCK-20260619-E32B-CAMPAIGN-STATE; grudge carry-forward
+    is E32C scope.
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >-
-    src/core/models/social.py::SocialComponent — all fields on EntityState, no cross-run persistence within a single run;
-    src/domains/campaigns/state.py::EntityCarryForward — cross-episode carry-forward model now exists (E32B)
+  v2_evidence: "src/core/models/social.py::SocialComponent \u2014 all fields on EntityState,\
+    \ no cross-run persistence within a single run; src/domains/campaigns/state.py::EntityCarryForward\
+    \ \u2014 cross-episode carry-forward model now exists (E32B)"
   proof_type: architecture
   test_path: tests/unit/combat/test_combat_ecology.py::test_grudge_scope_is_defined
   divergence_note: null
   support_boundary: null
 - id: COMB-292
-  text: Entity defeated by the same opponent >= 3 times selects CombatPosture.AVOID (fear_avoidance) instead of evaluating combat normally. Tracked via SocialComponent.combat_loss_counts.
+  text: Entity defeated by the same opponent >= 3 times selects CombatPosture.AVOID
+    (fear_avoidance) instead of evaluating combat normally. Tracked via SocialComponent.combat_loss_counts.
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/domains/combat_engagement/service.py::CombatEngagementDecisionService.evaluate — fear_avoidance short-circuit at combat_loss_counts >= 3
+  v2_evidence: "src/domains/combat_engagement/service.py::CombatEngagementDecisionService.evaluate\
+    \ \u2014 fear_avoidance short-circuit at combat_loss_counts >= 3"
   proof_type: unit
   test_path: tests/unit/combat/test_combat_ecology.py::test_fear_avoidance_posture_at_loss_threshold
   divergence_note: null
   support_boundary: null
-
 - id: COMB-293
-  text: >
-    COMBAT pillar grade stability across tick counts — see INFRA-255 (infrastructure.yaml)
-    for the cross-pillar normalized_score formula. COMBAT-specific: raw_score stays at 127.0
-    after tick 172 in dungeon_crawl seed42; post-fix grade holds A at any run length where
-    floor_tick < 172 (i.e., current_tick < 688). At 1000t (floor=250 > 172): denominator
-    is 250, norm=0.508 → A (barely above threshold). At 2000t (floor=500 > 172): denominator
-    is 500, norm=0.254 → B (floor-proportional dilution at very long runs is correct behavior).
-    (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY)
+  text: "COMBAT pillar grade stability across tick counts \u2014 see INFRA-255 (infrastructure.yaml)\
+    \ for the cross-pillar normalized_score formula. COMBAT-specific: raw_score stays\
+    \ at 127.0 after tick 172 in dungeon_crawl seed42; post-fix grade holds A at any\
+    \ run length where floor_tick < 172 (i.e., current_tick < 688). At 1000t (floor=250\
+    \ > 172): denominator is 250, norm=0.508 \u2192 A (barely above threshold). At\
+    \ 2000t (floor=500 > 172): denominator is 500, norm=0.254 \u2192 B (floor-proportional\
+    \ dilution at very long runs is correct behavior). (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY)\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "see INFRA-255 in infrastructure.yaml"
+  v2_evidence: see INFRA-255 in infrastructure.yaml
   proof_type: parity
   test_path: tests/simulation_quality/test_report.py::test_combat_grade_stable_across_tick_counts_for_same_activity
-  divergence_note: >
-    Secondary ref — primary entry is INFRA-255 in infrastructure.yaml.
-    Prior formula divided by current_tick; same COMBAT activity received B at 401t vs A at 200t.
+  divergence_note: "Secondary ref \u2014 primary entry is INFRA-255 in infrastructure.yaml.\
+    \ Prior formula divided by current_tick; same COMBAT activity received B at 401t\
+    \ vs A at 200t.\n"
   support_boundary: null
-
 - id: COMB-294
-  text: >
-    Faction relationship catalog coverage determines combat-legality and reward-classification
+  text: 'Faction relationship catalog coverage determines combat-legality and reward-classification
     outcomes for faction pairs without a perspectives.yaml override.
+
+    '
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    data/content/social/faction_relationships.yaml entries are read by
-    RelationProjectionService.project_relation() (src/content_semantics/relation.py) and
-    FactionSemanticsService.is_hostile_compat() (src/content_semantics/faction.py), which gate
-    LegalityServiceV2.verify_attack_legality() (src/engine/legality.py, Friendly Fire law) and
-    CombatRewardClassificationService.classify_defeated_target() (src/engine/combat_rewards.py,
-    see COMB-280). For factions without a perspectives.yaml entry, a new relationship entry flips
-    each consumer's own gate (has_perspective OR has_relationship for the exact directed pair) from
-    False to True. The two consumers diverge on the "gate False" fallback: is_hostile_compat()
-    (combat_rewards.py's path) falls back to is_hostile(), alignment_bucket-based; legality.py's
-    own Friendly Fire step computes a separate has_clean flag with the identical gate expression but
-    falls back to raw attacker.identity.faction == target.identity.faction (legacy_engine_bucket-based,
-    a different factions.yaml attribute than alignment_bucket) when the gate is False, then switches
-    to calling is_hostile_compat() itself once the gate flips True. Verified per new pair added by
-    TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS (21 populated-set pairs, 14/66 -> 35/66 on the
-    populated-only basis): 9 same-legacy-bucket MONSTER_HORDE pairs flip Friendly-Fire illegal ->
-    legal (bandit_company/orc_clan/wild_beast_pack/goblin_warband/undead_remnants/swamp_tribe
-    combinations); 2 cross-bucket pairs (forest_wardens->merchant_league, neutral->town_council)
-    flip legal -> illegal as the new "none"-hostility relationship makes them protected allies; the
-    remaining non-perspective-source pairs show no Friendly-Fire verdict change (same-bucket, "none"
-    hostility, both fallbacks already agreed). The combat_rewards.py/is_hostile_compat() delta
-    (alignment_bucket-based) independently flips False -> True for 4 of these pairs
-    (orc_clan->wild_beast_pack, bandit_company->goblin_warband, bandit_company->undead_remnants,
-    orc_clan->swamp_tribe) — confirming the two consumers' fallbacks are genuinely independent, not
-    redundant checks of the same thing.
+  v2_evidence: "data/content/social/faction_relationships.yaml entries are read by\
+    \ RelationProjectionService.project_relation() (src/content_semantics/relation.py)\
+    \ and FactionSemanticsService.is_hostile_compat() (src/content_semantics/faction.py),\
+    \ which gate LegalityServiceV2.verify_attack_legality() (src/engine/legality.py,\
+    \ Friendly Fire law) and CombatRewardClassificationService.classify_defeated_target()\
+    \ (src/engine/combat_rewards.py, see COMB-280). For factions without a perspectives.yaml\
+    \ entry, a new relationship entry flips each consumer's own gate (has_perspective\
+    \ OR has_relationship for the exact directed pair) from False to True. The two\
+    \ consumers diverge on the \"gate False\" fallback: is_hostile_compat() (combat_rewards.py's\
+    \ path) falls back to is_hostile(), alignment_bucket-based; legality.py's own\
+    \ Friendly Fire step computes a separate has_clean flag with the identical gate\
+    \ expression but falls back to raw attacker.identity.faction == target.identity.faction\
+    \ (legacy_engine_bucket-based, a different factions.yaml attribute than alignment_bucket)\
+    \ when the gate is False, then switches to calling is_hostile_compat() itself\
+    \ once the gate flips True. Verified per new pair added by TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS\
+    \ (21 populated-set pairs, 14/66 -> 35/66 on the populated-only basis): 9 same-legacy-bucket\
+    \ MONSTER_HORDE pairs flip Friendly-Fire illegal -> legal (bandit_company/orc_clan/wild_beast_pack/goblin_warband/undead_remnants/swamp_tribe\
+    \ combinations); 2 cross-bucket pairs (forest_wardens->merchant_league, neutral->town_council)\
+    \ flip legal -> illegal as the new \"none\"-hostility relationship makes them\
+    \ protected allies; the remaining non-perspective-source pairs show no Friendly-Fire\
+    \ verdict change (same-bucket, \"none\" hostility, both fallbacks already agreed).\
+    \ The combat_rewards.py/is_hostile_compat() delta (alignment_bucket-based) independently\
+    \ flips False -> True for 4 of these pairs (orc_clan->wild_beast_pack, bandit_company->goblin_warband,\
+    \ bandit_company->undead_remnants, orc_clan->swamp_tribe) \u2014 confirming the\
+    \ two consumers' fallbacks are genuinely independent, not redundant checks of\
+    \ the same thing.\n"
   proof_type: regression
   test_path: tests/unit/content/test_faction_relationships_coverage.py::test_new_pair_changes_legality_friendly_fire_verdict
-  divergence_note: >
-    Intentional, documented behavior change (same disclosure style as COMB-280): several
-    same-legacy-bucket MONSTER_HORDE faction pairs (e.g. bandit_company vs orc_clan, bandit_company
-    vs goblin_warband) that could never legally attack each other before this ticket (Friendly Fire
-    blocked purely because they shared a legacy_engine_bucket) can now fight once a relationship
-    record with elevated hostility exists between them — this is the intended "encounter variety"
-    outcome, not a regression. Conversely, forest_wardens<->merchant_league and neutral->town_council
-    gain Friendly-Fire protection (legal -> illegal) as newly-declared non-hostile allies. Full
-    per-pair delta table (both consumers) is in
-    tickets/done/TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS.md's Implementation Notes.
+  divergence_note: "Intentional, documented behavior change (same disclosure style\
+    \ as COMB-280): several same-legacy-bucket MONSTER_HORDE faction pairs (e.g. bandit_company\
+    \ vs orc_clan, bandit_company vs goblin_warband) that could never legally attack\
+    \ each other before this ticket (Friendly Fire blocked purely because they shared\
+    \ a legacy_engine_bucket) can now fight once a relationship record with elevated\
+    \ hostility exists between them \u2014 this is the intended \"encounter variety\"\
+    \ outcome, not a regression. Conversely, forest_wardens<->merchant_league and\
+    \ neutral->town_council gain Friendly-Fire protection (legal -> illegal) as newly-declared\
+    \ non-hostile allies. Full per-pair delta table (both consumers) is in tickets/done/TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS.md's\
+    \ Implementation Notes.\n"
   support_boundary: null
-
 - id: COMB-295
-  text: >
-    TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION (final child of
-    TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC) -- cuts COMBAT observability event
-    emission (combat_damage, combat_initiated, near_death_survival, entity_killed,
-    hazard_drain_applied, hero_death_unrecorded) over to the apply-layer shaper registry
-    (src/observability/event_shapers.py, built across INFRA-324/325) as the live default path.
-    `ENABLE_PUSH_EVENT_SHAPERS` flipped to default "ON" (`FeatureFlagManager.__init__`) --
-    validated by TCK-20260806-PUSH-SHADOW-VALIDATION-PERF's 130/131-tick real-corpus match before
-    this flip. `event_extractor.py`'s old diffing branches for these events are NOT deleted --
-    flag-gated (`if not _push_shapers_active:`) to fire only when the flag is explicitly set away
-    from "ON", providing a real, working rollback (not a partial one) rather than requiring a code
-    revert if a production issue surfaces.
+  text: 'TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION (final child of TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC)
+    -- cuts COMBAT observability event emission (combat_damage, combat_initiated,
+    near_death_survival, entity_killed, hazard_drain_applied, hero_death_unrecorded)
+    over to the apply-layer shaper registry (src/observability/event_shapers.py, built
+    across INFRA-324/325) as the live default path. `ENABLE_PUSH_EVENT_SHAPERS` flipped
+    to default "ON" (`FeatureFlagManager.__init__`) -- validated by TCK-20260806-PUSH-SHADOW-VALIDATION-PERF''s
+    130/131-tick real-corpus match before this flip. `event_extractor.py`''s old diffing
+    branches for these events are NOT deleted -- flag-gated (`if not _push_shapers_active:`)
+    to fire only when the flag is explicitly set away from "ON", providing a real,
+    working rollback (not a partial one) rather than requiring a code revert if a
+    production issue surfaces.
 
-    `entity_killed`/`hero_death_unrecorded` required special handling, not a clean branch removal:
-    the shaper's version is narrower by design (same-tick `outcome_kind=="KILL"` only, per
-    INFRA-324's reopen fix), while the old extractor's Kill-events branch covers ANY
-    `lifecycle.active` transition (old-age death, delayed hazard-transition death -- both
-    confirmed real by the validation ticket). Removing the old branch wholesale would have
-    silently dropped coverage for these non-KILL-tagged causes in production, not deferred it.
-    Fixed by narrowing the old branch's condition instead of removing it:
-    `is_shaper_owned_kill = (_push_shapers_active and real_combat_upd is not None and
-    real_combat_upd.outcome_kind == "KILL")`; the old branch fires `if not is_shaper_owned_kill`.
-    When the flag is off, `is_shaper_owned_kill` is always False, restoring byte-identical
-    pre-cutover behavior. Verified directly with real, non-mocked kernel runs (not just unit
-    tests): `dungeon_crawl_seed42_500t` with the flag absent (real `AuthoritativeState.
-    feature_flags` defaults to `{}`, confirmed) delivered all 39 combat/economy/faction events via
-    `source_system="event_shapers"`; the same world with `ENABLE_PUSH_EVENT_SHAPERS="OFF"`
-    produced byte-identical event counts via `source_system="event_extractor"`, confirming the
-    rollback path is real, not theoretical. `hero_guild_routing_seed42_500t` confirmed the
-    delayed-hazard-death case (entities 26/28/30, tick 5) still correctly emits `combat_kill` from
-    the old extractor even in the new default-ON state.
+    `entity_killed`/`hero_death_unrecorded` required special handling, not a clean
+    branch removal: the shaper''s version is narrower by design (same-tick `outcome_kind=="KILL"`
+    only, per INFRA-324''s reopen fix), while the old extractor''s Kill-events branch
+    covers ANY `lifecycle.active` transition (old-age death, delayed hazard-transition
+    death -- both confirmed real by the validation ticket). Removing the old branch
+    wholesale would have silently dropped coverage for these non-KILL-tagged causes
+    in production, not deferred it. Fixed by narrowing the old branch''s condition
+    instead of removing it: `is_shaper_owned_kill = (_push_shapers_active and real_combat_upd
+    is not None and real_combat_upd.outcome_kind == "KILL")`; the old branch fires
+    `if not is_shaper_owned_kill`. When the flag is off, `is_shaper_owned_kill` is
+    always False, restoring byte-identical pre-cutover behavior. Verified directly
+    with real, non-mocked kernel runs (not just unit tests): `dungeon_crawl_seed42_500t`
+    with the flag absent (real `AuthoritativeState. feature_flags` defaults to `{}`,
+    confirmed) delivered all 39 combat/economy/faction events via `source_system="event_shapers"`;
+    the same world with `ENABLE_PUSH_EVENT_SHAPERS="OFF"` produced byte-identical
+    event counts via `source_system="event_extractor"`, confirming the rollback path
+    is real, not theoretical. `hero_guild_routing_seed42_500t` confirmed the delayed-hazard-death
+    case (entities 26/28/30, tick 5) still correctly emits `combat_kill` from the
+    old extractor even in the new default-ON state.
+
+    '
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_extractor.py: `_push_shapers_active` flag read added at the top of
-    `extract()` (defaults `"ON"` matching `FeatureFlagManager`'s new default when
-    `state.feature_flags` doesn't override it); combat_damage/combat_initiated/near_death_survival/
-    hazard_drain_applied branches guarded `if not _push_shapers_active:`; Kill-events branch
-    narrowed (not guarded wholesale) per the `is_shaper_owned_kill` logic above.
-    src/domains/optimization/feature_flags.py:25 (`ENABLE_PUSH_EVENT_SHAPERS` default flipped
-    OFF->ON). src/engine/kernel.py:909-935 (`_phase_observability`'s shaper-events block now
-    extends `generated_events` -- delivered through the identical record/timeline path as
-    `EventExtractor`'s own output -- when the flag is "ON"; "SHADOW" mode keeps constructing and
-    logging only, for future Phase-2 validation reuse).
-  proof_type: regression
-  test_path: >
-    tests/unit/observability/ full suite (798 passed, 6 skipped, unchanged from pre-cutover --
-    existing MagicMock-based tests are unaffected by the new default because MagicMock's
-    auto-attribute-creation on an unconfigured `feature_flags` mock evaluates falsy against the
-    string "ON" comparison, coincidentally matching each test's own pre-cutover expectation; real
-    default-ON behavior was verified separately via non-mocked kernel integration runs, disclosed
-    explicitly in this entry's text rather than trusted from unit-test pass counts alone).
-  divergence_note: null
-  support_boundary: >
-    COMBAT domain only -- see TOWN-190 (economy) and FAC-013 (faction) for the other 2 migrated
-    domains' cutover entries. Does not touch `demographic_mortality` (despawn branch, deferred),
-    `combat_resolved`/`attrition_threshold_crossed` (dead code, disclosed not migrated). Does not
-    implement Phase 2 (quest/demographic/XP domains) -- unscoped future work.
+  v2_evidence: 'src/observability/event_extractor.py: `_push_shapers_active` flag
+    read added at the top of `extract()` (defaults `"ON"` matching `FeatureFlagManager`''s
+    new default when `state.feature_flags` doesn''t override it); combat_damage/combat_initiated/near_death_survival/
+    hazard_drain_applied branches guarded `if not _push_shapers_active:`; Kill-events
+    branch narrowed (not guarded wholesale) per the `is_shaper_owned_kill` logic above.
+    src/domains/optimization/feature_flags.py:25 (`ENABLE_PUSH_EVENT_SHAPERS` default
+    flipped OFF->ON). src/engine/kernel.py:909-935 (`_phase_observability`''s shaper-events
+    block now extends `generated_events` -- delivered through the identical record/timeline
+    path as `EventExtractor`''s own output -- when the flag is "ON"; "SHADOW" mode
+    keeps constructing and logging only, for future Phase-2 validation reuse).
 
+    '
+  proof_type: regression
+  test_path: 'tests/unit/observability/ full suite (798 passed, 6 skipped, unchanged
+    from pre-cutover -- existing MagicMock-based tests are unaffected by the new default
+    because MagicMock''s auto-attribute-creation on an unconfigured `feature_flags`
+    mock evaluates falsy against the string "ON" comparison, coincidentally matching
+    each test''s own pre-cutover expectation; real default-ON behavior was verified
+    separately via non-mocked kernel integration runs, disclosed explicitly in this
+    entry''s text rather than trusted from unit-test pass counts alone).
+
+    '
+  divergence_note: null
+  support_boundary: 'COMBAT domain only -- see TOWN-190 (economy) and FAC-013 (faction)
+    for the other 2 migrated domains'' cutover entries. Does not touch `demographic_mortality`
+    (despawn branch, deferred), `combat_resolved`/`attrition_threshold_crossed` (dead
+    code, disclosed not migrated). Does not implement Phase 2 (quest/demographic/XP
+    domains) -- unscoped future work.
+
+    '
 - id: COMB-296
-  text: >
-    TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP -- wound infliction, wound healing, and scar
-    gain (EntityUpdate.wound_update / WoundState, ScarState) were durable state with zero
-    observability coverage distinct from CombatUpdate's own already-observed hp_delta/outcome
-    (docs/event_ledger/entity.yaml ENTITY-018, previously `status: silent`). Adds three new
-    events to src/observability/event_extractor.py's diff loop: `wound_sustained` (new wound ID
-    appears in entity.combat.wounds; severity CRITICAL >=0.7 / WARNING >=0.4 / INFO otherwise,
-    keyed off the existing `WoundState.severity` field, no new threshold invented), `wound_healed`
-    (an existing wound's `healed` flag flips False->True), and `scar_gained` (new scar ID appears
-    in entity.combat.scars). Full-coverage-by-design, same rationale as SUB-375's biological/
-    stamina events (grouped in the same ticket, split across ledger files because wounds are a
-    CombatUpdate field, not a biological/stamina one).
+  text: 'TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP -- wound infliction, wound healing,
+    and scar gain (EntityUpdate.wound_update / WoundState, ScarState) were durable
+    state with zero observability coverage distinct from CombatUpdate''s own already-observed
+    hp_delta/outcome (docs/event_ledger/entity.yaml ENTITY-018, previously `status:
+    silent`). Adds three new events to src/observability/event_extractor.py''s diff
+    loop: `wound_sustained` (new wound ID appears in entity.combat.wounds; severity
+    CRITICAL >=0.7 / WARNING >=0.4 / INFO otherwise, keyed off the existing `WoundState.severity`
+    field, no new threshold invented), `wound_healed` (an existing wound''s `healed`
+    flag flips False->True), and `scar_gained` (new scar ID appears in entity.combat.scars).
+    Full-coverage-by-design, same rationale as SUB-375''s biological/ stamina events
+    (grouped in the same ticket, split across ledger files because wounds are a CombatUpdate
+    field, not a biological/stamina one).
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_extractor.py -- `wound_sustained`/`wound_healed`/`scar_gained` diff
-    blocks, guarded by `isinstance(..., list)` checks against `entity.combat.wounds`/`.scars`
-    (defensive against MagicMock-based test fixtures elsewhere in the suite, never true for a
-    real EntityState). Verified via real, non-mocked `WoundState`/`ScarState` objects constructed
-    by hand and passed through the real `EventExtractor.extract()` function directly (not
-    through a live `Kernel.tick_once()` loop) -- ENABLE_COMBAT_ENGAGEMENT is corpus-wide gated
-    off (TCK-20260806-SIMQ-COMBAT-ENGAGEMENT-GATE-CORPUS-VALIDITY), so no shipped calibration
-    world can currently produce a wound through a real tick loop. Matches this repo's own
-    precedented pattern for verifying gated mechanics without a live trigger path (see
-    test_information_intent_execution_fires_through_kernel_tick_once).
+  v2_evidence: '`wound_sustained` has a real production producer (`CombatResolutionSystem._get_wound_infliction`,
+    `src/engine/combat.py:605-617`), gated only by `ENABLE_COMBAT_ENGAGEMENT` -- confirmed
+    via a real, non-mocked `Kernel.tick_once()` integration test (`tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers`)
+    that observes a real wound land in `kernel.state.entities[...].combat.wounds`
+    (authoritative state, not events) at tick 9 of a deterministic 40-tick run at
+    seed 42. `wound_healed` and `scar_gained` have zero production producers, independent
+    of `ENABLE_COMBAT_ENGAGEMENT`''s gate state: the only production constructor of
+    `WoundUpdate` anywhere in `src/` (`combat.py:617`) never populates `wounds_heal`
+    or `scars_add` (re-confirmed by full-repo grep this session), and the same 40-tick
+    real-Kernel run never observes a `healed: False -> True` transition or a `ScarState`
+    addition, in authoritative state, across the whole run -- see `TCK-20260824-WOUND-HEALING-DECISION`
+    (wounds are declared intentionally permanent; no healing trigger is built).
+
+
+    `src/observability/event_extractor.py`''s wound/scar diff blocks (lines ~280-281,
+    ~302-303) previously had an independent bug (`isinstance(x, list)` instead of
+    `isinstance(x, (list, tuple))`) that silently dropped event emission for all three
+    events -- `wound_sustained`, `wound_healed`, and `scar_gained` -- once state was
+    committed as a tuple by the real apply path (which it always is in production).
+    This bug is now fixed by `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`:
+    both checks now read `isinstance(x, (list, tuple))`, matching the pre-existing
+    correct pattern already used elsewhere in the same file (`src/observability/event_extractor.py:1499`,
+    `:1583`). `wound_sustained` now genuinely fires through the real event-observability
+    layer, confirmed via a new real, non-mocked `Kernel.tick_once()` regression test
+    (`tests/integration/observability/test_kernel_event_recording.py::test_wound_sustained_fires_through_real_tick_once_loop`)
+    that observes the event land in `kernel._event_recorder.events` at tick 9 of the
+    same deterministic 40-tick fixture, produced by the same real production wound.
+    `wound_healed`/`scar_gained` event-layer reachability is fixed uniformly by the
+    same change, but this does not make either event fire in production: no code anywhere
+    constructs a non-empty `wounds_heal`/`scars_add` (see the zero-producer proof
+    above), so there is nothing left for the now-correct diff blocks to detect.
+
+
+    '
   proof_type: regression
-  test_path: >
-    tests/unit/observability/test_event_extractor_vitals.py::
-    test_wound_sustained_severity_mapping, ::test_wound_healed_fires, ::test_scar_gained_fires
+  test_path: 'tests/unit/observability/test_event_extractor_vitals.py:: test_wound_sustained_severity_mapping,
+    ::test_wound_healed_fires, ::test_scar_gained_fires; tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers;
+    tests/integration/observability/test_kernel_event_recording.py::test_wound_sustained_fires_through_real_tick_once_loop
+
+    '
   divergence_note: null
-  support_boundary: >
-    Emitted events are classified `unscored_intentional` (docs/simulation_quality/
-    event_type_coverage.md Section 5) -- not wired to any SimQ pillar. Code path is real and
-    tested but currently unreachable in any shipped calibration world since combat engagement is
-    corpus-wide off; will begin firing naturally once a future ticket re-enables it. See SUB-375
-    for the sibling biological/stamina entry from the same ticket.
+  support_boundary: Emitted events are classified `unscored_intentional` (docs/simulation_quality/event_type_coverage.md
+    Section 5) -- not wired to any SimQ pillar. `wound_sustained` now has both a real
+    production producer (gated only by `ENABLE_COMBAT_ENGAGEMENT`) and confirmed real
+    event-layer reachability, fixed by `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`
+    (the prior `isinstance(x, list)` bug that silently dropped all wound/scar event
+    diffing against real, tuple-shaped authoritative state is corrected). `wound_healed`/`scar_gained`
+    will still not begin firing under any circumstance, gate state or event-layer
+    fix included, because no code anywhere constructs a non-empty `wounds_heal`/`scars_add`
+    -- this is a permanent design decision (`TCK-20260824-WOUND-HEALING-DECISION`),
+    not a temporary gate or event-layer limitation. See SUB-375 for the sibling biological/stamina
+    entry from the same ticket.
 - id: COMB-297
-  text: >
-    TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION -- Hero's Journey rebirth/permadeath
-    branching (`classification.rebirth_eligible` -> `generation_delta`/`is_permadeath_set`)
-    previously existed only in `CombatResolutionSystem.resolve_attack()`, the one real
-    kill-resolution function this corpus's own AI never calls (0 real calls in 2000-tick runs,
-    confirmed by this session's own direct instrumentation). `resolve_multi_attack()` -- the
-    corpus's real, dominant kill mechanism via `movement.py`'s opportunity-attack call site --
-    already computed the same `classification` object for xp/gold rewards but never consumed its
-    own `rebirth_eligible` field, making rebirth structurally unreachable regardless of HERO
-    population size or kill rate.
+  text: 'TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION -- Hero''s Journey
+    rebirth/permadeath branching (`classification.rebirth_eligible` -> `generation_delta`/`is_permadeath_set`)
+    previously existed only in `CombatResolutionSystem.resolve_attack()`, the one
+    real kill-resolution function this corpus''s own AI never calls (0 real calls
+    in 2000-tick runs, confirmed by this session''s own direct instrumentation). `resolve_multi_attack()`
+    -- the corpus''s real, dominant kill mechanism via `movement.py`''s opportunity-attack
+    call site -- already computed the same `classification` object for xp/gold rewards
+    but never consumed its own `rebirth_eligible` field, making rebirth structurally
+    unreachable regardless of HERO population size or kill rate.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    Ported the existing branch verbatim into `resolve_multi_attack()` (src/engine/combat.py),
-    reusing the classification it already computes -- no new mechanic, no formula change. Added
-    the matching `LifecycleUpdate` lift in `movement.py`'s own opportunity-attack call site
-    (identical "computed but never lifted" pattern already found and fixed once this session for
-    the same call site's own resource_transfers, see COMB-049/intentional_divergences.md §2.33).
-    Real, non-mocked verification through the full `AuthoritativeApplyPipeline.refine()` path, not
-    a hand-constructed CombatUpdate.
+  v2_evidence: "Ported the existing branch verbatim into `resolve_multi_attack()`\
+    \ (src/engine/combat.py), reusing the classification it already computes -- no\
+    \ new mechanic, no formula change. Added the matching `LifecycleUpdate` lift in\
+    \ `movement.py`'s own opportunity-attack call site (identical \"computed but never\
+    \ lifted\" pattern already found and fixed once this session for the same call\
+    \ site's own resource_transfers, see COMB-049/intentional_divergences.md \xA7\
+    2.33). Real, non-mocked verification through the full `AuthoritativeApplyPipeline.refine()`\
+    \ path, not a hand-constructed CombatUpdate.\n"
   proof_type: regression
-  test_path: >
-    tests/unit/movement/test_tactical_movement.py::
-    test_opportunity_attack_lethal_hero_defender_triggers_rebirth
-  divergence_note: >
-    See intentional_divergences.md §2.34 (Hero's Journey Rebirth Orphaned in the Real Dominant
-    Kill Path, Bug Fix)
-  support_boundary: null
+  test_path: 'tests/unit/movement/test_tactical_movement.py:: test_opportunity_attack_lethal_hero_defender_triggers_rebirth
 
+    '
+  divergence_note: "See intentional_divergences.md \xA72.34 (Hero's Journey Rebirth\
+    \ Orphaned in the Real Dominant Kill Path, Bug Fix)\n"
+  support_boundary: null
 - id: COMB-298
-  text: >
-    TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION -- Passive readiness
-    accumulation (CombatComponent.readiness_speed) is implemented and applied every tick, closing
-    a gap between the documented kernel contract and the real source: docs/engine/contracts/
-    minimal_kernel.md Section 5 ("Readiness Accumulation: Entities gain readiness based on their
-    readiness_speed (passive)") documented this as an active P1 law, but the field and its
-    per-tick regen never existed in src/ (confirmed via grep) -- readiness only ever decreased
-    (movement/action costs, region suppression drain), with the sole restoration path a narrow
-    town-specific REST action (+10.0). A real, instrumented probe (330 samples, urban_political
-    2000-tick run) found LegalityServiceV2.verify_attack_legality() FALSE in 100% of cases, 55%
-    via ReasonCode.INSUFFICIENT_READINESS -- this was the single largest real contributor to the
-    corpus-wide near-zero combat/kill rate this session's own growth/progression investigation
-    chain traced back to (TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD).
+  text: 'TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION -- Passive
+    readiness accumulation (CombatComponent.readiness_speed) is implemented and applied
+    every tick, closing a gap between the documented kernel contract and the real
+    source: docs/engine/contracts/ minimal_kernel.md Section 5 ("Readiness Accumulation:
+    Entities gain readiness based on their readiness_speed (passive)") documented
+    this as an active P1 law, but the field and its per-tick regen never existed in
+    src/ (confirmed via grep) -- readiness only ever decreased (movement/action costs,
+    region suppression drain), with the sole restoration path a narrow town-specific
+    REST action (+10.0). A real, instrumented probe (330 samples, urban_political
+    2000-tick run) found LegalityServiceV2.verify_attack_legality() FALSE in 100%
+    of cases, 55% via ReasonCode.INSUFFICIENT_READINESS -- this was the single largest
+    real contributor to the corpus-wide near-zero combat/kill rate this session''s
+    own growth/progression investigation chain traced back to (TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD).
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    Added CombatComponent.readiness_speed (src/core/state.py, default 10.0) and a passive regen
-    block in ApplyPath._compute_entity_changes (src/engine/apply.py), mirroring the existing
-    Stamina regen block's own per-tick pattern. Also found and fixed a latent silent-field-drop
-    bug in EntityState.to_readonly() (src/core/state.py): its CombatComponent reconstruction used
-    an explicit hardcoded kwarg list that omitted readiness_speed, silently resetting any non-
-    default value back to the dataclass default on every readonly-conversion pass -- confirmed via
-    direct before/after test (tests/unit/combat/test_readiness_regen.py::
-    test_readiness_speed_survives_to_readonly_reconstruction). Real-corpus re-verification
-    (dungeon_crawl, 600-tick run, same is_attack_legal probe methodology): legal rate moved from a
-    confirmed 0% baseline to a real, non-zero 1.3% (2/159 real-hostile samples). Disclosed
-    honestly: this does not fully resolve the low combat-legal-rate finding -- movement and attack
-    draw from the same readiness pool, and closing that gap further is a broader combat-pacing
-    question outside this ticket's own proportionate scope (see intentional_divergences.md §2.36).
-    UPDATE (TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE, same session): that deferred
-    gap is now closed -- see COMB-300.
+  v2_evidence: "Added CombatComponent.readiness_speed (src/core/state.py, default\
+    \ 10.0) and a passive regen block in ApplyPath._compute_entity_changes (src/engine/apply.py),\
+    \ mirroring the existing Stamina regen block's own per-tick pattern. Also found\
+    \ and fixed a latent silent-field-drop bug in EntityState.to_readonly() (src/core/state.py):\
+    \ its CombatComponent reconstruction used an explicit hardcoded kwarg list that\
+    \ omitted readiness_speed, silently resetting any non- default value back to the\
+    \ dataclass default on every readonly-conversion pass -- confirmed via direct\
+    \ before/after test (tests/unit/combat/test_readiness_regen.py:: test_readiness_speed_survives_to_readonly_reconstruction).\
+    \ Real-corpus re-verification (dungeon_crawl, 600-tick run, same is_attack_legal\
+    \ probe methodology): legal rate moved from a confirmed 0% baseline to a real,\
+    \ non-zero 1.3% (2/159 real-hostile samples). Disclosed honestly: this does not\
+    \ fully resolve the low combat-legal-rate finding -- movement and attack draw\
+    \ from the same readiness pool, and closing that gap further is a broader combat-pacing\
+    \ question outside this ticket's own proportionate scope (see intentional_divergences.md\
+    \ \xA72.36). UPDATE (TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE, same\
+    \ session): that deferred gap is now closed -- see COMB-300.\n"
   proof_type: regression
-  test_path: >
-    tests/unit/combat/test_readiness_regen.py::test_readiness_regenerates_passively_per_tick,
+  test_path: 'tests/unit/combat/test_readiness_regen.py::test_readiness_regenerates_passively_per_tick,
     tests/unit/combat/test_readiness_regen.py::test_readiness_speed_survives_to_readonly_reconstruction
-  divergence_note: >
-    See intentional_divergences.md §2.36 (Readiness Never Regenerated Outside Town REST, Bug Fix)
-  support_boundary: null
 
+    '
+  divergence_note: "See intentional_divergences.md \xA72.36 (Readiness Never Regenerated\
+    \ Outside Town REST, Bug Fix)\n"
+  support_boundary: null
 - id: COMB-299
-  text: >
-    TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION -- LegalityServiceV2.
-    verify_attack_legality() and TacticalDecisionSystem's own hostile-detection loop both
-    hardcoded RelationContext(intruding=False) rather than leaving it unset. RelationProjection
-    Service.project_relation() treats an explicit False (not None) as a confirmed non-intrusion
-    for contextual_intruder_groups-classified relationships, permanently forcing them to resolve
-    "neutral" regardless of real combat_engaged state. Real content (data/content/social/
-    perspectives.yaml) uses contextual_intruder_groups for wild_beast_pack's stance toward
-    town_council/hero_guild/goblin_warband/bandit_company/orc_clan and swamp_tribe's stance toward
-    hero_guild/town_council/merchant_league -- both structurally unable to ever legally attack
-    through this path before this fix, independent of engagement state.
+  text: 'TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION -- LegalityServiceV2.
+    verify_attack_legality() and TacticalDecisionSystem''s own hostile-detection loop
+    both hardcoded RelationContext(intruding=False) rather than leaving it unset.
+    RelationProjection Service.project_relation() treats an explicit False (not None)
+    as a confirmed non-intrusion for contextual_intruder_groups-classified relationships,
+    permanently forcing them to resolve "neutral" regardless of real combat_engaged
+    state. Real content (data/content/social/ perspectives.yaml) uses contextual_intruder_groups
+    for wild_beast_pack''s stance toward town_council/hero_guild/goblin_warband/bandit_company/orc_clan
+    and swamp_tribe''s stance toward hero_guild/town_council/merchant_league -- both
+    structurally unable to ever legally attack through this path before this fix,
+    independent of engagement state.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    Removed the intruding=False kwarg at both call sites (src/engine/legality.py,
-    src/engine/tactical.py), leaving RelationContext.intruding at its real Optional[bool] default
-    (None). No real territorial-intrusion detector exists anywhere in src/ (confirmed via grep) --
-    None correctly defers to combat_engaged rather than asserting a false negative. Verified via
-    tests/unit/combat/test_readiness_regen.py::
-    test_contextual_intruder_group_hostility_not_hardcoded_neutral (wild_beast_pack vs hero_guild,
-    mutually engaged, now resolves LEGAL). Not proven to be the dominant real-corpus driver of
-    FRIENDLY_FIRE_ILLEGAL (urban_political's own original population contains no
-    wild_beast_pack/swamp_tribe entities to exercise it) -- landed because it is a small, real,
-    same-subsystem fix discovered during the same investigation, not a separate scope expansion.
+  v2_evidence: 'Removed the intruding=False kwarg at both call sites (src/engine/legality.py,
+    src/engine/tactical.py), leaving RelationContext.intruding at its real Optional[bool]
+    default (None). No real territorial-intrusion detector exists anywhere in src/
+    (confirmed via grep) -- None correctly defers to combat_engaged rather than asserting
+    a false negative. Verified via tests/unit/combat/test_readiness_regen.py:: test_contextual_intruder_group_hostility_not_hardcoded_neutral
+    (wild_beast_pack vs hero_guild, mutually engaged, now resolves LEGAL). Not proven
+    to be the dominant real-corpus driver of FRIENDLY_FIRE_ILLEGAL (urban_political''s
+    own original population contains no wild_beast_pack/swamp_tribe entities to exercise
+    it) -- landed because it is a small, real, same-subsystem fix discovered during
+    the same investigation, not a separate scope expansion.
+
+    '
   proof_type: regression
-  test_path: >
-    tests/unit/combat/test_readiness_regen.py::
-    test_contextual_intruder_group_hostility_not_hardcoded_neutral
-  divergence_note: >
-    See intentional_divergences.md §2.36 (Readiness Never Regenerated Outside Town REST, Bug Fix)
+  test_path: 'tests/unit/combat/test_readiness_regen.py:: test_contextual_intruder_group_hostility_not_hardcoded_neutral
+
+    '
+  divergence_note: "See intentional_divergences.md \xA72.36 (Readiness Never Regenerated\
+    \ Outside Town REST, Bug Fix)\n"
   support_boundary: null
-
 - id: COMB-300
-  text: >
-    TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE -- movement double-costed both
-    readiness (src/engine/movement.py's MovementSystem.resolve_move, and the position-swap path
-    in src/engine/pipeline_phases/movement.py) AND stamina (StaminaComponent.MOVE_COST, its own
-    separate regen and exhaustion mechanic, docs/combat/combat_movement_overhaul_spec.md Section
-    5) for the same single move action. Readiness's own documented contract
+  text: 'TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE -- movement double-costed
+    both readiness (src/engine/movement.py''s MovementSystem.resolve_move, and the
+    position-swap path in src/engine/pipeline_phases/movement.py) AND stamina (StaminaComponent.MOVE_COST,
+    its own separate regen and exhaustion mechanic, docs/combat/combat_movement_overhaul_spec.md
+    Section 5) for the same single move action. Readiness''s own documented contract
     (docs/engine/contracts/minimal_kernel.md Section 5) is a pure attack-eligibility/cooldown
-    gate, not a movement-fatigue resource -- stamina already fills that role. This was the real,
-    deferred cause COMB-298's own support_boundary flagged: even with passive readiness
-    regeneration active (COMB-298), an entity that had to travel to reach a hostile could still
-    arrive readiness-depleted, capping the real attack-legal rate at ~1.3%.
+    gate, not a movement-fatigue resource -- stamina already fills that role. This
+    was the real, deferred cause COMB-298''s own support_boundary flagged: even with
+    passive readiness regeneration active (COMB-298), an entity that had to travel
+    to reach a hostile could still arrive readiness-depleted, capping the real attack-legal
+    rate at ~1.3%.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    Removed the readiness_delta cost from both real movement-application sites (the
-    readiness_cost = move_cost * terrain_cost formula and its own dead terrain_cost computation
-    in resolve_move; the flat -entity.combat.move_cost delta in the position-swap path), leaving
-    stamina as the sole movement-fatigue cost. verify_movement_legality's own smaller readiness
-    pre-check (readiness >= move_cost, a real but much smaller bar than the 100.0 attack
-    threshold) was left untouched -- it still provides a brief, real movement lockout
-    immediately after an attack resets readiness to 0, which is correct and not disruptive.
-    Real re-verification (same is_attack_legal probe methodology as COMB-298/COMB-299): legal
-    rate moved from 1.3% to a real, measured 28.5% (dungeon_crawl, 600 ticks) and 36.6%
-    (urban_political, 600 ticks) -- INSUFFICIENT_READINESS no longer appears at all in either
-    world's own real reason-code breakdown; the remaining illegal reasons are OUT_OF_RANGE
+  v2_evidence: 'Removed the readiness_delta cost from both real movement-application
+    sites (the readiness_cost = move_cost * terrain_cost formula and its own dead
+    terrain_cost computation in resolve_move; the flat -entity.combat.move_cost delta
+    in the position-swap path), leaving stamina as the sole movement-fatigue cost.
+    verify_movement_legality''s own smaller readiness pre-check (readiness >= move_cost,
+    a real but much smaller bar than the 100.0 attack threshold) was left untouched
+    -- it still provides a brief, real movement lockout immediately after an attack
+    resets readiness to 0, which is correct and not disruptive. Real re-verification
+    (same is_attack_legal probe methodology as COMB-298/COMB-299): legal rate moved
+    from 1.3% to a real, measured 28.5% (dungeon_crawl, 600 ticks) and 36.6% (urban_political,
+    600 ticks) -- INSUFFICIENT_READINESS no longer appears at all in either world''s
+    own real reason-code breakdown; the remaining illegal reasons are OUT_OF_RANGE
     (expected -- random sampling catches entities mid-approach) and FRIENDLY_FIRE_ILLEGAL.
-  proof_type: regression
-  test_path: >
-    tests/unit/movement/test_phase4_movement.py::
-    test_successful_move_no_longer_costs_readiness,
-    tests/unit/movement/test_position_swap.py::
-    test_mutual_adjacent_position_swap_succeeds (extended with a readiness-unchanged assertion)
-  divergence_note: >
-    See intentional_divergences.md §2.38 (Movement Double-Costed Readiness and Stamina for the
-    Same Fatigue Concern, Bug Fix)
-  support_boundary: >
-    OUT_OF_RANGE (not readiness or friendly-fire) is now the dominant real illegal reason in both
-    worlds tested -- a further, real, and much smaller-magnitude lead (pursuit/approach pacing)
-    not investigated further here, since it no longer represents a structural blocker of the
-    scale readiness was.
 
+    '
+  proof_type: regression
+  test_path: 'tests/unit/movement/test_phase4_movement.py:: test_successful_move_no_longer_costs_readiness,
+    tests/unit/movement/test_position_swap.py:: test_mutual_adjacent_position_swap_succeeds
+    (extended with a readiness-unchanged assertion)
+
+    '
+  divergence_note: "See intentional_divergences.md \xA72.38 (Movement Double-Costed\
+    \ Readiness and Stamina for the Same Fatigue Concern, Bug Fix)\n"
+  support_boundary: 'OUT_OF_RANGE (not readiness or friendly-fire) is now the dominant
+    real illegal reason in both worlds tested -- a further, real, and much smaller-magnitude
+    lead (pursuit/approach pacing) not investigated further here, since it no longer
+    represents a structural blocker of the scale readiness was.
+
+    '
 - id: COMB-301
-  text: >
-    TCK-20260809-TACTICAL-DEAD-ACTIONSTYLE-SUBBRANCHES -- tactical.py's own AGGRESSIVE
-    effective-range bonus and EVASIVE "reposition instead of attacking" stub (formerly lines
-    596-603) were confirmed dead code: is_attack_legal is already decided earlier in the same
-    function (line ~401), using the entity's real, un-biased combat range, before this block ever
-    ran; the local attack_range variable this block computed was never read again by anything
-    downstream. Comments describing intended behavior ("Aggressive entities ignore range
-    buffers", "Evasive skirmishers might choose to reposition") did not match what the code
-    actually did (nothing).
+  text: 'TCK-20260809-TACTICAL-DEAD-ACTIONSTYLE-SUBBRANCHES -- tactical.py''s own
+    AGGRESSIVE effective-range bonus and EVASIVE "reposition instead of attacking"
+    stub (formerly lines 596-603) were confirmed dead code: is_attack_legal is already
+    decided earlier in the same function (line ~401), using the entity''s real, un-biased
+    combat range, before this block ever ran; the local attack_range variable this
+    block computed was never read again by anything downstream. Comments describing
+    intended behavior ("Aggressive entities ignore range buffers", "Evasive skirmishers
+    might choose to reposition") did not match what the code actually did (nothing).
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    Removed the dead block. Chose removal over implementing it for real: doing so would require
-    feeding an ActionStyle-biased range into is_attack_legal's own computation -- the exact
-    combat-legality decision point TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-
-    INVESTIGATION/TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE (same session) spent
-    real, corpus-verified effort hardening (0% -> 28.5%/36.6% real legal rate) -- re-touching it
-    for a speculative, never-requested game-feel effect (with no real EVASIVE reposition logic
-    even existing to pair it with) carried real regression risk for no confirmed benefit. Real
-    re-verification via the same live is_attack_legal probe methodology confirmed the freshly-
-    hardened legality path is genuinely unaffected: dungeon_crawl 27.7% legal (was 28.5%
-    pre-removal, within real sampling variance), urban_political 36.6% legal (unchanged).
-    Adjacent, disclosed finding fixed alongside: docs/compliance/checklist.md's own COMB-263
-    entry cited a test file (tests/unit/movement/test_tactical_movement.py) that never actually
-    tested its own claim -- corrected to a real test that does
+  v2_evidence: 'Removed the dead block. Chose removal over implementing it for real:
+    doing so would require feeding an ActionStyle-biased range into is_attack_legal''s
+    own computation -- the exact combat-legality decision point TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-
+    INVESTIGATION/TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE (same session)
+    spent real, corpus-verified effort hardening (0% -> 28.5%/36.6% real legal rate)
+    -- re-touching it for a speculative, never-requested game-feel effect (with no
+    real EVASIVE reposition logic even existing to pair it with) carried real regression
+    risk for no confirmed benefit. Real re-verification via the same live is_attack_legal
+    probe methodology confirmed the freshly- hardened legality path is genuinely unaffected:
+    dungeon_crawl 27.7% legal (was 28.5% pre-removal, within real sampling variance),
+    urban_political 36.6% legal (unchanged). Adjacent, disclosed finding fixed alongside:
+    docs/compliance/checklist.md''s own COMB-263 entry cited a test file (tests/unit/movement/test_tactical_movement.py)
+    that never actually tested its own claim -- corrected to a real test that does
     (tests/unit/combat/test_tactical_legality.py::test_tactical_legality_filtering).
-  proof_type: regression
-  test_path: >
-    Full scoped pytest re-run (tests/unit/tactical/, tests/unit/combat/, tests/unit/movement/,
-    tests/unit/strategic/, tests/unit/core/, tests/unit/kernel/) -- no new test needed since no
-    prior coverage referenced the removed block's behavior (confirmed via grep before removal).
-  divergence_note: null
-  support_boundary: >
-    style/ActionStyle remain real, used imports/locals in tactical.py -- the real kiting-distance
-    consumer (line ~555) is untouched by this removal.
 
+    '
+  proof_type: regression
+  test_path: 'Full scoped pytest re-run (tests/unit/tactical/, tests/unit/combat/,
+    tests/unit/movement/, tests/unit/strategic/, tests/unit/core/, tests/unit/kernel/)
+    -- no new test needed since no prior coverage referenced the removed block''s
+    behavior (confirmed via grep before removal).
+
+    '
+  divergence_note: null
+  support_boundary: 'style/ActionStyle remain real, used imports/locals in tactical.py
+    -- the real kiting-distance consumer (line ~555) is untouched by this removal.
+
+    '
 - id: COMB-302
-  text: >
-    TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY -- movement.py's real, successful-disengagement
+  text: 'TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY -- movement.py''s real, successful-disengagement
     case (MovementMode.RETREAT + ActionStyle.EVASIVE -> skip_oa=True, with engaged_hostiles
-    genuinely non-empty) previously left zero trace on the returned EntityUpdate -- no existing
-    field distinguished "escaped from a real hostile that would have attacked" from an ordinary
-    move with nothing nearby. Added a purely additive property_updates tag
-    ({"combat_escape": "EVASIVE_SUCCESS", "combat_escape_evaded_ids": [...]}) at the exact site
-    the skip_oa decision is already made, mirroring this file's own established
-    "movement_resolution": "POSITION_SWAP" pattern. No change to the real skip_oa/opportunity-
-    attack resolution logic itself.
+    genuinely non-empty) previously left zero trace on the returned EntityUpdate --
+    no existing field distinguished "escaped from a real hostile that would have attacked"
+    from an ordinary move with nothing nearby. Added a purely additive property_updates
+    tag ({"combat_escape": "EVASIVE_SUCCESS", "combat_escape_evaded_ids": [...]})
+    at the exact site the skip_oa decision is already made, mirroring this file''s
+    own established "movement_resolution": "POSITION_SWAP" pattern. No change to the
+    real skip_oa/opportunity- attack resolution logic itself.
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/movement.py's resolve_move(): a new escape_tag dict is computed right after the
-    existing skip_oa computation and merged into the final EntityUpdate's property_updates only
-    when engaged_hostiles and skip_oa are both true. Consumed by
-    src/observability/event_shapers.py's CombatShaper as one of 4 real
-    combat_engagement_ended outcomes (ESCAPED) -- see infrastructure.yaml for the shaper-side
-    entry. Real corpus re-verification (2000-tick live Kernel.tick_once() loop,
-    dungeon_crawl_seed42 + urban_political_seed42, corpus-default feature-flag config): ESCAPED
-    fired 5 times naturally in urban_political, 0 times in dungeon_crawl within this window --
-    disclosed honestly, not forced.
-  proof_type: regression
-  test_path: >
-    tests/unit/movement/ (41 passed, 1 pre-existing unrelated failure --
-    test_normal_move_triggers_oa, confirmed via bisection to predate this ticket) and
-    tests/unit/observability/test_event_shapers.py::test_combat_engagement_ended_escaped_reads_movement_escape_tag.
-  divergence_note: null
-  support_boundary: >
-    Purely additive read-side tag -- does not change skip_oa's own real condition, the
-    opportunity-attack resolution path, or any other movement outcome.
+  v2_evidence: 'src/engine/movement.py''s resolve_move(): a new escape_tag dict is
+    computed right after the existing skip_oa computation and merged into the final
+    EntityUpdate''s property_updates only when engaged_hostiles and skip_oa are both
+    true. Consumed by src/observability/event_shapers.py''s CombatShaper as one of
+    4 real combat_engagement_ended outcomes (ESCAPED) -- see infrastructure.yaml for
+    the shaper-side entry. Real corpus re-verification (2000-tick live Kernel.tick_once()
+    loop, dungeon_crawl_seed42 + urban_political_seed42, corpus-default feature-flag
+    config): ESCAPED fired 5 times naturally in urban_political, 0 times in dungeon_crawl
+    within this window -- disclosed honestly, not forced.
 
+    '
+  proof_type: regression
+  test_path: 'tests/unit/movement/ (41 passed, 1 pre-existing unrelated failure --
+    test_normal_move_triggers_oa, confirmed via bisection to predate this ticket)
+    and tests/unit/observability/test_event_shapers.py::test_combat_engagement_ended_escaped_reads_movement_escape_tag.
+
+    '
+  divergence_note: null
+  support_boundary: 'Purely additive read-side tag -- does not change skip_oa''s own
+    real condition, the opportunity-attack resolution path, or any other movement
+    outcome.
+
+    '
 - id: COMB-303
-  text: >
-    TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE -- EntityIdentityResolver.resolve()'s Path 1
-    (clean_metadata) required both faction_id and role_id in identity.properties before trusting
-    an entity's real, content-driven faction. worldbuilding/compiler.py (the real compile path
-    for the SimQ corpus worlds) sets faction_id but never role_id, so every entity fell through
-    to Path 3 (compatibility_projection), which maps the raw legacy 4-value Faction enum
-    (HERO_GUILD/MONSTER_HORDE/TOWN_COUNCIL/NEUTRAL) to a string -- silently collapsing any
-    content-driven faction outside those 4 buckets to "neutral", destroying hostility detection
-    for the majority of the real corpus roster (confirmed: 100% of dungeon_crawl's entities, 43%
-    of urban_political's). tactical.py's own hostile-detection loop (evaluate_entity_intent)
-    uses this resolver's faction_id, not the more direct get_faction_id_str() helper used
-    elsewhere -- the bug was invisible to any check using the latter, including this session's
+  text: 'TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE -- EntityIdentityResolver.resolve()''s
+    Path 1 (clean_metadata) required both faction_id and role_id in identity.properties
+    before trusting an entity''s real, content-driven faction. worldbuilding/compiler.py
+    (the real compile path for the SimQ corpus worlds) sets faction_id but never role_id,
+    so every entity fell through to Path 3 (compatibility_projection), which maps
+    the raw legacy 4-value Faction enum (HERO_GUILD/MONSTER_HORDE/TOWN_COUNCIL/NEUTRAL)
+    to a string -- silently collapsing any content-driven faction outside those 4
+    buckets to "neutral", destroying hostility detection for the majority of the real
+    corpus roster (confirmed: 100% of dungeon_crawl''s entities, 43% of urban_political''s).
+    tactical.py''s own hostile-detection loop (evaluate_entity_intent) uses this resolver''s
+    faction_id, not the more direct get_faction_id_str() helper used elsewhere --
+    the bug was invisible to any check using the latter, including this session''s
     own 2 prior legality-hardening tickets.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/entities/identity_resolver.py's EntityIdentityResolver.resolve() Path 1 now trusts a
-    real faction_id on its own, deriving role_id from the existing _ROLE_COMPAT legacy-role
-    compat map (the same one Path 3 already used) only when the caller didn't supply one, instead
-    of falling through to Path 3 (which discarded faction_id too). Confirmed via grep that
-    ResolvedEntityIdentity.role_id has zero real consumers anywhere in src/ (only .faction_id/
-    .archetype_id are ever read, in tactical.py/quests.py) -- a derived-not-authored role_id
-    carries no downstream risk. Real corpus re-verification (2000-tick live Kernel.tick_once()
-    loop, dungeon_crawl_seed42 + urban_political_seed42, corpus-default feature flags): real
-    hostile pairs (goblin_warband<->undead_remnants, bandit_company<->wild_beast_pack/
-    merchant_league) now genuinely reach verify_attack_legality -- 26+3+2 real checks, versus 0
-    before this fix. Honestly disclosed: every one still fails on ReasonCode.OUT_OF_RANGE
-    (attacker combat.range=1, checked at real distances 2-12) -- a distinct, downstream
-    pursuit-convergence bottleneck, not this bug, filed separately as
-    TCK-20260809-COMBAT-PURSUIT-NEVER-CLOSES-TO-MELEE-RANGE. combat_damage/entity_killed remain
-    zero in this specific 2000-tick window -- not claimed as fully resolved.
+  v2_evidence: 'src/entities/identity_resolver.py''s EntityIdentityResolver.resolve()
+    Path 1 now trusts a real faction_id on its own, deriving role_id from the existing
+    _ROLE_COMPAT legacy-role compat map (the same one Path 3 already used) only when
+    the caller didn''t supply one, instead of falling through to Path 3 (which discarded
+    faction_id too). Confirmed via grep that ResolvedEntityIdentity.role_id has zero
+    real consumers anywhere in src/ (only .faction_id/ .archetype_id are ever read,
+    in tactical.py/quests.py) -- a derived-not-authored role_id carries no downstream
+    risk. Real corpus re-verification (2000-tick live Kernel.tick_once() loop, dungeon_crawl_seed42
+    + urban_political_seed42, corpus-default feature flags): real hostile pairs (goblin_warband<->undead_remnants,
+    bandit_company<->wild_beast_pack/ merchant_league) now genuinely reach verify_attack_legality
+    -- 26+3+2 real checks, versus 0 before this fix. Honestly disclosed: every one
+    still fails on ReasonCode.OUT_OF_RANGE (attacker combat.range=1, checked at real
+    distances 2-12) -- a distinct, downstream pursuit-convergence bottleneck, not
+    this bug, filed separately as TCK-20260809-COMBAT-PURSUIT-NEVER-CLOSES-TO-MELEE-RANGE.
+    combat_damage/entity_killed remain zero in this specific 2000-tick window -- not
+    claimed as fully resolved.
+
+    '
   proof_type: regression
-  test_path: >
-    tests/unit/entities/test_entity_identity_resolver.py::test_faction_id_alone_resolves_clean_not_collapsed_to_neutral,
-    ::test_faction_id_alone_with_unmappable_legacy_role_gets_unresolved_role (2 new tests, plus
-    the file's existing 8, all passing -- regression-covered). Full scoped re-run:
-    tests/unit/entities/, tests/unit/tactical/, tests/unit/combat/, tests/unit/strategic/,
+  test_path: 'tests/unit/entities/test_entity_identity_resolver.py::test_faction_id_alone_resolves_clean_not_collapsed_to_neutral,
+    ::test_faction_id_alone_with_unmappable_legacy_role_gets_unresolved_role (2 new
+    tests, plus the file''s existing 8, all passing -- regression-covered). Full scoped
+    re-run: tests/unit/entities/, tests/unit/tactical/, tests/unit/combat/, tests/unit/strategic/,
     tests/unit/core/ -- 551 passed, zero regressions.
-  divergence_note: >
-    Correction (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE): the v2_evidence claim
-    "combat_damage/entity_killed remain zero" above was incomplete -- based on a filtered
-    sample, not a full event-count check. A full re-check on the identical dungeon_crawl_seed42
-    run confirms real, non-zero combat_damage=1/entity_killed=1/combat_engagement_started=1.
-    urban_political_seed42 genuinely remains at zero. See COMB-304 for the follow-up fix this
-    correction fed into.
-  support_boundary: >
-    Path 2 (runtime_identity_extension), Path 3 (compatibility_projection), Path 4 (legacy_enum)
-    are unchanged -- entities with genuinely no faction_id at all still fall through the same
-    existing chain. No change to resolve_attack()/calculate_damage()/any real combat-resolution
-    logic -- this fix is entirely in target identity resolution, upstream of legality/damage.
 
+    '
+  divergence_note: 'Correction (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE): the v2_evidence
+    claim "combat_damage/entity_killed remain zero" above was incomplete -- based
+    on a filtered sample, not a full event-count check. A full re-check on the identical
+    dungeon_crawl_seed42 run confirms real, non-zero combat_damage=1/entity_killed=1/combat_engagement_started=1.
+    urban_political_seed42 genuinely remains at zero. See COMB-304 for the follow-up
+    fix this correction fed into.
+
+    '
+  support_boundary: 'Path 2 (runtime_identity_extension), Path 3 (compatibility_projection),
+    Path 4 (legacy_enum) are unchanged -- entities with genuinely no faction_id at
+    all still fall through the same existing chain. No change to resolve_attack()/calculate_damage()/any
+    real combat-resolution logic -- this fix is entirely in target identity resolution,
+    upstream of legality/damage.
+
+    '
 - id: COMB-304
-  text: >
-    TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE -- src/engine/pipeline_phases/movement.py's
+  text: 'TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE -- src/engine/pipeline_phases/movement.py''s
     MovementPhase.route_movement_intent() used a static, persisted entity.navigation.target
-    snapshot for every tick that lacked a fresh
-    tactical decision. Since tactical re-evaluation itself is cadence-gated to once per ~10
-    ticks (scheduler.py's own SystemCadence.strategic_intelligence) while movement execution runs
-    every tick unthrottled, a pursuing entity walked straight to a stale snapshot of where its
-    target *was* at the last decision, arrived, then idled until its next cadence tick while the
-    real (unaware, wandering) target kept moving -- confirmed via a real per-tick trace to be the
-    precise mechanism behind rare/slow pursuit convergence, not a crash or dead code path.
+    snapshot for every tick that lacked a fresh tactical decision. Since tactical
+    re-evaluation itself is cadence-gated to once per ~10 ticks (scheduler.py''s own
+    SystemCadence.strategic_intelligence) while movement execution runs every tick
+    unthrottled, a pursuing entity walked straight to a stale snapshot of where its
+    target *was* at the last decision, arrived, then idled until its next cadence
+    tick while the real (unaware, wandering) target kept moving -- confirmed via a
+    real per-tick trace to be the precise mechanism behind rare/slow pursuit convergence,
+    not a crash or dead code path.
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    route_movement_intent() now re-derives the live navigation target from
-    task.payload["target_id"]'s current position each tick, when relying on the persisted
-    snapshot and a real, alive target_id is present. Scoped safely: target_id is only ever set
-    by real entity-tracking tactical branches (PURSUE/INTERCEPT/KITING/BRACKETING/
-    GUARDING_ALLY); TaskUpdate.payload_set replaces (not merges into) the persisted task.payload
-    (src/engine/patches.py:538), so fixed-point errands (WANDER/RETREAT/objective-pursuit, none
-    of which set target_id) are unaffected by construction. scheduler.py's own cadence mechanism
-    is untouched. Real corpus re-verification (2000-tick live Kernel.tick_once() loop,
-    dungeon_crawl_seed42, corpus-default flags): direct instrumentation confirms the fix fires
-    176 times (real cases where live position differed from the stale snapshot); the direct,
-    load-bearing measure of pursuit convergence (real is_attack_legal rate for hostile pairs)
-    improved from 0% (100% OUT_OF_RANGE) to 44% (69/156 real checks) -- a genuine,
-    order-of-magnitude improvement. Honestly disclosed: the final aggregate combat_damage/
-    entity_killed count for this specific short run stayed numerically flat (1/1) despite the
-    large legal-rate improvement, a plausible deterministic-butterfly-effect consequence, not
-    claimed as a full resolution of combat rarity (other factors, e.g. post-attack readiness
-    cooldown and multi-attacker pileup on an already-dead target, remain unaddressed).
-  proof_type: regression
-  test_path: >
-    tests/unit/movement/test_pursuit_target_refresh.py (4 new tests: live-refresh works,
-    fixed-point errands unaffected, dead/missing target_id falls back safely). Full scoped
-    re-run: tests/unit/movement/, tests/unit/tactical/, tests/unit/combat/, tests/unit/kernel/,
-    tests/unit/strategic/ -- 398 passed, 1 pre-existing unrelated failure
-    (test_normal_move_triggers_oa).
-  divergence_note: null
-  support_boundary: >
-    scheduler.py's own cadence gate and find_intercept_position()'s own prediction math are both
-    untouched -- this fix is entirely in movement-routing's target-position lookup, not in
-    when tactical decisions get made or how an intercept point is computed at decision time.
+  v2_evidence: 'route_movement_intent() now re-derives the live navigation target
+    from task.payload["target_id"]''s current position each tick, when relying on
+    the persisted snapshot and a real, alive target_id is present. Scoped safely:
+    target_id is only ever set by real entity-tracking tactical branches (PURSUE/INTERCEPT/KITING/BRACKETING/
+    GUARDING_ALLY); TaskUpdate.payload_set replaces (not merges into) the persisted
+    task.payload (src/engine/patches.py:538), so fixed-point errands (WANDER/RETREAT/objective-pursuit,
+    none of which set target_id) are unaffected by construction. scheduler.py''s own
+    cadence mechanism is untouched. Real corpus re-verification (2000-tick live Kernel.tick_once()
+    loop, dungeon_crawl_seed42, corpus-default flags): direct instrumentation confirms
+    the fix fires 176 times (real cases where live position differed from the stale
+    snapshot); the direct, load-bearing measure of pursuit convergence (real is_attack_legal
+    rate for hostile pairs) improved from 0% (100% OUT_OF_RANGE) to 44% (69/156 real
+    checks) -- a genuine, order-of-magnitude improvement. Honestly disclosed: the
+    final aggregate combat_damage/ entity_killed count for this specific short run
+    stayed numerically flat (1/1) despite the large legal-rate improvement, a plausible
+    deterministic-butterfly-effect consequence, not claimed as a full resolution of
+    combat rarity (other factors, e.g. post-attack readiness cooldown and multi-attacker
+    pileup on an already-dead target, remain unaddressed).
 
-- id: COMB-305
-  text: >
-    TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX -- combat_resolved (CombatScorer.EVENT_TYPES,
-    +3, the largest positive weight in the whole COMBAT pillar) has had a real, ready scoring
-    handler since the pillar's own original design, but zero real producers anywhere in src/ --
-    self-disclosed only in CombatShaper's own class docstring, never cross-referenced into
-    docs/simulation_quality/event_type_coverage.md's own §3 audit until this ticket. Direct
-    continuation of the user's own deferred pillar-scoring decision for
-    combat_engagement_started/ended (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY).
-  status: verified
-  priority: P1
-  legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_shapers.py's CombatShaper now emits a real combat_resolved event
-    alongside combat_engagement_ended for exactly 2 of its 4 real outcomes -- KILL and ESCAPED,
-    both literal matches for the pillar contract's own wording ("clear winner, loser retreats or
-    dies"); CAUGHT_FLEEING/PURSUIT_ABANDONED deliberately excluded (neither represents a clear
-    resolution). combat_engagement_started confirmed NOT a promotion candidate -- it fires on
-    the exact same real gate as the already-scored combat_initiated, so promoting it would
-    double-count the identical real-world event, not add new signal; documented as a deliberate
-    decision, not left open. Real corpus re-verification (2000-tick live Kernel.tick_once()
-    loop, dungeon_crawl_seed42 + urban_political_seed42, corpus-default flags, all 3 of this
-    session's own combat fixes active): combat_resolved fires at real, non-zero volume (1x
-    dungeon_crawl, 4x urban_political), 1:1 correlated with the real KILL/ESCAPED count in each
-    world, zero leakage into the excluded outcomes.
+    '
   proof_type: regression
-  test_path: >
-    tests/unit/observability/test_event_shapers.py::test_combat_resolved_fires_alongside_kill,
-    ::test_combat_resolved_fires_alongside_escaped,
-    ::test_combat_resolved_not_emitted_for_caught_fleeing,
-    ::test_combat_resolved_not_emitted_for_pursuit_abandoned (4 new tests). Full scoped re-run:
-    tests/unit/observability/, tests/simulation_quality/test_combat_scorer.py -- 1017 passed,
-    6 skipped, zero regressions.
-  divergence_note: null
-  support_boundary: >
-    CombatScorer.score()'s own scoring logic is untouched -- it already had a correct, ready
-    handler; this ticket only adds the missing producer. No change to combat_engagement_started/
-    ended's own already-implemented behavior, or to any combat-resolution logic itself.
-
-- id: COMB-306
-  text: >
-    TCK-20260809-COMBAT-TACTICAL-VARIETY-SCORER-GAP-FIX -- the same class of gap as COMB-305/
-    combat_resolved: CombatScorer.score()'s combat_damage handler reads
-    payload.get("tactical_modifier") and scores tactical_variety (+1, first occurrence of each
-    unique modifier), a real, ready signal since the pillar's own original design, but zero real
-    producers anywhere in src/ ever populated tactical_modifier. Meanwhile
-    CombatResolutionSystem.calculate_tactical_multipliers() (src/engine/combat.py:52-107)
-    computes a real, rich per-attack modifier trace (HIGH_GROUND/FLANKING/SURROUNDED/
-    COVER_REDUCTION/SHATTER/EXHAUSTION/STAMINA_EXHAUSTION/BOND_SYNERGY, matching
-    docs/mechanics/02_combat_laws.md §2's own documented table) on CombatUpdate.trace every
-    single attack -- stored, never read by src/observability/ anywhere, the same "computed but
-    discarded" finding this whole investigation thread traces back to.
-  status: verified
-  priority: P1
-  legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_shapers.py's CombatShaper now selects the first real
-    tactical-modifier key present in real_combat.trace (deterministic mechanics-bible table
-    order, via the new _select_tactical_modifier() helper) into combat_damage's own
-    tactical_modifier payload field, when one is present. FINAL_ATK_MULT/FINAL_DEF_MULT
-    (aggregate multipliers)/REWARD_SOURCE/REWARD_CATEGORY (reward classification)/
-    WOUND_INFLICTED (wound tracking) deliberately excluded -- real trace keys, none a tactical
-    modifier in the mechanics-bible sense. Real corpus re-verification (2000-tick live
-    Kernel.tick_once() loop, dungeon_crawl_seed42, corpus-default flags): combat_damage/
-    tactical_modifier are sparse and run-to-run timing-variable at this corpus scale (0-1
-    combat_damage per run across 3 clean re-runs, matching combat_damage's own already-disclosed
-    sparsity), but 2 of 3 runs showed a real, correct tactical_modifier="STAMINA_EXHAUSTION" --
-    confirmed working, not just unit-tested.
-  proof_type: regression
-  test_path: >
-    tests/unit/observability/test_event_shapers.py::test_combat_damage_carries_tactical_modifier_when_active,
-    ::test_combat_damage_tactical_modifier_absent_when_no_trace,
-    ::test_combat_damage_tactical_modifier_picks_mechanics_bible_order_when_multiple_active,
-    ::test_combat_damage_tactical_modifier_excludes_non_modifier_trace_keys (4 new tests). Full
-    scoped re-run: tests/unit/observability/, tests/simulation_quality/test_combat_scorer.py --
-    1021 passed, 6 skipped, zero regressions.
-  divergence_note: null
-  support_boundary: >
-    calculate_tactical_multipliers()'s own real modifier-computation logic is untouched -- this
-    fix reads its already-computed trace output only. CombatScorer.score()'s own scoring logic
-    is untouched -- it already had a correct, ready handler.
-
-- id: COMB-307
-  text: >
-    TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET -- an entity's ATTACK task, once emitted
-    with a real target_id, was never cleared on failure (src/engine/pipeline_phases/actions.py's
-    own route() preserved the entire original payload on any legality/readiness failure, mirror
-    ing the file's own EAT/REST/SLEEP-success reset pattern but with no equivalent for ATTACK
-    failure). Because scheduler.py's own is_idle_act check (`work_kind == "ENTITY_ACT" and not
-    ent.task.payload`) requires an EMPTY payload to route an entity back through the tactical-
-    brain-cadence gate, a non-empty stale-target payload meant the same failing ATTACK was
-    re-dispatched every tick the attacker's readiness recovered from the real -50.0 illegal-
-    target penalty (~5 real ticks to regen) -- confirmed via live corpus trace to repeat for
-    180+ real ticks against the same already-dead target, with no natural end observed.
-  status: verified
-  priority: P1
-  legacy_evidence: null
-  v2_evidence: >
-    ActionRoutingPhase.route() now resets the task to idle (payload_set={}) specifically when
-    action=="ATTACK" and the failure reason is TARGET_INCAPACITATED -- an unrecoverable
-    condition (the target is dead/inactive and can never become legal again), unlike
-    INSUFFICIENT_READINESS/OUT_OF_RANGE which are real, recoverable conditions deliberately left
-    un-reset. Also confirmed, disclosed, and left untouched: a real, legitimate 2-pass
-    architecture (Kernel._phase_collection's own parallel-worker Collection phase, then
-    AuthoritativeApplyPipeline._route_action_intent's own same-tick refinement pass, per
-    actions.py::route()'s own documented same-tick-ordering law) means each real attack attempt
-    is checked twice per tick by design -- not a bug, not touched. Real corpus re-verification
-    (2000-tick live Kernel.tick_once() loop, dungeon_crawl_seed42, corpus-default flags, 3 clean
-    re-runs): TARGET_INCAPACITATED volume dropped from 128-144 (pre-fix, one stuck pair
-    repeating for 180+ ticks) to exactly 4 per run (post-fix, 2 distinct pairs x 2 real
-    same-tick dispatches each -- the expected, legitimate 2-pass cost with the stuck-task
-    condition eliminated) -- a genuine, ~35x real reduction.
-  proof_type: regression
-  test_path: >
-    tests/unit/actions/test_action_routing_task_reset.py (5 new tests: dead-target reset,
-    incapacitated-but-alive-target reset, INSUFFICIENT_READINESS/OUT_OF_RANGE preserved
-    unchanged, missing-action short-circuit unaffected). Full scoped re-run:
-    tests/unit/actions/, tests/unit/combat/, tests/unit/tactical/, tests/unit/movement/,
-    tests/unit/kernel/ -- 206 passed, 1 pre-existing unrelated failure
-    (test_normal_move_triggers_oa).
-  divergence_note: null
-  support_boundary: >
-    combat_actions.py's own real -50.0 illegal-target readiness penalty is unchanged -- this fix
-    stops the *repeated* penalty from compounding against a target that can never become legal
-    again, without changing the penalty itself for a target that might still become legal.
-    scheduler.py's own cadence mechanism and the 2-pass Collection/action_routing architecture
-    are both untouched.
-
-- id: COMB-308
-  text: >
-    TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS -- PP-16's own real
-    run_phase("combat_engagement", ...) registration (src/engine/pipeline.py) called
-    CombatEngagementPhase.apply(state) without merging the result into the incoming,
-    already-accumulated StateUpdate (u). Every other phase in this same real chain that needs to
-    preserve prior phases' own output correctly calls u.merge(...) on its own real output (e.g.
-    information_belief's identical pattern); this phase's own lambda never referenced u at all.
-    run_phase()'s own real chaining logic replaces the accumulated update wholesale with
-    whatever the phase function returns, so whenever combat_engagement actually ran (flag ON,
-    not skipped by dependency-graph policy), every real StateUpdate produced by every earlier
-    phase in that same tick -- including the real action_routing/ATTACK-dispatch phase and
-    movement_routing -- was silently discarded.
-  status: verified
-  priority: P0
-  legacy_evidence: null
-  v2_evidence: >
-    Added the missing u.merge(CombatEngagementPhase.apply(state)) call, matching the file's own
-    already-established precedent. Real corpus A/B testing (2000-tick live Kernel.tick_once()
-    loop, dungeon_crawl_seed42, ENABLE_COMBAT_ENGAGEMENT=ON explicitly forced -- the exact
-    condition that previously showed total, deterministic suppression) confirms:
-    combat_engagement_started/ended, combat_resolved, combat_damage, entity_killed all now fire
-    alongside combat_kill, matching the corpus-default (flag-off) baseline's own real event
-    presence, for both dungeon_crawl and urban_political. A real, secondary, smaller effect was
-    also measured and disclosed: CombatEngagementPhase.apply()'s own real per-tick cost (0.85ms
-    avg) increases the rate of real "tick exceeded budget" warnings from 6.2% to 7.1% of ticks --
-    a real, modest, secondary contributing factor, not the primary cause. Real, disclosed
-    containment context: ENABLE_COMBAT_ENGAGEMENT defaults OFF and was never turned ON in any of
-    the 17 shipped SimQ calibration profiles at the time this bug was found -- the real,
-    practical blast radius was zero on any currently-shipped configuration.
-  proof_type: regression
-  test_path: >
-    tests/unit/domains/combat_engagement/test_combat_engagement_phase_merge.py
-    (2 new tests: prior-phase StateUpdate survives combat_engagement with the flag ON,
-    confirmed to genuinely fail against the pre-fix code via git-stash bisection; regression
-    guard confirming the flag-OFF/corpus-default path was never affected). Full scoped re-run:
-    tests/unit/domains/combat_engagement/, tests/integration/domains/combat_engagement/,
-    tests/unit/combat/, tests/unit/tactical/, tests/unit/kernel/ -- 187 passed, zero
-    regressions. Broader sweep (tests/unit/ -k "pipeline or phase") -- 575 passed. Broader
-    sweep (tests/unit/movement/, tests/unit/strategic/, tests/unit/entities/,
-    tests/unit/actions/, tests/unit/observability/) -- 1286 passed, 1 pre-existing unrelated
+  test_path: 'tests/unit/movement/test_pursuit_target_refresh.py (4 new tests: live-refresh
+    works, fixed-point errands unaffected, dead/missing target_id falls back safely).
+    Full scoped re-run: tests/unit/movement/, tests/unit/tactical/, tests/unit/combat/,
+    tests/unit/kernel/, tests/unit/strategic/ -- 398 passed, 1 pre-existing unrelated
     failure (test_normal_move_triggers_oa).
-  divergence_note: null
-  support_boundary: >
-    CombatEngagementPhase.apply()'s own real posture-evaluation logic is untouched -- the bug
-    was entirely in how its own output gets chained, not in what it computes. The real,
-    secondary, smaller tick-budget-pressure effect and a real, much bigger, disclosed-but-
-    out-of-scope chronic tick-budget-exceeded condition (persistence phase's own dominant real
-    cost, ~6% of ticks even at baseline) are both documented but not fixed here.
 
-- id: COMB-309
-  text: >
-    TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION -- COMB-295's own real
-    "Kill events" fallback in event_extractor.py fired `CombatKillEvent` (scored under the COMBAT
-    pillar as `combat_kill`/`entity_killed`, -1 attrition each) on ANY `lifecycle.active->False`
-    transition not already owned live by the shaper, regardless of the death's real cause.
-    Direct pipeline instrumentation on `dungeon_crawl_seed42_2000t` (corpus-default flags) traced
-    every one of the run's 25 calibrate_simq-scored `combat_kill` events back to a non-combat
-    cause: a HAZARD-preceded death (world_dynamics.py's own environmental drain mechanic,
-    already excluded from `_real_combat_update()` via `_NON_COMBAT_OUTCOME_KINDS` elsewhere in
-    the same file) or an unset `death_reason` (a mass despawn/old-age cluster) -- zero traced to
-    `LifecycleSystem.resolve_lifecycle()`'s own authoritative `death_reason=="COMBAT"` value.
-    Meanwhile the run's genuine `combat_engagement_ended` activity (10 real pursuit sequences)
-    produced zero credit because every one resolved as `PURSUIT_ABANDONED`, the one outcome
-    `CombatShaper` deliberately excludes from `combat_resolved`. This was the real, structural
-    reason the COMBAT pillar sat at the B/C grade boundary even after this session's 5 prior
-    combat fixes: it was absorbing negative attrition credit from non-combat mortality while its
-    own positive-scoring surface (`combat_active`, `combat_resolved`, `tactical_variety`,
-    `survival_tension`) stayed structurally unreachable for this corpus's real kill population.
+    '
+  divergence_note: null
+  support_boundary: 'scheduler.py''s own cadence gate and find_intercept_position()''s
+    own prediction math are both untouched -- this fix is entirely in movement-routing''s
+    target-position lookup, not in when tactical decisions get made or how an intercept
+    point is computed at decision time.
+
+    '
+- id: COMB-305
+  text: "TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX -- combat_resolved (CombatScorer.EVENT_TYPES,\
+    \ +3, the largest positive weight in the whole COMBAT pillar) has had a real,\
+    \ ready scoring handler since the pillar's own original design, but zero real\
+    \ producers anywhere in src/ -- self-disclosed only in CombatShaper's own class\
+    \ docstring, never cross-referenced into docs/simulation_quality/event_type_coverage.md's\
+    \ own \xA73 audit until this ticket. Direct continuation of the user's own deferred\
+    \ pillar-scoring decision for combat_engagement_started/ended (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY).\n"
   status: verified
-  priority: P0
+  priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    Narrowed the fallback in `src/observability/event_extractor.py` to additionally require
-    `entity.lifecycle.death_reason == "COMBAT"` (the durable, typed field
-    `LifecycleSystem.resolve_lifecycle()` sets in the same EntityUpdate as the `active=False`
-    flip, and the only place in the runtime pipeline that legitimately performs that flip) before
-    firing `CombatKillEvent`. `hero_death_unrecorded` (a broader "hero death went unrecorded by
-    anything else" narrative signal, not combat-specific) deliberately kept un-gated on the new
-    condition -- narrowing it too would have been an unrelated scope change; verified via a real
-    regression these two existing tests caught (`TestHeroDeathUnrecorded`) before the fix was
-    corrected. Old-age/despawn deaths keep their own real credit path unaffected:
-    `demographic_mortality` (WORLD pillar) fires separately on `entities_remove` when the corpse
-    is later removed. Real corpus re-verification post-fix:
-    `dungeon_crawl_seed42_2000t` COMBAT norm moved from -0.0251 (25 false-attributed events) to
-    +0.0000 (0 events -- an honest "no real credited combat activity" reading, not a false
-    penalty); `urban_political_seed42_2000t` moved from -0.00197 to +0.0000 identically. Grade
-    stayed C for both (0 events defaults to C per the scoring contract's own "no signal"
-    convention, not a boundary artifact) -- overall_score improved slightly in both cases since
-    the false penalty no longer drags the weighted total down.
+  v2_evidence: 'src/observability/event_shapers.py''s CombatShaper now emits a real
+    combat_resolved event alongside combat_engagement_ended for exactly 2 of its 4
+    real outcomes -- KILL and ESCAPED, both literal matches for the pillar contract''s
+    own wording ("clear winner, loser retreats or dies"); CAUGHT_FLEEING/PURSUIT_ABANDONED
+    deliberately excluded (neither represents a clear resolution). combat_engagement_started
+    confirmed NOT a promotion candidate -- it fires on the exact same real gate as
+    the already-scored combat_initiated, so promoting it would double-count the identical
+    real-world event, not add new signal; documented as a deliberate decision, not
+    left open. Real corpus re-verification (2000-tick live Kernel.tick_once() loop,
+    dungeon_crawl_seed42 + urban_political_seed42, corpus-default flags, all 3 of
+    this session''s own combat fixes active): combat_resolved fires at real, non-zero
+    volume (1x dungeon_crawl, 4x urban_political), 1:1 correlated with the real KILL/ESCAPED
+    count in each world, zero leakage into the excluded outcomes.
+
+    '
   proof_type: regression
-  test_path: >
-    tests/unit/observability/test_event_extractor_world.py::test_combat_kill_not_emitted_for_hazard_caused_death
-    (confirmed via git-stash bisection to genuinely fail against the pre-fix code) and
-    ::test_combat_kill_emitted_for_genuine_combat_death (regression guard -- real combat deaths
-    still fire). Full scoped re-run: tests/unit/observability/, tests/simulation_quality/,
-    tests/observability/ -- 1477 passed, 89 skipped; the only 3 failures
-    (test_grade_anchor_file_exists_and_valid, test_metrics_endpoint_integration,
-    test_ws_events_stream) confirmed pre-existing via git-stash bisection, unrelated to this
-    change (missing local calibration-report fixture and refused localhost connections,
-    respectively).
-  divergence_note: null
-  support_boundary: >
-    Does not address WHY genuine `combat_engagement_ended` activity in this corpus never
-    resolves as KILL/ESCAPED (always PURSUIT_ABANDONED) -- a related but separate question,
-    out of this ticket's own scope, that would need its own investigation if the corpus's own
-    real combat-resolution rate is judged worth improving. Does not address the smaller,
-    disclosed-but-unconfirmed mechanism by which some deaths reach `lifecycle.active=False` with
-    `death_reason` unset (neither "OLD_AGE" nor "COMBAT") -- treated conservatively as non-combat
-    by this fix regardless of true origin, which is the safe default either way.
+  test_path: 'tests/unit/observability/test_event_shapers.py::test_combat_resolved_fires_alongside_kill,
+    ::test_combat_resolved_fires_alongside_escaped, ::test_combat_resolved_not_emitted_for_caught_fleeing,
+    ::test_combat_resolved_not_emitted_for_pursuit_abandoned (4 new tests). Full scoped
+    re-run: tests/unit/observability/, tests/simulation_quality/test_combat_scorer.py
+    -- 1017 passed, 6 skipped, zero regressions.
 
-- id: COMB-310
-  text: >
-    TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS -- direct follow-up to
-    COMB-304 (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE). That fix live-refreshed a stale
-    pursuit navigation target inside `route_movement_intent()`, but two OTHER real, independent
-    places compute their own, separate "is this entity's nav_target stale" logic and were never
-    given the same fix: (1) `MovementCandidateSelector.select()` (`src/engine/candidate_selector.py`)
-    has its own, earlier "already at target, skip" check that runs BEFORE route_movement_intent's
-    own per-entity loop even gets a chance to run for a given entity -- a pursuer that had
-    "arrived" at a stale snapshot was permanently excluded from movement candidacy here, before
-    route_movement_intent's own live-retarget logic ever engaged; (2) both real `ENTITY_MOVE`
-    work-item dispatchers (`src/engine/executor.py`'s `LocalSequentialExecutor`,
-    `src/engine/worker_logic.py`'s `default_simulation_worker`, used by
-    `ConcurrentExecutionAdapter`) re-emit `NavigationUpdate(target_set=...)` every tick a pursuit
-    task is scheduled, reading the SAME static `task.payload["target_position"]` snapshot every
-    time -- which route_movement_intent's own `has_fresh_decision` check
-    (`ent_upd.navigation.target_set is not None`) misreads as a genuine new tactical decision
-    every single tick, silently defeating COMB-304's own live-retarget fallback entirely (it
-    never activates, since `has_fresh_decision` is always spuriously True). Confirmed via live
-    corpus trace on `dungeon_crawl_seed42_2000t`: two mutually-pursuing entities (25, 12) were
-    frozen at exactly Manhattan distance 2.0 (diagonally adjacent) for 990+ consecutive real
-    ticks, with `readiness=100.0` throughout (ruling out a readiness-starvation explanation) --
-    even with COMB-304's own fix already merged and active. This is the real, complete,
-    previously-unidentified mechanism producing the 100% `PURSUIT_ABANDONED` rate that
-    COMB-309's own investigation (TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION)
-    traced the COMBAT pillar's own positive-scoring-surface unreachability to.
+    '
+  divergence_note: null
+  support_boundary: 'CombatScorer.score()''s own scoring logic is untouched -- it
+    already had a correct, ready handler; this ticket only adds the missing producer.
+    No change to combat_engagement_started/ ended''s own already-implemented behavior,
+    or to any combat-resolution logic itself.
+
+    '
+- id: COMB-306
+  text: "TCK-20260809-COMBAT-TACTICAL-VARIETY-SCORER-GAP-FIX -- the same class of\
+    \ gap as COMB-305/ combat_resolved: CombatScorer.score()'s combat_damage handler\
+    \ reads payload.get(\"tactical_modifier\") and scores tactical_variety (+1, first\
+    \ occurrence of each unique modifier), a real, ready signal since the pillar's\
+    \ own original design, but zero real producers anywhere in src/ ever populated\
+    \ tactical_modifier. Meanwhile CombatResolutionSystem.calculate_tactical_multipliers()\
+    \ (src/engine/combat.py:52-107) computes a real, rich per-attack modifier trace\
+    \ (HIGH_GROUND/FLANKING/SURROUNDED/ COVER_REDUCTION/SHATTER/EXHAUSTION/STAMINA_EXHAUSTION/BOND_SYNERGY,\
+    \ matching docs/mechanics/02_combat_laws.md \xA72's own documented table) on CombatUpdate.trace\
+    \ every single attack -- stored, never read by src/observability/ anywhere, the\
+    \ same \"computed but discarded\" finding this whole investigation thread traces\
+    \ back to.\n"
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/observability/event_shapers.py''s CombatShaper now selects the
+    first real tactical-modifier key present in real_combat.trace (deterministic mechanics-bible
+    table order, via the new _select_tactical_modifier() helper) into combat_damage''s
+    own tactical_modifier payload field, when one is present. FINAL_ATK_MULT/FINAL_DEF_MULT
+    (aggregate multipliers)/REWARD_SOURCE/REWARD_CATEGORY (reward classification)/
+    WOUND_INFLICTED (wound tracking) deliberately excluded -- real trace keys, none
+    a tactical modifier in the mechanics-bible sense. Real corpus re-verification
+    (2000-tick live Kernel.tick_once() loop, dungeon_crawl_seed42, corpus-default
+    flags): combat_damage/ tactical_modifier are sparse and run-to-run timing-variable
+    at this corpus scale (0-1 combat_damage per run across 3 clean re-runs, matching
+    combat_damage''s own already-disclosed sparsity), but 2 of 3 runs showed a real,
+    correct tactical_modifier="STAMINA_EXHAUSTION" -- confirmed working, not just
+    unit-tested.
+
+    '
+  proof_type: regression
+  test_path: 'tests/unit/observability/test_event_shapers.py::test_combat_damage_carries_tactical_modifier_when_active,
+    ::test_combat_damage_tactical_modifier_absent_when_no_trace, ::test_combat_damage_tactical_modifier_picks_mechanics_bible_order_when_multiple_active,
+    ::test_combat_damage_tactical_modifier_excludes_non_modifier_trace_keys (4 new
+    tests). Full scoped re-run: tests/unit/observability/, tests/simulation_quality/test_combat_scorer.py
+    -- 1021 passed, 6 skipped, zero regressions.
+
+    '
+  divergence_note: null
+  support_boundary: 'calculate_tactical_multipliers()''s own real modifier-computation
+    logic is untouched -- this fix reads its already-computed trace output only. CombatScorer.score()''s
+    own scoring logic is untouched -- it already had a correct, ready handler.
+
+    '
+- id: COMB-307
+  text: 'TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET -- an entity''s ATTACK
+    task, once emitted with a real target_id, was never cleared on failure (src/engine/pipeline_phases/actions.py''s
+    own route() preserved the entire original payload on any legality/readiness failure,
+    mirror ing the file''s own EAT/REST/SLEEP-success reset pattern but with no equivalent
+    for ATTACK failure). Because scheduler.py''s own is_idle_act check (`work_kind
+    == "ENTITY_ACT" and not ent.task.payload`) requires an EMPTY payload to route
+    an entity back through the tactical- brain-cadence gate, a non-empty stale-target
+    payload meant the same failing ATTACK was re-dispatched every tick the attacker''s
+    readiness recovered from the real -50.0 illegal- target penalty (~5 real ticks
+    to regen) -- confirmed via live corpus trace to repeat for 180+ real ticks against
+    the same already-dead target, with no natural end observed.
+
+    '
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'ActionRoutingPhase.route() now resets the task to idle (payload_set={})
+    specifically when action=="ATTACK" and the failure reason is TARGET_INCAPACITATED
+    -- an unrecoverable condition (the target is dead/inactive and can never become
+    legal again), unlike INSUFFICIENT_READINESS/OUT_OF_RANGE which are real, recoverable
+    conditions deliberately left un-reset. Also confirmed, disclosed, and left untouched:
+    a real, legitimate 2-pass architecture (Kernel._phase_collection''s own parallel-worker
+    Collection phase, then AuthoritativeApplyPipeline._route_action_intent''s own
+    same-tick refinement pass, per actions.py::route()''s own documented same-tick-ordering
+    law) means each real attack attempt is checked twice per tick by design -- not
+    a bug, not touched. Real corpus re-verification (2000-tick live Kernel.tick_once()
+    loop, dungeon_crawl_seed42, corpus-default flags, 3 clean re-runs): TARGET_INCAPACITATED
+    volume dropped from 128-144 (pre-fix, one stuck pair repeating for 180+ ticks)
+    to exactly 4 per run (post-fix, 2 distinct pairs x 2 real same-tick dispatches
+    each -- the expected, legitimate 2-pass cost with the stuck-task condition eliminated)
+    -- a genuine, ~35x real reduction.
+
+    '
+  proof_type: regression
+  test_path: 'tests/unit/actions/test_action_routing_task_reset.py (5 new tests: dead-target
+    reset, incapacitated-but-alive-target reset, INSUFFICIENT_READINESS/OUT_OF_RANGE
+    preserved unchanged, missing-action short-circuit unaffected). Full scoped re-run:
+    tests/unit/actions/, tests/unit/combat/, tests/unit/tactical/, tests/unit/movement/,
+    tests/unit/kernel/ -- 206 passed, 1 pre-existing unrelated failure (test_normal_move_triggers_oa).
+
+    '
+  divergence_note: null
+  support_boundary: 'combat_actions.py''s own real -50.0 illegal-target readiness
+    penalty is unchanged -- this fix stops the *repeated* penalty from compounding
+    against a target that can never become legal again, without changing the penalty
+    itself for a target that might still become legal. scheduler.py''s own cadence
+    mechanism and the 2-pass Collection/action_routing architecture are both untouched.
+
+    '
+- id: COMB-308
+  text: 'TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS -- PP-16''s
+    own real run_phase("combat_engagement", ...) registration (src/engine/pipeline.py)
+    called CombatEngagementPhase.apply(state) without merging the result into the
+    incoming, already-accumulated StateUpdate (u). Every other phase in this same
+    real chain that needs to preserve prior phases'' own output correctly calls u.merge(...)
+    on its own real output (e.g. information_belief''s identical pattern); this phase''s
+    own lambda never referenced u at all. run_phase()''s own real chaining logic replaces
+    the accumulated update wholesale with whatever the phase function returns, so
+    whenever combat_engagement actually ran (flag ON, not skipped by dependency-graph
+    policy), every real StateUpdate produced by every earlier phase in that same tick
+    -- including the real action_routing/ATTACK-dispatch phase and movement_routing
+    -- was silently discarded.
+
+    '
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    Extracted the live-retargeting logic into a single shared helper,
-    `MovementCandidateSelector.resolve_live_tracking_target(entity, entities, fallback_target)`
-    (`src/engine/candidate_selector.py`), taking a plain `{entity_id: EntityState}` mapping
-    (not a full state/packet object) so it's usable from all four real call sites without
-    threading a wider dependency through the bounded, read-only `WorkerPacket` context. Applied
-    at: `MovementCandidateSelector.select()`'s own nav_target fallback (replacing its prior,
-    un-refreshed stale-snapshot check), `route_movement_intent()`'s own live-retarget branch
-    (now calling the shared helper instead of its own inline, duplicate copy of the same logic),
-    `LocalSequentialExecutor.execute()`'s `ENTITY_MOVE` branch (`executor.py`), and
-    `default_simulation_worker`'s `ENTITY_MOVE` branch (`worker_logic.py`). Real corpus
-    re-verification (`dungeon_crawl_seed42_2000t`, `urban_political_seed42_2000t`, corpus-default
-    flags): the specific frozen pair (25, 12) now moves and diverges from its prior fixed
-    position (though a real, disclosed, separate secondary issue -- see support_boundary --
-    means this specific pair still doesn't converge to melee range, via a different mechanism).
-    Real, decisive, corpus-wide measure: `combat_resolved`/`entity_killed`/`combat_damage`/
-    `combat_initiated`/`combat_engagement_started` event counts, all exactly 0 in a fresh
-    post-COMB-309 baseline run of both worlds, now fire non-zero post-fix (`dungeon_crawl`:
-    combat_initiated=1, combat_engagement_started=1, combat_damage=1, entity_killed=1,
-    combat_resolved=1; `urban_political`: combat_resolved=5). COMBAT pillar norm on
-    `dungeon_crawl_seed42_2000t` moved from exactly 0.0 (zero credited combat activity, COMB-309's
-    own post-fix baseline) to -0.0096 with 6 real events (grade stayed C -- a small, real, honest
-    change at this corpus's own low combat-volume scale, not a forced improvement).
+  v2_evidence: 'Added the missing u.merge(CombatEngagementPhase.apply(state)) call,
+    matching the file''s own already-established precedent. Real corpus A/B testing
+    (2000-tick live Kernel.tick_once() loop, dungeon_crawl_seed42, ENABLE_COMBAT_ENGAGEMENT=ON
+    explicitly forced -- the exact condition that previously showed total, deterministic
+    suppression) confirms: combat_engagement_started/ended, combat_resolved, combat_damage,
+    entity_killed all now fire alongside combat_kill, matching the corpus-default
+    (flag-off) baseline''s own real event presence, for both dungeon_crawl and urban_political.
+    A real, secondary, smaller effect was also measured and disclosed: CombatEngagementPhase.apply()''s
+    own real per-tick cost (0.85ms avg) increases the rate of real "tick exceeded
+    budget" warnings from 6.2% to 7.1% of ticks -- a real, modest, secondary contributing
+    factor, not the primary cause. Real, disclosed containment context: ENABLE_COMBAT_ENGAGEMENT
+    defaults OFF and was never turned ON in any of the 17 shipped SimQ calibration
+    profiles at the time this bug was found -- the real, practical blast radius was
+    zero on any currently-shipped configuration.
 
-    Also caught and fixed a real, independent regression this session's own earlier
-    `TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET` fix (COMB-307) introduced but its own
-    test scope never caught: `ActionRoutingPhase.route()`'s `is_unrecoverable_attack_failure`
-    reset (`payload_set={}`) conflicts with
-    `tests/integration/pipeline/test_combat_legality_matrix.py::
-    test_pipeline_simultaneous_attack_atomicity`/`test_aoe_sliding_state_awareness`, both of
-    which expected `outcome`/`reason` to survive in the SAME tick's own returned
-    `EntityUpdate.task.payload_set` for same-tick atomic-ordering visibility. Tried preserving
-    `outcome`/`reason` in the reset payload first; live corpus re-verification showed this
-    reintroduces a partial version of the original stuck-retry bug (one entity hit
-    `TARGET_INCAPACITATED` 73 times in a 2000-tick run, since `scheduler.py`'s own
-    `is_idle_act` check requires a genuinely falsy/empty payload, not merely an
+    '
+  proof_type: regression
+  test_path: 'tests/unit/domains/combat_engagement/test_combat_engagement_phase_merge.py
+    (2 new tests: prior-phase StateUpdate survives combat_engagement with the flag
+    ON, confirmed to genuinely fail against the pre-fix code via git-stash bisection;
+    regression guard confirming the flag-OFF/corpus-default path was never affected).
+    Full scoped re-run: tests/unit/domains/combat_engagement/, tests/integration/domains/combat_engagement/,
+    tests/unit/combat/, tests/unit/tactical/, tests/unit/kernel/ -- 187 passed, zero
+    regressions. Broader sweep (tests/unit/ -k "pipeline or phase") -- 575 passed.
+    Broader sweep (tests/unit/movement/, tests/unit/strategic/, tests/unit/entities/,
+    tests/unit/actions/, tests/unit/observability/) -- 1286 passed, 1 pre-existing
+    unrelated failure (test_normal_move_triggers_oa).
+
+    '
+  divergence_note: null
+  support_boundary: 'CombatEngagementPhase.apply()''s own real posture-evaluation
+    logic is untouched -- the bug was entirely in how its own output gets chained,
+    not in what it computes. The real, secondary, smaller tick-budget-pressure effect
+    and a real, much bigger, disclosed-but- out-of-scope chronic tick-budget-exceeded
+    condition (persistence phase''s own dominant real cost, ~6% of ticks even at baseline)
+    are both documented but not fixed here.
+
+    '
+- id: COMB-309
+  text: 'TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION -- COMB-295''s
+    own real "Kill events" fallback in event_extractor.py fired `CombatKillEvent`
+    (scored under the COMBAT pillar as `combat_kill`/`entity_killed`, -1 attrition
+    each) on ANY `lifecycle.active->False` transition not already owned live by the
+    shaper, regardless of the death''s real cause. Direct pipeline instrumentation
+    on `dungeon_crawl_seed42_2000t` (corpus-default flags) traced every one of the
+    run''s 25 calibrate_simq-scored `combat_kill` events back to a non-combat cause:
+    a HAZARD-preceded death (world_dynamics.py''s own environmental drain mechanic,
+    already excluded from `_real_combat_update()` via `_NON_COMBAT_OUTCOME_KINDS`
+    elsewhere in the same file) or an unset `death_reason` (a mass despawn/old-age
+    cluster) -- zero traced to `LifecycleSystem.resolve_lifecycle()`''s own authoritative
+    `death_reason=="COMBAT"` value. Meanwhile the run''s genuine `combat_engagement_ended`
+    activity (10 real pursuit sequences) produced zero credit because every one resolved
+    as `PURSUIT_ABANDONED`, the one outcome `CombatShaper` deliberately excludes from
+    `combat_resolved`. This was the real, structural reason the COMBAT pillar sat
+    at the B/C grade boundary even after this session''s 5 prior combat fixes: it
+    was absorbing negative attrition credit from non-combat mortality while its own
+    positive-scoring surface (`combat_active`, `combat_resolved`, `tactical_variety`,
+    `survival_tension`) stayed structurally unreachable for this corpus''s real kill
+    population.
+
+    '
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: 'Narrowed the fallback in `src/observability/event_extractor.py` to
+    additionally require `entity.lifecycle.death_reason == "COMBAT"` (the durable,
+    typed field `LifecycleSystem.resolve_lifecycle()` sets in the same EntityUpdate
+    as the `active=False` flip, and the only place in the runtime pipeline that legitimately
+    performs that flip) before firing `CombatKillEvent`. `hero_death_unrecorded` (a
+    broader "hero death went unrecorded by anything else" narrative signal, not combat-specific)
+    deliberately kept un-gated on the new condition -- narrowing it too would have
+    been an unrelated scope change; verified via a real regression these two existing
+    tests caught (`TestHeroDeathUnrecorded`) before the fix was corrected. Old-age/despawn
+    deaths keep their own real credit path unaffected: `demographic_mortality` (WORLD
+    pillar) fires separately on `entities_remove` when the corpse is later removed.
+    Real corpus re-verification post-fix: `dungeon_crawl_seed42_2000t` COMBAT norm
+    moved from -0.0251 (25 false-attributed events) to +0.0000 (0 events -- an honest
+    "no real credited combat activity" reading, not a false penalty); `urban_political_seed42_2000t`
+    moved from -0.00197 to +0.0000 identically. Grade stayed C for both (0 events
+    defaults to C per the scoring contract''s own "no signal" convention, not a boundary
+    artifact) -- overall_score improved slightly in both cases since the false penalty
+    no longer drags the weighted total down.
+
+    '
+  proof_type: regression
+  test_path: 'tests/unit/observability/test_event_extractor_world.py::test_combat_kill_not_emitted_for_hazard_caused_death
+    (confirmed via git-stash bisection to genuinely fail against the pre-fix code)
+    and ::test_combat_kill_emitted_for_genuine_combat_death (regression guard -- real
+    combat deaths still fire). Full scoped re-run: tests/unit/observability/, tests/simulation_quality/,
+    tests/observability/ -- 1477 passed, 89 skipped; the only 3 failures (test_grade_anchor_file_exists_and_valid,
+    test_metrics_endpoint_integration, test_ws_events_stream) confirmed pre-existing
+    via git-stash bisection, unrelated to this change (missing local calibration-report
+    fixture and refused localhost connections, respectively).
+
+    '
+- id: COMB-311
+  text: 'TCK-20260826-HOTFIX-PERMADEATH-LIFECYCLE-FIX -- `LifecycleSystem.resolve_lifecycle()`''s
+    combat-death check (`docs/parity_ledger/combat_movement.yaml` COMB-309''s own
+    cited authoritative `death_reason=="COMBAT"` writer) only matched `outcome_kind=="KILL"`,
+    never `"PERMADEATH"` -- the more final outcome `src/engine/combat.py` sets when
+    a rebirth-eligible target (a Hero) dies at `generation >= 4` (no more rebirth
+    generations available). A "permanently dead" Hero therefore never actually deactivated
+    (`lifecycle.active` stayed `True`) and kept acting in the simulation. Fixed by
+    checking `outcome_kind in ("KILL", "PERMADEATH")` -- both route through the identical
+    deactivation/death_reason="COMBAT" path, so COMB-309''s own fallback event-crediting
+    gate (`death_reason=="COMBAT"`) now correctly fires for PERMADEATH deaths too,
+    with no change needed to that gate itself. `CombatShaper` (`src/observability/event_shapers.py`)
+    keeps its own `outcome_kind=="KILL"`-only ownership boundary unchanged by design
+    -- PERMADEATH deaths are not "shaper-owned," so they correctly fall through to
+    the COMB-309 fallback path for event/reward crediting, not a second gap needing
+    its own fix.
+
+    '
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/systems/lifecycle_systems/lifecycle.py (resolve_lifecycle's combat-death
+    check)
+  proof_type: regression
+  test_path: tests/unit/progression/test_lifecycle.py::test_permadeath_death_classification
+  divergence_note: null
+  support_boundary: 'Does not address WHY genuine `combat_engagement_ended` activity
+    in this corpus never resolves as KILL/ESCAPED (always PURSUIT_ABANDONED) -- a
+    related but separate question, out of this ticket''s own scope, that would need
+    its own investigation if the corpus''s own real combat-resolution rate is judged
+    worth improving. Does not address the smaller, disclosed-but-unconfirmed mechanism
+    by which some deaths reach `lifecycle.active=False` with `death_reason` unset
+    (neither "OLD_AGE" nor "COMBAT") -- treated conservatively as non-combat by this
+    fix regardless of true origin, which is the safe default either way.
+
+    '
+- id: COMB-310
+  text: 'TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS -- direct
+    follow-up to COMB-304 (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE). That fix live-refreshed
+    a stale pursuit navigation target inside `route_movement_intent()`, but two OTHER
+    real, independent places compute their own, separate "is this entity''s nav_target
+    stale" logic and were never given the same fix: (1) `MovementCandidateSelector.select()`
+    (`src/engine/candidate_selector.py`) has its own, earlier "already at target,
+    skip" check that runs BEFORE route_movement_intent''s own per-entity loop even
+    gets a chance to run for a given entity -- a pursuer that had "arrived" at a stale
+    snapshot was permanently excluded from movement candidacy here, before route_movement_intent''s
+    own live-retarget logic ever engaged; (2) both real `ENTITY_MOVE` work-item dispatchers
+    (`src/engine/executor.py`''s `LocalSequentialExecutor`, `src/engine/worker_logic.py`''s
+    `default_simulation_worker`, used by `ConcurrentExecutionAdapter`) re-emit `NavigationUpdate(target_set=...)`
+    every tick a pursuit task is scheduled, reading the SAME static `task.payload["target_position"]`
+    snapshot every time -- which route_movement_intent''s own `has_fresh_decision`
+    check (`ent_upd.navigation.target_set is not None`) misreads as a genuine new
+    tactical decision every single tick, silently defeating COMB-304''s own live-retarget
+    fallback entirely (it never activates, since `has_fresh_decision` is always spuriously
+    True). Confirmed via live corpus trace on `dungeon_crawl_seed42_2000t`: two mutually-pursuing
+    entities (25, 12) were frozen at exactly Manhattan distance 2.0 (diagonally adjacent)
+    for 990+ consecutive real ticks, with `readiness=100.0` throughout (ruling out
+    a readiness-starvation explanation) -- even with COMB-304''s own fix already merged
+    and active. This is the real, complete, previously-unidentified mechanism producing
+    the 100% `PURSUIT_ABANDONED` rate that COMB-309''s own investigation (TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION)
+    traced the COMBAT pillar''s own positive-scoring-surface unreachability to.
+
+    '
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: 'Extracted the live-retargeting logic into a single shared helper,
+    `MovementCandidateSelector.resolve_live_tracking_target(entity, entities, fallback_target)`
+    (`src/engine/candidate_selector.py`), taking a plain `{entity_id: EntityState}`
+    mapping (not a full state/packet object) so it''s usable from all four real call
+    sites without threading a wider dependency through the bounded, read-only `WorkerPacket`
+    context. Applied at: `MovementCandidateSelector.select()`''s own nav_target fallback
+    (replacing its prior, un-refreshed stale-snapshot check), `route_movement_intent()`''s
+    own live-retarget branch (now calling the shared helper instead of its own inline,
+    duplicate copy of the same logic), `LocalSequentialExecutor.execute()`''s `ENTITY_MOVE`
+    branch (`executor.py`), and `default_simulation_worker`''s `ENTITY_MOVE` branch
+    (`worker_logic.py`). Real corpus re-verification (`dungeon_crawl_seed42_2000t`,
+    `urban_political_seed42_2000t`, corpus-default flags): the specific frozen pair
+    (25, 12) now moves and diverges from its prior fixed position (though a real,
+    disclosed, separate secondary issue -- see support_boundary -- means this specific
+    pair still doesn''t converge to melee range, via a different mechanism). Real,
+    decisive, corpus-wide measure: `combat_resolved`/`entity_killed`/`combat_damage`/
+    `combat_initiated`/`combat_engagement_started` event counts, all exactly 0 in
+    a fresh post-COMB-309 baseline run of both worlds, now fire non-zero post-fix
+    (`dungeon_crawl`: combat_initiated=1, combat_engagement_started=1, combat_damage=1,
+    entity_killed=1, combat_resolved=1; `urban_political`: combat_resolved=5). COMBAT
+    pillar norm on `dungeon_crawl_seed42_2000t` moved from exactly 0.0 (zero credited
+    combat activity, COMB-309''s own post-fix baseline) to -0.0096 with 6 real events
+    (grade stayed C -- a small, real, honest change at this corpus''s own low combat-volume
+    scale, not a forced improvement).
+
+    Also caught and fixed a real, independent regression this session''s own earlier
+    `TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET` fix (COMB-307) introduced
+    but its own test scope never caught: `ActionRoutingPhase.route()`''s `is_unrecoverable_attack_failure`
+    reset (`payload_set={}`) conflicts with `tests/integration/pipeline/test_combat_legality_matrix.py::
+    test_pipeline_simultaneous_attack_atomicity`/`test_aoe_sliding_state_awareness`,
+    both of which expected `outcome`/`reason` to survive in the SAME tick''s own returned
+    `EntityUpdate.task.payload_set` for same-tick atomic-ordering visibility. Tried
+    preserving `outcome`/`reason` in the reset payload first; live corpus re-verification
+    showed this reintroduces a partial version of the original stuck-retry bug (one
+    entity hit `TARGET_INCAPACITATED` 73 times in a 2000-tick run, since `scheduler.py`''s
+    own `is_idle_act` check requires a genuinely falsy/empty payload, not merely an
     action/target_id-less one, to reclassify the entity back to brain-cadence scheduling).
     Reverted to the original, corpus-verified `payload_set={}` behavior (0 repeats,
-    confirmed) and updated the 2 stale integration tests instead, since no real production code
-    (confirmed via grep) reads `task.payload.get("outcome")` -- only these 2 tests' own
-    assertions did.
+    confirmed) and updated the 2 stale integration tests instead, since no real production
+    code (confirmed via grep) reads `task.payload.get("outcome")` -- only these 2
+    tests'' own assertions did.
+
+    '
   proof_type: regression
-  test_path: >
-    tests/unit/domains/optimization/test_movement_candidate_selector.py (4 new tests, all confirmed via
-    git-stash bisection to genuinely fail pre-fix -- 3 with AttributeError since the shared
-    helper doesn't exist pre-fix, 1 with the exact confirmed candidacy-exclusion bug). Full
-    scoped re-run: tests/unit/domains/optimization/, tests/unit/movement/, tests/unit/combat/,
-    tests/unit/tactical/, tests/unit/kernel/, tests/unit/core/, tests/unit/engine/,
-    tests/unit/actions/, tests/unit/strategic/, tests/unit/observability/, tests/unit/entities/,
-    tests/integration/combat/, tests/integration/pipeline/ -- 2047 passed, only the 1
-    pre-existing, already-confirmed-unrelated failure (test_normal_move_triggers_oa, confirmed
-    via bisection identical on pristine pre-fix code too).
-    tests/integration/kernel/test_determinism_suite.py, test_seed_stability.py,
-    test_authoritative_outcome_truth.py -- 9 passed. test_long_run_determinism.py's own
-    test_1000_tick_determinism hit a pre-existing, unrelated 60s CI resource-timeout (confirmed
-    identical on pristine pre-fix code), matching the already-disclosed chronic
-    tick-budget-exceeded finding from COMB-308.
+  test_path: 'tests/unit/domains/optimization/test_movement_candidate_selector.py
+    (4 new tests, all confirmed via git-stash bisection to genuinely fail pre-fix
+    -- 3 with AttributeError since the shared helper doesn''t exist pre-fix, 1 with
+    the exact confirmed candidacy-exclusion bug). Full scoped re-run: tests/unit/domains/optimization/,
+    tests/unit/movement/, tests/unit/combat/, tests/unit/tactical/, tests/unit/kernel/,
+    tests/unit/core/, tests/unit/engine/, tests/unit/actions/, tests/unit/strategic/,
+    tests/unit/observability/, tests/unit/entities/, tests/integration/combat/, tests/integration/pipeline/
+    -- 2047 passed, only the 1 pre-existing, already-confirmed-unrelated failure (test_normal_move_triggers_oa,
+    confirmed via bisection identical on pristine pre-fix code too). tests/integration/kernel/test_determinism_suite.py,
+    test_seed_stability.py, test_authoritative_outcome_truth.py -- 9 passed. test_long_run_determinism.py''s
+    own test_1000_tick_determinism hit a pre-existing, unrelated 60s CI resource-timeout
+    (confirmed identical on pristine pre-fix code), matching the already-disclosed
+    chronic tick-budget-exceeded finding from COMB-308.
+
+    '
   divergence_note: null
-  support_boundary: >
-    The specific traced pair (entities 25/12) still does not converge to melee range post-fix --
-    they now move but enter a stable mutual-orbit oscillation (swapping which diagonal corner
-    they occupy each tick, never closing the gap), a real, disclosed, SEPARATE issue in
-    `NavigationSystem.get_next_step()`'s own single-axis-priority stepping algorithm (never moves
-    diagonally, only one axis per tick), not something this ticket's own retargeting fix touches
-    or claims to solve. This fix's own real, decisive, corpus-wide contribution is unblocking
-    combat resolution for pursuit pairs whose own geometry doesn't hit that specific oscillation
-    (confirmed via the non-zero combat_resolved/entity_killed counts above) -- not a claim that
-    all pursuit now converges reliably.
+  support_boundary: 'The specific traced pair (entities 25/12) still does not converge
+    to melee range post-fix -- they now move but enter a stable mutual-orbit oscillation
+    (swapping which diagonal corner they occupy each tick, never closing the gap),
+    a real, disclosed, SEPARATE issue in `NavigationSystem.get_next_step()`''s own
+    single-axis-priority stepping algorithm (never moves diagonally, only one axis
+    per tick), not something this ticket''s own retargeting fix touches or claims
+    to solve. This fix''s own real, decisive, corpus-wide contribution is unblocking
+    combat resolution for pursuit pairs whose own geometry doesn''t hit that specific
+    oscillation (confirmed via the non-zero combat_resolved/entity_killed counts above)
+    -- not a claim that all pursuit now converges reliably.
+
+    '
+- id: COMB-312
+  text: ActionRoutingPhase.route() emits a WorldEvent(category=WorldEventCategory.COMBAT_LOSS)
+    whenever an entity's ATTACK action resolves against a defender that survives (combat_upd.alive_set
+    is not False) and takes damage (combat_upd.damage_taken > 0). The event carries
+    tick=state.tick, region_id=defender's navigation.region_id, subject=str(defender_entity_id).
+    Deliberately not tied to NearDeathHardeningPhase's hp_pct<=10% threshold, which
+    would structurally guarantee hp_pct<0.3 on every firing and starve CausalAttributionService's
+    avoid_enemy fallback branch. Emission is unconditional -- not gated by any feature
+    flag -- so COMBAT_LOSS events populate state.recent_world_events in every real
+    run via the existing one-tick-lagged world-events channel, independent of whether
+    any downstream consumer (e.g. MemoryUpdatePhase) is enabled.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/pipeline_phases/actions.py:169-188 (ActionRoutingPhase.route(),
+    TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING). WorldEventCategory.COMBAT_LOSS (src/domains/world_emergence/schema.py)
+    is a new enum value added by this ticket with this producer as its first and only
+    source -- previously no code path emitted this category. Consumed by MemoryUpdatePhase
+    (see docs/parity_ledger/strategic_cognition.yaml::STRAT-227) once ENABLE_MEMORY_UPDATE
+    is ON; the event's own emission is not flag-gated.
+  proof_type: parity
+  test_path: tests/unit/actions/test_action_routing_combat_loss_world_event.py
+  divergence_note: New mechanic added by TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING.
+    Previously WorldEventCategory.COMBAT_LOSS did not exist and no WorldEvent was
+    emitted when a defender survived a damaging ATTACK -- that outcome was invisible
+    to state.recent_world_events and to any tick-boundary consumer.
+  support_boundary: null
+- id: COMB-313
+  text: 'TCK-20260824-LIFE-STAGE-TRANSITIONS -- LifecycleSystem.resolve_lifecycle()
+    now emits a deterministic, monotonic forward-only age-based life-stage transition
+    for every active entity, each tick: age_ticks < 3000 -> LifeStage.CHILD, 3000
+    <= age_ticks < 7000 -> LifeStage.ADULT, age_ticks >= 7000 -> LifeStage.ELDER (thresholds
+    intentionally duplicated from get_age_bracket()''s numeric law, docs/parity_ledger/world_dynamics.yaml::WORLD-DEMO-003,
+    as literal constants in LifeStageService.get_stage_for_age() -- separate vocabularies
+    for separate subsystems, per-entity strategic cognition vs. cohort-level aggregate
+    demographics, aligned only on the underlying tick boundaries). The transition
+    only ever fires forward (LifeStageService.is_forward_transition(), ordinal CHILD(0)
+    < ADULT(1) < ELDER(2)), never demoting an entity -- every world-generated entity
+    starts at age_ticks=0 with life_stage=ADULT already correct as a construction
+    default, not a literal newborn fact, so an unconditional recompute-and-overwrite
+    would misclassify every entity in the simulation as CHILD at tick 1. The typed
+    result is set via IdentityUpdate.life_stage_set and applied through IdentityPatch.apply()''s
+    existing replace() branch -- the only path that field can reach, since a populated
+    IdentityUpdate always forces that branch over ApplyPath._fast_replace_identity.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/systems/lifecycle_systems/lifecycle.py (resolve_lifecycle's life-stage
+    transition check); src/ai/life_stage.py (LifeStageService.get_stage_for_age, LifeStageService.is_forward_transition);
+    src/core/updates.py (IdentityUpdate.life_stage_set); src/engine/patches.py (IdentityPatch.apply()).
+  proof_type: regression
+  test_path: tests/unit/progression/test_lifecycle.py::test_life_stage_flips_at_age_boundary
+  divergence_note: null
+  support_boundary: null
+- id: COMB-314
+  text: "Wound penalty wiring \u2014 the live combat-resolution path (CombatResolutionSystem.resolve_attack()\
+    \ -> _get_wound_infliction()) actually reaches and applies WoundService.create_wound()'s\
+    \ severity-scaled penalty formula end-to-end, including max_hp_penalty flowing\
+    \ through SkillScalingService.get_effective_stats() to reduce effective max_hp\
+    \ for severe wounds. Previously the live path silently bypassed the formula, hand-constructing\
+    \ WoundState with a hardcoded flat atk_penalty=5.0/def_penalty=5.0 and leaving\
+    \ speed_penalty/max_hp_penalty at their dataclass default of 0.0."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/engine/combat.py CombatResolutionSystem._get_wound_infliction()\
+    \ delegates to src/engine/rpg_depth.py WoundService.create_wound(); max_hp_penalty\
+    \ consumed by src/engine/rpg_depth.py SkillScalingService.get_effective_stats()\
+    \ (lines 412-417, pre-existing/unchanged). Fixed and wired in TCK-20260824-WOUND-PENALTY-FORMULA-WIRING.\
+    \ Note: speed_penalty is computed/stored but not yet wired into get_effective_stats()\
+    \ \u2014 tracked as a deliberate separate follow-up."
+  proof_type: regression
+  test_path: tests/unit/combat/test_direct_combat_outcomes.py::test_wound_penalties_scale_with_severity_through_live_combat_path
+  divergence_note: null
+  support_boundary: null
+- id: COMB-315
+  text: Wound/scar severity affects tactical decision-making (cover-seeking, retreat
+    threshold, and PROTECTOR guard priority), independent of and in addition to raw
+    hp_percent/hp_ratio checks.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: TacticalDecisionSystem.evaluate_entity_intent wires WoundService.get_wound_stat_penalties/get_scar_stat_penalties
+    into the cover-seeking/retreat gate (src/engine/tactical.py:483-494) and the PROTECTOR
+    guard-wounded-ally branch (src/engine/tactical.py:542-582), additive to the pre-existing
+    hp_percent/hp_ratio-only checks. Landed in TCK-20260824-TACTICAL-WOUND-SCAR-WIRING.
+  proof_type: unit
+  test_path: tests/unit/combat/test_tactical_wound_scar_wiring.py
+  divergence_note: null
+  support_boundary: null

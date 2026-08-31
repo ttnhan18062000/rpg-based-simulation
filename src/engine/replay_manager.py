@@ -179,33 +179,6 @@ class ReplayManager:
         if not events:
             return
 
-        # INFRA-193: Budget check before dispatch (synchronous, caller thread).
-        # Never raise here — async thread path cannot safely propagate exceptions (INFRA-060 / M6 Law).
-        try:
-            def _to_dict(e):
-                if isinstance(e, dict):
-                    return e
-                if dataclasses.is_dataclass(e) and not isinstance(e, type):
-                    return dataclasses.asdict(e)
-                if hasattr(e, '__dict__'):
-                    return e.__dict__
-                return str(e)
-
-            estimated_bytes = len(
-                json.dumps([_to_dict(e) for e in events], default=str).encode()
-            )
-            _bcheck = get_default_registry().check("replay_chunk", estimated_bytes)
-            if _bcheck.action in ("warn", "reject"):
-                logger.warning(
-                    "ReplayManager: budget %s for replay_chunk — size=%.2f MB reason=%s",
-                    _bcheck.action,
-                    estimated_bytes / 1048576,
-                    _bcheck.reason,
-                )
-        except Exception as _budget_err:
-            # Budget check must never stall the replay pipeline (INFRA-060).
-            logger.debug("ReplayManager: budget check skipped: %s", _budget_err)
-
         if async_write:
             # Submit to background thread to satisfy M7 "Non-blocking" Law
             # M6 Law: Capture metadata snapshot to prevent race with next tick
@@ -289,6 +262,17 @@ class ReplayManager:
                     self._avg_chunk_size_bytes * 0.9 + chunk_bytes * 0.1
                     if self._avg_chunk_size_bytes > 0 else float(chunk_bytes)
                 )
+
+                # INFRA-193: Budget check reuses the byte count computed above instead of
+                # re-serializing the chunk a second time (M6/M7 Law — no redundant work).
+                _bcheck = get_default_registry().check("replay_chunk", chunk_bytes)
+                if _bcheck.action in ("warn", "reject"):
+                    logger.warning(
+                        "ReplayManager: budget %s for replay_chunk — size=%.2f MB reason=%s",
+                        _bcheck.action,
+                        chunk_bytes / 1048576,
+                        _bcheck.reason,
+                    )
             except Exception:
                 pass
         except Exception as e:

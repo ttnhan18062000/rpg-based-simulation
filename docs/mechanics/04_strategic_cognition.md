@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-12
+last_verified: 2026-08-30
 ---
 
 # Chapter 4: Strategic Cognition
@@ -20,14 +20,14 @@ Entities evaluate multiple "Concerns" and select the one with the highest calcul
 | **Tier 1: Survival** | `danger`, `fleeing` | Avoidance of death or incapacitation. |
 | **Tier 2: Biological** | `hunger`, `sleep`, `exhaustion` | Maintaining operational biological stats. |
 | **Tier 3: Social** | `social`, `grudge`, `bond` | Protecting allies or seeking revenge. |
-| **Tier 4: Economic** | `harvest`, `trade`, `craft` | Accumulating wealth and equipment. |
+| **Tier 4: Economic** | `harvest`, `trade`, `craft`, `occupation_change` | Accumulating wealth and equipment; `occupation_change` (`GoalKind.OCCUPATION_CHANGE`) is a `CITIZEN` entity taking an open, skill-matched civilian job (`SHOPKEEPER`/`WORKER`/`GUARD`) when idle. |
 
 ---
 
 ## 2. Interruption Resistance
 To prevent "Goal Flickering" (rapidly switching between two similar goals), entities apply an **Interruption Margin**. For adventure-domain project routing specifically, this law only governs entities whose resolved `CognitionProfileDefinition.supports_adventure_routing` is `True` (`src/content/schema.py:100`) — see `docs/simulation/domains/adventure_contract.md` for the full eligibility gate. (System B's general goal-switching via `GoalRegistry` also uses `Switch_Allowed`/`Interruption_Margin`, independent of this eligibility gate.)
 
-**Sole live tier-5 candidate (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE):** `AdventureGoalScorer` (`src/ai/goals/adventure_scorer.py`), registered unconditionally under `GoalKind.ADVENTURE_ROUTE` in `GoalRegistry`, is the sole adventure-decision mechanism — one candidate among the other `GoalKind` scorers in tier 5's `GoalRegistry.get_all_scores()` competition, evaluated every tick `StrategicIntelligenceSystem.evaluate_strategic_intent()` reaches for an entity (subject only to per-entity `SystemCadence` throttling, the same as every other `GoalKind`). It wraps the same opportunities → `AdventureRouteGenerator.generate()` → `AdventureDecisionService.decide()` sequence, unchanged, and its materialization branch (`src/systems/strategic_systems/intelligence.py`) uses the candidate's raw route score, not its normalized `GoalScore.utility`, when constructing the resulting `ProjectState` via `RouteToProjectMapper`. The formerly-separate `AdventureDecisionPhase` pipeline phase — which ran its own duplicate route-generation/scoring pass every tick, silently superseded by this tier-5 path's later-merged, last-writer-wins result whenever both ran — has been deleted; its eligibility helpers (`_resolve_cognition_profile_id`/`_supports_adventure_routing`) relocated byte-identical into this same module.
+**Live tier-5 candidates (as of TCK-20260824-OCCUPATION-CHANGE-TRIGGER):** four `GoalKind` scorers are registered in `GoalRegistry` (`src/ai/goals/__init__.py`) and compete in tier 5's `GoalRegistry.get_all_scores()` pass, each evaluated every tick `StrategicIntelligenceSystem.evaluate_strategic_intent()` reaches for an entity (subject only to per-entity `SystemCadence` throttling): `AdventureGoalScorer` (`GoalKind.ADVENTURE_ROUTE`, `src/ai/goals/adventure_scorer.py`), `SocialContractGoalScorer` (`GoalKind.SOCIAL_CONTRACT`), `RegionStabilizationGoalScorer` (`GoalKind.REGION_STABILIZATION`, §2a below), and `OccupationChangeGoalScorer` (`GoalKind.OCCUPATION_CHANGE`, §Tier 4 Economic row above). `AdventureGoalScorer` wraps the same opportunities → `AdventureRouteGenerator.generate()` → `AdventureDecisionService.decide()` sequence, unchanged, and its materialization branch (`src/systems/strategic_systems/intelligence.py`) uses the candidate's raw route score, not its normalized `GoalScore.utility`, when constructing the resulting `ProjectState` via `RouteToProjectMapper` — the other three bespoke-materialization candidates follow the identical raw-score-not-utility rule via their own dedicated `elif` branches in the same function (never the generic branch). The formerly-separate `AdventureDecisionPhase` pipeline phase (TCK-20260811-DELETE-ADVENTURE-DECISION-PHASE) — which ran its own duplicate route-generation/scoring pass every tick, silently superseded by this tier-5 path's later-merged, last-writer-wins result whenever both ran — has been deleted; its eligibility helpers (`_resolve_cognition_profile_id`/`_supports_adventure_routing`) relocated byte-identical into this same module.
 
 ```python
 # Switching Law
@@ -92,6 +92,34 @@ A `Lead` is a stored piece of information about a resource or location.
 *   **Detail**: Where it is located (e.g., `(45, 12)`).
 *   **Certainty**: High, Medium, or Low. Certainty decays over time if the information is not refreshed.
 
+### Lead Contradiction Testing (E42D; TCK-20260824-LEAD-CONTRADICTION-WIRING)
+Beyond time-based decay (§5), a lead can also be invalidated *immediately* when its claimed
+destination is inconsistent with current world state. `LeadContradictionSystem.enforce()`
+(`src/engine/pipeline_phases/lead_contradiction.py`) runs as the `lead_contradiction` phase of
+`AuthoritativeApplyPipeline.refine()` (phase 32, between `strategic_intelligence` and
+`near_death_hardening` — see `docs/engine/authoritative_pipeline.md`), scanning every alive
+entity's non-`EXHAUSTED` leads in deterministic sorted order every tick.
+
+Contradiction testing is per-`LeadKind`, via `_is_lead_contradicted()`:
+
+| `LeadKind` | Contradiction test | Coverage mechanism |
+| :--- | :--- | :--- |
+| `location` / `resource` | Subject resolves to a resource node whose `remaining_charges <= 0`. | State-scanned in `_is_lead_contradicted()`. |
+| `person` | Subject's entity id is absent from `state.entities`, or resolves to a non-`alive` entity. | State-scanned in `_is_lead_contradicted()`. |
+| `object` | Subject does not match any ground item's or chest item's `item_id` (absence is the failure signal — opposite polarity from `location`/`resource`). | State-scanned in `_is_lead_contradicted()`. |
+| `event` | Subject does not match any `local_scars` entry's `source_event_id`. | State-scanned in `_is_lead_contradicted()`. |
+| `concept` | Not state-scanned — always returns "not contradicted" from this phase (explicit no-op, same shape as the pre-existing `information` kind). | Routed instead through `BeliefContradictionService.detect()` at the observation call site (`ObservationBeliefBridge.process_observation()`, `src/domains/information/bridge.py`, for `claim_failed_search`/`region_danger_seen` observation kinds) and `InformationBeliefPhase.apply()` (`src/domains/information/phase.py`), not the world-state scan above. |
+
+On contradiction, the lead is marked `certainty=EXHAUSTED`, `test_outcome="FAILURE"`,
+`failure_count += 1`. The originating `InformationProvider.reliability_score` is decremented by
+`0.1`, floored at `0.1`. A new `UnknownFact(subject=lead.subject, reason="lead_contradicted",
+priority=0.7)` is regenerated so the `InformationNeedDetector` fires a replanning
+`INFORMATION_SEEKING` project next tick. A `belief_contradiction` `SimulationEvent` and a
+`lead_contradiction_resolved` `SimulationEvent` are emitted for both kinds. All mutations are
+typed `StrategicUpdate`/`EntityUpdate` records merged through the authoritative pipeline — no
+direct state writes. See `docs/parity_ledger/strategic_cognition.yaml` (`STRAT-230`) for parity
+status.
+
 ### Blockers (Problems)
 A `Blocker` is a reason why a goal cannot be achieved. The `BlockerKind` enum (`src/core/strategic.py`) defines the authoritative set of blocker kinds:
 
@@ -101,6 +129,83 @@ A `Blocker` is a reason why a goal cannot be achieved. The `BlockerKind` enum (`
 *   **`capability`**: Action or navigation is blocked due to entity capability limits (e.g., entity cannot perform the required action type).
 *   **`social`**: Goal blocked by social relationship constraints.
 *   **`group`**: Goal blocked by group composition or group-level requirements.
+
+### Grief Urgency & Nemesis Relations: Two Injection Paths (TCK-20260824-GRIEF-NEMESIS-REACHABILITY)
+
+Grief-urgency `ConcernState`s and nemesis-relation `BlockerState`s (E43F/E43G) are injected via
+two structurally different paths, distinguished by whether a live `Kernel`/`ApplyPath` exists at
+injection time.
+
+**Path 1 — Episode boundary (pre-existing, both mechanisms).** At the start of each campaign
+episode, `CampaignOrchestrator._build_initial_state()` calls `GriefUrgencyImporter.apply()` /
+`NemesisRelationImporter.apply()` (`src/domains/campaigns/grief_urgency.py:65-79`,
+`:124-133`) for every `GriefUrgencyModifier`/`NemesisRelation` carried forward in
+`CampaignState.grief_urgencies`/`.nemesis_relations`. Both `apply()` methods return a **new**
+`EntityState` with the concern/blocker merged directly into `entity.strategic.concerns`/
+`.blockers` — a direct-return mutation shape, not a `StrategicUpdate`. This is only
+architecturally safe because it runs before any `Kernel` instance (and therefore any
+`ApplyPath`) exists for the episode; there is no live tick to bypass. `CampaignState.grief_
+urgencies`/`.nemesis_relations` are themselves populated at the *previous* episode's teardown by
+`CampaignOrchestrator._advance_grief_urgencies()`/`_advance_nemesis_relations()`
+(`src/domains/campaigns/orchestrator.py:214-221`), which detect new grief from `entity_death`
+narrative entries and scan cumulative social-memory interaction history for repeated antagonism,
+respectively.
+
+**Path 2 — Mid-episode, tick-time (new, grief only).** A live ally death detected *during* a
+running episode now injects the same `grief_ally_{dead_ally_id}` `SOCIAL_THREAT` concern within
+the same episode, through the authoritative pipeline rather than a direct `EntityState` return:
+
+1. `EventExtractor.detect_grief_triggers()` (`src/observability/event_extractor.py:1665-1706`)
+   is called from `Kernel._phase_observability()` (`src/engine/kernel.py:1009`), immediately
+   after that phase's own `EventExtractor.extract()` call. It re-walks the same
+   `lifecycle.active: True→False` transition condition used for death detection and returns
+   `(griever_id, dead_ally_id, urgency)` triples for every currently-alive entity whose
+   `entity.social.trust_history` toward the newly-dead entity meets `ALLY_TRUST_THRESHOLD`
+   (`0.30`, `src/core/social_constants.py` — re-exported by `grief_urgency.py` for its own
+   callers). `urgency = round(min(1.0, trust * 0.8), 6)` — the identical
+   formula `CampaignOrchestrator._advance_grief_urgencies()` uses, so the two paths cannot
+   diverge in value.
+2. Because Observability runs *after* that tick's own `ApplyPath` pass in the 7-phase kernel loop
+   (`docs/engine/kernel.md`), the resulting mutation cannot land in the same tick that detected
+   the death. `Kernel._phase_observability()` records a `GriefUrgencyTriggeredEvent` immediately
+   (`kernel.py:1008-1012`) and queues each triple onto `Kernel._pending_grief_triggers`
+   (`kernel.py:1013`).
+3. On the *next* tick's `_phase_resolution()`, `Kernel._drain_pending_grief_triggers()`
+   (`kernel.py:692-730`) converts each queued triple into a `StrategicUpdate` via
+   `GriefUrgencyImporter.build_strategic_update()` (`grief_urgency.py:81-91`) — built from the
+   same `_build_grief_concern()` helper (`grief_urgency.py:45-63`) Path 1's `apply()` uses, so
+   the concern id/shape cannot drift between the two paths. The `StrategicUpdate` is merged into
+   that tick's `entity_updates` (`EntityUpdate.merge()`, preserving any decision system's own
+   update for the same entity) and committed through the normal `AuthoritativeApplyPipeline.
+   refine()` / `ApplyPath` route (`kernel.py:635`, `:659-664`) — the same authoritative route
+   `src/engine/tactical.py` already uses for its own `StrategicUpdate`s. This is the durable-state
+   rule this mechanism now satisfies for any mid-tick caller, which the Path 1 direct-`EntityState`
+   -return shape could not.
+4. **Last-tick edge case:** a death on an episode's *final* tick has no subsequent tick to drain
+   into. `Kernel.drain_pending_triggers_at_teardown()` (`kernel.py:732-754`) is a one-shot
+   resolution+apply flush against the current (final) state — reusing
+   `_drain_pending_grief_triggers()` and the same `AuthoritativeApplyPipeline.refine()` +
+   `ApplyPath.apply_generation()` commit route, but running none of the other 6 kernel phases and
+   not advancing `tick`/`world_time`. `ScenarioRuntimeService.flush_pending_grief_triggers()`
+   (`src/engine/scenario_runtime.py:264`) invokes it, and `CampaignOrchestrator.run_episode()`
+   (`src/domains/campaigns/orchestrator.py:178`) calls that before reading `svc.final_state` —
+   guaranteeing the same-episode injection guarantee holds even on the terminal tick.
+
+**Nemesis relations do not (yet) have a mid-episode path.** `NemesisRelationImporter.
+build_strategic_update()` (`grief_urgency.py:135-150`) exists for architectural symmetry with
+`GriefUrgencyImporter`'s pair, but is not wired to any live call site: nemesis-relation formation
+requires `NEMESIS_EPISODE_COUNT >= 2` (`grief_urgency.py:28`) distinct *episodes* of antagonism
+history — a cross-episode aggregate that cannot be evaluated from a single live episode's data —
+so there is no natural mid-episode trigger condition for it, unlike grief (a single death event).
+
+**Reachability.** `CampaignOrchestrator.run_episode()` — the entry point both paths above
+ultimately run under — is now reachable from a real production entry point for the first time:
+`tools/calibrate_simq.py`'s new `campaign_life_arc` SimQ profile drives a new
+`_run_campaign_engine()` branch (`tools/calibrate_simq.py:364-415`) that constructs a
+`CampaignOrchestrator` and calls `run_episode()` in a loop, previously reachable only from tests.
+Both `grief_urgency_triggered` and `nemesis_relation_formed` `SimulationEvent`s
+(`event_category="social"`) are scored by the SOCIAL SimQ pillar
+(`src/simulation_quality/scorers/social.py`).
 
 ---
 
@@ -159,6 +264,72 @@ head is ever read), and (c) a bounded retry count for a permanently-unresolvable
 (currently: a `None` `target_hint` never clears the arbiter's own target-floor check, so it
 retries forever, harmlessly, since nothing in this ticket's scope can ever produce one in
 production).
+
+### Cooperation Offer Retry Cooldown (TCK-20260830-COOPERATION-OFFER-RETRY-COOLDOWN-MISSING)
+Unlike Committed Intentions' deliberately unbounded retry-forever pattern above, a cooperation
+offer that expires unaccepted is throttled with a genuine bounded cooldown before the proposing
+entity may propose again — this prevents the same entity from re-proposing a cooperation offer
+to any target on the tick(s) immediately following a prior offer's expiry.
+
+- **Key**: `"cooperation_offer_retry"`, a fixed, namespaced string entry in the same
+  `IdentityComponent.cooldowns: Dict[str, int]` map used for skill cooldowns
+  (`src/core/state.py`) — reused rather than adding a new `EntityState` field. It never collides
+  with a real `skill_id`.
+- **Scope**: per-entity blanket, not per-(entity, partner) pair — the cooldown blocks proposing to
+  *any* target for its duration, not just the partner whose offer just expired.
+- **Set point**: `ContractService.reap_expired_offers()` (`src/systems/social_systems/contracts.py`).
+  When a reaped `OFFERED` contract has `kind == ContractKind.RECRUITMENT` (i.e. a cooperation
+  offer, not a `LOAN` or other contract kind), the entity's `EntityUpdate.identity` is merged with
+  `IdentityUpdate(cooldown_updates={"cooperation_offer_retry": current_tick + COOPERATION_OFFER_COOLDOWN_TICKS})`,
+  alongside the existing `strategic.contracts_remove` write, in the same authoritative
+  `StateUpdate` — going through the same authoritative apply path as skill cooldowns.
+- **Constant**: `COOPERATION_OFFER_COOLDOWN_TICKS = 15` (module-level constant,
+  `src/systems/social_systems/contracts.py`). Offer duration is 10 ticks, so a 15-tick post-expiry
+  cooldown puts the next allowed proposal roughly 25 ticks after the failed attempt's creation.
+- **Check point**: `CooperationDecisionService.select()` (`src/domains/cooperation/services.py`).
+  Near the top of the method: `on_offer_cooldown = state.tick < entity.identity.cooldowns.get("cooperation_offer_retry", 0)`.
+  This is read-only — decision logic reads state, it does not mutate it (Core Boundaries rule).
+  The "good partner exists" branch is gated with `if best_report and not on_offer_cooldown:`, so a
+  cooldown-gated entity falls through unchanged to the existing `solo_score >= 0.5` /
+  `DEFER_NO_PARTNER` fallback logic — the same fallback path already used when no suitable partner
+  exists. `CooperationIntentBridge.map_decision()` is unchanged: while on cooldown it never
+  receives a `REQUEST_HELP`/`HIRE_SUPPORT` decision, so no new contract is created.
+- **Not a Committed-Intentions-style retry**: this is a genuinely different, bounded-cooldown
+  mechanic. Committed Intentions' Retry-on-loss (above) is deliberately retry-forever with no
+  cooldown; the cooperation-offer-retry cooldown here is a fixed 15-tick durable suppression
+  window applied specifically to cooperation-offer proposal, not multi-step project arbitration.
+
+### Cooperation Offer Pending-Duplicate Gate (TCK-20260830-COOPERATION-OFFER-CONCURRENT-DUPLICATE-BURST)
+The retry cooldown above only throttles re-proposing *after* a prior offer has expired. It does
+not stop the same entity from creating several simultaneous un-expired offers on consecutive
+ticks *before* the first one ever expires — real corpus evidence
+(`highland_traverse_seed42_200t`) showed an entity creating a new `RECRUITMENT` offer on every
+single tick a decision persisted (up to 11-13 simultaneous pending offers) until the first one
+finally expired and set the retry cooldown. This gate closes that gap by checking for an
+already-pending offer at decision time, not just a post-expiry cooldown.
+
+- **Check point**: `CooperationDecisionService.select()` (`src/domains/cooperation/services.py`).
+  Immediately after the existing `on_offer_cooldown` read: `has_pending_recruitment_offer = any(c.kind
+  == ContractKind.RECRUITMENT and c.status == ContractStatus.OFFERED and (c.expiry_tick <= 0 or
+  c.expiry_tick > state.tick) for c in entity.strategic.contracts.values())` — read-only, scans the
+  entity's own already-materialized `strategic.contracts` map (never mutates it).
+- **Scope**: per-entity blanket, mirroring the retry cooldown's own scope — any pending
+  `RECRUITMENT` offer blocks a new one regardless of target, not just a pending offer to the same
+  candidate.
+- **Boundary semantics**: `c.expiry_tick > state.tick` (strict, not `>=`) intentionally matches
+  `ContractService.reap_expired_offers()`'s own reap condition (`0 < contract.expiry_tick <=
+  current_tick`) — a contract at its exact expiry tick is treated as already-expired by both, so
+  this gate never disagrees with the reaper about when an offer stops counting as pending.
+- **Gate site**: the same "good partner exists" branch the retry cooldown gates:
+  `if best_report and not on_offer_cooldown and not has_pending_recruitment_offer:`. While gated,
+  execution falls through unchanged to the existing `solo_score >= 0.5` / `DEFER_NO_PARTNER`
+  fallback — identical fallback behavior to the retry-cooldown case.
+- **Verified**: real A/B corpus trial (`tools/evaluate_simq.py --scenario
+  highland_traverse_seed42_200t`, deterministic seed 42) confirmed the fix. Pre-fix, every one of 8
+  offer-creating entities showed a consecutive per-tick creation burst (84 total burst instances,
+  e.g. entity 7 created 11 offers on ticks 19-29 with no gaps); post-fix, zero burst instances
+  across all entities and every offer is spaced by a full 10-tick offer lifetime or more. SOCIAL
+  pillar `normalized_score` improved from 5.636 to 6.020 (grade stayed `S`, anchor unchanged).
 
 ---
 
@@ -542,11 +713,12 @@ still produces exactly one ±1.0 adjustment per mapped family, never a growing s
 **Magnitude rationale:** ±1.0 sits below `blocker_penalty` (2.0, §6.5) so a blocked route is never
 rescued by a favorable memory adjustment, and above `confidence_bonus` (max 0.15, §6.2) and
 `personality_bias` (max 0.50, §6.4) so the effect is unambiguously measurable, comparable in order
-of magnitude to `plan_advance_bonus` (flat 1.5, §6.2). This constant is **undertuned** — no live-run
-measurement is possible until `MemoryUpdatePhase` is wired into the pipeline (see the "Not yet live"
-callout below) — the same honest disclosure pattern §6.5 already uses for `blocker_penalty`.
-Symmetric magnitude (not asymmetric suppress-vs-promote weighting) is chosen because there is no
-empirical basis yet to justify asymmetry.
+of magnitude to `plan_advance_bonus` (flat 1.5, §6.2). This constant remains **undertuned** — as of
+`TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING`, `MemoryUpdatePhase` is wired into the pipeline (see
+"Pipeline wiring status" below) but the gating `ENABLE_MEMORY_UPDATE` flag defaults to OFF, so no
+live-run measurement has occurred yet — the same honest disclosure pattern §6.5 already uses for
+`blocker_penalty`. Symmetric magnitude (not asymmetric suppress-vs-promote weighting) is chosen
+because there is no empirical basis yet to justify asymmetry.
 
 **Deliberately left unmapped in this pass:** `heal_first` / `rest_often` / `repair_weapon`
 (`combat_loss`, non-fallback branches), `seek_trusted_guide` / `verify_intel` (`failed_search`),
@@ -554,13 +726,17 @@ empirical basis yet to justify asymmetry.
 real, reachable advice strings, deferred to a future ticket with product/design input on the
 correct `RouteFamily` target, not guessed at here.
 
-**Not yet live:** This term is real, reachable code in `AdventureRouteScorer.score()`, but
-`CausalMemoryEntry` records are never created in a live simulation run today — `MemoryUpdatePhase`
-(`src/domains/memory/phase.py`), the only code that populates
-`entity.cognition.memory.causal.entries`, has zero call sites in `src/engine/pipeline.py` or
-anywhere else outside its own file and tests. This term is exercised only by unit tests with
-manually-constructed `CausalMemoryEntry` fixtures until a separate ticket wires `MemoryUpdatePhase`
-into the live pipeline.
+**Pipeline wiring status:** This term is real, reachable code in `AdventureRouteScorer.score()`.
+As of `TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING`, `MemoryUpdatePhase` (`src/domains/memory/phase.py`),
+the only code that populates `entity.cognition.memory.causal.entries`, is now registered as the
+`memory_update` phase in `AuthoritativeApplyPipeline.refine()` (between `actor_validity` and
+`self_model`; see `docs/engine/authoritative_pipeline.md`), wired to a real `WorldEventCategory.COMBAT_LOSS`
+trigger producer built in `ActionRoutingPhase.route()` (fires when a defender survives an `ATTACK`
+and takes damage). This call site is gated by the `ENABLE_MEMORY_UPDATE` feature flag, which
+**defaults to OFF** — so the term is wired but not yet enabled by default, not "always active in
+production." Until a rollout decision turns the flag on for a corpus/production profile, this term
+is exercised live only in tests that explicitly enable `ENABLE_MEMORY_UPDATE` (plus the existing
+unit tests using manually-constructed `CausalMemoryEntry` fixtures).
 
 **Dead-code caveat:** `AdventureRouteGenerator.generate()` never emits a `HUNT_WEAK_ENEMY` candidate
 (confirmed zero emission sites) — the `avoid_enemy` suppression is provably correct at the
@@ -645,4 +821,29 @@ This is entirely generation-time (`AdventureRouteGenerator`), not scoring-time �
 
 **Source:** `src/systems/social_systems/party_composition.py`, `src/domains/adventure/generator.py`
 (TCK-20260811-RELATIONSHIP-AWARE-FORM-PARTY, 2026-08-11)
+
+### 7.3 Role-Affinity Adjustment (TCK-20260824-RELATIONSHIP-ROLE-FIELD)
+
+`SocialBond` gains an additive `role: RelationshipRole` field (`NEUTRAL` default / `FRIEND` /
+`RIVAL`), settable only through the authoritative `SocialBondUpdate.role_set` →
+`RelationshipService.process_update()` path (`src/systems/social_systems/relationships.py`). When
+`PartyCompositionScorer.score(entities, actor=acting_entity)` is called with `actor` supplied, this
+role tag contributes a second additive term alongside §7.2's trust/bonds term:
+
+score = clamp(base_score + TRUST_BONUS_WEIGHT(0.15) × score_trust_bonds(actor, entities) + ROLE_AFFINITY_WEIGHT(0.10) × score_role_affinity(actor, entities), 0.0, 1.0)
+
+`score_role_affinity` is the mean, across the candidate pool, of each candidate's directed
+`RelationshipRole` value as seen from `actor`'s own `SocialComponent`: `FRIEND` → `+1.0`, `RIVAL` →
+`−1.0`, `NEUTRAL` or no bond → `0.0`. Range −1.0 to 1.0; `0.0` for an unknown/never-met candidate or
+when `actor` is omitted. `RelationshipRole.RIVAL` is fully independent of `nemesis_ids`/
+`grudge_history`-driven nemesis promotion (§Social Systems Contract, "Nemesis promotion") — it never
+reads or writes either field.
+
+This term is purely additive: §7.1's `ROLE_DIVERSITY_WEIGHT`/`OCEAN_COMPAT_WEIGHT` base-score weights
+and §7.2's `TRUST_BONUS_WEIGHT` term stay bit-identical. Omitting `actor` reproduces §7.1's base score
+exactly, same as before this change.
+
+**Source:** `src/systems/social_systems/party_composition.py`, `src/core/models/social.py`,
+`src/systems/social_systems/relationships.py` (SOC-247, TCK-20260824-RELATIONSHIP-ROLE-FIELD,
+2026-08-27)
 

@@ -1,3 +1,5 @@
+import threading
+
 from src.core.diagnostic import TraceEvent
 from src.engine.replay_manager import ReplayManager
 from src.engine.policy import GovernorPolicy
@@ -87,3 +89,51 @@ def test_manifest_integrity(tmp_path):
         assert manifest["chunks"][0]["id"] == 0
         assert manifest["chunks"][0]["event_count"] == 1
         assert "metrics" in manifest
+
+
+def test_rotate_chunk_does_not_serialize_synchronously_on_main_thread(tmp_path, monkeypatch):
+    """
+    INFRA-193: the budget check must be performed in the background persistence
+    thread, reusing the byte count _execute_persistence() already computes for
+    _avg_chunk_size_bytes, instead of re-serializing the chunk synchronously on
+    the main tick thread inside _rotate_chunk() before executor.submit().
+    """
+    import time
+    from src.engine import replay_manager as replay_manager_module
+    from src.certification.artifact_budget import BudgetCheckResult
+
+    call_threads = []
+
+    class _SpyRegistry:
+        def check(self, artifact_type, estimated_size_bytes):
+            call_threads.append(threading.current_thread())
+            return BudgetCheckResult(allowed=True, action="allow", reason=None)
+
+    monkeypatch.setattr(replay_manager_module, "get_default_registry", lambda: _SpyRegistry())
+
+    run_dir = tmp_path / "budget_check_run"
+    replay = ReplayManager(run_dir=run_dir, profile_name="TEST", chunk_tick_limit=2)
+    policy = GovernorPolicy()
+
+    replay.emit(TraceEvent(tick=0, system="K", event_type="E0"), policy)
+    replay.on_tick_end(0)
+    replay.emit(TraceEvent(tick=1, system="K", event_type="E1"), policy)
+    replay.on_tick_end(1)
+    replay.emit(TraceEvent(tick=2, system="K", event_type="E2"), policy)
+    # on_tick_end() -> _rotate_chunk() dispatches to executor.submit(); the budget
+    # check must only ever run inside that background task, never on this
+    # (main tick) thread's own call stack, regardless of scheduling race.
+    replay.on_tick_end(2)
+
+    for _ in range(200):
+        if call_threads:
+            break
+        time.sleep(0.01)
+
+    assert call_threads, "budget check never ran in the background thread"
+    assert all(t is not threading.main_thread() for t in call_threads), (
+        "budget check ran on the main tick thread — the synchronous pre-check "
+        "was not fully relocated to the background persistence thread"
+    )
+
+    replay.finalize()

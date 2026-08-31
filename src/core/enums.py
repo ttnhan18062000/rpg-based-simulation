@@ -154,7 +154,10 @@ class ReasonCode(str, Enum):
     DESPERATION_ACCEPTANCE = "desperation_acceptance"
     FRIENDLY_LOAN = "friendly_loan"
     UNNECESSARY_DEBT = "unnecessary_debt"
-    
+    TEAM_UP_ACCEPTED = "team_up_accepted"
+    TEAM_UP_DECLINED = "team_up_declined"
+    INFORMATION_SALE_ACCEPTED = "information_sale_accepted"
+
     # Quest
     QUEST_COMPLETED = "quest_completed"
     QUEST_FAILED = "quest_failed"

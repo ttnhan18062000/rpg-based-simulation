@@ -1,6 +1,10 @@
 # tests/social/test_social_bonds.py
+import json
+from dataclasses import asdict
+
 import pytest
 from src.core.state import EntityState, SocialComponent, IdentityComponent, SocialBond
+from src.core.models.social import RelationshipRole
 from src.core.updates import SocialUpdate, SocialBondUpdate
 from src.systems.social_systems.appraisal import SocialAppraisalSystem
 from src.systems.social_systems.relationships import RelationshipService
@@ -52,6 +56,30 @@ def test_social_bond_learning():
     assert bond_v2.familiarity == 0.2
     assert bond_v2.sentiment == 0.0 # 0.1 + (-1.0 * 0.1)
     assert bond_v2.last_interaction_tick == 200
+
+def test_social_bond_role_defaults_to_neutral():
+    """
+    A SocialBond constructed without specifying role continues to canonicalize
+    identically to today. Logic ID: SOC-247.
+    """
+    bond = SocialBond(target_id=2, familiarity=0.5, sentiment=0.3)
+    assert bond.role == RelationshipRole.NEUTRAL
+
+
+def test_social_bond_role_canonical_dict_serializes_as_plain_string():
+    """
+    RelationshipRole is a str subclass, so the canonical dict (asdict()'s shape,
+    matching AuthoritativeState.to_canonical_dict()'s bonds serialization at
+    src/core/state.py) round-trips through json.dumps as a plain string, exactly
+    as PartyRole already does elsewhere. Logic ID: SOC-247.
+    """
+    bond = SocialBond(target_id=2, role=RelationshipRole.FRIEND)
+    canonical = asdict(bond)
+    assert canonical["role"] == "friend"
+    round_tripped = json.loads(json.dumps(canonical))
+    assert round_tripped["role"] == "friend"
+    assert type(round_tripped["role"]) is str
+
 
 if __name__ == "__main__":
     test_social_bond_learning()

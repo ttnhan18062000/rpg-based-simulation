@@ -75,7 +75,7 @@ Each `Opportunity` has:
 
 ## Route Family Taxonomy
 
-All 13 families defined in `RouteFamily` (str enum in `src/domains/adventure/schema.py`):
+All 16 families defined in `RouteFamily` (str enum in `src/domains/adventure/schema.py`):
 
 | Family | Value | Meaning |
 |---|---|---|
@@ -92,6 +92,9 @@ All 13 families defined in `RouteFamily` (str enum in `src/domains/adventure/sch
 | `FORM_PARTY` | `"form_party"` | Social grouping |
 | `RETURN_TOWN` | `"return_town"` | Travel back to settlement |
 | `DEFER_WITH_REASON` | `"defer_with_reason"` | Fallback when no options |
+| `QUEST_OPPORTUNITY` | `"quest_opportunity"` | Pursue a registry-tracked quest opportunity; scored by HERO capability match against the quest's objective chain (non-HERO entities score it at half attractiveness) |
+| `PROTECT_TARGET` | `"protect_target"` | Escort-urgency route (E41D): stay near/defend the group's `escort_target_id` when this entity is not the target itself; scored with a flat +3.0 bonus in that scenario |
+| `OWN_SURVIVAL` | `"own_survival"` | Self-preservation route (E41D), deprioritised with a -1.0 penalty while this entity is actively escorting another entity |
 
 ---
 

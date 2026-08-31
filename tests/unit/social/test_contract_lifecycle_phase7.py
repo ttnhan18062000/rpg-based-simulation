@@ -104,6 +104,80 @@ def test_offer_expiration_logic():
         for c in strategic_update.contracts_add_or_update
     )
     
+def test_reap_expired_recruitment_offer_sets_retry_cooldown():
+    """
+    Verify that reaping an expired RECRUITMENT offer sets a durable
+    "cooperation_offer_retry" cooldown on the proposing entity, alongside the
+    existing contracts_remove write.
+    """
+    from src.core.updates import StateUpdate
+    from src.systems.social_systems.contracts import COOPERATION_OFFER_COOLDOWN_TICKS
+
+    entity = create_mock_entity(1)
+
+    contract = ContractService.create_recruitment_contract(
+        "c_expired_recruit",
+        source_id=1,
+        target_id=99,
+        tick=100,
+    )
+    # create_recruitment_contract expires offers at tick + 10.
+    assert contract.expiry_tick == 110
+
+    entity = replace(
+        entity,
+        strategic=replace(
+            entity.strategic,
+            contracts={contract.id: contract},
+        ),
+    )
+
+    current_tick = 111
+    state = AuthoritativeState(entities={1: entity}, tick=current_tick, seed=42)
+
+    state_update = ContractService.reap_expired_offers(state, StateUpdate())
+
+    ent_upd = state_update.entity_updates[1]
+    assert "c_expired_recruit" in ent_upd.strategic.contracts_remove
+    assert ent_upd.identity is not None
+    assert ent_upd.identity.cooldown_updates["cooperation_offer_retry"] == current_tick + COOPERATION_OFFER_COOLDOWN_TICKS
+
+
+def test_reap_expired_loan_offer_does_not_set_cooperation_cooldown():
+    """
+    Verify that reaping an expired LOAN offer still removes the contract but
+    never sets the cooperation-offer retry cooldown (RECRUITMENT-only guard).
+    """
+    from src.core.updates import StateUpdate
+
+    entity = create_mock_entity(1)
+
+    contract = ContractService.create_loan_contract(
+        "c_expired_loan",
+        source_id=1,
+        target_id=99,
+        amount=50,
+        tick=100,
+    )
+    assert contract.expiry_tick == 110
+
+    entity = replace(
+        entity,
+        strategic=replace(
+            entity.strategic,
+            contracts={contract.id: contract},
+        ),
+    )
+
+    state = AuthoritativeState(entities={1: entity}, tick=111, seed=42)
+
+    state_update = ContractService.reap_expired_offers(state, StateUpdate())
+
+    ent_upd = state_update.entity_updates[1]
+    assert "c_expired_loan" in ent_upd.strategic.contracts_remove
+    assert ent_upd.identity is None or not ent_upd.identity.cooldown_updates
+
+
 def test_offer_not_expired_before_expiry_tick():
     """
     Verify that a contract offer is not expired before its expiry tick.

@@ -5,9 +5,11 @@ from dataclasses import replace
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
+    from src.engine.cadence import SystemCadence
 from src.core.movement_modes import MovementMode
 from src.core.strategic import ProjectStatus, ObjectiveStatus
 from src.core.updates import EntityUpdate, NavigationUpdate, StrategicUpdate, InteractionUpdate
+from src.systems.strategic_systems.town_targeting import nearest_town_tile
 
 class StrategicRedirectionSystem:
     """
@@ -20,18 +22,11 @@ class StrategicRedirectionSystem:
         """
         Scan entities for blockers and propose navigation targets to resolve them.
         """
-        from src.engine.cadence import should_run
+        from src.engine.cadence import SystemCadence, should_run
         cadence = cadence or SystemCadence()
 
         refined_entity_updates = dict(update.entity_updates)
-        
-        # Optimization: Pre-calculate town target once per tick
-        town_target = state.town_center
-        if state.town_tiles:
-            # We use a stable sort for determinism, but only once
-            town_pos = sorted(list(state.town_tiles))[0]
-            town_target = (float(town_pos[0]), float(town_pos[1]))
-        
+
         # Optimization: Only process entities that had strategic changes or are relevant for redirection
         # Logic ID: PERF-006 (Dirty Entity Tracking)
         from src.core.dirty import get_relevant_entity_ids
@@ -131,8 +126,9 @@ class StrategicRedirectionSystem:
             if not has_nav_update:
                 has_items = len(entity.inventory.items) > 0
                 if has_items and entity.navigation.position != (0.0, 0.0):
-                    target_coords = town_target
-                    
+                    nearest = nearest_town_tile(state.town_tiles, entity.navigation.position)
+                    target_coords = nearest if nearest is not None else state.town_center
+
                     if entity.navigation.target != target_coords:
                         existing_nav = ent_upd.navigation or NavigationUpdate()
                         new_nav = replace(existing_nav, 

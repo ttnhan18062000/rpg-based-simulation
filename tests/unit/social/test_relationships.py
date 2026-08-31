@@ -4,9 +4,11 @@ Social relationship and reputation tests.
 """
 import pytest
 from src.core.state import AuthoritativeState
-from src.core.updates import EntityUpdate, SocialUpdate, StateUpdate
+from src.core.models.social import RelationshipRole
+from src.core.updates import EntityUpdate, SocialUpdate, SocialBondUpdate, StateUpdate
 from src.engine.apply import ApplyPath
 from src.core.builder import V2EntityBuilder
+from src.systems.social_systems.relationships import RelationshipService
 
 def test_relationship_familiarity_gain():
     entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
@@ -99,3 +101,40 @@ def test_relationship_salience_pruning():
     assert 20 not in pruned_social.trust_history
     assert 10 in pruned_social.salience_history
     assert 20 not in pruned_social.salience_history
+
+
+def test_social_bond_role_set_via_authoritative_update_only():
+    """
+    Logic ID: SOC-217/SOC-247. role can only be set through SocialBondUpdate.role_set
+    -> RelationshipService.process_update(), the sole authoritative apply path.
+    """
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, role_set=RelationshipRole.RIVAL)]
+    )
+    new_social = RelationshipService.process_update(entity.social, update)
+
+    assert new_social.bonds[99].role == RelationshipRole.RIVAL
+
+
+def test_process_update_role_set_none_preserves_existing_role():
+    """
+    A None role_set is a no-op for role -- it leaves the existing bond's role
+    untouched, exactly like last_interaction_tick_set. Logic ID: SOC-247.
+    """
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    first_update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, role_set=RelationshipRole.FRIEND)]
+    )
+    social_after_first = RelationshipService.process_update(entity.social, first_update)
+    assert social_after_first.bonds[99].role == RelationshipRole.FRIEND
+
+    second_update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, familiarity_delta=0.1)]
+    )
+    social_after_second = RelationshipService.process_update(social_after_first, second_update)
+
+    assert social_after_second.bonds[99].role == RelationshipRole.FRIEND
+    assert social_after_second.bonds[99].familiarity == pytest.approx(0.1)

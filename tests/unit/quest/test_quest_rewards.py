@@ -404,3 +404,46 @@ def test_entity_project_quest_state_unaffected_by_opportunity_reward():
     assert new_project is not None
     assert new_project.quest_status == QS.ACTIVE
     assert new_project.current_value == 0.0
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING — ESCORT-only reputation wiring
+# ---------------------------------------------------------------------------
+
+def test_quest_completion_non_escort_kind_does_not_touch_reputation():
+    """
+    QuestResolutionSystem.enforce()'s reputation side-effect must be scoped to
+    QuestKind.ESCORT only. A HUNT quest reaching is_newly_completed must not
+    set EntityUpdate.cognition_bundle_set.
+    """
+    from src.core.quests import QuestState, QuestKind, QuestStatus as QS, RewardState
+    from src.core.strategic import StrategicComponent
+    from src.core.updates import StateUpdate, QuestUpdate
+    from src.engine.quests import QuestResolutionSystem
+
+    entity_id = 1
+    quest = QuestState(
+        id="q-hunt-1",
+        kind="quest",
+        quest_kind=QuestKind.HUNT,
+        quest_status=QS.ACTIVE,
+        goal_value=1.0,
+        current_value=0.0,
+        reward=RewardState(xp=10, gold=5),
+    )
+    hero = _make_hero(entity_id)
+    hero = replace(hero, strategic=StrategicComponent(projects={quest.id: quest}))
+    state = AuthoritativeState(tick=10, seed=42, entities={entity_id: hero})
+
+    update = StateUpdate(
+        entity_updates={
+            entity_id: EntityUpdate(
+                entity_id=entity_id,
+                quest=QuestUpdate(quest_id=quest.id, progress_delta=1.0, status_set=QS.COMPLETED),
+            )
+        }
+    )
+    refined = QuestResolutionSystem.enforce(state, update)
+
+    ent_upd = refined.entity_updates[entity_id]
+    assert ent_upd.cognition_bundle_set is None

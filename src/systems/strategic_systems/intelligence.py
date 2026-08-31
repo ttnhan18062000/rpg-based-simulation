@@ -62,6 +62,7 @@ if TYPE_CHECKING:
     from src.engine.cadence import SystemCadence
 
 from src.core.state import EntityState, AuthoritativeState
+from src.core.enums import EntityRole
 from src.core.updates import (
     StrategicUpdate, InventoryUpdate, EntityUpdate, StateUpdate,
     CombatUpdate, BiologicalUpdate, IdentityUpdate
@@ -90,6 +91,7 @@ from src.systems.strategic_systems.detour import DetourSuggestionSystem
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
 from src.core.dirty import get_dirty_set
 from src.systems.strategic_systems.belief import BeliefCycleSystem
+from src.systems.strategic_systems.town_targeting import nearest_town_tile
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -331,11 +333,6 @@ class StrategicIntelligenceSystem:
             try: object.__setattr__(state, "_has_hostiles_or_dead_cache", has_hostiles_or_dead)
             except: pass
 
-        town_target = state.town_center
-        if not town_target and state.town_tiles:
-            town_pos = next(iter(state.town_tiles))
-            town_target = (float(town_pos[0]), float(town_pos[1]))
-
         # Evaluation of routine blockers and concerns must run across candidate entities
         # Logic ID: PERF-006 (Dirty Entity Tracking for specific sub-phases, but routine pass is global)
         fast_hits = 0
@@ -381,6 +378,7 @@ class StrategicIntelligenceSystem:
                                 nav_changed = True
                 if not nav_changed and not proj_resolved:
                     if not (curr_proj_id and project and project.status == ProjectStatus.ACTIVE and active_obj and getattr(active_obj, 'target_position', None) is not None):
+                        town_target = nearest_town_tile(state.town_tiles, entity.navigation.position) or state.town_center
                         if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target and entity.navigation.target != town_target:
                             if ent_upd:
                                 refined_entity_updates[e_id] = replace(ent_upd,
@@ -616,6 +614,7 @@ class StrategicIntelligenceSystem:
                                  ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
             
             if not has_nav_update:
+                town_target = nearest_town_tile(state.town_tiles, entity.navigation.position) or state.town_center
                 if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target:
                     if entity.navigation.target != town_target:
                         has_nav_update = True
@@ -1377,6 +1376,22 @@ class StrategicIntelligenceSystem:
                         leads_remove=memory_upd.leads_remove
                     )
 
+                # career_change: complete once the entity's role is no longer CITIZEN -- a
+                # discrete, verifiable, one-shot transition (unlike REGION_STABILIZATION, which
+                # has no completion check anywhere in this scan and is left open-ended
+                # deliberately -- see plan.md Design Decision 6). Without this check the project
+                # would permanently occupy the entity's max_active_projects budget after a
+                # successful transition.
+                if project.kind == ProjectKind.CAREER_CHANGE and entity.identity.role != EntityRole.CITIZEN:
+                    return StrategicUpdate(
+                        projects_add_or_update=[replace(project, status=ProjectStatus.COMPLETED)],
+                        current_project_id_set="",
+                        current_objective_id_set="",
+                        boredom_delta=boredom_upd,
+                        leads_add_or_update=memory_upd.leads_add_or_update,
+                        leads_remove=memory_upd.leads_remove
+                    )
+
                 # resolve_blocker timeout (TCK-20260817-STANDARD-HUNGER-STARVED-BY-RESOLVE-
                 # BLOCKER-FLAT-UTILITY): unlike hunger/fatigue/harvesting/shopping above, this
                 # GoalKind has no real completion condition -- some blockers (e.g. an "access"
@@ -1622,6 +1637,37 @@ class StrategicIntelligenceSystem:
                     # analysis. utility is normalized onto the 100-ceiling scale for tier-5
                     # competition only; ProjectState.score is read back through
                     # _score_scale_max()'s 2.9-ceiling scale once kind is a real ProjectKind.
+                    score=best_candidate.metadata.get("raw_score", 0.0),
+                )
+            elif best_candidate.kind == GoalKind.OCCUPATION_CHANGE:
+                # AC1/AC2: materialize a CITIZEN -> SHOPKEEPER/WORKER/GUARD transition win into a
+                # real ProjectKind-typed project, using proj_kind/obj_kind/dest_role already
+                # resolved by OccupationChangeGoalScorer and carried in metadata.
+                region_id = best_candidate.metadata.get("region_id")
+                dest_role = best_candidate.metadata.get("dest_role")
+                proj_kind = best_candidate.metadata.get("proj_kind")
+                obj_kind = best_candidate.metadata.get("obj_kind")
+                obj = ObjectiveState(
+                    id=f"obj_career_{region_id}_t{current_tick}",
+                    kind=obj_kind,
+                    target=f"role_{dest_role}",
+                    target_position=best_candidate.target_pos,
+                    status=ObjectiveStatus.ACTIVE,
+                )
+                candidate_proj = ProjectState(
+                    id=f"project_career_{region_id}_t{current_tick}",
+                    kind=proj_kind,
+                    status=ProjectStatus.ACTIVE,
+                    objectives=[obj],
+                    active_objective_id=obj.id,
+                    lock_until_tick=min(current_tick + 10, current_tick + 50),
+                    created_tick=current_tick,
+                    # NEVER best_candidate.utility -- see region_stabilization_scorer.py's own
+                    # New Finding #7 comment and
+                    # TCK-20260811-INTERRUPTION-BYPASS-RETENTION-MARGIN-SCALE-BUG;
+                    # _score_scale_max() (intelligence.py:108-126) classifies
+                    # ProjectKind.CAREER_CHANGE onto the 2.9-ceiling scale, not the 100-ceiling
+                    # utility scale.
                     score=best_candidate.metadata.get("raw_score", 0.0),
                 )
             else:

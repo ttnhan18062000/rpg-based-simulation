@@ -312,7 +312,7 @@ domain) before attempting #7's parallelization, not after. Same value the existi
 declarations already provide (`RPG-INFRA-155/156/157`) — this is the same pattern, one level
 finer-grained, where the existing pattern doesn't yet reach. Note the existing file's own comment:
 these are "declarative only — no runtime enforcement," enforced by test, not mechanically — worth
-deciding whether the 37-phase version should be held to a higher (mechanical) standard, or the same
+deciding whether the 39-phase version should be held to a higher (mechanical) standard, or the same
 test-guarded one.
 
 ## Section G — Additional external-note proposals, not verified this pass

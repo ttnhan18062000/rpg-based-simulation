@@ -50,21 +50,41 @@ Each milestone epic below cites specific idea numbers; look them up in the atlas
 
 ## Milestones
 
-### M1 — Quick Wins & Housekeeping (in flight)
+### M1 — Quick Wins & Housekeeping (DONE)
 
-**Tracking**: 21 ordered child tickets already exist under `tickets/todos/m1-quick-wins/`, with
-`tickets/todos/m1-quick-wins/SEQUENCE.md` as the executable ordering authority — see
-`docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md` for the full breakdown. 19 of the 20 originally
-scoped ideas produced tickets (idea 7 and idea 17 were each split into two tickets by responsibility); idea
-16 was resolved by investigation with no behavior-change ticket needed.
+**Tracking**: no separate `TCK-...-EPIC-RPG-M1-QUICK-WINS` ticket was created — the batch is tracked
+directly via the ticket folder `tickets/todos/m1-quick-wins/` (`SEQUENCE.md` sets implementation order),
+draining into `tickets/done/` one ticket at a time as each clears its own full standard-tier pipeline
+(`docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md` remains the scope source, 20 ideas / 21
+tickets, and now also carries the full Implementation Summary). All work landed on a single branch,
+`m1-quick-wins`, one commit per ticket, PR'd as
+[#90](https://github.com/ttnhan18062000/rpg-based-simulation/pull/90) — all 13 CI checks green as of
+2026-08-31; merge is a human call, not yet landed.
 
-No dependencies on anything else in this roadmap, and nothing in M1 blocks on anything else. **This batch is
-actively being implemented; this review pass deliberately made no changes to its scope, tickets, or
-sequence** — the temporal-axis proposal's own integration plan (§13) assigns temporal-contract
+<!-- IMPLEMENT-EPIC-STATUS:BEGIN -->
+**Live progress** (auto-updated by implement-epic, last run: 2026-08-29T07:48:23Z): 22/22 tickets done, 0 remaining. Tracking: m1-quick-wins batch COMPLETE -- folder archived to tickets/done/m1-quick-wins/ (SEQUENCE.md preserved).
+<!-- IMPLEMENT-EPIC-STATUS:END -->
+
+`tickets/working_log.csv`'s bottom rows have the one-paragraph summary of each ticket actually landed,
+in order.
+
+No dependencies on anything else in this roadmap, and nothing in M1 blocks on anything else. **This batch
+completed all 22 tickets** (2026-08-29/30, see `tickets/done/m1-quick-wins/` and this section's own
+live-progress block above) — the temporal-axis proposal's own integration plan (§13) assigns temporal-contract
 responsibility starting at M2, never at M1, and the update-request's plan-owner review found M1's ticket
-content sound as-is (only the surrounding documentation was stale). The confirmed final-permadeath lifecycle
-defect (`PERMADEATH` bypasses `LifecycleSystem.resolve_lifecycle()`'s deactivation check) is a related
-correctness bug but is **not** part of this 21-ticket batch — see M5 below for its owner.
+content sound as-is (only the surrounding documentation was stale, since fixed). The confirmed final-permadeath
+lifecycle defect (`PERMADEATH` bypasses `LifecycleSystem.resolve_lifecycle()`'s deactivation check) is a related
+correctness bug but was **not** part of this batch — see M5 below for its owner.
+
+**Post-batch hardening (2026-08-30/31)**: the 22-ticket batch's own real behavior changes (2 flags
+flipped ON by default, several previously-dormant mechanisms wired live) surfaced real findings once
+exercised for real — a SimQ corpus-wide grade-anchor staleness (never re-baselined against the batch's
+own changes), a real pipeline crash (`ProgressionConversionPhase` + `CanonicalStateHasher`), a
+cooperation-offer retry/duplicate-burst bug pair, an `EventRecorder` shutdown-ordering hazard, and
+several smaller gate-checker/tooling gaps. All were investigated and fixed as their own separate,
+traceable tickets (not folded into the M1 batch's own scope) — see
+`docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md`'s Implementation Summary for the full list.
+This is also the work that produced PR #90's first-ever green CI run.
 
 ### M2 — Foundational Systems (gated on M1's flag-governance decision, idea 9)
 
@@ -405,10 +425,16 @@ by this section — it is a pointer for whoever next scopes M2-M9 ticket-level w
   again as a side note. Idea 37's race-diversity corpus gap (no registry dimension tracks race composition
   per world, M9's own finding) still has no owner. Neither blocks anything shipping today; both will keep
   resurfacing as a caveat on someone else's finding until addressed directly.
-- **One possible duplicate system, not yet reconciled.** `get_age_bracket()`'s string-based age tiers
-  (young/adult/elder, `cohort.py`) and `LifeStage`'s enum (CHILD/ADULT/ELDER, `IdentityComponent`) may be two
-  overlapping representations of the same concept — flagged in M9, not resolved there or here. Whoever scopes
-  idea 20 should settle this first, not discover it mid-ticket.
+- **Resolved: duplicate-representation question (`get_age_bracket()` vs. `LifeStage`).**
+  `TCK-20260824-LIFE-STAGE-TRANSITIONS` settled this: `get_age_bracket()`'s string-based age tiers
+  (young/adult/elder, `cohort.py`, cohort-level aggregate demographics) and `LifeStage`'s enum
+  (CHILD/ADULT/ELDER, `IdentityComponent`, per-entity strategic cognition) stay two separate
+  vocabularies for two genuinely different subsystems/consumers — not merged or reconciled into one
+  representation. Only the underlying numeric age boundaries (3000/7000 ticks) are aligned:
+  `LifeStageService.get_stage_for_age()` (`src/ai/life_stage.py`) duplicates those literals rather
+  than importing `cohort.py`. See `docs/parity_ledger/combat_movement.yaml::COMB-313` and
+  `stored_artifacts/TCK-20260824-LIFE-STAGE-TRANSITIONS/investigation.md` (Design Decision 1) for
+  the full rationale.
 - **Four incompatible tick/calendar conventions confirmed live in code, not two — and the current age math is
   broken by 2-3 orders of magnitude, quantified.** (2026-08-29, `TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY`.)
   The temporal-axis proposal's §9.1 named two conflicting conventions (`docs/mechanics/05_world_evolution.md`'s
