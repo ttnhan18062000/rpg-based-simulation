@@ -14,11 +14,11 @@ if TYPE_CHECKING:
     )
     from src.engine.policy import GovernorPolicy
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
-from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage
+from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage, ItemInstance
 from src.core.models.social import RelationshipRole
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode, DiplomaticState
-from src.core.update_models.inventory import InventoryUpdate
+from src.core.update_models.inventory import InventoryUpdate, ItemInstanceUpdate
 from src.core.update_models.quests import QuestUpdate
 from src.core.update_models.resources import ResourceTransferIntent
 from src.core.dirty import DirtySet
@@ -902,6 +902,8 @@ class StateUpdate:
     node_updates: Dict[int, ResourceNodeUpdate] = field(default_factory=dict)
     ground_items_add_or_update: List[GroundItemState] = field(default_factory=list)
     ground_items_remove: List[int] = field(default_factory=list)
+    item_instances_add_or_update: List[ItemInstance] = field(default_factory=list)
+    item_instance_updates: Dict[int, ItemInstanceUpdate] = field(default_factory=dict)
     corpses_add_or_update: List[CorpseState] = field(default_factory=list)
     corpses_remove: List[int] = field(default_factory=list)
     scars_add_or_update: List[LocalScarState] = field(default_factory=list)
@@ -929,6 +931,7 @@ class StateUpdate:
     processed_transaction_ids: List[str] = field(default_factory=list)
     next_node_id_set: Optional[int] = None
     next_entity_id_set: Optional[int] = None
+    next_item_instance_id_set: Optional[int] = None
     dirty_set: Optional[DirtySet] = None
     force_full_scan: bool = False
     sub_phase_costs: Dict[str, float] = field(default_factory=dict)
@@ -967,7 +970,10 @@ class StateUpdate:
                 not self.quest_registry_remove and not self.quest_status_updates and
                 not self.quest_opportunity_reward_intents and
                 not self.information_providers_update and
-                not self.faction_updates)
+                not self.faction_updates and
+                not self.item_instances_add_or_update and
+                not self.item_instance_updates and
+                self.next_item_instance_id_set is None)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -1006,6 +1012,7 @@ class StateUpdate:
         new_groups_remove = set(self.groups_remove)
         new_ground_items_add_or_update = list(self.ground_items_add_or_update)
         new_ground_items_remove = set(self.ground_items_remove)
+        new_item_instances_add_or_update = list(self.item_instances_add_or_update)
         new_corpses_add_or_update = list(self.corpses_add_or_update)
         new_corpses_remove = set(self.corpses_remove)
         new_chest_add_or_update = list(self.chest_add_or_update)
@@ -1021,12 +1028,14 @@ class StateUpdate:
         new_quest_opportunity_reward_intents = list(self.quest_opportunity_reward_intents)
         new_information_providers_update = dict(self.information_providers_update)
         new_faction_updates = list(self.faction_updates)
+        new_item_instance_updates = dict(self.item_instance_updates)
 
         # Single values
         maturity = self.maturity_set
         calamity = self.last_calamity_tick_set
         node_id = self.next_node_id_set
         ent_id = self.next_entity_id_set
+        item_inst_id = self.next_item_instance_id_set
         rng = self.rng_checkpoint
         pressure = self.pressure_signals_set
         mode = self.current_mode_set
@@ -1072,6 +1081,7 @@ class StateUpdate:
             new_groups_remove.update(other.groups_remove)
             new_ground_items_add_or_update.extend(other.ground_items_add_or_update)
             new_ground_items_remove.update(other.ground_items_remove)
+            new_item_instances_add_or_update.extend(other.item_instances_add_or_update)
             new_corpses_add_or_update.extend(other.corpses_add_or_update)
             new_corpses_remove.update(other.corpses_remove)
             new_chest_add_or_update.extend(other.chest_add_or_update)
@@ -1089,12 +1099,15 @@ class StateUpdate:
             new_faction_updates.extend(
                 fu for fu in other.faction_updates if not fu.is_noop()
             )
+            for iid, upd in other.item_instance_updates.items():
+                new_item_instance_updates[iid] = upd
 
             # Single values
             if other.maturity_set is not None: maturity = other.maturity_set
             if other.last_calamity_tick_set is not None: calamity = other.last_calamity_tick_set
             if other.next_node_id_set is not None: node_id = other.next_node_id_set
             if other.next_entity_id_set is not None: ent_id = other.next_entity_id_set
+            if other.next_item_instance_id_set is not None: item_inst_id = other.next_item_instance_id_set
             if other.rng_checkpoint: rng = other.rng_checkpoint
             if other.pressure_signals_set is not None: pressure = other.pressure_signals_set
             if other.current_mode_set is not None: mode = other.current_mode_set
@@ -1149,6 +1162,9 @@ class StateUpdate:
             quest_opportunity_reward_intents=new_quest_opportunity_reward_intents,
             information_providers_update=new_information_providers_update,
             faction_updates=new_faction_updates,
+            item_instances_add_or_update=new_item_instances_add_or_update,
+            item_instance_updates=new_item_instance_updates,
+            next_item_instance_id_set=item_inst_id,
         )
 
     def compact(self) -> StateUpdate:

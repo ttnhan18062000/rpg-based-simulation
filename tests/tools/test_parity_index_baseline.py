@@ -138,11 +138,15 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # M1-batch and its follow-up tickets added several new entries with real `test_path`s from the
     # start and gave existing entries real `test_path`s during the m1-quick-wins/main merge
     # conflict resolution — e.g. PROG-121, INFRA-397/398/399, WORLD-117, SOC-245's cooldown
-    # evidence — a 10-entry net drop, re-verified via a fresh live scan).
+    # evidence — a 10-entry net drop, re-verified via a fresh live scan), then to 1321
+    # (TCK-20260831-ITEM-INSTANCE-HISTORY, 2026-09-01: TOWN-128 gained a real `test_path` citing
+    # tests/unit/resource/test_item_instance_history.py::test_town_128_item_kind_identity_unaffected_by_item_instance,
+    # previously `null` — a P0 gap flagged by that ticket's own investigation and closed per its
+    # AC #4).
     # The substantive check is the assertion above (manifest's own count matches a fresh,
     # independent live scan) — this second assertion only guards against a silent, unexplained
     # large swing.
-    assert live_missing == 1322
+    assert live_missing == 1321
 
 
 # ---------------------------------------------------------------------------

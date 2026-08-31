@@ -13,7 +13,7 @@ from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole, DiplomaticState
 from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
-from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent
+from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent, ItemInstance, AcquiredMethod
 from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
 from src.core.immutability import shallow_freeze
 from src.core.self_model import SelfModelBundle
@@ -1146,6 +1146,7 @@ class AuthoritativeState:
     camps: Dict[str, CampState] = field(default_factory=dict)
     regions: Dict[str, RegionState] = field(default_factory=dict)
     local_scars: Dict[int, LocalScarState] = field(default_factory=dict)
+    item_instances: Dict[int, ItemInstance] = field(default_factory=dict)
     _readonly_cache: Any = field(default=None, repr=False, compare=False)
     _readonly_entities_cache: Any = field(default=None, repr=False, compare=False)
     _spatial_grid_cache: Any = field(default=None, repr=False, compare=False)
@@ -1238,6 +1239,10 @@ class AuthoritativeState:
             int_n_keys = [k for k in self.resource_nodes.keys() if isinstance(k, int)]
             if int_n_keys and self.next_node_id <= max(int_n_keys):
                 object.__setattr__(self, "next_node_id", max(int_n_keys) + 1)
+        if self.item_instances:
+            int_i_keys = [k for k in self.item_instances.keys() if isinstance(k, int)]
+            if int_i_keys and self.next_item_instance_id <= max(int_i_keys):
+                object.__setattr__(self, "next_item_instance_id", max(int_i_keys) + 1)
         object.__setattr__(self, "_has_hostiles_or_dead_cache", has_hostile)
         object.__setattr__(self, "_has_contracts_cache", has_contracts)
         # Ensure town_entity_ids is frozen if in readonly mode
@@ -1248,6 +1253,7 @@ class AuthoritativeState:
     processed_transaction_ids: List[str] = field(default_factory=list)
     next_node_id: int = 1000
     next_entity_id: int = 1
+    next_item_instance_id: int = 1
 
     def to_readonly(self) -> AuthoritativeState:
         """Returns a read-only view of the entire world state."""
@@ -1277,6 +1283,7 @@ class AuthoritativeState:
             quest_registry=ReadOnlyDict(self.quest_registry),
             information_providers=ReadOnlyDict(self.information_providers),
             factions=ReadOnlyDict(self.factions),
+            item_instances=ReadOnlyDict(self.item_instances),
             groups=shallow_freeze(self.groups),
             terrain=shallow_freeze(self.terrain),
             global_resources=shallow_freeze(self.global_resources),

@@ -126,3 +126,33 @@ Every entity has a private, persistent storage unit located at their home positi
 *   **Capacity**: **32 slots** and **200.0 kg** (double a standard inventory).
 *   **Security**: Only the owning entity can deposit or withdraw from their home storage.
 *   **Sync**: Storage is only accessible when the entity is physically present at their home coordinates.
+
+---
+
+## 7. Per-Physical-Item Identity: `ItemInstance` Ownership History
+
+Added by TCK-20260831-ITEM-INSTANCE-HISTORY. `ItemStack` (Section 2) tracks *quantity by
+`item_id`* only — it has no notion of a specific physical object's provenance, and this Chapter
+had zero prior mentions of item identity/instance concepts before this section. `ItemInstance`
+introduces a strictly additive, opt-in layer on top of it for items whose individual history
+matters.
+
+*   **Scope**: Only items explicitly flagged `significant=True` at creation receive an
+    `ItemInstance` record. All other items continue through the ordinary `ItemStack` path
+    unchanged — this law does not apply to the general case.
+*   **Additivity Law**: `ItemInstance` never replaces or substitutes for a significant item's
+    `ItemStack` entry. Both representations coexist: `ItemStack` still governs quantity/weight/
+    slot conservation (Sections 1–2); `ItemInstance` separately tracks that one physical item's
+    ownership lineage. A stack-merge of same-`item_id` `ItemStack`s (e.g. two same-`item_id`
+    significant items ending up in one inventory) must never collapse their distinct
+    `ItemInstance` records into one.
+*   **Ownership Transfer Law**: Transferring a significant item (sale, gift, loot pickup by a new
+    owner) appends the new owner's entity id to `owner_history` — **append-only**; prior owners
+    are never overwritten or dropped. This is a typed `ItemInstanceUpdate`, and the append may
+    only be committed by `ApplyPath.apply_generation` — no other code path may mutate a live
+    `ItemInstance`.
+*   **No Automatic Classification**: `significant` is a caller-supplied boolean with no default
+    and no rarity/tier/value heuristic behind it. As of this writing, zero production call sites
+    set `significant=True` — the trigger criteria for what makes an item "significant" is an
+    explicit open design decision, not defined by this law. The feature is gated by
+    `ENABLE_ITEM_INSTANCE_HISTORY` (default OFF).

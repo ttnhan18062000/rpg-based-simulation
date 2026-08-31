@@ -125,6 +125,13 @@ class FeatureFlagManager:
             # default-OFF policy applies -- brand-new mechanic, no corpus profile turns this on
             # and no SHADOW-validation history exists.
             "ENABLE_HABIT_BIAS_ACTION_STYLE": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260831-ITEM-INSTANCE-HISTORY): registers the
+            # ItemInstance ownership-history scaffolding (ItemInstanceService.maybe_create_instance,
+            # src/core/inventory.py). DEV-002 default-OFF policy applies -- brand-new mechanic, no
+            # production call site passes significant=True yet (significance_flag trigger criteria is an
+            # explicit open design decision, not invented by this ticket -- see ticket AC #5), no corpus
+            # profile turns this on and no SHADOW-validation history exists.
+            "ENABLE_ITEM_INSTANCE_HISTORY": FeatureMode.OFF,
         }
         if overrides:
             for k, v in overrides.items():
