@@ -108,6 +108,25 @@ def test_knowledge_index_targets_use_python3_variable():
         )
 
 
+def test_knowledge_index_targets_set_hf_hub_etag_timeout():
+    """Guards TCK-20260831-KNOWLEDGE-INDEX-HF-HUB-TIMEOUT: knowledge-index/knowledge-index-update
+    must export HF_HUB_ETAG_TIMEOUT=120 alongside SSL_CERT_FILE/SSL_CERT_DIR, so a fresh
+    environment's first cold model download survives this network's per-request latency instead of
+    huggingface_hub giving up on its own default 10s timeout (previously mis-filed as a hard
+    network block by TCK-20260826-KNOWLEDGE-INDEX-PYTHON3-FIX's own live-verification note).
+    """
+    text = _makefile_text()
+
+    for target in ("knowledge-index", "knowledge-index-update"):
+        recipe = _extract_recipe(text, target)
+        assert "HF_HUB_ETAG_TIMEOUT=120" in recipe, (
+            f"expected {target}'s recipe to export HF_HUB_ETAG_TIMEOUT=120"
+        )
+        assert "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt" in recipe, (
+            f"expected {target}'s recipe to still export SSL_CERT_FILE (unrelated to this fix)"
+        )
+
+
 def test_dashboard_serve_recipe_has_no_npm_or_node():
     text = _makefile_text()
 
