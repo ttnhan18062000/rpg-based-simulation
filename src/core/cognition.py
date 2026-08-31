@@ -12,9 +12,6 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Tuple
 
 from src.core.self_model import (
-    SelfAwarenessComponent,
-    NeedInterpretationComponent,
-    CapabilityEstimateComponent,
     KnowledgeModelComponent,
     KnowledgeFact,
     UnknownFact
@@ -116,23 +113,6 @@ class RecoveryState:
 
 
 @dataclass(frozen=True, slots=True)
-class SelfModel:
-    """Subjective awareness and physical state interpretation."""
-    awareness: SelfAwarenessComponent = field(default_factory=SelfAwarenessComponent)
-    needs: NeedInterpretationComponent = field(default_factory=NeedInterpretationComponent)
-    capability: CapabilityEstimateComponent = field(default_factory=CapabilityEstimateComponent)
-    recovery: RecoveryState = field(default_factory=RecoveryState)
-
-    def to_canonical_dict(self) -> Dict[str, Any]:
-        return {
-            "awareness": self.awareness.to_canonical_dict(),
-            "needs": self.needs.to_canonical_dict(),
-            "capability": self.capability.to_canonical_dict(),
-            "recovery": self.recovery.to_canonical_dict()
-        }
-
-
-@dataclass(frozen=True, slots=True)
 class RiskModel:
     """Phase 13 Risk Beliefs Shell."""
     risks: Mapping[str, Any] = field(default_factory=dict)
@@ -211,7 +191,6 @@ class EmotionalModel:
 class SubjectiveModel:
     """Subjective model grouping perception, self, knowledge, risk, time, and emotion."""
     perception: PerceptionModel = field(default_factory=PerceptionModel)
-    self: SelfModel = field(default_factory=SelfModel)
     knowledge: KnowledgeModelComponent = field(default_factory=KnowledgeModelComponent)
     risk: RiskModel = field(default_factory=RiskModel)
     time: TemporalModel = field(default_factory=TemporalModel)
@@ -220,7 +199,6 @@ class SubjectiveModel:
     def to_canonical_dict(self) -> Dict[str, Any]:
         return {
             "perception": self.perception.to_canonical_dict(),
-            "self": self.self.to_canonical_dict(),
             "knowledge": self.knowledge.to_canonical_dict(),
             "risk": self.risk.to_canonical_dict(),
             "time": self.time.to_canonical_dict(),

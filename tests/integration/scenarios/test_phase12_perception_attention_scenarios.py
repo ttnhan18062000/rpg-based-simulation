@@ -1,8 +1,7 @@
 import pytest
 from dataclasses import replace
 from src.core.state import EntityState
-from src.core.cognition import CognitionModel, SubjectiveModel, SelfModel
-from src.core.self_model import NeedInterpretationComponent
+from src.core.self_model import SelfModelBundle, NeedInterpretationComponent
 from src.domains.perception.salience import WorldSignal
 from src.domains.perception.phase import PerceptionUpdatePhase
 
@@ -10,9 +9,8 @@ def test_injured_entity_notices_healing_first():
     # Setup entity with dominant_need == "healing"
     entity = EntityState(id=1, kind="HERO")
     needs = NeedInterpretationComponent(dominant_need="healing")
-    self_model = SelfModel(needs=needs)
-    subjective = SubjectiveModel(self=self_model)
-    entity = replace(entity, cognition=CognitionModel(subjective=subjective))
+    self_model = replace(SelfModelBundle(), needs=needs)
+    entity = replace(entity, self_model=self_model)
 
     signals = [
         # Clue gets standard salience score

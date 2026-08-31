@@ -20,3 +20,16 @@ This document establishes the official ownership mapping between core `Cognition
 | **`RelationshipModel`** | `cognition.relationships` | `src/domains/cooperation/` |
 | **`DerivedViews`** | *N/A (Computed transiently)* | `src/views/` |
 | **`DecisionTrace`** | *N/A (Observability pipeline)* | `src/observability/` |
+
+## Decisions
+
+### `SelfModel` / `SubjectiveModel.self` — CUT (TCK-20260831-DEAD-COGNITION-SCHEMA-DECISION, 2026-09-01)
+
+`core/cognition.py::SelfModel` (formerly `cognition.subjective.self`) was removed. It had zero
+production constructions anywhere in `src/` — the only writer path for entity self-model data is
+the real, distinct `entity.self_model` field (`SelfModelBundle`, `src/core/self_model.py`), owned by
+`src/cognition/` (`SelfModelUpdatePhase`, gated by `ENABLE_SELF_MODEL_COGNITION`) and already
+documented in `docs/cognition/README.md`. `entity.self_model` and `entity.cognition` are genuinely
+distinct `EntityState` fields with confusingly identical component class names
+(`SelfAwarenessComponent`, `NeedInterpretationComponent`, `CapabilityEstimateComponent`) — do not
+reintroduce a second self-model representation under `cognition.py`.

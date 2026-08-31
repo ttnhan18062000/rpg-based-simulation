@@ -1,21 +1,18 @@
 import pytest
 from dataclasses import replace
 from src.core.state import EntityState
-from src.core.cognition import CognitionModel, EmotionalModel, RecoveryState, SelfModel, HabitMemory, MemoryModel
+from src.core.cognition import CognitionModel, EmotionalModel, RecoveryState, HabitMemory, MemoryModel
 from src.domains.emotion.emotion_service import EmotionUpdateService
 from src.domains.emotion.recovery_service import RecoveryReadinessService
 from src.domains.emotion.habit_service import HabitBiasService
 from src.domains.emotion.opportunity_cost import OpportunityCostEvaluator
 
 def test_near_death_prevents_immediate_retry():
-    # Setup entity with near_death recovery state
+    # Setup near_death recovery state
     recovery = RecoveryState(recent_near_death=True, retry_readiness=0.1)
-    self_model = SelfModel(recovery=recovery)
-    cognition = CognitionModel(subjective=replace(CognitionModel().subjective, self=self_model))
-    entity = replace(EntityState(id=1, kind="HERO"), cognition=cognition)
 
     # Check retry readiness
-    assert RecoveryReadinessService.is_ready_to_retry(entity.cognition.subjective.self.recovery, current_tick=10) is False
+    assert RecoveryReadinessService.is_ready_to_retry(recovery, current_tick=10) is False
 
 def test_repeated_failure_causes_route_switch():
     # Base frustration increases

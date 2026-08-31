@@ -3802,3 +3802,29 @@
   test_path: tests/unit/strategic/test_redirection.py::test_redirection_enforce_targets_nearest_town_tile_not_arbitrary_sort
   divergence_note: null
   support_boundary: null
+- id: STRAT-261
+  text: AttentionFocusService.get_attention_focus()'s dominant-need read (src/domains/perception/service.py)
+    now targets the real, wired entity.self_model.needs.dominant_need (SelfModelBundle,
+    src/core/self_model.py, populated by SelfModelUpdatePhase behind ENABLE_SELF_MODEL_COGNITION)
+    instead of the dead entity.cognition.subjective.self.needs.dominant_need path
+    -- the latter's container, core/cognition.py::SelfModel/SubjectiveModel.self,
+    was deleted (zero production writers found) as part of TCK-20260831-DEAD-COGNITION-SCHEMA-DECISION.
+    cognition_accessors.py's three accessors (get_self_awareness, get_need_interpretation,
+    get_capability_estimate) were repointed the same way, from the dead entity.cognition.subjective.self.*
+    path to the real entity.self_model.* path (self_awareness/needs/capabilities).
+    docs/simulation/domains/perception_contract.md's Inputs table updated to match.
+    PerceptionUpdatePhase (AttentionFocusService's only pipeline-side caller) itself
+    has zero call sites in AuthoritativeApplyPipeline.refine() -- unaffected by and
+    separate from this fix; tracked as a disclosed follow-up gap, not addressed here.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/perception/service.py (AttentionFocusService.get_attention_focus()),
+    src/core/self_model.py (SelfModelBundle.needs/self_awareness/capabilities), src/cognition/self_model_phase.py
+    (SelfModelUpdatePhase writer), src/core/cognition.py (SelfModel/SubjectiveModel.self
+    removed), src/core/cognition_accessors.py (get_self_awareness/get_need_interpretation/get_capability_estimate
+    repointed to entity.self_model.*)
+  proof_type: parity
+  test_path: tests/integration/domains/perception/test_phase12_perception_phase.py::test_attention_focus_reads_real_self_model_dominant_need
+  divergence_note: null
+  support_boundary: null
