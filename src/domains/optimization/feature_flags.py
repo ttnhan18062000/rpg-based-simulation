@@ -118,6 +118,13 @@ class FeatureFlagManager:
             # first time. DEV-002 default-OFF policy applies -- brand-new mechanic, no corpus
             # profile turns this on and no SHADOW-validation history exists.
             "ENABLE_CREATURE_TERRITORY_LIFECYCLE": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260831-HABIT-BIAS-WIRING): wires HabitBiasService's
+            # record_outcome/apply_habit_bias into a real per-tick writer (HabitBiasUpdatePhase)
+            # and both live ActionStyle read sites (tactical.py kiting distance, movement.py
+            # opportunity-attack suppression on EVASIVE retreat) for the first time. DEV-002
+            # default-OFF policy applies -- brand-new mechanic, no corpus profile turns this on
+            # and no SHADOW-validation history exists.
+            "ENABLE_HABIT_BIAS_ACTION_STYLE": FeatureMode.OFF,
         }
         if overrides:
             for k, v in overrides.items():

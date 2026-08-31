@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-30
+last_verified: 2026-08-31
 ---
 
 # Chapter 4: Strategic Cognition
@@ -440,6 +440,33 @@ of `ActionStyle`'s own consumption in `tactical.py` (an `AGGRESSIVE` effective-r
 `EVASIVE` "reposition instead of attacking" stub) were traced and found to be genuinely dead code
 independent of this fix — a local variable computed but never read by the function's own
 downstream branches — disclosed, not fixed here (out of this ticket's own scope).
+
+**Live habit-biased re-derivation** (`TCK-20260831-HABIT-BIAS-WIRING`): both of the above dormant-
+but-wired consumers can now optionally re-derive `ActionStyle` at decision-time from
+*habit-biased* bravery instead of only the frozen construction-time value, gated behind
+`ENABLE_HABIT_BIAS_ACTION_STYLE` (default OFF — bit-identical to the construction-time value
+above while off). When the flag is ON, **both** `TacticalDecisionSystem.evaluate_entity_intent()`
+(`src/engine/tactical.py`, feeding the SKIRMISHER kiting-distance branch) **and**
+`MovementSystem.resolve_move()` (`src/engine/movement.py`, feeding the EVASIVE opportunity-attack
+suppression check) independently call `HabitBiasService.apply_habit_bias(entity.cognition.memory.habit,
+["combat_engagement"], entity.identity.personality.bravery)`, clamp the result to `[0.0, 1.0]`,
+and re-run it through the same `get_action_style_for_bravery()` thresholds documented above. Both
+sites were wired together in the same change deliberately — wiring only one would create a
+flag-ON inconsistency between the two real `ActionStyle` consumers named above, which otherwise
+read the identical frozen construction-time field.
+
+The `combat_engagement` habit pattern that feeds this re-derivation is written by a new
+`HabitBiasUpdatePhase` (`src/domains/emotion/habit_phase.py`), placed in the authoritative
+mutation pipeline strictly after `memory_update` and before `self_model`, which calls
+`HabitBiasService.record_outcome(habit, "combat_engagement", success=False)` for every
+`combat_loss`-kind trigger event on the entity's tick. **No win/victory `WorldEventCategory`
+exists yet**, so `record_outcome` can currently only ever be invoked with `success=False` — the
+`combat_engagement` pattern is therefore a **one-way monotonic decay from its 0.5 neutral baseline
+toward the 0.0 floor** as an entity accumulates combat losses, with no code path that can
+currently raise it back up. This is not a bug; it is the accurate current behavior and must be
+revisited if a win/victory trigger is ever added. See
+`docs/simulation/domains/emotion_contract.md` for the full `HabitBiasService` contract and event
+wiring table.
 
 ### 6.4 Personality Bias by Route Family
 

@@ -489,7 +489,23 @@ class TacticalDecisionSystem:
         # Tactical Role Logic
         role = entity.combat.tactical_role
         style = entity.combat.action_style
-        
+        # TCK-20260831-HABIT-BIAS-WIRING: live re-derivation from habit-biased bravery, flag-
+        # gated OFF by default (bit-identical to the frozen construction-time field above).
+        # Must stay synchronized with the identical re-derivation in movement.py:resolve_move --
+        # wiring only one creates a flag-ON inconsistency between the two real ActionStyle
+        # consumers named by SUB-381.
+        flags = getattr(state, "feature_flags", None) or {}
+        if flags.get("ENABLE_HABIT_BIAS_ACTION_STYLE", "OFF") == "ON":
+            from src.domains.emotion.habit_service import HabitBiasService, HABIT_PATTERN_COMBAT_ENGAGEMENT
+            from src.content_semantics.personality import get_action_style_for_bravery
+            effective_bravery = HabitBiasService.apply_habit_bias(
+                entity.cognition.memory.habit,
+                [HABIT_PATTERN_COMBAT_ENGAGEMENT],
+                entity.identity.personality.bravery,
+            )
+            effective_bravery = max(0.0, min(1.0, effective_bravery))
+            style = get_action_style_for_bravery(effective_bravery)
+
         # 5.1 Cover Seeking and Low HP Retreat (Task 4.2/4.3)
         # Ranged threats trigger cover seeking for Skirmishers or wounded entities
         # Logic ID: COMB-268 (Low HP affects tactical choice)
