@@ -3704,3 +3704,17 @@
     computed and gate applied)
   test_path: tests/unit/domains/cooperation/test_phase7_cooperation_decision_service.py::test_cooperation_offer_creation_blocked_while_pending_offer_unexpired
   divergence_note: null
+- id: SOC-256
+  text: 'ClanState schema shape: a new frozen, slots dataclass (clan_id, name,
+    member_entity_ids, home_region_ids, tension_level, leader_entity_id, founded_tick,
+    dissolved_tick) reusing FactionState''s exact serialization pattern
+    (to_canonical_dict/from_dict, cache-guarded, sorted collection fields). Schema-only:
+    not wired into AuthoritativeState, StateUpdate, or apply.py in this ticket -- lifecycle
+    actions (formation/dissolution/succession) are owned by a separate, later ticket
+    (idea 40/M4).'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (ClanState class, added alongside FactionState)
+  test_path: tests/unit/domains/faction/test_clan_state.py::test_clan_state_serialization_round_trip
+  divergence_note: null

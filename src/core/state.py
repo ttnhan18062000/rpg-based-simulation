@@ -646,6 +646,49 @@ class FactionState:
 
 
 @dataclass(frozen=True, slots=True)
+class ClanState:
+    """Authoritative durable state for a named clan (schema-only; idea 40/M4 owns lifecycle)."""
+    clan_id: str
+    name: str = ""
+    member_entity_ids: Tuple[int, ...] = ()
+    home_region_ids: Tuple[str, ...] = ()
+    tension_level: float = 0.0
+    leader_entity_id: Optional[int] = None
+    founded_tick: int = 0
+    dissolved_tick: Optional[int] = None
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res: Dict[str, Any] = {
+            "clan_id": self.clan_id,
+            "name": self.name,
+            "member_entity_ids": sorted(self.member_entity_ids),
+            "home_region_ids": sorted(self.home_region_ids),
+            "tension_level": self.tension_level,
+            "leader_entity_id": self.leader_entity_id,
+            "founded_tick": self.founded_tick,
+            "dissolved_tick": self.dissolved_tick,
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "ClanState":
+        return cls(
+            clan_id=d["clan_id"],
+            name=d.get("name", ""),
+            member_entity_ids=tuple(d.get("member_entity_ids", [])),
+            home_region_ids=tuple(d.get("home_region_ids", [])),
+            tension_level=float(d.get("tension_level", 0.0)),
+            leader_entity_id=d.get("leader_entity_id"),
+            founded_tick=int(d.get("founded_tick", 0)),
+            dissolved_tick=d.get("dissolved_tick"),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class EquipmentComponent:
     """Currently equipped items per slot."""
     slots: Dict[EquipSlot, str | None] = field(default_factory=dict)

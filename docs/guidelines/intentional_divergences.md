@@ -39,6 +39,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
 | **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
 | **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
+| **Social/Clan** | Clan Succession-on-Death | **Intentional Gameplay Change** | DEFERRED |
 
 ---
 
@@ -1392,6 +1393,35 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `tests/integration/domains/memory/test_memory_update_phase_apply_trigger_events.py`
   (`trigger_events` list, multi-entity matching by `entity_id`).
 - **Status**: ACTIVE
+
+### 2.48 Clan Succession-on-Death Diverges from Group's Dissolve-on-Death (TCK-20260831-CLAN-STATE-SCHEMA)
+- **Subsystem**: Social/Clan
+- **Old Behavior**: `Group` (the existing multi-entity coordination unit) unconditionally
+  dissolves when its leader dies or deactivates — `GroupSystem.update_groups()`,
+  `src/systems/world_systems/groups.py:93-108` (Logic IDs SOC-176/SOC-189), no re-election or
+  succession branch exists on leader death.
+- **New Behavior**: `ClanState`'s schema is designed to support succession instead of
+  dissolution on leader death — `leader_entity_id` is an independently reassignable field, not
+  structurally tied to member-removal logic the way Group's dissolution is. This ticket
+  (TCK-20260831-CLAN-STATE-SCHEMA) adds only the schema shape; it does not implement any
+  succession-execution logic, event, or lifecycle action.
+- **Rationale**: **Intentional Gameplay Change**. The brainstorm doc's own stated rationale for
+  `dissolved_tick` is explicitly framed around avoiding "cross-generational Clans silently
+  break[ing]" (`docs/brainstorm/rpg_expected_schemas.html:617`), implying Clans are meant to be
+  multi-generational political entities, unlike Group's small, disposable adventuring parties.
+  A `leader_entity_id` that can never be reassigned without dissolving the whole Clan would give
+  no signal beyond what `dissolved_tick` alone already provides.
+- **Verification**: `tests/unit/domains/faction/test_clan_state.py::test_clan_state_does_not_touch_authoritative_state`
+  — documents the current gap-state itself (schema exists, `leader_entity_id` is an
+  independently reassignable field, but no wiring into `AuthoritativeState`/`StateUpdate` and no
+  succession-execution logic exists yet), matching the `test_v2_service_refs_assembly_is_documented_gap`
+  precedent for a DEFERRED entry (§2.19).
+- **Unblock condition**: Idea 40/M4 implements the actual succession-on-death execution logic
+  (leader-liveness check + reassignment branch, analogous to but structurally distinct from
+  `GroupSystem.update_groups()`'s dissolution branch, since it must branch to reassignment
+  instead of removal). When that lands, update this entry's `Verification` field with the real
+  test path and flip the Summary Table Status from `DEFERRED` to `RATIFIED`.
+- **Status**: DEFERRED
 
 ---
 
