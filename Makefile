@@ -330,12 +330,12 @@ content-inventory: ## Regenerate config/content_inventory.json from real data/co
 
 knowledge-index: ## Build local semantic knowledge index (developer env only — not CI)
 	@echo "Building knowledge index (requires: pip install -e '.[knowledge]')..."
-	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs \
+	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs HF_HUB_ETAG_TIMEOUT=120 \
 	  $(PYTHON3) \
 	  tools/knowledge_search.py build
 
 knowledge-index-update: ## Incremental reindex — only re-embeds changed/new files (fast)
-	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs \
+	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs HF_HUB_ETAG_TIMEOUT=120 \
 	  $(PYTHON3) \
 	  tools/knowledge_search.py build --incremental
 

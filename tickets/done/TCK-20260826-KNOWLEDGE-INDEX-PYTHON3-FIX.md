@@ -160,6 +160,14 @@ exact failure condition the ticket describes):
   an empty-command shell error. This is the exact class of unrelated failure the ticket
   anticipates as acceptable evidence that python3 discovery itself now works.
 
+**Correction, 2026-08-31 (`TCK-20260831-KNOWLEDGE-INDEX-HF-HUB-TIMEOUT`):** "network-blocked in this
+sandbox" above was wrong. The connection to `huggingface.co` is real (routed through a corporate
+TLS-inspecting proxy) but slow (~375KB/s, 1-3.5s round-trip per request) — thin against
+`huggingface_hub`'s default 10s per-request timeout across a cold model download's ~10 file/ETag
+checks, which is what actually produced this `OSError`. Fixed by adding `HF_HUB_ETAG_TIMEOUT=120` to
+both `knowledge-index` targets; live-verified the model downloads successfully (465s) and
+`search_docs` returns real results once given that timeout budget.
+
 ## Files Changed
 - `Makefile` — `knowledge-index` and `knowledge-index-update` targets now use `$(PYTHON3)`
 - `tests/tools/test_dashboard_makefile_targets.py` — added
