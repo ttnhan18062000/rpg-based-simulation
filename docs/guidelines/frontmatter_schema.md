@@ -49,7 +49,8 @@ Applies to all files under `docs/` that are not in an archive subdirectory.
 | `layer` | yes | enum | see LAYER_VALUES |
 | `authority` | yes | enum | see AUTHORITY_VALUES |
 | `audience` | yes | enum | see AUDIENCE_VALUES |
-| `tags` | no | list of strings | free-form |
+| `tags` | no | list of strings | free-form unless `tags_enforced: true` — see `docs/guidelines/tag_taxonomy.md` |
+| `tags_enforced` | no | boolean | opt-in tag-enforcement marker for this file; default false/absent (see `docs/guidelines/tag_taxonomy.md`'s Enforcement section) |
 | `last_verified` | conditional | ISO 8601 date | required when `status: authoritative` |
 
 **Conditional rule:** `last_verified` is required when `status` is `authoritative`.
@@ -159,7 +160,7 @@ All values listed here must match the constants in `tools/validate_frontmatter.p
 ### LAYER_VALUES
 `mechanics`, `engine`, `testing`, `simulation`, `ai`, `architecture`, `core`, `ticket`,
 `artifact`, `guidelines`, `observability`, `performance`, `combat`, `compliance`,
-`strategy`, `systems`, `economy`, `world`, `misc`
+`strategy`, `systems`, `economy`, `world`, `misc`, `frontend`
 
 ### AUTHORITY_VALUES
 `P0`, `P1`, `P2`
