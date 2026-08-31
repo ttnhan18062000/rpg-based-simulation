@@ -51,7 +51,15 @@ validation step ahead of the highest-risk content item (see the roadmap's Sequen
    step, not a design decision — keep it small and throwaway, not a general lab-adoption ticket.
 1. **Idea 43 — Seed `population_cohorts` at world-compile time.** Cited by 5 later ideas; also the single
    highest-uncertainty item in the whole roadmap per Cross-Cutting Risk — the guard it activates has never
-   fired against real data in any compiled world.
+   fired against real data in any compiled world. **Temporal-axis caution
+   (`TCK-20260831-TEMPORAL-CALENDAR-AUTHORITY`, decided):** this idea seeds population *counts* into
+   `demographics/cohort.py`'s existing age-bracket buckets (young/adult/elder) — it does not need to fix
+   the buckets themselves. But that investigation confirmed the current tick-based thresholds
+   (`<3000`/`<7000`/`≥7000`) produce a 4.17-day maximum lifespan under the now-settled 2,400-ticks/day
+   calendar authority, and the accepted decision is to migrate age representation to fantasy-year units
+   as its own future ticket — not yet implemented. Scope idea 43's seeding logic against today's real
+   bucket boundaries, but do not treat those specific tick values as permanent or build anything that
+   would need non-trivial rework once that migration lands.
 2. **Idea 14 — Species Classification layer.** Cross-Cutting Risk resolved the prior open question: this
    does NOT duplicate the already-shipped `TCK-20260810-COGNITION-PROFILE-ADVENTURE-ELIGIBILITY` work — a
    genuinely separate system, safe to ticket as scoped. **Content note:** the obvious anchor for
