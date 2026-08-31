@@ -272,6 +272,23 @@ cohort/ecology interval, the universal duration formula's real code, the metamor
 deliberately out of this decision ticket's scope and awaits a dedicated implementation ticket, most likely
 inside M3 once its own ticketing starts (see M3's epic doc).
 
+**§9.3/§9.4 conflicts — code-verified, 2026-08-31** (direct read of `src/engine/domain/core_actions.py` and
+`src/domains/demographics/cohort.py`, not a summary):
+- **§9.3 instantaneous routine — confirmed as described.** `CoreActions.execute_survival()`'s `SLEEP`/`EAT`
+  handlers apply the full restorative delta (`sleep_debt_delta=-20.0`, `hunger_delta=-40.0`) and
+  `readiness_delta=-100.0` in one resolution; `BiologicalUpdate`/`EntityState` carry no start-tick, progress,
+  or interruption fields for either action. No sustained-activity state exists anywhere in the biological
+  domain today — matches the proposal's characterization exactly, not just directionally.
+- **§9.4 cadence-duration conflation — confirmed with a concrete instance the proposal itself doesn't name.**
+  `PopulationCohort.birth_rate`/`mortality_rate` (`src/domains/demographics/cohort.py`) are documented and
+  coded as "per 200-tick cycle," i.e. the rate's meaning is defined directly in terms of
+  `DemographicCycleService`'s evaluation cadence (`COHORT_INTERVAL=200`), not a calendar-independent duration
+  unit. The calendar-authority decision above already named `COHORT_INTERVAL=200` as a settled sub-cadence
+  (a tick-length question) — this is a distinct, still-open problem: even with tick length settled, a
+  0.02 birth-rate-per-200-ticks does not yet have a stated real-world meaning (e.g. births/year), so it
+  cannot yet be checked for plausibility or migrated cleanly if the cadence itself changes. Relevant directly
+  to M2's idea 43 (see that epic doc) since idea 43 is the ticket that will next touch these exact fields.
+
 **Suggested integration, by milestone** (per the proposal's §13 — read as a lens on M2-M9, not a new
 milestone or a mandate to start now):
 - M2 features should declare their timing/spatial-reach assumptions (population, Place transitions,
