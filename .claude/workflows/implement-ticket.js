@@ -886,23 +886,6 @@ const combinedFilesChanged = Array.from(new Set([
   ...(docUpdate.docs_updated || []).map(d => d.path),
 ]))
 
-// Files-Changed-omission early warning (TCK-20260831-HOTFIX-FILES-CHANGED-DOC-OMISSION-EARLY-
-// WARNING, agent-monitoring/retro/RETRO-2026-W35.md § "What to change?" item 1): a ticket's own
-// `## Files Changed` prose section omitting a path Document-Update genuinely touched was
-// previously only caught reactively by done-checker at Verify, 6+ phases later. combinedFilesChanged
-// already has everything needed to catch it right here — orchestrator-run, deterministic, no
-// agent() call needed (mirrors the doc-staleness gate's own shape just below). Warning only, never
-// blocking or gate-failing — do NOT auto-edit the ticket's Files Changed prose.
-const filesChangedSectionText = await bash(
-  `awk '/^## Files Changed/{flag=1; next} /^## /{flag=0} flag' "${ticketInfo.ticket_path}" 2>/dev/null || true`
-)
-const missingFromFilesChanged = (docUpdate.docs_updated || [])
-  .map(d => d.path)
-  .filter(p => !filesChangedSectionText.includes(p))
-if (missingFromFilesChanged.length > 0) {
-  log(`⚠ Files Changed section in ${ticketInfo.ticket_path} does not yet list ${missingFromFilesChanged.length} doc(s) Document-Update just touched: ${missingFromFilesChanged.join(', ')} — add them now rather than waiting for Verify to catch it.`)
-}
-
 const docStalenessFilesArgs = combinedFilesChanged.map(f => `"${f}"`).join(' ')
 const docsToUpdateArgs = docsToUpdate.length > 0 ? `--docs-to-update ${docsToUpdate.map(d => `"${d}"`).join(' ')}` : ''
 const docStalenessOutput = await bash(
@@ -916,6 +899,23 @@ if (docStalenessMarkerIndex !== -1) {
 }
 const docStalenessFailure = docStalenessResults && docStalenessResults.find(r => r.status === 'FAIL')
 const docStalenessAdvisory = docStalenessResults && docStalenessResults.find(r => r.status === 'ADVISORY')
+
+// Files-Changed-omission early warning (TCK-20260831-HOTFIX-FILES-CHANGED-DOC-OMISSION-EARLY-
+// WARNING, agent-monitoring/retro/RETRO-2026-W35.md § "What to change?" item 1): a ticket's own
+// `## Files Changed` prose section omitting a path Document-Update genuinely touched was
+// previously only caught reactively by done-checker at Verify, 6+ phases later. combinedFilesChanged
+// already has everything needed to catch it right here — orchestrator-run, deterministic, no
+// agent() call needed (mirrors the doc-staleness gate's own shape just above). Warning only, never
+// blocking or gate-failing — do NOT auto-edit the ticket's Files Changed prose.
+const filesChangedSectionText = await bash(
+  `awk '/^## Files Changed/{flag=1; next} /^## /{flag=0} flag' "${ticketInfo.ticket_path}" 2>/dev/null || true`
+)
+const missingFromFilesChanged = (docUpdate.docs_updated || [])
+  .map(d => d.path)
+  .filter(p => !filesChangedSectionText.includes(p))
+if (missingFromFilesChanged.length > 0) {
+  log(`⚠ Files Changed section in ${ticketInfo.ticket_path} does not yet list ${missingFromFilesChanged.length} doc(s) Document-Update just touched: ${missingFromFilesChanged.join(', ')} — add them now rather than waiting for Verify to catch it.`)
+}
 
 // No reason_code — DOC_STALENESS_BLOCKED already disambiguates 1:1 like TAGS_NOT_REGISTERED/
 // PARITY_INCOMPLETE/SECURITY_BLOCKED/TESTS_FAILED/CONFLICTS_DETECTED; reason_code exists only for
