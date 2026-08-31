@@ -1,0 +1,537 @@
+{
+  "_meta": {
+    "description": "Per-idea cross-document index across the RPG brainstorm corpus. atlas_anchor is always present (all 66 ideas); schema_anchor is present only for ideas with a durable-state schema section; scorecard_anchor is present for ideas 1-65 (66 was never scored); wiring_map_mentions is a raw text-mention count, not a clickable anchor, since that document has no reliable 1:1 per-idea anchor structure (see TCK-20260831-BRAINSTORM-IDEA-CROSS-INDEX's investigation.md).",
+    "regenerate_with": "make brainstorm-idea-index",
+    "generated": "2026-08-31T04:32:24Z"
+  },
+  "ideas": [
+    {
+      "idea": 1,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-1",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-1",
+      "wiring_map_mentions": 5,
+      "milestone": "M1"
+    },
+    {
+      "idea": 2,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-2",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-2",
+      "wiring_map_mentions": 0,
+      "milestone": "M2"
+    },
+    {
+      "idea": 3,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-3",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-3",
+      "wiring_map_mentions": 2,
+      "milestone": "M1"
+    },
+    {
+      "idea": 4,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-4",
+      "schema_anchor": "rpg_expected_schemas.html#schema-4",
+      "scorecard_anchor": "design_merit_scorecard.html#score-4",
+      "wiring_map_mentions": 1,
+      "milestone": "M2"
+    },
+    {
+      "idea": 5,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-5",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-5",
+      "wiring_map_mentions": 1,
+      "milestone": "M2"
+    },
+    {
+      "idea": 6,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-6",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-6",
+      "wiring_map_mentions": 1,
+      "milestone": "M2"
+    },
+    {
+      "idea": 7,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-7",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-7",
+      "wiring_map_mentions": 2,
+      "milestone": "M1"
+    },
+    {
+      "idea": 8,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-8",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-8",
+      "wiring_map_mentions": 1,
+      "milestone": "M2"
+    },
+    {
+      "idea": 9,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-9",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-9",
+      "wiring_map_mentions": 0,
+      "milestone": "M1"
+    },
+    {
+      "idea": 10,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-10",
+      "schema_anchor": "rpg_expected_schemas.html#schema-10",
+      "scorecard_anchor": "design_merit_scorecard.html#score-10",
+      "wiring_map_mentions": 1,
+      "milestone": "M1"
+    },
+    {
+      "idea": 11,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-11",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-11",
+      "wiring_map_mentions": 2,
+      "milestone": "M2"
+    },
+    {
+      "idea": 12,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-12",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-12",
+      "wiring_map_mentions": 1,
+      "milestone": "M1"
+    },
+    {
+      "idea": 13,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-13",
+      "schema_anchor": "rpg_expected_schemas.html#schema-13",
+      "scorecard_anchor": "design_merit_scorecard.html#score-13",
+      "wiring_map_mentions": 3,
+      "milestone": "M1"
+    },
+    {
+      "idea": 14,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-14",
+      "schema_anchor": "rpg_expected_schemas.html#schema-14",
+      "scorecard_anchor": "design_merit_scorecard.html#score-14",
+      "wiring_map_mentions": 0,
+      "milestone": "M2"
+    },
+    {
+      "idea": 15,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-15",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-15",
+      "wiring_map_mentions": 1,
+      "milestone": "M1"
+    },
+    {
+      "idea": 16,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-16",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-16",
+      "wiring_map_mentions": 1,
+      "milestone": "M1"
+    },
+    {
+      "idea": 17,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-17",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-17",
+      "wiring_map_mentions": 2,
+      "milestone": "M1"
+    },
+    {
+      "idea": 18,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-18",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-18",
+      "wiring_map_mentions": 1,
+      "milestone": "M1"
+    },
+    {
+      "idea": 19,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-19",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-19",
+      "wiring_map_mentions": 0,
+      "milestone": "M1"
+    },
+    {
+      "idea": 20,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-20",
+      "schema_anchor": "rpg_expected_schemas.html#schema-20",
+      "scorecard_anchor": "design_merit_scorecard.html#score-20",
+      "wiring_map_mentions": 3,
+      "milestone": "M1"
+    },
+    {
+      "idea": 21,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-21",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-21",
+      "wiring_map_mentions": 0,
+      "milestone": "M1"
+    },
+    {
+      "idea": 22,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-22",
+      "schema_anchor": "rpg_expected_schemas.html#schema-22",
+      "scorecard_anchor": "design_merit_scorecard.html#score-22",
+      "wiring_map_mentions": 2,
+      "milestone": "M1"
+    },
+    {
+      "idea": 23,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-23",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-23",
+      "wiring_map_mentions": 0,
+      "milestone": "M2"
+    },
+    {
+      "idea": 24,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-24",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-24",
+      "wiring_map_mentions": 1,
+      "milestone": "M1"
+    },
+    {
+      "idea": 25,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-25",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-25",
+      "wiring_map_mentions": 1,
+      "milestone": "M1"
+    },
+    {
+      "idea": 26,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-26",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-26",
+      "wiring_map_mentions": 1,
+      "milestone": "M1"
+    },
+    {
+      "idea": 27,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-27",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-27",
+      "wiring_map_mentions": 0,
+      "milestone": "M2"
+    },
+    {
+      "idea": 28,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-28",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-28",
+      "wiring_map_mentions": 0,
+      "milestone": "M2"
+    },
+    {
+      "idea": 29,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-29",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-29",
+      "wiring_map_mentions": 1,
+      "milestone": "M1"
+    },
+    {
+      "idea": 30,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-30",
+      "schema_anchor": "rpg_expected_schemas.html#schema-30",
+      "scorecard_anchor": "design_merit_scorecard.html#score-30",
+      "wiring_map_mentions": 0,
+      "milestone": "M2"
+    },
+    {
+      "idea": 31,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-31",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-31",
+      "wiring_map_mentions": 0,
+      "milestone": "M3"
+    },
+    {
+      "idea": 32,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-32",
+      "schema_anchor": "rpg_expected_schemas.html#schema-32",
+      "scorecard_anchor": "design_merit_scorecard.html#score-32",
+      "wiring_map_mentions": 4,
+      "milestone": "M3"
+    },
+    {
+      "idea": 33,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-33",
+      "schema_anchor": "rpg_expected_schemas.html#schema-33",
+      "scorecard_anchor": "design_merit_scorecard.html#score-33",
+      "wiring_map_mentions": 2,
+      "milestone": "M3"
+    },
+    {
+      "idea": 34,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-34",
+      "schema_anchor": "rpg_expected_schemas.html#schema-34",
+      "scorecard_anchor": "design_merit_scorecard.html#score-34",
+      "wiring_map_mentions": 3,
+      "milestone": "M3"
+    },
+    {
+      "idea": 35,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-35",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-35",
+      "wiring_map_mentions": 2,
+      "milestone": "M2"
+    },
+    {
+      "idea": 36,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-36",
+      "schema_anchor": "rpg_expected_schemas.html#schema-36",
+      "scorecard_anchor": "design_merit_scorecard.html#score-36",
+      "wiring_map_mentions": 1,
+      "milestone": "M2"
+    },
+    {
+      "idea": 37,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-37",
+      "schema_anchor": "rpg_expected_schemas.html#schema-37",
+      "scorecard_anchor": "design_merit_scorecard.html#score-37",
+      "wiring_map_mentions": 1,
+      "milestone": "M2"
+    },
+    {
+      "idea": 38,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-38",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-38",
+      "wiring_map_mentions": 1,
+      "milestone": "M3"
+    },
+    {
+      "idea": 39,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-39",
+      "schema_anchor": "rpg_expected_schemas.html#schema-39",
+      "scorecard_anchor": "design_merit_scorecard.html#score-39",
+      "wiring_map_mentions": 0,
+      "milestone": "M6"
+    },
+    {
+      "idea": 40,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-40",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-40",
+      "wiring_map_mentions": 1,
+      "milestone": "M4"
+    },
+    {
+      "idea": 41,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-41",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-41",
+      "wiring_map_mentions": 0,
+      "milestone": "M4"
+    },
+    {
+      "idea": 42,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-42",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-42",
+      "wiring_map_mentions": 0,
+      "milestone": "M1"
+    },
+    {
+      "idea": 43,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-43",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-43",
+      "wiring_map_mentions": 1,
+      "milestone": "M2"
+    },
+    {
+      "idea": 44,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-44",
+      "schema_anchor": "rpg_expected_schemas.html#schema-44",
+      "scorecard_anchor": "design_merit_scorecard.html#score-44",
+      "wiring_map_mentions": 0,
+      "milestone": "M4"
+    },
+    {
+      "idea": 45,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-45",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-45",
+      "wiring_map_mentions": 1,
+      "milestone": "M4"
+    },
+    {
+      "idea": 46,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-46",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-46",
+      "wiring_map_mentions": 1,
+      "milestone": "M4"
+    },
+    {
+      "idea": 47,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-47",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-47",
+      "wiring_map_mentions": 2,
+      "milestone": "M4"
+    },
+    {
+      "idea": 48,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-48",
+      "schema_anchor": "rpg_expected_schemas.html#schema-48",
+      "scorecard_anchor": "design_merit_scorecard.html#score-48",
+      "wiring_map_mentions": 0,
+      "milestone": "M2"
+    },
+    {
+      "idea": 49,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-49",
+      "schema_anchor": "rpg_expected_schemas.html#schema-49",
+      "scorecard_anchor": "design_merit_scorecard.html#score-49",
+      "wiring_map_mentions": 1,
+      "milestone": "M4"
+    },
+    {
+      "idea": 50,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-50",
+      "schema_anchor": "rpg_expected_schemas.html#schema-50",
+      "scorecard_anchor": "design_merit_scorecard.html#score-50",
+      "wiring_map_mentions": 0,
+      "milestone": "M4"
+    },
+    {
+      "idea": 51,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-51",
+      "schema_anchor": "rpg_expected_schemas.html#schema-51",
+      "scorecard_anchor": "design_merit_scorecard.html#score-51",
+      "wiring_map_mentions": 1,
+      "milestone": "M4"
+    },
+    {
+      "idea": 52,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-52",
+      "schema_anchor": "rpg_expected_schemas.html#schema-52",
+      "scorecard_anchor": "design_merit_scorecard.html#score-52",
+      "wiring_map_mentions": 0,
+      "milestone": "M4"
+    },
+    {
+      "idea": 53,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-53",
+      "schema_anchor": "rpg_expected_schemas.html#schema-53",
+      "scorecard_anchor": "design_merit_scorecard.html#score-53",
+      "wiring_map_mentions": 0,
+      "milestone": "M5"
+    },
+    {
+      "idea": 54,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-54",
+      "schema_anchor": "rpg_expected_schemas.html#schema-54",
+      "scorecard_anchor": "design_merit_scorecard.html#score-54",
+      "wiring_map_mentions": 0,
+      "milestone": "M5"
+    },
+    {
+      "idea": 55,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-55",
+      "schema_anchor": "rpg_expected_schemas.html#schema-55",
+      "scorecard_anchor": "design_merit_scorecard.html#score-55",
+      "wiring_map_mentions": 0,
+      "milestone": "M5"
+    },
+    {
+      "idea": 56,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-56",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-56",
+      "wiring_map_mentions": 1,
+      "milestone": "M6"
+    },
+    {
+      "idea": 57,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-57",
+      "schema_anchor": "rpg_expected_schemas.html#schema-57",
+      "scorecard_anchor": "design_merit_scorecard.html#score-57",
+      "wiring_map_mentions": 2,
+      "milestone": "M5"
+    },
+    {
+      "idea": 58,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-58",
+      "schema_anchor": "rpg_expected_schemas.html#schema-58",
+      "scorecard_anchor": "design_merit_scorecard.html#score-58",
+      "wiring_map_mentions": 0,
+      "milestone": "M5"
+    },
+    {
+      "idea": 59,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-59",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-59",
+      "wiring_map_mentions": 0,
+      "milestone": "M6"
+    },
+    {
+      "idea": 60,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-60",
+      "schema_anchor": "rpg_expected_schemas.html#schema-60",
+      "scorecard_anchor": "design_merit_scorecard.html#score-60",
+      "wiring_map_mentions": 0,
+      "milestone": "M5"
+    },
+    {
+      "idea": 61,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-61",
+      "schema_anchor": null,
+      "scorecard_anchor": "design_merit_scorecard.html#score-61",
+      "wiring_map_mentions": 0,
+      "milestone": "M4"
+    },
+    {
+      "idea": 62,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-62",
+      "schema_anchor": "rpg_expected_schemas.html#schema-62",
+      "scorecard_anchor": "design_merit_scorecard.html#score-62",
+      "wiring_map_mentions": 0,
+      "milestone": "M5"
+    },
+    {
+      "idea": 63,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-63",
+      "schema_anchor": "rpg_expected_schemas.html#schema-63",
+      "scorecard_anchor": "design_merit_scorecard.html#score-63",
+      "wiring_map_mentions": 1,
+      "milestone": "M5"
+    },
+    {
+      "idea": 64,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-64",
+      "schema_anchor": "rpg_expected_schemas.html#schema-64",
+      "scorecard_anchor": "design_merit_scorecard.html#score-64",
+      "wiring_map_mentions": 0,
+      "milestone": "M4"
+    },
+    {
+      "idea": 65,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-65",
+      "schema_anchor": "rpg_expected_schemas.html#schema-65",
+      "scorecard_anchor": "design_merit_scorecard.html#score-65",
+      "wiring_map_mentions": 0,
+      "milestone": "M6"
+    },
+    {
+      "idea": 66,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-66",
+      "schema_anchor": "rpg_expected_schemas.html#schema-66",
+      "scorecard_anchor": null,
+      "wiring_map_mentions": 4,
+      "milestone": "M8"
+    }
+  ]
+}
