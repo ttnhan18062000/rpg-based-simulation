@@ -16,6 +16,7 @@ from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
 from src.core.skills import SKILL_REGISTRY
 from src.engine.rpg_depth import WoundService
+from src.cognition.capability_estimate import CapabilityEstimateService, CapabilityContext
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -391,9 +392,20 @@ class TacticalDecisionSystem:
 
         # 4. Target Selection with Focus Fire
         group = state.groups.get(entity.identity.group_id) if entity.identity.group_id is not None else None
-        def target_score(h: EntityState) -> Tuple[float, int, float, int, int]:
+        def target_score(h: EntityState) -> Tuple[float, int, float, float, float, int]:
             dist = abs(h.navigation.position[0] - entity.navigation.position[0]) + abs(h.navigation.position[1] - entity.navigation.position[1])
-            
+
+            # Logic ID: COMB-316 -- subjective capability estimate, ad hoc/read-only
+            # (mirrors TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING's pattern; see
+            # docs/cognition/capability_and_knowledge_contract.md). entity.self_model.capabilities
+            # stays empty in production -- this call never writes back.
+            cap_component = CapabilityEstimateService.estimate(
+                entity,
+                context=CapabilityContext.for_combat(enemy_ids=[h.kind]),
+            )
+            cap_estimate = cap_component.estimates.get(f"combat.enemy_type.{h.kind}")
+            capability_confidence = cap_estimate.estimate if cap_estimate is not None else 0.0
+
             # Domain 7 Hardening: Trust-based focus fire bias
             group_bias = 1.0
             if group and group.shared_target_id == h.id:
@@ -423,7 +435,7 @@ class TacticalDecisionSystem:
                 - entity_pressures.duty_pressure * 0.3,
             )
 
-            return (group_bias, is_current_target, h.combat.hp, dist * pressure_dist_mod, h.id)
+            return (group_bias, is_current_target, -capability_confidence, h.combat.hp, dist * pressure_dist_mod, h.id)
 
         logger.debug(f"DEBUG: entity {entity.id} evaluating targets. Group target: {group.shared_target_id if group else None}")
         for h in hostiles:

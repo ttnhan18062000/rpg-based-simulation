@@ -83,9 +83,9 @@ This document is the canonical record of intentional behavior shifts in `src` co
 ### 2.6 Priority-Based Tactical Targeting
 - **Subsystem**: Tactical AI
 - **Old Behavior**: Nearest enemy was always selected.
-- **New Behavior**: Deterministic priority chain: `Lowest HP` > `Closest Distance` > `Lowest Entity ID`.
-- **Rationale**: **Contract Hardening**. Prevents target oscillation and improves AI effectiveness in focused firing.
-- **Verification**: `tests/parity/test_tactical_parity.py`
+- **New Behavior**: Deterministic priority chain: `Group Focus-Fire Bias` > `Target Stickiness/Hysteresis` > `Capability-Driven Priority` > `Lowest HP` > `Pressure-Scaled Distance` > `Lowest Entity ID`. As of `TCK-20260831-CAPABILITY-DRIVEN-TARGETING` (Logic ID COMB-316), the entity's own subjective `CapabilityEstimateService.estimate(...)` result against a hostile's specific `kind` is folded into the sort — a hostile the entity believes it is more likely to beat is prioritized higher, ahead of raw HP/distance but behind group cohesion and hysteresis. This is an ad-hoc, call-site-local, read-only call: `entity.self_model.capabilities.estimates` remains empty in production either way (`SelfModelUpdatePhase.apply()` still never passes `capability_context=`).
+- **Rationale**: **Contract Hardening** (original HP/distance/ID chain) + **Intentional Gameplay Change** (the capability-driven addition — a deliberate new prioritization heuristic, not a bug fix or further hardening of an existing rule). Prevents target oscillation, improves AI effectiveness in focused firing, and makes entities press fights they believe they can win.
+- **Verification**: `tests/unit/combat/test_capability_driven_targeting.py`
 
 ### 2.7 20% Retreat Threshold
 - **Subsystem**: Tactical AI

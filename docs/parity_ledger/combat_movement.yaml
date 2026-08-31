@@ -4091,3 +4091,24 @@
   test_path: tests/unit/combat/test_tactical_wound_scar_wiring.py
   divergence_note: null
   support_boundary: null
+- id: COMB-316
+  text: Tactical target-selection sort (TacticalDecisionSystem.target_score()) incorporates
+    a subjective capability-estimate signal -- an entity that reads itself as more
+    capable of beating a specific hostile kind prioritizes that hostile higher, ahead
+    of raw HP/distance but behind group focus-fire bias and target-selection hysteresis.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: TacticalDecisionSystem.target_score() (src/engine/tactical.py:395-438,
+    before this ticket carried no CapabilityEstimateService/CapabilityContext reference
+    at all -- confirmed zero hits via repo-wide grep) now calls CapabilityEstimateService.estimate(entity,
+    context=CapabilityContext.for_combat(enemy_ids=[h.kind])) per candidate hostile
+    and folds the resulting combat.enemy_type.<kind> estimate into the sort tuple
+    as -capability_confidence (line 438), negated so a higher subjective win-estimate
+    yields higher target priority. Ad-hoc, call-site-local, read-only -- entity.self_model.capabilities.estimates
+    remains empty in production (SelfModelUpdatePhase.apply() still never passes capability_context=,
+    unchanged by this ticket). Landed in TCK-20260831-CAPABILITY-DRIVEN-TARGETING.
+  proof_type: unit
+  test_path: tests/unit/combat/test_capability_driven_targeting.py
+  divergence_note: null
+  support_boundary: null
