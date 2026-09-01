@@ -1689,6 +1689,10 @@ The following legacy behaviors have been intentionally omitted or retired.
   (`src/town/class_hall.py`) — which does perform a real gold-affordability check but has no
   caller anywhere in `src/` — is explicitly left untouched; reconciling the two is a separate,
   future architectural cleanup, not required by any acceptance criterion here.
+  **Addendum (2026-09-02, TCK-20260902-CLASSHALL-DEAD-CODE)**: this deferred cleanup has now
+  landed — `src/town/class_hall.py` and its dedicated test (`test_class_hall_training` in
+  `tests/unit/world/test_recovery_class_hall.py`) were deleted after a re-confirmed zero-caller
+  grep across `src/`, `tests/`, and `tools/`. No further reconciliation is outstanding.
 - **Rationale**: **Intentional Gameplay Change**. The originating design source
   (`docs/brainstorm/rpg_feature_atlas.html`, idea 6, "Build teaching on trust, not new state")
   explicitly frames this as trust gating "instead of gold," and the pre-existing gold check
@@ -1703,4 +1707,5 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Status**: ACTIVE
 
 ---
-*Last updated: 2026-08-31 (DEV-007 added, TCK-20260831-TRUST-GATED-TEACHING).*
+*Last updated: 2026-09-02 (DEV-007 addendum, TCK-20260902-CLASSHALL-DEAD-CODE — deferred
+`ClassHallAction.train()` cleanup landed).*
