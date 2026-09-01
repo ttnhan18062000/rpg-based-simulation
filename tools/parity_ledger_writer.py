@@ -44,8 +44,10 @@ if str(_TOOLS_DIR) not in sys.path:
 
 from parity_index import DEFAULT_LEDGER_DIR, DEFAULT_DB_PATH, build  # noqa: E402
 
-# mirrors docs/parity_ledger/schema.json:9-11 (properties.id.pattern)
-_ID_PATTERN = re.compile(r"^[A-Z]+-[0-9]{3}$")
+# mirrors docs/parity_ledger/schema.json:9-11 (properties.id.pattern) -- byte-identical, must
+# never drift (TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT: the two fell out of sync once
+# already, silently rejecting live multi-segment shard ids like WORLD-DEMO-001)
+_ID_PATTERN = re.compile(r"^[A-Z]+(-[A-Z]+)*-[0-9]{3}$")
 
 
 class EntryValidationError(Exception):

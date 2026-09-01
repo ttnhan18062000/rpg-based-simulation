@@ -44,8 +44,11 @@ from parity_ledger_scan import CANONICAL_LEDGER_FILES  # noqa: E402
 _SRC_PATH_RE = re.compile(r"src/[\w\-./]+\.py")
 
 # mirrors tools/parity_ledger_writer.py's _ID_PATTERN (docs/parity_ledger/schema.json:9-11
-# properties.id.pattern), with prefix/suffix captured for arithmetic instead of a bare match
-_ID_PATTERN = re.compile(r"^([A-Z]+)-([0-9]{3})$")
+# properties.id.pattern), with the full non-numeric prefix and numeric suffix captured separately
+# for arithmetic instead of a bare match. The prefix group allows multi-segment prefixes (e.g.
+# WORLD-DEMO) so a shard mixing WORLD-NNN and WORLD-DEMO-NNN families is not silently collapsed
+# into one (TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT).
+_ID_PATTERN = re.compile(r"^([A-Z]+(?:-[A-Z]+)*)-([0-9]{3})$")
 
 
 def derive_mapping(ledger_dir: "Path | str" = "docs/parity_ledger") -> dict:
@@ -137,30 +140,40 @@ def next_available_id(shard_filename: str, ledger_dir="docs/parity_ledger") -> s
 
     IDs are not dense — a shard's highest entry_id suffix can sit well below its entry count — so
     this walks every id and tracks the maximum numeric suffix rather than using len(entries) + 1.
-    Prefix and zero-pad width are derived from the shard's own existing ids, never a hardcoded
-    shard->prefix table. Raises ValueError if the shard has no entry with an id matching
-    _ID_PATTERN — there is nothing to derive a prefix from.
+    A shard can mix more than one id family (e.g. world_dynamics.yaml holds bare WORLD-NNN
+    alongside multi-segment WORLD-DEMO-NNN and WORLD-CULT-NNN shard ids) -- max_suffix is tracked
+    per full prefix, never globally across families, so proposing the next id for one family can
+    never be skewed by a higher suffix that belongs to a different family. The reported family is
+    whichever prefix belongs to the last matching entry in the shard (its ids' own file order),
+    mirroring this function's pre-existing single-family behavior. Prefix and zero-pad width are
+    derived from the shard's own existing ids, never a hardcoded shard->prefix table. Raises
+    ValueError if the shard has no entry with an id matching _ID_PATTERN — there is nothing to
+    derive a prefix from.
     """
     path = Path(ledger_dir) / shard_filename
     entries = yaml.safe_load(path.read_text()) if path.exists() else []
     entries = entries or []
 
-    prefix = None
-    width = None
-    max_suffix = -1
+    max_suffix_by_prefix = {}
+    width_by_prefix = {}
+    last_prefix = None
     for entry in entries:
         match = _ID_PATTERN.match(entry.get("id") or "")
         if not match:
             continue
         entry_prefix, suffix_str = match.groups()
-        prefix = entry_prefix
-        width = len(suffix_str)
-        max_suffix = max(max_suffix, int(suffix_str))
+        width_by_prefix[entry_prefix] = len(suffix_str)
+        max_suffix_by_prefix[entry_prefix] = max(
+            max_suffix_by_prefix.get(entry_prefix, -1), int(suffix_str)
+        )
+        last_prefix = entry_prefix
 
-    if prefix is None:
+    if last_prefix is None:
         raise ValueError(f"{shard_filename} has no entry with an id matching {_ID_PATTERN.pattern!r}")
 
-    return f"{prefix}-{max_suffix + 1:0{width}d}"
+    width = width_by_prefix[last_prefix]
+    max_suffix = max_suffix_by_prefix[last_prefix]
+    return f"{last_prefix}-{max_suffix + 1:0{width}d}"
 
 
 def search_existing_entries(query: str, ledger_dir="docs/parity_ledger", shard_filename=None) -> list:

@@ -133,6 +133,16 @@ class TestValidateEntryRejections:
 
 class TestValidateEntryAcceptance:
 
+    @pytest.mark.parametrize(
+        "entry_id",
+        ["WORLD-DEMO-001", "WORLD-DEMO-006", "WORLD-CULT-001", "WORLD-CULT-003"],
+    )
+    def test_writer_accepts_multi_segment_ids(self, entry_id):
+        # TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT: these ids are already live in
+        # docs/parity_ledger/world_dynamics.yaml -- _ID_PATTERN must accept them, not just
+        # synthetic single-segment fixtures.
+        validate_entry(_entry(entry_id=entry_id))
+
     def test_writer_accepts_valid_verified_entry_and_writes_shard(self, tmp_path):
         ledger_dir = tmp_path / "ledger"
         ledger_dir.mkdir()
@@ -223,6 +233,30 @@ class TestParityUpdaterAgentDocUsesNewWritePath:
         assert "parity_ledger_writer" in text
         assert "write_entry" in text
         assert "python3 tools/parity_index.py build" in text
+
+
+_WORLD_DYNAMICS_LEDGER_PATH = (
+    Path(__file__).resolve().parent.parent.parent / "docs" / "parity_ledger" / "world_dynamics.yaml"
+)
+
+
+class TestValidateEntryAgainstRealMultiSegmentCorpus:
+    """TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT AC: validate_entry() must accept the
+    real, already-live WORLD-DEMO-*/WORLD-CULT-* entries in docs/parity_ledger/world_dynamics.yaml,
+    not just synthetic fixtures."""
+
+    def test_real_world_demo_and_world_cult_entries_pass_validate_entry(self):
+        entries = yaml.safe_load(_WORLD_DYNAMICS_LEDGER_PATH.read_text())
+        multi_segment_entries = [
+            entry for entry in entries
+            if entry.get("id", "").startswith(("WORLD-DEMO-", "WORLD-CULT-"))
+        ]
+        assert len(multi_segment_entries) >= 9, (
+            "expected the known WORLD-DEMO-001..006 and WORLD-CULT-001..003 entries to still be "
+            "present in world_dynamics.yaml"
+        )
+        for entry in multi_segment_entries:
+            validate_entry(entry)
 
 
 _INFRASTRUCTURE_LEDGER_PATH = (
