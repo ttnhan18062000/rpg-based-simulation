@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260831-METAMORPHIC-LAB-PILOT
-phase: open
+phase: done
 date: 2026-08-31
 tags: [testing]
 ---

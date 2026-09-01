@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260831-READINESS-SPEED-FORMULA
-phase: open
+phase: done
 date: 2026-08-31
 tags: [combat, progression]
 ---
@@ -15,7 +15,7 @@ tags: [combat, progression]
 Give readiness_speed a real agility-derived formula
 
 ## Status
-INPROGRESS (implementation complete, pending Verify/Finalize)
+DONE
 
 ## Tier
 standard

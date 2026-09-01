@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: core
 authority: P1
 audience: agent
 ticket_id: TCK-20260831-ITEM-INSTANCE-HISTORY
-phase: open
+phase: done
 date: 2026-08-31
 tags: [resource]
 ---
@@ -15,7 +15,7 @@ tags: [resource]
 Possessions With Personal History (ItemInstance ownership tracking)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

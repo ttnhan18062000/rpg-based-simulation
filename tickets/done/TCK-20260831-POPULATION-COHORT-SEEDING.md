@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260831-POPULATION-COHORT-SEEDING
-phase: open
+phase: done
 date: 2026-08-31
 tags: [world]
 ---
@@ -15,7 +15,7 @@ tags: [world]
 Seed population_cohorts at world-compile time
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

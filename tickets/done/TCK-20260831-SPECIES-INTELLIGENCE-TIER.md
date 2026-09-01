@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260831-SPECIES-INTELLIGENCE-TIER
-phase: open
+phase: done
 date: 2026-08-31
 tags: [content]
 ---
@@ -15,7 +15,7 @@ tags: [content]
 Add intelligence_tier to RaceDefinition (species classification layer)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260831-RACE-RELATIONS-MATRIX
-phase: open
+phase: done
 date: 2026-08-31
 tags: [faction, content, combat]
 ---
@@ -15,7 +15,7 @@ tags: [faction, content, combat]
 Author race-relations hostility matrix and wire it into legality/tactical scoring
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
