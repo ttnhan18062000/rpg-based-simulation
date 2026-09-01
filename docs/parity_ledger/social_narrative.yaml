@@ -3740,3 +3740,29 @@
   test_path: tests/unit/content_semantics/test_relation_race_projection.py
   divergence_note: null
   support_boundary: null
+- id: SOC-258
+  text: 'Teaching is gated on trust, not gold: CoreActions.execute_train() is a two-party
+    action (entity=teacher, payload[''target_id'']=student) that builds a transient
+    ContractState(kind=ContractKind.TEACH) and routes it through SocialAppraisalSystem.appraise_contract()
+    -- the student (target) appraises the teacher (entity), matching execute_recruit/execute_team_up/execute_trade''s
+    existing target-appraises-offer convention. _appraise_teach always accepts once
+    the shared hard-cancel prelude (trust_score<0.2 or bond.sentiment<-0.8) passes
+    -- that prelude is the entire gate, no additional utility/risk scoring. No gold
+    cost is charged: the previously-present, never-enforced 50-gold TRAIN_COST and
+    its ResourceTransferIntent are removed entirely (see docs/guidelines/intentional_divergences.md
+    DEV-007). On ACCEPTED, IdentityUpdate(recipes_learned=[skill_id]) is set directly
+    on the student''s EntityUpdate.identity (mirroring execute_allocate_ap''s direct-assignment
+    pattern), not nested in a ResourceTransferIntent. ContractService.get_project_mapping()
+    returns None for TEACH by construction -- it is not widened, so TEACH never materializes
+    a tier-5 strategic project.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src/engine/domain/core_actions.py (CoreActions.execute_train()); src/systems/social_systems/appraisal.py
+    (SocialAppraisalSystem._appraise_teach, appraise_contract()'s TEACH dispatch branch);
+    src/core/strategic.py (ContractKind.TEACH); src/core/enums.py (ReasonCode.TEACH_ACCEPTED/TEACH_DECLINED);
+    src/engine/domain/action_router.py (TRAIN branch passes neighbor_view/context).
+  proof_type: regression
+  test_path: tests/unit/social/test_teach.py::test_teach_refused_below_trust_hard_cancel_threshold
+  divergence_note: null
+  support_boundary: null

@@ -41,6 +41,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
 | **Social/Clan** | Clan Succession-on-Death | **Intentional Gameplay Change** | DEFERRED |
 | **Engine / Progression** | Post-Spawn `class_id` Mutation via `class_id_set` (DEV-006) | **Intentional Gameplay Change** | ACTIVE |
+| **Economy / Social** | Teaching Gated on Trust, Not Gold: TRAIN_COST Removed Entirely (DEV-007) | **Intentional Gameplay Change** | ACTIVE |
 
 ---
 
@@ -1660,5 +1661,46 @@ The following legacy behaviors have been intentionally omitted or retired.
   `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`, not corrected here).
 - **Status**: ACTIVE
 
+### DEV-007 — Teaching Gated on Trust, Not Gold: TRAIN_COST Removed Entirely (TCK-20260831-TRUST-GATED-TEACHING)
+- **Subsystem**: Economy / Social
+- **Situation**: `CoreActions.execute_train()` (`src/engine/domain/core_actions.py`) was a
+  single-party action with no teacher/target concept: it unconditionally built a
+  `ResourceTransferIntent(source_id="CLASS_HALL", source_kind="TOWN_SERVICE", gold_delta=-50, ...)`
+  alongside a `recipes_learned` grant nested in that intent's `identity_upd`. That 50-gold
+  `TRAIN_COST` was never actually an enforced affordability gate:
+  `ResourceTransactionResolver.resolve()`'s `TOWN_SERVICE` branch checks
+  `target_inventory.gold < intent.gold_cost`, and `execute_train()`'s intent never set
+  `gold_cost` (default `0`), so the check was always `gold < 0` = `False` — the transaction was
+  always accepted regardless of gold balance; gold was merely deducted-and-floored-at-0 as a
+  side effect. `CLASS_HALL` is also an untracked abstract sink (no `CLASS_HALL`-keyed balance
+  exists anywhere in `AuthoritativeState`), so removing this leg does not break any tracked-object
+  source/sink pairing under Mechanics Bible Ch.3 §1 (Atomic Conservation Law).
+- **Decision**: `execute_train()` becomes a two-party action (`entity` = teacher,
+  `payload["target_id"]` = student), gated entirely on trust via a new
+  `ContractKind.TEACH` routed through `SocialAppraisalSystem.appraise_contract()`'s existing
+  shared hard-cancel prelude (`trust_score < 0.2` or `bond.sentiment < -0.8` — the same threshold
+  RECRUITMENT/TEAM_UP/TRADE already use, unmodified). The student (target) appraises the teacher
+  (entity), mirroring `execute_recruit`/`execute_team_up`/`execute_trade`'s existing
+  target-appraises-offer convention. The 50-gold `TRAIN_COST` and its `ResourceTransferIntent`
+  are removed entirely — trust **replaces** gold, it does not gate alongside it. On acceptance,
+  `IdentityUpdate(recipes_learned=[skill_id])` is set directly on the target's `EntityUpdate`
+  (mirroring `execute_allocate_ap`'s existing direct-assignment pattern), not nested in a
+  `ResourceTransferIntent`. The orphaned, unwired duplicate `ClassHallAction.train()`
+  (`src/town/class_hall.py`) — which does perform a real gold-affordability check but has no
+  caller anywhere in `src/` — is explicitly left untouched; reconciling the two is a separate,
+  future architectural cleanup, not required by any acceptance criterion here.
+- **Rationale**: **Intentional Gameplay Change**. The originating design source
+  (`docs/brainstorm/rpg_feature_atlas.html`, idea 6, "Build teaching on trust, not new state")
+  explicitly frames this as trust gating "instead of gold," and the pre-existing gold check
+  provided no real economic enforcement to preserve (see Situation above) — removing it trades a
+  cosmetic-only gold deduction for a real, previously-absent social gate.
+- **Verification**: `tests/unit/social/test_teach.py::test_teach_no_gold_leg_regardless_of_gold_balance`
+  (proves teaching succeeds with `gold=0` on both parties and emits no `ResourceTransferIntent`),
+  `::test_teach_refused_below_trust_hard_cancel_threshold` (proves the trust gate itself),
+  `tests/unit/social/test_appraisal_logic.py::test_teach_kind_appraisal_accepts_once_prelude_passes`,
+  `tests/unit/resource/test_resource_v2_boundary.py::test_class_hall_train_refactor` (full-pipeline
+  regression, updated for the two-party/no-gold shape).
+- **Status**: ACTIVE
+
 ---
-*Last updated: 2026-08-31 (DEV-006 / §2.49 added, TCK-20260831-CLASS-TIER-BRANCHING).*
+*Last updated: 2026-08-31 (DEV-007 added, TCK-20260831-TRUST-GATED-TEACHING).*

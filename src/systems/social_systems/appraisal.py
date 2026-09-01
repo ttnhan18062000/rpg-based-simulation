@@ -78,6 +78,9 @@ class SocialAppraisalSystem:
         elif contract.kind == ContractKind.PAID_INFORMATION:
             return SocialAppraisalSystem._appraise_paid_information(entity, contract, trust_score)
 
+        elif contract.kind == ContractKind.TEACH:
+            return SocialAppraisalSystem._appraise_teach(entity, contract, trust_score)
+
         return ContractStatus.CANCELLED, ReasonCode.UNKNOWN, {}
 
     @staticmethod
@@ -322,6 +325,17 @@ class SocialAppraisalSystem:
         the entire gate PaidInformationTransactionSystem.enforce() needs; reaching this method
         means the prelude already passed, so it always accepts."""
         return ContractStatus.ACCEPTED, ReasonCode.INFORMATION_SALE_ACCEPTED, {}
+
+    @staticmethod
+    def _appraise_teach(
+        entity: EntityState,
+        contract: ContractState,
+        trust_score: float
+    ) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:
+        """The shared prelude (trust<0.2, sentiment<-0.8, betrayal-history) already expresses
+        the entire trust gate this contract kind uses; reaching this method means the prelude
+        already passed, so it always accepts. No utility/risk model is added here."""
+        return ContractStatus.ACCEPTED, ReasonCode.TEACH_ACCEPTED, {}
 
     @staticmethod
     def process_betrayal(

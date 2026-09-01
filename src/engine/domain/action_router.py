@@ -56,7 +56,7 @@ class ActionRouter:
             return CoreActions.execute_allocate_ap(entity, payload)
             
         if action == "TRAIN":
-            return CoreActions.execute_train(entity, payload, current_tick)
+            return CoreActions.execute_train(entity, payload, current_tick, neighbor_view, context)
             
         if action == "REPAIR":
             return CoreActions.execute_repair(entity, current_tick)
