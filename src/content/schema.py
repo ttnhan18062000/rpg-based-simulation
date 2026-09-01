@@ -199,6 +199,14 @@ class FactionRelationshipDefinition(CatalogBaseDefinition):
     axes: Dict[str, str] = Field(default_factory=dict)
 
 
+class RaceRelationRecord(CatalogBaseDefinition):
+    """Schema for hostility/relationship axes between two races."""
+    source_race: str = Field(..., description="Source RaceDefinition ID")
+    target_race: str = Field(..., description="Target RaceDefinition ID")
+    relationship_model: str = Field(..., description="Relationship classification")
+    axes: Dict[str, str] = Field(default_factory=dict)
+
+
 # ==========================================
 # 4. Entity & World Models
 # ==========================================

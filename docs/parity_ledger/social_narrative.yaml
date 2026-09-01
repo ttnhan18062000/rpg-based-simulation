@@ -3705,16 +3705,38 @@
   test_path: tests/unit/domains/cooperation/test_phase7_cooperation_decision_service.py::test_cooperation_offer_creation_blocked_while_pending_offer_unexpired
   divergence_note: null
 - id: SOC-256
-  text: 'ClanState schema shape: a new frozen, slots dataclass (clan_id, name,
-    member_entity_ids, home_region_ids, tension_level, leader_entity_id, founded_tick,
-    dissolved_tick) reusing FactionState''s exact serialization pattern
-    (to_canonical_dict/from_dict, cache-guarded, sorted collection fields). Schema-only:
-    not wired into AuthoritativeState, StateUpdate, or apply.py in this ticket -- lifecycle
-    actions (formation/dissolution/succession) are owned by a separate, later ticket
-    (idea 40/M4).'
+  text: 'ClanState schema shape: a new frozen, slots dataclass (clan_id, name, member_entity_ids,
+    home_region_ids, tension_level, leader_entity_id, founded_tick, dissolved_tick)
+    reusing FactionState''s exact serialization pattern (to_canonical_dict/from_dict,
+    cache-guarded, sorted collection fields). Schema-only: not wired into AuthoritativeState,
+    StateUpdate, or apply.py in this ticket -- lifecycle actions (formation/dissolution/succession)
+    are owned by a separate, later ticket (idea 40/M4).'
   status: verified
   priority: P2
   legacy_evidence: null
   v2_evidence: src/core/state.py (ClanState class, added alongside FactionState)
   test_path: tests/unit/domains/faction/test_clan_state.py::test_clan_state_serialization_round_trip
   divergence_note: null
+- id: SOC-257
+  text: 'New race_relations content family (RaceRelationRecord, mirroring FactionRelationshipDefinition''s
+    shape exactly: source_race, target_race, relationship_model, axes: Dict[str,str],
+    extra=''forbid'' via CatalogBaseDefinition) registered in CANONICAL_FAMILIES and
+    CONTENT_USAGE_MATRIX, loaded from data/content/social/race_relations.yaml (24
+    directed entries / 12 undirected pairs, a disclosed ~18% subset of the 66 populated-race
+    pairs). Consumed by RelationProjectionService.project_relation()''s new race-hostility
+    escalation step, which upgrade-only tightens a projected relationship label using
+    axes.hostility, gated off for same-faction pairs and for any label outside the
+    neutral/threat/intruder/enemy escalation ladder (fail-closed: an authored race
+    entry can never invert a perspective-declared ''ally'' label).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/content/schema.py (RaceRelationRecord); src/content/repository.py
+    (ContentFamilySpec('social.race_relations', 'social/race_relations.yaml', RaceRelationRecord,
+    'race_relations') in CANONICAL_FAMILIES); src/content_semantics/relation.py (project_relation()'s
+    '3.5 Race-hostility escalation' block); src/content/matrix.py:260-273 (CONTENT_USAGE_MATRIX['social/race_relations']
+    entry registering the new content family for usage-matrix tracking).
+  proof_type: regression
+  test_path: tests/unit/content_semantics/test_relation_race_projection.py
+  divergence_note: null
+  support_boundary: null

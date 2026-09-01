@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-28
+last_verified: 2026-09-01
 ---
 
 # Chapter 2: Combat Laws
@@ -144,6 +144,17 @@ disengaging while adjacent to a hostile) bypass this specific check.
     (`ReasonCode.FRIENDLY_FIRE_ILLEGAL`). Hostility for `contextual_intruder_groups`-classified
     relationships (real content: `data/content/social/perspectives.yaml`) resolves from real
     combat-engagement state, not a hardcoded assumption of non-intrusion.
+*   **Race-hostility escalation preserves the law**: `is_hostile_compat` resolves through
+    `RelationProjectionService.project_relation()`, whose race-hostility escalation step
+    (`src/content_semantics/relation.py`, real content: `data/content/social/race_relations.yaml`)
+    can upgrade a projected label toward `enemy`/`threat` using `axes.hostility` for the
+    attacker/target race pair, but only ever *upgrades* — it is gated off entirely whenever
+    `source_faction_id == target_faction_id`, so a race entry can never make a same-faction
+    attack legal, and it is fail-closed on a fixed label ladder
+    (`neutral`/`threat`/`intruder`/`enemy`), so an off-ladder perspective-declared label such as
+    `ally` or `protected` can never be escalated into hostility. This is what keeps the
+    Friendly-Fire Law intact once race-level hostility feeds attack legality
+    (`LegalityServiceV2.verify_attack_legality`, `src/engine/legality.py:243`).
 *   **Range & LoS**: Attacks additionally require the target within `effective_range` (melee: must
     be exactly adjacent) and unobstructed line of sight.
 *   **Unrecoverable-Failure Task Reset**: An `ATTACK` task that fails with

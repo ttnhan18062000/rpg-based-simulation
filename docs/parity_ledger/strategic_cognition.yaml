@@ -3864,3 +3864,18 @@
     tests/unit/tactical/test_habit_bias_action_style_wiring.py::test_habit_bias_flag_off_preserves_construction_time_action_style
   divergence_note: null
   proof_type: regression
+- id: STRAT-263
+  text: 'TacticalDecisionSystem.evaluate_entity_intent''s hostile-scan loop consumes
+    race-level hostility: RelationContext now carries source_race (via get_race_id_str(entity))
+    alongside target_race, so an authored race_relations.yaml entry can pull a neighbor
+    into the hostiles list (upstream of target_score()''s existing 6-element sort
+    tuple, which this change does not touch or extend).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/tactical.py:212-216 (RelationContext(source_race=get_race_id_str(entity),
+    target_race=get_race_id_str(n)) feeding is_hostile_compat() -> hostiles.append(n)).
+  proof_type: regression
+  test_path: tests/unit/combat/test_race_relations_tactical_wiring.py
+  divergence_note: null
+  support_boundary: null

@@ -212,6 +212,7 @@ class TacticalDecisionSystem:
             context = RelationContext(
                 distance=float(dist),
                 combat_engaged=combat_engaged,
+                source_race=get_race_id_str(entity),
                 target_race=get_race_id_str(n),
             )
             try:

@@ -243,6 +243,7 @@ class LegalityServiceV2:
         context = RelationContext(
             distance=float(dist),
             combat_engaged=combat_engaged,
+            source_race=get_race_id_str(attacker),
             target_race=get_race_id_str(target),
         )
 
