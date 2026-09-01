@@ -3,14 +3,14 @@ status: authoritative
 layer: world
 authority: P1
 audience: developer
-last_verified: 2026-07-02
+last_verified: 2026-09-01
 tags: [demographics, cohort, population, density-signal, phase-5]
 ---
 
 # Demographics Contract
 
 > **Authority:** Certified Level 1 (Authoritative)
-> **Tickets:** TCK-20260619-E52A-COHORT-MODEL · TCK-20260619-E52B-MIGRATION · TCK-20260619-E52C-AGE-ADVANCEMENT · TCK-20260619-E52D-DENSITY-SIGNAL
+> **Tickets:** TCK-20260619-E52A-COHORT-MODEL · TCK-20260619-E52B-MIGRATION · TCK-20260619-E52C-AGE-ADVANCEMENT · TCK-20260619-E52D-DENSITY-SIGNAL · TCK-20260831-POPULATION-COHORT-SEEDING
 > **Layer:** world
 > **Tags:** demographics, cohort, population, density-signal, phase-5
 
@@ -35,6 +35,47 @@ Defined in `src/domains/demographics/cohort.py`.
 | `migration_threshold` | float | 0.7 | Regional scarcity above which emigration fires |
 
 Cohorts are stored in `RegionState.population_cohorts: Dict[str, PopulationCohort]` keyed by bracket name.
+
+---
+
+## 1a. Compile-Time Seeding
+
+**Ticket:** `TCK-20260831-POPULATION-COHORT-SEEDING`
+
+`WorldCompiler.compile()` seeds `RegionState.population_cohorts` from `WorldSpec.entities`
+(`PopulationSpec.count`, summed by `spawn_region`) at world-assembly time — not via the
+tick-time `WorldUpdate.population_cohorts_set` merge path used by `apply_plan.py`. This is
+a direct `RegionState(...)` constructor assignment, following the same precedent already
+used for `influence` and `owner_faction_id`.
+
+**Distribution ratio.** No prior anchor existed in code or docs for how many entities in a
+declared population belong to which age bracket. This ticket authors a fixed
+young/adult/elder ratio of **30/50/20**, chosen as a plausible stable/mildly-growing
+population pyramid shape — a plurality of working-age adults, a meaningful youth cohort,
+and a smaller elder cohort — directionally consistent with `PopulationCohort`'s own default
+`birth_rate` (0.02) exceeding `mortality_rate` (0.01), which already implies net growth.
+The ratio is intentionally simple/round, not derived from any external demographic dataset
+— a fresh design choice, not a parity claim against real-world data.
+
+**Rounding.** Counts are split using largest-remainder (Hamilton apportionment) rounding
+with a fixed tie-break priority `["young", "adult", "elder"]`, guaranteeing the three
+bracket counts always sum exactly to the declared population, including at small totals
+(0, 1, 2) where naive per-bracket floor/truncation can lose 1-2 units. Pure arithmetic, no
+RNG draw — this preserves `compile()`'s determinism.
+
+**Rates left untouched.** Seeded `PopulationCohort` instances keep `birth_rate=0.02` /
+`mortality_rate=0.01` — the existing dataclass defaults — unchanged. This ticket's job is
+to seed the initial `count` values that §2's existing per-`COHORT_INTERVAL`-tick (200-tick)
+birth/death cycle then applies going forward; it does not rebalance or reinterpret what
+those rates mean. Those rates remain expressed in ticks, not any calendar-independent unit
+(e.g. births/year) — recalibrating them to a calendar-independent unit is an
+accepted-but-not-yet-implemented future decision owned by
+`TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY`, not this ticket.
+
+**Zero-`PopulationSpec` regions.** A region with no matching `PopulationSpec` entries gets
+`population_cohorts={}` (an empty dict, not three zero-count cohorts), which
+`DemographicCycleService`'s guard (`if not region.population_cohorts: continue`,
+`cohort.py:349`) no-ops on directly via plain dict-truthiness.
 
 ---
 
@@ -128,6 +169,7 @@ The multiplier is recorded in `RegionalPressure.source_aggregates` as `density_m
 | WORLD-DEMO-003 | verified | `test_age_bracket_returns_correct_bracket` |
 | WORLD-DEMO-004 | verified | `test_elder_modifier_reduces_combat_effectiveness` |
 | WORLD-DEMO-005 | verified | `test_high_population_region_higher_resource_demand` |
+| WORLD-DEMO-006 | verified | `test_compiler_seeds_population_cohorts_from_spec` |
 
 ---
 
@@ -139,5 +181,7 @@ The multiplier is recorded in `RegionalPressure.source_aggregates` as `density_m
 | `src/domains/world_emergence/models.py` | RegionalPressureModel with density demand multiplier |
 | `src/core/state.py` | RegionState.population_cohorts field |
 | `src/core/updates.py` | WorldUpdate.population_cohorts_set field |
-| `tests/unit/world/test_demographics.py` | Unit tests (57 tests) |
-| `tests/integration/scenarios/test_demographics.py` | Integration tests (4 tests) |
+| `src/worldbuilding/compiler.py` | `_seed_population_cohorts()` — compile-time seeding into `RegionState.population_cohorts` (§1a) |
+| `tests/unit/world/test_demographics.py` | Unit tests |
+| `tests/integration/scenarios/test_demographics.py` | Integration tests |
+| `tests/unit/worldbuilding/test_world_compiler.py` | Compile-time seeding unit tests (§1a) |

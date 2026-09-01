@@ -15,6 +15,8 @@ from src.domains.demographics.cohort import (
 )
 from src.domains.world_emergence.schema import WorldEventCategory, WorldEventAggregate
 from src.domains.world_emergence.models import RegionalPressureModel
+from src.worldbuilding.compiler import WorldCompiler
+from src.worldbuilding.schema import WorldSpec
 
 
 # ---------------------------------------------------------------------------
@@ -284,3 +286,82 @@ def test_high_population_region_higher_resource_demand():
     assert any("density_mult" in s for s in high_resource.source_aggregates), (
         "density_mult must appear in source_aggregates for traceability"
     )
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260831-POPULATION-COHORT-SEEDING: guard fires against compiler-produced state
+# ---------------------------------------------------------------------------
+
+def _build_population_seeding_world_spec() -> WorldSpec:
+    data = {
+        "schema_version": "worldspec.v1",
+        "world_id": "demo_cohort_seeding_world",
+        "name": "Cohort Seeding Demo World",
+        "topology": {"width": 100, "height": 100, "coordinate_system": "grid"},
+        "regions": [
+            # bounds sized generously (60x60 = 3600 tiles) relative to the 1000-entity
+            # citizen_group below, so LAW-SPAWN-OCCUPANCY's collision-reroll/raster-fallback
+            # path (cohort spawn tile resolution) isn't exercised under heavy oversubscription.
+            {"id": "town_square", "type": "town", "bounds": [0, 0, 60, 60], "terrain": "GRASS"},
+            {"id": "empty_outpost", "type": "wilderness", "bounds": [70, 70, 75, 75], "terrain": "PLAIN"},
+        ],
+        "factions": [
+            {"id": "villagers", "type": "civilian"},
+        ],
+        "entities": [
+            # count=1000 (not a small demo number) is deliberate: birth_rate/mortality_rate
+            # (0.02/0.01) apply per-bracket count via int(births - deaths) truncation
+            # (cohort.py:356-358), so a small declared population (e.g. 50, split 15/25/10
+            # young/adult/elder) truncates to net=0 for every bracket and the guard would
+            # pass without producing a real StateUpdate for the wrong reason. 1000 seeds
+            # young=300/adult=500/elder=200, each comfortably >=100 so net birth/death is
+            # nonzero for every bracket.
+            {"id": "citizen_group", "count": 1000, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"},
+        ],
+    }
+    return WorldSpec.model_validate(data)
+
+
+def test_demographic_cycle_proceeds_past_guard_on_compiler_produced_state_at_tick_200():
+    """
+    Headline AC: DemographicCycleService.process_demographics() has never run against
+    compiler-produced state -- every existing test hand-builds RegionState, bypassing
+    WorldCompiler entirely. This test compiles a real WorldSpec via WorldCompiler.compile()
+    (not a hand-built RegionState/AuthoritativeState fixture), then calls
+    process_demographics(compiled_state, tick=200) directly and asserts the guard at
+    cohort.py:349 (`if not region.population_cohorts: continue`) is passed for the
+    populated region -- i.e. the returned StateUpdate is non-trivial, distinct from the
+    StateUpdate() empty-sentinel returned by the off-cycle/empty-cohort short-circuits.
+    """
+    spec = _build_population_seeding_world_spec()
+    compiled_state, _ = WorldCompiler.compile(spec, seed=42)
+
+    # Sanity: compiler actually seeded a non-empty cohort for town_square before we
+    # exercise the guard -- otherwise this test would trivially pass for the wrong reason.
+    assert compiled_state.regions["town_square"].population_cohorts != {}
+
+    result = DemographicCycleService.process_demographics(compiled_state, tick=200)
+
+    assert not result.is_noop(), (
+        "process_demographics on compiler-produced state at tick=200 must proceed past "
+        "the population_cohorts guard and return a real StateUpdate"
+    )
+    assert "town_square" in result.world_updates or any(
+        e.region_id == "town_square" for e in result.world_events_add
+    ), "populated region must produce a real WorldUpdate and/or WorldEvent"
+
+
+def test_compiler_zero_population_region_guard_noop_via_full_tick_pipeline():
+    """Belt-and-suspenders: a zero-PopulationSpec region compiled by WorldCompiler
+    produces no WorldUpdate/WorldEvent for itself when run through
+    process_demographics(..., tick=200) -- the guard correctly no-ops on real
+    compiler-produced empty-cohort state, not just a hand-built fixture."""
+    spec = _build_population_seeding_world_spec()
+    compiled_state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert compiled_state.regions["empty_outpost"].population_cohorts == {}
+
+    result = DemographicCycleService.process_demographics(compiled_state, tick=200)
+
+    assert "empty_outpost" not in result.world_updates
+    assert not any(e.region_id == "empty_outpost" for e in result.world_events_add)

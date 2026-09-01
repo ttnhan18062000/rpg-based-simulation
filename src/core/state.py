@@ -278,7 +278,7 @@ class RegionState:
             "weather": self.weather,
             "active_modifiers": sorted(list(self.active_modifiers)),
             "price_modifiers": dict(sorted(self.price_modifiers.items())),
-            "population_cohorts": dict(sorted(self.population_cohorts.items())),
+            "population_cohorts": {k: v.to_canonical_dict() for k, v in sorted(self.population_cohorts.items())},
             "siege_state": self.siege_state.to_canonical_dict() if self.siege_state is not None else None,
             "service_availability": self.service_availability,
         }
