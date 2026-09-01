@@ -3879,3 +3879,21 @@
   test_path: tests/unit/combat/test_race_relations_tactical_wiring.py
   divergence_note: null
   support_boundary: null
+- id: STRAT-264
+  text: RoleModelSelectionPhase periodically (per-entity staggered social_memory cadence)
+    selects the nearest strictly-higher-evolution_level neighbor within radius=10.0
+    as an entity's admired role model (CognitionModel.role_model), and stores an intelligence_tier-derived
+    imitation_fidelity (RoleModelImitationService) alongside it -- gated off by default
+    behind ENABLE_ROLE_MODEL_IMITATION (DEV-002).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/strategy/role_model_phase.py (RoleModelSelectionPhase.apply); src/strategy/role_model_imitation.py
+    (RoleModelImitationService.compute_imitation_fidelity); src/core/cognition.py
+    (RoleModelBundle, CognitionModel.role_model); src/engine/pipeline.py (AuthoritativeApplyPipeline.refine
+    -- role_model_selection phase wired in after habit_bias_action_style, gated by
+    ENABLE_ROLE_MODEL_IMITATION); src/domains/optimization/feature_flags.py (FeatureFlagManager
+    -- ENABLE_ROLE_MODEL_IMITATION registered as FeatureMode.OFF per DEV-002 default-off
+    policy).
+  proof_type: regression
+  test_path: tests/unit/strategic/test_role_model_state.py

@@ -132,6 +132,12 @@ class FeatureFlagManager:
             # explicit open design decision, not invented by this ticket -- see ticket AC #5), no corpus
             # profile turns this on and no SHADOW-validation history exists.
             "ENABLE_ITEM_INSTANCE_HISTORY": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260831-ROLE-MODEL-IMITATION): wires
+            # RoleModelSelectionPhase into refine() for the first time -- per-entity
+            # proximity-based role-model watching/choosing plus intelligence_tier-modulated
+            # imitation fidelity. DEV-002 default-OFF policy applies -- brand-new mechanic, no
+            # corpus profile turns this on and no SHADOW-validation history exists.
+            "ENABLE_ROLE_MODEL_IMITATION": FeatureMode.OFF,
         }
         if overrides:
             for k, v in overrides.items():

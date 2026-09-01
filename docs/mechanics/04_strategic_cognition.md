@@ -333,6 +333,44 @@ already-pending offer at decision time, not just a post-expiry cooldown.
 
 ---
 
+### Role-Model Watching & Imitation Fidelity (TCK-20260831-ROLE-MODEL-IMITATION)
+Entities periodically watch nearby entities and, from among them, admire one as a role model —
+minimal durable state answering "who does this entity look up to," feeding a scaling hook for
+future imitation-driven behavior.
+
+- **State**: `CognitionModel.role_model` (`RoleModelBundle`, `src/core/cognition.py`) — 4 scalar
+  fields: `admired_entity_id` (the currently-admired entity, or `None`), `admired_since_tick` (when
+  the current choice started), `last_reconsidered_tick` (the last tick the choice was
+  re-evaluated, even if unchanged), and `imitation_fidelity` (a `0.0`–`1.0` multiplier, default
+  `0.5`). A single *current* role model at a time — no history log.
+- **Cadence**: `RoleModelSelectionPhase` re-evaluates each entity's choice on the existing
+  `SystemCadence.social_memory` tier (10 ticks), staggered per-entity via `should_run(tick,
+  entity_id, cadence)` — no new `SystemCadence` field was added.
+- **Selection rule**: proximity via `SpatialQueryService.nearby_entities(state, position,
+  radius=10.0)` (the same radius used elsewhere for perception, §5) combined with
+  `identity.evolution_level` — the nearest-by-radius neighbor with the strictly highest
+  `evolution_level` above the watcher's own becomes the admired entity. Deterministic tie-break:
+  candidates are iterated in `sorted(entity_id)` order, so ties resolve to the lowest id. Every
+  cadence tick recomputes fresh — there is no "keep current unless a strictly-better candidate
+  exists" carve-out, so a previously-admired entity that leaves the world or radius, or is
+  overtaken by a better candidate, is implicitly replaced (or cleared to `None`) on the next
+  reconsideration.
+- **Imitation fidelity**: `RoleModelImitationService.compute_imitation_fidelity()`
+  (`src/strategy/role_model_imitation.py`) reads `entity.identity.properties["race_id"]` →
+  `RaceDefinition.intelligence_tier` (landed by `TCK-20260831-SPECIES-INTELLIGENCE-TIER`) and maps
+  `"high"` → `1.0`, `"low"` (or an unresolved race/tier) → `0.5`. Deliberately kept as a separate
+  service rather than folded into `CapacityService.derive_profile` — see the Anti-Drift Notes in
+  `staging_artifacts`/`stored_artifacts/TCK-20260831-ROLE-MODEL-IMITATION/plan.md` for the fork
+  rationale; `CognitionProfile`'s existing 11 fields are untouched.
+- **Rollout**: gated off by default behind `ENABLE_ROLE_MODEL_IMITATION`
+  (`src/domains/optimization/feature_flags.py`), per the DEV-002 default-OFF policy for brand-new
+  mechanics with no corpus profile or SHADOW-validation history yet.
+- **Scope note**: `imitation_fidelity` is the minimal real hook point for intelligence-tier-scaled
+  behavior — this ticket does not build any actual behavior-copying/imitation-learning mechanism on
+  top of it.
+
+---
+
 ## 5. Perception & Salience
 Entities do not see the entire world.
 *   **Perception Radius**: **10.0 units** — all perception and neighbor-view calls use `radius=10.0` consistently (`src/engine/domain_logic.py`, `src/engine/domain/view.py`, `src/systems/strategic_systems/intelligence.py`). A 15.0-unit radius appears only in cooperation candidate search (`src/domains/cooperation/providers.py`) and is not a perception radius.

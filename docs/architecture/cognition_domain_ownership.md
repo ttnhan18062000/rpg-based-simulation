@@ -18,6 +18,7 @@ This document establishes the official ownership mapping between core `Cognition
 | **`MotivationModel`** | `cognition.motivation` | `src/domains/motivation/` |
 | **`CommitmentModel`** | `cognition.commitment` | `src/domains/commitment/` |
 | **`RelationshipModel`** | `cognition.relationships` | `src/domains/cooperation/` |
+| **`RoleModelBundle`** | `cognition.role_model` | `src/strategy/` (`role_model_phase.py`, `role_model_imitation.py`; TCK-20260831-ROLE-MODEL-IMITATION) |
 | **`DerivedViews`** | *N/A (Computed transiently)* | `src/views/` |
 | **`DecisionTrace`** | *N/A (Observability pipeline)* | `src/observability/` |
 

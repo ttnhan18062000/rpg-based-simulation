@@ -173,6 +173,19 @@ class AuthoritativeApplyPipeline:
         )
         costs["habit_bias_action_style"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Role Model Selection (TCK-20260831-ROLE-MODEL-IMITATION) ---
+        # Runs strictly after habit_bias_action_style so it reads through any same-tick
+        # cognition_bundle_set write that phase already staged (read-through-then-replace),
+        # independently gated by its own flag.
+        t_start = time.perf_counter_ns()
+        from src.strategy.role_model_phase import RoleModelSelectionPhase
+        update = run_phase(
+            "role_model_selection", update,
+            lambda u: RoleModelSelectionPhase.apply(state, u),
+            "ENABLE_ROLE_MODEL_IMITATION",
+        )
+        costs["role_model_selection"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 2: Self Model Cognition ---
         t_start = time.perf_counter_ns()
         from src.cognition import SelfModelUpdatePhase

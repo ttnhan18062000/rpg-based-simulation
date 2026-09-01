@@ -517,7 +517,32 @@ class RelationshipModel:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. Global CognitionModel Container
+# 6. Role Model Sub-components (TCK-20260831-ROLE-MODEL-IMITATION)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True, slots=True)
+class RoleModelBundle:
+    """Who this entity watches/admires as a role model, and how faithfully it can imitate them."""
+    admired_entity_id: Optional[int] = None
+    admired_since_tick: Optional[int] = None
+    last_reconsidered_tick: Optional[int] = None
+    imitation_fidelity: float = 0.5  # matches RoleModelImitationService.DEFAULT_FIDELITY
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        return {
+            "admired_entity_id": self.admired_entity_id,
+            "admired_since_tick": self.admired_since_tick,
+            "last_reconsidered_tick": self.last_reconsidered_tick,
+            "imitation_fidelity": round(self.imitation_fidelity, 4),
+        }
+
+    @classmethod
+    def empty(cls) -> "RoleModelBundle":
+        return cls()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 7. Global CognitionModel Container
 # ─────────────────────────────────────────────────────────────────────────────
 
 @dataclass(frozen=True, slots=True)
@@ -528,6 +553,7 @@ class CognitionModel:
     motivation: MotivationModel = field(default_factory=MotivationModel)
     commitment: CommitmentModel = field(default_factory=CommitmentModel)
     relationships: RelationshipModel = field(default_factory=RelationshipModel)
+    role_model: RoleModelBundle = field(default_factory=RoleModelBundle)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         return {
@@ -535,7 +561,8 @@ class CognitionModel:
             "memory": self.memory.to_canonical_dict(),
             "motivation": self.motivation.to_canonical_dict(),
             "commitment": self.commitment.to_canonical_dict(),
-            "relationships": self.relationships.to_canonical_dict()
+            "relationships": self.relationships.to_canonical_dict(),
+            "role_model": self.role_model.to_canonical_dict()
         }
 
     @classmethod

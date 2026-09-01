@@ -9,6 +9,7 @@ from src.core.cognition import (
     MotivationModel,
     CommitmentModel,
     RelationshipModel,
+    RoleModelBundle,
     EmotionalModel,
     TemporalModel,
     RiskModel
@@ -54,3 +55,23 @@ def test_cognition_accessors_read_real_self_model_path():
     assert get_need_interpretation(entity) == entity.self_model.needs
     assert get_capability_estimate(entity) == entity.self_model.capabilities
     assert get_knowledge_model(entity) == entity.cognition.subjective.knowledge
+
+
+def test_entity_state_cognition_has_role_model_subcomponent():
+    entity = EntityState(id=1, kind="HERO")
+    assert isinstance(entity.cognition.role_model, RoleModelBundle)
+    assert entity.cognition.role_model.admired_entity_id is None
+    assert entity.cognition.role_model.admired_since_tick is None
+    assert entity.cognition.role_model.last_reconsidered_tick is None
+    assert entity.cognition.role_model.imitation_fidelity == 0.5
+
+
+def test_role_model_state_canonical_dict_deterministic():
+    cog1 = CognitionModel(role_model=RoleModelBundle(
+        admired_entity_id=7, admired_since_tick=10, last_reconsidered_tick=20, imitation_fidelity=1.0
+    ))
+    cog2 = CognitionModel(role_model=RoleModelBundle(
+        admired_entity_id=7, admired_since_tick=10, last_reconsidered_tick=20, imitation_fidelity=1.0
+    ))
+    assert cog1.to_canonical_dict() == cog2.to_canonical_dict()
+    assert "role_model" in CognitionModel.empty().to_canonical_dict()
