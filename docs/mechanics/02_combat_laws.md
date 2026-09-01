@@ -133,12 +133,17 @@ disengaging while adjacent to a hostile) bypass this specific check.
     rate at ~1.3% even after the fixes below. Removing the double-cost raised it to a real,
     measured 28.5-36.6% on the same live worlds (`dungeon_crawl`/`urban_political`).
 *   **Passive Regeneration**: Every tick, an entity below 100.0 readiness regenerates by its own
-    `readiness_speed` stat (`CombatComponent.readiness_speed`, default **10.0/tick**), capped at
-    100.0. This closes a gap between the documented kernel contract
-    (`docs/engine/contracts/minimal_kernel.md` §5, "Readiness Accumulation") and the source: prior
-    to `TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION`, no passive regeneration
+    `readiness_speed` stat (`CombatComponent.readiness_speed`), capped at 100.0. This closes a gap
+    between the documented kernel contract (`docs/engine/contracts/minimal_kernel.md` §5,
+    "Readiness Accumulation") and the source: prior to
+    `TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION`, no passive regeneration
     existed anywhere in the pipeline — readiness only ever decreased, and the only restoration
     path was a narrow town-specific REST action (+10.0, `src/engine/town_resolution.py`).
+    `readiness_speed` is derived from `agility` in `LevelingService.recalculate_combat_stats()`:
+    `readiness_speed = max(1.0, 10.0 + (agility - 5) * 1.0)`. **10.0/tick is the value at
+    reference/baseline agility (`5`), not a universal flat default** — higher agility regenerates
+    readiness faster, lower agility slower, floored at 1.0/tick to prevent the gate from ever
+    locking permanently (`TCK-20260831-READINESS-SPEED-FORMULA`, `COMB-318`).
 *   **Friendly-Fire Law**: Attacks against a target the real faction-semantics service does not
     consider hostile (`FactionSemanticsService.is_hostile_compat`) are illegal
     (`ReasonCode.FRIENDLY_FIRE_ILLEGAL`). Hostility for `contextual_intruder_groups`-classified

@@ -4134,3 +4134,51 @@
   test_path: tests/unit/combat/test_race_relations_legality_wiring.py
   divergence_note: null
   support_boundary: null
+- id: COMB-318
+  text: readiness_speed is derived from agility (readiness_speed = max(1.0, 10.0 +
+    (agility - 5) * 1.0)) inside LevelingService.recalculate_combat_stats(), rather
+    than always the flat 10.0 dataclass default. Reference/baseline agility (5) preserves
+    readiness_speed == 10.0 exactly, keeping every existing test fixture that never
+    sets agility valid. The derived value flows through SkillScalingService.get_effective_stats()
+    and ApplyPath's PH8 replace(new_com, ...) call to reach the live CombatComponent.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/progression/leveling.py Step 1 block (readiness_speed formula,
+    new line); src/engine/apply.py:507-515 (replace(new_com, ...) now includes readiness_speed=derived.get(''readiness_speed'',
+    new_com.readiness_speed)). Unit/regression evidence is strong (formula direction+exact-value
+    asserted, backward-compat asserted, PH8 apply-path drop-prevention asserted --
+    see test_path). Corpus validation was attempted per plan Step 6 (hand-orchestrated
+    pre/post-code MetamorphicRuleEngine.evaluate_rules() check, staging_artifacts/TCK-20260831-READINESS-SPEED-FORMULA/corpus_validation.py,
+    monotonic_non_increasing on elder_window_damage_rate = count(combat_damage, tick>=7000)/2500,
+    9500 ticks, 3 seeds, observability.mode pinned to STANDARD/NORMAL, confirmed inline)
+    but produced a degenerate baseline=0.0/compared=0.0 result. Per the escalation
+    path plan.md Step 6 itself specifies (widen window/world before accepting a hollow
+    zero-difference PASSED), this was investigated with single-seed 9500-tick diagnostic
+    runs across 3 real corpus worlds (unit_faction_tension, crowded_frontier, lifecycle_full_coverage_world
+    -- the last authored specifically for full lifecycle-phase coverage including
+    ELDER, with active hostile modules). All 3 showed the identical root cause: every
+    combat_damage event in the entire 9500-tick run occurs before tick 1000 (106-196
+    events per world, 0 events at tick>=1000 in all 3), while LifeStageService.get_stage_for_age()
+    requires age_ticks>=7000 for ELDER eligibility -- these two windows never overlap
+    in any tested world. This is a structural corpus-content fact (real combat activity
+    ceases early and does not resume), not a sample-size/tick-count artifact, so widening
+    ticks or seeds further would not change the outcome. Conclusion: the formula''s
+    real population-level effect (elder agility decay, 5->4, the only durable non-default
+    agility source per leveling.py''s Step 1 citation trail) is currently unobservable
+    via corpus combat metrics because no tested world''s elder-eligible entities are
+    ever still fighting -- an honest null corpus finding, not evidence the change
+    is unsafe (the change''s correctness is fully covered by the unit/regression tests
+    below; see TCK-20260831-READINESS-SPEED-FORMULA Implementation Notes for the full
+    diagnostic record). Landed in TCK-20260831-READINESS-SPEED-FORMULA.'
+  proof_type: regression
+  test_path: tests/unit/core/test_rpg_depth.py::TestEffectiveStats::test_readiness_speed_derives_from_agility_two_values,
+    tests/unit/core/test_rpg_depth.py::TestEffectiveStats::test_readiness_speed_reference_agility_backward_compatible,
+    tests/unit/combat/test_readiness_regen.py::test_readiness_speed_survives_apply_path_replace
+  divergence_note: null
+  support_boundary: Real-corpus population-level validation of the elder-cohort agility
+    effect is currently unsupported by any tested world (unit_faction_tension, crowded_frontier,
+    lifecycle_full_coverage_world) because real combat activity ceases before tick
+    1000 in all of them while ELDER eligibility requires age_ticks>=7000 -- structural,
+    not sample-size. Code-level correctness (formula, backward-compat, apply-path
+    drop-prevention) remains fully verified via the unit/regression tests in test_path.

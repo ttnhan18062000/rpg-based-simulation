@@ -22,7 +22,7 @@ Define the complete attribute progression law: how entities accumulate XP, when 
 
 ## RPG Meaning
 
-Entities grow through experience. XP is earned by defeating enemies and completing quests. Each level requires progressively more XP (power law). On level-up, entities gain 5 Attribute Points and unlock specific skills at milestone levels. All derived stats (HP, ATK, DEF, evasion, move cost, tactical role) are recalculated deterministically whenever attributes or equipment change.
+Entities grow through experience. XP is earned by defeating enemies and completing quests. Each level requires progressively more XP (power law). On level-up, entities gain 5 Attribute Points and unlock specific skills at milestone levels. All derived stats (HP, ATK, DEF, evasion, readiness_speed, move cost, tactical role) are recalculated deterministically whenever attributes or equipment change.
 
 ---
 
@@ -134,11 +134,12 @@ Step 1 below reads whatever `attributes` it is given.
 
 **Step 1 — Base Attributes:**
 ```python
-max_hp    = base_hp + (vitality * 2) + int(endurance * 0.5)
-atk       = base_atk + int(strength * 0.5)
-def_stat  = base_def + int(vitality * 0.3)
-evasion   = base_evasion + (agility * 0.001)
-atk_range = 1  # default
+max_hp          = base_hp + (vitality * 2) + int(endurance * 0.5)
+atk             = base_atk + int(strength * 0.5)
+def_stat        = base_def + int(vitality * 0.3)
+evasion         = base_evasion + (agility * 0.001)
+readiness_speed = max(1.0, 10.0 + (agility - 5) * 1.0)
+atk_range       = 1  # default
 ```
 
 **Step 2 — Equipment Bonuses (non-broken slots only, `durability > 0`):**
@@ -359,6 +360,9 @@ Step 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
 | `tests/unit/core/test_rpg_depth.py` | `active_breakthroughs` wiring through `get_effective_stats()` and the apply path's `stats_dirty` gate |
 | `tests/unit/progression/test_class_tiers.py` | `CLASS_TIER_REGISTRY` branching options; `class_id_set` apply-path wiring (`is_noop()`/`merge()`); tier bonus survives a subsequent unrelated `stats_dirty` event; parity ledger PROG-122 |
 | `tests/integration/combat/test_class_tier_win_rate.py` | Tier bonus does not decrease average combat win-rate vs. a fixed opponent roster (AC #4) |
+| `tests/unit/core/test_rpg_depth.py::TestEffectiveStats::test_readiness_speed_derives_from_agility_two_values` | `readiness_speed` derives from agility, direction-checked (not just inequality) |
+| `tests/unit/core/test_rpg_depth.py::TestEffectiveStats::test_readiness_speed_reference_agility_backward_compatible` | Reference/baseline agility (`5`) still yields `readiness_speed == 10.0` |
+| `tests/unit/combat/test_readiness_regen.py::test_readiness_speed_survives_apply_path_replace` | PH8 `replace(new_com, ...)` no longer silently drops the derived `readiness_speed`; parity ledger `COMB-318` |
 
 ---
 

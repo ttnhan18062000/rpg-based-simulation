@@ -509,6 +509,7 @@ class ApplyPath:
                 atk=derived["atk"],
                 def_stat=derived["def_stat"],
                 evasion=derived["evasion"],
+                readiness_speed=derived.get("readiness_speed", new_com.readiness_speed),
                 move_cost=derived.get("move_cost", new_com.move_cost),
                 range=derived.get("range", new_com.range),
                 tactical_role=derived.get("tactical_role", new_com.tactical_role)
