@@ -142,11 +142,16 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # (TCK-20260831-ITEM-INSTANCE-HISTORY, 2026-09-01: TOWN-128 gained a real `test_path` citing
     # tests/unit/resource/test_item_instance_history.py::test_town_128_item_kind_identity_unaffected_by_item_instance,
     # previously `null` — a P0 gap flagged by that ticket's own investigation and closed per its
-    # AC #4).
+    # AC #4), then to 1320 (TCK-20260831-STATUS-EFFECT-STATE-UNIFICATION, 2026-09-01: COMB-122
+    # gained a real `test_path` citing
+    # tests/unit/combat/test_combat_legality_regression.py::test_shatter_logic,
+    # previously stale/broken, as part of migrating the SHATTER mechanic off the prior
+    # identity.properties.get("status_frozen") dict lookup onto the typed status_effect_update
+    # path).
     # The substantive check is the assertion above (manifest's own count matches a fresh,
     # independent live scan) — this second assertion only guards against a silent, unexplained
     # large swing.
-    assert live_missing == 1321
+    assert live_missing == 1320
 
 
 # ---------------------------------------------------------------------------
