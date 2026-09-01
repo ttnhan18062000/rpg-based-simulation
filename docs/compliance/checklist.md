@@ -735,7 +735,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 - [x] SOC-049: `test_routine_profile_instantiation`: Routine profile instantiation — Verify RoutineProfile can be instantiated with hybrid scheduling.
 - [x] SOC-050: `test_place_attachment_instantiation`: Place attachment instantiation — Verify PlaceAttachment can be instantiated and supports sentiment.
 - [x] SOC-159: `test_group_record_instantiation`: Group record instantiation — Verify GroupRecord supports shared tactical intent.
-- [x] SOC-052: `test_entity_integration`: Entity integration — Verify Entity and IdentityAspect absorb new fields.
+- [x] SOC-052: `test_entity_integration`: Entity integration — Verify Entity and IdentityComponent absorb new fields.
 - [x] SOC-053: `test_world_state_registry`: World state registry — Verify GroupRegistry integration in WorldState.
 
 #### `integration/gameplay/test_social_meaning.py`
@@ -1064,7 +1064,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 #### `unit/core/test_invariants.py`
 
 - [x] SUB-050: `test_speed_delay_invariants`: Speed delay invariants — Test that speed_delay never returns NaN or out-of-bounds values.
-- [x] SUB-051: `test_stats_invariants`: Stats invariants — AOA Stabilization: Test CombatAspect invariants (formerly Stats).
+- [x] SUB-051: `test_stats_invariants`: Stats invariants — AOA Stabilization: Test CombatComponent invariants (formerly Stats).
 - [x] SUB-052: `test_damage_calc_math`: Damage calc math — Test the core damage calculation logic in isolation.
 - [x] SUB-053: `test_recalc_level_consistency`: Recalc level consistency — Ensure level-based stat recalculation remains consistent across aspects.
 - [x] SUB-054: `test_combat_damage_invariants`: Combat damage invariants — Ensure HP reduction application doesn't cause overflow or invalid states.
@@ -1228,7 +1228,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 #### `unit/combat/test_consequences.py`
 
 - [x] COMB-071: `test_wound_infliction_massive_hit`: Wound infliction massive hit — Verify that damage > 25% max HP guarantees a wound.
-- [x] COMB-072: `test_wound_stat_impact`: Wound stat impact — Verify that wounds correctly reduce properties in CombatAspect.
+- [x] COMB-072: `test_wound_stat_impact`: Wound stat impact — Verify that wounds correctly reduce properties in CombatComponent.
 - [x] COMB-073: `test_scar_permanence`: Scar permanence — Verify that scars are permanent and identifiable.
 
 #### `unit/combat/test_exhaustion.py`

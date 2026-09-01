@@ -570,7 +570,7 @@
   divergence_note: null
   support_boundary: null
 - id: SOC-052
-  text: "`test_entity_integration`: Entity integration \u2014 Verify Entity and IdentityAspect\
+  text: "`test_entity_integration`: Entity integration \u2014 Verify Entity and IdentityComponent\
     \ absorb new Phase 3 fields.."
   status: verified
   priority: P0

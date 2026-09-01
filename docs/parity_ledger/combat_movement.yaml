@@ -761,7 +761,7 @@
   support_boundary: null
 - id: COMB-072
   text: "`test_wound_stat_impact`: Wound stat impact \u2014 Verify that wounds correctly\
-    \ reduce properties in CombatAspect.."
+    \ reduce properties in CombatComponent.."
   status: verified
   priority: P0
   legacy_evidence: null

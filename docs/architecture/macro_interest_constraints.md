@@ -25,8 +25,8 @@ This document defines the architectural boundaries, canonical ownership, and upd
 
 | State Family | Canonical Owner | Responsibility |
 | :--- | :--- | :--- |
-| **Personality / Soul** | `IdentityAspect` | Archetype, OCEAN traits, and `life_directive`. |
-| **Cognition / Mind** | `MindAspect` | Active Motives, Perceptual Beliefs, and Current Goal selection. |
+| **Personality / Soul** | `IdentityComponent` | Archetype, OCEAN traits, and `life_directive`. |
+| **Cognition / Mind** | `StrategicComponent` | Active Motives, Perceptual Beliefs, and Current Goal selection. |
 | **Social / Standing** | `SocialRegistry` | Authoritative directed bonds and public reputation. |
 | **Physical / World** | `WorldState` | Environmental consequences (Scars) and legacy persistence. |
 
@@ -37,7 +37,7 @@ All behavioral updates must follow this authoritative flow:
 1. **Raw Event**: An action is taken (e.g., `AttackHero`).
 2. **Interpretation Layer**: The event is tagged based on context (e.g., `Aggressive`, `Traumatic`).
 3. **State Update**:
-    - **Private**: Entity's `MindAspect` records a `TurningPoint` if salience is high.
+    - **Private**: Entity's `StrategicComponent` records a `TurningPoint` if salience is high.
     - **Public**: `SocialRegistry` updates directed bonds between participants.
 4. **Appraisal**: On subsequent ticks, the AI uses current `Mind` state + `Identity` traits to select the next `Goal`.
 
@@ -45,7 +45,7 @@ All behavioral updates must follow this authoritative flow:
 
 To prevent unbounded state growth, every system MUST implement:
 
-- **Memory Cap**: `MindAspect.narrative.memory_log` is capped at **50 entries**, authoritatively pruned by **weighted salience** (`abs(impact) * (1 - recency_decay)`).
+- **Memory Cap**: `CognitionModel.memory.experience` (owned by the `cognition` component, `src/core/cognition.py`) is capped at **50 entries**, authoritatively pruned by **weighted salience** (`abs(impact) * (1 - recency_decay)`).
 - **Relationship Cap**: `SocialRegistry` limits directed bonds to **20 records** per entity, pruned by last interaction tick.
 - **Salience Requirement**: Events are only preserved if their weighted impact remains above a minimum threshold (pruning occurs in the `ActionSystem` update path).
 

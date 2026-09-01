@@ -255,7 +255,7 @@ Wound check: 45 > 80 * 0.25 = 20.0? Yes → wound inflicted
 | Test / Group | Verified Law |
 |---|---|
 | COMB-071 `test_wound_infliction_massive_hit` | Wound triggers at >25% max HP (source-verified) |
-| COMB-072 `test_wound_stat_impact` | Wound penalties apply to CombatAspect |
+| COMB-072 `test_wound_stat_impact` | Wound penalties apply to CombatComponent |
 | COMB-073 / COMB-104 `test_scar_permanence` | Scar persistence after wound healing |
 | COMB-021 `test_high_ground_bonus` | +0.20 ATK modifier |
 | COMB-022 / COMB-055 `test_flanking_bonus` | +0.15 ATK modifier |
