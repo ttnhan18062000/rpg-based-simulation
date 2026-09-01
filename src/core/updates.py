@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Dict, Any, Optional, TYPE_CHECKING, List, Tuple
 if TYPE_CHECKING:
-    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, WoundState, ScarState
+    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, WoundState, ScarState, StatusEffectState
     from src.core.quests import QuestStatus
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
@@ -69,9 +69,10 @@ class InteractionUpdate:
     target_node_id: Optional[int] = None
     progress_delta: float = 0.0
     reset: bool = False
+    kind: Optional[str] = None
 
     def is_noop(self) -> bool:
-        return self.target_node_id is None and self.progress_delta == 0.0 and not self.reset
+        return self.target_node_id is None and self.progress_delta == 0.0 and not self.reset and self.kind is None
 
     def merge(self, other: InteractionUpdate) -> InteractionUpdate:
         if not other or other.is_noop():
@@ -80,6 +81,7 @@ class InteractionUpdate:
         if other.target_node_id is not None: changes["target_node_id"] = other.target_node_id
         if other.progress_delta != 0.0: changes["progress_delta"] = self.progress_delta + other.progress_delta
         if other.reset: changes["reset"] = True
+        if other.kind is not None: changes["kind"] = other.kind
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
@@ -626,6 +628,23 @@ class WoundUpdate:
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
+class StatusEffectUpdate:
+    """New status effects and effect removal."""
+    effects_add: List[StatusEffectState] = field(default_factory=list)
+    effects_remove: List[str] = field(default_factory=list)  # status `kind` values to remove
+
+    def is_noop(self) -> bool:
+        return not self.effects_add and not self.effects_remove
+
+    def merge(self, other: StatusEffectUpdate) -> StatusEffectUpdate:
+        if not other or other.is_noop():
+            return self
+        changes = {}
+        if other.effects_add: changes["effects_add"] = self.effects_add + other.effects_add
+        if other.effects_remove: changes["effects_remove"] = self.effects_remove + other.effects_remove
+        return replace(self, **changes)
+
+@dataclass(frozen=True, slots=True)
 class EntityUpdate:
     """
     Authoritative update for a single entity.
@@ -655,6 +674,7 @@ class EntityUpdate:
     task: Optional[TaskUpdate] = None
     stamina_update: Optional[StaminaUpdate] = None
     wound_update: Optional[WoundUpdate] = None
+    status_effect_update: Optional[StatusEffectUpdate] = None
     group_id_set: Optional[int] = None
     self_model_bundle_set: Optional[Any] = None
     cognition_bundle_set: Optional[Any] = None
@@ -679,7 +699,8 @@ class EntityUpdate:
                 (self.navigation is None or self.navigation.is_noop()) and 
                 (self.task is None or self.task.is_noop()) and 
                 (self.stamina_update is None or self.stamina_update.is_noop()) and 
-                (self.wound_update is None or self.wound_update.is_noop()) and 
+                (self.wound_update is None or self.wound_update.is_noop()) and
+                (self.status_effect_update is None or self.status_effect_update.is_noop()) and
                 self.group_id_set is None and self.self_model_bundle_set is None and
                 self.cognition_bundle_set is None and not self.intent_results and
                 not self.property_updates)
@@ -714,6 +735,7 @@ class EntityUpdate:
         if other.task: changes["task"] = self.task.merge(other.task) if self.task else other.task
         if other.stamina_update: changes["stamina_update"] = self.stamina_update.merge(other.stamina_update) if self.stamina_update else other.stamina_update
         if other.wound_update: changes["wound_update"] = self.wound_update.merge(other.wound_update) if self.wound_update else other.wound_update
+        if other.status_effect_update: changes["status_effect_update"] = self.status_effect_update.merge(other.status_effect_update) if self.status_effect_update else other.status_effect_update
         if other.group_id_set is not None: changes["group_id_set"] = other.group_id_set
         if other.self_model_bundle_set is not None: changes["self_model_bundle_set"] = other.self_model_bundle_set
         if other.cognition_bundle_set is not None: changes["cognition_bundle_set"] = other.cognition_bundle_set

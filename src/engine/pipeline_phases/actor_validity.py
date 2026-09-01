@@ -31,8 +31,8 @@ class ActorValidityPhase:
         Invalid means:
             - combat.alive is False
             - lifecycle.active is False
-            - status_stunned is True
-            - status_frozen is True
+            - a "stunned" StatusEffectState is present in combat.status_effects
+            - a "frozen" StatusEffectState is present in combat.status_effects
 
         Important:
             Navigation intent is also a proposal. A dead actor may not submit
@@ -56,8 +56,8 @@ class ActorValidityPhase:
             if entity is None:
                 continue
 
-            is_stunned = entity.identity.properties.get("status_stunned", False)
-            is_frozen = entity.identity.properties.get("status_frozen", False)
+            is_stunned = any(s.kind == "stunned" for s in entity.combat.status_effects)
+            is_frozen = any(s.kind == "frozen" for s in entity.combat.status_effects)
             is_sleeping = entity.identity.properties.get("status_sleeping", False)
             is_dead = not entity.combat.alive
             is_inactive = not entity.lifecycle.active

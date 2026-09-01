@@ -129,7 +129,7 @@ class LegalityServiceV2:
         if not actor.lifecycle.active or not actor.combat.alive:
             return False, ReasonCode.TARGET_INVALID
             
-        if actor.identity.properties.get("status_frozen") or actor.identity.properties.get("status_stunned"):
+        if any(s.kind in ("frozen", "stunned") for s in actor.combat.status_effects):
             return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
         # 2. Regional Suppression
@@ -163,7 +163,7 @@ class LegalityServiceV2:
         VERIFIED v2: movement_readiness_gating
         """
         # 0. Status Check
-        if entity.identity.properties.get("status_stunned") or entity.identity.properties.get("status_frozen"):
+        if any(s.kind in ("frozen", "stunned") for s in entity.combat.status_effects):
             return False, ReasonCode.ATTACKER_STATUS_BLOCKED
         # 1. Occupancy Check
         ok, reason = LegalityServiceV2.verify_occupancy(target_pos, state_or_context, ignore_entity_id=entity.id)
@@ -215,7 +215,7 @@ class LegalityServiceV2:
         if not is_opportunity_attack and attacker.combat.readiness < 100.0:
             return False, ReasonCode.INSUFFICIENT_READINESS
         
-        if attacker.identity.properties.get("status_frozen") or attacker.identity.properties.get("status_stunned"):
+        if any(s.kind in ("frozen", "stunned") for s in attacker.combat.status_effects):
             return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
         # 3. Faction Validity (Friendly Fire Law / Dynamic Relationship Check)
@@ -316,7 +316,7 @@ class LegalityServiceV2:
             return False, ReasonCode.ATTACKER_INCAPACITATED
         if attacker.combat.readiness < 100.0:
             return False, ReasonCode.INSUFFICIENT_READINESS
-        if attacker.identity.properties.get("status_frozen") or attacker.identity.properties.get("status_stunned"):
+        if any(s.kind in ("frozen", "stunned") for s in attacker.combat.status_effects):
             return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
         # 2. Range Validity

@@ -113,6 +113,15 @@ class ScarState:
 
 
 @dataclass(frozen=True, slots=True)
+class StatusEffectState:
+    """A persistent status effect (e.g. frozen, stunned) applied to an entity."""
+    kind: str  # "frozen", "stunned"
+    source: str = ""
+    magnitude: float = 0.0
+    expires_tick: int = -1
+
+
+@dataclass(frozen=True, slots=True)
 class BiologicalComponent:
     """State for sleep, hunger, and other biological pressures."""
     sleep_debt: float = 0.0      # 0.0 to 100.0, affects performance
@@ -311,6 +320,7 @@ class CombatComponent:
     readiness_speed: float = 10.0
     wounds: List[WoundState] = field(default_factory=list)
     scars: List[ScarState] = field(default_factory=list)
+    status_effects: List[StatusEffectState] = field(default_factory=list)
     latest_result: Optional["IntentResult"] = None
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -333,6 +343,7 @@ class CombatComponent:
             "readiness_speed": self.readiness_speed,
             "wounds": [asdict(w) for w in self.wounds],
             "scars": [asdict(s) for s in self.scars],
+            "status_effects": [asdict(s) for s in self.status_effects],
             "latest_result": asdict(self.latest_result) if self.latest_result else None
         }
         object.__setattr__(self, "_canonical_cache", res)
@@ -393,6 +404,7 @@ class InteractionComponent:
     target_node_id: int | None = None
     progress: int = 0
     start_tick: int = 0
+    kind: Optional[str] = None  # "harvest", "ground_item", "corpse", "chest", "guild", "inn", "tavern"
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -401,7 +413,8 @@ class InteractionComponent:
         res = {
             "target_node_id": self.target_node_id,
             "progress": self.progress,
-            "start_tick": self.start_tick
+            "start_tick": self.start_tick,
+            "kind": self.kind
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res

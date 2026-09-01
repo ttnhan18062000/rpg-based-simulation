@@ -140,7 +140,8 @@ class InteractionPatch(ComponentPatch):
                 new_int = changes.get("interaction", entity.interaction)
                 changes["interaction"] = replace(new_int,
                     target_node_id=u_int.target_node_id if u_int.target_node_id is not None else new_int.target_node_id,
-                    progress=new_int.progress + u_int.progress_delta
+                    progress=new_int.progress + u_int.progress_delta,
+                    kind=u_int.kind if u_int.kind is not None else new_int.kind
                 )
 
 
@@ -647,6 +648,33 @@ class WoundPatch(ComponentPatch):
 
 
 @dataclass(frozen=True, slots=True)
+class StatusEffectPatch(ComponentPatch):
+    status_effect_update: Optional[Any] = None  # StatusEffectUpdate
+
+    def is_noop(self) -> bool:
+        return self.status_effect_update is None or self.status_effect_update.is_noop()
+
+    def merge(self, other: StatusEffectPatch) -> StatusEffectPatch:
+        if not other or other.is_noop():
+            return self
+        merged = (self.status_effect_update.merge(other.status_effect_update)
+                  if self.status_effect_update and other.status_effect_update
+                  else (other.status_effect_update or self.status_effect_update))
+        return StatusEffectPatch(entity_id=self.entity_id, status_effect_update=merged)
+
+    def apply(self, entity: EntityState, changes: Dict[str, Any]) -> None:
+        from src.engine.apply import replace
+        if self.status_effect_update:
+            new_com = changes.get("combat", entity.combat)
+            new_effects = list(new_com.status_effects)
+            if self.status_effect_update.effects_remove:
+                new_effects = [e for e in new_effects if e.kind not in self.status_effect_update.effects_remove]
+            new_effects.extend(self.status_effect_update.effects_add)
+            new_com = replace(new_com, status_effects=tuple(new_effects))
+            changes["combat"] = new_com
+
+
+@dataclass(frozen=True, slots=True)
 class SelfModelPatch(ComponentPatch):
     self_model_bundle_set: Optional[Any] = None  # SelfModelBundle
 
@@ -741,6 +769,9 @@ def extract_patches(entity_id: int, update: EntityUpdate) -> List[ComponentPatch
         if not p.is_noop(): patches.append(p)
     if update.wound_update is not None:
         p = WoundPatch(entity_id, wound_update=update.wound_update)
+        if not p.is_noop(): patches.append(p)
+    if update.status_effect_update is not None:
+        p = StatusEffectPatch(entity_id, status_effect_update=update.status_effect_update)
         if not p.is_noop(): patches.append(p)
     if update.self_model_bundle_set is not None:
         p = SelfModelPatch(entity_id, self_model_bundle_set=update.self_model_bundle_set)

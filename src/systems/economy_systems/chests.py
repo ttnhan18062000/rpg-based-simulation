@@ -16,7 +16,7 @@ class ChestSystem:
             if not entity.interaction or entity.interaction.target_node_id is None:
                 continue
                 
-            if entity.identity.properties.get("interaction_kind") != "chest":
+            if entity.interaction.kind != "chest":
                 continue
                 
             chest_id = entity.interaction.target_node_id

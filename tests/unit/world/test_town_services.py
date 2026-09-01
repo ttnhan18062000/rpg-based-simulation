@@ -1,4 +1,5 @@
 import pytest
+from dataclasses import replace
 from src.core.state import AuthoritativeState, BuildingState
 from src.core.builder import V2EntityBuilder
 from src.systems.town_service import TownServiceSystem
@@ -12,8 +13,8 @@ def test_inn_restoration():
         .inventory(gold=100)
         .combat(hp=10, max_hp=100)
         .interaction(target_node_id=1, progress=9.0)
-        .identity(properties={"interaction_kind": "inn"})
         .build())
+    entity = replace(entity, interaction=replace(entity.interaction, kind="inn"))
     
     # Setup inn building
     inn = BuildingState(id=1, kind="inn", position=(10, 10))
@@ -44,8 +45,8 @@ def test_tavern_nourishment():
         .inventory(gold=50)
         .combat(hp=10, max_hp=100)
         .interaction(target_node_id=2, progress=9.0)
-        .identity(properties={"interaction_kind": "tavern"})
         .build())
+    entity = replace(entity, interaction=replace(entity.interaction, kind="tavern"))
     
     tavern = BuildingState(id=2, kind="tavern", position=(10, 10))
     
@@ -62,3 +63,45 @@ def test_tavern_nourishment():
     intent = ent_upd.resource_transfers[0]
     assert intent.biological_upd.hunger_set == 0.0
     assert intent.gold_delta == -5
+
+def test_guild_service_routes_via_interaction_kind():
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(10.0, 10.0)
+        .interaction(target_node_id=3, progress=9.0)
+        .build())
+    entity = replace(entity, interaction=replace(entity.interaction, kind="guild"))
+
+    guild = BuildingState(id=3, kind="guild", position=(10, 10))
+
+    state = AuthoritativeState(
+        tick=100, seed=42,
+        entities={1: entity},
+        buildings={3: guild}
+    )
+
+    update = TownServiceSystem.update(state)
+
+    ent_upd = update.entity_updates[1]
+    assert ent_upd.interaction.reset == True
+    assert ent_upd.property_updates.get("visited_guild_tick") == 100
+
+def test_unrelated_interaction_kind_not_routed():
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(10.0, 10.0)
+        .interaction(target_node_id=1, progress=9.0)
+        .build())
+    entity = replace(entity, interaction=replace(entity.interaction, kind="harvest"))
+
+    inn = BuildingState(id=1, kind="inn", position=(10, 10))
+
+    state = AuthoritativeState(
+        tick=100, seed=42,
+        entities={1: entity},
+        buildings={1: inn}
+    )
+
+    update = TownServiceSystem.update(state)
+
+    assert 1 not in update.entity_updates

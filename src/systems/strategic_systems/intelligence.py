@@ -845,7 +845,7 @@ class StrategicIntelligenceSystem:
                 continue
             
             # Legality Guard: Incapacitated entities skip strategic cycles
-            if entity.identity.properties.get("status_frozen") or entity.identity.properties.get("status_stunned"):
+            if any(s.kind in ("frozen", "stunned") for s in entity.combat.status_effects):
                 continue
 
             cad_val = (cadence.concern_evaluation if cadence else DefaultCadence().concern_evaluation)
@@ -915,7 +915,7 @@ class StrategicIntelligenceSystem:
                 continue
             
             # Legality Guard: Incapacitated entities skip strategic cycles
-            if entity.identity.properties.get("status_frozen") or entity.identity.properties.get("status_stunned"):
+            if any(s.kind in ("frozen", "stunned") for s in entity.combat.status_effects):
                 continue
 
             # Staggered frequency (Phase 5/6 spec)
@@ -1218,7 +1218,7 @@ class StrategicIntelligenceSystem:
             return StrategicUpdate()
         
         # Legality Guard: Incapacitated entities skip strategic cycles
-        if entity.identity.properties.get("status_frozen") or entity.identity.properties.get("status_stunned"):
+        if any(s.kind in ("frozen", "stunned") for s in entity.combat.status_effects):
             return StrategicUpdate()
 
         # Worker Fast-Path: If entity is a worker with an active, unblocked harvesting project and navigation target,

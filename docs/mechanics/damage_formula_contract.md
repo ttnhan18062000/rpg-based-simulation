@@ -69,7 +69,7 @@ Combat damage is not random — it is a deterministic function of attacker stats
 
 | Modifier | Type | Multiplier | Condition |
 |---|---|---|---|
-| Frozen/Shatter | multiplicative ATK | `× 1.50` | `defender.identity.properties.get("status_frozen")` truthy |
+| Frozen/Shatter | multiplicative ATK | `× 1.50` | `any(s.kind == "frozen" for s in defender.combat.status_effects)` truthy |
 | Sleep Exhaustion | multiplicative ATK | `× 0.80` | `attacker.biological.sleep_debt > 80.0` |
 | Stamina Exhaustion | multiplicative ATK | `× exhaust_mult` | `StaminaService.get_exhaustion_multiplier(attacker.stamina) < 1.0` only |
 
@@ -221,7 +221,7 @@ Wound check: 7 > 100 * 0.25 = 25.0? No → no wound
 
 ```
 Attacker: atk=30
-Defender: def_stat=10, max_hp=80, hp=80, status_frozen=True
+Defender: def_stat=10, max_hp=80, hp=80, status_effects=[StatusEffectState(kind="frozen")]
 
 Additive: high_ground → atk_mult += 0.20 → 1.20
           flanked → atk_mult += 0.15 → 1.35

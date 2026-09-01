@@ -3897,3 +3897,23 @@
     policy).
   proof_type: regression
   test_path: tests/unit/strategic/test_role_model_state.py
+- id: STRAT-265
+  text: 'Frozen or stunned entities are excluded from strategic-cognition scheduling:
+    StrategicWorkQueue.build() skips them from the eligible entity set, and StrategicIntelligenceSystem''s
+    per-entity concern-evaluation / background-sweep / strategic-update loop (3 call
+    sites, each behind a "Legality Guard: Incapacitated entities skip strategic cycles"
+    comment) short-circuits with an empty StrategicUpdate when the entity has an active
+    "frozen" or "stunned" status effect.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/systems/strategic_systems/work_queue.py:32 (`if any(s.kind in
+    ("frozen", "stunned") for s in entity.combat.status_effects): continue`); src/systems/strategic_systems/intelligence.py:848,918,1221
+    (same guard, 3 call sites). Migrated off identity.properties.get("status_frozen"/"status_stunned")
+    to the typed CombatComponent.status_effects: List[StatusEffectState] by TCK-20260831-STATUS-EFFECT-STATE-UNIFICATION.'
+  proof_type: parity
+  test_path: tests/unit/domains/optimization/test_strategic_work_queue.py::test_strategic_queue_excludes_frozen_and_stunned_entities,
+    tests/unit/strategic/test_status_hardening.py::test_frozen_actor_skips_strategic_intent,
+    ::test_stunned_actor_skips_strategic_concerns
+  divergence_note: null
+  support_boundary: null

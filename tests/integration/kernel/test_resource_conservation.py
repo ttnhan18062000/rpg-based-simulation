@@ -18,15 +18,17 @@ def base_state():
     )
     
     from src.core.builder import V2EntityBuilder
+    from dataclasses import replace
     entity = (V2EntityBuilder(1)
         .kind("HERO")
         .location(0, 0)
         .inventory(max_slots=1)
         .interaction(target_node_id=101, progress=0)
-        .properties({"interaction_kind": "harvest", "harvest_duration": 1})
+        .properties({"harvest_duration": 1})
         .build()
     )
-    
+    entity = replace(entity, interaction=replace(entity.interaction, kind="harvest"))
+
     return AuthoritativeState(
         tick=1,
         seed=42,
@@ -67,11 +69,10 @@ def test_loot_ground_item_full_inventory_does_not_remove_item(base_state):
     # 1. Setup ground item
     ground_item = GroundItemState(id=201, item_id="iron_ore", quantity=1, position=(1, 0))
     from dataclasses import replace
-    base_state = replace(base_state, 
+    base_state = replace(base_state,
         ground_items={201: ground_item},
-        entities={1: replace(base_state.entities[1], 
-            interaction=replace(base_state.entities[1].interaction, target_node_id=201, progress=9),
-            identity=replace(base_state.entities[1].identity, properties={**base_state.entities[1].identity.properties, "interaction_kind": "ground_item"})
+        entities={1: replace(base_state.entities[1],
+            interaction=replace(base_state.entities[1].interaction, target_node_id=201, progress=9, kind="ground_item")
         )}
     )
     
@@ -98,11 +99,10 @@ def test_loot_corpse_full_inventory_does_not_remove_corpse(base_state):
     # 1. Setup corpse
     corpse = CorpseState(id=301, original_entity_id=99, position=(1, 0), items=[ItemStack("iron_ore", 1)], decay_tick=100)
     from dataclasses import replace
-    base_state = replace(base_state, 
+    base_state = replace(base_state,
         corpses={301: corpse},
-        entities={1: replace(base_state.entities[1], 
-            interaction=replace(base_state.entities[1].interaction, target_node_id=301, progress=9),
-            identity=replace(base_state.entities[1].identity, properties={**base_state.entities[1].identity.properties, "interaction_kind": "corpse"})
+        entities={1: replace(base_state.entities[1],
+            interaction=replace(base_state.entities[1].interaction, target_node_id=301, progress=9, kind="corpse")
         )}
     )
     
