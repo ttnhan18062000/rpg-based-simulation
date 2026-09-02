@@ -188,6 +188,82 @@ def test_birth_record_writes_genetic_profile_via_authoritative_apply_path():
         assert 0.8 <= getattr(result_profile, attr) <= 1.3
 
 
+def test_parent_bond_updates_for_birth_apply_through_authoritative_path():
+    """TCK-20260902-REPRODUCTION-HUMANOID-CADENCE-PHASE: the reciprocal parent-side
+    SocialBond updates produced by build_parent_bond_updates_for_birth() for both real
+    parent entities must survive a full ApplyPath.apply_generation() round-trip, landing
+    at familiarity=0.8/sentiment=0.8 -- never a direct mutation."""
+    from src.core.builder import build_parent_bond_updates_for_birth
+
+    parent_a = EntityState(id=1, kind="HUMAN")
+    parent_b = EntityState(id=2, kind="HUMAN")
+    state = AuthoritativeState(tick=10, seed=42, world_time=100, entities={1: parent_a, 2: parent_b})
+
+    parent_updates = build_parent_bond_updates_for_birth([1, 2], child_entity_id=99, birth_tick=10)
+    update = StateUpdate(
+        entity_updates={u.entity_id: u for u in parent_updates},
+        force_full_scan=True,
+    )
+    new_state = ApplyPath.apply_generation(state, update, next_tick=11, cadence=SystemCadence())
+
+    for parent_id in (1, 2):
+        bond = new_state.entities[parent_id].social.bonds[99]
+        assert bond.familiarity == 0.8
+        assert bond.sentiment == 0.8
+        assert bond.last_interaction_tick == 10
+
+
+def test_humanoid_reproduction_commits_through_authoritative_apply_path():
+    """TCK-20260902-REPRODUCTION-HUMANOID-CADENCE-PHASE: the full StateUpdate produced by
+    HumanoidReproductionService.process_reproduction() -- new child entity plus both
+    parents' cooldown and reciprocal SocialBond updates -- must survive a full
+    ApplyPath.apply_generation() round-trip in a single tick. Mirrors
+    test_natural_creature_spawn_commits_through_authoritative_apply_path's pattern, extended
+    to also cover the parent-side mutations the parentless sibling never exercised."""
+    from src.systems.world_systems.generator import EntityGenerator
+    from src.world.reproduction_humanoid import HumanoidReproductionService
+
+    parent_a = EntityState(
+        id=101, kind="HUMAN",
+        navigation=NavigationComponent(position=(10.0, 10.0)),
+        combat=CombatComponent(hp=100, max_hp=100, alive=True),
+        identity=IdentityComponent(role="CITIZEN", life_stage=LifeStage.ADULT),
+        lifecycle=LifecycleComponent(age_ticks=5000, max_age_ticks=20000, active=True),
+    )
+    parent_b = EntityState(
+        id=102, kind="HUMAN",
+        navigation=NavigationComponent(position=(10.5, 10.5)),
+        combat=CombatComponent(hp=100, max_hp=100, alive=True),
+        identity=IdentityComponent(role="CITIZEN", life_stage=LifeStage.ADULT),
+        lifecycle=LifecycleComponent(age_ticks=5000, max_age_ticks=20000, active=True),
+    )
+    state = AuthoritativeState(tick=100, seed=42, world_time=1000, entities={101: parent_a, 102: parent_b})
+
+    generator = EntityGenerator(seed=42)
+    update = HumanoidReproductionService.process_reproduction(state, generator)
+
+    assert len(update.entities_add) == 1
+    child = update.entities_add[0]
+
+    new_state = ApplyPath.apply_generation(state, update, next_tick=101, cadence=SystemCadence())
+
+    result_child = new_state.entities[child.id]
+    assert result_child.kind == "HUMAN"
+    assert result_child.lifecycle.parent_a_entity_id == 101
+    assert result_child.lifecycle.parent_b_entity_id == 102
+    assert result_child.lifecycle.birth_tick == 100
+    assert result_child.identity.life_stage == LifeStage.CHILD
+
+    expiry = 100 + HumanoidReproductionService.REPRODUCTION_COOLDOWN_TICKS
+    assert new_state.entities[101].lifecycle.reproduction_cooldowns[102] == expiry
+    assert new_state.entities[102].lifecycle.reproduction_cooldowns[101] == expiry
+
+    for parent_id in (101, 102):
+        bond = new_state.entities[parent_id].social.bonds[child.id]
+        assert bond.familiarity == 0.8
+        assert bond.sentiment == 0.8
+
+
 def test_self_model_patch_apply_parity_durable_materialization():
     """
     TCK-20260703-SIMQ-UPLIFT3-BRANCH-B (supplementary fix): direct regression guard for

@@ -335,6 +335,73 @@ escalation event, not a settlement/camp demographic signal — the existing worl
 path sits beside has never had a population-pressure gate either. This path writes no
 `population_cohorts_set` under any circumstance.
 
+### Humanoid Reproduction (TCK-20260902-REPRODUCTION-HUMANOID-CADENCE-PHASE)
+
+Behind `ENABLE_REPRODUCTION_HUMANOID_PATH` (default OFF), `WorldDynamicsSystem.resolve_dynamics()`
+(`src/engine/world_dynamics.py`) gains a new "3.10 Humanoid Reproduction" step, nested inside the
+existing `cadence.world_dynamics`-gated block on its own independent cadence — the same
+nested-cadence pattern step "3.4 Boss Spawning" already established for `cadence.boss_spawn` in the
+same function. Unlike the Natural-Creature and Magical/Demonic paths above, which spawn a
+parentless entity from a per-camp/per-calamity anchor, this path operates on **existing entity
+pairs** and is the one path in the epic that gets a genuinely new `SystemCadence` field rather than
+reusing `cadence.world_dynamics` plus an inner constant.
+
+**Cadence:** a new `SystemCadence.reproduction_humanoid` field (200 ticks, `src/engine/cadence.py`)
+— a multiple of the outer `cadence.world_dynamics` gate (50) so the nested check aligns cleanly
+with one out of every four `world_dynamics` passes. `should_run(state.tick, None,
+cadence.reproduction_humanoid)` is checked independently of, and nested inside, the outer
+`cadence.world_dynamics` check, exactly as `cadence.boss_spawn` already does for step 3.4.
+
+**Eligibility (`HumanoidReproductionService.process_reproduction()`, `src/world/reproduction_humanoid.py`):**
+one O(n) pass over `state.entities` filtered to `identity.life_stage == LifeStage.ADULT`,
+`combat.alive`, and `lifecycle.active` (the same three-flag liveness convention already used
+elsewhere in this file), sorted by entity id for deterministic iteration. For each unpaired
+candidate, the existing indexed `SpatialQueryService.nearby_entities()` grid lookup (not a naive
+all-pairs scan) finds the lowest-id unpaired candidate within `HUMANOID_PAIRING_RADIUS` (10.0 units
+— the same 10-unit `nearby_entities()` radius convention already used for `_threat_resolved()`'s
+interaction-radius check in `src/systems/strategic_systems/intelligence.py` and
+`RoleModelSelectionPhase.RADIUS` in `src/strategy/role_model_phase.py`) whose
+`EntityState.kind` matches ("same-race" — no separate `race` field exists on `IdentityComponent`)
+and whose `reproduction_cooldowns` entry for the other party (if any) has already expired.
+
+**Population-pressure suppression gate:** reuses §5's Migration Law verbatim, identically to the
+Natural-Creature path above — a pairing is skipped when `compute_regional_scarcity(region.id,
+state)` exceeds the birth region's `young`-bracket `migration_threshold` (default 0.7), and a
+region with no `population_cohorts` seeded, or no region at all, is treated as eligible (not
+suppressed), mirroring the Migration Law's own skip-when-empty convention.
+
+**Tracked-parent birth record, not parentless:** the offspring is built via
+`EntityGenerator.spawn_humanoid_offspring()`, which calls `V2EntityBuilder.birth_record()` with
+real `parent_a_entity_id`/`parent_b_entity_id`, `birth_tick`, and each parent's own
+`lifecycle.genetic_profile` — resolved to a concrete `GeneticProfile` via
+`GeneticsSystem.generate_profile_from_seed(parent_id)` when a first-generation parent has none of
+its own yet (no live spawn path today populates a parent's own `genetic_profile`), since
+`birth_record()`'s internal `combine_profiles()` call only fires when at least one supplied parent
+profile is non-`None` — passing both through as `None` would silently skip genetics combination for
+every first-generation pairing. `parent_a_role`/`parent_b_role` are threaded through from each
+parent's live `identity.role`, driving `combine_profiles()`'s existing combat-lean bias (both
+`EntityRole.HERO` → combat-lean). The offspring spawns at `life_stage=LifeStage.CHILD`,
+`age_ticks=0` — a real newborn, not the Natural-Creature sibling's fast-forwarded maturation-clock
+trick, since this path has no analogous "must appear battle-ready soon" requirement.
+
+**Cooldown and bond writes:** on a successful pairing, both parents receive a per-key
+`LifecycleUpdate.reproduction_cooldowns_add` upsert (`REPRODUCTION_COOLDOWN_TICKS` = 400, 2x the
+cadence interval, so a repeat check on the same pair stays blocked through the very next cadence
+firing after the birth), and the already-shipped `build_parent_bond_updates_for_birth()` seeds each
+parent's reciprocal `SocialBond` toward the child at `familiarity=0.8`/`sentiment=0.8`, applied
+through the normal authoritative apply path — never a direct mutation.
+
+**Not marriage-gated:** per the 2026-08-29 build-order decoupling of Marriage (idea 33) from
+Reproduction (idea 32), this eligibility path never reads or checks any marriage-contract state
+(`ContractKind.MARRIAGE`/`MarriageState`) — verified by an architecture-guard test
+(`tests/unit/world/test_reproduction_humanoid_cadence.py`).
+
+**Does not yet close the population-pressure feedback loop:** this path only *reads*
+`compute_regional_scarcity()`/`migration_threshold` — it never writes `population_cohorts_set`.
+Individual births from this path do not yet feed back into the aggregate `population_cohorts`
+signal; that closure is a separate, later mechanic
+(`TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE`).
+
 ---
 
 ## 7. Cultural Drift (E62)

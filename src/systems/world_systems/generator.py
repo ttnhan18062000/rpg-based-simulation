@@ -16,6 +16,7 @@ from src.platform.rng import DeterministicRNG
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
+    from src.systems.lifecycle_systems.genetics import GeneticProfile
 
 class EntityGenerator:
     """
@@ -149,6 +150,48 @@ class EntityGenerator:
             .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
             .inventory(gold=int(base_gold))
             .birth_record(parent_a_entity_id=None, parent_b_entity_id=None, birth_tick=birth_tick, birth_city_id=None)
+            .build())
+
+    def spawn_humanoid_offspring(
+        self, pos: tuple[float, float], state: AuthoritativeState, kind: str,
+        parent_a_id: int, parent_b_id: int, birth_tick: int, birth_city_id: Optional[int],
+        parent_a_genetic_profile: Optional[GeneticProfile], parent_b_genetic_profile: Optional[GeneticProfile],
+        parent_a_role: int, parent_b_role: int, difficulty_tier: int = 1,
+    ) -> EntityState:
+        """Spawn a real newborn humanoid offspring with tracked parent ids, an inherited
+        GeneticProfile, and CHILD life stage at age_ticks=0 -- unlike
+        spawn_natural_creature_offspring()'s fast-forwarded maturation clock, this path has no
+        analogous "must appear battle-ready soon" requirement."""
+        entity_id = self.get_next_id()
+
+        from src.world.spawn_config import DIFFICULTY_TIERS
+        mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
+
+        tick = state.tick if state else 0
+        evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
+
+        base_hp = 50 * mults.hp
+        base_atk = 10 * mults.atk
+        base_def = 5 * mults.def_stat
+        base_gold = 10 * mults.gold
+
+        from src.core.builder import V2EntityBuilder
+        from src.core.state import LifeStage
+
+        return (V2EntityBuilder(entity_id)
+            .kind(kind)
+            .location(*pos)
+            .identity(role=EntityRole.CITIZEN, faction=Faction.TOWN_COUNCIL,
+                      evolution_level=evolution_level, life_stage=LifeStage.CHILD)
+            .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
+            .inventory(gold=int(base_gold))
+            .birth_record(
+                parent_a_entity_id=parent_a_id, parent_b_entity_id=parent_b_id,
+                birth_tick=birth_tick, birth_city_id=birth_city_id,
+                parent_a_genetic_profile=parent_a_genetic_profile,
+                parent_b_genetic_profile=parent_b_genetic_profile,
+                parent_a_role=parent_a_role, parent_b_role=parent_b_role,
+            )
             .build())
 
     def spawn_goblin(self, pos: tuple[float, float], state: AuthoritativeState | None = None, difficulty_tier: int = 1) -> EntityState:

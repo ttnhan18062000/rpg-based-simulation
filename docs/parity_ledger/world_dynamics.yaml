@@ -1753,3 +1753,49 @@
   divergence_note: null
   proof_type: parity
   support_boundary: null
+- id: WORLD-122
+  text: 'Behind ENABLE_REPRODUCTION_HUMANOID_PATH (default OFF), WorldDynamicsSystem.resolve_dynamics()
+    gains a new "3.10 Humanoid Reproduction" step nested inside the existing cadence.world_dynamics
+    block on its own independent cadence field, SystemCadence.reproduction_humanoid
+    (200 ticks) -- the same nested-cadence pattern already established by step 3.4
+    for cadence.boss_spawn. Unlike the parentless Natural-Creature/Magical-Demonic
+    siblings, this path operates on existing ADULT/alive/active entity pairs: HumanoidReproductionService.process_reproduction()
+    does one O(n) candidate pass, then uses the indexed SpatialQueryService.nearby_entities()
+    grid lookup (10.0-unit radius, the same nearby_entities() radius convention already
+    used by _threat_resolved()''s interaction-radius check in src/systems/strategic_systems/intelligence.py
+    and RoleModelSelectionPhase.RADIUS in src/strategy/role_model_phase.py) to find
+    same-kind, cooldown-clear pairs. A matched pair produces a real newborn (life_stage=CHILD,
+    age_ticks=0) via EntityGenerator.spawn_humanoid_offspring(), calling V2EntityBuilder.birth_record()
+    with real parent_a_entity_id/parent_b_entity_id, birth_tick, and each parent''s
+    GeneticProfile -- resolved via GeneticsSystem.generate_profile_from_seed(parent_id)
+    when a first-generation parent has none of its own, since birth_record()''s internal
+    combine_profiles() call only fires when at least one supplied parent profile is
+    non-None. parent_a_role/parent_b_role are threaded through from each parent''s
+    live identity.role, driving combine_profiles()''s existing combat-lean bias. Both
+    parents receive a per-key LifecycleUpdate.reproduction_cooldowns_add upsert (REPRODUCTION_COOLDOWN_TICKS=400,
+    2x the cadence interval), and build_parent_bond_updates_for_birth() seeds each
+    parent''s reciprocal SocialBond toward the child. Eligibility is suppressed when
+    compute_regional_scarcity() for the birth region exceeds the young-bracket PopulationCohort.migration_threshold
+    (default 0.7, reusing the Migration Law verbatim, skip-when-empty convention identical
+    to the Natural-Creature sibling). This path is explicitly NOT gated on any marriage-contract
+    state (2026-08-29 build-order decoupling of idea 32 from idea 33) and reads but
+    never writes population_cohorts -- the aggregate population-pressure feedback
+    loop closure is a separate, later ticket (TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE).'
+  status: verified
+  priority: P2
+  v2_evidence: src/world/reproduction_humanoid.py -- HumanoidReproductionService.process_reproduction();
+    src/engine/cadence.py -- SystemCadence.reproduction_humanoid (new field, 200 ticks);
+    src/engine/world_dynamics.py -- WorldDynamicsSystem.resolve_dynamics() "3.10 Humanoid
+    Reproduction" step, nested cadence.reproduction_humanoid check inside the cadence.world_dynamics
+    block; src/systems/world_systems/generator.py -- EntityGenerator.spawn_humanoid_offspring();
+    src/domains/optimization/feature_flags.py -- ENABLE_REPRODUCTION_HUMANOID_PATH
+    registered with default FeatureMode.OFF (DEV-002 default-OFF policy for a brand-new
+    mechanic). Cross-references SOC-259 (birth-record schema consumed), SOC-260 (genetics
+    inheritance consumed), WORLD-121/WORLD-120 (sibling reproduction paths, same flag-per-path/scarcity-gate-reuse
+    conventions), and WORLD-DEMO-001 (Migration Law, reused not reimplemented). TCK-20260902-REPRODUCTION-HUMANOID-CADENCE-PHASE.
+  test_path: tests/unit/world/test_reproduction_humanoid_cadence.py::test_eligible_adult_alive_same_location_same_race_pair_produces_birth;
+    tests/integration/optimization/test_component_patch_apply_parity.py::test_humanoid_reproduction_commits_through_authoritative_apply_path
+  divergence_note: null
+  proof_type: parity
+  legacy_evidence: null
+  support_boundary: null

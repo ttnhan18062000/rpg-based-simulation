@@ -33,6 +33,7 @@ class SystemCadence(BaseModel):
     ecology: int = Field(100, ge=1)
     building_sabotage: int = Field(100, ge=1)
     boss_spawn: int = Field(100, ge=1)
+    reproduction_humanoid: int = Field(200, ge=1)
 
 
 def should_run(tick: int, entity_id: int | None, cadence: int) -> bool:

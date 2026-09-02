@@ -198,6 +198,14 @@ class WorldDynamicsSystem:
                 if not territory_update.is_noop():
                     update = update.merge(territory_update)
 
+            # 3.10 Humanoid Reproduction
+            if (flags.get("ENABLE_REPRODUCTION_HUMANOID_PATH", "OFF") == "ON"
+                    and should_run(state.tick, None, cadence.reproduction_humanoid)):
+                from src.world.reproduction_humanoid import HumanoidReproductionService
+                repro_update = HumanoidReproductionService.process_reproduction(state, generator)
+                if not repro_update.is_noop():
+                    update = update.merge(repro_update)
+
         # 4. Regional Transformations (Type Shifting)
         from src.world.transformation import TransformationService
         refined_world_updates = dict(update.world_updates)
