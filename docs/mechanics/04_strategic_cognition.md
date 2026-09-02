@@ -847,6 +847,48 @@ score()` chain today (unlike `memory_adjustment`, §6.11) because both `GATHER_R
 
 ---
 
+### 6.13 Personal Dependents Route Bias (SOC-262)
+
+Applied in `AdventureRouteScorer.score()` block §9b, immediately after §9's escort scoring, when
+the scored entity's own durable state (`entity.lifecycle.dependent_entity_ids`) is non-empty.
+Unlike §6.10's `faction_directives` parameter, this term reads directly off the `entity` argument
+that is unconditionally passed at every real call site — it is live-wired by construction and
+cannot silently go dead the way §6.10's mechanic has.
+
+| Route family | Adjustment | Rationale |
+|---|---|---|
+| `HUNT_WEAK_ENEMY` | `−2.0` (floored at 0.0) | An entity responsible for a dependent avoids unnecessary combat risk |
+| `RECOVER` | `+1.0` | Recovering favors an entity that needs to remain able to care for its dependent |
+| `RETURN_TOWN` | `+1.0` | Returning to town favors an entity with a dependent to attend to |
+
+Both adjustments are flat, additive, and independently `round()`-and-floored at 0.0, matching §6.9's
+own shape. The bias fires on mere **presence** of at least one id in `dependent_entity_ids` — not on
+whether that id refers to a currently-alive entity — because `AdventureRouteScorer.score()` has no
+world-state parameter to check liveness against (see §6.10's own precedent for why a new parameter
+is deliberately not added here). This is a disclosed simplification, not an oversight.
+
+**Durable field and write path:** `LifecycleComponent.dependent_entity_ids: list[int]`
+(`src/core/state.py`), written only via `LifecycleUpdate.dependent_entity_ids_add` applied through
+`LifecyclePatch.apply()` (`src/engine/patches.py`) — never a direct mutation. See
+`docs/mechanics/05_world_evolution.md`'s "Personal Dependents (Non-Parental)" subsection for the
+full write-path description.
+
+**Deferred follow-up — not implemented by this mechanic:** birth-triggered parental dependent
+auto-registration (a newborn automatically becoming a parent's dependent via
+`parent_a_entity_id`/`parent_b_entity_id`) is explicitly **not** built here. It is deferred to
+`TCK-20260902-EPIC-RPG-M3-REPRODUCTION`, pending that epic's birth-record schema maturing further.
+As of this ticket, `dependent_entity_ids` is populated only via `V2EntityBuilder.lifecycle(
+dependent_entity_ids=...)` or `V2EntityBuilder.replace_lifecycle()`, for tests/demo construction —
+no production trigger establishes a dependent relationship automatically.
+
+**Source:** `src/domains/adventure/scoring.py` §9b, `src/domains/adventure/schema.py`
+(`AdventureRouteOption.dependent_bias`), `src/core/state.py` (`LifecycleComponent.
+dependent_entity_ids`), `src/core/updates.py` (`LifecycleUpdate.dependent_entity_ids_add`),
+`src/engine/patches.py` (`LifecyclePatch.apply()`) (TCK-20260902-PERSONAL-DEPENDENTS-ROUTE-BIAS,
+2026-09-02)
+
+---
+
 ## 7. Party Composition & Formation Scoring
 
 ### 7.1 PartyCompositionScorer.score() — Role Diversity & OCEAN Compatibility

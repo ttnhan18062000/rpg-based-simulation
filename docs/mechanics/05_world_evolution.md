@@ -204,6 +204,39 @@ function is shared between the two.
 **Source:** `src/systems/lifecycle_systems/lifecycle.py` (`LifecycleSystem._select_default_heir`,
 `LifecycleSystem.resolve_lifecycle`) (TCK-20260824-DEFAULT-HEIR-ASSIGNMENT, 2026-08-26)
 
+### Personal Dependents (Non-Parental) (TCK-20260902-PERSONAL-DEPENDENTS-ROUTE-BIAS)
+
+`LifecycleComponent.dependent_entity_ids: list[int]` (`src/core/state.py`) records the ids of
+entities this entity is personally responsible for — a general, plural concept distinct from
+`heir_entity_id` above (single-valued, death-only "who inherits") and distinct from the
+child→parent-direction `parent_a_entity_id`/`parent_b_entity_id` fields (which record whose child
+this entity is, the opposite direction).
+
+**Write path (mirrors `heir_entity_id`'s own precedent exactly):** the field is written only via
+`LifecycleUpdate.dependent_entity_ids_add: list[int]` on an entity's own `EntityUpdate` — never a
+direct field mutation — merged additively across same-tick writers by `LifecycleUpdate.merge()`,
+and applied authoritatively by `LifecyclePatch.apply()` (`src/engine/patches.py`), which extends
+the existing list and assigns the result the same way `heirlooms` is assigned (as a `tuple`,
+matching that field's own pre-existing list-typed-but-tuple-assigned pattern).
+
+**Construction (tests/demo only):** `V2EntityBuilder.lifecycle(dependent_entity_ids=[...])`
+(`src/core/builder.py`) or `V2EntityBuilder.replace_lifecycle(LifecycleComponent(
+dependent_entity_ids=[...]))`. No production system establishes this relationship automatically as
+of this ticket.
+
+**Scoring effect:** see `docs/mechanics/04_strategic_cognition.md` §6.13 (Personal Dependents Route
+Bias, SOC-262) for the `AdventureRouteScorer.score()` bias this field drives.
+
+**Deferred follow-up — not implemented by this mechanic:** birth-triggered parental dependent
+auto-registration (a newborn automatically becoming a parent's dependent via
+`parent_a_entity_id`/`parent_b_entity_id`) is explicitly **not** built here. It is deferred to
+`TCK-20260902-EPIC-RPG-M3-REPRODUCTION`, pending that epic's birth-record schema maturing further.
+
+**Source:** `src/core/state.py` (`LifecycleComponent.dependent_entity_ids`), `src/core/updates.py`
+(`LifecycleUpdate.dependent_entity_ids_add`), `src/engine/patches.py` (`LifecyclePatch.apply()`),
+`src/core/builder.py` (`V2EntityBuilder.lifecycle()`) (TCK-20260902-PERSONAL-DEPENDENTS-ROUTE-BIAS,
+2026-09-02)
+
 ### Migration Law
 When `scarcity(region) > cohort.migration_threshold` (default 0.7), **30%** of that cohort (min 1) emigrates to the lowest-scarcity adjacent region. Adjacency requires a shared boundary edge with non-degenerate overlap on the other axis.
 

@@ -162,6 +162,7 @@ class LifecycleComponent:
     heirlooms: list[str] = field(default_factory=list)
     parent_a_entity_id: Optional[int] = None
     parent_b_entity_id: Optional[int] = None
+    dependent_entity_ids: list[int] = field(default_factory=list)
     birth_tick: int = 0
     birth_city_id: Optional[int] = None
     reproduction_cooldowns: Dict[int, int] = field(default_factory=dict)  # partner_entity_id -> cooldown_expiry_tick
@@ -183,6 +184,7 @@ class LifecycleComponent:
             "heirlooms": sorted(list(self.heirlooms)),
             "parent_a_entity_id": self.parent_a_entity_id,
             "parent_b_entity_id": self.parent_b_entity_id,
+            "dependent_entity_ids": sorted(list(self.dependent_entity_ids)),
             "birth_tick": self.birth_tick,
             "birth_city_id": self.birth_city_id,
             "reproduction_cooldowns": dict(sorted(self.reproduction_cooldowns.items())),

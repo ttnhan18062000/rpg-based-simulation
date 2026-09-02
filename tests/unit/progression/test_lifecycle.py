@@ -592,3 +592,44 @@ def test_no_marriage_precondition_in_birth_record_schema_or_apply_path():
              .build())
     state = AuthoritativeState(tick=10, seed=42, entities={99: child})
     assert state.entities[99].strategic.contracts == {}
+
+
+def test_dependent_field_round_trip():
+    """TCK-20260902-PERSONAL-DEPENDENTS-ROUTE-BIAS: dependent_entity_ids serializes
+    deterministically via to_canonical_dict(), sorted like heirlooms, including the
+    unset (empty-list) default case."""
+    lifecycle = LifecycleComponent(dependent_entity_ids=[3, 1, 2])
+    canonical = lifecycle.to_canonical_dict()
+    assert canonical["dependent_entity_ids"] == [1, 2, 3]
+
+    unset = LifecycleComponent()
+    assert unset.to_canonical_dict()["dependent_entity_ids"] == []
+
+
+def test_dependent_field_applied_via_authoritative_patch():
+    """dependent_entity_ids is only ever set via LifecycleUpdate.dependent_entity_ids_add
+    applied through ApplyPath.apply_generation (the authoritative apply path) -- never a
+    direct mutation, mirroring heir_entity_id_set's own precedent."""
+    entity = (V2EntityBuilder(1).location(0.0, 0.0).build())
+    baseline_lifecycle = entity.lifecycle
+    state = AuthoritativeState(tick=100, seed=42, entities={1: entity})
+
+    assert LifecycleUpdate().is_noop()
+    assert not LifecycleUpdate(dependent_entity_ids_add=[2]).is_noop()
+
+    life_upd = LifecycleUpdate(dependent_entity_ids_add=[2])
+    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, lifecycle=life_upd)})
+
+    next_state = ApplyPath.apply_generation(state, update, 101, 101)
+
+    new_lifecycle = next_state.entities[1].lifecycle
+    assert list(new_lifecycle.dependent_entity_ids) == [2]
+
+    # Baseline entity/component object is untouched -- no direct mutation occurred.
+    assert state.entities[1].lifecycle is baseline_lifecycle
+    assert baseline_lifecycle.dependent_entity_ids == []
+
+    # merge() unions dependent_entity_ids_add across same-tick writers, mirroring
+    # heirlooms_add's own additive-list semantics.
+    merged = LifecycleUpdate(dependent_entity_ids_add=[2]).merge(LifecycleUpdate(dependent_entity_ids_add=[3]))
+    assert merged.dependent_entity_ids_add == [2, 3]

@@ -3864,3 +3864,38 @@
   test_path: tests/unit/social/test_marriage.py::test_marriage_refused_below_trust_hard_cancel_threshold
   divergence_note: null
   support_boundary: null
+- id: SOC-262
+  text: 'Personal Dependents Route Bias (idea 31, non-parental case): LifecycleComponent.dependent_entity_ids:
+    list[int] (src/core/state.py) is a new, genuinely distinct durable field from
+    heir_entity_id (singular, death-only inheritance target) and from parent_a_entity_id/parent_b_entity_id
+    (child->parent direction) -- it records the plural set of entities this entity
+    is personally responsible for while alive. Written only through LifecycleUpdate.dependent_entity_ids_add:
+    list[int] (src/core/updates.py), merged additively across same-tick writers by
+    LifecycleUpdate.merge(), and applied authoritatively by LifecyclePatch.apply()
+    (src/engine/patches.py), mirroring heirlooms/heirlooms_add''s extend-then-tuple-assign
+    write path exactly. AdventureRouteScorer.score() (src/domains/adventure/scoring.py)
+    gains a new post-clamp block SS9b, placed immediately after SS9''s escort scoring
+    (SOC-230) and reading entity.lifecycle.dependent_entity_ids directly off the entity
+    argument -- never a new optional scorer parameter, which avoids the confirmed-dead
+    faction_directives parameter pattern documented at SOC-230''s sibling SS6.10 entry
+    in docs/mechanics/04_strategic_cognition.md. When dependent_entity_ids is non-empty:
+    HUNT_WEAK_ENEMY gets a flat -2.0 (floored at 0.0), RECOVER and RETURN_TOWN each
+    get a flat +1.0. The new term is traced on its own AdventureRouteOption.dependent_bias
+    field (src/domains/adventure/schema.py). The bias keys on mere presence of an
+    id, not liveness, since score() carries no world-state parameter to check it against
+    -- a disclosed simplification. Construction is builder-only for tests/demo (V2EntityBuilder.lifecycle(dependent_entity_ids=...),
+    src/core/builder.py); birth-triggered parental dependent auto-registration (a
+    newborn auto-registering as its parent''s dependent via parent_a_entity_id/parent_b_entity_id)
+    is explicitly deferred to TCK-20260902-EPIC-RPG-M3-REPRODUCTION, pending that
+    epic''s birth-record schema maturing further -- not built by this entry.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (LifecycleComponent.dependent_entity_ids, to_canonical_dict());
+    src/core/updates.py (LifecycleUpdate.dependent_entity_ids_add, is_noop()/merge());
+    src/engine/patches.py (LifecyclePatch.apply()); src/core/builder.py (V2EntityBuilder.lifecycle());
+    src/domains/adventure/scoring.py (SS9b); src/domains/adventure/schema.py (AdventureRouteOption.dependent_bias).
+  proof_type: regression
+  test_path: tests/unit/domains/adventure/test_scoring_dependent_bias.py::test_dependent_route_bias_lowers_risky_route_score
+  divergence_note: null
+  support_boundary: null

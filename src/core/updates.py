@@ -444,6 +444,7 @@ class LifecycleUpdate:
     heirlooms_add: list[str] = field(default_factory=list)
     parent_a_entity_id_set: Optional[int] = None
     parent_b_entity_id_set: Optional[int] = None
+    dependent_entity_ids_add: list[int] = field(default_factory=list)
     birth_tick_set: Optional[int] = None
     birth_city_id_set: Optional[int] = None
     reproduction_cooldowns_add: Dict[int, int] = field(default_factory=dict)  # per-key upsert, NOT wholesale replace
@@ -454,7 +455,8 @@ class LifecycleUpdate:
                 self.is_permadeath_set is None and self.death_tick_set is None and
                 self.death_reason_set is None and self.heir_entity_id_set is None and
                 not self.heirlooms_add and self.parent_a_entity_id_set is None and
-                self.parent_b_entity_id_set is None and self.birth_tick_set is None and
+                self.parent_b_entity_id_set is None and not self.dependent_entity_ids_add and
+                self.birth_tick_set is None and
                 self.birth_city_id_set is None and not self.reproduction_cooldowns_add and
                 self.genetic_profile_set is None)
 
@@ -471,6 +473,7 @@ class LifecycleUpdate:
         if other.heirlooms_add: changes["heirlooms_add"] = self.heirlooms_add + other.heirlooms_add
         if other.parent_a_entity_id_set is not None: changes["parent_a_entity_id_set"] = other.parent_a_entity_id_set
         if other.parent_b_entity_id_set is not None: changes["parent_b_entity_id_set"] = other.parent_b_entity_id_set
+        if other.dependent_entity_ids_add: changes["dependent_entity_ids_add"] = self.dependent_entity_ids_add + other.dependent_entity_ids_add
         if other.birth_tick_set is not None: changes["birth_tick_set"] = other.birth_tick_set
         if other.birth_city_id_set is not None: changes["birth_city_id_set"] = other.birth_city_id_set
         if other.reproduction_cooldowns_add:

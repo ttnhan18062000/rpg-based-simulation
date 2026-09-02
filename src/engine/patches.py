@@ -75,6 +75,8 @@ class LifecyclePatch(ComponentPatch):
             u_life = self.lifecycle
             new_heirlooms = list(new_lifecycle.heirlooms)
             new_heirlooms.extend(u_life.heirlooms_add)
+            new_dependents = list(new_lifecycle.dependent_entity_ids)
+            new_dependents.extend(u_life.dependent_entity_ids_add)
             new_lifecycle = replace(new_lifecycle,
                 age_ticks=new_lifecycle.age_ticks + u_life.age_delta,
                 generation=new_lifecycle.generation + u_life.generation_delta,
@@ -85,6 +87,7 @@ class LifecyclePatch(ComponentPatch):
                 heirlooms=tuple(new_heirlooms),
                 parent_a_entity_id=u_life.parent_a_entity_id_set if u_life.parent_a_entity_id_set is not None else new_lifecycle.parent_a_entity_id,
                 parent_b_entity_id=u_life.parent_b_entity_id_set if u_life.parent_b_entity_id_set is not None else new_lifecycle.parent_b_entity_id,
+                dependent_entity_ids=tuple(new_dependents),
                 birth_tick=u_life.birth_tick_set if u_life.birth_tick_set is not None else new_lifecycle.birth_tick,
                 birth_city_id=u_life.birth_city_id_set if u_life.birth_city_id_set is not None else new_lifecycle.birth_city_id,
                 reproduction_cooldowns=(
