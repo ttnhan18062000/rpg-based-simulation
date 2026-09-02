@@ -102,6 +102,32 @@ def test_new_maturity_field_survives_apply_generation_round_trip():
     assert new_state.entities[1].identity.territory_maturity == 5.0
 
 
+def test_natural_creature_spawn_commits_through_authoritative_apply_path():
+    """TCK-20260902-REPRODUCTION-NATURAL-CREATURE-PATH: a parentless natural-creature
+    offspring built via EntityGenerator.spawn_natural_creature_offspring() and appended to
+    StateUpdate.entities_add must survive a full ApplyPath.apply_generation() round-trip,
+    including its birth-record fields and short-maturation-clock age_ticks."""
+    from src.systems.world_systems.generator import EntityGenerator
+
+    state = AuthoritativeState(tick=60, seed=42, world_time=100, entities={})
+
+    generator = EntityGenerator(seed=42)
+    offspring = generator.spawn_natural_creature_offspring(
+        (10.0, 20.0), state=state, kind="goblin_warrior", difficulty_tier=1, birth_tick=60,
+    )
+
+    update = StateUpdate(entities_add=[offspring], force_full_scan=True)
+    new_state = ApplyPath.apply_generation(state, update, next_tick=61, cadence=SystemCadence())
+
+    result_entity = new_state.entities[offspring.id]
+    assert result_entity.kind == "goblin_warrior"
+    assert result_entity.lifecycle.parent_a_entity_id is None
+    assert result_entity.lifecycle.parent_b_entity_id is None
+    assert result_entity.lifecycle.birth_tick == 60
+    assert result_entity.lifecycle.age_ticks == 3000 - 30
+    assert result_entity.identity.life_stage == LifeStage.CHILD
+
+
 def test_self_model_patch_apply_parity_durable_materialization():
     """
     TCK-20260703-SIMQ-UPLIFT3-BRANCH-B (supplementary fix): direct regression guard for

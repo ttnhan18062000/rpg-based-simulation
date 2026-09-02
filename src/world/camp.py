@@ -25,7 +25,8 @@ class CampService:
         """
         camp_updates: Dict[str, CampUpdate] = {}
         entities_add = []
-        
+        flags = getattr(state, "feature_flags", None) or {}
+
         # 1. Maturity Evolution
         for c_id, camp in state.camps.items():
             if not camp.active:
@@ -76,11 +77,32 @@ class CampService:
                         pass
                     
                     camp_updates[c_id] = CampUpdate(
-                        id=c_id, 
+                        id=c_id,
                         maturity_delta=-20.0, # Cost of raiding
                         last_raid_tick_set=state.tick
                     )
-                    
+
+            # 4. Natural-Creature Reproduction
+            if flags.get("ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH", "OFF") == "ON":
+                if (camp.maturity >= CampService.RAID_MATURITY_THRESHOLD
+                        and state.tick % CampService.CAMP_SPAWN_INTERVAL == 0):
+                    eligible = True
+                    if region is not None and region.population_cohorts:
+                        young = region.population_cohorts.get("young")
+                        threshold = young.migration_threshold if young is not None else 0.7
+                        from src.domains.demographics.cohort import compute_regional_scarcity
+                        scarcity = compute_regional_scarcity(region.id, state)
+                        eligible = scarcity <= threshold
+                    if eligible:
+                        offspring = generator.spawn_natural_creature_offspring(
+                            camp.position,
+                            state=state,
+                            kind="goblin_warrior" if camp.kind == "goblin" else "orc_warrior",
+                            difficulty_tier=int(camp.maturity / 20.0) + 1,
+                            birth_tick=state.tick,
+                        )
+                        entities_add.append(offspring)
+
         return StateUpdate(camp_updates=camp_updates, entities_add=entities_add)
 
     @staticmethod

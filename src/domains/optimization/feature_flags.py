@@ -138,6 +138,12 @@ class FeatureFlagManager:
             # imitation fidelity. DEV-002 default-OFF policy applies -- brand-new mechanic, no
             # corpus profile turns this on and no SHADOW-validation history exists.
             "ENABLE_ROLE_MODEL_IMITATION": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260902-REPRODUCTION-NATURAL-CREATURE-PATH): adds a new
+            # parentless same-kind offspring spawn branch inside CampService.process_camps()
+            # (src/world/camp.py), gated on camp maturity/spawn cadence plus a population-pressure
+            # scarcity check. DEV-002 default-OFF policy applies -- brand-new mechanic, no corpus
+            # profile turns this on and no SHADOW-validation history exists.
+            "ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH": FeatureMode.OFF,
         }
         if overrides:
             for k, v in overrides.items():

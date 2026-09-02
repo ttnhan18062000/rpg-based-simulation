@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-09-01
+last_verified: 2026-09-02
 ---
 
 # Chapter 5: World Evolution
@@ -264,6 +264,42 @@ per-entity mechanic with its own typed field (`IdentityComponent.territory_matur
 
 Per-species base rates are authored, inspectable content in `TERRITORY_MATURITY_RATES`
 (`src/world/creature_territory.py`), not derived from any existing table.
+
+### Natural-Creature Reproduction (TCK-20260902-REPRODUCTION-NATURAL-CREATURE-PATH)
+
+Behind `ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH` (default OFF), `CampService.process_camps()`
+(`src/world/camp.py`) gains a fourth, additive branch that spawns a parentless same-kind offspring
+for a camp that has reached raid maturity, on the camp's own spawn cadence — no new maturity field,
+no new spawn-trigger vocabulary.
+
+**Trigger:** `camp.maturity >= RAID_MATURITY_THRESHOLD` (80.0) and `state.tick %
+CAMP_SPAWN_INTERVAL == 0` (30) — both existing named constants already used by the garrison-spawn
+and raid-trigger blocks in the same function, not new authored numbers.
+
+**Parentless birth record:** the offspring is built via `EntityGenerator.spawn_natural_creature_offspring()`,
+which calls `V2EntityBuilder.birth_record(parent_a_entity_id=None, parent_b_entity_id=None,
+birth_tick=state.tick, birth_city_id=None)` — no tracked parent pair, and consequently no
+`SocialBond` seeding (both parent ids `None`).
+
+**Short CHILD→ADULT maturation clock:** the offspring is built with `life_stage=LifeStage.CHILD`
+and `age_ticks = 3000 - CAMP_SPAWN_INTERVAL` (2970) pre-seeded, rather than `age_ticks=0`. The
+existing, role-agnostic per-tick `age_ticks += 1` increment and `LifecycleSystem`'s forward-only
+`life_stage_set` transition then carry the entity to `ADULT` after exactly one more
+`CAMP_SPAWN_INTERVAL` (30 ticks) — the entity's own next spawn-cadence cycle. This explicitly does
+**not** touch `LifeStageService.get_stage_for_age()`'s global 3000/7000-tick thresholds documented
+in §5's "Age Bracket Thresholds" table above — those remain shared, unmodified, and apply exactly
+as before to every entity in the simulation.
+
+**Population-pressure suppression gate:** reuses §5's Migration Law verbatim — spawn is suppressed
+when `compute_regional_scarcity(region.id, state)` exceeds the camp's region's `young`-bracket
+`migration_threshold` (default 0.7). Because camps sit in wilderness/monster territory that is not
+guaranteed to have `population_cohorts` seeded, this gate mirrors the Migration Law's own existing
+skip-when-empty convention (`_check_migration`/`DemographicCycleService.process_demographics`, both
+skip evaluation entirely when `region.population_cohorts` is empty): a camp in a region with no
+cohort data, or no region at all, is treated as eligible (not suppressed) rather than assumed worst
+case. This path only *reads* `compute_regional_scarcity()`/`migration_threshold` — it never writes
+`population_cohorts_set` (the population-pressure feedback-loop closure is a separate, later
+mechanic).
 
 ---
 

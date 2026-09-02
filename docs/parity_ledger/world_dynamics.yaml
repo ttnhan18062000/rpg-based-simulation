@@ -1694,3 +1694,31 @@
     tests/unit/worldbuilding/test_world_compiler.py::test_canonical_state_hasher_serializes_seeded_population_cohorts
   divergence_note: null
   support_boundary: null
+- id: WORLD-120
+  text: Behind ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH (default OFF), when a camp's
+    maturity is at or above RAID_MATURITY_THRESHOLD (80.0) on a CAMP_SPAWN_INTERVAL
+    (30-tick) cadence, CampService.process_camps() spawns a parentless same-kind offspring
+    via EntityGenerator.spawn_natural_creature_offspring() -- built with life_stage=CHILD
+    and age_ticks=3000-CAMP_SPAWN_INTERVAL (2970) so the existing global aging pipeline
+    carries it to ADULT after exactly one more spawn-cadence cycle, and birth-record
+    fields populated via V2EntityBuilder.birth_record() with both parent_a_entity_id/parent_b_entity_id
+    left None (no SocialBond seeding). Spawn eligibility is suppressed when compute_regional_scarcity()
+    for the camp's region exceeds the young-bracket PopulationCohort.migration_threshold
+    (default 0.7, reusing the Migration Law verbatim); a region with no population_cohorts
+    seeded, or no region at all, is treated as eligible (not suppressed), mirroring
+    the Migration Law's own skip-when-empty convention (WORLD-DEMO-001). This path
+    reads but never writes population_cohorts, and adds no GeneticsSystem/GeneticProfile
+    dependency. The offspring consumes the parentless birth-record schema shipped
+    by SOC-259.
+  status: verified
+  priority: P2
+  v2_evidence: src/world/camp.py -- CampService.process_camps() "4. Natural-Creature
+    Reproduction" branch, flag-gated, reuses RAID_MATURITY_THRESHOLD/CAMP_SPAWN_INTERVAL;
+    src/systems/world_systems/generator.py -- EntityGenerator.spawn_natural_creature_offspring();
+    src/domains/optimization/feature_flags.py -- ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH
+    registered with default FeatureMode.OFF (DEV-002 default-OFF policy for a brand-new
+    mechanic). Cross-references WORLD-DEMO-001 (scarcity/migration-threshold law reused
+    verbatim, not reimplemented) and SOC-259 (birth-record schema consumed). TCK-20260902-REPRODUCTION-NATURAL-CREATURE-PATH.
+  test_path: tests/unit/world/test_natural_creature_reproduction.py::test_camp_maturity_threshold_spawns_natural_creature_offspring
+  divergence_note: null
+  proof_type: parity
