@@ -41,6 +41,12 @@ decay, testimony, generational transfer, and historical-memory horizons, per the
 §13 integration plan. Not resolved or required by this review pass; a forward pointer for whoever scopes
 these tickets.
 
+**Social/Political mechanics hardening (see the parent roadmap's "Hardening backlog" section, item 1):**
+[`docs/plans/rpg_design_roadmap/rpg_social_narrative_mechanics_hardening_plan.md`](rpg_social_narrative_mechanics_hardening_plan.md)
+documents and hardens the `SocialComponent`/`SocialBond`/`RelationshipService` state this milestone's
+reputation and history/belief branches both build on — a prerequisite documentation/verification pass these
+tickets can cite once scoped, not a substitute for their own investigation.
+
 ## Scope (not yet broken into child tickets)
 
 1. **Ideas 55 + 58 — one on-death dispatch hook, two thin handlers.** Both fire at the identical trigger
