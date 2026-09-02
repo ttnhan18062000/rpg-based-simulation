@@ -389,6 +389,72 @@ directly in this pass:
   no separate Place-level economic accounting needed yet). Inventory/economic canonical-hash coverage
   confirmed present and correct (contrast with the Social axis's real gap above).
 
+## Knowledge/Belief axis (added dimension, 2026-09-02 brainstorm)
+
+A fourth cross-cutting dimension, the same shape as space, time, and social/relationship above — what an
+entity knows or believes, as distinct from objective truth and from the Social axis's territory (beliefs
+*about specific other entities*). See
+[`docs/brainstorm/codex/2026-09-02-core-rpg-knowledge-belief-axis-proposal.md`](../../brainstorm/codex/2026-09-02-core-rpg-knowledge-belief-axis-proposal.md)
+for the full investigation.
+
+**Different starting condition than Social:** the existing per-file contracts
+(`docs/simulation/belief_and_detour_contract.md`, `docs/simulation/domains/information_contract.md`,
+`docs/simulation/domains/chronicle_contract.md`) are all confirmed accurate — zero factual errors found,
+unlike Social's two. The gap here is structural, not documentation debt.
+
+**Accepted in this brainstorm pass:**
+- Belief-vs-ground-truth divergence is confirmed genuinely modeled, twice, independently:
+  `StrategicComponent.beliefs: Dict[str, BeliefEntry]` and `KnowledgeModelComponent.facts: Dict[str,
+  KnowledgeFact]` — a real design property worth stating explicitly.
+- Chronicle is confirmed downstream of this axis (a stateless compression/rendering pipeline over real
+  recorded events), not part of it — no reconciliation proposed.
+
+**Real findings, not yet resolved:**
+- **Two parallel, unreconciled knowledge representations** — `BeliefEntry` and `KnowledgeFact` have zero
+  cross-references anywhere in the codebase, the same unreconciled-signal shape as the Social axis's
+  `RelationshipRole`/`nemesis_ids` finding, but larger: two entire parallel data models, not two fields.
+- **A larger determinism gap than the Social axis's own**: `StrategicComponent`'s canonical hash excludes 6
+  fields (`hypotheses`, `source_trust`, `contracts`, `turning_points`, `candidate_zones`,
+  `committed_intentions`), with `source_trust` confirmed behaviorally load-bearing (a real, live input to
+  detour selection) — a silent divergence here would go undetected between same-seed runs.
+
+## Bible chapter check (2026-09-02)
+
+The 4 remaining Mechanics Bible chapters not yet checked this session
+(`02_combat_laws.md`, `04_strategic_cognition.md`, `05_world_evolution.md`, `06_worldbuilding_foundation.md`)
+— same lightweight "does existing coverage need modification" treatment as the Economic axis check.
+
+- **Combat, Strategic Cognition, Worldbuilding Foundation: confirmed clean.** All three were kept
+  genuinely in sync with what shipped this session (idea 37's race-relations hostility, idea 27's
+  Role-Model Imitation and its exact `intelligence_tier`→`imitation_fidelity` mapping) — no edit needed.
+- **World Evolution: two real errors found and corrected directly.** §3's Influence Shifts stated ±1.0 per
+  death and ±100.0 ownership thresholds; the real values (`src/world/influence.py`) are
+  `DEATH_INFLUENCE_SHIFT=5.0` and `CONQUEST_THRESHOLD=-50.0`/`LIBERATION_THRESHOLD=50.0` — ±100.0 is only
+  the value's clamp bound, not a trigger. A 5x/2x discrepancy in a chapter re-verified as recently as
+  2026-09-01; this specific number was already independently confirmed correct elsewhere this session (the
+  M2 epic doc's idea-35 depth-audit) but never folded back into this chapter until now. Also flagged, not
+  yet resolved: an undocumented separate `+2.0` trauma increment (`src/engine/apply_plan.py:218`) in a
+  context the chapter's death-only trauma narrative doesn't cover.
+- No new atlas badge staleness found beyond idea 13's (already fixed).
+
+**Systemic finding, larger than any single chapter's own scope — the `tests_v2/`/generic-evidence citation
+pattern is repo-wide, not isolated to the 2 shards already fixed.** Checking the 3 parity-ledger shards
+behind these 4 chapters found the same pattern this session already caught in `substrate.yaml` (item 2 of
+the Hardening backlog below) and `town_resource.yaml` (Economic axis check above), at much larger scale:
+
+| Shard | `tests_v2/` citations | Generic "exhaustive checklist audit" evidence strings |
+|---|---|---|
+| `combat_movement.yaml` | 9 | 269 |
+| `strategic_cognition.yaml` | 10 | 205 |
+| `world_dynamics.yaml` | 2 | 92 |
+
+Spot-checked 2 `strategic_cognition.yaml` citations directly — both confirmed genuinely missing under any
+name, the same as the earlier findings, not merely moved. **This now looks like a repo-wide `tests_v2/`→
+`tests/` migration that was never propagated into the parity ledger anywhere** — not fixed here (hundreds
+of entries share the unverifiable generic evidence string alone; guessing replacements would repeat the
+exact fabrication pattern this session already found and corrected once), flagged as needing its own
+dedicated hardening pass across all shards.
+
 ## Hardening backlog (added 2026-09-02)
 
 Same treatment as the temporal axis and idea 66 above — design/doc claims cross-checked directly against
