@@ -109,3 +109,7 @@ review for three distinct, recurring reasons. Before writing `plan.md`, satisfy 
 ## Output
 
 Write `staging_artifacts/{ticket_id}/plan.md`. Begin your response with **one sentence** (≤200 chars) summarizing the plan approach — this is used as the agent monitoring event summary. Then return the ordered step list (one line per step), plus any unresolved questions that need a decision before implementation begins.
+
+## Background Commands
+
+Never end your turn while a `run_in_background` Bash command you started is still running. Either run the command in the foreground, or poll for the command's own completion within the same turn before returning control. You are not auto-resumed the way the top-level orchestrator is — an unfinished background command left running when you end your turn stalls the pipeline until it is manually detected and you are re-prompted.
