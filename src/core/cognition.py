@@ -12,9 +12,6 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Tuple
 
 from src.core.self_model import (
-    SelfAwarenessComponent,
-    NeedInterpretationComponent,
-    CapabilityEstimateComponent,
     KnowledgeModelComponent,
     KnowledgeFact,
     UnknownFact
@@ -116,23 +113,6 @@ class RecoveryState:
 
 
 @dataclass(frozen=True, slots=True)
-class SelfModel:
-    """Subjective awareness and physical state interpretation."""
-    awareness: SelfAwarenessComponent = field(default_factory=SelfAwarenessComponent)
-    needs: NeedInterpretationComponent = field(default_factory=NeedInterpretationComponent)
-    capability: CapabilityEstimateComponent = field(default_factory=CapabilityEstimateComponent)
-    recovery: RecoveryState = field(default_factory=RecoveryState)
-
-    def to_canonical_dict(self) -> Dict[str, Any]:
-        return {
-            "awareness": self.awareness.to_canonical_dict(),
-            "needs": self.needs.to_canonical_dict(),
-            "capability": self.capability.to_canonical_dict(),
-            "recovery": self.recovery.to_canonical_dict()
-        }
-
-
-@dataclass(frozen=True, slots=True)
 class RiskModel:
     """Phase 13 Risk Beliefs Shell."""
     risks: Mapping[str, Any] = field(default_factory=dict)
@@ -211,7 +191,6 @@ class EmotionalModel:
 class SubjectiveModel:
     """Subjective model grouping perception, self, knowledge, risk, time, and emotion."""
     perception: PerceptionModel = field(default_factory=PerceptionModel)
-    self: SelfModel = field(default_factory=SelfModel)
     knowledge: KnowledgeModelComponent = field(default_factory=KnowledgeModelComponent)
     risk: RiskModel = field(default_factory=RiskModel)
     time: TemporalModel = field(default_factory=TemporalModel)
@@ -220,7 +199,6 @@ class SubjectiveModel:
     def to_canonical_dict(self) -> Dict[str, Any]:
         return {
             "perception": self.perception.to_canonical_dict(),
-            "self": self.self.to_canonical_dict(),
             "knowledge": self.knowledge.to_canonical_dict(),
             "risk": self.risk.to_canonical_dict(),
             "time": self.time.to_canonical_dict(),
@@ -539,7 +517,32 @@ class RelationshipModel:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. Global CognitionModel Container
+# 6. Role Model Sub-components (TCK-20260831-ROLE-MODEL-IMITATION)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True, slots=True)
+class RoleModelBundle:
+    """Who this entity watches/admires as a role model, and how faithfully it can imitate them."""
+    admired_entity_id: Optional[int] = None
+    admired_since_tick: Optional[int] = None
+    last_reconsidered_tick: Optional[int] = None
+    imitation_fidelity: float = 0.5  # matches RoleModelImitationService.DEFAULT_FIDELITY
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        return {
+            "admired_entity_id": self.admired_entity_id,
+            "admired_since_tick": self.admired_since_tick,
+            "last_reconsidered_tick": self.last_reconsidered_tick,
+            "imitation_fidelity": round(self.imitation_fidelity, 4),
+        }
+
+    @classmethod
+    def empty(cls) -> "RoleModelBundle":
+        return cls()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 7. Global CognitionModel Container
 # ─────────────────────────────────────────────────────────────────────────────
 
 @dataclass(frozen=True, slots=True)
@@ -550,6 +553,7 @@ class CognitionModel:
     motivation: MotivationModel = field(default_factory=MotivationModel)
     commitment: CommitmentModel = field(default_factory=CommitmentModel)
     relationships: RelationshipModel = field(default_factory=RelationshipModel)
+    role_model: RoleModelBundle = field(default_factory=RoleModelBundle)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         return {
@@ -557,7 +561,8 @@ class CognitionModel:
             "memory": self.memory.to_canonical_dict(),
             "motivation": self.motivation.to_canonical_dict(),
             "commitment": self.commitment.to_canonical_dict(),
-            "relationships": self.relationships.to_canonical_dict()
+            "relationships": self.relationships.to_canonical_dict(),
+            "role_model": self.role_model.to_canonical_dict()
         }
 
     @classmethod

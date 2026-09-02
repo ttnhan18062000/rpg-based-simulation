@@ -1136,7 +1136,13 @@
     \ synthetic fixture, independent of any specific world\n"
   proof_type: parity
   test_path: tests/unit/entity/test_entity_archetypes.py::test_hero_archetypes_cover_combat_mage_rogue
-  divergence_note: null
+  divergence_note: 'TCK-20260831-CLASS-TIER-BRANCHING adds a real post-spawn class_id
+    mutation path (IdentityUpdate.class_id_set, applied via IdentityPatch.apply())
+    that this entry''s spawn-time-only framing does not cover. PROG-108''s claim (class_id
+    assigned by role from spawn_tables.yaml at world compilation) remains true and
+    status stays verified -- the new fact is additive, not a falsification. See docs/guidelines/intentional_divergences.md
+    DEV-006 / #2.49 for the recorded divergence and its rationale (Intentional Gameplay
+    Change, status ACTIVE).'
   support_boundary: null
 - id: PROG-109
   text: Quest opportunity reward is applied through the authoritative ResourceTransferIntent
@@ -1458,3 +1464,24 @@
   test_path: tests/unit/domains/progression/test_progression_decision_canonical_hash.py
   divergence_note: null
   proof_type: regression
+- id: PROG-122
+  text: A class-tier registry (CLASS_TIER_REGISTRY, src/core/classes.py) defines >=2
+    mutually-exclusive next-tier options per base class (WARRIOR, MAGE), applied post-spawn
+    via IdentityUpdate.class_id_set through the authoritative apply path.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/classes.py (CLASS_TIER_REGISTRY, ClassTierOption); src/core/updates.py
+    (IdentityUpdate.class_id_set, is_noop()/merge() branches); src/engine/patches.py
+    (IdentityPatch.apply() reads class_id_set into cls_id, writes class_id=cls_id
+    on the replace() call); src/progression/class_tiers.py (ClassTierService.apply_bonuses(),
+    live-recomputed from class_id on every get_effective_stats() call, mirroring BreakthroughService.apply_bonuses());
+    src/engine/apply.py (class_id_set added to the stats_dirty OR-clause and threaded
+    as class_id= into the SkillScalingService.get_effective_stats() call site).
+  proof_type: regression
+  test_path: tests/unit/progression/test_class_tiers.py::test_class_id_set_applies_via_identity_patch
+  divergence_note: null
+  support_boundary: Registry + typed field + apply-path wiring + tests only -- no
+    live AI/decision producer calls class_id_set in production gameplay code yet (accepted
+    precedent, see TCK-20260808-TRAIT-EXPRESSED-PRODUCER-INVESTIGATION). Breakthroughs
+    remain a separate, always-additive mechanism, untouched by this registry.

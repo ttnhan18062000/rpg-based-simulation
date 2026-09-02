@@ -13,7 +13,7 @@ from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole, DiplomaticState
 from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
-from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent
+from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent, ItemInstance, AcquiredMethod
 from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
 from src.core.immutability import shallow_freeze
 from src.core.self_model import SelfModelBundle
@@ -110,6 +110,15 @@ class ScarState:
     atk_penalty: float = 0.0
     def_penalty: float = 0.0
     speed_penalty: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class StatusEffectState:
+    """A persistent status effect (e.g. frozen, stunned) applied to an entity."""
+    kind: str  # "frozen", "stunned"
+    source: str = ""
+    magnitude: float = 0.0
+    expires_tick: int = -1
 
 
 @dataclass(frozen=True, slots=True)
@@ -278,7 +287,7 @@ class RegionState:
             "weather": self.weather,
             "active_modifiers": sorted(list(self.active_modifiers)),
             "price_modifiers": dict(sorted(self.price_modifiers.items())),
-            "population_cohorts": dict(sorted(self.population_cohorts.items())),
+            "population_cohorts": {k: v.to_canonical_dict() for k, v in sorted(self.population_cohorts.items())},
             "siege_state": self.siege_state.to_canonical_dict() if self.siege_state is not None else None,
             "service_availability": self.service_availability,
         }
@@ -311,6 +320,7 @@ class CombatComponent:
     readiness_speed: float = 10.0
     wounds: List[WoundState] = field(default_factory=list)
     scars: List[ScarState] = field(default_factory=list)
+    status_effects: List[StatusEffectState] = field(default_factory=list)
     latest_result: Optional["IntentResult"] = None
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -333,6 +343,7 @@ class CombatComponent:
             "readiness_speed": self.readiness_speed,
             "wounds": [asdict(w) for w in self.wounds],
             "scars": [asdict(s) for s in self.scars],
+            "status_effects": [asdict(s) for s in self.status_effects],
             "latest_result": asdict(self.latest_result) if self.latest_result else None
         }
         object.__setattr__(self, "_canonical_cache", res)
@@ -393,6 +404,7 @@ class InteractionComponent:
     target_node_id: int | None = None
     progress: int = 0
     start_tick: int = 0
+    kind: Optional[str] = None  # "harvest", "ground_item", "corpse", "chest", "guild", "inn", "tavern"
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -401,7 +413,8 @@ class InteractionComponent:
         res = {
             "target_node_id": self.target_node_id,
             "progress": self.progress,
-            "start_tick": self.start_tick
+            "start_tick": self.start_tick,
+            "kind": self.kind
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
@@ -479,6 +492,7 @@ class IdentityComponent:
     veterancy_points: int = 0
     veterancy_rank: int = 0
     unspent_ap: int = 0
+    territory_maturity: float = 0.0
     class_id: str = "NOVICE"
     learned_skills: Set[str] = field(default_factory=set)
     traits: Set[str] = field(default_factory=set)
@@ -502,6 +516,7 @@ class IdentityComponent:
             "evolution_points": self.evolution_points,
             "veterancy_rank": self.veterancy_rank,
             "unspent_ap": self.unspent_ap,
+            "territory_maturity": self.territory_maturity,
             "known_recipes": sorted(list(self.known_recipes)),
             "learned_skills": sorted(list(self.learned_skills)),
             "active_breakthroughs": sorted(list(self.active_breakthroughs)),
@@ -642,6 +657,49 @@ class FactionState:
             active_doctrines=tuple(d.get("active_doctrines", [])),
             military_strength=float(d.get("military_strength", 1.0)),
             tension_level=float(d.get("tension_level", 0.0)),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ClanState:
+    """Authoritative durable state for a named clan (schema-only; idea 40/M4 owns lifecycle)."""
+    clan_id: str
+    name: str = ""
+    member_entity_ids: Tuple[int, ...] = ()
+    home_region_ids: Tuple[str, ...] = ()
+    tension_level: float = 0.0
+    leader_entity_id: Optional[int] = None
+    founded_tick: int = 0
+    dissolved_tick: Optional[int] = None
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res: Dict[str, Any] = {
+            "clan_id": self.clan_id,
+            "name": self.name,
+            "member_entity_ids": sorted(self.member_entity_ids),
+            "home_region_ids": sorted(self.home_region_ids),
+            "tension_level": self.tension_level,
+            "leader_entity_id": self.leader_entity_id,
+            "founded_tick": self.founded_tick,
+            "dissolved_tick": self.dissolved_tick,
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "ClanState":
+        return cls(
+            clan_id=d["clan_id"],
+            name=d.get("name", ""),
+            member_entity_ids=tuple(d.get("member_entity_ids", [])),
+            home_region_ids=tuple(d.get("home_region_ids", [])),
+            tension_level=float(d.get("tension_level", 0.0)),
+            leader_entity_id=d.get("leader_entity_id"),
+            founded_tick=int(d.get("founded_tick", 0)),
+            dissolved_tick=d.get("dissolved_tick"),
         )
 
 
@@ -1101,6 +1159,7 @@ class AuthoritativeState:
     camps: Dict[str, CampState] = field(default_factory=dict)
     regions: Dict[str, RegionState] = field(default_factory=dict)
     local_scars: Dict[int, LocalScarState] = field(default_factory=dict)
+    item_instances: Dict[int, ItemInstance] = field(default_factory=dict)
     _readonly_cache: Any = field(default=None, repr=False, compare=False)
     _readonly_entities_cache: Any = field(default=None, repr=False, compare=False)
     _spatial_grid_cache: Any = field(default=None, repr=False, compare=False)
@@ -1193,6 +1252,10 @@ class AuthoritativeState:
             int_n_keys = [k for k in self.resource_nodes.keys() if isinstance(k, int)]
             if int_n_keys and self.next_node_id <= max(int_n_keys):
                 object.__setattr__(self, "next_node_id", max(int_n_keys) + 1)
+        if self.item_instances:
+            int_i_keys = [k for k in self.item_instances.keys() if isinstance(k, int)]
+            if int_i_keys and self.next_item_instance_id <= max(int_i_keys):
+                object.__setattr__(self, "next_item_instance_id", max(int_i_keys) + 1)
         object.__setattr__(self, "_has_hostiles_or_dead_cache", has_hostile)
         object.__setattr__(self, "_has_contracts_cache", has_contracts)
         # Ensure town_entity_ids is frozen if in readonly mode
@@ -1203,6 +1266,7 @@ class AuthoritativeState:
     processed_transaction_ids: List[str] = field(default_factory=list)
     next_node_id: int = 1000
     next_entity_id: int = 1
+    next_item_instance_id: int = 1
 
     def to_readonly(self) -> AuthoritativeState:
         """Returns a read-only view of the entire world state."""
@@ -1232,6 +1296,7 @@ class AuthoritativeState:
             quest_registry=ReadOnlyDict(self.quest_registry),
             information_providers=ReadOnlyDict(self.information_providers),
             factions=ReadOnlyDict(self.factions),
+            item_instances=ReadOnlyDict(self.item_instances),
             groups=shallow_freeze(self.groups),
             terrain=shallow_freeze(self.terrain),
             global_resources=shallow_freeze(self.global_resources),

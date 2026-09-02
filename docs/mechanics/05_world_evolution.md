@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-06
+last_verified: 2026-09-01
 ---
 
 # Chapter 5: World Evolution
@@ -235,6 +235,35 @@ When the global `Maturity` and regional `Trauma` scores are sufficiently high, t
 *   **Boss Spawns**: Unique, high-threat entities appear in traumatized regions.
 *   **Raids**: Faction-based attacks on town centers or resource hubs.
 *   **Threat Evolution**: Monsters in high-hazard regions evolve to higher `Evolution Levels`, becoming deadlier and granting better rewards.
+
+### Creature Territory Lifecycle (TCK-20260831-CREATURE-TERRITORY-LIFECYCLE)
+
+Behind `ENABLE_CREATURE_TERRITORY_LIFECYCLE` (default OFF), `CreatureTerritoryService`
+(`src/world/creature_territory.py`) gives monster-kind entities anchored by proximity to an
+existing camp (same 10x10 box check `CampService` uses to count nearby monsters) a per-entity
+`territory_maturity` value that grows every world-dynamics tick.
+
+**Per-tick delta formula:**
+
+```
+base_rate = TERRITORY_MATURITY_RATES.get(entity.kind, DEFAULT_TERRITORY_MATURITY_RATE)
+trauma_multiplier = 1.5 if region.trauma_score > 50.0 else 1.0
+delta = base_rate * trauma_multiplier
+```
+
+The `trauma_score > 50.0 -> x1.5` rule is not a new threshold -- it is the same regional
+instability threshold defined in §2 above, reused verbatim from `CampService`'s own camp-maturity
+multiplier (`src/world/camp.py`).
+
+**Threshold-crossing spawn:** when an entity's maturity would cross
+`TERRITORY_MATURITY_THRESHOLD` (100.0) on a given tick, `CreatureTerritoryService` spawns a new
+territory-occupant monster of the same kind at the entity's position and resets that entity's
+`territory_maturity` to 0.0 (not merely capped) for that tick. This does not use the entity-level
+`LifeStage`/`age_ticks` vocabulary from §5 above -- per-species territory pacing is a distinct,
+per-entity mechanic with its own typed field (`IdentityComponent.territory_maturity`).
+
+Per-species base rates are authored, inspectable content in `TERRITORY_MATURITY_RATES`
+(`src/world/creature_territory.py`), not derived from any existing table.
 
 ---
 

@@ -138,9 +138,18 @@ class RaceDefinition(CatalogBaseDefinition):
     sense_profile: str = Field(..., description="Referenced SenseProfileDefinition ID")
     cognition_profile: str = Field(..., description="Referenced CognitionProfileDefinition ID")
     drive_profile: str = Field(..., description="Referenced DriveProfileDefinition ID")
+    intelligence_tier: str = Field(..., description="Species cognitive-sophistication classification: 'high' or 'low', anchored via tool_user presence in natural_traits (see docs/mechanics species-tier note if authored) with explicitly justified exceptions.")
     natural_traits: List[str] = Field(default_factory=list)
     attribute_tendencies: Dict[str, str] = Field(default_factory=dict)
     compatible_roles: List[str] = Field(default_factory=list)
+
+    @field_validator("intelligence_tier")
+    @classmethod
+    def validate_intelligence_tier(cls, v: str) -> str:
+        valid_tiers = {"high", "low"}
+        if v not in valid_tiers:
+            raise ValueError(f"intelligence_tier must be one of {valid_tiers}")
+        return v
 
 
 # ==========================================
@@ -195,6 +204,14 @@ class FactionRelationshipDefinition(CatalogBaseDefinition):
     """Schema for relationship values between two factions."""
     source_faction: str = Field(..., description="Source FactionDefinition ID")
     target_faction: str = Field(..., description="Target FactionDefinition ID")
+    relationship_model: str = Field(..., description="Relationship classification")
+    axes: Dict[str, str] = Field(default_factory=dict)
+
+
+class RaceRelationRecord(CatalogBaseDefinition):
+    """Schema for hostility/relationship axes between two races."""
+    source_race: str = Field(..., description="Source RaceDefinition ID")
+    target_race: str = Field(..., description="Target RaceDefinition ID")
     relationship_model: str = Field(..., description="Relationship classification")
     axes: Dict[str, str] = Field(default_factory=dict)
 

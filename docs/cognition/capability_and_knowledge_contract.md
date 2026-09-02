@@ -76,6 +76,10 @@ Each estimate stored as `CapabilityEstimate(capability_key, estimate, confidence
 
 As of `TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING`, `AdventureRouteScorer.score()` (`src/domains/adventure/scoring.py`) calls `CapabilityEstimateService.estimate()` directly, ad hoc, for `GATHER_RESOURCE` and `CRAFT_UPGRADE` routes with a resolvable capability key — the resulting `CapabilityEstimate.estimate` value feeds `confidence_bonus` (replacing the flat `route.confidence × 0.15` term for those two families only), NOT a blocker-generation threshold mechanism. There is no `−2.0` capability-blocker penalty anywhere in `scoring.py` — that prior claim was aspirational and inaccurate. This call is scorer-local and ad hoc: it does not go through `SelfModelUpdatePhase`, and `entity.self_model.capabilities.estimates` remains empty in production (see `docs/mechanics/04_strategic_cognition.md` §6.12's closing disclosure), because `SelfModelUpdatePhase.apply()` never passes a `capability_context` to `run()`. Unlike `memory_adjustment`'s "Not yet live" callout (§6.11), this term IS live and observable via a real `generate() → score()` chain today — only `entity.self_model.capabilities` itself stays unpopulated, not the scorer-local read of it.
 
+### How tactical targeting uses capability estimates
+
+As of `TCK-20260831-CAPABILITY-DRIVEN-TARGETING`, `TacticalDecisionSystem.target_score()` (`src/engine/tactical.py`) also calls `CapabilityEstimateService.estimate()` directly, ad hoc, for the combat domain only — for each candidate hostile `h`, it estimates the acting entity's own subjective chance against `h.kind` via `CapabilityContext.for_combat(enemy_ids=[h.kind])`. The resulting `estimate` value is folded into the target-selection sort key (negated, so a higher subjective win-estimate makes the hostile a higher-priority target), placed ahead of raw HP/distance but behind group focus-fire bias and target-selection hysteresis (Logic ID COMB-316). Like the adventure-routing call above, this is scorer-local and ad hoc: it does not go through `SelfModelUpdatePhase`, and `entity.self_model.capabilities.estimates` remains empty in production either way, because `SelfModelUpdatePhase.apply()` never passes a `capability_context` to `run()`. The call is strictly read-only — no write-back into `entity.self_model`.
+
 ### Confidence decay
 
 The subsystem does not implement active confidence decay — estimates are static until re-computed. The `last_updated_tick` field allows consumers to check freshness.
@@ -140,6 +144,7 @@ Both events are collected by the orchestrator and routed to the warehouse/histor
 ## Regression tests
 
 - `tests/unit/cognition/test_phase2_capability_estimate_service.py` — combat/travel/gather/craft formulas, scoped context, None context → empty
+- `tests/unit/combat/test_capability_driven_targeting.py` — `TacticalDecisionSystem.target_score()`'s ad-hoc capability-driven consumption of `CapabilityEstimateService.estimate()` (COMB-316)
 - `tests/unit/cognition/test_phase2_knowledge_model_service.py` — assimilation by answer_kind, accumulation (no removal), certainty propagation, insufficient_gold no-op
 - `tests/integration/scenarios/test_phase2_self_model_scenarios.py` — KnowledgeFactLearnedEvent emitted on fact update, trace event emission coverage
 

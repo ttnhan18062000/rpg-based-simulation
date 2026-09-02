@@ -55,3 +55,20 @@ class InventoryComponent:
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
+
+class AcquiredMethod(str, Enum):
+    LOOT = "LOOT"
+    CRAFTED = "CRAFTED"
+    GIFT = "GIFT"
+    INHERITED = "INHERITED"
+
+@dataclass(frozen=True, slots=True)
+class ItemInstance:
+    """A durable per-physical-item ownership record. Additive sidecar to ItemStack — never
+    replaces the ItemStack entry in InventoryComponent.items. See docs/mechanics/03_economic_laws.md
+    (once updated) for the governing law."""
+    instance_id: int
+    item_id: str
+    owner_history: List[str]
+    acquired_tick: int
+    acquired_method: AcquiredMethod

@@ -25,6 +25,7 @@ from src.replay.fingerprint import StateFingerprinter
 from src.worldbuilding.schema import WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
 from src.core.strategic import ProjectKind
+from src.domains.demographics.cohort import PopulationCohort
 from src.domains.information.schema import InformationSourceProfile
 from src.world.providers.information import InformationResponse as _ProviderInformationResponse
 from src.world.providers.information import KnowledgeFact as _ProviderKnowledgeFact
@@ -169,6 +170,59 @@ def _load_class_table() -> Dict[str, List[str]]:
     return {}
 
 
+# Fixed young/adult/elder distribution ratio for compile-time population_cohorts seeding.
+# Authored 2026-09-01 (TCK-20260831-POPULATION-COHORT-SEEDING) -- no prior anchor existed
+# in code or docs. Chosen as a plausible stable/mildly-growing population pyramid shape:
+# a plurality of working-age adults, a meaningful youth cohort, and a smaller elder
+# cohort -- directionally consistent with PopulationCohort's own default birth_rate
+# (0.02) > mortality_rate (0.01), which already implies net growth (cohort.py:41-42).
+# Ratio is intentionally simple/round, not derived from any external demographic
+# dataset -- this is a fresh design choice, not a parity claim against real-world data.
+_YOUNG_ADULT_ELDER_RATIO: Dict[str, float] = {"young": 0.30, "adult": 0.50, "elder": 0.20}
+# Fixed priority order used only to break exact remainder ties deterministically.
+_BRACKET_PRIORITY: List[str] = ["young", "adult", "elder"]
+
+
+def _seed_population_cohorts(declared_population: int) -> Dict[str, "PopulationCohort"]:
+    """
+    Split declared_population into young/adult/elder PopulationCohort counts using the
+    fixed _YOUNG_ADULT_ELDER_RATIO, via largest-remainder (Hamilton apportionment)
+    rounding so the three counts always sum exactly to declared_population, including
+    at small totals (0, 1, 2) where naive per-bracket floor/truncation can lose 1-2
+    units.
+
+    Pure arithmetic, no RNG -- consistent with the only two existing precedents for
+    deriving a RegionState field from other spec values (`influence`, `owner_faction_id`),
+    neither of which uses RNG.
+
+    Returns {} (not three zero-count cohorts) when declared_population == 0, so the
+    DemographicCycleService guard at cohort.py:349 (`if not region.population_cohorts:
+    continue`) no-ops via plain dict-truthiness. Seeded cohorts leave
+    birth_rate/mortality_rate at their PopulationCohort dataclass defaults (0.02/0.01,
+    cohort.py:41-42) untouched -- this ticket seeds counts only, it does not rebalance
+    or reinterpret the existing per-200-tick-cycle rates.
+    """
+    if declared_population <= 0:
+        return {}
+
+    raw = {b: declared_population * r for b, r in _YOUNG_ADULT_ELDER_RATIO.items()}
+    floors = {b: int(v) for b, v in raw.items()}
+    remainder = declared_population - sum(floors.values())
+
+    remainders = sorted(
+        _BRACKET_PRIORITY,
+        key=lambda b: (-(raw[b] - floors[b]), _BRACKET_PRIORITY.index(b)),
+    )
+    counts = dict(floors)
+    for b in remainders[:remainder]:
+        counts[b] += 1
+
+    return {
+        bracket: PopulationCohort(bracket=bracket, count=counts[bracket])
+        for bracket in _BRACKET_PRIORITY
+    }
+
+
 class WorldCompiler:
     """
     Deterministic World Compiler that transforms a validated WorldSpec into
@@ -205,6 +259,18 @@ class WorldCompiler:
         for x in range(spec.topology.width):
             for y in range(spec.topology.height):
                 terrain[(x, y)] = "PLAIN"
+
+        # 1a. Aggregate declared population per region from spec.entities (PopulationSpec.count),
+        # summed by spawn_region. Must run before step 2 constructs RegionState, since RegionState
+        # is @dataclass(frozen=True, slots=True) (src/core/state.py) and cannot be field-mutated
+        # after construction. Multiple PopulationSpec entries may share one spawn_region
+        # (WorldSpec.validate_unique_identifiers only enforces uniqueness of PopulationSpec.id,
+        # not spawn_region), so this must sum, not overwrite.
+        region_declared_population: Dict[str, int] = {}
+        for pop_spec in spec.entities:
+            region_declared_population[pop_spec.spawn_region] = (
+                region_declared_population.get(pop_spec.spawn_region, 0) + pop_spec.count
+            )
 
         # 2. Compile regions & terrain painting
         regions: Dict[str, RegionState] = {}
@@ -250,7 +316,8 @@ class WorldCompiler:
                 influence=100.0 if r_spec.type == "town" else 0.0,
                 owner_faction_id=owner_faction,
                 hazard_level=getattr(r_spec, "hazard_level", 0.0),
-                hazard_kind=getattr(r_spec, "hazard_kind", "PHYSICAL")
+                hazard_kind=getattr(r_spec, "hazard_kind", "PHYSICAL"),
+                population_cohorts=_seed_population_cohorts(region_declared_population.get(r_spec.id, 0)),
             )
 
         # 2a. Derive town_center as the centroid of the first type=="town" region in

@@ -3802,3 +3802,118 @@
   test_path: tests/unit/strategic/test_redirection.py::test_redirection_enforce_targets_nearest_town_tile_not_arbitrary_sort
   divergence_note: null
   support_boundary: null
+- id: STRAT-261
+  text: AttentionFocusService.get_attention_focus()'s dominant-need read (src/domains/perception/service.py)
+    now targets the real, wired entity.self_model.needs.dominant_need (SelfModelBundle,
+    src/core/self_model.py, populated by SelfModelUpdatePhase behind ENABLE_SELF_MODEL_COGNITION)
+    instead of the dead entity.cognition.subjective.self.needs.dominant_need path
+    -- the latter's container, core/cognition.py::SelfModel/SubjectiveModel.self,
+    was deleted (zero production writers found) as part of TCK-20260831-DEAD-COGNITION-SCHEMA-DECISION.
+    cognition_accessors.py's three accessors (get_self_awareness, get_need_interpretation,
+    get_capability_estimate) were repointed the same way, from the dead entity.cognition.subjective.self.*
+    path to the real entity.self_model.* path (self_awareness/needs/capabilities).
+    docs/simulation/domains/perception_contract.md's Inputs table updated to match.
+    PerceptionUpdatePhase (AttentionFocusService's only pipeline-side caller) itself
+    has zero call sites in AuthoritativeApplyPipeline.refine() -- unaffected by and
+    separate from this fix; tracked as a disclosed follow-up gap, not addressed here.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/perception/service.py (AttentionFocusService.get_attention_focus()),
+    src/core/self_model.py (SelfModelBundle.needs/self_awareness/capabilities), src/cognition/self_model_phase.py
+    (SelfModelUpdatePhase writer), src/core/cognition.py (SelfModel/SubjectiveModel.self
+    removed), src/core/cognition_accessors.py (get_self_awareness/get_need_interpretation/get_capability_estimate
+    repointed to entity.self_model.*)
+  proof_type: parity
+  test_path: tests/integration/domains/perception/test_phase12_perception_phase.py::test_attention_focus_reads_real_self_model_dominant_need
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-262
+  text: 'TCK-20260831-HABIT-BIAS-WIRING -- new HabitBiasUpdatePhase (src/domains/emotion/habit_phase.py)
+    is the authoritative per-tick writer for HabitBiasService.record_outcome (src/domains/emotion/habit_service.py):
+    on a combat_loss WorldEventCategory trigger it reads-through-then-replaces entity_update.cognition_bundle_set
+    (falling back to entity.cognition), decrementing HabitMemory.patterns[HABIT_PATTERN_COMBAT_ENGAGEMENT]
+    (new shared constant, pattern_id="combat_engagement") toward 0.0. Runs strictly
+    after memory_update and before self_model in the pipeline (src/engine/pipeline.py)
+    so a same-tick memory_update write is preserved, not clobbered, and reuses memory_update''s
+    own combat_loss trigger-event list. success=True is never recorded: WorldEventCategory
+    currently has no win/victory category, so recording only ever biases bravery downward
+    (out of this ticket''s scope to add new event instrumentation). Both real runtime
+    ActionStyle consumers named by SUB-381 -- src/engine/tactical.py''s SKIRMISHER
+    kiting distance and src/engine/movement.py''s EVASIVE-retreat opportunity-attack
+    suppression -- now live-re-derive ActionStyle from habit-biased bravery via an
+    identical HabitBiasService.apply_habit_bias(...) + get_action_style_for_bravery(...)
+    call, kept deliberately in sync so wiring only one consumer cannot desync ActionStyle
+    between them. All of this (the write phase and both read-side re-derivations)
+    is gated behind a single new flag, ENABLE_HABIT_BIAS_ACTION_STYLE (default OFF,
+    src/domains/optimization/feature_flags.py) -- OFF preserves the frozen, construction-time
+    entity.combat.action_style exactly.'
+  status: verified
+  priority: P2
+  v2_evidence: src/domains/emotion/habit_phase.py:29-60 (HabitBiasUpdatePhase.apply);
+    src/domains/emotion/habit_service.py:14,20-29 (HABIT_PATTERN_COMBAT_ENGAGEMENT,
+    HabitBiasService.record_outcome); src/engine/pipeline.py:161-174 (habit_bias_action_style
+    phase wired after memory_update, before self_model, both gated behind ENABLE_HABIT_BIAS_ACTION_STYLE);
+    src/engine/tactical.py:492-507 (evaluate_entity_intent live re-derivation for
+    SKIRMISHER kiting); src/engine/movement.py:186-202 (resolve_move live re-derivation
+    for EVASIVE opportunity-attack suppression).
+  test_path: tests/integration/domains/emotion/test_habit_bias_pipeline_wiring.py::test_record_outcome_wired_through_authoritative_pipeline,
+    tests/integration/domains/emotion/test_habit_bias_pipeline_wiring.py::test_habit_bias_update_phase_preserves_prior_cognition_bundle_write,
+    tests/integration/domains/emotion/test_habit_bias_pipeline_wiring.py::test_habit_bias_action_style_flag_gates_pipeline_phase,
+    tests/unit/tactical/test_habit_bias_action_style_wiring.py::test_habit_bias_shifts_action_style_when_flag_on,
+    tests/unit/tactical/test_habit_bias_action_style_wiring.py::test_habit_bias_flag_off_preserves_construction_time_action_style
+  divergence_note: null
+  proof_type: regression
+- id: STRAT-263
+  text: 'TacticalDecisionSystem.evaluate_entity_intent''s hostile-scan loop consumes
+    race-level hostility: RelationContext now carries source_race (via get_race_id_str(entity))
+    alongside target_race, so an authored race_relations.yaml entry can pull a neighbor
+    into the hostiles list (upstream of target_score()''s existing 6-element sort
+    tuple, which this change does not touch or extend).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/tactical.py:212-216 (RelationContext(source_race=get_race_id_str(entity),
+    target_race=get_race_id_str(n)) feeding is_hostile_compat() -> hostiles.append(n)).
+  proof_type: regression
+  test_path: tests/unit/combat/test_race_relations_tactical_wiring.py
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-264
+  text: RoleModelSelectionPhase periodically (per-entity staggered social_memory cadence)
+    selects the nearest strictly-higher-evolution_level neighbor within radius=10.0
+    as an entity's admired role model (CognitionModel.role_model), and stores an intelligence_tier-derived
+    imitation_fidelity (RoleModelImitationService) alongside it -- gated off by default
+    behind ENABLE_ROLE_MODEL_IMITATION (DEV-002).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/strategy/role_model_phase.py (RoleModelSelectionPhase.apply); src/strategy/role_model_imitation.py
+    (RoleModelImitationService.compute_imitation_fidelity); src/core/cognition.py
+    (RoleModelBundle, CognitionModel.role_model); src/engine/pipeline.py (AuthoritativeApplyPipeline.refine
+    -- role_model_selection phase wired in after habit_bias_action_style, gated by
+    ENABLE_ROLE_MODEL_IMITATION); src/domains/optimization/feature_flags.py (FeatureFlagManager
+    -- ENABLE_ROLE_MODEL_IMITATION registered as FeatureMode.OFF per DEV-002 default-off
+    policy).
+  proof_type: regression
+  test_path: tests/unit/strategic/test_role_model_state.py
+- id: STRAT-265
+  text: 'Frozen or stunned entities are excluded from strategic-cognition scheduling:
+    StrategicWorkQueue.build() skips them from the eligible entity set, and StrategicIntelligenceSystem''s
+    per-entity concern-evaluation / background-sweep / strategic-update loop (3 call
+    sites, each behind a "Legality Guard: Incapacitated entities skip strategic cycles"
+    comment) short-circuits with an empty StrategicUpdate when the entity has an active
+    "frozen" or "stunned" status effect.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/systems/strategic_systems/work_queue.py:32 (`if any(s.kind in
+    ("frozen", "stunned") for s in entity.combat.status_effects): continue`); src/systems/strategic_systems/intelligence.py:848,918,1221
+    (same guard, 3 call sites). Migrated off identity.properties.get("status_frozen"/"status_stunned")
+    to the typed CombatComponent.status_effects: List[StatusEffectState] by TCK-20260831-STATUS-EFFECT-STATE-UNIFICATION.'
+  proof_type: parity
+  test_path: tests/unit/domains/optimization/test_strategic_work_queue.py::test_strategic_queue_excludes_frozen_and_stunned_entities,
+    tests/unit/strategic/test_status_hardening.py::test_frozen_actor_skips_strategic_intent,
+    ::test_stunned_actor_skips_strategic_concerns
+  divergence_note: null
+  support_boundary: null

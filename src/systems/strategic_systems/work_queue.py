@@ -29,7 +29,7 @@ class StrategicWorkQueue:
             entity = state.entities[e_id]
             if not entity.lifecycle.active or not entity.combat.alive:
                 continue
-            if entity.identity.properties.get("status_frozen") or entity.identity.properties.get("status_stunned"):
+            if any(s.kind in ("frozen", "stunned") for s in entity.combat.status_effects):
                 continue
             eligible_ids.append(e_id)
 

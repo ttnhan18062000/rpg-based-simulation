@@ -138,11 +138,28 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # M1-batch and its follow-up tickets added several new entries with real `test_path`s from the
     # start and gave existing entries real `test_path`s during the m1-quick-wins/main merge
     # conflict resolution — e.g. PROG-121, INFRA-397/398/399, WORLD-117, SOC-245's cooldown
-    # evidence — a 10-entry net drop, re-verified via a fresh live scan).
+    # evidence — a 10-entry net drop, re-verified via a fresh live scan), then to 1321
+    # (TCK-20260831-ITEM-INSTANCE-HISTORY, 2026-09-01: TOWN-128 gained a real `test_path` citing
+    # tests/unit/resource/test_item_instance_history.py::test_town_128_item_kind_identity_unaffected_by_item_instance,
+    # previously `null` — a P0 gap flagged by that ticket's own investigation and closed per its
+    # AC #4), then to 1320 (TCK-20260831-STATUS-EFFECT-STATE-UNIFICATION, 2026-09-01: COMB-122
+    # gained a real `test_path` citing
+    # tests/unit/combat/test_combat_legality_regression.py::test_shatter_logic,
+    # previously stale/broken, as part of migrating the SHATTER mechanic off the prior
+    # identity.properties.get("status_frozen") dict lookup onto the typed status_effect_update
+    # path), then to 1317 (TCK-20260902-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT,
+    # 2026-09-02: TCK-20260902-PARITY-TEST-PATH-GAP repointed 3 P0 entries from null test_path to
+    # real citations — SUB-051 (docs/parity_ledger/substrate.yaml) to
+    # tests/unit/core/test_rpg_math.py::test_combat_stats_stay_within_bounds_after_normal_recalculation,
+    # TOWN-027 (docs/parity_ledger/town_resource.yaml) to
+    # tests/unit/social/test_teach.py::test_teach_resolves_target_capability_blocker_not_teacher,
+    # TOWN-076 (docs/parity_ledger/town_resource.yaml) to
+    # tests/unit/resource/test_loot_channeling.py::test_loot_corpse_completion_transfers_all_item_stacks
+    # — a 3-entry net drop, re-verified via a fresh live scan).
     # The substantive check is the assertion above (manifest's own count matches a fresh,
     # independent live scan) — this second assertion only guards against a silent, unexplained
     # large swing.
-    assert live_missing == 1322
+    assert live_missing == 1317
 
 
 # ---------------------------------------------------------------------------

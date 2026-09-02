@@ -3,13 +3,13 @@ status: authoritative
 layer: systems
 authority: P1
 audience: agent
-last_verified: 2026-06-12
+last_verified: 2026-09-02
 tags: [town, buildings, economy, sabotage, contract]
 ---
 
 # Town Engine Contract
 
-**Source:** `src/town/` (10 files: blacksmith.py, buildings.py, class_hall.py, guild.py, home.py, home_storage.py, inn.py, sabotage.py, shop.py, town_navigation.py)  
+**Source:** `src/town/` (9 files: blacksmith.py, buildings.py, guild.py, home.py, home_storage.py, inn.py, sabotage.py, shop.py, town_navigation.py) — `class_hall.py` was deleted as confirmed-dead code under `TCK-20260902-CLASSHALL-DEAD-CODE`; its live counterpart is `CoreActions.execute_train()` (`src/engine/domain/core_actions.py`), not a `src/town/` file.  
 **Authoritative status:** Town state IS authoritative — `BuildingState` participates in `AuthoritativeState` and its hash.  
 **RPG economic laws:** `docs/mechanics/03_economic_laws.md` (atomic conservation — do not duplicate here).  
 **System overview:** `docs/systems/buildings_and_economy.md` was archived 2026-08-10

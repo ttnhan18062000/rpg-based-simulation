@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-28
+last_verified: 2026-09-01
 ---
 
 # Chapter 2: Combat Laws
@@ -133,17 +133,33 @@ disengaging while adjacent to a hostile) bypass this specific check.
     rate at ~1.3% even after the fixes below. Removing the double-cost raised it to a real,
     measured 28.5-36.6% on the same live worlds (`dungeon_crawl`/`urban_political`).
 *   **Passive Regeneration**: Every tick, an entity below 100.0 readiness regenerates by its own
-    `readiness_speed` stat (`CombatComponent.readiness_speed`, default **10.0/tick**), capped at
-    100.0. This closes a gap between the documented kernel contract
-    (`docs/engine/contracts/minimal_kernel.md` §5, "Readiness Accumulation") and the source: prior
-    to `TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION`, no passive regeneration
+    `readiness_speed` stat (`CombatComponent.readiness_speed`), capped at 100.0. This closes a gap
+    between the documented kernel contract (`docs/engine/contracts/minimal_kernel.md` §5,
+    "Readiness Accumulation") and the source: prior to
+    `TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION`, no passive regeneration
     existed anywhere in the pipeline — readiness only ever decreased, and the only restoration
     path was a narrow town-specific REST action (+10.0, `src/engine/town_resolution.py`).
+    `readiness_speed` is derived from `agility` in `LevelingService.recalculate_combat_stats()`:
+    `readiness_speed = max(1.0, 10.0 + (agility - 5) * 1.0)`. **10.0/tick is the value at
+    reference/baseline agility (`5`), not a universal flat default** — higher agility regenerates
+    readiness faster, lower agility slower, floored at 1.0/tick to prevent the gate from ever
+    locking permanently (`TCK-20260831-READINESS-SPEED-FORMULA`, `COMB-318`).
 *   **Friendly-Fire Law**: Attacks against a target the real faction-semantics service does not
     consider hostile (`FactionSemanticsService.is_hostile_compat`) are illegal
     (`ReasonCode.FRIENDLY_FIRE_ILLEGAL`). Hostility for `contextual_intruder_groups`-classified
     relationships (real content: `data/content/social/perspectives.yaml`) resolves from real
     combat-engagement state, not a hardcoded assumption of non-intrusion.
+*   **Race-hostility escalation preserves the law**: `is_hostile_compat` resolves through
+    `RelationProjectionService.project_relation()`, whose race-hostility escalation step
+    (`src/content_semantics/relation.py`, real content: `data/content/social/race_relations.yaml`)
+    can upgrade a projected label toward `enemy`/`threat` using `axes.hostility` for the
+    attacker/target race pair, but only ever *upgrades* — it is gated off entirely whenever
+    `source_faction_id == target_faction_id`, so a race entry can never make a same-faction
+    attack legal, and it is fail-closed on a fixed label ladder
+    (`neutral`/`threat`/`intruder`/`enemy`), so an off-ladder perspective-declared label such as
+    `ally` or `protected` can never be escalated into hostility. This is what keeps the
+    Friendly-Fire Law intact once race-level hostility feeds attack legality
+    (`LegalityServiceV2.verify_attack_legality`, `src/engine/legality.py:243`).
 *   **Range & LoS**: Attacks additionally require the target within `effective_range` (melee: must
     be exactly adjacent) and unobstructed line of sight.
 *   **Unrecoverable-Failure Task Reset**: An `ATTACK` task that fails with

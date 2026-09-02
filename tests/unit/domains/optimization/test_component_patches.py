@@ -1,12 +1,12 @@
 # Compliance IDs: PERF-015
 import pytest
 from unittest.mock import MagicMock
-from src.core.updates import EntityUpdate, CombatUpdate, NavigationUpdate, AttributeUpdate, IdentityUpdate, WoundUpdate
-from src.core.state import EntityState, CombatComponent, NavigationComponent, AttributeComponent, IdentityComponent, LifeStage
+from src.core.updates import EntityUpdate, CombatUpdate, NavigationUpdate, AttributeUpdate, IdentityUpdate, WoundUpdate, StatusEffectUpdate, InteractionUpdate
+from src.core.state import EntityState, CombatComponent, NavigationComponent, AttributeComponent, IdentityComponent, LifeStage, StatusEffectState, InteractionComponent
 from src.core.self_model import SelfModelBundle, KnowledgeModelComponent, UnknownFact
 from src.engine.patches import (
     extract_patches, CombatPatch, NavigationPatch, AttributePatch, IdentityPatch, WoundPatch, KindPatch,
-    SelfModelPatch
+    SelfModelPatch, StatusEffectPatch, InteractionPatch
 )
 
 def test_patch_noop_detection():
@@ -155,3 +155,91 @@ def test_extract_patches_omits_self_model_patch_when_unset():
     update = EntityUpdate(entity_id=1, kind_set="Orc")
     patches = extract_patches(1, update)
     assert not any(isinstance(p, SelfModelPatch) for p in patches)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# StatusEffectPatch / InteractionPatch.kind (TCK-20260831-STATUS-EFFECT-STATE-UNIFICATION)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_status_effect_patch_noop_detection():
+    sep_noop = StatusEffectPatch(entity_id=1, status_effect_update=None)
+    assert sep_noop.is_noop() is True
+    sep_active = StatusEffectPatch(entity_id=1, status_effect_update=StatusEffectUpdate(
+        effects_add=[StatusEffectState(kind="frozen")]
+    ))
+    assert sep_active.is_noop() is False
+
+
+def test_status_effect_patch_apply_adds_effect():
+    entity = EntityState(id=1, kind="hero")
+    patch = StatusEffectPatch(entity_id=1, status_effect_update=StatusEffectUpdate(
+        effects_add=[StatusEffectState(kind="frozen", source="test_fixture", magnitude=1.0, expires_tick=50)]
+    ))
+
+    changes = {}
+    patch.apply(entity, changes)
+
+    assert [s.kind for s in changes["combat"].status_effects] == ["frozen"]
+
+
+def test_status_effect_patch_apply_removes_effect_by_kind():
+    entity = EntityState(id=1, kind="hero", combat=CombatComponent(
+        status_effects=[StatusEffectState(kind="frozen"), StatusEffectState(kind="stunned")]
+    ))
+    patch = StatusEffectPatch(entity_id=1, status_effect_update=StatusEffectUpdate(
+        effects_remove=["frozen"]
+    ))
+
+    changes = {}
+    patch.apply(entity, changes)
+
+    assert [s.kind for s in changes["combat"].status_effects] == ["stunned"]
+
+
+def test_status_effect_patch_merge():
+    sep1 = StatusEffectPatch(entity_id=1, status_effect_update=StatusEffectUpdate(
+        effects_add=[StatusEffectState(kind="frozen")]
+    ))
+    sep2 = StatusEffectPatch(entity_id=1, status_effect_update=StatusEffectUpdate(
+        effects_remove=["stunned"]
+    ))
+
+    merged = sep1.merge(sep2)
+    assert [s.kind for s in merged.status_effect_update.effects_add] == ["frozen"]
+    assert merged.status_effect_update.effects_remove == ["stunned"]
+
+
+def test_extract_patches_includes_status_effect_patch():
+    update = EntityUpdate(
+        entity_id=1,
+        status_effect_update=StatusEffectUpdate(effects_add=[StatusEffectState(kind="frozen")])
+    )
+    patches = extract_patches(1, update)
+    assert any(isinstance(p, StatusEffectPatch) for p in patches)
+
+
+def test_interaction_patch_apply_sets_kind():
+    entity = EntityState(id=1, kind="hero", interaction=InteractionComponent(target_node_id=101, progress=0))
+    patch = InteractionPatch(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0, kind="harvest"))
+
+    changes = {}
+    patch.apply(entity, changes)
+
+    assert changes["interaction"].kind == "harvest"
+    assert changes["interaction"].progress == 1.0
+
+
+def test_interaction_patch_apply_reset_clears_kind():
+    """Explicit behavior change from the old identity.properties dict-storage shape:
+    reset=True replaces the whole InteractionComponent, so `kind` clears on reset --
+    unlike the old dict-based interaction_kind, which was merge-only and never cleared."""
+    entity = EntityState(id=1, kind="hero", interaction=InteractionComponent(
+        target_node_id=101, progress=9, kind="harvest"
+    ))
+    patch = InteractionPatch(entity_id=1, interaction=InteractionUpdate(reset=True))
+
+    changes = {}
+    patch.apply(entity, changes)
+
+    assert changes["interaction"].kind is None
+    assert changes["interaction"].target_node_id is None

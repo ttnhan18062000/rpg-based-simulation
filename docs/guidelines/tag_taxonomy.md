@@ -219,6 +219,12 @@ Violations are a hard rejection (exit 1), the same severity as every other front
 (`status`, `layer`, `authority`, `audience`, `phase`, `artifact_type`) — not a separate warn-only
 path.
 
-This taxonomy applies to `ticket` and `artifact` content types only. `doc`-type frontmatter's
-`tags` field remains free-form and unvalidated (see `docs/guidelines/frontmatter_schema.md`) — the
-registry does not apply there either.
+This taxonomy fully applies to `ticket` and `artifact` content types, forward-only from
+`2026-07-04` as described above. `doc`-type frontmatter's `tags` field is checked with the same
+two rules (canonical form, then registry membership) **only for a doc that explicitly opts in**
+via `tags_enforced: true` in its own frontmatter (see `docs/guidelines/frontmatter_schema.md`).
+This is a per-file opt-in marker, not a forward-only date cutoff like the ticket/artifact side —
+docs have no `ticket_id`-shaped identifier to date-gate on. Any doc lacking `tags_enforced` (the
+entire corpus as of `TCK-20260831-DOC-TAG-ENFORCEMENT`, which introduced this check) remains
+free-form and unvalidated, exactly as before that ticket landed; no existing doc has been
+retrofitted or bulk-registered against the tag registry.

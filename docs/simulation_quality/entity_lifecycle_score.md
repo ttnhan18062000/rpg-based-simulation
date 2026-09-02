@@ -54,7 +54,7 @@ meaningless; loop detection is undefined below 6 events by construction). Every 
 
 ## Real event-type → lifecycle-phase-bucket mapping
 
-Re-derived directly from `docs/event_ledger/entity.yaml`'s own 20-row `event_types` columns (the
+Re-derived directly from `docs/event_ledger/entity.yaml`'s own 22-row `event_types` columns (the
 authoritative `EntityUpdate`-mutation → event-type catalog), not invented ad hoc — see this
 ticket's own `investigation.md` for the full row-by-row cross-reference. 9 buckets:
 `VITALS`, `GROWTH_PROGRESSION`, `EXPLORATION`, `COMBAT`, `ECONOMY`, `SOCIAL`,

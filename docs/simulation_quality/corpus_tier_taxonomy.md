@@ -291,6 +291,27 @@ the concrete candidates a stress-tier world should cite when justifying its auth
    recomposition attempt (lower hostile density) is recommended but not queued as its own ticket
    yet.
 
+7. **No tested world sustains any `combat_damage` activity past tick ~1000 — the `ELDER`-eligible
+   tick window (`age_ticks >= 7000`, `LifeStageService.get_stage_for_age()`) never overlaps active
+   combat in any world's current content.** Discovered via
+   `TCK-20260831-READINESS-SPEED-FORMULA`'s corpus-validation attempt for an agility-derived
+   `readiness_speed` change (a metamorphic `monotonic_non_increasing` check on
+   `elder_window_damage_rate = count(combat_damage, tick>=7000)/2500` came back a degenerate
+   `0.0`/`0.0`). Follow-up single-seed 9500-tick diagnostic runs across `unit_faction_tension`,
+   `crowded_frontier`, and `lifecycle_full_coverage_world` (the last authored specifically for full
+   lifecycle-phase coverage, gap #6 above) all showed the identical root cause: 106-196
+   `combat_damage` events per world, all before tick 1000, zero at `tick >= 1000` in all three. This
+   is a structural corpus-content fact — real combat activity ceases early and does not resume in
+   any tested world — not a sample-size/tick-count artifact (confirmed by widening across 3
+   different world compositions, including one built for lifecycle breadth). **Not yet closed**: no
+   corpus world currently sustains combat into the elder-eligible tick range, so any future ticket
+   attempting corpus-level validation of an elder-cohort or other late-tick combat effect will hit
+   the same structural null. Full diagnostic record: `docs/parity_ledger/combat_movement.yaml`'s
+   `COMB-318` entry (`support_boundary` field). A candidate fix would be a new or extended
+   stress/long-run world that keeps at least one hostile-module `combat_damage` source active past
+   tick 7000 (e.g., a persistent low-level threat) rather than a front-loaded encounter that
+   exhausts itself before tick 1000.
+
 `TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS` is scoped to address a subset of these gaps — it is not
 required to close all five in one ticket.
 

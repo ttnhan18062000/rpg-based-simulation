@@ -14,11 +14,24 @@ Tactical decisions are triggered when an entity is `active`, `alive`, and its `r
 AI logic is bounded to **Local Visibility** (Default radius: 10.0 tiles) and must not consult long-horizon strategic data.
 
 ## 2. Target Selection Rules (GAP-T01)
-Targets are selected from hostiles within the visibility radius using the following deterministic priority chain:
+Targets are selected from hostiles within the visibility radius using the following deterministic priority chain (`TacticalDecisionSystem.target_score()`, `src/engine/tactical.py`; this section was previously stale — it omitted the group/hysteresis/pressure terms below even before the capability-driven term was added, per `TCK-20260831-CAPABILITY-DRIVEN-TARGETING`):
 
-1. **Lowest HP**: Prioritize finishing off weak targets.
-2. **Closest Distance**: Prioritize immediate threats (Manhattan distance).
-3. **Lowest Entity ID**: Final tie-breaker for absolute determinism.
+1. **Group Focus-Fire Bias**: If the entity's group has a `shared_target_id`, that hostile is biased toward higher priority based on the entity's trust in the group leader (`VANGUARD` roles bias further).
+2. **Target Stickiness / Hysteresis**: The entity's current `target_id` (if still a hostile) gets a small priority bonus, avoiding target flip-flop.
+3. **Capability-Driven Priority** (Logic ID COMB-316): For a hostile resolvable into `CapabilityContext.combat_enemies` (via the hostile's `kind`), the entity's own subjective `CapabilityEstimateService.estimate(...)` result against that specific enemy kind is folded in — a hostile the entity subjectively believes it is more likely to beat is prioritized higher, ahead of raw HP/distance. This is an ad-hoc, call-site-local, read-only call: it does not go through `SelfModelUpdatePhase`, and `entity.self_model.capabilities.estimates` remains empty in production either way (see `docs/cognition/capability_and_knowledge_contract.md`).
+4. **Lowest HP**: Prioritize finishing off weak targets.
+5. **Closest Distance** (pressure-scaled): Prioritize immediate threats (Manhattan distance, reduced by territory/duty pressure to make territorial/duty-bound entities more aggressive).
+6. **Lowest Entity ID**: Final tie-breaker for absolute determinism.
+
+**Note on `select_best_target()`**: `TacticalDecisionSystem` also exposes a separate public
+static helper, `select_best_target()` (`src/engine/tactical.py`), documented in its own docstring
+as matching the original legacy `TacticalEvaluator.SelectTarget` literally — `Lowest HP` >
+`Closest Distance` > `Lowest Entity ID` only, with none of the group/hysteresis/pressure/
+capability terms above. It is exercised only by its own contract test
+(`tests/unit/combat/test_target_selection_contract.py`) and is not called from the live tactical
+decision loop (`TacticalDecisionSystem.evaluate_entity_intent()` uses `target_score()` above, not
+this helper) — confirmed via a repo-wide reference search finding no production caller. This ticket
+(`TCK-20260831-CAPABILITY-DRIVEN-TARGETING`) did not modify `select_best_target()`.
 
 ## 3. Engagement & Pursuit Rules (GAP-T02/T04)
 - **Stickiness**: Entities retain their current `target_id` if the target is still alive and within a **Stickiness Radius** (Default: 15.0).

@@ -107,6 +107,7 @@ def test_shared_gate_no_fallthrough_for_gated_kinds():
         ContractKind.MERCHANT: {"price": 100, "item_value": 100},
         ContractKind.TEAM_UP: {"risk_level": "NORMAL"},
         ContractKind.PAID_INFORMATION: {},
+        ContractKind.TEACH: {},
     }
     for kind, terms in kind_terms.items():
         contract = ContractState(id=f"c_{kind.value}", kind=kind, source_id=2, target_id=1, terms=terms)
@@ -232,6 +233,65 @@ def test_paid_information_kind_appraisal_accepts_once_prelude_passes():
     status, reason, _ = SocialAppraisalSystem.appraise_contract(entity, contract, state)
     assert status == ContractStatus.ACCEPTED
     assert reason == ReasonCode.INFORMATION_SALE_ACCEPTED
+
+
+def test_teach_kind_appraisal_accepts_once_prelude_passes():
+    from src.core.enums import ReasonCode
+
+    entity = create_mock_entity(1)
+    state = AuthoritativeState(tick=100, seed=42)
+    contract = ContractState(
+        id="c_teach", kind=ContractKind.TEACH, source_id=2, target_id=1, terms={},
+    )
+    status, reason, _ = SocialAppraisalSystem.appraise_contract(entity, contract, state)
+    assert status == ContractStatus.ACCEPTED
+    assert reason == ReasonCode.TEACH_ACCEPTED
+
+
+def test_teach_boundary_trust_score_matches_recruitment_and_team_up_just_below_0_2():
+    """A trust score just below the shared hard-cancel threshold (0.2, strict '<') must
+    produce the same CANCELLED/TOTAL_DISTRUST outcome for TEACH as it already does for
+    RECRUITMENT/TEAM_UP at that same trust score -- proving no kind-specific threshold
+    drift was introduced by _appraise_teach. (trust_score == 0.2 exactly does NOT trigger
+    the hard-cancel, since the prelude's comparison is strict '<' -- appraisal.py:48 --
+    so the boundary value used here is just under it, not exactly on it.)"""
+    from src.core.enums import ReasonCode
+    from src.core.state import SocialBond
+
+    def entity_at_boundary_trust():
+        entity = create_mock_entity(1)
+        # trust_score = (sentiment + 1.0) / 2.0 == 0.195 -> sentiment == -0.61
+        return replace(
+            entity,
+            social=replace(entity.social, bonds={2: SocialBond(target_id=2, sentiment=-0.61)}),
+        )
+
+    state = AuthoritativeState(tick=100, seed=42)
+
+    recruitment_contract = ContractState(
+        id="c_recruit_boundary", kind=ContractKind.RECRUITMENT, source_id=2, target_id=1,
+        terms={"daily_pay": 20},
+    )
+    team_up_contract = ContractState(
+        id="c_team_up_boundary", kind=ContractKind.TEAM_UP, source_id=2, target_id=1,
+        terms={"risk_level": "NORMAL"},
+    )
+    teach_contract = ContractState(
+        id="c_teach_boundary", kind=ContractKind.TEACH, source_id=2, target_id=1, terms={},
+    )
+
+    recruit_status, recruit_reason, _ = SocialAppraisalSystem.appraise_contract(
+        entity_at_boundary_trust(), recruitment_contract, state
+    )
+    team_up_status, team_up_reason, _ = SocialAppraisalSystem.appraise_contract(
+        entity_at_boundary_trust(), team_up_contract, state
+    )
+    teach_status, teach_reason, _ = SocialAppraisalSystem.appraise_contract(
+        entity_at_boundary_trust(), teach_contract, state
+    )
+
+    assert recruit_status == team_up_status == teach_status == ContractStatus.CANCELLED
+    assert recruit_reason == team_up_reason == teach_reason == ReasonCode.TOTAL_DISTRUST
 
 
 def test_contract_kind_merchant_does_not_conflate_with_information_provider_archetype():

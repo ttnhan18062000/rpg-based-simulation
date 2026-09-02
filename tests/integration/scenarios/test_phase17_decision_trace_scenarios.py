@@ -1,7 +1,7 @@
 import pytest
 from dataclasses import replace
 from src.core.state import EntityState
-from src.core.cognition import CognitionModel, EmotionalModel, SubjectiveModel, SelfModel, RecoveryState
+from src.core.cognition import CognitionModel, EmotionalModel, SubjectiveModel, RecoveryState
 from src.observability.trace import DecisionTrace, DecisionOptionTrace, RejectedOptionTrace
 from src.observability.validator import DecisionTraceValidator
 from src.observability.reporter import CausalityChainReporter

@@ -3,14 +3,14 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-08-28
+last_verified: 2026-08-31
 ---
 
 # Emotion Domain Contract
 
 **Source:** `src/domains/emotion/` (emotion_service.py, habit_service.py, recovery_service.py, opportunity_cost.py)  
 **Pipeline phase:** event-driven, NOT every-tick scheduled  
-**Authoritative status:** Synchronous in-event callback pattern. Returns new immutable instances via `dataclasses.replace`. Does NOT produce `EntityUpdate` or route through the authoritative mutation pipeline.
+**Authoritative status:** Synchronous in-event callback pattern. Returns new immutable instances via `dataclasses.replace`. Does NOT produce `EntityUpdate` or route through the authoritative mutation pipeline — **except** the `combat_engagement` habit-bias write path (`HabitBiasService.record_outcome`), which as of `TCK-20260831-HABIT-BIAS-WIRING` is instead driven by a real pipeline phase (`HabitBiasUpdatePhase`, `src/domains/emotion/habit_phase.py`) that writes through `EntityUpdate.cognition_bundle_set` on the authoritative apply path, gated behind `ENABLE_HABIT_BIAS_ACTION_STYLE` (default OFF). All other emotion-domain services (`EmotionUpdateService`, `RecoveryReadinessService`, `OpportunityCostEvaluator`) remain the synchronous in-event callback pattern described above; see the event table below.
 
 ---
 
@@ -43,9 +43,9 @@ Emotion updates are **not** driven by a scheduled per-tick phase runner. They ar
 - `new_unknown` event → `EmotionUpdateService.update_on_event` (delta rule defined; no production call site wired yet)
 - `successful_goal` event → `EmotionUpdateService.update_on_event` (delta rule defined; no production call site wired yet)
 - `stagnation` event → `EmotionUpdateService.update_on_event` (delta rule defined; no production call site wired yet)
-- Action outcome (success/failure) → `HabitBiasService.record_outcome`
+- `combat_loss` trigger event → `HabitBiasUpdatePhase.apply()` (`src/domains/emotion/habit_phase.py`) → `HabitBiasService.record_outcome(habit, "combat_engagement", success=False)` — the domain's **only** habit-bias event with a confirmed production call site, wired as of `TCK-20260831-HABIT-BIAS-WIRING`, gated behind `ENABLE_HABIT_BIAS_ACTION_STYLE` (default OFF). No win/victory `WorldEventCategory` exists, so `record_outcome` can currently only ever be called with `success=False` — see the `HabitBiasService` section below for the resulting one-way-decay implication. Unlike the five event kinds above, this call site does **not** run as a synchronous in-event callback: it is a pipeline phase (see Authoritative status above)
 
-The domain has no `phase.py` — it is invoked by event handlers in the engine, not by the phase scheduler.
+The domain has no `phase.py` of its own for the five `EmotionUpdateService` event kinds above — those are invoked by event handlers in the engine, not by the phase scheduler. `HabitBiasUpdatePhase` (`src/domains/emotion/habit_phase.py`) is the one exception, living under `src/domains/emotion/` but running as a real pipeline phase in `AuthoritativeApplyPipeline.refine()`.
 
 ---
 
@@ -102,6 +102,11 @@ score += (memory.patterns[tag] - 0.5) × 0.4
 ```
 
 A bias of 1.0 contributes +0.2; a bias of 0.0 contributes −0.2; neutral 0.5 contributes 0.0. Applied additively to `base_score` — no clamping at this layer (caller is responsible).
+
+**Production call sites (`TCK-20260831-HABIT-BIAS-WIRING`, all gated behind `ENABLE_HABIT_BIAS_ACTION_STYLE`, default OFF):**
+
+- **Write:** `HabitBiasUpdatePhase.apply()` (`src/domains/emotion/habit_phase.py`) calls `record_outcome(habit, "combat_engagement", success=False)` for every `combat_loss` trigger event, per tick, in the authoritative pipeline (placed after `memory_update`, before `self_model`). No code path currently calls `record_outcome` with `success=True` — no win/victory `WorldEventCategory` exists yet. **This means the `"combat_engagement"` pattern in practice is a one-way monotonic decay from its 0.5 neutral default toward the 0.0 floor as an entity loses combat encounters; there is currently no way for it to recover.** Do not assume symmetric reinforcement/decay behavior for this pattern until a win trigger is added.
+- **Read:** `TacticalDecisionSystem.evaluate_entity_intent()` (`src/engine/tactical.py`, SKIRMISHER kiting-distance branch) and `MovementSystem.resolve_move()` (`src/engine/movement.py`, EVASIVE opportunity-attack suppression) both call `apply_habit_bias(habit, ["combat_engagement"], personality.bravery)`, clamp to `[0.0, 1.0]`, and re-derive `ActionStyle` from the result. The two read sites are wired together and must stay synchronized — see `docs/mechanics/04_strategic_cognition.md` §6.3 for the full mechanic and the `ActionStyle` threshold rule they both re-run.
 
 ### RecoveryReadinessService
 
@@ -163,7 +168,7 @@ The domain does not read world state, entity identity, or inventory directly.
 
 `EmotionalModel`, `HabitMemory`, and `RecoveryState` — returned as new immutable instances via `dataclasses.replace`. The caller is responsible for writing these back into the entity's cognition state.
 
-Updates are **not** routed through `EntityUpdate` or the authoritative mutation pipeline. This is the synchronous in-event callback pattern: the domain receives current state, computes the updated state, and returns the new record.
+Updates are **not** routed through `EntityUpdate` or the authoritative mutation pipeline — this is the synchronous in-event callback pattern: the domain receives current state, computes the updated state, and returns the new record. **Exception:** the `combat_engagement` habit-bias write (`HabitBiasUpdatePhase`) does route through `EntityUpdate.cognition_bundle_set` on the authoritative apply path; see the Authoritative status note at the top of this doc.
 
 ---
 
@@ -187,6 +192,8 @@ Updates are **not** routed through `EntityUpdate` or the authoritative mutation 
 | **Adventure domain** | Reads emotion outputs | `confidence` affects route scoring; `RecoveryReadinessService.is_ready_to_retry()` gates combat/high-risk route eligibility |
 | **Commitment domain** (inline utility, see commitment_contract.md) | Reads emotion outputs | Near-death emotion state (fear, panic) informs survival abandonment classification |
 | **Engine event handlers** | Triggers | Engine fires event callbacks on specific game outcomes; emotion domain is called synchronously within those handlers. Confirmed production call site: `NearDeathHardeningPhase.apply()` (`src/engine/pipeline_phases/hardening.py`) for the `near_death` event — the other five event kinds (`easy_win`, `repeated_failure`, `new_unknown`, `successful_goal`, `stagnation`) have delta rules defined but no production call site yet |
+| **Authoritative apply pipeline** (`AuthoritativeApplyPipeline.refine()`) | Triggers (habit-bias write only) | `HabitBiasUpdatePhase` (`src/domains/emotion/habit_phase.py`) runs as a real pipeline phase, not a synchronous event callback — the one exception to this domain's event-driven pattern (`TCK-20260831-HABIT-BIAS-WIRING`, behind `ENABLE_HABIT_BIAS_ACTION_STYLE`) |
+| **Tactical/Movement domains** (`src/engine/tactical.py`, `src/engine/movement.py`) | Read emotion outputs | `HabitBiasService.apply_habit_bias()` re-derives live `ActionStyle` from habit-biased bravery for SKIRMISHER kiting distance and EVASIVE opportunity-attack suppression respectively, behind `ENABLE_HABIT_BIAS_ACTION_STYLE` (`TCK-20260831-HABIT-BIAS-WIRING`) |
 
 ---
 
@@ -201,6 +208,10 @@ Updates are **not** routed through `EntityUpdate` or the authoritative mutation 
 | `tests/integration/scenarios/test_phase16_emotion_recovery_habit_scenarios.py` | Scenario-level: near_death cascade, habit reinforcement across multiple outcomes, stagnation boredom accumulation |
 | `tests/integration/scenarios/test_phase17_decision_trace_scenarios.py` | Downstream: confidence affects route scoring; recovery window blocks route eligibility |
 | `tests/unit/strategic/test_cognition_immediate_fixes.py` | Cognition model integration with emotion state |
+| `tests/integration/domains/emotion/test_habit_bias_pipeline_wiring.py` | `HabitBiasUpdatePhase` writes through the authoritative pipeline on `combat_loss`; preserves prior same-tick `cognition_bundle_set` writes; flag gates the phase |
+| `tests/unit/tactical/test_habit_bias_action_style_wiring.py` | `tactical.py`'s live habit-biased `ActionStyle` re-derivation, on and off the flag |
+| `tests/unit/movement/test_tactical_movement.py` | `movement.py`'s live habit-biased `ActionStyle` re-derivation for EVASIVE opportunity-attack suppression, on and off the flag |
+| `tests/architecture/test_habit_bias_personality_frozen.py` | `PersonalityComponent` stays frozen/immutable; no `PersonalityUpdate` type introduced; habit-bias wiring never constructs a `PersonalityComponent` |
 
 ---
 

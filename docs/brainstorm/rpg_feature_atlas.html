@@ -1937,7 +1937,7 @@ flowchart TB
       ],
       "fromNote": null,
       "desc": "Real town-service registry spanning 9 building files (the church's <code class=\"inline\">BLESSING</code>/<code class=\"inline\">RESURRECTION</code> services live here too, alongside inn rest, blacksmith repair, class-hall training, and home storage).",
-      "src": "<code class=\"inline\">town/{buildings,inn,blacksmith,class_hall,home_storage,shop}.py</code><code class=\"inline\">systems/economy_systems/town_service.py</code>"
+      "src": "<code class=\"inline\">town/{buildings,inn,blacksmith,home_storage,shop}.py</code><code class=\"inline\">systems/economy_systems/town_service.py</code><code class=\"inline\">engine/domain/core_actions.py</code> &middot; class-hall training now lives in <code class=\"inline\">CoreActions.execute_train()</code> (the dead <code class=\"inline\">town/class_hall.py</code> duplicate was deleted, TCK-20260902-CLASSHALL-DEAD-CODE)"
     },
     {
       "title": "Building Sabotage",

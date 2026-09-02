@@ -68,7 +68,7 @@ You can visualize these using the `tools/viz_strategy.html` utility to see a cha
 
 ## 5. Persistence & AOA Safety
 
-Strategic state is stored in the `StrategicState` model within the `MindAspect`. To ensure determinism and AOA (Authoritative Observable Atomic) compliance:
+Strategic state is stored in the `StrategicState` model within the `StrategicComponent`. To ensure determinism and AOA (Authoritative Observable Atomic) compliance:
 - Mutations ONLY happen during the Cognitive Pipeline's **Resolution** stage, via the `ActionSystem`.
 - High-level strategic choices are recorded in the `DecisionLog` for replayability.
 - The `freeze()` mechanism ensures that strategic choices during a tick are isolated from other concurrent workers.

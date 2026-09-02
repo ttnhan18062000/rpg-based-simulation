@@ -545,13 +545,13 @@
   support_boundary: null
 - id: SUB-051
   text: "`test_stats_invariants`: Stats invariants \u2014 AOA Stabilization: Test\
-    \ CombatAspect invariants (formerly Stats).."
+    \ CombatComponent invariants (formerly Stats).."
   status: verified
   priority: P0
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/core/test_rpg_math.py::test_combat_stats_stay_within_bounds_after_normal_recalculation
   divergence_note: null
   support_boundary: null
 - id: SUB-052
@@ -4529,34 +4529,40 @@
     both hooks entirely dormant. Also: this ticket''s own SUB-380 sibling entry''s
     hardcoded _BRAVERY_BIAS_BY_ALIGNMENT_BUCKET dict was migrated to real, external
     data (data/content/social/personality_bias.yaml) per an explicit mid-session user
-    design correction, alongside this ticket''s own new action_style_thresholds.
-
-    '
+    design correction, alongside this ticket''s own new action_style_thresholds.'
   status: verified
   priority: P1
-  legacy_evidence: null
   v2_evidence: 'Added get_action_style_for_bravery(bravery) -> int (src/worldbuilding/compiler.py),
     reading real thresholds (aggressive_at_or_above: 0.65, evasive_at_or_below: 0.35)
     from personality_bias.yaml (cached, with an in-code fallback matching the shipped
     data exactly). Wired into the same personality-seeding call site SUB-380 already
     touches: action_style=get_action_style_for_bravery(personality.bravery). Also
-    traced ActionStyle''s own full real consumption in tactical.py: found and disclosed
-    that an AGGRESSIVE effective-range bonus and an EVASIVE reposition-stub (tactical.py:596-603)
-    are genuinely dead code -- a local variable mutated but never read by the function''s
-    own downstream branches -- not fixed here (separate bug, out of this ticket''s
-    own scope). Real re-verification on live compiled worlds: dungeon_crawl''s wild_beast_pack
-    population (avg bravery ~0.89) -> 5/5 real entities AGGRESSIVE; urban_political''s
-    merchant_league (no bias) -> a real, roughly even 3/3/3 split across all 3 ActionStyle
-    values.
+    traced ActionStyle''s own full real consumption in src/engine/tactical.py: found
+    and disclosed that an AGGRESSIVE effective-range bonus and an EVASIVE reposition-stub
+    (src/engine/tactical.py:596-603) are genuinely dead code -- a local variable mutated
+    but never read by the function''s own downstream branches -- not fixed here (separate
+    bug, out of this ticket''s own scope). Real re-verification on live compiled worlds:
+    dungeon_crawl''s wild_beast_pack population (avg bravery ~0.89) -> 5/5 real entities
+    AGGRESSIVE; urban_political''s merchant_league (no bias) -> a real, roughly even
+    3/3/3 split across all 3 ActionStyle values.
 
-    '
+
+    UPDATE (TCK-20260831-HABIT-BIAS-WIRING, same subsystem, see STRAT-262): both of
+    this entry''s named consumers no longer only read the frozen construction-time
+    action_style. Behind a new flag, ENABLE_HABIT_BIAS_ACTION_STYLE (default OFF,
+    src/domains/optimization/feature_flags.py), src/engine/tactical.py:492-507 (SKIRMISHER
+    kiting) and src/engine/movement.py:186-202 (EVASIVE opportunity-attack suppression)
+    both now live-re-derive ActionStyle every tick from habit-biased bravery -- HabitBiasService.apply_habit_bias(entity.cognition.memory.habit,
+    [HABIT_PATTERN_COMBAT_ENGAGEMENT], entity.identity.personality.bravery) fed back
+    through the same get_action_style_for_bravery() this entry already covers -- using
+    an identical call shape in both files by deliberate design, so enabling the flag
+    cannot desync ActionStyle between the two consumers. Flag OFF (default) leaves
+    this entry''s original construction-time-only behavior bit-identical.'
   proof_type: regression
   test_path: 'tests/unit/worldbuilding/test_world_compiler.py:: test_get_action_style_for_bravery_thresholds,
     tests/unit/worldbuilding/test_world_compiler.py:: test_compiler_faction_bravery_bias_produces_real_action_style_skew,
     tests/unit/content_semantics/test_personality.py:: test_personality_bias_config_loads_from_real_data_file,
-    tests/unit/content_semantics/test_personality.py:: test_personality_bias_config_falls_back_safely_on_bad_file
-
-    '
+    tests/unit/content_semantics/test_personality.py:: test_personality_bias_config_falls_back_safely_on_bad_file'
   divergence_note: null
   support_boundary: 'tactical.py''s own confirmed-dead AGGRESSIVE range-bonus and
     EVASIVE reposition-stub are not fixed here -- a separate, real bug in that function''s
@@ -4565,9 +4571,8 @@
     (TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY, same session): the 2 config-loading
     tests referenced above moved from test_world_compiler.py to test_personality.py
     when _load_personality_bias_config/_PERSONALITY_BIAS_FALLBACK were extracted into
-    src/content_semantics/personality.py -- see SUB-382.
-
-    '
+    src/content_semantics/personality.py.'
+  legacy_evidence: null
 - id: SUB-382
   text: 'TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY -- ArchetypeEntityFactory.build_entity()
     (src/entities/archetype_factory.py) and WorldEntitySpawner._spawn_legacy_guard()
@@ -4870,22 +4875,19 @@
   support_boundary: null
 - id: SUB-388
   text: 'TCK-20260822-WORLD-GRAMMAR-REACHABILITY-VALIDATOR -- new `ParticipantReachabilityRule`
-    (`rule_id="WORLD-REACH-001"`, `src/worldbuilding/validator.py`) checks each
-    `QuestDefinition.required_participant_tags` against the reachable-population tag
-    pool built by `src/worldbuilding/reachability.py` from the chain
-    `PopulationSpec.archetype_id -> EntityArchetypeDefinition.role -> RoleDefinition.compatible_traits`
-    -- the only real catalog vocabulary covering a majority (5 of 6) of real
-    `required_participant_tags` value-sets (`EntityArchetypeDefinition.tags` is 0%
-    populated; `RoleDefinition.role_family` matches none). Runs at
-    `ValidationContext.WORLD`/`COMPILE`/`EXPERIMENT` only (excludes `MODULE`, whose
-    `dummy_spec` never populates `quest_definitions`). `WorldValidator.__init__` gained
-    an optional `catalog_repo: Optional[CatalogRepository] = None` parameter, wired
-    only at the one real WORLD-context call site (`WorldAssemblyValidator.validate()`,
+    (`rule_id="WORLD-REACH-001"`, `src/worldbuilding/validator.py`) checks each `QuestDefinition.required_participant_tags`
+    against the reachable-population tag pool built by `src/worldbuilding/reachability.py`
+    from the chain `PopulationSpec.archetype_id -> EntityArchetypeDefinition.role
+    -> RoleDefinition.compatible_traits` -- the only real catalog vocabulary covering
+    a majority (5 of 6) of real `required_participant_tags` value-sets (`EntityArchetypeDefinition.tags`
+    is 0% populated; `RoleDefinition.role_family` matches none). Runs at `ValidationContext.WORLD`/`COMPILE`/`EXPERIMENT`
+    only (excludes `MODULE`, whose `dummy_spec` never populates `quest_definitions`).
+    `WorldValidator.__init__` gained an optional `catalog_repo: Optional[CatalogRepository]
+    = None` parameter, wired only at the one real WORLD-context call site (`WorldAssemblyValidator.validate()`,
     `src/worldassembly/resolver.py`, reusing its own already-held `CatalogRepository`);
-    all 6 other real `WorldValidator()` call sites are unchanged and remain
-    catalog-blind by design, producing zero new issues. `ValidationIssue` gained two
-    additive optional fields, `source_entity`/`source_file`, populated from the quest
-    id and `QuestDefinition.source_module`.'
+    all 6 other real `WorldValidator()` call sites are unchanged and remain catalog-blind
+    by design, producing zero new issues. `ValidationIssue` gained two additive optional
+    fields, `source_entity`/`source_file`, populated from the quest id and `QuestDefinition.source_module`.'
   status: verified
   priority: P2
   legacy_evidence: null
@@ -4895,15 +4897,14 @@
     (WorldAssemblyValidator.validate() catalog_repo wiring + world_report source_entity/source_file)
   proof_type: regression
   test_path: tests/unit/worldbuilding/test_corpus_reachability_baseline.py::test_full_corpus_reachability_regression
-  divergence_note: 'The chosen matching field (`compatible_traits`) does not cover
+  divergence_note: The chosen matching field (`compatible_traits`) does not cover
     the `opportunistic` (goblin/bandit quests, 3 world modules) or `beast` (wolf quests,
-    1 world module) vocabulary used by real authored quest content, nor a handful of
-    `spiritual`/`undead` quests whose referenced archetype''s actual role trait
-    doesn''t match the tag the quest author chose -- confirmed via the corpus-wide
-    regression baseline (75 violations across 16 of 21 real composed worlds,
-    `tests/fixtures/world_grammar_reachability_baseline.json`). This is an accepted
-    content-authoring vocabulary gap, not a defect in the rule; backfilling catalog
-    content to close it is explicitly out of this ticket''s scope. `compiled_quests`
-    (`src/worldbuilding/compiler.py`) remains fully dead code with no live
-    `AuthoritativeState` consumer, so this baseline reflects authoring-time content
-    quality, not currently-live runtime behavior.'
+    1 world module) vocabulary used by real authored quest content, nor a handful
+    of `spiritual`/`undead` quests whose referenced archetype's actual role trait
+    doesn't match the tag the quest author chose -- confirmed via the corpus-wide
+    regression baseline (75 violations across 16 of 21 real composed worlds, `tests/fixtures/world_grammar_reachability_baseline.json`).
+    This is an accepted content-authoring vocabulary gap, not a defect in the rule;
+    backfilling catalog content to close it is explicitly out of this ticket's scope.
+    `compiled_quests` (`src/worldbuilding/compiler.py`) remains fully dead code with
+    no live `AuthoritativeState` consumer, so this baseline reflects authoring-time
+    content quality, not currently-live runtime behavior.

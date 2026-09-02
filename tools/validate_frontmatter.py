@@ -153,6 +153,28 @@ def _ticket_id_effective_date(ticket_id) -> str | None:
     return m.group(1) if m else None
 
 
+def _tag_membership_errors(filepath: str, tags: list, registry: dict | None = None) -> list[str]:
+    """Canonical-form + (if `registry` is given) registry-membership errors for a tag list.
+
+    Content-type-agnostic core shared by `_check_tags` (ticket/artifact) and `_check_doc_tags`
+    (doc) — the only thing that differs between content types is how each decides whether a file
+    is in scope for this check at all; this function assumes that decision has already been made.
+    """
+    errors = []
+    for tag in tags:
+        violation = canonical_form_violation(tag)
+        if violation:
+            errors.append(f"{filepath}: tags: {violation}")
+            continue
+        if registry is not None and not is_tag_registered(tag, registry):
+            errors.append(
+                f"{filepath}: tags: {tag!r} is not in the tag registry — register it first via "
+                f"`python3 tools/tag_registry.py add {tag} --category <category> "
+                f'--note "..."`'
+            )
+    return errors
+
+
 def _check_tags(filepath: str, fm: dict, registry: dict | None = None) -> list[str]:
     """Validate tags: canonical form, then (if `registry` is given) registry membership.
 
@@ -170,19 +192,19 @@ def _check_tags(filepath: str, fm: dict, registry: dict | None = None) -> list[s
         # no-backfill decision. Every other frontmatter check still applies as normal.
         return []
 
-    errors = []
-    for tag in tags:
-        violation = canonical_form_violation(tag)
-        if violation:
-            errors.append(f"{filepath}: tags: {violation}")
-            continue
-        if registry is not None and not is_tag_registered(tag, registry):
-            errors.append(
-                f"{filepath}: tags: {tag!r} is not in the tag registry — register it first via "
-                f"`python3 tools/tag_registry.py add {tag} --category <category> "
-                f'--note "..."`'
-            )
-    return errors
+    return _tag_membership_errors(filepath, tags, registry)
+
+
+def _check_doc_tags(filepath: str, fm: dict, registry: dict | None = None) -> list[str]:
+    """Validate doc tags: canonical form + registry membership, only for docs opted in via
+    `tags_enforced: true`. Every doc lacking this field (the entire corpus as of this ticket) is
+    exempt/grandfathered — see docs/guidelines/tag_taxonomy.md's Enforcement section."""
+    tags = fm.get("tags")
+    if not tags:
+        return []
+    if not fm.get("tags_enforced"):
+        return []
+    return _tag_membership_errors(filepath, tags, registry)
 
 
 def _validate_doc(filepath: str, fm: dict, registry: dict | None = None) -> list[str]:
@@ -198,6 +220,7 @@ def _validate_doc(filepath: str, fm: dict, registry: dict | None = None) -> list
         errors.append(
             f"{filepath}: last_verified: required when status is 'authoritative'"
         )
+    errors += _check_doc_tags(filepath, fm, registry)
     return errors
 
 

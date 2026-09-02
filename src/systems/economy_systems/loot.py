@@ -17,7 +17,7 @@ class LootSystem:
             if not entity.interaction or entity.interaction.target_node_id is None:
                 continue
                 
-            interaction_kind = entity.identity.properties.get("interaction_kind")
+            interaction_kind = entity.interaction.kind
             if interaction_kind not in ["ground_item", "corpse"]:
                 continue
                 
