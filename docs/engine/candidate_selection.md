@@ -3,7 +3,7 @@ status: active
 layer: engine
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-09-02
 ---
 
 # Candidate Selection Contract
@@ -29,11 +29,11 @@ Decides which entities produce work this tick. Three gates:
 
 | Gate | Rule |
 |---|---|
-| **Readiness** | `entity.readiness >= 100` — entities below threshold are skipped this tick |
+| **Readiness** | `entity.readiness >= 100` — gates `ENTITY_ACT` and `ENTITY_MOVE` only. **`ENTITY_BRAIN` (cognition/tactical evaluation, `TacticalDecisionSystem.evaluate_entity_intent()`) is explicitly exempt** — it costs 0 readiness and is gated by strategic cadence instead ("Action Readiness Law, COMB-266", `src/engine/scheduler.py`) |
 | **LOD gating** | Level-of-detail tier (A/B/C) gates whether full or reduced processing runs; distant/low-priority entities may get simplified work items |
 | **Strategic cadence** | `tick % entity.strategic_cadence == 0` — high-level strategic re-evaluation only runs every N ticks (not every tick), reducing redundant domain phase invocations |
 
-Entities that pass all three gates receive `WorkItem`s dispatched to workers. Entities that fail any gate receive no work this tick.
+Entities that pass the LOD and strategic-cadence gates receive an `ENTITY_BRAIN` work item regardless of readiness. `ENTITY_ACT`/`ENTITY_MOVE` additionally require the readiness gate. Entities that fail their applicable gates receive no work item of that kind this tick.
 
 ---
 

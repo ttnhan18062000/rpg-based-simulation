@@ -224,6 +224,7 @@ feature to declare:
 
 - Whether all 5 missing canonical-hash fields (§3.1) should be added, or whether some are legitimately
   non-authoritative enough to exclude — a real determinism-vs-cost tradeoff this document does not resolve.
+  **Promoted to `TCK-20260902-SOCIAL-CANONICAL-HASH-GAP` (2026-09-02).**
 - Which of `RelationshipRole` or `nemesis_ids` should take precedence when a consumer needs one answer and
   both are set (§3.4) — or whether the two should be unified into one signal instead.
 - Whether `public_reputation` locality (idea 60) should be a full per-observer ledger or a coarser
