@@ -76,6 +76,31 @@ _TOOLS_SUBDIR_MIRROR_PREFIXES = (
 # src/<subsystem>/... -> tests/unit/<subsystem>/... — only the subset that test-scoper's own map
 # documents; a src/ change under a subsystem not listed here is intentionally left unmapped
 # (SKIP, not FAIL) rather than guessing a directory that might not exist.
+#
+# `ai` and `systems` are DELIBERATELY absent, not an oversight (TCK-20260902-HOTFIX-TEST-SCOPE-
+# COVERAGE-AI-SYSTEMS-ALLOWLIST-GAP investigated and disclosed this after
+# TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE found both fell through this map silently). Neither
+# has a single reliable owning `tests/unit/<x>/` directory the way every subsystem above does:
+# - `src/ai/coming_of_age.py`'s own real test lives in `tests/unit/strategic/`, not
+#   `tests/unit/ai/` — a grep of real test-file references to `src/ai/*` across `tests/unit/` hits
+#   `strategic/` (12), `ai/`+`ai/goals/` (4), `domains/adventure/`, `domains/optimization/`,
+#   `observability/`, `systems/`, `world/` (1 each). No single directory is even the dominant real
+#   owner, let alone universal.
+# - `src/systems/` is not one subsystem but 5 real sub-packages (`lifecycle_systems/`,
+#   `strategic_systems/`, `world_systems/`, `social_systems/`, `economy_systems/`), each tested by
+#   a genuinely different, sometimes multi-directory set of real owners (e.g. `lifecycle_systems/`
+#   spans `tests/unit/world/`, `tests/unit/strategic/`, `tests/unit/progression/`;
+#   `economy_systems/` is tested only under `tests/integration/scenarios/` and
+#   `tests/architecture/` — not `tests/unit/` at all). Unlike `domains/` (also multi-subpackage but
+#   safely mapped below), `systems/`'s sub-package tests are NOT nested under one parent test
+#   directory the way `tests/unit/domains/<subpkg>/` nests every `src/domains/` subpackage — there
+#   is no structural equivalent to point at.
+# Forcing either into this flat 1:1 map would make this check require the WRONG directory for many
+# real tickets — actively worse than today's silent skip. The real backstop for both is
+# `.claude/agents/test-scoper.md`'s cross-cutting-expansion grep-sweep step (Scoping Rules), which
+# `src/systems/` already triggers and `src/ai/` was added to trigger by the same ticket that added
+# this comment. See `tests/tools/test_test_scope_coverage_static.py`'s guard test for the two
+# paths this reasoning covers.
 _SRC_UNIT_SUBSYSTEMS = frozenset({
     "api", "campaigns", "cognition", "combat", "config", "content", "content_semantics", "core",
     "diagnostics", "domains", "entity", "kernel", "lab", "lab_agent", "movement", "observability",

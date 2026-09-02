@@ -63,6 +63,20 @@ def test_unrecognized_src_subsystem_returns_none_not_a_guess():
     assert expected_test_dirs_for("src/not_a_real_subsystem/thing.py") is None
 
 
+def test_ai_and_systems_deliberately_unmapped_not_a_silent_gap():
+    # TCK-20260902-HOTFIX-TEST-SCOPE-COVERAGE-AI-SYSTEMS-ALLOWLIST-GAP: `ai` and `systems` are
+    # deliberately absent from `_SRC_UNIT_SUBSYSTEMS`, not an oversight -- neither has a single
+    # reliable owning tests/unit/<x>/ directory (see the frozenset's own comment for the real
+    # investigation evidence, e.g. src/ai/coming_of_age.py's real test lives in
+    # tests/unit/strategic/, not tests/unit/ai/). Forcing a flat mapping here would make the check
+    # require the WRONG directory for real tickets. Do not "fix" this back to a guessed mapping
+    # without re-reading that comment -- the real backstop for both is test-scoper.md's
+    # cross-cutting-expansion grep-sweep step, which this static check cannot perform.
+    assert expected_test_dirs_for("src/ai/coming_of_age.py") is None
+    assert expected_test_dirs_for("src/systems/lifecycle_systems/lifecycle.py") is None
+    assert expected_test_dirs_for("src/systems/economy_systems/market.py") is None
+
+
 def test_docs_and_ticket_paths_return_none():
     assert expected_test_dirs_for("docs/mechanics/01_entity_anatomy.md") is None
     assert expected_test_dirs_for("tickets/done/TCK-1.md") is None

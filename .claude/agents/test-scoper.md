@@ -93,9 +93,14 @@ under `tests/` before falling back to `tests/tools/`.
   "actually matter" within a directory by filename — the whole directory runs well within the
   resource budget, and the cost of guessing wrong is a real blocked gate.
 - Expand to cross-cutting tests only when the change touches shared infrastructure (`src/core/`,
-  `src/systems/`, `src/engine/`, or **any `tools/*.py` file directly under `tools/` with no
-  subdirectory** — those are disproportionately likely to define shared constants/schema that
-  other tests import directly, per the incident cited in Step 3).
+  `src/systems/`, `src/engine/`, `src/ai/`, or **any `tools/*.py` file directly under `tools/` with
+  no subdirectory** — those are disproportionately likely to define shared constants/schema that
+  other tests import directly, per the incident cited in Step 3). `src/ai/` was added to this list
+  by TCK-20260902-HOTFIX-TEST-SCOPE-COVERAGE-AI-SYSTEMS-ALLOWLIST-GAP: it has no naming-convention
+  `tests/unit/ai/` home the way most `src/` subsystems do — real coverage for `src/ai/
+  coming_of_age.py`, for example, lives in `tests/unit/strategic/`, not `tests/unit/ai/` — so
+  relying on the naming convention alone silently misses it; only the grep-based expansion in Step
+  3 reliably finds the real owning tests.
 - If the orchestrator's prompt states the ticket is tagged `performance`, always include `tests/unit/perf/` and `tests/perf/` (with `-m "not slow"`) in the scoped command, regardless of which `src/` paths were changed — a performance-motivated change is frequently outside `src/perf/` itself (e.g. a hot-path change in `src/engine/` or `src/world/`), so the naming-convention mapping alone would miss the real regression-gate check (`PerfRegressionGate`, `docs/performance/perf_baseline_policy.md` §3) this tag exists to trigger.
 - If any changed file is under `tools/` (flat, i.e. directly `tools/*.py` — not a named
   subdirectory), always include the **entire `tests/tools/` directory** in the scoped command,
