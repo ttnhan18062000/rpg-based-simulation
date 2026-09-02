@@ -79,6 +79,36 @@ def test_identity_patch_apply_sets_life_stage():
     assert changes["identity"].life_stage == LifeStage.ELDER
 
 
+def test_attribute_patch_apply_clamps_to_documented_range():
+    """TCK-20260902-ATTRIBUTE-CLAMP-WIRING-GAP: AttributePatch.apply must clamp to the documented
+    [1, ATTRIBUTE_CAP=99] range via enforce_attribute_caps -- not the old ad hoc 100-only-upper-bound
+    logic that had no lower bound at all. Proves the fix is reachable through the real apply() path,
+    not just enforce_attribute_caps() called in isolation (already covered separately)."""
+    entity = EntityState(id=1, kind="HERO", attributes=AttributeComponent(strength=95, agility=3))
+    patch = AttributePatch(entity_id=1, attributes=AttributeUpdate(strength_delta=20, agility_delta=-10))
+
+    changes = {}
+    patch.apply(entity, changes)
+
+    # Too-high case: 95 + 20 = 115 -> must clamp to 99 (documented ATTRIBUTE_CAP), not the old buggy 100
+    assert changes["attributes"].strength == 99
+    # Negative case: 3 + (-10) = -7 -> must clamp to 1 (the old code applied no floor at all)
+    assert changes["attributes"].agility == 1
+
+
+def test_attribute_patch_apply_within_range_unaffected():
+    """Deltas that stay within [1, 99] must pass through unchanged -- the clamp fix must not
+    perturb the normal, in-range case."""
+    entity = EntityState(id=1, kind="HERO", attributes=AttributeComponent(strength=10, agility=10))
+    patch = AttributePatch(entity_id=1, attributes=AttributeUpdate(strength_delta=5, agility_delta=-3))
+
+    changes = {}
+    patch.apply(entity, changes)
+
+    assert changes["attributes"].strength == 15
+    assert changes["attributes"].agility == 7
+
+
 def test_self_model_patch_noop_detection():
     smp_noop = SelfModelPatch(entity_id=1, self_model_bundle_set=None)
     assert smp_noop.is_noop() is True
