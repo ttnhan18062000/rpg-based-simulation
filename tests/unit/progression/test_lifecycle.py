@@ -1,12 +1,12 @@
 import pytest
 from dataclasses import replace
 from src.core.state import EntityState, LifecycleComponent, AuthoritativeState, CombatComponent, LifeStage
-from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, InventoryUpdate
+from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, InventoryUpdate, LifecycleUpdate
 from src.systems.lifecycle import LifecycleSystem
 from src.engine.apply import ApplyPath
-from src.core.builder import V2EntityBuilder
+from src.core.builder import V2EntityBuilder, build_parent_bond_updates_for_birth
 from src.core.enums import EntityRole, Faction
-from src.core.models.social import SocialBond
+from src.core.models.social import SocialBond, RelationshipRole
 
 def test_aging_per_tick():
     """Verify that entities age by 1 tick every generation."""
@@ -404,3 +404,173 @@ def test_near_death_hardening_logic():
     hero_upd = refined.entity_updates[1]
     assert hero_upd.combat is not None
     assert hero_upd.combat.max_hp_delta == 5
+
+
+def test_lifecycle_component_canonical_dict_round_trip_includes_birth_fields():
+    """Birth-record fields must serialize deterministically, including the parentless
+    (natural-creature/magical) case where parent ids and birth_city_id are None."""
+    lifecycle = LifecycleComponent(
+        parent_a_entity_id=10,
+        parent_b_entity_id=20,
+        birth_tick=42,
+        birth_city_id=7,
+        reproduction_cooldowns={20: 100, 10: 200},
+    )
+    canonical = lifecycle.to_canonical_dict()
+    assert canonical["parent_a_entity_id"] == 10
+    assert canonical["parent_b_entity_id"] == 20
+    assert canonical["birth_tick"] == 42
+    assert canonical["birth_city_id"] == 7
+    assert canonical["reproduction_cooldowns"] == {10: 200, 20: 100}
+    assert list(canonical["reproduction_cooldowns"].keys()) == [10, 20]
+
+    parentless = LifecycleComponent()
+    parentless_canonical = parentless.to_canonical_dict()
+    assert parentless_canonical["parent_a_entity_id"] is None
+    assert parentless_canonical["parent_b_entity_id"] is None
+    assert parentless_canonical["birth_city_id"] is None
+    assert parentless_canonical["birth_tick"] == 0
+    assert parentless_canonical["reproduction_cooldowns"] == {}
+
+
+def test_lifecycle_update_merges_birth_fields():
+    """New *_set fields participate in is_noop() and merge() with last-non-None-wins
+    semantics, matching heir_entity_id_set's existing behavior; reproduction_cooldowns_add
+    merges per-key so two same-tick writers updating different partners don't clobber
+    each other."""
+    assert LifecycleUpdate().is_noop()
+    assert not LifecycleUpdate(parent_a_entity_id_set=1).is_noop()
+    assert not LifecycleUpdate(birth_tick_set=5).is_noop()
+    assert not LifecycleUpdate(reproduction_cooldowns_add={1: 100}).is_noop()
+
+    base = LifecycleUpdate(parent_a_entity_id_set=1, birth_tick_set=5, reproduction_cooldowns_add={10: 100})
+    other = LifecycleUpdate(parent_a_entity_id_set=2, parent_b_entity_id_set=3, reproduction_cooldowns_add={20: 200})
+    merged = base.merge(other)
+
+    assert merged.parent_a_entity_id_set == 2  # last-non-None-wins
+    assert merged.parent_b_entity_id_set == 3
+    assert merged.birth_tick_set == 5  # untouched by `other`
+    assert merged.reproduction_cooldowns_add == {10: 100, 20: 200}  # per-key union
+
+
+def test_lifecycle_patch_apply_writes_birth_fields_through_authoritative_path():
+    """Birth-record fields are written only via LifecycleUpdate applied through
+    ApplyPath.apply_generation (the authoritative apply path) -- never direct mutation."""
+    parent = (V2EntityBuilder(1).location(0.0, 0.0).build())
+    baseline_lifecycle = parent.lifecycle
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent})
+
+    life_upd = LifecycleUpdate(
+        parent_a_entity_id_set=5,
+        parent_b_entity_id_set=6,
+        birth_tick_set=100,
+        birth_city_id_set=3,
+        reproduction_cooldowns_add={5: 150},
+    )
+    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, lifecycle=life_upd)})
+
+    next_state = ApplyPath.apply_generation(state, update, 101, 101)
+
+    new_lifecycle = next_state.entities[1].lifecycle
+    assert new_lifecycle.parent_a_entity_id == 5
+    assert new_lifecycle.parent_b_entity_id == 6
+    assert new_lifecycle.birth_tick == 100
+    assert new_lifecycle.birth_city_id == 3
+    assert new_lifecycle.reproduction_cooldowns == {5: 150}
+
+    # Baseline entity/component object is untouched -- no direct mutation occurred.
+    assert state.entities[1].lifecycle is baseline_lifecycle
+    assert baseline_lifecycle.parent_a_entity_id is None
+
+
+def test_builder_birth_record_path_two_parent_case():
+    """birth_record() populates all new Lifecycle fields exactly as passed for a two-parent
+    birth."""
+    child = (V2EntityBuilder(99)
+             .location(0.0, 0.0)
+             .birth_record(parent_a_entity_id=1, parent_b_entity_id=2, birth_tick=10, birth_city_id=4)
+             .build())
+
+    assert child.lifecycle.parent_a_entity_id == 1
+    assert child.lifecycle.parent_b_entity_id == 2
+    assert child.lifecycle.birth_tick == 10
+    assert child.lifecycle.birth_city_id == 4
+
+
+def test_builder_birth_record_path_parentless_case():
+    """A parentless spawn (natural-creature/magical path) must build cleanly with both
+    parent fields left None."""
+    creature = (V2EntityBuilder(100)
+                .location(0.0, 0.0)
+                .birth_record(birth_tick=10)
+                .build())
+
+    assert creature.lifecycle.parent_a_entity_id is None
+    assert creature.lifecycle.parent_b_entity_id is None
+    assert creature.lifecycle.birth_tick == 10
+    assert creature.lifecycle.birth_city_id is None
+    assert creature.social.bonds == {}
+
+
+def test_builder_birth_record_seeds_child_social_bonds_toward_parents():
+    """The two-parent case seeds the child's own SocialBonds toward each parent at the
+    documented high familiarity/sentiment (0.8/0.8), role left at its NEUTRAL default."""
+    child = (V2EntityBuilder(99)
+             .location(0.0, 0.0)
+             .birth_record(parent_a_entity_id=1, parent_b_entity_id=2, birth_tick=10)
+             .build())
+
+    assert set(child.social.bonds.keys()) == {1, 2}
+    for parent_id in (1, 2):
+        bond = child.social.bonds[parent_id]
+        assert bond.target_id == parent_id
+        assert bond.familiarity == 0.8
+        assert bond.sentiment == 0.8
+        assert bond.last_interaction_tick == 10
+        assert bond.role == RelationshipRole.NEUTRAL
+
+
+def test_parent_bond_updates_for_birth_apply_through_authoritative_path():
+    """build_parent_bond_updates_for_birth() produces typed EntityUpdates that, applied
+    through the normal authoritative apply path, land each existing parent's bond toward the
+    new child at the same 0.8/0.8 seeded values as the child's own side."""
+    parent_a = (V2EntityBuilder(1).location(0.0, 0.0).build())
+    parent_b = (V2EntityBuilder(2).location(0.0, 0.0).build())
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent_a, 2: parent_b})
+
+    updates = build_parent_bond_updates_for_birth([1, 2], child_entity_id=99, birth_tick=100)
+    update = StateUpdate(entity_updates={u.entity_id: u for u in updates})
+
+    next_state = ApplyPath.apply_generation(state, update, 101, 101)
+
+    for parent_id in (1, 2):
+        bond = next_state.entities[parent_id].social.bonds[99]
+        assert bond.familiarity == 0.8
+        assert bond.sentiment == 0.8
+        assert bond.last_interaction_tick == 100
+
+
+def test_no_marriage_precondition_in_birth_record_schema_or_apply_path():
+    """Reproduction (idea 32) is explicitly decoupled from Marriage (idea 33) per the
+    2026-08-29 build-order decision -- no marriage/contract precondition may gate the
+    birth-record schema, its builder path, or its apply path."""
+    import inspect
+    from src.engine import patches as patches_module
+    from src.core import builder as builder_module
+
+    for source in (
+        inspect.getsource(patches_module.LifecyclePatch),
+        inspect.getsource(builder_module.V2EntityBuilder.lifecycle),
+        inspect.getsource(builder_module.V2EntityBuilder.birth_record),
+        inspect.getsource(builder_module.build_parent_bond_updates_for_birth),
+    ):
+        assert "Contract" not in source
+        assert "marriage" not in source.lower()
+
+    # Behavioral: birth_record() succeeds with zero contracts present anywhere in state.
+    child = (V2EntityBuilder(99)
+             .location(0.0, 0.0)
+             .birth_record(parent_a_entity_id=1, parent_b_entity_id=2, birth_tick=10)
+             .build())
+    state = AuthoritativeState(tick=10, seed=42, entities={99: child})
+    assert state.entities[99].strategic.contracts == {}

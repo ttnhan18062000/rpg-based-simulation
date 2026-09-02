@@ -50,6 +50,7 @@ from src.core.enums import EntityRole, Faction
 from src.core.movement_modes import MovementMode
 from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
+from src.core.updates import EntityUpdate, SocialUpdate, SocialBondUpdate
 
 
 def _component(cls: type, **kwargs):
@@ -583,6 +584,11 @@ class V2EntityBuilder:
         generation: Optional[int] = None,
         heir_entity_id: Optional[int] = None,
         heirlooms: Optional[List[str]] = None,
+        parent_a_entity_id: Optional[int] = None,
+        parent_b_entity_id: Optional[int] = None,
+        birth_tick: Optional[int] = None,
+        birth_city_id: Optional[int] = None,
+        reproduction_cooldowns: Optional[Dict[int, int]] = None,
     ) -> V2EntityBuilder:
         current = self._lifecycle_to_dict()
 
@@ -596,6 +602,11 @@ class V2EntityBuilder:
             "generation": generation,
             "heir_entity_id": heir_entity_id,
             "heirlooms": _copy_list(heirlooms) if heirlooms is not None else None,
+            "parent_a_entity_id": parent_a_entity_id,
+            "parent_b_entity_id": parent_b_entity_id,
+            "birth_tick": birth_tick,
+            "birth_city_id": birth_city_id,
+            "reproduction_cooldowns": _copy_dict(reproduction_cooldowns) if reproduction_cooldowns is not None else None,
         }
 
         for key, value in updates.items():
@@ -603,6 +614,40 @@ class V2EntityBuilder:
                 current[key] = value
 
         self._lifecycle = _component(LifecycleComponent, **current)
+        return self
+
+    def birth_record(
+        self,
+        *,
+        parent_a_entity_id: Optional[int] = None,
+        parent_b_entity_id: Optional[int] = None,
+        birth_tick: int = 0,
+        birth_city_id: Optional[int] = None,
+        seed_familiarity: float = 0.8,
+        seed_sentiment: float = 0.8,
+    ) -> V2EntityBuilder:
+        """
+        Populate the new entity's parentage/birth fields and seed its own
+        SocialBonds toward its parents. Parentless (natural-creature/magical)
+        spawns pass no parent ids.
+        """
+        self.lifecycle(
+            parent_a_entity_id=parent_a_entity_id,
+            parent_b_entity_id=parent_b_entity_id,
+            birth_tick=birth_tick,
+            birth_city_id=birth_city_id,
+        )
+        bonds: Dict[int, SocialBond] = {}
+        for parent_id in (parent_a_entity_id, parent_b_entity_id):
+            if parent_id is not None:
+                bonds[parent_id] = SocialBond(
+                    target_id=parent_id,
+                    familiarity=seed_familiarity,
+                    sentiment=seed_sentiment,
+                    last_interaction_tick=birth_tick,
+                )
+        if bonds:
+            self.social(bonds=bonds)
         return self
 
     def interaction(
@@ -812,3 +857,36 @@ class V2EntityBuilder:
             for f in fields(component)
             if f.init
         }
+
+
+def build_parent_bond_updates_for_birth(
+    parent_ids: List[int],
+    child_entity_id: int,
+    birth_tick: int,
+    familiarity: float = 0.8,
+    sentiment: float = 0.8,
+) -> List[EntityUpdate]:
+    """
+    Build the parents' reciprocal EntityUpdates for a birth. A brand-new
+    parent-child pair starts from SocialBond defaults (familiarity=0.0,
+    sentiment=0.0), so these deltas land the parent's bond at exactly
+    `familiarity`/`sentiment`, matching the child's own seeded values.
+
+    Does not decide when reproduction happens or set any cooldown — a caller
+    (a reproduction-trigger ticket) must apply the returned updates through
+    the normal authoritative apply path.
+    """
+    return [
+        EntityUpdate(
+            entity_id=parent_id,
+            social=SocialUpdate(bond_updates=[
+                SocialBondUpdate(
+                    target_id=child_entity_id,
+                    familiarity_delta=familiarity,
+                    sentiment_delta=sentiment,
+                    last_interaction_tick_set=birth_tick,
+                )
+            ]),
+        )
+        for parent_id in parent_ids
+    ]

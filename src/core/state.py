@@ -159,6 +159,11 @@ class LifecycleComponent:
     generation: int = 1
     heir_entity_id: Optional[int] = None
     heirlooms: list[str] = field(default_factory=list)
+    parent_a_entity_id: Optional[int] = None
+    parent_b_entity_id: Optional[int] = None
+    birth_tick: int = 0
+    birth_city_id: Optional[int] = None
+    reproduction_cooldowns: Dict[int, int] = field(default_factory=dict)  # partner_entity_id -> cooldown_expiry_tick
     active: bool = True
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -174,6 +179,11 @@ class LifecycleComponent:
             "generation": self.generation,
             "heir_entity_id": self.heir_entity_id,
             "heirlooms": sorted(list(self.heirlooms)),
+            "parent_a_entity_id": self.parent_a_entity_id,
+            "parent_b_entity_id": self.parent_b_entity_id,
+            "birth_tick": self.birth_tick,
+            "birth_city_id": self.birth_city_id,
+            "reproduction_cooldowns": dict(sorted(self.reproduction_cooldowns.items())),
             "active": self.active
         }
         object.__setattr__(self, "_canonical_cache", res)

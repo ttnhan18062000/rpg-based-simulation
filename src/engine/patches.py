@@ -82,7 +82,15 @@ class LifecyclePatch(ComponentPatch):
                 death_tick=u_life.death_tick_set if u_life.death_tick_set is not None else new_lifecycle.death_tick,
                 death_reason=u_life.death_reason_set if u_life.death_reason_set is not None else new_lifecycle.death_reason,
                 heir_entity_id=u_life.heir_entity_id_set if u_life.heir_entity_id_set is not None else new_lifecycle.heir_entity_id,
-                heirlooms=tuple(new_heirlooms)
+                heirlooms=tuple(new_heirlooms),
+                parent_a_entity_id=u_life.parent_a_entity_id_set if u_life.parent_a_entity_id_set is not None else new_lifecycle.parent_a_entity_id,
+                parent_b_entity_id=u_life.parent_b_entity_id_set if u_life.parent_b_entity_id_set is not None else new_lifecycle.parent_b_entity_id,
+                birth_tick=u_life.birth_tick_set if u_life.birth_tick_set is not None else new_lifecycle.birth_tick,
+                birth_city_id=u_life.birth_city_id_set if u_life.birth_city_id_set is not None else new_lifecycle.birth_city_id,
+                reproduction_cooldowns=(
+                    {**new_lifecycle.reproduction_cooldowns, **u_life.reproduction_cooldowns_add}
+                    if u_life.reproduction_cooldowns_add else new_lifecycle.reproduction_cooldowns
+                ),
             )
         if new_lifecycle is not entity.lifecycle:
             changes["lifecycle"] = new_lifecycle

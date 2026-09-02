@@ -3766,3 +3766,32 @@
   test_path: tests/unit/social/test_teach.py::test_teach_refused_below_trust_hard_cancel_threshold
   divergence_note: null
   support_boundary: null
+- id: SOC-259
+  text: 'Birth-record durable schema (idea 32, Reproduction): LifecycleComponent gains
+    parent_a_entity_id/parent_b_entity_id (Optional[int], None for a parentless natural-creature/magical
+    spawn), birth_tick (int, 0 is the no-birth-record sentinel), birth_city_id (Optional[int],
+    no referential-integrity validation), and reproduction_cooldowns (Dict[int,int],
+    partner_entity_id -> cooldown_expiry_tick, merged per-key via LifecycleUpdate.reproduction_cooldowns_add
+    so two same-tick writers cannot clobber each other''s entry). All five fields
+    are written only through LifecycleUpdate.*_set/reproduction_cooldowns_add applied
+    via LifecyclePatch.apply -- the sole authoritative LifecycleComponent write path,
+    never a direct replace(). V2EntityBuilder.birth_record() populates all five fields
+    at entity-construction time and seeds the new entity''s own SocialBond toward
+    each parent at familiarity=0.8/sentiment=0.8 (role stays NEUTRAL); the module-level
+    build_parent_bond_updates_for_birth() helper produces the parents'' reciprocal
+    EntityUpdates at the same 0.8/0.8 values for a caller to apply through the standard
+    SocialUpdate.bond_updates path. This is schema + builder plumbing only -- no reproduction
+    trigger logic, no genetics wiring, and explicitly no marriage/contract precondition
+    anywhere in the schema or its write path (Reproduction, idea 32, is decoupled
+    from Marriage, idea 33, per the 2026-08-29 build-order decision).'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (LifecycleComponent.parent_a_entity_id/parent_b_entity_id/birth_tick/birth_city_id/reproduction_cooldowns,
+    to_canonical_dict()); src/core/updates.py (LifecycleUpdate.parent_a_entity_id_set/parent_b_entity_id_set/birth_tick_set/birth_city_id_set/reproduction_cooldowns_add,
+    is_noop()/merge()); src/engine/patches.py (LifecyclePatch.apply); src/core/builder.py
+    (V2EntityBuilder.lifecycle(), V2EntityBuilder.birth_record(), build_parent_bond_updates_for_birth()).
+  proof_type: regression
+  test_path: tests/unit/progression/test_lifecycle.py::test_lifecycle_component_canonical_dict_round_trip_includes_birth_fields
+  divergence_note: null
+  support_boundary: null

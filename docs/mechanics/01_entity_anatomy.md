@@ -139,6 +139,29 @@ charisma_delta  = int(attrs.charisma * 0.3)
 All deltas are integer-truncated toward zero and applied via a typed `AttributeUpdate` merged
 into the entity's `EntityUpdate` — never a direct mutation of the frozen `EntityState`.
 
+### Birth Record (Reproduction Schema)
+`LifecycleComponent` carries a per-entity birth record: `parent_a_entity_id`,
+`parent_b_entity_id` (`Optional[int]`, both `None` for a parentless natural-creature/magical
+spawn), `birth_tick` (`int`, `0` is the "no birth record" sentinel for world-assembled or
+pre-existing entities — mirrors `heir_entity_id: Optional[int] = None`'s existing "unset"
+convention), `birth_city_id` (`Optional[int]`, a bare identifier with no referential-integrity
+validation against the region/building registry), and `reproduction_cooldowns`
+(`Dict[int, int]`, partner entity ID → cooldown-expiry tick, merged per-key so two same-tick
+writers updating different partners cannot clobber each other's entry).
+
+These fields are populated only at entity-construction time, via
+`V2EntityBuilder.birth_record()` — never mutated afterward except `reproduction_cooldowns`,
+which reproduction-trigger logic updates through `LifecycleUpdate.reproduction_cooldowns_add`
+and the normal `LifecyclePatch.apply` authoritative path (Section 1's frozen-state law applies
+here identically to `heir_entity_id`). `birth_record()` also seeds the new entity's own
+`SocialBond` toward each parent at `familiarity=0.8`, `sentiment=0.8` (`role` stays at its
+`NEUTRAL` default) — the module-level `build_parent_bond_updates_for_birth()` helper produces
+the parents' reciprocal `EntityUpdate`s at the same 0.8/0.8 values, for a caller to apply through
+the standard `SocialUpdate.bond_updates` path.
+
+Reproduction (idea 32) is explicitly decoupled from Marriage (idea 33): no marriage/contract
+precondition gates any part of this schema or its write path.
+
 ---
 
 ## 6. Trauma: Wounds & Scars
