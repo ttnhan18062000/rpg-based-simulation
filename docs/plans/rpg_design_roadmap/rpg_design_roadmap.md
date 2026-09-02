@@ -320,8 +320,8 @@ leverage (how much other work depends on getting each one right); worked through
 its own dedicated high-level plan doc once investigated.
 
 1. **Social/Reputation/Political — no Mechanics Bible chapter, the widest blast-radius gap found.**
-   Investigated and scoped: [`docs/plans/rpg_design_roadmap/rpg_social_narrative_mechanics_hardening_plan.md`](rpg_social_narrative_mechanics_hardening_plan.md)
-   (PR #103). Corrected the initial framing (only 94 of `social_narrative.yaml`'s 276 entries are genuinely
+   Investigated and scoped: [`docs/plans/rpg_design_roadmap/rpg_social_narrative_mechanics_hardening_plan.md`](rpg_social_narrative_mechanics_hardening_plan.md).
+   Corrected the initial framing (only 94 of `social_narrative.yaml`'s 276 entries are genuinely
    social content, not all 276) and found the real gap is fragmentation — three partial contracts already
    exist, but the foundational `SocialComponent`/`SocialBond`/`RelationshipService` state has zero contract
    coverage anywhere. Also surfaced an open determinism question (does `CanonicalStateHasher` cover
