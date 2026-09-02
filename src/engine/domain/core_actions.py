@@ -327,38 +327,75 @@ class CoreActions:
     def execute_train(
         entity: EntityState,
         payload: Dict[str, Any],
-        current_tick: int
+        current_tick: int,
+        neighbor_view: List[tuple[int, EntityState]],
+        context: Any
     ) -> Dict[int, EntityUpdate]:
         skill_id = payload.get("skill_id")
         if not skill_id:
             return {entity.id: EntityUpdate(
-                entity_id=entity.id, 
+                entity_id=entity.id,
                 navigation=NavigationUpdate(failure_reason="MISSING_SKILL_ID")
             )}
-        
-        TRAIN_COST = 50
-        from src.core.updates import ResourceTransferIntent, StrategicUpdate
-        
-        resolved_blockers = []
-        for b_id, b in entity.strategic.blockers.items():
-            if b.kind == "capability" and b.subject == skill_id:
-                resolved_blockers.append(b_id)
 
-        intent = ResourceTransferIntent(
-            source_id="CLASS_HALL",
-            source_kind="TOWN_SERVICE",
-            gold_delta=-TRAIN_COST,
-            transfer_kind="TRAIN",
-            is_group_required=True,
-            identity_upd=IdentityUpdate(recipes_learned=[skill_id]),
-            strategic_upd=StrategicUpdate(blockers_remove=resolved_blockers)
+        target_id = payload.get("target_id")
+        target = None
+        if neighbor_view:
+            for eid, ent in neighbor_view:
+                if eid == target_id:
+                    target = ent
+                    break
+        if not target and context and hasattr(context, "entities"):
+            target = context.entities.get(target_id)
+
+        if not target:
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND")
+            )}
+
+        from src.systems.social_systems.appraisal import SocialAppraisalSystem
+        from src.core.strategic import ContractState, ContractKind, ContractStatus
+        from src.core.updates import SocialUpdate, StrategicUpdate
+
+        temp_contract = ContractState(
+            id="temp_eval",
+            kind=ContractKind.TEACH,
+            source_id=entity.id,
+            target_id=target.id,
+            terms={},
+            status=ContractStatus.OFFERED,
+            created_tick=current_tick
         )
-        
-        return {entity.id: EntityUpdate(
-            entity_id=entity.id,
-            readiness_delta=-100.0,
-            resource_transfers=[intent]
-        )}
+        status, reason, _ = SocialAppraisalSystem.appraise_contract(target, temp_contract, context)
+
+        if status == ContractStatus.ACCEPTED:
+            resolved_blockers = []
+            for b_id, b in target.strategic.blockers.items():
+                if b.kind == "capability" and b.subject == skill_id:
+                    resolved_blockers.append(b_id)
+
+            teacher_up = EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-100.0
+            )
+            student_up = EntityUpdate(
+                entity_id=target_id,
+                identity=IdentityUpdate(recipes_learned=[skill_id]),
+                strategic=StrategicUpdate(blockers_remove=resolved_blockers)
+            )
+            return {entity.id: teacher_up, target_id: student_up}
+        else:
+            attacker_up = EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-50.0,
+                task=replace(entity.task, payload={**payload, "outcome": "FAILURE", "reason": status.value})
+            )
+            target_up = EntityUpdate(
+                entity_id=target_id,
+                social=SocialUpdate(rejection_increment={entity.id: 1}, last_offer_tick_set=current_tick)
+            )
+            return {entity.id: attacker_up, target_id: target_up}
 
     @staticmethod
     def execute_repair(

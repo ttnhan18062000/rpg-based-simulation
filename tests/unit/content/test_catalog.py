@@ -4,7 +4,7 @@ import pytest
 import tempfile
 import yaml
 from src.content.repository import CatalogRepository
-from src.content.schema import FactionDefinition, RoleDefinition
+from src.content.schema import FactionDefinition, RoleDefinition, RaceDefinition
 from src.content.validator import CatalogValidator
 
 
@@ -286,6 +286,110 @@ def test_faction_catalog_loads_with_hazard_immunities_authored():
     hero_guild = repo.get_faction("hero_guild")
     assert hero_guild is not None
     assert hero_guild.hazard_immunities == []
+
+
+def test_race_definition_intelligence_tier_field_round_trips():
+    """RaceDefinition.intelligence_tier round-trips for both valid values, is required
+    (no default), and rejects a value outside {"high", "low"} via the field validator."""
+    from pydantic import ValidationError
+
+    race_high = RaceDefinition(
+        id="test_race_high",
+        body_model="standard_humanoid",
+        need_profile="humanoid_survival",
+        sense_profile="normal_humanoid_senses",
+        cognition_profile="practical_humanoid",
+        drive_profile="cautious_commoner",
+        intelligence_tier="high",
+    )
+    assert race_high.intelligence_tier == "high"
+
+    race_low = RaceDefinition(
+        id="test_race_low",
+        body_model="quadruped_predator",
+        need_profile="carnivore_survival",
+        sense_profile="predator_smell_senses",
+        cognition_profile="instinctive_animal",
+        drive_profile="territorial_predator",
+        intelligence_tier="low",
+    )
+    assert race_low.intelligence_tier == "low"
+
+    # Field omitted entirely -> ValidationError (required, no default).
+    with pytest.raises(ValidationError):
+        RaceDefinition(
+            id="test_race_missing_tier",
+            body_model="standard_humanoid",
+            need_profile="humanoid_survival",
+            sense_profile="normal_humanoid_senses",
+            cognition_profile="practical_humanoid",
+            drive_profile="cautious_commoner",
+        )
+
+    # Invalid value outside {"high", "low"} -> ValidationError via the field validator.
+    with pytest.raises(ValidationError):
+        RaceDefinition(
+            id="test_race_bad_tier",
+            body_model="standard_humanoid",
+            need_profile="humanoid_survival",
+            sense_profile="normal_humanoid_senses",
+            cognition_profile="practical_humanoid",
+            drive_profile="cautious_commoner",
+            intelligence_tier="medium",
+        )
+
+
+EXPECTED_INTELLIGENCE_TIER = {
+    "human": "high",
+    "goblin": "high",
+    "orc": "high",
+    "elf": "high",
+    "dwarf": "high",
+    "lizardfolk": "high",
+    "wolf": "low",
+    "spider": "low",
+    "undead": "low",
+    "troll": "low",
+    "slime": "low",
+    "dragonkin": "high",
+    "spirit": "high",
+}
+
+
+def test_all_13_races_have_documented_intelligence_tier():
+    """Every race in the real catalog carries an authored intelligence_tier matching the
+    documented anchor rule (tool_user in natural_traits <-> "high"), with dragonkin/spirit
+    as explicitly reviewed and justified exceptions (see ticket TCK-20260831-SPECIES-INTELLIGENCE-TIER)."""
+    repo = CatalogRepository("data/content")
+    repo.load_all()
+
+    assert set(EXPECTED_INTELLIGENCE_TIER) == set(repo.races.keys())
+
+    for race_id, expected_tier in EXPECTED_INTELLIGENCE_TIER.items():
+        race = repo.races[race_id]
+        assert race.intelligence_tier == expected_tier, (
+            f"{race_id}: expected intelligence_tier={expected_tier!r}, "
+            f"got {race.intelligence_tier!r}"
+        )
+
+    # Executable anchor-rule invariant for the 11 unambiguous races (dragonkin/spirit are the
+    # two explicitly justified exceptions to the tool_user anchor, see plan.md).
+    for race in repo.races.values():
+        if race.id in ("dragonkin", "spirit"):
+            continue
+        assert ("tool_user" in race.natural_traits) == (race.intelligence_tier == "high"), (
+            f"{race.id}: tool_user anchor rule violated "
+            f"(tool_user in natural_traits={'tool_user' in race.natural_traits}, "
+            f"intelligence_tier={race.intelligence_tier})"
+        )
+
+
+def test_race_catalog_loads_with_intelligence_tier_authored():
+    """The full real catalog (with intelligence_tier authored on every race) loads without
+    raising, catching a YAML authoring error (bad value or missing field) as a load failure."""
+    repo = CatalogRepository("data/content")
+    repo.load_all()
+    assert len(repo.races) == len(EXPECTED_INTELLIGENCE_TIER)
 
 
 def test_schema_compatibility_model_fail_closed():

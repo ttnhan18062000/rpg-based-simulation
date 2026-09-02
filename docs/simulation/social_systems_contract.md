@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-08-29
+last_verified: 2026-08-31
 ---
 
 # Social Systems Contract
@@ -44,6 +44,7 @@ Compliance IDs: SOC-001, SOC-002, SOC-004, SOC-008, STRAT-071, STRAT-073
 | MERCHANT | `_appraise_trade`: utility = `price / item_value` (hard-cancel to `INSUFFICIENT_INCENTIVE` if `item_value <= 0` or utility `< 0.5`); score = `trust_score × 0.4 + min(1.0, utility) × 0.6`; `>= 0.6` → ACCEPTED (`FAIR_COMPENSATION`); `>= 0.4` and `negotiation_count < 2` → COUNTERED at `price = item_value` (`HAGGLING_FOR_PAY`); else CANCELLED |
 | TEAM_UP | `_appraise_team_up`: pure trust gate, no utility/pay dimension — reuses `_appraise_recruitment`'s HIGH-risk/low-HP hard rejection (`FAILED, LOW_HP_RETREAT`); `trust_score >= 0.6` → ACCEPTED (`TEAM_UP_ACCEPTED`), else CANCELLED (`TEAM_UP_DECLINED`); no counter-terms |
 | PAID_INFORMATION | `_appraise_paid_information`: always ACCEPTED (`INFORMATION_SALE_ACCEPTED`) once the shared trust/hard-cancel prelude passes — the prelude alone is the entire gate. `PaidInformationTransactionSystem.enforce()` synthesizes a transient (non-persisted) `ContractState(kind=PAID_INFORMATION)` per seeker/provider pair, mirroring `execute_recruit()`'s `temp_contract` pattern, purely to gate whether it emits a `ResourceTransferIntent` — see `docs/engine/authoritative_pipeline.md`'s Economy & Evolution phase |
+| TEACH | `_appraise_teach`: always ACCEPTED (`TEACH_ACCEPTED`) once the shared trust/hard-cancel prelude passes — the prelude alone is the entire gate, no utility/risk model. `CoreActions.execute_train()` (`src/engine/domain/core_actions.py`) synthesizes a transient (non-persisted) `ContractState(kind=TEACH)` per teacher/student pair (`entity` = teacher, `target` = student), mirroring `execute_recruit()`'s `temp_contract` pattern — the **target (student) appraises the entity (teacher)**, same direction as RECRUITMENT/TEAM_UP/TRADE. On ACCEPTED, `IdentityUpdate(recipes_learned=[skill_id])` is set directly on the student's `EntityUpdate` (mirroring `execute_allocate_ap`'s direct-assignment pattern), not nested in a `ResourceTransferIntent`. No gold cost is charged — trust replaces the previously-present, never-enforced 50-gold `TRAIN_COST` entirely; see `docs/guidelines/intentional_divergences.md` DEV-007. `ContractService.get_project_mapping()` returns `None` for TEACH (not widened) — no tier-5 project is ever materialized from a teach offer. |
 
 All three added kinds route through the same shared trust/hard-cancel prelude above (steps 1–4)
 before kind dispatch — no behavior change to that prelude. `CoreActions.execute_team_up()` and

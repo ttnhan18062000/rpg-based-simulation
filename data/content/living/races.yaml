@@ -5,6 +5,7 @@
   need_profile: "humanoid_survival"
   sense_profile: "normal_humanoid_senses"
   cognition_profile: "practical_humanoid"
+  intelligence_tier: "high"
   drive_profile: "cautious_commoner"
   natural_traits: ["humanoid", "tool_user", "social_humanoid"]
   attribute_tendencies:
@@ -25,6 +26,7 @@
   need_profile: "carnivore_survival"
   sense_profile: "predator_smell_senses"
   cognition_profile: "instinctive_animal"
+  intelligence_tier: "low"
   drive_profile: "territorial_predator"
   natural_traits: ["quadruped", "pack_hunter", "territorial", "carnivore"]
   attribute_tendencies:
@@ -45,6 +47,7 @@
   need_profile: "goblin_survival"
   sense_profile: "goblin_alert_senses"
   cognition_profile: "opportunistic_humanoid"
+  intelligence_tier: "high"
   drive_profile: "opportunistic_raider"
   natural_traits: ["humanoid", "tool_user", "opportunistic", "social_humanoid", "small_body"]
   attribute_tendencies:
@@ -65,6 +68,7 @@
   need_profile: "carnivore_survival"
   sense_profile: "spider_vibration_senses"
   cognition_profile: "instinctive_animal"
+  intelligence_tier: "low"
   drive_profile: "territorial_predator"
   natural_traits: ["venomous", "territorial"]
   attribute_tendencies:
@@ -85,6 +89,7 @@
   need_profile: "humanoid_survival"
   sense_profile: "normal_humanoid_senses"
   cognition_profile: "opportunistic_humanoid"
+  intelligence_tier: "high"
   drive_profile: "opportunistic_raider"
   natural_traits: ["humanoid", "tool_user", "large_body"]
   attribute_tendencies:
@@ -105,6 +110,7 @@
   need_profile: "humanoid_survival"
   sense_profile: "arcane_senses"
   cognition_profile: "arcane_scholar"
+  intelligence_tier: "high"
   drive_profile: "disciplined_protector"
   natural_traits: ["humanoid", "tool_user", "magic_sensitive", "social_humanoid"]
   attribute_tendencies:
@@ -126,6 +132,7 @@
   need_profile: "humanoid_survival"
   sense_profile: "normal_humanoid_senses"
   cognition_profile: "practical_humanoid"
+  intelligence_tier: "high"
   drive_profile: "disciplined_protector"
   natural_traits: ["humanoid", "tool_user", "craftsman", "disciplined"]
   attribute_tendencies:
@@ -145,6 +152,7 @@
   need_profile: "undead_purpose"
   sense_profile: "undead_dread_senses"
   cognition_profile: "undead_fixated"
+  intelligence_tier: "low"
   drive_profile: "undead_purpose_bound"
   natural_traits: ["undead"]
   attribute_tendencies:
@@ -163,6 +171,7 @@
   need_profile: "humanoid_survival"
   sense_profile: "normal_humanoid_senses"
   cognition_profile: "instinctive_animal"
+  intelligence_tier: "low"
   drive_profile: "territorial_predator"
   natural_traits: ["large_body", "regenerating"]
   attribute_tendencies:
@@ -181,6 +190,7 @@
   need_profile: "humanoid_survival"
   sense_profile: "normal_humanoid_senses"
   cognition_profile: "practical_humanoid"
+  intelligence_tier: "high"
   drive_profile: "disciplined_protector"
   natural_traits: ["humanoid", "tool_user", "amphibious"]
   attribute_tendencies:
@@ -199,6 +209,7 @@
   need_profile: "elemental_stability"
   sense_profile: "arcane_senses"
   cognition_profile: "arcane_scholar"
+  intelligence_tier: "high"
   drive_profile: "disciplined_protector"
   natural_traits: ["flying", "large_body", "fire_aligned", "magic_sensitive"]
   attribute_tendencies:
@@ -218,6 +229,7 @@
   need_profile: "elemental_stability"
   sense_profile: "normal_humanoid_senses"
   cognition_profile: "instinctive_animal"
+  intelligence_tier: "low"
   drive_profile: "territorial_predator"
   natural_traits: ["regenerating"]
   attribute_tendencies:
@@ -236,6 +248,7 @@
   need_profile: "spirit_anchor"
   sense_profile: "arcane_senses"
   cognition_profile: "arcane_scholar"
+  intelligence_tier: "high"
   drive_profile: "ritual_fixated"
   natural_traits: ["spiritual", "magic_sensitive"]
   attribute_tendencies:

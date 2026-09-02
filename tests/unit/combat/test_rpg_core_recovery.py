@@ -167,10 +167,10 @@ def test_attrition_and_status():
     """
     Verifies Shatter damage, Exhaustion penalties, and Starvation decay.
     """
-    from src.core.state import BiologicalComponent, CombatComponent, EntityState, IdentityComponent
+    from src.core.state import BiologicalComponent, CombatComponent, EntityState, IdentityComponent, StatusEffectState
     from src.core.enums import Faction
     from dataclasses import replace
-    
+
     # 1. Test Shatter (1.5x damage vs Frozen)
     from src.core.builder import V2EntityBuilder
     attacker = (V2EntityBuilder(11)
@@ -185,17 +185,18 @@ def test_attrition_and_status():
         .location(1, 0)
         .identity(faction=Faction.MONSTER_HORDE)
         .combat(hp=100, atk=10, def_stat=5, alive=True)
-        .properties({"status_frozen": True})
         .build())
-    
+    target = replace(target, combat=replace(target.combat,
+        status_effects=[StatusEffectState(kind="frozen", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
+
     from src.engine.combat import CombatResolutionSystem
     state = AuthoritativeState(tick=1, seed=42, entities={11: attacker, 12: target})
     res = CombatResolutionSystem.resolve_attack(attacker, target, state)
     assert res.damage_taken > 4 # Shatter applied
-    
+
     # 2. Test Exhaustion Atk Penalty (0.8x)
     exhausted_attacker = replace(attacker, biological=replace(attacker.biological, sleep_debt=85.0))
-    normal_target = replace(target, identity=replace(target.identity, properties={}))
+    normal_target = replace(target, combat=replace(target.combat, status_effects=[]))
     
     res = CombatResolutionSystem.resolve_attack(exhausted_attacker, normal_target, state)
     assert res.damage_taken <= 4 # Exhaustion penalty (0.8x of 5 = 4)

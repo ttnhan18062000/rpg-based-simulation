@@ -19,7 +19,7 @@ class AttentionFocusService:
         focus_tags: List[str] = []
 
         # 1. Biased by dominant need
-        dominant_need = entity.cognition.subjective.self.needs.dominant_need
+        dominant_need = entity.self_model.needs.dominant_need
         if dominant_need == "healing":
             focus_tags.extend(["healing_resource", "healer", "safe_place"])
         elif dominant_need == "food":

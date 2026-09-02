@@ -8,6 +8,11 @@ from __future__ import annotations
 from dataclasses import replace
 from src.core.cognition import HabitMemory
 
+# Shared pattern_id used by both the write side (HabitBiasUpdatePhase.record_outcome call) and
+# the read side (tactical.py/movement.py's apply_habit_bias calls) so they can never drift apart
+# into mismatched keys (TCK-20260831-HABIT-BIAS-WIRING).
+HABIT_PATTERN_COMBAT_ENGAGEMENT = "combat_engagement"
+
 class HabitBiasService:
     """Forms habit bias scoring modifiers based on action outcomes."""
 

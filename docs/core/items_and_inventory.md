@@ -22,6 +22,42 @@ Every entity can carry an `Inventory` containing items, with three dedicated equ
 
 ## 1. Item Templates
 
+> **Divergence notice (found by TCK-20260831-ITEM-INSTANCE-HISTORY's investigation, corrected
+> 2026-09-01):** Sections 1–2 below (`ItemTemplate`, `rarity`, `item_type`, the full weapon/armor/
+> accessory/legendary tables) describe a **legacy/aspirational V1 schema** that does not match the
+> real, currently-registered item data. The actual authoritative template is `ItemDefinition`
+> (`src/core/items.py`). Its built-in class-body default is `ItemRegistry._items` — 18 items
+> as of this writing: `iron_ore`, `wood`, `herb`, `bread`, `healing_potion`, `iron_sword`,
+> `steel_sword`, `iron_plate`, `leather_armor`, `wooden_staff`, `iron_dagger`, `wooden_club`,
+> `gold_coin`, `gold`, `ore`, `stone`, plus 2 legacy-cased aliases (`WOOD`, `ORE`). This default
+> is only a fallback, though: `ItemRegistry.bootstrap(...)` (called from
+> `src/core/registries.py` and `src/runtime/bootstrap.py` during world assembly) replaces
+> `_items` wholesale with catalog-loaded content when a real content catalog is present, so a
+> live world's actual item count and roster vary by catalog and are not fixed at 18. Regardless
+> of source (built-in default or catalog-bootstrapped), every code path that constructs an
+> `ItemDefinition` — both the native-object branch and the catalog/pydantic-parsing branch of
+> `ItemRegistry.bootstrap` — populates only the 7 fields below. `ItemDefinition` has **no
+> `rarity` field at all** — every `rarity`/`Rarity`/"Legendary Items" reference below is
+> design-target content that was never implemented in `src/core/items.py`, not a
+> stale-but-once-true description. Treat Sections 1–2 as a roadmap/reference for a schema that
+> has not been built, not as documentation of current behavior. `ItemDefinition`'s real fields
+> are:
+>
+> | Field | Type | Description |
+> |-------|------|-------------|
+> | `id` | str | Unique identifier |
+> | `name` | str | Display name |
+> | `kind` | `ItemKind` | `MATERIAL`, `CONSUMABLE`, `WEAPON`, `ARMOR`, `CURRENCY` |
+> | `weight` | float | Weight units consumed in inventory (default `0.1`) |
+> | `stack_size` | int | Max quantity per `ItemStack` (default `20`; equipment is `1`) |
+> | `value` | int | Sell value (default `1`) |
+> | `properties` | `Dict[str, Any]` | Free-form per-item data (e.g. `atk_bonus`, `slot`, `heal_amount`) |
+>
+> This divergence predates and is unrelated to `ItemInstance` (Section 9 below) — it is corrected
+> here only because it is directly adjacent and could otherwise be conflated with `ItemInstance`'s
+> own real, deliberately-deferred `significance_flag` gap. No code changes accompany this
+> correction; `ItemDefinition` itself is untouched.
+
 All items are defined as `ItemTemplate` dataclass instances registered in the global `ITEM_REGISTRY` dictionary.
 
 ### ItemTemplate Fields
@@ -336,3 +372,53 @@ At home, the `VisitHomeHandler`:
 | Rare | 40g |
 
 Materials use their explicit `sell_value` field instead.
+
+---
+
+## 9. ItemInstance — Per-Physical-Item Ownership History
+
+Added by TCK-20260831-ITEM-INSTANCE-HISTORY. `ItemInstance` is a durable, typed record tracking
+per-*physical-item* ownership history — distinct from `ItemStack`, which tracks item *quantity*
+by `item_id` only and has no notion of a specific physical object's provenance.
+
+### Design
+
+- **Additive sidecar, never a replacement.** A significant item keeps its ordinary `ItemStack`
+  entry in `InventoryComponent.items` unchanged; `ItemInstance` is a parallel record, not a
+  substitute. `InventoryService.apply_update`'s merge-by-`item_id` logic
+  (`src/core/inventory.py`) is entirely unaware of `ItemInstance` and untouched by this feature.
+- **Typed state location:** `AuthoritativeState.item_instances: Dict[int, ItemInstance]`
+  (`src/core/state.py`) — int-keyed, counter-generated via `AuthoritativeState.next_item_instance_id`,
+  following the same durable-counter precedent as `next_entity_id`/`next_node_id`. Never stored in
+  `ItemStack.properties` or any other untyped dict.
+- **Fields** (`src/core/models/inventory.py`): `instance_id: int`, `item_id: str`,
+  `owner_history: List[str]` (entries are `str(entity_id)`), `acquired_tick: int`,
+  `acquired_method: AcquiredMethod` (`LOOT | CRAFTED | GIFT | INHERITED`).
+- **Minting:** `ItemInstanceService` (`src/core/inventory.py`) is a per-tick stateful id allocator
+  — construct exactly one instance per tick/phase and reuse it across every mint in that
+  invocation so two same-tick mints never collide (mirrors `EntityGenerator._last_id`). Its
+  `maybe_create_instance(...)` is pure construction only; the caller must route the result through
+  `StateUpdate.item_instances_add_or_update` + `next_item_instance_id_set`.
+- **Transfer:** appending a new owner to `owner_history` is a typed `ItemInstanceUpdate`
+  (`src/core/update_models/inventory.py`) routed through `StateUpdate.item_instance_updates`,
+  applied append-only, exclusively inside `ApplyPath.apply_generation` — no other code path may
+  mutate a live `ItemInstance`.
+
+### `significance_flag` — deliberately deferred, not invented
+
+Only items explicitly flagged `significant=True` at creation receive an `ItemInstance`; all other
+items continue through the unmodified `ItemStack` path. `significant: bool` is a **caller-supplied
+parameter only** — `maybe_create_instance` contains no rarity/tier/item_id/value heuristic of any
+kind, and has no default for this parameter (omitting it is a `TypeError`, not a silent
+`True`/`False`). **Zero production call sites pass `significant=True` in this ticket** — this is
+inert, testable scaffolding; the actual trigger-criteria decision (which items/events should be
+"significant") is an explicit open design decision requiring separate sign-off, not invented ad
+hoc here. The feature is additionally gated by `ENABLE_ITEM_INSTANCE_HISTORY` (default `OFF`,
+`src/domains/optimization/feature_flags.py`).
+
+### Tests
+
+`tests/unit/resource/test_item_instance_history.py` covers the typed state location, the
+significant/non-significant split, non-collapse under `ItemStack` merging, append-only transfer
+through `ApplyPath`, same-tick deterministic id allocation, the caller-supplied-flag contract, and
+`StateUpdate.merge_many`'s single-transfer-per-instance-per-tick contract.

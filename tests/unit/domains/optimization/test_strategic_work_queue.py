@@ -1,7 +1,7 @@
 # Compliance IDs: PERF-006, STRAT-PERF-001
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, IntentResult, IdentityComponent
+from src.core.state import AuthoritativeState, IntentResult, IdentityComponent, StatusEffectState
 from src.core.strategic import BlockerState, BlockerKind, ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus, ContractState, ContractKind, ContractStatus
 from src.core.dirty import DirtySet
 from src.core.updates import StateUpdate
@@ -107,3 +107,21 @@ def test_strategic_queue_force_full_scan_includes_all_strategic_entities():
 
     queue = StrategicWorkQueue.build(state, update, dirty, budget=5)
     assert len(queue) == 100  # Bypasses budget/narrowing entirely
+
+
+def test_strategic_queue_excludes_frozen_and_stunned_entities():
+    e1 = V2EntityBuilder(1).build()  # no active status -- baseline: eligible
+    e2 = V2EntityBuilder(2).build()
+    e2 = replace(e2, combat=replace(e2.combat,
+        status_effects=[StatusEffectState(kind="frozen", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
+    e3 = V2EntityBuilder(3).build()
+    e3 = replace(e3, combat=replace(e3.combat,
+        status_effects=[StatusEffectState(kind="stunned", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
+
+    state = AuthoritativeState(tick=1, seed=42)
+    state = replace(state, entities={1: e1, 2: e2, 3: e3})
+    update = StateUpdate(force_full_scan=True)
+    dirty = DirtySet()
+
+    queue = StrategicWorkQueue.build(state, update, dirty, budget=10)
+    assert queue == (1,)  # no-active-status baseline entity is eligible; frozen/stunned are excluded

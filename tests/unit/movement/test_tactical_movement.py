@@ -197,6 +197,71 @@ def test_evasive_retreat_skips_oa():
     upd1 = refined.entity_updates.get(1)
     assert upd1.combat is None or not upd1.combat.is_opportunity_attack
 
+
+def _entity_with_habit_biased_bravery(id, pos, faction=0, bravery=0.5, habit_bias=None):
+    """TCK-20260831-HABIT-BIAS-WIRING: entity whose construction-time action_style stays at
+    create_mock_entity's default (BALANCED=0) while personality.bravery and
+    cognition.memory.habit.patterns are set independently, so tests can isolate the habit-bias
+    re-derivation's effect from the frozen construction-time field."""
+    from src.core.cognition import HabitMemory
+    from src.core.state import PersonalityComponent
+    entity = create_mock_entity(id, pos, faction=faction)
+    entity = replace(entity, identity=replace(entity.identity, personality=PersonalityComponent(bravery=bravery)))
+    if habit_bias is not None:
+        entity = replace(entity, cognition=replace(
+            entity.cognition,
+            memory=replace(entity.cognition.memory, habit=HabitMemory(patterns={"combat_engagement": habit_bias})),
+        ))
+    return entity
+
+
+def test_habit_bias_shifts_movement_oa_suppression_when_flag_on():
+    """TCK-20260831-HABIT-BIAS-WIRING (Step 4b): with the flag ON, a habit bias that pushes
+    effective bravery down to the EVASIVE threshold suppresses OA on a RETREAT, even though the
+    entity's frozen construction-time action_style is BALANCED (0), not EVASIVE."""
+    state = create_mock_state()
+    # bravery=0.5 alone stays BALANCED; habit_bias=0.0 contributes (0.0-0.5)*0.4=-0.2 ->
+    # effective_bravery=0.3, at or below the 0.35 EVASIVE threshold.
+    e1 = _entity_with_habit_biased_bravery(1, (5.0, 5.0), faction=0, bravery=0.5, habit_bias=0.0)
+    e2 = create_mock_entity(2, (5.0, 6.0), faction=1)
+    state = replace(
+        state, entities={1: e1, 2: e2},
+        feature_flags={"ENABLE_HABIT_BIAS_ACTION_STYLE": "ON"},
+    )
+
+    raw_update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(entity_id=1, navigation=NavigationUpdate(target_set=(4.0, 5.0), movement_mode_set=MovementMode.RETREAT))
+        }
+    )
+    refined = AuthoritativeApplyPipeline.refine(state, raw_update)
+
+    upd1 = refined.entity_updates.get(1)
+    assert upd1.combat is None or not upd1.combat.is_opportunity_attack
+
+
+def test_habit_bias_flag_off_preserves_movement_oa_suppression():
+    """TCK-20260831-HABIT-BIAS-WIRING (Step 4b): identical entity setup to the ON-flag test
+    above, but with the new flag OFF (the default) -- OA behavior must stay bit-identical to
+    pre-ticket shipped behavior, reading only the frozen BALANCED construction-time field."""
+    state = create_mock_state()
+    e1 = _entity_with_habit_biased_bravery(1, (5.0, 5.0), faction=0, bravery=0.5, habit_bias=0.0)
+    e2 = create_mock_entity(2, (5.0, 6.0), faction=1)
+    state = replace(state, entities={1: e1, 2: e2})  # feature_flags empty -> flag OFF default
+
+    raw_update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(entity_id=1, navigation=NavigationUpdate(target_set=(4.0, 5.0), movement_mode_set=MovementMode.RETREAT))
+        }
+    )
+    refined = AuthoritativeApplyPipeline.refine(state, raw_update)
+
+    upd1 = refined.entity_updates.get(1)
+    assert upd1 is not None
+    assert upd1.combat is not None
+    assert upd1.combat.is_opportunity_attack is True
+
+
 def test_regroup_movement():
     state = create_mock_state()
     # E1 at (10, 10), Group Anchor at (0, 0), Cohesion 5

@@ -309,7 +309,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/social/test_teach.py::test_teach_resolves_target_capability_blocker_not_teacher
   divergence_note: null
   support_boundary: null
 - id: TOWN-028
@@ -798,7 +798,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/resource/test_loot_channeling.py::test_loot_corpse_completion_transfers_all_item_stacks
   divergence_note: null
   support_boundary: null
 - id: TOWN-077
@@ -1328,9 +1328,13 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: 'Implementation proven via exhaustive checklist audit Phase 1-11. Re-verified
+    2026-09-01 (TCK-20260831-ITEM-INSTANCE-HISTORY): confirmed the new ItemInstance
+    sidecar (AuthoritativeState.item_instances) does not alter item_id/kind on the
+    underlying ItemStack -- identity/kind here means item_id/ItemKind type identity,
+    not per-instance uniqueness, which ItemInstance tracks separately.'
   proof_type: null
-  test_path: null
+  test_path: tests/unit/resource/test_item_instance_history.py::test_town_128_item_kind_identity_unaffected_by_item_instance
   divergence_note: null
   support_boundary: null
 - id: TOWN-129
@@ -1998,19 +2002,17 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/pipeline_phases/paid_information.py — PaidInformationTransactionSystem;
-    provider selection now reads a sorted_provider_ids local hoisted once at the top
-    of enforce() (TCK-20260822-PAID-INFO-INDEX-RETROFIT), computed once per enforce()
-    call rather than resorted per seeker — selection semantics (smallest non-self
-    entity_id) unchanged;
-    src/core/conservation.py L255 — INFORMATION_PURCHASE added to fee resolver branch;
-    src/engine/pipeline.py — paid_information phase registered before resource_transactions;
-    src/domains/information/providers.py — InformationProviderState.reliability_score.
-    src/engine/pipeline_phases/paid_information.py::PaidInformationTransactionSystem.enforce
-    (lines ~128-141) — new eligibility gate call site: synthesizes a transient
-    ContractState and calls SocialAppraisalSystem.appraise_contract() before emitting
-    the intent (TCK-20260824-AFFECTION-CONTRACT-GATE).
+  v2_evidence: "src/engine/pipeline_phases/paid_information.py \u2014 PaidInformationTransactionSystem;\
+    \ provider selection now reads a sorted_provider_ids local hoisted once at the\
+    \ top of enforce() (TCK-20260822-PAID-INFO-INDEX-RETROFIT), computed once per\
+    \ enforce() call rather than resorted per seeker \u2014 selection semantics (smallest\
+    \ non-self entity_id) unchanged; src/core/conservation.py L255 \u2014 INFORMATION_PURCHASE\
+    \ added to fee resolver branch; src/engine/pipeline.py \u2014 paid_information\
+    \ phase registered before resource_transactions; src/domains/information/providers.py\
+    \ \u2014 InformationProviderState.reliability_score. src/engine/pipeline_phases/paid_information.py::PaidInformationTransactionSystem.enforce\
+    \ (lines ~128-141) \u2014 new eligibility gate call site: synthesizes a transient\
+    \ ContractState and calls SocialAppraisalSystem.appraise_contract() before emitting\
+    \ the intent (TCK-20260824-AFFECTION-CONTRACT-GATE).\n"
   proof_type: parity
   test_path: 'tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_paid_transaction_transfers_gold_and_lead;
 
@@ -2273,3 +2275,26 @@
     compiler''s first-declared-region-only placement rule, same methodology as the
     original audit).'
   support_boundary: null
+- id: TOWN-192
+  text: 'ItemInstance ownership-history scaffolding (TCK-20260831-ITEM-INSTANCE-HISTORY):
+    StateUpdate carries item_instances_add_or_update, item_instance_updates, and next_item_instance_id_set;
+    StateUpdate.merge_many extends/merges all three (item_instance_updates is a dict
+    keyed by instance_id, last-write-wins on a same-tick collision for the same id,
+    both ids survive when distinct); ApplyPath.apply_generation applies additions/overwrites
+    by instance_id and appends (never overwrites) owner_history via ItemInstanceUpdate.owner_history_append.
+    Minting itself is gated behind the ENABLE_ITEM_INSTANCE_HISTORY feature flag (default
+    OFF per DEV-002) and requires an explicit significant=True from the caller --
+    there is no auto-classifier.'
+  status: verified
+  priority: P1
+  v2_evidence: src/core/updates.py -- StateUpdate.item_instances_add_or_update, item_instance_updates,
+    next_item_instance_id_set fields and their merge_many extension; src/engine/apply.py
+    -- ApplyPath.apply_generation applies item_instances_add_or_update and item_instance_updates
+    (owner_history_append, append-only); src/domains/optimization/feature_flags.py
+    -- ENABLE_ITEM_INSTANCE_HISTORY, default OFF.
+  test_path: tests/unit/resource/test_item_instance_history.py::test_item_instance_update_merge_many_single_transfer_per_tick_contract;
+    tests/unit/resource/test_item_instance_history.py::test_transfer_significant_item_appends_owner_history_via_apply_pipeline;
+    tests/unit/resource/test_item_instance_history.py::test_significant_item_merge_does_not_collapse_instances;
+    tests/unit/resource/test_item_instance_history.py::test_only_significant_items_receive_item_instance
+  divergence_note: null
+  proof_type: parity

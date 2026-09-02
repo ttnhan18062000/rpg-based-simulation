@@ -9,8 +9,9 @@ def test_guild_intel_emission():
         .kind("HERO")
         .location(10, 10)
         .interaction(target_node_id=1, progress=9.0)
-        .identity(properties={"interaction_kind": "guild"})
         .build())
+    from dataclasses import replace
+    entity = replace(entity, interaction=replace(entity.interaction, kind="guild"))
     
     # Setup guild building
     guild = BuildingState(id=1, kind="guild", position=(10, 10))
@@ -45,3 +46,24 @@ def test_guild_intel_emission():
     concern = ent_upd.strategic.concerns_add_or_update[0]
     assert concern.kind == "danger"
     assert concern.urgency == 1.0 # 10.0 / 10.0
+
+def test_guild_intel_ignores_non_guild_interaction():
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .location(10, 10)
+        .interaction(target_node_id=1, progress=9.0)
+        .build())
+    from dataclasses import replace
+    entity = replace(entity, interaction=replace(entity.interaction, kind="chest"))
+
+    guild = BuildingState(id=1, kind="guild", position=(10, 10))
+
+    state = AuthoritativeState(
+        tick=100, seed=42,
+        entities={1: entity},
+        buildings={1: guild}
+    )
+
+    update = GuildIntelSystem.update(state)
+
+    assert 1 not in update.entity_updates

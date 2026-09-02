@@ -81,7 +81,7 @@ class CombatResolutionSystem:
             def_mult += CombatResolutionSystem.COVER_REDUCTION
             trace["COVER_REDUCTION"] = CombatResolutionSystem.COVER_REDUCTION
             
-        if defender.identity.properties.get("status_frozen"):
+        if any(s.kind == "frozen" for s in defender.combat.status_effects):
             atk_mult *= 1.5
             trace["SHATTER"] = 1.5
             

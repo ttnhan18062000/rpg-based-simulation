@@ -1,6 +1,6 @@
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityRole, BiologicalComponent
+from src.core.state import AuthoritativeState, EntityRole, BiologicalComponent, StatusEffectState
 from src.core.enums import ReasonCode, Faction
 from src.core.builder import V2EntityBuilder
 from src.engine.combat import CombatResolutionSystem
@@ -46,19 +46,34 @@ def test_range_legality():
 def test_shatter_logic():
     """Verify SHATTER damage bonus (1.5x) against frozen targets."""
     attacker = create_mock_entity(1, (1.0, 1.0))
+    defender_baseline = create_mock_entity(2, (2.0, 1.0), faction=Faction.MONSTER_HORDE)
+    # No-active-status baseline: defender has an empty status_effects list -- SHATTER must not trigger.
+    state_baseline = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender_baseline})
+    combat_up_baseline = CombatResolutionSystem.resolve_attack(attacker, defender_baseline, state_baseline)
+    assert "SHATTER" not in combat_up_baseline.trace
+
     defender = create_mock_entity(2, (2.0, 1.0), faction=Faction.MONSTER_HORDE)
     # Freeze the defender
-    defender = replace(defender, identity=replace(defender.identity, properties={"status_frozen": True}))
-    
+    defender = replace(defender, combat=replace(defender.combat,
+        status_effects=[StatusEffectState(kind="frozen", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
+
     state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender})
-    
+
     combat_up = CombatResolutionSystem.resolve_attack(attacker, defender, state)
-    
+
     assert "SHATTER" in combat_up.trace
     assert combat_up.trace["SHATTER"] == 1.5
     # Standard damage with 10 atk vs 5 def is roughly 4-5. With 1.5x atk (15 vs 5) it should be higher.
     # Formula: 15 * (15 / (15 + 10 + 1)) = 15 * (15 / 26) = 15 * 0.57 = ~8
     assert combat_up.damage_taken > 6
+
+    # SHATTER asymmetry: status_stunned (without frozen) on the defender must NOT set trace["SHATTER"].
+    defender_stunned = create_mock_entity(2, (2.0, 1.0), faction=Faction.MONSTER_HORDE)
+    defender_stunned = replace(defender_stunned, combat=replace(defender_stunned.combat,
+        status_effects=[StatusEffectState(kind="stunned", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
+    state_stunned = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender_stunned})
+    combat_up_stunned = CombatResolutionSystem.resolve_attack(attacker, defender_stunned, state_stunned)
+    assert "SHATTER" not in combat_up_stunned.trace
 
 def test_exhaustion_debuff():
     """

@@ -4,9 +4,10 @@ import os
 import tempfile
 import json
 from src.worldbuilding.schema import WorldSpec
-from src.worldbuilding.compiler import WorldCompiler, get_role_enum, get_faction_enum, get_quest_kind, get_bravery_bias, get_action_style_for_bravery
+from src.worldbuilding.compiler import WorldCompiler, get_role_enum, get_faction_enum, get_quest_kind, get_bravery_bias, get_action_style_for_bravery, _seed_population_cohorts
 from src.core.enums import EntityRole, Faction, ActionStyle
 from src.core.quests import QuestKind
+from src.engine.checkpoint import CanonicalStateHasher
 
 
 def create_base_valid_spec() -> dict:
@@ -1003,3 +1004,121 @@ def test_compiler_faction_bravery_bias_produces_real_action_style_skew():
     assert aggressive_count > len(styles) / 2, (
         "wild_beast_pack's high bravery bias (+0.35) should skew most entities AGGRESSIVE"
     )
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260831-POPULATION-COHORT-SEEDING: compile-time population_cohorts seeding
+# ---------------------------------------------------------------------------
+
+def test_compiler_seeds_population_cohorts_from_spec():
+    """WorldCompiler.compile() seeds RegionState.population_cohorts from declared
+    PopulationSpec.count, summed by spawn_region across multiple PopulationSpec entries
+    sharing one region -- proving true aggregation, not 1:1 pass-through. Counts split
+    young/adult/elder via the fixed 30/50/20 ratio and sum exactly to the declared total.
+    Seeded cohorts leave birth_rate/mortality_rate at dataclass defaults (AC 5)."""
+    data = create_base_valid_spec()
+    # town_square already has citizen_group (count=5). Add a second PopulationSpec
+    # sharing the same spawn_region to prove aggregation, not overwrite.
+    data["entities"].append(
+        {"id": "guards", "count": 15, "role": "guard", "faction": "villagers", "spawn_region": "town_square"}
+    )
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    town_region = state.regions["town_square"]
+    cohorts = town_region.population_cohorts
+    assert set(cohorts.keys()) == {"young", "adult", "elder"}
+
+    declared_population = 5 + 15  # citizen_group + guards, both spawn_region=town_square
+    assert sum(c.count for c in cohorts.values()) == declared_population
+
+    for bracket, cohort in cohorts.items():
+        assert cohort.bracket == bracket
+        assert cohort.birth_rate == 0.02, "seeded cohorts must leave birth_rate at its dataclass default"
+        assert cohort.mortality_rate == 0.01, "seeded cohorts must leave mortality_rate at its dataclass default"
+
+    wilds_region = state.regions["wilds"]
+    assert sum(c.count for c in wilds_region.population_cohorts.values()) == 2  # horde count=2
+
+
+def test_compiler_population_cohorts_sum_exact_at_small_totals():
+    """_seed_population_cohorts must reproduce the exact declared_population at any total
+    via largest-remainder rounding, including small totals where naive per-bracket
+    floor/truncation can lose 1-2 units."""
+    for total in (1, 2, 7, 1000):
+        cohorts = _seed_population_cohorts(total)
+        assert sum(c.count for c in cohorts.values()) == total, (
+            f"expected exact sum {total}, got {sum(c.count for c in cohorts.values())}"
+        )
+        assert set(cohorts.keys()) == {"young", "adult", "elder"}
+
+
+def test_compiler_zero_population_spec_region_no_crash_and_cohorts_empty():
+    """A region with zero PopulationSpec entries targeting it must compile without
+    crashing and its population_cohorts must be the empty dict {} (not three zero-count
+    cohorts), so DemographicCycleService's guard (`if not region.population_cohorts:
+    continue`) no-ops via plain dict-truthiness."""
+    data = create_base_valid_spec()
+    data["regions"].append(
+        {"id": "empty_outpost", "type": "wilderness", "bounds": [45, 45, 49, 49], "terrain": "PLAIN"}
+    )
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.regions["empty_outpost"].population_cohorts == {}
+
+
+def test_compiler_population_cohorts_deterministic_same_seed():
+    """Compiling the same WorldSpec+seed twice produces byte-identical population_cohorts
+    per region (determinism preserved -- seeding is pure arithmetic, no RNG)."""
+    data = create_base_valid_spec()
+    data["entities"].append(
+        {"id": "guards", "count": 15, "role": "guard", "faction": "villagers", "spawn_region": "town_square"}
+    )
+    spec = WorldSpec.model_validate(data)
+
+    state1, report1 = WorldCompiler.compile(spec, seed=42)
+    state2, report2 = WorldCompiler.compile(spec, seed=42)
+
+    assert report1["state_hash"] == report2["state_hash"]
+
+    for region_id in state1.regions:
+        assert state1.regions[region_id].population_cohorts == state2.regions[region_id].population_cohorts, (
+            f"population_cohorts diverged across two compiles of the same spec+seed for region {region_id}"
+        )
+
+
+def test_canonical_state_hasher_serializes_seeded_population_cohorts():
+    """Regression (found by Test phase on TCK-20260831-POPULATION-COHORT-SEEDING):
+    RegionState.to_canonical_dict() previously passed raw PopulationCohort dataclass
+    instances straight through into population_cohorts, which json.dumps() cannot
+    serialize. This was latent for the entire lifetime of E52A-COHORT-MODEL because
+    population_cohorts was always {} until this ticket seeded it from compiler-produced
+    state for the first time. CanonicalStateHasher.get_hash() -- called by
+    kernel.tick_once()/kernel.shutdown() on every real run -- must succeed and be
+    deterministic against a real compiler-produced AuthoritativeState with non-empty
+    population_cohorts."""
+    data = create_base_valid_spec()
+    data["entities"].append(
+        {"id": "guards", "count": 15, "role": "guard", "faction": "villagers", "spawn_region": "town_square"}
+    )
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.regions["town_square"].population_cohorts, (
+        "test setup must produce non-empty population_cohorts to exercise the regression"
+    )
+
+    hash1 = CanonicalStateHasher.get_hash(state)
+    hash2 = CanonicalStateHasher.get_hash(state)
+    assert hash1 == hash2
+
+    canonical_cohorts = CanonicalStateHasher.to_canonical_data(state)["regions"]["town_square"]["population_cohorts"]
+    for bracket, cohort_dict in canonical_cohorts.items():
+        assert cohort_dict == {
+            "bracket": bracket,
+            "count": state.regions["town_square"].population_cohorts[bracket].count,
+            "birth_rate": 0.02,
+            "mortality_rate": 0.01,
+            "migration_threshold": 0.7,
+        }

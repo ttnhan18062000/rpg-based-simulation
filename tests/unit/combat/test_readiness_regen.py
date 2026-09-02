@@ -1,7 +1,7 @@
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState
-from src.core.updates import StateUpdate
+from src.core.updates import AttributeUpdate, EntityUpdate, StateUpdate
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction, ReasonCode
 from src.engine.apply import ApplyPath
@@ -62,6 +62,29 @@ def test_readiness_speed_survives_to_readonly_reconstruction():
     readonly_ent = ent.to_readonly()
 
     assert readonly_ent.combat.readiness_speed == 37.0
+
+
+def test_readiness_speed_survives_apply_path_replace():
+    """PH8's replace(new_com, ...) in ApplyPath._apply_entity_update_to_dict() rebuilds
+    CombatComponent via an explicit hardcoded kwarg list (apply.py:507-515); previously it
+    omitted readiness_speed, so any stats_dirty update silently reset a derived
+    readiness_speed back to the pre-update value instead of recomputing it from agility."""
+    ent = (V2EntityBuilder(1)
+           .kind("actor")
+           .location(0.0, 0.0)
+           .identity(faction=Faction.HERO_GUILD)
+           .identity(role=EntityRole.HERO)
+           .attributes(agility=15)
+           .combat(hp=100, atk=10, def_stat=5, attack_range=1, readiness=0.0, readiness_speed=10.0)
+           .build())
+    state = AuthoritativeState(tick=1, seed=42, entities={1: ent})
+    update = StateUpdate(entity_updates={
+        1: EntityUpdate(entity_id=1, attributes=AttributeUpdate(agility_delta=0))
+    })
+
+    next_state = ApplyPath.apply_generation(state, update, 2, 2)
+
+    assert next_state.entities[1].combat.readiness_speed == 20.0
 
 
 def test_contextual_intruder_group_hostility_not_hardcoded_neutral():

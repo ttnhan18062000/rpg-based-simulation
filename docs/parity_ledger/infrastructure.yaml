@@ -11234,24 +11234,44 @@
     between this entry''s authoring and this branch merging -- a real, expected consequence
     of next_available_id() computing against each branch''s own pre-merge view of
     the shard, not a bug in the function itself. No src/ files changed -- pure Claude-agent-workflow
-    orchestration tooling.'
+    orchestration tooling. TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT fixed
+    a latent cross-family leak bug in next_available_id itself: it previously tracked
+    a single global max-suffix across the whole shard rather than per prefix family,
+    so in a shard mixing a bare-prefix family (WORLD-NNN) with a higher-numbered multi-segment
+    family (WORLD-DEMO-NNN/WORLD-CULT-NNN), the bare family''s max suffix could leak
+    into and skew the multi-segment family''s next-id proposal (or vice versa). Reworked
+    to track max_suffix_by_prefix keyed on the full captured prefix (including multi-segment
+    prefixes), reporting whichever prefix belongs to the last matching entry in the
+    shard''s own file order -- unchanged single-family behavior when a shard has only
+    one id family. This also required widening _ID_PATTERN itself from ^([A-Z]+)-([0-9]{3})$
+    to ^([A-Z]+(?:-[A-Z]+)*)-([0-9]{3})$, mirroring the identical fix independently
+    made to tools/parity_ledger_writer.py''s _ID_PATTERN and docs/parity_ledger/schema.json''s
+    byte-identical properties.id.pattern, which had been silently rejecting the already-live
+    multi-segment WORLD-DEMO-001..006 / WORLD-CULT-001..003 ids.'
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'tools/gate_checks/parity_updater_static.py:134-163 (next_available_id
-    -- walks every id matching _ID_PATTERN, tracks max numeric suffix per shard, derives
-    prefix/width from the shard''s own ids, raises ValueError if none match), :166-203
-    (search_existing_entries -- case-insensitive substring match over text/v2_evidence,
-    {id, shard, matched_field, excerpt} results, scoped to shard_filename or all CANONICAL_LEDGER_FILES).
-    .claude/workflows/implement-ticket.js:1213-1232 (Parity-phase nextIdOutput bash()
-    call, one next_available_id lookup per distinct candidate shard from expectedSubsystemsOutput,
-    ValueError caught per-shard as "unavailable: <reason>"), :1244 (injected as the
-    "Next available ID per candidate shard" prompt hint line). .claude/agents/parity-updater.md:10-37
-    (Step 0 -- documents both functions for agent use; next_available_id via the injected
-    hint or direct Bash call, search_existing_entries as a direct Bash call only,
-    not auto-wired).'
+  v2_evidence: 'tools/gate_checks/parity_updater_static.py:137-176 (next_available_id
+    -- walks every id matching _ID_PATTERN, tracks max numeric suffix per full prefix
+    family via max_suffix_by_prefix/width_by_prefix dicts keyed on the captured multi-segment-aware
+    prefix group, never globally across families; derives prefix/width from the shard''s
+    own ids; raises ValueError if none match), :179-216 (search_existing_entries --
+    case-insensitive substring match over text/v2_evidence, {id, shard, matched_field,
+    excerpt} results, scoped to shard_filename or all CANONICAL_LEDGER_FILES). :51
+    (_ID_PATTERN widened to r"^([A-Z]+(?:-[A-Z]+)*)-([0-9]{3})$" per TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT,
+    mirroring tools/parity_ledger_writer.py:44 and docs/parity_ledger/schema.json''s
+    byte-identical properties.id.pattern). .claude/workflows/implement-ticket.js:1213-1232
+    (Parity-phase nextIdOutput bash() call, one next_available_id lookup per distinct
+    candidate shard from expectedSubsystemsOutput, ValueError caught per-shard as
+    "unavailable: <reason>"), :1244 (injected as the "Next available ID per candidate
+    shard" prompt hint line). .claude/agents/parity-updater.md:10-37 (Step 0 -- documents
+    both functions for agent use; next_available_id via the injected hint or direct
+    Bash call, search_existing_entries as a direct Bash call only, not auto-wired).'
   proof_type: null
-  test_path: tests/tools/test_parity_updater_static.py::test_next_available_id_uses_max_suffix_not_count
+  test_path: tests/tools/test_parity_updater_static.py::test_next_available_id_uses_max_suffix_not_count,
+    tests/tools/test_parity_updater_static.py::test_next_available_id_accepts_multi_segment_id,
+    tests/tools/test_parity_updater_static.py::test_next_available_id_groups_max_suffix_per_prefix_family_not_globally,
+    tests/tools/test_parity_updater_static.py::test_next_available_id_against_real_world_dynamics_shard
   divergence_note: null
   support_boundary: Claude-agent-workflow orchestration tooling only -- no simulation
     behavior is involved (mirrors INFRA-263/264/265/315/379's support_boundary pattern
@@ -11259,7 +11279,8 @@
     INFRA-263 (Finalize-phase registry-regen gate), INFRA-264 (CI registry-drift backstop),
     INFRA-265 (Scope-phase ticket-location resolution), or INFRA-379 (retro-report
     KGMCP caveat text); this is a distinct guarantee scoped to Parity-phase id-lookup
-    and existing-entry search determinism.
+    and existing-entry search determinism, including the multi-segment-prefix-family
+    fix from TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT.
 - id: INFRA-382
   text: 'Fix cross-session contamination of the shared .claude/current_run sidecar:
     writeSidecar() (implement-ticket.js) and the Scope-phase resume branch now additionally
@@ -11793,3 +11814,19 @@
     not touch, extend, or duplicate FAC-013's own content, or INFRA-381/382 (Parity-phase
     id-lookup / sidecar-attribution determinism) -- this is a distinct guarantee scoped
     to the CANONICAL_LEDGER_FILES file-set itself.
+- id: INFRA-400
+  text: "RaceDefinition gains an intelligence_tier field (str, validator-enforced\
+    \ to \"high\"/\"low\", required no default), authored explicitly for all 13 races\
+    \ via a tool_user-in-natural_traits anchor rule (clean for 11/13; dragonkin and\
+    \ spirit resolved to \"high\" on cognition_profile grounds as documented exceptions).\
+    \ Ships as an inert, fully-typed, catalog-validated content field with zero production\
+    \ consumers today (staged for idea 27 imitation-sophistication scaling) \u2014\
+    \ no resolver or runtime-consumer wiring added."
+  status: verified
+  priority: P1
+  v2_evidence: src/content/schema.py RaceDefinition.intelligence_tier field + @field_validator("intelligence_tier")
+    (TCK-20260831-SPECIES-INTELLIGENCE-TIER); data/content/living/races.yaml (13 authored
+    values)
+  test_path: tests/unit/content/test_catalog.py::test_all_13_races_have_documented_intelligence_tier
+  divergence_note: null
+  proof_type: parity

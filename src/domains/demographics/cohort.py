@@ -42,6 +42,15 @@ class PopulationCohort:
     mortality_rate: float = 0.01      # deaths per 200-tick cycle as fraction of count
     migration_threshold: float = 0.7  # scarcity above this → emigrate (E52B)
 
+    def to_canonical_dict(self) -> dict:
+        return {
+            "bracket": self.bracket,
+            "count": self.count,
+            "birth_rate": self.birth_rate,
+            "mortality_rate": self.mortality_rate,
+            "migration_threshold": self.migration_threshold,
+        }
+
 
 # ---------------------------------------------------------------------------
 # E52C: Age bracket classification + elder attribute modifiers

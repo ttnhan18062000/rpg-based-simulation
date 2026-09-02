@@ -1,5 +1,6 @@
 import pytest
-from src.core.state import EntityState, CombatComponent
+from dataclasses import replace
+from src.core.state import EntityState, CombatComponent, StatusEffectState
 from src.core.builder import V2EntityBuilder
 
 def test_frozen_state_mutation_tripwire():
@@ -27,8 +28,9 @@ def test_tactical_legality_envelope_mock():
     hero = (V2EntityBuilder(1)
             .kind("hero")
             .location(5.0, 5.0)
-            .properties({"status_stunned": True})
             .build())
+    hero = replace(hero, combat=replace(hero.combat,
+        status_effects=[StatusEffectState(kind="stunned", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
     
     state = AuthoritativeState(tick=1, entities={1: hero}, seed=42)
     

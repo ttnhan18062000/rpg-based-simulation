@@ -761,7 +761,7 @@
   support_boundary: null
 - id: COMB-072
   text: "`test_wound_stat_impact`: Wound stat impact \u2014 Verify that wounds correctly\
-    \ reduce properties in CombatAspect.."
+    \ reduce properties in CombatComponent.."
   status: verified
   priority: P0
   legacy_evidence: null
@@ -1314,13 +1314,22 @@
   divergence_note: null
   support_boundary: null
 - id: COMB-122
-  text: '`test_shatter_combo`: combo behavior'
+  text: 'SHATTER combat mechanic: a "frozen" StatusEffectState present on the defender
+    triggers a 1.5x attacker damage multiplier (atk_mult *= 1.5, trace["SHATTER"]
+    = 1.5) in CombatResolutionSystem.calculate_tactical_multipliers(); "stunned" (without
+    "frozen") does NOT trigger SHATTER -- the asymmetry is intentional and pinned
+    by test.'
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: 'src/engine/combat.py:84-86 (CombatResolutionSystem.calculate_tactical_multipliers
+    -- `if any(s.kind == "frozen" for s in defender.combat.status_effects): atk_mult
+    *= 1.5; trace["SHATTER"] = 1.5`), reading the typed CombatComponent.status_effects:
+    List[StatusEffectState] field (src/core/state.py). Migrated by TCK-20260831-STATUS-EFFECT-STATE-UNIFICATION
+    off the prior identity.properties.get("status_frozen") dict lookup; zero production
+    writers existed for the old dict flag pre-migration.'
+  proof_type: parity
+  test_path: tests/unit/combat/test_combat_legality_regression.py::test_shatter_logic
   divergence_note: null
   support_boundary: null
 - id: COMB-123
@@ -4089,5 +4098,119 @@
     hp_percent/hp_ratio-only checks. Landed in TCK-20260824-TACTICAL-WOUND-SCAR-WIRING.
   proof_type: unit
   test_path: tests/unit/combat/test_tactical_wound_scar_wiring.py
+  divergence_note: null
+  support_boundary: null
+- id: COMB-316
+  text: Tactical target-selection sort (TacticalDecisionSystem.target_score()) incorporates
+    a subjective capability-estimate signal -- an entity that reads itself as more
+    capable of beating a specific hostile kind prioritizes that hostile higher, ahead
+    of raw HP/distance but behind group focus-fire bias and target-selection hysteresis.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: TacticalDecisionSystem.target_score() (src/engine/tactical.py:395-438,
+    before this ticket carried no CapabilityEstimateService/CapabilityContext reference
+    at all -- confirmed zero hits via repo-wide grep) now calls CapabilityEstimateService.estimate(entity,
+    context=CapabilityContext.for_combat(enemy_ids=[h.kind])) per candidate hostile
+    and folds the resulting combat.enemy_type.<kind> estimate into the sort tuple
+    as -capability_confidence (line 438), negated so a higher subjective win-estimate
+    yields higher target priority. Ad-hoc, call-site-local, read-only -- entity.self_model.capabilities.estimates
+    remains empty in production (SelfModelUpdatePhase.apply() still never passes capability_context=,
+    unchanged by this ticket). Landed in TCK-20260831-CAPABILITY-DRIVEN-TARGETING.
+  proof_type: unit
+  test_path: tests/unit/combat/test_capability_driven_targeting.py
+  divergence_note: null
+  support_boundary: null
+- id: COMB-317
+  text: 'Attack legality (LegalityServiceV2.verify_attack_legality) consumes race-level
+    hostility: RelationContext now carries source_race (attacker''s race, via get_race_id_str(attacker))
+    alongside the pre-existing target_race. RelationProjectionService.project_relation()''s
+    race-hostility escalation step resolves an authored race_relations.yaml entry
+    for the (source_race, target_race) pair and, when the pair is not same-faction,
+    upgrades a neutral/threat/intruder label toward enemy/threat based on axes.hostility
+    -- never downgrading an already-resolved label, and never touching perspective-declared
+    off-ladder labels (ally, protected, opportunity, ignored, prey). Friendly Fire
+    law is preserved: the escalation is gated off entirely when source_faction_id
+    == target_faction_id.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: 'src/engine/legality.py:243-247 (RelationContext(source_race=get_race_id_str(attacker),
+    target_race=get_race_id_str(target))); src/content_semantics/relation.py (project_relation()''s
+    ''3.5 Race-hostility escalation'' block, fail-closed on label in _RACE_LABEL_LADDER_RANK
+    = {None: 0, ''neutral'': 0, ''threat'': 1, ''intruder'': 1, ''enemy'': 2}).'
+  proof_type: regression
+  test_path: tests/unit/combat/test_race_relations_legality_wiring.py
+  divergence_note: null
+  support_boundary: null
+- id: COMB-318
+  text: readiness_speed is derived from agility (readiness_speed = max(1.0, 10.0 +
+    (agility - 5) * 1.0)) inside LevelingService.recalculate_combat_stats(), rather
+    than always the flat 10.0 dataclass default. Reference/baseline agility (5) preserves
+    readiness_speed == 10.0 exactly, keeping every existing test fixture that never
+    sets agility valid. The derived value flows through SkillScalingService.get_effective_stats()
+    and ApplyPath's PH8 replace(new_com, ...) call to reach the live CombatComponent.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/progression/leveling.py Step 1 block (readiness_speed formula,
+    new line); src/engine/apply.py:507-515 (replace(new_com, ...) now includes readiness_speed=derived.get(''readiness_speed'',
+    new_com.readiness_speed)). Unit/regression evidence is strong (formula direction+exact-value
+    asserted, backward-compat asserted, PH8 apply-path drop-prevention asserted --
+    see test_path). Corpus validation was attempted per plan Step 6 (hand-orchestrated
+    pre/post-code MetamorphicRuleEngine.evaluate_rules() check, staging_artifacts/TCK-20260831-READINESS-SPEED-FORMULA/corpus_validation.py,
+    monotonic_non_increasing on elder_window_damage_rate = count(combat_damage, tick>=7000)/2500,
+    9500 ticks, 3 seeds, observability.mode pinned to STANDARD/NORMAL, confirmed inline)
+    but produced a degenerate baseline=0.0/compared=0.0 result. Per the escalation
+    path plan.md Step 6 itself specifies (widen window/world before accepting a hollow
+    zero-difference PASSED), this was investigated with single-seed 9500-tick diagnostic
+    runs across 3 real corpus worlds (unit_faction_tension, crowded_frontier, lifecycle_full_coverage_world
+    -- the last authored specifically for full lifecycle-phase coverage including
+    ELDER, with active hostile modules). All 3 showed the identical root cause: every
+    combat_damage event in the entire 9500-tick run occurs before tick 1000 (106-196
+    events per world, 0 events at tick>=1000 in all 3), while LifeStageService.get_stage_for_age()
+    requires age_ticks>=7000 for ELDER eligibility -- these two windows never overlap
+    in any tested world. This is a structural corpus-content fact (real combat activity
+    ceases early and does not resume), not a sample-size/tick-count artifact, so widening
+    ticks or seeds further would not change the outcome. Conclusion: the formula''s
+    real population-level effect (elder agility decay, 5->4, the only durable non-default
+    agility source per leveling.py''s Step 1 citation trail) is currently unobservable
+    via corpus combat metrics because no tested world''s elder-eligible entities are
+    ever still fighting -- an honest null corpus finding, not evidence the change
+    is unsafe (the change''s correctness is fully covered by the unit/regression tests
+    below; see TCK-20260831-READINESS-SPEED-FORMULA Implementation Notes for the full
+    diagnostic record). Landed in TCK-20260831-READINESS-SPEED-FORMULA.'
+  proof_type: regression
+  test_path: tests/unit/core/test_rpg_depth.py::TestEffectiveStats::test_readiness_speed_derives_from_agility_two_values,
+    tests/unit/core/test_rpg_depth.py::TestEffectiveStats::test_readiness_speed_reference_agility_backward_compatible,
+    tests/unit/combat/test_readiness_regen.py::test_readiness_speed_survives_apply_path_replace
+  divergence_note: null
+  support_boundary: Real-corpus population-level validation of the elder-cohort agility
+    effect is currently unsupported by any tested world (unit_faction_tension, crowded_frontier,
+    lifecycle_full_coverage_world) because real combat activity ceases before tick
+    1000 in all of them while ELDER eligibility requires age_ticks>=7000 -- structural,
+    not sample-size. Code-level correctness (formula, backward-compat, apply-path
+    drop-prevention) remains fully verified via the unit/regression tests in test_path.
+- id: COMB-319
+  text: 'Frozen or stunned actors are illegal combatants: LegalityServiceV2.verify_action_legality/verify_movement_legality/verify_attack_legality/verify_aoe_legality
+    all reject with ReasonCode.ATTACKER_STATUS_BLOCKED when the actor has a "frozen"
+    or "stunned" StatusEffectState. ActorValidityPhase (Law 300.1) separately strips
+    any authoritative proposal (task, navigation, resource transfer, interaction progress)
+    submitted by such an actor at the authoritative-apply stage.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: 'src/engine/legality.py:132,166,218,319 (LegalityServiceV2 -- `if any(s.kind
+    in ("frozen", "stunned") for s in <entity>.combat.status_effects): return False,
+    ReasonCode.ATTACKER_STATUS_BLOCKED`, 4 call sites); src/engine/pipeline_phases/actor_validity.py:59-65
+    (ActorValidityPhase.resolve -- is_stunned/is_frozen read the same CombatComponent.status_effects
+    list). Both migrated off identity.properties.get("status_frozen"/"status_stunned")
+    to the typed CombatComponent.status_effects: List[StatusEffectState] by TCK-20260831-STATUS-EFFECT-STATE-UNIFICATION;
+    actor_validity.py''s is_sleeping check deliberately left on the untyped identity.properties
+    dict, out of this migration''s scope.'
+  proof_type: parity
+  test_path: tests/unit/combat/test_phase5_negative_cases.py::test_attacker_status_blocked,
+    tests/unit/core/test_hardening_e5.py::test_negative_case_stunned_actor_rejection,
+    ::test_negative_case_no_active_status_actor_not_blocked
   divergence_note: null
   support_boundary: null

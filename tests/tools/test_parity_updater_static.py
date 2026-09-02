@@ -242,6 +242,40 @@ def test_next_available_id_raises_on_shard_with_no_valid_ids(tmp_path):
         next_available_id("combat_movement.yaml", ledger_dir=tmp_path)
 
 
+def test_next_available_id_accepts_multi_segment_id(tmp_path):
+    # TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT
+    _write_ledger(tmp_path, "world_dynamics.yaml", [
+        {"id": "WORLD-DEMO-001", "text": "a", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+        {"id": "WORLD-DEMO-002", "text": "b", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+    ])
+
+    assert next_available_id("world_dynamics.yaml", ledger_dir=tmp_path) == "WORLD-DEMO-003"
+
+
+def test_next_available_id_groups_max_suffix_per_prefix_family_not_globally(tmp_path):
+    # A shard mixing a bare-prefix family (WORLD-NNN) with a higher-numbered multi-segment
+    # family (WORLD-DEMO-NNN) must never let one family's suffix leak into the other's count --
+    # reproduces the real world_dynamics.yaml shape (WORLD-001..119 alongside WORLD-DEMO-001..006).
+    _write_ledger(tmp_path, "world_dynamics.yaml", [
+        {"id": "WORLD-119", "text": "a", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+        {"id": "WORLD-DEMO-001", "text": "b", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+        {"id": "WORLD-DEMO-006", "text": "c", "status": "verified", "priority": "P1",
+         "v2_evidence": "x", "test_path": "y"},
+    ])
+
+    assert next_available_id("world_dynamics.yaml", ledger_dir=tmp_path) == "WORLD-DEMO-007"
+
+
+def test_next_available_id_against_real_world_dynamics_shard():
+    # Real-corpus regression proof (ticket AC): the live shard's last entry is a WORLD-DEMO-*
+    # id, so this must propose the next id in that family, never a bare WORLD-NNN fallback.
+    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-DEMO-007"
+
+
 # ---------------------------------------------------------------------------
 # search_existing_entries
 # ---------------------------------------------------------------------------

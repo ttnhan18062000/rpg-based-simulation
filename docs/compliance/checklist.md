@@ -450,7 +450,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 - [x] TOWN-024: `test_actor`: Actor. <!-- ID: TOWN-024 SOURCE: src/core/state.py TEST: tests/unit/core/test_actor_v2.py PROOF: unit -->
 - [x] TOWN-025: `test_visit_guild_no_legacy_goals`: Visit guild no legacy goals — Verify that visiting the guild produces StrategicUpdate and PerceptionUpdate, but no string goals. <!-- ID: TOWN-025 SOURCE: src/systems/world_systems/routine.py TEST: tests/unit/systems/test_routine_v2.py PROOF: unit -->
 - [x] TOWN-026: `test_visit_blacksmith_blocker_emission`: Visit blacksmith blocker emission — Verify that visiting the blacksmith without materials generates a BlockerRecord, not a string state. <!-- ID: TOWN-026 SOURCE: src/systems/world_systems/routine.py TEST: tests/unit/systems/test_routine_v2.py PROOF: unit -->
-- [x] TOWN-027: `test_visit_class_hall_resolution`: Visit class hall resolution — Verify that learning a skill emits a strategic resolution for the corresponding capability blocker. <!-- ID: TOWN-027 SOURCE: src/systems/world_systems/routine.py TEST: tests/unit/systems/test_routine_v2.py PROOF: unit -->
+- [x] TOWN-027: `test_visit_class_hall_resolution`: Visit class hall resolution — Verify that learning a skill emits a strategic resolution for the corresponding capability blocker. <!-- ID: TOWN-027 SOURCE: src/systems/world_systems/routine.py TEST: tests/unit/social/test_teach.py PROOF: unit -->
 - [x] TOWN-028: `test_visit_blacksmith_crafting_resolution`: Visit blacksmith crafting resolution — Verify that crafting an item emits a strategic resolution for the material blocker. <!-- ID: TOWN-028 SOURCE: src/systems/world_systems/routine.py TEST: tests/unit/systems/test_routine_v2.py PROOF: unit -->
 - [x] TOWN-029: `test_visit_home_upgrade_resolution`: Visit home upgrade resolution — Verify that home storage upgrade emits a strategic resolution for home maintenance. <!-- ID: TOWN-029 SOURCE: src/systems/world_systems/routine.py TEST: tests/unit/systems/test_routine_v2.py PROOF: unit -->
 - [x] TOWN-030: `test_detour_suggestion_lifecycle_awareness`: Detour suggestion lifecycle awareness — Verify DetourSuggestionService ignores exhausted leads and prioritizes untested ones. <!-- ID: TOWN-030 SOURCE: src/systems/strategic_systems/detours.py TEST: tests/unit/strategic/test_detours.py PROOF: unit -->
@@ -735,7 +735,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 - [x] SOC-049: `test_routine_profile_instantiation`: Routine profile instantiation — Verify RoutineProfile can be instantiated with hybrid scheduling.
 - [x] SOC-050: `test_place_attachment_instantiation`: Place attachment instantiation — Verify PlaceAttachment can be instantiated and supports sentiment.
 - [x] SOC-159: `test_group_record_instantiation`: Group record instantiation — Verify GroupRecord supports shared tactical intent.
-- [x] SOC-052: `test_entity_integration`: Entity integration — Verify Entity and IdentityAspect absorb new fields.
+- [x] SOC-052: `test_entity_integration`: Entity integration — Verify Entity and IdentityComponent absorb new fields.
 - [x] SOC-053: `test_world_state_registry`: World state registry — Verify GroupRegistry integration in WorldState.
 
 #### `integration/gameplay/test_social_meaning.py`
@@ -1064,7 +1064,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 #### `unit/core/test_invariants.py`
 
 - [x] SUB-050: `test_speed_delay_invariants`: Speed delay invariants — Test that speed_delay never returns NaN or out-of-bounds values.
-- [x] SUB-051: `test_stats_invariants`: Stats invariants — AOA Stabilization: Test CombatAspect invariants (formerly Stats).
+- [x] SUB-051: `test_stats_invariants`: Stats invariants — AOA Stabilization: Test CombatComponent invariants (formerly Stats).
 - [x] SUB-052: `test_damage_calc_math`: Damage calc math — Test the core damage calculation logic in isolation.
 - [x] SUB-053: `test_recalc_level_consistency`: Recalc level consistency — Ensure level-based stat recalculation remains consistent across aspects.
 - [x] SUB-054: `test_combat_damage_invariants`: Combat damage invariants — Ensure HP reduction application doesn't cause overflow or invalid states.
@@ -1228,7 +1228,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 #### `unit/combat/test_consequences.py`
 
 - [x] COMB-071: `test_wound_infliction_massive_hit`: Wound infliction massive hit — Verify that damage > 25% max HP guarantees a wound.
-- [x] COMB-072: `test_wound_stat_impact`: Wound stat impact — Verify that wounds correctly reduce properties in CombatAspect.
+- [x] COMB-072: `test_wound_stat_impact`: Wound stat impact — Verify that wounds correctly reduce properties in CombatComponent.
 - [x] COMB-073: `test_scar_permanence`: Scar permanence — Verify that scars are permanent and identifiable.
 
 #### `unit/combat/test_exhaustion.py`
@@ -1827,7 +1827,7 @@ Relevant original source/test evidence:
 - [x] TOWN-073: `test_per_based_hidden_discovery`: hidden discovery from perception <!-- ID: TOWN-073 SOURCE: src/systems/world_systems/harvesting.py TEST: tests/unit/world/test_discovery.py PROOF: unit -->
 - [x] TOWN-074: `test_loot_recovery_consistency`: loot recovery consistency <!-- ID: TOWN-074 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_loot_scaling.py PROOF: unit -->
 - [x] TOWN-075: `test_loot_no_duplication`: no duplicated loot <!-- ID: TOWN-075 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_loot_scaling.py PROOF: unit -->
-- [x] TOWN-076: `test_corpse_loot_convergence`: corpse loot convergence <!-- ID: TOWN-076 SOURCE: src/engine/economy.py TEST: tests/unit/economy/test_loot_scaling.py PROOF: unit -->
+- [x] TOWN-076: `test_corpse_loot_convergence`: corpse loot convergence <!-- ID: TOWN-076 SOURCE: src/engine/economy.py TEST: tests/unit/resource/test_loot_channeling.py PROOF: unit -->
 - [x] TOWN-077: `test_loot_and_respawn`: loot and respawn interaction <!-- ID: TOWN-077 SOURCE: src/systems/world_systems/generator.py TEST: tests/unit/world/test_respawn.py PROOF: unit -->
 - [x] TOWN-078: `test_loot_tables_exist`: loot table integrity <!-- ID: TOWN-078 SOURCE: src/world/spawn_config.py TEST: tests/unit/economy/test_loot_scaling.py PROOF: unit -->
 - [x] TOWN-079: `test_full_bag_aborts_looting`: abort looting when full <!-- ID: TOWN-079 SOURCE: src/core/inventory.py TEST: tests/unit/inventory/test_capacity.py PROOF: unit -->

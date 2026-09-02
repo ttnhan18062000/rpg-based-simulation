@@ -4,6 +4,7 @@ Date: 2026-08-28
 Status: brainstorming proposal for review
 Scope: the expected simulation after the proposed core-RPG roadmap and accepted Codex idea portfolio are available
 Constraint: this document does not approve implementation, change an existing plan, create tickets, or define a player-control system
+Verification: §9.1-9.4 were checked directly against running code on 2026-08-29 and 2026-08-31 (not just read as prose) — see the "Verified" notes inline in §9. The remaining sections describe an intended future state per this document's own Scope line and were not implementation-verified, since most of that content has no corresponding code yet by design.
 
 ## Purpose
 
@@ -947,11 +948,15 @@ The authoritative [World Evolution Mechanics](../../mechanics/05_world_evolution
 
 Required direction: choose one calendar authority and express feature timing through named units or centralized duration data. Existing raw constants must be classified before conversion; their current gameplay behavior should not automatically be interpreted as intended fictional duration.
 
+**Verified, 2026-08-29** (`tickets/done/TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY.md`): the real count is **four** incompatible tick conventions, not two — `src/world/raid.py`'s `TICKS_PER_DAY=100` and a previously-unnamed `src/domains/demographics/cohort.py`'s `COHORT_INTERVAL=200` cycle, alongside the Bible's 2,400 ticks/day. Decided: the World Evolution Bible's 2,400 ticks/day (36s/tick) is the sole calendar authority; the raid and cohort constants are named sub-cadences under it, not rival calendars. Not yet implemented — awaits a dedicated migration ticket, most likely under M3.
+
 ### 9.2 Aging conflict
 
 Current state uses a default maximum age of `10,000` ticks, while the demographic cohort model uses age-bracket thresholds around `3,000` and `7,000`. Under `2,400 ticks/day`, an entire current life lasts only a few days. These findings and the duplicate life-stage concern are also recorded in the [RPG Design Roadmap](../../plans/rpg_design_roadmap/rpg_design_roadmap.md).
 
 Required direction: represent human age in fantasy-calendar time, reconcile duplicate life-stage representations, and migrate lifespan balance away from direct inheritance of old raw tick thresholds.
+
+**Verified, 2026-08-29** (same ticket as §9.1): under the now-settled 2,400-ticks/day calendar, `max_age_ticks=10000` and the elder threshold (`age_ticks≥7000`) resolve to an exact **4.17-day maximum lifespan**. Decided: age representation migrates to fantasy-year units once that migration is implemented, rather than patching `max_age_ticks`/cohort thresholds under the current tick regime (avoids a second migration later). Exact life-stage boundaries and lifespan distribution remain open — only the migration *approach* is decided.
 
 ### 9.3 Instantaneous routine conflict
 
@@ -959,11 +964,15 @@ Current eating and sleeping behave as one-tick restorative actions, while needs 
 
 Required direction: distinguish starting, advancing, interrupting, and completing sustained activities. Need rates and restorative effects must be recalibrated from the daily budget together.
 
+**Verified, 2026-08-31** (direct read of `src/engine/domain/core_actions.py`): confirmed exactly as described, not just directionally. `CoreActions.execute_survival()`'s `SLEEP` and `EAT` handlers apply the full restorative delta (`sleep_debt_delta=-20.0`, `hunger_delta=-40.0`) and `readiness_delta=-100.0` in a single resolution. `BiologicalUpdate` and `EntityState` carry no start-tick, progress, or interruption fields for either action — there is no sustained-activity state anywhere in the biological domain today for this proposal's contract to attach to.
+
 ### 9.4 Cadence-duration conflation
 
 A system running every ten ticks does not mean its activity lasts ten ticks. A one-tick state transition may create a season-long commitment. A yearly review may make no change.
 
 Required direction: separately name evaluation cadence, activity duration, cooldown, deadline, persistence, and memory/decay horizon.
+
+**Verified, 2026-08-31** (direct read of `src/domains/demographics/cohort.py`): found a concrete live instance this document did not originally name. `PopulationCohort.birth_rate`/`mortality_rate` are documented and coded as "per 200-tick cycle" — the rate's real-world meaning is defined directly in terms of `DemographicCycleService`'s evaluation cadence (`COHORT_INTERVAL=200`), not a calendar-independent duration unit such as births/year. This is a distinct problem from §9.1's settled tick-length question: even with `COHORT_INTERVAL=200` now confirmed as a legitimate named sub-cadence, the rate *values* still have no stated real-world meaning, so they cannot yet be checked for plausibility or migrated cleanly if the cadence itself changes. Directly relevant to the RPG roadmap's M2 idea 43 (population seeding), which is the next ticket to touch these exact fields — flagged there, not resolved here, per this document's own constraint against editing existing plans.
 
 ### 9.5 Speed conflict
 
