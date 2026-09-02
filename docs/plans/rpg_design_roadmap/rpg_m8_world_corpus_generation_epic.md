@@ -90,7 +90,10 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
    before ticketing idea 45 (Camp) or idea 47 (Lair) in M4** — building those on today's flat model first
    means redoing both once (or if) this rebuild lands, and this epic's own item 2 already found Camp's
    current insertion point deeper than originally scoped, which is exactly the kind of rework idea 66 would
-   prevent.
+   prevent. **High-level plan written up separately, 2026-09-02:**
+   [`docs/plans/rpg_design_roadmap/rpg_idea66_region_place_rebuild_plan.md`](rpg_idea66_region_place_rebuild_plan.md)
+   — full field-level schema, the two-stage pilot, and the `state_hash` recalibration procedure, ready for
+   ticketing; this item stays as the sequencing note, that document is the scoping source.
 
 ## Out of Scope
 
@@ -121,3 +124,5 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
 - `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, Idea 66 promotion, temporal axis
 - `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — Idea 66 schema-migration
   ownership clarification, 2026-08-29
+- `docs/plans/rpg_design_roadmap/rpg_idea66_region_place_rebuild_plan.md` — idea 66's own dedicated
+  high-level plan, 2026-09-02
