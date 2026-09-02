@@ -2,14 +2,17 @@
 """
 Generate docs/brainstorm/idea_index.json — a per-idea cross-document index.
 
-Cross-references each of the 66 RPG design ideas across the four brainstorm
+Cross-references each of the RPG design ideas across the four brainstorm
 documents that discuss them by number, plus the owning M1-M9 milestone epic:
 
-- rpg_feature_atlas.html      -> id="idea-N" (all 66 ideas)
+- rpg_feature_atlas.html      -> id="idea-N" (all ideas, count derived live
+                                  from the atlas itself, not hardcoded)
 - rpg_expected_schemas.html   -> id="schema-N" (only ideas introducing new
                                   durable state; null otherwise)
-- design_merit_scorecard.html -> id="score-N" (ideas 1-65; idea 66 was added
-                                  after the original scoring pass, so null)
+- design_merit_scorecard.html -> id="score-N" (ideas 1-65 only; 66/67/68 were
+                                  all added after the original scoring pass
+                                  and are deliberately left unscored, so null
+                                  -- see that document's own grounding note)
 - rpg_simulation_wiring_map.html -> no reliable per-idea anchor exists in this
                                   document's current structure (an idea can
                                   span multiple unrelated rows); recorded as a
@@ -17,7 +20,10 @@ documents that discuss them by number, plus the owning M1-M9 milestone epic:
 - Milestone ownership is parsed directly from each M1-M9 epic doc's own
   **Source:** line (docs/plans/rpg_design_roadmap/rpg_mN_*.md), not
   hardcoded — except idea 66, which predates that convention and is recorded
-  per the roadmap's own explicit "scoped under M8" statement.
+  per the roadmap's own explicit "scoped under M8" statement. Ideas 67/68
+  (added 2026-09-02) are candidates not yet folded into any milestone's
+  committed **Source:** line, so their milestone is correctly null until
+  that happens, not a bug.
 
 Every non-null anchor is verified to actually exist in its source file before
 being written — this script raises rather than emitting a dangling reference.
@@ -33,11 +39,16 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-TOTAL_IDEAS = 66
+# The idea count is derived live from the atlas's own card-sections-data in
+# build_index() below -- no longer hardcoded, since the atlas grows over time
+# (66 -> 68 on 2026-09-02) and a stale constant here would silently truncate
+# the index.
 
-# Idea 66 predates the **Source:** line convention used by the other 65 ideas
+# Idea 66 predates the **Source:** line convention used by ideas 1-65
 # (see rpg_design_roadmap.md's Sequencing rules: "scoped under M8" while
-# gating M2's ideas 35/48) -- recorded explicitly rather than parsed.
+# gating M2's ideas 35/48) -- recorded explicitly rather than parsed. This is
+# keyed to idea 66 specifically, not "whichever idea number is currently
+# last" -- do not repurpose this constant when a later idea 69+ is added.
 IDEA_66_MILESTONE = "M8"
 
 EPIC_FILES = [f"rpg_m{n}_" for n in range(1, 10)]
@@ -136,19 +147,20 @@ def build_index(brainstorm_dir: Path, roadmap_dir: Path) -> dict:
     wiring_mentions = _mention_counts(wiring_text)
     milestones = _milestone_map(roadmap_dir)
 
-    missing_atlas = set(range(1, TOTAL_IDEAS + 1)) - atlas_ids
+    total_ideas = max(atlas_ids) if atlas_ids else 0
+    missing_atlas = set(range(1, total_ideas + 1)) - atlas_ids
     if missing_atlas:
         raise SystemExit(f"ERROR: atlas missing id=\"idea-N\" for: {sorted(missing_atlas)}")
 
     ideas = []
-    for n in range(1, TOTAL_IDEAS + 1):
+    for n in range(1, total_ideas + 1):
         entry = {
             "idea": n,
             "atlas_anchor": f"rpg_feature_atlas.html#idea-{n}",
             "schema_anchor": f"rpg_expected_schemas.html#schema-{n}" if n in schema_ids else None,
             "scorecard_anchor": f"design_merit_scorecard.html#score-{n}" if n in scorecard_ids else None,
             "wiring_map_mentions": wiring_mentions.get(n, 0),
-            "milestone": IDEA_66_MILESTONE if n == TOTAL_IDEAS else milestones.get(n),
+            "milestone": IDEA_66_MILESTONE if n == 66 else milestones.get(n),
         }
         ideas.append(entry)
 
@@ -156,9 +168,11 @@ def build_index(brainstorm_dir: Path, roadmap_dir: Path) -> dict:
         "_meta": {
             "description": (
                 "Per-idea cross-document index across the RPG brainstorm corpus. "
-                "atlas_anchor is always present (all 66 ideas); schema_anchor is "
-                "present only for ideas with a durable-state schema section; "
-                "scorecard_anchor is present for ideas 1-65 (66 was never scored); "
+                "atlas_anchor is always present (count derived live from the atlas "
+                "itself); schema_anchor is present only for ideas with a "
+                "durable-state schema section; scorecard_anchor is present for "
+                "ideas 1-65 only (66/67/68 were all added after the original "
+                "scoring pass and are deliberately left unscored); "
                 "wiring_map_mentions is a raw text-mention count, not a clickable "
                 "anchor, since that document has no reliable 1:1 per-idea anchor "
                 "structure (see TCK-20260831-BRAINSTORM-IDEA-CROSS-INDEX's "

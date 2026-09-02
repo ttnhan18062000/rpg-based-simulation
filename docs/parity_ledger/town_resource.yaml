@@ -54,8 +54,9 @@
   v2_evidence: '`src/engine/pipeline.py` (suppression logic in `_route_combat_intent`
     and `_resolve_occupancy_conflicts`)'
   proof_type: parity
-  test_path: '`tests_v2/test_occupancy_conflicts.py` (verifies conflict resolution
-    and move reversion)'
+  test_path: '`tests/unit/movement/test_occupancy_conflicts.py` (verifies conflict
+    resolution behavior; path corrected 2026-09-02, was `tests_v2/test_occupancy_conflicts.py`
+    -- that path never existed in this repo, only in a pre-migration test tree)'
   divergence_note: null
   support_boundary: null
 - id: TOWN-006
@@ -66,7 +67,8 @@
   v2_evidence: '`src/engine/pipeline.py` (`_resolve_occupancy_conflicts` with deterministic
     sorting)'
   proof_type: parity
-  test_path: '`tests_v2/test_occupancy_conflicts.py`'
+  test_path: '`tests/unit/movement/test_occupancy_conflicts.py` (path corrected 2026-09-02,
+    was `tests_v2/test_occupancy_conflicts.py`)'
   divergence_note: null
   support_boundary: null
 - id: TOWN-007

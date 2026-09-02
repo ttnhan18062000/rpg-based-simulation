@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-08-31
+last_verified: 2026-09-02
 ---
 
 # Social Systems Contract
@@ -89,7 +89,20 @@ Compliance IDs: SOC-193–SOC-196, SOC-217
 
 ### Decay
 
-Social history fields decay passively over time when there are no new interactions. Rate is configurable per-field in the social config.
+**Correction, 2026-09-02 (Social/Relationship axis investigation):** this section previously claimed social
+history fields decay passively over time with a configurable per-field rate. That was factually wrong, not
+just stale — direct verification found zero decay logic anywhere in `src/systems/social_systems/`, and no
+"social config" file exists anywhere in the repository. Live `SocialComponent`/`SocialBond` fields
+(`trust_history`, `grudge_history`, etc.) have **no passive decay of any kind today**; once set, a value
+stays exactly where it was left until a new interaction changes it.
+
+The only real decay mechanism in the codebase, `SocialMemoryDecay.apply_decay()`
+(`src/domains/campaigns/social_memory.py:355-390`, real tuned constants `FRIENDSHIP_DECAY=0.40`/episode,
+`GRUDGE_DECAY=0.10`/episode), operates on a **separate data structure** — `SocialMemoryRecord`, the
+Campaign framework's cross-episode carry-forward memory — and only fires at Campaign episode boundaries,
+not during ordinary continuous-tick simulation. It does not affect live gameplay's `SocialComponent` state.
+See `docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md` for the full
+investigation and idea 67 (Living Relationship Decay) for the proposed fix.
 
 ---
 
@@ -180,7 +193,11 @@ trust/bonds or role-affinity terms).
 | betrayal witnessed | reputation −0.2; BETRAYER label added |
 | camp cleared | reputation +0.05; COMBATANT label added |
 
-Public reputation (0.0–1.0) is visible to all entities and used in trust appraisal.
+Public reputation (real clamp range **0.0–2.0**, corrected 2026-09-02 — `relationships.py:94`; this section
+previously stated 0.0–1.0, contradicting the Relationships section's own correct clamp table above) is
+visible to all entities and used in trust appraisal — see the same correction note under Decay above.
+`SocialAppraisalSystem` derives a 0.0–1.0 trust baseline from it (`public_reputation / 2.0`); that derived
+baseline, not the raw field, is what's actually bounded 0.0–1.0.
 
 ---
 

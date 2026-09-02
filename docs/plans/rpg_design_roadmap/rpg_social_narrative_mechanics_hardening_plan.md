@@ -12,6 +12,15 @@ tags: [content, architecture]
 (see the parent roadmap's "Hardening backlog" section) — the same code-verification treatment the temporal
 axis and idea 66 already received, applied to the social/reputation/political surface.
 
+**Superseded in scope, not replaced, 2026-09-02:** the fuller axis-level treatment now lives in
+[`docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md) —
+same depth and structure as the temporal-axis proposal, including a resolved determinism finding
+(`CanonicalStateHasher` covers only 10 of `SocialComponent`'s 15 fields) this plan's own scope item 5 named
+as an open question. This plan's scope items 1-4 (write the missing chapter, relocate the misplaced
+reputation fragment, fold in existing partial contracts, spot-check `SOC-FAC-*`/`SOC-CHRON-*`) remain the
+actual chapter-authoring work; the axis proposal is the evidence base to write it from, not a replacement
+for doing so.
+
 **Source:** direct investigation, 2026-09-02, of `docs/parity_ledger/social_narrative.yaml` (276 entries),
 `src/core/models/social.py`, `src/systems/social_systems/relationships.py`,
 `src/systems/social_systems/memory.py`, `src/replay/fingerprint.py`, and the three existing partial
@@ -43,7 +52,7 @@ A new Mechanics Bible chapter (next available number after `06_worldbuilding_fou
 the genuinely-undocumented `SocialComponent`/`SocialBond`/`RelationshipService` contract, with the three
 existing partial contracts folded in as cross-linked sub-sections rather than rewritten.
 
-**`SocialComponent`** (`src/core/models/social.py`, 13 fields, confirmed real, none previously documented
+**`SocialComponent`** (`src/core/models/social.py`, 15 fields (corrected count, 2026-09-02), confirmed real, none previously documented
 in one place): `trust_history`, `familiarity_history`, `debt_history`, `fear_history`, `grudge_history`,
 `combat_loss_counts`, `salience_history`, `bonds: Dict[int, SocialBond]`, `nemesis_ids`, `place_attachment`,
 `betrayal_count`/`betrayal_records`, `public_reputation` (range 0.0–2.0), `heroism_score`, `notoriety_score`.
@@ -60,7 +69,7 @@ epic doc's own citation for idea 22's test design (`grudge ≥ 3.0`) — not a d
 ## Scope (not yet broken into child tickets)
 
 1. **Write the missing `SocialComponent`/`SocialBond`/`RelationshipService` contract as the chapter's core.**
-   This is the genuinely zero-coverage surface — document the 13 fields, the clamp ranges, and the apply
+   This is the genuinely zero-coverage surface — document the 15 fields, the clamp ranges, and the apply
    path above as the chapter's foundation, the same way `01_entity_anatomy.md` documents `EntityState`'s
    core attribute components.
 2. **Relocate or cross-link the reputation formula fragment currently misfiled in
@@ -73,14 +82,16 @@ epic doc's own citation for idea 22's test design (`grudge ≥ 3.0`) — not a d
    `FactionState`/diplomacy code directly**, the same way nemesis-promotion (`SOC-196`) was independently
    confirmed in this investigation pass — not yet done for these, and per this project's own caution against
    trusting a ledger's `verified` status without a direct check.
-5. **Resolve the `CanonicalStateHasher` social-field-coverage open question.** `replay/fingerprint.py`'s
-   `StateFingerprinter` (the lightweight, explicitly-non-canonical replay tracker) only tracks `bonds` as a
-   count and `reputation` rounded to 3 decimals — its own docstring names "social changes silently ignored"
-   as a failure mode it exists to catch, meaning `trust_history`, `grudge_history`, `nemesis_ids`, etc. are
-   *not* covered by it at all. Whether the separate, canonical `CanonicalStateHasher` (used for
-   `world_compile_report.json`'s `state_hash`) covers the rest of `SocialComponent` was not checked in this
-   investigation pass — this must be answered directly (confirmed covered, or confirmed a real determinism
-   gap) before this plan is considered scoped, not left as an assumption either way.
+5. **`CanonicalStateHasher` social-field-coverage question — RESOLVED, 2026-09-02, a real gap.**
+   `replay/fingerprint.py`'s `StateFingerprinter` (the lightweight, explicitly-non-canonical replay tracker)
+   only tracks `bonds` as a count and `reputation` rounded to 3 decimals — not the concern here.
+   `EntityState.to_canonical_dict()` (the real, canonical hash used for `world_compile_report.json`'s
+   `state_hash`) covers only **10 of `SocialComponent`'s 15 fields** — missing `debt_history`,
+   `salience_history`, `nemesis_ids`, `place_attachment`, and the detailed `betrayal_records` list (only its
+   count is hashed). A divergence in any of these 5 fields between two same-seed runs would go undetected
+   today. See the full Social/Relationship Axis proposal (References below) for the complete finding; this
+   plan's own chapter-authoring work should record the same finding, not re-derive it. Whether to add all 5
+   fields or document specific ones as intentionally non-authoritative remains an open decision.
 
 ## Out of Scope
 
@@ -105,8 +116,11 @@ epic doc's own citation for idea 22's test design (`grudge ≥ 3.0`) — not a d
 
 ## References
 
+- `docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md` — the fuller axis-level
+  proposal this plan's findings feed into
 - `docs/parity_ledger/social_narrative.yaml` — 276 entries, ~94 genuinely social/narrative
-- `src/core/models/social.py` — `SocialComponent`, 13 fields, no prior contract
+- `src/core/models/social.py` — `SocialComponent`, **15 fields** (corrected count, 2026-09-02 — an earlier
+  pass in this same investigation miscounted 13), no prior contract
 - `src/systems/social_systems/relationships.py:16-100` — `RelationshipService.process_update()`, real clamp
   ranges
 - `src/systems/social_systems/memory.py:38-52` — `check_nemesis_promotion()`, grudge ≥ 3.0, spot-check

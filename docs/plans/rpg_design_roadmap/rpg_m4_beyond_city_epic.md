@@ -80,6 +80,13 @@ tickets.
    doesn't fire on death as originally assumed — which would have silently killed cross-generational Clans
    if built as first scoped. **Depth-audit note:** the Party Formation & Lifecycle precedent this idea (and
    M2's idea 36) reuses spans 5 files but has exactly 1 test file — see Depth Beneath "Done" in the atlas.
+   **Candidate new idea, added to the atlas 2026-09-02, not yet in this ticket's scope:** idea 68,
+   Inter-Clan Relations (`docs/brainstorm/rpg_feature_atlas.html#idea-68`,
+   `docs/brainstorm/rpg_expected_schemas.html#schema-68`) — Clan-to-Clan relationship state reusing idea
+   37's race-relations pattern one layer up, and the missing external driver for `ClanState.tension_level`
+   (real field, M2's idea 36, but nothing outside a Clan currently pushes it). Distinct from idea 40's own
+   internal lifecycle scope (joining/leaving/succession) — a candidate for its own ticket once M2's idea 36
+   lands as real state, not part of idea 40's scope itself.
 7. **Idea 64 — The Empty Chair.** Confirmed genuinely unrelated to idea 40 (correctly not forced into a
    cluster) — the real remaining half after heir-assignment split off to M1's idea 10. No code precedent
    anywhere for the economic-vacancy signal it needs.

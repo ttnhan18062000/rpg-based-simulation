@@ -83,6 +83,14 @@ Trading with shops (Buildings) is governed by liquidity and stock availability.
 
 #### §4.1 Reputation Discount
 
+**Placement note, 2026-09-02 (Social/Relationship axis investigation):** this subsection reads a
+Social-domain field (`SocialComponent.public_reputation`), not an Economic one — it belongs in the future
+Social Mechanics Bible chapter (see
+`docs/plans/rpg_design_roadmap/rpg_social_narrative_mechanics_hardening_plan.md`), not here. Left in place
+rather than moved now, since that chapter doesn't exist yet as a real numbered doc and moving this content
+ahead of it would leave a dangling reference; relocate when that chapter is authored. The formula below
+remains verified accurate against real code either way — see its own conservation-law note.
+
 Entities with positive public reputation receive a proportional discount at all shops.
 
 **Formula:**
