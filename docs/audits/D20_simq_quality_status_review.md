@@ -28,6 +28,15 @@ a full working session spanning 11 tickets — see `current_state.md`'s "2026-08
 summary" for the complete list; this document summarizes and synthesizes, it does not duplicate
 the evidence trail.
 
+**Targeted correction, 2026-09-02** (not a full refresh — no new full-corpus run): a structural check,
+prompted by re-asking "is SimQ missing a pillar" against this session's Social/Relationship, Knowledge/
+Belief, Space (idea 66), and Time (temporal) axis investigations, found Finding 9 and its Candidate Item C
+below were stale — both cited tickets are actually done. Corrected in place. The same pillar-boundary check
+re-run against the 4 new axes found no new pillar gap (see Finding 9's own correction note for why). A full
+pillar-health/corpus re-run against everything M1/M2 shipped since 2026-08-06 remains genuinely due, but is
+deliberately deferred until core RPG implementation (M3-M9) settles further — recalibrating now would need
+redoing again once those milestones land.
+
 ---
 
 ## Executive Summary
@@ -194,7 +203,12 @@ silently mishandled the one scenario whose profile name differs from its world n
 the current source directly and confirmed via this refresh's own normal automated run (no
 workaround needed): the bug is fixed. No outstanding tooling issue in this path.
 
-### Finding 9 — COMBAT/PROGRESSION boundary and layer-lifecycle-trajectory gap identified, scoped (not yet implemented)
+### Finding 9 — COMBAT/PROGRESSION boundary and layer-lifecycle-trajectory gap identified, scoped, **implemented** (corrected 2026-09-02)
+
+**Correction, 2026-09-02** (SimQ architecture check): this finding previously ended "Not yet
+implemented." Both tickets it names are confirmed **done** — real events shipped, verified against real
+kernel runs, not just documentation. See `docs/simulation_quality/extension_points.md` item 12 for the
+current-state record; this entry is now the historical rationale, not an open item.
 
 A 2026-08-06 session discussion pushed on two structural questions: whether COMBAT and PROGRESSION
 need clearer scope separation ("combat also means strategy and build-up character," "progression
@@ -207,7 +221,7 @@ coherent. FACTION has a real gap — no trajectory-coherence rule paralleling WO
 `trauma_hazard_broken`. Region and world layers were re-checked and are already covered by WORLD's
 existing rules. Filed as `TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE` and
 `TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY`, rationale recorded in
-`TCK-20260806-SIMQ-LIFECYCLE-PILLAR-BOUNDARY-DOC`. Not yet implemented.
+`TCK-20260806-SIMQ-LIFECYCLE-PILLAR-BOUNDARY-DOC`. **Both shipped** (see correction above).
 
 ### Finding 10 — COMBAT event stream confirmed to include hazard damage misclassified as combat; whole-pipeline observability architecture question opened
 
@@ -376,7 +390,7 @@ correction note above.
 | A | Recalibrate WORLD pillar anchors against the spawn-occupancy signal | Yes — anchor staleness (Finding 1) | S | **High** — regression gate is untrustworthy for WORLD until done | Root cause fully diagnosed already; no further investigation needed before implementing |
 | B1 | Decide whether to reopen `ENABLE_ADVENTURE_ROUTING`'s DA-ruled default (ECONOMY Factor 1) | Real, but a policy question, not a bug | — | Low — no defect, a deliberate design boundary | Not a ticket unless the user wants to revisit the DA ruling; noted for completeness, not filed by default |
 | B2 | ~~Investigate whether `AdventureRouteScorer`'s craft/buy selection bias is a miscalibration~~ — **DONE 2026-08-05**, confirmed correct behavior, no fix (ECONOMY Factor 2) | Was real (Finding 2), now resolved as "working as intended" | — | — | `TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS`: blocker_penalty=2.0 correctly fires because entities never harvest/earn gold; root cause loops back to Factors 1/3, not this scorer |
-| C | Entity capability-trend + life-arc coherence signal (PROGRESSION), faction-trajectory signal (FACTION) | Yes — real gap (Finding 9) | M each | Medium — deepens diagnostic value, not a defect | **Filed 2026-08-06**: `TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE`, `TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY`, rationale in `TCK-20260806-SIMQ-LIFECYCLE-PILLAR-BOUNDARY-DOC` — the one exception to this section's "none filed yet" framing |
+| C | ~~Entity capability-trend + life-arc coherence signal (PROGRESSION), faction-trajectory signal (FACTION)~~ — **DONE**, shipped and verified | Was real (Finding 9), now resolved | — | — | `TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE`, `TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY` both confirmed done, real events shipped and kernel-verified (corrected 2026-09-02, see Finding 9) |
 
 **Not recommended right now:** reopening FACTION/INFORMATION/SOCIAL/AGENCY depth (all closed with
 real evidence under the SimQ roadmap's Phase 5 ruling), or any of SimQ's explicit MVP Non-Goals

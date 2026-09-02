@@ -8,13 +8,14 @@ tags: [content, architecture]
 
 # Plan — Idea 66: Region Contains Multiple Places (Region/Place Foundational Rebuild)
 
-**Status:** high-level plan, not yet ticketed. This document is the pre-ticket scoping layer for idea 66,
-promoted out of `rpg_m8_world_corpus_generation_epic.md`'s item 9 into its own document because M8's own
-scope explicitly says idea 66 "owns the world-schema migration and corpus-wide grade-anchor impact
-directly, rather than deferring that cost to this epic." Promote this into a real ticket (likely a small
-batch, given scale — schema migration, `WorldCompiler` wiring, and the two-stage pilot/recalibration are
-separable units of work) when M2/M8 ticketing next resumes; this doc is the scoping source for that pass,
-the same role M2's own epic doc played before its 15-ticket batch was created.
+**Status:** promoted to `TCK-20260902-EPIC-IDEA66-REGION-PLACE-REBUILD` (2026-09-02) as a scope-only
+epic. This document is the pre-ticket scoping layer for idea 66, originally promoted out of
+`rpg_m8_world_corpus_generation_epic.md`'s item 9 into its own document because M8's own scope
+explicitly says idea 66 "owns the world-schema migration and corpus-wide grade-anchor impact directly,
+rather than deferring that cost to this epic." Child tickets (schema migration, `WorldCompiler` wiring,
+two-stage pilot/recalibration — separable units of work, per the epic's own Scope section) are cut when
+the epic is picked up for action; this doc remains the scoping source for that pass, the same role M2's
+own epic doc played before its 15-ticket batch was created.
 
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` idea 66; `docs/brainstorm/rpg_expected_schemas.html`
 §"Region & Place" (`schema-66`, the most detailed schema section in that document);
@@ -69,6 +70,12 @@ kind sitting below City by scale), `maturity` (optional, CAMP/NEST-kind, reused 
 `hazard_level` (optional, RUIN/DUNGEON-kind local override — moves from a Region-level tag to a real
 field), `building_ids`/`entity_ids` (CITY-kind, today's `town_tiles`/`town_entities` equivalent, re-scoped
 to the Place instead of the whole Region).
+
+**Added 2026-09-02 (direction-alignment audit extension):** `prior_kind: Optional[PlaceKind]` and
+`transformed_tick: Optional[int]` — a single-hop transformation trail (what this Place used to be, and
+when), not a full history log. Serves Principle 5 ("places remember what happened to them") — a City
+destroyed into a Ruin should carry legible trace of what it used to be, not just its current kind. See
+`docs/brainstorm/rpg_expected_schemas.html#schema-66` for the field-table entry.
 
 **Settlement-size note:** there is no separate "Town" kind below City in this shape — settlement size
 (hamlet through metropolis) is the `scale` scalar on a single `CITY`-kind Place, not a taxonomy split. The

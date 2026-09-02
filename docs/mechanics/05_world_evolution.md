@@ -27,8 +27,13 @@ The simulation operates on a fixed-rate tick system. Every action and biological
 Regions are not static. They react to the violence and activity within their borders through the **Trauma Score**.
 
 ### The Trauma Cycle
-1.  **Event**: Every entity death in a region adds **+1.0** to the regional `Trauma Score`.
+1.  **Event**: Every entity death in a region adds **+1.0** to the regional `Trauma Score`
+    (`src/engine/world_dynamics.py:54-55`, confirmed 2026-09-02).
 2.  **Threshold**: If `Trauma Score > 50.0`, the region enters an unstable state.
+
+**Flagged, not yet resolved, 2026-09-02:** `src/engine/apply_plan.py:218` applies a separate `+2.0` trauma
+increment in a context this section's death-only narrative doesn't cover. Not confirmed wrong — just
+undocumented; needs its own follow-up check before this cycle description can be called complete.
 3.  **Hazard Scaling**: Unstable regions gain **+0.01** `Hazard Level` per world cycle.
 
 > For how per-entity Hazard Level drain is actually resolved against an entity standing in
@@ -41,14 +46,27 @@ Regions are not static. They react to the violence and activity within their bor
 Regions can be claimed and controlled by specific factions based on their active **Influence**.
 
 ### Influence Shifts
-Every death in a region shifts the balance of power:
-*   **Monster Death**: Increases Hero Influence by **+1.0**.
-*   **Hero Death**: Decreases Hero Influence by **-1.0** (shifts towards Monster Horde).
+
+**Corrected, 2026-09-02** (Bible-chapter check following the Social/Economic axis investigations): this
+section previously stated ±1.0 per death and ±100.0 ownership thresholds. Both were wrong, verified directly
+against `src/world/influence.py` — not a rounding difference, a 5x/2x discrepancy in a chapter re-verified
+as recently as 2026-09-01. This specific number was already independently confirmed correct elsewhere this
+session (the M2 epic doc's own idea-35 depth-audit), but that finding was never folded back into this
+chapter until now.
+
+Every death in a region shifts the balance of power by `DEATH_INFLUENCE_SHIFT = 5.0`
+(`src/world/influence.py:28`):
+*   **Monster Death**: Increases Hero Influence by **+5.0**.
+*   **Hero Death**: Decreases Hero Influence by **-5.0** (shifts towards Monster Horde).
 
 ### Ownership Thresholds
-A region is officially "Owned" when influence reaches significant levels:
-*   **Hero Controlled**: Influence ≥ **+100.0**.
-*   **Monster Controlled**: Influence ≤ **-100.0**.
+Conquest and liberation trigger at `CONQUEST_THRESHOLD = -50.0` / `LIBERATION_THRESHOLD = 50.0`
+(`influence.py:29-30`), not ±100.0:
+*   **Hero Controlled (Liberation)**: Influence ≥ **+50.0**.
+*   **Monster Controlled (Conquest)**: Influence ≤ **-50.0**.
+*   ±100.0 is only the influence value's clamp bound (`max(-100.0, min(100.0, ...))`,
+    `influence.py:59`), not itself a trigger — it caps how far influence can drift past the real
+    ±50.0 thresholds, it does not define a second, stricter ownership tier.
 
 **Impact of Ownership**: Faction-owned regions may provide safe zones for allies, trigger reinforcement spawns, or apply special economic modifiers to local trade.
 

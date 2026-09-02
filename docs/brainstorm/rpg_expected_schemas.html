@@ -593,9 +593,12 @@ nav.toc li.toc-sub a { padding-left: 1.4em; font-size: 13px; color: var(--ink-so
       <tr><td><code class="inline">occupant_entity_id</code></td><td><code class="inline">Optional[str]</code></td><td>LAIR-kind: anchors to a specific boss/creature</td><td><span class="badge done">Reused from today's real boss_region_id pattern</span></td></tr>
       <tr><td><code class="inline">hazard_level</code></td><td><code class="inline">Optional[float]</code></td><td>RUIN/DUNGEON-kind: local hazard override &mdash; already real in content (haunted_battlefield: 3.5) but currently stored as a Region-level tag</td><td><span class="badge partial">Moves from Region tag to Place field</span></td></tr>
       <tr><td><code class="inline">building_ids, entity_ids</code></td><td><code class="inline">List[str]</code></td><td>CITY-kind: today's town_tiles/town_entities equivalent, scoped to this Place, not the whole Region</td><td><span class="badge partial">Extended, re-scoped</span></td></tr>
+      <tr><td><code class="inline">prior_kind</code></td><td><code class="inline">Optional[PlaceKind]</code></td><td>What this Place used to be before its last transformation &mdash; a City destroyed into a Ruin should carry that it used to be a City, not just its current kind. Reuses idea 48's own <code class="inline">origin</code> field concept rather than inventing a second one</td><td><span class="badge gap">New, direction-alignment audit extension, 2026-09-02 &mdash; not yet built</span></td></tr>
+      <tr><td><code class="inline">transformed_tick</code></td><td><code class="inline">Optional[int]</code></td><td>When the last kind-transformation happened, pairing with <code class="inline">prior_kind</code> above so the trace is dated, not just present/absent</td><td><span class="badge gap">New, same extension</span></td></tr>
     </table>
   </div>
   <p class="loop-note"><strong>Open question:</strong> does membership work as <code class="inline">Region.places: List[str]</code> only, or does each entity/building also need a direct <code class="inline">place_id</code> field for fast lookup without a Region-side scan? The Durable State Rule (CLAUDE.md) argues for a registry index either way &mdash; worth deciding before idea 66 gets ticketed, not during implementation.</p>
+  <p class="loop-note"><strong>Principle 5 note, added 2026-09-02:</strong> <code class="inline">prior_kind</code>/<code class="inline">transformed_tick</code> above are a single-hop trail (what it was immediately before now), not a full history log &mdash; deliberately bounded, matching this document's own "lived-in without drowning in bookkeeping" convention (Principle 7) rather than an unbounded event list. A Place that transforms twice only remembers its immediately-prior kind, not its whole lineage.</p>
   <p class="loop-note"><strong>Gate boundary (2026-08-29 plan-owner decision): promoted, narrow gate.</strong> Idea 66 blocks only work whose authoritative state depends on Place identity or containment &mdash; M2's ideas 35 (City ownership) and 48 (place-type transitions), and M4's place-shaped branch (ideas 44-47, 61). It is not a whole-milestone gate: M2's ideas 36, 37, and 43 (population seeding) are explicitly unblocked by it, and M4's material/expansion (49-52) and institution (40, 41, 64) branches apply the gate only where an outcome authoritatively uses Place identity/containment, at ticket scope. See <code class="inline">docs/plans/rpg_design_roadmap/rpg_design_roadmap.md</code>.</p>
 </section>
 
@@ -618,6 +621,39 @@ nav.toc li.toc-sub a { padding-left: 1.4em; font-size: 13px; color: var(--ink-so
     </table>
   </div>
   <p class="loop-note"><strong>Open question:</strong> is clan membership tracked only from ClanState's side (<code class="inline">member_entity_ids</code>), or does <code class="inline">EntityState.identity</code> also need a <code class="inline">clan_id</code> field for O(1) lookup? Group/Party already faces this exact tradeoff &mdash; check how it resolved it before deciding here, per Architecture Rule ("shared world behavior should go through systems/registries, not scattered local hacks").</p>
+</section>
+
+<section id="schema-68">
+  <h2 class="section-title">Inter-Clan Relations</h2>
+  <p class="section-lede">Idea 68, added 2026-09-02 &mdash; reuses <a href="#schema-37">Race Relations (idea 37)</a>'s corrected shape one layer up, now that both <code class="inline">ClanState</code> (idea 36) and <code class="inline">race_relations.yaml</code> (idea 37) are real, shipped state.</p>
+  <h3 class="layer-title">ClanRelationRecord <span class="layer-scope">new, static/durable content</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">id</code></td><td><code class="inline">str</code></td><td>Unique record identifier</td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">source_clan_id, target_clan_id</code></td><td><code class="inline">str</code></td><td>Directed pair, identical convention to <code class="inline">RaceRelationRecord</code></td><td><span class="badge gated">New</span></td></tr>
+      <tr><td><code class="inline">relationship_model</code></td><td><code class="inline">str</code></td><td>e.g. <code class="inline">"rivalry"</code>, <code class="inline">"alliance"</code>, <code class="inline">"blood_feud"</code> &mdash; open vocabulary, mirrors <code class="inline">faction_relationships.yaml</code>'s real convention</td><td><span class="badge gap">Open question: exact label vocabulary</span></td></tr>
+      <tr><td><code class="inline">axes</code></td><td><code class="inline">{tension: str (qualitative)}</code></td><td>Qualitative, not a raw float &mdash; same correction already applied to idea 37, applied here from the start rather than discovered later</td><td><span class="badge gated">New</span></td></tr>
+    </table>
+  </div>
+  <p class="loop-note"><strong>Consumer, not yet built:</strong> intended to be the missing external driver for <code class="inline">ClanState.tension_level</code> (see the Clan schema above) &mdash; today that field can only be set directly, nothing reads a Clan-to-Clan relationship to push it. <strong>Open scoping question:</strong> full pairwise coverage may be feasible here (Clans are expected far fewer in number than the 13-race roster that made idea 37 settle for 18% disclosed coverage), but this isn't confirmed against any real corpus world's actual Clan count yet.</p>
+</section>
+
+<section id="schema-67">
+  <h2 class="section-title">Living Relationship Decay</h2>
+  <p class="section-lede">Idea 67, added 2026-09-02 &mdash; a decay rule on top of <a href="#schema-22">SocialBond</a>'s existing fields, not a new state class. Corrects the direction-alignment audit's own original guess that this would depend on idea 37's schema; it doesn't &mdash; the real target is <code class="inline">SocialComponent</code>/<code class="inline">SocialBond</code>, confirmed directly this session.</p>
+  <h3 class="layer-title">SocialBond / SocialComponent <span class="layer-scope">existing, reused</span></h3>
+
+  <div class="idea-index">
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Description</th><th>Status</th></tr>
+      <tr><td><code class="inline">SocialBond.last_interaction_tick</code></td><td><code class="inline">int</code></td><td>Already real (<code class="inline">src/core/models/social.py</code>) &mdash; the exact anchor a "time since last interaction" decay rule needs, already present, not something to add</td><td><span class="badge done">Reused as-is, real precedent</span></td></tr>
+      <tr><td><code class="inline">SocialComponent.trust_history, grudge_history</code></td><td><code class="inline">(shape not independently re-confirmed this pass)</code></td><td>The real decay targets &mdash; confirmed to exist and have zero passive-decay logic today (<code class="inline">RelationshipService.process_update()</code>), but this document does not re-verify their exact per-partner storage shape; check directly before scoping the actual decay-rate ticket</td><td><span class="badge partial">Reused target, shape needs re-confirming at ticket time</span></td></tr>
+      <tr><td><code class="inline">decay_rate</code></td><td><code class="inline">float</code></td><td>How fast an untouched bond drifts toward neutral per elapsed interval &mdash; no existing precedent anywhere, genuinely new creative/balance territory</td><td><span class="badge gap">New, free creative territory &mdash; same caution as idea 32's <code class="inline">birth_cooldown_ticks</code></span></td></tr>
+    </table>
+  </div>
+  <p class="loop-note"><strong>Sequencing note:</strong> lands most cleanly alongside hardening backlog item 1's planned Mechanics Bible chapter for <code class="inline">SocialComponent</code> (<code class="inline">docs/plans/rpg_design_roadmap/rpg_social_narrative_mechanics_hardening_plan.md</code>) &mdash; that chapter is the natural place to document this decay rule's contract once it exists, rather than adding a second undocumented behavior to an already-undocumented component.</p>
 </section>
 
 <section id="schema-37">
