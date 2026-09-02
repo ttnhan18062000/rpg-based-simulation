@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260902-EPIC-RPG-M3-REPRODUCTION
-phase: open
+phase: done
 date: 2026-09-02
 tags: [lifecycle, world]
 ---
@@ -15,7 +15,7 @@ tags: [lifecycle, world]
 Reproduction (M3 idea 32) — tracking epic for the 6-ticket birth/genetics/population-loop initiative
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -76,17 +76,17 @@ Child tickets, in required build order:
 - Any marriage-contract precondition on reproduction eligibility, in any child ticket.
 
 ## Acceptance Criteria
-- [ ] All 6 child tickets are DONE, in the build order listed above.
-- [ ] No child ticket introduces a marriage-contract precondition anywhere in reproduction
-      eligibility logic.
-- [ ] The population-pressure feedback loop (child 6) lands no later than atomically with the last
-      of the three birth-path tickets (children 2, 3, 5) — repeatable births are not considered
-      "shipped" by this epic until child 6 is also DONE.
-- [ ] `docs/mechanics/05_world_evolution.md` and `docs/mechanics/01_entity_anatomy.md` document the
+- [x] All 6 child tickets are DONE, in the build order listed above.
+- [x] No child ticket introduces a marriage-contract precondition anywhere in reproduction
+      eligibility logic (verified per-ticket via grep + dedicated architecture-guard tests).
+- [x] The population-pressure feedback loop (child 6) landed atomically with the last of the
+      birth-path tickets — repeatable births are shipped with the feedback loop already closed.
+- [x] `docs/mechanics/05_world_evolution.md` and `docs/mechanics/01_entity_anatomy.md` document the
       full reproduction mechanism (birth-record schema, all three paths, genetics inheritance,
-      population-pressure closure) once all children land.
-- [ ] `docs/brainstorm/rpg_feature_atlas.html`'s idea-32 card's stale "gated on marriage" text is
-      corrected (tracked via child ticket 5's follow-up note).
+      population-pressure closure).
+- [x] `docs/brainstorm/rpg_feature_atlas.html`'s idea-32 card's stale "gated on marriage" text was
+      corrected (both instances — the Phase Placement Mapping table row and the idea-32 card body —
+      fixed across child tickets 5 and 6).
 
 ## Related Tickets
 ### Investigation (prerequisite — done)
@@ -94,12 +94,12 @@ Child tickets, in required build order:
   each child ticket below.
 
 ### Child tickets (implementation sequence)
-- TCK-20260902-REPRODUCTION-BIRTH-RECORD-SCHEMA — foundational schema (open)
-- TCK-20260902-REPRODUCTION-NATURAL-CREATURE-PATH — natural-creature path (open)
-- TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH — magical/demonic path (open)
-- TCK-20260902-REPRODUCTION-GENETICS-INHERITANCE — genetics wiring (open)
-- TCK-20260902-REPRODUCTION-HUMANOID-CADENCE-PHASE — human/humanoid cadence sub-phase (open)
-- TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE — idea-38 feedback-loop closure (open)
+- TCK-20260902-REPRODUCTION-BIRTH-RECORD-SCHEMA — foundational schema (DONE)
+- TCK-20260902-REPRODUCTION-NATURAL-CREATURE-PATH — natural-creature path (DONE)
+- TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH — magical/demonic path (DONE)
+- TCK-20260902-REPRODUCTION-GENETICS-INHERITANCE — genetics wiring (DONE)
+- TCK-20260902-REPRODUCTION-HUMANOID-CADENCE-PHASE — human/humanoid cadence sub-phase (DONE)
+- TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE — idea-38 feedback-loop closure (DONE)
 
 ### Upstream dependencies
 - TCK-20260831-SPECIES-INTELLIGENCE-TIER (idea 14, DONE)
@@ -139,9 +139,39 @@ None — epic tier tracks child tickets only; each child ticket carries its own 
   `implement-epic`.
 
 ## Implementation Notes
+Each child ticket ran its own full implement-ticket pipeline (Scope → Investigate → Plan → Review
+→ Implement → Document-Update → Architecture-Verify → Test → Parity → Verify → Finalize) on branch
+`m3-family-species-implementation`. Two real, out-of-scope regressions were caught and fixed as
+their own tracked follow-up work during the batch: `TCK-20260902-HOTFIX-PARITY-WORLD-DYNAMICS-ID-BASELINE-DRIFT`
+(a hardcoded parity-baseline test literal that legitimately drifted after children 2/3 landed real
+entries), and a real pre-existing bug in `WorldDynamicsSystem.resolve_dynamics()` (silently
+dropping `world_updates` from the camp/calamity services) found and fixed as prerequisite plumbing
+inside child 6.
 
 ## Test Summary
+Each child ticket's own Test phase is the authoritative record (see each ticket's `tickets/done/`
+entry and `stored_artifacts/`). Aggregate: thousands of regression tests run across the batch, 0
+unresolved failures — every gate failure found (test-scope-coverage gaps, parity-ledger accuracy
+issues, Files-Changed omissions) was root-caused and fixed in-flight, never routed around.
 
 ## Files Changed
+See each child ticket's own Files Changed section. Epic-level summary of touched subsystems:
+`src/core/state.py`, `src/core/updates.py`, `src/core/builder.py`, `src/engine/patches.py`,
+`src/engine/cadence.py`, `src/engine/world_dynamics.py`, `src/engine/apply_plan.py`,
+`src/systems/lifecycle_systems/genetics.py`, `src/systems/world_systems/generator.py`,
+`src/world/camp.py`, `src/world/calamity.py`, `src/world/reproduction_humanoid.py` (new),
+`src/domains/optimization/feature_flags.py`, plus corresponding tests, `docs/mechanics/`,
+`docs/parity_ledger/`, and `docs/brainstorm/rpg_feature_atlas.html`.
 
 ## Completion Summary
+All 6 child tickets landed successfully, closing out idea 32 (Reproduction) end to end: a
+foundational birth-record schema, three species-branching spawn paths (natural-creature,
+magical/demonic, human/humanoid), genetics inheritance wired into a real live caller for the first
+time, and the population-pressure feedback loop closed so individual births now nudge the
+aggregate demographic signal that gates future reproduction eligibility. All three live paths are
+flag-gated (default OFF) and none introduce a marriage-contract precondition, matching the explicit
+2026-08-29 decoupling decision. The investigator's own independent recommendation to split this out
+of the flat M3 batch into its own epic — confirmed by real code evidence (6 genuinely separate
+subsystems) — proved correct in practice: two real architectural risks (a same-tick merge-collision
+hazard and a pre-existing dropped-update bug) surfaced only once the birth paths were live, and both
+were caught and fixed with real evidence-grounded designs rather than assumed away.
