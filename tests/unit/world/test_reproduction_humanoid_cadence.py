@@ -96,7 +96,9 @@ def test_no_marriage_contract_referenced_in_humanoid_reproduction_path():
     assert offspring[0].strategic.contracts == {}
 
 
-def test_no_population_cohorts_write_in_humanoid_reproduction_path():
+def test_no_population_cohorts_write_when_birth_region_unresolved():
+    """When SpatialQueryService.get_region_at() resolves no region (no regions declared
+    in state), there is no region to attribute the nudge to -- skipped, not defaulted."""
     parent_a = _adult(1, pos=(5.0, 5.0))
     parent_b = _adult(2, pos=(5.0, 5.0))
     state = AuthoritativeState(tick=200, seed=42, entities={1: parent_a, 2: parent_b})
@@ -105,6 +107,24 @@ def test_no_population_cohorts_write_in_humanoid_reproduction_path():
     update = HumanoidReproductionService.process_reproduction(state, generator)
 
     assert update.world_updates == {}
+
+
+def test_humanoid_birth_nudges_young_cohort_by_one():
+    """TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE (AC#1/AC#2): a successful
+    humanoid birth nudges the birth region's population_young_births_delta by exactly +1,
+    additive-only -- never a population_cohorts_set resync."""
+    region = _region()
+    parent_a = _adult(1, pos=(5.0, 5.0))
+    parent_b = _adult(2, pos=(5.0, 5.0))
+    state = AuthoritativeState(
+        tick=200, seed=42, entities={1: parent_a, 2: parent_b}, regions={"town": region},
+    )
+    generator = _generator_for(state)
+
+    update = HumanoidReproductionService.process_reproduction(state, generator)
+
+    assert update.world_updates["town"].population_young_births_delta == 1
+    assert update.world_updates["town"].population_cohorts_set is None
 
 
 def test_social_bond_seeded_between_each_parent_and_child_at_high_familiarity_sentiment():

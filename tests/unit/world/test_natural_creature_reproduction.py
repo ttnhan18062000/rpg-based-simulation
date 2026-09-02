@@ -137,7 +137,10 @@ def test_spawn_eligibility_allowed_when_region_has_no_population_cohorts():
     assert len(_natural_creature_offspring(update.entities_add)) == 1
 
 
-def test_natural_creature_reproduction_does_not_write_population_cohorts():
+def test_natural_creature_birth_nudges_young_cohort_by_one():
+    """TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE (AC#1/AC#2): a successful
+    natural-creature birth nudges the birth region's population_young_births_delta by
+    exactly +1, additive-only -- never a population_cohorts_set resync."""
     state = AuthoritativeState(
         tick=60, seed=42,
         regions={"forest": _region()},
@@ -148,7 +151,84 @@ def test_natural_creature_reproduction_does_not_write_population_cohorts():
 
     update = CampService.process_camps(state, generator)
 
-    assert update.world_updates == {}
+    assert update.world_updates["forest"].population_young_births_delta == 1
+    assert update.world_updates["forest"].population_cohorts_set is None
+
+
+def test_two_simultaneous_births_same_region_same_call_both_nudge():
+    """AC#2: two eligible camps in the same region, same process_camps() call -- the
+    second camp's nudge must merge with (not overwrite) the first's."""
+    region = _region()
+    camp_a = _camp(camp_id="camp_a", position=(10.0, 10.0))
+    camp_b = _camp(camp_id="camp_b", position=(90.0, 90.0))
+    state = AuthoritativeState(
+        tick=60, seed=42,
+        regions={"forest": region},
+        camps={"camp_a": camp_a, "camp_b": camp_b},
+        feature_flags={"ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH": "ON"},
+    )
+    generator = EntityGenerator(seed=42)
+
+    update = CampService.process_camps(state, generator)
+
+    assert len(_natural_creature_offspring(update.entities_add)) == 2
+    assert update.world_updates["forest"].population_young_births_delta == 2
+
+
+def test_birth_nudge_does_not_recompute_other_brackets():
+    """AC#2: the nudge only increments the young bracket's count -- adult/elder brackets
+    (and young's own birth_rate/mortality_rate/migration_threshold) are left untouched,
+    proving this is additive layering, not a full population_cohorts recompute."""
+    from src.engine.apply import ApplyPath
+
+    young = PopulationCohort(bracket="young", count=5, birth_rate=0.03, migration_threshold=0.9)
+    adult = PopulationCohort(bracket="adult", count=20)
+    elder = PopulationCohort(bracket="elder", count=3)
+    region = _region(cohorts={"young": young, "adult": adult, "elder": elder})
+    full = _node(1, (50.0, 50.0), remaining_charges=5, max_charges=5)
+    state = AuthoritativeState(
+        tick=60, seed=42,
+        regions={"forest": region},
+        camps={"camp_1": _camp()},
+        resource_nodes={1: full},
+        feature_flags={"ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH": "ON"},
+    )
+    generator = EntityGenerator(seed=42)
+
+    update = CampService.process_camps(state, generator)
+    next_state = ApplyPath.apply_partial(state, update)
+
+    cohorts = next_state.regions["forest"].population_cohorts
+    assert cohorts["young"].count == 6
+    assert cohorts["young"].birth_rate == 0.03
+    assert cohorts["young"].migration_threshold == 0.9
+    assert cohorts["adult"] == adult
+    assert cohorts["elder"] == elder
+
+
+def test_birth_in_region_missing_young_cohort():
+    """Risk #3: a region with population_cohorts == {} (or missing the young bracket
+    specifically) legitimately materializes a fresh young bracket on its first birth,
+    with dataclass defaults, rather than silently dropping the signal."""
+    from src.engine.apply import ApplyPath
+
+    region = _region(cohorts={})
+    state = AuthoritativeState(
+        tick=60, seed=42,
+        regions={"forest": region},
+        camps={"camp_1": _camp()},
+        feature_flags={"ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH": "ON"},
+    )
+    generator = EntityGenerator(seed=42)
+
+    update = CampService.process_camps(state, generator)
+    next_state = ApplyPath.apply_partial(state, update)
+
+    young = next_state.regions["forest"].population_cohorts["young"]
+    assert young.count == 1
+    assert young.birth_rate == 0.02
+    assert young.mortality_rate == 0.01
+    assert young.migration_threshold == 0.7
 
 
 def test_natural_creature_reproduction_does_not_reference_genetics():
@@ -198,3 +278,25 @@ def test_natural_creature_and_magical_demonic_paths_never_attach_genetic_profile
         (10.0, 20.0), state=state, difficulty_tier=4, birth_tick=60,
     )
     assert magical_demonic.lifecycle.genetic_profile is None
+
+
+def test_reproduction_paths_never_mutate_region_directly():
+    """Architecture guard: all three reproduction paths are decision logic -- they must
+    only build typed WorldUpdate objects (population_young_births_delta), never a direct
+    attribute assignment onto a RegionState/region.population_cohorts object. The only
+    legal place a durable population_cohorts change is committed is apply_plan.py."""
+    from src.world import camp as camp_module
+    from src.world import calamity as calamity_module
+    from src.world import reproduction_humanoid as repro_module
+
+    forbidden = ("object.__setattr__(region", "object.__setattr__(reg", "replace(region", "replace(reg,")
+    sources = (
+        inspect.getsource(camp_module.CampService.process_camps),
+        inspect.getsource(calamity_module.CalamityService.process_world_dynamics),
+        inspect.getsource(repro_module.HumanoidReproductionService.process_reproduction),
+    )
+    for source in sources:
+        for pattern in forbidden:
+            assert pattern not in source
+        assert "population_cohorts =" not in source
+        assert "population_cohorts[" not in source

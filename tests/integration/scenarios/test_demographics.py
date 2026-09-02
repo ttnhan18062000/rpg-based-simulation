@@ -289,6 +289,80 @@ def test_high_population_region_higher_resource_demand():
 
 
 # ---------------------------------------------------------------------------
+# TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: real births close the loop (AC#4)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.slow
+def test_population_pressure_region_responds_to_real_births():
+    """
+    AC#4: a region receiving real individual births via the Reproduction epic's humanoid
+    path (chosen over natural-creature/magical-demonic because it operates on real entity
+    pairs rather than a per-camp/per-calamity spawn anchor, per investigation.md) shows its
+    aggregate population_cohorts count increase and RegionalPressureModel's resource
+    pressure respond accordingly -- driven end-to-end through the real authoritative apply
+    path (WorldDynamicsSystem.resolve_dynamics() + ApplyPath.apply_generation()), never a
+    hand-constructed WorldUpdate.
+
+    Uses a 1x1-unit region (mirroring test_repeated_births_increase_population_density_signal's
+    fixture-scale rationale): a single +1 nudge is only assertable at a small enough area.
+    """
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import EntityRole
+    from src.core.updates import StateUpdate
+    from src.domains.world_emergence.schema import WorldEventAggregate, WorldEventCategory
+    from src.engine.apply import ApplyPath
+    from src.engine.cadence import SystemCadence
+    from src.engine.world_dynamics import WorldDynamicsSystem
+    from src.systems.world_systems.generator import EntityGenerator
+    from src.world.reproduction_humanoid import HumanoidReproductionService
+
+    region = _make_region("tiny_town", cohorts={}, bounds_=(0, 0, 1, 1))
+    parent_a = (V2EntityBuilder(1).kind("villager").location(0.5, 0.5).identity(role=EntityRole.CITIZEN).build())
+    parent_b = (V2EntityBuilder(2).kind("villager").location(0.5, 0.5).identity(role=EntityRole.CITIZEN).build())
+
+    state = AuthoritativeState(
+        tick=200, seed=42,
+        regions={"tiny_town": region},
+        entities={1: parent_a, 2: parent_b},
+        feature_flags={"ENABLE_REPRODUCTION_HUMANOID_PATH": "ON"},
+    )
+    generator = EntityGenerator(seed=42)
+    generator._last_id = state.next_entity_id - 1
+    cadence = SystemCadence(world_dynamics=1, reproduction_humanoid=1)
+
+    update = WorldDynamicsSystem.resolve_dynamics(state, StateUpdate(), generator, cadence)
+    next_state = ApplyPath.apply_generation(state, update, 201, 201, cadence=cadence)
+
+    # cadence=1 also fires SpawnService's ordinary monster replenishment in the same call,
+    # so filter to the tracked-parent offspring the humanoid path actually produces rather
+    # than "any new entity" -- an untracked garrison spawn must not make this test pass.
+    children = [e for e in next_state.entities.values() if e.lifecycle.parent_a_entity_id == 1]
+    assert len(children) == 1, "the humanoid path must actually produce a birth for this test to be meaningful"
+    assert next_state.regions["tiny_town"].population_cohorts["young"].count == 1
+
+    aggregates = (
+        WorldEventAggregate(
+            region_id="tiny_town", category=WorldEventCategory.RESOURCE_HARVESTED,
+            subject="wood", count=1, severity_sum=0.0, first_tick=1, last_tick=200,
+        ),
+    )
+    baseline_pressures = RegionalPressureModel.evaluate(state, aggregates)
+    post_birth_pressures = RegionalPressureModel.evaluate(next_state, aggregates)
+
+    baseline_resource = next(
+        p for p in baseline_pressures if p.region_id == "tiny_town" and p.pressure_kind == "resource"
+    )
+    post_birth_resource = next(
+        p for p in post_birth_pressures if p.region_id == "tiny_town" and p.pressure_kind == "resource"
+    )
+
+    assert post_birth_resource.intensity > baseline_resource.intensity, (
+        f"post-birth resource intensity ({post_birth_resource.intensity:.4f}) must exceed "
+        f"baseline ({baseline_resource.intensity:.4f})"
+    )
+
+
+# ---------------------------------------------------------------------------
 # TCK-20260831-POPULATION-COHORT-SEEDING: guard fires against compiler-produced state
 # ---------------------------------------------------------------------------
 

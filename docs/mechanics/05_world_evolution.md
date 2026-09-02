@@ -228,6 +228,44 @@ This closes the demographic feedback loop: population growth → density increas
 **Source:** `src/domains/demographics/cohort.py`, `src/domains/world_emergence/models.py`
 **Contract:** `docs/world/demographics_contract.md`
 
+### Individual-Birth Population-Pressure Nudge (idea 38, TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE)
+
+`DemographicCycleService.process_demographics()`'s own aggregate birth/death cycle above runs only
+every `COHORT_INTERVAL` (200) ticks. Between cycles, individual births produced by the Reproduction
+epic's per-entity paths (§6) did not move the aggregate `population_cohorts` count at all — a region
+flagged low-population by the pressure gate could stay flagged indefinitely regardless of real
+per-entity births. This nudge closes that gap with a deliberately **coarse, additive-only** fix, per
+the idea-38 atlas card's revision-25 decision: on a successful individual birth, the birth region's
+`population_cohorts["young"].count` is incremented by exactly `+1` — **never a full resync/recount**
+against actual named entities. The aggregate cohort stays a background abstraction, not a real
+census; the named-entity layer and the aggregate cohort layer remain intentionally decoupled.
+
+**Mechanism:** a new, genuinely additive field on the typed `WorldUpdate`,
+`population_young_births_delta: int = 0`, distinct from `population_cohorts_set` (the existing
+whole-dict-replace field used by the 200-tick cycle and by migration). `WorldUpdate.merge()` sums
+`population_young_births_delta` across every `WorldUpdate` merged in a call — so two births landing
+on the same region in the same tick correctly accumulate to `+2`, not a last-write-wins clobber. The
+authoritative apply path (`src/engine/apply_plan.py`) resolves `population_cohorts_set` first (the
+whole-dict base, whichever of a same-tick `DemographicCycleService` rebuild or the prior region
+state it is), then layers the nudge's delta on top of the `young` bracket — so a same-tick collision
+between the aggregate cycle's own rebuild and a reproduction path's nudge can never clobber either
+signal. If the region has no `young` bracket seeded yet (a region can legitimately have
+`population_cohorts == {}` — zero declared population seeds nothing, per
+`TCK-20260831-POPULATION-COHORT-SEEDING`), a fresh `PopulationCohort(bracket="young",
+count=<delta>)` is materialized with dataclass defaults (`birth_rate=0.02`, `mortality_rate=0.01`,
+`migration_threshold=0.7`) rather than the birth's signal being silently dropped — mirroring
+`src/worldbuilding/compiler.py`'s own `_seed_population_cohorts()`, whose docstring states seeded
+cohorts likewise "leave birth_rate/mortality_rate at their PopulationCohort dataclass defaults."
+
+**Participating paths:** the Natural-Creature and Humanoid reproduction paths (§6) each set the
+nudge inside their own already-flag-gated branch, on every successful birth. The Magical/Demonic
+path is deliberately **excluded** — see its own subsection in §6 for the confirmed rationale
+(`WORLD-121`: a calamity-driven spawn is a world-threat escalation event, not a settlement/camp
+demographic signal, and this path already never *reads* the population-pressure signal either).
+
+**Source:** `src/core/updates.py` (`WorldUpdate.population_young_births_delta`),
+`src/engine/apply_plan.py`, `src/world/camp.py`, `src/world/reproduction_humanoid.py`
+
 ---
 
 ## 6. Calamities & World Threats
@@ -297,9 +335,9 @@ guaranteed to have `population_cohorts` seeded, this gate mirrors the Migration 
 skip-when-empty convention (`_check_migration`/`DemographicCycleService.process_demographics`, both
 skip evaluation entirely when `region.population_cohorts` is empty): a camp in a region with no
 cohort data, or no region at all, is treated as eligible (not suppressed) rather than assumed worst
-case. This path only *reads* `compute_regional_scarcity()`/`migration_threshold` — it never writes
-`population_cohorts_set` (the population-pressure feedback-loop closure is a separate, later
-mechanic).
+case. On a successful birth, this path also nudges the birth region's `young`-bracket count by `+1`
+via `WorldUpdate.population_young_births_delta` — see "Individual-Birth Population-Pressure Nudge"
+below (`TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE`).
 
 ### Magical/Demonic Reproduction (TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH)
 
@@ -332,8 +370,13 @@ an open question.
 **not** read `compute_regional_scarcity()`/`migration_threshold`/`PopulationCohort` at all, and does
 not participate in §5's Migration Law in any way. A calamity-driven spawn is a world-threat
 escalation event, not a settlement/camp demographic signal — the existing world-boss branch this
-path sits beside has never had a population-pressure gate either. This path writes no
-`population_cohorts_set` under any circumstance.
+path sits beside has never had a population-pressure gate either. **This path is also deliberately
+excluded from the individual-birth population-pressure nudge** (see "Individual-Birth
+Population-Pressure Nudge" below) — `TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE`
+evaluated this exclusion explicitly (confirmed, not an oversight): since this path never *reads*
+the population-pressure signal either, symmetry with its own rationale above argues it should not
+*write* to that signal. This path writes neither `population_cohorts_set` nor
+`population_young_births_delta` under any circumstance.
 
 ### Humanoid Reproduction (TCK-20260902-REPRODUCTION-HUMANOID-CADENCE-PHASE)
 
@@ -396,10 +439,9 @@ Reproduction (idea 32), this eligibility path never reads or checks any marriage
 (`ContractKind.MARRIAGE`/`MarriageState`) — verified by an architecture-guard test
 (`tests/unit/world/test_reproduction_humanoid_cadence.py`).
 
-**Does not yet close the population-pressure feedback loop:** this path only *reads*
-`compute_regional_scarcity()`/`migration_threshold` — it never writes `population_cohorts_set`.
-Individual births from this path do not yet feed back into the aggregate `population_cohorts`
-signal; that closure is a separate, later mechanic
+**Closes the population-pressure feedback loop:** on a successful pairing, this path also nudges
+the birth region's `young`-bracket count by `+1` via `WorldUpdate.population_young_births_delta` —
+see "Individual-Birth Population-Pressure Nudge" below
 (`TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE`).
 
 ---

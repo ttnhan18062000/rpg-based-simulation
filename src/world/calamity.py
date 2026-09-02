@@ -58,6 +58,12 @@ class CalamityService:
                 )
 
                 # 3. Magical/Demonic Reproduction (additive, same trigger/target_region as the boss spawn)
+                # TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: deliberately excluded from
+                # the population_young_births_delta nudge. Confirmed exclusion, not an oversight —
+                # per WORLD-121, this path never reads compute_regional_scarcity()/
+                # migration_threshold/PopulationCohort either ("a calamity-driven spawn is a
+                # world-threat escalation event, not a settlement/camp demographic signal"), so by
+                # symmetry it should not write to that signal.
                 if flags.get("ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH", "OFF") == "ON":
                     magical_demonic_entity = generator.spawn_magical_demonic_entity(
                         state=state,

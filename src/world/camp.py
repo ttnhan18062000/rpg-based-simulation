@@ -2,7 +2,7 @@
 # src/world/camp.py
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List
-from src.core.updates import StateUpdate, CampUpdate
+from src.core.updates import StateUpdate, CampUpdate, WorldUpdate
 from src.core.enums import Domain, EntityRole
 
 if TYPE_CHECKING:
@@ -25,6 +25,7 @@ class CampService:
         """
         camp_updates: Dict[str, CampUpdate] = {}
         entities_add = []
+        world_updates: Dict[str, WorldUpdate] = {}
         flags = getattr(state, "feature_flags", None) or {}
 
         # 1. Maturity Evolution
@@ -102,8 +103,18 @@ class CampService:
                             birth_tick=state.tick,
                         )
                         entities_add.append(offspring)
+                        if region is not None:
+                            # TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: coarse +1
+                            # nudge, additive across camps in this call — must merge, not
+                            # overwrite, or a second eligible camp in the same region on the
+                            # same tick would silently drop the first camp's nudge.
+                            nudge = WorldUpdate(region_id=region.id, population_young_births_delta=1)
+                            if region.id in world_updates:
+                                world_updates[region.id] = world_updates[region.id].merge(nudge)
+                            else:
+                                world_updates[region.id] = nudge
 
-        return StateUpdate(camp_updates=camp_updates, entities_add=entities_add)
+        return StateUpdate(camp_updates=camp_updates, entities_add=entities_add, world_updates=world_updates)
 
     @staticmethod
     def resolve_camp_clearing(state: AuthoritativeState, camp_id: str) -> StateUpdate:

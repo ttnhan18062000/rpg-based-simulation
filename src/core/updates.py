@@ -825,6 +825,9 @@ class WorldUpdate:
     price_modifiers_set: Optional[Dict[str, float]] = None
     # E52A: Per-region demographic cohort state (Dict[bracket, PopulationCohort])
     population_cohorts_set: Optional[Dict[str, Any]] = None
+    # TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: coarse, additive-only nudge
+    # applied on top of population_cohorts_set (never a resync) — see apply_plan.py.
+    population_young_births_delta: int = 0
     # E53Cb: Siege mechanics
     service_availability_delta: float = 0.0
     siege_state_set: Optional[Any] = None   # Optional[SiegeState] — Any to avoid circular import
@@ -852,6 +855,7 @@ class WorldUpdate:
             modifiers_remove=list(set(self.modifiers_remove + other.modifiers_remove)),
             price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set,
             population_cohorts_set=other.population_cohorts_set if other.population_cohorts_set is not None else self.population_cohorts_set,
+            population_young_births_delta=self.population_young_births_delta + other.population_young_births_delta,
             service_availability_delta=self.service_availability_delta + other.service_availability_delta,
             siege_state_set=other.siege_state_set if other.siege_state_set is not None else self.siege_state_set,
             siege_state_clear=self.siege_state_clear or other.siege_state_clear,

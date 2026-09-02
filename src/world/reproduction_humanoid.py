@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Set
 
 from src.core.state import LifeStage
-from src.core.updates import StateUpdate, EntityUpdate, LifecycleUpdate
+from src.core.updates import StateUpdate, EntityUpdate, LifecycleUpdate, WorldUpdate
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -92,12 +92,17 @@ class HumanoidReproductionService:
             )
 
             expiry = state.tick + HumanoidReproductionService.REPRODUCTION_COOLDOWN_TICKS
+            # TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: coarse +1 nudge; no local
+            # accumulation needed since result.merge(pair_update) below already sums
+            # population_young_births_delta additively across pairs via WorldUpdate.merge().
+            world_updates = {region.id: WorldUpdate(region_id=region.id, population_young_births_delta=1)} if region is not None else {}
             pair_update = StateUpdate(
                 entities_add=[child],
                 entity_updates={
                     a.id: EntityUpdate(entity_id=a.id, lifecycle=LifecycleUpdate(reproduction_cooldowns_add={b.id: expiry})),
                     b.id: EntityUpdate(entity_id=b.id, lifecycle=LifecycleUpdate(reproduction_cooldowns_add={a.id: expiry})),
                 },
+                world_updates=world_updates,
             )
             bond_update = StateUpdate(
                 entity_updates={

@@ -95,14 +95,19 @@ def test_magical_demonic_reproduction_does_not_reference_genetics():
         assert "Genetics" not in source
 
 
-def test_magical_demonic_reproduction_does_not_write_population_cohorts():
-    """Decision 1: purely calamity-intensity-driven, no population-pressure gate and no
-    population_cohorts_set write."""
+def test_magical_demonic_birth_nudge_decision():
+    """TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: confirmed exclusion, not an
+    oversight -- per WORLD-121, this path never reads compute_regional_scarcity()/
+    migration_threshold/PopulationCohort either ("a calamity-driven spawn is a world-threat
+    escalation event, not a settlement/camp demographic signal"), so by symmetry it does not
+    write population_young_births_delta/population_cohorts_set either, even on a successful
+    spawn. This is a hard regression gate, not an absence of coverage."""
     state = _trigger_state(feature_flags={"ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH": "ON"})
     generator = EntityGenerator(seed=42)
 
     update = CalamityService.process_world_dynamics(state, generator)
 
+    assert _magical_demonic_entities(update.entities_add)
     assert update.world_updates == {}
 
 
