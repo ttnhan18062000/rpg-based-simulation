@@ -33,3 +33,7 @@ Produce a structured review with:
 3. A `summary` field (one sentence ≤200 chars): verdict + key reason. This goes into the agent monitoring event record.
 
 Do not suggest implementation details beyond what is needed to fix the violations.
+
+## Background Commands
+
+Never end your turn while a `run_in_background` Bash command you started is still running. Either run the command in the foreground, or poll for the command's own completion within the same turn before returning control. You are not auto-resumed the way the top-level orchestrator is — an unfinished background command left running when you end your turn stalls the pipeline until it is manually detected and you are re-prompted.

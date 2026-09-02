@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260902-AGENT-BACKGROUND-TASK-TURN-END-DEFENSE-IN-DEPTH
-phase: open
+phase: done
 date: 2026-09-02
 tags: [workflows, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [workflows, process-improvement]
 Propagate the "never end turn while your own run_in_background command is still running" warning to all dispatched-agent role files, not just implementer.md/test-scoper.md
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -83,12 +83,12 @@ been queued from within the sessions that observed it).
   fully solve. This ticket only closes the known files-without-any-warning gap.
 
 ## Acceptance Criteria
-- [ ] All 16 files under `.claude/agents/*.md` contain an explicit `run_in_background` /
+- [x] All 16 files under `.claude/agents/*.md` contain an explicit `run_in_background` /
       "never end your turn while a background command is running" warning (verified via
       `grep -L "run_in_background" .claude/agents/*.md` returning zero files).
-- [ ] The wording is consistent in substance and placement across all 16 files (spot-checkable by
+- [x] The wording is consistent in substance and placement across all 16 files (spot-checkable by
       a human diff-read, not just grep presence).
-- [ ] No other content in any of the 14 newly-touched files was altered.
+- [x] No other content in any of the 14 newly-touched files was altered.
 
 ## Related Tickets
 None — this is a fresh, standalone finding from the 2026-09-01 M2 batch implementation session,
@@ -130,9 +130,48 @@ None.
   per-file nuance that would justify `standard` tier instead.
 
 ## Implementation Notes
+Appended a `## Background Commands` section, verbatim from `implementer.md`'s existing wording
+("Never end your turn while a `run_in_background` Bash command you started is still running.
+Either run the command in the foreground, or poll for the command's own completion within the same
+turn before returning control. You are not auto-resumed the way the top-level orchestrator is — an
+unfinished background command left running when you end your turn stalls the pipeline until it is
+manually detected and you are re-prompted."), to each of the 14 files listed in Related Code Areas.
+Used implementer.md's exact text (rather than independently wording 14 variants) to satisfy this
+ticket's own requirement that the wording read as "one coherent convention, not 14 independently-
+worded warnings." Placement is consistent: appended as the final section of each file, matching
+where the section sits in both `implementer.md` and `test-scoper.md`. No other content in any of
+the 14 files was touched — confirmed via `git diff` showing pure additions (0 deletions) across all
+14 files. `implementer.md`/`test-scoper.md` themselves were not modified (confirmed empty diff).
+No CLAUDE.md change (out of scope, unchanged as source of truth).
 
 ## Test Summary
+This is a prose-only change to agent-definition files with no executable code path, so verification
+is the same grep-based check this ticket's own Acceptance Criteria specify, run directly (not via a
+pytest suite):
+```
+grep -L "run_in_background" .claude/agents/*.md
+  → (no output, exit 1) — confirms all 16 of 16 files now contain the string.
+git diff -- .claude/agents/ | grep -E "^\-[^-]" | grep -v "^--- "
+  → (no output) — confirms every one of the 14 diffs is pure-addition, no line removed.
+git diff --stat -- .claude/agents/implementer.md .claude/agents/test-scoper.md
+  → (empty) — confirms the 2 reference-precedent files were not touched.
+```
 
 ## Files Changed
+- `.claude/agents/architecture-reviewer.md`, `concern-investigator.md`, `doc-updater.md`,
+  `done-checker.md`, `investigator.md`, `mechanics-auditor.md`, `parity-updater.md`, `planner.md`,
+  `security-reviewer.md`, `simulation-analyst.md`, `spec-document-reviewer.md`, `ticket-scoper.md`,
+  `world-debugger.md`, `world-render-reviewer.md` — each gained a 4-line `## Background Commands`
+  section appended at end of file; no other lines changed.
+- `tickets/inprogress/TCK-20260902-AGENT-BACKGROUND-TASK-TURN-END-DEFENSE-IN-DEPTH.md` (this file,
+  moved from `tickets/todos/agent-orchestration-issues/`).
 
 ## Completion Summary
+Propagated CLAUDE.md's existing Hard Rule warning ("never end your turn while your own
+`run_in_background` command is still running") into the 14 of 16 `.claude/agents/*.md` role files
+that previously carried no explicit reinforcement of it, using `implementer.md`'s existing wording
+verbatim for consistency. All 16 files now contain the warning; the 14 diffs are pure additions with
+zero other content altered. This closes the largest known blast-radius disparity, though per the
+ticket's own Assumptions, it does not by itself guarantee the underlying recurrence (observed even
+on a file that already had the warning) is fully prevented — that remains a product-level
+consideration outside this repository's control surface.
