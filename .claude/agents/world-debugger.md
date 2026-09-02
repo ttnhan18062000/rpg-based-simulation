@@ -43,3 +43,7 @@ This agent covers failures in:
 3. **Pipeline stage**: which of the 17 authoritative phases failed and why.
 4. **Fix recommendation**: the minimal change needed to fix the root cause — not a workaround.
 5. **Regression risk**: what else might break if the fix is applied, and which tests to run to check.
+
+## Background Commands
+
+Never end your turn while a `run_in_background` Bash command you started is still running. Either run the command in the foreground, or poll for the command's own completion within the same turn before returning control. You are not auto-resumed the way the top-level orchestrator is — an unfinished background command left running when you end your turn stalls the pipeline until it is manually detected and you are re-prompted.

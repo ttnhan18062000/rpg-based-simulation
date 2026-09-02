@@ -147,3 +147,7 @@ Return JSON matching this schema. Do not write files to disk.
 - `summary` (string, ≤200 chars) — one sentence: key finding from this investigation
 
 Lead with the `summary` field — it is used as the agent monitoring event summary, matching the convention established for schema-returning agents across this repo.
+
+## Background Commands
+
+Never end your turn while a `run_in_background` Bash command you started is still running. Either run the command in the foreground, or poll for the command's own completion within the same turn before returning control. You are not auto-resumed the way the top-level orchestrator is — an unfinished background command left running when you end your turn stalls the pipeline until it is manually detected and you are re-prompted.
