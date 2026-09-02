@@ -320,6 +320,75 @@ No ticket, epic acceptance criterion, or numeric threshold in this roadmap or it
 by this section — it is a pointer for whoever next scopes M2-M9 ticket-level work, per the proposal's own
 "maintainers should later review — not automatically edit" framing.
 
+## Social/Relationship axis (added dimension, 2026-09-02 brainstorm)
+
+A third cross-cutting dimension, the same shape as space and time above: every entity has it, and dozens of
+ideas across M2/M4/M5/M6 depend on it. Unlike temporal, it is not aspirational — `SocialComponent`/
+`SocialBond`/`RelationshipService` (`src/core/models/social.py`,
+`src/systems/social_systems/relationships.py`) are real, live, and load-bearing today. The gap this axis
+names is a missing coherent account of it, not a missing mechanism — see
+[`docs/brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md)
+for the full investigation (mirrors the temporal proposal's own structure and rigor).
+
+**Accepted in this brainstorm pass:**
+- `SocialComponent`/`SocialBond`/`RelationshipService` is the shared vocabulary and single write path every
+  social-adjacent idea should cite, the same role shared calendar/duration calculation plays for time.
+- Two real documentation errors were found and corrected in the same pass, not deferred:
+  `docs/simulation/social_systems_contract.md` falsely claimed passive decay exists (none does — the only
+  real decay, `SocialMemoryDecay.apply_decay()`, operates on a separate Campaign-only structure and never
+  touches live gameplay state) and misdocumented `public_reputation`'s real clamp range (0.0–2.0, not
+  0.0–1.0).
+- Idea 37 (Race Relations) and idea 68 (Inter-Clan Relations) are confirmed structurally parallel to this
+  axis, not part of it — no merge or reconciliation is proposed between the two systems.
+
+**Determinism gap found and recorded, not yet resolved:** `EntityState.to_canonical_dict()` covers only 10
+of `SocialComponent`'s 15 fields — missing `debt_history`, `salience_history`, `nemesis_ids`,
+`place_attachment`, and the detailed `betrayal_records` list (only its count is hashed). A divergence in any
+of these 5 fields between two runs of the same seed would go undetected by the canonical determinism hash
+today. Whether to add all 5, or document specific fields as intentionally non-authoritative, is an open
+decision — not resolved by this brainstorm pass, the same way the calendar-authority decision needed its
+own dedicated ticket rather than being settled inside the original temporal proposal.
+
+**Still open, per the proposal's own "Decisions still requiring review":** the canonical-hash question
+above; which of `RelationshipRole` (`FRIEND`/`RIVAL`) or `nemesis_ids` (grudge-promoted) should take
+precedence when both are set for the same pair, a real unreconciled seam with no confirmed bug yet; idea
+60's exact reputation-locality granularity; idea 67's exact live-tick decay rate (the real Campaign-mode
+constants `FRIENDSHIP_DECAY=0.40`/episode, `GRUDGE_DECAY=0.10`/episode are a calibration anchor, not a
+settled live-gameplay number).
+
+No ticket, epic acceptance criterion, or numeric threshold in this roadmap or its sibling epics is changed
+by this section, except the two documentation corrections already made directly (see above) — this section
+is a pointer for whoever next scopes ideas 22/33/36/40/53-63/67/68's ticket-level work.
+
+## Economic axis check (2026-09-02)
+
+Unlike social/relationship, the economic/conservation dimension already has real Mechanics Bible coverage
+(`docs/mechanics/03_economic_laws.md`) and its own parity ledger (`docs/parity_ledger/town_resource.yaml`)
+— checked for needed modification rather than given a full new-axis proposal. Three findings, two fixed
+directly in this pass:
+
+- **§4.1's reputation-discount formula was confirmed accurate but misplaced** — it reads a Social-domain
+  field, not an Economic one. Left in place with a forward note (the future Social Bible chapter doesn't
+  exist yet as a real doc; moving the content ahead of it would leave a dangling reference) rather than
+  moved now.
+- **`town_resource.yaml` had the same stale-citation class hardening item 2 found in `substrate.yaml`,
+  systemic not isolated: 15 of 190 entries cited a `tests_v2/` path that doesn't exist anywhere in this
+  repo.** Fixed directly for the 2 entries (`TOWN-005`, `TOWN-006`) with a confirmed real replacement
+  (`tests/unit/movement/test_occupancy_conflicts.py`), via the sanctioned schema-validating
+  `tools/parity_ledger_writer.py`. The other 13 entries' cited files (`test_deterministic_baseline.py`,
+  `test_resource_interaction_parity.py`, `test_town_resolution_parity.py`, a `replay/` directory) genuinely
+  don't exist under any name found — **not fixed, since guessing a replacement citation would repeat the
+  exact fabrication pattern this session already found and corrected once (`SUB-327`)**. Flagged here as a
+  real, unresolved gap needing its own dedicated hardening pass (the same treatment `substrate.yaml` got),
+  not silently left uncited.
+- **Idea 13's atlas badge was stale** — shipped in M1's batch (`TCK-20260824-AFFECTION-CONTRACT-GATE`,
+  confirmed via `tickets/working_log.csv`) but still carried pre-implementation framing, the same pattern
+  idea 14's badge had before this session's earlier pass fixed it. Corrected directly.
+- No undocumented Social→Economic or Space→Economic interaction was found (population seeding is a pure
+  headcount field with no resource interaction; idea 66's `PlaceState` schema reuses Region-level storage,
+  no separate Place-level economic accounting needed yet). Inventory/economic canonical-hash coverage
+  confirmed present and correct (contrast with the Social axis's real gap above).
+
 ## Hardening backlog (added 2026-09-02)
 
 Same treatment as the temporal axis and idea 66 above — design/doc claims cross-checked directly against
