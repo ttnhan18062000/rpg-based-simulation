@@ -342,10 +342,18 @@ its own dedicated high-level plan doc once investigated.
    real, narrower finding: that call site only fires at multi-episode Campaign boundaries, a specialized,
    undertested path — the actual open question is Campaign-mode reachability across the corpus, not
    substrate activation. M4/M5/M6's epic docs corrected accordingly.
-4. **Attribute allocation silently no-ops for 7 of 9 attributes** (`progression.yaml` PROG-068/069,
-   `execute_allocate_ap` in `src/engine/domain/core_actions.py:146-176`) — already a known, accepted,
-   tested divergence (`DEV-004`); lower novelty than 1-3, more a "revisit the call" question than fresh
-   discovery — not yet investigated.
+4. **Attribute allocation silently no-ops for 7 of 9 attributes — investigated, confirmed-and-closed, no
+   new plan doc.** `PROG-068`/`PROG-069` (`execute_allocate_ap`, now at
+   `src/engine/domain/core_actions.py:295-321` — line numbers had drifted from the ledger's citation)
+   confirmed exactly as claimed: only strength/vitality branch correctly, the other 7 attribute names fall
+   through to a no-op while `unspent_ap` still decrements. `DEV-004` (`docs/guidelines/intentional_divergences.md`)
+   is `ACTIVE`, thorough, and already cites real corpus-trial evidence that the gated correct-path
+   (`AllocateAttributeAction`) is unreachable for two independent reasons, plus a separate blocking bug
+   (`CanonicalStateHasher` would crash on activation) — nothing found changes that calculus. Zero real
+   callers confirmed anywhere in the deployable system (not just `src/` — `frontend/` included). `DEV-004`'s
+   own text already names the correct follow-up ("port `AllocateAttributeAction`'s aptitude logic into
+   `core_actions.execute_allocate_ap`") — that's the real future ticket, not a fresh discovery this pass
+   needed to re-derive.
 5. **Several "done"-badged mechanics turn out untested or unreachable on inspection** (e.g. `CHURCH`
    building's Blessing/Resurrection services placed in zero worlds, `ReputationService` conflated with a
    different tested class) — cheapest to scope, nothing currently blocks on it — not yet investigated.
