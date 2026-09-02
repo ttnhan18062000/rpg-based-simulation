@@ -311,31 +311,44 @@ the full analysis.
 
 ## 12. Layer-lifecycle trajectory & build-capability signals
 
-**Now:** every pillar scores events, and a handful of pillars have threshold/plateau checks
-(`all_level_1`, `faction_monopoly`, `progression_frozen`), but only WORLD has a true
+**Corrected, 2026-09-02** (SimQ architecture check, following this session's Social/Knowledge/Space/Time
+axis investigations): this item previously described the gap below as still open. Both tickets it names
+are confirmed **done** — `TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE` shipped real
+`capability_growth_stalled`/`life_arc_incoherent` events (verified via a real, non-mocked 500-tick kernel
+run); `TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY` shipped `faction_trajectory_stagnant` in
+`FactionShaper` (verified via real-kernel runs across 2 worlds). This entry is now a historical record of
+the gap that motivated that work, not an open item.
+
+**Was:** every pillar scores events, and a handful of pillars have threshold/plateau checks
+(`all_level_1`, `faction_monopoly`, `progression_frozen`), but only WORLD had a true
 trajectory-*coherence* rule (`trauma_hazard_broken` — a degenerate trend over a window, not a
 single bad event or a static end-state threshold). Neither the entity layer nor the faction layer
-has an equivalent. Separately, PROGRESSION scores XP/level/skill/trait events in isolation but has
+had an equivalent. Separately, PROGRESSION scored XP/level/skill/trait events in isolation but had
 no signal for whether an entity's overall **capability** — level + equipped-gear quality + gold +
-skills, combined — is actually trending upward, which is a broader "growing richer/stronger"
+skills, combined — was actually trending upward, a broader "growing richer/stronger"
 concept than XP events alone convey.
 
-**Real, confirmed gap (found 2026-08-06):** checked against all four simulation layers
-(entity/region/faction/world). Region and world are already covered by WORLD's existing
+**Real, confirmed gap (found 2026-08-06, closed 2026-08-06):** checked against all four simulation layers
+(entity/region/faction/world). Region and world were already covered by WORLD's existing
 `trauma_hazard_broken`/`world_static`/`trauma_accumulation_broken` rules. Entity and faction layers
-have no trajectory-coherence rule and no capability-trend signal. No event for equipping/upgrading
-gear currently exists anywhere in the emission pipeline (checked `event_type_coverage.md` and
-`src/simulation_quality/pillars.py`) — capability-trend scoring may need either a new event or a
-snapshot read from `ScoringContext`, decided per-ticket.
+had no trajectory-coherence rule and no capability-trend signal — now fixed, see above.
 
-**Extend via:** new scoring rules on PROGRESSION (entity capability-trend + life-arc coherence) and
+**Extended via:** new scoring rules on PROGRESSION (entity capability-trend + life-arc coherence) and
 FACTION (faction-trajectory, mirroring `trauma_hazard_broken`'s pattern) — not a new pillar, per
-§7.6's application of the §7.1/§7.2 test. Tracked by
-`TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE` and
-`TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY`.
+§7.6's application of the §7.1/§7.2 test, both confirmed shipped.
 
 **Governing doc:** `docs/simulation_quality/quality_scoring_contract.md` §7.6,
-`docs/audits/D20_simq_quality_status_review.md` Finding 9.
+`docs/audits/D20_simq_quality_status_review.md` Finding 9 (also corrected, 2026-09-02).
+
+**No new pillar gap found, 2026-09-02**: this session's Social/Relationship, Knowledge/Belief, Space
+(idea 66), and Time (temporal) axis investigations were checked against this same pillar-boundary
+question. None surface a new top-level pillar candidate — their findings map to future event-level
+additions to existing pillars once the underlying mechanics ship (e.g. idea 67's decay → SOCIAL, idea 66's
+Place transformations → WORLD), or are a determinism/canonical-hash-completeness class of check that no
+pillar-scoring approach was ever meant to catch (see
+`docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md` and
+`docs/brainstorm/2026-09-02-core-rpg-knowledge-belief-axis-proposal.md`'s own determinism findings for that
+distinction).
 
 ---
 
