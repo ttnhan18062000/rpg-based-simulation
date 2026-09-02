@@ -3752,19 +3752,20 @@
     branch in StrategicIntelligenceSystem.evaluate_strategic_intent() (raw_score,
     never utility), resolves through ObjectiveIntentResolver -> ActionIntentAdapter''s
     new CHANGE_OCCUPATION branch, and commits the transition as a plain EntityUpdate(identity=IdentityUpdate(role_set=<int>))
-    -- the first-ever role_set producer in the codebase, applied only through the
-    existing authoritative IdentityPatch.apply path. A per-tick completion check marks
-    the project COMPLETED once entity.identity.role is no longer CITIZEN.'
+    -- the first role_set producer in the codebase, applied only through the existing
+    authoritative IdentityPatch.apply path (no longer the SOLE producer as of STRAT-267
+    -- see support_boundary). A per-tick completion check marks the project COMPLETED
+    once entity.identity.role is no longer CITIZEN.'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/ai/goals/occupation_change_scorer.py (OccupationChangeGoalScorer),
+  v2_evidence: 'src/ai/goals/occupation_change_scorer.py (OccupationChangeGoalScorer),
     src/world/occupation_config.py (BASE_OCCUPATION_DENSITY/MIN_OCCUPATION_SLOTS),
     src/systems/strategic_systems/intelligence.py (GoalKind.OCCUPATION_CHANGE materialization
     branch and the CAREER_CHANGE per-tick completion check), src/engine/intent/action_intent.py
-    (ActionIntentAdapter's CHANGE_OCCUPATION branch -- sole producer of IdentityUpdate(role_set=...)),
-    src/domains/adventure/resolver.py (ObjectiveIntentResolver's CHANGE_OCCUPATION
-    mapping).
+    (ActionIntentAdapter''s CHANGE_OCCUPATION branch -- originally the sole producer
+    of IdentityUpdate(role_set=...); see support_boundary re: STRAT-267), src/domains/adventure/resolver.py
+    (ObjectiveIntentResolver''s CHANGE_OCCUPATION mapping).'
   proof_type: parity
   test_path: tests/unit/strategic/test_occupation_change_scorer.py, tests/unit/strategic/test_intents.py::test_occupation_change_completion_issues_role_set_identity_update,
     tests/unit/domains/adventure/test_phase3_objective_intent_resolver.py::test_resolves_change_occupation_to_change_occupation,
@@ -3775,7 +3776,30 @@
     prior parity_ledger/*.yaml entry referenced ''occupation'' or ''career'' anywhere
     (confirmed via grep, TCK-20260824-OCCUPATION-CHANGE-TRIGGER investigation.md).
     This entry documents the first occupation-change trigger and the first role_set
-    producer end-to-end.'
+    producer end-to-end.
+
+
+    UPDATE (TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE / STRAT-267): src/systems/lifecycle_systems/lifecycle.py''s
+    Coming-of-Age branch (LifecycleSystem.resolve_lifecycle()) is now a second, real
+    role_set producer -- replace(ent_upd.identity, role_set=archetype_role) on an
+    existing IdentityUpdate instance, still applied only through the same authoritative
+    IdentityPatch.apply path, so the Durable State Rule itself is not violated. However,
+    this entry''s own "sole producer" claim, and tests/architecture/test_role_set_identity_patch_only_guard.py''s
+    _ALLOWED_ROLE_SET_PRODUCERS = frozenset({"engine/intent/action_intent.py"}) allowlist,
+    both now assert single-producer exclusivity that is no longer true. That architecture
+    test still PASSES post-STRAT-267 only because its regex (r"IdentityUpdate\([^)]*\brole_set\s*=")
+    matches literal `IdentityUpdate(role_set=...)` construction, not `replace(<existing
+    IdentityUpdate instance>, role_set=...)` -- lifecycle.py''s call site uses the
+    latter form and is invisible to the scan. This is a real regex blind spot in the
+    guard, not confirmation of continued single-producer compliance; a bespoke third
+    role_set writer using the same replace()-on-existing-instance form would also
+    pass undetected. Flagged for architecture-reviewer resolution, not resolved here:
+    either broaden the guard''s pattern/allowlist to explicitly recognize both sanctioned
+    producers (action_intent.py and lifecycle.py), or reroute Coming-of-Age''s role
+    assignment through the existing ActionIntentAdapter path if single-producer was
+    intended as a hard invariant rather than an incidental historical fact. Not changed
+    here per Gate Integrity: a parity-ledger update must not silently launder a guard''s
+    regex gap into an implied "still compliant" status.'
 - id: STRAT-260
   text: 'StrategicRedirectionSystem.enforce()''s "Return to Town" fallback and StrategicIntelligenceSystem''s
     routine-blocker pass (both "has-items, return to town" fallback blocks in fused_strategic_pass())
@@ -3943,5 +3967,33 @@
     new marriages=[...] segment, sorted by marriage_id).'
   proof_type: regression
   test_path: tests/unit/social/test_marriage.py::test_marriage_accepted_writes_typed_marriagestate_on_both_parties
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-267
+  text: A genuinely weighted (personality + parental-occupation + regional-need),
+    seeded-RNG archetype-choice roll fires exactly once inside LifecycleSystem.resolve_lifecycle()
+    when a CITIZEN entity transitions CHILD->ADULT, assigning role_set to one of {SHOPKEEPER,
+    WORKER, GUARD} via a single IdentityUpdate merged onto the same EntityUpdate that
+    already carries life_stage_set. Uses DeterministicRNG(state.seed).weighted_choice(Domain.STRATEGIC,
+    tick, entity_id, roles, weights) -- never Python's unseeded random module, never
+    a fixed-priority first-fit like OccupationChangeGoalScorer -- with a WEIGHT_FLOOR
+    guaranteeing every role keeps nonzero draw probability so a same-tick, same-region
+    batch never collapses onto one role. Gated additionally on entity.identity.role
+    == EntityRole.CITIZEN (excludes the flag-gated Natural-Creature MONSTER-role reproduction
+    path, which is parentless but still carries a real nonzero birth_tick) and on
+    is_excluded_no_birth_record() (a compound birth_tick==0 AND parent_a_entity_id
+    is None AND parent_b_entity_id is None check, not the unsafe birth_tick==0-only
+    shortcut).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/ai/coming_of_age.py (compute_role_weights, is_excluded_no_birth_record,
+    choose_archetype); src/systems/lifecycle_systems/lifecycle.py (LifecycleSystem.resolve_lifecycle()
+    Coming of Age sibling branch, gated on entity.identity.life_stage == LifeStage.CHILD,
+    target_stage == LifeStage.ADULT, and entity.identity.role == EntityRole.CITIZEN);
+    src/platform/rng.py (DeterministicRNG.weighted_choice); src/core/enums.py (Domain.STRATEGIC);
+    src/core/updates.py (IdentityUpdate.role_set).
+  proof_type: regression
+  test_path: tests/unit/strategic/test_coming_of_age_archetype_choice.py::TestComingOfAgeMetamorphicConvergenceGuard::test_coming_of_age_metamorphic_regional_need_weight_increases_variance
   divergence_note: null
   support_boundary: null

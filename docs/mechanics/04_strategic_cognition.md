@@ -1015,3 +1015,101 @@ ticket (idea 31, Personal Dependents). `ContractService.get_project_mapping()` r
 `src/engine/domain/action_router.py` (`"PROPOSE_MARRIAGE"` branch) (TCK-20260902-MARRIAGE-PROPOSAL-CONTRACT,
 2026-09-02)
 
+---
+
+## 9. Coming of Age Archetype-Choice Roll (idea 34, STRAT-267)
+
+A genuinely weighted (not fixed-priority) occupation-selection roll fires once when a citizen
+child reaches adulthood, filling the same `role_set` slot `OccupationChangeGoalScorer`
+(`src/ai/goals/occupation_change_scorer.py`, §Strategic Systems, `STRAT-259`) later reads for
+adult occupation changes -- deliberately not that scorer's own fixed-priority-first-fit pattern,
+since applying it here would collapse every same-tick, same-region child onto the identical
+occupation.
+
+**Gate.** Fires inside `LifecycleSystem.resolve_lifecycle()` (`src/systems/lifecycle_systems/
+lifecycle.py`), immediately beside the existing `life_stage_set`/ELDER-branch trigger, when all
+three hold simultaneously on the pre-tick frozen entity: `entity.identity.life_stage ==
+LifeStage.CHILD`, the age-derived `target_stage == LifeStage.ADULT` (the same CHILD->ADULT
+transition idea 20 already drives), and `entity.identity.role == EntityRole.CITIZEN`. The role
+gate is not optional bookkeeping: without it this branch would also fire for a MONSTER-role
+CHILD produced by the flag-gated Natural-Creature reproduction path
+(`spawn_natural_creature_offspring()`, `src/systems/world_systems/generator.py`), which is
+parentless but still carries a real nonzero `birth_tick` -- the no-birth-record exclusion below
+does not catch it, so the role gate is the only thing preventing an incoherent
+`MONSTER_HORDE`-faction entity from being handed a citizen occupation.
+
+A second gate, `is_excluded_no_birth_record()`, additionally excludes any entity for which
+`lifecycle.birth_tick == 0 AND lifecycle.parent_a_entity_id is None AND
+lifecycle.parent_b_entity_id is None` all hold at once (a compound check, not `birth_tick == 0`
+alone -- `HumanoidReproductionService.process_reproduction()` has no explicit `tick > 0` guard,
+so a real Humanoid-path child can be born at tick 0 with non-`None` parent ids; the compound form
+correctly treats that case as "has a birth record"). Forward-compatibility caveat: this is not
+provably safe against a hypothetical future reproduction path with neither an accumulation gate
+nor tracked parent ids -- no such path exists in the live codebase today.
+
+**Direction.** `choose_archetype(entity, state)` (`src/ai/coming_of_age.py`) draws one role from
+`{SHOPKEEPER, WORKER, GUARD}` via `DeterministicRNG(state.seed).weighted_choice(Domain.STRATEGIC,
+state.tick, entity.id, roles, weights)` -- a genuine seeded weighted-random draw, never Python's
+unseeded `random` module and never a deterministic argmax (an argmax over shared regional-need
+terms would reproduce `OccupationChangeGoalScorer`'s exact zero-variance convergence bug through
+a different mechanism). The weight vector comes from the pure function `compute_role_weights()`:
+
+```
+weight(role) = max(WEIGHT_FLOOR,
+    BASE_WEIGHT
+    + PERSONALITY_COEFF * personality_term(role, entity.identity.personality)
+    + PARENTAL_COEFF    * parental_term(role, entity, state)
+    + regional_coeff    * regional_need_term(role, entity, state)
+)
+```
+
+- `personality_term`: `SHOPKEEPER -> greed`, `WORKER -> industry`, `GUARD -> bravery` (mirrors
+  `PersonalityService.get_goal_modifiers()`'s own trait-to-domain mappings, `src/ai/
+  personality.py`).
+- `parental_term`: count of the entity's resolvable, active parents (via `state.entities.get()`,
+  skipping a `None` id, a removed/dead parent, or `lifecycle.active is False`) currently holding
+  that role -- 0, 1, or 2. A parentless or fully-inactive-parent entity yields a flat 0.0 for
+  every role, never a crash and never a fallback toward a specific occupation.
+- `regional_need_term`: `max(0.0, target_count(role) - live_count(role))`, read-only reuse of
+  `OccupationChangeGoalScorer`'s own region-lookup and per-role headcount tally as an input
+  signal (`BASE_OCCUPATION_DENSITY`/`MIN_OCCUPATION_SLOTS`, `src/world/occupation_config.py`) --
+  not a duplicate of that scorer's own selection behavior. `region is None` yields 0.0 for every
+  role.
+- `WEIGHT_FLOOR = 0.05` guarantees every role keeps strictly nonzero draw probability regardless
+  of how skewed the other three terms get -- the structural guard behind the convergence property
+  below.
+
+**Durable record.** The roll produces exactly one `IdentityUpdate(role_set=<role>)`, merged via
+`replace()` onto the same `EntityUpdate.identity` that already carries `life_stage_set` for this
+tick's CHILD->ADULT transition -- committed only through the authoritative apply pipeline
+(`ApplyPath.apply_generation`/`IdentityPatch.apply()`), never a direct-mutation shortcut. The
+origin-stage check (`entity.identity.life_stage == LifeStage.CHILD`, read from the pre-tick
+frozen entity) is what guarantees the roll fires exactly once: once the durable `life_stage_set`
+write lands, the entity's next frozen snapshot has `life_stage == ADULT`, so the branch's origin
+check no longer matches on subsequent ticks.
+
+**Convergence-risk metamorphic guard (permanent property, not just a test artifact).** Holding
+`personality_coeff`/`parental_coeff` fixed, increasing `regional_coeff` must strictly increase
+the entropy of the resulting weight distribution -- it must never collapse variance toward a
+single dominant role. This is the direct correction for the convergence bug class
+`OccupationChangeGoalScorer`'s fixed-priority-first-fit selection demonstrates: any same-region
+batch of children sharing a regional-need term would otherwise deterministically converge on one
+role. `WEIGHT_FLOOR` plus the genuine `weighted_choice` draw (rather than argmax) are what keep
+this property true empirically for any same-tick, same-region batch, verified by
+`tests/unit/strategic/test_coming_of_age_archetype_choice.py`.
+
+**Out of scope (deliberate).** No `GoalKind`/`GoalScorer` registration -- Coming of Age stays a
+direct `LifecycleSystem` write, never a goal-hierarchy candidate evaluated by
+`StrategicIntelligenceSystem.evaluate_strategic_intent()`. No change to
+`OccupationChangeGoalScorer`'s own fixed-priority selection logic, `_CANDIDATE_ROLES` tuple, or
+`BASE_OCCUPATION_DENSITY`/`MIN_OCCUPATION_SLOTS` -- those are read-only reuse targets. No
+long-run corpus-tier population-pressure convergence property (idea 38) -- the metamorphic guard
+here is a bounded single-tick synthetic batch, not a long-run corpus claim.
+
+**Source:** `src/ai/coming_of_age.py` (`compute_role_weights`, `is_excluded_no_birth_record`,
+`choose_archetype`); `src/systems/lifecycle_systems/lifecycle.py`
+(`LifecycleSystem.resolve_lifecycle()`'s Coming of Age sibling branch, beside the ELDER branch);
+`src/platform/rng.py` (`DeterministicRNG.weighted_choice`); `src/core/enums.py`
+(`Domain.STRATEGIC`); `src/core/updates.py` (`IdentityUpdate.role_set`)
+(TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE, 2026-09-02)
+
