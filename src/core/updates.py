@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Dict, Any, Optional, TYPE_CHECKING, List, Tuple
 if TYPE_CHECKING:
-    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, WoundState, ScarState
+    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, WoundState, ScarState, StatusEffectState
     from src.core.quests import QuestStatus
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
@@ -14,11 +14,11 @@ if TYPE_CHECKING:
     )
     from src.engine.policy import GovernorPolicy
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
-from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage
+from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage, ItemInstance
 from src.core.models.social import RelationshipRole
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode, DiplomaticState
-from src.core.update_models.inventory import InventoryUpdate
+from src.core.update_models.inventory import InventoryUpdate, ItemInstanceUpdate
 from src.core.update_models.quests import QuestUpdate
 from src.core.update_models.resources import ResourceTransferIntent
 from src.core.dirty import DirtySet
@@ -69,9 +69,10 @@ class InteractionUpdate:
     target_node_id: Optional[int] = None
     progress_delta: float = 0.0
     reset: bool = False
+    kind: Optional[str] = None
 
     def is_noop(self) -> bool:
-        return self.target_node_id is None and self.progress_delta == 0.0 and not self.reset
+        return self.target_node_id is None and self.progress_delta == 0.0 and not self.reset and self.kind is None
 
     def merge(self, other: InteractionUpdate) -> InteractionUpdate:
         if not other or other.is_noop():
@@ -80,6 +81,7 @@ class InteractionUpdate:
         if other.target_node_id is not None: changes["target_node_id"] = other.target_node_id
         if other.progress_delta != 0.0: changes["progress_delta"] = self.progress_delta + other.progress_delta
         if other.reset: changes["reset"] = True
+        if other.kind is not None: changes["kind"] = other.kind
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
@@ -226,6 +228,7 @@ class IdentityUpdate:
     craft_target: Optional[str] = None
     evolution_level_set: Optional[int] = None
     life_stage_set: Optional[LifeStage] = None
+    class_id_set: Optional[str] = None
     evolution_points_delta: int = 0
     veterancy_points_delta: int = 0
     breakthroughs_add: list[str] = field(default_factory=list)
@@ -235,15 +238,17 @@ class IdentityUpdate:
     traits_add: list[str] = field(default_factory=list)
     traits_remove: list[str] = field(default_factory=list)
     cooldown_updates: Dict[str, int] = field(default_factory=dict) # skill_id -> tick_ready
-    
+    territory_maturity_delta: float = 0.0
+
     def is_noop(self) -> bool:
         return (self.role_set is None and self.faction_set is None and not self.recipes_learned and
                 self.craft_target is None and self.evolution_level_set is None and
-                self.life_stage_set is None and
+                self.life_stage_set is None and self.class_id_set is None and
                 self.evolution_points_delta == 0 and self.veterancy_points_delta == 0 and
                 not self.breakthroughs_add and self.unspent_ap_delta == 0 and
                 self.unspent_ap_set is None and not self.learned_skills and
-                not self.traits_add and not self.traits_remove and not self.cooldown_updates)
+                not self.traits_add and not self.traits_remove and not self.cooldown_updates and
+                self.territory_maturity_delta == 0.0)
 
     def merge(self, other: IdentityUpdate) -> IdentityUpdate:
         if not other or other.is_noop():
@@ -255,6 +260,7 @@ class IdentityUpdate:
         if other.craft_target is not None: changes["craft_target"] = other.craft_target
         if other.evolution_level_set is not None: changes["evolution_level_set"] = other.evolution_level_set
         if other.life_stage_set is not None: changes["life_stage_set"] = other.life_stage_set
+        if other.class_id_set is not None: changes["class_id_set"] = other.class_id_set
         if other.evolution_points_delta != 0: changes["evolution_points_delta"] = self.evolution_points_delta + other.evolution_points_delta
         if other.veterancy_points_delta != 0: changes["veterancy_points_delta"] = self.veterancy_points_delta + other.veterancy_points_delta
         if other.breakthroughs_add: changes["breakthroughs_add"] = list(set(self.breakthroughs_add + other.breakthroughs_add))
@@ -264,6 +270,7 @@ class IdentityUpdate:
         if other.traits_add: changes["traits_add"] = list(set(self.traits_add + other.traits_add))
         if other.traits_remove: changes["traits_remove"] = list(set(self.traits_remove + other.traits_remove))
         if other.cooldown_updates: changes["cooldown_updates"] = {**self.cooldown_updates, **other.cooldown_updates}
+        if other.territory_maturity_delta != 0: changes["territory_maturity_delta"] = self.territory_maturity_delta + other.territory_maturity_delta
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
@@ -621,6 +628,23 @@ class WoundUpdate:
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
+class StatusEffectUpdate:
+    """New status effects and effect removal."""
+    effects_add: List[StatusEffectState] = field(default_factory=list)
+    effects_remove: List[str] = field(default_factory=list)  # status `kind` values to remove
+
+    def is_noop(self) -> bool:
+        return not self.effects_add and not self.effects_remove
+
+    def merge(self, other: StatusEffectUpdate) -> StatusEffectUpdate:
+        if not other or other.is_noop():
+            return self
+        changes = {}
+        if other.effects_add: changes["effects_add"] = self.effects_add + other.effects_add
+        if other.effects_remove: changes["effects_remove"] = self.effects_remove + other.effects_remove
+        return replace(self, **changes)
+
+@dataclass(frozen=True, slots=True)
 class EntityUpdate:
     """
     Authoritative update for a single entity.
@@ -650,6 +674,7 @@ class EntityUpdate:
     task: Optional[TaskUpdate] = None
     stamina_update: Optional[StaminaUpdate] = None
     wound_update: Optional[WoundUpdate] = None
+    status_effect_update: Optional[StatusEffectUpdate] = None
     group_id_set: Optional[int] = None
     self_model_bundle_set: Optional[Any] = None
     cognition_bundle_set: Optional[Any] = None
@@ -674,7 +699,8 @@ class EntityUpdate:
                 (self.navigation is None or self.navigation.is_noop()) and 
                 (self.task is None or self.task.is_noop()) and 
                 (self.stamina_update is None or self.stamina_update.is_noop()) and 
-                (self.wound_update is None or self.wound_update.is_noop()) and 
+                (self.wound_update is None or self.wound_update.is_noop()) and
+                (self.status_effect_update is None or self.status_effect_update.is_noop()) and
                 self.group_id_set is None and self.self_model_bundle_set is None and
                 self.cognition_bundle_set is None and not self.intent_results and
                 not self.property_updates)
@@ -709,6 +735,7 @@ class EntityUpdate:
         if other.task: changes["task"] = self.task.merge(other.task) if self.task else other.task
         if other.stamina_update: changes["stamina_update"] = self.stamina_update.merge(other.stamina_update) if self.stamina_update else other.stamina_update
         if other.wound_update: changes["wound_update"] = self.wound_update.merge(other.wound_update) if self.wound_update else other.wound_update
+        if other.status_effect_update: changes["status_effect_update"] = self.status_effect_update.merge(other.status_effect_update) if self.status_effect_update else other.status_effect_update
         if other.group_id_set is not None: changes["group_id_set"] = other.group_id_set
         if other.self_model_bundle_set is not None: changes["self_model_bundle_set"] = other.self_model_bundle_set
         if other.cognition_bundle_set is not None: changes["cognition_bundle_set"] = other.cognition_bundle_set
@@ -897,6 +924,8 @@ class StateUpdate:
     node_updates: Dict[int, ResourceNodeUpdate] = field(default_factory=dict)
     ground_items_add_or_update: List[GroundItemState] = field(default_factory=list)
     ground_items_remove: List[int] = field(default_factory=list)
+    item_instances_add_or_update: List[ItemInstance] = field(default_factory=list)
+    item_instance_updates: Dict[int, ItemInstanceUpdate] = field(default_factory=dict)
     corpses_add_or_update: List[CorpseState] = field(default_factory=list)
     corpses_remove: List[int] = field(default_factory=list)
     scars_add_or_update: List[LocalScarState] = field(default_factory=list)
@@ -924,6 +953,7 @@ class StateUpdate:
     processed_transaction_ids: List[str] = field(default_factory=list)
     next_node_id_set: Optional[int] = None
     next_entity_id_set: Optional[int] = None
+    next_item_instance_id_set: Optional[int] = None
     dirty_set: Optional[DirtySet] = None
     force_full_scan: bool = False
     sub_phase_costs: Dict[str, float] = field(default_factory=dict)
@@ -962,7 +992,10 @@ class StateUpdate:
                 not self.quest_registry_remove and not self.quest_status_updates and
                 not self.quest_opportunity_reward_intents and
                 not self.information_providers_update and
-                not self.faction_updates)
+                not self.faction_updates and
+                not self.item_instances_add_or_update and
+                not self.item_instance_updates and
+                self.next_item_instance_id_set is None)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -1001,6 +1034,7 @@ class StateUpdate:
         new_groups_remove = set(self.groups_remove)
         new_ground_items_add_or_update = list(self.ground_items_add_or_update)
         new_ground_items_remove = set(self.ground_items_remove)
+        new_item_instances_add_or_update = list(self.item_instances_add_or_update)
         new_corpses_add_or_update = list(self.corpses_add_or_update)
         new_corpses_remove = set(self.corpses_remove)
         new_chest_add_or_update = list(self.chest_add_or_update)
@@ -1016,12 +1050,14 @@ class StateUpdate:
         new_quest_opportunity_reward_intents = list(self.quest_opportunity_reward_intents)
         new_information_providers_update = dict(self.information_providers_update)
         new_faction_updates = list(self.faction_updates)
+        new_item_instance_updates = dict(self.item_instance_updates)
 
         # Single values
         maturity = self.maturity_set
         calamity = self.last_calamity_tick_set
         node_id = self.next_node_id_set
         ent_id = self.next_entity_id_set
+        item_inst_id = self.next_item_instance_id_set
         rng = self.rng_checkpoint
         pressure = self.pressure_signals_set
         mode = self.current_mode_set
@@ -1067,6 +1103,7 @@ class StateUpdate:
             new_groups_remove.update(other.groups_remove)
             new_ground_items_add_or_update.extend(other.ground_items_add_or_update)
             new_ground_items_remove.update(other.ground_items_remove)
+            new_item_instances_add_or_update.extend(other.item_instances_add_or_update)
             new_corpses_add_or_update.extend(other.corpses_add_or_update)
             new_corpses_remove.update(other.corpses_remove)
             new_chest_add_or_update.extend(other.chest_add_or_update)
@@ -1084,12 +1121,15 @@ class StateUpdate:
             new_faction_updates.extend(
                 fu for fu in other.faction_updates if not fu.is_noop()
             )
+            for iid, upd in other.item_instance_updates.items():
+                new_item_instance_updates[iid] = upd
 
             # Single values
             if other.maturity_set is not None: maturity = other.maturity_set
             if other.last_calamity_tick_set is not None: calamity = other.last_calamity_tick_set
             if other.next_node_id_set is not None: node_id = other.next_node_id_set
             if other.next_entity_id_set is not None: ent_id = other.next_entity_id_set
+            if other.next_item_instance_id_set is not None: item_inst_id = other.next_item_instance_id_set
             if other.rng_checkpoint: rng = other.rng_checkpoint
             if other.pressure_signals_set is not None: pressure = other.pressure_signals_set
             if other.current_mode_set is not None: mode = other.current_mode_set
@@ -1144,6 +1184,9 @@ class StateUpdate:
             quest_opportunity_reward_intents=new_quest_opportunity_reward_intents,
             information_providers_update=new_information_providers_update,
             faction_updates=new_faction_updates,
+            item_instances_add_or_update=new_item_instances_add_or_update,
+            item_instance_updates=new_item_instance_updates,
+            next_item_instance_id_set=item_inst_id,
         )
 
     def compact(self) -> StateUpdate:

@@ -1,18 +1,16 @@
 import pytest
 from dataclasses import replace
 from src.core.state import EntityState
-from src.core.cognition import CognitionModel, SubjectiveModel, SelfModel, EmotionalModel
-from src.core.self_model import NeedInterpretationComponent
+from src.core.cognition import CognitionModel, SubjectiveModel, EmotionalModel
+from src.core.self_model import SelfModelBundle, NeedInterpretationComponent
 from src.domains.perception.service import AttentionFocusService
 
 def test_low_health_focuses_on_healing_and_safety():
     entity = EntityState(id=1, kind="HERO")
     # Set dominant need to healing
     needs = NeedInterpretationComponent(dominant_need="healing")
-    self_model = SelfModel(needs=needs)
-    subjective = SubjectiveModel(self=self_model)
-    cognition = CognitionModel(subjective=subjective)
-    entity = replace(entity, cognition=cognition)
+    self_model = replace(SelfModelBundle(), needs=needs)
+    entity = replace(entity, self_model=self_model)
 
     focus = AttentionFocusService.get_attention_focus(entity)
     assert "healing_resource" in focus

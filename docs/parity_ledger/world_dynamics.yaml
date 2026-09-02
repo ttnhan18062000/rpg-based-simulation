@@ -1108,13 +1108,25 @@
   divergence_note: null
   support_boundary: null
 - id: WORLD-102
-  text: QuestOpportunity objects produced by WorldEmergencePhase are added to quest_registry via StateUpdate.quest_registry_add through the authoritative apply path, keyed by QuestOpportunity.id; addition is idempotent (duplicate IDs are skipped). Since TCK-20260822-QUEST-OPPORTUNITY-PREEMIT-VALIDATION, quest_registry_add only contains opportunities that pass quest_grammar.validate_quest_opportunity() — a runtime faction-coherence and resource-availability pre-emit gate; rejected opportunities are excluded and counted in metric_counters["quest_opportunities_rejected"], and never reach quest_registry.
+  text: "QuestOpportunity objects produced by WorldEmergencePhase are added to quest_registry\
+    \ via StateUpdate.quest_registry_add through the authoritative apply path, keyed\
+    \ by QuestOpportunity.id; addition is idempotent (duplicate IDs are skipped).\
+    \ Since TCK-20260822-QUEST-OPPORTUNITY-PREEMIT-VALIDATION, quest_registry_add\
+    \ only contains opportunities that pass quest_grammar.validate_quest_opportunity()\
+    \ \u2014 a runtime faction-coherence and resource-availability pre-emit gate;\
+    \ rejected opportunities are excluded and counted in metric_counters[\"quest_opportunities_rejected\"\
+    ], and never reach quest_registry."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/domains/world_emergence/phase.py (execute() step 5b filters quest_opps via quest_grammar.validate_quest_opportunity() before quest_registry_add=list(admitted_quest_opps)); src/domains/world_emergence/quest_grammar.py (check_faction_coherence, check_resource_availability, validate_quest_opportunity); src/engine/apply.py (idempotent add guard)
+  v2_evidence: src/domains/world_emergence/phase.py (execute() step 5b filters quest_opps
+    via quest_grammar.validate_quest_opportunity() before quest_registry_add=list(admitted_quest_opps));
+    src/domains/world_emergence/quest_grammar.py (check_faction_coherence, check_resource_availability,
+    validate_quest_opportunity); src/engine/apply.py (idempotent add guard)
   proof_type: parity
-  test_path: tests/unit/domains/world_emergence/test_quest_registry_wiring.py::test_world_emergence_populates_quest_registry, tests/unit/domains/world_emergence/test_quest_opportunity_preemit_validation.py::test_passing_opportunity_reaches_quest_registry_add_unfiltered, tests/unit/domains/world_emergence/test_quest_opportunity_preemit_validation.py::test_rejected_opportunity_excluded_from_quest_registry_add
+  test_path: tests/unit/domains/world_emergence/test_quest_registry_wiring.py::test_world_emergence_populates_quest_registry,
+    tests/unit/domains/world_emergence/test_quest_opportunity_preemit_validation.py::test_passing_opportunity_reaches_quest_registry_add_unfiltered,
+    tests/unit/domains/world_emergence/test_quest_opportunity_preemit_validation.py::test_rejected_opportunity_excluded_from_quest_registry_add
   divergence_note: null
   support_boundary: null
 - id: WORLD-DEMO-001
@@ -1612,5 +1624,73 @@
     defined at pipeline.py:102-131. TCK-20260830-HOTFIX-WORLD-EMERGENCE-VESTIGIAL-GATE-CLEANUP.'
   proof_type: parity
   test_path: tests/integration/domains/test_fused_loop.py::test_feature_shadow_mode_preserves_authoritative_hash
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-118
+  text: Behind ENABLE_CREATURE_TERRITORY_LIFECYCLE (default OFF), CreatureTerritoryService.process_territories()
+    applies a per-tick territory_maturity delta to monster-kind entities anchored
+    by proximity to an active camp, scaled by the same regional trauma_score > 50.0
+    -> x1.5 multiplier CampService already applies to camp maturity. Per-species base
+    rates are authored in TERRITORY_MATURITY_RATES with a DEFAULT_TERRITORY_MATURITY_RATE
+    fallback.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/world/creature_territory.py -- CreatureTerritoryService.process_territories(),
+    TERRITORY_MATURITY_RATES; src/core/state.py -- IdentityComponent.territory_maturity;
+    src/core/updates.py -- IdentityUpdate.territory_maturity_delta; src/engine/world_dynamics.py
+    -- flag-gated call site (# 3.9 Creature Territory Lifecycle); src/engine/patches.py:185,209,231
+    -- IdentityPatch.apply() reads new_id.territory_maturity, folds in u_id.territory_maturity_delta,
+    and passes territory_maturity=tm through the replace() call so the field survives
+    the authoritative apply path. TCK-20260831-CREATURE-TERRITORY-LIFECYCLE.
+  proof_type: parity
+  test_path: tests/unit/world/test_creature_territory_lifecycle.py::test_creature_maturity_delta_scales_with_region_trauma
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-119
+  text: Behind ENABLE_CREATURE_TERRITORY_LIFECYCLE (default OFF), when a monster-kind
+    entity's territory_maturity would cross TERRITORY_MATURITY_THRESHOLD (100.0) on
+    a given tick, CreatureTerritoryService.process_territories() spawns a new territory-occupant
+    monster of the same kind at the entity's position and resets that entity's territory_maturity
+    to exactly 0.0 for that tick (not merely capped).
+  status: verified
+  priority: P2
+  v2_evidence: src/world/creature_territory.py -- CreatureTerritoryService.process_territories()
+    threshold-crossing branch, TERRITORY_MATURITY_THRESHOLD; src/engine/world_dynamics.py
+    -- flag-gated call site (ENABLE_CREATURE_TERRITORY_LIFECYCLE, default OFF); src/domains/optimization/feature_flags.py:120
+    -- ENABLE_CREATURE_TERRITORY_LIFECYCLE registered in the flag map with default
+    FeatureMode.OFF (DEV-002 default-OFF policy for a brand-new mechanic). TCK-20260831-CREATURE-TERRITORY-LIFECYCLE.
+  test_path: tests/unit/world/test_creature_territory_lifecycle.py::test_creature_reaches_maturity_threshold_spawns_or_transitions
+  divergence_note: null
+  proof_type: parity
+- id: WORLD-DEMO-006
+  text: 'WorldCompiler.compile() seeds RegionState.population_cohorts at world-assembly
+    time. For each region, declared population = sum(PopulationSpec.count for specs
+    with matching spawn_region). Counts are split into young/adult/elder using a fixed
+    30/50/20 ratio via largest-remainder (Hamilton apportionment) rounding, guaranteeing
+    exact-sum reproduction at any population size. Seeded PopulationCohort instances
+    keep birth_rate=0.02/mortality_rate=0.01 (dataclass defaults) untouched. A region
+    with zero matching PopulationSpec entries gets population_cohorts={}, on which
+    DemographicCycleService''s guard (cohort.py:349) no-ops via plain dict truthiness.
+    Seeding is pure arithmetic (no RNG), preserving compile() determinism. Because
+    population_cohorts was always {} for the entire lifetime of E52A-COHORT-MODEL
+    before this ticket, CanonicalStateHasher.get_hash()/RegionState.to_canonical_dict()
+    had never been exercised against a non-empty population_cohorts dict: it previously
+    passed raw PopulationCohort dataclass instances straight through, which json.dumps()
+    cannot serialize. Fixed by adding PopulationCohort.to_canonical_dict() (src/domains/demographics/cohort.py)
+    and calling it from RegionState.to_canonical_dict() (src/core/state.py) instead
+    of passing the dataclass through unchanged -- a determinism/canonical-hashing
+    regression found and fixed during this ticket''s Test phase, Architecture-Verify-approved.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/worldbuilding/compiler.py (_seed_population_cohorts, RegionState(...)
+    construction, step 2); src/core/state.py (RegionState.to_canonical_dict(), population_cohorts
+    key now calls PopulationCohort.to_canonical_dict() per value instead of passing
+    the dataclass instance through dict(sorted(...))); src/domains/demographics/cohort.py
+    (PopulationCohort.to_canonical_dict(), new method emitting bracket/count/birth_rate/mortality_rate/migration_threshold)
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compiler_seeds_population_cohorts_from_spec;
+    tests/unit/worldbuilding/test_world_compiler.py::test_canonical_state_hasher_serializes_seeded_population_cohorts
   divergence_note: null
   support_boundary: null

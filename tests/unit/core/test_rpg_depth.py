@@ -525,6 +525,25 @@ class TestEffectiveStats:
         stats_empty = SkillScalingService.get_effective_stats(attrs, active_breakthroughs=set())
         assert stats_omitted == stats_none == stats_empty
 
+    def test_readiness_speed_derives_from_agility_two_values(self):
+        """readiness_speed increases with agility; direction check guards against the
+        move_cost sign-inversion hazard (higher agility lowers move_cost but raises
+        readiness_speed)."""
+        attrs_5 = AttributeComponent(agility=5)
+        attrs_15 = AttributeComponent(agility=15)
+        stats_5 = SkillScalingService.get_effective_stats(attrs_5)
+        stats_15 = SkillScalingService.get_effective_stats(attrs_15)
+        assert stats_15["readiness_speed"] > stats_5["readiness_speed"]
+        assert stats_5["readiness_speed"] == 10.0
+        assert stats_15["readiness_speed"] == 20.0
+
+    def test_readiness_speed_reference_agility_backward_compatible(self):
+        """Reference/baseline agility (dataclass default 5) still yields readiness_speed
+        == 10.0, so existing hardcoded test fixtures that never set agility remain valid."""
+        attrs = AttributeComponent()
+        stats = SkillScalingService.get_effective_stats(attrs)
+        assert stats["readiness_speed"] == 10.0
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # APPLY PATH INTEGRATION TESTS

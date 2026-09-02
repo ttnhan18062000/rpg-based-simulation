@@ -257,6 +257,20 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
         implementation_state="RESOLVED_PARTIALLY",
         content_maturity="REDESIGNED-CORE",
     ),
+    "social/race_relations": ContentFamilyMatrixEntry(
+        file_path="social/race_relations.yaml",
+        schema_class="RaceRelationRecord",
+        repository_index="race_relations",
+        validator_coverage="None",
+        resolver_component="None",
+        compile_runtime_consumer="RelationProjectionService",
+        test_coverage="tests/unit/content/test_race_relations_catalog.py",
+        evidence_tests="tests/unit/content_semantics/test_relation_race_projection.py::test_race_relations_hostility_changes_projected_label",
+        resolver_evidence=None,
+        runtime_consumer_evidence="RelationProjectionService resolves race_relations entries and factors axes.hostility into the projected label",
+        implementation_state="RESOLVED_PARTIALLY",
+        content_maturity="ADDITIONAL",
+    ),
 
     # 4. Entities
     "entities/stat_profiles": ContentFamilyMatrixEntry(

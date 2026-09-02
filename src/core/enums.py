@@ -157,6 +157,8 @@ class ReasonCode(str, Enum):
     TEAM_UP_ACCEPTED = "team_up_accepted"
     TEAM_UP_DECLINED = "team_up_declined"
     INFORMATION_SALE_ACCEPTED = "information_sale_accepted"
+    TEACH_ACCEPTED = "teach_accepted"
+    TEACH_DECLINED = "teach_declined"
 
     # Quest
     QUEST_COMPLETED = "quest_completed"

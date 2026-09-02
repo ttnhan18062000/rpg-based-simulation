@@ -39,6 +39,9 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
 | **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
 | **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
+| **Social/Clan** | Clan Succession-on-Death | **Intentional Gameplay Change** | DEFERRED |
+| **Engine / Progression** | Post-Spawn `class_id` Mutation via `class_id_set` (DEV-006) | **Intentional Gameplay Change** | ACTIVE |
+| **Economy / Social** | Teaching Gated on Trust, Not Gold: TRAIN_COST Removed Entirely (DEV-007) | **Intentional Gameplay Change** | ACTIVE |
 
 ---
 
@@ -83,9 +86,9 @@ This document is the canonical record of intentional behavior shifts in `src` co
 ### 2.6 Priority-Based Tactical Targeting
 - **Subsystem**: Tactical AI
 - **Old Behavior**: Nearest enemy was always selected.
-- **New Behavior**: Deterministic priority chain: `Lowest HP` > `Closest Distance` > `Lowest Entity ID`.
-- **Rationale**: **Contract Hardening**. Prevents target oscillation and improves AI effectiveness in focused firing.
-- **Verification**: `tests/parity/test_tactical_parity.py`
+- **New Behavior**: Deterministic priority chain: `Group Focus-Fire Bias` > `Target Stickiness/Hysteresis` > `Capability-Driven Priority` > `Lowest HP` > `Pressure-Scaled Distance` > `Lowest Entity ID`. As of `TCK-20260831-CAPABILITY-DRIVEN-TARGETING` (Logic ID COMB-316), the entity's own subjective `CapabilityEstimateService.estimate(...)` result against a hostile's specific `kind` is folded into the sort — a hostile the entity believes it is more likely to beat is prioritized higher, ahead of raw HP/distance but behind group cohesion and hysteresis. This is an ad-hoc, call-site-local, read-only call: `entity.self_model.capabilities.estimates` remains empty in production either way (`SelfModelUpdatePhase.apply()` still never passes `capability_context=`).
+- **Rationale**: **Contract Hardening** (original HP/distance/ID chain) + **Intentional Gameplay Change** (the capability-driven addition — a deliberate new prioritization heuristic, not a bug fix or further hardening of an existing rule). Prevents target oscillation, improves AI effectiveness in focused firing, and makes entities press fights they believe they can win.
+- **Verification**: `tests/unit/combat/test_capability_driven_targeting.py`
 
 ### 2.7 20% Retreat Threshold
 - **Subsystem**: Tactical AI
@@ -1393,6 +1396,84 @@ This document is the canonical record of intentional behavior shifts in `src` co
   (`trigger_events` list, multi-entity matching by `entity_id`).
 - **Status**: ACTIVE
 
+### 2.48 Clan Succession-on-Death Diverges from Group's Dissolve-on-Death (TCK-20260831-CLAN-STATE-SCHEMA)
+- **Subsystem**: Social/Clan
+- **Old Behavior**: `Group` (the existing multi-entity coordination unit) unconditionally
+  dissolves when its leader dies or deactivates — `GroupSystem.update_groups()`,
+  `src/systems/world_systems/groups.py:93-108` (Logic IDs SOC-176/SOC-189), no re-election or
+  succession branch exists on leader death.
+- **New Behavior**: `ClanState`'s schema is designed to support succession instead of
+  dissolution on leader death — `leader_entity_id` is an independently reassignable field, not
+  structurally tied to member-removal logic the way Group's dissolution is. This ticket
+  (TCK-20260831-CLAN-STATE-SCHEMA) adds only the schema shape; it does not implement any
+  succession-execution logic, event, or lifecycle action.
+- **Rationale**: **Intentional Gameplay Change**. The brainstorm doc's own stated rationale for
+  `dissolved_tick` is explicitly framed around avoiding "cross-generational Clans silently
+  break[ing]" (`docs/brainstorm/rpg_expected_schemas.html:617`), implying Clans are meant to be
+  multi-generational political entities, unlike Group's small, disposable adventuring parties.
+  A `leader_entity_id` that can never be reassigned without dissolving the whole Clan would give
+  no signal beyond what `dissolved_tick` alone already provides.
+- **Verification**: `tests/unit/domains/faction/test_clan_state.py::test_clan_state_does_not_touch_authoritative_state`
+  — documents the current gap-state itself (schema exists, `leader_entity_id` is an
+  independently reassignable field, but no wiring into `AuthoritativeState`/`StateUpdate` and no
+  succession-execution logic exists yet), matching the `test_v2_service_refs_assembly_is_documented_gap`
+  precedent for a DEFERRED entry (§2.19).
+- **Unblock condition**: Idea 40/M4 implements the actual succession-on-death execution logic
+  (leader-liveness check + reassignment branch, analogous to but structurally distinct from
+  `GroupSystem.update_groups()`'s dissolution branch, since it must branch to reassignment
+  instead of removal). When that lands, update this entry's `Verification` field with the real
+  test path and flip the Summary Table Status from `DEFERRED` to `RATIFIED`.
+- **Status**: DEFERRED
+
+### 2.49 Post-Spawn `class_id` Mutation via `class_id_set` Diverges from PROG-108's Spawn-Only Framing (TCK-20260831-CLASS-TIER-BRANCHING) — cross-referenced as **DEV-006**
+- **Subsystem**: Engine / Progression
+- **Old Behavior**: `IdentityComponent.class_id` (`src/core/state.py:482`) was assigned exactly once,
+  at world-compile time, by `V2EntityBuilder.identity(class_id=...)` (`src/core/builder.py:176,198`)
+  from `spawn_tables.yaml`'s `classtable.v1` entry. `PROG-108`
+  (`docs/parity_ledger/progression.yaml`) records this as verified law: "Entity class_id is
+  assigned by role from spawn_tables.yaml at world compilation." No apply-path file ever wrote
+  `class_id` after spawn — confirmed by a full-repo search across every `*Update`/`*Patch` class.
+- **New Behavior**: `IdentityUpdate.class_id_set: Optional[str]` (`src/core/updates.py`) is a new
+  last-write-wins field, following the exact shape of `role_set`/`life_stage_set`, that is wired
+  into `IdentityPatch.apply()` (`src/engine/patches.py`) — reading `class_id_set` into a local
+  `cls_id` var and passing `class_id=cls_id` into the component's final `replace()` call. This
+  makes `IdentityPatch.apply()` a real, live, currently-tested post-spawn writer of `class_id`,
+  generalized from (but not copying) `EvolutionSystem`'s hardcoded, linear `kind_set` mapping
+  (`src/engine/evolution.py::_get_evolved_kind`) — `CLASS_TIER_REGISTRY`
+  (`src/core/classes.py`) defines >=2 mutually-exclusive next-tier options per base class
+  (`WARRIOR` -> `WARRIOR_CHAMPION` | `WARRIOR_GUARDIAN`; `MAGE` -> `MAGE_ARCHMAGE` |
+  `MAGE_STORMWEAVER`), so this is a branch choice, not a single linear chain. A new
+  `ClassTierService.apply_bonuses()` (`src/progression/class_tiers.py`) applies each tier's
+  `attribute_bonuses` live, recomputed from the durable `class_id` on every
+  `SkillScalingService.get_effective_stats()` call — mirroring `BreakthroughService.apply_bonuses()`'s
+  exact live-recompute mechanism, not a one-time stored delta, to survive subsequent unrelated
+  `stats_dirty` recomputes (see `docs/mechanics/attribute_progression_contract.md` "Derived Stat
+  Recalculation Order").
+- **Rationale**: **Intentional Gameplay Change**. This is a deliberate new mechanic (mutually-exclusive
+  class-tier branching), not a correction or hardening of existing behavior. PROG-108's spawn-time
+  claim remains true and its `status` stays `verified` — the new fact (class_id can *also* mutate
+  post-spawn via `class_id_set`) is additive, not a falsification; `docs/parity_ledger/progression.yaml`
+  PROG-108's `divergence_note` cross-references this entry, and a new `PROG-122` entry records the
+  branching mechanism itself.
+- **Verification**: `tests/unit/progression/test_class_tiers.py::test_branch_selection_diverges_class_id`
+  (two entities, identical starting `class_id="WARRIOR"`/attributes, diverge in `identity.class_id`
+  and derived combat stats purely from different `class_id_set` inputs — same "identical starting
+  state, diverging input" shape as `test_goblin_evolution`);
+  `::test_class_id_set_applies_via_identity_patch` (apply-path wiring, `is_noop()`/`merge()`
+  last-write-wins); `::test_tier_bonus_survives_subsequent_stats_dirty_event` (tier bonus is not
+  silently wiped by the next unrelated `stats_dirty` event); `tests/integration/combat/test_class_tier_win_rate.py::test_tier_bonus_does_not_decrease_win_rate`
+  (a tier's stat bonuses do not decrease average combat win-rate against a fixed opponent roster).
+  `tests/unit/entity/test_entity_archetypes.py::test_hero_archetypes_cover_combat_mage_rogue`
+  (PROG-108's own `test_path`) is unaffected — it only exercises `WorldCompiler.compile()`, no
+  ticks/apply-path, so it cannot observe `class_id_set` regardless.
+- **Scope note**: This ticket ships the registry, the typed field, and the apply-path wiring only.
+  No live AI/decision producer calls `class_id_set` in production gameplay code yet — a
+  fully-wired-but-uninvoked-in-production end state accepted by this project's own precedent
+  (`TCK-20260808-TRAIT-EXPRESSED-PRODUCER-INVESTIGATION`, `breakthroughs_add`/`traits_add`). That
+  "wired but not yet invoked by production code" state does not make this divergence itself
+  deferred — the mechanism is active, tested, and callable today.
+- **Status**: ACTIVE
+
 ---
 
 ## 3. Unsupported / Retired Behavior
@@ -1580,5 +1661,51 @@ The following legacy behaviors have been intentionally omitted or retired.
   `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`, not corrected here).
 - **Status**: ACTIVE
 
+### DEV-007 — Teaching Gated on Trust, Not Gold: TRAIN_COST Removed Entirely (TCK-20260831-TRUST-GATED-TEACHING)
+- **Subsystem**: Economy / Social
+- **Situation**: `CoreActions.execute_train()` (`src/engine/domain/core_actions.py`) was a
+  single-party action with no teacher/target concept: it unconditionally built a
+  `ResourceTransferIntent(source_id="CLASS_HALL", source_kind="TOWN_SERVICE", gold_delta=-50, ...)`
+  alongside a `recipes_learned` grant nested in that intent's `identity_upd`. That 50-gold
+  `TRAIN_COST` was never actually an enforced affordability gate:
+  `ResourceTransactionResolver.resolve()`'s `TOWN_SERVICE` branch checks
+  `target_inventory.gold < intent.gold_cost`, and `execute_train()`'s intent never set
+  `gold_cost` (default `0`), so the check was always `gold < 0` = `False` — the transaction was
+  always accepted regardless of gold balance; gold was merely deducted-and-floored-at-0 as a
+  side effect. `CLASS_HALL` is also an untracked abstract sink (no `CLASS_HALL`-keyed balance
+  exists anywhere in `AuthoritativeState`), so removing this leg does not break any tracked-object
+  source/sink pairing under Mechanics Bible Ch.3 §1 (Atomic Conservation Law).
+- **Decision**: `execute_train()` becomes a two-party action (`entity` = teacher,
+  `payload["target_id"]` = student), gated entirely on trust via a new
+  `ContractKind.TEACH` routed through `SocialAppraisalSystem.appraise_contract()`'s existing
+  shared hard-cancel prelude (`trust_score < 0.2` or `bond.sentiment < -0.8` — the same threshold
+  RECRUITMENT/TEAM_UP/TRADE already use, unmodified). The student (target) appraises the teacher
+  (entity), mirroring `execute_recruit`/`execute_team_up`/`execute_trade`'s existing
+  target-appraises-offer convention. The 50-gold `TRAIN_COST` and its `ResourceTransferIntent`
+  are removed entirely — trust **replaces** gold, it does not gate alongside it. On acceptance,
+  `IdentityUpdate(recipes_learned=[skill_id])` is set directly on the target's `EntityUpdate`
+  (mirroring `execute_allocate_ap`'s existing direct-assignment pattern), not nested in a
+  `ResourceTransferIntent`. The orphaned, unwired duplicate `ClassHallAction.train()`
+  (`src/town/class_hall.py`) — which does perform a real gold-affordability check but has no
+  caller anywhere in `src/` — is explicitly left untouched; reconciling the two is a separate,
+  future architectural cleanup, not required by any acceptance criterion here.
+  **Addendum (2026-09-02, TCK-20260902-CLASSHALL-DEAD-CODE)**: this deferred cleanup has now
+  landed — `src/town/class_hall.py` and its dedicated test (`test_class_hall_training` in
+  `tests/unit/world/test_recovery_class_hall.py`) were deleted after a re-confirmed zero-caller
+  grep across `src/`, `tests/`, and `tools/`. No further reconciliation is outstanding.
+- **Rationale**: **Intentional Gameplay Change**. The originating design source
+  (`docs/brainstorm/rpg_feature_atlas.html`, idea 6, "Build teaching on trust, not new state")
+  explicitly frames this as trust gating "instead of gold," and the pre-existing gold check
+  provided no real economic enforcement to preserve (see Situation above) — removing it trades a
+  cosmetic-only gold deduction for a real, previously-absent social gate.
+- **Verification**: `tests/unit/social/test_teach.py::test_teach_no_gold_leg_regardless_of_gold_balance`
+  (proves teaching succeeds with `gold=0` on both parties and emits no `ResourceTransferIntent`),
+  `::test_teach_refused_below_trust_hard_cancel_threshold` (proves the trust gate itself),
+  `tests/unit/social/test_appraisal_logic.py::test_teach_kind_appraisal_accepts_once_prelude_passes`,
+  `tests/unit/resource/test_resource_v2_boundary.py::test_class_hall_train_refactor` (full-pipeline
+  regression, updated for the two-party/no-gold shape).
+- **Status**: ACTIVE
+
 ---
-*Last updated: 2026-08-30 (DEV-004 update, TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION).*
+*Last updated: 2026-09-02 (DEV-007 addendum, TCK-20260902-CLASSHALL-DEAD-CODE — deferred
+`ClassHallAction.train()` cleanup landed).*

@@ -190,6 +190,14 @@ class WorldDynamicsSystem:
             if not seasonal_update.is_noop():
                 update = update.merge(seasonal_update)
 
+            # 3.9 Creature Territory Lifecycle
+            flags = getattr(state, "feature_flags", None) or {}
+            if flags.get("ENABLE_CREATURE_TERRITORY_LIFECYCLE", "OFF") == "ON":
+                from src.world.creature_territory import CreatureTerritoryService
+                territory_update = CreatureTerritoryService.process_territories(state, generator)
+                if not territory_update.is_noop():
+                    update = update.merge(territory_update)
+
         # 4. Regional Transformations (Type Shifting)
         from src.world.transformation import TransformationService
         refined_world_updates = dict(update.world_updates)

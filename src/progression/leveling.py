@@ -101,6 +101,7 @@ class LevelingService:
         atk = base_atk + int(attributes.strength * 0.5)
         def_stat = base_def + int(attributes.vitality * 0.3)
         evasion = base_evasion + (attributes.agility * 0.001)
+        readiness_speed = max(1.0, 10.0 + (attributes.agility - 5) * 1.0)
         atk_range = 1
         
         # 2. Add Equipment Bonuses
@@ -180,6 +181,7 @@ class LevelingService:
             "evasion": evasion,
             "range": atk_range,
             "move_cost": move_cost,
-            "tactical_role": derived_role
+            "tactical_role": derived_role,
+            "readiness_speed": readiness_speed
         }
 

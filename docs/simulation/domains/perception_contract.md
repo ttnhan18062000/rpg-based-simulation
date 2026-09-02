@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-09-01
 ---
 
 # Perception Domain Contract
@@ -11,6 +11,8 @@ last_verified: 2026-06-13
 **Source:** `src/domains/perception/` (phase.py, filter.py, salience.py, service.py) + `src/world/perception/gate.py`  
 **Pipeline phase:** the Perception Update stage (`PerceptionUpdatePhase`)  
 **Authoritative status:** Read-phase direct update — NOT a StateUpdate producer. Uses `dataclasses.replace` to overwrite `entity.cognition.subjective.perception` in-place per entity.
+
+**Note:** `PerceptionUpdatePhase` currently has zero call sites in `AuthoritativeApplyPipeline.refine()` and does not run in any production pipeline tick today, independent of the path fix below (see TCK-20260831-DEAD-COGNITION-SCHEMA-DECISION; pipeline wiring is tracked as a separate, out-of-scope follow-up).
 
 ---
 
@@ -144,7 +146,7 @@ The gate is a binary filter. The Perception Update stage never sees signals that
 |---|---|
 | World signals | post-gate `Sequence[WorldSignal]` (base_relevance, kind, position, danger_level, is_novel) |
 | Entity cognition | `entity.cognition.subjective.perception` (previous tick state) |
-| Entity cognition | `entity.cognition.subjective.self.needs.dominant_need` |
+| Entity self-model | `entity.self_model.needs.dominant_need` |
 | Entity cognition | `entity.cognition.subjective.emotion.fear` |
 | Entity cognition | `entity.cognition.subjective.emotion.curiosity` |
 | Entity strategy | `entity.strategic.current_project_id` |

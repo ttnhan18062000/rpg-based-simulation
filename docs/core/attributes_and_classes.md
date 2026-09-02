@@ -187,18 +187,29 @@ The time between actions is determined by the `spd` stat using a logarithmic dim
 
 | Class | Primary Scaling | Bonuses | Cap Bonuses | Breakthrough |
 |-------|----------------|---------|-------------|-------------|
-| **Warrior** | STR=S, VIT=A | STR+3, VIT+2, END+1 | STR+10, VIT+5 | → Champion (Lv10, STR≥30) |
+| **Warrior** | STR=S, VIT=A | STR+3, VIT+2, END+1 | STR+10, VIT+5 | → Champion (Lv10, STR≥30) \| Guardian (Lv10, VIT≥30) |
 | **Ranger** | AGI=S, END=A | AGI+3, WIS+2, END+1 | AGI+10, WIS+5, PER+3 | → Sharpshooter (Lv10, AGI≥30) |
-| **Mage** | SPI=S, WIS=A | INT+2, SPI+3, WIS+2 | SPI+10, INT+5, WIS+5 | → Archmage (Lv10, INT≥30) |
+| **Mage** | SPI=S, WIS=A | INT+2, SPI+3, WIS+2 | SPI+10, INT+5, WIS+5 | → Archmage (Lv10, INT≥30) \| Stormweaver (Lv10, SPI≥30) |
 | **Rogue** | AGI=S, STR=B | STR+2, AGI+2, WIS+1 | AGI+8, STR+5, WIS+3 | → Assassin (Lv10, AGI≥30) |
 
 ### Breakthrough Classes (Tier 2)
 
+> As of TCK-20260831-CLASS-TIER-BRANCHING, Warrior and Mage Tier-2 progression is implemented as
+> **branching** (>=2 mutually-exclusive options per base class) via `CLASS_TIER_REGISTRY`
+> (`src/core/classes.py`), applied post-spawn through `IdentityUpdate.class_id_set` and the
+> authoritative apply path (`IdentityPatch.apply()`) — superseding the single-path tree previously
+> documented here for these two classes only. Ranger and Rogue Tier-2 rows below remain
+> unimplemented/aspirational, as does all of Tier 3. See
+> `docs/guidelines/intentional_divergences.md` DEV-006 / §2.49 and
+> `docs/parity_ledger/progression.yaml` PROG-108/PROG-122.
+
 | Class | From | Talent | Req |
 |-------|------|--------|-----|
 | **Champion** | Warrior | Unyielding | Level 10, STR 30+ |
+| **Guardian** | Warrior | Bulwark | Level 10, VIT 30+ |
 | **Sharpshooter** | Ranger | Precision | Level 10, AGI 30+ |
 | **Archmage** | Mage | Arcane Mastery | Level 10, INT 30+ |
+| **Stormweaver** | Mage | Storm Attunement | Level 10, SPI 30+ |
 | **Assassin** | Rogue | Lethal | Level 10, AGI 30+ |
 
 ### Transcendence Classes (Tier 3)
@@ -215,10 +226,12 @@ The time between actions is determined by the `spd` stat using a logarithmic dim
 ```mermaid
 graph TD
     A[Warrior] --> B[Champion]
+    A --> B2[Guardian]
     B --> C[Warlord]
     D[Ranger] --> E[Sharpshooter]
     E --> F[Storm Caller]
     G[Mage] --> H[Archmage]
+    G --> H2[Stormweaver]
     H --> I[Ghost Stalker]
     J[Rogue] --> K[Assassin]
     K --> L[Nightshade]

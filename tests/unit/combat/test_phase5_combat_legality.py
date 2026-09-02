@@ -1,7 +1,7 @@
 
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, NavigationComponent, CombatComponent, IdentityComponent
+from src.core.state import AuthoritativeState, EntityState, NavigationComponent, CombatComponent, IdentityComponent, StatusEffectState
 from src.core.enums import EntityRole, ReasonCode
 from src.engine.combat import CombatResolutionSystem
 
@@ -59,7 +59,8 @@ def test_readiness_block():
 
 def test_status_block():
     attacker = create_mock_entity(1)
-    attacker = replace(attacker, identity=replace(attacker.identity, properties={"status_frozen": True}))
+    attacker = replace(attacker, combat=replace(attacker.combat,
+        status_effects=[StatusEffectState(kind="frozen", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
     target = create_mock_entity(2, faction="MONSTER_FACTION", pos=(1,0))
     state = AuthoritativeState(entities={1: attacker, 2: target}, tick=0, seed=1)
     

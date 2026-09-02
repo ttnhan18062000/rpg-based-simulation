@@ -20,8 +20,9 @@ The `AuthoritativeState` is the singular, immutable source of truth for the enti
 | Component | Responsibility | Key Fields |
 | :--- | :--- | :--- |
 | **Identity** | Core identification and factional ties. | `entity_id`, `faction`, `role`, `learned_skills`. |
-| **Combat** | Tactical status and health. | `hp`, `readiness`, `alive`, `wounds`, `scars`. |
+| **Combat** | Tactical status and health. | `hp`, `readiness`, `alive`, `wounds`, `scars`, `status_effects`. |
 | **Navigation** | Spatial position and movement intent. | `position`, `target`, `path`, `movement_mode`. |
+| **Interaction** | Multi-tick channeling state (harvest, loot, chest, etc.). | `target_node_id`, `progress`, `start_tick`, `kind`. |
 | **Strategic** | Long-term mental state and objectives. | `projects`, `blockers`, `leads`, `concerns`. |
 | **Inventory** | Item and resource ownership. | `gold`, `items`, `max_slots`. |
 | **Biological** | Resource pressures and survival needs. | `sleep_debt`, `hunger`, `rest_pressure`. |

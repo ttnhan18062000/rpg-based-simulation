@@ -20,6 +20,7 @@ def base_state():
     )
     
     from src.core.builder import V2EntityBuilder
+    from dataclasses import replace
     entity = (V2EntityBuilder(1)
         .kind("HERO")
         .location(0, 0)
@@ -27,10 +28,11 @@ def base_state():
         .combat(hp=100, max_hp=100)
         .inventory(max_slots=1)
         .interaction(target_node_id=101, progress=0)
-        .properties({"interaction_kind": "harvest", "harvest_duration": 1})
+        .properties({"harvest_duration": 1})
         .build()
     )
-    
+    entity = replace(entity, interaction=replace(entity.interaction, kind="harvest"))
+
     return AuthoritativeState(
         tick=1,
         seed=42,

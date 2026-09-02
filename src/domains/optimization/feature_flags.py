@@ -113,6 +113,31 @@ class FeatureFlagManager:
             # both events remain in the codebase, flag-gated to fire only when this is NOT "ON"
             # -- a real, working rollback to pre-migration behavior.
             "ENABLE_PUSH_EVENT_SHAPERS_AGENCY": FeatureMode.ON,
+            # New gameplay behavior (TCK-20260831-CREATURE-TERRITORY-LIFECYCLE): wires
+            # CreatureTerritoryService into world_dynamics.py's macro-dynamics block for the
+            # first time. DEV-002 default-OFF policy applies -- brand-new mechanic, no corpus
+            # profile turns this on and no SHADOW-validation history exists.
+            "ENABLE_CREATURE_TERRITORY_LIFECYCLE": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260831-HABIT-BIAS-WIRING): wires HabitBiasService's
+            # record_outcome/apply_habit_bias into a real per-tick writer (HabitBiasUpdatePhase)
+            # and both live ActionStyle read sites (tactical.py kiting distance, movement.py
+            # opportunity-attack suppression on EVASIVE retreat) for the first time. DEV-002
+            # default-OFF policy applies -- brand-new mechanic, no corpus profile turns this on
+            # and no SHADOW-validation history exists.
+            "ENABLE_HABIT_BIAS_ACTION_STYLE": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260831-ITEM-INSTANCE-HISTORY): registers the
+            # ItemInstance ownership-history scaffolding (ItemInstanceService.maybe_create_instance,
+            # src/core/inventory.py). DEV-002 default-OFF policy applies -- brand-new mechanic, no
+            # production call site passes significant=True yet (significance_flag trigger criteria is an
+            # explicit open design decision, not invented by this ticket -- see ticket AC #5), no corpus
+            # profile turns this on and no SHADOW-validation history exists.
+            "ENABLE_ITEM_INSTANCE_HISTORY": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260831-ROLE-MODEL-IMITATION): wires
+            # RoleModelSelectionPhase into refine() for the first time -- per-entity
+            # proximity-based role-model watching/choosing plus intelligence_tier-modulated
+            # imitation fidelity. DEV-002 default-OFF policy applies -- brand-new mechanic, no
+            # corpus profile turns this on and no SHADOW-validation history exists.
+            "ENABLE_ROLE_MODEL_IMITATION": FeatureMode.OFF,
         }
         if overrides:
             for k, v in overrides.items():

@@ -85,6 +85,23 @@ def test_life_stage_set_survives_full_apply_pipeline():
     assert new_state.entities[1].identity.life_stage == LifeStage.ELDER
 
 
+def test_new_maturity_field_survives_apply_generation_round_trip():
+    """TCK-20260831-CREATURE-TERRITORY-LIFECYCLE: mirrors
+    test_life_stage_set_survives_full_apply_pipeline's pattern for the new
+    IdentityUpdate.territory_maturity_delta field, run through the full
+    ApplyPath.apply_generation() pipeline (not just IdentityPatch.apply() in isolation) to
+    catch a replace()-kwarg-omission bug."""
+    entity = EntityState(id=1, kind="goblin_warrior", identity=IdentityComponent(territory_maturity=0.0))
+    state = AuthoritativeState(tick=1, seed=1, world_time=100, entities={1: entity})
+
+    e_upd = EntityUpdate(entity_id=1, identity=IdentityUpdate(territory_maturity_delta=5.0))
+    update = StateUpdate(entity_updates={1: e_upd}, force_full_scan=True)
+
+    new_state = ApplyPath.apply_generation(state, update, next_tick=2, cadence=SystemCadence())
+
+    assert new_state.entities[1].identity.territory_maturity == 5.0
+
+
 def test_self_model_patch_apply_parity_durable_materialization():
     """
     TCK-20260703-SIMQ-UPLIFT3-BRANCH-B (supplementary fix): direct regression guard for

@@ -22,7 +22,7 @@ Define the complete attribute progression law: how entities accumulate XP, when 
 
 ## RPG Meaning
 
-Entities grow through experience. XP is earned by defeating enemies and completing quests. Each level requires progressively more XP (power law). On level-up, entities gain 5 Attribute Points and unlock specific skills at milestone levels. All derived stats (HP, ATK, DEF, evasion, move cost, tactical role) are recalculated deterministically whenever attributes or equipment change.
+Entities grow through experience. XP is earned by defeating enemies and completing quests. Each level requires progressively more XP (power law). On level-up, entities gain 5 Attribute Points and unlock specific skills at milestone levels. All derived stats (HP, ATK, DEF, evasion, readiness_speed, move cost, tactical role) are recalculated deterministically whenever attributes or equipment change.
 
 ---
 
@@ -134,11 +134,12 @@ Step 1 below reads whatever `attributes` it is given.
 
 **Step 1 — Base Attributes:**
 ```python
-max_hp    = base_hp + (vitality * 2) + int(endurance * 0.5)
-atk       = base_atk + int(strength * 0.5)
-def_stat  = base_def + int(vitality * 0.3)
-evasion   = base_evasion + (agility * 0.001)
-atk_range = 1  # default
+max_hp          = base_hp + (vitality * 2) + int(endurance * 0.5)
+atk             = base_atk + int(strength * 0.5)
+def_stat        = base_def + int(vitality * 0.3)
+evasion         = base_evasion + (agility * 0.001)
+readiness_speed = max(1.0, 10.0 + (agility - 5) * 1.0)
+atk_range       = 1  # default
 ```
 
 **Step 2 — Equipment Bonuses (non-broken slots only, `durability > 0`):**
@@ -247,7 +248,7 @@ Bonus *application* (this section) is independent of bonus *granting* and does n
 Progression evaluation runs in the **lifecycle systems phase** after combat resolution:
 - XP grants are emitted as `IdentityUpdate(evolution_points_delta=...)` from combat/quest resolution
 - `LevelingService` evaluates accumulated XP against threshold — level-up fires if threshold crossed
-- `recalculate_combat_stats()` is triggered by the apply path (`ApplyPath._apply_entity_update_to_dict`'s `stats_dirty` gate) after any `IdentityUpdate` that modifies `evolution_level`, `attributes`, equipment, `learned_skills`, `traits_add`/`traits_remove`, or `breakthroughs_add`
+- `recalculate_combat_stats()` is triggered by the apply path (`ApplyPath._apply_entity_update_to_dict`'s `stats_dirty` gate) after any `IdentityUpdate` that modifies `evolution_level`, `attributes`, equipment, `learned_skills`, `traits_add`/`traits_remove`, `breakthroughs_add`, or `class_id_set` (TCK-20260831-CLASS-TIER-BRANCHING — `class_id_set` mutates `class_id` via `IdentityPatch.apply()`, and `ClassTierService.apply_bonuses()` live-recomputes any matching class-tier `attribute_bonuses` on every `get_effective_stats()` call, mirroring `BreakthroughService.apply_bonuses()`)
 
 ---
 
@@ -339,6 +340,7 @@ Step 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
 | `src/progression/leveling.py` | `LevelingService` — threshold formula, level-up execution, stat recalc |
 | `src/progression/skills.py` | `SkillScalingService` — attribute-driven skill power scaling |
 | `src/progression/breakthroughs.py` | `BreakthroughService` — registry + `apply_bonuses()` (implemented) |
+| `src/progression/class_tiers.py` | `ClassTierService` — `CLASS_TIER_REGISTRY` lookup + `apply_bonuses()`, live-recomputed from `class_id` every `get_effective_stats()` call (mirrors `BreakthroughService`) |
 | `src/progression/evolution.py` | Entity evolution on level cap events |
 | `src/systems/lifecycle_systems/` | Lifecycle system invoking LevelingService per tick |
 
@@ -356,6 +358,11 @@ Step 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
 | `tests_v2/test_skill_scaling.py` | PHYSICAL/MAGICAL/ELEMENTAL scaling formulas |
 | `tests/unit/progression/test_breakthroughs.py` | `apply_bonuses()` sum/empty/unknown/mixed-ID behavior; parity ledger PROG-024 |
 | `tests/unit/core/test_rpg_depth.py` | `active_breakthroughs` wiring through `get_effective_stats()` and the apply path's `stats_dirty` gate |
+| `tests/unit/progression/test_class_tiers.py` | `CLASS_TIER_REGISTRY` branching options; `class_id_set` apply-path wiring (`is_noop()`/`merge()`); tier bonus survives a subsequent unrelated `stats_dirty` event; parity ledger PROG-122 |
+| `tests/integration/combat/test_class_tier_win_rate.py` | Tier bonus does not decrease average combat win-rate vs. a fixed opponent roster (AC #4) |
+| `tests/unit/core/test_rpg_depth.py::TestEffectiveStats::test_readiness_speed_derives_from_agility_two_values` | `readiness_speed` derives from agility, direction-checked (not just inequality) |
+| `tests/unit/core/test_rpg_depth.py::TestEffectiveStats::test_readiness_speed_reference_agility_backward_compatible` | Reference/baseline agility (`5`) still yields `readiness_speed == 10.0` |
+| `tests/unit/combat/test_readiness_regen.py::test_readiness_speed_survives_apply_path_replace` | PH8 `replace(new_com, ...)` no longer silently drops the derived `readiness_speed`; parity ledger `COMB-318` |
 
 ---
 

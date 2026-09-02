@@ -1,6 +1,6 @@
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState
+from src.core.state import AuthoritativeState, EntityState, StatusEffectState
 from src.core.updates import StateUpdate, EntityUpdate
 from src.systems.strategic import StrategicIntelligenceSystem
 from src.core.enums import ReasonCode
@@ -19,7 +19,8 @@ def test_frozen_actor_skips_strategic_intent(frozen_actor_state):
     state = replace(state, tick=new_tick)
     
     # 2. Mark as frozen
-    actor = replace(actor, identity=replace(actor.identity, properties={**actor.identity.properties, "status_frozen": True}))
+    actor = replace(actor, combat=replace(actor.combat,
+        status_effects=[StatusEffectState(kind="frozen", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
     state = replace(state, entities={actor_id: actor})
     
     # 3. Evaluate strategic intent
@@ -42,7 +43,8 @@ def test_stunned_actor_skips_strategic_concerns(frozen_actor_state):
     state = replace(state, tick=new_tick)
     
     # 2. Mark as stunned
-    actor = replace(actor, identity=replace(actor.identity, properties={**actor.identity.properties, "status_stunned": True}))
+    actor = replace(actor, combat=replace(actor.combat,
+        status_effects=[StatusEffectState(kind="stunned", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
     state = replace(state, entities={actor_id: actor})
     
     # 3. Evaluate all concerns

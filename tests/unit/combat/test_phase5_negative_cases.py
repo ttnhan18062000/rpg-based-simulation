@@ -1,6 +1,6 @@
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, NavigationComponent, CombatComponent, IdentityComponent, RegionState
+from src.core.state import AuthoritativeState, EntityState, NavigationComponent, CombatComponent, IdentityComponent, RegionState, StatusEffectState
 from src.core.enums import EntityRole, Faction
 from src.engine.combat import CombatResolutionSystem
 from src.engine.legality import LegalityServiceV2
@@ -181,18 +181,20 @@ def test_attacker_status_blocked():
     attacker_stunned = (V2EntityBuilder(1)
                         .kind("ACTOR")
                         .combat(readiness=100.0)
-                        .identity(properties={"status_stunned": True})
                         .build())
+    attacker_stunned = replace(attacker_stunned, combat=replace(attacker_stunned.combat,
+        status_effects=[StatusEffectState(kind="stunned", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
     is_legal, reason = LegalityServiceV2.verify_attack_legality(attacker_stunned, target, state)
     assert not is_legal
     assert reason == "ATTACKER_STATUS_BLOCKED"
-    
+
     # Frozen
     attacker_frozen = (V2EntityBuilder(1)
                        .kind("ACTOR")
                        .combat(readiness=100.0)
-                       .identity(properties={"status_frozen": True})
                        .build())
+    attacker_frozen = replace(attacker_frozen, combat=replace(attacker_frozen.combat,
+        status_effects=[StatusEffectState(kind="frozen", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
     is_legal, reason = LegalityServiceV2.verify_attack_legality(attacker_frozen, target, state)
     assert not is_legal
     assert reason == "ATTACKER_STATUS_BLOCKED"
@@ -252,8 +254,9 @@ def test_aoe_negative_cases():
                         .kind("ACTOR")
                         .location(0, 0)
                         .combat(readiness=100.0)
-                        .identity(properties={"status_stunned": True})
                         .build())
+    attacker_stunned = replace(attacker_stunned, combat=replace(attacker_stunned.combat,
+        status_effects=[StatusEffectState(kind="stunned", source="test_fixture", magnitude=1.0, expires_tick=-1)]))
     res = CombatResolutionSystem.resolve_aoe_attack(attacker_stunned, (2,0), 2, state)
     assert res[1].outcome_kind == "REJECTED"
     assert res[1].failure_reason == "ATTACKER_STATUS_BLOCKED"
