@@ -25,7 +25,8 @@ class CalamityService:
         Processes maturity, calamity spawns, and regional intensity shifts.
         """
         updates = StateUpdate()
-        
+        flags = getattr(state, "feature_flags", None) or {}
+
         # 1. Maturity Advancement
         if state.tick % CalamityService.MATURITY_INTERVAL == 0 and state.tick > 0:
             updates = updates.replace(maturity_set=state.maturity + 1)
@@ -55,7 +56,18 @@ class CalamityService:
                     entities_add=[boss],
                     last_calamity_tick_set=state.tick
                 )
-            
+
+                # 3. Magical/Demonic Reproduction (additive, same trigger/target_region as the boss spawn)
+                if flags.get("ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH", "OFF") == "ON":
+                    magical_demonic_entity = generator.spawn_magical_demonic_entity(
+                        state=state,
+                        pos=target_region.center,
+                        birth_tick=state.tick,
+                    )
+                    updates = updates.replace(
+                        entities_add=updates.entities_add + [magical_demonic_entity],
+                    )
+
         return updates
 
     @staticmethod

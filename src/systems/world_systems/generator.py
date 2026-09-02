@@ -119,6 +119,38 @@ class EntityGenerator:
             .birth_record(parent_a_entity_id=None, parent_b_entity_id=None, birth_tick=birth_tick, birth_city_id=None)
             .build())
 
+    def spawn_magical_demonic_entity(
+        self, pos: tuple[float, float], state: AuthoritativeState | None = None,
+        kind: str = "magical_demonic_entity", difficulty_tier: int = 4, birth_tick: int = 0,
+    ) -> EntityState:
+        """Spawn a parentless magical/demonic entity directly at ADULT life stage (no
+        CHILD->ADULT maturation clock), with birth-record fields populated via the
+        parentless V2EntityBuilder.birth_record() path (both parent ids None)."""
+        entity_id = self.get_next_id()
+
+        from src.world.spawn_config import DIFFICULTY_TIERS
+        mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
+
+        tick = state.tick if state else 0
+        evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
+
+        base_hp = 50 * mults.hp
+        base_atk = 10 * mults.atk
+        base_def = 5 * mults.def_stat
+        base_gold = 10 * mults.gold
+
+        from src.core.builder import V2EntityBuilder
+        return (V2EntityBuilder(entity_id)
+            .kind(kind)
+            .location(*pos)
+            .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE,
+                      evolution_level=evolution_level)
+            .navigation(home_position=pos, leash_radius=10.0)
+            .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
+            .inventory(gold=int(base_gold))
+            .birth_record(parent_a_entity_id=None, parent_b_entity_id=None, birth_tick=birth_tick, birth_city_id=None)
+            .build())
+
     def spawn_goblin(self, pos: tuple[float, float], state: AuthoritativeState | None = None, difficulty_tier: int = 1) -> EntityState:
         """Specialized goblin spawn with specific base stats for scaling tests."""
         entity_id = self.get_next_id()

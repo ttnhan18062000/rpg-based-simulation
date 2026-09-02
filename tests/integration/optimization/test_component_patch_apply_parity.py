@@ -128,6 +128,32 @@ def test_natural_creature_spawn_commits_through_authoritative_apply_path():
     assert result_entity.identity.life_stage == LifeStage.CHILD
 
 
+def test_magical_demonic_entity_spawn_commits_through_authoritative_apply_path():
+    """TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH: a parentless magical/demonic entity
+    built via EntityGenerator.spawn_magical_demonic_entity() and appended to
+    StateUpdate.entities_add must survive a full ApplyPath.apply_generation() round-trip,
+    including its birth-record fields and full-ADULT life stage (no maturation clock)."""
+    from src.systems.world_systems.generator import EntityGenerator
+
+    state = AuthoritativeState(tick=5000, seed=42, world_time=100, entities={})
+
+    generator = EntityGenerator(seed=42)
+    entity = generator.spawn_magical_demonic_entity(
+        (10.0, 20.0), state=state, difficulty_tier=4, birth_tick=5000,
+    )
+
+    update = StateUpdate(entities_add=[entity], force_full_scan=True)
+    new_state = ApplyPath.apply_generation(state, update, next_tick=5001, cadence=SystemCadence())
+
+    result_entity = new_state.entities[entity.id]
+    assert result_entity.kind == "magical_demonic_entity"
+    assert result_entity.lifecycle.parent_a_entity_id is None
+    assert result_entity.lifecycle.parent_b_entity_id is None
+    assert result_entity.lifecycle.birth_tick == 5000
+    assert result_entity.lifecycle.birth_city_id is None
+    assert result_entity.identity.life_stage == LifeStage.ADULT
+
+
 def test_self_model_patch_apply_parity_durable_materialization():
     """
     TCK-20260703-SIMQ-UPLIFT3-BRANCH-B (supplementary fix): direct regression guard for

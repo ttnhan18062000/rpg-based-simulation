@@ -301,6 +301,40 @@ case. This path only *reads* `compute_regional_scarcity()`/`migration_threshold`
 `population_cohorts_set` (the population-pressure feedback-loop closure is a separate, later
 mechanic).
 
+### Magical/Demonic Reproduction (TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH)
+
+Behind `ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH` (default OFF), `CalamityService.process_world_dynamics()`
+(`src/world/calamity.py`) gains a third, additive branch that spawns a parentless magical/demonic
+entity in the same high-intensity region as — and on the exact same trigger evaluation as — the
+existing world-boss spawn. No new maturity field, no new spawn-trigger vocabulary.
+
+**Trigger:** identical to the existing world-boss spawn's own trigger — `state.tick -
+state.last_calamity_tick >= CALAMITY_MIN_INTERVAL` (2000), `state.tick % CALAMITY_FORCE_INTERVAL ==
+0` (5000), and the region filter `calamity_intensity > 0.3` — all existing named constants already
+used by the boss-spawn block in the same function, not new authored numbers. The magical/demonic
+entity spawns at the same `target_region.center` already selected for the boss, not a separately
+computed region.
+
+**Parentless birth record:** the entity is built via `EntityGenerator.spawn_magical_demonic_entity()`,
+which calls `V2EntityBuilder.birth_record(parent_a_entity_id=None, parent_b_entity_id=None,
+birth_tick=state.tick, birth_city_id=None)` — no tracked parent pair, and consequently no
+`SocialBond` seeding (both parent ids `None`), identical to the Natural-Creature path above.
+
+**No childhood:** unlike the Natural-Creature path immediately above, this entity spawns directly
+at `LifeStage.ADULT` with `age_ticks=0` — no `life_stage=LifeStage.CHILD` kwarg and no pre-seeded
+`age_ticks` are ever passed to the builder. `IdentityComponent.life_stage` already defaults to
+`ADULT`, so this is satisfied by omission of the sibling path's maturation-clock trick, not by a
+new mechanism. There is no CHILD→ADULT transition and no maturation clock for this path at all —
+this is an explicit, resolved design decision (magical/demonic beings do not have a childhood), not
+an open question.
+
+**No population-pressure suppression gate:** unlike the Natural-Creature path, this branch does
+**not** read `compute_regional_scarcity()`/`migration_threshold`/`PopulationCohort` at all, and does
+not participate in §5's Migration Law in any way. A calamity-driven spawn is a world-threat
+escalation event, not a settlement/camp demographic signal — the existing world-boss branch this
+path sits beside has never had a population-pressure gate either. This path writes no
+`population_cohorts_set` under any circumstance.
+
 ---
 
 ## 7. Cultural Drift (E62)

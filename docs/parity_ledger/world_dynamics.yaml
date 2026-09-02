@@ -1722,3 +1722,34 @@
   test_path: tests/unit/world/test_natural_creature_reproduction.py::test_camp_maturity_threshold_spawns_natural_creature_offspring
   divergence_note: null
   proof_type: parity
+- id: WORLD-121
+  text: Behind ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH (default OFF), CalamityService.process_world_dynamics()
+    gains a third, additive branch that spawns a parentless magical/demonic entity
+    in the same target_region already selected for the existing world_boss spawn,
+    on the exact same should_spawn trigger (CALAMITY_MIN_INTERVAL, CALAMITY_FORCE_INTERVAL,
+    calamity_intensity > 0.3 region filter -- all reused verbatim, no new authored
+    trigger numbers). The entity is built via EntityGenerator.spawn_magical_demonic_entity()
+    with kind="magical_demonic_entity", role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE,
+    and spawns directly at LifeStage.ADULT with age_ticks=0 -- no life_stage=CHILD
+    kwarg and no pre-seeded age_ticks, i.e. no CHILD->ADULT maturation clock at all
+    (the opposite of the sibling natural-creature path's short-clock trick). Birth-record
+    fields are populated via V2EntityBuilder.birth_record() with both parent_a_entity_id/parent_b_entity_id
+    left None (no SocialBond seeding). This path does not reference compute_regional_scarcity()/migration_threshold/PopulationCohort
+    and applies no population-pressure suppression gate -- a calamity-driven spawn
+    is a world-threat escalation event, not a settlement/camp demographic signal,
+    matching the existing unguarded world_boss branch it sits beside. This path reads
+    and writes no population_cohorts, and adds no GeneticsSystem/GeneticProfile dependency.
+    The entity consumes the parentless birth-record schema shipped by SOC-259.
+  status: verified
+  priority: P2
+  v2_evidence: src/world/calamity.py -- CalamityService.process_world_dynamics() "3.
+    Magical/Demonic Reproduction" branch, flag-gated, reuses should_spawn/target_region
+    from the existing world_boss branch; src/systems/world_systems/generator.py --
+    EntityGenerator.spawn_magical_demonic_entity(); src/domains/optimization/feature_flags.py
+    -- ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH registered with default FeatureMode.OFF
+    (DEV-002 default-OFF policy for a brand-new mechanic). Cross-references SOC-259
+    (birth-record schema consumed). TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH.
+  test_path: tests/unit/world/test_calamity_magical_demonic_reproduction.py::test_calamity_trigger_spawns_magical_demonic_entity_when_flag_on
+  divergence_note: null
+  proof_type: parity
+  support_boundary: null

@@ -144,6 +144,13 @@ class FeatureFlagManager:
             # scarcity check. DEV-002 default-OFF policy applies -- brand-new mechanic, no corpus
             # profile turns this on and no SHADOW-validation history exists.
             "ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH): adds a new
+            # parentless, full-ADULT magical/demonic entity spawn branch inside
+            # CalamityService.process_world_dynamics() (src/world/calamity.py), additive to the
+            # existing world_boss spawn on the same should_spawn/target_region trigger. DEV-002
+            # default-OFF policy applies -- brand-new mechanic, no corpus profile turns this on
+            # and no SHADOW-validation history exists.
+            "ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH": FeatureMode.OFF,
         }
         if overrides:
             for k, v in overrides.items():
