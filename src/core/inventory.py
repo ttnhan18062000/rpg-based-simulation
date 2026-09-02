@@ -2,7 +2,10 @@
 # Compliance IDs: TOWN-079, TOWN-080, TOWN-081
 from __future__ import annotations
 from typing import List, Optional, Tuple
-from src.core.state import InventoryComponent, ItemStack, EntityState, EquipSlot
+from src.core.state import (
+    InventoryComponent, ItemStack, EntityState, EquipSlot, AuthoritativeState,
+    ItemInstance, AcquiredMethod,
+)
 from src.core.items import ItemRegistry
 from typing import TYPE_CHECKING
 import logging
@@ -212,4 +215,51 @@ class InventoryService:
             inventory,
             items=new_items,
             gold=max(0, inventory.gold + update.gold_delta)
+        )
+
+
+class ItemInstanceService:
+    """Per-tick stateful id allocator for ItemInstance minting, mirroring EntityGenerator._last_id
+    (src/systems/world_systems/generator.py:28-32). Callers MUST construct exactly one
+    ItemInstanceService(state) per tick/phase invocation and reuse that same instance across every
+    maybe_create_instance() call within that invocation — never re-instantiate mid-tick — so that
+    two mints in the same tick never read the same next_item_instance_id and collide. At the end
+    of the phase, propose next_item_instance_id_set=<instance>.last_id + 1 in the StateUpdate only
+    if at least one instance was actually minted (mirrors src/world/spawn.py:119's
+    `next_entity_id_set=generator._last_id + 1 if entities_add else None`)."""
+
+    def __init__(self, state: "AuthoritativeState"):
+        self._last_id = state.next_item_instance_id - 1
+
+    @property
+    def last_id(self) -> int:
+        return self._last_id
+
+    def maybe_create_instance(
+        self,
+        item_id: str,
+        significant: bool,
+        owner_entity_id: int,
+        tick: int,
+        acquired_method: AcquiredMethod,
+        state: "AuthoritativeState",
+    ) -> Optional[ItemInstance]:
+        """Pure construction only — does not mutate state. Caller must route the result through
+        StateUpdate.item_instances_add_or_update + next_item_instance_id_set (using this
+        instance's .last_id, see class docstring), applied only by ApplyPath.apply_generation.
+        Returns None when `significant` is False (ordinary ItemStack path, unaffected) or when
+        ENABLE_ITEM_INSTANCE_HISTORY is not ON. Does NOT increment/consume an id in either
+        None-returning case."""
+        if not significant:
+            return None
+        flags = getattr(state, "feature_flags", None) or {}
+        if flags.get("ENABLE_ITEM_INSTANCE_HISTORY", "OFF") != "ON":
+            return None
+        self._last_id += 1
+        return ItemInstance(
+            instance_id=self._last_id,
+            item_id=item_id,
+            owner_history=[str(owner_entity_id)],
+            acquired_tick=tick,
+            acquired_method=acquired_method,
         )

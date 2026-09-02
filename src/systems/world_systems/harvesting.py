@@ -16,7 +16,7 @@ class HarvestSystem:
             if not entity.interaction or entity.interaction.target_node_id is None:
                 continue
                 
-            if entity.identity.properties.get("interaction_kind") != "harvest":
+            if entity.interaction.kind != "harvest":
                 continue
                 
             node_id = entity.interaction.target_node_id

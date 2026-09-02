@@ -161,7 +161,9 @@ dispatches to it for any query routed to the `requirement_completeness_verificat
   not the caller/adapter code — the same reasoning already applied to Context Search's
   `index_version` above. `null` is the honest value.
 - `stable_entity_ids: "FULL"` — parity entry-ids are human-authored YAML fields
-  (`docs/parity_ledger/schema.json` id pattern `^[A-Z]+-[0-9]{3}$`), never build-derived;
+  (`docs/parity_ledger/schema.json` id pattern `^[A-Z]+(-[A-Z]+)*-[0-9]{3}$`, extended from the
+  single-segment-only `^[A-Z]+-[0-9]{3}$` by `TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT`
+  to admit established multi-segment shard ids like `WORLD-DEMO-001`), never build-derived;
   cross-shard uniqueness is enforced at build time by `DuplicateEntryIdError`
   (`tools/parity_index.py:235`, inside `_populate_entries()`). A removed id is tombstoned, never
   reused (`evidence_identity_kinds.schema.json`'s `PARITY_ENTRY.normalization_rules.delete`). This

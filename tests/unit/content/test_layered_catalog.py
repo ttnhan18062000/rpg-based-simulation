@@ -108,6 +108,7 @@ def test_layered_catalog_validation_errors():
                 "need_profile": "missing_need",
                 "sense_profile": "missing_sense",
                 "cognition_profile": "missing_cognition",
+                "intelligence_tier": "low",
                 "drive_profile": "missing_drive",
                 "natural_traits": ["missing_trait"],
                 "compatible_roles": ["missing_role"]
@@ -183,6 +184,7 @@ def test_phase23_reference_graph_and_dead_active_data():
             "id": "human", "display_name": "Human",
             "body_model": "humanoid", "need_profile": "human_needs",
             "sense_profile": "human_senses", "cognition_profile": "practical_human",
+            "intelligence_tier": "high",
             "drive_profile": "human_drives", "natural_traits": [], "compatible_roles": []
         }]
         with open(os.path.join(tmp_dir, "living", "races.yaml"), "w") as f:

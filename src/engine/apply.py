@@ -249,6 +249,18 @@ class ApplyPath:
             for corpse in plan.new_corpses:
                 new_corpses[corpse.id] = corpse
 
+        new_item_instances = dict(prior_state.item_instances)
+        for inst in update.item_instances_add_or_update:
+            new_item_instances[inst.instance_id] = inst
+        for instance_id, upd in update.item_instance_updates.items():
+            if upd.is_noop():
+                continue
+            existing = new_item_instances.get(instance_id)
+            if existing is not None and upd.owner_history_append is not None:
+                new_item_instances[instance_id] = replace(
+                    existing, owner_history=list(existing.owner_history) + [upd.owner_history_append]
+                )
+
         for e_id, tags in plan.dirty_tags_by_entity.items():
             dirty_builder.mark_entity(e_id, tags)
 
@@ -292,6 +304,7 @@ class ApplyPath:
         new_mode = update.current_mode_set if update.current_mode_set is not None else getattr(prior_state, "current_mode", 0)
         new_next_node = update.next_node_id_set if update.next_node_id_set is not None else getattr(prior_state, "next_node_id", 1000)
         new_next_entity = update.next_entity_id_set if update.next_entity_id_set is not None else getattr(prior_state, "next_entity_id", 1)
+        new_next_item_instance = update.next_item_instance_id_set if update.next_item_instance_id_set is not None else getattr(prior_state, "next_item_instance_id", 1)
         new_maturity = update.maturity_set if update.maturity_set is not None else prior_state.maturity
         new_last_calamity = update.last_calamity_tick_set if update.last_calamity_tick_set is not None else prior_state.last_calamity_tick
         new_rng = update.rng_checkpoint if update.rng_checkpoint is not None else prior_state.rng_checkpoint
@@ -398,6 +411,8 @@ class ApplyPath:
             processed_transaction_ids=new_processed,
             next_node_id=new_next_node,
             next_entity_id=new_next_entity,
+            item_instances=new_item_instances,
+            next_item_instance_id=new_next_item_instance,
             _active_nodes_grid=new_active_nodes,
             _building_map_cache=new_bldg_map,
             _has_hostiles_or_dead_cache=pass_hostile,
@@ -466,6 +481,7 @@ class ApplyPath:
                 update.identity.traits_add or
                 update.identity.traits_remove or
                 update.identity.breakthroughs_add or
+                update.identity.class_id_set is not None or
                 (update.identity.evolution_level_set is not None and update.identity.evolution_level_set > entity.identity.evolution_level)
             )) or
             (curr_id.evolution_level > entity.identity.evolution_level) or
@@ -484,7 +500,8 @@ class ApplyPath:
                 learned_skills=new_id.learned_skills,
                 traits=new_id.traits,
                 current_role=new_com.tactical_role,
-                active_breakthroughs=new_id.active_breakthroughs
+                active_breakthroughs=new_id.active_breakthroughs,
+                class_id=new_id.class_id
             )
             
             new_com = replace(new_com,
@@ -492,6 +509,7 @@ class ApplyPath:
                 atk=derived["atk"],
                 def_stat=derived["def_stat"],
                 evasion=derived["evasion"],
+                readiness_speed=derived.get("readiness_speed", new_com.readiness_speed),
                 move_cost=derived.get("move_cost", new_com.move_cost),
                 range=derived.get("range", new_com.range),
                 tactical_role=derived.get("tactical_role", new_com.tactical_role)
@@ -521,6 +539,7 @@ class ApplyPath:
         object.__setattr__(res, "veterancy_points", id_comp.veterancy_points)
         object.__setattr__(res, "veterancy_rank", id_comp.veterancy_rank)
         object.__setattr__(res, "unspent_ap", id_comp.unspent_ap)
+        object.__setattr__(res, "territory_maturity", id_comp.territory_maturity)
         object.__setattr__(res, "class_id", id_comp.class_id)
         object.__setattr__(res, "learned_skills", id_comp.learned_skills)
         object.__setattr__(res, "traits", id_comp.traits)

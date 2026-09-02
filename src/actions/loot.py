@@ -40,7 +40,7 @@ class LootAction:
             interaction=InteractionUpdate(
                 target_node_id=target_id,
                 progress_delta=0.0, # Will be incremented by LootSystem
-                reset=False
-            ),
-            property_updates={"interaction_kind": target_kind}
+                reset=False,
+                kind=target_kind
+            )
         )

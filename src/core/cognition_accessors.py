@@ -10,16 +10,16 @@ from src.core.self_model import (
 )
 
 def get_self_awareness(entity: EntityState) -> SelfAwarenessComponent:
-    """Helper to read self_awareness from new nested path."""
-    return entity.cognition.subjective.self.awareness
+    """Reads self_awareness from the real entity.self_model path (SelfModelBundle)."""
+    return entity.self_model.self_awareness
 
 def get_need_interpretation(entity: EntityState) -> NeedInterpretationComponent:
-    """Helper to read needs from new nested path."""
-    return entity.cognition.subjective.self.needs
+    """Reads needs from the real entity.self_model path (SelfModelBundle)."""
+    return entity.self_model.needs
 
 def get_capability_estimate(entity: EntityState) -> CapabilityEstimateComponent:
-    """Helper to read capabilities from new nested path."""
-    return entity.cognition.subjective.self.capability
+    """Reads capabilities from the real entity.self_model path (SelfModelBundle)."""
+    return entity.self_model.capabilities
 
 def get_knowledge_model(entity: EntityState) -> KnowledgeModelComponent:
     """Helper to read knowledge from new nested path."""

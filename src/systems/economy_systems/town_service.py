@@ -14,7 +14,7 @@ class TownServiceSystem:
             if not entity.interaction or entity.interaction.target_node_id is None:
                 continue
                 
-            kind = entity.identity.properties.get("interaction_kind")
+            kind = entity.interaction.kind
             if kind not in ["inn", "tavern", "guild"]:
                 continue
                 

@@ -140,7 +140,8 @@ class InteractionPatch(ComponentPatch):
                 new_int = changes.get("interaction", entity.interaction)
                 changes["interaction"] = replace(new_int,
                     target_node_id=u_int.target_node_id if u_int.target_node_id is not None else new_int.target_node_id,
-                    progress=new_int.progress + u_int.progress_delta
+                    progress=new_int.progress + u_int.progress_delta,
+                    kind=u_int.kind if u_int.kind is not None else new_int.kind
                 )
 
 
@@ -182,11 +183,13 @@ class IdentityPatch(ComponentPatch):
         vp = new_id.veterancy_points
         vrank = new_id.veterancy_rank
         ap = new_id.unspent_ap
+        tm = new_id.territory_maturity
         sk = set(new_id.learned_skills)
         tr = set(new_id.traits)
         brk = set(new_id.active_breakthroughs)
         cds = dict(new_id.cooldowns)
         ls = new_id.life_stage
+        cls_id = new_id.class_id
 
         if self.identity:
             u_id = self.identity
@@ -196,6 +199,7 @@ class IdentityPatch(ComponentPatch):
             if u_id.craft_target is not None: tgt = u_id.craft_target
             if u_id.evolution_level_set is not None: lvl = u_id.evolution_level_set
             if u_id.life_stage_set is not None: ls = u_id.life_stage_set
+            if u_id.class_id_set is not None: cls_id = u_id.class_id_set
             ep += u_id.evolution_points_delta
             if u_id.veterancy_points_delta != 0:
                 proc_id = VeterancyService.process_points(new_id, u_id.veterancy_points_delta)
@@ -203,6 +207,7 @@ class IdentityPatch(ComponentPatch):
                 vrank = proc_id.veterancy_rank
             if u_id.unspent_ap_set is not None: ap = u_id.unspent_ap_set
             else: ap += u_id.unspent_ap_delta
+            tm += u_id.territory_maturity_delta
             sk |= set(u_id.learned_skills)
             tr = (tr | set(u_id.traits_add)) - set(u_id.traits_remove)
             brk |= set(u_id.breakthroughs_add)
@@ -221,8 +226,10 @@ class IdentityPatch(ComponentPatch):
             changes["identity"] = ApplyPath._fast_replace_identity(new_id, intents)
         else:
             changes["identity"] = replace(new_id, role=rl, faction=fac, known_recipes=frozenset(rec),
-                                          craft_target=tgt, evolution_level=lvl, life_stage=ls, evolution_points=ep,
-                                          veterancy_points=vp, veterancy_rank=vrank, unspent_ap=ap, learned_skills=frozenset(sk),
+                                          craft_target=tgt, evolution_level=lvl, life_stage=ls, class_id=cls_id,
+                                          evolution_points=ep,
+                                          veterancy_points=vp, veterancy_rank=vrank, unspent_ap=ap,
+                                          territory_maturity=tm, learned_skills=frozenset(sk),
                                           traits=frozenset(tr), active_breakthroughs=frozenset(brk),
                                           cooldowns=ReadOnlyDict(cds), group_id=gid, properties=ReadOnlyDict(props),
                                           latest_intent_results=intents)
@@ -641,6 +648,33 @@ class WoundPatch(ComponentPatch):
 
 
 @dataclass(frozen=True, slots=True)
+class StatusEffectPatch(ComponentPatch):
+    status_effect_update: Optional[Any] = None  # StatusEffectUpdate
+
+    def is_noop(self) -> bool:
+        return self.status_effect_update is None or self.status_effect_update.is_noop()
+
+    def merge(self, other: StatusEffectPatch) -> StatusEffectPatch:
+        if not other or other.is_noop():
+            return self
+        merged = (self.status_effect_update.merge(other.status_effect_update)
+                  if self.status_effect_update and other.status_effect_update
+                  else (other.status_effect_update or self.status_effect_update))
+        return StatusEffectPatch(entity_id=self.entity_id, status_effect_update=merged)
+
+    def apply(self, entity: EntityState, changes: Dict[str, Any]) -> None:
+        from src.engine.apply import replace
+        if self.status_effect_update:
+            new_com = changes.get("combat", entity.combat)
+            new_effects = list(new_com.status_effects)
+            if self.status_effect_update.effects_remove:
+                new_effects = [e for e in new_effects if e.kind not in self.status_effect_update.effects_remove]
+            new_effects.extend(self.status_effect_update.effects_add)
+            new_com = replace(new_com, status_effects=tuple(new_effects))
+            changes["combat"] = new_com
+
+
+@dataclass(frozen=True, slots=True)
 class SelfModelPatch(ComponentPatch):
     self_model_bundle_set: Optional[Any] = None  # SelfModelBundle
 
@@ -735,6 +769,9 @@ def extract_patches(entity_id: int, update: EntityUpdate) -> List[ComponentPatch
         if not p.is_noop(): patches.append(p)
     if update.wound_update is not None:
         p = WoundPatch(entity_id, wound_update=update.wound_update)
+        if not p.is_noop(): patches.append(p)
+    if update.status_effect_update is not None:
+        p = StatusEffectPatch(entity_id, status_effect_update=update.status_effect_update)
         if not p.is_noop(): patches.append(p)
     if update.self_model_bundle_set is not None:
         p = SelfModelPatch(entity_id, self_model_bundle_set=update.self_model_bundle_set)

@@ -5,7 +5,7 @@ E5 Pipeline Hardening Tests.
 """
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, ResourceNodeState, ItemStack, StrategicComponent, InventoryComponent
+from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, ResourceNodeState, ItemStack, StrategicComponent, InventoryComponent, StatusEffectState
 from src.core.enums import EntityRole, ReasonCode, Faction
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.apply import ApplyPath
@@ -58,12 +58,9 @@ def test_negative_case_stunned_actor_rejection():
 
     e1 = replace(
         e1,
-        identity=replace(
-            e1.identity,
-            properties={
-                **dict(e1.identity.properties),
-                "status_stunned": True,
-            },
+        combat=replace(
+            e1.combat,
+            status_effects=[StatusEffectState(kind="stunned", source="test_fixture", magnitude=1.0, expires_tick=-1)],
         ),
     )
 
@@ -109,6 +106,41 @@ def test_negative_case_stunned_actor_rejection():
         and event.reason == ReasonCode.ATTACKER_STATUS_BLOCKED
         for event in refined.rejection_events
     )
+
+def test_negative_case_no_active_status_actor_not_blocked():
+    """No-active-status baseline for ActorValidityPhase: an entity with an empty
+    combat.status_effects list must not be rejected as ATTACKER_STATUS_BLOCKED."""
+    entity_id = 1
+    e1 = create_mock_entity(entity_id, hp=100)
+
+    state = AuthoritativeState(
+        tick=1,
+        seed=1,
+        entities={
+            entity_id: e1,
+        },
+    )
+
+    update = StateUpdate(
+        entity_updates={
+            entity_id: EntityUpdate(
+                entity_id=entity_id,
+                navigation=NavigationUpdate(
+                    target_set=(1.0, 1.0),
+                ),
+            )
+        }
+    )
+
+    refined = ActorValidityPhase.resolve(
+        state,
+        update,
+    )
+
+    refined_entity_update = refined.entity_updates[entity_id]
+    assert refined_entity_update.navigation.failure_reason != ReasonCode.ATTACKER_STATUS_BLOCKED
+    assert refined.rejections_delta.get(ReasonCode.ATTACKER_STATUS_BLOCKED, 0) == 0
+
 
 def test_negative_case_depleted_node():
     # RPG-1690: negative_case_depleted_node

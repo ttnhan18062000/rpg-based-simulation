@@ -50,6 +50,7 @@ ARTIFACT_TYPE_VALUES = _vfm.ARTIFACT_TYPE_VALUES
 FORBIDDEN_PRIORITY_TAGS = _vfm.FORBIDDEN_PRIORITY_TAGS
 TAG_SYNONYM_MAP = _vfm.TAG_SYNONYM_MAP
 TAG_TAXONOMY_EFFECTIVE_DATE = _vfm.TAG_TAXONOMY_EFFECTIVE_DATE
+load_registry = _vfm.load_registry
 
 
 # ---------------------------------------------------------------------------
@@ -243,6 +244,19 @@ class TestDocContentType:
     def test_doc_tags_optional_absent(self, tmp_path):
         f = self._doc_file(tmp_path, _doc_fm())
         assert validate_file(f) == []
+
+    def test_invalid_layer_doc_fixture_still_rejected(self):
+        """Regression pin (TCK-20260831-DOC-TAG-ENFORCEMENT): the one real doc-layer violation
+        found in the live corpus, `docs/simulation/domains/social_memory_contract.md`
+        (`layer: social`, not a registered layer). Confirms the pre-existing, already-working
+        doc-layer enum check is unaffected by this ticket's doc-tag-check changes. This file's
+        frontmatter is intentionally NOT fixed as part of this ticket (see plan.md Decision 4) —
+        a future fix to it must deliberately update this test, not silently flip it to pass."""
+        errors = validate_file(
+            _REPO_ROOT / "docs/simulation/domains/social_memory_contract.md",
+            content_type_override="doc",
+        )
+        assert any("layer" in e and "invalid value 'social'" in e for e in errors), errors
 
 
 # ---------------------------------------------------------------------------
@@ -619,6 +633,117 @@ class TestTagRegistryEnforcement:
             tmp_path, _ticket_fm(ticket_id="TCK-20260101-OLD", tags="[some-unregistered-tag]")
         )
         assert validate_file(f, registry={}) == []
+
+
+# ---------------------------------------------------------------------------
+# Group 6e — Doc tag enforcement (TCK-20260831-DOC-TAG-ENFORCEMENT)
+#
+# `doc`-type frontmatter gets its own opt-in cutover signal, `tags_enforced: true`, rather than
+# the ticket/artifact side's ticket_id-embedded-date scope (docs have no `ticket_id` field at
+# all). A doc lacking `tags_enforced` — the entire corpus as of this ticket — is exempt/
+# grandfathered; the check only bites a doc that explicitly opts in.
+# ---------------------------------------------------------------------------
+
+class TestDocTagEnforcement:
+    def _doc_file(self, tmp_path: Path, content: str) -> Path:
+        d = tmp_path / "docs" / "mechanics"
+        d.mkdir(parents=True, exist_ok=True)
+        return _write(d / "test.md", content)
+
+    def test_doc_registered_tag_accepted(self, tmp_path):
+        registry = {"faction": {"tag": "faction", "category": "subsystem-topic"}}
+        f = self._doc_file(
+            tmp_path, _doc_fm(tags="[faction]", tags_enforced="true")
+        )
+        assert validate_file(f, registry=registry) == []
+
+    def test_doc_unregistered_tag_rejected(self, tmp_path):
+        f = self._doc_file(
+            tmp_path, _doc_fm(tags="[some-new-tag]", tags_enforced="true")
+        )
+        errors = validate_file(f, registry={})
+        assert any("some-new-tag" in e and "not in the tag registry" in e for e in errors)
+        assert any("tools/tag_registry.py add" in e for e in errors)
+
+    def test_doc_non_canonical_tag_rejected(self, tmp_path):
+        f = self._doc_file(
+            tmp_path, _doc_fm(tags="[Combat]", tags_enforced="true")
+        )
+        errors = validate_file(f, registry={})
+        assert any("not canonical form" in e for e in errors)
+        assert not any("not in the tag registry" in e for e in errors)
+
+    def test_doc_phase_milestone_tag_exempt_from_registration(self, tmp_path):
+        f = self._doc_file(
+            tmp_path, _doc_fm(tags="[phase-5]", tags_enforced="true")
+        )
+        assert validate_file(f, registry={}) == []
+
+    def test_doc_missing_cutover_field_defaults_to_exempt(self, tmp_path):
+        """A doc with no `tags_enforced` field at all (the default shape of every doc in the
+        corpus today) is exempt from the tag check, even with a definitely-unregistered tag and
+        an empty registry — matches the ticket/artifact side's pre-cutoff exemption semantics."""
+        f = self._doc_file(
+            tmp_path, _doc_fm(tags="[some-unregistered-tag]")
+        )
+        assert validate_file(f, registry={}) == []
+
+    def test_doc_predating_cutover_signal_not_newly_rejected(self):
+        """AC-mandated grandfathering test against a real, pre-existing doc fixture:
+        docs/world/assembly_contract.md carries the tag `contract`, confirmed unregistered in
+        registries/tag_registry.jsonl, and carries no `tags_enforced` field. It must not be newly
+        broken by this ticket's doc-tag check."""
+        errors = validate_file(
+            _REPO_ROOT / "docs/world/assembly_contract.md",
+            content_type_override="doc",
+            registry={},
+        )
+        assert not any(e.startswith(f"{_REPO_ROOT / 'docs/world/assembly_contract.md'}: tags:") for e in errors)
+
+    def test_doc_within_cutover_scope_with_registered_tag_passes_end_to_end(self, tmp_path):
+        """Integration: an in-scope doc (tags_enforced: true) with only already-registered tags
+        validates cleanly against the real, live registry file — not just a mock."""
+        f = self._doc_file(
+            tmp_path, _doc_fm(tags="[combat, ai]", tags_enforced="true")
+        )
+        assert validate_file(f, registry=load_registry()) == []
+
+    def test_validate_doc_no_longer_silently_skips_tags(self, tmp_path):
+        """Primary anti-no-op guard: an in-scope doc fixture with a definitely-unregistered tag
+        and an empty registry must produce a non-empty, `tags`-mentioning error list. This test
+        fails against a naive `_check_tags(filepath, fm, registry)` wire-in (which is a permanent
+        no-op for docs, since no doc frontmatter carries `ticket_id`) and passes only against a
+        real, functioning doc-tag check."""
+        f = self._doc_file(
+            tmp_path, _doc_fm(tags="[definitely-unregistered-tag]", tags_enforced="true")
+        )
+        errors = validate_file(f, registry={})
+        assert errors != []
+        assert any("tags" in e for e in errors)
+
+    def test_check_tags_ticket_scope_unaffected_by_doc_generalization(self, tmp_path):
+        """Architecture guard: extracting `_tag_membership_errors` out of `_check_tags` (to share
+        with `_check_doc_tags`) must not alter ticket/artifact-side behavior. Directly re-asserts
+        a registered-tag-accepted and an unregistered-tag-rejected scenario against the ticket
+        content type, mirroring TestTagRegistryEnforcement's own coverage as an explicit guard
+        co-located with the doc-side generalization that motivated it."""
+        ticket_dir = tmp_path / "tickets" / "done"
+        ticket_dir.mkdir(parents=True, exist_ok=True)
+
+        registered = _write(
+            ticket_dir / "TCK-REG.md",
+            _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[faction]"),
+        )
+        assert validate_file(
+            registered, registry={"faction": {"tag": "faction", "category": "subsystem-topic"}}
+        ) == []
+
+        unregistered = _write(
+            ticket_dir / "TCK-UNREG.md",
+            _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[some-new-tag]"),
+        )
+        errors = validate_file(unregistered, registry={})
+        assert any("not in the tag registry" in e for e in errors)
 
 
 # ---------------------------------------------------------------------------

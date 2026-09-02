@@ -197,6 +197,15 @@ ideas 39/51 and 32 can't be corpus-tested at all until their own upstream mechan
 one's findings feed directly back into M2/M3/M4's own scope — read it before, not after, those epics start
 their affected tickets.
 
+**Idea 66 (Region Contains Multiple Places) has its own dedicated high-level plan, 2026-09-02:**
+[`docs/plans/rpg_design_roadmap/rpg_idea66_region_place_rebuild_plan.md`](rpg_idea66_region_place_rebuild_plan.md)
+— promoted out of this epic's own item 9 since idea 66 "owns the world-schema migration and corpus-wide
+grade-anchor impact directly" (see this section's gate note above). Pulls together the full field-level
+schema, the two-stage pilot plan, and the `state_hash`-first recalibration procedure into one scoping
+document, ready for the next ticket-creation pass — this is the current single highest-leverage next step
+in RPG-core planning, since it's the confirmed sequencing gate for M2's remaining two ideas (35, 48) and
+M4's place-shaped branch (44-47, 61), and no implementation ticket exists for it yet.
+
 ### M9 — World Corpus Test Coverage for New Features (follow-up, informs M1-M8, doesn't block them)
 
 **Tracking epic**: `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (not yet created, scope-only — see

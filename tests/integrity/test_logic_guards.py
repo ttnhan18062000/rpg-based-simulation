@@ -1,3 +1,4 @@
+import dataclasses
 import inspect
 import pytest
 from dataclasses import replace
@@ -578,3 +579,43 @@ def test_building_hp_reduction_traces_to_single_authoritative_source():
     source = inspect.getsource(AuthoritativeApplyPipeline.refine)
     assert source.count(".resolve(") >= 1
     assert source.count("BuildingSabotageSystem.resolve") == 1
+
+
+def test_self_model_cognition_wrapper_deleted_and_not_reintroduced():
+    """
+    STRICT LAW:
+        entity.self_model (SelfModelBundle, src/core/self_model.py) is the sole
+        live self-model representation, written by SelfModelUpdatePhase behind
+        ENABLE_SELF_MODEL_COGNITION. The dead duplicate cognition.py wrapper
+        dataclass (formerly SubjectiveModel.self) was deleted by
+        TCK-20260831-DEAD-COGNITION-SCHEMA-DECISION after confirming zero
+        production constructions anywhere.
+
+    Fraud this catches:
+        - the deleted wrapper dataclass silently reappears (e.g. via a bad
+          rebase) as a second, unreconciled self-model representation under
+          cognition.py.
+        - a test file hand-constructs the deleted wrapper again instead of
+          building entity.self_model directly.
+        - entity.self_model and entity.cognition collapse back into the same
+          field, losing the real/dead distinction this decision established.
+    """
+    import glob
+
+    deleted_wrapper_name = "SelfModel" + "("
+
+    with pytest.raises(ImportError):
+        from src.core.cognition import SelfModel  # noqa: F401
+
+    for path in glob.glob("tests/**/*.py", recursive=True):
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+        if path.replace("\\", "/").endswith("tests/integrity/test_logic_guards.py"):
+            continue
+        assert deleted_wrapper_name not in text, f"{path} still constructs the deleted cognition.py wrapper"
+
+    from src.core.state import EntityState
+    entity = EntityState(id=1, kind="HERO")
+    assert entity.self_model is not entity.cognition
+    field_names = {f.name for f in dataclasses.fields(EntityState)}
+    assert {"self_model", "cognition"}.issubset(field_names)

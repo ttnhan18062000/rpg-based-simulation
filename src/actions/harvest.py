@@ -33,10 +33,10 @@ class HarvestAction:
             interaction=InteractionUpdate(
                 target_node_id=target_node_id,
                 progress_delta=0.0,
-                reset=False
+                reset=False,
+                kind="harvest"
             ),
             property_updates={
-                "interaction_kind": "harvest",
                 "harvest_duration": float(node.required_ticks)
             }
         )

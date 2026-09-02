@@ -3,7 +3,7 @@ status: authoritative
 layer: systems
 authority: P1
 audience: agent
-last_verified: 2026-06-12
+last_verified: 2026-09-01
 tags: [content, semantics, contract, compile-time]
 ---
 
@@ -57,13 +57,13 @@ Compliance IDs: WORLD-SEM-001 (faction.py:1), WORLD-SEM-002 (faction.py:1).
 
 Compliance IDs: WORLD-SEM-003 (relation.py:1), WORLD-SEM-004 (relation.py:1).
 
-Projects a relationship label between two factions using catalog `PerspectiveDefinition` and `FactionRelationshipDefinition` records.
+Projects a relationship label between two factions using catalog `PerspectiveDefinition` and `FactionRelationshipDefinition` records. If `source_race`/`target_race` are both set and a matching `RaceRelationRecord` (`social/race_relations.yaml`) exists, its `axes.hostility` may upgrade (never downgrade) the resolved label, gated off for same-faction pairs to preserve the Friendly Fire law.
 
 **Projection contract:**
 - Input: `perspective_id`, `source_faction_id`, `target_faction_id`, optional `RelationContext`
 - Output: `RelationProjection` with `label` (string), `axes` (Dict[str, str]), `confidence` (float 0–1), `relationship_model`, `source_records` (list of catalog IDs used)
 
-**RelationContext fields** (all optional): `distance`, `location`, `intruding`, `combat_engaged`, `target_race`.
+**RelationContext fields** (all optional): `distance`, `location`, `intruding`, `combat_engaged`, `target_race`, `source_race`.
 
 **Fallback:** If no matching perspective or faction relationship is found, returns a default neutral projection with `confidence=0.0`.
 

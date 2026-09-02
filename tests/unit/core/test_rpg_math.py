@@ -61,6 +61,40 @@ def test_stat_recalculation():
     
     print("\nSuccessfully verified Stat Recalculation (Attributes + Gear).")
 
+def test_combat_stats_stay_within_bounds_after_normal_recalculation():
+    # SUB-051: CombatComponent/derived-stat numeric invariants for normal, in-range
+    # AttributeComponent construction (docs/mechanics/01_entity_anatomy.md Section 1's
+    # 1-99 attribute range, Section 2's derived-stat formulas). Deliberately excludes
+    # out-of-range/adversarial attributes -- that would hit AttributePatch.apply's
+    # unrelated, pre-existing clamp bug (src/engine/patches.py), out of scope here.
+    cases = [
+        AttributeComponent(),  # baseline/default: all nine attributes at 5
+        AttributeComponent(agility=1),  # near-floor agility -> readiness_speed floor
+        AttributeComponent(
+            strength=99, agility=99, vitality=99, endurance=99, intelligence=99,
+            spirit=99, wisdom=99, perception=99, charisma=99,
+        ),  # documented attribute cap
+    ]
+
+    for attrs in cases:
+        recalculated = LevelingService.recalculate_combat_stats(attrs)
+        effective = SkillScalingService.get_effective_stats(attrs)
+
+        for stats in (recalculated, effective):
+            assert stats["max_hp"] > 0
+            assert isinstance(stats["max_hp"], int)
+            assert stats["atk"] >= 1
+            assert stats["def_stat"] >= 1
+            assert 0.0 <= stats["evasion"] <= 0.95
+            assert stats["readiness_speed"] >= 1.0
+
+    baseline_stats = LevelingService.recalculate_combat_stats(cases[0])
+    combat = CombatComponent(hp=baseline_stats["max_hp"], max_hp=baseline_stats["max_hp"])
+    assert 0 <= combat.hp <= combat.max_hp
+    assert combat.max_hp > 0
+
+    print("\nSuccessfully verified CombatComponent/derived-stat invariants (SUB-051).")
+
 def test_encumbrance_scaling():
     attrs = AttributeComponent(agility=10) # -1.0 cost
     

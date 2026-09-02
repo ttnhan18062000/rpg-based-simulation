@@ -272,34 +272,50 @@ def test_recruitment_gold_handoff(base_state):
     assert up2.resource_transfers[0].gold_delta == 500
 
 def test_class_hall_train_refactor():
-    # Setup state
+    # Setup state: teacher (1) has no gold requirement; student (2) trusts the teacher.
+    from src.core.state import SocialBond
     hero = (V2EntityBuilder(1)
             .kind("HERO")
             .location(1.0, 1.0)
             .combat(readiness=100.0)
             .inventory(gold=100)
             .build())
-    
-    state = AuthoritativeState(entities={1: hero}, tick=0, seed=123)
-    
-    # Propose TRAIN action
-    payload = {"action": "TRAIN", "skill_id": "STRIKE"}
-    update_dict = SimulationDomainLogic.execute_action(hero, payload=payload)
+    student = (V2EntityBuilder(2)
+            .kind("HERO")
+            .location(1.0, 1.0)
+            .combat(readiness=100.0)
+            .inventory(gold=0)
+            .build())
+    student = replace(
+        student,
+        social=replace(student.social, bonds={1: SocialBond(target_id=1, sentiment=0.8)}),
+    )
+
+    state = AuthoritativeState(entities={1: hero, 2: student}, tick=0, seed=123)
+
+    # Propose TRAIN action: teacher (1) teaches student (2)
+    payload = {"action": "TRAIN", "skill_id": "STRIKE", "target_id": 2}
+    update_dict = SimulationDomainLogic.execute_action(
+        hero, payload=payload, neighbor_view=[(2, student)], context=state
+    )
     raw_update = StateUpdate(entity_updates=update_dict)
-    
+
     # Refine through pipeline
     refined = AuthoritativeApplyPipeline.refine(state, raw_update)
-    
-    # Verify: Intent generated and resolved
-    ent_upd = refined.entity_updates[1]
-    assert ent_upd.inventory is not None, f"Failure reason: {ent_upd.navigation.failure_reason if ent_upd.navigation else 'None'}"
-    assert ent_upd.inventory.gold_delta == -50
+
+    # Verify: student's IdentityUpdate is emitted directly, no ResourceTransferIntent
+    student_upd = refined.entity_updates[2]
+    assert student_upd.identity is not None
+    assert student_upd.identity.recipes_learned == ["STRIKE"]
+    assert not student_upd.resource_transfers
+
     # Apply refined update manually to verify state transition
     from src.engine.apply import ApplyPath
     next_state = ApplyPath.apply_generation(state, refined)
-    
-    assert next_state.entities[1].inventory.gold == 50 # 100 - 50
-    assert "STRIKE" in next_state.entities[1].identity.known_recipes
+
+    assert "STRIKE" in next_state.entities[2].identity.known_recipes
+    assert next_state.entities[1].inventory.gold == 100  # unchanged, no gold leg
+    assert next_state.entities[2].inventory.gold == 0  # unchanged, no gold leg
 
 def test_chest_looting_and_cooldown():
     # Setup state

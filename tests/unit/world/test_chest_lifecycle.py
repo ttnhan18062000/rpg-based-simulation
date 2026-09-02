@@ -11,8 +11,9 @@ def test_chest_looting():
         .kind("HERO")
         .location(5, 5)
         .interaction(target_node_id=1, progress=9.0)
-        .identity(properties={"interaction_kind": "chest"})
         .build())
+    from dataclasses import replace
+    entity = replace(entity, interaction=replace(entity.interaction, kind="chest"))
     
     # Setup chest
     chest = ChestState(
@@ -39,6 +40,31 @@ def test_chest_looting():
     chest_upd = update.chest_updates[1]
     assert chest_upd.items_set == []
     assert chest_upd.cooldown_set == 1000
+
+def test_chest_looting_ignores_non_chest_interaction():
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .location(5, 5)
+        .interaction(target_node_id=1, progress=9.0)
+        .build())
+    from dataclasses import replace
+    entity = replace(entity, interaction=replace(entity.interaction, kind="harvest"))
+
+    chest = ChestState(
+        id=1, position=(5, 5),
+        items=[ItemStack("gold_coin", 100)],
+        respawn_tick=1000
+    )
+
+    state = AuthoritativeState(
+        tick=100, seed=42,
+        entities={1: entity},
+        chests={1: chest}
+    )
+
+    update = ChestSystem.update(state)
+
+    assert 1 not in update.entity_updates
 
 def test_chest_respawn():
     # Setup chest in cooldown

@@ -158,6 +158,34 @@ class AuthoritativeApplyPipeline:
         )
         costs["memory_update"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Habit Bias Update (TCK-20260831-HABIT-BIAS-WIRING) ---
+        # Runs strictly after memory_update (not nested inside it) so it is independently
+        # gated by its own flag -- habit-bias recording must not require also turning on the
+        # unrelated ENABLE_MEMORY_UPDATE flag. Reuses the same combat_loss trigger-event list
+        # memory_update already built above, and reads entity_update.cognition_bundle_set
+        # through before replacing, so any same-tick memory_update write is preserved.
+        t_start = time.perf_counter_ns()
+        from src.domains.emotion.habit_phase import HabitBiasUpdatePhase
+        update = run_phase(
+            "habit_bias_action_style", update,
+            lambda u: HabitBiasUpdatePhase.apply(state, u, _memory_trigger_events),
+            "ENABLE_HABIT_BIAS_ACTION_STYLE",
+        )
+        costs["habit_bias_action_style"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Role Model Selection (TCK-20260831-ROLE-MODEL-IMITATION) ---
+        # Runs strictly after habit_bias_action_style so it reads through any same-tick
+        # cognition_bundle_set write that phase already staged (read-through-then-replace),
+        # independently gated by its own flag.
+        t_start = time.perf_counter_ns()
+        from src.strategy.role_model_phase import RoleModelSelectionPhase
+        update = run_phase(
+            "role_model_selection", update,
+            lambda u: RoleModelSelectionPhase.apply(state, u),
+            "ENABLE_ROLE_MODEL_IMITATION",
+        )
+        costs["role_model_selection"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 2: Self Model Cognition ---
         t_start = time.perf_counter_ns()
         from src.cognition import SelfModelUpdatePhase

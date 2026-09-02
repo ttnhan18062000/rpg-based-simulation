@@ -44,6 +44,7 @@ from src.content.schema import (
     RoleDefinition,
     PerspectiveDefinition,
     FactionRelationshipDefinition,
+    RaceRelationRecord,
     EntityArchetypeDefinition,
     PopulationRecipeDefinition,
     LegacyEnemyProjectionDefinition,
@@ -110,6 +111,7 @@ CANONICAL_FAMILIES: List[ContentFamilySpec] = [
     ContentFamilySpec("social.factions", "social/factions.yaml", FactionDefinition, "factions"),
     ContentFamilySpec("social.perspectives", "social/perspectives.yaml", PerspectiveDefinition, "perspectives"),
     ContentFamilySpec("social.faction_relationships", "social/faction_relationships.yaml", FactionRelationshipDefinition, "faction_relationships"),
+    ContentFamilySpec("social.race_relations", "social/race_relations.yaml", RaceRelationRecord, "race_relations"),
 
     # 4. Entities
     ContentFamilySpec("entities.stat_profiles", "entities/stat_profiles.yaml", StatsProfileDefinition, "stats_profiles"),
@@ -200,7 +202,8 @@ class CatalogRepository:
         self.factions: Dict[str, FactionDefinition] = {}
         self.perspectives: Dict[str, PerspectiveDefinition] = {}
         self.faction_relationships: Dict[str, FactionRelationshipDefinition] = {}
-        
+        self.race_relations: Dict[str, RaceRelationRecord] = {}
+
         # World
         self.buildings: Dict[str, BuildingDefinition] = {}
         self.terrain: Dict[str, TerrainDefinition] = {}
@@ -476,6 +479,9 @@ class CatalogRepository:
 
     def get_faction_relationship(self, def_id: str) -> Optional[FactionRelationshipDefinition]:
         return self.faction_relationships.get(def_id)
+
+    def get_race_relationship(self, def_id: str) -> Optional[RaceRelationRecord]:
+        return self.race_relations.get(def_id)
 
     def get_building(self, def_id: str) -> Optional[BuildingDefinition]:
         return self.buildings.get(def_id)
