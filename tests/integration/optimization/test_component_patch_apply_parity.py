@@ -154,6 +154,40 @@ def test_magical_demonic_entity_spawn_commits_through_authoritative_apply_path()
     assert result_entity.identity.life_stage == LifeStage.ADULT
 
 
+def test_birth_record_writes_genetic_profile_via_authoritative_apply_path():
+    """TCK-20260902-REPRODUCTION-GENETICS-INHERITANCE: a combined child GeneticProfile,
+    produced by V2EntityBuilder.birth_record()'s new parent-profile kwargs, must survive a
+    full ApplyPath.apply_generation() round-trip -- never a direct mutation."""
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import EntityRole
+    from src.systems.lifecycle_systems.genetics import GeneticsSystem
+
+    parent_a_profile = GeneticsSystem.generate_profile_from_seed(1)
+    parent_b_profile = GeneticsSystem.generate_profile_from_seed(2)
+
+    child = (V2EntityBuilder(99)
+             .location(0.0, 0.0)
+             .birth_record(
+                 parent_a_entity_id=1, parent_b_entity_id=2, birth_tick=10,
+                 parent_a_genetic_profile=parent_a_profile,
+                 parent_b_genetic_profile=parent_b_profile,
+                 parent_a_role=EntityRole.HERO, parent_b_role=EntityRole.HERO,
+             )
+             .build())
+
+    assert child.lifecycle.genetic_profile is not None
+
+    state = AuthoritativeState(tick=10, seed=42, world_time=100, entities={})
+    update = StateUpdate(entities_add=[child], force_full_scan=True)
+    new_state = ApplyPath.apply_generation(state, update, next_tick=11, cadence=SystemCadence())
+
+    result_profile = new_state.entities[99].lifecycle.genetic_profile
+    assert result_profile == child.lifecycle.genetic_profile
+    for attr in ("strength_mult", "agility_mult", "intelligence_mult",
+                 "wisdom_mult", "constitution_mult", "charisma_mult"):
+        assert 0.8 <= getattr(result_profile, attr) <= 1.3
+
+
 def test_self_model_patch_apply_parity_durable_materialization():
     """
     TCK-20260703-SIMQ-UPLIFT3-BRANCH-B (supplementary fix): direct regression guard for

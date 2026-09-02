@@ -51,6 +51,7 @@ from src.core.movement_modes import MovementMode
 from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
 from src.core.updates import EntityUpdate, SocialUpdate, SocialBondUpdate
+from src.systems.lifecycle_systems.genetics import GeneticsSystem, GeneticProfile
 
 
 def _component(cls: type, **kwargs):
@@ -589,6 +590,7 @@ class V2EntityBuilder:
         birth_tick: Optional[int] = None,
         birth_city_id: Optional[int] = None,
         reproduction_cooldowns: Optional[Dict[int, int]] = None,
+        genetic_profile: Optional[GeneticProfile] = None,
     ) -> V2EntityBuilder:
         current = self._lifecycle_to_dict()
 
@@ -607,6 +609,7 @@ class V2EntityBuilder:
             "birth_tick": birth_tick,
             "birth_city_id": birth_city_id,
             "reproduction_cooldowns": _copy_dict(reproduction_cooldowns) if reproduction_cooldowns is not None else None,
+            "genetic_profile": genetic_profile,
         }
 
         for key, value in updates.items():
@@ -625,11 +628,23 @@ class V2EntityBuilder:
         birth_city_id: Optional[int] = None,
         seed_familiarity: float = 0.8,
         seed_sentiment: float = 0.8,
+        parent_a_genetic_profile: Optional[GeneticProfile] = None,
+        parent_b_genetic_profile: Optional[GeneticProfile] = None,
+        parent_a_role: Optional[int] = None,
+        parent_b_role: Optional[int] = None,
     ) -> V2EntityBuilder:
         """
         Populate the new entity's parentage/birth fields and seed its own
         SocialBonds toward its parents. Parentless (natural-creature/magical)
         spawns pass no parent ids.
+
+        When at least one parent genetic profile is supplied, the child's
+        GeneticProfile is combined from both parents (missing parent profiles
+        fall back to a deterministic seed-derived profile, since no live spawn
+        path yet populates a parent's own genetic_profile). Combat-lean bias
+        applies only when both parents are EntityRole.HERO; any other parent-role
+        pairing (CITIZEN/SHOPKEEPER, WORKER/GUARD, or a mismatch between them)
+        falls through to the same neutral/civilian default.
         """
         self.lifecycle(
             parent_a_entity_id=parent_a_entity_id,
@@ -637,6 +652,13 @@ class V2EntityBuilder:
             birth_tick=birth_tick,
             birth_city_id=birth_city_id,
         )
+        if parent_a_genetic_profile is not None or parent_b_genetic_profile is not None:
+            combat_lean = (parent_a_role == EntityRole.HERO and parent_b_role == EntityRole.HERO)
+            a_profile = parent_a_genetic_profile or GeneticsSystem.generate_profile_from_seed(parent_a_entity_id or 0)
+            b_profile = parent_b_genetic_profile or GeneticsSystem.generate_profile_from_seed(parent_b_entity_id or 0)
+            combo_seed = (parent_a_entity_id or 0) * 1_000_003 + (parent_b_entity_id or 0) * 97 + birth_tick
+            combined = GeneticsSystem.combine_profiles(a_profile, b_profile, combat_lean=combat_lean, seed=combo_seed)
+            self.lifecycle(genetic_profile=combined)
         bonds: Dict[int, SocialBond] = {}
         for parent_id in (parent_a_entity_id, parent_b_entity_id):
             if parent_id is not None:

@@ -5,6 +5,9 @@ Covers:
 - LEG-RPG-144: Innate Talents (Genetics)
 - LEG-RPG-145: Skill Scaling (Types)
 """
+import inspect
+from pathlib import Path
+
 import pytest
 from src.systems.genetics import (
     GeneticsSystem, SkillScalingSystem,
@@ -114,3 +117,104 @@ class TestSkillScaling:
         power_without = SkillScalingSystem.compute_skill_power(skill, {"strength": 20.0})
 
         assert power_with_genetics > power_without  # 1.2x strength
+
+
+class TestCombineGeneticProfiles:
+    """Inheritance combination: two parent GeneticProfiles + occupation-bias -> a child
+    GeneticProfile, per TCK-20260902-REPRODUCTION-GENETICS-INHERITANCE."""
+
+    def test_combine_genetic_profiles_stays_within_multiplier_range(self):
+        floor = GeneticProfile(strength_mult=0.8, agility_mult=0.8, intelligence_mult=0.8,
+                                wisdom_mult=0.8, constitution_mult=0.8, charisma_mult=0.8)
+        ceiling = GeneticProfile(strength_mult=1.3, agility_mult=1.3, intelligence_mult=1.3,
+                                  wisdom_mult=1.3, constitution_mult=1.3, charisma_mult=1.3)
+
+        for combat_lean in (True, False):
+            for seed in (0, 1, 42, 999999):
+                combined = GeneticsSystem.combine_profiles(
+                    floor, ceiling, combat_lean=combat_lean, seed=seed
+                )
+                for attr in ("strength_mult", "agility_mult", "intelligence_mult",
+                             "wisdom_mult", "constitution_mult", "charisma_mult"):
+                    mult = getattr(combined, attr)
+                    assert 0.8 <= mult <= 1.3
+
+    def test_combine_genetic_profiles_is_deterministic(self):
+        parent_a = GeneticsSystem.generate_profile_from_seed(11)
+        parent_b = GeneticsSystem.generate_profile_from_seed(22)
+
+        combined_1 = GeneticsSystem.combine_profiles(parent_a, parent_b, combat_lean=True, seed=100)
+        combined_2 = GeneticsSystem.combine_profiles(parent_a, parent_b, combat_lean=True, seed=100)
+        assert combined_1 == combined_2
+
+        combined_different_seed = GeneticsSystem.combine_profiles(
+            parent_a, parent_b, combat_lean=True, seed=200
+        )
+        assert combined_1 != combined_different_seed
+
+    def test_adventurer_parents_bias_toward_combat_attributes(self):
+        """Two-HERO-parent pairs pull combat-relevant attributes (strength/agility/
+        constitution) measurably higher than the same parent pair without the bias."""
+        parent_a = GeneticsSystem.generate_profile_from_seed(1)
+        parent_b = GeneticsSystem.generate_profile_from_seed(2)
+        combat_attrs = ("strength_mult", "agility_mult", "constitution_mult")
+
+        combat_lean_means = []
+        neutral_means = []
+        for seed in range(30):
+            combat_lean = GeneticsSystem.combine_profiles(
+                parent_a, parent_b, combat_lean=True, seed=seed
+            )
+            neutral = GeneticsSystem.combine_profiles(
+                parent_a, parent_b, combat_lean=False, seed=seed
+            )
+            combat_lean_means.append(sum(getattr(combat_lean, a) for a in combat_attrs) / 3)
+            neutral_means.append(sum(getattr(neutral, a) for a in combat_attrs) / 3)
+
+        avg_combat_lean = sum(combat_lean_means) / len(combat_lean_means)
+        avg_neutral = sum(neutral_means) / len(neutral_means)
+        assert avg_combat_lean > avg_neutral
+
+    def test_civilian_parents_produce_flatter_neutral_spread(self):
+        """Any non-double-HERO pairing (civilian, worker/guard, or a mismatch) falls
+        through to the same neutral spread -- non-combat attributes are unaffected by
+        combat_lean either way."""
+        parent_a = GeneticsSystem.generate_profile_from_seed(3)
+        parent_b = GeneticsSystem.generate_profile_from_seed(4)
+        non_combat_attrs = ("intelligence_mult", "wisdom_mult", "charisma_mult")
+
+        for seed in range(10):
+            combat_lean = GeneticsSystem.combine_profiles(
+                parent_a, parent_b, combat_lean=True, seed=seed
+            )
+            neutral = GeneticsSystem.combine_profiles(
+                parent_a, parent_b, combat_lean=False, seed=seed
+            )
+            for attr in non_combat_attrs:
+                assert getattr(combat_lean, attr) == getattr(neutral, attr)
+
+
+def test_genetics_system_has_real_non_test_non_shim_caller():
+    """AC1 regression guard: GeneticsSystem/GeneticProfile must have at least one real,
+    live, non-test, non-shim call site in src/ -- so a future refactor cannot silently
+    remove the only caller and revert to the pre-TCK-20260902-REPRODUCTION-GENETICS-INHERITANCE
+    orphaned-system state."""
+    src_root = Path(__file__).resolve().parents[3] / "src"
+    excluded = {
+        src_root / "systems" / "lifecycle_systems" / "genetics.py",
+        src_root / "systems" / "genetics.py",
+    }
+
+    real_callers = []
+    for path in src_root.rglob("*.py"):
+        if path in excluded:
+            continue
+        text = path.read_text()
+        if "GeneticsSystem" in text or "GeneticProfile" in text:
+            real_callers.append(path)
+
+    assert real_callers, "expected at least one real, non-shim caller of GeneticsSystem/GeneticProfile in src/"
+
+    import src.core.builder as builder_module
+    birth_record_source = inspect.getsource(builder_module.V2EntityBuilder.birth_record)
+    assert "GeneticsSystem.combine_profiles" in birth_record_source

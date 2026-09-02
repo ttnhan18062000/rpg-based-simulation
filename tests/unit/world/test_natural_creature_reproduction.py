@@ -177,3 +177,24 @@ def test_flag_off_by_default_does_not_spawn_natural_creature_offspring():
     update = CampService.process_camps(state, generator)
 
     assert _natural_creature_offspring(update.entities_add) == []
+
+
+def test_natural_creature_and_magical_demonic_paths_never_attach_genetic_profile():
+    """TCK-20260902-REPRODUCTION-GENETICS-INHERITANCE anti-drift guard: neither
+    spawn path calls birth_record() with parent genetic profiles, so the produced
+    entity's lifecycle.genetic_profile must stay None -- this ticket's inheritance
+    wiring is human/humanoid-only, via V2EntityBuilder.birth_record()'s new optional
+    kwargs, and must never be exercised by the natural-creature or magical/demonic
+    parentless spawn paths."""
+    state = AuthoritativeState(tick=60, seed=42)
+    generator = EntityGenerator(seed=42)
+
+    natural_creature = generator.spawn_natural_creature_offspring(
+        (10.0, 20.0), state=state, kind="goblin_warrior", difficulty_tier=1, birth_tick=60,
+    )
+    assert natural_creature.lifecycle.genetic_profile is None
+
+    magical_demonic = generator.spawn_magical_demonic_entity(
+        (10.0, 20.0), state=state, difficulty_tier=4, birth_tick=60,
+    )
+    assert magical_demonic.lifecycle.genetic_profile is None

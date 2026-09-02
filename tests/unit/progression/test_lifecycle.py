@@ -433,6 +433,24 @@ def test_lifecycle_component_canonical_dict_round_trip_includes_birth_fields():
     assert parentless_canonical["reproduction_cooldowns"] == {}
 
 
+def test_canonical_dict_round_trip_includes_genetic_profile():
+    """TCK-20260902-REPRODUCTION-GENETICS-INHERITANCE: genetic_profile must serialize
+    deterministically via to_canonical_dict(), including the unset (None) case."""
+    from src.systems.lifecycle_systems.genetics import GeneticProfile
+
+    profile = GeneticProfile(strength_mult=1.2, agility_mult=0.9, intelligence_mult=1.1,
+                              wisdom_mult=1.0, constitution_mult=0.85, charisma_mult=1.05)
+    lifecycle = LifecycleComponent(genetic_profile=profile)
+    canonical = lifecycle.to_canonical_dict()
+    assert canonical["genetic_profile"] == {
+        "strength_mult": 1.2, "agility_mult": 0.9, "intelligence_mult": 1.1,
+        "wisdom_mult": 1.0, "constitution_mult": 0.85, "charisma_mult": 1.05,
+    }
+
+    unset = LifecycleComponent()
+    assert unset.to_canonical_dict()["genetic_profile"] is None
+
+
 def test_lifecycle_update_merges_birth_fields():
     """New *_set fields participate in is_noop() and merge() with last-non-None-wins
     semantics, matching heir_entity_id_set's existing behavior; reproduction_cooldowns_add

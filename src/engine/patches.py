@@ -91,6 +91,7 @@ class LifecyclePatch(ComponentPatch):
                     {**new_lifecycle.reproduction_cooldowns, **u_life.reproduction_cooldowns_add}
                     if u_life.reproduction_cooldowns_add else new_lifecycle.reproduction_cooldowns
                 ),
+                genetic_profile=u_life.genetic_profile_set if u_life.genetic_profile_set is not None else new_lifecycle.genetic_profile,
             )
         if new_lifecycle is not entity.lifecycle:
             changes["lifecycle"] = new_lifecycle

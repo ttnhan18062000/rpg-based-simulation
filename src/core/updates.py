@@ -22,6 +22,7 @@ from src.core.update_models.inventory import InventoryUpdate, ItemInstanceUpdate
 from src.core.update_models.quests import QuestUpdate
 from src.core.update_models.resources import ResourceTransferIntent
 from src.core.dirty import DirtySet
+from src.systems.lifecycle_systems.genetics import GeneticProfile
 
 
 @dataclass(frozen=True, slots=True)
@@ -446,6 +447,7 @@ class LifecycleUpdate:
     birth_tick_set: Optional[int] = None
     birth_city_id_set: Optional[int] = None
     reproduction_cooldowns_add: Dict[int, int] = field(default_factory=dict)  # per-key upsert, NOT wholesale replace
+    genetic_profile_set: Optional[GeneticProfile] = None
 
     def is_noop(self) -> bool:
         return (self.age_delta == 0 and self.generation_delta == 0 and
@@ -453,7 +455,8 @@ class LifecycleUpdate:
                 self.death_reason_set is None and self.heir_entity_id_set is None and
                 not self.heirlooms_add and self.parent_a_entity_id_set is None and
                 self.parent_b_entity_id_set is None and self.birth_tick_set is None and
-                self.birth_city_id_set is None and not self.reproduction_cooldowns_add)
+                self.birth_city_id_set is None and not self.reproduction_cooldowns_add and
+                self.genetic_profile_set is None)
 
     def merge(self, other: LifecycleUpdate) -> LifecycleUpdate:
         if not other or other.is_noop():
@@ -472,6 +475,7 @@ class LifecycleUpdate:
         if other.birth_city_id_set is not None: changes["birth_city_id_set"] = other.birth_city_id_set
         if other.reproduction_cooldowns_add:
             changes["reproduction_cooldowns_add"] = {**self.reproduction_cooldowns_add, **other.reproduction_cooldowns_add}
+        if other.genetic_profile_set is not None: changes["genetic_profile_set"] = other.genetic_profile_set
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
