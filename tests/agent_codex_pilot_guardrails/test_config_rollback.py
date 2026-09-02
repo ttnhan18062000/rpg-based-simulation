@@ -78,6 +78,33 @@ def test_disable_refuses_to_target_the_real_committed_config():
     assert_committed_config_hook_free(_REPO_ROOT)
 
 
+def test_rollback_scope_tools_hash_changes_with_any_shard_and_is_stable_otherwise(tmp_path):
+    """TCK-20260903-HOTFIX-CODEX-MONITORING-SHARD-AWARENESS: snapshot_rollback_scope's
+    tools.jsonl entry must track the real agent-monitoring/tools/tools-*.jsonl shard family, not
+    a single hardcoded (now nonexistent in the real repo) tools.jsonl file."""
+    monitoring_dir = tmp_path / "agent-monitoring"
+    (monitoring_dir / "tools").mkdir(parents=True)
+    (monitoring_dir / "runs.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (monitoring_dir / "events.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (monitoring_dir / "tools" / "tools-2026-W01.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (monitoring_dir / "tools" / "tools-unknown-week.jsonl").write_text('{"b": 1}\n', encoding="utf-8")
+    ticket_path = tmp_path / "TCK-SCRATCH-PILOT.md"
+    ticket_path.write_text("# scratch pilot ticket\n", encoding="utf-8")
+
+    unchanged = snapshot_rollback_scope(monitoring_dir, ticket_path)
+    assert snapshot_rollback_scope(monitoring_dir, ticket_path) == unchanged
+
+    (monitoring_dir / "tools" / "tools-2026-W01.jsonl").write_text('{"a": 2}\n', encoding="utf-8")
+    changed_first_shard = snapshot_rollback_scope(monitoring_dir, ticket_path)
+    assert changed_first_shard["tools.jsonl"] != unchanged["tools.jsonl"]
+    assert changed_first_shard["runs.jsonl"] == unchanged["runs.jsonl"]
+
+    (monitoring_dir / "tools" / "tools-2026-W01.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (monitoring_dir / "tools" / "tools-unknown-week.jsonl").write_text('{"b": 2}\n', encoding="utf-8")
+    changed_unknown_week_shard = snapshot_rollback_scope(monitoring_dir, ticket_path)
+    assert changed_unknown_week_shard["tools.jsonl"] != unchanged["tools.jsonl"]
+
+
 def test_rollback_scope_mismatch_raises():
     pre = {"runs.jsonl": "abc", "events.jsonl": "def", "tools.jsonl": "ghi", "pilot_ticket": "jkl"}
     post = {"runs.jsonl": "abc", "events.jsonl": "CHANGED", "tools.jsonl": "ghi", "pilot_ticket": "jkl"}

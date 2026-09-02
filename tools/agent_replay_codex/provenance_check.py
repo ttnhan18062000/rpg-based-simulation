@@ -11,15 +11,19 @@ import json
 from pathlib import Path
 
 from .errors import ContainmentViolationError
+from .monitoring_shards import tools_source_paths
 
-_MONITORING_FILENAMES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
+_SINGLE_FILE_MONITORING_FILENAMES = ("runs.jsonl", "events.jsonl")
 
 
 def assert_no_codex_provider_writes(agent_monitoring_dir: Path, provider_value: str = "codex") -> None:
-    """Reads the real runs.jsonl/events.jsonl/tools.jsonl and raises ContainmentViolationError if
-    any record's 'provider' field equals provider_value. Read-only — never writes."""
-    for filename in _MONITORING_FILENAMES:
-        path = agent_monitoring_dir / filename
+    """Reads the real runs.jsonl/events.jsonl and every 'tools' source file (a single legacy
+    tools.jsonl, or the weekly agent-monitoring/tools/tools-*.jsonl shards) and raises
+    ContainmentViolationError if any record's 'provider' field equals provider_value. Read-only —
+    never writes."""
+    paths = [agent_monitoring_dir / name for name in _SINGLE_FILE_MONITORING_FILENAMES]
+    paths.extend(tools_source_paths(agent_monitoring_dir))
+    for path in paths:
         if not path.exists():
             continue
         with open(path, "r", encoding="utf-8") as f:
@@ -33,6 +37,6 @@ def assert_no_codex_provider_writes(agent_monitoring_dir: Path, provider_value: 
                     continue
                 if isinstance(record, dict) and record.get("provider") == provider_value:
                     raise ContainmentViolationError(
-                        f"{filename}:{line_no}: found a live monitoring record with "
+                        f"{path.name}:{line_no}: found a live monitoring record with "
                         f"provider=={provider_value!r} — Codex must never be a live writer"
                     )

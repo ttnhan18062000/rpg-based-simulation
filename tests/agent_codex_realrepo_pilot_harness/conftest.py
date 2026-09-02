@@ -5,18 +5,23 @@ from pathlib import Path
 
 import pytest
 
+from tools.agent_replay_codex.monitoring_shards import read_tools_source_bytes
+
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_AGENT_MONITORING_DIR = _PROJECT_ROOT / "agent-monitoring"
 _WATCHED = (
     _PROJECT_ROOT / ".codex" / "config.toml",
-    _PROJECT_ROOT / "agent-monitoring" / "runs.jsonl",
-    _PROJECT_ROOT / "agent-monitoring" / "events.jsonl",
-    _PROJECT_ROOT / "agent-monitoring" / "tools.jsonl",
+    _AGENT_MONITORING_DIR / "runs.jsonl",
+    _AGENT_MONITORING_DIR / "events.jsonl",
 )
 
 
 def _snapshot() -> dict[str, bytes | None]:
     watched = {str(path): path.read_bytes() if path.is_file() else None for path in _WATCHED}
+    watched[str(_AGENT_MONITORING_DIR / "tools.jsonl")] = read_tools_source_bytes(
+        _AGENT_MONITORING_DIR
+    )
     watched.update(
         {
             str(path): path.read_bytes()
