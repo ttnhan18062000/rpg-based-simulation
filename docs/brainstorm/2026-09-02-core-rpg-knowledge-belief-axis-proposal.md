@@ -166,6 +166,7 @@ confirms, rather than changes, the Social axis proposal's own placement of ideas
   excluded as non-authoritative — `source_trust` is the one field this investigation confirms is
   behaviorally load-bearing enough that silent exclusion looks like a real risk, not a judgment call; the
   other 5 are not independently assessed to the same confidence.
+  **Promoted to `TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP` (2026-09-02).**
 - Whether `StrategicComponent.beliefs`'s weak `Dict[str, Any]` typing (§1.1) should be tightened to match
   its sibling fields — a small, low-risk type-safety fix flagged but not scoped as a ticket here.
 
