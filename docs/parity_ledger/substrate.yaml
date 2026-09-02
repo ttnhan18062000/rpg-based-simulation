@@ -545,13 +545,13 @@
   support_boundary: null
 - id: SUB-051
   text: "`test_stats_invariants`: Stats invariants \u2014 AOA Stabilization: Test\
-    \ CombatAspect invariants (formerly Stats).."
+    \ CombatComponent invariants (formerly Stats).."
   status: verified
   priority: P0
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/core/test_rpg_math.py::test_combat_stats_stay_within_bounds_after_normal_recalculation
   divergence_note: null
   support_boundary: null
 - id: SUB-052

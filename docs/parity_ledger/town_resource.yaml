@@ -309,7 +309,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/social/test_teach.py::test_teach_resolves_target_capability_blocker_not_teacher
   divergence_note: null
   support_boundary: null
 - id: TOWN-028
@@ -798,7 +798,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/resource/test_loot_channeling.py::test_loot_corpse_completion_transfers_all_item_stacks
   divergence_note: null
   support_boundary: null
 - id: TOWN-077
