@@ -3832,3 +3832,35 @@
   test_path: tests/unit/progression/test_genetics.py::TestCombineGeneticProfiles::test_adventurer_parents_bias_toward_combat_attributes
   divergence_note: null
   support_boundary: null
+- id: SOC-261
+  text: 'Marriage is a propose/accept contract gated on trust, not eligibility scoring:
+    CoreActions.execute_propose_marriage() (src/engine/domain/core_actions.py) is
+    a two-party action (entity=proposer, payload[''target_id'']=target) that builds
+    a transient ContractState(kind=ContractKind.MARRIAGE) and routes it through SocialAppraisalSystem.appraise_contract()
+    -- the target appraises the proposer, matching execute_recruit/execute_team_up/execute_trade/execute_train''s
+    existing target-appraises-offer convention. _appraise_marriage always accepts
+    once the shared hard-cancel prelude (trust_score<0.2, bond.sentiment<-0.8, or
+    betrayal_count>0 and trust_score<0.4) passes -- that prelude is the entire gate,
+    no additional utility/risk scoring, no eligibility_gate field. On ACCEPTED, a
+    new typed durable MarriageState record (own MarriageStatus enum: PROPOSED/ACCEPTED/REJECTED,
+    distinct from ContractStatus) is written via StrategicUpdate.marriages_add_or_update
+    on both the proposer''s and the target''s EntityUpdate, through the same authoritative
+    Patch.apply() merge path StrategicComponent.contracts already uses. ContractService.get_project_mapping()
+    returns None for MARRIAGE by construction -- it is not widened, so MARRIAGE never
+    materializes a tier-5 strategic project. Bigamy prevention, household/family/dependents
+    state, and fantasy-year aging/duration thresholds are deliberately out of scope
+    (TCK-20260902-MARRIAGE-PROPOSAL-CONTRACT).'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src/engine/domain/core_actions.py (CoreActions.execute_propose_marriage());
+    src/systems/social_systems/appraisal.py (SocialAppraisalSystem._appraise_marriage,
+    appraise_contract()'s MARRIAGE dispatch branch); src/core/strategic.py (ContractKind.MARRIAGE,
+    MarriageStatus, MarriageState, StrategicComponent.marriages); src/core/updates.py
+    (StrategicUpdate.marriages_add_or_update/marriages_remove); src/engine/patches.py
+    (Patch.apply() marriages merge); src/core/enums.py (ReasonCode.MARRIAGE_ACCEPTED/MARRIAGE_DECLINED);
+    src/engine/domain/action_router.py (PROPOSE_MARRIAGE branch).
+  proof_type: regression
+  test_path: tests/unit/social/test_marriage.py::test_marriage_refused_below_trust_hard_cancel_threshold
+  divergence_note: null
+  support_boundary: null

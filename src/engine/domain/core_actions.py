@@ -398,6 +398,74 @@ class CoreActions:
             return {entity.id: attacker_up, target_id: target_up}
 
     @staticmethod
+    def execute_propose_marriage(
+        entity: EntityState,
+        payload: Dict[str, Any],
+        current_tick: int,
+        neighbor_view: List[tuple[int, EntityState]],
+        context: Any
+    ) -> Dict[int, EntityUpdate]:
+        target_id = payload.get("target_id")
+        target = None
+        if neighbor_view:
+            for eid, ent in neighbor_view:
+                if eid == target_id:
+                    target = ent
+                    break
+        if not target and context and hasattr(context, "entities"):
+            target = context.entities.get(target_id)
+
+        if not target:
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND")
+            )}
+
+        from src.systems.social_systems.appraisal import SocialAppraisalSystem
+        from src.core.strategic import ContractState, ContractKind, ContractStatus, MarriageState, MarriageStatus
+        from src.core.updates import SocialUpdate, StrategicUpdate
+
+        temp_contract = ContractState(
+            id="temp_eval",
+            kind=ContractKind.MARRIAGE,
+            source_id=entity.id,
+            target_id=target.id,
+            terms={},
+            status=ContractStatus.OFFERED,
+            created_tick=current_tick
+        )
+        status, reason, _ = SocialAppraisalSystem.appraise_contract(target, temp_contract, context)
+
+        if status == ContractStatus.ACCEPTED:
+            marriage_record = MarriageState(
+                id=f"marriage_{entity.id}_{target_id}_{current_tick}",
+                proposer_entity_id=entity.id,
+                target_entity_id=target_id,
+                status=MarriageStatus.ACCEPTED,
+                married_tick=current_tick
+            )
+            proposer_up = EntityUpdate(
+                entity_id=entity.id,
+                strategic=StrategicUpdate(marriages_add_or_update=[marriage_record])
+            )
+            target_up = EntityUpdate(
+                entity_id=target_id,
+                strategic=StrategicUpdate(marriages_add_or_update=[marriage_record])
+            )
+            return {entity.id: proposer_up, target_id: target_up}
+        else:
+            proposer_up = EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-50.0,
+                task=replace(entity.task, payload={**payload, "outcome": "FAILURE", "reason": status.value})
+            )
+            target_up = EntityUpdate(
+                entity_id=target_id,
+                social=SocialUpdate(rejection_increment={entity.id: 1}, last_offer_tick_set=current_tick)
+            )
+            return {entity.id: proposer_up, target_id: target_up}
+
+    @staticmethod
     def execute_repair(
         entity: EntityState,
         current_tick: int

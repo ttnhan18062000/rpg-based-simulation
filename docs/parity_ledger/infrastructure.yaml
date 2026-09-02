@@ -3655,8 +3655,8 @@
   priority: P1
   legacy_evidence: null
   v2_evidence: "src/engine/pipeline.py:152 (information_belief call site, now wrapped\
-    \ in u.merge(...)); src/core/updates.py:946-950 (StateUpdate.merge(), delegates\
-    \ to merge_many); src/core/updates.py:663-697 (EntityUpdate.merge(), per-entity\
+    \ in u.merge(...)); src/core/updates.py:952-956 (StateUpdate.merge(), delegates\
+    \ to merge_many); src/core/updates.py:669-703 (EntityUpdate.merge(), per-entity\
     \ merge \u2014 two different entities' EntityUpdates never collide; self_model_bundle_set\
     \ prefers the later non-None set)\n"
   proof_type: parity

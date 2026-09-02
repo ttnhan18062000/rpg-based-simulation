@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
         CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState,
-        ContractState, TurningPointState, CommittedIntention
+        ContractState, TurningPointState, CommittedIntention, MarriageState
     )
     from src.engine.policy import GovernorPolicy
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
@@ -532,6 +532,9 @@ class StrategicUpdate:
     # Contracts
     contracts_add_or_update: list[ContractState] = field(default_factory=list)
     contracts_remove: list[str] = field(default_factory=list)
+    # Marriages
+    marriages_add_or_update: list[MarriageState] = field(default_factory=list)
+    marriages_remove: list[str] = field(default_factory=list)
     # Turning Points
     turning_points_add: list[TurningPointState] = field(default_factory=list)
     # Overload
@@ -558,6 +561,7 @@ class StrategicUpdate:
                 not self.candidate_zones_remove and not self.hypotheses_add_or_update and
                 not self.hypotheses_remove and not self.source_trust_updates and
                 not self.contracts_add_or_update and not self.contracts_remove and
+                not self.marriages_add_or_update and not self.marriages_remove and
                 not self.turning_points_add and self.overload_source_set is None and
                 self.overload_tick_set is None and self.last_routing_family_set is None and
                 self.last_routing_tick_set is None and not self.beliefs_add_or_update and
@@ -595,6 +599,8 @@ class StrategicUpdate:
             source_trust_updates=self.source_trust_updates + other.source_trust_updates,
             contracts_add_or_update=self.contracts_add_or_update + other.contracts_add_or_update,
             contracts_remove=self.contracts_remove + other.contracts_remove,
+            marriages_add_or_update=self.marriages_add_or_update + other.marriages_add_or_update,
+            marriages_remove=self.marriages_remove + other.marriages_remove,
             turning_points_add=self.turning_points_add + other.turning_points_add,
             overload_source_set=other.overload_source_set if other.overload_source_set is not None else self.overload_source_set,
             overload_tick_set=other.overload_tick_set if other.overload_tick_set is not None else self.overload_tick_set,

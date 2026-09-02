@@ -108,6 +108,7 @@ def test_shared_gate_no_fallthrough_for_gated_kinds():
         ContractKind.TEAM_UP: {"risk_level": "NORMAL"},
         ContractKind.PAID_INFORMATION: {},
         ContractKind.TEACH: {},
+        ContractKind.MARRIAGE: {},
     }
     for kind, terms in kind_terms.items():
         contract = ContractState(id=f"c_{kind.value}", kind=kind, source_id=2, target_id=1, terms=terms)
@@ -292,6 +293,56 @@ def test_teach_boundary_trust_score_matches_recruitment_and_team_up_just_below_0
 
     assert recruit_status == team_up_status == teach_status == ContractStatus.CANCELLED
     assert recruit_reason == team_up_reason == teach_reason == ReasonCode.TOTAL_DISTRUST
+
+
+def test_marriage_boundary_trust_score_matches_recruitment_and_team_up_and_teach_just_below_0_2():
+    """Same boundary-value proof as the TEACH test above, extended to MARRIAGE: a trust score
+    just under the shared hard-cancel threshold (0.195, not exactly 0.2 -- strict '<' comparison
+    at appraisal.py:48) must produce the same CANCELLED/TOTAL_DISTRUST outcome for MARRIAGE as it
+    already does for RECRUITMENT/TEAM_UP/TEACH -- proving no marriage-specific threshold drift."""
+    from src.core.enums import ReasonCode
+    from src.core.state import SocialBond
+
+    def entity_at_boundary_trust():
+        entity = create_mock_entity(1)
+        # trust_score = (sentiment + 1.0) / 2.0 == 0.195 -> sentiment == -0.61
+        return replace(
+            entity,
+            social=replace(entity.social, bonds={2: SocialBond(target_id=2, sentiment=-0.61)}),
+        )
+
+    state = AuthoritativeState(tick=100, seed=42)
+
+    recruitment_contract = ContractState(
+        id="c_recruit_boundary_marriage", kind=ContractKind.RECRUITMENT, source_id=2, target_id=1,
+        terms={"daily_pay": 20},
+    )
+    team_up_contract = ContractState(
+        id="c_team_up_boundary_marriage", kind=ContractKind.TEAM_UP, source_id=2, target_id=1,
+        terms={"risk_level": "NORMAL"},
+    )
+    teach_contract = ContractState(
+        id="c_teach_boundary_marriage", kind=ContractKind.TEACH, source_id=2, target_id=1, terms={},
+    )
+    marriage_contract = ContractState(
+        id="c_marriage_boundary", kind=ContractKind.MARRIAGE, source_id=2, target_id=1, terms={},
+    )
+
+    recruit_status, recruit_reason, _ = SocialAppraisalSystem.appraise_contract(
+        entity_at_boundary_trust(), recruitment_contract, state
+    )
+    team_up_status, team_up_reason, _ = SocialAppraisalSystem.appraise_contract(
+        entity_at_boundary_trust(), team_up_contract, state
+    )
+    teach_status, teach_reason, _ = SocialAppraisalSystem.appraise_contract(
+        entity_at_boundary_trust(), teach_contract, state
+    )
+    marriage_status, marriage_reason, _ = SocialAppraisalSystem.appraise_contract(
+        entity_at_boundary_trust(), marriage_contract, state
+    )
+
+    assert recruit_status == team_up_status == teach_status == marriage_status == ContractStatus.CANCELLED
+    assert recruit_reason == team_up_reason == teach_reason == marriage_reason == ReasonCode.TOTAL_DISTRUST
 
 
 def test_contract_kind_merchant_does_not_conflate_with_information_provider_archetype():

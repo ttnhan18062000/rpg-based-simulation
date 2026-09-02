@@ -3917,3 +3917,31 @@
     ::test_stunned_actor_skips_strategic_concerns
   divergence_note: null
   support_boundary: null
+- id: STRAT-266
+  text: 'A durable MarriageState record (own MarriageStatus enum: PROPOSED/ACCEPTED/REJECTED,
+    distinct from ContractStatus) is threaded through the strategic-cognition durable-state
+    plumbing the same way ContractState already is: StrategicComponent.marriages is
+    a new Dict[str, MarriageState] field alongside .contracts; StrategicUpdate gains
+    marriages_add_or_update/marriages_remove (wired into is_noop() and merge()); StrategicPatch.apply()
+    merges it via the same merge_dict() helper contracts uses (nmar = merge_dict(new_strat.marriages,
+    ...), assigned into the replace(...) call alongside the other collections); and
+    StateFingerprinter._strategic_identity() includes a new marriages=[...] segment
+    (marriage_id:status:target_entity_id per entry, sorted by key) in the canonical
+    strategic-component hash string, so an accepted/rejected marriage is covered by
+    replay determinism the same as every other StrategicComponent collection. ContractService.get_project_mapping()
+    is not widened for MARRIAGE, so this durable record never materializes a GoalKind/ProjectKind
+    candidate the way CommittedIntention (STRAT-256) does.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: 'src/core/strategic.py (MarriageStatus enum, MarriageState frozen dataclass,
+    StrategicComponent.marriages: Dict[str, MarriageState]); src/core/updates.py (StrategicUpdate.marriages_add_or_update/marriages_remove
+    fields, wired into is_noop() and merge()); src/engine/patches.py (StrategicPatch.apply()''s
+    nmar = merge_dict(...) and shallow_freeze(nmar) assignment, same merge_dict()
+    path contracts uses -- not the order-preserving merge_committed_intentions() helper
+    STRAT-256 documents); src/replay/fingerprint.py (StateFingerprinter._strategic_identity()''s
+    new marriages=[...] segment, sorted by marriage_id).'
+  proof_type: regression
+  test_path: tests/unit/social/test_marriage.py::test_marriage_accepted_writes_typed_marriagestate_on_both_parties
+  divergence_note: null
+  support_boundary: null

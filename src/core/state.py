@@ -792,7 +792,8 @@ class EntityState:
                 "leads": {k: asdict(v) for k, v in sorted(self.strategic.leads.items())},
                 "concerns": {k: asdict(v) for k, v in sorted(self.strategic.concerns.items())},
                 "boredom": dict(sorted(self.strategic.boredom.items())),
-                "beliefs": {k: asdict(v) for k, v in sorted(self.strategic.beliefs.items())}
+                "beliefs": {k: asdict(v) for k, v in sorted(self.strategic.beliefs.items())},
+                "marriages": {k: asdict(v) for k, v in sorted(self.strategic.marriages.items())}
             },
             "social": {
                 "trust_history": {str(k): v for k, v in sorted(self.social.trust_history.items())},

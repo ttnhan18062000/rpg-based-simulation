@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-31
+last_verified: 2026-09-02
 ---
 
 # Chapter 4: Strategic Cognition
@@ -911,4 +911,65 @@ exactly, same as before this change.
 **Source:** `src/systems/social_systems/party_composition.py`, `src/core/models/social.py`,
 `src/systems/social_systems/relationships.py` (SOC-247, TCK-20260824-RELATIONSHIP-ROLE-FIELD,
 2026-08-27)
+
+---
+
+## 8. Marriage Proposal Law (idea 33, SOC-261)
+
+Marriage is a propose/accept relationship contract following the same `ContractKind`/
+`SocialAppraisalSystem` pattern §Social Systems Contract already documents for `TEACH` and
+`TEAM_UP` -- it is not a scoring function and does not add a new tier-5 project kind.
+
+**Gate.** `ContractKind.MARRIAGE` routes through `SocialAppraisalSystem.appraise_contract()`'s
+shared trust prelude exactly like every other contract kind, with no marriage-specific
+threshold: hard-cancel to `CANCELLED`/`TOTAL_DISTRUST` when `trust_score < 0.2` or
+`bond.sentiment < -0.8`; hard-cancel to `CANCELLED`/`BETRAYAL_HISTORY` when
+`betrayal_count > 0 and trust_score < 0.4`. Once the prelude passes, `_appraise_marriage()`
+always accepts (`ACCEPTED`, `ReasonCode.MARRIAGE_ACCEPTED`) -- the prelude alone is the entire
+gate, with no additional utility/risk model and no `eligibility_gate` field.
+
+**Direction.** `CoreActions.execute_propose_marriage()` (`src/engine/domain/core_actions.py`)
+builds a transient (non-persisted) `ContractState(kind=ContractKind.MARRIAGE, source_id=proposer,
+target_id=target, status=OFFERED)` and calls `appraise_contract(target, temp_contract, context)`
+-- **the target appraises the proposer**, the same direction `execute_recruit`/`execute_team_up`/
+`execute_trade`/`execute_train` already use.
+
+**Durable record.** On `ACCEPTED`, a `MarriageState` record (`src/core/strategic.py`) is written
+via `StrategicUpdate.marriages_add_or_update` on **both** parties' `EntityUpdate`, through the
+same authoritative `Patch.apply()` merge path `StrategicComponent.contracts` already uses:
+
+```python
+@dataclass(frozen=True, slots=True)
+class MarriageState:
+    id: str
+    proposer_entity_id: int
+    target_entity_id: int
+    status: MarriageStatus  # PROPOSED | ACCEPTED | REJECTED
+    married_tick: Optional[int] = None
+```
+
+`MarriageState.status` is its own three-value `MarriageStatus` enum, distinct from
+`ContractStatus` (which has no `REJECTED` member) -- the transient offer's own `ContractState.status`
+still resolves through the ordinary `ContractStatus` values; only the durable record uses
+`MarriageStatus`. `StrategicComponent.marriages: Dict[str, MarriageState]` is keyed by a synthetic
+record id (mirroring `contracts`), not by spouse entity id, so both parties can independently hold
+records without collision.
+
+**Out of scope (deliberate).** No bigamy/duplicate-marriage precondition is enforced -- nothing
+prevents an entity from accumulating multiple `marriages` entries; this is a documented, deliberate
+scope boundary, not an oversight, deferred to a future ticket. No fantasy-year aging or
+lifecycle-duration threshold is introduced -- `married_tick` is a plain tick timestamp with no
+derived-duration/expiry logic, blocked on the unmigrated `TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY`.
+No household/family/dependents state is added to `MarriageState` -- that belongs to a separate
+ticket (idea 31, Personal Dependents). `ContractService.get_project_mapping()` returns `None` for
+`MARRIAGE` by construction, so a marriage proposal never materializes a tier-5 strategic project.
+
+**Source:** `src/core/strategic.py` (`ContractKind.MARRIAGE`, `MarriageStatus`, `MarriageState`,
+`StrategicComponent.marriages`); `src/core/updates.py` (`StrategicUpdate.marriages_add_or_update`/
+`marriages_remove`); `src/engine/patches.py` (`Patch.apply()` merge); `src/core/enums.py`
+(`ReasonCode.MARRIAGE_ACCEPTED`/`MARRIAGE_DECLINED`); `src/systems/social_systems/appraisal.py`
+(`SocialAppraisalSystem._appraise_marriage()`, `appraise_contract()`'s `MARRIAGE` dispatch branch);
+`src/engine/domain/core_actions.py` (`CoreActions.execute_propose_marriage()`);
+`src/engine/domain/action_router.py` (`"PROPOSE_MARRIAGE"` branch) (TCK-20260902-MARRIAGE-PROPOSAL-CONTRACT,
+2026-09-02)
 

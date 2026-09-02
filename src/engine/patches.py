@@ -464,6 +464,7 @@ class StrategicPatch(ComponentPatch):
             ncz = merge_dict(new_strat.candidate_zones, u_strat.candidate_zones_add_or_update, u_strat.candidate_zones_remove)
             nh = merge_dict(new_strat.hypotheses, u_strat.hypotheses_add_or_update, u_strat.hypotheses_remove)
             ncon = merge_dict(new_strat.contracts, u_strat.contracts_add_or_update, u_strat.contracts_remove)
+            nmar = merge_dict(new_strat.marriages, u_strat.marriages_add_or_update, u_strat.marriages_remove)
             nbel = merge_dict(new_strat.beliefs, u_strat.beliefs_add_or_update, u_strat.beliefs_remove)
             ntp = list(new_strat.turning_points) + u_strat.turning_points_add
             
@@ -488,7 +489,7 @@ class StrategicPatch(ComponentPatch):
             new_strat = replace(new_strat,
                 blockers=shallow_freeze(nb), leads=shallow_freeze(nl), directives=shallow_freeze(nd),
                 projects=shallow_freeze(np), concerns=shallow_freeze(nc), candidate_zones=shallow_freeze(ncz),
-                hypotheses=shallow_freeze(nh), contracts=shallow_freeze(ncon), turning_points=tuple(ntp),
+                hypotheses=shallow_freeze(nh), contracts=shallow_freeze(ncon), marriages=shallow_freeze(nmar), turning_points=tuple(ntp),
                 boredom=shallow_freeze(nbor), source_trust=shallow_freeze(ntrust), beliefs=shallow_freeze(nbel),
                 committed_intentions=nci,
                 current_project_id=u_strat.current_project_id_set if u_strat.current_project_id_set is not None else new_strat.current_project_id,

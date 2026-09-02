@@ -159,6 +159,8 @@ class ReasonCode(str, Enum):
     INFORMATION_SALE_ACCEPTED = "information_sale_accepted"
     TEACH_ACCEPTED = "teach_accepted"
     TEACH_DECLINED = "teach_declined"
+    MARRIAGE_ACCEPTED = "marriage_accepted"
+    MARRIAGE_DECLINED = "marriage_declined"
 
     # Quest
     QUEST_COMPLETED = "quest_completed"
