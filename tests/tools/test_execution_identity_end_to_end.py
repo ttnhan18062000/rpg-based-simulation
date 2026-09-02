@@ -27,6 +27,7 @@ import secrets
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -37,6 +38,15 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
 _RECORD_EVENTS_PATH = _MONITORING_TOOLS_DIR / "record_events.py"
 _RECORD_RUN_PATH = _MONITORING_TOOLS_DIR / "record_run.py"
 _POST_TOOL_HOOK_PATH = _MONITORING_TOOLS_DIR / "post_tool_hook.py"
+
+
+def _current_week_tools_file(agent_monitoring_dir: Path) -> Path:
+    """Resolves the real tools-source write target, mirroring post_tool_hook.py's own
+    `iso_week = now_dt.strftime("%G-W%V")` / `Path("agent-monitoring/tools") / f"tools-{iso_week}.jsonl"`
+    (tools/agent-monitoring/post_tool_hook.py:56,159) — since TCK-20260902-MONITORING-SHARD-WRITE-PATH,
+    the hook no longer writes a literal `tools.jsonl`. Keep this in sync if that format ever changes."""
+    iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+    return agent_monitoring_dir / "tools" / f"tools-{iso_week}.jsonl"
 
 
 # ---------------------------------------------------------------------------
@@ -194,6 +204,10 @@ def _parse_no_duplicate_keys(line: str) -> dict:
 
 
 def _seed_one_legacy_line_per_file(agent_monitoring_dir: Path) -> None:
+    """Seeds both the now-inert legacy `tools.jsonl` (proves it is never resurrected by a stray
+    write — the real hook has not touched it since TCK-20260902-MONITORING-SHARD-WRITE-PATH) and
+    the real current-week sharded file the hook actually writes to (gives the prefix-unchanged /
+    append-only assertions genuine pre-existing content on the real write target)."""
     legacy_event = {
         "run_id": "TCK-LEGACY", "seq": 1, "ts": "2026-01-01T00:00:00Z", "phase": "Implement",
         "agent": "implementer", "summary": "legacy row", "status": "ok",
@@ -212,6 +226,10 @@ def _seed_one_legacy_line_per_file(agent_monitoring_dir: Path) -> None:
     (agent_monitoring_dir / "runs.jsonl").write_text(json.dumps(legacy_run) + "\n")
     (agent_monitoring_dir / "tools.jsonl").write_text(json.dumps(legacy_tool) + "\n")
 
+    tools_shard_file = _current_week_tools_file(agent_monitoring_dir)
+    tools_shard_file.parent.mkdir(parents=True, exist_ok=True)
+    tools_shard_file.write_text(json.dumps(legacy_tool) + "\n")
+
 
 # ---------------------------------------------------------------------------
 # Step 5 (AC1, AC2): one execution shares one identity; a second execution differs.
@@ -223,7 +241,7 @@ def test_controlled_claude_execution_produces_coherent_identity_across_jsonl_sou
 
     events_file = tmp_path / "agent-monitoring" / "events.jsonl"
     runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
-    tools_file = tmp_path / "agent-monitoring" / "tools.jsonl"
+    tools_file = _current_week_tools_file(tmp_path / "agent-monitoring")
 
     events_lines = events_file.read_text().strip().splitlines()
     runs_lines = runs_file.read_text().strip().splitlines()
@@ -265,11 +283,12 @@ def test_baseline_prefix_unchanged_after_new_identity_writes(tmp_path):
 
     events_file = agent_monitoring_dir / "events.jsonl"
     runs_file = agent_monitoring_dir / "runs.jsonl"
-    tools_file = agent_monitoring_dir / "tools.jsonl"
+    tools_file = _current_week_tools_file(agent_monitoring_dir)
 
     events_prefix_before = events_file.read_text()
     runs_prefix_before = runs_file.read_text()
     tools_prefix_before = tools_file.read_text()
+    legacy_tools_prefix_before = (agent_monitoring_dir / "tools.jsonl").read_text()
     events_checksum_before = hashlib.sha256(events_prefix_before.encode("utf-8")).hexdigest()
     runs_checksum_before = hashlib.sha256(runs_prefix_before.encode("utf-8")).hexdigest()
     tools_checksum_before = hashlib.sha256(tools_prefix_before.encode("utf-8")).hexdigest()
@@ -293,6 +312,10 @@ def test_baseline_prefix_unchanged_after_new_identity_writes(tmp_path):
     assert len(runs_after.strip().splitlines()) == 1 + 1
     assert len(tools_after.strip().splitlines()) == 1 + 1
 
+    # The legacy literal `tools.jsonl` (pre-sharding write target) is never resurrected by a
+    # stray write — the real hook writes only to the current-week shard.
+    assert (agent_monitoring_dir / "tools.jsonl").read_text() == legacy_tools_prefix_before
+
 
 # ---------------------------------------------------------------------------
 # Step 6, Part B (AC6): the newly appended lines are themselves well-formed — no
@@ -308,7 +331,7 @@ def test_newly_appended_lines_have_no_duplicate_identity_keys_and_correct_values
 
     events_file = agent_monitoring_dir / "events.jsonl"
     runs_file = agent_monitoring_dir / "runs.jsonl"
-    tools_file = agent_monitoring_dir / "tools.jsonl"
+    tools_file = _current_week_tools_file(agent_monitoring_dir)
 
     identity = _perform_one_simulated_execution(tmp_path, ticket_id="TCK-CONTENT-CHECK", seq_start=1)
 
