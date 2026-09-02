@@ -42,9 +42,12 @@ split into a separate mutation-primitive/voluntary-trigger pair.
 2. **Idea 56 — Drifting Loyalty.** Derives gradual loyalty pressure that may request or influence idea 39's
    mutation. Confirmed genuinely different mechanism kind from idea 39 (continuous background pressure vs.
    discrete event) — stays a separate ticket, sequenced before or alongside idea 39 so 39's trust gate can
-   read 56's drift signal as an input. **Blocked on M4's `CultureDeriver` activation** (owner assigned
-   2026-08-29 — see `docs/plans/rpg_design_roadmap/rpg_m4_beyond_city_epic.md`), the same substrate M5's
-   ideas 57/62 also consume; M6 does not wire it itself.
+   read 56's drift signal as an input. **Not blocked on unbuilt substrate (correction, 2026-09-02 — hardening
+   backlog item 3, see
+   [`docs/plans/rpg_design_roadmap/rpg_culture_drift_hardening_plan.md`](rpg_culture_drift_hardening_plan.md)):**
+   `CultureDeriver`/`CulturalBiasApplicator` is real, live, and tested, not dormant — idea 56 needs to be
+   scoped as a read-side consumer of `region_cultures`, pending the hardening plan's open Campaign-mode-
+   reachability question (does any real corpus world actually run multi-episode Campaign mode today?).
 3. **Idea 59 — Home, Exile & Return.** The single largest correction in this whole investigation: its
    central claim (no per-entity place-attachment field exists) was flatly wrong.
    `StrategicComponent.home_region_id` already exists, typed, with a live consumer already wired
@@ -57,21 +60,22 @@ split into a separate mutation-primitive/voluntary-trigger pair.
 ## Out of Scope
 
 - Anything from Milestones 1 through 5.
-- Wiring `CultureDeriver`/`CulturalBiasApplicator` — the shared blocker idea 56 surfaces. **Owned by M4**
-  (plan-owner decision, 2026-08-29); M5's ideas 57/62 are the other consumer. Not duplicated here.
+- Building any new Culture Drift derivation/bias-application machinery — confirmed already complete
+  elsewhere (see the correction on idea 56 above). Only idea 56's own read-side consumer work belongs here.
 
 ## Acceptance Signal
 
 - 3 child tickets, not 4 (59+65 consolidated), landing in the order 39 &rarr; 56 &rarr; 59/65, or with an
   explicit justification for deviating from that order.
-- Idea 56 is not built ahead of its `CultureDeriver` dependency clearing.
+- Idea 56 is scoped as a read-side `region_cultures` consumer, not deferred waiting on substrate that
+  already exists (correction, 2026-09-02).
 
 ## Open Questions
 
-- This is the one milestone where "ready to scope in detail" and "ready to build" diverge the most — three
-  of its four ideas either depend on a not-yet-wired substrate or on every milestone before it. Worth
-  revisiting whether this epic should stay scope-only even longer than the others, pending real evidence
-  from M2 and M4/M5's shared blocker resolution.
+- This is the one milestone where "ready to scope in detail" and "ready to build" diverge the most — idea
+  56's dependency turned out to already be resolved (2026-09-02 correction), but idea 59/65 still depend on
+  every milestone before it. Worth revisiting whether this epic should stay scope-only even longer than the
+  others, pending real evidence from M2's own resolution.
 
 ## References
 

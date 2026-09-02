@@ -129,9 +129,11 @@ expansion engine. Gated on M2's City ownership (35), Clan shape (36), and place-
 Splits into three branches with different gating: **place-shaped ecology/settlements** (44-47, 61) satisfy
 Idea 66's gate first; **material exploration/national expansion** (49-52) apply the Idea 66 gate only to
 outcomes that authoritatively use Place identity/containment; **institutions/economic signals** (40, 41, 64)
-are not globally blocked on Idea 66 at all. **M4 owns the `CultureDeriver`/`CulturalBiasApplicator`
-activation** (plan-owner decision, 2026-08-29) as the single prerequisite shared with M5 (ideas 57, 62) and
-M6 (idea 56), rather than each milestone wiring it independently.
+are not globally blocked on Idea 66 at all. **Correction, 2026-09-02 (hardening backlog item 3):**
+`CultureDeriver`/`CulturalBiasApplicator` is not a dormant substrate needing activation — it's real, live,
+and tested (see the Hardening backlog section below). Idea 61 here, plus M5 (ideas 57, 62) and M6 (idea 56),
+need only their own read-side consumption of `region_cultures`, not a shared first-time-wiring
+prerequisite.
 
 ### M5 — Memory, Reputation & Legacy (gated on M2 + M3)
 
@@ -155,15 +157,16 @@ or as an unowned bug.
 **Tracking epic**: `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (not yet created, scope-only).
 
 4 ideas, the deepest single dependency chain in the whole roadmap (39 &rarr; 56 &rarr; 59 &rarr; 65) —
-affiliation's real change path, drifting loyalty, personal place attachment, refugee threads. Explicitly the
-least-validated milestone: its Direction/Narrative scores are strong in the Merit Scorecard, but its Phase
-Placement entry names a real, currently-unbuilt substrate (the history/culture-drift engine) as a shared
-blocker with parts of M4 and M5. **Confirmed single contract** (plan-owner decision, 2026-08-29): idea 39
-first establishes the affiliation mutation primitive; idea 56 derives gradual loyalty pressure that may
-request/influence that mutation; ideas 59/65 add consequences after — idea 39 is not split into a separate
-primitive/trigger pair. **M6 consumes M4's `CultureDeriver`/`CulturalBiasApplicator` activation** (idea 56's
-blocker) rather than wiring it itself. City-specific wording in this milestone's scope should be read as the
-Place model going forward, now that Idea 66 is promoted.
+affiliation's real change path, drifting loyalty, personal place attachment, refugee threads. Its Phase
+Placement entry once named the history/culture-drift engine as a currently-unbuilt shared blocker with parts
+of M4 and M5 — **corrected, 2026-09-02 (hardening backlog item 3): that engine (`CultureDeriver`/
+`CulturalBiasApplicator`) is real, live, and tested, not unbuilt** (see the Hardening backlog section
+below). **Confirmed single contract** (plan-owner decision, 2026-08-29): idea 39 first establishes the
+affiliation mutation primitive; idea 56 derives gradual loyalty pressure that may request/influence that
+mutation; ideas 59/65 add consequences after — idea 39 is not split into a separate primitive/trigger pair.
+**M6's idea 56 needs a read-side `region_cultures` consumer**, not activation of anything, pending the
+hardening plan's open Campaign-mode-reachability question. City-specific wording in this milestone's scope
+should be read as the Place model going forward, now that Idea 66 is promoted.
 
 ### M7 — Simulation Quality Pillar Integration (follow-up, gated on M1-M6)
 
@@ -331,9 +334,14 @@ its own dedicated high-level plan doc once investigated.
    contributor's machine, a nonexistent method name, a nonexistent test file) — not just stale, invented.
    The real spatial-lookup architecture (`SpatialGrid`/`SpatialIndex`, rebuild-from-scratch-when-dirty) is
    sound; the parity-ledger claims describing it are what need correcting.
-3. **`CultureDeriver`/`CulturalBiasApplicator` — a dormant substrate gating M4, M5, and M6 simultaneously**,
-   structurally the same shape as idea 66 (one unverified foundation, several milestones depending on it)
-   but never given idea-66-level scrutiny — not yet investigated.
+3. **`CultureDeriver`/`CulturalBiasApplicator` — the "dormant substrate" framing was false.** Investigated
+   and scoped: [`docs/plans/rpg_design_roadmap/rpg_culture_drift_hardening_plan.md`](rpg_culture_drift_hardening_plan.md).
+   Not idea-66-shaped after all — direct investigation found this substrate is complete, live, and tested
+   (`docs/world/culture_drift_contract.md`: `AUTHORITATIVE`), with a real live call site
+   (`src/domains/campaigns/orchestrator.py:226-230`) that M4's own epic doc had claimed didn't exist. The
+   real, narrower finding: that call site only fires at multi-episode Campaign boundaries, a specialized,
+   undertested path — the actual open question is Campaign-mode reachability across the corpus, not
+   substrate activation. M4/M5/M6's epic docs corrected accordingly.
 4. **Attribute allocation silently no-ops for 7 of 9 attributes** (`progression.yaml` PROG-068/069,
    `execute_allocate_ap` in `src/engine/domain/core_actions.py:146-176`) — already a known, accepted,
    tested divergence (`DEV-004`); lower novelty than 1-3, more a "revisit the call" question than fresh
@@ -413,10 +421,11 @@ its own dedicated high-level plan doc once investigated.
 - Idea 30 (Possessions With Personal History, part of no milestone above's critical path but flagged in
   Infrastructure Gaps) needs genuinely new per-instance-identity infrastructure this codebase doesn't have
   anywhere today — the one idea of 65 with no real precedent to build on.
-- Three separate clusters (M4's settlement-personality idea, M5's history/belief cluster, M6's drifting-
-  loyalty signal) all block on the identical dormant substrate (`CultureDeriver`/`CulturalBiasApplicator`),
-  per Phase Placement & Testing Strategy — worth a single wiring ticket early rather than three separate
-  discoveries later.
+- **Corrected, 2026-09-02 (hardening backlog item 3):** three separate clusters (M4's settlement-personality
+  idea, M5's history/belief cluster, M6's drifting-loyalty signal) were believed to block on a dormant
+  `CultureDeriver`/`CulturalBiasApplicator` substrate, per Phase Placement & Testing Strategy. Direct
+  investigation found the substrate is real, live, and tested — no wiring ticket is needed; each idea needs
+  only its own read-side `region_cultures` consumption. See the Hardening backlog section above.
 - The Design Merit Scorecard's own single-pass calibration (all 65 ideas scored in one batch) is unverified
   without an independent second read of a sample — noted, not blocking any milestone above.
 - The real race roster is 13 entries (`data/content/living/races.yaml`), and `RaceDefinition` has no numeric

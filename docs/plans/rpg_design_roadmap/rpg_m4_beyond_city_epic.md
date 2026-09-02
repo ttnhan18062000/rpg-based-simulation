@@ -28,9 +28,16 @@ Place identity/containment, at ticket scope, not milestone-wide; **institutions 
 (ideas 40, 41, 64) keep their own Clan-lifecycle, information-activation, and vacancy-signal prerequisites
 and are not blocked on Idea 66 at all.
 
-**M4 owns the `CultureDeriver`/`CulturalBiasApplicator` activation** (plan-owner decision, 2026-08-29) as
-the single prerequisite for idea 61 here and the shared blocker M5 (ideas 57, 62) and M6 (idea 56) also
-depend on — wired once here rather than independently in each of Ideas 56, 57, 61, and 62.
+**Correction, 2026-09-02 (hardening backlog item 3 — see
+[`docs/plans/rpg_design_roadmap/rpg_culture_drift_hardening_plan.md`](rpg_culture_drift_hardening_plan.md)):**
+`CultureDeriver`/`CulturalBiasApplicator` is NOT a dormant substrate needing activation — direct
+investigation confirmed it's complete, live, tested (`docs/world/culture_drift_contract.md`:
+`AUTHORITATIVE`, E62A-E62C), and has a real live call site
+(`src/domains/campaigns/orchestrator.py:226-230`). The earlier "M4 owns activation" framing below is
+superseded. The real, narrower scope: that call site only fires at multi-episode Campaign episode
+boundaries, so idea 61 (and M5's 57/62, M6's 56) most likely need only a read-side consumer of the real,
+populated `region_cultures: Dict[str, CultureCarryForward]` state — see the hardening plan doc for the
+open Campaign-mode-reachability question this still needs answered.
 
 **Temporal axis (see the parent roadmap's "Temporal axis" section):** once ticketed, M4 owns seasonal
 settlement, economy, vacancy, apprenticeship, and travel cadence, per the temporal-axis proposal's §13
@@ -60,9 +67,10 @@ tickets.
    for the base mechanism, not just the extension.
 3. **Idea 61 — Settlements Develop Personalities.** Re-scoped by a real correction: its original cited
    precedent (idea 48) was wrong; the actual live match is Culture Drift's `CultureDeriver`/
-   `CulturalBiasApplicator` — which has zero live callers anywhere. **This idea is blocked until that
-   substrate is wired**, the same blocker three other clusters across this roadmap share (see
-   `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`'s "Known open items").
+   `CulturalBiasApplicator`. **Not blocked** (correction, 2026-09-02, see the Problem section above) — the
+   substrate is real, live, and tested; this idea needs to be scoped as a read-side consumer of
+   `region_cultures`, with the Campaign-mode-reachability question (does any real corpus world actually run
+   multi-episode?) answered before treating it as trivially unblocked in practice.
 4. **Ideas 49 + 50 — Ambition/expansion, small shared helper only.** Both gate on "does this entity
    possess/consume material X" — worth one shared predicate, not a ticket merge. Idea 49 also carries a
    real naming-collision footgun: two unrelated classes both named `RecipeRegistry`.
@@ -81,17 +89,21 @@ tickets.
 ## Out of Scope
 
 - Anything from Milestones 1, 2, 3, 5, or 6.
-- **Update, 2026-08-29:** wiring `CultureDeriver`/`CulturalBiasApplicator` for the first time is now IN
+- **Superseded, 2026-09-02:** wiring `CultureDeriver`/`CulturalBiasApplicator` for the first time — the
+  2026-08-29 update below assumed this was needed; it is not (see Problem above). No first-time-wiring
+  ticket belongs in this epic's scope; only idea 61's own read-side consumer work does.
+- ~~**Update, 2026-08-29:** wiring `CultureDeriver`/`CulturalBiasApplicator` for the first time is now IN
   scope for this epic (see Problem above) rather than out of it — M4 is its assigned owner, shared with M5's
   ideas 57/62 and M6's idea 56 as consumers. Scope it as its own small prerequisite ticket inside this epic,
-  landed before or alongside idea 61, not built speculatively ahead of idea 61 needing it.
+  landed before or alongside idea 61, not built speculatively ahead of idea 61 needing it.~~
 
 ## Acceptance Signal
 
 - Consolidation findings above are reflected in the actual child-ticket count (roughly 9 tickets for 12
   ideas, per the atlas's own Roadmap estimate) — not silently reverted to 1:1 ticket-per-idea.
-- Idea 61 stays explicitly blocked/deferred until its substrate dependency is resolved, not built against
-  the wrong precedent it originally cited.
+- Idea 61 is scoped as a read-side consumer of `region_cultures`, not built against the wrong precedent it
+  originally cited, and not treated as blocked on unbuilt substrate that already exists (correction,
+  2026-09-02).
 
 ## References
 
