@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "description": "Per-idea cross-document index across the RPG brainstorm corpus. atlas_anchor is always present (all 66 ideas); schema_anchor is present only for ideas with a durable-state schema section; scorecard_anchor is present for ideas 1-65 (66 was never scored); wiring_map_mentions is a raw text-mention count, not a clickable anchor, since that document has no reliable 1:1 per-idea anchor structure (see TCK-20260831-BRAINSTORM-IDEA-CROSS-INDEX's investigation.md).",
+    "description": "Per-idea cross-document index across the RPG brainstorm corpus. atlas_anchor is always present (count derived live from the atlas itself); schema_anchor is present only for ideas with a durable-state schema section; scorecard_anchor is present for ideas 1-65 only (66/67/68 were all added after the original scoring pass and are deliberately left unscored); wiring_map_mentions is a raw text-mention count, not a clickable anchor, since that document has no reliable 1:1 per-idea anchor structure (see TCK-20260831-BRAINSTORM-IDEA-CROSS-INDEX's investigation.md).",
     "regenerate_with": "make brainstorm-idea-index",
-    "generated": "2026-08-31T04:32:24Z"
+    "generated": "2026-09-02T07:42:10Z"
   },
   "ideas": [
     {
@@ -532,6 +532,22 @@
       "scorecard_anchor": null,
       "wiring_map_mentions": 4,
       "milestone": "M8"
+    },
+    {
+      "idea": 67,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-67",
+      "schema_anchor": "rpg_expected_schemas.html#schema-67",
+      "scorecard_anchor": null,
+      "wiring_map_mentions": 0,
+      "milestone": null
+    },
+    {
+      "idea": 68,
+      "atlas_anchor": "rpg_feature_atlas.html#idea-68",
+      "schema_anchor": "rpg_expected_schemas.html#schema-68",
+      "scorecard_anchor": null,
+      "wiring_map_mentions": 0,
+      "milestone": null
     }
   ]
 }

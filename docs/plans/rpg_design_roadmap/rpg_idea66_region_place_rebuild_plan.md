@@ -70,6 +70,12 @@ kind sitting below City by scale), `maturity` (optional, CAMP/NEST-kind, reused 
 field), `building_ids`/`entity_ids` (CITY-kind, today's `town_tiles`/`town_entities` equivalent, re-scoped
 to the Place instead of the whole Region).
 
+**Added 2026-09-02 (direction-alignment audit extension):** `prior_kind: Optional[PlaceKind]` and
+`transformed_tick: Optional[int]` — a single-hop transformation trail (what this Place used to be, and
+when), not a full history log. Serves Principle 5 ("places remember what happened to them") — a City
+destroyed into a Ruin should carry legible trace of what it used to be, not just its current kind. See
+`docs/brainstorm/rpg_expected_schemas.html#schema-66` for the field-table entry.
+
 **Settlement-size note:** there is no separate "Town" kind below City in this shape — settlement size
 (hamlet through metropolis) is the `scale` scalar on a single `CITY`-kind Place, not a taxonomy split. The
 non-`CITY` kinds are explicitly the non-civilization side of the map: where monsters, ancient remnants, and

@@ -47,6 +47,20 @@ documents and hardens the `SocialComponent`/`SocialBond`/`RelationshipService` s
 reputation and history/belief branches both build on — a prerequisite documentation/verification pass these
 tickets can cite once scoped, not a substitute for their own investigation.
 
+**Social/Relationship axis (see the parent roadmap's own section, added 2026-09-02):**
+[`docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md)
+is the fuller, temporal-proposal-depth treatment the hardening plan above feeds into — full field inventory,
+a real determinism gap (`CanonicalStateHasher` covers only 10 of 15 `SocialComponent` fields), and a
+per-idea integration table covering this milestone's own 53-63 range plus idea 67.
+
+**Candidate new idea, added to the atlas 2026-09-02, not yet folded into this milestone's committed scope:**
+idea 67, Living Relationship Decay (`docs/brainstorm/rpg_feature_atlas.html#idea-67`,
+`docs/brainstorm/rpg_expected_schemas.html#schema-67`) — a passive trust/grudge decay rule for living
+entity pairs, distinct from this milestone's idea 55 (inherited feuds, a death-time transfer) and M6's idea
+56 (population-scale loyalty). Natural home is here given it targets the same `SocialComponent`/
+`RelationshipService` surface this milestone's other ideas already touch, but it is a candidate to review
+and schedule, not yet one of the 8 ideas this epic's Scope commits to below.
+
 ## Scope (not yet broken into child tickets)
 
 1. **Ideas 55 + 58 — one on-death dispatch hook, two thin handlers.** Both fire at the identical trigger
