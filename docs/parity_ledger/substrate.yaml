@@ -4325,17 +4325,17 @@
 
     '
   divergence_note: null
-  support_boundary: 'Emitted event classified `unscored_intentional` (docs/simulation_quality/
-    event_type_coverage.md Section 5) -- not wired to any SimQ pillar. The tangential
-    finding that `AttributePatch.apply` (src/engine/patches.py:557-570) clamps only
-    an upper bound (100) with no lower-bound floor is disclosed in this ticket''s
-    own investigation.md but explicitly NOT fixed here -- an apply-pipeline correctness
-    question, out of scope for an observability ticket, and currently unreachable
-    in practice since the only negative-delta producer (`compute_elder_attribute_update`)
-    is dead code. See SUB-375/COMB-296 for the sibling entity entries from the predecessor
-    vitals ticket.
-
-    '
+  support_boundary: 'Emitted event classified `unscored_intentional` (docs/simulation_quality/event_type_coverage.md
+    Section 5) -- not wired to any SimQ pillar. The tangential finding noted here
+    at the time this ticket landed -- that `AttributePatch.apply` clamped only an
+    upper bound (100, not the documented ATTRIBUTE_CAP=99) with no lower-bound floor
+    at all -- was fixed by TCK-20260902-ATTRIBUTE-CLAMP-WIRING-GAP: `AttributePatch.apply`
+    (src/engine/patches.py) now wires the already-existing, already-tested `enforce_attribute_caps`
+    (src/engine/rpg_depth.py) into the real apply path, enforcing the documented [1,
+    99] range on both bounds. Regression coverage: tests/unit/domains/optimization/test_component_patches.py::test_attribute_patch_apply_clamps_to_documented_range
+    (proves both the too-high and negative-delta cases clamp correctly through the
+    real apply() path, not just enforce_attribute_caps() in isolation). See SUB-375/COMB-296
+    for the sibling entity entries from the predecessor vitals ticket.'
 - id: SUB-377
   text: 'TCK-20260808-ENTITY-EQUIPMENT-OBSERVABILITY-GAP -- equipment slot assignment
     (EquipmentComponent.slots) and durability (EquipmentComponent.durability) were

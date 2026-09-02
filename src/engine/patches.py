@@ -578,20 +578,30 @@ class AttributePatch(ComponentPatch):
 
     def apply(self, entity: EntityState, changes: Dict[str, Any]) -> None:
         from src.engine.apply import replace
+        from src.engine.rpg_depth import enforce_attribute_caps
         if self.attributes:
             u_att = self.attributes
             new_att = changes.get("attributes", entity.attributes)
-            changes["attributes"] = replace(new_att,
-                strength=min(100, new_att.strength + u_att.strength_delta),
-                agility=min(100, new_att.agility + u_att.agility_delta),
-                vitality=min(100, new_att.vitality + u_att.vitality_delta),
-                endurance=min(100, new_att.endurance + u_att.endurance_delta),
-                intelligence=min(100, new_att.intelligence + u_att.intelligence_delta),
-                spirit=min(100, new_att.spirit + u_att.spirit_delta),
-                wisdom=min(100, new_att.wisdom + u_att.wisdom_delta),
-                perception=min(100, new_att.perception + u_att.perception_delta),
-                charisma=min(100, new_att.charisma + u_att.charisma_delta)
+            raw_att = replace(new_att,
+                strength=new_att.strength + u_att.strength_delta,
+                agility=new_att.agility + u_att.agility_delta,
+                vitality=new_att.vitality + u_att.vitality_delta,
+                endurance=new_att.endurance + u_att.endurance_delta,
+                intelligence=new_att.intelligence + u_att.intelligence_delta,
+                spirit=new_att.spirit + u_att.spirit_delta,
+                wisdom=new_att.wisdom + u_att.wisdom_delta,
+                perception=new_att.perception + u_att.perception_delta,
+                charisma=new_att.charisma + u_att.charisma_delta
             )
+            cap_deltas = enforce_attribute_caps(raw_att)
+            if cap_deltas:
+                raw_att = replace(raw_att, **{
+                    attr_name: getattr(raw_att, attr_name) + delta
+                    for attr_name, delta in (
+                        (key[: -len("_delta")], val) for key, val in cap_deltas.items()
+                    )
+                })
+            changes["attributes"] = raw_att
 
 
 @dataclass(frozen=True, slots=True)
