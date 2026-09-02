@@ -10,7 +10,12 @@ audience: developer
 This document defines the authoritative logic for local tactical decisions in the `src` engine.
 
 ## 1. Tactical Evaluation Boundary
-Tactical decisions are triggered when an entity is `active`, `alive`, and its `readiness >= 100`. 
+Tactical decisions are triggered when an entity is `active` and `alive`. **`readiness >= 100` is NOT a
+precondition for tactical evaluation** — cognition (the `ENTITY_BRAIN` work item, which runs
+`TacticalDecisionSystem.evaluate_entity_intent()`) is explicitly readiness-exempt by design ("Action
+Readiness Law, COMB-266", `src/engine/scheduler.py`); it consumes 0 readiness and is instead gated by
+the `strategic_intelligence` cadence (default: every tick). The `readiness >= 100` gate applies only to
+committing the *result* of a tactical decision — `ENTITY_ACT` / `ENTITY_MOVE` — not to evaluating one.
 AI logic is bounded to **Local Visibility** (Default radius: 10.0 tiles) and must not consult long-horizon strategic data.
 
 ## 2. Target Selection Rules (GAP-T01)
