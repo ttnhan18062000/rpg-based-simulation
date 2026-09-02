@@ -354,9 +354,25 @@ its own dedicated high-level plan doc once investigated.
    own text already names the correct follow-up ("port `AllocateAttributeAction`'s aptitude logic into
    `core_actions.execute_allocate_ap`") — that's the real future ticket, not a fresh discovery this pass
    needed to re-derive.
-5. **Several "done"-badged mechanics turn out untested or unreachable on inspection** (e.g. `CHURCH`
-   building's Blessing/Resurrection services placed in zero worlds, `ReputationService` conflated with a
-   different tested class) — cheapest to scope, nothing currently blocks on it — not yet investigated.
+5. **"Done"-badged mechanics turning out untested/unreachable — investigated, confirmed-and-closed, no new
+   plan doc.** Both named examples verified true, one sharper than framed: `CHURCH`'s Blessing/Resurrection
+   services (`src/town/buildings.py:15,23`, real code) are placed in **zero** of the 20 world modules and 21
+   compiled worlds (confirmed by direct grep, not just the atlas's original claim) — a content-authoring gap,
+   not a code bug. `ReputationService` (`src/systems/social_systems/reputation.py`) has zero tests as
+   claimed, and going further than the atlas's own framing: it also has **zero callers anywhere in `src/`** —
+   a 2-line static lookup nothing in the live system invokes, the same class of dead scaffolding this session
+   already found for `PublicReputationProfile`'s mutator (see M5 above). Neither has a parity-ledger entry at
+   all (undocumented, not misdocumented — a different failure mode than item 2's fabricated citation). The
+   atlas's own existing 18-row "Depth Beneath Done" audit (`rpg_feature_atlas.html#depth-beneath-done`)
+   already covers this pattern comprehensively across all 37 `done`-badged cards — no dedicated hardening-plan
+   doc needed; a redundant one would manufacture work the evidence doesn't support. Nothing in M1-M9's 65
+   ideas currently depends on either example. Recommended disposition: `ReputationService` is a genuine
+   delete-or-wire dead-code cleanup candidate, not urgent; `CHURCH` is a content-authoring gap for whenever
+   M8/town-building work is next touched.
+
+**All 5 hardening backlog items investigated as of 2026-09-02.** Items 1-3 produced dedicated plan docs
+(social/political mechanics, spatial index, culture drift); items 4-5 confirmed the prior framing and closed
+with no further plan-doc needed.
 
 ## Sequencing rules
 
