@@ -46,6 +46,7 @@ def _init_repo_with_union_attribute(tmp_path: Path, tracked_filename: str) -> Pa
         "agent-monitoring/runs.jsonl",
         "agent-monitoring/events.jsonl",
         "tickets/working_log.csv",
+        "agent-monitoring/tools/tools-2026-W36.jsonl",
     ],
 )
 def test_concurrent_branch_appends_merge_without_conflict_markers(tmp_path, tracked_filename):
@@ -94,3 +95,14 @@ def test_gitattributes_lines_present_for_all_four_union_merge_paths():
         "tickets/working_log.csv",
     ):
         assert f"{path} merge=union" in content
+
+
+def test_gitattributes_line_present_for_shard_glob():
+    """TCK-20260902-MONITORING-SHARD-WRITE-PATH: post_tool_hook.py now writes new tool-call
+    records to per-ISO-week shard files under agent-monitoring/tools/ instead of the single
+    legacy agent-monitoring/tools.jsonl. Both the new shard glob and the old legacy line must be
+    present -- the old line stays until a later ticket migrates/retires the legacy file."""
+    repo_root = Path(__file__).parent.parent.parent
+    content = (repo_root / ".gitattributes").read_text()
+    assert "agent-monitoring/tools/*.jsonl merge=union" in content
+    assert "agent-monitoring/tools.jsonl merge=union" in content

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PostToolUse hook: appends one tool-call record to agent-monitoring/tools.jsonl."""
+"""PostToolUse hook: appends one tool-call record to agent-monitoring/tools/tools-<ISO-week>.jsonl."""
 import json
 import sys
 import time
@@ -51,7 +51,13 @@ try:
     tool_response = payload.get("tool_response") or {}
     session_id = payload.get("session_id", "")
 
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now_dt = datetime.now(timezone.utc)
+    now = now_dt.isoformat().replace("+00:00", "Z")
+    iso_week = now_dt.strftime("%G-W%V")  # matches generate_retro.py::iso_week() (tools/agent-monitoring/generate_retro.py:126)
+                                            # and its --week current-week default (generate_retro.py:152).
+                                            # Duplicated (not imported) to keep this hot hook's import
+                                            # graph stdlib-only — see Decision 3 in plan.md. If this
+                                            # format ever changes, update generate_retro.py::iso_week() too.
 
     # Compute duration from pre-hook timestamp
     duration_ms = None
@@ -150,7 +156,7 @@ try:
         "ticket_id": ticket_id,
     }
 
-    tools_file = Path("agent-monitoring/tools.jsonl")
+    tools_file = Path("agent-monitoring/tools") / f"tools-{iso_week}.jsonl"
     tools_file.parent.mkdir(parents=True, exist_ok=True)
     write_line(tools_file, json.dumps(record, separators=(",", ":")))
 
