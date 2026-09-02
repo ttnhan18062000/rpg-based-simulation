@@ -308,6 +308,40 @@ No ticket, epic acceptance criterion, or numeric threshold in this roadmap or it
 by this section — it is a pointer for whoever next scopes M2-M9 ticket-level work, per the proposal's own
 "maintainers should later review — not automatically edit" framing.
 
+## Hardening backlog (added 2026-09-02)
+
+Same treatment as the temporal axis and idea 66 above — design/doc claims cross-checked directly against
+real running code, not re-read from existing docs — applied to already-shipped or already-planned RPG-core
+surfaces that hadn't yet received it. Identified in one research pass, 2026-09-02, ranked by downstream
+leverage (how much other work depends on getting each one right); worked through one at a time, each with
+its own dedicated high-level plan doc once investigated.
+
+1. **Social/Reputation/Political — no Mechanics Bible chapter, the widest blast-radius gap found.**
+   Investigated and scoped: [`docs/plans/rpg_design_roadmap/rpg_social_narrative_mechanics_hardening_plan.md`](rpg_social_narrative_mechanics_hardening_plan.md)
+   (PR #103). Corrected the initial framing (only 94 of `social_narrative.yaml`'s 276 entries are genuinely
+   social content, not all 276) and found the real gap is fragmentation — three partial contracts already
+   exist, but the foundational `SocialComponent`/`SocialBond`/`RelationshipService` state has zero contract
+   coverage anywhere. Also surfaced an open determinism question (does `CanonicalStateHasher` cover
+   `SocialComponent`'s history fields, given the lightweight replay fingerprint explicitly does not).
+2. **Spatial index — the "spatial-reach" half of the pair this roadmap's own M2 section names alongside
+   temporal timing.** Investigated and scoped:
+   [`docs/plans/rpg_design_roadmap/rpg_spatial_index_hardening_plan.md`](rpg_spatial_index_hardening_plan.md).
+   Found something worse than the two P0 `substrate.yaml` entries' "missing" framing suggested: `SUB-327`
+   carries a `verified` status backed by a **fabricated citation** (a nonexistent file path from a different
+   contributor's machine, a nonexistent method name, a nonexistent test file) — not just stale, invented.
+   The real spatial-lookup architecture (`SpatialGrid`/`SpatialIndex`, rebuild-from-scratch-when-dirty) is
+   sound; the parity-ledger claims describing it are what need correcting.
+3. **`CultureDeriver`/`CulturalBiasApplicator` — a dormant substrate gating M4, M5, and M6 simultaneously**,
+   structurally the same shape as idea 66 (one unverified foundation, several milestones depending on it)
+   but never given idea-66-level scrutiny — not yet investigated.
+4. **Attribute allocation silently no-ops for 7 of 9 attributes** (`progression.yaml` PROG-068/069,
+   `execute_allocate_ap` in `src/engine/domain/core_actions.py:146-176`) — already a known, accepted,
+   tested divergence (`DEV-004`); lower novelty than 1-3, more a "revisit the call" question than fresh
+   discovery — not yet investigated.
+5. **Several "done"-badged mechanics turn out untested or unreachable on inspection** (e.g. `CHURCH`
+   building's Blessing/Resurrection services placed in zero worlds, `ReputationService` conflated with a
+   different tested class) — cheapest to scope, nothing currently blocks on it — not yet investigated.
+
 ## Sequencing rules
 
 - **M1 has no gate — it's ready today.** Nothing else in this roadmap blocks it, and nothing in M1 blocks on
