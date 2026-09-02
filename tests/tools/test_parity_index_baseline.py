@@ -147,11 +147,19 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # tests/unit/combat/test_combat_legality_regression.py::test_shatter_logic,
     # previously stale/broken, as part of migrating the SHATTER mechanic off the prior
     # identity.properties.get("status_frozen") dict lookup onto the typed status_effect_update
-    # path).
+    # path), then to 1317 (TCK-20260902-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT,
+    # 2026-09-02: TCK-20260902-PARITY-TEST-PATH-GAP repointed 3 P0 entries from null test_path to
+    # real citations — SUB-051 (docs/parity_ledger/substrate.yaml) to
+    # tests/unit/core/test_rpg_math.py::test_combat_stats_stay_within_bounds_after_normal_recalculation,
+    # TOWN-027 (docs/parity_ledger/town_resource.yaml) to
+    # tests/unit/social/test_teach.py::test_teach_resolves_target_capability_blocker_not_teacher,
+    # TOWN-076 (docs/parity_ledger/town_resource.yaml) to
+    # tests/unit/resource/test_loot_channeling.py::test_loot_corpse_completion_transfers_all_item_stacks
+    # — a 3-entry net drop, re-verified via a fresh live scan).
     # The substantive check is the assertion above (manifest's own count matches a fresh,
     # independent live scan) — this second assertion only guards against a silent, unexplained
     # large swing.
-    assert live_missing == 1320
+    assert live_missing == 1317
 
 
 # ---------------------------------------------------------------------------
