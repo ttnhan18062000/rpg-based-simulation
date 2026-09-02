@@ -41,6 +41,12 @@ decay, testimony, generational transfer, and historical-memory horizons, per the
 §13 integration plan. Not resolved or required by this review pass; a forward pointer for whoever scopes
 these tickets.
 
+**Social/Political mechanics hardening (see the parent roadmap's "Hardening backlog" section, item 1):**
+[`docs/plans/rpg_design_roadmap/rpg_social_narrative_mechanics_hardening_plan.md`](rpg_social_narrative_mechanics_hardening_plan.md)
+documents and hardens the `SocialComponent`/`SocialBond`/`RelationshipService` state this milestone's
+reputation and history/belief branches both build on — a prerequisite documentation/verification pass these
+tickets can cite once scoped, not a substitute for their own investigation.
+
 ## Scope (not yet broken into child tickets)
 
 1. **Ideas 55 + 58 — one on-death dispatch hook, two thin handlers.** Both fire at the identical trigger
@@ -66,9 +72,12 @@ these tickets.
 ## Out of Scope
 
 - Anything from Milestones 1, 2, 3, 4, or 6.
-- Wiring `CultureDeriver`/`CulturalBiasApplicator` for the first time — a prerequisite this epic's ideas 57
-  and 62 surface, shared with M4's idea 61 and M6's idea 56. **Owned by M4** (plan-owner decision,
-  2026-08-29) — this epic consumes the activation, it does not build it.
+- Building any new Culture Drift derivation/bias-application machinery — **correction, 2026-09-02**
+  (hardening backlog item 3, see
+  [`docs/plans/rpg_design_roadmap/rpg_culture_drift_hardening_plan.md`](rpg_culture_drift_hardening_plan.md)):
+  `CultureDeriver`/`CulturalBiasApplicator` was never actually dormant — it's real, live, and tested. Ideas
+  57 and 62 need only their own read-side consumption of `region_cultures`, not a first-time-wiring
+  prerequisite owned elsewhere.
 
 ## Acceptance Signal
 
