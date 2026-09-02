@@ -8236,7 +8236,7 @@
     \ \"death\": the original implementation derived death from `alive_set` (which\
     \ maps to `CombatComponent.alive`, confirmed `src/engine/patches.py:301`) -- a\
     \ different field from `LifecycleComponent.active`, which `LifecycleSystem.resolve_lifecycle()`\
-    \ (`src/systems/lifecycle_systems/lifecycle.py:43`) only transitions on `outcome_kind==\"\
+    \ (`src/systems/lifecycle_systems/lifecycle.py:40`) only transitions on `outcome_kind==\"\
     KILL\"` or old-age, never on `alive_set` alone. Fixed by gating `entity_killed`/`hero_death_unrecorded`\
     \ on `outcome_kind==\"KILL\"` directly -- this also disclosed a second, related,\
     \ accepted limitation: a hazard-caused `combat.alive=False` can transition `lifecycle.active`\
