@@ -82,21 +82,32 @@ destroyed into a Ruin should carry legible trace of what it used to be, not just
 non-`CITY` kinds are explicitly the non-civilization side of the map: where monsters, ancient remnants, and
 natural spawns live, not where settled population lives.
 
+## Membership-index decision (resolved 2026-09-02)
+
+**Dual-sided membership: `RegionState.places: List[str]` (forward list) PLUS a cached `place_id`
+back-reference field on the owning entity/building component.** This is not a new pattern — it is the
+same tradeoff two existing components already resolved, verified directly against
+`src/core/state.py`:
+- `GroupRecord.member_ids` (group-side list, `docs/simulation/domains/party_contract.md` §1) is paired
+  with `IdentityComponent.group_id: Optional[int]` (entity-side back-reference,
+  `src/core/state.py:503`, exposed via `EntityState.group_id`).
+- `NavigationComponent.region_id: Optional[str]` (`src/core/state.py:388`) exists specifically as a
+  cached back-reference — its own comment reads `"Phase 3 Hardening: Cache region_id to avoid O(N)
+  scans"` — i.e. the region-membership version of this exact question was already answered the same way.
+
+Applying the identical shape: `PlaceState` carries `region_id` (parent reference, already in the Target
+Shape above); `RegionState.places: List[str]` is the forward list; entities/buildings that belong to a
+Place get a cached `place_id: Optional[str]` field (list-only membership was rejected — it would
+reintroduce the exact O(N)-scan problem `NavigationComponent.region_id` was added to eliminate).
+
 ## Scope (not yet broken into child tickets)
 
 1. **Schema migration.** Add `PlaceState`/`PlaceKind` per the shape above; extend `RegionState` with
-   `places: List[str]`. Resolve the open membership-index question below *before* ticketing this, not
-   during implementation.
-2. **Open design decision to resolve first:** does Place membership work as `RegionState.places: List[str]`
-   only, or does each entity/building also need a direct `place_id` field for fast lookup without a
-   Region-side scan? The Durable State Rule (project `CLAUDE.md`) argues for a registry index either way.
-   `Group`/`Party` already faced this exact tradeoff for a structurally similar problem (see the parallel
-   open question on `ClanState` membership in `rpg_expected_schemas.html`'s Clan schema) — check how that
-   resolved before deciding here rather than re-deriving it from scratch.
-3. **`WorldCompiler` wiring.** `WorldCompiler.compile()` (`src/worldbuilding/compiler.py`) is confirmed the
+   `places: List[str]`; add the cached `place_id` back-reference field per the decision above.
+2. **`WorldCompiler` wiring.** `WorldCompiler.compile()` (`src/worldbuilding/compiler.py`) is confirmed the
    sole production site that constructs a populated `AuthoritativeState` from content (per M8's own
    investigation) — this is the actual insertion point, not a new parallel pipeline.
-4. **Two-stage pilot, not a single 21-world cutover** (per M9's investigation, item 2):
+3. **Two-stage pilot, not a single 21-world cutover** (per M9's investigation, item 2):
    - **Stage A** (smallest correctness check): `unit_information_source` — 16 entities, 1 region
      (`frontier_village_core` + `hero_adventurers`). One region becomes one `Region` containing exactly one
      `Place(kind=CITY)`; nothing else should change, and the diff is trivially hand-verifiable.
@@ -108,7 +119,7 @@ natural spawns live, not where settled population lives.
      schema's `state_hash` + grades are already recorded as the baseline for all 21 worlds today; compile
      under the new schema and diff against that recorded baseline. A staged hard cutover (Stage A → Stage B
      → remaining 19), not a live comparison.
-5. **Recalibration procedure, using infrastructure that already exists.** Every
+4. **Recalibration procedure, using infrastructure that already exists.** Every
    `world_compile_report.json` already carries a `state_hash` field. Recompile each world under the new
    schema and diff `state_hash` against the committed one first — an unchanged hash proves a lossless
    migration for that world with no SimQ grade run needed at all. Only for worlds whose hash *does* change
@@ -117,7 +128,7 @@ natural spawns live, not where settled population lives.
    committed `run_keys` will very likely trip on a structural compile-shape change at this scale even with
    zero real gameplay regression — budget this as a genuine per-world triage pass across all 21 worlds/84
    run_keys, not a single batch diff.
-6. **Downstream unblocking.** Once this lands, ideas 35, 45, 46, 47, and 48 become buildable against a real
+5. **Downstream unblocking.** Once this lands, ideas 35, 45, 46, 47, and 48 become buildable against a real
    `Place` model instead of a flat one — each keeps its own ticket (see Out of Scope), but this rebuild is
    the shared prerequisite all of them cite.
 
@@ -138,8 +149,11 @@ natural spawns live, not where settled population lives.
 
 ## Acceptance Signal
 
-- The membership-index open question (List-only vs. `place_id` back-reference) is decided and recorded here
-  before any child ticket starts, not discovered mid-implementation.
+- ~~The membership-index open question (List-only vs. `place_id` back-reference) is decided and recorded
+  here before any child ticket starts, not discovered mid-implementation.~~ **Resolved 2026-09-02** — see
+  "Membership-index decision" above: dual-sided (`RegionState.places: List[str]` + cached `place_id`
+  back-reference), matching the existing `GroupRecord.member_ids`/`IdentityComponent.group_id` and
+  `NavigationComponent.region_id` precedents.
 - Stage A (`unit_information_source`) compiles with a byte-identical `state_hash` to its committed baseline,
   or any hash change is explained and accepted before Stage B begins.
 - Stage B (`hero_guild_routing`) compiles correctly with all 4 non-uniform region kinds represented as the
