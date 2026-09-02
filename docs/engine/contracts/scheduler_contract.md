@@ -18,6 +18,10 @@ This document defines the execution model for the deterministic scheduler. It re
 ## 3. Readiness-Driven Selection Semantics
 The scheduler selects entity work according to the readiness threshold (100.0) established by the minimal kernel contract.
 - It does **not** redefine eligibility; it only selects eligible entities for the current execution window.
+- The readiness threshold gates `ENTITY_ACT`/`ENTITY_MOVE` only. `ENTITY_BRAIN` (cognition/tactical
+  evaluation) is explicitly exempt from the readiness gate — it costs 0 readiness and is instead
+  governed by the entity's `strategic_intelligence` cadence ("Action Readiness Law, COMB-266",
+  `src/engine/scheduler.py`). See `docs/engine/candidate_selection.md` Tier 1 for the full gate table.
 
 ## 4. Work Boundaries & Ordering
 Execution is organized into ranked buckets. Work in a higher bucket must be selected/ordered before a lower bucket.
