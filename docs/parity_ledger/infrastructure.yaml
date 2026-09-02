@@ -1901,12 +1901,19 @@
     \ stdlib only, with no simulation behavior dependency. On ticket/artifact content\
     \ types, tags additionally carry controlled-vocabulary enforcement per docs/guidelines/tag_taxonomy.md\
     \ \u2014 forbidden p0/p1/p2 tags and canonical-synonym/format rejection \u2014\
-    \ applied forward-only from 2026-07-04 so historical tickets are not newly rejected.\n"
+    \ applied forward-only from 2026-07-04 so historical tickets are not newly rejected.\
+    \ On doc content type (TCK-20260831-DOC-TAG-ENFORCEMENT), the same canonical-form\
+    \ and registry-membership checks now also apply, gated on a new per-file opt-in\
+    \ marker (`tags_enforced: true`) rather than a date cutoff, since doc frontmatter\
+    \ carries no ticket_id-shaped identifier to date-gate on; the existing doc corpus\
+    \ is fully grandfathered \u2014 no doc currently carries the field, so no existing\
+    \ doc is newly rejected.\n"
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'tools/validate_frontmatter.py + docs/guidelines/frontmatter_schema.md
-    + docs/guidelines/tag_taxonomy.md + tests/tools/test_validate_frontmatter.py
+  v2_evidence: 'tools/validate_frontmatter.py (_check_doc_tags, _tag_membership_errors)
+    + docs/guidelines/frontmatter_schema.md + docs/guidelines/tag_taxonomy.md + tests/tools/test_validate_frontmatter.py
+    (TestDocTagEnforcement, test_invalid_layer_doc_fixture_still_rejected)
 
     '
   proof_type: null
