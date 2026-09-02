@@ -13,7 +13,7 @@ tags: [content, architecture]
 axis and idea 66 already received, applied to the social/reputation/political surface.
 
 **Superseded in scope, not replaced, 2026-09-02:** the fuller axis-level treatment now lives in
-[`docs/brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md) —
+[`docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md) —
 same depth and structure as the temporal-axis proposal, including a resolved determinism finding
 (`CanonicalStateHasher` covers only 10 of `SocialComponent`'s 15 fields) this plan's own scope item 5 named
 as an open question. This plan's scope items 1-4 (write the missing chapter, relocate the misplaced
@@ -116,7 +116,7 @@ epic doc's own citation for idea 22's test design (`grudge ≥ 3.0`) — not a d
 
 ## References
 
-- `docs/brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md` — the fuller axis-level
+- `docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md` — the fuller axis-level
   proposal this plan's findings feed into
 - `docs/parity_ledger/social_narrative.yaml` — 276 entries, ~94 genuinely social/narrative
 - `src/core/models/social.py` — `SocialComponent`, **15 fields** (corrected count, 2026-09-02 — an earlier

@@ -327,7 +327,7 @@ ideas across M2/M4/M5/M6 depend on it. Unlike temporal, it is not aspirational �
 `SocialBond`/`RelationshipService` (`src/core/models/social.py`,
 `src/systems/social_systems/relationships.py`) are real, live, and load-bearing today. The gap this axis
 names is a missing coherent account of it, not a missing mechanism — see
-[`docs/brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md)
+[`docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md)
 for the full investigation (mirrors the temporal proposal's own structure and rigor).
 
 **Accepted in this brainstorm pass:**
@@ -394,7 +394,7 @@ directly in this pass:
 A fourth cross-cutting dimension, the same shape as space, time, and social/relationship above — what an
 entity knows or believes, as distinct from objective truth and from the Social axis's territory (beliefs
 *about specific other entities*). See
-[`docs/brainstorm/codex/2026-09-02-core-rpg-knowledge-belief-axis-proposal.md`](../../brainstorm/codex/2026-09-02-core-rpg-knowledge-belief-axis-proposal.md)
+[`docs/brainstorm/2026-09-02-core-rpg-knowledge-belief-axis-proposal.md`](../../brainstorm/2026-09-02-core-rpg-knowledge-belief-axis-proposal.md)
 for the full investigation.
 
 **Different starting condition than Social:** the existing per-file contracts

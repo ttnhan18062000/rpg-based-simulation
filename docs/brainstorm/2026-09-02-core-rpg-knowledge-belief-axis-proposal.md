@@ -171,7 +171,7 @@ confirms, rather than changes, the Social axis proposal's own placement of ideas
 
 ## References
 
-- `docs/brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md` — the structural template
+- `docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md` — the structural template
   this document follows, and the source of the `RelationshipRole`/`nemesis_ids` precedent this document's
   §2.1 finding mirrors
 - `docs/simulation/belief_and_detour_contract.md`, `docs/simulation/domains/information_contract.md`,

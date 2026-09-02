@@ -101,7 +101,7 @@ The only real decay mechanism in the codebase, `SocialMemoryDecay.apply_decay()`
 `GRUDGE_DECAY=0.10`/episode), operates on a **separate data structure** — `SocialMemoryRecord`, the
 Campaign framework's cross-episode carry-forward memory — and only fires at Campaign episode boundaries,
 not during ordinary continuous-tick simulation. It does not affect live gameplay's `SocialComponent` state.
-See `docs/brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md` for the full
+See `docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md` for the full
 investigation and idea 67 (Living Relationship Decay) for the proposed fix.
 
 ---

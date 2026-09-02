@@ -48,7 +48,7 @@ reputation and history/belief branches both build on — a prerequisite document
 tickets can cite once scoped, not a substitute for their own investigation.
 
 **Social/Relationship axis (see the parent roadmap's own section, added 2026-09-02):**
-[`docs/brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/codex/2026-09-02-core-rpg-social-relationship-axis-proposal.md)
+[`docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md)
 is the fuller, temporal-proposal-depth treatment the hardening plan above feeds into — full field inventory,
 a real determinism gap (`CanonicalStateHasher` covers only 10 of 15 `SocialComponent` fields), and a
 per-idea integration table covering this milestone's own 53-63 range plus idea 67.
