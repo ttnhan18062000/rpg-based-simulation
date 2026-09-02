@@ -16,7 +16,7 @@ Observability layer for the Claude Code AI agent workflow. Tracks workflow runs 
 
 - Which workflow ran and what its outcome was (`runs.jsonl`)
 - Which agents were called, in which phase, and what each did in one sentence (`events.jsonl`)
-- Every individual tool call during a session: tool name, input summary, status, duration (`tools.jsonl`)
+- Every individual tool call during a session: tool name, input summary, status, duration (`tools/tools-YYYY-Www.jsonl`, one shard file per UTC ISO week)
 - Per-agent tool call counts derived from `tools.jsonl`, stored as `tool_call_count` on each event
 - A monotonic cost-proxy score per agent event, derived from `tools.jsonl` (Bash duration + Agent spawn count + edit-tool call count), stored as `cost_proxy_score` — an explicit proxy, not real token/dollar cost (see schema.md)
 - Weekly retro reports derived from the above
@@ -51,7 +51,7 @@ so a candidate reweighting's real impact is measured before it ships, not discov
 
 `tools/agent-monitoring/retrieval_baseline_metrics.py` is a separate, one-off/periodic
 read-only baseline-snapshot script (distinct from the recurring weekly retro above) that prints a
-JSON report over the same `runs.jsonl`/`events.jsonl`/`tools.jsonl` sources. Report sections:
+JSON report over the same `runs.jsonl`/`events.jsonl`/`tools/tools-YYYY-Www.jsonl` sources. Report sections:
 `context_tokens`, `search_count`, `raw_investigation_count`, `duration`, `gate_outcome`,
 `review_rework`, `legacy_schema_notes`. Every derived/proxy section states its own computation and
 limits inline via a `derivation`/`disclosure`/`reason` field — never a silent number. See
@@ -145,7 +145,7 @@ to a single isolated miss in August) rather than a flat ongoing rate.
 
 | Doc | Contents |
 |---|---|
-| [schema.md](schema.md) | Full field reference for runs.jsonl, events.jsonl, and tools.jsonl |
+| [schema.md](schema.md) | Full field reference for runs.jsonl, events.jsonl, and the tools/tools-YYYY-Www.jsonl shard family |
 | [../guides/agent_monitoring.md](../guides/agent_monitoring.md) | How to run the weekly retro loop |
 | [agent-monitoring/README.md](../../agent-monitoring/README.md) | Quick-reference schema and data files |
 

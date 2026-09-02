@@ -27,7 +27,10 @@ Run `make agent-monitoring-index` to (re)build it. `query.py` and `validate.py` 
 the index to exist (exiting with an actionable "run `make agent-monitoring-index` first" error if
 it's missing) — a deliberate choice, since neither is meant to run without its data source.
 `generate_retro.py` is the one exception: it builds the index on demand if missing **or stale**
-(any of `runs.jsonl`/`events.jsonl`/`tools.jsonl` has a newer mtime than the index —
+(`runs.jsonl`/`events.jsonl` each compared by their own single mtime; the `tools` source compares
+against the newest mtime across all `agent-monitoring/tools/tools-*.jsonl` shard files, via
+`max()` — never the shard directory's own mtime, since a directory's mtime does not reliably
+update when an existing file inside it is appended to. Any of these being newer than the index —
 `TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS`, since a present-but-outdated index was
 previously read silently forever, under-reporting retro numbers with no warning), and falls back
 to reading the raw JSONL directly if that on-demand build itself fails, so the weekly retro report
@@ -440,11 +443,12 @@ for line in Path('agent-monitoring/events.jsonl').read_text().splitlines():
         events_by_run[e['run_id']].append(e)
 
 tools_by_event = defaultdict(list)
-for line in Path('agent-monitoring/tools.jsonl').read_text().splitlines():
-    if line:
-        t = json.loads(line)
-        if t.get('run_id') and t.get('seq') is not None:
-            tools_by_event[(t['run_id'], t['seq'])].append(t)
+for shard in sorted(Path('agent-monitoring/tools').glob('tools-*.jsonl')):
+    for line in shard.read_text().splitlines():
+        if line:
+            t = json.loads(line)
+            if t.get('run_id') and t.get('seq') is not None:
+                tools_by_event[(t['run_id'], t['seq'])].append(t)
 
 # Full run with events and per-event tool calls:
 run = runs['TCK-20260607-...']

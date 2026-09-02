@@ -986,6 +986,58 @@ def test_index_is_stale_false_when_index_newer_than_all_sources(tmp_path, monkey
     assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is False
 
 
+def test_generate_retro_index_is_stale_detects_write_to_non_newest_shard(tmp_path, monkeypatch):
+    # TCK-20260902-MONITORING-SHARD-CONSUMERS AC3: a write to an OLDER (non-newest-by-filename)
+    # shard must still be detected as staleness, not just a write to the newest-named shard —
+    # this is why _index_is_stale() must use max() over every shard's own mtime, never the
+    # directory's own mtime as a shortcut.
+    import os
+    import time
+
+    runs_file = tmp_path / "runs.jsonl"
+    events_file = tmp_path / "events.jsonl"
+    tools_dir = tmp_path / "tools"
+    tools_dir.mkdir()
+    runs_file.write_text("")
+    events_file.write_text("")
+    older_shard = tools_dir / "tools-2026-W01.jsonl"
+    newer_shard = tools_dir / "tools-2026-W05.jsonl"
+    older_shard.write_text('{"run_id":"TCK-A","seq":1,"tool":"Read"}\n')
+    newer_shard.write_text('{"run_id":"TCK-B","seq":1,"tool":"Read"}\n')
+
+    monkeypatch.setattr(generate_retro, "RUNS_FILE", runs_file)
+    monkeypatch.setattr(generate_retro, "EVENTS_FILE", events_file)
+    monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tools_dir)
+
+    generate_retro._load_runs_and_events()  # builds the index fresh, now newer than all sources
+    assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is False
+
+    time.sleep(0.05)
+    with older_shard.open("a") as f:
+        f.write('{"run_id":"TCK-A","seq":2,"tool":"Edit"}\n')
+    os.utime(older_shard, None)
+
+    assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is True
+
+
+def test_generate_retro_load_jsonl_globs_shard_directory(tmp_path):
+    tools_dir = tmp_path / "tools"
+    tools_dir.mkdir()
+    (tools_dir / "tools-2026-W01.jsonl").write_text('{"run_id":"TCK-A","seq":1,"tool":"Read"}\n')
+    (tools_dir / "tools-2026-W02.jsonl").write_text(
+        '{"run_id":"TCK-B","seq":1,"tool":"Read"}\n{"run_id":"TCK-B","seq":2,"tool":"Bash"}\n'
+    )
+
+    records = generate_retro.load_jsonl(tools_dir)
+    assert [r["run_id"] for r in records] == ["TCK-A", "TCK-B", "TCK-B"]
+
+    # Dual-mode: a literal file path (existing or not) is unaffected.
+    single_file = tmp_path / "single.jsonl"
+    single_file.write_text('{"run_id":"TCK-SINGLE","seq":1,"tool":"Read"}\n')
+    assert [r["run_id"] for r in generate_retro.load_jsonl(single_file)] == ["TCK-SINGLE"]
+    assert generate_retro.load_jsonl(tmp_path / "does-not-exist.jsonl") == []
+
+
 def test_generate_retro_produces_clear_error_message_if_build_on_demand_disabled_or_fails(
     tmp_path, monkeypatch, capsys
 ):
@@ -2206,14 +2258,6 @@ def test_correlation_handles_single_group_empty_gracefully():
     assert "| Non-compliant | 0 | n/a | n/a |" in report
 
 
-@pytest.mark.xfail(
-    reason="agent-monitoring/tools.jsonl retired by TCK-20260902-MONITORING-SHARD-MIGRATION; "
-    "generate_retro.DEFAULT_TOOLS_FILE still points at the retired single-file path and reads "
-    "empty data -- not yet updated to glob the shard directory. Tracked by "
-    "TCK-20260902-MONITORING-SHARD-CONSUMERS (child 3), landing immediately after in this same "
-    "batch per SEQUENCE.md.",
-    strict=True,
-)
 def test_correlation_real_corpus_produces_a_real_number():
     real_events = generate_retro.load_jsonl(generate_retro.EVENTS_FILE)
     real_tools = generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
@@ -2227,14 +2271,6 @@ def test_correlation_real_corpus_produces_a_real_number():
 # ## Parity Index Read-Path Usage (AC3)
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(
-    reason="agent-monitoring/tools.jsonl retired by TCK-20260902-MONITORING-SHARD-MIGRATION; "
-    "generate_retro.DEFAULT_TOOLS_FILE still points at the retired single-file path and reads "
-    "empty data -- not yet updated to glob the shard directory. Tracked by "
-    "TCK-20260902-MONITORING-SHARD-CONSUMERS (child 3), landing immediately after in this same "
-    "batch per SEQUENCE.md.",
-    strict=True,
-)
 def test_parity_index_readpath_call_count_matches_real_corpus_state():
     # Was pinned at 0 (TCK-20260731-PARITY-READPATH-GATE's Gate A review: reviewed GO but not yet
     # wired into any real call site). compute_parity_index_readpath_call_count()'s own docstring

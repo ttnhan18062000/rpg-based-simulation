@@ -20,7 +20,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MODULE_PATH = _MONITORING_TOOLS_DIR / "skill_usage_metric.py"
 _REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
-_REAL_TOOLS_FILE = _REAL_AGENT_MONITORING_DIR / "tools.jsonl"
+_REAL_TOOLS_DIR = _REAL_AGENT_MONITORING_DIR / "tools"
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
@@ -135,33 +135,24 @@ def _independently_derive_counts() -> dict:
     real bug in build_skill_usage_section rather than just confirming it agrees with itself."""
     counts: dict = {}
     pattern = re.compile(r"'skill':\s*'([^']*)'")
-    with open(_REAL_TOOLS_FILE, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                rec = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if rec.get("tool") != "Skill":
-                continue
-            m = pattern.search(rec.get("input_summary", ""))
-            if m:
-                counts[m.group(1)] = counts.get(m.group(1), 0) + 1
+    for shard in sorted(_REAL_TOOLS_DIR.glob("tools-*.jsonl")):
+        with open(shard, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get("tool") != "Skill":
+                    continue
+                m = pattern.search(rec.get("input_summary", ""))
+                if m:
+                    counts[m.group(1)] = counts.get(m.group(1), 0) + 1
     return counts
 
 
-@pytest.mark.xfail(
-    reason=(
-        "agent-monitoring/tools.jsonl retired by TCK-20260902-MONITORING-SHARD-MIGRATION; "
-        "manifest.py/skill_usage_metric.py not yet updated to read the shard directory -- "
-        "tracked by TCK-20260902-MONITORING-SHARD-CONSUMERS (child 3), landing immediately "
-        "after in this same batch per SEQUENCE.md. Must be removed before any PR from this "
-        "branch opens."
-    ),
-    strict=True,
-)
 def test_live_corpus_matches_independently_derived_counts():
     from generate_retro import DEFAULT_TOOLS_FILE, load_jsonl
     tools = load_jsonl(DEFAULT_TOOLS_FILE)

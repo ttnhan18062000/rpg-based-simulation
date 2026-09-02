@@ -27,19 +27,11 @@ from manifest import build_manifest  # noqa: E402
 _EXPECTED_KEYS = {"file", "line_count", "byte_size", "sha256", "parser_result", "legacy_warning_count"}
 _WATCHED_JSONL_FILES = ["events.jsonl", "runs.jsonl", "tools.jsonl"]
 
-_XFAIL_TOOLS_JSONL_RETIRED_REASON = (
-    "agent-monitoring/tools.jsonl retired by TCK-20260902-MONITORING-SHARD-MIGRATION; "
-    "manifest.py/skill_usage_metric.py not yet updated to read the shard directory -- tracked "
-    "by TCK-20260902-MONITORING-SHARD-CONSUMERS (child 3), landing immediately after in this "
-    "same batch per SEQUENCE.md. Must be removed before any PR from this branch opens."
-)
-
 
 # ---------------------------------------------------------------------------
 # Shape test (AC1)
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(reason=_XFAIL_TOOLS_JSONL_RETIRED_REASON, strict=True)
 def test_build_manifest_shape_against_real_corpus():
     records = build_manifest(_REAL_AGENT_MONITORING_DIR)
 
@@ -66,7 +58,6 @@ def test_build_manifest_shape_against_real_corpus():
 # Reproducibility test (AC2)
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(reason=_XFAIL_TOOLS_JSONL_RETIRED_REASON, strict=True)
 def test_manifest_cli_reproducible_byte_identical_across_two_runs():
     result_1 = subprocess.run(
         [sys.executable, str(_MANIFEST_PATH)], cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
@@ -79,11 +70,63 @@ def test_manifest_cli_reproducible_byte_identical_across_two_runs():
     assert result_1.stdout.endswith("\n")
 
 
-@pytest.mark.xfail(reason=_XFAIL_TOOLS_JSONL_RETIRED_REASON, strict=True)
 def test_build_manifest_reproducible_byte_identical_direct_call():
     output_1 = build_manifest(_REAL_AGENT_MONITORING_DIR)
     output_2 = build_manifest(_REAL_AGENT_MONITORING_DIR)
     assert output_1 == output_2
+
+
+# ---------------------------------------------------------------------------
+# Sharded tools/ aggregation (TCK-20260902-MONITORING-SHARD-CONSUMERS)
+# ---------------------------------------------------------------------------
+
+def _write_jsonl(path: Path, lines: list) -> None:
+    path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+
+
+def test_manifest_tools_source_aggregates_all_shards(tmp_path):
+    (tmp_path / "runs.jsonl").write_text('{"run_id":"TCK-A"}\n', encoding="utf-8")
+    (tmp_path / "events.jsonl").write_text('{"run_id":"TCK-A","seq":1}\n', encoding="utf-8")
+    tools_dir = tmp_path / "tools"
+    tools_dir.mkdir()
+    _write_jsonl(tools_dir / "tools-2026-W01.jsonl", ['{"run_id":"TCK-A","seq":1,"tool":"Read"}'])
+    _write_jsonl(
+        tools_dir / "tools-2026-W02.jsonl",
+        ['{"run_id":"TCK-A","seq":2,"tool":"Edit"}', '{"run_id":"TCK-A","seq":3,"tool":"Bash"}'],
+    )
+
+    records = build_manifest(tmp_path)
+
+    assert len(records) == 3
+    by_file = {r["file"]: r for r in records}
+    assert set(by_file.keys()) == {"events.jsonl", "runs.jsonl", "tools.jsonl"}
+    tools_record = by_file["tools.jsonl"]
+    assert tools_record["line_count"] == 3
+    assert tools_record["parser_result"]["parsed_ok"] + tools_record["parser_result"]["parse_errors"] == 3
+    assert tools_record["byte_size"] == sum(
+        f.stat().st_size for f in tools_dir.glob("tools-*.jsonl")
+    )
+
+
+def test_manifest_tools_source_sha256_is_order_stable_across_shards(tmp_path):
+    (tmp_path / "runs.jsonl").write_text("", encoding="utf-8")
+    (tmp_path / "events.jsonl").write_text("", encoding="utf-8")
+    tools_dir = tmp_path / "tools"
+    tools_dir.mkdir()
+    _write_jsonl(tools_dir / "tools-2026-W01.jsonl", ['{"run_id":"TCK-A","seq":1,"tool":"Read"}'])
+    _write_jsonl(tools_dir / "tools-2026-W02.jsonl", ['{"run_id":"TCK-A","seq":2,"tool":"Edit"}'])
+
+    records_1 = build_manifest(tmp_path)
+    records_2 = build_manifest(tmp_path)
+    sha_1 = next(r["sha256"] for r in records_1 if r["file"] == "tools.jsonl")
+    sha_2 = next(r["sha256"] for r in records_2 if r["file"] == "tools.jsonl")
+    assert sha_1 == sha_2
+
+    with (tools_dir / "tools-2026-W01.jsonl").open("a") as f:
+        f.write('{"run_id":"TCK-B","seq":1,"tool":"Write"}\n')
+    records_3 = build_manifest(tmp_path)
+    sha_3 = next(r["sha256"] for r in records_3 if r["file"] == "tools.jsonl")
+    assert sha_3 != sha_1
 
 
 # ---------------------------------------------------------------------------
@@ -121,13 +164,17 @@ def _porcelain_snapshot() -> str:
 def _content_hash_snapshot() -> str:
     hasher = hashlib.sha256()
     for filename in _WATCHED_JSONL_FILES:
-        path = _REAL_AGENT_MONITORING_DIR / filename
         hasher.update(filename.encode("utf-8"))
+        if filename == "tools.jsonl":
+            tools_dir = _REAL_AGENT_MONITORING_DIR / "tools"
+            for shard in sorted(tools_dir.glob("tools-*.jsonl")):
+                hasher.update(shard.read_bytes())
+            continue
+        path = _REAL_AGENT_MONITORING_DIR / filename
         hasher.update(path.read_bytes())
     return hasher.hexdigest()
 
 
-@pytest.mark.xfail(reason=_XFAIL_TOOLS_JSONL_RETIRED_REASON, strict=True)
 def test_manifest_run_against_real_corpus_produces_zero_diff():
     assert _REAL_AGENT_MONITORING_DIR.is_dir()
     assert "tmp" not in str(_REAL_AGENT_MONITORING_DIR).lower()

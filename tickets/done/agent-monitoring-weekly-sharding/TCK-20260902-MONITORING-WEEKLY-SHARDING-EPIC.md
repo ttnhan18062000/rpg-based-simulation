@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260902-MONITORING-WEEKLY-SHARDING-EPIC
-phase: open
+phase: done
 date: 2026-09-02
 tags: [agent-monitoring, observability, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, observability, data-quality]
 Restructure `agent-monitoring/tools.jsonl`'s unbounded growth into weekly, ISO-week-numbered shard files
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -87,21 +87,26 @@ not a new convention invented for this epic.
   unmodified in content — content repair is not in scope for any child ticket).
 
 ## Acceptance Criteria
-- [ ] All 3 child tickets (`TCK-20260902-MONITORING-SHARD-WRITE-PATH`,
+- [x] All 3 child tickets (`TCK-20260902-MONITORING-SHARD-WRITE-PATH`,
       `TCK-20260902-MONITORING-SHARD-MIGRATION`, `TCK-20260902-MONITORING-SHARD-CONSUMERS`) are DONE.
-- [ ] `post_tool_hook.py` writes new tool-call records to
+- [x] `post_tool_hook.py` writes new tool-call records to
       `agent-monitoring/tools/tools-YYYY-Www.jsonl` (current ISO week), never to
       `agent-monitoring/tools.jsonl`.
-- [ ] The historical 179,096-line `agent-monitoring/tools.jsonl` has been split into weekly shards
-      with a verified zero-data-loss check, and the monolithic file no longer exists in the working
-      tree (its full content remains recoverable via git history).
-- [ ] `query.py`, `generate_retro.py`, `validate.py`, `build_index.py` all read from the full set of
-      sharded files, not one hardcoded path.
-- [ ] `.gitattributes` covers the new shard directory with `merge=union`, and no longer references
+- [x] The historical 179,243-line (real count at migration run time, not the 179,096 stated when
+      this epic was scoped) `agent-monitoring/tools.jsonl` has been split into weekly shards with a
+      verified zero-data-loss check (`179243 + 190 live = 179433`, exact reconciliation), and the
+      monolithic file no longer exists in the working tree (full content recoverable via
+      `git log --follow`, confirmed 70 commits).
+- [x] `query.py`, `generate_retro.py`, `validate.py`, `build_index.py` all read from the full set of
+      sharded files, not one hardcoded path. (`query.py`/`validate.py` confirmed to need zero
+      functional change — both are pure SQLite-index consumers, unaffected by the file-layout
+      change; documented, not silently assumed.)
+- [x] `.gitattributes` covers the new shard directory with `merge=union`, and no longer references
       the retired single-file path.
-- [ ] `docs/agent-monitoring/README.md`, `docs/agent-monitoring/schema.md`,
-      `docs/guides/agent_monitoring.md`, `docs/ai/system_overview.md` §6 describe the sharded shape,
-      not "3 JSONL files."
+- [x] `docs/agent-monitoring/README.md`, `docs/agent-monitoring/schema.md`,
+      `docs/ai/system_overview.md` §6 describe the sharded shape, not "3 JSONL files."
+      (`docs/guides/agent_monitoring.md` confirmed to need no change — its 2 references are
+      logical/conceptual, not physical-file claims.)
 
 ## Related Tickets
 - TCK-20260902-MONITORING-SHARD-WRITE-PATH (child 1)
@@ -165,9 +170,49 @@ tier child ticket requires its own `staging_artifacts/{ticket_id}/` per the Befo
   confirmed via `python3 tools/layer_registry.py list`.
 
 ## Implementation Notes
+All 3 child tickets implemented sequentially on branch `worktree-monitoring-tools-weekly-sharding`,
+each through the full standard-tier pipeline (Investigate → Plan → Implement → Test →
+Architecture-Verify → Verify → Finalize), each independently verified by architecture-reviewer and
+done-checker before proceeding to the next.
+
+Child 1 (write-path) surfaced no scope deviations. Child 2 (migration) discovered mid-implementation
+that 2 additional real-corpus tests in `test_generate_retro.py` shared the identical root cause as
+the 5 originally-planned `xfail`-marked tests; the orchestrating session extended the same treatment,
+correcting the interim-gap list from 5 to 7 tests, all tracked for child 3 to resolve. Child 3
+(consumers) discovered during its own Plan phase a live, previously-unknown, non-xfailed test failure
+(`manifest.py::capture_lines()`, used by 2 real downstream consumers) sharing the same root defect as
+the file's other broken function, and folded its fix in as the same fix applied to the file's second
+function — not scope creep. All 7 originally-accepted `xfail` markers plus this 8th
+previously-red test were confirmed genuinely `PASSED` (not `xfail`/`xpass`/`error`) before child 3's
+own Finalize, satisfying the hard release gate child 2's plan.md staked on child 3 landing.
 
 ## Test Summary
+Full regression sweep across all 3 children's combined changes (final state, child 3's Verify):
+**257 passed, 0 failed, 0 xfail, 0 xpass, 0 error.** All 8 previously-broken/xfailed real-corpus
+tests independently confirmed genuine `PASSED` by 2 separate gates (architecture-reviewer,
+done-checker) beyond the implementer's own report.
 
 ## Files Changed
+See each child ticket's own `## Files Changed` section
+(`tickets/done/TCK-20260902-MONITORING-SHARD-WRITE-PATH.md`,
+`tickets/done/TCK-20260902-MONITORING-SHARD-MIGRATION.md`,
+`tickets/done/TCK-20260902-MONITORING-SHARD-CONSUMERS.md`) for the complete, itemized list. Summary:
+`post_tool_hook.py` (write path), `migrate_tools_shards.py` (new, one-time migration script),
+`validate.py`/`build_index.py`/`generate_retro.py`/`manifest.py` (dir-aware readers), `.gitattributes`,
+4 doc files, 1 parity ledger entry (`INFRA-291`, via the sanctioned writer), and the historical
+`agent-monitoring/tools.jsonl` file itself (removed, 179,243 lines relocated into 14 shard files
+under `agent-monitoring/tools/`).
 
 ## Completion Summary
+`agent-monitoring/tools.jsonl`'s unbounded growth (179,243 lines / 64MB by the time this epic
+landed, causing repeated GitHub >50MB push warnings and `pack-objects` OOM failures observed live
+across this very session) is resolved via weekly, ISO-week-numbered shard files
+(`agent-monitoring/tools/tools-YYYY-Www.jsonl`), reusing the exact naming convention this repo's own
+`agent-monitoring/retro/` reports already established. The write path (child 1), a one-time
+zero-data-loss historical migration that retired the monolithic file (child 2), and every real
+consumer's read path (child 3) all landed and were independently verified. No data was lost — full
+history remains recoverable via `git log --follow`. `events.jsonl`/`runs.jsonl` were confirmed out
+of scope, growing far more slowly with no evidence of needing the same treatment. One deferred
+follow-up flagged, not silently dropped: root-level `agent-monitoring/README.md` (distinct from
+`docs/agent-monitoring/README.md`) has the same stale single-file framing and is a good small
+follow-up hotfix ticket candidate.

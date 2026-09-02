@@ -54,7 +54,7 @@ RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 EVENTS_FILE = Path("agent-monitoring/events.jsonl")
 RETRO_DIR = Path("agent-monitoring/retro")
 DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
-DEFAULT_TOOLS_FILE = Path("agent-monitoring/tools.jsonl")
+DEFAULT_TOOLS_FILE = Path("agent-monitoring/tools")
 
 # Repo root — two levels above tools/agent-monitoring/, matching this file's actual depth.
 _DEFAULT_TICKETS_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -62,9 +62,25 @@ _DEFAULT_SKILLS_DIR = _DEFAULT_TICKETS_ROOT / ".claude" / "skills"
 
 
 def load_jsonl(path):
+    if path.is_dir():
+        records = []
+        for shard in sorted(path.glob("tools-*.jsonl")):
+            records.extend(load_jsonl(shard))
+        return records
     if not path.exists():
         return []
     return [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
+
+
+def _source_mtime(source):
+    """Newest relevant mtime for a source: max shard mtime if `source` is a directory
+    (the sharded tools/ family), else the file's own mtime if it exists, else None."""
+    if source.is_dir():
+        shard_mtimes = [f.stat().st_mtime for f in source.glob("tools-*.jsonl")]
+        return max(shard_mtimes) if shard_mtimes else None
+    if source.exists():
+        return source.stat().st_mtime
+    return None
 
 
 def _index_is_stale(db_path):
@@ -76,7 +92,8 @@ def _index_is_stale(db_path):
         return True
     db_mtime = db_path.stat().st_mtime
     for source in (RUNS_FILE, EVENTS_FILE, DEFAULT_TOOLS_FILE):
-        if source.exists() and source.stat().st_mtime > db_mtime:
+        mtime = _source_mtime(source)
+        if mtime is not None and mtime > db_mtime:
             return True
     return False
 

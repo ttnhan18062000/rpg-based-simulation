@@ -27,12 +27,7 @@ _FILES_BY_SOURCE = {
 }
 
 
-def _scan_file(path: Path, source: str) -> dict:
-    parsed_ok = 0
-    parse_errors = 0
-    legacy_warning_count = 0
-    hasher = hashlib.sha256()
-
+def _stream_file_into(path: Path, source: str, hasher, counts: dict) -> None:
     with open(path, "rb") as f:
         for line_bytes in f:
             hasher.update(line_bytes)
@@ -42,27 +37,52 @@ def _scan_file(path: Path, source: str) -> dict:
             try:
                 record = json.loads(stripped)
             except json.JSONDecodeError:
-                parse_errors += 1
+                counts["parse_errors"] += 1
                 continue
-            parsed_ok += 1
+            counts["parsed_ok"] += 1
             labels = classify_provenance(record, source)
             if labels and labels != frozenset({"interactive_null"}):
-                legacy_warning_count += 1
+                counts["legacy_warning_count"] += 1
 
+
+def _scan_file(path: Path, source: str) -> dict:
+    hasher = hashlib.sha256()
+    counts = {"parsed_ok": 0, "parse_errors": 0, "legacy_warning_count": 0}
+    _stream_file_into(path, source, hasher, counts)
     return {
         "file": path.name,
-        "line_count": parsed_ok + parse_errors,
+        "line_count": counts["parsed_ok"] + counts["parse_errors"],
         "byte_size": path.stat().st_size,
         "sha256": hasher.hexdigest(),
-        "parser_result": {"parsed_ok": parsed_ok, "parse_errors": parse_errors},
-        "legacy_warning_count": legacy_warning_count,
+        "parser_result": {"parsed_ok": counts["parsed_ok"], "parse_errors": counts["parse_errors"]},
+        "legacy_warning_count": counts["legacy_warning_count"],
+    }
+
+
+def _scan_tools_shards(tools_dir: Path, source: str) -> dict:
+    hasher = hashlib.sha256()
+    counts = {"parsed_ok": 0, "parse_errors": 0, "legacy_warning_count": 0}
+    byte_size = 0
+    for shard in sorted(tools_dir.glob("tools-*.jsonl")):
+        _stream_file_into(shard, source, hasher, counts)
+        byte_size += shard.stat().st_size
+    return {
+        "file": "tools.jsonl",
+        "line_count": counts["parsed_ok"] + counts["parse_errors"],
+        "byte_size": byte_size,
+        "sha256": hasher.hexdigest(),
+        "parser_result": {"parsed_ok": counts["parsed_ok"], "parse_errors": counts["parse_errors"]},
+        "legacy_warning_count": counts["legacy_warning_count"],
     }
 
 
 def build_manifest(agent_monitoring_dir: Path) -> list:
     records = []
     for filename, source in sorted(_FILES_BY_SOURCE.items()):
-        records.append(_scan_file(agent_monitoring_dir / filename, source))
+        if source == "tools":
+            records.append(_scan_tools_shards(agent_monitoring_dir / "tools", source))
+        else:
+            records.append(_scan_file(agent_monitoring_dir / filename, source))
     return records
 
 
@@ -74,6 +94,16 @@ def capture_lines(agent_monitoring_dir: Path) -> dict[str, list[str]]:
     """
     result: dict[str, list[str]] = {}
     for filename in _FILES_BY_SOURCE:
+        if filename == "tools.jsonl":
+            tools_dir = agent_monitoring_dir / "tools"
+            if tools_dir.is_dir():
+                lines: list[str] = []
+                for shard in sorted(tools_dir.glob("tools-*.jsonl")):
+                    with open(shard, "r", encoding="utf-8") as file:
+                        for line in file:
+                            lines.append(line)
+                result[filename] = lines
+                continue
         path = agent_monitoring_dir / filename
         lines: list[str] = []
         with open(path, "r", encoding="utf-8") as file:

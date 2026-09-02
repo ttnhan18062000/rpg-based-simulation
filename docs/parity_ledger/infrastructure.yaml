@@ -6487,6 +6487,23 @@
     Coverage Audit rationale were corrected in the same ticket to say "missing or
     stale" rather than "missing" alone.
 
+
+    **Addendum (TCK-20260902-MONITORING-SHARD-CONSUMERS, 2026-09-03):** this entry''s
+    `v2_evidence` originally quoted `DEFAULT_TOOLS_FILE = Path("agent-monitoring/tools.jsonl")`
+    as the literal value of generate_retro.py''s tools-source path constant. TCK-20260902-MONITORING-SHARD-MIGRATION
+    retired that single physical file in favor of per-ISO-week shard files under agent-monitoring/tools/,
+    and this ticket repointed `DEFAULT_TOOLS_FILE` to `Path("agent-monitoring/tools")`
+    (the shard directory) and made `generate_retro.py`''s own `load_jsonl()` dir-aware
+    (globs and concatenates `sorted(tools_dir.glob("tools-*.jsonl"))` when given a
+    directory; unchanged single-file behavior otherwise) and generalized `_index_is_stale()`
+    to compare against the newest mtime across all shard files for the tools source,
+    via a new `_source_mtime()` helper, rather than one file''s mtime. This is a file-resolution-layer
+    change only -- the on-demand build/fallback shape, `_resolve_status()`/`_is_legacy_event()`/`_is_gate_fail()`,
+    and `compute_retro_metrics()`/`generate()` this entry documents are otherwise
+    unaffected. New tests: `test_generate_retro_load_jsonl_globs_shard_directory`,
+    `test_generate_retro_index_is_stale_detects_write_to_non_newest_shard`.
+
+
     '
 - id: INFRA-292
   text: 'New read-only baseline-metrics reporting tool over agent-monitoring/*.jsonl

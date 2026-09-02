@@ -221,6 +221,11 @@ def compute_multi_invocation_collision_report(events: list) -> str:
 
 
 def load_jsonl(path):
+    if path.is_dir():
+        records = []
+        for shard in sorted(path.glob("tools-*.jsonl")):
+            records.extend(load_jsonl(shard))
+        return records
     if not path.exists():
         return []
     records = []

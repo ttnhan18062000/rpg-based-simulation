@@ -41,7 +41,7 @@ from vocabulary import CANONICAL_TIERS, infer_workflow  # noqa: E402, F401
 
 DEFAULT_RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 DEFAULT_EVENTS_FILE = Path("agent-monitoring/events.jsonl")
-DEFAULT_TOOLS_FILE = Path("agent-monitoring/tools.jsonl")
+DEFAULT_TOOLS_FILE = Path("agent-monitoring/tools")
 DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
 
 

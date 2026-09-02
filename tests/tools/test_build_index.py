@@ -149,6 +149,118 @@ class TestBuildHappyPath:
 
 
 # ---------------------------------------------------------------------------
+# Group 1b — sharded tools/ directory source (TCK-20260902-MONITORING-SHARD-CONSUMERS)
+# ---------------------------------------------------------------------------
+
+class TestShardedToolsSource:
+
+    def test_build_index_reads_multiple_shard_files_from_directory(self, tmp_path):
+        runs_path = tmp_path / "runs.jsonl"
+        events_path = tmp_path / "events.jsonl"
+        tools_dir = tmp_path / "tools"
+        tools_dir.mkdir()
+        db_path = tmp_path / "index" / "monitoring.db"
+
+        _write_jsonl(runs_path, [])
+        _write_jsonl(events_path, [])
+        _write_jsonl(
+            tools_dir / "tools-2026-W01.jsonl",
+            [
+                {"run_id": "TCK-A", "seq": 1, "tool": "Read"},
+                {"run_id": "TCK-A", "seq": 2, "tool": "Edit"},
+            ],
+        )
+        _write_jsonl(
+            tools_dir / "tools-2026-W02.jsonl",
+            [
+                {"run_id": "TCK-B", "seq": 1, "tool": "Read"},
+                {"run_id": "TCK-B", "seq": 2, "tool": "Bash"},
+                {"run_id": "TCK-B", "seq": 3, "tool": "Write"},
+            ],
+        )
+
+        args = types.SimpleNamespace(
+            runs_file=str(runs_path),
+            events_file=str(events_path),
+            tools_file=str(tools_dir),
+            db_path=str(db_path),
+        )
+        exit_code = _bi.build(args)
+        assert exit_code == 0
+
+        conn = sqlite3.connect(str(db_path))
+        assert conn.execute("SELECT COUNT(*) FROM tools").fetchone()[0] == 5
+        conn.close()
+
+    def test_build_index_includes_unknown_week_shard(self, tmp_path):
+        runs_path = tmp_path / "runs.jsonl"
+        events_path = tmp_path / "events.jsonl"
+        tools_dir = tmp_path / "tools"
+        tools_dir.mkdir()
+        db_path = tmp_path / "index" / "monitoring.db"
+
+        _write_jsonl(runs_path, [])
+        _write_jsonl(events_path, [])
+        _write_jsonl(
+            tools_dir / "tools-2026-W05.jsonl",
+            [{"run_id": "TCK-A", "seq": 1, "tool": "Read"}],
+        )
+        _write_jsonl(
+            tools_dir / "tools-unknown-week.jsonl",
+            [{"run_id": "TCK-B", "seq": 1, "tool": "Bash"}],
+        )
+
+        args = types.SimpleNamespace(
+            runs_file=str(runs_path),
+            events_file=str(events_path),
+            tools_file=str(tools_dir),
+            db_path=str(db_path),
+        )
+        exit_code = _bi.build(args)
+        assert exit_code == 0
+
+        conn = sqlite3.connect(str(db_path))
+        assert conn.execute("SELECT COUNT(*) FROM tools").fetchone()[0] == 2
+        run_ids = {row[0] for row in conn.execute("SELECT run_id FROM tools")}
+        assert run_ids == {"TCK-A", "TCK-B"}
+        conn.close()
+
+    def test_build_index_glob_result_is_sorted(self, tmp_path):
+        runs_path = tmp_path / "runs.jsonl"
+        events_path = tmp_path / "events.jsonl"
+        tools_dir = tmp_path / "tools"
+        tools_dir.mkdir()
+        db_path = tmp_path / "index" / "monitoring.db"
+
+        _write_jsonl(runs_path, [])
+        _write_jsonl(events_path, [])
+        # Write the chronologically-later shard to disk FIRST, so an unsorted
+        # glob (filesystem/creation order) would concatenate out of order.
+        _write_jsonl(
+            tools_dir / "tools-2026-W10.jsonl",
+            [{"run_id": "TCK-LATER", "seq": 1, "tool": "Read"}],
+        )
+        _write_jsonl(
+            tools_dir / "tools-2026-W03.jsonl",
+            [{"run_id": "TCK-EARLIER", "seq": 1, "tool": "Read"}],
+        )
+
+        args = types.SimpleNamespace(
+            runs_file=str(runs_path),
+            events_file=str(events_path),
+            tools_file=str(tools_dir),
+            db_path=str(db_path),
+        )
+        exit_code = _bi.build(args)
+        assert exit_code == 0
+
+        conn = sqlite3.connect(str(db_path))
+        rows = [row[0] for row in conn.execute("SELECT run_id FROM tools ORDER BY id")]
+        conn.close()
+        assert rows == ["TCK-EARLIER", "TCK-LATER"]
+
+
+# ---------------------------------------------------------------------------
 # Group 2 — source files byte-identical after build (AC2)
 # ---------------------------------------------------------------------------
 
