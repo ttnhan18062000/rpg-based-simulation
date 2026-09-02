@@ -5,7 +5,6 @@
 # by physical line position — see conversation 2026-07-16 for the verification.
 agent-monitoring/runs.jsonl merge=union
 agent-monitoring/events.jsonl merge=union
-agent-monitoring/tools.jsonl merge=union
 agent-monitoring/tools/*.jsonl merge=union
 tickets/working_log.csv merge=union
 

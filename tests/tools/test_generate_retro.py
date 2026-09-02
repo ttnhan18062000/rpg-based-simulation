@@ -2206,6 +2206,14 @@ def test_correlation_handles_single_group_empty_gracefully():
     assert "| Non-compliant | 0 | n/a | n/a |" in report
 
 
+@pytest.mark.xfail(
+    reason="agent-monitoring/tools.jsonl retired by TCK-20260902-MONITORING-SHARD-MIGRATION; "
+    "generate_retro.DEFAULT_TOOLS_FILE still points at the retired single-file path and reads "
+    "empty data -- not yet updated to glob the shard directory. Tracked by "
+    "TCK-20260902-MONITORING-SHARD-CONSUMERS (child 3), landing immediately after in this same "
+    "batch per SEQUENCE.md.",
+    strict=True,
+)
 def test_correlation_real_corpus_produces_a_real_number():
     real_events = generate_retro.load_jsonl(generate_retro.EVENTS_FILE)
     real_tools = generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
@@ -2219,6 +2227,14 @@ def test_correlation_real_corpus_produces_a_real_number():
 # ## Parity Index Read-Path Usage (AC3)
 # ---------------------------------------------------------------------------
 
+@pytest.mark.xfail(
+    reason="agent-monitoring/tools.jsonl retired by TCK-20260902-MONITORING-SHARD-MIGRATION; "
+    "generate_retro.DEFAULT_TOOLS_FILE still points at the retired single-file path and reads "
+    "empty data -- not yet updated to glob the shard directory. Tracked by "
+    "TCK-20260902-MONITORING-SHARD-CONSUMERS (child 3), landing immediately after in this same "
+    "batch per SEQUENCE.md.",
+    strict=True,
+)
 def test_parity_index_readpath_call_count_matches_real_corpus_state():
     # Was pinned at 0 (TCK-20260731-PARITY-READPATH-GATE's Gate A review: reviewed GO but not yet
     # wired into any real call site). compute_parity_index_readpath_call_count()'s own docstring

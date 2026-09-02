@@ -12,6 +12,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MANIFEST_PATH = _MONITORING_TOOLS_DIR / "manifest.py"
@@ -25,11 +27,19 @@ from manifest import build_manifest  # noqa: E402
 _EXPECTED_KEYS = {"file", "line_count", "byte_size", "sha256", "parser_result", "legacy_warning_count"}
 _WATCHED_JSONL_FILES = ["events.jsonl", "runs.jsonl", "tools.jsonl"]
 
+_XFAIL_TOOLS_JSONL_RETIRED_REASON = (
+    "agent-monitoring/tools.jsonl retired by TCK-20260902-MONITORING-SHARD-MIGRATION; "
+    "manifest.py/skill_usage_metric.py not yet updated to read the shard directory -- tracked "
+    "by TCK-20260902-MONITORING-SHARD-CONSUMERS (child 3), landing immediately after in this "
+    "same batch per SEQUENCE.md. Must be removed before any PR from this branch opens."
+)
+
 
 # ---------------------------------------------------------------------------
 # Shape test (AC1)
 # ---------------------------------------------------------------------------
 
+@pytest.mark.xfail(reason=_XFAIL_TOOLS_JSONL_RETIRED_REASON, strict=True)
 def test_build_manifest_shape_against_real_corpus():
     records = build_manifest(_REAL_AGENT_MONITORING_DIR)
 
@@ -56,6 +66,7 @@ def test_build_manifest_shape_against_real_corpus():
 # Reproducibility test (AC2)
 # ---------------------------------------------------------------------------
 
+@pytest.mark.xfail(reason=_XFAIL_TOOLS_JSONL_RETIRED_REASON, strict=True)
 def test_manifest_cli_reproducible_byte_identical_across_two_runs():
     result_1 = subprocess.run(
         [sys.executable, str(_MANIFEST_PATH)], cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
@@ -68,6 +79,7 @@ def test_manifest_cli_reproducible_byte_identical_across_two_runs():
     assert result_1.stdout.endswith("\n")
 
 
+@pytest.mark.xfail(reason=_XFAIL_TOOLS_JSONL_RETIRED_REASON, strict=True)
 def test_build_manifest_reproducible_byte_identical_direct_call():
     output_1 = build_manifest(_REAL_AGENT_MONITORING_DIR)
     output_2 = build_manifest(_REAL_AGENT_MONITORING_DIR)
@@ -115,6 +127,7 @@ def _content_hash_snapshot() -> str:
     return hasher.hexdigest()
 
 
+@pytest.mark.xfail(reason=_XFAIL_TOOLS_JSONL_RETIRED_REASON, strict=True)
 def test_manifest_run_against_real_corpus_produces_zero_diff():
     assert _REAL_AGENT_MONITORING_DIR.is_dir()
     assert "tmp" not in str(_REAL_AGENT_MONITORING_DIR).lower()

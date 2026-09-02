@@ -17,6 +17,7 @@ _CALL_SITES = [
     _MONITORING_TOOLS_DIR / "post_tool_hook.py",
     _MONITORING_TOOLS_DIR / "record_run.py",
     _MONITORING_TOOLS_DIR / "record_events.py",
+    _MONITORING_TOOLS_DIR / "migrate_tools_shards.py",
 ]
 
 
@@ -38,6 +39,7 @@ def test_each_call_site_imports_shared_writer():
         "post_tool_hook.py": "write_line",
         "record_run.py": "write_line",
         "record_events.py": "write_lines",
+        "migrate_tools_shards.py": "write_lines",
     }
     for path in _CALL_SITES:
         source = path.read_text()

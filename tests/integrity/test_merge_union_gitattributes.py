@@ -82,16 +82,18 @@ def test_concurrent_branch_appends_merge_without_conflict_markers(tmp_path, trac
     assert '"branch": "b"' in merged_content
 
 
-def test_gitattributes_lines_present_for_all_four_union_merge_paths():
-    """Sanity guard: the real repo's own .gitattributes must still carry all four entries this
-    test's git-level behavior proves -- catches an accidental removal even though the git-level
-    test above uses a throwaway repo, not the real .gitattributes file."""
+def test_gitattributes_lines_present_for_three_legacy_union_merge_paths():
+    """Sanity guard: the real repo's own .gitattributes must still carry the 3 remaining legacy
+    append-only-file entries this test's git-level behavior proves -- catches an accidental
+    removal even though the git-level test above uses a throwaway repo, not the real
+    .gitattributes file. `agent-monitoring/tools.jsonl` was removed from this list by
+    TCK-20260902-MONITORING-SHARD-MIGRATION, which retired that file from the working tree
+    (see test_gitattributes_line_present_for_shard_glob below)."""
     repo_root = Path(__file__).parent.parent.parent
     content = (repo_root / ".gitattributes").read_text()
     for path in (
         "agent-monitoring/runs.jsonl",
         "agent-monitoring/events.jsonl",
-        "agent-monitoring/tools.jsonl",
         "tickets/working_log.csv",
     ):
         assert f"{path} merge=union" in content
@@ -100,9 +102,10 @@ def test_gitattributes_lines_present_for_all_four_union_merge_paths():
 def test_gitattributes_line_present_for_shard_glob():
     """TCK-20260902-MONITORING-SHARD-WRITE-PATH: post_tool_hook.py now writes new tool-call
     records to per-ISO-week shard files under agent-monitoring/tools/ instead of the single
-    legacy agent-monitoring/tools.jsonl. Both the new shard glob and the old legacy line must be
-    present -- the old line stays until a later ticket migrates/retires the legacy file."""
+    legacy agent-monitoring/tools.jsonl. TCK-20260902-MONITORING-SHARD-MIGRATION has since
+    retired the legacy agent-monitoring/tools.jsonl file from the working tree and removed its
+    merge=union line -- only the shard glob remains."""
     repo_root = Path(__file__).parent.parent.parent
     content = (repo_root / ".gitattributes").read_text()
     assert "agent-monitoring/tools/*.jsonl merge=union" in content
-    assert "agent-monitoring/tools.jsonl merge=union" in content
+    assert "agent-monitoring/tools.jsonl merge=union" not in content
