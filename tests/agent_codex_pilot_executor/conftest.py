@@ -5,18 +5,16 @@ from pathlib import Path
 
 import pytest
 
-from tools.agent_replay_codex.monitoring_shards import read_tools_source_bytes
+from tools.agent_replay_codex.monitoring_shards import read_source_bytes
 
 
 _REPO = Path(__file__).resolve().parents[2]
 _MONITORING = _REPO / "agent-monitoring"
-_WATCHED_SINGLE_FILES = ("runs.jsonl", "events.jsonl")
+_MONITORING_SOURCES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
 
 
 def _snapshot_monitoring() -> dict[str, bytes]:
-    snapshot = {name: (_MONITORING / name).read_bytes() for name in _WATCHED_SINGLE_FILES}
-    snapshot["tools.jsonl"] = read_tools_source_bytes(_MONITORING)
-    return snapshot
+    return {name: read_source_bytes(_MONITORING, name) for name in _MONITORING_SOURCES}
 
 
 @pytest.fixture(scope="session", autouse=True)

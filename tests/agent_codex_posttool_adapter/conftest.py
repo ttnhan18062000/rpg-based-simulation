@@ -11,7 +11,6 @@ capture_snapshot/assert_no_diff helpers, reused directly. All three assert uncha
 """
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 import pytest
@@ -21,22 +20,18 @@ from tools.agent_replay_codex.codex_config_guard import (
     snapshot_config_bytes,
 )
 from tools.agent_replay_codex.containment import assert_no_diff, capture_snapshot
-from tools.agent_replay_codex.monitoring_shards import read_tools_source_bytes
+from tools.agent_replay_codex.monitoring_shards import hash_source
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
-_WATCHED_SINGLE_FILE_MONITORING_FILES = ("runs.jsonl", "events.jsonl")
+_MONITORING_SOURCES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
 
 
 def _snapshot_monitoring_hashes() -> dict[str, str]:
-    hashes = {
-        name: hashlib.sha256((_AGENT_MONITORING_DIR / name).read_bytes()).hexdigest()
-        for name in _WATCHED_SINGLE_FILE_MONITORING_FILES
+    return {
+        name: hash_source(_AGENT_MONITORING_DIR, name)
+        for name in _MONITORING_SOURCES
     }
-    hashes["tools.jsonl"] = hashlib.sha256(
-        read_tools_source_bytes(_AGENT_MONITORING_DIR)
-    ).hexdigest()
-    return hashes
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -11,21 +11,20 @@ import json
 from pathlib import Path
 
 from .errors import ContainmentViolationError
-from .monitoring_shards import tools_source_paths
+from .monitoring_shards import source_paths
 
-_SINGLE_FILE_MONITORING_FILENAMES = ("runs.jsonl", "events.jsonl")
+_MONITORING_SOURCES = ("runs.jsonl", "events.jsonl", "tools.jsonl")
 
 
 def assert_no_codex_provider_writes(agent_monitoring_dir: Path, provider_value: str = "codex") -> None:
-    """Reads the real runs.jsonl/events.jsonl and every 'tools' source file (a single legacy
-    tools.jsonl, or the weekly agent-monitoring/tools/tools-*.jsonl shards) and raises
+    """Reads every file making up all 3 monitoring sources (a single legacy <source>.jsonl, or
+    the weekly agent-monitoring/data/<week>/<source>.jsonl shards) and raises
     ContainmentViolationError if any record's 'provider' field equals provider_value. Read-only —
     never writes."""
-    paths = [agent_monitoring_dir / name for name in _SINGLE_FILE_MONITORING_FILENAMES]
-    paths.extend(tools_source_paths(agent_monitoring_dir))
+    paths: list[Path] = []
+    for source in _MONITORING_SOURCES:
+        paths.extend(source_paths(agent_monitoring_dir, source))
     for path in paths:
-        if not path.exists():
-            continue
         with open(path, "r", encoding="utf-8") as f:
             for line_no, line in enumerate(f, start=1):
                 stripped = line.strip()
