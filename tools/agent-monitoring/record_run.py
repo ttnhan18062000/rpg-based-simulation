@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-"""Append a run record to agent-monitoring/runs.jsonl."""
+"""Append a run record to agent-monitoring/data/<ISO-week>/runs.jsonl."""
 import argparse
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from writer import write_line  # noqa: E402
 
 REQUIRED = {"run_id", "start_ts", "workflow", "tier", "final_status", "agent_count"}
-RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 
 
 def validate_record(record: dict) -> list[str]:
@@ -61,7 +60,7 @@ def compute_duration_s(record: dict) -> int | None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Append a run record to agent-monitoring/runs.jsonl")
+    parser = argparse.ArgumentParser(description="Append a run record to agent-monitoring/data/<ISO-week>/runs.jsonl")
     parser.add_argument("--data", required=True, help="JSON object to append")
     args = parser.parse_args()
 
@@ -83,12 +82,14 @@ def main():
 
     record["duration_s"] = compute_duration_s(record)
 
-    RUNS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    ok = write_line(RUNS_FILE, json.dumps(record, separators=(",", ":")))
+    iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+    runs_file = Path("agent-monitoring/data") / iso_week / "runs.jsonl"
+    runs_file.parent.mkdir(parents=True, exist_ok=True)
+    ok = write_line(runs_file, json.dumps(record, separators=(",", ":")))
     if not ok:
         print(
             f"WARNING: append failed for run_id={record['run_id']}, "
-            "see agent-monitoring/.writer_health.jsonl",
+            f"see agent-monitoring/data/{iso_week}/.writer_health.jsonl",
             file=sys.stderr,
         )
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Append a batch of event records to agent-monitoring/events.jsonl."""
+"""Append a batch of event records to agent-monitoring/data/<ISO-week>/events.jsonl."""
 import argparse
 import json
 import sys
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -13,8 +14,6 @@ from writer import write_lines  # noqa: E402
 
 REQUIRED = {"run_id", "seq", "ts", "phase", "agent", "summary", "status"}
 VALID_STATUS = {"ok", "failed", "blocked", "skipped"}
-EVENTS_FILE = Path("agent-monitoring/events.jsonl")
-TOOLS_FILE = Path("agent-monitoring/tools.jsonl")
 
 
 def validate_record(record: dict) -> list[str]:
@@ -34,8 +33,15 @@ def validate_record(record: dict) -> list[str]:
 
 def compute_tool_stats(records: list[dict]) -> dict[tuple, tuple[int, float]]:
     """Deterministically compute {(run_id, seq): (tool_call_count, cost_proxy_score)}
-    from real agent-monitoring/tools.jsonl rows, for every (run_id, seq) pair in
+    from real agent-monitoring/data/*/tools.jsonl rows (every ISO-week folder,
+    sorted, concatenated before grouping), for every (run_id, seq) pair in
     `records` whose run_id belongs to the 'implement-ticket' workflow.
+
+    Reads the union of every week folder's tools.jsonl rather than just the
+    current week's — a paused/resumed run's tool-call rows can land in an
+    earlier week than the event being written now (see
+    TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION). This is safe against
+    double-counting because (run_id, seq) is globally unique across weeks.
 
     Mirrors record_run.py's compute_duration_s precedent: computed here, at write
     time, from ground truth — never trusts a caller-supplied value. Only
@@ -56,8 +62,8 @@ def compute_tool_stats(records: list[dict]) -> dict[tuple, tuple[int, float]]:
         return {}
 
     rows_by_key: dict[tuple, list[dict]] = defaultdict(list)
-    if TOOLS_FILE.exists():
-        for line in TOOLS_FILE.read_text().splitlines():
+    for tools_path in sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl")):
+        for line in tools_path.read_text().splitlines():
             if not line:
                 continue
             row = json.loads(line)
@@ -84,7 +90,7 @@ def warn_vocabulary_drift(record: dict) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Append event records to agent-monitoring/events.jsonl")
+    parser = argparse.ArgumentParser(description="Append event records to agent-monitoring/data/<ISO-week>/events.jsonl")
     parser.add_argument("--data", required=True, help="JSON array of event records (or single object)")
     args = parser.parse_args()
 
@@ -140,13 +146,19 @@ def main():
             tool_call_count, cost_proxy_score = tool_stats[key]
             records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score}
 
-    EVENTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    # iso_week is computed once per batch, not once per record: write_lines() takes one
+    # target_path for the whole batch, so a batch straddling a UTC-midnight-on-Sunday ISO
+    # week boundary lands entirely in whichever week "now" resolved to at this point — the
+    # only interpretation compatible with write_lines' single-target batch-contiguity contract.
+    iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+    events_file = Path("agent-monitoring/data") / iso_week / "events.jsonl"
+    events_file.parent.mkdir(parents=True, exist_ok=True)
     lines = [json.dumps(record, separators=(",", ":")) for record in records]
-    ok = write_lines(EVENTS_FILE, lines)
+    ok = write_lines(events_file, lines)
     if not ok:
         print(
             f"WARNING: append failed for {len(records)} event record(s), "
-            "see agent-monitoring/.writer_health.jsonl",
+            f"see agent-monitoring/data/{iso_week}/.writer_health.jsonl",
             file=sys.stderr,
         )
 

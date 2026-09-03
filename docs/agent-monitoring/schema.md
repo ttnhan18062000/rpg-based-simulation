@@ -108,10 +108,21 @@ One record per workflow invocation.
 | `NOTHING_TO_CREATE` | `create-tickets` only — no actionable concerns, all concerns were duplicates of existing tickets, or no tasks survived structuring. |
 | `CRASHED` | Synthetic status set by `validate.py` for runs with `start_ts` but no `end_ts`. |
 
+Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, new run records are no longer appended to a
+single `agent-monitoring/runs.jsonl` file. They are written to
+`agent-monitoring/data/YYYY-Www/runs.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed
+at write time — i.e. when `record_run.py` is invoked, not from the record's own `start_ts` field —
+matching `post_tool_hook.py`'s existing precedent and `events.jsonl`'s write-time bucketing below).
+The historical monolithic `agent-monitoring/runs.jsonl` remains present in the working tree,
+frozen, receiving no new appends after this cutover, until a future migration ticket folds it into
+the unified layout. The per-record schema is unaffected by this change; only where a record
+physically lands changes.
+
 ### Historical Corrections
 
-`runs.jsonl` is append-only for all *new* writes (see the file's opening line above) — every writer
-(`record_run.py`) only ever `open(RUNS_FILE, "a")`s, never rewrites an existing line. The one
+`runs.jsonl` was append-only for all writes prior to this cutover, and each per-week
+`agent-monitoring/data/YYYY-Www/runs.jsonl` shard remains append-only going forward — every writer
+(`record_run.py`) only ever appends via `write_line()`, never rewrites an existing line. The one
 documented exception: **TCK-20260718-STATUS-DRIFT-REPAIR** (2026-07-18) corrected the `final_status`
 casing on 7 pre-existing records (`"done"`/`"success"` → `"DONE"`, predating this doc's all-uppercase
 enum convention) via an atomic, audited, line-scoped string substitution — not a bulk parse/
@@ -124,6 +135,16 @@ all writes going forward.
 ## `agent-monitoring/events.jsonl`
 
 One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
+
+Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, new event records are no longer appended to
+a single `agent-monitoring/events.jsonl` file. They are written to
+`agent-monitoring/data/YYYY-Www/events.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed
+at write time). `iso_week` is computed once per `record_events.py --data` invocation, not once per
+record, so a whole batch of events from one call always lands together in one target file — matching
+`write_lines()`'s single-target-path, one-lock-per-batch contract. The historical monolithic
+`agent-monitoring/events.jsonl` remains present in the working tree, frozen, receiving no new
+appends after this cutover, until a future migration ticket folds it into the unified layout. The
+per-record schema is unaffected by this change; only where a record physically lands changes.
 
 ```json
 {
@@ -341,7 +362,17 @@ stream.
 
 One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joined to events by `run_id` + `seq`.
 
-Since `TCK-20260902-MONITORING-SHARD-WRITE-PATH`, new tool-call rows are no longer appended to a single file. They are written to `agent-monitoring/tools/tools-YYYY-Www.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed at write time — matching `generate_retro.py::iso_week()`'s format and the `agent-monitoring/retro/RETRO-YYYY-Www.md` naming convention it already documents elsewhere). `TCK-20260902-MONITORING-SHARD-MIGRATION` has since retired the historical `agent-monitoring/tools.jsonl` from the working tree: every pre-cutover row was migrated into its matching `agent-monitoring/tools/tools-YYYY-Www.jsonl` shard (keyed by the row's own `ts` field), with the single confirmed row that carried no `ts` field routed to a dedicated `agent-monitoring/tools/tools-unknown-week.jsonl` fallback shard. The retired file's full history remains recoverable via `git log --follow -- agent-monitoring/tools.jsonl`. The per-record schema below is unaffected by this change; only where a record physically lands changes.
+Since `TCK-20260902-MONITORING-SHARD-WRITE-PATH`, new tool-call rows are no longer appended to a single file. They were written to `agent-monitoring/tools/tools-YYYY-Www.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed at write time — matching `generate_retro.py::iso_week()`'s format and the `agent-monitoring/retro/RETRO-YYYY-Www.md` naming convention it already documents elsewhere). `TCK-20260902-MONITORING-SHARD-MIGRATION` has since retired the historical `agent-monitoring/tools.jsonl` from the working tree: every pre-cutover row was migrated into its matching `agent-monitoring/tools/tools-YYYY-Www.jsonl` shard (keyed by the row's own `ts` field), with the single confirmed row that carried no `ts` field routed to a dedicated `agent-monitoring/tools/tools-unknown-week.jsonl` fallback shard. The retired file's full history remains recoverable via `git log --follow -- agent-monitoring/tools.jsonl`.
+
+Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, this shard shape itself has been superseded
+by a second, distinct move (not a repeat of the prior migration): new tool-call rows are written to
+`agent-monitoring/data/YYYY-Www/tools.jsonl` instead — still one file per UTC ISO week, still
+`%G-W%V`, still computed at write time; only the directory shape changed (`agent-monitoring/tools/
+tools-<week>.jsonl` → `agent-monitoring/data/<week>/tools.jsonl`), not the sharding granularity.
+The prior epic's `agent-monitoring/tools/tools-YYYY-Www.jsonl` shards remain present in the working
+tree, frozen, receiving no new appends after this cutover, until a future migration ticket folds
+them into the unified layout. The per-record schema below is unaffected by either change; only
+where a record physically lands changes.
 
 ```json
 {
@@ -379,7 +410,7 @@ The `PostToolUse` hook (`post_tool_hook.py`) routes its append through `tools/ag
 
 ### How tool calls are attributed to agent events
 
-The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. `record_events.py::compute_tool_stats()` — called at write time inside `record_events.py`'s own `main()`, not by `writeMonitoring`'s prompt — counts records per `(run_id, seq)` to produce `tool_call_count`/`cost_proxy_score` in `events.jsonl`, always overriding any value the caller passed in (`TCK-20260719-COST-PROXY-WRITE-PATH`; mirrors `record_run.py`'s `compute_duration_s`).
+The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. `record_events.py::compute_tool_stats()` — called at write time inside `record_events.py`'s own `main()`, not by `writeMonitoring`'s prompt — counts records per `(run_id, seq)` to produce `tool_call_count`/`cost_proxy_score` in `events.jsonl`, always overriding any value the caller passed in (`TCK-20260719-COST-PROXY-WRITE-PATH`; mirrors `record_run.py`'s `compute_duration_s`). Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, `compute_tool_stats()` reads the **union of every week folder's** `tools.jsonl` (a sorted glob over `agent-monitoring/data/*/tools.jsonl`, concatenated before grouping by `(run_id, seq)`) rather than a single fixed file — necessary because a paused/resumed run's tool-call rows can land in an earlier week than the event being written now (see the pause/resume mechanism below); this is safe against double-counting because `(run_id, seq)` is globally unique across weeks.
 
 Since `TCK-20260719-LIVE-PHASE-AGENT-LABEL`, the sidecar (and thus each `tools.jsonl` record) also carries `phase`/`agent`, threaded through the same `writeSidecar(seq, phase, agent)` call as `run_id`/`seq` — this lets a live-run consumer show which phase/agent is currently producing tool calls without waiting for the run's `events.jsonl` entries to be written at exit.
 
@@ -434,16 +465,18 @@ from pathlib import Path
 from collections import defaultdict
 
 runs = {json.loads(l)['run_id']: json.loads(l)
-        for l in Path('agent-monitoring/runs.jsonl').read_text().splitlines() if l}
+        for shard in sorted(Path('agent-monitoring/data').glob('*/runs.jsonl'))
+        for l in shard.read_text().splitlines() if l}
 
 events_by_run = defaultdict(list)
-for line in Path('agent-monitoring/events.jsonl').read_text().splitlines():
-    if line:
-        e = json.loads(line)
-        events_by_run[e['run_id']].append(e)
+for shard in sorted(Path('agent-monitoring/data').glob('*/events.jsonl')):
+    for line in shard.read_text().splitlines():
+        if line:
+            e = json.loads(line)
+            events_by_run[e['run_id']].append(e)
 
 tools_by_event = defaultdict(list)
-for shard in sorted(Path('agent-monitoring/tools').glob('tools-*.jsonl')):
+for shard in sorted(Path('agent-monitoring/data').glob('*/tools.jsonl')):
     for line in shard.read_text().splitlines():
         if line:
             t = json.loads(line)

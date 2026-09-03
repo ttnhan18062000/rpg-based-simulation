@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PostToolUse hook: appends one tool-call record to agent-monitoring/tools/tools-<ISO-week>.jsonl."""
+"""PostToolUse hook: appends one tool-call record to agent-monitoring/data/<ISO-week>/tools.jsonl."""
 import json
 import sys
 import time
@@ -156,7 +156,7 @@ try:
         "ticket_id": ticket_id,
     }
 
-    tools_file = Path("agent-monitoring/tools") / f"tools-{iso_week}.jsonl"
+    tools_file = Path("agent-monitoring/data") / iso_week / "tools.jsonl"
     tools_file.parent.mkdir(parents=True, exist_ok=True)
     write_line(tools_file, json.dumps(record, separators=(",", ":")))
 

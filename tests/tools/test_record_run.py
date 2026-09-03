@@ -9,6 +9,7 @@ test_validate_frontmatter.py's Group 7 pattern.
 import json
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
@@ -19,6 +20,17 @@ import record_run  # noqa: E402
 from record_run import compute_duration_s, validate_record  # noqa: E402
 
 _RECORD_PATH = _MONITORING_TOOLS_DIR / "record_run.py"
+
+
+def _freeze_now(monkeypatch, frozen_iso):
+    frozen = datetime.fromisoformat(frozen_iso)
+
+    class _FrozenDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return frozen if tz is None else frozen.astimezone(tz)
+
+    monkeypatch.setattr(record_run, "datetime", _FrozenDatetime)
 
 _VALID_RECORD = {
     "run_id": "TCK-FAKE-RUN",
@@ -165,7 +177,9 @@ class TestDurationWrittenToRecord:
             cwd=tmp_path,
         )
         assert result.returncode == 0, result.stderr
-        written = json.loads((tmp_path / "agent-monitoring" / "runs.jsonl").read_text().strip())
+        iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl"
+        written = json.loads(runs_file.read_text().strip())
         return written
 
     def test_duration_s_computed_and_written(self, tmp_path):
@@ -212,7 +226,9 @@ def test_execution_identity_fields_pass_through_unchanged(tmp_path):
         cwd=tmp_path,
     )
     assert result.returncode == 0, result.stderr
-    written = json.loads((tmp_path / "agent-monitoring" / "runs.jsonl").read_text().strip())
+    iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+    runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl"
+    written = json.loads(runs_file.read_text().strip())
     assert written["execution_id"] == "claude-TCK-FAKE-RUN-1234567890-abcd1234"
     assert written["provider"] == "claude"
     assert written["ticket_id"] == "TCK-FAKE-RUN"
@@ -232,3 +248,47 @@ def test_append_failure_is_non_blocking(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     assert "WARNING" in captured.err
     assert "DONE:" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY — unified per-ISO-week folder
+# ---------------------------------------------------------------------------
+
+
+def test_writes_to_unified_week_folder(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _freeze_now(monkeypatch, "2026-08-31T12:00:00+00:00")
+    monkeypatch.setattr(sys, "argv", ["record_run.py", "--data", json.dumps(dict(_VALID_RECORD))])
+
+    record_run.main()
+
+    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "runs.jsonl"
+    assert written_path.exists()
+    written = json.loads(written_path.read_text().strip())
+    assert written["run_id"] == "TCK-FAKE-RUN"
+    assert not (tmp_path / "agent-monitoring" / "runs.jsonl").exists()
+
+
+def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    _freeze_now(monkeypatch, "2026-08-31T12:00:00+00:00")
+    monkeypatch.setattr(
+        sys, "argv",
+        ["record_run.py", "--data", json.dumps({**_VALID_RECORD, "run_id": "TCK-WEEK-36"})],
+    )
+    record_run.main()
+
+    _freeze_now(monkeypatch, "2026-09-07T12:00:00+00:00")
+    monkeypatch.setattr(
+        sys, "argv",
+        ["record_run.py", "--data", json.dumps({**_VALID_RECORD, "run_id": "TCK-WEEK-37"})],
+    )
+    record_run.main()
+
+    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "runs.jsonl"
+    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / "runs.jsonl"
+    assert week_36.exists()
+    assert week_37.exists()
+    assert json.loads(week_36.read_text().strip())["run_id"] == "TCK-WEEK-36"
+    assert json.loads(week_37.read_text().strip())["run_id"] == "TCK-WEEK-37"
