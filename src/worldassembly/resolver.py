@@ -44,6 +44,7 @@ from src.worldbuilding.schema import (
     ResourceNodeSpec,
     BuildingSpec,
     QuestDefinition,
+    PlaceSpec,
 )
 
 
@@ -805,6 +806,22 @@ class WorldAssemblyResolver:
                 hazard_kind=getattr(reg, "hazard_kind", "PHYSICAL"),
                 tags=list(getattr(reg, "tags", [])),
                 terrain_variants=getattr(reg, "terrain_variants", None),
+                # Idea 66: namespace place ids the same way region ids are namespaced
+                # above (f"{prefix}{reg.id}"), so a module composed multiple times
+                # (e.g. multiple town instances) doesn't collide on place_id either.
+                places=[
+                    PlaceSpec(
+                        id=f"{prefix}{p.id}",
+                        kind=p.kind,
+                        position=p.position,
+                        footprint=p.footprint,
+                        owner_faction_id=p.owner_faction_id,
+                        scale=p.scale,
+                        maturity=p.maturity,
+                        hazard_level=p.hazard_level,
+                    )
+                    for p in getattr(reg, "places", [])
+                ],
             ))
 
         # 2. Resolve Factions

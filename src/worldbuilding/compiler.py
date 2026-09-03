@@ -18,6 +18,8 @@ from src.core.state import (
     InventoryComponent,
     PersonalityComponent,
     FactionState,
+    PlaceState,
+    PlaceKind,
 )
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
@@ -274,6 +276,7 @@ class WorldCompiler:
 
         # 2. Compile regions & terrain painting
         regions: Dict[str, RegionState] = {}
+        places: Dict[str, PlaceState] = {}  # Idea 66
         town_tiles: Set[tuple[int, int]] = set()
 
         for r_spec in spec.regions:
@@ -308,6 +311,23 @@ class WorldCompiler:
             if context is not None and hasattr(context, "region_ownership") and r_spec.id in context.region_ownership:
                 owner_faction = context.region_ownership[r_spec.id]
 
+            # Idea 66 (TCK-20260902-WORLDCOMPILER-PLACE-WIRING): construct real PlaceState
+            # instances from any Place-shaped content declared on this region (r_spec.places,
+            # RegionSpec's new field). Empty for all existing content today -- new, opt-in
+            # only; existing worlds compile with places=[] exactly as before this ticket.
+            for p_spec in getattr(r_spec, "places", []):
+                places[p_spec.id] = PlaceState(
+                    place_id=p_spec.id,
+                    region_id=r_spec.id,
+                    kind=PlaceKind(p_spec.kind),
+                    position=(float(p_spec.position[0]), float(p_spec.position[1])),
+                    footprint=p_spec.footprint,
+                    owner_faction_id=(int(p_spec.owner_faction_id) if p_spec.owner_faction_id is not None else None),
+                    scale=p_spec.scale,
+                    maturity=p_spec.maturity,
+                    hazard_level=p_spec.hazard_level,
+                )
+
             regions[r_spec.id] = RegionState(
                 id=r_spec.id,
                 name=r_spec.id.replace("_", " ").title(),
@@ -318,6 +338,7 @@ class WorldCompiler:
                 hazard_level=getattr(r_spec, "hazard_level", 0.0),
                 hazard_kind=getattr(r_spec, "hazard_kind", "PHYSICAL"),
                 population_cohorts=_seed_population_cohorts(region_declared_population.get(r_spec.id, 0)),
+                places=[p_spec.id for p_spec in getattr(r_spec, "places", [])],
             )
 
         # 2a. Derive town_center as the centroid of the first type=="town" region in
@@ -677,6 +698,7 @@ class WorldCompiler:
             resource_nodes=resource_nodes,
             buildings=buildings,
             regions=regions,
+            places=places,  # Idea 66
             terrain=terrain,
             global_resources=global_resources,
             blocked_tiles=blocked_tiles,

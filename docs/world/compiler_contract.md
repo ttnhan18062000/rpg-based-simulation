@@ -50,7 +50,7 @@ AuthoritativeState
 
 **`WorldSpec`** — the root declarative specification for a world. Contains:
 - `TopologySpec` — grid dimensions, region layout
-- `List[RegionSpec]` — region definitions (type, terrain, terrain_variants, hazard_level, grid_bounds)
+- `List[RegionSpec]` — region definitions (type, terrain, terrain_variants, hazard_level, grid_bounds, tags, `places: List[PlaceSpec]` — idea 66, empty for content not yet migrated to Place-shaped form)
 - `List[FactionSpec]` — faction definitions and starting parameters
 - `List[PopulationSpec]` — entity population groups per region
 - `List[ResourceNodeSpec]` — resource node placements

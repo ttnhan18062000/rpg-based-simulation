@@ -4943,3 +4943,43 @@
     output only if a caller actually populates AuthoritativeState.places or the new
     place_id fields -- no existing world/entity does so today, so no shipped calibration
     baseline is affected.
+- id: SUB-390
+  text: 'Idea 66 (Region/Place foundational rebuild) child 2/5: WorldCompiler.compile()
+    now constructs real PlaceState instances from Place-shaped content. Both real
+    compilation paths documented in docs/world/compiler_contract.md are wired: the
+    Direct path (RegionSpec.places -> WorldCompiler.compile()) and the Composition
+    path (RegionRecipeSpec.places -> WorldAssemblyResolver.resolve_module_contribution()
+    -> RegionSpec.places, round-tripping through world.resolved.yaml back into the
+    same WorldCompiler.compile() call). Place ids are namespaced by the same module
+    prefix as their parent region id, avoiding collision when a module is composed
+    multiple times. Existing (non-Place-shaped) content is confirmed unaffected --
+    the new places field defaults to an empty list on both RegionRecipeSpec and RegionSpec,
+    so no existing world''s compiled output changes. Schema only in the prior child
+    ticket (TCK-20260902-PLACE-SCHEMA-MIGRATION); this ticket makes the compiler capable
+    of constructing Places, but does not migrate any of the 21 existing worlds'' content
+    -- that is the pilot tickets'' job (TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT
+    onward).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/worldbuilding/recipe.py (new PlaceRecipeSpec, RegionRecipeSpec.places)
+    + src/worldbuilding/schema.py (new PlaceSpec, RegionSpec.places) + src/worldassembly/resolver.py:799-820
+    (resolve_module_contribution, RegionRecipeSpec.places -> RegionSpec.places with
+    prefix-namespaced ids) + src/worldbuilding/compiler.py (WorldCompiler.compile(),
+    constructs PlaceState from r_spec.places, populates AuthoritativeState.places
+    and RegionState.places) + docs/world/compiler_contract.md's own "Two Compilation
+    Paths" section (confirms both paths funnel through the same compile() call, verified
+    directly rather than assumed)
+  proof_type: parity
+  test_path: 'tests/unit/worldbuilding/test_place_wiring.py (6 tests: Direct path
+    construction, multiple places per region, non-Place-shaped content unchanged,
+    mixed Place-shaped/legacy regions coexisting, canonical-hash participation, invalid
+    kind rejected at schema level), tests/unit/worldassembly/test_resolver.py::test_resolve_module_contribution_wires_place_shaped_region,
+    tests/unit/worldassembly/test_resolver.py::test_resolve_module_contribution_region_without_places_yields_empty_list
+    (Composition path + prefix-namespacing + backward-compat coverage)'
+  divergence_note: null
+  support_boundary: 'Compiler capability only -- no content file under data/content/world_modules/
+    declares places: yet, so no existing world''s compiled AuthoritativeState or state_hash
+    changes as a result of this ticket. A world only gets real PlaceState objects
+    once its content is explicitly authored/migrated to use the new places: field,
+    which is out of scope here.'

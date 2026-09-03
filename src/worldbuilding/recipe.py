@@ -2,9 +2,42 @@
 from __future__ import annotations
 
 from typing import Optional, Any, List, Union
-from pydantic import BaseModel, Field, model_validator, ConfigDict
+from pydantic import BaseModel, Field, model_validator, field_validator, ConfigDict
 
 from src.worldbuilding.schema import TerrainVariantSpec
+
+# Idea 66 (Region/Place foundational rebuild): the same 7 kinds as
+# src/core/state.py's PlaceKind, mirrored here as plain strings since
+# content-authoring recipes are Pydantic models, not runtime dataclasses.
+PLACE_RECIPE_KINDS = {"CITY", "CAMP", "NEST", "LAIR", "RUIN", "DUNGEON", "LANDMARK"}
+
+
+class PlaceRecipeSpec(BaseModel):
+    """
+    Idea 66: content-authoring declaration of a Place within a region recipe.
+    Resolved into a real PlaceState by WorldCompiler.compile() at build time --
+    see TCK-20260902-WORLDCOMPILER-PLACE-WIRING. Schema only in this ticket; no
+    existing content declares `places:` yet (that is the pilot tickets' job,
+    TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT onward).
+    """
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    id: str = Field(..., min_length=1, description="Unique identifier for the place")
+    kind: str = Field(..., description="PlaceKind value: CITY | CAMP | NEST | LAIR | RUIN | DUNGEON | LANDMARK")
+    position: tuple[int, int] = Field(..., description="Point location within the parent region's bounds")
+    footprint: Optional[tuple[int, int, int, int]] = Field(None, description="Sub-bounds, multi-tile CITY-kind only")
+    owner_faction_id: Optional[str] = Field(None, description="Sovereignty override; defaults to the parent region's")
+    scale: Optional[float] = Field(None, description="CITY-kind only: settlement size scalar")
+    maturity: Optional[float] = Field(None, description="CAMP/NEST-kind: growth-over-time value")
+    hazard_level: Optional[float] = Field(None, description="RUIN/DUNGEON-kind: local hazard override")
+
+    @field_validator("kind")
+    @classmethod
+    def validate_kind(cls, v: str) -> str:
+        upper = v.upper()
+        if upper not in PLACE_RECIPE_KINDS:
+            raise ValueError(f"kind '{v}' is invalid. Supported: {PLACE_RECIPE_KINDS}")
+        return upper
 
 
 class RegionRecipeSpec(BaseModel):
@@ -18,6 +51,7 @@ class RegionRecipeSpec(BaseModel):
     hazard_kind: Optional[str] = Field("PHYSICAL", description="Semantic type of this region's passive hazard drain (e.g. 'PHYSICAL', 'NATURAL_TERRAIN', 'TOXIC_GAS').")
     tags: List[str] = Field(default_factory=list, description="Semantic labels for quest routing (e.g. mine, forest, ruins, settlement)")
     terrain_variants: Optional[List[TerrainVariantSpec]] = Field(None, description="Optional set of terrain fill variants for organic in-region terrain; inert until consumed by TCK-20260821-COMPILER-NOISE-FILL")
+    places: List[PlaceRecipeSpec] = Field(default_factory=list, description="Idea 66: Places contained within this region. Empty for all existing content -- new, opt-in only.")
 
     @model_validator(mode="after")
     def validate_bounds(self) -> RegionRecipeSpec:
