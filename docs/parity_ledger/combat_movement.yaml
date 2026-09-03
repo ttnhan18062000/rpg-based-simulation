@@ -4214,3 +4214,40 @@
     ::test_negative_case_no_active_status_actor_not_blocked
   divergence_note: null
   support_boundary: null
+- id: COMB-320
+  text: 'NavigationComponent''s canonical hash (EntityState.to_canonical_dict()''s
+    "navigation" sub-dict) previously covered only target, path, moved_recently, and
+    place_id -- omitting movement_mode, last_failure_reason, wait_count, oscillation_count,
+    last_position, home_position, leash_radius, region_id, chase_ticks, max_chase_ticks,
+    and returning_home. All 11 are confirmed real, actively-consumed durable state,
+    not derived: region_id (a cached back-reference, "Phase 3 Hardening: Cache region_id
+    to avoid O(N) scans") gates memory/information/combat-target-resolution phases;
+    wait_count/oscillation_count gate congestion-recovery replanning in src/engine/movement.py;
+    leash_radius/chase_ticks/max_chase_ticks/returning_home gate mob-leash chase logic
+    in src/engine/rpg_depth.py; last_failure_reason feeds StrategicIntelligenceSystem''s
+    blocker inference. position itself was already covered separately as a top-level
+    to_canonical_dict() key, not omitted as the original finding''s own open question
+    worried it might be. All 11 fields are now included.'
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (EntityState.to_canonical_dict(), "navigation" sub-dict,
+    11 fields added) + src/core/state.py:452-478 (NavigationComponent field definitions)
+    + src/engine/checkpoint.py:63-93 (CanonicalStateHasher.to_canonical_data(), the
+    real consumer -- NOT world_compile_report.json's state_hash, which comes from
+    the separate, already-lightweight StateFingerprinter.get_fingerprint(), src/replay/fingerprint.py)
+    + src/engine/kernel.py:1161-1162,1230-1231 (per-tick and final hash computation
+    call sites, same consumer chain as the parallel STRAT-268/SOC-263 fixes) + src/engine/apply.py:556-574
+    (_fast_replace_navigation, confirmed already copies all 16 real fields correctly
+    -- no matching bug here, unlike the place_id gap TCK-20260902-PLACE-SCHEMA-MIGRATION
+    found and fixed in that same method)
+  proof_type: parity
+  test_path: tests/unit/core/test_entity_integrity.py::test_navigation_eleven_newly_covered_fields_participate_in_canonical_hash,
+    tests/unit/core/test_entity_integrity.py::test_navigation_region_id_participates_in_canonical_hash_end_to_end
+  divergence_note: TCK-20260903-NAVIGATION-CANONICAL-HASH-GAP. The gap predates this
+    fix, found while implementing TCK-20260902-PLACE-SCHEMA-MIGRATION (adding NavigationComponent.place_id).
+    Same shape as the Social/Knowledge canonical-hash gaps closed 2026-09-02/03 (STRAT-268,
+    SOC-263), but larger (11 fields vs. 9/7) and in a third component. Confirmed all
+    11 fields are live via direct grep of every real consumer site before adding any
+    of them -- none are derived/reconstructable the way StrategicComponent.profile
+    was, so no field was excluded here.

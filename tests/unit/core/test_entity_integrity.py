@@ -328,3 +328,76 @@ def test_social_nemesis_ids_participates_in_canonical_hash_end_to_end():
     state_with_nemesis = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: with_nemesis})
 
     assert CanonicalStateHasher.get_hash(state_base) != CanonicalStateHasher.get_hash(state_with_nemesis)
+
+
+def test_navigation_eleven_newly_covered_fields_participate_in_canonical_hash():
+    """
+    TCK-20260903-NAVIGATION-CANONICAL-HASH-GAP: NavigationComponent's canonical hash
+    previously covered only target, path, moved_recently, and place_id -- omitting
+    movement_mode, last_failure_reason, wait_count, oscillation_count, last_position,
+    home_position, leash_radius, region_id, chase_ticks, max_chase_ticks, and
+    returning_home. All 11 confirmed real, actively-consumed durable state (e.g.
+    region_id gates memory/information/combat-target-resolution phases, wait_count/
+    oscillation_count gate congestion-recovery replanning in src/engine/movement.py,
+    leash_radius/chase_ticks/max_chase_ticks/returning_home gate mob-leash chase logic
+    in src/engine/rpg_depth.py, last_failure_reason feeds StrategicIntelligenceSystem's
+    blocker inference). `position` itself was already covered separately as a top-level
+    `to_canonical_dict()` key (`self.navigation.position`), not omitted as the original
+    finding's own open question worried it might be. Confirms each of the 11 fields
+    independently changes to_canonical_dict() output when it diverges.
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.movement_modes import MovementMode
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    base_dict = base.to_canonical_dict()
+
+    variants = {
+        "movement_mode": dataclass_replace(base.navigation, movement_mode=MovementMode.PURSUE),
+        "last_failure_reason": dataclass_replace(base.navigation, last_failure_reason="path_blocked"),
+        "wait_count": dataclass_replace(base.navigation, wait_count=3),
+        "oscillation_count": dataclass_replace(base.navigation, oscillation_count=2),
+        "last_position": dataclass_replace(base.navigation, last_position=(1.0, 2.0)),
+        "home_position": dataclass_replace(base.navigation, home_position=(4.0, 5.0)),
+        "leash_radius": dataclass_replace(base.navigation, leash_radius=10.0),
+        "region_id": dataclass_replace(base.navigation, region_id="region_1"),
+        "chase_ticks": dataclass_replace(base.navigation, chase_ticks=5),
+        "max_chase_ticks": dataclass_replace(base.navigation, max_chase_ticks=30),
+        "returning_home": dataclass_replace(base.navigation, returning_home=True),
+    }
+
+    for field_name, changed_navigation in variants.items():
+        changed_entity = dataclass_replace(base, navigation=changed_navigation)
+        assert base_dict != changed_entity.to_canonical_dict(), (
+            f"'{field_name}' divergence did not change to_canonical_dict() output"
+        )
+
+
+def test_navigation_region_id_participates_in_canonical_hash_end_to_end():
+    """
+    TCK-20260903-NAVIGATION-CANONICAL-HASH-GAP: region_id specifically is a cached
+    back-reference ("Phase 3 Hardening: Cache region_id to avoid O(N) scans") that real
+    movement/memory/combat-resolution logic gates on (src/domains/memory/phase.py,
+    src/domains/information/phase.py, src/engine/semantic_entity_index.py,
+    src/engine/pipeline_phases/actions.py) -- a same-seed divergence there would have
+    gone completely undetected by CanonicalStateHasher, the hash src/engine/kernel.py
+    uses for its per-tick and final-run determinism checks. Confirms the fix propagates
+    all the way to CanonicalStateHasher.get_hash() (same consumer chain as the parallel
+    TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP / TCK-20260902-SOCIAL-CANONICAL-HASH-GAP
+    fixes).
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.state import AuthoritativeState
+    from src.engine.checkpoint import CanonicalStateHasher
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    assert base.navigation.region_id is None
+
+    with_region = dataclass_replace(
+        base, navigation=dataclass_replace(base.navigation, region_id="region_1"),
+    )
+
+    state_base = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: base})
+    state_with_region = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: with_region})
+
+    assert CanonicalStateHasher.get_hash(state_base) != CanonicalStateHasher.get_hash(state_with_region)
