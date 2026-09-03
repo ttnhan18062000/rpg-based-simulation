@@ -86,6 +86,27 @@ tickets.
    from the original card. **Depth-audit note:** boss-spawn logic itself has zero dedicated test files
    ("boss" appears in none of them) — this ticket is extending an untested precedent, budget test-writing
    for the base mechanism, not just the extension.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-LAIR-ENTITY-ANCHOR`. `BossService` gained a new
+   `check_for_lair_spawn` method (`src/world/boss.py`), a direct sibling of `check_for_boss_spawn`,
+   generalizing the same entity-property idempotency pattern from per-`region_id` keying
+   (`boss_region_id`) to per-`place_id` keying (`identity.properties["lair_place_id"]`), so multiple
+   LAIR-kind Places in one Region each get an independent spawn slot. **Option A chosen:**
+   `PlaceState.occupant_entity_id` stays write-never — the lock lives entirely on the occupant entity's
+   properties, not on the Place, so no new `PlaceUpdate`/apply-path plumbing was added. Wired into
+   `WorldDynamicsSystem.resolve_dynamics` reusing the existing `cadence.boss_spawn` gate and
+   `state.maturity`/`region.trauma_score` thresholds unchanged — no new cadence or trigger condition.
+   Occupants spawn with `kind="dragonkin"`, which required extending
+   `src/observability/event_extractor.py`'s `spawn_cadence_fired` exclusion tuple and `_BOSS_KINDS`
+   frozenset (rollback-path lists only) so Lair spawns are correctly excluded from cadence-spawn
+   misclassification and emit `boss_spawned`. The depth-audit note above is now partially addressed:
+   `test_world_dynamics.py` gained 4 new Lair-spawn tests (fill/idempotency/multi-Place/no-dissolution)
+   alongside the original boss idempotency test, though `check_for_boss_spawn` itself still has no
+   dedicated test file of its own. Content is a synthetic fixture only
+   (`test_lair_kind_place_compiles_via_worldcompiler`) — no real corpus world has LAIR-kind content yet,
+   matching the CAMPSTATE-PLACE-BRIDGE precedent's own deferred-content discipline. Lair
+   dissolution/transformation on occupant death (idea 48, place-type transitions) remains explicitly
+   deferred and un-ticketed, guarded by a new negative test proving this ticket's code never mutates
+   `PlaceState.kind`/`prior_kind`/`transformed_tick`.
 3. **Idea 61 — Settlements Develop Personalities.** Re-scoped by a real correction: its original cited
    precedent (idea 48) was wrong; the actual live match is Culture Drift's `CultureDeriver`/
    `CulturalBiasApplicator`. **Not blocked** (correction, 2026-09-02, see the Problem section above) — the

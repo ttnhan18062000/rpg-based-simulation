@@ -139,6 +139,8 @@ Boss spawn is idempotent: `boss_region_id` is stored in the boss entity's proper
 
 Idempotency is tracked by entity properties, not by entity position — moving the boss to another region does not cancel the idempotency lock.
 
+**Lair — Place-scoped generalization (`TCK-20260904-LAIR-ENTITY-ANCHOR`):** `BossService.check_for_lair_spawn` is a direct sibling of `check_for_boss_spawn`, generalizing the same entity-property idempotency pattern from per-`region_id` keying to per-`place_id` keying, so multiple LAIR-kind Places within one Region each get an independent, idempotent spawn slot (the collision the plain region-scoped mechanism couldn't handle). It reuses the exact same spawn gate (`state.maturity >= 50`, `region.trauma_score >= 20`, read from the LAIR Place's parent Region) and the exact same `difficulty_tier=5` convention, but keys occupancy off `identity.properties["lair_place_id"]` (set to the occupying Place's `place_id`) instead of `boss_region_id`, and spawns `kind="dragonkin"` occupants directly at the Place's own `position` rather than a computed region-center. `PlaceState.occupant_entity_id` is *not* written by this mechanism — the lock lives on the occupant entity's identity properties, mirroring `check_for_boss_spawn`'s own pattern exactly; `occupant_entity_id` remains a schema-only, write-never field pending a future ticket (plausibly idea 48's dissolution-on-death mechanism) that would need to durably read "which entity occupies this Place."
+
 ### Boss stats
 
 World bosses spawn at `difficulty_tier=4`. Specific stat tables are in `spawn_config.py` under `DIFFICULTY_ZONES`.
@@ -191,4 +193,5 @@ Monsters spawned in monster-controlled regions (influence ≤ −50) receive a f
      monster cap, and cadence constants verbatim.
 2. To add a new raid type: extend `raid.py` with a new raid composition. Fix the hardcoded (0,0) anchor before adding new raid types — position anchoring is a known gap.
 3. To add a new boss type: add to `SPAWN_POOLS` and `DIFFICULTY_ZONES` in `spawn_config.py`. The idempotency lock is per region_id — if multiple boss types should coexist in one region, the locking mechanism needs extending.
+   - **Addressed for LAIR-kind Places (`TCK-20260904-LAIR-ENTITY-ANCHOR`):** `check_for_lair_spawn` closes this gap specifically for LAIR-kind Places via a parallel per-`place_id` lock (`identity.properties["lair_place_id"]`), so multiple LAIR Places can coexist in one Region without colliding. The original `world_boss`/`ancient_sentinel` mechanism (`check_for_boss_spawn`) is unchanged and remains region-scoped by design — a Region should still have at most one `world_boss`.
 4. To add a new spawn pool: extend `spawn_config.py`. Do not hardcode monster types in `spawn.py`.

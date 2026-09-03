@@ -932,9 +932,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: check_for_boss_spawn (region-scoped world_boss/ancient_sentinel idempotency,
+    keyed via identity.properties["boss_region_id"]) is unchanged. TCK-20260904-LAIR-ENTITY-ANCHOR
+    added a parallel, Place-scoped mechanism, check_for_lair_spawn (src/world/boss.py),
+    keyed via identity.properties["lair_place_id"] per place_id instead of region_id,
+    closing the multi-boss-type-per-region gap raid_boss_camp_contract.md Extension
+    rules S3 previously flagged as open (for LAIR-kind Places specifically).
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_world_dynamics.py::test_boss_spawn_is_idempotent_even_if_existing_boss_left_region
   divergence_note: null
   support_boundary: null
 - id: WORLD-086
@@ -1382,27 +1387,51 @@
   divergence_note: null
   support_boundary: null
 - id: WORLD-109
-  text: "spawn_cadence_fired is emitted when tick % 50 == 0 and StateUpdate.entities_add\
-    \ contains at least one non-excluded entity kind (world_boss, ancient_sentinel,\
-    \ goblin_raider are excluded as non-cadence spawns). node_recharged is emitted\
-    \ when a resource node's remaining_charges transitions from 0 to > 0 (complements\
-    \ resource_node_regenerated which is unscored). threat_evolved is emitted when\
-    \ world_update.trauma_delta > 0 and prior_trauma + trauma_delta crosses a threshold\
-    \ in {25, 50, 75, 100}. camp_constructed remains blocked \u2014 CampService has\
-    \ no event recorder. (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)\n"
+  text: 'spawn_cadence_fired is emitted when tick % 50 == 0 and StateUpdate.entities_add
+    contains at least one non-excluded entity kind. node_recharged is emitted when
+    a resource node''s remaining_charges transitions from 0 to > 0 (complements resource_node_regenerated
+    which is unscored). threat_evolved is emitted when world_update.trauma_delta >
+    0 and prior_trauma + trauma_delta crosses a threshold in {25, 50, 75, 100}. camp_constructed
+    remains blocked -- CampService has no event recorder. (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)
+
+
+    Boss-kind exclusion lists (TCK-20260904-LAIR-ENTITY-ANCHOR update): event_extractor.py
+    is the flag-gated (_push_shapers_phase2_active) rollback path and holds two separate
+    boss-kind lists -- the spawn_cadence_fired exclusion tuple and the _BOSS_KINDS
+    frozenset gating boss_spawned/narrative_milestone(boss variant)/raid_party_spawned.
+    Both were extended to include "dragonkin" alongside "world_boss"/"ancient_sentinel"(/"goblin_raider"
+    for the spawn_cadence_fired tuple) so check_for_lair_spawn''s new dragonkin lair-occupant
+    does not misfire as a cadence spawn or get missed as a boss-kind arrival. The
+    live-default apply-layer WorldDynamicsShaper (src/observability/event_shapers.py,
+    WORLD-115) maintains its OWN separate copies of both lists and was intentionally
+    left unchanged -- it still excludes only world_boss/ancient_sentinel/goblin_raider,
+    with no dragonkin recognition. TCK-20260904-LAIR-ENTITY-ANCHOR scoped dragonkin
+    boss-kind recognition to the rollback path only; extending event_shapers.py to
+    match is out of scope and a known follow-up gap, not a defect in this entry.'
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: "src/observability/event_extractor.py \u2014 spawn_cadence_fired block\
-    \ (tick%50, kind exclusion set); node_recharged block inside resource_node_regenerated\
-    \ guard (remaining_charges 0\u2192>0 only); threat_evolved block with threshold\
-    \ crossing logic in world_updates loop with try/except for MagicMock safety. As\
-    \ of the push-shaper migrations, spawn_cadence_fired and threat_evolved are also\
-    \ derived by the live-default apply-layer WorldDynamicsShaper (src/observability/event_shapers.py);\
-    \ node_recharged, despite sitting in this same entry alongside its two siblings,\
-    \ is derived by the separate DeferredInstrumentationShaper (src/observability/event_shapers.py),\
+    \ (tick%50, kind exclusion tuple now (None, \"world_boss\", \"ancient_sentinel\"\
+    , \"goblin_raider\", \"dragonkin\")); _BOSS_KINDS frozenset (governs boss_spawned\
+    \ / narrative_milestone boss-variant / raid_party_spawned) now frozenset((\"world_boss\"\
+    , \"ancient_sentinel\", \"dragonkin\")) -- both updated by TCK-20260904-LAIR-ENTITY-ANCHOR;\
+    \ node_recharged block inside resource_node_regenerated guard (remaining_charges\
+    \ 0\u2192>0 only); threat_evolved block with threshold crossing logic in world_updates\
+    \ loop with try/except for MagicMock safety. As of the push-shaper migrations,\
+    \ spawn_cadence_fired and threat_evolved are also derived by the live-default\
+    \ apply-layer WorldDynamicsShaper (src/observability/event_shapers.py); node_recharged,\
+    \ despite sitting in this same entry alongside its two siblings, is derived by\
+    \ the separate DeferredInstrumentationShaper (src/observability/event_shapers.py),\
     \ not WorldDynamicsShaper. event_extractor.py's block above is now the flag-gated\
-    \ (_push_shapers_phase2_active) rollback path for all three, not the sole terminus.\n"
+    \ (_push_shapers_phase2_active) rollback path for all three (plus boss_spawned/narrative_milestone/raid_party_spawned),\
+    \ not the sole terminus. event_shapers.py's WorldDynamicsShaper keeps its own,\
+    \ separately-maintained _BOSS_KINDS = frozenset((\"world_boss\", \"ancient_sentinel\"\
+    )) and its own spawn_cadence_fired exclusion tuple (None, \"world_boss\", \"ancient_sentinel\"\
+    , \"goblin_raider\") -- neither includes dragonkin. TCK-20260904-LAIR-ENTITY-ANCHOR\
+    \ only extended event_extractor.py's two rollback-path lists; the live-default\
+    \ path's dragonkin recognition remains an open follow-up, not part of this ticket's\
+    \ scope."
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestNodeRecharged;
@@ -1417,8 +1446,10 @@
     generation'') was inaccurate prior to this ticket -- zero production CampState
     construction existed. Still not pending/future work for THIS entry''s event-emission
     scope; see TCK-20260904-CAMPSTATE-PLACE-BRIDGE for the construction-path change.
-
-    '
+    Separately, TCK-20260904-LAIR-ENTITY-ANCHOR''s dragonkin addition to event_extractor.py''s
+    boss-kind exclusion lists was NOT mirrored into event_shapers.py''s live-default
+    path -- intentional, ticket-scoped, tracked as an open follow-up rather than a
+    divergence from the Mechanics Bible.'
   support_boundary: null
 - id: WORLD-110
   text: "WORLD pillar grade stability under normalized_score formula change \u2014\

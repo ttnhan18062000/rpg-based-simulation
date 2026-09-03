@@ -120,6 +120,26 @@ def test_place_participates_in_canonical_hash():
     )
 
 
+def test_lair_kind_place_compiles_via_worldcompiler():
+    """Synthetic fixture (not real corpus content, per TCK-20260904-LAIR-ENTITY-ANCHOR's
+    Option-A/content decision -- see stored_artifacts/TCK-20260904-LAIR-ENTITY-ANCHOR/plan.md)
+    proving a LAIR-kind PlaceSpec compiles to a real PlaceState with occupant_entity_id
+    defaulting to None (unwritten in that ticket -- Option A keys Lair occupancy off
+    entity-side identity.properties, not this field)."""
+    spec = _minimal_spec([
+        RegionSpec(
+            id="r1", type="wilderness", bounds=(0, 0, 10, 10),
+            places=[PlaceSpec(id="p1", kind="lair", position=(5, 5))],
+        ),
+    ])
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    place = state.places["p1"]
+    assert place.kind == PlaceKind.LAIR
+    assert place.occupant_entity_id is None
+
+
 def test_invalid_place_kind_rejected_at_schema_level():
     """PlaceSpec.kind must be one of the 7 real PlaceKind values -- content authoring
     errors are caught at schema validation, not silently accepted."""
