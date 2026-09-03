@@ -412,3 +412,26 @@
     tick depths) -- no crash, no false positive, but no real-run positive-path confirmation
     either. `grade_anchors.json` not recalibrated (no behavior change observed in
     real runs to recalibrate against).'
+- id: FAC-015
+  text: 'InformationPropagationService.compute_propagation_events() propagates every
+    WorldEvent with severity >= 0.8 whose region_id sits in a faction territory: City-to-City
+    to every sibling region in the same faction territory, and City-to-Country to
+    every region in an ALLIED (not NEUTRAL) faction territory. Emits new WorldEvents
+    (category=CRITICAL_INFORMATION_PROPAGATED) only -- never a FactionState mutation
+    or FactionUpdate. Uses state.recent_world_events (last-tick window -- one-tick
+    lag inherent, same as FactionAwarenessService). Gated behind ENABLE_INFORMATION_HUB_ACCUMULATION
+    (default OFF). (idea 41, M4)
+
+    '
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/faction_decision.py -- InformationPropagationService.compute_propagation_events();
+    src/engine/pipeline.py -- information_propagation run_phase block, run after faction_awareness;
+    src/domains/world_emergence/schema.py -- WorldEventCategory.CRITICAL_INFORMATION_PROPAGATED
+
+    '
+  proof_type: parity
+  test_path: tests/unit/domains/faction/test_critical_information_propagation.py
+  divergence_note: null
+  support_boundary: null

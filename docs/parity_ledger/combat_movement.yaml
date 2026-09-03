@@ -4154,7 +4154,7 @@
   priority: P1
   legacy_evidence: null
   v2_evidence: 'src/progression/leveling.py Step 1 block (readiness_speed formula,
-    new line); src/engine/apply.py:525-533 (replace(new_com, ...) now includes readiness_speed=derived.get(''readiness_speed'',
+    new line); src/engine/apply.py:533-541 (replace(new_com, ...) now includes readiness_speed=derived.get(''readiness_speed'',
     new_com.readiness_speed)). Unit/regression evidence is strong (formula direction+exact-value
     asserted, backward-compat asserted, PH8 apply-path drop-prevention asserted --
     see test_path). Corpus validation was attempted per plan Step 6 (hand-orchestrated

@@ -241,6 +241,17 @@ class AuthoritativeApplyPipeline:
         )
         costs["faction_awareness"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- TCK-20260903-INFORMATION-HUB-ACCUMULATION: Information Propagation ---
+        t_start = time.perf_counter_ns()
+        from src.engine.faction_decision import InformationPropagationService
+        from src.core.updates import StateUpdate as _SU_ip
+        update = run_phase(
+            "information_propagation", update,
+            lambda u: u.merge(_SU_ip(world_events_add=InformationPropagationService.compute_propagation_events(state, _recent_events))),
+            "ENABLE_INFORMATION_HUB_ACCUMULATION",
+        )
+        costs["information_propagation"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 8d: Diplomatic State Machine + Alliance Generation (E53Bc/Bd) ---
         t_start = time.perf_counter_ns()
         from src.domains.faction.diplomatic_state_machine import (

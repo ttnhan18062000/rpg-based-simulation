@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 from src.engine.faction_constants import DEFEND_BORDER, TRADE_ROUTE, COMMISSION_QUEST
 from src.domains.world_emergence.schema import WorldEventCategory, WorldEvent
 from src.core.updates import FactionUpdate
+from src.core.enums import DiplomaticState
 
 
 # ---------------------------------------------------------------------------
@@ -206,3 +207,58 @@ class FactionAwarenessService:
                 if event.region_id in fs.territory:
                     updates.append(FactionUpdate(faction_id=faction_id, tension_delta=0.1))
         return updates
+
+
+# ---------------------------------------------------------------------------
+# InformationPropagationService — critical WorldEvent propagation (idea 41)
+# ---------------------------------------------------------------------------
+_CRITICAL_SEVERITY_THRESHOLD: float = 0.8  # WorldEvent.severity anchor for "critical" (Plan decision
+# -- see TCK-20260903-INFORMATION-HUB-ACCUMULATION Anti-Drift Notes for why WorldEvent.severity was
+# chosen over SimulationEvent.severity).
+
+
+class InformationPropagationService:
+    """Propagates critical WorldEvents to sibling City territory (same faction) and ALLIED
+    Country territory (cross-faction), by emitting new WorldEvents at destination regions.
+    Does not mutate FactionState -- no new topology field, no FactionUpdate emitted.
+
+    Uses state.recent_world_events, the same bounded, one-tick-lagged window
+    FactionAwarenessService.compute_tension_updates() reads."""
+
+    @staticmethod
+    def compute_propagation_events(
+        state: AuthoritativeState,
+        recent_events: Sequence[WorldEvent],
+    ) -> list[WorldEvent]:
+        new_events: list[WorldEvent] = []
+        for event in recent_events:
+            if event.severity < _CRITICAL_SEVERITY_THRESHOLD:
+                continue
+            if event.region_id is None:
+                continue
+            for faction_id, fs in state.factions.items():
+                if event.region_id not in fs.territory:
+                    continue
+                # City-to-City: sibling regions in the same faction's territory.
+                for sibling_region in fs.territory:
+                    if sibling_region == event.region_id:
+                        continue
+                    new_events.append(WorldEvent(
+                        category=WorldEventCategory.CRITICAL_INFORMATION_PROPAGATED,
+                        tick=state.tick, region_id=sibling_region,
+                        subject=event.subject, severity=event.severity,
+                    ))
+                # City-to-Country: ALLIED factions' territory only (see Anti-Drift Notes for
+                # why ALLIED-only, not ALLIED/NEUTRAL).
+                for other_id, other_fs in state.factions.items():
+                    if other_id == faction_id:
+                        continue
+                    if fs.diplomatic_relations.get(other_id, DiplomaticState.NEUTRAL) != DiplomaticState.ALLIED:
+                        continue
+                    for dest_region in other_fs.territory:
+                        new_events.append(WorldEvent(
+                            category=WorldEventCategory.CRITICAL_INFORMATION_PROPAGATED,
+                            tick=state.tick, region_id=dest_region,
+                            subject=event.subject, severity=event.severity,
+                        ))
+        return new_events

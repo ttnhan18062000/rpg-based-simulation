@@ -393,6 +393,13 @@ class ApplyPath:
                 dissolved_tick=new_dissolved,
             )
 
+        # Wire information_providers into the tick-boundary apply path (previously omitted --
+        # every StateUpdate.information_providers_update write, including LeadContradictionSystem's
+        # existing decrement, was silently discarded at tick end; see TCK-20260903-INFORMATION-HUB-
+        # ACCUMULATION investigation.md).
+        new_information_providers = dict(getattr(prior_state, "information_providers", {}))
+        new_information_providers.update(update.information_providers_update)
+
         new_state = AuthoritativeState(
             tick=tick,
             seed=prior_state.seed,
@@ -445,6 +452,7 @@ class ApplyPath:
             quest_registry=new_quest_registry,
             factions=new_factions,
             clans=new_clans,
+            information_providers=new_information_providers,
             # Carry feature_flags across ticks so per-profile overrides injected at
             # engine start (e.g. ENABLE_SOCIAL_COOPERATION=ON) are not silently lost
             # when apply_generation reconstructs AuthoritativeState each tick.
