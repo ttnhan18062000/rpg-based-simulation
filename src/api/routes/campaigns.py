@@ -22,8 +22,11 @@ from fastapi import APIRouter, HTTPException, Query
 from src.api.presenters.campaigns import (
     CampaignHistoryResponse,
     NarrativeLedgerEntryPresenter,
+    SettlementPersonalityResponse,
 )
 from src.domains.campaigns.narrative_ledger import NarrativeLedger
+from src.domains.culture.exporter import CultureDriftImporter
+from src.domains.culture.settlement_personality import SettlementPersonalityService
 
 # Import only the type for annotation; avoid circular state at module level.
 from src.domains.campaigns.state import CampaignState
@@ -130,4 +133,52 @@ async def get_campaign_history(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to retrieve campaign history: {exc}",
+        ) from exc
+
+
+@router.get(
+    "/{campaign_id}/regions/{region_id}/personality",
+    response_model=SettlementPersonalityResponse,
+    summary="Get settlement personality signal for a region",
+    description=(
+        "Return a Culture-Drift-derived personality signal for a region within the "
+        "specified campaign, or a neutral descriptor if no culture data has been "
+        "derived for that region yet."
+    ),
+    responses={
+        404: {"description": "Campaign not found"},
+        500: {"description": "Internal error"},
+    },
+)
+async def get_settlement_personality(
+    campaign_id: str, region_id: str
+) -> SettlementPersonalityResponse:
+    """Return the settlement-personality signal for a region as a shaped JSON response.
+
+    Reads CampaignState directly from _CAMPAIGN_REGISTRY, mirroring
+    get_campaign_history's exact lookup pattern.
+
+    Returns:
+        SettlementPersonalityResponse with campaign_id, region_id, traits,
+        tag_deltas, and is_neutral.
+
+    Raises:
+        HTTPException(404): If no campaign with the given ID is registered.
+        HTTPException(500): On unexpected errors.
+    """
+    state = _CAMPAIGN_REGISTRY.get(campaign_id)
+    if state is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Campaign '{campaign_id}' not found.",
+        )
+
+    try:
+        culture = CultureDriftImporter.get_culture(state, region_id)
+        descriptor = SettlementPersonalityService.describe(culture)
+        return SettlementPersonalityResponse.from_domain(descriptor, campaign_id, region_id)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve settlement personality: {exc}",
         ) from exc

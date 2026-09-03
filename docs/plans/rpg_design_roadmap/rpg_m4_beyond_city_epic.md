@@ -113,6 +113,17 @@ tickets.
    substrate is real, live, and tested; this idea needs to be scoped as a read-side consumer of
    `region_cultures`, with the Campaign-mode-reachability question (does any real corpus world actually run
    multi-episode?) answered before treating it as trivially unblocked in practice.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-SETTLEMENT-CULTURE-READ`. The
+   Campaign-mode-reachability question is answered: no corpus world runs multi-episode Campaign mode
+   today. Scoped the read-side consumer to Region granularity (`RegionState.id`/`.name` —
+   `PlaceState` still has no name/identity field): a new pure `SettlementPersonalityService.describe()`
+   (`src/domains/culture/settlement_personality.py`, reuses `CulturalBiasApplicator.compute_culture_delta`
+   unchanged), a new read-only `CampaignOrchestrator.describe_settlement_personality(region_id)` method,
+   and a new `GET /api/v1/campaigns/{campaign_id}/regions/{region_id}/personality` REST endpoint with a
+   shaped Pydantic presenter. The deeper reachability blocker this correction named —
+   `CampaignOrchestrator._build_initial_state()` never carrying Region/Place data into per-episode
+   `AuthoritativeState` — is real, confirmed independent of idea 66, and tracked by a new ticket,
+   `TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY`, filed rather than fixed inline.
 4. **Ideas 49 + 50 — Ambition/expansion, small shared helper only.** Both gate on "does this entity
    possess/consume material X" — worth one shared predicate, not a ticket merge. Idea 49 also carries a
    real naming-collision footgun: two unrelated classes both named `RecipeRegistry`.

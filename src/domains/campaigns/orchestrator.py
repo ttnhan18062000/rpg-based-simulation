@@ -48,6 +48,11 @@ from src.domains.campaigns.grief_urgency import (
     NemesisRelationImporter, NEMESIS_EPISODE_COUNT, NEMESIS_INTERACTION_KINDS,
 )
 from src.domains.campaigns.state import GriefUrgencyModifier, NemesisRelation
+from src.domains.culture.exporter import CultureDriftImporter
+from src.domains.culture.settlement_personality import (
+    SettlementPersonalityDescriptor,
+    SettlementPersonalityService,
+)
 
 
 # ── Narrative significance map ────────────────────────────────────────────────
@@ -147,6 +152,17 @@ class CampaignOrchestrator:
     def state(self) -> CampaignState:
         """Current mutable CampaignState. Read-only property; do not replace."""
         return self._state
+
+    def describe_settlement_personality(self, region_id: str) -> SettlementPersonalityDescriptor:
+        """Pure read: settlement-personality signal for a region from carried-forward culture.
+
+        Composes CultureDriftImporter.get_culture() + SettlementPersonalityService.describe().
+        Does not read or mutate episode_index, persistent_entities, or narrative_ledger, and
+        never calls _build_initial_state()/_advance_state() — this is a query over
+        already-populated CampaignState.region_cultures, not an episode-boundary hook.
+        """
+        culture = CultureDriftImporter.get_culture(self._state, region_id)
+        return SettlementPersonalityService.describe(culture)
 
     def run_episode(self) -> EpisodeSummary:
         """Run the current episode and return its summary.

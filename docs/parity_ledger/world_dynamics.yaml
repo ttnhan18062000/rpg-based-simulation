@@ -1946,3 +1946,34 @@
     tests/unit/domains/optimization/test_apply_plan_builder.py::test_apply_plan_builder_camp_totem_stockpile_palisade
   divergence_note: null
   proof_type: parity
+- id: WORLD-CULT-004
+  text: 'A region with at least one culture axis above CULTURE_ACTIVATION_THRESHOLD
+    (0.3) produces a SettlementPersonalityDescriptor with a non-empty traits tuple
+    and non-zero tag_deltas for that axis''s canonical tag group; a region with no
+    CultureState data (the default for all 21 registered corpus worlds) produces the
+    neutral empty descriptor. This descriptor is now reachable end-to-end via CampaignOrchestrator.describe_settlement_personality(region_id)
+    (a pure read over CampaignState.region_cultures, never touching _build_initial_state()/_advance_state())
+    and via GET /api/v1/campaigns/{campaign_id}/regions/{region_id}/personality, which
+    reads CampaignState from the route''s own campaign registry and returns a shaped
+    SettlementPersonalityResponse (never the raw domain descriptor). This gives CulturalBiasApplicator.compute_culture_delta
+    its first real production call site (previously exercised only by tests): SettlementPersonalityService.describe
+    -> CulturalBiasApplicator.compute_culture_delta, reached via CampaignOrchestrator.describe_settlement_personality
+    and independently via the REST route handler.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/culture/settlement_personality.py (SettlementPersonalityService.describe,
+    SettlementPersonalityDescriptor) -- reuses CulturalBiasApplicator.compute_culture_delta
+    unchanged, adds no new axis/threshold/clamp rules, a new caller not new derivation
+    logic; src/domains/campaigns/orchestrator.py (CampaignOrchestrator.describe_settlement_personality,
+    a pure read composing CultureDriftImporter.get_culture + SettlementPersonalityService.describe
+    over already-populated CampaignState.region_cultures); src/api/routes/campaigns.py
+    (GET /{campaign_id}/regions/{region_id}/personality, get_settlement_personality)
+    and src/api/presenters/campaigns.py (SettlementPersonalityResponse.from_domain)
+    -- the route composes CultureDriftImporter.get_culture + SettlementPersonalityService.describe
+    directly (does not call the orchestrator method) but exercises the same production
+    call chain down to CulturalBiasApplicator.compute_culture_delta.
+  proof_type: parity
+  test_path: tests/unit/domains/culture/test_settlement_personality.py::test_describe_with_high_fatalism_axis_produces_fatalistic_signal;
+    tests/unit/domains/campaigns/test_settlement_personality_read.py::test_describe_settlement_personality_with_populated_region_cultures;
+    tests/api/test_campaign_history_api.py::test_settlement_personality_endpoint_returns_shaped_presenter_not_raw_domain_object
