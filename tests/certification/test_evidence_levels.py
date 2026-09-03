@@ -64,6 +64,7 @@ class FakeState:
     entities: dict = {1: _FakeCanonicalObj(hp=100), 2: _FakeCanonicalObj(hp=80), 3: _FakeCanonicalObj(hp=50)}
     resource_nodes: dict = {}
     regions: dict = {}
+    places: dict = {}  # Idea 66
     buildings: dict = {}
     corpses: dict = {}
     ground_items: dict = {}

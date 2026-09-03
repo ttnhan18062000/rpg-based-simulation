@@ -280,6 +280,10 @@ class RegionState:
     # E53Cb: Siege mechanics
     siege_state: Optional["SiegeState"] = None
     service_availability: float = 1.0  # 0.0 to 1.0; degraded by active siege
+    # Idea 66: ordered place_id references -- forward half of the dual-sided membership
+    # decision (see PlaceState.region_id for the back-reference half). A Region can hold
+    # zero or many Places.
+    places: List[str] = field(default_factory=list)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -305,6 +309,7 @@ class RegionState:
             "population_cohorts": {k: v.to_canonical_dict() for k, v in sorted(self.population_cohorts.items())},
             "siege_state": self.siege_state.to_canonical_dict() if self.siege_state is not None else None,
             "service_availability": self.service_availability,
+            "places": list(self.places),
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
@@ -315,6 +320,69 @@ class RegionState:
         return ((xmin + xmax) / 2.0, (ymin + ymax) / 2.0)
 
 
+class PlaceKind(str, Enum):
+    """Idea 66: the atomic point-of-interest kinds a Region may contain."""
+    CITY = "CITY"
+    CAMP = "CAMP"
+    NEST = "NEST"
+    LAIR = "LAIR"
+    RUIN = "RUIN"
+    DUNGEON = "DUNGEON"
+    LANDMARK = "LANDMARK"
+
+
+@dataclass(frozen=True, slots=True)
+class PlaceState:
+    """
+    Idea 66 (Region/Place foundational rebuild): the atomic point-of-interest object,
+    positioned within a Region's (larger) bounds. Replaces the prior model where a City
+    *is* one Region -- a Region now contains zero or many Places.
+
+    Schema only in this ticket (TCK-20260902-PLACE-SCHEMA-MIGRATION) -- WorldCompiler
+    wiring and content migration are separate child tickets, see
+    docs/plans/rpg_design_roadmap/rpg_idea66_region_place_rebuild_plan.md.
+    """
+    place_id: str
+    region_id: str  # Parent reference -- back-reference half of the dual-sided
+                     # membership decision (see RegionState.places for the forward half).
+    kind: PlaceKind
+    position: tuple[float, float]  # Point within the parent Region's bounds
+    footprint: Optional[tuple[int, int, int, int]] = None  # Sub-bounds, multi-tile CITY-kind only
+    owner_faction_id: Optional[int] = None  # Sovereignty override; defaults to the parent Region's
+    scale: Optional[float] = None  # CITY-kind only -- settlement size scalar
+    maturity: Optional[float] = None  # CAMP/NEST-kind, reused from CampState.maturity
+    occupant_entity_id: Optional[int] = None  # LAIR-kind, reused from today's boss_region_id pattern
+    hazard_level: Optional[float] = None  # RUIN/DUNGEON-kind local override
+    building_ids: Set[int] = field(default_factory=set)  # CITY-kind, re-scoped from AuthoritativeState.town_entity_ids' sibling concept
+    entity_ids: Set[int] = field(default_factory=set)     # CITY-kind, re-scoped from AuthoritativeState.town_entity_ids
+    # Added 2026-09-02 (direction-alignment audit extension): single-hop transformation
+    # trail, not a full history log. A City destroyed into a Ruin carries legible trace
+    # of what it used to be.
+    prior_kind: Optional[PlaceKind] = None
+    transformed_tick: Optional[int] = None
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "place_id": self.place_id,
+            "region_id": self.region_id,
+            "kind": str(self.kind),
+            "position": self.position,
+            "footprint": self.footprint,
+            "owner_faction_id": self.owner_faction_id,
+            "scale": self.scale,
+            "maturity": self.maturity,
+            "occupant_entity_id": self.occupant_entity_id,
+            "hazard_level": self.hazard_level,
+            "building_ids": sorted(self.building_ids),
+            "entity_ids": sorted(self.entity_ids),
+            "prior_kind": str(self.prior_kind) if self.prior_kind is not None else None,
+            "transformed_tick": self.transformed_tick,
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
 
 @dataclass(frozen=True, slots=True)
@@ -404,6 +472,10 @@ class NavigationComponent:
     chase_ticks: int = 0
     max_chase_ticks: int = 15
     returning_home: bool = False
+
+    # Idea 66: cached place_id back-reference, same rationale as region_id above --
+    # avoids an O(N) scan of PlaceState.entity_ids for fast Place lookup.
+    place_id: Optional[str] = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -835,7 +907,12 @@ class EntityState:
             "navigation": {
                 "target": self.navigation.target,
                 "path": self.navigation.path,
-                "moved_recently": self.navigation.moved_recently
+                "moved_recently": self.navigation.moved_recently,
+                # NOTE: region_id and most other NavigationComponent fields are NOT
+                # covered here -- a pre-existing gap (TCK-20260903-NAVIGATION-CANONICAL-HASH-GAP),
+                # not introduced or repeated by this field. place_id is added explicitly
+                # so it does not silently inherit that same omission.
+                "place_id": self.navigation.place_id,
             },
             "task": {
                 "work_kind": self.task.work_kind,
@@ -1121,6 +1198,10 @@ class BuildingState:
     functional: bool = True
     inventory: InventoryComponent = field(default_factory=InventoryComponent)
     price_modifiers: Dict[str, float] = field(default_factory=dict) # ItemKind -> Multiplier
+    # Idea 66: cached place_id back-reference. Buildings previously had zero
+    # region/place containment tracking as a state field at all -- this is new,
+    # not a mirror of a pre-existing region_id (none existed).
+    place_id: Optional[str] = None
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -1134,7 +1215,8 @@ class BuildingState:
             "max_hp": self.max_hp,
             "functional": self.functional,
             "inventory": self.inventory.to_canonical_dict(),
-            "price_modifiers": dict(sorted(self.price_modifiers.items()))
+            "price_modifiers": dict(sorted(self.price_modifiers.items())),
+            "place_id": self.place_id,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
@@ -1194,6 +1276,7 @@ class AuthoritativeState:
     buildings: Dict[int, BuildingState] = field(default_factory=dict)
     camps: Dict[str, CampState] = field(default_factory=dict)
     regions: Dict[str, RegionState] = field(default_factory=dict)
+    places: Dict[str, PlaceState] = field(default_factory=dict)  # Idea 66
     local_scars: Dict[int, LocalScarState] = field(default_factory=dict)
     item_instances: Dict[int, ItemInstance] = field(default_factory=dict)
     _readonly_cache: Any = field(default=None, repr=False, compare=False)
