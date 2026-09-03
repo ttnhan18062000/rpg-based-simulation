@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_f46968dc74e428e6",
+  "manifest_id": "prov_9ad917c47093d64d",
   "world_id": "wilderness_survival",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "4f1de54c8c58561f20136ed1924e453452df09e25b62b49a7b76640ce26eeb7c",
+  "catalog_fingerprint": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
-    "survivor_camp_shelter": "0a3665001e6467e9d2946f638a23150bbf6305a48a139ac60b6e3b03699b6fa8",
-    "undead_battlefield": "5a28c8d022a3a2d2510e3b0ef36e62ef4cb78d366f2b61e2c226c8797ee86b30",
-    "wolf_den_near_forest": "236ed57805d9d8a947b072448b36ce728b6b6653ad9fd5f0085c3bfb269953ee"
+    "survivor_camp_shelter": "276cbe476a87bcf8c1478fee6e2406712ffcae041748e377310a531d55fceeb4",
+    "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
+    "wolf_den_near_forest": "14dcdf22f8bfc5ea7340de80e47d9bab361e279778e165bd721367bc573f7769"
   },
   "composition_fingerprint": "bfd61dc0768ba0fb6758bc71d6e3077de1ee368d5510034bf47bad38fea954a1",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "f46968dc74e428e6eb26ec06c1d5fa0629a64c41603f0d12175da1b00caa82f1",
-  "created_at": "2026-07-07T05:40:24.019618Z",
+  "content_fingerprint": "9ad917c47093d64d64a7e4cce301a0924fcc35c7fe7feda61e601b8da7e55a0f",
+  "created_at": "2026-09-03T13:10:47.666279Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

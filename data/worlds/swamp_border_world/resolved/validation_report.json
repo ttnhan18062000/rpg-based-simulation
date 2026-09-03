@@ -3,14 +3,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -21,8 +15,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -812,5 +812,22 @@
     "trading_company_hub": []
   },
   "composition_validation": [],
-  "world_validation": []
+  "world_validation": [
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'wolf_hunt_alpha_pack' required_participant_tags ['beast'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.6.required_participant_tags",
+      "source_entity": "wolf_hunt_alpha_pack",
+      "source_file": "wolf_den_near_forest"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'wolf_explore_forest_trail' required_participant_tags ['beast'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.7.required_participant_tags",
+      "source_entity": "wolf_explore_forest_trail",
+      "source_file": "wolf_den_near_forest"
+    }
+  ]
 }

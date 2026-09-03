@@ -116,7 +116,12 @@ def test_compile_report_contents():
             "distinct_populated_factions",
             "warnings",
             "compile_duration_ms",
-            "state_hash"
+            "state_hash",
+            # TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT: state_hash (StateFingerprinter)
+            # does not cover Place data -- canonical_state_hash (CanonicalStateHasher) is
+            # the real, full-coverage check. place_count is a quick summary alongside it.
+            "canonical_state_hash",
+            "place_count",
         }
         assert set(report.keys()) == expected_keys
         

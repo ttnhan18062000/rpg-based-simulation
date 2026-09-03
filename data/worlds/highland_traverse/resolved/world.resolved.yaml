@@ -20,6 +20,7 @@ regions:
   hazard_kind: PHYSICAL
   tags:
   - mountain
+  places: []
 - id: near_forest
   type: wilderness
   bounds:
@@ -32,6 +33,7 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - plain
+  places: []
 - id: wolf_den
   type: wilderness
   bounds:
@@ -43,6 +45,7 @@ regions:
   hazard_level: 2.0
   hazard_kind: NATURAL_TERRAIN
   tags: []
+  places: []
 - id: river_ford
   type: wilderness
   bounds:
@@ -54,6 +57,7 @@ regions:
   hazard_level: 1.0
   hazard_kind: PHYSICAL
   tags: []
+  places: []
 - id: hometown
   type: settlement
   bounds:
@@ -65,6 +69,12 @@ regions:
   hazard_level: 0.0
   hazard_kind: PHYSICAL
   tags: []
+  places:
+  - id: settled_quarter_city
+    kind: CITY
+    position:
+    - 190
+    - 100
 factions:
 - id: hero_guild
   type: defender

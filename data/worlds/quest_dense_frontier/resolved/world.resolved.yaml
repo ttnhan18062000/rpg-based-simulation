@@ -28,6 +28,7 @@ regions:
   hazard_kind: PHYSICAL
   tags:
   - mountain
+  places: []
 - id: river_ford
   type: wilderness
   bounds:
@@ -39,6 +40,7 @@ regions:
   hazard_level: 1.0
   hazard_kind: PHYSICAL
   tags: []
+  places: []
 - id: haunted_battlefield
   type: wilderness
   bounds:
@@ -51,6 +53,13 @@ regions:
   hazard_kind: UNDEAD_CORRUPTION
   tags:
   - ruins
+  places:
+  - id: haunted_battlefield_ruin
+    kind: RUIN
+    position:
+    - 80
+    - 100
+    hazard_level: 3.5
 factions:
 - id: hero_guild
   type: defender

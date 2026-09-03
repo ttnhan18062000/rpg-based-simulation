@@ -29,12 +29,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'sand' is active but never consumed by any downstream component",
       "target": "sand"
     },
@@ -43,6 +37,12 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'grass' is active but never consumed by any downstream component",
       "target": "grass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -67,12 +67,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Theme 'elven' is active but never consumed by any downstream component",
       "target": "elven"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Relationship_axis 'kinship' is active but never consumed by any downstream component",
-      "target": "kinship"
     },
     {
       "severity": "WARNING",
@@ -409,6 +403,252 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Faction_relationship 'forest_to_spirit_court' is active but never consumed by any downstream component",
       "target": "forest_to_spirit_court"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'wild_beasts_to_goblins' is active but never consumed by any downstream component",
+      "target": "wild_beasts_to_goblins"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblins_to_wild_beasts' is active but never consumed by any downstream component",
+      "target": "goblins_to_wild_beasts"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'wild_beasts_to_bandits' is active but never consumed by any downstream component",
+      "target": "wild_beasts_to_bandits"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'bandits_to_wild_beasts' is active but never consumed by any downstream component",
+      "target": "bandits_to_wild_beasts"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'wild_beasts_to_orc_clan' is active but never consumed by any downstream component",
+      "target": "wild_beasts_to_orc_clan"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_clan_to_wild_beasts' is active but never consumed by any downstream component",
+      "target": "orc_clan_to_wild_beasts"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'wild_beasts_to_undead' is active but never consumed by any downstream component",
+      "target": "wild_beasts_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_wild_beasts' is active but never consumed by any downstream component",
+      "target": "undead_to_wild_beasts"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'wild_beasts_to_swamp_tribe' is active but never consumed by any downstream component",
+      "target": "wild_beasts_to_swamp_tribe"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_wild_beasts' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_wild_beasts"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblins_to_bandits' is active but never consumed by any downstream component",
+      "target": "goblins_to_bandits"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'bandits_to_goblins' is active but never consumed by any downstream component",
+      "target": "bandits_to_goblins"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblins_to_undead' is active but never consumed by any downstream component",
+      "target": "goblins_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_goblins' is active but never consumed by any downstream component",
+      "target": "undead_to_goblins"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblins_to_swamp_tribe' is active but never consumed by any downstream component",
+      "target": "goblins_to_swamp_tribe"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_goblins' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_goblins"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'bandits_to_orc_clan' is active but never consumed by any downstream component",
+      "target": "bandits_to_orc_clan"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_clan_to_bandits' is active but never consumed by any downstream component",
+      "target": "orc_clan_to_bandits"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'bandits_to_undead' is active but never consumed by any downstream component",
+      "target": "bandits_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_bandits' is active but never consumed by any downstream component",
+      "target": "undead_to_bandits"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'bandits_to_swamp_tribe' is active but never consumed by any downstream component",
+      "target": "bandits_to_swamp_tribe"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_bandits' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_bandits"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_clan_to_undead' is active but never consumed by any downstream component",
+      "target": "orc_clan_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_orc_clan' is active but never consumed by any downstream component",
+      "target": "undead_to_orc_clan"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_clan_to_swamp_tribe' is active but never consumed by any downstream component",
+      "target": "orc_clan_to_swamp_tribe"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_orc_clan' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_orc_clan"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_swamp_tribe' is active but never consumed by any downstream component",
+      "target": "undead_to_swamp_tribe"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_undead' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'merchants_to_spirit_court' is active but never consumed by any downstream component",
+      "target": "merchants_to_spirit_court"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'spirit_court_to_merchants' is active but never consumed by any downstream component",
+      "target": "spirit_court_to_merchants"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'merchants_to_arcane' is active but never consumed by any downstream component",
+      "target": "merchants_to_arcane"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'arcane_to_merchants' is active but never consumed by any downstream component",
+      "target": "arcane_to_merchants"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'spirit_court_to_arcane' is active but never consumed by any downstream component",
+      "target": "spirit_court_to_arcane"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'arcane_to_spirit_court' is active but never consumed by any downstream component",
+      "target": "arcane_to_spirit_court"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'forest_wardens_to_hero_guild' is active but never consumed by any downstream component",
+      "target": "forest_wardens_to_hero_guild"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'hero_guild_to_forest_wardens' is active but never consumed by any downstream component",
+      "target": "hero_guild_to_forest_wardens"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'merchants_to_forest_wardens' is active but never consumed by any downstream component",
+      "target": "merchants_to_forest_wardens"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'forest_wardens_to_merchants' is active but never consumed by any downstream component",
+      "target": "forest_wardens_to_merchants"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'merchants_to_hero_guild' is active but never consumed by any downstream component",
+      "target": "merchants_to_hero_guild"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'hero_guild_to_merchants' is active but never consumed by any downstream component",
+      "target": "hero_guild_to_merchants"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'neutral_to_town_council' is active but never consumed by any downstream component",
+      "target": "neutral_to_town_council"
     },
     {
       "severity": "WARNING",
@@ -598,20 +838,39 @@
     "survivor_camp_shelter": []
   },
   "composition_validation": [],
-  "world_validation": [],
+  "world_validation": [
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'undead_hunt_wraith_patrol' required_participant_tags ['spiritual'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.3.required_participant_tags",
+      "source_entity": "undead_hunt_wraith_patrol",
+      "source_file": "undead_battlefield"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'wolf_hunt_alpha_pack' required_participant_tags ['beast'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.4.required_participant_tags",
+      "source_entity": "wolf_hunt_alpha_pack",
+      "source_file": "wolf_den_near_forest"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'wolf_explore_forest_trail' required_participant_tags ['beast'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.5.required_participant_tags",
+      "source_entity": "wolf_explore_forest_trail",
+      "source_file": "wolf_den_near_forest"
+    }
+  ],
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 94
+    "warnings_count": 137
   },
   "blocking_errors": [],
   "warnings": [
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
-    },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
@@ -623,6 +882,12 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'grass' is active but never consumed by any downstream component",
       "target": "grass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -647,12 +912,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Theme 'elven' is active but never consumed by any downstream component",
       "target": "elven"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Relationship_axis 'kinship' is active but never consumed by any downstream component",
-      "target": "kinship"
     },
     {
       "severity": "WARNING",
@@ -993,6 +1252,252 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'wild_beasts_to_goblins' is active but never consumed by any downstream component",
+      "target": "wild_beasts_to_goblins"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblins_to_wild_beasts' is active but never consumed by any downstream component",
+      "target": "goblins_to_wild_beasts"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'wild_beasts_to_bandits' is active but never consumed by any downstream component",
+      "target": "wild_beasts_to_bandits"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'bandits_to_wild_beasts' is active but never consumed by any downstream component",
+      "target": "bandits_to_wild_beasts"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'wild_beasts_to_orc_clan' is active but never consumed by any downstream component",
+      "target": "wild_beasts_to_orc_clan"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_clan_to_wild_beasts' is active but never consumed by any downstream component",
+      "target": "orc_clan_to_wild_beasts"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'wild_beasts_to_undead' is active but never consumed by any downstream component",
+      "target": "wild_beasts_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_wild_beasts' is active but never consumed by any downstream component",
+      "target": "undead_to_wild_beasts"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'wild_beasts_to_swamp_tribe' is active but never consumed by any downstream component",
+      "target": "wild_beasts_to_swamp_tribe"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_wild_beasts' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_wild_beasts"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblins_to_bandits' is active but never consumed by any downstream component",
+      "target": "goblins_to_bandits"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'bandits_to_goblins' is active but never consumed by any downstream component",
+      "target": "bandits_to_goblins"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblins_to_undead' is active but never consumed by any downstream component",
+      "target": "goblins_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_goblins' is active but never consumed by any downstream component",
+      "target": "undead_to_goblins"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblins_to_swamp_tribe' is active but never consumed by any downstream component",
+      "target": "goblins_to_swamp_tribe"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_goblins' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_goblins"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'bandits_to_orc_clan' is active but never consumed by any downstream component",
+      "target": "bandits_to_orc_clan"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_clan_to_bandits' is active but never consumed by any downstream component",
+      "target": "orc_clan_to_bandits"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'bandits_to_undead' is active but never consumed by any downstream component",
+      "target": "bandits_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_bandits' is active but never consumed by any downstream component",
+      "target": "undead_to_bandits"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'bandits_to_swamp_tribe' is active but never consumed by any downstream component",
+      "target": "bandits_to_swamp_tribe"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_bandits' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_bandits"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_clan_to_undead' is active but never consumed by any downstream component",
+      "target": "orc_clan_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_orc_clan' is active but never consumed by any downstream component",
+      "target": "undead_to_orc_clan"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_clan_to_swamp_tribe' is active but never consumed by any downstream component",
+      "target": "orc_clan_to_swamp_tribe"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_orc_clan' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_orc_clan"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_swamp_tribe' is active but never consumed by any downstream component",
+      "target": "undead_to_swamp_tribe"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_undead' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'merchants_to_spirit_court' is active but never consumed by any downstream component",
+      "target": "merchants_to_spirit_court"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'spirit_court_to_merchants' is active but never consumed by any downstream component",
+      "target": "spirit_court_to_merchants"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'merchants_to_arcane' is active but never consumed by any downstream component",
+      "target": "merchants_to_arcane"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'arcane_to_merchants' is active but never consumed by any downstream component",
+      "target": "arcane_to_merchants"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'spirit_court_to_arcane' is active but never consumed by any downstream component",
+      "target": "spirit_court_to_arcane"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'arcane_to_spirit_court' is active but never consumed by any downstream component",
+      "target": "arcane_to_spirit_court"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'forest_wardens_to_hero_guild' is active but never consumed by any downstream component",
+      "target": "forest_wardens_to_hero_guild"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'hero_guild_to_forest_wardens' is active but never consumed by any downstream component",
+      "target": "hero_guild_to_forest_wardens"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'merchants_to_forest_wardens' is active but never consumed by any downstream component",
+      "target": "merchants_to_forest_wardens"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'forest_wardens_to_merchants' is active but never consumed by any downstream component",
+      "target": "forest_wardens_to_merchants"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'merchants_to_hero_guild' is active but never consumed by any downstream component",
+      "target": "merchants_to_hero_guild"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'hero_guild_to_merchants' is active but never consumed by any downstream component",
+      "target": "hero_guild_to_merchants"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'neutral_to_town_council' is active but never consumed by any downstream component",
+      "target": "neutral_to_town_council"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Stat_profile 'monster_base' is active but never consumed by any downstream component",
       "target": "monster_base"
     },
@@ -1169,15 +1674,39 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
       "target": "hero_adventurers"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'undead_hunt_wraith_patrol' required_participant_tags ['spiritual'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.3.required_participant_tags",
+      "source_entity": "undead_hunt_wraith_patrol",
+      "source_file": "undead_battlefield"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'wolf_hunt_alpha_pack' required_participant_tags ['beast'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.4.required_participant_tags",
+      "source_entity": "wolf_hunt_alpha_pack",
+      "source_file": "wolf_den_near_forest"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'wolf_explore_forest_trail' required_participant_tags ['beast'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.5.required_participant_tags",
+      "source_entity": "wolf_explore_forest_trail",
+      "source_file": "wolf_den_near_forest"
     }
   ],
   "fingerprints": {
-    "catalog": "4f1de54c8c58561f20136ed1924e453452df09e25b62b49a7b76640ce26eeb7c",
+    "catalog": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
     "modules": {
       "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
-      "survivor_camp_shelter": "0a3665001e6467e9d2946f638a23150bbf6305a48a139ac60b6e3b03699b6fa8",
-      "undead_battlefield": "5a28c8d022a3a2d2510e3b0ef36e62ef4cb78d366f2b61e2c226c8797ee86b30",
-      "wolf_den_near_forest": "236ed57805d9d8a947b072448b36ce728b6b6653ad9fd5f0085c3bfb269953ee"
+      "survivor_camp_shelter": "276cbe476a87bcf8c1478fee6e2406712ffcae041748e377310a531d55fceeb4",
+      "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
+      "wolf_den_near_forest": "14dcdf22f8bfc5ea7340de80e47d9bab361e279778e165bd721367bc573f7769"
     }
   }
 }

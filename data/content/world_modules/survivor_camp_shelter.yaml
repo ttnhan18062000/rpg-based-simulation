@@ -12,5 +12,11 @@ regions:
     grid_bounds: [30, 30, 60, 60]
     terrain: "forest"
     hazard_level: 0.5
+    # Idea 66, Stage B (TCK-20260902-PLACE-MIGRATION-STAGE-B-ROLLOUT): CAMP-kind Place,
+    # position is the centroid of grid_bounds.
+    places:
+      - id: "survivor_outpost_camp"
+        kind: "camp"
+        position: [45, 45]
 buildings:
   healer_hut: 1

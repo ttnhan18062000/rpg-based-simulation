@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_c3a37ed4642e3edf",
+  "manifest_id": "prov_e0edfbaa1de09536",
   "world_id": "swamp_border_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "10d77896a90aebb8c796b454766426b039a63265141b8574940c783cdee0455c",
+  "catalog_fingerprint": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
   "module_fingerprints": {
-    "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "sunken_swamp_border": "adbeeba097121a59128bc0d09a3b35b5fbaca044c2761049d3f97c477ca2ff96",
     "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
-    "wolf_den_near_forest": "236ed57805d9d8a947b072448b36ce728b6b6653ad9fd5f0085c3bfb269953ee"
+    "wolf_den_near_forest": "14dcdf22f8bfc5ea7340de80e47d9bab361e279778e165bd721367bc573f7769"
   },
   "composition_fingerprint": "5be4ecb7a2159e256f8bd6cc2f3df6f009c300e1d12f8bc70910318caf792179",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "c3a37ed4642e3edf364bb7df5d44d9294be5288313821db8bd6cd31386c57e33",
-  "created_at": "2026-07-13T18:04:40.804639Z",
+  "content_fingerprint": "e0edfbaa1de09536b487fa6fe7357a1136d5ff7fb263dfec268bd99b19dc37e3",
+  "created_at": "2026-09-03T13:10:35.160806Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

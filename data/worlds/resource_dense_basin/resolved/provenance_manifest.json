@@ -1,17 +1,17 @@
 {
-  "manifest_id": "prov_61d544346f8a2624",
+  "manifest_id": "prov_69075e6f245d61b1",
   "world_id": "resource_dense_basin",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "4f1de54c8c58561f20136ed1924e453452df09e25b62b49a7b76640ce26eeb7c",
+  "catalog_fingerprint": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
   "module_fingerprints": {
-    "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
   },
   "composition_fingerprint": "81b30fe841eea5397a8cd466e1f51cd5fdd596f6701978e6cbb9a41133e8a1e8",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "61d544346f8a26249e96aae85c54e60582bc66e7f184d6a71f9681a649276396",
-  "created_at": "2026-07-07T09:59:09.171360Z",
+  "content_fingerprint": "69075e6f245d61b15355bc7973eea738b3b77bda5f7a0a1bfafce0bc4d2aa084",
+  "created_at": "2026-09-03T13:10:26.723450Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
