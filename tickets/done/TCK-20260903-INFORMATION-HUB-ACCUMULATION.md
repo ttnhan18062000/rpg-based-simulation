@@ -149,6 +149,20 @@ Regression scope run (all passed, no failures introduced):
 - `tests/integration/kernel/` — 92 passed, 3 deselected (apply.py determinism/replay fidelity
   unaffected by the `information_providers` carry-forward fix).
 
+**Post-Finalize CI failure, root-caused and fixed (real gap, not silently patched):** the
+`Unit · infra / observability` CI job (which includes `tests/unit/cognition/`) failed after this
+ticket's push. `tests/unit/cognition/test_information_seeking.py::TestInformationProviderState::test_information_provider_to_canonical_dict`
+is a pre-existing test (from `TCK-20260619-E42B-INFO-PROVIDER`) asserting `InformationProviderState.to_canonical_dict()`'s
+exact literal dict shape — this ticket's Step 2 addition of `knowledge_accumulated` to that dict
+(correct, intended behavior, independently confirmed by two architecture reviews) broke that
+literal assertion. This test lives in `tests/unit/cognition/`, a directory this ticket's Test
+phase's cross-cutting sweep did not identify as a real owner of `InformationProviderState`
+(`src/domains/information/providers.py`) — a genuine test-scope-coverage gap (`InformationProviderState`
+has legacy test coverage split across two directories, `unit/cognition/` from its original E42B
+ticket and `unit/domains/information/` from this ticket, and only the latter was found). Fixed the
+stale literal assertion directly (added `"knowledge_accumulated": 0`); re-ran the exact failing CI
+job's own pytest command locally and confirmed 2503 passed, 0 failed.
+
 Command used (venv with dependencies): `/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 -m pytest <paths> -q -m "not slow"`.
 
 ## Files Changed
@@ -197,6 +211,9 @@ before this branch merged. Resolved by keeping the concurrent session's P0 entry
   citation for the same reason (via `tools/parity_ledger_writer.py`).
 - `docs/parity_ledger/infrastructure.yaml` — Parity phase: fixed INFRA-324's `apply.py` line
   citation for the same reason (via `tools/parity_ledger_writer.py`).
+- `tests/unit/cognition/test_information_seeking.py` — post-Finalize CI-failure fix: updated
+  `test_information_provider_to_canonical_dict`'s stale literal dict assertion to include the new
+  `knowledge_accumulated` field (see Test Summary for the real root-cause writeup).
 - `staging_artifacts/TCK-20260903-INFORMATION-HUB-ACCUMULATION/plan.md`,
   `investigation.md`, `test_plan.md` — pre-existing from this ticket's earlier Investigate/Plan
   phases (not modified during this Implement pass; listed per ticket-hygiene convention since they
