@@ -2,7 +2,7 @@
 # src/world/camp.py
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List
-from src.core.updates import StateUpdate, CampUpdate
+from src.core.updates import StateUpdate, CampUpdate, WorldUpdate
 from src.core.enums import Domain, EntityRole
 
 if TYPE_CHECKING:
@@ -25,7 +25,9 @@ class CampService:
         """
         camp_updates: Dict[str, CampUpdate] = {}
         entities_add = []
-        
+        world_updates: Dict[str, WorldUpdate] = {}
+        flags = getattr(state, "feature_flags", None) or {}
+
         # 1. Maturity Evolution
         for c_id, camp in state.camps.items():
             if not camp.active:
@@ -76,12 +78,43 @@ class CampService:
                         pass
                     
                     camp_updates[c_id] = CampUpdate(
-                        id=c_id, 
+                        id=c_id,
                         maturity_delta=-20.0, # Cost of raiding
                         last_raid_tick_set=state.tick
                     )
-                    
-        return StateUpdate(camp_updates=camp_updates, entities_add=entities_add)
+
+            # 4. Natural-Creature Reproduction
+            if flags.get("ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH", "OFF") == "ON":
+                if (camp.maturity >= CampService.RAID_MATURITY_THRESHOLD
+                        and state.tick % CampService.CAMP_SPAWN_INTERVAL == 0):
+                    eligible = True
+                    if region is not None and region.population_cohorts:
+                        young = region.population_cohorts.get("young")
+                        threshold = young.migration_threshold if young is not None else 0.7
+                        from src.domains.demographics.cohort import compute_regional_scarcity
+                        scarcity = compute_regional_scarcity(region.id, state)
+                        eligible = scarcity <= threshold
+                    if eligible:
+                        offspring = generator.spawn_natural_creature_offspring(
+                            camp.position,
+                            state=state,
+                            kind="goblin_warrior" if camp.kind == "goblin" else "orc_warrior",
+                            difficulty_tier=int(camp.maturity / 20.0) + 1,
+                            birth_tick=state.tick,
+                        )
+                        entities_add.append(offspring)
+                        if region is not None:
+                            # TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: coarse +1
+                            # nudge, additive across camps in this call — must merge, not
+                            # overwrite, or a second eligible camp in the same region on the
+                            # same tick would silently drop the first camp's nudge.
+                            nudge = WorldUpdate(region_id=region.id, population_young_births_delta=1)
+                            if region.id in world_updates:
+                                world_updates[region.id] = world_updates[region.id].merge(nudge)
+                            else:
+                                world_updates[region.id] = nudge
+
+        return StateUpdate(camp_updates=camp_updates, entities_add=entities_add, world_updates=world_updates)
 
     @staticmethod
     def resolve_camp_clearing(state: AuthoritativeState, camp_id: str) -> StateUpdate:

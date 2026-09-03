@@ -139,6 +139,65 @@ charisma_delta  = int(attrs.charisma * 0.3)
 All deltas are integer-truncated toward zero and applied via a typed `AttributeUpdate` merged
 into the entity's `EntityUpdate` — never a direct mutation of the frozen `EntityState`.
 
+### Birth Record (Reproduction Schema)
+`LifecycleComponent` carries a per-entity birth record: `parent_a_entity_id`,
+`parent_b_entity_id` (`Optional[int]`, both `None` for a parentless natural-creature/magical
+spawn), `birth_tick` (`int`, `0` is the "no birth record" sentinel for world-assembled or
+pre-existing entities — mirrors `heir_entity_id: Optional[int] = None`'s existing "unset"
+convention), `birth_city_id` (`Optional[int]`, a bare identifier with no referential-integrity
+validation against the region/building registry), and `reproduction_cooldowns`
+(`Dict[int, int]`, partner entity ID → cooldown-expiry tick, merged per-key so two same-tick
+writers updating different partners cannot clobber each other's entry).
+
+These fields are populated only at entity-construction time, via
+`V2EntityBuilder.birth_record()` — never mutated afterward except `reproduction_cooldowns`,
+which reproduction-trigger logic updates through `LifecycleUpdate.reproduction_cooldowns_add`
+and the normal `LifecyclePatch.apply` authoritative path (Section 1's frozen-state law applies
+here identically to `heir_entity_id`). `birth_record()` also seeds the new entity's own
+`SocialBond` toward each parent at `familiarity=0.8`, `sentiment=0.8` (`role` stays at its
+`NEUTRAL` default) — the module-level `build_parent_bond_updates_for_birth()` helper produces
+the parents' reciprocal `EntityUpdate`s at the same 0.8/0.8 values, for a caller to apply through
+the standard `SocialUpdate.bond_updates` path.
+
+Reproduction (idea 32) is explicitly decoupled from Marriage (idea 33): no marriage/contract
+precondition gates any part of this schema or its write path.
+
+### Genetic Inheritance (Combination)
+
+`LifecycleComponent.genetic_profile: Optional[GeneticProfile]` carries the entity's permanent
+genetic multipliers (see Section 4's Genetics rules — same `GeneticProfile` type, same
+0.8–1.3 per-attribute range). Like the birth-record fields above, it is populated only at
+entity-construction time and never mutated afterward.
+
+`GeneticsSystem.combine_profiles(parent_a, parent_b, *, combat_lean: bool, seed: int) ->
+GeneticProfile` (`src/systems/lifecycle_systems/genetics.py`) derives the child's profile from
+both parents', without a stored parent profile requiring a backfill: any `None` parent profile
+falls back to `generate_profile_from_seed()` seeded on that parent's entity id. Per attribute:
+
+1. `avg = (parent_a.attr + parent_b.attr) / 2` — a convex combination of two values already in
+   `[0.8, 1.3]`, so `avg` stays in range.
+2. `blended = 0.6 * avg + 0.4 * perturbation.attr`, where `perturbation` is a
+   `generate_profile_from_seed(seed)` draw providing deterministic per-birth variance — still a
+   convex combination, still in range.
+3. If `combat_lean` is `True` and `attr` is one of `strength_mult`/`agility_mult`/
+   `constitution_mult`, `blended` is pulled 35% of the remaining distance toward the 1.3 ceiling.
+4. The result is clamped to `[0.8, 1.3]` and rounded to 3 decimals (defense-in-depth; steps 1–3
+   cannot leave that range by construction).
+
+`combat_lean` is `True` only when both parents' `IdentityComponent.role == EntityRole.HERO`
+(the closest legacy analog to "Adventurer" — `EntityRole` has no literal `ADVENTURER` member).
+**Any other parent-role pairing — both civilian (`CITIZEN`/`SHOPKEEPER`), both `WORKER`/`GUARD`,
+or any mismatched combination — falls through to the same neutral, non-combat-biased default.**
+This is the general fallthrough rule, not a rule scoped narrowly to `CITIZEN`/`SHOPKEEPER` pairs.
+
+`V2EntityBuilder.birth_record()` wires this: passing `parent_a_genetic_profile`/
+`parent_b_genetic_profile` (and the matching `parent_a_role`/`parent_b_role`) triggers
+`combine_profiles()` and writes the result via `.lifecycle(genetic_profile=...)` — the same
+typed `LifecycleUpdate.genetic_profile_set` → `LifecyclePatch.apply()` authoritative path as
+every other `LifecycleComponent` field. Omitting both parent profiles (the natural-creature and
+magical/demonic parentless paths) leaves `genetic_profile` at its `None` default — those paths
+never call `GeneticsSystem`.
+
 ---
 
 ## 6. Trauma: Wounds & Scars

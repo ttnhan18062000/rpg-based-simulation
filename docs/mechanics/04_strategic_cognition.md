@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-08-31
+last_verified: 2026-09-02
 ---
 
 # Chapter 4: Strategic Cognition
@@ -847,6 +847,48 @@ score()` chain today (unlike `memory_adjustment`, §6.11) because both `GATHER_R
 
 ---
 
+### 6.13 Personal Dependents Route Bias (SOC-262)
+
+Applied in `AdventureRouteScorer.score()` block §9b, immediately after §9's escort scoring, when
+the scored entity's own durable state (`entity.lifecycle.dependent_entity_ids`) is non-empty.
+Unlike §6.10's `faction_directives` parameter, this term reads directly off the `entity` argument
+that is unconditionally passed at every real call site — it is live-wired by construction and
+cannot silently go dead the way §6.10's mechanic has.
+
+| Route family | Adjustment | Rationale |
+|---|---|---|
+| `HUNT_WEAK_ENEMY` | `−2.0` (floored at 0.0) | An entity responsible for a dependent avoids unnecessary combat risk |
+| `RECOVER` | `+1.0` | Recovering favors an entity that needs to remain able to care for its dependent |
+| `RETURN_TOWN` | `+1.0` | Returning to town favors an entity with a dependent to attend to |
+
+Both adjustments are flat, additive, and independently `round()`-and-floored at 0.0, matching §6.9's
+own shape. The bias fires on mere **presence** of at least one id in `dependent_entity_ids` — not on
+whether that id refers to a currently-alive entity — because `AdventureRouteScorer.score()` has no
+world-state parameter to check liveness against (see §6.10's own precedent for why a new parameter
+is deliberately not added here). This is a disclosed simplification, not an oversight.
+
+**Durable field and write path:** `LifecycleComponent.dependent_entity_ids: list[int]`
+(`src/core/state.py`), written only via `LifecycleUpdate.dependent_entity_ids_add` applied through
+`LifecyclePatch.apply()` (`src/engine/patches.py`) — never a direct mutation. See
+`docs/mechanics/05_world_evolution.md`'s "Personal Dependents (Non-Parental)" subsection for the
+full write-path description.
+
+**Deferred follow-up — not implemented by this mechanic:** birth-triggered parental dependent
+auto-registration (a newborn automatically becoming a parent's dependent via
+`parent_a_entity_id`/`parent_b_entity_id`) is explicitly **not** built here. It is deferred to
+`TCK-20260902-EPIC-RPG-M3-REPRODUCTION`, pending that epic's birth-record schema maturing further.
+As of this ticket, `dependent_entity_ids` is populated only via `V2EntityBuilder.lifecycle(
+dependent_entity_ids=...)` or `V2EntityBuilder.replace_lifecycle()`, for tests/demo construction —
+no production trigger establishes a dependent relationship automatically.
+
+**Source:** `src/domains/adventure/scoring.py` §9b, `src/domains/adventure/schema.py`
+(`AdventureRouteOption.dependent_bias`), `src/core/state.py` (`LifecycleComponent.
+dependent_entity_ids`), `src/core/updates.py` (`LifecycleUpdate.dependent_entity_ids_add`),
+`src/engine/patches.py` (`LifecyclePatch.apply()`) (TCK-20260902-PERSONAL-DEPENDENTS-ROUTE-BIAS,
+2026-09-02)
+
+---
+
 ## 7. Party Composition & Formation Scoring
 
 ### 7.1 PartyCompositionScorer.score() — Role Diversity & OCEAN Compatibility
@@ -911,4 +953,163 @@ exactly, same as before this change.
 **Source:** `src/systems/social_systems/party_composition.py`, `src/core/models/social.py`,
 `src/systems/social_systems/relationships.py` (SOC-247, TCK-20260824-RELATIONSHIP-ROLE-FIELD,
 2026-08-27)
+
+---
+
+## 8. Marriage Proposal Law (idea 33, SOC-261)
+
+Marriage is a propose/accept relationship contract following the same `ContractKind`/
+`SocialAppraisalSystem` pattern §Social Systems Contract already documents for `TEACH` and
+`TEAM_UP` -- it is not a scoring function and does not add a new tier-5 project kind.
+
+**Gate.** `ContractKind.MARRIAGE` routes through `SocialAppraisalSystem.appraise_contract()`'s
+shared trust prelude exactly like every other contract kind, with no marriage-specific
+threshold: hard-cancel to `CANCELLED`/`TOTAL_DISTRUST` when `trust_score < 0.2` or
+`bond.sentiment < -0.8`; hard-cancel to `CANCELLED`/`BETRAYAL_HISTORY` when
+`betrayal_count > 0 and trust_score < 0.4`. Once the prelude passes, `_appraise_marriage()`
+always accepts (`ACCEPTED`, `ReasonCode.MARRIAGE_ACCEPTED`) -- the prelude alone is the entire
+gate, with no additional utility/risk model and no `eligibility_gate` field.
+
+**Direction.** `CoreActions.execute_propose_marriage()` (`src/engine/domain/core_actions.py`)
+builds a transient (non-persisted) `ContractState(kind=ContractKind.MARRIAGE, source_id=proposer,
+target_id=target, status=OFFERED)` and calls `appraise_contract(target, temp_contract, context)`
+-- **the target appraises the proposer**, the same direction `execute_recruit`/`execute_team_up`/
+`execute_trade`/`execute_train` already use.
+
+**Durable record.** On `ACCEPTED`, a `MarriageState` record (`src/core/strategic.py`) is written
+via `StrategicUpdate.marriages_add_or_update` on **both** parties' `EntityUpdate`, through the
+same authoritative `Patch.apply()` merge path `StrategicComponent.contracts` already uses:
+
+```python
+@dataclass(frozen=True, slots=True)
+class MarriageState:
+    id: str
+    proposer_entity_id: int
+    target_entity_id: int
+    status: MarriageStatus  # PROPOSED | ACCEPTED | REJECTED
+    married_tick: Optional[int] = None
+```
+
+`MarriageState.status` is its own three-value `MarriageStatus` enum, distinct from
+`ContractStatus` (which has no `REJECTED` member) -- the transient offer's own `ContractState.status`
+still resolves through the ordinary `ContractStatus` values; only the durable record uses
+`MarriageStatus`. `StrategicComponent.marriages: Dict[str, MarriageState]` is keyed by a synthetic
+record id (mirroring `contracts`), not by spouse entity id, so both parties can independently hold
+records without collision.
+
+**Out of scope (deliberate).** No bigamy/duplicate-marriage precondition is enforced -- nothing
+prevents an entity from accumulating multiple `marriages` entries; this is a documented, deliberate
+scope boundary, not an oversight, deferred to a future ticket. No fantasy-year aging or
+lifecycle-duration threshold is introduced -- `married_tick` is a plain tick timestamp with no
+derived-duration/expiry logic, blocked on the unmigrated `TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY`.
+No household/family/dependents state is added to `MarriageState` -- that belongs to a separate
+ticket (idea 31, Personal Dependents). `ContractService.get_project_mapping()` returns `None` for
+`MARRIAGE` by construction, so a marriage proposal never materializes a tier-5 strategic project.
+
+**Source:** `src/core/strategic.py` (`ContractKind.MARRIAGE`, `MarriageStatus`, `MarriageState`,
+`StrategicComponent.marriages`); `src/core/updates.py` (`StrategicUpdate.marriages_add_or_update`/
+`marriages_remove`); `src/engine/patches.py` (`Patch.apply()` merge); `src/core/enums.py`
+(`ReasonCode.MARRIAGE_ACCEPTED`/`MARRIAGE_DECLINED`); `src/systems/social_systems/appraisal.py`
+(`SocialAppraisalSystem._appraise_marriage()`, `appraise_contract()`'s `MARRIAGE` dispatch branch);
+`src/engine/domain/core_actions.py` (`CoreActions.execute_propose_marriage()`);
+`src/engine/domain/action_router.py` (`"PROPOSE_MARRIAGE"` branch) (TCK-20260902-MARRIAGE-PROPOSAL-CONTRACT,
+2026-09-02)
+
+---
+
+## 9. Coming of Age Archetype-Choice Roll (idea 34, STRAT-267)
+
+A genuinely weighted (not fixed-priority) occupation-selection roll fires once when a citizen
+child reaches adulthood, filling the same `role_set` slot `OccupationChangeGoalScorer`
+(`src/ai/goals/occupation_change_scorer.py`, §Strategic Systems, `STRAT-259`) later reads for
+adult occupation changes -- deliberately not that scorer's own fixed-priority-first-fit pattern,
+since applying it here would collapse every same-tick, same-region child onto the identical
+occupation.
+
+**Gate.** Fires inside `LifecycleSystem.resolve_lifecycle()` (`src/systems/lifecycle_systems/
+lifecycle.py`), immediately beside the existing `life_stage_set`/ELDER-branch trigger, when all
+three hold simultaneously on the pre-tick frozen entity: `entity.identity.life_stage ==
+LifeStage.CHILD`, the age-derived `target_stage == LifeStage.ADULT` (the same CHILD->ADULT
+transition idea 20 already drives), and `entity.identity.role == EntityRole.CITIZEN`. The role
+gate is not optional bookkeeping: without it this branch would also fire for a MONSTER-role
+CHILD produced by the flag-gated Natural-Creature reproduction path
+(`spawn_natural_creature_offspring()`, `src/systems/world_systems/generator.py`), which is
+parentless but still carries a real nonzero `birth_tick` -- the no-birth-record exclusion below
+does not catch it, so the role gate is the only thing preventing an incoherent
+`MONSTER_HORDE`-faction entity from being handed a citizen occupation.
+
+A second gate, `is_excluded_no_birth_record()`, additionally excludes any entity for which
+`lifecycle.birth_tick == 0 AND lifecycle.parent_a_entity_id is None AND
+lifecycle.parent_b_entity_id is None` all hold at once (a compound check, not `birth_tick == 0`
+alone -- `HumanoidReproductionService.process_reproduction()` has no explicit `tick > 0` guard,
+so a real Humanoid-path child can be born at tick 0 with non-`None` parent ids; the compound form
+correctly treats that case as "has a birth record"). Forward-compatibility caveat: this is not
+provably safe against a hypothetical future reproduction path with neither an accumulation gate
+nor tracked parent ids -- no such path exists in the live codebase today.
+
+**Direction.** `choose_archetype(entity, state)` (`src/ai/coming_of_age.py`) draws one role from
+`{SHOPKEEPER, WORKER, GUARD}` via `DeterministicRNG(state.seed).weighted_choice(Domain.STRATEGIC,
+state.tick, entity.id, roles, weights)` -- a genuine seeded weighted-random draw, never Python's
+unseeded `random` module and never a deterministic argmax (an argmax over shared regional-need
+terms would reproduce `OccupationChangeGoalScorer`'s exact zero-variance convergence bug through
+a different mechanism). The weight vector comes from the pure function `compute_role_weights()`:
+
+```
+weight(role) = max(WEIGHT_FLOOR,
+    BASE_WEIGHT
+    + PERSONALITY_COEFF * personality_term(role, entity.identity.personality)
+    + PARENTAL_COEFF    * parental_term(role, entity, state)
+    + regional_coeff    * regional_need_term(role, entity, state)
+)
+```
+
+- `personality_term`: `SHOPKEEPER -> greed`, `WORKER -> industry`, `GUARD -> bravery` (mirrors
+  `PersonalityService.get_goal_modifiers()`'s own trait-to-domain mappings, `src/ai/
+  personality.py`).
+- `parental_term`: count of the entity's resolvable, active parents (via `state.entities.get()`,
+  skipping a `None` id, a removed/dead parent, or `lifecycle.active is False`) currently holding
+  that role -- 0, 1, or 2. A parentless or fully-inactive-parent entity yields a flat 0.0 for
+  every role, never a crash and never a fallback toward a specific occupation.
+- `regional_need_term`: `max(0.0, target_count(role) - live_count(role))`, read-only reuse of
+  `OccupationChangeGoalScorer`'s own region-lookup and per-role headcount tally as an input
+  signal (`BASE_OCCUPATION_DENSITY`/`MIN_OCCUPATION_SLOTS`, `src/world/occupation_config.py`) --
+  not a duplicate of that scorer's own selection behavior. `region is None` yields 0.0 for every
+  role.
+- `WEIGHT_FLOOR = 0.05` guarantees every role keeps strictly nonzero draw probability regardless
+  of how skewed the other three terms get -- the structural guard behind the convergence property
+  below.
+
+**Durable record.** The roll produces exactly one `IdentityUpdate(role_set=<role>)`, merged via
+`replace()` onto the same `EntityUpdate.identity` that already carries `life_stage_set` for this
+tick's CHILD->ADULT transition -- committed only through the authoritative apply pipeline
+(`ApplyPath.apply_generation`/`IdentityPatch.apply()`), never a direct-mutation shortcut. The
+origin-stage check (`entity.identity.life_stage == LifeStage.CHILD`, read from the pre-tick
+frozen entity) is what guarantees the roll fires exactly once: once the durable `life_stage_set`
+write lands, the entity's next frozen snapshot has `life_stage == ADULT`, so the branch's origin
+check no longer matches on subsequent ticks.
+
+**Convergence-risk metamorphic guard (permanent property, not just a test artifact).** Holding
+`personality_coeff`/`parental_coeff` fixed, increasing `regional_coeff` must strictly increase
+the entropy of the resulting weight distribution -- it must never collapse variance toward a
+single dominant role. This is the direct correction for the convergence bug class
+`OccupationChangeGoalScorer`'s fixed-priority-first-fit selection demonstrates: any same-region
+batch of children sharing a regional-need term would otherwise deterministically converge on one
+role. `WEIGHT_FLOOR` plus the genuine `weighted_choice` draw (rather than argmax) are what keep
+this property true empirically for any same-tick, same-region batch, verified by
+`tests/unit/strategic/test_coming_of_age_archetype_choice.py`.
+
+**Out of scope (deliberate).** No `GoalKind`/`GoalScorer` registration -- Coming of Age stays a
+direct `LifecycleSystem` write, never a goal-hierarchy candidate evaluated by
+`StrategicIntelligenceSystem.evaluate_strategic_intent()`. No change to
+`OccupationChangeGoalScorer`'s own fixed-priority selection logic, `_CANDIDATE_ROLES` tuple, or
+`BASE_OCCUPATION_DENSITY`/`MIN_OCCUPATION_SLOTS` -- those are read-only reuse targets. No
+long-run corpus-tier population-pressure convergence property (idea 38) -- the metamorphic guard
+here is a bounded single-tick synthetic batch, not a long-run corpus claim.
+
+**Source:** `src/ai/coming_of_age.py` (`compute_role_weights`, `is_excluded_no_birth_record`,
+`choose_archetype`); `src/systems/lifecycle_systems/lifecycle.py`
+(`LifecycleSystem.resolve_lifecycle()`'s Coming of Age sibling branch, beside the ELDER branch);
+`src/platform/rng.py` (`DeterministicRNG.weighted_choice`); `src/core/enums.py`
+(`Domain.STRATEGIC`); `src/core/updates.py` (`IdentityUpdate.role_set`)
+(TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE, 2026-09-02)
 

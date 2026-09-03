@@ -1,438 +1,414 @@
 - id: FAC-001
-  text: >
-    AuthoritativeState.factions persists FactionState records across ticks via
+  text: 'AuthoritativeState.factions persists FactionState records across ticks via
     typed FactionUpdate apply-path
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/core/state.py (FactionState dataclass, AuthoritativeState.factions field,
-    to_readonly() wrapping) + src/core/updates.py (FactionUpdate frozen dataclass,
-    StateUpdate.faction_updates field, is_noop/merge_many wiring) +
-    src/engine/apply.py (factions=new_factions threading,
-    TCK-20260619-E53Aa-FACTION-STATE). Compile-time construction of the initial
-    factions dict (not just apply-path persistence of subsequent updates) is covered
-    by FAC-012 — see WorldCompiler.compile()/WorldAssemblyResolver.assemble().
+  v2_evidence: "src/core/state.py (FactionState dataclass, AuthoritativeState.factions\
+    \ field, to_readonly() wrapping) + src/core/updates.py (FactionUpdate frozen dataclass,\
+    \ StateUpdate.faction_updates field, is_noop/merge_many wiring) + src/engine/apply.py\
+    \ (factions=new_factions threading, TCK-20260619-E53Aa-FACTION-STATE). Compile-time\
+    \ construction of the initial factions dict (not just apply-path persistence of\
+    \ subsequent updates) is covered by FAC-012 \u2014 see WorldCompiler.compile()/WorldAssemblyResolver.assemble().\n"
   proof_type: parity
   test_path: tests/unit/domains/faction/test_faction_state.py
   divergence_note: null
   support_boundary: null
-
 - id: FAC-002
-  text: >
-    FactionUpdate.tension_delta accumulates into FactionState.tension_level,
+  text: 'FactionUpdate.tension_delta accumulates into FactionState.tension_level,
     clamped to [0.0, 1.0]
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/apply.py (tension clamp logic, TCK-20260619-E53Aa-FACTION-STATE)
+  v2_evidence: 'src/engine/apply.py (tension clamp logic, TCK-20260619-E53Aa-FACTION-STATE)
+
+    '
   proof_type: parity
   test_path: tests/unit/domains/faction/test_faction_state.py::test_faction_update_apply_tension_delta
   divergence_note: null
   support_boundary: null
-
 - id: FAC-003
-  text: >
-    FactionDecisionPhase reads state.factions each decision tick and emits
-    transient FactionDirective list; directives are not persisted in AuthoritativeState
+  text: 'FactionDecisionPhase reads state.factions each decision tick and emits transient
+    FactionDirective list; directives are not persisted in AuthoritativeState
+
+    '
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/faction_decision.py + src/engine/pipeline.py (faction_decision inline block,
-    TCK-20260619-E53Ab-DECISION-PHASE)
+  v2_evidence: 'src/engine/faction_decision.py + src/engine/pipeline.py (faction_decision
+    inline block, TCK-20260619-E53Ab-DECISION-PHASE)
+
+    '
   proof_type: parity
   test_path: tests/unit/domains/faction/test_faction_decision_phase.py
   divergence_note: null
   support_boundary: null
 - id: FACTION-TENSION-001
-  text: >
-    FactionAwarenessService.compute_tension_updates() emits FactionUpdate(tension_delta=+0.1)
-    for each RESOURCE_DEPLETED WorldEvent whose region_id is in a faction's territory.
-    Tension is capped at [0.0, 1.0] by apply.py (authoritative path). Uses
-    state.recent_world_events (last-tick window — one-tick lag inherent). (E53Ad)
+  text: "FactionAwarenessService.compute_tension_updates() emits FactionUpdate(tension_delta=+0.1)\
+    \ for each RESOURCE_DEPLETED WorldEvent whose region_id is in a faction's territory.\
+    \ Tension is capped at [0.0, 1.0] by apply.py (authoritative path). Uses state.recent_world_events\
+    \ (last-tick window \u2014 one-tick lag inherent). (E53Ad)\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/faction_decision.py — FactionAwarenessService.compute_tension_updates();
-    src/engine/pipeline.py — faction_awareness run_phase block;
-    src/engine/apply.py:345 — tension clamped max(0.0, min(1.0, ...))
+  v2_evidence: "src/engine/faction_decision.py \u2014 FactionAwarenessService.compute_tension_updates();\
+    \ src/engine/pipeline.py \u2014 faction_awareness run_phase block; src/engine/apply.py:345\
+    \ \u2014 tension clamped max(0.0, min(1.0, ...))\n"
   proof_type: parity
   test_path: tests/unit/domains/faction/test_faction_awareness.py
   divergence_note: null
   support_boundary: null
-
 - id: FAC-004
-  text: >
-    FactionState.diplomatic_relations is Dict[str, DiplomaticState] (typed str-enum).
+  text: 'FactionState.diplomatic_relations is Dict[str, DiplomaticState] (typed str-enum).
     to_canonical_dict() serializes values to plain strings; from_dict() coerces string
     values back to DiplomaticState. FactionUpdate.diplomatic_relations_set uses the
     same typed dict. Apply path merges with per-value coercion. (E53Ba)
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/core/enums.py (DiplomaticState(str, Enum));
-    src/core/state.py (FactionState.diplomatic_relations, to_canonical_dict, from_dict);
-    src/core/updates.py (FactionUpdate.diplomatic_relations_set);
-    src/engine/apply.py (DiplomaticState coercion in merge)
+  v2_evidence: 'src/core/enums.py (DiplomaticState(str, Enum)); src/core/state.py
+    (FactionState.diplomatic_relations, to_canonical_dict, from_dict); src/core/updates.py
+    (FactionUpdate.diplomatic_relations_set); src/engine/apply.py (DiplomaticState
+    coercion in merge)
+
+    '
   proof_type: parity
   test_path: tests/unit/domains/faction/test_diplomacy.py
   divergence_note: null
   support_boundary: null
-
 - id: FAC-005
-  text: >
-    DiplomaticActionHandler.handle() dispatches diplomatic action subtypes
-    (TreatyOffer, TradeAgreement, NonAggressionPact, AllianceProposal, Betrayal)
-    to per-type pure handlers that return FactionUpdate lists encoding relation changes.
-    AllianceProposal uses proposer_strength vs target_strength*2 threshold for VASSAL.
-    Betrayal guard: returns [] unless current relation is ALLIED. (E53Bb)
+  text: 'DiplomaticActionHandler.handle() dispatches diplomatic action subtypes (TreatyOffer,
+    TradeAgreement, NonAggressionPact, AllianceProposal, Betrayal) to per-type pure
+    handlers that return FactionUpdate lists encoding relation changes. AllianceProposal
+    uses proposer_strength vs target_strength*2 threshold for VASSAL. Betrayal guard:
+    returns [] unless current relation is ALLIED. (E53Bb)
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/faction_decision.py (TreatyOffer/TradeAgreement/NonAggressionPact/AllianceProposal/Betrayal);
-    src/domains/faction/diplomatic_actions.py (DiplomaticActionHandler.handle);
-    src/core/updates.py (FactionUpdate.diplomatic_relations_set)
+  v2_evidence: 'src/engine/faction_decision.py (TreatyOffer/TradeAgreement/NonAggressionPact/AllianceProposal/Betrayal);
+    src/domains/faction/diplomatic_actions.py (DiplomaticActionHandler.handle); src/core/updates.py
+    (FactionUpdate.diplomatic_relations_set)
+
+    '
   proof_type: parity
   test_path: tests/unit/domains/faction/test_diplomacy.py
   divergence_note: null
   support_boundary: null
-
 - id: FAC-006
-  text: >
-    DiplomaticStateMachine.compute_transitions() evaluates all lexicographic faction pairs
-    each tick, applying one transition per pair in priority order: WAR→NEUTRAL (both ms<0.3)
-    > HOSTILE→WAR (aggressor ms > defender*1.2) > TENSE→HOSTILE (tension>0.7 or shared territory)
-    > NEUTRAL→TENSE (tension>0.4). ALLIED and VASSAL suppress all transitions.
-    Pipeline Phase 8d applies results via run_phase("diplomatic_transitions"). (E53Bc)
+  text: "DiplomaticStateMachine.compute_transitions() evaluates all lexicographic\
+    \ faction pairs each tick, applying one transition per pair in priority order:\
+    \ WAR\u2192NEUTRAL (both ms<0.3) > HOSTILE\u2192WAR (aggressor ms > defender*1.2)\
+    \ > TENSE\u2192HOSTILE (tension>0.7 or shared territory) > NEUTRAL\u2192TENSE\
+    \ (tension>0.4). ALLIED and VASSAL suppress all transitions. Pipeline Phase 8d\
+    \ applies results via run_phase(\"diplomatic_transitions\"). (E53Bc)\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/domains/faction/diplomatic_state_machine.py (compute_transitions, compute_common_enemy_pairs);
-    src/engine/pipeline.py (Phase 8d diplomatic_transitions run_phase block)
+  v2_evidence: 'src/domains/faction/diplomatic_state_machine.py (compute_transitions,
+    compute_common_enemy_pairs); src/engine/pipeline.py (Phase 8d diplomatic_transitions
+    run_phase block)
+
+    '
   proof_type: parity
   test_path: tests/unit/domains/faction/test_diplomacy.py
   divergence_note: null
   support_boundary: null
-
 - id: FAC-007
-  text: >
-    Diplomatic state transitions emit WorldEvents: HOSTILE→WAR emits FACTION_WAR_DECLARED
-    (significance=0.95), WAR→NEUTRAL emits FACTION_PEACE_TREATY (significance=0.75),
-    AllianceProposal resolution emits FACTION_ALLIANCE_FORMED (significance=0.80).
-    WorldEvent.subject encodes faction pair as ":".join(sorted([fid_a, fid_b])).
-    CampaignOrchestrator._extract_narrative_entries() maps these to NarrativeLedgerEntry
-    via _SIGNIFICANCE_MAP. Known deferral: E53Da will align Chronicle naming.py keys
-    (currently uppercase FACTION_WAR_DECLARED vs lowercase war_declared event_type). (E53Bd)
+  text: "Diplomatic state transitions emit WorldEvents: HOSTILE\u2192WAR emits FACTION_WAR_DECLARED\
+    \ (significance=0.95), WAR\u2192NEUTRAL emits FACTION_PEACE_TREATY (significance=0.75),\
+    \ AllianceProposal resolution emits FACTION_ALLIANCE_FORMED (significance=0.80).\
+    \ WorldEvent.subject encodes faction pair as \":\".join(sorted([fid_a, fid_b])).\
+    \ CampaignOrchestrator._extract_narrative_entries() maps these to NarrativeLedgerEntry\
+    \ via _SIGNIFICANCE_MAP. Known deferral: E53Da will align Chronicle naming.py\
+    \ keys (currently uppercase FACTION_WAR_DECLARED vs lowercase war_declared event_type).\
+    \ (E53Bd)\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/domains/world_emergence/schema.py (WorldEventCategory.FACTION_WAR_DECLARED/ALLIANCE_FORMED/PEACE_TREATY);
-    src/domains/faction/diplomatic_state_machine.py (events_from_transitions);
-    src/engine/pipeline.py (Phase 8d world_events_add);
-    src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP, _extract_narrative_entries)
+  v2_evidence: 'src/domains/world_emergence/schema.py (WorldEventCategory.FACTION_WAR_DECLARED/ALLIANCE_FORMED/PEACE_TREATY);
+    src/domains/faction/diplomatic_state_machine.py (events_from_transitions); src/engine/pipeline.py
+    (Phase 8d world_events_add); src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP,
+    _extract_narrative_entries)
+
+    '
   proof_type: parity
   test_path: tests/unit/domains/faction/test_diplomacy.py
   divergence_note: null
   support_boundary: null
-
 - id: FAC-008
-  text: >
-    MilitaryConflictPhase (Phase 8e) detects all WAR faction pairs each tick via
-    get_war_pairs() returning lexicographic (fid_a, fid_b) pairs. On first tick
-    with no active siege, emits WorldUpdate.siege_state_set=SiegeState(...) for
-    the defender's territory. Each tick with active WAR emits
-    service_availability_delta=-0.05 and siege_progress_delta=+0.05; if ≥ 3
-    GUARD entities defend the contested region, emits service_availability_delta=+0.02
-    and siege_progress_delta=-0.02 as reinforcement offset. (E53Ca/Cb)
+  text: "MilitaryConflictPhase (Phase 8e) detects all WAR faction pairs each tick\
+    \ via get_war_pairs() returning lexicographic (fid_a, fid_b) pairs. On first tick\
+    \ with no active siege, emits WorldUpdate.siege_state_set=SiegeState(...) for\
+    \ the defender's territory. Each tick with active WAR emits service_availability_delta=-0.05\
+    \ and siege_progress_delta=+0.05; if \u2265 3 GUARD entities defend the contested\
+    \ region, emits service_availability_delta=+0.02 and siege_progress_delta=-0.02\
+    \ as reinforcement offset. (E53Ca/Cb)\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/military_conflict.py (MilitaryConflictPhase.get_war_pairs, execute,
-    _find_contested_region, _find_guard_entities_in_region);
-    _find_guard_entities_in_region is now a thin wrapper around
-    _build_guard_index_by_region, a single-pass region_id -> sorted [GUARD entity id]
-    hoist computed once at the top of execute() (TCK-20260822-GUARD-SCAN-INDEX-RETROFIT),
-    replacing a per-WAR-pair O(N) rescan with one O(N) pass per tick regardless of
-    war_pair_count — not routed through SemanticEntityQuery.by_region (see that
-    ticket's plan.md Design Decision: SemanticEntityIndexService.get_indexes() has
-    no partial-dimension build path and would pay a ~5x rebuild cost as the index's
-    first production caller for no same-tick amortization in any shipped scenario);
-    selection semantics (identity.role == EntityRole.GUARD filter, per-region sort)
-    unchanged;
-    src/engine/pipeline.py (Phase 8e military_conflict run_phase block)
+  v2_evidence: "src/engine/military_conflict.py (MilitaryConflictPhase.get_war_pairs,\
+    \ execute, _find_contested_region, _find_guard_entities_in_region); _find_guard_entities_in_region\
+    \ is now a thin wrapper around _build_guard_index_by_region, a single-pass region_id\
+    \ -> sorted [GUARD entity id] hoist computed once at the top of execute() (TCK-20260822-GUARD-SCAN-INDEX-RETROFIT),\
+    \ replacing a per-WAR-pair O(N) rescan with one O(N) pass per tick regardless\
+    \ of war_pair_count \u2014 not routed through SemanticEntityQuery.by_region (see\
+    \ that ticket's plan.md Design Decision: SemanticEntityIndexService.get_indexes()\
+    \ has no partial-dimension build path and would pay a ~5x rebuild cost as the\
+    \ index's first production caller for no same-tick amortization in any shipped\
+    \ scenario); selection semantics (identity.role == EntityRole.GUARD filter, per-region\
+    \ sort) unchanged; src/engine/pipeline.py (Phase 8e military_conflict run_phase\
+    \ block)\n"
   proof_type: parity
-  test_path: >
-    tests/unit/domains/faction/test_siege_model.py::test_guard_index_matches_naive_full_scan;
+  test_path: 'tests/unit/domains/faction/test_siege_model.py::test_guard_index_matches_naive_full_scan;
     tests/unit/domains/faction/test_siege_model.py::test_military_conflict_reinforcement_fires_at_three_guards;
     tests/unit/domains/faction/test_siege_model.py::test_military_conflict_reinforcement_does_not_fire_below_threshold;
     tests/unit/domains/faction/test_siege_model.py::test_military_conflict_squad_commitment_capped_at_five;
     tests/unit/domains/faction/test_siege_model.py::test_military_conflict_squad_commitment_no_truncation_at_five;
     tests/unit/domains/faction/test_siege_model.py::test_military_conflict_squad_commitment_empty_when_no_guards
+
+    '
   divergence_note: null
   support_boundary: null
-
 - id: FAC-009
-  text: >
-    SiegeState is a frozen dataclass (slots=True) on RegionState.siege_state.
+  text: SiegeState is a frozen dataclass (slots=True) on RegionState.siege_state.
     RegionState.service_availability (float, default 1.0) tracks degraded service
     level during siege. WorldUpdate fields service_availability_delta, siege_state_set,
-    siege_state_clear, siege_progress_delta drive siege apply-path mutations.
-    apply_plan clamps service_availability to [0.0, 1.0] and siege_progress to [0.0, 1.0].
-    siege_state_clear takes priority over siege_state_set for clearing. (E53Cb)
+    siege_state_clear, siege_progress_delta drive siege apply-path mutations. apply_plan
+    clamps service_availability to [0.0, 1.0] and siege_progress to [0.0, 1.0]. siege_state_clear
+    takes priority over siege_state_set for clearing. (E53Cb)
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/core/state.py (SiegeState, RegionState.siege_state, RegionState.service_availability);
+  v2_evidence: src/core/state.py (SiegeState, RegionState.siege_state, RegionState.service_availability);
     src/core/updates.py (WorldUpdate.siege_state_set, siege_state_clear, siege_progress_delta,
-    service_availability_delta, merge());
-    src/engine/apply_plan.py (region apply block lines 125-140)
+    service_availability_delta, merge()); src/engine/apply_plan.py (region apply block,
+    now lines 137-152 -- shifted +12 from the prior 125-140 citation by TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE's
+    new population_young_births_delta nudge block inserted immediately above this
+    block in the same region-apply loop; re-verified against the current file, not
+    merely re-derived by offset)
   proof_type: parity
   test_path: tests/unit/domains/faction/test_siege_model.py
   divergence_note: null
   support_boundary: null
-
 - id: FAC-010
-  text: >
-    When RegionState.siege_state.siege_progress >= 1.0 (clamped by apply_plan from previous
-    tick), MilitaryConflictPhase.execute() emits: WorldUpdate(siege_state_clear=True,
-    service_availability_delta=+1.0) to restore the region; FactionUpdate(territory_add)
-    for the attacker and FactionUpdate(territory_remove) for the defender; WorldEvent
-    TERRITORY_TRANSFERRED with subject="{attacker}:{defender}:{region_id}" (significance=0.85).
-    No siege degradation delta is emitted on the transfer tick.
-    RegionState.owner_faction_id (Optional[int]) is NOT set during transfer — the int/str
-    type mismatch with FactionState.faction_id:str is a known limitation; authoritative
-    ownership is tracked via FactionState.territory. (E53Cc)
+  text: "When RegionState.siege_state.siege_progress >= 1.0 (clamped by apply_plan\
+    \ from previous tick), MilitaryConflictPhase.execute() emits: WorldUpdate(siege_state_clear=True,\
+    \ service_availability_delta=+1.0) to restore the region; FactionUpdate(territory_add)\
+    \ for the attacker and FactionUpdate(territory_remove) for the defender; WorldEvent\
+    \ TERRITORY_TRANSFERRED with subject=\"{attacker}:{defender}:{region_id}\" (significance=0.85).\
+    \ No siege degradation delta is emitted on the transfer tick. RegionState.owner_faction_id\
+    \ (Optional[int]) is NOT set during transfer \u2014 the int/str type mismatch\
+    \ with FactionState.faction_id:str is a known limitation; authoritative ownership\
+    \ is tracked via FactionState.territory. (E53Cc)\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/military_conflict.py (execute — territory transfer block);
-    src/domains/world_emergence/schema.py (WorldEventCategory.TERRITORY_TRANSFERRED);
-    src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["TERRITORY_TRANSFERRED"]);
-    src/engine/apply.py (lines 328-354, territory_add/remove application)
+  v2_evidence: "src/engine/military_conflict.py (execute \u2014 territory transfer\
+    \ block); src/domains/world_emergence/schema.py (WorldEventCategory.TERRITORY_TRANSFERRED);\
+    \ src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP[\"TERRITORY_TRANSFERRED\"\
+    ]); src/engine/apply.py (lines 328-354, territory_add/remove application)\n"
   proof_type: parity
   test_path: tests/unit/domains/faction/test_territory_transfer.py; tests/integration/scenarios/test_faction_campaign.py
-  divergence_note: >
-    RegionState.owner_faction_id not updated on transfer (int vs str type mismatch).
-    Authoritative ownership via FactionState.territory only.
-  support_boundary: null
+  divergence_note: 'RegionState.owner_faction_id not updated on transfer (int vs str
+    type mismatch). Authoritative ownership via FactionState.territory only.
 
+    '
+  support_boundary: null
 - id: FAC-011
-  text: >
-    MilitaryConflictPhase.execute() drains military_strength by 0.001/tick for each faction
-    currently at WAR (deduplicated per faction, regardless of number of WAR pairs).
-    When drain would push a faction from >= 0.3 to < 0.3, a WAR_ENDED_EXHAUSTION WorldEvent
-    is emitted (significance=0.80) with subject="{fid_a}:{fid_b}".
-    The autonomous WAR→NEUTRAL transition fires via DiplomaticStateMachine.compute_transitions()
-    (Phase 8d) when both factions have military_strength < 0.3 on the prior state.
-    Orphaned siege_state (region under siege but factions no longer at WAR) is cleared by
-    emitting WorldUpdate(siege_state_clear=True, service_availability_delta=+1.0) at the
-    top of execute() each tick. (E53Cd)
+  text: "MilitaryConflictPhase.execute() drains military_strength by 0.001/tick for\
+    \ each faction currently at WAR (deduplicated per faction, regardless of number\
+    \ of WAR pairs). When drain would push a faction from >= 0.3 to < 0.3, a WAR_ENDED_EXHAUSTION\
+    \ WorldEvent is emitted (significance=0.80) with subject=\"{fid_a}:{fid_b}\".\
+    \ The autonomous WAR\u2192NEUTRAL transition fires via DiplomaticStateMachine.compute_transitions()\
+    \ (Phase 8d) when both factions have military_strength < 0.3 on the prior state.\
+    \ Orphaned siege_state (region under siege but factions no longer at WAR) is cleared\
+    \ by emitting WorldUpdate(siege_state_clear=True, service_availability_delta=+1.0)\
+    \ at the top of execute() each tick. (E53Cd)\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/engine/military_conflict.py (exhaustion drain loop, orphan cleanup, WAR_ENDED_EXHAUSTION);
-    src/domains/world_emergence/schema.py (WorldEventCategory.WAR_ENDED_EXHAUSTION);
-    src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["WAR_ENDED_EXHAUSTION"]);
-    src/domains/faction/diplomatic_state_machine.py (compute_transitions WAR→NEUTRAL rule)
+  v2_evidence: "src/engine/military_conflict.py (exhaustion drain loop, orphan cleanup,\
+    \ WAR_ENDED_EXHAUSTION); src/domains/world_emergence/schema.py (WorldEventCategory.WAR_ENDED_EXHAUSTION);\
+    \ src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP[\"WAR_ENDED_EXHAUSTION\"\
+    ]); src/domains/faction/diplomatic_state_machine.py (compute_transitions WAR\u2192\
+    NEUTRAL rule)\n"
   proof_type: parity
   test_path: tests/unit/domains/faction/test_war_exhaustion.py; tests/integration/scenarios/test_faction_campaign.py::test_war_exhaustion_ends_conflict
-  divergence_note: >
-    SEEK_PEACE directive (transient FactionDirective) is not implemented — FactionDirective
-    cannot flow through StateUpdate. The autonomous Phase 8d WAR→NEUTRAL rule covers the
-    same outcome when both factions hit < 0.3.
+  divergence_note: "SEEK_PEACE directive (transient FactionDirective) is not implemented\
+    \ \u2014 FactionDirective cannot flow through StateUpdate. The autonomous Phase\
+    \ 8d WAR\u2192NEUTRAL rule covers the same outcome when both factions hit < 0.3.\n"
   support_boundary: null
-
 - id: FAC-012
-  text: >
-    FactionState is constructed with tension_level seeded from
-    WorldSpec.factions[].initial_tension_level at world-compile time
-    (WorldCompiler.compile()), sourced either from the catalog default (0.0) or a
-    composition-level faction_tension_overrides entry
-    (WorldAssemblyResolver.assemble()). Closes the "no bootstrap" gap where
-    AuthoritativeState.factions was permanently seeded at tension_level=0.0 for every
-    compiled world, which meant compute_transitions()'s pair_tension > 0.4 threshold
-    could never fire and diplomatic_transition/faction_tension_delta had 0
-    calibration_hits (TCK-20260702-SIMQ-UPLIFT2-FACTION).
-    TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS extends this with a second, authored-from-inception
-    data point at frontier_extended-comparable scale (62 entities/9 regions):
-    data/worlds/frontier_marches/world.yaml seeds faction_tension_overrides
-    ({bandit_company: 0.5, orc_clan: 0.5}), confirmed to compile with 0 warnings and to seed
-    FactionState.tension_level=0.5 for both factions via the same WorldCompiler.compile()/
-    WorldAssemblyResolver.assemble() plumbing above — no new code path exercised, just a second
-    real-world composition proving the mechanism scales beyond urban_political's 30-entity/
-    3-region footprint.
+  text: "FactionState is constructed with tension_level seeded from WorldSpec.factions[].initial_tension_level\
+    \ at world-compile time (WorldCompiler.compile()), sourced either from the catalog\
+    \ default (0.0) or a composition-level faction_tension_overrides entry (WorldAssemblyResolver.assemble()).\
+    \ Closes the \"no bootstrap\" gap where AuthoritativeState.factions was permanently\
+    \ seeded at tension_level=0.0 for every compiled world, which meant compute_transitions()'s\
+    \ pair_tension > 0.4 threshold could never fire and diplomatic_transition/faction_tension_delta\
+    \ had 0 calibration_hits (TCK-20260702-SIMQ-UPLIFT2-FACTION). TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS\
+    \ extends this with a second, authored-from-inception data point at frontier_extended-comparable\
+    \ scale (62 entities/9 regions): data/worlds/frontier_marches/world.yaml seeds\
+    \ faction_tension_overrides ({bandit_company: 0.5, orc_clan: 0.5}), confirmed\
+    \ to compile with 0 warnings and to seed FactionState.tension_level=0.5 for both\
+    \ factions via the same WorldCompiler.compile()/ WorldAssemblyResolver.assemble()\
+    \ plumbing above \u2014 no new code path exercised, just a second real-world composition\
+    \ proving the mechanism scales beyond urban_political's 30-entity/ 3-region footprint.\n"
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: >
-    src/worldbuilding/schema.py::FactionSpec.initial_tension_level (bounded [0.0, 1.0]);
-    src/worldassembly/schema.py::WorldCompositionSpec.faction_tension_overrides +
-    NormalizedWorldComposition.faction_tension_overrides (mirrored, required for
-    WorldCompositionNormalizer.normalize() to not raise ValidationError on every
-    composition); src/worldbuilding/compiler.py::WorldCompiler.compile() (step 3 —
-    builds one FactionState per FactionSpec in spec.factions, seeding
-    tension_level=f_spec.initial_tension_level, passed into the single
-    AuthoritativeState(...) constructor call); src/worldassembly/resolver.py::
-    WorldAssemblyResolver.assemble() (applies normalized_comp.faction_tension_overrides
-    onto the merged factions dict after module/catalog merge, before WorldSpec(...)
-    construction, via FactionSpec.model_validate(...) full reconstruction — not
-    .model_copy(update=...), which would bypass Pydantic v2 field validators);
-    data/worlds/urban_political/world.yaml (faction_tension_overrides:
-    {bandit_company: 0.5, town_council: 0.5})
+  v2_evidence: "src/worldbuilding/schema.py::FactionSpec.initial_tension_level (bounded\
+    \ [0.0, 1.0]); src/worldassembly/schema.py::WorldCompositionSpec.faction_tension_overrides\
+    \ + NormalizedWorldComposition.faction_tension_overrides (mirrored, required for\
+    \ WorldCompositionNormalizer.normalize() to not raise ValidationError on every\
+    \ composition); src/worldbuilding/compiler.py::WorldCompiler.compile() (step 3\
+    \ \u2014 builds one FactionState per FactionSpec in spec.factions, seeding tension_level=f_spec.initial_tension_level,\
+    \ passed into the single AuthoritativeState(...) constructor call); src/worldassembly/resolver.py::\
+    \ WorldAssemblyResolver.assemble() (applies normalized_comp.faction_tension_overrides\
+    \ onto the merged factions dict after module/catalog merge, before WorldSpec(...)\
+    \ construction, via FactionSpec.model_validate(...) full reconstruction \u2014\
+    \ not .model_copy(update=...), which would bypass Pydantic v2 field validators);\
+    \ data/worlds/urban_political/world.yaml (faction_tension_overrides: {bandit_company:\
+    \ 0.5, town_council: 0.5})\n"
   proof_type: parity
-  test_path: >
-    tests/unit/worldbuilding/test_worldspec_schema.py::test_faction_spec_initial_tension_level_defaults_to_zero,
-    test_faction_spec_initial_tension_level_round_trips,
-    test_faction_spec_initial_tension_level_out_of_range_rejected;
+  test_path: 'tests/unit/worldbuilding/test_worldspec_schema.py::test_faction_spec_initial_tension_level_defaults_to_zero,
+    test_faction_spec_initial_tension_level_round_trips, test_faction_spec_initial_tension_level_out_of_range_rejected;
     tests/unit/worldbuilding/test_world_compiler.py::test_compiler_seeds_faction_tension_from_spec,
-    test_compiler_seeds_full_faction_roster_at_zero_tension_by_default,
-    test_compiler_no_factions_declared_yields_empty_factions_dict;
+    test_compiler_seeds_full_faction_roster_at_zero_tension_by_default, test_compiler_no_factions_declared_yields_empty_factions_dict;
     tests/unit/worldassembly/test_assembly.py::test_faction_tension_overrides_applied_after_merge,
-    test_no_faction_tension_overrides_matches_current_behavior,
-    test_faction_tension_overrides_unknown_faction_raises,
-    test_faction_tension_overrides_out_of_range_raises;
-    tests/unit/domains/faction/test_diplomacy.py::test_urban_political_seeded_tension_fires_tense_transition
+    test_no_faction_tension_overrides_matches_current_behavior, test_faction_tension_overrides_unknown_faction_raises,
+    test_faction_tension_overrides_out_of_range_raises; tests/unit/domains/faction/test_diplomacy.py::test_urban_political_seeded_tension_fires_tense_transition
+
+    '
   divergence_note: null
   support_boundary: null
-
 - id: FAC-013
-  text: >
-    TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION -- cuts FACTION observability event emission
-    (diplomatic_transition, alliance_proposed, alliance_accepted, territory_ownership_changed,
-    resource_seized, faction_tension_delta, war_declared, military_conflict_resolved) over to
-    `FactionShaper` (src/observability/event_shapers.py, INFRA-325) as the live default path, same
-    flag-gated mutual-exclusion mechanism as COMB-295/TOWN-190. The `FactionUpdate`-driven loop
-    (6 events) is guarded as one unit, same reasoning as TOWN-190 -- every event inside maps 1:1 to
-    a migrated shaper event, no partial-scope case. The `world_events_add`-driven loop needed
-    narrower handling: it also produces `world_emergence_event`/`narrative_milestone`
-    (NARRATIVE-category, out of migration scope) for every `WorldEvent`, so only the
-    `war_declared`/`military_conflict_resolved` if/elif inside that loop is guarded, not the loop
-    itself -- guarding the whole loop would have silently suppressed 2 unrelated NARRATIVE event
-    types whenever the flag was "ON". `faction_extinct` (the full entity-census-scan event,
-    deferred per INFRA-325) is a separate block below both loops, untouched, fires unconditionally
+  text: 'TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION -- cuts FACTION observability
+    event emission (diplomatic_transition, alliance_proposed, alliance_accepted, territory_ownership_changed,
+    resource_seized, faction_tension_delta, war_declared, military_conflict_resolved)
+    over to `FactionShaper` (src/observability/event_shapers.py, INFRA-325) as the
+    live default path, same flag-gated mutual-exclusion mechanism as COMB-295/TOWN-190.
+    The `FactionUpdate`-driven loop (6 events) is guarded as one unit, same reasoning
+    as TOWN-190 -- every event inside maps 1:1 to a migrated shaper event, no partial-scope
+    case. The `world_events_add`-driven loop needed narrower handling: it also produces
+    `world_emergence_event`/`narrative_milestone` (NARRATIVE-category, out of migration
+    scope) for every `WorldEvent`, so only the `war_declared`/`military_conflict_resolved`
+    if/elif inside that loop is guarded, not the loop itself -- guarding the whole
+    loop would have silently suppressed 2 unrelated NARRATIVE event types whenever
+    the flag was "ON". `faction_extinct` (the full entity-census-scan event, deferred
+    per INFRA-325) is a separate block below both loops, untouched, fires unconditionally
     regardless of the flag.
+
+    '
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: >
-    src/observability/event_extractor.py's two faction-event loops, guarded via the same
-    `_push_shapers_active` flag read as COMB-295/TOWN-190 (the second loop narrowly, preserving
-    world_emergence_event/narrative_milestone unconditionally). Verified via real kernel run
-    (`dungeon_crawl_seed42_500t`, default flag state): `diplomatic_transition: 29` events, all
-    attributed to `event_shapers`, matching the exact count from
-    TCK-20260806-PUSH-SHADOW-VALIDATION-PERF's shadow-mode validation and this session's much
-    earlier raw-event investigation of the same world/seed. `world_emergence_event`/
-    `narrative_milestone` presence not disrupted (confirmed by the code path being untouched, not
-    re-verified via a fresh count in this entry — no reason to expect a change since the guard is
-    structurally scoped to exclude them).
+  v2_evidence: "src/observability/event_extractor.py's two faction-event loops, guarded\
+    \ via the same `_push_shapers_active` flag read as COMB-295/TOWN-190 (the second\
+    \ loop narrowly, preserving world_emergence_event/narrative_milestone unconditionally).\
+    \ Verified via real kernel run (`dungeon_crawl_seed42_500t`, default flag state):\
+    \ `diplomatic_transition: 29` events, all attributed to `event_shapers`, matching\
+    \ the exact count from TCK-20260806-PUSH-SHADOW-VALIDATION-PERF's shadow-mode\
+    \ validation and this session's much earlier raw-event investigation of the same\
+    \ world/seed. `world_emergence_event`/ `narrative_milestone` presence not disrupted\
+    \ (confirmed by the code path being untouched, not re-verified via a fresh count\
+    \ in this entry \u2014 no reason to expect a change since the guard is structurally\
+    \ scoped to exclude them).\n"
   proof_type: regression
-  test_path: >
-    tests/unit/observability/test_event_shapers_economy_faction.py (20 tests, unchanged by this
-    cutover — FactionShaper's own logic was not modified, only its delivery path).
+  test_path: "tests/unit/observability/test_event_shapers_economy_faction.py (20 tests,\
+    \ unchanged by this cutover \u2014 FactionShaper's own logic was not modified,\
+    \ only its delivery path).\n"
   divergence_note: null
-  support_boundary: >
-    FACTION domain only — see COMB-295 (combat) and TOWN-190 (economy) for the sibling cutover
-    entries. `faction_extinct` remains entirely on the old diffing path (deferred, not migrated),
-    unaffected by this flag. `world_emergence_event`/`narrative_milestone` (NARRATIVE category)
-    were structurally protected from THIS guard, not touched by THIS (Phase 1) migration — since
-    superseded: TCK-20260806-PUSH-SHAPER-REGISTRY-WORLD-DYNAMICS (Phase 2, WORLD-115) migrated
-    both into `WorldDynamicsShaper` (SHADOW-only, `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`), reading the
-    same `world_events_add` record this entry's own guard already protects. Not a contradiction of
-    this entry — just noting the "not touched by this migration at all" phrase above was accurate
-    only as of Phase 1, kept here verbatim rather than edited, with this note for anyone reading
-    it after Phase 2 landed.
-
-    UPDATE 2026-08-06 (TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION): the `faction_extinct`
-    deferral above is now closed. Migrated via `DeferredInstrumentationShaper`
-    (src/observability/event_shapers.py), which reconstructs the full living-entity-per-faction
-    census from `prior_state.entities` + this tick's `entities_add`/`entities_remove`/
-    `entity_updates[eid].identity.faction_set` deltas — same cost profile as the old extractor's
-    own full census scan, just reconstructed instead of read from `current_state` directly.
-    Deliberately did NOT fix a real, found bug in the old extractor: its HP-alive check reads
-    `getattr(entity, "hp", None)`, but `EntityState` has no top-level `hp` attribute (confirmed
-    directly — only `entity.combat.hp` exists), making that check dead code, always `True`. This
-    causes no wrong behavior in practice (dead entities are removed from `entities` entirely, not
-    HP-zeroed), so this shaper faithfully reproduces the *actual* (entity-presence-only) behavior,
-    not the *documented intent* (an HP check) — fixing the dead code is separate, small,
-    out-of-scope cleanup, not part of this migration ticket. Registered in
-    `PHASE2_SHAPER_REGISTRY`, gated by `ENABLE_PUSH_EVENT_SHAPERS_PHASE2` (default OFF).
-    SHADOW-only in this ticket. See
-    stored_artifacts/TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION/investigation.md for the
-    full trace.
-
-    UPDATE 2026-08-07 (TCK-20260806-PUSH-CUTOVER-PHASE2): the SHADOW-only status above for
-    faction_extinct (and WORLD-115's world_emergence_event/narrative_milestone reuse of this
-    entry's own world_events_add loop) is now closed too — ENABLE_PUSH_EVENT_SHAPERS_PHASE2
-    default flipped OFF->ON, event_extractor.py's legacy faction_extinct block flag-gated behind
-    the new _push_shapers_phase2_active; the dead HP-check bug noted above was deliberately NOT
-    fixed (still out of scope). See STRAT-247's update note and infrastructure.yaml INFRA-326 for
-    the run_shadow_shapers() default-lockstep bug found and fixed during this cutover, verified
-    fixed via real 5-world runs.
-
+  support_boundary: "FACTION domain only \u2014 see COMB-295 (combat) and TOWN-190\
+    \ (economy) for the sibling cutover entries. `faction_extinct` remains entirely\
+    \ on the old diffing path (deferred, not migrated), unaffected by this flag. `world_emergence_event`/`narrative_milestone`\
+    \ (NARRATIVE category) were structurally protected from THIS guard, not touched\
+    \ by THIS (Phase 1) migration \u2014 since superseded: TCK-20260806-PUSH-SHAPER-REGISTRY-WORLD-DYNAMICS\
+    \ (Phase 2, WORLD-115) migrated both into `WorldDynamicsShaper` (SHADOW-only,\
+    \ `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`), reading the same `world_events_add` record\
+    \ this entry's own guard already protects. Not a contradiction of this entry \u2014\
+    \ just noting the \"not touched by this migration at all\" phrase above was accurate\
+    \ only as of Phase 1, kept here verbatim rather than edited, with this note for\
+    \ anyone reading it after Phase 2 landed.\nUPDATE 2026-08-06 (TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION):\
+    \ the `faction_extinct` deferral above is now closed. Migrated via `DeferredInstrumentationShaper`\
+    \ (src/observability/event_shapers.py), which reconstructs the full living-entity-per-faction\
+    \ census from `prior_state.entities` + this tick's `entities_add`/`entities_remove`/\
+    \ `entity_updates[eid].identity.faction_set` deltas \u2014 same cost profile as\
+    \ the old extractor's own full census scan, just reconstructed instead of read\
+    \ from `current_state` directly. Deliberately did NOT fix a real, found bug in\
+    \ the old extractor: its HP-alive check reads `getattr(entity, \"hp\", None)`,\
+    \ but `EntityState` has no top-level `hp` attribute (confirmed directly \u2014\
+    \ only `entity.combat.hp` exists), making that check dead code, always `True`.\
+    \ This causes no wrong behavior in practice (dead entities are removed from `entities`\
+    \ entirely, not HP-zeroed), so this shaper faithfully reproduces the *actual*\
+    \ (entity-presence-only) behavior, not the *documented intent* (an HP check) \u2014\
+    \ fixing the dead code is separate, small, out-of-scope cleanup, not part of this\
+    \ migration ticket. Registered in `PHASE2_SHAPER_REGISTRY`, gated by `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`\
+    \ (default OFF). SHADOW-only in this ticket. See stored_artifacts/TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION/investigation.md\
+    \ for the full trace.\nUPDATE 2026-08-07 (TCK-20260806-PUSH-CUTOVER-PHASE2): the\
+    \ SHADOW-only status above for faction_extinct (and WORLD-115's world_emergence_event/narrative_milestone\
+    \ reuse of this entry's own world_events_add loop) is now closed too \u2014 ENABLE_PUSH_EVENT_SHAPERS_PHASE2\
+    \ default flipped OFF->ON, event_extractor.py's legacy faction_extinct block flag-gated\
+    \ behind the new _push_shapers_phase2_active; the dead HP-check bug noted above\
+    \ was deliberately NOT fixed (still out of scope). See STRAT-247's update note\
+    \ and infrastructure.yaml INFRA-326 for the run_shadow_shapers() default-lockstep\
+    \ bug found and fixed during this cutover, verified fixed via real 5-world runs.\n"
 - id: FAC-014
-  text: >
-    TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY -- adds a new FACTION scoring rule per
-    quality_scoring_contract.md's own §7.6 audit, mirroring WORLD's own `trauma_hazard_broken`
-    pattern: `faction_trajectory_stagnant` fires when a faction's territory (`territory_add`/
-    `territory_remove` combined) stays unchanged for `_FACTION_STAGNANT_TICKS` (300) ticks while
-    that same faction continues to show diplomatic activity (`diplomatic_relations_set`
-    non-empty) -- a trend flat despite an active, ongoing related signal, not a single bad event
-    or static threshold. Implemented directly in `FactionShaper` (`event_shapers.py`), the
-    current live-by-default path for FACTION (Phase 1 of the push-migration epic) -- this is the
-    first cross-tick state `FactionShaper` carries (every other FACTION event is derived from a
-    single tick's `FactionUpdate` alone), so `reset_run_state()` was added and wired into
-    `Kernel.__init__` alongside the other stateful shapers (`StrategyShaper`/`ProgressionShaper`/
-    `SocialShaper`). Region/world-layer trajectory coverage re-confirmed already sufficient via
-    WORLD's existing rules (§7.6's own conclusion) -- `world_dynamics.py` untouched.
-
-    Separately found and disclosed, not fixed here: neither `event_extractor.py`'s legacy
-    `territory_ownership_changed` construction nor `FactionShaper`'s live construction ever sets
-    a `faction_territory_pct` payload key, so `FactionScorer`'s existing `faction_monopoly`/
-    `faction_conquest_degenerate` branches (both gated on that key) can never fire in either path
-    -- a genuine, pre-existing, unrelated bug, present since before Phase 1's migration. Filed as
-    `TCK-20260807-FACTION-TERRITORY-PCT-PAYLOAD-GAP`, not fixed inline.
+  text: "TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY -- adds a new FACTION scoring\
+    \ rule per quality_scoring_contract.md's own \xA77.6 audit, mirroring WORLD's\
+    \ own `trauma_hazard_broken` pattern: `faction_trajectory_stagnant` fires when\
+    \ a faction's territory (`territory_add`/ `territory_remove` combined) stays unchanged\
+    \ for `_FACTION_STAGNANT_TICKS` (300) ticks while that same faction continues\
+    \ to show diplomatic activity (`diplomatic_relations_set` non-empty) -- a trend\
+    \ flat despite an active, ongoing related signal, not a single bad event or static\
+    \ threshold. Implemented directly in `FactionShaper` (`event_shapers.py`), the\
+    \ current live-by-default path for FACTION (Phase 1 of the push-migration epic)\
+    \ -- this is the first cross-tick state `FactionShaper` carries (every other FACTION\
+    \ event is derived from a single tick's `FactionUpdate` alone), so `reset_run_state()`\
+    \ was added and wired into `Kernel.__init__` alongside the other stateful shapers\
+    \ (`StrategyShaper`/`ProgressionShaper`/ `SocialShaper`). Region/world-layer trajectory\
+    \ coverage re-confirmed already sufficient via WORLD's existing rules (\xA77.6's\
+    \ own conclusion) -- `world_dynamics.py` untouched.\nSeparately found and disclosed,\
+    \ not fixed here: neither `event_extractor.py`'s legacy `territory_ownership_changed`\
+    \ construction nor `FactionShaper`'s live construction ever sets a `faction_territory_pct`\
+    \ payload key, so `FactionScorer`'s existing `faction_monopoly`/ `faction_conquest_degenerate`\
+    \ branches (both gated on that key) can never fire in either path -- a genuine,\
+    \ pre-existing, unrelated bug, present since before Phase 1's migration. Filed\
+    \ as `TCK-20260807-FACTION-TERRITORY-PCT-PAYLOAD-GAP`, not fixed inline.\n"
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: >-
-    src/observability/event_shapers.py -- FactionShaper._FACTION_STAGNANT_TICKS,
-    _last_territory_change_tick/_emitted_stagnant class state, reset_run_state(), new detection
-    block inside shape()'s per-FactionUpdate loop; src/engine/kernel.py --
-    FactionShaper.reset_run_state() wired into Kernel.__init__;
-    config/simulation_quality/scoring_weights.yaml -- faction_trajectory_stagnant: -8.0;
-    src/simulation_quality/scorers/faction.py -- new EVENT_TYPES entry and score() branch, weight
-    read from config (no numeric literals).
+  v2_evidence: 'src/observability/event_shapers.py -- FactionShaper._FACTION_STAGNANT_TICKS,
+    _last_territory_change_tick/_emitted_stagnant class state, reset_run_state(),
+    new detection block inside shape()''s per-FactionUpdate loop; src/engine/kernel.py
+    -- FactionShaper.reset_run_state() wired into Kernel.__init__; config/simulation_quality/scoring_weights.yaml
+    -- faction_trajectory_stagnant: -8.0; src/simulation_quality/scorers/faction.py
+    -- new EVENT_TYPES entry and score() branch, weight read from config (no numeric
+    literals).'
   proof_type: parity
-  test_path: >-
-    tests/unit/observability/test_event_shapers_economy_faction.py (new
-    TestFactionTrajectoryStagnant coverage), tests/simulation_quality/test_faction_scorer.py (new
-    coverage)
+  test_path: tests/unit/observability/test_event_shapers_economy_faction.py (new TestFactionTrajectoryStagnant
+    coverage), tests/simulation_quality/test_faction_scorer.py (new coverage)
   divergence_note: null
-  support_boundary: >-
-    Observability signal addition only -- no gameplay mechanic change. `grade_anchors.json`
-    recalibrated only if a real scoped test/calibration run shows an actual scenario grade shift
-    -- not reflexively.
-  update_2026_08_07: >-
-    TCK-20260807-FACTION-TERRITORY-PCT-PAYLOAD-GAP: closed the faction_territory_pct finding
-    disclosed above. `faction_territory_pct` (this faction's territory region count over total
-    world regions) is now computed and included in `territory_ownership_changed`'s payload at
-    both construction sites -- `event_extractor.py` reads `current_state.factions[fid].territory`
-    directly (full snapshot access); `FactionShaper` reconstructs current territory from
-    `prior_state.factions[fid].territory` plus this tick's `territory_add`/`territory_remove`
-    deltas. `faction_monopoly`/`faction_conquest_degenerate` are no longer dead code in either
-    delivery path. Verified via unit tests constructing the exact crossing scenario; real-kernel
-    checks (dungeon_crawl 500t, urban_political 1500t) showed zero territory_ownership_changed
-    events in either (rare in these corpora at these tick depths) -- no crash, no false positive,
-    but no real-run positive-path confirmation either. `grade_anchors.json` not recalibrated (no
-    behavior change observed in real runs to recalibrate against).
+  support_boundary: Observability signal addition only -- no gameplay mechanic change.
+    `grade_anchors.json` recalibrated only if a real scoped test/calibration run shows
+    an actual scenario grade shift -- not reflexively.
+  update_2026_08_07: 'TCK-20260807-FACTION-TERRITORY-PCT-PAYLOAD-GAP: closed the faction_territory_pct
+    finding disclosed above. `faction_territory_pct` (this faction''s territory region
+    count over total world regions) is now computed and included in `territory_ownership_changed`''s
+    payload at both construction sites -- `event_extractor.py` reads `current_state.factions[fid].territory`
+    directly (full snapshot access); `FactionShaper` reconstructs current territory
+    from `prior_state.factions[fid].territory` plus this tick''s `territory_add`/`territory_remove`
+    deltas. `faction_monopoly`/`faction_conquest_degenerate` are no longer dead code
+    in either delivery path. Verified via unit tests constructing the exact crossing
+    scenario; real-kernel checks (dungeon_crawl 500t, urban_political 1500t) showed
+    zero territory_ownership_changed events in either (rare in these corpora at these
+    tick depths) -- no crash, no false positive, but no real-run positive-path confirmation
+    either. `grade_anchors.json` not recalibrated (no behavior change observed in
+    real runs to recalibrate against).'

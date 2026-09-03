@@ -81,6 +81,9 @@ class SocialAppraisalSystem:
         elif contract.kind == ContractKind.TEACH:
             return SocialAppraisalSystem._appraise_teach(entity, contract, trust_score)
 
+        elif contract.kind == ContractKind.MARRIAGE:
+            return SocialAppraisalSystem._appraise_marriage(entity, contract, trust_score)
+
         return ContractStatus.CANCELLED, ReasonCode.UNKNOWN, {}
 
     @staticmethod
@@ -336,6 +339,19 @@ class SocialAppraisalSystem:
         the entire trust gate this contract kind uses; reaching this method means the prelude
         already passed, so it always accepts. No utility/risk model is added here."""
         return ContractStatus.ACCEPTED, ReasonCode.TEACH_ACCEPTED, {}
+
+    @staticmethod
+    def _appraise_marriage(
+        entity: EntityState,
+        contract: ContractState,
+        trust_score: float
+    ) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:
+        """The shared prelude (trust<0.2, sentiment<-0.8, betrayal-history) already expresses
+        the entire trust gate this contract kind uses; reaching this method means the prelude
+        already passed, so it always accepts. No utility/risk model or eligibility_gate scoring
+        is added here -- see stored_artifacts/TCK-20260902-MARRIAGE-PROPOSAL-CONTRACT/plan.md
+        Decision 4."""
+        return ContractStatus.ACCEPTED, ReasonCode.MARRIAGE_ACCEPTED, {}
 
     @staticmethod
     def process_betrayal(

@@ -215,6 +215,11 @@ class StateFingerprinter:
             for kind, value in sorted(strategic.boredom.items())
         )
 
+        marriage_ident = "|".join(
+            f"{marriage_id}:{m.status}:{m.target_entity_id}"
+            for marriage_id, m in sorted(strategic.marriages.items())
+        )
+
         committed_intention_ident = "|".join(
             f"{ci.intention_id}:"
             f"{ci.goal_kind}:"
@@ -232,6 +237,7 @@ class StateFingerprinter:
             f"directives=[{directive_ident}];"
             f"concerns=[{concern_ident}];"
             f"contracts=[{contract_ident}];"
+            f"marriages=[{marriage_ident}];"
             f"boredom=[{boredom_ident}]"
         )
 

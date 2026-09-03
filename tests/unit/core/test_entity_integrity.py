@@ -153,3 +153,178 @@ def test_self_model_fix_preserves_existing_baseline_hashes_when_flag_off():
         CanonicalStateHasher.get_hash(post_fix_state)
         == CanonicalStateHasher.get_hash(pre_fix_equivalent_state)
     )
+
+
+def test_strategic_source_trust_participates_in_canonical_hash():
+    """
+    TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP: source_trust is a real, live scoring input
+    to detour selection (belief_and_detour_contract.md's source_trust_bonus term), but was
+    previously excluded from EntityState.to_canonical_dict()'s "strategic" sub-dict -- a
+    same-seed divergence confined to source_trust would have gone completely undetected by
+    CanonicalStateHasher, the hash src/engine/kernel.py uses for its per-tick and final-run
+    determinism checks. Confirms the fix: two otherwise-identical entities differing ONLY in
+    source_trust now produce different canonical dicts and different hashes.
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.state import AuthoritativeState
+    from src.core.strategic import SourceTrustEntry
+    from src.engine.checkpoint import CanonicalStateHasher
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    assert base.strategic.source_trust == {}
+
+    with_trust = dataclass_replace(
+        base,
+        strategic=dataclass_replace(
+            base.strategic,
+            source_trust={5: SourceTrustEntry(entity_id=5, trust=0.9, interactions=3, last_outcome="SUCCESS")},
+        ),
+    )
+
+    assert base.to_canonical_dict() != with_trust.to_canonical_dict()
+
+    state_base = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: base})
+    state_with_trust = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: with_trust})
+
+    assert CanonicalStateHasher.get_hash(state_base) != CanonicalStateHasher.get_hash(state_with_trust)
+
+
+def test_strategic_all_nine_newly_covered_fields_participate_in_canonical_hash():
+    """
+    TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP: the remaining 8 fields (source_trust is
+    covered by its own dedicated test above given its P0 live-behavior significance) --
+    home_region_id, candidate_zones, hypotheses, contracts, turning_points,
+    committed_intentions, primary_overload_source, last_overload_tick -- were also
+    previously excluded from the canonical hash with no comment explaining why. Confirms
+    each one independently changes to_canonical_dict() output when it diverges.
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.strategic import (
+        CandidateZone, HypothesisState, ContractState, ContractKind, ContractStatus,
+        TurningPointState, TurningPointKind, CommittedIntention,
+    )
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    base_dict = base.to_canonical_dict()
+
+    variants = {
+        "home_region_id": dataclass_replace(base.strategic, home_region_id="region_1"),
+        "candidate_zones": dataclass_replace(
+            base.strategic, candidate_zones={"z1": CandidateZone(id="z1", region_id="region_1")}
+        ),
+        "hypotheses": dataclass_replace(
+            base.strategic, hypotheses={"h1": HypothesisState(id="h1", subject="s", claim="c")}
+        ),
+        "contracts": dataclass_replace(
+            base.strategic,
+            contracts={"c1": ContractState(
+                id="c1", kind=ContractKind.RECRUITMENT, source_id=1, target_id=2,
+                status=ContractStatus.OFFERED,
+            )},
+        ),
+        "turning_points": dataclass_replace(
+            base.strategic,
+            turning_points=[TurningPointState(id="t1", kind=TurningPointKind.BETRAYAL, subject_id=2)],
+        ),
+        "committed_intentions": dataclass_replace(
+            base.strategic,
+            committed_intentions=(
+                CommittedIntention(
+                    intention_id="i1", goal_kind="explore", target_hint=None,
+                    sequence_index=0, status="pending",
+                ),
+            ),
+        ),
+        "primary_overload_source": dataclass_replace(base.strategic, primary_overload_source="combat"),
+        "last_overload_tick": dataclass_replace(base.strategic, last_overload_tick=42),
+    }
+
+    for field_name, changed_strategic in variants.items():
+        changed_entity = dataclass_replace(base, strategic=changed_strategic)
+        assert base_dict != changed_entity.to_canonical_dict(), (
+            f"'{field_name}' divergence did not change to_canonical_dict() output"
+        )
+
+
+def test_strategic_profile_excluded_from_canonical_hash():
+    """
+    TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP: StrategicComponent.profile is documented as
+    "Derived from entity attributes (WIS, INT, level, archetype)" -- fully reconstructable
+    from already-covered `attributes`, so it is intentionally excluded from the canonical
+    hash (a divergence there cannot be independent of already-detected state). This is a
+    regression guard on the exclusion itself: if a future change makes `profile` divergent
+    from `attributes`, this test failing is the signal that the exclusion is no longer safe.
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.strategic import CognitionProfile
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    changed = dataclass_replace(
+        base,
+        strategic=dataclass_replace(base.strategic, profile=CognitionProfile(max_active_projects=99)),
+    )
+
+    assert base.to_canonical_dict() == changed.to_canonical_dict()
+
+
+def test_social_seven_newly_covered_fields_participate_in_canonical_hash():
+    """
+    TCK-20260902-SOCIAL-CANONICAL-HASH-GAP: SocialComponent's canonical hash previously
+    covered only 10 of 17 real fields, omitting debt_history, salience_history,
+    nemesis_ids, place_attachment, betrayal_records, last_offer_tick, and rejection_count
+    -- all confirmed real, actively-consumed durable state (e.g. nemesis_ids gates
+    cognition target evaluation, rejection_count feeds contract appraisal). Notably
+    betrayal_records (the event list) was uncovered while betrayal_count (its own derived
+    count) was already covered -- an inconsistent partial gap, not a deliberate exclusion.
+    Confirms each of the 7 fields independently changes to_canonical_dict() output when it
+    diverges.
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.models.social import BetrayalRecord
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    base_dict = base.to_canonical_dict()
+
+    variants = {
+        "debt_history": dataclass_replace(base.social, debt_history={5: 3.0}),
+        "salience_history": dataclass_replace(base.social, salience_history={5: 0.8}),
+        "nemesis_ids": dataclass_replace(base.social, nemesis_ids={5, 9}),
+        "place_attachment": dataclass_replace(base.social, place_attachment={"region_1": 0.5}),
+        "betrayal_records": dataclass_replace(
+            base.social,
+            betrayal_records=[BetrayalRecord(contract_id="c1", betrayer_id=1, victim_id=2)],
+        ),
+        "last_offer_tick": dataclass_replace(base.social, last_offer_tick=42),
+        "rejection_count": dataclass_replace(base.social, rejection_count={5: 3}),
+    }
+
+    for field_name, changed_social in variants.items():
+        changed_entity = dataclass_replace(base, social=changed_social)
+        assert base_dict != changed_entity.to_canonical_dict(), (
+            f"'{field_name}' divergence did not change to_canonical_dict() output"
+        )
+
+
+def test_social_nemesis_ids_participates_in_canonical_hash_end_to_end():
+    """
+    TCK-20260902-SOCIAL-CANONICAL-HASH-GAP: nemesis_ids specifically gates cognition
+    target evaluation (src/engine/cognition.py) -- confirms the fix propagates all the
+    way to CanonicalStateHasher.get_hash(), the hash src/engine/kernel.py uses for its
+    per-tick and final-run determinism checks (same consumer chain as the parallel
+    TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP fix).
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.state import AuthoritativeState
+    from src.engine.checkpoint import CanonicalStateHasher
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    assert base.social.nemesis_ids == set()
+
+    with_nemesis = dataclass_replace(
+        base, social=dataclass_replace(base.social, nemesis_ids={5, 9}),
+    )
+
+    state_base = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: base})
+    state_with_nemesis = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: with_nemesis})
+
+    assert CanonicalStateHasher.get_hash(state_base) != CanonicalStateHasher.get_hash(state_with_nemesis)

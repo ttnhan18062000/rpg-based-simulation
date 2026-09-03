@@ -19,6 +19,7 @@ def _make_entity(role_value: int):
     entity.self_model.needs.active_needs = {}
     entity.combat.alive = True
     entity.lifecycle.active = True
+    entity.lifecycle.dependent_entity_ids = []
     return entity
 
 

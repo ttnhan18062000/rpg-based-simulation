@@ -180,6 +180,18 @@ class WorldDynamicsSystem:
                 next_node_id_set=ecology_update.next_node_id_set or update.next_node_id_set,
                 next_entity_id_set=generator._last_id + 1 if (generator._last_id + 1) > state.next_entity_id else None
             )
+            # camp_state_update/calamity_update's own entities_add/camp_updates/maturity_set/
+            # last_calamity_tick_set are already folded in above via update.replace(...) — only
+            # world_updates (e.g. the reproduction-path population nudge) is still unhandled here,
+            # so fold it in with the same per-region merge-or-set idiom as ThreatService (149-152)
+            # rather than update.merge(camp_state_update)/.merge(calamity_update), which would
+            # double-count those already-handled fields.
+            for w_upd_source in (camp_state_update.world_updates, calamity_update.world_updates):
+                for r_id, w_upd in w_upd_source.items():
+                    if r_id in update.world_updates:
+                        update.world_updates[r_id] = update.world_updates[r_id].merge(w_upd)
+                    else:
+                        update.world_updates[r_id] = w_upd
             # Merge demographic world_updates into the main update
             if not demo_update.is_noop():
                 update = update.merge(demo_update)
@@ -197,6 +209,14 @@ class WorldDynamicsSystem:
                 territory_update = CreatureTerritoryService.process_territories(state, generator)
                 if not territory_update.is_noop():
                     update = update.merge(territory_update)
+
+            # 3.10 Humanoid Reproduction
+            if (flags.get("ENABLE_REPRODUCTION_HUMANOID_PATH", "OFF") == "ON"
+                    and should_run(state.tick, None, cadence.reproduction_humanoid)):
+                from src.world.reproduction_humanoid import HumanoidReproductionService
+                repro_update = HumanoidReproductionService.process_reproduction(state, generator)
+                if not repro_update.is_noop():
+                    update = update.merge(repro_update)
 
         # 4. Regional Transformations (Type Shifting)
         from src.world.transformation import TransformationService

@@ -3752,19 +3752,20 @@
     branch in StrategicIntelligenceSystem.evaluate_strategic_intent() (raw_score,
     never utility), resolves through ObjectiveIntentResolver -> ActionIntentAdapter''s
     new CHANGE_OCCUPATION branch, and commits the transition as a plain EntityUpdate(identity=IdentityUpdate(role_set=<int>))
-    -- the first-ever role_set producer in the codebase, applied only through the
-    existing authoritative IdentityPatch.apply path. A per-tick completion check marks
-    the project COMPLETED once entity.identity.role is no longer CITIZEN.'
+    -- the first role_set producer in the codebase, applied only through the existing
+    authoritative IdentityPatch.apply path (no longer the SOLE producer as of STRAT-267
+    -- see support_boundary). A per-tick completion check marks the project COMPLETED
+    once entity.identity.role is no longer CITIZEN.'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/ai/goals/occupation_change_scorer.py (OccupationChangeGoalScorer),
+  v2_evidence: 'src/ai/goals/occupation_change_scorer.py (OccupationChangeGoalScorer),
     src/world/occupation_config.py (BASE_OCCUPATION_DENSITY/MIN_OCCUPATION_SLOTS),
     src/systems/strategic_systems/intelligence.py (GoalKind.OCCUPATION_CHANGE materialization
     branch and the CAREER_CHANGE per-tick completion check), src/engine/intent/action_intent.py
-    (ActionIntentAdapter's CHANGE_OCCUPATION branch -- sole producer of IdentityUpdate(role_set=...)),
-    src/domains/adventure/resolver.py (ObjectiveIntentResolver's CHANGE_OCCUPATION
-    mapping).
+    (ActionIntentAdapter''s CHANGE_OCCUPATION branch -- originally the sole producer
+    of IdentityUpdate(role_set=...); see support_boundary re: STRAT-267), src/domains/adventure/resolver.py
+    (ObjectiveIntentResolver''s CHANGE_OCCUPATION mapping).'
   proof_type: parity
   test_path: tests/unit/strategic/test_occupation_change_scorer.py, tests/unit/strategic/test_intents.py::test_occupation_change_completion_issues_role_set_identity_update,
     tests/unit/domains/adventure/test_phase3_objective_intent_resolver.py::test_resolves_change_occupation_to_change_occupation,
@@ -3775,7 +3776,30 @@
     prior parity_ledger/*.yaml entry referenced ''occupation'' or ''career'' anywhere
     (confirmed via grep, TCK-20260824-OCCUPATION-CHANGE-TRIGGER investigation.md).
     This entry documents the first occupation-change trigger and the first role_set
-    producer end-to-end.'
+    producer end-to-end.
+
+
+    UPDATE (TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE / STRAT-267): src/systems/lifecycle_systems/lifecycle.py''s
+    Coming-of-Age branch (LifecycleSystem.resolve_lifecycle()) is now a second, real
+    role_set producer -- replace(ent_upd.identity, role_set=archetype_role) on an
+    existing IdentityUpdate instance, still applied only through the same authoritative
+    IdentityPatch.apply path, so the Durable State Rule itself is not violated. However,
+    this entry''s own "sole producer" claim, and tests/architecture/test_role_set_identity_patch_only_guard.py''s
+    _ALLOWED_ROLE_SET_PRODUCERS = frozenset({"engine/intent/action_intent.py"}) allowlist,
+    both now assert single-producer exclusivity that is no longer true. That architecture
+    test still PASSES post-STRAT-267 only because its regex (r"IdentityUpdate\([^)]*\brole_set\s*=")
+    matches literal `IdentityUpdate(role_set=...)` construction, not `replace(<existing
+    IdentityUpdate instance>, role_set=...)` -- lifecycle.py''s call site uses the
+    latter form and is invisible to the scan. This is a real regex blind spot in the
+    guard, not confirmation of continued single-producer compliance; a bespoke third
+    role_set writer using the same replace()-on-existing-instance form would also
+    pass undetected. Flagged for architecture-reviewer resolution, not resolved here:
+    either broaden the guard''s pattern/allowlist to explicitly recognize both sanctioned
+    producers (action_intent.py and lifecycle.py), or reroute Coming-of-Age''s role
+    assignment through the existing ActionIntentAdapter path if single-producer was
+    intended as a hard invariant rather than an incidental historical fact. Not changed
+    here per Gate Integrity: a parity-ledger update must not silently launder a guard''s
+    regex gap into an implied "still compliant" status.'
 - id: STRAT-260
   text: 'StrategicRedirectionSystem.enforce()''s "Return to Town" fallback and StrategicIntelligenceSystem''s
     routine-blocker pass (both "has-items, return to town" fallback blocks in fused_strategic_pass())
@@ -3917,3 +3941,102 @@
     ::test_stunned_actor_skips_strategic_concerns
   divergence_note: null
   support_boundary: null
+- id: STRAT-266
+  text: 'A durable MarriageState record (own MarriageStatus enum: PROPOSED/ACCEPTED/REJECTED,
+    distinct from ContractStatus) is threaded through the strategic-cognition durable-state
+    plumbing the same way ContractState already is: StrategicComponent.marriages is
+    a new Dict[str, MarriageState] field alongside .contracts; StrategicUpdate gains
+    marriages_add_or_update/marriages_remove (wired into is_noop() and merge()); StrategicPatch.apply()
+    merges it via the same merge_dict() helper contracts uses (nmar = merge_dict(new_strat.marriages,
+    ...), assigned into the replace(...) call alongside the other collections); and
+    StateFingerprinter._strategic_identity() includes a new marriages=[...] segment
+    (marriage_id:status:target_entity_id per entry, sorted by key) in the canonical
+    strategic-component hash string, so an accepted/rejected marriage is covered by
+    replay determinism the same as every other StrategicComponent collection. ContractService.get_project_mapping()
+    is not widened for MARRIAGE, so this durable record never materializes a GoalKind/ProjectKind
+    candidate the way CommittedIntention (STRAT-256) does.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: 'src/core/strategic.py (MarriageStatus enum, MarriageState frozen dataclass,
+    StrategicComponent.marriages: Dict[str, MarriageState]); src/core/updates.py (StrategicUpdate.marriages_add_or_update/marriages_remove
+    fields, wired into is_noop() and merge()); src/engine/patches.py (StrategicPatch.apply()''s
+    nmar = merge_dict(...) and shallow_freeze(nmar) assignment, same merge_dict()
+    path contracts uses -- not the order-preserving merge_committed_intentions() helper
+    STRAT-256 documents); src/replay/fingerprint.py (StateFingerprinter._strategic_identity()''s
+    new marriages=[...] segment, sorted by marriage_id).'
+  proof_type: regression
+  test_path: tests/unit/social/test_marriage.py::test_marriage_accepted_writes_typed_marriagestate_on_both_parties
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-267
+  text: A genuinely weighted (personality + parental-occupation + regional-need),
+    seeded-RNG archetype-choice roll fires exactly once inside LifecycleSystem.resolve_lifecycle()
+    when a CITIZEN entity transitions CHILD->ADULT, assigning role_set to one of {SHOPKEEPER,
+    WORKER, GUARD} via a single IdentityUpdate merged onto the same EntityUpdate that
+    already carries life_stage_set. Uses DeterministicRNG(state.seed).weighted_choice(Domain.STRATEGIC,
+    tick, entity_id, roles, weights) -- never Python's unseeded random module, never
+    a fixed-priority first-fit like OccupationChangeGoalScorer -- with a WEIGHT_FLOOR
+    guaranteeing every role keeps nonzero draw probability so a same-tick, same-region
+    batch never collapses onto one role. Gated additionally on entity.identity.role
+    == EntityRole.CITIZEN (excludes the flag-gated Natural-Creature MONSTER-role reproduction
+    path, which is parentless but still carries a real nonzero birth_tick) and on
+    is_excluded_no_birth_record() (a compound birth_tick==0 AND parent_a_entity_id
+    is None AND parent_b_entity_id is None check, not the unsafe birth_tick==0-only
+    shortcut).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/ai/coming_of_age.py (compute_role_weights, is_excluded_no_birth_record,
+    choose_archetype); src/systems/lifecycle_systems/lifecycle.py (LifecycleSystem.resolve_lifecycle()
+    Coming of Age sibling branch, gated on entity.identity.life_stage == LifeStage.CHILD,
+    target_stage == LifeStage.ADULT, and entity.identity.role == EntityRole.CITIZEN);
+    src/platform/rng.py (DeterministicRNG.weighted_choice); src/core/enums.py (Domain.STRATEGIC);
+    src/core/updates.py (IdentityUpdate.role_set).
+  proof_type: regression
+  test_path: tests/unit/strategic/test_coming_of_age_archetype_choice.py::TestComingOfAgeMetamorphicConvergenceGuard::test_coming_of_age_metamorphic_regional_need_weight_increases_variance
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-268
+  text: 'StrategicComponent''s canonical hash (EntityState.to_canonical_dict()''s
+    "strategic" sub-dict) previously covered only 10 of 19 real fields, omitting home_region_id,
+    candidate_zones, hypotheses, source_trust, contracts, turning_points, committed_intentions,
+    primary_overload_source, and last_overload_tick -- with no comment explaining
+    why. source_trust (SourceTrustEntry) is confirmed behaviorally live (a real, live
+    input to detour selection''s source_trust_bonus term, belief_and_detour_contract.md),
+    so a same-seed divergence confined to that field would previously have gone completely
+    undetected by CanonicalStateHasher -- the hash src/engine/kernel.py uses for its
+    per-tick and final-run determinism checks. All 9 fields are now included. profile
+    (CognitionProfile) remains intentionally excluded, documented inline: it is derived
+    from already-covered attributes (WIS/INT/level/archetype), so a divergence there
+    cannot be independent of already-detected state.'
+  status: divergent
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src/core/state.py:783-810 (EntityState.to_canonical_dict(), "strategic"
+    sub-dict, 9 fields added) + src/core/strategic.py:407-441 (StrategicComponent
+    field definitions) + src/engine/checkpoint.py:63-93 (CanonicalStateHasher.to_canonical_data(),
+    the real consumer -- NOT world_compile_report.json's state_hash, which comes from
+    the separate, already-lightweight StateFingerprinter.get_fingerprint(), src/replay/fingerprint.py)
+    + src/engine/kernel.py:1161-1162,1230-1231 (per-tick and final hash computation
+    call sites)
+  proof_type: parity
+  test_path: tests/unit/core/test_entity_integrity.py::test_strategic_source_trust_participates_in_canonical_hash,
+    tests/unit/core/test_entity_integrity.py::test_strategic_all_nine_newly_covered_fields_participate_in_canonical_hash,
+    tests/unit/core/test_entity_integrity.py::test_strategic_profile_excluded_from_canonical_hash
+  divergence_note: TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP. The gap predates this
+    fix and was not introduced by any single ticket -- these fields were simply never
+    added to to_canonical_dict() as StrategicComponent grew. Original investigation
+    (docs/brainstorm/2026-09-02-core-rpg-knowledge-belief-axis-proposal.md section
+    2.2) found 6 missing fields and cited world_compile_report.json's state_hash as
+    the consumer; both were corrected on pickup -- the real gap was 9 fields (M3's
+    merge added coverage for beliefs/marriages between the investigation and pickup),
+    and the real consumer is CanonicalStateHasher via src/engine/kernel.py's per-tick
+    audit hash, which makes this a higher-frequency check than the original framing
+    implied, not a lower one.
+  support_boundary: Canonical-hash coverage only -- no change to source_trust's own
+    scoring formula, source_trust_bonus behavior, or any other field's runtime semantics.
+    Adding these fields changes CanonicalStateHasher.get_hash() output for any AuthoritativeState
+    whose entities have non-default values in the 9 newly-covered fields; no shipped
+    calibration baseline is affected unless it already exercises these fields (source_trust/contracts/turning_points/committed_intentions/candidate_zones/hypotheses/home_region_id/overload
+    tracking) with non-default values.

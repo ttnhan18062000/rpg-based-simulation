@@ -271,9 +271,11 @@ def test_next_available_id_groups_max_suffix_per_prefix_family_not_globally(tmp_
 
 
 def test_next_available_id_against_real_world_dynamics_shard():
-    # Real-corpus regression proof (ticket AC): the live shard's last entry is a WORLD-DEMO-*
-    # id, so this must propose the next id in that family, never a bare WORLD-NNN fallback.
-    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-DEMO-007"
+    # Real-corpus regression proof (ticket AC): the live shard's last entry is now a bare
+    # WORLD-NNN id (WORLD-123, added by TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE
+    # for the individual-birth population-pressure nudge mechanism itself), so this must
+    # propose the next id in that family, WORLD-124.
+    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-124"
 
 
 # ---------------------------------------------------------------------------

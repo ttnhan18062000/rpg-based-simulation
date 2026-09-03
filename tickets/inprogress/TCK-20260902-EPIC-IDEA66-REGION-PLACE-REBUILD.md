@@ -67,10 +67,9 @@ child tickets:
   `src/worldbuilding/compiler.py` or `src/worldbuilding/schema.py` before starting.
 
 ## Acceptance Criteria
-- [ ] Membership-index open question is decided and recorded (in this ticket or the plan doc) before any
-      child ticket is cut.
-- [ ] Child tickets created for each of the 6 scope areas listed above (or a justified re-grouping),
-      each independently plannable/implementable/testable.
+- [x] Membership-index open question is decided and recorded — dual-sided membership (`RegionState.places`
+      list + cached `place_id` back-reference), see plan doc "Membership-index decision" section.
+- [x] Child tickets created (5, sequenced) — see Related Tickets above.
 - [ ] Stage A pilot lands with a byte-identical `state_hash` to its committed baseline (or an explained,
       accepted hash change) before Stage B starts.
 - [ ] All 21 worlds pass through the recalibration procedure with recorded triage notes.
@@ -78,7 +77,12 @@ child tickets:
       unblocking dependency.
 
 ## Related Tickets
-(child tickets to be created once the membership-index question is resolved — see Scope item 2)
+Child tickets (created 2026-09-02, sequenced 1→5):
+1. TCK-20260902-PLACE-SCHEMA-MIGRATION
+2. TCK-20260902-WORLDCOMPILER-PLACE-WIRING
+3. TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT
+4. TCK-20260902-PLACE-MIGRATION-STAGE-B-ROLLOUT
+5. TCK-20260902-PLACE-MIGRATION-RECALIBRATION (runs alongside/after child 4, per-world)
 
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/rpg_idea66_region_place_rebuild_plan.md` (full plan — this ticket's

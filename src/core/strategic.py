@@ -84,6 +84,7 @@ class ContractKind(str, Enum):
     TEAM_UP = "TEAM_UP"
     PAID_INFORMATION = "PAID_INFORMATION"
     TEACH = "TEACH"
+    MARRIAGE = "MARRIAGE"
 
 
 class DirectiveKind(str, Enum):
@@ -227,6 +228,29 @@ class ContractState:
     status: ContractStatus = ContractStatus.OFFERED
     created_tick: int = 0
     negotiation_count: int = 0
+
+
+class MarriageStatus(str, Enum):
+    """Lifecycle status of a durable MarriageState record."""
+    PROPOSED = "PROPOSED"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+
+
+@dataclass(frozen=True, slots=True)
+class MarriageState:
+    """
+    A durable propose/accept marriage record (idea 33). Written on ACCEPTED via a
+    typed StrategicUpdate/EntityUpdate on both parties -- see
+    docs/mechanics/04_strategic_cognition.md Sec 8. Bigamy prevention, household/family
+    state, and aging/duration thresholds are deliberately out of scope (TCK-20260902-
+    MARRIAGE-PROPOSAL-CONTRACT).
+    """
+    id: str
+    proposer_entity_id: int
+    target_entity_id: int
+    status: MarriageStatus
+    married_tick: Optional[int] = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -396,6 +420,7 @@ class StrategicComponent:
     hypotheses: Dict[str, HypothesisState] = field(default_factory=dict)
     source_trust: Dict[int, SourceTrustEntry] = field(default_factory=dict)
     contracts: Dict[str, ContractState] = field(default_factory=dict)
+    marriages: Dict[str, MarriageState] = field(default_factory=dict)
     turning_points: List[TurningPointState] = field(default_factory=list)
     beliefs: Dict[str, Any] = field(default_factory=dict)
     committed_intentions: Tuple[CommittedIntention, ...] = field(default_factory=tuple)
