@@ -13,6 +13,14 @@ regions:
     hazard_level: 4.0
     hazard_kind: "UNDEAD_CORRUPTION"
     tags: [ruins]
+    # Idea 66, Stage B (TCK-20260902-PLACE-MIGRATION-STAGE-B-ROLLOUT): RUIN-kind Place,
+    # position is the centroid of grid_bounds. hazard_level mirrors the Region's own
+    # value (4.0), same reasoning as ruins_mystery_quest.yaml's haunted_battlefield.
+    places:
+      - id: "haunted_battlefield_ruin"
+        kind: "ruin"
+        position: [140, 40]
+        hazard_level: 4.0
 factions: ["undead_remnants", "spirit_court"]
 populations: ["undead_battlefield_patrol"]
 resources:

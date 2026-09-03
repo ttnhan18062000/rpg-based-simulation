@@ -1,20 +1,20 @@
 {
-  "manifest_id": "prov_e8bb40253a568fa4",
+  "manifest_id": "prov_337d66e11985fa4a",
   "world_id": "generated_frontier_3_42",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "10d77896a90aebb8c796b454766426b039a63265141b8574940c783cdee0455c",
+  "catalog_fingerprint": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
   "module_fingerprints": {
-    "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
-    "goblin_camp_conflict": "7e712ab3d3321805bfad0b116c66ac5c679854fe887f7752b9ab6a27cb61e5fb",
+    "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
     "moon_cult_ruins": "c88d3ef942949a3d1a211d59602619701a43ee944dad0ec928b2eaf60248a3c7",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
   },
   "composition_fingerprint": "08df661524d9fb50237b7d875aeeb81bd7a0a1a213175a2960a0fb1454d6996a",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "e8bb40253a568fa4b8656d8cc0cc5184ce00c1e77d644fdf463025c6d501380e",
-  "created_at": "2026-07-09T16:15:14.992333Z",
+  "content_fingerprint": "337d66e11985fa4aa522190e292380d33220a2ddc79577fb316313dac92f0f4d",
+  "created_at": "2026-09-03T13:10:16.215758Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

@@ -19,6 +19,12 @@ regions:
   tags:
   - plain
   - settlement
+  places:
+  - id: hometown_city
+    kind: CITY
+    position:
+    - 25
+    - 25
 - id: bandit_road
   type: road
   bounds:
@@ -31,6 +37,7 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - wilderness
+  places: []
 - id: goblin_camp
   type: wilderness
   bounds:
@@ -43,6 +50,12 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
+  places:
+  - id: goblin_camp_place
+    kind: CAMP
+    position:
+    - 110
+    - 38
 - id: moon_cave
   type: wilderness
   bounds:
@@ -55,6 +68,7 @@ regions:
   hazard_kind: ARCANE_CORRUPTION
   tags:
   - cave
+  places: []
 - id: old_mine
   type: wilderness
   bounds:
@@ -68,6 +82,7 @@ regions:
   tags:
   - mine
   - underground
+  places: []
 - id: orc_stronghold
   type: wilderness
   bounds:
@@ -79,6 +94,7 @@ regions:
   hazard_level: 3.0
   hazard_kind: NATURAL_TERRAIN
   tags: []
+  places: []
 factions:
 - id: hero_guild
   type: defender

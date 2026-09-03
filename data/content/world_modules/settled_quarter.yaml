@@ -13,6 +13,12 @@ regions:
     grid_bounds: [170, 80, 210, 120]
     terrain: "plain"
     hazard_level: 0.0
+    # Idea 66, Stage B (TCK-20260902-PLACE-MIGRATION-STAGE-B-ROLLOUT): CITY-kind Place,
+    # position is the centroid of grid_bounds.
+    places:
+      - id: "settled_quarter_city"
+        kind: "city"
+        position: [190, 100]
 factions: ["merchant_league"]
 populations: ["frontier_village_population"]
 resources: {}

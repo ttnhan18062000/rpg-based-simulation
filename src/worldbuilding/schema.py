@@ -30,6 +30,37 @@ class TerrainVariantSpec(BaseModel):
     terrain: str = Field(..., min_length=1, description="Terrain type for this variant fill option")
     weight: float = Field(1.0, gt=0.0, description="Relative sampling weight; consumed by the noise-fill compiler logic added in a later ticket (TCK-20260821-COMPILER-NOISE-FILL) — unused/inert here")
 
+# Idea 66 (Region/Place foundational rebuild), mirrors src/core/state.py's PlaceKind.
+PLACE_SPEC_KINDS = {"CITY", "CAMP", "NEST", "LAIR", "RUIN", "DUNGEON", "LANDMARK"}
+
+
+class PlaceSpec(BaseModel):
+    """
+    Idea 66: the resolved, fully-namespaced content-authoring form of a Place, produced
+    by expanding a PlaceRecipeSpec (src/worldbuilding/recipe.py) during module assembly
+    (src/worldassembly/resolver.py). Consumed by WorldCompiler.compile()
+    (TCK-20260902-WORLDCOMPILER-PLACE-WIRING) to construct a real PlaceState.
+    """
+    model_config = ConfigDict(frozen=True)
+
+    id: str = Field(..., min_length=1, description="Unique identifier for the place")
+    kind: str = Field(..., description="PlaceKind value: CITY | CAMP | NEST | LAIR | RUIN | DUNGEON | LANDMARK")
+    position: tuple[int, int] = Field(..., description="Point location within the parent region's bounds")
+    footprint: Optional[tuple[int, int, int, int]] = Field(None, description="Sub-bounds, multi-tile CITY-kind only")
+    owner_faction_id: Optional[str] = Field(None, description="Sovereignty override; defaults to the parent region's")
+    scale: Optional[float] = Field(None, description="CITY-kind only: settlement size scalar")
+    maturity: Optional[float] = Field(None, description="CAMP/NEST-kind: growth-over-time value")
+    hazard_level: Optional[float] = Field(None, description="RUIN/DUNGEON-kind: local hazard override")
+
+    @field_validator("kind")
+    @classmethod
+    def validate_kind(cls, v: str) -> str:
+        upper = v.upper()
+        if upper not in PLACE_SPEC_KINDS:
+            raise ValueError(f"kind '{v}' is invalid. Supported: {PLACE_SPEC_KINDS}")
+        return upper
+
+
 class RegionSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -41,6 +72,7 @@ class RegionSpec(BaseModel):
     hazard_kind: Optional[str] = Field("PHYSICAL", description="Semantic type of this region's passive hazard drain (e.g. 'PHYSICAL', 'NATURAL_TERRAIN', 'TOXIC_GAS').")
     tags: List[str] = Field(default_factory=list, description="Semantic labels for quest routing (e.g. mine, forest, ruins, settlement)")
     terrain_variants: Optional[List[TerrainVariantSpec]] = Field(None, description="Optional set of terrain fill variants for organic in-region terrain; inert until consumed by TCK-20260821-COMPILER-NOISE-FILL")
+    places: List[PlaceSpec] = Field(default_factory=list, description="Idea 66: Places contained within this region. Empty for all existing content -- new, opt-in only.")
 
     @model_validator(mode="after")
     def validate_bounds(self) -> RegionSpec:

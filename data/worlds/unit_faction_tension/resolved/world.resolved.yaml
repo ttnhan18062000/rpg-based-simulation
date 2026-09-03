@@ -26,6 +26,12 @@ regions:
   tags:
   - plain
   - settlement
+  places:
+  - id: hometown_city
+    kind: CITY
+    position:
+    - 25
+    - 25
 - id: near_forest
   type: wilderness
   bounds:
@@ -38,6 +44,12 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
+  terrain_variants:
+  - terrain: forest
+    weight: 3.0
+  - terrain: swamp
+    weight: 1.0
+  places: []
 - id: wolf_den
   type: wilderness
   bounds:
@@ -50,6 +62,12 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
+  terrain_variants:
+  - terrain: forest
+    weight: 3.0
+  - terrain: swamp
+    weight: 1.0
+  places: []
 factions:
 - id: hero_guild
   type: defender

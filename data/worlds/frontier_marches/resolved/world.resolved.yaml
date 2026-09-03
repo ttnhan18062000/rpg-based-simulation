@@ -24,6 +24,12 @@ regions:
   tags:
   - plain
   - settlement
+  places:
+  - id: hometown_city
+    kind: CITY
+    position:
+    - 25
+    - 25
 - id: bandit_road
   type: road
   bounds:
@@ -36,6 +42,7 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - wilderness
+  places: []
 - id: goblin_camp
   type: wilderness
   bounds:
@@ -48,6 +55,12 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
+  places:
+  - id: goblin_camp_place
+    kind: CAMP
+    position:
+    - 110
+    - 38
 - id: old_mine
   type: wilderness
   bounds:
@@ -61,6 +74,7 @@ regions:
   tags:
   - mine
   - underground
+  places: []
 - id: orc_stronghold
   type: wilderness
   bounds:
@@ -72,6 +86,7 @@ regions:
   hazard_level: 3.0
   hazard_kind: NATURAL_TERRAIN
   tags: []
+  places: []
 - id: swamp_border_territory
   type: wilderness
   bounds:
@@ -83,6 +98,7 @@ regions:
   hazard_level: 2.5
   hazard_kind: NATURAL_TERRAIN
   tags: []
+  places: []
 - id: haunted_battlefield
   type: wilderness
   bounds:
@@ -95,6 +111,13 @@ regions:
   hazard_kind: UNDEAD_CORRUPTION
   tags:
   - ruins
+  places:
+  - id: haunted_battlefield_ruin
+    kind: RUIN
+    position:
+    - 140
+    - 40
+    hazard_level: 4.0
 - id: near_forest
   type: wilderness
   bounds:
@@ -107,6 +130,12 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
+  terrain_variants:
+  - terrain: forest
+    weight: 3.0
+  - terrain: swamp
+    weight: 1.0
+  places: []
 - id: wolf_den
   type: wilderness
   bounds:
@@ -119,6 +148,12 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
+  terrain_variants:
+  - terrain: forest
+    weight: 3.0
+  - terrain: swamp
+    weight: 1.0
+  places: []
 factions:
 - id: hero_guild
   type: defender

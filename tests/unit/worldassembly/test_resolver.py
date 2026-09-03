@@ -208,3 +208,71 @@ def test_resolve_module_contribution_rejects_raw_spec(base_repo):
     resolver = WorldAssemblyResolver(base_repo, module_repo)
     with pytest.raises(TypeError, match="resolve_module_contribution requires NormalizedWorldModule"):
         resolver.resolve_module_contribution(raw_spec)
+
+
+def test_resolve_module_contribution_wires_place_shaped_region(base_repo):
+    """TCK-20260902-WORLDCOMPILER-PLACE-WIRING (idea 66 child 2/5): a RegionRecipeSpec
+    declaring places: gets resolved into a RegionSpec with the matching PlaceSpec list,
+    with place_id namespaced by the same prefix as the parent region_id -- confirms the
+    Composition path (WorldModuleSpec -> resolver -> WorldSpec, round-tripping through
+    WorldCompiler.compile() per docs/world/compiler_contract.md's "Two Compilation Paths")
+    is wired the same as the Direct path (see tests/unit/worldbuilding/test_place_wiring.py).
+    """
+    from src.worldbuilding.recipe import RegionRecipeSpec, PlaceRecipeSpec
+    from src.worldmodules.schema import WorldModuleSpec
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    from src.worldmodules.repository import WorldModuleRepository
+    from src.worldassembly.resolver import WorldAssemblyResolver
+
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_place_module",
+        module_type="terrain",
+        display_name="Test Place Module",
+        regions=[
+            RegionRecipeSpec(
+                id="hometown", type="wilderness", grid_bounds=(0, 0, 10, 10),
+                places=[PlaceRecipeSpec(id="p1", kind="city", position=(5, 5), scale=1.5)],
+            ),
+        ],
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+
+    module_repo = WorldModuleRepository("data/content/world_modules")
+    resolver = WorldAssemblyResolver(base_repo, module_repo)
+    contribution = resolver.resolve_module_contribution(normalized, prefix="mod1_")
+
+    assert len(contribution.regions) == 1
+    region_spec = contribution.regions[0]
+    assert region_spec.id == "mod1_hometown"
+    assert len(region_spec.places) == 1
+    place_spec = region_spec.places[0]
+    assert place_spec.id == "mod1_p1"
+    assert place_spec.kind == "CITY"
+    assert place_spec.position == (5, 5)
+    assert place_spec.scale == 1.5
+
+
+def test_resolve_module_contribution_region_without_places_yields_empty_list(base_repo):
+    """Backward compatibility: a RegionRecipeSpec with no places declared (all existing
+    content today) resolves to an empty places list, not an error or None."""
+    from src.worldbuilding.recipe import RegionRecipeSpec
+    from src.worldmodules.schema import WorldModuleSpec
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    from src.worldmodules.repository import WorldModuleRepository
+    from src.worldassembly.resolver import WorldAssemblyResolver
+
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_no_place_module",
+        module_type="terrain",
+        display_name="Test No Place Module",
+        regions=[RegionRecipeSpec(id="hometown", type="wilderness", grid_bounds=(0, 0, 10, 10))],
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+
+    module_repo = WorldModuleRepository("data/content/world_modules")
+    resolver = WorldAssemblyResolver(base_repo, module_repo)
+    contribution = resolver.resolve_module_contribution(normalized)
+
+    assert contribution.regions[0].places == []

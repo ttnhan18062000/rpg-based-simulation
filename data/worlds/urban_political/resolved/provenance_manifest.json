@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_e2446ccc17ea22d4",
+  "manifest_id": "prov_b991a4aa4b0c2a86",
   "world_id": "urban_political",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "95a2e56e86e9526ef7759c426f8e6da9657521b26981e0a80a6e74253c0edec1",
+  "catalog_fingerprint": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
   "module_fingerprints": {
-    "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6"
   },
   "composition_fingerprint": "1dbfa93f7d8d71e1b030979d2732f9460ee8803a70085052c906f13cfdb86e00",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "e2446ccc17ea22d438f00b45534cc6d456996549e1a9011cf70198506221c471",
-  "created_at": "2026-07-09T14:43:55.202396Z",
+  "content_fingerprint": "b991a4aa4b0c2a86dbd870de434350e1d5b7697dbb468944626a38897147806b",
+  "created_at": "2026-09-03T13:10:45.589782Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
