@@ -44,6 +44,12 @@ from ticket_field_values import check_ticket_field_values  # noqa: E402
 from tag_registry import load_registry, check_tags_registered  # noqa: E402
 from registry_query import candidate_tags_from_text  # noqa: E402
 
+_MONITORING_DIR = _TOOLS_DIR / "agent-monitoring"
+if str(_MONITORING_DIR) not in sys.path:
+    sys.path.insert(0, str(_MONITORING_DIR))
+
+from verify_temporal_week_consistency import compute_temporal_week_consistency_report  # noqa: E402
+
 REQUIRED_ARTIFACT_FILES = ("plan.md", "investigation.md", "test_plan.md")
 
 
@@ -552,8 +558,35 @@ def check_docs_to_update_coverage(
     return ("PASS", evidence)
 
 
+def check_temporal_week_consistency(
+    data_dir: Path = Path("agent-monitoring/data"),
+) -> tuple[str, str]:
+    """Report-only corpus-health check (TCK-20260904-MONITORING-TEMPORAL-WEEK-
+    CONSISTENCY-CHECK): always returns PASS — never blocks a ticket close — but
+    carries real per-source findings in its evidence string on every Verify run.
+    Reuses the existing PASS status rather than introducing a new status value;
+    NA already means "this condition does not apply at this tier," a different
+    meaning than "informational, always non-blocking" (see this ticket's plan.md
+    Decision 2). Degrades gracefully against a repo with no agent-monitoring/data/
+    directory at all (e.g. _scaffold_precheck_repo's fixture) — compute_temporal_
+    week_consistency_report's own load_all_weeks() calls return an empty list per
+    source in that case, not an exception, matching verify_referential_integrity.
+    py's own precedent.
+    """
+    report = compute_temporal_week_consistency_report(data_dir)
+    evidence = (
+        f"tools: {report.tools.checked} checked, {len(report.tools.mismatches)} genuine anomalies, "
+        f"{report.tools.exempt_unknown_week} exempt, {report.tools.skipped_unparseable} skipped; "
+        f"events: {report.events.checked} checked, {len(report.events.mismatches)} possible divergences, "
+        f"{report.events.exempt_unknown_week} exempt, {report.events.skipped_unparseable} skipped; "
+        f"runs: {report.runs.checked} checked, {len(report.runs.mismatches)} expected divergences, "
+        f"{report.runs.exempt_unknown_week} exempt, {report.runs.skipped_unparseable} skipped"
+    )
+    return ("PASS", evidence)
+
+
 def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list[dict]:
-    """Aggregate all 7 Part A checks. Returns one dict per check, in this fixed order, matching
+    """Aggregate all 8 Part A checks. Returns one dict per check, in this fixed order, matching
     `DONE_SCHEMA.checklist`'s own item shape so the agent can transcribe directly. Does not
     collapse to a single boolean — per-check detail must survive.
     """
@@ -565,6 +598,7 @@ def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list
         ("frontmatter_valid", check_frontmatter_valid(ticket_id, tier)),
         ("ticket_field_values_valid", check_ticket_field_values_valid(ticket_id)),
         ("docs_to_update_coverage", check_docs_to_update_coverage(ticket_id, tier)),
+        ("temporal_week_consistency", check_temporal_week_consistency()),
     )
     return [
         {"condition": name, "status": status, "evidence": evidence}

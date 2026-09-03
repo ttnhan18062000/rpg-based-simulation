@@ -613,10 +613,11 @@ def test_run_static_precheck_all_pass_eligible(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
-    # 7 conditions as of TCK-20260802-DOC-COVERAGE-CHECK (was 6, added ticket_field_values_valid
-    # per TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM; was 5 originally). New 7th:
-    # docs_to_update_coverage.
-    assert len(results) == 7
+    # 8 conditions as of TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK
+    # (was 7, added temporal_week_consistency; was 6, added docs_to_update_coverage
+    # per TCK-20260802-DOC-COVERAGE-CHECK; was 5, added ticket_field_values_valid
+    # per TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM; was 5 originally: 5->6->7->8).
+    assert len(results) == 8
     statuses = {r["condition"]: r["status"] for r in results}
     assert all(s in ("PASS", "NA") for s in statuses.values()), statuses
 
@@ -668,6 +669,24 @@ def test_run_static_precheck_passes_valid_priority(tmp_path, monkeypatch):
     results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
     by_condition = {r["condition"]: r for r in results}
     assert by_condition["ticket_field_values_valid"]["status"] == "PASS"
+
+
+def test_done_checker_new_check_wired_and_returns_pass_with_evidence(tmp_path, monkeypatch):
+    # TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK: the new 8th Part A
+    # check must be present, must always PASS (report-only, never blocks a ticket
+    # close), and must degrade gracefully against a fixture repo that creates no
+    # agent-monitoring/data/ directory at all — mirroring
+    # verify_referential_integrity.py's own load_all_weeks() precedent (an empty
+    # glob, not an exception, for a missing data_dir).
+    _scaffold_precheck_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
+    assert len(results) == 8
+    by_condition = {r["condition"]: r for r in results}
+    assert "temporal_week_consistency" in by_condition
+    assert by_condition["temporal_week_consistency"]["status"] == "PASS"
+    assert by_condition["temporal_week_consistency"]["evidence"]  # non-trivial evidence string
 
 
 # ---------------------------------------------------------------------------

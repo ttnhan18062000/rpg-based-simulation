@@ -551,6 +551,43 @@ tool verifies and reports only.
 
 Full evidence: `stored_artifacts/TCK-20260903-MONITORING-DATA-REFERENTIAL-INTEGRITY/investigation.md`.
 
+### Temporal Week Consistency Verification
+
+`tools/agent-monitoring/verify_temporal_week_consistency.py` (TCK-20260904-MONITORING-TEMPORAL-WEEK-
+CONSISTENCY-CHECK) verifies, for every record in the multi-week corpus, whether the record's own
+authoritative timestamp field falls in the same ISO week as the folder it physically lives in — a
+single-file self-consistency check, not a join (the referential-integrity checker above covers the
+2 documented FK joins). It is source-aware: `tools.jsonl` checks `ts` only (bit-identical to its own
+write-time bucketing key by construction — a mismatch here has no legitimate explanation and is
+reported as a **genuine anomaly**); `events.jsonl` checks the same field-priority fallback list
+documented above (`ts`, `start_ts`, `ts_start`, `started_at`, `completed_at`, `ts_end`, `finished_at`,
+`timestamp`) and reports a mismatch as a **possible divergence** (plausible from once-per-batch
+write timing, not necessarily a bug); `runs.jsonl` checks the `start_ts`-first field-priority fallback
+list documented above and reports a mismatch as **expected divergence, not a bug** — a long-running or
+paused/resumed ticket can legitimately span multiple ISO weeks between its `start_ts` and the write
+time that lands its `runs.jsonl` row (`TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`'s own
+write-time-bucketing design). Records in the `unknown-week` fallback folder are structurally exempt
+(no real ISO week to compare against, a property of where the record physically sits); a record in a
+real, known week folder with no usable/parseable timestamp field at all is a third, distinct
+"skipped — unparseable" bucket (a property of the record's own content) — the two are never conflated.
+
+This check is wired into `tools/gate_checks/done_checker_static.py::run_static_precheck()` as an 8th
+Part A check, `check_temporal_week_consistency()`, and always returns `PASS` with the real per-source
+counts in its evidence string — it never blocks a ticket close on its own, matching the
+referential-integrity checker's report-only philosophy above.
+
+A real-corpus run on 2026-09-04 found **zero mismatches** across all 3 sources (196,691 rows examined:
+`tools.jsonl` 186,272 checked/186,272 matched/1 exempt/0 skipped; `events.jsonl` 8,996 checked/8,996
+matched/28 exempt/0 skipped; `runs.jsonl` 1,389 checked/1,389 matched/5 exempt/0 skipped). This is the
+expected first-run result, not evidence the check is inert: the corpus's own current week-folder
+layout was built using the equivalent of this exact same field-priority-lookup + tolerant-parser
+logic (the migration scripts this check reuses those lists/parser from), and no `runs.jsonl` row has
+yet been through a full week-spanning pause/resume cycle since the unified-weekly write-time-bucketing
+design went live. The check's real value is prospective — catching the first genuine future
+write-time-vs-record-time divergence — not retrospective.
+
+Full evidence: `stored_artifacts/TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK/investigation.md`.
+
 ### Full evidence
 
 Full classification evidence for the 2026-07-05 audit of 126 incomplete-run / 5 zero-event records (corrected: 16 true dedup-resolved, 107 true residual, 107/107 confirmed genuinely completed): `stored_artifacts/TCK-20260705-MONITORING-RUNID-JOIN/investigation.md`.
