@@ -33,6 +33,12 @@ regions:
   tags:
   - plain
   - settlement
+  places:
+  - id: hometown_city
+    kind: CITY
+    position:
+    - 25
+    - 25
 factions:
 - id: hero_guild
   type: defender

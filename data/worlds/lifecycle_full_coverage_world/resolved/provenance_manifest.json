@@ -1,22 +1,22 @@
 {
-  "manifest_id": "prov_9aabab87b447698b",
+  "manifest_id": "prov_57e5d79395471024",
   "world_id": "lifecycle_full_coverage_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "48ebc0bad9506b16cd32bf9a3e0aa2a76ba814d19b6e2deaca7b51b768794a42",
+  "catalog_fingerprint": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
   "module_fingerprints": {
-    "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
-    "goblin_camp_conflict": "7e712ab3d3321805bfad0b116c66ac5c679854fe887f7752b9ab6a27cb61e5fb",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+    "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
     "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
-    "ruins_mystery_quest": "678978502f5aad463a61082fb026caddef6796d83d9a9b6936e42ac49dc2116c",
-    "wolf_den_near_forest": "236ed57805d9d8a947b072448b36ce728b6b6653ad9fd5f0085c3bfb269953ee"
+    "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71",
+    "wolf_den_near_forest": "14dcdf22f8bfc5ea7340de80e47d9bab361e279778e165bd721367bc573f7769"
   },
   "composition_fingerprint": "b053bf15b5dd240ecc3b7b15be372885d621bc3a95780292e96a7577e66b18e0",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "9aabab87b447698bb60a9579293c1e17ee1e5a3dde2c42a5bbac231808c307b7",
-  "created_at": "2026-08-08T13:06:59.848422Z",
+  "content_fingerprint": "57e5d79395471024e6543b64d7be822517a49d72b767e0f253c336690cc8bbc4",
+  "created_at": "2026-09-03T13:10:22.526433Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

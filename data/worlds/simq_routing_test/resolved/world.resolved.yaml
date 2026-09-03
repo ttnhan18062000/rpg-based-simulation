@@ -26,6 +26,12 @@ regions:
   tags:
   - plain
   - settlement
+  places:
+  - id: hometown_city
+    kind: CITY
+    position:
+    - 25
+    - 25
 - id: goblin_camp
   type: wilderness
   bounds:
@@ -38,6 +44,12 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
+  places:
+  - id: goblin_camp_place
+    kind: CAMP
+    position:
+    - 110
+    - 38
 - id: old_mine
   type: wilderness
   bounds:
@@ -51,6 +63,7 @@ regions:
   tags:
   - mine
   - underground
+  places: []
 factions:
 - id: hero_guild
   type: defender

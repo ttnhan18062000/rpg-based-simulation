@@ -19,6 +19,12 @@ regions:
   hazard_level: 0.5
   hazard_kind: PHYSICAL
   tags: []
+  places:
+  - id: survivor_outpost_camp
+    kind: CAMP
+    position:
+    - 45
+    - 45
 - id: haunted_battlefield
   type: wilderness
   bounds:
@@ -31,6 +37,13 @@ regions:
   hazard_kind: UNDEAD_CORRUPTION
   tags:
   - ruins
+  places:
+  - id: haunted_battlefield_ruin
+    kind: RUIN
+    position:
+    - 140
+    - 40
+    hazard_level: 4.0
 - id: near_forest
   type: wilderness
   bounds:
@@ -43,6 +56,12 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
+  terrain_variants:
+  - terrain: forest
+    weight: 3.0
+  - terrain: swamp
+    weight: 1.0
+  places: []
 - id: wolf_den
   type: wilderness
   bounds:
@@ -55,6 +74,12 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
+  terrain_variants:
+  - terrain: forest
+    weight: 3.0
+  - terrain: swamp
+    weight: 1.0
+  places: []
 factions:
 - id: hero_guild
   type: defender

@@ -812,5 +812,38 @@
     "forest_deep_ecology": []
   },
   "composition_validation": [],
-  "world_validation": []
+  "world_validation": [
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'explore_mountain_route' required_participant_tags ['humanoid'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.1.required_participant_tags",
+      "source_entity": "explore_mountain_route",
+      "source_file": "mountain_pass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'hunt_mountain_predator' required_participant_tags ['humanoid'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.2.required_participant_tags",
+      "source_entity": "hunt_mountain_predator",
+      "source_file": "mountain_pass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'survey_river_route' required_participant_tags ['humanoid'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.3.required_participant_tags",
+      "source_entity": "survey_river_route",
+      "source_file": "river_crossing"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'spirit_source_trace' required_participant_tags ['spiritual'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.5.required_participant_tags",
+      "source_entity": "spirit_source_trace",
+      "source_file": "ruins_mystery_quest"
+    }
+  ]
 }

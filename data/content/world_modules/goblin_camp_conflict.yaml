@@ -13,6 +13,13 @@ regions:
     hazard_level: 3.0
     hazard_kind: "NATURAL_TERRAIN"
     tags: [forest]
+    # Idea 66, Stage B (TCK-20260902-PLACE-MIGRATION-STAGE-B-ROLLOUT): CAMP-kind Place,
+    # position is the centroid of grid_bounds. maturity left unset -- no calibrated value
+    # exists yet (same caution as Stage A's scale field).
+    places:
+      - id: "goblin_camp_place"
+        kind: "camp"
+        position: [110, 38]
 factions: ["goblin_warband"]
 populations: ["goblin_raiding_party"]
 relationships: ["town_to_goblin_warband", "goblin_warband_to_town"]

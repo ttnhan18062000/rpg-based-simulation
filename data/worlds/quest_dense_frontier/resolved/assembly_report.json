@@ -838,11 +838,44 @@
     "forest_deep_ecology": []
   },
   "composition_validation": [],
-  "world_validation": [],
+  "world_validation": [
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'explore_mountain_route' required_participant_tags ['humanoid'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.1.required_participant_tags",
+      "source_entity": "explore_mountain_route",
+      "source_file": "mountain_pass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'hunt_mountain_predator' required_participant_tags ['humanoid'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.2.required_participant_tags",
+      "source_entity": "hunt_mountain_predator",
+      "source_file": "mountain_pass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'survey_river_route' required_participant_tags ['humanoid'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.3.required_participant_tags",
+      "source_entity": "survey_river_route",
+      "source_file": "river_crossing"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'spirit_source_trace' required_participant_tags ['spiritual'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.5.required_participant_tags",
+      "source_entity": "spirit_source_trace",
+      "source_file": "ruins_mystery_quest"
+    }
+  ],
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 134
+    "warnings_count": 138
   },
   "blocking_errors": [],
   "warnings": [
@@ -1649,15 +1682,47 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
       "target": "hero_adventurers"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'explore_mountain_route' required_participant_tags ['humanoid'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.1.required_participant_tags",
+      "source_entity": "explore_mountain_route",
+      "source_file": "mountain_pass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'hunt_mountain_predator' required_participant_tags ['humanoid'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.2.required_participant_tags",
+      "source_entity": "hunt_mountain_predator",
+      "source_file": "mountain_pass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'survey_river_route' required_participant_tags ['humanoid'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.3.required_participant_tags",
+      "source_entity": "survey_river_route",
+      "source_file": "river_crossing"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'spirit_source_trace' required_participant_tags ['spiritual'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.5.required_participant_tags",
+      "source_entity": "spirit_source_trace",
+      "source_file": "ruins_mystery_quest"
     }
   ],
   "fingerprints": {
-    "catalog": "10d77896a90aebb8c796b454766426b039a63265141b8574940c783cdee0455c",
+    "catalog": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
     "modules": {
       "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
       "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
       "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
-      "ruins_mystery_quest": "678978502f5aad463a61082fb026caddef6796d83d9a9b6936e42ac49dc2116c"
+      "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71"
     }
   }
 }

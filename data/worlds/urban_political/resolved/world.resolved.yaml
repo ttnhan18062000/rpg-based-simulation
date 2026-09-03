@@ -22,6 +22,12 @@ regions:
   tags:
   - plain
   - settlement
+  places:
+  - id: hometown_city
+    kind: CITY
+    position:
+    - 25
+    - 25
 - id: bandit_road
   type: road
   bounds:
@@ -34,6 +40,7 @@ regions:
   hazard_kind: NATURAL_TERRAIN
   tags:
   - wilderness
+  places: []
 - id: trading_hometown
   type: town
   bounds:
@@ -47,6 +54,7 @@ regions:
   tags:
   - plain
   - trade_route
+  places: []
 factions:
 - id: hero_guild
   type: defender

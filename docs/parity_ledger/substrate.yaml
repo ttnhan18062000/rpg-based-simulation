@@ -5015,3 +5015,34 @@
     itself, no change to the existing state_hash field''s value or meaning. Purely
     additive: canonical_state_hash/place_count are new keys, existing consumers of
     the report dict are unaffected (confirmed via full regression sweep, 895 passed).'
+- id: SUB-392
+  text: 'Idea 66 (Region/Place foundational rebuild) child 4/5: all 21 worlds in the
+    real corpus now have real Place coverage, via 5 shared content-module edits rather
+    than 20 separate per-world migrations (frontier_village_core: CITY, added in the
+    prior Stage A ticket; goblin_camp_conflict: CAMP; ruins_mystery_quest: RUIN; settled_quarter:
+    CITY; survivor_camp_shelter: CAMP; undead_battlefield: RUIN). hero_guild_routing
+    (Stage B''s own named pilot) verified by direct inspection to produce all 4 non-uniform
+    region kinds: CITY, CAMP, RUIN, and an intentional empty-wilderness case (mountain_pass_zone,
+    pure transit terrain -- the ''or none at all'' case from idea 66''s own Target
+    Shape). wolf_den_near_forest''s wolf_den region deliberately NOT given a LAIR
+    Place -- no real boss/creature anchor exists in that generic wildlife-ecology
+    content, and its own module description explicitly frames it as proving contextual
+    hostility rather than a boss lair; forcing LAIR there would misuse the schema.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'data/content/world_modules/{goblin_camp_conflict,ruins_mystery_quest,settled_quarter,survivor_camp_shelter,undead_battlefield}.yaml
+    (places: declarations added) + a batch resolve+compile pass across all 21 worlds
+    (data/worlds/*/world_compile_report.json, every one showing place_count >= 1)
+    + direct canonical-dict diffs at 3 different entity-count scales (16, 31, 59)
+    all confirming isolation to regions/places only'
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_place_wiring.py::test_hero_guild_routing_real_content_produces_expected_non_uniform_place_kinds
+  divergence_note: null
+  support_boundary: Migration + compilation only, no state_hash/grade_anchors.json
+    triage -- that is TCK-20260902-PLACE-MIGRATION-RECALIBRATION's own scope. The
+    pre-existing, unrelated committed-baseline staleness found in the prior Stage
+    A ticket (TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS) means every world's
+    state_hash will show as 'changed' relative to its pre-idea-66 committed value
+    for two independent reasons now, not one -- Recalibration's own methodology needs
+    to account for both.

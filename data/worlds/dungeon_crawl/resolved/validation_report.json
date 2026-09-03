@@ -812,5 +812,62 @@
     "scalable_bandit_camp": []
   },
   "composition_validation": [],
-  "world_validation": []
+  "world_validation": [
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_hunt_warlord' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.0.required_participant_tags",
+      "source_entity": "goblin_hunt_warlord",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_fetch_stolen_goods' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.1.required_participant_tags",
+      "source_entity": "goblin_fetch_stolen_goods",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_defend_village_perimeter' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.2.required_participant_tags",
+      "source_entity": "goblin_defend_village_perimeter",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'spirit_source_trace' required_participant_tags ['spiritual'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.5.required_participant_tags",
+      "source_entity": "spirit_source_trace",
+      "source_file": "ruins_mystery_quest"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'sbandit_hunt_camp_leader' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.6.required_participant_tags",
+      "source_entity": "sbandit_hunt_camp_leader",
+      "source_file": "scalable_bandit_camp"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'sbandit_fetch_stolen_cache' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.7.required_participant_tags",
+      "source_entity": "sbandit_fetch_stolen_cache",
+      "source_file": "scalable_bandit_camp"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'sbandit_defend_road_checkpoint' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.8.required_participant_tags",
+      "source_entity": "sbandit_defend_road_checkpoint",
+      "source_file": "scalable_bandit_camp"
+    }
+  ]
 }
