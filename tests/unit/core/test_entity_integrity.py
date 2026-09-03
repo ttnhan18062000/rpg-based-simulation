@@ -153,3 +153,66 @@ def test_self_model_fix_preserves_existing_baseline_hashes_when_flag_off():
         CanonicalStateHasher.get_hash(post_fix_state)
         == CanonicalStateHasher.get_hash(pre_fix_equivalent_state)
     )
+
+
+def test_social_seven_newly_covered_fields_participate_in_canonical_hash():
+    """
+    TCK-20260902-SOCIAL-CANONICAL-HASH-GAP: SocialComponent's canonical hash previously
+    covered only 10 of 17 real fields, omitting debt_history, salience_history,
+    nemesis_ids, place_attachment, betrayal_records, last_offer_tick, and rejection_count
+    -- all confirmed real, actively-consumed durable state (e.g. nemesis_ids gates
+    cognition target evaluation, rejection_count feeds contract appraisal). Notably
+    betrayal_records (the event list) was uncovered while betrayal_count (its own derived
+    count) was already covered -- an inconsistent partial gap, not a deliberate exclusion.
+    Confirms each of the 7 fields independently changes to_canonical_dict() output when it
+    diverges.
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.models.social import BetrayalRecord
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    base_dict = base.to_canonical_dict()
+
+    variants = {
+        "debt_history": dataclass_replace(base.social, debt_history={5: 3.0}),
+        "salience_history": dataclass_replace(base.social, salience_history={5: 0.8}),
+        "nemesis_ids": dataclass_replace(base.social, nemesis_ids={5, 9}),
+        "place_attachment": dataclass_replace(base.social, place_attachment={"region_1": 0.5}),
+        "betrayal_records": dataclass_replace(
+            base.social,
+            betrayal_records=[BetrayalRecord(contract_id="c1", betrayer_id=1, victim_id=2)],
+        ),
+        "last_offer_tick": dataclass_replace(base.social, last_offer_tick=42),
+        "rejection_count": dataclass_replace(base.social, rejection_count={5: 3}),
+    }
+
+    for field_name, changed_social in variants.items():
+        changed_entity = dataclass_replace(base, social=changed_social)
+        assert base_dict != changed_entity.to_canonical_dict(), (
+            f"'{field_name}' divergence did not change to_canonical_dict() output"
+        )
+
+
+def test_social_nemesis_ids_participates_in_canonical_hash_end_to_end():
+    """
+    TCK-20260902-SOCIAL-CANONICAL-HASH-GAP: nemesis_ids specifically gates cognition
+    target evaluation (src/engine/cognition.py) -- confirms the fix propagates all the
+    way to CanonicalStateHasher.get_hash(), the hash src/engine/kernel.py uses for its
+    per-tick and final-run determinism checks (same consumer chain as the parallel
+    TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP fix).
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.state import AuthoritativeState
+    from src.engine.checkpoint import CanonicalStateHasher
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    assert base.social.nemesis_ids == set()
+
+    with_nemesis = dataclass_replace(
+        base, social=dataclass_replace(base.social, nemesis_ids={5, 9}),
+    )
+
+    state_base = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: base})
+    state_with_nemesis = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: with_nemesis})
+
+    assert CanonicalStateHasher.get_hash(state_base) != CanonicalStateHasher.get_hash(state_with_nemesis)
