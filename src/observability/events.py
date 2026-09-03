@@ -347,7 +347,7 @@ class BetrayalDesertionEvent(SimulationEvent):
 class ClanMemberLeftEvent(SimulationEvent):
     """Emitted when an entity leaves a clan (idea 40/M4).
 
-    Logic ID: SOC-263 (ClanLifecycleService.process_leave removes member via typed ClanUpdate)
+    Logic ID: SOC-264 (ClanLifecycleService.process_leave removes member via typed ClanUpdate)
     """
     clan_id: str
     event_type: str = "clan_member_left"
@@ -368,7 +368,7 @@ class ClanSuccessionEvent(SimulationEvent):
     """Emitted when clan leadership passes to a new leader after the prior leader's
     death or inactivity (idea 40/M4).
 
-    Logic ID: SOC-263 (ClanLifecycleService.process_succession, no 0.2 sociability-margin
+    Logic ID: SOC-264 (ClanLifecycleService.process_succession, no 0.2 sociability-margin
     gate -- contrast SOC-228's Group election)
     """
     clan_id: str

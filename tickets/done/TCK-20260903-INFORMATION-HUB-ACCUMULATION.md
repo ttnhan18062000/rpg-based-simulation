@@ -174,10 +174,19 @@ Command used (venv with dependencies): `/home/u24desktop/Working/rpg-based-simul
 - `tests/unit/domains/optimization/test_information_hub_flag_off.py` (new) — Step 8.
 - `docs/mechanics/04_strategic_cognition.md` — Step 9: new `## 11. Information Hub Knowledge
   Accumulation & Propagation Law` section.
-- `docs/parity_ledger/strategic_cognition.yaml` — Step 9: new `STRAT-268` entry (accumulation
-  mechanism); `STRAT-230`'s `v2_evidence` updated with a note distinguishing its own
-  always-correct decrement logic from the separate `apply.py` wiring defect this ticket fixes.
-  Written via `tools/parity_ledger_writer.py` (schema-validated, index rebuilt in-process).
+- `docs/parity_ledger/strategic_cognition.yaml` — Step 9: new `STRAT-269` entry (accumulation
+  mechanism, originally written as `STRAT-268` — see post-hoc merge note below); `STRAT-230`'s
+  `v2_evidence` updated with a note distinguishing its own always-correct decrement logic from the
+  separate `apply.py` wiring defect this ticket fixes. Written via `tools/parity_ledger_writer.py`
+  (schema-validated, index rebuilt in-process).
+
+**Post-hoc note (merge with `origin/main`, after this ticket's own Finalize):** this ticket's new
+parity ledger entry was originally written as `STRAT-268`. Merging `origin/main` into the M4 branch
+surfaced a real ID collision — an unrelated concurrent session (`TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP`,
+a P0 entry) had independently used `STRAT-268` for a different entry first, and it landed on `main`
+before this branch merged. Resolved by keeping the concurrent session's P0 entry as `STRAT-268`
+(already live) and re-adding this ticket's entry under the next real free ID, `STRAT-269`, via
+`tools/parity_ledger_writer.py`.
 - `docs/parity_ledger/faction.yaml` — Step 9: new `FAC-015` entry (propagation mechanism), same
   writer tool.
 - `docs/guides/feature_flags.md` — Step 10 (folded into Step 9's doc pass): new row for

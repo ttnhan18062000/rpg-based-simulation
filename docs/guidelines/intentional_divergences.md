@@ -1420,7 +1420,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `test_clan_dissolves_when_members_and_assets_both_empty`) and
   `tests/unit/domains/faction/test_clan_state.py::test_clan_state_is_wired_into_authoritative_state`
   (wiring into `AuthoritativeState`/`StateUpdate`/`apply.py`) — landed by
-  TCK-20260903-CLAN-LIFECYCLE-SUCCESSION (idea 40/M4), SOC-263. `ClanLifecycleService`
+  TCK-20260903-CLAN-LIFECYCLE-SUCCESSION (idea 40/M4), SOC-264. `ClanLifecycleService`
   (`src/systems/social_systems/clan_lifecycle.py`) implements margin-free succession
   (no 0.2 sociability-margin gate, contrast SOC-228) and dual-gated dissolution
   (`member_entity_ids` AND `asset_ids` both empty), wired into the pipeline via

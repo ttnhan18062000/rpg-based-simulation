@@ -1,4 +1,4 @@
-# Compliance IDs: SOC-263
+# Compliance IDs: SOC-264
 """
 Unit tests for CoreActions.execute_join_clan()/execute_leave_clan() and the
 ContractKind.CLAN dispatch branch (TCK-20260903-CLAN-LIFECYCLE-SUCCESSION, idea 40/M4).

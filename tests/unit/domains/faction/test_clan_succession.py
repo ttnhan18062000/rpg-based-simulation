@@ -1,4 +1,4 @@
-# Compliance IDs: SOC-263
+# Compliance IDs: SOC-264
 """
 Tests for ClanLifecycleService succession and dissolution
 (TCK-20260903-CLAN-LIFECYCLE-SUCCESSION, idea 40/M4).

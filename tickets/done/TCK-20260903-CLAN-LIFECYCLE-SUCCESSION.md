@@ -98,7 +98,7 @@ Key implementation points:
 - `ClanState.asset_ids: Tuple[int, ...] = ()` added (Step 1) with round-trip serialization; no
   mutator, no producer/consumer anywhere else in the codebase — deliberately inert, per the
   architecture-review's additional instruction. This inertness is stated explicitly in both the new
-  Mechanics Bible §10 ("It is currently always empty in every real run...") and SOC-263's `text`/
+  Mechanics Bible §10 ("It is currently always empty in every real run...") and SOC-264's `text`/
   `divergence_note` fields (parity ledger), not merely implied.
 - `AuthoritativeState.clans` / `StateUpdate.clan_updates` / `apply.py`'s clan-merge block mirror
   `FactionState`'s 6-touch-point pattern exactly (Steps 2-4).
@@ -118,7 +118,7 @@ Key implementation points:
   dissolution passes over `state.clans`.
 - `docs/guidelines/intentional_divergences.md` §2.48 flipped DEFERRED → RATIFIED with the real
   landed test paths (Step 9).
-- SOC-263 added via `tools/parity_ledger_writer.py` (never hand-edited YAML), after confirming its
+- SOC-264 added via `tools/parity_ledger_writer.py` (never hand-edited YAML), after confirming its
   own `test_path` passes (Step 11). The writer's `write_entry()` also rebuilt
   `tools/parity_index.py`'s derived SQLite index in-process.
 - `make knowledge-index-update` run after the docs/ edits (intentional_divergences.md,
@@ -139,6 +139,15 @@ Ran (all passing):
 - Combined: `pytest tests/unit/domains/faction/ tests/unit/social/ tests/unit/engine/ tests/integration/scenarios/test_faction_campaign.py -m "not slow" -q` — 589 passed, 1 skipped, 7 deselected.
 
 ## Files Changed
+**Post-hoc note (merge with `origin/main`, after this ticket's own Finalize):** this ticket's
+parity ledger entry was originally written as `SOC-263`. Merging `origin/main` into the M4 branch
+surfaced a real ID collision — an unrelated concurrent session (`TCK-20260902-SOCIAL-CANONICAL-HASH-GAP`)
+had independently used `SOC-263` for a different entry first, and it landed on `main` before this
+branch merged. Resolved by keeping the concurrent session's entry as `SOC-263` (already live) and
+re-adding this ticket's entry under the next real free ID, `SOC-264`, via `tools/parity_ledger_writer.py`
+— every reference to the old ID in this ticket, `docs/mechanics/04_strategic_cognition.md` §10, and
+`docs/guidelines/intentional_divergences.md` §2.48 was updated to `SOC-264` accordingly.
+
 - `src/core/state.py` — `ClanState.asset_ids` field + canonical dict/from_dict; `AuthoritativeState.clans` field + `to_readonly()` wiring.
 - `src/core/updates.py` — `ClanUpdate` dataclass; `StateUpdate.clan_updates` field + `is_noop()`/`merge_many()` wiring.
 - `src/engine/apply.py` — clan-merge block in `apply_partial`/`apply_generation`'s constructor path; `ClanState` import.
@@ -157,7 +166,7 @@ Ran (all passing):
 - `tests/unit/social/test_clan_appraisal.py` (new) — join/leave action-handler + appraisal-dispatch tests.
 - `docs/guidelines/intentional_divergences.md` — §2.48 Verification field + Status DEFERRED→RATIFIED.
 - `docs/mechanics/04_strategic_cognition.md` — new §10 "Clan Lifecycle Law".
-- `docs/parity_ledger/social_narrative.yaml` — new SOC-263 entry (via `tools/parity_ledger_writer.py`).
+- `docs/parity_ledger/social_narrative.yaml` — new SOC-264 entry (via `tools/parity_ledger_writer.py`).
 - `docs/parity_ledger/combat_movement.yaml` — Parity phase: fixed COMB-318's line citation into `src/engine/apply.py`, shifted by this ticket's own +18-line insertion (via `tools/parity_ledger_writer.py`).
 - `docs/parity_ledger/infrastructure.yaml` — Parity phase: fixed INFRA-324's line citation into `src/engine/apply.py` for the same reason (via `tools/parity_ledger_writer.py`).
 - `docs/parity_ledger/progression.yaml` — Parity phase: fixed PROG-024's line citation into `src/engine/apply.py` for the same reason (via `tools/parity_ledger_writer.py`).
@@ -173,6 +182,6 @@ mirroring `FactionState`'s 6-touch-point pattern. Membership writes go through a
 design (`CoreActions.execute_join_clan`/`execute_leave_clan` decide via `ActionRouter`;
 `ClanLifecyclePhase` commits the typed `ClanUpdate`), required because `ActionRouter.execute_action`
 is locked to `Dict[int, EntityUpdate]`. `docs/guidelines/intentional_divergences.md` §2.48 was
-ratified and a new parity ledger entry SOC-263 was added via the schema-validating writer tool. All
+ratified and a new parity ledger entry SOC-264 was added via the schema-validating writer tool. All
 36 new/changed tests pass, plus a 589-test regression pass across faction/social/engine/integration
 confirms no Faction, Group, Marriage, or Teach behavior regressed.

@@ -1115,7 +1115,7 @@ here is a bounded single-tick synthetic batch, not a long-run corpus claim.
 
 ---
 
-## 10. Clan Lifecycle Law (idea 40/M4, SOC-263)
+## 10. Clan Lifecycle Law (idea 40/M4, SOC-264)
 
 `ClanState` is wired into the authoritative mutation pipeline for the first time. Clan joining
 follows the same propose/accept `ContractKind`/`SocialAppraisalSystem` pattern §8 Marriage
@@ -1204,7 +1204,7 @@ concepts must not be conflated.
 `src/engine/domain/core_actions.py` (`execute_join_clan`/`execute_leave_clan`);
 `src/engine/domain/action_router.py` (`"JOIN_CLAN"`/`"LEAVE_CLAN"` branches); `src/engine/
 pipeline.py` (`clan_lifecycle` phase, run after `groups`); `src/observability/events.py`
-(`ClanMemberLeftEvent`, `ClanSuccessionEvent`) (TCK-20260903-CLAN-LIFECYCLE-SUCCESSION, SOC-263,
+(`ClanMemberLeftEvent`, `ClanSuccessionEvent`) (TCK-20260903-CLAN-LIFECYCLE-SUCCESSION, SOC-264,
 2026-09-03)
 
 ## 11. Information Hub Knowledge Accumulation & Propagation Law (idea 41, M4)

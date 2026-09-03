@@ -1,9 +1,9 @@
-# Compliance IDs: SOC-263
+# Compliance IDs: SOC-264
 """
 ClanLifecycleService — leaving, margin-free succession-on-death, and dissolution for Clans.
 
 Ticket: TCK-20260903-CLAN-LIFECYCLE-SUCCESSION (idea 40/M4)
-Logic ID: SOC-263
+Logic ID: SOC-264
 
 This service is built fresh and deliberately does NOT import from
 `party_lifecycle.py` (Group's 0.2-margin `check_leadership()`, SOC-228) or

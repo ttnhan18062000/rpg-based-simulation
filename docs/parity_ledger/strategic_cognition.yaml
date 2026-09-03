@@ -4050,3 +4050,31 @@
     whose entities have non-default values in the 9 newly-covered fields; no shipped
     calibration baseline is affected unless it already exercises these fields (source_trust/contracts/turning_points/committed_intentions/candidate_zones/hypotheses/home_region_id/overload
     tracking) with non-default values.
+- id: STRAT-269
+  text: 'InformationAccumulationService.record_quest_reported_back() increments InformationProviderState.knowledge_accumulated
+    by 1 and resets knowledge_age to 0, hooked into QuestResolutionSystem.enforce()''s
+    is_newly_completed branch when QuestState.source_entity_id resolves to a registered
+    provider. Gated behind ENABLE_INFORMATION_HUB_ACCUMULATION (default OFF). Requires
+    the apply.py information_providers carry-forward fix (also closes a pre-existing
+    wiring gap in STRAT-230''s own reliability decrement, which never survived a tick
+    boundary before this fix). Structurally inert in live corpus runs today: GuildAction.visit()
+    never populates QuestState.source_entity_id (src/town/guild.py), so this is verified
+    via direct unit-level construction through the full apply path, not corpus reachability.
+    (idea 41, M4)'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/information/accumulation.py -- InformationAccumulationService;
+    src/engine/quests.py -- QuestResolutionSystem.enforce() is_newly_completed accumulation
+    branch; src/engine/apply.py -- information_providers carry-forward-and-merge fix
+    (TCK-20260903-INFORMATION-HUB-ACCUMULATION); src/domains/information/providers.py
+    -- InformationProviderState.knowledge_accumulated field
+  proof_type: parity
+  test_path: tests/unit/domains/information/test_information_provider_accumulation.py
+  divergence_note: 'NOTE: this entry was originally written as STRAT-268 but was renumbered
+    to STRAT-269 during a merge-conflict resolution -- an unrelated concurrent session
+    independently used STRAT-268 for a different entry (StrategicComponent canonical-hash
+    gap fix, P0) first.'
+  support_boundary: Accumulation trigger reads QuestState.source_entity_id but does
+    not populate it; the Guild hub never sets it, so no live seeding path exists yet
+    (disclosed gap, not a bug).
