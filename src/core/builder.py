@@ -50,6 +50,8 @@ from src.core.enums import EntityRole, Faction
 from src.core.movement_modes import MovementMode
 from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
+from src.core.updates import EntityUpdate, SocialUpdate, SocialBondUpdate
+from src.systems.lifecycle_systems.genetics import GeneticsSystem, GeneticProfile
 
 
 def _component(cls: type, **kwargs):
@@ -583,6 +585,13 @@ class V2EntityBuilder:
         generation: Optional[int] = None,
         heir_entity_id: Optional[int] = None,
         heirlooms: Optional[List[str]] = None,
+        parent_a_entity_id: Optional[int] = None,
+        parent_b_entity_id: Optional[int] = None,
+        dependent_entity_ids: Optional[List[int]] = None,
+        birth_tick: Optional[int] = None,
+        birth_city_id: Optional[int] = None,
+        reproduction_cooldowns: Optional[Dict[int, int]] = None,
+        genetic_profile: Optional[GeneticProfile] = None,
     ) -> V2EntityBuilder:
         current = self._lifecycle_to_dict()
 
@@ -596,6 +605,13 @@ class V2EntityBuilder:
             "generation": generation,
             "heir_entity_id": heir_entity_id,
             "heirlooms": _copy_list(heirlooms) if heirlooms is not None else None,
+            "parent_a_entity_id": parent_a_entity_id,
+            "parent_b_entity_id": parent_b_entity_id,
+            "dependent_entity_ids": _copy_list(dependent_entity_ids) if dependent_entity_ids is not None else None,
+            "birth_tick": birth_tick,
+            "birth_city_id": birth_city_id,
+            "reproduction_cooldowns": _copy_dict(reproduction_cooldowns) if reproduction_cooldowns is not None else None,
+            "genetic_profile": genetic_profile,
         }
 
         for key, value in updates.items():
@@ -603,6 +619,59 @@ class V2EntityBuilder:
                 current[key] = value
 
         self._lifecycle = _component(LifecycleComponent, **current)
+        return self
+
+    def birth_record(
+        self,
+        *,
+        parent_a_entity_id: Optional[int] = None,
+        parent_b_entity_id: Optional[int] = None,
+        birth_tick: int = 0,
+        birth_city_id: Optional[int] = None,
+        seed_familiarity: float = 0.8,
+        seed_sentiment: float = 0.8,
+        parent_a_genetic_profile: Optional[GeneticProfile] = None,
+        parent_b_genetic_profile: Optional[GeneticProfile] = None,
+        parent_a_role: Optional[int] = None,
+        parent_b_role: Optional[int] = None,
+    ) -> V2EntityBuilder:
+        """
+        Populate the new entity's parentage/birth fields and seed its own
+        SocialBonds toward its parents. Parentless (natural-creature/magical)
+        spawns pass no parent ids.
+
+        When at least one parent genetic profile is supplied, the child's
+        GeneticProfile is combined from both parents (missing parent profiles
+        fall back to a deterministic seed-derived profile, since no live spawn
+        path yet populates a parent's own genetic_profile). Combat-lean bias
+        applies only when both parents are EntityRole.HERO; any other parent-role
+        pairing (CITIZEN/SHOPKEEPER, WORKER/GUARD, or a mismatch between them)
+        falls through to the same neutral/civilian default.
+        """
+        self.lifecycle(
+            parent_a_entity_id=parent_a_entity_id,
+            parent_b_entity_id=parent_b_entity_id,
+            birth_tick=birth_tick,
+            birth_city_id=birth_city_id,
+        )
+        if parent_a_genetic_profile is not None or parent_b_genetic_profile is not None:
+            combat_lean = (parent_a_role == EntityRole.HERO and parent_b_role == EntityRole.HERO)
+            a_profile = parent_a_genetic_profile or GeneticsSystem.generate_profile_from_seed(parent_a_entity_id or 0)
+            b_profile = parent_b_genetic_profile or GeneticsSystem.generate_profile_from_seed(parent_b_entity_id or 0)
+            combo_seed = (parent_a_entity_id or 0) * 1_000_003 + (parent_b_entity_id or 0) * 97 + birth_tick
+            combined = GeneticsSystem.combine_profiles(a_profile, b_profile, combat_lean=combat_lean, seed=combo_seed)
+            self.lifecycle(genetic_profile=combined)
+        bonds: Dict[int, SocialBond] = {}
+        for parent_id in (parent_a_entity_id, parent_b_entity_id):
+            if parent_id is not None:
+                bonds[parent_id] = SocialBond(
+                    target_id=parent_id,
+                    familiarity=seed_familiarity,
+                    sentiment=seed_sentiment,
+                    last_interaction_tick=birth_tick,
+                )
+        if bonds:
+            self.social(bonds=bonds)
         return self
 
     def interaction(
@@ -812,3 +881,36 @@ class V2EntityBuilder:
             for f in fields(component)
             if f.init
         }
+
+
+def build_parent_bond_updates_for_birth(
+    parent_ids: List[int],
+    child_entity_id: int,
+    birth_tick: int,
+    familiarity: float = 0.8,
+    sentiment: float = 0.8,
+) -> List[EntityUpdate]:
+    """
+    Build the parents' reciprocal EntityUpdates for a birth. A brand-new
+    parent-child pair starts from SocialBond defaults (familiarity=0.0,
+    sentiment=0.0), so these deltas land the parent's bond at exactly
+    `familiarity`/`sentiment`, matching the child's own seeded values.
+
+    Does not decide when reproduction happens or set any cooldown — a caller
+    (a reproduction-trigger ticket) must apply the returned updates through
+    the normal authoritative apply path.
+    """
+    return [
+        EntityUpdate(
+            entity_id=parent_id,
+            social=SocialUpdate(bond_updates=[
+                SocialBondUpdate(
+                    target_id=child_entity_id,
+                    familiarity_delta=familiarity,
+                    sentiment_delta=sentiment,
+                    last_interaction_tick_set=birth_tick,
+                )
+            ]),
+        )
+        for parent_id in parent_ids
+    ]

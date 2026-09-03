@@ -1,6 +1,7 @@
 import pytest
-from src.core.state import AuthoritativeState, RegionState
+from src.core.state import AuthoritativeState, RegionState, CampState
 from src.core.updates import StateUpdate
+from src.engine.cadence import SystemCadence
 from src.engine.world_dynamics import WorldDynamicsSystem
 from src.systems.world_systems.generator import EntityGenerator
 
@@ -142,3 +143,26 @@ def test_boss_spawn_is_idempotent_even_if_existing_boss_left_region():
     )
 
     assert update.entities_add == []
+
+
+def test_world_dynamics_folds_camp_and_calamity_world_updates_into_final_update():
+    """TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: regression guard for the
+    world_dynamics.py:174-182 dropped-world_updates bug -- camp_state_update.world_updates/
+    calamity_update.world_updates were never folded into the function's final returned
+    StateUpdate.world_updates. A CampService-level-only test would still pass even if this
+    bug reappeared, since the drop happens one layer up, inside resolve_dynamics() itself;
+    this drives the full call and asserts the reproduction-path nudge survives the fold-in."""
+    region = RegionState(id="forest", name="Forest", bounds=(0, 0, 100, 100))
+    camp = CampState(id="camp_1", kind="goblin", position=(50.0, 50.0), maturity=90.0, last_raid_tick=0)
+    state = AuthoritativeState(
+        tick=60, seed=42,
+        regions={"forest": region},
+        camps={"camp_1": camp},
+        feature_flags={"ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH": "ON"},
+    )
+    generator = EntityGenerator(42)
+    cadence = SystemCadence(world_dynamics=1)
+
+    refined = WorldDynamicsSystem.resolve_dynamics(state, StateUpdate(), generator, cadence)
+
+    assert refined.world_updates["forest"].population_young_births_delta == 1

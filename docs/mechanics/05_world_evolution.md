@@ -222,6 +222,39 @@ function is shared between the two.
 **Source:** `src/systems/lifecycle_systems/lifecycle.py` (`LifecycleSystem._select_default_heir`,
 `LifecycleSystem.resolve_lifecycle`) (TCK-20260824-DEFAULT-HEIR-ASSIGNMENT, 2026-08-26)
 
+### Personal Dependents (Non-Parental) (TCK-20260902-PERSONAL-DEPENDENTS-ROUTE-BIAS)
+
+`LifecycleComponent.dependent_entity_ids: list[int]` (`src/core/state.py`) records the ids of
+entities this entity is personally responsible for — a general, plural concept distinct from
+`heir_entity_id` above (single-valued, death-only "who inherits") and distinct from the
+child→parent-direction `parent_a_entity_id`/`parent_b_entity_id` fields (which record whose child
+this entity is, the opposite direction).
+
+**Write path (mirrors `heir_entity_id`'s own precedent exactly):** the field is written only via
+`LifecycleUpdate.dependent_entity_ids_add: list[int]` on an entity's own `EntityUpdate` — never a
+direct field mutation — merged additively across same-tick writers by `LifecycleUpdate.merge()`,
+and applied authoritatively by `LifecyclePatch.apply()` (`src/engine/patches.py`), which extends
+the existing list and assigns the result the same way `heirlooms` is assigned (as a `tuple`,
+matching that field's own pre-existing list-typed-but-tuple-assigned pattern).
+
+**Construction (tests/demo only):** `V2EntityBuilder.lifecycle(dependent_entity_ids=[...])`
+(`src/core/builder.py`) or `V2EntityBuilder.replace_lifecycle(LifecycleComponent(
+dependent_entity_ids=[...]))`. No production system establishes this relationship automatically as
+of this ticket.
+
+**Scoring effect:** see `docs/mechanics/04_strategic_cognition.md` §6.13 (Personal Dependents Route
+Bias, SOC-262) for the `AdventureRouteScorer.score()` bias this field drives.
+
+**Deferred follow-up — not implemented by this mechanic:** birth-triggered parental dependent
+auto-registration (a newborn automatically becoming a parent's dependent via
+`parent_a_entity_id`/`parent_b_entity_id`) is explicitly **not** built here. It is deferred to
+`TCK-20260902-EPIC-RPG-M3-REPRODUCTION`, pending that epic's birth-record schema maturing further.
+
+**Source:** `src/core/state.py` (`LifecycleComponent.dependent_entity_ids`), `src/core/updates.py`
+(`LifecycleUpdate.dependent_entity_ids_add`), `src/engine/patches.py` (`LifecyclePatch.apply()`),
+`src/core/builder.py` (`V2EntityBuilder.lifecycle()`) (TCK-20260902-PERSONAL-DEPENDENTS-ROUTE-BIAS,
+2026-09-02)
+
 ### Migration Law
 When `scarcity(region) > cohort.migration_threshold` (default 0.7), **30%** of that cohort (min 1) emigrates to the lowest-scarcity adjacent region. Adjacency requires a shared boundary edge with non-degenerate overlap on the other axis.
 
@@ -245,6 +278,44 @@ This closes the demographic feedback loop: population growth → density increas
 
 **Source:** `src/domains/demographics/cohort.py`, `src/domains/world_emergence/models.py`
 **Contract:** `docs/world/demographics_contract.md`
+
+### Individual-Birth Population-Pressure Nudge (idea 38, TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE)
+
+`DemographicCycleService.process_demographics()`'s own aggregate birth/death cycle above runs only
+every `COHORT_INTERVAL` (200) ticks. Between cycles, individual births produced by the Reproduction
+epic's per-entity paths (§6) did not move the aggregate `population_cohorts` count at all — a region
+flagged low-population by the pressure gate could stay flagged indefinitely regardless of real
+per-entity births. This nudge closes that gap with a deliberately **coarse, additive-only** fix, per
+the idea-38 atlas card's revision-25 decision: on a successful individual birth, the birth region's
+`population_cohorts["young"].count` is incremented by exactly `+1` — **never a full resync/recount**
+against actual named entities. The aggregate cohort stays a background abstraction, not a real
+census; the named-entity layer and the aggregate cohort layer remain intentionally decoupled.
+
+**Mechanism:** a new, genuinely additive field on the typed `WorldUpdate`,
+`population_young_births_delta: int = 0`, distinct from `population_cohorts_set` (the existing
+whole-dict-replace field used by the 200-tick cycle and by migration). `WorldUpdate.merge()` sums
+`population_young_births_delta` across every `WorldUpdate` merged in a call — so two births landing
+on the same region in the same tick correctly accumulate to `+2`, not a last-write-wins clobber. The
+authoritative apply path (`src/engine/apply_plan.py`) resolves `population_cohorts_set` first (the
+whole-dict base, whichever of a same-tick `DemographicCycleService` rebuild or the prior region
+state it is), then layers the nudge's delta on top of the `young` bracket — so a same-tick collision
+between the aggregate cycle's own rebuild and a reproduction path's nudge can never clobber either
+signal. If the region has no `young` bracket seeded yet (a region can legitimately have
+`population_cohorts == {}` — zero declared population seeds nothing, per
+`TCK-20260831-POPULATION-COHORT-SEEDING`), a fresh `PopulationCohort(bracket="young",
+count=<delta>)` is materialized with dataclass defaults (`birth_rate=0.02`, `mortality_rate=0.01`,
+`migration_threshold=0.7`) rather than the birth's signal being silently dropped — mirroring
+`src/worldbuilding/compiler.py`'s own `_seed_population_cohorts()`, whose docstring states seeded
+cohorts likewise "leave birth_rate/mortality_rate at their PopulationCohort dataclass defaults."
+
+**Participating paths:** the Natural-Creature and Humanoid reproduction paths (§6) each set the
+nudge inside their own already-flag-gated branch, on every successful birth. The Magical/Demonic
+path is deliberately **excluded** — see its own subsection in §6 for the confirmed rationale
+(`WORLD-121`: a calamity-driven spawn is a world-threat escalation event, not a settlement/camp
+demographic signal, and this path already never *reads* the population-pressure signal either).
+
+**Source:** `src/core/updates.py` (`WorldUpdate.population_young_births_delta`),
+`src/engine/apply_plan.py`, `src/world/camp.py`, `src/world/reproduction_humanoid.py`
 
 ---
 
@@ -282,6 +353,147 @@ per-entity mechanic with its own typed field (`IdentityComponent.territory_matur
 
 Per-species base rates are authored, inspectable content in `TERRITORY_MATURITY_RATES`
 (`src/world/creature_territory.py`), not derived from any existing table.
+
+### Natural-Creature Reproduction (TCK-20260902-REPRODUCTION-NATURAL-CREATURE-PATH)
+
+Behind `ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH` (default OFF), `CampService.process_camps()`
+(`src/world/camp.py`) gains a fourth, additive branch that spawns a parentless same-kind offspring
+for a camp that has reached raid maturity, on the camp's own spawn cadence — no new maturity field,
+no new spawn-trigger vocabulary.
+
+**Trigger:** `camp.maturity >= RAID_MATURITY_THRESHOLD` (80.0) and `state.tick %
+CAMP_SPAWN_INTERVAL == 0` (30) — both existing named constants already used by the garrison-spawn
+and raid-trigger blocks in the same function, not new authored numbers.
+
+**Parentless birth record:** the offspring is built via `EntityGenerator.spawn_natural_creature_offspring()`,
+which calls `V2EntityBuilder.birth_record(parent_a_entity_id=None, parent_b_entity_id=None,
+birth_tick=state.tick, birth_city_id=None)` — no tracked parent pair, and consequently no
+`SocialBond` seeding (both parent ids `None`).
+
+**Short CHILD→ADULT maturation clock:** the offspring is built with `life_stage=LifeStage.CHILD`
+and `age_ticks = 3000 - CAMP_SPAWN_INTERVAL` (2970) pre-seeded, rather than `age_ticks=0`. The
+existing, role-agnostic per-tick `age_ticks += 1` increment and `LifecycleSystem`'s forward-only
+`life_stage_set` transition then carry the entity to `ADULT` after exactly one more
+`CAMP_SPAWN_INTERVAL` (30 ticks) — the entity's own next spawn-cadence cycle. This explicitly does
+**not** touch `LifeStageService.get_stage_for_age()`'s global 3000/7000-tick thresholds documented
+in §5's "Age Bracket Thresholds" table above — those remain shared, unmodified, and apply exactly
+as before to every entity in the simulation.
+
+**Population-pressure suppression gate:** reuses §5's Migration Law verbatim — spawn is suppressed
+when `compute_regional_scarcity(region.id, state)` exceeds the camp's region's `young`-bracket
+`migration_threshold` (default 0.7). Because camps sit in wilderness/monster territory that is not
+guaranteed to have `population_cohorts` seeded, this gate mirrors the Migration Law's own existing
+skip-when-empty convention (`_check_migration`/`DemographicCycleService.process_demographics`, both
+skip evaluation entirely when `region.population_cohorts` is empty): a camp in a region with no
+cohort data, or no region at all, is treated as eligible (not suppressed) rather than assumed worst
+case. On a successful birth, this path also nudges the birth region's `young`-bracket count by `+1`
+via `WorldUpdate.population_young_births_delta` — see "Individual-Birth Population-Pressure Nudge"
+below (`TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE`).
+
+### Magical/Demonic Reproduction (TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH)
+
+Behind `ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH` (default OFF), `CalamityService.process_world_dynamics()`
+(`src/world/calamity.py`) gains a third, additive branch that spawns a parentless magical/demonic
+entity in the same high-intensity region as — and on the exact same trigger evaluation as — the
+existing world-boss spawn. No new maturity field, no new spawn-trigger vocabulary.
+
+**Trigger:** identical to the existing world-boss spawn's own trigger — `state.tick -
+state.last_calamity_tick >= CALAMITY_MIN_INTERVAL` (2000), `state.tick % CALAMITY_FORCE_INTERVAL ==
+0` (5000), and the region filter `calamity_intensity > 0.3` — all existing named constants already
+used by the boss-spawn block in the same function, not new authored numbers. The magical/demonic
+entity spawns at the same `target_region.center` already selected for the boss, not a separately
+computed region.
+
+**Parentless birth record:** the entity is built via `EntityGenerator.spawn_magical_demonic_entity()`,
+which calls `V2EntityBuilder.birth_record(parent_a_entity_id=None, parent_b_entity_id=None,
+birth_tick=state.tick, birth_city_id=None)` — no tracked parent pair, and consequently no
+`SocialBond` seeding (both parent ids `None`), identical to the Natural-Creature path above.
+
+**No childhood:** unlike the Natural-Creature path immediately above, this entity spawns directly
+at `LifeStage.ADULT` with `age_ticks=0` — no `life_stage=LifeStage.CHILD` kwarg and no pre-seeded
+`age_ticks` are ever passed to the builder. `IdentityComponent.life_stage` already defaults to
+`ADULT`, so this is satisfied by omission of the sibling path's maturation-clock trick, not by a
+new mechanism. There is no CHILD→ADULT transition and no maturation clock for this path at all —
+this is an explicit, resolved design decision (magical/demonic beings do not have a childhood), not
+an open question.
+
+**No population-pressure suppression gate:** unlike the Natural-Creature path, this branch does
+**not** read `compute_regional_scarcity()`/`migration_threshold`/`PopulationCohort` at all, and does
+not participate in §5's Migration Law in any way. A calamity-driven spawn is a world-threat
+escalation event, not a settlement/camp demographic signal — the existing world-boss branch this
+path sits beside has never had a population-pressure gate either. **This path is also deliberately
+excluded from the individual-birth population-pressure nudge** (see "Individual-Birth
+Population-Pressure Nudge" below) — `TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE`
+evaluated this exclusion explicitly (confirmed, not an oversight): since this path never *reads*
+the population-pressure signal either, symmetry with its own rationale above argues it should not
+*write* to that signal. This path writes neither `population_cohorts_set` nor
+`population_young_births_delta` under any circumstance.
+
+### Humanoid Reproduction (TCK-20260902-REPRODUCTION-HUMANOID-CADENCE-PHASE)
+
+Behind `ENABLE_REPRODUCTION_HUMANOID_PATH` (default OFF), `WorldDynamicsSystem.resolve_dynamics()`
+(`src/engine/world_dynamics.py`) gains a new "3.10 Humanoid Reproduction" step, nested inside the
+existing `cadence.world_dynamics`-gated block on its own independent cadence — the same
+nested-cadence pattern step "3.4 Boss Spawning" already established for `cadence.boss_spawn` in the
+same function. Unlike the Natural-Creature and Magical/Demonic paths above, which spawn a
+parentless entity from a per-camp/per-calamity anchor, this path operates on **existing entity
+pairs** and is the one path in the epic that gets a genuinely new `SystemCadence` field rather than
+reusing `cadence.world_dynamics` plus an inner constant.
+
+**Cadence:** a new `SystemCadence.reproduction_humanoid` field (200 ticks, `src/engine/cadence.py`)
+— a multiple of the outer `cadence.world_dynamics` gate (50) so the nested check aligns cleanly
+with one out of every four `world_dynamics` passes. `should_run(state.tick, None,
+cadence.reproduction_humanoid)` is checked independently of, and nested inside, the outer
+`cadence.world_dynamics` check, exactly as `cadence.boss_spawn` already does for step 3.4.
+
+**Eligibility (`HumanoidReproductionService.process_reproduction()`, `src/world/reproduction_humanoid.py`):**
+one O(n) pass over `state.entities` filtered to `identity.life_stage == LifeStage.ADULT`,
+`combat.alive`, and `lifecycle.active` (the same three-flag liveness convention already used
+elsewhere in this file), sorted by entity id for deterministic iteration. For each unpaired
+candidate, the existing indexed `SpatialQueryService.nearby_entities()` grid lookup (not a naive
+all-pairs scan) finds the lowest-id unpaired candidate within `HUMANOID_PAIRING_RADIUS` (10.0 units
+— the same 10-unit `nearby_entities()` radius convention already used for `_threat_resolved()`'s
+interaction-radius check in `src/systems/strategic_systems/intelligence.py` and
+`RoleModelSelectionPhase.RADIUS` in `src/strategy/role_model_phase.py`) whose
+`EntityState.kind` matches ("same-race" — no separate `race` field exists on `IdentityComponent`)
+and whose `reproduction_cooldowns` entry for the other party (if any) has already expired.
+
+**Population-pressure suppression gate:** reuses §5's Migration Law verbatim, identically to the
+Natural-Creature path above — a pairing is skipped when `compute_regional_scarcity(region.id,
+state)` exceeds the birth region's `young`-bracket `migration_threshold` (default 0.7), and a
+region with no `population_cohorts` seeded, or no region at all, is treated as eligible (not
+suppressed), mirroring the Migration Law's own skip-when-empty convention.
+
+**Tracked-parent birth record, not parentless:** the offspring is built via
+`EntityGenerator.spawn_humanoid_offspring()`, which calls `V2EntityBuilder.birth_record()` with
+real `parent_a_entity_id`/`parent_b_entity_id`, `birth_tick`, and each parent's own
+`lifecycle.genetic_profile` — resolved to a concrete `GeneticProfile` via
+`GeneticsSystem.generate_profile_from_seed(parent_id)` when a first-generation parent has none of
+its own yet (no live spawn path today populates a parent's own `genetic_profile`), since
+`birth_record()`'s internal `combine_profiles()` call only fires when at least one supplied parent
+profile is non-`None` — passing both through as `None` would silently skip genetics combination for
+every first-generation pairing. `parent_a_role`/`parent_b_role` are threaded through from each
+parent's live `identity.role`, driving `combine_profiles()`'s existing combat-lean bias (both
+`EntityRole.HERO` → combat-lean). The offspring spawns at `life_stage=LifeStage.CHILD`,
+`age_ticks=0` — a real newborn, not the Natural-Creature sibling's fast-forwarded maturation-clock
+trick, since this path has no analogous "must appear battle-ready soon" requirement.
+
+**Cooldown and bond writes:** on a successful pairing, both parents receive a per-key
+`LifecycleUpdate.reproduction_cooldowns_add` upsert (`REPRODUCTION_COOLDOWN_TICKS` = 400, 2x the
+cadence interval, so a repeat check on the same pair stays blocked through the very next cadence
+firing after the birth), and the already-shipped `build_parent_bond_updates_for_birth()` seeds each
+parent's reciprocal `SocialBond` toward the child at `familiarity=0.8`/`sentiment=0.8`, applied
+through the normal authoritative apply path — never a direct mutation.
+
+**Not marriage-gated:** per the 2026-08-29 build-order decoupling of Marriage (idea 33) from
+Reproduction (idea 32), this eligibility path never reads or checks any marriage-contract state
+(`ContractKind.MARRIAGE`/`MarriageState`) — verified by an architecture-guard test
+(`tests/unit/world/test_reproduction_humanoid_cadence.py`).
+
+**Closes the population-pressure feedback loop:** on a successful pairing, this path also nudges
+the birth region's `young`-bracket count by `+1` via `WorldUpdate.population_young_births_delta` —
+see "Individual-Birth Population-Pressure Nudge" below
+(`TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE`).
 
 ---
 

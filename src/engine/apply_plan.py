@@ -122,6 +122,18 @@ class ApplyPlanBuilder:
                     mods = list(set([m for m in reg.active_modifiers if m not in r_upd.modifiers_remove] + r_upd.modifiers_add))
                     prc = r_upd.price_modifiers_set if r_upd.price_modifiers_set is not None else reg.price_modifiers
                     pop_cohorts = r_upd.population_cohorts_set if r_upd.population_cohorts_set is not None else reg.population_cohorts
+                    # TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: coarse individual-
+                    # birth nudge, applied strictly after population_cohorts_set is resolved above
+                    # so a same-tick DemographicCycleService rebuild becomes the base and the
+                    # nudge adds on top of it, never clobbering it (additive-only, never a resync).
+                    if r_upd.population_young_births_delta:
+                        from src.domains.demographics.cohort import PopulationCohort
+                        pop_cohorts = dict(pop_cohorts)
+                        existing_young = pop_cohorts.get("young")
+                        if existing_young is not None:
+                            pop_cohorts["young"] = replace(existing_young, count=existing_young.count + r_upd.population_young_births_delta)
+                        else:
+                            pop_cohorts["young"] = PopulationCohort(bracket="young", count=r_upd.population_young_births_delta)
                     # E53Cb: siege mechanics — clamp service_availability, apply siege_state mutations
                     svc_avail = max(0.0, min(1.0, reg.service_availability + r_upd.service_availability_delta))
                     if r_upd.siege_state_clear:

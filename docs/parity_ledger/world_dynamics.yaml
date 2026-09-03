@@ -1694,3 +1694,175 @@
     tests/unit/worldbuilding/test_world_compiler.py::test_canonical_state_hasher_serializes_seeded_population_cohorts
   divergence_note: null
   support_boundary: null
+- id: WORLD-120
+  text: Behind ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH (default OFF), when a camp's
+    maturity is at or above RAID_MATURITY_THRESHOLD (80.0) on a CAMP_SPAWN_INTERVAL
+    (30-tick) cadence, CampService.process_camps() spawns a parentless same-kind offspring
+    via EntityGenerator.spawn_natural_creature_offspring() -- built with life_stage=CHILD
+    and age_ticks=3000-CAMP_SPAWN_INTERVAL (2970) so the existing global aging pipeline
+    carries it to ADULT after exactly one more spawn-cadence cycle, and birth-record
+    fields populated via V2EntityBuilder.birth_record() with both parent_a_entity_id/parent_b_entity_id
+    left None (no SocialBond seeding). Spawn eligibility is suppressed when compute_regional_scarcity()
+    for the camp's region exceeds the young-bracket PopulationCohort.migration_threshold
+    (default 0.7, reusing the Migration Law verbatim); a region with no population_cohorts
+    seeded, or no region at all, is treated as eligible (not suppressed), mirroring
+    the Migration Law's own skip-when-empty convention (WORLD-DEMO-001). On a successful
+    birth, this path also nudges the birth region's young-bracket count by +1 via
+    WorldUpdate.population_young_births_delta, additive-only, applied through the
+    authoritative apply path (see WORLD-123) -- corrected from this entry's prior
+    claim that the path never writes population_cohorts (TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE).
+    This path adds no GeneticsSystem/GeneticProfile dependency. The offspring consumes
+    the parentless birth-record schema shipped by SOC-259.
+  status: verified
+  priority: P2
+  v2_evidence: src/world/camp.py -- CampService.process_camps() "4. Natural-Creature
+    Reproduction" branch, flag-gated, reuses RAID_MATURITY_THRESHOLD/CAMP_SPAWN_INTERVAL,
+    and sets WorldUpdate(region_id=region.id, population_young_births_delta=1) on
+    a successful birth, merged across camps in the same call; src/systems/world_systems/generator.py
+    -- EntityGenerator.spawn_natural_creature_offspring(); src/domains/optimization/feature_flags.py
+    -- ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH registered with default FeatureMode.OFF
+    (DEV-002 default-OFF policy for a brand-new mechanic). Cross-references WORLD-DEMO-001
+    (scarcity/migration-threshold law reused verbatim, not reimplemented), SOC-259
+    (birth-record schema consumed), and WORLD-123 (the population-pressure nudge mechanism
+    this path participates in). TCK-20260902-REPRODUCTION-NATURAL-CREATURE-PATH, TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE.
+  test_path: tests/unit/world/test_natural_creature_reproduction.py::test_camp_maturity_threshold_spawns_natural_creature_offspring;
+    tests/unit/world/test_natural_creature_reproduction.py::test_natural_creature_birth_nudges_young_cohort_by_one
+  divergence_note: null
+  proof_type: parity
+- id: WORLD-121
+  text: 'Behind ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH (default OFF), CalamityService.process_world_dynamics()
+    gains a third, additive branch that spawns a parentless magical/demonic entity
+    in the same target_region already selected for the existing world_boss spawn,
+    on the exact same should_spawn trigger (CALAMITY_MIN_INTERVAL, CALAMITY_FORCE_INTERVAL,
+    calamity_intensity > 0.3 region filter -- all reused verbatim, no new authored
+    trigger numbers). The entity is built via EntityGenerator.spawn_magical_demonic_entity()
+    with kind="magical_demonic_entity", role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE,
+    and spawns directly at LifeStage.ADULT with age_ticks=0 -- no life_stage=CHILD
+    kwarg and no pre-seeded age_ticks, i.e. no CHILD->ADULT maturation clock at all
+    (the opposite of the sibling natural-creature path''s short-clock trick). Birth-record
+    fields are populated via V2EntityBuilder.birth_record() with both parent_a_entity_id/parent_b_entity_id
+    left None (no SocialBond seeding). This path does not reference compute_regional_scarcity()/migration_threshold/PopulationCohort
+    and applies no population-pressure suppression gate -- a calamity-driven spawn
+    is a world-threat escalation event, not a settlement/camp demographic signal,
+    matching the existing unguarded world_boss branch it sits beside. This path reads
+    and writes no population_cohorts, and adds no GeneticsSystem/GeneticProfile dependency.
+    The entity consumes the parentless birth-record schema shipped by SOC-259. TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE
+    evaluated whether this path should participate in the new individual-birth population-pressure
+    nudge (WORLD-123) and confirmed exclusion: since this path never reads compute_regional_scarcity()/migration_threshold/PopulationCohort
+    either, symmetry with its own rationale above argues it should not write to that
+    signal either. This path writes neither population_cohorts_set nor population_young_births_delta
+    under any circumstance.'
+  status: verified
+  priority: P2
+  v2_evidence: src/world/calamity.py -- CalamityService.process_world_dynamics() "3.
+    Magical/Demonic Reproduction" branch, flag-gated, reuses should_spawn/target_region
+    from the existing world_boss branch; src/systems/world_systems/generator.py --
+    EntityGenerator.spawn_magical_demonic_entity(); src/domains/optimization/feature_flags.py
+    -- ENABLE_REPRODUCTION_MAGICAL_DEMONIC_PATH registered with default FeatureMode.OFF
+    (DEV-002 default-OFF policy for a brand-new mechanic). Cross-references SOC-259
+    (birth-record schema consumed). TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH.
+    Cross-references WORLD-123 (confirmed non-participation, regression-guarded by
+    test_magical_demonic_birth_nudge_decision).
+  test_path: tests/unit/world/test_calamity_magical_demonic_reproduction.py::test_calamity_trigger_spawns_magical_demonic_entity_when_flag_on;
+    tests/unit/world/test_calamity_magical_demonic_reproduction.py::test_magical_demonic_birth_nudge_decision
+  divergence_note: null
+  proof_type: parity
+  support_boundary: null
+- id: WORLD-122
+  text: 'Behind ENABLE_REPRODUCTION_HUMANOID_PATH (default OFF), WorldDynamicsSystem.resolve_dynamics()
+    gains a new "3.10 Humanoid Reproduction" step nested inside the existing cadence.world_dynamics
+    block on its own independent cadence field, SystemCadence.reproduction_humanoid
+    (200 ticks) -- the same nested-cadence pattern already established by step 3.4
+    for cadence.boss_spawn. Unlike the parentless Natural-Creature/Magical-Demonic
+    siblings, this path operates on existing ADULT/alive/active entity pairs: HumanoidReproductionService.process_reproduction()
+    does one O(n) candidate pass, then uses the indexed SpatialQueryService.nearby_entities()
+    grid lookup (10.0-unit radius, the same nearby_entities() radius convention already
+    used by _threat_resolved()''s interaction-radius check in src/systems/strategic_systems/intelligence.py
+    and RoleModelSelectionPhase.RADIUS in src/strategy/role_model_phase.py) to find
+    same-kind, cooldown-clear pairs. A matched pair produces a real newborn (life_stage=CHILD,
+    age_ticks=0) via EntityGenerator.spawn_humanoid_offspring(), calling V2EntityBuilder.birth_record()
+    with real parent_a_entity_id/parent_b_entity_id, birth_tick, and each parent''s
+    GeneticProfile -- resolved via GeneticsSystem.generate_profile_from_seed(parent_id)
+    when a first-generation parent has none of its own, since birth_record()''s internal
+    combine_profiles() call only fires when at least one supplied parent profile is
+    non-None. parent_a_role/parent_b_role are threaded through from each parent''s
+    live identity.role, driving combine_profiles()''s existing combat-lean bias. Both
+    parents receive a per-key LifecycleUpdate.reproduction_cooldowns_add upsert (REPRODUCTION_COOLDOWN_TICKS=400,
+    2x the cadence interval), and build_parent_bond_updates_for_birth() seeds each
+    parent''s reciprocal SocialBond toward the child. Eligibility is suppressed when
+    compute_regional_scarcity() for the birth region exceeds the young-bracket PopulationCohort.migration_threshold
+    (default 0.7, reusing the Migration Law verbatim, skip-when-empty convention identical
+    to the Natural-Creature sibling). This path is explicitly NOT gated on any marriage-contract
+    state (2026-08-29 build-order decoupling of idea 32 from idea 33). On a successful
+    pairing, this path also nudges the birth region''s young-bracket count by +1 via
+    WorldUpdate.population_young_births_delta, additive-only, applied through the
+    authoritative apply path (see WORLD-123) -- corrected from this entry''s prior
+    claim that the aggregate population-pressure feedback loop closure was a separate,
+    later ticket; that ticket has now landed (TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE).'
+  status: verified
+  priority: P2
+  v2_evidence: 'src/world/reproduction_humanoid.py -- HumanoidReproductionService.process_reproduction();
+    src/engine/cadence.py -- SystemCadence.reproduction_humanoid (new field, 200 ticks);
+    src/engine/world_dynamics.py -- WorldDynamicsSystem.resolve_dynamics() "3.10 Humanoid
+    Reproduction" step, nested cadence.reproduction_humanoid check inside the cadence.world_dynamics
+    block; src/systems/world_systems/generator.py -- EntityGenerator.spawn_humanoid_offspring();
+    src/domains/optimization/feature_flags.py -- ENABLE_REPRODUCTION_HUMANOID_PATH
+    registered with default FeatureMode.OFF (DEV-002 default-OFF policy for a brand-new
+    mechanic). Cross-references SOC-259 (birth-record schema consumed), SOC-260 (genetics
+    inheritance consumed), WORLD-121/WORLD-120 (sibling reproduction paths, same flag-per-path/scarcity-gate-reuse
+    conventions), and WORLD-DEMO-001 (Migration Law, reused not reimplemented). TCK-20260902-REPRODUCTION-HUMANOID-CADENCE-PHASE.
+    Cross-references WORLD-123 (the population-pressure nudge mechanism this path
+    participates in, via world_updates={region.id: WorldUpdate(region_id=region.id,
+    population_young_births_delta=1)} on the pair_update StateUpdate).'
+  test_path: tests/unit/world/test_reproduction_humanoid_cadence.py::test_eligible_adult_alive_same_location_same_race_pair_produces_birth;
+    tests/integration/optimization/test_component_patch_apply_parity.py::test_humanoid_reproduction_commits_through_authoritative_apply_path;
+    tests/unit/world/test_reproduction_humanoid_cadence.py::test_humanoid_birth_nudges_young_cohort_by_one
+  divergence_note: null
+  proof_type: parity
+  legacy_evidence: null
+  support_boundary: null
+- id: WORLD-123
+  text: 'Individual-birth population-pressure nudge (idea 38): TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE
+    closes the gap between DemographicCycleService''s own 200-tick aggregate birth/death
+    cycle (WORLD-DEMO-001) and the Reproduction epic''s individual-birth paths (WORLD-120/121/122),
+    which previously did not move the aggregate population_cohorts count at all between
+    cycles. A new, genuinely additive field on WorldUpdate, population_young_births_delta:
+    int = 0, is summed across every WorldUpdate merged in a call (WorldUpdate.merge())
+    -- distinct from population_cohorts_set (the existing whole-dict-replace field
+    used by the 200-tick cycle and by migration, WORLD-DEMO-001), so a same-tick collision
+    between the two fields'' writers can never clobber either. The authoritative apply
+    path (src/engine/apply_plan.py) resolves population_cohorts_set first, then layers
+    the nudge''s delta onto the young bracket''s count -- materializing a fresh PopulationCohort(bracket="young",
+    count=<delta>) with dataclass defaults (mirroring src/worldbuilding/compiler.py''s
+    _seed_population_cohorts(), WORLD-DEMO-006) when the region has no young bracket
+    seeded yet, rather than silently dropping the signal. This also fixes a pre-existing
+    bug in WorldDynamicsSystem.resolve_dynamics() (src/engine/world_dynamics.py) that
+    silently dropped camp_state_update.world_updates/calamity_update.world_updates
+    before this ticket -- both are now folded into the final returned StateUpdate.world_updates
+    via the same per-region merge-or-set idiom already used for ThreatService. The
+    nudge is coarse and additive-only -- exactly +1 per birth, never a full resync/recount
+    against actual named entities -- per the idea-38 atlas card''s revision-25 decision.
+    Participating paths: Natural-Creature (WORLD-120) and Humanoid (WORLD-122). Magical/Demonic
+    (WORLD-121) is confirmed excluded: it never reads the population-pressure signal
+    either, so by symmetry it does not write to it.'
+  status: verified
+  priority: P1
+  v2_evidence: src/core/updates.py -- WorldUpdate.population_young_births_delta field
+    and its additive merge() branch; src/engine/apply_plan.py -- delta applied after
+    population_cohorts_set resolution, materializing a fresh young PopulationCohort
+    with dataclass defaults when absent; src/engine/world_dynamics.py -- resolve_dynamics()
+    now folds camp_state_update.world_updates/calamity_update.world_updates into the
+    final StateUpdate via the ThreatService merge-or-set idiom; src/world/camp.py
+    -- CampService.process_camps() block 4 sets the nudge, locally accumulated across
+    camps in the same call; src/world/reproduction_humanoid.py -- HumanoidReproductionService.process_reproduction()
+    sets the nudge on pair_update, accumulated via the existing result.merge(pair_update)
+    loop; src/world/calamity.py -- confirmed-exclusion comment on the Magical/Demonic
+    branch. Cross-references WORLD-120, WORLD-121, WORLD-122, WORLD-DEMO-005 (population
+    density -> demand_multiplier -> resource pressure, unchanged formula, new count-mutation
+    source), WORLD-DEMO-006 (world-assembly-time cohort seeding, precedent for dataclass-default
+    bracket materialization). TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE.
+  test_path: tests/unit/domains/world_emergence/test_phase8_regional_pressure_model.py::test_repeated_births_increase_population_density_signal;
+    tests/integration/scenarios/test_demographics.py::test_population_pressure_region_responds_to_real_births;
+    tests/unit/world/test_world_dynamics.py::test_world_dynamics_folds_camp_and_calamity_world_updates_into_final_update
+  divergence_note: null
+  proof_type: parity

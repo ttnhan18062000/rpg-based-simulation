@@ -75,6 +75,8 @@ class LifecyclePatch(ComponentPatch):
             u_life = self.lifecycle
             new_heirlooms = list(new_lifecycle.heirlooms)
             new_heirlooms.extend(u_life.heirlooms_add)
+            new_dependents = list(new_lifecycle.dependent_entity_ids)
+            new_dependents.extend(u_life.dependent_entity_ids_add)
             new_lifecycle = replace(new_lifecycle,
                 age_ticks=new_lifecycle.age_ticks + u_life.age_delta,
                 generation=new_lifecycle.generation + u_life.generation_delta,
@@ -82,7 +84,17 @@ class LifecyclePatch(ComponentPatch):
                 death_tick=u_life.death_tick_set if u_life.death_tick_set is not None else new_lifecycle.death_tick,
                 death_reason=u_life.death_reason_set if u_life.death_reason_set is not None else new_lifecycle.death_reason,
                 heir_entity_id=u_life.heir_entity_id_set if u_life.heir_entity_id_set is not None else new_lifecycle.heir_entity_id,
-                heirlooms=tuple(new_heirlooms)
+                heirlooms=tuple(new_heirlooms),
+                parent_a_entity_id=u_life.parent_a_entity_id_set if u_life.parent_a_entity_id_set is not None else new_lifecycle.parent_a_entity_id,
+                parent_b_entity_id=u_life.parent_b_entity_id_set if u_life.parent_b_entity_id_set is not None else new_lifecycle.parent_b_entity_id,
+                dependent_entity_ids=tuple(new_dependents),
+                birth_tick=u_life.birth_tick_set if u_life.birth_tick_set is not None else new_lifecycle.birth_tick,
+                birth_city_id=u_life.birth_city_id_set if u_life.birth_city_id_set is not None else new_lifecycle.birth_city_id,
+                reproduction_cooldowns=(
+                    {**new_lifecycle.reproduction_cooldowns, **u_life.reproduction_cooldowns_add}
+                    if u_life.reproduction_cooldowns_add else new_lifecycle.reproduction_cooldowns
+                ),
+                genetic_profile=u_life.genetic_profile_set if u_life.genetic_profile_set is not None else new_lifecycle.genetic_profile,
             )
         if new_lifecycle is not entity.lifecycle:
             changes["lifecycle"] = new_lifecycle
@@ -455,6 +467,7 @@ class StrategicPatch(ComponentPatch):
             ncz = merge_dict(new_strat.candidate_zones, u_strat.candidate_zones_add_or_update, u_strat.candidate_zones_remove)
             nh = merge_dict(new_strat.hypotheses, u_strat.hypotheses_add_or_update, u_strat.hypotheses_remove)
             ncon = merge_dict(new_strat.contracts, u_strat.contracts_add_or_update, u_strat.contracts_remove)
+            nmar = merge_dict(new_strat.marriages, u_strat.marriages_add_or_update, u_strat.marriages_remove)
             nbel = merge_dict(new_strat.beliefs, u_strat.beliefs_add_or_update, u_strat.beliefs_remove)
             ntp = list(new_strat.turning_points) + u_strat.turning_points_add
             
@@ -479,7 +492,7 @@ class StrategicPatch(ComponentPatch):
             new_strat = replace(new_strat,
                 blockers=shallow_freeze(nb), leads=shallow_freeze(nl), directives=shallow_freeze(nd),
                 projects=shallow_freeze(np), concerns=shallow_freeze(nc), candidate_zones=shallow_freeze(ncz),
-                hypotheses=shallow_freeze(nh), contracts=shallow_freeze(ncon), turning_points=tuple(ntp),
+                hypotheses=shallow_freeze(nh), contracts=shallow_freeze(ncon), marriages=shallow_freeze(nmar), turning_points=tuple(ntp),
                 boredom=shallow_freeze(nbor), source_trust=shallow_freeze(ntrust), beliefs=shallow_freeze(nbel),
                 committed_intentions=nci,
                 current_project_id=u_strat.current_project_id_set if u_strat.current_project_id_set is not None else new_strat.current_project_id,

@@ -3,7 +3,9 @@ from typing import TYPE_CHECKING, List, Optional
 from dataclasses import replace
 from src.core.updates import StateUpdate, EntityUpdate, LifecycleUpdate, InventoryUpdate, IdentityUpdate
 from src.core.state import LifeStage
+from src.core.enums import EntityRole
 from src.ai.life_stage import LifeStageService
+from src.ai.coming_of_age import choose_archetype, is_excluded_no_birth_record
 from src.domains.demographics.cohort import compute_elder_attribute_update
 import logging
 
@@ -66,6 +68,24 @@ class LifecycleSystem:
                     )
                     if elder_update is not None:
                         ent_upd = ent_upd.merge(elder_update)
+
+                # Coming of Age archetype-choice roll (TCK-20260902-COMING-OF-AGE-ARCHETYPE-
+                # CHOICE, idea 34). The entity.identity.role == EntityRole.CITIZEN gate is
+                # required, not optional: without it this branch would also fire for a
+                # MONSTER-role CHILD from the flag-gated Natural-Creature reproduction path
+                # (spawn_natural_creature_offspring(), src/systems/world_systems/generator.py),
+                # whose is_excluded_no_birth_record() check alone does NOT exclude it (it is
+                # parentless but carries a real nonzero birth_tick) -- overwriting role_set there
+                # would produce an incoherent MONSTER_HORDE-faction entity with a citizen
+                # occupation.
+                if (
+                    target_stage == LifeStage.ADULT
+                    and entity.identity.life_stage == LifeStage.CHILD
+                    and entity.identity.role == EntityRole.CITIZEN
+                ):
+                    if not is_excluded_no_birth_record(entity):
+                        archetype_role = choose_archetype(entity, state)
+                        ent_upd = replace(ent_upd, identity=replace(ent_upd.identity, role_set=archetype_role))
 
                 refined_entity_updates[e_id] = ent_upd
 

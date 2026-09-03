@@ -3766,3 +3766,136 @@
   test_path: tests/unit/social/test_teach.py::test_teach_refused_below_trust_hard_cancel_threshold
   divergence_note: null
   support_boundary: null
+- id: SOC-259
+  text: 'Birth-record durable schema (idea 32, Reproduction): LifecycleComponent gains
+    parent_a_entity_id/parent_b_entity_id (Optional[int], None for a parentless natural-creature/magical
+    spawn), birth_tick (int, 0 is the no-birth-record sentinel), birth_city_id (Optional[int],
+    no referential-integrity validation), and reproduction_cooldowns (Dict[int,int],
+    partner_entity_id -> cooldown_expiry_tick, merged per-key via LifecycleUpdate.reproduction_cooldowns_add
+    so two same-tick writers cannot clobber each other''s entry). All five fields
+    are written only through LifecycleUpdate.*_set/reproduction_cooldowns_add applied
+    via LifecyclePatch.apply -- the sole authoritative LifecycleComponent write path,
+    never a direct replace(). V2EntityBuilder.birth_record() populates all five fields
+    at entity-construction time and seeds the new entity''s own SocialBond toward
+    each parent at familiarity=0.8/sentiment=0.8 (role stays NEUTRAL); the module-level
+    build_parent_bond_updates_for_birth() helper produces the parents'' reciprocal
+    EntityUpdates at the same 0.8/0.8 values for a caller to apply through the standard
+    SocialUpdate.bond_updates path. This is schema + builder plumbing only -- no reproduction
+    trigger logic, no genetics wiring, and explicitly no marriage/contract precondition
+    anywhere in the schema or its write path (Reproduction, idea 32, is decoupled
+    from Marriage, idea 33, per the 2026-08-29 build-order decision).'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (LifecycleComponent.parent_a_entity_id/parent_b_entity_id/birth_tick/birth_city_id/reproduction_cooldowns,
+    to_canonical_dict()); src/core/updates.py (LifecycleUpdate.parent_a_entity_id_set/parent_b_entity_id_set/birth_tick_set/birth_city_id_set/reproduction_cooldowns_add,
+    is_noop()/merge()); src/engine/patches.py (LifecyclePatch.apply); src/core/builder.py
+    (V2EntityBuilder.lifecycle(), V2EntityBuilder.birth_record(), build_parent_bond_updates_for_birth()).
+  proof_type: regression
+  test_path: tests/unit/progression/test_lifecycle.py::test_lifecycle_component_canonical_dict_round_trip_includes_birth_fields
+  divergence_note: null
+  support_boundary: null
+- id: SOC-260
+  text: 'Genetic inheritance/combination (idea 32, Reproduction): GeneticsSystem.combine_profiles(parent_a,
+    parent_b, *, combat_lean, seed) -> GeneticProfile (src/systems/lifecycle_systems/genetics.py)
+    is GeneticsSystem/GeneticProfile''s first real, live, non-test, non-shim caller.
+    Per attribute, the child multiplier is a convex combination of both parents''
+    values, convex-blended with a generate_profile_from_seed(seed) perturbation draw
+    (0.6/0.4 weighting), then -- only when combat_lean is True and the attribute is
+    strength_mult/agility_mult/constitution_mult -- pulled 35% of the remaining distance
+    toward the 1.3 ceiling; the result is clamped to [0.8, 1.3]. Every step is a convex
+    combination of values already in that range or an explicit clamp, so the range
+    law holds by construction. combat_lean is True only when both parents'' IdentityComponent.role
+    == EntityRole.HERO; any other parent-role pairing (civilian CITIZEN/SHOPKEEPER,
+    WORKER/GUARD, or a mismatch) falls through to the same neutral default -- this
+    is the general fallthrough for any non-double-HERO pairing, not a rule scoped
+    narrowly to CITIZEN/SHOPKEEPER. LifecycleComponent gains genetic_profile: Optional[GeneticProfile]
+    (default None, to_canonical_dict() asdict()-serialized), written only through
+    LifecycleUpdate.genetic_profile_set applied via LifecyclePatch.apply -- the sole
+    authoritative LifecycleComponent write path, never a direct replace(). V2EntityBuilder.birth_record()
+    gains parent_a_genetic_profile/parent_b_genetic_profile/parent_a_role/parent_b_role
+    kwargs (all Optional, default None) that trigger combine_profiles() and write
+    the result via .lifecycle(genetic_profile=...); a missing parent profile falls
+    back to generate_profile_from_seed() seeded on that parent''s entity id, since
+    no live spawn path yet populates a parent''s own genetic_profile. Cross-references
+    SOC-259 (the birth-record schema this entry''s write path extends). The natural-creature
+    and magical/demonic parentless spawn paths never pass parent profiles, so genetic_profile
+    stays None for those entities (confirmed by dedicated anti-drift test).'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/systems/lifecycle_systems/genetics.py (GeneticsSystem.combine_profiles());
+    src/core/state.py (LifecycleComponent.genetic_profile, to_canonical_dict()); src/core/updates.py
+    (LifecycleUpdate.genetic_profile_set, is_noop()/merge()); src/engine/patches.py
+    (LifecyclePatch.apply()); src/core/builder.py (V2EntityBuilder.lifecycle(), V2EntityBuilder.birth_record()).
+  proof_type: regression
+  test_path: tests/unit/progression/test_genetics.py::TestCombineGeneticProfiles::test_adventurer_parents_bias_toward_combat_attributes
+  divergence_note: null
+  support_boundary: null
+- id: SOC-261
+  text: 'Marriage is a propose/accept contract gated on trust, not eligibility scoring:
+    CoreActions.execute_propose_marriage() (src/engine/domain/core_actions.py) is
+    a two-party action (entity=proposer, payload[''target_id'']=target) that builds
+    a transient ContractState(kind=ContractKind.MARRIAGE) and routes it through SocialAppraisalSystem.appraise_contract()
+    -- the target appraises the proposer, matching execute_recruit/execute_team_up/execute_trade/execute_train''s
+    existing target-appraises-offer convention. _appraise_marriage always accepts
+    once the shared hard-cancel prelude (trust_score<0.2, bond.sentiment<-0.8, or
+    betrayal_count>0 and trust_score<0.4) passes -- that prelude is the entire gate,
+    no additional utility/risk scoring, no eligibility_gate field. On ACCEPTED, a
+    new typed durable MarriageState record (own MarriageStatus enum: PROPOSED/ACCEPTED/REJECTED,
+    distinct from ContractStatus) is written via StrategicUpdate.marriages_add_or_update
+    on both the proposer''s and the target''s EntityUpdate, through the same authoritative
+    Patch.apply() merge path StrategicComponent.contracts already uses. ContractService.get_project_mapping()
+    returns None for MARRIAGE by construction -- it is not widened, so MARRIAGE never
+    materializes a tier-5 strategic project. Bigamy prevention, household/family/dependents
+    state, and fantasy-year aging/duration thresholds are deliberately out of scope
+    (TCK-20260902-MARRIAGE-PROPOSAL-CONTRACT).'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src/engine/domain/core_actions.py (CoreActions.execute_propose_marriage());
+    src/systems/social_systems/appraisal.py (SocialAppraisalSystem._appraise_marriage,
+    appraise_contract()'s MARRIAGE dispatch branch); src/core/strategic.py (ContractKind.MARRIAGE,
+    MarriageStatus, MarriageState, StrategicComponent.marriages); src/core/updates.py
+    (StrategicUpdate.marriages_add_or_update/marriages_remove); src/engine/patches.py
+    (Patch.apply() marriages merge); src/core/enums.py (ReasonCode.MARRIAGE_ACCEPTED/MARRIAGE_DECLINED);
+    src/engine/domain/action_router.py (PROPOSE_MARRIAGE branch).
+  proof_type: regression
+  test_path: tests/unit/social/test_marriage.py::test_marriage_refused_below_trust_hard_cancel_threshold
+  divergence_note: null
+  support_boundary: null
+- id: SOC-262
+  text: 'Personal Dependents Route Bias (idea 31, non-parental case): LifecycleComponent.dependent_entity_ids:
+    list[int] (src/core/state.py) is a new, genuinely distinct durable field from
+    heir_entity_id (singular, death-only inheritance target) and from parent_a_entity_id/parent_b_entity_id
+    (child->parent direction) -- it records the plural set of entities this entity
+    is personally responsible for while alive. Written only through LifecycleUpdate.dependent_entity_ids_add:
+    list[int] (src/core/updates.py), merged additively across same-tick writers by
+    LifecycleUpdate.merge(), and applied authoritatively by LifecyclePatch.apply()
+    (src/engine/patches.py), mirroring heirlooms/heirlooms_add''s extend-then-tuple-assign
+    write path exactly. AdventureRouteScorer.score() (src/domains/adventure/scoring.py)
+    gains a new post-clamp block SS9b, placed immediately after SS9''s escort scoring
+    (SOC-230) and reading entity.lifecycle.dependent_entity_ids directly off the entity
+    argument -- never a new optional scorer parameter, which avoids the confirmed-dead
+    faction_directives parameter pattern documented at SOC-230''s sibling SS6.10 entry
+    in docs/mechanics/04_strategic_cognition.md. When dependent_entity_ids is non-empty:
+    HUNT_WEAK_ENEMY gets a flat -2.0 (floored at 0.0), RECOVER and RETURN_TOWN each
+    get a flat +1.0. The new term is traced on its own AdventureRouteOption.dependent_bias
+    field (src/domains/adventure/schema.py). The bias keys on mere presence of an
+    id, not liveness, since score() carries no world-state parameter to check it against
+    -- a disclosed simplification. Construction is builder-only for tests/demo (V2EntityBuilder.lifecycle(dependent_entity_ids=...),
+    src/core/builder.py); birth-triggered parental dependent auto-registration (a
+    newborn auto-registering as its parent''s dependent via parent_a_entity_id/parent_b_entity_id)
+    is explicitly deferred to TCK-20260902-EPIC-RPG-M3-REPRODUCTION, pending that
+    epic''s birth-record schema maturing further -- not built by this entry.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (LifecycleComponent.dependent_entity_ids, to_canonical_dict());
+    src/core/updates.py (LifecycleUpdate.dependent_entity_ids_add, is_noop()/merge());
+    src/engine/patches.py (LifecyclePatch.apply()); src/core/builder.py (V2EntityBuilder.lifecycle());
+    src/domains/adventure/scoring.py (SS9b); src/domains/adventure/schema.py (AdventureRouteOption.dependent_bias).
+  proof_type: regression
+  test_path: tests/unit/domains/adventure/test_scoring_dependent_bias.py::test_dependent_route_bias_lowers_risky_route_score
+  divergence_note: null
+  support_boundary: null
