@@ -908,11 +908,18 @@ class EntityState:
                 "target": self.navigation.target,
                 "path": self.navigation.path,
                 "moved_recently": self.navigation.moved_recently,
-                # NOTE: region_id and most other NavigationComponent fields are NOT
-                # covered here -- a pre-existing gap (TCK-20260903-NAVIGATION-CANONICAL-HASH-GAP),
-                # not introduced or repeated by this field. place_id is added explicitly
-                # so it does not silently inherit that same omission.
                 "place_id": self.navigation.place_id,
+                "movement_mode": str(self.navigation.movement_mode),
+                "last_failure_reason": self.navigation.last_failure_reason,
+                "wait_count": self.navigation.wait_count,
+                "oscillation_count": self.navigation.oscillation_count,
+                "last_position": self.navigation.last_position,
+                "home_position": self.navigation.home_position,
+                "leash_radius": self.navigation.leash_radius,
+                "region_id": self.navigation.region_id,
+                "chase_ticks": self.navigation.chase_ticks,
+                "max_chase_ticks": self.navigation.max_chase_ticks,
+                "returning_home": self.navigation.returning_home,
             },
             "task": {
                 "work_kind": self.task.work_kind,
