@@ -96,6 +96,42 @@ class GeneticsSystem:
             charisma_mult=round(_extract(10), 3)
         )
 
+    _COMBAT_ATTRS = ("strength_mult", "agility_mult", "constitution_mult")
+    _PROFILE_ATTRS = (
+        "strength_mult", "agility_mult", "intelligence_mult",
+        "wisdom_mult", "constitution_mult", "charisma_mult",
+    )
+
+    @staticmethod
+    def combine_profiles(
+        parent_a: GeneticProfile,
+        parent_b: GeneticProfile,
+        *,
+        combat_lean: bool,
+        seed: int,
+    ) -> GeneticProfile:
+        """
+        Combine two parents' genetic profiles into a child profile via convex
+        combination (average of parents, blended with a seeded perturbation term),
+        with an optional pull toward the 1.3 ceiling on combat-relevant attributes
+        when both parents are combat-lean.
+
+        Every step is a convex combination of values already in [0.8, 1.3], or an
+        explicit clamp -- the result cannot leave [0.8, 1.3] by construction
+        (lifecycle_systems_contract.md Extension rule #2).
+        """
+        perturbation = GeneticsSystem.generate_profile_from_seed(seed)
+
+        result: Dict[str, float] = {}
+        for attr in GeneticsSystem._PROFILE_ATTRS:
+            avg = (getattr(parent_a, attr) + getattr(parent_b, attr)) / 2.0
+            blended = 0.6 * avg + 0.4 * getattr(perturbation, attr)
+            if combat_lean and attr in GeneticsSystem._COMBAT_ATTRS:
+                blended = blended + (1.3 - blended) * 0.35
+            result[attr] = round(min(1.3, max(0.8, blended)), 3)
+
+        return GeneticProfile(**result)
+
 
 class SkillScalingSystem:
     """

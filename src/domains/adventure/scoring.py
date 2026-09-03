@@ -367,6 +367,20 @@ class AdventureRouteScorer:
             elif route.family == RouteFamily.OWN_SURVIVAL:
                 final_score = round(max(0.0, final_score - 1.0), 4)
 
+        # ── 9b. Personal Dependents Route Bias (SOC-262) ─────────────────────────
+        # Reads entity.lifecycle.dependent_entity_ids directly (never a new optional scorer
+        # parameter) -- entity is the only argument confirmed unconditionally passed at every
+        # live call site (service.py:74, adventure_scorer.py:138); group/faction_directives are
+        # not always threaded through and must not be the read source (see plan.md Decision 2).
+        dependent_bias = 0.0
+        if entity.lifecycle.dependent_entity_ids:
+            if route.family == RouteFamily.HUNT_WEAK_ENEMY:
+                dependent_bias = -2.0
+            elif route.family in (RouteFamily.RECOVER, RouteFamily.RETURN_TOWN):
+                dependent_bias = 1.0
+            if dependent_bias != 0.0:
+                final_score = round(max(0.0, final_score + dependent_bias), 4)
+
         return dataclasses.replace(
             route,
             score=final_score,
@@ -378,4 +392,5 @@ class AdventureRouteScorer:
             confidence_bonus=round(confidence_bonus, 4),
             risk_penalty=round(risk_penalty, 4),
             blocker_penalty=round(blocker_penalty, 4),
+            dependent_bias=round(dependent_bias, 4),
         )

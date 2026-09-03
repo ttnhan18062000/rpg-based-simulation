@@ -18,6 +18,7 @@ from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
 from src.core.immutability import shallow_freeze
 from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
+from src.systems.lifecycle_systems.genetics import GeneticProfile
 
 
 def _readonly_mapping(value):
@@ -159,7 +160,14 @@ class LifecycleComponent:
     generation: int = 1
     heir_entity_id: Optional[int] = None
     heirlooms: list[str] = field(default_factory=list)
+    parent_a_entity_id: Optional[int] = None
+    parent_b_entity_id: Optional[int] = None
+    dependent_entity_ids: list[int] = field(default_factory=list)
+    birth_tick: int = 0
+    birth_city_id: Optional[int] = None
+    reproduction_cooldowns: Dict[int, int] = field(default_factory=dict)  # partner_entity_id -> cooldown_expiry_tick
     active: bool = True
+    genetic_profile: Optional[GeneticProfile] = None
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -174,7 +182,14 @@ class LifecycleComponent:
             "generation": self.generation,
             "heir_entity_id": self.heir_entity_id,
             "heirlooms": sorted(list(self.heirlooms)),
-            "active": self.active
+            "parent_a_entity_id": self.parent_a_entity_id,
+            "parent_b_entity_id": self.parent_b_entity_id,
+            "dependent_entity_ids": sorted(list(self.dependent_entity_ids)),
+            "birth_tick": self.birth_tick,
+            "birth_city_id": self.birth_city_id,
+            "reproduction_cooldowns": dict(sorted(self.reproduction_cooldowns.items())),
+            "active": self.active,
+            "genetic_profile": asdict(self.genetic_profile) if self.genetic_profile else None
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
@@ -779,7 +794,8 @@ class EntityState:
                 "leads": {k: asdict(v) for k, v in sorted(self.strategic.leads.items())},
                 "concerns": {k: asdict(v) for k, v in sorted(self.strategic.concerns.items())},
                 "boredom": dict(sorted(self.strategic.boredom.items())),
-                "beliefs": {k: asdict(v) for k, v in sorted(self.strategic.beliefs.items())}
+                "beliefs": {k: asdict(v) for k, v in sorted(self.strategic.beliefs.items())},
+                "marriages": {k: asdict(v) for k, v in sorted(self.strategic.marriages.items())}
             },
             "social": {
                 "trust_history": {str(k): v for k, v in sorted(self.social.trust_history.items())},

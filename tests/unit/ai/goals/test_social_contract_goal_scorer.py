@@ -128,6 +128,7 @@ def test_social_contract_protection_merchant_position_swap_never_spawn_a_project
         ContractKind.TEAM_UP,
         ContractKind.PAID_INFORMATION,
         ContractKind.TEACH,
+        ContractKind.MARRIAGE,
     ):
         contract = ContractState(
             id=f"c_{kind.value}", kind=kind, source_id=2, target_id=1,

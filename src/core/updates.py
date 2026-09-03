@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
         CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState,
-        ContractState, TurningPointState, CommittedIntention
+        ContractState, TurningPointState, CommittedIntention, MarriageState
     )
     from src.engine.policy import GovernorPolicy
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
@@ -22,6 +22,7 @@ from src.core.update_models.inventory import InventoryUpdate, ItemInstanceUpdate
 from src.core.update_models.quests import QuestUpdate
 from src.core.update_models.resources import ResourceTransferIntent
 from src.core.dirty import DirtySet
+from src.systems.lifecycle_systems.genetics import GeneticProfile
 
 
 @dataclass(frozen=True, slots=True)
@@ -441,12 +442,23 @@ class LifecycleUpdate:
     death_reason_set: Optional[str] = None
     heir_entity_id_set: Optional[int] = None
     heirlooms_add: list[str] = field(default_factory=list)
+    parent_a_entity_id_set: Optional[int] = None
+    parent_b_entity_id_set: Optional[int] = None
+    dependent_entity_ids_add: list[int] = field(default_factory=list)
+    birth_tick_set: Optional[int] = None
+    birth_city_id_set: Optional[int] = None
+    reproduction_cooldowns_add: Dict[int, int] = field(default_factory=dict)  # per-key upsert, NOT wholesale replace
+    genetic_profile_set: Optional[GeneticProfile] = None
 
     def is_noop(self) -> bool:
-        return (self.age_delta == 0 and self.generation_delta == 0 and 
-                self.is_permadeath_set is None and self.death_tick_set is None and 
-                self.death_reason_set is None and self.heir_entity_id_set is None and 
-                not self.heirlooms_add)
+        return (self.age_delta == 0 and self.generation_delta == 0 and
+                self.is_permadeath_set is None and self.death_tick_set is None and
+                self.death_reason_set is None and self.heir_entity_id_set is None and
+                not self.heirlooms_add and self.parent_a_entity_id_set is None and
+                self.parent_b_entity_id_set is None and not self.dependent_entity_ids_add and
+                self.birth_tick_set is None and
+                self.birth_city_id_set is None and not self.reproduction_cooldowns_add and
+                self.genetic_profile_set is None)
 
     def merge(self, other: LifecycleUpdate) -> LifecycleUpdate:
         if not other or other.is_noop():
@@ -459,6 +471,14 @@ class LifecycleUpdate:
         if other.death_reason_set is not None: changes["death_reason_set"] = other.death_reason_set
         if other.heir_entity_id_set is not None: changes["heir_entity_id_set"] = other.heir_entity_id_set
         if other.heirlooms_add: changes["heirlooms_add"] = self.heirlooms_add + other.heirlooms_add
+        if other.parent_a_entity_id_set is not None: changes["parent_a_entity_id_set"] = other.parent_a_entity_id_set
+        if other.parent_b_entity_id_set is not None: changes["parent_b_entity_id_set"] = other.parent_b_entity_id_set
+        if other.dependent_entity_ids_add: changes["dependent_entity_ids_add"] = self.dependent_entity_ids_add + other.dependent_entity_ids_add
+        if other.birth_tick_set is not None: changes["birth_tick_set"] = other.birth_tick_set
+        if other.birth_city_id_set is not None: changes["birth_city_id_set"] = other.birth_city_id_set
+        if other.reproduction_cooldowns_add:
+            changes["reproduction_cooldowns_add"] = {**self.reproduction_cooldowns_add, **other.reproduction_cooldowns_add}
+        if other.genetic_profile_set is not None: changes["genetic_profile_set"] = other.genetic_profile_set
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
@@ -515,6 +535,9 @@ class StrategicUpdate:
     # Contracts
     contracts_add_or_update: list[ContractState] = field(default_factory=list)
     contracts_remove: list[str] = field(default_factory=list)
+    # Marriages
+    marriages_add_or_update: list[MarriageState] = field(default_factory=list)
+    marriages_remove: list[str] = field(default_factory=list)
     # Turning Points
     turning_points_add: list[TurningPointState] = field(default_factory=list)
     # Overload
@@ -541,6 +564,7 @@ class StrategicUpdate:
                 not self.candidate_zones_remove and not self.hypotheses_add_or_update and
                 not self.hypotheses_remove and not self.source_trust_updates and
                 not self.contracts_add_or_update and not self.contracts_remove and
+                not self.marriages_add_or_update and not self.marriages_remove and
                 not self.turning_points_add and self.overload_source_set is None and
                 self.overload_tick_set is None and self.last_routing_family_set is None and
                 self.last_routing_tick_set is None and not self.beliefs_add_or_update and
@@ -578,6 +602,8 @@ class StrategicUpdate:
             source_trust_updates=self.source_trust_updates + other.source_trust_updates,
             contracts_add_or_update=self.contracts_add_or_update + other.contracts_add_or_update,
             contracts_remove=self.contracts_remove + other.contracts_remove,
+            marriages_add_or_update=self.marriages_add_or_update + other.marriages_add_or_update,
+            marriages_remove=self.marriages_remove + other.marriages_remove,
             turning_points_add=self.turning_points_add + other.turning_points_add,
             overload_source_set=other.overload_source_set if other.overload_source_set is not None else self.overload_source_set,
             overload_tick_set=other.overload_tick_set if other.overload_tick_set is not None else self.overload_tick_set,
@@ -808,6 +834,9 @@ class WorldUpdate:
     price_modifiers_set: Optional[Dict[str, float]] = None
     # E52A: Per-region demographic cohort state (Dict[bracket, PopulationCohort])
     population_cohorts_set: Optional[Dict[str, Any]] = None
+    # TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: coarse, additive-only nudge
+    # applied on top of population_cohorts_set (never a resync) — see apply_plan.py.
+    population_young_births_delta: int = 0
     # E53Cb: Siege mechanics
     service_availability_delta: float = 0.0
     siege_state_set: Optional[Any] = None   # Optional[SiegeState] — Any to avoid circular import
@@ -835,6 +864,7 @@ class WorldUpdate:
             modifiers_remove=list(set(self.modifiers_remove + other.modifiers_remove)),
             price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set,
             population_cohorts_set=other.population_cohorts_set if other.population_cohorts_set is not None else self.population_cohorts_set,
+            population_young_births_delta=self.population_young_births_delta + other.population_young_births_delta,
             service_availability_delta=self.service_availability_delta + other.service_availability_delta,
             siege_state_set=other.siege_state_set if other.siege_state_set is not None else self.siege_state_set,
             siege_state_clear=self.siege_state_clear or other.siege_state_clear,

@@ -123,6 +123,33 @@ Genetic profiles are **permanent** — they do not change during simulation (no 
 
 `effective_stat = base_stat × genetic_multiplier` per attribute. Effective stats (not base stats) are used in all downstream calculations: combat, skill scaling, progression.
 
+### Assignment via parent combination (inheritance)
+
+`GeneticsSystem.combine_profiles(parent_a: GeneticProfile, parent_b: GeneticProfile, *,
+combat_lean: bool, seed: int) -> GeneticProfile`
+
+A second, coexisting construction-time assignment mechanism (alongside `generate_profile_from_seed()`
+above), for human/humanoid reproduction (idea 32). Per attribute: convex-combine the two parents'
+multipliers (average), convex-blend that average with a `generate_profile_from_seed(seed)`
+perturbation draw (0.6/0.4 weighting), then — only when `combat_lean` is `True` and the attribute
+is `strength_mult`/`agility_mult`/`constitution_mult` — pull the blended value 35% of the remaining
+distance toward the 1.3 ceiling. Every step is a convex combination of values already in
+`[0.8, 1.3]`, or an explicit `min`/`max` clamp, so the result stays in range by construction —
+satisfying Extension rule #2 below without an `intentional_divergences.md` entry.
+
+`combat_lean` is `True` only when both parents' `IdentityComponent.role == EntityRole.HERO`; any
+other parent-role pairing (civilian `CITIZEN`/`SHOPKEEPER`, `WORKER`/`GUARD`, or a mismatch
+between them) falls through to the same neutral default — this is the general fallthrough, not a
+rule scoped to `CITIZEN`/`SHOPKEEPER` alone.
+
+`V2EntityBuilder.birth_record()` (`src/core/builder.py`) is this method's first real, live,
+non-test caller: passing `parent_a_genetic_profile`/`parent_b_genetic_profile`/`parent_a_role`/
+`parent_b_role` triggers `combine_profiles()` and writes the combined profile onto the new
+entity's `LifecycleComponent.genetic_profile` via `LifecycleUpdate.genetic_profile_set` →
+`LifecyclePatch.apply()` — the same authoritative write path as every other `LifecycleComponent`
+field, never a direct mutation. The natural-creature and magical/demonic parentless spawn paths
+never pass parent profiles, so `genetic_profile` stays `None` for those entities.
+
 ### Skill scaling by genetics
 
 `SkillScalingSystem.compute_skill_power()` applies effective stats to skill power formulas:

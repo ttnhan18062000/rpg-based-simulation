@@ -1,6 +1,7 @@
 # tests/unit/domains/world_emergence/test_phase8_regional_pressure_model.py
 import pytest
 from src.core.state import AuthoritativeState, RegionState
+from src.core.updates import StateUpdate, WorldUpdate
 from src.domains.world_emergence.schema import WorldEventAggregate, WorldEventCategory, RegionalPressure
 from src.domains.world_emergence.models import RegionalPressureModel
 
@@ -25,6 +26,52 @@ def test_repeated_deaths_increase_danger_pressure():
     danger = next(p for p in pressures if p.pressure_kind == "danger")
     assert danger.intensity > 0.4
     assert "3 entity deaths" in danger.reason
+
+
+def test_repeated_births_increase_population_density_signal():
+    """TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: mirrors
+    test_repeated_deaths_increase_danger_pressure's shape for the birth-side signal (AC#3).
+
+    Uses a deliberately tiny 1x1-unit region (area=1) rather than the 100x100/count=2000
+    scale used elsewhere in this repo -- a single +1 nudge is a ~0.05% density change at
+    that scale and would not produce an assertable delta; scaling the fixture up to make
+    that pattern "work more easily" would hide the real +1-scale mechanism instead of
+    proving it (investigation.md's own anti-drift warning)."""
+    from src.engine.apply import ApplyPath
+
+    region = RegionState(id="tiny", name="Tiny", bounds=(0, 0, 1, 1))
+    state = AuthoritativeState(entities={}, regions={"tiny": region}, tick=0, seed=0)
+
+    aggs = (
+        WorldEventAggregate(
+            region_id="tiny",
+            category=WorldEventCategory.RESOURCE_HARVESTED,
+            subject=None,
+            count=1,
+            severity_sum=0.0,
+            first_tick=1,
+            last_tick=1,
+        ),
+    )
+
+    baseline_pressures = RegionalPressureModel.evaluate(state, aggs)
+    baseline_resource = next(p for p in baseline_pressures if p.pressure_kind == "resource")
+
+    # Five individual births nudge population_young_births_delta additively, applied
+    # through the real authoritative apply path (never a direct RegionState mutation).
+    nudge = WorldUpdate(region_id="tiny", population_young_births_delta=1)
+    accumulated = nudge
+    for _ in range(4):
+        accumulated = accumulated.merge(nudge)
+    births_state = ApplyPath.apply_partial(state, StateUpdate(world_updates={"tiny": accumulated}))
+
+    assert births_state.regions["tiny"].population_cohorts["young"].count == 5
+
+    births_pressures = RegionalPressureModel.evaluate(births_state, aggs)
+    births_resource = next(p for p in births_pressures if p.pressure_kind == "resource")
+
+    assert births_resource.intensity > baseline_resource.intensity
+    assert "density_mult" in births_resource.source_aggregates[-1]
 
 
 # ---------------------------------------------------------------------------

@@ -3506,7 +3506,7 @@
   text: "Kernel tick-alignment fix: Kernel._phase_advancement() (src/engine/kernel.py:702-736)\
     \ reassigns self._state to the post-advance tick before calling _phase_observability(prior_state,\
     \ update), but three Resolution-phase-stamped properties (last_assimilated_tick,\
-    \ phase.py:77; last_calamity_tick_set, calamity.py:56; RuntimeStatus.last_transition_tick,\
+    \ phase.py:77; last_calamity_tick_set, calamity.py:57; RuntimeStatus.last_transition_tick,\
     \ runtime_status.py:79, set via reset_dwell() from _phase_init(), kernel.py:535-541)\
     \ are all stamped using the pre-advance tick. EventExtractor.extract()'s and _phase_observability's\
     \ == tick checks (event_extractor.py:286, event_extractor.py:899, kernel.py:836)\
@@ -3541,18 +3541,21 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/engine/kernel.py:702-736 (Kernel._phase_advancement(), prior_state/self._state
-    reassignment ordering); src/engine/kernel.py:806-855 (_phase_observability(),
-    the prior_state.tick fix at line 836); src/observability/event_extractor.py:286,899
-    (the two prior_state.tick fixes); src/domains/information/phase.py:77 (last_assimilated_tick
-    stamped with pre-advance state.tick); src/world/calamity.py:56 (last_calamity_tick_set
-    stamped with pre-advance state.tick); src/engine/runtime_status.py:79 (reset_dwell
-    stamps last_transition_tick with the current_tick argument, called pre-advance
-    from src/engine/governor.py:45,51 via kernel.py:535-541''s _phase_init()); the
-    follow-up investigation staging_artifacts/TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER/tick_alignment_bug_investigation.md
-    (full site inventory, blast-radius analysis, and test-impact confirmation).
-
-    '
+  v2_evidence: "src/engine/kernel.py:702-736 (Kernel._phase_advancement(), prior_state/self._state\
+    \ reassignment ordering); src/engine/kernel.py:806-855 (_phase_observability(),\
+    \ the prior_state.tick fix at line 836); src/observability/event_extractor.py:286,899\
+    \ (the two prior_state.tick fixes); src/domains/information/phase.py:77 (last_assimilated_tick\
+    \ stamped with pre-advance state.tick); src/world/calamity.py:57 (last_calamity_tick_set\
+    \ stamped with pre-advance state.tick); src/engine/runtime_status.py:79 (reset_dwell\
+    \ stamps last_transition_tick with the current_tick argument, called pre-advance\
+    \ from src/engine/governor.py:45,51 via kernel.py:535-541's _phase_init()); the\
+    \ follow-up investigation staging_artifacts/TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER/tick_alignment_bug_investigation.md\
+    \ (full site inventory, blast-radius analysis, and test-impact confirmation).\n\
+    \ Line citation refreshed for TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH,\
+    \ which inserted one line (flags = getattr(state, \"feature_flags\", None) or\
+    \ {}) above this statement in process_world_dynamics(), shifting it from line\
+    \ 56 to line 57; the pre-advance-tick stamping behavior this entry verifies is\
+    \ unchanged."
   proof_type: parity
   test_path: tests/integration/observability/test_kernel_event_recording.py; tests/unit/observability/test_event_extractor_cognition.py;
     tests/unit/observability/test_event_extractor_world.py
@@ -3652,8 +3655,8 @@
   priority: P1
   legacy_evidence: null
   v2_evidence: "src/engine/pipeline.py:152 (information_belief call site, now wrapped\
-    \ in u.merge(...)); src/core/updates.py:946-950 (StateUpdate.merge(), delegates\
-    \ to merge_many); src/core/updates.py:663-697 (EntityUpdate.merge(), per-entity\
+    \ in u.merge(...)); src/core/updates.py:952-956 (StateUpdate.merge(), delegates\
+    \ to merge_many); src/core/updates.py:669-703 (EntityUpdate.merge(), per-entity\
     \ merge \u2014 two different entities' EntityUpdates never collide; self_model_bundle_set\
     \ prefers the later non-None set)\n"
   proof_type: parity
@@ -8233,7 +8236,7 @@
     \ \"death\": the original implementation derived death from `alive_set` (which\
     \ maps to `CombatComponent.alive`, confirmed `src/engine/patches.py:301`) -- a\
     \ different field from `LifecycleComponent.active`, which `LifecycleSystem.resolve_lifecycle()`\
-    \ (`src/systems/lifecycle_systems/lifecycle.py:43`) only transitions on `outcome_kind==\"\
+    \ (`src/systems/lifecycle_systems/lifecycle.py:40`) only transitions on `outcome_kind==\"\
     KILL\"` or old-age, never on `alive_set` alone. Fixed by gating `entity_killed`/`hero_death_unrecorded`\
     \ on `outcome_kind==\"KILL\"` directly -- this also disclosed a second, related,\
     \ accepted limitation: a hazard-caused `combat.alive=False` can transition `lifecycle.active`\
