@@ -85,6 +85,7 @@ class ContractKind(str, Enum):
     PAID_INFORMATION = "PAID_INFORMATION"
     TEACH = "TEACH"
     MARRIAGE = "MARRIAGE"
+    CLAN = "CLAN"
 
 
 class DirectiveKind(str, Enum):

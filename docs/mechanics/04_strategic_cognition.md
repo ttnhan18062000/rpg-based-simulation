@@ -1113,3 +1113,97 @@ here is a bounded single-tick synthetic batch, not a long-run corpus claim.
 (`Domain.STRATEGIC`); `src/core/updates.py` (`IdentityUpdate.role_set`)
 (TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE, 2026-09-02)
 
+---
+
+## 10. Clan Lifecycle Law (idea 40/M4, SOC-263)
+
+`ClanState` is wired into the authoritative mutation pipeline for the first time. Clan joining
+follows the same propose/accept `ContractKind`/`SocialAppraisalSystem` pattern §8 Marriage
+Proposal Law already documents; leaving and succession are unconditional service-level lifecycle
+transitions, never scoring functions and never a new tier-5 project kind.
+
+**Gate.** `ContractKind.CLAN` routes through `SocialAppraisalSystem.appraise_contract()`'s shared
+trust prelude exactly like every other contract kind, with no Clan-specific threshold: hard-cancel
+to `CANCELLED`/`TOTAL_DISTRUST` when `trust_score < 0.2` or `bond.sentiment < -0.8`; hard-cancel to
+`CANCELLED`/`BETRAYAL_HISTORY` when `betrayal_count > 0 and trust_score < 0.4`. Once the prelude
+passes, `_appraise_clan()` always accepts (`ACCEPTED`, `ReasonCode.CLAN_JOIN_ACCEPTED`) -- the
+prelude alone is the entire gate, with no additional utility/risk model and no `tension_level`
+interaction of any kind.
+
+**Direction.** `CoreActions.execute_join_clan()` (`src/engine/domain/core_actions.py`) builds a
+transient (non-persisted) `ContractState(kind=ContractKind.CLAN, source_id=joiner,
+target_id=clan.leader_entity_id, status=OFFERED)` and calls
+`appraise_contract(leader, temp_contract, context)` -- **the Clan's leader appraises the joining
+entity**, the same "target appraises source" direction `execute_propose_marriage` already uses.
+Leaving (`execute_leave_clan()`) has no appraisal gate at all -- it is unconditional.
+
+**Durable record.** Unlike Marriage's per-entity `EntityUpdate.strategic` record, joining and
+leaving write a `ClanUpdate` into `StateUpdate.clan_updates` (registry-keyed by `clan_id`,
+mirroring `FactionUpdate`/`StateUpdate.faction_updates`). Because `ActionRouter.execute_action` is
+contractually locked to `Dict[int, EntityUpdate]`, `execute_join_clan`/`execute_leave_clan` cannot
+themselves emit a `ClanUpdate` -- they only decide ACCEPTED/CANCELLED and signal the outcome via
+the ordinary `task.payload_set` annotation every action already relies on
+(`ActionRoutingPhase.route()`). A second, dedicated pipeline phase, `ClanLifecyclePhase`
+(`src/engine/pipeline_phases/clan_lifecycle.py`, run immediately after the existing `groups`
+phase), reads that SUCCESS/FAILURE outcome and performs the actual `ClanUpdate` write. This
+two-phase split -- action handler decides, phase commits -- is a deliberate design, not
+incidental.
+
+**Succession.** `ClanLifecycleService.process_succession()` (`src/systems/social_systems/
+clan_lifecycle.py`) promotes the highest-sociability surviving member to `leader_entity_id`
+immediately whenever the leader is dead/inactive/`None`, with **no 0.2 sociability-margin gate**
+-- explicitly contrasted with Group's `PartyLifecycleService.check_leadership()` (SOC-228), which
+only re-elects a *living* leader's replacement when the challenger's sociability exceeds the
+current leader's by >= 0.2. Clan succession promotes on death alone; there is no "current"
+sociability to beat once the leader is gone. Leader liveness uses the same same-tick-effective-
+state pattern `GroupSystem.update_groups()`'s `is_alive`/`is_active` helpers use (reading the
+current tick's `StateUpdate.entity_updates` before falling back to the frozen start-of-tick
+`EntityState`), re-implemented locally in `ClanLifecycleService` rather than imported from
+`groups.py`, to avoid coupling Clan lifecycle to Group lifecycle. Tiebreak: lowest entity id,
+the same numeric convention `PartyLifecycleService.check_leadership()` uses (reused as a rule, not
+via shared code).
+
+**Dissolution.** `ClanLifecycleService.process_dissolution()` sets `dissolved_tick` only when
+`member_entity_ids` **and** `asset_ids` are **both** empty simultaneously -- either alone does not
+dissolve the Clan. This is a deliberate divergence from Group's `GroupSystem.update_groups()`,
+which dissolves unconditionally the moment its leader dies/deactivates (SOC-176/SOC-189); Group's
+dissolution path is untouched by this ticket and does not apply to Clan. `process_dissolution`
+reads the start-of-tick `state.clans` snapshot, so a Clan whose last member leaves this same tick
+dissolves on the *following* tick's pass -- the same one-tick lag `FactionAwarenessService`
+already documents ("one-tick lag is inherent (state frozen)"), not a new pattern.
+
+`ClanState.asset_ids: Tuple[int, ...] = ()` is the field this dissolution check reads for the
+asset/institutional-footprint half of the gate. **It is currently always empty in every real run
+-- no producer or consumer of this field exists anywhere in the codebase.** Nothing in this
+ticket's scope grants, spends, or otherwise populates `asset_ids`; it is populated only by direct
+`ClanState(...)` construction in tests. Because of this, the "zero assets" half of the AND-gate is
+**inert** in practice today: `asset_ids` is always `()`, so `process_dissolution` currently
+reduces to a members-only check for every Clan a real simulation run can produce. This is not a
+bug and not silently load-bearing -- it is the intentional minimum schema slot the AC requires,
+with the real asset-granting mechanic explicitly deferred to a future ticket (see Out of scope
+below). A future reader must not mistake `asset_ids` for a currently dual-gated, load-bearing
+condition; today it is dead weight the gate carries for forward compatibility only.
+
+**Out of scope (deliberate).** Idea 68 (Inter-Clan Relations) -- `ClanState.tension_level` is
+read/written by nothing in this ticket, and no diplomacy/alliance/war-adjacent field or logic is
+added. No asset-granting/consuming mechanic -- `asset_ids` is read-only in this ticket's
+dissolution check (see above); a future ticket owns whatever mechanic actually grants or spends
+Clan assets. No Clan founding/creation logic -- Clans are pre-existing; tests construct
+`ClanState` directly for fixtures, the same way `FactionState` tests do. No personal
+inheritance/heir assignment -- Clan leadership succession (`leader_entity_id`) is unrelated
+durable state from `TCK-20260824-DEFAULT-HEIR-ASSIGNMENT`'s heir field; the two "succession"
+concepts must not be conflated.
+
+**Source:** `src/core/state.py` (`ClanState.asset_ids`, `AuthoritativeState.clans`);
+`src/core/updates.py` (`ClanUpdate`, `StateUpdate.clan_updates`); `src/engine/apply.py`
+(clan-merge block); `src/core/strategic.py` (`ContractKind.CLAN`); `src/core/enums.py`
+(`ReasonCode.CLAN_JOIN_ACCEPTED`/`CLAN_JOIN_DECLINED`); `src/systems/social_systems/appraisal.py`
+(`SocialAppraisalSystem._appraise_clan()`, `appraise_contract()`'s `CLAN` dispatch branch);
+`src/systems/social_systems/clan_lifecycle.py` (`ClanLifecycleService`);
+`src/engine/pipeline_phases/clan_lifecycle.py` (`ClanLifecyclePhase`);
+`src/engine/domain/core_actions.py` (`execute_join_clan`/`execute_leave_clan`);
+`src/engine/domain/action_router.py` (`"JOIN_CLAN"`/`"LEAVE_CLAN"` branches); `src/engine/
+pipeline.py` (`clan_lifecycle` phase, run after `groups`); `src/observability/events.py`
+(`ClanMemberLeftEvent`, `ClanSuccessionEvent`) (TCK-20260903-CLAN-LIFECYCLE-SUCCESSION, SOC-263,
+2026-09-03)
+

@@ -682,6 +682,11 @@ class ClanState:
     name: str = ""
     member_entity_ids: Tuple[int, ...] = ()
     home_region_ids: Tuple[str, ...] = ()
+    # IDs of buildings/items/resources this Clan institutionally holds -- the AC-mandated
+    # "zero assets" dissolution measure (idea 40/M4). No producer/consumer of this field
+    # exists yet; it is read-only in this ticket's dissolution check and populated only by
+    # direct construction in tests until a future ticket adds a real asset-granting mechanic.
+    asset_ids: Tuple[int, ...] = ()
     tension_level: float = 0.0
     leader_entity_id: Optional[int] = None
     founded_tick: int = 0
@@ -696,6 +701,7 @@ class ClanState:
             "name": self.name,
             "member_entity_ids": sorted(self.member_entity_ids),
             "home_region_ids": sorted(self.home_region_ids),
+            "asset_ids": sorted(self.asset_ids),
             "tension_level": self.tension_level,
             "leader_entity_id": self.leader_entity_id,
             "founded_tick": self.founded_tick,
@@ -711,6 +717,7 @@ class ClanState:
             name=d.get("name", ""),
             member_entity_ids=tuple(d.get("member_entity_ids", [])),
             home_region_ids=tuple(d.get("home_region_ids", [])),
+            asset_ids=tuple(d.get("asset_ids", [])),
             tension_level=float(d.get("tension_level", 0.0)),
             leader_entity_id=d.get("leader_entity_id"),
             founded_tick=int(d.get("founded_tick", 0)),
@@ -1230,6 +1237,8 @@ class AuthoritativeState:
     information_providers: Dict[int, "InformationProviderState"] = field(default_factory=dict)
     # Epic 5.3: Durable faction-level state (E53Aa)
     factions: Dict[str, "FactionState"] = field(default_factory=dict)
+    # Idea 40/M4: Durable clan-level state
+    clans: Dict[str, "ClanState"] = field(default_factory=dict)
 
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)
@@ -1312,6 +1321,7 @@ class AuthoritativeState:
             quest_registry=ReadOnlyDict(self.quest_registry),
             information_providers=ReadOnlyDict(self.information_providers),
             factions=ReadOnlyDict(self.factions),
+            clans=ReadOnlyDict(self.clans),
             item_instances=ReadOnlyDict(self.item_instances),
             groups=shallow_freeze(self.groups),
             terrain=shallow_freeze(self.terrain),

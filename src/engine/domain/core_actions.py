@@ -466,6 +466,91 @@ class CoreActions:
             return {entity.id: proposer_up, target_id: target_up}
 
     @staticmethod
+    def execute_join_clan(
+        entity: EntityState,
+        payload: Dict[str, Any],
+        current_tick: int,
+        neighbor_view: List[tuple[int, EntityState]],
+        context: Any
+    ) -> Dict[int, EntityUpdate]:
+        """
+        Decides whether a join offer is ACCEPTED via appraise_contract() (the
+        target Clan's leader appraises the joining entity -- same "target
+        appraises source" direction as execute_propose_marriage). The durable
+        membership write does NOT happen here: ActionRouter.execute_action is
+        contractually locked to Dict[int, EntityUpdate], which cannot carry a
+        registry-level ClanUpdate. ClanLifecyclePhase (a separate pipeline
+        phase, run after action_routing) reads this handler's SUCCESS/FAILURE
+        outcome -- annotated automatically onto task.payload_set by
+        ActionRoutingPhase.route() -- and performs the actual ClanUpdate write.
+        """
+        clan_id = payload.get("clan_id")
+        clan = context.clans.get(clan_id) if context and hasattr(context, "clans") else None
+        if not clan or clan.dissolved_tick is not None:
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND")
+            )}
+        if entity.id in clan.member_entity_ids:
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                navigation=NavigationUpdate(failure_reason="ALREADY_MEMBER")
+            )}
+
+        leader = context.entities.get(clan.leader_entity_id) if clan.leader_entity_id is not None else None
+        if leader is None:
+            from src.core.enums import ReasonCode
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                navigation=NavigationUpdate(failure_reason=ReasonCode.TARGET_INVALID.value)
+            )}
+
+        from src.systems.social_systems.appraisal import SocialAppraisalSystem
+        from src.core.strategic import ContractState, ContractKind, ContractStatus
+
+        temp_contract = ContractState(
+            id=f"clan_join_{entity.id}_{clan_id}_{current_tick}",
+            kind=ContractKind.CLAN,
+            source_id=entity.id,
+            target_id=leader.id,
+            terms={"clan_id": clan_id},
+            status=ContractStatus.OFFERED,
+            created_tick=current_tick,
+        )
+        status, reason, _ = SocialAppraisalSystem.appraise_contract(leader, temp_contract, context)
+
+        if status == ContractStatus.ACCEPTED:
+            return {entity.id: EntityUpdate(entity_id=entity.id)}
+
+        return {entity.id: EntityUpdate(
+            entity_id=entity.id,
+            navigation=NavigationUpdate(failure_reason=reason.value)
+        )}
+
+    @staticmethod
+    def execute_leave_clan(
+        entity: EntityState,
+        payload: Dict[str, Any],
+        current_tick: int,
+        neighbor_view: List[tuple[int, EntityState]],
+        context: Any
+    ) -> Dict[int, EntityUpdate]:
+        """
+        No appraisal gate -- leaving a Clan is unconditional. As with
+        execute_join_clan, the durable ClanUpdate write happens in
+        ClanLifecyclePhase, not here.
+        """
+        clan_id = payload.get("clan_id")
+        clan = context.clans.get(clan_id) if context and hasattr(context, "clans") else None
+        if not clan or entity.id not in clan.member_entity_ids:
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                navigation=NavigationUpdate(failure_reason="NOT_A_MEMBER")
+            )}
+
+        return {entity.id: EntityUpdate(entity_id=entity.id)}
+
+    @staticmethod
     def execute_repair(
         entity: EntityState,
         current_tick: int

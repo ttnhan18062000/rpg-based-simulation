@@ -390,7 +390,8 @@ class AuthoritativeApplyPipeline:
         t5 = time.perf_counter_ns()
         update = run_phase("groups", update, lambda u: AuthoritativeApplyPipeline._resolve_groups(state, u))
         t6 = time.perf_counter_ns()
-        
+        update = run_phase("clan_lifecycle", update, lambda u: AuthoritativeApplyPipeline._resolve_clan_lifecycle(state, u))
+
         from src.systems.social_systems.contracts import ContractService
         update = run_phase("active_contracts", update, lambda u: ContractService.process_active_contracts(state, u))
         update = run_phase("expired_offers", update, lambda u: ContractService.reap_expired_offers(state, u))
@@ -453,6 +454,14 @@ class AuthoritativeApplyPipeline:
     ) -> StateUpdate:
         from src.engine.pipeline_phases.groups import GroupPhase
         return GroupPhase.resolve(state, update)
+
+    @staticmethod
+    def _resolve_clan_lifecycle(
+        state: AuthoritativeState,
+        update: StateUpdate,
+    ) -> StateUpdate:
+        from src.engine.pipeline_phases.clan_lifecycle import ClanLifecyclePhase
+        return ClanLifecyclePhase.resolve(state, update)
 
     @staticmethod
     def _route_interaction_intent(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:

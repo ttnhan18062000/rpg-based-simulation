@@ -249,7 +249,7 @@
     sums each active breakthrough REGISTRY attribute_bonuses onto AttributeComponent
     via dataclasses.replace; wired end-to-end via SkillScalingService.get_effective_stats
     new active_breakthroughs param (src/engine/rpg_depth.py, applied before recalculate_combat_stats)
-    and ApplyPath._apply_entity_update_to_dict (src/engine/apply.py:460-487), whose
+    and ApplyPath._apply_entity_update_to_dict (src/engine/apply.py:482-509), whose
     stats_dirty gate now also fires on update.identity.breakthroughs_add alone; verified
     by tests/unit/progression/test_breakthroughs.py
   proof_type: null

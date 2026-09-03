@@ -39,7 +39,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
 | **Engine / Progression** | ALLOCATE_AP Action-Router Branch Kept Dormant | **Bounded** | ACTIVE |
 | **Engine / Combat** | Wounds Permanent; `heal_wound()`/`get_diagnosis_quality()` Removed | **Bug Fix** | ACTIVE |
-| **Social/Clan** | Clan Succession-on-Death | **Intentional Gameplay Change** | DEFERRED |
+| **Social/Clan** | Clan Succession-on-Death | **Intentional Gameplay Change** | RATIFIED |
 | **Engine / Progression** | Post-Spawn `class_id` Mutation via `class_id_set` (DEV-006) | **Intentional Gameplay Change** | ACTIVE |
 | **Economy / Social** | Teaching Gated on Trust, Not Gold: TRAIN_COST Removed Entirely (DEV-007) | **Intentional Gameplay Change** | ACTIVE |
 
@@ -1413,17 +1413,19 @@ This document is the canonical record of intentional behavior shifts in `src` co
   multi-generational political entities, unlike Group's small, disposable adventuring parties.
   A `leader_entity_id` that can never be reassigned without dissolving the whole Clan would give
   no signal beyond what `dissolved_tick` alone already provides.
-- **Verification**: `tests/unit/domains/faction/test_clan_state.py::test_clan_state_does_not_touch_authoritative_state`
-  — documents the current gap-state itself (schema exists, `leader_entity_id` is an
-  independently reassignable field, but no wiring into `AuthoritativeState`/`StateUpdate` and no
-  succession-execution logic exists yet), matching the `test_v2_service_refs_assembly_is_documented_gap`
-  precedent for a DEFERRED entry (§2.19).
-- **Unblock condition**: Idea 40/M4 implements the actual succession-on-death execution logic
-  (leader-liveness check + reassignment branch, analogous to but structurally distinct from
-  `GroupSystem.update_groups()`'s dissolution branch, since it must branch to reassignment
-  instead of removal). When that lands, update this entry's `Verification` field with the real
-  test path and flip the Summary Table Status from `DEFERRED` to `RATIFIED`.
-- **Status**: DEFERRED
+- **Verification**: `tests/unit/domains/faction/test_clan_succession.py` (succession/dissolution
+  logic — `test_clan_succession_promotes_highest_sociability_on_leader_death`,
+  `test_clan_succession_no_promotion_when_leader_alive`,
+  `test_clan_succession_same_tick_death_effective_state`,
+  `test_clan_dissolves_when_members_and_assets_both_empty`) and
+  `tests/unit/domains/faction/test_clan_state.py::test_clan_state_is_wired_into_authoritative_state`
+  (wiring into `AuthoritativeState`/`StateUpdate`/`apply.py`) — landed by
+  TCK-20260903-CLAN-LIFECYCLE-SUCCESSION (idea 40/M4), SOC-263. `ClanLifecycleService`
+  (`src/systems/social_systems/clan_lifecycle.py`) implements margin-free succession
+  (no 0.2 sociability-margin gate, contrast SOC-228) and dual-gated dissolution
+  (`member_entity_ids` AND `asset_ids` both empty), wired into the pipeline via
+  `ClanLifecyclePhase` (`src/engine/pipeline_phases/clan_lifecycle.py`).
+- **Status**: RATIFIED
 
 ### 2.49 Post-Spawn `class_id` Mutation via `class_id_set` Diverges from PROG-108's Spawn-Only Framing (TCK-20260831-CLASS-TIER-BRANCHING) — cross-referenced as **DEV-006**
 - **Subsystem**: Engine / Progression

@@ -32,7 +32,7 @@ from src.core.state import (
     RegionState, ResourceNodeState, BuildingState, CampState, GroupRecord,
     GroundItemState, ChestState, LocalScarState, IntentResult, AttributeComponent,
     IdentityComponent, AptitudeComponent, EquipmentComponent, SocialComponent, ReadOnlyDict,
-    FactionState
+    FactionState, ClanState
 )
 from src.core.quests import QuestState, QuestStatus
 from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
@@ -376,6 +376,23 @@ class ApplyPath:
                 active_doctrines=new_doctrines,
             )
 
+        # Idea 40/M4: Apply clan updates to durable clans dict
+        new_clans = dict(getattr(prior_state, "clans", {}))
+        for cu in update.clan_updates:
+            if cu.is_noop():
+                continue
+            existing = new_clans.get(cu.clan_id)
+            if existing is None:
+                existing = ClanState(clan_id=cu.clan_id)
+            new_members = (set(existing.member_entity_ids) | set(cu.member_entity_ids_add)) - set(cu.member_entity_ids_remove)
+            new_leader = cu.leader_entity_id_set if cu.leader_entity_id_set is not None else existing.leader_entity_id
+            new_dissolved = cu.dissolved_tick_set if cu.dissolved_tick_set is not None else existing.dissolved_tick
+            new_clans[cu.clan_id] = replace(existing,
+                member_entity_ids=tuple(sorted(new_members)),
+                leader_entity_id=new_leader,
+                dissolved_tick=new_dissolved,
+            )
+
         new_state = AuthoritativeState(
             tick=tick,
             seed=prior_state.seed,
@@ -427,6 +444,7 @@ class ApplyPath:
             recent_world_events=new_recent_world_events,
             quest_registry=new_quest_registry,
             factions=new_factions,
+            clans=new_clans,
             # Carry feature_flags across ticks so per-profile overrides injected at
             # engine start (e.g. ENABLE_SOCIAL_COOPERATION=ON) are not silently lost
             # when apply_generation reconstructs AuthoritativeState each tick.
