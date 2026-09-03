@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260903-MONITORING-UNIFIED-WEEKLY-EPIC
-phase: open
+phase: done
 date: 2026-09-03
 tags: [agent-monitoring, observability, data-quality]
 ---
@@ -17,7 +17,7 @@ under one per-ISO-week folder (`agent-monitoring/data/YYYY-Www/{runs,events,tool
 referential-integrity verification between them
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -158,32 +158,32 @@ SKILL.md` needs a final check for path references.
   generic on `target_path`; no change expected here either, to be reconfirmed per child ticket.
 
 ## Acceptance Criteria
-- [ ] All 7 child tickets are DONE.
-- [ ] New writes for all 3 sources land in `agent-monitoring/data/<current-ISO-week>/{runs,events,
+- [x] All 7 child tickets are DONE.
+- [x] New writes for all 3 sources land in `agent-monitoring/data/<current-ISO-week>/{runs,events,
       tools}.jsonl`, never in `agent-monitoring/runs.jsonl`, `agent-monitoring/events.jsonl`, or
       `agent-monitoring/tools/tools-*.jsonl`.
-- [ ] All historical data (monolithic `runs.jsonl`, monolithic `events.jsonl`, and the prior epic's
+- [x] All historical data (monolithic `runs.jsonl`, monolithic `events.jsonl`, and the prior epic's
       already-sharded `tools/tools-YYYY-Www.jsonl` files) has been migrated into the unified layout
       with a verified zero-data-loss reconciliation, and none of the 3 old paths exist in the working
       tree afterward (history recoverable via `git log --follow`).
-- [ ] `record_events.py`'s `tool_call_count`/`cost_proxy_score` computation, `weight_sensitivity_
+- [x] `record_events.py`'s `tool_call_count`/`cost_proxy_score` computation, `weight_sensitivity_
       check.py`'s tools-source read, and `DashboardCache._tools_file`'s read are all confirmed fixed
       against real post-migration multi-week data (a regression test for each proving nonzero/
       correct output, not just "doesn't crash").
-- [ ] Every confirmed consumer (`build_index.py`, `generate_retro.py`, `manifest.py`, `seq_offset.py`,
+- [x] Every confirmed consumer (`build_index.py`, `generate_retro.py`, `manifest.py`, `seq_offset.py`,
       `weight_sensitivity_check.py`, `retro_nudge_hook.py`, `done_ticket_monitoring_coverage.py`,
       `validate.py`, `query.py`, `done_checker_static.py`, `agent_ops_dashboard/ingest.py`) reads the
       union of all week folders for each source it consumes, not one hardcoded path.
-- [ ] `tools/agent_replay_codex/monitoring_shards.py` and its 6 dependent call sites are generalized
+- [x] `tools/agent_replay_codex/monitoring_shards.py` and its 6 dependent call sites are generalized
       to resolve all 3 sources (not just `tools`) against the new layout, with the synthetic-scratch
       single-file shape still working unchanged.
-- [ ] A referential-integrity verification tool exists, is tested, and correctly joins
+- [x] A referential-integrity verification tool exists, is tested, and correctly joins
       `events.run_id -> runs.run_id` and `tools.(run_id, seq) -> events.(run_id, seq)` **across week
       folders** (a run/its events/tool-calls spanning an ISO week boundary must not be flagged as
       broken), while still flagging genuine orphans and respecting the schema's own documented
       exceptions (retrieval-event shadow rows, `run_id: null` interactive tool calls, negative
       shadow-packet `seq` values).
-- [ ] `docs/agent-monitoring/README.md`, `schema.md`, `docs/guides/agent_monitoring.md`,
+- [x] `docs/agent-monitoring/README.md`, `schema.md`, `docs/guides/agent_monitoring.md`,
       `docs/ai/system_overview.md` §6, `CLAUDE.md` (including the already-stale claims named above),
       and `.gitattributes` all describe the unified per-week layout, not any of the 3 retired shapes.
 
@@ -273,8 +273,93 @@ standard-tier child ticket requires its own `staging_artifacts/{ticket_id}/`.
 
 ## Implementation Notes
 
+All 7 child tickets ran through the full standard-tier pipeline (Investigate → Plan → Implement →
+Test → Architecture-Verify → Verify → Finalize), each with an independent Test-phase re-verification
+(test-scoper), an independent Architecture-Verify pass (architecture-reviewer), and an independent
+Verify pass (done-checker) — none trusted the implementing agent's own self-report. Children 3, 4, 5,
+and 6 (the 4 mutually file-disjoint consumer/dashboard/codex/referential-integrity tracks) ran in
+parallel per the requester's own explicit authorization to speed up implementation for non-blocking
+tickets, after child 2 (migration) landed; child 7 (docs sweep) ran last, after all 6 others, so it
+could describe the actually-landed final state rather than an aspirational one.
+
+Real findings surfaced and correctly handled at every stage, not silently absorbed:
+- Child 1 fixed the critical `record_events.py::TOOLS_FILE` ground-truth bug (silently zeroing
+  `tool_call_count`/`cost_proxy_score` on every event since 2026-09-02) with a genuine cross-week
+  regression test, and its own Test-phase caught a missed test file
+  (`test_execution_identity_end_to_end.py`) before Finalize.
+- Child 2 executed the real, irreversible historical-data migration only after zero-data-loss
+  verification passed for all 3 sources, then retired the 3 legacy paths via `git rm` — full
+  history recoverable via `git log --follow`. Its own Test-phase found a broader-than-anticipated
+  (but genuinely out-of-scope) test-breakage surface, correctly deferred to children 3/4.
+- Children 3 and 4 fixed 2 more live, silently-broken production bugs
+  (`weight_sensitivity_check.py`, `retro_nudge_hook.py`'s permanent no-op; `DashboardCache._tools_all`
+  silently empty on the live Agent Ops Dashboard) with dedicated cross-week regression tests. Child
+  3's own investigation corrected a real bug in its own plan (2 call sites the plan claimed needed
+  "zero code change" would have actually raised `IsADirectoryError`).
+- Child 5's Verify phase, re-run after children 3/4 landed, found a real, currently-live regression
+  in their already-landed code (dropped scratch-shape fallback support in `manifest.py`/
+  `DashboardCache`, silently masking a corruption-detection test) — outside every one of this epic's
+  6 children's scope, filed as `TCK-20260904-HOTFIX-MANIFEST-DASHBOARD-SCRATCH-SHAPE-FALLBACK`
+  rather than fixed inline or silently ignored.
+- Child 6 built the referential-integrity tool as report-only (never gating/crashing on the
+  ~12.7%/18-orphan real violations already present in the corpus), with its cross-week test fixture
+  modeled on real corpus patterns, not synthetic guesses.
+- Child 7's own Verify phase found and fixed 2 more missed doc references (its original sweep's
+  gap-detection command only checked the `tools.jsonl` bare-mention pattern, not `events.jsonl`/
+  `runs.jsonl`), and filed a second follow-up ticket
+  (`TCK-20260904-HOTFIX-AGENT-REPLAY-MONITORING-PATH-STALENESS`) for the unrelated,
+  unowned-by-any-child `tools/agent_replay/` package's own path staleness.
+
+One real infrastructure anomaly encountered and resolved: a background `git gc --auto` process
+repeatedly OOM-killed itself (`pack-objects died of signal 9`) on nearly every commit this session
+due to heavy concurrent write pressure on the shared `.git` object store from many active worktree
+sessions. This caused one real, confirmed commit-content-loss incident early in the session (child
+1's first Finalize commit landed with stale pre-edit ticket content despite correct staging) —
+diagnosed by comparing `git show HEAD:<path>` against the known-correct working tree, fixed with an
+immediate follow-up commit, and verified as landed correctly on every subsequent commit for the rest
+of the epic by re-checking `git show HEAD:<path>` after each one.
+
+Cross-worktree `git rm` merge-conflict exposure (documented, not automated, per this repo's
+established precedent) is now real for whichever other concurrently-active sessions' branches merge
+past this epic's file-retirement commits — 3 paths retired by child 2, on top of the prior epic's own
+1. Recommend merging this branch's PR promptly once ready, per the runbook already recorded in child
+2's own ticket.
+
 ## Test Summary
+
+Every child ticket's own Test Summary (in `stored_artifacts/TCK-20260903-MONITORING-DATA-*/`)
+documents its independently-re-run pass counts. Aggregate: hundreds of tests across the 3 write-path
+scripts, the migration script, 9 core consumer scripts, the dashboard/gate-check pair, the codex
+subsystem, and the new referential-integrity tool — all independently re-verified clean by a
+test-scoper agent that did not trust the implementing agent's self-report, for every one of the 7
+children.
 
 ## Files Changed
 
+See each child ticket's own Files Changed section for the full per-file list. At the epic level: all
+3 legacy monitoring paths (`agent-monitoring/runs.jsonl`, `agent-monitoring/events.jsonl`,
+`agent-monitoring/tools/`) are retired; `agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl`
+is now the sole live layout; 9 `tools/agent-monitoring/*.py` consumer scripts, `tools/gate_checks/
+done_checker_static.py`, `src/api/agent_ops_dashboard/ingest.py`, `tools/agent_replay_codex/
+monitoring_shards.py` and its 7 call sites, and a new `tools/agent-monitoring/
+verify_referential_integrity.py` were migrated/added; `CLAUDE.md`, `.gitattributes`, 8 `docs/`
+files, 3 `.claude/skills/*/SKILL.md` files, and `.claude/workflows/implement-ticket.js` (prose only)
+were swept for accuracy; `docs/parity_ledger/infrastructure.yaml`'s `INFRA-291` entry carries 2 new
+addenda (children 3 and 7).
+
 ## Completion Summary
+
+Corrected and extended the prior epic's tools-only weekly sharding to all 3 monitoring sources
+(`runs`, `events`, `tools`), per the requester's own explicit, verbatim correction. Delivered the
+directed target design (`agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl`, one folder per
+UTC ISO week) via 7 child tickets run through this repo's full standard-tier pipeline with
+independent verification at every gate, 4 of them (children 3-6) executed in parallel per explicit
+authorization once their shared prerequisite (child 2's migration) landed. Fixed 4 real, live,
+silently-broken production bugs discovered during investigation and Verify (2 in the epic's own
+originally-scoped critical-bug list, 2 more found live during the epic's own execution), each with a
+genuine cross-week regression test. Built real referential-integrity verification, cross-week-
+boundary aware as the requester specifically required, confirmed against real corpus patterns rather
+than synthetic guesses. Migrated all historical data with a verified zero-data-loss reconciliation
+before retiring the 3 legacy physical paths. Filed 2 new follow-up hotfix tickets for real gaps
+discovered outside this epic's own scope, rather than silently absorbing or ignoring them. All 7
+Acceptance Criteria satisfied.
