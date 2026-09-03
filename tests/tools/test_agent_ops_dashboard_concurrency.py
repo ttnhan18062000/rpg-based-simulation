@@ -21,8 +21,11 @@ from pathlib import Path
 from src.api.agent_ops_dashboard import ingest
 
 
+_FIXTURE_WEEK = "2026-W23"
+
+
 def _init_repo(tmp_path: Path) -> None:
-    (tmp_path / "agent-monitoring").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
@@ -38,7 +41,7 @@ def _write_ticket(tmp_path: Path, ticket_id: str) -> None:
 
 
 def _append_run(tmp_path: Path, run_id: str) -> None:
-    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
     existing = runs_file.read_text() if runs_file.exists() else ""
     row = json.dumps(
         {
@@ -132,7 +135,7 @@ def test_active_run_completion_flips_atomically_under_concurrent_reads(tmp_path,
     now = datetime.now(timezone.utc)
     live_ts = (now - timedelta(minutes=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    tools_file = tmp_path / "agent-monitoring" / "tools.jsonl"
+    tools_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "tools.jsonl"
     tools_file.write_text(
         json.dumps(
             {
@@ -168,7 +171,7 @@ def test_active_run_completion_flips_atomically_under_concurrent_reads(tmp_path,
         t.start()
 
     time.sleep(0.01)
-    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
     end_ts = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     runs_file.write_text(
         json.dumps(

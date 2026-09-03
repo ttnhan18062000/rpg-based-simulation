@@ -4880,7 +4880,8 @@
     standalone FastAPI app (src/api/agent_ops_dashboard/) exposing GET /api/tickets,
     /api/runs, /api/runs/{run_id}, /api/runs/{run_id}/timeline, /api/health as typed
     Pydantic response models only (never raw dict/domain payloads). ingest.py owns
-    all file reads over tickets/{inprogress,done,todos}/ and agent-monitoring/{runs,events,tools}.jsonl,
+    all file reads over tickets/{inprogress,done,todos}/ and agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl
+    (every week shard, globbed and concatenated via _week_shard_paths/_load_jsonl_counted_multi),
     reusing tools/validate_frontmatter.py''s extract_frontmatter(), tools/generate_registry.py''s
     body-section parsers, and tools/agent-monitoring/validate.py''s tolerant load_jsonl
     + legacy allowlists rather than reimplementing them. In-memory cache rebuilt on
@@ -5099,7 +5100,34 @@
     \ own ingest.py/models.py claims are unaffected (dashboard reader code untouched);\
     \ this note exists solely to record that the reader's already-tested native-identity\
     \ code paths now have real write-side traffic to serve, not just fixtures. See\
-    \ INFRA-281 for the writer-side (writeSidecar) evidence pointer.\n"
+    \ INFRA-281 for the writer-side (writeSidecar) evidence pointer.\n\nTCK-20260903-MONITORING-DATA-CONSUMERS-GATES-DASHBOARD:\
+    \ DashboardCache.__init__ (src/api/agent_ops_dashboard/ingest.py) replaced its\
+    \ 3 hardcoded single-file fields (self._runs_file/_events_file/_tools_file) with\
+    \ one self._data_root = repo_root / \"agent-monitoring\" / \"data\"; _current_source_state()\
+    \ now computes per-source mtimes via the new _max_mtime(_week_shard_paths(self._data_root,\
+    \ filename)) helper (max mtime across every agent-monitoring/data/<week>/{runs,events,tools}.jsonl\
+    \ shard, guarded against the empty-glob ValueError footgun via max(..., default=0.0));\
+    \ _rebuild() now reads/concatenates all matching week shards per source via the\
+    \ new _load_jsonl_counted_multi() helper (sums unparsed-line counts across shards\
+    \ rather than the last file's count silently winning), mirroring the sorted(Path(...).glob(\"\
+    agent-monitoring/data/*/tools.jsonl\")) precedent already landed in tools/agent-monitoring/record_events.py::compute_tool_stats()\
+    \ (TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY). This is also the dedicated\
+    \ fix for a live production bug: self._tools_file previously pointed at the already-git-rm'd\
+    \ flat agent-monitoring/tools.jsonl path, so _tools_all/_tools_by_seq/_tools_by_run_recent\
+    \ were silently empty, masking compute_inferred_active()'s 10-minute-window heuristic\
+    \ in production; confirmed fixed by a new dedicated regression, test_dashboard_cache_tools_all_nonempty_against_real_sharded_layout,\
+    \ plus test_dashboard_cache_rebuild_aggregates_across_multiple_weeks (2+ week\
+    \ aggregation) and test_dashboard_cache_maybe_rebuild_detects_staleness_from_non_newest_week_write\
+    \ (staleness detection from a write to a non-newest week, all 3 sources), all\
+    \ in tests/tools/test_agent_ops_dashboard_ingest.py. DashboardCache's public method\
+    \ surface (get_tickets/get_runs/get_run/get_timeline/get_bulk_timeline/get_health/get_agent_monitoring_stats/get_ticket_corpus_stats/get_glossary)\
+    \ and its single threading.RLock()-per-method locking pattern are unchanged, confirmed\
+    \ by test_dashboard_public_api_surface_and_lock_unchanged (inspect-based architecture\
+    \ guard). No parity-ledger-relevant regression: full scoped sweep (tests/tools/test_agent_ops_dashboard_ingest.py\
+    \ test_agent_ops_dashboard_stats.py test_agent_ops_dashboard_concurrency.py test_agent_ops_dashboard_api.py\
+    \ test_agent_ops_dashboard_api_boundary.py test_agent_ops_dashboard_glossary.py\
+    \ test_agent_ops_dashboard_frontend_api_surface.py test_agent_ops_dashboard_serve.py)\
+    \ -> 107 passed."
   proof_type: feature
   test_path: "tests/tools/test_agent_ops_dashboard_ingest.py (including test_get_tickets_and_across_dimensions_filters_tier_and_layer,\
     \ test_get_tickets_or_within_tag, test_get_tickets_dimension_filter_and_tag_filter_combine_with_and\

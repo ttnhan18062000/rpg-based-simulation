@@ -13,7 +13,8 @@ tags: [documentation, observability, api-design]
 The Agent Ops Dashboard backend (`src/api/agent_ops_dashboard/main.py`) is a
 standalone FastAPI app — not mounted on `src/api/server.py`, the main
 simulation API — exposing read-only, typed projections over `tickets/**` and
-`agent-monitoring/{runs,events,tools}.jsonl` for the dashboard SPA. It never
+`agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl` (every week shard,
+globbed and concatenated) for the dashboard SPA. It never
 touches `AuthoritativeState` or the tick loop; it is a separate product on a
 separate port. Content here reflects the shipped state as of
 TCK-20260717-AGENTOPS-DASHBOARD-DOCS, updated by TCK-20260718-STATS-DOCS-UPDATE
@@ -154,7 +155,8 @@ all verified disjoint — 88 total).
 
 ### Ingest / cache (`ingest.py`)
 
-All file reads over `tickets/**` and `agent-monitoring/*.jsonl` live in this
+All file reads over `tickets/**` and `agent-monitoring/data/*/{runs,events,tools}.jsonl`
+(globbed across every ISO-week folder) live in this
 module — `main.py` never reads a file directly. It reuses, rather than
 reimplements:
 - `tools/validate_frontmatter.py`'s `extract_frontmatter` for ticket

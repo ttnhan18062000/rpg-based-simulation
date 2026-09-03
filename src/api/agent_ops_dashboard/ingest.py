@@ -123,6 +123,36 @@ def load_jsonl_counted(path: Path) -> tuple[list[dict], int]:
     return records, total_lines - len(records)
 
 
+def _week_shard_paths(data_root: Path, filename: str) -> list[Path]:
+    """Every agent-monitoring/data/<week>/{filename} shard under data_root, sorted for
+    determinism — mirrors record_events.py::compute_tool_stats()'s
+    `sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl"))` precedent. A
+    data_root with no matching week folders yields an empty list (not an error)."""
+    return sorted(data_root.glob(f"*/{filename}"))
+
+
+def _max_mtime(paths: list[Path]) -> float:
+    """max() mtime across paths, defaulting to 0.0 for an empty list — guards the
+    empty-glob ValueError footgun (max() over an empty sequence raises without
+    `default=`), matching the old single-file "doesn't exist -> 0.0" precedent."""
+    return max((p.stat().st_mtime for p in paths if p.exists()), default=0.0)
+
+
+def _load_jsonl_counted_multi(data_root: Path, filename: str) -> tuple[list[dict], int]:
+    """Read + concatenate every agent-monitoring/data/<week>/{filename} shard (sorted,
+    ISO-week order) via load_jsonl_counted per file, summing unparsed-line counts
+    across all shards. Safe against double-counting: (run_id, seq) is globally unique
+    across weeks (see record_events.py::compute_tool_stats's docstring) and each shard
+    is read exactly once here."""
+    all_records: list[dict] = []
+    total_unparsed = 0
+    for path in _week_shard_paths(data_root, filename):
+        records, unparsed = load_jsonl_counted(path)
+        all_records.extend(records)
+        total_unparsed += unparsed
+    return all_records, total_unparsed
+
+
 # ---------------------------------------------------------------------------
 # Step 2 — ticket frontmatter + body-section parsing
 # ---------------------------------------------------------------------------
@@ -471,9 +501,7 @@ class DashboardCache:
 
     def __init__(self, repo_root: Path = _REPO_ROOT):
         self._repo_root = repo_root
-        self._runs_file = repo_root / "agent-monitoring" / "runs.jsonl"
-        self._events_file = repo_root / "agent-monitoring" / "events.jsonl"
-        self._tools_file = repo_root / "agent-monitoring" / "tools.jsonl"
+        self._data_root = repo_root / "agent-monitoring" / "data"
         self._tickets_root = repo_root / "tickets"
         self._lock = threading.RLock()
 
@@ -501,9 +529,9 @@ class DashboardCache:
         ticket_files = walk_ticket_dirs(self._tickets_root)
         tickets_state = float(len(ticket_files)) + sum(_mtime(p) for p in ticket_files)
         return {
-            "runs.jsonl": _mtime(self._runs_file),
-            "events.jsonl": _mtime(self._events_file),
-            "tools.jsonl": _mtime(self._tools_file),
+            "runs.jsonl": _max_mtime(_week_shard_paths(self._data_root, "runs.jsonl")),
+            "events.jsonl": _max_mtime(_week_shard_paths(self._data_root, "events.jsonl")),
+            "tools.jsonl": _max_mtime(_week_shard_paths(self._data_root, "tools.jsonl")),
             "tickets": tickets_state,
         }
 
@@ -516,9 +544,9 @@ class DashboardCache:
 
     def _rebuild(self, source_state: dict[str, float], now: datetime) -> None:
         with self._lock:
-            runs_all, runs_unparsed = load_jsonl_counted(self._runs_file)
-            events_all, events_unparsed = load_jsonl_counted(self._events_file)
-            tools_all, tools_unparsed = load_jsonl_counted(self._tools_file)
+            runs_all, runs_unparsed = _load_jsonl_counted_multi(self._data_root, "runs.jsonl")
+            events_all, events_unparsed = _load_jsonl_counted_multi(self._data_root, "events.jsonl")
+            tools_all, tools_unparsed = _load_jsonl_counted_multi(self._data_root, "tools.jsonl")
 
             grouped_runs = _group_runs_by_id(runs_all)
             runs_by_id = {rid: _primary_run_record(rows) for rid, rows in grouped_runs.items()}

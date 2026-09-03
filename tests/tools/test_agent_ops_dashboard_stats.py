@@ -14,25 +14,31 @@ from fastapi.testclient import TestClient
 from src.api.agent_ops_dashboard import ingest, main
 
 
+_FIXTURE_WEEK = "2026-W23"
+
+
 def _init_repo_skeleton(tmp_path: Path) -> None:
-    (tmp_path / "agent-monitoring").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
 
 
 def _write_runs(tmp_path: Path, rows: list[dict]) -> None:
-    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
+    runs_file.parent.mkdir(parents=True, exist_ok=True)
     runs_file.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
 
 
 def _write_events(tmp_path: Path, rows: list[dict]) -> None:
-    events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "events.jsonl"
+    events_file.parent.mkdir(parents=True, exist_ok=True)
     events_file.write_text("\n".join(json.dumps(e) for e in rows) + "\n")
 
 
 def _write_tools(tmp_path: Path, rows: list[dict]) -> None:
-    tools_file = tmp_path / "agent-monitoring" / "tools.jsonl"
+    tools_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "tools.jsonl"
+    tools_file.parent.mkdir(parents=True, exist_ok=True)
     tools_file.write_text("\n".join(json.dumps(t) for t in rows) + "\n")
 
 

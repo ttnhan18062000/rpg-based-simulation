@@ -79,6 +79,20 @@ def _jsonl_rows_for_run_id(path: Path, run_id: str) -> list[dict]:
     return rows
 
 
+def _jsonl_rows_for_run_id_across_weeks(data_root: Path, filename: str, run_id: str) -> list[dict]:
+    """Return every parsed JSON row whose run_id == run_id, across every
+    agent-monitoring/data/<week>/{filename} shard under data_root (sorted for
+    determinism — mirrors record_events.py::compute_tool_stats()'s
+    `sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl"))` precedent).
+    A data_root that doesn't exist, or exists with no matching week folders,
+    yields an empty glob and returns [] — matching the old single-file
+    ".exists() -> []" precedent, not an error."""
+    rows: list[dict] = []
+    for path in sorted(data_root.glob(f"*/{filename}")):
+        rows.extend(_jsonl_rows_for_run_id(path, run_id))
+    return rows
+
+
 def _extract_section_text(ticket_text: str, heading: str) -> str:
     """Return the body text under a `## {heading}` markdown heading, up to the next `## ` heading
     or end of file. Returns "" if the heading is not present. Body-section counterpart to
@@ -688,8 +702,7 @@ def check_working_log_exactly_one_row(
 
 def check_monitoring_write_recorded(
     ticket_id: str,
-    runs_path: Path = Path("agent-monitoring/runs.jsonl"),
-    events_path: Path = Path("agent-monitoring/events.jsonl"),
+    data_root: Path = Path("agent-monitoring/data"),
 ) -> tuple[str, str]:
     """Verify the agent-monitoring write for this run actually landed. Deliberately has no
     `tier` parameter and no NA branch — CLAUDE.md's Hard Rule requires the monitoring write
@@ -702,19 +715,20 @@ def check_monitoring_write_recorded(
     not as a 4th condition in `run_finalize_selfcheck` — see that ticket's plan.md Design
     Decision 2 for why it is wired in separately, at a later call site.
     """
-    run_rows = _jsonl_rows_for_run_id(runs_path, ticket_id)
+    run_rows = _jsonl_rows_for_run_id_across_weeks(data_root, "runs.jsonl", ticket_id)
     if not run_rows:
-        return ("FAIL", f"No row with run_id == {ticket_id} found in {runs_path}")
-    event_rows = _jsonl_rows_for_run_id(events_path, ticket_id)
+        return ("FAIL", f"No row with run_id == {ticket_id} found under {data_root}/*/runs.jsonl")
+    event_rows = _jsonl_rows_for_run_id_across_weeks(data_root, "events.jsonl", ticket_id)
     if not event_rows:
         return (
             "FAIL",
-            f"{runs_path} has a row for {ticket_id} but {events_path} has zero matching rows",
+            f"{data_root}/*/runs.jsonl has a row for {ticket_id} but "
+            f"{data_root}/*/events.jsonl has zero matching rows",
         )
     return (
         "PASS",
-        f"{runs_path} ({len(run_rows)} row(s)) and {events_path} ({len(event_rows)} row(s)) "
-        f"both have entries for {ticket_id}",
+        f"{data_root}/*/runs.jsonl ({len(run_rows)} row(s)) and {data_root}/*/events.jsonl "
+        f"({len(event_rows)} row(s)) both have entries for {ticket_id}",
     )
 
 
