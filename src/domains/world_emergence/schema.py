@@ -49,6 +49,9 @@ class WorldEventCategory(str, Enum):
     SOVEREIGNTY_SHIFT = "SOVEREIGNTY_SHIFT"
     # TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING: real combat_loss trigger for MemoryUpdatePhase
     COMBAT_LOSS = "COMBAT_LOSS"
+    # TCK-20260903-ECONOMIC-VACANCY-SIGNAL: sole production-relevant occupant died, region left
+    # with zero living holders of that role.
+    PRODUCTION_ROLE_VACATED = "PRODUCTION_ROLE_VACATED"
 
 @dataclass(frozen=True, slots=True)
 class WorldEvent:

@@ -2300,3 +2300,25 @@
     tests/unit/resource/test_item_instance_history.py::test_only_significant_items_receive_item_instance
   divergence_note: null
   proof_type: parity
+- id: TOWN-193
+  text: Death of the sole living region-scoped SHOPKEEPER or WORKER emits a PRODUCTION_ROLE_VACATED
+    WorldEvent through the authoritative apply path (world_events_add -> recent_world_events,
+    a last-500-events-globally window, not a 500-tick timer). Liveness is checked
+    on both `lifecycle.active` and `combat.alive` -- deliberately stricter than OccupationChangeGoalScorer's
+    `combat.alive`-only filter, because `combat.alive_set` is never written for OLD_AGE
+    deaths (only KILL/HAZARD outcomes write it), so an old-age corpse's `combat.alive`
+    stays True forever and would be miscounted as a live occupant under a `combat.alive`-only
+    filter. TownResolutionSystem reads the event back one-tick-lagged and increments
+    a per-region detection counter; it does not gate `BlacksmithSystem.enforce` or
+    any other production system, so crafting remains entity-agnostic and TOWN-017's
+    verified P0 parity entry is unchanged.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: '`src/economy/vacancy.py` (`EconomicVacancyService.check_and_emit`),
+    `src/systems/lifecycle_systems/lifecycle.py` (`LifecycleSystem.resolve_lifecycle`,
+    call site), `src/engine/town_resolution.py` (`TownResolutionSystem.resolve`)'
+  proof_type: parity
+  test_path: '`tests/integration/economy/test_economic_vacancy_signal.py`'
+  divergence_note: null
+  support_boundary: null

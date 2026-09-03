@@ -27,19 +27,32 @@ class TownResolutionSystem:
         from src.engine.cadence import SystemCadence as DefaultCadence
         from src.engine.spatial_query import SpatialQueryService
         from src.core.updates import ResourceTransferIntent, BuildingUpdate
-        
+        from src.domains.world_emergence.schema import WorldEventCategory
+
         cadence = cadence or DefaultCadence()
-        
+
         refined_entity_updates = dict(update.entity_updates)
         new_resource_updates = dict(update.resource_updates)
         refined_building_updates = dict(update.building_updates)
-        
+
         # 1. Early exits
         has_town = len(state.town_tiles) > 0
         has_regions = len(state.regions) > 0
-        
+
         if not has_town and not has_regions:
             return update
+
+        # Economic Vacancy Signal consumer (TCK-20260903-ECONOMIC-VACANCY-SIGNAL, PP-20). Reads
+        # the previous tick's already-applied, bounded window (src/engine/apply.py:335-338), same
+        # one-tick-lag law as FactionAwarenessService.compute_tension_updates. Purely additive
+        # metrics -- deliberately does not touch BuildingState.functional or gate
+        # BlacksmithSystem.enforce, preserving TOWN-017's verified P0 parity entry.
+        new_metric_counters = dict(update.metric_counters)
+        for event in getattr(state, "recent_world_events", []):
+            if event.category != WorldEventCategory.PRODUCTION_ROLE_VACATED:
+                continue
+            key = f"economic_vacancy_detected_region_{event.region_id}"
+            new_metric_counters[key] = new_metric_counters.get(key, 0) + 1
 
         # 2. Constants & Caches
         PASSIVE_HEAL_AMT = 1
@@ -171,8 +184,9 @@ class TownResolutionSystem:
                         b_upd = refined_building_updates.get(b_id, BuildingUpdate(building_id=b_id))
                         refined_building_updates[b_id] = replace(b_upd, functional_set=False)
 
-        return replace(update, 
+        return replace(update,
             entity_updates=refined_entity_updates,
             resource_updates=new_resource_updates,
-            building_updates=refined_building_updates
+            building_updates=refined_building_updates,
+            metric_counters=new_metric_counters,
         )
