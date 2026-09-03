@@ -34,15 +34,26 @@ from validate import (  # noqa: E402
     LEGACY_COMPLETION_FIELDS,  # noqa: F401
     LEGACY_TERMINAL_STATUS_VALUES,  # noqa: F401
     _record_is_complete,
+    load_data_glob,
     load_jsonl,
 )
 from generate_retro import _resolve_status  # noqa: E402
 from vocabulary import CANONICAL_TIERS, infer_workflow  # noqa: E402, F401
 
-DEFAULT_RUNS_FILE = Path("agent-monitoring/runs.jsonl")
-DEFAULT_EVENTS_FILE = Path("agent-monitoring/events.jsonl")
-DEFAULT_TOOLS_FILE = Path("agent-monitoring/tools")
+DEFAULT_RUNS_FILE = Path("agent-monitoring/data")
+DEFAULT_EVENTS_FILE = Path("agent-monitoring/data")
+DEFAULT_TOOLS_FILE = Path("agent-monitoring/data")
 DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
+
+
+def _load_source(path: Path, source: str) -> list:
+    """path is either the agent-monitoring/data root (production default, a directory) or a
+    literal single JSONL file (explicit --runs-file/--events-file/--tools-file override, or a
+    test's SimpleNamespace injection) — dispatch accordingly. `source` ("runs"/"events"/"tools")
+    is resolved statically by the caller, never inferred from the directory's own contents."""
+    if path.is_dir():
+        return load_data_glob(path, source)
+    return load_jsonl(path)
 
 
 def _infer_workflow_or_none(run_id):
@@ -172,9 +183,9 @@ def build(args) -> int:
     tools_path = Path(args.tools_file)
     db_path = Path(args.db_path)
 
-    runs = load_jsonl(runs_path)
-    events = load_jsonl(events_path)
-    tools = load_jsonl(tools_path)
+    runs = _load_source(runs_path, "runs")
+    events = _load_source(events_path, "events")
+    tools = _load_source(tools_path, "tools")
 
     db_path.parent.mkdir(parents=True, exist_ok=True)
     if db_path.exists():

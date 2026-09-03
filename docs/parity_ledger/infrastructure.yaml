@@ -6535,6 +6535,30 @@
     `test_generate_retro_index_is_stale_detects_write_to_non_newest_shard`.
 
 
+    **Addendum (TCK-20260903-MONITORING-DATA-CONSUMERS-CORE, 2026-09-03):** this entry''s
+    `v2_evidence` (and the prior addendum immediately above) described `DEFAULT_TOOLS_FILE`
+    as repointed to `Path("agent-monitoring/tools")` (a flat shard directory) with
+    `load_jsonl()` dir-aware, globbing `sorted(tools_dir.glob("tools-*.jsonl"))` --
+    both now superseded: TCK-20260903-MONITORING-DATA-MIGRATION retired that flat
+    shard directory in favor of the unified per-ISO-week `agent-monitoring/data/<week>/{runs,events,tools}.jsonl`
+    layout. This ticket repointed `RUNS_FILE`/`EVENTS_FILE`/`DEFAULT_TOOLS_FILE` all
+    to the same `Path("agent-monitoring/data")` root, ratifying investigation.md''s
+    Option B: `load_jsonl(path)` reverted to literal-single-file-only (its dir-mode
+    branch removed entirely), and a new sibling function `load_data_glob(data_dir,
+    source)` (added to `validate.py`, imported here) does `sorted(data_dir.glob(f"*/{source}.jsonl"))`
+    for the production default path, dispatched via a small local `_load_source(path,
+    source)` helper that checks `path.is_dir()`. `_source_mtime()`/`_index_is_stale()`
+    were generalized to take an explicit source name per source (`runs`/`events`/`tools`),
+    since all 3 constants now resolve to the identical directory and can no longer
+    be distinguished by `path.is_dir()` alone. This is again a file-resolution-layer
+    change only -- the on-demand build/fallback shape, `_resolve_status()`/`_is_legacy_event()`/`_is_gate_fail()`,
+    and `compute_retro_metrics()`/`generate()` this entry documents remain unaffected.
+    New/rewritten tests: `test_generate_retro_load_jsonl_globs_shard_directory` (rewritten
+    to the new week-subdirectory shape), `test_generate_retro_index_is_stale_detects_write_to_non_newest_shard`
+    (rewritten), `test_generate_retro_index_is_stale_detects_append_in_any_week_folder_any_source`
+    (new, covers all 3 sources, not just tools).
+
+
     '
 - id: INFRA-292
   text: 'New read-only baseline-metrics reporting tool over agent-monitoring/*.jsonl

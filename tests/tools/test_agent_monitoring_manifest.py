@@ -85,13 +85,16 @@ def _write_jsonl(path: Path, lines: list) -> None:
 
 
 def test_manifest_tools_source_aggregates_all_shards(tmp_path):
-    (tmp_path / "runs.jsonl").write_text('{"run_id":"TCK-A"}\n', encoding="utf-8")
-    (tmp_path / "events.jsonl").write_text('{"run_id":"TCK-A","seq":1}\n', encoding="utf-8")
-    tools_dir = tmp_path / "tools"
-    tools_dir.mkdir()
-    _write_jsonl(tools_dir / "tools-2026-W01.jsonl", ['{"run_id":"TCK-A","seq":1,"tool":"Read"}'])
+    week1 = tmp_path / "data" / "2026-W01"
+    week1.mkdir(parents=True)
+    (week1 / "runs.jsonl").write_text('{"run_id":"TCK-A"}\n', encoding="utf-8")
+    (week1 / "events.jsonl").write_text('{"run_id":"TCK-A","seq":1}\n', encoding="utf-8")
+    _write_jsonl(week1 / "tools.jsonl", ['{"run_id":"TCK-A","seq":1,"tool":"Read"}'])
+
+    week2 = tmp_path / "data" / "2026-W02"
+    week2.mkdir(parents=True)
     _write_jsonl(
-        tools_dir / "tools-2026-W02.jsonl",
+        week2 / "tools.jsonl",
         ['{"run_id":"TCK-A","seq":2,"tool":"Edit"}', '{"run_id":"TCK-A","seq":3,"tool":"Bash"}'],
     )
 
@@ -104,17 +107,20 @@ def test_manifest_tools_source_aggregates_all_shards(tmp_path):
     assert tools_record["line_count"] == 3
     assert tools_record["parser_result"]["parsed_ok"] + tools_record["parser_result"]["parse_errors"] == 3
     assert tools_record["byte_size"] == sum(
-        f.stat().st_size for f in tools_dir.glob("tools-*.jsonl")
+        f.stat().st_size for f in sorted((tmp_path / "data").glob("*/tools.jsonl"))
     )
 
 
 def test_manifest_tools_source_sha256_is_order_stable_across_shards(tmp_path):
-    (tmp_path / "runs.jsonl").write_text("", encoding="utf-8")
-    (tmp_path / "events.jsonl").write_text("", encoding="utf-8")
-    tools_dir = tmp_path / "tools"
-    tools_dir.mkdir()
-    _write_jsonl(tools_dir / "tools-2026-W01.jsonl", ['{"run_id":"TCK-A","seq":1,"tool":"Read"}'])
-    _write_jsonl(tools_dir / "tools-2026-W02.jsonl", ['{"run_id":"TCK-A","seq":2,"tool":"Edit"}'])
+    week1 = tmp_path / "data" / "2026-W01"
+    week1.mkdir(parents=True)
+    (week1 / "runs.jsonl").write_text("", encoding="utf-8")
+    (week1 / "events.jsonl").write_text("", encoding="utf-8")
+    _write_jsonl(week1 / "tools.jsonl", ['{"run_id":"TCK-A","seq":1,"tool":"Read"}'])
+
+    week2 = tmp_path / "data" / "2026-W02"
+    week2.mkdir(parents=True)
+    _write_jsonl(week2 / "tools.jsonl", ['{"run_id":"TCK-A","seq":2,"tool":"Edit"}'])
 
     records_1 = build_manifest(tmp_path)
     records_2 = build_manifest(tmp_path)
@@ -122,11 +128,34 @@ def test_manifest_tools_source_sha256_is_order_stable_across_shards(tmp_path):
     sha_2 = next(r["sha256"] for r in records_2 if r["file"] == "tools.jsonl")
     assert sha_1 == sha_2
 
-    with (tools_dir / "tools-2026-W01.jsonl").open("a") as f:
+    with (week1 / "tools.jsonl").open("a") as f:
         f.write('{"run_id":"TCK-B","seq":1,"tool":"Write"}\n')
     records_3 = build_manifest(tmp_path)
     sha_3 = next(r["sha256"] for r in records_3 if r["file"] == "tools.jsonl")
     assert sha_3 != sha_1
+
+
+def test_manifest_aggregates_all_3_sources_across_all_week_folders(tmp_path):
+    week1 = tmp_path / "data" / "2026-W01"
+    week1.mkdir(parents=True)
+    _write_jsonl(week1 / "runs.jsonl", ['{"run_id":"TCK-A"}'])
+    _write_jsonl(week1 / "events.jsonl", ['{"run_id":"TCK-A","seq":1}'])
+    _write_jsonl(week1 / "tools.jsonl", ['{"run_id":"TCK-A","seq":1,"tool":"Read"}'])
+
+    week2 = tmp_path / "data" / "2026-W02"
+    week2.mkdir(parents=True)
+    _write_jsonl(week2 / "runs.jsonl", ['{"run_id":"TCK-B"}'])
+    _write_jsonl(week2 / "events.jsonl", ['{"run_id":"TCK-B","seq":1}', '{"run_id":"TCK-B","seq":2}'])
+    _write_jsonl(week2 / "tools.jsonl", ['{"run_id":"TCK-B","seq":1,"tool":"Edit"}'])
+
+    records = build_manifest(tmp_path)
+
+    assert len(records) == 3
+    by_file = {r["file"]: r for r in records}
+    assert set(by_file.keys()) == {"events.jsonl", "runs.jsonl", "tools.jsonl"}
+    assert by_file["runs.jsonl"]["line_count"] == 2
+    assert by_file["events.jsonl"]["line_count"] == 3
+    assert by_file["tools.jsonl"]["line_count"] == 2
 
 
 # ---------------------------------------------------------------------------
@@ -163,15 +192,12 @@ def _porcelain_snapshot() -> str:
 
 def _content_hash_snapshot() -> str:
     hasher = hashlib.sha256()
+    data_dir = _REAL_AGENT_MONITORING_DIR / "data"
     for filename in _WATCHED_JSONL_FILES:
         hasher.update(filename.encode("utf-8"))
-        if filename == "tools.jsonl":
-            tools_dir = _REAL_AGENT_MONITORING_DIR / "tools"
-            for shard in sorted(tools_dir.glob("tools-*.jsonl")):
-                hasher.update(shard.read_bytes())
-            continue
-        path = _REAL_AGENT_MONITORING_DIR / filename
-        hasher.update(path.read_bytes())
+        source = filename[: -len(".jsonl")]
+        for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
+            hasher.update(shard.read_bytes())
     return hasher.hexdigest()
 
 

@@ -22,9 +22,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from validate import load_jsonl  # noqa: E402
+from validate import load_data_glob  # noqa: E402
 
-EVENTS_FILE = Path("agent-monitoring/events.jsonl")
+EVENTS_FILE = Path("agent-monitoring/data")
 
 
 def compute_seq_offset(run_id: str, events: list) -> int:
@@ -41,4 +41,4 @@ def compute_seq_offset(run_id: str, events: list) -> int:
 
 
 if __name__ == "__main__":
-    print("MARKER:" + json.dumps(compute_seq_offset(sys.argv[1], load_jsonl(EVENTS_FILE))))
+    print("MARKER:" + json.dumps(compute_seq_offset(sys.argv[1], load_data_glob(EVENTS_FILE, "events"))))

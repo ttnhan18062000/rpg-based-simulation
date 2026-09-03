@@ -221,11 +221,6 @@ def compute_multi_invocation_collision_report(events: list) -> str:
 
 
 def load_jsonl(path):
-    if path.is_dir():
-        records = []
-        for shard in sorted(path.glob("tools-*.jsonl")):
-            records.extend(load_jsonl(shard))
-        return records
     if not path.exists():
         return []
     records = []
@@ -237,6 +232,16 @@ def load_jsonl(path):
             records.append(json.loads(line))
         except json.JSONDecodeError as e:
             print(f"WARNING: {path}:{i}: invalid JSON — {e}", file=sys.stderr)
+    return records
+
+
+def load_data_glob(data_dir: Path, source: str) -> list:
+    """Concatenate source.jsonl from every ISO-week folder under data_dir, sorted by week-folder
+    name for determinism (matches record_events.py's write-side glob shape,
+    tools/agent-monitoring/record_events.py:65)."""
+    records = []
+    for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
+        records.extend(load_jsonl(shard))
     return records
 
 

@@ -27,10 +27,10 @@ Run `make agent-monitoring-index` to (re)build it. `query.py` and `validate.py` 
 the index to exist (exiting with an actionable "run `make agent-monitoring-index` first" error if
 it's missing) — a deliberate choice, since neither is meant to run without its data source.
 `generate_retro.py` is the one exception: it builds the index on demand if missing **or stale**
-(`runs.jsonl`/`events.jsonl` each compared by their own single mtime; the `tools` source compares
-against the newest mtime across all `agent-monitoring/tools/tools-*.jsonl` shard files, via
-`max()` — never the shard directory's own mtime, since a directory's mtime does not reliably
-update when an existing file inside it is appended to. Any of these being newer than the index —
+(all 3 sources — `runs`/`events`/`tools` — are compared uniformly against the newest mtime across
+their respective `agent-monitoring/data/*/<source>.jsonl` week files, via `max()` — never the
+data-dir root's own mtime, since a directory's mtime does not reliably update when an existing
+file inside it is appended to. Any of these being newer than the index —
 `TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS`, since a present-but-outdated index was
 previously read silently forever, under-reporting retro numbers with no warning), and falls back
 to reading the raw JSONL directly if that on-demand build itself fails, so the weekly retro report

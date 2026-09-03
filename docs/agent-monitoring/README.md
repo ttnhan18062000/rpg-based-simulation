@@ -145,7 +145,7 @@ to a single isolated miss in August) rather than a flat ongoing rate.
 
 | Doc | Contents |
 |---|---|
-| [schema.md](schema.md) | Full field reference for runs.jsonl, events.jsonl, and the tools/tools-YYYY-Www.jsonl shard family |
+| [schema.md](schema.md) | Full field reference for the `agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl` per-week layout |
 | [../guides/agent_monitoring.md](../guides/agent_monitoring.md) | How to run the weekly retro loop |
 | [agent-monitoring/README.md](../../agent-monitoring/README.md) | Quick-reference schema and data files |
 

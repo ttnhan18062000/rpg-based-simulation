@@ -59,15 +59,15 @@ def _scan_file(path: Path, source: str) -> dict:
     }
 
 
-def _scan_tools_shards(tools_dir: Path, source: str) -> dict:
+def _scan_data_dir_glob(data_dir: Path, source: str) -> dict:
     hasher = hashlib.sha256()
     counts = {"parsed_ok": 0, "parse_errors": 0, "legacy_warning_count": 0}
     byte_size = 0
-    for shard in sorted(tools_dir.glob("tools-*.jsonl")):
+    for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
         _stream_file_into(shard, source, hasher, counts)
         byte_size += shard.stat().st_size
     return {
-        "file": "tools.jsonl",
+        "file": f"{source}.jsonl",
         "line_count": counts["parsed_ok"] + counts["parse_errors"],
         "byte_size": byte_size,
         "sha256": hasher.hexdigest(),
@@ -77,12 +77,10 @@ def _scan_tools_shards(tools_dir: Path, source: str) -> dict:
 
 
 def build_manifest(agent_monitoring_dir: Path) -> list:
+    data_dir = agent_monitoring_dir / "data"
     records = []
     for filename, source in sorted(_FILES_BY_SOURCE.items()):
-        if source == "tools":
-            records.append(_scan_tools_shards(agent_monitoring_dir / "tools", source))
-        else:
-            records.append(_scan_file(agent_monitoring_dir / filename, source))
+        records.append(_scan_data_dir_glob(data_dir, source))
     return records
 
 
@@ -92,23 +90,14 @@ def capture_lines(agent_monitoring_dir: Path) -> dict[str, list[str]]:
     Line-lazy single-pass read (matches _scan_file's own streaming technique) — never a full
     read_text()/read()/readlines() of the whole file, per this module's own documented invariant.
     """
+    data_dir = agent_monitoring_dir / "data"
     result: dict[str, list[str]] = {}
-    for filename in _FILES_BY_SOURCE:
-        if filename == "tools.jsonl":
-            tools_dir = agent_monitoring_dir / "tools"
-            if tools_dir.is_dir():
-                lines: list[str] = []
-                for shard in sorted(tools_dir.glob("tools-*.jsonl")):
-                    with open(shard, "r", encoding="utf-8") as file:
-                        for line in file:
-                            lines.append(line)
-                result[filename] = lines
-                continue
-        path = agent_monitoring_dir / filename
+    for filename, source in _FILES_BY_SOURCE.items():
         lines: list[str] = []
-        with open(path, "r", encoding="utf-8") as file:
-            for line in file:
-                lines.append(line)
+        for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
+            with open(shard, "r", encoding="utf-8") as file:
+                for line in file:
+                    lines.append(line)
         result[filename] = lines
     return result
 

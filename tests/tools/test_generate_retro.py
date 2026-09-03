@@ -987,27 +987,30 @@ def test_index_is_stale_false_when_index_newer_than_all_sources(tmp_path, monkey
 
 
 def test_generate_retro_index_is_stale_detects_write_to_non_newest_shard(tmp_path, monkeypatch):
-    # TCK-20260902-MONITORING-SHARD-CONSUMERS AC3: a write to an OLDER (non-newest-by-filename)
-    # shard must still be detected as staleness, not just a write to the newest-named shard —
-    # this is why _index_is_stale() must use max() over every shard's own mtime, never the
-    # directory's own mtime as a shortcut.
+    # TCK-20260903-MONITORING-DATA-CONSUMERS-CORE: a write to an OLDER (non-newest-by-name) week
+    # folder must still be detected as staleness, not just a write to the newest-named week folder
+    # — this is why _source_mtime() must use max() over every week folder's own mtime, never the
+    # data-dir root's own mtime as a shortcut.
     import os
     import time
 
     runs_file = tmp_path / "runs.jsonl"
     events_file = tmp_path / "events.jsonl"
-    tools_dir = tmp_path / "tools"
-    tools_dir.mkdir()
     runs_file.write_text("")
     events_file.write_text("")
-    older_shard = tools_dir / "tools-2026-W01.jsonl"
-    newer_shard = tools_dir / "tools-2026-W05.jsonl"
+
+    week1 = tmp_path / "2026-W01"
+    week1.mkdir()
+    week5 = tmp_path / "2026-W05"
+    week5.mkdir()
+    older_shard = week1 / "tools.jsonl"
+    newer_shard = week5 / "tools.jsonl"
     older_shard.write_text('{"run_id":"TCK-A","seq":1,"tool":"Read"}\n')
     newer_shard.write_text('{"run_id":"TCK-B","seq":1,"tool":"Read"}\n')
 
     monkeypatch.setattr(generate_retro, "RUNS_FILE", runs_file)
     monkeypatch.setattr(generate_retro, "EVENTS_FILE", events_file)
-    monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tools_dir)
+    monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tmp_path)
 
     generate_retro._load_runs_and_events()  # builds the index fresh, now newer than all sources
     assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is False
@@ -1020,18 +1023,73 @@ def test_generate_retro_index_is_stale_detects_write_to_non_newest_shard(tmp_pat
     assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is True
 
 
+def test_generate_retro_index_is_stale_detects_append_in_any_week_folder_any_source(tmp_path, monkeypatch):
+    # AC3: a newly appended row in ANY week folder's ANY of the 3 files makes the index stale —
+    # a strictly broader assertion than the tools-only test above, covering runs/events/tools.
+    import os
+    import time
+
+    week1 = tmp_path / "2026-W01"
+    week1.mkdir()
+    week2 = tmp_path / "2026-W02"
+    week2.mkdir()
+    (week1 / "runs.jsonl").write_text('{"run_id":"TCK-A","start_ts":"2026-01-01T00:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}\n')
+    (week1 / "events.jsonl").write_text('{"run_id":"TCK-A","seq":1,"phase":"Implement","agent":"implementer","status":"ok","summary":"done"}\n')
+    (week1 / "tools.jsonl").write_text('{"run_id":"TCK-A","seq":1,"tool":"Read"}\n')
+    (week2 / "runs.jsonl").write_text("")
+    (week2 / "events.jsonl").write_text("")
+    (week2 / "tools.jsonl").write_text("")
+
+    monkeypatch.setattr(generate_retro, "RUNS_FILE", tmp_path)
+    monkeypatch.setattr(generate_retro, "EVENTS_FILE", tmp_path)
+    monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tmp_path)
+
+    generate_retro._load_runs_and_events()
+    assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is False
+
+    # Append to the OLDER week folder's runs.jsonl.
+    time.sleep(0.05)
+    with (week1 / "runs.jsonl").open("a") as f:
+        f.write('{"run_id":"TCK-A2","start_ts":"2026-01-02T00:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}\n')
+    os.utime(week1 / "runs.jsonl", None)
+    assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is True
+
+    generate_retro._load_runs_and_events()
+    assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is False
+
+    # Append to the NEWER week folder's events.jsonl.
+    time.sleep(0.05)
+    with (week2 / "events.jsonl").open("a") as f:
+        f.write('{"run_id":"TCK-B","seq":1,"phase":"Implement","agent":"implementer","status":"ok","summary":"done"}\n')
+    os.utime(week2 / "events.jsonl", None)
+    assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is True
+
+    generate_retro._load_runs_and_events()
+    assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is False
+
+    # Append to tools.jsonl.
+    time.sleep(0.05)
+    with (week2 / "tools.jsonl").open("a") as f:
+        f.write('{"run_id":"TCK-B","seq":1,"tool":"Bash"}\n')
+    os.utime(week2 / "tools.jsonl", None)
+    assert generate_retro._index_is_stale(generate_retro.DEFAULT_DB_PATH) is True
+
+
 def test_generate_retro_load_jsonl_globs_shard_directory(tmp_path):
-    tools_dir = tmp_path / "tools"
-    tools_dir.mkdir()
-    (tools_dir / "tools-2026-W01.jsonl").write_text('{"run_id":"TCK-A","seq":1,"tool":"Read"}\n')
-    (tools_dir / "tools-2026-W02.jsonl").write_text(
+    week1 = tmp_path / "2026-W01"
+    week1.mkdir()
+    week2 = tmp_path / "2026-W02"
+    week2.mkdir()
+    (week1 / "tools.jsonl").write_text('{"run_id":"TCK-A","seq":1,"tool":"Read"}\n')
+    (week2 / "tools.jsonl").write_text(
         '{"run_id":"TCK-B","seq":1,"tool":"Read"}\n{"run_id":"TCK-B","seq":2,"tool":"Bash"}\n'
     )
 
-    records = generate_retro.load_jsonl(tools_dir)
+    records = generate_retro._load_source(tmp_path, "tools")
     assert [r["run_id"] for r in records] == ["TCK-A", "TCK-B", "TCK-B"]
 
-    # Dual-mode: a literal file path (existing or not) is unaffected.
+    # load_jsonl itself is literal-single-file-only (no dir-mode branch) — a plain file path
+    # (existing or not) still reads/behaves exactly as before.
     single_file = tmp_path / "single.jsonl"
     single_file.write_text('{"run_id":"TCK-SINGLE","seq":1,"tool":"Read"}\n')
     assert [r["run_id"] for r in generate_retro.load_jsonl(single_file)] == ["TCK-SINGLE"]
@@ -1559,7 +1617,7 @@ class TestComputeRetrievalMetrics:
         # the live corpus can carry expansion_reason/expansion_count. This is the honest, disclosed
         # current state (Open Decisions 5/6 remain deferred), not a bug -- and this test is a
         # regression guard against a future accidental fabrication silently making this non-zero.
-        real_events = generate_retro.load_jsonl(generate_retro.EVENTS_FILE)
+        real_events = generate_retro._load_source(generate_retro.EVENTS_FILE, "events")
         metrics = compute_retrieval_metrics(real_events)
         assert metrics["expansion_rate"] == 0.0
 
@@ -2259,8 +2317,8 @@ def test_correlation_handles_single_group_empty_gracefully():
 
 
 def test_correlation_real_corpus_produces_a_real_number():
-    real_events = generate_retro.load_jsonl(generate_retro.EVENTS_FILE)
-    real_tools = generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
+    real_events = generate_retro._load_source(generate_retro.EVENTS_FILE, "events")
+    real_tools = generate_retro._load_source(generate_retro.DEFAULT_TOOLS_FILE, "tools")
     metrics = compute_tool_safety_metrics(real_events, real_tools)
     rcc = metrics["read_count_correlation"]
     assert rcc["compliant_group"]["count"] > 0
@@ -2284,7 +2342,7 @@ def test_parity_index_readpath_call_count_matches_real_corpus_state():
     # TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION's parity-updater phase legitimately ran
     # `tools/parity_index.py entry INFRA-366` (2026-08-21T02:30:02Z), recording a 4th real row --
     # again expected drift, not a bug -- see TCK-20260821-HOTFIX-PARITY-READPATH-BASELINE-DRIFT-2.
-    real_tools = generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
+    real_tools = generate_retro._load_source(generate_retro.DEFAULT_TOOLS_FILE, "tools")
     result = compute_parity_index_readpath_call_count(real_tools)
     assert result["count"] == 4
     assert result["derivation"]
@@ -2410,7 +2468,7 @@ def test_skill_usage_section_present_in_generated_report():
 
 
 def test_skill_usage_section_matches_real_corpus_counts():
-    real_tools = generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
+    real_tools = generate_retro._load_source(generate_retro.DEFAULT_TOOLS_FILE, "tools")
     expected = build_skill_usage_section(real_tools)
     report = generate([_BASE_RUN], [_ORDINARY_WORKFLOW_EVENT], "test-label", tools=real_tools)
     if expected["total_skill_invocations"] > 0:
@@ -2509,7 +2567,7 @@ def test_backend_testing_post_fix_state_not_currently_flagged():
     SKILL-STALENESS-SOFT-WARNING): grace-period expiry is calendar-driven, not code-driven, so a
     miss here warns rather than hard-fails CI — see tests/tools/skill_staleness_assertions.py."""
     result = compute_zero_invocation_skill_flags(
-        generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
+        generate_retro._load_source(generate_retro.DEFAULT_TOOLS_FILE, "tools")
     )
     skill_staleness_check(
         "backend-testing" not in result["flagged_stale"],
@@ -2570,7 +2628,7 @@ def test_zero_invocation_flag_current_domain_skills_all_excluded_on_real_corpus(
         "combat-mechanics", "cognition-strategy", "progression-entities",
     }
     result = compute_zero_invocation_skill_flags(
-        generate_retro.load_jsonl(generate_retro.DEFAULT_TOOLS_FILE)
+        generate_retro._load_source(generate_retro.DEFAULT_TOOLS_FILE, "tools")
     )
     stale_domain_skills = domain_skills.intersection(set(result["flagged_stale"]))
     skill_staleness_check(
