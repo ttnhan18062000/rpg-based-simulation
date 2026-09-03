@@ -131,13 +131,13 @@ def test_parse_ts_handles_z_suffix_and_rejects_garbage():
 
 
 def test_real_corpus_simq_depth_social_reproduces_documented_gap():
-    events_path = _REPO_ROOT / "agent-monitoring" / "events.jsonl"
     events = []
-    with events_path.open() as f:
-        for line in f:
-            row = json.loads(line)
-            if row.get("run_id") == "TCK-20260710-SIMQ-DEPTH-SOCIAL":
-                events.append(row)
+    for events_path in sorted((_REPO_ROOT / "agent-monitoring" / "data").glob("*/events.jsonl")):
+        with events_path.open() as f:
+            for line in f:
+                row = json.loads(line)
+                if row.get("run_id") == "TCK-20260710-SIMQ-DEPTH-SOCIAL":
+                    events.append(row)
     assert len(events) == 10  # sanity: real corpus row still present with expected shape
 
     result = compute_active_idle_split(
