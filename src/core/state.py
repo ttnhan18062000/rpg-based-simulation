@@ -1239,6 +1239,9 @@ class CampState:
     active: bool = True
     faction: str = "hostile"
     last_raid_tick: int = 0
+    totem_tier: int = 0              # 0 = no totem; provisional numeric strength scale, unanchored
+    stockpile: float = 0.0           # accumulated resource stockpile; provisional magnitude, unanchored
+    palisade_integrity: float = 0.0  # 0 = no palisade; provisional defensive scale, unanchored
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
     _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -1255,7 +1258,10 @@ class CampState:
             "maturity": self.maturity,
             "active": self.active,
             "faction": self.faction,
-            "last_raid_tick": self.last_raid_tick
+            "last_raid_tick": self.last_raid_tick,
+            "totem_tier": self.totem_tier,
+            "stockpile": self.stockpile,
+            "palisade_integrity": self.palisade_integrity,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res

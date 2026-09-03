@@ -3,7 +3,7 @@ status: active
 layer: core
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-09-04
 ---
 
 # Update Intent Pipeline
@@ -66,7 +66,7 @@ Additional inline fields on `EntityUpdate` that affect dirtiness but are not sub
 | `world_updates` | `Dict[str, WorldUpdate]` | Hazard level, suppression, calamity, trauma, retaliation pressure, influence, owner faction, weather, modifiers per region |
 | `node_updates` | `Dict[int, ResourceNodeUpdate]` | Harvest node charge delta and cooldown tick |
 | `building_updates` | `Dict[int, BuildingUpdate]` | Building HP delta, functional flag, inventory, price modifiers |
-| `camp_updates` | `Dict[str, CampUpdate]` | Camp maturity delta and active flag |
+| `camp_updates` | `Dict[str, CampUpdate]` | Camp maturity delta, active flag, last-raid-tick set; totem tier set, stockpile delta, palisade integrity set (typed scaffolding, unpopulated by production code — `TCK-20260904-CAMP-NEST-CLASSIFICATION`) |
 | `chest_updates` | `Dict[int, ChestUpdate]` | Chest cooldown set and items set |
 | `chest_add_or_update` | `List[ChestState]` | Full chest record upsert |
 | `ground_items_add_or_update` / `ground_items_remove` | `List[GroundItemState]` / `List[int]` | Dropped item lifecycle (add/update/remove by ID) |

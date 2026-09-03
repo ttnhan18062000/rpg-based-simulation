@@ -1866,3 +1866,40 @@
     tests/unit/world/test_world_dynamics.py::test_world_dynamics_folds_camp_and_calamity_world_updates_into_final_update
   divergence_note: null
   proof_type: parity
+- id: WORLD-124
+  text: 'Behind ENABLE_CAMP_NEST_SPREAD (default OFF), CampService.process_camps()
+    forks inside the existing raid-trigger gate (camp.maturity >= RAID_MATURITY_THRESHOLD
+    (80.0), state.tick - camp.last_raid_tick >= 500): a camp classified as Nest kind
+    (camp.kind in CampService.NEST_RACE_KINDS == frozenset({wolf, spider, troll, slime}),
+    the code projection of the City/Camp/Nest/Excluded classification rule resolved
+    against races.yaml''s natural_traits/drive_profile/cognition_profile) spawns one
+    parentless same-kind offspring via EntityGenerator.spawn_natural_creature_offspring(kind=camp.kind,
+    ...) instead of calling RaidService.check_for_raid(), applying the identical maturity_delta=-20.0
+    (relative, not an absolute reset) and last_raid_tick_set=state.tick cost/cooldown-reset
+    the raid outcome already uses. Camp-classified camps (goblin, orc) always take
+    the raid outcome regardless of this flag. No new CampState is constructed anywhere
+    in this branch (WORLD-109 remains true). CampState/CampUpdate also gain three
+    new typed fields -- totem_tier: int, stockpile: float, palisade_integrity: float
+    -- round-tripping through to_canonical_dict()/CampUpdate.merge() and committed
+    via apply_plan.py''s camp-application block; these are provisional scaffolding
+    only, with no production writer populating non-default values in this ticket.'
+  status: verified
+  priority: P2
+  v2_evidence: src/world/camp.py -- CampService.NEST_RACE_KINDS, CampService.process_camps()
+    "3. Raid Trigger (or Nest Spread...)" fork; src/systems/world_systems/generator.py
+    -- EntityGenerator.spawn_natural_creature_offspring() (reused, not new); src/domains/optimization/feature_flags.py
+    -- ENABLE_CAMP_NEST_SPREAD registered with default FeatureMode.OFF (DEV-002 default-OFF
+    policy for a brand-new mechanic); src/core/state.py -- CampState.totem_tier/stockpile/palisade_integrity
+    fields plus to_canonical_dict() wiring; src/core/updates.py -- CampUpdate.totem_tier_set/stockpile_delta/palisade_integrity_set
+    fields plus merge() wiring; src/engine/apply_plan.py -- camp-application block
+    extended to read and commit the three new CampUpdate fields via replace(camp,
+    ...), the sole authoritative commit point for CampUpdate fields committed via
+    ApplyPlanBuilder.build_plan(). TCK-20260904-CAMP-NEST-CLASSIFICATION.
+  test_path: tests/unit/world/test_camp_lifecycle.py::test_camp_flag_on_nest_kind_spreads_instead_of_raiding;
+    tests/unit/world/test_camp_lifecycle.py::test_camp_flag_off_nest_kind_camp_still_raids;
+    tests/unit/world/test_camp_lifecycle.py::test_camp_flag_on_camp_kind_still_raids;
+    tests/unit/world/test_camp_lifecycle.py::test_nest_spread_reuses_same_500_tick_cooldown_as_raid;
+    tests/unit/world/test_camp_lifecycle.py::test_campupdate_totem_stockpile_palisade_apply_via_apply_plan;
+    tests/unit/domains/optimization/test_apply_plan_builder.py::test_apply_plan_builder_camp_totem_stockpile_palisade
+  divergence_note: null
+  proof_type: parity

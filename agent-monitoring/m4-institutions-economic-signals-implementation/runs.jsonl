@@ -3,3 +3,4 @@
 {"run_id":"TCK-20260903-ECONOMIC-VACANCY-SIGNAL","start_ts":"2026-09-03T11:06:33Z","end_ts":"2026-09-03T12:46:01Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":12,"duration_s":5968}
 {"run_id":"TCK-20260903-INFORMATION-HUB-ACCUMULATION","start_ts":"2026-09-03T12:53:10Z","end_ts":"2026-09-03T14:26:17Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":5587}
 {"run_id":"create-tickets-m4-place-material-20260904002242","start_ts":"2026-09-03T17:23:23Z","end_ts":"2026-09-03T17:23:23Z","workflow":"create-tickets","tier":"n/a","final_status":"DONE","agent_count":7,"duration_s":0}
+{"run_id":"implement-CAMP-NEST-CLASSIFICATION-20260904002512","start_ts":"2026-09-04T00:25:12Z","end_ts":"2026-09-03T18:28:34Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":null}

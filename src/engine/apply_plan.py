@@ -282,7 +282,12 @@ class ApplyPlanBuilder:
                     new_mat = camp.maturity + c_upd.maturity_delta
                     new_act = c_upd.active_set if c_upd.active_set is not None else camp.active
                     new_raid = c_upd.last_raid_tick_set if c_upd.last_raid_tick_set is not None else camp.last_raid_tick
-                    new_camps[c_id] = replace(camp, maturity=new_mat, active=new_act, last_raid_tick=new_raid)
+                    new_totem = c_upd.totem_tier_set if c_upd.totem_tier_set is not None else camp.totem_tier
+                    new_stockpile = camp.stockpile + c_upd.stockpile_delta
+                    new_palisade = c_upd.palisade_integrity_set if c_upd.palisade_integrity_set is not None else camp.palisade_integrity
+                    new_camps[c_id] = replace(camp, maturity=new_mat, active=new_act, last_raid_tick=new_raid,
+                                               totem_tier=new_totem, stockpile=new_stockpile,
+                                               palisade_integrity=new_palisade)
         plan.world_collection_changes["camps"] = new_camps
 
         # 4. Precompute Entity Changes

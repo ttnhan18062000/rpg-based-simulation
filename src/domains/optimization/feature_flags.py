@@ -162,6 +162,10 @@ class FeatureFlagManager:
             # applies -- brand-new mechanic, no corpus profile turns this on and no
             # SHADOW-validation history exists.
             "ENABLE_REPRODUCTION_HUMANOID_PATH": FeatureMode.OFF,
+            # TCK-20260904-CAMP-NEST-CLASSIFICATION: gates the Nest spread-outcome branch in
+            # CampService.process_camps (default OFF per DEV-002; no corpus profile turns this on
+            # and no SHADOW-validation history exists).
+            "ENABLE_CAMP_NEST_SPREAD": FeatureMode.OFF,
             # New gameplay behavior (TCK-20260903-INFORMATION-HUB-ACCUMULATION): gates both the
             # InformationProviderState accumulation branch inside QuestResolutionSystem.enforce()
             # (checked via state.feature_flags directly, matching ENABLE_GUILD_QUEST_GENERATION's own

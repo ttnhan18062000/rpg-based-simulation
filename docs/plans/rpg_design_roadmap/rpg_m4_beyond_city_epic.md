@@ -54,6 +54,18 @@ tickets.
    not during. 45/46's Camp features (totem, stockpile, palisade) reuse real, already-tuned constants
    (`RAID_MATURITY_THRESHOLD`, spawn cap, raid cost) for the mechanism but still need new, unanchored
    magnitudes for the features themselves — see Content & Balance Requirements in the atlas.
+   **Status update, 2026-09-04:** the classification-and-CampService half of this item has shipped as
+   `TCK-20260904-CAMP-NEST-CLASSIFICATION` — the goblin `social_humanoid` contradiction is resolved
+   (the real discriminator is `drive_profile == "opportunistic_raider"`, not `social_humanoid`) and all
+   5 previously-unclassified races got an explicit disposition (wolf/spider/troll/slime → Nest;
+   undead/spirit → Excluded/no-fit; dragonkin → Excluded/Lair-adjacent), documented in
+   `docs/mechanics/05_world_evolution.md` §6. `CampService` gained a flag-gated (`ENABLE_CAMP_NEST_SPREAD`,
+   default OFF) Nest-spread fork reusing the raid branch's timing/cost, plus provisional
+   (unpopulated-by-production-code) `totem_tier`/`stockpile`/`palisade_integrity` typed fields on
+   `CampState`/`CampUpdate`. The world-generation gap below remains fully open — that ticket explicitly
+   did not construct or seed any `CampState`, and feature magnitudes/accrual logic for
+   totem/stockpile/palisade are still undefined, left to a follow-on ticket
+   (`TCK-20260904-CAMPSTATE-PLACE-BRIDGE` covers the world-gen wiring half).
    **World-generation note (M8):** idea 45's "seed CampState" framing understates the real gap —
    `CampState` is never constructed in production anywhere, and there's no schema field or compiler step
    for it at all. This ticket needs a new `WorldModuleSpec` field plus a new `WorldCompiler` step, not a

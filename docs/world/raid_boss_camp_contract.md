@@ -3,7 +3,7 @@ status: active
 layer: engine
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-09-04
 ---
 
 # Raid, Boss, and Camp Contract
@@ -43,6 +43,26 @@ Spawn runs every **50 ticks** (see spawn section). If the camp's current monster
 ### Raid trigger
 
 When `camp.maturity >= 80`, the camp triggers a raid. After triggering, maturity resets to 50 (partial reset — camp does not fully dissolve unless cleared).
+
+**Nest fork (`TCK-20260904-CAMP-NEST-CLASSIFICATION`, `ENABLE_CAMP_NEST_SPREAD`, default OFF):**
+inside this same raid-trigger gate, a camp classified as Nest kind (see "Camp/Nest classification"
+below) takes a spread outcome instead of a raid when the flag is ON: `CampService.process_camps()`
+spawns one parentless same-kind offspring via `EntityGenerator.spawn_natural_creature_offspring()`
+rather than calling `RaidService.check_for_raid()`. The cost is identical to the raid outcome it
+replaces — `maturity_delta=-20.0` (a relative delta applied against whatever `camp.maturity` is
+at trigger time, **not** an absolute set-to-50 — see the raid outcome's own imprecise "resets to
+50" phrasing above) and `last_raid_tick_set` reset to the current tick, reusing the same 500-tick
+cooldown. Camp-classified camps (goblin, orc) always take the raid outcome, flag or no flag.
+
+### Camp/Nest classification
+
+Race kinds resolve to City / Camp / Nest / Excluded based on `data/content/living/races.yaml`
+`natural_traits`/`drive_profile`/`cognition_profile` — see
+[docs/mechanics/05_world_evolution.md §6](../mechanics/05_world_evolution.md) "Camp/Nest
+Classification & Nest Spread" for the full 13-race table and goblin-contradiction resolution. The
+only code projection is `CampService.NEST_RACE_KINDS = frozenset({"wolf", "spider", "troll",
+"slime"})` — City and Excluded races never populate `CampState.kind`, so no code-side City/Excluded
+constant exists.
 
 ### Camp clearing
 
@@ -139,6 +159,10 @@ Monsters spawned in monster-controlled regions (influence ≤ −50) receive a f
 ## Extension rules
 
 1. To add a new camp type: extend `camp.py` with a new camp variant and growth rate. Monster cap formula should remain `max(2, maturity/10)` unless the variant has a documented reason to differ.
+   - **Precedent (`TCK-20260904-CAMP-NEST-CLASSIFICATION`):** the Nest spread outcome above is a
+     variant of the raid-trigger step, not the monster-cap/growth-rate steps — it substitutes the
+     trigger's *outcome* for Nest-classified camps while reusing the unmodified growth rate,
+     monster cap, and cadence constants verbatim.
 2. To add a new raid type: extend `raid.py` with a new raid composition. Fix the hardcoded (0,0) anchor before adding new raid types — position anchoring is a known gap.
 3. To add a new boss type: add to `SPAWN_POOLS` and `DIFFICULTY_ZONES` in `spawn_config.py`. The idempotency lock is per region_id — if multiple boss types should coexist in one region, the locking mechanism needs extending.
 4. To add a new spawn pool: extend `spawn_config.py`. Do not hardcode monster types in `spawn.py`.

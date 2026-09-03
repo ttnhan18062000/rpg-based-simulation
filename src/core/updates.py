@@ -894,6 +894,9 @@ class CampUpdate:
     maturity_delta: float = 0.0
     active_set: Optional[bool] = None
     last_raid_tick_set: Optional[int] = None
+    totem_tier_set: Optional[int] = None
+    stockpile_delta: float = 0.0
+    palisade_integrity_set: Optional[float] = None
 
     def merge(self, other: CampUpdate) -> CampUpdate:
         if self.id != other.id:
@@ -901,7 +904,10 @@ class CampUpdate:
         return replace(self,
             maturity_delta=self.maturity_delta + other.maturity_delta,
             active_set=other.active_set if other.active_set is not None else self.active_set,
-            last_raid_tick_set=other.last_raid_tick_set if other.last_raid_tick_set is not None else self.last_raid_tick_set
+            last_raid_tick_set=other.last_raid_tick_set if other.last_raid_tick_set is not None else self.last_raid_tick_set,
+            stockpile_delta=self.stockpile_delta + other.stockpile_delta,
+            totem_tier_set=other.totem_tier_set if other.totem_tier_set is not None else self.totem_tier_set,
+            palisade_integrity_set=other.palisade_integrity_set if other.palisade_integrity_set is not None else self.palisade_integrity_set,
         )
 
 
