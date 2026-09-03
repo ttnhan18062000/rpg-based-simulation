@@ -205,8 +205,19 @@ class TestEmitRetrievalEvent:
         captured = capsys.readouterr()
         assert captured.err == ""
 
-    def test_default_events_file_is_record_events_events_file(self, tmp_path, monkeypatch):
+    def test_default_events_file_matches_record_events_current_week_target(
+        self, tmp_path, monkeypatch
+    ):
+        """record_events.EVENTS_FILE no longer exists as a module attribute
+        (TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY removed it, replacing it with a
+        write-time-computed local inside record_events.py::main()) — this default must
+        reproduce that same current-ISO-week target, not the old flat
+        agent-monitoring/events.jsonl path (TCK-20260904-HOTFIX-RETRIEVAL-TOOLS-CONSUMERS-
+        DEAD-CONSTANTS). Confirmed by writing through both this function's own default and
+        record_events.py's real main() and asserting they land in the identical file."""
         monkeypatch.chdir(tmp_path)
+        assert not hasattr(record_events, "EVENTS_FILE")
+
         re_mod.emit_retrieval_event(
             run_id="RETRIEVAL-EVENT-test",
             seq=1,
@@ -215,8 +226,35 @@ class TestEmitRetrievalEvent:
             summary="default events_file test",
             status="ok",
         )
-        written = (tmp_path / "agent-monitoring" / "events.jsonl").read_text()
-        assert "default events_file test" in written
+
+        iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+        expected_path = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+        assert expected_path.exists()
+        assert "default events_file test" in expected_path.read_text()
+
+        # Cross-check against record_events.py's own real write path for the same run, not
+        # just a hand-reproduced formula -- proves this write lands in the exact same file
+        # record_events.py's own hook writes to.
+        monkeypatch.setattr(
+            sys, "argv",
+            [
+                "record_events.py",
+                "--data",
+                json.dumps(
+                    {
+                        "run_id": "some-other-run",
+                        "seq": 1,
+                        "ts": "2026-09-04T00:00:00Z",
+                        "phase": "Implement",
+                        "agent": "implementer",
+                        "summary": "record_events main() cross-check",
+                        "status": "ok",
+                    }
+                ),
+            ],
+        )
+        record_events.main()
+        assert "record_events main() cross-check" in expected_path.read_text()
 
     def test_ts_override_is_used_verbatim(self, tmp_path):
         events_file = tmp_path / "agent-monitoring" / "events.jsonl"
