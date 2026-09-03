@@ -4983,3 +4983,35 @@
     changes as a result of this ticket. A world only gets real PlaceState objects
     once its content is explicitly authored/migrated to use the new places: field,
     which is out of scope here.'
+- id: SUB-391
+  text: 'world_compile_report.json''s state_hash field (StateFingerprinter, src/replay/fingerprint.py)
+    is confirmed to have zero coverage of Place data -- it has no reference to `places`
+    anywhere. Verified directly: compiling a world with and without a real PlaceState
+    produces an identical state_hash. This means state_hash alone cannot verify a
+    Place-shaped content migration (idea 66). Fixed by adding canonical_state_hash
+    (CanonicalStateHasher, the real full-coverage hash used by src/engine/kernel.py''s
+    own per-tick/final-run determinism checks) and place_count to WorldCompiler.compile()''s
+    report output -- this is now the real verification mechanism for Place migrations
+    going forward (TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT onward).'
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/replay/fingerprint.py (StateFingerprinter, confirmed zero reference
+    to places) + src/worldbuilding/compiler.py (WorldCompiler.compile(), canonical_state_hash/place_count
+    added to the report dict) + src/engine/checkpoint.py (CanonicalStateHasher, the
+    real consumer)
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compile_report_includes_canonical_state_hash_and_place_count,
+    tests/unit/worldbuilding/test_world_compiler.py::test_compile_report_state_hash_blind_to_places_canonical_hash_is_not
+  divergence_note: 'TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT. StateFingerprinter''s
+    own docstring already discloses it is ''intentionally lightweight... not a full
+    canonical save-state serializer'' and directs callers needing full coverage to
+    CanonicalStateHasher -- this divergence is the report-generation code path (WorldCompiler.compile())
+    not having followed that guidance until now, not a new gap in StateFingerprinter
+    itself. Also relevant: TCK-20260903-NAVIGATION-CANONICAL-HASH-GAP found StateFingerprinter/CanonicalStateHasher
+    both under-cover NavigationComponent -- a related but separate finding, not fixed
+    by this entry.'
+  support_boundary: 'Compile-report field addition only -- no change to StateFingerprinter
+    itself, no change to the existing state_hash field''s value or meaning. Purely
+    additive: canonical_state_hash/place_count are new keys, existing consumers of
+    the report dict are unaffected (confirmed via full regression sweep, 895 passed).'

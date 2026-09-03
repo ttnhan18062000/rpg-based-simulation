@@ -12,6 +12,15 @@ regions:
     terrain: "plain"
     hazard_level: 0.0
     tags: [plain, settlement]
+    # Idea 66, Stage A pilot (TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT): one Region
+    # becomes one Region containing exactly one Place(kind=CITY). Position is the
+    # centroid of grid_bounds. owner_faction_id/footprint/scale left unset -- Place
+    # inherits the Region's existing sovereignty by default, and no calibrated value
+    # exists yet for scale (same caution as this session's other new numeric territory).
+    places:
+      - id: "hometown_city"
+        kind: "city"
+        position: [25, 25]
 factions: ["town_council", "merchant_league"]
 populations: ["frontier_village_population"]
 buildings:

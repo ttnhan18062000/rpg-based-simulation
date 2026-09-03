@@ -24,6 +24,7 @@ from src.core.state import (
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
 from src.replay.fingerprint import StateFingerprinter
+from src.engine.checkpoint import CanonicalStateHasher
 from src.worldbuilding.schema import WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
 from src.core.strategic import ProjectKind
@@ -715,6 +716,16 @@ class WorldCompiler:
         fingerprint = StateFingerprinter.get_fingerprint(state)
         state_hash = fingerprint["state_hash"]
 
+        # Idea 66 (TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT): StateFingerprinter is
+        # intentionally lightweight and does not cover Place data (or most of
+        # NavigationComponent, see TCK-20260903-NAVIGATION-CANONICAL-HASH-GAP) -- a
+        # world's "state_hash" staying unchanged does not mean its Place-shaped content
+        # migration was a no-op. canonical_state_hash is the real, full-coverage check
+        # (CanonicalStateHasher, the same hash src/engine/kernel.py uses for its
+        # per-tick/final-run determinism checks) -- the one that actually detects a
+        # Place addition.
+        canonical_state_hash = CanonicalStateHasher.get_hash(state)
+
         # Finalize report metrics
         end_time = time.perf_counter()
         compile_duration_ms = (end_time - start_time) * 1000.0
@@ -733,7 +744,9 @@ class WorldCompiler:
             }),
             "warnings": warnings,
             "compile_duration_ms": compile_duration_ms,
-            "state_hash": state_hash
+            "state_hash": state_hash,
+            "canonical_state_hash": canonical_state_hash,
+            "place_count": len(places),
         }
 
         if output_report_path:
