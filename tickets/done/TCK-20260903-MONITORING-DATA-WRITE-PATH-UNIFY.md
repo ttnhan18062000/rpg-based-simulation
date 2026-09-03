@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY
-phase: open
+phase: done
 date: 2026-09-03
 tags: [agent-monitoring, observability, hooks, data-quality]
 ---
@@ -17,7 +17,7 @@ Cut over `record_run.py`/`record_events.py`/`post_tool_hook.py` to the unified
 `record_events.py`'s live, silently-broken `TOOLS_FILE` ground-truth read
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -310,18 +310,59 @@ session (before the edit they were landing in the legacy
 `git status`). This is genuine confirmation the cutover works end-to-end, not test pollution — left
 untouched for the Test/Verify phase and the ticket owner to decide on.
 
+**Post-commit follow-up: `tests/tools/test_execution_identity_end_to_end.py` coverage gap
+(found by an independent Test-phase test-scoper agent run after this ticket's work was committed
+as `06597f53` and `origin/main` merged in as `42b76ac8`).** This black-box integration test
+(TCK-20260730-CLAUDE-EXECUTION-IDENTITY) drives all 3 writer scripts via subprocess and had
+hardcoded the pre-cutover paths — the true monolithic `agent-monitoring/events.jsonl`/`runs.jsonl`,
+and a `_current_week_tools_file()` helper that still resolved the *prior* epic's per-source shard
+shape (`agent-monitoring/tools/tools-<week>.jsonl`), not even the shape this ticket replaced it
+with. It was missed by both plan.md's file list and test_plan.md's Regression Surface, and
+consequently not run during the original implementation pass. Fixed the same way as the other 3
+test files: replaced `_current_week_tools_file()`'s single-purpose body with a shared
+`_current_week_dir()` helper resolving the real unified `agent-monitoring/data/<ISO-week>/`
+directory (mirroring all 3 writers' own `iso_week`/path construction), plus
+`_current_week_events_file()`/`_current_week_runs_file()` siblings; updated all 3 test functions'
+local `events_file`/`runs_file`/`tools_file` variables to use these; updated
+`_seed_one_legacy_line_per_file()` to seed both the still-true legacy monolithic files (proving
+they're never touched) and the real unified week-folder files (giving the prefix-unchanged /
+append-only assertions genuine pre-existing content on the real target). Strengthened (not
+weakened) `test_baseline_prefix_unchanged_after_new_identity_writes`: it previously only asserted
+the legacy `tools.jsonl` stays untouched (the only source that had already moved off a monolithic
+path before this ticket); now that all 3 sources have moved, added the symmetric assertions that
+legacy `events.jsonl`/`runs.jsonl` also stay untouched. All 3 of the file's original assertions
+(identity coherence across sources, prefix-preservation via byte-prefix + checksum, no-duplicate-
+identity-keys) are intact and unweakened — only the path resolution changed. Re-ran the
+coordinator's exact scoped command
+(`pytest tests/tools/test_post_tool_hook.py tests/tools/test_record_run.py
+tests/tools/test_record_events.py tests/tools/test_monitoring_writer.py
+tests/tools/test_monitoring_writer_single_source.py
+tests/tools/test_monitoring_writer_lockfile_candidate.py
+tests/tools/test_current_run_sidecar_orchestrator.py
+tests/tools/test_execution_identity_end_to_end.py tests/integrity/test_merge_union_gitattributes.py`)
+against `.venv/bin/python3`: 114 passed, 0 failed. Not committed — left in the working tree per
+the coordinator's instruction.
+
 ## Test Summary
 
-All 3 target test files run against the real venv (`.venv/bin/python3`, since the bare `python3`
+All target test files run against the real venv (`.venv/bin/python3`, since the bare `python3`
 on this host lacks `pydantic` and fails `tests/conftest.py`'s import):
 
 - `tests/tools/test_post_tool_hook.py`: 18 passed
 - `tests/tools/test_record_run.py`: 22 passed
 - `tests/tools/test_record_events.py`: 26 passed
+- `tests/tools/test_execution_identity_end_to_end.py`: 3 passed (fixed post-commit, see
+  Implementation Notes)
+- `tests/tools/test_monitoring_writer.py`,
+  `tests/tools/test_monitoring_writer_single_source.py`,
+  `tests/tools/test_monitoring_writer_lockfile_candidate.py`,
+  `tests/tools/test_current_run_sidecar_orchestrator.py` (anti-drift, unmodified): pass
 - `tests/integrity/test_merge_union_gitattributes.py` (anti-drift, unmodified): 7 passed
 - `tests/agent_codex_realrepo_pilot_harness/test_tools_shard_resolution.py` (anti-drift, unmodified): 5 passed
 
-Total: 78 passed, 0 failed.
+Coordinator's exact scoped command (8 files, excluding the last anti-drift file above): 114 passed,
+0 failed. Combined with the earlier `test_tools_shard_resolution.py` run: 119 passed, 0 failed
+total across this ticket's full verified surface.
 
 ## Files Changed
 - `tools/agent-monitoring/post_tool_hook.py` (Step 1: write-target path template)
@@ -333,6 +374,8 @@ Total: 78 passed, 0 failed.
 - `tests/tools/test_post_tool_hook.py`
 - `tests/tools/test_record_run.py`
 - `tests/tools/test_record_events.py`
+- `tests/tools/test_execution_identity_end_to_end.py` (post-commit coverage-gap fix, see
+  Implementation Notes)
 - `staging_artifacts/TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY/plan.md`,
   `investigation.md`, `test_plan.md` (present in the working tree at session start as untracked
   files from this run's own Investigate/Plan phases; part of this run's real changeset)
@@ -354,5 +397,12 @@ session per the doc-parity requirement. All 3 legacy `.gitattributes` lines and 
 monolithic/sharded data files remain present and untouched, per the ticket's explicit Out of Scope
 (migration is child 2's job). 66 updated/new tests across the 3 target test files pass, plus 12
 anti-drift tests in adjacent, out-of-scope test files confirmed unaffected. `writer.py` has a
-confirmed zero-diff. Not yet run through Test/Parity/Verify/Finalize — this ticket's Status remains
-`INPROGRESS` pending those phases.
+confirmed zero-diff.
+
+Independently re-verified through the full standard-tier pipeline: Test phase (test-scoper) found
+one real coverage gap post-implementation (`tests/tools/test_execution_identity_end_to_end.py`
+hardcoded pre-cutover paths, missed by plan.md/test_plan.md) — fixed and re-verified clean,
+114/114 passing. Architecture-Verify (architecture-reviewer): **APPROVED** — `writer.py` confirmed
+untouched, fail-silent contract confirmed preserved, `(run_id, seq)` global-uniqueness assumption
+independently re-derived from `seq_offset.py`/`schema.md` rather than merely trusted, no scope
+creep found. Verify (done-checker): **READY TO CLOSE**, 13/13 Definition-of-Done conditions PASS.
