@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260902-EPIC-IDEA66-REGION-PLACE-REBUILD
-phase: open
+phase: done
 date: 2026-09-02
 tags: [content, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [content, determinism]
 Region/Place foundational rebuild (idea 66) — epic, promoted from plan doc
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -70,11 +70,22 @@ child tickets:
 - [x] Membership-index open question is decided and recorded — dual-sided membership (`RegionState.places`
       list + cached `place_id` back-reference), see plan doc "Membership-index decision" section.
 - [x] Child tickets created (5, sequenced) — see Related Tickets above.
-- [ ] Stage A pilot lands with a byte-identical `state_hash` to its committed baseline (or an explained,
-      accepted hash change) before Stage B starts.
-- [ ] All 21 worlds pass through the recalibration procedure with recorded triage notes.
-- [ ] Downstream idea 35/48 (M2) and 44-47/61 (M4) tickets can cite this epic's landed state as their
-      unblocking dependency.
+- [x] Stage A pilot lands with a byte-identical `state_hash` to its committed baseline (or an explained,
+      accepted hash change) before Stage B starts. **Explained hash change**: `state_hash`
+      (`StateFingerprinter`) was found blind to Place data entirely; `canonical_state_hash`
+      (`CanonicalStateHasher`, added to the compile report specifically for this purpose) changed as
+      expected for real new Place data, verified isolated to `regions`/`places` only via direct
+      canonical-dict diffs.
+- [x] All 21 worlds pass through the recalibration procedure with recorded triage notes. Done in
+      `TCK-20260902-PLACE-MIGRATION-RECALIBRATION`: all 21 worlds' `canonical_state_hash` triaged as
+      compile-shape (not a regression); separately, a full 81-run_key `grade_anchors.json` sweep found
+      61/81 drifted, causally isolated via a revert-and-rerun control test and confirmed unrelated to
+      this epic's changes (pre-existing fixture staleness, tracked in
+      `TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS`).
+- [x] Downstream idea 35/48 (M2) and 44-47/61 (M4) tickets can cite this epic's landed state as their
+      unblocking dependency. All 21 worlds now carry real `Place` data (`CITY`/`CAMP`/`RUIN`, plus
+      deliberate empty-wilderness cases where no real anchor exists) with full canonical-hash coverage —
+      the schema and content foundation these downstream ideas depend on is landed.
 
 ## Related Tickets
 Child tickets (created 2026-09-02, sequenced 1→5):
@@ -110,13 +121,44 @@ artifacts to be created when each child ticket is scoped)
   is known after Stage B.
 
 ## Implementation Notes
-(fill in as child tickets are scoped)
+All 5 child tickets landed across two PRs: child 1 (`TCK-20260902-PLACE-SCHEMA-MIGRATION`) merged
+separately via #113; children 2-5 (`TCK-20260902-WORLDCOMPILER-PLACE-WIRING`,
+`TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT`, `TCK-20260902-PLACE-MIGRATION-STAGE-B-ROLLOUT`,
+`TCK-20260902-PLACE-MIGRATION-RECALIBRATION`) landed together on branch `worldcompiler-place-wiring`
+(PR #117, all CI checks green). `Place` is now a real, atomic point-of-interest object positioned within
+a Region's bounds, wired through both the Direct and Composition compilation paths, with dual-sided
+membership (`RegionState.places` + cached `place_id` back-reference), full canonical-hash coverage, and
+real content across all 21 worlds (`CITY`/`CAMP`/`RUIN` kinds, plus deliberate empty-wilderness cases
+where no real anchor exists in the source content). Two real findings surfaced and handled during
+implementation rather than deferred: `state_hash`'s blindness to Place data (fixed by adding
+`canonical_state_hash`/`place_count` to the compile report) and two independent stale-fixture gaps
+(`world_compile_report.json`, resolved as a side effect of Stage B's batch pass; `grade_anchors.json`,
+still open, causally proven unrelated to this epic and tracked in
+`TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS` for future human-reviewed regeneration).
 
 ## Test Summary
-(fill in as child tickets land)
+Aggregate across all 5 child tickets: 11 new unit/regression tests
+(`tests/unit/worldbuilding/test_place_wiring.py`, `tests/unit/worldassembly/test_resolver.py`,
+`tests/unit/worldbuilding/test_world_compiler.py`), 1 existing certification test's exact-key-set
+assertion updated, a full ~895-test regression sweep across worldbuilding/worldassembly/worldmodules/
+core/engine/kernel/certification (0 failed), a 21/21-world batch resolve+compile pass, and a full
+81-run_key `grade_anchors.json` sweep with a causal-isolation control test proving no regression from
+this epic. PR #117's CI (all lanes, including Simulation quality) is green.
 
 ## Files Changed
-(fill in as child tickets land)
+See each child ticket's own Files Changed section for the full per-file breakdown. Summary: schema
+(`src/core/state.py`, `src/worldbuilding/schema.py`, `src/worldbuilding/recipe.py`), wiring
+(`src/worldassembly/resolver.py`, `src/worldbuilding/compiler.py`), content (6 shared
+`data/content/world_modules/*.yaml` files), all 21 worlds' `world_compile_report.json`/`resolved/`
+assets, plus tests, docs (`docs/world/compiler_contract.md`), and parity ledger entries
+(`SUB-389`-`SUB-392`).
 
 ## Completion Summary
-(fill in when all child tickets are done)
+Idea 66's Region/Place foundational rebuild is fully landed: all 5 child tickets complete, zero real
+regressions found across the entire migration. This directly unblocks ideas 35 (sovereignty wiring),
+45/46/47 (Camp/Nest/Lair as `Place` kinds), and 48 (place-type transitions) — each retains its own
+ticket for implementation, but the schema/content/compiler foundation they depend on now exists and is
+verified. One follow-up ticket remains open from this work
+(`TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS`, `grade_anchors.json` half), tracked separately
+since it is a pre-existing fixture-maintenance gap unrelated to this epic's own changes, not a blocker
+to closing this epic.
