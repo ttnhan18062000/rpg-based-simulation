@@ -276,3 +276,40 @@ def test_resolve_module_contribution_region_without_places_yields_empty_list(bas
     contribution = resolver.resolve_module_contribution(normalized)
 
     assert contribution.regions[0].places == []
+
+
+def test_resolve_module_contribution_wires_camp_kind_place_with_race_field(base_repo):
+    """TCK-20260904-CAMPSTATE-PLACE-BRIDGE: the Composition path carries the new
+    creature_kind field through resolve_module_contribution() unchanged -- the id
+    namespacing (prefix) still applies to place_id, while creature_kind is not an
+    identifier and passes through unnamespaced."""
+    from src.worldbuilding.recipe import RegionRecipeSpec, PlaceRecipeSpec
+    from src.worldmodules.schema import WorldModuleSpec
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    from src.worldmodules.repository import WorldModuleRepository
+    from src.worldassembly.resolver import WorldAssemblyResolver
+
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_camp_place_module",
+        module_type="terrain",
+        display_name="Test Camp Place Module",
+        regions=[
+            RegionRecipeSpec(
+                id="goblin_camp", type="wilderness", grid_bounds=(0, 0, 10, 10),
+                places=[PlaceRecipeSpec(id="p1", kind="camp", position=(5, 5), creature_kind="goblin")],
+            ),
+        ],
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+
+    module_repo = WorldModuleRepository("data/content/world_modules")
+    resolver = WorldAssemblyResolver(base_repo, module_repo)
+    contribution = resolver.resolve_module_contribution(normalized, prefix="mod1_")
+
+    assert len(contribution.regions) == 1
+    region_spec = contribution.regions[0]
+    place_spec = region_spec.places[0]
+    assert place_spec.id == "mod1_p1"
+    assert place_spec.kind == "CAMP"
+    assert place_spec.creature_kind == "goblin"

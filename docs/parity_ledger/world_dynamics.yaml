@@ -1407,10 +1407,18 @@
   test_path: tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestNodeRecharged;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestThreatEvolved
-  divergence_note: "camp_constructed has no viable engine path under the current camp\
-    \ lifecycle model: camps are pre-placed at world generation and CampService (src/world/camp.py)\
-    \ only evolves existing camps (maturity, raids) \u2014 there is no dynamic construction\
-    \ mechanic to emit from. Not pending/future work; confirmed by TCK-20260701-SIMQ-EMIT-CAMP.\n"
+  divergence_note: 'camp_constructed remains blocked but for a narrower reason than
+    previously stated: as of TCK-20260904-CAMPSTATE-PLACE-BRIDGE, WorldCompiler.compile()
+    CAN construct a real CampState alongside a PlaceState(kind=CAMP/NEST) when content
+    declares the optional PlaceSpec.creature_kind field -- but no real content does
+    so yet (the field is opt-in and unset on hero_guild_routing''s goblin_camp_place),
+    so CampService still has no populated camps to emit camp_constructed from in any
+    real compiled world today. The original premise (''camps are pre-placed at world
+    generation'') was inaccurate prior to this ticket -- zero production CampState
+    construction existed. Still not pending/future work for THIS entry''s event-emission
+    scope; see TCK-20260904-CAMPSTATE-PLACE-BRIDGE for the construction-path change.
+
+    '
   support_boundary: null
 - id: WORLD-110
   text: "WORLD pillar grade stability under normalized_score formula change \u2014\
@@ -1877,12 +1885,16 @@
     ...) instead of calling RaidService.check_for_raid(), applying the identical maturity_delta=-20.0
     (relative, not an absolute reset) and last_raid_tick_set=state.tick cost/cooldown-reset
     the raid outcome already uses. Camp-classified camps (goblin, orc) always take
-    the raid outcome regardless of this flag. No new CampState is constructed anywhere
-    in this branch (WORLD-109 remains true). CampState/CampUpdate also gain three
-    new typed fields -- totem_tier: int, stockpile: float, palisade_integrity: float
-    -- round-tripping through to_canonical_dict()/CampUpdate.merge() and committed
-    via apply_plan.py''s camp-application block; these are provisional scaffolding
-    only, with no production writer populating non-default values in this ticket.'
+    the raid outcome regardless of this flag. This nest-spread branch itself constructs
+    no CampState (it spawns an entity via EntityGenerator, not a Place/Camp record)
+    -- distinct from the separate, opt-in world-gen CampState construction path WorldCompiler.compile()
+    gained under TCK-20260904-CAMPSTATE-PLACE-BRIDGE (see WORLD-109), which remains
+    inert for all real content today since no content sets PlaceSpec.creature_kind.
+    CampState/CampUpdate also gain three new typed fields -- totem_tier: int, stockpile:
+    float, palisade_integrity: float -- round-tripping through to_canonical_dict()/CampUpdate.merge()
+    and committed via apply_plan.py''s camp-application block; these are provisional
+    scaffolding only, with no production writer populating non-default values in this
+    ticket.'
   status: verified
   priority: P2
   v2_evidence: src/world/camp.py -- CampService.NEST_RACE_KINDS, CampService.process_camps()

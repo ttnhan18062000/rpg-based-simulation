@@ -39,12 +39,20 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
 1. **Idea 43's insertion point — confirmed clean, low-risk.** `WorldCompiler.compile()` step 2 already
    loops over `spec.regions`; `RegionState.population_cohorts` just needs to be set inside that existing
    loop. No new architecture required — reuse the M2 ticket, don't scope this separately.
-2. **Idea 45's insertion point — confirmed deeper than the atlas originally scoped.** `CampState` is never
-   constructed anywhere in production code, `WorldModuleSpec` has no `camp_recipes` field, and the compiler
-   has no camp step at all. This ticket needs a new schema field plus a new compiler step, not a data-seed
-   call into an existing pattern — re-scope idea 45's own M4 ticket estimate accordingly. **Superseded by
-   scope item 9 below if idea 66 lands first**: a real `Place` hierarchy would give Camp a proper insertion
-   point instead of a bespoke schema field.
+2. **Idea 45's insertion point — closed, as-built, by idea 66 plus `TCK-20260904-CAMPSTATE-PLACE-BRIDGE`.**
+   This item originally read: "`CampState` is never constructed anywhere in production code,
+   `WorldModuleSpec` has no `camp_recipes` field, and the compiler has no camp step at all — needs a new
+   schema field plus a new compiler step." That framing is now stale and superseded, exactly as the
+   original note below predicted. Idea 66's `Place` hierarchy already gave `WorldCompiler.compile()` a
+   generic insertion point for `kind=CAMP`/`kind=NEST` `PlaceState` construction (both Direct and
+   Composition content paths); `TCK-20260904-CAMPSTATE-PLACE-BRIDGE` closed the remaining gap with only a
+   narrow addition — a single optional `creature_kind: Optional[str]` field on `PlaceRecipeSpec`/`PlaceSpec`
+   (CAMP/NEST-scoped, `None` by default) plus an additive branch inside the *existing* Place-construction
+   loop that builds a companion `CampState`, keyed by the same `place_id`, when that field is set. No new
+   `WorldModuleSpec` field and no new compiler step were needed. The bridge is opt-in and inert for all
+   content on disk today (including `hero_guild_routing`'s `goblin_camp_place`) — migrating real content to
+   set `creature_kind` remains a separate, future, deliberately-deferred step (see that ticket's
+   Gameplay-Activation Risk Decision).
 3. **Idea 14/44's `settlement_capacity` — confirmed not-yet-built at the schema level**, not merely
    unwired. Doesn't exist anywhere in `src/` or `docs/` except this atlas's own prose. M2's ticket for idea
    14 needs to include the actual schema addition, not assume one exists to extend.

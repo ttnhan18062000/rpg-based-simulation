@@ -819,6 +819,7 @@ class WorldAssemblyResolver:
                         scale=p.scale,
                         maturity=p.maturity,
                         hazard_level=p.hazard_level,
+                        creature_kind=p.creature_kind,
                     )
                     for p in getattr(reg, "places", [])
                 ],

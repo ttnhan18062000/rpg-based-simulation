@@ -73,6 +73,32 @@ A camp is cleared when all its associated monsters are killed. On clear:
 
 **Known gap:** Camp-to-raid position anchoring is incomplete. The raid spawns at a hardcoded position (0,0) rather than near the camp's actual location. This is noted in camp.py comments as a stub pending implementation.
 
+### World-gen construction (`TCK-20260904-CAMPSTATE-PLACE-BRIDGE`)
+
+`CampState` instances are constructed at world-compile time, not authored directly. A content
+region declaring a `PlaceSpec(kind=CAMP` or `NEST, creature_kind=<race>)` causes
+`WorldCompiler.compile()` to build a companion `CampState`, keyed by the same id as its
+`PlaceState` counterpart (`state.places[place_id]` and `state.camps[place_id]` share one key),
+with `CampState.kind` set to the declared `creature_kind`. `CampState`'s other fields
+(`maturity`, `active`, `faction`, `last_raid_tick`, `totem_tier`, `stockpile`,
+`palisade_integrity`) are left at their dataclass defaults — no content-schema field carries
+values for them yet.
+
+`creature_kind` is `Optional[str]`, `None` by default, and validated against the Camp+Nest race
+set (`{goblin, orc, wolf, spider, troll, slime}`) from
+[docs/mechanics/05_world_evolution.md §6](../mechanics/05_world_evolution.md). It is opt-in: a
+`CAMP`/`NEST`-kind `PlaceSpec` that doesn't set it produces a `PlaceState` with no companion
+`CampState` — the bridge is inert unless content explicitly declares the field. No content on
+disk sets it today (including `hero_guild_routing`'s `goblin_camp_place`), so `state.camps`
+remains `{}` for every currently-compiled world; a future ticket migrating real content to set
+`creature_kind` is the point `CampService`/`CreatureTerritoryService` first receive non-empty
+`state.camps` data in a real compiled world.
+
+`CampService` and `CreatureTerritoryService` themselves are unchanged by this bridge — both
+already read `state.camps` unconditionally every tick (see "Growth"/"Monster spawning"/"Raid
+trigger" above), they simply had nothing to iterate before this ticket gave `state.camps` a real
+construction path.
+
 ---
 
 ## Raid — `raid.py`

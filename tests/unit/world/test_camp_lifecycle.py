@@ -212,3 +212,107 @@ def test_campupdate_totem_stockpile_palisade_apply_via_apply_plan():
     assert camp.totem_tier == 3
     assert camp.stockpile == 12.0
     assert camp.palisade_integrity == 60.0
+
+
+# TCK-20260904-CAMPSTATE-PLACE-BRIDGE: architecture-guard / anti-drift tests confirming
+# a world-gen-seeded CampState (via WorldCompiler.compile()) is functionally usable by
+# the existing, UNMODIFIED CampService -- this ticket adds no new gating and camp.py is
+# not touched.
+
+
+def test_campservice_process_camps_operates_on_world_gen_seeded_camp():
+    """Compile a minimal WorldSpec with a creature_kind-populated CAMP Place, then feed
+    the resulting state.camps entry directly into CampService.process_camps() and
+    assert it runs without error, producing the expected maturity-accrual StateUpdate
+    shape -- proving the world-gen-seeded CampState is not just structurally present
+    but functionally usable by the existing, unmodified service."""
+    from src.worldbuilding.compiler import WorldCompiler
+    from src.worldbuilding.schema import WorldSpec, TopologySpec, RegionSpec, PlaceSpec
+
+    spec = WorldSpec(
+        schema_version="worldspec.v1",
+        world_id="test_camp_bridge",
+        name="Test Camp Bridge",
+        topology=TopologySpec(width=100, height=100, coordinate_system="grid"),
+        regions=[
+            RegionSpec(
+                id="forest", type="wilderness", bounds=(0, 0, 100, 100),
+                places=[PlaceSpec(id="camp_1", kind="camp", position=(50, 50), creature_kind="goblin")],
+            ),
+        ],
+    )
+    compiled_state, _ = WorldCompiler.compile(spec, seed=42)
+    assert "camp_1" in compiled_state.camps
+
+    from dataclasses import replace
+    state = replace(compiled_state, tick=30)
+    generator = EntityGenerator(seed=42)
+
+    update = CampService.process_camps(state, generator)
+
+    assert "camp_1" in update.camp_updates
+    assert update.camp_updates["camp_1"].maturity_delta is not None
+
+
+def test_campservice_raid_and_spawn_branches_not_newly_flag_gated():
+    """This ticket seeds real data into an already-unconditional CampService.process_camps
+    -- it must not add any new flag check wrapping the raid-trigger/monster-spawn branches.
+    Proven behaviorally: a matured, world-gen-seeded camp still raids with NO feature
+    flags set at all (state.feature_flags left at its default), exactly as it did before
+    this ticket -- if a new flag check had been added, this would need an explicit ON."""
+    from src.worldbuilding.compiler import WorldCompiler
+    from src.worldbuilding.schema import WorldSpec, TopologySpec, RegionSpec, PlaceSpec
+    from dataclasses import replace
+
+    spec = WorldSpec(
+        schema_version="worldspec.v1",
+        world_id="test_camp_bridge_flagless_raid",
+        name="Test Camp Bridge Flagless Raid",
+        topology=TopologySpec(width=100, height=100, coordinate_system="grid"),
+        regions=[
+            RegionSpec(
+                id="forest", type="wilderness", bounds=(0, 0, 100, 100),
+                places=[PlaceSpec(id="camp_1", kind="camp", position=(50, 50), creature_kind="goblin")],
+            ),
+        ],
+    )
+    compiled_state, _ = WorldCompiler.compile(spec, seed=42)
+    state = replace(compiled_state, tick=500, camps={
+        "camp_1": replace(compiled_state.camps["camp_1"], maturity=90.0, last_raid_tick=0),
+    })
+    assert state.feature_flags == {}
+    generator = EntityGenerator(seed=42)
+
+    update = CampService.process_camps(state, generator)
+
+    assert update.camp_updates["camp_1"].maturity_delta == -20.0
+    assert update.camp_updates["camp_1"].last_raid_tick_set == 500
+
+
+def test_authoritative_state_to_readonly_wraps_world_gen_seeded_camps():
+    """AuthoritativeState.to_readonly()'s camps=ReadOnlyDict(self.camps) wrapping must
+    still apply to a CampState constructed via the new world-gen bridge -- guards
+    against accidentally replicating the pre-existing 'places is unwrapped' gap onto
+    the new camps construction path."""
+    from src.core.state import ReadOnlyDict
+    from src.worldbuilding.compiler import WorldCompiler
+    from src.worldbuilding.schema import WorldSpec, TopologySpec, RegionSpec, PlaceSpec
+
+    spec = WorldSpec(
+        schema_version="worldspec.v1",
+        world_id="test_camp_bridge_readonly",
+        name="Test Camp Bridge Readonly",
+        topology=TopologySpec(width=20, height=20, coordinate_system="grid"),
+        regions=[
+            RegionSpec(
+                id="forest", type="wilderness", bounds=(0, 0, 10, 10),
+                places=[PlaceSpec(id="camp_1", kind="camp", position=(5, 5), creature_kind="goblin")],
+            ),
+        ],
+    )
+    compiled_state, _ = WorldCompiler.compile(spec, seed=42)
+
+    readonly_state = compiled_state.to_readonly()
+
+    assert type(readonly_state.camps) is ReadOnlyDict
+    assert "camp_1" in readonly_state.camps

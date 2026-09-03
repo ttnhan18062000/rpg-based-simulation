@@ -66,12 +66,21 @@ tickets.
    did not construct or seed any `CampState`, and feature magnitudes/accrual logic for
    totem/stockpile/palisade are still undefined, left to a follow-on ticket
    (`TCK-20260904-CAMPSTATE-PLACE-BRIDGE` covers the world-gen wiring half).
-   **World-generation note (M8):** idea 45's "seed CampState" framing understates the real gap —
-   `CampState` is never constructed in production anywhere, and there's no schema field or compiler step
-   for it at all. This ticket needs a new `WorldModuleSpec` field plus a new `WorldCompiler` step, not a
-   data-seed call into an existing pattern. Read `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md` before
-   scoping. Good news from the same epic: 3 of the 6 real test-corpus profiles already have City+hostile-camp
-   content coexisting, so testing this needs zero new corpus authoring once the mechanism exists.
+   **World-generation note (M8) — closed, 2026-09-04, by `TCK-20260904-CAMPSTATE-PLACE-BRIDGE`.**
+   The original note below ("`CampState` is never constructed in production anywhere... needs a new
+   `WorldModuleSpec` field plus a new `WorldCompiler` step") is now stale — idea 66's `Place` hierarchy
+   already gave `WorldCompiler.compile()` a generic insertion point for `kind=CAMP`/`kind=NEST`
+   `PlaceState` construction, and the bridge ticket closed the remaining gap with only a narrow, additive
+   change: an optional `creature_kind: Optional[str]` field on `PlaceRecipeSpec`/`PlaceSpec` (CAMP/NEST-
+   scoped, `None` by default) plus a branch inside the *existing* Place-construction loop that builds a
+   companion `CampState`, keyed by the same `place_id`, when that field is set. No new `WorldModuleSpec`
+   field and no new `WorldCompiler` step were needed. The bridge is opt-in and inert for all content on
+   disk today (including `hero_guild_routing`'s `goblin_camp_place`) — migrating real content to set
+   `creature_kind` remains a separate, deliberately-deferred future step. See
+   `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md` item 2 (updated in the same
+   ticket) for the as-built framing. Good news from the same epic: 3 of the 6 real test-corpus profiles
+   already have City+hostile-camp content coexisting, so testing this needs zero new corpus authoring
+   once real content opts in.
 2. **Idea 47 — Lair.** Confirmed a genuinely separate ticket, correctly NOT a Camp variant — but its real
    precedent is Boss's entity-anchor idempotency pattern (`boss_region_id`), not Camp's shape, a correction
    from the original card. **Depth-audit note:** boss-spawn logic itself has zero dedicated test files
