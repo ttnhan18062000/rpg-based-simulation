@@ -1,12 +1,12 @@
 ---
 name: agent-monitoring-retro
-description: Generate the agent monitoring retro report from accumulated runs.jsonl/events.jsonl data. Use when the cadence rule is due (weekly, after 5+ completed tickets, or before changing any agent prompt/phase/tier rule) or when the retro-loop-enforcement hook nudges that the threshold has been crossed.
+description: Generate the agent monitoring retro report from accumulated agent-monitoring/data/YYYY-Www/{runs,events}.jsonl data. Use when the cadence rule is due (weekly, after 5+ completed tickets, or before changing any agent prompt/phase/tier rule) or when the retro-loop-enforcement hook nudges that the threshold has been crossed.
 ---
 
 # Agent Monitoring Retro
 
-Runs `make agent-monitoring-retro` to turn raw `agent-monitoring/runs.jsonl` and
-`agent-monitoring/events.jsonl` records into a structured retro report, then
+Runs `make agent-monitoring-retro` to turn raw `agent-monitoring/data/YYYY-Www/runs.jsonl` and
+`agent-monitoring/data/YYYY-Www/events.jsonl` records into a structured retro report, then
 walks through the retrospective process so the findings actually get acted on.
 
 ## When to Use This Skill

@@ -22,7 +22,7 @@ source:
   ticket_id: TCK-...              # the real ticket this fixture was derived from
   ticket_path: tickets/done/TCK-....md
   stored_artifacts_dir: stored_artifacts/TCK-.../
-  events_run_id: TCK-...          # run_id key in agent-monitoring/events.jsonl
+  events_run_id: TCK-...          # run_id key in agent-monitoring/data/YYYY-Www/events.jsonl
   events_seq_range: [1, 4]        # inclusive seq range covered by this fixture
 phases:
   - phase: Scope                  # one of: Scope, Investigate, Plan, Review

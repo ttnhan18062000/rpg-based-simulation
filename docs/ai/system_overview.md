@@ -228,10 +228,9 @@ and Do-Not list.
 
 ## 6. Observability and Where to Go Deeper
 
-Agent activity is recorded as append-only JSONL under `agent-monitoring/`, joined by `run_id`
-(and additionally by `seq` for the tool-call records): two single files (`runs.jsonl`,
-`events.jsonl`) plus a sharded family of tool-call files, one per UTC ISO week
-(`agent-monitoring/tools/tools-YYYY-Www.jsonl`):
+Agent activity is recorded as append-only JSONL under `agent-monitoring/data/YYYY-Www/`, one
+per-week folder per UTC ISO week, holding 3 sources joined by `run_id` (and additionally by `seq`
+for the tool-call records): `runs.jsonl`, `events.jsonl`, `tools.jsonl`.
 
 - **`runs.jsonl`** — one record per workflow invocation (`run_id`, `start_ts`, `end_ts` nullable,
   `workflow`, `tier`, `final_status`, `agent_count`, `duration_s`). Raw token counts are explicitly
@@ -241,10 +240,10 @@ Agent activity is recorded as append-only JSONL under `agent-monitoring/`, joine
   `summary` capped at 200 characters, `status`, `tool_call_count`, `cost_proxy_score` — a
   monotonic spend-proxy score, required for `implement-ticket` records; see
   `docs/agent-monitoring/schema.md`'s `cost_proxy_score` section for the formula).
-- **`tools/tools-YYYY-Www.jsonl`** — one record per tool call, keyed to events via `run_id`+`seq`
+- **`tools.jsonl`** — one record per tool call, keyed to events via `run_id`+`seq`
   through a `.claude/current_run` sidecar file (`tool`, `input_summary` capped at 120 characters,
-  `status`, `duration_ms`). Each row lands in the shard for the UTC ISO week its `ts` falls in;
-  readers glob and concatenate all shards in filename-sorted order.
+  `status`, `duration_ms`). Each row lands in the week folder its `ts` falls in; readers glob and
+  concatenate all week folders in sorted order.
 
 A retro process runs against this data on a cadence (5+ completed tickets, weekly, or before changing
 agent prompts or tier rules, nudged by a `PostToolUse` hook), producing a report via

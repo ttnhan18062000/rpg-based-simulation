@@ -8,7 +8,8 @@ tags: [agent-monitoring, schema]
 
 # Agent Monitoring — Schema Reference
 
-Two append-only JSONL files, joined by `run_id`.
+Three append-only JSONL sources (`runs`, `events`, `tools`) per UTC ISO week, joined by `run_id`
+(`tools` additionally joins to `events` by `seq`).
 
 ---
 
@@ -47,7 +48,7 @@ divergences.
 
 ---
 
-## `agent-monitoring/runs.jsonl`
+## `runs` (`agent-monitoring/data/YYYY-Www/runs.jsonl`)
 
 One record per workflow invocation.
 
@@ -136,7 +137,7 @@ all writes going forward.
 
 ---
 
-## `agent-monitoring/events.jsonl`
+## `events` (`agent-monitoring/data/YYYY-Www/events.jsonl`)
 
 One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 
@@ -365,7 +366,7 @@ stream.
 
 ---
 
-## `agent-monitoring/tools.jsonl`
+## `tools` (`agent-monitoring/data/YYYY-Www/tools.jsonl`)
 
 One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joined to events by `run_id` + `seq`.
 

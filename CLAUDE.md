@@ -91,7 +91,7 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 - Verify no leftover staging/temp files remain.
 - If any files under `docs/` were created or modified: run `make knowledge-index-update` to keep the agent context search index current.
 - `docs/REGISTRY.yaml` is regenerated unconditionally as part of Finalize's post-migration self-check (all tiers, including hotfix) — no manual `make docs-registry` step is needed. Always stage the regenerated file (`git add docs/REGISTRY.yaml`) as part of ticket close, alongside `agent-monitoring/`.
-- **Always stage `agent-monitoring/` (including `tools.jsonl`) in every commit** — the monitoring tools auto-update `tools.jsonl` on every run; never leave it as an unstaged modification.
+- **Always stage `agent-monitoring/` (including the current week's `data/YYYY-Www/{runs,events,tools}.jsonl` shard) in every commit** — the monitoring tools auto-update these per-week shards on every run; never leave them as an unstaged modification.
 
 ### Commit Convention
 
@@ -133,13 +133,13 @@ alongside the main checkout, each independently on its own branch.
   — it just shares the filesystem directory rather than getting its own. Commit and push each unit
   of work to its own branch as usual; never mix commits from two unrelated units of work onto one
   branch.
-- Watch for the shared-directory monitoring auto-write race when switching branches this way:
-  `agent-monitoring/tools.jsonl` is rewritten by a hook on nearly every tool call, so a plain `git
-  checkout -b` can fail with "local changes would be overwritten" if that file is dirty from the
-  immediately preceding tool call. Chain the commit and the checkout in one Bash invocation
-  (`git add agent-monitoring/tools.jsonl && git commit -m "..." && git checkout -b <branch>
-  origin/<default-branch>`) to close the race window, rather than issuing them as separate tool
-  calls.
+- Watch for the shared-directory monitoring auto-write race when switching branches this way: the
+  current week's `agent-monitoring/data/YYYY-Www/tools.jsonl` shard is rewritten by a hook on nearly
+  every tool call, so a plain `git checkout -b` can fail with "local changes would be overwritten"
+  if that file is dirty from the immediately preceding tool call. Chain the commit and the checkout
+  in one Bash invocation (`git add agent-monitoring/data/ && git commit -m "..." && git checkout -b
+  <branch> origin/<default-branch>`) to close the race window, rather than issuing them as separate
+  tool calls.
 
 ---
 
@@ -251,7 +251,7 @@ A task is not done unless all are true:
 - Repo state is consistent
 - Temporary run data cleaned: `data/runs/`, `reports/release_proof/`
 - No known material gap is left unstated
-- Agent monitoring records written: run entry in `agent-monitoring/runs.jsonl`, at least one event in `agent-monitoring/events.jsonl` _(guaranteed by workflow — not verified by done-checker)_
+- Agent monitoring records written: run entry in `agent-monitoring/data/YYYY-Www/runs.jsonl`, at least one event in `agent-monitoring/data/YYYY-Www/events.jsonl` _(guaranteed by workflow — not verified by done-checker)_
 - Frontmatter valid in the ticket and its staging artifacts (script-checked by `done-checker`'s `frontmatter_valid` condition)
 
 ---

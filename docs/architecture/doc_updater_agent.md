@@ -131,7 +131,7 @@ not its "Entry Schema" section, which is a YAML field-shape block, not a table:
 
 **Why** always travels with the what — the reason text from Investigate's bullet (standard/epic)
 or doc-updater's own stated judgment against ticket Scope (hotfix). The agent's output echoes
-this back per doc touched, so `agent-monitoring/events.jsonl`'s summary is self-explanatory
+this back per doc touched, so `agent-monitoring/data/YYYY-Www/events.jsonl`'s summary is self-explanatory
 without re-reading `investigation.md`.
 
 **Output contract** (mirrors `parity-updater.md`'s Output section): one-sentence summary
