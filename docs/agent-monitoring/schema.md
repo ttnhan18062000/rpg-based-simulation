@@ -113,10 +113,14 @@ single `agent-monitoring/runs.jsonl` file. They are written to
 `agent-monitoring/data/YYYY-Www/runs.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed
 at write time — i.e. when `record_run.py` is invoked, not from the record's own `start_ts` field —
 matching `post_tool_hook.py`'s existing precedent and `events.jsonl`'s write-time bucketing below).
-The historical monolithic `agent-monitoring/runs.jsonl` remains present in the working tree,
-frozen, receiving no new appends after this cutover, until a future migration ticket folds it into
-the unified layout. The per-record schema is unaffected by this change; only where a record
-physically lands changes.
+`TCK-20260903-MONITORING-DATA-MIGRATION` has since retired the historical monolithic
+`agent-monitoring/runs.jsonl` from the working tree: every pre-cutover row was migrated into its
+matching `agent-monitoring/data/YYYY-Www/runs.jsonl` bucket, keyed by each row's own `start_ts`
+field (with a documented field-priority fallback — `ts`, `ts_start`, `started_at`, `completed_at`,
+`ts_end`, `finished_at`, `timestamp`, in that order — for the rare row missing `start_ts`). The
+retired file's full history remains recoverable via `git log --follow -- agent-monitoring/
+runs.jsonl`. The per-record schema is unaffected by this change; only where a record physically
+lands changes.
 
 ### Historical Corrections
 
@@ -141,10 +145,13 @@ a single `agent-monitoring/events.jsonl` file. They are written to
 `agent-monitoring/data/YYYY-Www/events.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed
 at write time). `iso_week` is computed once per `record_events.py --data` invocation, not once per
 record, so a whole batch of events from one call always lands together in one target file — matching
-`write_lines()`'s single-target-path, one-lock-per-batch contract. The historical monolithic
-`agent-monitoring/events.jsonl` remains present in the working tree, frozen, receiving no new
-appends after this cutover, until a future migration ticket folds it into the unified layout. The
-per-record schema is unaffected by this change; only where a record physically lands changes.
+`write_lines()`'s single-target-path, one-lock-per-batch contract. `TCK-20260903-MONITORING-DATA-
+MIGRATION` has since retired the historical monolithic `agent-monitoring/events.jsonl` from the
+working tree: every pre-cutover row was migrated into its matching `agent-monitoring/data/YYYY-
+Www/events.jsonl` bucket, keyed by each row's own `ts` field (with the same documented
+field-priority fallback list used for `runs.jsonl` for the rare row missing `ts`). The retired
+file's full history remains recoverable via `git log --follow -- agent-monitoring/events.jsonl`.
+The per-record schema is unaffected by this change; only where a record physically lands changes.
 
 ```json
 {
@@ -369,10 +376,13 @@ by a second, distinct move (not a repeat of the prior migration): new tool-call 
 `agent-monitoring/data/YYYY-Www/tools.jsonl` instead — still one file per UTC ISO week, still
 `%G-W%V`, still computed at write time; only the directory shape changed (`agent-monitoring/tools/
 tools-<week>.jsonl` → `agent-monitoring/data/<week>/tools.jsonl`), not the sharding granularity.
-The prior epic's `agent-monitoring/tools/tools-YYYY-Www.jsonl` shards remain present in the working
-tree, frozen, receiving no new appends after this cutover, until a future migration ticket folds
-them into the unified layout. The per-record schema below is unaffected by either change; only
-where a record physically lands changes.
+`TCK-20260903-MONITORING-DATA-MIGRATION` has since retired the prior epic's `agent-monitoring/
+tools/tools-YYYY-Www.jsonl` shards from the working tree: each shard was relocated (not
+re-bucketed — the prior epic already did the per-line `ts`-based bucketing correctly, so this
+migration only parsed the ISO week directly out of each shard's own filename) into its matching
+`agent-monitoring/data/YYYY-Www/tools.jsonl` file. The retired directory's full history remains
+recoverable via `git log --follow -- agent-monitoring/tools/`. The per-record schema below is
+unaffected by either change; only where a record physically lands changes.
 
 ```json
 {

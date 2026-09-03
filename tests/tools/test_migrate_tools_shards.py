@@ -281,6 +281,10 @@ def test_tools_jsonl_removed_from_working_tree_after_migration():
 
 
 def test_gitattributes_no_longer_references_retired_tools_jsonl_path():
+    """TCK-20260903-MONITORING-DATA-MIGRATION has since retired the entire
+    agent-monitoring/tools/ directory (not just the monolithic tools.jsonl this ticket
+    itself retired) into agent-monitoring/data/YYYY-Www/tools.jsonl -- the shard-glob
+    line is now gone too, not merely the monolithic-file line."""
     content = (_REPO_ROOT / ".gitattributes").read_text()
     assert "agent-monitoring/tools.jsonl merge=union" not in content
-    assert "agent-monitoring/tools/*.jsonl merge=union" in content
+    assert "agent-monitoring/tools/*.jsonl merge=union" not in content

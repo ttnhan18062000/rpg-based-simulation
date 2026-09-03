@@ -135,6 +135,20 @@ via direct grep this session (line numbers as of this scoping session, reconfirm
 - `tools/agent-monitoring/done_ticket_monitoring_coverage.py`
 - `tools/agent-monitoring/validate.py`
 - `tools/agent-monitoring/query.py`
+- `tools/agent-monitoring/legacy_reader.py` (I/O-free helper library used only by `manifest.py`/
+  `generate_retro.py` — no independent read path of its own, but its test file below reads the real
+  corpus directly and is affected the same way)
+- **3 test files, confirmed RED as of child 2's landing, must be fixed as part of THIS ticket's own
+  Definition of Done, not silently rediscovered**: `tests/tools/test_agent_monitoring_manifest.py`
+  (4 failures), `tests/tools/test_done_ticket_monitoring_coverage.py` (1 failure),
+  `tests/tools/test_agent_monitoring_legacy_reader.py` (2 failures) — all 7 fail with
+  `FileNotFoundError`/silent-empty-read against the now-`git rm`'d `agent-monitoring/runs.jsonl`/
+  `events.jsonl`, independently verified (not just self-reported) by child 2's Test-phase agent.
+  This was explicitly deferred by child 2 as out-of-scope (matching the already-accepted
+  `agent_ops_dashboard/ingest.py` gap), on the understanding that fixing `manifest.py`/
+  `done_ticket_monitoring_coverage.py`'s read paths here — this ticket's own core scope — will
+  naturally fix most of these; explicitly confirm all 7 pass again before this ticket closes, do not
+  assume they're covered incidentally without checking.
 
 ## Assumptions / Open Questions
 - Assumes child 2 (migration) has landed — real, complete week-folder data exists on disk.

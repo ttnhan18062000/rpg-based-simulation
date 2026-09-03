@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260903-MONITORING-DATA-MIGRATION
-phase: open
+phase: done
 date: 2026-09-03
 tags: [agent-monitoring, observability, data-quality, schema]
 ---
@@ -17,7 +17,7 @@ sharded `tools/tools-YYYY-Www.jsonl` files into `agent-monitoring/data/YYYY-Www/
 tools}.jsonl`, retire all 3 old physical shapes
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -102,21 +102,21 @@ algorithm, generalized to 3 sources instead of 1.
   real commit) only.
 
 ## Acceptance Criteria
-- [ ] Every pre-cutover line in `agent-monitoring/runs.jsonl` and `agent-monitoring/events.jsonl`,
+- [x] Every pre-cutover line in `agent-monitoring/runs.jsonl` and `agent-monitoring/events.jsonl`,
       and every line across all `agent-monitoring/tools/tools-*.jsonl` shards, is present,
       content-preserved, in exactly one resulting `agent-monitoring/data/<week>/<source>.jsonl` file —
       verified by an automated script/test against the real corpus, not manual spot-check.
-- [ ] No line is duplicated or dropped for any of the 3 sources (line-count and content reconciliation
+- [x] No line is duplicated or dropped for any of the 3 sources (line-count and content reconciliation
       both pass per source, reported in Test Summary).
-- [ ] Records within each resulting file remain in original chronological (append) order.
-- [ ] Any week folder already receiving live rows from child 1's write-path cutover correctly
+- [x] Records within each resulting file remain in original chronological (append) order.
+- [x] Any week folder already receiving live rows from child 1's write-path cutover correctly
       contains migrated historical rows before live rows, for each source independently.
-- [ ] `agent-monitoring/runs.jsonl`, `agent-monitoring/events.jsonl`, and
+- [x] `agent-monitoring/runs.jsonl`, `agent-monitoring/events.jsonl`, and
       `agent-monitoring/tools/` no longer exist in the working tree after this ticket closes; full
       history remains recoverable via `git log --follow`.
-- [ ] `.gitattributes` no longer references any of the 3 retired paths; the unified glob from child 1
+- [x] `.gitattributes` no longer references any of the 3 retired paths; the unified glob from child 1
       remains.
-- [ ] The migration script's own zero-data-loss verification run against the real historical data
+- [x] The migration script's own zero-data-loss verification run against the real historical data
       (not a synthetic fixture) is captured in Test Summary before any file is retired.
 
 ## Related Tickets
@@ -176,8 +176,141 @@ algorithm, generalized to 3 sources instead of 1.
 
 ## Implementation Notes
 
+Implemented exactly per `staging_artifacts/TCK-20260903-MONITORING-DATA-MIGRATION/plan.md`'s 10
+steps, in order, with one real deviation discovered post-Step-7 (documented below and in plan.md's
+own new "Deviations" section).
+
+- **Step 1-5**: `tools/agent-monitoring/migrate_monitoring_data.py` (new). Imports
+  `_parse_ts_to_week`/`UNKNOWN_WEEK_KEY` from `migrate_tools_shards.py` (unmodified) and
+  `write_lines` from `writer.py` (unmodified). Two genuinely distinct orchestration paths:
+  `_migrate_rebucketed_source()` (runs/events — per-line `json.loads()` + `RUNS_FIELD_PRIORITY`/
+  `EVENTS_FIELD_PRIORITY` 8-field fallback lookup via `bucket_lines_by_week_multi_field()`) and
+  `_migrate_tools_relocation()` (tools — pure filename-based relocation via
+  `relocate_tools_shards()`, zero per-line `json.loads()` for bucketing purposes). Both converge on
+  the generalized `write_week_bucket()`/`verify_migration()` primitives (mechanically identical to
+  the reference implementation except `_target_path_for_week()` replacing `_shard_path_for_week()`).
+  `main()` never calls `git rm`.
+- **Step 6**: Ran the real migration against the actual `agent-monitoring/runs.jsonl` (1,388 lines),
+  `agent-monitoring/events.jsonl` (9,018 lines), and `agent-monitoring/tools/` (180,292 lines across
+  14 shards). `verification_passed: true` for all 3 sources — full report in Test Summary below.
+- **Step 7**: `git rm agent-monitoring/runs.jsonl agent-monitoring/events.jsonl` and
+  `git rm -r agent-monitoring/tools/`, run only after Step 6's report confirmed
+  `verification_passed: true` for all 3 sources.
+- **Step 8**: `.gitattributes` — removed the 3 superseded `merge=union` lines; kept
+  `agent-monitoring/data/*/*.jsonl merge=union` and `tickets/working_log.csv merge=union` plus both
+  comment blocks.
+- **Step 9**: `tests/tools/test_migrate_tools_shards.py`'s
+  `test_gitattributes_no_longer_references_retired_tools_jsonl_path` — flipped the second assertion
+  to `not in content`. `tests/integrity/test_merge_union_gitattributes.py` — renamed
+  `test_gitattributes_lines_present_for_three_legacy_union_merge_paths` to
+  `test_gitattributes_line_present_for_working_log_csv` (drops the 2 retired-line assertions, keeps
+  only `working_log.csv`), and rewrote `test_gitattributes_line_present_for_shard_glob` to
+  `test_gitattributes_lines_absent_for_retired_monitoring_paths` (asserts all 3 retired lines absent
+  and the unified glob present). `test_concurrent_branch_appends_merge_without_conflict_markers` left
+  untouched per plan (builds its own throwaway `.gitattributes`, unaffected).
+- **Step 10**: `docs/agent-monitoring/schema.md` — updated the 3 "remains present... until a future
+  migration ticket" sections (runs.jsonl, events.jsonl, tools.jsonl) to state the migration is
+  complete, name this ticket, and cite `git log --follow` for history recovery. Ran
+  `make knowledge-index-update` after.
+
+**Deviation (discovered post-Step-7, documented in plan.md's own new "Deviations" section, not
+worked around):** the broad regression pass surfaced 7 newly-failing tests across 3 files
+(`test_agent_monitoring_legacy_reader.py` x2, `test_agent_monitoring_manifest.py` x4,
+`test_done_ticket_monitoring_coverage.py` x1) that read the real `agent-monitoring/` directory
+directly and depend on the now-retired `runs.jsonl`/`events.jsonl`/`tools/` paths — broader
+collateral than the Test Plan's Regression Surface section anticipated (it incorrectly asserted
+these were `tmp_path`-scoped and unaffected). This is the same class of accepted risk the plan
+already documented for `src/api/agent_ops_dashboard/ingest.py` (children 3/4's consumer-update job),
+just wider than originally traced. No consumer tool or test was modified to route around this — see
+plan.md's Deviations section for the full breakdown and the 8th, unrelated, pre-existing
+`test_kgmcp_phase3_pilot_acceptance_measurement.py` resource-budget timeout failure (confirmed
+unrelated to this ticket by traceback).
+
 ## Test Summary
 
+Scoped command run: `pytest tests/tools/test_migrate_monitoring_data.py
+tests/tools/test_migrate_tools_shards.py tests/integrity/test_merge_union_gitattributes.py -v`
+→ **26 passed, 5 skipped** (the 5 skips are `_run_migration_against_copy()`-style real-corpus
+integration tests that correctly skip once their source has been retired — the intended end state,
+not a regression, matching the prior epic's own precedent).
+
+Broad regression pass: `pytest tests/tools/ tests/integrity/ -k "monitoring or gitattributes or
+agent_ops_dashboard or migrate or writer" -v` → **273 passed, 8 failed, 5 skipped, 2406 deselected**.
+7 of the 8 failures are the documented Deviation above (real-corpus-dependent consumer tests broken
+by legacy-path retirement, out of scope to fix here); the 8th (`test_kgmcp_phase3_pilot_acceptance_
+measurement.py::test_zero_mutation_of_agent_monitoring_and_manifest_across_full_run`) is a
+pre-existing, unrelated resource-budget `TimeoutError` reading `docs/REGISTRY.yaml` via a live
+gateway call, marked `@pytest.mark.extra_slow`/`@pytest.mark.slow`.
+
+**Step 6's real migration report (against the actual historical corpus, run before any `git rm`):**
+
+```json
+{
+  "runs": {
+    "original_total": 1388, "migrated_total": 1388, "explained_delta": 0,
+    "reconciles_exactly": true, "content_preserved": true, "all_lines_parse": true,
+    "verification_passed": true, "week_count": 15
+  },
+  "events": {
+    "original_total": 9018, "migrated_total": 9018, "explained_delta": 0,
+    "reconciles_exactly": true, "content_preserved": true, "all_lines_parse": true,
+    "verification_passed": true, "week_count": 15
+  },
+  "tools": {
+    "original_total": 180292, "migrated_total": 184206, "explained_delta": 3914,
+    "reconciles_exactly": true, "content_preserved": true, "all_lines_parse": true,
+    "verification_passed": true, "week_count": 14
+  }
+}
+```
+(`tools`'s `explained_delta` of 3,914 is the live current-week `agent-monitoring/data/2026-W36/
+tools.jsonl` content already written by child 1's cutover before this migration ran — correctly
+merged via Case B, migrated-first. `runs`/`events` had no live current-week content yet at run time,
+matching investigation's own time-sensitivity note.) **`verification_passed: true` for all 3 sources
+confirmed before Step 7's `git rm` ran** — zero data loss.
+
 ## Files Changed
+- `tools/agent-monitoring/migrate_monitoring_data.py` (new)
+- `tests/tools/test_migrate_monitoring_data.py` (new)
+- `tests/tools/test_migrate_tools_shards.py` (1 assertion flipped)
+- `tests/integrity/test_merge_union_gitattributes.py` (2 test functions rewritten/renamed)
+- `.gitattributes` (3 lines removed)
+- `docs/agent-monitoring/schema.md` (3 sections updated)
+- `agent-monitoring/runs.jsonl` (removed, `git rm`)
+- `agent-monitoring/events.jsonl` (removed, `git rm`)
+- `agent-monitoring/tools/` (removed, `git rm -r`, 14 shard files)
+- `agent-monitoring/data/2026-W23/` through `2026-W36/` and `agent-monitoring/data/unknown-week/`
+  (new/updated `runs.jsonl`/`events.jsonl`/`tools.jsonl` per-week files — migration output)
+- `tickets/inprogress/TCK-20260903-MONITORING-DATA-MIGRATION.md` (this file)
+- `staging_artifacts/TCK-20260903-MONITORING-DATA-MIGRATION/plan.md` (new "Deviations" section
+  appended)
+- `staging_artifacts/TCK-20260903-MONITORING-DATA-MIGRATION/investigation.md`,
+  `staging_artifacts/TCK-20260903-MONITORING-DATA-MIGRATION/test_plan.md` (pre-existing from this
+  run's own Investigate/Plan phases — not rewritten during Implement, listed here per ticket-hygiene
+  convention since they are part of this run's own changeset)
 
 ## Completion Summary
+
+Implemented `migrate_monitoring_data.py`, generalizing the prior epic's single-source
+`migrate_tools_shards.py` to 3 sources via 2 genuinely distinct strategies (per-line field-priority
+re-bucketing for `runs`/`events`; pure filename-based relocation for `tools`), sharing the same
+rename-aside + `write_lines()` write primitive and full-corpus verification primitive. Ran the
+migration for real against the actual historical corpus (1,388 `runs` + 9,018 `events` + 180,292
+`tools` lines); zero-data-loss verification passed for all 3 sources before retiring
+`agent-monitoring/runs.jsonl`, `agent-monitoring/events.jsonl`, and `agent-monitoring/tools/` via
+`git rm`, updating `.gitattributes` and `docs/agent-monitoring/schema.md` to match. Discovered and
+documented (not silently worked around) a broader-than-anticipated collateral test-breakage surface
+in 3 consumer test files that read the real corpus directly — an accepted, documented gap matching
+the plan's own already-ratified `ingest.py` dashboard-gap precedent, left for children 3/4 to close.
+
+Independently re-verified through the full standard-tier pipeline: Test phase (test-scoper)
+independently confirmed the 7-test regression is genuinely out-of-scope (2 of 3 affected consumer
+modules are explicitly named in child 1's own Out of Scope list) and re-derived the zero-data-loss
+verification counts from the real corpus itself, matching the captured report exactly.
+Architecture-Verify (architecture-reviewer): **APPROVED** — verify-before-retire ordering confirmed
+with real evidence, the 2 migration strategies confirmed genuinely separated (not collapsed), no
+scope creep, no recurring automation added. Added an explicit note to
+`TCK-20260903-MONITORING-DATA-CONSUMERS-CORE.md` naming the 3 affected test files so they aren't
+missed. Verify (done-checker): **READY FOR FINALIZE** — 8/8 conditions checked PASS, including an
+independent broad regression sweep confirming no undiscovered failures beyond the documented 7 (plus
+1 pre-existing, unrelated timeout).
