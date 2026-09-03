@@ -527,6 +527,29 @@ Do not "fix" any of this by backfilling `runs.jsonl` (Out of Scope, append-only 
 
 The `run-{code}-{unix_ts}` run_id convention and ad hoc `-REDESIGN`-style suffixes found in historical data are pre-refactor/manual-session artifacts (confirmed via `.claude/workflows/implement-ticket.js`'s single-capture `tid` pattern, which cannot produce either shape) — not reproducible by current `.claude/workflows/*.js` code. If hand-writing monitoring records outside the JS workflows (e.g. an `audit-maintenance`-style direct invocation), always reuse the exact ticket ID as `run_id` verbatim — never invent a suffix or a synthesized `run-{code}-{timestamp}` ID; doing so breaks the events/run-record join for that record permanently.
 
+### Referential Integrity Verification
+
+`tools/agent-monitoring/verify_referential_integrity.py` (TCK-20260903-MONITORING-DATA-REFERENTIAL-
+INTEGRITY) automates the 2 FK relationships documented above (`events.run_id -> runs.run_id`;
+`tools.(run_id, seq) -> events.(run_id, seq)`), reading the union of every `agent-monitoring/data/
+<week>/` folder (never scoped to one week) so a legitimate cross-week-boundary run is never
+false-flagged. It excludes the 3 documented exceptions: `RETRIEVAL-EVENT-<slug>` run_ids (no
+matching runs.jsonl row by design), `tools.jsonl` rows with `run_id: null` (outside an active
+workflow run), and `seq <= 0` shadow rows (context-packet-wrapper mechanism).
+
+A real-corpus run on 2026-09-03 found 18 distinct `run_id`s (117 individual event rows, out of 9,018
+events checked) with Check-1 orphans (events with no matching run) and 17,471/136,001 (12.8%)
+Check-2 orphans (tool-call rows with no matching event). The large majority of Check-2 volume is
+attributed to already-documented, explicitly-not-backfilled historical corruption
+(TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION, TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE). One
+notable exception is not explained by either fix: TCK-20260902-MONITORING-SHARD-MIGRATION has zero
+events.jsonl/runs.jsonl rows anywhere despite 229 real, dated `tools.jsonl` rows across 6 `seq`
+groups — flagged for possible follow-up investigation, not resolved here. As with the other Known
+Limitations above, no orphan is backfilled or repaired retroactively (append-only precedent) — this
+tool verifies and reports only.
+
+Full evidence: `stored_artifacts/TCK-20260903-MONITORING-DATA-REFERENTIAL-INTEGRITY/investigation.md`.
+
 ### Full evidence
 
 Full classification evidence for the 2026-07-05 audit of 126 incomplete-run / 5 zero-event records (corrected: 16 true dedup-resolved, 107 true residual, 107/107 confirmed genuinely completed): `stored_artifacts/TCK-20260705-MONITORING-RUNID-JOIN/investigation.md`.
