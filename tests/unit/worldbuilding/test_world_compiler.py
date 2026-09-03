@@ -146,6 +146,45 @@ def test_compiler_report_write():
         assert saved_report["entity_count"] == 7
 
 
+def test_compile_report_includes_canonical_state_hash_and_place_count():
+    """TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT: StateFingerprinter's state_hash is
+    intentionally lightweight and does not cover Place data (verified directly:
+    src/replay/fingerprint.py has zero reference to `places` anywhere) -- so the compile
+    report also carries canonical_state_hash (CanonicalStateHasher, the real, full-coverage
+    hash) and place_count, so a Place-shaped migration's actual effect is checkable without
+    a one-off script."""
+    from src.worldbuilding.schema import RegionSpec, PlaceSpec
+    from src.engine.checkpoint import CanonicalStateHasher
+
+    data = create_base_valid_spec()
+    data["regions"][0]["places"] = [{"id": "town_square_city", "kind": "city", "position": [5, 5]}]
+    spec = WorldSpec.model_validate(data)
+
+    state, report = WorldCompiler.compile(spec, seed=42)
+
+    assert report["place_count"] == 1
+    assert report["canonical_state_hash"] == CanonicalStateHasher.get_hash(state)
+    # The two hashes measure different things -- confirm they're not accidentally the same
+    # string (which would silently mask the coverage gap this field exists to surface).
+    assert report["canonical_state_hash"] != report["state_hash"]
+
+
+def test_compile_report_state_hash_blind_to_places_canonical_hash_is_not():
+    """The exact regression this ticket found and fixed: state_hash alone cannot verify a
+    Place-shaped content migration. canonical_state_hash can."""
+    from src.engine.checkpoint import CanonicalStateHasher
+
+    data_without = create_base_valid_spec()
+    data_with = create_base_valid_spec()
+    data_with["regions"][0]["places"] = [{"id": "p1", "kind": "city", "position": [5, 5]}]
+
+    _, report_without = WorldCompiler.compile(WorldSpec.model_validate(data_without), seed=42)
+    _, report_with = WorldCompiler.compile(WorldSpec.model_validate(data_with), seed=42)
+
+    assert report_without["state_hash"] == report_with["state_hash"]
+    assert report_without["canonical_state_hash"] != report_with["canonical_state_hash"]
+
+
 def test_compiler_quest_referential_warnings():
     data = create_base_valid_spec()
     # Introduce an unknown location tag in quest_definitions to trigger a referential warning

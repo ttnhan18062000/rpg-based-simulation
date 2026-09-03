@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_0104cb11130cf948",
+  "manifest_id": "prov_fa30c4230e93fb2c",
   "world_id": "dungeon_crawl",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "95a2e56e86e9526ef7759c426f8e6da9657521b26981e0a80a6e74253c0edec1",
+  "catalog_fingerprint": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
   "module_fingerprints": {
-    "goblin_camp_conflict": "7e712ab3d3321805bfad0b116c66ac5c679854fe887f7752b9ab6a27cb61e5fb",
+    "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
-    "ruins_mystery_quest": "678978502f5aad463a61082fb026caddef6796d83d9a9b6936e42ac49dc2116c",
+    "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71",
     "scalable_bandit_camp": "082f8715e9546c290140e123b62fcbc252117e4322c2324d3b728ab8a5daf9c1"
   },
   "composition_fingerprint": "1fe2f95e42b219274f5089f6edb01f8a508bc377b1df48e08a9a53d375cebaa3",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "0104cb11130cf948a0d6063247340769b15ea4f7466b9f9574ef61b4a3535b12",
-  "created_at": "2026-07-09T14:43:51.028472Z",
+  "content_fingerprint": "fa30c4230e93fb2cd9af26307b699ff3142e2747a652e42908380e5f8c7a96e3",
+  "created_at": "2026-09-03T13:10:07.709251Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

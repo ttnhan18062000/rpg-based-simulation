@@ -30,8 +30,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -42,14 +48,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -840,26 +840,47 @@
     "goblin_camp_conflict": []
   },
   "composition_validation": [],
-  "world_validation": [],
+  "world_validation": [
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_hunt_warlord' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.3.required_participant_tags",
+      "source_entity": "goblin_hunt_warlord",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_fetch_stolen_goods' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.4.required_participant_tags",
+      "source_entity": "goblin_fetch_stolen_goods",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_defend_village_perimeter' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.5.required_participant_tags",
+      "source_entity": "goblin_defend_village_perimeter",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'spirit_source_trace' required_participant_tags ['spiritual'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.9.required_participant_tags",
+      "source_entity": "spirit_source_trace",
+      "source_file": "ruins_mystery_quest"
+    }
+  ],
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 134
+    "warnings_count": 138
   },
   "blocking_errors": [],
   "warnings": [
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
-    },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
@@ -871,6 +892,18 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'sand' is active but never consumed by any downstream component",
       "target": "sand"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -1651,16 +1684,48 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
       "target": "hero_adventurers"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_hunt_warlord' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.3.required_participant_tags",
+      "source_entity": "goblin_hunt_warlord",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_fetch_stolen_goods' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.4.required_participant_tags",
+      "source_entity": "goblin_fetch_stolen_goods",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_defend_village_perimeter' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.5.required_participant_tags",
+      "source_entity": "goblin_defend_village_perimeter",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'spirit_source_trace' required_participant_tags ['spiritual'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.9.required_participant_tags",
+      "source_entity": "spirit_source_trace",
+      "source_file": "ruins_mystery_quest"
     }
   ],
   "fingerprints": {
-    "catalog": "95a2e56e86e9526ef7759c426f8e6da9657521b26981e0a80a6e74253c0edec1",
+    "catalog": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
     "modules": {
-      "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
-      "goblin_camp_conflict": "7e712ab3d3321805bfad0b116c66ac5c679854fe887f7752b9ab6a27cb61e5fb",
+      "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+      "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
       "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
       "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
-      "ruins_mystery_quest": "678978502f5aad463a61082fb026caddef6796d83d9a9b6936e42ac49dc2116c"
+      "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71"
     }
   }
 }

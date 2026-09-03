@@ -3,14 +3,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -21,8 +15,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -815,5 +815,70 @@
     "trading_company_hub": []
   },
   "composition_validation": [],
-  "world_validation": []
+  "world_validation": [
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'undead_hunt_wraith_patrol' required_participant_tags ['spiritual'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.15.required_participant_tags",
+      "source_entity": "undead_hunt_wraith_patrol",
+      "source_file": "undead_battlefield"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'wolf_hunt_alpha_pack' required_participant_tags ['beast'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.16.required_participant_tags",
+      "source_entity": "wolf_hunt_alpha_pack",
+      "source_file": "wolf_den_near_forest"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'wolf_explore_forest_trail' required_participant_tags ['beast'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.17.required_participant_tags",
+      "source_entity": "wolf_explore_forest_trail",
+      "source_file": "wolf_den_near_forest"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'bandit_hunt_road_captain' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.4.required_participant_tags",
+      "source_entity": "bandit_hunt_road_captain",
+      "source_file": "bandit_road_trade_pressure"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'bandit_investigate_ambush_source' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.5.required_participant_tags",
+      "source_entity": "bandit_investigate_ambush_source",
+      "source_file": "bandit_road_trade_pressure"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_hunt_warlord' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.6.required_participant_tags",
+      "source_entity": "goblin_hunt_warlord",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_fetch_stolen_goods' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.7.required_participant_tags",
+      "source_entity": "goblin_fetch_stolen_goods",
+      "source_file": "goblin_camp_conflict"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "WORLD-REACH-001",
+      "message": "Quest 'goblin_defend_village_perimeter' required_participant_tags ['humanoid', 'opportunistic'] not satisfiable by any reachable population's compatible_traits.",
+      "path": "quest_definitions.8.required_participant_tags",
+      "source_entity": "goblin_defend_village_perimeter",
+      "source_file": "goblin_camp_conflict"
+    }
+  ]
 }

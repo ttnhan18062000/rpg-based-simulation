@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_6c7094d3edeed29e",
+  "manifest_id": "prov_63f57d1b32e7dc29",
   "world_id": "quest_dense_frontier",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "10d77896a90aebb8c796b454766426b039a63265141b8574940c783cdee0455c",
+  "catalog_fingerprint": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
     "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
-    "ruins_mystery_quest": "678978502f5aad463a61082fb026caddef6796d83d9a9b6936e42ac49dc2116c"
+    "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71"
   },
   "composition_fingerprint": "5c7db0903cf598dbc3774a2362ca66e82ef857428d92ed8f3a08411c26056b68",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "6c7094d3edeed29e1b1a2340e30c2fbffad8826ed185f8e26aac18302d624ac3",
-  "created_at": "2026-08-05T17:18:04.617323Z",
+  "content_fingerprint": "63f57d1b32e7dc29eb2be440df48c6ce7556ae2e3f9f1204f07aa8e77dce0dde",
+  "created_at": "2026-09-03T13:10:24.671904Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

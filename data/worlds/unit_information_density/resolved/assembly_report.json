@@ -1648,9 +1648,9 @@
     }
   ],
   "fingerprints": {
-    "catalog": "10d77896a90aebb8c796b454766426b039a63265141b8574940c783cdee0455c",
+    "catalog": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
     "modules": {
-      "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
+      "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
       "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837"
     }
   }

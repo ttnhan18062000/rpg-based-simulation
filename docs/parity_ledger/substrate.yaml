@@ -4943,3 +4943,106 @@
     output only if a caller actually populates AuthoritativeState.places or the new
     place_id fields -- no existing world/entity does so today, so no shipped calibration
     baseline is affected.
+- id: SUB-390
+  text: 'Idea 66 (Region/Place foundational rebuild) child 2/5: WorldCompiler.compile()
+    now constructs real PlaceState instances from Place-shaped content. Both real
+    compilation paths documented in docs/world/compiler_contract.md are wired: the
+    Direct path (RegionSpec.places -> WorldCompiler.compile()) and the Composition
+    path (RegionRecipeSpec.places -> WorldAssemblyResolver.resolve_module_contribution()
+    -> RegionSpec.places, round-tripping through world.resolved.yaml back into the
+    same WorldCompiler.compile() call). Place ids are namespaced by the same module
+    prefix as their parent region id, avoiding collision when a module is composed
+    multiple times. Existing (non-Place-shaped) content is confirmed unaffected --
+    the new places field defaults to an empty list on both RegionRecipeSpec and RegionSpec,
+    so no existing world''s compiled output changes. Schema only in the prior child
+    ticket (TCK-20260902-PLACE-SCHEMA-MIGRATION); this ticket makes the compiler capable
+    of constructing Places, but does not migrate any of the 21 existing worlds'' content
+    -- that is the pilot tickets'' job (TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT
+    onward).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/worldbuilding/recipe.py (new PlaceRecipeSpec, RegionRecipeSpec.places)
+    + src/worldbuilding/schema.py (new PlaceSpec, RegionSpec.places) + src/worldassembly/resolver.py:799-820
+    (resolve_module_contribution, RegionRecipeSpec.places -> RegionSpec.places with
+    prefix-namespaced ids) + src/worldbuilding/compiler.py (WorldCompiler.compile(),
+    constructs PlaceState from r_spec.places, populates AuthoritativeState.places
+    and RegionState.places) + docs/world/compiler_contract.md's own "Two Compilation
+    Paths" section (confirms both paths funnel through the same compile() call, verified
+    directly rather than assumed)
+  proof_type: parity
+  test_path: 'tests/unit/worldbuilding/test_place_wiring.py (6 tests: Direct path
+    construction, multiple places per region, non-Place-shaped content unchanged,
+    mixed Place-shaped/legacy regions coexisting, canonical-hash participation, invalid
+    kind rejected at schema level), tests/unit/worldassembly/test_resolver.py::test_resolve_module_contribution_wires_place_shaped_region,
+    tests/unit/worldassembly/test_resolver.py::test_resolve_module_contribution_region_without_places_yields_empty_list
+    (Composition path + prefix-namespacing + backward-compat coverage)'
+  divergence_note: null
+  support_boundary: 'Compiler capability only -- no content file under data/content/world_modules/
+    declares places: yet, so no existing world''s compiled AuthoritativeState or state_hash
+    changes as a result of this ticket. A world only gets real PlaceState objects
+    once its content is explicitly authored/migrated to use the new places: field,
+    which is out of scope here.'
+- id: SUB-391
+  text: 'world_compile_report.json''s state_hash field (StateFingerprinter, src/replay/fingerprint.py)
+    is confirmed to have zero coverage of Place data -- it has no reference to `places`
+    anywhere. Verified directly: compiling a world with and without a real PlaceState
+    produces an identical state_hash. This means state_hash alone cannot verify a
+    Place-shaped content migration (idea 66). Fixed by adding canonical_state_hash
+    (CanonicalStateHasher, the real full-coverage hash used by src/engine/kernel.py''s
+    own per-tick/final-run determinism checks) and place_count to WorldCompiler.compile()''s
+    report output -- this is now the real verification mechanism for Place migrations
+    going forward (TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT onward).'
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/replay/fingerprint.py (StateFingerprinter, confirmed zero reference
+    to places) + src/worldbuilding/compiler.py (WorldCompiler.compile(), canonical_state_hash/place_count
+    added to the report dict) + src/engine/checkpoint.py (CanonicalStateHasher, the
+    real consumer)
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_compile_report_includes_canonical_state_hash_and_place_count,
+    tests/unit/worldbuilding/test_world_compiler.py::test_compile_report_state_hash_blind_to_places_canonical_hash_is_not
+  divergence_note: 'TCK-20260902-PLACE-MIGRATION-STAGE-A-PILOT. StateFingerprinter''s
+    own docstring already discloses it is ''intentionally lightweight... not a full
+    canonical save-state serializer'' and directs callers needing full coverage to
+    CanonicalStateHasher -- this divergence is the report-generation code path (WorldCompiler.compile())
+    not having followed that guidance until now, not a new gap in StateFingerprinter
+    itself. Also relevant: TCK-20260903-NAVIGATION-CANONICAL-HASH-GAP found StateFingerprinter/CanonicalStateHasher
+    both under-cover NavigationComponent -- a related but separate finding, not fixed
+    by this entry.'
+  support_boundary: 'Compile-report field addition only -- no change to StateFingerprinter
+    itself, no change to the existing state_hash field''s value or meaning. Purely
+    additive: canonical_state_hash/place_count are new keys, existing consumers of
+    the report dict are unaffected (confirmed via full regression sweep, 895 passed).'
+- id: SUB-392
+  text: 'Idea 66 (Region/Place foundational rebuild) child 4/5: all 21 worlds in the
+    real corpus now have real Place coverage, via 5 shared content-module edits rather
+    than 20 separate per-world migrations (frontier_village_core: CITY, added in the
+    prior Stage A ticket; goblin_camp_conflict: CAMP; ruins_mystery_quest: RUIN; settled_quarter:
+    CITY; survivor_camp_shelter: CAMP; undead_battlefield: RUIN). hero_guild_routing
+    (Stage B''s own named pilot) verified by direct inspection to produce all 4 non-uniform
+    region kinds: CITY, CAMP, RUIN, and an intentional empty-wilderness case (mountain_pass_zone,
+    pure transit terrain -- the ''or none at all'' case from idea 66''s own Target
+    Shape). wolf_den_near_forest''s wolf_den region deliberately NOT given a LAIR
+    Place -- no real boss/creature anchor exists in that generic wildlife-ecology
+    content, and its own module description explicitly frames it as proving contextual
+    hostility rather than a boss lair; forcing LAIR there would misuse the schema.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'data/content/world_modules/{goblin_camp_conflict,ruins_mystery_quest,settled_quarter,survivor_camp_shelter,undead_battlefield}.yaml
+    (places: declarations added) + a batch resolve+compile pass across all 21 worlds
+    (data/worlds/*/world_compile_report.json, every one showing place_count >= 1)
+    + direct canonical-dict diffs at 3 different entity-count scales (16, 31, 59)
+    all confirming isolation to regions/places only'
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_place_wiring.py::test_hero_guild_routing_real_content_produces_expected_non_uniform_place_kinds
+  divergence_note: null
+  support_boundary: Migration + compilation only, no state_hash/grade_anchors.json
+    triage -- that is TCK-20260902-PLACE-MIGRATION-RECALIBRATION's own scope. The
+    pre-existing, unrelated committed-baseline staleness found in the prior Stage
+    A ticket (TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS) means every world's
+    state_hash will show as 'changed' relative to its pre-idea-66 committed value
+    for two independent reasons now, not one -- Recalibration's own methodology needs
+    to account for both.

@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_63e91fdafbc610af",
+  "manifest_id": "prov_d6f7f106a57c608a",
   "world_id": "unit_faction_tension",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "4f1de54c8c58561f20136ed1924e453452df09e25b62b49a7b76640ce26eeb7c",
+  "catalog_fingerprint": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
   "module_fingerprints": {
-    "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
-    "wolf_den_near_forest": "236ed57805d9d8a947b072448b36ce728b6b6653ad9fd5f0085c3bfb269953ee"
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
+    "wolf_den_near_forest": "14dcdf22f8bfc5ea7340de80e47d9bab361e279778e165bd721367bc573f7769"
   },
   "composition_fingerprint": "f529199280865d07c18b0a5f0a0519ac15ce7ba00f772da02a819cce291f5079",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "63e91fdafbc610af333eac9deaade86076a78266924b3711cb3d6025a2fa043f",
-  "created_at": "2026-07-06T18:07:19.634295Z",
+  "content_fingerprint": "d6f7f106a57c608a1449b05f61d13084342f2e37209abe00c12ad2b547e2a39f",
+  "created_at": "2026-09-03T13:10:37.258534Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
