@@ -4008,31 +4008,45 @@
   divergence_note: null
   support_boundary: null
 - id: STRAT-268
-  text: 'InformationAccumulationService.record_quest_reported_back() increments InformationProviderState.knowledge_accumulated
-    by 1 and resets knowledge_age to 0, hooked into QuestResolutionSystem.enforce()''s
-    is_newly_completed branch when QuestState.source_entity_id resolves to a registered
-    provider. Gated behind ENABLE_INFORMATION_HUB_ACCUMULATION (default OFF). Requires
-    the apply.py information_providers carry-forward fix (also closes a pre-existing
-    wiring gap in STRAT-230''s own reliability decrement, which never survived a tick
-    boundary before this fix). Structurally inert in live corpus runs today: GuildAction.visit()
-    never populates QuestState.source_entity_id (src/town/guild.py), so this is verified
-    via direct unit-level construction through the full apply path, not corpus reachability.
-    (idea 41, M4)
-
-    '
-  status: verified
-  priority: P1
+  text: 'StrategicComponent''s canonical hash (EntityState.to_canonical_dict()''s
+    "strategic" sub-dict) previously covered only 10 of 19 real fields, omitting home_region_id,
+    candidate_zones, hypotheses, source_trust, contracts, turning_points, committed_intentions,
+    primary_overload_source, and last_overload_tick -- with no comment explaining
+    why. source_trust (SourceTrustEntry) is confirmed behaviorally live (a real, live
+    input to detour selection''s source_trust_bonus term, belief_and_detour_contract.md),
+    so a same-seed divergence confined to that field would previously have gone completely
+    undetected by CanonicalStateHasher -- the hash src/engine/kernel.py uses for its
+    per-tick and final-run determinism checks. All 9 fields are now included. profile
+    (CognitionProfile) remains intentionally excluded, documented inline: it is derived
+    from already-covered attributes (WIS/INT/level/archetype), so a divergence there
+    cannot be independent of already-detected state.'
+  status: divergent
+  priority: P0
   legacy_evidence: null
-  v2_evidence: 'src/domains/information/accumulation.py -- InformationAccumulationService;
-    src/engine/quests.py -- QuestResolutionSystem.enforce() is_newly_completed accumulation
-    branch; src/engine/apply.py -- information_providers carry-forward-and-merge fix
-    (TCK-20260903-INFORMATION-HUB-ACCUMULATION); src/domains/information/providers.py
-    -- InformationProviderState.knowledge_accumulated field
-
-    '
+  v2_evidence: src/core/state.py:783-810 (EntityState.to_canonical_dict(), "strategic"
+    sub-dict, 9 fields added) + src/core/strategic.py:407-441 (StrategicComponent
+    field definitions) + src/engine/checkpoint.py:63-93 (CanonicalStateHasher.to_canonical_data(),
+    the real consumer -- NOT world_compile_report.json's state_hash, which comes from
+    the separate, already-lightweight StateFingerprinter.get_fingerprint(), src/replay/fingerprint.py)
+    + src/engine/kernel.py:1161-1162,1230-1231 (per-tick and final hash computation
+    call sites)
   proof_type: parity
-  test_path: tests/unit/domains/information/test_information_provider_accumulation.py
-  divergence_note: null
-  support_boundary: Accumulation trigger reads QuestState.source_entity_id but does
-    not populate it; the Guild hub never sets it, so no live seeding path exists yet
-    (disclosed gap, not a bug).
+  test_path: tests/unit/core/test_entity_integrity.py::test_strategic_source_trust_participates_in_canonical_hash,
+    tests/unit/core/test_entity_integrity.py::test_strategic_all_nine_newly_covered_fields_participate_in_canonical_hash,
+    tests/unit/core/test_entity_integrity.py::test_strategic_profile_excluded_from_canonical_hash
+  divergence_note: TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP. The gap predates this
+    fix and was not introduced by any single ticket -- these fields were simply never
+    added to to_canonical_dict() as StrategicComponent grew. Original investigation
+    (docs/brainstorm/2026-09-02-core-rpg-knowledge-belief-axis-proposal.md section
+    2.2) found 6 missing fields and cited world_compile_report.json's state_hash as
+    the consumer; both were corrected on pickup -- the real gap was 9 fields (M3's
+    merge added coverage for beliefs/marriages between the investigation and pickup),
+    and the real consumer is CanonicalStateHasher via src/engine/kernel.py's per-tick
+    audit hash, which makes this a higher-frequency check than the original framing
+    implied, not a lower one.
+  support_boundary: Canonical-hash coverage only -- no change to source_trust's own
+    scoring formula, source_trust_bonus behavior, or any other field's runtime semantics.
+    Adding these fields changes CanonicalStateHasher.get_hash() output for any AuthoritativeState
+    whose entities have non-default values in the 9 newly-covered fields; no shipped
+    calibration baseline is affected unless it already exercises these fields (source_trust/contracts/turning_points/committed_intentions/candidate_zones/hypotheses/home_region_id/overload
+    tracking) with non-default values.

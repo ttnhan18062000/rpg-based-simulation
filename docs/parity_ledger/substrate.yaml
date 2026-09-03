@@ -4908,3 +4908,38 @@
     `compiled_quests` (`src/worldbuilding/compiler.py`) remains fully dead code with
     no live `AuthoritativeState` consumer, so this baseline reflects authoring-time
     content quality, not currently-live runtime behavior.
+- id: SUB-389
+  text: Idea 66 (Region/Place foundational rebuild) schema migration lands PlaceState/PlaceKind
+    and RegionState.places membership with full canonical-hash coverage from day one,
+    avoiding the Social/Knowledge canonical-hash gap pattern found elsewhere this
+    session. AuthoritativeState.places is included in CanonicalStateHasher.to_canonical_data()
+    alongside regions/entities/etc. The dual-sided membership decision (RegionState.places
+    list + cached place_id back-reference on NavigationComponent/BuildingState) mirrors
+    the existing GroupRecord.member_ids/IdentityComponent.group_id and NavigationComponent.region_id
+    precedents. place_id specifically was given explicit canonical-dict coverage even
+    though NavigationComponent's own region_id (and most other fields) are NOT covered
+    -- a separate, pre-existing gap (TCK-20260903-NAVIGATION-CANONICAL-HASH-GAP) this
+    new field does not inherit. Schema only in this ticket -- WorldCompiler wiring
+    and content migration are separate child tickets.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/core/state.py (PlaceState, PlaceKind, RegionState.places, NavigationComponent.place_id,
+    BuildingState.place_id, AuthoritativeState.places) + src/engine/checkpoint.py:85-86
+    (CanonicalStateHasher.to_canonical_data(), "places" key added) + src/engine/apply.py:557-575
+    (ApplyPath._fast_replace_navigation, updated for the new place_id field -- a real
+    bug found and fixed during implementation: this hand-rolled fast-constructor had
+    a hardcoded field list that predated place_id, causing a runtime AttributeError
+    under the tick-apply pipeline before the fix)'
+  proof_type: parity
+  test_path: 'tests/unit/core/test_place_state.py (9 tests: construction, all-kind
+    construction, transformation trail, membership list, back-reference on navigation/building,
+    canonical-hash participation for PlaceState/RegionState.places/NavigationComponent.place_id)'
+  divergence_note: null
+  support_boundary: Schema only -- no WorldCompiler wiring, no content migration,
+    no world recompilation. PlaceState/PlaceKind exist and are canonically covered,
+    but no production code path constructs a populated PlaceState yet (separate child
+    ticket, TCK-20260902-WORLDCOMPILER-PLACE-WIRING). Adding this schema changes CanonicalStateHasher.get_hash()
+    output only if a caller actually populates AuthoritativeState.places or the new
+    place_id fields -- no existing world/entity does so today, so no shipped calibration
+    baseline is affected.

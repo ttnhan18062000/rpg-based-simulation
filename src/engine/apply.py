@@ -597,6 +597,7 @@ class ApplyPath:
         object.__setattr__(res, "chase_ticks", nav.chase_ticks)
         object.__setattr__(res, "max_chase_ticks", nav.max_chase_ticks)
         object.__setattr__(res, "returning_home", nav.returning_home)
+        object.__setattr__(res, "place_id", nav.place_id)
         return res
 
     @staticmethod

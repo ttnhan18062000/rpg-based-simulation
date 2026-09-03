@@ -3900,38 +3900,38 @@
   divergence_note: null
   support_boundary: null
 - id: SOC-263
-  text: 'ClanState is wired into AuthoritativeState/StateUpdate/apply.py for the first
-    time (idea 40/M4): joining routes through SocialAppraisalSystem.appraise_contract()
-    via a new ContractKind.CLAN branch (target Clan leader appraises joining entity,
-    shared trust prelude unmodified); leaving and succession write typed ClanUpdate
-    records only, never direct ClanState mutation. Succession (ClanLifecycleService.process_succession)
-    promotes the highest-sociability surviving member to leader_entity_id immediately
-    on leader death/inactivity, with NO 0.2 sociability-margin gate -- an intentional
-    divergence from Group''s PartyLifecycleService.check_leadership() (SOC-228), which
-    this entry does not modify. Dissolution (process_dissolution) sets dissolved_tick
-    only when member_entity_ids AND the new ClanState.asset_ids field are both empty
-    simultaneously. NOTE: asset_ids currently has no producer/consumer anywhere in
-    the codebase and is always empty (); the dissolution AND-gate''s asset half is
-    therefore inert in every real run today -- it reduces to a members-only check
-    in practice, not a currently load-bearing dual-gated condition. A future ticket
-    that adds a real asset-granting mechanic is what would make the asset half load-bearing.'
-  status: verified
+  text: 'SocialComponent''s canonical hash (EntityState.to_canonical_dict()''s "social"
+    sub-dict) previously covered only 10 of 17 real fields, omitting debt_history,
+    salience_history, nemesis_ids, place_attachment, betrayal_records, last_offer_tick,
+    and rejection_count. All 7 are confirmed real, actively-consumed durable state,
+    not derived: nemesis_ids gates cognition target evaluation (src/engine/cognition.py),
+    rejection_count feeds contract appraisal (src/systems/social_systems/appraisal.py),
+    salience_history gates memory pruning (src/systems/social_systems/memory.py).
+    betrayal_records (the event list) was notably uncovered while betrayal_count (its
+    own derived count) was already covered -- an inconsistent partial gap, not a deliberate
+    exclusion. All 7 fields are now included.'
+  status: divergent
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/core/state.py (ClanState.asset_ids, AuthoritativeState.clans);
-    src/core/updates.py (ClanUpdate, StateUpdate.clan_updates); src/engine/apply.py
-    (clan-merge block); src/core/strategic.py (ContractKind.CLAN); src/systems/social_systems/appraisal.py
-    (_appraise_clan); src/systems/social_systems/clan_lifecycle.py (ClanLifecycleService);
-    src/engine/pipeline_phases/clan_lifecycle.py (ClanLifecyclePhase); src/engine/domain/core_actions.py
-    (execute_join_clan/execute_leave_clan); src/observability/events.py (ClanMemberLeftEvent,
-    ClanSuccessionEvent). (TCK-20260903-CLAN-LIFECYCLE-SUCCESSION)
+  v2_evidence: src/core/state.py (EntityState.to_canonical_dict(), "social" sub-dict,
+    7 fields added) + src/core/models/social.py:32-57 (SocialComponent field definitions)
+    + src/engine/checkpoint.py:63-93 (CanonicalStateHasher.to_canonical_data(), the
+    real consumer -- NOT world_compile_report.json's state_hash, which comes from
+    the separate, already-lightweight StateFingerprinter.get_fingerprint(), src/replay/fingerprint.py)
+    + src/engine/kernel.py:1161-1162,1230-1231 (per-tick and final hash computation
+    call sites, same consumer chain as the parallel STRAT-268 fix)
   proof_type: parity
-  test_path: pytest tests/unit/domains/faction/test_clan_state.py tests/unit/domains/faction/test_clan_succession.py
-    tests/unit/domains/faction/test_clan_lifecycle.py tests/unit/social/test_clan_appraisal.py
-    -x -v
-  divergence_note: Succession has no 0.2 sociability-margin gate (contrast SOC-228,
-    Group's check_leadership()); Group's unconditional dead-leader dissolution (SOC-176/SOC-189)
-    is unmodified and does not apply to Clan. asset_ids is currently always-empty/inert
-    (no producer/consumer exists), so the dissolution AND-gate is a members-only check
-    in practice until a future ticket adds a real asset-granting mechanic.
-  support_boundary: null
+  test_path: tests/unit/core/test_entity_integrity.py::test_social_seven_newly_covered_fields_participate_in_canonical_hash,
+    tests/unit/core/test_entity_integrity.py::test_social_nemesis_ids_participates_in_canonical_hash_end_to_end
+  divergence_note: TCK-20260902-SOCIAL-CANONICAL-HASH-GAP. The gap predates this fix.
+    Original investigation (docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md
+    section 3.1) undercounted the field total (15 vs. the real 17) and the missing-field
+    count (5 vs. the real 7) at scoping time -- corrected on pickup, same discipline
+    applied to the parallel Knowledge-axis ticket (STRAT-268), though here the drift
+    was an undercount at scoping time, not code changes landing in between (no SocialComponent
+    fields were added by M3).
+  support_boundary: Canonical-hash coverage only -- no change to any field's own semantics,
+    clamp ranges, or decay behavior. Adding these fields changes CanonicalStateHasher.get_hash()
+    output for any AuthoritativeState whose entities have non-default values in the
+    7 newly-covered fields; no shipped calibration baseline is affected unless it
+    already exercises these fields with non-default values.

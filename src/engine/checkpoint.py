@@ -83,6 +83,7 @@ class CanonicalStateHasher:
         
         # 3. Global collections (All sorted by key/id)
         data["regions"] = {k: v.to_canonical_dict() for k, v in sorted(state.regions.items())}
+        data["places"] = {k: v.to_canonical_dict() for k, v in sorted(state.places.items())}  # Idea 66
         data["local_scars"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.local_scars.items())}
         data["resource_nodes"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.resource_nodes.items())}
         data["buildings"] = {str(k): v.to_canonical_dict() for k, v in sorted(state.buildings.items())}
