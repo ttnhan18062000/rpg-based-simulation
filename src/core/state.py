@@ -783,8 +783,14 @@ class EntityState:
             "strategic": {
                 "current_project_id": self.strategic.current_project_id,
                 "current_objective_id": self.strategic.current_objective_id,
+                "home_region_id": self.strategic.home_region_id,
+                "primary_overload_source": self.strategic.primary_overload_source,
+                "last_overload_tick": self.strategic.last_overload_tick,
+                # "profile" is intentionally excluded: CognitionProfile is derived from
+                # entity attributes (WIS/INT/level/archetype), which are already covered
+                # above -- a divergence there cannot be independent of already-detected state.
                 "projects": {k: {
-                    "kind": v.kind, 
+                    "kind": v.kind,
                      "status": str(v.status),
                     "active_objective_id": v.active_objective_id,
                     "objectives": [asdict(o) for o in v.objectives]
@@ -793,6 +799,13 @@ class EntityState:
                 "blockers": {k: asdict(v) for k, v in sorted(self.strategic.blockers.items())},
                 "leads": {k: asdict(v) for k, v in sorted(self.strategic.leads.items())},
                 "concerns": {k: asdict(v) for k, v in sorted(self.strategic.concerns.items())},
+                "candidate_zones": {k: asdict(v) for k, v in sorted(self.strategic.candidate_zones.items())},
+                "hypotheses": {k: asdict(v) for k, v in sorted(self.strategic.hypotheses.items())},
+                "source_trust": {str(k): asdict(v) for k, v in sorted(self.strategic.source_trust.items())},
+                "contracts": {k: {**asdict(v), "kind": str(v.kind), "status": str(v.status)}
+                              for k, v in sorted(self.strategic.contracts.items())},
+                "turning_points": [{**asdict(tp), "kind": str(tp.kind)} for tp in self.strategic.turning_points],
+                "committed_intentions": [asdict(ci) for ci in self.strategic.committed_intentions],
                 "boredom": dict(sorted(self.strategic.boredom.items())),
                 "beliefs": {k: asdict(v) for k, v in sorted(self.strategic.beliefs.items())},
                 "marriages": {k: asdict(v) for k, v in sorted(self.strategic.marriages.items())}
