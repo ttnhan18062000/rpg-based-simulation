@@ -179,7 +179,7 @@ def mock_catalog_repo():
         archetypes_data = [
             {
                 "id": "rat_archetype",
-                "race": "beast",
+                "species": "beast",
                 "faction": "monster_faction",
                 "role": "beast",
                 "stat_profile": "rat_stats",
@@ -190,7 +190,7 @@ def mock_catalog_repo():
             },
             {
                 "id": "wolf_archetype",
-                "race": "beast",
+                "species": "beast",
                 "faction": "monster_faction",
                 "role": "beast",
                 "stat_profile": "wolf_stats",

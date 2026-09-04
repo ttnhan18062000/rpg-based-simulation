@@ -5046,3 +5046,20 @@
     state_hash will show as 'changed' relative to its pre-idea-66 committed value
     for two independent reasons now, not one -- Recalibration's own methodology needs
     to account for both.
+- id: SUB-393
+  text: Core content schema/entity-identity plumbing uses species-named identifiers
+    (SpeciesDefinition, EntityArchetypeDefinition.species, entity.identity.properties['species_id']),
+    not the legacy race-named ones (TCK-20260904-SPECIES-CORE-SCHEMA-RENAME, child
+    1/4 of the race->species terminology epic). The race-relations subsystem (RaceRelationRecord,
+    source_race/target_race, race_relations.yaml) is deliberately unrenamed here --
+    separate scope, TCK-20260904-SPECIES-RELATIONS-SUBSYSTEM-RENAME.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/content/schema.py SpeciesDefinition; src/entities/identity_resolver.py
+    ResolvedEntityIdentity.species_id; src/entities/runtime_contract.py ResolvedEntityRuntimeContract.species_id;
+    src/worldassembly/models.py ResolvedEntityProfile.species_id
+  proof_type: null
+  test_path: tests/unit/entities/test_entity_identity_resolver.py::test_clean_archetype_contract_resolves_clean_identity
+  divergence_note: null
+  support_boundary: null

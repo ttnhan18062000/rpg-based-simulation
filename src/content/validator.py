@@ -165,7 +165,7 @@ class CatalogValidator:
         self._validate_legacy_projection_relations(issues)
         self._validate_recipe_relations(issues)
         self._validate_region_relations(issues)
-        self._validate_race_relations(issues)
+        self._validate_species_relations(issues)
         self._validate_biome_relations(issues)
         self._validate_ecology_relations(issues)
         self._validate_defaults(issues)
@@ -235,12 +235,12 @@ class CatalogValidator:
     def _validate_archetype_relations(self, issues: List[ValidationIssue]) -> None:
         """Verify archetype components exist."""
         for arch_id, arch in self.repo.entity_archetypes.items():
-            # Check race
-            if not self.repo.get_race(arch.race):
+            # Check species
+            if not self.repo.get_species(arch.species):
                 issues.append(ValidationIssue(
                     severity="ERROR",
                     rule_id="CAT-REL-011",
-                    message=f"Archetype '{arch_id}' references non-existent race '{arch.race}'",
+                    message=f"Archetype '{arch_id}' references non-existent species '{arch.species}'",
                     target_id=arch_id,
                     filename="entities/entity_archetypes.yaml"
                 ))
@@ -382,12 +382,12 @@ class CatalogValidator:
                 ))
             for group, factions in pers.projected_labels.items():
                 for f_id in factions:
-                    # Let it pass if it is also a race (like prey_or_threat_by_context contains 'human', etc.)
-                    if not self.repo.get_faction(f_id) and not self.repo.get_race(f_id):
+                    # Let it pass if it is also a species (like prey_or_threat_by_context contains 'human', etc.)
+                    if not self.repo.get_faction(f_id) and not self.repo.get_species(f_id):
                         issues.append(ValidationIssue(
                             severity="ERROR",
                             rule_id="CAT-REL-013",
-                            message=f"Perspective '{pers_id}' projected label group '{group}' references non-existent faction/race '{f_id}'",
+                            message=f"Perspective '{pers_id}' projected label group '{group}' references non-existent faction/species '{f_id}'",
                             target_id=pers_id,
                             filename="social/perspectives.yaml"
                         ))
@@ -467,66 +467,66 @@ class CatalogValidator:
                         filename="world/runtime_regions.yaml"
                     ))
 
-    def _validate_race_relations(self, issues: List[ValidationIssue]) -> None:
-        """Verify race body models, needs, senses, cognition, drives, traits, and roles exist."""
-        for race_id, race in self.repo.races.items():
-            if not self.repo.get_body_model(race.body_model):
+    def _validate_species_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify species body models, needs, senses, cognition, drives, traits, and roles exist."""
+        for species_id, species in self.repo.species.items():
+            if not self.repo.get_body_model(species.body_model):
                 issues.append(ValidationIssue(
                     severity="ERROR",
                     rule_id="CAT-REL-017",
-                    message=f"Race '{race_id}' references non-existent body model '{race.body_model}'",
-                    target_id=race_id,
-                    filename="living/races.yaml"
+                    message=f"Species '{species_id}' references non-existent body model '{species.body_model}'",
+                    target_id=species_id,
+                    filename="living/species.yaml"
                 ))
-            if not self.repo.get_need_profile(race.need_profile):
+            if not self.repo.get_need_profile(species.need_profile):
                 issues.append(ValidationIssue(
                     severity="ERROR",
                     rule_id="CAT-REL-017",
-                    message=f"Race '{race_id}' references non-existent need profile '{race.need_profile}'",
-                    target_id=race_id,
-                    filename="living/races.yaml"
+                    message=f"Species '{species_id}' references non-existent need profile '{species.need_profile}'",
+                    target_id=species_id,
+                    filename="living/species.yaml"
                 ))
-            if not self.repo.get_sense_profile(race.sense_profile):
+            if not self.repo.get_sense_profile(species.sense_profile):
                 issues.append(ValidationIssue(
                     severity="ERROR",
                     rule_id="CAT-REL-017",
-                    message=f"Race '{race_id}' references non-existent sense profile '{race.sense_profile}'",
-                    target_id=race_id,
-                    filename="living/races.yaml"
+                    message=f"Species '{species_id}' references non-existent sense profile '{species.sense_profile}'",
+                    target_id=species_id,
+                    filename="living/species.yaml"
                 ))
-            if not self.repo.get_cognition_profile(race.cognition_profile):
+            if not self.repo.get_cognition_profile(species.cognition_profile):
                 issues.append(ValidationIssue(
                     severity="ERROR",
                     rule_id="CAT-REL-017",
-                    message=f"Race '{race_id}' references non-existent cognition profile '{race.cognition_profile}'",
-                    target_id=race_id,
-                    filename="living/races.yaml"
+                    message=f"Species '{species_id}' references non-existent cognition profile '{species.cognition_profile}'",
+                    target_id=species_id,
+                    filename="living/species.yaml"
                 ))
-            if not self.repo.get_drive_profile(race.drive_profile):
+            if not self.repo.get_drive_profile(species.drive_profile):
                 issues.append(ValidationIssue(
                     severity="ERROR",
                     rule_id="CAT-REL-017",
-                    message=f"Race '{race_id}' references non-existent drive profile '{race.drive_profile}'",
-                    target_id=race_id,
-                    filename="living/races.yaml"
+                    message=f"Species '{species_id}' references non-existent drive profile '{species.drive_profile}'",
+                    target_id=species_id,
+                    filename="living/species.yaml"
                 ))
-            for trait_id in race.natural_traits:
+            for trait_id in species.natural_traits:
                 if not self.repo.get_trait(trait_id):
                     issues.append(ValidationIssue(
                         severity="ERROR",
                         rule_id="CAT-REL-017",
-                        message=f"Race '{race_id}' references non-existent trait '{trait_id}'",
-                        target_id=race_id,
-                        filename="living/races.yaml"
+                        message=f"Species '{species_id}' references non-existent trait '{trait_id}'",
+                        target_id=species_id,
+                        filename="living/species.yaml"
                     ))
-            for role_id in race.compatible_roles:
+            for role_id in species.compatible_roles:
                 if not self.repo.get_role(role_id):
                     issues.append(ValidationIssue(
                         severity="ERROR",
                         rule_id="CAT-REL-017",
-                        message=f"Race '{race_id}' references non-existent role '{role_id}'",
-                        target_id=race_id,
-                        filename="living/races.yaml"
+                        message=f"Species '{species_id}' references non-existent role '{role_id}'",
+                        target_id=species_id,
+                        filename="living/species.yaml"
                     ))
 
     def _validate_biome_relations(self, issues: List[ValidationIssue]) -> None:
@@ -635,7 +635,7 @@ class CatalogValidator:
                 return "CAT-REL-015"
             elif src_concept == "region":
                 return "CAT-REL-016"
-            elif src_concept == "race":
+            elif src_concept == "species":
                 return "CAT-REL-017"
             elif src_concept == "biome":
                 return "CAT-REL-018"
@@ -651,8 +651,8 @@ class CatalogValidator:
                 src_concept, src_id = source.split(":", 1)
                 tgt_concept, tgt_id = target.split(":", 1)
                 
-                # Check race fallback for faction labels
-                if tgt_concept == "faction" and self.graph.has_node(f"race:{tgt_id}"):
+                # Check species fallback for faction labels
+                if tgt_concept == "faction" and self.graph.has_node(f"species:{tgt_id}"):
                     continue
                 
                 filename = None

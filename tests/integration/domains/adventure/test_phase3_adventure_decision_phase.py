@@ -221,7 +221,7 @@ def test_zero_regression_human_practical_humanoid_hero_archetype_native():
         role=0,  # EntityRole.HERO
         properties={
             "archetype_id": "adventurer_hero",
-            "race_id": "human",
+            "species_id": "human",
             "faction_id": "hero_guild",
             "role_id": "hero",
             "cognition_profile_id": "practical_humanoid",
@@ -255,7 +255,7 @@ def test_zero_regression_human_practical_humanoid_hero_legacy_guard_shape():
         role=0,  # EntityRole.HERO
         properties={
             "archetype_id": None,
-            "race_id": None,
+            "species_id": None,
             "role_id": None,
             "faction_id": None,
         },

@@ -12,7 +12,7 @@
       "inventory_seed": "undead_empty",
       "cognition_seed": "undead_fixated",
       "archetype_id": "undead_sentinel",
-      "race_id": "undead",
+      "species_id": "undead",
       "role_id": "sentinel",
       "faction_id": "undead_remnants",
       "traits": [

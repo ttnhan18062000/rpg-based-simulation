@@ -12,7 +12,7 @@
       "inventory_seed": "hero_pocket",
       "cognition_seed": "practical_humanoid",
       "archetype_id": "village_worker",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "worker",
       "faction_id": "town_council",
       "traits": [
@@ -45,7 +45,7 @@
       "inventory_seed": "guard_basic_kit",
       "cognition_seed": "disciplined_guard",
       "archetype_id": "frontier_guard",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "guard",
       "faction_id": "town_council",
       "traits": [
@@ -79,7 +79,7 @@
       "inventory_seed": "merchant_trade_pack",
       "cognition_seed": "trade_pragmatist",
       "archetype_id": "traveling_merchant",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "merchant",
       "faction_id": "merchant_league",
       "traits": [
@@ -113,7 +113,7 @@
       "inventory_seed": "blacksmith_toolkit",
       "cognition_seed": "practical_humanoid",
       "archetype_id": "village_blacksmith",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "blacksmith",
       "faction_id": "town_council",
       "traits": [
@@ -147,7 +147,7 @@
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
       "archetype_id": "lizardfolk_scout",
-      "race_id": "lizardfolk",
+      "species_id": "lizardfolk",
       "role_id": "scout",
       "faction_id": "swamp_tribe",
       "traits": [
@@ -180,7 +180,7 @@
       "inventory_seed": "mage_satchel",
       "cognition_seed": "practical_humanoid",
       "archetype_id": "lizardfolk_shaman",
-      "race_id": "lizardfolk",
+      "species_id": "lizardfolk",
       "role_id": "shaman",
       "faction_id": "swamp_tribe",
       "traits": [
@@ -214,7 +214,7 @@
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
       "archetype_id": "lizardfolk_scout",
-      "race_id": "lizardfolk",
+      "species_id": "lizardfolk",
       "role_id": "scout",
       "faction_id": "swamp_tribe",
       "traits": [
@@ -247,7 +247,7 @@
       "inventory_seed": null,
       "cognition_seed": null,
       "archetype_id": null,
-      "race_id": null,
+      "species_id": null,
       "role_id": null,
       "faction_id": null,
       "traits": [],
@@ -273,7 +273,7 @@
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
       "archetype_id": "hungry_wolf",
-      "race_id": "wolf",
+      "species_id": "wolf",
       "role_id": "predator_hunter",
       "faction_id": "wild_beast_pack",
       "traits": [
@@ -307,7 +307,7 @@
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
       "archetype_id": "alpha_wolf",
-      "race_id": "wolf",
+      "species_id": "wolf",
       "role_id": "alpha",
       "faction_id": "wild_beast_pack",
       "traits": [

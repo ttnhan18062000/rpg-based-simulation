@@ -53,7 +53,10 @@ def test_race_relations_coverage_meets_disclosed_threshold(repo):
 
 
 def test_race_relations_reference_valid_races_and_axes(repo):
-    race_ids = set(repo.races.keys())
+    # repo.races -> repo.species: hard coupling with TCK-20260904-SPECIES-CORE-SCHEMA-RENAME's
+    # CatalogRepository rename. This file's own race_relations/source_race/target_race naming
+    # is untouched here -- that belongs to TCK-20260904-SPECIES-RELATIONS-SUBSYSTEM-RENAME.
+    race_ids = set(repo.species.keys())
     axis_ids = set(repo.relationship_axes.keys())
 
     for rr in repo.race_relations.values():

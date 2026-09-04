@@ -99,7 +99,11 @@ def _combat_entity_snapshot(ent: Optional[Any]) -> Optional[Dict[str, Any]]:
         "def_stat": getattr(combat, "def_stat", None),
         "role": role_name,
         "faction_id": properties.get("faction_id"),
-        "race_id": properties.get("race_id"),
+        # TCK-20260904-SPECIES-CORE-SCHEMA-RENAME: reads the renamed species_id property key.
+        # Output key kept as "race_id" for now -- renaming the observability event-schema output
+        # key itself (and any downstream consumer) is TCK-20260904-SPECIES-CROSSCUTTING-
+        # CONSUMERS-RENAME's own scope, not bundled into this fix.
+        "race_id": properties.get("species_id"),
         "bravery": getattr(personality, "bravery", None),
         "action_style": getattr(combat, "action_style", None),
     }

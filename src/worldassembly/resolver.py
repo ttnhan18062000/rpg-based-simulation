@@ -1028,7 +1028,7 @@ class CompileProfileResolver:
                     cognition_seed=cognition_seed,
                     # Meta parameters preserved
                     archetype_id=resolved_arch.archetype_id,
-                    race_id=resolved_arch.race_id,
+                    species_id=resolved_arch.species_id,
                     role_id=resolved_arch.role_id,
                     faction_id=resolved_arch.faction_id,
                     traits=[t.id for t in resolved_arch.traits],

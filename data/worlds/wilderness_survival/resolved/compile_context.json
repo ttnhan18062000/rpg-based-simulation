@@ -12,7 +12,7 @@
       "inventory_seed": "undead_empty",
       "cognition_seed": "undead_fixated",
       "archetype_id": "undead_sentinel",
-      "race_id": "undead",
+      "species_id": "undead",
       "role_id": "sentinel",
       "faction_id": "undead_remnants",
       "traits": [
@@ -43,7 +43,7 @@
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
       "archetype_id": "hungry_wolf",
-      "race_id": "wolf",
+      "species_id": "wolf",
       "role_id": "predator_hunter",
       "faction_id": "wild_beast_pack",
       "traits": [
@@ -77,7 +77,7 @@
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
       "archetype_id": "alpha_wolf",
-      "race_id": "wolf",
+      "species_id": "wolf",
       "role_id": "alpha",
       "faction_id": "wild_beast_pack",
       "traits": [

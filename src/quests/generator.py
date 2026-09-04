@@ -20,7 +20,7 @@ class QuestTemplate:
     base_gold: int
     items: List[str] = field(default_factory=list)
     # HUNT-kind target (TCK-20260807-QUEST-HUNT-TARGET-METADATA-GAP): the real entity.kind value
-    # (an EntityIdentityResolver-independent field, derived from the archetype's `race` catalog
+    # (an EntityIdentityResolver-independent field, derived from the archetype's `species` catalog
     # entry -- e.g. "wolf") a killed entity must match for QuestResolutionSystem
     # .evaluate_combat_victory()'s legacy target_kind fallback to advance this quest. None for
     # HUNT templates with no real corpus content backing them yet (see q_slime_cull below) --
@@ -66,8 +66,8 @@ class QuestGenerator:
     
     TEMPLATES = [
         # TIER 1: Levels 1-5
-        # q_slime_cull has NO target_kind: no "slime" race/archetype exists anywhere in the real
-        # content corpus (data/content/entities/entity_archetypes.yaml's race values are wolf/
+        # q_slime_cull has NO target_kind: no "slime" species/archetype exists anywhere in the real
+        # content corpus (data/content/entities/entity_archetypes.yaml's species values are wolf/
         # goblin/human/elf/spider/orc/undead/spirit/dragonkin/lizardfolk/troll/dwarf -- no
         # slime), confirmed by a corpus-wide grep, not assumed. Left unset rather than guessed
         # at (TCK-20260807-QUEST-HUNT-TARGET-METADATA-GAP) -- this quest remains honestly
@@ -77,7 +77,7 @@ class QuestGenerator:
         QuestTemplate("q_wood_survey", "Survey the Woods", QuestKind.EXPLORE, 1, 8, 1.0, 80, 30),
 
         # TIER 2: Levels 6-10
-        # target_kind="wolf": both hungry_wolf and alpha_wolf archetypes declare race: "wolf"
+        # target_kind="wolf": both hungry_wolf and alpha_wolf archetypes declare species: "wolf"
         # (entity_archetypes.yaml), which contract_builder.py maps to EntityState.kind at spawn
         # time -- real, grounded corpus content (TCK-20260807-QUEST-HUNT-TARGET-METADATA-GAP).
         QuestTemplate("q_wolf_hunt", "Wolf Cull", QuestKind.HUNT, 6, 12, 8.0, 300, 150, target_kind="wolf"),

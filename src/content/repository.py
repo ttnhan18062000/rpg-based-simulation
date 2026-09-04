@@ -39,7 +39,7 @@ from src.content.schema import (
     CombatProfileDefinition,
     InventoryProfileDefinition,
     SkillProfileDefinition,
-    RaceDefinition,
+    SpeciesDefinition,
     FactionDefinition,
     RoleDefinition,
     PerspectiveDefinition,
@@ -99,7 +99,7 @@ CANONICAL_FAMILIES: List[ContentFamilySpec] = [
     ContentFamilySpec("foundation.elements", "foundation/elements.yaml", ElementDefinition, "elements"),
 
     # 2. Living
-    ContentFamilySpec("living.races", "living/races.yaml", RaceDefinition, "races"),
+    ContentFamilySpec("living.species", "living/species.yaml", SpeciesDefinition, "species"),
     ContentFamilySpec("living.need_profiles", "living/need_profiles.yaml", NeedProfileDefinition, "need_profiles"),
     ContentFamilySpec("living.sense_profiles", "living/sense_profiles.yaml", SenseProfileDefinition, "sense_profiles"),
     ContentFamilySpec("living.body_models", "living/body_models.yaml", BodyModelDefinition, "body_models"),
@@ -182,7 +182,7 @@ class CatalogRepository:
         self.elements: Dict[str, ElementDefinition] = {}
         
         # Living Profiles
-        self.races: Dict[str, RaceDefinition] = {}
+        self.species: Dict[str, SpeciesDefinition] = {}
         self.need_profiles: Dict[str, NeedProfileDefinition] = {}
         self.sense_profiles: Dict[str, SenseProfileDefinition] = {}
         self.body_models: Dict[str, BodyModelDefinition] = {}
@@ -432,8 +432,8 @@ class CatalogRepository:
     def get_element(self, def_id: str) -> Optional[ElementDefinition]:
         return self.elements.get(def_id)
 
-    def get_race(self, def_id: str) -> Optional[RaceDefinition]:
-        return self.races.get(def_id)
+    def get_species(self, def_id: str) -> Optional[SpeciesDefinition]:
+        return self.species.get(def_id)
 
     def get_need_profile(self, def_id: str) -> Optional[NeedProfileDefinition]:
         return self.need_profiles.get(def_id)
@@ -531,7 +531,7 @@ class CatalogRepository:
             "relationship_axis": self.relationship_axes,
             "attribute": self.attributes,
             "element": self.elements,
-            "race": self.races,
+            "species": self.species,
             "need_profile": self.need_profiles,
             "sense_profile": self.sense_profiles,
             "body_model": self.body_models,
@@ -572,7 +572,7 @@ class CatalogRepository:
             ("relationship_axis", self.relationship_axes),
             ("attribute", self.attributes),
             ("element", self.elements),
-            ("race", self.races),
+            ("species", self.species),
             ("need_profile", self.need_profiles),
             ("sense_profile", self.sense_profiles),
             ("body_model", self.body_models),

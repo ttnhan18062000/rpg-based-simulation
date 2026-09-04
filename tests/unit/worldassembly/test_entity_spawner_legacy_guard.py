@@ -20,7 +20,7 @@ def _profile(**overrides) -> ResolvedEntityProfile:
         attack_range=1,
         readiness=100.0,
         archetype_id=None,
-        race_id="human",
+        species_id="human",
         role_id="citizen",
         faction_id="wild_beast_pack",
         traits=[],

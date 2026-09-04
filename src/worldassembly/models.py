@@ -22,7 +22,7 @@ class ResolvedEntityProfile(BaseModel):
     
     # Archetype metadata fields (Phase 25)
     archetype_id: Optional[str] = None
-    race_id: Optional[str] = None
+    species_id: Optional[str] = None
     role_id: Optional[str] = None
     faction_id: Optional[str] = None
     traits: List[str] = Field(default_factory=list)

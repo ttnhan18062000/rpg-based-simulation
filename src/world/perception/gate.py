@@ -4,7 +4,7 @@ PerceptionGate — data-driven entity perception gating via sense profiles.
 Design constraints:
 - Read-only: never mutates entity state or catalog state
 - Deterministic: same inputs → same result
-- Data-driven: all sense strengths come from catalog sense profiles, no race scripts
+- Data-driven: all sense strengths come from catalog sense profiles, no species scripts
 - Upstream of relation projection: gates raw detection capability only
 - Fallback: entities without sense_profile_id use baseline humanoid defaults
 """

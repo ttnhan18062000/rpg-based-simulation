@@ -15,10 +15,10 @@ def reset_semantics_cache():
     yield
     reset_faction_semantics_service()
 
-def create_relation_entity(e_id, pos, faction_id, faction_enum=Faction.NEUTRAL, role=EntityRole.HERO, race_id=None):
+def create_relation_entity(e_id, pos, faction_id, faction_enum=Faction.NEUTRAL, role=EntityRole.HERO, species_id=None):
     properties = {"faction_id": faction_id}
-    if race_id:
-        properties["race_id"] = race_id
+    if species_id:
+        properties["species_id"] = species_id
     return (V2EntityBuilder(e_id)
             .kind("actor")
             .location(*pos)

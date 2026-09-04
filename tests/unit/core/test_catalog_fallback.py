@@ -41,7 +41,7 @@ def test_strict_required_mode_invalid_catalog():
         archetypes_data = [
             {
                 "id": "invalid_archetype",
-                "race": "non_existent_race",
+                "species": "non_existent_species",
                 "faction": "non_existent_faction",
                 "role": "non_existent_role",
                 "stat_profile": "non_existent_stats",

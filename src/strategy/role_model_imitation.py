@@ -27,20 +27,20 @@ class RoleModelImitationService:
 
     HIGH_TIER_FIDELITY = 1.0
     LOW_TIER_FIDELITY = 0.5
-    DEFAULT_FIDELITY = 0.5  # fallback when race/tier cannot be resolved
+    DEFAULT_FIDELITY = 0.5  # fallback when species/tier cannot be resolved
 
     @staticmethod
     def compute_imitation_fidelity(entity: "EntityState") -> float:
-        race_id = entity.identity.properties.get("race_id")
-        if not race_id:
+        species_id = entity.identity.properties.get("species_id")
+        if not species_id:
             return RoleModelImitationService.DEFAULT_FIDELITY
 
         from src.content_semantics.faction import get_faction_semantics_service
-        race_def = get_faction_semantics_service().repo.get_race(race_id)
-        if race_def is None:
+        species_def = get_faction_semantics_service().repo.get_species(species_id)
+        if species_def is None:
             return RoleModelImitationService.DEFAULT_FIDELITY
 
-        tier = getattr(race_def, "intelligence_tier", None)
+        tier = getattr(species_def, "intelligence_tier", None)
         if tier == "high":
             return RoleModelImitationService.HIGH_TIER_FIDELITY
         return RoleModelImitationService.LOW_TIER_FIDELITY

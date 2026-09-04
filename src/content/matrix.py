@@ -115,17 +115,17 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
     ),
 
     # 2. Living
-    "living/races": ContentFamilyMatrixEntry(
-        file_path="living/races.yaml",
-        schema_class="RaceDefinition",
-        repository_index="races",
+    "living/species": ContentFamilyMatrixEntry(
+        file_path="living/species.yaml",
+        schema_class="SpeciesDefinition",
+        repository_index="species",
         validator_coverage="CAT-REL-011, CAT-REL-017",
         resolver_component="LivingDefaultsResolver",
         compile_runtime_consumer="CompileContext, WorldCompiler",
         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
         evidence_tests="tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver",
-        resolver_evidence="LivingDefaultsResolver fetches race defaults",
-        runtime_consumer_evidence="CompileContext, WorldCompiler use race definitions during compilation",
+        resolver_evidence="LivingDefaultsResolver fetches species defaults",
+        runtime_consumer_evidence="CompileContext, WorldCompiler use species definitions during compilation",
         implementation_state="RESOLVED_PARTIALLY",
         content_maturity="REDESIGNED-CORE",
     ),

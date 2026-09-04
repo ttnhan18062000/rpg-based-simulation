@@ -22,8 +22,8 @@ class EnvironmentService:
         for this region's hazard_kind take zero drain, regardless of hostility to any
         other faction present. A hazard_kind nobody is flagged as enduring affects every
         faction equally, including mutually hostile ones.
-        # NOTE: If race-level hazard_immunities is ever added to RaceDefinition, this
-        # resolution must be revisited to union faction- and race-level endurance sets.
+        # NOTE: If species-level hazard_immunities is ever added to SpeciesDefinition, this
+        # resolution must be revisited to union faction- and species-level endurance sets.
         """
         from src.content_semantics.faction import get_faction_id_str, get_faction_semantics_service
 

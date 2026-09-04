@@ -60,9 +60,13 @@ def get_faction_id_str(entity: Any) -> str:
     return "neutral"
 
 def get_race_id_str(entity: Any) -> str:
-    """Retrieves the race ID string of an entity if present in properties."""
+    """Retrieves the species ID string of an entity if present in properties.
+    Function name kept as-is (race-relations-subsystem naming, TCK-20260904-
+    SPECIES-RELATIONS-SUBSYSTEM-RENAME's own scope) -- only the underlying stored
+    property key was renamed here (TCK-20260904-SPECIES-CORE-SCHEMA-RENAME), since
+    that key is a hard, unavoidable coupling with this ticket's own rename."""
     if hasattr(entity, "identity") and hasattr(entity.identity, "properties"):
-        return entity.identity.properties.get("race_id")
+        return entity.identity.properties.get("species_id")
     return None
 
 
