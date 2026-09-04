@@ -280,6 +280,26 @@ def test_natural_creature_and_magical_demonic_paths_never_attach_genetic_profile
     assert magical_demonic.lifecycle.genetic_profile is None
 
 
+def test_natural_creature_and_magical_demonic_paths_never_seed_public_reputation():
+    """TCK-20260904-INHERITED-REPUTATION-SEED anti-drift guard (AC3): neither parentless
+    spawn path calls birth_record() with parent_a_public_reputation/parent_b_public_reputation,
+    so the produced entity's social.public_reputation must stay at the SocialComponent class
+    default (1.0) -- this ticket's reputation-seeding wiring is human/humanoid-only, matching
+    the genetic_profile anti-drift precedent above exactly."""
+    state = AuthoritativeState(tick=60, seed=42)
+    generator = EntityGenerator(seed=42)
+
+    natural_creature = generator.spawn_natural_creature_offspring(
+        (10.0, 20.0), state=state, kind="goblin_warrior", difficulty_tier=1, birth_tick=60,
+    )
+    assert natural_creature.social.public_reputation == 1.0
+
+    magical_demonic = generator.spawn_magical_demonic_entity(
+        (10.0, 20.0), state=state, difficulty_tier=4, birth_tick=60,
+    )
+    assert magical_demonic.social.public_reputation == 1.0
+
+
 def test_reproduction_paths_never_mutate_region_directly():
     """Architecture guard: all three reproduction paths are decision logic -- they must
     only build typed WorldUpdate objects (population_young_births_delta), never a direct

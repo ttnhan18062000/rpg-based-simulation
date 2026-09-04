@@ -157,6 +157,7 @@ class EntityGenerator:
         parent_a_id: int, parent_b_id: int, birth_tick: int, birth_city_id: Optional[int],
         parent_a_genetic_profile: Optional[GeneticProfile], parent_b_genetic_profile: Optional[GeneticProfile],
         parent_a_role: int, parent_b_role: int, difficulty_tier: int = 1,
+        parent_a_public_reputation: Optional[float] = None, parent_b_public_reputation: Optional[float] = None,
     ) -> EntityState:
         """Spawn a real newborn humanoid offspring with tracked parent ids, an inherited
         GeneticProfile, and CHILD life stage at age_ticks=0 -- unlike
@@ -191,6 +192,8 @@ class EntityGenerator:
                 parent_a_genetic_profile=parent_a_genetic_profile,
                 parent_b_genetic_profile=parent_b_genetic_profile,
                 parent_a_role=parent_a_role, parent_b_role=parent_b_role,
+                parent_a_public_reputation=parent_a_public_reputation,
+                parent_b_public_reputation=parent_b_public_reputation,
             )
             .build())
 

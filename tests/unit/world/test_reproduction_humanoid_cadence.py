@@ -151,6 +151,24 @@ def test_social_bond_seeded_between_each_parent_and_child_at_high_familiarity_se
         assert bond_update.sentiment_delta == 0.8
 
 
+def test_humanoid_reproduction_seeds_child_public_reputation_from_parents():
+    """TCK-20260904-INHERITED-REPUTATION-SEED integration guard: the real two-parent call
+    chain (process_reproduction -> spawn_humanoid_offspring -> birth_record) wires each
+    parent's actual social.public_reputation through, producing a child value strictly
+    between the two parents' -- not the class default."""
+    parent_a = (V2EntityBuilder(1).kind("villager").location(5.0, 5.0)
+                .identity(role=EntityRole.CITIZEN).social(public_reputation=0.4).build())
+    parent_b = (V2EntityBuilder(2).kind("villager").location(5.0, 5.0)
+                .identity(role=EntityRole.CITIZEN).social(public_reputation=1.6).build())
+    state = AuthoritativeState(tick=200, seed=42, entities={1: parent_a, 2: parent_b})
+    generator = _generator_for(state)
+
+    update = HumanoidReproductionService.process_reproduction(state, generator)
+    child = _offspring(update.entities_add)[0]
+
+    assert 0.4 < child.social.public_reputation < 1.6
+
+
 def test_both_parents_cooldown_set_and_repeat_check_before_cooldown_clears_produces_no_second_birth():
     parent_a = _adult(1, pos=(5.0, 5.0))
     parent_b = _adult(2, pos=(5.0, 5.0))

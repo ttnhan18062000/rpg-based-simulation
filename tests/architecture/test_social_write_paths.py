@@ -78,3 +78,20 @@ def test_relationships_py_is_the_authoritative_writer():
     text = Path("src/systems/social_systems/relationships.py").read_text(encoding="utf-8")
     assert "public_reputation=" in text
     assert "regional_reputation=" in text
+
+
+def test_reputation_seed_write_path_does_not_reference_reputation_update_service():
+    """TCK-20260904-INHERITED-REPUTATION-SEED (AC5): the new birth-seed write path
+    (V2EntityBuilder.birth_record() and ReputationService.combine_public_reputation())
+    must never import or call ReputationUpdateService/PublicReputationProfile -- a
+    structurally separate, unrelated reputation representation this ticket must not touch."""
+    import inspect
+    from src.core.builder import V2EntityBuilder
+    from src.systems.social_systems.reputation import ReputationService
+
+    birth_record_source = inspect.getsource(V2EntityBuilder.birth_record)
+    combine_source = inspect.getsource(ReputationService.combine_public_reputation)
+
+    for source in (birth_record_source, combine_source):
+        assert "ReputationUpdateService" not in source
+        assert "PublicReputationProfile" not in source

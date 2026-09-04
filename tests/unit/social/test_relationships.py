@@ -187,3 +187,33 @@ def test_regional_reputation_delta_merges_by_summing_per_region():
     assert reputation_merge.reputation_set == 1.8
     heroism_merge = SocialUpdate(heroism_delta=0.1).merge(SocialUpdate(heroism_delta=0.2))
     assert heroism_merge.heroism_delta == pytest.approx(0.3)
+
+
+def test_heroism_and_notoriety_deltas_apply_identically_to_birth_seeded_reputation():
+    """TCK-20260904-INHERITED-REPUTATION-SEED (AC4): a birth-seeded public_reputation value
+    (simulated here via V2EntityBuilder's construction-time seed, standing in for
+    birth_record()'s own seed write) moves by the exact same heroism_delta/notoriety_delta
+    amount as the SocialComponent class default -- proving process_update() has no
+    floor/ceiling/persistence special-cased to birth-seed origin, and that this ticket adds
+    zero new decay logic to RelationshipService.process_update()."""
+    birth_seeded = V2EntityBuilder(entity_id=1).identity(role=0).social(public_reputation=0.6).build()
+    default_seeded = V2EntityBuilder(entity_id=2).identity(role=0).build()
+    assert default_seeded.social.public_reputation == 1.0
+
+    heroism_update = SocialUpdate(heroism_delta=0.2)
+    birth_seeded_after = RelationshipService.process_update(birth_seeded.social, heroism_update)
+    default_after = RelationshipService.process_update(default_seeded.social, heroism_update)
+
+    assert birth_seeded_after.public_reputation == pytest.approx(0.8)
+    assert default_after.public_reputation == pytest.approx(1.2)
+    assert (birth_seeded_after.public_reputation - birth_seeded.social.public_reputation) == pytest.approx(
+        default_after.public_reputation - default_seeded.social.public_reputation
+    )
+
+    notoriety_update = SocialUpdate(notoriety_delta=0.15)
+    birth_seeded_notoriety = RelationshipService.process_update(birth_seeded_after, notoriety_update)
+    default_notoriety = RelationshipService.process_update(default_after, notoriety_update)
+
+    assert (birth_seeded_notoriety.public_reputation - birth_seeded_after.public_reputation) == pytest.approx(
+        default_notoriety.public_reputation - default_after.public_reputation
+    )

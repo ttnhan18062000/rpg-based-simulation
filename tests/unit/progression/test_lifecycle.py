@@ -743,6 +743,63 @@ def test_builder_birth_record_seeds_child_social_bonds_toward_parents():
         assert bond.role == RelationshipRole.NEUTRAL
 
 
+def test_birth_record_seeds_public_reputation_from_both_parents_average():
+    """TCK-20260904-INHERITED-REPUTATION-SEED (AC1): both parent public_reputation values
+    supplied yields a child SocialComponent.public_reputation strictly between them (the
+    simple average), not the SocialComponent class default (1.0)."""
+    child = (V2EntityBuilder(99)
+             .location(0.0, 0.0)
+             .birth_record(
+                 parent_a_entity_id=1, parent_b_entity_id=2, birth_tick=10,
+                 parent_a_public_reputation=0.4, parent_b_public_reputation=1.6,
+             )
+             .build())
+
+    assert child.social.public_reputation == pytest.approx(1.0)
+    assert 0.4 < child.social.public_reputation < 1.6
+
+    asymmetric_child = (V2EntityBuilder(100)
+                         .location(0.0, 0.0)
+                         .birth_record(
+                             parent_a_entity_id=1, parent_b_entity_id=2, birth_tick=10,
+                             parent_a_public_reputation=0.2, parent_b_public_reputation=0.6,
+                         )
+                         .build())
+
+    assert 0.2 < asymmetric_child.social.public_reputation < 0.6
+    assert asymmetric_child.social.public_reputation != 1.0
+
+
+def test_birth_record_public_reputation_falls_back_to_default_with_partial_parent_data():
+    """TCK-20260904-INHERITED-REPUTATION-SEED (AC2): zero or exactly one parent
+    public_reputation value supplied falls back to the SocialComponent class default (1.0)
+    -- the trigger is an AND-gate (both required), not a partial-seed-from-whichever-parent
+    reading, deliberately the opposite of genetics' OR-gate."""
+    neither_supplied = (V2EntityBuilder(99)
+                         .location(0.0, 0.0)
+                         .birth_record(parent_a_entity_id=1, parent_b_entity_id=2, birth_tick=10)
+                         .build())
+    assert neither_supplied.social.public_reputation == 1.0
+
+    only_a_supplied = (V2EntityBuilder(100)
+                        .location(0.0, 0.0)
+                        .birth_record(
+                            parent_a_entity_id=1, parent_b_entity_id=2, birth_tick=10,
+                            parent_a_public_reputation=0.4,
+                        )
+                        .build())
+    assert only_a_supplied.social.public_reputation == 1.0
+
+    only_b_supplied = (V2EntityBuilder(101)
+                        .location(0.0, 0.0)
+                        .birth_record(
+                            parent_a_entity_id=1, parent_b_entity_id=2, birth_tick=10,
+                            parent_b_public_reputation=1.6,
+                        )
+                        .build())
+    assert only_b_supplied.social.public_reputation == 1.0
+
+
 def test_parent_bond_updates_for_birth_apply_through_authoritative_path():
     """build_parent_bond_updates_for_birth() produces typed EntityUpdates that, applied
     through the normal authoritative apply path, land each existing parent's bond toward the

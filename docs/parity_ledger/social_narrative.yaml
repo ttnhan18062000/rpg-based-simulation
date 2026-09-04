@@ -4031,3 +4031,38 @@
   test_path: tests/unit/social/test_relationships.py::test_public_reputation_locality_differs_by_region_after_region_scoped_event
   divergence_note: null
   support_boundary: null
+- id: SOC-267
+  text: 'Inherited Reputation birth-seed (idea 53, Reproduction): ReputationService.combine_public_reputation(parent_a,
+    parent_b) -> float (src/systems/social_systems/reputation.py) is a pure @staticmethod
+    computing the simple arithmetic mean of both parents'' SocialComponent.public_reputation,
+    clamped to [0.0, 2.0] (defense-in-depth; two in-range inputs averaged cannot leave
+    range by construction). V2EntityBuilder.birth_record() gains parent_a_public_reputation/parent_b_public_reputation
+    kwargs (both Optional[float], default None) that trigger the combine and write
+    the result via .social(public_reputation=...) -- an AND-gate, deliberately the
+    opposite of SOC-260''s genetics OR-gate: seeding requires both parent values present,
+    since every entity''s public_reputation always holds a real value (no missing-value
+    case to backfill via a fallback-generation function). Supplying zero or exactly
+    one parent value falls back to the SocialComponent class default (1.0), never
+    a partial single-parent seed. The write goes through the same construction-time
+    direct-construction path genetic_profile uses, already inside the SOC-217 authoritative-writer
+    guard''s allowlisted builder.py exception -- RelationshipService.process_update()
+    (SOC-217) remains the sole live-mutation writer and gains zero new fields or decay
+    call sites; a birth-seeded value is swamped by ordinary post-birth heroism_delta/notoriety_delta
+    play identically to the class default. The natural-creature and magical/demonic
+    parentless spawn paths never pass the new kwargs, so public_reputation stays at
+    1.0 for those entities (confirmed by dedicated anti-drift test). Cross-references
+    SOC-217 (sole-authoritative-writer law) and SOC-193 (public reputation and private
+    relationship/bond are separate state) -- this write never blurs the two.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/systems/social_systems/reputation.py (ReputationService.combine_public_reputation());
+    src/core/builder.py (V2EntityBuilder.birth_record()'s parent_a_public_reputation/parent_b_public_reputation
+    kwargs, .social(public_reputation=...) write); src/systems/world_systems/generator.py
+    (EntityGenerator.spawn_humanoid_offspring() threads the kwargs through); src/world/reproduction_humanoid.py
+    (HumanoidReproductionService.process_reproduction() wires real a.social.public_reputation/b.social.public_reputation
+    at the call site).
+  proof_type: regression
+  test_path: tests/unit/progression/test_lifecycle.py::test_birth_record_seeds_public_reputation_from_both_parents_average
+  divergence_note: null
+  support_boundary: null

@@ -69,11 +69,29 @@ and schedule, not yet one of the 8 ideas this epic's Scope commits to below.
 2. **Idea 53 — Inherited Reputation.** Simpler than originally scoped: no new decay logic needed at all —
    `RelationshipService.process_update()` has no passive decay on `public_reputation` today, so a one-time
    birth-seed write naturally gets swamped by the child's own subsequent deltas.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-INHERITED-REPUTATION-SEED`. Added a pure
+   `ReputationService.combine_public_reputation(parent_a, parent_b) -> float` (simple arithmetic mean,
+   clamped `[0.0, 2.0]`), wired through `V2EntityBuilder.birth_record()`'s new
+   `parent_a_public_reputation`/`parent_b_public_reputation` kwargs — an AND-gate (both parent values
+   required, unlike idea 53's genetics-precedent OR-gate) that falls back to the class default `1.0`
+   otherwise, since `public_reputation` never has a missing-value case to backfill. Real parent values are
+   wired at `HumanoidReproductionService.process_reproduction()`'s call site, through
+   `EntityGenerator.spawn_humanoid_offspring()`. The parentless natural-creature/magical-demonic spawn
+   paths, `RelationshipService.process_update()`'s decay-free behavior, `regional_reputation`, and
+   `ReputationUpdateService`/`PublicReputationProfile` are all untouched, matching this item's own scope.
+   Documented in `docs/mechanics/01_entity_anatomy.md` §5 "Reputation Seed" and
+   `docs/parity_ledger/social_narrative.yaml` (SOC-267).
 3. **Idea 60 — Reputations Are Local.** Its flagged "competing reputation system" risk was independently
    re-checked and downgraded: `PublicReputationProfile`'s only mutator has zero call sites anywhere — dead
    scaffolding, not a live system to reconcile with. **Must still sequence before or alongside idea 53/54**
    — confirmed independently as a real constraint, not just a hedge, since it changes the shape of the same
    field 53/54 write.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-REPUTATION-LOCALITY-SCOPE`, ahead of idea 53
+   as sequenced. Added `SocialComponent.regional_reputation: Dict[str, float]` (region-scoped, `[0.0, 2.0]`
+   clamp) additive to the retained, unchanged global `public_reputation` scalar, wired through
+   `RelationshipService.process_update()` as the sole authoritative writer, with both determinism surfaces
+   (`to_canonical_dict()`, `StateFingerprinter`) and an architecture guard test added. This annotation was
+   added retroactively by idea 53's own doc-update pass — idea 60's ticket closed without one.
 4. **Idea 54 — Guilt by Association.** Gated on M2's idea 36 (Clan) existing as real state.
 5. **Idea 57 — The Living Legend Feedback Loop.** Its own original claim ("nothing reads Chronicle's output
    back into anything") was wrong — `CultureDeriver` already does, at region scale, via Cultural Drift.
