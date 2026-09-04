@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 from src.core.state import EntityState, AuthoritativeState, EquipSlot
+from src.domains.progression.material_predicate import recipe_materials
 from src.domains.progression.schema import GrowthGap, GrowthGapReport, PossessionUnderstandingComponent
 
 
@@ -64,28 +65,36 @@ class GrowthGapEvaluator:
                 candidate_resolution_tags=("blacksmith_repair",)
             ))
 
-        # 2. Material Gap
-        # Check if we have high-priority known recipes with missing materials
+        # 2. Material Gap. See material_predicate.recipe_materials() docstring for why this
+        # reads src/core/recipes.py::RecipeRegistry, not src/core/registries.py::RecipeRegistry
+        # or src/engine/blacksmith.py::BlacksmithSystem.RECIPES.
         id_comp = getattr(entity, "identity", None)
         known_recipes = getattr(id_comp, "known_recipes", set()) or set()
-        
-        if "iron_sword" in known_recipes:
-            # Check possession meanings for iron_ore keep priority
-            # If we don't have iron_ore in our possession meanings, or quantity is 0
-            has_ore = False
-            for stack in getattr(entity.inventory, "items", []) or []:
-                if stack.item_id == "iron_ore" and stack.quantity > 0:
-                    has_ore = True
-                    break
+        inventory_item_ids = {
+            stack.item_id
+            for stack in getattr(entity.inventory, "items", []) or []
+            if stack.quantity > 0
+        }
 
-            if not has_ore:
-                gaps.append(GrowthGap(
-                    key="material_gap",
-                    severity=0.5,
-                    confidence=0.8,
-                    reason="Missing iron_ore to craft iron_sword recipe.",
-                    candidate_resolution_tags=("gather_material", "buy_material")
-                ))
+        missing_material_recipe = None
+        missing_material_id = None
+        for recipe_id in sorted(known_recipes):
+            for material_id in recipe_materials(recipe_id):
+                if material_id not in inventory_item_ids:
+                    missing_material_recipe = recipe_id
+                    missing_material_id = material_id
+                    break
+            if missing_material_recipe:
+                break
+
+        if missing_material_recipe:
+            gaps.append(GrowthGap(
+                key="material_gap",
+                severity=0.5,
+                confidence=0.8,
+                reason=f"Missing {missing_material_id} to craft {missing_material_recipe} recipe.",
+                candidate_resolution_tags=("gather_material", "buy_material")
+            ))
 
         # 3. Gold Gap
         inv = getattr(entity, "inventory", None)

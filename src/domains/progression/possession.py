@@ -12,6 +12,7 @@ from typing import Dict, Any
 
 from src.core.state import EntityState, AuthoritativeState
 from src.core.models.inventory import EquipSlot
+from src.domains.progression.material_predicate import recipe_materials
 from src.domains.progression.schema import PossessionMeaning, PossessionUnderstandingComponent
 
 
@@ -47,22 +48,19 @@ class PossessionUnderstandingService:
             craft_priority = 0.0
             reason = "No known strategic use."
 
-            # 1. Check if material for a known recipe
-            # Mock recipe lists for Phase 6 scenario needs
-            is_recipe_material = False
-            if item_id == "iron_ore" and "iron_sword" in known_recipes:
-                is_recipe_material = True
-                known_uses.append("iron_sword")
+            # 1. Check if material for a known recipe. See material_predicate.recipe_materials()
+            # docstring for why this reads src/core/recipes.py::RecipeRegistry, not
+            # src/core/registries.py::RecipeRegistry or src/engine/blacksmith.py::BlacksmithSystem.RECIPES.
+            matching_recipes = tuple(
+                recipe_id for recipe_id in sorted(known_recipes)
+                if item_id in recipe_materials(recipe_id)
+            )
+            is_recipe_material = bool(matching_recipes)
+            if is_recipe_material:
+                known_uses.extend(matching_recipes)
                 keep_priority = 0.95
                 craft_priority = 0.8
-                reason = "Required for known iron_sword recipe."
-
-            elif item_id == "wolf_fang" and "hunter_blade" in known_recipes:
-                is_recipe_material = True
-                known_uses.append("hunter_blade")
-                keep_priority = 0.8
-                craft_priority = 0.6
-                reason = "Required for known hunter_blade recipe."
+                reason = f"Required for known {matching_recipes[0]} recipe."
 
             # 2. Check if a better compatible gear than equipped
             is_weapon = item_id in ("iron_sword", "steel_sword", "rusted_sword")

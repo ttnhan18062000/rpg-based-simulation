@@ -78,3 +78,58 @@ def test_missing_recipe_material_creates_material_gap():
     
     gap_keys = [g.key for g in report.gaps]
     assert "material_gap" in gap_keys
+
+
+def test_growth_gap_material_gap_uses_real_recipe_lookup_not_hardcoded_literal():
+    """
+    Proves the material_gap check now reads recipe_materials() generically instead of the
+    old hardcoded iron_sword/iron_ore literal -- covers health_potion/herb, a recipe the
+    old hardcoded check could never recognize.
+    """
+    b = (V2EntityBuilder(1)
+         .kind("ACTOR")
+         .location(0.0, 0.0)
+         .combat(hp=100, atk=10)
+         .lifecycle(active=True)
+         .inventory(gold=100))
+    entity = b.build()
+
+    entity = replace(entity,
+        identity=replace(entity.identity, known_recipes={"health_potion"})
+    )
+
+    state = AuthoritativeState(entities={1: entity}, tick=1, seed=1)
+    possession = PossessionUnderstandingService.evaluate(entity, state)
+    report = GrowthGapEvaluator.evaluate(entity, possession, state)
+
+    material_gaps = [g for g in report.gaps if g.key == "material_gap"]
+    assert len(material_gaps) == 1
+    assert "herb" in material_gaps[0].reason
+    assert "health_potion" in material_gaps[0].reason
+
+
+def test_growth_gap_craft_prefixed_known_recipes_produce_no_material_gap():
+    """
+    Disclosed-limitation pinning test: craft_*-prefixed known_recipes ids (the ones
+    BlacksmithSystem.enforce() actually populates known_recipes with in production) are
+    not entries in src/core/recipes.py::RecipeRegistry, so no material_gap is raised via
+    this path. See src/domains/progression/material_predicate.py's module docstring.
+    """
+    b = (V2EntityBuilder(1)
+         .kind("ACTOR")
+         .location(0.0, 0.0)
+         .combat(hp=100, atk=10)
+         .lifecycle(active=True)
+         .inventory(gold=100))
+    entity = b.build()
+
+    entity = replace(entity,
+        identity=replace(entity.identity, known_recipes={"craft_steel_sword"})
+    )
+
+    state = AuthoritativeState(entities={1: entity}, tick=1, seed=1)
+    possession = PossessionUnderstandingService.evaluate(entity, state)
+    report = GrowthGapEvaluator.evaluate(entity, possession, state)
+
+    gap_keys = [g.key for g in report.gaps]
+    assert "material_gap" not in gap_keys
