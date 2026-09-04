@@ -102,15 +102,16 @@ def test_real_fixture_set_loads_and_validates():
     done_ticket_path = _REPO_ROOT / "tickets" / "done" / "TCK-20260721-ORCHESTRATION-CONTRACT-ADR.md"
     assert done_ticket_path.exists(), "fixture's source ticket_id has no matching tickets/done/ file"
 
-    runs_jsonl = _REPO_ROOT / "agent-monitoring" / "runs.jsonl"
+    runs_jsonl_shards = sorted((_REPO_ROOT / "agent-monitoring" / "data").glob("*/runs.jsonl"))
     matching_run_ids = set()
-    for line in runs_jsonl.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        row = json.loads(line)
-        matching_run_ids.add(row.get("run_id"))
+    for runs_jsonl in runs_jsonl_shards:
+        for line in runs_jsonl.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            matching_run_ids.add(row.get("run_id"))
     assert envelope.source["ticket_id"] in matching_run_ids, (
-        "fixture's source ticket_id has no matching row in agent-monitoring/runs.jsonl"
+        "fixture's source ticket_id has no matching row in any agent-monitoring/data/*/runs.jsonl shard"
     )
 
 
