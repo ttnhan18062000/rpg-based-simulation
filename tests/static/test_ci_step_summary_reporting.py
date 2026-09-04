@@ -343,6 +343,13 @@ def test_no_cross_job_aggregate_step_or_job_added() -> None:
     # close a real CI coverage gap -- it joins the exempt set alongside migration-lanes/typecheck/
     # slow (all non-pytest or pytest-reporting-exempt jobs), not _FASTLANE_JOBS, since it runs
     # npm/vitest, not pytest, and has no --junit-xml/base-branch-collect-only wiring to match.
+    # 'simq-grade-drift' (TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS) is another
+    # deliberate new job, same rationale as 'frontend': closes a real gap (test_grade_regression.py's
+    # anchor-comparison tests have silently pytest.skip()'d in every real CI run to date, since
+    # nothing ever populated data/calibration/) by wiring already-built tooling
+    # (`make simq-full-audit-full`) in as a `continue-on-error: true` informational job, mirroring
+    # the existing 'typecheck' job's own exempt informational pattern -- not _FASTLANE_JOBS, since
+    # it's deliberately non-blocking and has no --junit-xml/base-branch-collect-only wiring either.
     expected_job_names = set(_FASTLANE_JOBS) | {
         "changed-files",
         "perf-cert-arena",
@@ -350,6 +357,7 @@ def test_no_cross_job_aggregate_step_or_job_added() -> None:
         "typecheck",
         "slow",
         "frontend",
+        "simq-grade-drift",
     }
     assert set(_jobs().keys()) == expected_job_names, (
         "job set changed -- this ticket must not add a new CI job (no cross-job aggregate "

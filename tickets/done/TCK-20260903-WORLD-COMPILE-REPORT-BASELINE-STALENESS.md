@@ -212,12 +212,34 @@ report undercounts real drift.
   subset of the 64) are pre-existing real drift, not caused by this ticket.
 - No `grade_anchors.json` mutation at any point — confirmed via `git diff` showing zero changes to
   that file throughout this ticket's implementation.
+- **Real CI failure caught and fixed** (PR #127, "Architecture / docs / static" job): reproduced
+  locally with the exact CI command
+  (`pytest tests/architecture tests/docs tests/integrity tests/static tests/refactor -m "not slow and not extra_slow"`)
+  — `test_ci_step_summary_reporting.py::test_no_cross_job_aggregate_step_or_job_added` failed
+  because it's a static, frozen-job-set guard that doesn't yet know about the new
+  `simq-grade-drift` job. Investigated before touching it: the same file already documents a
+  sanctioned precedent for this exact situation (`frontend`, added by
+  `TCK-20260825-CI-FRONTEND-TEST-COVERAGE-GAP` with a comment) — the guard's real invariant is "no
+  *undocumented* job added," not "no job ever added." Extended `expected_job_names` with
+  `simq-grade-drift` and a comment citing this ticket, matching the file's own established pattern
+  — not a silently-routed-around gate. Re-ran the same command after the fix: 196 passed, 2
+  skipped, 1 deselected, 2 xfailed (was 195/2/1/2/1-failed before).
 
 ## Files Changed
 - `.github/workflows/test.yml` — new `simq-grade-drift` job (informational, push-to-main-only,
   runs `make simq-full-audit-full`).
 - `tests/simulation_quality/test_grade_regression.py` — module docstring only: fixed the broken
   `make calibrate` reference and added a CI note explaining the new job's purpose.
+- `tests/static/test_ci_step_summary_reporting.py` — CI caught this: PR #127's real
+  "Architecture / docs / static" job failed with a reproduced local exit 1,
+  `test_no_cross_job_aggregate_step_or_job_added` (a static frozen-job-set guard from
+  `TCK-20260823-CI-STEP-SUMMARY-REPORTING`). This is the exact same pattern the test file's own
+  `frontend` job entry already documents as sanctioned: the guard's real invariant is "no
+  undocumented job added," not "no job ever added" — a prior ticket
+  (`TCK-20260825-CI-FRONTEND-TEST-COVERAGE-GAP`) already extended it once, with a comment. Added
+  `simq-grade-drift` to `expected_job_names` the same way, with a comment citing this ticket and
+  its rationale — not a silent routed-around gate, following this repo's own established extension
+  precedent for this exact guard.
 
 ## Completion Summary
 Closed the `grade_anchors.json` half of this ticket via the user's chosen gate-only direction. The
