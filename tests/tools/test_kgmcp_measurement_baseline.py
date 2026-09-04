@@ -366,7 +366,13 @@ def test_no_live_gateway_code_or_search_mcp_edits_introduced():
         # ticket-window awareness; the other 4 paths below remain unedited by this ticket and this
         # guard still protects them.
         "tools/context_packet_assembler.py",
-        "tools/retrieval_events.py",
+        # tools/retrieval_events.py intentionally removed from this list by
+        # TCK-20260904-HOTFIX-KGMCP-FROZEN-FILE-BASELINE-UPDATE: Design Decision D1 (see
+        # test_knowledge_gateway_mcp.py::test_wrapper_functions_genuinely_not_applicable_zero_invoked)
+        # confirms none of this file's 3 wrap_*() functions has any real call site in the live
+        # KGMCP pipeline, so this file was never actually part of what this baseline measures —
+        # edits to it cannot affect measurement/baseline reproducibility, unlike the genuinely
+        # live-pipeline paths above.
     ):
         assert banned_path not in result.stdout, (
             f"{banned_path} must never be edited by this ticket (Out of Scope)"

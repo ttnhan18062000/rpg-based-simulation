@@ -9,12 +9,14 @@ from src.domains.demographics.cohort import get_age_bracket
 
 
 def test_get_stage_for_age_boundaries():
+    """TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION: boundaries are 12/60 fantasy years
+    (3456000/17280000 ticks), replacing the original raw 3000/7000-tick literals."""
     assert LifeStageService.get_stage_for_age(0) == LifeStage.CHILD
-    assert LifeStageService.get_stage_for_age(2999) == LifeStage.CHILD
-    assert LifeStageService.get_stage_for_age(3000) == LifeStage.ADULT
-    assert LifeStageService.get_stage_for_age(6999) == LifeStage.ADULT
-    assert LifeStageService.get_stage_for_age(7000) == LifeStage.ELDER
-    assert LifeStageService.get_stage_for_age(9000) == LifeStage.ELDER
+    assert LifeStageService.get_stage_for_age(3455999) == LifeStage.CHILD
+    assert LifeStageService.get_stage_for_age(3456000) == LifeStage.ADULT
+    assert LifeStageService.get_stage_for_age(17279999) == LifeStage.ADULT
+    assert LifeStageService.get_stage_for_age(17280000) == LifeStage.ELDER
+    assert LifeStageService.get_stage_for_age(18000000) == LifeStage.ELDER
 
 
 def test_is_forward_transition_promotes_only_forward():
@@ -37,7 +39,7 @@ def test_is_forward_transition_elder_never_regresses_from_recomputed_lower_candi
     assert LifeStageService.is_forward_transition(LifeStage.ELDER, LifeStage.ADULT) is False
 
 
-@pytest.mark.parametrize("age_ticks", [0, 2999, 3000, 6999, 7000, 9000])
+@pytest.mark.parametrize("age_ticks", [0, 3455999, 3456000, 17279999, 17280000, 18000000])
 def test_get_stage_for_age_matches_get_age_bracket_numeric_boundaries(age_ticks):
     """Regression guard for Design Decision 1 (investigation.md): get_stage_for_age()'s numeric
     boundaries are intentionally duplicated from get_age_bracket() (src/domains/demographics/

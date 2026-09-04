@@ -117,7 +117,7 @@ current enforcement location (see `DEV-004`, `docs/guidelines/intentional_diverg
    `core_actions.py::execute_allocate_ap`, not the apply path.
 2. `PROG-068`: attribute name is valid — **not enforced on the live path** (see the corrected
    `PROG-068` entry in `docs/parity_ledger/progression.yaml`).
-3. `PROG-069`: aptitude multiplier applied (entity class/race may modify AP efficiency) — **not
+3. `PROG-069`: aptitude multiplier applied (entity class/species may modify AP efficiency) — **not
    enforced on the live path** (see the corrected `PROG-069` entry in
    `docs/parity_ledger/progression.yaml`).
 4. `PROG-070`: attribute value cap of 100 enforced in the apply path, `AttributePatch.apply`

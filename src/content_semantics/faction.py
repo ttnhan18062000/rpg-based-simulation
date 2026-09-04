@@ -59,10 +59,10 @@ def get_faction_id_str(entity: Any) -> str:
             pass
     return "neutral"
 
-def get_race_id_str(entity: Any) -> str:
-    """Retrieves the race ID string of an entity if present in properties."""
+def get_species_id_str(entity: Any) -> str:
+    """Retrieves the species ID string of an entity if present in properties."""
     if hasattr(entity, "identity") and hasattr(entity.identity, "properties"):
-        return entity.identity.properties.get("race_id")
+        return entity.identity.properties.get("species_id")
     return None
 
 

@@ -14,7 +14,7 @@ FACTORY = ArchetypeEntityFactory()
 def _make_contract(**kw) -> ResolvedEntityRuntimeContract:
     defaults = dict(
         archetype_id="human_worker",
-        race_id="human",
+        species_id="human",
         faction_id="town_council",
         role_id="worker",
         kind="humanoid",
@@ -30,7 +30,7 @@ def _make_contract(**kw) -> ResolvedEntityRuntimeContract:
 def test_clean_archetype_contract_resolves_clean_identity():
     contract = _make_contract(
         archetype_id="human_worker",
-        race_id="human",
+        species_id="human",
         faction_id="town_council",
         role_id="worker",
         legacy_role=EntityRole.HERO,
@@ -43,7 +43,7 @@ def test_clean_archetype_contract_resolves_clean_identity():
     assert identity.faction_id == "town_council"
     assert identity.role_id == "worker"
     assert identity.archetype_id == "human_worker"
-    assert identity.race_id == "human"
+    assert identity.species_id == "human"
 
 
 def test_clean_faction_role_only_resolves_clean_identity():

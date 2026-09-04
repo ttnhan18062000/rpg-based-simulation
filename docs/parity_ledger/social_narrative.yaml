@@ -3718,26 +3718,27 @@
   test_path: tests/unit/domains/faction/test_clan_state.py::test_clan_state_serialization_round_trip
   divergence_note: null
 - id: SOC-257
-  text: 'New race_relations content family (RaceRelationRecord, mirroring FactionRelationshipDefinition''s
-    shape exactly: source_race, target_race, relationship_model, axes: Dict[str,str],
+  text: 'New species_relations content family (SpeciesRelationRecord, mirroring FactionRelationshipDefinition''s
+    shape exactly: source_species, target_species, relationship_model, axes: Dict[str,str],
     extra=''forbid'' via CatalogBaseDefinition) registered in CANONICAL_FAMILIES and
-    CONTENT_USAGE_MATRIX, loaded from data/content/social/race_relations.yaml (24
-    directed entries / 12 undirected pairs, a disclosed ~18% subset of the 66 populated-race
-    pairs). Consumed by RelationProjectionService.project_relation()''s new race-hostility
+    CONTENT_USAGE_MATRIX, loaded from data/content/social/species_relations.yaml (24
+    directed entries / 12 undirected pairs, a disclosed ~18% subset of the 66 populated-species
+    pairs). Consumed by RelationProjectionService.project_relation()''s new species-hostility
     escalation step, which upgrade-only tightens a projected relationship label using
     axes.hostility, gated off for same-faction pairs and for any label outside the
-    neutral/threat/intruder/enemy escalation ladder (fail-closed: an authored race
+    neutral/threat/intruder/enemy escalation ladder (fail-closed: an authored species
     entry can never invert a perspective-declared ''ally'' label).'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/content/schema.py (RaceRelationRecord); src/content/repository.py
-    (ContentFamilySpec('social.race_relations', 'social/race_relations.yaml', RaceRelationRecord,
-    'race_relations') in CANONICAL_FAMILIES); src/content_semantics/relation.py (project_relation()'s
-    '3.5 Race-hostility escalation' block); src/content/matrix.py:260-273 (CONTENT_USAGE_MATRIX['social/race_relations']
-    entry registering the new content family for usage-matrix tracking).
+  v2_evidence: src/content/schema.py (SpeciesRelationRecord); src/content/repository.py
+    (ContentFamilySpec('social.species_relations', 'social/species_relations.yaml',
+    SpeciesRelationRecord, 'species_relations') in CANONICAL_FAMILIES); src/content_semantics/relation.py
+    (project_relation()'s '3.5 Species-hostility escalation' block); src/content/matrix.py:260-273
+    (CONTENT_USAGE_MATRIX['social/species_relations'] entry registering the new content
+    family for usage-matrix tracking).
   proof_type: regression
-  test_path: tests/unit/content_semantics/test_relation_race_projection.py
+  test_path: tests/unit/content_semantics/test_relation_species_projection.py
   divergence_note: null
   support_boundary: null
 - id: SOC-258
@@ -3974,3 +3975,39 @@
     merge-conflict resolution -- an unrelated concurrent session independently used
     SOC-263 for a different entry (SocialComponent canonical-hash gap fix) first.'
   support_boundary: null
+- id: SOC-265
+  text: 'SocialComponent.nemesis_ids (promoted only from sustained real grudge_history
+    >= 3.0, SocialMemoryService.check_nemesis_promotion()) and SocialBond.role (RelationshipRole.FRIEND/RIVAL/NEUTRAL,
+    written on a fully independent path) previously had no reconciliation when both
+    were set for the same candidate -- confirmed a real bug, not just an open seam.
+    PartyCompositionScorer._candidate_role_value() scored a FRIEND-bonded confirmed
+    nemesis +1.0 (positive), and src/domains/adventure/generator.py''s FORM_PARTY
+    route''s own nemesis-block check only read a locally-derived proxy from entity.strategic.blockers,
+    never the canonical nemesis_ids field -- a confirmed nemesis with no matching
+    strategic blocker was not blocked from party formation at all. Fixed: nemesis_ids
+    now takes precedence over a FRIEND bond.role in _candidate_role_value() (returns
+    -1.0), and the FORM_PARTY block check now unions the canonical nemesis_ids field
+    with the existing strategic-blocker proxy.'
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/systems/social_systems/party_composition.py:142-161 (PartyCompositionScorer._candidate_role_value())
+    + src/domains/adventure/generator.py:141-150 (FORM_PARTY nemesis-block check)
+    + src/systems/social_systems/memory.py:36-50 (SocialMemoryService.check_nemesis_promotion(),
+    the source of the nemesis_ids signal, confirmed to never touch bond.role) + src/core/models/social.py:7-8
+    (RelationshipRole's own docstring, already documenting the independence this fix
+    reconciles)
+  proof_type: parity
+  test_path: tests/unit/social/test_party_composition.py::test_candidate_role_value_nemesis_overrides_stale_friend_bond,
+    tests/unit/social/test_party_composition.py::test_candidate_role_value_nemesis_without_bond,
+    tests/unit/social/test_party_composition.py::test_candidate_role_value_non_conflicting_cases_unchanged,
+    tests/unit/social/test_party_composition.py::test_party_composition_score_lower_for_nemesis_with_friend_bond_than_true_friend,
+    tests/unit/social/test_party_composition.py::test_form_party_route_blocked_by_canonical_nemesis_ids_without_strategic_blocker
+  divergence_note: 'TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE. The gap predates this
+    fix -- flagged as an open, unconfirmed seam in the 2026-09-02 Social/Relationship
+    axis brainstorm pass (docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md),
+    confirmed as a real, live bug on direct investigation 2026-09-04. Resolves the
+    roadmap''s own flagged open question. NOTE: this entry was originally written as
+    SOC-264 but was renumbered to SOC-265 during a merge-conflict resolution -- an
+    unrelated concurrent session independently used SOC-264 for a different entry
+    (ClanState lifecycle/succession wiring) first.'

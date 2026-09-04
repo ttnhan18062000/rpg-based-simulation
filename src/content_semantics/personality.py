@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from src.core.state import PersonalityComponent
 
 # Real per-entity bravery is RNG-seeded by callers (WorldCompiler.compile(),
-# ArchetypeEntityFactory.build_entity()) but was previously uncorrelated with race/faction -- a
+# ArchetypeEntityFactory.build_entity()) but was previously uncorrelated with species/faction -- a
 # wolf and a citizen drew from the identical distribution
 # (TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION / TCK-20260809-COMBAT-ACTIONSTYLE-WIRING).
 # Bias magnitudes and ActionStyle thresholds are real gameplay-tuning data, not code logic --
@@ -84,7 +84,7 @@ def get_action_style_for_bravery(bravery: float) -> int:
 
 def build_personality_for_entity(entity_id: int, faction_id: Optional[str], seed: int) -> "PersonalityComponent":
     """
-    Real, per-entity, race/faction-correlated PersonalityComponent, deterministic given
+    Real, per-entity, species/faction-correlated PersonalityComponent, deterministic given
     (entity_id, faction_id, seed). Shared by both real entity-construction paths
     (WorldCompiler.compile(), ArchetypeEntityFactory.build_entity() and WorldEntitySpawner's own
     legacy-guard path) so bravery-bias/ActionStyle logic lives in exactly one place

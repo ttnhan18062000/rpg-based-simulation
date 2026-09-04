@@ -20,7 +20,7 @@ from src.core.models.social import SocialBond, RelationshipRole
 
 def _entity(
     eid: int, kind: str = "hero", bravery: float = 0.5, sociability: float = 0.5,
-    trust_history: dict = None, bonds: dict = None,
+    trust_history: dict = None, bonds: dict = None, nemesis_ids: set = None,
 ):
     from src.core.builder import V2EntityBuilder
     entity = (
@@ -30,7 +30,7 @@ def _entity(
         .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
         .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
         .inventory(gold=0)
-        .social(trust_history=trust_history or {}, bonds=bonds or {})
+        .social(trust_history=trust_history or {}, bonds=bonds or {}, nemesis_ids=nemesis_ids or set())
         .build()
     )
     p = replace(entity.identity.personality, bravery=bravery, sociability=sociability)
@@ -325,3 +325,83 @@ def test_party_composition_score_role_term_requires_actor():
 
     assert score_without_actor == base_score
     assert score_with_actor != score_without_actor
+
+
+# ---------------------------------------------------------------------------
+# nemesis_ids / RelationshipRole precedence (TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE)
+# ---------------------------------------------------------------------------
+
+def test_candidate_role_value_nemesis_overrides_stale_friend_bond():
+    """A candidate who is both a confirmed nemesis (grudge-promoted) and still tagged
+    FRIEND on the bond must score as a nemesis (-1.0), not a friend (+1.0) -- nemesis_ids
+    is the stronger, harm-history-backed signal."""
+    candidate = _entity(2, kind="guard")
+    actor = _entity(
+        1, kind="hero",
+        bonds={2: SocialBond(target_id=2, sentiment=0.5, role=RelationshipRole.FRIEND)},
+        nemesis_ids={2},
+    )
+    assert PartyCompositionScorer._candidate_role_value(actor, candidate) == -1.0
+
+
+def test_candidate_role_value_nemesis_without_bond():
+    """A nemesis with no bond record at all still scores -1.0, not the no-bond default 0.0."""
+    candidate = _entity(2, kind="guard")
+    actor = _entity(1, kind="hero", nemesis_ids={2})
+    assert PartyCompositionScorer._candidate_role_value(actor, candidate) == -1.0
+
+
+def test_candidate_role_value_non_conflicting_cases_unchanged():
+    """Non-conflicting cases (FRIEND alone, RIVAL alone, NEUTRAL, no bond) are unaffected
+    by the nemesis_ids precedence check."""
+    candidate = _entity(2, kind="guard")
+
+    friend_actor = _entity(1, bonds={2: SocialBond(target_id=2, role=RelationshipRole.FRIEND)})
+    assert PartyCompositionScorer._candidate_role_value(friend_actor, candidate) == 1.0
+
+    rival_actor = _entity(1, bonds={2: SocialBond(target_id=2, role=RelationshipRole.RIVAL)})
+    assert PartyCompositionScorer._candidate_role_value(rival_actor, candidate) == -1.0
+
+    neutral_actor = _entity(1, bonds={2: SocialBond(target_id=2, role=RelationshipRole.NEUTRAL)})
+    assert PartyCompositionScorer._candidate_role_value(neutral_actor, candidate) == 0.0
+
+    no_bond_actor = _entity(1)
+    assert PartyCompositionScorer._candidate_role_value(no_bond_actor, candidate) == 0.0
+
+
+def test_party_composition_score_lower_for_nemesis_with_friend_bond_than_true_friend():
+    """End-to-end via score(): a nemesis-with-stale-FRIEND-bond actor scores lower than an
+    actor with a genuine FRIEND bond toward the same candidate pool shape."""
+    pool = [_entity(2, kind="guard"), _entity(3, kind="mage")]
+
+    true_friend_actor = _entity(
+        1, bonds={2: SocialBond(target_id=2, sentiment=0.5, role=RelationshipRole.FRIEND)},
+    )
+    nemesis_with_friend_tag_actor = _entity(
+        1, bonds={2: SocialBond(target_id=2, sentiment=0.5, role=RelationshipRole.FRIEND)},
+        nemesis_ids={2},
+    )
+
+    score_true_friend = PartyCompositionScorer.score(pool, actor=true_friend_actor)
+    score_nemesis = PartyCompositionScorer.score(pool, actor=nemesis_with_friend_tag_actor)
+
+    assert score_nemesis < score_true_friend
+
+
+def test_form_party_route_blocked_by_canonical_nemesis_ids_without_strategic_blocker():
+    """FORM_PARTY's own nemesis-block check must fire from the canonical nemesis_ids field
+    alone, even with zero matching strategic.blockers entries (the gap this ticket closes --
+    previously only the strategic-blocker proxy was checked)."""
+    from src.domains.adventure.generator import AdventureRouteGenerator
+    from src.domains.adventure.schema import RouteFamily
+    from src.core.state import AuthoritativeState
+
+    nemesis_candidate = _entity(2, kind="guard")
+    entity = _entity(1, kind="hero", sociability=0.8, nemesis_ids={2})
+    state = AuthoritativeState(tick=0, seed=1, entities={1: entity, 2: nemesis_candidate})
+
+    routes = AdventureRouteGenerator.generate(entity, state=state, opportunities=())
+    form_party = next((r for r in routes if r.family == RouteFamily.FORM_PARTY), None)
+
+    assert form_party is not None
+    assert "nemesis_block" in form_party.blockers

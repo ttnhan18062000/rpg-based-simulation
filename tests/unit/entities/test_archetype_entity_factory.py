@@ -8,7 +8,7 @@ from src.entities.archetype_factory import ArchetypeEntityFactory, EntitySpawnCo
 def _contract(**overrides) -> ResolvedEntityRuntimeContract:
     defaults = dict(
         archetype_id="human_worker",
-        race_id="human",
+        species_id="human",
         faction_id="town_council",
         role_id="worker",
         kind="humanoid",
@@ -61,7 +61,7 @@ def test_build_human_worker_entity_from_contract():
 def test_build_wolf_entity_from_contract():
     c = _contract(
         archetype_id="wolf_alpha",
-        race_id="wolf",
+        species_id="wolf",
         faction_id="wilderness",
         role_id="predator",
         kind="beast",
@@ -81,7 +81,7 @@ def test_build_wolf_entity_from_contract():
 def test_build_goblin_raider_entity_from_contract():
     c = _contract(
         archetype_id="goblin_raider",
-        race_id="goblin",
+        species_id="goblin",
         faction_id="goblin_clan",
         role_id="raider",
         kind="goblinoid",
@@ -136,10 +136,10 @@ def test_combat_values_match_contract():
 
 
 def test_archetype_id_preserved_in_identity_properties():
-    c = _contract(archetype_id="test_arch", race_id="test_race")
+    c = _contract(archetype_id="test_arch", species_id="test_species")
     entity = FACTORY.build_entity(7, c, _spawn())
     assert entity.identity.properties["archetype_id"] == "test_arch"
-    assert entity.identity.properties["race_id"] == "test_race"
+    assert entity.identity.properties["species_id"] == "test_species"
 
 
 def test_inventory_items_and_gold_from_contract():

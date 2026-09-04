@@ -131,8 +131,9 @@ class SkillProfileDefinition(CatalogBaseDefinition):
     skills: List[str] = Field(default_factory=list)
 
 
-class RaceDefinition(CatalogBaseDefinition):
-    """Schema for dynamic race/species definition."""
+class SpeciesDefinition(CatalogBaseDefinition):
+    """Schema for dynamic species definition (TCK-20260904-SPECIES-CORE-SCHEMA-RENAME:
+    renamed from RaceDefinition, part of the race->species terminology migration)."""
     body_model: str = Field(..., description="Referenced BodyModelDefinition ID")
     need_profile: str = Field(..., description="Referenced NeedProfileDefinition ID")
     sense_profile: str = Field(..., description="Referenced SenseProfileDefinition ID")
@@ -162,7 +163,7 @@ class FactionDefinition(CatalogBaseDefinition):
     influence_role: str = Field(..., description="Influence role (e.g., sovereign, challenger, non_combatant)")
     relationship_group: Optional[str] = Field(None, description="Optional legacy relationship group")
     legacy_engine_bucket: str = Field(..., description="Legacy Faction enum name mapping")
-    common_races: List[str] = Field(default_factory=list)
+    common_species: List[str] = Field(default_factory=list)
     themes: List[str] = Field(default_factory=list)
     hazard_immunities: List[str] = Field(default_factory=list, description="Hazard-kind tags this faction's members endure without harm (e.g. 'NATURAL_TERRAIN', 'CHAOS_CORRUPTION').")
 
@@ -208,10 +209,11 @@ class FactionRelationshipDefinition(CatalogBaseDefinition):
     axes: Dict[str, str] = Field(default_factory=dict)
 
 
-class RaceRelationRecord(CatalogBaseDefinition):
-    """Schema for hostility/relationship axes between two races."""
-    source_race: str = Field(..., description="Source RaceDefinition ID")
-    target_race: str = Field(..., description="Target RaceDefinition ID")
+class SpeciesRelationRecord(CatalogBaseDefinition):
+    """Schema for hostility/relationship axes between two species (TCK-20260904-
+    SPECIES-RELATIONS-SUBSYSTEM-RENAME: renamed from RaceRelationRecord)."""
+    source_species: str = Field(..., description="Source SpeciesDefinition ID")
+    target_species: str = Field(..., description="Target SpeciesDefinition ID")
     relationship_model: str = Field(..., description="Relationship classification")
     axes: Dict[str, str] = Field(default_factory=dict)
 
@@ -222,7 +224,7 @@ class RaceRelationRecord(CatalogBaseDefinition):
 
 class EntityArchetypeDefinition(CatalogBaseDefinition):
     """Schema for the spawnable entity archetype templates."""
-    race: str = Field(..., description="Referenced RaceDefinition ID")
+    species: str = Field(..., description="Referenced SpeciesDefinition ID")
     faction: str = Field(..., description="Referenced FactionDefinition ID")
     role: str = Field(..., description="Referenced RoleDefinition ID")
     stat_profile: str = Field(..., description="Referenced StatsProfileDefinition ID")

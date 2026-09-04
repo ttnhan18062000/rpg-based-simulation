@@ -12,12 +12,17 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
 
 from profile_sweep import (
     extract_top_hotspots,
     classify_cross_scenario,
     compute_tick_timing,
+    check_contention,
+    read_contention,
+    ContentionReading,
     HotspotRecord,
 )
 
@@ -98,3 +103,39 @@ def test_compute_tick_timing_basic_stats():
 def test_compute_tick_timing_empty_list_does_not_crash():
     result = compute_tick_timing([])
     assert result == {"avg": 0.0, "p50": 0.0, "p95": 0.0, "max": 0.0}
+
+
+def _reading(load1: float, cpu_count: int = 4) -> ContentionReading:
+    return ContentionReading(
+        load_avg_1min=load1,
+        load_avg_5min=load1,
+        load_avg_15min=load1,
+        cpu_count=cpu_count,
+        load_per_core_1min=load1 / cpu_count,
+    )
+
+
+def test_check_contention_passes_silently_when_under_threshold(capsys):
+    check_contention(_reading(load1=1.0, cpu_count=4), max_load_per_core=0.5, force=False)
+    assert capsys.readouterr().err == ""
+
+
+def test_check_contention_exits_when_over_threshold_without_force(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        check_contention(_reading(load1=5.75, cpu_count=4), max_load_per_core=0.5, force=False)
+    assert exc_info.value.code == 1
+    assert "CONTENTION WARNING" in capsys.readouterr().err
+
+
+def test_check_contention_warns_but_continues_with_force(capsys):
+    check_contention(_reading(load1=5.75, cpu_count=4), max_load_per_core=0.5, force=True)
+    err = capsys.readouterr().err
+    assert "CONTENTION WARNING" in err
+    assert "--force" in err
+
+
+def test_read_contention_returns_a_real_plausible_reading():
+    reading = read_contention()
+    assert reading.cpu_count >= 1
+    assert reading.load_avg_1min >= 0.0
+    assert reading.load_per_core_1min == reading.load_avg_1min / reading.cpu_count

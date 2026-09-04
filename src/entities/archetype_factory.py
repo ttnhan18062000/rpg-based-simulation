@@ -47,7 +47,7 @@ class ArchetypeEntityFactory:
         # Metadata carried into properties for traceability
         properties: dict = {
             "archetype_id": contract.archetype_id,
-            "race_id": contract.race_id,
+            "species_id": contract.species_id,
             "faction_id": contract.faction_id,
             "role_id": contract.role_id,
         }
@@ -80,7 +80,7 @@ class ArchetypeEntityFactory:
             for item_id, qty in sorted(contract.inventory_items.items())
         ]
 
-        # Real, per-entity, race/faction-correlated personality -- this path previously left
+        # Real, per-entity, species/faction-correlated personality -- this path previously left
         # every entity at PersonalityComponent()'s own all-zero default, the same class of bug
         # already fixed once for WorldCompiler.compile()'s own path (TCK-20260619-P0-ENTITY-INIT)
         # (TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY). Uses the exact same

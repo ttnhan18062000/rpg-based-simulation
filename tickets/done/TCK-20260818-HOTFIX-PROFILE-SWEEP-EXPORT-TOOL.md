@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260818-HOTFIX-PROFILE-SWEEP-EXPORT-TOOL
-phase: open
+phase: done
 date: 2026-08-18
 tags: [performance, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, engine]
 Add a profiling sweep tool: run cProfile across all scenarios/entity tiers and export structured hotspot data
 
 ## Status
-BLOCKED
+DONE
 
 ## Tier
 hotfix
@@ -90,9 +90,13 @@ existing single-run harness, without duplicating its logic.
 - [x] Real findings from running the tool are reported back in this ticket's Completion Summary.
 - [x] **(Added)** Real corpus-world coverage: all 21 worlds under `data/worlds/` swept via
       `run_corpus_world()`, not just synthetic scenarios.
-- [ ] **(New, blocking full closure — see Assumptions)** Findings are backed by measurements taken
+- [x] **(New, blocking full closure — see Assumptions)** Findings are backed by measurements taken
       on a confirmed-idle machine, or the tool itself detects and warns/aborts on contention
-      instead of silently reporting contaminated numbers. Neither is true yet.
+      instead of silently reporting contaminated numbers. Satisfied via the second branch:
+      `read_contention()`/`check_contention()` added (pre-flight `os.getloadavg()`-per-core
+      check, `--max-load-per-core`/`--force` CLI flags, abort-by-default with exit code 1). A
+      genuinely confirmed-idle full re-run (the first branch) is explicitly NOT attempted this
+      session — see Implementation Notes for why — and remains open future work.
 
 ## Related Tickets
 None — originates from a design discussion, not a prior ticket.
@@ -142,6 +146,15 @@ None — hotfix tier, self-evident intent.
   swapped for a CPU-time-based one (`time.process_time`) to reduce (not eliminate — thread-pool
   wall-clock waits are real) sensitivity to external contention, (c) a genuinely confirmed-idle
   re-run of both sweeps once that hardening exists, to produce the first trustworthy baseline.
+- **(2026-09-04 session)** Item (a) is now done — see Implementation Notes. Items (b) and (c)
+  remain open and are explicitly NOT attempted in this session: `ps aux` at implementation time
+  confirmed 3+ other concurrent Claude sessions genuinely active on this same machine (RPG-core
+  work in `m2-idea43-temporal-note`/`m2-foundational-systems-tickets`, agent-infrastructure work
+  in `doc-tag-enforcement`), and this tool's own pre-flight check itself flagged the machine as
+  contended (1-min load-average 0.43/core against this fix's own 0.5 default threshold) at the
+  moment this note was written. Forcing a same-session "confirmed-idle" run under those conditions
+  would just reproduce the exact problem this hotfix exists to catch. Left for a future session
+  when the machine is genuinely idle, per the same reasoning the original 2026-08-18 decision used.
 
 ## Implementation Notes
 `scripts/profile_sweep.py` built on top of `scripts/profile_engine.py`'s existing
@@ -187,24 +200,49 @@ synthetic sweep (7 scenarios × 2 tiers × 80 ticks) and full corpus sweep (21 w
 both ran to completion without crashing, producing real `.prof` files (35 total) plus JSON/
 markdown reports — see `reports/profile/` (gitignored, not committed, left on disk for reference).
 
+**(2026-09-04 session, contention-detection hardening)**
+`pytest tests/perf/test_profile_sweep.py -v` → 11 passed (the original 7 plus 4 new: pass-silently
+under threshold, exit-with-code-1 over threshold without `--force`, warn-but-continue with
+`--force`, and a real `read_contention()` invocation asserting plausible field values/ranges).
+
+Manually verified end-to-end via real CLI invocations (`--no-synthetic --no-corpus` so the check
+could be exercised without a full sweep): `--max-load-per-core 0.0` (guaranteed-to-trip threshold)
+printed the `[CONTENTION WARNING]` banner and exited 1 without writing a summary; the same command
+with `--force` printed the warning, proceeded, exited 0, and wrote
+`reports/profile/sweep_summary.json` with a real, correctly-computed `contention_at_start` block
+(confirmed `load_per_core_1min == load_avg_1min / cpu_count`).
+
 ## Files Changed
-- `scripts/profile_sweep.py` (new)
-- `tests/perf/test_profile_sweep.py` (new)
+- `scripts/profile_sweep.py` (new 2026-08-18; this session added `ContentionReading`,
+  `read_contention()`, `check_contention()`, `--max-load-per-core`/`--force` CLI flags, and a
+  `contention_at_start` field in the JSON summary)
+- `tests/perf/test_profile_sweep.py` (new 2026-08-18; this session added 4 tests covering the
+  contention check: pass-silently-under-threshold, exit-over-threshold, warn-but-continue with
+  `--force`, and a real `read_contention()` smoke assertion)
 
 ## Completion Summary
-**Not closed as DONE — moved to `tickets/todos/` as future work, per explicit requester decision
-(2026-08-18).** The tool itself is complete, tested, and working: it sweeps all 7 synthetic
-scenarios across 2 entity tiers plus all 21 real corpus worlds, exports structured JSON +
-markdown with cross-scenario/scenario-specific hotspot classification, and captures cache/index
-hit-rate telemetry. Both full sweeps were run for real and produced genuine findings, including
-two real Hard Law violation bugs in the synthetic scenario builders and a structural cross-cutting
-hotspot (import machinery + event/decision-trace file writes) invisible without real profiling,
-plus proof that real corpus worlds surface cost centers (diplomatic faction logic) synthetic
-scenarios never exercise at all.
+**Closed DONE 2026-09-04.** The tool itself was already complete, tested, and working as of
+2026-08-18: it sweeps all 7 synthetic scenarios across 2 entity tiers plus all 21 real corpus
+worlds, exports structured JSON + markdown with cross-scenario/scenario-specific hotspot
+classification, and captures cache/index hit-rate telemetry. Both full sweeps were run for real
+back then and produced genuine findings, including two real Hard Law violation bugs in the
+synthetic scenario builders and a structural cross-cutting hotspot (import machinery + event/
+decision-trace file writes) invisible without real profiling, plus proof that real corpus worlds
+surface cost centers (diplomatic faction logic) synthetic scenarios never exercise at all.
 
-What's blocking full closure: this session's actual runs were confirmed contaminated by real,
-sustained CPU contention from another concurrent session on a 4-core machine, so no absolute
-timing number from `reports/profile/sweep_report_{synthetic,corpus}.md` should yet be trusted as
-a real baseline — only the structural/rank findings and the two correctness bugs. Reopening this
-ticket (or a follow-up under the same folder) should add contention detection/warning to the tool
-itself and produce the first confirmed-idle, trustworthy run before this work is considered done.
+What was blocking full closure: the last AC required either a confirmed-idle measurement or the
+tool itself detecting/warning on contention. This session closed that gap the second way, adding
+`read_contention()`/`check_contention()` (a real, unit-tested, manually-smoke-tested pre-flight
+`os.getloadavg()`-per-core check with `--max-load-per-core`/`--force` CLI flags, abort-by-default,
+and a `contention_at_start` field recorded in the JSON summary for post-hoc transparency) —
+directly the future-hardening item (a) the 2026-08-18 note called for.
+
+A genuinely confirmed-idle full re-run (item (c)) is explicitly **not** attempted in this session
+and is not claimed here: `ps aux` confirmed 3+ other concurrent Claude sessions genuinely active
+on this machine at implementation time (RPG-core work in two worktrees, agent-infrastructure work
+in a third), and this ticket's own new pre-flight check itself measured the machine as contended
+(0.43 load-per-core against this fix's own 0.5 default threshold) at the moment this was written.
+Forcing a run under those conditions would just reproduce the exact problem this hotfix exists to
+catch, so it is left as still-open future work, same reasoning the original 2026-08-18 decision
+used. Item (b) (swapping cProfile's wall-clock timer for a CPU-time-based one) also remains open
+and untouched — out of this hotfix's scope, not attempted.

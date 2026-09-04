@@ -248,7 +248,13 @@ def test_no_frozen_kgmcp_dependency_edited():
         # a legitimate, Architecture-reviewed evolution (response-building now calls
         # knowledge_gateway_packet_assembly.py's new shared response-fragment functions instead
         # of inlining the dict shape a second time), not a frozen dependency.
-        "tools/retrieval_events.py",
+        # tools/retrieval_events.py intentionally removed here too
+        # (TCK-20260904-HOTFIX-KGMCP-FROZEN-FILE-BASELINE-UPDATE): Design Decision D1 (see
+        # test_knowledge_gateway_mcp.py::test_wrapper_functions_genuinely_not_applicable_zero_invoked)
+        # confirms none of this file's 3 wrap_*() functions has any real call site in the live
+        # KGMCP pipeline, so this file was never actually part of what this comparison measures —
+        # edits to it cannot affect baseline-comparison reproducibility, unlike the genuinely
+        # live-pipeline/fixture paths below.
         "tools/agent-monitoring/kgmcp_baseline_corpus.py",
         "tools/agent-monitoring/kgmcp_baseline_runner.py",
         "tests/tools/fixtures/kgmcp_measurement_baseline_corpus_results.json",

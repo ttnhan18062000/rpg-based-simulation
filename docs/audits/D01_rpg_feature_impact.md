@@ -695,7 +695,7 @@ in `CampaignState` via E52B migration artifacts.
 |---|---|---|
 | Trigger Rate | 1 | Load-time / configuration |
 | Entity Reach | 5 | If built, would shape all entity-facing RPG systems |
-| Cascade Width | 5 | Meta-architecture — enables swapping race/combat/economy/time-scale models |
+| Cascade Width | 5 | Meta-architecture — enables swapping species/combat/economy/time-scale models |
 | Emergence Ceiling | 1 | Enables emergence from swappable systems but is not itself emergent |
 | Absence Penalty | 1 | Zero code; nothing depends on it yet |
 | **Total** | **13 / 25** | |

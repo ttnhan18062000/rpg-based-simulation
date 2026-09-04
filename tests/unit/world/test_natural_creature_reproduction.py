@@ -72,7 +72,7 @@ def test_natural_creature_offspring_short_maturation_clock():
         (0.0, 0.0), state=AuthoritativeState(tick=0, seed=1), birth_tick=0,
     )
 
-    short_clock_age = 3000 - CampService.CAMP_SPAWN_INTERVAL
+    short_clock_age = 3456000 - CampService.CAMP_SPAWN_INTERVAL
     assert offspring.lifecycle.age_ticks == short_clock_age
     assert offspring.identity.life_stage == LifeStage.CHILD
 

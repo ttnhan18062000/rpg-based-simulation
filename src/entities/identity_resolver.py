@@ -36,7 +36,7 @@ class ResolvedEntityIdentity(BaseModel):
     Resolved identity for a runtime entity, regardless of construction path.
 
     source indicates which path succeeded:
-    - clean_metadata: explicit archetype/race/faction/role strings in identity.properties
+    - clean_metadata: explicit archetype/species/faction/role strings in identity.properties
     - runtime_identity_extension: runtime-set identity strings in a secondary properties key
     - compatibility_projection: legacy int enum projected to string ID via compat map
     - legacy_enum: raw legacy enum name used as string ID (lowest confidence)
@@ -46,7 +46,7 @@ class ResolvedEntityIdentity(BaseModel):
 
     entity_id: int
     archetype_id: Optional[str] = None
-    race_id: Optional[str] = None
+    species_id: Optional[str] = None
     faction_id: str
     role_id: str
     profession_id: Optional[str] = None
@@ -89,7 +89,7 @@ class EntityIdentityResolver:
             return ResolvedEntityIdentity(
                 entity_id=entity.id,
                 archetype_id=props.get("archetype_id"),
-                race_id=props.get("race_id"),
+                species_id=props.get("species_id"),
                 faction_id=faction_id,
                 role_id=role_id or "unresolved",
                 profession_id=props.get("profession_id"),
@@ -105,7 +105,7 @@ class EntityIdentityResolver:
             return ResolvedEntityIdentity(
                 entity_id=entity.id,
                 archetype_id=props.get("archetype_id"),
-                race_id=props.get("race_id"),
+                species_id=props.get("species_id"),
                 faction_id=rt_faction,
                 role_id=rt_role,
                 profession_id=props.get("profession_id"),
