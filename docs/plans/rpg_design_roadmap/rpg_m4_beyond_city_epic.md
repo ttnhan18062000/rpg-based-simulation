@@ -54,28 +54,107 @@ tickets.
    not during. 45/46's Camp features (totem, stockpile, palisade) reuse real, already-tuned constants
    (`RAID_MATURITY_THRESHOLD`, spawn cap, raid cost) for the mechanism but still need new, unanchored
    magnitudes for the features themselves — see Content & Balance Requirements in the atlas.
-   **World-generation note (M8):** idea 45's "seed CampState" framing understates the real gap —
-   `CampState` is never constructed in production anywhere, and there's no schema field or compiler step
-   for it at all. This ticket needs a new `WorldModuleSpec` field plus a new `WorldCompiler` step, not a
-   data-seed call into an existing pattern. Read `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md` before
-   scoping. Good news from the same epic: 3 of the 6 real test-corpus profiles already have City+hostile-camp
-   content coexisting, so testing this needs zero new corpus authoring once the mechanism exists.
+   **Status update, 2026-09-04:** the classification-and-CampService half of this item has shipped as
+   `TCK-20260904-CAMP-NEST-CLASSIFICATION` — the goblin `social_humanoid` contradiction is resolved
+   (the real discriminator is `drive_profile == "opportunistic_raider"`, not `social_humanoid`) and all
+   5 previously-unclassified races got an explicit disposition (wolf/spider/troll/slime → Nest;
+   undead/spirit → Excluded/no-fit; dragonkin → Excluded/Lair-adjacent), documented in
+   `docs/mechanics/05_world_evolution.md` §6. `CampService` gained a flag-gated (`ENABLE_CAMP_NEST_SPREAD`,
+   default OFF) Nest-spread fork reusing the raid branch's timing/cost, plus provisional
+   (unpopulated-by-production-code) `totem_tier`/`stockpile`/`palisade_integrity` typed fields on
+   `CampState`/`CampUpdate`. The world-generation gap below remains fully open — that ticket explicitly
+   did not construct or seed any `CampState`, and feature magnitudes/accrual logic for
+   totem/stockpile/palisade are still undefined, left to a follow-on ticket
+   (`TCK-20260904-CAMPSTATE-PLACE-BRIDGE` covers the world-gen wiring half).
+   **World-generation note (M8) — closed, 2026-09-04, by `TCK-20260904-CAMPSTATE-PLACE-BRIDGE`.**
+   The original note below ("`CampState` is never constructed in production anywhere... needs a new
+   `WorldModuleSpec` field plus a new `WorldCompiler` step") is now stale — idea 66's `Place` hierarchy
+   already gave `WorldCompiler.compile()` a generic insertion point for `kind=CAMP`/`kind=NEST`
+   `PlaceState` construction, and the bridge ticket closed the remaining gap with only a narrow, additive
+   change: an optional `creature_kind: Optional[str]` field on `PlaceRecipeSpec`/`PlaceSpec` (CAMP/NEST-
+   scoped, `None` by default) plus a branch inside the *existing* Place-construction loop that builds a
+   companion `CampState`, keyed by the same `place_id`, when that field is set. No new `WorldModuleSpec`
+   field and no new `WorldCompiler` step were needed. The bridge is opt-in and inert for all content on
+   disk today (including `hero_guild_routing`'s `goblin_camp_place`) — migrating real content to set
+   `creature_kind` remains a separate, deliberately-deferred future step. See
+   `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md` item 2 (updated in the same
+   ticket) for the as-built framing. Good news from the same epic: 3 of the 6 real test-corpus profiles
+   already have City+hostile-camp content coexisting, so testing this needs zero new corpus authoring
+   once real content opts in.
 2. **Idea 47 — Lair.** Confirmed a genuinely separate ticket, correctly NOT a Camp variant — but its real
    precedent is Boss's entity-anchor idempotency pattern (`boss_region_id`), not Camp's shape, a correction
    from the original card. **Depth-audit note:** boss-spawn logic itself has zero dedicated test files
    ("boss" appears in none of them) — this ticket is extending an untested precedent, budget test-writing
    for the base mechanism, not just the extension.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-LAIR-ENTITY-ANCHOR`. `BossService` gained a new
+   `check_for_lair_spawn` method (`src/world/boss.py`), a direct sibling of `check_for_boss_spawn`,
+   generalizing the same entity-property idempotency pattern from per-`region_id` keying
+   (`boss_region_id`) to per-`place_id` keying (`identity.properties["lair_place_id"]`), so multiple
+   LAIR-kind Places in one Region each get an independent spawn slot. **Option A chosen:**
+   `PlaceState.occupant_entity_id` stays write-never — the lock lives entirely on the occupant entity's
+   properties, not on the Place, so no new `PlaceUpdate`/apply-path plumbing was added. Wired into
+   `WorldDynamicsSystem.resolve_dynamics` reusing the existing `cadence.boss_spawn` gate and
+   `state.maturity`/`region.trauma_score` thresholds unchanged — no new cadence or trigger condition.
+   Occupants spawn with `kind="dragonkin"`, which required extending
+   `src/observability/event_extractor.py`'s `spawn_cadence_fired` exclusion tuple and `_BOSS_KINDS`
+   frozenset (rollback-path lists only) so Lair spawns are correctly excluded from cadence-spawn
+   misclassification and emit `boss_spawned`. The depth-audit note above is now partially addressed:
+   `test_world_dynamics.py` gained 4 new Lair-spawn tests (fill/idempotency/multi-Place/no-dissolution)
+   alongside the original boss idempotency test, though `check_for_boss_spawn` itself still has no
+   dedicated test file of its own. Content is a synthetic fixture only
+   (`test_lair_kind_place_compiles_via_worldcompiler`) — no real corpus world has LAIR-kind content yet,
+   matching the CAMPSTATE-PLACE-BRIDGE precedent's own deferred-content discipline. Lair
+   dissolution/transformation on occupant death (idea 48, place-type transitions) remains explicitly
+   deferred and un-ticketed, guarded by a new negative test proving this ticket's code never mutates
+   `PlaceState.kind`/`prior_kind`/`transformed_tick`.
 3. **Idea 61 — Settlements Develop Personalities.** Re-scoped by a real correction: its original cited
    precedent (idea 48) was wrong; the actual live match is Culture Drift's `CultureDeriver`/
    `CulturalBiasApplicator`. **Not blocked** (correction, 2026-09-02, see the Problem section above) — the
    substrate is real, live, and tested; this idea needs to be scoped as a read-side consumer of
    `region_cultures`, with the Campaign-mode-reachability question (does any real corpus world actually run
    multi-episode?) answered before treating it as trivially unblocked in practice.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-SETTLEMENT-CULTURE-READ`. The
+   Campaign-mode-reachability question is answered: no corpus world runs multi-episode Campaign mode
+   today. Scoped the read-side consumer to Region granularity (`RegionState.id`/`.name` —
+   `PlaceState` still has no name/identity field): a new pure `SettlementPersonalityService.describe()`
+   (`src/domains/culture/settlement_personality.py`, reuses `CulturalBiasApplicator.compute_culture_delta`
+   unchanged), a new read-only `CampaignOrchestrator.describe_settlement_personality(region_id)` method,
+   and a new `GET /api/v1/campaigns/{campaign_id}/regions/{region_id}/personality` REST endpoint with a
+   shaped Pydantic presenter. The deeper reachability blocker this correction named —
+   `CampaignOrchestrator._build_initial_state()` never carrying Region/Place data into per-episode
+   `AuthoritativeState` — is real, confirmed independent of idea 66, and tracked by a new ticket,
+   `TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY`, filed rather than fixed inline.
 4. **Ideas 49 + 50 — Ambition/expansion, small shared helper only.** Both gate on "does this entity
    possess/consume material X" — worth one shared predicate, not a ticket merge. Idea 49 also carries a
    real naming-collision footgun: two unrelated classes both named `RecipeRegistry`.
 5. **Ideas 51 + 52 — consolidated into one ticket.** Idea 52 confirmed pure wiring on top of idea 51's
    EXPAND directive, not a separate mechanism.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-FACTION-EXPAND-DIRECTIVE`. Added
+   `EXPAND_TERRITORY` as a 4th `FactionDirective` kind (`src/engine/faction_decision.py`), gated on
+   mean `compute_regional_scarcity()` > `0.7` over a faction's `fs.territory` (population density
+   from `compute_population_density()` folds into `priority` scaling only, never the gate — it has
+   no existing gate precedent elsewhere in the codebase). Target resolution is deliberately narrow:
+   the lowest-id faction-less region only (`RegionState.owner_faction_id is None`, sorted for
+   determinism) — explicitly not Camp/Nest-as-conquest-target and not idea 35's City-ownership
+   (still design-only, no implementation ticket exists yet). The directive threads same-tick through
+   `WorldDynamicsSystem.resolve_dynamics()` into `CampService.process_camps()` (both gained a new
+   trailing-optional `faction_directives` param, verified backward-compatible against all 33 real
+   call sites), where a matching directive additively boosts a camp's maturity growth by
+   `EXPAND_TERRITORY_MATURITY_BOOST` (`1.0`). This consumption path is real and unit-tested but
+   currently has zero observable effect in any real compiled world — `state.camps` is `{}`
+   everywhere since no world content sets `creature_kind` yet, the same content-authoring gap
+   `TCK-20260904-CAMPSTATE-PLACE-BRIDGE` already disclosed for item 1 above. The material-possession
+   predicate (item 4's shared helper) was deliberately not consulted — population-pressure alone is
+   the hard gate, per this ticket's own investigation. This closes the 6th and final ticket in the
+   `m4-place-material-expansion` batch; real, disclosed follow-up work remains open and not yet
+   ticketed — a `CampService` content-authoring bridge for Camp/Nest, a recipe-catalog namespace
+   bridge for item 4's `RecipeRegistry` naming collision, and roughly 44 stale parity test-path
+   citations surfaced across this batch — plus one already-filed ticket,
+   `TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY` (from item 3 above). This is the 5th of 8 scope items
+   above to get a "Status update" (items 1-5 now all shipped at least one ticket; item 1's world-
+   generation content-authoring half remains explicitly open per its own note) — items 6 (Clan
+   lifecycle), 7 (The Empty Chair), and 8 (Information hubs) remain fully unticketed. This epic is
+   not complete.
 6. **Idea 40 — Clan lifecycle.** Real correction found in Phase Placement: `party_lifecycle.py`'s SOC-228
    doesn't fire on death as originally assumed — which would have silently killed cross-generational Clans
    if built as first scoped. **Depth-audit note:** the Party Formation & Lifecycle precedent this idea (and

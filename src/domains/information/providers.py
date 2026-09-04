@@ -50,12 +50,18 @@ class InformationProviderState:
                            (e.g. "material_source", "recipe_definition").
         knowledge_age:    Ticks since the provider's knowledge was last refreshed.
                           0 = freshly updated.
+        knowledge_accumulated: Cumulative count of distinct knowledge-report events this
+                          provider has received (e.g. a quest they assigned being reported
+                          back). Monotonically non-decreasing. Distinct from
+                          reliability_score (trustworthiness) and knowledge_age (freshness)
+                          — see Anti-Drift Notes in TCK-20260903-INFORMATION-HUB-ACCUMULATION.
     """
     entity_id: int
     archetype: InformationProviderArchetype
     reliability_score: float = 1.0
     knowledge_domains: Tuple[str, ...] = ()
     knowledge_age: int = 0
+    knowledge_accumulated: int = 0
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         """
@@ -71,4 +77,5 @@ class InformationProviderState:
             "reliability_score": self.reliability_score,
             "knowledge_domains": list(self.knowledge_domains),
             "knowledge_age": self.knowledge_age,
+            "knowledge_accumulated": self.knowledge_accumulated,
         }

@@ -19,7 +19,11 @@ accumulated narrative history. Over long campaigns, regional cultures develop di
 values driven by their history of calamities, hero deaths, resource crises, and wars.
 
 Cultural state persists across episodes in `CampaignState.region_cultures` and
-produces measurable differences in entity motivation scoring (per-region, transient).
+produces measurable differences in entity motivation scoring (per-region, transient) —
+true today in test coverage (`test_two_regions_diverge_after_5_episodes`), and, as of
+`TCK-20260904-SETTLEMENT-CULTURE-READ`, also true via a real read-side production consumer
+(see Integration Points). It is not yet true via any per-tick in-episode entity-decision
+path: `MotivationBiasService.compute_bias_multiplier()` remains uncalled in production.
 
 ---
 
@@ -153,6 +157,12 @@ Test: `tests/integration/culture/test_culture_drift_acceptance.py`
 | `CulturalBiasApplicator` | `src/domains/culture/applicator.py` | CultureState → motivation delta |
 | `MotivationBiasService` | `src/domains/motivation/service.py` | Extended with culture_values param |
 | `CampaignState.region_cultures` | `src/domains/campaigns/state.py` | Cross-episode persistence |
+| `SettlementPersonalityService` | `src/domains/culture/settlement_personality.py` | CultureState → named settlement-personality descriptor (idea 61, `TCK-20260904-SETTLEMENT-CULTURE-READ`) |
+| `CampaignOrchestrator.describe_settlement_personality()` | `src/domains/campaigns/orchestrator.py` | Orchestrator-layer read: composes `CultureDriftImporter.get_culture()` + `SettlementPersonalityService` |
+| `GET /api/v1/campaigns/{id}/regions/{id}/personality` | `src/api/routes/campaigns.py` | REST read (first non-Campaign-mode-episode-machinery consumer of `region_cultures`) |
+
+Prior to `TCK-20260904-SETTLEMENT-CULTURE-READ`, this contract's Integration Points table stopped at
+`CultureDriftImporter` with no listed caller — the three rows above close that gap.
 
 ---
 

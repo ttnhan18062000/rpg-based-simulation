@@ -3,6 +3,7 @@ import pytest
 import asyncio
 import json
 import subprocess
+import sys
 import time
 import websockets
 import msgpack
@@ -16,7 +17,7 @@ _TEST_KEY_HASH = hashlib.sha256(_TEST_RAW_KEY.encode("utf-8")).hexdigest()
 async def test_ws_json_handshake():
     """Verify WebSocket handshake and streaming in JSON mode."""
     port = 8004
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
     time.sleep(3)
@@ -47,7 +48,7 @@ async def test_ws_json_handshake():
 async def test_ws_msgpack_handshake():
     """Verify WebSocket handshake and streaming in MessagePack mode."""
     port = 8005
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
     time.sleep(3)
@@ -74,7 +75,7 @@ async def test_ws_msgpack_delta_payload_shape():
     """Verify the per-tick entity-delta broadcast round-trips over msgpack with the expected
     changed/removed/tick/snapshot_as_of_tick shape (TCK-20260821-WS-ENTITY-DELTA-BROADCAST)."""
     port = 8006
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
     time.sleep(3)
@@ -116,7 +117,7 @@ async def test_ws_delta_envelope_includes_null_spatial_placeholder_field():
     """Verify the per-tick entity-delta broadcast carries the reserved, always-null region_id
     placeholder over the json format too (TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD)."""
     port = 8007
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
     time.sleep(3)
@@ -149,7 +150,7 @@ async def test_ws_delta_envelope_new_field_does_not_change_existing_field_semant
     """Verify the new region_id placeholder is purely additive -- tick/changed/removed/events/
     snapshot_as_of_tick keep their pre-existing types and values (TCK-20260821-DELTA-ENVELOPE-SPATIAL-FIELD)."""
     port = 8008
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
     time.sleep(3)

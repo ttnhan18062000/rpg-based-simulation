@@ -1,6 +1,7 @@
 # Compliance IDs: WORLD-030, WORLD-031
 # src/world/camp.py
 from __future__ import annotations
+from dataclasses import replace
 from typing import TYPE_CHECKING, Dict, List
 from src.core.updates import StateUpdate, CampUpdate, WorldUpdate
 from src.core.enums import Domain, EntityRole
@@ -13,13 +14,15 @@ class CampService:
     """
     Manages persistent world encampments, their maturity, and associated spawns.
     """
-    
+
     MATURITY_PER_TICK = 0.05
     RAID_MATURITY_THRESHOLD = 80.0
     CAMP_SPAWN_INTERVAL = 30
-    
+    NEST_RACE_KINDS = frozenset({"wolf", "spider", "troll", "slime"})
+    EXPAND_TERRITORY_MATURITY_BOOST = 1.0
+
     @staticmethod
-    def process_camps(state: AuthoritativeState, generator: EntityGenerator) -> StateUpdate:
+    def process_camps(state: AuthoritativeState, generator: EntityGenerator, faction_directives: list | None = None) -> StateUpdate:
         """
         Evolve camps and spawn monsters or raids.
         """
@@ -42,7 +45,19 @@ class CampService:
                 m_delta *= 1.5
                 
             camp_updates[c_id] = CampUpdate(id=c_id, maturity_delta=m_delta)
-            
+
+            # 1b. Faction EXPAND_TERRITORY consumption: a matching directive boosts maturity growth.
+            if faction_directives and region is not None:
+                from src.engine.faction_constants import EXPAND_TERRITORY
+                for directive in faction_directives:
+                    if getattr(directive, "directive_kind", None) == EXPAND_TERRITORY and directive.target_region == region.id:
+                        existing = camp_updates[c_id]
+                        camp_updates[c_id] = replace(
+                            existing,
+                            maturity_delta=existing.maturity_delta + CampService.EXPAND_TERRITORY_MATURITY_BOOST,
+                        )
+                        break
+
             # 2. Camp-based Spawning
             if state.tick % CampService.CAMP_SPAWN_INTERVAL == 0:
                 # Count monsters near camp
@@ -62,26 +77,45 @@ class CampService:
                     )
                     entities_add.append(mob)
             
-            # 3. Raid Trigger
+            # 3. Raid Trigger (or Nest Spread, for Nest-classified camps with the flag ON)
             if camp.maturity >= CampService.RAID_MATURITY_THRESHOLD:
                 # Check if enough time has passed since last raid
                 if state.tick - camp.last_raid_tick >= 500: # 5 days
-                    # Trigger a raid from this camp!
-                    from src.world.raid import RaidService
-                    # For now, we reuse RaidService logic but anchored here
-                    raid_update = RaidService.check_for_raid(state, generator)
-                    # Adjust positions to camp
-                    for mob in raid_update.entities_add:
-                        # We can't easily mutate the update list, so we just add them
-                        # but in a real system we'd pass the origin.
-                        # For now, let's just mark the last_raid_tick.
-                        pass
-                    
-                    camp_updates[c_id] = CampUpdate(
-                        id=c_id,
-                        maturity_delta=-20.0, # Cost of raiding
-                        last_raid_tick_set=state.tick
+                    is_nest_spread = (
+                        flags.get("ENABLE_CAMP_NEST_SPREAD", "OFF") == "ON"
+                        and camp.kind in CampService.NEST_RACE_KINDS
                     )
+                    if is_nest_spread:
+                        offspring = generator.spawn_natural_creature_offspring(
+                            camp.position,
+                            state=state,
+                            kind=camp.kind,
+                            difficulty_tier=int(camp.maturity / 20.0) + 1,
+                            birth_tick=state.tick,
+                        )
+                        entities_add.append(offspring)
+                        camp_updates[c_id] = CampUpdate(
+                            id=c_id,
+                            maturity_delta=-20.0,  # same cost as raiding, per ticket's "reuses timing" requirement
+                            last_raid_tick_set=state.tick
+                        )
+                    else:
+                        # Trigger a raid from this camp!
+                        from src.world.raid import RaidService
+                        # For now, we reuse RaidService logic but anchored here
+                        raid_update = RaidService.check_for_raid(state, generator)
+                        # Adjust positions to camp
+                        for mob in raid_update.entities_add:
+                            # We can't easily mutate the update list, so we just add them
+                            # but in a real system we'd pass the origin.
+                            # For now, let's just mark the last_raid_tick.
+                            pass
+
+                        camp_updates[c_id] = CampUpdate(
+                            id=c_id,
+                            maturity_delta=-20.0, # Cost of raiding
+                            last_raid_tick_set=state.tick
+                        )
 
             # 4. Natural-Creature Reproduction
             if flags.get("ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH", "OFF") == "ON":

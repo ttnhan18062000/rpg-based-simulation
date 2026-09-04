@@ -1,8 +1,8 @@
 # Compliance IDs: PERF-014, PERF-015
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, NavigationComponent, CombatComponent, BiologicalComponent, LifecycleComponent, StaminaComponent, StrategicComponent
-from src.core.updates import StateUpdate, EntityUpdate, NavigationUpdate
+from src.core.state import AuthoritativeState, EntityState, NavigationComponent, CombatComponent, BiologicalComponent, LifecycleComponent, StaminaComponent, StrategicComponent, CampState
+from src.core.updates import StateUpdate, EntityUpdate, NavigationUpdate, CampUpdate
 from src.core.movement_modes import MovementMode
 from src.engine.cadence import SystemCadence
 from src.engine.apply_plan import ApplyPlanBuilder, ApplyPlan, CacheInvalidationHints
@@ -69,3 +69,22 @@ def test_apply_plan_builder_noop():
     
     # Entity 1 should NOT be replaced
     assert 1 not in plan.entities_to_replace
+
+def test_apply_plan_builder_camp_totem_stockpile_palisade():
+    state = AuthoritativeState(
+        tick=100, seed=42, world_time=1000,
+        camps={"camp_1": CampState(id="camp_1", kind="wolf", position=(50, 50))},
+    )
+    upd = StateUpdate(camp_updates={
+        "camp_1": CampUpdate(
+            id="camp_1", totem_tier_set=3, stockpile_delta=12.0, palisade_integrity_set=60.0,
+        )
+    })
+    cadence = SystemCadence(biological=1000, lifecycle=1000)
+
+    plan = ApplyPlanBuilder.build_plan(state, upd, next_tick=101, cadence=cadence, passive=True, compute_entity_changes_fn=ApplyPath._compute_entity_changes)
+
+    camp = plan.world_collection_changes["camps"]["camp_1"]
+    assert camp.totem_tier == 3
+    assert camp.stockpile == 12.0
+    assert camp.palisade_integrity == 60.0

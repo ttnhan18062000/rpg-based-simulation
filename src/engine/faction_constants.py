@@ -8,3 +8,4 @@ Extracted here so scoring.py can import without touching faction_decision.py.
 DEFEND_BORDER = "DEFEND_BORDER"
 TRADE_ROUTE = "TRADE_ROUTE"
 COMMISSION_QUEST = "COMMISSION_QUEST"
+EXPAND_TERRITORY = "EXPAND_TERRITORY"

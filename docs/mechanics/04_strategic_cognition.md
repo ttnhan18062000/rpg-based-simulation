@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-09-02
+last_verified: 2026-09-03
 ---
 
 # Chapter 4: Strategic Cognition
@@ -1112,4 +1112,177 @@ here is a bounded single-tick synthetic batch, not a long-run corpus claim.
 `src/platform/rng.py` (`DeterministicRNG.weighted_choice`); `src/core/enums.py`
 (`Domain.STRATEGIC`); `src/core/updates.py` (`IdentityUpdate.role_set`)
 (TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE, 2026-09-02)
+
+---
+
+## 10. Clan Lifecycle Law (idea 40/M4, SOC-264)
+
+`ClanState` is wired into the authoritative mutation pipeline for the first time. Clan joining
+follows the same propose/accept `ContractKind`/`SocialAppraisalSystem` pattern §8 Marriage
+Proposal Law already documents; leaving and succession are unconditional service-level lifecycle
+transitions, never scoring functions and never a new tier-5 project kind.
+
+**Gate.** `ContractKind.CLAN` routes through `SocialAppraisalSystem.appraise_contract()`'s shared
+trust prelude exactly like every other contract kind, with no Clan-specific threshold: hard-cancel
+to `CANCELLED`/`TOTAL_DISTRUST` when `trust_score < 0.2` or `bond.sentiment < -0.8`; hard-cancel to
+`CANCELLED`/`BETRAYAL_HISTORY` when `betrayal_count > 0 and trust_score < 0.4`. Once the prelude
+passes, `_appraise_clan()` always accepts (`ACCEPTED`, `ReasonCode.CLAN_JOIN_ACCEPTED`) -- the
+prelude alone is the entire gate, with no additional utility/risk model and no `tension_level`
+interaction of any kind.
+
+**Direction.** `CoreActions.execute_join_clan()` (`src/engine/domain/core_actions.py`) builds a
+transient (non-persisted) `ContractState(kind=ContractKind.CLAN, source_id=joiner,
+target_id=clan.leader_entity_id, status=OFFERED)` and calls
+`appraise_contract(leader, temp_contract, context)` -- **the Clan's leader appraises the joining
+entity**, the same "target appraises source" direction `execute_propose_marriage` already uses.
+Leaving (`execute_leave_clan()`) has no appraisal gate at all -- it is unconditional.
+
+**Durable record.** Unlike Marriage's per-entity `EntityUpdate.strategic` record, joining and
+leaving write a `ClanUpdate` into `StateUpdate.clan_updates` (registry-keyed by `clan_id`,
+mirroring `FactionUpdate`/`StateUpdate.faction_updates`). Because `ActionRouter.execute_action` is
+contractually locked to `Dict[int, EntityUpdate]`, `execute_join_clan`/`execute_leave_clan` cannot
+themselves emit a `ClanUpdate` -- they only decide ACCEPTED/CANCELLED and signal the outcome via
+the ordinary `task.payload_set` annotation every action already relies on
+(`ActionRoutingPhase.route()`). A second, dedicated pipeline phase, `ClanLifecyclePhase`
+(`src/engine/pipeline_phases/clan_lifecycle.py`, run immediately after the existing `groups`
+phase), reads that SUCCESS/FAILURE outcome and performs the actual `ClanUpdate` write. This
+two-phase split -- action handler decides, phase commits -- is a deliberate design, not
+incidental.
+
+**Succession.** `ClanLifecycleService.process_succession()` (`src/systems/social_systems/
+clan_lifecycle.py`) promotes the highest-sociability surviving member to `leader_entity_id`
+immediately whenever the leader is dead/inactive/`None`, with **no 0.2 sociability-margin gate**
+-- explicitly contrasted with Group's `PartyLifecycleService.check_leadership()` (SOC-228), which
+only re-elects a *living* leader's replacement when the challenger's sociability exceeds the
+current leader's by >= 0.2. Clan succession promotes on death alone; there is no "current"
+sociability to beat once the leader is gone. Leader liveness uses the same same-tick-effective-
+state pattern `GroupSystem.update_groups()`'s `is_alive`/`is_active` helpers use (reading the
+current tick's `StateUpdate.entity_updates` before falling back to the frozen start-of-tick
+`EntityState`), re-implemented locally in `ClanLifecycleService` rather than imported from
+`groups.py`, to avoid coupling Clan lifecycle to Group lifecycle. Tiebreak: lowest entity id,
+the same numeric convention `PartyLifecycleService.check_leadership()` uses (reused as a rule, not
+via shared code).
+
+**Dissolution.** `ClanLifecycleService.process_dissolution()` sets `dissolved_tick` only when
+`member_entity_ids` **and** `asset_ids` are **both** empty simultaneously -- either alone does not
+dissolve the Clan. This is a deliberate divergence from Group's `GroupSystem.update_groups()`,
+which dissolves unconditionally the moment its leader dies/deactivates (SOC-176/SOC-189); Group's
+dissolution path is untouched by this ticket and does not apply to Clan. `process_dissolution`
+reads the start-of-tick `state.clans` snapshot, so a Clan whose last member leaves this same tick
+dissolves on the *following* tick's pass -- the same one-tick lag `FactionAwarenessService`
+already documents ("one-tick lag is inherent (state frozen)"), not a new pattern.
+
+`ClanState.asset_ids: Tuple[int, ...] = ()` is the field this dissolution check reads for the
+asset/institutional-footprint half of the gate. **It is currently always empty in every real run
+-- no producer or consumer of this field exists anywhere in the codebase.** Nothing in this
+ticket's scope grants, spends, or otherwise populates `asset_ids`; it is populated only by direct
+`ClanState(...)` construction in tests. Because of this, the "zero assets" half of the AND-gate is
+**inert** in practice today: `asset_ids` is always `()`, so `process_dissolution` currently
+reduces to a members-only check for every Clan a real simulation run can produce. This is not a
+bug and not silently load-bearing -- it is the intentional minimum schema slot the AC requires,
+with the real asset-granting mechanic explicitly deferred to a future ticket (see Out of scope
+below). A future reader must not mistake `asset_ids` for a currently dual-gated, load-bearing
+condition; today it is dead weight the gate carries for forward compatibility only.
+
+**Out of scope (deliberate).** Idea 68 (Inter-Clan Relations) -- `ClanState.tension_level` is
+read/written by nothing in this ticket, and no diplomacy/alliance/war-adjacent field or logic is
+added. No asset-granting/consuming mechanic -- `asset_ids` is read-only in this ticket's
+dissolution check (see above); a future ticket owns whatever mechanic actually grants or spends
+Clan assets. No Clan founding/creation logic -- Clans are pre-existing; tests construct
+`ClanState` directly for fixtures, the same way `FactionState` tests do. No personal
+inheritance/heir assignment -- Clan leadership succession (`leader_entity_id`) is unrelated
+durable state from `TCK-20260824-DEFAULT-HEIR-ASSIGNMENT`'s heir field; the two "succession"
+concepts must not be conflated.
+
+**Source:** `src/core/state.py` (`ClanState.asset_ids`, `AuthoritativeState.clans`);
+`src/core/updates.py` (`ClanUpdate`, `StateUpdate.clan_updates`); `src/engine/apply.py`
+(clan-merge block); `src/core/strategic.py` (`ContractKind.CLAN`); `src/core/enums.py`
+(`ReasonCode.CLAN_JOIN_ACCEPTED`/`CLAN_JOIN_DECLINED`); `src/systems/social_systems/appraisal.py`
+(`SocialAppraisalSystem._appraise_clan()`, `appraise_contract()`'s `CLAN` dispatch branch);
+`src/systems/social_systems/clan_lifecycle.py` (`ClanLifecycleService`);
+`src/engine/pipeline_phases/clan_lifecycle.py` (`ClanLifecyclePhase`);
+`src/engine/domain/core_actions.py` (`execute_join_clan`/`execute_leave_clan`);
+`src/engine/domain/action_router.py` (`"JOIN_CLAN"`/`"LEAVE_CLAN"` branches); `src/engine/
+pipeline.py` (`clan_lifecycle` phase, run after `groups`); `src/observability/events.py`
+(`ClanMemberLeftEvent`, `ClanSuccessionEvent`) (TCK-20260903-CLAN-LIFECYCLE-SUCCESSION, SOC-264,
+2026-09-03)
+
+## 11. Information Hub Knowledge Accumulation & Propagation Law (idea 41, M4)
+
+`InformationProviderState` gains a real knowledge-accumulation mechanism, and a second,
+independent mechanism propagates "critical" `WorldEvent`s City-to-City and City-to-Country using
+`FactionState`'s existing `territory`/`diplomatic_relations` topology. Both are gated behind one
+new flag, `ENABLE_INFORMATION_HUB_ACCUMULATION` (default OFF, DEV-002).
+
+**Apply-path fix (prerequisite).** `ApplyPath.apply_generation`'s `AuthoritativeState(...)`
+constructor call never carried `information_providers` forward -- unlike the adjacent
+`factions=new_factions`/`clans=new_clans` pattern, no `information_providers=` keyword was passed
+at all. Because `AuthoritativeState.information_providers` defaults to an empty dict, this silently
+reset the durable provider registry to `{}` on every single tick apply, discarding both
+`prior_state.information_providers` and any `StateUpdate.information_providers_update` regardless
+of writer. This broke the already-shipped `STRAT-230` `LeadContradictionSystem` reliability
+decrement too -- that mechanism's own `enforce()` logic was always correct, but its output never
+survived a tick boundary in any real run; it was only ever observed by tests calling `enforce()`
+directly. `src/engine/apply.py` now carries `information_providers` forward via the same
+carry-forward-and-merge pattern as `factions`/`clans`. This is a wiring fix, not a change to
+`LeadContradictionSystem`'s own decrement logic, `_RELIABILITY_PENALTY`, or `_RELIABILITY_FLOOR`.
+
+**Accumulation.** `InformationProviderState` gains `knowledge_accumulated: int = 0` -- a
+monotonically non-decreasing counter, distinct from `reliability_score` (trustworthiness) and
+`knowledge_age` (freshness). `InformationAccumulationService.record_quest_reported_back()`
+(`src/domains/information/accumulation.py`) is decision-only: given a provider, it returns a
+replacement with `knowledge_accumulated + 1` and `knowledge_age` reset to `0`. The trigger is
+hooked into `QuestResolutionSystem.enforce()`'s existing `is_newly_completed` branch
+(`src/engine/quests.py`), directly beside the pre-existing ESCORT-kind reputation side effect --
+when `ENABLE_INFORMATION_HUB_ACCUMULATION` is `"ON"` and the completed quest's
+`QuestState.source_entity_id` resolves to a registered provider, that provider's counter
+increments via `StateUpdate.information_providers_update`. Gated on `is_newly_completed` only (not
+`is_retry_pending`), so a reward-delivery retry across ticks cannot double-increment.
+
+`QuestState.source_entity_id` is an existing field this mechanism *reads*, not one this ticket
+*populates* -- `GuildAction.visit()` (`src/town/guild.py`) never sets it (`source_entity_id=None`
+on the Guild path), so the accumulation trigger is structurally inert in every real corpus run
+today even with the flag ON. It is proven correct via direct unit-level construction of a
+`QuestState`+`InformationProviderState` pair driven through the full `apply_generation` path, not
+via corpus reachability. Building the Guild-to-provider attribution/seeding pipeline that would
+make this live is explicitly out of this ticket's scope (a disclosed gap, not a silent narrowing).
+
+**Propagation.** `InformationPropagationService` (`src/engine/faction_decision.py`, beside
+`FactionAwarenessService`) reads `state.recent_world_events` -- the same bounded, one-tick-lagged
+window `FactionAwarenessService.compute_tension_updates()` reads -- and, for every event with
+`severity >= 0.8` (`_CRITICAL_SEVERITY_THRESHOLD`, this ticket's own reasoned "critical" anchor,
+chosen over the disjoint `SimulationEvent.severity` vocabulary because propagation walks
+`WorldEvent`s specifically) whose `region_id` sits inside a faction's `territory`:
+
+- **City-to-City:** emits a new `WorldEvent(category=CRITICAL_INFORMATION_PROPAGATED)` at every
+  *other* region in that same faction's `territory`.
+- **City-to-Country:** emits the same event at every region in another faction's `territory`, but
+  **only** when `diplomatic_relations.get(other_id, DiplomaticState.NEUTRAL) == ALLIED`. NEUTRAL is
+  deliberately excluded -- `diplomatic_relations.get(...)` defaults an *absent* relation entry to
+  `NEUTRAL`, so an unrelated faction with no explicit relation to the source would incorrectly
+  receive the propagation if NEUTRAL were also a propagate-gate.
+
+`InformationPropagationService` never mutates `FactionState` -- it emits only new `WorldEvent`s via
+`StateUpdate.world_events_add` (an append-only list field with multiple existing same-tick
+writers), never a `FactionUpdate`. No new `FactionState` field was added; an architecture-guard
+test (`tests/architecture/test_information_hub_accumulation_guards.py`) pins `FactionState`'s field
+set to prove this. The phase runs in `AuthoritativeApplyPipeline.refine()` immediately after
+`faction_awareness`, gated by `ENABLE_INFORMATION_HUB_ACCUMULATION` via the standard
+`run_phase(..., feature_flag=...)` form.
+
+**Guide-to-Guide / hub-to-hub exchange (AC #5) -- scoped out entirely.** No
+`Conversation`/entity-dialogue class exists anywhere in `src/`, and this ticket does not introduce
+one, nor a state-level stand-in for one. An architecture-guard test enforces the zero-count
+directly. Any future direct-exchange-between-providers mechanic is unbuilt and unscoped by this
+ticket.
+
+**Source:** `src/engine/apply.py` (`information_providers` carry-forward-and-merge block);
+`src/domains/information/providers.py` (`InformationProviderState.knowledge_accumulated`);
+`src/domains/information/accumulation.py` (`InformationAccumulationService`); `src/engine/
+quests.py` (`QuestResolutionSystem.enforce()`'s accumulation branch); `src/domains/world_emergence/
+schema.py` (`WorldEventCategory.CRITICAL_INFORMATION_PROPAGATED`); `src/engine/faction_decision.py`
+(`InformationPropagationService`); `src/engine/pipeline.py` (`information_propagation` phase, run
+after `faction_awareness`); `src/domains/optimization/feature_flags.py`
+(`ENABLE_INFORMATION_HUB_ACCUMULATION`) (TCK-20260903-INFORMATION-HUB-ACCUMULATION, idea 41,
+2026-09-03)
 

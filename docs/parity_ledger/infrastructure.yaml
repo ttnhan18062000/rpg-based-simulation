@@ -8293,7 +8293,7 @@
     \ only in the scorer's own `EVENT_TYPES`/`score()`) -- disclosed, not migrated,\
     \ since nothing exists to migrate.\nA known, disclosed, narrow limitation was\
     \ found and NOT fixed here (see support_boundary): `apply.py:93-110`'s passive\
-    \ health decay and `apply.py:463-495`'s level-up heal/stat-clamp both mutate HP\
+    \ health decay and `apply.py:489-521`'s level-up heal/stat-clamp both mutate HP\
     \ at apply-time without ever touching `EntityUpdate.combat` -- if either coincides\
     \ with a real combat hit on the same entity in the same tick, this shaper's `damage`/`hp`/`is_lethal`\
     \ *payload values* (not event *types*, which stay correct) could diverge from\
@@ -8372,7 +8372,7 @@
     go verdict. Does not migrate ECONOMY or FACTION -- `TCK-20260806-PUSH-SHAPER-ECONOMY-FACTION`''s
     scope, reusing this entry''s registry design unchanged. The 2 apply-time-only
     HP-mutation sources found during this ticket''s own investigation (`apply.py:93-110`,
-    `apply.py:463-495`) are a disclosed, narrow limitation, not a fixed bug -- see
+    `apply.py:489-521`) are a disclosed, narrow limitation, not a fixed bug -- see
     this entry''s `text` field and the investigation.md section it summarizes for
     the full reasoning; `TCK-20260806-PUSH-SHADOW-VALIDATION-PERF` must quantify real-corpus
     frequency before this is accepted as permanently negligible or escalated to a

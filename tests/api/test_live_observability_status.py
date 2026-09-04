@@ -2,6 +2,7 @@ from __future__ import annotations
 import hashlib
 import os
 import subprocess
+import sys
 import requests
 import time
 import pytest
@@ -13,7 +14,7 @@ _TEST_KEY_HASH = hashlib.sha256(_TEST_RAW_KEY.encode("utf-8")).hexdigest()
 def test_live_observability_endpoints():
     """Verify live status and snapshot endpoints under running server."""
     port = 8011
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
     headers = {"X-API-Key": _TEST_RAW_KEY}

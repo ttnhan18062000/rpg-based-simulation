@@ -68,7 +68,7 @@ laws was out of this ticket's scope.)
 `_TRANSLATE_CONDITIONAL` entry for `InvariantViolation` (now dispatching all 7 real hard laws, not
 just 1) in `quality_hub.py` are correct. No translation table gaps found.
 
-**Remaining gaps:** 0 engine emission gaps. 1 scorer entry has no viable engine path (`camp_constructed` — camps are pre-placed at world generation, no dynamic construction mechanic). See §3.9.
+**Remaining gaps:** 0 engine emission gaps. 1 scorer entry has no viable engine path (`camp_constructed` — `StateUpdate` has no `camps_add` field, so no tick-time construction mechanic exists to emit from; see §3.9's `TCK-20260904-CAMPSTATE-PLACE-BRIDGE` note for the narrower, compile-time-only exception).
 
 ---
 
@@ -305,7 +305,7 @@ Resolved by TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS. One item reclassified as `no_
 | `spawn_cadence_fired` | `event_shapers (WorldDynamicsShaper)` — tick % 50 + non-boss entities_add |
 | `threat_evolved` | `event_shapers (WorldDynamicsShaper)` — trauma_score crossing 25/50/75/100 thresholds |
 | `node_recharged` | `event_shapers (DeferredInstrumentationShaper)` — resource_node quantity 0 → >0 (despite sitting alongside the 3 `WorldDynamicsShaper` rows above, this event's derivation lives in `DeferredInstrumentationShaper`, not `WorldDynamicsShaper` — do not assign by proximity) |
-| `camp_constructed` | **No engine path.** `StateUpdate` has no `camps_add` field. `CampService` only evolves existing camps (maturity, raids). Camps are pre-placed at world generation — no dynamic construction occurs during simulation ticks. Implementing this event requires adding a camp placement mechanic first. TCK-20260701-SIMQ-EMIT-CAMP closed. |
+| `camp_constructed` | **No engine path.** `StateUpdate` has no `camps_add` field — no dynamic `CampState` construction occurs during simulation ticks; `CampService` only evolves existing camps (maturity, raids). Implementing this event requires adding a tick-time camp placement mechanic first. TCK-20260701-SIMQ-EMIT-CAMP closed. **Update, 2026-09-04 (`TCK-20260904-CAMPSTATE-PLACE-BRIDGE`):** the premise "camps are pre-placed at world generation" was actually false prior to that ticket — zero production `CampState` construction existed anywhere, at world-gen or tick-time. As of that ticket, `WorldCompiler.compile()` CAN construct a `CampState` at world-gen (compile time, not a simulation tick) when content declares the optional, opt-in `PlaceSpec.creature_kind` field — but no real content does so yet, so this row's conclusion (no viable engine path for `camp_constructed` in any real compiled world today) is unchanged. See `docs/parity_ledger/world_dynamics.yaml`'s `WORLD-109` entry for the parity-ledger record of this correction. |
 
 ### §3.10 Combat (CombatScorer)
 

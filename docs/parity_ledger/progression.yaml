@@ -249,7 +249,7 @@
     sums each active breakthrough REGISTRY attribute_bonuses onto AttributeComponent
     via dataclasses.replace; wired end-to-end via SkillScalingService.get_effective_stats
     new active_breakthroughs param (src/engine/rpg_depth.py, applied before recalculate_combat_stats)
-    and ApplyPath._apply_entity_update_to_dict (src/engine/apply.py:460-487), whose
+    and ApplyPath._apply_entity_update_to_dict (src/engine/apply.py:490-517), whose
     stats_dirty gate now also fires on update.identity.breakthroughs_add alone; verified
     by tests/unit/progression/test_breakthroughs.py
   proof_type: null
@@ -1485,3 +1485,28 @@
     live AI/decision producer calls class_id_set in production gameplay code yet (accepted
     precedent, see TCK-20260808-TRAIT-EXPRESSED-PRODUCER-INVESTIGATION). Breakthroughs
     remain a separate, always-additive mechanism, untouched by this registry.
+- id: PROG-123
+  text: PossessionUnderstandingService and GrowthGapEvaluator identify recipe-material
+    possession/gaps via a RecipeRegistry-backed predicate (recipe_materials()), not
+    hardcoded item-id literals.
+  status: verified
+  priority: P2
+  v2_evidence: src/domains/progression/material_predicate.py
+  test_path: tests/unit/domains/progression/test_material_possession_predicate.py
+  divergence_note: 'Predicate reads src/core/recipes.py::RecipeRegistry (3 entries)
+    per this ticket AC. entity.identity.known_recipes is populated in production only
+    via src/engine/blacksmith.py::BlacksmithSystem.RECIPES disjoint craft_*-prefixed
+    14-entry catalog, so this predicate does not yet fire against organically-learned
+    recipes. Separately (architecture-review correction, applies repo-wide, not unique
+    to this entry): recipes.py::RecipeRegistry has zero production callers of its
+    own -- its only readers, CraftingSystem.craft() and BlacksmithService.craft_item(),
+    are themselves unreachable from any live production code path. The actually-live
+    REQUEST_CRAFT execution path is src/core/registries.py::RecipeRegistry (catalog-bootstrapped,
+    25 entries) via src/engine/intent/action_intent.py -- a third, out-of-scope RecipeRegistry
+    this predicate deliberately does not read (ticket AC #2). So this predicate answers
+    against a recipe catalog that is neither the live crafting-execution registry
+    (registries.py) nor the live known_recipes population source (blacksmith.py::BlacksmithSystem.RECIPES)
+    -- both limitations disclosed, pre-existing, tracked, not defects of this entry
+    own scope. See TCK-20260904-MATERIAL-POSSESSION-PREDICATE investigation.md and
+    the recommended follow-up ticket in that ticket Completion Summary.'
+  proof_type: null

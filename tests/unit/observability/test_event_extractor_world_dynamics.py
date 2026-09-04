@@ -168,6 +168,18 @@ class TestSpawnCadrenceFired:
         )
         assert "spawn_cadence_fired" not in _types(events)
 
+    def test_not_fired_for_lair_occupant_spawn(self):
+        """TCK-20260904-LAIR-ENTITY-ANCHOR: dragonkin Lair occupants are boss-tier
+        spawns, excluded from spawn_cadence_fired just like world_boss/ancient_sentinel."""
+        entity = _entity()
+        spawned = self._spawn_entity("dragonkin")
+        events = EventExtractor.extract(
+            _state({1: entity}, tick=50),
+            _state({1: entity}, tick=50),
+            _update(entities_add=[spawned]), ObservabilityMode.NORMAL,
+        )
+        assert "spawn_cadence_fired" not in _types(events)
+
     def test_not_fired_at_non_cadence_tick(self):
         entity = _entity()
         spawned = self._spawn_entity("wolf")
@@ -304,3 +316,37 @@ class TestBuildingSabotaged:
             _update(building_updates={7: b_upd}), ObservabilityMode.NORMAL,
         )
         assert "building_sabotaged" not in _types(events)
+
+
+# ── boss_spawned ────────────────────────────────────────────────────────────────
+
+class TestBossSpawned:
+    def _spawn_entity(self, kind: str, eid: int = 7):
+        e = MagicMock()
+        e.id = eid
+        e.kind = kind
+        return e
+
+    def test_emitted_for_dragonkin_lair_occupant(self):
+        """TCK-20260904-LAIR-ENTITY-ANCHOR: dragonkin Lair occupants are classified as
+        boss-tier spawns by _BOSS_KINDS, same as world_boss/ancient_sentinel."""
+        entity = _entity()
+        spawned = self._spawn_entity("dragonkin")
+        events = EventExtractor.extract(
+            _state({1: entity}),
+            _state({1: entity}),
+            _update(entities_add=[spawned]), ObservabilityMode.NORMAL,
+        )
+        boss_evts = [e for e in events if e.event_type == "boss_spawned"]
+        assert len(boss_evts) == 1
+        assert boss_evts[0].payload["kind"] == "dragonkin"
+
+    def test_not_emitted_for_non_boss_kind(self):
+        entity = _entity()
+        spawned = self._spawn_entity("wolf")
+        events = EventExtractor.extract(
+            _state({1: entity}),
+            _state({1: entity}),
+            _update(entities_add=[spawned]), ObservabilityMode.NORMAL,
+        )
+        assert "boss_spawned" not in _types(events)

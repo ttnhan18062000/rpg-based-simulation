@@ -215,11 +215,14 @@ not tier labels with a one-line gesture.
    entities, 4 regions, tier `unit` — corrects this epic's earlier Stress-tier label) composes
    `frontier_village_core` (City: town_hall/shop/blacksmith/inn/healer_hut) alongside `goblin_camp_conflict`.
    **Real caveat: the `goblin_camp` region itself is `type: wilderness, tags: [forest], hazard_level: 3.0` —
-   camp-themed in name only, not a real `CampState` instance** (confirmed elsewhere this session `CampState`
-   is never constructed in production). This world tests the City-vs-hostile-population settlement-capacity
-   split idea 44 needs, but does NOT exercise real `CampState`/idea-66-`Place(kind=CAMP)` machinery — that
-   needs idea 66/45 landing first. Assert `settlement_capacity` resolves `FULL_SETTLEMENT` for the
-   `frontier_village_core` region and `NONE`/`CAMP_ONLY` for `goblin_camp`.
+   camp-themed in name only, not a real `CampState` instance** (its `goblin_camp_place` content sets no
+   `creature_kind`, the opt-in field `TCK-20260904-CAMPSTATE-PLACE-BRIDGE` added — so `WorldCompiler.compile()`
+   constructs no companion `CampState` for it, even though the compiler CAN now do so in general for content
+   that opts in). This world tests the City-vs-hostile-population settlement-capacity split idea 44 needs,
+   but does NOT exercise real `CampState`/idea-66-`Place(kind=CAMP)` machinery — that needs `goblin_camp_place`
+   migrated to declare `creature_kind` first (deliberately deferred by the bridge ticket). Assert
+   `settlement_capacity` resolves `FULL_SETTLEMENT` for the `frontier_village_core` region and
+   `NONE`/`CAMP_ONLY` for `goblin_camp`.
 
    **Idea 45/46/47 (Camp/Nest/Lair) — subsumed under idea 66's Place model**, no separate world spec; see
    idea 66 above and idea 44's caveat.

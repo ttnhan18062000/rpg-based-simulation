@@ -33,18 +33,36 @@
   support_boundary: null
 - id: FAC-003
   text: 'FactionDecisionPhase reads state.factions each decision tick and emits transient
-    FactionDirective list; directives are not persisted in AuthoritativeState
+    FactionDirective list (DEFEND_BORDER, TRADE_ROUTE, COMMISSION_QUEST, EXPAND_TERRITORY);
+    directives are not persisted in AuthoritativeState. EXPAND_TERRITORY gates on
+    mean compute_regional_scarcity() over fs.territory > 0.7 AND a faction-less region
+    existing (RegionState.owner_faction_id is None, resolved deterministically as
+    the lowest sorted region id not already in fs.territory); it is independent of
+    (not mutually exclusive with) DEFEND_BORDER/TRADE_ROUTE/COMMISSION_QUEST. priority
+    = min(1.0, mean_scarcity + mean_density * 0.1), where compute_population_density()
+    only scales priority and never gates. EXPAND_TERRITORY is additionally threaded
+    through WorldDynamicsSystem.resolve_dynamics(faction_directives=...) into CampService.process_camps(faction_directives=...):
+    a directive whose target_region matches a camp''s region boosts that camp''s maturity_delta
+    by EXPAND_TERRITORY_MATURITY_BOOST (1.0); this consumption is a transient, non-persisted
+    input -- the directive itself is never written to CampState/CampUpdate.
+
 
     '
   status: verified
   priority: P2
   legacy_evidence: null
   v2_evidence: 'src/engine/faction_decision.py + src/engine/pipeline.py (faction_decision
-    inline block, TCK-20260619-E53Ab-DECISION-PHASE)
+    inline block, TCK-20260619-E53Ab-DECISION-PHASE) + src/domains/demographics/cohort.py
+    (compute_regional_scarcity gate, compute_population_density priority scaling)
+    + src/engine/world_dynamics.py + src/world/camp.py (EXPAND_TERRITORY consumption
+    via CampService.EXPAND_TERRITORY_MATURITY_BOOST, TCK-20260904-FACTION-EXPAND-DIRECTIVE)
+
 
     '
   proof_type: parity
-  test_path: tests/unit/domains/faction/test_faction_decision_phase.py
+  test_path: tests/unit/domains/faction/test_faction_decision_phase.py; tests/unit/world/test_camp_lifecycle.py::test_camp_service_consumes_expand_territory_directive;
+    tests/unit/world/test_camp_lifecycle.py::test_camp_service_ignores_expand_territory_directive_for_other_region;
+    tests/unit/world/test_world_dynamics.py::test_resolve_dynamics_threads_faction_directives_to_camp_service
   divergence_note: null
   support_boundary: null
 - id: FACTION-TENSION-001
@@ -412,3 +430,26 @@
     tick depths) -- no crash, no false positive, but no real-run positive-path confirmation
     either. `grade_anchors.json` not recalibrated (no behavior change observed in
     real runs to recalibrate against).'
+- id: FAC-015
+  text: 'InformationPropagationService.compute_propagation_events() propagates every
+    WorldEvent with severity >= 0.8 whose region_id sits in a faction territory: City-to-City
+    to every sibling region in the same faction territory, and City-to-Country to
+    every region in an ALLIED (not NEUTRAL) faction territory. Emits new WorldEvents
+    (category=CRITICAL_INFORMATION_PROPAGATED) only -- never a FactionState mutation
+    or FactionUpdate. Uses state.recent_world_events (last-tick window -- one-tick
+    lag inherent, same as FactionAwarenessService). Gated behind ENABLE_INFORMATION_HUB_ACCUMULATION
+    (default OFF). (idea 41, M4)
+
+    '
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/faction_decision.py -- InformationPropagationService.compute_propagation_events();
+    src/engine/pipeline.py -- information_propagation run_phase block, run after faction_awareness;
+    src/domains/world_emergence/schema.py -- WorldEventCategory.CRITICAL_INFORMATION_PROPAGATED
+
+    '
+  proof_type: parity
+  test_path: tests/unit/domains/faction/test_critical_information_propagation.py
+  divergence_note: null
+  support_boundary: null

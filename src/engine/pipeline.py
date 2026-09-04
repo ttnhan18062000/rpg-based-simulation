@@ -241,6 +241,17 @@ class AuthoritativeApplyPipeline:
         )
         costs["faction_awareness"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- TCK-20260903-INFORMATION-HUB-ACCUMULATION: Information Propagation ---
+        t_start = time.perf_counter_ns()
+        from src.engine.faction_decision import InformationPropagationService
+        from src.core.updates import StateUpdate as _SU_ip
+        update = run_phase(
+            "information_propagation", update,
+            lambda u: u.merge(_SU_ip(world_events_add=InformationPropagationService.compute_propagation_events(state, _recent_events))),
+            "ENABLE_INFORMATION_HUB_ACCUMULATION",
+        )
+        costs["information_propagation"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 8d: Diplomatic State Machine + Alliance Generation (E53Bc/Bd) ---
         t_start = time.perf_counter_ns()
         from src.domains.faction.diplomatic_state_machine import (
@@ -329,7 +340,7 @@ class AuthoritativeApplyPipeline:
 
         generator = EntityGenerator(state.seed + state.tick)
         generator._last_id = state.next_entity_id - 1
-        update = run_phase("world_dynamics", update, lambda u: WorldDynamicsSystem.resolve_dynamics(state, u, generator, cadence=cadence))
+        update = run_phase("world_dynamics", update, lambda u: WorldDynamicsSystem.resolve_dynamics(state, u, generator, cadence=cadence, faction_directives=faction_directives))
         costs["governance_ecology"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Enhanced RPG Phase 8: World Emergence ---
@@ -390,7 +401,8 @@ class AuthoritativeApplyPipeline:
         t5 = time.perf_counter_ns()
         update = run_phase("groups", update, lambda u: AuthoritativeApplyPipeline._resolve_groups(state, u))
         t6 = time.perf_counter_ns()
-        
+        update = run_phase("clan_lifecycle", update, lambda u: AuthoritativeApplyPipeline._resolve_clan_lifecycle(state, u))
+
         from src.systems.social_systems.contracts import ContractService
         update = run_phase("active_contracts", update, lambda u: ContractService.process_active_contracts(state, u))
         update = run_phase("expired_offers", update, lambda u: ContractService.reap_expired_offers(state, u))
@@ -453,6 +465,14 @@ class AuthoritativeApplyPipeline:
     ) -> StateUpdate:
         from src.engine.pipeline_phases.groups import GroupPhase
         return GroupPhase.resolve(state, update)
+
+    @staticmethod
+    def _resolve_clan_lifecycle(
+        state: AuthoritativeState,
+        update: StateUpdate,
+    ) -> StateUpdate:
+        from src.engine.pipeline_phases.clan_lifecycle import ClanLifecyclePhase
+        return ClanLifecyclePhase.resolve(state, update)
 
     @staticmethod
     def _route_interaction_intent(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:

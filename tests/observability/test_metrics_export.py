@@ -3,6 +3,7 @@ import os
 import pytest
 import time
 import subprocess
+import sys
 import requests
 from prometheus_client.parser import text_string_to_metric_families
 
@@ -158,7 +159,7 @@ async def test_metrics_endpoint_direct():
 def test_metrics_endpoint_integration():
     """Verify the /metrics API endpoint over HTTP using a background server subprocess."""
     port = 8011
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
 

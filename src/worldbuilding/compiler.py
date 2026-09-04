@@ -20,6 +20,7 @@ from src.core.state import (
     FactionState,
     PlaceState,
     PlaceKind,
+    CampState,
 )
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
@@ -278,6 +279,7 @@ class WorldCompiler:
         # 2. Compile regions & terrain painting
         regions: Dict[str, RegionState] = {}
         places: Dict[str, PlaceState] = {}  # Idea 66
+        camps: Dict[str, CampState] = {}  # TCK-20260904-CAMPSTATE-PLACE-BRIDGE
         town_tiles: Set[tuple[int, int]] = set()
 
         for r_spec in spec.regions:
@@ -328,6 +330,17 @@ class WorldCompiler:
                     maturity=p_spec.maturity,
                     hazard_level=p_spec.hazard_level,
                 )
+
+                # TCK-20260904-CAMPSTATE-PLACE-BRIDGE: construct a companion CampState,
+                # keyed by the same place_id, when CAMP/NEST content declares an opt-in
+                # creature_kind. Inert (camps stays {}) for all content that doesn't set
+                # this field -- see plan.md's Gameplay-Activation Risk Decision.
+                if p_spec.kind in ("CAMP", "NEST") and getattr(p_spec, "creature_kind", None) is not None:
+                    camps[p_spec.id] = CampState(
+                        id=p_spec.id,
+                        kind=p_spec.creature_kind,
+                        position=(float(p_spec.position[0]), float(p_spec.position[1])),
+                    )
 
             regions[r_spec.id] = RegionState(
                 id=r_spec.id,
@@ -700,6 +713,7 @@ class WorldCompiler:
             buildings=buildings,
             regions=regions,
             places=places,  # Idea 66
+            camps=camps,  # TCK-20260904-CAMPSTATE-PLACE-BRIDGE
             terrain=terrain,
             global_resources=global_resources,
             blocked_tiles=blocked_tiles,

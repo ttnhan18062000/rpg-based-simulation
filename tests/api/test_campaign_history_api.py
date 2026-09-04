@@ -19,9 +19,11 @@ from fastapi import HTTPException
 from src.api.routes.campaigns import (
     _clear_registry,
     get_campaign_history,
+    get_settlement_personality,
     register_campaign,
 )
 from src.domains.campaigns.state import CampaignState, NarrativeLedgerEntry
+from src.domains.culture.model import CultureCarryForward, CultureState
 
 
 # ── Fixtures ───────────────────────────────────────────────────────────────────
@@ -251,3 +253,54 @@ async def test_campaign_history_combined_filters():
     assert response.entries[0].subject_id == "e3"
     assert response.entries[0].significance == 0.6
     assert response.entries[0].episode == 1
+
+
+# ── TC-8..10: GET /{campaign_id}/regions/{region_id}/personality ─────────────
+
+
+@pytest.mark.anyio
+async def test_settlement_personality_endpoint_returns_shaped_presenter_not_raw_domain_object():
+    """AC-required: endpoint returns SettlementPersonalityResponse, not a raw domain object."""
+    state = CampaignState(campaign_id="camp_personality", episode_index=0)
+    state.region_cultures["r1"] = CultureCarryForward(
+        region_id="r1", culture=CultureState(fatalism=0.8), derived_episode=0
+    )
+    register_campaign("camp_personality", state)
+
+    response = await get_settlement_personality(
+        campaign_id="camp_personality", region_id="r1"
+    )
+
+    from src.api.presenters.campaigns import SettlementPersonalityResponse
+
+    assert isinstance(response, SettlementPersonalityResponse)
+    assert response.campaign_id == "camp_personality"
+    assert response.region_id == "r1"
+    assert response.is_neutral is False
+    assert "fatalistic" in response.traits
+    assert response.tag_deltas["caution"] > 0.0
+
+
+@pytest.mark.anyio
+async def test_settlement_personality_endpoint_404_for_unregistered_campaign():
+    """Requesting an unregistered campaign returns HTTP 404."""
+    with pytest.raises(HTTPException) as exc_info:
+        await get_settlement_personality(campaign_id="nonexistent", region_id="r1")
+
+    assert exc_info.value.status_code == 404
+    assert "nonexistent" in exc_info.value.detail
+
+
+@pytest.mark.anyio
+async def test_settlement_personality_endpoint_empty_for_unknown_region():
+    """A known campaign with no culture data for the queried region returns a neutral descriptor, not an error."""
+    state = CampaignState(campaign_id="camp_no_culture", episode_index=0)
+    register_campaign("camp_no_culture", state)
+
+    response = await get_settlement_personality(
+        campaign_id="camp_no_culture", region_id="unknown_region"
+    )
+
+    assert response.is_neutral is True
+    assert response.traits == []
+    assert response.tag_deltas == {}

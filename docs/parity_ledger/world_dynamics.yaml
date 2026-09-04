@@ -932,9 +932,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: check_for_boss_spawn (region-scoped world_boss/ancient_sentinel idempotency,
+    keyed via identity.properties["boss_region_id"]) is unchanged. TCK-20260904-LAIR-ENTITY-ANCHOR
+    added a parallel, Place-scoped mechanism, check_for_lair_spawn (src/world/boss.py),
+    keyed via identity.properties["lair_place_id"] per place_id instead of region_id,
+    closing the multi-boss-type-per-region gap raid_boss_camp_contract.md Extension
+    rules S3 previously flagged as open (for LAIR-kind Places specifically).
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_world_dynamics.py::test_boss_spawn_is_idempotent_even_if_existing_boss_left_region
   divergence_note: null
   support_boundary: null
 - id: WORLD-086
@@ -1382,35 +1387,69 @@
   divergence_note: null
   support_boundary: null
 - id: WORLD-109
-  text: "spawn_cadence_fired is emitted when tick % 50 == 0 and StateUpdate.entities_add\
-    \ contains at least one non-excluded entity kind (world_boss, ancient_sentinel,\
-    \ goblin_raider are excluded as non-cadence spawns). node_recharged is emitted\
-    \ when a resource node's remaining_charges transitions from 0 to > 0 (complements\
-    \ resource_node_regenerated which is unscored). threat_evolved is emitted when\
-    \ world_update.trauma_delta > 0 and prior_trauma + trauma_delta crosses a threshold\
-    \ in {25, 50, 75, 100}. camp_constructed remains blocked \u2014 CampService has\
-    \ no event recorder. (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)\n"
+  text: 'spawn_cadence_fired is emitted when tick % 50 == 0 and StateUpdate.entities_add
+    contains at least one non-excluded entity kind. node_recharged is emitted when
+    a resource node''s remaining_charges transitions from 0 to > 0 (complements resource_node_regenerated
+    which is unscored). threat_evolved is emitted when world_update.trauma_delta >
+    0 and prior_trauma + trauma_delta crosses a threshold in {25, 50, 75, 100}. camp_constructed
+    remains blocked -- CampService has no event recorder. (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)
+
+
+    Boss-kind exclusion lists (TCK-20260904-LAIR-ENTITY-ANCHOR update): event_extractor.py
+    is the flag-gated (_push_shapers_phase2_active) rollback path and holds two separate
+    boss-kind lists -- the spawn_cadence_fired exclusion tuple and the _BOSS_KINDS
+    frozenset gating boss_spawned/narrative_milestone(boss variant)/raid_party_spawned.
+    Both were extended to include "dragonkin" alongside "world_boss"/"ancient_sentinel"(/"goblin_raider"
+    for the spawn_cadence_fired tuple) so check_for_lair_spawn''s new dragonkin lair-occupant
+    does not misfire as a cadence spawn or get missed as a boss-kind arrival. The
+    live-default apply-layer WorldDynamicsShaper (src/observability/event_shapers.py,
+    WORLD-115) maintains its OWN separate copies of both lists and was intentionally
+    left unchanged -- it still excludes only world_boss/ancient_sentinel/goblin_raider,
+    with no dragonkin recognition. TCK-20260904-LAIR-ENTITY-ANCHOR scoped dragonkin
+    boss-kind recognition to the rollback path only; extending event_shapers.py to
+    match is out of scope and a known follow-up gap, not a defect in this entry.'
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: "src/observability/event_extractor.py \u2014 spawn_cadence_fired block\
-    \ (tick%50, kind exclusion set); node_recharged block inside resource_node_regenerated\
-    \ guard (remaining_charges 0\u2192>0 only); threat_evolved block with threshold\
-    \ crossing logic in world_updates loop with try/except for MagicMock safety. As\
-    \ of the push-shaper migrations, spawn_cadence_fired and threat_evolved are also\
-    \ derived by the live-default apply-layer WorldDynamicsShaper (src/observability/event_shapers.py);\
-    \ node_recharged, despite sitting in this same entry alongside its two siblings,\
-    \ is derived by the separate DeferredInstrumentationShaper (src/observability/event_shapers.py),\
+    \ (tick%50, kind exclusion tuple now (None, \"world_boss\", \"ancient_sentinel\"\
+    , \"goblin_raider\", \"dragonkin\")); _BOSS_KINDS frozenset (governs boss_spawned\
+    \ / narrative_milestone boss-variant / raid_party_spawned) now frozenset((\"world_boss\"\
+    , \"ancient_sentinel\", \"dragonkin\")) -- both updated by TCK-20260904-LAIR-ENTITY-ANCHOR;\
+    \ node_recharged block inside resource_node_regenerated guard (remaining_charges\
+    \ 0\u2192>0 only); threat_evolved block with threshold crossing logic in world_updates\
+    \ loop with try/except for MagicMock safety. As of the push-shaper migrations,\
+    \ spawn_cadence_fired and threat_evolved are also derived by the live-default\
+    \ apply-layer WorldDynamicsShaper (src/observability/event_shapers.py); node_recharged,\
+    \ despite sitting in this same entry alongside its two siblings, is derived by\
+    \ the separate DeferredInstrumentationShaper (src/observability/event_shapers.py),\
     \ not WorldDynamicsShaper. event_extractor.py's block above is now the flag-gated\
-    \ (_push_shapers_phase2_active) rollback path for all three, not the sole terminus.\n"
+    \ (_push_shapers_phase2_active) rollback path for all three (plus boss_spawned/narrative_milestone/raid_party_spawned),\
+    \ not the sole terminus. event_shapers.py's WorldDynamicsShaper keeps its own,\
+    \ separately-maintained _BOSS_KINDS = frozenset((\"world_boss\", \"ancient_sentinel\"\
+    )) and its own spawn_cadence_fired exclusion tuple (None, \"world_boss\", \"ancient_sentinel\"\
+    , \"goblin_raider\") -- neither includes dragonkin. TCK-20260904-LAIR-ENTITY-ANCHOR\
+    \ only extended event_extractor.py's two rollback-path lists; the live-default\
+    \ path's dragonkin recognition remains an open follow-up, not part of this ticket's\
+    \ scope."
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestNodeRecharged;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestThreatEvolved
-  divergence_note: "camp_constructed has no viable engine path under the current camp\
-    \ lifecycle model: camps are pre-placed at world generation and CampService (src/world/camp.py)\
-    \ only evolves existing camps (maturity, raids) \u2014 there is no dynamic construction\
-    \ mechanic to emit from. Not pending/future work; confirmed by TCK-20260701-SIMQ-EMIT-CAMP.\n"
+  divergence_note: 'camp_constructed remains blocked but for a narrower reason than
+    previously stated: as of TCK-20260904-CAMPSTATE-PLACE-BRIDGE, WorldCompiler.compile()
+    CAN construct a real CampState alongside a PlaceState(kind=CAMP/NEST) when content
+    declares the optional PlaceSpec.creature_kind field -- but no real content does
+    so yet (the field is opt-in and unset on hero_guild_routing''s goblin_camp_place),
+    so CampService still has no populated camps to emit camp_constructed from in any
+    real compiled world today. The original premise (''camps are pre-placed at world
+    generation'') was inaccurate prior to this ticket -- zero production CampState
+    construction existed. Still not pending/future work for THIS entry''s event-emission
+    scope; see TCK-20260904-CAMPSTATE-PLACE-BRIDGE for the construction-path change.
+    Separately, TCK-20260904-LAIR-ENTITY-ANCHOR''s dragonkin addition to event_extractor.py''s
+    boss-kind exclusion lists was NOT mirrored into event_shapers.py''s live-default
+    path -- intentional, ticket-scoped, tracked as an open follow-up rather than a
+    divergence from the Mechanics Bible.'
   support_boundary: null
 - id: WORLD-110
   text: "WORLD pillar grade stability under normalized_score formula change \u2014\
@@ -1866,3 +1905,75 @@
     tests/unit/world/test_world_dynamics.py::test_world_dynamics_folds_camp_and_calamity_world_updates_into_final_update
   divergence_note: null
   proof_type: parity
+- id: WORLD-124
+  text: 'Behind ENABLE_CAMP_NEST_SPREAD (default OFF), CampService.process_camps()
+    forks inside the existing raid-trigger gate (camp.maturity >= RAID_MATURITY_THRESHOLD
+    (80.0), state.tick - camp.last_raid_tick >= 500): a camp classified as Nest kind
+    (camp.kind in CampService.NEST_RACE_KINDS == frozenset({wolf, spider, troll, slime}),
+    the code projection of the City/Camp/Nest/Excluded classification rule resolved
+    against races.yaml''s natural_traits/drive_profile/cognition_profile) spawns one
+    parentless same-kind offspring via EntityGenerator.spawn_natural_creature_offspring(kind=camp.kind,
+    ...) instead of calling RaidService.check_for_raid(), applying the identical maturity_delta=-20.0
+    (relative, not an absolute reset) and last_raid_tick_set=state.tick cost/cooldown-reset
+    the raid outcome already uses. Camp-classified camps (goblin, orc) always take
+    the raid outcome regardless of this flag. This nest-spread branch itself constructs
+    no CampState (it spawns an entity via EntityGenerator, not a Place/Camp record)
+    -- distinct from the separate, opt-in world-gen CampState construction path WorldCompiler.compile()
+    gained under TCK-20260904-CAMPSTATE-PLACE-BRIDGE (see WORLD-109), which remains
+    inert for all real content today since no content sets PlaceSpec.creature_kind.
+    CampState/CampUpdate also gain three new typed fields -- totem_tier: int, stockpile:
+    float, palisade_integrity: float -- round-tripping through to_canonical_dict()/CampUpdate.merge()
+    and committed via apply_plan.py''s camp-application block; these are provisional
+    scaffolding only, with no production writer populating non-default values in this
+    ticket.'
+  status: verified
+  priority: P2
+  v2_evidence: src/world/camp.py -- CampService.NEST_RACE_KINDS, CampService.process_camps()
+    "3. Raid Trigger (or Nest Spread...)" fork; src/systems/world_systems/generator.py
+    -- EntityGenerator.spawn_natural_creature_offspring() (reused, not new); src/domains/optimization/feature_flags.py
+    -- ENABLE_CAMP_NEST_SPREAD registered with default FeatureMode.OFF (DEV-002 default-OFF
+    policy for a brand-new mechanic); src/core/state.py -- CampState.totem_tier/stockpile/palisade_integrity
+    fields plus to_canonical_dict() wiring; src/core/updates.py -- CampUpdate.totem_tier_set/stockpile_delta/palisade_integrity_set
+    fields plus merge() wiring; src/engine/apply_plan.py -- camp-application block
+    extended to read and commit the three new CampUpdate fields via replace(camp,
+    ...), the sole authoritative commit point for CampUpdate fields committed via
+    ApplyPlanBuilder.build_plan(). TCK-20260904-CAMP-NEST-CLASSIFICATION.
+  test_path: tests/unit/world/test_camp_lifecycle.py::test_camp_flag_on_nest_kind_spreads_instead_of_raiding;
+    tests/unit/world/test_camp_lifecycle.py::test_camp_flag_off_nest_kind_camp_still_raids;
+    tests/unit/world/test_camp_lifecycle.py::test_camp_flag_on_camp_kind_still_raids;
+    tests/unit/world/test_camp_lifecycle.py::test_nest_spread_reuses_same_500_tick_cooldown_as_raid;
+    tests/unit/world/test_camp_lifecycle.py::test_campupdate_totem_stockpile_palisade_apply_via_apply_plan;
+    tests/unit/domains/optimization/test_apply_plan_builder.py::test_apply_plan_builder_camp_totem_stockpile_palisade
+  divergence_note: null
+  proof_type: parity
+- id: WORLD-CULT-004
+  text: 'A region with at least one culture axis above CULTURE_ACTIVATION_THRESHOLD
+    (0.3) produces a SettlementPersonalityDescriptor with a non-empty traits tuple
+    and non-zero tag_deltas for that axis''s canonical tag group; a region with no
+    CultureState data (the default for all 21 registered corpus worlds) produces the
+    neutral empty descriptor. This descriptor is now reachable end-to-end via CampaignOrchestrator.describe_settlement_personality(region_id)
+    (a pure read over CampaignState.region_cultures, never touching _build_initial_state()/_advance_state())
+    and via GET /api/v1/campaigns/{campaign_id}/regions/{region_id}/personality, which
+    reads CampaignState from the route''s own campaign registry and returns a shaped
+    SettlementPersonalityResponse (never the raw domain descriptor). This gives CulturalBiasApplicator.compute_culture_delta
+    its first real production call site (previously exercised only by tests): SettlementPersonalityService.describe
+    -> CulturalBiasApplicator.compute_culture_delta, reached via CampaignOrchestrator.describe_settlement_personality
+    and independently via the REST route handler.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/culture/settlement_personality.py (SettlementPersonalityService.describe,
+    SettlementPersonalityDescriptor) -- reuses CulturalBiasApplicator.compute_culture_delta
+    unchanged, adds no new axis/threshold/clamp rules, a new caller not new derivation
+    logic; src/domains/campaigns/orchestrator.py (CampaignOrchestrator.describe_settlement_personality,
+    a pure read composing CultureDriftImporter.get_culture + SettlementPersonalityService.describe
+    over already-populated CampaignState.region_cultures); src/api/routes/campaigns.py
+    (GET /{campaign_id}/regions/{region_id}/personality, get_settlement_personality)
+    and src/api/presenters/campaigns.py (SettlementPersonalityResponse.from_domain)
+    -- the route composes CultureDriftImporter.get_culture + SettlementPersonalityService.describe
+    directly (does not call the orchestrator method) but exercises the same production
+    call chain down to CulturalBiasApplicator.compute_culture_delta.
+  proof_type: parity
+  test_path: tests/unit/domains/culture/test_settlement_personality.py::test_describe_with_high_fatalism_axis_produces_fatalistic_signal;
+    tests/unit/domains/campaigns/test_settlement_personality_read.py::test_describe_settlement_personality_with_populated_region_cultures;
+    tests/api/test_campaign_history_api.py::test_settlement_personality_endpoint_returns_shaped_presenter_not_raw_domain_object
