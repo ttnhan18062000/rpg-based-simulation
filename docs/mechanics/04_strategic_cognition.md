@@ -1286,3 +1286,56 @@ after `faction_awareness`); `src/domains/optimization/feature_flags.py`
 (`ENABLE_INFORMATION_HUB_ACCUMULATION`) (TCK-20260903-INFORMATION-HUB-ACCUMULATION, idea 41,
 2026-09-03)
 
+## 12. On-Death Lineage Dispatch: Inherited Feuds & Dying Wishes (ideas 55+58, M5)
+
+Design ideas 55 (Feuds Outlive the Feuders) and 58 (A Dying Wish) both fire at the identical
+trigger moment -- death, once `heir_entity_id` resolves -- so they are implemented as one dispatch
+point with two thin handlers inside `LifecycleSystem.resolve_lifecycle` (`src/systems/
+lifecycle_systems/lifecycle.py`), called once heir resolution completes and before the existing
+heirloom-transfer block.
+
+**Dispatch point.** `resolve_lifecycle` already resolves `heir_entity_id` deterministically (either
+the deceased's manually-set heir, or the default heir selected by `_select_default_heir`) before
+transferring heirlooms. `_transfer_inherited_feud()` and `_seed_dying_wish()` are called back to
+back, right after heir resolution, both writing into the same `EntityUpdate` accumulated for the
+heir -- there is exactly one call site, not two independently-hooked triggers.
+
+**Idea 55 -- Inherited Feud.** `_transfer_inherited_feud()` reads the deceased's active
+Campaign-mode Nemesis blockers (`entity.strategic.blockers["nemesis_*"]`, populated only by
+`NemesisRelationImporter` from `CampaignState.nemesis_relations` -- see Section 3's "Grief Urgency
+& Nemesis Relations" for that importer). For each, it transfers a weakened copy to the heir via a
+typed `StrategicUpdate.blockers_add_or_update`: `severity * INHERITED_NEMESIS_SEVERITY_MULTIPLIER`
+(0.5), with a distinct `inherited_nemesis_{antagonist}` id so it never silently overwrites a heir's
+own, independently-formed nemesis blocker against the same antagonist. This is explicitly scoped to
+the Campaign-mode blocker representation only -- it does not touch the always-live legacy
+`SocialComponent.nemesis_ids`/`grudge_history` mechanism (tracked separately by
+`TCK-20260824-NEMESIS-MEMORY-UNIT-TESTS`). Most default single-episode Kernel runs never populate
+the Campaign-mode signal, so this handler is frequently a no-op -- a disclosed scope limit, not a
+bug.
+
+**Idea 58 -- A Dying Wish.** `_seed_dying_wish()` seeds a new `NamedIntentionBundle`
+(`src/core/cognition.py`) onto the heir's `MotivationModel.named_intention`, source-attributed to
+the deceased (`source_entity_id`), with a deterministic `text` (names the same antagonist as an
+inherited feud when one exists, otherwise a generic remembrance wish -- no narrative-generation
+subsystem is introduced) and `status="PENDING"`. Deliberately named distinctly from
+`CommittedIntention` (`src/core/strategic.py`, Section 4's self-generated multi-step-planning
+model) to avoid a naming collision. Honorable, ignorable, or rejectable: nothing in this codebase
+reads `NamedIntentionBundle.status` to force an action, so seeding this bundle never
+auto-executes anything.
+
+**Same-tick cognition-write safety.** `EntityUpdate.cognition_bundle_set` is a whole-object-replace
+field (`CognitionPatch.apply()`), not a per-field merge -- so `_seed_dying_wish()` follows this
+codebase's established read-through-then-replace convention (mirrors `src/strategy/
+role_model_phase.py`, `src/domains/emotion/habit_phase.py`, `src/engine/quests.py`'s reputation
+write): it reads whatever `cognition_bundle_set` an earlier same-tick phase already staged on the
+heir's `EntityUpdate` (falling back to `heir.cognition` if none), and replaces only the
+`motivation.named_intention` sub-field on top of that base, before writing back. A same-tick
+collision with another `cognition_bundle_set` writer therefore never silently clobbers either
+write.
+
+**Source:** `src/systems/lifecycle_systems/lifecycle.py`
+(`LifecycleSystem._transfer_inherited_feud`, `LifecycleSystem._seed_dying_wish`,
+`INHERITED_NEMESIS_SEVERITY_MULTIPLIER`); `src/core/cognition.py` (`NamedIntentionBundle`,
+`MotivationModel.named_intention`) (TCK-20260904-LINEAGE-DEATH-DISPATCH, ideas 55+58, M5,
+2026-09-04)
+

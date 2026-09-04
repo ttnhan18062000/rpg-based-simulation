@@ -3974,3 +3974,18 @@
     merge-conflict resolution -- an unrelated concurrent session independently used
     SOC-263 for a different entry (SocialComponent canonical-hash gap fix) first.'
   support_boundary: null
+- id: SOC-265
+  text: 'Idea 55 (Feuds Outlive the Feuders): the on-death lineage dispatch hook in
+    LifecycleSystem.resolve_lifecycle transfers a weakened version of the deceased''s
+    Campaign-mode Nemesis hostility to the resolved heir, so a feud outlives the individual
+    who held it. See COMB-321 for the strategic-blocker mechanics; this entry records
+    the social/narrative-continuity behavior itself. (idea 55, M5)'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/systems/lifecycle_systems/lifecycle.py -- LifecycleSystem._transfer_inherited_feud()
+  proof_type: parity
+  test_path: tests/unit/progression/test_lifecycle.py::test_inherited_nemesis_blocker_is_weakened_relative_to_original
+  divergence_note: null
+  support_boundary: See COMB-321 -- Campaign-mode Nemesis data only, not the always-live
+    legacy nemesis_ids/grudge_history mechanism.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: systems
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-LINEAGE-DEATH-DISPATCH
-phase: open
+phase: done
 date: 2026-09-04
 tags: [lifecycle, social]
 ---
@@ -15,7 +15,7 @@ tags: [lifecycle, social]
 Ideas 55+58 — On-Death Lineage Dispatch (Inherited Feud + Dying Wish)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -87,9 +87,66 @@ None
 - `layer: systems` was chosen because the dispatch hook and both handlers live in `src/systems/lifecycle_systems/` and are wired through the systems layer; this is a straightforward fit, not a fallback.
 
 ## Implementation Notes
+Added `NamedIntentionBundle` (`src/core/cognition.py`) as a new `MotivationModel.named_intention`
+field, and two thin static handlers on `LifecycleSystem`
+(`src/systems/lifecycle_systems/lifecycle.py`): `_transfer_inherited_feud` (idea 55) and
+`_seed_dying_wish` (idea 58), both called from a single new dispatch point inside
+`resolve_lifecycle`'s death block, right after `heir_entity_id` resolution and before the existing
+heirloom-transfer logic.
+
+**Idea 55 scope decision (as flagged in the ticket).** Explicitly targets only the Campaign-mode
+`entity.strategic.blockers["nemesis_*"]` signal (populated by `NemesisRelationImporter`) — the
+always-live legacy `SocialComponent.nemesis_ids`/`grudge_history` mechanism is untouched, per the
+ticket's own Out of Scope. Transfers a weakened copy (`severity * 0.5`) under a distinct
+`inherited_nemesis_{antagonist}` id so a heir's own independent nemesis relation against the same
+antagonist is never silently overwritten.
+
+**Idea 58 architecture decision.** Rather than inventing a new granular `CognitionPatch` sub-update
+(one of the two options the ticket's own Scope section left open), `_seed_dying_wish` reuses this
+codebase's already-established read-through-then-replace convention for `cognition_bundle_set`
+(the same shape as `src/strategy/role_model_phase.py`, `src/domains/emotion/habit_phase.py`, and
+`src/engine/quests.py`'s reputation write) — it reads whatever `cognition_bundle_set` an earlier
+same-tick phase already staged on the heir, replaces only `motivation.named_intention`, and writes
+back. This satisfies AC4 (no same-tick clobbering) without duplicating existing infrastructure.
+
+**Minor structural fix alongside the dispatch wiring (disclosed, not silently made).** The
+pre-existing heirloom-transfer code only wrote `refined_entity_updates[heir_id] = heir_upd` back
+*inside* the `if all_transfer_items:` branch. Since the new dispatch handlers can now mutate
+`heir_upd` even when the deceased has no items/heirlooms to transfer, that write-back was moved to
+run unconditionally at the end of the `if heir:` block — otherwise a death with no inheritable
+items but an active nemesis blocker or a seeded dying wish would silently drop both handlers'
+output. This is a direct, necessary consequence of this ticket's own scope (wiring a new dispatch
+point into that exact code path), not an unrelated fix.
+
+Wish text (idea 58) is deterministic, not narratively generated: references the deceased's active
+nemesis antagonist when `_transfer_inherited_feud` found one, otherwise a generic remembrance
+string — a Plan-phase content decision, since no existing spec selects among multiple wish
+templates.
 
 ## Test Summary
+6 new tests added to `tests/unit/progression/test_lifecycle.py`, one per Acceptance Criteria item
+(plus one extra no-op-case test for idea 55). Combined scoped regression (lifecycle, cognition-model
+schema, motivation-model schema, full `tests/unit/strategic/`, cognition-migration architecture
+linter, determinism/canonical-hash scheduler test, grief/nemesis Campaign-mode tests): 401 passed,
+0 failed.
+```
+pytest tests/unit/progression/test_lifecycle.py tests/unit/entity/test_phase11_cognition_model_schema.py tests/unit/domains/motivation/test_phase14_motivation_models.py tests/unit/strategic/ tests/architecture/test_phase18_cognition_migration_linter.py tests/unit/engine/test_hash_scheduler.py tests/unit/domains/campaigns/test_grief_urgency.py tests/unit/kernel/test_grief_trigger_drain.py tests/integration/campaigns/test_mid_episode_grief_trigger.py -q
+```
 
 ## Files Changed
+- `src/core/cognition.py` — new `NamedIntentionBundle` dataclass, `MotivationModel.named_intention` field
+- `src/systems/lifecycle_systems/lifecycle.py` — `_transfer_inherited_feud`, `_seed_dying_wish`, dispatch wiring, unconditional heir-update write-back
+- `tests/unit/progression/test_lifecycle.py` — 6 new tests
+- `docs/mechanics/04_strategic_cognition.md` — new Section 12
+- `docs/parity_ledger/combat_movement.yaml` — new entry COMB-321
+- `docs/parity_ledger/social_narrative.yaml` — new entry SOC-265
+- `docs/parity_ledger/strategic_cognition.yaml` — new entry STRAT-270
 
 ## Completion Summary
+Ideas 55 and 58 land as one on-death dispatch hook with two thin handlers inside
+`LifecycleSystem.resolve_lifecycle`, exactly matching the M5 epic doc's own consolidation. Idea 55
+transfers a weakened Campaign-mode nemesis blocker to the heir; idea 58 seeds a source-attributed,
+honorable/ignorable/rejectable named intention onto the heir's cognition, reusing the codebase's
+established same-tick-safe cognition-write pattern rather than inventing a new one. All 5 acceptance
+criteria are covered by dedicated tests; the reputation branch (ideas 60/53/54) remains untouched and
+independently landable, verified by a source-text guard test.

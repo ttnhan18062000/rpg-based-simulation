@@ -828,3 +828,139 @@ def test_dependent_field_applied_via_authoritative_patch():
     # heirlooms_add's own additive-list semantics.
     merged = LifecycleUpdate(dependent_entity_ids_add=[2]).merge(LifecycleUpdate(dependent_entity_ids_add=[3]))
     assert merged.dependent_entity_ids_add == [2, 3]
+
+
+# ── TCK-20260904-LINEAGE-DEATH-DISPATCH: on-death lineage dispatch (ideas 55+58) ──
+
+from src.core.strategic import BlockerState, BlockerKind
+
+
+def test_death_dispatch_fires_both_handlers_from_single_call_site():
+    """A death that resolves heir_entity_id triggers exactly one dispatch call
+    inside resolve_lifecycle's death block, invoking both idea-55 and idea-58
+    handlers -- not two separately-hooked triggers."""
+    nemesis_blocker = BlockerState(id="nemesis_99", kind=BlockerKind.SOCIAL, subject="99", severity=0.8)
+    parent = (V2EntityBuilder(1).location(0.0, 0.0).build())
+    parent = replace(parent, lifecycle=replace(parent.lifecycle, age_ticks=100, max_age_ticks=100, heir_entity_id=2))
+    parent = replace(parent, strategic=replace(parent.strategic, blockers={"nemesis_99": nemesis_blocker}))
+
+    heir = (V2EntityBuilder(2).location(1.0, 1.0).build())
+
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir})
+    refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+
+    heir_upd = refined.entity_updates[2]
+    # idea 55: inherited feud present
+    assert heir_upd.strategic is not None
+    assert any(b.id == "inherited_nemesis_99" for b in heir_upd.strategic.blockers_add_or_update)
+    # idea 58: named intention present, from the same dispatch call
+    assert heir_upd.cognition_bundle_set is not None
+    assert heir_upd.cognition_bundle_set.motivation.named_intention.source_entity_id == 1
+
+
+def test_inherited_nemesis_blocker_is_weakened_relative_to_original():
+    """The heir's inherited hostility is a weakened copy of the deceased's own --
+    verified severity comparison, not just presence."""
+    nemesis_blocker = BlockerState(id="nemesis_42", kind=BlockerKind.SOCIAL, subject="42", severity=0.9)
+    parent = (V2EntityBuilder(1).location(0.0, 0.0).build())
+    parent = replace(parent, lifecycle=replace(parent.lifecycle, age_ticks=100, max_age_ticks=100, heir_entity_id=2))
+    parent = replace(parent, strategic=replace(parent.strategic, blockers={"nemesis_42": nemesis_blocker}))
+
+    heir = (V2EntityBuilder(2).location(1.0, 1.0).build())
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir})
+
+    refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+    heir_upd = refined.entity_updates[2]
+
+    inherited = next(b for b in heir_upd.strategic.blockers_add_or_update if b.id == "inherited_nemesis_42")
+    assert inherited.severity == pytest.approx(0.9 * LifecycleSystem.INHERITED_NEMESIS_SEVERITY_MULTIPLIER)
+    assert inherited.severity < nemesis_blocker.severity
+    assert inherited.subject == "42"
+    # Never silently overwrites a heir's own independent nemesis blocker for the same antagonist
+    assert inherited.id != nemesis_blocker.id
+
+
+def test_death_with_no_nemesis_blocker_produces_no_feud_transfer():
+    """When the deceased has no active Campaign-mode Nemesis blocker, idea 55's
+    handler is a no-op (the common case for most default single-episode Kernel
+    runs -- an accepted, disclosed scope limit)."""
+    parent = (V2EntityBuilder(1).location(0.0, 0.0).build())
+    parent = replace(parent, lifecycle=replace(parent.lifecycle, age_ticks=100, max_age_ticks=100, heir_entity_id=2))
+    heir = (V2EntityBuilder(2).location(1.0, 1.0).build())
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir})
+
+    refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+    heir_upd = refined.entity_updates[2]
+
+    assert heir_upd.strategic is None or heir_upd.strategic.blockers_add_or_update == []
+
+
+def test_named_intention_is_honorable_ignorable_never_auto_executing():
+    """A named intention is written onto the heir's cognition through the
+    authoritative apply path, source-attributed to the deceased, status PENDING
+    (honorable/ignorable/rejectable), and round-trip serializes correctly."""
+    parent = (V2EntityBuilder(1).location(0.0, 0.0).build())
+    parent = replace(parent, lifecycle=replace(parent.lifecycle, age_ticks=100, max_age_ticks=100, heir_entity_id=2))
+    heir = (V2EntityBuilder(2).location(1.0, 1.0).build())
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir})
+
+    refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+
+    # Written through the authoritative apply path (ApplyPath -> patches.py CognitionPatch),
+    # not a direct mutation.
+    next_state = ApplyPath.apply_generation(state, refined, 101, 101)
+    heir_state = next_state.entities[2]
+    intention = heir_state.cognition.motivation.named_intention
+
+    assert intention.source_entity_id == 1
+    assert intention.status == "PENDING"
+    assert intention.text is not None
+
+    canonical = intention.to_canonical_dict()
+    assert canonical["source_entity_id"] == 1
+    assert canonical["status"] == "PENDING"
+
+    # Nothing reads `status` to force an action -- honorable/ignorable/rejectable means the
+    # heir's own state is otherwise unaffected by the mere presence of this bundle.
+    assert heir_state.lifecycle.active is True
+
+
+def test_dying_wish_does_not_clobber_earlier_same_tick_cognition_write():
+    """A same-tick collision between this ticket's cognition write and an earlier
+    cognition_bundle_set writer on the same heir does not silently clobber either
+    write -- follows the codebase's established read-through-then-replace
+    convention (src/strategy/role_model_phase.py, src/domains/emotion/habit_phase.py)."""
+    parent = (V2EntityBuilder(1).location(0.0, 0.0).build())
+    parent = replace(parent, lifecycle=replace(parent.lifecycle, age_ticks=100, max_age_ticks=100, heir_entity_id=2))
+    heir = (V2EntityBuilder(2).location(1.0, 1.0).build())
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir})
+
+    # Simulate an earlier same-tick phase having already staged a cognition_bundle_set
+    # write on the heir (e.g. RoleModelSelectionPhase), touching a field unrelated to
+    # motivation.named_intention.
+    earlier_cognition = replace(
+        heir.cognition,
+        role_model=replace(heir.cognition.role_model, admired_entity_id=999),
+    )
+    pre_staged = StateUpdate(entity_updates={2: EntityUpdate(entity_id=2, cognition_bundle_set=earlier_cognition)})
+
+    refined = LifecycleSystem.resolve_lifecycle(state, pre_staged)
+    heir_upd = refined.entity_updates[2]
+
+    # The earlier phase's write survives...
+    assert heir_upd.cognition_bundle_set.role_model.admired_entity_id == 999
+    # ...alongside this ticket's own write.
+    assert heir_upd.cognition_bundle_set.motivation.named_intention.source_entity_id == 1
+
+
+def test_lineage_dispatch_introduces_no_reputation_branch_changes():
+    """This ticket introduces zero changes to SocialComponent.public_reputation or
+    any other reputation-branch field -- keeps the death-and-lineage and
+    reputation branches independently landable."""
+    import inspect
+    from src.systems.lifecycle_systems import lifecycle as lifecycle_module
+
+    source = inspect.getsource(lifecycle_module)
+    assert "public_reputation" not in source
+    assert "ReputationUpdateService" not in source
+    assert "PublicReputationProfile" not in source
