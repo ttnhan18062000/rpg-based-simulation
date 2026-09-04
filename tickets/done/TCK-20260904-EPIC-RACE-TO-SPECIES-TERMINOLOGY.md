@@ -15,7 +15,7 @@ tags: [content, schema]
 Rename "race" terminology to "species" across schema, code, content, and docs
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -113,14 +113,14 @@ Real scope, found via direct grep (not estimated):
 - [x] Roadmap doc (`rpg_design_roadmap.md`) updated to record this decision, mirroring the existing
       Temporal-axis/idea-66-ownership reconciliation pattern, without editing the frozen brainstorm
       HTML sources.
-- [ ] All 4 child tickets implemented, tested, and closed (tracked here, not done in this epic).
+- [x] All 4 child tickets implemented, tested, and closed.
 
 ## Related Tickets
-Child tickets (created 2026-09-04, sequenced 1->4, folder `tickets/todos/race-to-species-migration/`):
-1. TCK-20260904-SPECIES-CORE-SCHEMA-RENAME
-2. TCK-20260904-SPECIES-RELATIONS-SUBSYSTEM-RENAME
-3. TCK-20260904-SPECIES-CROSSCUTTING-CONSUMERS-RENAME
-4. TCK-20260904-SPECIES-DOCS-MECHANICS-PARITY-SWEEP
+Child tickets (created 2026-09-04, sequenced 1->4, folder `tickets/done/race-to-species-migration/`):
+1. TCK-20260904-SPECIES-CORE-SCHEMA-RENAME — DONE
+2. TCK-20260904-SPECIES-RELATIONS-SUBSYSTEM-RENAME — DONE
+3. TCK-20260904-SPECIES-CROSSCUTTING-CONSUMERS-RENAME — DONE
+4. TCK-20260904-SPECIES-DOCS-MECHANICS-PARITY-SWEEP — DONE
 
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` (decision recorded, see Implementation Notes)
@@ -169,4 +169,15 @@ coverage for the files it renames.
   land, matching idea 66's own epic-closure precedent).
 
 ## Completion Summary
-(fill in when all 4 child tickets are done)
+All 4 child tickets landed. `RaceDefinition`/`race_id` and the "Race Relations" subsystem
+(`RaceRelationRecord`, `race_relations.yaml`) are now `SpeciesDefinition`/`species_id` and
+"Species Relations" (`SpeciesRelationRecord`, `species_relations.yaml`) throughout `src/`,
+`data/content/`, `tests/`, and the live `docs/` corpus, with a consistently-held, verified
+boundary against the frozen brainstorm HTML sources and historical narrative docs. Each child
+found and fixed real hard-coupling gaps beyond its own original file-list scope (confirmed via
+grep, never assumed), and each closed with its own full ticket-closing workflow: staging
+artifacts, tests (872/6008/1324/docs-validator sweeps, all green modulo 2 pre-diagnosed
+environment-load `TimeoutError`s unrelated to this rename), parity ledger entries, and archival.
+All 21 pre-compiled world artifacts were regenerated and diff-verified isolated to the renamed
+field. The "Race Relations" idea (idea 37 of the canonical 65-idea roadmap) is now "Species
+Relations" wherever it's cited as a named design idea outside the frozen investigation record.

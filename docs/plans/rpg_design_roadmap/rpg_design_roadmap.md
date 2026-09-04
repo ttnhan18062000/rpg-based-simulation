@@ -338,7 +338,7 @@ for the full investigation (mirrors the temporal proposal's own structure and ri
   real decay, `SocialMemoryDecay.apply_decay()`, operates on a separate Campaign-only structure and never
   touches live gameplay state) and misdocumented `public_reputation`'s real clamp range (0.0–2.0, not
   0.0–1.0).
-- Idea 37 (Race Relations) and idea 68 (Inter-Clan Relations) are confirmed structurally parallel to this
+- Idea 37 (Species Relations) and idea 68 (Inter-Clan Relations) are confirmed structurally parallel to this
   axis, not part of it — no merge or reconciliation is proposed between the two systems.
 
 **Determinism gap — resolved, 2026-09-03** (`tickets/done/TCK-20260902-SOCIAL-CANONICAL-HASH-GAP.md`,
@@ -652,8 +652,8 @@ with the new terminology is a separate decision, not bundled into this rename.
   only its own read-side `region_cultures` consumption. See the Hardening backlog section above.
 - The Design Merit Scorecard's own single-pass calibration (all 65 ideas scored in one batch) is unverified
   without an independent second read of a sample — noted, not blocking any milestone above.
-- The real race roster is 13 entries (`data/content/living/races.yaml`), and `RaceDefinition` has no numeric
-  field anywhere — only qualitative strings. Any idea introducing a new per-race numeric constant (idea 32's
+- The real species roster is 13 entries (`data/content/living/species.yaml`), and `SpeciesDefinition` has no numeric
+  field anywhere — only qualitative strings. Any idea introducing a new per-species numeric constant (idea 32's
   cooldowns, idea 37's matrix) is extending a schema that has never carried a number before, not following
   an established numeric-content pattern.
 - **The 6 Mechanics Bible chapters have no social/relationship/reputation/political chapter.** Mapping all

@@ -208,7 +208,7 @@ findings — low kill rate was treated as a given fact to design reward magnitud
 finding traces *why* it's low. Not fixed here — filed as
 `TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION` (the legality-gate bug/investigation)
 and `TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY` (a related but distinct feature idea:
-personality/race-driven flee-vs-fight outcomes and pursuit-prevents-escape, raised by the user
+personality/species-driven flee-vs-fight outcomes and pursuit-prevents-escape, raised by the user
 during this same investigation).
 
 **Update 2026-08-09** (`TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE`): the 2 sibling tickets

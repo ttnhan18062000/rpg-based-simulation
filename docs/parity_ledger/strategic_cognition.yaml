@@ -3288,7 +3288,7 @@
     and already applies uniformly to 100% of the real population (its one documented
     escape hatch, ActionStyle.EVASIVE + MovementMode.RETREAT, is structurally unreachable
     -- no real entity-generation path ever assigns a non-default ActionStyle); and
-    bravery has zero race/archetype correlation (pure per-entity RNG) -- both real,
+    bravery has zero species/archetype correlation (pure per-entity RNG) -- both real,
     evaluated, and deferred as separate scope, not fixed here.
 
     '
@@ -3890,17 +3890,17 @@
   proof_type: regression
 - id: STRAT-263
   text: 'TacticalDecisionSystem.evaluate_entity_intent''s hostile-scan loop consumes
-    race-level hostility: RelationContext now carries source_race (via get_race_id_str(entity))
-    alongside target_race, so an authored race_relations.yaml entry can pull a neighbor
-    into the hostiles list (upstream of target_score()''s existing 6-element sort
-    tuple, which this change does not touch or extend).'
+    species-level hostility: RelationContext now carries source_species (via get_species_id_str(entity))
+    alongside target_species, so an authored species_relations.yaml entry can pull
+    a neighbor into the hostiles list (upstream of target_score()''s existing 6-element
+    sort tuple, which this change does not touch or extend).'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/engine/tactical.py:212-216 (RelationContext(source_race=get_race_id_str(entity),
-    target_race=get_race_id_str(n)) feeding is_hostile_compat() -> hostiles.append(n)).
+  v2_evidence: src/engine/tactical.py:212-216 (RelationContext(source_species=get_species_id_str(entity),
+    target_species=get_species_id_str(n)) feeding is_hostile_compat() -> hostiles.append(n)).
   proof_type: regression
-  test_path: tests/unit/combat/test_race_relations_tactical_wiring.py
+  test_path: tests/unit/combat/test_species_relations_tactical_wiring.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-264

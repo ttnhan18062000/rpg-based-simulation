@@ -1414,17 +1414,17 @@
   text: q_wolf_hunt (HUNT-kind) quests now carry a real, corpus-grounded target_kind
     so QuestResolutionSystem.evaluate_combat_victory()'s legacy target_kind fallback
     can detect a matching kill and complete them; q_slime_cull (the other HUNT template)
-    remains permanently uncompletable -- no "slime" race/archetype exists anywhere
+    remains permanently uncompletable -- no "slime" species/archetype exists anywhere
     in the real content corpus, so no target_kind was fabricated for it.
   status: divergent
   priority: P2
   legacy_evidence: null
   v2_evidence: 'src/quests/generator.py -- QuestTemplate gained a target_kind: Optional[str]
     = None field; q_wolf_hunt''s TEMPLATES entry sets target_kind="wolf" (both hungry_wolf
-    and alpha_wolf archetypes declare race: "wolf" in data/content/entities/entity_archetypes.yaml,
+    and alpha_wolf archetypes declare species: "wolf" in data/content/entities/entity_archetypes.yaml,
     which src/entities/contract_builder.py maps to EntityState.kind at spawn time
     -- confirmed via direct trace, not assumed); q_slime_cull''s entry deliberately
-    has no target_kind (confirmed via corpus-wide grep: no "slime" race value exists
+    has no target_kind (confirmed via corpus-wide grep: no "slime" species value exists
     in entity_archetypes.yaml). generate() now sets metadata={"target_kind": template.target_kind}
     for HUNT templates that declare one.'
   proof_type: parity

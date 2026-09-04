@@ -123,11 +123,11 @@ populated `metadata` for any kind, making every generated quest permanently unco
   `metadata={"target_pos": (x, y)}`. Without `origin_pos`, `metadata` stays without a
   `target_pos` key.
 - **HUNT**: `QuestTemplate` gained a `target_kind: Optional[str] = None` field — a real,
-  corpus-grounded `EntityState.kind` value (derived from the archetype's `race` catalog entry,
+  corpus-grounded `EntityState.kind` value (derived from the archetype's `species` catalog entry,
   e.g. `"wolf"` for both `hungry_wolf`/`alpha_wolf`) a killed entity must match for
   `evaluate_combat_victory()`'s legacy `target_kind` fallback path to advance the quest. Only
   `q_wolf_hunt` has one set (`"wolf"`) — `q_slime_cull` deliberately has none: no `"slime"`
-  race/archetype exists anywhere in the real content corpus
+  species/archetype exists anywhere in the real content corpus
   (`data/content/entities/entity_archetypes.yaml`), so this quest stays honestly uncompletable
   rather than matching against a fabricated kind string. When set, `generate()` sets
   `metadata={"target_kind": template.target_kind}` for HUNT templates.

@@ -4122,25 +4122,26 @@
   divergence_note: null
   support_boundary: null
 - id: COMB-317
-  text: 'Attack legality (LegalityServiceV2.verify_attack_legality) consumes race-level
-    hostility: RelationContext now carries source_race (attacker''s race, via get_race_id_str(attacker))
-    alongside the pre-existing target_race. RelationProjectionService.project_relation()''s
-    race-hostility escalation step resolves an authored race_relations.yaml entry
-    for the (source_race, target_race) pair and, when the pair is not same-faction,
-    upgrades a neutral/threat/intruder label toward enemy/threat based on axes.hostility
-    -- never downgrading an already-resolved label, and never touching perspective-declared
-    off-ladder labels (ally, protected, opportunity, ignored, prey). Friendly Fire
-    law is preserved: the escalation is gated off entirely when source_faction_id
-    == target_faction_id.'
+  text: 'Attack legality (LegalityServiceV2.verify_attack_legality) consumes species-level
+    hostility: RelationContext now carries source_species (attacker''s species, via
+    get_species_id_str(attacker)) alongside the pre-existing target_species. RelationProjectionService.project_relation()''s
+    species-hostility escalation step resolves an authored species_relations.yaml
+    entry for the (source_species, target_species) pair and, when the pair is not
+    same-faction, upgrades a neutral/threat/intruder label toward enemy/threat based
+    on axes.hostility -- never downgrading an already-resolved label, and never touching
+    perspective-declared off-ladder labels (ally, protected, opportunity, ignored,
+    prey). Friendly Fire law is preserved: the escalation is gated off entirely when
+    source_faction_id == target_faction_id.'
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: 'src/engine/legality.py:243-247 (RelationContext(source_race=get_race_id_str(attacker),
-    target_race=get_race_id_str(target))); src/content_semantics/relation.py (project_relation()''s
-    ''3.5 Race-hostility escalation'' block, fail-closed on label in _RACE_LABEL_LADDER_RANK
-    = {None: 0, ''neutral'': 0, ''threat'': 1, ''intruder'': 1, ''enemy'': 2}).'
+  v2_evidence: 'src/engine/legality.py:243-247 (RelationContext(source_species=get_species_id_str(attacker),
+    target_species=get_species_id_str(target))); src/content_semantics/relation.py
+    (project_relation()''s ''3.5 Species-hostility escalation'' block, fail-closed
+    on label in _SPECIES_LABEL_LADDER_RANK = {None: 0, ''neutral'': 0, ''threat'':
+    1, ''intruder'': 1, ''enemy'': 2}).'
   proof_type: regression
-  test_path: tests/unit/combat/test_race_relations_legality_wiring.py
+  test_path: tests/unit/combat/test_species_relations_legality_wiring.py
   divergence_note: null
   support_boundary: null
 - id: COMB-318

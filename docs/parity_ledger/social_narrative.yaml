@@ -3718,26 +3718,27 @@
   test_path: tests/unit/domains/faction/test_clan_state.py::test_clan_state_serialization_round_trip
   divergence_note: null
 - id: SOC-257
-  text: 'New race_relations content family (RaceRelationRecord, mirroring FactionRelationshipDefinition''s
-    shape exactly: source_race, target_race, relationship_model, axes: Dict[str,str],
+  text: 'New species_relations content family (SpeciesRelationRecord, mirroring FactionRelationshipDefinition''s
+    shape exactly: source_species, target_species, relationship_model, axes: Dict[str,str],
     extra=''forbid'' via CatalogBaseDefinition) registered in CANONICAL_FAMILIES and
-    CONTENT_USAGE_MATRIX, loaded from data/content/social/race_relations.yaml (24
-    directed entries / 12 undirected pairs, a disclosed ~18% subset of the 66 populated-race
-    pairs). Consumed by RelationProjectionService.project_relation()''s new race-hostility
+    CONTENT_USAGE_MATRIX, loaded from data/content/social/species_relations.yaml (24
+    directed entries / 12 undirected pairs, a disclosed ~18% subset of the 66 populated-species
+    pairs). Consumed by RelationProjectionService.project_relation()''s new species-hostility
     escalation step, which upgrade-only tightens a projected relationship label using
     axes.hostility, gated off for same-faction pairs and for any label outside the
-    neutral/threat/intruder/enemy escalation ladder (fail-closed: an authored race
+    neutral/threat/intruder/enemy escalation ladder (fail-closed: an authored species
     entry can never invert a perspective-declared ''ally'' label).'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/content/schema.py (RaceRelationRecord); src/content/repository.py
-    (ContentFamilySpec('social.race_relations', 'social/race_relations.yaml', RaceRelationRecord,
-    'race_relations') in CANONICAL_FAMILIES); src/content_semantics/relation.py (project_relation()'s
-    '3.5 Race-hostility escalation' block); src/content/matrix.py:260-273 (CONTENT_USAGE_MATRIX['social/race_relations']
-    entry registering the new content family for usage-matrix tracking).
+  v2_evidence: src/content/schema.py (SpeciesRelationRecord); src/content/repository.py
+    (ContentFamilySpec('social.species_relations', 'social/species_relations.yaml',
+    SpeciesRelationRecord, 'species_relations') in CANONICAL_FAMILIES); src/content_semantics/relation.py
+    (project_relation()'s '3.5 Species-hostility escalation' block); src/content/matrix.py:260-273
+    (CONTENT_USAGE_MATRIX['social/species_relations'] entry registering the new content
+    family for usage-matrix tracking).
   proof_type: regression
-  test_path: tests/unit/content_semantics/test_relation_race_projection.py
+  test_path: tests/unit/content_semantics/test_relation_species_projection.py
   divergence_note: null
   support_boundary: null
 - id: SOC-258
