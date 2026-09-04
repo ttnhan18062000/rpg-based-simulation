@@ -528,6 +528,32 @@ its own dedicated high-level plan doc once investigated.
 (social/political mechanics, spatial index, culture drift); items 4-5 confirmed the prior framing and closed
 with no further plan-doc needed.
 
+## Terminology correction: Race -> Species (2026-09-04)
+
+`race` was identified as a misused term for what the design actually means: biological/creature
+classification (human, wolf, goblin, dire_wolf), not ethnic/fantasy-ancestry "race." Confirmed via
+direct investigation, not assumed — `RaceDefinition`'s own docstring already reads "dynamic
+race/species definition," and `src/engine/evolution.py`'s existing "species evolution thresholds"
+usage confirms there is no separate, colliding "species" concept; this is a genuine naming correction,
+not a new concept being introduced.
+
+Real scope is large: `race_id` is a stored `entity.identity.properties` field wired through 25 `src/`
+files, two content catalogs (`data/content/living/races.yaml`,
+`data/content/social/race_relations.yaml`), 20 test files, 7 `docs/parity_ledger/` shards, and 5
+`docs/mechanics/` files. **Idea 37 of the canonical 65-idea set is itself named "Race Relations"**
+(`docs/brainstorm/rpg_expected_schemas.html#schema-37`) — this rename touches a real, numbered design
+idea, not just an internal identifier.
+
+Scoped as `TCK-20260904-EPIC-RACE-TO-SPECIES-TERMINOLOGY` (epic, scope-only, 4 sequenced child
+tickets in `tickets/todos/race-to-species-migration/`: core schema/entity plumbing, the race-relations
+subsystem, remaining cross-cutting consumers, and a docs/mechanics/parity sweep). **No implementation
+has landed yet** — this section only records the decision and scope, per this roadmap's own established
+pattern (see Temporal axis/Social-Relationship axis/Knowledge-Belief axis above) of reconciling
+brainstorm findings here rather than editing the frozen brainstorm HTML sources
+(`rpg_feature_atlas.html`, `rpg_expected_schemas.html`, `design_merit_scorecard.html`) directly. Idea
+37's name in those frozen sources is unchanged; a future deliberate regeneration of the brainstorm HTML
+with the new terminology is a separate decision, not bundled into this rename.
+
 ## Sequencing rules
 
 - **M1 has no gate — it's ready today.** Nothing else in this roadmap blocks it, and nothing in M1 blocks on
