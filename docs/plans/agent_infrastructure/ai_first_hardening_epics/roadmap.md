@@ -48,9 +48,11 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | 21 | Live Codex provider pilot | C — Future option | H3, blocked | `bucket_c_future_options.md` |
 | — | Workflow-engine migration, A2A, full sandboxing, general AI-config platform, general command-risk policy | Rejected | — | `bucket_c_future_options.md` (§"Explicitly not recommended") |
 
-12 committed items (bucket A), 5 experiments (bucket B), 4 blocked future options (bucket C), plus
-5 explicitly-rejected directions — the full set brainstormed in the frozen proposal, none silently
-dropped from this planning pass.
+12 committed items (bucket A) were originally scoped — **11 still to implement, plus item 8, found
+during planning discussion to already be shipped on `main`** (see the Horizon 0/1 entries above and
+`telemetry_retention_epic.md`'s M1 note) — 5 experiments (bucket B), 4 blocked future options
+(bucket C), plus 5 explicitly-rejected directions — the full set brainstormed in the frozen
+proposal, none silently dropped from this planning pass.
 
 ## Epics and detail docs
 
