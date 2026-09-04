@@ -419,3 +419,22 @@ def test_world_dynamics_folds_camp_and_calamity_world_updates_into_final_update(
     refined = WorldDynamicsSystem.resolve_dynamics(state, StateUpdate(), generator, cadence)
 
     assert refined.world_updates["forest"].population_young_births_delta == 1
+
+
+def test_resolve_dynamics_threads_faction_directives_to_camp_service():
+    """TCK-20260904-FACTION-EXPAND-DIRECTIVE: confirms the full 3-phase threading --
+    resolve_dynamics(..., faction_directives=[...]) passes the list through unchanged
+    into CampService.process_camps(), which applies the EXPAND_TERRITORY maturity boost."""
+    from src.engine.faction_decision import FactionDirective
+
+    region = RegionState(id="forest", name="Forest", bounds=(0, 0, 100, 100))
+    camp = CampState(id="camp_1", kind="goblin", position=(50.0, 50.0), maturity=10.0)
+    state = AuthoritativeState(tick=1, seed=42, regions={"forest": region}, camps={"camp_1": camp})
+    generator = EntityGenerator(42)
+    cadence = SystemCadence(world_dynamics=1)
+    directive = FactionDirective(faction_id="faction_a", directive_kind="EXPAND_TERRITORY", target_region="forest", created_tick=1)
+
+    from src.world.camp import CampService
+    refined = WorldDynamicsSystem.resolve_dynamics(state, StateUpdate(), generator, cadence, faction_directives=[directive])
+
+    assert refined.camp_updates["camp_1"].maturity_delta == pytest.approx(0.05 + CampService.EXPAND_TERRITORY_MATURITY_BOOST)

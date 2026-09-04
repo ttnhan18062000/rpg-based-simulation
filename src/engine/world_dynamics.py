@@ -20,7 +20,7 @@ class WorldDynamicsSystem:
     """
 
     @staticmethod
-    def resolve_dynamics(state: AuthoritativeState, update: StateUpdate, generator: EntityGenerator, cadence: SystemCadence | None = None) -> StateUpdate:
+    def resolve_dynamics(state: AuthoritativeState, update: StateUpdate, generator: EntityGenerator, cadence: SystemCadence | None = None, faction_directives: list | None = None) -> StateUpdate:
         """
         Apply regional effects to entities and update world markers.
         """
@@ -172,7 +172,7 @@ class WorldDynamicsSystem:
 
             # 3.6 Process Camps (Persistent Encampments)
             from src.world.camp import CampService
-            camp_state_update = CampService.process_camps(state, generator)
+            camp_state_update = CampService.process_camps(state, generator, faction_directives=faction_directives)
 
             # 3.7 Demographic Birth/Death Cycle (E52A)
             from src.domains.demographics.cohort import DemographicCycleService

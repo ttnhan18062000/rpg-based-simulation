@@ -166,3 +166,178 @@ def test_faction_directive_has_slots():
     from src.engine.faction_decision import FactionDirective
 
     assert hasattr(FactionDirective, "__slots__"), "FactionDirective must use slots=True for memory efficiency"
+
+
+# ---------------------------------------------------------------------------
+# EXPAND_TERRITORY (TCK-20260904-FACTION-EXPAND-DIRECTIVE, ideas 51+52)
+# ---------------------------------------------------------------------------
+
+def _pressured_region(region_id: str, owner_faction_id=None) -> "RegionState":
+    """A region with zero resource nodes -> compute_regional_scarcity() == 1.0 (max scarcity)."""
+    from src.core.state import RegionState
+
+    return RegionState(id=region_id, name=region_id, bounds=(0, 0, 10, 10), owner_faction_id=owner_faction_id)
+
+
+def test_faction_decision_phase_expand_territory_emitted_under_population_pressure():
+    from src.engine.faction_decision import FactionDecisionPhase
+    from src.core.state import FactionState, AuthoritativeState, RegionState
+
+    fs = FactionState(faction_id="faction_e", tension_level=0.1, military_strength=0.1, territory=("region_home",))
+    home = _pressured_region("region_home", owner_faction_id=1)
+    free = RegionState(id="region_free", name="region_free", bounds=(20, 20, 30, 30), owner_faction_id=None)
+    state = AuthoritativeState(tick=0, seed=0, factions={"faction_e": fs}, regions={"region_home": home, "region_free": free})
+
+    directives = FactionDecisionPhase.execute(state, policy=None)
+
+    expand = [d for d in directives if d.faction_id == "faction_e" and d.directive_kind == "EXPAND_TERRITORY"]
+    assert len(expand) == 1
+    assert expand[0].target_region == "region_free"
+
+
+def test_faction_decision_phase_expand_territory_not_emitted_without_pressure():
+    from src.engine.faction_decision import FactionDecisionPhase
+    from src.core.state import FactionState, AuthoritativeState, RegionState, ResourceNodeState
+
+    fs = FactionState(faction_id="faction_f", tension_level=0.1, military_strength=0.1, territory=("region_home",))
+    home = RegionState(id="region_home", name="region_home", bounds=(0, 0, 10, 10), owner_faction_id=1)
+    free = RegionState(id="region_free", name="region_free", bounds=(20, 20, 30, 30), owner_faction_id=None)
+    # A fully-stocked resource node inside region_home's bounds -> scarcity == 0.0, well below the 0.7 gate.
+    node = ResourceNodeState(
+        id=1, kind="ORE", position=(5.0, 5.0), yields_item="iron_ore",
+        remaining_charges=100, max_charges=100, required_ticks=10,
+    )
+    state = AuthoritativeState(
+        tick=0, seed=0, factions={"faction_f": fs},
+        regions={"region_home": home, "region_free": free},
+        resource_nodes={1: node},
+    )
+
+    directives = FactionDecisionPhase.execute(state, policy=None)
+
+    kinds = {d.directive_kind for d in directives if d.faction_id == "faction_f"}
+    assert "EXPAND_TERRITORY" not in kinds
+
+
+def test_faction_decision_phase_expand_territory_not_emitted_without_target():
+    from src.engine.faction_decision import FactionDecisionPhase
+    from src.core.state import FactionState, AuthoritativeState
+
+    fs = FactionState(faction_id="faction_g", tension_level=0.1, military_strength=0.1, territory=("region_home",))
+    home = _pressured_region("region_home", owner_faction_id=1)
+    # No other regions exist -> no faction-less target available.
+    state = AuthoritativeState(tick=0, seed=0, factions={"faction_g": fs}, regions={"region_home": home})
+
+    directives = FactionDecisionPhase.execute(state, policy=None)
+
+    kinds = {d.directive_kind for d in directives if d.faction_id == "faction_g"}
+    assert "EXPAND_TERRITORY" not in kinds
+
+
+def test_faction_decision_phase_expand_territory_target_resolution_deterministic():
+    from src.engine.faction_decision import FactionDecisionPhase
+    from src.core.state import FactionState, AuthoritativeState, RegionState
+
+    fs = FactionState(faction_id="faction_h", tension_level=0.1, military_strength=0.1, territory=("region_home",))
+    home = _pressured_region("region_home", owner_faction_id=1)
+    # Two faction-less regions; ids chosen so unsorted dict-iteration order would be observable.
+    region_zeta = RegionState(id="region_zeta", name="region_zeta", bounds=(20, 20, 30, 30), owner_faction_id=None)
+    region_alpha = RegionState(id="region_alpha", name="region_alpha", bounds=(40, 40, 50, 50), owner_faction_id=None)
+    state = AuthoritativeState(
+        tick=0, seed=0, factions={"faction_h": fs},
+        regions={"region_zeta": region_zeta, "region_home": home, "region_alpha": region_alpha},
+    )
+
+    first = FactionDecisionPhase.execute(state, policy=None)
+    second = FactionDecisionPhase.execute(state, policy=None)
+
+    expand_first = [d for d in first if d.faction_id == "faction_h" and d.directive_kind == "EXPAND_TERRITORY"]
+    expand_second = [d for d in second if d.faction_id == "faction_h" and d.directive_kind == "EXPAND_TERRITORY"]
+    assert len(expand_first) == 1 and len(expand_second) == 1
+    assert expand_first[0].target_region == "region_alpha"  # lowest sorted id
+    assert expand_first[0].target_region == expand_second[0].target_region
+
+
+def test_faction_decision_phase_expand_territory_transient_not_persisted():
+    from src.engine.faction_decision import FactionDecisionPhase
+    from src.core.state import FactionState, AuthoritativeState, RegionState
+    from src.core.updates import StateUpdate
+
+    assert not hasattr(StateUpdate, "faction_directives")
+    field_names = getattr(StateUpdate, "__dataclass_fields__", {}).keys()
+    assert not any("expand" in f.lower() or "territory" in f.lower() for f in field_names)
+
+    fs = FactionState(faction_id="faction_i", tension_level=0.1, military_strength=0.1, territory=("region_home",))
+    home = _pressured_region("region_home", owner_faction_id=1)
+    free = RegionState(id="region_free", name="region_free", bounds=(20, 20, 30, 30), owner_faction_id=None)
+    state = AuthoritativeState(tick=0, seed=0, factions={"faction_i": fs}, regions={"region_home": home, "region_free": free})
+
+    result = FactionDecisionPhase.execute(state, policy=None)
+    assert isinstance(result, list)
+    assert not isinstance(result, StateUpdate)
+    assert any(d.directive_kind == "EXPAND_TERRITORY" for d in result)
+
+
+def test_faction_constants_expand_territory_value():
+    from src.engine.faction_constants import EXPAND_TERRITORY as const_expand
+    from src.engine.faction_decision import EXPAND_TERRITORY as decision_expand
+
+    assert const_expand == "EXPAND_TERRITORY"
+    assert decision_expand == "EXPAND_TERRITORY"
+
+
+# ---------------------------------------------------------------------------
+# Anti-drift guard D: EXPAND_TERRITORY does not suppress or duplicate DEFEND_BORDER
+# ---------------------------------------------------------------------------
+def test_faction_decision_phase_expand_territory_coexists_with_defend_border():
+    from src.engine.faction_decision import FactionDecisionPhase
+    from src.core.state import FactionState, AuthoritativeState, RegionState
+
+    fs = FactionState(faction_id="faction_j", tension_level=0.7, military_strength=1.0, territory=("region_home",))
+    home = _pressured_region("region_home", owner_faction_id=1)
+    free = RegionState(id="region_free", name="region_free", bounds=(20, 20, 30, 30), owner_faction_id=None)
+    state = AuthoritativeState(tick=0, seed=0, factions={"faction_j": fs}, regions={"region_home": home, "region_free": free})
+
+    directives = FactionDecisionPhase.execute(state, policy=None)
+
+    kinds = {d.directive_kind for d in directives if d.faction_id == "faction_j"}
+    assert "DEFEND_BORDER" in kinds
+    assert "EXPAND_TERRITORY" in kinds
+    assert "COMMISSION_QUEST" in kinds
+
+
+# ---------------------------------------------------------------------------
+# Anti-drift guard E: no Camp/Nest or City-ownership-aware logic in target resolution
+# ---------------------------------------------------------------------------
+def test_faction_decision_phase_expand_territory_target_resolution_ignores_camps_and_places():
+    import inspect
+    from src.engine.faction_decision import FactionDecisionPhase
+
+    sig = inspect.signature(FactionDecisionPhase._resolve_expand_territory_target)
+    params = set(sig.parameters.keys())
+    assert params == {"state", "fs"}, (
+        "_resolve_expand_territory_target must only read state.regions/fs.territory "
+        "(RegionState.owner_faction_id) -- no camps/places/city-ownership parameter"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Anti-drift guard F: recipe_materials() is never a hard gate for EXPAND_TERRITORY
+# ---------------------------------------------------------------------------
+def test_faction_decision_phase_expand_territory_not_gated_on_recipe_materials():
+    from src.domains.progression.material_predicate import recipe_materials
+    from src.engine.faction_decision import FactionDecisionPhase
+    from src.core.state import FactionState, AuthoritativeState, RegionState
+
+    # Confirmed real-world case: known_recipes are craft_*-prefixed and share no ids with
+    # recipes.py's 3-entry catalog, so recipe_materials() returns () for any real crafted recipe.
+    assert recipe_materials("craft_steel_sword") == ()
+
+    fs = FactionState(faction_id="faction_k", tension_level=0.1, military_strength=0.1, territory=("region_home",))
+    home = _pressured_region("region_home", owner_faction_id=1)
+    free = RegionState(id="region_free", name="region_free", bounds=(20, 20, 30, 30), owner_faction_id=None)
+    state = AuthoritativeState(tick=0, seed=0, factions={"faction_k": fs}, regions={"region_home": home, "region_free": free})
+
+    directives = FactionDecisionPhase.execute(state, policy=None)
+
+    assert any(d.directive_kind == "EXPAND_TERRITORY" for d in directives if d.faction_id == "faction_k")

@@ -21,12 +21,13 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional, Sequence
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState
+    from src.core.state import AuthoritativeState, FactionState
     from src.engine.policy import GovernorPolicy
 
 # Directive kind constants live in faction_constants to avoid circular imports
 # with scoring.py (which also imports these).
-from src.engine.faction_constants import DEFEND_BORDER, TRADE_ROUTE, COMMISSION_QUEST
+from src.engine.faction_constants import DEFEND_BORDER, TRADE_ROUTE, COMMISSION_QUEST, EXPAND_TERRITORY
+from src.domains.demographics.cohort import compute_population_density, compute_regional_scarcity
 from src.domains.world_emergence.schema import WorldEventCategory, WorldEvent
 from src.core.updates import FactionUpdate
 from src.core.enums import DiplomaticState
@@ -44,7 +45,7 @@ class FactionDirective:
     """
 
     faction_id: str
-    directive_kind: str  # "DEFEND_BORDER" | "TRADE_ROUTE" | "COMMISSION_QUEST"
+    directive_kind: str  # "DEFEND_BORDER" | "TRADE_ROUTE" | "COMMISSION_QUEST" | "EXPAND_TERRITORY"
     target_faction: Optional[str] = None
     target_region: Optional[str] = None
     priority: float = 1.0
@@ -114,6 +115,10 @@ class FactionDecisionPhase:
       - TRADE_ROUTE:      military_strength > 0.7  AND tension_level < 0.3
         (mutually exclusive with DEFEND_BORDER via if/elif)
       - COMMISSION_QUEST: territory non-empty (unconditional; priority = tension_level)
+      - EXPAND_TERRITORY: mean compute_regional_scarcity() over fs.territory > 0.7 AND a
+        faction-less region exists (RegionState.owner_faction_id is None); independent of
+        (not mutually exclusive with) the three rules above. compute_population_density()
+        contributes only to priority scaling, never to the gate itself.
 
     The ``policy`` parameter is accepted for E53B/C compatibility but is unused in E53Ab.
     """
@@ -166,7 +171,38 @@ class FactionDecisionPhase:
                     )
                 )
 
+            # --- EXPAND_TERRITORY: population-pressure-gated territorial expansion ---
+            if fs.territory:
+                mean_scarcity = sum(
+                    compute_regional_scarcity(rid, state) for rid in fs.territory
+                ) / len(fs.territory)
+                if mean_scarcity > 0.7:
+                    target = FactionDecisionPhase._resolve_expand_territory_target(state, fs)
+                    if target is not None:
+                        mean_density = sum(
+                            compute_population_density(state.regions[rid])
+                            for rid in fs.territory if rid in state.regions
+                        ) / len(fs.territory)
+                        directives.append(
+                            FactionDirective(
+                                faction_id=faction_id,
+                                directive_kind=EXPAND_TERRITORY,
+                                target_region=target,
+                                priority=min(1.0, mean_scarcity + mean_density * 0.1),
+                                created_tick=state.tick,
+                            )
+                        )
+
         return directives
+
+    @staticmethod
+    def _resolve_expand_territory_target(state: AuthoritativeState, fs: FactionState) -> Optional[str]:
+        """Deterministically pick the lowest-id faction-less region not already in fs.territory."""
+        candidates = sorted(
+            rid for rid, region in state.regions.items()
+            if region.owner_faction_id is None and rid not in fs.territory
+        )
+        return candidates[0] if candidates else None
 
 
 # ---------------------------------------------------------------------------

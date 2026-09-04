@@ -99,6 +99,31 @@ already read `state.camps` unconditionally every tick (see "Growth"/"Monster spa
 trigger" above), they simply had nothing to iterate before this ticket gave `state.camps` a real
 construction path.
 
+### Faction EXPAND_TERRITORY consumption (`TCK-20260904-FACTION-EXPAND-DIRECTIVE`)
+
+`CampService.process_camps()` takes a new trailing-optional `faction_directives: list | None =
+None` parameter, threaded in from `WorldDynamicsSystem.resolve_dynamics()` (itself threaded from
+`pipeline.py`'s `refine()`, which computes `faction_directives` via `FactionDecisionPhase.execute()`
+at the earlier `faction_decision` phase, same tick). Inside the existing per-camp loop, immediately
+after the "Growth" maturity-evolution step and before "Monster spawning": if any directive in
+`faction_directives` has `directive_kind == "EXPAND_TERRITORY"` and `target_region` equal to the
+camp's own region id, that camp's `maturity_delta` is additively boosted by
+`CampService.EXPAND_TERRITORY_MATURITY_BOOST` (`1.0`) via `dataclasses.replace()` on the existing
+`CampUpdate` — the trauma-scaled growth delta from "Growth" above is preserved, not overwritten.
+
+**Interaction with raid trigger:** if the same camp also crosses the raid-trigger gate
+(`maturity >= 80`) in the same tick, the raid-trigger step's own unconditional
+`CampUpdate(maturity_delta=-20.0, ...)` runs later in the same loop iteration and **overwrites**
+(not merges) the entry — the EXPAND_TERRITORY boost is silently discarded that tick. This is the
+same pre-existing overwrite behavior the raid-trigger step already applies to the plain "Growth"
+delta; EXPAND_TERRITORY introduces no new hazard here.
+
+**Real-content reachability:** as with the world-gen construction bridge above, `state.camps` is
+`{}` in every currently-compiled real world today (no content sets `creature_kind`), so this
+consumption branch is real and unit-tested (constructing `state.camps` directly, matching this
+file's existing test pattern) but has zero observable effect in any real compiled world today —
+wired but content-gap-inert, not a defect.
+
 ---
 
 ## Raid — `raid.py`

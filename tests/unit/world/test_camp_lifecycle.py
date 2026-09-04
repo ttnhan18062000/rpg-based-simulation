@@ -289,6 +289,62 @@ def test_campservice_raid_and_spawn_branches_not_newly_flag_gated():
     assert update.camp_updates["camp_1"].last_raid_tick_set == 500
 
 
+# TCK-20260904-FACTION-EXPAND-DIRECTIVE: EXPAND_TERRITORY directive consumption -- a
+# matching directive additively boosts an existing camp's maturity_delta via the new
+# trailing-optional faction_directives param. This branch is real and tested here, but
+# has zero observable effect in any currently-compiled real world (state.camps is {}
+# everywhere real today, per TCK-20260904-CAMPSTATE-PLACE-BRIDGE's own disclosure).
+
+
+def test_camp_service_consumes_expand_territory_directive():
+    from src.engine.faction_decision import FactionDirective
+
+    state = AuthoritativeState(
+        tick=1,
+        seed=42,
+        regions={"forest": RegionState(id="forest", name="The Deep Woods", kind="forest", bounds=(0, 0, 100, 100))},
+        camps={"camp_1": CampState(id="camp_1", kind="goblin", position=(50, 50), maturity=10.0)},
+    )
+    generator = EntityGenerator(seed=42)
+    directive = FactionDirective(faction_id="faction_a", directive_kind="EXPAND_TERRITORY", target_region="forest", created_tick=1)
+
+    update = CampService.process_camps(state, generator, faction_directives=[directive])
+
+    # Base MATURITY_PER_TICK (0.05, no trauma boost) + EXPAND_TERRITORY_MATURITY_BOOST (1.0).
+    assert update.camp_updates["camp_1"].maturity_delta == pytest.approx(0.05 + CampService.EXPAND_TERRITORY_MATURITY_BOOST)
+
+
+def test_camp_service_ignores_expand_territory_directive_for_other_region():
+    from src.engine.faction_decision import FactionDirective
+
+    state = AuthoritativeState(
+        tick=1,
+        seed=42,
+        regions={"forest": RegionState(id="forest", name="The Deep Woods", kind="forest", bounds=(0, 0, 100, 100))},
+        camps={"camp_1": CampState(id="camp_1", kind="goblin", position=(50, 50), maturity=10.0)},
+    )
+    generator = EntityGenerator(seed=42)
+    directive = FactionDirective(faction_id="faction_a", directive_kind="EXPAND_TERRITORY", target_region="other_region", created_tick=1)
+
+    update = CampService.process_camps(state, generator, faction_directives=[directive])
+
+    assert update.camp_updates["camp_1"].maturity_delta == pytest.approx(0.05)
+
+
+def test_camp_service_process_camps_backward_compatible_no_directives():
+    state = AuthoritativeState(
+        tick=1,
+        seed=42,
+        regions={"forest": RegionState(id="forest", name="The Deep Woods", kind="forest", bounds=(0, 0, 100, 100))},
+        camps={"camp_1": CampState(id="camp_1", kind="goblin", position=(50, 50), maturity=10.0)},
+    )
+    generator = EntityGenerator(seed=42)
+
+    update = CampService.process_camps(state, generator)
+
+    assert update.camp_updates["camp_1"].maturity_delta == pytest.approx(0.05)
+
+
 def test_authoritative_state_to_readonly_wraps_world_gen_seeded_camps():
     """AuthoritativeState.to_readonly()'s camps=ReadOnlyDict(self.camps) wrapping must
     still apply to a CampState constructed via the new world-gen bridge -- guards

@@ -340,7 +340,7 @@ class AuthoritativeApplyPipeline:
 
         generator = EntityGenerator(state.seed + state.tick)
         generator._last_id = state.next_entity_id - 1
-        update = run_phase("world_dynamics", update, lambda u: WorldDynamicsSystem.resolve_dynamics(state, u, generator, cadence=cadence))
+        update = run_phase("world_dynamics", update, lambda u: WorldDynamicsSystem.resolve_dynamics(state, u, generator, cadence=cadence, faction_directives=faction_directives))
         costs["governance_ecology"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Enhanced RPG Phase 8: World Emergence ---

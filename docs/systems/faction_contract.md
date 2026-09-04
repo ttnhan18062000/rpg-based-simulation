@@ -82,7 +82,7 @@ Defined in `src/engine/faction_decision.py`. **Transient** — never persisted.
 ```
 FactionDirective(frozen=True, slots=True)
   faction_id:      str
-  directive_kind:  str   — one of: DEFEND_BORDER | TRADE_ROUTE | COMMISSION_QUEST
+  directive_kind:  str   — one of: DEFEND_BORDER | TRADE_ROUTE | COMMISSION_QUEST | EXPAND_TERRITORY
   target_faction:  Optional[str]
   target_region:   Optional[str]
   priority:        float = 1.0
@@ -100,9 +100,17 @@ Constants defined in `src/engine/faction_constants.py`.
 | `DEFEND_BORDER` | `"DEFEND_BORDER"` | `tension_level > 0.5` AND `territory` non-empty |
 | `TRADE_ROUTE` | `"TRADE_ROUTE"` | `military_strength > 0.7` AND `tension_level < 0.3` |
 | `COMMISSION_QUEST` | `"COMMISSION_QUEST"` | `territory` non-empty (unconditional secondary) |
+| `EXPAND_TERRITORY` | `"EXPAND_TERRITORY"` | mean `compute_regional_scarcity()` (`src/domains/demographics/cohort.py`) over `fs.territory` > `0.7` AND a faction-less region exists (`RegionState.owner_faction_id is None`) |
 
 `DEFEND_BORDER` and `TRADE_ROUTE` are mutually exclusive per faction per tick (if/elif).
 `COMMISSION_QUEST` is always emitted when territory is non-empty regardless of tension.
+`EXPAND_TERRITORY` is independent of (not mutually exclusive with) the other three — a faction
+under both high tension and population pressure emits both `DEFEND_BORDER` and
+`EXPAND_TERRITORY` the same tick. Target resolution deterministically picks the lowest-id
+faction-less region (`_resolve_expand_territory_target`, sorted `state.regions` iteration);
+`compute_population_density()` is read too but only contributes to `priority` scaling, never to
+the gate itself. Target resolution is scoped to `RegionState.owner_faction_id` only — no
+Camp/Nest-as-conquest-target or City-ownership-aware (idea 35) logic (TCK-20260904-FACTION-EXPAND-DIRECTIVE).
 
 ---
 
@@ -158,6 +166,12 @@ Notes:
 pipeline.py:refine()
   ...
   [Phase 8b]  FactionDecisionPhase.execute(state) → faction_directives  (every tick)
+              faction_directives (including EXPAND_TERRITORY) is additionally threaded, same
+              tick, into the later "world_dynamics" phase (pipeline.py:343,
+              WorldDynamicsSystem.resolve_dynamics() → CampService.process_camps()) — a second,
+              real consumption point alongside the (disclosed-dead) urgency-scoring path
+              described under "Directive Propagation to Entity Scoring"
+              (TCK-20260904-FACTION-EXPAND-DIRECTIVE).
   [Phase 8c]  FactionAwarenessService.compute_tension_updates(state, events) → faction_updates
   [Phase 8d]  compute_transitions(factions) → transition_updates            (E53Bc)
               compute_common_enemy_pairs(factions) → alliance proposals      (E53Bc)

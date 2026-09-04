@@ -1,6 +1,7 @@
 # Compliance IDs: WORLD-030, WORLD-031
 # src/world/camp.py
 from __future__ import annotations
+from dataclasses import replace
 from typing import TYPE_CHECKING, Dict, List
 from src.core.updates import StateUpdate, CampUpdate, WorldUpdate
 from src.core.enums import Domain, EntityRole
@@ -13,14 +14,15 @@ class CampService:
     """
     Manages persistent world encampments, their maturity, and associated spawns.
     """
-    
+
     MATURITY_PER_TICK = 0.05
     RAID_MATURITY_THRESHOLD = 80.0
     CAMP_SPAWN_INTERVAL = 30
     NEST_RACE_KINDS = frozenset({"wolf", "spider", "troll", "slime"})
+    EXPAND_TERRITORY_MATURITY_BOOST = 1.0
 
     @staticmethod
-    def process_camps(state: AuthoritativeState, generator: EntityGenerator) -> StateUpdate:
+    def process_camps(state: AuthoritativeState, generator: EntityGenerator, faction_directives: list | None = None) -> StateUpdate:
         """
         Evolve camps and spawn monsters or raids.
         """
@@ -43,7 +45,19 @@ class CampService:
                 m_delta *= 1.5
                 
             camp_updates[c_id] = CampUpdate(id=c_id, maturity_delta=m_delta)
-            
+
+            # 1b. Faction EXPAND_TERRITORY consumption: a matching directive boosts maturity growth.
+            if faction_directives and region is not None:
+                from src.engine.faction_constants import EXPAND_TERRITORY
+                for directive in faction_directives:
+                    if getattr(directive, "directive_kind", None) == EXPAND_TERRITORY and directive.target_region == region.id:
+                        existing = camp_updates[c_id]
+                        camp_updates[c_id] = replace(
+                            existing,
+                            maturity_delta=existing.maturity_delta + CampService.EXPAND_TERRITORY_MATURITY_BOOST,
+                        )
+                        break
+
             # 2. Camp-based Spawning
             if state.tick % CampService.CAMP_SPAWN_INTERVAL == 0:
                 # Count monsters near camp

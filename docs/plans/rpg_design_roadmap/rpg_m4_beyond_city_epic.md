@@ -129,6 +129,32 @@ tickets.
    real naming-collision footgun: two unrelated classes both named `RecipeRegistry`.
 5. **Ideas 51 + 52 — consolidated into one ticket.** Idea 52 confirmed pure wiring on top of idea 51's
    EXPAND directive, not a separate mechanism.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-FACTION-EXPAND-DIRECTIVE`. Added
+   `EXPAND_TERRITORY` as a 4th `FactionDirective` kind (`src/engine/faction_decision.py`), gated on
+   mean `compute_regional_scarcity()` > `0.7` over a faction's `fs.territory` (population density
+   from `compute_population_density()` folds into `priority` scaling only, never the gate — it has
+   no existing gate precedent elsewhere in the codebase). Target resolution is deliberately narrow:
+   the lowest-id faction-less region only (`RegionState.owner_faction_id is None`, sorted for
+   determinism) — explicitly not Camp/Nest-as-conquest-target and not idea 35's City-ownership
+   (still design-only, no implementation ticket exists yet). The directive threads same-tick through
+   `WorldDynamicsSystem.resolve_dynamics()` into `CampService.process_camps()` (both gained a new
+   trailing-optional `faction_directives` param, verified backward-compatible against all 33 real
+   call sites), where a matching directive additively boosts a camp's maturity growth by
+   `EXPAND_TERRITORY_MATURITY_BOOST` (`1.0`). This consumption path is real and unit-tested but
+   currently has zero observable effect in any real compiled world — `state.camps` is `{}`
+   everywhere since no world content sets `creature_kind` yet, the same content-authoring gap
+   `TCK-20260904-CAMPSTATE-PLACE-BRIDGE` already disclosed for item 1 above. The material-possession
+   predicate (item 4's shared helper) was deliberately not consulted — population-pressure alone is
+   the hard gate, per this ticket's own investigation. This closes the 6th and final ticket in the
+   `m4-place-material-expansion` batch; real, disclosed follow-up work remains open and not yet
+   ticketed — a `CampService` content-authoring bridge for Camp/Nest, a recipe-catalog namespace
+   bridge for item 4's `RecipeRegistry` naming collision, and roughly 44 stale parity test-path
+   citations surfaced across this batch — plus one already-filed ticket,
+   `TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY` (from item 3 above). This is the 5th of 8 scope items
+   above to get a "Status update" (items 1-5 now all shipped at least one ticket; item 1's world-
+   generation content-authoring half remains explicitly open per its own note) — items 6 (Clan
+   lifecycle), 7 (The Empty Chair), and 8 (Information hubs) remain fully unticketed. This epic is
+   not complete.
 6. **Idea 40 — Clan lifecycle.** Real correction found in Phase Placement: `party_lifecycle.py`'s SOC-228
    doesn't fire on death as originally assumed — which would have silently killed cross-generational Clans
    if built as first scoped. **Depth-audit note:** the Party Formation & Lifecycle precedent this idea (and
