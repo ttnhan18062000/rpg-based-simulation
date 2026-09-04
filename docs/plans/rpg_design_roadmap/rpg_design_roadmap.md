@@ -413,8 +413,12 @@ unlike Social's two. The gap here is structural, not documentation debt.
 
 **Accepted in this brainstorm pass:**
 - Belief-vs-ground-truth divergence is confirmed genuinely modeled, twice, independently:
-  `StrategicComponent.beliefs: Dict[str, BeliefEntry]` and `KnowledgeModelComponent.facts: Dict[str,
-  KnowledgeFact]` — a real design property worth stating explicitly.
+  `StrategicComponent.beliefs` and `KnowledgeModelComponent.facts: Dict[str, KnowledgeFact]` — a real
+  design property worth stating explicitly. **Correction, 2026-09-04**: `StrategicComponent.beliefs` is
+  actually typed `Dict[str, Any]`, not `Dict[str, BeliefEntry]` (`src/core/strategic.py:425`) — in
+  practice it holds real `BeliefEntry` objects keyed by belief id (from `process_rumor`/
+  `process_observation`) alongside at least one unrelated ad-hoc key (`"combat_risk"`, read by
+  `src/domains/cooperation/evaluators.py` but never written anywhere — dead code, flagged separately).
 - Chronicle is confirmed downstream of this axis (a stateless compression/rendering pipeline over real
   recorded events), not part of it — no reconciliation proposed.
 
@@ -428,13 +432,19 @@ to detour selection) is covered, closing exactly the silent same-seed-divergence
 pass flagged. `profile: CognitionProfile` is the one deliberate exclusion (derived from already-covered
 `attributes`).
 
-**Still open, not resolved by either brainstorm pass or the determinism-gap ticket above:**
-- **Two parallel, unreconciled knowledge representations** — `BeliefEntry` and `KnowledgeFact` have zero
-  cross-references anywhere in the codebase, the same unreconciled-signal shape as the Social axis's
-  `RelationshipRole`/`nemesis_ids` finding, but larger: two entire parallel data models, not two fields.
-  This is a real architectural question (which model owns which kind of belief, or whether they should
-  be reconciled at all) needing its own dedicated decision ticket, the same way the temporal proposal's
-  calendar-authority question got one rather than being settled inline.
+**`BeliefEntry`/`KnowledgeFact` reconciliation — decided, 2026-09-04**
+(`tickets/done/TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION.md`): investigated and closed
+as a **deliberate split, not accidental duplication** — unlike the Social axis's `RelationshipRole`/
+`nemesis_ids` finding, which turned out to be a real bug. `src/domains/information/phase.py` is the
+single dispatch site: structured query responses become `KnowledgeFact` (capacity-bounded, no decay,
+via `InformationAssimilationService.assimilate()`); raw witnessed events become `BeliefEntry`
+(contradiction-tracked, decays toward staleness, via `ObservationBeliefBridge.process_observation()`).
+`BeliefEntry`'s contradiction-tracking is real, live-consumed behavior with no `KnowledgeFact`
+equivalent (`detour.py`'s `_score_detour()` penalizes by `matching_belief.contradictions * 25.0`). No
+merge/bridge was implemented — not warranted by the evidence. Documented the relationship directly in
+both contract docs (`belief_and_detour_contract.md`, `information_contract.md`) so a future reader
+doesn't have to re-derive it. The `"combat_risk"` dead-code finding is tracked as its own small,
+separate follow-up, not blocking this decision.
 
 ## Bible chapter check (2026-09-02)
 

@@ -19,6 +19,8 @@ tags: [domains, information, belief, trust, contract]
 
 The information domain manages an entity's belief system: how new information is received, validated against existing knowledge, assimilated or contradicted, and how source trust is updated over time. It bridges the runtime simulation to `src/core/strategic` types (`KnowledgeFact`, `LeadState`, `SourceTrustEntry`, `BlockerState`).
 
+**Relationship to `BeliefEntry`** (`src/systems/strategic_systems/belief.py`, see `docs/simulation/belief_and_detour_contract.md`): `KnowledgeFact` (`src/core/self_model.py`) and `BeliefEntry` are sibling, deliberately separate models. `src/domains/information/phase.py` dispatches between them by input kind — structured query responses become `KnowledgeFact` via `InformationAssimilationService.assimilate()` (this contract); raw, directly-witnessed events become `BeliefEntry` via `ObservationBeliefBridge.process_observation()` (the belief/detour contract). Confirmed a deliberate split, not accidental duplication, via `TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION`.
+
 ---
 
 ## Information Source Kinds

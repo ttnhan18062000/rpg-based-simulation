@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION
-phase: open
+phase: done
 date: 2026-09-04
 tags: [content]
 ---
@@ -16,7 +16,7 @@ Decide whether BeliefEntry and KnowledgeFact should be reconciled — two parall
 models with zero cross-references
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -76,17 +76,21 @@ unrelated ephemeral provider-side transfer object — that pairing is fine and o
   (`TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP`).
 
 ## Acceptance Criteria
-- [ ] Real purpose/overlap of `BeliefEntry` vs. `KnowledgeFact` characterized with evidence (not
+- [x] Real purpose/overlap of `BeliefEntry` vs. `KnowledgeFact` characterized with evidence (not
       assumed) — which domains actually read which, and whether any real behavior depends on the
-      split being separate vs. accidental.
-- [ ] At least one concrete plausible bug scenario evaluated (contradictory belief/knowledge for the
+      split being separate vs. accidental. Confirmed via `phase.py`'s own dispatch site: structured
+      query responses -> `KnowledgeFact`; raw witnessed events -> `BeliefEntry`. Deliberate split.
+- [x] At least one concrete plausible bug scenario evaluated (contradictory belief/knowledge for the
       same subject) — confirmed present, confirmed absent, or confirmed structurally impossible, with
-      reasoning.
-- [ ] A decision recorded (keep-and-document, reconcile, or bridge) with plan-owner sign-off, the same
-      rigor as the calendar-authority decision.
-- [ ] `rpg_design_roadmap.md`'s Knowledge/Belief axis section updated with the decision.
-- [ ] If "reconcile" or "bridge" is chosen: a follow-up implementation ticket filed, not implemented
-      inline here.
+      reasoning. No unified query surface exists, and no live consumer needs one today — a latent,
+      not active, gap.
+- [x] A decision recorded (keep-and-document, reconcile, or bridge) with plan-owner sign-off, the same
+      rigor as the calendar-authority decision. **Option 1 chosen: keep both, document explicitly.**
+- [x] `rpg_design_roadmap.md`'s Knowledge/Belief axis section updated with the decision.
+- [x] If "reconcile" or "bridge" is chosen: a follow-up implementation ticket filed, not implemented
+      inline here. N/A — Option 1 chosen, no merge/bridge ticket needed. A separate, unrelated
+      dead-code finding (`"combat_risk"` never written) was filed as its own follow-up,
+      `TCK-20260904-COMBAT-RISK-BELIEF-DEAD-READ`.
 
 ## Related Tickets
 - TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY (the precedent this ticket's process mirrors: investigate,
@@ -100,7 +104,7 @@ unrelated ephemeral provider-side transfer object — that pairing is fine and o
 - `docs/simulation/belief_and_detour_contract.md`, `docs/simulation/domains/information_contract.md`
 
 ## Related Stored Artifacts
-None yet.
+(staging artifacts in `staging_artifacts/TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION/`)
 
 ## Related Code Areas
 - `src/systems/strategic_systems/belief.py`, `src/core/strategic.py` (`StrategicComponent.beliefs`)
@@ -113,9 +117,42 @@ None yet.
   question this ticket must resolve with evidence, not assume either way going in.
 
 ## Implementation Notes
+`src/domains/information/phase.py` is the single dispatch site that decides which model new
+information becomes: line 69 (`InformationAssimilationService.assimilate()`, structured query
+responses -> `KnowledgeFact`), line 162 (`ObservationBeliefBridge.process_observation()`, raw witnessed
+events -> `BeliefEntry`). `BeliefEntry`'s contradiction-tracking is real, live-consumed behavior
+`KnowledgeFact` has no equivalent for (`detour.py`'s `_score_detour()`: `matching_belief.contradictions
+* 25.0` penalty). This is a coherent two-track pipeline, not accidental duplication — Option 1 (keep
+both, document) is the correct call; reconciling would be over-engineering given the evidence.
+
+Documented the relationship directly in both `docs/simulation/belief_and_detour_contract.md` and
+`docs/simulation/domains/information_contract.md` so a future reader has the cross-reference without
+re-deriving it.
+
+Also corrected a factual error found along the way: the roadmap's original brainstorm-pass text claimed
+`StrategicComponent.beliefs: Dict[str, BeliefEntry]` — it is actually typed `Dict[str, Any]`
+(`src/core/strategic.py:425`), and in practice holds real `BeliefEntry` objects alongside at least one
+unrelated ad-hoc key. That ad-hoc key (`"combat_risk"`, `src/domains/cooperation/evaluators.py:47`) was
+confirmed dead code — never written anywhere in `src/` — and filed as its own separate, non-blocking
+follow-up (`TCK-20260904-COMBAT-RISK-BELIEF-DEAD-READ`), since it's unrelated to this ticket's own
+reconciliation question.
 
 ## Test Summary
+No code changed — decision/investigation/documentation only. No new tests needed.
 
 ## Files Changed
+- `docs/simulation/belief_and_detour_contract.md` — cross-reference note added.
+- `docs/simulation/domains/information_contract.md` — cross-reference note added.
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — Knowledge/Belief axis section updated with
+  the decision and the `StrategicComponent.beliefs` typing correction.
+- `tickets/todos/TCK-20260904-COMBAT-RISK-BELIEF-DEAD-READ.md` — new, filed as a separate follow-up.
 
 ## Completion Summary
+Closed the Knowledge/Belief axis's flagged `BeliefEntry`/`KnowledgeFact` reconciliation question.
+Confirmed via the real dispatch site (`phase.py`) that the split is deliberate, not accidental
+duplication: structured/queried information becomes `KnowledgeFact`, raw/observed information becomes
+`BeliefEntry`, each with a genuinely different lifecycle (capacity-bounded vs.
+contradiction-tracked-and-decaying). Decision: keep both, document explicitly — no merge/bridge
+implementation, matching the evidence rather than over-engineering a fix for a non-problem. Documented
+the relationship in both contract docs and the roadmap. Found and separately filed one small,
+unrelated dead-code issue (`"combat_risk"`) surfaced during the investigation.
