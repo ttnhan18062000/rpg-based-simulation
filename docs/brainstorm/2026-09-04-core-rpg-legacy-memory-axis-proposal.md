@@ -130,6 +130,12 @@ By contrast, M5's other two branches do not touch this gap:
    transmission).
 2. **An entity/reputation-scale aggregation shape**, sibling to `CultureDeriver`'s region-scale one, for
    idea 57's "does this entity's past deeds currently make them a Living Legend" question.
+   **Delivered, 2026-09-04:** see
+   `docs/brainstorm/2026-09-04-idea57-entity-scale-fame-aggregation-design.md` — the shape mirrors
+   `CultureDeriver` exactly (keyed by `NarrativeLedgerEntry.subject_id` instead of `region_id`, no
+   new schema field needed); the real open question found is which event types actually feed it,
+   since the Narrative Ledger's 4-type vocabulary has no `combat_victory` signal today and idea 57's
+   own atlas text conflates Chronicle's output with the separate, already-live `heroism_score` field.
 3. **A decay/significance-erosion rule for Chronicle-worthy events**, since `EventSignificanceScorer`
    today has no time dimension at all — a century-old rescue and a same-tick rescue score identically.
 
