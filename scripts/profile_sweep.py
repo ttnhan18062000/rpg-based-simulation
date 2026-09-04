@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import cProfile
 import json
+import os
 import pstats
 import sys
 import time
@@ -82,6 +83,70 @@ ENTITY_TIERS: Dict[str, int] = {
     "light": 200,
     "heavy": 1500,
 }
+
+
+@dataclass
+class ContentionReading:
+    """
+    OS-level load-average snapshot, normalized by CPU count. cProfile's own cumtime/tottime and
+    this tool's own compute_tick_timing() both use wall-clock timers (time.perf_counter()), not
+    CPU-time accounting -- scheduler preemption from unrelated processes inflates every absolute
+    millisecond figure this tool produces, on top of cProfile's own well-known 2-5x instrumentation
+    overhead. TCK-20260818-HOTFIX-PROFILE-SWEEP-EXPORT-TOOL's own first real sweep runs were
+    confirmed contaminated exactly this way (another session's pytest run at 100% CPU plus a
+    concurrent `graphify update .`, on a 4-core box) -- discovered only by hand, after the fact.
+    This reading is what check_contention() below judges against, and what gets recorded into the
+    JSON summary so a reader can judge past runs the same way.
+    """
+    load_avg_1min: float
+    load_avg_5min: float
+    load_avg_15min: float
+    cpu_count: int
+    load_per_core_1min: float
+
+
+def read_contention() -> ContentionReading:
+    """os.getloadavg() is POSIX-only -- this tool already assumes a POSIX dev environment
+    (no Windows support claimed or tested anywhere else in this script)."""
+    load1, load5, load15 = os.getloadavg()
+    cpu_count = os.cpu_count() or 1
+    return ContentionReading(
+        load_avg_1min=load1,
+        load_avg_5min=load5,
+        load_avg_15min=load15,
+        cpu_count=cpu_count,
+        load_per_core_1min=load1 / cpu_count,
+    )
+
+
+def check_contention(reading: ContentionReading, max_load_per_core: float, force: bool) -> None:
+    """
+    Aborts (exit code 1) when the 1-minute load-average-per-core exceeds max_load_per_core,
+    unless --force is passed -- so a sweep run under real external contention doesn't silently
+    produce numbers that look like a trustworthy baseline. This is the pre-flight check
+    TCK-20260818-HOTFIX-PROFILE-SWEEP-EXPORT-TOOL's own Assumptions section called for as future
+    hardening item (a); it runs once, before the sweep starts, since that is the only point at
+    which the reading reflects other processes and not the sweep's own CPU usage.
+    """
+    if reading.load_per_core_1min <= max_load_per_core:
+        return
+    message = (
+        f"\n[CONTENTION WARNING] 1-min load average is {reading.load_avg_1min:.2f} across "
+        f"{reading.cpu_count} cores ({reading.load_per_core_1min:.2f} per core), above the "
+        f"{max_load_per_core:.2f}-per-core threshold. cProfile's wall-clock timers cannot "
+        f"distinguish real engine cost from scheduler preemption by other processes -- absolute "
+        f"timing figures from this run would not be a trustworthy baseline.\n"
+    )
+    if not force:
+        message += (
+            "Re-run once the machine is idle, or pass --force to proceed anyway (rank/presence-"
+            "based findings -- which functions show up as hotspots at all -- are far more "
+            "contention-robust than absolute millisecond values).\n"
+        )
+        print(message, file=sys.stderr)
+        sys.exit(1)
+    message += "Proceeding anyway because --force was passed -- treat absolute timing numbers from this run as untrustworthy.\n"
+    print(message, file=sys.stderr)
 
 
 @dataclass
@@ -426,7 +491,18 @@ def main() -> None:
         help="Specific corpus world names to sweep (default: all discovered under data/worlds/)",
     )
     parser.add_argument("--corpus-ticks", type=int, default=None, help="Ticks per corpus-world run (default: --ticks)")
+    parser.add_argument(
+        "--max-load-per-core", type=float, default=0.5,
+        help="Abort if 1-min load-average-per-core exceeds this before the sweep starts (default: 0.5)",
+    )
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Proceed even if the pre-flight contention check fails (absolute timings will be untrustworthy)",
+    )
     args = parser.parse_args()
+
+    contention = read_contention()
+    check_contention(contention, args.max_load_per_core, args.force)
 
     results: List[RunResult] = []
 
@@ -457,6 +533,7 @@ def main() -> None:
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(
             {
+                "contention_at_start": asdict(contention),
                 "runs": [
                     {**asdict(r), "hotspots": [asdict(h) for h in r.hotspots]} for r in results
                 ],
