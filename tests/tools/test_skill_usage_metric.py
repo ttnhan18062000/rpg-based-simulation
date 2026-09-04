@@ -14,11 +14,16 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MODULE_PATH = _MONITORING_TOOLS_DIR / "skill_usage_metric.py"
 _REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
-_REAL_TOOLS_FILE = _REAL_AGENT_MONITORING_DIR / "tools.jsonl"
+# Post-TCK-20260903-MONITORING-DATA-MIGRATION unified weekly layout: real tools.jsonl shards live
+# under agent-monitoring/data/<ISO-week>/tools.jsonl, not the legacy agent-monitoring/tools/
+# tools-*.jsonl path (that directory no longer exists).
+_REAL_DATA_DIR = _REAL_AGENT_MONITORING_DIR / "data"
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
@@ -44,7 +49,11 @@ def _imported_names() -> set:
 
 def test_reuses_generate_retro_loader_not_a_second_loader():
     imported = _imported_names()
-    assert "load_jsonl" in imported
+    # DEFAULT_TOOLS_FILE is directory-valued (TCK-20260903-MONITORING-DATA-CONSUMERS-CORE), so
+    # this module reuses generate_retro.py's multi-week-aware load_data_glob() rather than the
+    # literal-file-only load_jsonl() (TCK-20260904-HOTFIX-RETRIEVAL-TOOLS-CONSUMERS-DEAD-
+    # CONSTANTS — a bare load_jsonl(DEFAULT_TOOLS_FILE) raises IsADirectoryError).
+    assert "load_data_glob" in imported
     assert "DEFAULT_TOOLS_FILE" in imported
 
 
@@ -133,29 +142,34 @@ def _independently_derive_counts() -> dict:
     real bug in build_skill_usage_section rather than just confirming it agrees with itself."""
     counts: dict = {}
     pattern = re.compile(r"'skill':\s*'([^']*)'")
-    with open(_REAL_TOOLS_FILE, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                rec = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if rec.get("tool") != "Skill":
-                continue
-            m = pattern.search(rec.get("input_summary", ""))
-            if m:
-                counts[m.group(1)] = counts.get(m.group(1), 0) + 1
+    for shard in sorted(_REAL_DATA_DIR.glob("*/tools.jsonl")):
+        with open(shard, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get("tool") != "Skill":
+                    continue
+                m = pattern.search(rec.get("input_summary", ""))
+                if m:
+                    counts[m.group(1)] = counts.get(m.group(1), 0) + 1
     return counts
 
 
 def test_live_corpus_matches_independently_derived_counts():
-    from generate_retro import DEFAULT_TOOLS_FILE, load_jsonl
-    tools = load_jsonl(DEFAULT_TOOLS_FILE)
+    from generate_retro import DEFAULT_TOOLS_FILE, load_data_glob
+    tools = load_data_glob(DEFAULT_TOOLS_FILE, "tools")
     report = build_skill_usage_section(tools)
     expected = _independently_derive_counts()
     assert report["per_skill"] == expected
+    # Correct-data assertion, not just "doesn't crash": the real corpus spans multiple
+    # agent-monitoring/data/<ISO-week>/ shards, so a nonzero count here proves the full
+    # multi-week corpus was actually read, not silently truncated to one shard.
+    assert report["total_skill_invocations"] > 0
 
 
 def test_cli_runs_against_real_corpus_and_prints_json():
@@ -169,7 +183,7 @@ def test_cli_runs_against_real_corpus_and_prints_json():
 
 
 def test_causes_zero_diff_on_real_corpus():
-    from generate_retro import DEFAULT_TOOLS_FILE, load_jsonl
+    from generate_retro import DEFAULT_TOOLS_FILE, load_data_glob
 
     def _porcelain():
         return subprocess.run(
@@ -178,7 +192,35 @@ def test_causes_zero_diff_on_real_corpus():
         ).stdout
 
     pre = _porcelain()
-    tools = load_jsonl(DEFAULT_TOOLS_FILE)
+    tools = load_data_glob(DEFAULT_TOOLS_FILE, "tools")
     build_skill_usage_section(tools)
     post = _porcelain()
     assert pre == post, f"skill_usage_metric mutated agent-monitoring/: pre={pre!r} post={post!r}"
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260904-HOTFIX-RETRIEVAL-TOOLS-CONSUMERS-DEAD-CONSTANTS — dedicated cross-week fixture,
+# proving main()'s tool-loading correctly aggregates multiple ISO-week folders (not just that the
+# real corpus happens to work).
+# ---------------------------------------------------------------------------
+
+def test_load_data_glob_reads_across_multiple_week_folders(tmp_path):
+    from generate_retro import load_data_glob
+
+    data_dir = tmp_path / "agent-monitoring" / "data"
+    (data_dir / "2026-W01").mkdir(parents=True)
+    (data_dir / "2026-W02").mkdir(parents=True)
+    (data_dir / "2026-W01" / "tools.jsonl").write_text(
+        json.dumps({"tool": "Skill", "run_id": "TCK-A", "input_summary": "{'skill': 'graphify'}"}) + "\n"
+    )
+    (data_dir / "2026-W02" / "tools.jsonl").write_text(
+        json.dumps(
+            {"tool": "Skill", "run_id": "TCK-B", "input_summary": "{'skill': 'implement-ticket'}"}
+        )
+        + "\n"
+    )
+
+    tools = load_data_glob(data_dir, "tools")
+    report = build_skill_usage_section(tools)
+    assert report["total_skill_invocations"] == 2
+    assert report["per_skill"] == {"graphify": 1, "implement-ticket": 1}

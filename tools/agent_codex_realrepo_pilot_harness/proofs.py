@@ -8,6 +8,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from tools.agent_replay_codex.monitoring_shards import resolve_tree_lines
+
 if TYPE_CHECKING:
     from .preflight import PreflightResult
 
@@ -64,7 +66,7 @@ def assert_monitoring_prefixes(before: dict[str, list[bytes]], after: dict[str, 
 
 
 def _lines(tree: dict[str, bytes], name: str) -> list[bytes]:
-    return tree.get(f"agent-monitoring/{name}", b"").splitlines(keepends=True)
+    return resolve_tree_lines(tree, name)
 
 
 def _parse_iso8601(value: object) -> datetime:

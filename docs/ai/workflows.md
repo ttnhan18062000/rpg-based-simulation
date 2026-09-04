@@ -137,7 +137,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 - `tickets/done/{ticket_id}.md`
 - `stored_artifacts/{ticket_id}/` (investigation.md, plan.md, test_plan.md)
 - `tickets/working_log.csv` (one new row)
-- `agent-monitoring/runs.jsonl` + `events.jsonl` (one run record + per-phase events)
+- `agent-monitoring/data/YYYY-Www/runs.jsonl` + `events.jsonl` (one run record + per-phase events)
 
 **`lane-architecture` coverage boundary:** `make lane-architecture` (`pytest tests/ -m "architecture"`)
 is a `src/`-simulation-code guard lane only — durable-state mutation discipline, cross-domain import
@@ -200,8 +200,8 @@ boundary.
 
 **Artifacts produced:**
 - All artifacts from each child `implement-ticket` run (tickets, stored_artifacts, working_log)
-- `agent-monitoring/runs.jsonl` — one batch run record (`EPIC-{id}` or `FOLDER-{path}`)
-- `agent-monitoring/events.jsonl` — one event per child ticket
+- `agent-monitoring/data/YYYY-Www/runs.jsonl` — one batch run record (`EPIC-{id}` or `FOLDER-{path}`)
+- `agent-monitoring/data/YYYY-Www/events.jsonl` — one event per child ticket
 
 ---
 

@@ -276,7 +276,7 @@ runs `::next_available_id` for every shard `expected_subsystems_for_files` named
 injecting a `Next available ID per candidate shard` hint line (`max-numeric-suffix + 1`, never
 `entry-count + 1` — shards have gaps). After this agent's turn ends, the orchestrator runs
 `::cross_reference_touched` (via `bash()`) against the actual `git status` diff of
-`docs/parity_ledger/` and records any discrepancy in `agent-monitoring/events.jsonl` — visibility
+`docs/parity_ledger/` and records any discrepancy in `agent-monitoring/data/YYYY-Www/events.jsonl` — visibility
 only, not a blocking gate. The agent self-reports which of its findings were informed by the
 injected context vs. independent judgment in a `verified_by` field.
 

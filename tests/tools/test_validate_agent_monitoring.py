@@ -425,6 +425,64 @@ class TestRegressionParity:
         assert direct_report != indexed_report
 
 
+class TestDriftReportsUnaffectedByWeekShardMigration:
+    """TCK-20260903-MONITORING-DATA-CONSUMERS-CORE AC7 — validate.py's drift-report functions
+    produce identical results on the post-migration (per-week-sharded) corpus as they would on a
+    pre-migration (single flat file) corpus, for a fixed historical time window. Proves this
+    ticket's fix is purely additive to file *discovery* (build_index.py's _load_source()/
+    validate.load_data_glob(), Step 2) — never to compute_drift_report()'s own normalization/
+    reporting logic, which this test never touches."""
+
+    def test_validate_drift_reports_identical_pre_and_post_migration_fixed_window(self, tmp_path):
+        import types
+
+        week1_runs = [dict(_BASE_RUN, run_id="TCK-WIN-A", workflow=None)]
+        week1_events = [
+            {"run_id": "TCK-WIN-A", "seq": 1, "ts": "t", "phase": "weird-phase",
+             "agent": "ticket-scoper", "status": "ok", "summary": "s"},
+        ]
+        week2_runs = [dict(_BASE_RUN, run_id="TCK-WIN-B", tier="not-a-real-tier")]
+        week2_events = [
+            {"run_id": "TCK-WIN-B", "seq": 1, "ts": "t", "phase": "Implement",
+             "agent": "unknown-agent", "status": "ok", "summary": "s"},
+        ]
+
+        # "Pre-migration" expectation: one flat combined corpus, computed directly against plain
+        # lists (compute_drift_report does zero file I/O of its own).
+        pre_migration_report = compute_drift_report(week1_runs + week2_runs, week1_events + week2_events)
+
+        # "Post-migration": the identical records physically split across 2 week folders under a
+        # temp agent-monitoring/data/-shaped directory, read via build_index.build()'s
+        # _load_source()/load_data_glob() glob (this ticket's own fix), then re-derived through
+        # the SQLite index exactly like TestRegressionParity above.
+        for week_dir, runs, events in ((tmp_path / "2026-W01", week1_runs, week1_events),
+                                        (tmp_path / "2026-W02", week2_runs, week2_events)):
+            week_dir.mkdir()
+            (week_dir / "runs.jsonl").write_text(
+                "\n".join(json.dumps(r) for r in runs) + "\n", encoding="utf-8"
+            )
+            (week_dir / "events.jsonl").write_text(
+                "\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8"
+            )
+            (week_dir / "tools.jsonl").write_text("", encoding="utf-8")
+
+        db_path = tmp_path / "index" / "monitoring.db"
+        args = types.SimpleNamespace(
+            runs_file=str(tmp_path), events_file=str(tmp_path), tools_file=str(tmp_path),
+            db_path=str(db_path),
+        )
+        build_index.build(args)
+
+        conn = sqlite3.connect(str(db_path))
+        post_migration_runs = validate.load_runs_from_index(conn)
+        post_migration_events = validate.load_events_from_index(conn)
+        conn.close()
+
+        post_migration_report = compute_drift_report(post_migration_runs, post_migration_events)
+
+        assert pre_migration_report == post_migration_report
+
+
 class TestMissingIndex:
 
     def test_missing_index_produces_actionable_error(self, tmp_path, capsys):

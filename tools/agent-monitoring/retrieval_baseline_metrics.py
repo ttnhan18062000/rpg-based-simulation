@@ -4,7 +4,7 @@
 
 One-off baseline snapshot of current retrieval/context-loading behavior, computed purely by
 importing and composing existing functions from generate_retro.py (_load_runs_and_events,
-load_jsonl, DEFAULT_TOOLS_FILE, _resolve_status, _is_gate_fail, SEARCH_TOOL_NAMES,
+load_data_glob, DEFAULT_TOOLS_FILE, _resolve_status, _is_gate_fail, SEARCH_TOOL_NAMES,
 build_search_count_section, build_raw_investigation_count_section), legacy_reader.py
 (classify_provenance), and manifest.py (_assert_safe_output_path) — never reimplementing any of
 their logic. Prints a JSON report to stdout by default; never writes into agent-monitoring/ itself.
@@ -33,7 +33,7 @@ from generate_retro import (  # noqa: E402
     _resolve_status,
     build_raw_investigation_count_section,
     build_search_count_section,
-    load_jsonl,
+    load_data_glob,
 )
 from legacy_reader import classify_provenance  # noqa: E402
 from manifest import _assert_safe_output_path  # noqa: E402
@@ -49,7 +49,10 @@ REWORK_TRIGGER_STATUSES = frozenset({"NEEDS_CHANGES", "BLOCKED"})
 
 def load_all_sources() -> tuple:
     runs, events = _load_runs_and_events()
-    tools = load_jsonl(DEFAULT_TOOLS_FILE)
+    # DEFAULT_TOOLS_FILE is directory-valued (TCK-20260903-MONITORING-DATA-CONSUMERS-CORE) — a
+    # bare load_jsonl() against it raises IsADirectoryError; load_data_glob() is the multi-week-
+    # aware replacement, matching generate_retro.py's own real call site (line 2275).
+    tools = load_data_glob(DEFAULT_TOOLS_FILE, "tools")
     return runs, events, tools
 
 

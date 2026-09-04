@@ -44,6 +44,12 @@ from ticket_field_values import check_ticket_field_values  # noqa: E402
 from tag_registry import load_registry, check_tags_registered  # noqa: E402
 from registry_query import candidate_tags_from_text  # noqa: E402
 
+_MONITORING_DIR = _TOOLS_DIR / "agent-monitoring"
+if str(_MONITORING_DIR) not in sys.path:
+    sys.path.insert(0, str(_MONITORING_DIR))
+
+from verify_temporal_week_consistency import compute_temporal_week_consistency_report  # noqa: E402
+
 REQUIRED_ARTIFACT_FILES = ("plan.md", "investigation.md", "test_plan.md")
 
 
@@ -76,6 +82,20 @@ def _jsonl_rows_for_run_id(path: Path, run_id: str) -> list[dict]:
             continue
         if row.get("run_id") == run_id:
             rows.append(row)
+    return rows
+
+
+def _jsonl_rows_for_run_id_across_weeks(data_root: Path, filename: str, run_id: str) -> list[dict]:
+    """Return every parsed JSON row whose run_id == run_id, across every
+    agent-monitoring/data/<week>/{filename} shard under data_root (sorted for
+    determinism — mirrors record_events.py::compute_tool_stats()'s
+    `sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl"))` precedent).
+    A data_root that doesn't exist, or exists with no matching week folders,
+    yields an empty glob and returns [] — matching the old single-file
+    ".exists() -> []" precedent, not an error."""
+    rows: list[dict] = []
+    for path in sorted(data_root.glob(f"*/{filename}")):
+        rows.extend(_jsonl_rows_for_run_id(path, run_id))
     return rows
 
 
@@ -538,8 +558,35 @@ def check_docs_to_update_coverage(
     return ("PASS", evidence)
 
 
+def check_temporal_week_consistency(
+    data_dir: Path = Path("agent-monitoring/data"),
+) -> tuple[str, str]:
+    """Report-only corpus-health check (TCK-20260904-MONITORING-TEMPORAL-WEEK-
+    CONSISTENCY-CHECK): always returns PASS — never blocks a ticket close — but
+    carries real per-source findings in its evidence string on every Verify run.
+    Reuses the existing PASS status rather than introducing a new status value;
+    NA already means "this condition does not apply at this tier," a different
+    meaning than "informational, always non-blocking" (see this ticket's plan.md
+    Decision 2). Degrades gracefully against a repo with no agent-monitoring/data/
+    directory at all (e.g. _scaffold_precheck_repo's fixture) — compute_temporal_
+    week_consistency_report's own load_all_weeks() calls return an empty list per
+    source in that case, not an exception, matching verify_referential_integrity.
+    py's own precedent.
+    """
+    report = compute_temporal_week_consistency_report(data_dir)
+    evidence = (
+        f"tools: {report.tools.checked} checked, {len(report.tools.mismatches)} genuine anomalies, "
+        f"{report.tools.exempt_unknown_week} exempt, {report.tools.skipped_unparseable} skipped; "
+        f"events: {report.events.checked} checked, {len(report.events.mismatches)} possible divergences, "
+        f"{report.events.exempt_unknown_week} exempt, {report.events.skipped_unparseable} skipped; "
+        f"runs: {report.runs.checked} checked, {len(report.runs.mismatches)} expected divergences, "
+        f"{report.runs.exempt_unknown_week} exempt, {report.runs.skipped_unparseable} skipped"
+    )
+    return ("PASS", evidence)
+
+
 def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list[dict]:
-    """Aggregate all 7 Part A checks. Returns one dict per check, in this fixed order, matching
+    """Aggregate all 8 Part A checks. Returns one dict per check, in this fixed order, matching
     `DONE_SCHEMA.checklist`'s own item shape so the agent can transcribe directly. Does not
     collapse to a single boolean — per-check detail must survive.
     """
@@ -551,6 +598,7 @@ def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list
         ("frontmatter_valid", check_frontmatter_valid(ticket_id, tier)),
         ("ticket_field_values_valid", check_ticket_field_values_valid(ticket_id)),
         ("docs_to_update_coverage", check_docs_to_update_coverage(ticket_id, tier)),
+        ("temporal_week_consistency", check_temporal_week_consistency()),
     )
     return [
         {"condition": name, "status": status, "evidence": evidence}
@@ -688,8 +736,7 @@ def check_working_log_exactly_one_row(
 
 def check_monitoring_write_recorded(
     ticket_id: str,
-    runs_path: Path = Path("agent-monitoring/runs.jsonl"),
-    events_path: Path = Path("agent-monitoring/events.jsonl"),
+    data_root: Path = Path("agent-monitoring/data"),
 ) -> tuple[str, str]:
     """Verify the agent-monitoring write for this run actually landed. Deliberately has no
     `tier` parameter and no NA branch — CLAUDE.md's Hard Rule requires the monitoring write
@@ -702,19 +749,20 @@ def check_monitoring_write_recorded(
     not as a 4th condition in `run_finalize_selfcheck` — see that ticket's plan.md Design
     Decision 2 for why it is wired in separately, at a later call site.
     """
-    run_rows = _jsonl_rows_for_run_id(runs_path, ticket_id)
+    run_rows = _jsonl_rows_for_run_id_across_weeks(data_root, "runs.jsonl", ticket_id)
     if not run_rows:
-        return ("FAIL", f"No row with run_id == {ticket_id} found in {runs_path}")
-    event_rows = _jsonl_rows_for_run_id(events_path, ticket_id)
+        return ("FAIL", f"No row with run_id == {ticket_id} found under {data_root}/*/runs.jsonl")
+    event_rows = _jsonl_rows_for_run_id_across_weeks(data_root, "events.jsonl", ticket_id)
     if not event_rows:
         return (
             "FAIL",
-            f"{runs_path} has a row for {ticket_id} but {events_path} has zero matching rows",
+            f"{data_root}/*/runs.jsonl has a row for {ticket_id} but "
+            f"{data_root}/*/events.jsonl has zero matching rows",
         )
     return (
         "PASS",
-        f"{runs_path} ({len(run_rows)} row(s)) and {events_path} ({len(event_rows)} row(s)) "
-        f"both have entries for {ticket_id}",
+        f"{data_root}/*/runs.jsonl ({len(run_rows)} row(s)) and {data_root}/*/events.jsonl "
+        f"({len(event_rows)} row(s)) both have entries for {ticket_id}",
     )
 
 

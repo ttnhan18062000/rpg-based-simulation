@@ -74,7 +74,7 @@ does not create one.
 ## Notes
 
 - `writeMonitoring` is called at every exit path: `DONE_NO_TICKET`, `NEEDS_TICKET`,
-  `ANCHORS_STILL_FAILING`, `BLOCKED`. Never write to `agent-monitoring/runs.jsonl` or `events.jsonl`
+  `ANCHORS_STILL_FAILING`, `BLOCKED`. Never write to `agent-monitoring/data/YYYY-Www/runs.jsonl` or `events.jsonl`
   directly — always go through `record_run.py` / `record_events.py`.
 - The governance branch is deliberate: routine no-regression passes land as a lightweight chore commit
   with no ticket ceremony, mirroring the historical precedent of doc-sync commits with no ticket ID.

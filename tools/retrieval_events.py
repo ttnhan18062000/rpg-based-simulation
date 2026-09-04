@@ -138,7 +138,16 @@ def emit_retrieval_event(
     if errors:
         raise ValueError(errors)
 
-    target = events_file if events_file is not None else record_events.EVENTS_FILE
+    if events_file is not None:
+        target = events_file
+    else:
+        # Matches record_events.py::main()'s own write-time iso_week/events_file computation
+        # verbatim (tools/agent-monitoring/record_events.py:153-154) — record_events.EVENTS_FILE
+        # no longer exists as a module attribute (TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY),
+        # so this default must reproduce record_events.py's own current-week target rather than
+        # reference a removed constant.
+        iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+        target = Path("agent-monitoring/data") / iso_week / "events.jsonl"
     target.parent.mkdir(parents=True, exist_ok=True)
     return write_lines(target, [json.dumps(record, separators=(",", ":"))])
 

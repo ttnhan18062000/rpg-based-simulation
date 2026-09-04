@@ -19,8 +19,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from generate_retro import RUNS_FILE, load_jsonl  # noqa: E402
+from generate_retro import RUNS_FILE  # noqa: E402
 from manifest import _assert_safe_output_path  # noqa: E402
+from validate import load_data_glob  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from validate_frontmatter import extract_frontmatter  # noqa: E402
@@ -68,7 +69,7 @@ def build_coverage_section(done_dir: Path = Path("tickets/done")) -> dict:
     # it needs the direct-read guarantee regardless (caught during this ticket's own Test phase:
     # TCK-20260805-COMBAT-SKILL and several other same-session tickets, confirmed present in the
     # real runs.jsonl file, were wrongly reported missing before this fix).
-    runs = load_jsonl(RUNS_FILE)
+    runs = load_data_glob(RUNS_FILE, "runs")
     run_ids_present = {r.get("run_id") for r in runs if r.get("run_id")}
 
     covered = []

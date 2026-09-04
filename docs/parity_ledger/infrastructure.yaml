@@ -4880,7 +4880,8 @@
     standalone FastAPI app (src/api/agent_ops_dashboard/) exposing GET /api/tickets,
     /api/runs, /api/runs/{run_id}, /api/runs/{run_id}/timeline, /api/health as typed
     Pydantic response models only (never raw dict/domain payloads). ingest.py owns
-    all file reads over tickets/{inprogress,done,todos}/ and agent-monitoring/{runs,events,tools}.jsonl,
+    all file reads over tickets/{inprogress,done,todos}/ and agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl
+    (every week shard, globbed and concatenated via _week_shard_paths/_load_jsonl_counted_multi),
     reusing tools/validate_frontmatter.py''s extract_frontmatter(), tools/generate_registry.py''s
     body-section parsers, and tools/agent-monitoring/validate.py''s tolerant load_jsonl
     + legacy allowlists rather than reimplementing them. In-memory cache rebuilt on
@@ -5099,7 +5100,34 @@
     \ own ingest.py/models.py claims are unaffected (dashboard reader code untouched);\
     \ this note exists solely to record that the reader's already-tested native-identity\
     \ code paths now have real write-side traffic to serve, not just fixtures. See\
-    \ INFRA-281 for the writer-side (writeSidecar) evidence pointer.\n"
+    \ INFRA-281 for the writer-side (writeSidecar) evidence pointer.\n\nTCK-20260903-MONITORING-DATA-CONSUMERS-GATES-DASHBOARD:\
+    \ DashboardCache.__init__ (src/api/agent_ops_dashboard/ingest.py) replaced its\
+    \ 3 hardcoded single-file fields (self._runs_file/_events_file/_tools_file) with\
+    \ one self._data_root = repo_root / \"agent-monitoring\" / \"data\"; _current_source_state()\
+    \ now computes per-source mtimes via the new _max_mtime(_week_shard_paths(self._data_root,\
+    \ filename)) helper (max mtime across every agent-monitoring/data/<week>/{runs,events,tools}.jsonl\
+    \ shard, guarded against the empty-glob ValueError footgun via max(..., default=0.0));\
+    \ _rebuild() now reads/concatenates all matching week shards per source via the\
+    \ new _load_jsonl_counted_multi() helper (sums unparsed-line counts across shards\
+    \ rather than the last file's count silently winning), mirroring the sorted(Path(...).glob(\"\
+    agent-monitoring/data/*/tools.jsonl\")) precedent already landed in tools/agent-monitoring/record_events.py::compute_tool_stats()\
+    \ (TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY). This is also the dedicated\
+    \ fix for a live production bug: self._tools_file previously pointed at the already-git-rm'd\
+    \ flat agent-monitoring/tools.jsonl path, so _tools_all/_tools_by_seq/_tools_by_run_recent\
+    \ were silently empty, masking compute_inferred_active()'s 10-minute-window heuristic\
+    \ in production; confirmed fixed by a new dedicated regression, test_dashboard_cache_tools_all_nonempty_against_real_sharded_layout,\
+    \ plus test_dashboard_cache_rebuild_aggregates_across_multiple_weeks (2+ week\
+    \ aggregation) and test_dashboard_cache_maybe_rebuild_detects_staleness_from_non_newest_week_write\
+    \ (staleness detection from a write to a non-newest week, all 3 sources), all\
+    \ in tests/tools/test_agent_ops_dashboard_ingest.py. DashboardCache's public method\
+    \ surface (get_tickets/get_runs/get_run/get_timeline/get_bulk_timeline/get_health/get_agent_monitoring_stats/get_ticket_corpus_stats/get_glossary)\
+    \ and its single threading.RLock()-per-method locking pattern are unchanged, confirmed\
+    \ by test_dashboard_public_api_surface_and_lock_unchanged (inspect-based architecture\
+    \ guard). No parity-ledger-relevant regression: full scoped sweep (tests/tools/test_agent_ops_dashboard_ingest.py\
+    \ test_agent_ops_dashboard_stats.py test_agent_ops_dashboard_concurrency.py test_agent_ops_dashboard_api.py\
+    \ test_agent_ops_dashboard_api_boundary.py test_agent_ops_dashboard_glossary.py\
+    \ test_agent_ops_dashboard_frontend_api_surface.py test_agent_ops_dashboard_serve.py)\
+    \ -> 107 passed."
   proof_type: feature
   test_path: "tests/tools/test_agent_ops_dashboard_ingest.py (including test_get_tickets_and_across_dimensions_filters_tier_and_layer,\
     \ test_get_tickets_or_within_tag, test_get_tickets_dimension_filter_and_tag_filter_combine_with_and\
@@ -6456,41 +6484,83 @@
     in the plan, not a blocker."
 
     '
-  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior, Mechanics Bible chapter, or engine contract governs generate_retro.py''s
-    report-generation semantics (same category as INFRA-281 through INFRA-290 immediately
-    above). No `src/` file touched, no on-disk schema change to runs.jsonl/events.jsonl/tools.jsonl
-    -- this is a read-path consumer migration onto the existing derived index (built
-    by TCK-20260713-MONITORING-SQLITE-INDEX, out of this ticket''s scope, same as
-    INFRA-289/290). Does not touch `build_index.py`, `query.py`, or `validate.py`
-    themselves. Does not migrate `compute_retro_metrics()`/`generate()`''s internal
-    call sites onto index-injected keys (that would require the tests-inject-plain-dicts
-    conflict documented in this entry''s `text`) and does not touch `_normalize_phase`/`_normalize_agent`/
-    `_canonicalize`/`_flag_outliers` (INFRA-283/284''s separate, already-shipped normalization
-    concern -- confirmed byte-identical by the same source-hash guard this entry''s
-    test_path cites).
-
-
-    **Addendum (TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS, 2026-08-14):**
-    this entry''s original `text`/`v2_evidence` described `_load_runs_and_events()`
-    rebuilding the index only when `DEFAULT_DB_PATH` was *missing* -- a present-but-outdated
-    index was read silently forever, under-reporting retro numbers with no warning
-    (confirmed: one real session under-counted 7 runs/41 events vs. the correct 18
-    runs/123 events). Fixed by adding `_index_is_stale(db_path)` (generate_retro.py:66-77)
-    -- returns `True` if the DB is missing OR any of `RUNS_FILE`/`EVENTS_FILE`/`DEFAULT_TOOLS_FILE`
-    has a newer mtime than the index -- and gating the on-demand-rebuild branch on
-    it (:90, `if _index_is_stale(DEFAULT_DB_PATH):`) instead of the old bare `if not
-    DEFAULT_DB_PATH.exists():` check. Rebuild-on-stale reuses the exact same `build_index.build()`
-    call and non-fatal-fallback-on-`Exception` semantics this entry''s `text` already
-    documents -- no change to the never-hard-gating guarantee. New tests: `test_generate_retro_rebuilds_stale_index_not_just_missing_index`
-    (writes a row, builds the index, appends a second row that postdates the index''s
-    mtime, confirms the second load reflects both rows) and `test_index_is_stale_false_when_index_newer_than_all_sources`
-    (negative case). `docs/agent-monitoring/schema.md`''s "Derived SQLite Index" section
-    and `docs/agent-monitoring/README.md`''s Quick Start snippet and Done-Ticket Monitoring
-    Coverage Audit rationale were corrected in the same ticket to say "missing or
-    stale" rather than "missing" alone.
-
-    '
+  support_boundary: "Agent-orchestration/monitoring-pipeline tooling only -- no simulation\
+    \ behavior, Mechanics Bible chapter, or engine contract governs generate_retro.py's\
+    \ report-generation semantics (same category as INFRA-281 through INFRA-290 immediately\
+    \ above). No `src/` file touched, no on-disk schema change to runs.jsonl/events.jsonl/tools.jsonl\
+    \ -- this is a read-path consumer migration onto the existing derived index (built\
+    \ by TCK-20260713-MONITORING-SQLITE-INDEX, out of this ticket's scope, same as\
+    \ INFRA-289/290). Does not touch `build_index.py`, `query.py`, or `validate.py`\
+    \ themselves. Does not migrate `compute_retro_metrics()`/`generate()`'s internal\
+    \ call sites onto index-injected keys (that would require the tests-inject-plain-dicts\
+    \ conflict documented in this entry's `text`) and does not touch `_normalize_phase`/`_normalize_agent`/\
+    \ `_canonicalize`/`_flag_outliers` (INFRA-283/284's separate, already-shipped\
+    \ normalization concern -- confirmed byte-identical by the same source-hash guard\
+    \ this entry's test_path cites).\n\n**Addendum (TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS,\
+    \ 2026-08-14):** this entry's original `text`/`v2_evidence` described `_load_runs_and_events()`\
+    \ rebuilding the index only when `DEFAULT_DB_PATH` was *missing* -- a present-but-outdated\
+    \ index was read silently forever, under-reporting retro numbers with no warning\
+    \ (confirmed: one real session under-counted 7 runs/41 events vs. the correct\
+    \ 18 runs/123 events). Fixed by adding `_index_is_stale(db_path)` (generate_retro.py:66-77)\
+    \ -- returns `True` if the DB is missing OR any of `RUNS_FILE`/`EVENTS_FILE`/`DEFAULT_TOOLS_FILE`\
+    \ has a newer mtime than the index -- and gating the on-demand-rebuild branch\
+    \ on it (:90, `if _index_is_stale(DEFAULT_DB_PATH):`) instead of the old bare\
+    \ `if not DEFAULT_DB_PATH.exists():` check. Rebuild-on-stale reuses the exact\
+    \ same `build_index.build()` call and non-fatal-fallback-on-`Exception` semantics\
+    \ this entry's `text` already documents -- no change to the never-hard-gating\
+    \ guarantee. New tests: `test_generate_retro_rebuilds_stale_index_not_just_missing_index`\
+    \ (writes a row, builds the index, appends a second row that postdates the index's\
+    \ mtime, confirms the second load reflects both rows) and `test_index_is_stale_false_when_index_newer_than_all_sources`\
+    \ (negative case). `docs/agent-monitoring/schema.md`'s \"Derived SQLite Index\"\
+    \ section and `docs/agent-monitoring/README.md`'s Quick Start snippet and Done-Ticket\
+    \ Monitoring Coverage Audit rationale were corrected in the same ticket to say\
+    \ \"missing or stale\" rather than \"missing\" alone.\n\n**Addendum (TCK-20260902-MONITORING-SHARD-CONSUMERS,\
+    \ 2026-09-03):** this entry's `v2_evidence` originally quoted `DEFAULT_TOOLS_FILE\
+    \ = Path(\"agent-monitoring/tools.jsonl\")` as the literal value of generate_retro.py's\
+    \ tools-source path constant. TCK-20260902-MONITORING-SHARD-MIGRATION retired\
+    \ that single physical file in favor of per-ISO-week shard files under agent-monitoring/tools/,\
+    \ and this ticket repointed `DEFAULT_TOOLS_FILE` to `Path(\"agent-monitoring/tools\"\
+    )` (the shard directory) and made `generate_retro.py`'s own `load_jsonl()` dir-aware\
+    \ (globs and concatenates `sorted(tools_dir.glob(\"tools-*.jsonl\"))` when given\
+    \ a directory; unchanged single-file behavior otherwise) and generalized `_index_is_stale()`\
+    \ to compare against the newest mtime across all shard files for the tools source,\
+    \ via a new `_source_mtime()` helper, rather than one file's mtime. This is a\
+    \ file-resolution-layer change only -- the on-demand build/fallback shape, `_resolve_status()`/`_is_legacy_event()`/`_is_gate_fail()`,\
+    \ and `compute_retro_metrics()`/`generate()` this entry documents are otherwise\
+    \ unaffected. New tests: `test_generate_retro_load_jsonl_globs_shard_directory`,\
+    \ `test_generate_retro_index_is_stale_detects_write_to_non_newest_shard`.\n\n\
+    **Addendum (TCK-20260903-MONITORING-DATA-CONSUMERS-CORE, 2026-09-03):** this entry's\
+    \ `v2_evidence` (and the prior addendum immediately above) described `DEFAULT_TOOLS_FILE`\
+    \ as repointed to `Path(\"agent-monitoring/tools\")` (a flat shard directory)\
+    \ with `load_jsonl()` dir-aware, globbing `sorted(tools_dir.glob(\"tools-*.jsonl\"\
+    ))` -- both now superseded: TCK-20260903-MONITORING-DATA-MIGRATION retired that\
+    \ flat shard directory in favor of the unified per-ISO-week `agent-monitoring/data/<week>/{runs,events,tools}.jsonl`\
+    \ layout. This ticket repointed `RUNS_FILE`/`EVENTS_FILE`/`DEFAULT_TOOLS_FILE`\
+    \ all to the same `Path(\"agent-monitoring/data\")` root, ratifying investigation.md's\
+    \ Option B: `load_jsonl(path)` reverted to literal-single-file-only (its dir-mode\
+    \ branch removed entirely), and a new sibling function `load_data_glob(data_dir,\
+    \ source)` (added to `validate.py`, imported here) does `sorted(data_dir.glob(f\"\
+    */{source}.jsonl\"))` for the production default path, dispatched via a small\
+    \ local `_load_source(path, source)` helper that checks `path.is_dir()`. `_source_mtime()`/`_index_is_stale()`\
+    \ were generalized to take an explicit source name per source (`runs`/`events`/`tools`),\
+    \ since all 3 constants now resolve to the identical directory and can no longer\
+    \ be distinguished by `path.is_dir()` alone. This is again a file-resolution-layer\
+    \ change only -- the on-demand build/fallback shape, `_resolve_status()`/`_is_legacy_event()`/`_is_gate_fail()`,\
+    \ and `compute_retro_metrics()`/`generate()` this entry documents remain unaffected.\
+    \ New/rewritten tests: `test_generate_retro_load_jsonl_globs_shard_directory`\
+    \ (rewritten to the new week-subdirectory shape), `test_generate_retro_index_is_stale_detects_write_to_non_newest_shard`\
+    \ (rewritten), `test_generate_retro_index_is_stale_detects_append_in_any_week_folder_any_source`\
+    \ (new, covers all 3 sources, not just tools).\n\n\n    **Addendum (TCK-20260903-MONITORING-DATA-DOCS-SWEEP,\
+    \ 2026-09-04):** this entry's own physical-layout\ndescription (fully reflected\
+    \ by the 2026-09-03 CONSUMERS-CORE addendum immediately above) is now also\nconsistently\
+    \ reflected across the surrounding docs suite (CLAUDE.md, docs/agent-monitoring/,\
+    \ docs/ai/,\n.claude/skills/, docs/testing/regression_policy.md) -- a docs/prose-only\
+    \ sweep correcting every remaining\nreference to a retired physical shape (bare\
+    \ runs.jsonl/events.jsonl/tools.jsonl, or the intermediate\ntools/tools-YYYY-Www.jsonl\
+    \ shard) to the unified agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl\n\
+    layout this entry already documents at the code level. No further generate_retro.py\
+    \ source-resolution\nchange beyond what the CONSUMERS-CORE addendum already landed.\n\
+    \n"
 - id: INFRA-292
   text: 'New read-only baseline-metrics reporting tool over agent-monitoring/*.jsonl
     (context-tokens, follow-up-search-count, phase-duration, gate-outcome, review-rework)

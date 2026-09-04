@@ -21,6 +21,8 @@ from ticket_field_values import LAYER_VALUES  # tools/ticket_field_values.py —
 # Helpers
 # ---------------------------------------------------------------------------
 
+_FIXTURE_WEEK = "2026-W23"
+
 
 def _write_ticket_raw(
     tmp_path: Path,
@@ -49,7 +51,7 @@ def _write_ticket_raw(
 
 
 def _init_repo_skeleton(tmp_path: Path) -> None:
-    (tmp_path / "agent-monitoring").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK).mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
@@ -81,13 +83,15 @@ def _write_runs_events_tools(
     tools: list[dict] | None = None,
 ) -> None:
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    week_dir = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK
+    week_dir.mkdir(parents=True, exist_ok=True)
+    runs_file = week_dir / "runs.jsonl"
     runs_file.write_text("\n".join(json.dumps(r) for r in runs) + "\n")
     if events:
-        events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+        events_file = week_dir / "events.jsonl"
         events_file.write_text("\n".join(json.dumps(e) for e in events) + "\n")
     if tools:
-        tools_file = tmp_path / "agent-monitoring" / "tools.jsonl"
+        tools_file = week_dir / "tools.jsonl"
         tools_file.write_text("\n".join(json.dumps(t) for t in tools) + "\n")
 
 
@@ -287,7 +291,7 @@ def test_active_run_completion_flips_inferred_flag_and_timestamps(tmp_path):
     now = datetime.now(timezone.utc)
     live_ts = (now - timedelta(minutes=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    tools_file = tmp_path / "agent-monitoring" / "tools.jsonl"
+    tools_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "tools.jsonl"
     tools_file.write_text(
         json.dumps(
             {
@@ -309,7 +313,7 @@ def test_active_run_completion_flips_inferred_flag_and_timestamps(tmp_path):
     assert run.is_inferred_active is True
     assert run.end_ts is None
 
-    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
     end_ts = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     runs_file.write_text(
         json.dumps(
@@ -379,7 +383,7 @@ def test_files_touched_dedup_by_path_restricted_to_edit_tools():
 
 def test_legacy_runs_jsonl_schema_generations_do_not_crash_ingest(tmp_path):
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
     rows = [
         {"run_id": "TCK-LEGACY-A", "started_at": "2026-07-01T00:00:00Z", "finished_at": "2026-07-01T01:00:00Z", "status": "done"},
         {"run_id": "TCK-LEGACY-B", "ts_start": "2026-07-02T00:00:00Z", "ts_end": "2026-07-02T01:00:00Z", "result": "success"},
@@ -404,7 +408,7 @@ def test_legacy_runs_jsonl_schema_generations_do_not_crash_ingest(tmp_path):
 
 def test_run_summary_carries_provider_execution_id_ticket_id_when_present(tmp_path):
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
     row = {
         "run_id": "TCK-NATIVE-IDENTITY",
         "start_ts": "2026-07-22T00:00:00Z",
@@ -429,7 +433,7 @@ def test_run_summary_carries_provider_execution_id_ticket_id_when_present(tmp_pa
 
 def test_run_summary_labels_legacy_record_as_legacy_not_none_silently(tmp_path):
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
     legacy_line = (_FIXTURES_DIR / "shape2_final_status_no_end_ts.jsonl").read_text().strip()
     runs_file.write_text(legacy_line + "\n")
 
@@ -444,7 +448,7 @@ def test_run_summary_labels_legacy_record_as_legacy_not_none_silently(tmp_path):
 
 def test_get_runs_filters_by_provider_and_execution_id(tmp_path):
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
     legacy_line = (_FIXTURES_DIR / "shape2_final_status_no_end_ts.jsonl").read_text().strip()
     native_row = {
         "run_id": "TCK-NATIVE-FILTER-TEST",
@@ -480,7 +484,7 @@ def test_provider_claude_code_legacy_value_tolerated_not_normalized_as_new_write
     # normalization/aliasing is performed: the value passes through unchanged, exactly like every
     # other pass-through field.
     _init_repo_skeleton(tmp_path)
-    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "runs.jsonl"
     legacy_shaped_row = {
         "run_id": "TCK-LEGACY-TOKEN-TEST",
         "start_ts": "2026-07-22T00:00:00Z",
@@ -954,7 +958,7 @@ def test_bulk_timeline_until_excludes_none_start_ts_runs_consistent_with_since(t
     _init_repo_skeleton(tmp_path)
     now = datetime.now(timezone.utc)
     live_ts = (now - timedelta(minutes=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    tools_file = tmp_path / "agent-monitoring" / "tools.jsonl"
+    tools_file = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK / "tools.jsonl"
     tools_file.write_text(
         json.dumps(
             {
@@ -1026,3 +1030,154 @@ def test_bulk_timeline_empty_window_returns_empty_dict_not_error(tmp_path):
 
     bulk = cache.get_bulk_timeline(since="2026-08-01T00:00:00Z", limit=10)
     assert bulk.entries_by_run == {}
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260903-MONITORING-DATA-CONSUMERS-GATES-DASHBOARD — multi-week glob
+# read path: aggregation across weeks, staleness from a non-newest week, the
+# dedicated _tools_file regression, the empty-glob guard, and the public
+# API/lock architecture guard.
+# ---------------------------------------------------------------------------
+
+_OLD_FIXTURE_WEEK = "2026-W23"
+_NEW_FIXTURE_WEEK = "2026-W36"
+
+
+def test_dashboard_cache_rebuild_aggregates_across_multiple_weeks(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    old_dir = tmp_path / "agent-monitoring" / "data" / _OLD_FIXTURE_WEEK
+    new_dir = tmp_path / "agent-monitoring" / "data" / _NEW_FIXTURE_WEEK
+    old_dir.mkdir(parents=True, exist_ok=True)
+    new_dir.mkdir(parents=True, exist_ok=True)
+
+    (old_dir / "runs.jsonl").write_text(
+        json.dumps({"run_id": "TCK-OLD-WEEK-RUN", "start_ts": "2026-06-01T00:00:00Z", "final_status": "DONE"}) + "\n"
+    )
+    (new_dir / "runs.jsonl").write_text(
+        json.dumps({"run_id": "TCK-NEW-WEEK-RUN", "start_ts": "2026-09-01T00:00:00Z", "final_status": "DONE"}) + "\n"
+    )
+    (old_dir / "events.jsonl").write_text(
+        json.dumps({"run_id": "TCK-OLD-WEEK-RUN", "seq": 1, "phase": "Implement", "agent": "implementer", "status": "ok", "summary": "x", "ts": "2026-06-01T00:00:01Z"}) + "\n"
+    )
+    (new_dir / "events.jsonl").write_text(
+        json.dumps({"run_id": "TCK-NEW-WEEK-RUN", "seq": 1, "phase": "Implement", "agent": "implementer", "status": "ok", "summary": "y", "ts": "2026-09-01T00:00:01Z"}) + "\n"
+    )
+    (old_dir / "tools.jsonl").write_text(
+        json.dumps({"run_id": "TCK-OLD-WEEK-RUN", "seq": 1, "ts": "2026-06-01T00:00:00Z", "tool": "Read", "input_summary": "/a.py", "status": "ok", "duration_ms": 5}) + "\n"
+    )
+    (new_dir / "tools.jsonl").write_text(
+        json.dumps({"run_id": "TCK-NEW-WEEK-RUN", "seq": 1, "ts": "2026-09-01T00:00:00Z", "tool": "Read", "input_summary": "/b.py", "status": "ok", "duration_ms": 5}) + "\n"
+    )
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    runs = cache.get_runs(limit=100)
+    run_ids = {r.run_id for r in runs}
+    assert {"TCK-OLD-WEEK-RUN", "TCK-NEW-WEEK-RUN"} <= run_ids
+
+    assert {e.get("run_id") for e in cache._events_all} == {"TCK-OLD-WEEK-RUN", "TCK-NEW-WEEK-RUN"}
+    assert {t.get("run_id") for t in cache._tools_all} == {"TCK-OLD-WEEK-RUN", "TCK-NEW-WEEK-RUN"}
+
+
+def test_dashboard_cache_maybe_rebuild_detects_staleness_from_non_newest_week_write(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    old_dir = tmp_path / "agent-monitoring" / "data" / _OLD_FIXTURE_WEEK
+    new_dir = tmp_path / "agent-monitoring" / "data" / _NEW_FIXTURE_WEEK
+    old_dir.mkdir(parents=True, exist_ok=True)
+    new_dir.mkdir(parents=True, exist_ok=True)
+
+    (old_dir / "runs.jsonl").write_text(
+        json.dumps({"run_id": "TCK-OLD-A", "start_ts": "2026-06-01T00:00:00Z", "final_status": "DONE"}) + "\n"
+    )
+    (new_dir / "runs.jsonl").write_text(
+        json.dumps({"run_id": "TCK-NEW-A", "start_ts": "2026-09-01T00:00:00Z", "final_status": "DONE"}) + "\n"
+    )
+    (old_dir / "events.jsonl").write_text("")
+    (new_dir / "events.jsonl").write_text("")
+    (old_dir / "tools.jsonl").write_text("")
+    (new_dir / "tools.jsonl").write_text("")
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    assert cache.get_run("TCK-OLD-A-2") is None  # forces initial rebuild
+
+    # runs.jsonl: bump the OLDER week's file with new content and confirm it's picked up.
+    (old_dir / "runs.jsonl").write_text(
+        json.dumps({"run_id": "TCK-OLD-A-2", "start_ts": "2026-06-02T00:00:00Z", "final_status": "DONE"}) + "\n"
+    )
+    _bump_mtime(old_dir / "runs.jsonl")
+    assert cache.get_run("TCK-OLD-A-2") is not None
+
+    # events.jsonl: same, from the older week.
+    (old_dir / "events.jsonl").write_text(
+        json.dumps({"run_id": "TCK-OLD-A-2", "seq": 1, "phase": "Implement", "agent": "implementer", "status": "ok", "summary": "z", "ts": "2026-06-02T00:00:01Z"}) + "\n"
+    )
+    _bump_mtime(old_dir / "events.jsonl")
+    timeline = cache.get_timeline("TCK-OLD-A-2")
+    assert timeline is not None
+    assert len(timeline.entries) == 1
+
+    # tools.jsonl: same, from the older week.
+    (old_dir / "tools.jsonl").write_text(
+        json.dumps({"run_id": "TCK-OLD-A-2", "seq": 1, "ts": "2026-06-02T00:00:00Z", "tool": "Read", "input_summary": "/c.py", "status": "ok", "duration_ms": 5}) + "\n"
+    )
+    _bump_mtime(old_dir / "tools.jsonl")
+    cache.get_run("TCK-OLD-A-2")  # force a rebuild check
+    assert any(t.get("run_id") == "TCK-OLD-A-2" for t in cache._tools_all)
+
+
+def test_dashboard_cache_tools_all_nonempty_against_real_sharded_layout(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    week_dir = tmp_path / "agent-monitoring" / "data" / _FIXTURE_WEEK
+    week_dir.mkdir(parents=True, exist_ok=True)
+    (week_dir / "tools.jsonl").write_text(
+        "\n".join(
+            json.dumps(t)
+            for t in [
+                {"run_id": "TCK-SHARD-TOOLS", "seq": 1, "ts": "2026-08-17T00:00:00Z", "tool": "Read", "input_summary": "/a.py", "status": "ok", "duration_ms": 5},
+                {"run_id": "TCK-SHARD-TOOLS", "seq": 2, "ts": "2026-08-17T00:00:01Z", "tool": "Edit", "input_summary": "/a.py", "status": "ok", "duration_ms": 8},
+            ]
+        )
+        + "\n"
+    )
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    cache.get_tickets()  # force a rebuild
+    assert cache._tools_all, "DashboardCache._tools_all is empty against a real sharded fixture"
+    assert cache._tools_by_seq[("TCK-SHARD-TOOLS", 1)][0]["tool"] == "Read"
+    assert cache._tools_by_seq[("TCK-SHARD-TOOLS", 2)][0]["tool"] == "Edit"
+    assert len(cache._tools_by_run_recent["TCK-SHARD-TOOLS"]) == 2
+
+
+def test_current_source_state_empty_data_dir_returns_zero_not_crash(tmp_path):
+    (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    state = cache._current_source_state()
+    assert state["runs.jsonl"] == 0.0
+    assert state["events.jsonl"] == 0.0
+    assert state["tools.jsonl"] == 0.0
+
+
+def test_dashboard_public_api_surface_and_lock_unchanged():
+    import inspect
+
+    public_methods = {
+        name
+        for name in dir(ingest.DashboardCache)
+        if not name.startswith("_") and callable(getattr(ingest.DashboardCache, name))
+    }
+    assert public_methods == {
+        "get_tickets",
+        "get_runs",
+        "get_run",
+        "get_timeline",
+        "get_bulk_timeline",
+        "get_health",
+        "get_agent_monitoring_stats",
+        "get_ticket_corpus_stats",
+        "get_glossary",
+    }
+
+    init_source = inspect.getsource(ingest.DashboardCache.__init__)
+    assert init_source.count("threading.RLock()") == 1

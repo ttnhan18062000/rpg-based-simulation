@@ -35,6 +35,7 @@ from validate_frontmatter import (  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from vocabulary import WORKFLOW_AGENTS, WORKFLOW_PHASES, infer_workflow  # noqa: E402
 from duration_utils import compute_active_idle_split  # noqa: E402
+from validate import load_data_glob  # noqa: E402
 
 # Read-only reference imports for TCK-20260729-RETRIEVAL-RETRO-VIEWS's retrieval-quality views —
 # anti-drift: compute_retrieval_metrics() must never re-literal these values (see
@@ -50,11 +51,11 @@ from retrieval_cache import (  # noqa: E402
     read_cache_access_log,
 )
 
-RUNS_FILE = Path("agent-monitoring/runs.jsonl")
-EVENTS_FILE = Path("agent-monitoring/events.jsonl")
+RUNS_FILE = Path("agent-monitoring/data")
+EVENTS_FILE = Path("agent-monitoring/data")
 RETRO_DIR = Path("agent-monitoring/retro")
 DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
-DEFAULT_TOOLS_FILE = Path("agent-monitoring/tools.jsonl")
+DEFAULT_TOOLS_FILE = Path("agent-monitoring/data")
 
 # Repo root — two levels above tools/agent-monitoring/, matching this file's actual depth.
 _DEFAULT_TICKETS_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -67,6 +68,24 @@ def load_jsonl(path):
     return [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
 
 
+def _load_source(path, source):
+    if path.is_dir():
+        return load_data_glob(path, source)
+    return load_jsonl(path)
+
+
+def _source_mtime(path, source_name):
+    """Newest relevant mtime for one source: max mtime across
+    agent-monitoring/data/*/<source_name>.jsonl if path is the data-dir root (a directory),
+    else the literal file's own mtime if it exists, else None."""
+    if path.is_dir():
+        mtimes = [f.stat().st_mtime for f in path.glob(f"*/{source_name}.jsonl")]
+        return max(mtimes) if mtimes else None
+    if path.exists():
+        return path.stat().st_mtime
+    return None
+
+
 def _index_is_stale(db_path):
     """True if db_path is missing, or any source JSONL (runs/events/tools) has a newer mtime
     than the index — the index is a point-in-time snapshot (TCK-20260713-MONITORING-SQLITE-INDEX),
@@ -75,8 +94,9 @@ def _index_is_stale(db_path):
     if not db_path.exists():
         return True
     db_mtime = db_path.stat().st_mtime
-    for source in (RUNS_FILE, EVENTS_FILE, DEFAULT_TOOLS_FILE):
-        if source.exists() and source.stat().st_mtime > db_mtime:
+    for path, source_name in ((RUNS_FILE, "runs"), (EVENTS_FILE, "events"), (DEFAULT_TOOLS_FILE, "tools")):
+        mtime = _source_mtime(path, source_name)
+        if mtime is not None and mtime > db_mtime:
             return True
     return False
 
@@ -117,7 +137,7 @@ def _load_runs_and_events():
             f"scan of {RUNS_FILE}/{EVENTS_FILE}",
             file=sys.stderr,
         )
-        return load_jsonl(RUNS_FILE), load_jsonl(EVENTS_FILE)
+        return _load_source(RUNS_FILE, "runs"), _load_source(EVENTS_FILE, "events")
 
 
 def iso_week(ts_str):
@@ -2252,7 +2272,7 @@ def main():
     args = parser.parse_args()
 
     all_runs, all_events = _load_runs_and_events()
-    all_tools = load_jsonl(DEFAULT_TOOLS_FILE)
+    all_tools = _load_source(DEFAULT_TOOLS_FILE, "tools")
     # Never period-sliced (see generate()'s own docstring) — read_cache_access_log() never raises
     # (returns [] on a fresh/never-migrated retrieval_cache.db), so no try/except is needed here.
     all_kgmcp_access_log = read_cache_access_log()

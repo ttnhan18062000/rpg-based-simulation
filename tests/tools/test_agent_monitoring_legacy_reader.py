@@ -204,8 +204,18 @@ _SAMPLE_SIZE = 20
 
 
 def _recent_records(filename: str, n: int) -> list:
-    path = _REAL_MONITORING_DIR / filename
-    lines = [line for line in path.read_text().splitlines() if line.strip()]
+    # "unknown-week" is a real, legitimate glob match for production readers (aggregation/coverage
+    # must never special-case it out — see plan.md's Anti-Drift Hazards), but it holds pre-migration
+    # records with no determinable ISO week, not necessarily chronologically recent ones. It sorts
+    # alphabetically AFTER every real "YYYY-Www" folder ('u' > '2'), which would make this test's
+    # own recency sampling wrongly treat old, unattributed records as "most recent." Excluded here
+    # only, in this test-only recency heuristic — not a production read path.
+    source = filename[: -len(".jsonl")]
+    lines: list = []
+    for shard in sorted((_REAL_MONITORING_DIR / "data").glob(f"*/{source}.jsonl")):
+        if shard.parent.name == "unknown-week":
+            continue
+        lines.extend(line for line in shard.read_text().splitlines() if line.strip())
     records = []
     for line in lines[-n:]:
         try:

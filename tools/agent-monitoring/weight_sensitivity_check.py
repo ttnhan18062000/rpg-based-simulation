@@ -25,9 +25,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cost_proxy import W_AGENT, W_BASH, W_EDIT  # noqa: E402
+from validate import load_data_glob  # noqa: E402
 
-TOOLS_FILE = Path("agent-monitoring/tools.jsonl")
-EVENTS_FILE = Path("agent-monitoring/events.jsonl")
+TOOLS_FILE = Path("agent-monitoring/data")
+EVENTS_FILE = Path("agent-monitoring/data")
 
 _EDIT_TOOLS = {"Read", "Edit", "Write", "MultiEdit"}
 
@@ -138,31 +139,21 @@ def _load_tool_rows_and_events(tools_path: Path, events_path: Path):
     """Real-file reader — kept separate from compute_weight_sensitivity_report() so that function
     stays testable with plain fixture dicts, no file I/O."""
     tool_rows_by_group: dict[tuple, list[dict]] = defaultdict(list)
-    if tools_path.exists():
-        with open(tools_path, encoding="utf-8") as f:
-            for line in f:
-                if not line.strip():
-                    continue
-                r = json.loads(line)
-                if r.get("run_id") is None or r.get("seq") is None:
-                    continue
-                tool_rows_by_group[(r["run_id"], r["seq"])].append(r)
+    for r in load_data_glob(tools_path, "tools"):
+        if r.get("run_id") is None or r.get("seq") is None:
+            continue
+        tool_rows_by_group[(r["run_id"], r["seq"])].append(r)
 
     phase_of: dict[tuple, str] = {}
     agent_of: dict[tuple, str] = {}
-    if events_path.exists():
-        with open(events_path, encoding="utf-8") as f:
-            for line in f:
-                if not line.strip():
-                    continue
-                e = json.loads(line)
-                run_id = e.get("run_id")
-                seq = e.get("seq")
-                if run_id is None or seq is None:
-                    continue
-                key = (run_id, seq)
-                phase_of[key] = e.get("phase", "?")
-                agent_of[key] = e.get("agent", "?")
+    for e in load_data_glob(events_path, "events"):
+        run_id = e.get("run_id")
+        seq = e.get("seq")
+        if run_id is None or seq is None:
+            continue
+        key = (run_id, seq)
+        phase_of[key] = e.get("phase", "?")
+        agent_of[key] = e.get("agent", "?")
 
     return tool_rows_by_group, phase_of, agent_of
 

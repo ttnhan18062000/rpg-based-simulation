@@ -4,6 +4,8 @@ promoted from experiments/cost_proxy_calibration/validate_rank_order.py).
 Pure unit tests against compute_weight_sensitivity_report() with fixture dicts — no file I/O, no
 subprocess, mirroring test_cost_proxy.py's fixture-dict style.
 """
+import json
+import re
 import sys
 from pathlib import Path
 
@@ -17,6 +19,11 @@ from weight_sensitivity_check import (  # noqa: E402
     _spearman_rank_correlation,
     compute_weight_sensitivity_report,
 )
+import weight_sensitivity_check as _wsc  # noqa: E402
+
+
+def _write_jsonl(path: Path, records: list) -> None:
+    path.write_text("\n".join(json.dumps(r) for r in records) + "\n", encoding="utf-8")
 
 _W_BASELINE = {"bash": 0.001, "agent": 50, "edit": 1}
 _W_CANDIDATE = {"bash": 0.01, "agent": 100, "edit": 10}
@@ -136,3 +143,52 @@ def test_rank_delta_reflects_material_reordering_between_weight_sets():
     assert rows["Implement"]["candidate_rank"] == 0
     assert rows["Test"]["rank_delta"] != 0
     assert rows["Implement"]["rank_delta"] != 0
+
+
+def test_weight_sensitivity_check_real_multi_week_tools_and_events_produce_nonzero_score(tmp_path, monkeypatch, capsys):
+    # Cross-week regression test for the TOOLS_FILE/EVENTS_FILE ground-truth bug this ticket
+    # names explicitly: week1 seeds one (run_id, seq) group, week2 seeds a distinct one — a
+    # same-week-only fixture could pass a weaker version of this test while leaving the
+    # cross-week case silently broken.
+    week1 = tmp_path / "agent-monitoring" / "data" / "2026-W01"
+    week1.mkdir(parents=True)
+    _write_jsonl(week1 / "tools.jsonl", [
+        {"run_id": "TCK-A", "seq": 1, "tool": "Bash", "duration_ms": 1000},
+    ])
+    _write_jsonl(week1 / "events.jsonl", [
+        {"run_id": "TCK-A", "seq": 1, "phase": "Test", "agent": "test-scoper"},
+    ])
+
+    week2 = tmp_path / "agent-monitoring" / "data" / "2026-W02"
+    week2.mkdir(parents=True)
+    _write_jsonl(week2 / "tools.jsonl", [
+        {"run_id": "TCK-B", "seq": 1, "tool": "Agent"},
+    ])
+    _write_jsonl(week2 / "events.jsonl", [
+        {"run_id": "TCK-B", "seq": 1, "phase": "Implement", "agent": "implementer"},
+    ])
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", [
+        "weight_sensitivity_check.py",
+        "--candidate-weights", '{"bash": 0.01, "agent": 100, "edit": 10}',
+        "--baseline-weights", '{"bash": 0.001, "agent": 50, "edit": 1}',
+    ])
+
+    # Real CLI path — must exercise _load_tool_rows_and_events()'s real file-reading logic,
+    # not compute_weight_sensitivity_report() called directly with hand-built dicts.
+    _wsc.main()
+    captured = capsys.readouterr()
+    match = re.search(r"Groups scored \(real \(run_id,seq\) with a matching event\): (\d+)", captured.out)
+    assert match is not None, captured.out
+    assert int(match.group(1)) > 0, "n_groups_scored must be nonzero across a real multi-week corpus"
+
+    tool_rows_by_group, phase_of, agent_of = _wsc._load_tool_rows_and_events(_wsc.TOOLS_FILE, _wsc.EVENTS_FILE)
+    report = compute_weight_sensitivity_report(
+        tool_rows_by_group, phase_of, agent_of,
+        {"bash": 0.001, "agent": 50, "edit": 1}, {"bash": 0.01, "agent": 100, "edit": 10},
+    )
+    assert report["n_groups_scored"] == 2
+    rows = {r["bucket"]: r for r in report["by_phase"]["rows"]}
+    assert rows["Test"]["baseline_mean"] != 0
+    assert rows["Implement"]["candidate_mean"] != 0

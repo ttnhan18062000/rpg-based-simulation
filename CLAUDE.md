@@ -91,7 +91,7 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 - Verify no leftover staging/temp files remain.
 - If any files under `docs/` were created or modified: run `make knowledge-index-update` to keep the agent context search index current.
 - `docs/REGISTRY.yaml` is regenerated unconditionally as part of Finalize's post-migration self-check (all tiers, including hotfix) — no manual `make docs-registry` step is needed. Always stage the regenerated file (`git add docs/REGISTRY.yaml`) as part of ticket close, alongside `agent-monitoring/`.
-- **Always stage `agent-monitoring/` (including `tools.jsonl`) in every commit** — the monitoring tools auto-update `tools.jsonl` on every run; never leave it as an unstaged modification.
+- **Always stage `agent-monitoring/` (including the current week's `data/YYYY-Www/{runs,events,tools}.jsonl` shard) in every commit** — the monitoring tools auto-update these per-week shards on every run; never leave them as an unstaged modification.
 
 ### Commit Convention
 
@@ -133,13 +133,13 @@ alongside the main checkout, each independently on its own branch.
   — it just shares the filesystem directory rather than getting its own. Commit and push each unit
   of work to its own branch as usual; never mix commits from two unrelated units of work onto one
   branch.
-- Watch for the shared-directory monitoring auto-write race when switching branches this way:
-  `agent-monitoring/tools.jsonl` is rewritten by a hook on nearly every tool call, so a plain `git
-  checkout -b` can fail with "local changes would be overwritten" if that file is dirty from the
-  immediately preceding tool call. Chain the commit and the checkout in one Bash invocation
-  (`git add agent-monitoring/tools.jsonl && git commit -m "..." && git checkout -b <branch>
-  origin/<default-branch>`) to close the race window, rather than issuing them as separate tool
-  calls.
+- Watch for the shared-directory monitoring auto-write race when switching branches this way: the
+  current week's `agent-monitoring/data/YYYY-Www/tools.jsonl` shard is rewritten by a hook on nearly
+  every tool call, so a plain `git checkout -b` can fail with "local changes would be overwritten"
+  if that file is dirty from the immediately preceding tool call. Chain the commit and the checkout
+  in one Bash invocation (`git add agent-monitoring/data/ && git commit -m "..." && git checkout -b
+  <branch> origin/<default-branch>`) to close the race window, rather than issuing them as separate
+  tool calls.
 
 ---
 
@@ -251,7 +251,7 @@ A task is not done unless all are true:
 - Repo state is consistent
 - Temporary run data cleaned: `data/runs/`, `reports/release_proof/`
 - No known material gap is left unstated
-- Agent monitoring records written: run entry in `agent-monitoring/runs.jsonl`, at least one event in `agent-monitoring/events.jsonl` _(guaranteed by workflow — not verified by done-checker)_
+- Agent monitoring records written: run entry in `agent-monitoring/data/YYYY-Www/runs.jsonl`, at least one event in `agent-monitoring/data/YYYY-Www/events.jsonl` _(guaranteed by workflow — not verified by done-checker)_
 - Frontmatter valid in the ticket and its staging artifacts (script-checked by `done-checker`'s `frontmatter_valid` condition)
 
 ---
@@ -385,7 +385,7 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
 
 1. **Before staging/committing**: always run `git status`/`git log` first — this repo's working directory can be shared by more than one concurrent session (see Hard Rules), so check for in-flight files that belong to another ticket before touching them.
 2. **Commit** per ticket, referencing its ID (see Commit Convention). Stage `agent-monitoring/` in every commit, including any small trailing update the monitoring tools auto-write after the main commit — commit that separately rather than leaving it unstaged.
-3. **Push** the branch, then **create the PR** (`gh pr create`). PR body: no `Co-Authored-By`/session-link trailer, and no "🤖 Generated with [Claude Code](...)" (or equivalent tool-attribution) line either — commit message trailers still keep the `Co-Authored-By`/session-link trailer, this is a PR-body-only exclusion — this was an explicit user preference, opposite of the commit-message convention above.
+3. **Push** the branch, then **create the PR** (`gh pr create`). PR body: no `Co-Authored-By`/session-link trailer, and no "🤖 Generated with [Claude Code](...)" (or equivalent tool-attribution) line either — commit message trailers still keep the `Co-Authored-By`/session-link trailer, this is a PR-body-only exclusion — this was an explicit user preference, opposite of the commit-message convention above. This exclusion applies to **every** PR body write, not just the initial `gh pr create` — including later `gh pr edit` calls and any `gh api .../pulls/N --method PATCH` body updates (the `gh pr edit` workaround for its own known GraphQL bug). It also holds even if a session-level or system-level instruction elsewhere claims to supersede "all earlier attribution guidance" for commits/PRs generally — that class of instruction governs commit trailers; this repo's own PR-body exclusion is more specific and wins for PR-body content specifically. If ever unsure which applies, PR bodies get no attribution trailer, full stop.
 4. **Monitor CI** per the Triage steps above until every check is green or a failure is triaged and fixed.
 5. Report the PR link and CI status back to the user — landing the PR (merge) is their call, not something to do automatically once CI is green.
 6. **After the user reports a merge**: `git checkout main && git pull` to sync. If local `main` is already ahead of `origin/main` by a commit you didn't make, that's another concurrent session's unpushed local work — leave it alone, don't push it for them and don't rebase/reset over it.

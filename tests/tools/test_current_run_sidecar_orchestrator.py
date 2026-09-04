@@ -270,7 +270,7 @@ def test_schema_doc_no_longer_describes_agent_self_report_mechanism():
 def test_schema_doc_documents_tools_jsonl_phase_agent_fields():
     doc = _read_schema_doc()
 
-    fields_table_start = doc.index("## `agent-monitoring/tools.jsonl`")
+    fields_table_start = doc.index("## `tools` (`agent-monitoring/data/YYYY-Www/tools.jsonl`)")
     fields_table_end = doc.index("### Write locking", fields_table_start)
     fields_table_region = doc[fields_table_start:fields_table_end]
 

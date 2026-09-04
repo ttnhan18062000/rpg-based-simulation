@@ -3,9 +3,7 @@
 # every consumer (tools/agent-monitoring/{generate_retro,query,validate}.py, and the
 # agent-ops-dashboard ingest design) reads these by explicit ts/seq/run_id fields, never
 # by physical line position — see conversation 2026-07-16 for the verification.
-agent-monitoring/runs.jsonl merge=union
-agent-monitoring/events.jsonl merge=union
-agent-monitoring/tools.jsonl merge=union
+agent-monitoring/data/*/*.jsonl merge=union
 tickets/working_log.csv merge=union
 
 # docs/REGISTRY.yaml is deliberately NOT listed here: it's a full-file rewrite on every
