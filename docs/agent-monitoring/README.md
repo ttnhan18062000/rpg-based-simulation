@@ -134,12 +134,57 @@ up-to-the-second, and this audit's whole purpose (catching a just-closed ticket 
 monitoring record) needs the direct-read guarantee regardless. Built by
 `TCK-20260805-DONE-TICKET-MONITORING-COVERAGE-AUDIT` after
 `TCK-20260805-CODEX-EVENT-TRACE-GAP-INVESTIGATION` found 2 `DONE` tickets with zero monitoring
-records. The full audit found 719 of 1,303 tickets missing coverage, but this is **not** an
-ongoing systemic bug — the earliest real `runs.jsonl` record is dated 2026-06-07 (the
-`TCK-20260607-MON-CAPTURE` ticket that built agent-monitoring capture itself), so every ticket
-dated before that structurally cannot have a record; bucketing the remainder by month shows a
-clean rollout-adoption curve (124 missing in the June 2026 rollout month, 24 in July, converging
-to a single isolated miss in August) rather than a flat ongoing rate.
+records. The full audit found 719 of 1,303 tickets missing coverage; the earliest real
+`runs.jsonl` record is dated 2026-06-07 (the `TCK-20260607-MON-CAPTURE` ticket that built
+agent-monitoring capture itself), so every ticket dated before that structurally cannot have a
+record, and the 2026-08-05 investigation found the remainder converging toward a rollout-adoption
+curve rather than a flat ongoing rate.
+
+**Update (`TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE`, 2026-09-04):** a
+follow-up re-run found the gap has **not** fully converged — 798 of 1,815 tickets are missing
+coverage, and 30 of those are dated within the last ~3 days, well after the 2026-06-07 rollout
+period. Root cause: any ticket closed by hand-orchestration (a session reading the ticket, editing
+code, running tests, and moving the file to `tickets/done/` without invoking the `Workflow` tool)
+produces zero monitoring records, since only the formal `implement-ticket.js` pipeline auto-records
+coverage. This is a real, ongoing pattern, not a shrinking historical tail. See "Recording
+coverage for a hand-orchestrated closure" below for the fix. The 798 historical entries are **not**
+backfilled — fabricating `runs.jsonl` records for work that happened without real monitoring
+instrumentation would create data the real events never generated, which this project's Durable
+State Rule forbids.
+
+## Recording coverage for a hand-orchestrated closure
+
+If you close a ticket without going through the `Workflow` tool's `implement-ticket.js` pipeline,
+nothing else records its monitoring coverage — you must do it yourself, or the ticket joins the
+`missing` list above. Use `tools/agent-monitoring/record_hand_orchestrated_closure.py`, a thin
+wrapper over `record_run.py`/`record_events.py` (reuses both modules' own validation and
+duration/cost-proxy logic unchanged) that auto-fills the boilerplate fields shared across every
+phase of one closure:
+
+```bash
+python3 tools/agent-monitoring/record_hand_orchestrated_closure.py \
+  --ticket-id TCK-20260904-EXAMPLE --tier hotfix \
+  --events '[
+    {"phase": "Scope", "status": "ok", "summary": "..."},
+    {"phase": "Implement", "status": "ok", "summary": "..."},
+    {"phase": "Test", "status": "ok", "summary": "..."},
+    {"phase": "Parity", "status": "skipped", "summary": "..."},
+    {"phase": "Verify", "status": "ok", "summary": "..."},
+    {"phase": "Finalize", "status": "ok", "summary": "..."}
+  ]'
+```
+
+Each event only needs `phase`/`status`/`summary` — `run_id`, `execution_id`, `provider`,
+`ticket_id`, and 1-indexed `seq` are filled in automatically. `--start-ts`/`--end-ts` default to
+"now" (identical value for both) if real elapsed wall-clock time wasn't tracked. See `CLAUDE.md`'s
+"After Work" checklist for when this is required.
+
+**Deliberately not done as part of this fix** (recorded, not silently dropped): no new blocking or
+advisory gate/hook enforces this — `CLAUDE.md`'s Definition of Done already states monitoring
+coverage is "guaranteed by workflow — not verified by done-checker," a deliberate boundary this fix
+does not change, and `.claude/settings.json` hook changes affect every concurrent session
+immediately, a larger blast radius than a single ticket should decide unilaterally. Flagged as a
+follow-up recommendation for whoever next revisits this area.
 
 ## Navigation
 
