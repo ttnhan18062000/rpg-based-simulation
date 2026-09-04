@@ -293,9 +293,9 @@ Skills form a prerequisite chain. To learn tier-2 or tier-3 skills:
 | Shield Wall (Lv3, DEF+50% 3t, CD8) | Evasive Step (Lv3, EVA+30% 3t, CD7) | Frost Shield (Lv3, DEF+40% 3t, CD8) | Shadowstep (Lv3, EVA+40% SPD+30% 2t, CD7) |
 | Battle Cry (Lv5, AoE ATK+20% 3t, CD12) | Mark Prey (Lv5, DEF-25% 4t, CD10) | Mana Surge (Lv5, ATK+30% 4t, CD12) | Poison Blade (Lv5, DoT 4t, CD10) |
 
-### Race Skills (Innate, Free)
+### Species Skills (Innate, Free)
 
-| Race | Skills |
+| Species | Skills |
 |------|--------|
 | Hero | Rally (AoE ATK+10% DEF+10% 3t), Second Wind (Heal 20% max HP, CD20) |
 | Wolf | Pack Hunt, Feral Bite |

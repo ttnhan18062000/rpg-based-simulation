@@ -31,7 +31,7 @@ _SINGLE_FILE_CATEGORIES: dict[str, str] = {
     "Stat profiles": "data/content/entities/stat_profiles.yaml",
     "Entity archetypes": "data/content/entities/entity_archetypes.yaml",
     "Populations": "data/content/entities/populations.yaml",
-    "Races": "data/content/living/races.yaml",
+    "Species": "data/content/living/species.yaml",
     "Combat profiles": "data/content/entities/combat_profiles.yaml",
     "Skill profiles": "data/content/entities/skill_profiles.yaml",
     "Inventory profiles": "data/content/entities/inventory_profiles.yaml",

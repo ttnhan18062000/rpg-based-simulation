@@ -114,11 +114,13 @@ Followed staging_artifacts/TCK-20260904-INHERITED-REPUTATION-SEED/plan.md exactl
 8. Added the "Reputation Seed" subsection to `docs/mechanics/01_entity_anatomy.md` §5, immediately
    after "Genetic Inheritance (Combination)", following its exact shape (field type/location, the
    pure combine function, the AND-gate trigger contrasted with genetics' OR-gate, the
-   construction-time write, the parentless-path exclusion). Added a new `SOC-267` entry to
+   construction-time write, the parentless-path exclusion). Added a new (originally `SOC-267`,
+   renumbered to `SOC-271` during the PR merge — a cascade from PR #123's concurrent SOC-265
+   collision) entry to
    `docs/parity_ledger/social_narrative.yaml` via `tools/parity_ledger_writer.py` (never
    hand-edited), `status: verified`, cross-referencing `SOC-217` and `SOC-193` (both correctly
    cited as P0 per the architecture review's correction to the investigation), with `test_path`
-   citing the new AC1 test. Confirmed via `git diff` that only the one new `SOC-267` block was
+   citing the new AC1 test. Confirmed via `git diff` that only the one new `SOC-271` block was
    added, no existing entries altered. Ran `python3 tools/parity_index.py build` as the second,
    visible index-rebuild call per the parity-updater precedent.
 
@@ -184,4 +186,4 @@ tests (two-parent seed, partial-parent fallback, parentless anti-drift, post-bir
 heroism/notoriety-delta parity, and a source-text guard against the excluded
 ReputationUpdateService/PublicReputationProfile system), plus one integration test on the real
 production call chain. Docs updated: a new "Reputation Seed" Mechanics Bible subsection and a new
-`SOC-267` parity ledger entry (status: verified, cross-referencing P0 entries SOC-217 and SOC-193).
+`SOC-271` parity ledger entry (status: verified, cross-referencing P0 entries SOC-217 and SOC-193).

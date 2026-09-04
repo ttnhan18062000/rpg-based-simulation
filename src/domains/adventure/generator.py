@@ -139,13 +139,19 @@ class AdventureRouteGenerator:
                     trust_term = PartyCompositionScorer.score_trust_bonds(entity, candidates[:8])
                     comp_score = PartyCompositionScorer.score(candidates[:8], actor=entity)
                     # E43G: block FORM_PARTY if any candidate is a nemesis.
+                    # TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE: also check the canonical
+                    # SocialComponent.nemesis_ids field, not just the strategic-blocker proxy --
+                    # a candidate promoted to nemesis via real grudge_history (>= 3.0) was
+                    # previously not blocked here at all unless a separate, unrelated SOCIAL
+                    # strategic blocker happened to also exist for the same target.
                     from src.core.strategic import BlockerKind
-                    nemesis_ids = {
+                    blocker_nemesis_ids = {
                         int(b.subject)
                         for b in entity.strategic.blockers.values()
                         if b.kind == BlockerKind.SOCIAL and b.subject.isdigit()
                     }
-                    nemesis_in_candidates = any(c.id in nemesis_ids for c in candidates)
+                    all_nemesis_ids = blocker_nemesis_ids | entity.social.nemesis_ids
+                    nemesis_in_candidates = any(c.id in all_nemesis_ids for c in candidates)
                     route_blockers = ("nemesis_block",) if nemesis_in_candidates else ()
                     opts.append(
                         AdventureRouteOption(

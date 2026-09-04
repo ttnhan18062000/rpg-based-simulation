@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_fa30c4230e93fb2c",
+  "manifest_id": "prov_9b7abc2c2f6a0409",
   "world_id": "dungeon_crawl",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
+  "catalog_fingerprint": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
   "module_fingerprints": {
     "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
@@ -11,8 +11,8 @@
   },
   "composition_fingerprint": "1fe2f95e42b219274f5089f6edb01f8a508bc377b1df48e08a9a53d375cebaa3",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "fa30c4230e93fb2cd9af26307b699ff3142e2747a652e42908380e5f8c7a96e3",
-  "created_at": "2026-09-03T13:10:07.709251Z",
+  "content_fingerprint": "9b7abc2c2f6a0409b2aa504b113803d6c49f2fd01dea4b4c169f6035463a0e52",
+  "created_at": "2026-09-04T08:05:10.698324Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

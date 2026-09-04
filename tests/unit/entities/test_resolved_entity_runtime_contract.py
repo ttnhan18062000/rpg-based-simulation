@@ -12,7 +12,7 @@ from src.core.enums import EntityRole, Faction
 def _make_contract(**overrides):
     defaults = dict(
         archetype_id="human_worker",
-        race_id="human",
+        species_id="human",
         faction_id="town_council",
         role_id="worker",
         kind="humanoid",
@@ -34,7 +34,7 @@ def _make_contract(**overrides):
 def test_contract_construction_minimal():
     c = _make_contract()
     assert c.archetype_id == "human_worker"
-    assert c.race_id == "human"
+    assert c.species_id == "human"
     assert c.faction_id == "town_council"
     assert c.role_id == "worker"
     assert c.kind == "humanoid"

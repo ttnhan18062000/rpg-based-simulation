@@ -162,7 +162,7 @@ class TacticalDecisionSystem:
                       )
                   )
 
-        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_race_id_str
+        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_species_id_str
         from src.content_semantics.relation import RelationContext
         from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
         from src.engine.behavior_consumers import (
@@ -212,8 +212,8 @@ class TacticalDecisionSystem:
             context = RelationContext(
                 distance=float(dist),
                 combat_engaged=combat_engaged,
-                source_race=get_race_id_str(entity),
-                target_race=get_race_id_str(n),
+                source_species=get_species_id_str(entity),
+                target_species=get_species_id_str(n),
             )
             try:
                 _tgt_identity = _id_resolver.resolve(n)

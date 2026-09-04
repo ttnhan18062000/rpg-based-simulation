@@ -40,7 +40,7 @@ def _child_at_boundary(eid: int, pos: tuple = (5.0, 5.0), **identity_kwargs):
             .kind("citizen")
             .location(*pos)
             .identity(**identity_kwargs)
-            .lifecycle(age_ticks=3000, max_age_ticks=100000,
+            .lifecycle(age_ticks=3456000, max_age_ticks=99999999,
                        parent_a_entity_id=1000 + eid, parent_b_entity_id=2000 + eid, birth_tick=1)
             .build())
 
@@ -120,7 +120,7 @@ def test_coming_of_age_handles_missing_or_inactive_parent_entity():
     child = V2EntityBuilder(1).kind("citizen").location(5.0, 5.0).identity(
         role=EntityRole.CITIZEN, faction=Faction.TOWN_COUNCIL, life_stage=LifeStage.CHILD
     ).lifecycle(
-        age_ticks=3000, max_age_ticks=100000, parent_a_entity_id=99, parent_b_entity_id=100
+        age_ticks=3456000, max_age_ticks=99999999, parent_a_entity_id=99, parent_b_entity_id=100
     ).build()
     state = _state(entities={1: child, 100: inactive_parent})
 
@@ -136,7 +136,7 @@ def test_coming_of_age_parentless_child_uses_neutral_parental_term():
     child = V2EntityBuilder(1).kind("citizen").location(5.0, 5.0).identity(
         role=EntityRole.CITIZEN, faction=Faction.TOWN_COUNCIL, life_stage=LifeStage.CHILD
     ).lifecycle(
-        age_ticks=3000, max_age_ticks=100000,
+        age_ticks=3456000, max_age_ticks=99999999,
         parent_a_entity_id=None, parent_b_entity_id=None, birth_tick=50,
     ).build()
     state = _state(entities={1: child})

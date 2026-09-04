@@ -113,7 +113,7 @@ class WorldEntitySpawner:
         personality = build_personality_for_entity(entity_id, profile.faction_id, seed)
         return (
             V2EntityBuilder(entity_id)
-            .kind(profile.race_id or "human")
+            .kind(profile.species_id or "human")
             .location(*spawn.position)
             .identity(
                 role=profile.legacy_role,
@@ -121,7 +121,7 @@ class WorldEntitySpawner:
                 traits=set(profile.traits),
                 properties={
                     "archetype_id": profile.archetype_id,
-                    "race_id": profile.race_id,
+                    "species_id": profile.species_id,
                     "faction_id": profile.faction_id,
                     "role_id": profile.role_id,
                 },

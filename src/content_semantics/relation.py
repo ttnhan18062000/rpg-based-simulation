@@ -18,8 +18,8 @@ class RelationContext(BaseModel):
     location: Optional[str] = None
     intruding: Optional[bool] = None
     combat_engaged: Optional[bool] = None
-    target_race: Optional[str] = None
-    source_race: Optional[str] = None
+    target_species: Optional[str] = None
+    source_species: Optional[str] = None
 
 
 class RelationProjection(BaseModel):
@@ -144,8 +144,8 @@ class RelationProjectionService:
             else:
                 label = "neutral"
 
-        # 3.5 Race-hostility escalation (upgrade-only, never loosens an existing label).
-        # Friendly Fire law guard: same-faction pairs must never become attackable via race
+        # 3.5 Species-hostility escalation (upgrade-only, never loosens an existing label).
+        # Friendly Fire law guard: same-faction pairs must never become attackable via species
         # hostility alone (docs/mechanics/02_combat_laws.md:117; investigation.md Risk #2).
         # Ally/protected-label guard: project_relation() can produce five labels outside the
         # neutral->threat/intruder->enemy escalation ladder -- "ally" (relation.py:93), "protected"
@@ -153,30 +153,30 @@ class RelationProjectionService:
         # (relation.py:119), all confirmed by direct read of the perspective-label block. Only
         # labels IN the ladder dict are eligible for escalation at all -- this is a fail-closed
         # design: an off-ladder or future-unknown label is always skipped, never defaulted to
-        # rank 0/neutral. Do not replace `label in _RACE_LABEL_LADDER_RANK` with a
-        # `.get(label, 0)`-style default -- that would let an authored race-hostility entry
+        # rank 0/neutral. Do not replace `label in _SPECIES_LABEL_LADDER_RANK` with a
+        # `.get(label, 0)`-style default -- that would let an authored species-hostility entry
         # silently invert a perspective-declared ally (e.g. hero_guild -> forest_wardens) into
-        # "enemy"/"threat". See test_race_relations_never_overrides_ally_label.
-        _RACE_LABEL_LADDER_RANK = {None: 0, "neutral": 0, "threat": 1, "intruder": 1, "enemy": 2}
+        # "enemy"/"threat". See test_species_relations_never_overrides_ally_label.
+        _SPECIES_LABEL_LADDER_RANK = {None: 0, "neutral": 0, "threat": 1, "intruder": 1, "enemy": 2}
         if (
             source_faction_id != target_faction_id
-            and context and context.source_race and context.target_race
-            and label in _RACE_LABEL_LADDER_RANK
+            and context and context.source_species and context.target_species
+            and label in _SPECIES_LABEL_LADDER_RANK
         ):
-            race_rel = None
-            for rr in self.repo.race_relations.values():
-                if rr.source_race == context.source_race and rr.target_race == context.target_race:
-                    race_rel = rr
+            species_rel = None
+            for rr in self.repo.species_relations.values():
+                if rr.source_species == context.source_species and rr.target_species == context.target_species:
+                    species_rel = rr
                     break
-            if race_rel:
-                race_hostility = race_rel.axes.get("hostility", "none")
-                current_rank = _RACE_LABEL_LADDER_RANK[label]
-                if race_hostility == "high" and current_rank < 2:
+            if species_rel:
+                species_hostility = species_rel.axes.get("hostility", "none")
+                current_rank = _SPECIES_LABEL_LADDER_RANK[label]
+                if species_hostility == "high" and current_rank < 2:
                     label = "enemy"
-                elif race_hostility in ("medium", "medium_contextual", "high_contextual", "low_base_contextual") and current_rank < 1:
+                elif species_hostility in ("medium", "medium_contextual", "high_contextual", "low_base_contextual") and current_rank < 1:
                     label = "threat"
                 if label in ("enemy", "threat"):
-                    source_records.append(f"race_relationship:{race_rel.id}")
+                    source_records.append(f"species_relationship:{species_rel.id}")
 
         # 4. Fallback to legacy semantics
         if not label:

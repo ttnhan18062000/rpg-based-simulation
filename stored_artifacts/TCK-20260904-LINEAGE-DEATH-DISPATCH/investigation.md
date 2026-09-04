@@ -66,7 +66,10 @@ tags: [lifecycle, social]
 
 None pre-existing for this exact mechanism (death-triggered hostility transfer, intention-seeding).
 `next_available_id()` at investigation time: `combat_movement.yaml` -> COMB-321,
-`social_narrative.yaml` -> SOC-265, `strategic_cognition.yaml` -> STRAT-270.
+`social_narrative.yaml` -> SOC-265, `strategic_cognition.yaml` -> STRAT-270. (Post-hoc note: COMB-321
+and SOC-265 were each independently claimed by a concurrent PR #123 entry during the later merge into
+origin/main and had to be renumbered to COMB-322/SOC-269 — see the ticket's own Files Changed section
+for the final IDs. This artifact is left as an accurate historical record of investigation-time state.)
 
 ## Prior Work
 

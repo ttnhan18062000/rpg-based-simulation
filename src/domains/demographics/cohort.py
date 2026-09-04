@@ -9,6 +9,16 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
+from src.core.calendar import TICKS_PER_FANTASY_YEAR
+
+# TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION: 12/60 fantasy years, replacing the raw
+# 3000/7000-tick literals (TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY's decision). Kept as named
+# module constants, not inlined, since src/ai/life_stage.py::LifeStageService.get_stage_for_age()
+# intentionally duplicates these same two boundaries and must be kept in sync by hand (see that
+# function's own docstring).
+YOUNG_ADULT_BOUNDARY_TICKS = 12 * TICKS_PER_FANTASY_YEAR
+ADULT_ELDER_BOUNDARY_TICKS = 60 * TICKS_PER_FANTASY_YEAR
+
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, AttributeComponent, RegionState
     from src.core.updates import EntityUpdate, StateUpdate, WorldUpdate
@@ -60,16 +70,18 @@ def get_age_bracket(age_ticks: int) -> str:
     """
     Return the age bracket for an entity given its current age in ticks.
 
-    Bracket thresholds (spec: TCK-20260619-E52C-AGE-ADVANCEMENT §Scope):
-        age_ticks < 3000  → "young"
-        age_ticks < 7000  → "adult"
-        age_ticks ≥ 7000  → "elder"
+    Bracket thresholds (TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION: 12/60 fantasy years,
+    replacing the original spec's raw 3000/7000-tick literals per TCK-20260829-TEMPORAL-CALENDAR-
+    AUTHORITY's decision — spec origin: TCK-20260619-E52C-AGE-ADVANCEMENT §Scope):
+        age_ticks < YOUNG_ADULT_BOUNDARY_TICKS (12y)  → "young"
+        age_ticks < ADULT_ELDER_BOUNDARY_TICKS (60y)  → "adult"
+        age_ticks >= ADULT_ELDER_BOUNDARY_TICKS (60y) → "elder"
 
     Pure function — deterministic, no state.
     """
-    if age_ticks < 3000:
+    if age_ticks < YOUNG_ADULT_BOUNDARY_TICKS:
         return "young"
-    if age_ticks < 7000:
+    if age_ticks < ADULT_ELDER_BOUNDARY_TICKS:
         return "adult"
     return "elder"
 
@@ -82,7 +94,7 @@ def compute_elder_attribute_update(
     """
     Compute elder-tier attribute modifiers for one entity.
 
-    Returns None for non-elder entities (age_ticks < 7000).
+    Returns None for non-elder entities (age_ticks < ADULT_ELDER_BOUNDARY_TICKS).
     Returns an EntityUpdate containing an AttributeUpdate for elder entities.
 
     Modifier mapping (Mechanics Bible §1, Chapter 01 — attributes scale 1–99):

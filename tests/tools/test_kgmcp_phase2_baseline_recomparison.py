@@ -324,7 +324,13 @@ def test_no_frozen_kgmcp_dependency_edited():
         # ticket's migration_002/LEVEL2_CACHE_COLUMNS, both Architecture-Review-approved) —
         # already removed from this exact banned-path list in
         # tests/tools/test_kgmcp_measurement_baseline.py by the first of those two tickets.
-        "tools/retrieval_events.py",
+        # tools/retrieval_events.py intentionally removed here too
+        # (TCK-20260904-HOTFIX-KGMCP-FROZEN-FILE-BASELINE-UPDATE): Design Decision D1 (see
+        # test_knowledge_gateway_mcp.py::test_wrapper_functions_genuinely_not_applicable_zero_invoked)
+        # confirms none of this file's 3 wrap_*() functions has any real call site in the live
+        # KGMCP pipeline, so this file was never actually part of what this recomparison measures —
+        # edits to it cannot affect baseline reproducibility, unlike the genuinely live-pipeline/
+        # fixture paths above and below.
         "tools/knowledge_search.py",
         "tools/agent-monitoring/kgmcp_baseline_corpus.py",
         "tools/agent-monitoring/kgmcp_baseline_runner.py",

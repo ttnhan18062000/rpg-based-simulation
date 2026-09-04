@@ -127,7 +127,7 @@ class AppraisalSystem:
         # comment ("Biases combat vs flee", src/core/state.py) was unfulfilled here: this
         # function is the hard, first-checked flee gate in src/engine/tactical.py
         # (`if emotion.is_fleeing: ... PANIC_RETREAT`), and it ran identically for every
-        # entity regardless of personality or race (TCK-20260809-COMBAT-OUTCOME-FLEE-VS-
+        # entity regardless of personality or species (TCK-20260809-COMBAT-OUTCOME-FLEE-VS-
         # FIGHT-PERSONALITY). Bravery is in [0.0, 1.0); a high-bravery entity's effective
         # panic threshold rises toward ~0.7, a zero-bravery entity keeps the original 0.4.
         panic -= subject.identity.personality.bravery * 0.3

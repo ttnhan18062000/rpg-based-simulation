@@ -321,14 +321,14 @@ def _force_hunt_quest(seed_start: int, level: int, tick: int):
 def test_wolf_hunt_quest_gets_real_target_kind():
     """q_wolf_hunt (level 6-12) must carry metadata["target_kind"]="wolf" -- a real, corpus-
     grounded entity.kind value (both hungry_wolf and alpha_wolf archetypes declare
-    race: "wolf" in entity_archetypes.yaml)."""
+    species: "wolf" in entity_archetypes.yaml)."""
     q = _force_hunt_quest(0, level=8, tick=10)
     assert q.name == "Wolf Cull"
     assert q.metadata.get("target_kind") == "wolf"
 
 
 def test_slime_cull_quest_has_no_target_kind():
-    """q_slime_cull (level 1-5) must NOT carry a target_kind -- no "slime" race/archetype exists
+    """q_slime_cull (level 1-5) must NOT carry a target_kind -- no "slime" species/archetype exists
     anywhere in the real content corpus, so fabricating one would silently mask a real content
     gap rather than leave it honestly disclosed as uncompletable."""
     found_slime = False

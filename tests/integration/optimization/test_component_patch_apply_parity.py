@@ -124,7 +124,7 @@ def test_natural_creature_spawn_commits_through_authoritative_apply_path():
     assert result_entity.lifecycle.parent_a_entity_id is None
     assert result_entity.lifecycle.parent_b_entity_id is None
     assert result_entity.lifecycle.birth_tick == 60
-    assert result_entity.lifecycle.age_ticks == 3000 - 30
+    assert result_entity.lifecycle.age_ticks == 3456000 - 30
     assert result_entity.identity.life_stage == LifeStage.CHILD
 
 

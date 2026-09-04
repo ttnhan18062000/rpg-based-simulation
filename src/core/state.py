@@ -19,6 +19,7 @@ from src.core.immutability import shallow_freeze
 from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
 from src.systems.lifecycle_systems.genetics import GeneticProfile
+from src.core.calendar import TICKS_PER_FANTASY_YEAR
 
 
 def _readonly_mapping(value):
@@ -153,7 +154,12 @@ class BiologicalComponent:
 class LifecycleComponent:
     """State for hero aging and death mechanics."""
     age_ticks: int = 0
-    max_age_ticks: int = 10000
+    # TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION: 70 fantasy years (was a raw 10000-tick
+    # literal giving every entity a 4.17-day maximum lifespan under the settled 2400-ticks/day
+    # calendar; TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY decided this migration, 70y matches the
+    # temporal-axis proposal's own worked example, docs/brainstorm/codex/
+    # 2026-08-28-core-rpg-temporal-axis-proposal.md §1.1).
+    max_age_ticks: int = 70 * TICKS_PER_FANTASY_YEAR
     is_permadeath: bool = False
     death_tick: Optional[int] = None
     death_reason: Optional[str] = None

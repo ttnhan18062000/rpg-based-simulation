@@ -129,8 +129,10 @@ phase per the plan's own note).
    (`v2_evidence` now notes `appraise_contract()`'s read is unchanged), SOC-CROSS-EP-002
    (`v2_evidence`/`divergence_note` now document the importer-bypass fix, the orchestrator-bypass
    fix, and that `regional_reputation` does not participate in cross-episode carry-forward),
-   TOWN-181 (`divergence_note` now discloses the shop-discount-consumer gap), and new entry SOC-266
-   documenting the `regional_reputation` mechanism itself.
+   TOWN-181 (`divergence_note` now discloses the shop-discount-consumer gap), and new entry
+   (originally SOC-266, renumbered to SOC-270 during the PR merge — PR #123's concurrent renumbering
+   of SOC-265 cascaded forward onto this and this ticket's sibling entries) documenting the
+   `regional_reputation` mechanism itself.
 
 **Disclosed follow-up gaps (explicitly out of scope, per plan's Scope Guards):**
 - `src/engine/shop.py:84` and `src/town/shop.py:38` (the two real `apply_reputation_discount()`

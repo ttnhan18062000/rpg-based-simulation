@@ -8593,9 +8593,9 @@
     events existed, with no signal for how a combat started (deliberate goal-engage
     vs. an opportunity attack) or for 3 of the 4 real ways it can end without a kill
     (a fleeing entity getting caught, a chaser giving up pursuit, a clean escape).
-    Entity-level context (level, hp/max_hp, atk/def, role/faction/race, bravery, action_style)
-    was also absent from every existing combat event, making it impossible to later
-    judge whether a given combat scenario was reasonable.'
+    Entity-level context (level, hp/max_hp, atk/def, role/faction/species, bravery,
+    action_style) was also absent from every existing combat event, making it impossible
+    to later judge whether a given combat scenario was reasonable.'
   status: verified
   priority: P2
   legacy_evidence: null
@@ -11888,8 +11888,8 @@
     id-lookup / sidecar-attribution determinism) -- this is a distinct guarantee scoped
     to the CANONICAL_LEDGER_FILES file-set itself.
 - id: INFRA-400
-  text: "RaceDefinition gains an intelligence_tier field (str, validator-enforced\
-    \ to \"high\"/\"low\", required no default), authored explicitly for all 13 races\
+  text: "SpeciesDefinition gains an intelligence_tier field (str, validator-enforced\
+    \ to \"high\"/\"low\", required no default), authored explicitly for all 13 species\
     \ via a tool_user-in-natural_traits anchor rule (clean for 11/13; dragonkin and\
     \ spirit resolved to \"high\" on cognition_profile grounds as documented exceptions).\
     \ Ships as an inert, fully-typed, catalog-validated content field with zero production\
@@ -11897,9 +11897,23 @@
     \ no resolver or runtime-consumer wiring added."
   status: verified
   priority: P1
-  v2_evidence: src/content/schema.py RaceDefinition.intelligence_tier field + @field_validator("intelligence_tier")
-    (TCK-20260831-SPECIES-INTELLIGENCE-TIER); data/content/living/races.yaml (13 authored
-    values)
-  test_path: tests/unit/content/test_catalog.py::test_all_13_races_have_documented_intelligence_tier
+  v2_evidence: src/content/schema.py SpeciesDefinition.intelligence_tier field + @field_validator("intelligence_tier")
+    (TCK-20260831-SPECIES-INTELLIGENCE-TIER); data/content/living/species.yaml (13
+    authored values)
+  test_path: tests/unit/content/test_catalog.py::test_all_13_species_have_documented_intelligence_tier
   divergence_note: null
   proof_type: parity
+- id: INFRA-401
+  text: The combat_engagement_started/ended observability event's entity snapshot
+    uses the species-named output key species_id, not the legacy race_id (TCK-20260904-SPECIES-CROSSCUTTING-CONSUMERS-RENAME,
+    child 3/4 of the race->species terminology epic) -- confirmed zero downstream
+    consumers (warehouse ingestion, dashboards) referenced the old key name before
+    this rename.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/observability/event_shapers.py _combat_entity_snapshot()
+  proof_type: null
+  test_path: tests/unit/observability/test_event_shapers.py::test_combat_entity_snapshot_returns_real_fields
+  divergence_note: null
+  support_boundary: null

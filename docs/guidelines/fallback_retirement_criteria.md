@@ -144,7 +144,7 @@ content, not inline constants.
 
 **Current status:** MET
 
-**Notes:** Guard scans for hardcoded faction/role/race string literals in non-allowlisted
+**Notes:** Guard scans for hardcoded faction/role/species string literals in non-allowlisted
 modules. Must remain passing as fallback retirement progresses.
 
 ---

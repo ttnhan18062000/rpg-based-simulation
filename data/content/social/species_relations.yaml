@@ -1,0 +1,183 @@
+# STATE: ADDITIONAL
+# TCK-20260831-RACE-RELATIONS-MATRIX: species-level hostility escalation feeding
+# RelationProjectionService.project_relation()'s upgrade-only species-hostility step.
+# (TCK-20260904-SPECIES-RELATIONS-SUBSYSTEM-RENAME: renamed from race_relations.yaml.)
+#
+# Disclosed coverage: 24 directed entries (12 undirected pairs), authored against the
+# 66-populated-pair basis (12 species with a real entity_archetypes.yaml spawn path,
+# excluding `slime` which has zero archetype entries) -- ~18% coverage, matching the
+# P2D-FACTION-RELS precedent's "high-encounter-frequency, not full coverage" framing.
+# Rationale: hero-species-vs-monster-species and predator/prey pairs most likely to actually
+# co-populate and fight in a real scenario. The remaining 54 of 66 populated undirected
+# pairs (elf/dwarf vs wolf/troll/undead/spider/dragonkin/lizardfolk, and all
+# monster-vs-monster pairs) are left at neutral default (no entry) -- no evidence found of
+# these pairs co-populating in any real corpus world's population recipe, and
+# monster-vs-monster pairs rarely fight each other in the current scenario roster.
+
+- id: "wolf_to_human"
+  source_species: "wolf"
+  target_species: "human"
+  relationship_model: "predator_prey"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "human_to_wolf"
+  source_species: "human"
+  target_species: "wolf"
+  relationship_model: "predator_prey"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "goblin_to_human"
+  source_species: "goblin"
+  target_species: "human"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "high"
+
+- id: "human_to_goblin"
+  source_species: "human"
+  target_species: "goblin"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "high"
+
+- id: "orc_to_human"
+  source_species: "orc"
+  target_species: "human"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "high"
+
+- id: "human_to_orc"
+  source_species: "human"
+  target_species: "orc"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "troll_to_human"
+  source_species: "troll"
+  target_species: "human"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "high"
+
+- id: "human_to_troll"
+  source_species: "human"
+  target_species: "troll"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "undead_to_human"
+  source_species: "undead"
+  target_species: "human"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "high"
+
+- id: "human_to_undead"
+  source_species: "human"
+  target_species: "undead"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "high"
+
+- id: "spider_to_human"
+  source_species: "spider"
+  target_species: "human"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "human_to_spider"
+  source_species: "human"
+  target_species: "spider"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "dragonkin_to_human"
+  source_species: "dragonkin"
+  target_species: "human"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "human_to_dragonkin"
+  source_species: "human"
+  target_species: "dragonkin"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "low_base_contextual"
+
+- id: "lizardfolk_to_human"
+  source_species: "lizardfolk"
+  target_species: "human"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "human_to_lizardfolk"
+  source_species: "human"
+  target_species: "lizardfolk"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "low_base_contextual"
+
+- id: "goblin_to_elf"
+  source_species: "goblin"
+  target_species: "elf"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "high"
+
+- id: "elf_to_goblin"
+  source_species: "elf"
+  target_species: "goblin"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "orc_to_elf"
+  source_species: "orc"
+  target_species: "elf"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "high"
+
+- id: "elf_to_orc"
+  source_species: "elf"
+  target_species: "orc"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "goblin_to_dwarf"
+  source_species: "goblin"
+  target_species: "dwarf"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "high"
+
+- id: "dwarf_to_goblin"
+  source_species: "dwarf"
+  target_species: "goblin"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "medium_contextual"
+
+- id: "orc_to_dwarf"
+  source_species: "orc"
+  target_species: "dwarf"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "high"
+
+- id: "dwarf_to_orc"
+  source_species: "dwarf"
+  target_species: "orc"
+  relationship_model: "hero_vs_monster_race"
+  axes:
+    hostility: "medium_contextual"

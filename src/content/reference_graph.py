@@ -10,7 +10,7 @@ FAMILY_TO_SHORT = {
     "foundation.relationship_axes": "relationship_axis",
     "foundation.attributes": "attribute",
     "foundation.elements": "element",
-    "living.races": "race",
+    "living.species": "species",
     "living.need_profiles": "need_profile",
     "living.sense_profiles": "sense_profile",
     "living.body_models": "body_model",
@@ -43,7 +43,7 @@ FAMILY_TO_SHORT = {
 }
 
 FIELD_TO_TARGET = {
-    "race": "race",
+    "species": "species",
     "body_model": "body_model",
     "need_profile": "need_profile",
     "sense_profile": "sense_profile",

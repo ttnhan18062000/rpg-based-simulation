@@ -516,7 +516,7 @@ class WorldCompiler:
 
                     # Seed personality deterministically from entity ID + world seed.
                     # Bravery is biased by the entity's real faction alignment_bucket (see
-                    # get_bravery_bias) so race/faction produces a real, measurable population
+                    # get_bravery_bias) so species/faction produces a real, measurable population
                     # skew (e.g. wild_beast_pack trending brave) while individual per-entity RNG
                     # variance is preserved within that skew.
                     bravery_bias = get_bravery_bias(pop_spec.faction)
@@ -542,8 +542,8 @@ class WorldCompiler:
                         resolved = context.entities[pop_key]
                         if hasattr(resolved, "faction_id") and resolved.faction_id:
                             ent_properties["faction_id"] = resolved.faction_id
-                        if hasattr(resolved, "race_id") and resolved.race_id:
-                            ent_properties["race_id"] = resolved.race_id
+                        if hasattr(resolved, "species_id") and resolved.species_id:
+                            ent_properties["species_id"] = resolved.species_id
 
                     builder = (
                         V2EntityBuilder(next_entity_id)

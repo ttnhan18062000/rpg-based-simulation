@@ -314,12 +314,14 @@ def test_default_heir_does_not_override_manual_heir_entity_id():
     assert life_upd.heir_entity_id_set in (None, 2)
 
 def test_life_stage_flips_at_age_boundary():
-    """TCK-20260824-LIFE-STAGE-TRANSITIONS: age_ticks=6999 must not transition; age_ticks=7000
-    (the boundary, inclusive per get_age_bracket()'s numeric law) must transition to ELDER."""
+    """TCK-20260824-LIFE-STAGE-TRANSITIONS: age_ticks=17279999 must not transition; age_ticks=17280000
+    (the boundary, inclusive per get_age_bracket()'s numeric law) must transition to ELDER.
+    Boundary is 60 fantasy years (TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION), replacing the
+    original raw 7000-tick literal."""
     below_boundary = (V2EntityBuilder(1)
                        .location(0.0, 0.0)
                        .identity(life_stage=LifeStage.ADULT)
-                       .lifecycle(age_ticks=6999, max_age_ticks=100000)
+                       .lifecycle(age_ticks=17279999, max_age_ticks=99999999)
                        .build())
     state_below = AuthoritativeState(tick=100, seed=42, entities={1: below_boundary})
     refined_below = LifecycleSystem.resolve_lifecycle(state_below, StateUpdate())
@@ -329,7 +331,7 @@ def test_life_stage_flips_at_age_boundary():
     at_boundary = (V2EntityBuilder(1)
                    .location(0.0, 0.0)
                    .identity(life_stage=LifeStage.ADULT)
-                   .lifecycle(age_ticks=7000, max_age_ticks=100000)
+                   .lifecycle(age_ticks=17280000, max_age_ticks=99999999)
                    .build())
     state_at = AuthoritativeState(tick=100, seed=42, entities={1: at_boundary})
     refined_at = LifecycleSystem.resolve_lifecycle(state_at, StateUpdate())
@@ -340,7 +342,8 @@ def test_life_stage_flips_at_age_boundary():
 def test_life_stage_transition_is_monotonic_forward_only():
     """An already-ADULT entity at age_ticks=0 (a construction-time bookkeeping default, not a
     literal newborn fact) must NOT be demoted to CHILD. A CHILD entity correctly promotes to
-    ADULT at 3000 and to ELDER at 7000."""
+    ADULT at 3456000 (12 fantasy years) and to ELDER at 17280000 (60 fantasy years) --
+    TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION."""
     already_adult = (V2EntityBuilder(1)
                       .location(0.0, 0.0)
                       .identity(life_stage=LifeStage.ADULT)
@@ -354,7 +357,7 @@ def test_life_stage_transition_is_monotonic_forward_only():
     child = (V2EntityBuilder(2)
              .location(0.0, 0.0)
              .identity(life_stage=LifeStage.CHILD)
-             .lifecycle(age_ticks=0, max_age_ticks=100000)
+             .lifecycle(age_ticks=0, max_age_ticks=99999999)
              .build())
 
     state_child_at_0 = AuthoritativeState(tick=100, seed=42, entities={2: child})
@@ -362,12 +365,12 @@ def test_life_stage_transition_is_monotonic_forward_only():
     ent_upd_at_0 = refined_at_0.entity_updates.get(2)
     assert ent_upd_at_0 is None or ent_upd_at_0.identity is None or ent_upd_at_0.identity.life_stage_set is None
 
-    child_at_3000 = replace(child, lifecycle=replace(child.lifecycle, age_ticks=3000))
+    child_at_3000 = replace(child, lifecycle=replace(child.lifecycle, age_ticks=3456000))
     state_at_3000 = AuthoritativeState(tick=100, seed=42, entities={2: child_at_3000})
     refined_at_3000 = LifecycleSystem.resolve_lifecycle(state_at_3000, StateUpdate())
     assert refined_at_3000.entity_updates[2].identity.life_stage_set == LifeStage.ADULT
 
-    child_at_7000 = replace(child, lifecycle=replace(child.lifecycle, age_ticks=7000))
+    child_at_7000 = replace(child, lifecycle=replace(child.lifecycle, age_ticks=17280000))
     state_at_7000 = AuthoritativeState(tick=100, seed=42, entities={2: child_at_7000})
     refined_at_7000 = LifecycleSystem.resolve_lifecycle(state_at_7000, StateUpdate())
     assert refined_at_7000.entity_updates[2].identity.life_stage_set == LifeStage.ELDER
@@ -380,7 +383,7 @@ def test_coming_of_age_fires_exactly_once_on_child_to_adult_transition():
     child = (V2EntityBuilder(1)
              .location(0.0, 0.0)
              .identity(role=EntityRole.CITIZEN, faction=Faction.TOWN_COUNCIL, life_stage=LifeStage.CHILD)
-             .lifecycle(age_ticks=3000, max_age_ticks=100000,
+             .lifecycle(age_ticks=3456000, max_age_ticks=99999999,
                         parent_a_entity_id=10, parent_b_entity_id=11, birth_tick=1)
              .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: child})
@@ -399,7 +402,7 @@ def test_coming_of_age_does_not_fire_for_already_adult_or_elder_entities():
     already_adult = (V2EntityBuilder(1)
                       .location(0.0, 0.0)
                       .identity(role=EntityRole.CITIZEN, faction=Faction.TOWN_COUNCIL, life_stage=LifeStage.ADULT)
-                      .lifecycle(age_ticks=3000, max_age_ticks=100000)
+                      .lifecycle(age_ticks=3456000, max_age_ticks=99999999)
                       .build())
     state_adult = AuthoritativeState(tick=100, seed=42, entities={1: already_adult})
     refined_adult = LifecycleSystem.resolve_lifecycle(state_adult, StateUpdate())
@@ -409,7 +412,7 @@ def test_coming_of_age_does_not_fire_for_already_adult_or_elder_entities():
     already_elder = (V2EntityBuilder(2)
                       .location(0.0, 0.0)
                       .identity(role=EntityRole.CITIZEN, faction=Faction.TOWN_COUNCIL, life_stage=LifeStage.ELDER)
-                      .lifecycle(age_ticks=7000, max_age_ticks=100000)
+                      .lifecycle(age_ticks=17280000, max_age_ticks=99999999)
                       .build())
     state_elder = AuthoritativeState(tick=100, seed=42, entities={2: already_elder})
     refined_elder = LifecycleSystem.resolve_lifecycle(state_elder, StateUpdate())
@@ -423,7 +426,7 @@ def test_coming_of_age_role_set_uses_authoritative_identity_patch_path():
     child = (V2EntityBuilder(1)
              .location(0.0, 0.0)
              .identity(role=EntityRole.CITIZEN, faction=Faction.TOWN_COUNCIL, life_stage=LifeStage.CHILD)
-             .lifecycle(age_ticks=3000, max_age_ticks=100000,
+             .lifecycle(age_ticks=3456000, max_age_ticks=99999999,
                         parent_a_entity_id=10, parent_b_entity_id=11, birth_tick=1)
              .build())
     baseline_identity = child.identity
@@ -448,7 +451,7 @@ def test_coming_of_age_no_birth_record_exclusion_tracked_or_stubbed():
     no_birth_record_child = (V2EntityBuilder(1)
                               .location(0.0, 0.0)
                               .identity(role=EntityRole.CITIZEN, faction=Faction.TOWN_COUNCIL, life_stage=LifeStage.CHILD)
-                              .lifecycle(age_ticks=3000, max_age_ticks=100000)
+                              .lifecycle(age_ticks=3456000, max_age_ticks=99999999)
                               .build())
     state_no_record = AuthoritativeState(tick=100, seed=42, entities={1: no_birth_record_child})
     refined_no_record = LifecycleSystem.resolve_lifecycle(state_no_record, StateUpdate())
@@ -459,7 +462,7 @@ def test_coming_of_age_no_birth_record_exclusion_tracked_or_stubbed():
     tick_zero_humanoid_child = (V2EntityBuilder(2)
                                  .location(0.0, 0.0)
                                  .identity(role=EntityRole.CITIZEN, faction=Faction.TOWN_COUNCIL, life_stage=LifeStage.CHILD)
-                                 .lifecycle(age_ticks=3000, max_age_ticks=100000,
+                                 .lifecycle(age_ticks=3456000, max_age_ticks=99999999,
                                             parent_a_entity_id=10, parent_b_entity_id=11, birth_tick=0)
                                  .build())
     state_tick_zero = AuthoritativeState(tick=100, seed=42, entities={2: tick_zero_humanoid_child})
@@ -477,7 +480,7 @@ def test_coming_of_age_monster_role_child_role_untouched_on_transition():
     monster_child = (V2EntityBuilder(1)
                       .location(0.0, 0.0)
                       .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, life_stage=LifeStage.CHILD)
-                      .lifecycle(age_ticks=3000, max_age_ticks=100000,
+                      .lifecycle(age_ticks=3456000, max_age_ticks=99999999,
                                  parent_a_entity_id=None, parent_b_entity_id=None, birth_tick=50)
                       .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: monster_child})

@@ -143,8 +143,9 @@ text guard test added, zero `public_reputation=` writes found.
 - **Document-Update/Parity phase-boundary overlap.** During this run, the Document-Update phase
   (which per `implement-ticket.js`'s own phase description should stay outside
   `docs/parity_ledger/`) used `tools/parity_ledger_writer.py::write_entry` to update SOC-134's
-  `v2_evidence` text (status/test_path unchanged) and add new entry SOC-268 for
-  `ClanState.clan_reputation`. This is a one-time process/phase-boundary deviation, not a substance
+  `v2_evidence` text (status/test_path unchanged) and add a new entry (originally SOC-268,
+  renumbered to SOC-272 during the PR merge — a cascade from PR #123's concurrent SOC-265
+  collision) for `ClanState.clan_reputation`. This is a one-time process/phase-boundary deviation, not a substance
   problem: the subsequent Parity phase independently re-verified both entries against the live code
   and both tests, found them accurate and complete, and made no further ledger writes (no duplicate
   entry created).
@@ -188,7 +189,7 @@ nodes, 100704 edges, 1238 communities).
   `plan.md`, `test_plan.md` — pre-existing artifacts from this ticket's earlier Investigate/Plan
   phases (read, not modified, during this Implement run)
 - `docs/mechanics/04_strategic_cognition.md` — new §10a "Clan Reputation & Guilt-by-Association Law"
-- `docs/parity_ledger/social_narrative.yaml` — new entry SOC-268; revised SOC-134 `v2_evidence` text
+- `docs/parity_ledger/social_narrative.yaml` — new entry, originally SOC-268, renumbered to SOC-272 during the PR merge; revised SOC-134 `v2_evidence` text
   (status/test_path unchanged)
 - `docs/plans/rpg_design_roadmap/rpg_m5_memory_reputation_epic.md` — status annotation for idea 54;
   corrected the idea-60/idea-54 "same field" sequencing claim

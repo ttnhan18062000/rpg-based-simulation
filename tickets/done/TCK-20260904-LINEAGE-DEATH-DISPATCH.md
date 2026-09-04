@@ -138,8 +138,8 @@ pytest tests/unit/progression/test_lifecycle.py tests/unit/entity/test_phase11_c
 - `src/systems/lifecycle_systems/lifecycle.py` — `_transfer_inherited_feud`, `_seed_dying_wish`, dispatch wiring, unconditional heir-update write-back
 - `tests/unit/progression/test_lifecycle.py` — 6 new tests
 - `docs/mechanics/04_strategic_cognition.md` — new Section 12
-- `docs/parity_ledger/combat_movement.yaml` — new entry COMB-321
-- `docs/parity_ledger/social_narrative.yaml` — new entry SOC-265
+- `docs/parity_ledger/combat_movement.yaml` — new entry, originally written as COMB-321, renumbered to COMB-322 during the PR merge (an unrelated concurrent PR #123 independently used COMB-321 first)
+- `docs/parity_ledger/social_narrative.yaml` — new entry, originally written as SOC-265, renumbered to SOC-269 during the PR merge (PR #123 independently used SOC-265 first)
 - `docs/parity_ledger/strategic_cognition.yaml` — new entry STRAT-270
 
 ## Completion Summary

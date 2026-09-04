@@ -356,9 +356,9 @@ future imitation-driven behavior.
   overtaken by a better candidate, is implicitly replaced (or cleared to `None`) on the next
   reconsideration.
 - **Imitation fidelity**: `RoleModelImitationService.compute_imitation_fidelity()`
-  (`src/strategy/role_model_imitation.py`) reads `entity.identity.properties["race_id"]` →
-  `RaceDefinition.intelligence_tier` (landed by `TCK-20260831-SPECIES-INTELLIGENCE-TIER`) and maps
-  `"high"` → `1.0`, `"low"` (or an unresolved race/tier) → `0.5`. Deliberately kept as a separate
+  (`src/strategy/role_model_imitation.py`) reads `entity.identity.properties["species_id"]` →
+  `SpeciesDefinition.intelligence_tier` (landed by `TCK-20260831-SPECIES-INTELLIGENCE-TIER`) and maps
+  `"high"` → `1.0`, `"low"` (or an unresolved species/tier) → `0.5`. Deliberately kept as a separate
   service rather than folded into `CapacityService.derive_profile` — see the Anti-Drift Notes in
   `staging_artifacts`/`stored_artifacts/TCK-20260831-ROLE-MODEL-IMITATION/plan.md` for the fork
   rationale; `CognitionProfile`'s existing 11 fields are untouched.
@@ -454,7 +454,7 @@ per-tick combat-vs-flee decision as well as the strategic one documented above.
 **Where `bravery` itself comes from** (`TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION`):
 `bravery` is a real, per-entity `DeterministicRNG` draw in `[0.0, 1.0)`
 (`src/worldbuilding/compiler.py`, `get_bravery_bias()`). Until this ticket it was uncorrelated
-with race/faction — a wolf and a citizen drew from the identical distribution. It is now biased
+with species/faction — a wolf and a citizen drew from the identical distribution. It is now biased
 by the entity's real faction `alignment_bucket` (`data/content/social/factions.yaml`, via
 `FactionSemanticsService.get_alignment_bucket`): `wild` +0.35, `invader` +0.25, `rival` +0.15,
 `defender` +0.05, `neutral` +0.0, additive and clamped to `[0.0, 1.0]` — individual per-entity
@@ -470,7 +470,7 @@ in `compiler.py` — a designer can retune magnitudes without a code change.
 (bias-applied) bravery also sets its real `ActionStyle` (`src/core/enums.py`:
 `BALANCED`/`AGGRESSIVE`/`EVASIVE`) at generation, via thresholds in the same data file
 (`aggressive_at_or_above: 0.65`, `evasive_at_or_below: 0.35`). Until this ticket every entity kept
-`ActionStyle`'s own class default (`BALANCED`) regardless of personality or race, leaving 2 real,
+`ActionStyle`'s own class default (`BALANCED`) regardless of personality or species, leaving 2 real,
 already-wired code hooks entirely dormant: kiting distance for `SKIRMISHER`-role entities
 (`src/engine/tactical.py` — `AGGRESSIVE` kites less, `EVASIVE` kites more) and opportunity-attack
 suppression on a deliberate `EVASIVE` retreat (`src/engine/movement.py`). Two further sub-branches

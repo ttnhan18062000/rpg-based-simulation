@@ -92,6 +92,11 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 - If any files under `docs/` were created or modified: run `make knowledge-index-update` to keep the agent context search index current.
 - `docs/REGISTRY.yaml` is regenerated unconditionally as part of Finalize's post-migration self-check (all tiers, including hotfix) — no manual `make docs-registry` step is needed. Always stage the regenerated file (`git add docs/REGISTRY.yaml`) as part of ticket close, alongside `agent-monitoring/`.
 - **Always stage `agent-monitoring/` (including the current week's `data/YYYY-Www/{runs,events,tools}.jsonl` shard) in every commit** — the monitoring tools auto-update these per-week shards on every run; never leave them as an unstaged modification.
+- **If this ticket was closed by hand-orchestration (reading the ticket, editing code, running tests, without invoking the `Workflow` tool) rather than the formal multi-agent `implement-ticket.js` pipeline: record its own run + event coverage yourself** — the pipeline's own auto-recording never ran, so nothing else will do this for you (confirmed real, ongoing gap: `TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE`). Use `tools/agent-monitoring/record_hand_orchestrated_closure.py` (one call, auto-fills the shared `run_id`/`execution_id`/`provider`/`ticket_id`/`seq` fields):
+  ```
+  python3 tools/agent-monitoring/record_hand_orchestrated_closure.py --ticket-id <TCK-ID> --tier <hotfix|standard|epic> --events '[{"phase":"Scope","status":"ok","summary":"..."},{"phase":"Implement","status":"ok","summary":"..."},{"phase":"Test","status":"ok","summary":"..."},{"phase":"Parity","status":"skipped","summary":"..."},{"phase":"Verify","status":"ok","summary":"..."},{"phase":"Finalize","status":"ok","summary":"..."}]'
+  ```
+  (or call `record_run.py`/`record_events.py` directly if you need finer control). Monitoring write failure must never fail the workflow, same as the formal pipeline's own rule.
 
 ### Commit Convention
 

@@ -84,7 +84,7 @@ Dict[int, EntityState]       → loaded into AuthoritativeState
 
 Four resolved profile types, all passed through `CompileContext`:
 
-- **`ResolvedEntityProfile`** — entity's fully resolved catalog attributes (race, body model, stats, cognition, role, faction)
+- **`ResolvedEntityProfile`** — entity's fully resolved catalog attributes (species, body model, stats, cognition, role, faction)
 - **`ResolvedBuildingProfile`** — building's resolved type, services, and durability parameters
 - **`ResolvedResourceProfile`** — resource node's resolved kind, harvest parameters, and spawn table
 - **`ResolvedFactionEconomyProfile`** — faction's resolved economy parameters (starting gold, vault limits)
@@ -132,9 +132,9 @@ Profiles without `archetype_id` (e.g. town NPCs, synthetic entities) → `V2Enti
 accepts a `seed: int = 42` parameter, used to seed real, per-entity `PersonalityComponent` values
 (both the archetype-native path, via `ArchetypeEntityFactory.build_entity()`, and the legacy-guard
 path) via `src/content_semantics/personality.py::build_personality_for_entity` — the same
-`DeterministicRNG`/race-correlated-bravery/`ActionStyle` mechanism `WorldCompiler.compile()` uses.
+`DeterministicRNG`/species-correlated-bravery/`ActionStyle` mechanism `WorldCompiler.compile()` uses.
 Prior to this ticket, every entity spawned through this path kept `PersonalityComponent()`'s own
-all-zero default regardless of race/faction.
+all-zero default regardless of species/faction.
 
 **Determinism:** Given the same `CompileContext`, `base_entity_id`, and `seed`, `spawn_from_context`
 produces bit-identical `EntityState` objects — the same real, verified guarantee as before, now
