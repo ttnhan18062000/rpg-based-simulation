@@ -617,25 +617,26 @@ class TestMigrationPressure:
 def test_age_bracket_returns_correct_bracket():
     """
     Acceptance criterion: test_age_bracket_returns_correct_bracket
-    Boundary conditions for get_age_bracket:
-      age_ticks < 3000  → "young"
-      3000 ≤ age_ticks < 7000 → "adult"
-      age_ticks ≥ 7000 → "elder"
+    Boundary conditions for get_age_bracket (TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION:
+    12/60 fantasy years, replacing the original raw 3000/7000-tick literals):
+      age_ticks < 3456000 (12y)   → "young"
+      3456000 ≤ age_ticks < 17280000 (60y) → "adult"
+      age_ticks ≥ 17280000 (60y) → "elder"
     """
     # Young bracket
     assert get_age_bracket(0) == "young"
     assert get_age_bracket(1) == "young"
-    assert get_age_bracket(2999) == "young"
+    assert get_age_bracket(3455999) == "young"
 
     # Adult bracket
-    assert get_age_bracket(3000) == "adult"
-    assert get_age_bracket(5000) == "adult"
-    assert get_age_bracket(6999) == "adult"
+    assert get_age_bracket(3456000) == "adult"
+    assert get_age_bracket(5000000) == "adult"
+    assert get_age_bracket(17279999) == "adult"
 
     # Elder bracket
-    assert get_age_bracket(7000) == "elder"
-    assert get_age_bracket(10000) == "elder"
-    assert get_age_bracket(99999) == "elder"
+    assert get_age_bracket(17280000) == "elder"
+    assert get_age_bracket(18000000) == "elder"
+    assert get_age_bracket(20160000) == "elder"
 
 
 # ---------------------------------------------------------------------------
@@ -645,12 +646,12 @@ def test_age_bracket_returns_correct_bracket():
 def test_elder_modifier_reduces_combat_effectiveness():
     """
     Acceptance criterion: test_elder_modifier_reduces_combat_effectiveness
-    An elder entity (age_ticks=7000) with strength=10, agility=10 receives
-    negative strength_delta and agility_delta in the returned EntityUpdate.
-    Modifiers are applied via AttributeUpdate — no direct mutation of frozen state.
+    An elder entity (age_ticks=17280000, TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION) with
+    strength=10, agility=10 receives negative strength_delta and agility_delta in the returned
+    EntityUpdate. Modifiers are applied via AttributeUpdate — no direct mutation of frozen state.
     """
     attrs = AttributeComponent(strength=10, agility=10)
-    result = compute_elder_attribute_update(entity_id=42, attrs=attrs, age_ticks=7000)
+    result = compute_elder_attribute_update(entity_id=42, attrs=attrs, age_ticks=17280000)
 
     assert result is not None
     assert isinstance(result, EntityUpdate)
@@ -666,17 +667,18 @@ def test_elder_modifier_reduces_combat_effectiveness():
 
 
 def test_non_elder_returns_none():
-    """Non-elder entities (age_ticks < 7000) produce no modifier."""
+    """Non-elder entities (age_ticks < 17280000, TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION)
+    produce no modifier."""
     attrs = AttributeComponent(strength=10, agility=10)
     assert compute_elder_attribute_update(entity_id=1, attrs=attrs, age_ticks=0) is None
-    assert compute_elder_attribute_update(entity_id=1, attrs=attrs, age_ticks=2999) is None
-    assert compute_elder_attribute_update(entity_id=1, attrs=attrs, age_ticks=6999) is None
+    assert compute_elder_attribute_update(entity_id=1, attrs=attrs, age_ticks=3455999) is None
+    assert compute_elder_attribute_update(entity_id=1, attrs=attrs, age_ticks=17279999) is None
 
 
 def test_elder_knowledge_bonus_positive():
     """Elder entity knowledge bonus: wisdom_delta > 0, charisma_delta > 0."""
     attrs = AttributeComponent(wisdom=10, charisma=10)
-    result = compute_elder_attribute_update(entity_id=7, attrs=attrs, age_ticks=7000)
+    result = compute_elder_attribute_update(entity_id=7, attrs=attrs, age_ticks=17280000)
 
     assert result is not None
     # knowledge_reputation_weight *= 1.3 → WIS and CHA +30%
@@ -690,7 +692,7 @@ def test_elder_knowledge_bonus_positive():
 def test_elder_mortality_modifier_reduces_vitality_endurance():
     """Elder mortality_rate *= 2.0 → vitality and endurance reduced by 50%."""
     attrs = AttributeComponent(vitality=10, endurance=10)
-    result = compute_elder_attribute_update(entity_id=5, attrs=attrs, age_ticks=9000)
+    result = compute_elder_attribute_update(entity_id=5, attrs=attrs, age_ticks=18000000)
 
     assert result is not None
     assert result.attributes.vitality_delta < 0
@@ -703,7 +705,7 @@ def test_elder_mortality_modifier_reduces_vitality_endurance():
 def test_elder_modifier_entity_id_preserved():
     """The EntityUpdate carries the correct entity_id."""
     attrs = AttributeComponent()
-    result = compute_elder_attribute_update(entity_id=999, attrs=attrs, age_ticks=7000)
+    result = compute_elder_attribute_update(entity_id=999, attrs=attrs, age_ticks=17280000)
     assert result is not None
     assert result.entity_id == 999
 
@@ -798,7 +800,7 @@ class TestLifecycleSystemElderWiring:
             .kind("hero")
             .location(0.0, 0.0)
             .attributes(strength=10, agility=10, vitality=10, endurance=10, wisdom=10, charisma=10)
-            .lifecycle(active=True, age_ticks=age_ticks, max_age_ticks=99999)
+            .lifecycle(active=True, age_ticks=age_ticks, max_age_ticks=99999999)
         )
         if life_stage is not None:
             builder = builder.identity(life_stage=life_stage)
@@ -806,7 +808,8 @@ class TestLifecycleSystemElderWiring:
 
     def test_elder_attribute_modifier_applies_once_on_bracket_transition(self):
         """
-        An entity crossing age_ticks >= 7000 for the first time (life_stage still
+        An entity crossing age_ticks >= 17280000 (60 fantasy years,
+        TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION) for the first time (life_stage still
         ADULT) receives the elder attribute deltas exactly once via
         resolve_lifecycle(), merged onto the same EntityUpdate that also sets
         identity.life_stage_set = ELDER.
@@ -814,7 +817,7 @@ class TestLifecycleSystemElderWiring:
         from src.systems.lifecycle_systems.lifecycle import LifecycleSystem
         from src.core.state import LifeStage
 
-        entity = self._make_entity(1, age_ticks=7000)
+        entity = self._make_entity(1, age_ticks=17280000)
         state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
 
         refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
@@ -840,7 +843,7 @@ class TestLifecycleSystemElderWiring:
         from src.systems.lifecycle_systems.lifecycle import LifecycleSystem
         from src.core.state import LifeStage
 
-        entity = self._make_entity(1, age_ticks=8000, life_stage=LifeStage.ELDER)
+        entity = self._make_entity(1, age_ticks=18000000, life_stage=LifeStage.ELDER)
         state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
 
         refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())

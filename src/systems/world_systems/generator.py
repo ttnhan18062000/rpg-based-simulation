@@ -106,7 +106,11 @@ class EntityGenerator:
         from src.core.builder import V2EntityBuilder
         from src.core.state import LifeStage
         from src.world.camp import CampService
-        short_clock_age = 3000 - CampService.CAMP_SPAWN_INTERVAL
+        from src.domains.demographics.cohort import YOUNG_ADULT_BOUNDARY_TICKS
+        # TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION: spawns just shy of the real
+        # CHILD->ADULT boundary (was a raw 3000-tick literal), so the offspring matures to
+        # ADULT after roughly one CAMP_SPAWN_INTERVAL of ticks.
+        short_clock_age = YOUNG_ADULT_BOUNDARY_TICKS - CampService.CAMP_SPAWN_INTERVAL
 
         return (V2EntityBuilder(entity_id)
             .kind(kind)

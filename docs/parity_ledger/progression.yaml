@@ -1485,3 +1485,44 @@
     live AI/decision producer calls class_id_set in production gameplay code yet (accepted
     precedent, see TCK-20260808-TRAIT-EXPRESSED-PRODUCER-INVESTIGATION). Breakthroughs
     remain a separate, always-additive mechanism, untouched by this registry.
+- id: PROG-123
+  text: "Entity aging/lifespan migrated to fantasy-year units, implementing TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY's\
+    \ decision #2 (deferred at the time to \"a dedicated implementation ticket\").\
+    \ Previously, LifecycleComponent.max_age_ticks=10000 gave every entity a 4.17-day\
+    \ maximum lifespan under the settled 2,400-ticks/day calendar, and the demographic\
+    \ elder/adult/young age-bracket thresholds (src/domains/demographics/cohort.py,\
+    \ mirrored intentionally in src/ai/life_stage.py::LifeStageService) triggered\
+    \ at 2.9/1.25 days. M3's reproduction epic shipped in full on top of this still-unmigrated\
+    \ calendar before this fix. New values, sourced directly from the temporal-axis\
+    \ proposal's own accepted text (docs/brainstorm/codex/2026-08-28-core-rpg-temporal-axis-proposal.md\
+    \ \xA71.1/\xA72.2), confirmed with the user before implementation: max_age_ticks=70\
+    \ fantasy years (20,160,000 ticks), CHILD\u2192ADULT at 12 fantasy years (3,456,000\
+    \ ticks, folding the proposal's Adolescent stage into ADULT since LifeStage has\
+    \ no 4th enum value), ADULT\u2192ELDER at 60 fantasy years (17,280,000 ticks).\
+    \ Added src/core/calendar.py as the single named source of truth for the 2,400-ticks/day\
+    \ / 120-day-fantasy-year conversion. Also found and fixed a live production consumer\
+    \ of the raw 3000-tick literal that the original ticket scope missed: EntityGenerator.spawn_natural_creature_offspring()\
+    \ (src/systems/world_systems/generator.py) computed newly-spawned creatures' maturation-clock\
+    \ age directly from the old boundary."
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/calendar.py (new, TICKS_PER_FANTASY_YEAR=288000) + src/core/state.py:156-162
+    (LifecycleComponent.max_age_ticks default) + src/domains/demographics/cohort.py:17-23,70-74
+    (YOUNG_ADULT_BOUNDARY_TICKS/ADULT_ELDER_BOUNDARY_TICKS, get_age_bracket()) + src/ai/life_stage.py:44-57
+    (LifeStageService.get_stage_for_age(), intentionally-duplicated literals kept
+    in sync per its own documented design decision) + src/systems/world_systems/generator.py:108-114
+    (spawn_natural_creature_offspring()'s short_clock_age, the missed consumer found
+    during implementation, not in the original ticket scope)
+  proof_type: parity
+  test_path: tests/unit/core/test_calendar.py, tests/unit/world/test_demographics.py::test_age_bracket_returns_correct_bracket,
+    tests/unit/strategic/test_life_stage_transitions.py::test_get_stage_for_age_boundaries,
+    tests/integration/optimization/test_component_patch_apply_parity.py::test_natural_creature_spawn_commits_through_authoritative_apply_path,
+    tests/unit/world/test_natural_creature_reproduction.py::test_natural_creature_offspring_short_maturation_clock
+  divergence_note: "TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION. The gap predates\
+    \ this fix -- TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY decided the migration approach\
+    \ but explicitly deferred implementation. Numeric targets were confirmed with\
+    \ the user before writing any code (a real design-authority decision, not invented)\
+    \ -- see that ticket's own investigation.md for the full options presented. Exact\
+    \ life-stage boundaries beyond these two remain a separate open decision per the\
+    \ temporal-axis proposal's own \xA717 (not resolved by this ticket)."
