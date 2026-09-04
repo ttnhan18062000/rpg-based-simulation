@@ -348,10 +348,18 @@ plus `last_offer_tick` and `rejection_count`, which this brainstorm pass's own i
 All 7 are now included in `EntityState.to_canonical_dict()`'s `"social"` sub-dict; a same-seed
 divergence in any of them is now caught by the canonical determinism hash.
 
-**Still open, per the proposal's own "Decisions still requiring review":** which of `RelationshipRole`
-(`FRIEND`/`RIVAL`) or `nemesis_ids` (grudge-promoted) should take precedence when both are set for the
-same pair, a real unreconciled seam with no confirmed bug yet; idea 60's exact reputation-locality
-granularity; idea 67's exact live-tick decay rate (the real Campaign-mode constants
+**`RelationshipRole`/`nemesis_ids` precedence — resolved, 2026-09-04**
+(`tickets/done/TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE.md`, parity ledger `SOC-264`): this was **not**
+just an unreconciled seam — direct investigation confirmed a real, live bug. `nemesis_ids` (promoted only
+from sustained real `grudge_history >= 3.0`) and `bond.role` (written on a fully independent path) could
+genuinely diverge for the same pair, and neither `PartyCompositionScorer._candidate_role_value()` nor
+`FORM_PARTY`'s own nemesis-block check (`src/domains/adventure/generator.py`) caught it — a confirmed
+nemesis with a stale `FRIEND` tag scored *positively* for party composition and was not blocked from party
+formation unless an unrelated strategic blocker happened to also exist. Fixed: `nemesis_ids` now takes
+precedence over a `FRIEND` bond.role, and `FORM_PARTY`'s block check reads the canonical field.
+
+**Still open, per the proposal's own "Decisions still requiring review":** idea 60's exact
+reputation-locality granularity; idea 67's exact live-tick decay rate (the real Campaign-mode constants
 `FRIENDSHIP_DECAY=0.40`/episode, `GRUDGE_DECAY=0.10`/episode are a calibration anchor, not a settled
 live-gameplay number).
 

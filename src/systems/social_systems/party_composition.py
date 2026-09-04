@@ -144,7 +144,18 @@ class PartyCompositionScorer:
         """
         Directed RelationshipRole value the acting entity holds toward one specific
         candidate: FRIEND -> +1.0, RIVAL -> -1.0, NEUTRAL or no bond -> 0.0.
+
+        `nemesis_ids` takes precedence over a `FRIEND` bond.role when both are set for
+        the same candidate (TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE, resolving the
+        Social/Relationship axis brainstorm's flagged open question): `nemesis_ids` is
+        promoted only from sustained real grudge_history (>= 3.0, SocialMemoryService.
+        check_nemesis_promotion()) -- a stronger, harm-history-backed signal than the
+        coarser categorical bond.role tag, which is written independently and never
+        automatically downgraded when a bond later turns hostile. A stale FRIEND tag
+        must not silently outweigh a confirmed nemesis.
         """
+        if candidate.id in actor.social.nemesis_ids:
+            return -1.0
         bond = actor.social.bonds.get(candidate.id)
         if bond is None:
             return 0.0

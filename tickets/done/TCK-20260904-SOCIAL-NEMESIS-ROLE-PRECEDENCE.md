@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE
-phase: open
+phase: done
 date: 2026-09-04
 tags: [social, combat]
 ---
@@ -16,7 +16,7 @@ nemesis_ids does not gate FORM_PARTY or PartyCompositionScorer's role-affinity t
 contradictory-signal bug, not the "no confirmed bug yet" the roadmap currently says
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -76,14 +76,14 @@ Two real, live consumers read these fields independently, and neither catches th
   replaced by, the canonical field), since it may catch scenarios `nemesis_ids` alone does not.
 
 ## Acceptance Criteria
-- [ ] `PartyCompositionScorer._candidate_role_value()` returns `-1.0` for a candidate in `nemesis_ids`,
+- [x] `PartyCompositionScorer._candidate_role_value()` returns `-1.0` for a candidate in `nemesis_ids`,
       regardless of `bond.role`.
-- [ ] `generator.py`'s `FORM_PARTY` nemesis-block check also considers the canonical `nemesis_ids` field.
-- [ ] New regression tests confirm both fixes (a `FRIEND`-bonded-but-nemesis candidate scores negatively
-      and blocks `FORM_PARTY`).
-- [ ] Existing `tests/unit/social/test_party_composition.py` suite passes unchanged for every case that
-      does not involve a `nemesis_ids`/`FRIEND`-bond conflict.
-- [ ] `rpg_design_roadmap.md`'s Social/Relationship axis section updated to record the resolution.
+- [x] `generator.py`'s `FORM_PARTY` nemesis-block check also considers the canonical `nemesis_ids` field.
+- [x] New regression tests confirm both fixes (a `FRIEND`-bonded-but-nemesis candidate scores negatively
+      and blocks `FORM_PARTY`). 5 new tests added.
+- [x] Existing `tests/unit/social/test_party_composition.py` suite passes unchanged for every case that
+      does not involve a `nemesis_ids`/`FRIEND`-bond conflict. 30/30 pass.
+- [x] `rpg_design_roadmap.md`'s Social/Relationship axis section updated to record the resolution.
 
 ## Related Tickets
 - TCK-20260902-SOCIAL-CANONICAL-HASH-GAP (the sibling Social-axis fix this ticket's precedence question
@@ -94,7 +94,7 @@ Two real, live consumers read these fields independently, and neither catches th
 - `docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md`
 
 ## Related Stored Artifacts
-None yet.
+(staging artifacts in `staging_artifacts/TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE/`)
 
 ## Related Code Areas
 - `src/systems/social_systems/party_composition.py` (`_candidate_role_value`)
@@ -107,9 +107,33 @@ None beyond what's stated above — this is a well-bounded, evidence-confirmed f
 question.
 
 ## Implementation Notes
+Confirmed via direct code read that `nemesis_ids` and `bond.role` are written on fully independent
+paths — `SocialMemoryService.check_nemesis_promotion()` never touches `bond.role`, and
+`RelationshipRole`'s own docstring already states the independence. Fixed `_candidate_role_value()` to
+check `nemesis_ids` first (returns `-1.0`, same as `RIVAL`) before falling through to the `bond.role`
+check. Fixed `generator.py`'s `FORM_PARTY` nemesis-block check to union the canonical `nemesis_ids`
+field with the existing `strategic.blockers`-derived proxy, rather than replacing it — the two may
+catch different real scenarios, so both stay active.
 
 ## Test Summary
+5 new tests in `tests/unit/social/test_party_composition.py` (nemesis-overrides-friend,
+nemesis-without-bond, non-conflicting-cases-unchanged, end-to-end score comparison, `FORM_PARTY` block
+via canonical field alone). Full scoped sweep: `pytest tests/unit/domains/adventure/ tests/unit/social/
+tests/integration/domains/adventure/ tests/architecture/test_adventure_routing_flag_inert.py
+tests/architecture/test_adventure_route_score_max_unchanged.py -m "not slow"` → 355 passed, 1
+deselected, 0 failed.
 
 ## Files Changed
+- `src/systems/social_systems/party_composition.py` — `_candidate_role_value()` nemesis precedence.
+- `src/domains/adventure/generator.py` — `FORM_PARTY` nemesis-block check unions canonical field.
+- `tests/unit/social/test_party_composition.py` — 5 new tests, `_entity()` helper gained `nemesis_ids`.
+- `docs/parity_ledger/social_narrative.yaml` — new entry `SOC-264`.
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — Social/Relationship axis section updated.
 
 ## Completion Summary
+Closed the Social/Relationship axis's flagged `RelationshipRole`/`nemesis_ids` precedence question —
+confirmed a real, live bug (not just an unreconciled seam): a confirmed nemesis with a stale `FRIEND`
+bond tag scored positively for party composition and was not blocked from `FORM_PARTY` unless an
+unrelated strategic blocker happened to also exist. `nemesis_ids` now takes precedence, and the
+`FORM_PARTY` block reads the canonical field. Full existing test suite passes unchanged; 5 new tests
+lock in the fix. Parity ledger entry `SOC-264` added.

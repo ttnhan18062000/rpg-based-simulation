@@ -3935,3 +3935,36 @@
     output for any AuthoritativeState whose entities have non-default values in the
     7 newly-covered fields; no shipped calibration baseline is affected unless it
     already exercises these fields with non-default values.
+- id: SOC-264
+  text: 'SocialComponent.nemesis_ids (promoted only from sustained real grudge_history
+    >= 3.0, SocialMemoryService.check_nemesis_promotion()) and SocialBond.role (RelationshipRole.FRIEND/RIVAL/NEUTRAL,
+    written on a fully independent path) previously had no reconciliation when both
+    were set for the same candidate -- confirmed a real bug, not just an open seam.
+    PartyCompositionScorer._candidate_role_value() scored a FRIEND-bonded confirmed
+    nemesis +1.0 (positive), and src/domains/adventure/generator.py''s FORM_PARTY
+    route''s own nemesis-block check only read a locally-derived proxy from entity.strategic.blockers,
+    never the canonical nemesis_ids field -- a confirmed nemesis with no matching
+    strategic blocker was not blocked from party formation at all. Fixed: nemesis_ids
+    now takes precedence over a FRIEND bond.role in _candidate_role_value() (returns
+    -1.0), and the FORM_PARTY block check now unions the canonical nemesis_ids field
+    with the existing strategic-blocker proxy.'
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/systems/social_systems/party_composition.py:142-161 (PartyCompositionScorer._candidate_role_value())
+    + src/domains/adventure/generator.py:141-150 (FORM_PARTY nemesis-block check)
+    + src/systems/social_systems/memory.py:36-50 (SocialMemoryService.check_nemesis_promotion(),
+    the source of the nemesis_ids signal, confirmed to never touch bond.role) + src/core/models/social.py:7-8
+    (RelationshipRole's own docstring, already documenting the independence this fix
+    reconciles)
+  proof_type: parity
+  test_path: tests/unit/social/test_party_composition.py::test_candidate_role_value_nemesis_overrides_stale_friend_bond,
+    tests/unit/social/test_party_composition.py::test_candidate_role_value_nemesis_without_bond,
+    tests/unit/social/test_party_composition.py::test_candidate_role_value_non_conflicting_cases_unchanged,
+    tests/unit/social/test_party_composition.py::test_party_composition_score_lower_for_nemesis_with_friend_bond_than_true_friend,
+    tests/unit/social/test_party_composition.py::test_form_party_route_blocked_by_canonical_nemesis_ids_without_strategic_blocker
+  divergence_note: TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE. The gap predates this
+    fix -- flagged as an open, unconfirmed seam in the 2026-09-02 Social/Relationship
+    axis brainstorm pass (docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md),
+    confirmed as a real, live bug on direct investigation 2026-09-04. Resolves the
+    roadmap's own flagged open question.
