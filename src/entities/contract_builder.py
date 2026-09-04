@@ -35,10 +35,10 @@ def resolved_archetype_to_contract(
 
     return ResolvedEntityRuntimeContract(
         archetype_id=arch.archetype_id,
-        race_id=arch.race_id,
+        species_id=arch.species_id,
         faction_id=arch.faction_id,
         role_id=arch.role_id,
-        kind=arch.race_id,  # kind derives from race; may be overridden by spawn context
+        kind=arch.species_id,  # kind derives from species; may be overridden by spawn context
         legacy_role=legacy_role,
         legacy_faction=legacy_faction,
         hp=stats.hp,

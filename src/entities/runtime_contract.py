@@ -21,7 +21,7 @@ class ResolvedEntityRuntimeContract(BaseModel):
 
     # --- Clean identity ---
     archetype_id: str
-    race_id: str
+    species_id: str
     faction_id: str
     role_id: str
     profession_id: Optional[str] = None

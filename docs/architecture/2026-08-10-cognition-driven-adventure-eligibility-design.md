@@ -25,8 +25,8 @@ intelligence.py`, `src/ai/goals/`): the universal baseline — survival, combat,
 goals for every entity, always.
 
 Confirmed via direct source + content read that a real, already-authored, but completely inert
-extension point already exists for exactly this kind of per-race/faction behavioral variation:
-`RaceDefinition.cognition_profile` (content: `data/content/living/races.yaml`) references a
+extension point already exists for exactly this kind of per-species/faction behavioral variation:
+`SpeciesDefinition.cognition_profile` (content: `data/content/living/species.yaml`) references a
 `CognitionProfileDefinition` (content: `data/content/living/cognition_profiles.yaml`) — e.g.
 `elf → arcane_scholar`, `human → practical_humanoid`, `wolf → instinctive_animal`. This reference
 is threaded through entity construction as `entity.identity.properties["cognition_profile_id"]`
@@ -41,14 +41,14 @@ score-driven ones.
 ## Goals
 
 1. Adventure-routing eligibility becomes a property of how an entity thinks (`cognition_profile`),
-   not a hardcoded role check — any sufficiently cognitively-capable race/faction (elf, human,
-   dwarf, ...) can be adventure-eligible; instinctive/simple races (wolf, slime, ...) never are,
+   not a hardcoded role check — any sufficiently cognitively-capable species/faction (elf, human,
+   dwarf, ...) can be adventure-eligible; instinctive/simple species (wolf, slime, ...) never are,
    regardless of role.
 2. The interruption-resistance lock-bypass mechanism becomes score/urgency-driven, not a
    hardcoded allowlist of specific `kind` strings — any sufficiently urgent goal, from either
    system, present or future, can interrupt routine activity without new code.
 3. Zero behavioral regression for the current corpus (verified: `human`/`practical_humanoid` is
-   the only race compatible with the `hero` role today, so marking `practical_humanoid` eligible
+   the only species compatible with the `hero` role today, so marking `practical_humanoid` eligible
    preserves exactly today's real behavior for every existing hero).
 4. The historical dormant-wiring pattern (this is the third instance found this session — see
    `HUNT_WEAK_ENEMY` dead route generation, `GoalKind`/`ProjectKind` vocabulary split, and this
@@ -57,7 +57,7 @@ score-driven ones.
 
 ## Non-goals
 
-- Full per-race scoring-coefficient customization (personality-bias weights, risk multipliers) —
+- Full per-species scoring-coefficient customization (personality-bias weights, risk multipliers) —
   scoped out; this design only touches eligibility and interruption bypass, not the scoring
   formulas themselves.
 - Migrating `AdventureDecisionPhase`'s own 14 non-combat route families into `GoalRegistry`
@@ -77,7 +77,7 @@ etc.), which remain descriptive-only. Content authoring for the 7 existing profi
 `practical_humanoid`, `arcane_scholar` → `True` (matches current hero-eligible behavior and the
 elf/human parity example); `instinctive_animal`, `opportunistic_humanoid`, `undead_fixated` →
 `False`. **Implement checklist item:** `disciplined_guard`/`trade_pragmatist` are not referenced
-by any race in `races.yaml` today (checked directly) — before assigning them a value, search all
+by any species in `species.yaml` today (checked directly) — before assigning them a value, search all
 of `data/content/` for any other real reference (NPC templates, hero archetypes, etc.) so the
 value isn't a guess.
 
@@ -168,7 +168,7 @@ coefficient calibration), not a design-level decision.
 is compatible with the `hero` role in current content, so marking it eligible is behavior-
 preserving by construction. `GoalRegistry`'s own universal scope is unchanged (still runs for
 every entity, always) — this design only adds eligibility-gating to System A's own enrichment
-layer, a strict superset expansion for any future race/role combination, never a removal of
+layer, a strict superset expansion for any future species/role combination, never a removal of
 existing behavior.
 
 **Bypass side**: a real, deliberate behavior tightening, not risk-free. The generalized rule adds

@@ -5,7 +5,7 @@ from src.core.enums import ReasonCode, Faction
 from src.core.builder import V2EntityBuilder
 from src.engine.legality import LegalityServiceV2
 from src.engine.tactical import TacticalDecisionSystem
-from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_race_id_str, reset_faction_semantics_service
+from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_species_id_str, reset_faction_semantics_service
 from src.content_semantics.relation import RelationContext
 
 
@@ -15,10 +15,10 @@ def reset_semantics_cache():
     yield
     reset_faction_semantics_service()
 
-def create_relation_entity(e_id, pos, faction_id, faction_enum=Faction.NEUTRAL, role=EntityRole.HERO, race_id=None):
+def create_relation_entity(e_id, pos, faction_id, faction_enum=Faction.NEUTRAL, role=EntityRole.HERO, species_id=None):
     properties = {"faction_id": faction_id}
-    if race_id:
-        properties["race_id"] = race_id
+    if species_id:
+        properties["species_id"] = species_id
     return (V2EntityBuilder(e_id)
             .kind("actor")
             .location(*pos)
@@ -35,7 +35,7 @@ def test_integration_perspective_hostility():
 
     # Test hostility classification
     semantics_service = get_faction_semantics_service()
-    context = RelationContext(distance=1.0, combat_engaged=False, target_race=None, intruding=False)
+    context = RelationContext(distance=1.0, combat_engaged=False, target_species=None, intruding=False)
     
     # hero_guild perspective maps goblin_warband in hostile_groups
     assert semantics_service.is_hostile_compat("hero_guild", "goblin_warband", context) is True
@@ -61,15 +61,15 @@ def test_integration_contextual_beast_threat():
     semantics_service = get_faction_semantics_service()
 
     # Beast far: distance 9.0, not engaged -> not hostile
-    context_far = RelationContext(distance=9.0, combat_engaged=False, target_race=None, intruding=False)
+    context_far = RelationContext(distance=9.0, combat_engaged=False, target_species=None, intruding=False)
     assert semantics_service.is_hostile_compat("hero_guild", "wild_beast_pack", context_far) is False
 
     # Beast near: distance 1.0, not engaged -> hostile (contextual threat <= 5.0)
-    context_near = RelationContext(distance=1.0, combat_engaged=False, target_race=None, intruding=False)
+    context_near = RelationContext(distance=1.0, combat_engaged=False, target_species=None, intruding=False)
     assert semantics_service.is_hostile_compat("hero_guild", "wild_beast_pack", context_near) is True
 
     # Beast far but engaged -> hostile
-    context_engaged = RelationContext(distance=9.0, combat_engaged=True, target_race=None, intruding=False)
+    context_engaged = RelationContext(distance=9.0, combat_engaged=True, target_species=None, intruding=False)
     assert semantics_service.is_hostile_compat("hero_guild", "wild_beast_pack", context_engaged) is True
 
 def test_integration_legacy_fallback():
@@ -81,7 +81,7 @@ def test_integration_legacy_fallback():
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity_a, 2: entity_b})
 
     semantics_service = get_faction_semantics_service()
-    context = RelationContext(distance=1.0, combat_engaged=False, target_race=None, intruding=False)
+    context = RelationContext(distance=1.0, combat_engaged=False, target_species=None, intruding=False)
 
     # Missing dynamic data -> falls back to legacy bucket mapping:
     # "unconfigured_hero_faction" gets HERO_GUILD, "unconfigured_monster_faction" gets MONSTER_HORDE
@@ -155,7 +155,7 @@ def test_new_catalog_pair_is_hostile_compat_delta(
     """Step 4 item 1: combat_rewards.py's is_hostile_compat() delta for each new non-perspective-
     source pair, using the real authored data/content/social/faction_relationships.yaml entry."""
     semantics_service = get_faction_semantics_service()
-    context = RelationContext(distance=1.0, combat_engaged=True, target_race=None, intruding=False)
+    context = RelationContext(distance=1.0, combat_engaged=True, target_species=None, intruding=False)
     assert semantics_service.is_hostile_compat(source_id, target_id, context) is expected_hostile
 
 

@@ -274,9 +274,9 @@ Used during: loot pickup, shop purchases.
 
 Numbers in parentheses are weights for weighted random selection.
 
-### Race-Specific Loot (`RACE_LOOT_TABLES`)
+### Species-Specific Loot (`SPECIES_LOOT_TABLES`)
 
-Each mob kind has drops with probabilities (see `entities_and_factions.md` for full race details):
+Each mob kind has drops with probabilities (see `entities_and_factions.md` for full species details):
 
 | Kind | Key Drops |
 |------|-----------|

@@ -510,7 +510,7 @@ all-pairs scan) finds the lowest-id unpaired candidate within `HUMANOID_PAIRING_
 — the same 10-unit `nearby_entities()` radius convention already used for `_threat_resolved()`'s
 interaction-radius check in `src/systems/strategic_systems/intelligence.py` and
 `RoleModelSelectionPhase.RADIUS` in `src/strategy/role_model_phase.py`) whose
-`EntityState.kind` matches ("same-race" — no separate `race` field exists on `IdentityComponent`)
+`EntityState.kind` matches ("same-species" — no separate `species` field exists on `IdentityComponent`)
 and whose `reproduction_cooldowns` entry for the other party (if any) has already expired.
 
 **Population-pressure suppression gate:** reuses §5's Migration Law verbatim, identically to the

@@ -17,6 +17,8 @@ last_verified: 2026-06-13
 
 Beliefs are an entity's uncertain claims about world state. Detours are temporary deviations from the primary project to resolve a blocker. Together they enable entities to act on incomplete information (belief) and adapt to obstacles (detour) without abandoning long-term goals.
 
+**Relationship to `KnowledgeFact`** (`src/core/self_model.py`, see `docs/simulation/domains/information_contract.md`): `BeliefEntry` and `KnowledgeFact` are sibling, deliberately separate models, not duplicates — `src/domains/information/phase.py` is the single dispatch site that decides which one a given piece of new information becomes: raw, directly-witnessed events go to `ObservationBeliefBridge.process_observation()` (this file's `BeliefEntry`, contradiction-tracked, decays toward staleness), while structured query responses go to `InformationAssimilationService.assimilate()` (`KnowledgeFact`, capacity-bounded, no decay). No accessor today fuses both into one "what does this entity currently believe/know about X" view — none is needed until a real consumer requires it (confirmed via `TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION`, which investigated and closed this as a deliberate split, not a gap to merge).
+
 ---
 
 ## Belief System — `belief.py`

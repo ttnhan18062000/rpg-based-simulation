@@ -5,7 +5,7 @@ pressure values that downstream goal/target scoring can consume.
 Design constraints:
 - Read-only: never mutates entity state or catalog state
 - Deterministic: same entity + context → same pressures
-- No race-specific scripts: resolution is entirely data-driven from catalog profiles
+- No species-specific scripts: resolution is entirely data-driven from catalog profiles
 - Pressures are inputs to scoring — they do not directly force actions
 - Missing profile → MotivationPressureSet.empty() with source="no_profile", no exception
 """

@@ -41,13 +41,13 @@ def test_resolved_archetype_preserves_identity_metadata(repos):
             entity_found = True
             # Core identity fields from archetype definition
             assert entity.archetype_id == "goblin_raider", f"Expected archetype_id='goblin_raider', got {entity.archetype_id!r}"
-            assert entity.race_id == "goblin", f"Expected race_id='goblin', got {entity.race_id!r}"
+            assert entity.species_id == "goblin", f"Expected species_id='goblin', got {entity.species_id!r}"
             assert entity.role_id == "raider", f"Expected role_id='raider', got {entity.role_id!r}"
             assert entity.faction_id == "goblin_warband", f"Expected faction_id='goblin_warband', got {entity.faction_id!r}"
 
-            # Traits: archetype traits first, then race natural_traits not already present
+            # Traits: archetype traits first, then species natural_traits not already present
             # goblin_raider: ["humanoid", "tool_user", "opportunistic"]
-            # goblin race natural_traits: ["humanoid", "tool_user", "opportunistic", "social_humanoid", "small_body"]
+            # goblin species natural_traits: ["humanoid", "tool_user", "opportunistic", "social_humanoid", "small_body"]
             # merged: ["humanoid", "tool_user", "opportunistic", "social_humanoid", "small_body"]
             assert "humanoid" in entity.traits, f"Expected 'humanoid' in traits, got {entity.traits}"
             assert "tool_user" in entity.traits, f"Expected 'tool_user' in traits, got {entity.traits}"
@@ -60,7 +60,7 @@ def test_resolved_archetype_preserves_identity_metadata(repos):
             assert entity.combat_profile_id == "opportunist_raider", f"Expected combat_profile_id='opportunist_raider', got {entity.combat_profile_id!r}"
             assert entity.drive_profile_id == "opportunistic_raider", f"Expected drive_profile_id='opportunistic_raider', got {entity.drive_profile_id!r}"
 
-            # Need and sense profiles come from the goblin race defaults
+            # Need and sense profiles come from the goblin species defaults
             assert entity.need_profile_id == "goblin_survival", f"Expected need_profile_id='goblin_survival', got {entity.need_profile_id!r}"
             assert entity.sense_profile_id == "goblin_alert_senses", f"Expected sense_profile_id='goblin_alert_senses', got {entity.sense_profile_id!r}"
 

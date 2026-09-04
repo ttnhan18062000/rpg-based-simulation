@@ -4483,11 +4483,11 @@
 - id: SUB-380
   text: 'TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION -- WorldCompiler.compile()''s
     per-entity personality seeding (bravery, greed, sociability, industry -- real
-    DeterministicRNG draws, src/worldbuilding/compiler.py) was uncorrelated with race/faction/archetype:
+    DeterministicRNG draws, src/worldbuilding/compiler.py) was uncorrelated with species/faction/archetype:
     a wolf archetype and a town citizen drew bravery from the identical distribution.
     Real per-entity variance already existed and was already calibrated to matter
     for strategic route selection (STRAT-226, strategic_cognition.yaml) -- the gap
-    was population-level race correlation, not variance itself.
+    was population-level species correlation, not variance itself.
 
     '
   status: verified
@@ -4525,7 +4525,7 @@
     src/core/enums.py) has 2 real, already-wired combat-behavior consumers (kiting
     distance for SKIRMISHER-role entities, opportunity-attack suppression on a deliberate
     EVASIVE retreat -- src/engine/tactical.py, src/engine/movement.py) but every real
-    entity kept the class default (BALANCED) regardless of personality/race, leaving
+    entity kept the class default (BALANCED) regardless of personality/species, leaving
     both hooks entirely dormant. Also: this ticket''s own SUB-380 sibling entry''s
     hardcoded _BRAVERY_BIAS_BY_ALIGNMENT_BUCKET dict was migrated to real, external
     data (data/content/social/personality_bias.yaml) per an explicit mid-session user
@@ -4579,7 +4579,7 @@
     (src/worldassembly/entity_spawner.py) -- the 2 entity-construction branches WorldEntitySpawner.spawn_from_context()
     itself dispatches to -- never set PersonalityComponent at all, leaving every entity
     spawned through either at the class''s own all-zero default regardless of real
-    race_id/faction_id. Same class of bug as WorldCompiler.compile()''s own earlier
+    species_id/faction_id. Same class of bug as WorldCompiler.compile()''s own earlier
     all-zero-personality bug (TCK-20260619-P0-ENTITY-INIT), for a separate, newer
     construction path that fix never covered. Confirmed zero real impact on any currently-scored
     SimQ pipeline before fixing (this path''s only real caller, CatalogScenarioStateBuilder,
@@ -5046,3 +5046,20 @@
     state_hash will show as 'changed' relative to its pre-idea-66 committed value
     for two independent reasons now, not one -- Recalibration's own methodology needs
     to account for both.
+- id: SUB-393
+  text: Core content schema/entity-identity plumbing uses species-named identifiers
+    (SpeciesDefinition, EntityArchetypeDefinition.species, entity.identity.properties['species_id']),
+    not the legacy race-named ones (TCK-20260904-SPECIES-CORE-SCHEMA-RENAME, child
+    1/4 of the race->species terminology epic). The race-relations subsystem (RaceRelationRecord,
+    source_race/target_race, race_relations.yaml) is deliberately unrenamed here --
+    separate scope, TCK-20260904-SPECIES-RELATIONS-SUBSYSTEM-RENAME.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/content/schema.py SpeciesDefinition; src/entities/identity_resolver.py
+    ResolvedEntityIdentity.species_id; src/entities/runtime_contract.py ResolvedEntityRuntimeContract.species_id;
+    src/worldassembly/models.py ResolvedEntityProfile.species_id
+  proof_type: null
+  test_path: tests/unit/entities/test_entity_identity_resolver.py::test_clean_archetype_contract_resolves_clean_identity
+  divergence_note: null
+  support_boundary: null

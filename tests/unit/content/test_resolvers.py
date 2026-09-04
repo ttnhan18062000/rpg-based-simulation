@@ -85,9 +85,9 @@ class TestResolverError:
         assert "bad_id" in msg
 
     def test_message_with_context(self):
-        err = ResolverError("body_model", "ghost", context="referenced by race 'test_race'")
+        err = ResolverError("body_model", "ghost", context="referenced by species 'test_species'")
         msg = str(err)
-        assert "test_race" in msg
+        assert "test_species" in msg
         assert "ghost" in msg
 
     def test_attributes_accessible(self):
@@ -281,7 +281,7 @@ class TestLivingDefaultsResolver:
         assert "tool_user" in trait_ids
 
     def test_resolve_human_natural_traits_order_preserved(self, living: LivingDefaultsResolver):
-        """Natural traits must be returned in the same order as declared in the race definition."""
+        """Natural traits must be returned in the same order as declared in the species definition."""
         result = living.resolve_living_defaults("human")
         trait_ids = [t.id for t in result.natural_traits]
         assert trait_ids == ["humanoid", "tool_user", "social_humanoid"]
@@ -306,10 +306,10 @@ class TestLivingDefaultsResolver:
         assert "worker" in role_ids
 
     def test_resolve_human_compatible_roles_order_preserved(self, living: LivingDefaultsResolver):
-        """Compatible roles must be in the same order as declared in the race definition."""
+        """Compatible roles must be in the same order as declared in the species definition."""
         result = living.resolve_living_defaults("human")
         role_ids = [r.id for r in result.compatible_roles]
-        # human's compatible_roles as declared in races.yaml (first few entries)
+        # human's compatible_roles as declared in species.yaml (first few entries)
         assert role_ids[0] == "hero"
         assert role_ids[1] == "worker"
         assert role_ids[2] == "citizen"
@@ -322,11 +322,11 @@ class TestLivingDefaultsResolver:
         assert "pack_hunter" in trait_ids
         assert "territorial" in trait_ids
 
-    def test_resolve_missing_race_raises(self, living: LivingDefaultsResolver):
+    def test_resolve_missing_species_raises(self, living: LivingDefaultsResolver):
         with pytest.raises(ResolverError) as exc_info:
-            living.resolve_living_defaults("nonexistent_race_xxxx")
-        assert "race" in str(exc_info.value)
-        assert "nonexistent_race_xxxx" in str(exc_info.value)
+            living.resolve_living_defaults("nonexistent_species_xxxx")
+        assert "species" in str(exc_info.value)
+        assert "nonexistent_species_xxxx" in str(exc_info.value)
 
     def test_resolve_living_defaults_returns_frozen_model(self, living: LivingDefaultsResolver):
         """ResolvedLivingDefaults must be immutable (frozen Pydantic model)."""
@@ -447,7 +447,7 @@ class TestEntityArchetypeResolver:
     ):
         result = archetype_resolver.resolve("hungry_wolf")
         assert result.archetype_id == "hungry_wolf"
-        assert result.race_id == "wolf"
+        assert result.species_id == "wolf"
         assert result.faction_id == "wild_beast_pack"
         assert result.role_id == "predator_hunter"
 
@@ -476,20 +476,20 @@ class TestEntityArchetypeResolver:
         result = archetype_resolver.resolve("hungry_wolf")
         assert result.drive_profile.id == "territorial_predator"
 
-    # --- Race defaults propagated ---
+    # --- Species defaults propagated ---
 
-    def test_resolve_wolf_need_profile_from_race(
+    def test_resolve_wolf_need_profile_from_species(
         self, archetype_resolver: EntityArchetypeResolver
     ):
-        """need_profile comes from race defaults, not the archetype directly."""
+        """need_profile comes from species defaults, not the archetype directly."""
         result = archetype_resolver.resolve("hungry_wolf")
-        # wolf race has need_profile = "carnivore_survival"
+        # wolf species has need_profile = "carnivore_survival"
         assert result.need_profile.id == "carnivore_survival"
 
-    def test_resolve_wolf_sense_profile_from_race(
+    def test_resolve_wolf_sense_profile_from_species(
         self, archetype_resolver: EntityArchetypeResolver
     ):
-        """sense_profile comes from race defaults."""
+        """sense_profile comes from species defaults."""
         result = archetype_resolver.resolve("hungry_wolf")
         assert result.sense_profile.id == "predator_smell_senses"
 
@@ -508,7 +508,7 @@ class TestEntityArchetypeResolver:
     def test_resolve_wolf_traits_archetype_first_in_order(
         self, archetype_resolver: EntityArchetypeResolver
     ):
-        """Archetype traits appear before appended race natural_traits."""
+        """Archetype traits appear before appended species natural_traits."""
         result = archetype_resolver.resolve("hungry_wolf")
         trait_ids = [t.id for t in result.traits]
         # First three are archetype-declared
@@ -523,18 +523,18 @@ class TestEntityArchetypeResolver:
         trait_ids = [t.id for t in result.traits]
         assert len(trait_ids) == len(set(trait_ids))
 
-    def test_resolve_wolf_race_traits_appended_if_not_in_archetype(
+    def test_resolve_wolf_species_traits_appended_if_not_in_archetype(
         self, archetype_resolver: EntityArchetypeResolver
     ):
         """
-        Wolf race has natural_traits: [pack_hunter, territorial, carnivore].
+        Wolf species has natural_traits: [pack_hunter, territorial, carnivore].
         All three are also in the hungry_wolf archetype, so no extras should be appended.
         The alpha_wolf has 'leader' plus the same wolf naturals — verify no duplicates.
         """
         result = archetype_resolver.resolve("alpha_wolf")
         trait_ids = [t.id for t in result.traits]
         # Should have pack_hunter, territorial, carnivore, leader (all from archetype)
-        # Race naturals overlap; no duplicates expected
+        # Species naturals overlap; no duplicates expected
         assert len(trait_ids) == len(set(trait_ids))
         assert "leader" in trait_ids
 
@@ -578,11 +578,11 @@ class TestEntityArchetypeResolver:
     ):
         result = archetype_resolver.resolve("village_worker")
         assert result.archetype_id == "village_worker"
-        assert result.race_id == "human"
+        assert result.species_id == "human"
         assert result.role_id == "worker"
         assert result.faction_id == "town_council"
 
-    def test_resolve_village_worker_need_profile_from_human_race(
+    def test_resolve_village_worker_need_profile_from_human_species(
         self, archetype_resolver: EntityArchetypeResolver
     ):
         result = archetype_resolver.resolve("village_worker")
@@ -605,7 +605,7 @@ class TestEntityArchetypeResolver:
     def test_resolve_goblin_raider_explicit_profiles_override(
         self, archetype_resolver: EntityArchetypeResolver
     ):
-        """Explicit archetype profiles override race defaults."""
+        """Explicit archetype profiles override species defaults."""
         result = archetype_resolver.resolve("goblin_raider")
         assert result.stat_profile.id == "goblin_raider_base"
         assert result.combat_profile.id == "opportunist_raider"

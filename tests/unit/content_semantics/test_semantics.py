@@ -98,7 +98,7 @@ def test_relation_projection_clean(base_repo):
     assert "perspective:hero_guild_perspective" in proj1.source_records
     assert proj1.confidence == 1.0
 
-    # 2. Wild beast pack projects as contextual threat, not enemy-by-race.
+    # 2. Wild beast pack projects as contextual threat, not enemy-by-species.
     proj2 = service.project_relation(
         perspective_id="hero_guild_perspective",
         source_faction_id="hero_guild",

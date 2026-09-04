@@ -202,7 +202,7 @@ not tier labels with a one-line gesture.
    spans. Assert `len(member_entity_ids) ≥ 3` and a defection event (Group's real precedent) removes exactly
    one member.
 
-   **Idea 37 (Race Relations) — confirmed real gap, no world can be specified yet.** The corpus registry has
+   **Idea 37 (Species Relations) — confirmed real gap, no world can be specified yet.** The corpus registry has
    no race-diversity dimension at all; a test world can't be designed without the dedicated audit item 4's
    own row already calls for.
 

@@ -4,7 +4,7 @@
   description: "Default chosen faction for hero-centered scenarios."
   alignment_bucket: "defender"
   influence_role: "protector"
-  common_races: ["human", "elf", "dwarf"]
+  common_species: ["human", "elf", "dwarf"]
   themes: ["frontier", "village"]
   legacy_engine_bucket: "HERO_GUILD"
 
@@ -14,7 +14,7 @@
   description: "Settlement authority and civil administration."
   alignment_bucket: "defender"
   influence_role: "sovereign"
-  common_races: ["human", "dwarf", "elf"]
+  common_species: ["human", "dwarf", "elf"]
   themes: ["village", "frontier"]
   legacy_engine_bucket: "TOWN_COUNCIL"
 
@@ -24,7 +24,7 @@
   description: "Fallback for unaffiliated content."
   alignment_bucket: "neutral"
   influence_role: "none"
-  common_races: []
+  common_species: []
   themes: []
   legacy_engine_bucket: "NEUTRAL"
 
@@ -34,7 +34,7 @@
   description: "Territorial animal groups. Contextual threat, not enemy-by-race."
   alignment_bucket: "wild"
   influence_role: "territorial_pressure"
-  common_races: ["wolf", "spider", "slime"]
+  common_species: ["wolf", "spider", "slime"]
   themes: ["forest", "wolf_den"]
   legacy_engine_bucket: "MONSTER_HORDE"
   hazard_immunities: ["NATURAL_TERRAIN"]
@@ -45,7 +45,7 @@
   description: "Opportunistic raider faction."
   alignment_bucket: "invader"
   influence_role: "challenger"
-  common_races: ["goblin"]
+  common_species: ["goblin"]
   themes: ["goblin", "frontier"]
   legacy_engine_bucket: "MONSTER_HORDE"
   hazard_immunities: ["NATURAL_TERRAIN"]
@@ -56,7 +56,7 @@
   description: "Trade-centered faction that prefers negotiated safety."
   alignment_bucket: "neutral"
   influence_role: "economic_actor"
-  common_races: ["human", "dwarf", "elf"]
+  common_species: ["human", "dwarf", "elf"]
   themes: ["trade", "frontier"]
   legacy_engine_bucket: "NEUTRAL"
   hazard_immunities: ["NATURAL_TERRAIN"]
@@ -67,7 +67,7 @@
   description: "Outlaw faction hostile to settlement safety and trade routes."
   alignment_bucket: "invader"
   influence_role: "challenger"
-  common_races: ["human", "goblin", "orc"]
+  common_species: ["human", "goblin", "orc"]
   themes: ["bandit", "frontier"]
   legacy_engine_bucket: "MONSTER_HORDE"
   hazard_immunities: ["NATURAL_TERRAIN"]
@@ -78,7 +78,7 @@
   description: "Protective faction defending forest balance."
   alignment_bucket: "defender"
   influence_role: "protector"
-  common_races: ["elf", "human", "spirit"]
+  common_species: ["elf", "human", "spirit"]
   themes: ["forest", "sacred"]
   legacy_engine_bucket: "HERO_GUILD"
   hazard_immunities: ["NATURAL_TERRAIN"]
@@ -89,7 +89,7 @@
   description: "Honor/strength-driven clan faction, not always hostile."
   alignment_bucket: "rival"
   influence_role: "territorial_power"
-  common_races: ["orc"]
+  common_species: ["orc"]
   themes: ["orc", "frontier"]
   legacy_engine_bucket: "MONSTER_HORDE"
   hazard_immunities: ["NATURAL_TERRAIN"]
@@ -100,7 +100,7 @@
   description: "Mining and crafting faction controlling mountain/mine assets."
   alignment_bucket: "defender"
   influence_role: "economic_actor"
-  common_races: ["dwarf"]
+  common_species: ["dwarf"]
   themes: ["dwarven", "mine"]
   legacy_engine_bucket: "HERO_GUILD"
 
@@ -110,7 +110,7 @@
   description: "Ritual faction tied to moon ruins and arcane materials."
   alignment_bucket: "invader"
   influence_role: "hidden_pressure"
-  common_races: ["human", "goblin", "spirit"]
+  common_species: ["human", "goblin", "spirit"]
   themes: ["moon", "arcane", "corrupted"]
   legacy_engine_bucket: "MONSTER_HORDE"
 
@@ -120,7 +120,7 @@
   description: "Purpose-bound remnants around battlefields, ruins, and barrows."
   alignment_bucket: "invader"
   influence_role: "corruption_pressure"
-  common_races: ["undead", "spirit"]
+  common_species: ["undead", "spirit"]
   themes: ["undead", "ruin"]
   legacy_engine_bucket: "MONSTER_HORDE"
   hazard_immunities: ["UNDEAD_CORRUPTION"]
@@ -131,7 +131,7 @@
   description: "Research faction interested in crystals, ruins, and magical anomalies."
   alignment_bucket: "neutral"
   influence_role: "knowledge_actor"
-  common_races: ["human", "elf", "spirit"]
+  common_species: ["human", "elf", "spirit"]
   themes: ["arcane", "moon"]
   legacy_engine_bucket: "NEUTRAL"
   hazard_immunities: ["ARCANE_CORRUPTION"]
@@ -142,7 +142,7 @@
   description: "Lizardfolk/swamp faction defending wetland territory."
   alignment_bucket: "rival"
   influence_role: "territorial_power"
-  common_races: ["lizardfolk"]
+  common_species: ["lizardfolk"]
   themes: ["swamp"]
   legacy_engine_bucket: "MONSTER_HORDE"
   hazard_immunities: ["NATURAL_TERRAIN"]
@@ -153,7 +153,7 @@
   description: "Cult faction serving dragonkin/fire-aligned power."
   alignment_bucket: "invader"
   influence_role: "boss_pressure"
-  common_races: ["human", "dragonkin", "orc"]
+  common_species: ["human", "dragonkin", "orc"]
   themes: ["dragon", "volcanic", "cult"]
   legacy_engine_bucket: "MONSTER_HORDE"
 
@@ -163,7 +163,7 @@
   description: "Spirit faction protecting sacred or haunted territories."
   alignment_bucket: "neutral"
   influence_role: "territorial_power"
-  common_races: ["spirit"]
+  common_species: ["spirit"]
   themes: ["spirit", "sacred"]
   legacy_engine_bucket: "NEUTRAL"
   hazard_immunities: ["NATURAL_TERRAIN"]

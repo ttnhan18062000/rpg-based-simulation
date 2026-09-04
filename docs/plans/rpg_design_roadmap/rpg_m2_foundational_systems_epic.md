@@ -74,15 +74,15 @@ validation step ahead of the highest-risk content item (see the roadmap's Sequen
    `intelligence_tier` (the qualitative `attribute_tendencies.intelligence` field) is a false friend —
    goblin/orc are `medium_low` intelligence but are clearly intended as high-tier per this idea's own
    framing. Use `natural_traits` containing `tool_user` instead (see Content & Balance Requirements in the
-   atlas for the full 13-race breakdown). **Implemented (`TCK-20260831-SPECIES-INTELLIGENCE-TIER`):**
-   `RaceDefinition.intelligence_tier` (required `str`, `{"high","low"}`) landed on all 13 races using
-   exactly this `tool_user`-in-`natural_traits` anchor for 11/13; `dragonkin` and `spirit` (the two races
+   atlas for the full 13-species breakdown). **Implemented (`TCK-20260831-SPECIES-INTELLIGENCE-TIER`):**
+   `SpeciesDefinition.intelligence_tier` (required `str`, `{"high","low"}`) landed on all 13 species using
+   exactly this `tool_user`-in-`natural_traits` anchor for 11/13; `dragonkin` and `spirit` (the two species
    lacking `tool_user` despite `cognition_profile: arcane_scholar`) were explicitly reviewed and both
    resolved `"high"` on the cognition signal — see that ticket's Implementation Notes for the full
    evidence trail. Ships as an unconsumed, catalog-validated field with zero wiring — consumption is
    `TCK-20260831-ROLE-MODEL-IMITATION`'s job (idea 27), not this ticket's. **World-generation note (M8),
    corrected:** `settlement_capacity` (idea 44) was explicitly scoped OUT of this ticket — it is not idea
-   14 at all, it's a separate field on the same `RaceDefinition` class that still doesn't exist anywhere
+   14 at all, it's a separate field on the same `SpeciesDefinition` class that still doesn't exist anywhere
    at the schema level. The line below originally conflated the two under one bullet; read
    `docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md` before scoping `settlement_capacity`
    as its own ticket — it remains unstarted.
