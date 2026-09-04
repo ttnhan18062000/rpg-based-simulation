@@ -149,6 +149,162 @@ class TestBuildHappyPath:
 
 
 # ---------------------------------------------------------------------------
+# Group 1b — sharded tools/ directory source (TCK-20260902-MONITORING-SHARD-CONSUMERS)
+# ---------------------------------------------------------------------------
+
+class TestShardedToolsSource:
+
+    def test_build_index_reads_multiple_shard_files_from_directory(self, tmp_path):
+        db_path = tmp_path / "index" / "monitoring.db"
+
+        week1 = tmp_path / "2026-W01"
+        week1.mkdir()
+        _write_jsonl(week1 / "runs.jsonl", [])
+        _write_jsonl(week1 / "events.jsonl", [])
+        _write_jsonl(
+            week1 / "tools.jsonl",
+            [
+                {"run_id": "TCK-A", "seq": 1, "tool": "Read"},
+                {"run_id": "TCK-A", "seq": 2, "tool": "Edit"},
+            ],
+        )
+
+        week2 = tmp_path / "2026-W02"
+        week2.mkdir()
+        _write_jsonl(week2 / "runs.jsonl", [])
+        _write_jsonl(week2 / "events.jsonl", [])
+        _write_jsonl(
+            week2 / "tools.jsonl",
+            [
+                {"run_id": "TCK-B", "seq": 1, "tool": "Read"},
+                {"run_id": "TCK-B", "seq": 2, "tool": "Bash"},
+                {"run_id": "TCK-B", "seq": 3, "tool": "Write"},
+            ],
+        )
+
+        args = types.SimpleNamespace(
+            runs_file=str(tmp_path),
+            events_file=str(tmp_path),
+            tools_file=str(tmp_path),
+            db_path=str(db_path),
+        )
+        exit_code = _bi.build(args)
+        assert exit_code == 0
+
+        conn = sqlite3.connect(str(db_path))
+        assert conn.execute("SELECT COUNT(*) FROM tools").fetchone()[0] == 5
+        conn.close()
+
+    def test_build_index_includes_unknown_week_shard(self, tmp_path):
+        db_path = tmp_path / "index" / "monitoring.db"
+
+        week1 = tmp_path / "2026-W05"
+        week1.mkdir()
+        _write_jsonl(week1 / "runs.jsonl", [])
+        _write_jsonl(week1 / "events.jsonl", [])
+        _write_jsonl(week1 / "tools.jsonl", [{"run_id": "TCK-A", "seq": 1, "tool": "Read"}])
+
+        unknown_week = tmp_path / "unknown-week"
+        unknown_week.mkdir()
+        _write_jsonl(unknown_week / "runs.jsonl", [])
+        _write_jsonl(unknown_week / "events.jsonl", [])
+        _write_jsonl(unknown_week / "tools.jsonl", [{"run_id": "TCK-B", "seq": 1, "tool": "Bash"}])
+
+        args = types.SimpleNamespace(
+            runs_file=str(tmp_path),
+            events_file=str(tmp_path),
+            tools_file=str(tmp_path),
+            db_path=str(db_path),
+        )
+        exit_code = _bi.build(args)
+        assert exit_code == 0
+
+        conn = sqlite3.connect(str(db_path))
+        assert conn.execute("SELECT COUNT(*) FROM tools").fetchone()[0] == 2
+        run_ids = {row[0] for row in conn.execute("SELECT run_id FROM tools")}
+        assert run_ids == {"TCK-A", "TCK-B"}
+        conn.close()
+
+    def test_build_index_glob_result_is_sorted(self, tmp_path):
+        db_path = tmp_path / "index" / "monitoring.db"
+
+        # Write the chronologically-later week folder to disk FIRST, so an unsorted
+        # glob (filesystem/creation order) would concatenate out of order.
+        week_later = tmp_path / "2026-W10"
+        week_later.mkdir()
+        _write_jsonl(week_later / "runs.jsonl", [])
+        _write_jsonl(week_later / "events.jsonl", [])
+        _write_jsonl(week_later / "tools.jsonl", [{"run_id": "TCK-LATER", "seq": 1, "tool": "Read"}])
+
+        week_earlier = tmp_path / "2026-W03"
+        week_earlier.mkdir()
+        _write_jsonl(week_earlier / "runs.jsonl", [])
+        _write_jsonl(week_earlier / "events.jsonl", [])
+        _write_jsonl(week_earlier / "tools.jsonl", [{"run_id": "TCK-EARLIER", "seq": 1, "tool": "Read"}])
+
+        args = types.SimpleNamespace(
+            runs_file=str(tmp_path),
+            events_file=str(tmp_path),
+            tools_file=str(tmp_path),
+            db_path=str(db_path),
+        )
+        exit_code = _bi.build(args)
+        assert exit_code == 0
+
+        conn = sqlite3.connect(str(db_path))
+        rows = [row[0] for row in conn.execute("SELECT run_id FROM tools ORDER BY id")]
+        conn.close()
+        assert rows == ["TCK-EARLIER", "TCK-LATER"]
+
+
+# ---------------------------------------------------------------------------
+# Group 1c — unified agent-monitoring/data/ layout, all 3 sources (AC2)
+# ---------------------------------------------------------------------------
+
+class TestUnifiedDataDirSource:
+
+    def test_build_index_2plus_week_folders_all_included(self, tmp_path):
+        db_path = tmp_path / "index" / "monitoring.db"
+
+        week1 = tmp_path / "2026-W01"
+        week1.mkdir()
+        _write_jsonl(week1 / "runs.jsonl", [dict(_BASE_RUN, run_id="TCK-WEEK1")])
+        _write_jsonl(
+            week1 / "events.jsonl",
+            [{"run_id": "TCK-WEEK1", "seq": 1, "phase": "Implement", "agent": "implementer"}],
+        )
+        _write_jsonl(week1 / "tools.jsonl", [{"run_id": "TCK-WEEK1", "seq": 1, "tool": "Read"}])
+
+        week2 = tmp_path / "2026-W02"
+        week2.mkdir()
+        _write_jsonl(week2 / "runs.jsonl", [dict(_BASE_RUN, run_id="TCK-WEEK2")])
+        _write_jsonl(
+            week2 / "events.jsonl",
+            [{"run_id": "TCK-WEEK2", "seq": 1, "phase": "Test", "agent": "test-scoper"}],
+        )
+        _write_jsonl(week2 / "tools.jsonl", [{"run_id": "TCK-WEEK2", "seq": 1, "tool": "Bash"}])
+
+        args = types.SimpleNamespace(
+            runs_file=str(tmp_path),
+            events_file=str(tmp_path),
+            tools_file=str(tmp_path),
+            db_path=str(db_path),
+        )
+        exit_code = _bi.build(args)
+        assert exit_code == 0
+
+        conn = sqlite3.connect(str(db_path))
+        run_ids = {row[0] for row in conn.execute("SELECT run_id FROM runs")}
+        event_run_ids = {row[0] for row in conn.execute("SELECT run_id FROM events")}
+        tool_run_ids = {row[0] for row in conn.execute("SELECT run_id FROM tools")}
+        conn.close()
+
+        assert run_ids == {"TCK-WEEK1", "TCK-WEEK2"}
+        assert event_run_ids == {"TCK-WEEK1", "TCK-WEEK2"}
+        assert tool_run_ids == {"TCK-WEEK1", "TCK-WEEK2"}
+
+
+# ---------------------------------------------------------------------------
 # Group 2 — source files byte-identical after build (AC2)
 # ---------------------------------------------------------------------------
 

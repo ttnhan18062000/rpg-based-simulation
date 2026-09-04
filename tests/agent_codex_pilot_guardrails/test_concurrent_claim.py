@@ -51,3 +51,20 @@ def test_provider_field_coverage_against_real_corpus_is_populated():
     # Keep this as a lightweight integration assertion without depending on an exact run count:
     # later legitimate identity-bearing executions may append additional records.
     assert provider_field_coverage(_REAL_AGENT_MONITORING_DIR) >= 1
+
+
+def test_provider_field_coverage_resolves_sharded_real_repo_runs_source(tmp_path):
+    """TCK-20260903-MONITORING-DATA-CODEX-REMIGRATION: provider_field_coverage must stream
+    every agent-monitoring/data/<week>/runs.jsonl shard, not a single hardcoded top-level
+    runs.jsonl path."""
+    monitoring_dir = tmp_path / "agent-monitoring"
+    data_dir = monitoring_dir / "data"
+    for week in ("2026-W01", "2026-W02", "unknown-week"):
+        (data_dir / week).mkdir(parents=True)
+    (data_dir / "2026-W01" / "runs.jsonl").write_text(
+        '{"provider": "claude"}\n{"provider": null}\n', encoding="utf-8"
+    )
+    (data_dir / "2026-W02" / "runs.jsonl").write_text('{"provider": "claude"}\n', encoding="utf-8")
+    (data_dir / "unknown-week" / "runs.jsonl").write_text("{}\n", encoding="utf-8")
+
+    assert provider_field_coverage(monitoring_dir) == 2

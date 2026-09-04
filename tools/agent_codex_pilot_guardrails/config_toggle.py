@@ -13,6 +13,8 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
+from tools.agent_replay_codex.monitoring_shards import hash_source
+
 from .errors import PilotConfigToggleGuardError, PilotRollbackVerificationError
 
 # The empirically-discovered hook-registration TOML syntax, recorded in
@@ -55,19 +57,19 @@ def disable(scratch_config_path: Path, repo_root: Path, baseline_bytes: bytes) -
 
 
 def snapshot_rollback_scope(agent_monitoring_dir: Path, pilot_ticket_path: Path) -> dict[str, str]:
-    """sha256 of each of runs.jsonl/events.jsonl/tools.jsonl + pilot_ticket_path, whole-file.
+    """sha256 of each of the 3 monitoring sources (a single legacy <source>.jsonl, or the weekly
+    agent-monitoring/data/<week>/<source>.jsonl shards) + pilot_ticket_path, whole-file.
 
     Strict hash-equality IS correct here, unlike the baseline-manifest gate's prefix-preservation
     check — the rollback drill must leave these files completely untouched, not merely
     append-safe.
     """
-    watched = {
-        "runs.jsonl": agent_monitoring_dir / "runs.jsonl",
-        "events.jsonl": agent_monitoring_dir / "events.jsonl",
-        "tools.jsonl": agent_monitoring_dir / "tools.jsonl",
-        "pilot_ticket": pilot_ticket_path,
+    scope = {
+        source: hash_source(agent_monitoring_dir, source)
+        for source in ("runs.jsonl", "events.jsonl", "tools.jsonl")
     }
-    return {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in watched.items()}
+    scope["pilot_ticket"] = hashlib.sha256(pilot_ticket_path.read_bytes()).hexdigest()
+    return scope
 
 
 def assert_rollback_scope_unchanged(pre: dict[str, str], post: dict[str, str]) -> None:

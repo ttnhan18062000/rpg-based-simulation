@@ -8,7 +8,8 @@ tags: [agent-monitoring, schema]
 
 # Agent Monitoring — Schema Reference
 
-Two append-only JSONL files, joined by `run_id`.
+Three append-only JSONL sources (`runs`, `events`, `tools`) per UTC ISO week, joined by `run_id`
+(`tools` additionally joins to `events` by `seq`).
 
 ---
 
@@ -27,7 +28,10 @@ Run `make agent-monitoring-index` to (re)build it. `query.py` and `validate.py` 
 the index to exist (exiting with an actionable "run `make agent-monitoring-index` first" error if
 it's missing) — a deliberate choice, since neither is meant to run without its data source.
 `generate_retro.py` is the one exception: it builds the index on demand if missing **or stale**
-(any of `runs.jsonl`/`events.jsonl`/`tools.jsonl` has a newer mtime than the index —
+(all 3 sources — `runs`/`events`/`tools` — are compared uniformly against the newest mtime across
+their respective `agent-monitoring/data/*/<source>.jsonl` week files, via `max()` — never the
+data-dir root's own mtime, since a directory's mtime does not reliably update when an existing
+file inside it is appended to. Any of these being newer than the index —
 `TCK-20260811-AGENT-MONITORING-INDEX-SILENT-STALENESS`, since a present-but-outdated index was
 previously read silently forever, under-reporting retro numbers with no warning), and falls back
 to reading the raw JSONL directly if that on-demand build itself fails, so the weekly retro report
@@ -44,7 +48,7 @@ divergences.
 
 ---
 
-## `agent-monitoring/runs.jsonl`
+## `runs` (`agent-monitoring/data/YYYY-Www/runs.jsonl`)
 
 One record per workflow invocation.
 
@@ -105,10 +109,25 @@ One record per workflow invocation.
 | `NOTHING_TO_CREATE` | `create-tickets` only — no actionable concerns, all concerns were duplicates of existing tickets, or no tasks survived structuring. |
 | `CRASHED` | Synthetic status set by `validate.py` for runs with `start_ts` but no `end_ts`. |
 
+Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, new run records are no longer appended to a
+single `agent-monitoring/runs.jsonl` file. They are written to
+`agent-monitoring/data/YYYY-Www/runs.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed
+at write time — i.e. when `record_run.py` is invoked, not from the record's own `start_ts` field —
+matching `post_tool_hook.py`'s existing precedent and `events.jsonl`'s write-time bucketing below).
+`TCK-20260903-MONITORING-DATA-MIGRATION` has since retired the historical monolithic
+`agent-monitoring/runs.jsonl` from the working tree: every pre-cutover row was migrated into its
+matching `agent-monitoring/data/YYYY-Www/runs.jsonl` bucket, keyed by each row's own `start_ts`
+field (with a documented field-priority fallback — `ts`, `ts_start`, `started_at`, `completed_at`,
+`ts_end`, `finished_at`, `timestamp`, in that order — for the rare row missing `start_ts`). The
+retired file's full history remains recoverable via `git log --follow -- agent-monitoring/
+runs.jsonl`. The per-record schema is unaffected by this change; only where a record physically
+lands changes.
+
 ### Historical Corrections
 
-`runs.jsonl` is append-only for all *new* writes (see the file's opening line above) — every writer
-(`record_run.py`) only ever `open(RUNS_FILE, "a")`s, never rewrites an existing line. The one
+`runs.jsonl` was append-only for all writes prior to this cutover, and each per-week
+`agent-monitoring/data/YYYY-Www/runs.jsonl` shard remains append-only going forward — every writer
+(`record_run.py`) only ever appends via `write_line()`, never rewrites an existing line. The one
 documented exception: **TCK-20260718-STATUS-DRIFT-REPAIR** (2026-07-18) corrected the `final_status`
 casing on 7 pre-existing records (`"done"`/`"success"` → `"DONE"`, predating this doc's all-uppercase
 enum convention) via an atomic, audited, line-scoped string substitution — not a bulk parse/
@@ -118,9 +137,22 @@ all writes going forward.
 
 ---
 
-## `agent-monitoring/events.jsonl`
+## `events` (`agent-monitoring/data/YYYY-Www/events.jsonl`)
 
 One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
+
+Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, new event records are no longer appended to
+a single `agent-monitoring/events.jsonl` file. They are written to
+`agent-monitoring/data/YYYY-Www/events.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed
+at write time). `iso_week` is computed once per `record_events.py --data` invocation, not once per
+record, so a whole batch of events from one call always lands together in one target file — matching
+`write_lines()`'s single-target-path, one-lock-per-batch contract. `TCK-20260903-MONITORING-DATA-
+MIGRATION` has since retired the historical monolithic `agent-monitoring/events.jsonl` from the
+working tree: every pre-cutover row was migrated into its matching `agent-monitoring/data/YYYY-
+Www/events.jsonl` bucket, keyed by each row's own `ts` field (with the same documented
+field-priority fallback list used for `runs.jsonl` for the rare row missing `ts`). The retired
+file's full history remains recoverable via `git log --follow -- agent-monitoring/events.jsonl`.
+The per-record schema is unaffected by this change; only where a record physically lands changes.
 
 ```json
 {
@@ -334,9 +366,24 @@ stream.
 
 ---
 
-## `agent-monitoring/tools.jsonl`
+## `tools` (`agent-monitoring/data/YYYY-Www/tools.jsonl`)
 
 One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joined to events by `run_id` + `seq`.
+
+Since `TCK-20260902-MONITORING-SHARD-WRITE-PATH`, new tool-call rows are no longer appended to a single file. They were written to `agent-monitoring/tools/tools-YYYY-Www.jsonl`, one file per UTC ISO week (`%G-W%V` format, computed at write time — matching `generate_retro.py::iso_week()`'s format and the `agent-monitoring/retro/RETRO-YYYY-Www.md` naming convention it already documents elsewhere). `TCK-20260902-MONITORING-SHARD-MIGRATION` has since retired the historical `agent-monitoring/tools.jsonl` from the working tree: every pre-cutover row was migrated into its matching `agent-monitoring/tools/tools-YYYY-Www.jsonl` shard (keyed by the row's own `ts` field), with the single confirmed row that carried no `ts` field routed to a dedicated `agent-monitoring/tools/tools-unknown-week.jsonl` fallback shard. The retired file's full history remains recoverable via `git log --follow -- agent-monitoring/tools.jsonl`.
+
+Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, this shard shape itself has been superseded
+by a second, distinct move (not a repeat of the prior migration): new tool-call rows are written to
+`agent-monitoring/data/YYYY-Www/tools.jsonl` instead — still one file per UTC ISO week, still
+`%G-W%V`, still computed at write time; only the directory shape changed (`agent-monitoring/tools/
+tools-<week>.jsonl` → `agent-monitoring/data/<week>/tools.jsonl`), not the sharding granularity.
+`TCK-20260903-MONITORING-DATA-MIGRATION` has since retired the prior epic's `agent-monitoring/
+tools/tools-YYYY-Www.jsonl` shards from the working tree: each shard was relocated (not
+re-bucketed — the prior epic already did the per-line `ts`-based bucketing correctly, so this
+migration only parsed the ISO week directly out of each shard's own filename) into its matching
+`agent-monitoring/data/YYYY-Www/tools.jsonl` file. The retired directory's full history remains
+recoverable via `git log --follow -- agent-monitoring/tools/`. The per-record schema below is
+unaffected by either change; only where a record physically lands changes.
 
 ```json
 {
@@ -370,11 +417,11 @@ One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joine
 
 ### Write locking
 
-The `PostToolUse` hook (`post_tool_hook.py`) wraps its open+write block in `fcntl.flock(f, fcntl.LOCK_EX)` (released via `fcntl.flock(f, fcntl.LOCK_UN)` after the write) so concurrent hook invocations from different Claude Code sessions/processes serialize their appends instead of racing — without this, two processes' `write()` calls to the same append-mode file handle can interleave mid-line, producing an unparseable record (observed and hand-repaired once, `TCK-20260716-MONITORING-TOOLS-JSONL-WRITE-LOCK`). This is a POSIX-only guarantee (`fcntl` has no Windows equivalent); the hook has no platform fallback, consistent with this repo's `tools/` convention of not supporting non-POSIX environments. The lock is advisory and only serializes writers going through this same hook script — it does not protect against a non-Python process writing to the file directly (none is known to). Any locking failure (unsupported platform, OS-level error) is swallowed by the hook's existing fail-silent `try/except Exception: pass` wrapper exactly like every other exception in this hook — it never blocks or fails the tool call the hook fires after.
+The `PostToolUse` hook (`post_tool_hook.py`) routes its append through `tools/agent-monitoring/writer.py::write_line()`, the shared O_CREAT|O_EXCL lock-file protocol also used by `record_run.py` and `record_events.py` (`TCK-20260721-MONITORING-WRITER-UNIFICATION`, superseding this file's earlier direct `fcntl.flock` implementation). `write_line()` acquires a per-target-file lock (`<target>.lock`, derived generically from the target path via `os.open(..., O_CREAT | O_EXCL | O_WRONLY)`, bounded retry, stale-lock recovery) before appending, so concurrent hook invocations from different Claude Code sessions/processes serialize their appends instead of racing — without this, two processes' `write()` calls to the same append-mode file handle can interleave mid-line, producing an unparseable record (observed and hand-repaired once, `TCK-20260716-MONITORING-TOOLS-JSONL-WRITE-LOCK`). Since the lock path is derived from the target path, locking is naturally per-shard-file after `TCK-20260902-MONITORING-SHARD-WRITE-PATH`'s cutover to per-ISO-week files — no cross-shard lock contention. This is a POSIX-only guarantee (`os.open` with `O_EXCL` has no equivalent guarantee on non-POSIX filesystems); the hook has no platform fallback, consistent with this repo's `tools/` convention of not supporting non-POSIX environments. The lock is advisory and only serializes writers going through this same hook script — it does not protect against a non-Python process writing to the file directly (none is known to). Any lock-acquire or write failure is caught inside `write_line()`, logged to a diagnostic sidecar (`.writer_health.jsonl`, alongside the target file), and never raised — it is also swallowed by the hook's own outer fail-silent `try/except Exception: pass` exactly like every other exception in this hook — it never blocks or fails the tool call the hook fires after.
 
 ### How tool calls are attributed to agent events
 
-The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. `record_events.py::compute_tool_stats()` — called at write time inside `record_events.py`'s own `main()`, not by `writeMonitoring`'s prompt — counts records per `(run_id, seq)` to produce `tool_call_count`/`cost_proxy_score` in `events.jsonl`, always overriding any value the caller passed in (`TCK-20260719-COST-PROXY-WRITE-PATH`; mirrors `record_run.py`'s `compute_duration_s`).
+The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. `record_events.py::compute_tool_stats()` — called at write time inside `record_events.py`'s own `main()`, not by `writeMonitoring`'s prompt — counts records per `(run_id, seq)` to produce `tool_call_count`/`cost_proxy_score` in `events.jsonl`, always overriding any value the caller passed in (`TCK-20260719-COST-PROXY-WRITE-PATH`; mirrors `record_run.py`'s `compute_duration_s`). Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, `compute_tool_stats()` reads the **union of every week folder's** `tools.jsonl` (a sorted glob over `agent-monitoring/data/*/tools.jsonl`, concatenated before grouping by `(run_id, seq)`) rather than a single fixed file — necessary because a paused/resumed run's tool-call rows can land in an earlier week than the event being written now (see the pause/resume mechanism below); this is safe against double-counting because `(run_id, seq)` is globally unique across weeks.
 
 Since `TCK-20260719-LIVE-PHASE-AGENT-LABEL`, the sidecar (and thus each `tools.jsonl` record) also carries `phase`/`agent`, threaded through the same `writeSidecar(seq, phase, agent)` call as `run_id`/`seq` — this lets a live-run consumer show which phase/agent is currently producing tool calls without waiting for the run's `events.jsonl` entries to be written at exit.
 
@@ -429,20 +476,23 @@ from pathlib import Path
 from collections import defaultdict
 
 runs = {json.loads(l)['run_id']: json.loads(l)
-        for l in Path('agent-monitoring/runs.jsonl').read_text().splitlines() if l}
+        for shard in sorted(Path('agent-monitoring/data').glob('*/runs.jsonl'))
+        for l in shard.read_text().splitlines() if l}
 
 events_by_run = defaultdict(list)
-for line in Path('agent-monitoring/events.jsonl').read_text().splitlines():
-    if line:
-        e = json.loads(line)
-        events_by_run[e['run_id']].append(e)
+for shard in sorted(Path('agent-monitoring/data').glob('*/events.jsonl')):
+    for line in shard.read_text().splitlines():
+        if line:
+            e = json.loads(line)
+            events_by_run[e['run_id']].append(e)
 
 tools_by_event = defaultdict(list)
-for line in Path('agent-monitoring/tools.jsonl').read_text().splitlines():
-    if line:
-        t = json.loads(line)
-        if t.get('run_id') and t.get('seq') is not None:
-            tools_by_event[(t['run_id'], t['seq'])].append(t)
+for shard in sorted(Path('agent-monitoring/data').glob('*/tools.jsonl')):
+    for line in shard.read_text().splitlines():
+        if line:
+            t = json.loads(line)
+            if t.get('run_id') and t.get('seq') is not None:
+                tools_by_event[(t['run_id'], t['seq'])].append(t)
 
 # Full run with events and per-event tool calls:
 run = runs['TCK-20260607-...']
@@ -477,6 +527,66 @@ Do not "fix" any of this by backfilling `runs.jsonl` (Out of Scope, append-only 
 ### Manual/ad hoc run_id convention
 
 The `run-{code}-{unix_ts}` run_id convention and ad hoc `-REDESIGN`-style suffixes found in historical data are pre-refactor/manual-session artifacts (confirmed via `.claude/workflows/implement-ticket.js`'s single-capture `tid` pattern, which cannot produce either shape) — not reproducible by current `.claude/workflows/*.js` code. If hand-writing monitoring records outside the JS workflows (e.g. an `audit-maintenance`-style direct invocation), always reuse the exact ticket ID as `run_id` verbatim — never invent a suffix or a synthesized `run-{code}-{timestamp}` ID; doing so breaks the events/run-record join for that record permanently.
+
+### Referential Integrity Verification
+
+`tools/agent-monitoring/verify_referential_integrity.py` (TCK-20260903-MONITORING-DATA-REFERENTIAL-
+INTEGRITY) automates the 2 FK relationships documented above (`events.run_id -> runs.run_id`;
+`tools.(run_id, seq) -> events.(run_id, seq)`), reading the union of every `agent-monitoring/data/
+<week>/` folder (never scoped to one week) so a legitimate cross-week-boundary run is never
+false-flagged. It excludes the 3 documented exceptions: `RETRIEVAL-EVENT-<slug>` run_ids (no
+matching runs.jsonl row by design), `tools.jsonl` rows with `run_id: null` (outside an active
+workflow run), and `seq <= 0` shadow rows (context-packet-wrapper mechanism).
+
+A real-corpus run on 2026-09-03 found 18 distinct `run_id`s (117 individual event rows, out of 9,018
+events checked) with Check-1 orphans (events with no matching run) and 17,471/136,001 (12.8%)
+Check-2 orphans (tool-call rows with no matching event). The large majority of Check-2 volume is
+attributed to already-documented, explicitly-not-backfilled historical corruption
+(TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION, TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE). One
+notable exception is not explained by either fix: TCK-20260902-MONITORING-SHARD-MIGRATION has zero
+events.jsonl/runs.jsonl rows anywhere despite 229 real, dated `tools.jsonl` rows across 6 `seq`
+groups — flagged for possible follow-up investigation, not resolved here. As with the other Known
+Limitations above, no orphan is backfilled or repaired retroactively (append-only precedent) — this
+tool verifies and reports only.
+
+Full evidence: `stored_artifacts/TCK-20260903-MONITORING-DATA-REFERENTIAL-INTEGRITY/investigation.md`.
+
+### Temporal Week Consistency Verification
+
+`tools/agent-monitoring/verify_temporal_week_consistency.py` (TCK-20260904-MONITORING-TEMPORAL-WEEK-
+CONSISTENCY-CHECK) verifies, for every record in the multi-week corpus, whether the record's own
+authoritative timestamp field falls in the same ISO week as the folder it physically lives in — a
+single-file self-consistency check, not a join (the referential-integrity checker above covers the
+2 documented FK joins). It is source-aware: `tools.jsonl` checks `ts` only (bit-identical to its own
+write-time bucketing key by construction — a mismatch here has no legitimate explanation and is
+reported as a **genuine anomaly**); `events.jsonl` checks the same field-priority fallback list
+documented above (`ts`, `start_ts`, `ts_start`, `started_at`, `completed_at`, `ts_end`, `finished_at`,
+`timestamp`) and reports a mismatch as a **possible divergence** (plausible from once-per-batch
+write timing, not necessarily a bug); `runs.jsonl` checks the `start_ts`-first field-priority fallback
+list documented above and reports a mismatch as **expected divergence, not a bug** — a long-running or
+paused/resumed ticket can legitimately span multiple ISO weeks between its `start_ts` and the write
+time that lands its `runs.jsonl` row (`TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`'s own
+write-time-bucketing design). Records in the `unknown-week` fallback folder are structurally exempt
+(no real ISO week to compare against, a property of where the record physically sits); a record in a
+real, known week folder with no usable/parseable timestamp field at all is a third, distinct
+"skipped — unparseable" bucket (a property of the record's own content) — the two are never conflated.
+
+This check is wired into `tools/gate_checks/done_checker_static.py::run_static_precheck()` as an 8th
+Part A check, `check_temporal_week_consistency()`, and always returns `PASS` with the real per-source
+counts in its evidence string — it never blocks a ticket close on its own, matching the
+referential-integrity checker's report-only philosophy above.
+
+A real-corpus run on 2026-09-04 found **zero mismatches** across all 3 sources (196,691 rows examined:
+`tools.jsonl` 186,272 checked/186,272 matched/1 exempt/0 skipped; `events.jsonl` 8,996 checked/8,996
+matched/28 exempt/0 skipped; `runs.jsonl` 1,389 checked/1,389 matched/5 exempt/0 skipped). This is the
+expected first-run result, not evidence the check is inert: the corpus's own current week-folder
+layout was built using the equivalent of this exact same field-priority-lookup + tolerant-parser
+logic (the migration scripts this check reuses those lists/parser from), and no `runs.jsonl` row has
+yet been through a full week-spanning pause/resume cycle since the unified-weekly write-time-bucketing
+design went live. The check's real value is prospective — catching the first genuine future
+write-time-vs-record-time divergence — not retrospective.
+
+Full evidence: `stored_artifacts/TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK/investigation.md`.
 
 ### Full evidence
 

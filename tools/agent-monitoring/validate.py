@@ -235,6 +235,16 @@ def load_jsonl(path):
     return records
 
 
+def load_data_glob(data_dir: Path, source: str) -> list:
+    """Concatenate source.jsonl from every ISO-week folder under data_dir, sorted by week-folder
+    name for determinism (matches record_events.py's write-side glob shape,
+    tools/agent-monitoring/record_events.py:65)."""
+    records = []
+    for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
+        records.extend(load_jsonl(shard))
+    return records
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         description="Cross-check agent-monitoring integrity against tickets/working_log.csv"

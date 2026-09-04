@@ -34,6 +34,7 @@ from retrieval_baseline_metrics import (  # noqa: E402
     build_search_count_section,
     load_all_sources,
 )
+from generate_retro import load_data_glob  # noqa: E402
 
 _MODULE_SOURCE = _MODULE_PATH.read_text()
 _MODULE_AST = ast.parse(_MODULE_SOURCE)
@@ -55,7 +56,11 @@ def _imported_names() -> set:
 def test_baseline_report_reuses_load_data_pattern_not_a_fourth_loader():
     imported = _imported_names()
     assert "_load_runs_and_events" in imported
-    assert "load_jsonl" in imported
+    # DEFAULT_TOOLS_FILE is directory-valued (TCK-20260903-MONITORING-DATA-CONSUMERS-CORE),
+    # so this module reuses generate_retro.py's multi-week-aware load_data_glob() rather than
+    # the literal-file-only load_jsonl() (TCK-20260904-HOTFIX-RETRIEVAL-TOOLS-CONSUMERS-DEAD-
+    # CONSTANTS — a bare load_jsonl(DEFAULT_TOOLS_FILE) raises IsADirectoryError).
+    assert "load_data_glob" in imported
     assert "DEFAULT_TOOLS_FILE" in imported
 
     for node in ast.walk(_MODULE_AST):
@@ -91,6 +96,58 @@ def test_baseline_report_tool_never_imports_writer_module():
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "open":
             if len(node.args) >= 2 and isinstance(node.args[1], ast.Constant):
                 assert node.args[1].value not in ("w", "a"), "must never open a file for writing"
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260904-HOTFIX-RETRIEVAL-TOOLS-CONSUMERS-DEAD-CONSTANTS — load_all_sources() must read
+# the FULL multi-week tools corpus (via load_data_glob), not crash with IsADirectoryError on the
+# now-directory-valued DEFAULT_TOOLS_FILE, and not silently under-report by reading only one week.
+# ---------------------------------------------------------------------------
+
+def test_load_all_sources_tools_reads_across_multiple_week_folders(tmp_path, monkeypatch):
+    data_dir = tmp_path / "agent-monitoring" / "data"
+    (data_dir / "2026-W01").mkdir(parents=True)
+    (data_dir / "2026-W02").mkdir(parents=True)
+    (data_dir / "2026-W01" / "tools.jsonl").write_text(
+        json.dumps({"run_id": "TCK-A", "tool": "Read"}) + "\n"
+    )
+    (data_dir / "2026-W02" / "tools.jsonl").write_text(
+        json.dumps({"run_id": "TCK-B", "tool": "Read"}) + "\n"
+        + json.dumps({"run_id": "TCK-B", "tool": "Bash"}) + "\n"
+    )
+
+    monkeypatch.setattr(rbm, "_load_runs_and_events", lambda: ([], []))
+    monkeypatch.setattr(rbm, "DEFAULT_TOOLS_FILE", data_dir)
+
+    runs, events, tools = load_all_sources()
+
+    assert runs == []
+    assert events == []
+    # Correct-data assertion, not just "doesn't crash": both week folders' rows are present.
+    assert len(tools) == 3
+    assert {t["run_id"] for t in tools} == {"TCK-A", "TCK-B"}
+    read_section = build_raw_investigation_count_section(tools)
+    assert read_section["total"] == 2
+    assert read_section["per_run"] == {"TCK-A": 1, "TCK-B": 1}
+
+
+def test_load_all_sources_uses_load_data_glob_directly_on_directory_valued_default(tmp_path):
+    data_dir = tmp_path / "agent-monitoring" / "data"
+    (data_dir / "2026-W10").mkdir(parents=True)
+    (data_dir / "2026-W11").mkdir(parents=True)
+    (data_dir / "2026-W10" / "tools.jsonl").write_text(
+        json.dumps({"run_id": "TCK-C", "tool": "Edit"}) + "\n"
+    )
+    (data_dir / "2026-W11" / "tools.jsonl").write_text(
+        json.dumps({"run_id": "TCK-D", "tool": "Edit"}) + "\n"
+    )
+
+    # Directly exercises the exact call shape load_all_sources() now uses
+    # (load_data_glob(DEFAULT_TOOLS_FILE, "tools")) against a real directory, proving it neither
+    # raises IsADirectoryError nor silently returns an empty/partial result.
+    tools = load_data_glob(data_dir, "tools")
+    assert len(tools) == 2
+    assert {t["run_id"] for t in tools} == {"TCK-C", "TCK-D"}
 
 
 # ---------------------------------------------------------------------------

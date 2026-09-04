@@ -14,8 +14,11 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from validate import load_data_glob  # noqa: E402
+
 THRESHOLD = 5
-RUNS_FILE = Path("agent-monitoring/runs.jsonl")
+RUNS_FILE = Path("agent-monitoring/data")
 RETRO_DIR = Path("agent-monitoring/retro")
 STATE_FILE = Path(".claude/.retro_nudge_state.json")
 COOLDOWN_S = 3600  # fallback only, used if no session_id is available
@@ -36,17 +39,8 @@ def _last_dated_retro_mtime() -> float:
 
 
 def _count_done_since(cutoff: float) -> int:
-    if not RUNS_FILE.exists():
-        return 0
     count = 0
-    for line in RUNS_FILE.read_text().splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            record = json.loads(line)
-        except Exception:
-            continue
+    for record in load_data_glob(RUNS_FILE, "runs"):
         workflow = record.get("workflow") or record.get("agent")
         status = record.get("final_status") or record.get("status")
         start_ts = record.get("start_ts") or record.get("started_at")

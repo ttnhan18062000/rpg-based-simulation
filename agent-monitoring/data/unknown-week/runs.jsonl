@@ -1,0 +1,5 @@
+{"run_id":"FOLDER-tickets-todos-cert-memory-fix","start_ts":1781425809.0960267,"workflow":"implement-epic","tier":"epic-batch","final_status":"DONE","summary":"cert-memory-fix batch: 5/5 tickets DONE (CERT-SAFE-SERIAL, CERT-RECORDER-REFACTOR, CERT-EVIDENCE-LEVELS, CERT-MANIFEST-SNAPSHOT, CERT-MEMRAY-BUDGET)"}
+{"run_id":"TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER-20260623","ticket_id":"TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER","workflow":"implement-ticket","final_status":"DONE","tier":"standard","start_ts":1782150000,"end_ts":1782153648}
+{"run_id":"TCK-20260619-E53Dc-COMPILER-INTEGRATION-20260623","ticket_id":"TCK-20260619-E53Dc-COMPILER-INTEGRATION","workflow":"implement-ticket","final_status":"DONE","tier":"standard","start_ts":1782153700,"end_ts":1782154200}
+{"run_id":"TCK-20260619-E53Dd-DOC-ARCHIVE-20260623","ticket_id":"TCK-20260619-E53Dd-DOC-ARCHIVE","workflow":"implement-ticket","final_status":"DONE","tier":"standard","start_ts":1782154300,"end_ts":1782154800}
+{"run_id":"EPIC-TCK-20260619-E53D-HISTORY-20260623","ticket_id":"TCK-20260619-E53D-HISTORY","workflow":"implement-epic","final_status":"DONE","tier":"epic","start_ts":1782100000,"end_ts":1782154800}

@@ -46,6 +46,7 @@ def _init_repo_with_union_attribute(tmp_path: Path, tracked_filename: str) -> Pa
         "agent-monitoring/runs.jsonl",
         "agent-monitoring/events.jsonl",
         "tickets/working_log.csv",
+        "agent-monitoring/tools/tools-2026-W36.jsonl",
     ],
 )
 def test_concurrent_branch_appends_merge_without_conflict_markers(tmp_path, tracked_filename):
@@ -81,16 +82,34 @@ def test_concurrent_branch_appends_merge_without_conflict_markers(tmp_path, trac
     assert '"branch": "b"' in merged_content
 
 
-def test_gitattributes_lines_present_for_all_four_union_merge_paths():
-    """Sanity guard: the real repo's own .gitattributes must still carry all four entries this
-    test's git-level behavior proves -- catches an accidental removal even though the git-level
-    test above uses a throwaway repo, not the real .gitattributes file."""
+def test_gitattributes_line_present_for_working_log_csv():
+    """Sanity guard: the real repo's own .gitattributes must still carry the
+    tickets/working_log.csv append-only-file entry -- catches an accidental removal even
+    though the git-level test above uses a throwaway repo, not the real .gitattributes
+    file. All 3 monitoring-source legacy lines this function used to also assert
+    (`agent-monitoring/runs.jsonl`, `agent-monitoring/events.jsonl`,
+    `agent-monitoring/tools/*.jsonl`) were removed from .gitattributes by
+    TCK-20260903-MONITORING-DATA-MIGRATION, which retired all 3 legacy physical shapes
+    from the working tree in favor of the unified agent-monitoring/data/YYYY-Www/
+    {runs,events,tools}.jsonl layout (see test_gitattributes_lines_absent_for_retired_
+    monitoring_paths below)."""
     repo_root = Path(__file__).parent.parent.parent
     content = (repo_root / ".gitattributes").read_text()
-    for path in (
-        "agent-monitoring/runs.jsonl",
-        "agent-monitoring/events.jsonl",
-        "agent-monitoring/tools.jsonl",
-        "tickets/working_log.csv",
-    ):
-        assert f"{path} merge=union" in content
+    assert "tickets/working_log.csv merge=union" in content
+
+
+def test_gitattributes_lines_absent_for_retired_monitoring_paths():
+    """TCK-20260902-MONITORING-SHARD-MIGRATION retired the legacy agent-monitoring/
+    tools.jsonl file. TCK-20260903-MONITORING-DATA-MIGRATION has since retired the other
+    2 legacy monolithic files (agent-monitoring/runs.jsonl, agent-monitoring/
+    events.jsonl) and the shard directory this ticket's own migration produced
+    (agent-monitoring/tools/) -- none of the 3 monitoring-source legacy merge=union
+    lines remain; only the unified glob added by TCK-20260903-MONITORING-DATA-WRITE-
+    PATH-UNIFY does."""
+    repo_root = Path(__file__).parent.parent.parent
+    content = (repo_root / ".gitattributes").read_text()
+    assert "agent-monitoring/tools.jsonl merge=union" not in content
+    assert "agent-monitoring/runs.jsonl merge=union" not in content
+    assert "agent-monitoring/events.jsonl merge=union" not in content
+    assert "agent-monitoring/tools/*.jsonl merge=union" not in content
+    assert "agent-monitoring/data/*/*.jsonl merge=union" in content

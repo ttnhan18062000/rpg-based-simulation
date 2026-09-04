@@ -78,6 +78,67 @@ def test_disable_refuses_to_target_the_real_committed_config():
     assert_committed_config_hook_free(_REPO_ROOT)
 
 
+def test_rollback_scope_tools_hash_changes_with_any_shard_and_is_stable_otherwise(tmp_path):
+    """TCK-20260903-MONITORING-DATA-CODEX-REMIGRATION: snapshot_rollback_scope's tools.jsonl
+    entry must track the real agent-monitoring/data/<week>/tools.jsonl shard family, not a
+    single hardcoded (now nonexistent in the real repo) tools.jsonl file."""
+    monitoring_dir = tmp_path / "agent-monitoring"
+    data_dir = monitoring_dir / "data"
+    for week in ("2026-W01", "unknown-week"):
+        (data_dir / week).mkdir(parents=True)
+        (data_dir / week / "runs.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+        (data_dir / week / "events.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (data_dir / "2026-W01" / "tools.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (data_dir / "unknown-week" / "tools.jsonl").write_text('{"b": 1}\n', encoding="utf-8")
+    ticket_path = tmp_path / "TCK-SCRATCH-PILOT.md"
+    ticket_path.write_text("# scratch pilot ticket\n", encoding="utf-8")
+
+    unchanged = snapshot_rollback_scope(monitoring_dir, ticket_path)
+    assert snapshot_rollback_scope(monitoring_dir, ticket_path) == unchanged
+
+    (data_dir / "2026-W01" / "tools.jsonl").write_text('{"a": 2}\n', encoding="utf-8")
+    changed_first_shard = snapshot_rollback_scope(monitoring_dir, ticket_path)
+    assert changed_first_shard["tools.jsonl"] != unchanged["tools.jsonl"]
+    assert changed_first_shard["runs.jsonl"] == unchanged["runs.jsonl"]
+
+    (data_dir / "2026-W01" / "tools.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (data_dir / "unknown-week" / "tools.jsonl").write_text('{"b": 2}\n', encoding="utf-8")
+    changed_unknown_week_shard = snapshot_rollback_scope(monitoring_dir, ticket_path)
+    assert changed_unknown_week_shard["tools.jsonl"] != unchanged["tools.jsonl"]
+
+
+def test_snapshot_rollback_scope_runs_and_events_hash_changes_with_any_week_and_is_stable_otherwise(tmp_path):
+    """Acceptance Criterion #4: snapshot_rollback_scope's runs.jsonl/events.jsonl entries must
+    track the real agent-monitoring/data/<week>/{runs,events}.jsonl shard families, generalizing
+    the tools-only precedent above to the other 2 sources."""
+    monitoring_dir = tmp_path / "agent-monitoring"
+    data_dir = monitoring_dir / "data"
+    for week in ("2026-W01", "unknown-week"):
+        (data_dir / week).mkdir(parents=True)
+        (data_dir / week / "tools.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (data_dir / "2026-W01" / "runs.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (data_dir / "unknown-week" / "runs.jsonl").write_text('{"b": 1}\n', encoding="utf-8")
+    (data_dir / "2026-W01" / "events.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (data_dir / "unknown-week" / "events.jsonl").write_text('{"b": 1}\n', encoding="utf-8")
+    ticket_path = tmp_path / "TCK-SCRATCH-PILOT.md"
+    ticket_path.write_text("# scratch pilot ticket\n", encoding="utf-8")
+
+    unchanged = snapshot_rollback_scope(monitoring_dir, ticket_path)
+    assert snapshot_rollback_scope(monitoring_dir, ticket_path) == unchanged
+
+    (data_dir / "2026-W01" / "runs.jsonl").write_text('{"a": 2}\n', encoding="utf-8")
+    changed_first_week_runs = snapshot_rollback_scope(monitoring_dir, ticket_path)
+    assert changed_first_week_runs["runs.jsonl"] != unchanged["runs.jsonl"]
+    assert changed_first_week_runs["events.jsonl"] == unchanged["events.jsonl"]
+    assert changed_first_week_runs["tools.jsonl"] == unchanged["tools.jsonl"]
+
+    (data_dir / "2026-W01" / "runs.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (data_dir / "unknown-week" / "events.jsonl").write_text('{"b": 2}\n', encoding="utf-8")
+    changed_unknown_week_events = snapshot_rollback_scope(monitoring_dir, ticket_path)
+    assert changed_unknown_week_events["events.jsonl"] != unchanged["events.jsonl"]
+    assert changed_unknown_week_events["runs.jsonl"] == unchanged["runs.jsonl"]
+
+
 def test_rollback_scope_mismatch_raises():
     pre = {"runs.jsonl": "abc", "events.jsonl": "def", "tools.jsonl": "ghi", "pilot_ticket": "jkl"}
     post = {"runs.jsonl": "abc", "events.jsonl": "CHANGED", "tools.jsonl": "ghi", "pilot_ticket": "jkl"}

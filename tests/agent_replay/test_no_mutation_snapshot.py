@@ -31,7 +31,7 @@ from agent_replay.runner import replay_slice  # noqa: E402
 _REAL_FIXTURE_PATH = (
     _REPO_ROOT / "tests" / "fixtures" / "agent_replay" / "TCK-20260721-ORCHESTRATION-CONTRACT-ADR.yaml"
 )
-_WATCHED_GIT_PATHSPECS = ["tickets/", "agent-monitoring/runs.jsonl", "agent-monitoring/events.jsonl", "agent-monitoring/tools.jsonl"]
+_WATCHED_GIT_PATHSPECS = ["tickets/", "agent-monitoring/data/"]
 
 
 def _porcelain_snapshot() -> str:
@@ -47,7 +47,7 @@ def _porcelain_snapshot() -> str:
 
 def _watched_files() -> list[Path]:
     files = [f for f in sorted((_REPO_ROOT / "tickets").rglob("*")) if f.is_file()]
-    files += sorted((_REPO_ROOT / "agent-monitoring").glob("*.jsonl"))
+    files += [f for f in sorted((_REPO_ROOT / "agent-monitoring" / "data").rglob("*")) if f.is_file()]
     return files
 
 
@@ -95,3 +95,37 @@ def test_replay_run_produces_zero_diff_in_tickets_and_monitoring_corpus():
         "agent-monitoring/*.jsonl (ambient dirty state existed before the run, but its content "
         "hash must be unchanged after)"
     )
+
+
+def test_watch_set_actually_detects_a_deliberate_mutation_under_agent_monitoring_data():
+    """Regression guard for TCK-20260904-HOTFIX-AGENT-REPLAY-MONITORING-PATH-STALENESS.
+
+    The prior `_WATCHED_GIT_PATHSPECS`/`_watched_files()` hardcoded the 3 retired monolithic
+    `agent-monitoring/*.jsonl` paths, none of which exist any more now that real data lives under
+    `agent-monitoring/data/<week>/`. That made the two assertions above pass vacuously — they were
+    watching nothing under `agent-monitoring/`, so a real mutation there would go undetected. This
+    proves the widened watch set (`agent-monitoring/data/`, recursive) actually fires on a
+    deliberate mutation to a file in the real shard layout, not just that the snapshot helpers run
+    without error.
+    """
+    probe_path = _REPO_ROOT / "agent-monitoring" / "data" / "unknown-week" / "_no_mutation_snapshot_probe.jsonl"
+    assert not probe_path.exists(), "stale probe file from a previous failed run — clean it up first"
+
+    pre_content_hash = _content_hash_snapshot()
+    pre_porcelain = _porcelain_snapshot()
+    try:
+        probe_path.write_text('{"probe": true}\n', encoding="utf-8")
+
+        post_content_hash = _content_hash_snapshot()
+        post_porcelain = _porcelain_snapshot()
+
+        assert post_content_hash != pre_content_hash, (
+            "content-hash snapshot was unchanged after writing a file under agent-monitoring/data/ "
+            "— _watched_files() is not covering the real shard layout"
+        )
+        assert post_porcelain != pre_porcelain, (
+            "git porcelain snapshot was unchanged after writing a file under agent-monitoring/data/ "
+            "— _WATCHED_GIT_PATHSPECS is not covering the real shard layout"
+        )
+    finally:
+        probe_path.unlink(missing_ok=True)

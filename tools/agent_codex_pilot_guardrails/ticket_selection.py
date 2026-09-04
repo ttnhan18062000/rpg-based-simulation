@@ -6,6 +6,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from tools.agent_replay_codex.monitoring_shards import source_paths
+
 from . import pilot_manifest
 from .errors import ConcurrentProviderClaimError, PilotManifestValidationError
 from .pilot_manifest import PilotRequest
@@ -50,8 +52,9 @@ def assert_no_concurrent_claim(ticket_id: str, run_records: list[dict]) -> None:
 
 
 def provider_field_coverage(agent_monitoring_dir: Path) -> int:
-    """Stream agent-monitoring/runs.jsonl (line-lazy, mirroring manifest.py::_scan_file's own
-    streaming technique — never a full read) and count records carrying a non-null provider key.
+    """Stream every agent-monitoring runs.jsonl source file (line-lazy, mirroring
+    manifest.py::_scan_file's own streaming technique — never a full read) and count records
+    carrying a non-null provider key.
 
     Exists specifically so a test can assert the real corpus currently has zero provider-bearing
     records: .claude/workflows/implement-ticket.js does not construct one on any real run today
@@ -60,14 +63,14 @@ def provider_field_coverage(agent_monitoring_dir: Path) -> int:
     visible rather than silently assumed away. Populating provider/execution_id on real writes is
     explicitly out of this ticket's scope.
     """
-    runs_path = agent_monitoring_dir / "runs.jsonl"
     count = 0
-    with open(runs_path, "r", encoding="utf-8") as f:
-        for line in f:
-            stripped = line.strip()
-            if not stripped:
-                continue
-            record = json.loads(stripped)
-            if record.get("provider") is not None:
-                count += 1
+    for runs_path in source_paths(agent_monitoring_dir, "runs.jsonl"):
+        with open(runs_path, "r", encoding="utf-8") as f:
+            for line in f:
+                stripped = line.strip()
+                if not stripped:
+                    continue
+                record = json.loads(stripped)
+                if record.get("provider") is not None:
+                    count += 1
     return count

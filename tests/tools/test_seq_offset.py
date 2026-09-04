@@ -5,6 +5,8 @@ Constructs events as plain Python dicts, mirroring test_validate_agent_monitorin
 fixture-construction style — no file I/O, no subprocess, pure-function testing.
 """
 import copy
+import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -13,6 +15,8 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 
 from seq_offset import compute_seq_offset  # noqa: E402
+
+_SEQ_OFFSET_PATH = _MONITORING_TOOLS_DIR / "seq_offset.py"
 
 
 def _event(run_id, seq):
@@ -42,3 +46,21 @@ def test_compute_seq_offset_is_read_only():
     before = copy.deepcopy(fixture)
     compute_seq_offset("TCK-FAKE", fixture)
     assert fixture == before
+
+
+def test_seq_offset_reads_events_across_multiple_week_folders(tmp_path):
+    week1 = tmp_path / "agent-monitoring" / "data" / "2026-W01"
+    week1.mkdir(parents=True)
+    (week1 / "events.jsonl").write_text(json.dumps(_event("TCK-FAKE", 3)) + "\n", encoding="utf-8")
+
+    week2 = tmp_path / "agent-monitoring" / "data" / "2026-W02"
+    week2.mkdir(parents=True)
+    (week2 / "events.jsonl").write_text(json.dumps(_event("TCK-FAKE", 9)) + "\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(_SEQ_OFFSET_PATH), "TCK-FAKE"],
+        cwd=str(tmp_path), capture_output=True, text=True, check=True,
+    )
+    marker_line = next(line for line in result.stdout.splitlines() if line.startswith("MARKER:"))
+    offset = json.loads(marker_line[len("MARKER:"):])
+    assert offset == 9

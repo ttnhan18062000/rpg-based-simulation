@@ -1,10 +1,12 @@
 """Tests for TCK-20260716-MONITORING-TOOLS-JSONL-WRITE-LOCK.
 
 `post_tool_hook.py` appends one JSON record per tool call to
-`agent-monitoring/tools.jsonl`. Before this ticket, the append (`with open(tools_file, "a") as
-f: f.write(...)`) had no synchronization across processes, and a real two-session race produced
-one corrupted, unparseable line in production (see the ticket's Request Summary). The fix wraps
-the write in `fcntl.flock(f, fcntl.LOCK_EX)` / `fcntl.flock(f, fcntl.LOCK_UN)`.
+`agent-monitoring/data/<ISO-week>/tools.jsonl` (unified layout since
+TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY). Before the original write-lock ticket, the append
+(`with open(tools_file, "a") as f: f.write(...)`) had no synchronization across processes, and a
+real two-session race produced one corrupted, unparseable line in production (see the ticket's
+Request Summary). The fix wraps the write in `fcntl.flock(f, fcntl.LOCK_EX)` /
+`fcntl.flock(f, fcntl.LOCK_UN)`.
 
 The hook is a top-level script (not importable as a module of functions — reading `sys.stdin`
 executes immediately on import), so every test here drives it the way Claude Code itself does:
@@ -15,6 +17,7 @@ import json
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
@@ -49,8 +52,36 @@ def _run_hook(cwd, payload):
 
 
 def _tools_lines(cwd):
-    tools_file = cwd / "agent-monitoring" / "tools.jsonl"
+    iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+    tools_file = cwd / "agent-monitoring" / "data" / iso_week / "tools.jsonl"
     return tools_file.read_text().splitlines()
+
+
+def _run_hook_with_frozen_now(cwd, payload, frozen_iso):
+    hook_source = _HOOK_PATH.read_text()
+    shim_source = (
+        f"import sys as _sys\n"
+        f"_sys.path.insert(0, {str(_MONITORING_TOOLS_DIR)!r})\n"
+        "import datetime as _dt_module\n"
+        f"_FROZEN = _dt_module.datetime.fromisoformat({frozen_iso!r})\n"
+        "class _FrozenDatetime(_dt_module.datetime):\n"
+        "    @classmethod\n"
+        "    def now(cls, tz=None):\n"
+        "        return _FROZEN if tz is None else _FROZEN.astimezone(tz)\n"
+        "_dt_module.datetime = _FrozenDatetime\n"
+        "\n"
+        + hook_source
+    )
+    shim = cwd / f"post_tool_hook_frozen_now_shim_{frozen_iso.replace(':', '')}.py"
+    shim.write_text(shim_source)
+    return subprocess.run(
+        [sys.executable, str(shim)],
+        input=json.dumps(payload),
+        cwd=str(cwd),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
 
 
 def test_single_writer_produces_one_well_formed_line(tmp_path):
@@ -407,8 +438,108 @@ def test_locking_failure_does_not_propagate(tmp_path):
     assert result.returncode == 0
     assert result.stderr == ""
 
-    diagnostic_path = tmp_path / "agent-monitoring" / ".writer_health.jsonl"
+    # TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY: the diagnostic sidecar path is derived from
+    # target_path.parent (writer.py::_diagnostic_path_for), which is now
+    # agent-monitoring/data/<ISO-week>/ (the unified week folder) rather than
+    # agent-monitoring/tools/ (the prior epic's shard directory).
+    iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+    diagnostic_path = tmp_path / "agent-monitoring" / "data" / iso_week / ".writer_health.jsonl"
     diagnostic_lines = diagnostic_path.read_text().splitlines()
     assert len(diagnostic_lines) == 1
     diagnostic = json.loads(diagnostic_lines[0])
     assert diagnostic["stage"] == "lock_acquire"
+
+
+def test_writes_to_unified_week_folder(tmp_path):
+    result = _run_hook_with_frozen_now(tmp_path, _payload(), "2026-08-31T12:00:00+00:00")
+    assert result.returncode == 0
+
+    week_file = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "tools.jsonl"
+    assert week_file.exists()
+    lines = week_file.read_text().splitlines()
+    assert len(lines) == 1
+    record = json.loads(lines[0])
+    assert set(record.keys()) == _RECORD_FIELDS
+
+    assert not (tmp_path / "agent-monitoring" / "tools.jsonl").exists()
+    assert not (tmp_path / "agent-monitoring" / "tools" / "tools-2026-W36.jsonl").exists()
+
+
+def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path):
+    result_1 = _run_hook_with_frozen_now(
+        tmp_path, _payload(command="cmd-week-36"), "2026-08-31T12:00:00+00:00"
+    )
+    assert result_1.returncode == 0
+
+    result_2 = _run_hook_with_frozen_now(
+        tmp_path, _payload(command="cmd-week-37"), "2026-09-07T12:00:00+00:00"
+    )
+    assert result_2.returncode == 0
+
+    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "tools.jsonl"
+    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / "tools.jsonl"
+    assert week_36.exists()
+    assert week_37.exists()
+
+    lines_36 = week_36.read_text().splitlines()
+    lines_37 = week_37.read_text().splitlines()
+    assert len(lines_36) == 1
+    assert len(lines_37) == 1
+
+    record_36 = json.loads(lines_36[0])
+    record_37 = json.loads(lines_37[0])
+    assert record_36["input_summary"] == "cmd-week-36"
+    assert record_37["input_summary"] == "cmd-week-37"
+
+
+def test_iso_week_shard_directory_created_on_first_write(tmp_path):
+    assert not (tmp_path / "agent-monitoring").exists()
+
+    result = _run_hook_with_frozen_now(tmp_path, _payload(), "2026-08-31T12:00:00+00:00")
+    assert result.returncode == 0
+
+    week_dir = tmp_path / "agent-monitoring" / "data" / "2026-W36"
+    assert week_dir.exists()
+    assert (week_dir / "tools.jsonl").exists()
+
+
+def test_iso_week_computation_failure_does_not_propagate(tmp_path):
+    # NOTE (deviation from plan.md's literal Step 3 code, see plan.md Deviations section):
+    # `from writer import write_line` (post_tool_hook.py:10) executes at module-import time,
+    # before the try: block (line 47) where datetime.now() is actually called -- and it is
+    # outside the outer try/except entirely. The shim runs from a different directory than the
+    # real hook, so post_tool_hook.py's own `sys.path.insert(0, Path(__file__).resolve().parent)`
+    # would resolve to the shim's tmp_path, not the real tools/agent-monitoring/ dir where
+    # writer.py lives, causing a ModuleNotFoundError unrelated to the clock-failure behavior this
+    # test targets. Insert the real dir first, matching test_locking_failure_does_not_propagate's
+    # existing precedent.
+    hook_source = _HOOK_PATH.read_text()
+    shim_source = (
+        f"import sys as _sys\n"
+        f"_sys.path.insert(0, {str(_MONITORING_TOOLS_DIR)!r})\n"
+        "import datetime as _dt_module\n"
+        "class _RaisingDatetime(_dt_module.datetime):\n"
+        "    @classmethod\n"
+        "    def now(cls, tz=None):\n"
+        "        raise RuntimeError('forced clock failure for test')\n"
+        "_dt_module.datetime = _RaisingDatetime\n"
+        "\n"
+        + hook_source
+    )
+    shim = tmp_path / "post_tool_hook_clock_failure_shim.py"
+    shim.write_text(shim_source)
+
+    result = subprocess.run(
+        [sys.executable, str(shim)],
+        input=json.dumps(_payload()),
+        cwd=str(tmp_path),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+
+    assert result.returncode == 0
+    assert result.stderr == ""
+    assert not (tmp_path / "agent-monitoring" / "tools").exists()
+    assert not (tmp_path / "agent-monitoring" / "tools.jsonl").exists()
+    assert not (tmp_path / "agent-monitoring" / "data").exists()

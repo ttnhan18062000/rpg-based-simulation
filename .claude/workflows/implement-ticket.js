@@ -382,7 +382,7 @@ Step 2 — build and write events:
   overwritten by "execution_id"/"provider"/"ticket_id" or vice versa. If "ts" is null or missing,
   set "ts" to END_TS.
   Do NOT compute or set "tool_call_count"/"cost_proxy_score" yourself — record_events.py now
-  computes both deterministically from agent-monitoring/tools.jsonl ground truth at write time
+  computes both deterministically from agent-monitoring/data/YYYY-Www/tools.jsonl ground truth at write time
   and always overrides whatever you pass, so omit both keys entirely from each event object.
   Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
 
@@ -1703,6 +1703,6 @@ return {
   parity_updated: implementation.behavior_changed,
   artifacts: tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix)',
   message: monitoringWarning
-    ? `WARNING: agent-monitoring write for this run could not be verified (${monitoringWarning}). Ticket is otherwise complete — investigate agent-monitoring/runs.jsonl and events.jsonl manually.`
+    ? `WARNING: agent-monitoring write for this run could not be verified (${monitoringWarning}). Ticket is otherwise complete — investigate agent-monitoring/data/YYYY-Www/runs.jsonl and events.jsonl manually.`
     : undefined,
 }

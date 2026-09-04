@@ -8,7 +8,7 @@ tags: [agent-monitoring, retro]
 
 # Agent Monitoring Retro Guide
 
-The retro process transforms raw `runs.jsonl` + `events.jsonl` into a structured improvement cycle. Run it weekly or after a batch of tickets.
+The retro process transforms raw `agent-monitoring/data/YYYY-Www/{runs,events}.jsonl` into a structured improvement cycle. Run it weekly or after a batch of tickets.
 
 ---
 
@@ -21,7 +21,7 @@ The retro process transforms raw `runs.jsonl` + `events.jsonl` into a structured
 This is no longer pure human discipline: a `PostToolUse` hook
 (`tools/agent-monitoring/retro_nudge_hook.py`, wired in `.claude/settings.json`)
 counts `implement-ticket` runs with `final_status`/`status` `DONE` in
-`agent-monitoring/runs.jsonl` whose `start_ts`/`started_at` is later than the
+`agent-monitoring/data/YYYY-Www/runs.jsonl` whose `start_ts`/`started_at` is later than the
 mtime of the most recent dated `agent-monitoring/retro/RETRO-<week>.md` report
 (`RETRO-ALL.md` is a static all-time snapshot and is excluded from this check).
 Once that count reaches 5, it injects an `additionalContext` reminder to run
@@ -147,7 +147,7 @@ Commit the filled-in report to the repo. Do not discard notes — they are the i
 child-ticket activity that has gone idle.
 
 It resolves each epic's child ticket IDs, then cross-references
-`tickets/working_log.csv` rows and `agent-monitoring/runs.jsonl` records for
+`tickets/working_log.csv` rows and `agent-monitoring/data/YYYY-Www/runs.jsonl` records for
 the most recent matching timestamp across both sources. An epic is flagged
 **stale** only if at least one child ticket shows real activity evidence AND
 that evidence is older than the default **5-day** staleness window

@@ -613,10 +613,11 @@ def test_run_static_precheck_all_pass_eligible(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
-    # 7 conditions as of TCK-20260802-DOC-COVERAGE-CHECK (was 6, added ticket_field_values_valid
-    # per TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM; was 5 originally). New 7th:
-    # docs_to_update_coverage.
-    assert len(results) == 7
+    # 8 conditions as of TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK
+    # (was 7, added temporal_week_consistency; was 6, added docs_to_update_coverage
+    # per TCK-20260802-DOC-COVERAGE-CHECK; was 5, added ticket_field_values_valid
+    # per TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM; was 5 originally: 5->6->7->8).
+    assert len(results) == 8
     statuses = {r["condition"]: r["status"] for r in results}
     assert all(s in ("PASS", "NA") for s in statuses.values()), statuses
 
@@ -668,6 +669,24 @@ def test_run_static_precheck_passes_valid_priority(tmp_path, monkeypatch):
     results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
     by_condition = {r["condition"]: r for r in results}
     assert by_condition["ticket_field_values_valid"]["status"] == "PASS"
+
+
+def test_done_checker_new_check_wired_and_returns_pass_with_evidence(tmp_path, monkeypatch):
+    # TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK: the new 8th Part A
+    # check must be present, must always PASS (report-only, never blocks a ticket
+    # close), and must degrade gracefully against a fixture repo that creates no
+    # agent-monitoring/data/ directory at all — mirroring
+    # verify_referential_integrity.py's own load_all_weeks() precedent (an empty
+    # glob, not an exception, for a missing data_dir).
+    _scaffold_precheck_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
+    assert len(results) == 8
+    by_condition = {r["condition"]: r for r in results}
+    assert "temporal_week_consistency" in by_condition
+    assert by_condition["temporal_week_consistency"]["status"] == "PASS"
+    assert by_condition["temporal_week_consistency"]["evidence"]  # non-trivial evidence string
 
 
 # ---------------------------------------------------------------------------
@@ -945,40 +964,34 @@ def _write_jsonl(path: Path, rows: list[dict]) -> None:
 
 
 def test_check_monitoring_write_recorded_fails_when_run_missing(tmp_path):
-    runs_path = tmp_path / "runs.jsonl"
-    events_path = tmp_path / "events.jsonl"
+    runs_path = tmp_path / "2026-W23" / "runs.jsonl"
+    events_path = tmp_path / "2026-W23" / "events.jsonl"
     _write_jsonl(runs_path, [{"run_id": "TCK-OTHER"}])
     _write_jsonl(events_path, [{"run_id": "TCK-OTHER"}])
 
-    status, evidence = check_monitoring_write_recorded(
-        "TCK-FAKE", runs_path=runs_path, events_path=events_path
-    )
+    status, evidence = check_monitoring_write_recorded("TCK-FAKE", data_root=tmp_path)
     assert status == "FAIL"
     assert "No row with run_id == TCK-FAKE" in evidence
 
 
 def test_check_monitoring_write_recorded_fails_when_events_missing(tmp_path):
-    runs_path = tmp_path / "runs.jsonl"
-    events_path = tmp_path / "events.jsonl"
+    runs_path = tmp_path / "2026-W23" / "runs.jsonl"
+    events_path = tmp_path / "2026-W23" / "events.jsonl"
     _write_jsonl(runs_path, [{"run_id": "TCK-FAKE"}])
     _write_jsonl(events_path, [{"run_id": "TCK-OTHER"}])
 
-    status, evidence = check_monitoring_write_recorded(
-        "TCK-FAKE", runs_path=runs_path, events_path=events_path
-    )
+    status, evidence = check_monitoring_write_recorded("TCK-FAKE", data_root=tmp_path)
     assert status == "FAIL"
     assert "zero matching rows" in evidence
 
 
 def test_check_monitoring_write_recorded_passes_when_both_present(tmp_path):
-    runs_path = tmp_path / "runs.jsonl"
-    events_path = tmp_path / "events.jsonl"
+    runs_path = tmp_path / "2026-W23" / "runs.jsonl"
+    events_path = tmp_path / "2026-W23" / "events.jsonl"
     _write_jsonl(runs_path, [{"run_id": "TCK-FAKE"}])
     _write_jsonl(events_path, [{"run_id": "TCK-FAKE"}, {"run_id": "TCK-FAKE"}])
 
-    status, evidence = check_monitoring_write_recorded(
-        "TCK-FAKE", runs_path=runs_path, events_path=events_path
-    )
+    status, evidence = check_monitoring_write_recorded("TCK-FAKE", data_root=tmp_path)
     assert status == "PASS"
     assert "TCK-FAKE" in evidence
 
@@ -986,22 +999,41 @@ def test_check_monitoring_write_recorded_passes_when_both_present(tmp_path):
 def test_check_monitoring_write_recorded_applies_under_hotfix_tier(tmp_path):
     # The function takes no `tier` argument at all — this documents and locks in that it
     # cannot special-case hotfix, per CLAUDE.md's Hard Rule ("including hotfix").
-    runs_path = tmp_path / "runs.jsonl"
-    events_path = tmp_path / "events.jsonl"
+    runs_path = tmp_path / "2026-W23" / "runs.jsonl"
+    events_path = tmp_path / "2026-W23" / "events.jsonl"
     _write_jsonl(runs_path, [])
     _write_jsonl(events_path, [])
 
-    status, _ = check_monitoring_write_recorded(
-        "TCK-HOTFIX-FAKE", runs_path=runs_path, events_path=events_path
-    )
+    status, _ = check_monitoring_write_recorded("TCK-HOTFIX-FAKE", data_root=tmp_path)
     assert status == "FAIL"
 
     _write_jsonl(runs_path, [{"run_id": "TCK-HOTFIX-FAKE"}])
     _write_jsonl(events_path, [{"run_id": "TCK-HOTFIX-FAKE"}])
-    status, _ = check_monitoring_write_recorded(
-        "TCK-HOTFIX-FAKE", runs_path=runs_path, events_path=events_path
-    )
+    status, _ = check_monitoring_write_recorded("TCK-HOTFIX-FAKE", data_root=tmp_path)
     assert status == "PASS"
+
+
+def test_check_monitoring_write_recorded_finds_pair_in_non_current_week(tmp_path):
+    old_week = tmp_path / "2026-W23"
+    _write_jsonl(old_week / "runs.jsonl", [{"run_id": "TCK-OLD-WEEK"}])
+    _write_jsonl(old_week / "events.jsonl", [{"run_id": "TCK-OLD-WEEK"}])
+    # A newer, unrelated week folder must not be required or interfered with.
+    new_week = tmp_path / "2026-W36"
+    _write_jsonl(new_week / "runs.jsonl", [{"run_id": "TCK-OTHER"}])
+    _write_jsonl(new_week / "events.jsonl", [{"run_id": "TCK-OTHER"}])
+
+    status, evidence = check_monitoring_write_recorded("TCK-OLD-WEEK", data_root=tmp_path)
+    assert status == "PASS"
+    assert "TCK-OLD-WEEK" in evidence
+
+
+def test_check_monitoring_write_recorded_still_fails_when_absent_from_all_weeks(tmp_path):
+    _write_jsonl(tmp_path / "2026-W23" / "runs.jsonl", [{"run_id": "TCK-OTHER-1"}])
+    _write_jsonl(tmp_path / "2026-W36" / "runs.jsonl", [{"run_id": "TCK-OTHER-2"}])
+
+    status, evidence = check_monitoring_write_recorded("TCK-NOWHERE", data_root=tmp_path)
+    assert status == "FAIL"
+    assert "No row with run_id == TCK-NOWHERE" in evidence
 
 
 # ---------------------------------------------------------------------------

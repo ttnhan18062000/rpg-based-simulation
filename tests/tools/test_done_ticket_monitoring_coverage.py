@@ -52,9 +52,9 @@ def _write_ticket(done_dir: Path, rel_path: str, ticket_id: str | None, extra_fr
 # Reuse-not-reimplement / regression guards
 # ---------------------------------------------------------------------------
 
-def test_reuses_generate_retro_load_jsonl_not_a_second_loader():
+def test_reuses_shared_load_data_glob_not_a_second_loader():
     imported = _imported_names()
-    assert "load_jsonl" in imported
+    assert "load_data_glob" in imported
     assert "RUNS_FILE" in imported
 
 
@@ -76,7 +76,7 @@ def test_covered_and_missing_classification(tmp_path):
     _write_ticket(done_dir, "TCK-B.md", "TCK-B")
 
     fake_runs = [{"run_id": "TCK-A", "final_status": "DONE"}]
-    with patch.object(dtmc, "load_jsonl", return_value=fake_runs):
+    with patch.object(dtmc, "load_data_glob", return_value=fake_runs):
         report = build_coverage_section(done_dir=done_dir)
 
     assert report["total_done_tickets_checked"] == 2
@@ -89,7 +89,7 @@ def test_legacy_no_frontmatter_ticket_falls_back_to_filename_stem(tmp_path):
     done_dir = tmp_path / "tickets" / "done"
     _write_ticket(done_dir, "METRICS-01.md", None)
 
-    with patch.object(dtmc, "load_jsonl", return_value=[]):
+    with patch.object(dtmc, "load_data_glob", return_value=[]):
         report = build_coverage_section(done_dir=done_dir)
 
     assert report["total_done_tickets_checked"] == 1
@@ -105,7 +105,7 @@ def test_sequence_and_readme_index_files_excluded(tmp_path):
     (done_dir / "README.md").write_text("# not a ticket\n", encoding="utf-8")
     _write_ticket(done_dir, "some-epic-folder/TCK-C.md", "TCK-C")
 
-    with patch.object(dtmc, "load_jsonl", return_value=[{"run_id": "TCK-C"}]):
+    with patch.object(dtmc, "load_data_glob", return_value=[{"run_id": "TCK-C"}]):
         report = build_coverage_section(done_dir=done_dir)
 
     assert report["total_done_tickets_checked"] == 1
@@ -114,7 +114,7 @@ def test_sequence_and_readme_index_files_excluded(tmp_path):
 def test_empty_done_dir_produces_empty_report_not_error(tmp_path):
     done_dir = tmp_path / "tickets" / "done"
     done_dir.mkdir(parents=True)
-    with patch.object(dtmc, "load_jsonl", return_value=[]):
+    with patch.object(dtmc, "load_data_glob", return_value=[]):
         report = build_coverage_section(done_dir=done_dir)
     assert report["total_done_tickets_checked"] == 0
     assert report["missing"] == []
@@ -122,7 +122,7 @@ def test_empty_done_dir_produces_empty_report_not_error(tmp_path):
 
 def test_missing_done_dir_produces_empty_report_not_error(tmp_path):
     done_dir = tmp_path / "tickets" / "does_not_exist"
-    with patch.object(dtmc, "load_jsonl", return_value=[]):
+    with patch.object(dtmc, "load_data_glob", return_value=[]):
         report = build_coverage_section(done_dir=done_dir)
     assert report["total_done_tickets_checked"] == 0
 
@@ -131,16 +131,42 @@ def test_run_id_with_none_value_never_counts_as_covered(tmp_path):
     done_dir = tmp_path / "tickets" / "done"
     _write_ticket(done_dir, "TCK-D.md", "TCK-D")
     # A malformed run record with run_id=None must not accidentally satisfy any ticket lookup.
-    with patch.object(dtmc, "load_jsonl", return_value=[{"run_id": None}]):
+    with patch.object(dtmc, "load_data_glob", return_value=[{"run_id": None}]):
         report = build_coverage_section(done_dir=done_dir)
     assert report["missing"][0]["ticket_id"] == "TCK-D"
 
 
 def test_derivation_string_present_and_explains_freshness_choice():
-    with patch.object(dtmc, "load_jsonl", return_value=[]):
+    with patch.object(dtmc, "load_data_glob", return_value=[]):
         report = build_coverage_section(done_dir=Path("/nonexistent"))
     assert "derivation" in report
     assert "stale" in report["derivation"] or "index" in report["derivation"]
+
+
+def test_done_ticket_monitoring_coverage_reads_runs_across_multiple_week_folders(tmp_path, monkeypatch):
+    done_dir = tmp_path / "tickets" / "done"
+    _write_ticket(done_dir, "TCK-WEEK1.md", "TCK-WEEK1")
+    _write_ticket(done_dir, "TCK-WEEK2.md", "TCK-WEEK2")
+
+    data_dir = tmp_path / "agent-monitoring" / "data"
+    week1 = data_dir / "2026-W01"
+    week1.mkdir(parents=True)
+    (week1 / "runs.jsonl").write_text(
+        json.dumps({"run_id": "TCK-WEEK1", "final_status": "DONE"}) + "\n", encoding="utf-8",
+    )
+    week2 = data_dir / "2026-W02"
+    week2.mkdir(parents=True)
+    (week2 / "runs.jsonl").write_text(
+        json.dumps({"run_id": "TCK-WEEK2", "final_status": "DONE"}) + "\n", encoding="utf-8",
+    )
+
+    monkeypatch.setattr(dtmc, "RUNS_FILE", data_dir)
+    report = build_coverage_section(done_dir=done_dir)
+
+    missing_ids = {m["ticket_id"] for m in report["missing"]}
+    assert "TCK-WEEK1" not in missing_ids
+    assert "TCK-WEEK2" not in missing_ids
+    assert report["covered_count"] == 2
 
 
 # ---------------------------------------------------------------------------
