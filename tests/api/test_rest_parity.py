@@ -1,5 +1,6 @@
 import hashlib
 import requests
+import sys
 import time
 import subprocess
 import os
@@ -12,7 +13,7 @@ def test_api_rest_parity():
     """Verify that V2 API responds with expected JSON shapes."""
     # Start server in background
     port = 8002
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
     headers = {"X-API-Key": _TEST_RAW_KEY}
@@ -80,7 +81,7 @@ def test_api_rest_parity():
 def test_api_compression():
     """Verify that GZip compression is working for large responses."""
     port = 8003
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "ERROR"]
     env = {**os.environ, "RPG_API_KEY_HASHES": f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"}
     server = subprocess.Popen(cmd, env=env)
     time.sleep(3)

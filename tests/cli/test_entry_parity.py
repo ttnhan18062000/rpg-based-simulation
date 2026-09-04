@@ -1,4 +1,5 @@
 import subprocess
+import sys
 import os
 import shutil
 import json
@@ -13,7 +14,7 @@ def test_cli_basic_execution():
         shutil.rmtree(replay_dir)
         
     cmd = [
-        "python3", "-m", "src", "cli",
+        sys.executable, "-m", "src", "cli",
         "--seed", "123",
         "--entities", "5",
         "--ticks", "20",
@@ -33,14 +34,14 @@ def test_cli_basic_execution():
 
 def test_cli_invalid_arg():
     """Verify that invalid arguments cause an error."""
-    cmd = ["python3", "-m", "src", "cli", "--invalid-flag", "val"]
+    cmd = [sys.executable, "-m", "src", "cli", "--invalid-flag", "val"]
     result = subprocess.run(cmd, capture_output=True, text=True)
     assert result.returncode != 0
     assert "unrecognized arguments" in result.stderr
 
 def test_cli_default_mode():
     """Verify that running without a subcommand starts the server (default mode)."""
-    cmd = ["python3", "-m", "src", "--port", "8006"]
+    cmd = [sys.executable, "-m", "src", "--port", "8006"]
     try:
         # Should start the server and keep running. We use a short timeout.
         subprocess.run(cmd, capture_output=True, text=True, timeout=5)
@@ -53,7 +54,7 @@ def test_cli_determinism():
     """Verify that identical CLI calls produce identical hashes."""
     def get_hash(seed):
         cmd = [
-            "python3", "-m", "src", "cli",
+            sys.executable, "-m", "src", "cli",
             "--seed", str(seed),
             "--entities", "5",
             "--ticks", "10"

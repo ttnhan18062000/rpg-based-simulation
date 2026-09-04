@@ -3,6 +3,7 @@ import pytest
 import asyncio
 import json
 import subprocess
+import sys
 import time
 import websockets
 import os
@@ -22,7 +23,7 @@ async def test_ws_events_stream():
     log_file = open("uvicorn.log", "w")
 
     # Run uvicorn server in a subprocess
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "INFO"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "INFO"]
     server = subprocess.Popen(cmd, env=env, stdout=log_file, stderr=log_file)
     time.sleep(4.0)  # Wait for uvicorn to fully boot
 
