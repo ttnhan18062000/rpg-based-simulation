@@ -59,15 +59,32 @@ def _scan_file(path: Path, source: str) -> dict:
     }
 
 
-def _scan_data_dir_glob(data_dir: Path, source: str) -> dict:
+def _source_paths(agent_monitoring_dir: Path, filename: str) -> list[Path]:
+    """Sorted, existing paths making up one monitoring source file (e.g. "runs.jsonl").
+
+    Real-repo shape: agent_monitoring_dir/data/<week>/<filename> for every week folder
+    (including the "unknown-week" fallback bucket), preferred whenever the data/ subfolder
+    exists. Scratch/legacy shape: a single agent_monitoring_dir/<filename> file, still built
+    directly by this subsystem's own synthetic test fixtures. Mirrors
+    tools/agent_replay_codex/monitoring_shards.py::source_paths — the landed precedent for this
+    exact dual-mode resolution (TCK-20260904-HOTFIX-MANIFEST-DASHBOARD-SCRATCH-SHAPE-FALLBACK).
+    """
+    data_dir = agent_monitoring_dir / "data"
+    if data_dir.is_dir():
+        return sorted(data_dir.glob(f"*/{filename}"))
+    single = agent_monitoring_dir / filename
+    return [single] if single.exists() else []
+
+
+def _scan_source(agent_monitoring_dir: Path, filename: str, source: str) -> dict:
     hasher = hashlib.sha256()
     counts = {"parsed_ok": 0, "parse_errors": 0, "legacy_warning_count": 0}
     byte_size = 0
-    for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
-        _stream_file_into(shard, source, hasher, counts)
-        byte_size += shard.stat().st_size
+    for path in _source_paths(agent_monitoring_dir, filename):
+        _stream_file_into(path, source, hasher, counts)
+        byte_size += path.stat().st_size
     return {
-        "file": f"{source}.jsonl",
+        "file": filename,
         "line_count": counts["parsed_ok"] + counts["parse_errors"],
         "byte_size": byte_size,
         "sha256": hasher.hexdigest(),
@@ -77,10 +94,9 @@ def _scan_data_dir_glob(data_dir: Path, source: str) -> dict:
 
 
 def build_manifest(agent_monitoring_dir: Path) -> list:
-    data_dir = agent_monitoring_dir / "data"
     records = []
     for filename, source in sorted(_FILES_BY_SOURCE.items()):
-        records.append(_scan_data_dir_glob(data_dir, source))
+        records.append(_scan_source(agent_monitoring_dir, filename, source))
     return records
 
 
@@ -90,12 +106,11 @@ def capture_lines(agent_monitoring_dir: Path) -> dict[str, list[str]]:
     Line-lazy single-pass read (matches _scan_file's own streaming technique) — never a full
     read_text()/read()/readlines() of the whole file, per this module's own documented invariant.
     """
-    data_dir = agent_monitoring_dir / "data"
     result: dict[str, list[str]] = {}
-    for filename, source in _FILES_BY_SOURCE.items():
+    for filename in _FILES_BY_SOURCE:
         lines: list[str] = []
-        for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
-            with open(shard, "r", encoding="utf-8") as file:
+        for path in _source_paths(agent_monitoring_dir, filename):
+            with open(path, "r", encoding="utf-8") as file:
                 for line in file:
                     lines.append(line)
         result[filename] = lines

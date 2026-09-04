@@ -127,8 +127,18 @@ def _week_shard_paths(data_root: Path, filename: str) -> list[Path]:
     """Every agent-monitoring/data/<week>/{filename} shard under data_root, sorted for
     determinism — mirrors record_events.py::compute_tool_stats()'s
     `sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl"))` precedent. A
-    data_root with no matching week folders yields an empty list (not an error)."""
-    return sorted(data_root.glob(f"*/{filename}"))
+    data_root with no matching week folders yields an empty list (not an error).
+
+    Falls back to a single flat data_root.parent/{filename} file (e.g.
+    <repo_root>/agent-monitoring/runs.jsonl directly, no data/ subfolder) when data_root itself
+    doesn't exist — the scratch/legacy shape this subsystem's own synthetic test fixtures still
+    build directly. Mirrors tools/agent_replay_codex/monitoring_shards.py::source_paths and
+    tools/agent-monitoring/manifest.py::_source_paths, the landed precedents for this exact
+    dual-mode resolution (TCK-20260904-HOTFIX-MANIFEST-DASHBOARD-SCRATCH-SHAPE-FALLBACK)."""
+    if data_root.is_dir():
+        return sorted(data_root.glob(f"*/{filename}"))
+    single = data_root.parent / filename
+    return [single] if single.exists() else []
 
 
 def _max_mtime(paths: list[Path]) -> float:
