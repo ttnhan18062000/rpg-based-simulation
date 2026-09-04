@@ -341,24 +341,25 @@ for the full investigation (mirrors the temporal proposal's own structure and ri
 - Idea 37 (Race Relations) and idea 68 (Inter-Clan Relations) are confirmed structurally parallel to this
   axis, not part of it — no merge or reconciliation is proposed between the two systems.
 
-**Determinism gap found and recorded, not yet resolved:** `EntityState.to_canonical_dict()` covers only 10
-of `SocialComponent`'s 15 fields — missing `debt_history`, `salience_history`, `nemesis_ids`,
-`place_attachment`, and the detailed `betrayal_records` list (only its count is hashed). A divergence in any
-of these 5 fields between two runs of the same seed would go undetected by the canonical determinism hash
-today. Whether to add all 5, or document specific fields as intentionally non-authoritative, is an open
-decision — not resolved by this brainstorm pass, the same way the calendar-authority decision needed its
-own dedicated ticket rather than being settled inside the original temporal proposal.
+**Determinism gap — resolved, 2026-09-03** (`tickets/done/TCK-20260902-SOCIAL-CANONICAL-HASH-GAP.md`,
+parity ledger `SOC-263`): the real gap on pickup was 7 fields, not 5 — `debt_history`,
+`salience_history`, `nemesis_ids`, `place_attachment`, `betrayal_records` (detail, not just count),
+plus `last_offer_tick` and `rejection_count`, which this brainstorm pass's own investigation missed.
+All 7 are now included in `EntityState.to_canonical_dict()`'s `"social"` sub-dict; a same-seed
+divergence in any of them is now caught by the canonical determinism hash.
 
-**Still open, per the proposal's own "Decisions still requiring review":** the canonical-hash question
-above; which of `RelationshipRole` (`FRIEND`/`RIVAL`) or `nemesis_ids` (grudge-promoted) should take
-precedence when both are set for the same pair, a real unreconciled seam with no confirmed bug yet; idea
-60's exact reputation-locality granularity; idea 67's exact live-tick decay rate (the real Campaign-mode
-constants `FRIENDSHIP_DECAY=0.40`/episode, `GRUDGE_DECAY=0.10`/episode are a calibration anchor, not a
-settled live-gameplay number).
+**Still open, per the proposal's own "Decisions still requiring review":** which of `RelationshipRole`
+(`FRIEND`/`RIVAL`) or `nemesis_ids` (grudge-promoted) should take precedence when both are set for the
+same pair, a real unreconciled seam with no confirmed bug yet; idea 60's exact reputation-locality
+granularity; idea 67's exact live-tick decay rate (the real Campaign-mode constants
+`FRIENDSHIP_DECAY=0.40`/episode, `GRUDGE_DECAY=0.10`/episode are a calibration anchor, not a settled
+live-gameplay number).
 
-No ticket, epic acceptance criterion, or numeric threshold in this roadmap or its sibling epics is changed
-by this section, except the two documentation corrections already made directly (see above) — this section
-is a pointer for whoever next scopes ideas 22/33/36/40/53-63/67/68's ticket-level work.
+No ticket, epic acceptance criterion, or numeric threshold in this roadmap or its sibling epics was changed
+by the original brainstorm pass itself, except the two documentation corrections made directly (see above)
+— the canonical-hash gap noted above was later closed by its own dedicated ticket
+(`TCK-20260902-SOCIAL-CANONICAL-HASH-GAP`), the same pattern the calendar-authority decision used. This
+section remains a pointer for whoever next scopes ideas 22/33/36/40/53-63/67/68's ticket-level work.
 
 ## Economic axis check (2026-09-02)
 
@@ -409,14 +410,23 @@ unlike Social's two. The gap here is structural, not documentation debt.
 - Chronicle is confirmed downstream of this axis (a stateless compression/rendering pipeline over real
   recorded events), not part of it — no reconciliation proposed.
 
-**Real findings, not yet resolved:**
+**Determinism gap — resolved, 2026-09-03** (`tickets/done/TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP.md`,
+parity ledger `STRAT-268`): the real gap on pickup was 9 fields, not 6 — `home_region_id`,
+`candidate_zones`, `hypotheses`, `source_trust`, `contracts`, `turning_points`,
+`committed_intentions`, `primary_overload_source`, `last_overload_tick` — `beliefs`/`marriages` had
+already gained coverage in the interim (a separate merge), shrinking what would have been an 11-field
+gap. All 9 are now included; `source_trust` (confirmed behaviorally load-bearing, a real, live input
+to detour selection) is covered, closing exactly the silent same-seed-divergence risk this brainstorm
+pass flagged. `profile: CognitionProfile` is the one deliberate exclusion (derived from already-covered
+`attributes`).
+
+**Still open, not resolved by either brainstorm pass or the determinism-gap ticket above:**
 - **Two parallel, unreconciled knowledge representations** — `BeliefEntry` and `KnowledgeFact` have zero
   cross-references anywhere in the codebase, the same unreconciled-signal shape as the Social axis's
   `RelationshipRole`/`nemesis_ids` finding, but larger: two entire parallel data models, not two fields.
-- **A larger determinism gap than the Social axis's own**: `StrategicComponent`'s canonical hash excludes 6
-  fields (`hypotheses`, `source_trust`, `contracts`, `turning_points`, `candidate_zones`,
-  `committed_intentions`), with `source_trust` confirmed behaviorally load-bearing (a real, live input to
-  detour selection) — a silent divergence here would go undetected between same-seed runs.
+  This is a real architectural question (which model owns which kind of belief, or whether they should
+  be reconciled at all) needing its own dedicated decision ticket, the same way the temporal proposal's
+  calendar-authority question got one rather than being settled inline.
 
 ## Bible chapter check (2026-09-02)
 
