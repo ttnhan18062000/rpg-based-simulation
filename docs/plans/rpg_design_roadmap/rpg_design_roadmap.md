@@ -380,16 +380,18 @@ directly in this pass:
   field, not an Economic one. Left in place with a forward note (the future Social Bible chapter doesn't
   exist yet as a real doc; moving the content ahead of it would leave a dangling reference) rather than
   moved now.
-- **`town_resource.yaml` had the same stale-citation class hardening item 2 found in `substrate.yaml`,
-  systemic not isolated: 15 of 190 entries cited a `tests_v2/` path that doesn't exist anywhere in this
-  repo.** Fixed directly for the 2 entries (`TOWN-005`, `TOWN-006`) with a confirmed real replacement
-  (`tests/unit/movement/test_occupancy_conflicts.py`), via the sanctioned schema-validating
-  `tools/parity_ledger_writer.py`. The other 13 entries' cited files (`test_deterministic_baseline.py`,
-  `test_resource_interaction_parity.py`, `test_town_resolution_parity.py`, a `replay/` directory) genuinely
-  don't exist under any name found — **not fixed, since guessing a replacement citation would repeat the
-  exact fabrication pattern this session already found and corrected once (`SUB-327`)**. Flagged here as a
-  real, unresolved gap needing its own dedicated hardening pass (the same treatment `substrate.yaml` got),
-  not silently left uncited.
+- **`town_resource.yaml`'s stale-citation gap — fully resolved, 2026-09-04**
+  (`tickets/done/TCK-20260904-TOWN-RESOURCE-PARITY-CITATION-HARDENING.md`). The same stale-citation class
+  hardening item 2 found in `substrate.yaml`, systemic not isolated: 15 of 190 entries cited a `tests_v2/`
+  path that doesn't exist anywhere in this repo. 2 entries (`TOWN-005`, `TOWN-006`) were fixed directly in
+  the original 2026-09-02 pass. The remaining 13 (`TOWN-001, 004, 007, 008, 009, 010, 013, 014, 015, 016,
+  017, 019, 020`) were left uncited at the time rather than guessed, matching the `SUB-327` discipline —
+  **all 13 now have confirmed, evidence-backed, passing real replacement citations** (e.g. `TOWN-009`
+  "Looting is a channeled state..." -> `tests/unit/resource/test_loot_channeling.py`; `TOWN-017`
+  "Blacksmith visits resolve recipe/crafting/material-gating behavior" ->
+  `tests/unit/world/test_economy_contract.py::test_blacksmith_crafting`), each written via
+  `tools/parity_ledger_writer.py` and independently run to confirm they pass before citing. No entry was
+  marked `missing`/`unsupported` — real coverage existed for all 13, it just wasn't cited correctly.
 - **Idea 13's atlas badge was stale** — shipped in M1's batch (`TCK-20260824-AFFECTION-CONTRACT-GATE`,
   confirmed via `tickets/working_log.csv`) but still carried pre-implementation framing, the same pattern
   idea 14's badge had before this session's earlier pass fixed it. Corrected directly.
