@@ -175,7 +175,7 @@ def test_phase23_reference_graph_and_dead_active_data():
             os.makedirs(os.path.join(tmp_dir, folder), exist_ok=True)
 
         # Create Faction (source)
-        factions_data = [{"id": "town_council", "display_name": "Town Council", "alignment_bucket": "defender", "influence_role": "sovereign", "legacy_engine_bucket": "TOWN_COUNCIL", "common_races": [], "themes": []}]
+        factions_data = [{"id": "town_council", "display_name": "Town Council", "alignment_bucket": "defender", "influence_role": "sovereign", "legacy_engine_bucket": "TOWN_COUNCIL", "common_species": [], "themes": []}]
         with open(os.path.join(tmp_dir, "social", "factions.yaml"), "w") as f:
             yaml.dump(factions_data, f)
 

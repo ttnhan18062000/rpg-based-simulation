@@ -299,7 +299,7 @@ def test_combat_entity_snapshot_returns_real_fields():
     assert snap["def_stat"] == 8
     assert snap["role"] == "MONSTER"
     assert snap["faction_id"] == "wolf_pack"
-    assert snap["race_id"] == "wolf"
+    assert snap["species_id"] == "wolf"
     assert snap["bravery"] == 0.35
     assert snap["action_style"] == 1
 

@@ -163,7 +163,7 @@ class FactionDefinition(CatalogBaseDefinition):
     influence_role: str = Field(..., description="Influence role (e.g., sovereign, challenger, non_combatant)")
     relationship_group: Optional[str] = Field(None, description="Optional legacy relationship group")
     legacy_engine_bucket: str = Field(..., description="Legacy Faction enum name mapping")
-    common_races: List[str] = Field(default_factory=list)
+    common_species: List[str] = Field(default_factory=list)
     themes: List[str] = Field(default_factory=list)
     hazard_immunities: List[str] = Field(default_factory=list, description="Hazard-kind tags this faction's members endure without harm (e.g. 'NATURAL_TERRAIN', 'CHAOS_CORRUPTION').")
 
