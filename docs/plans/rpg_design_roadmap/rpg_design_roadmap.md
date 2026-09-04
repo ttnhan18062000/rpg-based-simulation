@@ -86,10 +86,13 @@ traceable tickets (not folded into the M1 batch's own scope) — see
 `docs/plans/rpg_design_roadmap/rpg_m1_quick_wins_epic.md`'s Implementation Summary for the full list.
 This is also the work that produced PR #90's first-ever green CI run.
 
-### M2 — Foundational Systems (gated on M1's flag-governance decision, idea 9)
+### M2 — Foundational Systems (DONE)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M2-FOUNDATIONAL-SYSTEMS` (not yet created, scope-only — new
-sibling epic).
+**Shipped, 2026-09-02:** PR #101 ("M2 Foundational Systems: implementation batch (15 tickets)"),
+merged. Landed as a flat batch of individually-closed tickets, not under a single named epic
+ticket (the `TCK-20260823-EPIC-RPG-M2-FOUNDATIONAL-SYSTEMS` id this section originally guessed was
+never created); `tickets/done/m2-foundational-systems/` (folder, `SEQUENCE.md` preserved) is the
+real completion record.
 
 16 ideas, the highest-leverage tier in the whole set — Species Classification (14), City ownership (35),
 Clan's shape (36), population seeding (43), and place-type transitions (48) are each cited as prerequisites
@@ -106,9 +109,13 @@ authoritative state depends on Place identity or containment: ideas 35 and 48 he
 half of M4 (see M4 below). Ideas 36, 37, and 43 are explicitly *not* blocked by it — population seeding in
 particular is a shared foundation independent of the Place migration.
 
-### M3 — Family, Species & the Adult Life (gated on M2)
+### M3 — Family, Species & the Adult Life (DONE)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M3-FAMILY-SPECIES` (not yet created, scope-only).
+**Shipped, 2026-09-03:** PR #107 ("M3 Family & Species: Reproduction epic + flat batch (complete)"),
+merged. `TCK-20260902-EPIC-RPG-M3-REPRODUCTION` (`tickets/done/m3-reproduction-epic/`) is the real
+epic ticket ID — not `TCK-20260823-EPIC-RPG-M3-FAMILY-SPECIES`, this section's original guess, which
+was never created; the remaining 4 ideas landed as a flat batch
+(`tickets/done/m3-family-species/`, folder, `SEQUENCE.md` preserved).
 
 5 ideas — reproduction, marriage, coming of age, dependents, closing the population-pressure loop. Hard
 dependency on M2's Species Classification (14) and population seeding (43) landing first, confirmed
@@ -120,9 +127,12 @@ Also owns concrete human/species lifecycle durations and fantasy-year aging once
 calendar authority is settled (see "Temporal axis" below) — no numeric thresholds are changed by this
 review pass.
 
-### M4 — Beyond the City & the Layer Model (gated on M2)
+### M4 — Beyond the City & the Layer Model (DONE)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M4-BEYOND-CITY` (not yet created, scope-only).
+**Shipped, 2026-09-03:** PR #115 ("M4 Beyond the City: all 12 ideas shipped (9 tickets + 4
+hotfixes)"), merged. Landed as a flat batch of individually-closed tickets, not under a single
+named epic ticket (the `TCK-20260823-EPIC-RPG-M4-BEYOND-CITY` id this section originally guessed
+was never created).
 
 12 ideas — Camp/Nest/Lair, settlement-capacity, Country's EXPAND directive, population pressure as an
 expansion engine. Gated on M2's City ownership (35), Clan shape (36), and place-type transitions (48).
@@ -135,7 +145,7 @@ and tested (see the Hardening backlog section below). Idea 61 here, plus M5 (ide
 need only their own read-side consumption of `region_cultures`, not a shared first-time-wiring
 prerequisite.
 
-### M5 — Memory, Reputation & Legacy (gated on M2 + M3)
+### M5 — Memory, Reputation & Legacy (gated on M2 + M3, both DONE as of 2026-09-03 — gate clear)
 
 **Tracking epic**: `TCK-20260823-EPIC-RPG-M5-MEMORY-REPUTATION` (not yet created, scope-only).
 
