@@ -1,0 +1,711 @@
+<title>Architecture Maturity Audit</title>
+<style>
+:root{
+  --paper:#EEF1F4; --surface:#FFFFFF; --surface-2:#E4E9ED;
+  --ink:#17202B; --ink-soft:#51606F; --ink-faint:#7C8996;
+  --line:#D2DAE1; --line-soft:#E2E7EB;
+  --accent:#1F5C73; --accent-ink:#0F3644; --accent-soft:#DCEBF0; --accent-soft-line:#BFD9E3;
+  --good:#2F7D5A; --good-soft:#DEEFE6;
+  --warn:#B8752B; --warn-soft:#F5E6D3;
+  --bad:#A6423F; --bad-soft:#F3DEDD;
+  --na:#8A9098;  --na-soft:#E7E9EB;
+  --shadow: 0 1px 2px rgba(23,32,43,.06), 0 6px 20px -8px rgba(23,32,43,.14);
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10151C; --surface:#171F29; --surface-2:#1E2733;
+    --ink:#E8ECF0; --ink-soft:#9FADBB; --ink-faint:#748291;
+    --line:#2B3543; --line-soft:#232C38;
+    --accent:#5FBBDA; --accent-ink:#CDEFFB; --accent-soft:#173442; --accent-soft-line:#254A5C;
+    --good:#5FBE93; --good-soft:#173428;
+    --warn:#E0A758; --warn-soft:#3A2C15;
+    --bad:#E28683; --bad-soft:#3B2020;
+    --na:#8D97A2; --na-soft:#232B34;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -10px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10151C; --surface:#171F29; --surface-2:#1E2733;
+  --ink:#E8ECF0; --ink-soft:#9FADBB; --ink-faint:#748291;
+  --line:#2B3543; --line-soft:#232C38;
+  --accent:#5FBBDA; --accent-ink:#CDEFFB; --accent-soft:#173442; --accent-soft-line:#254A5C;
+  --good:#5FBE93; --good-soft:#173428;
+  --warn:#E0A758; --warn-soft:#3A2C15;
+  --bad:#E28683; --bad-soft:#3B2020;
+  --na:#8D97A2; --na-soft:#232B34;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -10px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif;
+  font-size:15.5px; line-height:1.55;
+}
+.mono{font-family:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;}
+h1,h2,h3,h4{font-family:"IBM Plex Sans",sans-serif; font-weight:700; text-wrap:balance; color:var(--ink); margin:0;}
+p{margin:0 0 .8em; color:var(--ink-soft); max-width:66ch;}
+a{color:var(--accent);}
+.tab{font-variant-numeric:tabular-nums;}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1180px; margin:0 auto; padding:0 28px 120px;}
+.topnav{
+  position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter:blur(8px); border-bottom:1px solid var(--line);
+}
+.topnav-inner{max-width:1180px; margin:0 auto; padding:0 28px; display:flex; align-items:center; gap:22px; height:52px; overflow-x:auto;}
+.topnav a{color:var(--ink-faint); text-decoration:none; font-size:12.5px; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; font-weight:600;}
+.topnav a:hover{color:var(--accent);}
+.topnav .brand{color:var(--ink); font-weight:700; font-size:13px; letter-spacing:.02em; text-transform:none;}
+
+/* ---------- cover ---------- */
+.cover{padding:56px 0 40px; border-bottom:1px solid var(--line);}
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px; font-family:"IBM Plex Mono",monospace;
+  font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent);
+  background:var(--accent-soft); border:1px solid var(--accent-soft-line); padding:4px 10px; border-radius:100px; margin-bottom:18px;
+}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+.cover h1{font-size:clamp(30px,4vw,44px); line-height:1.08; letter-spacing:-.01em; max-width:16ch;}
+.cover .sub{font-size:17px; max-width:62ch; margin-top:14px;}
+.meta-row{display:flex; flex-wrap:wrap; gap:24px; margin-top:22px; font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-faint);}
+.meta-row b{color:var(--ink-soft); font-weight:600;}
+
+.score-panel{display:grid; grid-template-columns:220px 1fr; gap:36px; margin-top:40px; align-items:start;}
+@media (max-width:760px){.score-panel{grid-template-columns:1fr;}}
+.score-tile{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:22px; text-align:center;
+}
+.score-num{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:56px; line-height:1; color:var(--accent); letter-spacing:-.02em;}
+.score-num span{font-size:22px; color:var(--ink-faint);}
+.score-label{font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); margin-top:8px;}
+.score-band{font-size:13px; color:var(--ink-soft); margin-top:10px; padding-top:10px; border-top:1px solid var(--line-soft);}
+
+.cat-bars{display:flex; flex-direction:column; gap:9px;}
+.cat-row{display:grid; grid-template-columns:170px 1fr 34px; align-items:center; gap:12px;}
+.cat-name{font-size:12.5px; color:var(--ink-soft);}
+.cat-track{height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden; border:1px solid var(--line-soft);}
+.cat-fill{height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-ink)); border-radius:4px;}
+.cat-pct{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-faint); text-align:right;}
+
+/* ---------- section shell ---------- */
+section{padding:52px 0; border-bottom:1px solid var(--line);}
+section:last-of-type{border-bottom:none;}
+.sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:22px;}
+.sec-num{font-family:"IBM Plex Mono",monospace; color:var(--accent); font-size:13px; font-weight:600;}
+.sec-head h2{font-size:23px;}
+.sec-intro{max-width:70ch; margin-bottom:26px;}
+
+/* ---------- loops ---------- */
+.loops{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+@media (max-width:760px){.loops{grid-template-columns:1fr;}}
+.loop-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow);}
+.loop-card h3{font-size:15px; margin-bottom:4px;}
+.loop-chain{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-faint); margin:10px 0 12px; line-height:1.9;}
+.loop-verdict{font-size:12.5px; font-weight:600; display:inline-block; padding:3px 9px; border-radius:100px; margin-bottom:10px;}
+
+/* ---------- pill / meter shared ---------- */
+.pill{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:100px; white-space:nowrap; letter-spacing:.01em;}
+.pill::before{content:""; width:6px; height:6px; border-radius:50%;}
+.pill.good{background:var(--good-soft); color:var(--good);} .pill.good::before{background:var(--good);}
+.pill.warn{background:var(--warn-soft); color:var(--warn);} .pill.warn::before{background:var(--warn);}
+.pill.bad{background:var(--bad-soft); color:var(--bad);} .pill.bad::before{background:var(--bad);}
+.pill.na{background:var(--na-soft); color:var(--na);} .pill.na::before{background:var(--na);}
+.meter{display:inline-flex; gap:3px; vertical-align:middle;}
+.meter i{width:7px; height:7px; border-radius:2px; background:var(--surface-2); border:1px solid var(--line);}
+.meter i.on{background:var(--accent); border-color:var(--accent);}
+.prio{font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:700; padding:2px 7px; border-radius:5px; letter-spacing:.02em;}
+.prio.P0{background:var(--bad-soft); color:var(--bad);}
+.prio.P1{background:var(--warn-soft); color:var(--warn);}
+.prio.P2{background:var(--accent-soft); color:var(--accent);}
+.prio.P3{background:var(--na-soft); color:var(--na);}
+.prio.MAINT{background:var(--good-soft); color:var(--good);}
+.prio.NREC{background:var(--surface-2); color:var(--ink-faint);}
+
+/* ---------- matrix table ---------- */
+.matrix-scroll{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);}
+table.matrix{border-collapse:collapse; width:100%; min-width:920px; background:var(--surface);}
+table.matrix th{
+  text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint);
+  padding:11px 14px; border-bottom:1px solid var(--line); position:sticky; top:52px; background:var(--surface);
+}
+table.matrix td{padding:11px 14px; border-bottom:1px solid var(--line-soft); font-size:13.5px; vertical-align:middle;}
+table.matrix tr:last-child td{border-bottom:none;}
+table.matrix tr:hover td{background:var(--surface-2);}
+.pat-name{font-weight:600; color:var(--ink);}
+.pat-num{font-family:"IBM Plex Mono",monospace; color:var(--ink-faint); font-size:12px; margin-right:6px;}
+
+/* ---------- layer clusters / accordions ---------- */
+.layer-block{margin-bottom:34px;}
+.layer-head{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+.layer-head .idx{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--accent); background:var(--accent-soft);
+  border:1px solid var(--accent-soft-line); width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.layer-head h3{font-size:16.5px;}
+.layer-head .layer-sub{font-size:12.5px; color:var(--ink-faint); margin-left:auto; font-family:"IBM Plex Mono",monospace;}
+
+details.pat{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); margin-bottom:9px; box-shadow:var(--shadow); overflow:hidden;}
+details.pat > summary{
+  list-style:none; cursor:pointer; padding:13px 16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+}
+details.pat > summary::-webkit-details-marker{display:none;}
+details.pat > summary::after{
+  content:"+"; margin-left:auto; font-family:"IBM Plex Mono",monospace; color:var(--ink-faint); font-size:16px; flex-shrink:0;
+}
+details.pat[open] > summary::after{content:"–";}
+details.pat .pat-title{font-weight:600; font-size:14px; color:var(--ink); flex:1 1 240px; min-width:0;}
+.pat-body{padding:0 16px 18px; border-top:1px solid var(--line-soft);}
+.field{margin-top:14px;}
+.field-label{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); font-weight:700; margin-bottom:5px;}
+.field p{font-size:13.5px; margin:0; max-width:none;}
+.ev{background:var(--surface-2); border:1px solid var(--line-soft); border-radius:7px; padding:10px 12px; font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); line-height:1.7;}
+.rf-row{display:flex; gap:22px; flex-wrap:wrap; margin-top:14px; font-size:12.5px;}
+.rf-row div span{display:block; color:var(--ink-faint); font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:3px;}
+.rf-row div b{color:var(--ink);}
+
+/* ---------- gap analysis ---------- */
+.gap-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+@media (max-width:760px){.gap-grid{grid-template-columns:1fr;}}
+.gap-col{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow);}
+.gap-col h4{font-size:13px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:10px; display:flex; align-items:center; gap:8px;}
+.gap-col h4::before{content:""; width:8px; height:8px; border-radius:2px;}
+.gap-col.strong h4::before{background:var(--good);} .gap-col.strong{border-left:3px solid var(--good);}
+.gap-col.incomplete h4::before{background:var(--accent);} .gap-col.incomplete{border-left:3px solid var(--accent);}
+.gap-col.missing h4::before{background:var(--bad);} .gap-col.missing{border-left:3px solid var(--bad);}
+.gap-col.optional h4::before{background:var(--warn);} .gap-col.optional{border-left:3px solid var(--warn);}
+.gap-col.notrec h4::before{background:var(--na);} .gap-col.notrec{border-left:3px solid var(--na);}
+.gap-col ul{margin:0; padding-left:18px; color:var(--ink-soft); font-size:13.5px;}
+.gap-col li{margin-bottom:6px;}
+
+/* ---------- roadmap ---------- */
+.road-group{margin-bottom:26px;}
+.road-group-head{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+.road-items{display:grid; grid-template-columns:repeat(2,1fr); gap:12px;}
+@media (max-width:820px){.road-items{grid-template-columns:1fr;}}
+.road-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow);}
+.road-card h5{font-size:14px; margin-bottom:8px; color:var(--ink);}
+.road-card dl{display:grid; grid-template-columns:70px 1fr; gap:4px 10px; font-size:12.5px; margin:0;}
+.road-card dt{color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; font-size:10.5px; padding-top:2px;}
+.road-card dd{margin:0; color:var(--ink-soft);}
+
+/* ---------- quick wins / bets ---------- */
+.qw-list{display:grid; grid-template-columns:repeat(2,1fr); gap:10px;}
+@media (max-width:760px){.qw-list{grid-template-columns:1fr;}}
+.qw-item{display:flex; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:12px 14px; font-size:13.5px; color:var(--ink-soft); box-shadow:var(--shadow);}
+.qw-item .chk{flex-shrink:0; width:18px; height:18px; border-radius:5px; border:1.5px solid var(--good); color:var(--good); display:flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;}
+.bets{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+@media (max-width:760px){.bets{grid-template-columns:1fr;}}
+.bet-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow);}
+.bet-card h5{font-size:14.5px; margin-bottom:6px;}
+.bet-card p{font-size:13px; margin:0;}
+
+/* ---------- final ---------- */
+.qa{display:flex; flex-direction:column; gap:20px;}
+.qa-item{display:grid; grid-template-columns:34px 1fr; gap:14px;}
+.qa-num{font-family:"IBM Plex Mono",monospace; color:var(--accent); font-weight:700; font-size:14px;}
+.qa-item h4{font-size:14.5px; margin-bottom:6px; max-width:none;}
+.qa-item p{font-size:14px; max-width:74ch;}
+.closing{background:var(--accent-soft); border:1px solid var(--accent-soft-line); border-radius:var(--radius); padding:22px 24px; margin-top:26px;}
+.closing p{color:var(--accent-ink); max-width:none; font-size:14.5px;}
+
+footer.rep{padding:36px 0 10px; font-size:12px; color:var(--ink-faint); font-family:"IBM Plex Mono",monospace;}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+
+<nav class="topnav"><div class="topnav-inner">
+  <span class="brand">AI-First Audit</span>
+  <a href="#loops">Control Loops</a>
+  <a href="#matrix">Matrix</a>
+  <a href="#patterns">30 Patterns</a>
+  <a href="#gaps">Gap Analysis</a>
+  <a href="#roadmap">Roadmap</a>
+  <a href="#wins">Quick Wins</a>
+  <a href="#bets">Strategic Bets</a>
+  <a href="#final">Recommendation</a>
+</div></nav>
+
+<div class="wrap">
+  <header class="cover">
+    <span class="eyebrow"><span class="dot"></span>Architecture Maturity Audit</span>
+    <h1>AI-First Engineering Architecture Review</h1>
+    <p class="sub">An evidence-based maturity assessment of <code class="mono">rpg-based-simulation</code>'s AI-native software development architecture — 30 patterns, each traced to real code, config, and execution history rather than documentation claims.</p>
+    <div class="meta-row">
+      <span><b>Repo</b> rpg-based-simulation</span>
+      <span><b>HEAD</b> <span class="mono tab">68579af2</span></span>
+      <span><b>Reviewed</b> 2026-09-03</span>
+      <span><b>Method</b> 6 independent evidence-gathering passes, synthesized</span>
+    </div>
+
+    <div class="score-panel">
+      <div class="score-tile">
+        <div class="score-num tab">58<span>/100</span></div>
+        <div class="score-label">Overall maturity</div>
+        <div class="score-band">Operational core, governance lagging</div>
+      </div>
+      <div class="cat-bars" id="catbars"></div>
+    </div>
+  </header>
+
+  <section id="summary">
+    <div class="sec-head"><span class="sec-num">§1</span><h2>Executive summary</h2></div>
+    <p class="sec-intro">This repository runs a genuinely deterministic outer workflow (a hand-built phase pipeline, not an LLM deciding what to do next) around well-differentiated specialist agents, backed by live, provenance-tracked repository intelligence (hybrid search + a 34k-node code graph) and a three-tier execution trace (<span class="mono">agent-monitoring/{runs,events,tools}.jsonl</span>) that is, pattern-for-pattern, the strongest single piece of this architecture. That is the AI-first "task execution" and "engineering delivery" loops working as designed, with git-worktree isolation and a real ticket→spec→plan→artifact chain underneath it.</p>
+    <p class="sec-intro">The gaps cluster tightly around <b>agent governance</b>, not workflow design: tool permissions are scoped at the session level, not per-agent, so an investigative agent inherits the same <span class="mono">rm *</span>/<span class="mono">docker *</span> allowlist as the implementer; the two adversarial reviewer roles (architecture, security) run on the same model family they're reviewing, reintroducing the correlated-failure risk the pattern is meant to prevent; and the two safety-critical "never do X" rules in <span class="mono">CLAUDE.md</span> are enforced as prose nudges, not blocking hooks, even though the repo's own hook infrastructure already proves the harder version is buildable. A third, structural gap — no real token/dollar cost visibility — is platform-imposed, not a repo defect, and it quietly caps two other patterns (cost-aware orchestration, and a real "agent v12 vs v13" success-rate comparison) from ever reaching full maturity without an upstream change.</p>
+  </section>
+
+  <section id="loops">
+    <div class="sec-head"><span class="sec-num">§2</span><h2>The three control loops</h2></div>
+    <p class="sec-intro">Section 35 of the review brief asks whether the repo supports task execution, engineering delivery, and AI-system self-improvement as distinct, working loops.</p>
+    <div class="loops">
+      <div class="loop-card">
+        <span class="loop-verdict" style="background:var(--good-soft);color:var(--good)">Operational</span>
+        <h3>Loop 1 — Task Execution</h3>
+        <div class="loop-chain">Understand → Plan → Implement<br>→ Test → Review</div>
+        <p style="font-size:13px">12-phase deterministic pipeline (<span class="mono">implement-ticket.js</span>) with typed JSON schemas gating every phase transition. This is the repo's most mature loop.</p>
+      </div>
+      <div class="loop-card">
+        <span class="loop-verdict" style="background:var(--good-soft);color:var(--good)">Operational</span>
+        <h3>Loop 2 — Engineering Delivery</h3>
+        <div class="loop-chain">PR → CI (12 jobs) → Review<br>→ Merge → main sync</div>
+        <p style="font-size:13px">Worktree-per-ticket, PR lifecycle, and CI triage are documented and practiced — evidenced by 5 live worktrees and 201 branches at time of review.</p>
+      </div>
+      <div class="loop-card">
+        <span class="loop-verdict" style="background:var(--warn-soft);color:var(--warn)">Partial</span>
+        <h3>Loop 3 — AI System Improvement</h3>
+        <div class="loop-chain">Traces → weekly retro → notes<br>→ (manual) change → ???</div>
+        <p style="font-size:13px">Real and hook-enforced in cadence, but stops at qualitative retro notes — no task-success-rate metric closes the loop back to "did the change help."</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="matrix">
+    <div class="sec-head"><span class="sec-num">§3</span><h2>Summary matrix — all 30 patterns</h2></div>
+    <p class="sec-intro">Sorted by review order. Jump to any row's full write-up in <a href="#patterns">§4</a>.</p>
+    <div class="matrix-scroll">
+      <table class="matrix">
+        <thead><tr>
+          <th>Pattern</th><th>Status</th><th>Maturity</th><th>Relevance</th><th>Feasibility</th><th>Priority</th>
+        </tr></thead>
+        <tbody id="matrix-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="patterns">
+    <div class="sec-head"><span class="sec-num">§4</span><h2>Pattern-by-pattern findings</h2></div>
+    <p class="sec-intro">Grouped into seven architecture clusters. Every claim below cites a real file, script, config block, or a live tool call made during this review — not a description of intended design.</p>
+    <div id="layers"></div>
+  </section>
+
+  <section id="gaps">
+    <div class="sec-head"><span class="sec-num">§5</span><h2>Gap analysis</h2></div>
+    <div class="gap-grid">
+      <div class="gap-col strong">
+        <h4>Strong / already mature</h4>
+        <ul>
+          <li>Agent instructions as infra — <span class="mono">AGENTS.md</span> is generated, not hand-duplicated</li>
+          <li>Skills library (22 reusable capabilities)</li>
+          <li>Persistent repo intelligence (graphify + REGISTRY.yaml)</li>
+          <li>Agent observability (3-tier JSONL trace schema)</li>
+          <li>Artifact-oriented architecture (1,214+ stored artifacts)</li>
+          <li>Deterministic outer workflow (typed-schema phase gates)</li>
+          <li>Git-native workflow (worktree-per-ticket, enforced PR lifecycle)</li>
+        </ul>
+      </div>
+      <div class="gap-col incomplete">
+        <h4>Good foundation, incomplete</h4>
+        <ul>
+          <li>Spec-driven development — hotfix tier has no persisted investigation/plan</li>
+          <li>Context engineering — index/graph freshness is manual-trigger only</li>
+          <li>Specialized agents — roles are clean, tool scoping is not</li>
+          <li>Independent review — process-independent, model-correlated</li>
+          <li>Architecture boundary tests — half are regex, not AST</li>
+          <li>Improvement loop — qualitative only, no success-rate metric</li>
+          <li>Provider portability — contract built, conformance test still unwritten</li>
+          <li>Durable checkpointing — ticket-level yes, phase-level no</li>
+        </ul>
+      </div>
+      <div class="gap-col missing">
+        <h4>Important missing capabilities</h4>
+        <ul>
+          <li>Least-privilege tool permissions — one broad session-wide allowlist</li>
+          <li>Security boundary — no general command/secret scan on the Bash path</li>
+          <li>Deterministic guardrails — two Hard Rules are prose-only, not hooked</li>
+          <li>Model routing — literally none (0 of 16 agents override the default)</li>
+          <li>Cost-aware orchestration — no real token/dollar accounting</li>
+        </ul>
+      </div>
+      <div class="gap-col optional">
+        <h4>Optional enhancements</h4>
+        <ul>
+          <li>Task-DAG parallelism inside <span class="mono">implement-ticket.js</span></li>
+          <li>Finer failure taxonomy (repo already declined to over-build this)</li>
+          <li>Further AI-friendly repo-structure polish</li>
+        </ul>
+      </div>
+      <div class="gap-col notrec">
+        <h4>Not recommended</h4>
+        <ul>
+          <li>Agent-to-agent (A2A) protocol — no distributed boundary exists</li>
+          <li>Always-on / event-driven agents — no concrete trigger source</li>
+          <li>Full container/VM sandboxing at repo level — a harness concern, not a repo one</li>
+          <li>Replacing the custom JS orchestrator with Temporal/LangGraph</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="roadmap">
+    <div class="sec-head"><span class="sec-num">§6</span><h2>Prioritized roadmap</h2></div>
+    <div id="roadmap-groups"></div>
+  </section>
+
+  <section id="wins">
+    <div class="sec-head"><span class="sec-num">§7</span><h2>Quick wins</h2></div>
+    <p class="sec-intro">Low-cost, high-leverage — every one of these reuses code or infrastructure that already exists in the repo.</p>
+    <div class="qw-list">
+      <div class="qw-item"><span class="chk">✓</span>Add scoped <span class="mono">tools:</span> frontmatter to each of the 16 agent files, mined from real usage in <span class="mono">agent-monitoring/tools.jsonl</span></div>
+      <div class="qw-item"><span class="chk">✓</span>Reuse the gateway's already-tuned <span class="mono">scan_for_secrets()</span> as a <span class="mono">PreToolUse</span> Bash-command warning hook</div>
+      <div class="qw-item"><span class="chk">✓</span>Add a post-commit hook running <span class="mono">graphify update .</span> / <span class="mono">make knowledge-index-update</span> automatically</div>
+      <div class="qw-item"><span class="chk">✓</span>Add a test asserting each <span class="mono">SKILL.md</span>'s phase list is a subset of its <span class="mono">.js</span> workflow's phases</div>
+      <div class="qw-item"><span class="chk">✓</span>Extend <span class="mono">cost_proxy_score</span> emission to <span class="mono">implement-epic.js</span> / <span class="mono">create-tickets.js</span></div>
+      <div class="qw-item"><span class="chk">✓</span>Add a commit-msg hook validating the <span class="mono">TCK-YYYYMMDD-SCOPE:</span> prefix against open tickets</div>
+    </div>
+  </section>
+
+  <section id="bets">
+    <div class="sec-head"><span class="sec-num">§8</span><h2>Strategic bets</h2></div>
+    <p class="sec-intro">Higher cost, larger payoff — worth scoping as real tickets, not quick patches.</p>
+    <div class="bets">
+      <div class="bet-card">
+        <h5>Model-diverse adversarial review</h5>
+        <p>Route <span class="mono">architecture-reviewer</span> and <span class="mono">security-reviewer</span> to a distinct model from the implementer. Directly closes the correlated-failure risk this review flags as the sharpest weakness in Pattern 15.</p>
+      </div>
+      <div class="bet-card">
+        <h5>Phase-level workflow checkpointing</h5>
+        <p>Teach <span class="mono">implement-ticket.js</span> to read the existing <span class="mono">.claude/current_run</span> sidecar's phase on start and skip completed phases — turns today's manual crash-recovery into automatic resume.</p>
+      </div>
+      <div class="bet-card">
+        <h5>Agent-behavior eval harness</h5>
+        <p>Seed from the 1,300+ closed tickets in <span class="mono">tickets/done/</span> — replay historical investigation/plan/implement phases and diff outcome quality, feeding a real success-rate metric into the retro loop.</p>
+      </div>
+      <div class="bet-card">
+        <h5>Provider portability, made live</h5>
+        <p>Write the conformance test the ADR already specifies, diffing <span class="mono">.claude/</span> and <span class="mono">.codex/</span> phase/status/gate definitions against the shared contract — the one missing piece before a real Codex pilot.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="final">
+    <div class="sec-head"><span class="sec-num">§9</span><h2>Final recommendation</h2></div>
+    <div class="qa">
+      <div class="qa-item"><span class="qa-num">1</span><div><h4>How AI-first is the repository today?</h4><p>Operationally AI-first for the engineering-delivery loop specifically — the spec→investigate→plan→implement→verify chain is real, gated by typed schemas, and traced end to end. It is not yet AI-first in how it governs the agents running that loop: permissions, review independence, and cost visibility all lag noticeably behind the workflow engineering around them.</p></div></div>
+      <div class="qa-item"><span class="qa-num">2</span><div><h4>What does it already do unusually well?</h4><p>Persistent, live-verified repository intelligence (a 34k-node code graph plus hybrid dense+BM25 search, both actually queried during this review and returning correct file/line citations) and a three-tier execution trace schema that most agent codebases don't build at all. The provider-neutral orchestration contract — a static check that fails on the mere presence of a provider-specific field name — is an unusually disciplined piece of forward design for a repo with only one provider live today.</p></div></div>
+      <div class="qa-item"><span class="qa-num">3</span><div><h4>Most important architectural weaknesses?</h4><p>A single broad, session-wide shell allowlist that every agent inherits regardless of role; no security layer between a model-generated Bash command and host execution outside one narrow cache-write path; and zero model diversity in the two roles whose entire job is catching what the implementer missed.</p></div></div>
+      <div class="qa-item"><span class="qa-num">4</span><div><h4>Main bottleneck to the next maturity level?</h4><p>The harness doesn't forward per-call token/dollar usage into workflow scripts. That single platform gap caps cost-aware orchestration, model routing's ROI case, and a real quantitative "did this prompt change help" comparison — three separate patterns — no matter how well the repo's own code is written.</p></div></div>
+      <div class="qa-item"><span class="qa-num">5</span><div><h4>Top improvements for real-world value?</h4><p>Per-agent least-privilege tool scoping; a general secret/command-injection scan on the Bash path (the code to do it already exists, just narrowly applied); model-diverse review for the two adversarial gate roles; automated freshness for the two repository-intelligence indexes; and AST-based (not regex) import-boundary enforcement.</p></div></div>
+      <div class="qa-item"><span class="qa-num">6</span><div><h4>Which fashionable ideas should this repo avoid?</h4><p>A workflow-engine rewrite (Temporal/LangGraph) in place of the custom JS orchestrator that already works; agent-to-agent protocol adoption with no distributed boundary to serve; always-on event-driven agents with no event source; and a vector-database swap-in where the existing hybrid search already outperforms plain grep.</p></div></div>
+      <div class="qa-item"><span class="qa-num">7</span><div><h4>What should the architecture look like after the next evolution?</h4><p>The same eight-layer shape it has today — not bigger, tighter: least-privilege tool scoping and command-level guardrails hardened into real gates, adversarial review made genuinely independent, and the two intelligence indexes self-refreshing instead of relying on an agent to remember a manual step.</p></div></div>
+    </div>
+    <div class="closing">
+      <p><b>Bottom line:</b> this is a repository whose AI-first <i>workflow</i> engineering — the outer loop, the spec discipline, the repo intelligence — is already close to mature (Level 3, edging toward Level 4 in places). What holds the overall score at 58/100 is that its AI-first <i>governance</i> — who an agent is allowed to be, and who checks its work — has not yet caught up to the sophistication of the pipeline it's operating inside.</p>
+    </div>
+  </section>
+
+  <footer class="rep">Generated 2026-09-03 · rpg-based-simulation @ 68579af2 · Evidence gathered via search_docs, graphify, and direct code/config inspection across 6 independent review passes.</footer>
+</div>
+
+<script>
+const LAYERS = [
+  {name:"Specification &amp; Instructions", sub:"3 patterns", ids:[1,7,8]},
+  {name:"Orchestration &amp; Agents", sub:"4 patterns", ids:[2,3,4,30]},
+  {name:"Context &amp; Repository Intelligence", sub:"3 patterns", ids:[5,6,9]},
+  {name:"Isolation, Permissions &amp; Security", sub:"5 patterns", ids:[10,11,12,13,27]},
+  {name:"Verification, Review &amp; Observability", sub:"6 patterns", ids:[14,15,21,22,23,28]},
+  {name:"Delivery, Boundaries &amp; Portability", sub:"4 patterns", ids:[24,25,26,29]},
+  {name:"Cost, Routing &amp; Durable State", sub:"5 patterns", ids:[16,17,18,19,20]},
+];
+
+const PATTERNS = {
+1:{name:"Spec-Driven Development", status:"warn", statusLabel:"Partial", maturity:3, relevance:"Critical", feasibility:"Easy", benefit:"High reliability &amp; traceability, already largely realized", priority:"MAINT",
+  evidence:"CLAUDE.md Workflow Rule · tickets/{inprogress,done}/ · staging_artifacts/{id}/{plan,investigation,test_plan}.md · docs/REGISTRY.yaml · docs/parity_ledger/*.yaml (id/text/status/test_path) · tools/validate_frontmatter.py",
+  design:"Requirement → frontmatter-validated ticket → investigation.md/test_plan.md → plan.md, all persisted per-ticket, migrated to stored_artifacts/ on close, indexed into REGISTRY.yaml, cross-linked to a machine-readable parity ledger tying claims to test_path.",
+  gaps:"Hotfix tier explicitly skips investigation/plan artifacts — a real fraction of changes leave no persisted spec beyond the ticket body. Acceptance criteria are free-text, not machine-checked against implementation.",
+  suggested:"Extend done-checker to spot-check that Acceptance Criteria bullets have a parity-ledger entry or test reference for standard/epic tier; leave hotfix as-is."},
+2:{name:"Deterministic Outer Workflow + Agentic Inner Loops", status:"good", statusLabel:"Implemented", maturity:3, relevance:"Critical", feasibility:"—", benefit:"Already realized: reliability, auditability, debuggability", priority:"MAINT",
+  evidence:".claude/workflows/implement-ticket.js (1,709 lines) · 12 phase() calls (Scope→…→Finalize) · typed JSON schemas (TICKET_SCHEMA, REVIEW_SCHEMA, IMPL_SCHEMA) constraining every agent() return",
+  design:"Every phase transition, gate check, and monitoring write is deterministic JS/Python; agent() calls are boxed to one narrow decision per phase. Tier routing (hotfix/standard/epic) short-circuits phases in code, never via LLM judgment.",
+  gaps:"Resume is ticket-ID re-invocation, not true mid-workflow state serialization — a crash mid-Plan re-runs Investigate unless staging artifacts already exist on disk. No workflow-engine; it's a bespoke script interpreter.",
+  suggested:"No change needed — well-executed instance of the pattern."},
+3:{name:"Hierarchical / Specialized Agents", status:"good", statusLabel:"Implemented", maturity:3, relevance:"High", feasibility:"Easy", benefit:"Marginal for role clarity; moderate for blast-radius if tool-scoped", priority:"P2",
+  evidence:".claude/agents/*.md — 16 files (ticket-scoper, investigator, planner, architecture-reviewer, implementer, doc-updater, parity-updater, security-reviewer, test-scoper, done-checker, mechanics-auditor, spec-document-reviewer, concern-investigator, simulation-analyst, world-debugger, world-render-reviewer)",
+  design:"Each agent has a distinct, single-purpose role with explicitly documented boundaries against neighboring roles (e.g. spec-document-reviewer vs. architecture-reviewer vs. mechanics-auditor). implement-ticket.js invokes each only in its designated phase.",
+  gaps:"No near-duplicate agents found — genuine differentiation confirmed. But only 1 of 16 (concern-investigator) declares scoped tools: frontmatter; the rest default to full, unrestricted tool access regardless of role.",
+  suggested:"Audit and add explicit tools: frontmatter per agent, matching observed usage in agent-monitoring/tools.jsonl, starting with implementer and parity-updater."},
+4:{name:"Task DAG and Parallel Execution", status:"warn", statusLabel:"Partial", maturity:2, relevance:"Medium", feasibility:"Moderate", benefit:"Low-to-medium latency reduction on implement-ticket.js only", priority:"—",
+  evidence:"implement-ticket.js / implement-epic.js: 0 parallel() calls, 15 sequential agent() calls · vs. 6 simulation-analysis workflows using real parallel() fan-out (generate-simulation-setup.js:41, prepare-simulation-execution.js:17,76, etc.)",
+  design:"The two primary engineering-lifecycle workflows are strictly linear chains even where phases are logically independent (Parity-update and Security-Review don't depend on each other). The simulation-analysis workflow family already does correct DAG fan-out where independence is real.",
+  gaps:"implement-epic.js deliberately chose sequential-with-early-stop over parallel child tickets — a defensible tradeoff given per-ticket worktree isolation, not a clear gap.",
+  suggested:"If pursued, pilot parallelizing Test and Parity phases first (both read the Implement diff independently) before touching the tighter Document-Update/Architecture-Verify pair."},
+5:{name:"Context Engineering", status:"warn", statusLabel:"Partial", maturity:3, relevance:"Critical", feasibility:"Moderate", benefit:"Reliability, precision", priority:"P1",
+  evidence:"tools/knowledge_search.py (hybrid dense+lexical, all-MiniLM-L6-v2, sqlite-vec) · tools/hybrid_retrieval.py (RRF fusion, built to fix TCK-20260729-HYBRID-RETRIEVAL-FUSION) · tools/eval_search.py + reports/eval_search_20260815.json (Recall@5/MRR@10)",
+  design:"Retrieval is genuinely hybrid and scoped to a curated corpus, not the whole repo — returns ranked, scored, excerpted, provenance-tagged chunks. Live-verified: search_docs returned correct source_path/section metadata, not raw dumps.",
+  gaps:"Index staleness: search_health reports a build from 2026-08-20 while the repo has moved on daily since — refresh is manual (make knowledge-index-update), not triggered automatically on doc change.",
+  suggested:"Add a post-commit or CI step calling make knowledge-index-update automatically rather than relying on agent discipline."},
+6:{name:"Persistent Repository Intelligence", status:"good", statusLabel:"Implemented", maturity:3, relevance:"Critical", feasibility:"Easy", benefit:"Token efficiency, precision", priority:"P1",
+  evidence:"graphify-out/GRAPH_REPORT.md — 33,956 nodes / 100,661 edges / 1,280 communities over 2,917 files · docs/REGISTRY.yaml (36,673 lines, auto-regenerated on ticket Finalize) · live graphify query returned real src=/loc= citations",
+  design:"Two independent, incrementally-updatable, version-controlled intelligence layers, cross-referenced in CLAUDE.md's mandatory context-scan order (search_docs → graphify → REGISTRY.yaml → grep).",
+  gaps:"Graph build was 28 commits stale at review time — graphify update . is manual-trigger. Query results for one topic returned 146 loosely-ranked nodes with no visible pruning before return.",
+  suggested:"Hook graphify update . to the same post-commit trigger as the search index; consider light result-ranking on BFS output."},
+7:{name:"Agent Instructions as Repository Infrastructure", status:"good", statusLabel:"Implemented", maturity:4, relevance:"Critical", feasibility:"Moderate", benefit:"Prevents silent instruction/behavior divergence", priority:"MAINT",
+  evidence:"CLAUDE.md (project, ~700 lines) · ~/.claude/CLAUDE.md (user-global) · AGENTS.md — header states it is generated by tools/agent_orchestration_codex_adapter/generator.py from the validated agent-orchestration/ contract, 'do not hand-edit'",
+  design:"CLAUDE.md is the human-maintained source of truth; AGENTS.md is explicitly generated rather than hand-duplicated, directly addressing the review's own §10 concern about redundant per-tool instruction files.",
+  gaps:"CLAUDE.md itself (~700 lines) is approaching the size where a hierarchical split would help. No automated drift check exists — a past drift (TCK-20260804-CREATE-TICKETS-SKILL-SYNC) was caught manually, not by tooling.",
+  suggested:"A cheap CI check diffing SKILL.md phase references against the .js workflow they describe, catching the class of drift already found once by hand."},
+8:{name:"Skills / Reusable Agent Capabilities", status:"good", statusLabel:"Implemented", maturity:4, relevance:"High", feasibility:"Moderate", benefit:"Eliminates a documented, recurring drift failure mode", priority:"P2",
+  evidence:".claude/skills/ — 22 directories (create-tickets, implement-ticket, implement-epic, simq-audit, combat-mechanics, observability, …) · SKILL.md files define explicit inputs, pipeline phases, and mandate monitoring writes at every exit point",
+  design:"Each skill has clear triggers, explicit inputs, a defined pipeline, and tier routing (hotfix/standard/epic) rather than logic reinvented per prompt. Version-controlled in-repo.",
+  gaps:"SKILL.md is explicitly not the authoritative source for the two most complex skills — the real logic lives in .claude/workflows/*.js, and the two have already drifted once (a cited, resolved ticket). No test coverage for the skills' own JS logic.",
+  suggested:"A pytest asserting each SKILL.md's documented phase list is a subset of the phase names in its corresponding .js file — turns a manually-found gap into an enforced invariant."},
+9:{name:"MCP / Structured Tool Layer", status:"good", statusLabel:"Implemented", maturity:3, relevance:"High", feasibility:"—", benefit:"Reliability, validation, observability", priority:"MAINT",
+  evidence:".mcp.json registers 3 servers (knowledge-search, knowledge-gateway, github) · tools/knowledge_gateway_mcp.py + 4 supporting modules (router, packet-assembly, cache, redaction) · live-verified typed search_health/search_docs calls",
+  design:"Tool access for knowledge retrieval goes through typed, schema-validated MCP function calls, not shell invocation or freeform text parsing. A second layer (knowledge-gateway) adds provenance tracking and packet assembly.",
+  gaps:"Per prior internal comparison, the knowledge-gateway routing layer lost to direct tool calls on 7/7 warm-path latency+token comparisons — the abstraction exists without a demonstrated interoperability gain over calling search_docs/graphify directly.",
+  suggested:"Maintain the base knowledge-search MCP layer as-is. Re-evaluate knowledge-gateway with fresh cost/benefit data before continued investment."},
+10:{name:"Agent-to-Agent Communication", status:"na", statusLabel:"Not Applicable", maturity:0, relevance:"Not Applicable", feasibility:"—", benefit:"—", priority:"NREC",
+  evidence:"All 16 agent roles run as in-process subagents of one session/workflow · no separately-deployed agent service, webhook, or queue-based agent messaging found in tools/ or .github/workflows/",
+  design:"N/A — no real distributed-agent use case exists today.",
+  gaps:"The Codex provider-adapter work is the closest candidate for a second runtime, but .codex/config.toml is deliberately inert/hook-free, not a live boundary.",
+  suggested:"Revisit only if the Codex adapter goes live and needs cross-runtime coordination beyond the shared file-based monitoring schema it already uses."},
+11:{name:"Isolated Execution Environments", status:"warn", statusLabel:"Partial", maturity:2, relevance:"High", feasibility:"Difficult", benefit:"Reduced blast radius from a single runaway command", priority:"—",
+  evidence:"git worktree list — 5 live worktrees under .claude/worktrees/ (3 locked), each on its own branch · CLAUDE.md 'Worktree &amp; Branch Isolation' section documents the EnterWorktree fallback pattern",
+  design:"Filesystem isolation is real and actively used — 5 concurrent worktrees at review time. No process, network, or resource isolation beyond that; agent-executed shell commands run directly on the host.",
+  gaps:"Two agents on different worktrees can still both run unrestricted Bash(docker *)/Bash(rm *) against the same host — worktree isolation covers git state only, not process/CPU/network isolation.",
+  suggested:"N/A at repo level — full sandboxing is a harness-level concern, not something this repo can fix alone."},
+12:{name:"Least Privilege and Tool Permissions", status:"bad", statusLabel:"Experimental", maturity:1, relevance:"Critical", feasibility:"Easy", benefit:"Meaningfully reduces blast radius per role without breaking workflows", priority:"P0",
+  evidence:".claude/settings.json permissions.allow — broad wildcard shell allowlist (Bash(git *), Bash(rm *), Bash(docker *), Bash(curl *), Bash(pkill *), Bash(python3 *)) plus unrestricted Write/Edit · settings.local.json has ~70 accreted one-off entries",
+  design:"Permission scoping happens at the session level for every tool call and every agent, not per-agent or per-task. Only concern-investigator declares a scoped tools: frontmatter; the other 15 default to full access.",
+  gaps:"No deny-list exists at all. A purely investigative agent (investigator, doc-updater) inherits the same rm */docker */curl * allowance as implementer.",
+  suggested:"Mine agent-monitoring/tools.jsonl for each agent's real historical tool usage, then set tools: frontmatter to that set plus headroom — starting with doc-updater and investigator."},
+13:{name:"Deterministic Guardrails and Hooks", status:"warn", statusLabel:"Partial", maturity:2, relevance:"Critical", feasibility:"Moderate", benefit:"Closes a real gap between documented and enforced policy", priority:"P0",
+  evidence:".claude/settings.json hooks — 4 PreToolUse (monitoring write, graphify-nudge, search_docs-nudge, sidecar-presence check) + 4 PostToolUse (monitoring write, graphify auto-update, retro-nudge, epic-staleness check) · tools/validate_frontmatter.py, tag_registry.py hard-raise on violation",
+  design:"Two enforcement tiers exist: real gates (monitoring writes, graphify refresh, registry validators that hard-raise) vs. advisory nudges (search-before-grep and sidecar-write rules, both implemented as additionalContext text injections, not blocking calls).",
+  gaps:"The two most safety-critical Hard Rules in CLAUDE.md — 'never grep before search_docs/graphify' and 'never edit a gate to make it pass' — are enforced by nudge-hooks or not hooked at all; the gate-integrity rule has zero hook backing.",
+  suggested:"Convert the grep-matcher hook from nudge to a deny on a session's first Bash call per topic; add a new hook flagging edits to tests/ or tools/gate_checks/ made during a Verify-phase run."},
+14:{name:"Verification-First / Eval-Driven Development", status:"warn", statusLabel:"Partial", maturity:2, relevance:"Critical (engine) / Medium (agent eval)", feasibility:"Moderate", benefit:"High reliability for engine changes; parity for agent-prompt changes if extended", priority:"P3",
+  evidence:".github/workflows/test.yml — 12 CI jobs (unit×3, integration, api-tools, agent-orchestration, simulation-quality, arch-docs, frontend, perf-cert, migration-lanes, slow-regression, typecheck-informational) · docs/testing/regression_policy.md (explicit hard-gate vs. soft-monitor split)",
+  design:"Layered verification past unit tests: compile→unit→integration→architecture-guard→performance-threshold→certification, with an evidence-based hard-block/alert-only distinction, not a vibes-based one. Numeric, gated performance thresholds.",
+  gaps:"No behavioral/LLM-output evaluation layer — everything verifies the simulation engine's correctness, not the AI agent workflow's output quality. mypy runs continue-on-error only (informational, acknowledged gap).",
+  suggested:"Reuse the tickets/done/ corpus (1,300+ tickets) as a seed eval set: replay a sample's investigation/plan/implement phases and diff outcome quality against the original result, feeding the retro loop."},
+15:{name:"Independent Reviewer / Critic", status:"warn", statusLabel:"Partial", maturity:2, relevance:"High", feasibility:"Moderate", benefit:"Reduces correlated blind spots between generation and review", priority:"P1",
+  evidence:".claude/agents/architecture-reviewer.md (pre + post-implement, backed by tools/gate_checks/architecture_reviewer_static.py) · security-reviewer.md (tag-triggered) · none of the 4 gatekeeper agents declare a model: frontmatter field",
+  design:"Independence is achieved through separate context, prompt, and invocation, plus (for architecture-reviewer) a deterministic static script pre-flagging findings before the LLM judges them — a genuinely good self-honesty pattern that documents its own blind spots.",
+  gaps:"The same underlying model family reviews its own generation — the exact correlated-failure risk (same model + same assumptions) this pattern exists to prevent. No model-family diversity anywhere in the review chain.",
+  suggested:"Add model: (a distinct model) to architecture-reviewer.md and security-reviewer.md specifically — the two adversarial gatekeeping roles where correlated failure matters most; leave the checklist-following done-checker on default."},
+16:{name:"Model Routing", status:"bad", statusLabel:"Not Implemented", maturity:0, relevance:"Medium", feasibility:"Easy", benefit:"Lower cost/latency on high-frequency mechanical agents", priority:"P2",
+  evidence:"grep \"^model:\" .claude/agents/*.md → zero matches across all 16 agent definitions",
+  design:"Every specialized agent runs on whatever the session's default model is; no complexity- or cost-based routing exists anywhere in the repo.",
+  gaps:"Cheap, mechanical roles (done-checker's 13-condition checklist, ticket-scoper's tag lookups — both fire on every single run) use the same model tier as reasoning-heavy roles like planner.",
+  suggested:"Pilot model: haiku on done-checker.md and ticket-scoper.md only; A/B the final_status distribution in runs.jsonl before/after."},
+17:{name:"Cost-Aware Orchestration", status:"warn", statusLabel:"Partial", maturity:2, relevance:"Medium", feasibility:"Difficult (real $) / Easy (coverage)", benefit:"Comparable cost visibility across all workflows, not just one", priority:"P1",
+  evidence:"agent-monitoring/{runs,tools}.jsonl + docs/agent-monitoring/schema.md's cost_proxy_score field — deterministic, tools.jsonl-derived, implement-ticket only · schema.md:79 explicitly states the harness never forwards input/output token counts to workflow scripts",
+  design:"A monotonic, unitless cost proxy computed from tool-call volume, tracked per-run, aggregated in weekly retros — an honestly-disclosed proxy, not real dollars, because of a genuine platform limitation.",
+  gaps:"Only implement-ticket gets cost_proxy_score/tool_call_count — implement-epic and create-tickets get neither (both null per schema).",
+  suggested:"Wire the existing cost_proxy_score computation into implement-epic.js and create-tickets.js's event-recording call sites."},
+18:{name:"Durable State and Checkpointing", status:"warn", statusLabel:"Partial", maturity:2, relevance:"High", feasibility:"Moderate", benefit:"Fewer manual re-diagnoses after a crashed run", priority:"P1",
+  evidence:"tickets/{inprogress,done}/, staging_artifacts/{id}/, stored_artifacts/ (1,214 entries) · 7 tickets live in tickets/inprogress/ at review time, confirming real (not aspirational) usage",
+  design:"A ticket's plan.md/investigation.md/test_plan.md in staging_artifacts/ IS the checkpoint — a fresh agent can resume from any phase by reading the ticket + its 3 artifacts, without reconstructing intent from chat history.",
+  gaps:"This is file-based checkpointing at ticket granularity, not workflow-engine checkpointing at phase granularity — a mid-Implement crash has no automatic 'resume from Stage 3'; a human/agent must manually re-diagnose from runs.jsonl's final_status.",
+  suggested:"Have implement-ticket.js read the existing .claude/current_run sidecar's phase on start and skip already-completed phases when an IN_PROGRESS/CRASHED run_id is found."},
+19:{name:"Artifact-Oriented Architecture", status:"good", statusLabel:"Implemented", maturity:3, relevance:"Critical", feasibility:"—", benefit:"Maintain — a genuine strength", priority:"MAINT",
+  evidence:"stored_artifacts/ (1,214 files) · staging_artifacts/{id}/{plan,investigation,test_plan}.md · docs/parity_ledger/*.yaml (schema-validated) · docs/REGISTRY.yaml (auto-regenerated) · tickets/working_log.csv (append-only)",
+  design:"Every workflow output — plans, investigations, review findings, monitoring events — is written to a versioned, git-tracked file with a defined lifecycle, not left inside chat/agent messages. Frontmatter makes artifacts machine-queryable.",
+  gaps:"docs/REGISTRY.yaml regeneration is coupled to Finalize's self-check — if Finalize is skipped (hand-orchestration), the registry can silently drift. No archival policy for very old stored artifacts.",
+  suggested:"A light audit of whether stored_artifacts/ needs an archival tier for artifacts with no live doc references."},
+20:{name:"Human-in-the-Loop Design", status:"good", statusLabel:"Implemented", maturity:3, relevance:"High", feasibility:"Moderate", benefit:"Removes reliance on an agent remembering the rule", priority:"P2",
+  evidence:"CLAUDE.md 'Proactive Tool Use' table — auto-invoke (read-only: search_docs, graphify, gh pr checks polling) vs. explicit opt-in (Workflow multi-agent orchestration, git push/PR creation/merge) · NEEDS_HUMAN_INPUT and BLOCKED as first-class final_status values",
+  design:"Risk-based placement — read/query and CI-triage are unattended; anything hard-to-reverse or visible to others requires a fresh human ask each time. PR merge is explicitly 'their call, not something to do automatically once CI is green.'",
+  gaps:"The boundary is enforced by documented convention (agent self-discipline) for most of it — nothing stops a misbehaving agent from calling gh pr create directly, short of the permission-prompt UI.",
+  suggested:"Encode the opt-in table into .claude/settings.json permission rules directly (deny-by-default for git push/gh pr create/Workflow) rather than relying purely on CLAUDE.md prose."},
+21:{name:"Observability for Agents", status:"good", statusLabel:"Implemented", maturity:3, relevance:"Critical", feasibility:"Easy (except cost gap)", benefit:"Already realized — the strongest pattern in this review", priority:"MAINT",
+  evidence:"agent-monitoring/{runs,events,tools}.jsonl — real sampled fields: run_id, workflow, tier, final_status, agent_count, duration_s, phase, agent, status, cost_proxy_score · docs/agent-monitoring/schema.md",
+  design:"Three-table schema records workflow-, phase/agent-, and tool-call-level granularity — matching the ideal Workflow→Stage→Agent→Tool-call trace. A derived SQLite index makes it queryable.",
+  gaps:"No real token counts or dollar cost anywhere — explicitly documented as a platform limitation ('no workaround short of a platform change from Anthropic'), not a repo defect.",
+  suggested:"No urgent change. If the platform ever exposes per-call token usage, wire it in alongside cost_proxy_score rather than replacing it."},
+22:{name:"Failure Taxonomy", status:"warn", statusLabel:"Partial", maturity:1, relevance:"Medium", feasibility:"Moderate", benefit:"Sharper retro-loop signal on why runs fail, not just where", priority:"—",
+  evidence:"docs/agent-monitoring/schema.md's reason_code table — conflicts_detected, tag_registry_rejection, dod_condition_failed (explicitly documented as 'a deliberately coarse fallback... evidence-driven, not speculative')",
+  design:"A real but narrow taxonomy classifies gate/workflow failure causes (which DoD condition, which tag), not the broader cognitive taxonomy (retrieval failure, hallucination, context overflow) the review brief describes.",
+  gaps:"No classification distinguishing why an agent got something wrong at the reasoning level — dod_condition_failed collapses many distinct causes into one bucket.",
+  suggested:"Mine events.jsonl's free-text summary field for the dod_condition_failed and NEEDS_CHANGES/BLOCKED buckets before adding new categories — matching the repo's own evidence-driven standard."},
+23:{name:"AI System Improvement Loop", status:"warn", statusLabel:"Partial", maturity:2, relevance:"High", feasibility:"Moderate", benefit:"Would let prompt/agent changes be evaluated with CI-grade rigor", priority:"P3",
+  evidence:".claude/skills/agent-monitoring-retro/SKILL.md · tools/agent-monitoring/generate_retro.py · agent-monitoring/retro/RETRO-<week>.md · retro_nudge_hook.py (auto-nudges after 5+ completed runs) · weight_sensitivity_check.py (before/after comparison for cost-proxy weight changes)",
+  design:"A real closed loop: traces → weekly retro → 'what failed / what was slow / what to change' notes → committed as institutional memory → cadence enforced by hook, not manual discipline.",
+  gaps:"No end-to-end 'agent v12 vs v13' success-rate comparison for prompt/phase changes generally — retro notes aren't tracked through to 'was this actually shipped and did it help.' Partly blocked by the token-cost gap.",
+  suggested:"Extend weight_sensitivity_check.py's before/after pattern to agent-prompt changes generally: require citing retro metrics before/after a set number of subsequent runs when an agent .md file changes."},
+24:{name:"Git-Native Agent Workflow", status:"good", statusLabel:"Implemented", maturity:3, relevance:"High", feasibility:"Easy", benefit:"Maintain — a strength area", priority:"MAINT",
+  evidence:"5 live worktrees under .claude/worktrees/, 201 branches, PR-numbered squash commits · CLAUDE.md 'Worktree &amp; Branch Isolation' + 'PR Lifecycle' sections · TCK-YYYYMMDD-SCOPE commit convention",
+  design:"Every unit of work gets an isolated worktree+branch; PR creation, CI monitoring, and merge are explicit steps with a defined owner (agent creates/monitors, human merges).",
+  gaps:"No enforcement that agents actually use worktree isolation — it's a documented convention, not a hook-checked one.",
+  suggested:"A commit-msg hook validating the TCK-YYYYMMDD-SCOPE: prefix against tickets/{inprogress,done}/."},
+25:{name:"Architecture Boundary Enforcement", status:"warn", statusLabel:"Partial", maturity:2, relevance:"Critical", feasibility:"Moderate", benefit:"Closes a real evasion gap in a rule marked hard in CLAUDE.md", priority:"P0",
+  evidence:"tests/architecture/test_api_read_model_guard.py, test_phase_domain_permissions.py (AST-based) · test_phase18_import_boundaries.py, test_phase19_observability_boundaries.py (substring-grep only, per docs/plans/architecture_boundary_hardening_epic.md:135-136) · 13+2 grandfathered violations frozen, not fixed",
+  design:"Two-tier enforcement — an LLM-driven architecture-reviewer gate plus static Python tests in CI, some AST-based, some regex-based.",
+  gaps:"Half the import-boundary tests are string-match, not AST — evadable by any non-literal import (importlib, aliasing). The epic's own todo to 'upgrade to AST' is unimplemented.",
+  suggested:"Port test_phase18/19 to ast.walk-based import-graph checks matching test_api_read_model_guard.py's existing pattern — already scoped as the epic's own next step."},
+26:{name:"AI-Friendly Repository Design", status:"good", statusLabel:"Implemented", maturity:3, relevance:"Medium", feasibility:"Easy", benefit:"Marginal — already strong", priority:"MAINT",
+  evidence:"722 src/ files across 25 well-named domain modules · 1,435 test files · docs/engine/ + docs/mechanics/ as durable, versioned specs · graphify-out/GRAPH_REPORT.md as a maintained repo map",
+  design:"Domain-per-directory under src/domains/, contracts documented separately from code with a parity-ledger mechanism forcing doc/code sync on every behavior change.",
+  gaps:"25 top-level src/ modules is real surface for a newcomer without the graph; graphify-out/ freshness is manual-trigger, echoing Pattern 6's gap.",
+  suggested:"A CI check failing if src/ or tests/ changed but graphify-out/ didn't refresh in the same commit."},
+27:{name:"Security Boundary Between Model and Infrastructure", status:"warn", statusLabel:"Partial", maturity:2, relevance:"Critical", feasibility:"Difficult (general) / Moderate (pilot)", benefit:"Closes the single largest security gap in this review", priority:"P0",
+  evidence:"tools/knowledge_gateway_redaction.py — 10 secret-scan regexes (AWS keys, API keys, PEM blocks, Bearer tokens), 64 KiB payload cap, path redaction, versioned redaction_policy_version — expanded once already after a Security-Review phase found concrete gaps",
+  design:"One specific data path (writes into the knowledge-gateway cache) has a real, iterated security policy layer between model output and persisted state — a genuine instance of the LLM→policy-layer→tool-API→infrastructure shape, for that one path only.",
+  gaps:"The dominant path by volume — the model directly issuing Bash commands per Pattern 12's broad allowlist — has no repo-authored policy layer at all; no command-injection guard, no credential-exposure check on that path.",
+  suggested:"Reuse the already-built and already-tuned scan_for_secrets() as a PreToolUse Bash-matcher hook scanning the outgoing command string itself, starting as an advisory warning matching the repo's existing nudge-hook pattern."},
+28:{name:"Testing the Agent System Itself", status:"warn", statusLabel:"Partial", maturity:2, relevance:"High", feasibility:"Moderate", benefit:"Catches agent-infra regressions the way engine tests catch engine regressions", priority:"P2",
+  evidence:"11 dedicated test directories (tests/agent_orchestration/, agent_replay/, agent_codex_pilot_guardrails/, …) wired into CI's agent-orchestration job · added specifically after TCK-20260817-CI-COVERAGE-GAP found 439 of 440 tests had never run in CI",
+  design:"A substantial, real, CI-enforced test surface exists for agent orchestration/replay/guardrails infrastructure — genuinely more than most repos do, including tests of the monitoring tooling itself.",
+  gaps:"No prompt-regression tests, no context-retrieval quality tests, no explicit checkpoint/resume tests, no permission-boundary tests. The prior orphaned-test-directory incident shows this area has had real, confirmed coverage gaps before.",
+  suggested:"Re-run the equivalent of the orphaned-test-directory audit specifically for retrieval-quality and prompt-regression coverage, given the repo's demonstrated pattern of infra tests existing but not being wired into CI."},
+29:{name:"Provider / Model Portability", status:"warn", statusLabel:"Partial (deliberately paused)", maturity:2, relevance:"High", feasibility:"Moderate", benefit:"Resilience, cost arbitrage, eval diversity (feeds Pattern 15 too)", priority:"P1",
+  evidence:"TCK-20260721-PROVIDER-AGNOSTIC-IMPLEMENTATION-EPIC (DONE) · TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC (BLOCKED, by design) · docs/architecture/agent_orchestration_contract.md's Provider-Adapter Boundary ADR · tools/retrieval_event_parity_check.py statically bans provider-specific field names in the shared schema",
+  design:"A single provider-neutral agent-orchestration/ contract is the semantic source of truth; both Claude and Codex adapters must translate into it without redefining it — an unusually rigorous investment for a repo with one live provider.",
+  gaps:"The ADR's own conformance test is marked 'proposed-pending-implementation-evidence' — divergence between adapters is structurally guarded at the field-name level but not yet test-verified.",
+  suggested:"Implement the conformance test the ADR already specifies: diff .claude/agents/*.md phase definitions against .codex/config.toml's translated equivalents against the canonical contract."},
+30:{name:"Long-Running / Always-On Engineering Agents", status:"bad", statusLabel:"Not Implemented", maturity:0, relevance:"Low", feasibility:"Moderate (infra exists)", benefit:"Low given current repo shape", priority:"NREC",
+  evidence:".github/workflows/test.yml has a nightly cron trigger for pytest only, not an agent · no .claude/workflows/*.js is triggered by cron/webhook/event — all invoked via explicit user/skill opt-in per CLAUDE.md's Proactive Tool Use table",
+  design:"All agent work is synchronous, session-initiated. CI-failure triage is a human/session-driven poll loop, not an autonomous agent reacting independently.",
+  gaps:"No event-driven agent responds to a new ticket, new PR, CI failure, or dependency vulnerability. Not a real gap given this repo has no production traffic or deployment surface beyond a docs site.",
+  suggested:"None — revisit only if the repo gains multiple concurrent human operators or an external issue-tracker generating a real event stream."},
+};
+
+const CAT = [
+  {name:"Workflow Architecture", pct:75},
+  {name:"Context Engineering", pct:75},
+  {name:"Agent Architecture", pct:50},
+  {name:"Execution Isolation", pct:50},
+  {name:"Verification &amp; Evaluation", pct:50},
+  {name:"Reliability &amp; Recovery", pct:50},
+  {name:"Security &amp; Governance", pct:38},
+  {name:"Observability", pct:75},
+  {name:"Cost Efficiency", pct:25},
+  {name:"Developer Experience", pct:88},
+];
+
+const catbars = document.getElementById('catbars');
+CAT.forEach(c=>{
+  const row = document.createElement('div'); row.className='cat-row';
+  row.innerHTML = `<div class="cat-name">${c.name}</div><div class="cat-track"><div class="cat-fill" style="width:${c.pct}%"></div></div><div class="cat-pct tab">${c.pct}%</div>`;
+  catbars.appendChild(row);
+});
+
+function meter(m){
+  let h='<span class="meter">';
+  for(let i=0;i<4;i++) h += `<i class="${i<m?'on':''}"></i>`;
+  return h+'</span>';
+}
+function prioLabel(p){
+  return {P0:'P0',P1:'P1',P2:'P2',P3:'P3',MAINT:'Maintain',NREC:'Not rec.'}[p]||p;
+}
+
+// matrix
+const mbody = document.getElementById('matrix-body');
+Object.keys(PATTERNS).forEach(id=>{
+  const p = PATTERNS[id];
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><span class="pat-num">${id.padStart(2,'0')}</span><span class="pat-name">${p.name}</span></td>
+    <td><span class="pill ${p.status}">${p.statusLabel}</span></td>
+    <td>${meter(p.maturity)} <span class="mono tab" style="font-size:11.5px;color:var(--ink-faint)">${p.maturity}/4</span></td>
+    <td style="color:var(--ink-soft);font-size:13px">${p.relevance}</td>
+    <td style="color:var(--ink-soft);font-size:13px">${p.feasibility}</td>
+    <td><span class="prio ${p.priority}">${prioLabel(p.priority)}</span></td>
+  `;
+  mbody.appendChild(tr);
+});
+
+// layers + pattern cards
+const layersEl = document.getElementById('layers');
+LAYERS.forEach((layer,li)=>{
+  const block = document.createElement('div'); block.className='layer-block';
+  block.innerHTML = `<div class="layer-head"><span class="idx">${li+1}</span><h3>${layer.name}</h3><span class="layer-sub">${layer.sub}</span></div>`;
+  const list = document.createElement('div');
+  layer.ids.forEach(id=>{
+    const p = PATTERNS[id];
+    const det = document.createElement('details'); det.className='pat';
+    det.innerHTML = `
+      <summary>
+        <span class="pat-num">${String(id).padStart(2,'0')}</span>
+        <span class="pat-title">${p.name}</span>
+        <span class="pill ${p.status}">${p.statusLabel}</span>
+        ${meter(p.maturity)}
+        <span class="prio ${p.priority}">${prioLabel(p.priority)}</span>
+      </summary>
+      <div class="pat-body">
+        <div class="field"><div class="field-label">Evidence</div><div class="ev">${p.evidence}</div></div>
+        <div class="field"><div class="field-label">Current design</div><p>${p.design}</p></div>
+        <div class="field"><div class="field-label">Gaps</div><p>${p.gaps}</p></div>
+        <div class="field"><div class="field-label">Suggested implementation</div><p>${p.suggested}</p></div>
+        <div class="rf-row">
+          <div><span>Relevance</span><b>${p.relevance}</b></div>
+          <div><span>Feasibility</span><b>${p.feasibility}</b></div>
+          <div><span>Expected benefit</span><b>${p.benefit}</b></div>
+        </div>
+      </div>`;
+    list.appendChild(det);
+  });
+  block.appendChild(list);
+  layersEl.appendChild(block);
+});
+
+// roadmap
+const ROADMAP = [
+  {tier:"P0", title:"Foundational / correctness / security", items:[
+    {name:"Per-agent least-privilege tool scoping", problem:"One session-wide shell allowlist covers all 16 agents regardless of role.", change:"Add tools: frontmatter to each .claude/agents/*.md, mined from real usage in tools.jsonl.", affected:".claude/agents/*.md", effort:"Low", impact:"High — cuts blast radius without breaking flows", risk:"Low"},
+    {name:"General command/secret scan on the Bash path", problem:"No policy layer between model-issued shell commands and host execution outside one narrow cache-write path.", change:"Reuse knowledge_gateway_redaction.py's scan_for_secrets() as a PreToolUse Bash hook.", affected:"tools/knowledge_gateway_redaction.py, .claude/settings.json hooks", effort:"Low (code exists)", impact:"High", risk:"Low (advisory first)"},
+    {name:"AST-based import-boundary enforcement", problem:"test_phase18/19 use substring-grep, evadable by aliasing or importlib.", change:"Port to ast.walk-based checks matching test_api_read_model_guard.py's pattern.", affected:"tests/architecture/", effort:"Medium", impact:"High — closes a documented evasion gap", risk:"Medium (false positives on dynamic imports)"},
+    {name:"Enforce the two safety-critical Hard Rules as real hooks", problem:"'Search before grep' and 'never edit a gate to pass' are prose-only or advisory nudges.", change:"Convert grep-nudge to a deny on first Bash call; add an edit-flag hook for tests/ or gate_checks/ during Verify.", affected:".claude/settings.json hooks", effort:"Medium", impact:"High", risk:"Medium (over-blocking legitimate follow-up)"},
+  ]},
+  {tier:"P1", title:"High-value architecture improvements", items:[
+    {name:"Automated freshness for both intelligence indexes", problem:"search index and code graph both rely on a manual make/graphify command.", change:"Add a post-commit or CI hook triggering both refreshes automatically.", affected:"tools/knowledge_search.py, graphify-out/", effort:"Low", impact:"Medium", risk:"Low"},
+    {name:"Model-diverse adversarial review", problem:"architecture-reviewer and security-reviewer run on the same model family as the implementer.", change:"Add model: frontmatter routing them to a distinct model.", affected:".claude/agents/architecture-reviewer.md, security-reviewer.md", effort:"Low", impact:"Medium-High", risk:"Low (cost increase only)"},
+    {name:"Phase-level workflow resume", problem:"A crash mid-phase requires manual re-diagnosis from runs.jsonl.", change:"Read the existing sidecar's phase on start; skip completed phases.", affected:".claude/workflows/implement-ticket.js", effort:"Medium", impact:"Medium", risk:"Medium (stale-state edge cases)"},
+    {name:"Provider-portability conformance test", problem:"The ADR's own conformance test is unwritten; divergence is guarded at the field-name level only.", change:"Diff .claude/ and .codex/ phase/status/gate definitions against the shared contract.", affected:"agent-orchestration/, .codex/", effort:"Medium", impact:"Medium", risk:"Low"},
+    {name:"Extend cost-proxy coverage", problem:"Only implement-ticket emits cost_proxy_score; the other two workflows get null.", change:"Wire the existing computation into implement-epic.js and create-tickets.js.", affected:".claude/workflows/", effort:"Low", impact:"Medium", risk:"Low"},
+  ]},
+  {tier:"P2", title:"Optimization / scalability", items:[
+    {name:"Pilot cost-based model routing", problem:"Zero model routing anywhere; mechanical checklist agents run at full model cost.", change:"Route done-checker and ticket-scoper to a cheaper model; A/B outcomes.", affected:".claude/agents/done-checker.md, ticket-scoper.md", effort:"Low", impact:"Low-Medium", risk:"Medium (needs eval before broad rollout)"},
+    {name:"Encode the human-in-the-loop table into settings", problem:"Opt-in boundary (push/PR/Workflow) is prose convention, not permission config.", change:"Mirror CLAUDE.md's Proactive Tool Use table into .claude/settings.json permission rules.", affected:".claude/settings.json", effort:"Medium", impact:"Medium", risk:"Low"},
+    {name:"SKILL.md ↔ workflow.js consistency test", problem:"The two most complex skills' docs already drifted from their .js implementation once.", change:"Assert SKILL.md's phase list is a subset of the .js file's phase names.", affected:"tests/tools/", effort:"Low", impact:"Medium", risk:"Low"},
+  ]},
+  {tier:"P3", title:"Experimental / future", items:[
+    {name:"Agent-behavior eval harness", problem:"No eval layer exists for agent output quality, only for engine correctness.", change:"Seed from tickets/done/ (1,300+) — replay and diff historical phases.", affected:"New tooling under tools/", effort:"High", impact:"High (long-term)", risk:"Medium (dataset curation cost)"},
+    {name:"Task-success-rate metric into the retro loop", problem:"Retro produces qualitative notes only, no closed-loop 'did this change help.'", change:"Define an objective success signal and track it before/after agent-prompt changes.", affected:"tools/agent-monitoring/", effort:"High", impact:"High", risk:"Medium (partly blocked on token-cost data)"},
+  ]},
+];
+
+const roadEl = document.getElementById('roadmap-groups');
+ROADMAP.forEach(g=>{
+  const grp = document.createElement('div'); grp.className='road-group';
+  grp.innerHTML = `<div class="road-group-head"><span class="prio ${g.tier}">${g.tier}</span><h3 style="font-size:16px">${g.title}</h3></div>`;
+  const items = document.createElement('div'); items.className='road-items';
+  g.items.forEach(it=>{
+    const card = document.createElement('div'); card.className='road-card';
+    card.innerHTML = `<h5>${it.name}</h5>
+      <dl>
+        <dt>Problem</dt><dd>${it.problem}</dd>
+        <dt>Change</dt><dd>${it.change}</dd>
+        <dt>Affected</dt><dd class="mono" style="font-size:11.5px">${it.affected}</dd>
+        <dt>Effort</dt><dd>${it.effort}</dd>
+        <dt>Impact</dt><dd>${it.impact}</dd>
+        <dt>Risk</dt><dd>${it.risk}</dd>
+      </dl>`;
+    items.appendChild(card);
+  });
+  grp.appendChild(items);
+  roadEl.appendChild(grp);
+});
+</script>
