@@ -603,6 +603,8 @@ class CampaignOrchestrator:
 
         from src.core.models.inventory import EquipSlot
         from src.core.state import AuthoritativeState, EntityState
+        from src.core.updates import SocialUpdate
+        from src.systems.social_systems.relationships import RelationshipService
 
         alive_carry_forwards = {
             eid: cf
@@ -649,9 +651,8 @@ class CampaignOrchestrator:
             )
 
             # Apply carried reputation.
-            social = dc_replace(
-                base.social,
-                public_reputation=cf.reputation,
+            social = RelationshipService.process_update(
+                base.social, SocialUpdate(reputation_set=cf.reputation)
             )
 
             entities[eid] = dc_replace(

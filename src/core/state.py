@@ -900,6 +900,7 @@ class EntityState:
                 "bonds": {str(k): asdict(v) for k, v in sorted(self.social.bonds.items())},
                 "nemesis_ids": sorted(self.social.nemesis_ids),
                 "place_attachment": dict(sorted(self.social.place_attachment.items())),
+                "regional_reputation": dict(sorted(self.social.regional_reputation.items())),
                 "betrayal_count": self.social.betrayal_count,
                 "betrayal_records": [asdict(b) for b in self.social.betrayal_records],
                 "public_reputation": self.social.public_reputation,

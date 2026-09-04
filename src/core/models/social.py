@@ -45,7 +45,8 @@ class SocialComponent:
     # Domain 4 Hardening: Nemesis & Place Memory
     nemesis_ids: Set[int] = field(default_factory=set) # Promoted from grudge_history
     place_attachment: Dict[str, float] = field(default_factory=dict) # RegionID -> Attachment Score
-    
+    regional_reputation: Dict[str, float] = field(default_factory=dict) # RegionID -> Local Reputation Score (0.0 to 2.0)
+
     betrayal_count: int = 0
     betrayal_records: List[BetrayalRecord] = field(default_factory=list)
     public_reputation: float = 1.0   # Unified reputation score (0.0 to 2.0)

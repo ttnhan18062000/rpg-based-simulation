@@ -23,6 +23,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace as dc_replace
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
+from src.core.updates import SocialUpdate
+from src.systems.social_systems.relationships import RelationshipService
+
 if TYPE_CHECKING:
     from src.core.state import EntityState
 
@@ -515,14 +518,17 @@ class SocialMemoryImporter:
             new_trust[eid] = new_trust.get(eid, 0.0) + score
 
         # Reputation: only override if "default" key is present in the record.
-        new_reputation: float = entity.social.public_reputation
-        if "default" in record.faction_reputation:
-            new_reputation = record.faction_reputation["default"]
-
-        new_social = dc_replace(
-            entity.social,
-            trust_history=new_trust,
-            public_reputation=new_reputation,
+        reputation_set = (
+            record.faction_reputation["default"]
+            if "default" in record.faction_reputation
+            else None
         )
+
+        new_social = RelationshipService.process_update(
+            entity.social, SocialUpdate(reputation_set=reputation_set)
+        )
+        # trust_history is a bulk carry-forward set, not a per-entity delta -- distinct
+        # semantics from SocialUpdate.trust_delta, so it stays a direct dc_replace here.
+        new_social = dc_replace(new_social, trust_history=new_trust)
 
         return dc_replace(entity, social=new_social)

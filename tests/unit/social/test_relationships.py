@@ -138,3 +138,52 @@ def test_process_update_role_set_none_preserves_existing_role():
 
     assert social_after_second.bonds[99].role == RelationshipRole.FRIEND
     assert social_after_second.bonds[99].familiarity == pytest.approx(0.1)
+
+
+def test_public_reputation_locality_differs_by_region_after_region_scoped_event():
+    """
+    TCK-20260904-REPUTATION-LOCALITY-SCOPE (AC #2): a region-scoped reputation-affecting
+    event updates SocialComponent.regional_reputation[region_id] independently of the
+    retained global scalar. Two reads at different regions diverge after only one region
+    receives an event; the untouched region and the global scalar keep their defaults.
+    """
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    update = SocialUpdate(regional_reputation_delta={"region_a": 0.5})
+    new_social = RelationshipService.process_update(entity.social, update)
+
+    assert new_social.regional_reputation["region_a"] == pytest.approx(0.5)
+    assert new_social.regional_reputation.get("region_b", 0.0) == 0.0
+    assert new_social.regional_reputation["region_a"] != new_social.regional_reputation.get("region_b", 0.0)
+    # The retained global scalar is unaffected by a region-scoped delta.
+    assert new_social.public_reputation == 1.0
+
+
+def test_regional_reputation_delta_clamped_to_public_reputation_range():
+    """Regional reputation clamps to [0.0, 2.0], matching public_reputation's own clamp."""
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    over_update = SocialUpdate(regional_reputation_delta={"region_a": 5.0})
+    over_social = RelationshipService.process_update(entity.social, over_update)
+    assert over_social.regional_reputation["region_a"] == pytest.approx(2.0)
+
+    under_update = SocialUpdate(regional_reputation_delta={"region_a": -5.0})
+    under_social = RelationshipService.process_update(over_social, under_update)
+    assert under_social.regional_reputation["region_a"] == pytest.approx(0.0)
+
+
+def test_regional_reputation_delta_merges_by_summing_per_region():
+    """SocialUpdate.merge() sums regional_reputation_delta by key, mirroring
+    place_attachment_delta's existing merge rule."""
+    first = SocialUpdate(regional_reputation_delta={"region_a": 0.2})
+    second = SocialUpdate(regional_reputation_delta={"region_a": 0.1, "region_b": 0.3})
+
+    merged = first.merge(second)
+
+    assert merged.regional_reputation_delta["region_a"] == pytest.approx(0.3)
+    assert merged.regional_reputation_delta["region_b"] == pytest.approx(0.3)
+    # Existing composition rules for reputation_set/heroism_delta/notoriety_delta unchanged.
+    reputation_merge = SocialUpdate(reputation_set=1.2).merge(SocialUpdate(reputation_set=1.8))
+    assert reputation_merge.reputation_set == 1.8
+    heroism_merge = SocialUpdate(heroism_delta=0.1).merge(SocialUpdate(heroism_delta=0.2))
+    assert heroism_merge.heroism_delta == pytest.approx(0.3)

@@ -307,6 +307,7 @@ class SocialUpdate:
     # Domain 4 Hardening
     nemesis_promotion: List[int] = field(default_factory=list) # EntityIDs to add to nemesis_ids
     place_attachment_delta: Dict[str, float] = field(default_factory=dict) # RegionID -> Delta
+    regional_reputation_delta: Dict[str, float] = field(default_factory=dict) # RegionID -> Delta
     combat_loss_delta: Dict[int, int] = field(default_factory=dict) # EntityID -> +1 per defeat by that entity
     
     contracts_add: List[ContractState] = field(default_factory=list)
@@ -318,8 +319,9 @@ class SocialUpdate:
                 not self.salience_delta and self.betrayal_increment == 0 and 
                 not self.betrayal_records_add and self.reputation_set is None and 
                 self.heroism_delta == 0.0 and self.notoriety_delta == 0.0 and 
-                self.last_offer_tick_set is None and not self.rejection_increment and 
+                self.last_offer_tick_set is None and not self.rejection_increment and
                 not self.nemesis_promotion and not self.place_attachment_delta and
+                not self.regional_reputation_delta and
                 not self.combat_loss_delta and not self.contracts_add and not self.contracts_remove)
 
     def merge(self, other: SocialUpdate) -> SocialUpdate:
@@ -339,6 +341,10 @@ class SocialUpdate:
         new_places = dict(self.place_attachment_delta)
         for k, v in other.place_attachment_delta.items():
             new_places[k] = new_places.get(k, 0.0) + v
+
+        new_regional_rep = dict(self.regional_reputation_delta)
+        for k, v in other.regional_reputation_delta.items():
+            new_regional_rep[k] = new_regional_rep.get(k, 0.0) + v
 
         new_combat_loss = dict(self.combat_loss_delta)
         for k, v in other.combat_loss_delta.items():
@@ -361,6 +367,7 @@ class SocialUpdate:
             rejection_increment={**self.rejection_increment, **other.rejection_increment},
             nemesis_promotion=self.nemesis_promotion + other.nemesis_promotion,
             place_attachment_delta=new_places,
+            regional_reputation_delta=new_regional_rep,
             combat_loss_delta=new_combat_loss,
             contracts_add=self.contracts_add + other.contracts_add,
             contracts_remove=self.contracts_remove + other.contracts_remove

@@ -56,10 +56,13 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/core/state.py` (`SocialComponent` has `public_reputation` vs
-    `trust_history`)'
+  v2_evidence: '`src/core/models/social.py` (`SocialComponent` has `public_reputation`
+    vs `trust_history`). TCK-20260904-REPUTATION-LOCALITY-SCOPE added `regional_reputation:
+    Dict[str, float]` as a structurally separate, additive locality dimension (RegionID
+    -> local reputation) alongside the retained global `public_reputation` scalar
+    -- not a replacement of it.'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_social_parity.py`'
+  test_path: tests/unit/social/test_relationships.py::test_public_reputation_impact
   divergence_note: null
   support_boundary: null
 - id: SOC-006
@@ -1444,7 +1447,11 @@
   legacy_evidence: null
   v2_evidence: "src/systems/social_systems/appraisal.py appraise_contract \u2014 public_trust\
     \ = source.social.public_reputation / 2.0; trust_score = public_trust * 0.7 +\
-    \ history_trust * 0.3; < 0.2 \u2192 TOTAL_DISTRUST (TCK-20260619-PARITY-P0-BUGS)\n"
+    \ history_trust * 0.3; < 0.2 -> TOTAL_DISTRUST (TCK-20260619-PARITY-P0-BUGS).\
+    \ TCK-20260904-REPUTATION-LOCALITY-SCOPE confirmed this read is unchanged: appraise_contract()\
+    \ still reads the retained global public_reputation scalar; region-scoped blending\
+    \ into this read was explicitly scoped out as a documented follow-up, not implemented\
+    \ in this ticket.\n"
   proof_type: parity
   test_path: tests/unit/social/test_parity_soc_134.py::TestSocialAppraisalWithNarrative::test_social_appraisal_with_narrative
   divergence_note: null
@@ -2544,7 +2551,7 @@
     at episode start. Both hooks are wired into CampaignOrchestrator._advance_state()
     and _build_initial_state(). CampaignState.social_memories is serialized with str(k)/int(k)
     key conversion and participates in the full to_dict/from_dict round-trip. Pure
-    read for export; dc_replace for import (no live mutation).
+    read for export; authoritative write for import.
 
     '
   status: verified
@@ -2553,6 +2560,19 @@
   v2_evidence: 'src/domains/campaigns/social_memory.py (SocialMemoryExporter, SocialMemoryImporter).
     src/domains/campaigns/state.py (CampaignState.social_memories field). src/domains/campaigns/orchestrator.py
     (_extract_social_memories, _build_initial_state import hook). (TCK-20260619-E43B-EXPORT-IMPORT)
+    TCK-20260904-REPUTATION-LOCALITY-SCOPE fixed a pre-existing bypass: SocialMemoryImporter.apply()
+    previously wrote public_reputation via a direct dc_replace(entity.social, ...)
+    call, bypassing RelationshipService.process_update() -- the sole authoritative
+    writer per SOC-217. It now routes the write through RelationshipService.process_update(entity.social,
+    SocialUpdate(reputation_set=...)), a zero-behavior-change refactor (same computed
+    value, different write mechanism). The same class of bypass was also found and
+    fixed in CampaignOrchestrator._build_initial_state()''s carried-reputation seeding
+    (src/domains/campaigns/orchestrator.py), discovered via the new architecture guard
+    test (tests/architecture/test_social_write_paths.py) during this ticket''s implementation.
+    regional_reputation is NOT exported/imported across episode boundaries in this
+    ticket -- only the flat faction_reputation["default"] carries forward, unchanged;
+    cross-episode carry-forward for regional_reputation is a disclosed follow-up gap,
+    not implemented here.
 
     '
   proof_type: parity
@@ -2563,6 +2583,9 @@
   divergence_note: 'faction_reputation is a single "default" key (public_reputation
     proxy) in E43B. Per-faction detail deferred to a future E43 child ticket. Per
     Mechanics Bible ch03 "E43 adds per-faction detail" note in EntityCarryForward.
+    regional_reputation (a geographic, not organizational/faction, dimension) is a
+    separate axis added by TCK-20260904-REPUTATION-LOCALITY-SCOPE and does not participate
+    in this cross-episode carry-forward.
 
     '
   support_boundary: null
@@ -3989,3 +4012,22 @@
   divergence_note: null
   support_boundary: See COMB-321 -- Campaign-mode Nemesis data only, not the always-live
     legacy nemesis_ids/grudge_history mechanism.
+- id: SOC-266
+  text: SocialComponent.regional_reputation (Dict[RegionID, float]) provides a region-scoped
+    reputation dimension additive to the retained global public_reputation scalar;
+    both are written by RelationshipService.process_update() from the same SocialUpdate
+    when a region_id is supplied via regional_reputation_delta.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/models/social.py (SocialComponent.regional_reputation field,
+    mirroring place_attachment's Dict[str, float] shape). src/core/updates.py (SocialUpdate.regional_reputation_delta,
+    sum-by-key merge()). src/systems/social_systems/relationships.py (RelationshipService.process_update()
+    applies regional_reputation_delta clamped [0.0, 2.0], same clamp range as public_reputation,
+    alongside the unchanged global-scalar write). src/core/state.py (EntityState.to_canonical_dict()
+    sorted-key coverage). src/replay/fingerprint.py (StateFingerprinter.get_fingerprint()
+    sorted-join coverage). (TCK-20260904-REPUTATION-LOCALITY-SCOPE)
+  proof_type: parity
+  test_path: tests/unit/social/test_relationships.py::test_public_reputation_locality_differs_by_region_after_region_scoped_event
+  divergence_note: null
+  support_boundary: null

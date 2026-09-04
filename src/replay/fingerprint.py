@@ -67,6 +67,7 @@ class StateFingerprinter:
                 f"items={StateFingerprinter._inventory_identity(ent)}:"
                 f"bonds={len(ent.social.bonds)}:"
                 f"reputation={ent.social.public_reputation:.3f}:"
+                f"regional_reputation={'|'.join(f'{k}:{v:.3f}' for k, v in sorted(ent.social.regional_reputation.items()))}:"
                 f"strategic={strategic_ident}"
             )
 

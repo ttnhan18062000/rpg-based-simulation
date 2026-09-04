@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-09-02
+last_verified: 2026-09-04
 ---
 
 # Social Systems Contract
@@ -87,6 +87,12 @@ Compliance IDs: SOC-193–SOC-196, SOC-217
 ### Social bonds
 
 `SocialBond` is a richer directional relationship: `familiarity`, `sentiment` (−1.0 to 1.0), `last_interaction_tick`, `role` (`RelationshipRole`: `NEUTRAL` default / `FRIEND` / `RIVAL`, SOC-247). Bonds are formed for entities with high familiarity or strong sentiment. Bond sentiment takes priority over trust_history in appraisal. `role` is settable only through the authoritative `SocialBondUpdate.role_set` → `RelationshipService.process_update()` path, and `RIVAL` is independent of `nemesis_ids`/`grudge_history`-driven nemesis promotion below.
+
+### Regional reputation (SOC-266, TCK-20260904-REPUTATION-LOCALITY-SCOPE)
+
+`SocialComponent.regional_reputation: Dict[RegionID, float]` (0.0–2.0 clamp, same range as `public_reputation`) is a region-scoped reputation dimension, additive to — not a replacement of — the retained global `public_reputation` scalar. It mirrors `place_attachment`'s `Dict[str, float]` shape. Written via `SocialUpdate.regional_reputation_delta` (sum-by-key `merge()`, matching `place_attachment_delta`'s composition rule) through the same `RelationshipService.process_update()` authoritative path — no second write path was introduced.
+
+**Disclosed follow-up gaps (not wired as of this ticket):** the Trust evaluation pipeline's step 1 above (`SocialAppraisalSystem.appraise_contract()`) and both live reputation-discount call sites (`src/engine/shop.py`, `src/town/shop.py`, see `docs/mechanics/03_economic_laws.md` §4.1) still read only the global `public_reputation` scalar, not `regional_reputation`. `regional_reputation` also does not carry across Campaign episode boundaries — see `docs/simulation/domains/social_memory_contract.md`. See SOC-266 in `docs/parity_ledger/social_narrative.yaml` for the authoritative evidence trail.
 
 ### Decay
 
@@ -210,7 +216,7 @@ Social system updates run as part of the authoritative apply pipeline. There is 
 
 ## Mutation rules
 
-All social state changes go through `SocialUpdate` → `RelationshipService.process_update()` → authoritative apply. Direct mutation of `SocialComponent` fields outside this path is prohibited (SOC-217).
+All social state changes go through `SocialUpdate` → `RelationshipService.process_update()` → authoritative apply. Direct mutation of `SocialComponent` fields outside this path is prohibited (SOC-217). `tests/architecture/test_social_write_paths.py` (added by TCK-20260904-REPUTATION-LOCALITY-SCOPE) is a real architecture guard test for this rule; it also caught and led to fixing two pre-existing bypasses of this path (`SocialMemoryImporter.apply()` and `CampaignOrchestrator._build_initial_state()` in `src/domains/campaigns/`, both now routed through `RelationshipService.process_update()`).
 
 ---
 
@@ -219,6 +225,8 @@ All social state changes go through `SocialUpdate` → `RelationshipService.proc
 - `tests/unit/social/test_groups.py` — trust pipeline, hard reject gates, bond formation
 - `tests/unit/social/test_party_agency.py` — delta application, clamping, place attachment
 - `tests/integration/scenarios/test_phase7_social_cooperation_scenarios.py` — full contract lifecycle: offer → appraisal → accept/breach
+- `tests/unit/social/test_relationships.py` — including `regional_reputation` delta application and clamping (SOC-266)
+- `tests/architecture/test_social_write_paths.py` — guards that no code path bypasses `RelationshipService.process_update()` to mutate `SocialComponent` reputation fields directly
 
 ---
 
