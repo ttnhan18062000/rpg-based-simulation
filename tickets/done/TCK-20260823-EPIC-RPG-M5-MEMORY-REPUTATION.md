@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: core
 authority: P1
 audience: agent
 ticket_id: TCK-20260823-EPIC-RPG-M5-MEMORY-REPUTATION
-phase: open
+phase: done
 date: 2026-09-04
 tags: [lifecycle, social]
 ---
@@ -15,7 +15,7 @@ tags: [lifecycle, social]
 Memory, Reputation & Legacy (M5) — tracking epic for the death-and-lineage and reputation branches
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -94,14 +94,29 @@ safe to start now.
   Drift).
 
 ## Acceptance Criteria
-- [ ] All 4 child tickets (death-and-lineage combined + idea 60 + idea 53 + idea 54) are DONE, idea
-      60 landing before idea 53/54 per the epic doc's sequencing constraint.
-- [ ] Idea 60's child ticket documents, with fresh evidence, which `public_reputation`
+- [x] All 4 child tickets (death-and-lineage combined + idea 60 + idea 53 + idea 54) are DONE, idea
+      60 landing before idea 53/54 per the epic doc's sequencing constraint. Verified: all 4 in
+      `tickets/done/` (`TCK-20260904-LINEAGE-DEATH-DISPATCH`, `TCK-20260904-REPUTATION-LOCALITY-SCOPE`,
+      `TCK-20260904-INHERITED-REPUTATION-SEED`, `TCK-20260904-CLAN-REPUTATION-ASSOCIATION`); per
+      `tickets/working_log.csv`, idea 60 (`REPUTATION-LOCALITY-SCOPE`) landed 2026-09-04T08:22:20Z,
+      before both idea 53 (`INHERITED-REPUTATION-SEED`, 2026-09-05T00:00:00Z) and idea 54
+      (`CLAN-REPUTATION-ASSOCIATION`, 2026-09-04T19:29:19Z).
+- [x] Idea 60's child ticket documents, with fresh evidence, which `public_reputation`
       field(s)/module(s) it actually constrains, correcting the epic doc's stale premise rather than
-      repeating it.
-- [ ] No child ticket touches idea 57/62/63 or any Legacy/Memory-axis-shaped machinery.
-- [ ] Death-and-lineage's on-death dispatch hook fires at a single trigger moment (death, after
-      `heir_entity_id` resolves), not duplicated across idea 55 and idea 58's handlers.
+      repeating it. Verified: `TCK-20260904-REPUTATION-LOCALITY-SCOPE` added
+      `SocialComponent.regional_reputation` as a region-scoped field additive to the existing global
+      `public_reputation` scalar, wired through `RelationshipService.process_update()` — the sole
+      authoritative write path — correcting the epic doc's stale "zero call sites" premise.
+- [x] No child ticket touches idea 57/62/63 or any Legacy/Memory-axis-shaped machinery. Verified:
+      all 4 child tickets' own Scope/Out-of-Scope sections confirm they touch only death-and-lineage
+      dispatch and the three reputation fields (`SocialComponent.public_reputation`/
+      `regional_reputation`, `ClanState.clan_reputation`) — none reference Chronicle aggregation,
+      generational transformation, or belief representation.
+- [x] Death-and-lineage's on-death dispatch hook fires at a single trigger moment (death, after
+      `heir_entity_id` resolves), not duplicated across idea 55 and idea 58's handlers. Verified:
+      `TCK-20260904-LINEAGE-DEATH-DISPATCH`'s working-log summary confirms one on-death dispatch hook
+      in `LifecycleSystem.resolve_lifecycle` wires both idea 55's nemesis-blocker transfer and idea
+      58's dying-wish seed onto the heir from a single trigger point.
 
 ## Related Tickets
 ### Investigation (prerequisite — done)
@@ -170,4 +185,37 @@ None — epic tier tracks child tickets only; each child ticket carries its own 
 (Epic tier — see each child ticket's own Files Changed section.)
 
 ## Completion Summary
-(Pending — child tickets not yet created.)
+
+All 4 child tickets scoped by this epic are DONE, closing out both of the epic's two active
+branches (death-and-lineage and reputation), with the history-and-belief branch (ideas 57/62/63)
+deliberately held out of scope as planned:
+
+- **Death-and-lineage (ideas 55+58)** — `TCK-20260904-LINEAGE-DEATH-DISPATCH`: one on-death
+  dispatch hook in `LifecycleSystem.resolve_lifecycle`, firing once at death after
+  `heir_entity_id` resolves, wiring idea 55's weakened Campaign-mode nemesis-blocker transfer and
+  idea 58's honorable/ignorable dying-wish `NamedIntentionBundle` seed onto the heir.
+- **Idea 60 (Reputations Are Local)** — `TCK-20260904-REPUTATION-LOCALITY-SCOPE`: added
+  `SocialComponent.regional_reputation` (region-scoped `Dict[str, float]`) additive to the retained
+  global `public_reputation` scalar, wired through the sole authoritative write path
+  (`RelationshipService.process_update()`) and both determinism surfaces (canonical hash,
+  fingerprint) — correcting the epic doc's stale "zero call sites" premise with fresh evidence, and
+  closing two pre-existing direct-write bypasses.
+- **Idea 53 (Inherited Reputation)** — `TCK-20260904-INHERITED-REPUTATION-SEED`: a pure
+  `ReputationService.combine_public_reputation()` averaging both parents' `public_reputation`,
+  threaded through `V2EntityBuilder.birth_record()`'s new AND-gated parent-reputation kwargs and
+  the humanoid reproduction call chain, seeding a newborn's starting reputation from parental
+  standing.
+- **Idea 54 (Guilt by Association)** — `TCK-20260904-CLAN-REPUTATION-ASSOCIATION`: added
+  `ClanState.clan_reputation` as new durable state written only via `ClanUpdate.clan_reputation_delta`
+  through `apply.py`, wired a clan-reputation misconduct penalty into the live party-defection
+  pipeline path (and, at the pure-function level with a disclosed pipeline-reachability gap, into
+  contract betrayal), and extended stranger-judgment appraisal with an additive clan-trust blend
+  that preserves the pinned SOC-134 parity test unmodified.
+
+All 4 Acceptance Criteria verified satisfied above. The final-permadeath repair precondition
+(`TCK-20260826-HOTFIX-PERMADEATH-LIFECYCLE-FIX`) landed ahead of this epic, as scoped. The
+history-and-belief branch (ideas 57/62/63) remains deliberately out of this epic's scope, tracked
+as future work of the parent `docs/plans/rpg_design_roadmap/rpg_m5_memory_reputation_epic.md` doc
+pending the not-yet-drafted Legacy/Memory axis proposal and the still-open
+`TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION` ticket — this epic ticket's closure
+covers only its own narrower 4-ticket scope, not the full 8-idea roadmap doc.

@@ -86,6 +86,14 @@ and schedule, not yet one of the 8 ideas this epic's Scope commits to below.
    scaffolding, not a live system to reconcile with. **Must still sequence before or alongside idea 53/54**
    — confirmed independently as a real constraint, not just a hedge, since it changes the shape of the same
    field 53/54 write.
+   **Correction, 2026-09-04** (from `TCK-20260904-CLAN-REPUTATION-ASSOCIATION`'s investigation): this
+   "same field 53/54 write" claim is confirmed accurate for idea 53 (which writes
+   `SocialComponent.public_reputation`, the same scalar idea 60 touches) but **inaccurate for idea 54
+   specifically** — idea 54 targets a brand-new `ClanState.clan_reputation` field on a structurally
+   distinct dataclass (`ClanState`, not `SocialComponent`) that idea 60 never referenced. Idea 60's
+   sequencing dependency was therefore a hedge for idea 54, not a real code constraint; idea 54 could have
+   shipped independently of idea 60's landing. Left uncorrected here previously so future scoping wouldn't
+   silently repeat the same overstated claim.
    **Status update, 2026-09-04:** shipped as `TCK-20260904-REPUTATION-LOCALITY-SCOPE`, ahead of idea 53
    as sequenced. Added `SocialComponent.regional_reputation: Dict[str, float]` (region-scoped, `[0.0, 2.0]`
    clamp) additive to the retained, unchanged global `public_reputation` scalar, wired through
@@ -93,6 +101,19 @@ and schedule, not yet one of the 8 ideas this epic's Scope commits to below.
    (`to_canonical_dict()`, `StateFingerprinter`) and an architecture guard test added. This annotation was
    added retroactively by idea 53's own doc-update pass — idea 60's ticket closed without one.
 4. **Idea 54 — Guilt by Association.** Gated on M2's idea 36 (Clan) existing as real state.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-CLAN-REPUTATION-ASSOCIATION`. Added
+   `ClanState.clan_reputation: float = 1.0` (clamped `[0.0, 2.0]`) as new typed durable state, written
+   exclusively through `ClanUpdate.clan_reputation_delta` applied additively in `apply.py`'s clan-merge
+   block. Wired live into party defection (`GroupPhase.resolve()`) via a new
+   `ClanLifecycleService.find_clan_id_for_entity()` sorted reverse lookup and shared
+   `CLAN_REPUTATION_MISCONDUCT_DELTA = -0.25` constant; the same lookup/constant is also used by a
+   contract-betrayal path (`ContractService.compute_betrayal_clan_reputation_update()`) but that path is
+   disclosed as not reachable from any live pipeline phase today — a pre-existing gap this ticket
+   surfaces, not fixes. Read side extends `SocialAppraisalSystem.appraise_contract()`'s no-bond
+   stranger-judgment branch with an additive `(clan_trust - 0.5) * 0.2` delta term that reduces to exactly
+   the pre-existing pinned formula at the no-clan/neutral default, preserving P0 parity entry SOC-134
+   unmodified. Documented in `docs/mechanics/04_strategic_cognition.md` §10a "Clan Reputation &
+   Guilt-by-Association Law" and `docs/parity_ledger/social_narrative.yaml` (SOC-268).
 5. **Idea 57 — The Living Legend Feedback Loop.** Its own original claim ("nothing reads Chronicle's output
    back into anything") was wrong — `CultureDeriver` already does, at region scale, via Cultural Drift.
    Should copy `CultureDeriver`'s aggregation shape rather than invent new event-scoring logic.

@@ -1451,7 +1451,15 @@
     \ TCK-20260904-REPUTATION-LOCALITY-SCOPE confirmed this read is unchanged: appraise_contract()\
     \ still reads the retained global public_reputation scalar; region-scoped blending\
     \ into this read was explicitly scoped out as a documented follow-up, not implemented\
-    \ in this ticket.\n"
+    \ in this ticket. TCK-20260904-CLAN-REPUTATION-ASSOCIATION (SOC-268) extended\
+    \ the no-bond stranger-judgment branch with a third additive term, (clan_trust\
+    \ - 0.5) * CLAN_INFLUENCE_WEIGHT (CLAN_INFLUENCE_WEIGHT=0.2), where clan_trust\
+    \ = (state.clans[clan_id].clan_reputation / 2.0) if the source belongs to a Clan\
+    \ else 0.5; the pinned no-clan-case formula (public_trust * 0.7 + history_trust\
+    \ * 0.3) is preserved bit-for-bit because the delta term evaluates to exactly\
+    \ 0.0 when clan_trust == 0.5 (no Clan / neutral default). This entry's status\
+    \ and test_path are unchanged since the case this test exercises has no source\
+    \ Clan.\n"
   proof_type: parity
   test_path: tests/unit/social/test_parity_soc_134.py::TestSocialAppraisalWithNarrative::test_social_appraisal_with_narrative
   divergence_note: null
@@ -4064,5 +4072,42 @@
     at the call site).
   proof_type: regression
   test_path: tests/unit/progression/test_lifecycle.py::test_birth_record_seeds_public_reputation_from_both_parents_average
+  divergence_note: null
+  support_boundary: null
+- id: SOC-268
+  text: 'Idea 54/M5 (Guilt by Association): `ClanState.clan_reputation: float = 1.0`
+    (clamped [0.0, 2.0]) is a new typed durable field distinct from any member''s
+    SocialComponent.public_reputation/regional_reputation. It is written exclusively
+    through `ClanUpdate.clan_reputation_delta`, applied additively (and clamped) in
+    apply.py''s clan-merge block, from two producers: a live party-defection trigger
+    in GroupPhase.resolve() and a pure-function-only contract-betrayal path (ContractService.compute_betrayal_clan_reputation_update,
+    not wired to any live pipeline phase). It is read in SocialAppraisalSystem.appraise_contract()''s
+    no-bond stranger-judgment branch as an additive delta term on trust_score, bounded
+    to +/-0.1, that reduces to 0.0 (no change) at the no-clan/neutral default -- preserving
+    SOC-134''s pinned formula unmodified.
+
+    '
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/core/state.py ClanState.clan_reputation (default 1.0, clamp [0.0,
+    2.0] applied at write time in apply.py); src/core/updates.py ClanUpdate.clan_reputation_delta
+    (default 0.0, folded into is_noop()); src/engine/apply.py clan-merge block (`new_reputation
+    = max(0.0, min(2.0, existing.clan_reputation + cu.clan_reputation_delta))`) --
+    the sole legal mutation point; src/systems/social_systems/clan_lifecycle.py (ClanLifecycleService.find_clan_id_for_entity,
+    sorted O(n_clans) reverse lookup; CLAN_REPUTATION_MISCONDUCT_DELTA = -0.25, shared
+    by both producers); src/engine/pipeline_phases/groups.py GroupPhase.resolve()
+    (live party-defection trigger, wired as pipeline phase "groups"); src/systems/social_systems/contracts.py
+    ContractService.compute_betrayal_clan_reputation_update (pure-function-only contract-betrayal
+    path; disclosed as not reachable from process_active_contracts(), the only production
+    caller of resolve_contract_outcome(), which never passes betrayal=True/betrayer_id
+    -- a pre-existing gap this ticket surfaces but does not fix); src/systems/social_systems/appraisal.py
+    appraise_contract() (stranger-judgment blend term, CLAN_INFLUENCE_WEIGHT = 0.2).
+    Mechanics Bible: docs/mechanics/04_strategic_cognition.md Sec.10a "Clan Reputation
+    & Guilt-by-Association Law". (TCK-20260904-CLAN-REPUTATION-ASSOCIATION)
+
+    '
+  proof_type: parity
+  test_path: tests/unit/domains/faction/test_clan_reputation_association.py::test_party_defection_produces_clan_reputation_clan_update
   divergence_note: null
   support_boundary: null

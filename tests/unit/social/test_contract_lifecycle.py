@@ -119,3 +119,51 @@ def test_contract_lifecycle_resolution():
     s_upd, b_upds = ContractService.resolve_contract_outcome(entity, contract.id, success=False, betrayal=True, betrayer_id=99)
     assert s_upd.contracts_add_or_update[0].status == ContractStatus.BETRAYED
     assert b_upds[0].bond_updates[0].sentiment_delta == -1.0
+
+
+def test_contract_betrayal_produces_clan_reputation_clan_update():
+    """Idea 54/M5 (SOC-268): a contract betrayal also produces a ClanUpdate
+    degrading the betrayer's clan's clan_reputation, verified through
+    ApplyPath. NOT wired to any live pipeline phase today --
+    process_active_contracts() never passes betrayal=True/betrayer_id (a
+    pre-existing gap, disclosed but not fixed by this ticket) -- this test
+    only proves compute_betrayal_clan_reputation_update() + apply.py correct
+    at the pure-function/apply-path level, not live-pipeline reachability."""
+    from src.core.state import ClanState
+    from src.core.updates import StateUpdate
+    from src.engine.apply import ApplyPath
+
+    contract = ContractService.create_recruitment_contract("c6", 99, 1, tick=100)
+    contract = replace(contract, status=ContractStatus.ACTIVE)
+    entity = V2EntityBuilder(1).kind("ACTOR").location(0, 0).strategic(contracts={contract.id: contract}).build()
+
+    # Existing entity-level SocialUpdate behavior remains unchanged/additive.
+    s_upd, b_upds = ContractService.resolve_contract_outcome(
+        entity, contract.id, success=False, betrayal=True, betrayer_id=99
+    )
+    assert b_upds[1].notoriety_delta == 0.5
+    assert b_upds[1].betrayal_increment == 1
+
+    clan = ClanState(clan_id="ironfang", member_entity_ids=(99,), clan_reputation=1.0)
+    state = AuthoritativeState(tick=1, seed=0, clans={"ironfang": clan})
+
+    clan_update = ContractService.compute_betrayal_clan_reputation_update(
+        betrayer_id=99, state=state, tick=1
+    )
+    assert clan_update is not None
+    assert clan_update.clan_id == "ironfang"
+    assert clan_update.clan_reputation_delta < 0.0
+
+    new_state = ApplyPath.apply_partial(state, StateUpdate(clan_updates=[clan_update]))
+    assert new_state.clans["ironfang"].clan_reputation < 1.0
+
+
+def test_contract_betrayal_with_no_clan_produces_no_clan_update():
+    """A betrayer with no clan membership produces None, not a crash or an
+    erroneous ClanUpdate."""
+    state = AuthoritativeState(tick=1, seed=0, clans={})
+
+    clan_update = ContractService.compute_betrayal_clan_reputation_update(
+        betrayer_id=99, state=state, tick=1
+    )
+    assert clan_update is None

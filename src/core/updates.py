@@ -962,6 +962,7 @@ class ClanUpdate:
     member_entity_ids_remove: Tuple[int, ...] = ()
     leader_entity_id_set: Optional[int] = None
     dissolved_tick_set: Optional[int] = None
+    clan_reputation_delta: float = 0.0
 
     def is_noop(self) -> bool:
         return (
@@ -969,6 +970,7 @@ class ClanUpdate:
             and not self.member_entity_ids_remove
             and self.leader_entity_id_set is None
             and self.dissolved_tick_set is None
+            and self.clan_reputation_delta == 0.0
         )
 
 

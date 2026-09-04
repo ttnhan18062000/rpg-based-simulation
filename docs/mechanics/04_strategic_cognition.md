@@ -1207,6 +1207,110 @@ pipeline.py` (`clan_lifecycle` phase, run after `groups`); `src/observability/ev
 (`ClanMemberLeftEvent`, `ClanSuccessionEvent`) (TCK-20260903-CLAN-LIFECYCLE-SUCCESSION, SOC-264,
 2026-09-03)
 
+### 10a. Clan Reputation & Guilt-by-Association Law (idea 54/M5, SOC-268)
+
+`ClanState` gains a second scalar, `clan_reputation: float = 1.0` (clamped `[0.0, 2.0]`) --
+the Clan's own aggregate standing, structurally distinct from any individual member's
+`SocialComponent.public_reputation`/`regional_reputation` (idea 53/idea 60, SOC-267/SOC-266).
+`clan_reputation` is never derived by summing/averaging member reputations; it accrues and
+decays only through the explicit misconduct deltas below. `ClanState.tension_level` (idea 68,
+still out of scope) is untouched by this law.
+
+**Write path.** The sole legal mutation point is `apply.py`'s existing clan-merge block
+(`src/engine/apply.py:379-396`, the same block SOC-264 established), extended with one more
+additive-delta line: `new_reputation = max(0.0, min(2.0, existing.clan_reputation +
+cu.clan_reputation_delta))`, mirroring `FactionState.tension_level`'s clamp pattern at the
+adjacent block. The only field carrying a delta into that block is the new
+`ClanUpdate.clan_reputation_delta: float = 0.0` (`src/core/updates.py`), folded into
+`ClanUpdate.is_noop()`'s existing check. Two producers exist:
+
+- **Party defection (live).** `GroupPhase.resolve()` (`src/engine/pipeline_phases/groups.py:163-170`)
+  calls the new `ClanLifecycleService.find_clan_id_for_entity(state, m_id)` reverse lookup
+  immediately after `PartyLifecycleService.check_defection()` returns a non-`None` entity
+  update, and if the defector belongs to a Clan, appends
+  `ClanUpdate(clan_id=clan_id, clan_reputation_delta=CLAN_REPUTATION_MISCONDUCT_DELTA)` to
+  `new_clan_updates`. This is the only live-pipeline trigger for `clan_reputation` today.
+  Runs as pipeline phase `"groups"` (`src/engine/pipeline.py:402`).
+- **Contract betrayal (pure-function only, not live-wired).**
+  `ContractService.compute_betrayal_clan_reputation_update(betrayer_id, state, tick)`
+  (`src/systems/social_systems/contracts.py:263-291`) performs the same reverse lookup and
+  returns a `ClanUpdate` with the same delta. It is deliberately kept separate from
+  `resolve_contract_outcome()` because that method's `Tuple[StrategicUpdate,
+  List[SocialUpdate]]` return shape is unpacked by every existing caller/test and must not
+  change. **Disclosed gap, not fixed by this ticket:** `process_active_contracts()`
+  (`src/systems/social_systems/contracts.py:294-300`, the only production caller of
+  `resolve_contract_outcome()`, wired as pipeline phase `"active_contracts"`,
+  `src/engine/pipeline.py:407`) always calls it with `success=True` and never passes
+  `betrayal=True`/`betrayer_id` -- this pre-existing condition means
+  `compute_betrayal_clan_reputation_update()` is reachable only from direct unit tests
+  today, not from any live simulation run. A future ticket owns wiring a real
+  betrayal-detection trigger into `process_active_contracts()`.
+
+**Shared constant.** `CLAN_REPUTATION_MISCONDUCT_DELTA: float = -0.25`
+(`src/systems/social_systems/clan_lifecycle.py`) is used by both producers -- no source
+doc distinguishes the relative severity of defection vs. betrayal at the clan level, so one
+constant covers both rather than two arbitrarily-differentiated magnitudes.
+
+**Reverse lookup.** `ClanLifecycleService.find_clan_id_for_entity(state, entity_id) ->
+Optional[str]` (`src/systems/social_systems/clan_lifecycle.py:40-51`) is a plain O(n_clans)
+scan over `sorted(state.clans.items())`, returning the first Clan whose
+`member_entity_ids` contains `entity_id`. No entity->clan index exists in durable state; a
+scan was chosen over adding an index because no evidence in this repo's fixtures shows
+Clan counts large enough to warrant one (2-6 clans in existing scenarios, the same order as
+Faction counts). Sorted iteration is mandatory here, consistent with `to_canonical_dict()`
+and the apply.py clan-merge block's own sorting convention.
+
+**Read path -- stranger-judgment blend.** `SocialAppraisalSystem.appraise_contract()`'s
+no-`SocialBond` ("stranger") branch (`src/systems/social_systems/appraisal.py:51-70`) gains
+one additive term:
+
+```
+clan_id = ClanLifecycleService.find_clan_id_for_entity(state, source_id)
+clan_trust = (state.clans[clan_id].clan_reputation / 2.0) if clan_id else 0.5
+
+trust_score = (
+    (public_trust * 0.7)
+    + (history_trust * 0.3)
+    + (clan_trust - 0.5) * CLAN_INFLUENCE_WEIGHT
+)
+```
+
+`CLAN_INFLUENCE_WEIGHT = 0.2` (`src/systems/social_systems/appraisal.py`) bounds the clan
+term to at most +/-0.1 (a full `clan_trust` swing from its floor 0.0 to its ceiling 1.0
+times 0.2). This is a strictly additive delta, not a re-weighting of the two existing
+terms: when the source has no Clan (`clan_id is None`), `clan_trust` defaults to `0.5`, the
+delta term evaluates to exactly `0.0`, and the formula reduces byte-for-byte to the
+pre-existing pinned formula (`public_trust * 0.7 + history_trust * 0.3`) that
+**SOC-134** (P0, `docs/parity_ledger/social_narrative.yaml`) certifies. SOC-134's `status`
+and `test_path` are unchanged by this law -- only its `v2_evidence` text was extended to
+describe the new formula shape, since the no-clan case it tests remains bit-identical.
+The `if bond:` branch (private-history judgment) is untouched and deliberately stays
+clan-blind: a member with direct history is judged on that history, never diluted by their
+counterpart's clan standing. `_appraise_clan()` (the `ContractKind.CLAN` join-offer
+appraisal) is a separate code path and is not affected by this blend.
+
+**Guard.** `tests/architecture/test_social_write_paths.py`'s existing scan for
+`public_reputation=`/`regional_reputation=` writes outside its allowlist provides defense
+in depth; `tests/architecture/test_clan_reputation_write_paths.py` additionally asserts (a)
+`ClanState.clan_reputation` is written only by `apply.py`'s clan-merge block, and (b) no
+`SocialComponent.public_reputation`/`regional_reputation` write occurs anywhere in the
+clan-reputation code paths above.
+
+**Out of scope (deliberate).** No `PublicReputationProfile`/`ReputationUpdateService`
+wiring (confirmed dead code, zero call sites). No entity->clan index structure. No live
+betrayal-detection trigger in `process_active_contracts()` (see above). No change to
+`_appraise_clan()`'s CLAN-join gate.
+
+**Source:** `src/core/state.py` (`ClanState.clan_reputation`); `src/core/updates.py`
+(`ClanUpdate.clan_reputation_delta`); `src/engine/apply.py` (clan-merge block's reputation
+clamp); `src/systems/social_systems/clan_lifecycle.py`
+(`ClanLifecycleService.find_clan_id_for_entity`, `CLAN_REPUTATION_MISCONDUCT_DELTA`);
+`src/engine/pipeline_phases/groups.py` (`GroupPhase.resolve()`'s defection hook);
+`src/systems/social_systems/contracts.py`
+(`ContractService.compute_betrayal_clan_reputation_update`);
+`src/systems/social_systems/appraisal.py` (`appraise_contract()`'s stranger-judgment blend,
+`CLAN_INFLUENCE_WEIGHT`) (TCK-20260904-CLAN-REPUTATION-ASSOCIATION, SOC-268, 2026-09-04)
+
 ## 11. Information Hub Knowledge Accumulation & Propagation Law (idea 41, M4)
 
 `InformationProviderState` gains a real knowledge-accumulation mechanism, and a second,
