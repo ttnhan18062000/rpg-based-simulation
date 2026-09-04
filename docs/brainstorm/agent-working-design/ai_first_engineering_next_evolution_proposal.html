@@ -1,0 +1,948 @@
+<title>Next Evolution Proposal</title>
+<style>
+:root{
+  --paper:#EEF1F4; --surface:#FFFFFF; --surface-2:#E4E9ED;
+  --ink:#17202B; --ink-soft:#51606F; --ink-faint:#7C8996;
+  --line:#D2DAE1; --line-soft:#E2E7EB;
+  --accent:#1F5C73; --accent-ink:#0F3644; --accent-soft:#DCEBF0; --accent-soft-line:#BFD9E3;
+  --violet:#5B4B8A; --violet-soft:#E6E1F2; --violet-line:#CFC3E8;
+  --good:#2F7D5A; --good-soft:#DEEFE6;
+  --warn:#B8752B; --warn-soft:#F5E6D3;
+  --bad:#A6423F; --bad-soft:#F3DEDD;
+  --na:#8A9098;  --na-soft:#E7E9EB;
+  --shadow: 0 1px 2px rgba(23,32,43,.06), 0 6px 20px -8px rgba(23,32,43,.14);
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10151C; --surface:#171F29; --surface-2:#1E2733;
+    --ink:#E8ECF0; --ink-soft:#9FADBB; --ink-faint:#748291;
+    --line:#2B3543; --line-soft:#232C38;
+    --accent:#5FBBDA; --accent-ink:#CDEFFB; --accent-soft:#173442; --accent-soft-line:#254A5C;
+    --violet:#B3A3E0; --violet-soft:#241C3A; --violet-line:#3A2E58;
+    --good:#5FBE93; --good-soft:#173428;
+    --warn:#E0A758; --warn-soft:#3A2C15;
+    --bad:#E28683; --bad-soft:#3B2020;
+    --na:#8D97A2; --na-soft:#232B34;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -10px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10151C; --surface:#171F29; --surface-2:#1E2733;
+  --ink:#E8ECF0; --ink-soft:#9FADBB; --ink-faint:#748291;
+  --line:#2B3543; --line-soft:#232C38;
+  --accent:#5FBBDA; --accent-ink:#CDEFFB; --accent-soft:#173442; --accent-soft-line:#254A5C;
+  --violet:#B3A3E0; --violet-soft:#241C3A; --violet-line:#3A2E58;
+  --good:#5FBE93; --good-soft:#173428;
+  --warn:#E0A758; --warn-soft:#3A2C15;
+  --bad:#E28683; --bad-soft:#3B2020;
+  --na:#8D97A2; --na-soft:#232B34;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -10px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;}
+body{background:var(--paper); color:var(--ink); font-family:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif; font-size:15.5px; line-height:1.58;}
+.mono{font-family:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;}
+h1,h2,h3,h4,h5{font-family:"IBM Plex Sans",sans-serif; font-weight:700; text-wrap:balance; color:var(--ink); margin:0;}
+p{margin:0 0 .8em; color:var(--ink-soft); max-width:68ch;}
+a{color:var(--accent);}
+.tab{font-variant-numeric:tabular-nums;}
+code{font-family:"IBM Plex Mono",monospace; font-size:.92em; background:var(--surface-2); padding:1px 5px; border-radius:4px; color:var(--ink);}
+
+.wrap{max-width:1240px; margin:0 auto; padding:0 28px 130px;}
+.topnav{position:sticky; top:0; z-index:30; background:color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--line);}
+.topnav-inner{max-width:1240px; margin:0 auto; padding:0 28px; display:flex; align-items:center; gap:18px; height:52px; overflow-x:auto;}
+.topnav a{color:var(--ink-faint); text-decoration:none; font-size:11.5px; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; font-weight:600;}
+.topnav a:hover{color:var(--accent);}
+.topnav .brand{color:var(--ink); font-weight:700; font-size:13px; white-space:nowrap;}
+
+.cover{padding:56px 0 40px; border-bottom:1px solid var(--line);}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--violet); background:var(--violet-soft); border:1px solid var(--violet-line); padding:4px 10px; border-radius:100px; margin-bottom:18px;}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--violet);}
+.cover h1{font-size:clamp(27px,4vw,40px); line-height:1.1; letter-spacing:-.01em; max-width:22ch;}
+.cover .sub{font-size:16.5px; max-width:70ch; margin-top:14px;}
+.deliverable-name{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-faint); margin-top:16px; padding:8px 12px; background:var(--surface-2); border-radius:7px; display:inline-block; border:1px solid var(--line-soft);}
+.meta-row{display:flex; flex-wrap:wrap; gap:22px; margin-top:20px; font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-faint);}
+.meta-row b{color:var(--ink-soft); font-weight:600;}
+.addendum-flag{margin-top:18px; display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent-soft-line); padding:8px 12px; border-radius:8px;}
+
+section{padding:48px 0; border-bottom:1px solid var(--line);}
+section:last-of-type{border-bottom:none;}
+.sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:20px; flex-wrap:wrap;}
+.sec-num{font-family:"IBM Plex Mono",monospace; color:var(--violet); font-size:13px; font-weight:600;}
+.sec-head h2{font-size:22px;}
+.sec-head .new-tag{font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:700; color:var(--good); background:var(--good-soft); padding:2px 7px; border-radius:100px; letter-spacing:.04em;}
+.sec-intro{max-width:74ch; margin-bottom:24px;}
+
+.exec-box{background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--violet); border-radius:var(--radius); padding:24px 26px; box-shadow:var(--shadow);}
+.exec-box p{max-width:none; font-size:15.5px;}
+.exec-box p:last-child{margin-bottom:0;}
+
+.pill{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 9px; border-radius:100px; white-space:nowrap;}
+.pill::before{content:""; width:6px; height:6px; border-radius:50%;}
+.pill.confirmed{background:var(--good-soft); color:var(--good);} .pill.confirmed::before{background:var(--good);}
+.pill.mostly{background:var(--accent-soft); color:var(--accent);} .pill.mostly::before{background:var(--accent);}
+.pill.reframe{background:var(--warn-soft); color:var(--warn);} .pill.reframe::before{background:var(--warn);}
+.pill.disagree{background:var(--bad-soft); color:var(--bad);} .pill.disagree::before{background:var(--bad);}
+.pill.addressed{background:var(--violet-soft); color:var(--violet);} .pill.addressed::before{background:var(--violet);}
+.pill.insuff{background:var(--na-soft); color:var(--na);} .pill.insuff::before{background:var(--na);}
+
+.evid{font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; white-space:nowrap;}
+.evid.A{background:var(--good-soft); color:var(--good);}
+.evid.B{background:var(--accent-soft); color:var(--accent);}
+.evid.C{background:var(--warn-soft); color:var(--warn);}
+.evid.D{background:var(--violet-soft); color:var(--violet);}
+.evid.E{background:var(--na-soft); color:var(--na);}
+
+.ready{font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap;}
+.ready.READY{background:var(--good-soft); color:var(--good);}
+.ready.Design{background:var(--accent-soft); color:var(--accent);}
+.ready.Measure{background:var(--warn-soft); color:var(--warn);}
+.ready.Experiment{background:var(--violet-soft); color:var(--violet);}
+.ready.Blocked{background:var(--na-soft); color:var(--na);}
+.ready.Reject{background:var(--bad-soft); color:var(--bad);}
+.timing-now{color:var(--accent); font-weight:700; font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.03em; text-transform:uppercase;}
+.timing-later{color:var(--ink-faint); font-weight:600; font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.03em; text-transform:uppercase;}
+
+.reassess-list{display:flex; flex-direction:column; gap:10px;}
+.reassess-item{background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:14px 16px; box-shadow:var(--shadow); display:grid; grid-template-columns:190px 1fr; gap:16px; align-items:start;}
+@media (max-width:760px){.reassess-item{grid-template-columns:1fr;}}
+.reassess-item .rl{display:flex; flex-direction:column; gap:6px;}
+.reassess-item .rl b{font-size:13.5px; color:var(--ink);}
+.reassess-item .badges{display:flex; gap:6px; flex-wrap:wrap;}
+.reassess-item p{font-size:13.5px; margin:0;}
+
+.finding-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+@media (max-width:820px){.finding-grid{grid-template-columns:1fr;}}
+.finding-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); position:relative;}
+.finding-card .fhead{display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+.finding-card .fnum{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--violet); font-weight:700; background:var(--violet-soft); border:1px solid var(--violet-line); padding:2px 8px; border-radius:100px;}
+.finding-card h4{font-size:14.5px; margin-bottom:6px;}
+.finding-card p{font-size:13px; margin:0 0 8px;}
+.finding-card .ev{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-faint); background:var(--surface-2); border-radius:6px; padding:8px 10px; line-height:1.6;}
+
+.diagram{font-family:"IBM Plex Mono",monospace; font-size:12px; line-height:1.75; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px 24px; overflow-x:auto; box-shadow:var(--shadow); color:var(--ink-soft); white-space:pre;}
+.diagram b{color:var(--ink); font-weight:600;}
+.diagram .new{color:var(--good); font-weight:600;}
+.diagram .changed{color:var(--warn); font-weight:600;}
+
+.inv-scroll,.risk-scroll,.auth-scroll,.own-scroll,.auto-scroll,.ret-scroll{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);}
+table{border-collapse:collapse; width:100%; background:var(--surface);}
+table.inv{min-width:1280px;} table.risk{min-width:920px;} table.auth{min-width:1360px;} table.own{min-width:920px;} table.auto{min-width:1160px;} table.ret{min-width:900px;}
+table th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); padding:10px 13px; border-bottom:1px solid var(--line);}
+table td{padding:10px 13px; border-bottom:1px solid var(--line-soft); font-size:12.5px; vertical-align:top;}
+table tr:last-child td{border-bottom:none;}
+table tr:hover td{background:var(--surface-2);}
+.inv-change{font-weight:600; color:var(--ink); font-size:13px;}
+.decision{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap;}
+.decision.adopt{background:var(--good-soft); color:var(--good);}
+.decision.pilot{background:var(--accent-soft); color:var(--accent);}
+.decision.defer{background:var(--warn-soft); color:var(--warn);}
+.decision.reject{background:var(--na-soft); color:var(--na);}
+.gap-flag{color:var(--bad); font-weight:600;}
+
+.horizon{margin-bottom:30px;}
+.horizon-head{display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;}
+.horizon-badge{font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:700; padding:5px 12px; border-radius:100px; border:1px solid var(--line);}
+.horizon-badge.h0{background:var(--bad-soft); color:var(--bad); border-color:transparent;}
+.horizon-badge.h1{background:var(--warn-soft); color:var(--warn); border-color:transparent;}
+.horizon-badge.h2{background:var(--accent-soft); color:var(--accent); border-color:transparent;}
+.horizon-badge.h3{background:var(--na-soft); color:var(--na); border-color:transparent;}
+.horizon-head h3{font-size:16px;}
+.horizon-desc{font-size:13px; color:var(--ink-faint); margin-left:2px;}
+.epic-tag{font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--violet); background:var(--violet-soft); border:1px solid var(--violet-line); padding:2px 8px; border-radius:100px;}
+
+.ri-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:14px; overflow:hidden;}
+.ri-head{padding:15px 18px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; border-bottom:1px solid var(--line-soft); background:var(--surface-2);}
+.ri-head h4{font-size:15px; flex:1 1 200px;}
+.conf{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:5px;}
+.conf.High{background:var(--good-soft); color:var(--good);}
+.conf.Medium{background:var(--warn-soft); color:var(--warn);}
+.conf.Exploratory{background:var(--na-soft); color:var(--na);}
+.riskTag{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:5px;}
+.riskTag.Low{background:var(--good-soft); color:var(--good);}
+.riskTag.Medium{background:var(--warn-soft); color:var(--warn);}
+.riskTag.High{background:var(--bad-soft); color:var(--bad);}
+.ri-body{padding:16px 18px; display:grid; grid-template-columns:1fr 1fr; gap:16px 24px;}
+@media (max-width:760px){.ri-body{grid-template-columns:1fr;}}
+.ri-field{font-size:13px;}
+.ri-field .fl{font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--violet); font-weight:700; margin-bottom:4px;}
+.ri-field p{margin:0; font-size:13px; max-width:none;}
+.ri-field.full{grid-column:1/-1;}
+
+.lvl{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:5px;}
+.lvl.Low{background:var(--good-soft); color:var(--good);} .lvl.Medium{background:var(--warn-soft); color:var(--warn);} .lvl.High{background:var(--bad-soft); color:var(--bad);}
+
+.keep-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px;}
+@media (max-width:760px){.keep-grid{grid-template-columns:1fr;}}
+.keep-card{background:var(--good-soft); border:1px solid var(--good); border-left:4px solid var(--good); border-radius:9px; padding:14px 16px;}
+.keep-card h5{font-size:13.5px; color:var(--good); margin-bottom:6px;}
+.keep-card p{font-size:12.5px; margin:0; color:var(--ink-soft);}
+.keep-card .why{font-size:11.5px; color:var(--ink-faint); margin-top:6px;}
+
+.nrec-list{display:flex; flex-direction:column; gap:10px;}
+.nrec-item{background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--na); border-radius:9px; padding:14px 16px; box-shadow:var(--shadow);}
+.nrec-item h5{font-size:13.5px; margin-bottom:5px;}
+.nrec-item p{font-size:13px; margin:0 0 4px;}
+.nrec-item .reconsider{font-size:12px; color:var(--ink-faint); font-style:normal;}
+
+.simple-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+@media (max-width:760px){.simple-grid{grid-template-columns:1fr;}}
+.simple-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow);}
+.simple-card h5{font-size:14px; margin-bottom:6px;}
+.simple-card p{font-size:13px; margin:0;}
+
+.bucket{margin-bottom:34px;}
+.bucket-head{display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;}
+.bucket-badge{font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:700; padding:6px 14px; border-radius:100px;}
+.bucket-badge.A{background:var(--good-soft); color:var(--good);}
+.bucket-badge.B{background:var(--violet-soft); color:var(--violet);}
+.bucket-badge.C{background:var(--na-soft); color:var(--na);}
+.bucket-head h3{font-size:18px;}
+.bucket-desc{font-size:13.5px; color:var(--ink-faint); margin-bottom:18px; max-width:74ch;}
+
+.qa{display:flex; flex-direction:column; gap:18px;}
+.qa-item{display:grid; grid-template-columns:30px 1fr; gap:12px;}
+.qa-num{font-family:"IBM Plex Mono",monospace; color:var(--violet); font-weight:700; font-size:13px;}
+.qa-item h4{font-size:14px; margin-bottom:5px; max-width:none;}
+.qa-item p{font-size:13.5px; max-width:76ch;}
+.closing{background:var(--violet-soft); border:1px solid var(--violet-line); border-radius:var(--radius); padding:22px 24px; margin-top:26px;}
+.closing p{color:var(--ink); max-width:none; font-size:14.5px;}
+
+.level-block{margin-bottom:22px;}
+.level-block h4{font-size:14.5px; margin-bottom:10px; display:flex; align-items:center; gap:10px;}
+.level-num{font-family:"IBM Plex Mono",monospace; background:var(--accent-soft); color:var(--accent); border-radius:6px; width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;}
+.metric-row{display:grid; grid-template-columns:170px 1fr 90px; gap:14px; padding:8px 0; border-bottom:1px solid var(--line-soft); align-items:center; font-size:13px;}
+.metric-row:last-child{border-bottom:none;}
+.metric-row .mrole{font-weight:600; color:var(--ink);}
+.metric-row .msig{color:var(--ink-soft);}
+
+footer.rep{padding:36px 0 10px; font-size:12px; color:var(--ink-faint); font-family:"IBM Plex Mono",monospace;}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+
+<nav class="topnav"><div class="topnav-inner">
+  <span class="brand">Next Evolution</span>
+  <a href="#current">Current State</a>
+  <a href="#reassess">Reassessment</a>
+  <a href="#findings">Findings</a>
+  <a href="#target">Target Arch.</a>
+  <a href="#authority">Authority Map</a>
+  <a href="#inventory">Inventory</a>
+  <a href="#coupling">Epics</a>
+  <a href="#outputs">Roadmap</a>
+  <a href="#gates">Gates</a>
+  <a href="#evaluation">Evaluation</a>
+  <a href="#automation">Automation</a>
+  <a href="#lifecycle">Lifecycle</a>
+  <a href="#notrec">Not Rec.</a>
+  <a href="#risks">Risks</a>
+  <a href="#final">Final</a>
+  <a href="#freeze">Freeze Verdict</a>
+</div></nav>
+
+<div class="wrap">
+  <header class="cover">
+    <span class="eyebrow"><span class="dot"></span>Architecture Proposal · Volume II, Revision 3 — Frozen</span>
+    <h1>The Next Evolution of the Engineering Platform</h1>
+    <p class="sub">An independent, repository-grounded proposal for what this AI-first engineering system should become next — treating the prior maturity audit as a hypothesis set to confirm, reframe, or overturn, and this revision adds evidence-strength grading, epic-level coupling analysis, three-level evaluation design, and explicit implementation-readiness verdicts so the roadmap is executable, not just architecturally reasonable.</p>
+    <div class="deliverable-name">AI_FIRST_ENGINEERING_NEXT_EVOLUTION_PROPOSAL</div>
+    <div class="meta-row">
+      <span><b>Repo</b> rpg-based-simulation</span>
+      <span><b>HEAD</b> <span class="mono tab">68579af2</span></span>
+      <span><b>Reviewed</b> 2026-09-03</span>
+      <span><b>Prior audit</b> Architecture Maturity Audit (58/100)</span>
+    </div>
+    <div class="addendum-flag">Revision 2 incorporated the "Executable Engineering Strategy" addendum (§§60–86). This pass is a final consistency &amp; freeze pass — it corrects readiness/timing conflation, secret-scan naming precision, ownership roles, evaluation-metric overclaims, and telemetry-lifecycle ambiguity, and closes with a Freeze Verdict (§Freeze Pass). It does not reopen settled architecture.</div>
+  </header>
+
+  <section id="exec">
+    <div class="sec-head"><span class="sec-num">§1</span><h2>Executive recommendation</h2></div>
+    <div class="exec-box">
+      <p>This system does not need more architecture. It needs the architecture it already has to be <b>enforced instead of documented</b>, <b>bounded instead of unbounded</b>, and <b>measured instead of assumed</b>. That diagnosis survives this deeper pass — but the deeper pass changes what counts as "next": not a flat priority list, but a small set of <b>Committed</b> changes that are genuinely ready to ticket today, a smaller set of <b>Experiments</b> designed to produce evidence rather than ship a feature, and a explicitly preserved set of <b>Future Options</b> that stay un-ticketed until their prerequisite evidence exists.</p>
+      <p>Nothing in the Committed set requires new infrastructure this repository doesn't already have the pieces for. The one genuine experiment — a filtered agent-evaluation replay — is deliberately sized small (20–40 tickets, not the full 1,099-ticket eligible pool) with a dev/validation/holdout split, because a small trusted benchmark beats a large untrusted one. And nothing that increases agent autonomy (model routing, one-click workflow resume, blocking security enforcement) is Committed — each is explicitly gated behind a named decision point, not a target date.</p>
+    </div>
+  </section>
+
+  <section id="current">
+    <div class="sec-head"><span class="sec-num">§2</span><h2>Current-state architecture</h2></div>
+    <p class="sec-intro">Nine layers as they actually exist, not forced into the instruction's reference model where it doesn't fit.</p>
+    <div class="diagram">┌─────────────────────────────────────────────────────────────┐
+│  <b>Human / Ticket</b>          chat-driven; no CLI/dashboard trigger  │
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  <b>Specification</b>           tickets/ + staging_artifacts/{id}/     │
+│                        82.6% coverage on standard tier          │
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  <b>Deterministic Workflow</b>  implement-ticket.js — 12 phases,       │
+│                        15 typed agent() calls, 1:1 handoffs     │
+└──────────┬─────────────────────────────────────┬───────────────┘
+           ▼                                     ▼
+┌───────────────────────────┐      ┌───────────────────────────┐
+│ <b>Context Intelligence</b>      │      │ <b>Capability / Policy</b>       │
+│ search_docs (2,138 real calls)│  │ session-wide allowlist —   │
+│ + graphify — both manual-     │  │ NOT per-agent (Pattern 12) │
+│ refresh, no auto-hook          │  │ settings.local.json         │
+│ knowledge-gateway: 2 real calls│ │ git-ignored, unaudited      │
+│ ever — <b>effectively dead</b>       │ │                             │
+└───────────────────────────┘      └───────────────────────────┘
+           ▼                                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│  <b>Specialized Agents</b>      16 roles, clean separation, one     │
+│                        model tier for all, zero routing         │
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  <b>Tool Runtime</b>            unrestricted Bash for 15/16 agents; │
+│                        1 narrow secret-scan path (gateway only) │
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  <b>Verification</b>            12 well-designed CI jobs, AST tests │
+│                        on 2/4 boundary checks, gateway regex on 2│
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  <b>Git / Delivery</b>          worktree-per-ticket (convention,    │
+│                        NOT locked — no double-claim protection) │
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  <b>Observability</b>           agent-monitoring/*.jsonl (182,923   │
+│                        lines / 66MB, +2,260 lines/day, no        │
+│                        rotation) + <b>agent-ops dashboard</b> (read-  │
+│                        only Gantt/Replay/Tickets/Stats views)    │
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  <b>Improvement Loop</b>        weekly retro, hook-enforced cadence,│
+│                        same 2 defects recur across 3+ weeks     │
+│                        unfixed — <b>the loop surfaces but doesn't   │
+│                        close</b>                                  │
+└─────────────────────────────────────────────────────────────┘</div>
+  </section>
+
+  <section id="reassess">
+    <div class="sec-head"><span class="sec-num">§3</span><h2>Reassessment of the previous audit</h2></div>
+    <p class="sec-intro">Each verdict now carries an evidence-strength grade (A–E, §60 of the addendum). Prefer A/B-graded conclusions when deciding what to commit to first — the Change Inventory in §7 reuses these grades directly.</p>
+    <div class="reassess-list" id="reassess-list"></div>
+  </section>
+
+  <section id="findings">
+    <div class="sec-head"><span class="sec-num">§4</span><h2>Newly discovered findings</h2></div>
+    <p class="sec-intro">Issues the original 30-pattern review never covered, each graded for evidence strength.</p>
+    <div class="finding-grid" id="findings-grid"></div>
+  </section>
+
+  <section id="target">
+    <div class="sec-head"><span class="sec-num">§6</span><h2>Target architecture</h2></div>
+    <p class="sec-intro">Same nine layers — a tightening, not an expansion. Green marks additions; amber marks changes to an existing box.</p>
+    <div class="diagram">┌─────────────────────────────────────────────────────────────┐
+│  Human / Ticket ──── dashboard surfaces exact resume command ─┤ <span class="changed">changed</span>
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Specification  ──── done-checker spot-checks AC↔test links ──┤ <span class="changed">changed</span>
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Deterministic Workflow ── phase-level resume, validated ─────┤ <span class="changed">changed</span>
+│                              against workflow_version+input_hash│
+└──────────┬─────────────────────────────────────┬───────────────┘
+           ▼                                     ▼
+┌───────────────────────────┐      ┌───────────────────────────┐
+│ Context Intelligence        │      │ Capability / Policy         │
+│ + auto-refresh hook       ──┤ <span class="new">new</span>   │ + per-agent tools: scoping──┤ <span class="new">new</span>
+│ − knowledge-gateway      ──┤ <span class="changed">removed</span> │ + versioned settings baseline┤ <span class="new">new</span>
+└───────────────────────────┘      └───────────────────────────┘
+           ▼                                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Specialized Agents ── 2 reviewer roles: shadow-mode diversity┤ <span class="new">new</span>
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Tool Runtime ── Bash secret-exposure advisory hook (advisory) ┤ <span class="new">new</span>
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Verification ── AST import-boundary checks (was regex) ──────┤ <span class="changed">changed</span>
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Git / Delivery ── ticket-claim DETECTION only (not a lock) ──┤ <span class="new">new</span>
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Observability ── monthly rotation + SQLite-only cold storage ┤ <span class="new">new</span>
+│                    + telemetry/retention/ownership classified  ┤ <span class="new">new</span>
+└──────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Improvement Loop ── small stratified replay pilot (20–40) ───┤ <span class="new">new</span>
+│                        3-level metrics, dev/val/holdout split  │
+└─────────────────────────────────────────────────────────────┘</div>
+  </section>
+
+  <section id="authority">
+    <div class="sec-head"><span class="sec-num">§62–64</span><h2>Configuration &amp; behavior authority map <span class="new-tag">NEW</span></h2></div>
+    <p class="sec-intro">Every source that influences agent behavior, and who is authoritative for each. The <code>Ownership</code> column comes back undefined for all ten domains — that absence is itself a finding, not a formatting gap: nobody is named as the responsible party for keeping any of this current.</p>
+    <div class="auth-scroll">
+      <table class="auth">
+        <thead><tr><th>Domain</th><th>Canonical source</th><th>Derivatives</th><th>Local overrides</th><th>Validation</th><th>Drift detection</th><th>Ownership today</th><th>Recommended role</th></tr></thead>
+        <tbody id="auth-body"></tbody>
+      </table>
+    </div>
+    <p class="sec-intro" style="margin-top:18px"><b>Two live ambiguous-authority cases</b> found (§63's "multiple sources appear authoritative" pattern): (1) CLAUDE.md's Hard Rule states search-before-grep is mandatory; the hook that implements it only nudges. Documentation and enforcement disagree about what "mandatory" means. (2) <code>SKILL.md</code> vs. <code>.claude/workflows/*.js</code> for create-tickets/implement-ticket — already drifted once (TCK-20260804-CREATE-TICKETS-SKILL-SYNC), and nothing prevents it drifting again, because SKILL.md is documentation-only and the workflow file is what actually runs.</p>
+    <div class="simple-card" style="margin-top:18px"><h5>Configuration precedence invariant</h5><p>Target rule: <b>local configuration may specialize machine-specific behavior, but may not silently widen the centrally reviewed security envelope.</b> Formally: <code>effective local capability ⊆ approved capability envelope</code>. This review found no confirmed mechanism in the current harness to enforce that inclusion automatically at runtime — stated as a limitation, not assumed away. The practical fallback: a versioned, reviewed capability-envelope baseline (bucket A, §8) plus an auditable comparison script that diffs the live <code>settings.local.json</code> against it. That script is a check a human or CI can run, not a proven runtime guarantee that a wider local permission can never take effect. What belongs in the version-controlled baseline: the approved envelope itself. What may stay machine-local: entries within that envelope. What requires review: any local entry the diff flags as outside it.</p></div>
+  </section>
+
+  <section id="inventory">
+    <div class="sec-head"><span class="sec-num">§7</span><h2>Comprehensive change inventory <span class="new-tag">graded</span></h2></div>
+    <p class="sec-intro">Every viable change from both reviews, now carrying an Evidence Level (§60), a Motivation category (§61, ranked Observed Failure > Measured Inefficiency > Known Structural Risk > Expected Scaling Risk > Preventive Hardening > Speculative Opportunity), and a Readiness verdict (§82) — the field that actually gates whether an item may become a ticket (§83).</p>
+    <div class="inv-scroll">
+      <table class="inv">
+        <thead><tr><th>Change</th><th>Motivation</th><th>Evidence</th><th>Effort</th><th>Readiness</th><th>Timing</th><th>Decision</th></tr></thead>
+        <tbody id="inv-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="coupling">
+    <div class="sec-head"><span class="sec-num">§70–71</span><h2>Change coupling &amp; epic boundaries <span class="new-tag">NEW</span></h2></div>
+    <p class="sec-intro">Items that share a component, a risk surface, or a testing boundary are grouped into one epic. Items with independent value and independent rollback stay standalone — forcing them together would only slow down the ones that don't need to wait. <b>Rechecked after this pass's corrections:</b> the five epic boundaries below still hold. The one structural change is inside Review Independence, which now explicitly separates its committed-infrastructure member (deploy shadow logging) from its experiment member (the comparison and cutover decision) — the grouping itself didn't move, the two things inside it are just no longer described as one undifferentiated item.</p>
+    <div class="simple-grid" id="epic-grid"></div>
+  </section>
+
+  <section id="outputs">
+    <div class="sec-head"><span class="sec-num">§85</span><h2>Roadmap, as three separated outputs <span class="new-tag">restructured</span></h2></div>
+    <p class="sec-intro">Per §85: Committed Changes, Experiments/Measurements, and Future Options are deliberately not one backlog. <b>Readiness is not the same as timing</b> — READY means the design is resolved enough to write a ticket; it does not by itself mean "start today." This proposal uses three states: <b>Start now</b> (bucket A, horizon H0 — begin immediately), <b>Ready, schedule later</b> (bucket A, horizon H1/H2 — ticket-writable now, sequenced later by dependency and capacity, not by any remaining design gap), and <b>Experiment/measurement only</b> (bucket B — do not ticket; run the investigation first, per §83). Bucket C receives no tickets at all until its named blocker clears.</p>
+    <div id="output-buckets"></div>
+  </section>
+
+  <section id="gates">
+    <div class="sec-head"><span class="sec-num">§84</span><h2>Decision gates between horizons <span class="new-tag">NEW</span></h2></div>
+    <div class="simple-grid">
+      <div class="simple-card"><h5>Horizon 0 → Horizon 1 gate</h5><p>All four must hold before Horizon 1's "ready, schedule later" items begin in earnest (independent H1 items like <code>tools.jsonl</code> rotation may start in parallel — they don't depend on this gate):</p><p>① Per-agent capability policies deployed with zero critical workflow breakage over 2 weeks. ② The Bash secret-exposure advisory hook shows an acceptable false-positive rate in normal advisory operation. ③ Both converted guardrail hooks show zero recurrence of their target failure pattern across ≥2 subsequent weekly retros. ④ knowledge-gateway archived with zero renewed calls over 2 weeks.</p></div>
+      <div class="simple-card"><h5>Eval-pilot exit gate (gates all of Horizon 2's autonomy work)</h5><p>① Repeatable scoring established — the same config scores the same on 2 independent runs. ② Sample quality accepted for the 2 target defect classes. ③ Replay contamination risk (shared sidecar, post-hoc knowledge leakage — see §11) is understood and demonstrably controlled in the pilot's own execution.</p><p>Model routing, phase-resume automation beyond shadow, and any further autonomy increase wait here — not on a calendar date.</p></div>
+    </div>
+  </section>
+
+  <section id="evaluation">
+    <div class="sec-head"><span class="sec-num">§65–69</span><h2>Evaluation design <span class="new-tag">NEW</span></h2></div>
+    <p class="sec-intro">Three levels, not one global score — and two evaluation modes with their limitations named explicitly, not assumed away.</p>
+
+    <div class="level-block">
+      <h4><span class="level-num">1</span>Role-level — is this specific agent doing its job?</h4>
+      <div id="level1-rows"></div>
+      <p style="font-size:12.5px;margin-top:8px"><b>Available today (Level A data):</b> done-checker's block rate — the DOD_BLOCKED share of runs.jsonl — is a directly observed metric available now. That is not the same as its false-block rate, which requires independent adjudication of whether each block was actually correct; no adjudicated labels exist yet for any role. Everything else in this level needs a baseline collected first.</p>
+    </div>
+    <div class="level-block">
+      <h4><span class="level-num">2</span>Workflow-level — did the engineering task succeed?</h4>
+      <div id="level2-rows"></div>
+    </div>
+    <div class="level-block">
+      <h4><span class="level-num">3</span>System-level — is the platform improving delivery overall?</h4>
+      <div id="level3-rows"></div>
+      <p style="font-size:12.5px;margin-top:8px">§65's own warning applies directly to any future model-routing pilot (bucket C, blocked on this eval work): judge it on Level 1 — done-checker's block rate today, its false-pass/false-block rate once adjudicated labels exist — never on system-level DONE-rate alone, which is too noisy to attribute to a single mechanical-agent change.</p>
+    </div>
+
+    <div class="simple-grid" style="margin-top:22px">
+      <div class="simple-card"><h5>Safety vs. optimization split — worked example</h5><p><b>done-checker routing pilot (bucket C, blocked until this eval work lands)</b> — Primary: role-specific correctness for done-checker — today that means its directly observed block rate; a true false-pass/false-block rate needs adjudicated labels the eval pilot could eventually produce. Safety: overall DOD_BLOCKED+NEEDS_CHANGES rate must not exceed the 6.3% baseline. Efficiency: latency and cost_proxy_score for done-checker specifically. The pilot is not "successful" merely because global workflow failure stayed flat — the primary metric has to move, not just fail to regress.</p></div>
+      <div class="simple-card"><h5>Metric-strength terminology, used consistently</h5><p><b>Directly observed:</b> block rate, DONE rate, workflow duration, tool-call volume, NEEDS_HUMAN_INPUT rate — all read straight off runs.jsonl/tools.jsonl. <b>Derived:</b> first-pass success (computed from DONE without a prior NEEDS_CHANGES). <b>Requires adjudication:</b> false pass, false block, reviewer precision/recall, ticket-scoper accuracy — none of these exist yet; they need an independent judgment of correctness the repository doesn't currently produce. This proposal names each metric it uses by which of the three it is, rather than treating "observed" and "correct" as interchangeable.</p></div>
+      <div class="simple-card"><h5>Offline replay — contamination risks, named</h5><p>①The referenced repo state has moved on since a historical ticket closed — code an old investigation.md cites may no longer match HEAD. ②Shared unscoped sidecar contamination if replay isn't strictly worktree-isolated. ③<b>Newly named this revision:</b> the search index/graph now contain information written after the original ticket closed — an agent replaying that ticket today may "solve" it using knowledge it wouldn't have had access to originally, inflating the score.</p></div>
+      <div class="simple-card"><h5>Online shadow mode — where it's recommended here</h5><p>Not for the eval pilot (offline is sufficient and cheaper there). Recommended specifically for the <b>model-diverse reviewer routing</b> item: run the candidate model alongside the current one on the same diffs for several weeks, comparing finding rates, before it ever gates a real workflow — a genuinely new refinement this revision adds to that item.</p></div>
+      <div class="simple-card"><h5>Dataset hygiene &amp; starting small</h5><p>The 1,099-ticket filtered pool is the <i>eligible set</i>, not the pilot size. First batch: 20–40 tickets, stratified across tier, <code>layer</code>, and success/failure (the ~88 known-failed runs in runs.jsonl give a real "failed tasks" stratum). Split into development / validation / untouched holdout before any scoring rule is tuned. Add newer closed tickets periodically so the benchmark doesn't stagnate against a fixed 2026-era corpus.</p></div>
+    </div>
+  </section>
+
+  <section id="automation">
+    <div class="sec-head"><span class="sec-num">§78</span><h2>Automation boundary analysis <span class="new-tag">NEW</span></h2></div>
+    <p class="sec-intro">For every item that could increase agent autonomy: what human decision does it replace, what evidence would justify that, and what happens if it's wrong.</p>
+    <div class="auto-scroll">
+      <table class="auto">
+        <thead><tr><th>Item</th><th>Human decision today</th><th>Evidence needed to automate</th><th>Impact if wrong</th><th>Reversible?</th><th>Target rung today</th></tr></thead>
+        <tbody id="auto-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="lifecycle">
+    <div class="sec-head"><span class="sec-num">§73–75</span><h2>Telemetry &amp; artifact lifecycle <span class="new-tag">NEW</span></h2></div>
+    <p class="sec-intro">Extended past the monitoring log the original proposal flagged — every artifact class in the repo gets a classification and a retention rule.</p>
+    <div class="diagram" style="margin-bottom:22px">tools.jsonl raw writes (per tool call, live)
+        │
+        ▼
+Live file, current month only  ── target: stays under a defined size threshold
+        │
+        ▼  (monthly rotation)
+Dated archive file ── cold, not queried directly
+        │
+        ▼
+Derived SQLite index ── queryable, permanent, already exists today
+        │
+        ▼
+Weekly retro aggregation (agent-monitoring/retro/*.md) ── permanent
+        │
+        ▼
+Version-controlled knowledge (CLAUDE.md Hard Rules, agent prompts)
+   ── THIS is the step that currently doesn't close: the doc-update
+      and test-scoper patterns reached "aggregated retrospective"
+      three times each and never crossed into a prompt/hook change</div>
+    <div class="ret-scroll">
+      <table class="ret">
+        <thead><tr><th>Artifact class</th><th>Classification</th><th>Current retention</th><th>Recommended</th></tr></thead>
+        <tbody id="ret-body"></tbody>
+      </table>
+    </div>
+
+    <div class="own-scroll" style="margin-top:22px">
+      <table class="own">
+        <thead><tr><th>New/changed subsystem</th><th>Accountable role</th><th>Update trigger</th><th>Staleness signal</th><th>Removal condition</th></tr></thead>
+        <tbody id="own-body"></tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:var(--ink-faint);margin-top:10px">Roles, not headcount: <code>Agent Configuration Maintainer</code>, <code>Workflow Runtime Maintainer</code>, <code>Evaluation Maintainer</code>, <code>Agent Monitoring Maintainer</code>, and <code>Repository Intelligence Maintainer</code> describe responsibility boundaries. If this repository currently has a single maintainer holding several of these roles, that is acceptable — the point is that each responsibility has a name, not that it has a dedicated person.</p>
+
+    <div class="simple-grid" style="margin-top:22px">
+      <div class="simple-card"><h5>Resume semantics, not just resume mechanics (§76)</h5><p>A checkpoint is reusable only if <code>workflow_version</code> matches, the input the phase consumed is unchanged (<code>input_hash</code>), and every artifact the phase produced still exists on disk. All three must hold, or the workflow restarts from the earliest invalidated phase — never a blind "checkpoint exists, so skip."</p></div>
+      <div class="simple-card"><h5>Complexity budget (§79) — the three genuinely new subsystems</h5><p><b>Rotation infra:</b> small new surface, justified — near-100% of the growth-bounding benefit for one script and one hook edit. <b>Eval pilot tooling:</b> justified at pilot scale (§69 keeps it small); a full platform (H3) must re-justify itself separately, not inherit the pilot's justification. <b>Claim detection→lock:</b> exactly why it starts as logging-only — paying the larger complexity cost only if evidence demands it.</p></div>
+      <div class="simple-card"><h5>AI-infrastructure maintenance cost (§80)</h5><p>Add two lightweight trend lines to the existing weekly retro, using data already collected: the share of closed tickets tagged agent-infra/agent-monitoring/dashboard vs. product/simulation tags (via the existing tag registry), and the count of active agent/skill files over time (16 agents, 22 skills today). Early-warning signals only — §80 explicitly rejects an arbitrary target ratio, and so does this proposal.</p></div>
+      <div class="simple-card"><h5>Detection before prevention (§77)</h5><p>Applied consistently across this revision: the Bash secret-exposure hook ships advisory before it ever blocks; the ticket-claim mechanism ships as logging before it ever locks. Both follow the same unknown-risk → detect → measure → decide → prevent-if-justified pattern, not parallel one-off designs.</p></div>
+      <div class="simple-card"><h5>Secret exposure ≠ command-risk policy</h5><p>The Bash secret-exposure advisory hook detects secret-shaped values in a command string — nothing more. It is <b>not</b> a dangerous-command policy, and not command-injection detection. Destructive filesystem/Git commands, Docker host-wide operations, remote script execution, suspicious piping, privilege escalation, and network exfiltration remain entirely unaddressed by this proposal. Per §64's own instruction, that broader policy is not designed or committed here — it would need its own evidence-backed proposal if the repository's risk profile ever justifies it.</p></div>
+    </div>
+  </section>
+
+  <section id="notrec">
+    <div class="sec-head"><span class="sec-num">§12</span><h2>Not recommended for the next evolution</h2></div>
+    <div class="nrec-list">
+      <div class="nrec-item"><h5>Workflow-engine migration (Temporal / LangGraph)</h5><p>The 1:1 agent-call-to-phase ratio confirms the custom orchestrator is lean, not bloated. <span class="reconsider">Reconsider if: workflows need distributed, multi-machine execution, which nothing in this repo's usage pattern currently requires.</span></p></div>
+      <div class="nrec-item"><h5>A2A / distributed agents</h5><p>No separately-deployed agent runtime exists. <span class="reconsider">Reconsider if: the Codex pilot goes live and needs cross-runtime coordination beyond the shared monitoring schema it already has.</span></p></div>
+      <div class="nrec-item"><h5>Always-on / event-driven agents</h5><p>No production surface, no external event source. <span class="reconsider">Reconsider if: the repo gains an external issue tracker or a second concurrent team generating a real event stream.</span></p></div>
+      <div class="nrec-item"><h5>Full container/VM sandboxing at the repo level</h5><p>A harness-level capability, not something this repo can build for itself. <span class="reconsider">Reconsider if: the harness itself ships sandboxed execution — adopt it, don't build a parallel one.</span></p></div>
+      <div class="nrec-item"><h5><b>Reversed from a surface reading of the prior audit:</b> "re-evaluate knowledge-gateway with fresh data"</h5><p>Real usage data (2 calls vs. 2,138) removes the ambiguity — confirmed dead code, Evidence Level A. <span class="reconsider">Moved to §7 as Adopt/READY, not left as an open question.</span></p></div>
+      <div class="nrec-item"><h5><b>Reversed:</b> building a new developer-facing observability UI</h5><p>One already exists, is well-designed, and covers observation completely. <span class="reconsider">Extend it (§8B/C, dashboard resume-command affordance) instead of rebuilding.</span></p></div>
+      <div class="nrec-item"><h5><b>New in this revision:</b> a general-purpose AI-configuration management platform</h5><p>§64 asks whether configuration versioning infrastructure is needed. It isn't yet — Git commit hashes on <code>.claude/agents/*.md</code>, workflow files, and the orchestration contract already answer "which config version produced this result" for every case this repo currently has. <span class="reconsider">Reconsider if: model-routing or a live second provider makes config combinations numerous enough that git-blame stops being a fast-enough answer.</span></p></div>
+    </div>
+  </section>
+
+  <section id="protect">
+    <div class="sec-head"><span class="sec-num">§13, §81</span><h2>Protect these existing strengths</h2></div>
+    <div class="keep-grid">
+      <div class="keep-card"><h5>KEEP — implement-ticket.js's 12-phase deterministic pipeline</h5><p>15 agent() calls / 12 phases — 1:1, no excessive relay pattern.</p><p class="why">Why: doing exactly what a deterministic outer workflow should. Only change if Tests/Parity is proven independent enough to parallelize.</p></div>
+      <div class="keep-card"><h5>KEEP — the agent-ops dashboard as read-only</h5><p>Its "never mutates tickets/, agent-monitoring/, or AuthoritativeState" boundary is deliberate and correct.</p><p class="why">Why: a write capability before the claim-detection gate (§10) exists would let a dashboard button race the same way manual re-invocation does today.</p></div>
+      <div class="keep-card"><h5>KEEP — the CI job structure</h5><p>12 jobs run genuinely in parallel; the 19-minute slow suite is deliberately gated off the PR path.</p><p class="why">Why: already correctly designed. Only change if PR-path duration measurably regresses.</p></div>
+      <div class="keep-card"><h5>KEEP — search_docs + graphify as the two surviving intelligence systems</h5><p>2,138 real calls, live-verified accurate citations.</p><p class="why">Why: strongest-evidenced pattern in either review. Only change to add auto-refresh triggers — never to replace the retrieval approach.</p></div>
+      <div class="keep-card"><h5>KEEP — the weekly retro cadence</h5><p>It correctly surfaced the same 2 defects for 3+ consecutive weeks — detection works.</p><p class="why">Why: the loop's failure is that findings don't automatically become shipped fixes, not that it fails to surface them. Fix the close (§10), not the detect.</p></div>
+      <div class="keep-card"><h5>KEEP — provider-neutral orchestration contract discipline</h5><p>A static check already fails on the mere presence of a provider-specific field name.</p><p class="why">Why: unusually rigorous forward design. Only change to add the conformance test the ADR already calls for.</p></div>
+    </div>
+  </section>
+
+  <section id="metrics">
+    <div class="sec-head"><span class="sec-num">§14</span><h2>Success metrics</h2></div>
+    <div class="simple-grid">
+      <div class="simple-card"><h5>Least privilege</h5><p>100% of 16 agent files carry explicit <code>tools:</code> frontmatter. Zero read-only-role agents retain <code>Bash(rm/docker/curl)</code> access.</p></div>
+      <div class="simple-card"><h5>Guardrail hooks</h5><p>Zero recurrences of the doc-update self-report gap or the test-scoper background-hang pattern across 4 consecutive retro reports after the hook ships.</p></div>
+      <div class="simple-card"><h5>Observability retention</h5><p>Live <code>tools.jsonl</code> stays under a defined threshold; historical data stays queryable only through the SQLite index.</p></div>
+      <div class="simple-card"><h5>Eval pilot</h5><p>The 20–40-ticket stratified sample produces a repeatable score for both known defect classes across 2 independent runs of the same config — repeatability, not absolute accuracy, is the bar.</p></div>
+      <div class="simple-card"><h5>Model routing (bucket C — only after the eval-pilot exit gate)</h5><p>done-checker's block rate holds or improves with no increase over the 6.3% baseline gate-failure rate; once adjudicated labels exist, false-pass/false-block rate must not regress either.</p></div>
+      <div class="simple-card"><h5>Dashboard action gap</h5><p>A human unfamiliar with the sidecar/ticket-lifecycle internals resumes a blocked run using only what the dashboard shows them.</p></div>
+    </div>
+  </section>
+
+  <section id="risks">
+    <div class="sec-head"><span class="sec-num">§15</span><h2>Risk register</h2></div>
+    <div class="risk-scroll">
+      <table class="risk">
+        <thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th><th>Early warning signal</th></tr></thead>
+        <tbody id="risk-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="final">
+    <div class="sec-head"><span class="sec-num">§59</span><h2>Final architectural judgment</h2></div>
+    <div class="qa" id="final-qa"></div>
+
+    <div class="sec-head" style="margin-top:36px"><span class="sec-num">§86</span><h2>Executability synthesis <span class="new-tag">NEW</span></h2></div>
+    <div class="qa" id="synthesis-qa"></div>
+
+    <div class="closing">
+      <p><b>Bottom line, restated for executability:</b> the previous audit's headline number (58/100) survives this deeper pass, but the real deliverable of this revision isn't the number — it's that every item in the Committed bucket has a design resolved enough to become a ticket, with an explicit Start now or Ready-schedule-later timing so readiness is never mistaken for priority, and every item that isn't yet resolved is honestly parked in Experiments or Future Options instead of padding out a roadmap that looks complete but isn't buildable. The addendum's own closing principle is the right one to end on: the goal is not better agents, it's better evidence about whether the agents are better — and this revision's evidence grading, decision gates, and readiness verdicts are how that evidence gets tracked instead of assumed.</p>
+    </div>
+  </section>
+
+  <section id="freeze">
+    <div class="sec-head"><span class="sec-num">Freeze Pass</span><h2>Post-freeze observations &amp; architecture freeze verdict <span class="new-tag">NEW</span></h2></div>
+    <p class="sec-intro">This was a consistency pass, not another architecture review. Nothing below reopens a settled conclusion — it records what a tightening pass surfaced, then closes the discovery phase for this revision.</p>
+
+    <div class="simple-grid">
+      <div class="simple-card"><h5>Post-Freeze Observation 1</h5><p>The AI-infrastructure maintenance-cost tracking recommendation (§lifecycle) leans partly on <code>cost_proxy_score</code>, which is itself an acknowledged non-dollar proxy. Any future cost-based decision built on it should keep treating it as directional, not exact — non-blocking, but worth carrying forward as a standing caveat rather than re-litigating now.</p></div>
+      <div class="simple-card"><h5>Post-Freeze Observation 2</h5><p>Whether <code>graphify-out/</code> and <code>knowledge-index/</code> should be Git-tracked build outputs or rebuildable artifacts remains genuinely open — this review found insufficient evidence on CI/dev workflow needs to resolve it (§lifecycle retention table). Worth a short check before the Telemetry &amp; Retention epic is scoped into tickets, but it blocks nothing today: neither artifact class was ever committed to a specific treatment in this proposal.</p></div>
+    </div>
+
+    <div class="exec-box" style="margin-top:24px;border-left-color:var(--good)">
+      <p style="font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;font-size:13px;color:var(--good);font-weight:700;margin-bottom:10px">Architecture Freeze Verdict — READY TO FREEZE</p>
+      <p>None of the four disqualifying conditions apply after this pass: no roadmap contradiction blocks sequencing (the shadow-mode split and the Bash-hook decision/readiness mismatch — the two real contradictions this pass found — are both corrected above); the security design is scoped precisely rather than ambiguously (secret-exposure detection is now explicitly named apart from the dangerous-command policy this proposal does not commit to); nothing in bucket A is unsafe to implement (every item is reversible, and the two enforcement-adjacent items ship advisory/detection-only first); and no item classified READY still lacks a necessary design decision (the one that did — phase-level resume — was moved to bucket B specifically because it lacked one). No evidence gathered across either review is known to be wrong.</p>
+    </div>
+
+    <div class="diagram" style="margin-top:22px">Architecture discovery is now CLOSED for this roadmap revision.
+
+Bucket A (Committed):
+  Frozen Architecture Proposal
+        │
+        ▼
+    Epic Design
+        │
+        ▼
+    Acceptance Criteria
+        │
+        ▼
+    Migration / Rollback Plan
+        │
+        ▼
+    Implementation Tickets
+
+Bucket B (Experiments &amp; Measurements) — never converts directly to production tickets:
+  Frozen Architecture Proposal
+        │
+        ▼
+    Experiment Specification
+        │
+        ▼
+    Hypothesis · Baseline · Method · Metrics · Exit Criteria · Kill Criteria
+        │
+        ▼
+    Run Experiment
+        │
+        ▼
+    Decision  ──►  (may THEN generate its own implementation ticket)
+
+Bucket C (Future Options): no epics, no tickets, no experiment specs —
+   preserved only, until its named blocker clears.
+
+This freeze pass creates neither epics nor tickets itself.
+That is the next phase's work, not this document's.</div>
+  </section>
+
+  <footer class="rep">Generated 2026-09-03, frozen 2026-09-04 · rpg-based-simulation @ 68579af2 · Rev.2 incorporated the executable-engineering-strategy addendum; Rev.3 is the final consistency &amp; freeze pass · Evidence from 3 new targeted forks plus the 6-fork maturity-audit corpus.</footer>
+</div>
+
+<script>
+const REASSESS = [
+  {name:"Deterministic outer workflow is mature", verdict:"confirmed", label:"Confirmed", evid:"A",
+   note:"15 agent() calls across 12 phases is exactly 1:1 — no excessive-handoff pattern under closer inspection."},
+  {name:"Spec-driven development is Level 3", verdict:"mostly", label:"Mostly Confirmed — sharpened", evid:"A",
+   note:"Quantified precisely: 232 of 1,331 standard-tier tickets (17.4%) have no matching stored_artifacts/ despite the tier requiring one."},
+  {name:"knowledge-gateway: \"maintain base, re-evaluate gateway with fresh data\"", verdict:"disagree", label:"Disagreed", evid:"A",
+   note:"2 real gateway calls ever vs. 2,138 direct search_docs calls removes the ambiguity — this moves to Adopt (remove), not a re-evaluation candidate."},
+  {name:"Developer experience relies on raw JSONL + a retro markdown report", verdict:"reframe", label:"Needs Reframing", evid:"B",
+   note:"Wrong: a fully-built, 4-view agent-ops dashboard already exists (10 shipped tickets). The real gap is action affordances, not observation."},
+  {name:"Observability is the strongest pattern — \"Maintain\"", verdict:"reframe", label:"Needs Reframing", evid:"A",
+   note:"'Maintain' was incomplete: tools.jsonl is 182,923 lines / 66MB, +2,260 lines/day, zero rotation — a real operational-debt gap only visible by checking real file size, not schema."},
+  {name:"Deterministic guardrails should replace the two most safety-critical prose rules", verdict:"confirmed", label:"Confirmed — upgraded", evid:"A",
+   note:"Direct empirical proof in the repo's own retros: both target patterns recurred 3+ times across separate weeks despite being documented."},
+  {name:"Agent evaluation / historical replay: no clear path forward yet", verdict:"insuff-to-confirmed", label:"Insufficient → Ready to Pilot", evid:"A",
+   note:"1,099 standard-tier tickets have complete stored_artifacts/, a real 6.3% baseline failure rate exists, 2 known recurring defect classes give the pilot something concrete to detect."},
+  {name:"Least-privilege tool permissions need per-agent scoping (P0)", verdict:"confirmed", label:"Confirmed — sharpened", evid:"C",
+   note:"New angle: settings.local.json (the real permission surface) is git-ignored — invisible to PR review, unauditable, can diverge machine-to-machine."},
+  {name:"Independent review needs model diversity (P1)", verdict:"confirmed", label:"Confirmed", evid:"C"},
+  {name:"CI job structure — not previously reviewed in depth", verdict:"addressed", label:"Already Addressed", evid:"A",
+   note:"12 jobs run genuinely in parallel; the ~19-minute slow suite is deliberately gated off the PR path (PR-path runs finish in ~7-8 min). Confirmed well-designed."},
+  {name:"Task DAG / parallel execution: defer", verdict:"confirmed", label:"Confirmed", evid:"A",
+   note:"The 1:1 handoff-count finding directly supports this."},
+  {name:"Provider portability: continue, conformance test is the one gap", verdict:"confirmed", label:"Confirmed", evid:"D"},
+];
+const rlist = document.getElementById('reassess-list');
+REASSESS.forEach(r=>{
+  const el = document.createElement('div'); el.className='reassess-item';
+  el.innerHTML = `<div class="rl"><b>${r.name}</b><div class="badges"><span class="pill ${r.verdict.split('-')[0]==='insuff'?'insuff':r.verdict}">${r.label}</span><span class="evid ${r.evid}">Level ${r.evid}</span></div></div><p>${r.note||''}</p>`;
+  rlist.appendChild(el);
+});
+
+const FINDINGS = [
+  {n:"01", title:"A fully-built agent-ops dashboard already exists", evid:"B", body:"4 views (Gantt, Replay Timeline, Tickets, Stats), 10 shipped tickets, explicitly read-only. The prior audit reasoned from an incomplete picture.",
+   ev:"src/api/agent_ops_dashboard/ · dashboard-frontend/ · docs/guides/agent_ops_dashboard.md · 10× TCK-20260716/17/18-AGENTOPS-*"},
+  {n:"02", title:"knowledge-gateway is effectively dead infrastructure", evid:"A", body:"3,036 lines across 5 modules — used twice, ever, against 2,138 real calls to the direct tool it wraps.",
+   ev:"tools/knowledge_gateway_{mcp,router,packet_assembly,cache,redaction}.py · agent-monitoring/tools.jsonl call counts"},
+  {n:"03", title:"agent-monitoring/tools.jsonl is heading toward a real repo-bloat problem", evid:"A", body:"182,923 lines / 66MB, growing ~2,260 lines/day since 2026-06-14. Contributing to a 4.7GB .git directory, and required staged in every commit.",
+   ev:"agent-monitoring/tools.jsonl (66MB) · .git size 4.7GB · CLAUDE.md monitoring-staging Hard Rule"},
+  {n:"04", title:"settings.local.json is git-ignored — an unaudited permission surface", evid:"C", body:"~70 accreted allow-entries define the actual effective permission boundary on this machine, invisible to version control and PR review.",
+   ev:".claude/settings.local.json (128 lines) · confirmed via git check-ignore"},
+  {n:"05", title:"The cross-session sidecar fix is real but only half-shipped", evid:"B", body:"A session-scoped variant was added to fix cross-session misattribution — but 2 known consumers were explicitly left reading the old racy unscoped file.",
+   ev:"implement-ticket.js:264-292 · TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE"},
+  {n:"06", title:"Concurrency safety is 100% convention — no double-claim protection", evid:"C", body:"tickets/inprogress/ is a plain directory with no claim/reservation record. This is the addendum's own worked example almost verbatim: structural absence, no confirmed production incident.",
+   ev:"tickets/inprogress/ (plain dir, no lock) · 5 live worktrees, convention-coordinated only"},
+];
+const fgrid = document.getElementById('findings-grid');
+FINDINGS.forEach(f=>{
+  const el = document.createElement('div'); el.className='finding-card';
+  el.innerHTML = `<div class="fhead"><span class="fnum">Finding ${f.n}</span><span class="evid ${f.evid}">Level ${f.evid}</span></div><h4>${f.title}</h4><p>${f.body}</p><div class="ev">${f.ev}</div>`;
+  fgrid.appendChild(el);
+});
+
+const AUTHORITY = [
+  {domain:"Orchestration contract (phase/status/gate semantics)", canon:"agent-orchestration/ contract", deriv:"AGENTS.md (generated), .codex/ adapter", local:"none known", val:"retrieval_event_parity_check.py (field-name ban only)", drift:"Conformance test proposed, not built", own:"Undefined", rec:"AI Platform Maintainer", flag:true},
+  {domain:"Tool permissions", canon:".claude/settings.json", deriv:"none", local:"settings.local.json — git-ignored, ~70 entries, IS the real policy", val:"none", drift:"none", own:"Undefined", rec:"Agent Configuration Maintainer", flag:true},
+  {domain:"Workflow phase logic", canon:".claude/workflows/*.js", deriv:"SKILL.md (docs, \"can drift\")", local:"none", val:"none automated", drift:"caught manually once (TCK-20260804)", own:"Undefined", rec:"Workflow Runtime Maintainer", flag:true},
+  {domain:"Agent responsibilities/roles", canon:".claude/agents/*.md", deriv:"AGENTS.md excerpt", local:"none", val:"validate_frontmatter.py (schema only)", drift:"none", own:"Undefined", rec:"Agent Configuration Maintainer", flag:false},
+  {domain:"Model selection", canon:"agent .md frontmatter (unset for all 16)", deriv:"—", local:"—", val:"—", drift:"—", own:"Undefined", rec:"Agent Configuration Maintainer", flag:false},
+  {domain:"Retrieval strategy", canon:"knowledge_search.py + hybrid_retrieval.py", deriv:"knowledge-index/ (built)", local:"—", val:"eval_search.py (Recall@5/MRR@10)", drift:"none automatic — manual refresh only", own:"Undefined", rec:"Repository Intelligence Maintainer", flag:false},
+  {domain:"Repository graph", canon:"graphify (AST extraction)", deriv:"graphify-out/", local:"—", val:"—", drift:"none automatic", own:"Undefined", rec:"Repository Intelligence Maintainer", flag:false},
+  {domain:"Hooks / guardrails", canon:".claude/settings.json hooks block", deriv:"—", local:"settings.local.json can add more, untracked", val:"—", drift:"—", own:"Undefined", rec:"Workflow Runtime Maintainer", flag:true},
+  {domain:"Architecture invariants", canon:"tests/architecture/*.py", deriv:"—", local:"—", val:"CI-enforced", drift:"CI itself", own:"Undefined", rec:"Workflow Runtime Maintainer", flag:false},
+  {domain:"Monitoring/telemetry schema", canon:"docs/agent-monitoring/schema.md", deriv:"agent-monitoring/*.jsonl (actual data)", local:"—", val:"none — schema is documentation only", drift:"none", own:"Undefined", rec:"Agent Monitoring Maintainer", flag:true},
+];
+const authBody = document.getElementById('auth-body');
+AUTHORITY.forEach(a=>{
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td style="font-weight:600;color:var(--ink)">${a.domain}</td><td class="mono" style="font-size:11.5px">${a.canon}</td><td style="font-size:12px">${a.deriv}</td><td style="font-size:12px">${a.flag?'<span class="gap-flag">⚠ </span>':''}${a.local}</td><td style="font-size:12px">${a.val}</td><td style="font-size:12px">${a.drift}</td><td style="color:var(--ink-faint)">${a.own}</td><td style="font-size:11.5px;color:var(--accent)">${a.rec}</td>`;
+  authBody.appendChild(tr);
+});
+
+const INVENTORY = [
+  {change:"Per-agent least-privilege tools: frontmatter", motiv:"Known Structural Risk", evid:"C", effort:"Low", ready:"READY", timing:"now", decision:"adopt"},
+  {change:"Bash secret-exposure advisory hook", motiv:"Known Structural Risk", evid:"B", effort:"Low", ready:"READY", timing:"now", decision:"adopt"},
+  {change:"AST-based import-boundary enforcement", motiv:"Known Structural Risk", evid:"B", effort:"Medium", ready:"READY", timing:"now", decision:"adopt"},
+  {change:"Convert 2 proven-failing prose rules to hooks", motiv:"Observed Failure", evid:"A", effort:"Medium", ready:"READY", timing:"now", decision:"adopt"},
+  {change:"Remove/archive knowledge-gateway", motiv:"Measured Inefficiency", evid:"A", effort:"Low", ready:"READY", timing:"now", decision:"adopt"},
+  {change:"Extract scan_for_secrets() before gateway removal", motiv:"Preventive Hardening", evid:"B", effort:"Low", ready:"READY", timing:"now", decision:"adopt"},
+  {change:"Model-diverse reviewer — deploy shadow-mode logging", motiv:"Known Structural Risk", evid:"C", effort:"Low", ready:"READY", timing:"later", decision:"adopt"},
+  {change:"agent-monitoring/tools.jsonl rotation (coherent hot→archive→index lifecycle)", motiv:"Expected Scaling Risk", evid:"A", effort:"Medium", ready:"READY", timing:"later", decision:"adopt"},
+  {change:"Versioned capability-envelope baseline for settings.local.json", motiv:"Known Structural Risk", evid:"C", effort:"Low", ready:"READY", timing:"now", decision:"adopt"},
+  {change:"Migrate the 2 remaining sidecar stragglers", motiv:"Known Structural Risk", evid:"B", effort:"Low", ready:"READY", timing:"later", decision:"adopt"},
+  {change:"Extend cost_proxy_score to implement-epic.js / create-tickets.js", motiv:"Preventive Hardening", evid:"B", effort:"Low", ready:"READY", timing:"later", decision:"adopt"},
+  {change:"working_log.csv parser / cleanup", motiv:"Known Structural Risk", evid:"A", effort:"Low", ready:"READY", timing:"later", decision:"adopt"},
+  {change:"Provider-portability conformance test", motiv:"Preventive Hardening", evid:"D", effort:"Medium", ready:"READY", timing:"later", decision:"adopt"},
+  {change:"Phase-level workflow resume (with resume-semantics validation)", motiv:"Measured Inefficiency", evid:"B", effort:"Medium", ready:"Design", timing:"—", decision:"pilot"},
+  {change:"Dashboard: surface exact resume command on blocked runs", motiv:"Measured Inefficiency", evid:"B", effort:"Low-Med", ready:"Design", timing:"—", decision:"pilot"},
+  {change:"Ticket-claim DETECTION logging", motiv:"Known Structural Risk (unconfirmed)", evid:"C/E", effort:"Medium", ready:"Measure", timing:"—", decision:"pilot"},
+  {change:"Model-diverse reviewer — shadow comparison &amp; cutover decision", motiv:"Known Structural Risk", evid:"C", effort:"Low", ready:"Experiment", timing:"—", decision:"pilot"},
+  {change:"Bash secret-exposure hook — blocking-escalation decision", motiv:"Known Structural Risk", evid:"E", effort:"Low", ready:"Measure", timing:"—", decision:"pilot"},
+  {change:"Filtered replay eval pilot (20–40 tickets, stratified)", motiv:"Known Structural Risk", evid:"A/B", effort:"High", ready:"Experiment", timing:"—", decision:"pilot"},
+  {change:"Model-based routing for mechanical agents", motiv:"Speculative Opportunity", evid:"E", effort:"Low", ready:"Blocked", decision:"defer"},
+  {change:"Task-success-rate metric feeding the retro loop", motiv:"Speculative Opportunity", evid:"E", effort:"High", ready:"Blocked", decision:"defer"},
+  {change:"Full agent-behavior eval platform", motiv:"Speculative Opportunity", evid:"E", effort:"Very High", ready:"Blocked", decision:"defer"},
+  {change:"Live Codex provider pilot", motiv:"Speculative Opportunity", evid:"D", effort:"High", ready:"Blocked", decision:"defer"},
+  {change:"Workflow-engine migration (Temporal/LangGraph)", motiv:"Speculative Opportunity", evid:"A", effort:"Very High", ready:"Reject", decision:"reject"},
+  {change:"A2A protocol adoption", motiv:"Speculative Opportunity", evid:"C", effort:"High", ready:"Reject", decision:"reject"},
+  {change:"Full container/VM sandboxing at repo level", motiv:"Preventive Hardening", evid:"C", effort:"Very High", ready:"Reject", decision:"reject"},
+  {change:"General AI-config management platform", motiv:"Speculative Opportunity", evid:"C", effort:"High", ready:"Reject", decision:"reject"},
+];
+const ibody = document.getElementById('inv-body');
+INVENTORY.forEach(i=>{
+  const tr = document.createElement('tr');
+  const readyClass = i.ready.split(' ')[0].replace(/[()]/g,'').split('/')[0];
+  const timingLabel = i.timing==='now' ? '<span class="timing-now">Start now</span>' : i.timing==='later' ? '<span class="timing-later">Schedule later</span>' : '<span style="color:var(--ink-faint)">—</span>';
+  tr.innerHTML = `<td class="inv-change">${i.change}</td><td style="font-size:12px">${i.motiv}</td><td><span class="evid ${i.evid.split('/')[0]}">${i.evid}</span></td><td style="font-size:12px">${i.effort}</td><td><span class="ready ${readyClass}">${i.ready}</span></td><td>${timingLabel}</td><td><span class="decision ${i.decision}">${i.decision.toUpperCase()}</span></td>`;
+  ibody.appendChild(tr);
+});
+
+const EPICS = [
+  {name:"Epic — Governance &amp; Capability Policy", tag:"H0", items:"Per-agent least-privilege scoping + Bash secret-exposure advisory hook + versioned capability-envelope baseline for settings.local.json", why:"All three touch the same capability-policy authority boundary; shipping them together avoids a scoping change and a new hook interacting in confusing, hard-to-debug ways if landed separately. Rechecked post-freeze-pass: still coherent — nothing in items 4–6 of this revision moved a member out of this boundary."},
+  {name:"Epic — Guardrail Enforcement", tag:"H0", items:"Convert 2 prose rules to hooks + AST import-boundary enforcement", why:"Both are prose/regex → deterministic conversions and should share one rollout pattern (advisory-with-logging → blocking) rather than each inventing its own."},
+  {name:"Epic — Workflow Reliability", tag:"H1", items:"Sidecar straggler migration + phase-level resume + ticket-claim detection", why:"All three touch run-state/sidecar mechanics directly — the addendum's own worked example (§70) names this exact grouping."},
+  {name:"Epic — Telemetry &amp; Retention", tag:"H1", items:"tools.jsonl rotation + artifact retention policy + ownership/lifecycle documentation", why:"One monitoring-data pipeline; splitting rotation from its own retention policy would ship a mechanism without the rule it's supposed to enforce."},
+  {name:"Epic — Agent Evaluation Foundation", tag:"H1", items:"Filtered replay pilot + dataset stratification/holdout split + safety/optimization metric design", why:"The corpus, its split, and the scoring rule are inseparable — designing them apart risks a pilot that can't be trusted even if it runs."},
+  {name:"Standalone — Review Independence", tag:"H1", items:"Model-diverse reviewer — deploy shadow-mode logging (committed infra) + shadow comparison &amp; cutover decision (experiment)", why:"Independent value, independently rollback-able (a 2-line frontmatter revert) — correctly NOT folded into a bigger epic per §71's separation criteria. Split into two items this pass: deploying the parallel-logging capability is committed engineering (bucket A); comparing results and deciding on cutover is the experiment (bucket B) — keeping both under one label previously mixed a committed change with a learning goal."},
+  {name:"Standalone items", tag:"—", items:"knowledge-gateway removal · cost_proxy_score extension · working_log.csv parser · provider conformance test", why:"Each carries independent value and independent risk; grouping them would only add coordination overhead with no shared component to justify it."},
+];
+const epicGrid = document.getElementById('epic-grid');
+EPICS.forEach(e=>{
+  const el = document.createElement('div'); el.className='simple-card';
+  el.innerHTML = `<h5>${e.name} <span class="epic-tag" style="margin-left:6px">${e.tag}</span></h5><p><b>Groups:</b> ${e.items}</p><p style="margin-top:6px;font-size:12.5px;color:var(--ink-faint)">${e.why}</p>`;
+  epicGrid.appendChild(el);
+});
+
+const BUCKETS = [
+  {tag:"A", label:"A — Committed Changes", desc:"Design is resolved enough to write an implementation ticket today — that is what \"Committed\" means here, and it is not the same claim as \"start today.\" H0 items start now. H1/H2 items are equally ready to ticket, but sequenced later by dependency and capacity, not by any remaining design uncertainty — see the Start now / Schedule later badge on each card.",
+   items:[
+    {name:"Per-agent least-privilege tool scoping", h:"H0", epic:"Governance & Capability Policy", detail:"Mine tools.jsonl for real per-agent usage; set tools: frontmatter to that plus headroom, starting with doc-updater and investigator."},
+    {name:"Bash secret-exposure advisory hook", h:"H0", epic:"Governance & Capability Policy", detail:"Reuse scan_for_secrets() as a PreToolUse Bash-matcher hook; warn, do not block, until §9's blocking-escalation gate is met. Scope note: this detects secret-shaped values only — it is not a dangerous-command or command-injection policy (see the scope callout below)."},
+    {name:"Versioned capability-envelope baseline for settings.local.json", h:"H0", epic:"Governance & Capability Policy", detail:"Commit a version-controlled baseline capability envelope, separate from the git-ignored local file. Invariant: effective local capability ⊆ approved capability envelope. Enforce via an auditable diff/comparison script — this review found no confirmed harness-level mechanism to enforce it automatically, so treat the check as auditable tooling, not a hard runtime guarantee, until that's confirmed otherwise."},
+    {name:"AST-based import-boundary enforcement", h:"H0", epic:"Guardrail Enforcement", detail:"Port test_phase18/19 to ast.walk-based checks matching test_api_read_model_guard.py's already-proven pattern."},
+    {name:"Convert 2 proven-failing prose rules to hooks", h:"H0", epic:"Guardrail Enforcement", detail:"Bake the doc-update fix into doc-updater.md's base prompt plus a deterministic Verify-phase check; add a hook flagging an unresumed background pytest call at agent turn-end."},
+    {name:"Remove/archive knowledge-gateway", h:"H0", epic:"standalone", detail:"Extract scan_for_secrets() first; archive (don't hard-delete) the module; remove the .mcp.json registration; monitor 2 weeks for renewed calls."},
+    {name:"Model-diverse reviewer — deploy shadow-mode logging", h:"H1", epic:"Review Independence", detail:"Wire a candidate model to run alongside the current reviewer on every diff, logging both verdicts — neither blocks the workflow. This ships the comparison capability only; whether the candidate ever replaces the current model is a separate decision (bucket B)."},
+    {name:"agent-monitoring/tools.jsonl rotation — coherent hot→archive→index lifecycle", h:"H1", epic:"Telemetry & Retention", detail:"Rotate the live file on a regular cadence (candidate: monthly, informed by the real ~2,260 lines/day growth rate) into temporary raw storage outside Git; verify successful ingestion into the existing SQLite index; then delete the raw archive. The archive's retention window before deletion is not fixed here — set it from operational data once rotation is running, not guessed in advance."},
+    {name:"Migrate the 2 remaining sidecar stragglers", h:"H1", epic:"Workflow Reliability", detail:"Move tools/retrieval_cache.py and the settings.json inline hook onto the session-scoped sidecar path — finishing an already-90%-shipped fix."},
+    {name:"Extend cost_proxy_score to implement-epic.js / create-tickets.js", h:"H2", epic:"standalone", detail:"Wire the existing computation into the two workflows' event-recording call sites."},
+    {name:"working_log.csv parser and cleanup", h:"H2", epic:"standalone", detail:"Write a proper CSV parser (or a stricter quoted writer going forward) before any tooling tries to derive rework signal from the file."},
+    {name:"Provider-portability conformance test", h:"H2", epic:"standalone", detail:"Diff .claude/ and .codex/ phase/status/gate definitions against the canonical agent-orchestration/ contract."},
+   ]},
+  {tag:"B", label:"B — Experiments &amp; Measurements", desc:"Work whose purpose is to generate evidence or resolve an unresolved design/implementation decision — not to ship a finished feature. Each has an explicit exit criterion (§9) and, where relevant, a kill criterion (§11). Nothing here is scheduled as \"start now\" or \"later\" — it's scoped as an investigation with its own exit condition instead.",
+   items:[
+    {name:"Filtered replay eval pilot", h:"H1", epic:"Agent Evaluation Foundation", detail:"20–40 tickets, stratified by tier/layer/success-failure, dev/validation/holdout split. Exit criterion: repeatable scoring across 2 runs on the 2 known defect classes."},
+    {name:"Ticket-claim detection logging", h:"H1", epic:"Workflow Reliability", detail:"Log-only signal when two sessions touch the same ticket ID within a short window. Decision gate: build an actual lock only if real incidents are observed within 30 days."},
+    {name:"Phase-level workflow resume (design phase)", h:"H1", epic:"Workflow Reliability", detail:"Resolve the resume-semantics validation rule (workflow_version + input_hash + artifact existence — and source_revision/phase_version only if materially necessary, §76) before writing the resume logic itself. Invariant to hold: checkpoint exists + checkpoint still valid = safe to reuse — never checkpoint exists = skip phase."},
+    {name:"Model-diverse reviewer — shadow comparison &amp; cutover decision", h:"H2", epic:"Review Independence", detail:"Once shadow-mode logging (bucket A) has run for several weeks, compare finding rates between the two models on real live diffs; only then decide whether the candidate fully replaces the current model for architecture-reviewer/security-reviewer."},
+    {name:"Bash secret-exposure hook — blocking-escalation decision", h:"H2", epic:"Governance & Capability Policy", detail:"Measure the advisory hook's false-positive rate over several weeks of normal operation before considering escalation to a hard block. This decision covers secret-exposure blocking only — it does not extend to a general dangerous-command policy, which remains out of scope (see the scope callout in §lifecycle)."},
+   ]},
+  {tag:"C", label:"C — Future Options", desc:"Directions worth preserving, explicitly not ticketed, each blocked on a named prerequisite rather than a calendar date.",
+   items:[
+    {name:"Model-based routing for mechanical agents", h:"H2", epic:"—", detail:"Blocked on: the eval pilot (bucket B) producing a trusted baseline. Do not start before that exists — no way to detect a quiet quality regression from routing otherwise."},
+    {name:"Task-success-rate metric closing the improvement loop", h:"H3", epic:"—", detail:"Blocked on: the eval pilot's scoring approach proving repeatable, which this metric would then build on."},
+    {name:"Full agent-behavior eval platform", h:"H3", epic:"—", detail:"Blocked on: the pilot (bucket B) proving the signal is real. Widening sample coverage before that is exactly the 'elaborate benchmark before establishing usefulness' trap §69 warns against."},
+    {name:"Live Codex provider pilot", h:"H3", epic:"—", detail:"Blocked on: the provider-portability conformance test (bucket A) existing and passing. Already correctly sequenced by the repo's own prior design."},
+   ]},
+];
+const bEl = document.getElementById('output-buckets');
+BUCKETS.forEach(b=>{
+  const block = document.createElement('div'); block.className='bucket';
+  block.innerHTML = `<div class="bucket-head"><span class="bucket-badge ${b.tag}">${b.label}</span></div><p class="bucket-desc">${b.desc}</p>`;
+  b.items.forEach(it=>{
+    const card = document.createElement('div'); card.className='ri-card';
+    const timing = b.tag==='A' ? (it.h==='H0' ? '<span class="timing-now">Start now</span>' : '<span class="timing-later">Ready — schedule later</span>') : '';
+    card.innerHTML = `<div class="ri-head"><h4>${it.name}</h4><span class="horizon-badge h${it.h.slice(1)}">${it.h}</span>${timing}${it.epic!=='—'&&it.epic!=='standalone'?`<span class="epic-tag">${it.epic}</span>`:''}</div><div class="ri-body"><div class="ri-field full"><p>${it.detail}</p></div></div>`;
+    block.appendChild(card);
+  });
+  bEl.appendChild(block);
+});
+
+const LEVEL1 = [
+  {role:"ticket-scoper", sig:"correct tier · correct tags · correct affected areas · human correction rate — all require adjudicated labels", data:"none yet"},
+  {role:"done-checker — block rate", sig:"DOD_BLOCKED share of runs.jsonl — a directly observed rate, not a correctness judgment", data:"A"},
+  {role:"done-checker — false pass / false block", sig:"Requires adjudicated ground truth (an independent judgment of whether each block was correct) — not yet available", data:"none yet"},
+  {role:"reviewer (arch/security)", sig:"true defect found · false positive · missed known defect · actionable-finding rate — all require adjudicated labels", data:"none yet"},
+  {role:"investigator", sig:"relevant files discovered · irrelevant context retrieved · dependency missed — all require adjudicated labels", data:"none yet"},
+];
+const LEVEL2 = [
+  {role:"Task completion", sig:"DONE rate — 78.4% (1,088/1,388) available today", data:"A"},
+  {role:"Verification failures", sig:"6.3% baseline gate-failure rate available today", data:"A"},
+  {role:"Human intervention", sig:"NEEDS_HUMAN_INPUT — 23/1,388 (1.7%) available today", data:"A"},
+  {role:"Tool-call volume / duration", sig:"Available via tools.jsonl / runs.jsonl duration_s", data:"A"},
+  {role:"Rework cycles", sig:"Blocked on the working_log.csv parser fix (bucket A)", data:"blocked"},
+];
+const LEVEL3 = [
+  {role:"First-pass success rate", sig:"Partially derivable: DONE without a prior NEEDS_CHANGES", data:"B"},
+  {role:"Regression rate", sig:"Not measured — requires the eval pilot", data:"none yet"},
+  {role:"Cost per successful task", sig:"Blocked by the platform's missing token-forwarding (per the maturity audit)", data:"blocked"},
+  {role:"Cycle time", sig:"Available via runs.jsonl duration", data:"A"},
+];
+function renderLevel(id, rows){
+  const el = document.getElementById(id);
+  rows.forEach(r=>{
+    const row = document.createElement('div'); row.className='metric-row';
+    row.innerHTML = `<div class="mrole">${r.role}</div><div class="msig">${r.sig}</div><div>${r.data.startsWith('A')||r.data==='A'?'<span class="evid A">Level A</span>':r.data.startsWith('B')?'<span class="evid B">Level B</span>':`<span class="evid E">${r.data}</span>`}</div>`;
+    el.appendChild(row);
+  });
+}
+renderLevel('level1-rows', LEVEL1);
+renderLevel('level2-rows', LEVEL2);
+renderLevel('level3-rows', LEVEL3);
+
+const AUTOMATION = [
+  {item:"Model-diverse review routing", human:"Which model reviews a diff (currently: only one, never chosen)", evidence:"N/A — this reduces risk, it doesn't increase autonomy", impact:"N/A", rev:"Yes, instant (frontmatter revert)", rung:"N/A — not an autonomy increase"},
+  {item:"Phase-level resume", human:"Whether to trust a checkpoint and resume vs. restart", evidence:"Resume-semantics validation passes (workflow_version + input_hash + artifact existence, §76)", impact:"A bad resume applies a phase to stale/mismatched state", rev:"Yes — falls back to restart-from-Scope if validation fails", rung:"Auto-with-audit, gated by the validation rule"},
+  {item:"Bash secret-exposure hook, advisory → blocking", human:"Sees the command run either way, currently", evidence:"False-positive rate measured over normal operation first", impact:"False block interrupts real work; false negative lets a secret-shaped value through undetected", rev:"Yes, instantly reversible", rung:"Shadow/advisory today"},
+  {item:"Ticket-claim, detection → active lock", human:"Convention is the only guard against a double-claim today", evidence:"Real double-claim incident rate from the detection log", impact:"A false block prevents legitimate concurrent work on unrelated sub-scopes", rev:"Yes", rung:"Detection-only today"},
+  {item:"Dashboard resume-command, display → one-click action", human:"Copies a command by hand today", evidence:"Ticket-claim lock must exist first", impact:"A race could double-invoke a workflow", rev:"Yes", rung:"Read-only display today — never one-click before the lock exists"},
+];
+const autoBody = document.getElementById('auto-body');
+AUTOMATION.forEach(a=>{
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td style="font-weight:600;color:var(--ink)">${a.item}</td><td style="font-size:12px">${a.human}</td><td style="font-size:12px">${a.evidence}</td><td style="font-size:12px">${a.impact}</td><td>${a.rev}</td><td style="font-size:12px;color:var(--ink-faint)">${a.rung}</td>`;
+  autoBody.appendChild(tr);
+});
+
+const RETENTION = [
+  {cls:"agent-monitoring/tools.jsonl (raw tool calls)", kind:"Operational telemetry", now:"Unbounded, in Git", rec:"Hot window in Git → rotate to temp raw storage outside Git → verify SQLite ingestion → delete raw. Rotation cadence informed by the real growth rate (~2,260 lines/day); exact raw-retention window TBD from operational data, not fixed in advance."},
+  {cls:"agent-monitoring/events.jsonl (phase/agent events)", kind:"Operational telemetry", now:"Unbounded, in Git", rec:"Same lifecycle as tools.jsonl — smaller file, lower urgency, same rotation trigger"},
+  {cls:"agent-monitoring/runs.jsonl (run summaries)", kind:"Derived operational index", now:"Unbounded, in Git", rec:"Keep — 1,388 records only, low growth relative to tools.jsonl"},
+  {cls:"stored_artifacts/{id}/ (plan/investigation/test_plan)", kind:"Ticket-scoped → institutional knowledge", now:"Permanent", rec:"Keep permanent"},
+  {cls:"tickets/done/*.md", kind:"Institutional knowledge", now:"Permanent", rec:"Keep permanent"},
+  {cls:"agent-monitoring/retro/RETRO-*.md", kind:"Aggregated retrospective / institutional knowledge", now:"Permanent", rec:"Keep permanent"},
+  {cls:"graphify-out/ (derived graph)", kind:"Derived operational index (rebuildable)", now:"Committed to Git", rec:"Open question — insufficient evidence on CI/dev workflow needs to recommend build-output vs. tracked; flagging rather than asserting"},
+  {cls:"knowledge-index/ (search DB)", kind:"Derived operational index (rebuildable)", now:"Unclear if tracked", rec:"Same open question as graphify-out/"},
+  {cls:"working_log.csv", kind:"Aggregated retrospective (currently data-quality-broken)", now:"Permanent, append-only", rec:"Keep permanent once the parser fix (bucket A) lands"},
+  {cls:".claude/current_run sidecar(s)", kind:"Ephemeral / run-scoped", now:"Overwritten per-run", rec:"Already correctly ephemeral — no change needed"},
+];
+const retBody = document.getElementById('ret-body');
+RETENTION.forEach(r=>{
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td style="font-weight:600;color:var(--ink)">${r.cls}</td><td style="font-size:12px">${r.kind}</td><td style="font-size:12px">${r.now}</td><td style="font-size:12px">${r.rec}</td>`;
+  retBody.appendChild(tr);
+});
+
+const OWNERSHIP = [
+  {sub:"tools.jsonl rotation policy", owner:"Agent Monitoring Maintainer", trigger:"Regular cadence, automatic (candidate: monthly)", stale:"Live file exceeds its size threshold", removal:"N/A — permanent operational policy"},
+  {sub:"Eval pilot corpus/sample", owner:"Evaluation Maintainer", trigger:"Before each eval run", stale:"Corpus drifts from live ticket schema", removal:"Superseded by a full eval platform, if that ever ships"},
+  {sub:"Per-agent tools: frontmatter", owner:"Agent Configuration Maintainer", trigger:"Any tool-usage pattern change for that role", stale:"tools.jsonl shows a denied call the role legitimately needs", removal:"N/A — permanent"},
+  {sub:"Ticket-claim detection log", owner:"Workflow Runtime Maintainer", trigger:"Continuous", stale:"Zero incidents after 30 days", removal:"Remove instrumentation if zero for a full quarter"},
+  {sub:"Model-routing config (once piloted)", owner:"Agent Configuration Maintainer", trigger:"Any quality-regression signal from the Evaluation Maintainer", stale:"DOD_BLOCKED/NEEDS_CHANGES rate rises above baseline", removal:"Revert routing if regression confirmed"},
+  {sub:"Capability-envelope baseline (settings.local.json)", owner:"Agent Configuration Maintainer", trigger:"Any new legitimate permission need", stale:"Baseline diverges from an actual working local file", removal:"N/A"},
+];
+const ownBody = document.getElementById('own-body');
+OWNERSHIP.forEach(o=>{
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td style="font-weight:600;color:var(--ink)">${o.sub}</td><td style="font-size:12px">${o.owner}</td><td style="font-size:12px">${o.trigger}</td><td style="font-size:12px">${o.stale}</td><td style="font-size:12px;color:var(--ink-faint)">${o.removal}</td>`;
+  ownBody.appendChild(tr);
+});
+
+const RISKS = [
+  {risk:"agent-monitoring/tools.jsonl unbounded growth", like:"High", impact:"Medium", mit:"Rotate to temp raw storage outside Git, verify SQLite ingestion, then delete raw (bucket A)", warn:"Git repo size crossing a defined threshold, or measurable clone-time regression"},
+  {risk:"Ticket double-claim under rising concurrency", like:"Medium", impact:"Medium", mit:"Detection-only logging first (bucket B, kill-criteria gated)", warn:"Two sessions editing the same ticket ID observed in monitoring"},
+  {risk:"Prose-only guardrails silently failing", like:"High (already proven)", impact:"Medium", mit:"Convert the 2 confirmed-failing Hard Rules to hooks (bucket A)", warn:"Same failure recurring in consecutive weekly retros"},
+  {risk:"Eval pilot producing false confidence from a non-representative sample", like:"Medium", impact:"Medium", mit:"Dev/validation/holdout split; keep claims scoped to the stratified 20-40 sample", warn:"Pilot scores don't correlate with the known-good/known-bad defect classes"},
+  {risk:"Removing knowledge-gateway breaks an undiscovered consumer", like:"Low", impact:"Low-Medium", mit:"Archive rather than hard-delete; monitor for renewed calls", warn:"Any mcp__knowledge-gateway__* call appears in tools.jsonl post-archival"},
+  {risk:"settings.local.json silently widening the security envelope on a given machine", like:"Medium", impact:"Medium", mit:"Versioned capability-envelope baseline + auditable diff check (bucket A) — enforced as a comparison script, not a confirmed runtime guarantee", warn:"The diff check flags a local capability outside the approved envelope, or a session on a new machine behaves unexpectedly"},
+  {risk:"Model-routing pilot masking a real quality regression", like:"Medium", impact:"High", mit:"Hard decision gate — cannot start until the eval pilot's exit criteria are met (§9)", warn:"DOD_BLOCKED/NEEDS_CHANGES rate rises above the 6.3% baseline after routing ships"},
+  {risk:"Dashboard action-affordance creeping into a full mutation surface", like:"Low", impact:"Medium", mit:"Keep the resume-command addition strictly read-only; a real action waits on the claim-lock decision", warn:"Any dashboard change proposes a write/execute endpoint before that decision is made"},
+  {risk:"Eval-pilot replay contamination from post-hoc knowledge", like:"Medium", impact:"Medium", mit:"Document the risk explicitly (§evaluation); treat pilot scores as directional, not absolute", warn:"A replayed ticket's score looks implausibly better than its original human outcome"},
+];
+const rBody = document.getElementById('risk-body');
+RISKS.forEach(r=>{
+  const tr = document.createElement('tr');
+  const likeLvl = r.like.startsWith('High')?'High':r.like.startsWith('Medium')?'Medium':'Low';
+  tr.innerHTML = `<td style="font-weight:600;color:var(--ink)">${r.risk}</td><td><span class="lvl ${likeLvl}">${r.like}</span></td><td><span class="lvl ${r.impact.split('-')[0]}">${r.impact}</span></td><td style="font-size:12.5px">${r.mit}</td><td style="color:var(--ink-faint);font-size:12px">${r.warn}</td>`;
+  rBody.appendChild(tr);
+});
+
+const FINALQA = [
+  {q:"What stage of AI-first engineering maturity is the project entering now?", a:"A hardening stage. The workflow/spec/intelligence layers are mature enough that the next real gains come from enforcing what's documented and finishing what's half-shipped, not from adding architecture."},
+  {q:"What should the project stop investing in?", a:"knowledge-gateway, any further prose-only policy rules for the two failure modes already proven to recur, and any exploration of a workflow-engine migration — none have supporting evidence in either review."},
+  {q:"What existing capabilities should be protected from unnecessary redesign?", a:"The 12-phase pipeline, the dashboard's read-only boundary, the CI job structure, and the two surviving intelligence systems — all confirmed working well under closer inspection, not just assumed fine."},
+  {q:"What architectural debt creates the greatest current risk?", a:"The session-wide tool-permission allowlist combined with a security scan that covers only one narrow path — most agent actions pass through zero policy layer between model output and host execution."},
+  {q:"What missing capability creates the greatest future leverage?", a:"The agent-evaluation pilot. Every quality-sensitive initiative on this roadmap is gated behind having a way to detect a regression, and the evidence to build a small trusted one now exists."},
+  {q:"Which improvements should happen immediately?", a:"Everything in bucket A (§8) — all evidence-graded, all reversible, all reusing code that already exists."},
+  {q:"Which improvements should wait until measurement/evaluation exists?", a:"Model-based routing beyond the two shadow-piloted reviewer roles, and any general autonomy increase — both explicitly gated behind the eval-pilot exit criteria (§9)."},
+  {q:"Which improvements require experiments before commitment?", a:"Everything in bucket B (§8) — the ticket-claim lock, the eval pilot itself, the phase-resume design work, and the two escalation decisions (Bash secret-exposure hook blocking, reviewer shadow comparison and cutover)."},
+  {q:"Which previously suggested improvements do you disagree with?", a:"The prior audit's hedge on knowledge-gateway — the evidence gathered this session removes the ambiguity entirely. Also disagree with treating agent evaluation as indefinitely speculative; a scoped pilot is immediately actionable now."},
+  {q:"What important opportunities did the previous architecture review miss?", a:"The agent-ops dashboard's existence, the unbounded growth of tools.jsonl, the git-ignored settings.local.json, and the empirical proof from retro reports that specific prose guardrails have already failed."},
+  {q:"What should the system look like after the next evolution?", a:"The same nine-layer architecture, every box either unchanged (protected strength) or tightened — never expanded with a new layer or framework."},
+  {q:"What is the smallest realistic set of changes capable of reaching that state?", a:"Bucket A in full (12 items) plus bucket B's eval pilot (1 item) — thirteen initiatives, all reusing existing repo infrastructure, none requiring a new dependency."},
+  {q:"How will we objectively know whether the next architecture is better than the current one?", a:"Four independently checkable signals: zero recurrence of the two proven-failing guardrail patterns across 4 consecutive retros; 100% of agents carrying explicit tool scopes; a repeatable eval-pilot score; and tools.jsonl staying under its size threshold instead of growing unbounded."},
+];
+const qaEl = document.getElementById('final-qa');
+FINALQA.forEach((item,i)=>{
+  const el = document.createElement('div'); el.className='qa-item';
+  el.innerHTML = `<span class="qa-num">${i+1}</span><div><h4>${item.q}</h4><p>${item.a}</p></div>`;
+  qaEl.appendChild(el);
+});
+
+const SYNTHESIS = [
+  {q:"Which roadmap items are truly implementation-ready today?", a:"Everything in bucket A (§8) — twelve items, each with an unambiguous Evidence Level (mostly A/B), a clear owner-able change, and no unresolved design question blocking a ticket from being written."},
+  {q:"Which items only look implementation-ready but still contain unresolved design assumptions?", a:"Phase-level resume was drafted as 'read the sidecar and skip completed phases' in the earlier revision — that undersells it. It needs the resume-semantics validation rule (§76) designed first, which is why this revision moves it to bucket B as a design measurement, not bucket A."},
+  {q:"Which proposed changes modify shared infrastructure and therefore should be grouped into the same epic?", a:"See §10's five epic groupings — Governance & Capability Policy, Guardrail Enforcement, Workflow Reliability, Telemetry & Retention, and Agent Evaluation Foundation. Everything else stays standalone by design."},
+  {q:"What should be the authoritative configuration source for agent behavior, permissions, workflow, and provider semantics?", a:"Per §6's authority map: .claude/agents/*.md for responsibilities, .claude/settings.json (with a versioned baseline, bucket A) for permissions, .claude/workflows/*.js for phase logic, and the agent-orchestration/ contract for provider semantics. All four currently lack a named owner — that gap is itself worth fixing alongside whichever bucket-A item touches each domain."},
+  {q:"Which AI-system changes can currently be evaluated objectively?", a:"Anything with Level A workflow-level data already available: task completion (78.4% DONE), verification failures (6.3% baseline), human intervention (1.7%), and duration/tool-call volume. These can back the safety metric for the model-routing decision gate today, without waiting on the eval pilot."},
+  {q:"Which cannot yet be evaluated reliably?", a:"Anything requiring role-level signal (ticket-scoper tier accuracy, reviewer true/false-positive rates) or regression rate — none of these have a baseline yet; they're exactly what the eval pilot exists to establish."},
+  {q:"What should the first minimum viable evaluation suite measure?", a:"The 2 already-known recurring defect classes (doc-update self-report gap, test-scoper background hang) on a 20-40 ticket stratified sample — repeatability across 2 runs, not absolute accuracy against every possible defect type."},
+  {q:"Which metrics should be role-specific rather than workflow-global?", a:"The model-routing pilot's primary metric must stay role-specific — done-checker's directly observed block rate today, and its false-pass/false-block rate once adjudicated labels exist. §65 explicitly warns against judging a narrow agent change on a noisy system-level number."},
+  {q:"Which changes should first run in offline replay?", a:"The eval pilot itself — repeatability and controlled comparison matter more than live-traffic realism for establishing whether the scoring approach works at all."},
+  {q:"Which changes should first run in online shadow mode?", a:"Model-diverse reviewer routing — comparing finding rates on real live diffs without ever letting the candidate model's verdict block real work."},
+  {q:"What operational data should stop being version-controlled in Git?", a:"agent-monitoring/tools.jsonl and events.jsonl, past their live/current-month window — historical data belongs in the SQLite index, not as raw JSONL accumulating in git history."},
+  {q:"Which artifacts should remain permanent institutional knowledge?", a:"stored_artifacts/, tickets/done/, agent-monitoring/retro/*.md, and working_log.csv (once its parser is fixed) — all classified 'Permanent' in §10's retention table."},
+  {q:"What is the appropriate ownership and maintenance lifecycle for every new subsystem proposed?", a:"See §10's ownership table — six subsystems, each with a proposed owner, update trigger, staleness signal, and removal condition; none left as undefined the way today's configuration-authority map is."},
+  {q:"What evidence must exist before agent autonomy can increase?", a:"Per §11's automation-boundary table: resume-semantics validation for phase resume, a measured false-positive rate for the Bash secret-exposure hook, a real incident count for the ticket-claim lock, and the eval-pilot exit criteria for anything touching model routing."},
+  {q:"Where is the architecture currently at greatest risk of becoming more complex than the product benefit justifies?", a:"The eval pilot, if it's allowed to grow past its deliberately small scope before proving repeatable. §69's own warning is the guardrail: a small trusted benchmark beats a large untrusted one, and bucket C's full-platform item stays blocked specifically to prevent that overreach."},
+];
+const synEl = document.getElementById('synthesis-qa');
+SYNTHESIS.forEach((item,i)=>{
+  const el = document.createElement('div'); el.className='qa-item';
+  el.innerHTML = `<span class="qa-num">${i+1}</span><div><h4>${item.q}</h4><p>${item.a}</p></div>`;
+  synEl.appendChild(el);
+});
+</script>
