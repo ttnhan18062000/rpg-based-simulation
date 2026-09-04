@@ -159,7 +159,12 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # The substantive check is the assertion above (manifest's own count matches a fresh,
     # independent live scan) — this second assertion only guards against a silent, unexplained
     # large swing.
-    assert live_missing == 1317
+    # Updated from 1317 to 1316 (TCK-20260904-LAIR-ENTITY-ANCHOR, 2026-09-04): WORLD-085
+    # (docs/parity_ledger/world_dynamics.yaml, "World boss spawn rule is deterministic") gained a
+    # real `test_path` (tests/unit/world/test_world_dynamics.py::
+    # test_boss_spawn_is_idempotent_even_if_existing_boss_left_region), previously `null`, as part
+    # of generalizing BossService's region-scoped idempotency pattern to Place-scoped Lair spawning.
+    assert live_missing == 1316
 
 
 # ---------------------------------------------------------------------------

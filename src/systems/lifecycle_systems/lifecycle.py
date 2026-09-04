@@ -160,13 +160,16 @@ class LifecycleSystem:
         # Apply Influence Shifts and Conquest Lifecycle
         if recent_deaths:
             from src.world.influence import FactionInfluenceService
+            from src.economy.vacancy import EconomicVacancyService
             # Influence Shift
             inf_update = FactionInfluenceService.process_influence_shift(state, recent_deaths)
             # Conquest/Stronghold Lifecycle (Requires generator)
             from src.systems.world_systems.generator import EntityGenerator
             generator = EntityGenerator(state.seed + state.tick)
             inf_update = FactionInfluenceService.process_conquest_lifecycle(state, inf_update, generator)
-            
+            # Economic Vacancy Signal (TCK-20260903-ECONOMIC-VACANCY-SIGNAL)
+            vac_update = EconomicVacancyService.check_and_emit(state, recent_deaths)
+
             # Merge world updates and new entities
             new_world_updates = dict(update.world_updates)
             for r_id, extra_upd in inf_update.world_updates.items():
@@ -174,11 +177,12 @@ class LifecycleSystem:
                     new_world_updates[r_id] = new_world_updates[r_id].merge(extra_upd)
                 else:
                     new_world_updates[r_id] = extra_upd
-            
+
             update = replace(update,
                 world_updates=new_world_updates,
                 entities_add=list(update.entities_add) + list(inf_update.entities_add),
-                entities_remove=list(update.entities_remove) + list(inf_update.entities_remove)
+                entities_remove=list(update.entities_remove) + list(inf_update.entities_remove),
+                world_events_add=list(update.world_events_add) + list(vac_update.world_events_add),
             )
                         
         return replace(update, entity_updates=refined_entity_updates)

@@ -344,6 +344,53 @@ class BetrayalDesertionEvent(SimulationEvent):
         )
 
 
+class ClanMemberLeftEvent(SimulationEvent):
+    """Emitted when an entity leaves a clan (idea 40/M4).
+
+    Logic ID: SOC-264 (ClanLifecycleService.process_leave removes member via typed ClanUpdate)
+    """
+    clan_id: str
+    event_type: str = "clan_member_left"
+    event_category: EventCategory = "social"
+    severity: EventSeverity = "INFO"
+    source_system: str = "clan_lifecycle_service"
+    message: str = ""
+
+    def __init__(self, **data: Any) -> None:
+        if "message" not in data or not data["message"]:
+            eid = data.get("entity_id")
+            cid = data.get("clan_id")
+            data["message"] = f"Entity {eid} left clan {cid}"
+        super().__init__(**data)
+
+
+class ClanSuccessionEvent(SimulationEvent):
+    """Emitted when clan leadership passes to a new leader after the prior leader's
+    death or inactivity (idea 40/M4).
+
+    Logic ID: SOC-264 (ClanLifecycleService.process_succession, no 0.2 sociability-margin
+    gate -- contrast SOC-228's Group election)
+    """
+    clan_id: str
+    old_leader_id: Optional[int] = None
+    new_leader_id: int
+    event_type: str = "clan_succession"
+    event_category: EventCategory = "social"
+    severity: EventSeverity = "INFO"
+    source_system: str = "clan_lifecycle_service"
+    message: str = ""
+
+    def __init__(self, **data: Any) -> None:
+        if "message" not in data or not data["message"]:
+            cid = data.get("clan_id")
+            old = data.get("old_leader_id")
+            new = data.get("new_leader_id")
+            data["message"] = (
+                f"Clan {cid} leadership passed from entity {old} to entity {new}"
+            )
+        super().__init__(**data)
+
+
 # ---------------------------------------------------------------------------
 # Social Memory consequence events (TCK-20260619-E43E-CONSEQUENCE-EVENTS)
 # ---------------------------------------------------------------------------

@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-09-02
+last_verified: 2026-09-04
 ---
 
 # Chapter 5: World Evolution
@@ -389,6 +389,61 @@ cohort data, or no region at all, is treated as eligible (not suppressed) rather
 case. On a successful birth, this path also nudges the birth region's `young`-bracket count by `+1`
 via `WorldUpdate.population_young_births_delta` — see "Individual-Birth Population-Pressure Nudge"
 below (`TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE`).
+
+### Camp/Nest Classification & Nest Spread (TCK-20260904-CAMP-NEST-CLASSIFICATION)
+
+Behind `ENABLE_CAMP_NEST_SPREAD` (default OFF), `CampService.process_camps()` (`src/world/camp.py`)
+gains a fork *inside* the existing raid-trigger gate (the same `camp.maturity >=
+RAID_MATURITY_THRESHOLD` (80.0) and `state.tick - camp.last_raid_tick >= 500`-tick cooldown check
+that gates the raid outcome): for camps classified as Nest kind, the raid outcome is replaced with
+a spread/population-growth outcome. No new maturity field, no new spawn-trigger vocabulary, and no
+independent cooldown — a Nest-classified camp cannot both raid and spread on the same qualifying
+tick.
+
+**Classification rule.** All 13 `races.yaml` races resolve to one of City / Camp / Nest / Excluded,
+keyed off `natural_traits`, `drive_profile`, and `cognition_profile`:
+
+| Race | Classification | Deciding rule |
+|---|---|---|
+| human, elf, dwarf, lizardfolk | City | `humanoid` + `tool_user` in `natural_traits`, `drive_profile != "opportunistic_raider"` |
+| goblin, orc | Camp | `humanoid` + `tool_user` in `natural_traits`, `drive_profile == "opportunistic_raider"` |
+| wolf, spider, troll, slime | Nest | `tool_user` absent from `natural_traits`, `cognition_profile == "instinctive_animal"`, `drive_profile == "territorial_predator"` |
+| undead, spirit | Excluded (neither) | No City/Camp/Nest trait pair fits; population growth has no reproduction-concept fit for either race (reanimation / incorporeal guardian, not birth) — a real, named gap, no owning ticket |
+| dragonkin | Excluded (Lair-adjacent) | Fails both City/Camp and Nest; its high-intelligence, solitary, place-anchored profile matches idea 47's Lair concept instead, owned by `TCK-20260904-LAIR-ENTITY-ANCHOR` |
+
+Goblin's `social_humanoid` trait (shared with City-eligible human/elf) does **not** decide Camp-vs-
+City — it is present on both City and Camp races. The real discriminator is `drive_profile ==
+"opportunistic_raider"`, shared exclusively by goblin and orc among all 13 races, and already
+independently corroborated by the pre-existing garrison-spawn block's `"goblin_warrior" if
+camp.kind == "goblin" else "orc_warrior"` fallback (`src/world/camp.py`), which has always treated
+orc as the code's de facto second Camp race.
+
+The only code projection of this table is `CampService.NEST_RACE_KINDS = frozenset({"wolf",
+"spider", "troll", "slime"})` — City and Excluded races are not represented in code because no
+production path constructs a `CampState` for them (`CampState` construction remains out of scope
+of this ticket; see WORLD-109 below).
+
+**Spread outcome:** for a Nest-classified camp (`camp.kind in CampService.NEST_RACE_KINDS`) at
+raid maturity, past the cooldown, with the flag ON, `CampService.process_camps()` spawns one
+parentless same-kind offspring via `EntityGenerator.spawn_natural_creature_offspring(kind=camp.kind,
+...)` — the same parentless-birth mechanism the Natural-Creature Reproduction path above uses —
+instead of calling `RaidService.check_for_raid()`. The offspring is keyed directly off `camp.kind`
+(no `goblin_warrior`/`orc_warrior`-style archetype remapping), and no new `CampState` is
+constructed anywhere in this branch.
+
+**Cost:** identical to the raid outcome it replaces — `maturity_delta=-20.0` (a relative delta, not
+an absolute reset) and `last_raid_tick_set=state.tick`, reusing the same 500-tick cooldown. A
+Camp-classified camp (goblin, orc) is unaffected by this flag: it always takes the raid outcome,
+even with `ENABLE_CAMP_NEST_SPREAD` ON.
+
+**New typed Camp/Nest feature fields.** `CampState`/`CampUpdate` (`src/core/state.py`,
+`src/core/updates.py`) gain three typed fields — `totem_tier: int`, `stockpile: float`,
+`palisade_integrity: float` — round-tripping through `to_canonical_dict()` and `CampUpdate.merge()`
+and committed via `apply_plan.py`'s authoritative camp-application block, the same commit point the
+existing `maturity`/`active`/`last_raid_tick` fields already go through. **These magnitudes are
+provisional scaffolding only** — no production code path in this ticket populates them with a
+non-default value or defines accrual/effect logic (e.g. what a totem buffs, how stockpile
+accumulates); that is left to a follow-on ticket.
 
 ### Magical/Demonic Reproduction (TCK-20260902-REPRODUCTION-MAGICAL-DEMONIC-PATH)
 

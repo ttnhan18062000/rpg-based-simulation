@@ -2607,25 +2607,35 @@
   divergence_note: null
   support_boundary: null
 - id: STRAT-230
-  text: When an entity's lead destination is inconsistent with world state (depleted
+  text: 'When an entity''s lead destination is inconsistent with world state (depleted
     resource node, dead person target, absent ground-item/chest object for OBJECT
     leads, no matching local scar for EVENT leads), the lead is marked FAILURE/EXHAUSTED,
-    the originating provider's reliability_score is decremented by 0.1 (floored at
+    the originating provider''s reliability_score is decremented by 0.1 (floored at
     0.1) via StateUpdate.information_providers_update, an UnknownFact (priority=0.7)
     is regenerated for replanning, a belief_contradiction SimulationEvent is emitted,
     and a lead_contradiction_resolved SimulationEvent is emitted for the resolved
     lead. This check runs every tick as the "lead_contradiction" phase in AuthoritativeApplyPipeline.refine(),
     between strategic_intelligence and near_death_hardening. (E42D; TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS;
     TCK-20260824-LEAD-CONTRADICTION-WIRING)
+
+    '
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/engine/pipeline_phases/lead_contradiction.py \u2014 LeadContradictionSystem.enforce();\
-    \ src/core/updates.py \u2014 StateUpdate.information_providers_update field; src/cognition/knowledge_model.py\
-    \ \u2014 effective_certainty() staleness decay utility; src/engine/pipeline.py\
-    \ \u2014 run_phase(\"lead_contradiction\", ...) call in refine(); src/domains/information/phase.py\
-    \ \u2014 InformationBeliefPhase.apply()'s observation-synthesis branch (claim_failed_search/region_danger_seen)\
-    \ that routes untested leads through BeliefContradictionService.detect() via ObservationBeliefBridge.process_observation()"
+  v2_evidence: 'src/engine/pipeline_phases/lead_contradiction.py -- LeadContradictionSystem.enforce();
+    src/core/updates.py -- StateUpdate.information_providers_update field; src/cognition/knowledge_model.py
+    -- effective_certainty() staleness decay utility; src/engine/pipeline.py -- run_phase("lead_contradiction",
+    ...) call in refine(); src/domains/information/phase.py -- InformationBeliefPhase.apply()''s
+    observation-synthesis branch (claim_failed_search/region_danger_seen) that routes
+    untested leads through BeliefContradictionService.detect() via ObservationBeliefBridge.process_observation().
+    NOTE (TCK-20260903-INFORMATION-HUB-ACCUMULATION): this mechanism''s own enforce()
+    logic was always correct, but a SEPARATE wiring defect in src/engine/apply.py
+    (AuthoritativeState(...) never carried information_providers forward) meant its
+    decrement never survived a tick boundary in any real run before that ticket''s
+    apply.py fix -- a distinct bug from this entry''s own verified decrement logic,
+    not a correction to it.
+
+    '
   proof_type: parity
   test_path: tests/unit/cognition/test_information_seeking.py::TestLeadContradiction::test_belief_contradiction_fires_on_depleted_lead;
     tests/unit/cognition/test_information_seeking.py::TestLeadContradiction; tests/unit/cognition/test_information_seeking.py::TestLeadContradiction::test_pipeline_refine_produces_lead_contradiction_matching_isolated_enforce
@@ -4040,3 +4050,31 @@
     whose entities have non-default values in the 9 newly-covered fields; no shipped
     calibration baseline is affected unless it already exercises these fields (source_trust/contracts/turning_points/committed_intentions/candidate_zones/hypotheses/home_region_id/overload
     tracking) with non-default values.
+- id: STRAT-269
+  text: 'InformationAccumulationService.record_quest_reported_back() increments InformationProviderState.knowledge_accumulated
+    by 1 and resets knowledge_age to 0, hooked into QuestResolutionSystem.enforce()''s
+    is_newly_completed branch when QuestState.source_entity_id resolves to a registered
+    provider. Gated behind ENABLE_INFORMATION_HUB_ACCUMULATION (default OFF). Requires
+    the apply.py information_providers carry-forward fix (also closes a pre-existing
+    wiring gap in STRAT-230''s own reliability decrement, which never survived a tick
+    boundary before this fix). Structurally inert in live corpus runs today: GuildAction.visit()
+    never populates QuestState.source_entity_id (src/town/guild.py), so this is verified
+    via direct unit-level construction through the full apply path, not corpus reachability.
+    (idea 41, M4)'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/information/accumulation.py -- InformationAccumulationService;
+    src/engine/quests.py -- QuestResolutionSystem.enforce() is_newly_completed accumulation
+    branch; src/engine/apply.py -- information_providers carry-forward-and-merge fix
+    (TCK-20260903-INFORMATION-HUB-ACCUMULATION); src/domains/information/providers.py
+    -- InformationProviderState.knowledge_accumulated field
+  proof_type: parity
+  test_path: tests/unit/domains/information/test_information_provider_accumulation.py
+  divergence_note: 'NOTE: this entry was originally written as STRAT-268 but was renumbered
+    to STRAT-269 during a merge-conflict resolution -- an unrelated concurrent session
+    independently used STRAT-268 for a different entry (StrategicComponent canonical-hash
+    gap fix, P0) first.'
+  support_boundary: Accumulation trigger reads QuestState.source_entity_id but does
+    not populate it; the Guild hub never sets it, so no live seeding path exists yet
+    (disclosed gap, not a bug).

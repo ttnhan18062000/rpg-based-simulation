@@ -84,6 +84,9 @@ class SocialAppraisalSystem:
         elif contract.kind == ContractKind.MARRIAGE:
             return SocialAppraisalSystem._appraise_marriage(entity, contract, trust_score)
 
+        elif contract.kind == ContractKind.CLAN:
+            return SocialAppraisalSystem._appraise_clan(entity, contract, trust_score)
+
         return ContractStatus.CANCELLED, ReasonCode.UNKNOWN, {}
 
     @staticmethod
@@ -352,6 +355,21 @@ class SocialAppraisalSystem:
         is added here -- see stored_artifacts/TCK-20260902-MARRIAGE-PROPOSAL-CONTRACT/plan.md
         Decision 4."""
         return ContractStatus.ACCEPTED, ReasonCode.MARRIAGE_ACCEPTED, {}
+
+    @staticmethod
+    def _appraise_clan(
+        entity: EntityState,
+        contract: ContractState,
+        trust_score: float
+    ) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:
+        """The shared prelude (trust<0.2, sentiment<-0.8, betrayal-history, appraisal.py:47-54)
+        already expresses the entire trust gate this contract kind uses; reaching this method
+        means the prelude already passed, so it always accepts. Mirrors _appraise_teach/
+        _appraise_marriage's prelude-only shape exactly -- no utility/risk model or
+        tension-level gate is added here; any ClanState.tension_level interaction beyond this
+        shared prelude is idea 68 (Inter-Clan Relations) scope, explicitly out of scope for
+        this ticket."""
+        return ContractStatus.ACCEPTED, ReasonCode.CLAN_JOIN_ACCEPTED, {}
 
     @staticmethod
     def process_betrayal(

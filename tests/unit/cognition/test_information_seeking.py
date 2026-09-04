@@ -231,6 +231,7 @@ class TestInformationProviderState:
             "reliability_score": 0.75,
             "knowledge_domains": ["danger_rating", "material_source"],
             "knowledge_age": 10,
+            "knowledge_accumulated": 0,
         }
 
     def test_information_providers_serializes_deterministically(self):

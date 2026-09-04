@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-09-04
 tags: [resource-conservation, atomic-law, crafting, economy, loot, home-storage]
 related_chapter: 03_economic_laws.md
 ---
@@ -168,7 +168,23 @@ This is enforced structurally — the authoritative `apply` path only processes 
 
 ## Crafting Atomicity
 
-`CraftingSystem` (`src/systems/economy_systems/crafting.py`) runs 7 sequential gate checks before emitting an `InventoryUpdate`:
+Two independent `RecipeRegistry`-backed crafting code paths exist in the repo (see
+`docs/parity_ledger/progression.yaml`'s `PROG-123` divergence note and
+`TCK-20260904-MATERIAL-POSSESSION-PREDICATE` for the full disambiguation). Only one is live in
+production; this section previously described the other one as if it were.
+
+**Live path — `src/engine/intent/action_intent.py`'s `REQUEST_CRAFT` handling**, reading
+`src/core/registries.py::RecipeRegistry`. Pre-flight, it builds `Requirement(kind="recipe_known" /
+"has_gold" / "has_item", ...)` checks evaluated by `RequirementEvaluator`. On execution it builds a
+`ResourceTransferIntent(source_id=recipe_id, source_kind="CRAFTING", items_add=[ItemStack(recipe.output_item_id,
+1)], items_remove=materials, gold_delta=-recipe.gold_cost, gold_cost=recipe.gold_cost,
+transfer_kind="CRAFT")` and delegates all atomicity to the conservation path below. It deliberately
+does **not** call `CraftingSystem.craft()` — an explicit code comment at `action_intent.py:193-198`
+states doing so "bypasses that authoritative path and would not surface an `item_crafted` event."
+
+**Not live — `CraftingSystem` (`src/systems/economy_systems/crafting.py`)**, reading
+`src/core/recipes.py::RecipeRegistry`. Runs 7 sequential gate checks before emitting an
+`InventoryUpdate`:
 
 1. Recipe known in `RecipeRegistry`
 2. Entity has `recipe_id` in `identity.known_recipes`
@@ -178,7 +194,19 @@ This is enforced structurally — the authoritative `apply` path only processes 
 6. Capacity for output (slot count, stacking exemption if item already present)
 7. If all pass: emit `InventoryUpdate(items_remove=materials, items_add=[result_item], gold_delta=-recipe.gold_cost)`
 
-The conservation path (`source_kind="CRAFTING"`) then re-checks materials, gold, and capacity atomically. Materials are removed and product added in the same `InventoryUpdate`. This double-check prevents TOCTOU drift between CraftingSystem evaluation and conservation resolution.
+This class and its `craft()` method have zero non-test callers anywhere in `src/` (repo-wide
+reference search confirms only `src/systems/crafting.py`'s re-export, itself also uncalled in
+production). It remains in the codebase and is exercised by unit tests, but this gate sequence does
+not execute during live simulation. Do not treat it as a TOCTOU double-check partner for the
+conservation path below — that characterization was inaccurate and is corrected here (cross-doc
+staleness sweep, TCK-20260904-MATERIAL-POSSESSION-PREDICATE, 2026-09-04).
+
+**Conservation path (`source_kind="CRAFTING"`, `src/core/conservation.py:133-153`) — this is the
+live atomicity enforcement**, reached via the `ResourceTransferIntent` built by the live path above:
+checks inventory is not full, gold `>= gold_cost`, then for each material in `items_remove` confirms
+held quantity is sufficient; if all pass, emits `InventoryUpdate(items_add=..., items_remove=...,
+gold_delta=-gold_cost)` atomically in one step. This is the sole place crafting's atomic
+add/remove/gold-spend actually happens in production.
 
 ---
 

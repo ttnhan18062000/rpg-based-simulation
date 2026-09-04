@@ -1,12 +1,13 @@
 import pytest
 from dataclasses import replace
-from src.core.state import EntityState, LifecycleComponent, AuthoritativeState, CombatComponent, LifeStage
+from src.core.state import EntityState, LifecycleComponent, AuthoritativeState, CombatComponent, LifeStage, RegionState
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, InventoryUpdate, LifecycleUpdate
 from src.systems.lifecycle import LifecycleSystem
 from src.engine.apply import ApplyPath
 from src.core.builder import V2EntityBuilder, build_parent_bond_updates_for_birth
 from src.core.enums import EntityRole, Faction
 from src.core.models.social import SocialBond, RelationshipRole
+from src.domains.world_emergence.schema import WorldEventCategory
 
 def test_aging_per_tick():
     """Verify that entities age by 1 tick every generation."""
@@ -491,6 +492,82 @@ def test_coming_of_age_monster_role_child_role_untouched_on_transition():
 
     next_state = ApplyPath.apply_generation(state, refined, 101, 101)
     assert next_state.entities[1].identity.role == EntityRole.MONSTER
+
+
+def test_sole_shopkeeper_death_emits_vacancy_event():
+    """TCK-20260903-ECONOMIC-VACANCY-SIGNAL: killing the sole living SHOPKEEPER in a region
+    through resolve_lifecycle produces a PRODUCTION_ROLE_VACATED WorldEvent in the returned
+    StateUpdate.world_events_add, carrying vacated_role and region_id."""
+    dying = (V2EntityBuilder(1)
+             .location(10.0, 10.0)
+             .identity(role=EntityRole.SHOPKEEPER)
+             .lifecycle(age_ticks=1000, max_age_ticks=1000)
+             .build())
+    region = RegionState(id="region_01", name="Test Region", bounds=(0, 0, 100, 100))
+    state = AuthoritativeState(tick=100, seed=42, entities={1: dying}, regions={"region_01": region})
+
+    refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+
+    assert len(refined.world_events_add) == 1
+    event = refined.world_events_add[0]
+    assert event.category == WorldEventCategory.PRODUCTION_ROLE_VACATED
+    assert event.region_id == "region_01"
+    assert event.subject == "1"
+    assert event.payload == {"vacated_role": float(int(EntityRole.SHOPKEEPER))}
+
+
+def test_non_sole_occupant_death_does_not_emit_vacancy_event():
+    """A region with two living SHOPKEEPERs -- killing one via resolve_lifecycle must NOT emit
+    the vacancy event (negative case guarding against a naive "any production-role death"
+    implementation that ignores the sole-occupant condition)."""
+    dying = (V2EntityBuilder(1)
+             .location(10.0, 10.0)
+             .identity(role=EntityRole.SHOPKEEPER)
+             .lifecycle(age_ticks=1000, max_age_ticks=1000)
+             .build())
+    surviving_peer = (V2EntityBuilder(2)
+                       .location(20.0, 20.0)
+                       .identity(role=EntityRole.SHOPKEEPER)
+                       .build())
+    region = RegionState(id="region_01", name="Test Region", bounds=(0, 0, 100, 100))
+    state = AuthoritativeState(
+        tick=100, seed=42,
+        entities={1: dying, 2: surviving_peer},
+        regions={"region_01": region},
+    )
+
+    refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+
+    assert refined.world_events_add == []
+
+
+def test_role_and_region_scope_of_sole_occupant_check():
+    """Two regions, each with exactly one SHOPKEEPER: killing the one in region_01 via
+    resolve_lifecycle emits a vacancy event scoped to region_01 only -- guards against a
+    "global role count" misinterpretation of the occupancy check."""
+    dying_a = (V2EntityBuilder(1)
+               .location(10.0, 10.0)
+               .identity(role=EntityRole.SHOPKEEPER)
+               .lifecycle(age_ticks=1000, max_age_ticks=1000)
+               .build())
+    shopkeeper_b = (V2EntityBuilder(2)
+                     .location(200.0, 200.0)
+                     .identity(role=EntityRole.SHOPKEEPER)
+                     .build())
+    state = AuthoritativeState(
+        tick=100, seed=42,
+        entities={1: dying_a, 2: shopkeeper_b},
+        regions={
+            "region_01": RegionState(id="region_01", name="Region A", bounds=(0, 0, 100, 100)),
+            "region_02": RegionState(id="region_02", name="Region B", bounds=(150, 150, 250, 250)),
+        },
+    )
+
+    refined = LifecycleSystem.resolve_lifecycle(state, StateUpdate())
+
+    assert len(refined.world_events_add) == 1
+    assert refined.world_events_add[0].region_id == "region_01"
+    assert refined.world_events_add[0].subject == "1"
 
 
 def test_near_death_hardening_logic():

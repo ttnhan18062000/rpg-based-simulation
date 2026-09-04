@@ -11,6 +11,10 @@ from src.worldbuilding.schema import TerrainVariantSpec
 # content-authoring recipes are Pydantic models, not runtime dataclasses.
 PLACE_RECIPE_KINDS = {"CITY", "CAMP", "NEST", "LAIR", "RUIN", "DUNGEON", "LANDMARK"}
 
+# TCK-20260904-CAMPSTATE-PLACE-BRIDGE: Camp + Nest creature races per the
+# classification table in docs/mechanics/05_world_evolution.md Sec.6.
+CAMP_NEST_CREATURE_RACES = frozenset({"goblin", "orc", "wolf", "spider", "troll", "slime"})
+
 
 class PlaceRecipeSpec(BaseModel):
     """
@@ -30,6 +34,12 @@ class PlaceRecipeSpec(BaseModel):
     scale: Optional[float] = Field(None, description="CITY-kind only: settlement size scalar")
     maturity: Optional[float] = Field(None, description="CAMP/NEST-kind: growth-over-time value")
     hazard_level: Optional[float] = Field(None, description="RUIN/DUNGEON-kind: local hazard override")
+    creature_kind: Optional[str] = Field(
+        None,
+        description="CAMP/NEST-kind only: creature race driving CampState.kind "
+                    "(goblin/orc/wolf/spider/troll/slime); None for all other kinds "
+                    "and for CAMP/NEST content not yet migrated to the world-gen Camp bridge",
+    )
 
     @field_validator("kind")
     @classmethod
@@ -38,6 +48,16 @@ class PlaceRecipeSpec(BaseModel):
         if upper not in PLACE_RECIPE_KINDS:
             raise ValueError(f"kind '{v}' is invalid. Supported: {PLACE_RECIPE_KINDS}")
         return upper
+
+    @field_validator("creature_kind")
+    @classmethod
+    def validate_creature_kind(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        lower = v.lower()
+        if lower not in CAMP_NEST_CREATURE_RACES:
+            raise ValueError(f"creature_kind '{v}' is invalid. Supported: {CAMP_NEST_CREATURE_RACES}")
+        return lower
 
 
 class RegionRecipeSpec(BaseModel):

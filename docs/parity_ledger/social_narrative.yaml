@@ -3937,6 +3937,45 @@
     7 newly-covered fields; no shipped calibration baseline is affected unless it
     already exercises these fields with non-default values.
 - id: SOC-264
+  text: 'ClanState is wired into AuthoritativeState/StateUpdate/apply.py for the first
+    time (idea 40/M4): joining routes through SocialAppraisalSystem.appraise_contract()
+    via a new ContractKind.CLAN branch (target Clan leader appraises joining entity,
+    shared trust prelude unmodified); leaving and succession write typed ClanUpdate
+    records only, never direct ClanState mutation. Succession (ClanLifecycleService.process_succession)
+    promotes the highest-sociability surviving member to leader_entity_id immediately
+    on leader death/inactivity, with NO 0.2 sociability-margin gate -- an intentional
+    divergence from Group''s PartyLifecycleService.check_leadership() (SOC-228), which
+    this entry does not modify. Dissolution (process_dissolution) sets dissolved_tick
+    only when member_entity_ids AND the new ClanState.asset_ids field are both empty
+    simultaneously. NOTE: asset_ids currently has no producer/consumer anywhere in
+    the codebase and is always empty (); the dissolution AND-gate''s asset half is
+    therefore inert in every real run today -- it reduces to a members-only check
+    in practice, not a currently load-bearing dual-gated condition. A future ticket
+    that adds a real asset-granting mechanic is what would make the asset half load-bearing.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (ClanState.asset_ids, AuthoritativeState.clans);
+    src/core/updates.py (ClanUpdate, StateUpdate.clan_updates); src/engine/apply.py
+    (clan-merge block); src/core/strategic.py (ContractKind.CLAN); src/systems/social_systems/appraisal.py
+    (_appraise_clan); src/systems/social_systems/clan_lifecycle.py (ClanLifecycleService);
+    src/engine/pipeline_phases/clan_lifecycle.py (ClanLifecyclePhase); src/engine/domain/core_actions.py
+    (execute_join_clan/execute_leave_clan); src/observability/events.py (ClanMemberLeftEvent,
+    ClanSuccessionEvent). (TCK-20260903-CLAN-LIFECYCLE-SUCCESSION)
+  proof_type: parity
+  test_path: pytest tests/unit/domains/faction/test_clan_state.py tests/unit/domains/faction/test_clan_succession.py
+    tests/unit/domains/faction/test_clan_lifecycle.py tests/unit/social/test_clan_appraisal.py
+    -x -v
+  divergence_note: 'Succession has no 0.2 sociability-margin gate (contrast SOC-228,
+    Group''s check_leadership()); Group''s unconditional dead-leader dissolution (SOC-176/SOC-189)
+    is unmodified and does not apply to Clan. asset_ids is currently always-empty/inert
+    (no producer/consumer exists), so the dissolution AND-gate is a members-only check
+    in practice until a future ticket adds a real asset-granting mechanic. NOTE: this
+    entry was originally written as SOC-263 but was renumbered to SOC-264 during a
+    merge-conflict resolution -- an unrelated concurrent session independently used
+    SOC-263 for a different entry (SocialComponent canonical-hash gap fix) first.'
+  support_boundary: null
+- id: SOC-265
   text: 'SocialComponent.nemesis_ids (promoted only from sustained real grudge_history
     >= 3.0, SocialMemoryService.check_nemesis_promotion()) and SocialBond.role (RelationshipRole.FRIEND/RIVAL/NEUTRAL,
     written on a fully independent path) previously had no reconciliation when both
@@ -3964,8 +4003,11 @@
     tests/unit/social/test_party_composition.py::test_candidate_role_value_non_conflicting_cases_unchanged,
     tests/unit/social/test_party_composition.py::test_party_composition_score_lower_for_nemesis_with_friend_bond_than_true_friend,
     tests/unit/social/test_party_composition.py::test_form_party_route_blocked_by_canonical_nemesis_ids_without_strategic_blocker
-  divergence_note: TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE. The gap predates this
+  divergence_note: 'TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE. The gap predates this
     fix -- flagged as an open, unconfirmed seam in the 2026-09-02 Social/Relationship
     axis brainstorm pass (docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md),
     confirmed as a real, live bug on direct investigation 2026-09-04. Resolves the
-    roadmap's own flagged open question.
+    roadmap''s own flagged open question. NOTE: this entry was originally written as
+    SOC-264 but was renumbered to SOC-265 during a merge-conflict resolution -- an
+    unrelated concurrent session independently used SOC-264 for a different entry
+    (ClanState lifecycle/succession wiring) first.'

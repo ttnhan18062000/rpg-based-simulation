@@ -120,6 +120,26 @@ def test_place_participates_in_canonical_hash():
     )
 
 
+def test_lair_kind_place_compiles_via_worldcompiler():
+    """Synthetic fixture (not real corpus content, per TCK-20260904-LAIR-ENTITY-ANCHOR's
+    Option-A/content decision -- see stored_artifacts/TCK-20260904-LAIR-ENTITY-ANCHOR/plan.md)
+    proving a LAIR-kind PlaceSpec compiles to a real PlaceState with occupant_entity_id
+    defaulting to None (unwritten in that ticket -- Option A keys Lair occupancy off
+    entity-side identity.properties, not this field)."""
+    spec = _minimal_spec([
+        RegionSpec(
+            id="r1", type="wilderness", bounds=(0, 0, 10, 10),
+            places=[PlaceSpec(id="p1", kind="lair", position=(5, 5))],
+        ),
+    ])
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    place = state.places["p1"]
+    assert place.kind == PlaceKind.LAIR
+    assert place.occupant_entity_id is None
+
+
 def test_invalid_place_kind_rejected_at_schema_level():
     """PlaceSpec.kind must be one of the 7 real PlaceKind values -- content authoring
     errors are caught at schema validation, not silently accepted."""
@@ -162,3 +182,143 @@ def test_hero_guild_routing_real_content_produces_expected_non_uniform_place_kin
     state, report = WorldCompiler.compile(spec, seed=42)
     assert report["place_count"] == 3
     assert set(state.places.keys()) == {"hometown_city", "goblin_camp_place", "haunted_battlefield_ruin"}
+
+
+# TCK-20260904-CAMPSTATE-PLACE-BRIDGE: WorldCompiler.compile() now builds a companion
+# CampState alongside a PlaceState(kind=CAMP/NEST) whenever content sets the new,
+# opt-in PlaceSpec.creature_kind field. Inert for all content that doesn't set it
+# (including hero_guild_routing's real goblin_camp_place, above) -- see plan.md's
+# Gameplay-Activation Risk Decision.
+
+def test_camp_kind_place_compiles_to_companion_campstate():
+    """A CAMP-kind PlaceSpec with creature_kind set produces both a PlaceState and a
+    linked CampState, keyed by the same place_id."""
+    spec = _minimal_spec([
+        RegionSpec(
+            id="r1", type="wilderness", bounds=(0, 0, 10, 10),
+            places=[PlaceSpec(id="p1", kind="camp", position=(5, 5), creature_kind="goblin")],
+        ),
+    ])
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert "p1" in state.places
+    assert state.places["p1"].kind == PlaceKind.CAMP
+    assert "p1" in state.camps
+    camp = state.camps["p1"]
+    assert camp.kind == "goblin"
+    assert camp.position == (5.0, 5.0)
+
+
+def test_nest_kind_place_compiles_to_companion_campstate():
+    """A NEST-kind PlaceSpec with a Nest-classified race carries through end-to-end,
+    preserving CampService.NEST_RACE_KINDS membership."""
+    from src.world.camp import CampService
+
+    spec = _minimal_spec([
+        RegionSpec(
+            id="r1", type="wilderness", bounds=(0, 0, 10, 10),
+            places=[PlaceSpec(id="p1", kind="nest", position=(5, 5), creature_kind="wolf")],
+        ),
+    ])
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.places["p1"].kind == PlaceKind.NEST
+    assert state.camps["p1"].kind in CampService.NEST_RACE_KINDS
+
+
+def test_non_camp_nest_place_kinds_do_not_construct_campstate():
+    """The Camp bridge is strictly scoped to CAMP/NEST kinds -- CITY/RUIN/DUNGEON/
+    LANDMARK/LAIR never produce a CampState entry."""
+    spec = _minimal_spec([
+        RegionSpec(
+            id="r1", type="wilderness", bounds=(0, 0, 20, 20),
+            places=[
+                PlaceSpec(id="p1", kind="city", position=(1, 1)),
+                PlaceSpec(id="p2", kind="ruin", position=(2, 2)),
+                PlaceSpec(id="p3", kind="dungeon", position=(3, 3)),
+                PlaceSpec(id="p4", kind="landmark", position=(4, 4)),
+                PlaceSpec(id="p5", kind="lair", position=(5, 5)),
+            ],
+        ),
+    ])
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.camps == {}
+
+
+def test_non_place_shaped_content_compiles_unchanged_with_camp_bridge():
+    """Extends test_non_place_shaped_content_compiles_unchanged: a region with no
+    places at all still compiles with camps == {} alongside places == {}."""
+    spec = _minimal_spec([
+        RegionSpec(id="r1", type="town", bounds=(0, 0, 10, 10)),
+        RegionSpec(id="r2", type="wilderness", bounds=(11, 0, 20, 10)),
+    ])
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.places == {}
+    assert state.camps == {}
+
+
+def test_campstate_place_linkage_round_trips_via_place_id():
+    """Given a place_id, both state.places[place_id] and state.camps[place_id] resolve
+    and share the same key -- the linkage scheme this ticket's plan.md chose."""
+    spec = _minimal_spec([
+        RegionSpec(
+            id="r1", type="wilderness", bounds=(0, 0, 10, 10),
+            places=[PlaceSpec(id="p1", kind="camp", position=(5, 5), creature_kind="orc")],
+        ),
+    ])
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.places["p1"].place_id == "p1"
+    assert state.camps["p1"].id == "p1"
+
+
+def test_invalid_creature_race_rejected_at_schema_level():
+    """PlaceSpec.creature_kind must be one of the Camp+Nest race set -- content
+    authoring errors are caught at schema validation, not silently accepted."""
+    with pytest.raises(Exception):
+        PlaceSpec(id="p1", kind="camp", position=(0, 0), creature_kind="dragon")
+
+
+def test_creature_kind_field_is_none_for_non_camp_nest_place_kinds():
+    """The new field stays Optional/unset for non-Camp/Nest PlaceSpecs, confirming it
+    doesn't become an accidental required field breaking existing content."""
+    place = PlaceSpec(id="p1", kind="city", position=(0, 0))
+    assert place.creature_kind is None
+
+    spec = _minimal_spec([
+        RegionSpec(id="r1", type="wilderness", bounds=(0, 0, 10, 10), places=[place]),
+    ])
+    state, _ = WorldCompiler.compile(spec, seed=42)
+    assert state.camps == {}
+
+
+def test_campstate_place_bridge_participates_in_canonical_hash():
+    """A CAMP-kind Place with creature_kind set produces a different state_hash than the
+    same world without it -- mirrors test_place_participates_in_canonical_hash."""
+    with_camp = _minimal_spec([
+        RegionSpec(
+            id="r1", type="wilderness", bounds=(0, 0, 10, 10),
+            places=[PlaceSpec(id="p1", kind="camp", position=(5, 5), creature_kind="goblin")],
+        ),
+    ])
+    without_camp = _minimal_spec([
+        RegionSpec(
+            id="r1", type="wilderness", bounds=(0, 0, 10, 10),
+            places=[PlaceSpec(id="p1", kind="camp", position=(5, 5))],
+        ),
+    ])
+
+    state_with, _ = WorldCompiler.compile(with_camp, seed=42)
+    state_without, _ = WorldCompiler.compile(without_camp, seed=42)
+
+    assert (
+        CanonicalStateHasher.get_hash(state_with)
+        != CanonicalStateHasher.get_hash(state_without)
+    )

@@ -894,6 +894,9 @@ class CampUpdate:
     maturity_delta: float = 0.0
     active_set: Optional[bool] = None
     last_raid_tick_set: Optional[int] = None
+    totem_tier_set: Optional[int] = None
+    stockpile_delta: float = 0.0
+    palisade_integrity_set: Optional[float] = None
 
     def merge(self, other: CampUpdate) -> CampUpdate:
         if self.id != other.id:
@@ -901,7 +904,10 @@ class CampUpdate:
         return replace(self,
             maturity_delta=self.maturity_delta + other.maturity_delta,
             active_set=other.active_set if other.active_set is not None else self.active_set,
-            last_raid_tick_set=other.last_raid_tick_set if other.last_raid_tick_set is not None else self.last_raid_tick_set
+            last_raid_tick_set=other.last_raid_tick_set if other.last_raid_tick_set is not None else self.last_raid_tick_set,
+            stockpile_delta=self.stockpile_delta + other.stockpile_delta,
+            totem_tier_set=other.totem_tier_set if other.totem_tier_set is not None else self.totem_tier_set,
+            palisade_integrity_set=other.palisade_integrity_set if other.palisade_integrity_set is not None else self.palisade_integrity_set,
         )
 
 
@@ -938,6 +944,24 @@ class FactionUpdate:
             and not self.resources_delta
             and not self.diplomatic_relations_set
             and self.active_doctrines_set is None
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ClanUpdate:
+    """Typed mutation record for a single clan's durable state (idea 40/M4)."""
+    clan_id: str
+    member_entity_ids_add: Tuple[int, ...] = ()
+    member_entity_ids_remove: Tuple[int, ...] = ()
+    leader_entity_id_set: Optional[int] = None
+    dissolved_tick_set: Optional[int] = None
+
+    def is_noop(self) -> bool:
+        return (
+            not self.member_entity_ids_add
+            and not self.member_entity_ids_remove
+            and self.leader_entity_id_set is None
+            and self.dissolved_tick_set is None
         )
 
 
@@ -997,6 +1021,8 @@ class StateUpdate:
     information_providers_update: Dict[int, "InformationProviderState"] = field(default_factory=dict)
     # E53Aa: Faction durable-state mutation records
     faction_updates: List[FactionUpdate] = field(default_factory=list)
+    # Idea 40/M4: Clan durable-state mutation records
+    clan_updates: List[ClanUpdate] = field(default_factory=list)
 
     def is_noop(self) -> bool:
         """True if this update contains absolutely no changes."""
@@ -1023,6 +1049,7 @@ class StateUpdate:
                 not self.quest_opportunity_reward_intents and
                 not self.information_providers_update and
                 not self.faction_updates and
+                not self.clan_updates and
                 not self.item_instances_add_or_update and
                 not self.item_instance_updates and
                 self.next_item_instance_id_set is None)
@@ -1080,6 +1107,7 @@ class StateUpdate:
         new_quest_opportunity_reward_intents = list(self.quest_opportunity_reward_intents)
         new_information_providers_update = dict(self.information_providers_update)
         new_faction_updates = list(self.faction_updates)
+        new_clan_updates = list(self.clan_updates)
         new_item_instance_updates = dict(self.item_instance_updates)
 
         # Single values
@@ -1151,6 +1179,9 @@ class StateUpdate:
             new_faction_updates.extend(
                 fu for fu in other.faction_updates if not fu.is_noop()
             )
+            new_clan_updates.extend(
+                cu for cu in other.clan_updates if not cu.is_noop()
+            )
             for iid, upd in other.item_instance_updates.items():
                 new_item_instance_updates[iid] = upd
 
@@ -1214,6 +1245,7 @@ class StateUpdate:
             quest_opportunity_reward_intents=new_quest_opportunity_reward_intents,
             information_providers_update=new_information_providers_update,
             faction_updates=new_faction_updates,
+            clan_updates=new_clan_updates,
             item_instances_add_or_update=new_item_instances_add_or_update,
             item_instance_updates=new_item_instance_updates,
             next_item_instance_id_set=item_inst_id,

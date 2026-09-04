@@ -162,6 +162,22 @@ class FeatureFlagManager:
             # applies -- brand-new mechanic, no corpus profile turns this on and no
             # SHADOW-validation history exists.
             "ENABLE_REPRODUCTION_HUMANOID_PATH": FeatureMode.OFF,
+            # TCK-20260904-CAMP-NEST-CLASSIFICATION: gates the Nest spread-outcome branch in
+            # CampService.process_camps (default OFF per DEV-002; no corpus profile turns this on
+            # and no SHADOW-validation history exists).
+            "ENABLE_CAMP_NEST_SPREAD": FeatureMode.OFF,
+            # New gameplay behavior (TCK-20260903-INFORMATION-HUB-ACCUMULATION): gates both the
+            # InformationProviderState accumulation branch inside QuestResolutionSystem.enforce()
+            # (checked via state.feature_flags directly, matching ENABLE_GUILD_QUEST_GENERATION's own
+            # guild_visit.py convention) and the new information_propagation pipeline phase (checked via
+            # FeatureFlagManager/run_phase). DEV-002 default-OFF policy applies -- brand-new mechanic
+            # (idea 41), no corpus profile turns this on and no SHADOW-validation history exists. Note:
+            # the accumulation branch is structurally inert in any real corpus run today even when ON --
+            # the Guild hub's own visit-completion path never populates QuestState.source_entity_id
+            # (src/town/guild.py:38, source_entity_id=None  # GUILD), so this flag currently only
+            # gates directly-constructed unit-test scenarios and the propagation phase. See
+            # investigation.md Risk #1/#2.
+            "ENABLE_INFORMATION_HUB_ACCUMULATION": FeatureMode.OFF,
         }
         if overrides:
             for k, v in overrides.items():

@@ -162,8 +162,10 @@ class QuestResolutionSystem:
         from src.core.quests import QuestStatus
         from src.quests.service import QuestService
         from src.domains.commitment.reputation import ReputationUpdateService
+        from src.domains.information.accumulation import InformationAccumulationService
 
         refined_entity_updates = dict(update.entity_updates)
+        providers_update = dict(update.information_providers_update)
         
         # Phase 9 Fix: Sort by entity ID for deterministic reward intent emission
         for e_id in sorted(list(update.entity_updates.keys())):
@@ -233,6 +235,16 @@ class QuestResolutionSystem:
                         )
                         new_relationships = replace(base_cognition.relationships, public_reputation=new_profile)
                         reputation_cognition_update = replace(base_cognition, relationships=new_relationships)
+
+                    if is_newly_completed:
+                        flags = getattr(state, "feature_flags", None) or {}
+                        if flags.get("ENABLE_INFORMATION_HUB_ACCUMULATION", "OFF") == "ON" and project.source_entity_id is not None:
+                            provider = providers_update.get(
+                                project.source_entity_id,
+                                state.information_providers.get(project.source_entity_id),
+                            )
+                            if provider is not None:
+                                providers_update[project.source_entity_id] = InformationAccumulationService.record_quest_reported_back(provider)
                 else:
                     current_quest_updates.append(qu)
 
@@ -250,4 +262,4 @@ class QuestResolutionSystem:
 
             refined_entity_updates[e_id] = replace(ent_upd, **replace_kwargs)
                 
-        return replace(update, entity_updates=refined_entity_updates)
+        return replace(update, entity_updates=refined_entity_updates, information_providers_update=providers_update)

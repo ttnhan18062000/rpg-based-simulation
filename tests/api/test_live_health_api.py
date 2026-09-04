@@ -1,6 +1,7 @@
 import hashlib
 import pytest
 import subprocess
+import sys
 import time
 import os
 import requests
@@ -21,7 +22,7 @@ async def test_live_health_api_suite():
     log_file = open("uvicorn_health_obs.log", "w")
 
     # Start the V2 API server uvicorn subprocess
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "INFO"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "INFO"]
     server = subprocess.Popen(cmd, env=env, stdout=log_file, stderr=log_file)
     time.sleep(4.0)  # Wait for uvicorn server to initialize completely
 

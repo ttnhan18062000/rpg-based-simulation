@@ -61,6 +61,12 @@ class ActionRouter:
         if action == "PROPOSE_MARRIAGE":
             return CoreActions.execute_propose_marriage(entity, payload, current_tick, neighbor_view, context)
 
+        if action == "JOIN_CLAN":
+            return CoreActions.execute_join_clan(entity, payload, current_tick, neighbor_view, context)
+
+        if action == "LEAVE_CLAN":
+            return CoreActions.execute_leave_clan(entity, payload, current_tick, neighbor_view, context)
+
         if action == "REPAIR":
             return CoreActions.execute_repair(entity, current_tick)
             

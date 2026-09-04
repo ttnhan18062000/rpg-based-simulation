@@ -127,7 +127,7 @@ deselected, 0 failed.
 - `src/systems/social_systems/party_composition.py` — `_candidate_role_value()` nemesis precedence.
 - `src/domains/adventure/generator.py` — `FORM_PARTY` nemesis-block check unions canonical field.
 - `tests/unit/social/test_party_composition.py` — 5 new tests, `_entity()` helper gained `nemesis_ids`.
-- `docs/parity_ledger/social_narrative.yaml` — new entry `SOC-264`.
+- `docs/parity_ledger/social_narrative.yaml` — new entry `SOC-265`.
 - `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — Social/Relationship axis section updated.
 
 ## Completion Summary
@@ -136,4 +136,6 @@ confirmed a real, live bug (not just an unreconciled seam): a confirmed nemesis 
 bond tag scored positively for party composition and was not blocked from `FORM_PARTY` unless an
 unrelated strategic blocker happened to also exist. `nemesis_ids` now takes precedence, and the
 `FORM_PARTY` block reads the canonical field. Full existing test suite passes unchanged; 5 new tests
-lock in the fix. Parity ledger entry `SOC-264` added.
+lock in the fix. Parity ledger entry `SOC-265` added (originally written as `SOC-264`, renumbered
+during a merge-conflict resolution against `origin/main`'s own concurrent `SOC-264`, the
+`TCK-20260903-CLAN-LIFECYCLE-SUCCESSION` entry).

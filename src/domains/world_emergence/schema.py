@@ -49,6 +49,12 @@ class WorldEventCategory(str, Enum):
     SOVEREIGNTY_SHIFT = "SOVEREIGNTY_SHIFT"
     # TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING: real combat_loss trigger for MemoryUpdatePhase
     COMBAT_LOSS = "COMBAT_LOSS"
+    # TCK-20260903-ECONOMIC-VACANCY-SIGNAL: sole production-relevant occupant died, region left
+    # with zero living holders of that role.
+    PRODUCTION_ROLE_VACATED = "PRODUCTION_ROLE_VACATED"
+    # TCK-20260903-INFORMATION-HUB-ACCUMULATION: critical WorldEvent propagated to a sibling
+    # City (same faction territory) or an ALLIED Country's territory.
+    CRITICAL_INFORMATION_PROPAGATED = "CRITICAL_INFORMATION_PROPAGATED"
 
 @dataclass(frozen=True, slots=True)
 class WorldEvent:

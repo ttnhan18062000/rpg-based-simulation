@@ -204,15 +204,20 @@ def test_search_mcp_py_provably_untouched():
     requires adding `_run_parity_provider()`/`_load_parity_index_module()` to that module and
     wiring `ROUTING_TABLE["requirement_completeness_verification"]` to a real `parity_ledger`
     primary provider (closing Phase 1's deliberate `not_yet_routed="parity_ledger"` placeholder).
-    The remaining two paths stay genuinely frozen for every Knowledge Gateway MCP ticket, this one
-    included (per its own Out-of-Scope)."""
+
+    `tools/retrieval_events.py` is dropped from this tuple by
+    TCK-20260904-HOTFIX-KGMCP-FROZEN-FILE-BASELINE-UPDATE: Design Decision D1 (re-verified by
+    test_wrapper_functions_genuinely_not_applicable_zero_invoked below) confirms none of its 3
+    wrap_*() functions has any real call site in this module's pipeline, so this file was never
+    actually a dependency of what this test suite exercises — edits to it cannot affect this
+    module's behavior. `tools/search_mcp.py` stays genuinely frozen for every Knowledge Gateway
+    MCP ticket, this one included (per its own Out-of-Scope)."""
     result = subprocess.run(
         ["git", "diff", "--stat", "HEAD"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     for banned_path in (
         "tools/search_mcp.py",
-        "tools/retrieval_events.py",
     ):
         assert banned_path not in result.stdout, (
             f"{banned_path} must never be edited by this ticket (DONE/frozen dependency)"
@@ -224,6 +229,15 @@ def test_search_mcp_py_provably_untouched():
 # ---------------------------------------------------------------------------
 
 def test_wrapper_functions_genuinely_not_applicable_zero_invoked(monkeypatch):
+    """Verifies Design Decision D1 directly: none of `retrieval_events.py`'s 3 wrap_*() functions
+    is invoked from this module's real call site. This is the actual invariant that matters —
+    the trailing `git diff --stat`-based "file must be fully frozen" assertion this test used to
+    also carry was dropped by TCK-20260904-HOTFIX-KGMCP-FROZEN-FILE-BASELINE-UPDATE: it was a
+    strictly coarser proxy for the same invariant (D1 holds regardless of whether the file's bytes
+    changed, since the wrap_*() functions genuinely have zero call sites in the pipeline either
+    way), and it blocked a legitimate, structurally-unrelated production bug fix to this file's
+    `emit_retrieval_event()` default-argument resolution
+    (TCK-20260904-HOTFIX-RETRIEVAL-TOOLS-CONSUMERS-DEAD-CONSTANTS)."""
     spec = importlib.util.spec_from_file_location(
         "knowledge_gateway_mcp_test_retrieval_events", _TOOLS_DIR / "retrieval_events.py"
     )
@@ -242,12 +256,6 @@ def test_wrapper_functions_genuinely_not_applicable_zero_invoked(monkeypatch):
 
     for name, spy in spies.items():
         assert spy.call_count == 0, f"{name} must never be invoked from this ticket's real call site"
-
-    result = subprocess.run(
-        ["git", "diff", "--stat", "HEAD", "--", "tools/retrieval_events.py"],
-        cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
-    )
-    assert result.stdout == "", "tools/retrieval_events.py must be fully frozen for this ticket"
 
 
 # ---------------------------------------------------------------------------

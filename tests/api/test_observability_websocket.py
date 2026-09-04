@@ -3,6 +3,7 @@ import pytest
 import asyncio
 import json
 import subprocess
+import sys
 import time
 import websockets
 import os
@@ -24,7 +25,7 @@ async def test_observability_websocket_suite():
     log_file = open("uvicorn_ws_obs.log", "w")
 
     # Start the V2 API server uvicorn subprocess
-    cmd = ["python3", "-m", "src", "serve", "--port", str(port), "--log-level", "INFO"]
+    cmd = [sys.executable, "-m", "src", "serve", "--port", str(port), "--log-level", "INFO"]
     server = subprocess.Popen(cmd, env=env, stdout=log_file, stderr=log_file)
     time.sleep(4.0)  # Wait for uvicorn server to initialize completely
 

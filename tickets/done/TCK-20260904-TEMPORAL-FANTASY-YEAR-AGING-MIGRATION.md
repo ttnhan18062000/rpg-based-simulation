@@ -89,7 +89,7 @@ entity of old age in under 5 in-game days.
 - [x] Any replay/checkpoint/world-compile fixture that encoded the old lifespan is identified and
       updated, or confirmed none exist. Confirmed via direct grep across `data/worlds/` — none exist.
 - [x] Parity ledger entry added recording the migration, referencing
-      `TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY`'s original decision. `PROG-123` added via
+      `TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY`'s original decision. `PROG-124` added via
       `tools/parity_ledger_writer.py`.
 
 ## Related Tickets
@@ -184,7 +184,7 @@ confirmed via direct grep across `data/worlds/`, not assumed.
   `tests/unit/strategic/test_life_stage_transitions.py`,
   `tests/integration/optimization/test_component_patch_apply_parity.py`,
   `tests/unit/world/test_natural_creature_reproduction.py` — boundary-value assertions updated.
-- `docs/parity_ledger/progression.yaml` — new entry `PROG-123`.
+- `docs/parity_ledger/progression.yaml` — new entry `PROG-124`.
 
 ## Completion Summary
 Implemented `TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY`'s deferred aging migration. Every entity's
@@ -195,4 +195,6 @@ fixed a real production consumer (`spawn_natural_creature_offspring()`) the orig
 missed, plus a second test file with an independent copy of the stale literal, both caught by running
 the full regression sweep rather than trusting the initial grep alone. Full existing test suite passes
 unchanged in shape (1087 + 315 tests), with boundary-value assertions updated to the new numbers, not
-weakened or skipped. Parity ledger entry `PROG-123` records the migration.
+weakened or skipped. Parity ledger entry `PROG-124` records the migration (originally written as
+`PROG-123`, renumbered during a merge-conflict resolution against `origin/main`'s own concurrent
+`PROG-123`, the `TCK-20260904-MATERIAL-POSSESSION-PREDICATE` entry).

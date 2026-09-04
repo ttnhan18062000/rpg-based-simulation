@@ -161,6 +161,8 @@ class ReasonCode(str, Enum):
     TEACH_DECLINED = "teach_declined"
     MARRIAGE_ACCEPTED = "marriage_accepted"
     MARRIAGE_DECLINED = "marriage_declined"
+    CLAN_JOIN_ACCEPTED = "clan_join_accepted"
+    CLAN_JOIN_DECLINED = "clan_join_declined"
 
     # Quest
     QUEST_COMPLETED = "quest_completed"

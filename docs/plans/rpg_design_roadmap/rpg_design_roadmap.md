@@ -349,7 +349,7 @@ All 7 are now included in `EntityState.to_canonical_dict()`'s `"social"` sub-dic
 divergence in any of them is now caught by the canonical determinism hash.
 
 **`RelationshipRole`/`nemesis_ids` precedence — resolved, 2026-09-04**
-(`tickets/done/TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE.md`, parity ledger `SOC-264`): this was **not**
+(`tickets/done/TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE.md`, parity ledger `SOC-265`): this was **not**
 just an unreconciled seam — direct investigation confirmed a real, live bug. `nemesis_ids` (promoted only
 from sustained real `grudge_history >= 3.0`) and `bond.role` (written on a fully independent path) could
 genuinely diverge for the same pair, and neither `PartyCompositionScorer._candidate_role_value()` nor

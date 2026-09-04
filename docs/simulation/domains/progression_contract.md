@@ -97,11 +97,11 @@ From world state:
 
 ### Step 1 — Possession Understanding (`PossessionUnderstandingService.evaluate`)
 
-Evaluates the entity's current inventory and equipment state. Outputs a possession snapshot: what is equipped, what is unequipped, what is sellable loot, what is damaged.
+Evaluates the entity's current inventory and equipment state. Outputs a possession snapshot: what is equipped, what is unequipped, what is sellable loot, what is damaged. Materials needed for the entity's known recipes are identified via a `RecipeRegistry`-backed lookup (`src/core/recipes.py::RecipeRegistry`, per TCK-20260904-MATERIAL-POSSESSION-PREDICATE) rather than a fixed item list. Note: `entity.identity.known_recipes` is populated in production exclusively via `BlacksmithSystem.enforce()`'s `craft_*`-prefixed catalog (`src/engine/blacksmith.py`), a namespace disjoint from `recipes.py::RecipeRegistry`'s catalog — this lookup is therefore not yet reachable from organically-learned recipes; see `docs/parity_ledger/progression.yaml`'s corresponding entry for status.
 
 ### Step 2 — Growth Gap Evaluation (`GrowthGapEvaluator.evaluate`)
 
-Compares the possession snapshot against class doctrine and role-fit preference. Identifies gaps: missing weapon type, underleveled armor, missing key skill, unspent AP. The gap record prioritizes which conversion options are most relevant this tick.
+Compares the possession snapshot against class doctrine and role-fit preference. Identifies gaps: missing weapon type, underleveled armor, missing key skill, missing recipe material, unspent AP. The gap record prioritizes which conversion options are most relevant this tick.
 
 ### Step 3 — Reward Interpretation (`RewardInterpretationService.interpret`)
 
