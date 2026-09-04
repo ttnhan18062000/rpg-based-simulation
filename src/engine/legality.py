@@ -219,7 +219,7 @@ class LegalityServiceV2:
             return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
         # 3. Faction Validity (Friendly Fire Law / Dynamic Relationship Check)
-        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_race_id_str
+        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_species_id_str
         from src.content_semantics.relation import RelationContext
 
         attacker_faction_str = get_faction_id_str(attacker)
@@ -243,8 +243,8 @@ class LegalityServiceV2:
         context = RelationContext(
             distance=float(dist),
             combat_engaged=combat_engaged,
-            source_race=get_race_id_str(attacker),
-            target_race=get_race_id_str(target),
+            source_species=get_species_id_str(attacker),
+            target_species=get_species_id_str(target),
         )
 
         semantics_service = get_faction_semantics_service()

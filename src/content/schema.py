@@ -209,10 +209,11 @@ class FactionRelationshipDefinition(CatalogBaseDefinition):
     axes: Dict[str, str] = Field(default_factory=dict)
 
 
-class RaceRelationRecord(CatalogBaseDefinition):
-    """Schema for hostility/relationship axes between two races."""
-    source_race: str = Field(..., description="Source SpeciesDefinition ID")
-    target_race: str = Field(..., description="Target SpeciesDefinition ID")
+class SpeciesRelationRecord(CatalogBaseDefinition):
+    """Schema for hostility/relationship axes between two species (TCK-20260904-
+    SPECIES-RELATIONS-SUBSYSTEM-RENAME: renamed from RaceRelationRecord)."""
+    source_species: str = Field(..., description="Source SpeciesDefinition ID")
+    target_species: str = Field(..., description="Target SpeciesDefinition ID")
     relationship_model: str = Field(..., description="Relationship classification")
     axes: Dict[str, str] = Field(default_factory=dict)
 

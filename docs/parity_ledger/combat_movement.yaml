@@ -4251,3 +4251,19 @@
     11 fields are live via direct grep of every real consumer site before adding any
     of them -- none are derived/reconstructable the way StrategicComponent.profile
     was, so no field was excluded here.
+- id: COMB-321
+  text: 'The species-hostility escalation subsystem (idea 37, formerly "Race Relations")
+    is species-named throughout: SpeciesRelationRecord, source_species/target_species,
+    species_relations.yaml, get_species_id_str() (TCK-20260904-SPECIES-RELATIONS-SUBSYSTEM-RENAME,
+    child 2/4 of the race->species terminology epic). Pure rename -- no legality/diplomacy/tactical-modifier
+    value or matrix semantics changed.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/content/schema.py SpeciesRelationRecord; src/content_semantics/relation.py
+    RelationContext.source_species/target_species; src/content_semantics/faction.py
+    get_species_id_str(); src/engine/tactical.py, src/engine/legality.py
+  proof_type: null
+  test_path: tests/unit/content_semantics/test_relation_species_projection.py::test_species_relations_hostility_changes_projected_label
+  divergence_note: null
+  support_boundary: null
