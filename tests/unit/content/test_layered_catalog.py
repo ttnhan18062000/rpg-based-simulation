@@ -18,7 +18,7 @@ def test_layered_catalog_validation_errors():
         archetypes_data = [
             {
                 "id": "broken_archetype",
-                "race": "missing_race",
+                "species": "missing_species",
                 "faction": "missing_faction",
                 "role": "missing_role",
                 "stat_profile": "missing_stats",
@@ -100,10 +100,10 @@ def test_layered_catalog_validation_errors():
         with open(os.path.join(tmp_dir, "world", "runtime_regions.yaml"), "w") as f:
             yaml.dump(regions_data, f)
 
-        # 7. Create a broken Race (CAT-REL-017)
-        races_data = [
+        # 7. Create a broken Species (CAT-REL-017)
+        species_data = [
             {
-                "id": "broken_race",
+                "id": "broken_species",
                 "body_model": "missing_body",
                 "need_profile": "missing_need",
                 "sense_profile": "missing_sense",
@@ -114,8 +114,8 @@ def test_layered_catalog_validation_errors():
                 "compatible_roles": ["missing_role"]
             }
         ]
-        with open(os.path.join(tmp_dir, "living", "races.yaml"), "w") as f:
-            yaml.dump(races_data, f)
+        with open(os.path.join(tmp_dir, "living", "species.yaml"), "w") as f:
+            yaml.dump(species_data, f)
 
         # 8. Create a broken Biome (CAT-REL-018)
         biomes_data = [
@@ -175,20 +175,20 @@ def test_phase23_reference_graph_and_dead_active_data():
             os.makedirs(os.path.join(tmp_dir, folder), exist_ok=True)
 
         # Create Faction (source)
-        factions_data = [{"id": "town_council", "display_name": "Town Council", "alignment_bucket": "defender", "influence_role": "sovereign", "legacy_engine_bucket": "TOWN_COUNCIL", "common_races": [], "themes": []}]
+        factions_data = [{"id": "town_council", "display_name": "Town Council", "alignment_bucket": "defender", "influence_role": "sovereign", "legacy_engine_bucket": "TOWN_COUNCIL", "common_species": [], "themes": []}]
         with open(os.path.join(tmp_dir, "social", "factions.yaml"), "w") as f:
             yaml.dump(factions_data, f)
 
-        # Create Race (source)
-        races_data = [{
+        # Create Species (source)
+        species_data = [{
             "id": "human", "display_name": "Human",
             "body_model": "humanoid", "need_profile": "human_needs",
             "sense_profile": "human_senses", "cognition_profile": "practical_human",
             "intelligence_tier": "high",
             "drive_profile": "human_drives", "natural_traits": [], "compatible_roles": []
         }]
-        with open(os.path.join(tmp_dir, "living", "races.yaml"), "w") as f:
-            yaml.dump(races_data, f)
+        with open(os.path.join(tmp_dir, "living", "species.yaml"), "w") as f:
+            yaml.dump(species_data, f)
 
         # Add profiles to prevent errors
         with open(os.path.join(tmp_dir, "living", "body_models.yaml"), "w") as f:
@@ -215,7 +215,7 @@ def test_phase23_reference_graph_and_dead_active_data():
         # Active archetype (Existing Logic / Redesigned Core maturity)
         archetypes_data = [{
             "id": "active_guard",
-            "race": "human",
+            "species": "human",
             "faction": "town_council",
             "role": "guard_role",
             "stat_profile": "guard_stats",
@@ -235,18 +235,18 @@ def test_phase23_reference_graph_and_dead_active_data():
         graph = ContentReferenceGraph(repo)
 
         # Assert nodes exist
-        assert graph.has_node("race:human")
+        assert graph.has_node("species:human")
         assert graph.has_node("faction:town_council")
         assert graph.has_node("archetype:active_guard")
 
-        # Assert outgoing neighbors (archetype references race, faction, role)
+        # Assert outgoing neighbors (archetype references species, faction, role)
         outgoing = graph.get_outgoing_neighbors("archetype:active_guard")
-        assert "race:human" in outgoing
+        assert "species:human" in outgoing
         assert "faction:town_council" in outgoing
         assert "role:guard_role" in outgoing
 
         # Assert incoming neighbors (reverse lookup)
-        incoming = graph.get_incoming_neighbors("race:human")
+        incoming = graph.get_incoming_neighbors("species:human")
         assert "archetype:active_guard" in incoming
 
         # Test dead data warning

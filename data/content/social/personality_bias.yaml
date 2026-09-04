@@ -1,6 +1,6 @@
 # Personality-generation tuning data. Read by src/worldbuilding/compiler.py during entity
 # generation. Real, per-entity personality traits are seeded via DeterministicRNG (genuine
-# individual variance); these biases shift the population MEAN per faction so race/faction
+# individual variance); these biases shift the population MEAN per faction so species/faction
 # produces a real, measurable skew without collapsing individual variance.
 # TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION / TCK-20260809-COMBAT-ACTIONSTYLE-WIRING.
 

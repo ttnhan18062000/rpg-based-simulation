@@ -338,27 +338,36 @@ for the full investigation (mirrors the temporal proposal's own structure and ri
   real decay, `SocialMemoryDecay.apply_decay()`, operates on a separate Campaign-only structure and never
   touches live gameplay state) and misdocumented `public_reputation`'s real clamp range (0.0–2.0, not
   0.0–1.0).
-- Idea 37 (Race Relations) and idea 68 (Inter-Clan Relations) are confirmed structurally parallel to this
+- Idea 37 (Species Relations) and idea 68 (Inter-Clan Relations) are confirmed structurally parallel to this
   axis, not part of it — no merge or reconciliation is proposed between the two systems.
 
-**Determinism gap found and recorded, not yet resolved:** `EntityState.to_canonical_dict()` covers only 10
-of `SocialComponent`'s 15 fields — missing `debt_history`, `salience_history`, `nemesis_ids`,
-`place_attachment`, and the detailed `betrayal_records` list (only its count is hashed). A divergence in any
-of these 5 fields between two runs of the same seed would go undetected by the canonical determinism hash
-today. Whether to add all 5, or document specific fields as intentionally non-authoritative, is an open
-decision — not resolved by this brainstorm pass, the same way the calendar-authority decision needed its
-own dedicated ticket rather than being settled inside the original temporal proposal.
+**Determinism gap — resolved, 2026-09-03** (`tickets/done/TCK-20260902-SOCIAL-CANONICAL-HASH-GAP.md`,
+parity ledger `SOC-263`): the real gap on pickup was 7 fields, not 5 — `debt_history`,
+`salience_history`, `nemesis_ids`, `place_attachment`, `betrayal_records` (detail, not just count),
+plus `last_offer_tick` and `rejection_count`, which this brainstorm pass's own investigation missed.
+All 7 are now included in `EntityState.to_canonical_dict()`'s `"social"` sub-dict; a same-seed
+divergence in any of them is now caught by the canonical determinism hash.
 
-**Still open, per the proposal's own "Decisions still requiring review":** the canonical-hash question
-above; which of `RelationshipRole` (`FRIEND`/`RIVAL`) or `nemesis_ids` (grudge-promoted) should take
-precedence when both are set for the same pair, a real unreconciled seam with no confirmed bug yet; idea
-60's exact reputation-locality granularity; idea 67's exact live-tick decay rate (the real Campaign-mode
-constants `FRIENDSHIP_DECAY=0.40`/episode, `GRUDGE_DECAY=0.10`/episode are a calibration anchor, not a
-settled live-gameplay number).
+**`RelationshipRole`/`nemesis_ids` precedence — resolved, 2026-09-04**
+(`tickets/done/TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE.md`, parity ledger `SOC-265`): this was **not**
+just an unreconciled seam — direct investigation confirmed a real, live bug. `nemesis_ids` (promoted only
+from sustained real `grudge_history >= 3.0`) and `bond.role` (written on a fully independent path) could
+genuinely diverge for the same pair, and neither `PartyCompositionScorer._candidate_role_value()` nor
+`FORM_PARTY`'s own nemesis-block check (`src/domains/adventure/generator.py`) caught it — a confirmed
+nemesis with a stale `FRIEND` tag scored *positively* for party composition and was not blocked from party
+formation unless an unrelated strategic blocker happened to also exist. Fixed: `nemesis_ids` now takes
+precedence over a `FRIEND` bond.role, and `FORM_PARTY`'s block check reads the canonical field.
 
-No ticket, epic acceptance criterion, or numeric threshold in this roadmap or its sibling epics is changed
-by this section, except the two documentation corrections already made directly (see above) — this section
-is a pointer for whoever next scopes ideas 22/33/36/40/53-63/67/68's ticket-level work.
+**Still open, per the proposal's own "Decisions still requiring review":** idea 60's exact
+reputation-locality granularity; idea 67's exact live-tick decay rate (the real Campaign-mode constants
+`FRIENDSHIP_DECAY=0.40`/episode, `GRUDGE_DECAY=0.10`/episode are a calibration anchor, not a settled
+live-gameplay number).
+
+No ticket, epic acceptance criterion, or numeric threshold in this roadmap or its sibling epics was changed
+by the original brainstorm pass itself, except the two documentation corrections made directly (see above)
+— the canonical-hash gap noted above was later closed by its own dedicated ticket
+(`TCK-20260902-SOCIAL-CANONICAL-HASH-GAP`), the same pattern the calendar-authority decision used. This
+section remains a pointer for whoever next scopes ideas 22/33/36/40/53-63/67/68's ticket-level work.
 
 ## Economic axis check (2026-09-02)
 
@@ -371,16 +380,18 @@ directly in this pass:
   field, not an Economic one. Left in place with a forward note (the future Social Bible chapter doesn't
   exist yet as a real doc; moving the content ahead of it would leave a dangling reference) rather than
   moved now.
-- **`town_resource.yaml` had the same stale-citation class hardening item 2 found in `substrate.yaml`,
-  systemic not isolated: 15 of 190 entries cited a `tests_v2/` path that doesn't exist anywhere in this
-  repo.** Fixed directly for the 2 entries (`TOWN-005`, `TOWN-006`) with a confirmed real replacement
-  (`tests/unit/movement/test_occupancy_conflicts.py`), via the sanctioned schema-validating
-  `tools/parity_ledger_writer.py`. The other 13 entries' cited files (`test_deterministic_baseline.py`,
-  `test_resource_interaction_parity.py`, `test_town_resolution_parity.py`, a `replay/` directory) genuinely
-  don't exist under any name found — **not fixed, since guessing a replacement citation would repeat the
-  exact fabrication pattern this session already found and corrected once (`SUB-327`)**. Flagged here as a
-  real, unresolved gap needing its own dedicated hardening pass (the same treatment `substrate.yaml` got),
-  not silently left uncited.
+- **`town_resource.yaml`'s stale-citation gap — fully resolved, 2026-09-04**
+  (`tickets/done/TCK-20260904-TOWN-RESOURCE-PARITY-CITATION-HARDENING.md`). The same stale-citation class
+  hardening item 2 found in `substrate.yaml`, systemic not isolated: 15 of 190 entries cited a `tests_v2/`
+  path that doesn't exist anywhere in this repo. 2 entries (`TOWN-005`, `TOWN-006`) were fixed directly in
+  the original 2026-09-02 pass. The remaining 13 (`TOWN-001, 004, 007, 008, 009, 010, 013, 014, 015, 016,
+  017, 019, 020`) were left uncited at the time rather than guessed, matching the `SUB-327` discipline —
+  **all 13 now have confirmed, evidence-backed, passing real replacement citations** (e.g. `TOWN-009`
+  "Looting is a channeled state..." -> `tests/unit/resource/test_loot_channeling.py`; `TOWN-017`
+  "Blacksmith visits resolve recipe/crafting/material-gating behavior" ->
+  `tests/unit/world/test_economy_contract.py::test_blacksmith_crafting`), each written via
+  `tools/parity_ledger_writer.py` and independently run to confirm they pass before citing. No entry was
+  marked `missing`/`unsupported` — real coverage existed for all 13, it just wasn't cited correctly.
 - **Idea 13's atlas badge was stale** — shipped in M1's batch (`TCK-20260824-AFFECTION-CONTRACT-GATE`,
   confirmed via `tickets/working_log.csv`) but still carried pre-implementation framing, the same pattern
   idea 14's badge had before this session's earlier pass fixed it. Corrected directly.
@@ -404,19 +415,38 @@ unlike Social's two. The gap here is structural, not documentation debt.
 
 **Accepted in this brainstorm pass:**
 - Belief-vs-ground-truth divergence is confirmed genuinely modeled, twice, independently:
-  `StrategicComponent.beliefs: Dict[str, BeliefEntry]` and `KnowledgeModelComponent.facts: Dict[str,
-  KnowledgeFact]` — a real design property worth stating explicitly.
+  `StrategicComponent.beliefs` and `KnowledgeModelComponent.facts: Dict[str, KnowledgeFact]` — a real
+  design property worth stating explicitly. **Correction, 2026-09-04**: `StrategicComponent.beliefs` is
+  actually typed `Dict[str, Any]`, not `Dict[str, BeliefEntry]` (`src/core/strategic.py:425`) — in
+  practice it holds real `BeliefEntry` objects keyed by belief id (from `process_rumor`/
+  `process_observation`) alongside at least one unrelated ad-hoc key (`"combat_risk"`, read by
+  `src/domains/cooperation/evaluators.py` but never written anywhere — dead code, flagged separately).
 - Chronicle is confirmed downstream of this axis (a stateless compression/rendering pipeline over real
   recorded events), not part of it — no reconciliation proposed.
 
-**Real findings, not yet resolved:**
-- **Two parallel, unreconciled knowledge representations** — `BeliefEntry` and `KnowledgeFact` have zero
-  cross-references anywhere in the codebase, the same unreconciled-signal shape as the Social axis's
-  `RelationshipRole`/`nemesis_ids` finding, but larger: two entire parallel data models, not two fields.
-- **A larger determinism gap than the Social axis's own**: `StrategicComponent`'s canonical hash excludes 6
-  fields (`hypotheses`, `source_trust`, `contracts`, `turning_points`, `candidate_zones`,
-  `committed_intentions`), with `source_trust` confirmed behaviorally load-bearing (a real, live input to
-  detour selection) — a silent divergence here would go undetected between same-seed runs.
+**Determinism gap — resolved, 2026-09-03** (`tickets/done/TCK-20260902-KNOWLEDGE-CANONICAL-HASH-GAP.md`,
+parity ledger `STRAT-268`): the real gap on pickup was 9 fields, not 6 — `home_region_id`,
+`candidate_zones`, `hypotheses`, `source_trust`, `contracts`, `turning_points`,
+`committed_intentions`, `primary_overload_source`, `last_overload_tick` — `beliefs`/`marriages` had
+already gained coverage in the interim (a separate merge), shrinking what would have been an 11-field
+gap. All 9 are now included; `source_trust` (confirmed behaviorally load-bearing, a real, live input
+to detour selection) is covered, closing exactly the silent same-seed-divergence risk this brainstorm
+pass flagged. `profile: CognitionProfile` is the one deliberate exclusion (derived from already-covered
+`attributes`).
+
+**`BeliefEntry`/`KnowledgeFact` reconciliation — decided, 2026-09-04**
+(`tickets/done/TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION.md`): investigated and closed
+as a **deliberate split, not accidental duplication** — unlike the Social axis's `RelationshipRole`/
+`nemesis_ids` finding, which turned out to be a real bug. `src/domains/information/phase.py` is the
+single dispatch site: structured query responses become `KnowledgeFact` (capacity-bounded, no decay,
+via `InformationAssimilationService.assimilate()`); raw witnessed events become `BeliefEntry`
+(contradiction-tracked, decays toward staleness, via `ObservationBeliefBridge.process_observation()`).
+`BeliefEntry`'s contradiction-tracking is real, live-consumed behavior with no `KnowledgeFact`
+equivalent (`detour.py`'s `_score_detour()` penalizes by `matching_belief.contradictions * 25.0`). No
+merge/bridge was implemented — not warranted by the evidence. Documented the relationship directly in
+both contract docs (`belief_and_detour_contract.md`, `information_contract.md`) so a future reader
+doesn't have to re-derive it. The `"combat_risk"` dead-code finding is tracked as its own small,
+separate follow-up, not blocking this decision.
 
 ## Bible chapter check (2026-09-02)
 
@@ -518,6 +548,32 @@ its own dedicated high-level plan doc once investigated.
 (social/political mechanics, spatial index, culture drift); items 4-5 confirmed the prior framing and closed
 with no further plan-doc needed.
 
+## Terminology correction: Race -> Species (2026-09-04)
+
+`race` was identified as a misused term for what the design actually means: biological/creature
+classification (human, wolf, goblin, dire_wolf), not ethnic/fantasy-ancestry "race." Confirmed via
+direct investigation, not assumed — `RaceDefinition`'s own docstring already reads "dynamic
+race/species definition," and `src/engine/evolution.py`'s existing "species evolution thresholds"
+usage confirms there is no separate, colliding "species" concept; this is a genuine naming correction,
+not a new concept being introduced.
+
+Real scope is large: `race_id` is a stored `entity.identity.properties` field wired through 25 `src/`
+files, two content catalogs (`data/content/living/races.yaml`,
+`data/content/social/race_relations.yaml`), 20 test files, 7 `docs/parity_ledger/` shards, and 5
+`docs/mechanics/` files. **Idea 37 of the canonical 65-idea set is itself named "Race Relations"**
+(`docs/brainstorm/rpg_expected_schemas.html#schema-37`) — this rename touches a real, numbered design
+idea, not just an internal identifier.
+
+Scoped as `TCK-20260904-EPIC-RACE-TO-SPECIES-TERMINOLOGY` (epic, scope-only, 4 sequenced child
+tickets in `tickets/todos/race-to-species-migration/`: core schema/entity plumbing, the race-relations
+subsystem, remaining cross-cutting consumers, and a docs/mechanics/parity sweep). **No implementation
+has landed yet** — this section only records the decision and scope, per this roadmap's own established
+pattern (see Temporal axis/Social-Relationship axis/Knowledge-Belief axis above) of reconciling
+brainstorm findings here rather than editing the frozen brainstorm HTML sources
+(`rpg_feature_atlas.html`, `rpg_expected_schemas.html`, `design_merit_scorecard.html`) directly. Idea
+37's name in those frozen sources is unchanged; a future deliberate regeneration of the brainstorm HTML
+with the new terminology is a separate decision, not bundled into this rename.
+
 ## Sequencing rules
 
 - **M1 has no gate — it's ready today.** Nothing else in this roadmap blocks it, and nothing in M1 blocks on
@@ -596,8 +652,8 @@ with no further plan-doc needed.
   only its own read-side `region_cultures` consumption. See the Hardening backlog section above.
 - The Design Merit Scorecard's own single-pass calibration (all 65 ideas scored in one batch) is unverified
   without an independent second read of a sample — noted, not blocking any milestone above.
-- The real race roster is 13 entries (`data/content/living/races.yaml`), and `RaceDefinition` has no numeric
-  field anywhere — only qualitative strings. Any idea introducing a new per-race numeric constant (idea 32's
+- The real species roster is 13 entries (`data/content/living/species.yaml`), and `SpeciesDefinition` has no numeric
+  field anywhere — only qualitative strings. Any idea introducing a new per-species numeric constant (idea 32's
   cooldowns, idea 37's matrix) is extending a schema that has never carried a number before, not following
   an established numeric-content pattern.
 - **The 6 Mechanics Bible chapters have no social/relationship/reputation/political chapter.** Mapping all

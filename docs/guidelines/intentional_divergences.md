@@ -854,13 +854,13 @@ This document is the canonical record of intentional behavior shifts in `src` co
   population — its one documented escape hatch (`ActionStyle.EVASIVE` + `MovementMode.RETREAT`
   skipping the OA, `src/engine/movement.py:185-186`) is structurally unreachable, since no real
   entity-generation path (`generator.py`, `worldbuilding/compiler.py`) ever assigns anything but
-  the default `ActionStyle.BALANCED`; (2) `bravery` has zero race/archetype correlation in real
+  the default `ActionStyle.BALANCED`; (2) `bravery` has zero species/archetype correlation in real
   content (`data/content/entities/entity_archetypes.yaml` has no personality fields at all) — it
   is pure per-entity RNG, so a "wolf" archetype does not yet get systematically higher bravery
   than any other entity. Both are real, evaluated, and deferred: wiring `ActionStyle` would
   meaningfully change corpus-wide OA/escape dynamics while `TCK-20260809-COMBAT-ATTACK-LEGALITY-
   ALWAYS-FALSE-INVESTIGATION`'s own downstream effects (landed earlier this same session) are
-  still being absorbed; race-correlated bravery requires a real content/design decision not made
+  still being absorbed; species-correlated bravery requires a real content/design decision not made
   here. This fix changes *which* entities flee at a given state, not combat *frequency* — no full
   corpus re-verification was run (judged disproportionate for this narrow, unit-testable change).
 - **Verification**:
@@ -922,7 +922,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
   and `WorldEntitySpawner._spawn_legacy_guard()` (`src/worldassembly/entity_spawner.py`) — the two
   branches `WorldEntitySpawner.spawn_from_context()` itself dispatches every entity to — never set
   `PersonalityComponent` at all, leaving every entity spawned through either path at the class's
-  own all-zero default regardless of real `race_id`/`faction_id`. Same class of bug as
+  own all-zero default regardless of real `species_id`/`faction_id`. Same class of bug as
   `WorldCompiler.compile()`'s own earlier all-zero-personality bug
   (`TCK-20260619-P0-ENTITY-INIT`), for a separate, newer construction path that fix never covered.
   `docs/world/assembly_contract.md`'s own real, authoritative contract additionally stated "No

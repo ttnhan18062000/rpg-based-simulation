@@ -75,7 +75,7 @@ def _select_tactical_modifier(trace: Optional[Dict[str, Any]]) -> Optional[str]:
 
 def _combat_entity_snapshot(ent: Optional[Any]) -> Optional[Dict[str, Any]]:
     """Real, honest snapshot of one combat participant's own state at the moment of a
-    combat_engagement_started/ended event -- level, hp/max_hp, atk/def, role/faction/race,
+    combat_engagement_started/ended event -- level, hp/max_hp, atk/def, role/faction/species,
     bravery, action_style -- sufficient to later judge whether a given combat scenario was
     reasonable (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY). Reads prior_state only, matching
     this shaper's own prior_state+update-only design. Returns None if ent is None (e.g. an
@@ -99,7 +99,7 @@ def _combat_entity_snapshot(ent: Optional[Any]) -> Optional[Dict[str, Any]]:
         "def_stat": getattr(combat, "def_stat", None),
         "role": role_name,
         "faction_id": properties.get("faction_id"),
-        "race_id": properties.get("race_id"),
+        "species_id": properties.get("species_id"),
         "bravery": getattr(personality, "bravery", None),
         "action_style": getattr(combat, "action_style", None),
     }

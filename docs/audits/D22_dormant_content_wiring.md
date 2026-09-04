@@ -164,7 +164,7 @@ and only the first one is true today.
 
 **Status: fixed** — via a different code path than the ticket's own Scope description names.
 
-Before C1, `RaceDefinition.cognition_profile` (content: `data/content/living/races.yaml`)
+Before C1, `SpeciesDefinition.cognition_profile` (content: `data/content/living/species.yaml`)
 resolved to a `CognitionProfileDefinition` (content: `data/content/living/cognition_profiles.yaml`)
 and was threaded through entity construction as
 `entity.identity.properties["cognition_profile_id"]` — but nothing downstream ever read it back.

@@ -2,7 +2,7 @@
 Content Expansion Readiness Gate.
 
 Asserts all prerequisite conditions before horizontal content expansion begins
-(new races, factions, archetypes, regions, modules, scenarios).
+(new species, factions, archetypes, regions, modules, scenarios).
 
 Run standalone with:
     pytest tests/integration/content/test_expansion_gate.py -v

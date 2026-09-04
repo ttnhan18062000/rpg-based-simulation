@@ -87,7 +87,7 @@ two of these are NOT what they first look like:
   entity — no `LegalityServiceV2.get_region_for_position` spatial lookup needed, and arguably
   more meaningful for cohort analysis than an entity's live end-of-run position.
 - **`kind`**: `entity.kind` is a job/archetype string (worker/guard/raider/scout/etc) — the
-  closest real proxy for "race/species" this codebase has, not literal species. Disclosed as
+  closest real proxy for "species" this codebase has, not a literal species field. Disclosed as
   such, not overclaimed.
 
 **Mid-run-spawned entities** (`TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP`): real

@@ -12,7 +12,7 @@
       "inventory_seed": "hero_pocket",
       "cognition_seed": "practical_humanoid",
       "archetype_id": "village_worker",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "worker",
       "faction_id": "town_council",
       "traits": [
@@ -45,7 +45,7 @@
       "inventory_seed": "guard_basic_kit",
       "cognition_seed": "disciplined_guard",
       "archetype_id": "frontier_guard",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "guard",
       "faction_id": "town_council",
       "traits": [
@@ -79,7 +79,7 @@
       "inventory_seed": "merchant_trade_pack",
       "cognition_seed": "trade_pragmatist",
       "archetype_id": "traveling_merchant",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "merchant",
       "faction_id": "merchant_league",
       "traits": [
@@ -113,7 +113,7 @@
       "inventory_seed": "blacksmith_toolkit",
       "cognition_seed": "practical_humanoid",
       "archetype_id": "village_blacksmith",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "blacksmith",
       "faction_id": "town_council",
       "traits": [
@@ -147,7 +147,7 @@
       "inventory_seed": "goblin_looter_pouch",
       "cognition_seed": "opportunistic_humanoid",
       "archetype_id": "bandit_scout",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "scout",
       "faction_id": "bandit_company",
       "traits": [
@@ -181,7 +181,7 @@
       "inventory_seed": "merchant_trade_pack",
       "cognition_seed": "trade_pragmatist",
       "archetype_id": "traveling_merchant",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "merchant",
       "faction_id": "merchant_league",
       "traits": [
@@ -215,7 +215,7 @@
       "inventory_seed": "guard_basic_kit",
       "cognition_seed": "disciplined_guard",
       "archetype_id": "frontier_guard",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "guard",
       "faction_id": "town_council",
       "traits": [
@@ -249,7 +249,7 @@
       "inventory_seed": "goblin_looter_pouch",
       "cognition_seed": "opportunistic_humanoid",
       "archetype_id": "goblin_scout",
-      "race_id": "goblin",
+      "species_id": "goblin",
       "role_id": "scout",
       "faction_id": "goblin_warband",
       "traits": [
@@ -284,7 +284,7 @@
       "inventory_seed": "goblin_looter_pouch",
       "cognition_seed": "opportunistic_humanoid",
       "archetype_id": "goblin_raider",
-      "race_id": "goblin",
+      "species_id": "goblin",
       "role_id": "raider",
       "faction_id": "goblin_warband",
       "traits": [
@@ -318,7 +318,7 @@
       "inventory_seed": "goblin_looter_pouch",
       "cognition_seed": "opportunistic_humanoid",
       "archetype_id": "goblin_archer",
-      "race_id": "goblin",
+      "species_id": "goblin",
       "role_id": "scout",
       "faction_id": "goblin_warband",
       "traits": [
@@ -353,7 +353,7 @@
       "inventory_seed": "boss_hoard_token",
       "cognition_seed": "opportunistic_humanoid",
       "archetype_id": "goblin_warlord",
-      "race_id": "goblin",
+      "species_id": "goblin",
       "role_id": "leader",
       "faction_id": "goblin_warband",
       "traits": [
@@ -388,7 +388,7 @@
       "inventory_seed": "mage_satchel",
       "cognition_seed": "arcane_scholar",
       "archetype_id": "apprentice_mage",
-      "race_id": "human",
+      "species_id": "human",
       "role_id": "mage",
       "faction_id": "arcane_circle",
       "traits": [
@@ -422,7 +422,7 @@
       "inventory_seed": "empty_animal_inventory",
       "cognition_seed": "instinctive_animal",
       "archetype_id": "cave_spider",
-      "race_id": "spider",
+      "species_id": "spider",
       "role_id": "predator_hunter",
       "faction_id": "wild_beast_pack",
       "traits": [
@@ -454,7 +454,7 @@
       "inventory_seed": "goblin_looter_pouch",
       "cognition_seed": "opportunistic_humanoid",
       "archetype_id": "orc_brute",
-      "race_id": "orc",
+      "species_id": "orc",
       "role_id": "raider",
       "faction_id": "orc_clan",
       "traits": [

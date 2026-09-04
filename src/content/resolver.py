@@ -160,11 +160,11 @@ class FoundationResolver:
 
 class ResolvedLivingDefaults(BaseModel):
     """
-    The fully-resolved defaults bundle for a single race.
+    The fully-resolved defaults bundle for a single species.
 
     All referenced profiles and traits have been validated against the catalog.
     attribute_tendencies keys are validated attribute IDs; values are the
-    free-form tendency strings defined in the races catalog.
+    free-form tendency strings defined in the species catalog.
     """
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
@@ -184,9 +184,9 @@ class ResolvedLivingDefaults(BaseModel):
 
 class LivingDefaultsResolver:
     """
-    Resolves a race ID into a ResolvedLivingDefaults bundle.
+    Resolves a species ID into a ResolvedLivingDefaults bundle.
 
-    This is the first place where a race becomes more than a string label;
+    This is the first place where a species becomes more than a string label;
     it is validated and expanded into a fully-typed structure ready for
     downstream consumption by the archetype resolver (Phase 25).
     """
@@ -196,66 +196,66 @@ class LivingDefaultsResolver:
         self._foundation = FoundationResolver(repo)
         self._social = SocialDefaultsResolver(repo)
 
-    def resolve_living_defaults(self, race_id: str) -> ResolvedLivingDefaults:
+    def resolve_living_defaults(self, species_id: str) -> ResolvedLivingDefaults:
         """
-        Resolve all living defaults for the given race ID.
+        Resolve all living defaults for the given species ID.
 
-        Raises ResolverError if the race itself or any of its referenced
+        Raises ResolverError if the species itself or any of its referenced
         body model, need/sense/cognition/drive profiles, traits,
         attribute axes, or compatible roles are missing from the catalog.
         """
-        race = self._repo.get_race(race_id)
-        if race is None:
-            raise ResolverError("race", race_id)
+        species = self._repo.get_species(species_id)
+        if species is None:
+            raise ResolverError("species", species_id)
 
         # Resolve profile references
-        body_model = self._repo.get_body_model(race.body_model)
+        body_model = self._repo.get_body_model(species.body_model)
         if body_model is None:
             raise ResolverError(
-                "body_model", race.body_model,
-                context=f"referenced by race '{race_id}'"
+                "body_model", species.body_model,
+                context=f"referenced by species '{species_id}'"
             )
 
-        need_profile = self._repo.get_need_profile(race.need_profile)
+        need_profile = self._repo.get_need_profile(species.need_profile)
         if need_profile is None:
             raise ResolverError(
-                "need_profile", race.need_profile,
-                context=f"referenced by race '{race_id}'"
+                "need_profile", species.need_profile,
+                context=f"referenced by species '{species_id}'"
             )
 
-        sense_profile = self._repo.get_sense_profile(race.sense_profile)
+        sense_profile = self._repo.get_sense_profile(species.sense_profile)
         if sense_profile is None:
             raise ResolverError(
-                "sense_profile", race.sense_profile,
-                context=f"referenced by race '{race_id}'"
+                "sense_profile", species.sense_profile,
+                context=f"referenced by species '{species_id}'"
             )
 
-        cognition_profile = self._repo.get_cognition_profile(race.cognition_profile)
+        cognition_profile = self._repo.get_cognition_profile(species.cognition_profile)
         if cognition_profile is None:
             raise ResolverError(
-                "cognition_profile", race.cognition_profile,
-                context=f"referenced by race '{race_id}'"
+                "cognition_profile", species.cognition_profile,
+                context=f"referenced by species '{species_id}'"
             )
 
-        drive_profile = self._repo.get_drive_profile(race.drive_profile)
+        drive_profile = self._repo.get_drive_profile(species.drive_profile)
         if drive_profile is None:
             raise ResolverError(
-                "drive_profile", race.drive_profile,
-                context=f"referenced by race '{race_id}'"
+                "drive_profile", species.drive_profile,
+                context=f"referenced by species '{species_id}'"
             )
 
         # Resolve natural traits (preserving order)
-        natural_traits = self._foundation.resolve_traits(race.natural_traits)
+        natural_traits = self._foundation.resolve_traits(species.natural_traits)
 
         # Validate attribute tendency keys against the attribute catalog
-        for attr_key in race.attribute_tendencies:
+        for attr_key in species.attribute_tendencies:
             self._foundation.resolve_attribute(attr_key)
-        attribute_tendencies: Dict[str, str] = dict(race.attribute_tendencies)
+        attribute_tendencies: Dict[str, str] = dict(species.attribute_tendencies)
 
         # Resolve compatible roles (preserving order)
         compatible_roles = [
             self._social.resolve_role_defaults(role_id)
-            for role_id in race.compatible_roles
+            for role_id in species.compatible_roles
         ]
 
         return ResolvedLivingDefaults(
@@ -343,12 +343,12 @@ class ResolvedEntityArchetype(BaseModel):
     The fully-resolved, compile-ready template for a single entity archetype.
 
     Resolution order:
-      race defaults → role defaults → faction defaults
+      species defaults → role defaults → faction defaults
         → explicit archetype profiles → explicit archetype traits/themes
       = ResolvedEntityArchetype
 
-    Explicit archetype fields always override race/role/faction defaults.
-    Traits are merged deterministically: archetype traits first, then any race
+    Explicit archetype fields always override species/role/faction defaults.
+    Traits are merged deterministically: archetype traits first, then any species
     natural_traits not already present (stable deduplication).
     No enemy/boss labels are stored here.
     """
@@ -356,17 +356,17 @@ class ResolvedEntityArchetype(BaseModel):
 
     # --- Identity ---
     archetype_id: str
-    race_id: str
+    species_id: str
     faction_id: str
     role_id: str
 
-    # --- Resolved profiles (explicit archetype values; race/role defaults fill gaps) ---
+    # --- Resolved profiles (explicit archetype values; species/role defaults fill gaps) ---
     stat_profile: StatsProfileDefinition
     combat_profile: CombatProfileDefinition
     cognition_profile: CognitionProfileDefinition
     drive_profile: DriveProfileDefinition
-    need_profile: NeedProfileDefinition        # from race defaults
-    sense_profile: SenseProfileDefinition      # from race defaults
+    need_profile: NeedProfileDefinition        # from species defaults
+    sense_profile: SenseProfileDefinition      # from species defaults
     inventory_profile: InventoryProfileDefinition
     skill_profile: Optional[SkillProfileDefinition]  # may be absent
 
@@ -389,10 +389,10 @@ class EntityArchetypeResolver:
     ResolvedEntityArchetype.
 
     Resolution strategy:
-      - Race provides: need_profile, sense_profile, natural_traits (baseline).
+      - Species provides: need_profile, sense_profile, natural_traits (baseline).
       - Role provides: cognition_profile fallback (if archetype omits it).
-      - Explicit archetype profiles always override race/role defaults.
-      - Traits: archetype traits first, then race natural_traits not already
+      - Explicit archetype profiles always override species/role defaults.
+      - Traits: archetype traits first, then species natural_traits not already
         present, preserving stable order (no duplicates).
       - Themes: exactly as declared in the archetype (no merging from other layers).
     """
@@ -433,8 +433,8 @@ class EntityArchetypeResolver:
         archetype_id = arch.id
         ctx = f"archetype '{archetype_id}'"
 
-        # --- Race defaults ---
-        race_defaults = self._living.resolve_living_defaults(arch.race)
+        # --- Species defaults ---
+        species_defaults = self._living.resolve_living_defaults(arch.species)
 
         # --- Role defaults ---
         role_def = self._social.resolve_role_defaults(arch.role)
@@ -474,9 +474,9 @@ class EntityArchetypeResolver:
         if drive_profile is None:
             raise ResolverError("drive_profile", arch.drive_profile, context=ctx)
 
-        # --- Need/sense profiles: always from race defaults ---
-        need_profile = race_defaults.need_profile
-        sense_profile = race_defaults.sense_profile
+        # --- Need/sense profiles: always from species defaults ---
+        need_profile = species_defaults.need_profile
+        sense_profile = species_defaults.sense_profile
 
         # --- Inventory profile: archetype explicit (required field) ---
         inventory_profile = self._repo.get_inventory_profile(arch.inventory_profile)
@@ -494,14 +494,14 @@ class EntityArchetypeResolver:
                     "skill_profile", arch.skill_profile, context=ctx
                 )
 
-        # --- Trait merge: archetype traits first, then race natural_traits not already present ---
+        # --- Trait merge: archetype traits first, then species natural_traits not already present ---
         seen: set = set()
         merged_trait_ids: List[str] = []
         for tid in arch.traits:
             if tid not in seen:
                 seen.add(tid)
                 merged_trait_ids.append(tid)
-        for td in race_defaults.natural_traits:
+        for td in species_defaults.natural_traits:
             if td.id not in seen:
                 seen.add(td.id)
                 merged_trait_ids.append(td.id)
@@ -512,7 +512,7 @@ class EntityArchetypeResolver:
 
         return ResolvedEntityArchetype(
             archetype_id=archetype_id,
-            race_id=arch.race,
+            species_id=arch.species,
             faction_id=arch.faction,
             role_id=arch.role,
             stat_profile=stat_profile,

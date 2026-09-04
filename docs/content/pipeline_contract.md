@@ -111,7 +111,7 @@ Resolvers are instantiated with a loaded `CatalogRepository`. They hold no mutab
 
 **`FAMILY_TO_SHORT`** — dotted family name → short type name used in cross-reference validation (e.g. `"foundation.materials"` → `"material"`).
 
-**`FIELD_TO_TARGET`** — field name on a definition → expected target type name (e.g. `"race"` → `"race"`, `"compatible_roles"` → `"role"`).
+**`FIELD_TO_TARGET`** — field name on a definition → expected target type name (e.g. `"species"` → `"species"`, `"compatible_roles"` → `"role"`).
 
 Reference graph rules:
 1. Every ID referenced in a definition's cross-reference fields must exist in the catalog under the target family.

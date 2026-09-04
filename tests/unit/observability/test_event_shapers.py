@@ -18,7 +18,7 @@ from src.observability.event_shapers import (
 
 def _entity(eid: int = 1, hp: int = 100, max_hp: int = 100, active: bool = True, kind: str = "hero",
             atk: int = 10, def_stat: int = 5, action_style: int = 0, evolution_level: int = 3,
-            role: int | None = 2, faction_id: str = "town_a", race_id: str = "human",
+            role: int | None = 2, faction_id: str = "town_a", species_id: str = "human",
             bravery: float = 0.5, task=None):
     e = MagicMock()
     e.id = eid
@@ -28,7 +28,7 @@ def _entity(eid: int = 1, hp: int = 100, max_hp: int = 100, active: bool = True,
     e.identity = MagicMock(
         evolution_level=evolution_level,
         role=role,
-        properties={"faction_id": faction_id, "race_id": race_id},
+        properties={"faction_id": faction_id, "species_id": species_id},
         personality=MagicMock(bravery=bravery),
     )
     e.task = task
@@ -290,7 +290,7 @@ def test_run_shadow_shapers_does_not_touch_a_queue():
 
 def test_combat_entity_snapshot_returns_real_fields():
     ent = _entity(hp=42, max_hp=100, atk=15, def_stat=8, action_style=1, evolution_level=4,
-                  role=2, faction_id="wolf_pack", race_id="wolf", bravery=0.35)
+                  role=2, faction_id="wolf_pack", species_id="wolf", bravery=0.35)
     snap = _combat_entity_snapshot(ent)
     assert snap["level"] == 4
     assert snap["hp"] == 42
@@ -299,7 +299,7 @@ def test_combat_entity_snapshot_returns_real_fields():
     assert snap["def_stat"] == 8
     assert snap["role"] == "MONSTER"
     assert snap["faction_id"] == "wolf_pack"
-    assert snap["race_id"] == "wolf"
+    assert snap["species_id"] == "wolf"
     assert snap["bravery"] == 0.35
     assert snap["action_style"] == 1
 

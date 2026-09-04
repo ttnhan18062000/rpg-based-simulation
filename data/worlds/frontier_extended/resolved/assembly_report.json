@@ -34,14 +34,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -244,7 +244,7 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Race 'slime' is active but never consumed by any downstream component",
+      "message": "Species 'slime' is active but never consumed by any downstream component",
       "target": "slime"
     },
     {
@@ -916,14 +916,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -1126,7 +1126,7 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Race 'slime' is active but never consumed by any downstream component",
+      "message": "Species 'slime' is active but never consumed by any downstream component",
       "target": "slime"
     },
     {
@@ -1775,7 +1775,7 @@
     }
   ],
   "fingerprints": {
-    "catalog": "bc803705055ce78d7e81632cb4a44029420ba2f26afc91d0b2f82f93a60aa357",
+    "catalog": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
     "modules": {
       "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
       "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",

@@ -41,7 +41,8 @@ class LifeStageService:
     @staticmethod
     def get_stage_for_age(age_ticks: int) -> LifeStage:
         """
-        Pure per-entity age->LifeStage mapping. Numeric boundaries (3000/7000) are
+        Pure per-entity age->LifeStage mapping. Numeric boundaries (12/60 fantasy years =
+        3456000/17280000 ticks, TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION) are
         intentionally duplicated from get_age_bracket() (src/domains/demographics/cohort.py,
         WORLD-DEMO-003 in docs/parity_ledger/world_dynamics.yaml) rather than imported --
         separate vocabularies for separate subsystems (per-entity strategic cognition vs.
@@ -49,9 +50,9 @@ class LifeStageService:
         investigation.md Design Decision 1), same underlying tick boundaries. If
         get_age_bracket()'s thresholds ever change, this function's literals must change too.
         """
-        if age_ticks < 3000:
+        if age_ticks < 3456000:
             return LifeStage.CHILD
-        if age_ticks < 7000:
+        if age_ticks < 17280000:
             return LifeStage.ADULT
         return LifeStage.ELDER
 

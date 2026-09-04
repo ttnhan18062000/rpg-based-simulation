@@ -35,7 +35,7 @@ def test_archetype_native_path_produces_valid_entity_state(catalog):
     assert entity.lifecycle.active is True
     assert entity.navigation.position == (10.0, 10.0)
     assert entity.identity.properties["archetype_id"] == "hungry_wolf"
-    assert entity.identity.properties["race_id"] == "wolf"
+    assert entity.identity.properties["species_id"] == "wolf"
 
 
 def test_archetype_native_path_combat_values_match_resolved(catalog):
