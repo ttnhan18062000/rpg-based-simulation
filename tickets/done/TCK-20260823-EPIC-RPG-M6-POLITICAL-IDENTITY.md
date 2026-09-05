@@ -15,7 +15,7 @@ tags: [architecture, faction, social]
 Political Identity & Belonging (M6) — tracking epic for the 3-ticket affiliation/loyalty/place-attachment chain
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -101,8 +101,10 @@ This epic tracks child tickets only; no direct implementation happens here.
 - [x] The parent roadmap's stale "Campaign-mode-reachability... open question" note for idea 56 is
       updated to reflect the answer the culture-drift hardening plan already found (2026-09-05: real
       but narrow, only 1/21 corpus worlds, not wired into standard CI).
-- [ ] A future session that picks up any child ticket runs it through the full standard-tier pipeline
-      (Investigate → Plan → Implement → ... → Finalize) and links back to this epic.
+- [x] A future session that picks up any child ticket runs it through the full standard-tier pipeline
+      (Investigate → Plan → Implement → ... → Finalize) and links back to this epic. All 3 children
+      landed: `TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`, `TCK-20260905-DRIFTING-LOYALTY-SIGNAL`,
+      `TCK-20260905-HOME-EXILE-REFUGEE-THREADS` (2026-09-06, this batch).
 
 ## Related Tickets
 ### Child tickets (implementation sequence — see `tickets/todos/m6-political-identity/SEQUENCE.md`)
@@ -157,9 +159,26 @@ picked up for implementation.
   Investigate/Plan phases — not decided here.
 
 ## Implementation Notes
+This epic tracked only — no direct implementation at the epic level, per its own Scope. Each
+child ticket ran its own full standard-tier pipeline independently; see each child ticket's own
+Implementation Notes for details.
 
 ## Test Summary
+See each child ticket's own Test Summary. No epic-level tests.
 
 ## Files Changed
+None directly by this epic ticket, beyond its own body and the epic doc it tracks
+(`docs/plans/rpg_design_roadmap/rpg_m6_political_identity_epic.md`, corrected/updated across all
+3 child ticket landings).
 
 ## Completion Summary
+All 4 design ideas (39, 56, 59, 65) landed across the 3 confirmed child tickets, in the confirmed
+build order (39 → 56 → 59/65), with zero deviation from the sequencing this epic scoped:
+- Idea 39 (Affiliation's real change path) — `TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`.
+- Idea 56 (Drifting Loyalty) — `TCK-20260905-DRIFTING-LOYALTY-SIGNAL`.
+- Idea 59+65 (Home, Exile & Return + Named Refugee Threads) — `TCK-20260905-HOME-EXILE-REFUGEE-THREADS`.
+
+Each child ticket found and disclosed real gaps beyond this epic's own scoping pass (31 vs. 6
+`identity.faction` call sites, `StateFingerprinter` coverage gaps, a real architecture-boundary
+violation caught and fixed rather than routed around) — the epic's own scoping held up under
+implementation scrutiny with zero material drift.

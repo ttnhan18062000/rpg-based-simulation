@@ -8,10 +8,10 @@ tags: [architecture, content, feature-flags]
 
 # Epic Plan — RPG Design Roadmap, Milestone 6: Political Identity & Belonging
 
-**Tracking ticket:** `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/inprogress/`,
-`## Status: EPIC_SCOPED` as of 2026-09-05 — 3 child tickets scoped in
-`tickets/todos/m6-political-identity/`; idea 39 landed 2026-09-06
-(`TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`), idea 56 and idea 59/65 not yet implemented)
+**Tracking ticket:** `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/done/` as of
+2026-09-06 — all 3 child tickets landed: idea 39
+(`TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`), idea 56 (`TCK-20260905-DRIFTING-LOYALTY-SIGNAL`),
+idea 59/65 (`TCK-20260905-HOME-EXILE-REFUGEE-THREADS`) — epic closed)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Design Ideas 39, 56, 59, 65.
 **Gate:** effectively everything above — the deepest single dependency chain in the whole 65-idea roadmap.
 The roadmap explicitly does not recommend starting this milestone early, even speculatively.
@@ -80,9 +80,21 @@ split into a separate mutation-primitive/voluntary-trigger pair.
    `StrategicComponent.home_region_id` already exists, typed, with a live consumer already wired
    (`RoutineService.evaluate_anchored_behavior()`'s "return home" concern). This ticket is
    populate-an-existing-field, not invent-new-state — materially cheaper than originally scoped.
+   **Landed, 2026-09-06** (`TCK-20260905-HOME-EXILE-REFUGEE-THREADS`): `home_region_id` is now
+   populated at birth (`src/world/reproduction_humanoid.py` resolves the spawn region and passes
+   it into `EntityGenerator.spawn_humanoid_offspring()`) via the new
+   `StrategicUpdate.home_region_id_set` field, whose `StrategicPatch.apply()` resolution is
+   deliberately reversed from every other `_set` field: an already-set value always wins over a
+   proposed update, so a refugee's original home is never overwritten.
 4. **Idea 65 — Named Refugee Threads.** Folds into idea 59's ticket as extra acceptance criteria (writing
    `home_region_id` at displacement time) rather than a separate ticket, per Shared Implementation
-   Opportunities.
+   Opportunities. **Landed, 2026-09-06** (`TCK-20260905-HOME-EXILE-REFUGEE-THREADS`): new
+   `DisplacementService.compute_displacement()` (`src/world/displacement.py`) relocates living
+   entities out of any region at or above `calamity_intensity` 0.6 into their lowest-intensity
+   adjacent region, carrying `home_region_id` forward via idea 59's mechanism if it was still
+   unset. Confirmed end-to-end that `RoutineService.evaluate_anchored_behavior()`'s pre-existing
+   "return home" concern correctly targets the displaced entity's original home, not their new
+   physical location. Full contract: `docs/world/home_exile_refugee_contract.md`.
 
 ## Out of Scope
 
@@ -93,9 +105,11 @@ split into a separate mutation-primitive/voluntary-trigger pair.
 ## Acceptance Signal
 
 - 3 child tickets, not 4 (59+65 consolidated), landing in the order 39 &rarr; 56 &rarr; 59/65, or with an
-  explicit justification for deviating from that order. Idea 39 landed first, 2026-09-06, on order.
+  explicit justification for deviating from that order. All 3 landed 2026-09-06, on order.
 - Idea 56 is scoped as a read-side `region_cultures` consumer, not deferred waiting on substrate that
   already exists (correction, 2026-09-02).
+- **Epic closed, 2026-09-06**: all 4 design ideas (39, 56, 59, 65) landed across the 3 confirmed
+  child tickets; `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` moved to `tickets/done/`.
 
 ## Open Questions
 
