@@ -104,10 +104,14 @@ domain-specific authoritative outcome). **Gate**: idea 9 (deciding the fate of 8
 flags) should land first — several M2 ideas are exactly the kind of new-flagged-mechanism idea 9's own
 governance decision is meant to set precedent for.
 
-**Idea 66 (Region/Place architecture) — promoted, narrow gate.** Idea 66 blocks only work whose
-authoritative state depends on Place identity or containment: ideas 35 and 48 here, and the place-shaped
-half of M4 (see M4 below). Ideas 36, 37, and 43 are explicitly *not* blocked by it — population seeding in
-particular is a shared foundation independent of the Place migration.
+**Idea 66 (Region/Place architecture) — landed, gate cleared, 2026-09-03.**
+`TCK-20260902-EPIC-IDEA66-REGION-PLACE-REBUILD` (5 child tickets, PR #113 + PR #117, both merged) is
+fully done — `Place` is a real, atomic point-of-interest object positioned within a Region's bounds,
+wired through both compilation paths, zero real regressions. It blocked only work whose authoritative
+state depends on Place identity or containment: ideas 35 and 48 here, and the place-shaped half of
+M4 (see M4 below) — both shipped as part of M2/M4's own now-complete batches (above). Ideas 36, 37,
+and 43 were never blocked by it — population seeding in particular is a shared foundation independent
+of the Place migration.
 
 ### M3 — Family, Species & the Adult Life (DONE)
 
@@ -207,14 +211,14 @@ ideas 39/51 and 32 can't be corpus-tested at all until their own upstream mechan
 one's findings feed directly back into M2/M3/M4's own scope — read it before, not after, those epics start
 their affected tickets.
 
-**Idea 66 (Region Contains Multiple Places) has its own dedicated high-level plan, 2026-09-02:**
-[`docs/plans/rpg_design_roadmap/rpg_idea66_region_place_rebuild_plan.md`](rpg_idea66_region_place_rebuild_plan.md)
-— promoted out of this epic's own item 9 since idea 66 "owns the world-schema migration and corpus-wide
-grade-anchor impact directly" (see this section's gate note above). Pulls together the full field-level
-schema, the two-stage pilot plan, and the `state_hash`-first recalibration procedure into one scoping
-document, ready for the next ticket-creation pass — this is the current single highest-leverage next step
-in RPG-core planning, since it's the confirmed sequencing gate for M2's remaining two ideas (35, 48) and
-M4's place-shaped branch (44-47, 61), and no implementation ticket exists for it yet.
+**Idea 66 (Region Contains Multiple Places) — landed, 2026-09-03.** Its dedicated high-level plan
+([`docs/plans/rpg_design_roadmap/rpg_idea66_region_place_rebuild_plan.md`](rpg_idea66_region_place_rebuild_plan.md),
+2026-09-02) was promoted out of this epic's own item 9 since idea 66 "owns the world-schema migration
+and corpus-wide grade-anchor impact directly" (see this section's gate note above), and was fully
+implemented as `TCK-20260902-EPIC-IDEA66-REGION-PLACE-REBUILD` (5 child tickets, PR #113 + PR #117,
+both merged, zero real regressions). This was the confirmed sequencing gate for M2's remaining two
+ideas (35, 48) and M4's place-shaped branch (44-47, 61) — both shipped as part of M2/M4's own
+now-complete batches (see those sections above).
 
 ### M9 — World Corpus Test Coverage for New Features (follow-up, informs M1-M8, doesn't block them)
 
