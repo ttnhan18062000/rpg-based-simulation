@@ -73,6 +73,10 @@ not tier labels with a one-line gesture.
    `information_learning`, `reward_conversion`, `cooperation_usage`, `world_feedback_usage`) — **none of
    which touch reputation, nemesis, or Chronicle fidelity.** Testing these four ideas needs new scorecard
    fields added to the evaluator itself, not just new episodes run through the existing one.
+   **Re-verified against real code, 2026-09-05:** `src/domains/campaigns/scorecard.py`'s
+   `CampaignScorecardEvaluator.evaluate()` still has exactly these 7 fields, no `reputation_inheritance_check`/
+   `nemesis_transfer_check` or equivalent — this finding has not drifted, still accurate as of M5's
+   current in-progress implementation state.
 
    **Concrete shared test plan, base world `frontier_living_world`** (`hero_guild_perspective`,
    `tick_limit: 400`/episode):

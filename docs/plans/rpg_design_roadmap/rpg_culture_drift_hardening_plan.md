@@ -8,10 +8,13 @@ tags: [content, architecture]
 
 # Plan — Culture Drift Hardening: correcting the "dormant substrate" framing
 
-**Status:** high-level plan, not yet ticketed. Item 3 of the 5-item hardening backlog (see the parent
+**Status, re-verified 2026-09-05: mostly done.** Item 3 of the 5-item hardening backlog (see the parent
 roadmap's "Hardening backlog" section). **This item turned out smaller than the other two** — the finding
 is a documentation correction, not a new-architecture scoping task, because the thing being described as
-dormant turns out to already be built, live, tested, and documented.
+dormant turns out to already be built, live, tested, and documented. Of this plan's own 4 scope items:
+1, 2, and 4 are done/answered; item 3 is partially done (idea 61 shipped, idea 57 scoped via a
+different, superseding shape) with ideas 56/62 still needing their own scoping — see item 3 below for
+the current detail.
 
 **Source:** direct investigation, 2026-09-02, of `docs/world/culture_drift_contract.md`,
 `docs/mechanics/05_world_evolution.md` §7, `docs/parity_ledger/world_dynamics.yaml` (`WORLD-CULT-001/002/003`),
@@ -61,19 +64,45 @@ idea's exact needs; that check belongs to this plan's own scope, not assumed her
 1. **Correct the "dormant"/"zero live callers"/"needs activation" language** in
    `rpg_m4_beyond_city_epic.md`, `rpg_m5_memory_reputation_epic.md`, `rpg_m6_political_identity_epic.md`,
    and the parent roadmap wherever they currently assert this — replace with the real finding: live,
-   correct, but Campaign-mode-only reachable.
+   correct, but Campaign-mode-only reachable. **Done, confirmed 2026-09-05**: all three epic docs
+   (`rpg_m4_beyond_city_epic.md:33`, `rpg_m5_memory_reputation_epic.md:99`,
+   `rpg_m6_political_identity_epic.md:48`) plus the parent roadmap now carry the corrected framing.
 2. **Answer the real open question: does any of the 21 real corpus worlds ever run multi-episode
    Campaign mode?** If none do, Culture Drift is code-correct but never actually exercised in practice
    today — a real gap, but a testing/corpus gap, not an implementation gap. This determines whether M9's
    already-documented `CampaignScorecardEvaluator` gap needs to be closed before M5/M6's culture-dependent
-   ideas can be trusted in practice.
+   ideas can be trusted in practice. **Answered, 2026-09-05:** a real production Campaign-mode entry
+   point exists (`tools/calibrate_simq.py::_run_campaign_engine`, gated behind `campaign_episodes > 0`
+   in a profile YAML), and exactly one real profile enables it
+   (`config/simulation_quality/profiles/campaign_life_arc.yaml`), hardcoded to run against exactly one
+   world (`frontier_living_world`), not the full 21-world corpus. It has its own dedicated integration
+   test (`tests/integration/tools/test_calibrate_simq_campaign_mode.py`) but is **not wired into the
+   standard CI/calibration sweep** that routinely grades the corpus (confirmed via
+   `.github/workflows/` grep — zero hits). So: Culture Drift's Campaign-mode path is real and tested in
+   isolation, but M5/M6's culture-dependent ideas cannot be validated against the routine corpus-grading
+   flow today — M9's `CampaignScorecardEvaluator` gap (re-confirmed still open, 2026-09-05, see
+   `rpg_m9_corpus_test_coverage_epic.md`) is therefore a real blocker to trusting those ideas in
+   practice, not merely a nice-to-have.
 3. **Scope each of ideas 56 (M6), 57/62 (M5), and 61 (M4) against `region_cultures` directly** — confirm
    each is a straightforward read-side consumer of existing state, and name the specific field(s)/method(s)
-   each would read, rather than leaving "culture drift as an input" as a vague dependency.
+   each would read, rather than leaving "culture drift as an input" as a vague dependency. **Partially
+   done:** idea 61 shipped as a real read-side consumer
+   (`TCK-20260904-SETTLEMENT-CULTURE-READ`, done). Idea 57 was scoped differently than this item
+   originally framed — not as a `region_cultures` reader, but as its own entity-scale `FameDeriver`
+   sibling to `CultureDeriver` (`docs/brainstorm/2026-09-04-idea57-entity-scale-fame-aggregation-design.md`,
+   2026-09-04), since idea 57's "does this entity's past deeds make them a Living Legend" question is
+   entity-scale, not region-scale, and reading `region_cultures` directly would answer the wrong
+   question. **Still open:** ideas 56 (M6) and 62 (M5) have no named `region_cultures` read requirement
+   yet — idea 62 in particular is now further scoped by
+   `docs/brainstorm/2026-09-05-testimony-retelling-model-design.md`, which found it needs its own
+   episode-distance-based `TestimonyDeriver`, likely also not a direct `region_cultures` read. Whoever
+   tickets ideas 56/62 should re-check whether "read `region_cultures` directly" is still the right shape
+   at all, given both siblings scoped so far turned out to need entity/event-scale derivers instead.
 4. **Reassign the word "activate."** M4's epic doc should no longer claim ownership of "activating" a
    dormant substrate — if any of ideas 56/57/61/62 need something Culture Drift doesn't yet provide (e.g. a
    direct non-Campaign-mode trigger), name that specifically rather than reusing the generic "activation"
-   framing that turned out to be inaccurate.
+   framing that turned out to be inaccurate. **Done** as part of item 1's language correction — none of
+   the 3 epic docs now claim an "activation" step is owed.
 
 ## Out of Scope
 

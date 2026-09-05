@@ -168,7 +168,10 @@ or as an unowned bug.
 
 ### M6 — Political Identity & Belonging (gated on everything above)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (not yet created, scope-only).
+**Tracking epic**: `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/inprogress/`,
+`## Status: EPIC_SCOPED` as of 2026-09-05 — 3 child tickets scoped in
+`tickets/todos/m6-political-identity/`, none yet implemented; M2-M5 all confirmed DONE, so this
+milestone's own gate is now clear).
 
 4 ideas, the deepest single dependency chain in the whole roadmap (39 &rarr; 56 &rarr; 59 &rarr; 65) —
 affiliation's real change path, drifting loyalty, personal place attachment, refugee threads. Its Phase
@@ -178,9 +181,12 @@ of M4 and M5 — **corrected, 2026-09-02 (hardening backlog item 3): that engine
 below). **Confirmed single contract** (plan-owner decision, 2026-08-29): idea 39 first establishes the
 affiliation mutation primitive; idea 56 derives gradual loyalty pressure that may request/influence that
 mutation; ideas 59/65 add consequences after — idea 39 is not split into a separate primitive/trigger pair.
-**M6's idea 56 needs a read-side `region_cultures` consumer**, not activation of anything, pending the
-hardening plan's open Campaign-mode-reachability question. City-specific wording in this milestone's scope
-should be read as the Place model going forward, now that Idea 66 is promoted.
+**M6's idea 56 needs a read-side `region_cultures` consumer**, not activation of anything. **Campaign-mode-
+reachability question answered, 2026-09-05** (previously open in this section): real but narrow — exactly
+one corpus profile (`campaign_life_arc.yaml`) enables multi-episode Campaign mode, hardcoded to one world,
+not wired into standard CI; idea 56's own ticket scopes its test against that one real profile directly. City-
+specific wording in this milestone's scope should be read as the Place model going forward, now that Idea 66
+is promoted.
 
 ### M7 — Simulation Quality Pillar Integration (follow-up, gated on M1-M6)
 
