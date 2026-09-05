@@ -766,4 +766,89 @@ own "No Live Consumer Yet" precedent — built, not yet visible in play.
 
 **Sources:** `src/domains/fame/`
 **Contract:** `docs/world/fame_legend_contract.md`
-**Parity:** WORLD-FAME-001, WORLD-FAME-002
+
+## 10. Belief Institutions (idea 63)
+
+Once a subject's Chronicle-recorded fame crosses `FAME_THRESHOLD` (§9), each real Clan forms its
+own organized belief around the event that made them a legend — but different Clans weigh the
+same recorded history differently, per the design's own "the same deeds, read differently
+depending on who you are" framing. `BeliefInstitution` is a direct structural sibling of Cultural
+Drift, Chronicle Fidelity Drift, and Living Legend Fame above: the same episode-boundary,
+Deriver/Model/Exporter-Importer pattern — but keyed per-(clan, legendary event) pair, and reading
+real Clan membership (`AuthoritativeState.clans`, passed in read-only) as a second input alongside
+`ChronicleHierarchy`.
+
+### Formation Rule
+
+A `BeliefInstitution` forms for every existing Clan, for every subject with a real `LegendFact`
+(§9) — Chronicle is world-visible history, so every Clan is assumed to have heard of a
+Chronicle-recorded legend. What differs is how strongly each Clan holds the belief:
+
+| Relationship to the legendary subject | `belief_strength` |
+|---|---|
+| Subject is a member of this Clan (in-group — "one of our own") | `fact.fame` |
+| Subject is not a member of this Clan (out-group — "we've heard of them, but they aren't ours") | `fact.fame * OUT_GROUP_DAMPENING` |
+
+`OUT_GROUP_DAMPENING = 0.4`, a module-local constant in `src/domains/belief_institution/deriver.py`.
+
+**Disclosed simplification:** only two distinct `belief_strength` values ever occur for a given
+legend — in-group and out-group — not a richer per-clan model (e.g. weighted by prior contact,
+distance, or rivalry). This is a deliberate, disclosed simplification appropriate for a P2 feature
+whose entire upstream chain (`LegendFact`, §9) has no live pipeline consumer yet; escalating this to
+a full social-simulation model would be over-engineering for a mechanism nothing in the live game
+yet reads.
+
+### `origin_event_id` Selection
+
+`FameState` (§9) is an aggregate over possibly several contributing `NarrativeLedgerEntry` records
+— it has no single `entry_id` of its own. `BeliefInstitutionDeriver` selects one real origin event
+per legendary subject: the highest-significance HERO `entity_death` entry if one exists (the more
+legend-shaped "died gloriously" moment), else the highest-significance `quest_completed` entry.
+This selection only ever considers event types `FameDeriver` (§9) itself would have credited fame
+for — it can never invent an origin event `FameDeriver` wouldn't recognize.
+
+### Persistence
+
+`BeliefInstitution` per (clan, origin event) pair is stored as `BeliefInstitutionCarryForward` in
+`CampaignState.belief_institutions: Dict[str, BeliefInstitutionCarryForward]`, keyed by
+`"{clan_id}:{origin_event_id}"`. Pairs not re-derived in a given episode keep their prior snapshot
+unchanged — the same carry-forward guarantee as Culture/Fidelity/Fame.
+
+### Derivation Trigger
+
+`BeliefInstitutionExporter.export()` is called from `CampaignOrchestrator._advance_state()`,
+immediately after `FameExporter.export()` (its own real dependency) and alongside
+`CultureDriftExporter.export()`/`FidelityExporter.export()` — all four consume the same
+`ChronicleGrouper().group(narrative_ledger)` result. Unlike its three siblings, it additionally
+receives `final_state.clans` (the just-completed episode's real Clan membership), already in scope
+at this exact call site — read-only; `ClanState`/`AuthoritativeState` receive zero writes.
+
+### Distinctness from `BeliefEntry` and `KnowledgeFact`
+
+`BeliefInstitution` is a genuinely third belief representation, distinct from both
+`BeliefEntry` (`src/systems/strategic_systems/belief.py`, a per-entity tactical/near-term
+decision-support record with real live consumers — cooperation risk evaluation, route-blocking,
+guild rumor propagation) and `KnowledgeFact` (`src/core/self_model.py`, structured/queried settled
+information) — per `TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION`'s resolved
+two-track split. `BeliefInstitution` models population-scale organized reverence, not an
+individual entity's own tactical belief or knowledge. Neither existing class is modified or
+imported by this mechanism.
+
+### No Live Consumer Yet
+
+This mechanism ships with **no live reader wired in** — it is the terminal idea in the M5
+Fame → Fidelity → Belief-Institution chain, and the whole chain remains "built, not yet visible in
+play." No new SimQ scoring pillar or `CHURCH` building (`"BLESSING"`/`"RESURRECTION"`) wiring is
+added — both are explicitly out of scope, per the source design's own "too underspecified to build
+around responsibly" caveat.
+
+### Acceptance Signal
+
+> `BeliefInstitutionDeriver.derive()` given a subject with a real `LegendFact` and two Clans (one
+> containing the subject, one not) produces two `BeliefInstitution` records referencing the same
+> `origin_event_id`, with the in-group Clan's `belief_strength` strictly higher than the out-group
+> Clan's; a subject below `FAME_THRESHOLD` produces no `BeliefInstitution` for any Clan.
+
+**Sources:** `src/domains/belief_institution/`
+**Contract:** `docs/world/belief_institution_contract.md`
+**Parity:** WORLD-BELIEF-001, WORLD-BELIEF-002

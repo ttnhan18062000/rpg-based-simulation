@@ -16,6 +16,7 @@ from src.domains.campaigns.social_memory import FactionSocialMemory, SocialMemor
 from src.domains.culture.model import CultureCarryForward
 from src.domains.fidelity.model import FidelityCarryForward
 from src.domains.fame.model import FameCarryForward
+from src.domains.belief_institution.model import BeliefInstitutionCarryForward
 
 
 @dataclass(frozen=True)
@@ -324,6 +325,12 @@ class CampaignState:
     # by FameImporter/LegendFactService (no live perception/motivation consumer yet --
     # idea 57's own "built, not yet visible in play" disclosure). Derived from
     # ChronicleHierarchy, mirroring region_cultures'/historical_drift's own field shape.
+    belief_institutions: Dict[str, BeliefInstitutionCarryForward] = field(default_factory=dict)
+    # E63-BELIEF: per-(clan, legend) belief snapshots keyed by "{clan_id}:{origin_event_id}".
+    # Populated by BeliefInstitutionExporter at episode end from a real LegendFact
+    # (idea 57) plus real Clan membership; consumed by BeliefInstitutionImporter (no
+    # live consumer yet -- the terminal idea in the M5 Fame -> Fidelity -> Belief-Institution
+    # chain, which remains "built, not yet visible in play" end to end).
 
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict. All dict keys sorted for determinism."""
@@ -372,6 +379,10 @@ class CampaignState:
             "entity_fame": {
                 k: v.to_dict()
                 for k, v in sorted(self.entity_fame.items())
+            },
+            "belief_institutions": {
+                k: v.to_dict()
+                for k, v in sorted(self.belief_institutions.items())
             },
         }
 
@@ -429,5 +440,9 @@ class CampaignState:
             entity_fame={
                 k: FameCarryForward.from_dict(v)
                 for k, v in d.get("entity_fame", {}).items()
+            },
+            belief_institutions={
+                k: BeliefInstitutionCarryForward.from_dict(v)
+                for k, v in d.get("belief_institutions", {}).items()
             },
         )

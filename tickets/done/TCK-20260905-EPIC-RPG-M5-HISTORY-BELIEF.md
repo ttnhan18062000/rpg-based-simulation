@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: core
 authority: P1
 audience: agent
 ticket_id: TCK-20260905-EPIC-RPG-M5-HISTORY-BELIEF
-phase: open
+phase: done
 date: 2026-09-05
 tags: [lifecycle, social]
 ---
@@ -15,7 +15,7 @@ tags: [lifecycle, social]
 Memory, Reputation & Legacy (M5) — tracking epic for the history-and-belief branch (ideas 57, 62, 63)
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -136,18 +136,35 @@ This epic tracks child tickets only; no direct implementation happens here.
   (deliberate, keep both) by `TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION`.
 
 ## Acceptance Criteria
-- [ ] All 3 child tickets (idea 57, idea 62, idea 63) are DONE, idea 63 landing after both idea 36
-      (already true) and idea 57.
-- [ ] Idea 57's child ticket documents, with fresh evidence, whether the "alongside" resolution for
+- [x] All 3 child tickets (idea 57, idea 62, idea 63) are DONE, idea 63 landing after both idea 36
+      (already true) and idea 57. Verified: all 3 in `tickets/done/m5-history-belief/` (folder moved
+      as a whole once the last, idea 63, landed) — `TCK-20260905-CHRONICLE-FIDELITY-DRIFT`,
+      `TCK-20260905-FAME-DERIVER-LEGEND-FACT`, `TCK-20260905-BELIEF-INSTITUTION-DESIGN`. Per
+      `tickets/working_log.csv`, idea 57 (`FAME-DERIVER-LEGEND-FACT`) landed 2026-09-05T05:55:00Z,
+      before idea 63 (`BELIEF-INSTITUTION-DESIGN`, 2026-09-05T09:10:00Z).
+- [x] Idea 57's child ticket documents, with fresh evidence, whether the "alongside" resolution for
       idea 62 held up in practice (i.e., idea 57 did not end up needing idea 62's output as an input).
-- [ ] Idea 57's `FameDeriver` mirrors `CultureDeriver`'s exact 3-layer pattern (Deriver/Model/
+      Verified: idea 57's own investigation independently found the epic's own "alongside" framing
+      did NOT fully hold as stated (its own more specific scope language actually described a
+      sequential dependency) but confirmed the practical resolution — building idea 62 as an
+      independent sibling — was correct because a literal upstream-transform reading would have
+      broken the already-shipped `CultureDeriver`. Idea 57 shipped consuming raw Chronicle output
+      directly, with zero dependency on idea 62's output, confirming the practical outcome intended.
+- [x] Idea 57's `FameDeriver` mirrors `CultureDeriver`'s exact 3-layer pattern (Deriver/Model/
       Exporter-Importer), introduces zero new Chronicle event-scoring logic beyond the disclosed
       Option B event-type rule, and is called from the same `CampaignOrchestrator._advance_state()`
-      episode-boundary call site.
-- [ ] Idea 62's transform does not mutate `NarrativeLedgerEntry`/`ChronicleHierarchy` in place — it
+      episode-boundary call site. Verified by `TCK-20260905-FAME-DERIVER-LEGEND-FACT`'s own
+      Architecture-Verify pass and 1282 passing tests.
+- [x] Idea 62's transform does not mutate `NarrativeLedgerEntry`/`ChronicleHierarchy` in place — it
       produces its own separate derived view, preserving Chronicle's own record as ground truth.
-- [ ] Idea 63's belief/reverence mechanism reads both `ClanState` (as container) and idea 57's fame
-      substrate as inputs; it is not a thin wrapper on either alone.
+      Verified: `src/domains/fidelity/` writes only into a new `CampaignState.historical_drift`
+      field, confirmed by `TCK-20260905-CHRONICLE-FIDELITY-DRIFT`'s own architecture guard test.
+- [x] Idea 63's belief/reverence mechanism reads both `ClanState` (as container) and idea 57's fame
+      substrate as inputs; it is not a thin wrapper on either alone. Verified:
+      `BeliefInstitutionDeriver.derive()` reads real `ClanState` membership (`final_state.clans`,
+      read-only) and real `LegendFact`/`FameState` (idea 57) together to form per-clan divergent
+      `BeliefInstitution` records — neither input alone would produce the in-group/out-group
+      distinction this mechanism's own acceptance signal requires.
 
 ## Related Tickets
 ### Predecessor epic (done)
@@ -160,11 +177,16 @@ This epic tracks child tickets only; no direct implementation happens here.
 - `docs/brainstorm/2026-09-04-idea57-entity-scale-fame-aggregation-design.md` (PR #126)
 - `TCK-20260831-CLAN-STATE-SCHEMA` (idea 36, DONE — idea 63's container prerequisite)
 
-### Child tickets (implementation sequence)
-- TCK-20260905-CHRONICLE-FIDELITY-DRIFT — idea 62 (Generations Misremember), no intra-batch deps
-- TCK-20260905-FAME-DERIVER-LEGEND-FACT — idea 57 (The Living Legend Feedback Loop), no intra-batch deps
+### Child tickets (implementation sequence, all DONE)
+- TCK-20260905-CHRONICLE-FIDELITY-DRIFT — idea 62 (Generations Misremember), no intra-batch deps (DONE)
+- TCK-20260905-FAME-DERIVER-LEGEND-FACT — idea 57 (The Living Legend Feedback Loop), no intra-batch deps (DONE)
 - TCK-20260905-BELIEF-INSTITUTION-DESIGN — idea 63 (Belief Grows Around Real History), hard-blocked
-  on TCK-20260905-FAME-DERIVER-LEGEND-FACT landing first
+  on TCK-20260905-FAME-DERIVER-LEGEND-FACT landing first (DONE)
+
+### Real, disclosed follow-up work (not silently treated as complete)
+- `TCK-20260905-CHORE-CARRYFORWARD-DERIVER-CONSOLIDATION` — filed during idea 63's own Architecture
+  Review, which flagged (non-blocking) that Culture, Fidelity, Fame, and Belief-Institution are now
+  4 structurally near-identical Deriver/Model/Exporter-Importer triples worth a consolidation pass.
 
 ## Related Docs
 - docs/plans/rpg_design_roadmap/rpg_m5_memory_reputation_epic.md
@@ -202,10 +224,31 @@ None — epic tier tracks child tickets only; each child ticket carries its own 
 (Epic tier — no direct implementation. See each child ticket.)
 
 ## Test Summary
-(Epic tier — see each child ticket's own Test phase.)
+(Epic tier — see each child ticket's own Test phase. Aggregate: idea 62 landed with 969 scoped
+tests passing, idea 57 with 1282, idea 63 with 1428 — each ticket's own final scoped run, not
+cumulative across tickets since the same broad `tests/unit/domains/` etc. directories were re-run
+each time.)
 
 ## Files Changed
-(Epic tier — see each child ticket's own Files Changed section.)
+(Epic tier — see each child ticket's own Files Changed section. Epic-level summary of touched
+subsystems: `src/domains/fidelity/`, `src/domains/fame/`, `src/domains/belief_institution/` (all
+new), `src/domains/campaigns/{state,orchestrator}.py`, plus corresponding tests,
+`docs/mechanics/05_world_evolution.md` (§8/§9/§10), 3 new `docs/world/*_contract.md` files,
+`docs/parity_ledger/world_dynamics.yaml`, the parent epic doc, `docs/brainstorm/rpg_feature_atlas.html`,
+and `docs/brainstorm/simulation_capabilities.html`.)
 
 ## Completion Summary
-(Pending — child tickets not yet created.)
+All 3 child tickets landed successfully, closing out the history-and-belief branch and, with it,
+the entire M5 "Memory, Reputation & Legacy" epic — all 8 source design ideas (53, 54, 55, 57, 58,
+60, 62, 63) are now shipped across this epic and its predecessor
+(`TCK-20260823-EPIC-RPG-M5-MEMORY-REPUTATION`). The epic's own two premise corrections (idea 62 is
+an independent sibling, not a mandatory upstream transform; idea 62 must not repurpose
+`BeliefEntry`) both held up under real implementation, independently re-confirmed by each child
+ticket's own investigation rather than inherited on faith. All three tickets (idea 62's Chronicle
+fidelity drift, idea 57's Living Legend Fame, idea 63's Belief Institutions) follow the same
+Deriver/Model/Exporter-Importer pattern originated by `CultureDeriver`, and all three honestly
+disclose shipping as "built, not yet visible in play" — real, tested, typed state and derivation
+logic with no live pipeline consumer wired in yet, rather than overclaiming a finished,
+player-visible feature. One real follow-up gap was found and filed rather than silently absorbed:
+the now-4-sibling structural duplication across Culture/Fidelity/Fame/Belief-Institution
+(`TCK-20260905-CHORE-CARRYFORWARD-DERIVER-CONSOLIDATION`).

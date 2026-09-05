@@ -175,6 +175,25 @@ and schedule, not yet one of the 8 ideas this epic's Scope commits to below.
    (WORLD-FIDELITY-001, WORLD-FIDELITY-002).
 7. **Idea 63 — Belief Grows Around Real History.** Confirmed a genuine downstream composite, needing both
    idea 36 (Clan, as container) and idea 57 (fame substrate) first — not a thin wrapper on either.
+   **Status update, 2026-09-05:** shipped as `TCK-20260905-BELIEF-INSTITUTION-DESIGN`, the final ticket
+   of the M5 epic (8/8 design ideas now shipped). Added `src/domains/belief_institution/`
+   (`BeliefInstitution`/`BeliefInstitutionCarryForward` model, `BeliefInstitutionDeriver.derive()`,
+   `BeliefInstitutionExporter`/`BeliefInstitutionImporter`), a genuinely third belief representation
+   distinct from `BeliefEntry`/`KnowledgeFact` per the resolved Knowledge/Belief reconciliation split.
+   Forms one `BeliefInstitution` per (Clan, legendary subject) pair for every existing Clan and every
+   subject with a real `LegendFact` (idea 57) — `belief_strength = fame` for the subject's own clan
+   (in-group), `fame * OUT_GROUP_DAMPENING (0.4)` for every other clan (out-group), a disclosed
+   simplification (only two distinct values per legend). `origin_event_id` is the highest-significance
+   fame-contributing entry for that subject, mirroring `FameDeriver`'s own event-type rule exactly.
+   `BeliefInstitutionExporter.export()` is called from `CampaignOrchestrator._advance_state()`
+   immediately after `FameExporter.export()`, additionally reading `final_state.clans`
+   (`AuthoritativeState.clans`, read-only — zero writes to `ClanState`/`AuthoritativeState`). Ships
+   with no live consumer yet — the terminal idea in the M5 Fame → Fidelity → Belief-Institution chain,
+   "built, not yet visible in play" end to end. No new SimQ pillar or `CHURCH` building wiring added,
+   per the source design's own "too underspecified" caveat. Documented in
+   `docs/mechanics/05_world_evolution.md` §10 "Belief Institutions (idea 63)",
+   `docs/world/belief_institution_contract.md` (new file), and `docs/parity_ledger/world_dynamics.yaml`
+   (WORLD-BELIEF-001, WORLD-BELIEF-002).
 
 ## Out of Scope
 

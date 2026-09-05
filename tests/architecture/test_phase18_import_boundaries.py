@@ -173,7 +173,7 @@ _DOMAINS_OBSERVABILITY_PINNED = {
     ("src/domains/campaigns/narrative_ledger.py", 71): (
         "src.observability.events", ("SimulationEvent",),
     ),
-    ("src/domains/campaigns/orchestrator.py", 440): (
+    ("src/domains/campaigns/orchestrator.py", 447): (
         "src.observability.events", ("SimulationEvent",),
     ),
 }
