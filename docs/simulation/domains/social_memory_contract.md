@@ -3,7 +3,7 @@ status: authoritative
 layer: social
 authority: P1
 audience: agent
-last_verified: 2026-06-22
+last_verified: 2026-09-04
 tags: [domains, campaigns, social-memory, consequence-events, cross-episode, contract]
 ---
 
@@ -70,6 +70,10 @@ Collective faction-level hostility record. Frozen dataclass. Persists regardless
 - Pure read of `entity.social.trust_history` and `entity.social.public_reputation`
 - Called at episode end by `CampaignOrchestrator._advance_state()`
 - Stores result in `CampaignState.social_memories[entity_id]`
+- **Does not read `entity.social.regional_reputation`** (added by
+  TCK-20260904-REPUTATION-LOCALITY-SCOPE, SOC-266) — the region-scoped reputation dimension is not
+  part of this export today; only the flat global `public_reputation` scalar crosses episode
+  boundaries, via the same `faction_reputation["default"]` proxy key as before.
 
 ### `SocialMemoryImporter.apply(entity, record, episode_index)`
 
@@ -77,6 +81,24 @@ Collective faction-level hostility record. Frozen dataclass. Persists regardless
 - Seeds `entity.social.public_reputation` from `record.faction_reputation["default"]`
 - Applies `SocialMemoryDecay` before merging (see E43C below)
 - Called at episode start by `CampaignOrchestrator._build_initial_state()`
+- **Write path corrected (TCK-20260904-REPUTATION-LOCALITY-SCOPE):** this seed previously bypassed
+  `RelationshipService.process_update()` via a direct `dc_replace(entity.social, ...,
+  public_reputation=new_reputation)` call — a real, pre-existing violation of SOC-217's "no second
+  write path" rule, found by a new architecture guard test
+  (`tests/architecture/test_social_write_paths.py`). It now routes through
+  `RelationshipService.process_update(entity.social, SocialUpdate(reputation_set=...))`, a
+  zero-behavior-change fix (same computed value, authoritative write mechanism). The same class of
+  bypass was independently found and fixed in `CampaignOrchestrator._build_initial_state()`'s own
+  carried-reputation seeding. Does not seed `entity.social.regional_reputation` — that field is not
+  yet carried across episode boundaries; see the disclosed gap below.
+
+**Disclosed gap — `regional_reputation` does not cross episode boundaries:** `SocialComponent.regional_reputation`
+(`Dict[RegionID, float]`, TCK-20260904-REPUTATION-LOCALITY-SCOPE, SOC-266) is a region-scoped reputation
+dimension additive to `public_reputation`. Neither `SocialMemoryExporter.export()` nor
+`SocialMemoryImporter.apply()` reads or seeds it — only the flat `faction_reputation["default"]` proxy
+(itself a *faction*-scoped placeholder, per `SocialMemoryRecord.faction_reputation`'s field description
+above) carries forward across episodes, unchanged from before this ticket. Wiring a region-scoped
+carry-forward is out of scope here and not yet tracked by a follow-up ticket.
 
 ---
 

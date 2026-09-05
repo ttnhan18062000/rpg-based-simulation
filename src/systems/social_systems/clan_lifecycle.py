@@ -21,15 +21,34 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
 if TYPE_CHECKING:
-    from src.core.state import ClanState, EntityState
+    from src.core.state import AuthoritativeState, ClanState, EntityState
     from src.core.updates import ClanUpdate, StateUpdate
     from src.observability.events import ClanMemberLeftEvent, ClanSuccessionEvent
+
+# Idea 54/M5 (SOC-268): shared negative delta for both contract-betrayal and
+# party-defection clan-reputation misconduct events -- no source doc distinguishes
+# their relative severity at the clan level, so a single shared constant is used
+# rather than two arbitrarily-differentiated magnitudes.
+CLAN_REPUTATION_MISCONDUCT_DELTA: float = -0.25
 
 
 class ClanLifecycleService:
     """
     Pure-static service for Clan leave/succession/dissolution lifecycle.
     """
+
+    @staticmethod
+    def find_clan_id_for_entity(state: "AuthoritativeState", entity_id: int) -> Optional[str]:
+        """
+        O(n_clans) reverse lookup -- no entity_id -> clan_id index exists in
+        durable state (idea 54/M5 Plan-phase decision: clan counts are small,
+        no evidence in this repo's fixtures that an index is warranted). Sorted
+        iteration by clan_id for determinism.
+        """
+        for clan_id, clan in sorted(state.clans.items()):
+            if entity_id in clan.member_entity_ids:
+                return clan_id
+        return None
 
     @staticmethod
     def process_leave(

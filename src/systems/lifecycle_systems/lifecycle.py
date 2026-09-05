@@ -20,6 +20,103 @@ class LifecycleSystem:
     Phase 9: Hero Lifecycle.
     """
 
+    # Idea 55 (Feuds Outlive the Feuders): the heir's inherited hostility is weaker
+    # than the deceased's own -- a starting grudge, not a full transfer.
+    INHERITED_NEMESIS_SEVERITY_MULTIPLIER = 0.5
+
+    @staticmethod
+    def _transfer_inherited_feud(deceased: EntityState, heir_upd: EntityUpdate) -> EntityUpdate:
+        """Idea 55 (Feuds Outlive the Feuders, TCK-20260904-LINEAGE-DEATH-DISPATCH):
+        transfer a weakened version of the deceased's active Campaign-mode Nemesis
+        blockers to the heir.
+
+        Explicitly scoped to entity.strategic.blockers['nemesis_*'] -- the
+        Campaign-mode signal populated by NemesisRelationImporter from
+        CampaignState.nemesis_relations (src/domains/campaigns/grief_urgency.py) --
+        NOT the always-live legacy SocialComponent.nemesis_ids/grudge_history
+        mechanism, which this ticket does not touch (tracked separately by
+        TCK-20260824-NEMESIS-MEMORY-UNIT-TESTS). Most default single-episode
+        Kernel runs never populate the Campaign-mode signal, so this handler is
+        frequently a no-op -- an accepted, disclosed scope limit, not a bug.
+
+        Uses a distinct "inherited_nemesis_{antagonist}" id (not "nemesis_
+        {antagonist}") so this never silently overwrites a heir's own,
+        independently-formed nemesis blocker against the same antagonist.
+        """
+        from src.core.strategic import BlockerState
+        from src.core.updates import StrategicUpdate
+
+        inherited = [
+            replace(
+                blocker,
+                id=f"inherited_nemesis_{blocker.subject}",
+                severity=blocker.severity * LifecycleSystem.INHERITED_NEMESIS_SEVERITY_MULTIPLIER,
+                resolved=False,
+                suppression_until_tick=0,
+            )
+            for bid, blocker in sorted(deceased.strategic.blockers.items(), key=lambda kv: kv[0])
+            if bid.startswith("nemesis_")
+        ]
+        if not inherited:
+            return heir_upd
+        strat_upd = heir_upd.strategic or StrategicUpdate()
+        return replace(
+            heir_upd,
+            strategic=replace(
+                strat_upd,
+                blockers_add_or_update=list(strat_upd.blockers_add_or_update) + inherited,
+            ),
+        )
+
+    @staticmethod
+    def _seed_dying_wish(
+        deceased: EntityState, heir: EntityState, heir_upd: EntityUpdate, death_tick: int
+    ) -> EntityUpdate:
+        """Idea 58 (A Dying Wish, TCK-20260904-LINEAGE-DEATH-DISPATCH): seed one
+        named, source-attributed intention onto the heir's MotivationModel at the
+        moment heir_entity_id resolves.
+
+        Honorable, ignorable, or rejectable -- nothing in this codebase reads
+        NamedIntentionBundle.status to force an action, so seeding this bundle
+        never auto-executes anything.
+
+        Follows the codebase's established read-through-then-replace convention
+        for entity.cognition (src/strategy/role_model_phase.py,
+        src/domains/emotion/habit_phase.py, src/engine/quests.py): reads whatever
+        cognition_bundle_set an earlier same-tick phase already staged on this
+        heir_upd (falling back to heir.cognition) before replacing, so a same-tick
+        collision with another cognition_bundle_set writer never silently clobbers
+        either write.
+
+        Wish text is deterministic, not narratively generated: if the deceased has
+        an active Campaign-mode Nemesis blocker, the wish names that same
+        antagonist (coherent with idea 55's feud transfer above); otherwise it
+        falls back to a generic remembrance wish. No new decision-making/narrative
+        subsystem is introduced -- a Plan-phase-equivalent scope decision, since no
+        existing precedent selects among multiple wish templates.
+        """
+        from src.core.cognition import NamedIntentionBundle
+
+        nemesis_ids = sorted(bid for bid in deceased.strategic.blockers if bid.startswith("nemesis_"))
+        if nemesis_ids:
+            antagonist = deceased.strategic.blockers[nemesis_ids[0]].subject
+            text = f"avenge me against {antagonist}"
+        else:
+            text = "honor my memory"
+
+        base_cognition = (
+            heir_upd.cognition_bundle_set if heir_upd.cognition_bundle_set is not None else heir.cognition
+        )
+        new_intention = NamedIntentionBundle(
+            text=text,
+            source_entity_id=deceased.id,
+            created_tick=death_tick,
+            status="PENDING",
+        )
+        new_motivation = replace(base_cognition.motivation, named_intention=new_intention)
+        new_cognition = replace(base_cognition, motivation=new_motivation)
+        return replace(heir_upd, cognition_bundle_set=new_cognition)
+
     @staticmethod
     def _select_default_heir(state: AuthoritativeState, deceased: EntityState) -> Optional[int]:
         candidates = []
@@ -133,10 +230,18 @@ class LifecycleSystem:
                     heir = state.entities.get(heir_id)
                     if heir:
                         heir_upd = refined_entity_updates.get(heir_id, EntityUpdate(entity_id=heir_id))
+
+                        # On-death lineage dispatch (ideas 55+58): one dispatch point, two
+                        # thin handlers, both firing here -- right after heir_id resolution,
+                        # before the heirloom transfer below (TCK-20260904-LINEAGE-DEATH-
+                        # DISPATCH).
+                        heir_upd = LifecycleSystem._transfer_inherited_feud(entity, heir_upd)
+                        heir_upd = LifecycleSystem._seed_dying_wish(entity, heir, heir_upd, state.tick)
+
                         # Transactional Heirloom Transfer
                         from src.core.updates import ResourceTransferIntent
                         from src.core.state import ItemStack
-                        
+
                         # Combine inventory and specific heirlooms. entity.inventory.items is a
                         # list on a live/authoritative entity but a tuple when entity is a
                         # to_readonly() view (src/core/state.py's immutability optimization) --
@@ -145,7 +250,7 @@ class LifecycleSystem:
                         # INVENTORY-TUPLE-TYPEERROR).
                         heirloom_stacks = [ItemStack(item_id=hid, quantity=1) for hid in entity.lifecycle.heirlooms]
                         all_transfer_items = list(entity.inventory.items) + heirloom_stacks
-                        
+
                         if all_transfer_items:
                             intent = ResourceTransferIntent(
                                 source_id=entity.id,
@@ -153,9 +258,11 @@ class LifecycleSystem:
                                 items_add=all_transfer_items,
                                 transfer_kind="AUTO"
                             )
-                            refined_entity_updates[heir_id] = replace(heir_upd,
+                            heir_upd = replace(heir_upd,
                                 resource_transfers=heir_upd.resource_transfers + [intent]
                             )
+
+                        refined_entity_updates[heir_id] = heir_upd
 
         # Apply Influence Shifts and Conquest Lifecycle
         if recent_deaths:

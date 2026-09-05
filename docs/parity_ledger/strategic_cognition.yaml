@@ -4078,3 +4078,27 @@
   support_boundary: Accumulation trigger reads QuestState.source_entity_id but does
     not populate it; the Guild hub never sets it, so no live seeding path exists yet
     (disclosed gap, not a bug).
+- id: STRAT-270
+  text: 'LifecycleSystem._seed_dying_wish() (src/systems/lifecycle_systems/lifecycle.py)
+    fires once heir_entity_id resolves inside resolve_lifecycle''s death block: seeds
+    a new NamedIntentionBundle (src/core/cognition.py, on MotivationModel.named_intention)
+    onto the heir''s cognition, source-attributed to the deceased, status PENDING.
+    Follows the codebase''s established read-through-then-replace convention for cognition_bundle_set
+    (mirrors src/strategy/role_model_phase.py, src/domains/emotion/habit_phase.py)
+    so a same-tick collision with another cognition_bundle_set writer never silently
+    clobbers either write. Applied through the authoritative pipeline (CognitionPatch).
+    Honorable/ignorable/rejectable -- nothing reads NamedIntentionBundle.status to
+    force an action, so this never auto-executes. Deliberately named distinctly from
+    CommittedIntention (StrategicComponent) to avoid a naming collision. (idea 58,
+    M5)'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/cognition.py -- NamedIntentionBundle, MotivationModel.named_intention;
+    src/systems/lifecycle_systems/lifecycle.py -- LifecycleSystem._seed_dying_wish()
+  proof_type: parity
+  test_path: tests/unit/progression/test_lifecycle.py::test_named_intention_is_honorable_ignorable_never_auto_executing
+  divergence_note: null
+  support_boundary: Wish text is deterministic (references the deceased's active Nemesis
+    antagonist if one exists, else a generic remembrance) -- no narrative-generation
+    subsystem is introduced.

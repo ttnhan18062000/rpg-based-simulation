@@ -415,6 +415,32 @@ class MoralPreferenceProfile:
 
 
 @dataclass(frozen=True, slots=True)
+class NamedIntentionBundle:
+    """A dying wish seeded onto an heir at the moment of a benefactor's death
+    (idea 58, A Dying Wish -- TCK-20260904-LINEAGE-DEATH-DISPATCH). Deliberately
+    NOT named "Intention" -- that name already belongs to CommittedIntention
+    (src/core/strategic.py), a distinct self-generated multi-step-planning model.
+    Honorable, ignorable, or rejectable: nothing in this codebase reads `status`
+    to force an action, so seeding this bundle never auto-executes anything."""
+    text: Optional[str] = None
+    source_entity_id: Optional[int] = None
+    created_tick: Optional[int] = None
+    status: str = "PENDING"  # PENDING | HONORED | REJECTED
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        return {
+            "text": self.text,
+            "source_entity_id": self.source_entity_id,
+            "created_tick": self.created_tick,
+            "status": self.status,
+        }
+
+    @classmethod
+    def empty(cls) -> "NamedIntentionBundle":
+        return cls()
+
+
+@dataclass(frozen=True, slots=True)
 class MotivationModel:
     """Identity values and traits that bias action selections."""
     doctrine: IdentityDoctrine = field(default_factory=IdentityDoctrine)
@@ -422,6 +448,7 @@ class MotivationModel:
     role_fit: RoleFitPreference = field(default_factory=RoleFitPreference)
     ambition: AmbitionProfile = field(default_factory=AmbitionProfile)
     moral: MoralPreferenceProfile = field(default_factory=MoralPreferenceProfile)
+    named_intention: NamedIntentionBundle = field(default_factory=NamedIntentionBundle)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         return {
@@ -429,7 +456,8 @@ class MotivationModel:
             "values": self.values.to_canonical_dict(),
             "role_fit": self.role_fit.to_canonical_dict(),
             "ambition": self.ambition.to_canonical_dict(),
-            "moral": self.moral.to_canonical_dict()
+            "moral": self.moral.to_canonical_dict(),
+            "named_intention": self.named_intention.to_canonical_dict()
         }
 
 
