@@ -1977,3 +1977,128 @@
   test_path: tests/unit/domains/culture/test_settlement_personality.py::test_describe_with_high_fatalism_axis_produces_fatalistic_signal;
     tests/unit/domains/campaigns/test_settlement_personality_read.py::test_describe_settlement_personality_with_populated_region_cultures;
     tests/api/test_campaign_history_api.py::test_settlement_personality_endpoint_returns_shaped_presenter_not_raw_domain_object
+- id: WORLD-FIDELITY-001
+  text: 'FidelityState is derived only from ChronicleHierarchy at episode boundary
+    (FidelityExporter.export() called from _advance_state() only, immediately alongside
+    CultureDriftExporter.export(), consuming the same _hierarchy local) -- never mutated
+    during the tick loop. Fidelity decays linearly with Era-distance from the current
+    Era: fidelity = max(0.0, 1.0 - era_distance * 0.2) (FIDELITY_DECAY_PER_ERA=0.2),
+    keyed by NarrativeLedgerEntry.entry_id. Era membership is resolved by walking
+    hierarchy.eras -> Era.episodes -> Episode.index, never by episode // ERA_EPISODE_MIN
+    arithmetic.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/fidelity/deriver.py (FidelityDeriver.derive); src/domains/fidelity/exporter.py
+    (FidelityExporter.export called from _advance_state() in orchestrator.py immediately
+    after CultureDriftExporter.export)
+  proof_type: contract
+  test_path: tests/unit/domains/chronicle/test_fidelity_deriver.py
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-FIDELITY-002
+  text: 'FidelityDeriver.derive() is deterministic: calling it twice with the same
+    ChronicleHierarchy input produces byte-identical output. FidelityCarryForward
+    round-trips through CampaignState.to_dict()/from_dict() serialization with full
+    fidelity, stored in CampaignState.historical_drift: Dict[str, FidelityCarryForward].'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/fidelity/model.py (FidelityState/FidelityCarryForward to_dict/from_dict);
+    src/domains/campaigns/state.py (CampaignState.historical_drift serialization wiring)
+  proof_type: contract
+  test_path: tests/unit/domains/chronicle/test_fidelity_exporter.py::test_fidelity_carry_forward_round_trips_through_campaign_state_serialization,
+    tests/unit/domains/chronicle/test_fidelity_deriver.py::test_fidelity_derive_is_deterministic_byte_identical
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-FAME-001
+  text: FameState is derived only from ChronicleHierarchy at episode boundary (FameExporter.export()
+    called from _advance_state() only, immediately alongside CultureDriftExporter.export()/FidelityExporter.export(),
+    consuming the same _hierarchy local) -- never mutated during the tick loop. Fame
+    accumulates additively per subject_id for quest_completed entries and entity_death
+    entries where payload["entity_role"]=="HERO" (Option B), normalised via min(1.0,
+    raw_sum / 3.0) (NORMALISE_DENOMINATOR=3.0), a module-local constant independent
+    of CultureDeriver's own identically-valued constant.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/fame/deriver.py (FameDeriver.derive); src/domains/fame/exporter.py
+    (FameExporter.export called from _advance_state() in orchestrator.py immediately
+    after FidelityExporter.export)
+  proof_type: contract
+  test_path: tests/unit/domains/fame/test_fame_deriver.py
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-FAME-002
+  text: 'FameDeriver.derive() is deterministic: calling it twice with the same ChronicleHierarchy
+    input produces byte-identical output. FameCarryForward round-trips through CampaignState.to_dict()/from_dict()
+    serialization with full fidelity, stored in CampaignState.entity_fame: Dict[str,
+    FameCarryForward]. LegendFactService.for_entity() constructs a LegendFact only
+    when FameImporter.get_fame(...).fame >= FAME_THRESHOLD (0.5, anchored to CHRONICLE_THRESHOLD);
+    a fame value below threshold produces None. LegendFact is never persisted as a
+    CampaignState field -- lazily reconstructed at query time.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/fame/model.py (FameState/FameCarryForward to_dict/from_dict);
+    src/domains/campaigns/state.py (CampaignState.entity_fame serialization wiring);
+    src/domains/fame/legend.py (LegendFactService.for_entity threshold gating)
+  proof_type: contract
+  test_path: tests/unit/domains/fame/test_fame_exporter.py::test_fame_carry_forward_round_trips_through_campaign_state_serialization,
+    tests/unit/domains/fame/test_fame_deriver.py::test_fame_deriver_is_deterministic_byte_identical,
+    tests/unit/domains/fame/test_legend_fact.py
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-BELIEF-001
+  text: 'Idea 63 (Belief Grows Around Real History): BeliefInstitutionDeriver.derive()
+    forms one BeliefInstitution per (Clan, legendary subject) pair for every existing
+    Clan and every subject with a real LegendFact (idea 57), with belief_strength
+    = fact.fame for the subject''s own clan (in-group) or fact.fame * OUT_GROUP_DAMPENING
+    (0.4) for every other clan (out-group) -- a disclosed simplification, only two
+    distinct values per legend. origin_event_id is selected as the highest-significance
+    HERO entity_death entry if one exists, else the highest-significance quest_completed
+    entry for that subject -- mirroring FameDeriver''s own Option-B event-type rule
+    exactly. BeliefInstitutionExporter.export() is called from CampaignOrchestrator._advance_state()
+    immediately after FameExporter.export(), alongside CultureDriftExporter/FidelityExporter,
+    additionally reading final_state.clans (AuthoritativeState.clans, read-only).'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/belief_institution/deriver.py (BeliefInstitutionDeriver.derive(),
+    _select_origin_events(), OUT_GROUP_DAMPENING=0.4); src/domains/belief_institution/exporter.py
+    (BeliefInstitutionExporter.export(), called from src/domains/campaigns/orchestrator.py
+    _advance_state() after FameExporter.export()); src/domains/fame/legend.py (LegendFactService.for_entity(),
+    the real trigger substrate); src/core/state.py (ClanState.member_entity_ids, read-only
+    input via final_state.clans).
+  proof_type: parity
+  test_path: tests/unit/domains/belief_institution/test_deriver.py::test_two_clans_form_different_belief_strength_for_same_origin_event,
+    tests/unit/domains/belief_institution/test_deriver.py::test_no_belief_institution_without_qualifying_legend_fact,
+    tests/unit/domains/belief_institution/test_deriver.py::test_belief_institution_origin_event_prefers_posthumous_hero_death
+  divergence_note: null
+  support_boundary: Ships with no live consumer -- terminal idea in the M5 Fame ->
+    Fidelity -> Belief-Institution chain, unit-tested only, not wired into any live
+    pipeline phase.
+- id: WORLD-BELIEF-002
+  text: 'BeliefInstitutionDeriver.derive() is pure/stateless/deterministic: calling
+    it twice with the same (hierarchy, campaign_state, clans) inputs produces byte-identical
+    output. CampaignState.belief_institutions round-trips via to_dict()/from_dict().
+    BeliefInstitution/BeliefInstitutionCarryForward are frozen dataclasses with zero
+    src.engine imports and zero unguarded src.core.state imports at module level (a
+    TYPE_CHECKING-only ClanState reference is permitted, never executes at runtime).
+    ClanState/AuthoritativeState receive zero writes -- final_state.clans is read-only
+    input, verified by a dedicated architecture guard alongside the sole-authoritative-writer
+    guard for campaign_state.belief_institutions itself.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/belief_institution/model.py (BeliefInstitution.to_dict()/from_dict(),
+    BeliefInstitutionCarryForward.to_dict()/from_dict()); src/domains/campaigns/state.py
+    (CampaignState.belief_institutions field + to_dict()/from_dict() entries); tests/architecture/test_belief_institution_write_paths.py
+    (sole-writer guard, BeliefEntry/KnowledgeFact non-reference guard, TYPE_CHECKING-aware
+    import guard, ClanState-no-mutation guard, no-CHURCH/SimQ-wiring guard).
+  proof_type: regression
+  test_path: tests/unit/domains/belief_institution/test_deriver.py::test_belief_institution_derivation_is_deterministic,
+    tests/unit/domains/belief_institution/test_model.py::test_belief_institution_round_trip_serialization,
+    tests/architecture/test_belief_institution_write_paths.py::test_belief_institutions_written_only_through_belief_institution_exporter
+  divergence_note: null
+  support_boundary: null

@@ -166,11 +166,14 @@ def test_observability_domains_systems_import_allowlist():
 # pure SimulationEvent dataclass, guarded by an event-recorder-present check immediately
 # above. Expanding this set requires updating both this test and
 # docs/audits/D14_coupling_depth.md's Coupling Inventory together -- not a silent addition.
+# Line 437->440 re-pinned by TCK-20260905-FAME-DERIVER-LEGEND-FACT: adding the
+# FameExporter.export() call/import in orchestrator.py._advance_state() shifted this line
+# down by 3, per the sibling Fidelity ticket's own documented collateral-drift lesson.
 _DOMAINS_OBSERVABILITY_PINNED = {
     ("src/domains/campaigns/narrative_ledger.py", 71): (
         "src.observability.events", ("SimulationEvent",),
     ),
-    ("src/domains/campaigns/orchestrator.py", 434): (
+    ("src/domains/campaigns/orchestrator.py", 447): (
         "src.observability.events", ("SimulationEvent",),
     ),
 }

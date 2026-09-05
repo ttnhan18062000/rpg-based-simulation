@@ -261,6 +261,36 @@ class ContractService:
              return strat_up, [target_up, source_up]
 
     @staticmethod
+    def compute_betrayal_clan_reputation_update(
+        betrayer_id: int,
+        state: AuthoritativeState,
+        tick: int,
+    ) -> "Optional[ClanUpdate]":
+        """
+        Idea 54/M5 (SOC-268): a contract betrayal also degrades the betrayer's
+        clan's clan_reputation. Deliberately separate from resolve_contract_outcome
+        -- that method's Tuple[StrategicUpdate, List[SocialUpdate]] return shape is
+        unpacked by every existing caller/test and must not change.
+
+        NOT wired to any live pipeline phase today: process_active_contracts(), the
+        only production caller of resolve_contract_outcome(), never passes
+        betrayal=True/betrayer_id -- a pre-existing gap this ticket discloses but
+        does not fix (out of scope; would require new betrayal-detection decision
+        logic in process_active_contracts()). This method is reachable only from
+        direct unit tests until a future ticket wires a real betrayal trigger.
+        """
+        from src.core.updates import ClanUpdate
+        from src.systems.social_systems.clan_lifecycle import (
+            ClanLifecycleService,
+            CLAN_REPUTATION_MISCONDUCT_DELTA,
+        )
+
+        clan_id = ClanLifecycleService.find_clan_id_for_entity(state, betrayer_id)
+        if clan_id is None:
+            return None
+        return ClanUpdate(clan_id=clan_id, clan_reputation_delta=CLAN_REPUTATION_MISCONDUCT_DELTA)
+
+    @staticmethod
     def process_active_contracts(
         state: AuthoritativeState,
         update: StateUpdate
