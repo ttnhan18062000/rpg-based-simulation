@@ -3376,13 +3376,20 @@
   divergence_note: null
   support_boundary: null
 - id: SUB-327
-  text: Spatial index can move entity/object between cells.
+  text: 'Spatial index reflects an entity''s current cell after it moves, via a real,
+    verified rebuild-from-scratch on each construction -- not an atomic per-entity
+    move method. SpatialIndex (src/engine/world_index.py:78) is in fact a frozen dataclass
+    with no mutator at all; the real mutation-free design is SpatialGrid.__init__
+    re-bucketing every entity into its current cell each time it is constructed (TCK-20260905-SUB-327-FABRICATED-CITATION-FIX:
+    the original text/citation described a nonexistent atomic-move architecture).'
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: src/engine/spatial.py:8 (SpatialGrid.__init__ buckets entities into
+    cell_size x cell_size grid cells from their current position); src/engine/world_index.py:78
+    (SpatialIndex is a frozen dataclass, no move()/mutator method exists)
+  proof_type: unit
+  test_path: tests/unit/movement/test_spatial_index.py::test_spatial_grid_rebuild_logic
   divergence_note: null
   support_boundary: null
 - id: SUB-328
