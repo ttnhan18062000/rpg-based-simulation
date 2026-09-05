@@ -52,6 +52,7 @@ from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
 from src.core.updates import EntityUpdate, SocialUpdate, SocialBondUpdate
 from src.systems.lifecycle_systems.genetics import GeneticsSystem, GeneticProfile
+from src.systems.social_systems.reputation import ReputationService
 
 
 def _component(cls: type, **kwargs):
@@ -634,6 +635,8 @@ class V2EntityBuilder:
         parent_b_genetic_profile: Optional[GeneticProfile] = None,
         parent_a_role: Optional[int] = None,
         parent_b_role: Optional[int] = None,
+        parent_a_public_reputation: Optional[float] = None,
+        parent_b_public_reputation: Optional[float] = None,
     ) -> V2EntityBuilder:
         """
         Populate the new entity's parentage/birth fields and seed its own
@@ -647,6 +650,14 @@ class V2EntityBuilder:
         applies only when both parents are EntityRole.HERO; any other parent-role
         pairing (CITIZEN/SHOPKEEPER, WORKER/GUARD, or a mismatch between them)
         falls through to the same neutral/civilian default.
+
+        When both parent public_reputation values are supplied, the child's
+        SocialComponent.public_reputation is seeded from their average (idea 53's
+        "starting echo") -- unlike genetics, this gate is AND, not OR: every
+        entity's public_reputation always holds a real value, so there is no
+        missing-value case to backfill via a fallback-generation function; supplying
+        only one parent value is treated as "not enough to seed," falling back to
+        the class default.
         """
         self.lifecycle(
             parent_a_entity_id=parent_a_entity_id,
@@ -661,6 +672,11 @@ class V2EntityBuilder:
             combo_seed = (parent_a_entity_id or 0) * 1_000_003 + (parent_b_entity_id or 0) * 97 + birth_tick
             combined = GeneticsSystem.combine_profiles(a_profile, b_profile, combat_lean=combat_lean, seed=combo_seed)
             self.lifecycle(genetic_profile=combined)
+        if parent_a_public_reputation is not None and parent_b_public_reputation is not None:
+            combined_reputation = ReputationService.combine_public_reputation(
+                parent_a_public_reputation, parent_b_public_reputation
+            )
+            self.social(public_reputation=combined_reputation)
         bonds: Dict[int, SocialBond] = {}
         for parent_id in (parent_a_entity_id, parent_b_entity_id):
             if parent_id is not None:

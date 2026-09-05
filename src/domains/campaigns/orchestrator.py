@@ -244,6 +244,19 @@ class CampaignOrchestrator:
         from src.domains.chronicle.grouper import ChronicleGrouper
         _hierarchy = ChronicleGrouper().group(list(self._state.narrative_ledger))
         CultureDriftExporter.export(self._state, _hierarchy, summary.episode_index)
+        # E62-FIDELITY: derive and persist chronicle-fidelity drift at the same episode boundary.
+        from src.domains.fidelity.exporter import FidelityExporter
+        FidelityExporter.export(self._state, _hierarchy, summary.episode_index)
+        # E-FAME: derive and persist fame drift at the same episode boundary.
+        from src.domains.fame.exporter import FameExporter
+        FameExporter.export(self._state, _hierarchy, summary.episode_index)
+        # E63-BELIEF: derive and persist per-clan belief institutions at the same
+        # episode boundary, from real LegendFacts (just exported above) and real
+        # Clan membership (final_state.clans, read-only).
+        from src.domains.belief_institution.exporter import BeliefInstitutionExporter
+        BeliefInstitutionExporter.export(
+            self._state, _hierarchy, final_state.clans, summary.episode_index
+        )
         self._state.episode_index += 1
 
     def _advance_grief_urgencies(
@@ -603,6 +616,8 @@ class CampaignOrchestrator:
 
         from src.core.models.inventory import EquipSlot
         from src.core.state import AuthoritativeState, EntityState
+        from src.core.updates import SocialUpdate
+        from src.systems.social_systems.relationships import RelationshipService
 
         alive_carry_forwards = {
             eid: cf
@@ -649,9 +664,8 @@ class CampaignOrchestrator:
             )
 
             # Apply carried reputation.
-            social = dc_replace(
-                base.social,
-                public_reputation=cf.reputation,
+            social = RelationshipService.process_update(
+                base.social, SocialUpdate(reputation_set=cf.reputation)
             )
 
             entities[eid] = dc_replace(

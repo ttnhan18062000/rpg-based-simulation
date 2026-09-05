@@ -207,8 +207,8 @@ footer {
     <tr><td class="sec-name"><a href="#nations">Nations &amp; Politics</a></td><td><span class="badge live">Mixed</span></td><td>Diplomacy, reputation, and a real day-to-day ambition system are all live; a nation can never be founded or wiped out entirely.</td></tr>
     <tr><td class="sec-name"><a href="#clans">Organizations Beyond Borders</a></td><td><span class="badge planned">Planned</span></td><td>Confirmed to not exist at all &mdash; no organization spanning more than one city or nation yet.</td></tr>
     <tr><td class="sec-name"><a href="#races">Peoples &amp; Races</a></td><td><span class="badge live">Mixed</span></td><td>A character's own species matters and is real; nothing tracks a whole people's population or general standing yet.</td></tr>
-    <tr><td class="sec-name"><a href="#world">The Living World</a></td><td><span class="badge live">Mixed</span></td><td>Ongoing campaigns and automatic history-writing are both real and substantial; there's no religion system of any kind.</td></tr>
-    <tr><td class="sec-name"><a href="#legacy">Memory, Reputation &amp; Legacy</a></td><td><span class="badge planned">Planned</span></td><td>None of this exists yet, but it's a real, thought-through set of ideas for how reputation, feuds, and history could outlive the person who earned them.</td></tr>
+    <tr><td class="sec-name"><a href="#world">The Living World</a></td><td><span class="badge live">Mixed</span></td><td>Ongoing campaigns and automatic history-writing are both real and substantial; belief around a famous legend now genuinely forms per-clan too, though nothing yet reads it back into play.</td></tr>
+    <tr><td class="sec-name"><a href="#legacy">Memory, Reputation &amp; Legacy</a></td><td><span class="badge live">Mixed</span></td><td>Five of eight pieces are now real: a newborn's reputation echo and an organization's own standing are genuinely live, a feud that survives its owner's death and a final wish that outlives its speaker are built (though each has one still-missing piece), and reputation now differs by region behind the scenes. A hero's fame inspiring the next generation, a settlement drifting away on its own, and where a character's from actually mattering remain design only.</td></tr>
     <tr><td class="sec-name"><a href="#objects">Trade, Gear &amp; Crafting</a></td><td><span class="badge live">Mixed</span></td><td>Gear and the economy are both deep; crafting's rules are real but there's very little to actually craft yet.</td></tr>
   </table>
 </div>
@@ -939,9 +939,9 @@ footer {
       },
       {
         "title": "Gods & Religion",
-        "tier": "planned",
-        "tierLabel": "Confirmed not built",
-        "desc": "Checked directly, and there's no religious system of any kind today. The only trace anywhere is a single button-label at a church building offering a generic \"blessing\" — one word, not an actual mechanic behind it. One way this could actually get built without hand-authoring a pantheon: let belief grow around things the world genuinely witnessed — a hero who survives the impossible becoming revered, a shrine that outlasted a disaster, two groups remembering the same event differently. Whether a god is real could stay an open question; what would be real is that people believe something and organize around it."
+        "tier": "built",
+        "tierLabel": "Built, but not yet visible in play",
+        "desc": "There's still no hand-authored pantheon or actual deity — that stays an open question, deliberately. What's now real: belief that grows around things the world genuinely witnessed. Once a specific hero's deeds become famous enough, every clan in the world forms its own belief around that legend — the hero's own clan holds it strongly, as one of their own; every other clan has heard of the legend too, but holds a distinctly weaker version of it, since it isn't theirs. That's a genuine, if simplified, version of \"two groups remembering the same event differently.\" It doesn't show up anywhere a player would notice yet — nothing in the game currently reads these beliefs back into behavior — and the single button-label at a church building offering a generic \"blessing\" is still just a word, not a mechanic."
       },
       {
         "title": "What Actually Happened vs. What People Believe Happened",
@@ -954,25 +954,25 @@ footer {
   {
     "id": "legacy",
     "title": "Memory, Reputation & Legacy",
-    "lede": "None of this exists in the simulation yet, but it's a real, thought-through set of ideas, not a wish list — reputation, feuds, and history that outlive the specific person who earned them.",
+    "lede": "Five of eight pieces here are now real, built during the same push: a newborn's reputation echo, an organization's own standing, a feud that survives its owner's death, a dying wish that outlives the character who made it, and reputation that differs by region. The remaining three (a hero's fame inspiring the next generation, a settlement drifting away without a single triggering event, and where you're from actually mattering) are still thought-through plans, not yet built.",
     "cards": [
       {
         "title": "A Reputation Before You've Earned One",
-        "tier": "planned",
-        "tierLabel": "Not yet built",
-        "desc": "A newborn character doesn't get a completely blank reputation the way they do today. The plan is for them to start carrying a small echo of their parents' public standing instead. A child of a celebrated hero would be trusted a little faster; a child of someone notorious would start a step behind, having to actively earn back what their parent lost. That echo would fade on its own as the child's own actions build a reputation that's genuinely theirs."
+        "tier": "live",
+        "tierLabel": "Live, but subtle",
+        "desc": "A newborn character no longer gets a completely blank reputation. At birth, they now genuinely start carrying a small echo of both parents' averaged public standing — a child of a celebrated hero really is trusted a little faster; a child of someone notorious really does start a step behind. That echo isn't locked in either: it fades on its own the same way any reputation normally moves, as the child's own actions pile on top of it. It's subtle by design — nobody would call it a dramatic effect — but it's genuinely live, not just planned, and it flows through every place reputation already mattered (shop prices, how quickly a stranger trusts them)."
       },
       {
         "title": "An Organization's Own Name",
-        "tier": "planned",
-        "tierLabel": "Not yet built",
-        "desc": "Once organizations spanning more than one city exist (see Organizations Beyond Borders), the plan is for the organization itself to carry its own reputation, separate from any single member's. One member's real betrayal could drag the whole group's standing down — meaning every other member, even ones who did nothing wrong, would start new relationships a step behind, purely because of who they belong to."
+        "tier": "live",
+        "tierLabel": "Live, with one trigger not yet wired",
+        "desc": "Now that organizations spanning more than one region are real, the organization itself genuinely carries its own reputation, separate from any single member's. A member deserting their party for selfish reasons really does drag the whole group's standing down, and a stranger judging an unfamiliar member they've never personally dealt with now genuinely weighs that group reputation into how much they trust them. One trigger is still missing: a member's contract betrayal is written to affect the group's standing, but nothing in the game currently calls that path during play — so today it's desertion that moves the needle, not betrayal, even though the logic for both exists."
       },
       {
         "title": "A Feud That Outlives Everyone Who Started It",
-        "tier": "planned",
-        "tierLabel": "Not yet built",
-        "desc": "A grudge that survives the death of the person who earned it, passed down to their children or chosen heir the way a name is. Combined with the real marriage system already planned, this creates something nobody would have scripted: two people who've done nothing to each other, falling for one another across a conflict that actually belongs to their parents."
+        "tier": "built",
+        "tierLabel": "Built, but only active in one game mode",
+        "desc": "A grudge can now genuinely survive the death of the person who earned it, passed down to their heir the way a name is — a weakened version of the original hostility, not the full force of it. It plugs into the same mechanism that already keeps two people from forming a party together over an active grudge, so an inherited feud can actually block a heir from teaming up with their parent's old enemy. The catch: this only works in the multi-chapter Campaign mode's cross-chapter memory today, not in an ordinary single-session game, so most play won't ever see it fire."
       },
       {
         "title": "A City That Drifts Away Without a Single Event",
@@ -988,9 +988,9 @@ footer {
       },
       {
         "title": "A Final Wish That Shapes What Comes Next",
-        "tier": "planned",
-        "tierLabel": "Not yet built",
-        "desc": "When a character dies and leaves an heir, the plan is for their last specific wish — avenge me, protect your sibling, finish what I started — to become a real, lasting pull on that heir's own motivations, separate from anything inherited by blood or by will. The heir could honor it, ignore it, or actively turn away from it — but it would be there, shaping their choices either way."
+        "tier": "built",
+        "tierLabel": "Built, but not yet visible in play",
+        "desc": "When a character dies and leaves an heir, their last specific wish — avenge me, protect your sibling, finish what I started — is now genuinely recorded onto that heir's own motivations, separate from anything inherited by blood or by will. It's real, named, and attributed to the person who made it. What's still missing is anything that actually reads it back: the heir could in principle go on to honor it, ignore it, or actively reject it, but no system yet notices the wish exists and changes the heir's behavior because of it — so today it's recorded faithfully but invisible in play."
       },
       {
         "title": "Where You're From Actually Matters",
@@ -1000,9 +1000,9 @@ footer {
       },
       {
         "title": "The Same Deeds, Read Differently Depending on Where You Are",
-        "tier": "planned",
-        "tierLabel": "Not yet built",
-        "desc": "Public reputation today is a single number that means the same thing everywhere in the world at once. The plan is for that to stop being true: a hero who saved one city could be genuinely worshipped there, barely known fifty miles away, a complete stranger on the far side of the continent, and remembered as the villain by the side they fought against — all at the same time, all equally real. Standing would depend on where you're actually standing."
+        "tier": "built",
+        "tierLabel": "Built, but not yet visible in play",
+        "desc": "A character's public reputation used to be a single number that meant the same thing everywhere in the world at once. That's no longer entirely true: a character can now genuinely build up a separate, real standing in each region they spend time in, on top of the one overall reputation number they've always had. In principle, a hero who saved one city could end up more trusted there specifically than the rest of their reputation would suggest. In practice, nothing a player would actually notice reads this new region-by-region standing yet — shop prices, how much a stranger trusts a character before agreeing to a deal, and what a character's reputation carries into their next chapter all still go by the one old overall number, unchanged. The regional side is real and being tracked correctly behind the scenes; it just doesn't show up in play anywhere yet."
       }
     ]
   },

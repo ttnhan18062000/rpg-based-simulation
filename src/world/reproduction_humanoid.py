@@ -89,6 +89,8 @@ class HumanoidReproductionService:
                 a.id, b.id, state.tick, None,
                 a_profile, b_profile,
                 a.identity.role, b.identity.role,
+                parent_a_public_reputation=a.social.public_reputation,
+                parent_b_public_reputation=b.social.public_reputation,
             )
 
             expiry = state.tick + HumanoidReproductionService.REPRODUCTION_COOLDOWN_TICKS

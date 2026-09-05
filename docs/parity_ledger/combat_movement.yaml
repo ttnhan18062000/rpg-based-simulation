@@ -4268,3 +4268,27 @@
   test_path: tests/unit/content_semantics/test_relation_species_projection.py::test_species_relations_hostility_changes_projected_label
   divergence_note: null
   support_boundary: null
+- id: COMB-322
+  text: 'LifecycleSystem._transfer_inherited_feud() (src/systems/lifecycle_systems/lifecycle.py)
+    fires once heir_entity_id resolves inside resolve_lifecycle''s death block: for
+    each of the deceased''s active Campaign-mode Nemesis blockers (entity.strategic.blockers[''nemesis_*''],
+    populated by NemesisRelationImporter from CampaignState.nemesis_relations), transfers
+    a weakened copy (severity * 0.5, id ''inherited_nemesis_{antagonist}'') onto the
+    heir via a typed StrategicUpdate, applied through the authoritative pipeline.
+    Explicitly scoped to the Campaign-mode blocker representation only -- does not
+    touch the always-live legacy SocialComponent.nemesis_ids/grudge_history mechanism.
+    Most default single-episode Kernel runs never populate the Campaign-mode signal,
+    so this handler is frequently a no-op (disclosed scope limit, not a bug). (idea
+    55, M5)'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/systems/lifecycle_systems/lifecycle.py -- LifecycleSystem._transfer_inherited_feud(),
+    dispatched from resolve_lifecycle right after heir_entity_id resolution
+  proof_type: parity
+  test_path: tests/unit/progression/test_lifecycle.py::test_inherited_nemesis_blocker_is_weakened_relative_to_original
+  divergence_note: null
+  support_boundary: Only fires when the deceased has a Campaign-mode Nemesis blocker
+    (entity.strategic.blockers["nemesis_*"]) -- populated exclusively via NemesisRelationImporter
+    at Campaign episode start, so this handler is a no-op in the default single-episode
+    Kernel path.
