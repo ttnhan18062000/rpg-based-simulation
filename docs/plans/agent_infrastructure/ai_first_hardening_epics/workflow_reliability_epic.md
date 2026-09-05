@@ -11,8 +11,10 @@ tags: [ai, agent-monitoring, hooks]
 
 **Tracking ticket**: not yet created (planning stage — detail plan and milestones only).
 **Source**: `AI_FIRST_ENGINEERING_NEXT_EVOLUTION_PROPOSAL` Rev.3, Bucket A / Horizon 1 item
-"Migrate the 2 remaining sidecar stragglers", plus two Bucket-B members of the same epic grouping
-("Ticket-claim DETECTION logging", "Phase-level workflow resume (design phase)").
+"Migrate the 2 remaining sidecar stragglers" (quoted verbatim from the frozen proposal; corrected
+during the 2026-09-04 `create-tickets` investigation pass to 1 remaining straggler — see the
+Problem section below), plus two Bucket-B members of the same epic grouping ("Ticket-claim
+DETECTION logging", "Phase-level workflow resume (design phase)").
 **Roadmap**: `roadmap.md` — Horizon 1. M1 has **no dependency** on the Horizon-0 exit gate
 (`governance_capability_policy_epic.md`/`guardrail_enforcement_epic.md`) and may start in parallel
 with Horizon 0, capacity allowing — the horizon label reflects strategic staging, not a hard
@@ -28,16 +30,20 @@ sequencing M1 after Epic G.
 Three related run-state reliability gaps, all touching the same mechanism — the
 `.claude/current_run` sidecar and the ticket-lifecycle state it represents:
 
-1. **The cross-session sidecar fix is real but only half-shipped.**
+1. **The cross-session sidecar fix is real but only partially shipped.**
    `TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE` added a session-scoped
    `.claude/current_run.<SESSION_ID>` variant specifically because the old unscoped file was
    "silently overwritten by every concurrent session's own `writeSidecar()` call, misattributing
    `tools.jsonl` rows across sessions" (comment at `implement-ticket.js:264-272`). Two known
-   consumers were explicitly left reading the old, racy unscoped file: `tools/retrieval_cache.py`
-   (`_CURRENT_RUN_SIDECAR_PATH = Path(".claude/current_run")`, line 516, feeding
-   `read_current_run_sidecar()`) and the inline `PreToolUse` sidecar-check hook in
-   `.claude/settings.json` (line 88, reads `.claude/current_run` directly via a `python3 -c`
-   one-liner).
+   consumers were originally left reading the old, racy unscoped file: `tools/retrieval_cache.py`
+   (`_CURRENT_RUN_SIDECAR_PATH = Path(".claude/current_run")`, feeding `read_current_run_sidecar()`)
+   and the inline `PreToolUse` sidecar-check hook in `.claude/settings.json` (line 88, reads
+   `.claude/current_run` directly via a `python3 -c` one-liner). **Revised during the 2026-09-04
+   `create-tickets` investigation pass (PR #124)**: `tools/retrieval_cache.py`'s
+   `read_current_run_sidecar()` was already migrated to the scoped-then-unscoped-fallback pattern
+   by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY` (closed the same day, 2026-08-24) — confirmed by
+   direct read of the current source, which already prefers `.claude/current_run.<CLAUDE_CODE_SESSION_ID>`
+   when it exists. Only one straggler genuinely remains: the `.claude/settings.json` inline hook.
 2. **No repo-level protection exists against two sessions claiming the same ticket.**
    `tickets/inprogress/` is a plain directory with no claim/reservation record. 5 worktrees were
    live at review time, all coordinated by convention only (CLAUDE.md's Worktree & Branch
@@ -49,15 +55,19 @@ Three related run-state reliability gaps, all touching the same mechanism — th
 
 ## Scope
 
-### M1 — Migrate the 2 remaining sidecar stragglers (gated on nothing; Bucket A, committed)
+### M1 — Migrate the 1 remaining sidecar straggler (gated on nothing; Bucket A, committed)
 
-Move both known consumers from the unscoped `.claude/current_run` to the session-scoped
-`.claude/current_run.<SESSION_ID>` path, finishing the fix `TCK-20260824-SIDECAR-CROSS-SESSION-
-SCOPE` left partial:
-- `tools/retrieval_cache.py`'s `read_current_run_sidecar()` / `_CURRENT_RUN_SIDECAR_PATH`.
+Move the one genuinely remaining consumer from the unscoped `.claude/current_run` to the
+session-scoped `.claude/current_run.<SESSION_ID>` path, finishing the fix
+`TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE` left partial:
 - The inline `PreToolUse` Edit|Write-matcher hook in `.claude/settings.json` (line 88) — update its
-  embedded `python3 -c` snippet to resolve the session-scoped path the same way
-  `implement-ticket.js` already does, rather than reading the shared file directly.
+  embedded `python3 -c` snippet to resolve the session-scoped path (`CLAUDE_CODE_SESSION_ID` env
+  var) the same way `implement-ticket.js` and `tools/retrieval_cache.py` already do, rather than
+  reading the shared file directly.
+
+`tools/retrieval_cache.py`'s `read_current_run_sidecar()` / `_CURRENT_RUN_SIDECAR_PATH` is **not**
+in scope — confirmed already migrated by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY` (see the
+Problem section above). Re-touching it would be duplicate effort against already-correct code.
 
 This is the only Bucket-A (committed) member of this epic — the other two milestones below are
 design/measurement work, not implementation, and are explicitly **not** committed to a ticket at
@@ -101,9 +111,9 @@ to move from Bucket B into a future Bucket-A ticket; it is not there yet.
 
 ## Acceptance signal for this epic
 
-- M1: both `tools/retrieval_cache.py` and the `.claude/settings.json` inline hook read from the
-  session-scoped sidecar path; a synthetic two-session scenario no longer shows cross-session
-  attribution bleed in `tools.jsonl` for either consumer.
+- M1: the `.claude/settings.json` inline hook reads from the session-scoped sidecar path (matching
+  `tools/retrieval_cache.py`'s already-shipped behavior); a synthetic two-session scenario no
+  longer shows cross-session attribution bleed in `tools.jsonl` for this consumer.
 - M2: detection logging is live; after 30 days, either a real incident triggered the lock-build
   decision, or zero incidents confirm the convention-only approach stands.
 - M3: a written resume-semantics validation rule exists, reviewed, ready to hand to a future
@@ -116,6 +126,9 @@ to move from Bucket B into a future Bucket-A ticket; it is not there yet.
   epic's grouping is named directly there, matching the addendum's own worked example), §"Resume
   semantics, not just resume mechanics", Automation boundary analysis (phase resume row).
 - `implement-ticket.js:264-292` — the partial sidecar fix this epic's M1 finishes.
-- `tools/retrieval_cache.py:467-468,513,516,540` — the first straggler consumer.
-- `.claude/settings.json:88` — the second straggler consumer (inline hook).
+- `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY` (done, 2026-08-24) — already migrated
+  `tools/retrieval_cache.py`'s consumer; confirms M1 has only one real remaining target.
+- `.claude/settings.json:88` — the one remaining straggler consumer (inline hook).
+- `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE` — the ticket this milestone was scoped into during
+  the 2026-09-04 `create-tickets` pass, reflecting the single-consumer correction above.
 - `tickets/inprogress/` — the plain directory M2's detection logging instruments.

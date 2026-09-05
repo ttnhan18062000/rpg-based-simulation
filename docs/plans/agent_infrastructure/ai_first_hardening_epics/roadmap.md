@@ -28,10 +28,10 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | 1 | Per-agent least-privilege tool scoping | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M1, M3) |
 | 2 | Bash secret-exposure advisory hook | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M4) |
 | 3 | Versioned capability-envelope baseline | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M2) |
-| 4 | AST-based import-boundary enforcement | A — Committed | H0, start now | `guardrail_enforcement_epic.md` (M1) |
+| 4 | ~~AST-based import-boundary enforcement~~ **SUPERSEDED — already shipped** on `main` (`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`, found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M1 note; remaining scope is M2/M3) |
 | 5 | Convert 2 proven-failing prose rules to hooks | A — Committed | H0, start now | `guardrail_enforcement_epic.md` (M2, M3) |
-| 6 | Remove/archive knowledge-gateway | A — Committed | H0, start now | `standalone_items.md` (§1) |
-| 7 | Migrate the 2 remaining sidecar stragglers | A — Committed | H1, schedule later | `workflow_reliability_epic.md` (M1) |
+| 6 | Remove/archive knowledge-gateway — **BLOCKED**, conflicts with `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`'s ratified "no changes authorized" (found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (blocked, pending re-ratification) | `standalone_items.md` (§1) |
+| 7 | Migrate the 2 remaining sidecar stragglers (corrected to 1 remaining during the 2026-09-04 `create-tickets` investigation pass — `tools/retrieval_cache.py` was already migrated by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`) | A — Committed | H1, schedule later | `workflow_reliability_epic.md` (M1) |
 | 8 | ~~`tools.jsonl` sharding + reconciled lifecycle~~ **SUPERSEDED — already shipped** on `main` (PR #112, `TCK-20260902/903-MONITORING-*`, found during planning discussion) | A — Committed | H1 (was) | `telemetry_retention_epic.md` (M1 note; remaining scope is M2/M3) |
 | 9 | Model-diverse reviewer — deploy shadow logging | A — Committed | H1, schedule later | `review_independence_epic.md` (M1) |
 | 10 | Extend `cost_proxy_score` coverage | A — Committed | H2, schedule later | `standalone_items.md` (§2) |
@@ -48,11 +48,16 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | 21 | Live Codex provider pilot | C — Future option | H3, blocked | `bucket_c_future_options.md` |
 | — | Workflow-engine migration, A2A, full sandboxing, general AI-config platform, general command-risk policy | Rejected | — | `bucket_c_future_options.md` (§"Explicitly not recommended") |
 
-12 committed items (bucket A) were originally scoped — **11 still to implement, plus item 8, found
-during planning discussion to already be shipped on `main`** (see the Horizon 0/1 entries above and
-`telemetry_retention_epic.md`'s M1 note) — 5 experiments (bucket B), 4 blocked future options
-(bucket C), plus 5 explicitly-rejected directions — the full set brainstormed in the frozen
-proposal, none silently dropped from this planning pass.
+12 committed items (bucket A) were originally scoped. As of the 2026-09-04 `create-tickets`
+investigation pass (PR #124): **9 remain to implement (6 now ticketed — items 1, 2, 3, 5, 7, 9;
+3 still Horizon-2-only — items 10–12)**; **item 8** was found already shipped on `main` during
+planning discussion (see `telemetry_retention_epic.md`'s M1 note); **item 4** was found already
+shipped on `main` during the ticket-creation investigation (see
+`guardrail_enforcement_epic.md`'s M1 note); **item 6** is BLOCKED, not committed/start-now, on an
+already-ratified decision conflict discovered during the same investigation (see
+`standalone_items.md` §1 and `TCK-20260904-BASH-SECRET-SCAN-HOOK`) — plus 5 experiments (bucket B),
+4 blocked future options (bucket C), and 5 explicitly-rejected directions — the full set
+brainstormed in the frozen proposal, none silently dropped from this planning pass.
 
 ## Epics and detail docs
 
@@ -61,11 +66,14 @@ proposal, none silently dropped from this planning pass.
 - **Epic G — Governance &amp; Capability Policy** (`governance_capability_policy_epic.md`): items
   1–3. Per-agent tool scoping, the Bash secret-exposure advisory hook, and the capability-envelope
   baseline.
-- **Epic H — Guardrail Enforcement** (`guardrail_enforcement_epic.md`): items 4–5. AST boundary
-  enforcement plus the two prose-rule-to-hook conversions with directly observed repeated-failure
-  evidence.
-- **Standalone — knowledge-gateway removal** (`standalone_items.md` §1): item 6. Not an epic —
-  independent value, independent rollback — but shares one real dependency with Epic G (below).
+- **Epic H — Guardrail Enforcement** (`guardrail_enforcement_epic.md`): item 5 (item 4, AST
+  boundary enforcement, is superseded — already shipped, see item 4's inventory row above). The
+  two prose-rule-to-hook conversions with directly observed repeated-failure evidence remain live.
+- **Standalone — knowledge-gateway removal** (`standalone_items.md` §1): item 6, **now BLOCKED, not
+  start-now** — conflicts with the already-ratified `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`
+  decision, found during the ticket-creation investigation (see item 6's inventory row above). Not
+  an epic — independent value, independent rollback — and still shares one real dependency with
+  Epic G (below), once unblocked.
 
 ### Horizon 1 — ready, schedule later (horizon label is strategic staging, not an automatic execution-order constraint — three items below have no H0-gate dependency at all)
 
@@ -235,7 +243,9 @@ conditions:
    normal advisory operation.
 3. Both converted guardrail hooks (item 5) show **zero recurrence** of their target failure
    pattern across ≥2 subsequent weekly retro reports.
-4. `knowledge-gateway` (item 6) archived with **zero renewed calls** observed over 2 weeks.
+4. `knowledge-gateway` (item 6) archived with **zero renewed calls** observed over 2 weeks — **this
+   condition itself is now blocked** until item 6's re-ratification (see item 6's inventory row
+   above); the gate cannot close on this condition before that happens.
 
 ### Eval-pilot exit gate (item 13)
 
