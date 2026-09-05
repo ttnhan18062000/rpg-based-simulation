@@ -58,6 +58,43 @@ def test_entity_faction_changed_fires_on_real_delta():
     assert matches[0].payload["previous_faction"] == prior_ent.identity.faction
 
 
+def test_entity_faction_changed_fires_once_on_real_defection_trigger():
+    """TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE (AC #2): runs the real
+    check_defection() -> ApplyPath -> EventExtractor sequence end-to-end, rather than a
+    hand-built identity delta -- confirming the now-live producer (PartyLifecycleService.
+    check_defection(), party_lifecycle.py) actually reaches this pre-existing, already-correct
+    diff-based emission."""
+    from src.core.state import GroupRecord
+    from src.core.updates import StateUpdate
+    from src.engine.apply import ApplyPath
+    from src.systems.social_systems.party_lifecycle import PartyLifecycleService
+    from src.core.enums import Faction
+
+    state, eid, prior_ent = _identity_fixture_states()
+    original_faction = prior_ent.identity.faction
+
+    group = GroupRecord(
+        id=1,
+        leader_id=eid,
+        member_ids={eid},
+        anchor=(0.0, 0.0),
+        grievance_log=("g1", "g2", "g3"),
+    )
+    _, _, entity_update = PartyLifecycleService.check_defection(group, prior_ent, tick=state.tick)
+    assert entity_update is not None
+
+    update = StateUpdate(entity_updates={eid: entity_update})
+    next_state = ApplyPath.apply_partial(state, update)
+    assert next_state.entities[eid].identity.faction == Faction.NEUTRAL
+
+    extractor = EventExtractor()
+    events = extractor.extract(state, next_state, update, mode=None)
+    matches = [e for e in events if e.event_type == "entity_faction_changed"]
+    assert len(matches) == 1
+    assert matches[0].payload["faction"] == Faction.NEUTRAL
+    assert matches[0].payload["previous_faction"] == original_faction
+
+
 def test_recipe_learned_fires_on_new_entry():
     state, eid, prior_ent = _identity_fixture_states()
     extractor = EventExtractor()

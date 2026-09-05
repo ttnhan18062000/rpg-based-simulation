@@ -4292,3 +4292,27 @@
     (entity.strategic.blockers["nemesis_*"]) -- populated exclusively via NemesisRelationImporter
     at Campaign episode start, so this handler is a no-op in the default single-episode
     Kernel path.
+- id: COMB-323
+  text: 'TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE: a same-tick identity.faction
+    mutation (e.g. defection via SOC-273) takes effect at the next-tick boundary for
+    combat/action legality, not retroactively within the same tick. AuthoritativeApplyPipeline.refine()
+    runs the "action_routing" phase (where LegalityServiceV2.verify_attack_legality()
+    is evaluated) strictly before the "groups" phase (where the defection trigger
+    lives); both read the same frozen `state` argument for the whole refine() pass,
+    so a same-tick defection cannot change a legality decision "action_routing" already
+    made earlier that tick. This is a structural consequence of the existing phase
+    order (src/engine/pipeline.py), not a new guard -- no legality.py code change
+    was made. See docs/world/affiliation_mutation.md.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/engine/pipeline.py ("action_routing" phase precedes "groups" phase
+    in AuthoritativeApplyPipeline.refine()). src/engine/legality.py (LegalityServiceV2's
+    6 identity.faction call sites read fresh, no stale caching beyond apply.py:321's
+    own hostile/dead cache invalidation).
+  proof_type: regression
+  test_path: tests/unit/engine/test_legality_faction_mutation.py::test_faction_change_mid_tick_legality_semantics
+  divergence_note: null
+  support_boundary: Covers the phase-order guarantee structurally; does not re-verify
+    each of the 31 identity.faction read call sites individually (investigation's
+    own scoped-out item).

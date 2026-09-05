@@ -10,7 +10,8 @@ tags: [architecture, content, feature-flags]
 
 **Tracking ticket:** `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/inprogress/`,
 `## Status: EPIC_SCOPED` as of 2026-09-05 — 3 child tickets scoped in
-`tickets/todos/m6-political-identity/`, none yet implemented)
+`tickets/todos/m6-political-identity/`; idea 39 landed 2026-09-06
+(`TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`), idea 56 and idea 59/65 not yet implemented)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Design Ideas 39, 56, 59, 65.
 **Gate:** effectively everything above — the deepest single dependency chain in the whole 65-idea roadmap.
 The roadmap explicitly does not recommend starting this milestone early, even speculatively.
@@ -35,11 +36,17 @@ tickets.
 between "Drifting Loyalty before any affiliation change" and "affiliation primitive first"): idea 39 is not
 split into a separate mutation-primitive/voluntary-trigger pair.
 
-1. **Idea 39 — Affiliation's real change path.** Establishes the mutation primitive first. Confirmed the
-   entire apply-path already exists and is waiting on a single writer (`IdentityUpdate.faction_set`, a fully
-   wired dormant `entity_faction_changed` observability event). Real risk: `identity.faction` is read
-   directly by combat/action legality itself (`engine/legality.py`, 6 confirmed call sites) — not just
-   diplomatic flavor.
+1. **Idea 39 — Affiliation's real change path.** **Landed, 2026-09-06**
+   (`TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`): `PartyLifecycleService.check_defection()` is now the
+   first real, live producer of `IdentityUpdate.faction_set`, setting a defecting entity's faction to
+   `Faction.NEUTRAL` (a NEUTRAL-sentinel design, not rival-faction selection) through the pre-existing
+   authoritative apply-path; the previously dormant `entity_faction_changed` observability event now fires
+   end-to-end from this real trigger. The combat/action-legality risk this bullet originally flagged
+   (`identity.faction` read directly by `engine/legality.py`, 6 confirmed call sites, plus 25 further call
+   sites found across `src/`) resolved as a structural consequence of `AuthoritativeApplyPipeline.refine()`'s
+   existing `action_routing`-before-`groups` phase order: a same-tick faction change cannot retroactively
+   affect a legality decision `action_routing` already made earlier in that same tick, so no
+   `engine/legality.py` change was needed. Full contract: `docs/world/affiliation_mutation.md`.
 2. **Idea 56 — Drifting Loyalty.** Derives gradual loyalty pressure that may request or influence idea 39's
    mutation. Confirmed genuinely different mechanism kind from idea 39 (continuous background pressure vs.
    discrete event) — stays a separate ticket. **Sequencing corrected, 2026-09-05**: this section previously
@@ -74,7 +81,7 @@ split into a separate mutation-primitive/voluntary-trigger pair.
 ## Acceptance Signal
 
 - 3 child tickets, not 4 (59+65 consolidated), landing in the order 39 &rarr; 56 &rarr; 59/65, or with an
-  explicit justification for deviating from that order.
+  explicit justification for deviating from that order. Idea 39 landed first, 2026-09-06, on order.
 - Idea 56 is scoped as a read-side `region_cultures` consumer, not deferred waiting on substrate that
   already exists (correction, 2026-09-02).
 
@@ -93,3 +100,5 @@ split into a separate mutation-primitive/voluntary-trigger pair.
 - `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, Idea 66 promotion, temporal axis
 - `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — single-contract and
   `CultureDeriver` ownership decisions, 2026-08-29
+- `docs/world/affiliation_mutation.md` — idea 39's landed write-path contract
+  (`TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`)

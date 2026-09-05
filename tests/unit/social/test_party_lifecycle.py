@@ -684,3 +684,43 @@ def test_low_composition_defects_at_threshold_3():
     assert result is not None and event is not None, (
         "Zero-composition group SHOULD defect at grievance_count=3 (threshold=3)"
     )
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE — defection sets faction_set=NEUTRAL
+# ---------------------------------------------------------------------------
+
+def test_defection_produces_faction_set_neutral_via_apply_path():
+    """
+    AC1: check_defection()'s returned EntityUpdate.identity.faction_set == Faction.NEUTRAL
+    when the grievance threshold is met, and entity_update.identity is None when it is not.
+    check_defection() remains a pure function -- entity.identity.faction is unchanged by the
+    call itself, only by running the returned update through ApplyPath (patches.py:209).
+    """
+    from src.core.enums import Faction
+
+    group = _group(
+        leader_id=10,
+        member_ids={10, 11},
+        grievance_log=("g1", "g2", "g3"),
+    )
+    member = _entity(11, sociability=0.5)
+    original_faction = member.identity.faction
+
+    _, _, entity_update = _PLS.check_defection(group, member, tick=50)
+
+    assert entity_update is not None
+    assert entity_update.identity is not None
+    assert entity_update.identity.faction_set == Faction.NEUTRAL
+
+    # Pure function: no mutation of the entity itself.
+    assert member.identity.faction == original_faction
+
+    # Below threshold: no identity change proposed at all.
+    below_group = _group(
+        leader_id=10,
+        member_ids={10, 11},
+        grievance_log=("g1", "g2"),
+    )
+    no_group, no_event, no_update = _PLS.check_defection(below_group, member, tick=50)
+    assert no_group is None and no_event is None and no_update is None

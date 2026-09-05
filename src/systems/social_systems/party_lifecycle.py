@@ -15,7 +15,10 @@ Election rule (SOC-228):
 Defection rule (SOC-230):
   An entity defects when len(group.grievance_log) >= DEFECTION_GRIEVANCE_THRESHOLD (3).
   On defection: entity is removed from group.member_ids; a BetrayalDesertionEvent is
-  emitted; entity notoriety increases by 2.0 via EntityUpdate.social.
+  emitted; entity notoriety increases by 2.0 via EntityUpdate.social; entity.identity.faction
+  is set to Faction.NEUTRAL via EntityUpdate.identity (TCK-20260905-AFFILIATION-MUTATION-
+  PRIMITIVE) -- a NEUTRAL-sentinel design, not rival-faction selection; see
+  docs/world/affiliation_mutation.md.
   If the group drops to <= 1 member after defection, dissolution_tick is set.
 
 All state changes are returned as typed records/updates (immutable dataclass
@@ -171,7 +174,8 @@ class PartyLifecycleService:
             return (None, None, None)
 
         from src.observability.events import BetrayalDesertionEvent
-        from src.core.updates import EntityUpdate, SocialUpdate
+        from src.core.updates import EntityUpdate, SocialUpdate, IdentityUpdate
+        from src.core.enums import Faction
 
         new_members = group.member_ids - {entity.id}
         dissolution = tick if len(new_members) <= 1 else group.dissolution_tick
@@ -194,6 +198,7 @@ class PartyLifecycleService:
         entity_update = EntityUpdate(
             entity_id=entity.id,
             social=SocialUpdate(notoriety_delta=2.0),
+            identity=IdentityUpdate(faction_set=Faction.NEUTRAL),
         )
 
         return (updated_group, event, entity_update)
