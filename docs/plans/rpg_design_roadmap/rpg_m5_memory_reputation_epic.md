@@ -120,12 +120,26 @@ and schedule, not yet one of the 8 ideas this epic's Scope commits to below.
    **Design delivered, 2026-09-04:** `docs/brainstorm/2026-09-04-idea57-entity-scale-fame-aggregation-design.md`
    works out the actual entity-scale sibling shape and discloses a real open question — which event
    types feed it, since the Narrative Ledger has no `combat_victory` type today.
-6. **Idea 62 — Generations Misremember.** Genuinely distinct from idea 57, not a duplicate — sits upstream
-   of both idea 57's and Cultural Drift's consumption of Chronicle's output, as a single transform view.
+6. **Idea 62 — Generations Misremember.** Genuinely distinct from idea 57, not a duplicate.
    **Gate cleared, 2026-09-04:** was blocked on the Knowledge/Belief axis's `BeliefEntry`/`KnowledgeFact`
    reconciliation decision (`docs/brainstorm/2026-09-04-core-rpg-legacy-memory-axis-proposal.md`); that
-   decision is made (deliberate split, both kept) — idea 62 is unblocked to proceed as a `BeliefEntry`
-   consumer specifically.
+   decision is made (deliberate split, both kept).
+   **Correction, 2026-09-05** (found during `TCK-20260905-EPIC-RPG-M5-HISTORY-BELIEF`'s own
+   re-investigation, independently confirmed by two separate investigations): both claims in this
+   item's original text were wrong. (1) Idea 62 does **not** "sit upstream of both idea 57's and
+   Cultural Drift's consumption of Chronicle's output, as a single transform view" — `CultureDeriver`
+   is already shipped and live, reading `hierarchy.events` directly with zero transform layer in
+   front of it today; forcing idea 62 into a mandatory-upstream position would mean a breaking retrofit
+   of already-shipped production code, not a greenfield design choice. The real atlas card for idea 62
+   itself says "sequence alongside idea 57 since both consume the same Chronicle substrate" — an
+   independent sibling reading, not a pipeline stage. (2) "Proceed as a `BeliefEntry` consumer
+   specifically" is also wrong: `BeliefEntry` (`src/systems/strategic_systems/belief.py`) is a
+   per-entity, tactical/near-term decision-support record (real live consumers: cooperation risk
+   evaluation, route-blocking, guild rumor propagation) with a ticks-since-discovered decay model —
+   structurally mismatched with population/generation-scale historical myth-drift. Idea 62 should be
+   built as its own new Deriver-pattern sibling (mirroring `CultureDeriver`/idea 57's `FameDeriver`
+   shape), not a repurposing of `BeliefEntry`. Left uncorrected here previously so future scoping
+   wouldn't silently repeat either overstated claim.
 7. **Idea 63 — Belief Grows Around Real History.** Confirmed a genuine downstream composite, needing both
    idea 36 (Clan, as container) and idea 57 (fame substrate) first — not a thin wrapper on either.
 
