@@ -165,6 +165,20 @@ tests/unit/world/test_economy_contract.py tests/unit/core/test_hardcoded_regress
 `pytest tests/tools/ -k parity -q` after the `docs/parity_ledger/progression.yaml` write → 161
 passed, confirming the schema-validated write and rebuilt index are consistent.
 
+**Real CI failure found and fixed post-PR-open**: `Unit · gameplay` job failed on
+`tests/unit/social/test_town_contract.py::test_blacksmith_unknown_recipe` and
+`::test_blacksmith_recipe_learning_parity` — a directory (`tests/unit/social/`) missed by the
+earlier `BlacksmithSystem`-reference grep sweep, since it doesn't literally contain the string
+`BlacksmithSystem`. Both pinned the old wholesale-learn behavior (14-entry `BlacksmithSystem.RECIPES`
+literal count, and `STEEL_SWORD_RECIPE` as a real learned id) as correct — reproduced locally
+against the exact CI command per CLAUDE.md's CI Failure Triage before concluding root cause, then
+rewrote both with before/after docstrings, generalized against the live registry instead of a
+hardcoded literal (matching the same non-hardcoding principle used elsewhere in this ticket). Full
+`tests/unit/strategic tests/unit/combat tests/unit/social tests/unit/economy tests/unit/resource
+tests/unit/progression tests/unit/quest tests/unit/movement tests/unit/motivation tests/unit/tactical
+tests/unit/scenarios tests/unit/systems tests/unit/actions tests/unit/ai -m "not slow and not
+extra_slow"` (the exact CI command) → 1152 passed, 1 skipped, 2 deselected after the fix.
+
 ## Files Changed
 - `src/domains/progression/material_predicate.py` — `recipe_materials()` now reads
   `registries.py::RecipeRegistry`; docstring rewritten to disambiguate all three registry-shaped
@@ -187,6 +201,9 @@ passed, confirming the schema-validated write and rebuilt index are consistent.
   and the two remaining, separately-disclosed narrower gaps.
 - `staging_artifacts/TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE/{investigation,plan,test_plan}.md`
   (new).
+- `tests/unit/social/test_town_contract.py` — found via real CI failure post-PR-open (not the
+  earlier grep sweep); the two wholesale-learn-pinning tests rewritten with before/after docstrings
+  against the live registry.
 
 ## Completion Summary
 Bridged the three disjoint recipe-shaped catalogs (`recipes.py::RecipeRegistry`,

@@ -17,6 +17,7 @@ from src.core.state import (
 )
 from src.core.updates import StateUpdate
 from src.core.state import BuildingState
+from src.core.registries import RecipeRegistry as LiveRecipeRegistry
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
 
@@ -258,7 +259,20 @@ def test_blacksmith_insufficient_gold():
 
 
 def test_blacksmith_unknown_recipe():
-    """Law of Knowledge: Crafting fails if recipe is not known."""
+    """Law of Knowledge: Crafting fails if recipe is not known.
+
+    BEFORE TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE, wholesale-learn populated
+    recipes_learned from BlacksmithSystem.RECIPES's own private 14-entry craft_* list, so
+    STEEL_SWORD_RECIPE (one of those 14) was itself a real member of the learned set.
+
+    AFTER: wholesale-learn populates from the real, live registries.py::RecipeRegistry instead
+    (TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE) -- STEEL_SWORD_RECIPE is not a member of that
+    catalog (confirmed: none of BlacksmithSystem.RECIPES's 14 ids exist in the real catalog), so
+    this test now asserts against a real registries.py id instead. craft_target is left as
+    STEEL_SWORD_RECIPE deliberately -- the wholesale-learn branch `continue`s before reaching the
+    craft_target-gated crafting-execution branch this tick (entity.identity.known_recipes was
+    empty), so craft_target's value is irrelevant to what this test actually exercises.
+    """
     inventory_component = _make_inventory(
         items=[
             ItemStack("iron_ore", 1),
@@ -277,12 +291,22 @@ def test_blacksmith_unknown_recipe():
     refined = _refine(state)
 
     e_upd = _get_entity_update(refined)
-    assert STEEL_SWORD_RECIPE in e_upd.identity.recipes_learned
+    assert "craft_iron_sword" in e_upd.identity.recipes_learned
     assert e_upd.inventory is None
 
 
 def test_blacksmith_recipe_learning_parity():
-    """Law of Knowledge: Recipe learning is wholesale on first visit."""
+    """Law of Knowledge: Recipe learning is wholesale on first visit.
+
+    BEFORE TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE, wholesale-learn populated recipes_learned
+    from BlacksmithSystem.RECIPES's own private 14-entry list, so the learned count was a fixed
+    literal (14).
+
+    AFTER: wholesale-learn populates from the real, live registries.py::RecipeRegistry
+    (TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE) -- asserted generically against that registry's
+    own live key set, not a hardcoded literal, so this test does not re-break the next time the
+    real content catalog's recipe count changes.
+    """
     inventory_component = InventoryComponent()
     identity_component = IdentityComponent(known_recipes=set())
 
@@ -292,4 +316,4 @@ def test_blacksmith_recipe_learning_parity():
     refined = _refine(state)
 
     e_upd = _get_entity_update(refined)
-    assert len(e_upd.identity.recipes_learned) == 14
+    assert set(e_upd.identity.recipes_learned) == set(LiveRecipeRegistry.all().keys())
