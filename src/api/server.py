@@ -145,6 +145,9 @@ def create_v2_app(
     from src.api.routes import manifest
     app.include_router(manifest.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
+    from src.api.routes import metadata
+    app.include_router(metadata.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+
     from src.api.routes import map as map_routes
     app.include_router(map_routes.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 

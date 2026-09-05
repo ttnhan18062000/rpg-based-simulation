@@ -31,9 +31,18 @@ const EMPTY_METADATA: GameMetadata = {
 };
 
 const API = import.meta.env.VITE_API_URL || '';
+// Dev-only: when set (frontend/.env.development), sent as X-API-Key -- mirrors
+// useSimulation.ts's own API_KEY/authHeaders() convention exactly. Without this, every
+// /api/v1/metadata/* call 401s against the real backend (TCK-20260825-METADATA-API-BACKEND-MISSING
+// mounted these routes with the same require_admission auth every other REST route already uses,
+// no special-casing) -- confirmed by live-testing against a real running backend + frontend dev
+// server, not assumed.
+const API_KEY = import.meta.env.VITE_API_KEY as string | undefined;
 
 async function fetchJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${API}/api/v1/metadata${path}`);
+  const res = await fetch(`${API}/api/v1/metadata${path}`, {
+    headers: API_KEY ? { 'X-API-Key': API_KEY } : undefined,
+  });
   if (!res.ok) throw new Error(`metadata ${path}: ${res.status}`);
   return res.json();
 }

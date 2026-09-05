@@ -570,6 +570,36 @@ jobs:
         run: python3 -m mypy src/ --config-file pyproject.toml --no-error-summary || true
         continue-on-error: true
 
+  # ── SimQ grade-anchor drift (informational) ──────────────────────────────
+  simq-grade-drift:
+    name: "SimQ grade-anchor drift (informational)"
+    runs-on: ubuntu-latest
+    # TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS: test_grade_regression.py's own
+    # anchor-comparison tests only ever run against data/calibration/ (gitignored,
+    # developer-machine-local) and pytest.skip() silently whenever it's absent -- which is
+    # every PR-gating "Simulation quality" job run today, since no CI job populates it. That
+    # silence is exactly how 61/81 grade_anchors.json entries drifted from real current `main`
+    # behavior with zero visible CI signal. This job runs `make simq-full-audit-full`, which
+    # re-runs the engine for real (populating data/calibration/) and diffs against the
+    # committed anchors (tools/evaluate_simq.py, exit 1 on REGRESS) -- same push-to-main-only
+    # cadence as the "Slow regression" job below, since it re-runs the engine and shouldn't
+    # gate fast PR iteration. Deliberately informational (continue-on-error), NOT blocking:
+    # 61/81 anchors are already known-drifted (a separate, deliberately-deferred decision on
+    # whether/how to regenerate them -- see the ticket), so a hard-blocking gate would fail
+    # every push to main immediately over already-known, already-accepted drift. This job's
+    # job is to make new drift visible for human review, not to silently re-accept it as
+    # passing (which is the exact failure mode it exists to replace) or to force premature
+    # acceptance of the historical backlog.
+    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.13", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: SimQ full audit (engine re-run + anchor diff + regression tests + coverage scan)
+        run: make simq-full-audit-full || true
+        continue-on-error: true
+
   # ── Slow regression (main + PRs targeting main) ──────────────────────────
   slow:
     name: "Slow regression"
