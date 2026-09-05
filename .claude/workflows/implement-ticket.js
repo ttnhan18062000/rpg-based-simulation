@@ -1445,7 +1445,10 @@ Before checking conditions 3, 4, 6, 7, 10, 12 by hand, run the static pre-check 
 JSON output verbatim for those conditions instead of re-deriving them (condition 6, "Docs updated",
 is now backed by the script's docs_to_update_coverage check, added by TCK-20260802-DOC-COVERAGE-CHECK
 — it independently re-verifies Investigate's flagged docs were touched, regardless of what
-behavior_changed was self-reported at Implement time):
+behavior_changed was self-reported at Implement time; as of TCK-20260904-DOC-COVERAGE-REVERSE-CHECK
+the same check also independently re-verifies the reverse direction — that every docs/ path git
+shows touched is itself reflected back into the ticket's own Files Changed/Related Docs text,
+tier-agnostically including hotfix):
   python3 -c "import sys; sys.path.insert(0,'.'); from tools.gate_checks.done_checker_static import run_static_precheck; import json; print(json.dumps(run_static_precheck('${tid}', '${tier}', '${startTs}')))"
 
 Check all DoD conditions with evidence. For these, mark as noted:

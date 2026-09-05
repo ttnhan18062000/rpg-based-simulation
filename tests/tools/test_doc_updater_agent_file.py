@@ -44,6 +44,19 @@ def test_doc_updater_agent_file_has_required_sections():
     )
 
 
+def test_doc_updater_prompt_includes_self_check_instruction():
+    # TCK-20260904-DOC-COVERAGE-REVERSE-CHECK, AC #4: the base prompt must instruct the agent to
+    # cross-reference its own touched docs/ paths against Files Changed/Related Docs before
+    # returning, and to flag a mismatch same-turn via the existing `blocker` field.
+    text = _read()
+    what_to_do_idx = text.find("## What to Do")
+    output_idx = text.find("## Output")
+    assert what_to_do_idx != -1 and output_idx != -1
+    section = text[what_to_do_idx:output_idx].lower()
+    assert "files changed" in section and "related docs" in section
+    assert "blocker" in section
+
+
 def test_doc_updater_never_edits_parity_ledger_or_audits_scope():
     text = _read()
     assert "docs/parity_ledger/" in text, (
