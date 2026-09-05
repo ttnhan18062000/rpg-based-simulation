@@ -15,18 +15,41 @@ tags: [ai, agent-monitoring, data-quality]
 into a bigger epic would only add coordination overhead with no shared component to justify it
 (§71's separation criteria). Grouped into one doc here purely for planning-doc convenience — they
 remain four independent units of work, not one epic.
-**Roadmap**: `roadmap.md` — one Horizon-0 item, three Horizon-2 items.
+**Roadmap**: `roadmap.md` — one Horizon-0 item (now BLOCKED, see §1 below), three Horizon-2 items.
 
-## 1. Remove/archive knowledge-gateway (Horizon 0 — start now)
+## 1. Remove/archive knowledge-gateway (BLOCKED — see below; originally Horizon 0, start now)
 
-**Priority**: P0 — Measured Inefficiency motivation, Level A evidence (2 real MCP calls ever vs.
-2,138 calls to the direct tool it wraps).
+**Revised during the 2026-09-04 `create-tickets` investigation pass (PR #124)**: this item directly
+conflicts with an already-ratified decision. **`TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`** (closed
+2026-08-24) ratified "Option A — keep as-is, no further investment," and its decision doc
+(`docs/engine/contracts/knowledge_gateway_mcp/keep_or_deprecate_decision.md` §3) states explicitly:
+"No changes to `tools/knowledge_gateway_mcp.py` or any related module are authorized by this
+decision." That ratification's own §1 already considered and rejected "Option C — Deprecate/
+remove" — the option this item re-proposes. This item's evidence (below) was gathered without
+knowledge of that prior ratification and does not supersede it. **This item is BLOCKED, not
+committed/start-now, pending an explicit repository-owner re-ratification** that cites this new
+usage-count evidence and explicitly supersedes `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`. See
+`TCK-20260904-BASH-SECRET-SCAN-HOOK` (the sibling ticket whose own hard prerequisite is milestone 1
+below) for the full blocking chain — not duplicated here.
+
+Two other gaps the same investigation found, left for whoever eventually re-scopes this item: the
+"2 vs 2,138 calls" figure below could not be reconciled against a direct `agent-monitoring/data/*/
+tools.jsonl` grep (found 13 `mcp__knowledge-gateway__*` calls vs. 3,212 `mcp__knowledge-search__*`
+calls — same order-of-magnitude imbalance, different exact numbers, likely a narrower/earlier
+measurement window than the raw corpus); and `tools/retrieval_cache.py` has a real import
+dependency on `knowledge_gateway_redaction.py` beyond just `scan_for_secrets()`
+(`open_connection_with_limits()`, `evaluate_write_candidate()`), which milestone 1 below does not
+currently account for.
+
+**Priority**: P0 — Measured Inefficiency motivation, Level A evidence (order-of-magnitude usage
+imbalance — see the reconciliation note above for the exact figures).
 
 **Problem**: `tools/knowledge_gateway_{mcp,router,packet_assembly,cache,redaction}.py` (3,036
 lines across 5 modules) is registered as a live MCP server in `.mcp.json` but is, by real usage
-data, dead infrastructure.
+data, largely-idle infrastructure — live-confirmed still fully functional as of 2026-09-04, not
+disabled or broken, just underused.
 
-**Milestones**:
+**Milestones** (blocked — do not start until re-ratified, see above):
 1. **Extract `scan_for_secrets()`** out of `knowledge_gateway_redaction.py` into a location
    independent of the gateway module — this is the cross-epic dependency
    `governance_capability_policy_epic.md`'s M4 needs (see `roadmap.md`). Do this step first,
@@ -34,14 +57,15 @@ data, dead infrastructure.
 2. **Archive, don't hard-delete**, the remaining gateway modules — move to an archive location,
    remove the `.mcp.json` registration.
 3. **Monitor for 2 weeks**: confirm zero `mcp__knowledge-gateway__*` calls appear in
-   `agent-monitoring/tools.jsonl` post-archival.
+   `agent-monitoring/data/*/tools.jsonl` post-archival.
 4. **Delete** only after the monitoring window confirms no renewed calls.
 
-**Acceptance signal**: `scan_for_secrets()` is importable from its new location and used by
-`governance_capability_policy_epic.md`'s M4; the gateway module is archived, deregistered, and
-(after the monitoring window) deleted; zero regressions in any tool that legitimately depended on
-the gateway (none currently known, per the usage data — this step exists to catch an
-undiscovered consumer, not an expected one).
+**Acceptance signal**: a repository-owner re-ratification superseding
+`TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` is recorded first; then `scan_for_secrets()` is importable
+from its new location and used by `governance_capability_policy_epic.md`'s M4; the gateway module
+is archived, deregistered, and (after the monitoring window) deleted; `tools/retrieval_cache.py`'s
+additional dependency is resolved before `knowledge_gateway_redaction.py` is archived; zero
+regressions in any tool that legitimately depended on the gateway.
 
 ## 2. Extend cost_proxy_score to implement-epic.js / create-tickets.js (Horizon 2 — ready, schedule later)
 

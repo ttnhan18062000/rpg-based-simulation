@@ -20,19 +20,32 @@ Policy; no dependency between them).
 Failure motivation (Level A evidence) in the entire Bucket-A set. This is not a preventive
 hardening call; the failure already happened, twice, in this repository's own retro history.
 
+## M1 is superseded — do not implement, already done
+
+Revised during the 2026-09-04 `create-tickets` investigation pass (PR #124): `test_phase18_import
+_boundaries.py` and `test_phase19_observability_boundaries.py` were both independently confirmed —
+by two separate investigation runs — to already use `ast.walk`/`ast.parse`-based import-graph
+detection on `main`, mirroring `test_api_read_model_guard.py`'s pattern exactly as M1 below
+describes. Both files were closed by **`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`**
+(done, 2026-08-19) — running the current 8 relevant tests across all three files confirms 8/8
+pass. This epic's own cited evidence, `docs/plans/architecture_boundary_hardening_epic.md:135-136`
+("documented, unimplemented todo"), is itself stale: that doc was archived to
+`docs/plans/archive/architecture_boundary_hardening_epic.md` on 2026-08-20 with an explicit
+`Status: Resolved by TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` note the epic doc missed
+when it was written. **Action for this milestone**: none — the work is done and live on `main`. One
+genuinely open, narrower gap surfaced during the same investigation (not what M1 as originally
+scoped asked for, and not itself a Bucket-A item here): `test_hot_path_does_not_import_heavy
+_analyzers` deliberately preserves bare-prefix (non-`src.`-aware) substring semantics post-rewrite,
+so it still misses 5 real, currently-shipping violations in `src/engine/kernel.py` — already
+tracked as a known, documented gap in `docs/audits/D24_codebase_health_observatory.md` §K, not a
+new finding here.
+
 ## Problem
 
-Three enforcement gaps, one already-proven and two structurally evidenced:
+Two enforcement gaps remain live (a third, AST-based import-boundary enforcement, is resolved —
+see the superseded-M1 note above):
 
-1. **Two of the four architecture import-boundary tests use substring/regex matching, not AST.**
-   `tests/architecture/test_phase18_import_boundaries.py` and
-   `tests/architecture/test_phase19_observability_boundaries.py` are evadable by any non-literal
-   import (`importlib`, import aliasing) — a documented, unimplemented todo in the repo's own
-   `docs/plans/architecture_boundary_hardening_epic.md:135-136`. The other two boundary tests
-   (`tests/architecture/test_api_read_model_guard.py`, `test_phase_domain_permissions.py`) already
-   use `ast.walk`-based checks — the pattern to port to exists in this same test suite, it just
-   isn't applied everywhere yet.
-2. **The doc-update self-report gap recurs across the repo's own retro history.** Read in full
+1. **The doc-update self-report gap recurs across the repo's own retro history.** Read in full
    this session: `agent-monitoring/retro/RETRO-2026-W33.md` and `RETRO-2026-W36.md`. Both weeks'
    `## Notes` sections independently surface the same defect — a `doc-updater`-added doc file not
    reflected back into the ticket's own `## Files Changed`/`## Related Docs` — caught by
@@ -42,7 +55,7 @@ Three enforcement gaps, one already-proven and two structurally evidenced:
    times** (`ITEM-INSTANCE-HISTORY`, `RACE-RELATIONS-MATRIX`, `READINESS-SPEED-FORMULA`) and again
    proposes the same fix, unshipped. `Verify` already catches it downstream every time — the gap is
    that generation-time never internalized the fix, so the same catch-and-patch cycle repeats.
-3. **The test-scoper background-hang pattern recurred despite already being a documented Hard
+2. **The test-scoper background-hang pattern recurred despite already being a documented Hard
    Rule.** CLAUDE.md has carried "never end your turn while your own `run_in_background` command is
    still running" since 2026-08-17/18 specifically because of this failure mode. `RETRO-2026-W36`
    reports it recurring 3 more times regardless — direct, repository-native proof that a prose-only
@@ -51,20 +64,13 @@ Three enforcement gaps, one already-proven and two structurally evidenced:
 
 ## Scope
 
-### M1 — AST-based import-boundary enforcement (gated on nothing)
+### M1 — AST-based import-boundary enforcement — SUPERSEDED, see note above (gated on nothing)
 
-Port `test_phase18_import_boundaries.py` and `test_phase19_observability_boundaries.py` from their
-current substring/regex checks to `ast.walk`-based import-graph checks, mirroring
-`test_api_read_model_guard.py`'s already-proven pattern in the same test suite. Concretely: parse
-each source file's AST, walk `ast.Import`/`ast.ImportFrom` nodes directly (catching aliased and
-`importlib.import_module(...)` forms the current regex cannot), and check the resolved module path
-against the same boundary rules the existing tests already encode — this is a detection-mechanism
-upgrade, not a change to what counts as a violation.
-
-**Known risk, named explicitly**: AST-based import detection can produce false positives on
-genuinely dynamic imports (conditional imports, plugin-style loading) that the current regex
-happens to miss too, just for a different reason. Any such case found during porting should be
-added as an explicit, commented allowlist entry — not silently special-cased.
+~~Port `test_phase18_import_boundaries.py` and `test_phase19_observability_boundaries.py` from
+their current substring/regex checks to `ast.walk`-based import-graph checks, mirroring
+`test_api_read_model_guard.py`'s already-proven pattern in the same test suite.~~ Already done by
+`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` — see "M1 is superseded" above. No action
+remains under this milestone.
 
 ### Invariant governing M2 and M3 (added during planning discussion)
 
@@ -136,9 +142,8 @@ what detection already proved was open.
 
 ## Acceptance signal for this epic
 
-- M1: `test_phase18_import_boundaries.py` and `test_phase19_observability_boundaries.py` both use
-  `ast.walk`-based detection; a synthetic aliased-import or `importlib`-based violation is caught
-  post-change where it passed before (a real before/after check, not just a code read-through).
+- M1: none required — already shipped and verified upstream by
+  `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` (8/8 relevant tests pass).
 - M2: `check_docs_to_update_coverage` (or its replacement) is confirmed as the primary control,
   catching the reverse-direction case the three retro incidents describe, verified against at
   least one of the three real historical tickets that exhibited it — this must hold true
@@ -161,10 +166,12 @@ what detection already proved was open.
   two items.
 - `agent-monitoring/retro/RETRO-2026-W33.md`, `RETRO-2026-W36.md` — the real, repeated evidence
   this epic's priority is drawn from.
-- `docs/plans/architecture_boundary_hardening_epic.md:135-136` — the repo's own prior, unshipped
-  todo to upgrade the two regex-based boundary tests.
+- `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` (done, 2026-08-19) — the real, closed ticket
+  that already shipped M1 (see "M1 is superseded" above). `docs/plans/architecture_boundary_hardening_epic.md`
+  (the doc this epic originally cited for M1's motivation) is now archived at
+  `docs/plans/archive/architecture_boundary_hardening_epic.md` with a `Status: Resolved` note.
 - `tests/architecture/test_api_read_model_guard.py`, `test_phase_domain_permissions.py` — the
-  existing AST-based pattern M1 ports.
+  existing AST-based pattern the shipped M1 work ported.
 - `.claude/agents/doc-updater.md`, `.claude/agents/test-scoper.md` — the two agent prompts M2/M3
   modify.
 - `CLAUDE.md` — the existing prose Hard Rule M3 operationalizes (dispatched-subagent
