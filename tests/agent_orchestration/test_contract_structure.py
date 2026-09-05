@@ -179,9 +179,21 @@ def test_new_contract_file_wired_into_readme_and_manifest():
     assert "hook_surface_policy_version" in readme_text
 
 
-def test_policy_represents_claude_two_enabled_events():
+def test_policy_represents_claude_three_enabled_events():
     policy = _load_hook_surface_policy()
-    assert set(policy["providers"]["claude"]["enabled_events"]) == {"PreToolUse", "PostToolUse"}
+    assert set(policy["providers"]["claude"]["enabled_events"]) == {
+        "PreToolUse", "PostToolUse", "SubagentStop",
+    }
+
+
+def test_policy_represents_claude_four_available_events():
+    # TCK-20260904-TEST-SCOPER-HANG-GUARD: only the four events this repo's own investigation has
+    # direct evidence for (Claude Code docs + the installed binary's own validation schema) —
+    # deliberately not the full ~32-event product vocabulary, per this ticket's Anti-Drift Hazards.
+    policy = _load_hook_surface_policy()
+    assert set(policy["providers"]["claude"]["available_events"]) == {
+        "PreToolUse", "PostToolUse", "Stop", "SubagentStop",
+    }
 
 
 def test_policy_represents_codex_ten_available_events():
@@ -212,9 +224,11 @@ def test_policy_normalized_vocabulary_matches_hook_events_yaml():
     assert "normalized_events" not in policy
 
 
-def test_hook_events_yaml_unchanged_normalized_vocabulary():
+def test_hook_events_yaml_normalized_vocabulary_includes_subagent_stop():
     hook_events = yaml.safe_load((_CONTRACT_DIR / "hook-events.yaml").read_text(encoding="utf-8"))
-    assert {entry["id"] for entry in hook_events["hook_types"]} == {"PreToolUse", "PostToolUse"}
+    assert {entry["id"] for entry in hook_events["hook_types"]} == {
+        "PreToolUse", "PostToolUse", "SubagentStop",
+    }
 
 
 def test_only_codex_post_tool_use_is_an_activation_candidate():
