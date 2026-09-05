@@ -117,8 +117,15 @@ and schedule, not yet one of the 8 ideas this epic's Scope commits to below.
 5. **Idea 57 — The Living Legend Feedback Loop.** Its own original claim ("nothing reads Chronicle's output
    back into anything") was wrong — `CultureDeriver` already does, at region scale, via Cultural Drift.
    Should copy `CultureDeriver`'s aggregation shape rather than invent new event-scoring logic.
+   **Design delivered, 2026-09-04:** `docs/brainstorm/2026-09-04-idea57-entity-scale-fame-aggregation-design.md`
+   works out the actual entity-scale sibling shape and discloses a real open question — which event
+   types feed it, since the Narrative Ledger has no `combat_victory` type today.
 6. **Idea 62 — Generations Misremember.** Genuinely distinct from idea 57, not a duplicate — sits upstream
    of both idea 57's and Cultural Drift's consumption of Chronicle's output, as a single transform view.
+   **Gate cleared, 2026-09-04:** was blocked on the Knowledge/Belief axis's `BeliefEntry`/`KnowledgeFact`
+   reconciliation decision (`docs/brainstorm/2026-09-04-core-rpg-legacy-memory-axis-proposal.md`); that
+   decision is made (deliberate split, both kept) — idea 62 is unblocked to proceed as a `BeliefEntry`
+   consumer specifically.
 7. **Idea 63 — Belief Grows Around Real History.** Confirmed a genuine downstream composite, needing both
    idea 36 (Clan, as container) and idea 57 (fame substrate) first — not a thin wrapper on either.
 
