@@ -120,6 +120,22 @@ and schedule, not yet one of the 8 ideas this epic's Scope commits to below.
    **Design delivered, 2026-09-04:** `docs/brainstorm/2026-09-04-idea57-entity-scale-fame-aggregation-design.md`
    works out the actual entity-scale sibling shape and discloses a real open question — which event
    types feed it, since the Narrative Ledger has no `combat_victory` type today.
+
+   **Status update, 2026-09-05:** shipped as `TCK-20260905-FAME-DERIVER-LEGEND-FACT`. Implemented
+   `FameDeriver`/`FameState`/`FameCarryForward`/`FameExporter`/`FameImporter`
+   (`src/domains/fame/`) mirroring `CultureDeriver`'s 3-layer pattern exactly, keyed by
+   `NarrativeLedgerEntry.subject_id`, Option B event rule (`quest_completed` +
+   `entity_death`+`HERO`). Persists in `CampaignState.entity_fame`, wired into
+   `CampaignOrchestrator._advance_state()` alongside `CultureDriftExporter`/`FidelityExporter`.
+   Added a lazy, non-durable `LegendFact` read-model (`FAME_THRESHOLD=0.5`, anchored to
+   `CHRONICLE_THRESHOLD`) constructed at query time via `LegendFactService.for_entity()` — no new
+   `CampaignState` field. Discoverability verified directly against
+   `PerceptionFilterService.filter()` at the service level (existing `perceived_opportunities`
+   catch-all branch, zero `filter.py` change). Matches idea 62's own "built, not yet visible in
+   play" honesty framing: `PerceptionUpdatePhase`/`MotivationBiasService.compute_bias_multiplier()`
+   remain dormant (zero live call sites, unchanged by this ticket), and idea 34's
+   `_CANDIDATE_ROLES` is untouched. See `docs/mechanics/05_world_evolution.md` §9 and
+   `docs/world/fame_legend_contract.md`.
 6. **Idea 62 — Generations Misremember.** Genuinely distinct from idea 57, not a duplicate.
    **Gate cleared, 2026-09-04:** was blocked on the Knowledge/Belief axis's `BeliefEntry`/`KnowledgeFact`
    reconciliation decision (`docs/brainstorm/2026-09-04-core-rpg-legacy-memory-axis-proposal.md`); that

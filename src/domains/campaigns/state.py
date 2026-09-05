@@ -15,6 +15,7 @@ from src.domains.campaigns.progression_plan import ProgressionPlan
 from src.domains.campaigns.social_memory import FactionSocialMemory, SocialMemoryRecord
 from src.domains.culture.model import CultureCarryForward
 from src.domains.fidelity.model import FidelityCarryForward
+from src.domains.fame.model import FameCarryForward
 
 
 @dataclass(frozen=True)
@@ -317,6 +318,12 @@ class CampaignState:
     # Populated by FidelityExporter at episode end; consumed by FidelityImporter (no live
     # consumer yet — idea 63, Belief Grows Around Real History, is the intended eventual reader).
     # Derived from ChronicleHierarchy, mirroring region_cultures' own field shape.
+    entity_fame: Dict[str, FameCarryForward] = field(default_factory=dict)
+    # E57-FAME: per-subject Chronicle-derived fame snapshots keyed by
+    # NarrativeLedgerEntry.subject_id. Populated by FameExporter at episode end; consumed
+    # by FameImporter/LegendFactService (no live perception/motivation consumer yet --
+    # idea 57's own "built, not yet visible in play" disclosure). Derived from
+    # ChronicleHierarchy, mirroring region_cultures'/historical_drift's own field shape.
 
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict. All dict keys sorted for determinism."""
@@ -361,6 +368,10 @@ class CampaignState:
             "historical_drift": {
                 k: v.to_dict()
                 for k, v in sorted(self.historical_drift.items())
+            },
+            "entity_fame": {
+                k: v.to_dict()
+                for k, v in sorted(self.entity_fame.items())
             },
         }
 
@@ -414,5 +425,9 @@ class CampaignState:
             historical_drift={
                 k: FidelityCarryForward.from_dict(v)
                 for k, v in d.get("historical_drift", {}).items()
+            },
+            entity_fame={
+                k: FameCarryForward.from_dict(v)
+                for k, v in d.get("entity_fame", {}).items()
             },
         )

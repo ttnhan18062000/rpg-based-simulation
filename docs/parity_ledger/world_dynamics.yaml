@@ -2011,3 +2011,41 @@
     tests/unit/domains/chronicle/test_fidelity_deriver.py::test_fidelity_derive_is_deterministic_byte_identical
   divergence_note: null
   support_boundary: null
+- id: WORLD-FAME-001
+  text: FameState is derived only from ChronicleHierarchy at episode boundary (FameExporter.export()
+    called from _advance_state() only, immediately alongside CultureDriftExporter.export()/FidelityExporter.export(),
+    consuming the same _hierarchy local) -- never mutated during the tick loop. Fame
+    accumulates additively per subject_id for quest_completed entries and entity_death
+    entries where payload["entity_role"]=="HERO" (Option B), normalised via min(1.0,
+    raw_sum / 3.0) (NORMALISE_DENOMINATOR=3.0), a module-local constant independent
+    of CultureDeriver's own identically-valued constant.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/fame/deriver.py (FameDeriver.derive); src/domains/fame/exporter.py
+    (FameExporter.export called from _advance_state() in orchestrator.py immediately
+    after FidelityExporter.export)
+  proof_type: contract
+  test_path: tests/unit/domains/fame/test_fame_deriver.py
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-FAME-002
+  text: 'FameDeriver.derive() is deterministic: calling it twice with the same ChronicleHierarchy
+    input produces byte-identical output. FameCarryForward round-trips through CampaignState.to_dict()/from_dict()
+    serialization with full fidelity, stored in CampaignState.entity_fame: Dict[str,
+    FameCarryForward]. LegendFactService.for_entity() constructs a LegendFact only
+    when FameImporter.get_fame(...).fame >= FAME_THRESHOLD (0.5, anchored to CHRONICLE_THRESHOLD);
+    a fame value below threshold produces None. LegendFact is never persisted as a
+    CampaignState field -- lazily reconstructed at query time.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/fame/model.py (FameState/FameCarryForward to_dict/from_dict);
+    src/domains/campaigns/state.py (CampaignState.entity_fame serialization wiring);
+    src/domains/fame/legend.py (LegendFactService.for_entity threshold gating)
+  proof_type: contract
+  test_path: tests/unit/domains/fame/test_fame_exporter.py::test_fame_carry_forward_round_trips_through_campaign_state_serialization,
+    tests/unit/domains/fame/test_fame_deriver.py::test_fame_deriver_is_deterministic_byte_identical,
+    tests/unit/domains/fame/test_legend_fact.py
+  divergence_note: null
+  support_boundary: null

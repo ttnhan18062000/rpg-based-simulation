@@ -658,3 +658,112 @@ yet built. This is a disclosed, accepted gap, not a hidden incompleteness.
 **Sources:** `src/domains/fidelity/`
 **Contract:** `docs/world/chronicle_fidelity_contract.md`
 **Parity:** WORLD-FIDELITY-001, WORLD-FIDELITY-002
+
+---
+
+## 9. Living Legend Fame (idea 57)
+
+Over long campaigns, a hero's Chronicle-recorded deeds accumulate into fame — once fame crosses a
+threshold, the hero becomes a discoverable "living legend" fact. Living Legend Fame is a
+**long-horizon** mechanism, a direct structural sibling of Cultural Drift and Chronicle Fidelity
+Drift above: it operates at the same episode boundary, over the same `ChronicleHierarchy`
+substrate, via the same Deriver/Model/Exporter-Importer pattern — but keyed per-subject
+(`NarrativeLedgerEntry.subject_id`) rather than per-region or per-event.
+
+### Axis Definition
+
+`fame`: a single float in [0.0, 1.0] per subject (not a fame+notoriety split — Option B's own
+event set contains zero fame-reducing event types, and a `notoriety` axis with no accumulation
+input would sit permanently at `0.0`; a real heroism/notoriety split already exists as a separate,
+already-shipped mechanism at `SocialUpdate.heroism_delta`/`notoriety_delta` →
+`SocialRecord.heroism_score`/`notoriety_score`/`public_reputation`).
+
+### Source Events (Option B)
+
+| Event type | Condition | Contribution |
+|---|---|---|
+| `quest_completed` | any | `entry.significance` |
+| `entity_death` | `payload["entity_role"] == "HERO"` (posthumous fame) | `entry.significance` |
+
+No other event types contribute. Explicitly excluded: `LEGENDARY_ARRIVAL` (a distinct,
+faction-reputation consequence event — see "Distinctness from LEGENDARY_ARRIVAL" below),
+`faction_shift`, `calamity`, and any war/diplomatic event type — none are personal-heroism
+signals under Option B. In-life combat-earned fame is a disclosed, accepted limitation: no
+`combat_victory` event type exists in the Narrative Ledger today.
+
+Normalisation: `fame = min(1.0, raw_sum / NORMALISE_DENOMINATOR)`, `NORMALISE_DENOMINATOR = 3.0` —
+a fresh, module-local constant in `src/domains/fame/deriver.py`, independent of
+`CultureDeriver`'s identically-valued constant (never imported or aliased).
+
+**Disclosed characteristic — quest-failure fame contamination:** `orchestrator.py`'s
+`_SIGNIFICANCE_MAP` maps `QUEST_FAILED` to `event_type="quest_completed"` at `significance=0.3`
+(vs. `0.7` for a real success). Since `ChronicleGrouper`'s chronicle-worthiness gate scores by
+`event_type` string alone (`BASE_SIGNIFICANCE["quest_completed"]=0.7` regardless of outcome), both
+real quest successes and failures reach `hierarchy.events` and both match `FameDeriver`'s
+`event_type == "quest_completed"` check. A failed quest therefore contributes a smaller but
+non-zero amount of fame — a real, accepted characteristic of the existing
+`NarrativeLedgerEntry`/`_SIGNIFICANCE_MAP` taxonomy, not a bug.
+
+### Derivation Trigger
+
+`FameExporter.export()` is called from `CampaignOrchestrator._advance_state()`, immediately
+alongside `CultureDriftExporter.export()` and `FidelityExporter.export()` — all three consume the
+exact same `ChronicleGrouper().group(narrative_ledger)` result, never a separately (re)computed
+hierarchy.
+
+### Persistence
+
+`FameState` per subject is stored as `FameCarryForward` in `CampaignState.entity_fame: Dict[str,
+FameCarryForward]`, keyed by `NarrativeLedgerEntry.subject_id`. Subjects without events in a given
+episode keep their prior fame snapshot unchanged until the next derivation.
+
+### `LegendFact` — a Lazy, Non-Durable Read-Model
+
+`LegendFact` is deliberately **not** a `CampaignState` field. It is fully and deterministically
+reconstructible from `FameCarryForward` (the actual durable, typed record with its own lifecycle),
+so per the Durable State Rule it needs no second persisted record of its own.
+`LegendFactService.for_entity(campaign_state, subject_id, entity_name=None)` calls
+`FameImporter.get_fame(...)` and returns a `LegendFact` only when `.fame >= FAME_THRESHOLD =
+0.5` — otherwise `None`.
+
+`FAME_THRESHOLD` reuses `CHRONICLE_THRESHOLD` (`src/domains/chronicle/significance.py`, `0.5`) as
+its anchor: both operate on the same normalized `[0.0, 1.0]` scale and express the same underlying
+concept — "has this crossed the bar to be considered narratively significant enough to be
+noticed." Concretely: a single `quest_completed` entry (raw `0.7/3.0≈0.233`) or a single HERO
+`entity_death` (raw `0.5/3.0≈0.167`) never crosses `0.5` alone; becoming a "living legend" requires
+roughly 2-3 significant hero-events.
+
+`LegendFactService.to_world_signal(fact, position=(0.0, 0.0))` wraps a `LegendFact` as a
+`WorldSignal(kind="legend_fact", base_relevance=fact.fame, ...)` for perception discoverability.
+`position` defaults to `(0.0, 0.0)` since fame has no location concept of its own.
+
+### Distinctness from `LEGENDARY_ARRIVAL`
+
+`LegendFact` must never be confused with the pre-existing, unrelated `LegendaryArrivalEvent`/
+`LEGENDARY_ARRIVAL` faction-reputation consequence event
+(`src/systems/social_systems/consequence_events.py`), which fires when
+`social_memories[...].faction_reputation.get("default", 0.0) >= 0.9` — a structurally distinct
+mechanism reading `CampaignState.social_memories`, never Chronicle-derived fame. `LegendFact`'s
+only real input is `FameImporter.get_fame(...)`. Enforced by
+`tests/architecture/test_fame_legend_fact_distinctness.py`.
+
+### No Live Consumer Yet
+
+This mechanism ships with **no live reader wired in** for perception/motivation. `LegendFact`
+discoverability is verified by directly calling `PerceptionFilterService.filter()` at the service
+level (`"legend_fact"` lands in the existing catch-all `perceived_opportunities` branch, no
+`filter.py` change needed) — `PerceptionUpdatePhase` has zero live pipeline call sites, and
+`MotivationBiasService.compute_bias_multiplier()` has zero call sites outside its own module, both
+unchanged by this ticket. This is a disclosed, accepted gap, matching Chronicle Fidelity Drift's
+own "No Live Consumer Yet" precedent — built, not yet visible in play.
+
+### Acceptance Signal
+
+> `FameDeriver.derive()` on a hierarchy containing a `quest_completed` entry and a HERO
+> `entity_death` entry for two different subject_ids produces two distinct non-zero `FameState`
+> entries; a subject whose fame crosses `FAME_THRESHOLD` produces a `LegendFact` discoverable via
+> `PerceptionFilterService.filter()`, while one below threshold produces none.
+
+**Sources:** `src/domains/fame/`
+**Contract:** `docs/world/fame_legend_contract.md`
+**Parity:** WORLD-FAME-001, WORLD-FAME-002
