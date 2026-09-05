@@ -49,7 +49,7 @@ phase('Discover')
 
 const DISCOVER_SCHEMA = {
   type: 'object',
-  required: ['mode', 'ticket_ids', 'already_done', 'summary'],
+  required: ['mode', 'ticket_ids', 'already_done', 'blocked', 'summary'],
   properties: {
     mode: { type: 'string', enum: ['folder', 'epic_id', 'request'] },
     ticket_ids: {
@@ -61,6 +61,12 @@ const DISCOVER_SCHEMA = {
       type: 'array',
       items: { type: 'string' },
       description: 'Ticket IDs already in tickets/done/ — skipped',
+    },
+    blocked: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'TCK-20260904-EPIC-SKIP-BLOCKED-TICKETS: ticket IDs whose own body `## Status` '
+        + 'reads BLOCKED — excluded from ticket_ids, reported separately (not attempted, not silently dropped)',
     },
     epic_ticket_path: { type: 'string', description: 'Path of the epic ticket, if created or found' },
     summary: { type: 'string', description: 'One sentence: how many tickets found and how many to implement (≤200 chars)' },
@@ -106,6 +112,12 @@ Step 4 — check which are already done:
   Run: ls tickets/done/
   A ticket is already done if tickets/done/{ticket_id}.md exists.
 
+Step 4a — check which of the NOT-yet-done tickets (from Step 4) are BLOCKED
+(TCK-20260904-EPIC-SKIP-BLOCKED-TICKETS): a BLOCKED ticket cannot structurally proceed, so it must
+be excluded from ticket_ids and reported separately, not attempted or silently dropped.
+  Run: python3 -c "import sys; sys.path.insert(0,'tools'); from gate_checks.epic_blocked_status_static import find_blocked_ticket_ids; print(' '.join(find_blocked_ticket_ids([<the not-yet-done ticket IDs from Step 4, as a Python list literal of quoted strings>], ['${folder}'])))"
+  The printed space-separated IDs (may be empty) are the blocked ticket IDs.
+
 Step 4b — check for an optional tracking_doc declaration (TCK-20260826-IMPLEMENT-EPIC-ROADMAP-
 DOC-STALENESS-GAP). Skip entirely if SEQUENCE.md was not found in Step 2.
   Run: python3 -c "import sys; sys.path.insert(0,'tools'); from gate_checks.epic_tracking_doc_static import parse_tracking_doc_from_sequence; print(parse_tracking_doc_from_sequence(open('${folder}SEQUENCE.md').read()) or '')"
@@ -113,11 +125,12 @@ DOC-STALENESS-GAP). Skip entirely if SEQUENCE.md was not found in Step 2.
 
 Step 5 — return:
   mode="folder"
-  ticket_ids = ordered list of ticket IDs NOT yet done (SEQUENCE.md order if available, else alphabetical)
+  ticket_ids = ordered list of ticket IDs NOT yet done AND NOT blocked (SEQUENCE.md order if available, else alphabetical)
   already_done = ticket IDs that ARE already in tickets/done/
+  blocked = the ticket IDs from Step 4a — excluded from ticket_ids above, never attempted
   epic_ticket_path = "" (no epic ticket for folder mode)
   tracking_doc = the value from Step 4b, or "" if SEQUENCE.md was not found / no declaration present
-  summary = one sentence noting order source, e.g. "Found 5 tickets in folder (SEQUENCE.md order), 3 to implement, 2 already done."
+  summary = one sentence noting order source, e.g. "Found 5 tickets in folder (SEQUENCE.md order), 3 to implement, 2 already done, 1 blocked."
 
 Do not implement anything. Discovery only.`
 
@@ -136,14 +149,23 @@ Step 3 — check which are already done:
   Run: ls tickets/done/
   A ticket is already done if tickets/done/{ticket_id}.md exists.
 
+Step 3a — check which of the NOT-yet-done children (from Step 3) are BLOCKED
+(TCK-20260904-EPIC-SKIP-BLOCKED-TICKETS): a BLOCKED ticket cannot structurally proceed, so it must
+be excluded from ticket_ids and reported separately, not attempted or silently dropped. Child
+tickets can live in tickets/inprogress/, tickets/todos/ (including subfolders), or occasionally
+tickets/done/ (already excluded above) — search all three.
+  Run: python3 -c "import sys; sys.path.insert(0,'tools'); from gate_checks.epic_blocked_status_static import find_blocked_ticket_ids; print(' '.join(find_blocked_ticket_ids([<the not-yet-done child ticket IDs from Step 3, as a Python list literal of quoted strings>], ['tickets/inprogress', 'tickets/todos', 'tickets/done'])))"
+  The printed space-separated IDs (may be empty) are the blocked ticket IDs.
+
 Step 4 — return:
   mode="epic_id"
-  ticket_ids = ordered list of child ticket IDs NOT yet done
+  ticket_ids = ordered list of child ticket IDs NOT yet done AND NOT blocked
   already_done = child ticket IDs already in tickets/done/
+  blocked = the ticket IDs from Step 3a — excluded from ticket_ids above, never attempted
   epic_ticket_path = path of the epic ticket found in step 1
   tracking_doc = "" (epic_id mode has no SEQUENCE.md; the epic ticket itself is its own tracking
     surface — see TCK-20260826-IMPLEMENT-EPIC-ROADMAP-DOC-STALENESS-GAP's Out of Scope)
-  summary = one sentence: e.g. "Epic has 4 child tickets, 4 to implement, 0 already done."`
+  summary = one sentence: e.g. "Epic has 4 child tickets, 3 to implement, 0 already done, 1 blocked."`
 
     : `Create an epic ticket for this request, then return ticket IDs to implement.
 
@@ -160,6 +182,7 @@ Step 2 — return:
   mode="request"
   ticket_ids = [] (no children yet — user must create them)
   already_done = []
+  blocked = []
   epic_ticket_path = path of the created epic ticket
   summary = one sentence describing the epic created`,
 
@@ -172,6 +195,10 @@ log(`Discover: ${discovery.summary}`)
 
 if (discovery.already_done.length > 0) {
   log(`Skipping already-done: ${discovery.already_done.join(', ')}`)
+}
+
+if (discovery.blocked.length > 0) {
+  log(`Skipping blocked: ${discovery.blocked.join(', ')}`)
 }
 
 // request mode — epic created, no children yet
@@ -212,7 +239,7 @@ if (ticketIds.length === 0) {
     ? 'EPIC-' + epicId
     : 'FOLDER-' + folder.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
   await bash(
-    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${nothingRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Discover found no tickets to implement (all done or none found)","ts":"${nothingTs}"}]' 2>/dev/null || true`
+    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${nothingRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Discover found no tickets to implement (all done, all blocked, or none found)","ts":"${nothingTs}"}]' 2>/dev/null || true`
   )
   await bash(
     `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${nothingRunId}","start_ts":"${batchStartTs || nothingTs}","end_ts":"${nothingTs}","workflow":"implement-epic","tier":"epic","final_status":"NOTHING_TO_DO","agent_count":1}' 2>/dev/null || true`
@@ -220,7 +247,10 @@ if (ticketIds.length === 0) {
   return {
     status: 'NOTHING_TO_DO',
     already_done: discovery.already_done,
-    message: discovery.already_done.length > 0
+    blocked: discovery.blocked,
+    message: discovery.blocked.length > 0
+      ? `Nothing to implement: ${discovery.already_done.length} already done, ${discovery.blocked.length} blocked (${discovery.blocked.join(', ')}).`
+      : discovery.already_done.length > 0
       ? `All ${discovery.already_done.length} ticket(s) are already done.`
       : `No TCK-*.md tickets found in the specified source.`,
   }
@@ -382,6 +412,7 @@ const reportLines = [
     `  ${r.status === 'DONE' ? 'DONE' : 'FAIL'} ${r.ticket_id}${r.status !== 'DONE' ? ' — ' + r.status : ''}`
   ),
   ...(remaining.length > 0 ? ['', 'Not started:', ...remaining.map(t => '  SKIP ' + t)] : []),
+  ...(discovery.blocked.length > 0 ? ['', 'Blocked (excluded, not attempted):', ...discovery.blocked.map(t => '  BLOCKED ' + t)] : []),
   ...(trackingDocUpdate ? ['', `Tracking doc (${discovery.tracking_doc}): ${trackingDocUpdate.status}`] : []),
 ]
 
@@ -393,6 +424,7 @@ return {
   total: ticketIds.length,
   done_count: doneCount,
   already_done: discovery.already_done,
+  blocked: discovery.blocked,
   results,
   stopped_at: stoppedAt,
   remaining: remaining,
