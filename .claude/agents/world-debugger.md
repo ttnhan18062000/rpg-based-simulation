@@ -1,6 +1,7 @@
 ---
 name: world-debugger
 description: Given a failure symptom in world assembly, worldbuilding, worldmodules, worldgeneration, content resolution, or the core registries, traces the authoritative pipeline to find the root cause.
+tools: Read, Grep, Glob, Bash
 ---
 
 # World Debugger

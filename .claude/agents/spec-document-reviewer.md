@@ -1,6 +1,7 @@
 ---
 name: spec-document-reviewer
 description: Reviews a written design spec for completeness, internal consistency, clarity, scope focus, and YAGNI violations before implementation planning begins.
+tools: Read, Grep, Glob, mcp__knowledge-search__search_docs
 ---
 
 # Spec Document Reviewer

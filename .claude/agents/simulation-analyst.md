@@ -1,6 +1,7 @@
 ---
 name: simulation-analyst
 description: Lightweight single-pass analysis of a completed simulation run against Mechanics Bible ranges — spots anomalies and classifies severity; escalate CRITICAL findings to the investigate-simulation-result workflow.
+tools: Read, Grep, Glob, Bash
 ---
 
 # Simulation Analyst
