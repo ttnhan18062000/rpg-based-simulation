@@ -63,6 +63,18 @@ split into a separate mutation-primitive/voluntary-trigger pair.
    (`campaign_life_arc.yaml`) enables multi-episode Campaign mode, hardcoded to one world, and it is not wired
    into standard CI. Idea 56's own ticket should test against that one real profile directly, not assume
    corpus-wide coverage.
+   **Status update, 2026-09-05** (`TCK-20260905-DRIFTING-LOYALTY-SIGNAL`): shipped. Reuses the
+   already-live `CultureState.faction_conflict_exposure` axis (no new derivation logic) via a new
+   `LoyaltyDriftService`, keyed by an entity's *current* region (`entity.navigation.region_id` — real
+   and live-populated for every entity today, not `home_region_id`, which is boss-only until idea 59
+   lands). Wired as a real, tested, optional `loyalty_pressure` parameter on
+   `PartyLifecycleService.effective_defection_threshold()`/`check_defection()`, lowering the grievance
+   threshold idea 39's `Faction.NEUTRAL` mutation trigger reads. **Disclosed gap**: the one live
+   per-tick caller, `GroupPhase.resolve()`, has no `CampaignState` access (no bridge exists between
+   per-tick `AuthoritativeState` and episode-boundary `CampaignState`), so it still supplies only the
+   backward-compatible `0.0` default — the signal is real and end-to-end tested via a Culture-Drift
+   integration test, but not yet visible in the default single-episode Kernel path. Full contract:
+   `docs/world/culture_drift_contract.md`.
 3. **Idea 59 — Home, Exile & Return.** The single largest correction in this whole investigation: its
    central claim (no per-entity place-attachment field exists) was flatly wrong.
    `StrategicComponent.home_region_id` already exists, typed, with a live consumer already wired

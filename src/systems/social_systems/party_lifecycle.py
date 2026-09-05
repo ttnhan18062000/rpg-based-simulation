@@ -4,6 +4,7 @@ PartyLifecycleService — periodic leadership election and defection for active 
 
 Ticket: TCK-20260619-E41B-LEADERSHIP (check_leadership)
 Ticket: TCK-20260619-E41D-DEFECTION-ESCORT (check_defection)
+Ticket: TCK-20260905-DRIFTING-LOYALTY-SIGNAL (effective_defection_threshold's loyalty_pressure param)
 Logic IDs: SOC-228, SOC-230
 
 Election rule (SOC-228):
@@ -13,7 +14,10 @@ Election rule (SOC-228):
   as tiebreaker) is elected leader and a LeadershipChangedEvent is emitted.
 
 Defection rule (SOC-230):
-  An entity defects when len(group.grievance_log) >= DEFECTION_GRIEVANCE_THRESHOLD (3).
+  An entity defects when len(group.grievance_log) >= effective_defection_threshold(group)
+  (base DEFECTION_GRIEVANCE_THRESHOLD=3, modulated by composition_score and, since
+  TCK-20260905-DRIFTING-LOYALTY-SIGNAL, an optional loyalty_pressure signal -- see
+  effective_defection_threshold()'s own docstring and docs/world/culture_drift_contract.md).
   On defection: entity is removed from group.member_ids; a BetrayalDesertionEvent is
   emitted; entity notoriety increases by 2.0 via EntityUpdate.social; entity.identity.faction
   is set to Faction.NEUTRAL via EntityUpdate.identity (TCK-20260905-AFFILIATION-MUTATION-
@@ -128,7 +132,10 @@ class PartyLifecycleService:
     DEFECTION_GRIEVANCE_THRESHOLD: int = 3  # unresolved grievances required to defect
 
     @staticmethod
-    def effective_defection_threshold(group: "GroupRecord") -> int:
+    def effective_defection_threshold(
+        group: "GroupRecord",
+        loyalty_pressure: float = 0.0,
+    ) -> int:
         """
         Compute the effective defection threshold for this group.
 
@@ -138,15 +145,28 @@ class PartyLifecycleService:
         composition_score = 0.0  → threshold = 3  (baseline)
         composition_score = 0.5  → threshold = 4  (+1 grievance)
         composition_score = 1.0  → threshold = 5  (+2 grievances)
+
+        loyalty_pressure (idea 56, TCK-20260905-DRIFTING-LOYALTY-SIGNAL): an optional
+        [0.0, 1.0] signal, typically LoyaltyDriftService.compute_loyalty_pressure()'s
+        output — high regional faction-conflict exposure LOWERS the threshold by up
+        to 2 grievances, mirroring composition_score's own bonus shape in the
+        opposite direction. Defaults to 0.0 (no effect), reproducing the exact
+        pre-idea-56 behavior for any caller that does not supply it -- the current
+        live caller (GroupPhase.resolve()) has no CampaignState to derive a real
+        value from and is unchanged; see docs/world/culture_drift_contract.md.
+        The result is floored at 1 -- grievance-driven defection is never made
+        impossible by a hostile-culture region alone.
         """
         bonus = round(group.composition_score * 2)
-        return PartyLifecycleService.DEFECTION_GRIEVANCE_THRESHOLD + bonus
+        penalty = round(loyalty_pressure * 2)
+        return max(1, PartyLifecycleService.DEFECTION_GRIEVANCE_THRESHOLD + bonus - penalty)
 
     @staticmethod
     def check_defection(
         group: "GroupRecord",
         entity: "EntityState",
         tick: int,
+        loyalty_pressure: float = 0.0,
     ) -> "Tuple[Optional[GroupRecord], Optional[BetrayalDesertionEvent], Optional[EntityUpdate]]":
         """
         Evaluate whether *entity* defects from *group* this tick.
@@ -155,6 +175,9 @@ class PartyLifecycleService:
             group:  The active GroupRecord to evaluate.
             entity: The candidate entity (must be in group.member_ids).
             tick:   Current simulation tick.
+            loyalty_pressure: optional idea-56 signal, see
+                effective_defection_threshold()'s own docstring. Defaults to 0.0
+                (no effect) -- backward-compatible with every existing caller.
 
         Returns:
             (None, None, None)
@@ -169,7 +192,7 @@ class PartyLifecycleService:
             - If group drops to <= 1 member after defection, dissolution_tick is set.
             - Entity must be in group.member_ids; behaviour is undefined otherwise.
         """
-        threshold = PartyLifecycleService.effective_defection_threshold(group)
+        threshold = PartyLifecycleService.effective_defection_threshold(group, loyalty_pressure)
         if len(group.grievance_log) < threshold:
             return (None, None, None)
 
