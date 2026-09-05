@@ -9,14 +9,20 @@ tags: [content, architecture]
 # Plan — Social/Political Mechanics Hardening: the missing Mechanics Bible chapter
 
 **Status, re-verified 2026-09-05:** item 5 (the `CanonicalStateHasher` determinism gap) is fully fixed and
-shipped. Items 1-4 (the actual chapter-authoring work) remain fully pending — no
+shipped, and items 2 and 4 are now also fully closed (see below) — only item 1 (writing/promoting the
+actual chapter) and part of item 3 (ideas 56/62's own read-requirement scoping) remain open. No
 `docs/mechanics/07_*.md` (or any new-numbered chapter) exists yet, and `docs/simulation/
 social_systems_contract.md` (a pre-existing, differently-scoped doc) does not satisfy this plan's
-own Target Shape. Item 1 of a 5-item hardening backlog identified 2026-09-02 (see the parent
-roadmap's "Hardening backlog" section) — the same code-verification treatment the temporal axis and
-idea 66 already received, applied to the social/reputation/political surface. **Ticketed,
+own Target Shape as-is, though it may substantially reduce the remaining authoring effort if promoted
+rather than duplicated — see the ticket below. Item 1 of a 5-item hardening backlog identified 2026-09-02
+(see the parent roadmap's "Hardening backlog" section) — the same code-verification treatment the temporal
+axis and idea 66 already received, applied to the social/reputation/political surface. **Ticketed,
 2026-09-05:** `TCK-20260905-SOCIAL-MECHANICS-BIBLE-CHAPTER` (`tickets/todos/`), scope-only —
-chapter-authoring is real content work, left for whoever picks it up next.
+chapter-authoring is real content work, left for whoever picks it up next. That ticket also carries a new
+finding this same re-verification surfaced: `social_systems_contract.md`'s own Reputation section
+describes `ReputationService` as live, which conflicts with this plan's own hardening-backlog item 5
+finding that the same service has zero callers anywhere in `src/` — an inconsistency the chapter's
+implementer must resolve directly, not assume either doc is right.
 
 **Superseded in scope, not replaced, 2026-09-02:** the fuller axis-level treatment now lives in
 [`docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md) —
@@ -86,8 +92,15 @@ epic doc's own citation for idea 22's test design (`grudge ≥ 3.0`) — not a d
    chapter should cross-link and summarize, not redo this work.
 4. **Spot-check the ~10 `SOC-FAC-001`–`010` and `SOC-CHRON-001`–`006` parity-ledger entries against real
    `FactionState`/diplomacy code directly**, the same way nemesis-promotion (`SOC-196`) was independently
-   confirmed in this investigation pass — not yet done for these, and per this project's own caution against
-   trusting a ledger's `verified` status without a direct check.
+   confirmed in this investigation pass. **Done, confirmed 2026-09-05:** all 16 entries (10 `SOC-FAC-*`, 6
+   `SOC-CHRON-*`) spot-checked directly against `src/domains/chronicle/{significance,grouper}.py`,
+   `src/domains/faction/diplomatic_state_machine.py`, `src/domains/campaigns/orchestrator.py`, and
+   `src/api/routes/chronicle.py` — every numeric constant (event-type significance weights,
+   `INCIDENT_TICK_WINDOW=50`, `ERA_EPISODE_MIN=3`, the `_SIGNIFICANCE_MAP` entries) and every structural
+   claim (the `ALLIED→HOSTILE` betrayal-transition condition, the REST route paths) matched exactly.
+   Cited tests (`tests/unit/domains/chronicle/test_significance.py`,
+   `tests/unit/domains/faction/test_betrayal_ledger.py`) run directly and confirmed passing (17/17).
+   Unlike `SUB-327`, no correction was needed here — this batch of citations was accurate as recorded.
 5. **`CanonicalStateHasher` social-field-coverage question — RESOLVED and FIXED, confirmed 2026-09-05.**
    `TCK-20260902-SOCIAL-CANONICAL-HASH-GAP` (`tickets/done/`) added all 5 missing fields
    (`debt_history`, `salience_history`, `nemesis_ids`, `place_attachment`, `betrayal_records`) to

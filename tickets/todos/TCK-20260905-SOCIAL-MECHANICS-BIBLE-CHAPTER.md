@@ -66,9 +66,11 @@ inaccurate-citation mistake `SUB-327` already demonstrated the cost of
 - Fold in (cross-link, not rewrite) the three existing partial contracts:
   `docs/simulation/domains/social_memory_contract.md`, `docs/simulation/domains/chronicle_contract.md`,
   `docs/systems/faction_contract.md`.
-- Spot-check the ~10 `SOC-FAC-001`–`010` and `SOC-CHRON-001`–`006` parity-ledger entries against real
-  `FactionState`/diplomacy code directly, the same way nemesis-promotion (`SOC-196`) was independently
-  confirmed in the original hardening pass — not yet done for these.
+- ~~Spot-check the ~10 `SOC-FAC-001`–`010` and `SOC-CHRON-001`–`006` parity-ledger entries against real
+  `FactionState`/diplomacy code directly~~ — **done, 2026-09-05**: all 16 entries confirmed accurate
+  against `src/domains/chronicle/{significance,grouper}.py`,
+  `src/domains/faction/diplomatic_state_machine.py`, `src/domains/campaigns/orchestrator.py`, and
+  `src/api/routes/chronicle.py`; cited tests re-run and passing (17/17). No corrections needed.
 
 ## Out of Scope
 - Rewriting the 117 `social_narrative.yaml` entries that are not social/narrative content despite the
@@ -87,8 +89,9 @@ inaccurate-citation mistake `SUB-327` already demonstrated the cost of
 - [ ] The `ReputationService`/`PublicReputationProfile` liveness question is resolved with a direct
       code check, not assumed from either existing doc.
 - [ ] The `03_economic_laws.md` reputation fragment is cross-linked, not duplicated.
-- [ ] The `SOC-FAC-*`/`SOC-CHRON-*` entries are independently spot-checked against real diplomacy code,
-      with results recorded (confirmed or corrected).
+- [x] The `SOC-FAC-*`/`SOC-CHRON-*` entries are independently spot-checked against real diplomacy code,
+      with results recorded (confirmed or corrected). **Done, 2026-09-05** — all 16 confirmed accurate,
+      no corrections needed.
 
 ## Related Tickets
 - `TCK-20260902-SOCIAL-CANONICAL-HASH-GAP` (this plan's item 5, already shipped)
