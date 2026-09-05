@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY
-phase: open
+phase: done
 date: 2026-09-05
 tags: [architecture, faction, social]
 ---

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260905-DRIFTING-LOYALTY-SIGNAL
-phase: open
+phase: done
 date: 2026-09-05
 tags: [world, faction]
 ---
