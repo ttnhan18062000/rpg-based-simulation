@@ -116,7 +116,12 @@ By contrast, M5's other two branches do not touch this gap:
   new event-scoring engine — already an explicit scope note in M5's own epic plan for idea 57.
 - Idea 62 is a Knowledge/Belief-axis consumer, not a new parallel memory representation. Any
   implementation of idea 62 should be gated on the `BeliefEntry`/`KnowledgeFact` reconciliation decision,
-  not proceed independently of it.
+  not proceed independently of it. **Gate cleared, 2026-09-04:**
+  `tickets/done/TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION.md` confirmed the split is
+  deliberate (structured query responses → `KnowledgeFact`; raw witnessed events → `BeliefEntry`,
+  contradiction-tracked) — the reconciliation decision this gate names is made. Idea 62 is unblocked to
+  proceed as a `BeliefEntry` consumer specifically (it models degrading *witnessed* memory, not queried
+  facts), not gated on any further Knowledge/Belief-axis work.
 - Cross-episode Campaign social memory (`social_memory.py`) and this axis's in-world "testimony decay"
   question are related but distinct: the former is a snapshot/restore mechanism between episodes, the
   latter (if built) would be a continuous within-episode process. Confusing the two risks building a
@@ -130,6 +135,12 @@ By contrast, M5's other two branches do not touch this gap:
    transmission).
 2. **An entity/reputation-scale aggregation shape**, sibling to `CultureDeriver`'s region-scale one, for
    idea 57's "does this entity's past deeds currently make them a Living Legend" question.
+   **Delivered, 2026-09-04:** see
+   `docs/brainstorm/2026-09-04-idea57-entity-scale-fame-aggregation-design.md` — the shape mirrors
+   `CultureDeriver` exactly (keyed by `NarrativeLedgerEntry.subject_id` instead of `region_id`, no
+   new schema field needed); the real open question found is which event types actually feed it,
+   since the Narrative Ledger's 4-type vocabulary has no `combat_victory` signal today and idea 57's
+   own atlas text conflates Chronicle's output with the separate, already-live `heroism_score` field.
 3. **A decay/significance-erosion rule for Chronicle-worthy events**, since `EventSignificanceScorer`
    today has no time dimension at all — a century-old rescue and a same-tick rescue score identically.
 
@@ -138,8 +149,8 @@ By contrast, M5's other two branches do not touch this gap:
 | Proposal | Status relative to current roadmap | Priority | First responsibility |
 |---|---|---:|---|
 | Confirm Chronicle/`CultureDeriver` stay downstream, not rearchitected | Verification, not new work | P0 | Design-authority confirmation before M5's history/belief branch starts |
-| Gate idea 62 on the Knowledge/Belief reconciliation decision | New sequencing constraint | P0 | Whoever scopes idea 62's ticket |
-| Entity/reputation-scale aggregation shape (idea 57's real dependency) | New, `CultureDeriver`-derived | P1 | M5, once idea 62's gate clears |
+| Gate idea 62 on the Knowledge/Belief reconciliation decision | **Cleared, 2026-09-04** — see above | P0 | Whoever scopes idea 62's ticket |
+| Entity/reputation-scale aggregation shape (idea 57's real dependency) | **Delivered, 2026-09-04** — see above | P1 | M5, once idea 62's gate clears |
 | Testimony/retelling model | New, larger scope | P2 | Design review — likely too large for a single M5 ticket, may need its own dedicated proposal the way the temporal calendar did |
 | Chronicle significance decay | New, small | P2 | `EventSignificanceScorer`, once a real consumer needs it (not speculative) |
 | Campaign-only social-memory / in-world testimony distinction, documented explicitly | Documentation-only | P1 | Whoever next touches `social_memory.py` or scopes idea 55/58 |
@@ -148,9 +159,10 @@ By contrast, M5's other two branches do not touch this gap:
 
 This should not become a tenth axis-of-axes review pass. Its responsibility is narrow and immediate:
 
-1. Before M5's history-and-belief branch (62 → 57 → 63) starts, resolve the Knowledge/Belief axis's
-   `BeliefEntry`/`KnowledgeFact` reconciliation decision — idea 62 is a direct consumer of that decision,
-   not an independent design.
+1. **Cleared, 2026-09-04:** the Knowledge/Belief axis's `BeliefEntry`/`KnowledgeFact` reconciliation
+   decision this branch was gated on is resolved (deliberate split, both kept — see the Accepted section
+   above). M5's history-and-belief branch (62 → 57 → 63) is now unblocked to start on this specific
+   gate; idea 62 proceeds as a `BeliefEntry` consumer.
 2. M5's death-and-lineage and reputation branches are unaffected by this proposal and do not need to wait
    for it (confirmed via the gap analysis above — neither touches accumulation/decay/retelling).
 3. If idea 57's entity-scale aggregation shape is accepted, document it as a named sibling capability to

@@ -21,13 +21,26 @@ Fast tests (200t / 500t runs) run in the standard suite.
 Slow tests (1000t runs) require ``pytest -m slow`` or omit ``-m "not slow"``.
 
 To update anchors after an intentional scoring change:
-  1. Re-run calibration: ``make calibrate`` (or per-scenario variant)
+  1. Re-run calibration: ``make evaluate-full`` (re-runs the engine for all fast/<=500t
+     scenarios and populates ``data/calibration/``; add ``--include-slow`` via
+     ``tools/evaluate_simq.py --include-slow`` for the 1000t/2000t anchors too), or
+     per-scenario via ``tools/calibrate_simq.py --ticks ... --seed ... --name ...``
+     (``make calibrate`` does not exist as a Makefile target -- do not use it)
   2. Inspect new grades/scores in ``data/calibration/<run_key>/quality_report.json``
      (use ``normalized_score``, not ``raw_score``)
   3. Edit ``tests/simulation_quality/fixtures/grade_anchors.json`` with new
      ``{"grade": ..., "score": ...}`` values
   4. Run this file to confirm all pass
   5. Commit both fixture and calibration data together
+
+CI note (TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS): this file's own anchor
+tests only compare against ``data/calibration/`` (gitignored, developer-machine-local) --
+they silently ``pytest.skip()`` whenever that directory is absent, which is every real CI
+run today (no CI job populates it). The "SimQ grade-anchor drift (informational)" job in
+``.github/workflows/test.yml`` runs ``make simq-full-audit-full`` on push-to-main to
+actually populate ``data/calibration/`` and surface real drift for human review --
+non-blocking by design, since committed anchors can already be behind current `main`
+(known drift is tracked, not silently re-accepted as passing).
 """
 from __future__ import annotations
 
