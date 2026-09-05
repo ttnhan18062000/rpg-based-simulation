@@ -15,7 +15,7 @@ tags: [social, strategy]
 Idea 63 — Belief Grows Around Real History (BeliefInstitution)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

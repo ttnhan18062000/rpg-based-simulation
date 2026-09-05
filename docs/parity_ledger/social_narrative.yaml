@@ -1457,11 +1457,18 @@
     \ = (state.clans[clan_id].clan_reputation / 2.0) if the source belongs to a Clan\
     \ else 0.5; the pinned no-clan-case formula (public_trust * 0.7 + history_trust\
     \ * 0.3) is preserved bit-for-bit because the delta term evaluates to exactly\
-    \ 0.0 when clan_trust == 0.5 (no Clan / neutral default). This entry's status\
-    \ and test_path are unchanged since the case this test exercises has no source\
-    \ Clan.\n"
+    \ 0.0 when clan_trust == 0.5 (no Clan / neutral default). Cross-referenced by\
+    \ intentional_divergences.md #2.51. TCK-20260905-HOTFIX-PARITY-NEXT-ID-WORLD-BELIEF-DRIFT-adjacent\
+    \ fix (found during external PR review, 2026-09-05): this entry's own test_path\
+    \ citation (TestSocialAppraisalWithNarrative::test_social_appraisal_with_narrative)\
+    \ named a method that does not exist in tests/unit/social/test_parity_soc_134.py\
+    \ -- pre-existing since commit 6e25d4f2, predating this PR entirely, never caught\
+    \ by either ticket that touched this entry's v2_evidence field. Corrected to the\
+    \ two real methods on that same class that together cover exactly what this entry's\
+    \ own text describes (zero-reputation rejected, high-reputation accepted)."
   proof_type: parity
-  test_path: tests/unit/social/test_parity_soc_134.py::TestSocialAppraisalWithNarrative::test_social_appraisal_with_narrative
+  test_path: tests/unit/social/test_parity_soc_134.py::TestSocialAppraisalWithNarrative::test_zero_public_reputation_source_rejected,
+    tests/unit/social/test_parity_soc_134.py::TestSocialAppraisalWithNarrative::test_high_public_reputation_source_accepted
   divergence_note: null
   support_boundary: null
 - id: SOC-135
@@ -4145,12 +4152,12 @@
     tests/unit/social/test_party_composition.py::test_candidate_role_value_non_conflicting_cases_unchanged,
     tests/unit/social/test_party_composition.py::test_party_composition_score_lower_for_nemesis_with_friend_bond_than_true_friend,
     tests/unit/social/test_party_composition.py::test_form_party_route_blocked_by_canonical_nemesis_ids_without_strategic_blocker
-  divergence_note: 'TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE. The gap predates this
-    fix -- flagged as an open, unconfirmed seam in the 2026-09-02 Social/Relationship
+  divergence_note: 'TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE. The gap predates
+    this fix -- flagged as an open, unconfirmed seam in the 2026-09-02 Social/Relationship
     axis brainstorm pass (docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md),
     confirmed as a real, live bug on direct investigation 2026-09-04. Resolves the
-    roadmap''s own flagged open question. NOTE: this entry was originally written as
-    SOC-264 but was renumbered to SOC-265 during a merge-conflict resolution -- an
-    unrelated concurrent session independently used SOC-264 for a different entry
+    roadmap''s own flagged open question. NOTE: this entry was originally written
+    as SOC-264 but was renumbered to SOC-265 during a merge-conflict resolution --
+    an unrelated concurrent session independently used SOC-264 for a different entry
     (ClanState lifecycle/succession wiring) first.'
   support_boundary: null

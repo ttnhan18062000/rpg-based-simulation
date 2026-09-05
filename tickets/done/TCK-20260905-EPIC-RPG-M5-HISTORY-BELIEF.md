@@ -137,11 +137,20 @@ This epic tracks child tickets only; no direct implementation happens here.
 
 ## Acceptance Criteria
 - [x] All 3 child tickets (idea 57, idea 62, idea 63) are DONE, idea 63 landing after both idea 36
-      (already true) and idea 57. Verified: all 3 in `tickets/done/m5-history-belief/` (folder moved
-      as a whole once the last, idea 63, landed) — `TCK-20260905-CHRONICLE-FIDELITY-DRIFT`,
-      `TCK-20260905-FAME-DERIVER-LEGEND-FACT`, `TCK-20260905-BELIEF-INSTITUTION-DESIGN`. Per
-      `tickets/working_log.csv`, idea 57 (`FAME-DERIVER-LEGEND-FACT`) landed 2026-09-05T05:55:00Z,
-      before idea 63 (`BELIEF-INSTITUTION-DESIGN`, 2026-09-05T09:10:00Z).
+      (already true) and idea 57. Verified: `TCK-20260905-CHRONICLE-FIDELITY-DRIFT` and
+      `TCK-20260905-FAME-DERIVER-LEGEND-FACT` live directly in `tickets/done/` (each ticket's own
+      individual Finalize deleted its copy from the `tickets/todos/m5-history-belief/` folder and
+      wrote it to `tickets/done/` directly, per this repo's own per-ticket Finalize convention);
+      `TCK-20260905-BELIEF-INSTITUTION-DESIGN` also lives directly in `tickets/done/`.
+      **Correction, found during an external PR review before merge:** an earlier version of this
+      AC claimed all 3 tickets ended up inside `tickets/done/m5-history-belief/` — that was
+      inaccurate. Only the folder itself (containing `SEQUENCE.md`, now-empty of ticket files) moved
+      to `tickets/done/m5-history-belief/` once the batch completed; a stale, pre-correction duplicate
+      copy of `TCK-20260905-BELIEF-INSTITUTION-DESIGN.md` had also been left inside that folder by the
+      same Finalize run and was deleted as part of this correction — the surviving, authoritative copy
+      is the one directly in `tickets/done/`. Per `tickets/working_log.csv`, idea 57
+      (`FAME-DERIVER-LEGEND-FACT`) landed 2026-09-05T05:55:00Z, before idea 63
+      (`BELIEF-INSTITUTION-DESIGN`, 2026-09-05T09:10:00Z).
 - [x] Idea 57's child ticket documents, with fresh evidence, whether the "alongside" resolution for
       idea 62 held up in practice (i.e., idea 57 did not end up needing idea 62's output as an input).
       Verified: idea 57's own investigation independently found the epic's own "alongside" framing

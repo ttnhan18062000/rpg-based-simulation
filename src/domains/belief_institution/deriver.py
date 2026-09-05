@@ -153,7 +153,10 @@ class BeliefInstitutionDeriver:
                     best_quest[subject_id] = entry
 
         origin_events: Dict[str, str] = {}
-        all_subjects = set(best_hero_death) | set(best_quest)
+        # sorted(): a set union's iteration order is not guaranteed stable across
+        # process runs (string hash randomization) -- this dict's insertion order
+        # must be deterministic since it feeds `result`'s own key order downstream.
+        all_subjects = sorted(set(best_hero_death) | set(best_quest))
         for subject_id in all_subjects:
             chosen = best_hero_death.get(subject_id) or best_quest[subject_id]
             origin_events[subject_id] = chosen.entry_id
