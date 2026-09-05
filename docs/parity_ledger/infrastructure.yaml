@@ -11917,3 +11917,176 @@
   test_path: tests/unit/observability/test_event_shapers.py::test_combat_entity_snapshot_returns_real_fields
   divergence_note: null
   support_boundary: null
+- id: INFRA-402
+  text: 'Agent tool-usage baseline audit (TCK-20260904-AGENT-TOOL-USAGE-BASELINE):
+    a new read-only script, tools/agent-monitoring/agent_tool_usage_baseline.py, aggregates
+    every agent-monitoring/data/*/tools.jsonl shard into a per-registered-agent tool-usage
+    table (one row per live-globbed .claude/agents/*.md agent plus one unattributed
+    row for null/non-matching agent values), each with a per-(agent, tool) call count
+    and a real, verbatim, truncated:true-labeled example drawn from input_summary.
+    Reuses generate_retro.py::load_data_glob rather than reimplementing a 4th shard-glob
+    loader; never opens agent-monitoring/data/ for writing.'
+  status: verified
+  priority: P2
+  v2_evidence: tools/agent-monitoring/agent_tool_usage_baseline.py (registered_agents(),
+    load_all_tool_rows() delegating to generate_retro.py::load_data_glob, bucket_for(),
+    build_usage_table(), build_report()); docs/agent-monitoring/README.md "Agent Tool-Usage
+    Baseline" section documents the tool and its current findings (6 of 16 registered
+    agents with zero historical tool-call rows).
+  test_path: 'tests/tools/test_agent_tool_usage_baseline.py (10/10 passing: test_output_has_exactly_16_agent_rows_plus_unattributed,
+    test_agent_row_present_with_zero_count_for_agents_with_no_real_rows, test_null_and_non_matching_agent_values_bucket_to_unattributed,
+    test_glob_matches_all_dated_week_shards_and_unknown_week, test_reuses_load_data_glob_not_a_fourth_loader,
+    test_sum_of_per_agent_counts_matches_wc_l_sanity_check_on_real_corpus, test_every_nonzero_tool_entry_has_a_labeled_truncated_example,
+    test_example_is_verbatim_substring_of_a_real_row_not_paraphrased, test_script_is_read_only_against_real_agent_monitoring_data,
+    test_cli_runs_against_real_corpus_and_prints_valid_json_or_table)'
+  divergence_note: null
+  proof_type: contract
+- id: INFRA-403
+  text: 'Capability-envelope baseline registry (TCK-20260904-CAPABILITY-ENVELOPE-BASELINE):
+    tools/capability_envelope_baseline.py manages an append-only JSONL registry (registries/capability_envelope_registry.jsonl,
+    keyed on (field, value)) covering all 4 of .claude/settings.local.json''s top-level
+    schema fields, mirroring tools/tag_registry.py / tools/layer_registry.py''s registry
+    convention (one entry per line, add_entry() refuses to re-add an existing key,
+    load_registry() raises on a duplicate key on disk). Each entry carries a typed
+    reviewed:bool field distinguishing individually-reviewed (add, default True) from
+    bulk-seeded (seed_registry, always False) entries - a durable typed field, not
+    recovered from note''s free-form text. The diff subcommand compares a live settings
+    file against the registry and is audit-only: it and add/seed/list never write
+    to any settings*.json file, and every diff report carries an audit_only_disclaimer
+    field stating there is no confirmed runtime-enforcement mechanism today.'
+  status: verified
+  priority: P2
+  v2_evidence: tools/capability_envelope_baseline.py (add_entry(), seed_registry(),
+    load_registry(), diff_against_registry() CLI subcommands add/seed/list/diff);
+    docs/ai/capability_envelope_baseline.md (registry shape, audit-only scope, why-this-exists)
+  test_path: 'tests/tools/test_capability_envelope_baseline.py (9/9 passing: test_baseline_schema_covers_all_four_settings_local_fields,
+    test_diff_script_runs_against_real_settings_local_json_produces_real_report, test_diff_script_handles_missing_settings_local_json_gracefully,
+    test_diff_script_output_states_audit_only_no_enforcement, test_clean_baseline_input_produces_empty_result,
+    test_out_of_envelope_entry_produces_flagged_result, test_baseline_registry_rejects_or_governs_duplicate_or_conflicting_entries,
+    test_diff_script_is_read_only_against_settings_local_json_and_baseline, test_seeded_entries_marked_unreviewed_and_manual_adds_marked_reviewed)'
+  divergence_note: null
+  proof_type: contract
+- id: INFRA-404
+  text: 'Verify-phase docs-coverage gate reverse-direction hardening (TCK-20260904-DOC-COVERAGE-REVERSE-CHECK):
+    tools/gate_checks/done_checker_static.py''s check_docs_to_update_coverage() previously
+    only checked the forward direction (does every docs/ path bullet declared in investigation.md''s
+    ''Docs Requiring Update'' section actually get touched) -- it had no check for
+    the reverse direction, a docs/ path real git status shows touched during the ticket''s
+    diff that never made it into the ticket''s own ''## Files Changed''/''## Related
+    Docs'' section text. This let a doc-updater-added doc file recurringly slip through
+    undeclared, confirmed live by RETRO-2026-W36 across 3 separate incidents (ITEM-INSTANCE-HISTORY,
+    RACE-RELATIONS-MATRIX, READINESS-SPEED-FORMULA), each previously caught only by
+    hand-patching after the fact. Fixed by adding a new reverse half to check_docs_to_update_coverage:
+    new _DOCS_PROSE_TOKEN_RE/_prose_docs_paths/_touched_docs_paths_uncovered helpers
+    and a new _resolve_ticket_body_path (distinct from, does not touch, check_tag_drift''s
+    own path-resolution helper) reuse check_tag_drift''s existing pattern for locating
+    the ticket file and reading section text via _extract_section_text, then diff
+    every git-touched docs/ path (via the single existing _git_touched_paths() call,
+    not a second invocation) against the union of Files Changed and Related Docs text,
+    applying _path_touched''s existing directory-collapse tolerance. The check is
+    tier-agnostic: unlike the forward half (which still short-circuits under hotfix
+    tier for lack of an investigation.md), the reverse half always runs, scoped to
+    docs/ paths only (an explicit, disclosed scope decision -- it structurally cannot
+    catch ITEM-INSTANCE-HISTORY''s actual src/core/state.py gap). Reproduced the real
+    TCK-20260831-RACE-RELATIONS-MATRIX incident as a regression fixture (test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident)
+    proving the new check would have FAILed pre-hand-patch. Direct extension of the
+    same check_docs_to_update_coverage function INFRA-322 and INFRA-396 previously
+    extended.'
+  status: verified
+  priority: P2
+  v2_evidence: 'tools/gate_checks/done_checker_static.py: _DOCS_PROSE_TOKEN_RE, _prose_docs_paths(),
+    _touched_docs_paths_uncovered(), _resolve_ticket_body_path() (new helpers); check_docs_to_update_coverage()
+    restructured so the hotfix-tier bare early-NA-return is gone -- forward half still
+    skips under hotfix, reverse half now always runs afterward, tier-agnostically,
+    scoped to docs/ paths, reusing the single existing _git_touched_paths() call result
+    for both halves.'
+  test_path: 'tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_fails_when_touched_doc_not_in_files_changed_or_related_docs,
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_passes_when_touched_doc_appears_in_files_changed,
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_passes_when_touched_doc_appears_in_related_docs_only,
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_directory_collapse_tolerance,
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_ITEM_INSTANCE_HISTORY_style_non_docs_path_is_out_of_scope,
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_hotfix_tier_behavior,
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident
+    (7/7 re-run and confirmed passing during this parity update: `pytest tests/tools/test_done_checker_static.py
+    -k reverse_docs_coverage -q` -> ''7 passed'').'
+  divergence_note: null
+  proof_type: regression
+- id: INFRA-405
+  text: 'SubagentStop deterministic background-hang guard (TCK-20260904-TEST-SCOPER-HANG-GUARD):
+    a prose-only Hard Rule ("never end your turn while your own run_in_background
+    command is still running"), carried in CLAUDE.md since 2026-08-17/18 and propagated
+    to 14 more agent role files by a prior hotfix (TCK-20260902-AGENT-BACKGROUND-TASK-TURN-END-DEFENSE-IN-DEPTH),
+    recurred a confirmed 4th time per RETRO-2026-W36 -- direct proof prose alone does
+    not prevent a dispatched subagent from ending its turn while its own background
+    command is still live. Fixed by wiring a new, genuinely-blocking tools/agent-monitoring/subagent_stop_background_guard.py
+    script under a SubagentStop hook key that did not previously exist in .claude/settings.json''s
+    hooks block (matcher "*", not suffixed with the swallowing || true every other
+    hook in the file uses, since this one must not swallow its own exit-2 block signal).
+    The script reads the harness-populated background_tasks array directly off the
+    real SubagentStop payload (extracted via literal zod-schema recovery from the
+    installed Claude Code binary after both named live-capture spike avenues were
+    blocked by the sandbox''s own auto-mode classifier) rather than parsing transcript_path
+    JSONL -- a non-empty background_tasks blocks (exit 2) unless stop_hook_active
+    is already true, matching the harness''s own documented loop-prevention intent.
+    agent-orchestration/hook-events.yaml and hook-surface-policy.yaml updated to add
+    SubagentStop as a third enabled event and a new fourth available_events entry,
+    with no loader.py/generator.py schema change required. .claude/agents/test-scoper.md''s
+    existing prose Background Commands section is kept verbatim as defense-in-depth
+    (not superseded), since the hook fails open on any internal error and the prose
+    remains the backstop for exactly those cases.'
+  status: verified
+  priority: P0
+  v2_evidence: tools/agent-monitoring/subagent_stop_background_guard.py (reads payload["background_tasks"],
+    checks stop_hook_active first, blocks with exit 2 on a non-empty still-running
+    background task, fails open on malformed/empty/non-JSON stdin); .claude/settings.json
+    (new SubagentStop hook key, matcher "*", command not suffixed with || true); agent-orchestration/hook-events.yaml
+    (new SubagentStop entry); agent-orchestration/hook-surface-policy.yaml (providers.claude.enabled_events
+    now includes SubagentStop; new providers.claude.available_events).
+  test_path: 'tests/tools/test_subagent_stop_background_guard.py (5/5 passing: fires
+    on still-running background task, allows completed task, allows no-background-task
+    common case with zero side-effect files, fails open on malformed/empty/non-JSON
+    stdin and malformed background_tasks shapes, respects stop_hook_active loop-prevention);
+    tests/tools/test_settings_json_hooks_wiring.py (4/4 passing: new key proven genuinely
+    new, command not suffixed with swallowing || true, script path exists and is referenced,
+    existing PreToolUse/PostToolUse/permissions.allow content untouched); PYTHONPATH=tools:.
+    pytest tests/agent_orchestration/test_contract_structure.py (20/20 passing, including
+    test_policy_represents_claude_three_enabled_events, test_hook_events_yaml_normalized_vocabulary_includes_subagent_stop,
+    and new test_policy_represents_claude_four_available_events).'
+  divergence_note: null
+  proof_type: contract
+- id: INFRA-406
+  text: 'Wave 1 agent-tools frontmatter rollout (TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE):
+    10 of 16 .claude/agents/*.md role files (investigator, ticket-scoper, done-checker,
+    test-scoper, mechanics-auditor, spec-document-reviewer, simulation-analyst, world-debugger,
+    world-render-reviewer, doc-updater) now carry an explicit tools: frontmatter allowlist,
+    gated on the tool-usage baseline audit (INFRA-402) and a Step 0 empirical harness-enforcement
+    check performed before any wave landed. 5 agents scoped from real historical usage-table
+    rows (test-scoper deliberately excludes Edit despite 147 historical calls, per
+    an explicit, disclosed judgment call); 6 agents (concern-investigator, mechanics-auditor,
+    simulation-analyst, spec-document-reviewer, world-debugger, world-render-reviewer)
+    have zero historical tool-call rows and are scoped from policy-derived static
+    analysis instead, flagged as the most likely candidates for a post-rollout tightening
+    pass. concern-investigator.md (the repo''s only prior tools: precedent, from TCK-20260709-CONCERN-INVESTIGATOR-AGENT)
+    confirmed byte-identical/unchanged throughout. Wave 2 (architecture-reviewer,
+    security-reviewer, planner) and Wave 3 (implementer, parity-updater) are explicitly
+    deferred to future tickets, each gated on the prior wave''s clean observation
+    window.'
+  status: verified
+  priority: P2
+  v2_evidence: '.claude/agents/investigator.md, ticket-scoper.md, done-checker.md,
+    test-scoper.md, mechanics-auditor.md, spec-document-reviewer.md, simulation-analyst.md,
+    world-debugger.md, world-render-reviewer.md, doc-updater.md (each gained a single-line
+    tools: frontmatter field); .claude/agents/concern-investigator.md unchanged (byte-identical,
+    verified throughout); docs/plans/agent_infrastructure/ai_first_hardening_epics/governance_capability_policy_epic.md
+    (Step 0 outcome, confirmed (2026-09-05) paragraph) and roadmap.md (Item 1 -- partial
+    progress (2026-09-05) paragraph, 11/16 agents now carry tools:, Wave 2/3 remain
+    unshipped).'
+  test_path: tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave1_agent_files_declare_tools_field,
+    tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave1_candidate_scope_excludes_known_denied_tools,
+    tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave1_agents_do_not_declare_disallowed_tools_field,
+    tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave2_wave3_agents_do_not_gain_tools_field,
+    tests/tools/test_wave1_agent_tools_frontmatter.py::test_concern_investigator_tools_field_unchanged_byte_identical
+    (55/55 passing per ticket Test Summary, run together with test_concern_investigator_agent_definition.py
+    and test_doc_updater_agent_file.py)
+  divergence_note: null
+  proof_type: contract
