@@ -1977,3 +1977,37 @@
   test_path: tests/unit/domains/culture/test_settlement_personality.py::test_describe_with_high_fatalism_axis_produces_fatalistic_signal;
     tests/unit/domains/campaigns/test_settlement_personality_read.py::test_describe_settlement_personality_with_populated_region_cultures;
     tests/api/test_campaign_history_api.py::test_settlement_personality_endpoint_returns_shaped_presenter_not_raw_domain_object
+- id: WORLD-FIDELITY-001
+  text: 'FidelityState is derived only from ChronicleHierarchy at episode boundary
+    (FidelityExporter.export() called from _advance_state() only, immediately alongside
+    CultureDriftExporter.export(), consuming the same _hierarchy local) -- never mutated
+    during the tick loop. Fidelity decays linearly with Era-distance from the current
+    Era: fidelity = max(0.0, 1.0 - era_distance * 0.2) (FIDELITY_DECAY_PER_ERA=0.2),
+    keyed by NarrativeLedgerEntry.entry_id. Era membership is resolved by walking
+    hierarchy.eras -> Era.episodes -> Episode.index, never by episode // ERA_EPISODE_MIN
+    arithmetic.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/fidelity/deriver.py (FidelityDeriver.derive); src/domains/fidelity/exporter.py
+    (FidelityExporter.export called from _advance_state() in orchestrator.py immediately
+    after CultureDriftExporter.export)
+  proof_type: contract
+  test_path: tests/unit/domains/chronicle/test_fidelity_deriver.py
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-FIDELITY-002
+  text: 'FidelityDeriver.derive() is deterministic: calling it twice with the same
+    ChronicleHierarchy input produces byte-identical output. FidelityCarryForward
+    round-trips through CampaignState.to_dict()/from_dict() serialization with full
+    fidelity, stored in CampaignState.historical_drift: Dict[str, FidelityCarryForward].'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/fidelity/model.py (FidelityState/FidelityCarryForward to_dict/from_dict);
+    src/domains/campaigns/state.py (CampaignState.historical_drift serialization wiring)
+  proof_type: contract
+  test_path: tests/unit/domains/chronicle/test_fidelity_exporter.py::test_fidelity_carry_forward_round_trips_through_campaign_state_serialization,
+    tests/unit/domains/chronicle/test_fidelity_deriver.py::test_fidelity_derive_is_deterministic_byte_identical
+  divergence_note: null
+  support_boundary: null

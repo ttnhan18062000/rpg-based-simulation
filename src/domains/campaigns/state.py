@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional
 from src.domains.campaigns.progression_plan import ProgressionPlan
 from src.domains.campaigns.social_memory import FactionSocialMemory, SocialMemoryRecord
 from src.domains.culture.model import CultureCarryForward
+from src.domains.fidelity.model import FidelityCarryForward
 
 
 @dataclass(frozen=True)
@@ -311,6 +312,11 @@ class CampaignState:
     # Detected at episode end (2+ negative interaction episodes from SocialMemoryRecord);
     # protagonist receives a BlockerState(SOCIAL) at episode start blocking FORM_PARTY
     # routes when the antagonist is among candidates (via GriefUrgencyImporter).
+    historical_drift: Dict[str, FidelityCarryForward] = field(default_factory=dict)
+    # E62-FIDELITY: per-event chronicle-fidelity snapshots keyed by NarrativeLedgerEntry.entry_id.
+    # Populated by FidelityExporter at episode end; consumed by FidelityImporter (no live
+    # consumer yet — idea 63, Belief Grows Around Real History, is the intended eventual reader).
+    # Derived from ChronicleHierarchy, mirroring region_cultures' own field shape.
 
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict. All dict keys sorted for determinism."""
@@ -351,6 +357,10 @@ class CampaignState:
             "nemesis_relations": {
                 k: v.to_dict()
                 for k, v in sorted(self.nemesis_relations.items())
+            },
+            "historical_drift": {
+                k: v.to_dict()
+                for k, v in sorted(self.historical_drift.items())
             },
         }
 
@@ -400,5 +410,9 @@ class CampaignState:
             nemesis_relations={
                 k: NemesisRelation.from_dict(v)
                 for k, v in d.get("nemesis_relations", {}).items()
+            },
+            historical_drift={
+                k: FidelityCarryForward.from_dict(v)
+                for k, v in d.get("historical_drift", {}).items()
             },
         )

@@ -244,6 +244,9 @@ class CampaignOrchestrator:
         from src.domains.chronicle.grouper import ChronicleGrouper
         _hierarchy = ChronicleGrouper().group(list(self._state.narrative_ledger))
         CultureDriftExporter.export(self._state, _hierarchy, summary.episode_index)
+        # E62-FIDELITY: derive and persist chronicle-fidelity drift at the same episode boundary.
+        from src.domains.fidelity.exporter import FidelityExporter
+        FidelityExporter.export(self._state, _hierarchy, summary.episode_index)
         self._state.episode_index += 1
 
     def _advance_grief_urgencies(

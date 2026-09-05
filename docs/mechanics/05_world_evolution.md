@@ -600,3 +600,61 @@ additive delta layered onto `MotivationBiasService.compute_bias_multiplier()` re
 **Sources:** `src/domains/culture/`
 **Contract:** `docs/world/culture_drift_contract.md`
 **Parity:** WORLD-CULT-001, WORLD-CULT-002, WORLD-CULT-003
+
+---
+
+## 8. Chronicle Fidelity Drift (E62)
+
+Over long campaigns, Chronicle's recorded history loses accuracy the further removed an event
+is from the current Era — a battle survivors remember personally fades into a simplified,
+distance-distorted story. Fidelity drift is a **long-horizon** mechanism, a direct structural
+sibling of Cultural Drift above: it operates at the same episode boundary, over the same
+`ChronicleHierarchy` substrate, via the same Deriver/Model/Exporter-Importer pattern.
+
+### Value Definition
+
+`fidelity`: a single float in [0.0, 1.0] per chronicle-worthy event, keyed by
+`NarrativeLedgerEntry.entry_id`. `1.0` = fully accurate (an event just recorded, in the current
+Era). Decreases linearly with Era-distance from the current Era.
+
+### Derivation Trigger
+
+`FidelityDeriver.derive(hierarchy)` walks `hierarchy.eras` → `Era.episodes` → `Episode.index` to
+find each event's real containing Era (never `episode // ERA_EPISODE_MIN` arithmetic, which is
+wrong whenever any episode has zero chronicle-worthy events, since `Era.episodes` batches only
+the already-filtered episode list). For each event:
+
+```
+era_distance = current_era_ordinal - event_era_ordinal
+fidelity = max(0.0, 1.0 - era_distance * FIDELITY_DECAY_PER_ERA)
+FIDELITY_DECAY_PER_ERA = 0.2
+```
+
+Same-era events (`era_distance == 0`) always get `fidelity = 1.0`.
+
+`FidelityExporter.export()` is called from `CampaignOrchestrator._advance_state()` at every
+episode boundary, immediately alongside `CultureDriftExporter.export()` — both consume the exact
+same `ChronicleGrouper().group(narrative_ledger)` result, never a separately (re)computed copy.
+
+### Persistence
+
+`FidelityState` per event is stored as `FidelityCarryForward` in
+`CampaignState.historical_drift: Dict[str, FidelityCarryForward]`, keyed by
+`NarrativeLedgerEntry.entry_id`. Events absent from a given episode's hierarchy keep their prior
+fidelity snapshot unchanged until the next derivation.
+
+### No Live Consumer Yet
+
+Unlike Cultural Drift's `CulturalBiasApplicator` overlay, this mechanism ships with **no live
+reader wired in**. `FidelityImporter.get_fidelity()` is a thin, `None`-safe lookup helper with no
+call site — the intended eventual consumer is idea 63 ("Belief Grows Around Real History"), not
+yet built. This is a disclosed, accepted gap, not a hidden incompleteness.
+
+### Acceptance Signal
+
+> Given a `ChronicleHierarchy` with events spanning 2 or more Eras, an event's derived fidelity
+> is strictly lower the further that event's Era is from the current Era.
+
+**Sources:** `src/domains/fidelity/`
+**Contract:** `docs/world/chronicle_fidelity_contract.md`
+**Parity:** WORLD-FIDELITY-001, WORLD-FIDELITY-002

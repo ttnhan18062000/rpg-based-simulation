@@ -140,6 +140,23 @@ and schedule, not yet one of the 8 ideas this epic's Scope commits to below.
    built as its own new Deriver-pattern sibling (mirroring `CultureDeriver`/idea 57's `FameDeriver`
    shape), not a repurposing of `BeliefEntry`. Left uncorrected here previously so future scoping
    wouldn't silently repeat either overstated claim.
+   **Status update, 2026-09-05:** shipped as `TCK-20260905-CHRONICLE-FIDELITY-DRIFT`, exactly per the
+   correction above (its own Deriver-pattern sibling, not a `BeliefEntry` repurposing). Added
+   `src/domains/fidelity/` (`FidelityState`/`FidelityCarryForward` model, `FidelityDeriver.derive()`,
+   `FidelityExporter`/`FidelityImporter`) mirroring `src/domains/culture/`'s exact 3-layer
+   Deriver/Model/Exporter-Importer shape. `fidelity` is a per-event float in `[0.0, 1.0]` keyed by
+   `NarrativeLedgerEntry.entry_id`, decaying linearly with Era-distance from the current Era
+   (`fidelity = max(0.0, 1.0 - era_distance * FIDELITY_DECAY_PER_ERA)`, `FIDELITY_DECAY_PER_ERA = 0.2`),
+   with Era membership resolved by walking `hierarchy.eras` → `Era.episodes` → `Episode.index` (never
+   `episode // ERA_EPISODE_MIN` arithmetic, which silently diverges whenever an episode has zero
+   chronicle-worthy events). Persisted in new `CampaignState.historical_drift: Dict[str,
+   FidelityCarryForward]`, written by `FidelityExporter.export()` called from
+   `CampaignOrchestrator._advance_state()` immediately alongside `CultureDriftExporter.export()`,
+   consuming the exact same `ChronicleHierarchy`. Ships with no live consumer yet — idea 63 is the
+   intended eventual reader, a disclosed, accepted gap. Documented in
+   `docs/mechanics/05_world_evolution.md` §8 "Chronicle Fidelity Drift (E62)",
+   `docs/world/chronicle_fidelity_contract.md` (new file), and `docs/parity_ledger/world_dynamics.yaml`
+   (WORLD-FIDELITY-001, WORLD-FIDELITY-002).
 7. **Idea 63 — Belief Grows Around Real History.** Confirmed a genuine downstream composite, needing both
    idea 36 (Clan, as container) and idea 57 (fame substrate) first — not a thin wrapper on either.
 
