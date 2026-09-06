@@ -170,8 +170,9 @@ or as an unowned bug.
 
 **Tracking epic**: `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/inprogress/`,
 `## Status: EPIC_SCOPED` as of 2026-09-05 — 3 child tickets scoped in
-`tickets/todos/m6-political-identity/`, none yet implemented; M2-M5 all confirmed DONE, so this
-milestone's own gate is now clear).
+`tickets/todos/m6-political-identity/`; idea 39 landed 2026-09-06
+(`TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`), idea 56 and idea 59/65 not yet implemented;
+M2-M5 all confirmed DONE, so this milestone's own gate is now clear).
 
 4 ideas, the deepest single dependency chain in the whole roadmap (39 &rarr; 56 &rarr; 59 &rarr; 65) —
 affiliation's real change path, drifting loyalty, personal place attachment, refugee threads. Its Phase
@@ -677,15 +678,26 @@ with the new terminology is a separate decision, not bundled into this rename.
   cooldowns, idea 37's matrix) is extending a schema that has never carried a number before, not following
   an established numeric-content pattern.
 - **The 6 Mechanics Bible chapters have no social/relationship/reputation/political chapter.** Mapping all
-  65 ideas against the Bible and the 8 parity ledger files (see the atlas's new Mechanics Bible & Parity
-  Ledger Mapping section) found that `social_narrative.yaml` — the second-largest ledger, 265 entries — has
-  no chapter home at all, affecting roughly a third of the roadmap's ideas. Whoever scopes a ticket touching
-  Clan, faction diplomacy, Chronicle, grief/nemesis, or reputation should expect to update the ledger entry
-  with no corresponding Bible chapter section to point it at — that gap is not a defect in any single idea's
-  ticket, it's a standing hole in the Bible's own structure worth its own follow-up ticket eventually. Idea
-  39 (M6, affiliation change) is the single widest cross-ledger idea in the whole set (5 of 8 ledger files);
-  ideas 53/54/60 all touch `entity.social.public_reputation`, which is included in the deterministic replay
-  hash (`replay/fingerprint.py`) — a determinism concern layered on top of the ordinary parity-ledger one.
+  65 ideas against the Bible and the (then-)8 parity ledger files (see the atlas's new Mechanics Bible &
+  Parity Ledger Mapping section) found that `social_narrative.yaml` — the second-largest ledger, 265 entries
+  — has no chapter home at all, affecting roughly a third of the roadmap's ideas. Whoever scopes a ticket
+  touching Clan, faction diplomacy, Chronicle, grief/nemesis, or reputation should expect to update the
+  ledger entry with no corresponding Bible chapter section to point it at — that gap is not a defect in any
+  single idea's ticket, it's a standing hole in the Bible's own structure worth its own follow-up ticket
+  eventually. **Ledger count corrected, 2026-09-06:** the canonical parity ledger set is now 9 files, not 8
+  — `docs/parity_ledger/faction.yaml` was added as a 9th canonical file (`INFRA-399`,
+  `TCK-20260826-PARITY-FACTION-CANONICAL-SCAN`), after this "8 ledger files" framing was originally written.
+  Idea 39 (M6, affiliation change) was cited here as the single widest cross-ledger idea in the whole set
+  ("5 of 8" ledger files); that specific numerator has not been re-verified against the new 9-file set, but
+  its own landed implementation (`TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`, 2026-09-06) confirms real
+  parity-ledger entries in exactly 3 of the 9 files (`social_narrative.yaml`, `combat_movement.yaml`,
+  `substrate.yaml` — see `docs/world/affiliation_mutation.md`); `faction.yaml` itself was investigated and
+  confirmed **not** touched, since all of its entries concern `FactionState`-level mechanics (tension,
+  diplomacy, siege), not per-entity `identity.faction`. Whether idea 39's originally-cited 5th ledger file
+  (likely `world_dynamics.yaml`, per that investigation) still applies was not re-verified by this ticket and
+  should not be assumed; ideas 53/54/60 all touch `entity.social.public_reputation`, which is included in the
+  deterministic replay hash (`replay/fingerprint.py`) — a determinism concern layered on top of the ordinary
+  parity-ledger one.
 - **Cross-epic file-conflict check (2026-08-17): no near-term risk.** This roadmap's only PR so far changes
   zero `src/`/`tests/` files and nothing is ticketed yet, so there is nothing to conflict with today. The one
   real historical near-hit — a merged `worldgen-organic-terrain` epic that touched `src/worldbuilding/compiler.py`,

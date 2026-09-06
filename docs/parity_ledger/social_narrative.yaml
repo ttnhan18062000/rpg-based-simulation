@@ -4161,3 +4161,62 @@
     an unrelated concurrent session independently used SOC-264 for a different entry
     (ClanState lifecycle/succession wiring) first.'
   support_boundary: null
+- id: SOC-273
+  text: 'TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE (idea 39, M6 Political Identity
+    epic): PartyLifecycleService.check_defection() (SOC-230) is now the first real,
+    live producer of IdentityUpdate.faction_set -- a defecting entity''s identity.faction
+    is set to Faction.NEUTRAL through the pre-existing authoritative apply-path (IdentityPatch.apply(),
+    patches.py:209). This is a NEUTRAL-sentinel design, not rival-faction selection:
+    GroupRecord carries no faction context to pick a destination from, and idea 56
+    (Drifting Loyalty, TCK-20260905-DRIFTING-LOYALTY-SIGNAL) is the anticipated future
+    consumer for a non-neutral destination. check_defection() remains a pure function;
+    the entity''s faction only changes once the returned EntityUpdate is run through
+    ApplyPath. See docs/world/affiliation_mutation.md.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/systems/social_systems/party_lifecycle.py (PartyLifecycleService.check_defection()
+    returns EntityUpdate(identity=IdentityUpdate(faction_set=Faction.NEUTRAL), ...)
+    on defection). src/engine/patches.py:209 (IdentityPatch.apply(), pre-existing
+    authoritative consumer, unchanged). tests/architecture/test_faction_mutation_write_paths.py
+    enforces no bypassing write path exists.
+  proof_type: regression
+  test_path: tests/unit/social/test_party_lifecycle.py::test_defection_produces_faction_set_neutral_via_apply_path;
+    tests/unit/observability/test_event_extractor_identity.py::test_entity_faction_changed_fires_once_on_real_defection_trigger
+  divergence_note: null
+  support_boundary: NEUTRAL-sentinel only -- no rival-faction-selection logic. No
+    loyalty/pressure-accumulation field added (idea 56's own scope).
+- id: SOC-274
+  text: 'Idea 56/M6 (Drifting Loyalty): LoyaltyDriftService.compute_loyalty_pressure(campaign_state,
+    region_id) -> float (src/systems/social_systems/loyalty_drift.py) is a pure, read-only
+    reuse of the already-live CultureState.faction_conflict_exposure axis via CultureDriftImporter.get_culture(),
+    keyed by the entity''s current region (entity.navigation.region_id, real and live-populated
+    for every entity -- NOT StrategicComponent.home_region_id, which is populated
+    only for bosses until idea 59 lands). Wired as a real, optional loyalty_pressure
+    parameter on PartyLifecycleService.effective_defection_threshold()/check_defection()
+    (src/systems/social_systems/party_lifecycle.py), subtracting round(loyalty_pressure
+    * 2) from the grievance threshold (mirrors composition_score''s own bonus shape,
+    opposite sign), floored at 1. Default 0.0 is fully backward-compatible with every
+    pre-existing caller. Disclosed gap: GroupPhase.resolve() (src/engine/pipeline_phases/groups.py),
+    the one live per-tick caller, has no CampaignState access -- no bridge exists
+    between per-tick AuthoritativeState and episode-boundary CampaignState today --
+    so the live call site still supplies only the 0.0 default; the parameter itself
+    is real, tested end-to-end via a Culture-Drift integration test, not a dead stub.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/systems/social_systems/loyalty_drift.py (LoyaltyDriftService.compute_loyalty_pressure());
+    src/systems/social_systems/party_lifecycle.py (effective_defection_threshold()/check_defection()'s
+    loyalty_pressure parameter). Builds no new Culture Drift derivation/bias-application
+    machinery -- reuses CultureState.faction_conflict_exposure and CultureDriftImporter.get_culture()
+    exactly as they already exist.
+  proof_type: parity
+  test_path: tests/unit/social/test_loyalty_drift.py, tests/unit/social/test_party_lifecycle.py::test_effective_defection_threshold_lowered_by_loyalty_pressure,
+    tests/unit/social/test_party_lifecycle.py::test_check_defection_fires_earlier_with_loyalty_pressure,
+    tests/integration/culture/test_loyalty_drift_campaign.py
+  divergence_note: null
+  support_boundary: Only takes effect where a real loyalty_pressure value is supplied
+    -- the one live per-tick caller (GroupPhase.resolve()) has no CampaignState access
+    today and uses the 0.0 default, so this signal is currently a no-op in the default
+    single-episode Kernel path, matching the M5 batch's own "built, not yet visible
+    in play" precedent.

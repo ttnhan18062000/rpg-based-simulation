@@ -56,6 +56,8 @@ class StateFingerprinter:
             entity_parts.append(
                 f"{eid}:"
                 f"{ent.kind}:"
+                f"role={ent.identity.role}:"
+                f"faction={ent.identity.faction}:"
                 f"pos={ent.navigation.position}:"
                 f"hp={ent.combat.hp}:"
                 f"gold={ent.inventory.gold}:"

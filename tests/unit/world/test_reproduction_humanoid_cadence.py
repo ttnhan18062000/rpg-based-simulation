@@ -109,6 +109,39 @@ def test_no_population_cohorts_write_when_birth_region_unresolved():
     assert update.world_updates == {}
 
 
+def test_humanoid_offspring_home_region_id_set_from_spawn_position():
+    """TCK-20260905-HOME-EXILE-REFUGEE-THREADS (idea 59): a humanoid offspring's
+    strategic.home_region_id is populated from the region its spawn position resolves to --
+    the first real production population path for this field on non-boss entities."""
+    region = _region()
+    parent_a = _adult(1, pos=(5.0, 5.0))
+    parent_b = _adult(2, pos=(5.0, 5.0))
+    state = AuthoritativeState(
+        tick=200, seed=42, entities={1: parent_a, 2: parent_b}, regions={"town": region},
+    )
+    generator = _generator_for(state)
+
+    update = HumanoidReproductionService.process_reproduction(state, generator)
+
+    offspring = _offspring(update.entities_add)
+    assert len(offspring) == 1
+    assert offspring[0].strategic.home_region_id == "town"
+
+
+def test_humanoid_offspring_home_region_id_none_when_no_region_resolved():
+    """No regions declared -- home_region_id stays None, no crash (mirrors the population-cohort
+    unresolved-region test's own None-safe contract just above)."""
+    parent_a = _adult(1, pos=(5.0, 5.0))
+    parent_b = _adult(2, pos=(5.0, 5.0))
+    state = AuthoritativeState(tick=200, seed=42, entities={1: parent_a, 2: parent_b})
+    generator = _generator_for(state)
+
+    update = HumanoidReproductionService.process_reproduction(state, generator)
+
+    offspring = _offspring(update.entities_add)
+    assert offspring[0].strategic.home_region_id is None
+
+
 def test_humanoid_birth_nudges_young_cohort_by_one():
     """TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE (AC#1/AC#2): a successful
     humanoid birth nudges the birth region's population_young_births_delta by exactly +1,

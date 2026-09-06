@@ -44,6 +44,7 @@ jobs:
                  tests/unit/worldmodules \
                  tests/unit/content \
                  tests/unit/content_semantics \
+                 tests/unit/replay \
                  tests/unit/test_dirty_refresh.py \
                  -m "not slow and not extra_slow" --tb=short -q \
                  --junit-xml=reports/junit/unit-core-world.xml
@@ -75,6 +76,7 @@ jobs:
                    tests/unit/worldmodules \
                    tests/unit/content \
                    tests/unit/content_semantics \
+                   tests/unit/replay \
                    tests/unit/test_dirty_refresh.py \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
