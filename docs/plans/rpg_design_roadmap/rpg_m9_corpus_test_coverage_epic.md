@@ -8,8 +8,18 @@ tags: [testing, simulation-quality, corpus]
 
 # Epic Plan — RPG Design Roadmap, Milestone 9: World Corpus Test Coverage for New Features
 
-**Tracking ticket:** `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (not yet created — scope-only, per
-`docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
+**Status, scoped 2026-09-06:** M1-M8 are all now confirmed DONE, so this epic's own gate is clear.
+Full re-verification against real code found: item 2 (idea 66) fully resolved, matching this epic's
+own recommended procedure exactly; the item-4 age-tier timing bug (ideas 20/34) is far more severe
+than originally described (the fantasy-year-units migration already landed, making the real elder
+threshold ~17.28M ticks, not 7000); ideas 50 and 64 were found to have never actually shipped despite
+one being referenced in M4's own epic doc and the parent roadmap's "12 ideas shipped" claim for M4 —
+corpus-test authoring for those two is genuinely blocked, not ready work. Scoped into 8 child tickets,
+see `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE`.
+
+**Tracking ticket:** `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (`tickets/inprogress/`,
+`## Status: EPIC_SCOPED` as of 2026-09-06 — 8 child tickets scoped in
+`tickets/todos/m9-corpus-test-coverage/`, none yet implemented)
 **Source:** Direct investigation of `docs/simulation_quality/corpus_tier_taxonomy.md`,
 `config/simulation_quality/corpus_registry.yaml`'s `_worlds` key (21 real worlds), `data/worlds/*/world.yaml`
 and `data/worlds/*/world_compile_report.json`, `data/content/world_modules/*.yaml` (20 real modules),
@@ -96,7 +106,15 @@ not tier labels with a one-line gesture.
    - *Evaluator change needed:* add `reputation_inheritance_check` and `nemesis_transfer_check` fields to
      `CampaignScorecard`; fail if a death with a live heir occurs and `inherited_reputation_seed` is unset.
 
-2. **Idea 66 (Region/Place rebuild) — corpus-wide migration, not a single test world.** It restructures
+2. **Idea 66 (Region/Place rebuild) — corpus-wide migration, not a single test world. RESOLVED,
+   2026-09-06 (re-verified against `tickets/done/TCK-20260902-EPIC-IDEA66-REGION-PLACE-REBUILD.md`).**
+   The real implementation followed this exact procedure: the Stage A/Stage B two-stage pilot named
+   below, and the `state_hash`-first recalibration across all 21 worlds/84 run_keys. One real
+   deviation, triaged rather than worked around: `state_hash` itself (`StateFingerprinter`) was found
+   blind to Place data entirely, so a new `canonical_state_hash` field was added and used for the
+   recalibration instead — all 21 worlds' `canonical_state_hash` triaged as compile-shape (not a
+   regression), and a full 81-run_key `grade_anchors.json` sweep confirmed clean. No child ticket
+   needed for this item. It restructures
    `RegionState`/`RegionSpec` for every one of the corpus's 21 worlds simultaneously.
    `grade_anchors.json`'s tolerance (±1 letter-grade band, `max(0.05, 0.20×score)`) across all 84 committed
    run_keys will very likely trip on a structural compile-shape change at this scale even with zero real
@@ -152,18 +170,22 @@ not tier labels with a one-line gesture.
    `ACCEPTED` only between them.
 
    **Ideas 20 (Life Stages) + 34 (Coming of Age) — same 16-entity world, long-run tooling, real timing
-   bug found.** Confirmed real thresholds directly (`src/domains/demographics/cohort.py:50-88`):
-   `get_age_bracket()` defines young (age_ticks<3000), adult (<7000), elder (≥7000);
-   `compute_elder_attribute_update()` applies STR/AGI×0.7, VIT/END×0.5, WIS/CHA×1.3 at the elder boundary.
-   **`tools/simq_long_run_observation.py` defaults to `--ticks 5000` — below the 7000-tick elder
-   threshold, so its default run would never observe an ADULT→ELDER transition at all.** Any ticket testing
-   idea 20 must use `--ticks 8000` minimum or the test silently proves nothing. Initialize 1-2 entities'
-   `age_ticks` near 0 (instead of default-adult) so both the CHILD→ADULT and the real 7000-tick elder
-   boundary are observable in one run. Assert `identity.life_stage` flips at the new CHILD→ADULT threshold,
-   elder deltas apply at 7000, and idea 34's `archetype_locked` flips false→true specifically at
-   CHILD→ADULT. **Open question surfaced, not previously flagged: `get_age_bracket()`'s young/adult/elder
-   string system and `IdentityComponent.life_stage: LifeStage` (CHILD/ADULT/ELDER enum) may be two
-   overlapping age-tier systems — reconcile before idea 20 is ticketed, not just tested.**
+   bug found — corrected and deepened, 2026-09-06.** This item's original thresholds (age_ticks<3000
+   young, <7000 adult/elder boundary) are now stale: `TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-
+   MIGRATION` (DONE) replaced those raw literals with real fantasy-year units —
+   `YOUNG_ADULT_BOUNDARY_TICKS = 12 * TICKS_PER_FANTASY_YEAR`,
+   `ADULT_ELDER_BOUNDARY_TICKS = 60 * TICKS_PER_FANTASY_YEAR`
+   (`src/domains/demographics/cohort.py:19-20,69-85`), with `TICKS_PER_FANTASY_YEAR = 288,000`
+   (`src/core/calendar.py:13`) — real current thresholds are **3,456,000** and **17,280,000** ticks,
+   not 3000/7000. **This makes the original bug finding far more severe, not merely off by a stale
+   number:** `tools/simq_long_run_observation.py` still defaults to `--ticks 5000`
+   (confirmed unchanged) — roughly 0.03% of even the young→adult threshold alone, not "below the elder
+   threshold" as originally framed. No calibration run using this tool's default has ever been capable
+   of observing any age-bracket transition at all. Real follow-up ticket:
+   `TCK-20260906-AGE-TIER-TIMING-BUG-AND-CORPUS-TEST`. **Open question, still genuinely unresolved
+   (unaffected by the fantasy-year correction above): `get_age_bracket()`'s young/adult/elder string
+   system and `IdentityComponent.life_stage: LifeStage` (CHILD/ADULT/ELDER enum) may be two
+   overlapping age-tier systems — reconcile before idea 20 is ticketed further, not just tested.**
 
    **Idea 22 (Relationship Roles) — zero new world, add one assertion.** `highland_traverse` (18 entities, 5
    regions) or `frontier_living_world` (49 entities, 8 regions, 6 factions) — both already SOCIAL-active. No
@@ -248,11 +270,11 @@ not tier labels with a one-line gesture.
    currently composed into any registry world — adding it to a world's module list is a one-line config
    change, not new content authoring, if that specific material is wanted.)
 
-   **Idea 50 (Material-Gated Evolution) — new Unit-tier world needed.** Matching `unit_faction_tension`'s
-   real shape (18 entities, 3 regions, 5 factions): compose `frontier_village_core` + `mountain_pass` (for
-   `frost_shard_cluster`) only. Seed one entity at XP just below a threshold (10/25/50) carrying
-   `frost_shard`, run to the threshold tick, assert `alt_outcome_kind` fires instead of the default XP-only
-   path; run a sibling entity without the material in the same world for direct comparison.
+   **Idea 50 (Material-Gated Evolution) — blocked, 2026-09-06 (re-verified): mechanism never shipped.**
+   Zero real code hits for `alt_outcome_kind` anywhere in `src/`; this idea doesn't appear in any
+   shipped milestone's epic doc, only here and in the atlas. Corpus-test authoring is premature — the
+   mechanism itself needs a future milestone ticket first. See
+   `TCK-20260906-CORPUS-TEST-NEW-WORLD-NEEDED`.
 
    **Ideas 51/52 (Country EXPAND + population-driven expansion) — zero new world, blocked on idea 43.**
    `frontier_marches`: once unblocked, assert `EXPAND_TERRITORY` fires for the faction with the highest
@@ -262,10 +284,13 @@ not tier labels with a one-line gesture.
    member of Clan A commits a witnessed betrayal; assert a stranger's trust delta toward an *unmet* Clan A
    member is measurably lower than baseline.
 
-   **Idea 57 (Living Legend Feedback Loop) — extend `lifecycle_full_coverage_world`'s existing 5000-tick
-   run.** Seed one entity's `heroism_score` above the fame threshold early; assert a Townsperson entity's
-   Motivation & Doctrine route bias measurably shifts toward adventuring after the fame-perception event, via
-   the real Perception budget (10 signals) as the propagation mechanism.
+   **Idea 57 (Living Legend Feedback Loop) — blocked, 2026-09-06 (re-verified).** `heroism_score` is
+   real (`src/core/models/social.py`), but the Perception/Motivation route-bias mechanism this test
+   needs has zero live call sites anywhere in `src/systems/strategic_systems/` or `src/domains/fame/`
+   — the same already-disclosed gap idea 57's own M5 ticket and M7's own scoping found (`FameDeriver`/
+   `LegendFact` are "built, not yet visible in play"). This corpus test cannot currently produce a
+   real assertion; deferred, not authored, per
+   `TCK-20260906-STRESS-TIER-LONG-RUN-CORPUS-TESTS`.
 
    **Idea 60 (Reputations Are Local) — zero new world, hard-blocked regardless.** `frontier_extended`
    (largest, most regions): once the per-region shape exists, read the same entity's `public_reputation`
@@ -276,10 +301,12 @@ not tier labels with a one-line gesture.
    no real anchor exists yet to build a scenario against. `lifecycle_full_coverage_world`'s real
    calamity/boss events are the plausible substrate once the idea is grounded further, not a confirmed spec.
 
-   **Idea 64 (The Empty Chair) — new Unit-tier world needed.** 1 region, exactly 1 SHOPKEEPER-role entity —
-   no existing world has this; all have redundant role coverage. Kill it mid-run; assert
-   `EconomicVacancyEvent` fires and either an apprentice auto-promotes or a market-price distortion is
-   observable within N ticks.
+   **Idea 64 (The Empty Chair) — blocked, 2026-09-06 (re-verified): mechanism never shipped despite
+   M4's "12 ideas" claim.** M4's own epic doc states "No code precedent anywhere for the
+   economic-vacancy signal it needs" — confirmed still true, zero real code hits for
+   `EconomicVacancyEvent` anywhere in `src/`. The parent roadmap's M4 section claims "all 12 ideas
+   shipped," but idea 64 evidently was not among them — a real discrepancy flagged, not resolved
+   here. See `TCK-20260906-CORPUS-TEST-NEW-WORLD-NEEDED`.
 
    **Idea 65 (Named Refugee Threads) — zero new world, blocked on 43+59.** `crowded_frontier` (6 factions, 4
    regions): trigger a hostile-pressure event in one region, assert a civilian's `identity.home_region_id`
