@@ -65,7 +65,13 @@ lifecycles that have never been classified together. That gap is this epic's rem
 
 ## Scope
 
-### M2 — Artifact retention classification, repo-wide (gated on nothing)
+### M2 — Artifact retention classification, repo-wide (gated on nothing) — SHIPPED
+
+**M2 is shipped — see `TCK-20260904-ARTIFACT-RETENTION-CLASSIFICATION`.** The table below reflects
+this milestone's original planning-time draft; the committed, evidence-verified version — including
+both the `graphify-out/` and `knowledge-index/` questions resolved with concrete citations rather
+than carried forward — now lives at `docs/guidelines/artifact_retention_classification.md`. Treat
+that doc as authoritative; this table is retained here for historical context only.
 
 Classify every artifact class the repo produces, using the four categories the freeze pass
 established (Ephemeral / Run-scoped / Ticket-scoped / Long-lived / Institutional):
@@ -87,8 +93,16 @@ two open questions either resolved or explicitly still-open with a named follow-
 ### M3 — Ownership & lifecycle documentation for new/changed subsystems (gated on nothing)
 
 For every *remaining* subsystem this epic and its siblings touch, record an accountable role (not
-a person — see the roadmap's shared role vocabulary), an update trigger, a staleness signal, and a
-removal condition:
+a person — see docs/guidelines/subsystem_ownership_lifecycle.md's Accountable Role Vocabulary
+section), an update trigger, a staleness signal, and a removal condition:
+
+**M3 is shipped — see `docs/guidelines/subsystem_ownership_lifecycle.md`.** The table below
+reflects this milestone's original planning-time draft. The committed, evidence-verified
+version — with the Accountable Role Vocabulary section and explicit row-or-exclusion decisions
+for every other in-batch subsystem — now lives at
+`docs/guidelines/subsystem_ownership_lifecycle.md`, shipped by
+`TCK-20260904-OWNERSHIP-LIFECYCLE-DOC`. Treat that doc as authoritative; this table is retained
+here for historical context only.
 
 | Subsystem | Accountable role | Update trigger | Staleness signal |
 |---|---|---|---|
@@ -114,9 +128,11 @@ from every epic doc, not restated in each.
 ## Acceptance signal for this epic
 
 - M1: none required — already shipped and verified upstream.
-- M2: a committed retention-classification table covers every remaining artifact class in the
-  table above, with the two open questions either resolved or explicitly assigned a follow-up
-  owner.
+- M2: **met** — a committed retention-classification table
+  (`docs/guidelines/artifact_retention_classification.md`, shipped by
+  `TCK-20260904-ARTIFACT-RETENTION-CLASSIFICATION`) covers every remaining artifact class, with both
+  `graphify-out/`/`knowledge-index/` questions resolved with concrete evidence citations, not
+  deferred.
 - M3: an ownership table exists for the remaining subsystems and is cross-referenced from this
   epic's sibling docs rather than duplicated.
 
@@ -131,5 +147,7 @@ from every epic doc, not restated in each.
   session's pull; PR #112).
 - `tools/agent-monitoring/verify_referential_integrity.py` — the already-shipped
   referential-integrity tool.
+- `docs/guidelines/artifact_retention_classification.md` — the M2 deliverable (shipped, see
+  `TCK-20260904-ARTIFACT-RETENTION-CLASSIFICATION`).
 - `docs/agent-monitoring/schema.md` — schema documentation, already updated by the shipped epics
   to describe the current `agent-monitoring/data/YYYY-Www/` layout.
