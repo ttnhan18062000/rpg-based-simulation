@@ -41,6 +41,7 @@ This project uses **Claude Code** with a structured set of subagents, multi-agen
 | [skills.md](skills.md) | Project skills and built-in Claude Code skills |
 | [ticket-lifecycle.md](ticket-lifecycle.md) | Complete development flow from request to closed ticket |
 | [agent_infrastructure_audit.md](agent_infrastructure_audit.md) | Scored technical audit of the agent orchestration layer (2026-07-03) |
+| [capability_envelope_baseline.md](capability_envelope_baseline.md) | Append-only baseline registry + audit-only diff script for `.claude/settings.local.json`'s approved capability envelope |
 
 ---
 

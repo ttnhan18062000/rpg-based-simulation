@@ -1396,10 +1396,18 @@ def test_path_touched_no_match():
 # ---------------------------------------------------------------------------
 
 
-def test_docs_coverage_hotfix_is_na(tmp_path):
+def test_docs_coverage_hotfix_forward_half_still_skips(tmp_path, monkeypatch):
+    # TCK-20260904-DOC-COVERAGE-REVERSE-CHECK, Decision 3: the forward half still requires no
+    # investigation.md under hotfix tier (a real structural absence, genuinely unchanged) — this
+    # is isolated here by making the reverse half trivially PASS (no git repo at all, so
+    # _git_touched_paths() fails open to {}, so there is no docs/ path to check reverse coverage
+    # against). Replaces the old test_docs_coverage_hotfix_is_na, which asserted a bare
+    # unconditional NA that Decision 3 deliberately removes.
     base = tmp_path / "staging_artifacts"  # directory does not even exist
+    monkeypatch.chdir(tmp_path)
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "hotfix", base_dir=base)
-    assert status == "NA"
+    assert status == "PASS"
+    assert "does not exist" not in evidence
 
 
 def test_docs_coverage_missing_investigation_file_fails(tmp_path):
@@ -1423,7 +1431,10 @@ def _write_investigation(base: Path, ticket_id: str, docs_section_body: str) -> 
     return path
 
 
-def test_docs_coverage_no_section_heading_passes(tmp_path):
+def test_docs_coverage_no_section_heading_passes(tmp_path, monkeypatch):
+    # monkeypatch.chdir isolates _git_touched_paths() from the real repo's own working-tree
+    # state — the reverse check (TCK-20260904-DOC-COVERAGE-REVERSE-CHECK) now always calls it,
+    # unlike the old forward-only logic, which never did for an empty-required-docs fixture.
     base = tmp_path / "staging_artifacts"
     directory = base / "TCK-FAKE"
     directory.mkdir(parents=True)
@@ -1431,18 +1442,20 @@ def test_docs_coverage_no_section_heading_passes(tmp_path):
         ARTIFACT_FM.format(ticket_id="TCK-FAKE", artifact_type="investigation"),
         encoding="utf-8",
     )
+    monkeypatch.chdir(tmp_path)
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
     assert status == "PASS"
 
 
-def test_docs_coverage_explicit_none_passes(tmp_path):
+def test_docs_coverage_explicit_none_passes(tmp_path, monkeypatch):
     base = tmp_path / "staging_artifacts"
     _write_investigation(base, "TCK-FAKE", "None.")
+    monkeypatch.chdir(tmp_path)
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
     assert status == "PASS"
 
 
-def test_docs_coverage_none_with_trailing_rationale_passes(tmp_path):
+def test_docs_coverage_none_with_trailing_rationale_passes(tmp_path, monkeypatch):
     # End-to-end regression test for the actual observed FAIL, at the exact call site
     # (check_docs_to_update_coverage) that produced it for TCK-20260803-DOCS-STRUCTURE-AUDIT,
     # TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE, TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION.
@@ -1452,6 +1465,7 @@ def test_docs_coverage_none_with_trailing_rationale_passes(tmp_path):
         "TCK-FAKE",
         "None. This ticket only touches tooling/test files, no docs/ content changes needed.",
     )
+    monkeypatch.chdir(tmp_path)
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
     assert status == "PASS"
 
@@ -1496,6 +1510,11 @@ def test_docs_coverage_all_flagged_paths_touched_passes(tmp_path, monkeypatch):
 
     base = tmp_path / "staging_artifacts"
     _write_investigation(base, "TCK-FAKE", "- `docs/mechanics/x.md`: reason")
+    # Reverse-check needs a resolvable ticket file declaring the same touched docs/ path
+    # (TCK-20260904-DOC-COVERAGE-REVERSE-CHECK) — real Verify-time calls always have one; this
+    # fixture's earlier absence was a pre-existing gap in the fixture, not a case the reverse
+    # check should skip.
+    _write_reverse_ticket(tmp_path, "TCK-FAKE", files_changed="- `docs/mechanics/x.md`: reason")
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
@@ -1516,6 +1535,11 @@ def test_docs_coverage_line_suffix_bullet_matches_bare_git_path(tmp_path, monkey
 
     base = tmp_path / "staging_artifacts"
     _write_investigation(base, "TCK-FAKE", "- `docs/agent-monitoring/schema.md:287`: reason")
+    # Reverse-check needs a resolvable ticket file declaring the same touched docs/ path
+    # (TCK-20260904-DOC-COVERAGE-REVERSE-CHECK) — see note on the sibling test above.
+    _write_reverse_ticket(
+        tmp_path, "TCK-FAKE", files_changed="- `docs/agent-monitoring/schema.md:287`: reason"
+    )
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
@@ -1580,6 +1604,12 @@ def test_docs_coverage_resolved_conditional_bullet_touched_anyway_still_passes(t
         "- `docs/mechanics/04_strategic_cognition.md`: Resolved during implementation, "
         "condition not met, but touched anyway for an unrelated reason.",
     )
+    # Reverse-check needs a resolvable ticket file declaring the same touched docs/ path
+    # (TCK-20260904-DOC-COVERAGE-REVERSE-CHECK) — see note on the earlier sibling tests above.
+    _write_reverse_ticket(
+        tmp_path, "TCK-FAKE",
+        files_changed="- `docs/mechanics/04_strategic_cognition.md` — touched anyway",
+    )
     monkeypatch.chdir(tmp_path)
 
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
@@ -1624,6 +1654,230 @@ def test_docs_coverage_ignores_behavior_changed_entirely():
 
 
 # ---------------------------------------------------------------------------
+# check_docs_to_update_coverage — reverse direction (TCK-20260904-DOC-COVERAGE-REVERSE-CHECK)
+# ---------------------------------------------------------------------------
+
+_REVERSE_TICKET_TEMPLATE = """---
+status: active
+layer: ai
+authority: P1
+audience: agent
+ticket_id: {ticket_id}
+phase: open
+date: 2026-09-04
+tags: []
+---
+
+# {ticket_id}
+
+## Title
+Fixture ticket
+
+## Tier
+{tier}
+
+## Files Changed
+{files_changed}
+
+## Related Docs
+{related_docs}
+
+## Completion Summary
+"""
+
+
+def _write_reverse_ticket(
+    tmp_path, ticket_id, files_changed="None.", related_docs="None.", tier="standard",
+    location="tickets/inprogress",
+) -> Path:
+    directory = tmp_path / location
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{ticket_id}.md"
+    path.write_text(
+        _REVERSE_TICKET_TEMPLATE.format(
+            ticket_id=ticket_id, tier=tier, files_changed=files_changed, related_docs=related_docs,
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def _git_init(tmp_path):
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+
+
+def _git_commit_baseline(tmp_path, tracked_dir: str):
+    # Commits a placeholder inside `tracked_dir` so it (and every ancestor directory) is already
+    # tracked — a file added later inside it then shows up individually in `git status
+    # --porcelain`, not collapsed to the nearest wholly-new directory (confirmed empirically: a
+    # brand-new `docs/` in a fresh repo collapses to `?? docs/` regardless of nesting depth).
+    d = tmp_path / tracked_dir
+    d.mkdir(parents=True, exist_ok=True)
+    (d / ".gitkeep").write_text("", encoding="utf-8")
+    subprocess.run(["git", "add", "."], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "baseline"], cwd=tmp_path, check=True)
+
+
+def test_reverse_docs_coverage_fails_when_touched_doc_not_in_files_changed_or_related_docs(
+    tmp_path, monkeypatch
+):
+    _git_init(tmp_path)
+    _git_commit_baseline(tmp_path, "docs/mechanics")
+    (tmp_path / "docs" / "mechanics" / "combat.md").write_text("content", encoding="utf-8")
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "None.")
+    _write_reverse_ticket(tmp_path, "TCK-FAKE", files_changed="- src/combat/engine.py")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+    )
+    assert status == "FAIL"
+    assert "docs/mechanics/combat.md" in evidence
+
+
+def test_reverse_docs_coverage_passes_when_touched_doc_appears_in_files_changed(tmp_path, monkeypatch):
+    _git_init(tmp_path)
+    _git_commit_baseline(tmp_path, "docs/mechanics")
+    (tmp_path / "docs" / "mechanics" / "combat.md").write_text("content", encoding="utf-8")
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "None.")
+    _write_reverse_ticket(
+        tmp_path, "TCK-FAKE",
+        files_changed="- `docs/mechanics/combat.md` — updated for new formula",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+    )
+    assert status == "PASS"
+
+
+def test_reverse_docs_coverage_passes_when_touched_doc_appears_in_related_docs_only(
+    tmp_path, monkeypatch
+):
+    _git_init(tmp_path)
+    _git_commit_baseline(tmp_path, "docs/mechanics")
+    (tmp_path / "docs" / "mechanics" / "combat.md").write_text("content", encoding="utf-8")
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "None.")
+    _write_reverse_ticket(
+        tmp_path, "TCK-FAKE",
+        files_changed="None.",
+        related_docs="- docs/mechanics/combat.md",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+    )
+    assert status == "PASS"
+
+
+def test_reverse_docs_coverage_directory_collapse_tolerance(tmp_path, monkeypatch):
+    # Mirrors _path_touched's own docstring example: a wholly-new untracked directory collapses to
+    # its own path (`?? docs/newsubsystem/`) in git status --porcelain, rather than listing every
+    # file inside it — the reverse check must still recognize a declared path under it as covered.
+    _git_init(tmp_path)
+    _git_commit_baseline(tmp_path, "docs")
+    (tmp_path / "docs" / "newsubsystem").mkdir(parents=True)
+    (tmp_path / "docs" / "newsubsystem" / "foo.md").write_text("content", encoding="utf-8")
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "None.")
+    _write_reverse_ticket(
+        tmp_path, "TCK-FAKE",
+        files_changed="- `docs/newsubsystem/foo.md` — new doc",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+    )
+    assert status == "PASS"
+
+
+def test_reverse_docs_coverage_ITEM_INSTANCE_HISTORY_style_non_docs_path_is_out_of_scope(
+    tmp_path, monkeypatch
+):
+    # Decision 2's disclosed limitation: a touched non-docs/ path (the real
+    # TCK-20260831-ITEM-INSTANCE-HISTORY incident's actual gap was src/core/state.py) can never be
+    # flagged by this docs/-only reverse check, undeclared or not.
+    _git_init(tmp_path)
+    (tmp_path / "src" / "core").mkdir(parents=True)
+    (tmp_path / "src" / "core" / "state.py").write_text("content", encoding="utf-8")
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "None.")
+    _write_reverse_ticket(tmp_path, "TCK-FAKE")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+    )
+    assert status == "PASS"
+
+
+def test_reverse_docs_coverage_hotfix_tier_behavior(tmp_path, monkeypatch):
+    # Decision 3: the reverse half runs identically under hotfix tier — no investigation.md
+    # dependency, no NA branch — and can independently FAIL, not merely PASS.
+    _git_init(tmp_path)
+    _git_commit_baseline(tmp_path, "docs/mechanics")
+    (tmp_path / "docs" / "mechanics" / "combat.md").write_text("content", encoding="utf-8")
+
+    _write_reverse_ticket(tmp_path, "TCK-FAKE", tier="hotfix")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-FAKE", "hotfix", base_dir=Path("staging_artifacts")
+    )
+    assert status == "FAIL"
+    assert "docs/mechanics/combat.md" in evidence
+
+    _write_reverse_ticket(
+        tmp_path, "TCK-FAKE", tier="hotfix",
+        files_changed="- `docs/mechanics/combat.md` — hotfix update",
+    )
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-FAKE", "hotfix", base_dir=Path("staging_artifacts")
+    )
+    assert status == "PASS"
+
+
+def test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident(tmp_path, monkeypatch):
+    # Historical-incident regression fixture (AC #3): reconstructs
+    # TCK-20260831-RACE-RELATIONS-MATRIX's pre-hand-patch state — Document-Update added
+    # docs/mechanics/02_combat_laws.md coverage for the is_hostile_compat extension, but the
+    # ticket's own Files Changed/Related Docs never recorded it (RETRO-2026-W36's "What to
+    # change?" note). This is a deliberately-incomplete fixture reconstruction, not a copy of the
+    # real post-patch tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md file.
+    monkeypatch.setattr(
+        "gate_checks.done_checker_static._git_touched_paths",
+        lambda root=Path("."): {"docs/mechanics/02_combat_laws.md"},
+    )
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-20260831-RACE-RELATIONS-MATRIX", "None.")
+    _write_reverse_ticket(
+        tmp_path,
+        "TCK-20260831-RACE-RELATIONS-MATRIX",
+        files_changed="- src/domains/combat_engagement/hostility.py — is_hostile_compat extension",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-20260831-RACE-RELATIONS-MATRIX", "standard", base_dir=Path("staging_artifacts")
+    )
+    assert status == "FAIL"
+    assert "docs/mechanics/02_combat_laws.md" in evidence
+
+
+# ---------------------------------------------------------------------------
 # run_static_precheck — docs_to_update_coverage wiring (TCK-20260802-DOC-COVERAGE-CHECK)
 # ---------------------------------------------------------------------------
 
@@ -1635,6 +1889,26 @@ def test_run_static_precheck_includes_docs_to_update_coverage_condition(tmp_path
     results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
     conditions = {r["condition"] for r in results}
     assert "docs_to_update_coverage" in conditions
+
+
+def test_run_static_precheck_wires_reverse_check_blocking(tmp_path, monkeypatch):
+    # TCK-20260904-DOC-COVERAGE-REVERSE-CHECK, Decision 4: no run_static_precheck code change was
+    # needed for the reverse half — it already folds check_docs_to_update_coverage's returned
+    # (status, evidence) into the existing docs_to_update_coverage entry. This proves a
+    # reverse-check FAIL surfaces through that same aggregation rather than being silently
+    # absorbed into a PASS from the (still-passing) forward half. _write_ticket's own fixture
+    # ticket (via _scaffold_precheck_repo) has no Files Changed/Related Docs section at all, so any
+    # touched docs/ path is trivially undeclared.
+    _scaffold_precheck_repo(tmp_path)
+    _git_init(tmp_path)
+    _git_commit_baseline(tmp_path, "docs/mechanics")
+    (tmp_path / "docs" / "mechanics" / "x.md").write_text("content", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
+    by_condition = {r["condition"]: r for r in results}
+    assert by_condition["docs_to_update_coverage"]["status"] == "FAIL"
+    assert "docs/mechanics/x.md" in by_condition["docs_to_update_coverage"]["evidence"]
 
 
 # ---------------------------------------------------------------------------
@@ -1662,3 +1936,15 @@ def test_verify_prompt_condition_6_precedes_static_precheck_invocation():
     assert condition_idx != -1
     assert invoke_idx != -1
     assert condition_idx < invoke_idx
+
+
+def test_verify_prompt_mentions_reverse_check_or_updated_condition_language():
+    # TCK-20260904-DOC-COVERAGE-REVERSE-CHECK: the same static-script-citation sentence must now
+    # also describe the reverse direction, not only the forward direction it originally documented.
+    text = _IMPLEMENT_TICKET_JS_PATH.read_text(encoding="utf-8")
+    idx = text.find("Before checking conditions 3, 4, 6, 7, 10, 12")
+    assert idx != -1
+    invoke_idx = text.find("run_static_precheck('${tid}'")
+    sentence = text[idx:invoke_idx]
+    assert "TCK-20260904-DOC-COVERAGE-REVERSE-CHECK" in sentence
+    assert "reverse" in sentence.lower()

@@ -30,6 +30,15 @@ evolution proposal work, none previously flagged by the original 30-pattern revi
    role. Only 1 of 16 (`concern-investigator`) declares a scoped `tools:` frontmatter. An
    investigative-only agent (`investigator`, `doc-updater`) has the same `rm */docker */curl *`
    reach as `implementer`.
+
+   **Status update (2026-09-05):** `TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE` landed M3's Wave 1 —
+   11 of 16 agents (all read-oriented/low-mutation roles, see Wave 1's list below) now declare a
+   scoped `tools:` frontmatter, so the `investigator`/`doc-updater` example above no longer holds as
+   a current-state fact — both are Wave 1 agents and no longer share `implementer`'s unrestricted
+   reach. The remaining 5 (`architecture-reviewer`, `security-reviewer`, `planner` — Wave 2;
+   `implementer`, `parity-updater` — Wave 3) still inherit the full, unrestricted session-level
+   default described above, gated on Wave 1's real elapsed observation window per this milestone's
+   own sizing rule below.
 2. **No policy layer exists between a model-issued Bash command and host execution**, outside one
    narrow path: `tools/knowledge_gateway_redaction.py::scan_for_secrets()` only guards writes into
    the knowledge-gateway cache. The dominant path — direct Bash tool calls from any of the 16
@@ -86,6 +95,18 @@ trivially-reversible enforcement:
 (the one agent that already has a `tools:` field) whether declaring `tools:` is actually enforced
 at the harness level, and whether `disallowedTools` is recognized at all if a denylist approach is
 ever needed later. Do not assume either behavior from unverified documentation — observe it.
+
+**Step 0 outcome, confirmed (2026-09-05):** `TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE`'s
+investigation empirically confirmed both fields via direct binary-schema extraction from the
+installed harness and a live subagent dispatch — `tools:` is enforced (an undeclared tool is not
+exposed to the model's function-calling surface at all) and `disallowedTools` is a real, recognized
+frontmatter/spawn-option key in the harness's own schema. This supersedes the earlier framing above
+that "Claude Code's own documentation was unreachable... only third-party sources describe"
+this behavior — it is now confirmed directly, not merely third-party-documented. That same ticket
+landed Wave 1 (11 read-oriented agents) only; Wave 2 (`architecture-reviewer`, `security-reviewer`,
+`planner`) and Wave 3 (`implementer`, `parity-updater`) remain unimplemented, gated on Wave 1's real
+elapsed observation window (a single session cannot manufacture that time) and tracked as separate
+future tickets, not sub-steps of the ticket that landed Wave 1.
 
 **Offline candidate-policy replay (per agent, before that agent's wave enforces anything):** for
 every historical tool call the agent made (from M1's usage table), evaluate whether a candidate

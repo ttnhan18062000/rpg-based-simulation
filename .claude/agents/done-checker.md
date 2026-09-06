@@ -1,6 +1,7 @@
 ---
 name: done-checker
 description: Verifies all 13 Definition-of-Done conditions for a ticket before it can move to tickets/done/, citing the static pre-check script for the five script-checkable conditions.
+tools: Bash, Read, Edit, Agent, Write, mcp__knowledge-search__search_docs, TaskUpdate, ToolSearch, ScheduleWakeup, TaskCreate, AskUserQuestion, Artifact, Monitor, ListAgents, WebSearch, TaskOutput, Skill, SendMessage, TaskStop, WebFetch, SendUserFile, ReportFindings, mcp__knowledge-gateway__knowledge_context, mcp__knowledge-gateway__knowledge_status
 ---
 
 # Done Checker

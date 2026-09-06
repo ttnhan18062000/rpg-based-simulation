@@ -29,7 +29,7 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | 2 | Bash secret-exposure advisory hook | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M4) |
 | 3 | Versioned capability-envelope baseline | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M2) |
 | 4 | ~~AST-based import-boundary enforcement~~ **SUPERSEDED — already shipped** on `main` (`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`, found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M1 note; remaining scope is M2/M3) |
-| 5 | Convert 2 proven-failing prose rules to hooks | A — Committed | H0, start now | `guardrail_enforcement_epic.md` (M2, M3) |
+| 5 | ~~Convert 2 proven-failing prose rules to hooks~~ **SHIPPED** — M2 (`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) and M3 (`TCK-20260904-TEST-SCOPER-HANG-GUARD`) both landed | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M2, M3 — both shipped) |
 | 6 | Remove/archive knowledge-gateway — **BLOCKED**, conflicts with `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`'s ratified "no changes authorized" (found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (blocked, pending re-ratification) | `standalone_items.md` (§1) |
 | 7 | Migrate the 2 remaining sidecar stragglers (corrected to 1 remaining during the 2026-09-04 `create-tickets` investigation pass — `tools/retrieval_cache.py` was already migrated by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`) | A — Committed | H1, schedule later | `workflow_reliability_epic.md` (M1) |
 | 8 | ~~`tools.jsonl` sharding + reconciled lifecycle~~ **SUPERSEDED — already shipped** on `main` (PR #112, `TCK-20260902/903-MONITORING-*`, found during planning discussion) | A — Committed | H1 (was) | `telemetry_retention_epic.md` (M1 note; remaining scope is M2/M3) |
@@ -59,16 +59,37 @@ already-ratified decision conflict discovered during the same investigation (see
 4 blocked future options (bucket C), and 5 explicitly-rejected directions — the full set
 brainstormed in the frozen proposal, none silently dropped from this planning pass.
 
+**Updated post-implementation (2026-09-04/05, outside the PR #124 investigation-pass snapshot
+above)**: **item 5 has since shipped in full** — M2 via `TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`
+and M3 via `TCK-20260904-TEST-SCOPER-HANG-GUARD` (see `guardrail_enforcement_epic.md`'s Acceptance
+signal section for both). This moves item 5 out of the "6 now ticketed" group above, leaving **8
+remaining to implement** (5 now-shipped-elsewhere/still-open ticketed items — 1, 2, 3, 7, 9; 3
+still Horizon-2-only — items 10–12).
+
+**Item 1 — partial progress (2026-09-05)**: `TCK-20260904-AGENT-TOOL-USAGE-BASELINE` (M1) and
+`TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE` (M3 Step 0 + Wave 1) have both landed — 11 of 16
+`.claude/agents/*.md` files now carry an explicit `tools:` frontmatter (see
+`governance_capability_policy_epic.md`'s M3 section for the confirmed Step 0 outcome and the
+per-wave breakdown). Item 1 is **not** fully shipped like item 5 above: M3's Wave 2
+(`architecture-reviewer`, `security-reviewer`, `planner`) and Wave 3 (`implementer`,
+`parity-updater`) remain open, each gated on the prior wave's real elapsed observation window per
+the epic doc's own sizing rule, and tracked as separate future tickets. Item 1 therefore stays in
+the "8 remaining to implement" count above until all three waves land.
+
 ## Epics and detail docs
 
 ### Horizon 0 — start now
 
 - **Epic G — Governance &amp; Capability Policy** (`governance_capability_policy_epic.md`): items
-  1–3. Per-agent tool scoping, the Bash secret-exposure advisory hook, and the capability-envelope
-  baseline.
-- **Epic H — Guardrail Enforcement** (`guardrail_enforcement_epic.md`): item 5 (item 4, AST
-  boundary enforcement, is superseded — already shipped, see item 4's inventory row above). The
-  two prose-rule-to-hook conversions with directly observed repeated-failure evidence remain live.
+  1–3. Per-agent tool scoping (item 1) is **partially shipped** — M1 and M3's Wave 1 landed via
+  `TCK-20260904-AGENT-TOOL-USAGE-BASELINE` and `TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE`; Wave
+  2/3 remain open (see the note above). The Bash secret-exposure advisory hook (item 2, M4) and the
+  capability-envelope baseline (item 3, M2) are unaffected and still open.
+- **Epic H — Guardrail Enforcement** (`guardrail_enforcement_epic.md`): item 5 — **SHIPPED** (item
+  4, AST boundary enforcement, is separately superseded — already shipped, see item 4's inventory
+  row above). Both prose-rule-to-hook conversions with directly observed repeated-failure evidence
+  have landed: M2 (`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) and M3
+  (`TCK-20260904-TEST-SCOPER-HANG-GUARD`).
 - **Standalone — knowledge-gateway removal** (`standalone_items.md` §1): item 6, **now BLOCKED, not
   start-now** — conflicts with the already-ratified `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`
   decision, found during the ticket-creation investigation (see item 6's inventory row above). Not
@@ -127,7 +148,9 @@ below the exit gates section):
    the other beyond that shared prerequisite.
 2. **Shared-file coordination, not a dependency** — `.claude/settings.json`'s `hooks` block is a
    three-way file-overlap point: item 2 (Epic G, M4 — new hook entry), item 5 (Epic H, M3 —
-   possibly a new hook entry, mechanism TBD), and item 7 (Workflow Reliability, M1 — edits the
+   shipped: a new `SubagentStop` hook entry,
+   `tools/agent-monitoring/subagent_stop_background_guard.py`, landed additively per
+   `TCK-20260904-TEST-SCOPER-HANG-GUARD`), and item 7 (Workflow Reliability, M1 — edits the
    *existing* inline sidecar-check hook's embedded script). None of these three items architecturally
    depends on either of the others — same file touched ≠ roadmap dependency. See "Git &amp;
    delivery process" below for the rebase-based resolution.
@@ -266,7 +289,8 @@ observed, not on a target date.
 - `docs/brainstorm/agent-working-design/ai_first_architecture_maturity_review.html` — the earlier
   maturity audit the proposal reassessed.
 - `governance_capability_policy_epic.md` — items 1–3, and item 17's follow-on.
-- `guardrail_enforcement_epic.md` — items 4–5.
+- `guardrail_enforcement_epic.md` — items 4 (superseded — already shipped) and 5 (shipped: M2 +
+  M3).
 - `standalone_items.md` — items 6, 10, 11, 12.
 - `workflow_reliability_epic.md` — items 7, 14, 15.
 - `telemetry_retention_epic.md` — item 8 (superseded — already shipped) and the remaining
