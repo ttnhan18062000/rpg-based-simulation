@@ -1,0 +1,139 @@
+gate_policy_version: 1
+workflow_id: implement-ticket
+
+# gate_type vocabulary:
+#   agent_verdict      — an agent's own schema-declared `verdict` enum gates the phase; pass_value
+#                        is the one enum value that lets the phase continue past `if (X.verdict
+#                        !== pass_value)`.
+#   static_check       — an orchestrator-run Python check (no agent judgment) gates the phase.
+#     invocation: import — `from gate_checks.<module> import <function>` (or, for the one
+#                 non-gate_checks case, `from tag_registry import <function>`), after
+#                 `sys.path.insert(0, 'tools')`.
+#     invocation: cli    — invoked as `python3 tools/gate_checks/<module>.py <args>`, a standalone
+#                 script entry point never imported by name — currently only doc_staleness_check.
+#   agent_result_field — a non-verdict field on an agent's own output schema (boolean or array)
+#                        gates the phase — no enum, just one pass/fail-shaped field.
+#
+# Deliberately does NOT re-derive any static_check module's own internal pass/fail predicate (e.g.
+# done_checker_static.py's ~13 named DoD sub-conditions) — records only which module/function backs
+# the gate and which terminal-status value(s) result on failure. See
+# staging_artifacts/TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST/investigation.md's
+# Anti-Drift Hazards for why.
+gates:
+  - phase: Scope
+    gate_type: agent_result_field
+    result_field: conflicts          # ticket-scoper's own SCOPE_SCHEMA field, implement-ticket.js:86
+    pass_value: []                   # empty array passes (implement-ticket.js:444)
+    on_fail_status: [CONFLICTS_DETECTED]
+  - phase: Scope
+    gate_type: static_check
+    invocation: import
+    check_module: tag_registry       # NOT gate_checks.tag_registry — tools/tag_registry.py directly
+    check_function: check_tags_registered   # implement-ticket.js:411, tools/tag_registry.py:187
+    on_fail_status: [TAGS_NOT_REGISTERED]
+  - phase: Plan
+    gate_type: static_check
+    invocation: import
+    check_module: gate_checks.plan_gate_static
+    check_function: plan_has_unresolved_questions_heading   # implement-ticket.js:658, gate_checks/plan_gate_static.py:29
+    on_fail_status: [NEEDS_HUMAN_INPUT]
+    # NOTE: terminal-statuses.yaml (line 48-50) records NEEDS_HUMAN_INPUT's `phases: [Investigate]`.
+    # This is stale relative to live code: phase('Plan') is called at implement-ticket.js:618 and
+    # this gate's check (line 654-679, pushEvent('Plan', ...) at :671) sits textually inside the
+    # Plan block, well after phase('Investigate') at :499 and before phase('Review') at :686.
+    # Do NOT copy terminal-statuses.yaml's `phases` value here — this is a genuine, independently
+    # re-derived correction for the gate_policy axis only. Not fixed in terminal-statuses.yaml
+    # itself (out of scope — see Anti-Drift Notes).
+  - phase: Review
+    gate_type: agent_verdict
+    verdict_enum: [APPROVED, NEEDS_CHANGES, BLOCKED]   # implement-ticket.js:692
+    pass_value: APPROVED                                # implement-ticket.js:729
+    on_fail_status: [NEEDS_CHANGES, BLOCKED]            # writeMonitoring(review.verdict), :735 — verdict passthrough
+  - phase: Implement
+    gate_type: static_check
+    invocation: cli
+    check_module: gate_checks.doc_staleness_check
+    check_function: check_doc_staleness    # implement-ticket.js:892 (CLI, not import); gate_checks/doc_staleness_check.py:39
+    on_fail_status: [DOC_STALENESS_BLOCKED]
+  - phase: Architecture-Verify
+    gate_type: agent_verdict
+    verdict_enum: [APPROVED, NEEDS_CHANGES, BLOCKED]   # implement-ticket.js:982
+    pass_value: APPROVED                                # implement-ticket.js:1011
+    on_fail_status: [NEEDS_CHANGES, BLOCKED]            # writeMonitoring(archVerify.verdict), :1017 — verdict passthrough
+  - phase: Test
+    gate_type: static_check
+    invocation: import
+    check_module: gate_checks.test_scope_coverage_static
+    check_function: check_test_scope_coverage   # implement-ticket.js:1093, gate_checks/test_scope_coverage_static.py:151
+    on_fail_status: [TEST_SCOPE_COVERAGE_FAILED]
+  - phase: Test
+    gate_type: agent_result_field
+    result_field: passed             # test-scoper's own TEST_SCHEMA field, implement-ticket.js:1041
+    pass_value: true
+    on_fail_status: [TESTS_FAILED]    # implement-ticket.js:1119-1122
+  - phase: Test
+    gate_type: static_check
+    invocation: import
+    check_module: gate_checks.done_checker_static
+    check_function: clean_data_runs_early   # implement-ticket.js:1157, gate_checks/done_checker_static.py:209
+    on_fail_status: [DATA_RUNS_CLEAN_FAILED]
+  - phase: Parity
+    gate_type: static_check
+    invocation: import
+    check_module: gate_checks.parity_updater_static
+    check_function: cross_reference_touched   # implement-ticket.js:1303, gate_checks/parity_updater_static.py:96
+    on_fail_status: [PARITY_INCOMPLETE]
+    # Parity's separate skip-eligibility condition (paritySkipEligible, implement-ticket.js:1192-1222)
+    # is a conditional-trigger, not a pass/fail gate — already fully covered by
+    # workflows/implement-ticket.yaml's `condition: src_change_and_behavior_changed` /
+    # `if_false: skipped_event` fields on the Parity phase entry. Do NOT add a second gate_policy
+    # row for it.
+  - phase: Security-Review
+    gate_type: agent_verdict
+    verdict_enum: [APPROVED, NEEDS_CHANGES, BLOCKED]   # implement-ticket.js:1355
+    pass_value: APPROVED                                # implement-ticket.js:1378
+    on_fail_status: [SECURITY_BLOCKED]    # implement-ticket.js:1384 — fixed literal, NOT verdict passthrough
+    # (both NEEDS_CHANGES and BLOCKED verdicts collapse to the single SECURITY_BLOCKED status —
+    # unlike Review/Architecture-Verify above, this is a `kind: literal` result in
+    # terminal-statuses.yaml, not `verdict_derived`. Distinguishable structurally: on_fail_status
+    # here does not equal verdict_enum minus pass_value.)
+  - phase: Verify
+    gate_type: agent_verdict
+    verdict_enum: [READY_TO_CLOSE, BLOCKED]   # done-checker's own DONE_SCHEMA, implement-ticket.js:1405
+    pass_value: READY_TO_CLOSE                 # implement-ticket.js:1465
+    on_fail_status: [DOD_BLOCKED]    # implement-ticket.js:1470 — fixed literal (not "BLOCKED"), informationally
+    # backed by gate_checks.done_checker_static.run_static_precheck (implement-ticket.js:1452) as
+    # cited evidence for the agent's own verdict — run_static_precheck does NOT itself branch the
+    # gate (the JS branches on doneCheck.verdict, the agent's own field, not the script's return
+    # value directly). Do NOT add check_module/check_function keys here — that would misrepresent
+    # this as a static_check gate when it is actually agent_verdict backed by evidence. Do NOT
+    # enumerate run_static_precheck's ~13 named DoD sub-conditions as separate rows — this is the
+    # single highest scope-creep risk this ticket faces (see investigation.md Anti-Drift Hazards).
+  - phase: Finalize
+    gate_type: static_check
+    invocation: import
+    check_module: gate_checks.done_checker_static
+    check_function: run_finalize_selfcheck   # implement-ticket.js:1544, gate_checks/done_checker_static.py:950
+    on_fail_status: [FINALIZE_INCOMPLETE]
+
+gateless_phases:
+  - phase: Investigate
+    reason: >
+      No hard pass/fail gate of its own in the live code. NEEDS_HUMAN_INPUT is gated in the Plan
+      phase (see the `gates:` entry above and its note) — terminal-statuses.yaml's `phases:
+      [Investigate]` attribution for that value is stale relative to current code; not corrected
+      here (out of scope for this ticket — see Anti-Drift Notes).
+  - phase: Document-Update
+    reason: >
+      doc-updater's `blocker` field only ever produces an 'ok'/'failed' *event*
+      (implement-ticket.js:858-863) — it never calls writeMonitoring() and never returns early.
+      Advisory only; the workflow always continues regardless of `blocker`.
+
+excluded_outcomes:
+  - value: EPIC_SCOPED
+    phase: Scope
+    reason: >
+      A tier-routing exit (`tier === 'epic'`, implement-ticket.js:472-479), not a pass/fail gate
+      condition — already fully covered by the phase_order/tier-applicability axis
+      (workflows/implement-ticket.yaml). Recording it here would conflate the two axes, which
+      investigation.md's Anti-Drift Hazards explicitly forbids.

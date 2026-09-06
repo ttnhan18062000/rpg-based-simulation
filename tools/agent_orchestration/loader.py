@@ -1,8 +1,9 @@
 """Validation entry point for the agent-orchestration/ contract.
 
-`load_contract()` reads and validates all seven files under `agent-orchestration/`
+`load_contract()` reads and validates all files under `agent-orchestration/`
 (contract.yaml, workflows/implement-ticket.yaml, all roles/*.yaml, skills.yaml,
-monitoring-schema.yaml, hook-events.yaml, hook-surface-policy.yaml), raising ContractValidationError on any missing
+monitoring-schema.yaml, hook-events.yaml, hook-surface-policy.yaml, terminal-statuses.yaml,
+gate-policy.yaml), raising ContractValidationError on any missing
 required field, malformed value, or non-mapping YAML root. Mirrors
 tools/agent_replay/fixture_envelope.py's load_fixture() shape: a single validation entry
 point returning a frozen dataclass on success. Only yaml.safe_load and the stdlib are used —
@@ -38,6 +39,14 @@ _REQUIRED_HOOK_SURFACE_POLICY_KEYS = (
 _REQUIRED_ACTIVATION_CANDIDATE_KEYS = ("provider", "event", "status", "writer_functions")
 _REQUIRED_ACTIVATION_PREREQUISITE_KEYS = ("id", "description")
 _AUTHORIZATION_IMPLYING_KEYS = ("approved", "granted", "authorized")
+_REQUIRED_GATE_POLICY_KEYS = ("gate_policy_version", "workflow_id", "gates")
+_REQUIRED_GATE_ENTRY_KEYS = ("phase", "gate_type", "on_fail_status")
+_GATE_TYPE_EXTRA_KEYS = {
+    "agent_verdict": ("verdict_enum", "pass_value"),
+    "static_check": ("invocation", "check_module", "check_function"),
+    "agent_result_field": ("result_field", "pass_value"),
+}
+_REQUIRED_ARTIFACT_REQUIREMENTS_KEYS = ("required_files", "exempt_tier")
 
 
 @dataclass(frozen=True)
@@ -62,6 +71,8 @@ class ContractBundle:
     hook_surface_policy: dict[str, Any]
     terminal_statuses: list[dict[str, Any]]
     continuation_policy: "ContinuationPolicy | None"
+    gate_policy: dict[str, Any]
+    artifact_requirements: dict[str, Any] | None
 
 
 @dataclass(frozen=True)
@@ -90,6 +101,21 @@ def _load_contract_yaml(path: Path) -> dict[str, Any]:
     _require_keys(path, data, _REQUIRED_CONTRACT_KEYS)
     if not isinstance(data["version"], int):
         raise ContractValidationError(f"{path}: 'version' must be an int, got {type(data['version']).__name__}")
+
+    artifact_requirements = data.get("artifact_requirements")
+    if artifact_requirements is not None:
+        if not isinstance(artifact_requirements, dict):
+            raise ContractValidationError(f"{path}: 'artifact_requirements' must be a mapping")
+        _require_keys(path, artifact_requirements, _REQUIRED_ARTIFACT_REQUIREMENTS_KEYS, context="artifact_requirements")
+        required_files = artifact_requirements["required_files"]
+        if not isinstance(required_files, list) or not required_files or not all(
+            isinstance(item, str) and item.strip() for item in required_files
+        ):
+            raise ContractValidationError(f"{path}: artifact_requirements.required_files must be a non-empty list of strings")
+        exempt_tier = artifact_requirements["exempt_tier"]
+        if not isinstance(exempt_tier, str) or not exempt_tier.strip():
+            raise ContractValidationError(f"{path}: artifact_requirements.exempt_tier must be a non-empty string")
+
     return data
 
 
@@ -320,6 +346,52 @@ def _load_hook_surface_policy_yaml(path: Path, hook_events: dict[str, Any]) -> d
     return data
 
 
+def _load_gate_policy_yaml(path: Path) -> dict[str, Any]:
+    data = _load_yaml_mapping(path)
+    _require_keys(path, data, _REQUIRED_GATE_POLICY_KEYS)
+
+    if not isinstance(data["gate_policy_version"], int):
+        raise ContractValidationError(
+            f"{path}: 'gate_policy_version' must be an int, got {type(data['gate_policy_version']).__name__}"
+        )
+
+    gates = data["gates"]
+    if not isinstance(gates, list) or len(gates) == 0:
+        raise ContractValidationError(f"{path}: 'gates' must be a non-empty list")
+    for idx, entry in enumerate(gates):
+        if not isinstance(entry, dict):
+            raise ContractValidationError(f"{path}: gates[{idx}] is not a mapping")
+        for key in _REQUIRED_GATE_ENTRY_KEYS:
+            if entry.get(key) is None:
+                raise ContractValidationError(f"{path}: gates[{idx}] missing required field '{key}'")
+
+        gate_type = entry["gate_type"]
+        extra_keys = _GATE_TYPE_EXTRA_KEYS.get(gate_type)
+        if extra_keys is None:
+            raise ContractValidationError(
+                f"{path}: gates[{idx}] has unrecognized gate_type '{gate_type}' — expected one of "
+                f"{sorted(_GATE_TYPE_EXTRA_KEYS)}"
+            )
+        for key in extra_keys:
+            if entry.get(key) is None:
+                raise ContractValidationError(f"{path}: gates[{idx}] (gate_type={gate_type!r}) missing required field '{key}'")
+
+        on_fail_status = entry["on_fail_status"]
+        if not isinstance(on_fail_status, list) or not on_fail_status or not all(
+            isinstance(item, str) for item in on_fail_status
+        ):
+            raise ContractValidationError(f"{path}: gates[{idx}].on_fail_status must be a non-empty list of strings")
+
+    for optional_key in ("gateless_phases", "excluded_outcomes"):
+        entries = data.get(optional_key)
+        if entries is None:
+            continue
+        if not isinstance(entries, list) or not entries or not all(isinstance(e, dict) for e in entries):
+            raise ContractValidationError(f"{path}: '{optional_key}' must be a non-empty list of mappings")
+
+    return data
+
+
 def load_contract(root: Path) -> ContractBundle:
     """Load and validate the full agent-orchestration/ contract rooted at `root`.
 
@@ -346,6 +418,7 @@ def load_contract(root: Path) -> ContractBundle:
     hook_surface_policy = _load_hook_surface_policy_yaml(
         contract_dir / "hook-surface-policy.yaml", hook_events
     )
+    gate_policy = _load_gate_policy_yaml(contract_dir / "gate-policy.yaml")
 
     return ContractBundle(
         contract=contract,
@@ -357,4 +430,6 @@ def load_contract(root: Path) -> ContractBundle:
         hook_surface_policy=hook_surface_policy,
         terminal_statuses=terminal_statuses,
         continuation_policy=continuation_policy,
+        gate_policy=gate_policy,
+        artifact_requirements=contract.get("artifact_requirements"),
     )
