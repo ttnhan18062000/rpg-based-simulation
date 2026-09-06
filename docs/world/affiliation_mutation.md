@@ -74,8 +74,15 @@ test_entity_faction_changed_fires_once_on_real_defection_trigger`, which runs th
 ## Combat/Action-Legality Semantics: Next-Tick Boundary
 
 `identity.faction` is read live (no caching beyond the hostile/dead cache noted above) by
-`LegalityServiceV2` (`src/engine/legality.py`, 6 call sites) and 25 other call sites across
-`src/`. The relevant ordering guarantee comes from `AuthoritativeApplyPipeline.refine()`'s fixed
+`LegalityServiceV2` (`src/engine/legality.py`, 6 call sites) and 35 other call sites across
+`src/` (41 total `.identity.faction` reads repo-wide, re-counted 2026-09-06 during an external
+pre-merge review — the original 31 undercounted by 10; the correction doesn't change the safety
+conclusion below, since every missed site, `src/engine/town_resolution.py:129,140` included, is an
+immediate per-tick read, not a cross-tick cache). `src/engine/town_resolution.py`'s two sites
+(`entity.identity.faction != region.owner_faction_id`, taxation and suppression) are structurally
+identical to `legality.py`'s own reads — same frozen-`state`-within-one-`refine()`-pass timing
+safety applies, they were simply not enumerated by this ticket's original investigation. The
+relevant ordering guarantee comes from `AuthoritativeApplyPipeline.refine()`'s fixed
 phase order (`src/engine/pipeline.py`):
 
 ```

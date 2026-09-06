@@ -39,7 +39,19 @@ pytestmark = pytest.mark.architecture
 _SRC_ROOT = Path("src")
 
 _FACTION_SET_PATTERN = re.compile(r'faction_set\s*=')
-_IDENTITY_REPLACE_FACTION_BYPASS_PATTERN = re.compile(r'replace\([^)]*?faction\s*=(?!=)', re.DOTALL)
+# Correction, found during an external pre-merge review (2026-09-06): the original
+# `replace\([^)]*?faction\s*=(?!=)` cannot match across a single level of nested parens (e.g.
+# `dataclasses.replace(entity.identity, role=get_default_role(), faction=Faction.NEUTRAL)` --
+# `get_default_role()`'s own closing paren terminates `[^)]*?` before `faction=` is ever reached,
+# silently evading the guard). Widened to tolerate one level of nested balanced parens via
+# `(?:[^()]|\([^()]*\))*?`. This is not a full AST-based scan (unlike
+# test_phase18_import_boundaries.py's own precedent) and would still miss two or more levels of
+# nesting -- not a live risk today (the `faction_set=` pattern above independently covers the one
+# realistic bypass shape that exists anywhere in src/ currently), but disclosed here rather than
+# silently left as an unstated limitation.
+_IDENTITY_REPLACE_FACTION_BYPASS_PATTERN = re.compile(
+    r'replace\((?:[^()]|\([^()]*\))*?faction\s*=(?!=)', re.DOTALL
+)
 
 # Files permitted to contain `faction_set=`:
 #   - updates.py: IdentityUpdate's field declaration + merge()/is_noop() plumbing

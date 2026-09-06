@@ -107,7 +107,7 @@ This epic tracks child tickets only; no direct implementation happens here.
       `TCK-20260905-HOME-EXILE-REFUGEE-THREADS` (2026-09-06, this batch).
 
 ## Related Tickets
-### Child tickets (implementation sequence — see `tickets/todos/m6-political-identity/SEQUENCE.md`)
+### Child tickets (implementation sequence — see `tickets/done/m6-political-identity/SEQUENCE.md`, moved from `tickets/todos/` once the last child ticket landed)
 - `TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE` (idea 39) — no deps in this batch, land first.
 - `TCK-20260905-DRIFTING-LOYALTY-SIGNAL` (idea 56) — depends on (1) landing first, per the 2026-08-29
   decision (39 establishes the mutation primitive that 56's signal requests/uses).
@@ -152,7 +152,7 @@ picked up for implementation.
   whole set" and this epic's own gate-riskiest item — its child ticket's own Investigate phase should
   re-confirm the 6 `legality.py` call sites and the Mechanics Bible chapter gap against real code at
   implementation time, not just inherit this scoping pass's citations.
-- `SEQUENCE.md` in `tickets/todos/m6-political-identity/` enforces the build order above for
+- `SEQUENCE.md` (now in `tickets/done/m6-political-identity/`, originally `tickets/todos/`) enforces the build order above for
   `implement-epic`.
 - Whether idea 39's child ticket should itself author a minimal Mechanics Bible chapter section (vs.
   waiting on `TCK-20260905-SOCIAL-MECHANICS-BIBLE-CHAPTER` to land first) is left to that ticket's own
@@ -178,7 +178,8 @@ build order (39 → 56 → 59/65), with zero deviation from the sequencing this 
 - Idea 56 (Drifting Loyalty) — `TCK-20260905-DRIFTING-LOYALTY-SIGNAL`.
 - Idea 59+65 (Home, Exile & Return + Named Refugee Threads) — `TCK-20260905-HOME-EXILE-REFUGEE-THREADS`.
 
-Each child ticket found and disclosed real gaps beyond this epic's own scoping pass (31 vs. 6
-`identity.faction` call sites, `StateFingerprinter` coverage gaps, a real architecture-boundary
-violation caught and fixed rather than routed around) — the epic's own scoping held up under
-implementation scrutiny with zero material drift.
+Each child ticket found and disclosed real gaps beyond this epic's own scoping pass (41 vs. 6
+`identity.faction` call sites — corrected from an initially-reported 31 during an external
+pre-merge review of PR #133, see `docs/world/affiliation_mutation.md` — `StateFingerprinter`
+coverage gaps, a real architecture-boundary violation caught and fixed rather than routed around)
+— the epic's own scoping held up under implementation scrutiny with zero material drift.

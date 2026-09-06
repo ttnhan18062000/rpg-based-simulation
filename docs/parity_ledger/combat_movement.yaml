@@ -3126,7 +3126,14 @@
     \ flips False -> True for 4 of these pairs (orc_clan->wild_beast_pack, bandit_company->goblin_warband,\
     \ bandit_company->undead_remnants, orc_clan->swamp_tribe) \u2014 confirming the\
     \ two consumers' fallbacks are genuinely independent, not redundant checks of\
-    \ the same thing.\n"
+    \ the same thing.\n\n Cross-reference added 2026-09-06 (external pre-merge review\
+    \ of PR #133): attacker.identity.faction == target.identity.faction in this same\
+    \ Friendly Fire fallback is no longer effectively immutable for an entity lifetime\
+    \ -- TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE gave IdentityUpdate.faction_set\
+    \ its first real producer (PartyLifecycleService.check_defection()), so a mid-tick\
+    \ defection can flip this exact verdict by the next tick boundary. See COMB-323\
+    \ (the new entry recording that mutation primitive) and docs/guidelines/intentional_divergences.md\
+    \ Section 2.52 for the full timing-safety analysis and verification path.\n"
   proof_type: regression
   test_path: tests/unit/content/test_faction_relationships_coverage.py::test_new_pair_changes_legality_friendly_fire_verdict
   divergence_note: "Intentional, documented behavior change (same disclosure style\
@@ -4312,7 +4319,12 @@
     own hostile/dead cache invalidation).
   proof_type: regression
   test_path: tests/unit/engine/test_legality_faction_mutation.py::test_faction_change_mid_tick_legality_semantics
-  divergence_note: null
+  divergence_note: 'This entry documents the timing safety of the mutation (same-tick
+    vs. next-tick), not the outcome-flip against COMB-294''s own P0-certified Friendly-Fire
+    fallback. See docs/guidelines/intentional_divergences.md Section 2.52 for the
+    full disclosure of that outcome-flip, added 2026-09-06 during an external pre-merge
+    review of PR #133.'
   support_boundary: Covers the phase-order guarantee structurally; does not re-verify
-    each of the 31 identity.faction read call sites individually (investigation's
-    own scoped-out item).
+    each of the 41 identity.faction read call sites individually (investigation's
+    own scoped-out item; corrected 2026-09-06 from an initially-reported 31 during
+    an external pre-merge review, see docs/world/affiliation_mutation.md).
