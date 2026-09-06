@@ -331,7 +331,16 @@ def test_no_frozen_kgmcp_dependency_edited():
         # KGMCP pipeline, so this file was never actually part of what this recomparison measures —
         # edits to it cannot affect baseline reproducibility, unlike the genuinely live-pipeline/
         # fixture paths above and below.
-        "tools/knowledge_search.py",
+        # tools/knowledge_search.py intentionally removed here too (TCK-20260904-WORKING-LOG-CSV-PARSER):
+        # that ticket adds one narrow guard to _extract_working_log_rows() skipping a single bogus
+        # embedded-duplicate-header-row document (id=="ticket_id") that tickets/working_log.csv's
+        # Finding 2 duplication incident introduced. Verified this frozen fixture's own recorded
+        # results are unaffected: none of the 7 entries' `sources_recalled` lists contains that
+        # document id anywhere (confirmed by direct scan of
+        # kgmcp_measurement_baseline_corpus_results.json) — the bogus row was never actually
+        # recalled by any of the 7 real historical queries this fixture records, so excluding it
+        # going forward cannot retroactively change these already-recorded numbers. Same evidentiary
+        # bar as the retrieval_events.py removal directly above.
         "tools/agent-monitoring/kgmcp_baseline_corpus.py",
         "tools/agent-monitoring/kgmcp_baseline_runner.py",
         "tools/agent-monitoring/kgmcp_phase1_gateway_runner.py",

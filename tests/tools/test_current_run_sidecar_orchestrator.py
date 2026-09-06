@@ -14,6 +14,15 @@ Architecture-Verify, Test, Parity, Security-Review, Verify; plus Finalize's sing
 Document-Update site added by TCK-20260803-DOC-UPDATER-CORE-WIRING, following the exact same
 writeSidecar(seq)-then-agent() adjacency template as every other two-line site.
 
+TCK-20260904-SHADOW-REVIEWER-LOGGING adds 2 more `writeSidecar()` call sites — an advisory shadow
+candidate-reviewer call each for Architecture-Verify and Security-Review — but these deliberately
+use a distinct NEGATIVE-seq expression (`writeSidecar(archShadowSeq, ...)` /
+`writeSidecar(securityShadowSeq, ...)`), never the positive `events.length + 1 + seqOffset`
+idiom the original 11 use, since reusing the positive form would collide with the enclosing
+production phase's own `(run_id, seq)` tools.jsonl bucket. They are counted and asserted
+separately, below (see `test_sidecar_bash_write_precedes_each_covered_agent_call`'s second
+assertion) — the original `== 11` count/adjacency list stays unchanged.
+
 Two follow-up fixes from TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION, which found (via
 direct empirical cross-check of tool_call_count against tools.jsonl ground truth) that ~35% of
 historical events had a wrong count:
@@ -62,6 +71,8 @@ _COVERED_SITE_ADJACENCY = [
     "await writeSidecar(events.length + 1 + seqOffset, 'Test', 'test-scoper')\nconst testResult = await agent(",
     "  await writeSidecar(events.length + 1 + seqOffset, 'Parity', 'parity-updater')\n  const parity = await agent(",
     "  await writeSidecar(events.length + 1 + seqOffset, 'Security-Review', 'security-reviewer')\n  const securityReview = await agent(",
+    "      await writeSidecar(archShadowSeq, 'Architecture-Verify', 'architecture-reviewer-shadow')\n      const archVerifyShadow = await agent(",
+    "      await writeSidecar(securityShadowSeq, 'Security-Review', 'security-reviewer-shadow')\n      const securityReviewShadow = await agent(",
     "await writeSidecar(events.length + 1 + seqOffset, 'Verify', 'done-checker')\nconst doneCheck = await agent(",
     "await writeSidecar(events.length + 1 + seqOffset, 'Finalize', 'finalizer')\nawait agent(",
 ]
@@ -104,6 +115,15 @@ def test_sidecar_bash_write_precedes_each_covered_agent_call():
 
     # Exactly 11 writeSidecar() calls total (10 two-line sites + Finalize).
     assert len(re.findall(r"await writeSidecar\(events\.length \+ 1 \+ seqOffset, '[^']+', '[^']+'\)", source)) == 11
+
+    # Two additional writeSidecar() calls for the shadow-reviewer mechanism
+    # (TCK-20260904-SHADOW-REVIEWER-LOGGING) use a NEGATIVE seq expression on purpose — reusing
+    # the positive events.length + 1 + seqOffset idiom here would collide with the enclosing
+    # production phase's own (run_id, seq) tools.jsonl bucket. Counted separately from the
+    # positive-seq assertion above.
+    assert len(re.findall(
+        r"await writeSidecar\((archShadowSeq|securityShadowSeq), '[^']+', '[^']+-shadow'\)", source
+    )) == 2
 
     # No other `await agent(` call sits between a writeSidecar call and its paired agent() call —
     # each adjacency string above already asserts direct (whitespace-only) adjacency, so a passing

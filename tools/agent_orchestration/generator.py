@@ -115,4 +115,8 @@ def generate(
     )
     written.append(terminal_statuses_path)
 
+    gate_policy_path = target_dir / "gate-policy.yaml"
+    _write_yaml(repo_root, gate_policy_path, bundle.gate_policy, allow_outside_contract=allow_outside_contract)
+    written.append(gate_policy_path)
+
     return written

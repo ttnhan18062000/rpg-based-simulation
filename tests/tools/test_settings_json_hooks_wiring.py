@@ -76,3 +76,53 @@ def test_existing_hook_writers_untouched():
     assert len(settings["hooks"]["PostToolUse"]) == 4
     assert "permissions" in settings
     assert "allow" in settings["permissions"]
+
+
+def test_edit_write_hook_reads_scoped_sidecar_via_env_var():
+    # TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE, AC #1 / AC #4: the Edit|Write PreToolUse hook's
+    # RUN_ID=$(...) subshell must read the session-scoped sidecar file first (falling back to the
+    # unscoped file), mirroring tools/retrieval_cache.py::read_current_run_sidecar()'s preference
+    # order rather than the old unscoped-only read.
+    settings = _load_settings()
+    command = settings["hooks"]["PreToolUse"][3]["hooks"][0]["command"]
+
+    assert "os.environ.get('CLAUDE_CODE_SESSION_ID','')" in command
+    assert ".claude/current_run.'+sid" in command
+    assert "os.path.exists(" in command
+    assert "else '.claude/current_run'" in command
+
+    # The old single-branch (unscoped-only) form must be fully replaced, not merely appended
+    # alongside the new one.
+    old_form = (
+        "RUN_ID=$(python3 -c \\\"import json; "
+        "print(json.load(open('.claude/current_run')).get('run_id') or '')\\\""
+    )
+    assert old_form not in command
+
+
+def test_edit_write_hook_still_fail_open_and_advisory():
+    # Regression guard (test_plan.md #2): the edit must not drop or relocate the fail-open
+    # wrapper on either subshell, nor reword the advisory reminder text.
+    settings = _load_settings()
+    command = settings["hooks"]["PreToolUse"][3]["hooks"][0]["command"]
+
+    file_subshell = command.split("RUN_ID=$(", 1)[0]
+    assert "FILE=$(python3 -c" in file_subshell
+    assert "2>/dev/null || true" in file_subshell
+
+    run_id_subshell = command.split("RUN_ID=$(", 1)[1]
+    assert "2>/dev/null || true" in run_id_subshell
+
+    assert (
+        "sidecar-check: tickets/inprogress/ has an active ticket but .claude/current_run has no run_id."
+        in command
+    )
+
+
+def test_edit_write_hook_json_still_valid_after_edit():
+    # Regression guard (test_plan.md #3): the file must still parse as valid JSON with its
+    # top-level shape intact after the RUN_ID segment edit.
+    settings = _load_settings()
+    assert "permissions" in settings
+    assert "allow" in settings["permissions"]
+    assert {"PreToolUse", "PostToolUse", "SubagentStop"} <= set(settings["hooks"])

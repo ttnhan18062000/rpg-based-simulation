@@ -37,7 +37,8 @@ def compute_tool_stats(
     """Deterministically compute {(run_id, seq): (tool_call_count, cost_proxy_score)}
     from real agent-monitoring/data/*/tools.jsonl rows (every ISO-week folder,
     sorted, concatenated before grouping), for every (run_id, seq) pair in
-    `records` whose run_id belongs to the 'implement-ticket' workflow.
+    `records` whose run_id belongs to one of the 3 workflows with real sidecar
+    coverage: 'implement-ticket', 'implement-epic', 'create-tickets'.
 
     Reads the union of every week folder's tools.jsonl rather than just the
     current week's — a paused/resumed run's tool-call rows can land in an
@@ -46,28 +47,45 @@ def compute_tool_stats(
     double-counting because (run_id, seq) is globally unique across weeks.
 
     Mirrors record_run.py's compute_duration_s precedent: computed here, at write
-    time, from ground truth — never trusts a caller-supplied value. Only
-    'implement-ticket' run_ids are computed (that's the only workflow whose
-    Scope-through-Finalize call sites write a live .claude/current_run sidecar per
-    phase, giving this a real (run_id, seq) -> tool-call-group ground truth to
-    read); every other workflow's records are left untouched by the caller in
-    main() below — implement-epic/create-tickets never register a sidecar per
-    agent call, so their tool_call_count/cost_proxy_score stay absent, as
-    documented.
+    time, from ground truth — never trusts a caller-supplied value.
 
-    `omit_when_unattributed`: by default (False), a key with zero matching
-    tools.jsonl rows still gets (0, 0.0) — correct for this module's own CLI,
-    where an implement-ticket phase always has a live sidecar, so "zero rows"
-    means "confirmed zero calls" (see test_cost_proxy_score_absent_when_no_tools_jsonl_exists).
-    Pass True for a caller whose events never had a live sidecar during the
-    real work (e.g. record_hand_orchestrated_closure.py) — there, "zero rows"
-    means "no attribution data was ever possible," not "confirmed zero," so the
-    key is omitted entirely rather than reported as a false zero.
+    Coverage is partial, not uniform, per workflow (TCK-20260904-COST-PROXY-EPIC-TICKETS,
+    reversing TCK-20260719-COST-PROXY-WRITE-PATH's original 'implement-ticket only' scope
+    narrowing):
+    - 'implement-ticket': every Scope-through-Finalize call site registers a sidecar write.
+    - 'implement-epic': its 4 real top-level agent() call sites (Discover,
+      batch-monitoring-write, folder-cleanup, tracking-doc-update) register a sidecar write
+      using a disjoint negative seq range (-1..-4) — these deliberately have no matching
+      events.jsonl row of their own (see implement-epic.js), so they compute but are never
+      looked up via `wanted` in practice. The pre-existing per-child-ticket `batchEvents`
+      rows (seq=1..N) are the ones this filter widening actually makes non-null for.
+    - 'create-tickets': 4 of its 7 real agent() call sites register a sidecar write
+      (comprehend, structure, write-sequence, link-epic). 3 sites are permanently excluded:
+      writeMonitoring's own agent() call (mirrors implement-ticket.js's own writeMonitoring
+      exclusion) and the 2 pipeline() fan-out sites (investigate:${concern.id},
+      write:${task.short_scope}) — concurrent agent() calls sharing one mutable sidecar file
+      cannot safely write distinct sidecar values without a structural race.
+    - 'simq-audit' is deliberately NOT included — it has its own separate, still-unfixed
+      inline TOOL_STATS-compute anti-pattern (TCK-20260719-COST-PROXY-WRITE-PATH's "Found but
+      explicitly out of scope" note); including it here would silently overwrite whatever
+      simq-audit.js computes itself. This must stay a membership check against exactly these
+      3 literals, never simplified to "not None".
+
+    `omit_when_unattributed` (TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP): by
+    default (False), a key with zero matching tools.jsonl rows still gets (0, 0.0) — correct
+    for this module's own CLI, where a real implement-ticket/implement-epic/create-tickets
+    phase always has a live sidecar, so "zero rows" means "confirmed zero calls" (see
+    test_cost_proxy_score_absent_when_no_tools_jsonl_exists). Pass True for a caller whose
+    events never had a live sidecar during the real work (e.g.
+    record_hand_orchestrated_closure.py) — there, "zero rows" means "no attribution data was
+    ever possible," not "confirmed zero," so the key is omitted entirely rather than reported
+    as a false zero.
     """
     wanted = {
         (r.get("run_id"), r.get("seq"))
         for r in records
-        if infer_workflow(r.get("run_id", "")) == "implement-ticket" and r.get("seq") is not None
+        if infer_workflow(r.get("run_id", "")) in {"implement-ticket", "implement-epic", "create-tickets"}
+        and r.get("seq") is not None
     }
     if not wanted:
         return {}
