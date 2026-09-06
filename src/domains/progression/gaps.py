@@ -65,9 +65,9 @@ class GrowthGapEvaluator:
                 candidate_resolution_tags=("blacksmith_repair",)
             ))
 
-        # 2. Material Gap. See material_predicate.recipe_materials() docstring for why this
-        # reads src/core/recipes.py::RecipeRegistry, not src/core/registries.py::RecipeRegistry
-        # or src/engine/blacksmith.py::BlacksmithSystem.RECIPES.
+        # 2. Material Gap. See material_predicate.recipe_materials() docstring: reads
+        # src/core/registries.py::RecipeRegistry (TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE)
+        # -- the same registry known_recipes is now organically populated from.
         id_comp = getattr(entity, "identity", None)
         known_recipes = getattr(id_comp, "known_recipes", set()) or set()
         inventory_item_ids = {

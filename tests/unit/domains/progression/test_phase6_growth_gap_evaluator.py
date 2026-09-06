@@ -82,9 +82,10 @@ def test_missing_recipe_material_creates_material_gap():
 
 def test_growth_gap_material_gap_uses_real_recipe_lookup_not_hardcoded_literal():
     """
-    Proves the material_gap check now reads recipe_materials() generically instead of the
-    old hardcoded iron_sword/iron_ore literal -- covers health_potion/herb, a recipe the
-    old hardcoded check could never recognize.
+    Proves the material_gap check reads recipe_materials() generically instead of a
+    hardcoded iron_sword/iron_ore literal -- covers craft_healer_bundle/herb, a real
+    registries.py::RecipeRegistry recipe (TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE) a
+    hardcoded check could never recognize.
     """
     b = (V2EntityBuilder(1)
          .kind("ACTOR")
@@ -95,7 +96,7 @@ def test_growth_gap_material_gap_uses_real_recipe_lookup_not_hardcoded_literal()
     entity = b.build()
 
     entity = replace(entity,
-        identity=replace(entity.identity, known_recipes={"health_potion"})
+        identity=replace(entity.identity, known_recipes={"craft_healer_bundle"})
     )
 
     state = AuthoritativeState(entities={1: entity}, tick=1, seed=1)
@@ -104,16 +105,22 @@ def test_growth_gap_material_gap_uses_real_recipe_lookup_not_hardcoded_literal()
 
     material_gaps = [g for g in report.gaps if g.key == "material_gap"]
     assert len(material_gaps) == 1
-    assert "herb" in material_gaps[0].reason
-    assert "health_potion" in material_gaps[0].reason
+    assert "craft_healer_bundle" in material_gaps[0].reason
 
 
-def test_growth_gap_craft_prefixed_known_recipes_produce_no_material_gap():
+def test_growth_gap_craft_prefixed_known_recipes_now_produce_material_gap():
     """
-    Disclosed-limitation pinning test: craft_*-prefixed known_recipes ids (the ones
-    BlacksmithSystem.enforce() actually populates known_recipes with in production) are
-    not entries in src/core/recipes.py::RecipeRegistry, so no material_gap is raised via
-    this path. See src/domains/progression/material_predicate.py's module docstring.
+    BEFORE TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE, this was a disclosed-limitation pinning
+    test: craft_*-prefixed known_recipes ids (the ones BlacksmithSystem.enforce() actually
+    populated known_recipes with) were not entries in src/core/recipes.py::RecipeRegistry (the
+    registry recipe_materials() read at the time), so no material_gap was ever raised via this
+    path -- a real, disclosed gap, not a bug.
+
+    AFTER: both the population side (BlacksmithSystem) and recipe_materials() now read the same
+    real registry (src/core/registries.py::RecipeRegistry), so a real, organically-learned
+    craft_*-prefixed recipe id genuinely produces a material_gap when its materials are missing.
+    `craft_iron_sword` is a real registries.py recipe (materials: iron_ore, wood) -- not the old,
+    fictional `craft_steel_sword`.
     """
     b = (V2EntityBuilder(1)
          .kind("ACTOR")
@@ -124,12 +131,13 @@ def test_growth_gap_craft_prefixed_known_recipes_produce_no_material_gap():
     entity = b.build()
 
     entity = replace(entity,
-        identity=replace(entity.identity, known_recipes={"craft_steel_sword"})
+        identity=replace(entity.identity, known_recipes={"craft_iron_sword"})
     )
 
     state = AuthoritativeState(entities={1: entity}, tick=1, seed=1)
     possession = PossessionUnderstandingService.evaluate(entity, state)
     report = GrowthGapEvaluator.evaluate(entity, possession, state)
 
-    gap_keys = [g.key for g in report.gaps]
-    assert "material_gap" not in gap_keys
+    material_gaps = [g for g in report.gaps if g.key == "material_gap"]
+    assert len(material_gaps) == 1
+    assert "craft_iron_sword" in material_gaps[0].reason

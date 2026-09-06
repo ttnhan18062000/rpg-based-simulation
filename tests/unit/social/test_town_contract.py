@@ -8,6 +8,8 @@ Town contract and economy tests.
 
 from dataclasses import replace
 
+import pytest
+
 from src.core.builder import V2EntityBuilder
 from src.core.state import (
     AuthoritativeState,
@@ -17,6 +19,7 @@ from src.core.state import (
 )
 from src.core.updates import StateUpdate
 from src.core.state import BuildingState
+from src.core.registries import RecipeRegistry as LiveRecipeRegistry, seed_phase1_content
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
 
@@ -24,6 +27,23 @@ ENTITY_ID = 1
 SHOP_POS = (5, 5)
 BLACKSMITH_POS = (5, 6)
 STEEL_SWORD_RECIPE = "craft_steel_sword"
+
+
+@pytest.fixture(autouse=True)
+def ensure_real_recipe_registry():
+    """Re-bootstraps RecipeRegistry from the real content catalog before each test in this file.
+
+    RecipeRegistry is a module-level singleton (src/core/registries.py); several other test files
+    call seed_phase1_content(..., mode=LEGACY_FALLBACK) with no teardown, which downgrades it to a
+    3-entry hardcoded set for the rest of the pytest process (same documented, pre-existing
+    footgun test_race_conditions_v2.py's ensure_test_items fixture guards against for
+    ItemRegistry). Before TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE this was harmless here --
+    BlacksmithSystem's wholesale-learn read its own private RECIPES dict, not this singleton. Now
+    that it reads this singleton, test_blacksmith_unknown_recipe/test_blacksmith_recipe_learning_
+    parity became order-dependent on whichever test ran last in the same process -- this fixture
+    makes them deterministic regardless of run order, mirroring the same established pattern.
+    """
+    seed_phase1_content()
 
 
 def _make_inventory(items=None, gold=100):
@@ -258,7 +278,20 @@ def test_blacksmith_insufficient_gold():
 
 
 def test_blacksmith_unknown_recipe():
-    """Law of Knowledge: Crafting fails if recipe is not known."""
+    """Law of Knowledge: Crafting fails if recipe is not known.
+
+    BEFORE TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE, wholesale-learn populated
+    recipes_learned from BlacksmithSystem.RECIPES's own private 14-entry craft_* list, so
+    STEEL_SWORD_RECIPE (one of those 14) was itself a real member of the learned set.
+
+    AFTER: wholesale-learn populates from the real, live registries.py::RecipeRegistry instead
+    (TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE) -- STEEL_SWORD_RECIPE is not a member of that
+    catalog (confirmed: none of BlacksmithSystem.RECIPES's 14 ids exist in the real catalog), so
+    this test now asserts against a real registries.py id instead. craft_target is left as
+    STEEL_SWORD_RECIPE deliberately -- the wholesale-learn branch `continue`s before reaching the
+    craft_target-gated crafting-execution branch this tick (entity.identity.known_recipes was
+    empty), so craft_target's value is irrelevant to what this test actually exercises.
+    """
     inventory_component = _make_inventory(
         items=[
             ItemStack("iron_ore", 1),
@@ -277,12 +310,22 @@ def test_blacksmith_unknown_recipe():
     refined = _refine(state)
 
     e_upd = _get_entity_update(refined)
-    assert STEEL_SWORD_RECIPE in e_upd.identity.recipes_learned
+    assert "craft_iron_sword" in e_upd.identity.recipes_learned
     assert e_upd.inventory is None
 
 
 def test_blacksmith_recipe_learning_parity():
-    """Law of Knowledge: Recipe learning is wholesale on first visit."""
+    """Law of Knowledge: Recipe learning is wholesale on first visit.
+
+    BEFORE TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE, wholesale-learn populated recipes_learned
+    from BlacksmithSystem.RECIPES's own private 14-entry list, so the learned count was a fixed
+    literal (14).
+
+    AFTER: wholesale-learn populates from the real, live registries.py::RecipeRegistry
+    (TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE) -- asserted generically against that registry's
+    own live key set, not a hardcoded literal, so this test does not re-break the next time the
+    real content catalog's recipe count changes.
+    """
     inventory_component = InventoryComponent()
     identity_component = IdentityComponent(known_recipes=set())
 
@@ -292,4 +335,4 @@ def test_blacksmith_recipe_learning_parity():
     refined = _refine(state)
 
     e_upd = _get_entity_update(refined)
-    assert len(e_upd.identity.recipes_learned) == 14
+    assert set(e_upd.identity.recipes_learned) == set(LiveRecipeRegistry.all().keys())
