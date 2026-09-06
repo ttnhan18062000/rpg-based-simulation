@@ -215,18 +215,23 @@ it to fire, a SimQ pillar mapping (or explicit exclusion), and an observer-facin
 ticket is considered done — M7 verifies completeness and calibrates the aggregate rules afterward, it
 doesn't backfill missing contracts feature-ticket by feature-ticket.
 
-### M8 — World Corpus, Generation & Modules (informs M1-M6, doesn't block them)
+### M8 — World Corpus, Generation & Modules (informs M1-M6, doesn't block them) (DONE — no tracking ticket needed)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M8-WORLD-CORPUS` (not yet created, scope-only — see
-`docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md`).
+**No tracking epic needed** — see
+`docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md`, re-verified 2026-09-06: this
+epic has no buildable deliverable of its own, only findings that feed M2-M4's real tickets, and all 9
+of those findings are now resolved (2 were found stale on re-check — idea 43's cohort seeding and
+idea 32's capacity-gating are both real, live, and tested, not missing as originally scoped; idea 44's
+`settlement_capacity` landed in a different technical shape than originally planned).
 
 Also not a new RPG feature — checks whether the real world-generation/compilation pipeline and the 6 named
 test-corpus profiles actually have a place for each idea's content to enter a running world. Found two real
-scope corrections (ideas 45 and 14 both need new schema/compiler work, deeper than originally scoped),
-confirmed three corpus profiles already have what idea 44 needs with zero new authoring, and confirmed
-ideas 39/51 and 32 can't be corpus-tested at all until their own upstream mechanisms exist. Unlike M7, this
-one's findings feed directly back into M2/M3/M4's own scope — read it before, not after, those epics start
-their affected tickets.
+scope corrections (ideas 45 and 14 both needed deeper schema/compiler work than originally scoped — both
+landed, see below), confirmed three corpus profiles already have what idea 44 needs with zero new
+authoring, and confirmed ideas 39/51 can't be corpus-tested at all until their own upstream mechanisms
+exist (idea 32 was also flagged this way originally, but is now resolved — see below). Unlike M7, this
+one's findings fed directly back into M2/M3/M4's own scope, and both epics that consumed them (M3, M4)
+are now themselves DONE.
 
 **Idea 66 (Region Contains Multiple Places) — landed, 2026-09-03.** Its dedicated high-level plan
 ([`docs/plans/rpg_design_roadmap/rpg_idea66_region_place_rebuild_plan.md`](rpg_idea66_region_place_rebuild_plan.md),
