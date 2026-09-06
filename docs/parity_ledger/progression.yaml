@@ -1491,25 +1491,27 @@
     hardcoded item-id literals.
   status: verified
   priority: P2
-  v2_evidence: src/domains/progression/material_predicate.py
-  test_path: tests/unit/domains/progression/test_material_possession_predicate.py
-  divergence_note: 'Predicate reads src/core/recipes.py::RecipeRegistry (3 entries)
-    per this ticket AC. entity.identity.known_recipes is populated in production only
-    via src/engine/blacksmith.py::BlacksmithSystem.RECIPES disjoint craft_*-prefixed
-    14-entry catalog, so this predicate does not yet fire against organically-learned
-    recipes. Separately (architecture-review correction, applies repo-wide, not unique
-    to this entry): recipes.py::RecipeRegistry has zero production callers of its
-    own -- its only readers, CraftingSystem.craft() and BlacksmithService.craft_item(),
-    are themselves unreachable from any live production code path. The actually-live
-    REQUEST_CRAFT execution path is src/core/registries.py::RecipeRegistry (catalog-bootstrapped,
-    25 entries) via src/engine/intent/action_intent.py -- a third, out-of-scope RecipeRegistry
-    this predicate deliberately does not read (ticket AC #2). So this predicate answers
-    against a recipe catalog that is neither the live crafting-execution registry
-    (registries.py) nor the live known_recipes population source (blacksmith.py::BlacksmithSystem.RECIPES)
-    -- both limitations disclosed, pre-existing, tracked, not defects of this entry
-    own scope. See TCK-20260904-MATERIAL-POSSESSION-PREDICATE investigation.md and
-    the recommended follow-up ticket in that ticket Completion Summary.'
-  proof_type: null
+  v2_evidence: 'src/domains/progression/material_predicate.py (TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE:
+    recipe_materials() now reads src/core/registries.py::RecipeRegistry, the same
+    catalog-backed registry src/engine/blacksmith.py::BlacksmithSystem.enforce()''s
+    wholesale-learn step populates known_recipes from, and the same registry src/engine/intent/action_intent.py''s
+    live REQUEST_CRAFT execution path reads)'
+  test_path: tests/unit/domains/progression/test_material_possession_predicate.py,
+    tests/unit/domains/progression/test_phase6_possession_understanding_service.py,
+    tests/unit/domains/progression/test_phase6_growth_gap_evaluator.py, tests/integration/domains/progression/test_recipe_reachability_under_real_kernel_tick.py
+  divergence_note: 'TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE closed the namespace
+    mismatch this entry previously disclosed: the predicate now reads the same registry
+    (src/core/registries.py) that both known_recipes population (blacksmith.py) and
+    live crafting execution (action_intent.py) read, so a real, organically-learned
+    recipe id genuinely matches on all three sides. Two narrower gaps remain, both
+    explicitly out of scope for this ticket and separately disclosed: (1) src/core/recipes.py::RecipeRegistry
+    (the legacy 3-entry registry this predicate read before) still has zero production
+    callers -- left undeleted as a disclosed follow-up, not a defect of this entry;
+    (2) src/engine/blacksmith.py::BlacksmithSystem.RECIPES''s own 14-entry crafting-execution
+    branch (craft_target-gated) is confirmed separately dead in production (no live
+    AI ever sets craft_target) and was left untouched -- this entry is about known_recipes
+    population and material-gap detection reachability, not that branch.'
+  proof_type: regression
 - id: PROG-124
   text: "Entity aging/lifespan migrated to fantasy-year units, implementing TCK-20260829-TEMPORAL-CALENDAR-AUTHORITY's\
     \ decision #2 (deferred at the time to \"a dedicated implementation ticket\").\

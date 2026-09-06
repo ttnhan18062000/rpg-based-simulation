@@ -49,8 +49,9 @@ class PossessionUnderstandingService:
             reason = "No known strategic use."
 
             # 1. Check if material for a known recipe. See material_predicate.recipe_materials()
-            # docstring for why this reads src/core/recipes.py::RecipeRegistry, not
-            # src/core/registries.py::RecipeRegistry or src/engine/blacksmith.py::BlacksmithSystem.RECIPES.
+            # docstring: reads src/core/registries.py::RecipeRegistry (TCK-20260904-RECIPE-
+            # CATALOG-NAMESPACE-BRIDGE) -- the same registry known_recipes is now organically
+            # populated from, so a real recipe id genuinely matches here.
             matching_recipes = tuple(
                 recipe_id for recipe_id in sorted(known_recipes)
                 if item_id in recipe_materials(recipe_id)
