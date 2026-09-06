@@ -102,6 +102,22 @@ Both fixes verified locally before commit: the parity test against the live ledg
 Confirmed via local reproduction of the exact original CI command that no other failures exist beyond
 these two.
 
+**Correction, same-day**: this ticket's own original commit (`de18f950`) edited
+`tests/tools/test_parity_updater_static.py` on disk, and this ticket's own text (including this
+section and Files Changed below) claimed that fix, but the `git add` command used to build that
+commit listed `tickets/`, `.github/workflows/test.yml`, `docs/REGISTRY.yaml`, and
+`agent-monitoring/data/2026-W36/` explicitly — and never included the test file itself. The edit sat
+as an uncommitted local change; local test runs kept passing (the working tree had the fix) while
+real CI on PR #133 kept failing twice in a row (the actually-committed content on `origin` did not).
+Diagnosed by pulling a real CI log once the sandbox's network filter cleared, showing the live
+assertion still comparing against the old `WORLD-BELIEF-003` value. Confirmed directly via
+`git show de18f950:tests/tools/test_parity_updater_static.py` against the real remote commit content
+before concluding this, not assumed. Fixed in a separate, explicit follow-up commit (`d9b221c9`),
+verified against the actual remote content this time, and confirmed via a clean, fully-green CI run
+afterward. The `.github/workflows/test.yml` half of this same original commit was independently
+re-verified and confirmed correctly committed — this was an isolated one-file omission, not a
+broader pattern.
+
 ## Test Summary
 - `tests/tools/test_ci_workflow_test_coverage.py tests/tools/test_parity_updater_static.py
   tests/tools/test_parity_index_baseline.py` — 62 passed, 0 failed.
