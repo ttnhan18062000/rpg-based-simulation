@@ -33,10 +33,10 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | 6 | Remove/archive knowledge-gateway — **BLOCKED**, conflicts with `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`'s ratified "no changes authorized" (found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (blocked, pending re-ratification) | `standalone_items.md` (§1) |
 | 7 | ~~Migrate the 2 remaining sidecar stragglers~~ **SHIPPED** — corrected to 1 remaining during the 2026-09-04 `create-tickets` investigation pass (`tools/retrieval_cache.py` was already migrated by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`); the last straggler, `.claude/settings.json`'s inline `Edit\|Write` hook, migrated by `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE` | A — Committed | H1 (was) | `workflow_reliability_epic.md` (M1 — shipped) |
 | 8 | ~~`tools.jsonl` sharding + reconciled lifecycle~~ **SUPERSEDED — already shipped** on `main` (PR #112, `TCK-20260902/903-MONITORING-*`, found during planning discussion) | A — Committed | H1 (was) | `telemetry_retention_epic.md` (M1 note; remaining scope is M2/M3) |
-| 9 | Model-diverse reviewer — deploy shadow logging | A — Committed | H1, schedule later | `review_independence_epic.md` (M1) |
+| 9 | ~~Model-diverse reviewer — deploy shadow logging~~ **SHIPPED** — `TCK-20260904-SHADOW-REVIEWER-LOGGING` wired an env-gated, bounded-sample shadow candidate-model call (`claude-fable-5-1`) alongside both production `architecture-reviewer` and `security-reviewer` calls; off by default (`SHADOW_REVIEWER_LOGGING_ENABLED` unset), so zero real shadow samples exist yet — item 16 (M2, shadow comparison & cutover) stays gated on real elapsed data this ships but does not itself produce | A — Committed | H1 (was) | `review_independence_epic.md` (M1 — shipped) |
 | 10 | ~~Extend `cost_proxy_score` coverage~~ **SHIPPED (code) — real-run confirmation outstanding**: `TCK-20260904-COST-PROXY-EPIC-TICKETS` added sidecar coverage to `implement-epic.js` (all 4 real top-level `agent()` sites) and `create-tickets.js` (4 of 7 real sites — `writeMonitoring` and the 2 `pipeline()` fan-out sites are permanently excluded, not a gap) and widened `record_events.py`'s workflow filter; this item's own acceptance signal (non-null `cost_proxy_score` after each workflow's next real run) has not yet been directly confirmed | A — Committed | H2 (was) | `standalone_items.md` (§2) |
-| 11 | `working_log.csv` parser and cleanup | A — Committed | H2, schedule later | `standalone_items.md` (§3) |
-| 12 | Provider-portability conformance test | A — Committed | H2, schedule later | `standalone_items.md` (§4) |
+| 11 | ~~`working_log.csv` parser and cleanup~~ **SHIPPED** — `TCK-20260904-WORKING-LOG-CSV-PARSER` built a tolerant parser (`tools/working_log_parser.py`) classifying every row as clean/field_count_mismatch/quote_desync_masquerading_as_clean/embedded_header_duplicate, wired into `validate_working_log.py` and a narrow `knowledge_search.py` guard, with no historical row ever rewritten. Filed a separate follow-up ticket for an unrelated ~1586-row git-merge duplication discovered during investigation (`TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP`, not yet started) | A — Committed | H2 (was) | `standalone_items.md` (§3) |
+| 12 | ~~Provider-portability conformance test~~ **SHIPPED** — `TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST` added `gate_policy`/`artifact_requirements` as the 3rd/4th named Provider-Adapter Boundary contract axes, with Claude-adapter and Codex-adapter (`AGENTS.md`) conformance tests including a deliberately-introduced-mismatch fixture per axis | A — Committed | H2 (was) | `standalone_items.md` (§4) |
 | 13 | Filtered replay eval pilot + dataset hygiene + metric design | B — Experiment | H1 | `agent_evaluation_foundation_experiment.md` |
 | 14 | Ticket-claim detection logging | B — Experiment | H1 | `workflow_reliability_epic.md` (M2) |
 | 15 | Phase-level resume — design/validation-rule resolution | B — Experiment | H1 | `workflow_reliability_epic.md` (M3) |
@@ -89,6 +89,16 @@ outstanding by the ticket itself, to be checked at the next real `implement-epic
 invocation. This moves item 10 out of the "3 still Horizon-2-only" group above, leaving **2 still
 Horizon-2-only — items 11–12** and **7 remaining to implement** overall (1, 2, 3, 7, 9, plus item
 1's remaining waves).
+
+**Items 7, 9, 11, 12 — shipped (2026-09-06/07, `ai-first-hardening-h1-h2-followon` batch,
+`TCK-20260904-*` tickets, PR #141)**: all four landed in the same batch (see their own table rows
+above for detail). This closes out every remaining Bucket-A committed item except the two that are
+genuinely blocked (2, 6 — ratification-conflict) and item 1's Wave 2/3 (time-gated, cannot be
+manufactured in a single session). **Current true remaining-to-implement count: 0 startable Bucket-A
+items** — everything left in Bucket A is either shipped, blocked pending an external ratification
+decision, or gated on real elapsed observation time. Bucket B (experiments 13–17) and Bucket C
+(blocked future options 18–21) are the only tiers with any startable-now scope; see their own
+sections below for per-item gating.
 
 ## Epics and detail docs
 
