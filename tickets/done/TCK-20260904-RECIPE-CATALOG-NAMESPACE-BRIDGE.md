@@ -179,6 +179,26 @@ tests/unit/progression tests/unit/quest tests/unit/movement tests/unit/motivatio
 tests/unit/scenarios tests/unit/systems tests/unit/actions tests/unit/ai -m "not slow and not
 extra_slow"` (the exact CI command) → 1152 passed, 1 skipped, 2 deselected after the fix.
 
+**Second real regression found and fixed after merging `origin/main`** (main had advanced 4 merged
+PRs since this branch was opened; only textual conflict was the fully-generated
+`docs/REGISTRY.yaml`, resolved by regenerating via `tools/generate_registry.py` per this repo's own
+established safe-resolution precedent for that file — no other file conflicted). Post-merge,
+`test_town_contract.py::test_blacksmith_unknown_recipe` failed intermittently depending on run
+order: several test files (`test_hardcoded_regression_guard.py` among many others, confirmed via
+grep across the suite — a pre-existing, already-documented footgun, see
+`test_race_conditions_v2.py`'s own `ensure_test_items` fixture guarding the same class of issue for
+`ItemRegistry`) call `seed_phase1_content(..., mode=LEGACY_FALLBACK)` with no teardown, downgrading
+the module-level `RecipeRegistry` singleton to a 3-entry hardcoded set for the rest of the pytest
+process. Before this ticket this was harmless to `test_town_contract.py`, since
+`BlacksmithSystem`'s wholesale-learn read its own private dict, not this singleton; now that it
+reads the same singleton, these two tests became order-dependent. Fixed by adding an `autouse`
+fixture to `test_town_contract.py` that calls `seed_phase1_content()` (real catalog bootstrap)
+before each test, mirroring the exact established precedent in `test_race_conditions_v2.py` rather
+than inventing a new pattern or attempting a broader, out-of-scope fix to the seeding
+function/other test files. Re-ran the exact CI `Unit · gameplay` command (1178 passed, 1 skipped, 2
+deselected) plus the full progression/economy/BlacksmithSystem regression set (46 + 45 passed, 2
+xfailed pre-existing) after this fix, confirming no remaining order-dependence.
+
 ## Files Changed
 - `src/domains/progression/material_predicate.py` — `recipe_materials()` now reads
   `registries.py::RecipeRegistry`; docstring rewritten to disambiguate all three registry-shaped
@@ -203,7 +223,9 @@ extra_slow"` (the exact CI command) → 1152 passed, 1 skipped, 2 deselected aft
   (new).
 - `tests/unit/social/test_town_contract.py` — found via real CI failure post-PR-open (not the
   earlier grep sweep); the two wholesale-learn-pinning tests rewritten with before/after docstrings
-  against the live registry.
+  against the live registry; new `autouse` fixture re-bootstrapping `RecipeRegistry` before each
+  test to fix a post-merge run-order dependency on another test file's un-reset legacy-fallback
+  seeding.
 
 ## Completion Summary
 Bridged the three disjoint recipe-shaped catalogs (`recipes.py::RecipeRegistry`,

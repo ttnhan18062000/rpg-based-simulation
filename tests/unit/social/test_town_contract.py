@@ -8,6 +8,8 @@ Town contract and economy tests.
 
 from dataclasses import replace
 
+import pytest
+
 from src.core.builder import V2EntityBuilder
 from src.core.state import (
     AuthoritativeState,
@@ -17,7 +19,7 @@ from src.core.state import (
 )
 from src.core.updates import StateUpdate
 from src.core.state import BuildingState
-from src.core.registries import RecipeRegistry as LiveRecipeRegistry
+from src.core.registries import RecipeRegistry as LiveRecipeRegistry, seed_phase1_content
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
 
@@ -25,6 +27,23 @@ ENTITY_ID = 1
 SHOP_POS = (5, 5)
 BLACKSMITH_POS = (5, 6)
 STEEL_SWORD_RECIPE = "craft_steel_sword"
+
+
+@pytest.fixture(autouse=True)
+def ensure_real_recipe_registry():
+    """Re-bootstraps RecipeRegistry from the real content catalog before each test in this file.
+
+    RecipeRegistry is a module-level singleton (src/core/registries.py); several other test files
+    call seed_phase1_content(..., mode=LEGACY_FALLBACK) with no teardown, which downgrades it to a
+    3-entry hardcoded set for the rest of the pytest process (same documented, pre-existing
+    footgun test_race_conditions_v2.py's ensure_test_items fixture guards against for
+    ItemRegistry). Before TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE this was harmless here --
+    BlacksmithSystem's wholesale-learn read its own private RECIPES dict, not this singleton. Now
+    that it reads this singleton, test_blacksmith_unknown_recipe/test_blacksmith_recipe_learning_
+    parity became order-dependent on whichever test ran last in the same process -- this fixture
+    makes them deterministic regardless of run order, mirroring the same established pattern.
+    """
+    seed_phase1_content()
 
 
 def _make_inventory(items=None, gold=100):
