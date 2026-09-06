@@ -273,7 +273,15 @@ section above); the long-run observation tool's default 5000-tick run is now con
 inadequate than originally described — the fantasy-year-units migration already landed
 (`TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION`), so the real elder-attribute threshold idea 20
 needs is ~17.28M ticks, not 7000, meaning no long-run observation using this tool's default has ever
-observed any age-bracket transition at all; and two ideas this doc originally scoped as merely needing a
+observed any age-bracket transition at all — **addressed, 2026-09-06**
+(`TCK-20260906-AGE-TIER-TIMING-BUG-AND-CORPUS-TEST`): a real 17.28M-tick corpus run remains
+impractical for normal test budgets, so the tool now warns explicitly whenever `--ticks` can't reach
+a real boundary rather than silently no-op'ing, and a new Unit-tier SimQ corpus test
+(`tests/simulation_quality/test_age_tier_transitions_corpus.py`) proves both transitions plus idea
+34's Coming-of-Age roll fire correctly at the real thresholds via a deterministic hand-seeded
+scenario — the underlying mechanics themselves were already correctly unit-tested elsewhere
+(`test_lifecycle.py`, `test_coming_of_age_archetype_choice.py`) at these exact boundary values, this
+gap was specific to the one long-run observation tool; and two ideas this doc originally scoped as merely needing a
 new corpus world (50, 64) were found, 2026-09-06, to have never actually shipped their underlying
 mechanism at all — idea 64 specifically contradicts M4's own "all 12 ideas shipped" claim above, a real
 discrepancy flagged for a future audit, not resolved here.
