@@ -18,6 +18,7 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
 
 import record_events  # noqa: E402
 import writer  # noqa: E402
+from cost_proxy import compute_cost_proxy_score  # noqa: E402
 from record_events import compute_tool_stats, validate_record, warn_vocabulary_drift  # noqa: E402
 
 _RECORD_PATH = _MONITORING_TOOLS_DIR / "record_events.py"
@@ -246,34 +247,127 @@ def test_cost_proxy_score_absent_when_no_tools_jsonl_exists(tmp_path):
     assert written["tool_call_count"] == 0
 
 
-def test_implement_epic_and_create_tickets_records_unaffected_no_sidecar():
-    # implement-epic ("EPIC-"/"FOLDER-" run_id prefix) and create-tickets ("CREATE-TICKETS-"
-    # prefix) never register a per-agent-call sidecar — compute_tool_stats must leave their
-    # records exactly as passed through, never adding a tool_call_count/cost_proxy_score key
-    # that wasn't already there (matches this ticket's explicit Out-of-Scope: "100% missing for
-    # both fields by documented, deliberate design").
+def test_implement_epic_and_create_tickets_records_now_computed_from_real_tools_jsonl(tmp_path, monkeypatch):
+    # TCK-20260904-COST-PROXY-EPIC-TICKETS reverses TCK-20260719-COST-PROXY-WRITE-PATH's prior
+    # exclusion of implement-epic ("EPIC-"/"FOLDER-" run_id prefix) and create-tickets
+    # ("CREATE-TICKETS-" prefix) — that earlier exclusion was a scope-discipline decision for a
+    # narrowly-framed bug-fix ticket (limiting blast radius to the one workflow already being
+    # fixed), not a technical constraint (see investigation.md's Prior Work section). Both
+    # workflows now register a real orchestrator-side writeSidecar() call at their covered sites
+    # (implement-epic.js, create-tickets.js), so compute_tool_stats() must compute real, non-null
+    # values for them exactly like implement-ticket, not leave them passed through untouched.
+    monkeypatch.chdir(tmp_path)
+    _write_tools_jsonl(tmp_path, [
+        {"run_id": "EPIC-TCK-FAKE-EPIC", "seq": 1, "tool": "Read", "duration_ms": 5},
+        {"run_id": "FOLDER-tickets-todos-fake", "seq": 2, "tool": "Bash", "duration_ms": 500},
+        {"run_id": "CREATE-TICKETS-fake-source", "seq": 3, "tool": "Edit", "duration_ms": 10},
+    ])
     records = [
         {**_VALID_EVENT, "run_id": "EPIC-TCK-FAKE-EPIC", "seq": 1},
-        {**_VALID_EVENT, "run_id": "FOLDER-tickets-todos-fake", "seq": 1},
-        {**_VALID_EVENT, "run_id": "CREATE-TICKETS-fake-source", "seq": 1},
+        {**_VALID_EVENT, "run_id": "FOLDER-tickets-todos-fake", "seq": 2},
+        {**_VALID_EVENT, "run_id": "CREATE-TICKETS-fake-source", "seq": 3},
     ]
     stats = compute_tool_stats(records)
-    assert stats == {}
+    assert stats == {
+        ("EPIC-TCK-FAKE-EPIC", 1): (1, 1.0),
+        ("FOLDER-tickets-todos-fake", 2): (1, 0.5),
+        ("CREATE-TICKETS-fake-source", 3): (1, 1.0),
+    }
 
 
-def test_compute_tool_stats_only_targets_implement_ticket_workflow(tmp_path, monkeypatch):
-    # A mixed batch: one implement-ticket record (gets computed) and one implement-epic record
-    # (must not appear in the result at all, even though tools.jsonl has no rows for it either).
+def test_zero_tool_call_no_sidecar_paths_compute_zero_not_null(tmp_path, monkeypatch):
+    # implement-epic.js's 2 fire-and-forget bash()-only early-return paths (request mode's
+    # EPIC_CREATED path, and the ticketIds.length===0 NOTHING_TO_DO path) never call agent(), so
+    # they have no (run_id, seq) tool-call group to attribute in the first place — once the filter
+    # widens, compute_tool_stats()'s existing unconditional-entry-per-wanted-key behavior must
+    # legitimately return (0, 0.0) for these records, not omit the key (they genuinely made zero
+    # tracked tool calls, not a gap in coverage).
+    monkeypatch.chdir(tmp_path)
+    records = [
+        {**_VALID_EVENT, "run_id": "EPIC-TCK-FAKE-EPIC-CREATED", "seq": 1},
+        {**_VALID_EVENT, "run_id": "FOLDER-tickets-todos-nothing", "seq": 1},
+    ]
+    stats = compute_tool_stats(records)
+    assert stats == {
+        ("EPIC-TCK-FAKE-EPIC-CREATED", 1): (0, 0.0),
+        ("FOLDER-tickets-todos-nothing", 1): (0, 0.0),
+    }
+
+
+def test_compute_tool_stats_targets_implement_ticket_implement_epic_and_create_tickets(tmp_path, monkeypatch):
+    # A 4-way mixed batch: one implement-ticket, one implement-epic, one create-tickets record —
+    # each with its own matching tools.jsonl row at a distinct (run_id, seq), proving the 3
+    # buckets compute independently with no cross-bucket leakage — plus one simq-audit record
+    # with its own tools.jsonl row that must be ABSENT from the result entirely (not None, not
+    # (0, 0.0)) — proving the filter is a membership check against exactly {implement-ticket,
+    # implement-epic, create-tickets}, never "any known workflow".
     monkeypatch.chdir(tmp_path)
     _write_tools_jsonl(tmp_path, [
         {"run_id": "TCK-MIXED-BATCH", "seq": 1, "tool": "Read", "duration_ms": 5},
+        {"run_id": "EPIC-TCK-MIXED-BATCH", "seq": 2, "tool": "Bash", "duration_ms": 500},
+        {"run_id": "CREATE-TICKETS-MIXED-BATCH", "seq": 3, "tool": "Edit", "duration_ms": 10},
+        {"run_id": "SIMQ-AUDIT-MIXED-BATCH", "seq": 4, "tool": "Bash", "duration_ms": 999},
     ])
     records = [
         {**_VALID_EVENT, "run_id": "TCK-MIXED-BATCH", "seq": 1},
-        {**_VALID_EVENT, "run_id": "EPIC-TCK-MIXED-BATCH", "seq": 1},
+        {**_VALID_EVENT, "run_id": "EPIC-TCK-MIXED-BATCH", "seq": 2},
+        {**_VALID_EVENT, "run_id": "CREATE-TICKETS-MIXED-BATCH", "seq": 3},
+        {**_VALID_EVENT, "run_id": "SIMQ-AUDIT-MIXED-BATCH", "seq": 4},
     ]
     stats = compute_tool_stats(records)
-    assert stats == {("TCK-MIXED-BATCH", 1): (1, 1.0)}
+    assert stats == {
+        ("TCK-MIXED-BATCH", 1): (1, 1.0),
+        ("EPIC-TCK-MIXED-BATCH", 2): (1, 0.5),
+        ("CREATE-TICKETS-MIXED-BATCH", 3): (1, 1.0),
+    }
+    assert ("SIMQ-AUDIT-MIXED-BATCH", 4) not in stats
+
+
+def test_batch_top_level_negative_seq_and_child_ticket_positive_seq_do_not_cross_contaminate(tmp_path, monkeypatch):
+    # Reproduces and pins the Step 1 collision fix from
+    # staging_artifacts/TCK-20260904-COST-PROXY-EPIC-TICKETS/plan.md: implement-epic.js's 4
+    # top-level sidecar sites (Discover, batch-monitoring-write, folder-cleanup,
+    # tracking-doc-update) share one run_id (batchRunId) with the pre-existing batchEvents array,
+    # which already uses seq=1..N under that identical run_id. This test proves, at the Python
+    # compute_tool_stats() level (no JS execution needed), that the negative seq range (-1..-4)
+    # this ticket's Step 1 introduces is provably disjoint from batchEvents' positive seq=1..N
+    # range in BOTH directions — a positive-seq key never leaks a negative-seq row's tool calls,
+    # and vice versa.
+    monkeypatch.chdir(tmp_path)
+    run_id = "EPIC-TCK-BATCH-COLLISION-TEST"
+    _write_tools_jsonl(tmp_path, [
+        # seq=-1 (Discover's own tool calls) — 2 rows.
+        {"run_id": run_id, "seq": -1, "tool": "Bash", "duration_ms": 500},
+        {"run_id": run_id, "seq": -1, "tool": "Read", "duration_ms": 10},
+        # seq=-2 (batch-monitoring-write's own tool calls) — 1 row.
+        {"run_id": run_id, "seq": -2, "tool": "Bash", "duration_ms": 200},
+        # seq=1 (first child ticket's batchEvents slot) — 1 row.
+        {"run_id": run_id, "seq": 1, "tool": "Edit", "duration_ms": 1},
+        # No row at seq=2 (a second child ticket slot with genuinely zero tool calls).
+    ])
+    records = [
+        {**_VALID_EVENT, "run_id": run_id, "seq": 1},
+        {**_VALID_EVENT, "run_id": run_id, "seq": 2},
+        {**_VALID_EVENT, "run_id": run_id, "seq": -1},
+        {**_VALID_EVENT, "run_id": run_id, "seq": -2},
+    ]
+    stats = compute_tool_stats(records)
+
+    # (run_id, 1): only its own 1 row, not seq=-1's 2 rows or seq=-2's 1 row.
+    assert stats[(run_id, 1)] == (1, compute_cost_proxy_score([
+        {"run_id": run_id, "seq": 1, "tool": "Edit", "duration_ms": 1},
+    ]))
+    # (run_id, 2): genuinely zero — not leaking seq=-2's row.
+    assert stats[(run_id, 2)] == (0, 0.0)
+    # (run_id, -1): only its own 2 rows.
+    assert stats[(run_id, -1)] == (2, compute_cost_proxy_score([
+        {"run_id": run_id, "seq": -1, "tool": "Bash", "duration_ms": 500},
+        {"run_id": run_id, "seq": -1, "tool": "Read", "duration_ms": 10},
+    ]))
+    # (run_id, -2): only its own 1 row.
+    assert stats[(run_id, -2)] == (1, compute_cost_proxy_score([
+        {"run_id": run_id, "seq": -2, "tool": "Bash", "duration_ms": 200},
+    ]))
 
 
 # ---------------------------------------------------------------------------

@@ -46,6 +46,26 @@ Do not stop merely for:
 - `test-scoper` — Maps changed files to relevant tests, builds and runs the scoped pytest command, and reports pass/fail counts and coverage gaps.
 - `ticket-scoper` — Creates or loads the ticket, computes tags/suggested_skills/mistag_warning, and detects scope conflicts before implementation begins.
 
+## Gate Policy
+
+- Scope (agent_result_field): conflicts==[] -> on_fail: CONFLICTS_DETECTED
+- Scope (static_check): tag_registry.check_tags_registered -> on_fail: TAGS_NOT_REGISTERED
+- Plan (static_check): gate_checks.plan_gate_static.plan_has_unresolved_questions_heading -> on_fail: NEEDS_HUMAN_INPUT
+- Review (agent_verdict): pass_value=APPROVED -> on_fail: NEEDS_CHANGES, BLOCKED
+- Implement (static_check): gate_checks.doc_staleness_check.check_doc_staleness -> on_fail: DOC_STALENESS_BLOCKED
+- Architecture-Verify (agent_verdict): pass_value=APPROVED -> on_fail: NEEDS_CHANGES, BLOCKED
+- Test (static_check): gate_checks.test_scope_coverage_static.check_test_scope_coverage -> on_fail: TEST_SCOPE_COVERAGE_FAILED
+- Test (agent_result_field): passed==True -> on_fail: TESTS_FAILED
+- Test (static_check): gate_checks.done_checker_static.clean_data_runs_early -> on_fail: DATA_RUNS_CLEAN_FAILED
+- Parity (static_check): gate_checks.parity_updater_static.cross_reference_touched -> on_fail: PARITY_INCOMPLETE
+- Security-Review (agent_verdict): pass_value=APPROVED -> on_fail: SECURITY_BLOCKED
+- Verify (agent_verdict): pass_value=READY_TO_CLOSE -> on_fail: DOD_BLOCKED
+- Finalize (static_check): gate_checks.done_checker_static.run_finalize_selfcheck -> on_fail: FINALIZE_INCOMPLETE
+
+## Artifact Requirements
+
+- Required for all tiers except `hotfix`: plan.md, investigation.md, test_plan.md
+
 ## Skills
 
 - `agent-monitoring-retro` — Generates the agent monitoring retro report from accumulated runs.jsonl/events.jsonl data. (see `.agents/skills/agent-monitoring-retro/SKILL.md`)

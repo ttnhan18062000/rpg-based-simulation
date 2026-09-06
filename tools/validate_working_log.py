@@ -7,35 +7,36 @@ Checks:
   2. All tickets in tickets/done/ have a log entry.
   3. No empty fields in any row.
 
+Row loading is tolerant (see tools/working_log_parser.py): malformed rows are
+classified explicitly rather than silently mis-mapped by a bare DictReader, and the
+ambiguous-row count is surfaced as a first-class signal (mirrors
+tools/ticket_stats_report.py::compute_velocity's unparseable_rows convention).
+
 Usage: python3 tools/validate_working_log.py
 Exit 0 on success, 1 on any error.
 """
 
-import csv
 import sys
 from pathlib import Path
 
+_TOOLS_DIR = Path(__file__).parent
+if str(_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_TOOLS_DIR))
 
-def main():
-    log_path = Path("tickets/working_log.csv")
-    done_dir = Path("tickets/done")
+from working_log_parser import parse_working_log  # noqa: E402
 
-    if not log_path.exists():
-        print(f"ERROR: {log_path} not found", file=sys.stderr)
-        sys.exit(1)
 
-    if not done_dir.exists():
-        print(f"ERROR: {done_dir} not found", file=sys.stderr)
-        sys.exit(1)
-
+def run_validation(log_path: Path, done_dir: Path) -> dict:
+    """Run the three pre-existing checks (duplicate ticket IDs, missing done/ entries,
+    empty fields) against the tolerant parser's clean + recovered records, and surface
+    the ambiguous/duplicate row counts as first-class signals. Check logic itself is
+    unchanged from the prior bare-DictReader implementation — only the row source
+    changed."""
     errors = []
 
-    with open(log_path, newline="") as f:
-        reader = csv.DictReader(f)
-        if not reader.fieldnames:
-            print("ERROR: working_log.csv has no header row", file=sys.stderr)
-            sys.exit(1)
-        rows = list(reader)
+    parse_result = parse_working_log(log_path)
+    kept_rows = [r for r in parse_result.rows if r.record is not None]
+    rows = [r.record for r in kept_rows]
 
     # 1. Duplicate ticket IDs
     ids = [r.get("ticket_id", "").strip() for r in rows]
@@ -59,20 +60,46 @@ def main():
         )
 
     # 3. Empty fields
-    for i, row in enumerate(rows, start=2):  # row 1 is header
+    for parsed_row in kept_rows:
+        row = parsed_row.record
         for field, val in row.items():
             if field and (val is None or not val.strip()):
                 errors.append(
-                    f"Row {i} ({row.get('ticket_id', '?')}): empty field '{field}'"
+                    f"Row {parsed_row.line_no} ({row.get('ticket_id', '?')}): empty field '{field}'"
                 )
 
-    if errors:
-        for e in errors:
+    return {
+        "errors": errors,
+        "row_count": len(rows),
+        "done_count": len(done_tickets),
+        "ambiguous_row_count": parse_result.ambiguous_row_count,
+        "duplicate_row_count": parse_result.duplicate_row_count,
+    }
+
+
+def main():
+    log_path = Path("tickets/working_log.csv")
+    done_dir = Path("tickets/done")
+
+    if not log_path.exists():
+        print(f"ERROR: {log_path} not found", file=sys.stderr)
+        sys.exit(1)
+
+    if not done_dir.exists():
+        print(f"ERROR: {done_dir} not found", file=sys.stderr)
+        sys.exit(1)
+
+    result = run_validation(log_path, done_dir)
+
+    if result["errors"]:
+        for e in result["errors"]:
             print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
     print(
-        f"OK: {len(rows)} log entries, {len(done_tickets)} done tickets — all consistent"
+        f"OK: {result['row_count']} log entries, {result['done_count']} done tickets — "
+        f"all consistent (ambiguous_row_count={result['ambiguous_row_count']}, "
+        f"duplicate_row_count={result['duplicate_row_count']})"
     )
 
 

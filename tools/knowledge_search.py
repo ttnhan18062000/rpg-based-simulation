@@ -95,6 +95,7 @@ def _extract_request_summary(text: str) -> str:
 def _extract_working_log_rows(csv_path: Path) -> list[dict]:
     """Read working_log.csv, return list of {id, title, summary, path} dicts."""
     rows = []
+    skipped_embedded_header_duplicates = 0
     if not csv_path.exists():
         return rows
     try:
@@ -117,6 +118,12 @@ def _extract_working_log_rows(csv_path: Path) -> list[dict]:
                 ).strip()
                 if not ticket_id and not title:
                     continue
+                # A data row whose ticket_id is literally the header's own column name is
+                # an embedded duplicate header row (e.g. tickets/working_log.csv:1594 from
+                # a whole-block merge duplication), not a real corpus document.
+                if ticket_id == "ticket_id":
+                    skipped_embedded_header_duplicates += 1
+                    continue
                 rows.append(
                     {
                         "id": ticket_id or title,
@@ -127,6 +134,12 @@ def _extract_working_log_rows(csv_path: Path) -> list[dict]:
                 )
     except Exception as exc:
         print(f"Warning: could not read {csv_path}: {exc}", file=sys.stderr)
+    if skipped_embedded_header_duplicates:
+        print(
+            f"Warning: skipped {skipped_embedded_header_duplicates} "
+            f"embedded-header-duplicate row(s) in {csv_path}",
+            file=sys.stderr,
+        )
     return rows
 
 

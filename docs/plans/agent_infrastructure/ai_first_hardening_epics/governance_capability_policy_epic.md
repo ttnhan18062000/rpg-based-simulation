@@ -80,6 +80,10 @@ Concretely:
   machine-local: entries within that envelope. What requires review: any local entry the diff
   flags as outside it.
 
+**Ownership/lifecycle row:** see docs/guidelines/subsystem_ownership_lifecycle.md for this
+subsystem's accountable role, update trigger, staleness signal, and removal condition — not
+restated here.
+
 ### M3 — Per-agent `tools:` frontmatter rollout (gated on M1)
 
 Revised during planning discussion after a proposed runtime "audit mode" turned out to be
@@ -132,6 +136,10 @@ unresolved permission regression:
 3. **Wave 3 — agents with legitimate mutation/execution requirements**: `implementer`,
    `parity-updater` — highest blast radius, done last, with the most compatibility-analysis
    evidence in hand.
+
+**Ownership/lifecycle row:** see docs/guidelines/subsystem_ownership_lifecycle.md for this
+subsystem's accountable role, update trigger, staleness signal, and removal condition — not
+restated here.
 
 **Observability requirement**: when a wave goes live, a permission-related failure must be
 identifiable by agent, tool, and workflow/phase — not a silent or ambiguous failure. Rollback for

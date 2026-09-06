@@ -28,6 +28,17 @@ governs:
   - path: hook-surface-policy.yaml
     version_field: hook_surface_policy_version
     description: Per-provider available/normalized/enabled hook-event policy and Codex activation boundary.
+  - path: gate-policy.yaml
+    version_field: gate_policy_version
+    description: Per-phase gate mechanism (agent_verdict/static_check/agent_result_field), pass condition, and resulting terminal-status mapping for implement-ticket.
   - path: terminal-statuses.yaml
     version_field: terminal_status_schema_version
     description: Normalized terminal outcomes for the implement-ticket workflow.
+
+# Added directly below `description:` on contract.yaml, as a new OPTIONAL field — mirrors
+# workflows/implement-ticket.yaml's existing optional `continuation_policy` field
+# (tools/agent_orchestration/loader.py:118-133 validates it only when present, no version bump
+# needed for its addition — same treatment here).
+artifact_requirements:
+  required_files: [plan.md, investigation.md, test_plan.md]
+  exempt_tier: hotfix

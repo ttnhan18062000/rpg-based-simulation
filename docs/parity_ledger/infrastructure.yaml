@@ -5716,53 +5716,55 @@
     compute_duration_s "always overrides" precedent exactly. implement-ticket.js''s
     writeMonitoring prompt had its old TOOL_STATS-compute step removed entirely (an
     agent following the prompt no longer computes or transmits these two fields at
-    all). Records for implement-epic/create-tickets (neither registers a per-agent-call
-    sidecar) are left completely untouched by compute_tool_stats -- no key added if
-    not already present, preserving their documented "100% missing, no sidecar" behavior,
-    verified by a direct regression test. duration_s was investigated in the same
-    pass and confirmed already resolved (99.13% coverage, single miss an expected
-    in-progress run) -- no code change made for it.
+    all). ORIGINALLY (as of this ticket, 2026-07-19): records for implement-epic/create-tickets
+    (neither registered a per-agent-call sidecar at the time) were left completely
+    untouched by compute_tool_stats -- no key added if not already present, preserving
+    their then-documented "100% missing, no sidecar" behavior. duration_s was investigated
+    in the same pass and confirmed already resolved (99.13% coverage, single miss
+    an expected in-progress run) -- no code change made for it.
 
-    '
+
+    SUPERSEDED 2026-09-04 by TCK-20260904-COST-PROXY-EPIC-TICKETS (see INFRA-407):
+    that ticket reversed the implement-epic/create-tickets exclusion described above
+    by adding real per-agent-call sidecar coverage to both workflows and widening
+    compute_tool_stats''s infer_workflow filter from a single-value equality check
+    to a membership check over {''implement-ticket'', ''implement-epic'', ''create-tickets''}.
+    This entry''s core claim (the two workflows are ''left completely untouched'')
+    is therefore historical, describing the pre-2026-09-04 state only -- current behavior
+    is documented in INFRA-407. simq-audit remains excluded from the filter, unchanged
+    by either ticket.'
   status: verified
   priority: P2
   legacy_evidence: null
   v2_evidence: 'tools/agent-monitoring/record_events.py:34 (`def compute_tool_stats(records:
-    list[dict]) -> dict[tuple, tuple[int, float]]`, gated on `infer_workflow(r.get("run_id",
-    "")) == "implement-ticket"`) and :135 (`tool_stats = compute_tool_stats(records)`,
-    wired into `main()` immediately before the write block, always overwriting `tool_call_count`/
-    `cost_proxy_score` for any record whose `(run_id, seq)` key is present in the
-    computed dict). .claude/workflows/implement-ticket.js:267-289 (`writeMonitoring`''s
-    prompt: Step 0 sidecar-clear unchanged, old Step 2 TOOL_STATS-compute-and-substitute
+    list[dict]) -> dict[tuple, tuple[int, float]]`) as it stood at TCK-20260719-COST-PROXY-WRITE-PATH''s
+    landing, gated on the single-value equality check `infer_workflow(r.get("run_id",
+    "")) == "implement-ticket"`, and :135 (`tool_stats = compute_tool_stats(records)`,
+    wired into main() immediately before the write block, always overwriting tool_call_count/cost_proxy_score
+    for any record whose (run_id, seq) key is present in the computed dict). .claude/workflows/implement-ticket.js:267-289
+    (writeMonitoring''s prompt: Step 0 sidecar-clear unchanged, old Step 2 TOOL_STATS-compute-and-substitute
     instruction removed, remaining steps renumbered 1-3, new Step 2 "build and write
     events" explicitly instructs the agent not to compute or set either field itself).
-
-    '
+    This equality-check gate was since widened to a membership check by TCK-20260904-COST-PROXY-EPIC-TICKETS
+    -- see INFRA-407 for the current record_events.py:34-76 shape.'
   proof_type: contract
   test_path: 'tests/tools/test_record_events.py::test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not_passthrough
     (a deliberately wrong caller-supplied value of 999999 is overridden by the real
     hand-computed value from a tools.jsonl fixture); ::test_cost_proxy_score_absent_when_no_tools_jsonl_exists
-    (no crash, zero-fallback when tools.jsonl is absent); ::test_implement_epic_and_create_tickets_records_unaffected_no_sidecar
-    and ::test_compute_tool_stats_only_targets_implement_ticket_workflow (both directly
-    call compute_tool_stats() to prove non-implement-ticket records are never touched,
-    even in a mixed batch). All 4 re-run and confirmed passing as part of this parity
-    update, alongside the full 19/19 in test_record_events.py and the 1 renamed/updated
-    test in test_current_run_sidecar_orchestrator.py (12/12 passing).
-
-    '
+    (no crash, zero-fallback when tools.jsonl is absent). NOTE: this entry originally
+    also cited ::test_implement_epic_and_create_tickets_records_unaffected_no_sidecar
+    and ::test_compute_tool_stats_only_targets_implement_ticket_workflow as proof
+    of the implement-epic/create-tickets exclusion; both were renamed and rewritten
+    by TCK-20260904-COST-PROXY-EPIC-TICKETS to assert the opposite (non-null values)
+    -- see INFRA-407 for their current names and current-state coverage.'
   divergence_note: null
-  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+  support_boundary: Agent-orchestration/monitoring-pipeline tooling only -- no simulation
     behavior is involved (same category as INFRA-281 immediately above, and INFRA-263/264/265/277/278/279/280
     more generally). Does not change what cost_proxy_score/tool_call_count mean or
-    how they''re formulated (cost_proxy.py''s weights/formula untouched) -- only where
-    and how reliably they''re computed. Deliberately does not fix the same anti-pattern
-    found in .claude/workflows/ simq-audit.js''s own separate inline TOOL_STATS-style
-    compute step -- out of this ticket''s stated scope (Related Code Areas names only
-    implement-ticket.js), zero regression risk to that workflow since compute_tool_stats''s
-    infer_workflow gate never matches a SIMQ-AUDIT- prefixed run_id, but noted here
-    as a known, real, unfixed instance of the same defect for a future ticket.
-
-    '
+    how they are formulated (cost_proxy.py's weights/formula untouched) -- only where
+    and how reliably they are computed. The simq-audit gap noted in this entry's original
+    text remains unfixed and out of scope for both this ticket and its 2026-09-04
+    successor.
 - id: INFRA-283
   text: 'Phase/agent vocabulary casing normalization in the agent-monitoring retro
     report (TCK-20260719-PHASE-AGENT-CASE-FOLD): direct measurement against live agent-monitoring/
@@ -12095,3 +12097,164 @@
     and test_doc_updater_agent_file.py)
   divergence_note: null
   proof_type: contract
+- id: INFRA-407
+  text: 'Reverses TCK-20260719-COST-PROXY-WRITE-PATH''s deliberate ''implement-ticket
+    only'' exclusion (TCK-20260904-COST-PROXY-EPIC-TICKETS, see INFRA-282 for the
+    original exclusion this supersedes): implement-epic.js and create-tickets.js previously
+    never registered a per-agent-call .claude/current_run sidecar at all, so their
+    events.jsonl rows always reported null tool_call_count/cost_proxy_score. Fixed
+    by adding dual-write sidecar coverage at the real top-level agent() call sites
+    in both files, then widening record_events.py::compute_tool_stats()''s workflow
+    filter from a single-value equality check (`== "implement-ticket"`) to a membership
+    check (`in {"implement-ticket", "implement-epic", "create-tickets"}`) -- simq-audit
+    deliberately stays excluded, unchanged. implement-epic.js: hoisted batchRunId''s
+    computation earlier, added a 4-arg writeSidecar(seq, phase, agentName) helper,
+    wired at its 4 real top-level agent() sites (Discover, batch-monitoring-write,
+    folder-cleanup, tracking-doc-update) using a disjoint negative seq range (-1..-4)
+    so it can never collide with the pre-existing per-child-ticket batchEvents rows''
+    positive seq=1..N range under the same run_id. create-tickets.js: added the same
+    writeSidecar helper (using this file''s own events.length + 1 seq convention),
+    wired at 4 of its 7 agent() sites (comprehend, structure, write-sequence, link-epic);
+    writeMonitoring''s own agent() call and 2 pipeline() concurrent fan-out sites
+    (investigate:<concern.id>, write:<task.short_scope>) stay permanently excluded
+    and documented in-line, since a writeSidecar()-then-agent() pattern inside a concurrent
+    fan-out callback would let a later iteration''s write race the earlier one''s
+    shared sidecar file.'
+  status: verified
+  priority: P2
+  v2_evidence: '.claude/workflows/implement-epic.js:99 (hoisted batchRunId computation),
+    :131/:331/:361/:399 (writeSidecar(-1..-4, ...) at the 4 real top-level agent()
+    sites: Discover, batch-monitoring-write, folder-cleanup, tracking-doc-update).
+    .claude/workflows/create-tickets.js:192/:484/:844/:867 (writeSidecar(events.length
+    + 1, ...) at comprehend/structure/write-sequence/link-epic); lines 162, 335-338,
+    699 carry in-line comments documenting the 3 permanently-excluded sites (writeMonitoring,
+    and the 2 pipeline() fan-out callbacks). tools/agent-monitoring/record_events.py:34-76
+    (compute_tool_stats() docstring rewritten to describe per-workflow partial coverage;
+    :75 membership check `infer_workflow(r.get("run_id", "")) in {"implement-ticket",
+    "implement-epic", "create-tickets"}` replacing the old single-value equality check).'
+  proof_type: contract
+  test_path: 'tests/tools/test_record_events.py::test_implement_epic_and_create_tickets_records_now_computed_from_real_tools_jsonl,
+    ::test_zero_tool_call_no_sidecar_paths_compute_zero_not_null, ::test_compute_tool_stats_targets_implement_ticket_implement_epic_and_create_tickets,
+    ::test_batch_top_level_negative_seq_and_child_ticket_positive_seq_do_not_cross_contaminate;
+    tests/tools/test_epic_create_tickets_sidecar_orchestrator.py (adjacency for all
+    8 covered sites across both files, exact negative-seq-literal-in-order guard,
+    single-hoisted-batchRunId guard, absence-of-writeSidecar guards for all 3 excluded
+    create-tickets.js sites plus the fire-and-forget-paths, dual-write guards for
+    both helpers, execution_id/provider-absence guard). 92/92 passing at landing:
+    `pytest tests/tools/test_record_events.py tests/tools/test_cost_proxy.py tests/tools/test_current_run_sidecar_orchestrator.py
+    tests/tools/test_validate_agent_monitoring.py tests/tools/test_epic_create_tickets_sidecar_orchestrator.py
+    -q`.'
+  divergence_note: null
+  support_boundary: Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same support_boundary category as INFRA-263/264/265/277
+    through INFRA-282/305/306/402-406). Does not change what cost_proxy_score/tool_call_count
+    mean or how they are formulated (cost_proxy.py's weights/formula untouched) --
+    only which workflows' records get computed. simq-audit.js's own separate inline
+    TOOL_STATS-style compute step (noted as unfixed in INFRA-282) remains unfixed
+    and out of scope here too. Real-run acceptance verification (a genuine implement-epic/create-tickets
+    run producing non-null values in live events.jsonl, per this ticket's own plan.md
+    Step 7) was flagged as outstanding at Implement-phase close -- confirm at this
+    ticket's own Finalize/close or the next real invocation of either workflow.
+- id: INFRA-408
+  text: 'gate_policy and artifact_requirements conformance: .claude/ provider translation
+    of implement-ticket''s per-phase gate mechanism and per-tier staging-artifact
+    requirement must not silently diverge from agent-orchestration/gate-policy.yaml
+    and contract.yaml''s artifact_requirements field.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/agent_orchestration_claude_adapter/gate_policy_extractor.py,
+    tools/agent_orchestration_claude_adapter/artifact_requirements_extractor.py diff
+    live .claude/workflows/implement-ticket.js and tools/gate_checks/done_checker_static.py
+    against agent-orchestration/{gate-policy.yaml,contract.yaml}
+  proof_type: contract
+  test_path: tests/agent_orchestration_claude_adapter/test_gate_policy_conformance.py,tests/agent_orchestration_claude_adapter/test_artifact_requirements_conformance.py,tests/agent_orchestration_codex_adapter/test_gate_policy_artifact_requirements_conformance.py
+  divergence_note: null
+  support_boundary: Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved.
+- id: INFRA-409
+  text: 'Advisory, opt-in shadow candidate-reviewer logging (TCK-20260904-SHADOW-REVIEWER-LOGGING)
+    added at two call sites in .claude/workflows/implement-ticket.js: the Architecture-Verify
+    phase (after the production architecture-reviewer agent() call at line ~1004,
+    before the if (archVerify.verdict !== ''APPROVED'') block at ~line 1106) and the
+    Security-Review phase (after the production security-reviewer agent() call at
+    ~line 1364, before the if (securityReview.verdict !== ''APPROVED'') block at ~line
+    1378). A candidate model (claude-fable-5-1 -- a distinct model family from whatever
+    the main-loop/production reviewer call inherits, chosen to de-correlate failure
+    modes) runs against the same diff/evidence the production reviewer just judged,
+    on an identical prompt, for logging only. Gated behind SHADOW_REVIEWER_LOGGING_ENABLED
+    (strict "1" string equality, off by default) AND a bounded per-reviewer sample
+    window (tools/agent-monitoring/shadow_reviewer_window.py::is_shadow_window_open(),
+    thresholds 50 for architecture-reviewer / 10 for security-reviewer, sized from
+    real historical event volume: 478 vs. 14 historical Architecture-Verify/Security-Review
+    events, a ~34:1 ratio) -- once a reviewer''s window closes, zero further candidate
+    calls are made for it. The candidate verdict never reaches pushEvent(..., ''failed'',
+    ...), writeMonitoring(), or an early return -- both shadow blocks sit structurally
+    before the production if-check and never reference the production result variable
+    at all, so this is a construction-level guarantee, not a conditional one. Each
+    shadow call''s own tool-call footprint is attributed via writeSidecar() to its
+    own (run_id, negative_seq) bucket -- seq = -(SHADOW_SEQ_BASE[reviewer] + prior_count_this_run_this_reviewer),
+    SHADOW_SEQ_BASE = {architecture-reviewer: 100, security-reviewer: 200} -- provably
+    disjoint from the real per-phase seq range (>= 1) and from INFRA-299''s own small
+    -1..-5 shadow-packet range, so it never folds into the production call''s tools.jsonl
+    cost/tool-count bucket. The verdict itself is written via a new module, tools/agent-monitoring/shadow_reviewer_events.py::emit_shadow_reviewer_event()
+    (validates via record_events.validate_record(), writes via writer.write_lines()
+    -- not built on tools/retrieval_events.py::emit_retrieval_event(), whose own RETRIEVAL_EVENT_FIELDS
+    unknown-field guard would reject this ticket''s candidate_* field family), carrying
+    candidate_model, candidate_verdict, candidate_violations_count, and its own independently-computed
+    candidate_tool_call_count/candidate_cost_proxy_score (via cost_proxy.compute_cost_proxy_score(),
+    formula untouched) plus candidate_wall_time_ms/workflow_wall_time_ms (via a new
+    captureEpochMs()/workflowStartMs orchestrator helper pair). Fail-open at three
+    levels: shell (2>/dev/null || true), Python (try/except Exception: pass), and
+    a wrapping JS try/catch (so even agent() throwing on an API error/timeout cannot
+    abort the phase) -- same convention as SHADOW_CONTEXT_PACKET_ENABLED (INFRA-299).
+    Does not extend to the pre-Implement Review phase''s separate architecture-reviewer
+    call (against prose plan.md, a different call site/input shape), does not widen
+    the Security-Review tag-gated trigger condition, and does not build any promotion/"enough
+    evidence" comparison-decision logic -- is_shadow_window_open() is a pure mechanical
+    stop condition only.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '.claude/workflows/implement-ticket.js: captureEpochMs()/workflowStartMs
+    helpers added immediately after captureTs(); shadow block at Architecture-Verify
+    (after const archVerify = await agent(...) closes, before if (archVerify.verdict
+    !== ''APPROVED'')); shadow block at Security-Review (after const securityReview
+    = await agent(...) closes, before if (securityReview.verdict !== ''APPROVED'')).
+    tools/agent-monitoring/shadow_reviewer_window.py (new -- is_shadow_window_open(),
+    compute_shadow_seq(), SHADOW_MAX_SAMPLES, SHADOW_SEQ_BASE). tools/agent-monitoring/shadow_reviewer_events.py
+    (new -- emit_shadow_reviewer_event(), SHADOW_REVIEWER_EVENT_FIELDS). docs/agent-monitoring/schema.md
+    (new Shadow-reviewer-event field family section; seq field exception note extended).'
+  proof_type: contract
+  test_path: tests/tools/test_shadow_reviewer_call_site.py, tests/tools/test_shadow_reviewer_window.py,
+    tests/tools/test_current_run_sidecar_orchestrator.py::test_sidecar_bash_write_precedes_each_covered_agent_call
+  divergence_note: null
+  support_boundary: Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same support_boundary category as INFRA-299/402-408). Does
+    not change what cost_proxy_score means or how it is formulated -- only adds a
+    second, independently-attributed candidate score per reviewer.
+- id: INFRA-410
+  text: 'Migrate .claude/settings.json''s Edit|Write PreToolUse hook''s inline RUN_ID=$(...)
+    python3 -c snippet from an unscoped-only read of .claude/current_run to the same
+    scoped-then-unscoped-fallback preference order as tools/retrieval_cache.py::read_current_run_sidecar()
+    (INFRA-390): reads CLAUDE_CODE_SESSION_ID via os.environ.get (no hook-payload
+    session_id field is available in this bash-embedded context, unlike post_tool_hook.py),
+    prefers .claude/current_run.<session_id> when that file exists, falling back to
+    the unscoped .claude/current_run otherwise. This is the second and final straggler
+    INFRA-382''s own text named as "deferred not migrated" alongside tools/retrieval_cache.py
+    (already migrated by INFRA-390) -- INFRA-382''s own historical record is left
+    unedited; this is a new entry documenting the follow-up, not a retroactive rewrite.
+    Deliberately does NOT adopt post_tool_hook.py''s null-sentinel-on-absence write
+    behavior (INFRA-389) -- this is a read-only advisory hook with no justified write
+    side effect. No other segment of the command (FILE=$(...) extraction, case matcher
+    list, ls tickets/inprogress/*.md guard, echo JSON reminder text, or either subshell''s
+    trailing 2>/dev/null || true fail-open wrapper) changed.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: .claude/settings.json (hooks.PreToolUse[3].hooks[0].command, Edit|Write
+    matcher entry)
+  test_path: tests/tools/test_settings_json_hooks_wiring.py::test_edit_write_hook_reads_scoped_sidecar_via_env_var,
+    tests/tools/test_settings_json_edit_write_hook_sidecar_scope.py::test_two_concurrent_sessions_resolve_to_their_own_run_id
+  divergence_note: null
+  proof_type: regression

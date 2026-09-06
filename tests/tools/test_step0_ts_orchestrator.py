@@ -15,6 +15,12 @@ Investigate/Plan) has been replaced by an orchestrator-side `captureTs()` helper
 constraint in plan.md's Anti-Drift Notes). This file is scoped purely to this ticket's ts-capture
 mechanism — the sidecar-write mechanism itself
 (`tests/tools/test_current_run_sidecar_orchestrator.py`) is out of scope here.
+
+Two documented exceptions: implement-epic.js's Discover site and create-tickets.js's Comprehend
+site no longer have their literal captureTs()->agent() adjacency checked in this file, since
+TCK-20260904-COST-PROXY-EPIC-TICKETS inserted a writeSidecar() call between the two at both sites;
+the superseding writeSidecar()->agent() adjacency for both is asserted instead by
+tests/tools/test_epic_create_tickets_sidecar_orchestrator.py.
 """
 import re
 from pathlib import Path
@@ -43,9 +49,21 @@ _IMPLEMENT_TICKET_ADJACENCY = [
     "const doneCheckTs = await captureTs()\nawait writeSidecar(events.length + 1 + seqOffset, 'Verify', 'done-checker')\nconst doneCheck = await agent(",
 ]
 
-_IMPLEMENT_EPIC_ADJACENCY = "const discoverTs = await captureTs()\nconst discovery = await agent("
-
-_CREATE_TICKETS_ADJACENCY = "const comprehendTs = await captureTs()\nconst comprehension = await agent("
+# _IMPLEMENT_EPIC_ADJACENCY (literal "const discoverTs = await captureTs()\nconst discovery =
+# await agent(") and _CREATE_TICKETS_ADJACENCY (literal "const comprehendTs = await
+# captureTs()\nconst comprehension = await agent(") were retired by
+# TCK-20260904-COST-PROXY-EPIC-TICKETS: that ticket's Step 1 inserted a hoisted `batchRunId`
+# computation + implement-epic.js's first `writeSidecar()` call between `discoverTs`'s capture
+# and the Discover `agent()` call (batchRunId's request-mode branch genuinely depends on
+# discoverTs's value, so nothing can execute between them for free); Step 3 inserted
+# create-tickets.js's first `writeSidecar()` call directly between `comprehendTs`'s capture and
+# the Comprehend `agent()` call. The superseding invariant for both sites —
+# `writeSidecar()` immediately precedes `agent()` — is asserted instead by
+# tests/tools/test_epic_create_tickets_sidecar_orchestrator.py
+# (`_EPIC_COVERED_ADJACENCY[0]` / `_CREATE_TICKETS_COVERED_ADJACENCY[0]`). The "captured value
+# actually reaches downstream code" property this file still protects for both files is
+# unchanged — see the `batchStartTs = discoverTs || null` / `startTs = comprehendTs || null`
+# assertions below.
 
 
 def _read_implement_ticket() -> str:
@@ -114,10 +132,12 @@ def test_ts_capture_bash_precedes_each_covered_agent_call():
         assert adjacency in it_source, f"expected adjacency not found: {adjacency!r}"
 
     ie_source = _read_implement_epic()
-    assert _IMPLEMENT_EPIC_ADJACENCY in ie_source
+    # implement-epic.js's Discover-site captureTs()->agent() adjacency is no longer checked
+    # here — see the retirement comment above _IMPLEMENT_EPIC_ADJACENCY's old location.
 
     ct_source = _read_create_tickets()
-    assert _CREATE_TICKETS_ADJACENCY in ct_source
+    # create-tickets.js's Comprehend-site captureTs()->agent() adjacency is no longer checked
+    # here — see the same retirement comment (covers both constants).
 
     # Captured values are wired downstream, not discarded.
     assert "const startTs = scopeTs || null" in it_source

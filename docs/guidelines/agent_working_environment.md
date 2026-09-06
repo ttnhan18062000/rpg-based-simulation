@@ -264,20 +264,23 @@ All HTTP queries work identically. The only difference is the server does not au
 
 ---
 
-## Other Local, Gitignored Caches (Knowledge Gateway MCP)
+## Other Local, Gitignored Caches
 
-The semantic search index above is one of three local, disposable caches this repository uses. None
-of them are committed — all three are deliberately rebuildable-only, per this repository's own
-principle that "the local database must remain disposable and rebuildable"
-(`docs/plans/knowledge-gateway-mcp-proposal.md` §10, `tmp/mcp-followup-instruction.md` §10). If you
-are setting up a fresh checkout or moving to a new environment, none of these need to be copied —
-rebuild them instead:
+The semantic search index above is one of four local, disposable caches this repository uses. None
+of them are committed — all four are deliberately rebuildable-only. Three of the four (semantic
+search index, parity ledger query index, Knowledge Gateway MCP cache) exist to support the Knowledge
+Gateway MCP and follow its own principle that "the local database must remain disposable and
+rebuildable" (`docs/plans/knowledge-gateway-mcp-proposal.md` §10, `tmp/mcp-followup-instruction.md`
+§10); the fourth (the `graphify` CLI's code-graph index) is unrelated to the Knowledge Gateway MCP but
+shares the same disposable/rebuildable design. If you are setting up a fresh checkout or moving to a
+new environment, none of these need to be copied — rebuild them instead:
 
 | Artifact | Real path | What it is | Gitignored? | How to rebuild |
 |---|---|---|---|---|
 | Semantic search index | `knowledge-index/knowledge.db`, `bm25.pkl`, `embeddings_cache.pkl`, `manifest.json` | The `search_docs` index described above | Yes (`.gitignore:264`) | `make knowledge-index` |
 | Parity Ledger query index | `parity-index/parity.db` | Read-only SQLite index over `docs/parity_ledger/*.yaml`, built by `tools/parity_index.py` | Yes (`.gitignore:271`) | `make parity-index` |
 | Knowledge Gateway MCP cache | `knowledge-index/retrieval_cache.db` | The Knowledge Gateway MCP's Level 1 (provider-result) and Level 2 (assembled-packet) cache — see `docs/plans/knowledge-gateway-mcp-proposal.md` §10 for the cache design | Yes (same `knowledge-index/` ignore rule) | No bootstrap command exists — see below |
+| `graphify` code-graph index | `graphify-out/graph.json` (plus other `graphify-out/*` build output) | The `graphify` CLI's persistent knowledge graph — god nodes, community detection, and query/path/explain data described in `graphify-out/GRAPH_REPORT.md` | Yes (`.gitignore:260` `graphify-out/*`, `.gitignore:261` `src/graphify-out/`) | `graphify update .` (incremental, AST-only) or a full `/graphify` rebuild — see `CLAUDE.md`'s Graphify Integration section |
 
 **One-command bootstrap for a fresh environment:**
 

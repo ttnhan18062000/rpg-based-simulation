@@ -67,19 +67,40 @@ is archived, deregistered, and (after the monitoring window) deleted; `tools/ret
 additional dependency is resolved before `knowledge_gateway_redaction.py` is archived; zero
 regressions in any tool that legitimately depended on the gateway.
 
-## 2. Extend cost_proxy_score to implement-epic.js / create-tickets.js (Horizon 2 — ready, schedule later)
+## 2. Extend cost_proxy_score to implement-epic.js / create-tickets.js — SHIPPED (code), real-run confirmation outstanding (was: Horizon 2 — ready, schedule later)
 
 **Priority**: P2 — Preventive Hardening motivation, Level B evidence.
 
-**Problem**: only `implement-ticket.js` emits `cost_proxy_score`/`tool_call_count` into
-`agent-monitoring/`; `implement-epic.js` and `create-tickets.js` report `null` for both fields
+**Shipped by**: `TCK-20260904-COST-PROXY-EPIC-TICKETS` (2026-09-06). Investigation at
+implementation time found this item's original framing understated the real work: neither
+`implement-epic.js` nor `create-tickets.js` registered a `.claude/current_run` sidecar per
+`agent()` call at all (a deliberate prior scope-narrowing by `TCK-20260719-COST-PROXY-WRITE-PATH`,
+not a technical limitation) — so the milestone below was reversing that exclusion, not just wiring
+an existing computation into two more call sites.
+
+**Original problem**: only `implement-ticket.js` emitted `cost_proxy_score`/`tool_call_count` into
+`agent-monitoring/`; `implement-epic.js` and `create-tickets.js` reported `null` for both fields
 (`docs/agent-monitoring/schema.md`).
 
-**Milestone**: wire the existing `tools/agent-monitoring/cost_proxy.py` computation into the two
-workflows' event-recording call sites — the same computation, two more call sites, no new logic.
+**What actually landed**: a dual-write `writeSidecar(seq, phase, agentName)` helper in each file —
+`implement-epic.js` at all 4 real top-level `agent()` sites (`discover`, `batch-monitoring-write`,
+`folder-cleanup`, `tracking-doc-update`), using a disjoint negative `seq` range (`-1..-4`) to avoid
+colliding with the file's pre-existing positive-`seq` `batchEvents` array; `create-tickets.js` at 4
+of its 7 real sites (`comprehend`, `structure`, `write-sequence`, `link-epic`) — the other 3
+(`writeMonitoring`'s own call, and the 2 `pipeline()` fan-out sites `investigate:${concern.id}` /
+`write:${task.short_scope}`) are **permanently, deliberately excluded** (documented in code
+comments), not a remaining gap: `writeMonitoring` mirrors `implement-ticket.js`'s identical
+excluded role, and the 2 fan-out sites run true concurrent `agent()` calls sharing one mutable
+sidecar file, which a per-item `writeSidecar()` write cannot safely support without redesigning the
+sidecar mechanism itself. `record_events.py::compute_tool_stats()`'s workflow filter was widened to
+a membership check covering all three workflows (`simq-audit` stays excluded). Full detail:
+`docs/agent-monitoring/schema.md`'s "How tool calls are attributed to agent events" section.
 
-**Acceptance signal**: all three workflows show non-null `cost_proxy_score` in `runs.jsonl` after
-their next real run.
+**Acceptance signal — outstanding**: this item's original acceptance signal (all three workflows
+show non-null `cost_proxy_score` in `runs.jsonl` after their next real run) has not yet been
+independently confirmed by direct `events.jsonl`/`tools.jsonl` inspection of a real
+`implement-epic`/`create-tickets` run — flagged as outstanding by the shipping ticket itself, to be
+checked at the next real invocation of either workflow.
 
 ## 3. working_log.csv parser and cleanup (Horizon 2 — ready, schedule later)
 
