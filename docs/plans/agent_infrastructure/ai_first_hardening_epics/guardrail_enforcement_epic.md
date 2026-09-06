@@ -104,14 +104,35 @@ postcondition; the generation-time prompt change is defense-in-depth, not the pr
 
 ### M3 — Test-scoper background-hang guard (gated on nothing)
 
-**Target implementation is a real `Stop`/`PostToolUse`/turn-end deterministic hook or equivalent
-state check** — not a prompt-only assertion. A turn-end prompt assertion inside `test-scoper.md`
-is acceptable only as a documented fallback if implementation-time inspection proves the
-background-task state genuinely cannot be checked deterministically (per the invariant above),
-never as an equally-weighted default choice. The guard flags — and where the harness allows,
-prevents — a `test-scoper` subagent ending its turn while its own `run_in_background` pytest
-invocation is still running. This directly operationalizes the CLAUDE.md Hard Rule that has
-existed since 2026-08-17/18 but has not, on its own, prevented the recurrence.
+**SHIPPED** by `TCK-20260904-TEST-SCOPER-HANG-GUARD` — a real, deterministic `SubagentStop` hook
+(`tools/agent-monitoring/subagent_stop_background_guard.py`), wired as a new `SubagentStop` key in
+`.claude/settings.json`'s `hooks` block (previously only `PreToolUse`/`PostToolUse` existed), and
+verified by `tests/tools/test_subagent_stop_background_guard.py` (5 tests: fires on a still-running
+background task, allows a completed one, allows the no-background-task common case, fails open on
+malformed input, and respects `stop_hook_active` loop-prevention) plus
+`tests/tools/test_settings_json_hooks_wiring.py` (proves the key is genuinely new, and that the
+hook's command is not suffixed with the swallowing `|| true` every other hook in this file uses).
+
+The hook reads a harness-populated `background_tasks` array directly off the `SubagentStop`
+payload rather than parsing transcript JSONL: this ticket's implementation-time spike found both
+live-capture avenues (a nested `claude` invocation, and a throwaway `.claude/settings.local.json`
+diagnostic hook) blocked by this sandbox's own auto-mode classifier, so the real payload shape was
+instead extracted directly from the installed Claude Code binary's own validation schema and
+control-flow code — evidence stronger than a single live-fired example, since it is the schema
+that produces every instance. That extraction revealed `background_tasks` (populated from a live
+per-session task registry, non-empty exactly when in-flight background work exists) is a first-
+party field purpose-built for this exact question, making the transcript-heuristic architecture
+this milestone originally anticipated unnecessary. See
+`tests/fixtures/claude_hook_payloads/subagent_stop_schema_capture.json` for the full citation, and
+`staging_artifacts/TCK-20260904-TEST-SCOPER-HANG-GUARD/plan.md`'s Deviations section for the full
+accounting. This directly operationalizes the CLAUDE.md Hard Rule that has existed since
+2026-08-17/18 but had not, on its own, prevented the recurrence.
+
+**Known same-batch coordination point**: `.claude/settings.json`'s `hooks` block is also expected to
+be touched by `TCK-20260904-BASH-SECRET-SCAN-HOOK` (same batch), likely adding its own key under
+`PreToolUse`. Both edits are additive (new sibling keys) and should not structurally conflict —
+flagged here so a future reader understands why two tickets both touch this file in the same
+window, not because either ticket is sequenced on the other.
 
 ### M4 — Horizon-0 exit signal (observation only, not implementation)
 
@@ -144,17 +165,27 @@ what detection already proved was open.
 
 - M1: none required — already shipped and verified upstream by
   `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC` (8/8 relevant tests pass).
-- M2: `check_docs_to_update_coverage` (or its replacement) is confirmed as the primary control,
-  catching the reverse-direction case the three retro incidents describe, verified against at
-  least one of the three real historical tickets that exhibited it — this must hold true
-  independent of whether `doc-updater.md`'s prompt self-check fires. The prompt self-check exists
-  and reduces how often the primary control needs to act, but is not itself the acceptance bar.
-- M3: the background-hang guard is a real deterministic hook/state-check (not a prompt-only
-  assertion) and demonstrably fires against a synthetic case where a `test-scoper` subagent would
-  otherwise end its turn with a background pytest still running. If implementation genuinely
-  cannot achieve deterministic detection, the documented fallback format (reason / fallback /
-  residual risk) exists in this doc before M3 is considered complete — a silent prompt-only
-  implementation does not satisfy this milestone.
+- M2: **satisfied by `TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`** (done) — extended
+  `check_docs_to_update_coverage` in-place with a tier-agnostic reverse-direction check (a `docs/`
+  path git shows touched that never made it into the ticket's own `## Files Changed`/`## Related
+  Docs` text), wired into `run_static_precheck`'s existing blocking aggregation. Verified against
+  the real `TCK-20260831-RACE-RELATIONS-MATRIX` historical incident, reproduced as a regression
+  fixture proving the new check would have `FAIL`ed before that ticket's hand-patch. Scoped to
+  `docs/` paths only (matching the forward check's own scope) — this means the check structurally
+  cannot catch the `TCK-20260831-ITEM-INSTANCE-HISTORY` incident's actual gap
+  (`src/core/state.py`, a non-`docs/` path); this is a disclosed, accepted limitation, not
+  something this milestone's closure implies is also covered. `doc-updater.md`'s prompt self-check
+  (Step 5 of that ticket's plan) exists as defense-in-depth but is not itself the acceptance bar,
+  consistent with the original wording below.
+- M3: **satisfied** — `tools/agent-monitoring/subagent_stop_background_guard.py`, a real
+  deterministic `SubagentStop` hook (not a prompt-only assertion), wired in `.claude/settings.json`
+  under a hook event key that did not previously exist, and demonstrably fires against a synthetic
+  case where a `test-scoper`-shaped subagent would otherwise end its turn with a background pytest
+  still running (`tests/tools/test_subagent_stop_background_guard.py::
+  test_hook_fires_for_still_running_background_task`). `.claude/agents/test-scoper.md`'s existing
+  `## Background Commands` prose section is kept verbatim as defense-in-depth (the hook fails open
+  on any internal error, so the prose remains the backstop for exactly the cases the hook cannot
+  catch).
 - M4: zero recurrence of either target pattern confirmed across ≥2 consecutive weekly retros,
   feeding `roadmap.md`'s shared gate.
 

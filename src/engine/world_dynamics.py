@@ -217,6 +217,15 @@ class WorldDynamicsSystem:
                 if not territory_update.is_noop():
                     update = update.merge(territory_update)
 
+            # 3.9b Calamity-Driven Displacement (idea 65, "Named Refugee Threads") -- reads
+            # region.calamity_intensity (already updated above by CalamityService/
+            # CalamityPressurePropagator this same cycle) and relocates living entities out of any
+            # region past DISPLACEMENT_THRESHOLD, carrying home_region_id (idea 59) forward.
+            from src.world.displacement import DisplacementService
+            displacement_update = DisplacementService.compute_displacement(state)
+            if not displacement_update.is_noop():
+                update = update.merge(displacement_update)
+
             # 3.10 Humanoid Reproduction
             if (flags.get("ENABLE_REPRODUCTION_HUMANOID_PATH", "OFF") == "ON"
                     and should_run(state.tick, None, cadence.reproduction_humanoid)):

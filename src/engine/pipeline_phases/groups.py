@@ -28,7 +28,11 @@ class GroupPhase:
     def resolve(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         from src.systems.world_systems.groups import GroupSystem
         from src.systems.social_systems.party_lifecycle import PartyLifecycleService
-        from src.core.updates import EntityUpdate
+        from src.systems.social_systems.clan_lifecycle import (
+            ClanLifecycleService,
+            CLAN_REPUTATION_MISCONDUCT_DELTA,
+        )
+        from src.core.updates import ClanUpdate, EntityUpdate
 
         # Clear per-tick event buffers
         GroupPhase.last_tick_events = []
@@ -107,6 +111,8 @@ class GroupPhase:
             existing = refined_entity_updates.get(eid, EntityUpdate(entity_id=eid))
             refined_entity_updates[eid] = existing.merge(eupd)
 
+        new_clan_updates: List["ClanUpdate"] = list(update.clan_updates)
+
         for g_id in sorted(all_relevant_group_ids):
             group = groups_being_updated.get(g_id) or state.groups.get(g_id)
             if group is None:
@@ -154,6 +160,15 @@ class GroupPhase:
                     existing_upd = refined_entity_updates.get(m_id, EntityUpdate(entity_id=m_id))
                     refined_entity_updates[m_id] = existing_upd.merge(entity_upd)
 
+                    clan_id = ClanLifecycleService.find_clan_id_for_entity(state, m_id)
+                    if clan_id is not None:
+                        new_clan_updates.append(
+                            ClanUpdate(
+                                clan_id=clan_id,
+                                clan_reputation_delta=CLAN_REPUTATION_MISCONDUCT_DELTA,
+                            )
+                        )
+
                 # One defection per group per tick
                 break
 
@@ -162,4 +177,5 @@ class GroupPhase:
             groups_add_or_update=new_groups_add,
             groups_remove=new_groups_remove,
             entity_updates=refined_entity_updates,
+            clan_updates=new_clan_updates,
         )

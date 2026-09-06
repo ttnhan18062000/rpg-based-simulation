@@ -483,6 +483,60 @@ def test_betrayal_desertion_dissolution_on_single_member():
 
 
 # ---------------------------------------------------------------------------
+# TCK-20260905-DRIFTING-LOYALTY-SIGNAL — loyalty_pressure lowers effective threshold
+# ---------------------------------------------------------------------------
+
+def test_effective_defection_threshold_default_matches_pre_idea_56_behavior():
+    """Backward compatibility: loyalty_pressure defaults to 0.0, reproducing the
+    exact pre-idea-56 threshold for any caller that doesn't supply it."""
+    group = _group(leader_id=10, member_ids={10, 11}, composition_score=0.0)
+    assert _PLS.effective_defection_threshold(group) == 3
+    assert _PLS.effective_defection_threshold(group, loyalty_pressure=0.0) == 3
+
+
+def test_effective_defection_threshold_lowered_by_loyalty_pressure():
+    """High regional faction-conflict exposure lowers the threshold, mirroring
+    composition_score's own bonus shape in the opposite direction."""
+    group = _group(leader_id=10, member_ids={10, 11}, composition_score=0.0)
+    assert _PLS.effective_defection_threshold(group, loyalty_pressure=0.5) == 2
+    assert _PLS.effective_defection_threshold(group, loyalty_pressure=1.0) == 1
+
+
+def test_effective_defection_threshold_floored_at_one():
+    """Even with a high composition bonus fully offset by max loyalty_pressure,
+    the threshold never drops below 1 -- grievance-driven defection stays possible
+    but a hostile-culture region alone can never make it automatic."""
+    group = _group(leader_id=10, member_ids={10, 11}, composition_score=1.0)
+    assert _PLS.effective_defection_threshold(group, loyalty_pressure=1.0) == 3
+    # Push loyalty_pressure conceptually further than [0,1] is ever supplied in
+    # practice, to prove the floor holds even under an extreme input.
+    assert _PLS.effective_defection_threshold(group, loyalty_pressure=10.0) == 1
+
+
+def test_check_defection_fires_earlier_with_loyalty_pressure():
+    """A group with only 2 grievances (below the base threshold of 3) still
+    triggers defection once loyalty_pressure lowers the effective threshold to 2 --
+    proving loyalty_pressure is a real, wired input to idea 39's mutation trigger,
+    not just a threshold-computation side effect nothing consumes."""
+    group = _group(leader_id=10, member_ids={10, 11}, grievance_log=("g1", "g2"))
+    member = _entity(11, sociability=0.5)
+
+    # Without loyalty pressure: below threshold, no defection.
+    no_pressure_result = _PLS.check_defection(group, member, tick=10)
+    assert no_pressure_result == (None, None, None)
+
+    # With loyalty pressure lowering the threshold to 2: defection fires.
+    updated_group, event, entity_upd = _PLS.check_defection(
+        group, member, tick=10, loyalty_pressure=0.5
+    )
+    assert updated_group is not None
+    assert event is not None
+    assert entity_upd is not None
+    assert entity_upd.identity is not None
+    assert entity_upd.identity.faction_set is not None
+
+
+# ---------------------------------------------------------------------------
 # AC4 — Escort target route scores above OWN_SURVIVAL route
 # ---------------------------------------------------------------------------
 
@@ -684,3 +738,43 @@ def test_low_composition_defects_at_threshold_3():
     assert result is not None and event is not None, (
         "Zero-composition group SHOULD defect at grievance_count=3 (threshold=3)"
     )
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE — defection sets faction_set=NEUTRAL
+# ---------------------------------------------------------------------------
+
+def test_defection_produces_faction_set_neutral_via_apply_path():
+    """
+    AC1: check_defection()'s returned EntityUpdate.identity.faction_set == Faction.NEUTRAL
+    when the grievance threshold is met, and entity_update.identity is None when it is not.
+    check_defection() remains a pure function -- entity.identity.faction is unchanged by the
+    call itself, only by running the returned update through ApplyPath (patches.py:209).
+    """
+    from src.core.enums import Faction
+
+    group = _group(
+        leader_id=10,
+        member_ids={10, 11},
+        grievance_log=("g1", "g2", "g3"),
+    )
+    member = _entity(11, sociability=0.5)
+    original_faction = member.identity.faction
+
+    _, _, entity_update = _PLS.check_defection(group, member, tick=50)
+
+    assert entity_update is not None
+    assert entity_update.identity is not None
+    assert entity_update.identity.faction_set == Faction.NEUTRAL
+
+    # Pure function: no mutation of the entity itself.
+    assert member.identity.faction == original_faction
+
+    # Below threshold: no identity change proposed at all.
+    below_group = _group(
+        leader_id=10,
+        member_ids={10, 11},
+        grievance_log=("g1", "g2"),
+    )
+    no_group, no_event, no_update = _PLS.check_defection(below_group, member, tick=50)
+    assert no_group is None and no_event is None and no_update is None

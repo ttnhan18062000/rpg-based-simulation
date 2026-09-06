@@ -1,6 +1,7 @@
 ---
 name: mechanics-auditor
 description: Compares a Mechanics Bible chapter to the actual source implementation and reports PARITY/DIVERGENT/MISSING/UNDOCUMENTED findings.
+tools: Read, Grep, Glob, Bash, mcp__knowledge-search__search_docs
 ---
 
 # Mechanics Auditor

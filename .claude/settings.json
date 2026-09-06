@@ -127,6 +127,17 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 tools/agent-monitoring/subagent_stop_background_guard.py"
+          }
+        ]
+      }
     ]
   }
 }

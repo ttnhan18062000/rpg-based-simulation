@@ -161,11 +161,19 @@ class EntityGenerator:
         parent_a_id: int, parent_b_id: int, birth_tick: int, birth_city_id: Optional[int],
         parent_a_genetic_profile: Optional[GeneticProfile], parent_b_genetic_profile: Optional[GeneticProfile],
         parent_a_role: int, parent_b_role: int, difficulty_tier: int = 1,
+        parent_a_public_reputation: Optional[float] = None, parent_b_public_reputation: Optional[float] = None,
+        home_region_id: Optional[str] = None,
     ) -> EntityState:
         """Spawn a real newborn humanoid offspring with tracked parent ids, an inherited
         GeneticProfile, and CHILD life stage at age_ticks=0 -- unlike
         spawn_natural_creature_offspring()'s fast-forwarded maturation clock, this path has no
-        analogous "must appear battle-ready soon" requirement."""
+        analogous "must appear battle-ready soon" requirement.
+
+        home_region_id (idea 59, "Home, Exile & Return"): the region the birth position resolves
+        to, resolved by the caller -- this module (src/systems/) must not import src/engine/
+        (region resolution lives in LegalityServiceV2/SpatialQueryService, both engine-only), so
+        the caller (src/world/reproduction_humanoid.py, which already resolves the birth region
+        for its own population_cohorts nudge) passes the plain string down instead."""
         entity_id = self.get_next_id()
 
         from src.world.spawn_config import DIFFICULTY_TIERS
@@ -189,12 +197,15 @@ class EntityGenerator:
                       evolution_level=evolution_level, life_stage=LifeStage.CHILD)
             .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
             .inventory(gold=int(base_gold))
+            .strategic(home_region_id=home_region_id)
             .birth_record(
                 parent_a_entity_id=parent_a_id, parent_b_entity_id=parent_b_id,
                 birth_tick=birth_tick, birth_city_id=birth_city_id,
                 parent_a_genetic_profile=parent_a_genetic_profile,
                 parent_b_genetic_profile=parent_b_genetic_profile,
                 parent_a_role=parent_a_role, parent_b_role=parent_b_role,
+                parent_a_public_reputation=parent_a_public_reputation,
+                parent_b_public_reputation=parent_b_public_reputation,
             )
             .build())
 

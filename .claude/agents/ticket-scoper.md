@@ -1,6 +1,7 @@
 ---
 name: ticket-scoper
 description: Given a request description, produces a complete correctly-formatted ticket and flags any conflicts (duplicate work, mechanics constraints, parity overlap) before implementation begins.
+tools: Bash, Read, Edit, Agent, Write, ToolSearch, mcp__knowledge-search__search_docs, ListAgents, AskUserQuestion, TaskCreate, ScheduleWakeup, SendMessage, TaskUpdate, Monitor, TaskStop
 ---
 
 # Ticket Scoper

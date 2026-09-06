@@ -305,6 +305,63 @@ def test_social_seven_newly_covered_fields_participate_in_canonical_hash():
         )
 
 
+def test_social_public_reputation_locality_participates_in_canonical_hash():
+    """
+    TCK-20260904-REPUTATION-LOCALITY-SCOPE (AC #3): SocialComponent.regional_reputation
+    (the new region-scoped locality dimension, additive to the retained global
+    public_reputation scalar) participates in to_canonical_dict()'s "social" sub-dict,
+    sorted by key like place_attachment, and diverging values change the canonical dict
+    and the CanonicalStateHasher hash it feeds.
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.state import AuthoritativeState
+    from src.engine.checkpoint import CanonicalStateHasher
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    base_dict = base.to_canonical_dict()
+
+    assert base_dict["social"]["regional_reputation"] == {}
+
+    with_regional_rep = dataclass_replace(
+        base, social=dataclass_replace(base.social, regional_reputation={"region_1": 1.5}),
+    )
+
+    assert base_dict != with_regional_rep.to_canonical_dict()
+    assert with_regional_rep.to_canonical_dict()["social"]["regional_reputation"] == {"region_1": 1.5}
+    # public_reputation's own coverage is unaffected by the new field's addition.
+    assert with_regional_rep.to_canonical_dict()["social"]["public_reputation"] == base.social.public_reputation
+
+    state_base = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: base})
+    state_with_regional_rep = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: with_regional_rep})
+
+    assert CanonicalStateHasher.get_hash(state_base) != CanonicalStateHasher.get_hash(state_with_regional_rep)
+
+
+def test_social_public_reputation_locality_participates_in_fingerprint():
+    """
+    TCK-20260904-REPUTATION-LOCALITY-SCOPE (AC #3): StateFingerprinter.get_fingerprint()'s
+    state_hash also changes when only regional_reputation differs between two otherwise-
+    identical states, following the file's own region_ident/scar_ident sorted-join
+    precedent for a new Dict[str, float] fingerprint segment.
+    """
+    from dataclasses import replace as dataclass_replace
+    from src.core.state import AuthoritativeState
+    from src.replay.fingerprint import StateFingerprinter
+
+    base = EntityState(id=1, kind="hero", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    with_regional_rep = dataclass_replace(
+        base, social=dataclass_replace(base.social, regional_reputation={"region_1": 1.5}),
+    )
+
+    state_base = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: base})
+    state_with_regional_rep = AuthoritativeState(tick=1, seed=1, world_time=0, entities={1: with_regional_rep})
+
+    fp_base = StateFingerprinter.get_fingerprint(state_base)
+    fp_with_regional_rep = StateFingerprinter.get_fingerprint(state_with_regional_rep)
+
+    assert fp_base["state_hash"] != fp_with_regional_rep["state_hash"]
+
+
 def test_social_nemesis_ids_participates_in_canonical_hash_end_to_end():
     """
     TCK-20260902-SOCIAL-CANONICAL-HASH-GAP: nemesis_ids specifically gates cognition

@@ -88,6 +88,86 @@ def test_appraise_recruitment_danger_low_hp():
     assert reason == ReasonCode.LOW_HP_RETREAT
 
 
+def _make_source_with_reputation(entity_id: int, public_reputation: float):
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(entity_id)
+        .kind("human").location(1, 1)
+        .social(public_reputation=public_reputation)
+        .combat(readiness=100.0)
+        .build())
+
+
+def test_stranger_judgment_incorporates_clan_reputation():
+    """Idea 54/M5 (SOC-268): a stranger with no direct SocialBond/familiarity
+    history toward a clan member gets a trust prior that incorporates that
+    member's clan's clan_reputation -- low vs. high clan_reputation produces
+    a distinguishably different appraisal outcome for the same base entity
+    setup (public_reputation=0.2 puts the no-clan-influence trust_score close
+    to the 0.2 TOTAL_DISTRUST threshold)."""
+    from src.core.state import ClanState
+    from src.core.enums import ReasonCode
+
+    observer = create_mock_entity(1)
+    source = _make_source_with_reputation(10, public_reputation=0.2)
+
+    contract = ContractState(
+        id="c_clan_stranger",
+        kind=ContractKind.RECRUITMENT,
+        source_id=10,
+        target_id=1,
+        terms={"daily_pay": 20},
+        status=ContractStatus.OFFERED,
+    )
+
+    low_clan = ClanState(clan_id="lowrep", member_entity_ids=(10,), clan_reputation=0.0)
+    high_clan = ClanState(clan_id="highrep", member_entity_ids=(10,), clan_reputation=2.0)
+
+    state_low = AuthoritativeState(entities={1: observer, 10: source}, tick=1, seed=1, clans={"lowrep": low_clan})
+    state_high = AuthoritativeState(entities={1: observer, 10: source}, tick=1, seed=1, clans={"highrep": high_clan})
+
+    status_low, reason_low, _ = SocialAppraisalSystem.appraise_contract(observer, contract, state_low)
+    status_high, reason_high, _ = SocialAppraisalSystem.appraise_contract(observer, contract, state_high)
+
+    assert status_low == ContractStatus.CANCELLED
+    assert reason_low == ReasonCode.TOTAL_DISTRUST
+    assert not (status_high == ContractStatus.CANCELLED and reason_high == ReasonCode.TOTAL_DISTRUST), (
+        f"High clan_reputation should clear the trust gate, got status={status_high} reason={reason_high}"
+    )
+
+
+def test_stranger_judgment_clan_reputation_does_not_leak_into_bond_branch():
+    """AC3 regression guard: an observer with direct history (a SocialBond)
+    toward the source must be judged identically regardless of the source's
+    clan's clan_reputation -- the bond branch (appraisal.py:39-41) stays
+    clan-blind."""
+    from src.core.state import ClanState, SocialBond
+
+    bond = SocialBond(target_id=10, sentiment=0.5)
+    observer = create_mock_entity(1)
+    observer = replace(observer, social=replace(observer.social, bonds={10: bond}))
+    source = _make_source_with_reputation(10, public_reputation=0.2)
+
+    contract = ContractState(
+        id="c_clan_bond",
+        kind=ContractKind.RECRUITMENT,
+        source_id=10,
+        target_id=1,
+        terms={"daily_pay": 20},
+        status=ContractStatus.OFFERED,
+    )
+
+    low_clan = ClanState(clan_id="lowrep", member_entity_ids=(10,), clan_reputation=0.0)
+    high_clan = ClanState(clan_id="highrep", member_entity_ids=(10,), clan_reputation=2.0)
+
+    state_low = AuthoritativeState(entities={1: observer, 10: source}, tick=1, seed=1, clans={"lowrep": low_clan})
+    state_high = AuthoritativeState(entities={1: observer, 10: source}, tick=1, seed=1, clans={"highrep": high_clan})
+
+    result_low = SocialAppraisalSystem.appraise_contract(observer, contract, state_low)
+    result_high = SocialAppraisalSystem.appraise_contract(observer, contract, state_high)
+
+    assert result_low == result_high
+
+
 # --- TCK-20260824-AFFECTION-CONTRACT-GATE: shared gate generalization ------------------------
 
 

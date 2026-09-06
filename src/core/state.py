@@ -766,6 +766,7 @@ class ClanState:
     # direct construction in tests until a future ticket adds a real asset-granting mechanic.
     asset_ids: Tuple[int, ...] = ()
     tension_level: float = 0.0
+    clan_reputation: float = 1.0
     leader_entity_id: Optional[int] = None
     founded_tick: int = 0
     dissolved_tick: Optional[int] = None
@@ -781,6 +782,7 @@ class ClanState:
             "home_region_ids": sorted(self.home_region_ids),
             "asset_ids": sorted(self.asset_ids),
             "tension_level": self.tension_level,
+            "clan_reputation": self.clan_reputation,
             "leader_entity_id": self.leader_entity_id,
             "founded_tick": self.founded_tick,
             "dissolved_tick": self.dissolved_tick,
@@ -797,6 +799,7 @@ class ClanState:
             home_region_ids=tuple(d.get("home_region_ids", [])),
             asset_ids=tuple(d.get("asset_ids", [])),
             tension_level=float(d.get("tension_level", 0.0)),
+            clan_reputation=float(d.get("clan_reputation", 1.0)),
             leader_entity_id=d.get("leader_entity_id"),
             founded_tick=int(d.get("founded_tick", 0)),
             dissolved_tick=d.get("dissolved_tick"),
@@ -906,6 +909,7 @@ class EntityState:
                 "bonds": {str(k): asdict(v) for k, v in sorted(self.social.bonds.items())},
                 "nemesis_ids": sorted(self.social.nemesis_ids),
                 "place_attachment": dict(sorted(self.social.place_attachment.items())),
+                "regional_reputation": dict(sorted(self.social.regional_reputation.items())),
                 "betrayal_count": self.social.betrayal_count,
                 "betrayal_records": [asdict(b) for b in self.social.betrayal_records],
                 "public_reputation": self.social.public_reputation,

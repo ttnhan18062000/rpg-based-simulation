@@ -198,6 +198,37 @@ every other `LifecycleComponent` field. Omitting both parent profiles (the natur
 magical/demonic parentless paths) leaves `genetic_profile` at its `None` default — those paths
 never call `GeneticsSystem`.
 
+### Reputation Seed
+
+`SocialComponent.public_reputation: float` (default `1.0`, clamped `[0.0, 2.0]`) is a newborn's
+unified public standing. Idea 53 (Inherited Reputation) seeds it at birth from the parents'
+averaged standing — a "starting echo," not a full inheritance — which is then swamped by the
+child's own subsequent play with zero new decay logic required (see `RelationshipService.
+process_update()`'s existing `heroism_delta`/`notoriety_delta` write, unchanged by this
+mechanism).
+
+`ReputationService.combine_public_reputation(parent_a: float, parent_b: float) -> float`
+(`src/systems/social_systems/reputation.py`) is a pure `@staticmethod`: `max(0.0, min(2.0,
+(parent_a + parent_b) / 2.0))` — a simple arithmetic mean, clamped to `public_reputation`'s
+authoritative `[0.0, 2.0]` range as defense-in-depth (two in-range inputs averaged cannot leave
+range by construction, matching the genetics clamp's own reasoning above).
+
+Unlike Genetic Inheritance's `OR`-gate (either parent profile present triggers a fallback-filled
+combine), the reputation-seed trigger is an `AND`-gate: `V2EntityBuilder.birth_record()` only
+seeds when **both** `parent_a_public_reputation` and `parent_b_public_reputation` are supplied.
+There is no equivalent to `generate_profile_from_seed()`'s missing-value fallback here, because
+every entity's `public_reputation` always holds a real value (default `1.0` at minimum, never
+`None`) — supplying only one parent value is simply "not enough to seed," not "one value needs
+backfilling," so `birth_record()` falls back to the class default rather than partially seeding
+from a single parent.
+
+When triggered, the combined value is written via the pre-existing `.social(public_reputation=
+...)` construction-time kwarg — the same direct-construction pattern `genetic_profile` uses via
+`.lifecycle(genetic_profile=...)` above, already inside the architecture guard's allowlisted
+`builder.py` exception (`tests/architecture/test_social_write_paths.py`). Omitting both
+reputation kwargs (the natural-creature and magical/demonic parentless paths) leaves
+`public_reputation` at its `1.0` class default — those paths never call `ReputationService`.
+
 ---
 
 ## 6. Trauma: Wounds & Scars

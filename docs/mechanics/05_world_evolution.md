@@ -600,3 +600,255 @@ additive delta layered onto `MotivationBiasService.compute_bias_multiplier()` re
 **Sources:** `src/domains/culture/`
 **Contract:** `docs/world/culture_drift_contract.md`
 **Parity:** WORLD-CULT-001, WORLD-CULT-002, WORLD-CULT-003
+
+---
+
+## 8. Chronicle Fidelity Drift (E62)
+
+Over long campaigns, Chronicle's recorded history loses accuracy the further removed an event
+is from the current Era — a battle survivors remember personally fades into a simplified,
+distance-distorted story. Fidelity drift is a **long-horizon** mechanism, a direct structural
+sibling of Cultural Drift above: it operates at the same episode boundary, over the same
+`ChronicleHierarchy` substrate, via the same Deriver/Model/Exporter-Importer pattern.
+
+### Value Definition
+
+`fidelity`: a single float in [0.0, 1.0] per chronicle-worthy event, keyed by
+`NarrativeLedgerEntry.entry_id`. `1.0` = fully accurate (an event just recorded, in the current
+Era). Decreases linearly with Era-distance from the current Era.
+
+### Derivation Trigger
+
+`FidelityDeriver.derive(hierarchy)` walks `hierarchy.eras` → `Era.episodes` → `Episode.index` to
+find each event's real containing Era (never `episode // ERA_EPISODE_MIN` arithmetic, which is
+wrong whenever any episode has zero chronicle-worthy events, since `Era.episodes` batches only
+the already-filtered episode list). For each event:
+
+```
+era_distance = current_era_ordinal - event_era_ordinal
+fidelity = max(0.0, 1.0 - era_distance * FIDELITY_DECAY_PER_ERA)
+FIDELITY_DECAY_PER_ERA = 0.2
+```
+
+Same-era events (`era_distance == 0`) always get `fidelity = 1.0`.
+
+`FidelityExporter.export()` is called from `CampaignOrchestrator._advance_state()` at every
+episode boundary, immediately alongside `CultureDriftExporter.export()` — both consume the exact
+same `ChronicleGrouper().group(narrative_ledger)` result, never a separately (re)computed copy.
+
+### Persistence
+
+`FidelityState` per event is stored as `FidelityCarryForward` in
+`CampaignState.historical_drift: Dict[str, FidelityCarryForward]`, keyed by
+`NarrativeLedgerEntry.entry_id`. Events absent from a given episode's hierarchy keep their prior
+fidelity snapshot unchanged until the next derivation.
+
+### No Live Consumer Yet
+
+Unlike Cultural Drift's `CulturalBiasApplicator` overlay, this mechanism ships with **no live
+reader wired in**. `FidelityImporter.get_fidelity()` is a thin, `None`-safe lookup helper with no
+call site — the intended eventual consumer is idea 63 ("Belief Grows Around Real History"), not
+yet built. This is a disclosed, accepted gap, not a hidden incompleteness.
+
+### Acceptance Signal
+
+> Given a `ChronicleHierarchy` with events spanning 2 or more Eras, an event's derived fidelity
+> is strictly lower the further that event's Era is from the current Era.
+
+**Sources:** `src/domains/fidelity/`
+**Contract:** `docs/world/chronicle_fidelity_contract.md`
+**Parity:** WORLD-FIDELITY-001, WORLD-FIDELITY-002
+
+---
+
+## 9. Living Legend Fame (idea 57)
+
+Over long campaigns, a hero's Chronicle-recorded deeds accumulate into fame — once fame crosses a
+threshold, the hero becomes a discoverable "living legend" fact. Living Legend Fame is a
+**long-horizon** mechanism, a direct structural sibling of Cultural Drift and Chronicle Fidelity
+Drift above: it operates at the same episode boundary, over the same `ChronicleHierarchy`
+substrate, via the same Deriver/Model/Exporter-Importer pattern — but keyed per-subject
+(`NarrativeLedgerEntry.subject_id`) rather than per-region or per-event.
+
+### Axis Definition
+
+`fame`: a single float in [0.0, 1.0] per subject (not a fame+notoriety split — Option B's own
+event set contains zero fame-reducing event types, and a `notoriety` axis with no accumulation
+input would sit permanently at `0.0`; a real heroism/notoriety split already exists as a separate,
+already-shipped mechanism at `SocialUpdate.heroism_delta`/`notoriety_delta` →
+`SocialRecord.heroism_score`/`notoriety_score`/`public_reputation`).
+
+### Source Events (Option B)
+
+| Event type | Condition | Contribution |
+|---|---|---|
+| `quest_completed` | any | `entry.significance` |
+| `entity_death` | `payload["entity_role"] == "HERO"` (posthumous fame) | `entry.significance` |
+
+No other event types contribute. Explicitly excluded: `LEGENDARY_ARRIVAL` (a distinct,
+faction-reputation consequence event — see "Distinctness from LEGENDARY_ARRIVAL" below),
+`faction_shift`, `calamity`, and any war/diplomatic event type — none are personal-heroism
+signals under Option B. In-life combat-earned fame is a disclosed, accepted limitation: no
+`combat_victory` event type exists in the Narrative Ledger today.
+
+Normalisation: `fame = min(1.0, raw_sum / NORMALISE_DENOMINATOR)`, `NORMALISE_DENOMINATOR = 3.0` —
+a fresh, module-local constant in `src/domains/fame/deriver.py`, independent of
+`CultureDeriver`'s identically-valued constant (never imported or aliased).
+
+**Disclosed characteristic — quest-failure fame contamination:** `orchestrator.py`'s
+`_SIGNIFICANCE_MAP` maps `QUEST_FAILED` to `event_type="quest_completed"` at `significance=0.3`
+(vs. `0.7` for a real success). Since `ChronicleGrouper`'s chronicle-worthiness gate scores by
+`event_type` string alone (`BASE_SIGNIFICANCE["quest_completed"]=0.7` regardless of outcome), both
+real quest successes and failures reach `hierarchy.events` and both match `FameDeriver`'s
+`event_type == "quest_completed"` check. A failed quest therefore contributes a smaller but
+non-zero amount of fame — a real, accepted characteristic of the existing
+`NarrativeLedgerEntry`/`_SIGNIFICANCE_MAP` taxonomy, not a bug.
+
+### Derivation Trigger
+
+`FameExporter.export()` is called from `CampaignOrchestrator._advance_state()`, immediately
+alongside `CultureDriftExporter.export()` and `FidelityExporter.export()` — all three consume the
+exact same `ChronicleGrouper().group(narrative_ledger)` result, never a separately (re)computed
+hierarchy.
+
+### Persistence
+
+`FameState` per subject is stored as `FameCarryForward` in `CampaignState.entity_fame: Dict[str,
+FameCarryForward]`, keyed by `NarrativeLedgerEntry.subject_id`. Subjects without events in a given
+episode keep their prior fame snapshot unchanged until the next derivation.
+
+### `LegendFact` — a Lazy, Non-Durable Read-Model
+
+`LegendFact` is deliberately **not** a `CampaignState` field. It is fully and deterministically
+reconstructible from `FameCarryForward` (the actual durable, typed record with its own lifecycle),
+so per the Durable State Rule it needs no second persisted record of its own.
+`LegendFactService.for_entity(campaign_state, subject_id, entity_name=None)` calls
+`FameImporter.get_fame(...)` and returns a `LegendFact` only when `.fame >= FAME_THRESHOLD =
+0.5` — otherwise `None`.
+
+`FAME_THRESHOLD` reuses `CHRONICLE_THRESHOLD` (`src/domains/chronicle/significance.py`, `0.5`) as
+its anchor: both operate on the same normalized `[0.0, 1.0]` scale and express the same underlying
+concept — "has this crossed the bar to be considered narratively significant enough to be
+noticed." Concretely: a single `quest_completed` entry (raw `0.7/3.0≈0.233`) or a single HERO
+`entity_death` (raw `0.5/3.0≈0.167`) never crosses `0.5` alone; becoming a "living legend" requires
+roughly 2-3 significant hero-events.
+
+`LegendFactService.to_world_signal(fact, position=(0.0, 0.0))` wraps a `LegendFact` as a
+`WorldSignal(kind="legend_fact", base_relevance=fact.fame, ...)` for perception discoverability.
+`position` defaults to `(0.0, 0.0)` since fame has no location concept of its own.
+
+### Distinctness from `LEGENDARY_ARRIVAL`
+
+`LegendFact` must never be confused with the pre-existing, unrelated `LegendaryArrivalEvent`/
+`LEGENDARY_ARRIVAL` faction-reputation consequence event
+(`src/systems/social_systems/consequence_events.py`), which fires when
+`social_memories[...].faction_reputation.get("default", 0.0) >= 0.9` — a structurally distinct
+mechanism reading `CampaignState.social_memories`, never Chronicle-derived fame. `LegendFact`'s
+only real input is `FameImporter.get_fame(...)`. Enforced by
+`tests/architecture/test_fame_legend_fact_distinctness.py`.
+
+### No Live Consumer Yet
+
+This mechanism ships with **no live reader wired in** for perception/motivation. `LegendFact`
+discoverability is verified by directly calling `PerceptionFilterService.filter()` at the service
+level (`"legend_fact"` lands in the existing catch-all `perceived_opportunities` branch, no
+`filter.py` change needed) — `PerceptionUpdatePhase` has zero live pipeline call sites, and
+`MotivationBiasService.compute_bias_multiplier()` has zero call sites outside its own module, both
+unchanged by this ticket. This is a disclosed, accepted gap, matching Chronicle Fidelity Drift's
+own "No Live Consumer Yet" precedent — built, not yet visible in play.
+
+### Acceptance Signal
+
+> `FameDeriver.derive()` on a hierarchy containing a `quest_completed` entry and a HERO
+> `entity_death` entry for two different subject_ids produces two distinct non-zero `FameState`
+> entries; a subject whose fame crosses `FAME_THRESHOLD` produces a `LegendFact` discoverable via
+> `PerceptionFilterService.filter()`, while one below threshold produces none.
+
+**Sources:** `src/domains/fame/`
+**Contract:** `docs/world/fame_legend_contract.md`
+
+## 10. Belief Institutions (idea 63)
+
+Once a subject's Chronicle-recorded fame crosses `FAME_THRESHOLD` (§9), each real Clan forms its
+own organized belief around the event that made them a legend — but different Clans weigh the
+same recorded history differently, per the design's own "the same deeds, read differently
+depending on who you are" framing. `BeliefInstitution` is a direct structural sibling of Cultural
+Drift, Chronicle Fidelity Drift, and Living Legend Fame above: the same episode-boundary,
+Deriver/Model/Exporter-Importer pattern — but keyed per-(clan, legendary event) pair, and reading
+real Clan membership (`AuthoritativeState.clans`, passed in read-only) as a second input alongside
+`ChronicleHierarchy`.
+
+### Formation Rule
+
+A `BeliefInstitution` forms for every existing Clan, for every subject with a real `LegendFact`
+(§9) — Chronicle is world-visible history, so every Clan is assumed to have heard of a
+Chronicle-recorded legend. What differs is how strongly each Clan holds the belief:
+
+| Relationship to the legendary subject | `belief_strength` |
+|---|---|
+| Subject is a member of this Clan (in-group — "one of our own") | `fact.fame` |
+| Subject is not a member of this Clan (out-group — "we've heard of them, but they aren't ours") | `fact.fame * OUT_GROUP_DAMPENING` |
+
+`OUT_GROUP_DAMPENING = 0.4`, a module-local constant in `src/domains/belief_institution/deriver.py`.
+
+**Disclosed simplification:** only two distinct `belief_strength` values ever occur for a given
+legend — in-group and out-group — not a richer per-clan model (e.g. weighted by prior contact,
+distance, or rivalry). This is a deliberate, disclosed simplification appropriate for a P2 feature
+whose entire upstream chain (`LegendFact`, §9) has no live pipeline consumer yet; escalating this to
+a full social-simulation model would be over-engineering for a mechanism nothing in the live game
+yet reads.
+
+### `origin_event_id` Selection
+
+`FameState` (§9) is an aggregate over possibly several contributing `NarrativeLedgerEntry` records
+— it has no single `entry_id` of its own. `BeliefInstitutionDeriver` selects one real origin event
+per legendary subject: the highest-significance HERO `entity_death` entry if one exists (the more
+legend-shaped "died gloriously" moment), else the highest-significance `quest_completed` entry.
+This selection only ever considers event types `FameDeriver` (§9) itself would have credited fame
+for — it can never invent an origin event `FameDeriver` wouldn't recognize.
+
+### Persistence
+
+`BeliefInstitution` per (clan, origin event) pair is stored as `BeliefInstitutionCarryForward` in
+`CampaignState.belief_institutions: Dict[str, BeliefInstitutionCarryForward]`, keyed by
+`"{clan_id}:{origin_event_id}"`. Pairs not re-derived in a given episode keep their prior snapshot
+unchanged — the same carry-forward guarantee as Culture/Fidelity/Fame.
+
+### Derivation Trigger
+
+`BeliefInstitutionExporter.export()` is called from `CampaignOrchestrator._advance_state()`,
+immediately after `FameExporter.export()` (its own real dependency) and alongside
+`CultureDriftExporter.export()`/`FidelityExporter.export()` — all four consume the same
+`ChronicleGrouper().group(narrative_ledger)` result. Unlike its three siblings, it additionally
+receives `final_state.clans` (the just-completed episode's real Clan membership), already in scope
+at this exact call site — read-only; `ClanState`/`AuthoritativeState` receive zero writes.
+
+### Distinctness from `BeliefEntry` and `KnowledgeFact`
+
+`BeliefInstitution` is a genuinely third belief representation, distinct from both
+`BeliefEntry` (`src/systems/strategic_systems/belief.py`, a per-entity tactical/near-term
+decision-support record with real live consumers — cooperation risk evaluation, route-blocking,
+guild rumor propagation) and `KnowledgeFact` (`src/core/self_model.py`, structured/queried settled
+information) — per `TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION`'s resolved
+two-track split. `BeliefInstitution` models population-scale organized reverence, not an
+individual entity's own tactical belief or knowledge. Neither existing class is modified or
+imported by this mechanism.
+
+### No Live Consumer Yet
+
+This mechanism ships with **no live reader wired in** — it is the terminal idea in the M5
+Fame → Fidelity → Belief-Institution chain, and the whole chain remains "built, not yet visible in
+play." No new SimQ scoring pillar or `CHURCH` building (`"BLESSING"`/`"RESURRECTION"`) wiring is
+added — both are explicitly out of scope, per the source design's own "too underspecified to build
+around responsibly" caveat.
+
+### Acceptance Signal
+
+> `BeliefInstitutionDeriver.derive()` given a subject with a real `LegendFact` and two Clans (one
+> containing the subject, one not) produces two `BeliefInstitution` records referencing the same
+> `origin_event_id`, with the in-group Clan's `belief_strength` strictly higher than the out-group
+> Clan's; a subject below `FAME_THRESHOLD` produces no `BeliefInstitution` for any Clan.
+
+**Sources:** `src/domains/belief_institution/`
+**Contract:** `docs/world/belief_institution_contract.md`
+**Parity:** WORLD-BELIEF-001, WORLD-BELIEF-002

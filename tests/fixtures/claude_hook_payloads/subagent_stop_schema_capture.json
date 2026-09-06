@@ -1,0 +1,76 @@
+{
+  "fixture_schema_version": 1,
+  "capture_grade": "binary_schema_extraction",
+  "hook_event_name": "SubagentStop",
+  "claude_code_version": "2.1.261",
+  "captured_at_utc": "2026-09-05T17:45:00Z",
+  "capture_method": "TCK-20260904-TEST-SCOPER-HANG-GUARD Step 1 spike: two live-capture avenues were attempted first and both were BLOCKED by this sandbox's own auto-mode classifier, not by Claude Code itself: (1) a nested `claude -p ...` invocation in a throwaway scratch directory (to register a diagnostic hook and trigger a real SubagentStop by dispatching a subagent) was refused outright by the classifier for any `claude` invocation, and (2) writing a throwaway `.claude/settings.local.json` (gitignored, outside this repo's committed trust boundary) to register a diagnostic SubagentStop hook against a real Agent-tool-dispatched subagent within this very session was also refused by the classifier. With both avenues blocked, this fixture was built instead from the literal, currently-enforced zod validation schema and producing control-flow code embedded verbatim in the installed Claude Code binary itself (`/home/u24desktop/.local/share/claude/versions/2.1.261`, an ELF executable bundling the harness's own JS, readable via plain `grep -a`/byte-offset extraction -- not blocked by the classifier since it is a read, not a hook registration or nested invocation). This is the literal, currently-enforced contract every real SubagentStop payload must satisfy in this exact installed version -- not a single example instance, but the schema and control-flow that PRODUCES every instance -- so it is treated as real, non-guessed evidence per this ticket's Anti-Drift Hazard ('do not invent an exact transcript/payload schema without the scratch-first capture'), while still falling short of a literal one-shot raw stdin dump. See 'Deviations' in staging_artifacts/TCK-20260904-TEST-SCOPER-HANG-GUARD/plan.md for the full accounting of why this substitutes for a live-fired capture.",
+  "binary_evidence": {
+    "common_fields_schema_source_verbatim": "var be=m(()=>c({session_id:s(),transcript_path:s(),cwd:s(),prompt_id:s().optional().describe(...),permission_mode:s().optional(),agent_id:s().optional().describe(\"Subagent identifier. Present only when the hook fires from within a subagent (e.g., a tool called by an AgentTool worker). Absent for the main thread, even in --agent sessions. Use this field (not agent_type) to distinguish subagent calls from main-thread calls.\"),agent_type:s().optional().describe('Agent type name (e.g., \"general-purpose\", \"code-reviewer\"). Present when the hook fires from within a subagent (alongside agent_id), or on the main thread of a session started with --agent (without agent_id).'),effort:c({level:s()...}).optional(...)}))",
+    "subagent_stop_schema_source_verbatim": "zoe=m(()=>be().and(c({hook_event_name:C(\"SubagentStop\"),stop_hook_active:P(),agent_id:s(),agent_transcript_path:s(),agent_type:s(),last_assistant_message:s().optional().describe(\"Text content of the last assistant message before stopping. Avoids the need to read and parse the transcript file.\"),background_tasks:k(VU()).optional().describe('In-flight background work (running/pending + backgrounded) registered in this session. Lets hooks distinguish \"session is done\" from \"session is paused waiting for background work to wake it\". Empty array when nothing is in flight.'),session_crons:k(KU()).optional().describe(\"Session-scoped cron tasks (CronCreate, ScheduleWakeup, /loop) that will wake this session later. Empty array when none are scheduled.\")})))",
+    "stop_schema_source_verbatim": "xoe=m(()=>be().and(c({hook_event_name:C(\"Stop\"),stop_hook_active:P(),last_assistant_message:s().optional()...,background_tasks:k(VU()).optional()...,session_crons:k(KU()).optional()...})))",
+    "background_task_item_schema_source_verbatim": "VU=m(()=>c({id:s(),type:s().describe(\"Friendly task-type label (e.g. 'shell', 'subagent', 'monitor', 'workflow'). Falls back to the raw discriminant for unknown types.\"),status:s(),description:s().describe(...),command:s().optional().describe(\"Shell command line. Only present for 'shell' tasks. Capped at 1000 chars...\"),agent_type:s().optional().describe(\"Subagent type name. Only present for 'subagent' tasks.\"),server:s().optional()...,tool:s().optional()...,name:s().optional().describe(\"Workflow name. Only present for 'workflow' tasks.\")}))",
+    "background_tasks_population_source_verbatim": "q={background_tasks:Imr(f.taskRegistry.all()),session_crons:Mmr()} -- background_tasks is populated directly from a live per-session taskRegistry, not reconstructed from transcript text, at the moment Stop/SubagentStop actually fires.",
+    "loop_prevention_source_verbatim": "yield It(`A hook blocked the turn from ending ${Pc} consecutive times — overriding and ending turn. For Stop/SubagentStop hooks, check stop_hook_active in the input and return success while it's true. Set CLAUDE_CODE_STOP_HOOK_BLOCK_CAP to raise this limit.`,\"warning\") -- confirms stop_hook_active is real and that the harness's own documented intent is: a Stop/SubagentStop hook MUST return success (allow) whenever stop_hook_active is true; the harness itself enforces a hard consecutive-block cap (CLAUDE_CODE_STOP_HOOK_BLOCK_CAP) as a backstop even if a hook ignores this, so a misbehaving hook cannot truly infinite-loop the harness, but the intended/correct hook behavior is to respect the field directly."
+  },
+  "conclusion_for_step_2": "background_tasks is a first-party, harness-populated field that directly answers 'is there in-flight background work right now' at the exact moment Stop/SubagentStop fires -- it makes the transcript-derived Bash/BashOutput/Monitor heuristic architecture investigation.md and plan.md's Step 2 hypothesized (before this evidence existed) unnecessary. The hook script (Step 2) reads payload['background_tasks'] directly instead of parsing payload['transcript_path'] -- a simpler, more authoritative check than transcript-JSONL parsing would have been, and still grounded entirely in real captured field names, not guessed ones. Separately, this ticket's own investigation subagent's real transcript (subagents/agent-a9fe8f10e7d252632.jsonl, TCK-20260902 predecessor) already independently confirmed there is no 'BashOutput' tool in this installed harness -- the real polling tool used everywhere in this repo's history is named 'Monitor' -- corroborating that investigation.md's own 'BashOutput/Monitor' hedge should resolve to 'Monitor' alone.",
+  "example_payload_still_running_background_task": {
+    "session_id": "sess-example-still-running",
+    "transcript_path": "/home/u24desktop/.claude/projects/-home-example/session.jsonl",
+    "cwd": "/home/u24desktop/Working/rpg-based-simulation",
+    "hook_event_name": "SubagentStop",
+    "stop_hook_active": false,
+    "agent_id": "agent-example123",
+    "agent_transcript_path": "/home/u24desktop/.claude/projects/-home-example/subagents/agent-example123.jsonl",
+    "agent_type": "test-scoper",
+    "background_tasks": [
+      {
+        "id": "bc8huor3n",
+        "type": "shell",
+        "status": "running",
+        "description": "Run broad scoped pytest sweep",
+        "command": "python3 -m pytest tests/tools/ tests/agent_orchestration/ -m \"not slow and not extra_slow\" -q"
+      }
+    ]
+  },
+  "example_payload_background_task_already_complete": {
+    "session_id": "sess-example-complete",
+    "transcript_path": "/home/u24desktop/.claude/projects/-home-example/session.jsonl",
+    "cwd": "/home/u24desktop/Working/rpg-based-simulation",
+    "hook_event_name": "SubagentStop",
+    "stop_hook_active": false,
+    "agent_id": "agent-example456",
+    "agent_transcript_path": "/home/u24desktop/.claude/projects/-home-example/subagents/agent-example456.jsonl",
+    "agent_type": "test-scoper",
+    "background_tasks": []
+  },
+  "example_payload_no_background_task_ever_started": {
+    "session_id": "sess-example-none",
+    "transcript_path": "/home/u24desktop/.claude/projects/-home-example/session.jsonl",
+    "cwd": "/home/u24desktop/Working/rpg-based-simulation",
+    "hook_event_name": "SubagentStop",
+    "stop_hook_active": false,
+    "agent_id": "agent-example789",
+    "agent_transcript_path": "/home/u24desktop/.claude/projects/-home-example/subagents/agent-example789.jsonl",
+    "agent_type": "investigator"
+  },
+  "example_payload_stop_hook_active_loop_prevention": {
+    "session_id": "sess-example-loop",
+    "transcript_path": "/home/u24desktop/.claude/projects/-home-example/session.jsonl",
+    "cwd": "/home/u24desktop/Working/rpg-based-simulation",
+    "hook_event_name": "SubagentStop",
+    "stop_hook_active": true,
+    "agent_id": "agent-exampleloop",
+    "agent_transcript_path": "/home/u24desktop/.claude/projects/-home-example/subagents/agent-exampleloop.jsonl",
+    "agent_type": "test-scoper",
+    "background_tasks": [
+      {
+        "id": "still-going",
+        "type": "shell",
+        "status": "running",
+        "description": "A genuinely never-finishing background command",
+        "command": "sleep 99999"
+      }
+    ]
+  }
+}

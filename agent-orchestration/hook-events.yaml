@@ -1,9 +1,11 @@
-# Normalizes exactly the two hook types actually wired in .claude/settings.json today. No
-# speculative SessionStart/Stop/other hook type — this file documents the real, current
-# vocabulary only.
+# Normalizes exactly the three hook types actually wired in .claude/settings.json today. No
+# speculative SessionStart/other hook type — this file documents the real, current vocabulary
+# only. SubagentStop added by TCK-20260904-TEST-SCOPER-HANG-GUARD.
 hook_schema_version: 1
 hook_types:
   - id: PreToolUse
     description: Fired before a tool call executes.
   - id: PostToolUse
     description: Fired after a tool call completes; feeds tools.jsonl writes.
+  - id: SubagentStop
+    description: Fired when a subagent's turn ends; can block via exit code 2.

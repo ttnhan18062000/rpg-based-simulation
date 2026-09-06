@@ -10,6 +10,15 @@ from src.core.enums import ReasonCode
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
 
+# Idea 54/M5 (SOC-268): maximum size of a clan's clan_reputation influence on the
+# stranger-judgment trust_score blend -- a full swing of clan_trust from its floor
+# (0.0) to its ceiling (1.0) shifts trust_score by at most +/-0.1
+# ((1.0 - 0.5) * CLAN_INFLUENCE_WEIGHT). See docs/mechanics/04_strategic_cognition.md
+# Sec.10 and SOC-134's parity note for why this is an additive delta term, not a
+# re-weighted blend.
+CLAN_INFLUENCE_WEIGHT: float = 0.2
+
+
 class SocialAppraisalSystem:
     """
     Evaluates social offers and contracts based on trust, risk, and utility.
@@ -42,7 +51,23 @@ class SocialAppraisalSystem:
         else:
             # Blend history with public reputation
             history_trust = entity.social.trust_history.get(source_id, 0.5)
-            trust_score = (public_trust * 0.7) + (history_trust * 0.3)
+
+            # Idea 54/M5: guilt-by-association -- a stranger's clan_reputation
+            # informs the trust prior of an observer with no direct history.
+            # Additive delta, exactly 0.0 at the neutral/no-clan case, so this
+            # reduces to the pre-idea-54 formula whenever clan_trust == 0.5
+            # (preserves SOC-134's pinned formula -- do not re-weight the base
+            # public_trust/history_trust terms).
+            from src.systems.social_systems.clan_lifecycle import ClanLifecycleService
+
+            clan_id = ClanLifecycleService.find_clan_id_for_entity(state, source_id)
+            clan_trust = (state.clans[clan_id].clan_reputation / 2.0) if clan_id else 0.5
+
+            trust_score = (
+                (public_trust * 0.7)
+                + (history_trust * 0.3)
+                + (clan_trust - 0.5) * CLAN_INFLUENCE_WEIGHT
+            )
         
         # Persistent Distrust for betrayers
         if trust_score < 0.2 or (bond and bond.sentiment < -0.8):

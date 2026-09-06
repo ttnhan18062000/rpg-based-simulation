@@ -1,6 +1,7 @@
 ---
 name: test-scoper
 description: Given a set of changed files, maps them to relevant existing tests, builds and runs the correct scoped pytest command, and reports pass/fail counts and coverage gaps.
+tools: Bash, Read, Agent, ToolSearch, Monitor, Write, SendMessage, ListAgents, mcp__knowledge-search__search_docs, ScheduleWakeup, TaskStop, AskUserQuestion, SendFeedback, TaskUpdate, Artifact, Skill, mcp__knowledge-gateway__knowledge_status, mcp__knowledge-search__search_health, SendUserFile
 ---
 
 # Test Scoper

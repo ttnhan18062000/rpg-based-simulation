@@ -152,6 +152,25 @@ backfilled — fabricating `runs.jsonl` records for work that happened without r
 instrumentation would create data the real events never generated, which this project's Durable
 State Rule forbids.
 
+## Agent Tool-Usage Baseline
+
+`tools/agent-monitoring/agent_tool_usage_baseline.py` is a separate, read-only per-agent
+tool-usage audit answering "which tools does *this specific* registered agent actually invoke, how
+often, and with what real (truncated) inputs" — the evidence base a future per-agent `tools:`
+frontmatter least-privilege scoping ticket depends on. Reports one row per currently-registered
+`.claude/agents/*.md` agent (live-globbed, never hardcoded) plus one `unattributed` row for every
+null or non-matching `agent` value in `tools.jsonl` (documented pseudo-agent literals like
+`finalizer`/`claude` and undocumented drift literals like `orchestrator` alike — distinguishing
+legitimate-pseudo-agent from genuine drift within that bucket is out of this ticket's scope), each
+with a per-(agent, tool-name) call count and a real, verbatim, explicitly `truncated: true`-labeled
+example drawn from `input_summary`. Reuses `load_data_glob` rather than reimplementing a shard-glob
+loader, and includes a sanity-check reconciliation (`total_rows_seen` vs. the summed table) in its
+own output. Built by `TCK-20260904-AGENT-TOOL-USAGE-BASELINE`, which also found 6 of 16 registered
+agents currently have zero real historical tool-call rows anywhere in the corpus
+(`concern-investigator`, `mechanics-auditor`, `simulation-analyst`, `spec-document-reviewer`,
+`world-debugger`, `world-render-reviewer`) — flagged as a gap for whoever next scopes that
+frontmatter work, not resolved by this ticket.
+
 ## Recording coverage for a hand-orchestrated closure
 
 If you close a ticket without going through the `Workflow` tool's `implement-ticket.js` pipeline,

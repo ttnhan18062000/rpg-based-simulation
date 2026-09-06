@@ -4078,3 +4078,57 @@
   support_boundary: Accumulation trigger reads QuestState.source_entity_id but does
     not populate it; the Guild hub never sets it, so no live seeding path exists yet
     (disclosed gap, not a bug).
+- id: STRAT-270
+  text: 'LifecycleSystem._seed_dying_wish() (src/systems/lifecycle_systems/lifecycle.py)
+    fires once heir_entity_id resolves inside resolve_lifecycle''s death block: seeds
+    a new NamedIntentionBundle (src/core/cognition.py, on MotivationModel.named_intention)
+    onto the heir''s cognition, source-attributed to the deceased, status PENDING.
+    Follows the codebase''s established read-through-then-replace convention for cognition_bundle_set
+    (mirrors src/strategy/role_model_phase.py, src/domains/emotion/habit_phase.py)
+    so a same-tick collision with another cognition_bundle_set writer never silently
+    clobbers either write. Applied through the authoritative pipeline (CognitionPatch).
+    Honorable/ignorable/rejectable -- nothing reads NamedIntentionBundle.status to
+    force an action, so this never auto-executes. Deliberately named distinctly from
+    CommittedIntention (StrategicComponent) to avoid a naming collision. (idea 58,
+    M5)'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/cognition.py -- NamedIntentionBundle, MotivationModel.named_intention;
+    src/systems/lifecycle_systems/lifecycle.py -- LifecycleSystem._seed_dying_wish()
+  proof_type: parity
+  test_path: tests/unit/progression/test_lifecycle.py::test_named_intention_is_honorable_ignorable_never_auto_executing
+  divergence_note: null
+  support_boundary: Wish text is deterministic (references the deceased's active Nemesis
+    antagonist if one exists, else a generic remembrance) -- no narrative-generation
+    subsystem is introduced.
+- id: STRAT-271
+  text: 'Idea 59 (Home, Exile & Return): StrategicUpdate gains home_region_id_set:
+    Optional[str] = None (src/core/updates.py), populated at birth (src/world/reproduction_humanoid.py
+    resolves the spawn region via SpatialQueryService.get_region_at() and passes it
+    into EntityGenerator.spawn_humanoid_offspring()''s new home_region_id parameter,
+    which the builder applies via .strategic(home_region_id=...)) or at calamity displacement
+    (idea 65''s DisplacementService, only when previously unset). StrategicPatch.apply()
+    resolves home_region_id as new_strat.home_region_id if set, else u_strat.home_region_id_set
+    -- the reverse of every other StrategicUpdate _set field, because a refugee''s
+    home_region_id must keep pointing at their original home through displacement,
+    never get overwritten by a later proposed update. spawn_humanoid_offspring() itself
+    takes the resolved region id as a plain parameter rather than resolving it internally,
+    since src/systems/ may not import src/engine/ (where region resolution lives)
+    outside the pinned exception list -- src/world/reproduction_humanoid.py, which
+    is under src/world/ and already imports engine, does the resolution instead.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/updates.py -- StrategicUpdate.home_region_id_set, is_noop()/merge()
+    coverage; src/engine/patches.py -- StrategicPatch.apply() reversed-precedence
+    home_region_id resolution; src/systems/world_systems/generator.py -- EntityGenerator.spawn_humanoid_offspring()
+    home_region_id parameter; src/world/reproduction_humanoid.py -- caller-side region
+    resolution and pass-through.
+  proof_type: parity
+  test_path: tests/unit/world/test_reproduction_humanoid_cadence.py::test_humanoid_offspring_home_region_id_set_from_spawn_position,
+    tests/unit/world/test_reproduction_humanoid_cadence.py::test_humanoid_offspring_home_region_id_none_when_no_region_resolved,
+    tests/unit/world/test_displacement.py::test_home_region_id_set_to_struck_region_when_previously_unset,
+    tests/unit/world/test_displacement.py::test_home_region_id_preserved_when_already_set
+  divergence_note: null
+  support_boundary: null

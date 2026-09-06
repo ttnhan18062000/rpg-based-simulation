@@ -387,10 +387,12 @@ class ApplyPath:
             new_members = (set(existing.member_entity_ids) | set(cu.member_entity_ids_add)) - set(cu.member_entity_ids_remove)
             new_leader = cu.leader_entity_id_set if cu.leader_entity_id_set is not None else existing.leader_entity_id
             new_dissolved = cu.dissolved_tick_set if cu.dissolved_tick_set is not None else existing.dissolved_tick
+            new_reputation = max(0.0, min(2.0, existing.clan_reputation + cu.clan_reputation_delta))
             new_clans[cu.clan_id] = replace(existing,
                 member_entity_ids=tuple(sorted(new_members)),
                 leader_entity_id=new_leader,
                 dissolved_tick=new_dissolved,
+                clan_reputation=new_reputation,
             )
 
         # Wire information_providers into the tick-boundary apply path (previously omitted --
