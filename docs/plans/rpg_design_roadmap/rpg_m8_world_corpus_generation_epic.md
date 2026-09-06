@@ -8,7 +8,16 @@ tags: [content, architecture]
 
 # Epic Plan — RPG Design Roadmap, Milestone 8: World Corpus, Generation & Modules
 
-**Tracking ticket:** `TCK-20260823-EPIC-RPG-M8-WORLD-CORPUS` (not yet created — scope-only, per
+**Status, re-verified 2026-09-06:** this epic has no buildable deliverable of its own (see its own
+Out of Scope below) — it's an "informs" analysis whose findings feed M2-M4's real tickets. Of its 9
+scope items, all are now resolved: items 1 and 7 (idea 43 seeding, idea 32 capacity-gating) were found
+stale on re-check — both are real, live, and tested, corrected below with real citations; item 3
+(idea 44's `settlement_capacity`) landed in a different technical shape than originally scoped, also
+corrected below; items 2, 4, 5, 6, 8, 9 were already accurate. No tracking ticket is needed to "close"
+this epic — its findings have all been consumed by the milestones that needed them.
+
+**Tracking ticket:** `TCK-20260823-EPIC-RPG-M8-WORLD-CORPUS` (never created — not needed; this epic's
+own scope is analysis/findings only, with no independent implementation to track, per
 `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
 **Source:** Direct investigation of `src/worldbuilding/compiler.py`, `src/worldmodules/`,
 `data/content/world_modules/*.yaml` (20 files), `data/worlds/*/world.yaml` (21 compiled worlds),
@@ -36,9 +45,15 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
 
 ## Scope (not yet broken into child tickets)
 
-1. **Idea 43's insertion point — confirmed clean, low-risk.** `WorldCompiler.compile()` step 2 already
-   loops over `spec.regions`; `RegionState.population_cohorts` just needs to be set inside that existing
-   loop. No new architecture required — reuse the M2 ticket, don't scope this separately.
+1. **Idea 43's insertion point — confirmed clean, low-risk. Landed, 2026-09-06 (re-verified):**
+   `TCK-20260831-POPULATION-COHORT-SEEDING` (`tickets/done/`, DONE) implemented exactly this — real
+   `_seed_population_cohorts()` function, called at compile time from `WorldCompiler.compile()` step 2
+   (`src/worldbuilding/compiler.py:190,354`). Every compiled world now gets real, populated
+   `RegionState.population_cohorts` at compile time — confirmed directly in source, not merely
+   inferred from the ticket being closed (grepping the static `data/worlds/*/world.yaml` spec files
+   for `population_cohorts` finds nothing, since it's a compile-time-derived runtime field, not
+   declarative spec content — check the compiler's own seeding function, not the raw world files, to
+   verify this).
 2. **Idea 45's insertion point — closed, as-built, by idea 66 plus `TCK-20260904-CAMPSTATE-PLACE-BRIDGE`.**
    This item originally read: "`CampState` is never constructed anywhere in production code,
    `WorldModuleSpec` has no `camp_recipes` field, and the compiler has no camp step at all — needs a new
@@ -53,9 +68,15 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
    content on disk today (including `hero_guild_routing`'s `goblin_camp_place`) — migrating real content to
    set `creature_kind` remains a separate, future, deliberately-deferred step (see that ticket's
    Gameplay-Activation Risk Decision).
-3. **Idea 14/44's `settlement_capacity` — confirmed not-yet-built at the schema level**, not merely
-   unwired. Doesn't exist anywhere in `src/` or `docs/` except this atlas's own prose. M2's ticket for idea
-   14 needs to include the actual schema addition, not assume one exists to extend.
+3. **Idea 14/44's `settlement_capacity` — resolved differently than originally scoped, 2026-09-06
+   (re-verified).** No literal `settlement_capacity` field was ever added to `data/content/living/
+   races.yaml` (confirmed — still zero hits repo-wide for that exact field name). Instead,
+   `TCK-20260904-CAMP-NEST-CLASSIFICATION` (`tickets/done/`, DONE) consolidated ideas 44+45+46 and
+   delivered the underlying City/Camp/Nest/Excluded classification as a documented, race-data-verified
+   rule with its sole code projection `CampService.NEST_RACE_KINDS` (`src/world/camp.py`) — a derived
+   classification, not a stored per-race field. M2's idea-14 ticket correctly did NOT add this field
+   (it was explicitly scoped out there, per `rpg_m2_foundational_systems_epic.md`); the concept landed
+   in M4 instead, in a different technical shape than this item originally anticipated.
 4. **World-module deployment — confirmed a non-issue, re-verify only if this epic starts much later.** All
    20 authored world modules are live in at least one of the 21 real compiled worlds today (re-checked
    directly against `TCK-20260630-WORLD-DEPLOY-MODULES`'s original "7 of 20 unused" finding, which was
@@ -75,12 +96,23 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
    `FactionState` with territory — there is no separate concept to build a corpus scenario against beyond
    what Faction already provides. Worth a terminology clarification on ideas 35/51 themselves (not done in
    this epic) if this reads as confusing to a future implementer.
-7. **Idea 32 (reproduction pressure-gating near capacity) — confirmed not achievable by any profile, for
-   two independent reasons.** `population_cohorts` is unseeded in every world in the corpus (same root
-   cause as item 1), and no reproduction/capacity-gating mechanism exists in code at all — only
-   scarcity-triggered emigration exists today, a different mechanic. Fixing corpus content alone would not
-   exercise anything; both the cohort model (idea 43) and the capacity concept (idea 32 itself) need
-   building first. Sequence this epic's work on idea 32 strictly after M3 ships, not before.
+7. **Idea 32 (reproduction pressure-gating near capacity) — both blockers cleared, 2026-09-06
+   (re-verified against real code, not assumed from M3 having shipped).** This item's original framing
+   ("no reproduction/capacity-gating mechanism exists in code at all") is now stale and was itself
+   found via an incomplete search (grepping for the literal word "capacity" — the real mechanism uses
+   "scarcity"/"migration_threshold" terminology instead, which a narrower search missed). The real,
+   current state: both the natural-creature path (`src/world/camp.py:127-130`) and the humanoid path
+   (`src/world/reproduction_humanoid.py:67-72`) gate reproduction on
+   `compute_regional_scarcity(region) > migration_threshold` (default 0.7) — reproduction is skipped
+   when a region is too scarce/crowded, landed as part of M3's Reproduction epic. The magical-demonic
+   path (`src/world/calamity.py:60-66`) *intentionally* excludes this gate, with a real documented
+   rationale ("a calamity-driven spawn is a world-threat escalation event, not a settlement/camp
+   demographic signal") — a deliberate, symmetric design choice, not an oversight or gap. All three
+   paths have real test coverage (`tests/unit/world/test_reproduction_humanoid_cadence.py`,
+   `test_natural_creature_reproduction.py`, `test_calamity_magical_demonic_reproduction.py`). Combined
+   with item 1's confirmation that `population_cohorts` is genuinely seeded at compile time, idea 32
+   can now actually be corpus-tested against real compiled worlds — no further building needed before
+   that testing could start.
 8. **Reusable groundwork already found**: a real, freeform location-tag vocabulary already exists across
    the 20 modules (`ruins`, `cave`, `mine`/`underground`, den-flavored regions, `settlement`) via
    `RegionRecipeSpec.tags`, used today only for quest-routing. Idea 48 (place-type transitions) can reuse
@@ -115,12 +147,17 @@ in this roadmap lives or dies on whether that function has (or gets) a real inse
 
 ## Acceptance Signal
 
-- Ideas 45 and 14's M4/M2 tickets reflect the corrected, deeper scope (new schema field + compiler step)
-  before implementation starts on either, not discovered mid-ticket.
+- **Satisfied, 2026-09-06 (re-verified against real code, not assumed from tickets being closed):**
+  idea 43's compile-time seeding (item 1) and idea 32's capacity-gating (item 7) are both real, live,
+  and tested — see those items' own corrected text above. Idea 45/44's insertion points landed via
+  `TCK-20260904-CAMPSTATE-PLACE-BRIDGE` and `TCK-20260904-CAMP-NEST-CLASSIFICATION` respectively, in a
+  different technical shape than originally scoped (a documented classification rule, not a new
+  schema field, for idea 44) but functionally equivalent to what this epic asked for.
 - No new corpus-profile authoring work is scheduled for idea 44's testing needs in `crowded_frontier`,
   `hero_guild_routing`, or `resource_dense_basin` — confirmed unnecessary, don't duplicate it.
-- Idea 32's corpus-testing work is explicitly sequenced after both idea 43 (M2) and idea 32 (M3) itself
-  ship, not attempted earlier against an empty cohort model.
+- Idea 32's corpus-testing work can now actually proceed (both its blockers cleared) — this epic itself
+  builds nothing, so a real corpus-testing pass for idea 32 (if wanted) would be its own future ticket,
+  not automatically implied by this acceptance signal being satisfied.
 
 ## References
 
