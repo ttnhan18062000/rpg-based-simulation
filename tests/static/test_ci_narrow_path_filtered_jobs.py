@@ -12,6 +12,11 @@ import yaml
 # Follows the tests/static/test_corpus_diversity_ci_isolation.py precedent: parse the workflow
 # YAML with yaml.safe_load and assert on job/step dict structure and `run:` step text -- no live
 # GitHub Actions execution is possible from pytest.
+#
+# TCK-20260906-CI-FRONTEND-PATH-FILTER extended the same gate mechanism with a third gated job,
+# `frontend` -- a fully separate (TypeScript/npm) toolchain with no Python import graph, so its
+# trigger path set (`frontend/` itself) needs no live-import derivation the way 8/9 do for the
+# Python jobs; see test 12 below.
 
 _ROOT = Path(__file__).resolve().parent.parent.parent
 _WORKFLOW_PATH = _ROOT / ".github" / "workflows" / "test.yml"
@@ -122,11 +127,12 @@ def _marker_tagged_test_files() -> list[Path]:
     return matched
 
 
-# 1. Both in-scope jobs actually gained a truthy `if:` condition.
+# 1. All 3 in-scope jobs actually gained a truthy `if:` condition.
 def test_perf_cert_arena_and_migration_lanes_have_if_conditions() -> None:
     jobs = _jobs()
     assert jobs["perf-cert-arena"].get("if"), "perf-cert-arena must have a truthy 'if' condition"
     assert jobs["migration-lanes"].get("if"), "migration-lanes must have a truthy 'if' condition"
+    assert jobs["frontend"].get("if"), "frontend must have a truthy 'if' condition"
 
 
 # 2. Primary anti-scope-creep guard: none of the 9 out-of-scope jobs gained an `if:`.
@@ -180,6 +186,15 @@ def test_migration_lanes_if_references_changed_files_gate_output() -> None:
     assert "run_migration_lanes" in condition
 
 
+# 5c. frontend's if: references its own distinct output (TCK-20260906-CI-FRONTEND-PATH-FILTER).
+def test_frontend_if_references_changed_files_gate_output() -> None:
+    jobs = _jobs()
+    condition = jobs["frontend"]["if"]
+    assert "needs." in condition
+    assert ".outputs." in condition
+    assert "run_frontend" in condition
+
+
 # 6. Non-pull_request events force both outputs true before any git diff is attempted.
 def test_gate_job_fails_open_on_non_pull_request_events() -> None:
     jobs = _jobs()
@@ -199,6 +214,7 @@ def test_gate_job_fails_open_on_non_pull_request_events() -> None:
     branch_text = run_text[non_pr_branch_index:diff_index]
     assert "run_perf_cert_arena=true" in branch_text
     assert "run_migration_lanes=true" in branch_text
+    assert "run_frontend=true" in branch_text
     assert "exit 0" in branch_text
 
 
@@ -217,6 +233,7 @@ def test_gate_job_fails_open_on_diff_command_failure() -> None:
     branch_text = failure_branch_match.group(0)
     assert "run_perf_cert_arena=true" in branch_text
     assert "run_migration_lanes=true" in branch_text
+    assert "run_frontend=true" in branch_text
     assert "exit 0" in branch_text
 
 
@@ -276,6 +293,7 @@ def test_gated_jobs_fail_open_on_gate_job_non_success() -> None:
     for job_name, output_key in (
         ("perf-cert-arena", "run_perf_cert_arena"),
         ("migration-lanes", "run_migration_lanes"),
+        ("frontend", "run_frontend"),
     ):
         condition = jobs[job_name]["if"]
         assert "!cancelled()" in condition, (
@@ -308,4 +326,23 @@ def test_gate_job_diff_uses_three_dot_range() -> None:
         "found a plain two-dot 'git diff --name-only \"$BASE\" \"$HEAD\"' -- must be three-dot "
         "range or an explicit merge-base, not a plain two-dot diff against the base branch's "
         "current tip"
+    )
+
+
+# 12. (TCK-20260906-CI-FRONTEND-PATH-FILTER) frontend's trigger path set covers its own directory
+# and the workflow file. Unlike tests 8/9, this needs no live-import derivation -- frontend/ is a
+# separate (TypeScript/npm) toolchain with no Python import graph, so its dependency set is
+# definitionally the directory itself, not something to re-derive from src/ imports.
+def test_frontend_path_set_covers_frontend_directory_and_workflow_file() -> None:
+    jobs = _jobs()
+    run_text = _gate_run_text(jobs)
+    frontend_pattern = _extract_re_pattern(run_text, "FRONTEND_RE")
+
+    assert "frontend/" in frontend_pattern, (
+        f"frontend's trigger path set (FRONTEND_RE) must cover the frontend/ directory itself: "
+        f"{frontend_pattern!r}"
+    )
+    assert r"\.github/workflows/test\.yml" in frontend_pattern, (
+        f"frontend's trigger path set (FRONTEND_RE) must cover .github/workflows/test.yml itself "
+        f"(editing the workflow must always re-run every gated job): {frontend_pattern!r}"
     )
