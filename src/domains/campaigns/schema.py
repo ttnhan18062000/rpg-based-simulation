@@ -104,6 +104,8 @@ class CampaignScorecard:
     reward_conversion: str
     cooperation_usage: str
     world_feedback_usage: str
+    reputation_inheritance_check: str  # "pass" | "fail" | "partial" (no death-with-heir this run)
+    nemesis_transfer_check: str  # "pass" | "fail" | "partial" (no nemesis-bearing death this run)
     behavior_change_proofs: int
     route_diversity_score: float
     stagnant_entity_ratio: float

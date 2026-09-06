@@ -4220,3 +4220,30 @@
     today and uses the 0.0 default, so this signal is currently a no-op in the default
     single-episode Kernel path, matching the M5 batch's own "built, not yet visible
     in play" precedent.
+- id: SOC-275
+  text: CampaignScorecardEvaluator.evaluate() reports reputation_inheritance_check
+    and nemesis_transfer_check, derived from entity_arc_reports major_events of event_type="died"
+    carrying heir_entity_id/inherited_reputation_seed/had_nemesis/nemesis_transferred
+    in their details dict.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/domains/campaigns/scorecard.py::CampaignScorecardEvaluator.evaluate()
+    (new fields added by TCK-20260906-CAMPAIGN-SCORECARD-EVALUATOR-FIELDS). Both fields
+    default to "partial" when no death-with-heir event is present this run; "fail"
+    once a death-with-heir occurs with inherited_reputation_seed unset (reputation_inheritance_check)
+    or a nemesis-bearing death with nemesis_transferred falsy (nemesis_transfer_check);
+    "pass" otherwise, never overwritten back from a prior fail. This scorer is purely
+    additive and does not itself know about LifecycleSystem/idea 55/58/53 -- it only
+    reads what the caller (SimulationAnalysisRunner or a future real caller) reports
+    in each CampaignEvent details dict. The real idea 53/55/58/62 mechanisms themselves
+    are unchanged by this ticket -- see SOC-269/STRAT-270 (TCK-20260904-LINEAGE-DEATH-DISPATCH)
+    for those.
+  proof_type: regression
+  test_path: tests/unit/domains/campaigns/test_phase9_semantic_campaign_scorecard.py::test_reputation_inheritance_check_fails_when_seed_unset_after_death_with_heir
+  divergence_note: null
+  support_boundary: Covers only CampaignScorecardEvaluator itself. Does not cover
+    whether idea 53/55/58/62 are reachable from a real multi-episode CampaignOrchestrator
+    run in production -- that is covered separately by tests/integration/campaigns/test_lineage_dispatch_deterministic_kernel_tick.py
+    and test_nemesis_relation_and_chronicle_fidelity_campaign.py, real production
+    code paths with scripted/deterministic inputs, not through this scorer.

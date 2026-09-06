@@ -569,6 +569,20 @@ class EventExtractor:
                         payload={"new_level": entity.identity.evolution_level},
                     ))
 
+            # Species evolution (TCK-20260906-ENTITY-EVOLVED-EVENT-GAP): EvolutionSystem
+            # (src/engine/evolution.py) transforms `kind` at level thresholds 10/25/50
+            # (e.g. GOBLIN->GOBLIN_WARRIOR). `kind` is a plain EntityState field, not gated
+            # behind identity/combat, so this check does not need the `hasattr` guards above.
+            # Flag-gated, same rollback pattern as the XP/level-up block above.
+            if (not _push_shapers_phase2_active
+                    and getattr(entity, "kind", None) != getattr(prior_ent, "kind", None)):
+                events.append(SimulationEvent(
+                    event_type="entity_evolved", event_category="lifecycle",
+                    tick=tick, entity_id=eid, severity="INFO",
+                    source_system="event_extractor", message="",
+                    payload={"previous_kind": prior_ent.kind, "new_kind": entity.kind},
+                ))
+
             # Economy/Gold events (exclusively meaningful changes)
             gold_diff = entity.inventory.gold - prior_ent.inventory.gold
             if gold_diff != 0:

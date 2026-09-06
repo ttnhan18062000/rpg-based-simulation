@@ -31,7 +31,9 @@ def validate_record(record: dict) -> list[str]:
     return errors
 
 
-def compute_tool_stats(records: list[dict]) -> dict[tuple, tuple[int, float]]:
+def compute_tool_stats(
+    records: list[dict], *, omit_when_unattributed: bool = False
+) -> dict[tuple, tuple[int, float]]:
     """Deterministically compute {(run_id, seq): (tool_call_count, cost_proxy_score)}
     from real agent-monitoring/data/*/tools.jsonl rows (every ISO-week folder,
     sorted, concatenated before grouping), for every (run_id, seq) pair in
@@ -68,6 +70,16 @@ def compute_tool_stats(records: list[dict]) -> dict[tuple, tuple[int, float]]:
       explicitly out of scope" note); including it here would silently overwrite whatever
       simq-audit.js computes itself. This must stay a membership check against exactly these
       3 literals, never simplified to "not None".
+
+    `omit_when_unattributed` (TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP): by
+    default (False), a key with zero matching tools.jsonl rows still gets (0, 0.0) — correct
+    for this module's own CLI, where a real implement-ticket/implement-epic/create-tickets
+    phase always has a live sidecar, so "zero rows" means "confirmed zero calls" (see
+    test_cost_proxy_score_absent_when_no_tools_jsonl_exists). Pass True for a caller whose
+    events never had a live sidecar during the real work (e.g.
+    record_hand_orchestrated_closure.py) — there, "zero rows" means "no attribution data was
+    ever possible," not "confirmed zero," so the key is omitted entirely rather than reported
+    as a false zero.
     """
     wanted = {
         (r.get("run_id"), r.get("seq"))
@@ -88,7 +100,11 @@ def compute_tool_stats(records: list[dict]) -> dict[tuple, tuple[int, float]]:
             if key in wanted:
                 rows_by_key[key].append(row)
 
-    return {key: (len(rows_by_key[key]), compute_cost_proxy_score(rows_by_key[key])) for key in wanted}
+    return {
+        key: (len(rows_by_key[key]), compute_cost_proxy_score(rows_by_key[key]))
+        for key in wanted
+        if not omit_when_unattributed or rows_by_key[key]
+    }
 
 
 def warn_vocabulary_drift(record: dict) -> None:

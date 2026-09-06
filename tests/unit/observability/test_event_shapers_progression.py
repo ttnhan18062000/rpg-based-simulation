@@ -23,9 +23,10 @@ def _identity(evolution_level=1, evolution_points=0, learned_skills=None):
     return i
 
 
-def _entity(identity=None):
+def _entity(identity=None, kind="goblin"):
     e = MagicMock()
     e.identity = identity or _identity()
+    e.kind = kind
     return e
 
 
@@ -50,7 +51,7 @@ def _identity_update(evolution_points_delta=0, evolution_level_set=None,
     return u
 
 
-def _entity_update(identity=None):
+def _entity_update(identity=None, kind_set="goblin"):
     u = MagicMock()
     u.identity = identity
     u.combat = None
@@ -58,6 +59,7 @@ def _entity_update(identity=None):
     u.property_updates = {}
     u.self_model_bundle_set = None
     u.strategic = None
+    u.kind_set = kind_set
     return u
 
 
@@ -113,6 +115,23 @@ def test_level_up_not_emitted_when_not_increased():
     upd = _update({1: _entity_update(_identity_update(evolution_level_set=3))})
     events = ProgressionShaper().shape(prior, upd, tick=10)
     assert "level_up" not in _types(events)
+
+
+def test_entity_evolved():
+    prior = _prior_state({1: _entity(kind="goblin")})
+    upd = _update({1: _entity_update(kind_set="goblin_warrior")})
+    events = ProgressionShaper().shape(prior, upd, tick=10)
+    ev = next(e for e in events if e.event_type == "entity_evolved")
+    assert ev.payload == {"previous_kind": "goblin", "new_kind": "goblin_warrior"}
+
+
+def test_entity_evolved_not_emitted_when_kind_unchanged():
+    """EvolutionSystem always writes kind_set (unchanged when the entity did not evolve this
+    tick) -- a bare non-None check would false-fire on every progression tick."""
+    prior = _prior_state({1: _entity(kind="goblin")})
+    upd = _update({1: _entity_update(kind_set="goblin")})
+    events = ProgressionShaper().shape(prior, upd, tick=10)
+    assert "entity_evolved" not in _types(events)
 
 
 def test_skill_unlocked():

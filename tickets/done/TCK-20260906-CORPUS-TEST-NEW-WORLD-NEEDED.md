@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260906-CORPUS-TEST-NEW-WORLD-NEEDED
-phase: open
+phase: done
 date: 2026-09-06
 tags: [testing, simulation-quality, corpus]
 ---
@@ -15,7 +15,7 @@ tags: [testing, simulation-quality, corpus]
 Ideas 50 (Material-Gated Evolution) and 64 (The Empty Chair) — corpus-test authoring is blocked, mechanisms never shipped
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -60,9 +60,9 @@ ready work today.
 - Re-auditing the rest of M4's "12 ideas shipped" claim beyond this one specific discrepancy.
 
 ## Acceptance Criteria
-- [ ] M9 epic doc's item 4 entries for ideas 50/64 corrected to state the real blocker (mechanism not
+- [x] M9 epic doc's item 4 entries for ideas 50/64 corrected to state the real blocker (mechanism not
       shipped) rather than "new world needed."
-- [ ] The M4 "12 ideas shipped" discrepancy for idea 64 is flagged somewhere real and citable (this
+- [x] The M4 "12 ideas shipped" discrepancy for idea 64 is flagged somewhere real and citable (this
       ticket, or a cross-reference from M4's own roadmap section) — not silently left uncorrected.
 
 ## Related Tickets
@@ -85,9 +85,28 @@ None yet — created by this ticket's own Investigate/Plan phases once picked up
   M9 corpus-testing epic.
 
 ## Implementation Notes
+Investigate found both Acceptance Criteria were already satisfied by the M9 scoping pass's own doc
+edits — confirmed via `git show 3aa642b7:...` (the original M9-scoping commit, PR #138, predating
+any M9 child-ticket implementation) that `rpg_m9_corpus_test_coverage_epic.md` lines 294-298/325-330
+and `rpg_design_roadmap.md` lines 141-147 already carried the corrected "mechanism never shipped"
+framing and the M4-discrepancy flag, both already cross-referencing this exact ticket ID by name. No
+doc edit was made — re-writing already-correct text would add no value. Both underlying factual
+claims were independently re-verified rather than re-trusted: `grep -rn "EconomicVacancyEvent\|
+alt_outcome_kind" src/` returns 0 hits for both. This ticket's real, remaining work was formal
+closure only.
 
 ## Test Summary
+No pytest run required — `behavior_changed=false`, no `src/`/`tests/` files touched. Verification
+was direct grep + `git show` against the original scoping commit (see stored_artifacts test_plan.md
+for the exact steps), both confirmed passing.
 
 ## Files Changed
+None in `docs/` or `src/` — both target docs already carried the correct text. Only this ticket's
+own file (moved to `tickets/done/`) and `tickets/working_log.csv`/`docs/REGISTRY.yaml` changed.
 
 ## Completion Summary
+Confirmed both Acceptance Criteria were already satisfied by the M9 epic's own scoping pass, before
+this ticket was ever picked up for implementation — not new work, a formal-closure ticket. Both
+underlying claims (idea 50/64 mechanisms never shipped) were independently re-verified via direct
+grep rather than re-trusted from the pre-existing doc text. No code, doc, or test changes were
+needed or made.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260906-AGE-TIER-TIMING-BUG-AND-CORPUS-TEST
-phase: open
+phase: done
 date: 2026-09-06
 tags: [testing, simulation-quality, temporal]
 ---
@@ -15,7 +15,7 @@ tags: [testing, simulation-quality, temporal]
 simq_long_run_observation.py's 5000-tick default is now catastrophically short — real elder threshold is ~17.28M ticks, not 7000
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -73,12 +73,12 @@ been capable of observing any age-bracket transition at all, silently proving no
 - Any other item from M9's scope.
 
 ## Acceptance Criteria
-- [ ] `simq_long_run_observation.py`'s default (or an explicit guard) prevents a silent no-observation
+- [x] `simq_long_run_observation.py`'s default (or an explicit guard) prevents a silent no-observation
       run for age-bracket transitions going forward.
-- [ ] A real corpus test observes both the young->adult and adult->elder transitions at their real,
+- [x] A real corpus test observes both the young->adult and adult->elder transitions at their real,
       current fantasy-year-scaled thresholds, with `identity.life_stage` and `archetype_locked`
       assertions.
-- [ ] The `get_age_bracket()`/`LifeStage` overlap question is either resolved or explicitly deferred
+- [x] The `get_age_bracket()`/`LifeStage` overlap question is either resolved or explicitly deferred
       with a written reason in this ticket — not silently dropped.
 
 ## Related Tickets
@@ -110,9 +110,62 @@ None yet — created by this ticket's own Investigate/Plan phases once picked up
   check during Investigate before treating this as wholly new scope.
 
 ## Implementation Notes
+4 real corrections found during Investigate, all disclosed rather than silently applied (see
+`stored_artifacts/TCK-20260906-AGE-TIER-TIMING-BUG-AND-CORPUS-TEST/investigation.md` for full
+citations):
+1. **No duplicate ownership** — confirmed via the roadmap doc's own "Temporal axis"/M9 sections;
+   this ticket is the correct, unowned fix location.
+2. **The underlying mechanics are already well-tested at the real boundaries** — `test_lifecycle.py`,
+   `test_coming_of_age_archetype_choice.py`, and `test_demographics.py` already exercise
+   `identity.life_stage` transitions, the Coming-of-Age roll, and `compute_elder_attribute_update()`
+   at the real 3,456,000/17,280,000-tick boundaries through the real `LifecycleSystem.resolve_lifecycle()`
+   path. The real gap was narrower than "no run has ever observed these transitions" — specifically
+   `simq_long_run_observation.py`'s own long-run tool, not the codebase's test coverage in general.
+3. **`archetype_locked` does not exist anywhere in real code** (confirmed via grep). Idea 34's real
+   mechanism (`src/ai/coming_of_age.py::choose_archetype()`) is a one-shot `role_set` moving
+   `identity.role` off `CITIZEN` onto one of `_CANDIDATE_ROLES = (SHOPKEEPER, WORKER, GUARD)` at the
+   CHILD->ADULT transition — the new test asserts on this real proxy instead.
+4. **The `get_age_bracket()`/`LifeStage` overlap question was already resolved** by
+   `TCK-20260824-LIFE-STAGE-TRANSITIONS` (DONE) — two deliberately separate vocabularies for two
+   different consumers, numeric boundaries kept in sync by hand (already correctly updated by the
+   fantasy-year migration in both `cohort.py` and `src/ai/life_stage.py`, confirmed via direct read).
+   No new code needed; cited here per AC3.
+
+A real 17,280,000-tick emergent corpus run was confirmed impractical (3-4 orders of magnitude beyond
+any existing test's scale). Fixed via: (a) `tools/simq_long_run_observation.py` gains
+`age_bracket_transition_warning()`, called from `main()`, printing an explicit stderr warning
+whenever `--ticks` can't reach one or both real boundaries — the default stays `5000` (an
+impractically large default bump was rejected, see Anti-Drift Hazards in investigation.md); (b) a
+new Unit-tier SimQ corpus test (`tests/simulation_quality/test_age_tier_transitions_corpus.py`,
+synthetic content, explicitly idiomatic per `corpus_tier_taxonomy.md`) drives 2 real
+`Kernel.tick_once()` scenarios with entities hand-seeded at each real boundary, proving both
+transitions plus the Coming-of-Age role change fire correctly end-to-end.
 
 ## Test Summary
+- `tests/simulation_quality/test_age_tier_transitions_corpus.py` (new, 2 tests) — 2 passed.
+- `tests/tools/test_simq_long_run_observation.py` (3 new tests for the guard function added) — 8
+  passed total.
+- Regression: `tests/simulation_quality/test_age_tier_transitions_corpus.py
+  tests/unit/progression/test_lifecycle.py tests/unit/strategic/test_life_stage_transitions.py
+  tests/unit/strategic/test_coming_of_age_archetype_choice.py tests/unit/world/test_demographics.py`
+  — 119 passed, 0 failed.
+- Negative-path sanity-checked manually (not committed as a test): an entity at `age_ticks=100`
+  through the same real `Kernel.tick_once()` path stays `LifeStage.ADULT` with unmodified attributes
+  — confirms the new assertions are real, not tautological.
 
 ## Files Changed
+- `tools/simq_long_run_observation.py`
+- `tests/simulation_quality/test_age_tier_transitions_corpus.py` (new)
+- `tests/tools/test_simq_long_run_observation.py`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
+- `docs/REGISTRY.yaml` (regenerated)
 
 ## Completion Summary
+Fixed the real, disclosed gap in `simq_long_run_observation.py`'s silent no-observation default via
+an explicit warning (not an impractical default bump), and added a real Unit-tier SimQ corpus test
+proving idea 20 (life-stage transitions) and idea 34 (Coming of Age) fire correctly at the real
+fantasy-year-scaled thresholds. Found and disclosed 4 real corrections to the ticket's own original
+framing along the way (duplicate-ownership check, already-existing test coverage at a narrower
+scope than described, a fabricated `archetype_locked` field name, and an already-resolved
+`LifeStage`/`get_age_bracket()` overlap question) rather than silently inheriting them. No
+production mechanic changed — tooling + tests only.

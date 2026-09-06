@@ -1300,7 +1300,15 @@
     event_extractor=32, event_shapers=32, exact parity. Registered in PHASE2_SHAPER_REGISTRY,
     gated by ENABLE_PUSH_EVENT_SHAPERS_PHASE2 (default OFF, shared with StrategyShaper
     -- see STRAT-247). SHADOW-only in this ticket; cutover is a separate, later Phase
-    2 child. (TCK-20260806-PUSH-SHAPER-REGISTRY-PROGRESSION)'
+    2 child. (TCK-20260806-PUSH-SHAPER-REGISTRY-PROGRESSION) Amended 2026-09-06 (TCK-20260906-ENTITY-EVOLVED-EVENT-GAP):
+    ProgressionShaper gained an 8th event type, entity_evolved (species evolution
+    at level thresholds 10/25/50, reading EntityUpdate.kind_set directly -- diffed
+    against prior_ent.kind, not id_upd, since kind_set lives on EntityUpdate itself,
+    not IdentityUpdate like the other 7 events). Verified against the real EvolutionSystem.evaluate()
+    output (src/engine/evolution.py) via tests/unit/progression/test_evolution.py::
+    test_goblin_evolution_emits_entity_evolved_observability_event. Same rollback-path
+    convention as the other 7: event_extractor.py also carries a flag-gated (_push_shapers_phase2_active)
+    mirror block.'
   status: verified
   priority: P1
   legacy_evidence: null
@@ -1556,3 +1564,36 @@
     \ entry was originally written as PROG-123 but was renumbered to PROG-124 during\
     \ a merge-conflict resolution -- an unrelated concurrent session independently\
     \ used PROG-123 for a different entry (recipe-material possession predicate) first."
+- id: PROG-125
+  text: 'entity_evolved observability event (TCK-20260906-ENTITY-EVOLVED-EVENT-GAP):
+    EvolutionSystem (src/engine/evolution.py) transforms an entity kind at level thresholds
+    10/25/50 (e.g. GOBLIN->GOBLIN_WARRIOR); this was a real observability gap independent
+    of any of M9''s own 32 tracked ideas -- zero real code hits for entity_evolved
+    anywhere in src/ prior to this ticket, despite the underlying mechanic already
+    shipping and being unit-tested. New entity_evolved event wired into both the live
+    ProgressionShaper push path (event_shapers.py, reading EntityUpdate.kind_set directly,
+    diffed against prior_ent.kind since kind_set is always written unchanged when
+    no evolution occurs) and the flag-gated event_extractor.py rollback path (diffing
+    entity.kind against prior_ent.kind on already-applied state). Registered with
+    ProgressionScorer as a new species_evolution signal (+10, config/simulation_quality/scoring_weights.yaml)
+    -- PROGRESSION''s own Question already names "evolving their playstyle" as part
+    of what this pillar tracks.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/observability/event_shapers.py::ProgressionShaper.shape() (new
+    entity_evolved block); src/observability/event_extractor.py (flag-gated rollback
+    mirror); src/simulation_quality/scorers/progression.py::ProgressionScorer.score()
+    (new species_evolution rule); config/simulation_quality/scoring_weights.yaml (species_evolution:
+    50.0). Verified against the real EvolutionSystem.evaluate() output (src/engine/evolution.py),
+    not a hand-built mock. Not yet observed in any real shipped calibration run --
+    no shipped corpus world confirmed to have an entity reach level 10 within existing
+    tick budgets; a real, disclosed gap for a future calibration ticket, matching
+    route_new_query''s own precedent (SOC/INFRA entries from TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES).'
+  proof_type: regression
+  test_path: tests/unit/progression/test_evolution.py::test_goblin_evolution_emits_entity_evolved_observability_event
+  divergence_note: null
+  support_boundary: Covers wiring correctness (the event fires and carries the right
+    payload when EvolutionSystem genuinely evolves an entity). Does not cover real-corpus
+    calibration reachability -- out of this ticket's own scope, disclosed as a known
+    gap in docs/simulation_quality/event_type_coverage.md.

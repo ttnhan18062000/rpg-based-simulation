@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260906-RACE-DIVERSITY-AUDIT-INVESTIGATION
-phase: open
+phase: done
 date: 2026-09-06
 tags: [testing, simulation-quality, corpus]
 ---
@@ -15,7 +15,7 @@ tags: [testing, simulation-quality, corpus]
 Idea 37 (Species Relations) — scope a race-diversity dimension for the corpus registry
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -52,12 +52,12 @@ small addition to the existing corpus registry's scale metrics, or a wholly new 
 - Any other item from M9's scope.
 
 ## Acceptance Criteria
-- [ ] The registry-shape question (extend existing scale metrics vs. new dimension) has a concrete,
+- [x] The registry-shape question (extend existing scale metrics vs. new dimension) has a concrete,
       evidenced recommendation.
-- [ ] A named, concrete world spec exists for idea 37's corpus test (or an explicit written reason
+- [x] A named, concrete world spec exists for idea 37's corpus test (or an explicit written reason
       none can be specified yet, matching idea 63's own honest-deferral precedent elsewhere in this
       epic).
-- [ ] If idea 37's own underlying mechanism is confirmed not yet built, that finding is reported
+- [x] If idea 37's own underlying mechanism is confirmed not yet built, that finding is reported
       clearly rather than a corpus test being fabricated against a mechanism that doesn't exist.
 
 ## Related Tickets
@@ -80,9 +80,35 @@ None yet — created by this ticket's own Investigate/Plan phases once picked up
   (see sibling ticket `TCK-20260906-CORPUS-TEST-NEW-WORLD-NEEDED`'s idea 50/64 finding).
 
 ## Implementation Notes
+Found a real correction to this ticket's own uncertain framing: idea 37 (Species Relations) is NOT
+an open "was this ever built" question — `TCK-20260831-RACE-RELATIONS-MATRIX` (DONE) already
+shipped it, with real content (`data/content/social/species_relations.yaml`, 24 directed entries)
+and a real, passing metamorphic-validation test
+(`tests/integration/lab/test_species_relations_metamorphic_validation.py`, re-ran directly: 1
+passed in 70.26s) against the already-registered `unit_faction_tension` corpus world (human + wolf
+populations, 5 real run_keys up to 2000 ticks). `data/content/entities/entity_archetypes.yaml`
+already declares a real per-archetype `species:` field, confirming a species-diversity dimension —
+if ever built — would be a small, content-only addition to `tools/generate_corpus_registry.py`, no
+`WorldCompiler`/`world_compile_report.json` schema change needed. Recommendation: do not build it
+now — `unit_faction_tension` already provides real, sufficient species-diverse coverage for idea 37,
+and this epic's own Out of Scope disclaims building new tooling capability for no demonstrated need.
+Updated `rpg_m9_corpus_test_coverage_epic.md`'s idea-37 entry and Open Questions section to record
+this resolution.
 
 ## Test Summary
+No new tests authored — real, sufficient coverage already exists. Re-ran the existing
+`test_species_relations_metamorphic_validation.py` directly: 1 passed in 70.26s, confirming it is
+still real and functioning, not stale.
 
 ## Files Changed
+- `docs/plans/rpg_design_roadmap/rpg_m9_corpus_test_coverage_epic.md` (idea-37 entry + Open
+  Questions corrected)
 
 ## Completion Summary
+Investigated idea 37's real state rather than trusting the ticket's own uncertain framing: the
+mechanism is fully shipped and already has real, appropriate-tier test coverage via the
+already-registered `unit_faction_tension` corpus world. Answered the epic doc's own registry-shape
+Open Question concretely (a small, content-only addition is technically feasible) while
+recommending against building it now (no demonstrated need, out of this epic's own scope boundary).
+No code or test changes — a documentation-correction and formal-recommendation ticket. Last of the
+8 M9 child tickets — `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` closed in the same batch.

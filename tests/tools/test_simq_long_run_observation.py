@@ -61,3 +61,28 @@ def test_engine_driven_only_once_per_world(monkeypatch):
     monkeypatch.setattr(els, "_run_for_analysis", spy)
     slro.observe_world("sandbox_world", seed=42, ticks=30, obs_mode="NORMAL")
     assert call_count["n"] == 1
+
+
+# --- TCK-20260906-AGE-TIER-TIMING-BUG-AND-CORPUS-TEST: age-bracket transition guard -------------
+
+
+def test_age_bracket_warning_for_default_ticks_names_both_real_boundaries():
+    """The tool's own 5000-tick default cannot reach either real fantasy-year-scaled boundary --
+    the warning must name both, not just one."""
+    warning = slro.age_bracket_transition_warning(5000)
+    assert warning is not None
+    assert "3,456,000" in warning
+    assert "17,280,000" in warning
+
+
+def test_age_bracket_warning_for_ticks_between_boundaries_names_only_the_elder_gap():
+    warning = slro.age_bracket_transition_warning(4_000_000)
+    assert warning is not None
+    assert "reaches the young->adult boundary" in warning
+    assert "but not the adult->elder boundary" in warning
+    assert "17,280,000" in warning
+
+
+def test_age_bracket_warning_none_once_ticks_reaches_real_elder_boundary():
+    assert slro.age_bracket_transition_warning(17_280_000) is None
+    assert slro.age_bracket_transition_warning(20_000_000) is None

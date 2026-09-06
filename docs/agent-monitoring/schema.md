@@ -469,6 +469,20 @@ The `PostToolUse` hook (`post_tool_hook.py`) routes its append through `tools/ag
 
 The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. `record_events.py::compute_tool_stats()` — called at write time inside `record_events.py`'s own `main()`, not by `writeMonitoring`'s prompt — counts records per `(run_id, seq)` to produce `tool_call_count`/`cost_proxy_score` in `events.jsonl`, always overriding any value the caller passed in (`TCK-20260719-COST-PROXY-WRITE-PATH`; mirrors `record_run.py`'s `compute_duration_s`). Since `TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY`, `compute_tool_stats()` reads the **union of every week folder's** `tools.jsonl` (a sorted glob over `agent-monitoring/data/*/tools.jsonl`, concatenated before grouping by `(run_id, seq)`) rather than a single fixed file — necessary because a paused/resumed run's tool-call rows can land in an earlier week than the event being written now (see the pause/resume mechanism below); this is safe against double-counting because `(run_id, seq)` is globally unique across weeks.
 
+**Hand-orchestrated closures (`TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP`).**
+`compute_tool_stats()`'s "zero matching rows means confirmed zero calls" logic above is only true
+for its original caller — a real `implement-ticket.js` phase always has a live sidecar during the
+work, so zero rows really is zero. `tools/agent-monitoring/record_hand_orchestrated_closure.py`
+(a session's lightweight way to record a closure done outside the `Workflow` pipeline; see
+`docs/agent-monitoring/README.md`) reuses the same function for synthetic, after-the-fact event
+records that never had a live sidecar during the actual work — there, zero matching rows means "no
+attribution data was ever possible," not "confirmed zero." It therefore calls
+`compute_tool_stats(records, omit_when_unattributed=True)`, which omits an unattributed
+`(run_id, seq)` key from the returned dict entirely rather than reporting a false `(0, 0.0)` —
+matching this section's own established convention that unattributed means absent/`null`, not
+zero. Events written by this wrapper before this fix may still show a false `0`/`0.0`; not
+backfilled, per this section's own no-backfill precedent below.
+
 Since `TCK-20260719-LIVE-PHASE-AGENT-LABEL`, the sidecar (and thus each `tools.jsonl` record) also carries `phase`/`agent`, threaded through the same `writeSidecar(seq, phase, agent)` call as `run_id`/`seq` — this lets a live-run consumer show which phase/agent is currently producing tool calls without waiting for the run's `events.jsonl` entries to be written at exit.
 
 Scope (`ticket-scoper`) also registers a sidecar value now (net-new coverage, `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`) — it can't reuse `writeSidecar(seq)` itself (that helper closes over `tid`, not yet known when creating a brand-new ticket), so it inlines two bash() branches: the real `{run_id: ticketId, seq: seqOffset + 1}` when resuming an existing ticket, or an explicit clear-to-`{}` when creating a new one (the ticket_id genuinely doesn't exist yet at that point — clearing at least prevents a stale value from a crashed prior run bleeding into this run's Scope-phase tool calls, even though Scope's own tool calls during ticket *creation* specifically stay correctly unattributed/null rather than attributed to the not-yet-known new ticket).
