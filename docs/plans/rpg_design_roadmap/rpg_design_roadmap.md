@@ -149,9 +149,13 @@ and tested (see the Hardening backlog section below). Idea 61 here, plus M5 (ide
 need only their own read-side consumption of `region_cultures`, not a shared first-time-wiring
 prerequisite.
 
-### M5 — Memory, Reputation & Legacy (gated on M2 + M3, both DONE as of 2026-09-03 — gate clear)
+### M5 — Memory, Reputation & Legacy (DONE)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M5-MEMORY-REPUTATION` (not yet created, scope-only).
+**Shipped, 2026-09-05:** PR #128 ("M5 Memory, Reputation & Legacy: all 8 ideas shipped (7 tickets)"),
+merged. `TCK-20260823-EPIC-RPG-M5-MEMORY-REPUTATION` (`tickets/done/`) and
+`TCK-20260905-EPIC-RPG-M5-HISTORY-BELIEF` (`tickets/done/`) are the two real epic tickets — landed in
+two waves (death-and-lineage/reputation first, history-and-belief second, once the Legacy/Memory axis
+and Knowledge/Belief blockers cleared via a concurrent session's work).
 
 8 ideas — inherited reputation, guilt by association, inherited feuds, drifting loyalty, the Living Legend
 feedback loop, a dying wish, generational misremembering, emergent belief. Needs M2's Clan (36) and M3's
@@ -166,13 +170,19 @@ stays `active=True`. M5's death-and-lineage branch (55/58) already depends on "c
 existing — this repair is the prerequisite that makes that true, and belongs alongside it rather than in M1
 or as an unowned bug.
 
-### M6 — Political Identity & Belonging (gated on everything above)
+### M6 — Political Identity & Belonging (DONE)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/inprogress/`,
-`## Status: EPIC_SCOPED` as of 2026-09-05 — 3 child tickets scoped in
-`tickets/todos/m6-political-identity/`; idea 39 landed 2026-09-06
-(`TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`), idea 56 and idea 59/65 not yet implemented;
-M2-M5 all confirmed DONE, so this milestone's own gate is now clear).
+**Shipped, 2026-09-06:** PR #133 ("M6 Political Identity & Belonging: all 4 ideas shipped (3 tickets
++ hotfix)"), merged. `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/done/`) is the real epic
+ticket. Externally reviewed before merge (architecture/determinism, mechanics/parity, ticket
+hygiene) — 4 real findings (a call-site undercount, a false PR-body claim, an under-documented
+P0-law interaction, a guard-test regex gap), all independently fixed and re-verified
+(`TCK-20260906-HOTFIX-M6-EXTERNAL-REVIEW-FIXES`) before this milestone was called complete. Idea 56
+(Drifting Loyalty) is real, tested code with no live per-tick reach yet — disclosed honestly, not a
+hidden gap, matching the same "built, not yet visible in play" pattern M5's ideas 57/62 had.
+**Correction, 2026-09-06:** this section's own prior text (still saying "idea 56 and idea 59/65 not
+yet implemented" as of an earlier intermediate commit) was itself stale relative to the real,
+fully-updated `rpg_m6_political_identity_epic.md` — fixed here to match that doc's real final state.
 
 4 ideas, the deepest single dependency chain in the whole roadmap (39 &rarr; 56 &rarr; 59 &rarr; 65) —
 affiliation's real change path, drifting loyalty, personal place attachment, refugee threads. Its Phase
