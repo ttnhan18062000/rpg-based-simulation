@@ -556,6 +556,17 @@ exactly as before.
 | `WORLD` | World Dynamics | Ecology, calamity, spawn, trauma, demographics | PP-20, PP-22, WD-01–15 | Tier 1 (22/25) |
 | `NARRATIVE` | Narrative | Quests, chronicle, world emergence, scenario | PP-23, PP-24, PP-33 | Tier 2 (10/25 partial) |
 
+**Coverage note (`TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES`):** a real event type existing in
+`src/observability/event_extractor.py` but absent from a pillar's own "Event types scored" list
+below is not automatically an unaudited gap — check
+`docs/simulation_quality/event_type_coverage.md` §5 "Unscored Intentional" first. As of this
+ticket, 14 real event types are deliberately unscored with a documented reason there
+(`attribute_changed`, `belief_contradiction`, `biological_state_changed`,
+`entity_faction_changed`, `entity_role_changed`, `equipment_durability_changed`, `item_equipped`,
+`item_unequipped`, `recipe_learned`, `scar_gained`, `skill_cooldown_started`, `stamina_changed`,
+`wound_healed`, `wound_sustained`) — this table intentionally does not duplicate that doc's own
+per-event reasoning, to keep a single source of truth.
+
 ---
 
 ### COGNITION
@@ -924,12 +935,21 @@ behavioral divergence?
 
 **Event types scored:** `belief_assimilated`, `lead_certainty_updated`,
 `lead_contradiction_resolved`, `paid_information_transaction`,
-`paid_info_changed_goal`, `belief_stale`, `decision_diverged_by_belief`
+`paid_info_changed_goal`, `belief_stale`, `decision_diverged_by_belief`, `route_new_query`
+
+**Real producer (`TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES`):** `route_new_query` was a real,
+live-emitted event (`src/observability/event_extractor.py`, `src/observability/event_shapers.py`,
+originally added by `TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE`) with no scorer wiring of any
+kind — missed by both this table and `docs/simulation_quality/event_type_coverage.md`'s own
+otherwise-complete audit until this ticket. Added to `InformationScorer.EVENT_TYPES` as the natural
+sibling of `belief_assimilated`/`belief_stale` (a new information-seeking query started, rather
+than a belief being updated by one already in flight).
 
 | Signal | Delta | Tag |
 |---|---|---|
 | Belief assimilated from information event | +2 | `belief_active` |
 | Lead certainty increased from new information | +2 | `intel_quality_up` |
+| Entity routes a new information-seeking query | +2 | `information_seeking_active` |
 | Entity pays for information (paid transaction) | +3 | `knowledge_economy_active` |
 | Paid information changes entity's goal within 5 ticks | +5 | `info_has_impact` |
 | Lead contradiction resolved (entity replanned from conflicting intel) | +4 | `intel_complexity` |
@@ -1266,6 +1286,34 @@ no change — already covered. Tracked by
 `TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE` and
 `TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY`, which cite this subsection as their rationale
 source; full scoping context in `TCK-20260806-SIMQ-LIFECYCLE-PILLAR-BOUNDARY-DOC`.
+
+### 7.7 Idea-Level Pillar-Mapping Completeness Cross-Check (2026-09)
+
+`TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS` (M7 epic, `TCK-20260823-EPIC-RPG-M7-SIMQ-
+INTEGRATION`, child 2 of 2) cross-referenced ticket 1's own finished named-pillar mapping (all 65
+rows of `docs/brainstorm/design_merit_scorecard.html`'s Pillar Reach column) against the 10 real
+pillars, per the epic's own Scope item 5: "every idea Pillar Reach says should touch a pillar needs
+a traceable rule or an explicit, written reason it doesn't." A checklist against a known-complete
+list (ticket 1's own mapping), not a fresh open-ended per-idea trace.
+
+**Method:** every named pillar on every row must be one of the 10 real pillars (all 10 already
+confirmed by ticket 1's own 90-event-type audit to have real, scored event coverage), and the named
+list's count must match the raw `N/10` the axis still records.
+
+**Result: 65/65 rows accounted for, 0 real undisclosed gaps.**
+
+| Category | Count | Notes |
+|---|---|---|
+| Named pillar(s), structurally consistent | 58 | Includes the 3 dormant ideas (56/57/62) — named for the pillars they would strengthen once built, per the axis's own forward-looking question text, despite zero live event backing today |
+| Bare `0/10`, no named pillar | 7 | Ideas 8, 9, 15, 16, 17, 18, 19 — matches ticket 1's own already-disclosed "governance/doc-fix/investigation-only, no real event surface" exception list exactly |
+| Unrecognized pillar name or count mismatch | 0 | — |
+
+No real gap was found, so per this ticket's own Acceptance Criteria ("any real gap... fixed or
+ticketed"), no fix and no follow-up ticket were needed. Script:
+`stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/completeness_check.py`.
+
+**Conclusion: M7's own Scope item 5 is satisfied — every one of the 65 ideas is either backed by a
+real, traceable signal rule, or has an explicit, already-written reason it isn't.**
 
 ---
 

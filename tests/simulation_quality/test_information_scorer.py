@@ -122,6 +122,17 @@ class TestDecisionDiverged:
         assert "paid_info_memory_failure" in rec.tags
 
 
+class TestRouteNewQuery:
+    def test_information_seeking_active(self, scorer: InformationScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("route_new_query"), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights.for_pillar("INFORMATION")["information_seeking_active"]
+        assert "information_seeking_active" in rec.tags
+
+    def test_route_new_query_in_event_types(self) -> None:
+        assert "route_new_query" in InformationScorer.EVENT_TYPES
+
+
 class TestNullReturn:
     def test_null_unknown(self, scorer: InformationScorer) -> None:
         assert scorer.score(_env("combat_initiated"), _ctx()) is None
