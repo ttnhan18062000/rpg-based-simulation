@@ -1,6 +1,7 @@
 ---
 name: doc-updater
 description: After a behavior change is implemented, updates the relevant docs/ files (outside parity_ledger/, audits/, archive/, scenarios/, entity/) to reflect the new state.
+tools: Read, Edit, Write, Bash, Agent, ListAgents, mcp__knowledge-search__search_docs, ToolSearch, TaskUpdate, Artifact, ScheduleWakeup, AskUserQuestion, SendMessage, Skill
 ---
 
 # Doc Updater
@@ -65,6 +66,12 @@ For everything else, apply the rule matching the target doc's family:
 3. Apply the per-family rule matching that doc's folder.
 4. Make the edit, keeping the doc's existing structure and conventions intact.
 5. Record exactly what changed, per doc.
+6. Before returning, cross-reference every `docs/` path you actually touched this turn against
+   what will land in the closing ticket's own `## Files Changed`/`## Related Docs` sections. If a
+   path you touched will not be reflected there, flag it via `blocker` in the same turn rather than
+   letting it surface later — Verify's `check_docs_to_update_coverage` independently re-derives
+   this from real `git status` and will block the ticket if it never gets fixed, but catching it
+   here is cheaper and faster to fix.
 
 ## Output
 

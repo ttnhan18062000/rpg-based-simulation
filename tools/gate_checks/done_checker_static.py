@@ -103,14 +103,20 @@ def _extract_section_text(ticket_text: str, heading: str) -> str:
     """Return the body text under a `## {heading}` markdown heading, up to the next `## ` heading
     or end of file. Returns "" if the heading is not present. Body-section counterpart to
     `validate_frontmatter.extract_frontmatter()`, which only parses the YAML frontmatter block and
-    never reads body sections (see TCK-20260720-TAG-RELEVANCE-VERIFY investigation.md)."""
-    marker = f"## {heading}"
-    start = ticket_text.find(marker)
-    if start == -1:
+    never reads body sections (see TCK-20260720-TAG-RELEVANCE-VERIFY investigation.md).
+
+    Anchors the heading match to the start of a line (TCK-20260904-DOC-COVERAGE-REVERSE-CHECK) —
+    a naive substring search previously matched an inline-code mention of a heading name inside
+    prose (e.g. an investigation.md discussing this very function and quoting "`## Docs Requiring
+    Update`" as an example) before the real `## `-prefixed heading, silently extracting unrelated
+    prose as the section body instead. Real markdown headings only ever start a line.
+    """
+    match = re.search(rf"^## {re.escape(heading)}", ticket_text, re.MULTILINE)
+    if match is None:
         return ""
-    body_start = start + len(marker)
-    next_heading = ticket_text.find("\n## ", body_start)
-    end = next_heading if next_heading != -1 else len(ticket_text)
+    body_start = match.end()
+    next_heading = re.search(r"^## ", ticket_text[body_start:], re.MULTILINE)
+    end = body_start + next_heading.start() if next_heading is not None else len(ticket_text)
     return ticket_text[body_start:end].strip()
 
 
@@ -329,6 +335,14 @@ _DOCS_BULLET_RE = re.compile(r"^-\s+`(docs/[^`]+?)(?::\d+)?`", re.MULTILINE)
 _DOCS_NONE_PHRASES = {"", "none", "none.", "n/a"}
 _DOCS_NONE_PREFIX_RE = re.compile(r"^(none|n/a)\.?\s*", re.IGNORECASE)
 
+# TCK-20260904-DOC-COVERAGE-REVERSE-CHECK: unlike `_DOCS_BULLET_RE`, this matches a bare
+# `docs/...` token anywhere in prose, with no line-start-bullet anchor and no backtick
+# requirement — `## Files Changed` entries are backtick-wrapped
+# (`tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md:210`) but `## Related Docs` entries are
+# bare, no backticks (`tickets/done/TCK-20260831-READINESS-SPEED-FORMULA.md:56-57`); the reverse
+# check must recognize both forms.
+_DOCS_PROSE_TOKEN_RE = re.compile(r"docs/[^\s`]+")
+
 # TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED: word-sequence match (not a
 # single exact-line match) so it tolerates a line wrap or surrounding markdown bold (`**...**`)
 # around the phrase — see that bullet's own docstring note below for why this is a THIRD case,
@@ -479,83 +493,154 @@ def _parse_resolved_not_applicable_docs(section_text: str) -> list[str]:
     ]
 
 
+def _prose_docs_paths(section_text: str) -> set[str]:
+    """Extract every `docs/...` path token appearing anywhere in `section_text`'s prose, covering
+    both real body-section formats confirmed by reading actual DONE tickets: `## Files Changed`'s
+    backtick-wrapped bullets (`` - `docs/mechanics/02_combat_laws.md` — reason ``,
+    `tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md:210`) and `## Related Docs`'s bare, no-backtick
+    bullets (`- docs/simulation_quality/corpus_tier_taxonomy.md`,
+    `tickets/done/TCK-20260831-READINESS-SPEED-FORMULA.md:56-57`). Strips trailing punctuation
+    (mirrors `_parse_docs_to_update`'s own trailing-suffix-stripping precedent, applied to a
+    different suffix shape: prose punctuation instead of a `:digits` line-number suffix)."""
+    return {match.rstrip(".,;:)") for match in _DOCS_PROSE_TOKEN_RE.findall(section_text)}
+
+
+def _touched_docs_paths_uncovered(touched: set[str], declared: set[str]) -> list[str]:
+    """Reverse-direction complement of `_path_touched`: for each real git-touched `docs/` path in
+    `touched`, confirm some ticket-declared path in `declared` "covers" it. Reuses `_path_touched`
+    with its arguments in the reverse role — a declared path `d` is checked as "covered by" the
+    single-element set `{t}` — so a directory-collapsed touched entry (e.g. `docs/newsubsystem/`)
+    still correctly matches a declared path underneath it (e.g. `docs/newsubsystem/foo.md`),
+    reusing the exact existing collapse-tolerance helper rather than reimplementing path matching.
+    """
+    return sorted(t for t in touched if not any(_path_touched(d, {t}) for d in declared))
+
+
+def _resolve_ticket_body_path(ticket_id: str) -> Path:
+    """Resolve the closing ticket's own body-text file the same way `check_tag_drift` does — a
+    small private helper of its own, not extracted into a shared function, so `check_tag_drift`'s
+    body stays untouched (its forward-direction-adjacent contract is out of this ticket's Scope)."""
+    path = Path(f"tickets/done/{ticket_id}.md")
+    if not path.exists():
+        path = Path(f"tickets/inprogress/{ticket_id}.md")
+    return path
+
+
 def check_docs_to_update_coverage(
     ticket_id: str, tier: str, base_dir: Path = Path("staging_artifacts")
 ) -> tuple[str, str]:
-    """Independently re-verify that every docs/ path Investigate flagged as required was actually
-    touched in the final diff — deliberately reads only investigation.md and real git state, NEVER
-    any Implement-phase self-report (`behavior_changed`, `files_changed`).
+    """Independently re-verify docs/ coverage in both directions — deliberately reads only
+    investigation.md / the ticket's own body-section text and real git state, NEVER any
+    Implement-phase self-report (`behavior_changed`, `files_changed`) or doc-updater's own
+    `docs_updated` self-report.
 
-    Built for TCK-20260802-DOC-COVERAGE-CHECK: closes the gap where an implementer wrongly reports
-    `behavior_changed=false` for a change that did introduce new logic/features/settings —
-    `doc_staleness_check.py`'s gate and its `docs_to_update` advisory (both from
-    TCK-20260802-DOC-UPDATE-DISCIPLINE) only ever run when `behavior_changed=true`, so a false
-    `false` bypasses both silently. Investigate's `docs_to_update` obligation is derived from ticket
-    scope/acceptance criteria, independent of that later self-report, so re-checking it here at
-    Verify time — after Architecture-Verify/Test/Parity have already run and the implementation is
-    stable — catches this silent-skip case regardless of what the implementer claimed.
-
-    `tier == "hotfix"` → `NA` (no investigation.md exists, same as `check_staging_artifacts_complete`).
-    A missing `investigation.md` for standard/epic tier is a `FAIL` — it must exist by Verify time.
-    An empty/"None." section is a valid, deliberate judgment call — `PASS`, not `NA`: the section
-    itself is still required to exist and be read, just found to have nothing flagged.
-    A non-empty section that fails to parse any path AND has no resolved-conditional bullet either
-    is treated as a format regression (`FAIL`), not silently passed — this also enforces the
-    tightened bullet format going forward.
-
-    A bullet carrying the resolved-conditional marker (`_RESOLVED_CONDITION_MARKER_RE`, e.g.
-    "Resolved during implementation, condition not met") is excluded from `required_docs` by
-    `_parse_docs_to_update` and reported separately via `_parse_resolved_not_applicable_docs` —
-    such a bullet was correctly written in Format 1 at investigation time because its need
-    depended on an implementation-time choice not yet made, then genuinely resolved as
-    not-applicable; it must PASS without being touched, while never weakening the requirement on
-    any sibling unconditional bullet in the same section
+    **Forward direction** (built for TCK-20260802-DOC-COVERAGE-CHECK): closes the gap where an
+    implementer wrongly reports `behavior_changed=false` for a change that did introduce new
+    logic/features/settings — `doc_staleness_check.py`'s gate and its `docs_to_update` advisory
+    (both from TCK-20260802-DOC-UPDATE-DISCIPLINE) only ever run when `behavior_changed=true`, so a
+    false `false` bypasses both silently. Investigate's `docs_to_update` obligation is derived from
+    ticket scope/acceptance criteria, independent of that later self-report, so re-checking it here
+    at Verify time catches this silent-skip case regardless of what the implementer claimed.
+    `tier == "hotfix"` skips the forward half unconditionally (no `investigation.md` exists — a
+    real structural absence, not a policy choice). A missing `investigation.md` for standard/epic
+    tier is a `FAIL` — it must exist by Verify time. An empty/"None." section is a valid, deliberate
+    judgment call — `PASS`, not skipped. A non-empty section that fails to parse any path AND has no
+    resolved-conditional bullet either is a format regression (`FAIL`). A bullet carrying the
+    resolved-conditional marker (`_RESOLVED_CONDITION_MARKER_RE`) is excluded from `required_docs`
+    and reported separately via `_parse_resolved_not_applicable_docs`
     (TCK-20260829-DOC-COVERAGE-CONDITIONAL-BULLET-BLIND-DOD-BLOCKED).
+
+    **Reverse direction** (built for TCK-20260904-DOC-COVERAGE-REVERSE-CHECK): does real `git
+    status` show a `docs/` path touched during the ticket's diff that never made it into the
+    ticket's own resolved `## Files Changed` or `## Related Docs` body-section text? Reuses
+    `check_tag_drift`'s path-resolution/`_extract_section_text` mechanics but keeps this function's
+    own `PASS`/`FAIL` vocabulary, never `check_tag_drift`'s advisory `CLEAN`/`FLAGGED` contract.
+    Deliberately tier-agnostic (no hotfix skip) — unlike the forward half's required input
+    (`investigation.md`), the reverse half's required inputs (real `git status` and the ticket's own
+    body-section text) exist for every tier, hotfix included, so there is no structural reason to
+    skip it there (mirrors `check_monitoring_write_recorded`'s no-tier-parameter precedent). Scoped
+    to `docs/` paths only, matching the forward check's own scope — this means a touched non-`docs/`
+    path (e.g. a `src/` fix folded into the same ticket) is never flagged by this function
+    regardless of whether it was declared; see this ticket's plan.md Decision 2 for the disclosed
+    consequence. If no `docs/` path was touched at all, the reverse half trivially `PASS`es without
+    needing to resolve the ticket file. Otherwise, a ticket file that cannot be resolved at all is
+    itself a `FAIL` (a missing ticket file at Verify time is a real problem, not a silent pass).
+    The function returns the first `FAIL` encountered — forward first (existing early-return
+    behavior), reverse only once the forward half has not already failed — so a `FAIL` from either
+    direction blocks regardless of the other having passed.
     """
-    if tier == "hotfix":
-        return ("NA", "hotfix tier — no investigation.md, no Docs Requiring Update section")
-
-    investigation_path = base_dir / ticket_id / "investigation.md"
-    if not investigation_path.exists():
-        return (
-            "FAIL",
-            f"{investigation_path} does not exist — cannot check docs_to_update coverage",
-        )
-
-    text = investigation_path.read_text(encoding="utf-8")
-    section_text = _extract_section_text(text, "Docs Requiring Update")
-    required_docs = _parse_docs_to_update(section_text)
-    resolved_docs = _parse_resolved_not_applicable_docs(section_text)
-
-    if not required_docs and not resolved_docs:
-        if _is_none_section(section_text):
-            return ("PASS", "no docs/ paths flagged as requiring update")
-        return (
-            "FAIL",
-            f"'## Docs Requiring Update' section is non-empty but no docs/ path could be parsed "
-            f"from it — expected one bullet per path (e.g. '- `docs/x.md`: reason'); "
-            f"got: {section_text[:200]!r}",
-        )
-
-    if not required_docs:
-        return (
-            "PASS",
-            f"no docs/ paths require update — {len(resolved_docs)} conditional bullet(s) "
-            f"resolved not-applicable: {resolved_docs}",
-        )
-
+    forward_evidence = "hotfix tier — forward direction skipped, no investigation.md"
     touched = _git_touched_paths()
-    missing = [d for d in required_docs if not _path_touched(d, touched)]
-    if missing:
+
+    if tier != "hotfix":
+        investigation_path = base_dir / ticket_id / "investigation.md"
+        if not investigation_path.exists():
+            return (
+                "FAIL",
+                f"{investigation_path} does not exist — cannot check docs_to_update coverage",
+            )
+
+        text = investigation_path.read_text(encoding="utf-8")
+        section_text = _extract_section_text(text, "Docs Requiring Update")
+        required_docs = _parse_docs_to_update(section_text)
+        resolved_docs = _parse_resolved_not_applicable_docs(section_text)
+
+        if not required_docs and not resolved_docs and not _is_none_section(section_text):
+            return (
+                "FAIL",
+                f"'## Docs Requiring Update' section is non-empty but no docs/ path could be "
+                f"parsed from it — expected one bullet per path (e.g. '- `docs/x.md`: reason'); "
+                f"got: {section_text[:200]!r}",
+            )
+
+        if required_docs:
+            missing = [d for d in required_docs if not _path_touched(d, touched)]
+            if missing:
+                return (
+                    "FAIL",
+                    f"investigation.md flagged {missing} as requiring an update but git status "
+                    f"shows no changes to these path(s)",
+                )
+            forward_evidence = f"all {len(required_docs)} flagged doc path(s) touched: {required_docs}"
+            if resolved_docs:
+                forward_evidence += f"; {len(resolved_docs)} resolved-not-applicable: {resolved_docs}"
+        elif resolved_docs:
+            forward_evidence = (
+                f"no docs/ paths require update — {len(resolved_docs)} conditional bullet(s) "
+                f"resolved not-applicable: {resolved_docs}"
+            )
+        else:
+            forward_evidence = "no docs/ paths flagged as requiring update"
+
+    touched_docs = {t for t in touched if t.startswith("docs/")}
+    if not touched_docs:
+        return ("PASS", f"{forward_evidence}; reverse: no docs/ path(s) touched")
+
+    ticket_path = _resolve_ticket_body_path(ticket_id)
+    if not ticket_path.exists():
         return (
             "FAIL",
-            f"investigation.md flagged {missing} as requiring an update but git status shows no "
-            f"changes to these path(s)",
+            f"reverse check: {ticket_path} does not exist — cannot confirm touched docs/ path(s) "
+            f"{sorted(touched_docs)} are reflected in Files Changed/Related Docs",
         )
-    evidence = f"all {len(required_docs)} flagged doc path(s) touched: {required_docs}"
-    if resolved_docs:
-        evidence += f"; {len(resolved_docs)} resolved-not-applicable: {resolved_docs}"
-    return ("PASS", evidence)
+
+    ticket_text = ticket_path.read_text(encoding="utf-8")
+    declared = _prose_docs_paths(
+        _extract_section_text(ticket_text, "Files Changed")
+    ) | _prose_docs_paths(_extract_section_text(ticket_text, "Related Docs"))
+
+    uncovered = _touched_docs_paths_uncovered(touched_docs, declared)
+    if uncovered:
+        return (
+            "FAIL",
+            f"reverse check: git status shows docs/ path(s) {uncovered} touched but not reflected "
+            f"in {ticket_path}'s '## Files Changed' or '## Related Docs' section text",
+        )
+    return (
+        "PASS",
+        f"{forward_evidence}; reverse: all touched docs/ path(s) {sorted(touched_docs)} reflected "
+        f"in Files Changed/Related Docs",
+    )
 
 
 def check_temporal_week_consistency(

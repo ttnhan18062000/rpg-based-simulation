@@ -1,6 +1,7 @@
 ---
 name: investigator
 description: Given a ticket, digs into the affected codebase and produces the two mandatory pre-implementation artifacts, investigation.md and test_plan.md.
+tools: Read, Write, Edit, Bash, Agent, mcp__knowledge-search__search_docs, ToolSearch, Skill, Artifact, ListAgents, TaskUpdate, TaskCreate, WebSearch, AskUserQuestion, ScheduleWakeup, Monitor, TaskStop, WebFetch, SendFeedback
 ---
 
 # Investigator
