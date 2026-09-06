@@ -272,15 +272,15 @@ def test_next_available_id_groups_max_suffix_per_prefix_family_not_globally(tmp_
 
 def test_next_available_id_against_real_world_dynamics_shard():
     # Real-corpus regression proof (ticket AC): the live shard's last entry is now a
-    # WORLD-BELIEF-NNN id (WORLD-BELIEF-002, added by TCK-20260905-BELIEF-INSTITUTION-DESIGN for
-    # idea 63's BeliefInstitution mechanism), so this must propose the next id in that family,
-    # WORLD-BELIEF-003 -- not a bare WORLD-NNN or WORLD-CULT-NNN id, per next_available_id()'s own
-    # documented per-family-suffix design (it tracks max suffix per full id-family prefix, and
-    # reports whichever family belongs to the shard's own last matching entry). Previously
-    # WORLD-CULT-005, when the shard's last entry was still WORLD-CULT-004 (added by
-    # TCK-20260904-SETTLEMENT-CULTURE-READ); TCK-20260905-BELIEF-INSTITUTION-DESIGN then appended
-    # WORLD-BELIEF-001/002 after it.
-    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-BELIEF-003"
+    # WORLD-DISPLACE-NNN id (WORLD-DISPLACE-001, added by TCK-20260905-HOME-EXILE-REFUGEE-THREADS
+    # for idea 65's calamity-driven DisplacementService), so this must propose the next id in that
+    # family, WORLD-DISPLACE-002 -- not a bare WORLD-NNN or WORLD-BELIEF-NNN id, per
+    # next_available_id()'s own documented per-family-suffix design (it tracks max suffix per full
+    # id-family prefix, and reports whichever family belongs to the shard's own last matching
+    # entry). Previously WORLD-BELIEF-003, when the shard's last entry was still WORLD-BELIEF-002
+    # (added by TCK-20260905-BELIEF-INSTITUTION-DESIGN); TCK-20260905-HOME-EXILE-REFUGEE-THREADS
+    # then appended WORLD-DISPLACE-001 after it.
+    assert next_available_id("world_dynamics.yaml", ledger_dir="docs/parity_ledger") == "WORLD-DISPLACE-002"
 
 
 # ---------------------------------------------------------------------------
