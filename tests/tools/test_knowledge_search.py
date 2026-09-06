@@ -692,6 +692,22 @@ class TestExtractWorkingLogRows:
         rows = _ks._extract_working_log_rows(csv_file)
         assert rows == []
 
+    def test_does_not_index_embedded_header_duplicate_row(self, tmp_path, capsys):
+        csv_file = tmp_path / "working_log.csv"
+        csv_file.write_text(
+            "ticket_id,title,summary,date\n"
+            "TCK-001,First Ticket,First summary,2026-01-01\n"
+            "ticket_id,title,summary,date\n"
+            "TCK-002,Second Ticket,Second summary,2026-01-02\n",
+            encoding="utf-8",
+        )
+        rows = _ks._extract_working_log_rows(csv_file)
+
+        assert len(rows) == 2
+        assert all(row["id"] != "ticket_id" for row in rows)
+        assert {row["id"] for row in rows} == {"TCK-001", "TCK-002"}
+        assert "embedded-header-duplicate" in capsys.readouterr().err
+
 
 # ---------------------------------------------------------------------------
 # Unit tests — _collect_corpus (boundaries)

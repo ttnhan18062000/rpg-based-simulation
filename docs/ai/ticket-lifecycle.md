@@ -568,6 +568,14 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
    ```
    2026-06-06T00:00:00Z,TCK-20260606-COMBAT-RELATION,Relation Projection,DONE,Added relation projection wrapper into combat target classification,stored_artifacts/TCK-20260606-COMBAT-RELATION
    ```
+   **If any field (title/summary/artifacts_path) contains a literal comma, wrap that field in
+   double quotes** (RFC4180), e.g.:
+   ```
+   2026-06-06T00:00:00Z,TCK-20260606-COMBAT-RELATION,Relation Projection,DONE,"Added relation projection wrapper, including tests, into combat target classification",stored_artifacts/TCK-20260606-COMBAT-RELATION
+   ```
+   Un-quoted embedded commas silently split this row into extra columns for every downstream reader
+   (`validate_working_log.py`, `knowledge_search.py`, `ticket_stats_report.py`) — this is a real,
+   recurring corruption source (see `TCK-20260904-WORKING-LOG-CSV-PARSER`).
 4. Move: `staging_artifacts/{id}/` → `stored_artifacts/{id}/`
 5. Clean: `data/runs/*`, `reports/release_proof/*` (backstop — primary cleanup happens post-Test as of
    TCK-20260708-DATA-RUNS-CLEANUP-TIMING; this step now typically finds nothing to remove).
