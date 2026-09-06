@@ -16,6 +16,7 @@ class ProgressionScorer(PillarScorer):
     EVENT_TYPES = (
         "xp_granted",
         "level_up",
+        "entity_evolved",
         "skill_unlocked",
         "trait_expressed",
         "pillar_trait_unlocked",
@@ -80,6 +81,13 @@ class ProgressionScorer(PillarScorer):
                     ("all_level_1",),
                 )
             return _rec(self.weights["level_milestone"], "entity leveled up", ("level_milestone",))
+
+        if et == "entity_evolved":
+            return _rec(
+                self.weights["species_evolution"],
+                "entity underwent species evolution (level-threshold kind transformation)",
+                ("species_evolution",),
+            )
 
         if et == "skill_unlocked":
             return _rec(self.weights["skill_growth"], "skill unlocked", ("skill_growth",))

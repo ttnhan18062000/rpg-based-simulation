@@ -89,6 +89,7 @@ PROGRESSION:
   # proportionally, not just milestones. Negative/dormancy weights below are untouched.
   xp_active: 5.0
   level_milestone: 40.0
+  species_evolution: 50.0
   skill_growth: 25.0
   genetic_determinism_active: 10.0
   pillar_trait_milestone: 75.0

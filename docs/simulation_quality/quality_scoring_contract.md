@@ -845,14 +845,15 @@ traits, and evolving their playstyle? Or are they locked at level 1 for the enti
 **Pipeline:** PP-24 (`quest_rewards`), PP-28 (`evolution`), PP-29 (`progression_conversion`),
 PP-31 (`near_death_hardening`), PP-33 (`lifecycle`)
 
-**Event types scored:** `xp_granted`, `level_up`, `skill_unlocked`, `trait_expressed`,
-`pillar_trait_unlocked`, `progression_conversion_applied`, `near_death_survival`,
+**Event types scored:** `xp_granted`, `level_up`, `entity_evolved`, `skill_unlocked`,
+`trait_expressed`, `pillar_trait_unlocked`, `progression_conversion_applied`, `near_death_survival`,
 `progression_plateau_detected`, `capability_growth_stalled`, `life_arc_incoherent`
 
 | Signal | Delta | Tag |
 |---|---|---|
 | XP granted to entity (any source) | +1 per 10 XP | `xp_active` |
 | Level-up event fires | +8 | `level_milestone` |
+| Species evolution fires (level-threshold `kind` transformation, e.g. GOBLIN->GOBLIN_WARRIOR) | +10 | `species_evolution` |
 | Skill unlocked | +5 | `skill_growth` |
 | Trait expressed (personality trait actively modified a decision outcome) | +2 | `genetic_determinism_active` |
 | Pillar trait unlocked (level 50/75/100 milestone) | +15 | `pillar_trait_milestone` |

@@ -65,6 +65,17 @@ class TestLevelUp:
         assert rec.delta == scoring_weights["all_level_1"]
 
 
+class TestEntityEvolved:
+    def test_species_evolution(self, scorer: ProgressionScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(
+            _env("entity_evolved", payload={"previous_kind": "goblin", "new_kind": "goblin_warrior"}),
+            _ctx(),
+        )
+        assert rec is not None
+        assert rec.delta == scoring_weights["species_evolution"]
+        assert "species_evolution" in rec.tags
+
+
 class TestSkillAndTrait:
     def test_skill_unlocked(self, scorer: ProgressionScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("skill_unlocked"), _ctx())
