@@ -116,6 +116,13 @@ suites import) — see the `changed-files` job in `.github/workflows/test.yml` f
 it is CI plumbing shared across both jobs, not migration-lane-specific, so it is not duplicated
 here.
 
+**TCK-20260906-CI-FRONTEND-PATH-FILTER:** the `frontend` job (npm install/vitest/build) carries
+the same `changed-files`-gated `if:` shape, via its own `run_frontend` output. Its trigger path
+set is much simpler than the other two — `frontend/**` plus `.github/workflows/test.yml` — since
+`frontend/` is a fully separate TypeScript/npm toolchain with no Python import graph to derive
+coverage from (unlike `perf-cert-arena`/`migration-lanes`, whose trigger sets are re-derived live
+from what `src/` dirs their tests actually import). Same fail-open guarantees apply.
+
 ---
 
 ## Running Locally
