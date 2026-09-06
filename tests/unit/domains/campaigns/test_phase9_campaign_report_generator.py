@@ -9,7 +9,7 @@ from src.domains.campaigns.reports import CampaignReportGenerator
 
 
 def test_report_generator_writes_markdown_and_json():
-    scorecard = CampaignScorecard("pass", "pass", "pass", "pass", "pass", "pass", "pass", 10, 0.8, 0.0, 0, "pass")
+    scorecard = CampaignScorecard("pass", "pass", "pass", "pass", "pass", "pass", "pass", "partial", "partial", 10, 0.8, 0.0, 0, "pass")
     diversity = RouteDiversityReport(3, {"cautious_growth": 3}, {}, 0.0, 0.0, False)
     entity_reports = [
         EntityArcReport(1, ("cautious_growth",), (), (), ("e1",))

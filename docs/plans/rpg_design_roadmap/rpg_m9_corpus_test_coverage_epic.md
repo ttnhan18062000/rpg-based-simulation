@@ -106,6 +106,27 @@ not tier labels with a one-line gesture.
    - *Evaluator change needed:* add `reputation_inheritance_check` and `nemesis_transfer_check` fields to
      `CampaignScorecard`; fail if a death with a live heir occurs and `inherited_reputation_seed` is unset.
 
+   **Three corrections found and shipped, 2026-09-06 (`TCK-20260906-CAMPAIGN-SCORECARD-EVALUATOR-FIELDS`)
+   — this item's own concrete test plan above did not survive contact with real code unmodified:**
+   1. `CampaignScorecardEvaluator` is called from exactly one place in the whole codebase —
+      `SimulationAnalysisRunner.run()`, a single-episode subsystem. `CampaignOrchestrator` (the real
+      multi-episode system these 4 ideas live in) never calls it at all. The new evaluator fields and the
+      cross-episode Campaign test are two independently-verified pieces of work, not one integrated
+      pipeline — wiring the evaluator into `CampaignOrchestrator` was explicitly out of scope.
+   2. `EntityCarryForward` (the real cross-episode persistence type) carries only `level/xp/equipment/
+      reputation/alive` — never `heir_entity_id`, `strategic.blockers` (idea 55's transfer target), or
+      `motivation.named_intention` (idea 58's dying wish). Idea 55/58's outcomes cannot be asserted in a
+      *later* episode as originally scoped above (Episode 3's framing) — they are asserted within the
+      same episode/tick they are produced instead, via a deterministic one-`Kernel.tick_once()` test.
+   3. There is no `inherited_reputation_seed` field or "dying Hero's reputation echoes to heir" mechanism
+      anywhere in real code. Idea 53 (`V2EntityBuilder.birth_record()`) is a **birth-time** mechanism
+      seeding a *newborn's* reputation from its two *living parents'* current reputation — structurally
+      unrelated to idea 55/58's heir-succession mechanism, which never touches reputation at all. Idea 53
+      is tested on its own real terms (drifted, non-default parent reputation values) instead.
+
+   Shipped as 2 new `tests/integration/campaigns/` files plus unit tests in the existing scorecard test
+   file — see that ticket's own Implementation Notes for the full corrected design.
+
 2. **Idea 66 (Region/Place rebuild) — corpus-wide migration, not a single test world. RESOLVED,
    2026-09-06 (re-verified against `tickets/done/TCK-20260902-EPIC-IDEA66-REGION-PLACE-REBUILD.md`).**
    The real implementation followed this exact procedure: the Stage A/Stage B two-stage pilot named
