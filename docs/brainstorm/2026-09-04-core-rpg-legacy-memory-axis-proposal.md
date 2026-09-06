@@ -132,7 +132,14 @@ By contrast, M5's other two branches do not touch this gap:
 1. **A testimony/retelling model** — how a recorded event's *represented* content diverges from its
    *ground-truth* content as it propagates through retellings, distinct from both Chronicle (which never
    diverges) and `BeliefEntry`/`KnowledgeFact` (which model one entity's current belief, not a chain of
-   transmission).
+   transmission). **Delivered, 2026-09-05:** see
+   `docs/brainstorm/2026-09-05-testimony-retelling-model-design.md` — confirms the gap is real (no
+   existing mechanism bridges Chronicle's output to belief formation about historical events),
+   proposes a `TestimonyDeriver` sibling to `CultureDeriver`/`FameDeriver`, and discloses two open
+   questions: whether content-string distortion is actually load-bearing for idea 63 (vs.
+   confidence-only decay, which `BeliefEntry.certainty` already supports), and an unresolved
+   tick-vs-episode unit mismatch between `BeliefCycleSystem`'s decay and Chronicle's episode-scoped
+   events.
 2. **An entity/reputation-scale aggregation shape**, sibling to `CultureDeriver`'s region-scale one, for
    idea 57's "does this entity's past deeds currently make them a Living Legend" question.
    **Delivered, 2026-09-04:** see
@@ -151,7 +158,7 @@ By contrast, M5's other two branches do not touch this gap:
 | Confirm Chronicle/`CultureDeriver` stay downstream, not rearchitected | Verification, not new work | P0 | Design-authority confirmation before M5's history/belief branch starts |
 | Gate idea 62 on the Knowledge/Belief reconciliation decision | **Cleared, 2026-09-04** — see above | P0 | Whoever scopes idea 62's ticket |
 | Entity/reputation-scale aggregation shape (idea 57's real dependency) | **Delivered, 2026-09-04** — see above | P1 | M5, once idea 62's gate clears |
-| Testimony/retelling model | New, larger scope | P2 | Design review — likely too large for a single M5 ticket, may need its own dedicated proposal the way the temporal calendar did |
+| Testimony/retelling model | **Delivered, 2026-09-05** — see above | P2 | Design review — dedicated proposal delivered; 2 open questions remain (content distortion vs. confidence-only, tick/episode unit mismatch) |
 | Chronicle significance decay | New, small | P2 | `EventSignificanceScorer`, once a real consumer needs it (not speculative) |
 | Campaign-only social-memory / in-world testimony distinction, documented explicitly | Documentation-only | P1 | Whoever next touches `social_memory.py` or scopes idea 55/58 |
 

@@ -8,8 +8,9 @@ tags: [architecture, content, feature-flags]
 
 # Epic Plan — RPG Design Roadmap, Milestone 6: Political Identity & Belonging
 
-**Tracking ticket:** `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (not yet created — scope-only, per
-`docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`)
+**Tracking ticket:** `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/inprogress/`,
+`## Status: EPIC_SCOPED` as of 2026-09-05 — 3 child tickets scoped in
+`tickets/todos/m6-political-identity/`, none yet implemented)
 **Source:** `docs/brainstorm/rpg_feature_atlas.html` Design Ideas 39, 56, 59, 65.
 **Gate:** effectively everything above — the deepest single dependency chain in the whole 65-idea roadmap.
 The roadmap explicitly does not recommend starting this milestone early, even speculatively.
@@ -41,13 +42,20 @@ split into a separate mutation-primitive/voluntary-trigger pair.
    diplomatic flavor.
 2. **Idea 56 — Drifting Loyalty.** Derives gradual loyalty pressure that may request or influence idea 39's
    mutation. Confirmed genuinely different mechanism kind from idea 39 (continuous background pressure vs.
-   discrete event) — stays a separate ticket, sequenced before or alongside idea 39 so 39's trust gate can
-   read 56's drift signal as an input. **Not blocked on unbuilt substrate (correction, 2026-09-02 — hardening
-   backlog item 3, see
+   discrete event) — stays a separate ticket. **Sequencing corrected, 2026-09-05**: this section previously
+   said "sequenced before or alongside idea 39," which contradicted this same doc's own Acceptance Signal
+   (`39 → 56 → 59/65`) — flagged by `docs/brainstorm/codex/2026-08-27-core-rpg-feature-review.md`'s "M6 —
+   valuable late-game chain, but sequencing text conflicts" section. The single confirmed decision (2026-08-29,
+   see References) is idea 39 lands first, establishing the mutation primitive idea 56's signal then
+   requests/uses — not before or alongside it. **Not blocked on unbuilt substrate (correction, 2026-09-02 —
+   hardening backlog item 3, see
    [`docs/plans/rpg_design_roadmap/rpg_culture_drift_hardening_plan.md`](rpg_culture_drift_hardening_plan.md)):**
    `CultureDeriver`/`CulturalBiasApplicator` is real, live, and tested, not dormant — idea 56 needs to be
-   scoped as a read-side consumer of `region_cultures`, pending the hardening plan's open Campaign-mode-
-   reachability question (does any real corpus world actually run multi-episode Campaign mode today?).
+   scoped as a read-side consumer of `region_cultures`. **Campaign-mode-reachability question answered,
+   2026-09-05** (same hardening plan): real but narrow — exactly one corpus profile
+   (`campaign_life_arc.yaml`) enables multi-episode Campaign mode, hardcoded to one world, and it is not wired
+   into standard CI. Idea 56's own ticket should test against that one real profile directly, not assume
+   corpus-wide coverage.
 3. **Idea 59 — Home, Exile & Return.** The single largest correction in this whole investigation: its
    central claim (no per-entity place-attachment field exists) was flatly wrong.
    `StrategicComponent.home_region_id` already exists, typed, with a live consumer already wired

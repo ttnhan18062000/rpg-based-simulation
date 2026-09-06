@@ -3167,9 +3167,12 @@ These items are appended rather than replacing existing checklist items. They ar
 
 ## Z13. Spatial index and map authority law
 
-- [x] SUB-327: Spatial index can move entity/object between cells. [src/world/spatial.py:15](file:///home/vboxuser/Work/rpg-based-simulation/src/world/spatial.py#L15)
-    - `SpatialIndex.move` handles cell transition atomically.
-    - TEST: `tests/unit/world/test_spatial_index.py`
+- [x] SUB-327: Spatial index reflects an entity's current cell after it moves, via a real,
+      verified rebuild-from-scratch (not an atomic per-entity move method — `SpatialIndex`,
+      `src/engine/world_index.py:78`, is a frozen dataclass with no mutator at all).
+      [src/engine/spatial.py:8](src/engine/spatial.py#L8)
+    - `SpatialGrid.__init__` re-buckets every entity into its current cell on each construction.
+    - TEST: `tests/unit/movement/test_spatial_index.py::test_spatial_grid_rebuild_logic`
 - [x] SUB-332: Spatial index stays consistent with authoritative entity positions after apply. [src/engine/apply.py:45](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/apply.py#L45)
     - `ApplyPath.apply_generation` triggers spatial sync.
     - TEST: `tests/unit/engine/test_spatial_sync.py`
