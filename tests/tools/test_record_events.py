@@ -277,6 +277,39 @@ def test_compute_tool_stats_only_targets_implement_ticket_workflow(tmp_path, mon
 
 
 # ---------------------------------------------------------------------------
+# TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP — omit_when_unattributed: a hand-
+# orchestrated closure's events never had a live sidecar during the real work, so "zero matching
+# tools.jsonl rows" means "no attribution data," not "confirmed zero" — must be omitted, not (0, 0.0).
+# ---------------------------------------------------------------------------
+
+
+def test_omit_when_unattributed_false_is_default_and_unchanged(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    records = [{**_VALID_EVENT, "run_id": "TCK-DEFAULT-BEHAVIOR", "seq": 1}]
+    assert compute_tool_stats(records) == {("TCK-DEFAULT-BEHAVIOR", 1): (0, 0.0)}
+
+
+def test_omit_when_unattributed_true_omits_zero_match_keys(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    records = [{**_VALID_EVENT, "run_id": "TCK-NO-SIDECAR", "seq": 1}]
+    stats = compute_tool_stats(records, omit_when_unattributed=True)
+    assert stats == {}
+
+
+def test_omit_when_unattributed_true_still_computes_real_matches(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _write_tools_jsonl(tmp_path, [
+        {"run_id": "TCK-PARTIAL-ATTRIBUTION", "seq": 1, "tool": "Read", "duration_ms": 5},
+    ])
+    records = [
+        {**_VALID_EVENT, "run_id": "TCK-PARTIAL-ATTRIBUTION", "seq": 1},
+        {**_VALID_EVENT, "run_id": "TCK-PARTIAL-ATTRIBUTION", "seq": 2},
+    ]
+    stats = compute_tool_stats(records, omit_when_unattributed=True)
+    assert stats == {("TCK-PARTIAL-ATTRIBUTION", 1): (1, 1.0)}
+
+
+# ---------------------------------------------------------------------------
 # TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY — unified per-ISO-week folder,
 # and the critical bug fix: compute_tool_stats() must read the union of every
 # week folder's tools.jsonl, not just the current week's.
