@@ -3,7 +3,7 @@ status: authoritative
 layer: simulation
 authority: P1
 audience: developer
-last_verified: 2026-08-13
+last_verified: 2026-09-06
 ---
 
 # SimQ Event Type Coverage
@@ -23,7 +23,14 @@ deliberately uncovered — see the `deliberately_uncovered` row below, not a res
 **Ticket:** TCK-20260630-SIMQ-TRANSLATE  
 **Date:** 2026-06-30  
 **Audit base:** calibration runs in `data/calibration/` (sandbox_world seeds 42/137/999 200t, dungeon_crawl 200t, urban_political 200t, wilderness_survival 200t, simq_routing_test 500t)  
-**Last updated:** 2026-07-04 (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B — `self_model_phase.py`'s `events=[]` hardcoding fixed, `pipeline.py:152`'s `information_belief` merge-clobber fixed, and `self_model_bundle_set` durable materialization fixed (`SelfModelPatch`, `SUB-374`); `belief_assimilated`'s Branch B path (route-a-new-query off `self_model.knowledge.unknowns`) confirmed reachable end-to-end via a test-scoped cross-tick-boundary test with both `ENABLE_SELF_MODEL_COGNITION` and `ENABLE_BELIEF_ASSIMILATION` ON — see `INFRA-259`/`INFRA-260`. `ENABLE_SELF_MODEL_COGNITION` stays `OFF` in every shipped calibration profile, so Branch B contributes 0 to any real calibration_hits count; `belief_assimilated`'s measured `1` remains entirely Branch A. Byte-identical canonical hash confirmed for `urban_political`'s shipped profile with/without the `SelfModelPatch` fix — 0 impact on existing baselines)
+**Last updated:** 2026-09-06 (`TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES` — found and fixed a real
+gap this doc's own audit had missed since 2026-07-12: `route_new_query`, real and live-emitted by
+both `event_extractor.py` and `event_shapers.py` since `TCK-20260712-SIMQ-INFORMATION-ROUTING-
+CLOSURE`, was never registered with `InformationScorer.EVENT_TYPES` or documented here at all —
+neither `scored` nor `unscored_intentional`. Added to §1.1 as a new scored INFORMATION event
+(`information_seeking_active` signal); `scored` count 84→85. Not yet calibrated.)
+
+**Previously updated:** 2026-07-04 (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B — `self_model_phase.py`'s `events=[]` hardcoding fixed, `pipeline.py:152`'s `information_belief` merge-clobber fixed, and `self_model_bundle_set` durable materialization fixed (`SelfModelPatch`, `SUB-374`); `belief_assimilated`'s Branch B path (route-a-new-query off `self_model.knowledge.unknowns`) confirmed reachable end-to-end via a test-scoped cross-tick-boundary test with both `ENABLE_SELF_MODEL_COGNITION` and `ENABLE_BELIEF_ASSIMILATION` ON — see `INFRA-259`/`INFRA-260`. `ENABLE_SELF_MODEL_COGNITION` stays `OFF` in every shipped calibration profile, so Branch B contributes 0 to any real calibration_hits count; `belief_assimilated`'s measured `1` remains entirely Branch A. Byte-identical canonical hash confirmed for `urban_political`'s shipped profile with/without the `SelfModelPatch` fix — 0 impact on existing baselines)
 
 **Previously updated:** 2026-07-03 (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER — `pending_information_responses` compile-time plumbing (INFRA-257) + kernel tick-alignment fix (INFRA-258) shipped: `belief_assimilated`/`belief_updated` calibration_hits confirmed == 1 in each of all 7 `urban_political_*` calibration runs through the real `Kernel.tick_once()` live loop (INFORMATION pillar C→B in all 7; COGNITION C→B in 6 of 7, natural `belief_updated` consequence); `dungeon_crawl` spot-check stayed 0 — no leakage. `calamity_spawned`'s tick-gate comparison fix is verified correct by a dedicated unit test, but a one-off diagnostic run (`dungeon_crawl_seed42_5200t`, not anchored) did not naturally produce the event — a separate, pre-existing hero-death-dependent `calamity_intensity` precondition, not fixed by this ticket. `GovernorModeChanged` confirmed firing naturally in existing long-running baselines — infrastructure telemetry, not SimQ-scored)
 
@@ -35,7 +42,7 @@ deliberately uncovered — see the `deliberately_uncovered` row below, not a res
 
 | Category | Count | Notes |
 |---|---|---|
-| scored | 84 | +1 `world_hard_law_violation` (TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP) |
+| scored | 85 | +1 `route_new_query` (TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES, a genuine gap missed by every prior audit of this doc). +1 `world_hard_law_violation` (TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP) |
 | translation_gap | 0 | — |
 | engine_emission_gap | 0 | — |
 | no_engine_path | 1 | `camp_constructed` — no dynamic camp construction in simulation; scorer entry is premature |
@@ -173,6 +180,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `quest_completed` | campaigns/runner | NarrativeScorer | 0 | Campaign-gated; also reachable via quest_event conditional translation |
 | `scenario_objective_completed` | engine/scenario_runtime | NarrativeScorer | 0 | Scenario-gated (see §4) |
 | `scenario_stalled` | engine/scenario_runtime | NarrativeScorer | 0 | Scenario-gated (see §4) |
+| `route_new_query` | event_extractor / event_shapers (StrategyShaper) | InformationScorer | 0 | `prop.last_routed_query_tick == prior_state.tick` — TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE. Emitted by both `event_extractor.py` and `event_shapers.py` (StrategyShaper) since that ticket but never registered with `InformationScorer.EVENT_TYPES` or this table until `TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES` found the gap — not calibrated yet. |
 
 ### §1.2 Via `_TRANSLATE_SIMPLE` (one-to-one remaps)
 
