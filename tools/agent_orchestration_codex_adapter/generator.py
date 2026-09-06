@@ -46,7 +46,21 @@ def build_agents_md(repo_root: Path) -> str:
         lines += ['', '## Workflow Continuation', '', policy.instruction.strip(), '', 'Do not stop merely for:', '']
         lines += [f"- {item}" for item in policy.non_gates]
         lines += ['']
-    lines += [f"- `{r.role_id}` — {r.description}" for r in b.roles] + ['', '## Skills','']
+    lines += [f"- `{r.role_id}` — {r.description}" for r in b.roles]
+    lines += ['', '## Gate Policy', '']
+    for g in b.gate_policy['gates']:
+        if g['gate_type'] == 'agent_verdict':
+            detail = f"pass_value={g['pass_value']}"
+        elif g['gate_type'] == 'static_check':
+            detail = f"{g['check_module']}.{g['check_function']}"
+        else:
+            detail = f"{g['result_field']}=={g['pass_value']}"
+        lines += [f"- {g['phase']} ({g['gate_type']}): {detail} -> on_fail: {', '.join(g['on_fail_status'])}"]
+    lines += ['', '## Artifact Requirements', '']
+    if b.artifact_requirements:
+        ar = b.artifact_requirements
+        lines += [f"- Required for all tiers except `{ar['exempt_tier']}`: {', '.join(ar['required_files'])}"]
+    lines += ['', '## Skills','']
     lines += [f"- `{s['id']}` — {s['description']} (see `.agents/skills/{s['id']}/SKILL.md`)" for s in b.skills['skills']]
     return '\n'.join(lines)+'\n'
 

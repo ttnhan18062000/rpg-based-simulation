@@ -179,6 +179,36 @@ def test_new_contract_file_wired_into_readme_and_manifest():
     assert "hook_surface_policy_version" in readme_text
 
 
+def test_new_gate_policy_file_wired_into_readme_and_manifest():
+    contract = yaml.safe_load((_CONTRACT_DIR / "contract.yaml").read_text(encoding="utf-8"))
+    governed_paths = {entry["path"]: entry for entry in contract["governs"]}
+    assert "gate-policy.yaml" in governed_paths
+    assert governed_paths["gate-policy.yaml"]["version_field"] == "gate_policy_version"
+
+    readme_text = (_CONTRACT_DIR / "README.md").read_text(encoding="utf-8")
+    assert "gate-policy.yaml" in readme_text
+    assert "gate_policy_version" in readme_text
+
+
+def test_load_contract_includes_gate_policy():
+    bundle = load_contract(_REPO_ROOT)
+    assert bundle.gate_policy["gate_policy_version"] == 1
+    assert len(bundle.gate_policy["gates"]) >= 12
+
+
+def test_contract_yaml_artifact_requirements_optional_field():
+    contract = yaml.safe_load((_CONTRACT_DIR / "contract.yaml").read_text(encoding="utf-8"))
+    assert contract["artifact_requirements"]["required_files"] == ["plan.md", "investigation.md", "test_plan.md"]
+    assert contract["artifact_requirements"]["exempt_tier"] == "hotfix"
+
+
+def test_contract_and_workflow_versions_unchanged_by_this_ticket():
+    contract = yaml.safe_load((_CONTRACT_DIR / "contract.yaml").read_text(encoding="utf-8"))
+    workflow = yaml.safe_load((_CONTRACT_DIR / "workflows" / "implement-ticket.yaml").read_text(encoding="utf-8"))
+    assert contract["version"] == 1
+    assert workflow["workflow_version"] == 2
+
+
 def test_policy_represents_claude_three_enabled_events():
     policy = _load_hook_surface_policy()
     assert set(policy["providers"]["claude"]["enabled_events"]) == {

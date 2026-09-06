@@ -124,10 +124,46 @@ const captureTs = async () => {
   return (out || '').trim() || null
 }
 
+// Orchestrator-side dual-write sidecar helper (TCK-20260904-COST-PROXY-EPIC-TICKETS) — mirrors
+// implement-ticket.js's writeSidecar(seq, phase, agent) helper (implement-ticket.js:274-285).
+// Uses this file's own `events.length + 1` seq numbering (this file already maintains an `events`
+// array via pushEvent, unlike implement-epic.js) rather than a fixed literal. Omits
+// execution_id/provider (implement-ticket.js's separate, unrelated
+// TCK-20260730-CLAUDE-EXECUTION-IDENTITY addition) — post_tool_hook.py tolerates their absence
+// entirely.
+//
+// Covers exactly 4 real, top-level-sequential agent() call sites: comprehend, structure,
+// write-sequence, link-epic. Deliberately EXCLUDED (no writeSidecar() call, documented at each
+// site below): writeMonitoring's own agent() call (mirrors implement-ticket.js's own permanent,
+// tested exclusion of the same architectural role — see
+// test_writeMonitoring_call_has_no_preceding_sidecar_write) and the 2 pipeline() fan-out sites
+// (investigate:${concern.id}, write:${task.short_scope}) — pipeline() runs up to
+// min(16, CPUs-2) truly concurrent agent() calls sharing one mutable sidecar file
+// (.claude/current_run.<session_id>), so a writeSidecar()-then-agent() pattern there would let a
+// later fan-out iteration's sidecar write silently overwrite an earlier iteration's
+// still-in-flight attribution — a structural race, not fixable by per-item seq values alone.
+const writeSidecar = async (seq, phase, agentName) => {
+  await bash(
+    `python3 -c "
+import json, sys, os
+data = json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4]})
+open('.claude/current_run', 'w').write(data)
+sid = os.environ.get('CLAUDE_CODE_SESSION_ID', '')
+if sid:
+    open('.claude/current_run.' + sid, 'w').write(data)
+" "${runId}" "${seq}" "${phase}" "${agentName}" 2>/dev/null || true`
+  )
+}
+
 const writeMonitoring = async (finalStatus) => {
   const eventsJson = JSON.stringify(events)
   const eventsCount = events.length
   const startTsLiteral = startTs ? startTs : '<END_TS>'
+  // No writeSidecar() call here, by design (TCK-20260904-COST-PROXY-EPIC-TICKETS) — mirrors
+  // implement-ticket.js's own permanent exclusion of its writeMonitoring agent() call from sidecar
+  // coverage. Adding one would attribute this bookkeeping call's own tool calls to whatever
+  // sidecar state the immediately-preceding phase last set, reintroducing the exact
+  // TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION bug class.
   const result = await agent(
     `Write agent monitoring records for run "${runId}". This is bookkeeping — do NOT fail if writes error.
 
@@ -153,6 +189,7 @@ Return "monitoring written" or "monitoring write failed: <reason>".`,
 }
 
 const comprehendTs = await captureTs()
+await writeSidecar(events.length + 1, 'Comprehend', 'comprehend')
 const comprehension = await agent(
   `Read a proposal document and extract the discrete concerns the author is describing.
 
@@ -295,6 +332,14 @@ const DOMAIN_TO_LAYERS = {
   architecture:   ['architecture'],
 }
 
+// No writeSidecar() call inside this pipeline() callback, by design
+// (TCK-20260904-COST-PROXY-EPIC-TICKETS) — pipeline() runs up to min(16, CPUs-2) truly concurrent
+// agent() calls per item, all sharing the single mutable .claude/current_run(.session) sidecar
+// file. A writeSidecar()-then-agent() pattern here would let a later concurrent iteration's
+// sidecar write silently overwrite an earlier iteration's still-in-flight tool-call attribution —
+// a structural race in the sidecar's single-writer design, not fixable by distinct per-item seq
+// values (the collision is on the shared file's "currently active" pointer, not on seq
+// uniqueness). No safe design exists for concurrent fan-out within the current sidecar mechanism.
 const investigations = await pipeline(
   comprehension.concerns,
   (concern) => {
@@ -436,6 +481,7 @@ const investigationBundle = activeInvestigations.map(inv => {
   return { concern, investigation: inv }
 })
 
+await writeSidecar(events.length + 1, 'Structure', 'structure')
 const structured = await agent(
   `Synthesize investigation findings into properly-formed ticket fields.
 
@@ -650,6 +696,8 @@ const WRITE_SCHEMA = {
   },
 }
 
+// No writeSidecar() call inside this pipeline() callback either, by design — same concurrent
+// fan-out race as the investigate: pipeline() above (TCK-20260904-COST-PROXY-EPIC-TICKETS).
 const written = await pipeline(
   tasksReadyToWrite,
   (task) => {
@@ -793,6 +841,7 @@ if (hasIntraDeps) {
     'tickets are skipped automatically.',
   ].join('\n')
 
+  await writeSidecar(events.length + 1, 'Write', 'write-sequence')
   await agent(
     `Write the implementation sequence file for this batch.
 
@@ -815,6 +864,7 @@ Confirm: DONE or ERROR.`,
 if (epicId && ticketIds.length > 0) {
   phase('Link')
 
+  await writeSidecar(events.length + 1, 'Link', 'link-epic')
   const linkResult = await agent(
     `Append new ticket IDs to the ## Related Tickets section of epic ${epicId}.
 

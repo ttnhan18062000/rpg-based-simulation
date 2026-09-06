@@ -89,6 +89,52 @@ const captureTs = async () => {
 }
 
 const discoverTs = await captureTs()
+
+// batchRunId — hoisted here (previously computed after Discover, at the old
+// implement-epic.js:272-274 position) so the 4 top-level sidecar sites below (starting with
+// Discover itself) have a correct run_id in scope before their first agent() call. folder/epicId
+// branches copied verbatim from this file's own pre-existing formula — priority order
+// (epicId-first) matches that original, unmodified formula exactly, unaffected by the fact that
+// folder/epic_id/request are mutually exclusive at runtime (the required-args check above).
+// request mode has no real identifier yet (the epic ticket doesn't exist until Discover's own
+// agent() call creates it) — mints a provisional EPIC-REQUEST-<ts> value from the
+// already-captured discoverTs, same convention as this file's own EPIC-INVALID-ARGS-<ts> no-op
+// path. See staging_artifacts/TCK-20260904-COST-PROXY-EPIC-TICKETS/plan.md Step 1 for the
+// request-mode residual-limitation writeup (the real epicCreatedRunId, computed later at
+// line ~187, is a different, unreconciled string from this provisional value).
+const batchRunId = epicId
+  ? 'EPIC-' + epicId
+  : folder
+  ? 'FOLDER-' + folder.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+  : 'EPIC-REQUEST-' + (discoverTs || '').replace(/[^0-9]/g, '')
+
+// Orchestrator-side dual-write sidecar helper (TCK-20260904-COST-PROXY-EPIC-TICKETS) — mirrors
+// implement-ticket.js's writeSidecar(seq, phase, agent) helper (implement-ticket.js:274-285), with
+// one difference: closes over the single, unchanging batchRunId instead of taking run_id as a
+// parameter (safe here — unlike implement-ticket.js's per-child tid, batchRunId never changes
+// across this script's execution). Omits execution_id/provider (implement-ticket.js's separate,
+// unrelated TCK-20260730-CLAUDE-EXECUTION-IDENTITY addition) — post_tool_hook.py tolerates their
+// absence entirely.
+//
+// seq values are fixed literals -1/-2/-3/-4 (call order), NEVER positive — this run_id is also
+// used by the pre-existing batchEvents array (below) at seq=1..N, so a positive seq here would
+// collide with that range for realistic batch sizes (the exact TCK-20260711-MONITORING-TOOLCOUNT-
+// SIDECAR-COLLISION bug class). Never use seq=0 either — post_tool_hook.py's
+// `sidecar.get("seq") or None` treats 0 as falsy and silently drops it to None.
+const writeSidecar = async (seq, phase, agentName) => {
+  await bash(
+    `python3 -c "
+import json, sys, os
+data = json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4]})
+open('.claude/current_run', 'w').write(data)
+sid = os.environ.get('CLAUDE_CODE_SESSION_ID', '')
+if sid:
+    open('.claude/current_run.' + sid, 'w').write(data)
+" "${batchRunId}" "${seq}" "${phase}" "${agentName}" 2>/dev/null || true`
+  )
+}
+
+await writeSidecar(-1, 'Discover', 'discover')
 const discovery = await agent(
   folder
     ? `Discover tickets in folder "${folder}".
@@ -298,10 +344,8 @@ for (const tid of ticketIds) {
 }
 
 // ─── Monitoring — batch run record ───────────────────────────────────────────
-
-const batchRunId = epicId
-  ? 'EPIC-' + epicId
-  : 'FOLDER-' + folder.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+// batchRunId is declared once, hoisted above (before the Discover agent() call) — see that
+// declaration's comment for the full rationale.
 
 const doneCount = results.filter(r => r.status === 'DONE').length
 const batchEvents = results.map((r, i) => ({
@@ -314,6 +358,7 @@ const batchEvents = results.map((r, i) => ({
 
 // Pre-embed batchStartTs so the agent only substitutes one placeholder (<END_TS>).
 const batchStartTsLiteral = batchStartTs ? batchStartTs : '<END_TS>'
+await writeSidecar(-2, 'Implement', 'batch-monitoring-write')
 await agent(
   `Write batch monitoring record for epic run "${batchRunId}". This is bookkeeping — do NOT fail if writes error.
 
@@ -343,6 +388,7 @@ If any command fails, print "WARNING: batch monitoring write failed: <error>" bu
 
 if (batchStatus === 'DONE' && folder) {
   const folderName = folder.replace(/\/$/, '').replace(/^.*\//, '')
+  await writeSidecar(-3, 'Implement', 'folder-cleanup')
   await agent(
     `Move the completed tickets/todos folder to tickets/done/. This is bookkeeping — do NOT fail the workflow if anything goes wrong.
 
@@ -380,6 +426,7 @@ const remaining = ticketIds.slice(results.length)
 let trackingDocUpdate = null
 if (discovery.mode === 'folder' && discovery.tracking_doc) {
   const modeDescription = `folder-based batch at \`${folder}\``
+  await writeSidecar(-4, 'Report', 'tracking-doc-update')
   const trackingDocResult = await agent(
     `Update the tracking-doc status block for this batch. This is bookkeeping — do NOT fail the
 workflow if anything goes wrong.

@@ -295,6 +295,18 @@ const captureTs = async () => {
   return (out || '').trim() || null
 }
 
+const captureEpochMs = async () => {
+  const out = await bash('date +%s%3N')
+  const parsed = parseInt((out || '').trim(), 10)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+// Workflow-start epoch-ms, captured once, for the shadow-reviewer mechanism's
+// `workflow_wall_time_ms` field (TCK-20260904-SHADOW-REVIEWER-LOGGING) -- distinct from
+// `startTs` (an ISO string, used for run-record start_ts) and from any per-phase `captureTs()`
+// call. Read-only downstream; never mutated after this point.
+const workflowStartMs = await captureEpochMs()
+
 // Orchestrator-side ticket-location resolution (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX). Replaces
 // the former Step 1a/1b/1c agent-prompt-text file search + unconditional copy: `## Tier` is a
 // static fact already on disk, locatable by the same mechanical search the agent used to perform
@@ -1008,6 +1020,89 @@ verified_by (list which findings came from the static script vs. independent jud
     { label: 'architecture-verify', schema: ARCH_VERIFY_SCHEMA, agentType: 'architecture-reviewer' }
   )
 
+  // ─── Shadow candidate reviewer (advisory, TCK-20260904-SHADOW-REVIEWER-LOGGING) ──────────────
+  // Runs a candidate model (claude-fable-5-1) against the SAME diff/evidence the production
+  // architecture-reviewer just judged, purely for logging -- this block never reads or writes
+  // archVerify.verdict, and nothing below it reads this block's own verdict. Gated by
+  // SHADOW_REVIEWER_LOGGING_ENABLED=1 AND a bounded per-reviewer sample window
+  // (tools/agent-monitoring/shadow_reviewer_window.py::is_shadow_window_open) -- a run outside the
+  // window makes zero extra model calls. Fail-open at every level -- shell (`2>/dev/null || true`),
+  // Python (`try/except Exception: pass`), AND this entire JS block (`try/catch`) -- because the
+  // shadow candidate path is advisory-only and must never propagate ANY failure (API error,
+  // timeout, thrown exception -- not just a bad verdict) to the production gate outcome, same
+  // convention as SHADOW_CONTEXT_PACKET_ENABLED (INFRA-299).
+  const archShadowWindowOutput = await bash(
+    `if [ "$SHADOW_REVIEWER_LOGGING_ENABLED" = "1" ]; then python3 tools/agent-monitoring/shadow_reviewer_window.py "architecture-reviewer" "${tid}" 2>/dev/null; fi`
+  )
+  let archShadowWindow = null
+  const archShadowWindowMarker = (archShadowWindowOutput || '').indexOf('SHADOW_WINDOW_JSON:')
+  if (archShadowWindowMarker !== -1) {
+    try { archShadowWindow = JSON.parse(archShadowWindowOutput.slice(archShadowWindowMarker + 'SHADOW_WINDOW_JSON:'.length).trim()) }
+    catch (e) { archShadowWindow = null }
+  }
+
+  if (archShadowWindow && archShadowWindow.window_open) {
+    // Advisory-only fail-open: nothing in this block -- including agent() throwing on an API
+    // error/timeout, or any other exception -- may ever propagate to the enclosing
+    // Architecture-Verify phase or its production gate outcome.
+    try {
+      const archShadowSeq = archShadowWindow.shadow_seq
+      const archShadowStartMs = await captureEpochMs()
+      await writeSidecar(archShadowSeq, 'Architecture-Verify', 'architecture-reviewer-shadow')
+      const archVerifyShadow = await agent(
+        `Post-implementation architecture verification for ticket ${tid}.
+
+Files changed: ${implementation.files_changed.join(', ')}
+
+Deterministic static-check results (tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks, already run against the files above):
+${archCheckResults !== null ? JSON.stringify(archCheckResults) : 'UNPARSEABLE — treat as inconclusive, do not silently pass'}
+
+This is a narrow verification, not a full re-review. The plan was already judged APPROVED in the pre-Implement Review phase — do not re-litigate strategic/tactical boundary soundness or abstraction-premature-ness here. Your job:
+1. For each FAIL item above, read the actual file/line cited and decide: real violation, or false positive (state which, and why).
+2. For each SKIP item, note it as unchecked (not clean) — do not treat a SKIP as a passing result.
+3. Address any confirmed real violation by describing what must change, or explain why it's a false positive.
+
+Return: APPROVED (no confirmed real violations) / NEEDS_CHANGES (fixable violations confirmed) / BLOCKED (fundamental conflict),
+violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤200 chars),
+verified_by (list which findings came from the static script vs. independent judgment, e.g. ["static:architecture_reviewer_static", "llm"]).`,
+        { label: 'architecture-verify-shadow', schema: ARCH_VERIFY_SCHEMA, agentType: 'architecture-reviewer', model: 'claude-fable-5-1' }
+      )
+      const archShadowEndMs = await captureEpochMs()
+
+      const archShadowPayload = JSON.stringify({
+        run_id: tid,
+        seq: archShadowSeq,
+        phase: 'Architecture-Verify',
+        agent: 'architecture-reviewer-shadow',
+        summary: (archVerifyShadow.summary || '').toString().slice(0, 200),
+        candidate_model: 'claude-fable-5-1',
+        candidate_verdict: archVerifyShadow.verdict,
+        candidate_violations_count: archVerifyShadow.violations.length,
+        candidate_wall_time_ms: archShadowEndMs - archShadowStartMs,
+        workflow_wall_time_ms: archShadowEndMs - workflowStartMs,
+      })
+      // Single-quote-escape for safe embedding as ONE single-quoted argv element -- avoids
+      // interpolating free-text, model-generated fields (summary/verdict) as separate
+      // double-quoted argv pieces, which a `"`, backtick, or `$()` in model output could break out of.
+      const archShadowPayloadEscaped = archShadowPayload.replace(/'/g, "'\\''")
+
+      await bash(
+        `timeout 15s python3 -c "
+import sys, json
+sys.path.insert(0, 'tools/agent-monitoring')
+from shadow_reviewer_events import emit_shadow_reviewer_event
+try:
+    emit_shadow_reviewer_event(**json.loads(sys.argv[1]))
+except Exception:
+    pass
+" '${archShadowPayloadEscaped}' 2>/dev/null || true`
+      )
+    } catch (e) {
+      // Fail-open: swallow any exception from the shadow candidate path (agent() throwing on an
+      // API error/timeout, JSON encoding, etc.) -- it must never propagate to the production gate.
+    }
+  }
+
   if (archVerify.verdict !== 'APPROVED') {
     log(`Architecture-Verify: ${archVerify.verdict}`)
     if (archVerify.violations.length > 0) {
@@ -1374,6 +1469,79 @@ Return: APPROVED / NEEDS_CHANGES (fixable violations) / BLOCKED (fundamental vul
 violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤200 chars).`,
     { label: 'security-review', schema: SECURITY_REVIEW_SCHEMA, agentType: 'security-reviewer' }
   )
+
+  // ─── Shadow candidate reviewer (advisory, TCK-20260904-SHADOW-REVIEWER-LOGGING) ──────────────
+  // Same mechanism as the Architecture-Verify shadow block above -- see its comment for the full
+  // rationale. This block never reads or writes securityReview.verdict. Fail-open at every level --
+  // shell (`2>/dev/null || true`), Python (`try/except Exception: pass`), AND this entire JS block
+  // (`try/catch`) -- the shadow candidate path is advisory-only and must never propagate ANY
+  // failure to the production gate outcome.
+  const securityShadowWindowOutput = await bash(
+    `if [ "$SHADOW_REVIEWER_LOGGING_ENABLED" = "1" ]; then python3 tools/agent-monitoring/shadow_reviewer_window.py "security-reviewer" "${tid}" 2>/dev/null; fi`
+  )
+  let securityShadowWindow = null
+  const securityShadowWindowMarker = (securityShadowWindowOutput || '').indexOf('SHADOW_WINDOW_JSON:')
+  if (securityShadowWindowMarker !== -1) {
+    try { securityShadowWindow = JSON.parse(securityShadowWindowOutput.slice(securityShadowWindowMarker + 'SHADOW_WINDOW_JSON:'.length).trim()) }
+    catch (e) { securityShadowWindow = null }
+  }
+
+  if (securityShadowWindow && securityShadowWindow.window_open) {
+    // Advisory-only fail-open: nothing in this block -- including agent() throwing on an API
+    // error/timeout, or any other exception -- may ever propagate to the enclosing
+    // Security-Review phase or its production gate outcome.
+    try {
+      const securityShadowSeq = securityShadowWindow.shadow_seq
+      const securityShadowStartMs = await captureEpochMs()
+      await writeSidecar(securityShadowSeq, 'Security-Review', 'security-reviewer-shadow')
+      const securityReviewShadow = await agent(
+        `Security review for ticket ${tid}.
+
+Read:
+- ${ticketInfo.ticket_path}
+- Files changed: ${implementation.files_changed.join(', ')}
+
+This ticket is tagged \`security\` (its frontmatter tags include \`security\`, or suggested_skills includes /security-review). Review the actual diff/changed files for: injection, unsafe deserialization, path traversal, subprocess/command injection, secrets-in-code, raw-domain-model API exposure.
+
+Return: APPROVED / NEEDS_CHANGES (fixable violations) / BLOCKED (fundamental vulnerability),
+violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤200 chars).`,
+        { label: 'security-review-shadow', schema: SECURITY_REVIEW_SCHEMA, agentType: 'security-reviewer', model: 'claude-fable-5-1' }
+      )
+      const securityShadowEndMs = await captureEpochMs()
+
+      const securityShadowPayload = JSON.stringify({
+        run_id: tid,
+        seq: securityShadowSeq,
+        phase: 'Security-Review',
+        agent: 'security-reviewer-shadow',
+        summary: (securityReviewShadow.summary || '').toString().slice(0, 200),
+        candidate_model: 'claude-fable-5-1',
+        candidate_verdict: securityReviewShadow.verdict,
+        candidate_violations_count: securityReviewShadow.violations.length,
+        candidate_wall_time_ms: securityShadowEndMs - securityShadowStartMs,
+        workflow_wall_time_ms: securityShadowEndMs - workflowStartMs,
+      })
+      // Single-quote-escape for safe embedding as ONE single-quoted argv element -- avoids
+      // interpolating free-text, model-generated fields (summary/verdict) as separate
+      // double-quoted argv pieces, which a `"`, backtick, or `$()` in model output could break out of.
+      const securityShadowPayloadEscaped = securityShadowPayload.replace(/'/g, "'\\''")
+
+      await bash(
+        `timeout 15s python3 -c "
+import sys, json
+sys.path.insert(0, 'tools/agent-monitoring')
+from shadow_reviewer_events import emit_shadow_reviewer_event
+try:
+    emit_shadow_reviewer_event(**json.loads(sys.argv[1]))
+except Exception:
+    pass
+" '${securityShadowPayloadEscaped}' 2>/dev/null || true`
+      )
+    } catch (e) {
+      // Fail-open: swallow any exception from the shadow candidate path (agent() throwing on an
+      // API error/timeout, JSON encoding, etc.) -- it must never propagate to the production gate.
+    }
+  }
 
   if (securityReview.verdict !== 'APPROVED') {
     log(`Security review: ${securityReview.verdict}`)

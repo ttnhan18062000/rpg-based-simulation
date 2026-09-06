@@ -20,13 +20,15 @@ read it first for the *why*; this README covers the *what's here* and *how to us
 | `monitoring-schema.yaml` | Execution-identity field model (`execution_id`/`run_id`/`ticket_id`), consumed verbatim from `docs/ai/monitoring_writer_decision.md`. |
 | `hook-events.yaml` | Normalized lifecycle hook-event vocabulary currently wired in `.claude/settings.json`. |
 | `hook-surface-policy.yaml` | Per-provider available/normalized/enabled hook-event policy and the Codex activation boundary (available/normalized/enabled distinction, activation candidates, activation prerequisites). |
+| `gate-policy.yaml` | Per-phase gate mechanism, pass condition, and resulting terminal-status mapping for `implement-ticket`. |
 | `terminal-statuses.yaml` | Normalized terminal outcomes for `implement-ticket`; every value ends the current invocation. |
 
 ## Versioning scheme
 
 Each file carries its own independent **integer generation counter** — `version` in
 `contract.yaml`, `workflow_version`, `role_version` (per role file), `skills_version`,
-`schema_version`, `hook_schema_version`, `hook_surface_policy_version`, `terminal_status_schema_version` — starting at `1`. Not semver: this is a single-repo
+`schema_version`, `hook_schema_version`, `hook_surface_policy_version`, `gate_policy_version`,
+`terminal_status_schema_version` — starting at `1`. Not semver: this is a single-repo
 internal contract with zero external consumers today (no provider adapter yet reads it), so
 semver's major/minor/patch compatibility triad would model guarantees that don't exist yet.
 
@@ -42,6 +44,12 @@ ticket invocation moving, but every declared terminal outcome ends that invocati
 does not alter the live Claude workflow, select another ticket, or authorize scope changes,
 gate bypass, hooks, live/destructive actions, or provider activation. Removing the optional field
 and regenerating `AGENTS.md` is the rollback path.
+
+`contract.yaml` may also carry an optional validated `artifact_requirements` field (added by
+TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST) — a new optional field on an existing file,
+not a new sibling file, mirroring `continuation_policy`'s own optional-field treatment above. It
+records the per-tier required staging-artifact filename set (`required_files`) and the one tier
+exempt from the requirement (`exempt_tier`).
 
 ## Bootstrap vocabulary — one-time, not a permanent sync
 

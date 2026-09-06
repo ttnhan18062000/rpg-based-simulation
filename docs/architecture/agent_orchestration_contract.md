@@ -122,7 +122,9 @@ and artifact requirements. This is the least-constrained of the 5 decisions —
 the source plan gives no further detail on test shape, location, or invocation,
 and this ADR does not invent one beyond the stated principle.
 
-**Status: Proposed-pending-implementation-evidence**
+**Status: Implemented — all 4 named axes (phase_order, terminal_status, gate_policy,
+artifact_requirements) have conformance tests as of TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER
+(2 axes) and TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST (2 axes).**
 
 ### Execution Identity (Consumed Input)
 
@@ -226,7 +228,9 @@ guessed in advance of it.
 - Thin evidence on Versioning and Conformance Mechanism means those two
   decisions carry more implementation risk than the other three: a future
   implementer will need to make additional judgment calls neither this ADR nor
-  its source evidence has made yet.
+  its source evidence has made yet. (Historical framing — kept as originally
+  written. Conformance Mechanism's evidence gap has since been closed: see the
+  updated status above and the Revisit Trigger note below.)
 
 ## Consequences
 

@@ -105,7 +105,11 @@ earlier document said so:
 - `roadmap.md` — how this doc relates to the Horizon-0/1/2 committed and experimental work.
 - `AI_FIRST_ENGINEERING_NEXT_EVOLUTION_PROPOSAL` — §"Not recommended for the next evolution",
   Change Inventory `Blocked`/`Reject` rows, §"Post-freeze observations" for the two items the
-  freeze pass explicitly declined to resolve now (`graphify-out/`/`knowledge-index/` git-tracking,
-  `cost_proxy_score`'s non-dollar-proxy caveat) — those live in
-  `telemetry_retention_epic.md`'s M2, not repeated here since they're partially-blocked
-  sub-questions rather than whole blocked initiatives.
+  freeze pass originally declined to resolve at freeze time (`graphify-out/`/`knowledge-index/`
+  git-tracking, `cost_proxy_score`'s non-dollar-proxy caveat) — not repeated here since they were
+  partially-blocked sub-questions rather than whole blocked initiatives. **Update:** the
+  `graphify-out/`/`knowledge-index/` git-tracking question is no longer open — it was resolved with
+  concrete evidence by `telemetry_retention_epic.md`'s M2
+  (`TCK-20260904-ARTIFACT-RETENTION-CLASSIFICATION`, see
+  `docs/guidelines/artifact_retention_classification.md`). The `cost_proxy_score` non-dollar-proxy
+  caveat remains open.
