@@ -267,7 +267,7 @@ ol.reshape li b { color: var(--accent-ink); }
         <span class="axis-num">4 &middot; new</span>
         <h3>Pillar Reach</h3>
         <p class="question">How many of SimQ's 10 real pillars would this idea strengthen once it's actually built and running?</p>
-        <p class="scale">Raw count, 0&ndash;10 &mdash; deliberately not normalized to the 0&ndash;5 scale yet (see Reshape Notes). The bridge back to eventual runtime measurement. <strong>Disambiguation, found by an independent calibration check surfacing a real split reading on idea 9 (0/10 originally vs. 6/10 independently derived):</strong> count only pillars the idea <em>directly</em> produces scoreable events for, not pillars it merely unlocks or enables downstream. A governance/flag decision like idea 9 scores near 0 even though flipping its flags could eventually let other, already-real mechanisms start producing events in several pillars &mdash; that's those mechanisms' own Pillar Reach, not idea 9's.</p>
+        <p class="scale">Raw count, 0&ndash;10 &mdash; deliberately not normalized to the 0&ndash;5 scale yet (see Reshape Notes). The bridge back to eventual runtime measurement. <strong>Disambiguation, found by an independent calibration check surfacing a real split reading on idea 9 (0/10 originally vs. 6/10 independently derived):</strong> count only pillars the idea <em>directly</em> produces scoreable events for, not pillars it merely unlocks or enables downstream. A governance/flag decision like idea 9 scores near 0 even though flipping its flags could eventually let other, already-real mechanisms start producing events in several pillars &mdash; that's those mechanisms' own Pillar Reach, not idea 9's. <strong>Named (`TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES`):</strong> each cell below now lists the specific pillar(s) (short IDs matching quality_scoring_contract.md's own Pillar Metadata table: COGNITION, AGENCY, COMBAT, FACTION, ECONOMY, PROGRESSION, SOCIAL, INFORMATION, WORLD, NARRATIVE) alongside the count, not just the count alone. For the ~20 ideas predating this session's own M2-M6 implementation work, the naming is title/take-column-based rather than freshly re-verified against shipped code &mdash; a disclosed lower-confidence tier, see that ticket's investigation.md.</p>
         <p class="source">source: cross-reference against quality_scoring_contract.md &sect;5's Pillar Metadata table</p>
       </div>
       <div class="axis-card">
@@ -315,7 +315,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">1</td>
           <td class="score">1</td>
           <td class="score">5</td>
-          <td class="score">6/10</td>
+          <td class="score">AGENCY, PROGRESSION, SOCIAL, INFORMATION, WORLD, COGNITION (6/10)</td>
           <td class="score">5</td>
           <td class="score">4</td>
           <td class="score">1</td>
@@ -326,7 +326,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">2</td>
           <td class="score">0</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">AGENCY, COMBAT (2/10)</td>
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">1</td>
@@ -337,7 +337,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">1</td>
           <td class="score">1</td>
           <td class="score">4</td>
-          <td class="score">1/10</td>
+          <td class="score">PROGRESSION (1/10)</td>
           <td class="score">5</td>
           <td class="score">5</td>
           <td class="score">2</td>
@@ -348,7 +348,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">1</td>
           <td class="score">4</td>
-          <td class="score">4/10</td>
+          <td class="score">COMBAT, PROGRESSION, AGENCY, WORLD (4/10)</td>
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -359,7 +359,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">COGNITION, AGENCY, COMBAT (3/10)</td>
           <td class="score">2</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -370,7 +370,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">2</td>
           <td class="score">2</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">SOCIAL, PROGRESSION (2/10)</td>
           <td class="score">5</td>
           <td class="score">4</td>
           <td class="score">1</td>
@@ -381,7 +381,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">NARRATIVE, SOCIAL, COGNITION (3/10)</td>
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">1</td>
@@ -414,7 +414,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">5</td>
-          <td class="score">3/10</td>
+          <td class="score">PROGRESSION, NARRATIVE, SOCIAL (3/10)</td>
           <td class="score">5</td>
           <td class="score">5</td>
           <td class="score">3</td>
@@ -425,7 +425,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">3</td>
-          <td class="score">3/10</td>
+          <td class="score">PROGRESSION, COMBAT, AGENCY (3/10)</td>
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -436,7 +436,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">3</td>
-          <td class="score">2/10</td>
+          <td class="score">INFORMATION, COGNITION (2/10)</td>
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">1</td>
@@ -447,7 +447,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">SOCIAL, FACTION, AGENCY (3/10)</td>
           <td class="score">5</td>
           <td class="score">4</td>
           <td class="score">2</td>
@@ -458,7 +458,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">5</td>
           <td class="score">3</td>
           <td class="score">3</td>
-          <td class="score">3/10</td>
+          <td class="score">COGNITION, COMBAT, WORLD (3/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">4</td>
@@ -524,7 +524,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">3</td>
-          <td class="score">3/10</td>
+          <td class="score">PROGRESSION, WORLD, SOCIAL (3/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">2</td>
@@ -535,7 +535,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">3</td>
-          <td class="score">4/10</td>
+          <td class="score">PROGRESSION, ECONOMY, SOCIAL, AGENCY (4/10)</td>
           <td class="score">5</td>
           <td class="score">2</td>
           <td class="score">2</td>
@@ -546,7 +546,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">SOCIAL, NARRATIVE (2/10)</td>
           <td class="score">3</td>
           <td class="score">4</td>
           <td class="score">1</td>
@@ -557,7 +557,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">PROGRESSION, COGNITION (2/10)</td>
           <td class="score">2</td>
           <td class="score">2</td>
           <td class="score">2</td>
@@ -568,7 +568,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">2</td>
           <td class="score">2</td>
           <td class="score">3</td>
-          <td class="score">2/10</td>
+          <td class="score">ECONOMY, PROGRESSION (2/10)</td>
           <td class="score">1</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -579,7 +579,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">INFORMATION, SOCIAL (2/10)</td>
           <td class="score">1</td>
           <td class="score">1</td>
           <td class="score">1</td>
@@ -590,7 +590,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">PROGRESSION, ECONOMY, COGNITION (3/10)</td>
           <td class="score">5</td>
           <td class="score">3</td>
           <td class="score">1</td>
@@ -601,7 +601,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">2</td>
           <td class="score">2</td>
           <td class="score">3</td>
-          <td class="score">2/10</td>
+          <td class="score">SOCIAL, PROGRESSION (2/10)</td>
           <td class="score">0</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -612,7 +612,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">3</td>
-          <td class="score">3/10</td>
+          <td class="score">WORLD, COMBAT, PROGRESSION (3/10)</td>
           <td class="score">2</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -623,7 +623,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">COMBAT, PROGRESSION, NARRATIVE (3/10)</td>
           <td class="score">2</td>
           <td class="score">4</td>
           <td class="score">1</td>
@@ -634,7 +634,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">ECONOMY, NARRATIVE (2/10)</td>
           <td class="score">0</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -645,7 +645,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">SOCIAL, ECONOMY, PROGRESSION (3/10)</td>
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">1</td>
@@ -656,7 +656,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">5</td>
           <td class="score">4</td>
-          <td class="score">5/10</td>
+          <td class="score">PROGRESSION, WORLD, SOCIAL, ECONOMY, FACTION (5/10)</td>
           <td class="score">1</td>
           <td class="score">1</td>
           <td class="score">4</td>
@@ -667,7 +667,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">5</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">SOCIAL, FACTION, PROGRESSION (3/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">3</td>
@@ -678,7 +678,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">5</td>
           <td class="score">5</td>
           <td class="score">4</td>
-          <td class="score">4/10</td>
+          <td class="score">PROGRESSION, SOCIAL, WORLD, NARRATIVE (4/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">5</td>
@@ -689,7 +689,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">3</td>
-          <td class="score">3/10</td>
+          <td class="score">FACTION, WORLD, ECONOMY (3/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">4</td>
@@ -700,7 +700,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">FACTION, SOCIAL (2/10)</td>
           <td class="score">5</td>
           <td class="score">2</td>
           <td class="score">3</td>
@@ -711,7 +711,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">5</td>
-          <td class="score">3/10</td>
+          <td class="score">FACTION, COMBAT, WORLD (3/10)</td>
           <td class="score">5</td>
           <td class="score">2</td>
           <td class="score">2</td>
@@ -722,7 +722,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">2</td>
           <td class="score">1</td>
           <td class="score">3</td>
-          <td class="score">1/10</td>
+          <td class="score">WORLD (1/10)</td>
           <td class="score">3</td>
           <td class="score">4</td>
           <td class="score">1</td>
@@ -733,7 +733,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">FACTION, COMBAT, SOCIAL (3/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">3</td>
@@ -744,7 +744,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">3</td>
-          <td class="score">2/10</td>
+          <td class="score">FACTION, SOCIAL (2/10)</td>
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">2</td>
@@ -755,7 +755,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">INFORMATION, ECONOMY, COGNITION (3/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -766,7 +766,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">1</td>
           <td class="score">0</td>
           <td class="score">4</td>
-          <td class="score">1/10</td>
+          <td class="score">WORLD (1/10)</td>
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">1</td>
@@ -777,7 +777,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">2</td>
           <td class="score">1</td>
           <td class="score">5</td>
-          <td class="score">2/10</td>
+          <td class="score">WORLD, PROGRESSION (2/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">5</td>
@@ -788,7 +788,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">WORLD, ECONOMY (2/10)</td>
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">3</td>
@@ -799,7 +799,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">WORLD, COMBAT, ECONOMY (3/10)</td>
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">3</td>
@@ -810,7 +810,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">5</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">WORLD, COMBAT (2/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -821,7 +821,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">3</td>
-          <td class="score">2/10</td>
+          <td class="score">WORLD, COMBAT (2/10)</td>
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">2</td>
@@ -832,7 +832,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">5</td>
           <td class="score">4</td>
           <td class="score">3</td>
-          <td class="score">2/10</td>
+          <td class="score">WORLD, NARRATIVE (2/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">3</td>
@@ -843,7 +843,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">ECONOMY, AGENCY (2/10)</td>
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">2</td>
@@ -854,7 +854,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">PROGRESSION, ECONOMY (2/10)</td>
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -865,7 +865,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">FACTION, WORLD (2/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">3</td>
@@ -876,7 +876,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">WORLD, FACTION (2/10)</td>
           <td class="score">5</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -887,7 +887,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">SOCIAL, PROGRESSION (2/10)</td>
           <td class="score">5</td>
           <td class="score">4</td>
           <td class="score">2</td>
@@ -898,7 +898,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">2</td>
           <td class="score">2</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">SOCIAL, FACTION (2/10)</td>
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">2</td>
@@ -909,7 +909,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">4</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">SOCIAL, NARRATIVE (2/10)</td>
           <td class="score">3</td>
           <td class="score">4</td>
           <td class="score">1</td>
@@ -920,7 +920,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">FACTION, SOCIAL, WORLD (3/10)</td>
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">2</td>
@@ -931,7 +931,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">3</td>
-          <td class="score">3/10</td>
+          <td class="score">NARRATIVE, SOCIAL, COGNITION (3/10)</td>
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">3</td>
@@ -942,7 +942,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">4</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">NARRATIVE, COGNITION (2/10)</td>
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">1</td>
@@ -953,7 +953,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">2</td>
-          <td class="score">2/10</td>
+          <td class="score">WORLD, AGENCY (2/10)</td>
           <td class="score">5</td>
           <td class="score">4</td>
           <td class="score">2</td>
@@ -964,7 +964,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">SOCIAL, WORLD (2/10)</td>
           <td class="score">2</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -975,7 +975,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">3</td>
-          <td class="score">3/10</td>
+          <td class="score">WORLD, SOCIAL, NARRATIVE (3/10)</td>
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">2</td>
@@ -986,7 +986,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">NARRATIVE, INFORMATION (2/10)</td>
           <td class="score">3</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -997,7 +997,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">4</td>
           <td class="score">4</td>
-          <td class="score">3/10</td>
+          <td class="score">INFORMATION, SOCIAL, NARRATIVE (3/10)</td>
           <td class="score">1</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -1008,7 +1008,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">3</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">SOCIAL, NARRATIVE (2/10)</td>
           <td class="score">1</td>
           <td class="score">2</td>
           <td class="score">1</td>
@@ -1019,7 +1019,7 @@ ol.reshape li b { color: var(--accent-ink); }
           <td class="score">4</td>
           <td class="score">3</td>
           <td class="score">4</td>
-          <td class="score">2/10</td>
+          <td class="score">WORLD, NARRATIVE (2/10)</td>
           <td class="score">4</td>
           <td class="score">2</td>
           <td class="score">1</td>

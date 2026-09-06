@@ -24,6 +24,7 @@ class InformationScorer(PillarScorer):
         "paid_info_changed_goal",
         "belief_stale",
         "decision_diverged_by_belief",
+        "route_new_query",
     )
 
     def __init__(self, weights: ScoringWeights) -> None:
@@ -142,6 +143,13 @@ class InformationScorer(PillarScorer):
                 self.weights["subjective_divergence"],
                 "two entities diverged on route choice due to belief difference",
                 ("subjective_divergence",),
+            )
+
+        if et == "route_new_query":
+            return _rec(
+                self.weights["information_seeking_active"],
+                "entity routed a new information-seeking query",
+                ("information_seeking_active",),
             )
 
         return None

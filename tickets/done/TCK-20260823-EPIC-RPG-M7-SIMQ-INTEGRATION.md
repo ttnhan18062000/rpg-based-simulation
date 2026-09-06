@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260823-EPIC-RPG-M7-SIMQ-INTEGRATION
-phase: open
+phase: done
 date: 2026-09-06
 tags: [simulation-quality, calibration, content]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, calibration, content]
 Simulation Quality Pillar Integration (M7) — tracking epic for the 2-ticket SimQ audit/calibration sweep
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -84,11 +84,13 @@ This epic tracks child tickets only; no direct implementation happens here.
       build order, with no implementation performed as part of closing this acceptance criterion.
 - [x] The parent roadmap's M5/M6 sections are corrected from stale gate-status language to real
       shipped-status citations (done in this same pass, see Related Docs).
-- [ ] A future session that picks up either child ticket runs it through the full standard-tier
-      pipeline (Investigate → Plan → Implement → ... → Finalize) and links back to this epic.
+- [x] A future session that picks up either child ticket runs it through the full standard-tier
+      pipeline (Investigate → Plan → Implement → ... → Finalize) and links back to this epic. Both
+      landed: `TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES`, `TCK-20260906-SIMQ-CALIBRATION-AND-
+      COMPLETENESS` (2026-09-06, this batch).
 
 ## Related Tickets
-### Child tickets (implementation sequence — see `tickets/todos/m7-simq-pillar-integration/SEQUENCE.md`)
+### Child tickets (implementation sequence — see `tickets/done/m7-simq-pillar-integration/SEQUENCE.md`, moved from `tickets/todos/` once the last child ticket landed)
 - `TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES` (epic Scope items 1-3) — no deps in this batch, land
   first.
 - `TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS` (epic Scope items 4-5) — depends on (1) landing
@@ -110,8 +112,9 @@ This epic tracks child tickets only; no direct implementation happens here.
   "built, not yet visible in play" ideas flagged above
 
 ## Related Stored Artifacts
-None — epic tier tracks child tickets only; each child ticket carries its own staging artifacts once
-picked up for implementation.
+None directly — epic tier tracks child tickets only. Each child ticket's own artifacts:
+`stored_artifacts/TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES/`,
+`stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/`.
 
 ## Related Code Areas
 - `src/simulation_quality/` (`scorers/`, `pillar_accumulator.py`, `quality_report.py`, `quality_hub.py`)
@@ -124,13 +127,35 @@ picked up for implementation.
 - Whether the 3 flagged dormant ideas (57, 62, 56) should be excluded from M7's pillar-mapping
   entirely, or included with an explicit "no live event type yet" note, is left to the first child
   ticket's own Investigate/Plan phases — not decided here.
-- `SEQUENCE.md` in `tickets/todos/m7-simq-pillar-integration/` enforces the build order above for
-  `implement-epic`.
+- `SEQUENCE.md` (now in `tickets/done/m7-simq-pillar-integration/`, originally `tickets/todos/`)
+  enforces the build order above for `implement-epic`.
 
 ## Implementation Notes
+This epic tracked only — no direct implementation at the epic level, per its own Scope. Each
+child ticket ran its own full standard-tier pipeline independently; see each child ticket's own
+Implementation Notes for details.
 
 ## Test Summary
+See each child ticket's own Test Summary. No epic-level tests.
 
 ## Files Changed
+None directly by this epic ticket, beyond its own body.
 
 ## Completion Summary
+Both design ideas of M7's own scope landed across the 2 confirmed child tickets, in the confirmed
+build order (mapping/rules before calibration/completeness), with zero deviation:
+- Epic Scope items 1-3 (named-pillar mapping, event-type inventory, missing-rule authoring) —
+  `TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES`: all 65 ideas named-pillar-mapped, the one genuine
+  unscored event-type gap (`route_new_query`) closed as `InformationScorer`'s 8th rule, the 3
+  flagged dormant ideas (56/57/62) honestly dispositioned as emitting no event of any kind.
+- Epic Scope items 4-5 (calibration re-run, completeness cross-check) —
+  `TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS`: confirmed `route_new_query` does not fire in any
+  shipped calibration corpus (2 real runs), proved the new rule's wiring correct via a deterministic
+  isolated `QualityHub` replay instead (real, non-flat, attributable score delta), and ran the
+  idea-level completeness cross-check against all 65 ideas — 65/65 accounted for, 0 real gaps.
+
+This epic's own scoping held up under implementation scrutiny with only one real refinement beyond
+what was originally anticipated: `route_new_query` does not fire in any shipped calibration corpus
+(confirmed by 2 fresh real runs) — a limitation of the current calibration data, not of the new
+rule or of this epic's own scoping — resolved via a deterministic isolated proof instead. No
+material scoping drift.
