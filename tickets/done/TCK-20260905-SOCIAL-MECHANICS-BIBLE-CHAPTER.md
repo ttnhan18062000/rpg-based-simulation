@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: mechanics
 authority: P1
 audience: agent
 ticket_id: TCK-20260905-SOCIAL-MECHANICS-BIBLE-CHAPTER
-phase: open
+phase: done
 date: 2026-09-05
 tags: [content, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [content, architecture]
 Write the missing Social/Political Mechanics Bible chapter (items 1-4 of the social/political hardening plan)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -83,12 +83,18 @@ inaccurate-citation mistake `SUB-327` already demonstrated the cost of
   (`TCK-20260902-SOCIAL-CANONICAL-HASH-GAP`).
 
 ## Acceptance Criteria
-- [ ] A Mechanics Bible chapter (new or promoted-and-restructured) exists, is `Certified Level 1`, and
+- [x] A Mechanics Bible chapter (new or promoted-and-restructured) exists, is `Certified Level 1`, and
       every formula it states is cited against real code, spot-checked directly — not transcribed from
-      the parity ledger's own `verified` claims unverified.
-- [ ] The `ReputationService`/`PublicReputationProfile` liveness question is resolved with a direct
-      code check, not assumed from either existing doc.
-- [ ] The `03_economic_laws.md` reputation fragment is cross-linked, not duplicated.
+      the parity ledger's own `verified` claims unverified. **Done** —
+      `docs/mechanics/07_social_political_dynamics.md`, promoted from `social_systems_contract.md`
+      with 5 sections corrected after independent verification found them materially diverged from
+      real code (see Implementation Notes).
+- [x] The `ReputationService`/`PublicReputationProfile` liveness question is resolved with a direct
+      code check, not assumed from either existing doc. **Done** — both are live, but they are two
+      structurally distinct, differently-typed fields sharing a confusingly similar name; see
+      Chapter 07 §4.
+- [x] The `03_economic_laws.md` reputation fragment is cross-linked, not duplicated. **Done** —
+      relocated to Chapter 07 §6, a pointer left in `03_economic_laws.md`.
 - [x] The `SOC-FAC-*`/`SOC-CHRON-*` entries are independently spot-checked against real diplomacy code,
       with results recorded (confirmed or corrected). **Done, 2026-09-05** — all 16 confirmed accurate,
       no corrections needed.
@@ -120,9 +126,67 @@ None yet — scope-only, staging artifacts to be created by whoever picks this u
 - The `ReputationService` liveness inconsistency (see Request Summary) — not resolved here.
 
 ## Implementation Notes
+Chose promote-with-correction over author-from-scratch: `social_systems_contract.md` is a genuinely
+thorough starting structure, but independently spot-checking every formula against real code (per
+this ticket's own AC1 and the SUB-327 precedent) found 5 sections materially diverged from real code
+— not stale numbers, but describing mechanisms with no basis in `src/` at all:
+1. **Appraisal trust formula** — missing the real `(clan_trust - 0.5) * 0.2` term (idea 54) and the
+   `bond.sentiment < -0.8` hard-reject OR-condition.
+2. **Reputation** — conflated two structurally distinct, differently-typed fields sharing a name:
+   `SocialComponent.public_reputation` (the real clamped scalar) vs. `PublicReputationProfile.labels`
+   (a separate label bag `ReputationUpdateService.process_witnessed_event()` actually writes, at a
+   different component path entirely, with different event names/deltas than the doc claimed).
+3. **Contracts** — cited a non-existent `ESCORT` `ContractKind` (ESCORT is a `QuestKind`) and a
+   per-kind breach table that doesn't exist; the real mechanism (`resolve_contract_outcome()`) is one
+   generic function applied uniformly across all 10 real `ContractKind` members.
+4. **Guilds** — described a `GuildMembership`/dues/rank system with zero real code; the real
+   mechanism (`GuildIntelSystem`) is unrelated intel-gathering (visiting a guild building generates a
+   rumor Lead about the world's most dangerous region).
+5. **Party** — described a `PartyRecord` type that doesn't exist anywhere in `src/`; the real state
+   type is `GroupRecord`, with real leadership-influence/election/defection mechanics
+   (`PartyCoordinationSystem`/`PartyLifecycleService`) substantially different from what was described.
+
+All 5 corrected in both the new chapter and `social_systems_contract.md` itself (in place, with
+inline correction notes and a top-of-file provenance summary) — leaving a known-inaccurate P1/active
+doc uncorrected while a new "Certified Level 1" chapter contradicts it would itself be a semantic-
+parity violation. Sections confirmed accurate (Relationships clamp table, Social Memory, Party
+Composition, Decay) were promoted with presentation changes only. A new finding not in either prior
+doc — the real write paths to `public_reputation` (contract fulfillment, party defection, birth-seed,
+Campaign carry-forward) — is documented in Chapter 07 §4 with a disclosed dead-code gap (the
+contract-betrayal branch has no production caller today, matching this session's own established
+"built, not yet reachable" disclosure pattern).
+
+Also relocated the `03_economic_laws.md` §4.1 reputation-discount fragment (pointer left behind) and
+updated both roadmap-tracking docs to reflect the whole 5-item hardening backlog is now shipped.
 
 ## Test Summary
+Docs-only ticket, no `src/`/`tests/` code authored. Every formula in the new chapter was
+independently verified against its cited source file/function before writing (see
+`staging_artifacts/.../test_plan.md` for the exact commands run). Regression:
+`tests/tools/test_generate_registry.py tests/tools/test_doc_staleness_check.py
+tests/tools/test_add_frontmatter_live.py` — 176 passed, 0 failed (confirmed clean after
+`docs/REGISTRY.yaml` regeneration). `tools/validate_frontmatter.py` clean on every touched/created
+file. `make knowledge-index-update` run successfully (docs/ changed).
 
 ## Files Changed
+- `docs/mechanics/07_social_political_dynamics.md` (new)
+- `docs/mechanics/README.md`
+- `docs/mechanics/06_worldbuilding_foundation.md`
+- `docs/mechanics/03_economic_laws.md`
+- `docs/simulation/social_systems_contract.md`
+- `docs/plans/rpg_design_roadmap/rpg_social_narrative_mechanics_hardening_plan.md`
+- `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md`
+- `docs/REGISTRY.yaml` (regenerated)
 
 ## Completion Summary
+Authored `docs/mechanics/07_social_political_dynamics.md`, the missing Social & Political Mechanics
+Bible chapter, `Certified Level 1`, promoted from `docs/simulation/social_systems_contract.md` with
+every formula independently re-verified against real code. Found and corrected 5 real, material
+inaccuracies in the promoted-from doc (Reputation, Appraisal's trust formula, Contracts, Guilds,
+Party) — not transcribed unverified, matching this ticket's own explicit warning against the
+SUB-327 fabricated-citation failure mode. Resolved the pre-flagged liveness question: both
+`ReputationUpdateService` and `ReputationService.combine_public_reputation()` are live, but are two
+structurally distinct fields sharing a confusing name. Relocated the misfiled reputation-discount
+fragment and cross-linked the 3 existing partial contracts without rewriting them. Closes out the
+whole 5-item Social/Political hardening backlog (`rpg_social_narrative_mechanics_hardening_plan.md`).
+No production code touched.
