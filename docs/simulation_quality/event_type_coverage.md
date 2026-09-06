@@ -23,7 +23,23 @@ deliberately uncovered — see the `deliberately_uncovered` row below, not a res
 **Ticket:** TCK-20260630-SIMQ-TRANSLATE  
 **Date:** 2026-06-30  
 **Audit base:** calibration runs in `data/calibration/` (sandbox_world seeds 42/137/999 200t, dungeon_crawl 200t, urban_political 200t, wilderness_survival 200t, simq_routing_test 500t)  
-**Last updated:** 2026-09-06 (`TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES` — found and fixed a real
+**Last updated:** 2026-09-06 (`TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS` — attempted to
+calibrate the new `route_new_query` rule against 2 fresh real runs of the one shipped profile with
+all 3 required flags ON, `urban_political_selfmodel_execution_probe`: seed 42/500t (18297 events
+replayed) and seed 137/300t (10443 events replayed). **`route_new_query`: 0 occurrences in both** —
+matches `test_grade_regression.py::test_urban_political_selfmodel_execution_isolated_grade_anchor`'s
+own pre-existing, already-disclosed "does NOT generalize" finding for this exact profile/world, now
+independently re-confirmed at 1.5-2.5x that test's own 200-tick budget and a second seed, not just
+inherited. Since no shipped corpus fires it, built a deterministic before/after proof through the
+real `QualityHub`/`InformationScorer` instead (`route_new_query_isolated_calibration.py`,
+`stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/`), replaying the real,
+engine-captured envelope shape: INFORMATION raw_score 0.0 → 10.0, grade C → S — a real, non-flat,
+fully attributable delta proving the wiring is correct and will register the moment any corpus
+profile actually routes Branch 3. Also ran the epic's own idea-level completeness cross-check
+(`completeness_check.py`, same directory) against all 65 ideas' named-pillar mapping: 65/65
+accounted for, 0 real undisclosed gaps — see `quality_scoring_contract.md` §7.7.)
+
+**Previously updated:** 2026-09-06 (`TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES` — found and fixed a real
 gap this doc's own audit had missed since 2026-07-12: `route_new_query`, real and live-emitted by
 both `event_extractor.py` and `event_shapers.py` since `TCK-20260712-SIMQ-INFORMATION-ROUTING-
 CLOSURE`, was never registered with `InformationScorer.EVENT_TYPES` or documented here at all —
@@ -180,7 +196,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `quest_completed` | campaigns/runner | NarrativeScorer | 0 | Campaign-gated; also reachable via quest_event conditional translation |
 | `scenario_objective_completed` | engine/scenario_runtime | NarrativeScorer | 0 | Scenario-gated (see §4) |
 | `scenario_stalled` | engine/scenario_runtime | NarrativeScorer | 0 | Scenario-gated (see §4) |
-| `route_new_query` | event_extractor / event_shapers (StrategyShaper) | InformationScorer | 0 | `prop.last_routed_query_tick == prior_state.tick` — TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE. Emitted by both `event_extractor.py` and `event_shapers.py` (StrategyShaper) since that ticket but never registered with `InformationScorer.EVENT_TYPES` or this table until `TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES` found the gap — not calibrated yet. |
+| `route_new_query` | event_extractor / event_shapers (StrategyShaper) | InformationScorer | 0 | `prop.last_routed_query_tick == prior_state.tick` — TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE. Emitted by both `event_extractor.py` and `event_shapers.py` (StrategyShaper) since that ticket but never registered with `InformationScorer.EVENT_TYPES` or this table until `TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES` found the gap. **Calibrated 2026-09-06 (`TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS`):** 0 occurrences confirmed in 2 fresh real runs of `urban_political_selfmodel_execution_probe` (seed 42/500t, seed 137/300t) — matches this table's own pre-existing `test_urban_political_selfmodel_execution_isolated_grade_anchor` disclosure. No shipped corpus profile fires it; wiring proven correct via an isolated `QualityHub` replay instead (raw_score 0.0 → 10.0, grade C → S) — see `stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/route_new_query_isolated_calibration.py`. |
 
 ### §1.2 Via `_TRANSLATE_SIMPLE` (one-to-one remaps)
 

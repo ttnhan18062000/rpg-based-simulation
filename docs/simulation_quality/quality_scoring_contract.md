@@ -1287,6 +1287,34 @@ no change — already covered. Tracked by
 `TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY`, which cite this subsection as their rationale
 source; full scoping context in `TCK-20260806-SIMQ-LIFECYCLE-PILLAR-BOUNDARY-DOC`.
 
+### 7.7 Idea-Level Pillar-Mapping Completeness Cross-Check (2026-09)
+
+`TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS` (M7 epic, `TCK-20260823-EPIC-RPG-M7-SIMQ-
+INTEGRATION`, child 2 of 2) cross-referenced ticket 1's own finished named-pillar mapping (all 65
+rows of `docs/brainstorm/design_merit_scorecard.html`'s Pillar Reach column) against the 10 real
+pillars, per the epic's own Scope item 5: "every idea Pillar Reach says should touch a pillar needs
+a traceable rule or an explicit, written reason it doesn't." A checklist against a known-complete
+list (ticket 1's own mapping), not a fresh open-ended per-idea trace.
+
+**Method:** every named pillar on every row must be one of the 10 real pillars (all 10 already
+confirmed by ticket 1's own 90-event-type audit to have real, scored event coverage), and the named
+list's count must match the raw `N/10` the axis still records.
+
+**Result: 65/65 rows accounted for, 0 real undisclosed gaps.**
+
+| Category | Count | Notes |
+|---|---|---|
+| Named pillar(s), structurally consistent | 58 | Includes the 3 dormant ideas (56/57/62) — named for the pillars they would strengthen once built, per the axis's own forward-looking question text, despite zero live event backing today |
+| Bare `0/10`, no named pillar | 7 | Ideas 8, 9, 15, 16, 17, 18, 19 — matches ticket 1's own already-disclosed "governance/doc-fix/investigation-only, no real event surface" exception list exactly |
+| Unrecognized pillar name or count mismatch | 0 | — |
+
+No real gap was found, so per this ticket's own Acceptance Criteria ("any real gap... fixed or
+ticketed"), no fix and no follow-up ticket were needed. Script:
+`stored_artifacts/TCK-20260906-SIMQ-CALIBRATION-AND-COMPLETENESS/completeness_check.py`.
+
+**Conclusion: M7's own Scope item 5 is satisfied — every one of the 65 ideas is either backed by a
+real, traceable signal rule, or has an explicit, already-written reason it isn't.**
+
 ---
 
 ## 8. Data Flow & Persistence
