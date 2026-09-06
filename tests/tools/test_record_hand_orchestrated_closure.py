@@ -1,10 +1,12 @@
 """Tests for tools/agent-monitoring/record_hand_orchestrated_closure.py
-(TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE).
+(TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE,
+TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP).
 
 Covers the pure build_records() expansion function directly and the CLI's real write behavior via
 subprocess with an isolated cwd, mirroring test_record_run.py's/test_record_events.py's own
 established pattern for these sibling tools.
 """
+import csv
 import json
 import subprocess
 import sys
@@ -26,6 +28,10 @@ _MINIMAL_EVENTS = [
     {"phase": "Implement", "status": "ok", "summary": "Applied the fix"},
     {"phase": "Verify", "status": "ok", "summary": "Confirmed tests pass"},
 ]
+
+_TITLE_ARGS = ["--title", "Fake ticket title", "--log-summary", "Fake one-sentence summary."]
+
+_WORKING_LOG_HEADER = "timestamp,ticket_id,title,status,summary,artifacts_path\n"
 
 
 def test_build_records_shares_run_id_execution_id_provider_ticket_id_across_events():
@@ -112,7 +118,7 @@ class TestCLIWritesRealRecords:
 
     def test_writes_one_run_and_n_event_records(self, tmp_path):
         result = self._run(
-            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS)],
+            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
             tmp_path,
         )
         assert result.returncode == 0, result.stderr
@@ -133,7 +139,7 @@ class TestCLIWritesRealRecords:
 
     def test_invalid_tier_rejected_by_argparse_choices(self, tmp_path):
         result = self._run(
-            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "not_a_real_tier", "--events", json.dumps(_MINIMAL_EVENTS)],
+            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "not_a_real_tier", "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
             tmp_path,
         )
         assert result.returncode != 0
@@ -142,7 +148,7 @@ class TestCLIWritesRealRecords:
     def test_event_missing_required_field_rejected(self, tmp_path):
         bad_events = [{"phase": "Scope", "status": "ok"}]  # missing "summary"
         result = self._run(
-            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--events", json.dumps(bad_events)],
+            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--events", json.dumps(bad_events), *_TITLE_ARGS],
             tmp_path,
         )
         assert result.returncode == 1
@@ -151,7 +157,7 @@ class TestCLIWritesRealRecords:
 
     def test_empty_events_array_rejected(self, tmp_path):
         result = self._run(
-            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--events", "[]"],
+            ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--events", "[]", *_TITLE_ARGS],
             tmp_path,
         )
         assert result.returncode == 1
@@ -161,7 +167,7 @@ class TestCLIWritesRealRecords:
         result = self._run(
             [
                 "--ticket-id", "TCK-FAKE-CLI", "--tier", "epic", "--events", json.dumps(_MINIMAL_EVENTS),
-                "--final-status", "NEEDS_HUMAN_INPUT", "--workflow", "implement-epic",
+                "--final-status", "NEEDS_HUMAN_INPUT", "--workflow", "implement-epic", *_TITLE_ARGS,
             ],
             tmp_path,
         )
@@ -171,3 +177,145 @@ class TestCLIWritesRealRecords:
         run_record = json.loads(runs_file.read_text().strip())
         assert run_record["final_status"] == "NEEDS_HUMAN_INPUT"
         assert run_record["workflow"] == "implement-epic"
+
+
+class TestUnattributedStatsAreOmittedNotZero:
+    """TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP: a hand-orchestrating session
+    never has a live per-phase sidecar during the real work, so an unattributed phase must get
+    no tool_call_count/cost_proxy_score keys at all -- never a false (0, 0.0)."""
+
+    def _run(self, args, tmp_path):
+        return subprocess.run(
+            [sys.executable, str(_RECORD_PATH), *args],
+            capture_output=True, text=True, cwd=tmp_path,
+        )
+
+    def test_no_matching_tools_jsonl_rows_omits_stats_keys_entirely(self, tmp_path):
+        result = self._run(
+            ["--ticket-id", "TCK-NO-SIDECAR-CLI", "--tier", "hotfix",
+             "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+        event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
+        for event in event_lines:
+            assert "tool_call_count" not in event
+            assert "cost_proxy_score" not in event
+
+    def test_real_attributed_rows_still_computed_correctly(self, tmp_path):
+        # A mixed case: seq=1 has real tools.jsonl rows (e.g. a session that partially used the
+        # live workflow before finishing via hand-orchestration); seq=2 has none.
+        iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+        week_dir = tmp_path / "agent-monitoring" / "data" / iso_week
+        week_dir.mkdir(parents=True, exist_ok=True)
+        with open(week_dir / "tools.jsonl", "w") as f:
+            f.write(json.dumps({"run_id": "TCK-MIXED-CLI", "seq": 1, "tool": "Read", "duration_ms": 5}) + "\n")
+
+        events = [
+            {"phase": "Scope", "status": "ok", "summary": "Scoped"},
+            {"phase": "Implement", "status": "ok", "summary": "Implemented"},
+        ]
+        result = self._run(
+            ["--ticket-id", "TCK-MIXED-CLI", "--tier", "hotfix", "--events", json.dumps(events), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+        event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
+        seq1, seq2 = event_lines[0], event_lines[1]
+        assert seq1["tool_call_count"] == 1
+        assert "tool_call_count" not in seq2
+        assert "cost_proxy_score" not in seq2
+
+
+class TestWorkingLogCsvAppended:
+    """TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP: the wrapper must append its own
+    tickets/working_log.csv row -- previously never written at all for this call path."""
+
+    def _run(self, args, tmp_path):
+        return subprocess.run(
+            [sys.executable, str(_RECORD_PATH), *args],
+            capture_output=True, text=True, cwd=tmp_path,
+        )
+
+    def _seed_working_log(self, tmp_path):
+        log_path = tmp_path / "tickets" / "working_log.csv"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_path.write_text(_WORKING_LOG_HEADER)
+        return log_path
+
+    def test_appends_one_row_with_correct_columns(self, tmp_path):
+        log_path = self._seed_working_log(tmp_path)
+        result = self._run(
+            ["--ticket-id", "TCK-LOG-TEST", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
+             "--title", "A test ticket", "--log-summary", "Did the test thing."],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        rows = list(csv.reader(log_path.read_text().splitlines()))
+        assert rows[0] == ["timestamp", "ticket_id", "title", "status", "summary", "artifacts_path"]
+        assert len(rows) == 2
+        _, ticket_id, title, status, summary, artifacts_path = rows[1]
+        assert ticket_id == "TCK-LOG-TEST"
+        assert title == "A test ticket"
+        assert status == "DONE"
+        assert summary == "Did the test thing."
+        assert artifacts_path == "none (hotfix — no staging artifacts)"
+
+    def test_artifacts_path_defaults_to_stored_artifacts_for_standard_tier(self, tmp_path):
+        log_path = self._seed_working_log(tmp_path)
+        result = self._run(
+            ["--ticket-id", "TCK-LOG-STANDARD", "--tier", "standard", "--events", json.dumps(_MINIMAL_EVENTS),
+             *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        rows = list(csv.reader(log_path.read_text().splitlines()))
+        assert rows[1][5] == "stored_artifacts/TCK-LOG-STANDARD"
+
+    def test_explicit_artifacts_path_overrides_default(self, tmp_path):
+        log_path = self._seed_working_log(tmp_path)
+        result = self._run(
+            ["--ticket-id", "TCK-LOG-EXPLICIT", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
+             *_TITLE_ARGS, "--artifacts-path", "custom/path"],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        rows = list(csv.reader(log_path.read_text().splitlines()))
+        assert rows[1][5] == "custom/path"
+
+    def test_embedded_comma_in_summary_round_trips_correctly(self, tmp_path):
+        log_path = self._seed_working_log(tmp_path)
+        result = self._run(
+            ["--ticket-id", "TCK-LOG-COMMA", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
+             "--title", "A title", "--log-summary", "Fixed the bug, added tests, updated docs."],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        rows = list(csv.reader(log_path.read_text().splitlines()))
+        assert rows[1][4] == "Fixed the bug, added tests, updated docs."
+
+    def test_missing_title_rejected_with_no_partial_write(self, tmp_path):
+        self._seed_working_log(tmp_path)
+        result = self._run(
+            ["--ticket-id", "TCK-LOG-NOTITLE", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
+             "--log-summary", "x"],
+            tmp_path,
+        )
+        assert result.returncode != 0
+        assert not (tmp_path / "agent-monitoring").exists()
+
+    def test_missing_working_log_parent_dir_warns_but_does_not_fail_the_run(self, tmp_path):
+        # No tickets/ dir at all in this isolated cwd -- monitoring writes must never fail the
+        # workflow (CLAUDE.md Hard Rule), so the run/event write still succeeds.
+        result = self._run(
+            ["--ticket-id", "TCK-LOG-NODIR", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
+             *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        assert "working_log.csv" in result.stderr
+        iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+        assert (tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl").exists()

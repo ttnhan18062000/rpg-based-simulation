@@ -12,6 +12,8 @@ them by hand for every event.
 Usage:
     python3 tools/agent-monitoring/record_hand_orchestrated_closure.py \\
         --ticket-id TCK-20260904-EXAMPLE --tier hotfix \\
+        --title "Short ticket title" \\
+        --log-summary "One sentence of what was implemented." \\
         --events '[
           {"phase": "Scope", "status": "ok", "summary": "..."},
           {"phase": "Implement", "status": "ok", "summary": "..."},
@@ -27,10 +29,21 @@ order) are filled in automatically and shared across the whole batch, matching a
 `Workflow` run's own shape. `--start-ts`/`--end-ts` default to "now" (matching this project's own
 existing hand-orchestrated `runs.jsonl` precedent of using an identical start/end timestamp when
 real elapsed wall-clock time wasn't tracked) but accept explicit ISO-8601 values when known.
+
+`tool_call_count`/`cost_proxy_score` are only ever added when real `tools.jsonl` rows are found
+for a given (run_id, seq) -- a hand-orchestrating session never has a live per-phase sidecar
+during the actual work, so an unattributed phase correctly gets no such keys at all (never a
+false `0`/`0.0`).
+
+This call also appends one row to `tickets/working_log.csv` (`--title`/`--log-summary` plus
+`--artifacts-path`, which defaults to `stored_artifacts/<ticket-id>` for standard/epic tier or
+"none (hotfix — no staging artifacts)" for hotfix) -- do not append that row by hand separately
+when using this wrapper, or the ticket will get a duplicate working_log entry.
 """
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 import time
@@ -106,6 +119,14 @@ def main() -> None:
     parser.add_argument("--workflow", default="implement-ticket")
     parser.add_argument("--provider", default="claude")
     parser.add_argument("--agent", default="claude", help="Default agent value for events that don't override it")
+    parser.add_argument("--title", required=True, help="Ticket title, for tickets/working_log.csv")
+    parser.add_argument("--log-summary", required=True, help="One-sentence summary for tickets/working_log.csv")
+    parser.add_argument(
+        "--artifacts-path",
+        default=None,
+        help="Defaults to stored_artifacts/<ticket-id> for standard/epic tier, "
+        "'none (hotfix — no staging artifacts)' for hotfix",
+    )
     args = parser.parse_args()
 
     try:
@@ -149,7 +170,7 @@ def main() -> None:
 
     run_record["duration_s"] = record_run.compute_duration_s(run_record)
 
-    tool_stats = record_events.compute_tool_stats(event_records)
+    tool_stats = record_events.compute_tool_stats(event_records, omit_when_unattributed=True)
     for i, record in enumerate(event_records):
         key = (record.get("run_id"), record.get("seq"))
         if key in tool_stats:
@@ -171,6 +192,28 @@ def main() -> None:
         print(f"WARNING: run-record append failed for run_id={args.ticket_id}", file=sys.stderr)
     if not events_ok:
         print(f"WARNING: event-record append failed for {len(event_records)} record(s)", file=sys.stderr)
+
+    artifacts_path = args.artifacts_path
+    if artifacts_path is None:
+        artifacts_path = (
+            "none (hotfix — no staging artifacts)"
+            if args.tier == "hotfix"
+            else f"stored_artifacts/{args.ticket_id}"
+        )
+
+    working_log_path = Path("tickets/working_log.csv")
+    try:
+        with working_log_path.open("a", newline="", encoding="utf-8") as f:
+            csv.writer(f, quoting=csv.QUOTE_MINIMAL).writerow(
+                [run_record["end_ts"], args.ticket_id, args.title, args.final_status, args.log_summary, artifacts_path]
+            )
+        log_ok = True
+    except OSError as e:
+        log_ok = False
+        print(f"WARNING: working_log.csv append failed: {e}", file=sys.stderr)
+
+    if not log_ok:
+        print("WARNING: working_log.csv was not updated — append it manually", file=sys.stderr)
 
     print(f"DONE: recorded 1 run + {len(event_records)} event record(s) for {args.ticket_id}")
 

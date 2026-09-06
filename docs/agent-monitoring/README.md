@@ -183,6 +183,8 @@ phase of one closure:
 ```bash
 python3 tools/agent-monitoring/record_hand_orchestrated_closure.py \
   --ticket-id TCK-20260904-EXAMPLE --tier hotfix \
+  --title "Short ticket title" \
+  --log-summary "One sentence of what was implemented." \
   --events '[
     {"phase": "Scope", "status": "ok", "summary": "..."},
     {"phase": "Implement", "status": "ok", "summary": "..."},
@@ -197,6 +199,19 @@ Each event only needs `phase`/`status`/`summary` — `run_id`, `execution_id`, `
 `ticket_id`, and 1-indexed `seq` are filled in automatically. `--start-ts`/`--end-ts` default to
 "now" (identical value for both) if real elapsed wall-clock time wasn't tracked. See `CLAUDE.md`'s
 "After Work" checklist for when this is required.
+
+This call also appends one row to `tickets/working_log.csv` for you (`--title`/`--log-summary`,
+plus `--artifacts-path` which defaults to `stored_artifacts/<ticket-id>` for standard/epic tier or
+`none (hotfix — no staging artifacts)` for hotfix) — **do not append that row by hand** when using
+this wrapper, or the ticket ends up with a duplicate `working_log.csv` entry.
+
+`tool_call_count`/`cost_proxy_score` are only ever added to an event when real `tools.jsonl` rows
+exist for its `(run_id, seq)` — a hand-orchestrating session never has a live per-phase sidecar
+during the actual work, so an unattributed phase correctly has no such keys at all (never a false
+`0`/`0.0`; see `docs/agent-monitoring/schema.md`'s "How tool calls are attributed" section).
+Historical events written before `TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP` may
+still show a false `0`/`0.0` for this reason — not backfilled, matching this doc's own established
+precedent of not fabricating retroactive certainty about unattributed history.
 
 **Deliberately not done as part of this fix** (recorded, not silently dropped): no new blocking or
 advisory gate/hook enforces this — `CLAUDE.md`'s Definition of Done already states monitoring
