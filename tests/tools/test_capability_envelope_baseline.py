@@ -25,9 +25,7 @@ from capability_envelope_baseline import (  # noqa: E402
 )
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REAL_SETTINGS_LOCAL_PATH = Path(
-    "/home/u24desktop/Working/rpg-based-simulation/.claude/settings.local.json"
-)
+_REAL_SETTINGS_LOCAL_PATH = _REPO_ROOT / ".claude" / "settings.local.json"
 _REAL_REGISTRY_PATH = _REPO_ROOT / "registries" / "capability_envelope_registry.jsonl"
 
 
@@ -59,8 +57,16 @@ def test_baseline_schema_covers_all_four_settings_local_fields():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(
+    not _REAL_SETTINGS_LOCAL_PATH.exists(),
+    reason=(
+        ".claude/settings.local.json is git-ignored and machine-local (per-developer settings, "
+        "never committed) -- it exists on some development machines but never in a fresh CI "
+        "checkout. This test validates against real ambient local settings when present; "
+        "test_diff_script_handles_missing_settings_local_json_gracefully covers the absent case."
+    ),
+)
 def test_diff_script_runs_against_real_settings_local_json_produces_real_report():
-    assert _REAL_SETTINGS_LOCAL_PATH.exists()
     assert _REAL_REGISTRY_PATH.exists(), "seed step (plan Step 5) must have committed the registry"
 
     live_settings = load_settings_local(_REAL_SETTINGS_LOCAL_PATH)
