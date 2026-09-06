@@ -1991,7 +1991,12 @@
   divergence_note: "Faction-scoped discount gating (ticket pseudocode had faction_id\
     \ != shop_faction guard) not implemented \u2014 no per-faction reputation dict\
     \ on SocialComponent. Discount applied universally based on public_reputation.\
-    \ Declared as DEV-001 in TCK-20260619-E33D-REP-DISCOUNTS plan. See docs/guidelines/v2_intentional_divergences.md.\n"
+    \ Declared as DEV-001 in TCK-20260619-E33D-REP-DISCOUNTS plan. See docs/guidelines/v2_intentional_divergences.md.\
+    \ TCK-20260904-REPUTATION-LOCALITY-SCOPE added a region dimension (SocialComponent.regional_reputation)\
+    \ on the same component, but the discount consumer (apply_reputation_discount()\
+    \ and both its callers) does not yet read it \u2014 it still reads the retained\
+    \ global public_reputation scalar, unchanged. Wiring region-awareness into the\
+    \ discount path is a disclosed follow-up, not implemented in this ticket.\n"
   support_boundary: null
 - id: TOWN-182
   text: "Paid information transactions deduct gold via ResourceTransferIntent (source_kind=\"\

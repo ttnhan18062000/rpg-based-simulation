@@ -160,9 +160,34 @@ Test: `tests/integration/culture/test_culture_drift_acceptance.py`
 | `SettlementPersonalityService` | `src/domains/culture/settlement_personality.py` | CultureState → named settlement-personality descriptor (idea 61, `TCK-20260904-SETTLEMENT-CULTURE-READ`) |
 | `CampaignOrchestrator.describe_settlement_personality()` | `src/domains/campaigns/orchestrator.py` | Orchestrator-layer read: composes `CultureDriftImporter.get_culture()` + `SettlementPersonalityService` |
 | `GET /api/v1/campaigns/{id}/regions/{id}/personality` | `src/api/routes/campaigns.py` | REST read (first non-Campaign-mode-episode-machinery consumer of `region_cultures`) |
+| `LoyaltyDriftService` | `src/systems/social_systems/loyalty_drift.py` | CultureState.faction_conflict_exposure → loyalty-pressure signal (idea 56, `TCK-20260905-DRIFTING-LOYALTY-SIGNAL`) |
+| `PartyLifecycleService.effective_defection_threshold()` | `src/systems/social_systems/party_lifecycle.py` | Consumes `LoyaltyDriftService`'s output via an optional `loyalty_pressure` parameter — lowers the grievance threshold idea 39's `check_defection()`/`Faction.NEUTRAL` mutation trigger reads |
 
 Prior to `TCK-20260904-SETTLEMENT-CULTURE-READ`, this contract's Integration Points table stopped at
 `CultureDriftImporter` with no listed caller — the three rows above close that gap.
+
+### Idea 56 — Drifting Loyalty (`TCK-20260905-DRIFTING-LOYALTY-SIGNAL`)
+
+Reuses `faction_conflict_exposure` and `CultureDriftImporter.get_culture()` exactly as they already
+exist — no new Culture Drift derivation/bias-application logic. `LoyaltyDriftService.compute_loyalty_pressure(campaign_state, region_id)`
+returns the region's carried-forward `faction_conflict_exposure` (`0.0` if unpopulated), keyed by the
+entity's *current* region (`entity.navigation.region_id`, real and live-populated for every entity) —
+not `StrategicComponent.home_region_id`, which is populated only for bosses until idea 59
+(`TCK-20260905-HOME-EXILE-REFUGEE-THREADS`) lands.
+
+`effective_defection_threshold(group, loyalty_pressure=0.0)` subtracts `round(loyalty_pressure * 2)`
+from the threshold (mirroring `composition_score`'s own bonus shape, opposite sign), floored at `1`.
+Default `0.0` is fully backward-compatible with every pre-existing caller.
+
+**Disclosed gap, not silently hidden**: `GroupPhase.resolve()` (`src/engine/pipeline_phases/groups.py`),
+the one live per-tick caller of `effective_defection_threshold()`, receives only `AuthoritativeState` —
+it has no `CampaignState`/`region_cultures` access, since that state lives one layer above the per-tick
+Kernel pipeline (populated only by `CampaignOrchestrator._advance_state()` at episode boundaries). No
+bridge between the two exists today. `loyalty_pressure` is therefore a real, tested, wired parameter —
+proven end-to-end via `tests/integration/culture/test_loyalty_drift_campaign.py` — but the one live
+per-tick call site does not yet supply a real value (it uses the `0.0` default, unchanged behavior).
+Building that bridge is a separate, larger architectural change, out of this ticket's own scope — the
+same "built, not yet visible in play" shape as ideas 57/60/62 in the M5 batch.
 
 ---
 

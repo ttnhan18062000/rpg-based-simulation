@@ -56,6 +56,26 @@ def test_clan_state_asset_ids_round_trip():
     assert restored.asset_ids == (1, 2, 3)
 
 
+def test_clan_state_clan_reputation_serialization_round_trip():
+    """Idea 54/M5 (SOC-268): ClanState.clan_reputation round-trips through
+    to_canonical_dict()/from_dict(), including a non-default value and the
+    class default."""
+    from src.core.state import ClanState
+
+    cs = ClanState(clan_id="stormfell", clan_reputation=1.6)
+    d = cs.to_canonical_dict()
+    assert d["clan_reputation"] == 1.6
+
+    restored = ClanState.from_dict(d)
+    assert restored == cs
+    assert restored.clan_reputation == 1.6
+
+    default_cs = ClanState(clan_id="x")
+    assert default_cs.clan_reputation == 1.0
+    restored_default = ClanState.from_dict(default_cs.to_canonical_dict())
+    assert restored_default.clan_reputation == 1.0
+
+
 def test_clan_state_is_frozen():
     import pytest
     from src.core.state import ClanState
@@ -213,11 +233,11 @@ def test_clan_state_no_new_idea68_fields():
     clan_state_fields = {f.name for f in dataclasses.fields(ClanState) if not f.name.startswith("_")}
     assert clan_state_fields == {
         "clan_id", "name", "member_entity_ids", "home_region_ids", "asset_ids",
-        "tension_level", "leader_entity_id", "founded_tick", "dissolved_tick",
+        "tension_level", "clan_reputation", "leader_entity_id", "founded_tick", "dissolved_tick",
     }
 
     clan_update_fields = {f.name for f in dataclasses.fields(ClanUpdate)}
     assert clan_update_fields == {
         "clan_id", "member_entity_ids_add", "member_entity_ids_remove",
-        "leader_entity_id_set", "dissolved_tick_set",
+        "leader_entity_id_set", "dissolved_tick_set", "clan_reputation_delta",
     }

@@ -102,6 +102,12 @@ Entities with positive public reputation receive a proportional discount at all 
 
 **Notes:**
 - `public_reputation` sourced from `SocialComponent.public_reputation` (range 0.0–2.0, default 1.0).
+  This remains the exact, unchanged read as of TCK-20260904-REPUTATION-LOCALITY-SCOPE — that ticket
+  added a sibling `SocialComponent.regional_reputation: Dict[RegionID, float]` field (region-scoped,
+  additive to this retained global scalar, SOC-266), but both real discount call sites
+  (`src/engine/shop.py`, `src/town/shop.py`) still read only this global scalar; the discount
+  formula below is unaffected. Region-aware discounting is a disclosed, not-yet-implemented
+  follow-up, not part of this formula.
 - At default reputation (1.0): 10% discount.
 - At maximum reputation (2.0): 20% discount.
 - At zero or negative reputation: 0% discount (no penalty, no bonus).

@@ -69,26 +69,131 @@ and schedule, not yet one of the 8 ideas this epic's Scope commits to below.
 2. **Idea 53 — Inherited Reputation.** Simpler than originally scoped: no new decay logic needed at all —
    `RelationshipService.process_update()` has no passive decay on `public_reputation` today, so a one-time
    birth-seed write naturally gets swamped by the child's own subsequent deltas.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-INHERITED-REPUTATION-SEED`. Added a pure
+   `ReputationService.combine_public_reputation(parent_a, parent_b) -> float` (simple arithmetic mean,
+   clamped `[0.0, 2.0]`), wired through `V2EntityBuilder.birth_record()`'s new
+   `parent_a_public_reputation`/`parent_b_public_reputation` kwargs — an AND-gate (both parent values
+   required, unlike idea 53's genetics-precedent OR-gate) that falls back to the class default `1.0`
+   otherwise, since `public_reputation` never has a missing-value case to backfill. Real parent values are
+   wired at `HumanoidReproductionService.process_reproduction()`'s call site, through
+   `EntityGenerator.spawn_humanoid_offspring()`. The parentless natural-creature/magical-demonic spawn
+   paths, `RelationshipService.process_update()`'s decay-free behavior, `regional_reputation`, and
+   `ReputationUpdateService`/`PublicReputationProfile` are all untouched, matching this item's own scope.
+   Documented in `docs/mechanics/01_entity_anatomy.md` §5 "Reputation Seed" and
+   `docs/parity_ledger/social_narrative.yaml` (SOC-267).
 3. **Idea 60 — Reputations Are Local.** Its flagged "competing reputation system" risk was independently
    re-checked and downgraded: `PublicReputationProfile`'s only mutator has zero call sites anywhere — dead
    scaffolding, not a live system to reconcile with. **Must still sequence before or alongside idea 53/54**
    — confirmed independently as a real constraint, not just a hedge, since it changes the shape of the same
    field 53/54 write.
+   **Correction, 2026-09-04** (from `TCK-20260904-CLAN-REPUTATION-ASSOCIATION`'s investigation): this
+   "same field 53/54 write" claim is confirmed accurate for idea 53 (which writes
+   `SocialComponent.public_reputation`, the same scalar idea 60 touches) but **inaccurate for idea 54
+   specifically** — idea 54 targets a brand-new `ClanState.clan_reputation` field on a structurally
+   distinct dataclass (`ClanState`, not `SocialComponent`) that idea 60 never referenced. Idea 60's
+   sequencing dependency was therefore a hedge for idea 54, not a real code constraint; idea 54 could have
+   shipped independently of idea 60's landing. Left uncorrected here previously so future scoping wouldn't
+   silently repeat the same overstated claim.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-REPUTATION-LOCALITY-SCOPE`, ahead of idea 53
+   as sequenced. Added `SocialComponent.regional_reputation: Dict[str, float]` (region-scoped, `[0.0, 2.0]`
+   clamp) additive to the retained, unchanged global `public_reputation` scalar, wired through
+   `RelationshipService.process_update()` as the sole authoritative writer, with both determinism surfaces
+   (`to_canonical_dict()`, `StateFingerprinter`) and an architecture guard test added. This annotation was
+   added retroactively by idea 53's own doc-update pass — idea 60's ticket closed without one.
 4. **Idea 54 — Guilt by Association.** Gated on M2's idea 36 (Clan) existing as real state.
+   **Status update, 2026-09-04:** shipped as `TCK-20260904-CLAN-REPUTATION-ASSOCIATION`. Added
+   `ClanState.clan_reputation: float = 1.0` (clamped `[0.0, 2.0]`) as new typed durable state, written
+   exclusively through `ClanUpdate.clan_reputation_delta` applied additively in `apply.py`'s clan-merge
+   block. Wired live into party defection (`GroupPhase.resolve()`) via a new
+   `ClanLifecycleService.find_clan_id_for_entity()` sorted reverse lookup and shared
+   `CLAN_REPUTATION_MISCONDUCT_DELTA = -0.25` constant; the same lookup/constant is also used by a
+   contract-betrayal path (`ContractService.compute_betrayal_clan_reputation_update()`) but that path is
+   disclosed as not reachable from any live pipeline phase today — a pre-existing gap this ticket
+   surfaces, not fixes. Read side extends `SocialAppraisalSystem.appraise_contract()`'s no-bond
+   stranger-judgment branch with an additive `(clan_trust - 0.5) * 0.2` delta term that reduces to exactly
+   the pre-existing pinned formula at the no-clan/neutral default, preserving P0 parity entry SOC-134
+   unmodified. Documented in `docs/mechanics/04_strategic_cognition.md` §10a "Clan Reputation &
+   Guilt-by-Association Law" and `docs/parity_ledger/social_narrative.yaml` (SOC-268).
 5. **Idea 57 — The Living Legend Feedback Loop.** Its own original claim ("nothing reads Chronicle's output
    back into anything") was wrong — `CultureDeriver` already does, at region scale, via Cultural Drift.
    Should copy `CultureDeriver`'s aggregation shape rather than invent new event-scoring logic.
    **Design delivered, 2026-09-04:** `docs/brainstorm/2026-09-04-idea57-entity-scale-fame-aggregation-design.md`
    works out the actual entity-scale sibling shape and discloses a real open question — which event
    types feed it, since the Narrative Ledger has no `combat_victory` type today.
-6. **Idea 62 — Generations Misremember.** Genuinely distinct from idea 57, not a duplicate — sits upstream
-   of both idea 57's and Cultural Drift's consumption of Chronicle's output, as a single transform view.
+
+   **Status update, 2026-09-05:** shipped as `TCK-20260905-FAME-DERIVER-LEGEND-FACT`. Implemented
+   `FameDeriver`/`FameState`/`FameCarryForward`/`FameExporter`/`FameImporter`
+   (`src/domains/fame/`) mirroring `CultureDeriver`'s 3-layer pattern exactly, keyed by
+   `NarrativeLedgerEntry.subject_id`, Option B event rule (`quest_completed` +
+   `entity_death`+`HERO`). Persists in `CampaignState.entity_fame`, wired into
+   `CampaignOrchestrator._advance_state()` alongside `CultureDriftExporter`/`FidelityExporter`.
+   Added a lazy, non-durable `LegendFact` read-model (`FAME_THRESHOLD=0.5`, anchored to
+   `CHRONICLE_THRESHOLD`) constructed at query time via `LegendFactService.for_entity()` — no new
+   `CampaignState` field. Discoverability verified directly against
+   `PerceptionFilterService.filter()` at the service level (existing `perceived_opportunities`
+   catch-all branch, zero `filter.py` change). Matches idea 62's own "built, not yet visible in
+   play" honesty framing: `PerceptionUpdatePhase`/`MotivationBiasService.compute_bias_multiplier()`
+   remain dormant (zero live call sites, unchanged by this ticket), and idea 34's
+   `_CANDIDATE_ROLES` is untouched. See `docs/mechanics/05_world_evolution.md` §9 and
+   `docs/world/fame_legend_contract.md`.
+6. **Idea 62 — Generations Misremember.** Genuinely distinct from idea 57, not a duplicate.
    **Gate cleared, 2026-09-04:** was blocked on the Knowledge/Belief axis's `BeliefEntry`/`KnowledgeFact`
    reconciliation decision (`docs/brainstorm/2026-09-04-core-rpg-legacy-memory-axis-proposal.md`); that
-   decision is made (deliberate split, both kept) — idea 62 is unblocked to proceed as a `BeliefEntry`
-   consumer specifically.
+   decision is made (deliberate split, both kept).
+   **Correction, 2026-09-05** (found during `TCK-20260905-EPIC-RPG-M5-HISTORY-BELIEF`'s own
+   re-investigation, independently confirmed by two separate investigations): both claims in this
+   item's original text were wrong. (1) Idea 62 does **not** "sit upstream of both idea 57's and
+   Cultural Drift's consumption of Chronicle's output, as a single transform view" — `CultureDeriver`
+   is already shipped and live, reading `hierarchy.events` directly with zero transform layer in
+   front of it today; forcing idea 62 into a mandatory-upstream position would mean a breaking retrofit
+   of already-shipped production code, not a greenfield design choice. The real atlas card for idea 62
+   itself says "sequence alongside idea 57 since both consume the same Chronicle substrate" — an
+   independent sibling reading, not a pipeline stage. (2) "Proceed as a `BeliefEntry` consumer
+   specifically" is also wrong: `BeliefEntry` (`src/systems/strategic_systems/belief.py`) is a
+   per-entity, tactical/near-term decision-support record (real live consumers: cooperation risk
+   evaluation, route-blocking, guild rumor propagation) with a ticks-since-discovered decay model —
+   structurally mismatched with population/generation-scale historical myth-drift. Idea 62 should be
+   built as its own new Deriver-pattern sibling (mirroring `CultureDeriver`/idea 57's `FameDeriver`
+   shape), not a repurposing of `BeliefEntry`. Left uncorrected here previously so future scoping
+   wouldn't silently repeat either overstated claim.
+   **Status update, 2026-09-05:** shipped as `TCK-20260905-CHRONICLE-FIDELITY-DRIFT`, exactly per the
+   correction above (its own Deriver-pattern sibling, not a `BeliefEntry` repurposing). Added
+   `src/domains/fidelity/` (`FidelityState`/`FidelityCarryForward` model, `FidelityDeriver.derive()`,
+   `FidelityExporter`/`FidelityImporter`) mirroring `src/domains/culture/`'s exact 3-layer
+   Deriver/Model/Exporter-Importer shape. `fidelity` is a per-event float in `[0.0, 1.0]` keyed by
+   `NarrativeLedgerEntry.entry_id`, decaying linearly with Era-distance from the current Era
+   (`fidelity = max(0.0, 1.0 - era_distance * FIDELITY_DECAY_PER_ERA)`, `FIDELITY_DECAY_PER_ERA = 0.2`),
+   with Era membership resolved by walking `hierarchy.eras` → `Era.episodes` → `Episode.index` (never
+   `episode // ERA_EPISODE_MIN` arithmetic, which silently diverges whenever an episode has zero
+   chronicle-worthy events). Persisted in new `CampaignState.historical_drift: Dict[str,
+   FidelityCarryForward]`, written by `FidelityExporter.export()` called from
+   `CampaignOrchestrator._advance_state()` immediately alongside `CultureDriftExporter.export()`,
+   consuming the exact same `ChronicleHierarchy`. Ships with no live consumer yet — idea 63 is the
+   intended eventual reader, a disclosed, accepted gap. Documented in
+   `docs/mechanics/05_world_evolution.md` §8 "Chronicle Fidelity Drift (E62)",
+   `docs/world/chronicle_fidelity_contract.md` (new file), and `docs/parity_ledger/world_dynamics.yaml`
+   (WORLD-FIDELITY-001, WORLD-FIDELITY-002).
 7. **Idea 63 — Belief Grows Around Real History.** Confirmed a genuine downstream composite, needing both
    idea 36 (Clan, as container) and idea 57 (fame substrate) first — not a thin wrapper on either.
+   **Status update, 2026-09-05:** shipped as `TCK-20260905-BELIEF-INSTITUTION-DESIGN`, the final ticket
+   of the M5 epic (8/8 design ideas now shipped). Added `src/domains/belief_institution/`
+   (`BeliefInstitution`/`BeliefInstitutionCarryForward` model, `BeliefInstitutionDeriver.derive()`,
+   `BeliefInstitutionExporter`/`BeliefInstitutionImporter`), a genuinely third belief representation
+   distinct from `BeliefEntry`/`KnowledgeFact` per the resolved Knowledge/Belief reconciliation split.
+   Forms one `BeliefInstitution` per (Clan, legendary subject) pair for every existing Clan and every
+   subject with a real `LegendFact` (idea 57) — `belief_strength = fame` for the subject's own clan
+   (in-group), `fame * OUT_GROUP_DAMPENING (0.4)` for every other clan (out-group), a disclosed
+   simplification (only two distinct values per legend). `origin_event_id` is the highest-significance
+   fame-contributing entry for that subject, mirroring `FameDeriver`'s own event-type rule exactly.
+   `BeliefInstitutionExporter.export()` is called from `CampaignOrchestrator._advance_state()`
+   immediately after `FameExporter.export()`, additionally reading `final_state.clans`
+   (`AuthoritativeState.clans`, read-only — zero writes to `ClanState`/`AuthoritativeState`). Ships
+   with no live consumer yet — the terminal idea in the M5 Fame → Fidelity → Belief-Institution chain,
+   "built, not yet visible in play" end to end. No new SimQ pillar or `CHURCH` building wiring added,
+   per the source design's own "too underspecified" caveat. Documented in
+   `docs/mechanics/05_world_evolution.md` §10 "Belief Institutions (idea 63)",
+   `docs/world/belief_institution_contract.md` (new file), and `docs/parity_ledger/world_dynamics.yaml`
+   (WORLD-BELIEF-001, WORLD-BELIEF-002).
 
 ## Out of Scope
 

@@ -142,10 +142,15 @@ justification — allowed and expected, not a failure); `verified_by`.
 ### Error handling
 
 The Verify-time gate (`check_docs_to_update_coverage`) stays **fully decoupled** from
-doc-updater's own output — it continues re-deriving ground truth from `investigation.md` + real
-`git status` only, exactly as it does today. This preserves the "never trust the self-report"
-principle that caught two real gate failures in the session motivating this design. No new
-coupling is added.
+doc-updater's own output — it continues re-deriving ground truth from `investigation.md`/the
+ticket's own `## Files Changed`/`## Related Docs` body-section text plus real `git status` only,
+never from doc-updater's own `docs_updated` self-report. This preserves the "never trust the
+self-report" principle that caught two real gate failures in the session motivating this design.
+As of TCK-20260904-DOC-COVERAGE-REVERSE-CHECK, the same function additionally checks the reverse
+direction (a `docs/` path git shows touched that never made it into the ticket's own Files
+Changed/Related Docs text) — a coupling between the ticket's own body text and real `git status`
+now exists that did not before, though it still excludes doc-updater's self-report specifically,
+exactly as the forward direction always has.
 
 Two phase-local cases, **standard/epic tier**:
 
@@ -159,14 +164,20 @@ Two phase-local cases, **standard/epic tier**:
    Architecture-Verify/Test, and Verify's existing gate is what actually stops the ticket if a
    doc genuinely never got updated.
 
-**Hotfix tier has no equivalent backstop.** `check_docs_to_update_coverage` returns `NA` for
-hotfix tier unconditionally (no `investigation.md` exists to check against) — this is existing,
-unchanged behavior, not something this design introduces. It means case 1 above has no safety net
-on hotfix tickets: if doc-updater misjudges that a hotfix's docs don't need updating, nothing in
-the pipeline catches it. This is an accepted, pre-existing gap (the same gap exists today for the
-generalist implementer's own hotfix-tier doc edits — this design does not make it worse), not a
-new risk introduced by adding doc-updater. Any future ticket that wants a hotfix-tier doc
-coverage backstop is a separately-scoped decision, not implied here.
+**Hotfix tier's backstop is now split, not fully absent.** `check_docs_to_update_coverage`'s
+*forward* half still returns no usable signal for hotfix tier (no `investigation.md` exists to
+check against — genuinely unchanged by TCK-20260904-DOC-COVERAGE-REVERSE-CHECK). It means case 1
+above still has no safety net on hotfix tickets for the omission class: if doc-updater misjudges
+that a hotfix's docs don't need updating at all, and so never touches them, git then shows nothing
+touched — nothing in the pipeline catches that. This slice of the gap is accepted and pre-existing
+(the same gap exists today for the generalist implementer's own hotfix-tier doc edits), not made
+worse by adding doc-updater. However, the function's *reverse* half now runs unconditionally,
+hotfix included: if doc-updater (or the generalist implementer) does touch a `docs/` file during a
+hotfix ticket but that touch never lands in the ticket's own Files Changed/Related Docs text, the
+reverse check catches that specific failure mode tier-agnostically. The narrower
+touched-but-undeclared case is closed on hotfix tier; the broader never-touched-at-all omission
+case remains an open, accepted gap. Any future ticket that wants a hotfix-tier backstop for the
+omission case is a separately-scoped decision, not implied here.
 
 ## Rationale
 

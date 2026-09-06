@@ -201,6 +201,17 @@ not execute during live simulation. Do not treat it as a TOCTOU double-check par
 conservation path below — that characterization was inaccurate and is corrected here (cross-doc
 staleness sweep, TCK-20260904-MATERIAL-POSSESSION-PREDICATE, 2026-09-04).
 
+**`known_recipes` population — `src/engine/blacksmith.py::BlacksmithSystem.enforce()`'s
+wholesale-learn step.** Before `TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE`, this populated
+`entity.identity.known_recipes` from `BlacksmithSystem`'s own private 14-entry `craft_*`-prefixed
+list, which shared **zero ids** with either `RecipeRegistry` above — so `known_recipes` could never
+genuinely satisfy Gate 2 of the live `REQUEST_CRAFT` path (`recipe_id in identity.known_recipes`)
+against a real, organically-populated recipe. That ticket re-pointed the wholesale-learn step at the
+live `registries.py::RecipeRegistry` (the same one `REQUEST_CRAFT` reads), so an organically-learned
+recipe id now genuinely satisfies that gate. `BlacksmithSystem.RECIPES`'s own crafting-execution
+branch (`craft_target`-gated) is a separate, still-dead code path — untouched, since no live AI ever
+sets `craft_target`.
+
 **Conservation path (`source_kind="CRAFTING"`, `src/core/conservation.py:133-153`) — this is the
 live atomicity enforcement**, reached via the `ResourceTransferIntent` built by the live path above:
 checks inventory is not full, gold `>= gold_cost`, then for each material in `items_remove` confirms

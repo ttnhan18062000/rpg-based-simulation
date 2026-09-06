@@ -56,6 +56,8 @@ class StateFingerprinter:
             entity_parts.append(
                 f"{eid}:"
                 f"{ent.kind}:"
+                f"role={ent.identity.role}:"
+                f"faction={ent.identity.faction}:"
                 f"pos={ent.navigation.position}:"
                 f"hp={ent.combat.hp}:"
                 f"gold={ent.inventory.gold}:"
@@ -67,6 +69,7 @@ class StateFingerprinter:
                 f"items={StateFingerprinter._inventory_identity(ent)}:"
                 f"bonds={len(ent.social.bonds)}:"
                 f"reputation={ent.social.public_reputation:.3f}:"
+                f"regional_reputation={'|'.join(f'{k}:{v:.3f}' for k, v in sorted(ent.social.regional_reputation.items()))}:"
                 f"strategic={strategic_ident}"
             )
 

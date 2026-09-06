@@ -86,7 +86,10 @@ def test_better_weapon_gets_equip_priority():
 
 
 def test_material_possession_predicate_recognizes_known_recipe_material():
-    """Generalized normal flow beyond the original hardcoded iron_ore/iron_sword pair."""
+    """Generalized normal flow beyond the original hardcoded iron_ore/iron_sword pair. Uses a real
+    registries.py::RecipeRegistry recipe (craft_healer_bundle, requires herb + healing_flower) --
+    the old "health_potion" fixture predates TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE and is
+    not a real id in the current live registry."""
     b = (V2EntityBuilder(1)
          .kind("ACTOR")
          .location(0.0, 0.0)
@@ -98,7 +101,7 @@ def test_material_possession_predicate_recognizes_known_recipe_material():
     stack = ItemStack(item_id="herb", quantity=3)
     entity = replace(entity,
         inventory=replace(entity.inventory, items=[stack]),
-        identity=replace(entity.identity, known_recipes={"health_potion"})
+        identity=replace(entity.identity, known_recipes={"craft_healer_bundle"})
     )
 
     state = AuthoritativeState(entities={1: entity}, tick=1, seed=1)
@@ -108,7 +111,7 @@ def test_material_possession_predicate_recognizes_known_recipe_material():
     meaning = comp.meanings["herb"]
     assert meaning.keep_priority > 0.9
     assert meaning.craft_priority > 0.7
-    assert "health_potion" in meaning.known_uses
+    assert "craft_healer_bundle" in meaning.known_uses
 
 
 def test_material_possession_predicate_empty_inventory_returns_false_no_crash():
@@ -131,13 +134,21 @@ def test_material_possession_predicate_empty_inventory_returns_false_no_crash():
     assert comp.meanings == {}
 
 
-def test_material_possession_predicate_craft_prefixed_known_recipes_do_not_match():
+def test_material_possession_predicate_craft_prefixed_known_recipes_now_match():
     """
-    Disclosed-limitation pinning test: craft_*-prefixed known_recipes ids (the ones
-    BlacksmithSystem.enforce() actually, wholesale, populates known_recipes with in
-    production) are not entries in src/core/recipes.py::RecipeRegistry, so this
-    predicate correctly does not treat iron_ore as a recipe material for them. See
-    src/domains/progression/material_predicate.py's module docstring.
+    BEFORE TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE, this was a disclosed-limitation pinning
+    test: craft_*-prefixed known_recipes ids (the ones BlacksmithSystem.enforce() actually,
+    wholesale, populated known_recipes with) were not entries in src/core/recipes.py::
+    RecipeRegistry (the registry this predicate read at the time), so the predicate correctly-
+    but-uselessly did NOT treat iron_ore as a recipe material for them -- a real, disclosed gap,
+    not a bug.
+
+    AFTER: both the population side (BlacksmithSystem) and this predicate now read the same real
+    registry (src/core/registries.py::RecipeRegistry), so a real, organically-learned craft_*-
+    prefixed recipe id genuinely matches. `craft_iron_sword` here is a real registries.py recipe
+    (materials: iron_ore, wood) -- not the old, fictional `craft_steel_sword` (BlacksmithSystem's
+    own private, orphaned recipe list, confirmed to reference items/materials that don't exist
+    anywhere in the real content catalog).
     """
     b = (V2EntityBuilder(1)
          .kind("ACTOR")
@@ -150,7 +161,7 @@ def test_material_possession_predicate_craft_prefixed_known_recipes_do_not_match
     stack = ItemStack(item_id="iron_ore", quantity=1)
     entity = replace(entity,
         inventory=replace(entity.inventory, items=[stack]),
-        identity=replace(entity.identity, known_recipes={"craft_steel_sword"})
+        identity=replace(entity.identity, known_recipes={"craft_iron_sword"})
     )
 
     state = AuthoritativeState(entities={1: entity}, tick=1, seed=1)
@@ -158,5 +169,5 @@ def test_material_possession_predicate_craft_prefixed_known_recipes_do_not_match
 
     assert "iron_ore" in comp.meanings
     meaning = comp.meanings["iron_ore"]
-    assert meaning.known_uses == ()
-    assert meaning.craft_priority == 0.0
+    assert meaning.known_uses == ("craft_iron_sword",)
+    assert meaning.craft_priority == 0.8

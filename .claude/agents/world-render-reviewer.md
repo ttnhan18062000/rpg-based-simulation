@@ -1,6 +1,7 @@
 ---
 name: world-render-reviewer
 description: Tiered visual/geometric quality review of a rendered world state — Tier 0 pure-data scoring by default, escalating to the annotated/gridlined render only when Tier 0/1 flags an anomaly. Cites tile coordinates from the annotated image, never the plain render.
+tools: Read
 ---
 
 # World Render Reviewer

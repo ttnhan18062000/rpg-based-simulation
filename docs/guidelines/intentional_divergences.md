@@ -42,6 +42,9 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Social/Clan** | Clan Succession-on-Death | **Intentional Gameplay Change** | RATIFIED |
 | **Engine / Progression** | Post-Spawn `class_id` Mutation via `class_id_set` (DEV-006) | **Intentional Gameplay Change** | ACTIVE |
 | **Economy / Social** | Teaching Gated on Trust, Not Gold: TRAIN_COST Removed Entirely (DEV-007) | **Intentional Gameplay Change** | ACTIVE |
+| **Engine / Campaigns** | `CampaignState` Direct Mutation Bypasses `patches.py` for Episode-Boundary Deriver Exporters | **Bounded** | RATIFIED |
+| **Social/Clan** | Clan Reputation Folded Into P0-Certified `appraise_contract()` Stranger-Judgment Formula | **Bounded** | RATIFIED |
+| **Combat / Legality** | Mid-Tick Faction Mutation Can Flip a P0-Certified Friendly-Fire Legality Outcome by the Next Tick | **Bounded** | RATIFIED |
 
 ---
 
@@ -1475,6 +1478,102 @@ This document is the canonical record of intentional behavior shifts in `src` co
   "wired but not yet invoked by production code" state does not make this divergence itself
   deferred — the mechanism is active, tested, and callable today.
 - **Status**: ACTIVE
+
+### 2.50 `CampaignState` Direct Mutation Bypasses `src/engine/patches.py` for Episode-Boundary Deriver Exporters (TCK-20260904-REPUTATION-LOCALITY-SCOPE, TCK-20260905-CHRONICLE-FIDELITY-DRIFT, TCK-20260905-FAME-DERIVER-LEGEND-FACT, TCK-20260905-BELIEF-INSTITUTION-DESIGN)
+- **Subsystem**: Engine / Campaigns
+- **Old Behavior**: The Durable State Rule (`CLAUDE.md`) states durable changes must be represented
+  through typed records/updates and committed only through the authoritative application path
+  (`src/engine/patches.py`). No divergence entry previously documented an exception to this for
+  `CampaignState`.
+- **New Behavior**: `CampaignState` (`src/domains/campaigns/state.py`) has zero `src/engine/patches.py`
+  write path at all — it is explicitly not frozen and is mutated directly by
+  `CampaignOrchestrator._advance_state()`, confirmed via the class's own docstring ("NOT frozen —
+  mutation by `CampaignOrchestrator` is intentional"). This pattern was established, unlogged, by
+  `CultureDriftExporter.export()` (pre-existing, region-scale Culture Drift) and was independently
+  re-confirmed as the correct, intended pattern — not a shortcut around the real rule — by four
+  separate 2026-09-04/05 tickets each adding their own episode-boundary Exporter mutating
+  `CampaignState` the same way: `RegionalReputationExporter`-adjacent locality work
+  (TCK-20260904-REPUTATION-LOCALITY-SCOPE), `FidelityExporter` (TCK-20260905-CHRONICLE-FIDELITY-DRIFT),
+  `FameExporter` (TCK-20260905-FAME-DERIVER-LEGEND-FACT), and `BeliefInstitutionExporter`
+  (TCK-20260905-BELIEF-INSTITUTION-DESIGN). `AuthoritativeState`/`ClanState` remain governed by the
+  normal typed-Update + `patches.py` path unchanged — this exception is scoped to `CampaignState`
+  specifically, which lives one layer above the per-tick Kernel `AuthoritativeState` the Durable
+  State Rule was written against.
+- **Rationale**: **Bounded**. `CampaignState` is episode-boundary, multi-episode meta-layer state
+  (Campaign-mode only), not per-tick `AuthoritativeState` — it has no `StateUpdate`/apply-path
+  concept to route through in the first place, since `CampaignOrchestrator._advance_state()` runs
+  between episodes, not inside the Kernel's own tick loop. Routing it through `patches.py` would
+  require inventing a parallel authoritative-mutation mechanism for a state object the Kernel itself
+  never touches — the existing direct-mutation pattern is the narrower, already-proven fit, not a
+  bypass of a rule that was ever meant to cover this layer.
+- **Verification**: `tests/architecture/test_social_write_paths.py` (confirms `CampaignState` is
+  intentionally exempted, not silently missed), plus each of the four tickets' own architecture-guard
+  tests confirming their respective Exporter is the sole writer of its own new `CampaignState` field
+  (`region_reputation`/`entity_fidelity`/`entity_fame`/`belief_institutions`).
+- **Status**: RATIFIED
+
+### 2.51 Clan Reputation Folded Into P0-Certified `appraise_contract()` Stranger-Judgment Formula (TCK-20260904-CLAN-REPUTATION-ASSOCIATION) — cross-referenced as SOC-134/SOC-268
+- **Subsystem**: Social/Clan
+- **Old Behavior**: `SocialAppraisalSystem.appraise_contract()`'s no-bond stranger-judgment branch
+  (`src/systems/social_systems/appraisal.py`) computed `trust_score = public_trust * 0.7 +
+  history_trust * 0.3`, a P0-certified, pinned formula (`docs/parity_ledger/social_narrative.yaml`
+  SOC-134, `TCK-20260619-PARITY-P0-BUGS`) with no Clan-membership input of any kind.
+- **New Behavior**: The same branch now adds a third additive term, `(clan_trust - 0.5) *
+  CLAN_INFLUENCE_WEIGHT` (`CLAN_INFLUENCE_WEIGHT = 0.2`), where `clan_trust =
+  state.clans[clan_id].clan_reputation / 2.0` if the source belongs to a Clan, else `0.5`. The term
+  evaluates to exactly `0.0` at the no-Clan/neutral default, so SOC-134's own pinned test still
+  passes bit-for-bit — but for any source entity that does belong to a Clan with a non-neutral
+  `clan_reputation`, the real trust score a stranger computes now differs from the old formula's
+  output, a genuine behavior change SOC-134's own `text`/`status` fields do not describe.
+- **Rationale**: **Bounded**. This is idea 54's own explicit design intent (Guilt by Association: a
+  stranger judging an unfamiliar Clan member should weigh that Clan's own standing) applied at the
+  one real, already-live choke point for stranger judgment — not a scope-creep addition to an
+  unrelated formula. The additive-delta shape (rather than replacing or reweighting the original two
+  terms) was chosen specifically to guarantee the P0 pinned case stays byte-identical, bounding the
+  change to only the new Clan-membership case the old formula never covered.
+- **Verification**: `tests/unit/social/test_appraisal_logic.py` (new stranger-judgment/Clan-blend
+  tests, confirming both the neutral-default pinned case and the real Clan-influenced case),
+  `tests/unit/social/test_parity_soc_134.py` (SOC-134's own pinned test, confirmed still passing
+  unmodified). `docs/parity_ledger/social_narrative.yaml` SOC-134's `v2_evidence` field was updated
+  in place to describe this extension; SOC-268 records the new `ClanState.clan_reputation` field
+  itself.
+- **Status**: RATIFIED
+
+---
+
+### 2.52 Mid-Tick Faction Mutation Can Flip a P0-Certified Friendly-Fire Legality Outcome by the Next Tick (TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE) — cross-referenced as COMB-294/COMB-323
+- **Subsystem**: Combat / Legality
+- **Old Behavior**: `LegalityServiceV2.verify_attack_legality()`'s Friendly-Fire fallback
+  (`src/engine/legality.py`, P0-certified, `docs/parity_ledger/combat_movement.yaml` COMB-294) reads
+  `attacker.identity.faction == target.identity.faction` against a frozen `AuthoritativeState` that,
+  before this ticket, had no live producer ever changing `identity.faction` post-spawn —
+  `IdentityUpdate.faction_set` existed but had zero real constructors anywhere in `src/`. COMB-294's
+  own text and evidence describe this check as if faction were effectively immutable for a given
+  entity's lifetime.
+- **New Behavior**: `PartyLifecycleService.check_defection()` now gives `faction_set` its first real
+  producer, setting a defector's faction to `Faction.NEUTRAL` through the authoritative apply-path.
+  Because `AuthoritativeApplyPipeline.refine()`'s `"action_routing"` phase (where legality is
+  evaluated) runs strictly before the `"groups"` phase (where the defection trigger lives) within one
+  tick, a same-tick defection cannot retroactively change a legality decision already made earlier in
+  that same tick. But starting with the very next tick's `"action_routing"` pass, the same
+  attacker/target pair's `verify_attack_legality()` outcome can flip — `LEGAL` before the defection to
+  `FRIENDLY_FIRE_ILLEGAL` after — a real change to COMB-294's certified outcome, not merely to its
+  timing. Found and disclosed during an external pre-merge review of PR #133; COMB-294's own ledger
+  entry did not previously cross-reference this.
+- **Rationale**: **Bounded**. This is idea 39's own explicit design intent (a defector should stop
+  being friendly to their former faction) applied at the one real, already-live choke point for
+  faction-equality legality checks — not a scope-creep addition to combat legality itself. The
+  next-tick boundary (rather than an immediate retroactive re-evaluation) was chosen specifically
+  because it is a structural consequence of `refine()`'s existing, already-certified phase order, not
+  a new mechanism bolted onto legality — no `src/engine/legality.py` code change was made or is
+  required to produce this effect.
+- **Verification**: `tests/unit/engine/test_legality_faction_mutation.py::
+  test_faction_change_mid_tick_legality_semantics` demonstrates `legal_before=True`/`LEGAL` →
+  (defection sets `faction_set=Faction.NEUTRAL`) → `legal_after=False`/`FRIENDLY_FIRE_ILLEGAL` once
+  applied at the next tick boundary via `ApplyPath.apply_partial()`. `docs/parity_ledger/
+  combat_movement.yaml` COMB-294's own `v2_evidence` cross-references COMB-323 (this ticket's own
+  parity entry) and this divergence entry in place, rather than leaving the interaction undisclosed.
+- **Status**: RATIFIED
 
 ---
 

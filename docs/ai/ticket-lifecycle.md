@@ -355,11 +355,15 @@ remaining general folders. `docs/parity_ledger/` stays `parity-updater`'s exclus
 every ticket whose only `docs/` change comes from doc-updater would trip `DOC_STALENESS_BLOCKED`
 before doc-updater ever got a chance to run. A `blocker` in the agent's own output (genuine
 ambiguity it could not resolve) is reported via a `failed`-status event only — the pipeline
-continues regardless. Verify's `check_docs_to_update_coverage` remains the actual backstop for
-standard/epic tier, independently re-deriving ground truth from `investigation.md` and real `git
-status` rather than trusting doc-updater's self-report. Hotfix tier has no equivalent backstop
-(`check_docs_to_update_coverage` returns `NA` unconditionally for hotfix) — an accepted,
-pre-existing gap, not something this phase introduces.
+continues regardless. Verify's `check_docs_to_update_coverage` remains the actual backstop,
+independently re-deriving ground truth from `investigation.md`/the ticket's own body-section text
+and real `git status` rather than trusting doc-updater's self-report. Its forward-direction half
+still returns no usable signal for hotfix tier (`investigation.md` genuinely does not exist for
+hotfix tickets, unchanged) — an accepted, pre-existing gap for the omission case (doc-updater never
+touching a doc it should have). Its reverse-direction half
+(`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) now runs identically under hotfix tier, closing the
+narrower touched-but-undeclared case: a `docs/` file touched during a hotfix ticket but never
+reflected in the ticket's own Files Changed/Related Docs text is caught tier-agnostically.
 
 ---
 

@@ -56,10 +56,13 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/core/state.py` (`SocialComponent` has `public_reputation` vs
-    `trust_history`)'
+  v2_evidence: '`src/core/models/social.py` (`SocialComponent` has `public_reputation`
+    vs `trust_history`). TCK-20260904-REPUTATION-LOCALITY-SCOPE added `regional_reputation:
+    Dict[str, float]` as a structurally separate, additive locality dimension (RegionID
+    -> local reputation) alongside the retained global `public_reputation` scalar
+    -- not a replacement of it.'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_social_parity.py`'
+  test_path: tests/unit/social/test_relationships.py::test_public_reputation_impact
   divergence_note: null
   support_boundary: null
 - id: SOC-006
@@ -1444,9 +1447,28 @@
   legacy_evidence: null
   v2_evidence: "src/systems/social_systems/appraisal.py appraise_contract \u2014 public_trust\
     \ = source.social.public_reputation / 2.0; trust_score = public_trust * 0.7 +\
-    \ history_trust * 0.3; < 0.2 \u2192 TOTAL_DISTRUST (TCK-20260619-PARITY-P0-BUGS)\n"
+    \ history_trust * 0.3; < 0.2 -> TOTAL_DISTRUST (TCK-20260619-PARITY-P0-BUGS).\
+    \ TCK-20260904-REPUTATION-LOCALITY-SCOPE confirmed this read is unchanged: appraise_contract()\
+    \ still reads the retained global public_reputation scalar; region-scoped blending\
+    \ into this read was explicitly scoped out as a documented follow-up, not implemented\
+    \ in this ticket. TCK-20260904-CLAN-REPUTATION-ASSOCIATION (SOC-268) extended\
+    \ the no-bond stranger-judgment branch with a third additive term, (clan_trust\
+    \ - 0.5) * CLAN_INFLUENCE_WEIGHT (CLAN_INFLUENCE_WEIGHT=0.2), where clan_trust\
+    \ = (state.clans[clan_id].clan_reputation / 2.0) if the source belongs to a Clan\
+    \ else 0.5; the pinned no-clan-case formula (public_trust * 0.7 + history_trust\
+    \ * 0.3) is preserved bit-for-bit because the delta term evaluates to exactly\
+    \ 0.0 when clan_trust == 0.5 (no Clan / neutral default). Cross-referenced by\
+    \ intentional_divergences.md #2.51. TCK-20260905-HOTFIX-PARITY-NEXT-ID-WORLD-BELIEF-DRIFT-adjacent\
+    \ fix (found during external PR review, 2026-09-05): this entry's own test_path\
+    \ citation (TestSocialAppraisalWithNarrative::test_social_appraisal_with_narrative)\
+    \ named a method that does not exist in tests/unit/social/test_parity_soc_134.py\
+    \ -- pre-existing since commit 6e25d4f2, predating this PR entirely, never caught\
+    \ by either ticket that touched this entry's v2_evidence field. Corrected to the\
+    \ two real methods on that same class that together cover exactly what this entry's\
+    \ own text describes (zero-reputation rejected, high-reputation accepted)."
   proof_type: parity
-  test_path: tests/unit/social/test_parity_soc_134.py::TestSocialAppraisalWithNarrative::test_social_appraisal_with_narrative
+  test_path: tests/unit/social/test_parity_soc_134.py::TestSocialAppraisalWithNarrative::test_zero_public_reputation_source_rejected,
+    tests/unit/social/test_parity_soc_134.py::TestSocialAppraisalWithNarrative::test_high_public_reputation_source_accepted
   divergence_note: null
   support_boundary: null
 - id: SOC-135
@@ -2544,7 +2566,7 @@
     at episode start. Both hooks are wired into CampaignOrchestrator._advance_state()
     and _build_initial_state(). CampaignState.social_memories is serialized with str(k)/int(k)
     key conversion and participates in the full to_dict/from_dict round-trip. Pure
-    read for export; dc_replace for import (no live mutation).
+    read for export; authoritative write for import.
 
     '
   status: verified
@@ -2553,6 +2575,19 @@
   v2_evidence: 'src/domains/campaigns/social_memory.py (SocialMemoryExporter, SocialMemoryImporter).
     src/domains/campaigns/state.py (CampaignState.social_memories field). src/domains/campaigns/orchestrator.py
     (_extract_social_memories, _build_initial_state import hook). (TCK-20260619-E43B-EXPORT-IMPORT)
+    TCK-20260904-REPUTATION-LOCALITY-SCOPE fixed a pre-existing bypass: SocialMemoryImporter.apply()
+    previously wrote public_reputation via a direct dc_replace(entity.social, ...)
+    call, bypassing RelationshipService.process_update() -- the sole authoritative
+    writer per SOC-217. It now routes the write through RelationshipService.process_update(entity.social,
+    SocialUpdate(reputation_set=...)), a zero-behavior-change refactor (same computed
+    value, different write mechanism). The same class of bypass was also found and
+    fixed in CampaignOrchestrator._build_initial_state()''s carried-reputation seeding
+    (src/domains/campaigns/orchestrator.py), discovered via the new architecture guard
+    test (tests/architecture/test_social_write_paths.py) during this ticket''s implementation.
+    regional_reputation is NOT exported/imported across episode boundaries in this
+    ticket -- only the flat faction_reputation["default"] carries forward, unchanged;
+    cross-episode carry-forward for regional_reputation is a disclosed follow-up gap,
+    not implemented here.
 
     '
   proof_type: parity
@@ -2563,6 +2598,9 @@
   divergence_note: 'faction_reputation is a single "default" key (public_reputation
     proxy) in E43B. Per-faction detail deferred to a future E43 child ticket. Per
     Mechanics Bible ch03 "E43 adds per-faction detail" note in EntityCarryForward.
+    regional_reputation (a geographic, not organizational/faction, dimension) is a
+    separate axis added by TCK-20260904-REPUTATION-LOCALITY-SCOPE and does not participate
+    in this cross-episode carry-forward.
 
     '
   support_boundary: null
@@ -3975,6 +4013,117 @@
     merge-conflict resolution -- an unrelated concurrent session independently used
     SOC-263 for a different entry (SocialComponent canonical-hash gap fix) first.'
   support_boundary: null
+- id: SOC-269
+  text: 'Idea 55 (Feuds Outlive the Feuders): the on-death lineage dispatch hook in
+    LifecycleSystem.resolve_lifecycle transfers a weakened version of the deceased''s
+    Campaign-mode Nemesis hostility to the resolved heir, so a feud outlives the individual
+    who held it. See COMB-322 for the strategic-blocker mechanics; this entry records
+    the social/narrative-continuity behavior itself. (idea 55, M5) NOTE: originally
+    written as SOC-265 but renumbered to SOC-269 during a merge-conflict resolution
+    -- an unrelated concurrent session (PR #123) independently used SOC-265 for a
+    different entry (nemesis-role party-composition precedence fix) first, same shape
+    as the SOC-263/264 precedent this entry''s own sibling COMB-321/322 collision
+    also hit.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/systems/lifecycle_systems/lifecycle.py -- LifecycleSystem._transfer_inherited_feud()
+  proof_type: parity
+  test_path: tests/unit/progression/test_lifecycle.py::test_inherited_nemesis_blocker_is_weakened_relative_to_original
+  divergence_note: null
+  support_boundary: See COMB-322 -- Campaign-mode Nemesis data only, not the always-live
+    legacy nemesis_ids/grudge_history mechanism.
+- id: SOC-270
+  text: SocialComponent.regional_reputation (Dict[RegionID, float]) provides a region-scoped
+    reputation dimension additive to the retained global public_reputation scalar;
+    both are written by RelationshipService.process_update() from the same SocialUpdate
+    when a region_id is supplied via regional_reputation_delta.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/models/social.py (SocialComponent.regional_reputation field,
+    mirroring place_attachment's Dict[str, float] shape). src/core/updates.py (SocialUpdate.regional_reputation_delta,
+    sum-by-key merge()). src/systems/social_systems/relationships.py (RelationshipService.process_update()
+    applies regional_reputation_delta clamped [0.0, 2.0], same clamp range as public_reputation,
+    alongside the unchanged global-scalar write). src/core/state.py (EntityState.to_canonical_dict()
+    sorted-key coverage). src/replay/fingerprint.py (StateFingerprinter.get_fingerprint()
+    sorted-join coverage). (TCK-20260904-REPUTATION-LOCALITY-SCOPE)
+  proof_type: parity
+  test_path: tests/unit/social/test_relationships.py::test_public_reputation_locality_differs_by_region_after_region_scoped_event
+  divergence_note: null
+  support_boundary: null
+- id: SOC-271
+  text: 'Inherited Reputation birth-seed (idea 53, Reproduction): ReputationService.combine_public_reputation(parent_a,
+    parent_b) -> float (src/systems/social_systems/reputation.py) is a pure @staticmethod
+    computing the simple arithmetic mean of both parents'' SocialComponent.public_reputation,
+    clamped to [0.0, 2.0] (defense-in-depth; two in-range inputs averaged cannot leave
+    range by construction). V2EntityBuilder.birth_record() gains parent_a_public_reputation/parent_b_public_reputation
+    kwargs (both Optional[float], default None) that trigger the combine and write
+    the result via .social(public_reputation=...) -- an AND-gate, deliberately the
+    opposite of SOC-260''s genetics OR-gate: seeding requires both parent values present,
+    since every entity''s public_reputation always holds a real value (no missing-value
+    case to backfill via a fallback-generation function). Supplying zero or exactly
+    one parent value falls back to the SocialComponent class default (1.0), never
+    a partial single-parent seed. The write goes through the same construction-time
+    direct-construction path genetic_profile uses, already inside the SOC-217 authoritative-writer
+    guard''s allowlisted builder.py exception -- RelationshipService.process_update()
+    (SOC-217) remains the sole live-mutation writer and gains zero new fields or decay
+    call sites; a birth-seeded value is swamped by ordinary post-birth heroism_delta/notoriety_delta
+    play identically to the class default. The natural-creature and magical/demonic
+    parentless spawn paths never pass the new kwargs, so public_reputation stays at
+    1.0 for those entities (confirmed by dedicated anti-drift test). Cross-references
+    SOC-217 (sole-authoritative-writer law) and SOC-193 (public reputation and private
+    relationship/bond are separate state) -- this write never blurs the two.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/systems/social_systems/reputation.py (ReputationService.combine_public_reputation());
+    src/core/builder.py (V2EntityBuilder.birth_record()'s parent_a_public_reputation/parent_b_public_reputation
+    kwargs, .social(public_reputation=...) write); src/systems/world_systems/generator.py
+    (EntityGenerator.spawn_humanoid_offspring() threads the kwargs through); src/world/reproduction_humanoid.py
+    (HumanoidReproductionService.process_reproduction() wires real a.social.public_reputation/b.social.public_reputation
+    at the call site).
+  proof_type: regression
+  test_path: tests/unit/progression/test_lifecycle.py::test_birth_record_seeds_public_reputation_from_both_parents_average
+  divergence_note: null
+  support_boundary: null
+- id: SOC-272
+  text: 'Idea 54/M5 (Guilt by Association): `ClanState.clan_reputation: float = 1.0`
+    (clamped [0.0, 2.0]) is a new typed durable field distinct from any member''s
+    SocialComponent.public_reputation/regional_reputation. It is written exclusively
+    through `ClanUpdate.clan_reputation_delta`, applied additively (and clamped) in
+    apply.py''s clan-merge block, from two producers: a live party-defection trigger
+    in GroupPhase.resolve() and a pure-function-only contract-betrayal path (ContractService.compute_betrayal_clan_reputation_update,
+    not wired to any live pipeline phase). It is read in SocialAppraisalSystem.appraise_contract()''s
+    no-bond stranger-judgment branch as an additive delta term on trust_score, bounded
+    to +/-0.1, that reduces to 0.0 (no change) at the no-clan/neutral default -- preserving
+    SOC-134''s pinned formula unmodified.
+
+    '
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/core/state.py ClanState.clan_reputation (default 1.0, clamp [0.0,
+    2.0] applied at write time in apply.py); src/core/updates.py ClanUpdate.clan_reputation_delta
+    (default 0.0, folded into is_noop()); src/engine/apply.py clan-merge block (`new_reputation
+    = max(0.0, min(2.0, existing.clan_reputation + cu.clan_reputation_delta))`) --
+    the sole legal mutation point; src/systems/social_systems/clan_lifecycle.py (ClanLifecycleService.find_clan_id_for_entity,
+    sorted O(n_clans) reverse lookup; CLAN_REPUTATION_MISCONDUCT_DELTA = -0.25, shared
+    by both producers); src/engine/pipeline_phases/groups.py GroupPhase.resolve()
+    (live party-defection trigger, wired as pipeline phase "groups"); src/systems/social_systems/contracts.py
+    ContractService.compute_betrayal_clan_reputation_update (pure-function-only contract-betrayal
+    path; disclosed as not reachable from process_active_contracts(), the only production
+    caller of resolve_contract_outcome(), which never passes betrayal=True/betrayer_id
+    -- a pre-existing gap this ticket surfaces but does not fix); src/systems/social_systems/appraisal.py
+    appraise_contract() (stranger-judgment blend term, CLAN_INFLUENCE_WEIGHT = 0.2).
+    Mechanics Bible: docs/mechanics/04_strategic_cognition.md Sec.10a "Clan Reputation
+    & Guilt-by-Association Law". (TCK-20260904-CLAN-REPUTATION-ASSOCIATION)
+
+    '
+  proof_type: parity
+  test_path: tests/unit/domains/faction/test_clan_reputation_association.py::test_party_defection_produces_clan_reputation_clan_update
+  divergence_note: null
+  support_boundary: null
 - id: SOC-265
   text: 'SocialComponent.nemesis_ids (promoted only from sustained real grudge_history
     >= 3.0, SocialMemoryService.check_nemesis_promotion()) and SocialBond.role (RelationshipRole.FRIEND/RIVAL/NEUTRAL,
@@ -4003,11 +4152,71 @@
     tests/unit/social/test_party_composition.py::test_candidate_role_value_non_conflicting_cases_unchanged,
     tests/unit/social/test_party_composition.py::test_party_composition_score_lower_for_nemesis_with_friend_bond_than_true_friend,
     tests/unit/social/test_party_composition.py::test_form_party_route_blocked_by_canonical_nemesis_ids_without_strategic_blocker
-  divergence_note: 'TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE. The gap predates this
-    fix -- flagged as an open, unconfirmed seam in the 2026-09-02 Social/Relationship
+  divergence_note: 'TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE. The gap predates
+    this fix -- flagged as an open, unconfirmed seam in the 2026-09-02 Social/Relationship
     axis brainstorm pass (docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md),
     confirmed as a real, live bug on direct investigation 2026-09-04. Resolves the
-    roadmap''s own flagged open question. NOTE: this entry was originally written as
-    SOC-264 but was renumbered to SOC-265 during a merge-conflict resolution -- an
-    unrelated concurrent session independently used SOC-264 for a different entry
+    roadmap''s own flagged open question. NOTE: this entry was originally written
+    as SOC-264 but was renumbered to SOC-265 during a merge-conflict resolution --
+    an unrelated concurrent session independently used SOC-264 for a different entry
     (ClanState lifecycle/succession wiring) first.'
+  support_boundary: null
+- id: SOC-273
+  text: 'TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE (idea 39, M6 Political Identity
+    epic): PartyLifecycleService.check_defection() (SOC-230) is now the first real,
+    live producer of IdentityUpdate.faction_set -- a defecting entity''s identity.faction
+    is set to Faction.NEUTRAL through the pre-existing authoritative apply-path (IdentityPatch.apply(),
+    patches.py:209). This is a NEUTRAL-sentinel design, not rival-faction selection:
+    GroupRecord carries no faction context to pick a destination from, and idea 56
+    (Drifting Loyalty, TCK-20260905-DRIFTING-LOYALTY-SIGNAL) is the anticipated future
+    consumer for a non-neutral destination. check_defection() remains a pure function;
+    the entity''s faction only changes once the returned EntityUpdate is run through
+    ApplyPath. See docs/world/affiliation_mutation.md.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/systems/social_systems/party_lifecycle.py (PartyLifecycleService.check_defection()
+    returns EntityUpdate(identity=IdentityUpdate(faction_set=Faction.NEUTRAL), ...)
+    on defection). src/engine/patches.py:209 (IdentityPatch.apply(), pre-existing
+    authoritative consumer, unchanged). tests/architecture/test_faction_mutation_write_paths.py
+    enforces no bypassing write path exists.
+  proof_type: regression
+  test_path: tests/unit/social/test_party_lifecycle.py::test_defection_produces_faction_set_neutral_via_apply_path;
+    tests/unit/observability/test_event_extractor_identity.py::test_entity_faction_changed_fires_once_on_real_defection_trigger
+  divergence_note: null
+  support_boundary: NEUTRAL-sentinel only -- no rival-faction-selection logic. No
+    loyalty/pressure-accumulation field added (idea 56's own scope).
+- id: SOC-274
+  text: 'Idea 56/M6 (Drifting Loyalty): LoyaltyDriftService.compute_loyalty_pressure(campaign_state,
+    region_id) -> float (src/systems/social_systems/loyalty_drift.py) is a pure, read-only
+    reuse of the already-live CultureState.faction_conflict_exposure axis via CultureDriftImporter.get_culture(),
+    keyed by the entity''s current region (entity.navigation.region_id, real and live-populated
+    for every entity -- NOT StrategicComponent.home_region_id, which is populated
+    only for bosses until idea 59 lands). Wired as a real, optional loyalty_pressure
+    parameter on PartyLifecycleService.effective_defection_threshold()/check_defection()
+    (src/systems/social_systems/party_lifecycle.py), subtracting round(loyalty_pressure
+    * 2) from the grievance threshold (mirrors composition_score''s own bonus shape,
+    opposite sign), floored at 1. Default 0.0 is fully backward-compatible with every
+    pre-existing caller. Disclosed gap: GroupPhase.resolve() (src/engine/pipeline_phases/groups.py),
+    the one live per-tick caller, has no CampaignState access -- no bridge exists
+    between per-tick AuthoritativeState and episode-boundary CampaignState today --
+    so the live call site still supplies only the 0.0 default; the parameter itself
+    is real, tested end-to-end via a Culture-Drift integration test, not a dead stub.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/systems/social_systems/loyalty_drift.py (LoyaltyDriftService.compute_loyalty_pressure());
+    src/systems/social_systems/party_lifecycle.py (effective_defection_threshold()/check_defection()'s
+    loyalty_pressure parameter). Builds no new Culture Drift derivation/bias-application
+    machinery -- reuses CultureState.faction_conflict_exposure and CultureDriftImporter.get_culture()
+    exactly as they already exist.
+  proof_type: parity
+  test_path: tests/unit/social/test_loyalty_drift.py, tests/unit/social/test_party_lifecycle.py::test_effective_defection_threshold_lowered_by_loyalty_pressure,
+    tests/unit/social/test_party_lifecycle.py::test_check_defection_fires_earlier_with_loyalty_pressure,
+    tests/integration/culture/test_loyalty_drift_campaign.py
+  divergence_note: null
+  support_boundary: Only takes effect where a real loyalty_pressure value is supplied
+    -- the one live per-tick caller (GroupPhase.resolve()) has no CampaignState access
+    today and uses the 0.0 default, so this signal is currently a no-op in the default
+    single-episode Kernel path, matching the M5 batch's own "built, not yet visible
+    in play" precedent.

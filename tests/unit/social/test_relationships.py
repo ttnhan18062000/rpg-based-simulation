@@ -138,3 +138,82 @@ def test_process_update_role_set_none_preserves_existing_role():
 
     assert social_after_second.bonds[99].role == RelationshipRole.FRIEND
     assert social_after_second.bonds[99].familiarity == pytest.approx(0.1)
+
+
+def test_public_reputation_locality_differs_by_region_after_region_scoped_event():
+    """
+    TCK-20260904-REPUTATION-LOCALITY-SCOPE (AC #2): a region-scoped reputation-affecting
+    event updates SocialComponent.regional_reputation[region_id] independently of the
+    retained global scalar. Two reads at different regions diverge after only one region
+    receives an event; the untouched region and the global scalar keep their defaults.
+    """
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    update = SocialUpdate(regional_reputation_delta={"region_a": 0.5})
+    new_social = RelationshipService.process_update(entity.social, update)
+
+    assert new_social.regional_reputation["region_a"] == pytest.approx(0.5)
+    assert new_social.regional_reputation.get("region_b", 0.0) == 0.0
+    assert new_social.regional_reputation["region_a"] != new_social.regional_reputation.get("region_b", 0.0)
+    # The retained global scalar is unaffected by a region-scoped delta.
+    assert new_social.public_reputation == 1.0
+
+
+def test_regional_reputation_delta_clamped_to_public_reputation_range():
+    """Regional reputation clamps to [0.0, 2.0], matching public_reputation's own clamp."""
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    over_update = SocialUpdate(regional_reputation_delta={"region_a": 5.0})
+    over_social = RelationshipService.process_update(entity.social, over_update)
+    assert over_social.regional_reputation["region_a"] == pytest.approx(2.0)
+
+    under_update = SocialUpdate(regional_reputation_delta={"region_a": -5.0})
+    under_social = RelationshipService.process_update(over_social, under_update)
+    assert under_social.regional_reputation["region_a"] == pytest.approx(0.0)
+
+
+def test_regional_reputation_delta_merges_by_summing_per_region():
+    """SocialUpdate.merge() sums regional_reputation_delta by key, mirroring
+    place_attachment_delta's existing merge rule."""
+    first = SocialUpdate(regional_reputation_delta={"region_a": 0.2})
+    second = SocialUpdate(regional_reputation_delta={"region_a": 0.1, "region_b": 0.3})
+
+    merged = first.merge(second)
+
+    assert merged.regional_reputation_delta["region_a"] == pytest.approx(0.3)
+    assert merged.regional_reputation_delta["region_b"] == pytest.approx(0.3)
+    # Existing composition rules for reputation_set/heroism_delta/notoriety_delta unchanged.
+    reputation_merge = SocialUpdate(reputation_set=1.2).merge(SocialUpdate(reputation_set=1.8))
+    assert reputation_merge.reputation_set == 1.8
+    heroism_merge = SocialUpdate(heroism_delta=0.1).merge(SocialUpdate(heroism_delta=0.2))
+    assert heroism_merge.heroism_delta == pytest.approx(0.3)
+
+
+def test_heroism_and_notoriety_deltas_apply_identically_to_birth_seeded_reputation():
+    """TCK-20260904-INHERITED-REPUTATION-SEED (AC4): a birth-seeded public_reputation value
+    (simulated here via V2EntityBuilder's construction-time seed, standing in for
+    birth_record()'s own seed write) moves by the exact same heroism_delta/notoriety_delta
+    amount as the SocialComponent class default -- proving process_update() has no
+    floor/ceiling/persistence special-cased to birth-seed origin, and that this ticket adds
+    zero new decay logic to RelationshipService.process_update()."""
+    birth_seeded = V2EntityBuilder(entity_id=1).identity(role=0).social(public_reputation=0.6).build()
+    default_seeded = V2EntityBuilder(entity_id=2).identity(role=0).build()
+    assert default_seeded.social.public_reputation == 1.0
+
+    heroism_update = SocialUpdate(heroism_delta=0.2)
+    birth_seeded_after = RelationshipService.process_update(birth_seeded.social, heroism_update)
+    default_after = RelationshipService.process_update(default_seeded.social, heroism_update)
+
+    assert birth_seeded_after.public_reputation == pytest.approx(0.8)
+    assert default_after.public_reputation == pytest.approx(1.2)
+    assert (birth_seeded_after.public_reputation - birth_seeded.social.public_reputation) == pytest.approx(
+        default_after.public_reputation - default_seeded.social.public_reputation
+    )
+
+    notoriety_update = SocialUpdate(notoriety_delta=0.15)
+    birth_seeded_notoriety = RelationshipService.process_update(birth_seeded_after, notoriety_update)
+    default_notoriety = RelationshipService.process_update(default_after, notoriety_update)
+
+    assert (birth_seeded_notoriety.public_reputation - birth_seeded_after.public_reputation) == pytest.approx(
+        default_notoriety.public_reputation - default_after.public_reputation
+    )

@@ -164,7 +164,12 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # real `test_path` (tests/unit/world/test_world_dynamics.py::
     # test_boss_spawn_is_idempotent_even_if_existing_boss_left_region), previously `null`, as part
     # of generalizing BossService's region-scoped idempotency pattern to Place-scoped Lair spawning.
-    assert live_missing == 1316
+    # Updated from 1316 to 1315 (TCK-20260905-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT,
+    # 2026-09-05): SUB-327 (docs/parity_ledger/substrate.yaml, spatial-index atomic-move claim)
+    # gained a real `test_path` (tests/unit/movement/test_spatial_index.py::
+    # test_spatial_grid_rebuild_logic), previously `null` behind a fabricated citation to a
+    # nonexistent file/method (TCK-20260905-SUB-327-FABRICATED-CITATION-FIX).
+    assert live_missing == 1315
 
 
 # ---------------------------------------------------------------------------
