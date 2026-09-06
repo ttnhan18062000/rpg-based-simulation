@@ -171,15 +171,15 @@ The per-record schema is unaffected by this change; only where a record physical
 | Field | Type | Nullable | Description |
 |---|---|---|---|
 | `run_id` | string | No | FK to runs.jsonl. |
-| `seq` | int | No | 1-based call order within the run. Monotonically increasing. **Exception:** the advisory context-packet shadow-call site (TCK-20260729-SHADOW-PACKET-CALL-SITE, see Provenance note below) emits `seq <= 0` values, deliberately disjoint from this monotonic range — never assume `seq >= 1` when reading `context-packet-wrapper` rows. |
+| `seq` | int | No | 1-based call order within the run. Monotonically increasing. **Exceptions:** the advisory context-packet shadow-call site (TCK-20260729-SHADOW-PACKET-CALL-SITE, see Provenance note below) emits `seq <= 0` values; the advisory shadow-reviewer call sites (TCK-20260904-SHADOW-REVIEWER-LOGGING, see the Shadow-reviewer-event field family section below) emit `seq <= -100` values. Both are deliberately disjoint from this monotonic range and from each other — never assume `seq >= 1` when reading `context-packet-wrapper` or `*-shadow` rows. |
 | `ts` | ISO 8601 | No | UTC timestamp when this event was recorded. Captured by the orchestrator (`bash('date -u +%Y-%m-%dT%H:%M:%SZ')`) immediately before the paired `agent()` call, not self-reported by the agent — see TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH. |
 | `phase` | string | No | Workflow phase this agent call belongs to. |
 | `agent` | string | No | Agent identifier (matches `.claude/agents/{agent}.md` filename). |
 | `summary` | string | No | One sentence describing what the agent did and the key finding. Empty string = agent did not provide a summary (prompt quality signal). Max 200 chars. |
 | `status` | string | No | `ok` \| `failed` \| `blocked` \| `skipped` |
-| `tool_call_count` | int | Yes | Total number of tool calls made by this agent. Computed deterministically by `record_events.py` at write time from `tools.jsonl` (counts entries matching `run_id` + `seq`) for `implement-ticket` workflow records only — see below. `null` for runs produced before this field was added, and for workflows that never register a `.claude/current_run` sidecar (`create-tickets`, `implement-epic`). |
+| `tool_call_count` | int | Yes | Total number of tool calls made by this agent. Computed deterministically by `record_events.py` at write time from `tools.jsonl` (counts entries matching `run_id` + `seq`) — see below. Since `TCK-20260904-COST-PROXY-EPIC-TICKETS`, computed for `implement-ticket` (all real call sites), `implement-epic` (all 4 real top-level call sites), and `create-tickets` (4 of 7 real call sites — `comprehend`, `structure`, `write-sequence`, `link-epic`; `monitoring-write` and the 2 `pipeline()`-fan-out sites `investigate:`/`write:` per-item are excluded and stay `null`/absent, see below). `null` for runs produced before this field was added, and for the excluded `create-tickets` sites above. |
 | `reason_code` | string | Yes | Machine-parseable sub-cause code. Populated for `Scope`/`ticket-scoper` and `Verify`/`done-checker` `failed` events; `null` everywhere else, and `null` for all records predating `TCK-20260706-MONITORING-REASON-CODE`/`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`. See below for why only those two phases get one. |
-| `cost_proxy_score` | float | Yes | Monotonic, unitless spend-proxy score computed deterministically by `record_events.py` at write time from `tools.jsonl`, for `implement-ticket` workflow records only. `null`/absent for all records predating `TCK-20260708-AGENT-COST-OBSERVABILITY` (no backfill). See below for the formula. |
+| `cost_proxy_score` | float | Yes | Monotonic, unitless spend-proxy score computed deterministically by `record_events.py` at write time from `tools.jsonl`, for `implement-ticket`, `implement-epic`, and `create-tickets` workflow records (see the `tool_call_count` row above for `create-tickets`'/`implement-epic`'s own partial-coverage caveat). `null`/absent for all records predating `TCK-20260708-AGENT-COST-OBSERVABILITY` (no backfill) or falling on an excluded `create-tickets` site. See below for the formula. |
 
 ### `status` values
 
@@ -286,7 +286,7 @@ for hotfix tier. `Security-Review` only appears in `events.jsonl` for tickets wh
 
 ### `phase` values (create-tickets workflow)
 
-`Comprehend`, `Investigate` (one event per concern), `Structure`, `Write` (one event per ticket), `Link` (only when `epic_id` is provided). Neither `create-tickets` nor `implement-epic` registers a `.claude/current_run` sidecar per agent call (neither ever has), so `tool_call_count` is always absent on their events — `record_events.py::compute_tool_stats()` only computes it for `implement-ticket` run_ids (see "How tool calls are attributed to agent events" above), and leaves every other workflow's records untouched.
+`Comprehend`, `Investigate` (one event per concern), `Structure`, `Write` (one event per ticket), `Link` (only when `epic_id` is provided). Prior to `TCK-20260904-COST-PROXY-EPIC-TICKETS`, neither `create-tickets` nor `implement-epic` registered a `.claude/current_run` sidecar per agent call — **neither ever has** until that ticket landed. Since `TCK-20260904-COST-PROXY-EPIC-TICKETS`, `create-tickets.js` registers a `.claude/current_run` sidecar write (via its own `writeSidecar(seq, phase, agentName)` helper) at 4 of its 5 phases' call sites — `Comprehend` (`comprehend`), `Structure` (`structure`), and, when they fire, `Write`'s `write-sequence` site and `Link`'s `link-epic` site — so `tool_call_count`/`cost_proxy_score` are non-null for those. Two phases stay excluded and permanently absent/null: `Investigate` (the `investigate:${concern.id}` `pipeline()` fan-out, per-item) and `Write`'s per-ticket `write:${task.short_scope}` `pipeline()` fan-out — both run up to `min(16, CPUs-2)` truly concurrent `agent()` calls sharing one mutable sidecar file, making a safe per-item `writeSidecar()` write impossible without redesigning the sidecar mechanism itself (see "How tool calls are attributed to agent events" below for the full rationale). `writeMonitoring`'s own bookkeeping `agent()` call is also excluded, mirroring `implement-ticket.js`'s identical, permanent exclusion of the same architectural role.
 
 ### `phase` values (implement-epic workflow)
 
@@ -363,6 +363,52 @@ Because these `run_id`s have no matching `runs.jsonl` row, they are naturally ex
 existing run-scoped retro/dashboard view (`generate_retro.py` filters events to `run_id in
 {r["run_id"] for r in runs}`) — they do not corrupt or interleave into any real ticket's event
 stream.
+
+### Shadow-reviewer-event field family (additive)
+
+Introduced by `TCK-20260904-SHADOW-REVIEWER-LOGGING`. `tools/agent-monitoring/shadow_reviewer_events.py`
+is the single source of truth for the field list (`SHADOW_REVIEWER_EVENT_FIELDS`) — the table below
+is illustrative documentation, same convention as `vocabulary.py`/`RETRIEVAL_EVENT_FIELDS` above.
+All fields are optional additions on top of the 7 base fields already documented above; they never
+replace or narrow the base REQUIRED set enforced by `record_events.py::validate_record()`.
+
+An advisory, opt-in candidate model (`claude-fable-5-1`, a distinct model family from whatever the
+main-loop/production reviewer call inherits — de-correlating failure modes was the whole point) runs
+alongside the production `architecture-reviewer` call (Architecture-Verify phase) and the production
+`security-reviewer` call (Security-Review phase, itself tag-gated — see the `phase` values table
+above), on the same diff/evidence, purely for logging. Gated behind `SHADOW_REVIEWER_LOGGING_ENABLED`
+(strict `"1"` string equality, off by default) AND a bounded per-reviewer sample window
+(`tools/agent-monitoring/shadow_reviewer_window.py::is_shadow_window_open()` — 50 prior samples for
+`architecture-reviewer`, 10 for `security-reviewer`, sized from each reviewer's real historical
+event volume, ~34:1 asymmetric). The candidate's verdict never reaches `pushEvent(..., 'failed', ...)`,
+`writeMonitoring()`, or an early `return` — those remain wired exclusively to the production call's
+own result variable.
+
+| Field | Type | Description |
+|---|---|---|
+| `shadow_reviewer_event_schema_version` | int | Version of this additive field family itself, starting at `1`. |
+| `candidate_model` | string | The candidate model identifier, currently always `claude-fable-5-1`. |
+| `candidate_verdict` | string | `APPROVED` \| `NEEDS_CHANGES` \| `BLOCKED` — the candidate model's own verdict, structurally decoupled from the production gate outcome. |
+| `candidate_violations_count` | int | `len(violations)` from the candidate's own schema-validated response. |
+| `candidate_tool_call_count` | int | Tool-call count for this shadow call's own `(run_id, seq)` bucket in `tools.jsonl` — computed the same way `record_events.py::compute_tool_stats()` computes the production field, but inline (this module never calls that function directly — see `tool_call_count` row above for why `compute_tool_stats()` itself isn't reused for a single-key lookup). |
+| `candidate_cost_proxy_score` | float | Same `cost_proxy.compute_cost_proxy_score()` formula/weights as the production `cost_proxy_score` field, computed against this shadow call's own `(run_id, seq)` tool-call rows — never summed with or overwriting the production event's own score. |
+| `candidate_wall_time_ms` | int | Wall-clock time of the candidate `agent()` call itself, measured via the orchestrator's `captureEpochMs()` helper (epoch-ms, distinct from the ISO-string `captureTs()`). |
+| `workflow_wall_time_ms` | int | Elapsed time from workflow start (`workflowStartMs`, captured once near the top of `implement-ticket.js`) to this shadow call's completion — lets a retro reader see how far into the run the shadow sample landed. |
+
+**Provenance (`run_id`/`seq`/`phase`/`agent`):** unlike the two standalone-invocation retrieval
+modules above, `run_id` here is always the real `tid` — there is no synthetic prefix, since both
+shadow call sites are wired directly into `implement-ticket.js` against a real ticket run. `seq` is
+always `<= -100` (`SHADOW_SEQ_BASE`-derived: `-(100 + prior_count)` for `architecture-reviewer`,
+`-(200 + prior_count)` for `security-reviewer`), deliberately disjoint from both the real per-phase
+range (`>= 1`) and INFRA-299's own small `-1..-5` shadow-packet range, so a reader can tell the two
+shadow mechanisms apart by raw `seq` value alone. `phase` is reused verbatim from the production
+phase (`Architecture-Verify` / `Security-Review` — both already canonical in
+`vocabulary.WORKFLOW_PHASES["implement-ticket"]`), so **`phase` never shows as drift** under
+`compute_drift_report()` — a deliberate difference from the shadow-packet precedent, where
+`phase="Retrieval"` is itself non-canonical. `agent` is `architecture-reviewer-shadow` /
+`security-reviewer-shadow` (neither in `WORKFLOW_AGENTS["implement-ticket"]`), so these are expected
+to show under `compute_drift_report()`'s "Non-canonical agent values" going forward — the same
+non-gating precedent as `context-packet-wrapper`, not a vocabulary regression to chase.
 
 ---
 
@@ -445,7 +491,9 @@ seq=1` event) so a future recurrence surfaces automatically.
 
 Tool calls made outside a workflow (interactive Claude Code session) are still recorded with `run_id: null, seq: null` — useful for auditing overall tool usage. Historical `tool_call_count`/`cost_proxy_score` values recorded before this fix are not backfilled (append-only precedent) — they may still be wrong; only events recorded after this fix are expected to be reliable.
 
-**Cross-session contamination fix (`TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE`, 2026-08-24).** `.claude/current_run` is a single file shared by every concurrent Claude Code session working in this repository's shared directory — every session's own `writeSidecar()` call overwrites the same file, so a session's tool calls get attributed to whichever session wrote the sidecar most recently, not the session that actually made the call. This was confirmed live, not theoretically: `tickets/done/TCK-20260821-VISUAL-QUALITY-DOCS.md` closed on 2026-08-22T21:36:09Z, yet `tools.jsonl` kept receiving rows stamped with that same closed ticket's `run_id`/`phase`/`agent` from a different, concurrently-running session two days later, on 2026-08-24. **Fix:** `writeSidecar()` (and the Scope-phase resume branch) now additionally write a per-session-scoped copy, `.claude/current_run.<CLAUDE_CODE_SESSION_ID>` — a stable, process-level env var the harness sets once per session, so reading it introduces no new race — alongside the existing unscoped file (kept for `tools/retrieval_cache.py` and `.claude/settings.json`'s inline sidecar-check hook, both deferred rather than migrated). `post_tool_hook.py` prefers the session-scoped file, keyed by the `session_id` it already reads from its own hook payload, falling back to the unscoped file when no scoped file exists for that session. Scoped files older than 24 hours are pruned opportunistically on every hook invocation (no "session end" hook exists in this repo to delete them precisely at session close). **Historical data:** consistent with the no-backfill precedent immediately above, no `tools.jsonl` row written before this fix is corrected or flagged — cross-session misattribution during concurrent-session windows before 2026-08-24 (the `TCK-20260821-VISUAL-QUALITY-DOCS` window above being the one concretely confirmed instance) remains an accepted, documented data-quality caveat, not something retroactively repaired.
+**Cross-session contamination fix (`TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE`, 2026-08-24).** `.claude/current_run` is a single file shared by every concurrent Claude Code session working in this repository's shared directory — every session's own `writeSidecar()` call overwrites the same file, so a session's tool calls get attributed to whichever session wrote the sidecar most recently, not the session that actually made the call. This was confirmed live, not theoretically: `tickets/done/TCK-20260821-VISUAL-QUALITY-DOCS.md` closed on 2026-08-22T21:36:09Z, yet `tools.jsonl` kept receiving rows stamped with that same closed ticket's `run_id`/`phase`/`agent` from a different, concurrently-running session two days later, on 2026-08-24. **Fix:** `writeSidecar()` (and the Scope-phase resume branch) now additionally write a per-session-scoped copy, `.claude/current_run.<CLAUDE_CODE_SESSION_ID>` — a stable, process-level env var the harness sets once per session, so reading it introduces no new race — alongside the existing unscoped file. Two consumers were originally left reading only the unscoped file — `tools/retrieval_cache.py`'s `read_current_run_sidecar()` (migrated to the same scoped-then-unscoped-fallback order by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`, same day) and `.claude/settings.json`'s inline `Edit|Write` `PreToolUse` hook (migrated by `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE`, 2026-09-04, reading `CLAUDE_CODE_SESSION_ID` via `os.environ.get` since this bash-embedded hook has no payload `session_id` field to read) — both now prefer the scoped file when it exists, falling back to the unscoped file otherwise. `post_tool_hook.py` prefers the session-scoped file, keyed by the `session_id` it already reads from its own hook payload, falling back to the unscoped file when no scoped file exists for that session. The unscoped file itself is kept indefinitely as that shared fallback target, not as a sign any consumer is still unmigrated. Scoped files older than 24 hours are pruned opportunistically on every hook invocation (no "session end" hook exists in this repo to delete them precisely at session close). **Historical data:** consistent with the no-backfill precedent immediately above, no `tools.jsonl` row written before this fix is corrected or flagged — cross-session misattribution during concurrent-session windows before 2026-08-24 (the `TCK-20260821-VISUAL-QUALITY-DOCS` window above being the one concretely confirmed instance) remains an accepted, documented data-quality caveat, not something retroactively repaired.
+
+**`implement-epic.js`/`create-tickets.js` gain their own `writeSidecar` helpers (`TCK-20260904-COST-PROXY-EPIC-TICKETS`).** Both workflows previously never registered a `.claude/current_run` sidecar per agent call at all (a deliberate scope-narrowing decision by `TCK-20260719-COST-PROXY-WRITE-PATH`, not a technical limitation) — this ticket reverses that decision for the sites where a safe, non-racing write is possible. Each file adds its own 4-arg `writeSidecar(seq, phase, agentName)` helper — same dual-write shape as `implement-ticket.js`'s (unscoped `.claude/current_run` + session-scoped `.claude/current_run.<CLAUDE_CODE_SESSION_ID>` copy, argv-quoted, fail-open), but omitting the `execution_id`/`provider` fields (`TCK-20260730-CLAUDE-EXECUTION-IDENTITY`'s separate, unrelated addition to `implement-ticket.js` only) — `post_tool_hook.py` tolerates their absence. `implement-epic.js`'s helper closes over a single, hoisted `batchRunId` and is called at its 4 real top-level `agent()` sites (`discover`, `batch-monitoring-write`, `folder-cleanup`, `tracking-doc-update`) using a disjoint, monotonic **negative** `seq` range (`-1..-4`, never positive) — this run_id is shared with the pre-existing `batchEvents` array's own `seq = 1..N` positive range, so a positive value here would collide with it for realistic batch sizes (the same `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION` bug class). `create-tickets.js`'s helper reuses this file's own `events.length + 1` numbering (it already maintains an `events` array via `pushEvent`) and is called at 4 sites: `comprehend`, `structure`, `write-sequence`, `link-epic`. Three `create-tickets.js` sites are permanently excluded, each with its own documenting code comment: `writeMonitoring`'s own `agent()` call (mirrors `implement-ticket.js`'s identical, permanent exclusion of the same architectural role, immediately above) and the 2 `pipeline()` fan-out sites, `investigate:${concern.id}` and `write:${task.short_scope}` — `pipeline()` runs up to `min(16, CPUs-2)` truly concurrent `agent()` calls sharing the one mutable sidecar file, so a `writeSidecar()`-then-`agent()` pattern there would let a later concurrent iteration's write silently overwrite an earlier iteration's still-in-flight attribution, a structural race not fixable by distinct per-item `seq` values alone. `record_events.py::compute_tool_stats()`'s workflow filter was correspondingly widened from a single `== "implement-ticket"` check to a membership check against `{"implement-ticket", "implement-epic", "create-tickets"}` — `simq-audit` stays deliberately excluded (it has its own separate, still-unfixed inline compute path).
 
 ### `status` values
 
@@ -536,7 +584,13 @@ INTEGRITY) automates the 2 FK relationships documented above (`events.run_id -> 
 <week>/` folder (never scoped to one week) so a legitimate cross-week-boundary run is never
 false-flagged. It excludes the 3 documented exceptions: `RETRIEVAL-EVENT-<slug>` run_ids (no
 matching runs.jsonl row by design), `tools.jsonl` rows with `run_id: null` (outside an active
-workflow run), and `seq <= 0` shadow rows (context-packet-wrapper mechanism).
+workflow run), and `seq <= 0` shadow rows. As of `TCK-20260904-SHADOW-REVIEWER-LOGGING`, this
+third exception's literal `seq <= 0` check (`tools/agent-monitoring/verify_referential_integrity.py`)
+numerically also covers the new shadow-reviewer mechanism's `seq <= -100` rows, not only the
+context-packet-wrapper mechanism's original `seq <= 0`-and-small-negative range — both mechanisms'
+rows are correctly excluded from Check 2's checked population by the same condition, with no code
+change needed in that script for this ticket. See the Shadow-reviewer-event field family section
+above for the full `seq` disjointness proof between the two mechanisms.
 
 A real-corpus run on 2026-09-03 found 18 distinct `run_id`s (117 individual event rows, out of 9,018
 events checked) with Check-1 orphans (events with no matching run) and 17,471/136,001 (12.8%)

@@ -31,10 +31,10 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | 4 | ~~AST-based import-boundary enforcement~~ **SUPERSEDED — already shipped** on `main` (`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`, found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M1 note; remaining scope is M2/M3) |
 | 5 | ~~Convert 2 proven-failing prose rules to hooks~~ **SHIPPED** — M2 (`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) and M3 (`TCK-20260904-TEST-SCOPER-HANG-GUARD`) both landed | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M2, M3 — both shipped) |
 | 6 | Remove/archive knowledge-gateway — **BLOCKED**, conflicts with `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`'s ratified "no changes authorized" (found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (blocked, pending re-ratification) | `standalone_items.md` (§1) |
-| 7 | Migrate the 2 remaining sidecar stragglers (corrected to 1 remaining during the 2026-09-04 `create-tickets` investigation pass — `tools/retrieval_cache.py` was already migrated by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`) | A — Committed | H1, schedule later | `workflow_reliability_epic.md` (M1) |
+| 7 | ~~Migrate the 2 remaining sidecar stragglers~~ **SHIPPED** — corrected to 1 remaining during the 2026-09-04 `create-tickets` investigation pass (`tools/retrieval_cache.py` was already migrated by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`); the last straggler, `.claude/settings.json`'s inline `Edit\|Write` hook, migrated by `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE` | A — Committed | H1 (was) | `workflow_reliability_epic.md` (M1 — shipped) |
 | 8 | ~~`tools.jsonl` sharding + reconciled lifecycle~~ **SUPERSEDED — already shipped** on `main` (PR #112, `TCK-20260902/903-MONITORING-*`, found during planning discussion) | A — Committed | H1 (was) | `telemetry_retention_epic.md` (M1 note; remaining scope is M2/M3) |
 | 9 | Model-diverse reviewer — deploy shadow logging | A — Committed | H1, schedule later | `review_independence_epic.md` (M1) |
-| 10 | Extend `cost_proxy_score` coverage | A — Committed | H2, schedule later | `standalone_items.md` (§2) |
+| 10 | ~~Extend `cost_proxy_score` coverage~~ **SHIPPED (code) — real-run confirmation outstanding**: `TCK-20260904-COST-PROXY-EPIC-TICKETS` added sidecar coverage to `implement-epic.js` (all 4 real top-level `agent()` sites) and `create-tickets.js` (4 of 7 real sites — `writeMonitoring` and the 2 `pipeline()` fan-out sites are permanently excluded, not a gap) and widened `record_events.py`'s workflow filter; this item's own acceptance signal (non-null `cost_proxy_score` after each workflow's next real run) has not yet been directly confirmed | A — Committed | H2 (was) | `standalone_items.md` (§2) |
 | 11 | `working_log.csv` parser and cleanup | A — Committed | H2, schedule later | `standalone_items.md` (§3) |
 | 12 | Provider-portability conformance test | A — Committed | H2, schedule later | `standalone_items.md` (§4) |
 | 13 | Filtered replay eval pilot + dataset hygiene + metric design | B — Experiment | H1 | `agent_evaluation_foundation_experiment.md` |
@@ -76,6 +76,20 @@ per-wave breakdown). Item 1 is **not** fully shipped like item 5 above: M3's Wav
 the epic doc's own sizing rule, and tracked as separate future tickets. Item 1 therefore stays in
 the "8 remaining to implement" count above until all three waves land.
 
+**Item 10 — shipped (2026-09-06)**: `TCK-20260904-COST-PROXY-EPIC-TICKETS` landed this item's full
+scoped milestone — sidecar coverage wired into `implement-epic.js` (4/4 real top-level sites) and
+`create-tickets.js` (4/7 real sites; the other 3 are permanently, deliberately excluded — see
+`standalone_items.md` §2), plus the `record_events.py` filter widening. This is a real scope-size
+correction, not a like-for-like of the original milestone text above: investigation found the
+original "same computation, two more call sites, no new logic" framing understated the work, since
+neither file previously registered a per-agent-call sidecar at all (see the ticket's own
+Investigation for detail). This item's stated acceptance signal (non-null `cost_proxy_score` in
+`runs.jsonl` after each workflow's next real run) is not yet independently confirmed — flagged as
+outstanding by the ticket itself, to be checked at the next real `implement-epic`/`create-tickets`
+invocation. This moves item 10 out of the "3 still Horizon-2-only" group above, leaving **2 still
+Horizon-2-only — items 11–12** and **7 remaining to implement** overall (1, 2, 3, 7, 9, plus item
+1's remaining waves).
+
 ## Epics and detail docs
 
 ### Horizon 0 — start now
@@ -116,9 +130,10 @@ the "8 remaining to implement" count above until all three waves land.
 
 ### Horizon 2 — ready, schedule later / experiment follow-ons
 
-- **Standalone items** (`standalone_items.md` §2–4): items 10–12. `cost_proxy_score` coverage,
-  `working_log.csv` cleanup, provider conformance test — three independent, low-effort committed
-  items.
+- **Standalone items** (`standalone_items.md` §2–4): items 10–12 — three independent, low-effort
+  committed items. Item 10 (`cost_proxy_score` coverage) has since **shipped**
+  (`TCK-20260904-COST-PROXY-EPIC-TICKETS`, see the item-10 note above); `working_log.csv` cleanup
+  (11) and the provider conformance test (12) remain open.
 - **Experiment follow-ons**: item 16 (`review_independence_epic.md` M2) and item 17
   (`governance_capability_policy_epic.md`'s post-M5 follow-on) — both are decisions that can only
   be made once their Horizon-0/1 committed counterpart has run long enough to produce real data.
