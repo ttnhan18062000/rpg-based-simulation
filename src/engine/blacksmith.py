@@ -5,6 +5,7 @@ from dataclasses import replace, dataclass
 
 from src.core.updates import EntityUpdate, IdentityUpdate, NavigationUpdate
 from src.core.movement_modes import MovementMode
+from src.core.registries import RecipeRegistry as LiveRecipeRegistry
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -139,9 +140,16 @@ class BlacksmithSystem:
                 if not entity.identity.known_recipes:
                     existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                     existing_id = existing_upd.identity if existing_upd.identity else IdentityUpdate()
-                    
-                    # Wholesale learning (Parity with V1)
-                    all_recipes = list(BlacksmithSystem.RECIPES.keys())
+
+                    # Wholesale learning (Parity with V1). Populates from the real, catalog-backed
+                    # registries.py::RecipeRegistry (TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE)
+                    # -- not BlacksmithSystem.RECIPES below, whose 14 entries were confirmed to
+                    # reference items/materials never authored anywhere in the real content
+                    # catalog. This is the same registry action_intent.py's REQUEST_CRAFT branch
+                    # reads for real AI-driven crafting, and the same one
+                    # material_predicate.recipe_materials() now reads -- so a real,
+                    # organically-learned recipe id genuinely matches on both ends.
+                    all_recipes = list(LiveRecipeRegistry.all().keys())
                     new_id = replace(existing_id, recipes_learned=all_recipes)
                     
                     refined_entity_updates[e_id] = replace(

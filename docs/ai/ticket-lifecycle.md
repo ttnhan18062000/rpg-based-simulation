@@ -626,9 +626,9 @@ Use `/implement-epic` when you have multiple tickets to implement in sequence.
 ```
 
 **How it works:**
-1. **Discover** — lists all TCK-*.md tickets in the folder or reads the epic's `## Related Tickets` section; filters out any already in `tickets/done/`
+1. **Discover** — lists all TCK-*.md tickets in the folder or reads the epic's `## Related Tickets` section; filters out any already in `tickets/done/`, and any whose own `## Status` reads `BLOCKED` (excluded from the implementation order and named separately in the summary/report — a structurally-blocked ticket is never attempted; see `tools/gate_checks/epic_blocked_status_static.py`)
 2. **Implement** — calls `implement-ticket` for each ticket in order; stops at the first gate failure
-3. **Report** — summarizes done/failed/remaining tickets and writes a batch monitoring record
+3. **Report** — summarizes done/failed/remaining/blocked tickets and writes a batch monitoring record
 
 **Gate failure recovery:**
 ```

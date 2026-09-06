@@ -496,7 +496,13 @@ class StrategicPatch(ComponentPatch):
                 boredom=shallow_freeze(nbor), source_trust=shallow_freeze(ntrust), beliefs=shallow_freeze(nbel),
                 committed_intentions=nci,
                 current_project_id=u_strat.current_project_id_set if u_strat.current_project_id_set is not None else new_strat.current_project_id,
-                current_objective_id=u_strat.current_objective_id_set if u_strat.current_objective_id_set is not None else new_strat.current_objective_id
+                current_objective_id=u_strat.current_objective_id_set if u_strat.current_objective_id_set is not None else new_strat.current_objective_id,
+                # Idea 59/65: intentionally the REVERSE of every other _set field above -- an
+                # already-set home_region_id always wins over a proposed update. A refugee's
+                # home_region_id must keep pointing at their *original* home through displacement;
+                # only a still-unset home_region_id (a fresh birth, or an entity displaced before
+                # ever having one) accepts the proposed value.
+                home_region_id=new_strat.home_region_id if new_strat.home_region_id is not None else u_strat.home_region_id_set
             )
             changes["strategic"] = new_strat
 

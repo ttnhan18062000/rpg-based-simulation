@@ -142,6 +142,7 @@ INFORMATION:
   info_has_impact: 25.0
   intel_complexity: 20.0
   subjective_divergence: 30.0
+  information_seeking_active: 10.0
   knowledge_rot: -2.0
   belief_pipeline_deaf: -1.0
   knowledge_economy_dormant: -10.0

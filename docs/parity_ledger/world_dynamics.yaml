@@ -2102,3 +2102,33 @@
     tests/architecture/test_belief_institution_write_paths.py::test_belief_institutions_written_only_through_belief_institution_exporter
   divergence_note: null
   support_boundary: null
+- id: WORLD-DISPLACE-001
+  text: 'Idea 65 (Named Refugee Threads) + idea 59 (Home, Exile & Return): DisplacementService.compute_displacement()
+    (src/world/displacement.py) relocates every living entity (lifecycle.active and
+    combat.alive) in a region whose calamity_intensity >= DISPLACEMENT_THRESHOLD (0.6)
+    to its lowest-calamity_intensity adjacent region, reusing RegionalPressureModel._are_adjacent()
+    read-only for adjacency. Relocation is via EntityUpdate.new_position (safe_region.center),
+    the same mechanism src/engine/movement.py already uses for teleport. If the entity''s
+    StrategicComponent.home_region_id is still unset, StrategicUpdate.home_region_id_set
+    carries the struck region forward as their original home; an already-set home_region_id
+    is never overwritten -- StrategicPatch.apply() treats home_region_id_set as the
+    one field in StrategicUpdate where the durable value wins over a proposed update,
+    deliberately the reverse of every other _set field. Wired into src/engine/world_dynamics.py
+    right after the existing Creature Territory Lifecycle block (3.9b), merged into
+    the tick''s StateUpdate only if not is_noop(). Struck regions and affected entities
+    are both iterated in sorted id order for determinism.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/world/displacement.py -- DisplacementService.compute_displacement(),
+    _find_safe_neighbor(); src/core/updates.py -- StrategicUpdate.home_region_id_set;
+    src/engine/patches.py -- StrategicPatch.apply() reversed-precedence handling of
+    home_region_id_set; src/engine/world_dynamics.py -- 3.9b Calamity-Driven Displacement
+    wiring.
+  proof_type: parity
+  test_path: tests/unit/world/test_displacement.py, tests/architecture/test_displacement_write_paths.py
+  divergence_note: null
+  support_boundary: DISPLACEMENT_THRESHOLD (0.6) is a new, independent constant one
+    tier above CalamityService.apply_calamity_consequences()'s existing hazard_level
+    > 0.5 growth gate -- deliberately distinct events on the same underlying signal,
+    not a shared threshold.

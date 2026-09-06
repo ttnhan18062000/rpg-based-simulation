@@ -559,6 +559,9 @@ class StrategicUpdate:
     # Committed Intentions
     committed_intentions_add_or_update: list[CommittedIntention] = field(default_factory=list)
     committed_intentions_remove: list[str] = field(default_factory=list)  # by intention_id
+    # Home/Exile (idea 59/65) -- set once at birth, or once at displacement if previously unset;
+    # never overwrites an already-set value (a refugee's home_region_id is their *original* home).
+    home_region_id_set: Optional[str] = None
 
     def is_noop(self) -> bool:
         return (not self.blockers_add_or_update and not self.blockers_remove and
@@ -576,7 +579,7 @@ class StrategicUpdate:
                 self.overload_tick_set is None and self.last_routing_family_set is None and
                 self.last_routing_tick_set is None and not self.beliefs_add_or_update and
                 not self.beliefs_remove and not self.committed_intentions_add_or_update and
-                not self.committed_intentions_remove)
+                not self.committed_intentions_remove and self.home_region_id_set is None)
 
     def merge(self, other: StrategicUpdate) -> StrategicUpdate:
         """Merges another StrategicUpdate into this one."""
@@ -619,7 +622,8 @@ class StrategicUpdate:
             beliefs_add_or_update=self.beliefs_add_or_update + other.beliefs_add_or_update,
             beliefs_remove=self.beliefs_remove + other.beliefs_remove,
             committed_intentions_add_or_update=self.committed_intentions_add_or_update + other.committed_intentions_add_or_update,
-            committed_intentions_remove=self.committed_intentions_remove + other.committed_intentions_remove
+            committed_intentions_remove=self.committed_intentions_remove + other.committed_intentions_remove,
+            home_region_id_set=other.home_region_id_set if other.home_region_id_set is not None else self.home_region_id_set
         )
 
 @dataclass(frozen=True, slots=True)

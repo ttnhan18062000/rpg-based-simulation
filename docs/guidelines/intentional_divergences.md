@@ -44,6 +44,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Economy / Social** | Teaching Gated on Trust, Not Gold: TRAIN_COST Removed Entirely (DEV-007) | **Intentional Gameplay Change** | ACTIVE |
 | **Engine / Campaigns** | `CampaignState` Direct Mutation Bypasses `patches.py` for Episode-Boundary Deriver Exporters | **Bounded** | RATIFIED |
 | **Social/Clan** | Clan Reputation Folded Into P0-Certified `appraise_contract()` Stranger-Judgment Formula | **Bounded** | RATIFIED |
+| **Combat / Legality** | Mid-Tick Faction Mutation Can Flip a P0-Certified Friendly-Fire Legality Outcome by the Next Tick | **Bounded** | RATIFIED |
 
 ---
 
@@ -1536,6 +1537,42 @@ This document is the canonical record of intentional behavior shifts in `src` co
   unmodified). `docs/parity_ledger/social_narrative.yaml` SOC-134's `v2_evidence` field was updated
   in place to describe this extension; SOC-268 records the new `ClanState.clan_reputation` field
   itself.
+- **Status**: RATIFIED
+
+---
+
+### 2.52 Mid-Tick Faction Mutation Can Flip a P0-Certified Friendly-Fire Legality Outcome by the Next Tick (TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE) — cross-referenced as COMB-294/COMB-323
+- **Subsystem**: Combat / Legality
+- **Old Behavior**: `LegalityServiceV2.verify_attack_legality()`'s Friendly-Fire fallback
+  (`src/engine/legality.py`, P0-certified, `docs/parity_ledger/combat_movement.yaml` COMB-294) reads
+  `attacker.identity.faction == target.identity.faction` against a frozen `AuthoritativeState` that,
+  before this ticket, had no live producer ever changing `identity.faction` post-spawn —
+  `IdentityUpdate.faction_set` existed but had zero real constructors anywhere in `src/`. COMB-294's
+  own text and evidence describe this check as if faction were effectively immutable for a given
+  entity's lifetime.
+- **New Behavior**: `PartyLifecycleService.check_defection()` now gives `faction_set` its first real
+  producer, setting a defector's faction to `Faction.NEUTRAL` through the authoritative apply-path.
+  Because `AuthoritativeApplyPipeline.refine()`'s `"action_routing"` phase (where legality is
+  evaluated) runs strictly before the `"groups"` phase (where the defection trigger lives) within one
+  tick, a same-tick defection cannot retroactively change a legality decision already made earlier in
+  that same tick. But starting with the very next tick's `"action_routing"` pass, the same
+  attacker/target pair's `verify_attack_legality()` outcome can flip — `LEGAL` before the defection to
+  `FRIENDLY_FIRE_ILLEGAL` after — a real change to COMB-294's certified outcome, not merely to its
+  timing. Found and disclosed during an external pre-merge review of PR #133; COMB-294's own ledger
+  entry did not previously cross-reference this.
+- **Rationale**: **Bounded**. This is idea 39's own explicit design intent (a defector should stop
+  being friendly to their former faction) applied at the one real, already-live choke point for
+  faction-equality legality checks — not a scope-creep addition to combat legality itself. The
+  next-tick boundary (rather than an immediate retroactive re-evaluation) was chosen specifically
+  because it is a structural consequence of `refine()`'s existing, already-certified phase order, not
+  a new mechanism bolted onto legality — no `src/engine/legality.py` code change was made or is
+  required to produce this effect.
+- **Verification**: `tests/unit/engine/test_legality_faction_mutation.py::
+  test_faction_change_mid_tick_legality_semantics` demonstrates `legal_before=True`/`LEGAL` →
+  (defection sets `faction_set=Faction.NEUTRAL`) → `legal_after=False`/`FRIENDLY_FIRE_ILLEGAL` once
+  applied at the next tick boundary via `ApplyPath.apply_partial()`. `docs/parity_ledger/
+  combat_movement.yaml` COMB-294's own `v2_evidence` cross-references COMB-323 (this ticket's own
+  parity entry) and this divergence entry in place, rather than leaving the interaction undisclosed.
 - **Status**: RATIFIED
 
 ---

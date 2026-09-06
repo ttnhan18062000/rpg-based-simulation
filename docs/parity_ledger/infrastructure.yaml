@@ -3332,14 +3332,19 @@
 - id: INFRA-245
   text: "InformationScorer covers all contract \xA75 INFORMATION & BELIEF rules: belief_active,\
     \ intel_quality_up/intel_complexity, knowledge_economy_active/dormant, info_has_impact,\
-    \ belief_pipeline_deaf, subjective_divergence, omniscience_collapse, paid_info_memory_failure.\
-    \ paid_information_transaction scored here (not in EconomyScorer) per SQ-16."
+    \ belief_pipeline_deaf, subjective_divergence, omniscience_collapse, paid_info_memory_failure,\
+    \ information_seeking_active. paid_information_transaction scored here (not in\
+    \ EconomyScorer) per SQ-16."
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: "src/simulation_quality/scorers/information.py::InformationScorer.score.\
     \ Compile-time construction of information_source_profiles (not scorer logic)\
-    \ is covered by INFRA-256 \u2014 see WorldCompiler.compile()/WorldAssemblyResolver.assemble().\n"
+    \ is covered by INFRA-256 \u2014 see WorldCompiler.compile()/WorldAssemblyResolver.assemble().\
+    \ route_new_query -> information_seeking_active (TCK-20260906-SIMQ-PILLAR-MAPPING-AND-RULES)\
+    \ added as InformationScorer.EVENT_TYPES's 8th entry -- the event itself was already\
+    \ real and live-emitted since TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE (INFRA-267)\
+    \ but had never been registered with any scorer.\n"
   proof_type: null
   test_path: tests/simulation_quality/test_information_scorer.py
   divergence_note: null

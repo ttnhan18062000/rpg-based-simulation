@@ -44,6 +44,7 @@ jobs:
                  tests/unit/worldmodules \
                  tests/unit/content \
                  tests/unit/content_semantics \
+                 tests/unit/replay \
                  tests/unit/test_dirty_refresh.py \
                  -m "not slow and not extra_slow" --tb=short -q \
                  --junit-xml=reports/junit/unit-core-world.xml
@@ -75,6 +76,7 @@ jobs:
                    tests/unit/worldmodules \
                    tests/unit/content \
                    tests/unit/content_semantics \
+                   tests/unit/replay \
                    tests/unit/test_dirty_refresh.py \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
@@ -447,6 +449,11 @@ jobs:
   frontend:
     name: "Frontend"
     runs-on: ubuntu-latest
+    # TCK-20260906-CI-FRONTEND-PATH-FILTER: path-filtered via the changed-files gate below --
+    # frontend/ is a fully separate toolchain (no Python import graph), so unlike the 9 explicitly
+    # out-of-scope Python jobs, a path-based skip here carries no false-negative risk.
+    needs: [changed-files]
+    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_frontend == 'true') }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
@@ -461,17 +468,19 @@ jobs:
       - name: Build
         run: cd frontend && npm run build
 
-  # ── Changed-files gate (path-based skip for perf-cert-arena / migration-lanes) ──
+  # ── Changed-files gate (path-based skip for perf-cert-arena / migration-lanes / frontend) ──
   # TCK-20260819-CI-NARROW-PATH-FILTERED-JOBS: always runs (no if: of its own -- a
   # gate job that could itself be skipped would cascade-skip both downstream jobs via
   # the needs-success mechanism this ticket exists to avoid). Scoped to pull_request
   # events only; all other event types force both outputs true unconditionally.
+  # run_frontend added by TCK-20260906-CI-FRONTEND-PATH-FILTER, same fail-open shape.
   changed-files:
     name: "Changed files (path-filter gate)"
     runs-on: ubuntu-latest
     outputs:
       run_perf_cert_arena: ${{ steps.diff.outputs.run_perf_cert_arena }}
       run_migration_lanes: ${{ steps.diff.outputs.run_migration_lanes }}
+      run_frontend: ${{ steps.diff.outputs.run_frontend }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
@@ -480,6 +489,7 @@ jobs:
           if [ "${{ github.event_name }}" != "pull_request" ]; then
             echo "run_perf_cert_arena=true" >> "$GITHUB_OUTPUT"
             echo "run_migration_lanes=true" >> "$GITHUB_OUTPUT"
+            echo "run_frontend=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           BASE="${{ github.event.pull_request.base.sha }}"
@@ -488,13 +498,16 @@ jobs:
             echo "::warning::changed-files diff failed ($CHANGED) — failing open, both jobs will run"
             echo "run_perf_cert_arena=true" >> "$GITHUB_OUTPUT"
             echo "run_migration_lanes=true" >> "$GITHUB_OUTPUT"
+            echo "run_frontend=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "$CHANGED"
           PERF_RE='^(tests/(perf|certification|arena)/|src/(ai|api|certification|cognition|config|core|domains|engine|observability|perf|platform|replay|world|worldbuilding)/|Makefile$|requirements\.txt$|\.github/workflows/test\.yml$)'
           MIG_RE='^(tests/architecture/|tests/(integration|unit)/(content|scenarios|worldassembly|certification|runtime)/|tests/conftest\.py$|src/(core|content|platform|runtime|scenarios|worldassembly|worldbuilding|worldmodules|certification)/|Makefile$|requirements\.txt$|\.github/workflows/test\.yml$)'
+          FRONTEND_RE='^(frontend/|\.github/workflows/test\.yml$)'
           echo "run_perf_cert_arena=$(echo "$CHANGED" | grep -qE "$PERF_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "run_migration_lanes=$(echo "$CHANGED" | grep -qE "$MIG_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "run_frontend=$(echo "$CHANGED" | grep -qE "$FRONTEND_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
   # ── Perf / certification / arena ─────────────────────────────────────────
   perf-cert-arena:

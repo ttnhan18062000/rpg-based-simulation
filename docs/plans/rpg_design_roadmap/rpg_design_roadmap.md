@@ -138,6 +138,14 @@ hotfixes)"), merged. Landed as a flat batch of individually-closed tickets, not 
 named epic ticket (the `TCK-20260823-EPIC-RPG-M4-BEYOND-CITY` id this section originally guessed
 was never created).
 
+**Real discrepancy found, 2026-09-06 (M9 scoping pass):** idea 64 (The Empty Chair) does not actually
+appear to be among the "12 ideas shipped" — zero real code hits for `EconomicVacancyEvent` anywhere
+in `src/`, and this idea's own M4-epic-doc entry (`rpg_m4_beyond_city_epic.md`) states outright "No
+code precedent anywhere for the economic-vacancy signal it needs." The PR title's headline count
+appears to not match this specific idea's real delivered state — not re-audited further here, flagged
+for whoever next reconciles M4's own completion claim. See
+`TCK-20260906-CORPUS-TEST-NEW-WORLD-NEEDED` (M9).
+
 12 ideas — Camp/Nest/Lair, settlement-capacity, Country's EXPAND directive, population pressure as an
 expansion engine. Gated on M2's City ownership (35), Clan shape (36), and place-type transitions (48).
 Splits into three branches with different gating: **place-shaped ecology/settlements** (44-47, 61) satisfy
@@ -149,9 +157,13 @@ and tested (see the Hardening backlog section below). Idea 61 here, plus M5 (ide
 need only their own read-side consumption of `region_cultures`, not a shared first-time-wiring
 prerequisite.
 
-### M5 — Memory, Reputation & Legacy (gated on M2 + M3, both DONE as of 2026-09-03 — gate clear)
+### M5 — Memory, Reputation & Legacy (DONE)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M5-MEMORY-REPUTATION` (not yet created, scope-only).
+**Shipped, 2026-09-05:** PR #128 ("M5 Memory, Reputation & Legacy: all 8 ideas shipped (7 tickets)"),
+merged. `TCK-20260823-EPIC-RPG-M5-MEMORY-REPUTATION` (`tickets/done/`) and
+`TCK-20260905-EPIC-RPG-M5-HISTORY-BELIEF` (`tickets/done/`) are the two real epic tickets — landed in
+two waves (death-and-lineage/reputation first, history-and-belief second, once the Legacy/Memory axis
+and Knowledge/Belief blockers cleared via a concurrent session's work).
 
 8 ideas — inherited reputation, guilt by association, inherited feuds, drifting loyalty, the Living Legend
 feedback loop, a dying wish, generational misremembering, emergent belief. Needs M2's Clan (36) and M3's
@@ -166,12 +178,19 @@ stays `active=True`. M5's death-and-lineage branch (55/58) already depends on "c
 existing — this repair is the prerequisite that makes that true, and belongs alongside it rather than in M1
 or as an unowned bug.
 
-### M6 — Political Identity & Belonging (gated on everything above)
+### M6 — Political Identity & Belonging (DONE)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/inprogress/`,
-`## Status: EPIC_SCOPED` as of 2026-09-05 — 3 child tickets scoped in
-`tickets/todos/m6-political-identity/`, none yet implemented; M2-M5 all confirmed DONE, so this
-milestone's own gate is now clear).
+**Shipped, 2026-09-06:** PR #133 ("M6 Political Identity & Belonging: all 4 ideas shipped (3 tickets
++ hotfix)"), merged. `TCK-20260823-EPIC-RPG-M6-POLITICAL-IDENTITY` (`tickets/done/`) is the real epic
+ticket. Externally reviewed before merge (architecture/determinism, mechanics/parity, ticket
+hygiene) — 4 real findings (a call-site undercount, a false PR-body claim, an under-documented
+P0-law interaction, a guard-test regex gap), all independently fixed and re-verified
+(`TCK-20260906-HOTFIX-M6-EXTERNAL-REVIEW-FIXES`) before this milestone was called complete. Idea 56
+(Drifting Loyalty) is real, tested code with no live per-tick reach yet — disclosed honestly, not a
+hidden gap, matching the same "built, not yet visible in play" pattern M5's ideas 57/62 had.
+**Correction, 2026-09-06:** this section's own prior text (still saying "idea 56 and idea 59/65 not
+yet implemented" as of an earlier intermediate commit) was itself stale relative to the real,
+fully-updated `rpg_m6_political_identity_epic.md` — fixed here to match that doc's real final state.
 
 4 ideas, the deepest single dependency chain in the whole roadmap (39 &rarr; 56 &rarr; 59 &rarr; 65) —
 affiliation's real change path, drifting loyalty, personal place attachment, refugee threads. Its Phase
@@ -204,18 +223,23 @@ it to fire, a SimQ pillar mapping (or explicit exclusion), and an observer-facin
 ticket is considered done — M7 verifies completeness and calibrates the aggregate rules afterward, it
 doesn't backfill missing contracts feature-ticket by feature-ticket.
 
-### M8 — World Corpus, Generation & Modules (informs M1-M6, doesn't block them)
+### M8 — World Corpus, Generation & Modules (informs M1-M6, doesn't block them) (DONE — no tracking ticket needed)
 
-**Tracking epic**: `TCK-20260823-EPIC-RPG-M8-WORLD-CORPUS` (not yet created, scope-only — see
-`docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md`).
+**No tracking epic needed** — see
+`docs/plans/rpg_design_roadmap/rpg_m8_world_corpus_generation_epic.md`, re-verified 2026-09-06: this
+epic has no buildable deliverable of its own, only findings that feed M2-M4's real tickets, and all 9
+of those findings are now resolved (2 were found stale on re-check — idea 43's cohort seeding and
+idea 32's capacity-gating are both real, live, and tested, not missing as originally scoped; idea 44's
+`settlement_capacity` landed in a different technical shape than originally planned).
 
 Also not a new RPG feature — checks whether the real world-generation/compilation pipeline and the 6 named
 test-corpus profiles actually have a place for each idea's content to enter a running world. Found two real
-scope corrections (ideas 45 and 14 both need new schema/compiler work, deeper than originally scoped),
-confirmed three corpus profiles already have what idea 44 needs with zero new authoring, and confirmed
-ideas 39/51 and 32 can't be corpus-tested at all until their own upstream mechanisms exist. Unlike M7, this
-one's findings feed directly back into M2/M3/M4's own scope — read it before, not after, those epics start
-their affected tickets.
+scope corrections (ideas 45 and 14 both needed deeper schema/compiler work than originally scoped — both
+landed, see below), confirmed three corpus profiles already have what idea 44 needs with zero new
+authoring, and confirmed ideas 39/51 can't be corpus-tested at all until their own upstream mechanisms
+exist (idea 32 was also flagged this way originally, but is now resolved — see below). Unlike M7, this
+one's findings fed directly back into M2/M3/M4's own scope, and both epics that consumed them (M3, M4)
+are now themselves DONE.
 
 **Idea 66 (Region Contains Multiple Places) — landed, 2026-09-03.** Its dedicated high-level plan
 ([`docs/plans/rpg_design_roadmap/rpg_idea66_region_place_rebuild_plan.md`](rpg_idea66_region_place_rebuild_plan.md),
@@ -228,8 +252,10 @@ now-complete batches (see those sections above).
 
 ### M9 — World Corpus Test Coverage for New Features (follow-up, informs M1-M8, doesn't block them)
 
-**Tracking epic**: `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (not yet created, scope-only — see
-`docs/plans/rpg_design_roadmap/rpg_m9_corpus_test_coverage_epic.md`).
+**Tracking epic**: `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (`tickets/inprogress/`,
+`## Status: EPIC_SCOPED` as of 2026-09-06 — 8 child tickets scoped in
+`tickets/todos/m9-corpus-test-coverage/`, none yet implemented; M1-M8 all confirmed DONE, so this
+milestone's own gate is now clear).
 
 Also not a new RPG feature, and distinct from both M7 and M8: M7 asks whether SimQ knows how to *grade* an
 event once it fires; M8 asks whether the compiler can *seed* an idea's content into a world at all. M9 asks
@@ -238,14 +264,19 @@ Regression, per `docs/simulation_quality/corpus_tier_taxonomy.md`) actually exis
 one need authoring. Classified all 32 stateful/behavioral ideas against the real corpus tier taxonomy, then
 specified each one concretely on direct follow-up request — real world names, module compositions,
 entity/region counts, trigger sequences, and assertable checks, not tier labels alone. Headline findings:
-4 ideas (53, 55, 58, 62) can only be tested by a real multi-episode Campaign run, and
-`CampaignScorecardEvaluator` itself has zero fields today that would even catch a failure in any of them —
-a distinct test-infrastructure gap, not just a missing world; idea 66's Region/Place rebuild has
-corpus-wide blast radius across all 21 worlds and 84 committed grade anchors, with a concrete 2-stage pilot
-plan and a `state_hash`-based recalibration procedure now specified; the long-run observation tool's
-default 5000-tick run would never even reach the real 7000-tick elder-attribute threshold idea 20 needs,
-a timing bug that would have silently produced a false-negative test; and several ideas (32, 43, 48)
-already have live SimQ scoring rules sitting idle, waiting only for the event to fire.
+4 ideas (53, 55, 58, 62, all shipped via M5) can only be tested by a real multi-episode Campaign run, and
+`CampaignScorecardEvaluator` itself still has zero fields today that would catch a failure in any of them,
+confirmed 2026-09-06 — a real, standing testing gap for already-live mechanics, not a future concern;
+idea 66's Region/Place rebuild's corpus-wide migration is now confirmed fully resolved, having followed
+this epic's own recommended 2-stage pilot and `state_hash`-based recalibration procedure exactly (see M8
+section above); the long-run observation tool's default 5000-tick run is now confirmed far more
+inadequate than originally described — the fantasy-year-units migration already landed
+(`TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION`), so the real elder-attribute threshold idea 20
+needs is ~17.28M ticks, not 7000, meaning no long-run observation using this tool's default has ever
+observed any age-bracket transition at all; and two ideas this doc originally scoped as merely needing a
+new corpus world (50, 64) were found, 2026-09-06, to have never actually shipped their underlying
+mechanism at all — idea 64 specifically contradicts M4's own "all 12 ideas shipped" claim above, a real
+discrepancy flagged for a future audit, not resolved here.
 
 
 
@@ -677,15 +708,26 @@ with the new terminology is a separate decision, not bundled into this rename.
   cooldowns, idea 37's matrix) is extending a schema that has never carried a number before, not following
   an established numeric-content pattern.
 - **The 6 Mechanics Bible chapters have no social/relationship/reputation/political chapter.** Mapping all
-  65 ideas against the Bible and the 8 parity ledger files (see the atlas's new Mechanics Bible & Parity
-  Ledger Mapping section) found that `social_narrative.yaml` — the second-largest ledger, 265 entries — has
-  no chapter home at all, affecting roughly a third of the roadmap's ideas. Whoever scopes a ticket touching
-  Clan, faction diplomacy, Chronicle, grief/nemesis, or reputation should expect to update the ledger entry
-  with no corresponding Bible chapter section to point it at — that gap is not a defect in any single idea's
-  ticket, it's a standing hole in the Bible's own structure worth its own follow-up ticket eventually. Idea
-  39 (M6, affiliation change) is the single widest cross-ledger idea in the whole set (5 of 8 ledger files);
-  ideas 53/54/60 all touch `entity.social.public_reputation`, which is included in the deterministic replay
-  hash (`replay/fingerprint.py`) — a determinism concern layered on top of the ordinary parity-ledger one.
+  65 ideas against the Bible and the (then-)8 parity ledger files (see the atlas's new Mechanics Bible &
+  Parity Ledger Mapping section) found that `social_narrative.yaml` — the second-largest ledger, 265 entries
+  — has no chapter home at all, affecting roughly a third of the roadmap's ideas. Whoever scopes a ticket
+  touching Clan, faction diplomacy, Chronicle, grief/nemesis, or reputation should expect to update the
+  ledger entry with no corresponding Bible chapter section to point it at — that gap is not a defect in any
+  single idea's ticket, it's a standing hole in the Bible's own structure worth its own follow-up ticket
+  eventually. **Ledger count corrected, 2026-09-06:** the canonical parity ledger set is now 9 files, not 8
+  — `docs/parity_ledger/faction.yaml` was added as a 9th canonical file (`INFRA-399`,
+  `TCK-20260826-PARITY-FACTION-CANONICAL-SCAN`), after this "8 ledger files" framing was originally written.
+  Idea 39 (M6, affiliation change) was cited here as the single widest cross-ledger idea in the whole set
+  ("5 of 8" ledger files); that specific numerator has not been re-verified against the new 9-file set, but
+  its own landed implementation (`TCK-20260905-AFFILIATION-MUTATION-PRIMITIVE`, 2026-09-06) confirms real
+  parity-ledger entries in exactly 3 of the 9 files (`social_narrative.yaml`, `combat_movement.yaml`,
+  `substrate.yaml` — see `docs/world/affiliation_mutation.md`); `faction.yaml` itself was investigated and
+  confirmed **not** touched, since all of its entries concern `FactionState`-level mechanics (tension,
+  diplomacy, siege), not per-entity `identity.faction`. Whether idea 39's originally-cited 5th ledger file
+  (likely `world_dynamics.yaml`, per that investigation) still applies was not re-verified by this ticket and
+  should not be assumed; ideas 53/54/60 all touch `entity.social.public_reputation`, which is included in the
+  deterministic replay hash (`replay/fingerprint.py`) — a determinism concern layered on top of the ordinary
+  parity-ledger one.
 - **Cross-epic file-conflict check (2026-08-17): no near-term risk.** This roadmap's only PR so far changes
   zero `src/`/`tests/` files and nothing is ticketed yet, so there is nothing to conflict with today. The one
   real historical near-hit — a merged `worldgen-organic-terrain` epic that touched `src/worldbuilding/compiler.py`,
