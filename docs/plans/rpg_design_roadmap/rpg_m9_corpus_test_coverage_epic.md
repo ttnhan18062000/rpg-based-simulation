@@ -106,6 +106,27 @@ not tier labels with a one-line gesture.
    - *Evaluator change needed:* add `reputation_inheritance_check` and `nemesis_transfer_check` fields to
      `CampaignScorecard`; fail if a death with a live heir occurs and `inherited_reputation_seed` is unset.
 
+   **Three corrections found and shipped, 2026-09-06 (`TCK-20260906-CAMPAIGN-SCORECARD-EVALUATOR-FIELDS`)
+   — this item's own concrete test plan above did not survive contact with real code unmodified:**
+   1. `CampaignScorecardEvaluator` is called from exactly one place in the whole codebase —
+      `SimulationAnalysisRunner.run()`, a single-episode subsystem. `CampaignOrchestrator` (the real
+      multi-episode system these 4 ideas live in) never calls it at all. The new evaluator fields and the
+      cross-episode Campaign test are two independently-verified pieces of work, not one integrated
+      pipeline — wiring the evaluator into `CampaignOrchestrator` was explicitly out of scope.
+   2. `EntityCarryForward` (the real cross-episode persistence type) carries only `level/xp/equipment/
+      reputation/alive` — never `heir_entity_id`, `strategic.blockers` (idea 55's transfer target), or
+      `motivation.named_intention` (idea 58's dying wish). Idea 55/58's outcomes cannot be asserted in a
+      *later* episode as originally scoped above (Episode 3's framing) — they are asserted within the
+      same episode/tick they are produced instead, via a deterministic one-`Kernel.tick_once()` test.
+   3. There is no `inherited_reputation_seed` field or "dying Hero's reputation echoes to heir" mechanism
+      anywhere in real code. Idea 53 (`V2EntityBuilder.birth_record()`) is a **birth-time** mechanism
+      seeding a *newborn's* reputation from its two *living parents'* current reputation — structurally
+      unrelated to idea 55/58's heir-succession mechanism, which never touches reputation at all. Idea 53
+      is tested on its own real terms (drifted, non-default parent reputation values) instead.
+
+   Shipped as 2 new `tests/integration/campaigns/` files plus unit tests in the existing scorecard test
+   file — see that ticket's own Implementation Notes for the full corrected design.
+
 2. **Idea 66 (Region/Place rebuild) — corpus-wide migration, not a single test world. RESOLVED,
    2026-09-06 (re-verified against `tickets/done/TCK-20260902-EPIC-IDEA66-REGION-PLACE-REBUILD.md`).**
    The real implementation followed this exact procedure: the Stage A/Stage B two-stage pilot named
@@ -228,9 +249,17 @@ not tier labels with a one-line gesture.
    spans. Assert `len(member_entity_ids) ≥ 3` and a defection event (Group's real precedent) removes exactly
    one member.
 
-   **Idea 37 (Species Relations) — confirmed real gap, no world can be specified yet.** The corpus registry has
-   no race-diversity dimension at all; a test world can't be designed without the dedicated audit item 4's
-   own row already calls for.
+   **Idea 37 (Species Relations) — resolved, 2026-09-06 (`TCK-20260906-RACE-DIVERSITY-AUDIT-INVESTIGATION`):
+   mechanism already shipped, real test already exists, no new world needed.** Correction to this doc's own
+   prior framing: idea 37's mechanism (`TCK-20260831-RACE-RELATIONS-MATRIX`, DONE) already ships real content
+   (`data/content/social/species_relations.yaml`, 24 directed entries) and a real, passing metamorphic-validation
+   test (`tests/integration/lab/test_species_relations_metamorphic_validation.py`) against the already-registered
+   `unit_faction_tension` corpus world (human + wolf populations, 5 real run_keys) — named directly as the
+   sufficiently species-diverse world, no new one authored. The registry-shape question does have a concrete
+   answer (a species-diversity dimension would be a small, content-only addition — `entity_archetypes.yaml`
+   already declares a real per-archetype `species:` field, no `WorldCompiler` change needed) but building it
+   is not recommended: no real gap currently needs it, and it would be new tooling capability outside this
+   epic's own "builds nothing" scope.
 
    **Idea 39 (Affiliation Change) — zero new world.** `frontier_marches`: pick one entity from the smallest
    of the 9 factions, trigger `IdentityUpdate(faction_set=<a neighboring faction>)`, assert `identity.faction`
@@ -350,8 +379,12 @@ not tier labels with a one-line gesture.
 - Is the Campaign test plan for ideas 53/55/58/62 one shared 4-episode run (as specified above) or four
   separate ones? This epic specifies one shared run since they share the same Reproduction/episode-boundary
   prerequisites — worth confirming before ticketing.
-- Idea 37's race-diversity audit: a small addition to the existing corpus registry's scale metrics, or a
-  wholly new registry dimension? Not investigated in this epic's scope.
+- ~~Idea 37's race-diversity audit: a small addition to the existing corpus registry's scale metrics, or a
+  wholly new registry dimension?~~ **Answered, 2026-09-06 (`TCK-20260906-RACE-DIVERSITY-AUDIT-INVESTIGATION`):
+  a small addition — `entity_archetypes.yaml` already has a real per-archetype `species:` field, no compiler
+  change needed. Not built, though: no real gap currently needs it (idea 37 already has real coverage via the
+  already-registered `unit_faction_tension` world), and building it would be new tooling capability outside
+  this epic's own scope.**
 - `get_age_bracket()`'s string-based age tiers vs. `LifeStage`'s enum — one system or two, and if two,
   which one idea 20's trigger should actually write to? Not resolved here.
 

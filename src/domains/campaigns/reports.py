@@ -30,6 +30,8 @@ class CampaignReportGenerator:
 - **Reward Conversion**: `{score.reward_conversion}`
 - **Cooperation Usage**: `{score.cooperation_usage}`
 - **World Feedback Usage**: `{score.world_feedback_usage}`
+- **Reputation Inheritance Check**: `{score.reputation_inheritance_check}`
+- **Nemesis Transfer Check**: `{score.nemesis_transfer_check}`
 - **Behavior Change Proofs Detected**: {score.behavior_change_proofs}
 - **Route Diversity Score**: {score.route_diversity_score:.2f}
 - **Stagnant Entity Ratio**: {score.stagnant_entity_ratio:.2%}
@@ -91,6 +93,8 @@ class CampaignReportGenerator:
                 "reward_conversion": result.semantic_scorecard.reward_conversion,
                 "cooperation_usage": result.semantic_scorecard.cooperation_usage,
                 "world_feedback_usage": result.semantic_scorecard.world_feedback_usage,
+                "reputation_inheritance_check": result.semantic_scorecard.reputation_inheritance_check,
+                "nemesis_transfer_check": result.semantic_scorecard.nemesis_transfer_check,
                 "behavior_change_proofs": result.semantic_scorecard.behavior_change_proofs,
                 "route_diversity_score": result.semantic_scorecard.route_diversity_score,
                 "stagnant_entity_ratio": result.semantic_scorecard.stagnant_entity_ratio,

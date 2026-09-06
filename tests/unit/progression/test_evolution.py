@@ -149,3 +149,28 @@ def test_no_evolution_before_threshold():
 
     assert new_entity.kind == "goblin_0"
     assert new_entity.identity.evolution_level == 9
+
+
+def test_goblin_evolution_emits_entity_evolved_observability_event():
+    """TCK-20260906-ENTITY-EVOLVED-EVENT-GAP: EvolutionSystem's real, production `kind_set` output
+    must wire into the real ProgressionShaper observability layer, not just a hand-built mock
+    update. Reuses the exact same real EvolutionSystem.evaluate() call as test_goblin_evolution()
+    above -- this test's own value is proving the *observability* half of that same real
+    transition, not re-proving the evolution mechanic itself.
+    """
+    from src.observability.event_shapers import ProgressionShaper
+
+    entity = make_goblin_stage(1, kind="goblin_0", level=9, points=0)
+    xp_needed = LevelingService.get_xp_required(9)
+    state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
+    state_upd = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(entity_id=1, identity=IdentityUpdate(evolution_points_delta=xp_needed)),
+        }
+    )
+
+    refined = EvolutionSystem.evaluate(state, state_upd)
+
+    events = ProgressionShaper().shape(state, refined, tick=0)
+    ev = next(e for e in events if e.event_type == "entity_evolved")
+    assert ev.payload == {"previous_kind": "goblin_0", "new_kind": "goblin_1"}

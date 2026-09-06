@@ -948,8 +948,9 @@ SHAPER_REGISTRY: dict[str, list[EventShaper]] = {
 }
 
 class ProgressionShaper:
-    """PROGRESSION domain shaper — xp_granted, level_up, skill_unlocked, trait_expressed,
-    pillar_trait_unlocked, progression_conversion_applied, progression_plateau_detected.
+    """PROGRESSION domain shaper — xp_granted, level_up, entity_evolved, skill_unlocked,
+    trait_expressed, pillar_trait_unlocked, progression_conversion_applied,
+    progression_plateau_detected.
 
     Confirmed against `event_extractor.py:266-282,773-834` and `src/core/updates.py:220-243`
     (`IdentityUpdate`): every event except `progression_plateau_detected` reads an already-typed
@@ -1060,6 +1061,20 @@ class ProgressionShaper:
                         source_system="event_shapers", message="",
                         payload={"ap_spent": -ap_delta, "tick": tick},
                     ))
+
+            # entity_evolved (TCK-20260906-ENTITY-EVOLVED-EVENT-GAP): species evolution at level
+            # thresholds (src/engine/evolution.py's EvolutionSystem). Unlike xp_granted/level_up
+            # above, `kind_set` lives directly on EntityUpdate (e_upd), not IdentityUpdate
+            # (id_upd) -- EvolutionSystem always writes kind_set (unchanged when not evolved), so
+            # this must diff against prior_ent.kind, not just check for a non-None value.
+            new_kind = getattr(e_upd, "kind_set", None)
+            if new_kind is not None and new_kind != prior_ent.kind:
+                events.append(SimulationEvent(
+                    event_type="entity_evolved", event_category="lifecycle",
+                    tick=tick, entity_id=eid, severity="INFO",
+                    source_system="event_shapers", message="",
+                    payload={"previous_kind": prior_ent.kind, "new_kind": new_kind},
+                ))
 
             # progression_plateau_detected — cross-tick derived, shaper-local state. Runs for any
             # entity with SOME update this tick (see note above), not just an identity update.

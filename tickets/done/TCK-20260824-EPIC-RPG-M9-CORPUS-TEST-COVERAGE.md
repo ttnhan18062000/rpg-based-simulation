@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE
-phase: open
+phase: done
 date: 2026-09-06
 tags: [testing, simulation-quality, corpus]
 ---
@@ -15,7 +15,7 @@ tags: [testing, simulation-quality, corpus]
 World Corpus Test Coverage for New Features (M9) — tracking epic for the 8-ticket corpus-authoring/gap-closure sweep
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -93,11 +93,15 @@ This epic tracks child tickets only; no direct implementation happens here.
       implementation performed as part of closing this acceptance criterion.
 - [x] The epic doc's item 2 (idea 66) is corrected from "recommendation" framing to confirmed-resolved
       status, with the real implementing ticket cited.
-- [ ] A future session that picks up any child ticket runs it through the full standard-tier pipeline
-      and links back to this epic.
+- [x] A future session that picks up any child ticket runs it through the full standard-tier pipeline
+      and links back to this epic. All 8 children landed: `TCK-20260906-CAMPAIGN-SCORECARD-EVALUATOR-FIELDS`,
+      `TCK-20260906-AGE-TIER-TIMING-BUG-AND-CORPUS-TEST`, `TCK-20260906-ENTITY-EVOLVED-EVENT-GAP`,
+      `TCK-20260906-CORPUS-TEST-NEWLY-UNBLOCKED-IDEAS`, `TCK-20260906-CORPUS-TEST-ZERO-NEW-WORLD-ASSERTIONS`,
+      `TCK-20260906-STRESS-TIER-LONG-RUN-CORPUS-TESTS`, `TCK-20260906-CORPUS-TEST-NEW-WORLD-NEEDED`,
+      `TCK-20260906-RACE-DIVERSITY-AUDIT-INVESTIGATION` (2026-09-06, this batch).
 
 ## Related Tickets
-### Child tickets (see `tickets/todos/m9-corpus-test-coverage/SEQUENCE.md` for build order)
+### Child tickets (implementation sequence — see `tickets/done/m9-corpus-test-coverage/SEQUENCE.md`, moved from `tickets/todos/` once the last child ticket landed)
 - `TCK-20260906-CAMPAIGN-SCORECARD-EVALUATOR-FIELDS` — item 1, highest value, fully specified already.
 - `TCK-20260906-ENTITY-EVOLVED-EVENT-GAP` — item 3's standalone finding, small and independent.
 - `TCK-20260906-CORPUS-TEST-NEWLY-UNBLOCKED-IDEAS` — ideas 32+43, 51/52, 54, 60, 65 (item 4 entries
@@ -136,14 +140,45 @@ picked up for implementation.
   real code at implementation time (mechanism status, exact field names, corpus world composition),
   not just inherit this scoping pass's citations — the same discipline `TCK-20260823-EPIC-RPG-M6-
   POLITICAL-IDENTITY`'s own children applied.
-- `SEQUENCE.md` in `tickets/todos/m9-corpus-test-coverage/` enforces build order for `implement-epic`.
-- The idea-37/idea-20 age-tier reconciliation questions are genuinely open design decisions, not
-  resolved by this scoping pass — left to their own child tickets' Investigate/Plan phases.
+- `SEQUENCE.md` (now in `tickets/done/m9-corpus-test-coverage/`, originally `tickets/todos/`) enforces
+  build order for `implement-epic`.
+- The idea-37/idea-20 age-tier reconciliation questions were genuinely open design decisions at
+  scoping time — both resolved by their own child tickets: idea 37's registry-shape question by
+  `TCK-20260906-RACE-DIVERSITY-AUDIT-INVESTIGATION` (answered, not built — no demonstrated need),
+  idea 20's `get_age_bracket()`/`LifeStage` overlap by `TCK-20260906-AGE-TIER-TIMING-BUG-AND-CORPUS-TEST`
+  (already resolved by a prior ticket, `TCK-20260824-LIFE-STAGE-TRANSITIONS`, cited rather than
+  re-decided).
 
 ## Implementation Notes
+This epic tracked only — no direct implementation at the epic level, per its own Scope. Each
+child ticket ran its own full standard-tier pipeline independently; see each child ticket's own
+Implementation Notes for details.
 
 ## Test Summary
+See each child ticket's own Test Summary. No epic-level tests.
 
 ## Files Changed
+None directly by this epic ticket, beyond its own body and the epic doc it tracks
+(`docs/plans/rpg_design_roadmap/rpg_m9_corpus_test_coverage_epic.md`, corrected across multiple
+child ticket landings — most recently by `TCK-20260906-RACE-DIVERSITY-AUDIT-INVESTIGATION`'s own
+idea-37 resolution).
 
 ## Completion Summary
+All 8 M9 child tickets landed with zero material scoping drift — every load-bearing citation this
+epic's own scoping pass made held up under implementation scrutiny, though nearly every child
+ticket found and honestly disclosed real, narrower corrections beyond this epic's own text (wrong
+field names, conflated mechanisms, dead/unreachable pipeline paths, a same-file threshold
+conflation, a field-system conflation between `PlaceKind` and `RegionState.kind`) — never forced or
+fabricated, always resolved with real evidence or an explicit deferral. Real highlights: idea 39's
+Campaign-mode testing gap closed with 2 new evaluator fields + a decoupled real-pipeline test suite
+after discovering `CampaignScorecardEvaluator` and the real multi-episode `CampaignOrchestrator`
+were structurally disjoint (a real premise flaw in this epic's own scoping, corrected rather than
+forced); a genuinely stale tooling default (`simq_long_run_observation.py`'s 5000-tick default,
+0.03% of the real elder threshold) fixed with a guard, not a reckless bump; a real `entity_evolved`
+observability gap closed with a correctly-wired production event; 16 corpus-test assertions
+authored across 2 tickets covering 16 ideas total, with 11 real premise corrections found along the
+way; a real stress-tier pipeline-integration test for idea 48 after finding the ticket's own scope
+conflated two separate field systems; idea 50/64 confirmed to have already been correctly
+documented as unshipped by this epic's own scoping pass, needing only formal closure; and idea 37
+confirmed already fully shipped with real, adequate test coverage, closing this epic's last open
+question. Zero ideas were left silently unaccounted for.

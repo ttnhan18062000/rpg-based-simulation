@@ -40,6 +40,32 @@ DEFAULT_WORLDS = [
 OUTPUT_DIR = Path("docs/simulation_quality/long_run_observations")
 
 
+def age_bracket_transition_warning(ticks: int) -> str | None:
+    """TCK-20260906-AGE-TIER-TIMING-BUG-AND-CORPUS-TEST: real age-bracket boundaries are fantasy-year
+    scaled (TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION) -- 3,456,000 ticks (young->adult) and
+    17,280,000 ticks (adult->elder), src/domains/demographics/cohort.py. A --ticks value below either
+    boundary means this run structurally cannot observe that age-bracket transition for any entity
+    that starts at age_ticks=0, no matter how the world is composed -- return a warning naming the
+    real gap instead of silently no-op'ing, as every call to this tool has done historically at its
+    own 5000-tick default. Returns None when ticks reaches both real boundaries.
+    """
+    from src.domains.demographics.cohort import ADULT_ELDER_BOUNDARY_TICKS, YOUNG_ADULT_BOUNDARY_TICKS  # noqa: E402
+
+    if ticks >= ADULT_ELDER_BOUNDARY_TICKS:
+        return None
+    if ticks >= YOUNG_ADULT_BOUNDARY_TICKS:
+        return (
+            f"--ticks={ticks} reaches the young->adult boundary ({YOUNG_ADULT_BOUNDARY_TICKS:,}) "
+            f"but not the adult->elder boundary ({ADULT_ELDER_BOUNDARY_TICKS:,}); no entity starting "
+            "at age_ticks=0 can be observed transitioning to elder in this run."
+        )
+    return (
+        f"--ticks={ticks} cannot reach either real age-bracket boundary (young->adult="
+        f"{YOUNG_ADULT_BOUNDARY_TICKS:,}, adult->elder={ADULT_ELDER_BOUNDARY_TICKS:,}); no entity "
+        "starting at age_ticks=0 will visibly age out of its starting bracket in this run."
+    )
+
+
 def observe_world(world: str, seed: int, ticks: int, obs_mode: str = "NORMAL") -> dict:
     """Drive one real Kernel run for `world` and return a combined SimQ + lifecycle observation.
 
@@ -96,6 +122,10 @@ def main() -> int:
     worlds = [w.strip() for w in args.worlds.split(",")] if args.worlds else DEFAULT_WORLDS
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    age_warning = age_bracket_transition_warning(args.ticks)
+    if age_warning is not None:
+        print(f"[simq_long_run_observation] WARNING: {age_warning}", file=sys.stderr, flush=True)
 
     for world in worlds:
         print(f"[simq_long_run_observation] Observing {world} at {args.ticks} ticks...", flush=True)

@@ -297,6 +297,29 @@ def test_level_up_not_emitted_when_level_unchanged():
     assert "level_up" not in _types(events)
 
 
+# ── entity_evolved ──────────────────────────────────────────────────────────
+
+def test_entity_evolved_emitted_on_kind_change():
+    prior = _entity(kind="goblin")
+    curr = _entity(kind="goblin_warrior")
+    prior_state = _state({1: prior})
+    curr_state = _state({1: curr})
+    curr_state.tick = 10
+    events = EventExtractor.extract(prior_state, curr_state, _update(), ObservabilityMode.NORMAL)
+    ev = next(e for e in events if e.event_type == "entity_evolved")
+    assert ev.payload == {"previous_kind": "goblin", "new_kind": "goblin_warrior"}
+
+
+def test_entity_evolved_not_emitted_when_kind_unchanged():
+    prior = _entity(kind="goblin")
+    curr = _entity(kind="goblin")
+    prior_state = _state({1: prior})
+    curr_state = _state({1: curr})
+    curr_state.tick = 10
+    events = EventExtractor.extract(prior_state, curr_state, _update(), ObservabilityMode.NORMAL)
+    assert "entity_evolved" not in _types(events)
+
+
 # ── resource_node_depleted / resource_node_regenerated ────────────────────────
 
 def test_resource_node_depleted_emitted():
