@@ -138,6 +138,14 @@ hotfixes)"), merged. Landed as a flat batch of individually-closed tickets, not 
 named epic ticket (the `TCK-20260823-EPIC-RPG-M4-BEYOND-CITY` id this section originally guessed
 was never created).
 
+**Real discrepancy found, 2026-09-06 (M9 scoping pass):** idea 64 (The Empty Chair) does not actually
+appear to be among the "12 ideas shipped" — zero real code hits for `EconomicVacancyEvent` anywhere
+in `src/`, and this idea's own M4-epic-doc entry (`rpg_m4_beyond_city_epic.md`) states outright "No
+code precedent anywhere for the economic-vacancy signal it needs." The PR title's headline count
+appears to not match this specific idea's real delivered state — not re-audited further here, flagged
+for whoever next reconciles M4's own completion claim. See
+`TCK-20260906-CORPUS-TEST-NEW-WORLD-NEEDED` (M9).
+
 12 ideas — Camp/Nest/Lair, settlement-capacity, Country's EXPAND directive, population pressure as an
 expansion engine. Gated on M2's City ownership (35), Clan shape (36), and place-type transitions (48).
 Splits into three branches with different gating: **place-shaped ecology/settlements** (44-47, 61) satisfy
@@ -244,8 +252,10 @@ now-complete batches (see those sections above).
 
 ### M9 — World Corpus Test Coverage for New Features (follow-up, informs M1-M8, doesn't block them)
 
-**Tracking epic**: `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (not yet created, scope-only — see
-`docs/plans/rpg_design_roadmap/rpg_m9_corpus_test_coverage_epic.md`).
+**Tracking epic**: `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (`tickets/inprogress/`,
+`## Status: EPIC_SCOPED` as of 2026-09-06 — 8 child tickets scoped in
+`tickets/todos/m9-corpus-test-coverage/`, none yet implemented; M1-M8 all confirmed DONE, so this
+milestone's own gate is now clear).
 
 Also not a new RPG feature, and distinct from both M7 and M8: M7 asks whether SimQ knows how to *grade* an
 event once it fires; M8 asks whether the compiler can *seed* an idea's content into a world at all. M9 asks
@@ -254,14 +264,19 @@ Regression, per `docs/simulation_quality/corpus_tier_taxonomy.md`) actually exis
 one need authoring. Classified all 32 stateful/behavioral ideas against the real corpus tier taxonomy, then
 specified each one concretely on direct follow-up request — real world names, module compositions,
 entity/region counts, trigger sequences, and assertable checks, not tier labels alone. Headline findings:
-4 ideas (53, 55, 58, 62) can only be tested by a real multi-episode Campaign run, and
-`CampaignScorecardEvaluator` itself has zero fields today that would even catch a failure in any of them —
-a distinct test-infrastructure gap, not just a missing world; idea 66's Region/Place rebuild has
-corpus-wide blast radius across all 21 worlds and 84 committed grade anchors, with a concrete 2-stage pilot
-plan and a `state_hash`-based recalibration procedure now specified; the long-run observation tool's
-default 5000-tick run would never even reach the real 7000-tick elder-attribute threshold idea 20 needs,
-a timing bug that would have silently produced a false-negative test; and several ideas (32, 43, 48)
-already have live SimQ scoring rules sitting idle, waiting only for the event to fire.
+4 ideas (53, 55, 58, 62, all shipped via M5) can only be tested by a real multi-episode Campaign run, and
+`CampaignScorecardEvaluator` itself still has zero fields today that would catch a failure in any of them,
+confirmed 2026-09-06 — a real, standing testing gap for already-live mechanics, not a future concern;
+idea 66's Region/Place rebuild's corpus-wide migration is now confirmed fully resolved, having followed
+this epic's own recommended 2-stage pilot and `state_hash`-based recalibration procedure exactly (see M8
+section above); the long-run observation tool's default 5000-tick run is now confirmed far more
+inadequate than originally described — the fantasy-year-units migration already landed
+(`TCK-20260904-TEMPORAL-FANTASY-YEAR-AGING-MIGRATION`), so the real elder-attribute threshold idea 20
+needs is ~17.28M ticks, not 7000, meaning no long-run observation using this tool's default has ever
+observed any age-bracket transition at all; and two ideas this doc originally scoped as merely needing a
+new corpus world (50, 64) were found, 2026-09-06, to have never actually shipped their underlying
+mechanism at all — idea 64 specifically contradicts M4's own "all 12 ideas shipped" claim above, a real
+discrepancy flagged for a future audit, not resolved here.
 
 
 
