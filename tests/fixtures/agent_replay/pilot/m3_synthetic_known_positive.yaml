@@ -1,0 +1,16 @@
+# SYNTHETIC — hand-built to exercise the M3 detector's own logic (defect_detectors.py::
+# detect_m3_background_hang); does NOT represent a real historical tickets/done/ instance;
+# no reliable historical signal for this defect class exists (see
+# staging_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/investigation.md, "Risks and Open
+# Questions" #1). `background_tasks` is a live-runtime-only signal sourced from a per-session
+# task registry that is never persisted to any stored artifact for a past ticket — this payload
+# models the SubagentStop hook's real, currently-enforced payload shape (per
+# tools/agent-monitoring/subagent_stop_background_guard.py's own module docstring and
+# tests/fixtures/claude_hook_payloads/subagent_stop_schema_capture.json) at a synthetic
+# test-scoper phase, not a captured real event.
+stop_hook_active: false
+agent_type: test-scoper
+background_tasks:
+  - id: "synthetic-bg-1"
+    description: "pytest tests/agent_replay/ (run_in_background)"
+    status: "running"

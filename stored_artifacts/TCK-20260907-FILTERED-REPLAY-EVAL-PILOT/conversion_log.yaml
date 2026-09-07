@@ -1,0 +1,158 @@
+conversions:
+- ticket_id: TCK-20260410-PH1-STG8-STRATEGIC-KNOWLEDGE
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260410-PH1-STG8-STRATEGIC-KNOWLEDGE/
+- ticket_id: TCK-20260419-MC-TASK2-HARDEN-REPLAY-STAGING
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260419-MC-TASK2-HARDEN-REPLAY-STAGING/
+- ticket_id: TCK-20260422-PH7-HARDENING-CLOSURE
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260422-PH7-HARDENING-CLOSURE/
+- ticket_id: TCK-20260501-V2-ENGINE-HARDENING
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260501-V2-ENGINE-HARDENING/investigation.md
+- ticket_id: TCK-20260503-PRICE-HARDENING
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260503-PRICE-HARDENING/
+- ticket_id: TCK-20260512-PERF-STAGGERED-SCHEDULER
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260512-PERF-STAGGERED-SCHEDULER/
+- ticket_id: TCK-20260520-SIM-OBS-PHASE4-M15
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: "missing events.jsonl phase record(s) for ['Scope', 'Investigate', 'Plan',\
+    \ 'Review'] \u2014 no Scope/Investigate/Plan/Review phase transitions recorded\
+    \ (common for hotfix-tier tickets, whose pipeline has no Investigate/Plan/Review\
+    \ phase at all)"
+- ticket_id: TCK-20260523-WORLD-TEMPLATES
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: "missing events.jsonl phase record(s) for ['Scope', 'Investigate', 'Plan',\
+    \ 'Review'] \u2014 no Scope/Investigate/Plan/Review phase transitions recorded\
+    \ (common for hotfix-tier tickets, whose pipeline has no Investigate/Plan/Review\
+    \ phase at all)"
+- ticket_id: TCK-20260607-STRICT-MODE-PRODUCTION
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: "missing events.jsonl phase record(s) for ['Scope', 'Investigate', 'Plan',\
+    \ 'Review'] \u2014 no Scope/Investigate/Plan/Review phase transitions recorded\
+    \ (common for hotfix-tier tickets, whose pipeline has no Investigate/Plan/Review\
+    \ phase at all)"
+- ticket_id: TCK-20260607-V2-SERVICE-ASSEMBLY-GAP
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: "missing events.jsonl phase record(s) for ['Scope', 'Investigate', 'Plan',\
+    \ 'Review'] \u2014 no Scope/Investigate/Plan/Review phase transitions recorded\
+    \ (common for hotfix-tier tickets, whose pipeline has no Investigate/Plan/Review\
+    \ phase at all)"
+- ticket_id: TCK-20260609-STRICT-WORLD-MATRIX
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: "missing events.jsonl phase record(s) for ['Scope', 'Investigate', 'Plan',\
+    \ 'Review'] \u2014 no Scope/Investigate/Plan/Review phase transitions recorded\
+    \ (common for hotfix-tier tickets, whose pipeline has no Investigate/Plan/Review\
+    \ phase at all)"
+- ticket_id: TCK-20260610-ENUM-MIGRATION-REPORT
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260610-ENUM-MIGRATION-REPORT/
+- ticket_id: TCK-20260613-DOC-COGNITION-SUBSYSTEM
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260613-DOC-COGNITION-SUBSYSTEM/
+- ticket_id: TCK-20260624-FIX-MOCK-SERIAL
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: "missing events.jsonl phase record(s) for ['Scope', 'Investigate', 'Plan',\
+    \ 'Review'] \u2014 no Scope/Investigate/Plan/Review phase transitions recorded\
+    \ (common for hotfix-tier tickets, whose pipeline has no Investigate/Plan/Review\
+    \ phase at all)"
+- ticket_id: TCK-20260628-E41F-PARTY-SCORER
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260628-E41F-PARTY-SCORER/
+- ticket_id: TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY
+  converted: true
+  fixture_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/tests/fixtures/agent_replay/pilot/sample/TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY.yaml
+  review_output_fidelity: reconstructed_from_truncated_summary
+  reason: null
+- ticket_id: TCK-20260718-STATS-DOCS-UPDATE
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260718-STATS-DOCS-UPDATE/
+- ticket_id: TCK-20260718-STATUS-SUFFIX-TRIM
+  converted: true
+  fixture_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/tests/fixtures/agent_replay/pilot/sample/TCK-20260718-STATUS-SUFFIX-TRIM.yaml
+  review_output_fidelity: reconstructed_from_truncated_summary
+  reason: null
+- ticket_id: TCK-20260722-CONTRACT-STRUCTURE-TEST-STALE-PATH
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260722-CONTRACT-STRUCTURE-TEST-STALE-PATH/
+- ticket_id: TCK-20260731-PARITY-INDEX-IMPORTER
+  converted: true
+  fixture_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/tests/fixtures/agent_replay/pilot/sample/TCK-20260731-PARITY-INDEX-IMPORTER.yaml
+  review_output_fidelity: reconstructed_from_truncated_summary
+  reason: null
+- ticket_id: TCK-20260805-COGNITION-STRATEGY-SKILL
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: "missing events.jsonl phase record(s) for ['Scope', 'Review'] \u2014 no\
+    \ Scope/Investigate/Plan/Review phase transitions recorded (common for hotfix-tier\
+    \ tickets, whose pipeline has no Investigate/Plan/Review phase at all)"
+- ticket_id: TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS
+  converted: true
+  fixture_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/tests/fixtures/agent_replay/pilot/sample/TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS.yaml
+  review_output_fidelity: reconstructed_from_truncated_summary
+  reason: null
+- ticket_id: TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: "missing events.jsonl phase record(s) for ['Scope', 'Plan', 'Review'] \u2014\
+    \ no Scope/Investigate/Plan/Review phase transitions recorded (common for hotfix-tier\
+    \ tickets, whose pipeline has no Investigate/Plan/Review phase at all)"
+- ticket_id: TCK-20260817-HOTFIX-SIMQ-GRADE-ANCHOR-GUARD-NONE-CHECK
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260817-HOTFIX-SIMQ-GRADE-ANCHOR-GUARD-NONE-CHECK/
+- ticket_id: TCK-20260818-HOTFIX-WEBSOCKET-OBSERVABILITY-MOVEMENT-EVENT-RACE
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260818-HOTFIX-WEBSOCKET-OBSERVABILITY-MOVEMENT-EVENT-RACE/
+- ticket_id: TCK-20260818-KGMCP-CACHE-WRITE-SIZE-CAP-FIX
+  converted: false
+  fixture_path: null
+  review_output_fidelity: null
+  reason: missing stored_artifacts/TCK-20260818-KGMCP-CACHE-WRITE-SIZE-CAP-FIX/
+- ticket_id: TCK-20260822-SEMANTIC-ENTITY-INDEX
+  converted: true
+  fixture_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/tests/fixtures/agent_replay/pilot/sample/TCK-20260822-SEMANTIC-ENTITY-INDEX.yaml
+  review_output_fidelity: reconstructed_from_truncated_summary
+  reason: null

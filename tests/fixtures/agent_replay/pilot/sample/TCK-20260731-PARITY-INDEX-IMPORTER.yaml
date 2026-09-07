@@ -1,0 +1,60 @@
+# Bulk-converted replay fixture for TCK-20260731-PARITY-INDEX-IMPORTER (TCK-20260907-FILTERED-REPLAY-EVAL-PILOT tools/agent_replay/fixture_converter.py).
+# Review.output.verdict/.violations RECONSTRUCTED from a truncated events.jsonl summary — see docs/ai/replay_fixture_spec.md and this ticket's conversion_log.yaml (review_output_fidelity='reconstructed_from_truncated_summary').
+version: 1
+source:
+  ticket_id: TCK-20260731-PARITY-INDEX-IMPORTER
+  ticket_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/tickets/done/TCK-20260731-PARITY-INDEX-IMPORTER.md
+  stored_artifacts_dir: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260731-PARITY-INDEX-IMPORTER/
+  events_run_id: TCK-20260731-PARITY-INDEX-IMPORTER
+  events_seq_range:
+  - 1
+  - 5
+  final_status: DONE
+  tier: standard
+phases:
+- phase: Scope
+  agent: ticket-scoper
+  input:
+    tags:
+    - ai
+    - observability
+    - process-improvement
+    - testing
+    conflicts: []
+  output:
+    status: ok
+    summary: Loaded Phase 1 importer ticket after completed baseline dependency.
+    ts: '2026-08-01T08:25:42Z'
+  transition: ok
+- phase: Investigate
+  agent: investigator
+  input: {}
+  output:
+    status: ok
+    summary: FTS5 confirmed available live; flagged injectable-seam need for AC3 test;
+      no Phase-0 conflict found
+    ts: '2026-08-02T12:05:59Z'
+  transition: ok
+- phase: Plan
+  agent: planner
+  input:
+    plan_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260731-PARITY-INDEX-IMPORTER/plan.md
+  output:
+    status: ok
+    summary: 8-step atomic-lifecycle build plan; resolved duplicate-ID-abort, entry_fts
+      naming, FTS5-seam decisions; zero unresolved
+    ts: '2026-08-02T12:13:09Z'
+  transition: ok
+- phase: Review
+  agent: architecture-reviewer
+  input:
+    plan_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260731-PARITY-INDEX-IMPORTER/plan.md
+    investigation_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260731-PARITY-INDEX-IMPORTER/investigation.md
+  output:
+    verdict: APPROVED
+    violations: []
+    status: ok
+    summary: 'APPROVED: atomic build lifecycle and protected-baseline boundary concretely
+      verified, not just described'
+    ts: '2026-08-02T12:18:39Z'
+  transition: APPROVED

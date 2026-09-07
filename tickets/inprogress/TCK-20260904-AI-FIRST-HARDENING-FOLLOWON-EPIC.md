@@ -72,6 +72,30 @@ investigation/scoping work is future, out-of-session work.
       cross-reference), so the roadmap's Bucket B/C scope stays traceable to one place.
 
 ## Related Tickets
+- `TCK-20260907-FILTERED-REPLAY-EVAL-PILOT` (`tickets/done/`, closed 2026-09-07) — item 13's
+  Experiment Specification was scoped into a real ticket, executing
+  `agent_evaluation_foundation_experiment.md`'s Method against the now-shipped M1 sidecar
+  prerequisite, and has now completed: all 3 Exit Criteria MET, no Kill Criterion fired (see
+  `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` and the frozen spec doc's
+  own appended `## Results`/`## Decision` section). This unblocks Bucket-C items 18-20's own
+  downstream scoping per the roadmap's Eval-pilot exit gate — those items' own scoping/execution
+  remains separate follow-on work, not automatically started by this closure. Per this epic's own
+  acceptance criteria, this is the backward link recorded once item 13 became real work, path
+  updated once implementation moved the ticket from `tickets/todos/` through `tickets/inprogress/`
+  to `tickets/done/`.
+- `TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING` (`tickets/todos/`) — item 14's Experiment
+  Specification (`workflow_reliability_epic.md` M2) is now scoped into a real ticket covering both
+  the spec document and the log-only detection instrumentation it describes. Per this epic's own
+  acceptance criteria, this is the backward link recorded once item 14 became real work.
+- `TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN` (`tickets/inprogress/` — implementation landed
+  2026-09-07) — item 15's design/validation-rule resolution (`workflow_reliability_epic.md` M3) is
+  now scoped into a real ticket producing the written decision document `implement-ticket.js` would
+  need for phase-level resume, not the resume code itself:
+  `docs/ai/phase_resume_validation_rule_decision.md`. Per this epic's own acceptance criteria, this
+  is the backward link recorded once item 15 became real work. (This bullet was lost to a
+  concurrent-edit race between the 3 parallel ticket-scoper dispatches that scoped items 13/14/15
+  simultaneously — added after the fact once the race was noticed; path updated once implementation
+  moved the ticket from `tickets/todos/` to `tickets/inprogress/`.)
 - Bucket A (already handled, not part of this epic's remaining scope):
   `tickets/todos/ai-first-hardening-governance-guardrail-batch/` (12 tickets),
   `TCK-20260904-BASH-SECRET-SCAN-HOOK` (blocked, `tickets/inprogress/`).
