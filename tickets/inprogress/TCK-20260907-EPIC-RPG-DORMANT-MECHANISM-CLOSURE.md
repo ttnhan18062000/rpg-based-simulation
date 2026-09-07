@@ -79,8 +79,14 @@ This epic tracks child tickets only; no direct implementation happens here.
 
 ## Related Tickets
 ### Child tickets (see `tickets/todos/dormant-mechanism-closure/SEQUENCE.md`)
-- `TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE` (P1 — ideas 56+57, shared bridge)
-- `TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH` (P2 — dead-code cleanup/wiring)
+- `TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE` (P1 — idea 56, DONE 2026-09-07; idea 57 split out,
+  see below — the bridge mechanism itself and idea 56's own wiring needed no rework from the split)
+- `TCK-20260907-PERCEPTION-MOTIVATION-PIPELINE-REVIVAL` (P1 — split out of the bridge ticket
+  2026-09-07: idea 57 turned out to require reviving 2 entirely dead subsystems
+  (`PerceptionUpdatePhase`/`MotivationBiasService`), a materially larger scope than "bridge one
+  signal" — also unlocks the already-built Culture Drift bias overlay at the same time)
+- `TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH` (P2 — DONE 2026-09-07, appended onto PR #143 since it
+  directly extended the Social & Political Mechanics Bible chapter authored there)
 - `TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO` (P2 — new corpus test authoring)
 - `TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION` (P3 — activate-or-defer decision, idea 30)
 - `TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS` (P3 — written disposition for ideas 50/62/64)

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE
-phase: open
+phase: done
 date: 2026-09-07
 tags: [architecture, simulation-quality]
 ---
@@ -12,10 +12,10 @@ tags: [architecture, simulation-quality]
 # TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE
 
 ## Title
-Bridge CampaignState's episode-boundary signals into per-tick gameplay — unlocks ideas 56 (Drifting Loyalty) and 57 (Living Legend)
+Bridge CampaignState's episode-boundary signals into per-tick gameplay — idea 56 (Drifting Loyalty) delivered; idea 57 (Living Legend) split out
 
 ## Status
-BLOCKED — idea 56 done, idea 57 escalated (see Implementation Notes)
+DONE — scope split per orchestrating-session decision 2026-09-07 (see Completion Summary)
 
 ## Tier
 standard
@@ -71,12 +71,16 @@ live Perception/Motivation pipeline call sites at all.
       `0.0` default, confirmed via a test showing a non-default loyalty-pressure value affecting the
       defection threshold. **Done** —
       `tests/integration/campaigns/test_loyalty_pressure_campaign_bridge.py`.
-- [ ] A real Perception/Motivation consumer reads bridged `LegendFact` data and produces a measurable
-      route-bias shift for at least one Townsperson entity, confirmed via a test. **NOT done —
-      escalated as a genuine architectural fork, see Implementation Notes: both
+- [x] A real Perception/Motivation consumer reads bridged `LegendFact` data and produces a measurable
+      route-bias shift for at least one Townsperson entity, confirmed via a test. **Split out,
+      2026-09-07, per an explicit orchestrating-session decision (not solo-decided
+      mid-implementation) — escalated as a genuine architectural fork, not a small wiring gap: both
       `PerceptionUpdatePhase` and `MotivationBiasService.compute_bias_multiplier()` have zero real
-      production callers anywhere in `src/`, a materially larger pre-existing gap than this AC
-      assumed.**
+      production callers anywhere in `src/`, a materially larger pre-existing gap (reviving 2 dead
+      subsystems) than this ticket's own scope assumed. Filed as its own separately-scoped ticket,
+      `TCK-20260907-PERCEPTION-MOTIVATION-PIPELINE-REVIVAL`, which also unlocks the already-built but
+      equally-dormant Culture Drift bias overlay (`CulturalBiasApplicator`, E62C) at the same time —
+      see Completion Summary.**
 - [x] Determinism confirmed: no unsorted iteration over the new snapshot data feeds any durable
       structure's key/iteration order (the exact failure class PR #128's own architecture review
       caught once already in this codebase). **Done** — sorted iteration over
@@ -179,9 +183,18 @@ ticket's own changes.
 Idea 56's bridge is fully implemented, tested, and documented — `LoyaltyDriftService`'s
 `region_cultures` signal now reaches live per-tick gameplay through `GroupPhase.resolve()` in any
 Campaign-mode run past episode 0, closing the disclosed gap from `TCK-20260905-DRIFTING-LOYALTY-
-SIGNAL`. Idea 57 is genuinely blocked on a much larger pre-existing gap than this ticket's own
-scoping anticipated (two entirely dead subsystems, not one missing signal) and is deliberately left
-unimplemented pending a real scope decision from whoever tracks the parent epic — disclosed in
-full here rather than forced, faked, or silently dropped. This ticket is left OPEN
-(`tickets/inprogress/`), not moved to `tickets/done/`, since one of its own Acceptance Criteria
-(AC3) is genuinely unmet.
+SIGNAL`.
+
+Idea 57 hit a genuine architecture-scale blocker, not a small wiring gap: reviving it as originally
+scoped would require first reviving two entirely separate, currently-dead subsystems
+(`PerceptionUpdatePhase`, `MotivationBiasService.compute_bias_multiplier()`), a task materially
+larger than "bridge `CampaignState` data into per-tick state." Escalated to the orchestrating
+session rather than solo-decided mid-implementation or silently dropped. Decision made 2026-09-07:
+**split the scope** — this ticket closes with idea 56 as its real, complete deliverable; idea 57 is
+filed as its own separately-scoped ticket, `TCK-20260907-PERCEPTION-MOTIVATION-PIPELINE-REVIVAL`
+(`tickets/todos/dormant-mechanism-closure/`), which is properly epic-sized (deciding where
+`PerceptionUpdatePhase` should run in the live tick pipeline, defining the full real `world_signals`
+set, and wiring a real route/goal-scoring consumer) and — as a genuine bonus found during this
+ticket's own investigation — will unlock the already-built but equally-dormant Culture Drift bias
+overlay (`CulturalBiasApplicator`, E62C) at the same time, not just idea 57's `LegendFact` signal
+alone.
