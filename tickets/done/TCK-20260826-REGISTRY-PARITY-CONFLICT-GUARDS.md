@@ -105,3 +105,19 @@ the real, live ledger corpus, closing the one genuine implementation gap this ti
 zero `.github/workflows/test.yml` edits, using the same pattern already established for
 REGISTRY.yaml. No new merge driver or pre-commit infrastructure was built; investigation confirmed
 the simpler CI-check route is sufficient for both remaining failure classes.
+
+**Correction, 2026-09-07 (`TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP`):** the claim above
+that the shipped `merge=union` behavior "resolves concurrent-branch appends" understated a real gap
+this ticket's own regression test never covered: `merge=union` is a git merge *driver* that only
+engages during an actual `git merge`/`rebase`/`cherry-pick -m` operation. This repo's actual
+GitHub PR-landing convention is squash-merge (confirmed systemic — 5/5 of the most recently merged
+PRs at investigation time were squash-merged), which never invokes git's merge machinery at all, so
+`merge=union` provides close to zero real protection for how PRs actually land here. This is exactly
+what let a ~1586-row duplicate block into `tickets/working_log.csv` via PR #90's squash-merge, five
+days after this ticket shipped. The regression test this ticket added
+(`test_concurrent_branch_appends_merge_without_conflict_markers`) remains correct and unchanged — it
+genuinely proves the git-level mechanism works for a real 3-way merge — the gap was in this ticket's
+own conclusion that this coverage was sufficient for the repo's actual landing mechanism, not in the
+test itself. See `stored_artifacts/TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP/investigation.md`
+for the full root-cause evidence and `tests/integrity/test_no_duplicate_content_blocks.py` for the
+new, squash-merge-aware detection mechanism this correction's ticket shipped.
