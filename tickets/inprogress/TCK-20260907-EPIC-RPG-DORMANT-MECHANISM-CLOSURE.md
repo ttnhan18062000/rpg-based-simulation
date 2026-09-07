@@ -115,9 +115,9 @@ This epic tracks child tickets only; no direct implementation happens here.
   a future milestone (`rpg_design_roadmap.md` §M10), not retired; found and corrected a stale
   premise — idea 62/63 had already shipped, not blocked — split real remaining "no live consumer"
   gap into the ticket below)
-- `TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING` (P2 — NEW, not in the original 6-ticket plan: wire
-  idea 62's `FidelityState`/idea 63's `BeliefInstitution` into a live consumer, matching the idea
-  56/57 `personality_bias` pattern; scoped 2026-09-07 following the discovery above — IN PROGRESS)
+- `TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING` (P2 — DONE 2026-09-07, NEW, not in the original
+  6-ticket plan: wired idea 62's `FidelityState`/idea 63's `BeliefInstitution` into a live
+  `QUEST_OPPORTUNITY` `personality_bias` branch, matching the idea 56/57 pattern)
 - `TCK-20260907-CHURCH-CONTENT-AUTHORING` (P3 — DONE 2026-09-07: original "pure content" premise was
   wrong — Blessing/Resurrection are inert data labels with zero real code reading them; placed
   CHURCH anyway and formally disclosed the inertness per the ratified decision)
@@ -304,13 +304,27 @@ folded in as if it were always the plan. Listed chronologically, 2026-09-07 unle
    child ticket, `TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING` (see `## Related Tickets` above),
    matching the idea 56/57 `personality_bias`-wiring pattern this epic already built. This is a
    **net-new addition to the epic's own scope**, discovered during implementation, not present in
-   the original 6-ticket plan.
+   the original 6-ticket plan. **Done** — wired via a new `QUEST_OPPORTUNITY` `personality_bias`
+   branch reusing tickets #2-3's exact bridge/carry-forward/scoring-threading infrastructure, with
+   `BeliefInstitution.belief_strength` scaled by its own origin event's `FidelityState.fidelity`
+   before contributing (strongest-of-multiple-memberships, not summed, to avoid a multi-clan
+   entity getting an N-times bonus for one conceptual "does my in-group revere a legend" signal).
+   Independently verified by the orchestrator: 20 new tests pass standalone, 384 tests pass across
+   the full touched-area regression sweep, all cited code (new `AuthoritativeState` fields,
+   `apply_generation()` carry-forward, the scoring branch) confirmed real via direct read. One
+   real, disclosed scope adjustment: AC3 originally called for a corpus/calibration proof, but
+   belief institutions require real multi-episode Chronicle-fame accumulation to form (unlike
+   `unit_information_routing_pilot`'s compile-time-seedable content) — deterministic single-shot
+   seeding was assessed impractical, so the real production code paths
+   (`_build_initial_state()`/`apply_generation()`/`AdventureRouteScorer.score()`) were exercised
+   directly instead, matching the exact same evidentiary bar decisions #2-3's own Culture
+   Drift/Living Legend branches used (neither of which used a full corpus run either).
 
-**Still pending, not yet implemented** (as of this writing): `TCK-20260907-CHRONICLE-BELIEF-
-CONSUMER-WIRING` (the new wiring ticket from decision #9) and `TCK-20260907-INFORMATION-SOURCE-
-PROFILES-PERSISTENCE-DECISION` (Option 1 implementation from decision #6) — both currently in
-progress or about to be dispatched. This section will be updated with implementation outcomes once
-resolved.
+**All 13 tickets in this batch are now DONE** (grown from an original scope of 6), **except**
+`TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH`, whose real code lives on the separate,
+still-unmerged PR #143 branch rather than this one — see decision #7 above. This epic ticket stays
+open (not moved to `tickets/done/`) until that PR merges; at that point a final housekeeping pass
+should close this epic ticket for real.
 
 ## Test Summary
 

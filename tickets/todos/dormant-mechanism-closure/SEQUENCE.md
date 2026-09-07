@@ -50,20 +50,28 @@ in the original 6-ticket plan, grows this batch to 10 real tickets total.
 5. ~~TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING~~ — **DONE, 2026-09-07**
 6. ~~TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO~~ — **DONE, 2026-09-07, as an investigation** (real
    blocker is structural, not a content gap; split into ticket 6b below)
-6b. TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION  (P2 — real architecture decision
-    split out of ticket 6)
+6b. ~~TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION~~ — **DONE, 2026-09-07** (Option
+    1 implemented; surfaced a second, separate real bug fixed as ticket 6d below;
+    `route_new_query` now genuinely fires end-to-end)
 6c. ~~TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD~~ — **DONE, 2026-09-07** (hotfix found
     while implementing ticket 6, fixes a real regression in tickets 4-5's own bridge fields)
+6d. ~~TCK-20260907-INFORMATION-INTENT-EXECUTION-RESULT-TYPE-MISMATCH~~ — **DONE, 2026-09-07** (hotfix,
+    NEW, not in the original plan — fixes the second bug ticket 6b surfaced)
 7. ~~TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION~~ — **DONE, 2026-09-07** (real decision: defer idea
    30, `ENABLE_ITEM_INSTANCE_HISTORY` stays OFF — confirmed zero producer AND zero consumer)
 8. ~~TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS~~ — **DONE, 2026-09-07** (ideas 50/64 scheduled
    for a future milestone, not retired; found the epic's own idea-62 premise was stale — both 62/63
    already shipped — split real remaining gap into ticket 8b below)
-8b. TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING  (P2 — NEW, not in the original 6-ticket plan: wire
-    idea 62/63's `FidelityState`/`BeliefInstitution` into a live `personality_bias` consumer,
-    matching tickets 4-5's own pattern; hard-depends on tickets 4-5 already having landed, since it
-    reuses their `personality_bias`/carry-forward infrastructure directly)
-9. TCK-20260907-CHURCH-CONTENT-AUTHORING  (P3 — pure content, lowest risk)
+8b. ~~TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING~~ — **DONE, 2026-09-07** (NEW, not in the
+    original 6-ticket plan: wired idea 62/63's `FidelityState`/`BeliefInstitution` into a live
+    `personality_bias` consumer via `QUEST_OPPORTUNITY`, matching tickets 4-5's own pattern)
+9. ~~TCK-20260907-CHURCH-CONTENT-AUTHORING~~ — **DONE, 2026-09-07** (original "pure content" premise
+   was wrong — services are inert data labels; placed anyway, inertness formally disclosed)
+
+**All 13 tickets in this batch (grown from an original scope of 6) are now DONE**, except
+`TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH`, whose code lives on the separate, still-unmerged PR #143
+branch (`social-mechanics-bible-chapter`) rather than this one — see the epic ticket's own
+`## Implementation Notes` decision #7 for the full cross-reference.
 
 ## Why This Order Matters
 
