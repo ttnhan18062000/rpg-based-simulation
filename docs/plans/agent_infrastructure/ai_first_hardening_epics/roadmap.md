@@ -37,7 +37,7 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | 10 | ~~Extend `cost_proxy_score` coverage~~ **SHIPPED (code) — real-run confirmation outstanding**: `TCK-20260904-COST-PROXY-EPIC-TICKETS` added sidecar coverage to `implement-epic.js` (all 4 real top-level `agent()` sites) and `create-tickets.js` (4 of 7 real sites — `writeMonitoring` and the 2 `pipeline()` fan-out sites are permanently excluded, not a gap) and widened `record_events.py`'s workflow filter; this item's own acceptance signal (non-null `cost_proxy_score` after each workflow's next real run) has not yet been directly confirmed | A — Committed | H2 (was) | `standalone_items.md` (§2) |
 | 11 | `working_log.csv` parser and cleanup | A — Committed | H2, schedule later | `standalone_items.md` (§3) |
 | 12 | Provider-portability conformance test | A — Committed | H2, schedule later | `standalone_items.md` (§4) |
-| 13 | Filtered replay eval pilot + dataset hygiene + metric design | B — Experiment | H1 | `agent_evaluation_foundation_experiment.md` |
+| 13 | Filtered replay eval pilot + dataset hygiene + metric design — **EXECUTED, all 3 Exit Criteria MET** (TCK-20260907-FILTERED-REPLAY-EVAL-PILOT) — items 18-20 unblocked per the Eval-pilot exit gate | B — Experiment | H1 | `agent_evaluation_foundation_experiment.md` |
 | 14 | Ticket-claim detection logging | B — Experiment | H1 | `workflow_reliability_epic.md` (M2) |
 | 15 | Phase-level resume — design/validation-rule resolution | B — Experiment | H1 | `workflow_reliability_epic.md` (M3) |
 | 16 | Model-diverse reviewer — shadow comparison &amp; cutover decision | B — Experiment | H2 | `review_independence_epic.md` (M2) |

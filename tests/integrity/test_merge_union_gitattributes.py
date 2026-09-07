@@ -82,6 +82,55 @@ def test_concurrent_branch_appends_merge_without_conflict_markers(tmp_path, trac
     assert '"branch": "b"' in merged_content
 
 
+def test_squash_style_single_parent_commit_is_not_a_merge_and_bypasses_drivers(tmp_path):
+    """Root-cause regression guard (TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP):
+    proves, at the git level, that merge=union provides zero protection for a landing path
+    that never invokes git's own merge machinery -- exactly what a GitHub squash-merge does
+    (confirmed for PR #90 / commit 5993cac3: single parent, GitHub-recorded merge SHA,
+    concatenated per-commit message body -- the shape GitHub produces for a squash-merge).
+
+    Reproduces the *effect* of a squash-merge without ever calling `git merge`, `git
+    rebase`, or `git cherry-pick -m`: branch-b's append lands as a normal commit on main,
+    then branch-a's diff (computed against the shared original base, exactly like GitHub
+    diffs a stale PR branch tip against current main) is applied as a second plain,
+    single-parent commit directly on top -- reproducing content already on main as a
+    synthetic "addition," the same mechanism that produced the real ~1586-row duplication.
+    """
+    repo = _init_repo_with_union_attribute(tmp_path, "tickets/working_log.csv")
+    target = repo / "tickets/working_log.csv"
+    base_content = target.read_text()
+
+    _run_git(["checkout", "-q", "-b", "branch-a"], cwd=repo)
+    branch_a_addition = '{"seq": 2, "branch": "a"}\n'
+    target.write_text(base_content + branch_a_addition)
+    _run_git(["commit", "-q", "-am", "branch-a append"], cwd=repo)
+    branch_a_full_content = target.read_text()
+
+    _run_git(["checkout", "-q", "main"], cwd=repo)
+    target.write_text(base_content + '{"seq": 2, "branch": "b"}\n')
+    _run_git(["commit", "-q", "-am", "branch-b append"], cwd=repo)
+
+    # Reproduce a squash-merge's mechanics: apply branch-a's full content directly as a
+    # plain commit on current main, without ever calling git merge/rebase/cherry-pick -m.
+    target.write_text(branch_a_full_content)
+    result = _run_git(["commit", "-q", "-am", "squash-style landing of branch-a"], cwd=repo)
+    assert result.returncode == 0
+
+    parents = _run_git(["log", "-1", "--format=%P", "HEAD"], cwd=repo).stdout.strip().split()
+    assert len(parents) == 1, (
+        "a squash-style landing must be an ordinary single-parent commit, not a real merge"
+    )
+
+    final_content = target.read_text()
+    assert final_content == branch_a_full_content, (
+        "no merge driver ran (none was invoked) -- the squash-style commit's content is "
+        "exactly branch-a's diff applied wholesale, silently discarding branch-b's own "
+        "concurrent append that main already had. merge=union never got a chance to union "
+        "the two sides because git's merge machinery never ran."
+    )
+    assert '"branch": "b"' not in final_content
+
+
 def test_gitattributes_line_present_for_working_log_csv():
     """Sanity guard: the real repo's own .gitattributes must still carry the
     tickets/working_log.csv append-only-file entry -- catches an accidental removal even

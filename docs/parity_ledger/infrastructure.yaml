@@ -12259,6 +12259,34 @@
   divergence_note: null
   proof_type: regression
 - id: INFRA-411
+  text: 'Log-only ticket-claim detection (TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING)
+    added at .claude/workflows/implement-ticket.js, immediately after `const tid =
+    ticketInfo.ticket_id` (line ~213), before the execution-identity block. A new
+    module, tools/agent-monitoring/ticket_claim_detection.py::check_and_log(), enumerates
+    other sessions'' .claude/current_run.<session_id> sidecar files (reusing post_tool_hook.py''s
+    Path(".claude").glob("current_run.*") pattern) and flags a detection when another
+    session''s scoped sidecar has run_id == tid AND an mtime within a 15-minute window
+    of now -- both conditions required together. Detections are appended to a new
+    dedicated agent-monitoring/data/YYYY-Www/claim_detections.jsonl via the shared
+    writer.py::write_line() primitive, never into runs.jsonl/events.jsonl. Always-on
+    (no env-var gate) -- a local file glob/JSON-parse, negligible cost, unlike the
+    shadow-reviewer-logging precedent''s gated extra LLM call. Never raises, blocks,
+    or refuses; purely additive observability feeding a 30-day/ quarter decision gate
+    on whether to later build an actual claim lock (explicitly deferred, see workflow_reliability_epic.md
+    M2). Documented, accepted false-negative gap: the window is measured against the
+    other session''s last phase-transition sidecar write, not continuous activity,
+    so a session mid-way through one long phase can look stale before it is actually
+    done -- not fixed by widening the window (see ticket_claim_detection_experiment.md
+    Known Limitations).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: .claude/workflows/implement-ticket.js (line ~213-223, tid-confirmation
+    insertion point); tools/agent-monitoring/ticket_claim_detection.py
+  test_path: tests/tools/test_ticket_claim_detection.py, tests/tools/test_current_run_sidecar_orchestrator.py::test_scope_phase_wires_detection_call_at_tid_confirmation_point
+  divergence_note: null
+  proof_type: regression
+- id: INFRA-412
   text: 'InformationIntentExecutionPhase.execute() (src/engine/pipeline_phases/information_intent_execution.py)
     never stripped the raw ActionIntent it resolved from EntityUpdate.intent_results,
     letting it survive unchanged (EntityUpdate.merge() concatenates intent_results

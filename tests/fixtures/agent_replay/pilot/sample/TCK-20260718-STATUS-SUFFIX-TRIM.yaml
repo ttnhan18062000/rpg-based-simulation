@@ -1,0 +1,60 @@
+# Bulk-converted replay fixture for TCK-20260718-STATUS-SUFFIX-TRIM (TCK-20260907-FILTERED-REPLAY-EVAL-PILOT tools/agent_replay/fixture_converter.py).
+# Review.output.verdict/.violations RECONSTRUCTED from a truncated events.jsonl summary — see docs/ai/replay_fixture_spec.md and this ticket's conversion_log.yaml (review_output_fidelity='reconstructed_from_truncated_summary').
+version: 1
+source:
+  ticket_id: TCK-20260718-STATUS-SUFFIX-TRIM
+  ticket_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/tickets/done/TCK-20260718-STATUS-SUFFIX-TRIM.md
+  stored_artifacts_dir: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260718-STATUS-SUFFIX-TRIM/
+  events_run_id: TCK-20260718-STATUS-SUFFIX-TRIM
+  events_seq_range:
+  - 1
+  - 4
+  final_status: DONE
+  tier: standard
+phases:
+- phase: Scope
+  agent: ticket-scoper
+  input:
+    tags:
+    - data-quality
+    - observability
+    conflicts: []
+  output:
+    status: ok
+    summary: Created TCK-20260718-STATUS-SUFFIX-TRIM scoping the 10-file DONE-status-suffix
+      normalization plus a deferred go/defer call on extending status_drift_check.py.
+    ts: '2026-07-18T05:07:49Z'
+  transition: ok
+- phase: Investigate
+  agent: investigator
+  input: {}
+  output:
+    status: ok
+    summary: Captured exact current text of all 10 files Status+Completion Summary
+      sections; recommended DEFER on extending status_drift_check.py mirroring predecessor
+      precedent.
+    ts: '2026-07-18T05:13:58Z'
+  transition: ok
+- phase: Plan
+  agent: planner
+  input:
+    plan_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260718-STATUS-SUFFIX-TRIM/plan.md
+  output:
+    status: ok
+    summary: 13-step plan with per-file pre-drafted Completion Summary wording; resolved
+      status_drift_check.py DEFER decision inline, no Unresolved Questions heading.
+    ts: '2026-07-18T05:18:29Z'
+  transition: ok
+- phase: Review
+  agent: architecture-reviewer
+  input:
+    plan_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260718-STATUS-SUFFIX-TRIM/plan.md
+    investigation_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260718-STATUS-SUFFIX-TRIM/investigation.md
+  output:
+    verdict: APPROVED
+    violations: []
+    status: ok
+    summary: 'APPROVED: pure ticket-corpus markdown normalization with no durable-state/API/mechanics
+      touch; DEFER decision matches established predecessor precedent.'
+    ts: '2026-07-18T05:22:02Z'
+  transition: APPROVED

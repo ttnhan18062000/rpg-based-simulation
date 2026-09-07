@@ -206,6 +206,35 @@ def test_run_validation_preserves_existing_duplicate_id_and_missing_entry_checks
     assert any("TCK-ORPHAN" in e for e in result["errors"])
 
 
+def test_duplicate_ticket_ids_check_excludes_flagged_duplicate_rows(tmp_path):
+    """TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP: an exact-duplicate physical
+    line (is_duplicate=True, e.g. from a squash-merge whole-block duplication) must not
+    trigger a false "Duplicate ticket IDs" error -- but a genuine same-ticket-ID,
+    different-content second row (an actual reopened ticket / a real double-paste) must
+    still be reported."""
+    tickets_dir = tmp_path / "tickets"
+    done_dir = tickets_dir / "done"
+    done_dir.mkdir(parents=True)
+
+    exact_duplicate_line = "2026-07-06T00:00:00Z,TCK-A,A,DONE,x,none\n"
+    log = tickets_dir / "working_log.csv"
+    log.write_text(
+        HEADER
+        + exact_duplicate_line
+        + exact_duplicate_line  # exact-duplicate physical line -- flagged is_duplicate, not a real dupe
+        + "2026-07-07T00:00:00Z,TCK-B,B,DONE,y,none\n"
+        + "2026-07-08T00:00:00Z,TCK-B,B reopened,DONE,z,none\n",  # genuine same-ticket-ID dupe
+        encoding="utf-8",
+    )
+
+    result = run_validation(log, done_dir)
+
+    dupe_errors = [e for e in result["errors"] if "Duplicate ticket IDs" in e]
+    assert len(dupe_errors) == 1
+    assert "TCK-A" not in dupe_errors[0]
+    assert "TCK-B" in dupe_errors[0]
+
+
 def test_run_validation_reports_ambiguous_row_count(tmp_path):
     tickets_dir = tmp_path / "tickets"
     done_dir = tickets_dir / "done"
@@ -241,46 +270,70 @@ def test_round_trip_parses_full_file_without_exception():
     assert len(result.rows) == expected_count
 
 
-def test_all_11_confirmed_live_mismatch_rows_are_flagged():
+def test_all_9_confirmed_live_mismatch_rows_are_flagged():
+    """Was test_all_11_confirmed_live_mismatch_rows_are_flagged before
+    TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP's Step 6 cleanup commit. Of the
+    original 11 physical lines, 2 (3104, 3174) were themselves the exact-duplicate copies
+    of 2 others in this same set (1511, 3104 = 1511+1593; 1581, 3174 = 1581+1593) --
+    reproduced by PR #90's squash-merge whole-block duplication and removed by that
+    cleanup commit, which deleted physical lines 1594-3180 inclusive. The remaining 9
+    lines are the same real rows as before, at their post-cleanup physical positions
+    (unaffected if < 1594, shifted down by exactly 1587 if originally > 3180). No
+    classification logic changed -- verified directly: 1511 and 1581 keep their original
+    line numbers (below the deleted range); 3245/3253/3284/3287/3289/3294/3307 shift to
+    1658/1666/1697/1700/1702/1707/1720 (each original line number minus 1587)."""
     result = parse_working_log(REAL_LOG_PATH)
     by_line = {r.line_no: r for r in result.rows}
 
-    expected_lines = {1511, 3104, 1581, 3174, 3245, 3253, 3284, 3287, 3289, 3294, 3307}
+    expected_lines = {1511, 1581, 1658, 1666, 1697, 1700, 1702, 1707, 1720}
     for line_no in expected_lines:
         assert by_line[line_no].classification == "field_count_mismatch", line_no
 
-    irreducible = {1511, 3104}
+    irreducible = {1511}
     for line_no in expected_lines:
         expected_recoverable = line_no not in irreducible
         assert by_line[line_no].recoverable is expected_recoverable, line_no
 
 
 def test_trailing_field_comma_split_rows_reconstruct_correct_artifacts_path():
+    """Line 3174 (the exact-duplicate copy of 1581) was removed by
+    TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP's Step 6 cleanup commit -- only
+    the original row at 1581 remains."""
     result = parse_working_log(REAL_LOG_PATH)
     by_line = {r.line_no: r for r in result.rows}
 
-    for line_no in (1581, 3174):
+    for line_no in (1581,):
         row = by_line[line_no]
         assert row.record["artifacts_path"] == "none (epic, scope-only)"
         assert row.record["summary"].endswith("uncalibrated illustrative placeholders.")
         assert not row.record["summary"].endswith(",none (epic")
 
 
-def test_ambiguous_row_count_matches_45_for_real_file():
+def test_ambiguous_row_count_matches_26_for_real_file():
+    """Was test_ambiguous_row_count_matches_45_for_real_file before
+    TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP's Step 6 cleanup commit removed
+    the ~1586-row duplicate block (physical lines 1594-3180). 45 = 11 mismatch + 34
+    quote-desync rows counted every duplicate copy as a separate ambiguous row; 26 = 9 + 17
+    counts each real row exactly once now that the duplicate copies are gone."""
     result = parse_working_log(REAL_LOG_PATH)
-    assert result.ambiguous_row_count == 45
+    assert result.ambiguous_row_count == 26
 
 
-def test_all_34_confirmed_live_quote_desync_lines_are_flagged():
+def test_all_17_confirmed_live_quote_desync_lines_are_flagged():
+    """Was test_all_34_confirmed_live_quote_desync_lines_are_flagged before
+    TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP's Step 6 cleanup commit. All 17
+    of the original 34 physical lines >= 2693 were exact-duplicate copies of these same 17
+    lines (offset +1593, e.g. 1100+1593=2693), reproduced by PR #90's squash-merge and
+    removed by that cleanup. The remaining 17 lines are unaffected -- all sit below the
+    deleted range (1594-3180), so their line numbers did not shift."""
     result = parse_working_log(REAL_LOG_PATH)
     by_line = {r.line_no: r for r in result.rows}
 
     expected_lines = {
         1100, 1101, 1102, 1103, 1318, 1320, 1329, 1332, 1337, 1400, 1401,
-        1415, 1453, 1457, 1459, 1460, 1462, 2693, 2694, 2695, 2696, 2911,
-        2913, 2922, 2925, 2930, 2993, 2994, 3008, 3046, 3050, 3052, 3053, 3055,
+        1415, 1453, 1457, 1459, 1460, 1462,
     }
-    assert len(expected_lines) == 34
+    assert len(expected_lines) == 17
 
     for line_no in expected_lines:
         row = by_line[line_no]
