@@ -68,3 +68,14 @@
   max_hp: 850
   service_profile_id: "arcane_service"
   themes: ["arcane", "moon"]
+
+# STATE: ADDITIONAL
+# TCK-20260907-CHURCH-CONTENT-AUTHORING: no service_profile_id -- BuildingRegistry.CHURCH's
+# BLESSING/RESURRECTION service labels (src/town/buildings.py:23) have zero real code reading
+# them anywhere in src/, so this entry deliberately does not invent a service profile that would
+# imply functionality. See docs/guidelines/intentional_divergences.md for the disclosure.
+- id: "church"
+  display_name: "Church"
+  hp: 1500
+  max_hp: 1500
+  themes: ["village", "sacred"]

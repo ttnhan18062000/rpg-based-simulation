@@ -29,6 +29,7 @@ buildings:
   blacksmith: 1
   inn: 1
   healer_hut: 1
+  church: 1
 relationships: ["town_to_merchants", "merchants_to_town"]
 resource_recipes:
   - resource_type: "wood_node"

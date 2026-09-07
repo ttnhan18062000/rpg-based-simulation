@@ -214,6 +214,9 @@ buildings:
 - id: healer_hut_0
   type: healer_hut
   region: hometown
+- id: church_0
+  type: church
+  region: hometown
 quest_definitions:
 - id: village_fetch_supply_run
   type: fetch

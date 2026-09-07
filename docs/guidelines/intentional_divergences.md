@@ -1625,6 +1625,49 @@ This document is the canonical record of intentional behavior shifts in `src` co
 
 ---
 
+### 2.54 CHURCH's BLESSING/RESURRECTION Service Labels Are Placed-But-Inert — No Live Consumer Anywhere (TCK-20260907-CHURCH-CONTENT-AUTHORING)
+- **Subsystem**: World Content / Town Buildings
+- **Old Behavior**: `BuildingRegistry._templates[CHURCH]["services"] = ["BLESSING", "RESURRECTION"]`
+  (`src/town/buildings.py:23`) was assumed to represent real, functioning building services simply
+  waiting to be placed into a world module — the ticket's own inherited premise, matching the 2026-
+  09-02 hardening pass's framing of this as "pure content authoring, not a code bug."
+- **New Behavior**: Confirmed false on Investigate. Unlike every sibling service string in the same
+  template dict (`REST`→`src/engine/town_resolution.py:100-106`, `CRAFT`→`src/engine/blacksmith.py:
+  225`/`src/town/blacksmith.py:56`, `TRADE`→`src/engine/domain/action_router.py:52`, `QUEST`→`src/
+  engine/quests.py:209`, `INTEL`→`src/engine/town_resolution.py:100`), `BLESSING` and `RESURRECTION`
+  have zero occurrences anywhere else in `src/` (`grep -rni "blessing\|resurrection" src/ --include=
+  "*.py"` returns zero hits outside `buildings.py`'s own dict). `BuildingRegistry.get_services()`
+  itself has zero call sites in `src/` outside tests. Separately, `BuildingRegistry` is itself
+  disconnected from the real runtime building-creation path: `WorldCompiler`'s building compilation
+  (`src/worldbuilding/compiler.py::compile()`, step 5) sets `BuildingState.kind` directly from the
+  world module's own `buildings:` count-map key (a lowercase content-catalog ID resolved against
+  `data/content/world/buildings.yaml` via `BuildingResolver`), never referencing `BuildingRegistry`
+  at all; runtime service dispatch (e.g. `town_resolution.py`'s `REST`/`GATHER_INTEL` handling)
+  compares against these lowercase catalog IDs directly, not `BuildingRegistry`'s uppercase
+  constants. `CHURCH` is placed as a real, spawnable building (new `church` entry in `data/content/
+  world/buildings.yaml`, added to `frontier_village_core`'s `buildings:` map, confirmed compiled as
+  `church_0`/`type: church` in `sandbox_world`'s resolved output) — but its `BLESSING`/`RESURRECTION`
+  service labels remain permanently inert: no engine phase, action-router branch, or intent handler
+  anywhere reads them, and the new `church` catalog entry deliberately omits `service_profile_id`
+  rather than inventing a fake service profile that would misleadingly imply functionality.
+- **Rationale**: **Bounded**. Building real BLESSING/RESURRECTION service-handling logic (an engine
+  phase or action-router branch comparable in shape to `REST`'s) is a materially larger scope than
+  this P3 backlog item's "pure content authoring" framing — disproportionate for the ticket as
+  scoped. Ratified by the orchestrating session via explicit user decision (2026-09-07): place
+  `CHURCH` and formally disclose the inertness rather than either building new service logic or
+  leaving the finding unstated, matching Chronicle Fidelity Drift's and Living Legend Perception's
+  own "No Live Consumer Yet" precedent shape (`docs/mechanics/05_world_evolution.md` §"No Live
+  Consumer Yet", lines 646-651 and 750-757).
+- **Verification**: `python3 -m src.worldbuilding.cli resolve sandbox_world` and `... validate
+  sandbox_world` both succeed (only the 3 pre-existing, unrelated `WORLD-UNEXPECTED-SECTION`
+  warnings shared by every world using this profile shape); `church_0` (`type: church`) confirmed
+  present in `data/worlds/sandbox_world/resolved/world.resolved.yaml`. `tools/calibrate_simq.py
+  --name sandbox_world --seed 42 --ticks 100` runs cleanly (`overall_grade=A`) with no CHURCH-
+  specific event ever emitted, confirming inertness rather than silent malfunction.
+- **Status**: RATIFIED
+
+---
+
 ## 3. Unsupported / Retired Behavior
 
 The following legacy behaviors have been intentionally omitted or retired.
