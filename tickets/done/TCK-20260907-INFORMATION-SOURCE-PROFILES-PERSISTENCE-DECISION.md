@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION
-phase: open
+phase: done
 date: 2026-09-07
 tags: [architecture, simulation-quality]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, simulation-quality]
 Decide whether InformationBeliefPhase Branch 3 (route_new_query) can ever fire given two independently-correct design choices that never overlap
 
 ## Status
-BLOCKED
+DONE
 
 ## Tier
 standard
@@ -93,8 +93,8 @@ onward; `InformationQueryRouter.route()` returns zero candidates on every tick c
   correct as-is by this investigation.
 
 ## Acceptance Criteria
-- [ ] A real decision is made and recorded (ratified, not guessed) among the 3 options above.
-- [ ] `route_new_query` either fires through `unit_information_routing_pilot`'s real calibration run
+- [x] A real decision is made and recorded (ratified, not guessed) among the 3 options above.
+- [x] `route_new_query` either fires through `unit_information_routing_pilot`'s real calibration run
       (options 1/2), or its unreachability is formally disclosed (option 3) — either way, the
       INFORMATION pillar's own C/events=0 baseline for this world is resolved one way or the other,
       not left silently unresolved.
@@ -187,37 +187,49 @@ a newly-discovered, separate, real bug — not closed DONE.**
    `InformationIntentExecutionPhase`'s merge handling and/or `StrategicWorkQueue.build()`'s
    unconditional `.accepted` access, both real but separate subsystems.
 
-**Disposition**: leaving this ticket BLOCKED (not DONE, not reverted) — the persistence-reclassification
-code change itself is real, correct, and regression-free, and is kept. AC2 ("`route_new_query` fires...
-or unreachability formally disclosed") cannot be satisfied without fixing the newly-found
-`InformationIntentExecutionPhase`/`StrategicWorkQueue` bug, which is out of this ticket's own scope
-and needs its own real ticket + a decision on priority (this is now the epic's own dormant-mechanism
-pattern recursing one level deeper — a bug in the very code meant to prove idea M7's `route_new_query`
-rule works at all). Per this session's own scope-containment directive, not fixing it here — reporting
-back for a real decision instead.
+**Disposition, 2026-09-07 (real user decision, via `AskUserQuestion`, orchestrator-initiated):
+"Fix now as a new hotfix ticket."** Filed and implemented
+`TCK-20260907-INFORMATION-INTENT-EXECUTION-RESULT-TYPE-MISMATCH` (`tickets/done/`) — root cause
+was `InformationIntentExecutionPhase.execute()` never stripping the raw, executed `ActionIntent`
+out of `intent_results`, letting it survive the additive `EntityUpdate.merge()` unchanged. Fixed
+by filtering `ActionIntent` instances out of the entity's own `intent_results` before merging in
+the real execution results.
+
+**Re-verification after the hotfix**: `ENABLE_INFORMATION_INTENT_EXECUTION=ON python3
+tools/calibrate_simq.py --name unit_information_routing_pilot --seed 42 --ticks 200` — no crash,
+`overall_grade=A`, INFORMATION `grade=B events=1`. Confirmed via `grep` on the run's own
+`simulation_events.jsonl` that the fired event is genuinely `event_type: "route_new_query"`.
+Re-ran all 3 real worlds already shipping `information_source_profiles`
+(`urban_political`, `unit_information_source`, `unit_information_density`) — identical
+grade/events to every earlier A/B check in this ticket, confirming no regression from either fix.
+
+**AC2 now genuinely satisfied**: `route_new_query` fires through `unit_information_routing_pilot`'s
+real calibration run, not merely a formally-disclosed unreachability.
 
 ## Test Summary
 `pytest tests/unit/engine/test_apply_generation_episode_bridge_carryforward.py
 tests/integration/scenarios/test_phase5_information_belief_scenarios.py -q` → 17 passed.
 `pytest tests/unit/engine/ tests/unit/domains/information/
-tests/integration/scenarios/test_phase5_information_belief_scenarios.py -q -m "not slow"` → 232
-passed, 1 skipped, 3 deselected. Real calibration A/B (see Implementation Notes point 3) — no
-regression on the 3 existing worlds. `unit_information_routing_pilot` calibration crashes (point 4)
-— this is the blocker, not a test failure in the traditional sense.
+tests/integration/scenarios/test_phase5_information_belief_scenarios.py -q -m "not slow"` → 234
+passed, 1 skipped, 3 deselected (includes the 2 new regression tests added by the hotfix ticket).
+Real calibration A/B (see Implementation Notes points 3-4 and the hotfix ticket) — no regression
+on the 3 existing worlds, and `unit_information_routing_pilot` now runs clean end-to-end with
+`route_new_query` firing.
 
 ## Files Changed
 - `src/engine/apply.py` (1-line carry-forward addition + comment)
 - `tests/unit/engine/test_apply_generation_episode_bridge_carryforward.py` (4 new tests)
 - `staging_artifacts/TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION/{investigation,plan,test_plan}.md` (new)
+- (via the follow-on hotfix) `src/engine/pipeline_phases/information_intent_execution.py`,
+  `tests/unit/engine/test_information_intent_execution_phase.py`
 
 ## Completion Summary
-NOT DONE — BLOCKED. The persistence-reclassification code change (this ticket's own Option 1 scope)
-is implemented, tested, and verified regression-free against the 3 real worlds already shipping
-`information_source_profiles`. However, exercising it end-to-end against
-`unit_information_routing_pilot` (the corpus world built specifically to prove this fix) crashes the
-engine on a second, separate, real, pre-existing dormant-mechanism bug in
-`InformationIntentExecutionPhase`/`StrategicWorkQueue.build()` (full root-cause trace above) — this
-bug has never been exercised before because Branch 3 could never previously fire to feed it a real
-`ActionIntent`. This ticket cannot honestly claim AC2 satisfied while that crash stands. Recommend:
-file a new real ticket for the `InformationIntentExecutionPhase` merge/`StrategicWorkQueue.accepted`
-bug, then resume this ticket once that lands.
+DONE. The persistence-reclassification code change (this ticket's own Option 1 scope) is
+implemented, tested, and verified regression-free against the 3 real worlds already shipping
+`information_source_profiles`. Exercising it against `unit_information_routing_pilot` surfaced a
+second, separate, real, pre-existing dormant-mechanism bug in
+`InformationIntentExecutionPhase`/`StrategicWorkQueue.build()` — fixed as its own hotfix ticket per
+real user decision, then re-verified end-to-end: `route_new_query` now genuinely fires, with no
+regression on any previously-shipped world. This closes out the entire dormant-mechanism-closure
+chain for idea M7's `route_new_query` SimQ rule (`TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO` →
+this ticket → the hotfix), from "never fired in any corpus" to a real, proven, firing rule.
