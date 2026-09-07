@@ -8,21 +8,20 @@ tags: [content, architecture]
 
 # Plan — Social/Political Mechanics Hardening: the missing Mechanics Bible chapter
 
-**Status, re-verified 2026-09-05:** item 5 (the `CanonicalStateHasher` determinism gap) is fully fixed and
-shipped, and items 2 and 4 are now also fully closed (see below) — only item 1 (writing/promoting the
-actual chapter) and part of item 3 (ideas 56/62's own read-requirement scoping) remain open. No
-`docs/mechanics/07_*.md` (or any new-numbered chapter) exists yet, and `docs/simulation/
-social_systems_contract.md` (a pre-existing, differently-scoped doc) does not satisfy this plan's
-own Target Shape as-is, though it may substantially reduce the remaining authoring effort if promoted
-rather than duplicated — see the ticket below. Item 1 of a 5-item hardening backlog identified 2026-09-02
-(see the parent roadmap's "Hardening backlog" section) — the same code-verification treatment the temporal
-axis and idea 66 already received, applied to the social/reputation/political surface. **Ticketed,
-2026-09-05:** `TCK-20260905-SOCIAL-MECHANICS-BIBLE-CHAPTER` (`tickets/todos/`), scope-only —
-chapter-authoring is real content work, left for whoever picks it up next. That ticket also carries a new
-finding this same re-verification surfaced: `social_systems_contract.md`'s own Reputation section
-describes `ReputationService` as live, which conflicts with this plan's own hardening-backlog item 5
-finding that the same service has zero callers anywhere in `src/` — an inconsistency the chapter's
-implementer must resolve directly, not assume either doc is right.
+**Status, closed 2026-09-07:** all 5 items of this hardening backlog are now shipped.
+`docs/mechanics/07_social_political_dynamics.md` is authored and `Certified Level 1` — items 1-4 are
+complete: the chapter documents `SocialComponent`/`SocialBond`/`RelationshipService` as its core, the
+reputation-discount fragment is relocated out of `03_economic_laws.md` (a cross-link pointer left
+behind), the three existing partial contracts are folded in as cross-linked sub-sections (not
+rewritten), and the `SOC-FAC-*`/`SOC-CHRON-*` spot-check landed 2026-09-05 (see below). The liveness
+question flagged below (whether `ReputationService`/`PublicReputationProfile` are live) is resolved:
+**both are live**, but they are two structurally distinct, differently-typed fields sharing a
+confusingly similar name — `SocialComponent.public_reputation` (a real, clamped scalar, actively
+used in trust/discount/inheritance) and `PublicReputationProfile.labels` (a separate label bag, one
+real live event kind). See Chapter 07 §4 for the full breakdown; `docs/simulation/
+social_systems_contract.md`'s own Reputation/Appraisal/Contracts/Guilds/Party sections were also
+corrected in the same pass — five sections there had materially diverged from real code, not merely
+gone stale (`TCK-20260905-SOCIAL-MECHANICS-BIBLE-CHAPTER`).
 
 **Superseded in scope, not replaced, 2026-09-02:** the fuller axis-level treatment now lives in
 [`docs/brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md`](../../brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md) —
