@@ -15,7 +15,7 @@ tags: [architecture, simulation-quality]
 Revive the dead Perception → Motivation route-bias pipeline — unlocks idea 57 (Living Legend) and the already-built Culture Drift bias overlay
 
 ## Status
-OPEN
+BLOCKED — escalated 2026-09-07, real scope is a 4-component dead chain plus a missing data model, not the 2-component gap originally scoped (see Implementation Notes)
 
 ## Tier
 standard
@@ -122,8 +122,112 @@ None yet — created by this ticket's own Investigate/Plan phases once picked up
 
 ## Implementation Notes
 
+**Escalated, 2026-09-07 — the real scope is materially larger than this ticket's own Request
+Summary anticipated. No code was written; this is a pure Investigate-phase finding.**
+
+### The real chain has 4 dead links, not 2
+
+This ticket's own Request Summary named 2 dead functions (`PerceptionUpdatePhase`,
+`MotivationBiasService.compute_bias_multiplier()`). Direct investigation found **2 more, plus a
+missing data model, forming one unbroken dead chain from end to end**:
+
+1. **`DoctrineResolver.resolve()`** (`src/domains/motivation/resolver.py`) — has **zero real
+   (non-test) callers anywhere in `src/`**, confirmed via grep (only referenced from
+   `motivation/__init__.py`'s own re-export and test files). This means `motivation.doctrine` on
+   every real entity is always the bare default `IdentityDoctrine(class_id=...)` with **empty**
+   `preferred_route_tags`/`avoided_route_tags` — the exact fields
+   `compute_bias_multiplier()` reads. Even if `compute_bias_multiplier()` were wired to a real
+   caller today, it would compute a no-op multiplier (1.0) for every real entity, because nothing
+   ever populates the doctrine it reads from.
+2. **`PerceptionUpdatePhase`** (`src/domains/perception/phase.py`) — confirmed zero real callers
+   (as this ticket's own Request Summary already stated). It produces an updated `PerceptionModel`
+   (`perceived_entities`/`perceived_resources`/`perceived_opportunities`/`perceived_threats`/etc.)
+   on the entity.
+3. **No real code anywhere reads `PerceptionModel`'s fields for route generation or scoring** —
+   confirmed via grep across `src/domains/adventure/` (route generation/scoring) and
+   `src/systems/strategic_systems/` (strategic pass): zero hits for `perceived_opportunities`,
+   `perceived_threats`, or `PerceptionModel` outside `src/domains/perception/` itself. Even if
+   `PerceptionUpdatePhase` were wired into the live tick loop, its output would still go nowhere —
+   there is no existing consumer to connect it to.
+4. **`MotivationBiasService.compute_bias_multiplier()`** — confirmed zero real callers (as this
+   ticket's own Request Summary already stated). Its `tags: Iterable[str]` parameter expects a
+   **combat/tactical-style vocabulary** (`"melee"`, `"ranged"`, `"heavy_armor"`, `"spells"`,
+   `"flee"`, `"scouting"`, `"stealth"`, `"intel"`, `"mana"` — confirmed via
+   `DoctrineResolver.resolve()`'s own real per-class doctrine data and
+   `tests/unit/domains/motivation/test_phase14_bias_service.py`), **not** the `RouteFamily` enum
+   vocabulary (`"recover"`, `"gather_resource"`, `"buy_upgrade"`, `"scout_location"`, etc.) that
+   `AdventureRouteOption` actually carries via its `family` field. **`AdventureRouteOption` has no
+   `tags` field of any kind** (confirmed via direct read of `src/domains/adventure/schema.py`) —
+   there is no existing data model that would let a real route ever be scored against
+   `compute_bias_multiplier()`'s expected tag vocabulary at all. The two tag vocabularies do not
+   overlap (only a near-miss: `"scout_location"` vs. `"scouting"`) and represent genuinely
+   different classification dimensions (WHAT to do vs. HOW to fight) — there is no cheap, already-
+   implied mapping between them to build on.
+
+### Why this is a genuine architectural fork, not a small wiring gap
+
+Reviving idea 57 (and the Culture Drift bias overlay) "as scoped" would require design decisions on
+at least 4 independent axes, each with real trade-offs the ticket's own text does not resolve and
+that a hand-orchestrating implementer should not decide alone:
+- **Where/whether to wire `DoctrineResolver.resolve()`** — at entity construction (once, per
+  `class_id`), or dynamically. If never wired, `compute_bias_multiplier()` can never produce a
+  non-trivial multiplier for any doctrine-driven route no matter what else is built.
+- **Whether `PerceptionUpdatePhase` is even on the real critical path for idea 57 at all.**
+  `compute_bias_multiplier(entity, tags, culture_values)` takes `culture_values: CultureState`
+  directly — it does NOT take a `PerceptionModel`. A `LegendFact`-driven bias could plausibly be
+  wired to `compute_bias_multiplier()` without ever touching `PerceptionUpdatePhase`, by inventing
+  a parallel `legend_values`-shaped input (mirroring `culture_values`) rather than going through
+  perception filtering at all — a real, different design than "revive `PerceptionUpdatePhase`,"
+  the design this ticket's own Scope assumed. Conversely, if `PerceptionUpdatePhase` genuinely is
+  the intended real path (its own docstring says "Phase 12," implying original intent to wire it
+  into the live pipeline), that's a separate, larger question about what its *other* real consumers
+  should be (idea 57 alone doesn't justify reviving a whole phase whose other purpose — populating
+  `perceived_entities`/`perceived_threats` for combat/social AI — has never been used by anything
+  either).
+- **Whether/how to invent a real `tags` field on `AdventureRouteOption`, and what its real
+  vocabulary should be** — this is new data-model design work, not just wiring, and needs a
+  decision on whether it should reuse the combat-style vocabulary `IdentityDoctrine` already uses,
+  a new route-specific vocabulary, or both.
+- **Where the real live route/goal-scoring call site should invoke `compute_bias_multiplier()`** —
+  the real, live, already-shipped scorer (`AdventureRouteScorer.score()`,
+  `src/domains/adventure/scoring.py`) has its own real, independent formula (`final_score =
+  urgency + benefit + personality_bias + plan_advance_bonus + memory_adjustment +
+  confidence_bonus - risk_penalty - blocker_penalty`) with **no existing bias/multiplier term at
+  all** — adding one is a real change to a live, already-certified formula, not an additive no-op
+  the way idea 56's own `region_loyalty_pressure` bridge was (a genuinely new, previously-`0.0`
+  parameter with no existing formula to touch).
+
+None of these four decisions is this ticket's own text resolved in advance, and guessing at any one
+of them (e.g., inventing a route-tags vocabulary, or deciding `PerceptionUpdatePhase` is or isn't
+on the critical path) would be exactly the kind of unilateral architecture decision this session's
+own established discipline says to escalate rather than force.
+
+### Recommendation
+
+Do not implement this ticket as currently scoped. Real options for whoever tracks this epic next:
+1. **Split further**: separate "wire `DoctrineResolver` + add a minimal `tags` field to
+   `AdventureRouteOption` + add a bias term to `AdventureRouteScorer.score()`" (the real
+   prerequisite infrastructure, benefits BOTH idea 57 and Culture Drift) from "wire `LegendFact`
+   specifically into whatever that infrastructure turns out to be" (idea 57's own narrow piece).
+2. **Re-scope narrower**: skip `PerceptionUpdatePhase` and route generation/scoring entirely; wire
+   `LegendFact` → a new, `culture_values`-shaped `legend_values` input on
+   `compute_bias_multiplier()` → a single, hand-picked existing decision point (e.g. directly
+   inside `StrategicIntelligenceSystem.fused_strategic_pass()`, already real and live) — smaller,
+   but bypasses `PerceptionUpdatePhase` and the route-scoring layer entirely, which may or may not
+   match idea 57's own original design intent (re-read `TCK-20260905-FAME-DERIVER-LEGEND-FACT`
+   closely before choosing this).
+3. **Accept this really is epic-sized** and scope a proper multi-ticket mini-epic for the whole
+   route-bias-scoring revival, treating idea 57/Culture Drift as two of several beneficiaries.
+
+No code, docs, or test changes were made — this Implementation Notes section IS the deliverable of
+this Investigate-phase pass.
+
 ## Test Summary
+No tests run — no code changed. All grep-based investigation results above are independently
+reproducible via the exact commands cited.
 
 ## Files Changed
+None.
 
 ## Completion Summary
+(Not completed — escalated per Implementation Notes above.)
