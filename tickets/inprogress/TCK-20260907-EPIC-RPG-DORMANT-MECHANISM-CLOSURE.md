@@ -84,14 +84,20 @@ This epic tracks child tickets only; no direct implementation happens here.
 - `TCK-20260907-PERCEPTION-MOTIVATION-PIPELINE-REVIVAL` (P1 — DONE 2026-09-07 as an investigation:
   found the real scope is a 4-component dead chain plus a missing `AdventureRouteOption.tags` data
   model, not the 2-component gap originally assumed — split further into the 2 tickets below)
-- `TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE` (P1 — the real shared prerequisite: wires
-  `DoctrineResolver`, adds a `tags` field to `AdventureRouteOption`, adds a bias term to
-  `AdventureRouteScorer.score()` — benefits idea 57 AND the already-built Culture Drift bias overlay)
-- `TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING` (P1 — idea 57's own narrow piece, depends on the
-  infrastructure ticket above landing first)
+- `TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE` (P1 — DONE 2026-09-07: wires the real
+  `personality_bias` mechanism with a Culture Drift branch, bypassing the confirmed-dead
+  `DoctrineResolver`/`MotivationBiasService` chain)
+- `TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING` (P1 — DONE 2026-09-07: idea 57's own narrow piece,
+  a Living Legend `personality_bias` branch — closes idea 57's entire revival chain)
 - `TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH` (P2 — DONE 2026-09-07, appended onto PR #143 since it
   directly extended the Social & Political Mechanics Bible chapter authored there)
-- `TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO` (P2 — new corpus test authoring)
+- `TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO` (P2 — DONE 2026-09-07 as an investigation: the real
+  blocker is structural, not a corpus-content gap — split into the ticket below)
+- `TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION` (P2 — real architecture decision
+  split out of the ticket above)
+- `TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD` (P1 — DONE 2026-09-07, hotfix: found
+  while implementing the corpus-scenario ticket above, fixes a real regression silently breaking the
+  Culture Drift/Living Legend bias branches above beyond tick 1 of any real campaign episode)
 - `TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION` (P3 — activate-or-defer decision, idea 30)
 - `TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS` (P3 — written disposition for ideas 50/62/64)
 - `TCK-20260907-CHURCH-CONTENT-AUTHORING` (P3 — pure content, no code)

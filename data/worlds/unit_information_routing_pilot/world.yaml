@@ -1,0 +1,25 @@
+schema_version: "worldcomposition.v1"
+world_id: "unit_information_routing_pilot"
+name: "Unit Test — Information Routing (route_new_query) Isolation"
+description: "Unit-tier isolation world for InformationBeliefPhase's Branch 3 (route_new_query, src/domains/information/phase.py:86-104) -- a genuinely new gap the 3 pre-existing unit-tier INFORMATION/COGNITION worlds don't cover: unit_selfmodel_pilot seeds pending_self_model_information_events (so an entity gets a real unresolved unknown) but deliberately omits information_source_profiles and ENABLE_BELIEF_ASSIMILATION (its own explicit scope guard, TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT Scope item 3); unit_information_source/unit_information_density seed information_source_profiles + pending_information_responses (Branch 2's pre-answered-response path) but leave pending_self_model_information_events empty, so neither ever produces an entity with self_model.knowledge.unknowns non-empty. This world combines both halves for the first time: one pending_self_model_information_events entry targets pop_1 with an unresolved unknown about material.wood.source (a real material this composition's own frontier_village_core resource_recipes actually produce, via wood_node -- same subject unit_selfmodel_pilot already uses), and one information_source_profiles entry (town_notice_board, knowledge_scopes=[common_resource_sources], byte-for-byte the same shape unit_information_source/unit_information_density/urban_political all already use) gives InformationQueryRouter.route() a real candidate for the resulting InformationQuery(kind='material_source'). Composes frontier_village_core + hero_adventurers (byte-for-byte the same module pair as the 3 sibling unit-tier worlds) -- hero_adventurers's 3 un-ided population_recipes produce the positional pop_0/pop_1/pop_2 addressing fallback (WorldAssemblyResolver.resolve) needed to target target_population_id. faction_tension_overrides stays at catalog default and pending_information_responses stays empty -- every other Pattern-6 field stays at baseline so this isolates Branch 3 specifically, not Branch 2's pre-answered-response path."
+modules:
+  - "frontier_village_core"
+  - "hero_adventurers"
+generation_seed: 504
+information_source_profiles:
+  - source_id: "town_notice_board"
+    source_kind: "guide"
+    knowledge_scopes: ["common_resource_sources"]
+    accuracy: 0.4
+    freshness: 0.6
+    bias: 0.1
+    cost_gold: 0
+    max_answers_per_query: 2
+pending_self_model_information_events:
+  - target_population_id: "pop_1"
+    answer_kind: "unknown"
+    unknowns:
+      - "material.wood.source"
+    certainty: 0.0
+    source_id: null
+    cost_gold: 0
