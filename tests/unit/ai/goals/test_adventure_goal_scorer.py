@@ -7,6 +7,8 @@ the tier-5 floor), AC6 (deliberate tie-break value), and the Risk #1 target_pos-
 """
 from __future__ import annotations
 
+from unittest.mock import create_autospec
+
 import pytest
 
 from src.ai.goals import GoalRegistry
@@ -38,12 +40,23 @@ def _state(entities=None, buildings=None, town_center=(50.0, 50.0), tick=10):
     )
 
 
+def _autospec_decide(behavior):
+    """Wraps `behavior` (a plain callable, entity/candidates positional + **kwargs) in a
+    create_autospec mock matching AdventureDecisionService.decide()'s real, current signature
+    (TCK-20260908-ADVENTURE-DECIDE-MOCK-SIGNATURE-DRIFT-HARDENING). If the real signature
+    later drops/renames a param, or a caller passes a kwarg that no longer exists, this fails
+    loudly and structurally at mock-call time -- instead of depending on every test file's own
+    hand-rolled stub signature staying manually in sync (the exact regression class
+    TCK-20260907-DORMANT-CLOSURE-CI-REGRESSION-FIXUP fixed after-the-fact)."""
+    return create_autospec(AdventureDecisionService.decide, side_effect=behavior)
+
+
 def _fake_decide_factory(raw_score, family=RouteFamily.GATHER_RESOURCE, target_node_id=999):
     """Builds a fake AdventureDecisionService.decide() replacement pinning `selected.score`
     and `selected.family`, so the scorer's normalization/metadata/target-resolution logic can
     be tested in isolation from route-generation nondeterminism (test_plan.md AC2 guidance)."""
 
-    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None, legend_fact=None, belief_institutions=None, event_fidelity=None):
+    def _fake_decide(entity, candidates, **kwargs):
         selected = AdventureRouteOption(
             family=family,
             score=raw_score,
@@ -60,7 +73,7 @@ def _fake_decide_factory(raw_score, family=RouteFamily.GATHER_RESOURCE, target_n
             trace={},
         )
 
-    return _fake_decide
+    return _autospec_decide(_fake_decide)
 
 
 def _eligible(monkeypatch):
@@ -182,7 +195,7 @@ def test_adventure_route_sibling_ticket_typical_band_produces_higher_utility_tha
 def test_adventure_goal_scorer_ineligible_entity_returns_zero_utility_no_target(monkeypatch):
     call_count = {"n": 0}
 
-    def _spy_decide(*args, **kwargs):
+    def _spy_decide(entity, candidates, **kwargs):
         call_count["n"] += 1
         raise AssertionError("AdventureDecisionService.decide() must not be called for an "
                               "ineligible entity (early-return before expensive work).")
@@ -191,7 +204,7 @@ def test_adventure_goal_scorer_ineligible_entity_returns_zero_utility_no_target(
         "src.ai.goals.adventure_scorer._supports_adventure_routing",
         lambda entity, cache: False,
     )
-    monkeypatch.setattr(AdventureDecisionService, "decide", _spy_decide)
+    monkeypatch.setattr(AdventureDecisionService, "decide", _autospec_decide(_spy_decide))
 
     entity = _entity()
     state = _state(entities={1: entity})
@@ -206,7 +219,7 @@ def test_adventure_goal_scorer_ineligible_entity_returns_zero_utility_no_target(
 def test_adventure_goal_scorer_defer_with_reason_returns_zero_utility_no_target(monkeypatch):
     _eligible(monkeypatch)
 
-    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None, legend_fact=None, belief_institutions=None, event_fidelity=None):
+    def _fake_decide(entity, candidates, **kwargs):
         selected = AdventureRouteOption(
             family=RouteFamily.DEFER_WITH_REASON,
             score=0.01,
@@ -219,7 +232,7 @@ def test_adventure_goal_scorer_defer_with_reason_returns_zero_utility_no_target(
             selected=selected, rejected=(), proposed_project=None, proposed_objective=None, trace={},
         )
 
-    monkeypatch.setattr(AdventureDecisionService, "decide", _fake_decide)
+    monkeypatch.setattr(AdventureDecisionService, "decide", _autospec_decide(_fake_decide))
     entity = _entity()
     state = _state(entities={1: entity})
     score = AdventureGoalScorer().score(entity, state)
@@ -299,8 +312,8 @@ def test_adventure_goal_scorer_threads_bridged_culture_state_for_entity_own_regi
     _eligible(monkeypatch)
     seen = {}
 
-    def _spy_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None, legend_fact=None, belief_institutions=None, event_fidelity=None):
-        seen["culture_state"] = culture_state
+    def _spy_decide(entity, candidates, **kwargs):
+        seen["culture_state"] = kwargs.get("culture_state")
         return AdventureDecisionResult(
             selected=AdventureRouteOption(
                 family=RouteFamily.RECOVER, score=0.5, confidence=1.0,
@@ -309,7 +322,7 @@ def test_adventure_goal_scorer_threads_bridged_culture_state_for_entity_own_regi
             rejected=(), proposed_project=None, proposed_objective=None, trace={},
         )
 
-    monkeypatch.setattr(AdventureDecisionService, "decide", _spy_decide)
+    monkeypatch.setattr(AdventureDecisionService, "decide", _autospec_decide(_spy_decide))
 
     entity = _entity()
     entity = dataclasses.replace(
@@ -330,8 +343,8 @@ def test_adventure_goal_scorer_culture_state_none_safe_when_region_or_entry_miss
     _eligible(monkeypatch)
     seen = {}
 
-    def _spy_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None, legend_fact=None, belief_institutions=None, event_fidelity=None):
-        seen["culture_state"] = culture_state
+    def _spy_decide(entity, candidates, **kwargs):
+        seen["culture_state"] = kwargs.get("culture_state")
         return AdventureDecisionResult(
             selected=AdventureRouteOption(
                 family=RouteFamily.RECOVER, score=0.5, confidence=1.0,
@@ -340,7 +353,7 @@ def test_adventure_goal_scorer_culture_state_none_safe_when_region_or_entry_miss
             rejected=(), proposed_project=None, proposed_objective=None, trace={},
         )
 
-    monkeypatch.setattr(AdventureDecisionService, "decide", _spy_decide)
+    monkeypatch.setattr(AdventureDecisionService, "decide", _autospec_decide(_spy_decide))
 
     # Entity with no region_id yet (default None) -- must not raise.
     entity = _entity()
@@ -367,8 +380,8 @@ def test_adventure_goal_scorer_threads_bridged_legend_fact_for_entity_own_subjec
     _eligible(monkeypatch)
     seen = {}
 
-    def _spy_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None, legend_fact=None, belief_institutions=None, event_fidelity=None):
-        seen["legend_fact"] = legend_fact
+    def _spy_decide(entity, candidates, **kwargs):
+        seen["legend_fact"] = kwargs.get("legend_fact")
         return AdventureDecisionResult(
             selected=AdventureRouteOption(
                 family=RouteFamily.RECOVER, score=0.5, confidence=1.0,
@@ -377,7 +390,7 @@ def test_adventure_goal_scorer_threads_bridged_legend_fact_for_entity_own_subjec
             rejected=(), proposed_project=None, proposed_objective=None, trace={},
         )
 
-    monkeypatch.setattr(AdventureDecisionService, "decide", _spy_decide)
+    monkeypatch.setattr(AdventureDecisionService, "decide", _autospec_decide(_spy_decide))
 
     entity = _entity(eid=7)
     fact = LegendFact(subject_id="7", fame=0.8)
@@ -393,8 +406,8 @@ def test_adventure_goal_scorer_legend_fact_none_safe_when_subject_id_missing(mon
     _eligible(monkeypatch)
     seen = {}
 
-    def _spy_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None, legend_fact=None, belief_institutions=None, event_fidelity=None):
-        seen["legend_fact"] = legend_fact
+    def _spy_decide(entity, candidates, **kwargs):
+        seen["legend_fact"] = kwargs.get("legend_fact")
         return AdventureDecisionResult(
             selected=AdventureRouteOption(
                 family=RouteFamily.RECOVER, score=0.5, confidence=1.0,
@@ -403,7 +416,7 @@ def test_adventure_goal_scorer_legend_fact_none_safe_when_subject_id_missing(mon
             rejected=(), proposed_project=None, proposed_objective=None, trace={},
         )
 
-    monkeypatch.setattr(AdventureDecisionService, "decide", _spy_decide)
+    monkeypatch.setattr(AdventureDecisionService, "decide", _autospec_decide(_spy_decide))
 
     # Entity whose subject_id has no bridged entry -- must fall back to None, not KeyError.
     entity = _entity(eid=99)
@@ -441,3 +454,30 @@ def test_adventure_route_loses_exact_utility_tie_against_existing_kind():
     ]
     scores.sort(key=lambda x: (-x.utility, x.kind))
     assert scores[0].kind == GoalKind.RECOVER  # recover (survival-urgency) wins the tie
+
+
+# --- TCK-20260908-ADVENTURE-DECIDE-MOCK-SIGNATURE-DRIFT-HARDENING ------------------------
+
+
+def test_autospec_decide_mock_rejects_unknown_kwarg_structurally():
+    """Regression guard proving `create_autospec(AdventureDecisionService.decide)` enforces
+    the real, current signature at call time. Before this ticket, 4 of 5 test files'
+    hand-rolled `_fake_decide` stubs had their own manually-typed, independently-driftable
+    copy of this signature -- when `belief_institutions`/`event_fidelity` were added for real
+    (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING), 4 stayed stale and only failed when CI
+    happened to exercise them (TCK-20260907-DORMANT-CLOSURE-CI-REGRESSION-FIXUP). This test
+    proves the autospec approach catches the *inverse* drift too -- a caller (or a future
+    stub) passing a kwarg the real signature has since dropped/renamed -- immediately, at the
+    mock-call boundary, not by accident during a later exercised test."""
+    mock_decide = create_autospec(AdventureDecisionService.decide)
+    entity = _entity()
+
+    with pytest.raises(TypeError):
+        mock_decide(entity, [], this_kwarg_was_removed_or_never_existed=True)
+
+    # Sanity check: the real, current kwargs are still accepted (proves the failure above is
+    # about the *unknown* kwarg, not autospec rejecting kwargs in general).
+    mock_decide(
+        entity, [], tick=0, resource_nodes=None, faction_directives=None, factions=None,
+        culture_state=None, legend_fact=None, belief_institutions=None, event_fidelity=None,
+    )
