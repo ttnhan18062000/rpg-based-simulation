@@ -98,8 +98,25 @@ with **no `ResourceTransferIntent`** for TEAM_UP — no gold changes hands on pa
 
 `SocialBond` is a richer directional relationship: `familiarity` (0.0-1.0), `sentiment` (−1.0 to
 1.0), `last_interaction_tick`, `role` (`RelationshipRole`: `NEUTRAL` default / `FRIEND` / `RIVAL`).
-Bond sentiment takes priority over `trust_history` wherever both exist (§1's own rule). `role` is
-settable only through `SocialBondUpdate.role_set` → `RelationshipService.process_update()`.
+Bond sentiment takes priority over `trust_history` wherever both exist (§1's own rule).
+
+**`role` write path, corrected 2026-09-07 (`TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH`):** the explicit
+`SocialBondUpdate.role_set` override always existed, but had **zero real (non-test) callers**
+anywhere in `src/` — every live `SocialBond.role` was permanently `NEUTRAL` until this ticket, despite
+a real, already-live consumer (§9's `role_affinity_term`, reached via
+`AdventureRouteGenerator`'s `FORM_PARTY` route) silently always reading `NEUTRAL`. Fixed by deriving
+`role` directly inside `RelationshipService.process_update()` from the bond's own resulting
+`sentiment` whenever a real `sentiment_delta` is applied (already a live signal — flows from
+`contracts.py`, `combat.py`, `appraisal.py`): `sentiment >= 0.8` → `FRIEND`, `sentiment <= -0.8` →
+`RIVAL` (mirroring §1's own real `TOTAL_DISTRUST` bound, not an invented threshold), else the
+existing `role` is left untouched (a familiarity-only or zero-`sentiment_delta` update never touches
+`role` — sticky, one-crossing-per-real-sentiment-change, matching `last_interaction_tick_set`'s own
+set-if-provided precedent). `role_set` itself remains a real, honored explicit override, evaluated
+first. Deliberately kept independent of `nemesis_ids`/`grudge_history` (per this field's own original
+design intent, `TCK-20260824-RELATIONSHIP-ROLE-FIELD`) — **`nemesis_ids`'s own promotion mechanism,
+`SocialMemoryService.check_nemesis_promotion()`, was found to have zero real callers either** during
+this investigation (a separate, undisclosed dormancy on an adjacent field, out of this ticket's own
+scope — not corrected here, flagged for a future ticket).
 
 **Decay:** live `SocialComponent`/`SocialBond` fields have **no passive decay of any kind** — once
 set, a value stays exactly where it was left until a new interaction changes it. The only real decay
@@ -120,17 +137,28 @@ is pruned from all five).
 
 ## 3. Social Memory: Place Attachment & Nemesis Promotion
 
-`SocialMemoryService` (`memory.py`) handles two persistent per-tick social memory effects:
+`SocialMemoryService` (`memory.py`) defines two social memory effects — **correction, 2026-09-07
+(`TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH`): both are dormant, not "per-tick" as previously stated.**
+Direct verification found zero real (non-test) callers anywhere in `src/` of either method:
 
-- **Place attachment:** `+0.001` per tick while an entity is inside a region's bounds
-  (`SocialUpdate(place_attachment_delta={region_id: 0.001})`). Long-term presence creates measurable
-  "home" attachment over time.
-- **Nemesis promotion:** when `grudge_history[eid] >= 3.0`, that entity is promoted into
-  `nemesis_ids` (`check_nemesis_promotion()`). Nemesis status affects routing (adventure domain
-  avoids nemesis regions) and cooperation (never cooperates with a nemesis) — and, per §1, `RIVAL`
-  bond role and `nemesis_ids` are independently-driven signals; `nemesis_ids` takes precedence over a
-  stale `FRIEND` bond role in `PartyCompositionScorer` (§8, `TCK-20260904-SOCIAL-NEMESIS-ROLE-
-  PRECEDENCE`) since it is backed by sustained real harm history, not a coarser categorical tag.
+- **Place attachment:** `tick_place_attachment()` would apply `+0.001`/tick while an entity is inside
+  a region's bounds (`SocialUpdate(place_attachment_delta={region_id: 0.001})`) — a real, correct,
+  unit-tested pure function with no live caller wiring it into any per-tick phase.
+- **Nemesis promotion:** `check_nemesis_promotion()` would promote an entity into `nemesis_ids` when
+  `grudge_history[eid] >= 3.0` — likewise real, correct, and unit-tested, but with no live caller.
+  `SocialComponent.nemesis_ids` can still be seeded once at entity construction
+  (`V2EntityBuilder(nemesis_ids=...)`), so a non-empty `nemesis_ids` set is possible in a hand-built
+  scenario, but no real per-tick gameplay path grows it from `grudge_history` today.
+
+Per §1's own rule, `RIVAL` bond role and `nemesis_ids` are independently-driven signals by design —
+`nemesis_ids` is documented as taking precedence over a stale `FRIEND` bond role in
+`PartyCompositionScorer` (§9, `TCK-20260904-SOCIAL-NEMESIS-ROLE-PRECEDENCE`) on the theory that it's
+backed by sustained real harm history — but since neither side of that precedence rule currently has
+a live per-tick producer, this specific interaction is not yet reachable in real gameplay. Not
+corrected here — this ticket's own scope was `SocialBond.role`'s write path (§2), not
+`SocialMemoryService`'s; flagged for a future ticket to wire real callers, matching this chapter's
+own `route_new_query` (§4) and contract-betrayal (§5) precedent for disclosing a dormant-but-real
+mechanism rather than silently describing it as live.
 
 **Distinction from other memory types:** social memory (this layer, place attachment + nemesis) is
 separate from domain memory (`src/domains/memory/`, causal/spatial/temporal per-tick memory) and the

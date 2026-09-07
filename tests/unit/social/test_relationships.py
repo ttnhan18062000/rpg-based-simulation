@@ -217,3 +217,131 @@ def test_heroism_and_notoriety_deltas_apply_identically_to_birth_seeded_reputati
     assert (birth_seeded_notoriety.public_reputation - birth_seeded_after.public_reputation) == pytest.approx(
         default_notoriety.public_reputation - default_after.public_reputation
     )
+
+
+def test_sustained_positive_sentiment_derives_role_to_friend():
+    """TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH (SOC-248): a real sentiment_delta crossing
+    the FRIEND_SENTIMENT_THRESHOLD (0.8) through the authoritative apply-path -- not an
+    explicit role_set -- derives role to FRIEND. This is the real, live production trigger
+    (fires wherever sentiment_delta already flows today: contracts.py, combat.py,
+    appraisal.py), unlike role_set which has zero real (non-test) callers."""
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, sentiment_delta=0.85)]
+    )
+    new_social = RelationshipService.process_update(entity.social, update)
+
+    assert new_social.bonds[99].sentiment == pytest.approx(0.85)
+    assert new_social.bonds[99].role == RelationshipRole.FRIEND
+
+
+def test_sustained_negative_sentiment_derives_role_to_rival():
+    """SOC-248: the mirror-negative case, reusing appraisal.py's own real TOTAL_DISTRUST
+    bound (bond.sentiment < -0.8) as RIVAL_SENTIMENT_THRESHOLD."""
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, sentiment_delta=-0.85)]
+    )
+    new_social = RelationshipService.process_update(entity.social, update)
+
+    assert new_social.bonds[99].sentiment == pytest.approx(-0.85)
+    assert new_social.bonds[99].role == RelationshipRole.RIVAL
+
+
+def test_mid_band_sentiment_change_does_not_derive_a_role():
+    """SOC-248: a real sentiment_delta that does not cross either extreme leaves role at
+    its NEUTRAL default -- this is not a tautology, since a naive implementation could
+    derive role on every bond_update regardless of magnitude."""
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, sentiment_delta=0.3)]
+    )
+    new_social = RelationshipService.process_update(entity.social, update)
+
+    assert new_social.bonds[99].sentiment == pytest.approx(0.3)
+    assert new_social.bonds[99].role == RelationshipRole.NEUTRAL
+
+
+def test_derived_friend_role_is_not_demoted_by_a_later_mid_band_sentiment_update():
+    """SOC-248: once derived (not just explicitly role_set), a promotion is sticky against
+    a later sentiment_delta that lands back in the mid-band -- a regression-catching
+    assertion that a naive "always re-derive from current sentiment" implementation would
+    fail (it would silently reset role to NEUTRAL on the second update below)."""
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    first_update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, sentiment_delta=0.9)]
+    )
+    social_after_first = RelationshipService.process_update(entity.social, first_update)
+    assert social_after_first.bonds[99].role == RelationshipRole.FRIEND
+
+    second_update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, sentiment_delta=-0.3)]
+    )
+    social_after_second = RelationshipService.process_update(social_after_first, second_update)
+
+    assert social_after_second.bonds[99].sentiment == pytest.approx(0.6)
+    assert social_after_second.bonds[99].role == RelationshipRole.FRIEND
+
+
+def test_extreme_negative_sentiment_can_flip_an_existing_friend_role_to_rival():
+    """SOC-248: unlike nemesis_ids' own one-way-only promotion, a role derivation is not
+    one-way across the FRIEND/RIVAL boundary itself -- a real, extreme sentiment reversal
+    (e.g. a betrayal) can flip an existing FRIEND bond to RIVAL, since both are derived from
+    the same live sentiment signal, not independently latched flags."""
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    first_update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, sentiment_delta=0.9)]
+    )
+    social_after_first = RelationshipService.process_update(entity.social, first_update)
+    assert social_after_first.bonds[99].role == RelationshipRole.FRIEND
+
+    second_update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, sentiment_delta=-1.8)]
+    )
+    social_after_second = RelationshipService.process_update(social_after_first, second_update)
+
+    assert social_after_second.bonds[99].sentiment == pytest.approx(-0.9)
+    assert social_after_second.bonds[99].role == RelationshipRole.RIVAL
+
+
+def test_explicit_role_set_overrides_a_contradicting_derived_sentiment():
+    """SOC-248: an explicit role_set still takes priority over the sentiment-derivation
+    even when they'd disagree -- role_set remains a real, honored override, not dead
+    scaffolding replaced outright by the new derivation."""
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, sentiment_delta=0.9, role_set=RelationshipRole.RIVAL)]
+    )
+    new_social = RelationshipService.process_update(entity.social, update)
+
+    assert new_social.bonds[99].sentiment == pytest.approx(0.9)
+    assert new_social.bonds[99].role == RelationshipRole.RIVAL
+
+
+def test_zero_sentiment_delta_bond_update_does_not_touch_role():
+    """SOC-248: a bond_update with sentiment_delta left at its 0.0 default (e.g. a pure
+    familiarity or last_interaction_tick touch) must not evaluate role derivation at all --
+    this is TCK-20260824-RELATIONSHIP-ROLE-FIELD's own established
+    test_process_update_role_set_none_preserves_existing_role guarantee, re-asserted here
+    directly against the new derivation code path added by this ticket."""
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
+
+    first_update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, sentiment_delta=0.9)]
+    )
+    social_after_first = RelationshipService.process_update(entity.social, first_update)
+    assert social_after_first.bonds[99].role == RelationshipRole.FRIEND
+
+    second_update = SocialUpdate(
+        bond_updates=[SocialBondUpdate(target_id=99, familiarity_delta=0.1)]
+    )
+    social_after_second = RelationshipService.process_update(social_after_first, second_update)
+
+    assert social_after_second.bonds[99].role == RelationshipRole.FRIEND
+    assert social_after_second.bonds[99].familiarity == pytest.approx(0.1)
