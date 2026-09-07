@@ -43,7 +43,7 @@ def _fake_decide_factory(raw_score, family=RouteFamily.GATHER_RESOURCE, target_n
     and `selected.family`, so the scorer's normalization/metadata/target-resolution logic can
     be tested in isolation from route-generation nondeterminism (test_plan.md AC2 guidance)."""
 
-    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None):
+    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None):
         selected = AdventureRouteOption(
             family=family,
             score=raw_score,
@@ -206,7 +206,7 @@ def test_adventure_goal_scorer_ineligible_entity_returns_zero_utility_no_target(
 def test_adventure_goal_scorer_defer_with_reason_returns_zero_utility_no_target(monkeypatch):
     _eligible(monkeypatch)
 
-    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None):
+    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None):
         selected = AdventureRouteOption(
             family=RouteFamily.DEFER_WITH_REASON,
             score=0.01,
@@ -287,6 +287,75 @@ def test_form_party_target_pos_falls_back_to_entity_own_position_when_no_ally_ca
     state = _state(entities={1: entity})
     score = AdventureGoalScorer().score(entity, state)
     assert score.target_pos == (7.0, 8.0)
+
+
+# --- TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: region_culture_states bridge ---------
+
+
+def test_adventure_goal_scorer_threads_bridged_culture_state_for_entity_own_region(monkeypatch):
+    import dataclasses
+    from src.domains.culture.model import CultureState
+
+    _eligible(monkeypatch)
+    seen = {}
+
+    def _spy_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None):
+        seen["culture_state"] = culture_state
+        return AdventureDecisionResult(
+            selected=AdventureRouteOption(
+                family=RouteFamily.RECOVER, score=0.5, confidence=1.0,
+                expected_benefit=0.5, expected_risk=0.0,
+            ),
+            rejected=(), proposed_project=None, proposed_objective=None, trace={},
+        )
+
+    monkeypatch.setattr(AdventureDecisionService, "decide", _spy_decide)
+
+    entity = _entity()
+    entity = dataclasses.replace(
+        entity, navigation=dataclasses.replace(entity.navigation, region_id="hostile_region")
+    )
+    culture = CultureState(fatalism=0.8)
+    state = _state(entities={1: entity})
+    state.region_culture_states["hostile_region"] = culture
+
+    AdventureGoalScorer().score(entity, state)
+
+    assert seen["culture_state"] is culture
+
+
+def test_adventure_goal_scorer_culture_state_none_safe_when_region_or_entry_missing(monkeypatch):
+    import dataclasses
+
+    _eligible(monkeypatch)
+    seen = {}
+
+    def _spy_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None):
+        seen["culture_state"] = culture_state
+        return AdventureDecisionResult(
+            selected=AdventureRouteOption(
+                family=RouteFamily.RECOVER, score=0.5, confidence=1.0,
+                expected_benefit=0.5, expected_risk=0.0,
+            ),
+            rejected=(), proposed_project=None, proposed_objective=None, trace={},
+        )
+
+    monkeypatch.setattr(AdventureDecisionService, "decide", _spy_decide)
+
+    # Entity with no region_id yet (default None) -- must not raise.
+    entity = _entity()
+    state = _state(entities={1: entity})
+    AdventureGoalScorer().score(entity, state)
+    assert seen["culture_state"] is None
+
+    # Entity resolved to a region with no bridged entry -- must fall back to None, not KeyError.
+    entity2 = _entity(eid=2)
+    entity2 = dataclasses.replace(
+        entity2, navigation=dataclasses.replace(entity2.navigation, region_id="unbridged_region")
+    )
+    state2 = _state(entities={2: entity2})
+    AdventureGoalScorer().score(entity2, state2)
+    assert seen["culture_state"] is None
 
 
 # --- AC6 ---------------------------------------------------------------------------------

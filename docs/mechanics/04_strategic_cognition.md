@@ -518,12 +518,36 @@ wiring table.
 | `QUEST_OPPORTUNITY` | `greed` | **0.50** |
 | `BUY_UPGRADE`, `COMBAT_ENGAGE`, `DEFER_WITH_REASON` | (none) | 0.0 |
 
-Only one family match applies per route. Maximum personality_bias = 0.50 (greed routes).
+Only one family match applies per route. Maximum personality_bias = 0.50 (greed routes) from the
+trait-based table above.
 
 **Calibration history:** Weights were raised from a uniform 0.25 (E11C, 2026-06-28) after the
 E11B 1k-tick personality audit showed greed and sociability had Δ<0.05 effect on route
 selection. Bravery already exerts strong influence via risk_multiplier (multiplicative path)
 and was not changed.
+
+**Culture Drift branch (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, 2026-09-07):** an
+independent, additive second contribution to `personality_bias`, layered on top of the
+trait-based table above (both can apply to the same route at once — this branch is not part of
+the "only one family match" rule). When `AdventureRouteScorer.score()` receives a `culture_state`
+(the entity's current region's `CultureState`, bridged once per episode from
+`CampaignState.region_cultures` via `AuthoritativeState.region_culture_states`), and the route's
+family has a real Culture Drift tag mapping, `personality_bias` also receives
+`CulturalBiasApplicator.compute_culture_delta()`'s additive delta (E62C, bounded to
+`[-0.5, 1.0]`, reused unchanged from the already-shipped Culture Drift subsystem):
+
+| RouteFamily | Culture tags |
+|---|---|
+| `RECOVER` | `recovery`, `caution` |
+| `HUNT_WEAK_ENEMY` | `combat` |
+| `OWN_SURVIVAL` | `survival`, `flee` |
+| `FORM_PARTY` | `party` |
+| `PROTECT_TARGET` | `loyalty` |
+
+Every other `RouteFamily` value has no Culture Drift mapping and contributes 0.0 from this
+branch. This bypasses the pre-existing `MotivationBiasService`/`DoctrineResolver`/
+`IdentityDoctrine`/`ValuePreferenceProfile` chain, which was confirmed dead in production (see
+`docs/guidelines/intentional_divergences.md` §2.53 for the full disclosure).
 
 ### 6.5 blocker_penalty = 2.0 — Justification
 

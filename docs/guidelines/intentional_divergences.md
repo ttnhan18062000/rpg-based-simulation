@@ -45,6 +45,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Campaigns** | `CampaignState` Direct Mutation Bypasses `patches.py` for Episode-Boundary Deriver Exporters | **Bounded** | RATIFIED |
 | **Social/Clan** | Clan Reputation Folded Into P0-Certified `appraise_contract()` Stranger-Judgment Formula | **Bounded** | RATIFIED |
 | **Combat / Legality** | Mid-Tick Faction Mutation Can Flip a P0-Certified Friendly-Fire Legality Outcome by the Next Tick | **Bounded** | RATIFIED |
+| **AI / Motivation-Adventure Scoring** | Doctrine/Values Motivation Chain Confirmed Dead; Culture Drift Wired Into `personality_bias` Instead | **Bounded** | RATIFIED |
 
 ---
 
@@ -1573,6 +1574,53 @@ This document is the canonical record of intentional behavior shifts in `src` co
   applied at the next tick boundary via `ApplyPath.apply_partial()`. `docs/parity_ledger/
   combat_movement.yaml` COMB-294's own `v2_evidence` cross-references COMB-323 (this ticket's own
   parity entry) and this divergence entry in place, rather than leaving the interaction undisclosed.
+- **Status**: RATIFIED
+
+---
+
+### 2.53 Doctrine/Values Motivation Chain Confirmed Dead; Culture Drift Wired Into `personality_bias` Instead (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE) — cross-referenced as STRAT-227
+- **Subsystem**: AI / Motivation-Adventure Scoring
+- **Old Behavior**: `MotivationBiasService.compute_bias_multiplier()` (`src/domains/motivation/
+  service.py`), `DoctrineResolver.resolve()` (`src/domains/motivation/resolver.py`), and the
+  `IdentityDoctrine`/`ValuePreferenceProfile` records they operate on (`src/core/cognition.py`) were
+  assumed to be the live personality/doctrine-driven route-bias path — the intended integration point
+  for idea 57's (Living Legend Feedback Loop) Culture Drift signal, per the ticket's own inherited
+  investigation text.
+- **New Behavior**: Confirmed dead in production, not merely under-used. `DoctrineResolver.resolve()`
+  has zero real (non-test) callers: the only two `identity(class_id=...)` construction sites in the
+  whole codebase (`src/testing/scenario_runner.py`, `src/domains/campaigns/runner.py`) are test/
+  single-episode-analysis utilities, not the real corpus-world entity population path, so every real
+  entity's `class_id` stays at the bare default and `IdentityDoctrine` never differentiates in
+  production. `ValuePreferenceProfile`'s fields all default to exactly `0.5`, so `compute_bias_
+  multiplier()`'s `(value - 0.5) * 0.5` terms are mathematically guaranteed to evaluate to `0.0` for
+  every real entity even if the service were called. `compute_bias_multiplier()` itself has zero real
+  callers anywhere in `src/`. This entire chain is superseded by `AdventureRouteScorer.score()`'s own
+  already-live `personality_bias` mechanism (`src/domains/adventure/scoring.py`, STRAT-227), which
+  does the same conceptual job (personality/context → route-family bias) with real, populated
+  per-entity trait data instead. Culture Drift is now wired directly into that live `personality_bias`
+  block as a new additive branch — `AuthoritativeState.region_culture_states` (bridged once per
+  episode from `CampaignOrchestrator._build_initial_state()`, mirroring the existing `region_loyalty_
+  pressure` bridge pattern) is threaded through `AdventureGoalScorer.score()` →
+  `AdventureDecisionService.decide()` → `AdventureRouteScorer.score()`'s new `culture_state` parameter,
+  which adds `CulturalBiasApplicator.compute_culture_delta()` (`src/domains/culture/applicator.py`,
+  E62C, already shipped and live) for a small, real, family-specific tag set. The dead Doctrine/Values
+  chain itself is deliberately NOT revived and NOT deleted in this ticket — each of its four modules
+  now carries a "CONFIRMED DEAD LEGACY CODE" docstring disclosure cross-referencing this entry, rather
+  than being left silently unexplained.
+- **Rationale**: **Bounded**. Reviving a confirmed-dead chain (2 further dead subsystems' worth of
+  scope, per this ticket's own iterative investigation history) to carry one narrow signal would have
+  been materially out of proportion to the ask; extending the one real, already-live personality-bias
+  choke point with an additive branch is the minimal change that achieves the same real gameplay
+  effect without resurrecting or deleting unrelated legacy code, both of which were out of this
+  ticket's scope. Ratified by the orchestrating session via explicit user decision (2026-09-07:
+  "Decide now: bypass legacy, extend personality_bias") after the dead-chain finding was independently
+  re-verified against real source.
+- **Verification**: New Culture Drift branch in `AdventureRouteScorer.score()` covered by a dedicated
+  unit test proving a populated `CultureState` measurably changes `final_score` versus `culture_state=
+  None` for at least one real `RouteFamily`/tag combination (see this ticket's own Test Summary for
+  the exact test path). `docs/parity_ledger/strategic_cognition.yaml` STRAT-227's own `text`/
+  `v2_evidence` fields were updated in place to describe the new branch; `docs/mechanics/
+  04_strategic_cognition.md` §6.4 was updated with the corresponding note.
 - **Status**: RATIFIED
 
 ---

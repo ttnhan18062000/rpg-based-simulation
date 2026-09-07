@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Dict, Any, Set, Optional, List, Tuple, ClassVar, TYPE_CHECKING
 if TYPE_CHECKING:
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
+    from src.domains.culture.model import CultureState
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole, DiplomaticState
 from src.core.movement_modes import MovementMode
@@ -1363,6 +1364,13 @@ class AuthoritativeState:
     # per-tick input, not durable Kernel-produced state, so it stays out of equality/hash/repr —
     # matching feature_flags's own compare=False precedent immediately above.
     region_loyalty_pressure: Dict[str, float] = field(default_factory=dict, repr=False, compare=False)
+    # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: region_id -> CultureState, snapshotted once
+    # per episode by CampaignOrchestrator._build_initial_state() from CampaignState.region_cultures
+    # (mirrors region_loyalty_pressure's own bridge pattern immediately above). Read by
+    # AdventureGoalScorer.score() to feed a real Culture Drift bias branch into
+    # AdventureRouteScorer.score()'s personality_bias term. Read-only per-tick input, not durable
+    # Kernel-produced state, so it stays out of equality/hash/repr.
+    region_culture_states: Dict[str, "CultureState"] = field(default_factory=dict, repr=False, compare=False)
     recent_world_events: List["WorldEvent"] = field(default_factory=list)
     quest_registry: Dict[str, "QuestOpportunity"] = field(default_factory=dict)
     # Epic 4.2B: Durable registry of entities classified as information providers.

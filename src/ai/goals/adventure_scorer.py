@@ -134,6 +134,16 @@ class AdventureGoalScorer(GoalScorer):
             + ServiceOpportunityProvider.get_opportunities(entity, state)
         )
         candidates = AdventureRouteGenerator.generate(entity, state, opportunities=opportunities)
+
+        # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: resolve the entity's real current
+        # region and look up the bridged CultureState snapshot (None-safe: a region with no
+        # region_culture_states entry, or an entity with no region_id yet, simply supplies None,
+        # reproducing the exact pre-bridge behavior).
+        culture_state = None
+        region_id = entity.navigation.region_id
+        if region_id is not None:
+            culture_state = state.region_culture_states.get(region_id)
+
         result = AdventureDecisionService.decide(
             entity,
             candidates,
@@ -141,6 +151,7 @@ class AdventureGoalScorer(GoalScorer):
             resource_nodes=state.resource_nodes,
             faction_directives=None,
             factions=state.factions,
+            culture_state=culture_state,
         )
 
         # Risk #1 resolution (plan.md Step 3 decision, PORT): mirrors phase.py's own

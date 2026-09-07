@@ -49,7 +49,7 @@ def _eligible(monkeypatch):
 
 
 def _fake_decide_factory(raw_score, family, target_node_id=None):
-    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None):
+    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None):
         selected = AdventureRouteOption(
             family=family,
             score=raw_score,

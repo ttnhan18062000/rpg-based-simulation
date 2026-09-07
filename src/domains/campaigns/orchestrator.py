@@ -764,11 +764,22 @@ class CampaignOrchestrator:
             for region_id in sorted(self._state.region_cultures.keys())
         }
 
+        # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: snapshot region_cultures's own
+        # CultureState objects (not a derived scalar, unlike region_loyalty_pressure above) so
+        # AdventureGoalScorer.score() can feed a real Culture Drift bias branch into
+        # AdventureRouteScorer.score()'s personality_bias term. Same sorted-iteration
+        # determinism discipline as region_loyalty_pressure immediately above.
+        region_culture_states = {
+            region_id: self._state.region_cultures[region_id].culture
+            for region_id in sorted(self._state.region_cultures.keys())
+        }
+
         return AuthoritativeState(
             tick=0,
             seed=episode_seed,
             entities=entities,
             region_loyalty_pressure=region_loyalty_pressure,
+            region_culture_states=region_culture_states,
         )
 
     # ── spawn helpers ──────────────────────────────────────────────────────────

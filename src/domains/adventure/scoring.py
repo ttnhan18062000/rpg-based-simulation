@@ -28,6 +28,26 @@ if TYPE_CHECKING:
     from src.core.state import GroupRecord
     from src.domains.campaigns.progression_plan import ProgressionPlan
     from src.engine.faction_decision import FactionDirective
+    from src.domains.culture.model import CultureState
+
+
+# TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: real RouteFamily -> Culture Drift tag mapping,
+# grounded directly in CulturalBiasApplicator.compute_culture_delta()'s own real tag vocabulary
+# (src/domains/culture/applicator.py: _FATALISM_POSITIVE/_FATALISM_NEGATIVE/_HERO_POSITIVE/
+# _SCARCITY_POSITIVE/_CONFLICT_POSITIVE/_CONFLICT_NEGATIVE — {caution, recovery, flee, pride,
+# combat, aggressive, loyalty, party, survival}, confirmed via direct read; NOT an invented or
+# assumed wider vocabulary). Only RouteFamily values with a genuine, non-forced semantic match are
+# mapped — mirrors personality_bias's own existing pattern immediately below, which likewise does
+# not cover every RouteFamily value (BUY_UPGRADE/TRAIN_SKILL/RETURN_TOWN/DEFER_WITH_REASON/
+# ASK_INFORMATION/SCOUT_LOCATION/SELL_LOOT_FOR_GOLD/TAKE_EASY_QUEST have no real culture-tag match
+# either and are deliberately left uncovered, contributing 0.0, not forced into a weak fit).
+_CULTURE_DRIFT_TAGS_BY_FAMILY: Dict[RouteFamily, frozenset] = {
+    RouteFamily.RECOVER: frozenset({"recovery", "caution"}),
+    RouteFamily.HUNT_WEAK_ENEMY: frozenset({"combat"}),
+    RouteFamily.OWN_SURVIVAL: frozenset({"survival", "flee"}),
+    RouteFamily.FORM_PARTY: frozenset({"party"}),
+    RouteFamily.PROTECT_TARGET: frozenset({"loyalty"}),
+}
 
 
 class AdventureRouteScorer:
@@ -46,11 +66,21 @@ class AdventureRouteScorer:
         faction_directives: Optional[list] = None,
         factions: Optional[Any] = None,
         progression_plan: Optional["ProgressionPlan"] = None,
+        culture_state: Optional["CultureState"] = None,
     ) -> AdventureRouteOption:
         """
         Calculate subjective score for the route option and return updated option.
         Formula:
             score = urgency + benefit + personality_bias + plan_advance_bonus + memory_adjustment + confidence_bonus - risk_penalty - blocker_penalty
+
+        culture_state (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, optional): the entity's
+        real current region's CultureState, bridged from CampaignState.region_cultures by
+        CampaignOrchestrator._build_initial_state() and threaded down from
+        AdventureGoalScorer.score() via AdventureDecisionService.decide(). When supplied and the
+        route's family has a real Culture Drift tag mapping (_CULTURE_DRIFT_TAGS_BY_FAMILY above),
+        adds an additive delta to personality_bias via
+        CulturalBiasApplicator.compute_culture_delta() — see that block below for the real
+        vocabulary/mapping this reuses.
 
         Optional group context enables class-synergy multipliers (SOC-229):
           - WARRIOR + MAGE both present in group.roles → HUNT_WEAK_ENEMY score ×1.15
@@ -221,6 +251,21 @@ class AdventureRouteScorer:
             personality_bias += sociability * 0.40
         elif route.family == RouteFamily.QUEST_OPPORTUNITY:
             personality_bias += greed * 0.50
+
+        # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: Culture Drift bias, additive and
+        # independent of the trait-based if/elif chain above (a route can be affected by both a
+        # personality trait AND regional culture at once, unlike the trait chain's own
+        # one-match-only structure). Deliberately bypasses the dead MotivationBiasService/
+        # DoctrineResolver/IdentityDoctrine/ValuePreferenceProfile chain (see docs/guidelines/
+        # intentional_divergences.md §2.53) — reuses the same real, already-shipped
+        # CulturalBiasApplicator.compute_culture_delta() logic that idea-56/57's own investigation
+        # found this codebase already has, just never wired to a live route-scoring consumer.
+        if culture_state is not None:
+            culture_tags = _CULTURE_DRIFT_TAGS_BY_FAMILY.get(route.family)
+            if culture_tags:
+                from src.domains.culture.applicator import CulturalBiasApplicator
+
+                personality_bias += CulturalBiasApplicator.compute_culture_delta(culture_state, culture_tags)
 
         # ── 4b. Plan-Advance Bonus ──────────────────────────────────────────
         # +1.5 flat bonus when this route's family matches the head BuildGoal's

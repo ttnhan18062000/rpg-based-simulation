@@ -8,9 +8,12 @@ and constructs the final bridge state using RouteToProjectMapper.
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional, TYPE_CHECKING
 
 from src.core.state import EntityState, ResourceNodeState
+
+if TYPE_CHECKING:
+    from src.domains.culture.model import CultureState
 from src.domains.adventure.schema import (
     RouteFamily,
     AdventureRouteOption,
@@ -35,10 +38,15 @@ class AdventureDecisionService:
         resource_nodes: Optional[Dict[int, ResourceNodeState]] = None,
         faction_directives: Optional[list] = None,
         factions: Optional[Any] = None,
+        culture_state: Optional["CultureState"] = None,
     ) -> AdventureDecisionResult:
         """
         Evaluate candidates, score them using Personality biased heuristics,
         and select the highest scoring valid option.
+
+        culture_state (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, optional): the entity's
+        real current region's CultureState, threaded through unchanged to
+        AdventureRouteScorer.score()'s own Culture Drift bias branch.
         
         Args:
             entity: The current EntityState (immutable view)
@@ -75,6 +83,7 @@ class AdventureDecisionService:
                 resource_nodes=resource_nodes,
                 faction_directives=faction_directives,
                 factions=factions,
+                culture_state=culture_state,
             )
             scored_candidates.append(scored)
 

@@ -2532,7 +2532,15 @@
     \ call instead of route.confidence, same 0.15 weight; all other routes, and mapped\
     \ routes whose key cannot be resolved, keep route.confidence \xD7 0.15; entity.self_model.capabilities\
     \ itself remains unpopulated in production; all constants documented in docs/mechanics/04_strategic_cognition.md\
-    \ \xA76.12."
+    \ \xA76.12. TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE (2026-09-07) adds a\
+    \ Culture Drift branch: when a `culture_state` (CultureState) is supplied, personality_bias\
+    \ also receives an additive CulturalBiasApplicator.compute_culture_delta() delta\
+    \ for the 5 RouteFamily values with a real tag mapping (RECOVER, HUNT_WEAK_ENEMY,\
+    \ OWN_SURVIVAL, FORM_PARTY, PROTECT_TARGET) -- independent of, and additive with,\
+    \ the trait-based if/elif chain above. culture_state is bridged once per episode\
+    \ from CampaignState.region_cultures via AuthoritativeState.region_culture_states\
+    \ (see docs/guidelines/intentional_divergences.md \xA72.53 for the dead Doctrine/Values\
+    \ chain this bypasses)."
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2562,11 +2570,18 @@
     \ becomes non-empty with avoid_enemy advice end-to-end through the real pipeline.\
     \ confidence_bonus capability-driven source for GATHER_RESOURCE/ CRAFT_UPGRADE,\
     \ ad-hoc CapabilityEstimateService.estimate() call, SelfModelUpdatePhase.apply()\
-    \ still never passes capability_context (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING)."
+    \ still never passes capability_context (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING).\
+    \ Culture Drift branch (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE): src/domains/adventure/scoring.py\
+    \ _CULTURE_DRIFT_TAGS_BY_FAMILY + the culture_state block in AdventureRouteScorer.score();\
+    \ src/domains/culture/applicator.py CulturalBiasApplicator.compute_culture_delta()\
+    \ (E62C, reused unchanged); state.region_culture_states bridged by src/domains/campaigns/orchestrator.py\
+    \ CampaignOrchestrator._build_initial_state() and consumed by src/ai/goals/adventure_scorer.py\
+    \ AdventureGoalScorer.score()."
   proof_type: parity
   test_path: tests/unit/domains/adventure/test_phase3_route_scoring.py; tests/unit/domains/adventure/test_depletion_scoring.py;
     tests/unit/domains/adventure/test_memory_informed_scoring.py; tests/unit/domains/adventure/test_capability_confidence_scoring.py;
-    tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py
+    tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py; tests/unit/domains/adventure/test_culture_drift_route_bias.py;
+    tests/unit/ai/goals/test_adventure_goal_scorer.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-228
