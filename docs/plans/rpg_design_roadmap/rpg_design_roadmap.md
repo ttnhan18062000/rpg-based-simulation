@@ -290,7 +290,18 @@ new corpus world (50, 64) were found, 2026-09-06, to have never actually shipped
 mechanism at all — idea 64 specifically contradicts M4's own "all 12 ideas shipped" claim above, a real
 discrepancy flagged for a future audit, not resolved here.
 
+### M10 — Deferred Ideas Backlog (scheduled, not started)
 
+**Tracking epic**: none yet — created only once real implementation work on this milestone begins.
+Tracked for now under `TCK-20260907-EPIC-RPG-DORMANT-MECHANISM-CLOSURE`'s own
+`TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS` disposition ticket.
+
+**Ideas 50 (Material-Gated Evolution) and 64 (The Empty Chair)** — both confirmed still fully
+unbuilt (zero real code for `alt_outcome_kind`/`EconomicVacancyEvent`) as of 2026-09-07, re-checked
+against M9's own 2026-09-06 finding. Roadmap-owner decision, 2026-09-07: **schedule both for a
+future milestone** rather than retire — real feature-design work, not resolved by this backlog
+entry. No scope, sequencing, or implementation detail is decided here; whoever picks up M10 starts
+from a fresh Investigate pass against these ideas' original atlas cards, not from this note.
 
 ## Temporal axis (added dimension, 2026-08-28 brainstorm)
 

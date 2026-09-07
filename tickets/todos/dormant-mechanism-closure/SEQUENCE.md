@@ -30,6 +30,15 @@ never overlap for the same tick), not a missing-corpus-content gap as originally
 DONE as an investigation (+ a real, ready-to-use new corpus world), split into
 `TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION`.
 
+**2026-09-07 update 3:** `TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION` (idea 30) landed DONE —
+real user decision: defer, leave `ENABLE_ITEM_INSTANCE_HISTORY` OFF (confirmed zero producer AND
+zero consumer, unlike every other ticket here). `TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS`
+also landed DONE, but found the epic's own scoping premise for idea 62 was stale — idea 62
+(Chronicle Fidelity Drift) and idea 63 (Belief Institution) had already shipped 2026-09-05, not
+blocked as originally claimed. Real remaining gap ("no live consumer," same shape as tickets 4-5's
+own idea 56/57 gap) split into a new ticket, `TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING` — not
+in the original 6-ticket plan, grows this batch to 10 real tickets total.
+
 ## Order
 
 1. ~~TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE~~ — **DONE, 2026-09-07** (idea 56 only; idea 57 split
@@ -45,8 +54,15 @@ DONE as an investigation (+ a real, ready-to-use new corpus world), split into
     split out of ticket 6)
 6c. ~~TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD~~ — **DONE, 2026-09-07** (hotfix found
     while implementing ticket 6, fixes a real regression in tickets 4-5's own bridge fields)
-7. TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION  (P3 — product decision, idea 30)
-8. TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS  (P3 — product decisions, ideas 50/62/64)
+7. ~~TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION~~ — **DONE, 2026-09-07** (real decision: defer idea
+   30, `ENABLE_ITEM_INSTANCE_HISTORY` stays OFF — confirmed zero producer AND zero consumer)
+8. ~~TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS~~ — **DONE, 2026-09-07** (ideas 50/64 scheduled
+   for a future milestone, not retired; found the epic's own idea-62 premise was stale — both 62/63
+   already shipped — split real remaining gap into ticket 8b below)
+8b. TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING  (P2 — NEW, not in the original 6-ticket plan: wire
+    idea 62/63's `FidelityState`/`BeliefInstitution` into a live `personality_bias` consumer,
+    matching tickets 4-5's own pattern; hard-depends on tickets 4-5 already having landed, since it
+    reuses their `personality_bias`/carry-forward infrastructure directly)
 9. TCK-20260907-CHURCH-CONTENT-AUTHORING  (P3 — pure content, lowest risk)
 
 ## Why This Order Matters
