@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260907-EPIC-RPG-DORMANT-MECHANISM-CLOSURE
-phase: open
+phase: done
 date: 2026-09-07
 tags: [simulation-quality, content, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, content, architecture]
 Dormant Mechanism Closure — tracking epic for the 6-ticket observe-and-fix pass across the 64 shipped ideas
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -80,8 +80,9 @@ This epic tracks child tickets only; no direct implementation happens here.
 ## Acceptance Criteria
 - [x] This epic ticket exists at `## Status: EPIC_SCOPED`, listing all 6 child tickets, with no
       implementation performed as part of closing this acceptance criterion.
-- [ ] A future session that picks up any child ticket runs it through the full standard-tier pipeline
-      and links back to this epic.
+- [x] A future session that picks up any child ticket runs it through the full standard-tier pipeline
+      and links back to this epic. All 14 child tickets (grown from the original 6) landed this way,
+      each linking back here.
 
 ## Related Tickets
 ### Child tickets (see `tickets/todos/dormant-mechanism-closure/SEQUENCE.md`)
@@ -96,7 +97,8 @@ This epic tracks child tickets only; no direct implementation happens here.
 - `TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING` (P1 — DONE 2026-09-07: idea 57's own narrow piece,
   a Living Legend `personality_bias` branch — closes idea 57's entire revival chain)
 - `TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH` (P2 — DONE 2026-09-07, appended onto PR #143 since it
-  directly extended the Social & Political Mechanics Bible chapter authored there)
+  directly extended the Social & Political Mechanics Bible chapter authored there; PR #143 merged
+  2026-09-07, `1500384f` — genuinely shipped on `main`)
 - `TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO` (P2 — DONE 2026-09-07 as an investigation: the real
   blocker is structural, not a corpus-content gap — split into the ticket below)
 - `TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION` (P2 — DONE 2026-09-07: real
@@ -277,10 +279,8 @@ folded in as if it were always the plan. Listed chronologically, 2026-09-07 unle
    Political Mechanics Bible chapter authored in PR #143, its implementation
    (`TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH`, commit `8cd2555b` on branch
    `social-mechanics-bible-chapter`) landed on that branch instead of this epic's own branch.
-   **Caveat for reviewer**: as of this writing PR #143 is still `state: OPEN`, `mergedAt: null` —
-   this decision's actual code is not yet on `main` despite the ticket being tracked DONE in this
-   epic's own `## Related Tickets` list above. Do not treat idea 56's social-role wiring as shipped
-   until PR #143 itself merges.
+   **Resolved 2026-09-07**: PR #143 merged (`1500384f`) — this decision's code is now genuinely on
+   `main`. Idea 56's social-role wiring is fully shipped.
 
 8. **`TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION` — idea 30 deferred, not activated.**
    Found (orchestrator-directed, scope-bounded investigation fork): unlike every other mechanism
@@ -359,17 +359,40 @@ folded in as if it were always the plan. Listed chronologically, 2026-09-07 unle
       `QUEST_OPPORTUNITY` as an implementation-convenience choice rather than a settled
       architectural constraint.
 
-**All 14 tickets in this batch are now DONE** (grown from an original scope of 6 — 13 from the
-epic itself, plus this review round's own CI hotfix), **except**
-`TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH`, whose real code lives on the separate,
-still-unmerged PR #143 branch rather than this one — see decision #7 above. One further ticket,
-`TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE`, was filed but deliberately left OPEN for
-future investigation, not implemented as part of this epic. This epic ticket stays open (not moved
-to `tickets/done/`) until PR #143 merges; at that point a final housekeeping pass should close this
-epic ticket for real.
+**All 14 tickets in this batch are DONE** (grown from an original scope of 6 — 13 from the epic
+itself, plus the review round's own CI hotfix), **including** `TCK-20260907-SOCIALBOND-ROLE-WRITE-
+PATH` — PR #143 merged 2026-09-07 (`1500384f`), so its code is now genuinely on `main`. One further
+ticket, `TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE`, was filed but deliberately left
+OPEN for future investigation, not implemented as part of this epic — that is the epic's only
+remaining open thread. This epic ticket is now closed.
 
 ## Test Summary
+This epic tier tracked child tickets only; no direct implementation happened here. Each of the 14
+child tickets carries its own real test coverage in its own `## Test Summary` section
+(`tickets/done/TCK-20260907-*.md`). Two independent full-regression sweeps were run directly by
+the orchestrator (not just accepted from sub-agent self-reports) across the merged result:
+`architecture`/`docs`/`integrity`/`static`/`refactor`/`tools` (3083 passed) and the epic's own
+core touched areas (`strategic`/`adventure`/`campaigns`/`engine`/`information`/`social`/etc., 1307
+passed) — both clean, 0 failed, on the final merged state including PR #143's own content.
 
 ## Files Changed
+See each child ticket's own `## Files Changed` section — too numerous to usefully list here (14
+tickets spanning `src/engine/`, `src/domains/`, `src/ai/`, `data/worlds/`, `docs/`, `tests/`, and
+this epic's own tracking docs).
 
 ## Completion Summary
+Closed the real, disclosed "built but not observable" gap class M5-M9 each found and deliberately
+left unfixed. Grew from an original 6-ticket scoping pass to 14 real tickets as each child
+ticket's own Investigate phase found the real scope, blocker, or correct fix differed from what
+was originally assumed — every deviation is recorded chronologically in this ticket's own
+`## Implementation Notes` (11 numbered decisions), including two process incidents where a fork
+subagent bypassed the orchestrator (reported separately via `SendFeedback`, not hidden) and an
+independent review round (`rpg-feature-planning`) that found 3 real CI regressions plus pushed
+back successfully on one design decision (CHURCH placement, reversed to match idea 30's more
+consistent "fully deferred" treatment).
+
+Final state: all 14 tickets DONE, including `SOCIALBOND-ROLE-WRITE-PATH` (PR #143, merged
+`1500384f`). One further ticket, `TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE`, was
+deliberately filed but left open — a real determinism-coverage question this epic's own work
+surfaced, genuinely out of this epic's scope to resolve unilaterally. PR #144 carries the full
+branch; both PRs independently reviewed (twice) before landing.

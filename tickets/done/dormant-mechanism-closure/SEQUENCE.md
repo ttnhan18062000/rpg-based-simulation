@@ -99,3 +99,8 @@ coverage question spanning all 6 `CampaignState`-bridge fields this batch added,
 investigation). Ticket 9 (CHURCH) was reversed: after review, `CHURCH` is now deferred (not
 placed), matching ticket 7's own idea-30 treatment for the same "no producer, no consumer" shape.
 See the epic ticket's own `## Implementation Notes` decision #11 for the full record.
+
+**2026-09-07 update 5 (closure):** PR #143 merged (`1500384f`) — ticket 2's
+(`SOCIALBOND-ROLE-WRITE-PATH`) code is now genuinely on `main`. All 14 tickets in this batch are
+DONE. Epic ticket `TCK-20260907-EPIC-RPG-DORMANT-MECHANISM-CLOSURE` closed and moved to
+`tickets/done/`; this folder moved alongside it, per the standard folder-close convention.
