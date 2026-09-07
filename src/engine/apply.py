@@ -471,6 +471,15 @@ class ApplyPath:
             region_loyalty_pressure=prior_state.region_loyalty_pressure,
             region_culture_states=prior_state.region_culture_states,
             entity_legend_facts=prior_state.entity_legend_facts,
+            # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: same episode-scoped bridge
+            # carry-forward pattern as region_culture_states/entity_legend_facts immediately
+            # above — populated once per episode by CampaignOrchestrator._build_initial_state(),
+            # never mutated mid-episode, only read by AdventureGoalScorer.score(). Added directly
+            # alongside the constructor field in the same change, per this ticket's own AC4, to
+            # avoid repeating the exact regression APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD
+            # fixed for the 3 sibling fields above.
+            entity_belief_institutions=prior_state.entity_belief_institutions,
+            event_fidelity=prior_state.event_fidelity,
             # TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION: reclassifies
             # information_source_profiles from Bounded/single-fire (the §2.23 framing above) to
             # persistent — it is conceptually a static world-level catalog, not a one-shot event

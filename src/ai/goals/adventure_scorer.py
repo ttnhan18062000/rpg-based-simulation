@@ -152,6 +152,16 @@ class AdventureGoalScorer(GoalScorer):
         # (str), not an int entity id" — src/domains/fame/exporter.py).
         legend_fact = state.entity_legend_facts.get(str(entity.id))
 
+        # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: resolve this entity's own bridged
+        # BeliefInstitution adherent memberships (None-safe via .get(..., ()): an entity with no
+        # entity_belief_institutions entry — not a real adherent of any belief institution —
+        # simply supplies an empty tuple, reproducing exact pre-bridge behavior). Keyed by int
+        # entity.id, matching BeliefInstitution.adherent_entity_ids's own real element type
+        # directly (unlike entity_legend_facts's str(entity.id) keying above, no re-keying
+        # needed). event_fidelity is passed through unfiltered — the scorer itself looks up only
+        # the specific origin_event_id(s) it needs.
+        belief_institutions = state.entity_belief_institutions.get(entity.id, ())
+
         result = AdventureDecisionService.decide(
             entity,
             candidates,
@@ -161,6 +171,8 @@ class AdventureGoalScorer(GoalScorer):
             factions=state.factions,
             culture_state=culture_state,
             legend_fact=legend_fact,
+            belief_institutions=belief_institutions,
+            event_fidelity=state.event_fidelity,
         )
 
         # Risk #1 resolution (plan.md Step 3 decision, PORT): mirrors phase.py's own

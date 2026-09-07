@@ -2552,7 +2552,26 @@
     \ ApplyPath.apply_generation() past tick 1 of any real episode (same gap as SOC-276's\
     \ region_loyalty_pressure) -- both the Culture Drift and Living Legend branches\
     \ above were silently inert from tick 2 onward until this fix. Now genuinely persist\
-    \ for the whole episode."
+    \ for the whole episode. Belief Institution branch (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING,\
+    \ 2026-09-07): when belief_institutions (a tuple of BeliefInstitution snapshots\
+    \ this entity is a real adherent of) is supplied and route.family == QUEST_OPPORTUNITY,\
+    \ personality_bias also receives an additive term equal to the strongest fidelity-scaled\
+    \ belief_strength among the entity's real memberships times 0.30 -- max across\
+    \ memberships, not summed (one entity in N belief institutions is one 'does my\
+    \ in-group revere a legend' signal, not N independent ones) -- independent of,\
+    \ and additive with, the trait-based chain, Culture Drift, and Living Legend branches\
+    \ above. Each institution's belief_strength is scaled by event_fidelity.get(institution.origin_event_id,\
+    \ 1.0) before the max is taken -- a belief formed around a heavily-mythologized/decayed-fidelity\
+    \ event carries less real-history weight than one still faithful to the original\
+    \ record. belief_institutions is bridged once per episode from CampaignState.belief_institutions\
+    \ via AuthoritativeState.entity_belief_institutions (keyed directly off each institution's\
+    \ own real adherent_entity_ids -- no separate clans lookup needed at scoring time);\
+    \ event_fidelity is bridged the same way from CampaignState.historical_drift via\
+    \ AuthoritativeState.event_fidelity (entry_id -> fidelity scalar only). Both are\
+    \ carried forward every tick by ApplyPath.apply_generation() in the same commit\
+    \ that introduced them, avoiding the exact regression TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD\
+    \ fixed for the sibling region_culture_states/entity_legend_facts fields. See\
+    \ docs/guidelines/intentional_divergences.md section 2.55 for the full rationale."
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2592,13 +2611,19 @@
     \ src/domains/adventure/scoring.py legend_fact block in AdventureRouteScorer.score();\
     \ state.entity_legend_facts bridged by src/domains/campaigns/orchestrator.py CampaignOrchestrator._build_initial_state()\
     \ via src/domains/fame/legend.py LegendFactService.for_entity(), consumed by src/ai/goals/adventure_scorer.py\
+    \ AdventureGoalScorer.score(). Belief Institution branch (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING):\
+    \ src/domains/adventure/scoring.py belief_institutions/event_fidelity block in\
+    \ AdventureRouteScorer.score(); state.entity_belief_institutions/state.event_fidelity\
+    \ bridged by src/domains/campaigns/orchestrator.py CampaignOrchestrator._build_initial_state()\
+    \ from CampaignState.belief_institutions/historical_drift, consumed by src/ai/goals/adventure_scorer.py\
     \ AdventureGoalScorer.score()."
   proof_type: parity
   test_path: tests/unit/domains/adventure/test_phase3_route_scoring.py; tests/unit/domains/adventure/test_depletion_scoring.py;
     tests/unit/domains/adventure/test_memory_informed_scoring.py; tests/unit/domains/adventure/test_capability_confidence_scoring.py;
     tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py; tests/unit/domains/adventure/test_culture_drift_route_bias.py;
     tests/unit/ai/goals/test_adventure_goal_scorer.py; tests/unit/domains/adventure/test_legend_fact_route_bias.py;
-    tests/unit/domains/campaigns/test_fame_wiring.py; tests/unit/engine/test_apply_generation_episode_bridge_carryforward.py
+    tests/unit/domains/campaigns/test_fame_wiring.py; tests/unit/engine/test_apply_generation_episode_bridge_carryforward.py;
+    tests/unit/domains/adventure/test_belief_institution_route_bias.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-228

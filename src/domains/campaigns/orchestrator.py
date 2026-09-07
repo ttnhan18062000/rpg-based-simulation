@@ -789,6 +789,30 @@ class CampaignOrchestrator:
             if fact is not None:
                 entity_legend_facts[subject_id] = fact
 
+        # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: snapshot idea 63's belief_institutions
+        # (keyed "{clan_id}:{origin_event_id}") into a per-entity-id dict — each
+        # BeliefInstitution's own adherent_entity_ids already carries the real int entity ids
+        # directly, so no separate clans lookup is needed. One entity can be a real adherent of
+        # more than one belief institution at once (different clans/legends), hence the tuple
+        # value rather than a single BeliefInstitution. Sorted iteration over
+        # belief_institutions.keys() for the same determinism discipline as
+        # region_loyalty_pressure/region_culture_states/entity_legend_facts above.
+        entity_belief_institutions: Dict[int, tuple] = {}
+        for _key, _carry_forward in sorted(self._state.belief_institutions.items()):
+            institution = _carry_forward.institution
+            for eid in institution.adherent_entity_ids:
+                entity_belief_institutions[eid] = entity_belief_institutions.get(eid, ()) + (institution,)
+
+        # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: snapshot idea 62's historical_drift
+        # (keyed by NarrativeLedgerEntry.entry_id) into a plain entry_id -> fidelity scalar dict —
+        # only the scalar is needed to scale entity_belief_institutions's own belief_strength
+        # contribution at scoring time, not the full FidelityCarryForward record. Sorted
+        # iteration for the same determinism discipline as the bridges above.
+        event_fidelity = {
+            entry_id: _carry_forward.fidelity.fidelity
+            for entry_id, _carry_forward in sorted(self._state.historical_drift.items())
+        }
+
         return AuthoritativeState(
             tick=0,
             seed=episode_seed,
@@ -796,6 +820,8 @@ class CampaignOrchestrator:
             region_loyalty_pressure=region_loyalty_pressure,
             region_culture_states=region_culture_states,
             entity_legend_facts=entity_legend_facts,
+            entity_belief_institutions=entity_belief_institutions,
+            event_fidelity=event_fidelity,
         )
 
     # ── spawn helpers ──────────────────────────────────────────────────────────

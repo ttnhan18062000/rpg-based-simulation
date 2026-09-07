@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
     from src.domains.culture.model import CultureState
     from src.domains.fame.legend import LegendFact
+    from src.domains.belief_institution.model import BeliefInstitution
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole, DiplomaticState
 from src.core.movement_modes import MovementMode
@@ -1388,6 +1389,30 @@ class AuthoritativeState:
     # region_culture_states immediately above. Carried forward across every tick by
     # ApplyPath.apply_generation() (TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD).
     entity_legend_facts: Dict[str, "LegendFact"] = field(default_factory=dict, repr=False, compare=False)
+    # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: entity_id (int, matching
+    # BeliefInstitution.adherent_entity_ids's own real element type -- unlike
+    # entity_legend_facts's str keying above, no re-keying needed) -> the tuple of
+    # BeliefInstitution snapshots that entity is a real adherent of, snapshotted once per episode
+    # by CampaignOrchestrator._build_initial_state() from CampaignState.belief_institutions.
+    # Mirrors entity_legend_facts's own bridge pattern immediately above. Read by
+    # AdventureGoalScorer.score() to feed idea 62/63's belief-strength (scaled by the matching
+    # idea-62 event_fidelity entry, when present) into AdventureRouteScorer.score()'s
+    # personality_bias term. Read-only per-tick input, not durable Kernel-produced state, so it
+    # stays out of equality/hash/repr. Carried forward across every tick by
+    # ApplyPath.apply_generation() (same TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD
+    # pattern as region_culture_states/entity_legend_facts).
+    entity_belief_institutions: Dict[int, Tuple["BeliefInstitution", ...]] = field(default_factory=dict, repr=False, compare=False)
+    # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: NarrativeLedgerEntry.entry_id -> idea 62's
+    # own FidelityState.fidelity scalar (not the full FidelityCarryForward record -- only the
+    # scalar is needed at scoring time), snapshotted once per episode by
+    # CampaignOrchestrator._build_initial_state() from CampaignState.historical_drift. Used to
+    # scale entity_belief_institutions's own belief_strength contribution by how faithfully
+    # accurate the underlying legend's historical record still is (a belief institution formed
+    # around a heavily-mythologized/decayed-fidelity event should carry less real-history weight
+    # than one still close to its origin). Read-only per-tick input, not durable Kernel-produced
+    # state, so it stays out of equality/hash/repr. Carried forward across every tick by
+    # ApplyPath.apply_generation() (same pattern as entity_belief_institutions immediately above).
+    event_fidelity: Dict[str, float] = field(default_factory=dict, repr=False, compare=False)
     recent_world_events: List["WorldEvent"] = field(default_factory=list)
     quest_registry: Dict[str, "QuestOpportunity"] = field(default_factory=dict)
     # Epic 4.2B: Durable registry of entities classified as information providers.

@@ -1668,6 +1668,62 @@ This document is the canonical record of intentional behavior shifts in `src` co
 
 ---
 
+### 2.55 Chronicle Fidelity Drift and Belief Institution Gain a Live Consumer via `personality_bias` (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING)
+- **Subsystem**: AI / Adventure Route Scoring, World Dynamics
+- **Old Behavior**: idea 62 (Chronicle Fidelity Drift, `src/domains/fidelity/`) and idea 63 (Belief
+  Institution, `src/domains/belief_institution/`) shipped 2026-09-05 each explicitly disclosed as
+  having no live consumer — the terminal ideas in the M5 Fame → Fidelity → Belief-Institution chain,
+  unit-tested only. This epic's own scoping pass on 2026-09-07 further mis-stated idea 62 as
+  "blocked on idea 63 not existing," a stale premise corrected by
+  `TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS`.
+- **New Behavior**: Both wired into `AdventureRouteScorer.score()`'s live `personality_bias`
+  mechanism, following the exact bridge-and-wire pattern §2.53 established for idea 57's own
+  `LegendFact`/Living Legend branch. `CampaignOrchestrator._build_initial_state()` snapshots
+  `CampaignState.belief_institutions` into `AuthoritativeState.entity_belief_institutions`
+  (`Dict[int, Tuple[BeliefInstitution, ...]]`, keyed directly off each institution's own real
+  `adherent_entity_ids` — no separate `clans` lookup needed) and `CampaignState.historical_drift`
+  into `AuthoritativeState.event_fidelity` (`Dict[str, float]`, entry_id → fidelity scalar only, not
+  the full `FidelityCarryForward` record). Both are carried forward every tick by
+  `ApplyPath.apply_generation()` in the same commit that introduced them, avoiding the exact
+  regression `TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD` fixed for the sibling
+  fields. `AdventureGoalScorer.score()` resolves both per entity and threads them through
+  `AdventureDecisionService.decide()` into a new `AdventureRouteScorer.score()` branch: for
+  `QUEST_OPPORTUNITY` routes, the strongest fidelity-scaled `belief_strength` among the entity's real
+  adherent memberships (max, not sum — one entity in N belief institutions is conceptually one
+  "does my in-group revere a legend" signal, not N independent ones) adds `strongest * 0.30` to
+  `personality_bias`, additive and independent of the trait, Culture Drift, and Living Legend
+  branches above it.
+- **Rationale**: **Bounded**. Reused the existing bridge/wire infrastructure §2.53/idea-57 already
+  built rather than inventing a new consumer mechanism — the minimal change that gives both real
+  chains an actual gameplay effect. `FidelityState`'s own scaling role (dampening a belief's weight
+  by how faithfully accurate its origin event's historical record remains) was chosen over inventing
+  a second, separate `RouteFamily` branch for fidelity alone, since fidelity has no independent
+  per-entity meaning outside the belief-institution context it decays alongside — evaluated and
+  rejected as a candidate for `PROTECT_TARGET` (would require a real escort-target-to-legend-subject
+  cross-reference not evidenced by any existing data shape) in favor of this simpler, directly-
+  evidenced design. Ratified by the orchestrating session via explicit user decision (2026-09-07:
+  "Add a new wiring ticket now") after the stale-premise finding was independently re-verified
+  against real source (`src/domains/fidelity/`, `src/domains/belief_institution/`).
+- **Verification**: New branch covered by
+  `tests/unit/domains/adventure/test_belief_institution_route_bias.py` (6 tests: additive bonus,
+  unmapped-route no-op, empty-tuple/omitted equivalence, fidelity scaling including missing-entry
+  1.0 default, strongest-not-summed across multiple memberships, additivity with the Living Legend
+  branch). Bridge construction covered by two new tests in
+  `tests/unit/domains/campaigns/test_fame_wiring.py`
+  (`test_build_initial_state_bridges_belief_institutions_and_fidelity_by_entity_id`). Carry-forward
+  covered by 4 new tests in `tests/unit/engine/test_apply_generation_episode_bridge_carryforward.py`.
+  `docs/parity_ledger/world_dynamics.yaml` `WORLD-BELIEF-001`/`WORLD-FIDELITY-001`'s own
+  `support_boundary` fields updated in place to record the resolved "no live consumer" gap. No full
+  emergent-corpus calibration run was attempted: belief institutions require multi-episode Chronicle-
+  fame accumulation to form naturally (a real `Clan` + a subject crossing `FAME_THRESHOLD` + at
+  least one completed episode), making deterministic single-shot corpus seeding impractical within
+  this ticket's scope — the real production code paths (`_build_initial_state()`,
+  `apply_generation()`, `AdventureRouteScorer.score()`) are exercised directly instead, matching the
+  same evidentiary bar §2.53's own Culture Drift/Living Legend branches used.
+- **Status**: RATIFIED
+
+---
+
 ## 3. Unsupported / Retired Behavior
 
 The following legacy behaviors have been intentionally omitted or retired.

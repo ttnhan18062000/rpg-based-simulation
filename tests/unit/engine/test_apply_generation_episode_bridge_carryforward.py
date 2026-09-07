@@ -10,6 +10,7 @@ from src.core.state import AuthoritativeState
 from src.core.updates import StateUpdate
 from src.domains.culture.model import CultureState
 from src.domains.fame.legend import LegendFact
+from src.domains.belief_institution.model import BeliefInstitution
 from src.domains.information.schema import InformationSourceProfile
 from src.engine.apply import ApplyPath
 
@@ -22,6 +23,10 @@ def _state_with_bridges() -> AuthoritativeState:
         region_loyalty_pressure={"r1": 0.5},
         region_culture_states={"r1": CultureState(fatalism=0.8)},
         entity_legend_facts={"1": LegendFact(subject_id="1", fame=0.9)},
+        entity_belief_institutions={
+            1: (BeliefInstitution(origin_event_id="ev_a", clan_id="clan_1", adherent_entity_ids=(1,), belief_strength=0.6),)
+        },
+        event_fidelity={"ev_a": 0.9},
     )
 
 
@@ -58,6 +63,20 @@ def test_entity_legend_facts_survives_apply_generation():
     assert new_state.entity_legend_facts == {"1": LegendFact(subject_id="1", fame=0.9)}
 
 
+def test_entity_belief_institutions_survives_apply_generation():
+    state = _state_with_bridges()
+    new_state = ApplyPath.apply_generation(state, StateUpdate())
+    assert new_state.entity_belief_institutions == {
+        1: (BeliefInstitution(origin_event_id="ev_a", clan_id="clan_1", adherent_entity_ids=(1,), belief_strength=0.6),)
+    }
+
+
+def test_event_fidelity_survives_apply_generation():
+    state = _state_with_bridges()
+    new_state = ApplyPath.apply_generation(state, StateUpdate())
+    assert new_state.event_fidelity == {"ev_a": 0.9}
+
+
 def test_bridges_survive_multiple_generations():
     state = _state_with_bridges()
     for _ in range(3):
@@ -65,6 +84,10 @@ def test_bridges_survive_multiple_generations():
     assert state.region_loyalty_pressure == {"r1": 0.5}
     assert state.region_culture_states == {"r1": CultureState(fatalism=0.8)}
     assert state.entity_legend_facts == {"1": LegendFact(subject_id="1", fame=0.9)}
+    assert state.entity_belief_institutions == {
+        1: (BeliefInstitution(origin_event_id="ev_a", clan_id="clan_1", adherent_entity_ids=(1,), belief_strength=0.6),)
+    }
+    assert state.event_fidelity == {"ev_a": 0.9}
 
 
 def test_default_empty_bridges_stay_empty_no_regression():
@@ -76,6 +99,8 @@ def test_default_empty_bridges_stay_empty_no_regression():
     assert new_state.region_loyalty_pressure == {}
     assert new_state.region_culture_states == {}
     assert new_state.entity_legend_facts == {}
+    assert new_state.entity_belief_institutions == {}
+    assert new_state.event_fidelity == {}
 
 
 def test_information_source_profiles_survives_apply_generation():
