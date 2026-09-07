@@ -250,12 +250,16 @@ both merged, zero real regressions). This was the confirmed sequencing gate for 
 ideas (35, 48) and M4's place-shaped branch (44-47, 61) — both shipped as part of M2/M4's own
 now-complete batches (see those sections above).
 
-### M9 — World Corpus Test Coverage for New Features (follow-up, informs M1-M8, doesn't block them)
+### M9 — World Corpus Test Coverage for New Features (follow-up, informs M1-M8, doesn't block them) (DONE)
 
-**Tracking epic**: `TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (`tickets/inprogress/`,
-`## Status: EPIC_SCOPED` as of 2026-09-06 — 8 child tickets scoped in
-`tickets/todos/m9-corpus-test-coverage/`, none yet implemented; M1-M8 all confirmed DONE, so this
-milestone's own gate is now clear).
+**Shipped, 2026-09-06:** PR #139 ("M9 World Corpus Test Coverage: all 8 tickets shipped"), merged.
+`TCK-20260824-EPIC-RPG-M9-CORPUS-TEST-COVERAGE` (`tickets/done/`) is the real epic ticket. Externally
+reviewed before merge (architecture, mechanics/citation accuracy, ticket hygiene) — no findings
+required a fix; every spot-checked claim in the implementation's own unusually detailed self-report
+(several real premise corrections to the original scoping pass — e.g. ideas 50/64 never actually
+shipped, `archetype_locked` doesn't exist, `TeamUpInvite`/`settlement_capacity` don't exist) was
+independently confirmed true against real code. **This closes out all 9 numbered milestones of this
+roadmap — M1 through M9 are now all DONE.**
 
 Also not a new RPG feature, and distinct from both M7 and M8: M7 asks whether SimQ knows how to *grade* an
 event once it fires; M8 asks whether the compiler can *seed* an idea's content into a world at all. M9 asks
