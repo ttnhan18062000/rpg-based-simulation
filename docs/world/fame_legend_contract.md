@@ -8,7 +8,8 @@ last_verified: 2026-09-05
 
 # Fame & Legend Contract
 
-**Status**: AUTHORITATIVE — TCK-20260905-FAME-DERIVER-LEGEND-FACT complete.
+**Status**: AUTHORITATIVE — TCK-20260905-FAME-DERIVER-LEGEND-FACT complete;
+TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING (2026-09-07) adds the first live consumer.
 **Ticket**: TCK-20260905-FAME-DERIVER-LEGEND-FACT (idea 57, "The Living Legend Feedback Loop").
 
 ---
@@ -25,7 +26,8 @@ episode-boundary cadence — but keyed per-subject rather than per-region or per
 
 Fame state persists across episodes in `CampaignState.entity_fame`. `LegendFact` itself is
 **not** durable — it is a lazy read-model reconstructed at query time from `FameCarryForward`.
-This ships with **no live perception/motivation consumer yet**. See "No Live Consumer" below.
+It now has a real live consumer via route-bias scoring — see "Live Consumer: Route-Bias Scoring"
+below — though perception/motivation-specific consumers remain unwired.
 
 ---
 
@@ -127,21 +129,34 @@ fame has no location concept of its own.
 
 ---
 
-## No Live Consumer
+## Live Consumer: Route-Bias Scoring (TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING, 2026-09-07)
 
-`FameImporter.get_fame(campaign_state, entity_id) -> Optional[FameState]` (defined in
-`src/domains/fame/exporter.py`) and `LegendFactService.for_entity()`/`to_world_signal()` have **no
-live call site** as of this ticket:
+As of this ticket, `LegendFactService.for_entity()` has a real, live per-episode call site:
+`CampaignOrchestrator._build_initial_state()` snapshots `CampaignState.entity_fame` into
+`AuthoritativeState.entity_legend_facts: Dict[str, LegendFact]` once per episode (subjects below
+`FAME_THRESHOLD` are excluded, per `for_entity()`'s own gate). `AdventureGoalScorer.score()`
+(`src/ai/goals/adventure_scorer.py`) resolves the scoring entity's own bridged `LegendFact` via
+`state.entity_legend_facts.get(str(entity.id))` and threads it through
+`AdventureDecisionService.decide()` into `AdventureRouteScorer.score()`
+(`src/domains/adventure/scoring.py`), which adds `legend_fact.fame * 0.30` to `personality_bias`
+for `QUEST_OPPORTUNITY` routes — see `docs/mechanics/04_strategic_cognition.md` §6.4 "Living
+Legend branch" for the full formula and `docs/parity_ledger/strategic_cognition.yaml` STRAT-227
+for the parity citation. This bypasses `MotivationBiasService`/`DoctrineResolver` entirely
+(confirmed dead legacy code, `docs/guidelines/intentional_divergences.md` §2.53) — the same
+integration point idea 56/57's own Culture Drift signal already uses.
 
-- No live pipeline phase constructs `PerceptionUpdatePhase` (unchanged, zero call sites).
+**Still not wired, disclosed not fixed by this ticket:**
+- No live pipeline phase constructs `PerceptionUpdatePhase` (unchanged, zero call sites) —
+  `LegendFactService.to_world_signal()` remains unconsumed; discoverability stays verified only at
+  the `PerceptionFilterService.filter()` service level (`"legend_fact"` lands in the existing
+  catch-all `perceived_opportunities` branch), not through a real per-tick perception pipeline call.
 - No live call site exists for `MotivationBiasService.compute_bias_multiplier()` (unchanged,
-  zero call sites outside its own module).
+  zero call sites outside its own module) — confirmed-dead, not revived (§2.53).
 - `src/ai/coming_of_age.py`'s `_CANDIDATE_ROLES` is unchanged — no `ADVENTURER`/`HERO` bias exists.
-
-`LegendFact` discoverability is verified directly at the `PerceptionFilterService.filter()`
-service level (`"legend_fact"` lands in the existing catch-all `perceived_opportunities` branch,
-zero `filter.py` change needed). This is a disclosed, accepted gap — built, not yet visible in
-play — matching Chronicle Fidelity Drift's own "No Live Consumer Yet" precedent.
+- The bridge only populates for entities with an alive `EntityCarryForward` (episode N>0
+  carry-forward path) — a fresh episode-0 `_build_initial_state()` early-return still yields a bare
+  `AuthoritativeState()` with empty `entity_legend_facts`, matching `region_culture_states`'s own
+  pre-existing episode-0 gap (out of this ticket's own scope to fix).
 
 ---
 
@@ -166,6 +181,15 @@ byte-identical output.
 Test: `tests/unit/domains/fame/test_fame_deriver.py`
 → `test_fame_deriver_is_deterministic_byte_identical`
 
+> A subject with a bridged `LegendFact` produces a measurably higher `AdventureRouteScorer.score()`
+> result for a `QUEST_OPPORTUNITY` route than the same route scored without one, through the real
+> `AdventureGoalScorer.score()` → `AdventureDecisionService.decide()` → `AdventureRouteScorer.score()`
+> pipeline — not a hand-called pure function.
+
+Test: `tests/unit/domains/adventure/test_legend_fact_route_bias.py`,
+`tests/unit/ai/goals/test_adventure_goal_scorer.py`,
+`tests/unit/domains/campaigns/test_fame_wiring.py`
+
 ---
 
 ## Integration Points
@@ -176,11 +200,14 @@ Test: `tests/unit/domains/fame/test_fame_deriver.py`
 | `FameCarryForward` | `src/domains/fame/model.py` | Per-subject carry-forward |
 | `FameDeriver` | `src/domains/fame/deriver.py` | ChronicleHierarchy → FameState |
 | `FameExporter` | `src/domains/fame/exporter.py` | Episode-end persistence hook |
-| `FameImporter` | `src/domains/fame/exporter.py` | Thin lookup (subject_id → FameState); no live caller yet |
+| `FameImporter` | `src/domains/fame/exporter.py` | Thin lookup (subject_id → FameState); live caller: `LegendFactService.for_entity()` |
 | `LegendFact` | `src/domains/fame/legend.py` | Lazy, non-durable read-model above `FAME_THRESHOLD` |
-| `LegendFactService` | `src/domains/fame/legend.py` | Query-time construction + `WorldSignal` conversion |
+| `LegendFactService` | `src/domains/fame/legend.py` | Query-time construction + `WorldSignal` conversion; called once per episode by `CampaignOrchestrator._build_initial_state()` |
 | `CampaignState.entity_fame` | `src/domains/campaigns/state.py` | Cross-episode persistence |
 | `CampaignOrchestrator._advance_state()` | `src/domains/campaigns/orchestrator.py` | Episode-boundary wiring, alongside `CultureDriftExporter`/`FidelityExporter` |
+| `AuthoritativeState.entity_legend_facts` | `src/core/state.py` | Per-tick-reachable snapshot, populated once per episode by `CampaignOrchestrator._build_initial_state()` |
+| `AdventureGoalScorer.score()` | `src/ai/goals/adventure_scorer.py` | Resolves the entity's own bridged `LegendFact` and threads it into `AdventureDecisionService.decide()` |
+| `AdventureRouteScorer.score()` | `src/domains/adventure/scoring.py` | Living Legend `personality_bias` branch (§6.4 of `docs/mechanics/04_strategic_cognition.md`) |
 
 ---
 
@@ -190,3 +217,4 @@ Test: `tests/unit/domains/fame/test_fame_deriver.py`
 |---|---|
 | WORLD-FAME-001 | FameDeriver's Option B derivation rule and episode-boundary wiring match this contract |
 | WORLD-FAME-002 | Determinism guarantee, CampaignState serialization round-trip, and LegendFact threshold-gating |
+| STRAT-227 (`docs/parity_ledger/strategic_cognition.yaml`) | Living Legend `personality_bias` branch formula/weight in `AdventureRouteScorer.score()` |

@@ -10,6 +10,7 @@ from typing import Dict, Any, Set, Optional, List, Tuple, ClassVar, TYPE_CHECKIN
 if TYPE_CHECKING:
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
     from src.domains.culture.model import CultureState
+    from src.domains.fame.legend import LegendFact
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole, DiplomaticState
 from src.core.movement_modes import MovementMode
@@ -1371,6 +1372,15 @@ class AuthoritativeState:
     # AdventureRouteScorer.score()'s personality_bias term. Read-only per-tick input, not durable
     # Kernel-produced state, so it stays out of equality/hash/repr.
     region_culture_states: Dict[str, "CultureState"] = field(default_factory=dict, repr=False, compare=False)
+    # TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING: subject_id -> LegendFact, snapshotted once per
+    # episode by CampaignOrchestrator._build_initial_state() from CampaignState.entity_fame via
+    # LegendFactService.for_entity() (only subjects whose fame crosses FAME_THRESHOLD are present —
+    # mirrors LegendFactService's own None-below-threshold contract, not a raw fame dump). Read by
+    # AdventureGoalScorer.score() to feed idea 57's "Living Legend" bias branch into
+    # AdventureRouteScorer.score()'s personality_bias term. Read-only per-tick input, not durable
+    # Kernel-produced state, so it stays out of equality/hash/repr — same precedent as
+    # region_culture_states immediately above.
+    entity_legend_facts: Dict[str, "LegendFact"] = field(default_factory=dict, repr=False, compare=False)
     recent_world_events: List["WorldEvent"] = field(default_factory=list)
     quest_registry: Dict[str, "QuestOpportunity"] = field(default_factory=dict)
     # Epic 4.2B: Durable registry of entities classified as information providers.

@@ -14,6 +14,7 @@ from src.core.state import EntityState, ResourceNodeState
 
 if TYPE_CHECKING:
     from src.domains.culture.model import CultureState
+    from src.domains.fame.legend import LegendFact
 from src.domains.adventure.schema import (
     RouteFamily,
     AdventureRouteOption,
@@ -39,6 +40,7 @@ class AdventureDecisionService:
         faction_directives: Optional[list] = None,
         factions: Optional[Any] = None,
         culture_state: Optional["CultureState"] = None,
+        legend_fact: Optional["LegendFact"] = None,
     ) -> AdventureDecisionResult:
         """
         Evaluate candidates, score them using Personality biased heuristics,
@@ -47,7 +49,11 @@ class AdventureDecisionService:
         culture_state (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, optional): the entity's
         real current region's CultureState, threaded through unchanged to
         AdventureRouteScorer.score()'s own Culture Drift bias branch.
-        
+
+        legend_fact (TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING, optional): this entity's own
+        LegendFact (None if their fame hasn't crossed FAME_THRESHOLD), threaded through unchanged
+        to AdventureRouteScorer.score()'s own Living Legend bias branch.
+
         Args:
             entity: The current EntityState (immutable view)
             candidates: List of generated AdventureRouteOptions
@@ -84,6 +90,7 @@ class AdventureDecisionService:
                 faction_directives=faction_directives,
                 factions=factions,
                 culture_state=culture_state,
+                legend_fact=legend_fact,
             )
             scored_candidates.append(scored)
 

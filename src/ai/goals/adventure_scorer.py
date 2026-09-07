@@ -144,6 +144,14 @@ class AdventureGoalScorer(GoalScorer):
         if region_id is not None:
             culture_state = state.region_culture_states.get(region_id)
 
+        # TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING: resolve this entity's own bridged LegendFact
+        # (None-safe: an entity whose subject_id has no entry — fame never crossed FAME_THRESHOLD,
+        # or was never observed at all — simply supplies None, reproducing exact pre-bridge
+        # behavior). Keyed by str(entity.id), matching FameImporter.get_fame()'s own documented
+        # calling convention ("entity_id's runtime value domain is NarrativeLedgerEntry.subject_id
+        # (str), not an int entity id" — src/domains/fame/exporter.py).
+        legend_fact = state.entity_legend_facts.get(str(entity.id))
+
         result = AdventureDecisionService.decide(
             entity,
             candidates,
@@ -152,6 +160,7 @@ class AdventureGoalScorer(GoalScorer):
             faction_directives=None,
             factions=state.factions,
             culture_state=culture_state,
+            legend_fact=legend_fact,
         )
 
         # Risk #1 resolution (plan.md Step 3 decision, PORT): mirrors phase.py's own

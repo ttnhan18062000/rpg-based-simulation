@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from src.domains.campaigns.progression_plan import ProgressionPlan
     from src.engine.faction_decision import FactionDirective
     from src.domains.culture.model import CultureState
+    from src.domains.fame.legend import LegendFact
 
 
 # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: real RouteFamily -> Culture Drift tag mapping,
@@ -67,6 +68,7 @@ class AdventureRouteScorer:
         factions: Optional[Any] = None,
         progression_plan: Optional["ProgressionPlan"] = None,
         culture_state: Optional["CultureState"] = None,
+        legend_fact: Optional["LegendFact"] = None,
     ) -> AdventureRouteOption:
         """
         Calculate subjective score for the route option and return updated option.
@@ -81,6 +83,14 @@ class AdventureRouteScorer:
         adds an additive delta to personality_bias via
         CulturalBiasApplicator.compute_culture_delta() — see that block below for the real
         vocabulary/mapping this reuses.
+
+        legend_fact (TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING, optional): the LegendFact
+        (src/domains/fame/legend.py) for this specific entity's own subject_id, bridged from
+        CampaignState.entity_fame by CampaignOrchestrator._build_initial_state() and resolved by
+        AdventureGoalScorer.score() via state.entity_legend_facts.get(str(entity.id)). When
+        present (i.e. this entity's own Chronicle-derived fame has crossed FAME_THRESHOLD), adds a
+        fame-scaled bonus to QUEST_OPPORTUNITY's personality_bias — idea 57's "Living Legend
+        Feedback Loop": a legend's own accumulated fame reinforces further heroic quest-seeking.
 
         Optional group context enables class-synergy multipliers (SOC-229):
           - WARRIOR + MAGE both present in group.roles → HUNT_WEAK_ENEMY score ×1.15
@@ -266,6 +276,15 @@ class AdventureRouteScorer:
                 from src.domains.culture.applicator import CulturalBiasApplicator
 
                 personality_bias += CulturalBiasApplicator.compute_culture_delta(culture_state, culture_tags)
+
+        # TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING: Living Legend feedback loop, additive and
+        # independent of both the trait-based chain and the Culture Drift branch above (an entity
+        # can be affected by a personality trait, regional culture, AND their own legend status
+        # simultaneously). Only QUEST_OPPORTUNITY is mapped — a legend's own accumulated fame
+        # reinforces further heroic quest-seeking, the exact feedback idea 57 was designed to
+        # produce; no other RouteFamily has a comparably real semantic tie to a subject's own fame.
+        if legend_fact is not None and route.family == RouteFamily.QUEST_OPPORTUNITY:
+            personality_bias += legend_fact.fame * 0.30
 
         # ── 4b. Plan-Advance Bonus ──────────────────────────────────────────
         # +1.5 flat bonus when this route's family matches the head BuildGoal's

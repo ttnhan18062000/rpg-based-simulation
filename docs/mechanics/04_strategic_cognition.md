@@ -549,6 +549,22 @@ branch. This bypasses the pre-existing `MotivationBiasService`/`DoctrineResolver
 `IdentityDoctrine`/`ValuePreferenceProfile` chain, which was confirmed dead in production (see
 `docs/guidelines/intentional_divergences.md` §2.53 for the full disclosure).
 
+**Living Legend branch (TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING, 2026-09-07):** a third
+independent, additive contribution to `personality_bias`, layered on top of both the trait-based
+table and the Culture Drift branch above (all three can apply to the same route at once). When
+`AdventureRouteScorer.score()` receives a `legend_fact` (this entity's own `LegendFact`, bridged
+once per episode from `CampaignState.entity_fame` via `AuthoritativeState.entity_legend_facts`,
+gated by `LegendFactService.for_entity()`'s own `FAME_THRESHOLD = 0.5` check) and
+`route.family == RouteFamily.QUEST_OPPORTUNITY`, `personality_bias` also receives
+`legend_fact.fame * 0.30` — idea 57's "Living Legend Feedback Loop": a subject whose own
+Chronicle-derived fame has crossed the threshold is further biased toward the very kind of
+heroic deed (`QUEST_OPPORTUNITY`) that produces more fame. At `fame = 1.0` (the maximum), this
+contributes up to `0.30`, on top of `QUEST_OPPORTUNITY`'s existing `greed * 0.50` trait term (see
+§6.7 for the family's separate `expected_benefit` capability-matching multiplier, which this term
+does not affect). No other `RouteFamily` has a Living Legend mapping and contributes 0.0 from
+this branch. See `docs/world/fame_legend_contract.md` for the full `LegendFact`/`FameCarryForward`
+model this reads.
+
 ### 6.5 blocker_penalty = 2.0 — Justification
 
 `blocker_penalty` is a **fixed constant**, not graduated by severity.

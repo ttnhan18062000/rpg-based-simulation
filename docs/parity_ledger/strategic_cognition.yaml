@@ -2540,7 +2540,14 @@
     \ the trait-based if/elif chain above. culture_state is bridged once per episode\
     \ from CampaignState.region_cultures via AuthoritativeState.region_culture_states\
     \ (see docs/guidelines/intentional_divergences.md \xA72.53 for the dead Doctrine/Values\
-    \ chain this bypasses)."
+    \ chain this bypasses). TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING (2026-09-07)\
+    \ adds a Living Legend branch: when a `legend_fact` (LegendFact, this entity's\
+    \ own subject) is supplied and route.family == QUEST_OPPORTUNITY, personality_bias\
+    \ also receives an additive legend_fact.fame * 0.30 term -- independent of, and\
+    \ additive with, both the trait-based chain and the Culture Drift branch above.\
+    \ legend_fact is bridged once per episode from CampaignState.entity_fame via AuthoritativeState.entity_legend_facts,\
+    \ gated by LegendFactService.for_entity()'s own FAME_THRESHOLD check (only subjects\
+    \ whose fame >= 0.5 are present)."
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2576,12 +2583,17 @@
     \ src/domains/culture/applicator.py CulturalBiasApplicator.compute_culture_delta()\
     \ (E62C, reused unchanged); state.region_culture_states bridged by src/domains/campaigns/orchestrator.py\
     \ CampaignOrchestrator._build_initial_state() and consumed by src/ai/goals/adventure_scorer.py\
+    \ AdventureGoalScorer.score(). Living Legend branch (TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING):\
+    \ src/domains/adventure/scoring.py legend_fact block in AdventureRouteScorer.score();\
+    \ state.entity_legend_facts bridged by src/domains/campaigns/orchestrator.py CampaignOrchestrator._build_initial_state()\
+    \ via src/domains/fame/legend.py LegendFactService.for_entity(), consumed by src/ai/goals/adventure_scorer.py\
     \ AdventureGoalScorer.score()."
   proof_type: parity
   test_path: tests/unit/domains/adventure/test_phase3_route_scoring.py; tests/unit/domains/adventure/test_depletion_scoring.py;
     tests/unit/domains/adventure/test_memory_informed_scoring.py; tests/unit/domains/adventure/test_capability_confidence_scoring.py;
     tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py; tests/unit/domains/adventure/test_culture_drift_route_bias.py;
-    tests/unit/ai/goals/test_adventure_goal_scorer.py
+    tests/unit/ai/goals/test_adventure_goal_scorer.py; tests/unit/domains/adventure/test_legend_fact_route_bias.py;
+    tests/unit/domains/campaigns/test_fame_wiring.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-228
@@ -2589,15 +2601,21 @@
     \ objective_chain verb tokens. Full match yields benefit\xD72.0, partial match\
     \ benefit\xD71.5, no match benefit\xD71.0. Non-HERO entities receive benefit\xD7\
     0.5 for quest routes. Greedy personality bias (greed\xD70.50) applies to QUEST_OPPORTUNITY\
-    \ family for all entity types (E11C, 2026-06-28)."
+    \ family for all entity types (E11C, 2026-06-28). TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING\
+    \ (2026-09-07): when the entity's own bridged LegendFact is present (fame >= FAME_THRESHOLD),\
+    \ personality_bias for QUEST_OPPORTUNITY also receives an additive fame*0.30 term,\
+    \ on top of the greed*0.50 term above -- the two are independent, additive terms\
+    \ in the same formula, not a replacement of one by the other."
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: "src/domains/adventure/scoring.py \u2014 AdventureRouteScorer.score()\
     \ QUEST_OPPORTUNITY branch; src/domains/adventure/schema.py \u2014 RouteFamily.QUEST_OPPORTUNITY,\
-    \ AdventureRouteOption.quest_id"
+    \ AdventureRouteOption.quest_id Living Legend branch: src/domains/adventure/scoring.py\
+    \ legend_fact block in AdventureRouteScorer.score() (see STRAT-227 for the full\
+    \ bridge/threading citation)."
   proof_type: parity
-  test_path: tests/unit/domains/adventure/test_hero_quest_scoring.py
+  test_path: tests/unit/domains/adventure/test_hero_quest_scoring.py; tests/unit/domains/adventure/test_legend_fact_route_bias.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-229

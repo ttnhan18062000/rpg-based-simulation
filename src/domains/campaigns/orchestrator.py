@@ -774,12 +774,28 @@ class CampaignOrchestrator:
             for region_id in sorted(self._state.region_cultures.keys())
         }
 
+        # TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING: snapshot idea 57's own Chronicle-derived fame
+        # signal into per-tick-reachable state, mirroring region_culture_states's own bridge pattern
+        # immediately above. LegendFactService.for_entity() is the real, already-shipped
+        # threshold-gate (returns None below FAME_THRESHOLD) — reused unchanged rather than
+        # re-deriving the threshold check here, so only subjects that actually cross it end up in
+        # the bridged dict. Sorted iteration over entity_fame.keys() for the same determinism
+        # discipline as region_loyalty_pressure/region_culture_states.
+        from src.domains.fame.legend import LegendFactService
+
+        entity_legend_facts = {}
+        for subject_id in sorted(self._state.entity_fame.keys()):
+            fact = LegendFactService.for_entity(self._state, subject_id)
+            if fact is not None:
+                entity_legend_facts[subject_id] = fact
+
         return AuthoritativeState(
             tick=0,
             seed=episode_seed,
             entities=entities,
             region_loyalty_pressure=region_loyalty_pressure,
             region_culture_states=region_culture_states,
+            entity_legend_facts=entity_legend_facts,
         )
 
     # ── spawn helpers ──────────────────────────────────────────────────────────
