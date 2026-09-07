@@ -43,24 +43,31 @@ depth. It is **not**, however, in the Mechanics Bible's own numbered chapter ser
 remaining gap may be narrower than "author from scratch": promoting/restructuring this existing
 content into proper Mechanics Bible form, rather than duplicating it, is worth checking first.
 
-**A second, real inconsistency found and not yet resolved:** `social_systems_contract.md`'s own
+**Second inconsistency, RESOLVED 2026-09-07 (re-verified against current code before handoff, per
+this ticket's own instruction not to assume either doc is right):** `social_systems_contract.md`'s
 "Reputation" section describes `ReputationUpdateService.process_witnessed_event()`/
-`PublicReputationProfile` as if actively updating on witnessed events — but the roadmap's own
-Hardening backlog item 5 ("'Done'-badged mechanics turning out untested/unreachable") found
-`ReputationService`/`PublicReputationProfile`'s mutator has **zero callers anywhere in `src/`** —
-dead scaffolding, not a live mechanism. Whoever picks up this ticket must resolve this directly
-(re-verify against current code, don't assume either doc is right) before writing the new chapter's
-own Reputation section — citing dead code as live would repeat exactly the kind of fabricated/
-inaccurate-citation mistake `SUB-327` already demonstrated the cost of
-(`TCK-20260905-SUB-327-FABRICATED-CITATION-FIX`).
+`PublicReputationProfile` as actively updating on witnessed events — the roadmap's Hardening backlog
+item 5 (2026-09-02) claimed this had zero callers, but that is now stale. Confirmed directly:
+`ReputationUpdateService.process_witnessed_event()` (`src/domains/commitment/reputation.py:15`) has a
+real, live, non-test caller at `src/engine/quests.py:233` — fires on ESCORT quest completion,
+threading a `"successful_escort"` event through a typed cognition-bundle `replace()`, no feature flag
+gating it off. Separately, `ReputationService.combine_public_reputation()`
+(`src/systems/social_systems/reputation.py:32`, a distinct class in a distinct file, easy to conflate
+by name) also has a real caller: `src/core/builder.py:676`, wired by idea 53's
+`TCK-20260904-INHERITED-REPUTATION-SEED` (M5, shipped 2026-09-05, after the original hardening pass).
+**Both were dead or unconfirmed at the 2026-09-02 investigation; both are live now.** `social_systems_
+contract.md`'s framing was accurate all along for `ReputationUpdateService`; the hardening backlog's
+claim was either wrong from the start or overtaken by M5's own later work — not re-derived further
+here. Write the chapter's Reputation section citing both as live, real mechanisms.
 
 ## Scope
 - Determine whether the new Mechanics Bible chapter should be authored fresh, or whether
   `docs/simulation/social_systems_contract.md`'s existing content should be promoted/restructured
   into the Mechanics Bible's own numbered series (next available number after
   `06_worldbuilding_foundation.md`) and certified `Level 1` — check first, don't assume either shape.
-- Resolve the `ReputationService`/`PublicReputationProfile` liveness inconsistency above before
-  writing the chapter's own Reputation section.
+- ~~Resolve the `ReputationService`/`PublicReputationProfile` liveness inconsistency above before
+  writing the chapter's own Reputation section~~ — **done, 2026-09-07**: both are confirmed live with
+  real callers (`quests.py:233`, `builder.py:676`). Write the chapter citing both as live.
 - Relocate or cross-link the reputation formula fragment currently misfiled in
   `docs/mechanics/03_economic_laws.md` — leave a pointer behind, don't duplicate.
 - Fold in (cross-link, not rewrite) the three existing partial contracts:
@@ -86,8 +93,8 @@ inaccurate-citation mistake `SUB-327` already demonstrated the cost of
 - [ ] A Mechanics Bible chapter (new or promoted-and-restructured) exists, is `Certified Level 1`, and
       every formula it states is cited against real code, spot-checked directly — not transcribed from
       the parity ledger's own `verified` claims unverified.
-- [ ] The `ReputationService`/`PublicReputationProfile` liveness question is resolved with a direct
-      code check, not assumed from either existing doc.
+- [x] The `ReputationService`/`PublicReputationProfile` liveness question is resolved with a direct
+      code check, not assumed from either existing doc. **Done, 2026-09-07** — both confirmed live.
 - [ ] The `03_economic_laws.md` reputation fragment is cross-linked, not duplicated.
 - [x] The `SOC-FAC-*`/`SOC-CHRON-*` entries are independently spot-checked against real diplomacy code,
       with results recorded (confirmed or corrected). **Done, 2026-09-05** — all 16 confirmed accurate,
@@ -117,7 +124,9 @@ None yet — scope-only, staging artifacts to be created by whoever picks this u
 ## Assumptions / Open Questions
 - Whether `social_systems_contract.md` should be promoted into the Mechanics Bible numbering or a new
   chapter written alongside it — not decided here, first task for whoever picks this up.
-- The `ReputationService` liveness inconsistency (see Request Summary) — not resolved here.
+- `SocialComponent`'s exact current field count should be re-confirmed against real code during
+  Investigate — this ticket's "15 fields" citation is inherited from the 2026-09-02 investigation and
+  has not been re-counted since M5/M6 shipped (several social-adjacent fields landed in that window).
 
 ## Implementation Notes
 
