@@ -2,10 +2,13 @@
 src/domains/culture/applicator.py
 ───────────────────────────────────────────────────────────────────────────────
 CulturalBiasApplicator — translates a CultureState into an additive tag-level
-bias delta layered onto MotivationBiasService results (E62C).
+bias delta layered onto AdventureRouteScorer.score()'s personality_bias (E62C,
+re-wired by TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE — the original
+MotivationBiasService this docstring referred to was confirmed dead and deleted,
+TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT).
 
 The overlay is transient (per scoring call) and never stored in durable state.
-It does not modify ValuePreferenceProfile or MotivationModel on the entity.
+It does not modify MotivationModel on the entity.
 
 Axis → tag → delta rules:
   fatalism > THRESHOLD         → +fatalism*0.4 for {caution, recovery, flee}
@@ -47,7 +50,7 @@ class CulturalBiasApplicator:
         culture: "CultureState",
         tags: Iterable[str],
     ) -> float:
-        """Return additive delta to add to MotivationBiasService result.
+        """Return additive delta to add to AdventureRouteScorer.score()'s personality_bias.
 
         Parameters
         ----------

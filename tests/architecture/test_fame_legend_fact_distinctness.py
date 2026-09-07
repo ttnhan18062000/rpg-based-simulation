@@ -141,16 +141,17 @@ def test_fame_module_no_perception_update_phase_call_site_increase():
         "this ticket must not wire PerceptionUpdatePhase into the live pipeline"
     )
 
-    # compute_bias_multiplier( must have zero call sites outside its own module.
-    motivation_service_path = Path("src/domains/motivation/service.py")
+    # compute_bias_multiplier( must have zero call sites anywhere. TCK-20260908-DEAD-DOCTRINE-
+    # VALUES-CHAIN-RETIREMENT (2026-09-08) deleted MotivationBiasService entirely (confirmed
+    # dead, see docs/guidelines/intentional_divergences.md §2.53) -- this guard now also catches
+    # any future reintroduction of the symbol under any module path, not just a live wiring of
+    # the original module.
     for path in _iter_src_py_files():
-        if path == motivation_service_path:
-            continue
         text = path.read_text(encoding="utf-8")
         assert "compute_bias_multiplier(" not in text, (
-            f"{path.as_posix()} calls compute_bias_multiplier() -- this ticket must "
-            "not wire MotivationBiasService.compute_bias_multiplier() into any live "
-            "call site"
+            f"{path.as_posix()} calls compute_bias_multiplier() -- this symbol was confirmed "
+            "dead and deleted (TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT); it must not "
+            "be reintroduced without revisiting that decision"
         )
 
     # phase.py itself is read here only to confirm it still exists/is unmodified in

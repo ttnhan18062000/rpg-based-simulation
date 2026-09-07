@@ -339,60 +339,10 @@ class MemoryModel:
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. Motivation Model Sub-components
 # ─────────────────────────────────────────────────────────────────────────────
-
-@dataclass(frozen=True, slots=True)
-class IdentityDoctrine:
-    """Doctrine/class constraints.
-
-    CONFIRMED DEAD LEGACY CODE (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, 2026-09-07): no
-    real entity ever gets a non-default `class_id`, so this dataclass is always constructed with
-    its bare defaults in production. See `src/domains/motivation/{resolver,service}.py`'s own
-    module docstrings and `docs/guidelines/intentional_divergences.md` §2.53 for the full
-    disclosure — superseded by `AdventureRouteScorer.score()`'s `personality_bias` mechanism.
-    """
-    class_id: Optional[str] = None
-    preferred_route_tags: Mapping[str, float] = field(default_factory=dict)
-    avoided_route_tags: Mapping[str, float] = field(default_factory=dict)
-    combat_style_bias: Mapping[str, float] = field(default_factory=dict)
-    cooperation_bias: Mapping[str, float] = field(default_factory=dict)
-
-    def to_canonical_dict(self) -> Dict[str, Any]:
-        return {
-            "class_id": self.class_id,
-            "preferred_route_tags": {k: round(v, 4) for k, v in sorted(self.preferred_route_tags.items())},
-            "avoided_route_tags": {k: round(v, 4) for k, v in sorted(self.avoided_route_tags.items())}
-        }
-
-
-@dataclass(frozen=True, slots=True)
-class ValuePreferenceProfile:
-    """Value scales (greed, pride, curiosity, caution).
-
-    CONFIRMED DEAD LEGACY CODE (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, 2026-09-07): zero
-    real construction of a non-default profile exists anywhere in `src/`, so every field stays at
-    its bare 0.5 default in production. See `docs/guidelines/intentional_divergences.md` §2.53 for
-    the full disclosure — superseded by `AdventureRouteScorer.score()`'s `personality_bias`
-    mechanism.
-    """
-    survival: float = 0.5
-    reward: float = 0.5
-    knowledge: float = 0.5
-    loyalty: float = 0.5
-    pride: float = 0.5
-    curiosity: float = 0.5
-    caution: float = 0.5
-
-    def to_canonical_dict(self) -> Dict[str, Any]:
-        return {
-            "survival": round(self.survival, 4),
-            "reward": round(self.reward, 4),
-            "knowledge": round(self.knowledge, 4),
-            "loyalty": round(self.loyalty, 4),
-            "pride": round(self.pride, 4),
-            "curiosity": round(self.curiosity, 4),
-            "caution": round(self.caution, 4)
-        }
-
+# TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT (2026-09-08): IdentityDoctrine and
+# ValuePreferenceProfile (formerly defined here) were deleted -- confirmed dead in production
+# (see TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE), superseded by AdventureRouteScorer.score()'s
+# personality_bias mechanism. See docs/guidelines/intentional_divergences.md §2.53.
 
 @dataclass(frozen=True, slots=True)
 class RoleFitPreference:
@@ -456,9 +406,13 @@ class NamedIntentionBundle:
 
 @dataclass(frozen=True, slots=True)
 class MotivationModel:
-    """Identity values and traits that bias action selections."""
-    doctrine: IdentityDoctrine = field(default_factory=IdentityDoctrine)
-    values: ValuePreferenceProfile = field(default_factory=ValuePreferenceProfile)
+    """Identity values and traits that bias action selections.
+
+    TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT (2026-09-08): `doctrine`/`values` fields
+    (formerly IdentityDoctrine/ValuePreferenceProfile) removed -- confirmed dead, never read
+    outside the now-deleted MotivationBiasService's own bias-multiplier method. See
+    docs/guidelines/intentional_divergences.md §2.53.
+    """
     role_fit: RoleFitPreference = field(default_factory=RoleFitPreference)
     ambition: AmbitionProfile = field(default_factory=AmbitionProfile)
     moral: MoralPreferenceProfile = field(default_factory=MoralPreferenceProfile)
@@ -466,8 +420,6 @@ class MotivationModel:
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         return {
-            "doctrine": self.doctrine.to_canonical_dict(),
-            "values": self.values.to_canonical_dict(),
             "role_fit": self.role_fit.to_canonical_dict(),
             "ambition": self.ambition.to_canonical_dict(),
             "moral": self.moral.to_canonical_dict(),
