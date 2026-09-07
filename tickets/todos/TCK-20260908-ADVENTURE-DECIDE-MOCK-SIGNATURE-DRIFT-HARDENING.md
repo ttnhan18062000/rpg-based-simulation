@@ -53,6 +53,10 @@ relying on someone remembering to grep before every future signature change.
 - Prove the hardening actually works: add (or confirm) a regression test showing that reverting one of
   these mocks to a stale hand-rolled signature would now fail at mock-construction time, not silently
   produce a `TypeError` deep in application code.
+- **Reviewer note (`rpg-feature-planning`, 2026-09-08)**: before assuming zero behavior change, confirm
+  `create_autospec` doesn't fight any of the 5 tests' own intentional edge cases — i.e. check none of
+  them relies on a mock accepting an argument shape the real `decide()` signature wouldn't allow.
+  Unlikely given these are all `decide()`-output stubs, but a quick check, not an assumption.
 
 ## Out of Scope
 - **Repo-wide audit of the other ~18 files using a similar `_fake_`/`_spy_`/`_stub_` naming pattern**
@@ -89,12 +93,9 @@ None yet — created by this ticket's own Investigate/Plan phases once picked up
 - `src/domains/adventure/service.py` (`AdventureDecisionService.decide()`)
 
 ## Assumptions / Open Questions
-- **Real scope decision, not resolved here**: fix only the 5 files this specific regression touched
-  (narrow), or use this ticket as the pilot for a broader repo-wide audit of all ~23 files using the
-  same fragile hand-rolled `_fake_`/`_spy_`/`_stub_` mock pattern (broad — genuinely bigger scope,
-  most of those 23 files likely mock entirely different functions with different risk profiles, not
-  evaluated here). Default assumption unless told otherwise: narrow, since a broad audit was never
-  requested and most of the 23 hits are unrelated to this specific regression class.
+- **Decided 2026-09-08 (real user decision)**: **narrow scope** — fix only the 5
+  `AdventureDecisionService.decide()` mock files this specific regression touched. The broader
+  ~23-file repo-wide audit is explicitly out of scope, not a future phase of this same ticket.
 
 ## Implementation Notes
 

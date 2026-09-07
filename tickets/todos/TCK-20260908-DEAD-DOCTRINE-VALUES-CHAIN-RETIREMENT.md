@@ -83,12 +83,10 @@ None yet — created by this ticket's own Investigate/Plan phases once picked up
 - `src/core/cognition.py` (`IdentityDoctrine`, `ValuePreferenceProfile`)
 
 ## Assumptions / Open Questions
-- **Real decision needed, not resolved here**: delete the 4 modules/classes outright, or leave them
-  in place with the existing "CONFIRMED DEAD LEGACY CODE" docstrings as a formally-accepted permanent
-  disposition. No real risk of deletion has been identified yet — this needs the Investigate phase to
-  check for any reference to these exact module/class paths outside `src/` (docs, external tooling,
-  roadmap docs describing a future idea that might want to revive this exact mechanism) before
-  recommending deletion.
+- **Decided 2026-09-08 (real user decision)**: **delete the 4 modules/classes outright.** Investigate
+  should still check for any reference to these exact module/class paths outside `src/` (docs,
+  external tooling, roadmap docs) before deleting — the decision to delete stands regardless, but if
+  a real external reference is found, update it rather than silently leaving a dangling reference.
 
 ## Implementation Notes
 
