@@ -12286,3 +12286,39 @@
   test_path: tests/tools/test_ticket_claim_detection.py, tests/tools/test_current_run_sidecar_orchestrator.py::test_scope_phase_wires_detection_call_at_tid_confirmation_point
   divergence_note: null
   proof_type: regression
+- id: INFRA-412
+  text: 'InformationIntentExecutionPhase.execute() (src/engine/pipeline_phases/information_intent_execution.py)
+    never stripped the raw ActionIntent it resolved from EntityUpdate.intent_results,
+    letting it survive unchanged (EntityUpdate.merge() concatenates intent_results
+    additively) into entity.identity.latest_intent_results, where StrategicWorkQueue.build()
+    (src/systems/strategic_systems/work_queue.py:55) crashed reading .accepted off
+    it unconditionally -- a field only the real IntentResult dataclass has, not ActionIntent
+    (TCK-20260907-INFORMATION-INTENT-EXECUTION-RESULT-TYPE-MISMATCH). This was dormant,
+    unexercised code: InformationBeliefPhase Branch 3 (src/domains/information/phase.py:86-104),
+    the only producer of a raw ActionIntent in this field, could never previously
+    fire in any real corpus world before TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION''s
+    own carry-forward fix made it reachable for the first time. Fix: filter ActionIntent
+    instances out of the entity''s own intent_results before merging in ActionIntentAdapter.execute()''s
+    real results, so the additive merge starts from a cleaned list. Real IntentResult
+    entries in the same list (the mixed-list case) are preserved untouched.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/pipeline_phases/information_intent_execution.py (InformationIntentExecutionPhase.execute()
+    strips ActionIntent entries from refined_entity_updates[eid].intent_results via
+    dataclasses.replace() before executing and merging); real calibration proof: ENABLE_INFORMATION_INTENT_EXECUTION=ON
+    python3 tools/calibrate_simq.py --name unit_information_routing_pilot --seed 42
+    --ticks 200 no longer crashes, route_new_query fires (confirmed via grep on the
+    run''s own simulation_events.jsonl), INFORMATION pillar moves off grade=C events=0
+    to grade=B events=1; no regression on the 3 real worlds already shipping information_source_profiles
+    (urban_political, unit_information_source, unit_information_density -- identical
+    grade/events before and after).'
+  proof_type: parity
+  test_path: tests/unit/engine/test_information_intent_execution_phase.py::test_action_intent_execution_phase_strips_raw_action_intent_after_execution;
+    tests/unit/engine/test_information_intent_execution_phase.py::test_action_intent_execution_phase_preserves_real_intent_result_alongside_stripped_action_intent
+  divergence_note: null
+  support_boundary: ENABLE_INFORMATION_INTENT_EXECUTION still defaults OFF and remains
+    OFF in every previously-shipped config/simulation_quality/profiles/*.yaml -- this
+    fix does not change that. The new unit_information_routing_pilot profile (TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO)
+    is the only shipped world that turns this flag ON, specifically to exercise this
+    exact code path.

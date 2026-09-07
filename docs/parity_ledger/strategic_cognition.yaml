@@ -2532,7 +2532,46 @@
     \ call instead of route.confidence, same 0.15 weight; all other routes, and mapped\
     \ routes whose key cannot be resolved, keep route.confidence \xD7 0.15; entity.self_model.capabilities\
     \ itself remains unpopulated in production; all constants documented in docs/mechanics/04_strategic_cognition.md\
-    \ \xA76.12."
+    \ \xA76.12. TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE (2026-09-07) adds a\
+    \ Culture Drift branch: when a `culture_state` (CultureState) is supplied, personality_bias\
+    \ also receives an additive CulturalBiasApplicator.compute_culture_delta() delta\
+    \ for the 5 RouteFamily values with a real tag mapping (RECOVER, HUNT_WEAK_ENEMY,\
+    \ OWN_SURVIVAL, FORM_PARTY, PROTECT_TARGET) -- independent of, and additive with,\
+    \ the trait-based if/elif chain above. culture_state is bridged once per episode\
+    \ from CampaignState.region_cultures via AuthoritativeState.region_culture_states\
+    \ (see docs/guidelines/intentional_divergences.md \xA72.53 for the dead Doctrine/Values\
+    \ chain this bypasses). TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING (2026-09-07)\
+    \ adds a Living Legend branch: when a `legend_fact` (LegendFact, this entity's\
+    \ own subject) is supplied and route.family == QUEST_OPPORTUNITY, personality_bias\
+    \ also receives an additive legend_fact.fame * 0.30 term -- independent of, and\
+    \ additive with, both the trait-based chain and the Culture Drift branch above.\
+    \ legend_fact is bridged once per episode from CampaignState.entity_fame via AuthoritativeState.entity_legend_facts,\
+    \ gated by LegendFactService.for_entity()'s own FAME_THRESHOLD check (only subjects\
+    \ whose fame >= 0.5 are present). CORRECTION (TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD,\
+    \ 2026-09-07): region_culture_states/entity_legend_facts were found not to survive\
+    \ ApplyPath.apply_generation() past tick 1 of any real episode (same gap as SOC-276's\
+    \ region_loyalty_pressure) -- both the Culture Drift and Living Legend branches\
+    \ above were silently inert from tick 2 onward until this fix. Now genuinely persist\
+    \ for the whole episode. Belief Institution branch (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING,\
+    \ 2026-09-07): when belief_institutions (a tuple of BeliefInstitution snapshots\
+    \ this entity is a real adherent of) is supplied and route.family == QUEST_OPPORTUNITY,\
+    \ personality_bias also receives an additive term equal to the strongest fidelity-scaled\
+    \ belief_strength among the entity's real memberships times 0.30 -- max across\
+    \ memberships, not summed (one entity in N belief institutions is one 'does my\
+    \ in-group revere a legend' signal, not N independent ones) -- independent of,\
+    \ and additive with, the trait-based chain, Culture Drift, and Living Legend branches\
+    \ above. Each institution's belief_strength is scaled by event_fidelity.get(institution.origin_event_id,\
+    \ 1.0) before the max is taken -- a belief formed around a heavily-mythologized/decayed-fidelity\
+    \ event carries less real-history weight than one still faithful to the original\
+    \ record. belief_institutions is bridged once per episode from CampaignState.belief_institutions\
+    \ via AuthoritativeState.entity_belief_institutions (keyed directly off each institution's\
+    \ own real adherent_entity_ids -- no separate clans lookup needed at scoring time);\
+    \ event_fidelity is bridged the same way from CampaignState.historical_drift via\
+    \ AuthoritativeState.event_fidelity (entry_id -> fidelity scalar only). Both are\
+    \ carried forward every tick by ApplyPath.apply_generation() in the same commit\
+    \ that introduced them, avoiding the exact regression TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD\
+    \ fixed for the sibling region_culture_states/entity_legend_facts fields. See\
+    \ docs/guidelines/intentional_divergences.md section 2.55 for the full rationale."
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2562,11 +2601,29 @@
     \ becomes non-empty with avoid_enemy advice end-to-end through the real pipeline.\
     \ confidence_bonus capability-driven source for GATHER_RESOURCE/ CRAFT_UPGRADE,\
     \ ad-hoc CapabilityEstimateService.estimate() call, SelfModelUpdatePhase.apply()\
-    \ still never passes capability_context (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING)."
+    \ still never passes capability_context (TCK-20260811-CAPABILITY-CONFIDENCE-ADVENTURE-SCORING).\
+    \ Culture Drift branch (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE): src/domains/adventure/scoring.py\
+    \ _CULTURE_DRIFT_TAGS_BY_FAMILY + the culture_state block in AdventureRouteScorer.score();\
+    \ src/domains/culture/applicator.py CulturalBiasApplicator.compute_culture_delta()\
+    \ (E62C, reused unchanged); state.region_culture_states bridged by src/domains/campaigns/orchestrator.py\
+    \ CampaignOrchestrator._build_initial_state() and consumed by src/ai/goals/adventure_scorer.py\
+    \ AdventureGoalScorer.score(). Living Legend branch (TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING):\
+    \ src/domains/adventure/scoring.py legend_fact block in AdventureRouteScorer.score();\
+    \ state.entity_legend_facts bridged by src/domains/campaigns/orchestrator.py CampaignOrchestrator._build_initial_state()\
+    \ via src/domains/fame/legend.py LegendFactService.for_entity(), consumed by src/ai/goals/adventure_scorer.py\
+    \ AdventureGoalScorer.score(). Belief Institution branch (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING):\
+    \ src/domains/adventure/scoring.py belief_institutions/event_fidelity block in\
+    \ AdventureRouteScorer.score(); state.entity_belief_institutions/state.event_fidelity\
+    \ bridged by src/domains/campaigns/orchestrator.py CampaignOrchestrator._build_initial_state()\
+    \ from CampaignState.belief_institutions/historical_drift, consumed by src/ai/goals/adventure_scorer.py\
+    \ AdventureGoalScorer.score()."
   proof_type: parity
   test_path: tests/unit/domains/adventure/test_phase3_route_scoring.py; tests/unit/domains/adventure/test_depletion_scoring.py;
     tests/unit/domains/adventure/test_memory_informed_scoring.py; tests/unit/domains/adventure/test_capability_confidence_scoring.py;
-    tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py
+    tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py; tests/unit/domains/adventure/test_culture_drift_route_bias.py;
+    tests/unit/ai/goals/test_adventure_goal_scorer.py; tests/unit/domains/adventure/test_legend_fact_route_bias.py;
+    tests/unit/domains/campaigns/test_fame_wiring.py; tests/unit/engine/test_apply_generation_episode_bridge_carryforward.py;
+    tests/unit/domains/adventure/test_belief_institution_route_bias.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-228
@@ -2574,15 +2631,21 @@
     \ objective_chain verb tokens. Full match yields benefit\xD72.0, partial match\
     \ benefit\xD71.5, no match benefit\xD71.0. Non-HERO entities receive benefit\xD7\
     0.5 for quest routes. Greedy personality bias (greed\xD70.50) applies to QUEST_OPPORTUNITY\
-    \ family for all entity types (E11C, 2026-06-28)."
+    \ family for all entity types (E11C, 2026-06-28). TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING\
+    \ (2026-09-07): when the entity's own bridged LegendFact is present (fame >= FAME_THRESHOLD),\
+    \ personality_bias for QUEST_OPPORTUNITY also receives an additive fame*0.30 term,\
+    \ on top of the greed*0.50 term above -- the two are independent, additive terms\
+    \ in the same formula, not a replacement of one by the other."
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: "src/domains/adventure/scoring.py \u2014 AdventureRouteScorer.score()\
     \ QUEST_OPPORTUNITY branch; src/domains/adventure/schema.py \u2014 RouteFamily.QUEST_OPPORTUNITY,\
-    \ AdventureRouteOption.quest_id"
+    \ AdventureRouteOption.quest_id Living Legend branch: src/domains/adventure/scoring.py\
+    \ legend_fact block in AdventureRouteScorer.score() (see STRAT-227 for the full\
+    \ bridge/threading citation)."
   proof_type: parity
-  test_path: tests/unit/domains/adventure/test_hero_quest_scoring.py
+  test_path: tests/unit/domains/adventure/test_hero_quest_scoring.py; tests/unit/domains/adventure/test_legend_fact_route_bias.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-229

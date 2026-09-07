@@ -134,6 +134,34 @@ class AdventureGoalScorer(GoalScorer):
             + ServiceOpportunityProvider.get_opportunities(entity, state)
         )
         candidates = AdventureRouteGenerator.generate(entity, state, opportunities=opportunities)
+
+        # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: resolve the entity's real current
+        # region and look up the bridged CultureState snapshot (None-safe: a region with no
+        # region_culture_states entry, or an entity with no region_id yet, simply supplies None,
+        # reproducing the exact pre-bridge behavior).
+        culture_state = None
+        region_id = entity.navigation.region_id
+        if region_id is not None:
+            culture_state = state.region_culture_states.get(region_id)
+
+        # TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING: resolve this entity's own bridged LegendFact
+        # (None-safe: an entity whose subject_id has no entry — fame never crossed FAME_THRESHOLD,
+        # or was never observed at all — simply supplies None, reproducing exact pre-bridge
+        # behavior). Keyed by str(entity.id), matching FameImporter.get_fame()'s own documented
+        # calling convention ("entity_id's runtime value domain is NarrativeLedgerEntry.subject_id
+        # (str), not an int entity id" — src/domains/fame/exporter.py).
+        legend_fact = state.entity_legend_facts.get(str(entity.id))
+
+        # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: resolve this entity's own bridged
+        # BeliefInstitution adherent memberships (None-safe via .get(..., ()): an entity with no
+        # entity_belief_institutions entry — not a real adherent of any belief institution —
+        # simply supplies an empty tuple, reproducing exact pre-bridge behavior). Keyed by int
+        # entity.id, matching BeliefInstitution.adherent_entity_ids's own real element type
+        # directly (unlike entity_legend_facts's str(entity.id) keying above, no re-keying
+        # needed). event_fidelity is passed through unfiltered — the scorer itself looks up only
+        # the specific origin_event_id(s) it needs.
+        belief_institutions = state.entity_belief_institutions.get(entity.id, ())
+
         result = AdventureDecisionService.decide(
             entity,
             candidates,
@@ -141,6 +169,10 @@ class AdventureGoalScorer(GoalScorer):
             resource_nodes=state.resource_nodes,
             faction_directives=None,
             factions=state.factions,
+            culture_state=culture_state,
+            legend_fact=legend_fact,
+            belief_institutions=belief_institutions,
+            event_fidelity=state.event_fidelity,
         )
 
         # Risk #1 resolution (plan.md Step 3 decision, PORT): mirrors phase.py's own

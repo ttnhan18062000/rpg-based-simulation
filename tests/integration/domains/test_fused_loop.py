@@ -497,13 +497,12 @@ def test_branch_b_fires_across_real_tick_boundary_after_self_model_patch_materia
     assert materialized_unk is not None
     assert materialized_unk.reason == "provider_unknown"
 
-    # information_source_profiles is itself a per-tick-seeded field (like
-    # pending_information_responses/pending_self_model_information_events, it is not
-    # carried forward by ApplyPath.apply_generation() — confirmed empty on next_state
-    # here) — unrelated to this fix; re-seed it for tick N+1 exactly as a live world
-    # would supply routable source profiles every tick.
-    assert next_state.information_source_profiles == []
-    next_state = dataclass_replace(next_state, information_source_profiles=[profile])
+    # information_source_profiles is now a persistent field (reclassified by
+    # TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION, unlike its sibling
+    # pending_information_responses/pending_self_model_information_events, which remain
+    # Bounded/single-fire) — confirmed carried forward onto next_state unchanged here,
+    # so no manual re-seed is needed for tick N+1.
+    assert next_state.information_source_profiles == [profile]
 
     # Tick N+1: no new self-model event seed — Branch B now sees the durably
     # materialized unknown (carried on `next_state` via this fix) and routes.

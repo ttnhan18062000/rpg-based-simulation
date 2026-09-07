@@ -22,9 +22,9 @@ same 3-layer Deriver/Model/Exporter-Importer pattern, same `ChronicleHierarchy` 
 episode-boundary cadence — but keyed per-event rather than per-region, and with no accumulated
 axis semantics.
 
-Fidelity state persists across episodes in `CampaignState.historical_drift`. This ships with
-**no live consumer yet**: idea 63 ("Belief Grows Around Real History") is the intended eventual
-reader, not yet built. See "No Live Consumer" below.
+Fidelity state persists across episodes in `CampaignState.historical_drift`. As of
+`TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING` (2026-09-07) this has a real live consumer via
+`AdventureRouteScorer.score()`'s `personality_bias` mechanism. See "Live Consumer" below.
 
 ---
 
@@ -104,14 +104,21 @@ Existing entries for events not observed in the current episode's hierarchy pers
 
 ---
 
-## No Live Consumer
+## Live Consumer
 
-`FidelityImporter.get_fidelity(campaign_state, entry_id) -> Optional[FidelityState]` is a thin,
-`None`-safe lookup helper defined in `src/domains/fidelity/exporter.py`. It has **no live call
-site** as of this ticket — idea 63 ("Belief Grows Around Real History") is the intended eventual
-reader, and possibly future feud/national-myth mechanics. This is a disclosed, accepted gap
-(matching the sibling `TCK-20260904-LINEAGE-DEATH-DISPATCH`'s own write-no-read disclosure
-pattern), not a hidden incompleteness.
+As of `TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING` (2026-09-07): `CampaignOrchestrator.
+_build_initial_state()` snapshots `historical_drift` into `AuthoritativeState.event_fidelity`
+(`Dict[str, float]`, entry_id → fidelity scalar only — not the full `FidelityCarryForward`
+record), carried forward every tick by `ApplyPath.apply_generation()`. `AdventureGoalScorer.
+score()` threads it into `AdventureRouteScorer.score()`'s Belief Institution `personality_bias`
+branch (see `docs/world/belief_institution_contract.md`), which scales a belief institution's own
+`belief_strength` contribution by the matching `origin_event_id`'s current fidelity — a belief
+formed around a heavily-mythologized/decayed-fidelity event carries less real-history weight than
+one still close to the original record. `FidelityImporter.get_fidelity()` itself
+(`src/domains/fidelity/exporter.py`) remains unused by this wiring (the bridge reads
+`historical_drift` directly, matching `region_culture_states`/`entity_legend_facts`'s own
+established bridge pattern) — it stays available as a direct lookup helper for any future
+per-entry consumer.
 
 ---
 
@@ -140,9 +147,11 @@ Test: `tests/unit/domains/chronicle/test_fidelity_deriver.py`
 | `FidelityCarryForward` | `src/domains/fidelity/model.py` | Per-event carry-forward |
 | `FidelityDeriver` | `src/domains/fidelity/deriver.py` | ChronicleHierarchy → FidelityState |
 | `FidelityExporter` | `src/domains/fidelity/exporter.py` | Episode-end persistence hook |
-| `FidelityImporter` | `src/domains/fidelity/exporter.py` | Thin lookup (entry_id → FidelityState); no live caller yet |
+| `FidelityImporter` | `src/domains/fidelity/exporter.py` | Thin lookup (entry_id → FidelityState); unused by the live wiring, available for future per-entry consumers |
 | `CampaignState.historical_drift` | `src/domains/campaigns/state.py` | Cross-episode persistence |
 | `CampaignOrchestrator._advance_state()` | `src/domains/campaigns/orchestrator.py` | Episode-boundary wiring, alongside `CultureDriftExporter.export()` |
+| `AuthoritativeState.event_fidelity` | `src/core/state.py` | Per-tick bridged snapshot (entry_id → fidelity scalar), populated by `CampaignOrchestrator._build_initial_state()` |
+| `AdventureRouteScorer.score()` | `src/domains/adventure/scoring.py` | Live consumer — scales the Belief Institution `personality_bias` branch |
 
 ---
 

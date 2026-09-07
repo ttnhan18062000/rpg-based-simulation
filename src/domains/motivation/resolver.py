@@ -2,6 +2,18 @@
 src/domains/motivation/resolver.py
 ───────────────────────────────────────────────────────────────────────────────
 DoctrineResolver for Phase 14.
+
+CONFIRMED DEAD LEGACY CODE (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, 2026-09-07):
+`DoctrineResolver.resolve()` has zero real (non-test) callers anywhere in `src/` — the only two
+`identity(class_id=...)` construction sites in the whole codebase
+(`src/testing/scenario_runner.py`, `src/domains/campaigns/runner.py`) are test/single-episode-
+analysis utilities, not the real corpus-world entity population path, so every real entity's
+`class_id` stays at the bare default and this resolver never produces a meaningfully-differentiated
+`IdentityDoctrine` in production. It is superseded by `AdventureRouteScorer.score()`'s own
+already-live `personality_bias` mechanism (`src/domains/adventure/scoring.py`), which does the same
+conceptual job (personality/context → route-family bias) with real, populated per-entity trait data
+instead. Deliberately NOT revived or deleted — see `docs/guidelines/intentional_divergences.md`
+§2.53 for the full disclosure and rationale.
 """
 
 from __future__ import annotations

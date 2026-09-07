@@ -205,7 +205,7 @@ def test_agency_events_fire_end_to_end_for_winning_adventure_route(monkeypatch):
         lambda entity, cache: True,
     )
 
-    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None):
+    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None, legend_fact=None, belief_institutions=None, event_fidelity=None):
         selected = AdventureRouteOption(
             family=RouteFamily.TAKE_EASY_QUEST,
             score=2.0,

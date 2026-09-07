@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Expected per-world FeatureMode flag state and Pattern-6 content-field seeding for config/simulation_quality/profiles/. Distinct from data/content/simulation_scenarios/ scenario-template defaults (see tests/integration/test_scenario_feature_flag_defaults.py, parity INFRA-221) -- do not merge or extend that file with this fixture's coverage.",
-    "world_count": 21,
+    "world_count": 22,
     "agency_da_non_routing_worlds": [
       "urban_political", "dungeon_crawl", "sandbox_world", "wilderness_survival",
       "highland_traverse", "swamp_border_world", "frontier_living_world",
@@ -70,6 +70,11 @@
       "profile_file": "unit_information_source.yaml",
       "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": false, "information_content": true, "self_model_content": false}
+    },
+    "unit_information_routing_pilot": {
+      "profile_file": "unit_information_routing_pilot.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "ON", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
+      "content": {"faction_tension_overrides": false, "information_content": true, "self_model_content": true}
     },
     "unit_selfmodel_pilot": {
       "profile_file": "unit_selfmodel_pilot.yaml",

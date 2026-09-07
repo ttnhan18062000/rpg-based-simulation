@@ -342,7 +342,14 @@ class MemoryModel:
 
 @dataclass(frozen=True, slots=True)
 class IdentityDoctrine:
-    """Doctrine/class constraints."""
+    """Doctrine/class constraints.
+
+    CONFIRMED DEAD LEGACY CODE (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, 2026-09-07): no
+    real entity ever gets a non-default `class_id`, so this dataclass is always constructed with
+    its bare defaults in production. See `src/domains/motivation/{resolver,service}.py`'s own
+    module docstrings and `docs/guidelines/intentional_divergences.md` §2.53 for the full
+    disclosure — superseded by `AdventureRouteScorer.score()`'s `personality_bias` mechanism.
+    """
     class_id: Optional[str] = None
     preferred_route_tags: Mapping[str, float] = field(default_factory=dict)
     avoided_route_tags: Mapping[str, float] = field(default_factory=dict)
@@ -359,7 +366,14 @@ class IdentityDoctrine:
 
 @dataclass(frozen=True, slots=True)
 class ValuePreferenceProfile:
-    """Value scales (greed, pride, curiosity, caution)."""
+    """Value scales (greed, pride, curiosity, caution).
+
+    CONFIRMED DEAD LEGACY CODE (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, 2026-09-07): zero
+    real construction of a non-default profile exists anywhere in `src/`, so every field stays at
+    its bare 0.5 default in production. See `docs/guidelines/intentional_divergences.md` §2.53 for
+    the full disclosure — superseded by `AdventureRouteScorer.score()`'s `personality_bias`
+    mechanism.
+    """
     survival: float = 0.5
     reward: float = 0.5
     knowledge: float = 0.5

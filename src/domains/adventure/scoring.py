@@ -28,6 +28,28 @@ if TYPE_CHECKING:
     from src.core.state import GroupRecord
     from src.domains.campaigns.progression_plan import ProgressionPlan
     from src.engine.faction_decision import FactionDirective
+    from src.domains.culture.model import CultureState
+    from src.domains.fame.legend import LegendFact
+    from src.domains.belief_institution.model import BeliefInstitution
+
+
+# TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: real RouteFamily -> Culture Drift tag mapping,
+# grounded directly in CulturalBiasApplicator.compute_culture_delta()'s own real tag vocabulary
+# (src/domains/culture/applicator.py: _FATALISM_POSITIVE/_FATALISM_NEGATIVE/_HERO_POSITIVE/
+# _SCARCITY_POSITIVE/_CONFLICT_POSITIVE/_CONFLICT_NEGATIVE — {caution, recovery, flee, pride,
+# combat, aggressive, loyalty, party, survival}, confirmed via direct read; NOT an invented or
+# assumed wider vocabulary). Only RouteFamily values with a genuine, non-forced semantic match are
+# mapped — mirrors personality_bias's own existing pattern immediately below, which likewise does
+# not cover every RouteFamily value (BUY_UPGRADE/TRAIN_SKILL/RETURN_TOWN/DEFER_WITH_REASON/
+# ASK_INFORMATION/SCOUT_LOCATION/SELL_LOOT_FOR_GOLD/TAKE_EASY_QUEST have no real culture-tag match
+# either and are deliberately left uncovered, contributing 0.0, not forced into a weak fit).
+_CULTURE_DRIFT_TAGS_BY_FAMILY: Dict[RouteFamily, frozenset] = {
+    RouteFamily.RECOVER: frozenset({"recovery", "caution"}),
+    RouteFamily.HUNT_WEAK_ENEMY: frozenset({"combat"}),
+    RouteFamily.OWN_SURVIVAL: frozenset({"survival", "flee"}),
+    RouteFamily.FORM_PARTY: frozenset({"party"}),
+    RouteFamily.PROTECT_TARGET: frozenset({"loyalty"}),
+}
 
 
 class AdventureRouteScorer:
@@ -46,11 +68,44 @@ class AdventureRouteScorer:
         faction_directives: Optional[list] = None,
         factions: Optional[Any] = None,
         progression_plan: Optional["ProgressionPlan"] = None,
+        culture_state: Optional["CultureState"] = None,
+        legend_fact: Optional["LegendFact"] = None,
+        belief_institutions: Optional[tuple] = None,
+        event_fidelity: Optional[Dict[str, float]] = None,
     ) -> AdventureRouteOption:
         """
         Calculate subjective score for the route option and return updated option.
         Formula:
             score = urgency + benefit + personality_bias + plan_advance_bonus + memory_adjustment + confidence_bonus - risk_penalty - blocker_penalty
+
+        culture_state (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, optional): the entity's
+        real current region's CultureState, bridged from CampaignState.region_cultures by
+        CampaignOrchestrator._build_initial_state() and threaded down from
+        AdventureGoalScorer.score() via AdventureDecisionService.decide(). When supplied and the
+        route's family has a real Culture Drift tag mapping (_CULTURE_DRIFT_TAGS_BY_FAMILY above),
+        adds an additive delta to personality_bias via
+        CulturalBiasApplicator.compute_culture_delta() — see that block below for the real
+        vocabulary/mapping this reuses.
+
+        legend_fact (TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING, optional): the LegendFact
+        (src/domains/fame/legend.py) for this specific entity's own subject_id, bridged from
+        CampaignState.entity_fame by CampaignOrchestrator._build_initial_state() and resolved by
+        AdventureGoalScorer.score() via state.entity_legend_facts.get(str(entity.id)). When
+        present (i.e. this entity's own Chronicle-derived fame has crossed FAME_THRESHOLD), adds a
+        fame-scaled bonus to QUEST_OPPORTUNITY's personality_bias — idea 57's "Living Legend
+        Feedback Loop": a legend's own accumulated fame reinforces further heroic quest-seeking.
+
+        belief_institutions / event_fidelity (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING,
+        both optional): idea 62/63's own real chain. belief_institutions is the tuple of
+        BeliefInstitution snapshots (src/domains/belief_institution/model.py) this entity is a
+        real adherent of, bridged from CampaignState.belief_institutions by
+        CampaignOrchestrator._build_initial_state() and resolved by AdventureGoalScorer.score()
+        via state.entity_belief_institutions.get(entity.id, ()). event_fidelity is the
+        entry_id -> idea 62 fidelity-scalar dict bridged the same way, used to scale each
+        institution's own belief_strength by how faithfully accurate its origin_event_id's
+        historical record still is (missing entry_id defaults to 1.0 — fully accurate — matching
+        FidelityState's own default). Adds a QUEST_OPPORTUNITY personality_bias bonus, same route
+        family and additive-independence pattern as the Living Legend branch above.
 
         Optional group context enables class-synergy multipliers (SOC-229):
           - WARRIOR + MAGE both present in group.roles → HUNT_WEAK_ENEMY score ×1.15
@@ -221,6 +276,53 @@ class AdventureRouteScorer:
             personality_bias += sociability * 0.40
         elif route.family == RouteFamily.QUEST_OPPORTUNITY:
             personality_bias += greed * 0.50
+
+        # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: Culture Drift bias, additive and
+        # independent of the trait-based if/elif chain above (a route can be affected by both a
+        # personality trait AND regional culture at once, unlike the trait chain's own
+        # one-match-only structure). Deliberately bypasses the dead MotivationBiasService/
+        # DoctrineResolver/IdentityDoctrine/ValuePreferenceProfile chain (see docs/guidelines/
+        # intentional_divergences.md §2.53) — reuses the same real, already-shipped
+        # CulturalBiasApplicator.compute_culture_delta() logic that idea-56/57's own investigation
+        # found this codebase already has, just never wired to a live route-scoring consumer.
+        if culture_state is not None:
+            culture_tags = _CULTURE_DRIFT_TAGS_BY_FAMILY.get(route.family)
+            if culture_tags:
+                from src.domains.culture.applicator import CulturalBiasApplicator
+
+                personality_bias += CulturalBiasApplicator.compute_culture_delta(culture_state, culture_tags)
+
+        # TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING: Living Legend feedback loop, additive and
+        # independent of both the trait-based chain and the Culture Drift branch above (an entity
+        # can be affected by a personality trait, regional culture, AND their own legend status
+        # simultaneously). Only QUEST_OPPORTUNITY is mapped — a legend's own accumulated fame
+        # reinforces further heroic quest-seeking, the exact feedback idea 57 was designed to
+        # produce; no other RouteFamily has a comparably real semantic tie to a subject's own fame.
+        if legend_fact is not None and route.family == RouteFamily.QUEST_OPPORTUNITY:
+            personality_bias += legend_fact.fame * 0.30
+
+        # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: Belief Institution reinforcement,
+        # additive and independent of every branch above (an entity can be affected by a
+        # personality trait, regional culture, their own legend status, AND their clan's organized
+        # belief in a (possibly different) legend simultaneously). Only QUEST_OPPORTUNITY is
+        # mapped, mirroring the Living Legend branch's own real semantic tie — a clan's organized
+        # reverence for a real historical legend plausibly reinforces the same heroic
+        # quest-seeking behavior fame itself reinforces, just channeled through group identity
+        # rather than individual renown. Each institution's belief_strength is scaled by its own
+        # origin_event_id's real current fidelity (idea 62) before contributing — a belief formed
+        # around a heavily-mythologized/decayed-fidelity event carries less real-history weight
+        # than one still faithful to the original record. Uses the single strongest
+        # fidelity-scaled institution among this entity's real adherent memberships (max, not
+        # sum) — one entity can belong to more than one belief institution, and summing would let
+        # an entity in N clans get an N-times bonus for what is conceptually one "does my
+        # in-group revere a legend" signal, not N independent signals.
+        if belief_institutions and route.family == RouteFamily.QUEST_OPPORTUNITY:
+            _fidelity_map = event_fidelity or {}
+            strongest = max(
+                inst.belief_strength * _fidelity_map.get(inst.origin_event_id, 1.0)
+                for inst in belief_institutions
+            )
+            personality_bias += strongest * 0.30
 
         # ── 4b. Plan-Advance Bonus ──────────────────────────────────────────
         # +1.5 flat bonus when this route's family matches the head BuildGoal's

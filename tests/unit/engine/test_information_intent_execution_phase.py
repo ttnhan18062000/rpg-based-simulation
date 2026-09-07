@@ -78,6 +78,55 @@ def test_action_intent_execution_phase_only_executes_the_action_intent_entry_in_
     assert traces[0].intent_kind == "MOVE_TO"
 
 
+def test_action_intent_execution_phase_strips_raw_action_intent_after_execution():
+    """TCK-20260907-INFORMATION-INTENT-EXECUTION-RESULT-TYPE-MISMATCH regression.
+
+    Before the fix, the raw ActionIntent survived unchanged in the returned
+    update's intent_results (EntityUpdate.merge() concatenates additively) and
+    later got installed as entity.identity.latest_intent_results --
+    StrategicWorkQueue.build() then crashed with AttributeError reading
+    .accepted off it (a field only real IntentResult objects have, not
+    ActionIntent).
+    """
+    actor = _entity(1)
+    state = _state([actor])
+
+    action_intent = _move_intent(actor.id)
+    update = StateUpdate(entity_updates={
+        actor.id: EntityUpdate(entity_id=actor.id, intent_results=[action_intent]),
+    })
+
+    result = InformationIntentExecutionPhase.execute(state, update)
+
+    surviving = result.entity_updates[actor.id].intent_results
+    assert not any(isinstance(r, ActionIntent) for r in surviving), (
+        "raw ActionIntent must not survive execution -- StrategicWorkQueue.build() "
+        "reads .accepted unconditionally off every intent_results entry"
+    )
+    for r in surviving:
+        assert hasattr(r, "accepted"), "every surviving entry must be a real IntentResult"
+
+
+def test_action_intent_execution_phase_preserves_real_intent_result_alongside_stripped_action_intent():
+    actor = _entity(1)
+    state = _state([actor])
+
+    real_intent_result = IntentResult(
+        transaction_id="tx1", accepted=True, reason=None,
+        source_kind="RESOURCE_TRANSFER", source_id=99,
+    )
+    action_intent = _move_intent(actor.id)
+    update = StateUpdate(entity_updates={
+        actor.id: EntityUpdate(entity_id=actor.id, intent_results=[real_intent_result, action_intent]),
+    })
+
+    result = InformationIntentExecutionPhase.execute(state, update)
+
+    surviving = result.entity_updates[actor.id].intent_results
+    assert not any(isinstance(r, ActionIntent) for r in surviving)
+    assert real_intent_result in surviving
+
+
 def test_action_intent_execution_phase_preserves_deterministic_entity_order():
     entities = [_entity(30), _entity(5), _entity(17)]
     state = _state(entities)

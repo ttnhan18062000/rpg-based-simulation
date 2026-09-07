@@ -23,8 +23,12 @@ keyed per-(clan, legendary event) pair, and consuming a second real input alongs
 `ChronicleHierarchy`: real Clan membership (`AuthoritativeState.clans`), read-only.
 
 This is the terminal idea in the M5 "Memory, Reputation & Legacy" epic's Fame → Fidelity →
-Belief-Institution chain — the whole chain ships with **no live perception/motivation consumer
-yet**. See "No Live Consumer" below.
+Belief-Institution chain. As of `TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING` (2026-09-07) it has
+a real live route-scoring consumer via `AdventureRouteScorer.score()`'s `personality_bias`
+mechanism — see "Live Consumer" below. It still has **no live perception/motivation consumer**
+(the `PerceptionFilterService`/`MotivationBiasService` gap idea 57's own `LegendFact` shares and
+remains unresolved for, per §2.53's own disclosed scope) — these are two distinct consumer paths,
+and only the route-scoring one is resolved here.
 
 ---
 
@@ -129,14 +133,27 @@ Existing (clan, origin event) pairs not re-derived in the current episode persis
 
 ---
 
-## No Live Consumer
+## Live Consumer
+
+As of `TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING` (2026-09-07):
+`CampaignOrchestrator._build_initial_state()` snapshots `belief_institutions` into
+`AuthoritativeState.entity_belief_institutions` (`Dict[int, Tuple[BeliefInstitution, ...]]`, keyed
+directly off each institution's own real `adherent_entity_ids` — no separate `clans` lookup needed
+at scoring time), carried forward every tick by `ApplyPath.apply_generation()`.
+`AdventureGoalScorer.score()` resolves it per entity and threads it into
+`AdventureRouteScorer.score()`'s `personality_bias` mechanism: for `QUEST_OPPORTUNITY` routes, the
+strongest fidelity-scaled `belief_strength` among the entity's real adherent memberships (max, not
+summed across multiple institutions) adds a bonus — a clan's organized reverence for a real legend
+reinforces the same heroic quest-seeking fame itself reinforces, mirroring idea 57's own Living
+Legend branch but channeled through group identity rather than individual renown.
 
 `BeliefInstitutionImporter.get_institution(campaign_state, clan_id, origin_event_id) ->
-Optional[BeliefInstitution]` (defined in `src/domains/belief_institution/exporter.py`) has **no
-live call site** as of this ticket — this is the terminal idea in the M5 Fame → Fidelity →
-Belief-Institution chain, and the whole chain remains "built, not yet visible in play." No new SimQ
-scoring pillar is registered and no `CHURCH` building (`"BLESSING"`/`"RESURRECTION"`) wiring is
-added — both explicitly out of scope, per the source design's own "too underspecified to build
+Optional[BeliefInstitution]` (defined in `src/domains/belief_institution/exporter.py`) itself
+remains unused by this wiring (the bridge reads `belief_institutions` directly, matching
+`region_culture_states`/`entity_legend_facts`'s own established bridge pattern) — it stays
+available as a direct per-(clan, event) lookup helper for any future consumer. No new SimQ scoring
+pillar is registered and no `CHURCH` building (`"BLESSING"`/`"RESURRECTION"`) wiring is added —
+both remain explicitly out of scope, per the source design's own "too underspecified to build
 around responsibly" caveat. Enforced by
 `tests/architecture/test_belief_institution_write_paths.py::test_belief_institution_module_adds_no_church_service_or_simq_wiring`.
 
@@ -173,8 +190,10 @@ Test: `tests/unit/domains/belief_institution/test_deriver.py`
 | `BeliefInstitutionCarryForward` | `src/domains/belief_institution/model.py` | Per-(clan, event) carry-forward |
 | `BeliefInstitutionDeriver` | `src/domains/belief_institution/deriver.py` | (ChronicleHierarchy, CampaignState, clans) → BeliefInstitution |
 | `BeliefInstitutionExporter` | `src/domains/belief_institution/exporter.py` | Episode-end persistence hook |
-| `BeliefInstitutionImporter` | `src/domains/belief_institution/exporter.py` | Thin lookup ((clan_id, origin_event_id) → BeliefInstitution); no live caller yet |
+| `BeliefInstitutionImporter` | `src/domains/belief_institution/exporter.py` | Thin lookup ((clan_id, origin_event_id) → BeliefInstitution); unused by the live wiring, available for future consumers |
 | `CampaignState.belief_institutions` | `src/domains/campaigns/state.py` | Cross-episode persistence |
+| `AuthoritativeState.entity_belief_institutions` | `src/core/state.py` | Per-tick bridged snapshot (entity_id → tuple of real adherent BeliefInstitution), populated by `CampaignOrchestrator._build_initial_state()` |
+| `AdventureRouteScorer.score()` | `src/domains/adventure/scoring.py` | Live consumer — `personality_bias` bonus for `QUEST_OPPORTUNITY` routes |
 | `CampaignOrchestrator._advance_state()` | `src/domains/campaigns/orchestrator.py` | Episode-boundary wiring, after `FameExporter`, alongside `CultureDriftExporter`/`FidelityExporter` |
 
 ---

@@ -2,6 +2,18 @@
 src/domains/motivation/service.py
 ───────────────────────────────────────────────────────────────────────────────
 MotivationBiasService for Phase 14.
+
+CONFIRMED DEAD LEGACY CODE (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, 2026-09-07):
+`compute_bias_multiplier()` has zero real (non-test) callers anywhere in `src/`. Even if wired,
+all three of its real inputs are simultaneously dead in production: `IdentityDoctrine` (via
+`DoctrineResolver`, see that module's own disclosure), `ValuePreferenceProfile` (every field
+defaults to exactly 0.5, so its `(value - 0.5) * 0.5` terms are mathematically guaranteed to
+evaluate to 0.0 for every real entity), and — until this ticket — `culture_values`. It is
+superseded by `AdventureRouteScorer.score()`'s own already-live `personality_bias` mechanism,
+which does the same conceptual job with real, populated per-entity trait data. Culture Drift is
+now wired directly into `personality_bias` instead (`src/domains/adventure/scoring.py`), bypassing
+this service entirely. Deliberately NOT revived or deleted — see
+`docs/guidelines/intentional_divergences.md` §2.53 for the full disclosure and rationale.
 """
 
 from __future__ import annotations

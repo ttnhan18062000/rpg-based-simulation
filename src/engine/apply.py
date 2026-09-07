@@ -459,6 +459,35 @@ class ApplyPath:
             # engine start (e.g. ENABLE_SOCIAL_COOPERATION=ON) are not silently lost
             # when apply_generation reconstructs AuthoritativeState each tick.
             feature_flags=dict(getattr(prior_state, "feature_flags", None) or {}),
+            # TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD: these 3 episode-scoped
+            # bridge snapshots (populated once per episode by CampaignOrchestrator._build_initial_
+            # state(), read every tick by GroupPhase.resolve()/AdventureGoalScorer.score()) were
+            # never carried forward here, silently resetting to {} after the first tick — unlike
+            # information_source_profiles/pending_information_responses (Pattern 6's own documented
+            # Bounded/single-fire fields, deliberately NOT carried forward; see design_patterns.md),
+            # these 3 have no such rationale and are meant to persist for the whole episode, same as
+            # factions above. Never mutated mid-episode by any StateUpdate, only read, so a plain
+            # passthrough is correct.
+            region_loyalty_pressure=prior_state.region_loyalty_pressure,
+            region_culture_states=prior_state.region_culture_states,
+            entity_legend_facts=prior_state.entity_legend_facts,
+            # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: same episode-scoped bridge
+            # carry-forward pattern as region_culture_states/entity_legend_facts immediately
+            # above — populated once per episode by CampaignOrchestrator._build_initial_state(),
+            # never mutated mid-episode, only read by AdventureGoalScorer.score(). Added directly
+            # alongside the constructor field in the same change, per this ticket's own AC4, to
+            # avoid repeating the exact regression APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD
+            # fixed for the 3 sibling fields above.
+            entity_belief_institutions=prior_state.entity_belief_institutions,
+            event_fidelity=prior_state.event_fidelity,
+            # TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION: reclassifies
+            # information_source_profiles from Bounded/single-fire (the §2.23 framing above) to
+            # persistent — it is conceptually a static world-level catalog, not a one-shot event
+            # queue like its sibling pending_information_responses (deliberately still NOT carried
+            # forward here — Branch 2 in InformationBeliefPhase.apply() depends on it staying
+            # single-fire, and has no dependency on information_source_profiles at all, so this
+            # split cannot cause Branch 2 to double-fire). Never mutated mid-episode, only read.
+            information_source_profiles=prior_state.information_source_profiles,
         )
 
         if not any_entity_changed and getattr(prior_state, "_readonly_entities_cache", None) is not None:
