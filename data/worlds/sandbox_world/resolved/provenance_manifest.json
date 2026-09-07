@@ -1,16 +1,16 @@
 {
-  "manifest_id": "prov_a023f5380fc9a197",
+  "manifest_id": "prov_0a90326b7ca1bcc1",
   "world_id": "sandbox_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "03a49cc95e9b19ed0efac1c5a017247bd0e41766ba8ec060a420843e566974d5",
+  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
   "module_fingerprints": {
-    "frontier_village_core": "2a013aad4d317d0cedac56c2bf14232c940cca2d89927a781e1fdacde682a5d6",
+    "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "wolf_den_near_forest": "14dcdf22f8bfc5ea7340de80e47d9bab361e279778e165bd721367bc573f7769"
   },
   "composition_fingerprint": "91c50c555e73a74e6fe95195feeaa4623150188393168ed3d5941f8eccd7487a",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "a023f5380fc9a19749e9985569db48e414af8900b0e58ab693e952a03dfb8b7f",
-  "created_at": "2026-09-07T08:05:27.453187Z",
+  "content_fingerprint": "0a90326b7ca1bcc18571b273c38e509db7e584d94e402841d78476edede418e3",
+  "created_at": "2026-09-07T09:20:24.790571Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -411,19 +411,6 @@
       "parameters": {},
       "profiles": {
         "building_type": "healer_hut"
-      },
-      "details": {
-        "region": "hometown"
-      }
-    },
-    "church_0": {
-      "element_id": "church_0",
-      "element_type": "building",
-      "source_module": "frontier_village_core",
-      "recipe_type": "building_layout",
-      "parameters": {},
-      "profiles": {
-        "building_type": "church"
       },
       "details": {
         "region": "hometown"

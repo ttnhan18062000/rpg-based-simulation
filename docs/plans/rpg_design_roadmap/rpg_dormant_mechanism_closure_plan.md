@@ -102,6 +102,11 @@ have no live path connecting them to the rest of the simulation.
 7. **The `CHURCH` building's Blessing/Resurrection services are fully coded and placed in zero of the
    20 world modules** — a pure content-authoring gap (add the building to at least one module's
    composition), no code required. Lowest priority since it's isolated and low-risk either way.
+   **Resolved, 2026-09-07** (`TCK-20260907-CHURCH-CONTENT-AUTHORING`, `tickets/done/`): premise was
+   wrong — `BLESSING`/`RESURRECTION` have zero real code reading them anywhere, unlike this plan's
+   other content-only gaps. Real user decision (after two revisions, see the ticket's own
+   Completion Summary): **deferred**, same treatment as idea 30 (`TCK-20260907-ITEM-INSTANCE-
+   HISTORY-DECISION`) — `CHURCH` is not placed in any world module.
 
 ## Out of Scope
 

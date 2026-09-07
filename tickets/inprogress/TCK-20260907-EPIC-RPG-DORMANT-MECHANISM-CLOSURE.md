@@ -119,8 +119,14 @@ This epic tracks child tickets only; no direct implementation happens here.
   6-ticket plan: wired idea 62's `FidelityState`/idea 63's `BeliefInstitution` into a live
   `QUEST_OPPORTUNITY` `personality_bias` branch, matching the idea 56/57 pattern)
 - `TCK-20260907-CHURCH-CONTENT-AUTHORING` (P3 — DONE 2026-09-07: original "pure content" premise was
-  wrong — Blessing/Resurrection are inert data labels with zero real code reading them; placed
-  CHURCH anyway and formally disclosed the inertness per the ratified decision)
+  wrong — Blessing/Resurrection are inert data labels with zero real code reading them; first
+  placed with inertness disclosed, **then reverted to deferred** after independent review, matching
+  idea 30's treatment — see decision #11)
+- `TCK-20260907-DORMANT-CLOSURE-CI-REGRESSION-FIXUP` (P1 — DONE 2026-09-07, hotfix, NEW: fixes 3
+  real CI clusters an independent review found in decisions #6/#9's own changes — see decision #11)
+- `TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE` (P2 — NEW, filed but deliberately left
+  OPEN, not implemented: a real determinism-coverage question raised by independent review — see
+  decision #11)
 
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/rpg_dormant_mechanism_closure_plan.md`
@@ -320,11 +326,47 @@ folded in as if it were always the plan. Listed chronologically, 2026-09-07 unle
    directly instead, matching the exact same evidentiary bar decisions #2-3's own Culture
    Drift/Living Legend branches used (neither of which used a full corpus run either).
 
-**All 13 tickets in this batch are now DONE** (grown from an original scope of 6), **except**
+11. **Independent review round (PR #144), requested specifically to scrutinize the 4 decisions
+    above, not rubber-stamp them.** The repo owner explicitly flagged not being 100% certain these
+    decisions were right and asked for real scrutiny; the `rpg-feature-planning` session (the
+    original epic scoping author) reviewed and found: (a) 3 real, currently-failing CI clusters
+    (10 tests), all regression-scope gaps from decisions #6 and #9's own changes, not
+    architectural bugs; (b) a real determinism-coverage gap broader than any single decision — none
+    of the 6 `CampaignState`-bridge fields this whole epic added participate in the canonical state
+    hash (`CanonicalStateHasher.to_canonical_data()`, `src/engine/checkpoint.py`); (c) design
+    pushback on decision 10 (CHURCH), arguing its precedent didn't actually fit and idea 30's
+    "fully deferred" treatment was more consistent for the same shape of gap; (d) requests to name
+    two implicit reasoning steps explicitly (decision 3's `personality_bias` scope + dead-chain
+    retirement plan; decision 9(ii)'s `QUEST_OPPORTUNITY` choice as implementation-convenience).
+    Every finding was independently reproduced/verified by the orchestrator before acting (all 10
+    failing tests reproduced locally; the state-hash gap traced directly in
+    `checkpoint.py`).
+    **Real user decision, "go ahead with all your recommendations"**:
+    - CI fixes: implemented and closed as `TCK-20260907-DORMANT-CLOSURE-CI-REGRESSION-FIXUP`
+      (hotfix, DONE) — all 10 tests now pass, no new regressions in the broader touched-area suite.
+    - Determinism gap: filed as its own ticket,
+      `TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE` (not implemented now — a real
+      investigation is needed first to confirm whether it's a genuine verification gap or a benign
+      omission).
+    - Decision 10 (CHURCH): **reversed**. `CHURCH` is no longer placed in any world module —
+      reverted to the same "deferred" disposition as idea 30, matching the reviewer's argument that
+      the "No Live Consumer Yet" precedent didn't actually fit (that precedent has a live, correct
+      derivation with only consumption pending; CHURCH has neither). `docs/guidelines/
+      intentional_divergences.md` §2.54 rewritten to record both decisions honestly rather than
+      erase the first one.
+    - Decisions 3 and 9(ii): clarifying notes added to §2.53 and §2.55 respectively, naming
+      `personality_bias`'s real current scope + a disclosed dead-chain-retirement gap, and naming
+      `QUEST_OPPORTUNITY` as an implementation-convenience choice rather than a settled
+      architectural constraint.
+
+**All 14 tickets in this batch are now DONE** (grown from an original scope of 6 — 13 from the
+epic itself, plus this review round's own CI hotfix), **except**
 `TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH`, whose real code lives on the separate,
-still-unmerged PR #143 branch rather than this one — see decision #7 above. This epic ticket stays
-open (not moved to `tickets/done/`) until that PR merges; at that point a final housekeeping pass
-should close this epic ticket for real.
+still-unmerged PR #143 branch rather than this one — see decision #7 above. One further ticket,
+`TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE`, was filed but deliberately left OPEN for
+future investigation, not implemented as part of this epic. This epic ticket stays open (not moved
+to `tickets/done/`) until PR #143 merges; at that point a final housekeeping pass should close this
+epic ticket for real.
 
 ## Test Summary
 

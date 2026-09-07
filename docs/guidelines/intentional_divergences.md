@@ -1621,50 +1621,60 @@ This document is the canonical record of intentional behavior shifts in `src` co
   the exact test path). `docs/parity_ledger/strategic_cognition.yaml` STRAT-227's own `text`/
   `v2_evidence` fields were updated in place to describe the new branch; `docs/mechanics/
   04_strategic_cognition.md` §6.4 was updated with the corresponding note.
+- **`personality_bias`'s real conceptual scope, added 2026-09-07 after independent review**:
+  `personality_bias` has now been extended 3 times — this entry's own Culture Drift branch, idea
+  57's Living Legend branch (§2.53 itself, `LegendFact.fame`), and idea 62/63's Belief Institution
+  branch (§2.55). Its real, current conceptual scope is: **every additive per-tick signal that
+  plausibly biases which adventure route family an entity gravitates toward, keyed by real,
+  already-populated per-entity/per-region/per-episode state** — not "wherever the one live hook
+  happens to be" as a default reflex. A future 4th addition should be checked against that
+  definition explicitly (does the new signal genuinely bias route-family choice the same way these
+  3 do, or does it belong somewhere else in the pipeline) rather than added by the same "it's the
+  only live hook" reasoning without re-confirming fit.
+- **Dead Doctrine/Values/Culture chain retirement, added 2026-09-07**: no ticket currently exists to
+  delete or formally retire `MotivationBiasService`/`DoctrineResolver`/`IdentityDoctrine`/
+  `ValuePreferenceProfile` — they remain in `src/` with "CONFIRMED DEAD LEGACY CODE" docstrings
+  (added by this ticket) as the only signal to a future investigator that they're not live. This is
+  a real, disclosed gap, not silently dropped: a future cleanup ticket should either (a) delete the
+  4 modules outright once nothing references the docstring disclosure as a "why does this still
+  exist" answer, or (b) formally document them as permanently-retired-in-place if deletion carries
+  its own risk (e.g. external tooling referencing the module paths). Not actioned here — this entry
+  exists so the gap is findable, not to resolve it.
 - **Status**: RATIFIED
 
 ---
 
-### 2.54 CHURCH's BLESSING/RESURRECTION Service Labels Are Placed-But-Inert — No Live Consumer Anywhere (TCK-20260907-CHURCH-CONTENT-AUTHORING)
+### 2.54 CHURCH's BLESSING/RESURRECTION Service Labels — Considered "Place and Disclose Inert," Reverted to Deferred (TCK-20260907-CHURCH-CONTENT-AUTHORING)
 - **Subsystem**: World Content / Town Buildings
-- **Old Behavior**: `BuildingRegistry._templates[CHURCH]["services"] = ["BLESSING", "RESURRECTION"]`
-  (`src/town/buildings.py:23`) was assumed to represent real, functioning building services simply
-  waiting to be placed into a world module — the ticket's own inherited premise, matching the 2026-
-  09-02 hardening pass's framing of this as "pure content authoring, not a code bug."
-- **New Behavior**: Confirmed false on Investigate. Unlike every sibling service string in the same
-  template dict (`REST`→`src/engine/town_resolution.py:100-106`, `CRAFT`→`src/engine/blacksmith.py:
-  225`/`src/town/blacksmith.py:56`, `TRADE`→`src/engine/domain/action_router.py:52`, `QUEST`→`src/
-  engine/quests.py:209`, `INTEL`→`src/engine/town_resolution.py:100`), `BLESSING` and `RESURRECTION`
-  have zero occurrences anywhere else in `src/` (`grep -rni "blessing\|resurrection" src/ --include=
-  "*.py"` returns zero hits outside `buildings.py`'s own dict). `BuildingRegistry.get_services()`
-  itself has zero call sites in `src/` outside tests. Separately, `BuildingRegistry` is itself
-  disconnected from the real runtime building-creation path: `WorldCompiler`'s building compilation
-  (`src/worldbuilding/compiler.py::compile()`, step 5) sets `BuildingState.kind` directly from the
-  world module's own `buildings:` count-map key (a lowercase content-catalog ID resolved against
-  `data/content/world/buildings.yaml` via `BuildingResolver`), never referencing `BuildingRegistry`
-  at all; runtime service dispatch (e.g. `town_resolution.py`'s `REST`/`GATHER_INTEL` handling)
-  compares against these lowercase catalog IDs directly, not `BuildingRegistry`'s uppercase
-  constants. `CHURCH` is placed as a real, spawnable building (new `church` entry in `data/content/
-  world/buildings.yaml`, added to `frontier_village_core`'s `buildings:` map, confirmed compiled as
-  `church_0`/`type: church` in `sandbox_world`'s resolved output) — but its `BLESSING`/`RESURRECTION`
-  service labels remain permanently inert: no engine phase, action-router branch, or intent handler
-  anywhere reads them, and the new `church` catalog entry deliberately omits `service_profile_id`
-  rather than inventing a fake service profile that would misleadingly imply functionality.
-- **Rationale**: **Bounded**. Building real BLESSING/RESURRECTION service-handling logic (an engine
-  phase or action-router branch comparable in shape to `REST`'s) is a materially larger scope than
-  this P3 backlog item's "pure content authoring" framing — disproportionate for the ticket as
-  scoped. Ratified by the orchestrating session via explicit user decision (2026-09-07): place
-  `CHURCH` and formally disclose the inertness rather than either building new service logic or
-  leaving the finding unstated, matching Chronicle Fidelity Drift's and Living Legend Perception's
-  own "No Live Consumer Yet" precedent shape (`docs/mechanics/05_world_evolution.md` §"No Live
-  Consumer Yet", lines 646-651 and 750-757).
-- **Verification**: `python3 -m src.worldbuilding.cli resolve sandbox_world` and `... validate
-  sandbox_world` both succeed (only the 3 pre-existing, unrelated `WORLD-UNEXPECTED-SECTION`
-  warnings shared by every world using this profile shape); `church_0` (`type: church`) confirmed
-  present in `data/worlds/sandbox_world/resolved/world.resolved.yaml`. `tools/calibrate_simq.py
-  --name sandbox_world --seed 42 --ticks 100` runs cleanly (`overall_grade=A`) with no CHURCH-
-  specific event ever emitted, confirming inertness rather than silent malfunction.
-- **Status**: RATIFIED
+- **Finding, unchanged from the original investigation**: `BuildingRegistry._templates[CHURCH]
+  ["services"] = ["BLESSING", "RESURRECTION"]` (`src/town/buildings.py:23`) are inert data labels
+  with zero real code reading them anywhere in `src/`, unlike every sibling building service
+  (`REST`/`CRAFT`/`TRADE`/`QUEST`/`INTEL`, each with a real handler). `BuildingRegistry.
+  get_services()` itself has zero call sites outside tests. This part of the finding stands and is
+  not in question.
+- **Decision history**: this ticket's first pass placed `CHURCH` into `frontier_village_core`
+  anyway with the inertness formally disclosed (matching the "No Live Consumer Yet" precedent
+  shape) — ratified via the orchestrating session's own `AskUserQuestion` to the real user,
+  2026-09-07. **Reverted the same day**, after an independent review (`rpg-feature-planning`
+  session, requested specifically to scrutinize this decision) argued the precedent didn't
+  actually fit: `fame_legend_contract.md`'s "No Live Consumer Yet" cases have a live, correct
+  *derivation* with only the *consumption* pending — here, placing `CHURCH` produced literally zero
+  observable effect from any system or player perspective (confirmed by the original ticket's own
+  calibration run — no `CHURCH`-specific event ever fired). Idea 30 (`ItemInstanceService`,
+  `TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION`) faced the structurally identical shape — neither
+  producer nor consumer wired — and was deferred outright, not half-built. The reviewer's
+  conclusion, accepted by the real user: CHURCH should get the same treatment as idea 30, not the
+  fame_legend precedent's treatment.
+- **Current behavior**: `CHURCH` is **not** placed in any world module.
+  `data/content/world/buildings.yaml` and `data/content/world_modules/frontier_village_core.yaml`
+  were reverted to their pre-ticket state; `sandbox_world` was recompiled to confirm `church_0` no
+  longer appears in its resolved output.
+- **Rationale**: **Bounded** (deferred, matching idea 30's own precedent, not "placed but inert").
+  Building real BLESSING/RESURRECTION service-handling logic remains out of this P3 backlog item's
+  scope; placing the building without it produces no real value and risks silently implying
+  functionality that isn't there.
+- **Status**: RATIFIED (revised) — see `TCK-20260907-CHURCH-CONTENT-AUTHORING`'s own updated
+  Completion Summary for the full record of both decisions.
 
 ---
 
@@ -1720,6 +1730,20 @@ This document is the canonical record of intentional behavior shifts in `src` co
   this ticket's scope — the real production code paths (`_build_initial_state()`,
   `apply_generation()`, `AdventureRouteScorer.score()`) are exercised directly instead, matching the
   same evidentiary bar §2.53's own Culture Drift/Living Legend branches used.
+- **Why `QUEST_OPPORTUNITY` specifically, added 2026-09-07 after independent review**: the real
+  reason is implementation convenience, and this note names that explicitly rather than leaving it
+  implicit. `QUEST_OPPORTUNITY` was chosen because `BeliefInstitution.belief_strength` is
+  conceptually a Clan-scoped derivative of `LegendFact.fame` (per its own model docstring — equal to
+  the legendary subject's own fame when the subject is a clan member), so it reuses the Living
+  Legend branch's exact real semantic tie to heroic quest-seeking with the least new code — not
+  because `QUEST_OPPORTUNITY` is the only, or even the most obviously fitting, route family a
+  belief-institution signal could plausibly bias. A more SOCIAL-adjacent route family (e.g. one tied
+  to defending or rallying around a religious/institutional site) was not evaluated in depth, mainly
+  because no existing `RouteFamily` cleanly represents that shape today. A future idea that wants
+  belief-institution bias on a different route family should treat this as a real, re-openable
+  design question, not a settled architectural constraint — it should re-derive its own reasoning
+  from `BeliefInstitution`'s real fields rather than assuming `QUEST_OPPORTUNITY` is the only valid
+  hook.
 - **Status**: RATIFIED
 
 ---

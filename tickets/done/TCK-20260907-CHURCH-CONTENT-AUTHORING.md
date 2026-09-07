@@ -47,12 +47,10 @@ content-authoring gap, not a code bug.
 - Any other item from the Dormant Mechanism Closure epic's scope.
 
 ## Acceptance Criteria
-- [x] `CHURCH` is placed in at least one real world module.
-- [x] **Amended 2026-09-07 (real user decision)**: Blessing/Resurrection services confirmed
-      functional in that world via a real test or run — **amended to**: placement confirmed via a
-      real resolve/validate/calibration run, and the services' actual inertness (zero code reads
-      the `BLESSING`/`RESURRECTION` service labels anywhere in `src/`) formally disclosed in
-      `docs/guidelines/intentional_divergences.md`, not silently implied as functional.
+- [x] **Amended 2026-09-07 (2nd revision, real user decision after independent review)**: `CHURCH`
+      is **not** placed — deferred, matching idea 30's own treatment for the structurally identical
+      "neither producer nor consumer" gap. The original AC text (placement + functional services,
+      later amended to placement + disclosed inertness) is superseded by this final disposition.
 
 ## Related Tickets
 - `TCK-20260907-EPIC-RPG-DORMANT-MECHANISM-CLOSURE` (parent epic)
@@ -124,35 +122,53 @@ to "placement confirmed, service inertness formally disclosed" rather than "serv
 functional." Disclose in `docs/guidelines/intentional_divergences.md`, matching the
 `docs/world/fame_legend_contract.md` "No Live Consumer Yet" precedent.
 
+Implemented as decided: added a `church` catalog entry (no `service_profile_id`), placed it in
+`frontier_village_core`, verified via a real resolve/validate/100-tick-calibration run against
+`sandbox_world` (`church_0` confirmed present, no `CHURCH`-specific event ever fired, confirming
+inertness rather than silent malfunction). Disclosed in `docs/guidelines/intentional_divergences.md`
+§2.54.
+
+### Decision reversed, 2026-09-07 (2nd revision, real user decision after independent review)
+An independent review (`rpg-feature-planning` session, explicitly requested to scrutinize this
+decision, not rubber-stamp it) argued the "No Live Consumer Yet" precedent didn't actually fit:
+that precedent's cases have a live, correct *derivation* with only the *consumption* pending —
+here, placing `CHURCH` produced literally zero observable effect from any perspective (the
+original calibration run's own evidence: no `CHURCH`-specific event ever fired). Idea 30
+(`TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION`) faced the structurally identical "neither producer
+nor consumer" gap and was deferred outright, not half-built — the reviewer argued CHURCH deserved
+the same consistent treatment, not the fame_legend precedent's treatment.
+
+**Reverted**: `CHURCH` removed from `data/content/world/buildings.yaml` and
+`data/content/world_modules/frontier_village_core.yaml` (both restored to their pre-ticket state);
+`sandbox_world` recompiled to confirm `church_0` no longer appears. `docs/guidelines/
+intentional_divergences.md` §2.54 rewritten to record both decisions (place-and-disclose, then
+reverted-to-deferred) rather than silently erasing the first one. **Final disposition: deferred**,
+same treatment as idea 30 — `BLESSING`/`RESURRECTION` remain unplaced pending either a future
+decision to build real service-handling logic, or a decision that they're not needed at all.
+
 ## Test Summary
-`python3 -m src.worldbuilding.cli resolve sandbox_world` and `... validate sandbox_world` both
-succeed (only 3 pre-existing, unrelated `WORLD-UNEXPECTED-SECTION` warnings shared by every world
-using this shape). `church_0` (`type: church`) confirmed present in `data/worlds/sandbox_world/
-resolved/world.resolved.yaml` via direct grep. `tools/calibrate_simq.py --name sandbox_world --seed
-42 --ticks 100` runs cleanly (`overall_grade=A`, 98 events replayed) — no CHURCH-specific event
-ever emitted, confirming the disclosed inertness rather than a silent malfunction. No `src/` code
-was changed; no new automated test was added (pure content + doc placement, matching the ratified
-"place and disclose" decision — nothing new to unit-test since the services are deliberately not
-wired to any logic).
+Original placement verification (now reverted, kept here for the record): `python3 -m
+src.worldbuilding.cli resolve sandbox_world`/`... validate sandbox_world` both succeeded,
+`church_0` confirmed present, `tools/calibrate_simq.py --name sandbox_world --seed 42 --ticks 100`
+ran cleanly with no `CHURCH`-specific event ever emitted. Post-revert verification: same
+resolve/validate run against `sandbox_world` confirms `church_0` no longer present, only the 3
+pre-existing unrelated `WORLD-UNEXPECTED-SECTION` warnings remain. No `src/` code was ever changed
+by either revision of this ticket.
 
 ## Files Changed
-- `data/content/world/buildings.yaml` (new `church` catalog entry, no `service_profile_id`)
-- `data/content/world_modules/frontier_village_core.yaml` (added `church: 1` to `buildings:`)
-- `data/worlds/sandbox_world/resolved/` (recompiled — `world.resolved.yaml`, `compile_context.json`,
-  `provenance_manifest.json`, `validation_report.json`, `assembly_report.json`)
-- `docs/guidelines/intentional_divergences.md` (new §2.54 disclosure entry)
-- `tickets/inprogress/TCK-20260907-CHURCH-CONTENT-AUTHORING.md` (this ticket)
+- `data/content/world/buildings.yaml` (church catalog entry added, then reverted)
+- `data/content/world_modules/frontier_village_core.yaml` (`church: 1` added, then reverted)
+- `data/worlds/sandbox_world/resolved/` (recompiled twice — once with CHURCH placed, once without)
+- `docs/guidelines/intentional_divergences.md` (§2.54 written, then rewritten to record both
+  decisions)
+- `tickets/done/TCK-20260907-CHURCH-CONTENT-AUTHORING.md` (this ticket)
 
 ## Completion Summary
 Investigation found the ticket's own premise was wrong: `BLESSING`/`RESURRECTION` are data-label
 strings with zero real code reading them anywhere in `src/`, unlike every sibling building service.
 Escalated rather than silently building new service logic or silently placing the building with a
-misleading "functional" claim. The orchestrating session's ratified decision (2026-09-07, ratified
-via `AskUserQuestion` to the real user, relayed back through the ticket): place `CHURCH` in a real
-world module and formally disclose the inertness, matching the `docs/mechanics/05_world_evolution.md`
-"No Live Consumer Yet" precedent shape — do not build real service-handling logic (disproportionate
-for a P3 backlog item). Implemented: added a `church` entry to the world-building content catalog
-(no `service_profile_id`, deliberately not implying functionality), placed it in
-`frontier_village_core` (a widely-reused settlement module), and verified via a real resolve +
-validate + 100-tick calibration run against `sandbox_world`. Disclosed in `docs/guidelines/
-intentional_divergences.md` §2.54.
+misleading "functional" claim. First ratified decision (2026-09-07): place `CHURCH` and formally
+disclose the inertness. That decision was reversed the same day after an independent review argued
+the precedent it relied on didn't actually fit, and that idea 30's "fully deferred" treatment was
+the more consistent outcome for the same shape of gap. **Final state: `CHURCH` is not placed in any
+world module — deferred, same as idea 30.**

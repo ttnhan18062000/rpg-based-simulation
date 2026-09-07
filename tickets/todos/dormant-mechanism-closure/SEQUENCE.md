@@ -66,9 +66,15 @@ in the original 6-ticket plan, grows this batch to 10 real tickets total.
     original 6-ticket plan: wired idea 62/63's `FidelityState`/`BeliefInstitution` into a live
     `personality_bias` consumer via `QUEST_OPPORTUNITY`, matching tickets 4-5's own pattern)
 9. ~~TCK-20260907-CHURCH-CONTENT-AUTHORING~~ — **DONE, 2026-09-07** (original "pure content" premise
-   was wrong — services are inert data labels; placed anyway, inertness formally disclosed)
+   was wrong — services are inert data labels; first placed with inertness disclosed, **reverted to
+   deferred after independent review** — matches ticket 7's own idea-30 treatment)
+9b. ~~TCK-20260907-DORMANT-CLOSURE-CI-REGRESSION-FIXUP~~ — **DONE, 2026-09-07** (hotfix, NEW: fixes
+    3 real CI clusters an independent review of this PR found in tickets 6b/8b's own changes)
+9c. TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE (P2 — NEW, filed but deliberately left
+    OPEN, not implemented: a real determinism-coverage question raised by the same review, spanning
+    all 6 `CampaignState`-bridge fields this batch added)
 
-**All 13 tickets in this batch (grown from an original scope of 6) are now DONE**, except
+**All 14 tickets in this batch (grown from an original scope of 6) are now DONE**, except
 `TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH`, whose code lives on the separate, still-unmerged PR #143
 branch (`social-mechanics-bible-chapter`) rather than this one — see the epic ticket's own
 `## Implementation Notes` decision #7 for the full cross-reference.
@@ -84,3 +90,12 @@ turned out to be structural (ticket 6b) rather than content-authoring, and direc
 unrelated regression in tickets 4-5's own shipped work (ticket 6c, already fixed). Ticket 7 is a
 real, bounded fix with no shared blocker. Tickets 8-9 are lower priority: 8 produces decisions
 rather than code, and 9 is isolated, low-risk content work that can land whenever convenient.
+
+**2026-09-07 update 4 (post-review):** An independent review of PR #144 (requested specifically to
+scrutinize decisions 3, 6(i), 9(ii), and 10 above) found 3 real CI regression clusters — fixed as
+`TCK-20260907-DORMANT-CLOSURE-CI-REGRESSION-FIXUP` (hotfix, DONE) — plus a real determinism-
+coverage question spanning all 6 `CampaignState`-bridge fields this batch added, filed as
+`TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE` (not implemented, needs its own
+investigation). Ticket 9 (CHURCH) was reversed: after review, `CHURCH` is now deferred (not
+placed), matching ticket 7's own idea-30 treatment for the same "no producer, no consumer" shape.
+See the epic ticket's own `## Implementation Notes` decision #11 for the full record.
