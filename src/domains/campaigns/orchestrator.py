@@ -750,7 +750,26 @@ class CampaignOrchestrator:
                 for event in evaluate_social_consequence(entity, faction_id, self._state, tick=0):
                     self._event_recorder.record(event)
 
-        return AuthoritativeState(tick=0, seed=episode_seed, entities=entities)
+        # TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE: snapshot idea 56's region_cultures signal
+        # into per-tick-reachable state at episode start -- the real bridge GroupPhase.resolve()
+        # (the one live caller of LoyaltyDriftService.compute_loyalty_pressure() via
+        # effective_defection_threshold()/check_defection()) has needed since TCK-20260905-
+        # DRIFTING-LOYALTY-SIGNAL shipped it with an always-0.0 default. Sorted iteration per this
+        # ticket's own AC4 determinism requirement -- feeds a plain dict keyed by region_id, not an
+        # unsorted set/iteration order into any durable structure's own key order.
+        from src.systems.social_systems.loyalty_drift import LoyaltyDriftService
+
+        region_loyalty_pressure = {
+            region_id: LoyaltyDriftService.compute_loyalty_pressure(self._state, region_id)
+            for region_id in sorted(self._state.region_cultures.keys())
+        }
+
+        return AuthoritativeState(
+            tick=0,
+            seed=episode_seed,
+            entities=entities,
+            region_loyalty_pressure=region_loyalty_pressure,
+        )
 
     # ── spawn helpers ──────────────────────────────────────────────────────────
 

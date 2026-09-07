@@ -118,9 +118,24 @@ class GroupPhase:
             if group is None:
                 continue
 
+            # TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE: read idea 56's bridged loyalty-pressure
+            # signal for this group's real region, instead of always defaulting to 0.0.
+            # Resolved from the group's own anchor position (real geometry, recomputed every call)
+            # rather than a member's cached NavigationComponent.region_id -- avoids depending on
+            # that per-entity cache's own freshness for a group-level (not per-entity) decision.
+            # None-safe: 0.0 (no-op, byte-identical to the pre-bridge behavior) when the group's
+            # anchor isn't inside any region, or that region has no region_cultures entry yet.
+            from src.engine.spatial_query import SpatialQueryService
+
+            group_region = SpatialQueryService.get_region_at(state, group.anchor)
+            loyalty_pressure = (
+                state.region_loyalty_pressure.get(group_region.id, 0.0)
+                if group_region is not None else 0.0
+            )
+
             # Only run defection on groups that still have multiple members
             # and whose grievance_log is at threshold or above.
-            if len(group.grievance_log) < PartyLifecycleService.effective_defection_threshold(group):
+            if len(group.grievance_log) < PartyLifecycleService.effective_defection_threshold(group, loyalty_pressure):
                 continue
 
             # Collect live members eligible to defect (those present in state.entities)
@@ -133,7 +148,7 @@ class GroupPhase:
             for m_id in live_member_ids:
                 member_entity = state.entities[m_id]
                 updated_group, def_event, entity_upd = PartyLifecycleService.check_defection(
-                    group, member_entity, tick
+                    group, member_entity, tick, loyalty_pressure
                 )
 
                 if updated_group is None:

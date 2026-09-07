@@ -1357,6 +1357,12 @@ class AuthoritativeState:
     pending_self_model_information_events: List[Dict[str, Any]] = field(default_factory=list, repr=False, compare=False)
     information_source_profiles: List[Any] = field(default_factory=list, repr=False, compare=False)
     feature_flags: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+    # TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE: region_id -> loyalty-pressure signal
+    # (LoyaltyDriftService.compute_loyalty_pressure() output), snapshotted once per episode by
+    # CampaignOrchestrator._build_initial_state() from CampaignState.region_cultures. Read-only
+    # per-tick input, not durable Kernel-produced state, so it stays out of equality/hash/repr —
+    # matching feature_flags's own compare=False precedent immediately above.
+    region_loyalty_pressure: Dict[str, float] = field(default_factory=dict, repr=False, compare=False)
     recent_world_events: List["WorldEvent"] = field(default_factory=list)
     quest_registry: Dict[str, "QuestOpportunity"] = field(default_factory=dict)
     # Epic 4.2B: Durable registry of entities classified as information providers.

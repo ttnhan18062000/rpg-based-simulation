@@ -15,10 +15,11 @@ None-safe lookup exactly as they already exist.
 Feeds into PartyLifecycleService.effective_defection_threshold() as an
 optional, backward-compatible parameter (idea 39's mutation-trigger
 condition) — see docs/world/culture_drift_contract.md for the full
-mechanism and its disclosed live-wiring gap (GroupPhase.resolve(), the one
-live caller of effective_defection_threshold(), has no CampaignState access
-today; that bridge is a separate, larger architectural change, out of this
-ticket's own scope).
+mechanism. Bridged into the live per-tick GroupPhase.resolve() call site by
+TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE (AuthoritativeState.
+region_loyalty_pressure, populated once per episode by
+CampaignOrchestrator._build_initial_state()) — this signal is now live in
+any Campaign-mode run past episode 0, not a no-op.
 """
 from __future__ import annotations
 
