@@ -212,6 +212,16 @@ if (!ticketInfo || !ticketInfo.ticket_id) {
 
 const tid = ticketInfo.ticket_id
 
+// TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING: log-only, fail-open check for another
+// concurrently-active session already working this same ticket ID. Never blocks, never raises,
+// never changes control flow — see docs/plans/agent_infrastructure/ai_first_hardening_epics/
+// ticket_claim_detection_experiment.md for the full rationale and the 30-day decision gate this
+// feeds. Always-on (no env-var gate): unlike the shadow-reviewer logging precedent (which spends
+// a full extra LLM call and is gated behind SHADOW_REVIEWER_LOGGING_ENABLED to bound cost), this
+// is a local file glob + JSON parse with negligible cost, so gating it would only add friction
+// with no corresponding benefit.
+await bash(`python3 tools/agent-monitoring/ticket_claim_detection.py "${tid}" 2>/dev/null || true`)
+
 // Execution identity (TCK-20260730-CLAUDE-EXECUTION-IDENTITY): generated exactly once, here,
 // after tid is confirmed real by the ticket-scoper agent — never before (the Scope-agent-failed
 // fallback above and the Scope-phase resume-branch's pre-tid sidecar write intentionally stay

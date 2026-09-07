@@ -93,9 +93,19 @@ def _extract_request_summary(text: str) -> str:
 
 
 def _extract_working_log_rows(csv_path: Path) -> list[dict]:
-    """Read working_log.csv, return list of {id, title, summary, path} dicts."""
+    """Read working_log.csv, return list of {id, title, summary, path} dicts.
+
+    Read-only: this function never opens csv_path in a write/append mode. Exact-content
+    duplicate rows (e.g. the whole-block squash-merge duplication documented in
+    TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP) are deduped in-memory here —
+    keeping only the first occurrence, the same convention tools/working_log_parser.py's
+    own `seen_raw_lines`/`is_duplicate`/`duplicate_of_line` tracking already uses — so the
+    corpus this feeds does not carry one document per duplicate physical line.
+    """
     rows = []
     skipped_embedded_header_duplicates = 0
+    skipped_exact_content_duplicates = 0
+    seen_content = set()
     if not csv_path.exists():
         return rows
     try:
@@ -124,6 +134,11 @@ def _extract_working_log_rows(csv_path: Path) -> list[dict]:
                 if ticket_id == "ticket_id":
                     skipped_embedded_header_duplicates += 1
                     continue
+                content_key = (ticket_id, title, summary)
+                if content_key in seen_content:
+                    skipped_exact_content_duplicates += 1
+                    continue
+                seen_content.add(content_key)
                 rows.append(
                     {
                         "id": ticket_id or title,
@@ -138,6 +153,12 @@ def _extract_working_log_rows(csv_path: Path) -> list[dict]:
         print(
             f"Warning: skipped {skipped_embedded_header_duplicates} "
             f"embedded-header-duplicate row(s) in {csv_path}",
+            file=sys.stderr,
+        )
+    if skipped_exact_content_duplicates:
+        print(
+            f"Warning: skipped {skipped_exact_content_duplicates} "
+            f"exact-content-duplicate row(s) in {csv_path}",
             file=sys.stderr,
         )
     return rows

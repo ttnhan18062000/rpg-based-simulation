@@ -138,3 +138,18 @@ abandoned, and not quietly rescoped into a smaller claim without saying so.
   depends on.
 - `tickets/done/`, `stored_artifacts/`, `agent-monitoring/runs.jsonl` — the real corpus and
   baseline data this spec cites.
+
+## Results
+
+Executed by TCK-20260907-FILTERED-REPLAY-EVAL-PILOT (2026-09-07T08:37:37.538526+00:00). Full report: `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md`.
+
+1. **Repeatable scoring established** — MET
+2. **Sample quality accepted for the 2 target defect classes** — MET
+3. **Replay contamination risk is understood and demonstrably controlled** — MET
+
+- **Scores are noisy/non-repeatable** — NOT FIRED
+- **Worktree isolation cannot fully eliminate the shared-sidecar contamination risk** — NOT FIRED
+
+## Decision
+
+All 3 Exit Criteria met, no Kill Criterion fired — item 13's downstream Bucket-C dependency notes (items 18-20) are unblocked per roadmap.md's Eval-pilot exit gate.

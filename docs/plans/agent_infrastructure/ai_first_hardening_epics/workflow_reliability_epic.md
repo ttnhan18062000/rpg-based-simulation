@@ -79,7 +79,7 @@ This is the only Bucket-A (committed) member of this epic — the other two mile
 design/measurement work, not implementation, and are explicitly **not** committed to a ticket at
 this stage.
 
-### M2 — Ticket-claim detection logging (Bucket B — experiment/measurement, not a committed ticket)
+### M2 — Ticket-claim detection logging (Bucket B — experiment/measurement) — **INSTRUMENTATION SHIPPED** (`TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING`, 2026-09-07); 30-day/quarter decision gate still open
 
 Per the freeze verdict's §77 "detect before prevent" principle and the frozen proposal's own kill
 criteria: add **log-only** instrumentation that flags when two sessions touch the same ticket ID
@@ -89,15 +89,22 @@ days of this instrumentation going live. If zero incidents surface after a full 
 this from "build a lock" to "keep as documented convention" rather than shipping unused
 infrastructure (frozen proposal, kill criteria).
 
-This becomes an Experiment Specification (Hypothesis/Baseline/Method/Metrics/Exit/Kill Criteria)
-before any ticket is written — not sketched further here; see the freeze verdict's Bucket-B
-handoff boundary.
+This became an Experiment Specification (Hypothesis/Baseline/Method/Metrics/Exit/Kill Criteria)
+before any ticket was written, per the freeze verdict's Bucket-B handoff boundary — see
+`ticket_claim_detection_experiment.md`. `TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING` then
+converted that spec directly into a ticket that both wrote the spec and shipped the described
+log-only instrumentation (`tools/agent-monitoring/ticket_claim_detection.py`, wired into
+`implement-ticket.js`'s Scope phase): reading the real
+`.claude/current_run.<CLAUDE_CODE_SESSION_ID>` sidecar signal named above, writing detections to
+`agent-monitoring/data/YYYY-Www/claim_detections.jsonl`, never blocking. Only the 30-day/quarter
+observation window and the resulting lock-vs-convention decision remain open — that decision is
+explicitly out of scope for the shipping ticket itself.
 
 **Ownership/lifecycle row:** see docs/guidelines/subsystem_ownership_lifecycle.md for this
 subsystem's accountable role, update trigger, staleness signal, and removal condition — not
 restated here.
 
-### M3 — Phase-level workflow resume: design/validation-rule resolution (Bucket B — design work, not a committed ticket)
+### M3 — Phase-level workflow resume: design/validation-rule resolution (Bucket B — design work, not a committed ticket) — **RESOLVED** (`TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN`, 2026-09-07)
 
 Before any resume logic is written, resolve the resume-semantics validation rule the freeze pass
 required (§76): a checkpoint is reusable only if `workflow_version` matches, the input a phase
@@ -107,8 +114,26 @@ work finds them materially necessary. Invariant to hold once implemented: `check
 checkpoint still valid = safe to reuse` — never `checkpoint exists = skip phase`.
 
 This is design-resolution work, not implementation — it produces the validation rule
-`implement-ticket.js` would need, not the resume code itself. Once resolved, it becomes eligible
-to move from Bucket B into a future Bucket-A ticket; it is not there yet.
+`implement-ticket.js` would need, not the resume code itself.
+
+**Resolved by `docs/ai/phase_resume_validation_rule_decision.md`**: confirms today's baseline is
+ticket-ID re-invocation from Scope with no phase-level checkpoint anywhere (direct read of
+`implement-ticket.js`/`SKILL.md`); confirms the epic's proposed minimum field set
+(`workflow_version` + `input_hash` + per-phase-artifact-existence) is sufficient and that
+`source_revision`/`phase_version` are **not** materially necessary; confirms
+`agent-orchestration/workflows/implement-ticket.yaml`'s existing `workflow_version` field can be
+reused as-is (same consumer pattern as `tools/agent_codex_runtime_shadow/matrix.py`'s own
+staleness check) rather than forking a distinct field; identifies that `workflow_version` and
+`input_hash` both need new `runs.jsonl`/`events.jsonl` fields (neither is recorded today, per
+`docs/agent-monitoring/schema.md`), while artifact-existence needs no new recorded field (a live
+filesystem check suffices); states the earliest-invalidated-phase restart fallback; and states the
+audit-trail requirement (a new closed-vocabulary `reason_code`-family value distinguishing
+checkpoint-reused from each invalidation cause) as a requirement for the future implementation
+ticket to build, not something this design work builds itself.
+
+**M3 is now eligible to move from Bucket B into a future Bucket-A ticket** — the design/validation-
+rule resolution this milestone required is complete, but the phase-level resume implementation
+itself is still future work, not scoped by this resolution.
 
 ## Out of scope
 
@@ -125,10 +150,13 @@ to move from Bucket B into a future Bucket-A ticket; it is not there yet.
   (matching `tools/retrieval_cache.py`'s already-shipped behavior); a synthetic two-session
   scenario (`tests/tools/test_settings_json_edit_write_hook_sidecar_scope.py::test_two_concurrent_sessions_resolve_to_their_own_run_id`)
   confirms it no longer shows cross-session attribution bleed in `tools.jsonl` for this consumer.
-- M2: detection logging is live; after 30 days, either a real incident triggered the lock-build
-  decision, or zero incidents confirm the convention-only approach stands.
-- M3: a written resume-semantics validation rule exists, reviewed, ready to hand to a future
-  implementation ticket — not yet that ticket itself.
+- M2: **instrumentation met, decision gate open.** Detection logging is live
+  (`TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING`); after 30 days/a full quarter, either a real
+  incident triggered the lock-build decision, or zero incidents confirm the convention-only
+  approach stands.
+- M3: **met.** A written resume-semantics validation rule exists
+  (`docs/ai/phase_resume_validation_rule_decision.md`), ready to hand to a future implementation
+  ticket — not yet that ticket itself.
 
 ## References
 
@@ -145,3 +173,9 @@ to move from Bucket B into a future Bucket-A ticket; it is not there yet.
 - `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE` — the ticket this milestone was scoped into during
   the 2026-09-04 `create-tickets` pass, reflecting the single-consumer correction above.
 - `tickets/inprogress/` — the plain directory M2's detection logging instruments.
+- `docs/ai/phase_resume_validation_rule_decision.md` — M3's resolved design/validation-rule
+  decision doc (`TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN`, 2026-09-07).
+- `ticket_claim_detection_experiment.md` — M2's Experiment Specification, and
+  `TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING` (done, 2026-09-07) — shipped M2's log-only
+  instrumentation (`tools/agent-monitoring/ticket_claim_detection.py`), leaving only the 30-day/
+  quarter decision gate open.

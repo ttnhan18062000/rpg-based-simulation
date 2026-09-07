@@ -3,6 +3,17 @@
 # every consumer (tools/agent-monitoring/{generate_retro,query,validate}.py, and the
 # agent-ops-dashboard ingest design) reads these by explicit ts/seq/run_id fields, never
 # by physical line position — see conversation 2026-07-16 for the verification.
+#
+# CAVEAT (TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP): merge=union only
+# engages when git's own merge machinery actually runs (`git merge`, `git rebase`,
+# `git cherry-pick -m`, GitHub's "Create a merge commit" option) — it does NOT protect
+# against a GitHub squash-merge, which this repo's PRs use almost exclusively (5/5 of
+# the last 5 merged PRs sampled were squash-merged; a squash-merge has exactly one
+# parent and applies a plain diff, invoking no merge driver at all). This gap already
+# produced one confirmed ~1586-row whole-block duplication in tickets/working_log.csv
+# (see investigation.md for that ticket). The actual squash-merge-safe protection is
+# tests/integrity/test_no_duplicate_content_blocks.py, which detects (not prevents)
+# any new duplicate content block landing via this path.
 agent-monitoring/data/*/*.jsonl merge=union
 tickets/working_log.csv merge=union
 
