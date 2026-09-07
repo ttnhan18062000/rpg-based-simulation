@@ -1,7 +1,8 @@
-# Compliance IDs: SOC-193, SOC-194, SOC-195, SOC-196, SOC-217
+# Compliance IDs: SOC-193, SOC-194, SOC-195, SOC-196, SOC-217, SOC-248
 from __future__ import annotations
 from typing import Dict, Any, TYPE_CHECKING
 from src.core.state import SocialComponent
+from src.core.models.social import RelationshipRole
 
 if TYPE_CHECKING:
     from src.core.updates import SocialUpdate
@@ -11,6 +12,13 @@ class RelationshipService:
     Authoritative service for directed social bonds between entities.
     In V2, these are stored in each entity's SocialComponent.
     """
+
+    # Logic ID: SOC-248 (TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH). Mirrors appraisal.py's
+    # own real, already-established TOTAL_DISTRUST extreme-sentiment bound (`bond.sentiment
+    # < -0.8`) rather than inventing an unrelated threshold -- a sustained, extreme sentiment
+    # swing in either direction is exactly as significant here as it already is there.
+    FRIEND_SENTIMENT_THRESHOLD: float = 0.8
+    RIVAL_SENTIMENT_THRESHOLD: float = -0.8
 
     @staticmethod
     def process_update(social: SocialComponent, update: SocialUpdate) -> SocialComponent:
@@ -53,12 +61,33 @@ class RelationshipService:
         for b_upd in update.bond_updates:
             tid = b_upd.target_id
             bond = new_bonds.get(tid, SocialBond(target_id=tid))
+            new_sentiment = max(-1.0, min(1.0, bond.sentiment + b_upd.sentiment_delta))
+
+            # Logic ID: SOC-248. role_set (explicit) always wins. Otherwise, only a real
+            # sentiment change (b_upd.sentiment_delta != 0) can promote role -- a
+            # familiarity-only/tick-only update must never silently reset an existing role,
+            # exactly like last_interaction_tick_set's own set-if-provided semantics
+            # (TCK-20260824-RELATIONSHIP-ROLE-FIELD's own precedent). Promotion is one-way
+            # per crossing: a sentiment change that doesn't reach either extreme leaves the
+            # existing role untouched rather than demoting it back to NEUTRAL.
+            if b_upd.role_set is not None:
+                new_role = b_upd.role_set
+            elif b_upd.sentiment_delta != 0:
+                if new_sentiment >= RelationshipService.FRIEND_SENTIMENT_THRESHOLD:
+                    new_role = RelationshipRole.FRIEND
+                elif new_sentiment <= RelationshipService.RIVAL_SENTIMENT_THRESHOLD:
+                    new_role = RelationshipRole.RIVAL
+                else:
+                    new_role = bond.role
+            else:
+                new_role = bond.role
+
             new_bonds[tid] = replace(
                 bond,
                 familiarity=max(0.0, min(1.0, bond.familiarity + b_upd.familiarity_delta)),
-                sentiment=max(-1.0, min(1.0, bond.sentiment + b_upd.sentiment_delta)),
+                sentiment=new_sentiment,
                 last_interaction_tick=b_upd.last_interaction_tick_set if b_upd.last_interaction_tick_set is not None else bond.last_interaction_tick,
-                role=b_upd.role_set if b_upd.role_set is not None else bond.role
+                role=new_role
             )
 
         new_betrayals = list(social.betrayal_records)

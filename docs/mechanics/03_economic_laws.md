@@ -83,38 +83,10 @@ Trading with shops (Buildings) is governed by liquidity and stock availability.
 
 #### §4.1 Reputation Discount
 
-**Placement note, 2026-09-02 (Social/Relationship axis investigation):** this subsection reads a
-Social-domain field (`SocialComponent.public_reputation`), not an Economic one — it belongs in the future
-Social Mechanics Bible chapter (see
-`docs/plans/rpg_design_roadmap/rpg_social_narrative_mechanics_hardening_plan.md`), not here. Left in place
-rather than moved now, since that chapter doesn't exist yet as a real numbered doc and moving this content
-ahead of it would leave a dangling reference; relocate when that chapter is authored. The formula below
-remains verified accurate against real code either way — see its own conservation-law note.
-
-Entities with positive public reputation receive a proportional discount at all shops.
-
-**Formula:**
-
-    entity_rep  = clamp(public_reputation, 0.0, 2.0) / 2.0   # normalized [0, 1]
-    discount    = entity_rep × 0.20                            # up to 20% at max rep
-    discounted  = floor(base_cost × (1 − discount))
-    final_cost  = max(1, discounted)                           # floor: never free
-
-**Notes:**
-- `public_reputation` sourced from `SocialComponent.public_reputation` (range 0.0–2.0, default 1.0).
-  This remains the exact, unchanged read as of TCK-20260904-REPUTATION-LOCALITY-SCOPE — that ticket
-  added a sibling `SocialComponent.regional_reputation: Dict[RegionID, float]` field (region-scoped,
-  additive to this retained global scalar, SOC-266), but both real discount call sites
-  (`src/engine/shop.py`, `src/town/shop.py`) still read only this global scalar; the discount
-  formula below is unaffected. Region-aware discounting is a disclosed, not-yet-implemented
-  follow-up, not part of this formula.
-- At default reputation (1.0): 10% discount.
-- At maximum reputation (2.0): 20% discount.
-- At zero or negative reputation: 0% discount (no penalty, no bonus).
-- Faction cross-check is not applied in this release (DEV-001). Discount is universal across all shops.
-- Conservation law satisfied: buyer pays less, shop receives less; net world gold unchanged.
-
-**Reference:** TCK-20260619-E33D-REP-DISCOUNTS, `src/systems/economy_systems/reputation_discount.py`.
+**Relocated, 2026-09-07 (`TCK-20260905-SOCIAL-MECHANICS-BIBLE-CHAPTER`):** this subsection reads a
+Social-domain field (`SocialComponent.public_reputation`), not an Economic one — it now lives in
+`docs/mechanics/07_social_political_dynamics.md` §6, the Social & Political Mechanics Bible chapter.
+See that section for the full formula, notes, and reference — not duplicated here.
 
 ### Selling to Shops
 *   **Rule**: The building must have enough **Gold (Liquidity)** to pay the entity.

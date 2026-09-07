@@ -3569,30 +3569,42 @@
     threshold is not promoted to nemesis status by virtue of the role tag alone.'
   support_boundary: null
 - id: SOC-248
-  text: 'EmotionUpdateService.update_on_event() is wired into NearDeathHardeningPhase.apply()
-    for the "near_death" event_kind: when an entity survives a hit with projected
-    HP <= 10% of current max HP, fear and panic increase (+0.4/+0.5, capped at 1.0)
-    and confidence decreases (-0.3, floored at 0.0) on EmotionalModel. The updated
-    model is written via a nested replace() into entity.cognition.subjective.emotion
-    and staged on EntityUpdate.cognition_bundle_set alongside the existing max_hp_delta=5
-    hardening effect (both set together, neither dropped). Same-tick collision handling:
-    if an earlier phase (e.g. MemoryUpdatePhase) already set cognition_bundle_set
-    for this entity this tick, the emotion update is built on top of that already-updated
-    bundle, not the stale pre-tick entity.cognition, so earlier same-tick cognition
-    changes are never clobbered by the whole-bundle EntityUpdate.merge() last-writer-wins
-    semantics. Distinct from the unrelated AppraisalSystem.evaluate_emotional_state()
-    per-tick tactical appraisal.'
+  text: 'SocialBond.role (RelationshipRole) gains its first real, live production
+    writer. RelationshipService.process_update() (src/systems/social_systems/relationships.py)
+    now derives role from the bond own resulting sentiment whenever a real sentiment_delta
+    is applied (already a live signal from contracts.py/combat.py/appraisal.py): sentiment
+    >= FRIEND_SENTIMENT_THRESHOLD(0.8) -> FRIEND, sentiment <= RIVAL_SENTIMENT_THRESHOLD(-0.8)
+    -> RIVAL, else the existing role is left untouched (sticky, one-crossing-per-real-sentiment-change;
+    a familiarity-only or zero-sentiment_delta bond_update never touches role, matching
+    last_interaction_tick_set own set-if-provided precedent from SOC-247). Explicit
+    SocialBondUpdate.role_set (SOC-247, previously the only write path, with zero
+    real non-test callers anywhere in src/) is evaluated first and still honored as
+    a real override when supplied. The 0.8/-0.8 thresholds mirror appraisal.py own
+    real, already-established TOTAL_DISTRUST bound (bond.sentiment < -0.8, SOC-...
+    appraisal hard-reject gate), not an invented magic number. Before this entry,
+    PartyCompositionScorer.score_role_affinity() (SOC-247) role_term was silently
+    always 0.0 in every real production FORM_PARTY route call (src/domains/adventure/generator.py,
+    the only real caller that passes actor=), since role was permanently NEUTRAL.
+    Remains deliberately independent of nemesis_ids/grudge_history per SOC-247 own
+    design intent.'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/domains/emotion/emotion_service.py (EmotionUpdateService.update_on_event());
-    src/engine/pipeline_phases/hardening.py (NearDeathHardeningPhase.apply() call
-    site) (TCK-20260824-WIRE-ORPHANED-MECHANISMS)
-  proof_type: parity
-  test_path: tests/unit/engine/test_near_death_hardening_emotion.py::test_near_death_hardening_updates_emotional_model
-    tests/unit/engine/test_near_death_hardening_emotion.py::test_near_death_hardening_preserves_same_tick_cognition_bundle_set
+  v2_evidence: src/systems/social_systems/relationships.py::RelationshipService.process_update()
+    (new FRIEND_SENTIMENT_THRESHOLD/RIVAL_SENTIMENT_THRESHOLD class constants + role
+    derivation in the bond_updates loop). Real live reachability confirmed via src/domains/adventure/generator.py:140
+    (PartyCompositionScorer.score(actor=entity), the real FORM_PARTY route call site
+    that passes actor= and therefore evaluates score_role_affinity()/role_term). TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH.
+  proof_type: regression
+  test_path: tests/unit/social/test_relationships.py::test_sustained_positive_sentiment_derives_role_to_friend
   divergence_note: null
-  support_boundary: null
+  support_boundary: Covers SocialBond.role write-path liveness only. Does not cover
+    SocialMemoryService.check_nemesis_promotion()/tick_place_attachment(), a separately-found
+    dormant pair on an adjacent field (nemesis_ids/place_attachment) disclosed in
+    docs/mechanics/07_social_political_dynamics.md Section 3 but not fixed by this
+    ticket. Does not add SocialBond field coverage to src/replay/fingerprint.py (a
+    pre-existing gap predating this ticket -- familiarity/sentiment were already excluded
+    there too).
 - id: SOC-249
   text: "Trade appraisal via ContractKind.MERCHANT routes through the shared bond.sentiment-priority-else-trust_history\
     \ prelude (hard-cancel at trust_score<0.2 / bond.sentiment<-0.8 / betrayal-history)\

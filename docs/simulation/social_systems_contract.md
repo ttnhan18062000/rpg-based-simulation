@@ -3,10 +3,23 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-09-04
+last_verified: 2026-09-07
 ---
 
 # Social Systems Contract
+
+**Correction, 2026-09-07 (`TCK-20260905-SOCIAL-MECHANICS-BIBLE-CHAPTER`):** while promoting this
+doc into `docs/mechanics/07_social_political_dynamics.md` (the new Mechanics Bible chapter, now
+authoritative for this subsystem), direct re-verification against source found 5 sections below had
+materially diverged from real code — not stale numbers, but describing mechanisms with no basis in
+`src/` at all. Each is corrected in place below, with a pointer to the new chapter's own fuller
+treatment: **Appraisal**'s blended trust formula (missing the real `clan_trust` term), **Reputation**
+(conflated two structurally distinct, differently-typed fields sharing a name), **Contracts**
+(cited a non-existent `ESCORT` `ContractKind` and per-kind breach rules that don't exist), **Guilds**
+(described a `GuildMembership`/dues/rank system with zero real code — the real mechanism is
+intel-gathering), **Party** (described a `PartyRecord` type that doesn't exist — the real mechanism
+is `GroupRecord`-based). This doc remains a useful narrower reference; Chapter 07 is now the
+authoritative, independently-verified source for this subsystem.
 
 **Source:** `src/systems/social_systems/` (appraisal.py, contracts.py, relationships.py, guilds.py, party.py, party_composition.py, memory.py, group_service.py, reputation.py)
 **Related docs:** [docs/simulation/domains/cooperation_contract.md](domains/cooperation_contract.md), [docs/simulation/domains/commitment_contract.md](domains/commitment_contract.md), [docs/simulation/domains/domain_ownership_map.md](domains/domain_ownership_map.md)
@@ -31,8 +44,13 @@ Compliance IDs: SOC-001, SOC-002, SOC-004, SOC-008, STRAT-071, STRAT-073
 
 1. **Public reputation bias:** `source_entity.social.public_reputation / 2.0` → 0.0–1.0 baseline
 2. **Private bond override:** if a SocialBond exists, `trust_score = (bond.sentiment + 1.0) / 2.0` (private sentiment overrides public)
-3. **Blended fallback:** `trust_score = public_trust × 0.7 + history_trust × 0.3`
-4. **Hard reject gates:** `trust_score < 0.2` → TOTAL_DISTRUST; `betrayal_count > 0 AND trust_score < 0.4` → BETRAYAL_HISTORY
+3. **Blended fallback (corrected 2026-09-07 — a real term was missing):** `trust_score = public_trust
+   × 0.7 + history_trust × 0.3 + (clan_trust − 0.5) × 0.2` — the third term (idea 54's clan-reputation
+   guilt-by-association blend) is exactly `0.0` at the no-clan/neutral default, so it extends rather
+   than replaces the older two-term formula. See `docs/mechanics/07_social_political_dynamics.md` §1
+   for the full derivation.
+4. **Hard reject gates (corrected 2026-09-07 — an OR-condition was missing):** `trust_score < 0.2 OR
+   bond.sentiment < -0.8` → TOTAL_DISTRUST; `betrayal_count > 0 AND trust_score < 0.4` → BETRAYAL_HISTORY
 
 ### Contract kinds
 
@@ -132,41 +150,53 @@ investigation and idea 67 (Living Relationship Decay) for the proposed fix.
 
 Social contracts are durable `ContractState` records. Each contract has: `kind`, `source_id`, `target_id`, `terms`, `status` (OFFERED/ACCEPTED/COUNTERED/CANCELLED/FULFILLED/BREACHED), `deadline_tick`.
 
-### Breach conditions
+### Consequence resolution (corrected 2026-09-07 — the table below was fictional)
 
-| Contract kind | Breach triggers |
-|---|---|
-| RECRUITMENT | Source entity abandons party; party trust drops below threshold |
-| ESCORT | Source entity dies before reaching destination |
-| LOAN | Target entity fails to return gold by deadline_tick |
-| POSITION_SWAP | Either party cannot reach the target position within agreed ticks |
+There is no `ESCORT` `ContractKind` (ESCORT is a `QuestKind`, a separate quest-domain enum, not a
+social contract) and no per-kind breach-condition table — `resolve_contract_outcome()` is a single
+generic mechanism applied uniformly across all 10 real `ContractKind` members
+(`RECRUITMENT`/`LOAN`/`PROTECTION`/`MERCHANT`/`POSITION_SWAP`/`TEAM_UP`/`PAID_INFORMATION`/`TEACH`/
+`MARRIAGE`/`CLAN`): `sentiment_delta = ±0.2` (or `-1.0` on betrayal), `heroism_delta = 0.05` on
+success, `notoriety_delta = 0.1` on failure or `0.5` + `betrayal_increment = 1` on a confirmed
+betrayal. See `docs/mechanics/07_social_political_dynamics.md` §5 for the full formula and a
+disclosed reachability gap (the betrayal-specific branch has no production caller today).
 
-Breach records `betrayal_count += 1` on the breaching entity and triggers reputation update via `ReputationUpdateService`.
+Breach records `betrayal_count += 1` on the breaching entity and updates `SocialComponent.public_reputation` via the notoriety_delta path above — not `ReputationUpdateService`, which is a structurally separate mechanism (see the Reputation section's own correction below).
 
 ---
 
 ## Guilds — `guilds.py`
 
-Guild membership stores a `GuildMembership` record on the entity. Benefits and obligations:
-- Members gain access to guild-affiliated service opportunities (guild halls, job boards)
-- Members pay guild dues (ResourceTransferIntent at guild taxation cadence)
-- Guild rank affects appraisal: higher-rank entities receive better contract terms from guild affiliates
-- Routing: entities prefer regions where their guild has presence (guild presence is a positive route bias factor)
+**Corrected 2026-09-07 — `GuildMembership`, guild dues, guild rank, and guild-presence route bias
+have zero hits anywhere in `src/`; this section previously described a fictional system.** The real
+mechanism, `GuildIntelSystem.update()`, is an intel-gathering interaction: an entity interacting with
+a functional guild building accumulates `interaction.progress` by `+1.0`/tick; at `progress >=
+10.0`, the guild identifies the world's highest-`trauma_score` region and creates a real rumor
+`LeadState`/`BeliefState` about danger there, plus a `ConcernState(kind="danger")` if that region's
+trauma exceeds `5.0`. See `docs/mechanics/07_social_political_dynamics.md` §7 for the full
+mechanism.
 
 ---
 
-## Party — `party.py`
+## Party — `party.py`, `party_lifecycle.py`, `group_service.py`
 
-Party state is stored as a `PartyRecord` on a designated party leader entity. Assembly conditions:
-- Requires a COOPERATION or RECRUITMENT contract between at least 2 entities
-- Party forms when contract status transitions to ACCEPTED
+**Corrected 2026-09-07 — there is no `PartyRecord` type anywhere in `src/`; this section previously
+described a fictional state model.** The real state type is `GroupRecord` (`member_ids`, `anchor`,
+`cohesion_radius`, `roles`, `composition_score`, `grievance_log`). Real mechanics:
+- **Leadership influence** (`PartyCoordinationSystem.apply_leadership_influence()`): a goal-injection
+  mechanism, not directive propagation — an ACTIVE-`RECRUITMENT`-contract member gets an injected
+  `GoalScore` matching the leader's active objective, utility `25.0 + trust_score × 15.0`.
+- **Leadership election** (SOC-228): periodic re-election to the highest-sociability member once
+  they exceed the current leader's sociability by `>= 0.2`.
+- **Defection/dissolution** (SOC-230): an entity defects at `len(grievance_log) >=
+  effective_defection_threshold(group)` (baseline 3, ±composition/loyalty-pressure modulated);
+  `notoriety_delta = 2.0` and `identity.faction = NEUTRAL` apply on defection; the group's
+  `dissolution_tick` is set once membership drops to `<= 1`.
 
-Dissolution rules:
-- Leader death → party dissolved; trust decreases by 0.25 for all members (cooperation domain handles this)
-- All members reach destination → party fulfills and dissolves
-- Explicit LEAVE action by any member → voluntary quit (commitment penalty applies)
-
-Shared goal mechanics: party members share objective visibility. When the leader sets a project, members receive a `force_route_reevaluation` flag pointing them toward the same region.
+See `docs/mechanics/07_social_political_dynamics.md` §8 for the full formulas and real triggers —
+none of "LEAVE action", "trust −0.25 on leader death", or `force_route_reevaluation`-based party
+sync have a real basis in this subsystem's own code (`force_route_reevaluation` is real, but lives
+in `src/domains/world_emergence/`, an unrelated system).
 
 ---
 
@@ -190,21 +220,26 @@ trust/bonds or role-affinity terms).
 
 ---
 
-## Reputation — `reputation.py`
+## Reputation — `reputation.py`, `src/domains/commitment/reputation.py`
 
-`ReputationUpdateService.process_witnessed_event()` updates `PublicReputationProfile.labels` for witnessed events:
+**Corrected 2026-09-07 — this section previously conflated two structurally distinct, differently-
+typed fields that happen to share a name.** `SocialComponent.public_reputation` (a clamped
+0.0–2.0 float, used by trust appraisal/shop discounts/birth-seed inheritance) is written only via
+`RelationshipService.process_update()`'s `reputation_set`/`heroism_delta`/`notoriety_delta` fields —
+**not** by `ReputationUpdateService.process_witnessed_event()`, which instead writes
+`PublicReputationProfile.labels` (a separate `Mapping[str, float]` label bag at
+`entity.cognition.relationships.public_reputation`, a different component path entirely). The real
+`process_witnessed_event()` events/deltas are: `"successful_escort"` → `labels["reliable"] += 0.1`;
+`"betrayal"` → `labels["betrayer"] += 0.4`, `labels["reliable"] -= 0.3`; `"clear_camp"` →
+`labels["camp_clearer"] += 0.2`, `labels["heroic"] += 0.1` — no "COMBATANT" label exists, and none of
+these events change the clamped scalar. Only `"successful_escort"` has a confirmed live caller
+(`src/engine/quests.py`, on ESCORT quest completion).
 
-| Event | Effect |
-|---|---|
-| escort completed | reputation +0.1; RELIABLE label added |
-| betrayal witnessed | reputation −0.2; BETRAYER label added |
-| camp cleared | reputation +0.05; COMBATANT label added |
-
-Public reputation (real clamp range **0.0–2.0**, corrected 2026-09-02 — `relationships.py:94`; this section
-previously stated 0.0–1.0, contradicting the Relationships section's own correct clamp table above) is
-visible to all entities and used in trust appraisal — see the same correction note under Decay above.
-`SocialAppraisalSystem` derives a 0.0–1.0 trust baseline from it (`public_reputation / 2.0`); that derived
-baseline, not the raw field, is what's actually bounded 0.0–1.0.
+Public reputation (the clamped scalar, real range **0.0–2.0**) is visible to all entities and used in
+trust appraisal — `SocialAppraisalSystem` derives a 0.0–1.0 trust baseline from it
+(`public_reputation / 2.0`). See `docs/mechanics/07_social_political_dynamics.md` §4 for the full
+two-system breakdown, including every real write path to the scalar (contract fulfillment, party
+defection, birth-seed, Campaign carry-forward).
 
 ---
 

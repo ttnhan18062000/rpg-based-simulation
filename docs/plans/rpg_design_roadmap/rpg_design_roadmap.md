@@ -567,13 +567,17 @@ surfaces that hadn't yet received it. Identified in one research pass, 2026-09-0
 leverage (how much other work depends on getting each one right); worked through one at a time, each with
 its own dedicated high-level plan doc once investigated.
 
-1. **Social/Reputation/Political — no Mechanics Bible chapter, the widest blast-radius gap found.**
+1. **Social/Reputation/Political — no Mechanics Bible chapter, the widest blast-radius gap found. Shipped, 2026-09-07.**
    Investigated and scoped: [`docs/plans/rpg_design_roadmap/rpg_social_narrative_mechanics_hardening_plan.md`](rpg_social_narrative_mechanics_hardening_plan.md).
    Corrected the initial framing (only 94 of `social_narrative.yaml`'s 276 entries are genuinely
    social content, not all 276) and found the real gap is fragmentation — three partial contracts already
    exist, but the foundational `SocialComponent`/`SocialBond`/`RelationshipService` state has zero contract
    coverage anywhere. Also surfaced an open determinism question (does `CanonicalStateHasher` cover
    `SocialComponent`'s history fields, given the lightweight replay fingerprint explicitly does not).
+   `docs/mechanics/07_social_political_dynamics.md` (`Certified Level 1`) now closes the gap
+   (`TCK-20260905-SOCIAL-MECHANICS-BIBLE-CHAPTER`) — its own authoring pass found the promoted-from
+   `social_systems_contract.md` had 5 sections materially diverged from real code (not just stale),
+   corrected in the same pass rather than transcribed unverified.
 2. **Spatial index — the "spatial-reach" half of the pair this roadmap's own M2 section names alongside
    temporal timing.** Investigated and scoped:
    [`docs/plans/rpg_design_roadmap/rpg_spatial_index_hardening_plan.md`](rpg_spatial_index_hardening_plan.md).
