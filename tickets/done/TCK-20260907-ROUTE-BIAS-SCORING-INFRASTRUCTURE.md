@@ -233,6 +233,20 @@ described above:
    `culture_state=None` to each fake's signature (no behavior change to the fakes themselves — they
    already ignored unused kwargs conceptually, just couldn't accept this one syntactically).
 
+## Post-Closure Disclosure (2026-09-07, `TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD`)
+A real gap was found after this ticket closed, while implementing
+`TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO`: `ApplyPath.apply_generation()`
+(`src/engine/apply.py`) never carried `region_culture_states` forward past the first
+`Kernel.tick_once()` call, silently resetting it to `{}` from tick 2 of any real episode onward —
+so the Culture Drift branch this ticket shipped only ever produced its intended effect on the
+episode's first tick, not the whole episode as intended. Every test below passed because they all
+call `AdventureGoalScorer.score()`/`AdventureRouteScorer.score()` directly against a
+hand-constructed `AuthoritativeState`, bypassing the real `Kernel.tick_once()`/`apply_generation()`
+round-trip entirely — none of them could have caught this. Fixed by the above ticket (adds
+`region_culture_states=prior_state.region_culture_states` to `apply_generation()`'s
+`AuthoritativeState(...)` constructor); this ticket's own implementation and tests below needed no
+changes — only the engine-level carry-forward was missing.
+
 ## Test Summary
 New tests:
 - `tests/unit/domains/adventure/test_culture_drift_route_bias.py` (4 tests) — proves

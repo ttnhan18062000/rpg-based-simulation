@@ -1363,14 +1363,20 @@ class AuthoritativeState:
     # (LoyaltyDriftService.compute_loyalty_pressure() output), snapshotted once per episode by
     # CampaignOrchestrator._build_initial_state() from CampaignState.region_cultures. Read-only
     # per-tick input, not durable Kernel-produced state, so it stays out of equality/hash/repr —
-    # matching feature_flags's own compare=False precedent immediately above.
+    # matching feature_flags's own compare=False precedent immediately above. Carried forward
+    # across every tick by ApplyPath.apply_generation() (TCK-20260907-APPLY-GENERATION-EPISODE-
+    # BRIDGE-CARRYFORWARD — fixed a real gap where this silently reset to {} after tick 1; never
+    # mutated mid-episode, only read, so it persists for the whole episode like `factions`, NOT
+    # like the Bounded/single-fire `information_source_profiles`/`pending_information_responses`).
     region_loyalty_pressure: Dict[str, float] = field(default_factory=dict, repr=False, compare=False)
     # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: region_id -> CultureState, snapshotted once
     # per episode by CampaignOrchestrator._build_initial_state() from CampaignState.region_cultures
     # (mirrors region_loyalty_pressure's own bridge pattern immediately above). Read by
     # AdventureGoalScorer.score() to feed a real Culture Drift bias branch into
     # AdventureRouteScorer.score()'s personality_bias term. Read-only per-tick input, not durable
-    # Kernel-produced state, so it stays out of equality/hash/repr.
+    # Kernel-produced state, so it stays out of equality/hash/repr. Carried forward across every
+    # tick by ApplyPath.apply_generation() (TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-
+    # CARRYFORWARD — same persist-for-the-whole-episode fix as region_loyalty_pressure above).
     region_culture_states: Dict[str, "CultureState"] = field(default_factory=dict, repr=False, compare=False)
     # TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING: subject_id -> LegendFact, snapshotted once per
     # episode by CampaignOrchestrator._build_initial_state() from CampaignState.entity_fame via
@@ -1379,7 +1385,8 @@ class AuthoritativeState:
     # AdventureGoalScorer.score() to feed idea 57's "Living Legend" bias branch into
     # AdventureRouteScorer.score()'s personality_bias term. Read-only per-tick input, not durable
     # Kernel-produced state, so it stays out of equality/hash/repr — same precedent as
-    # region_culture_states immediately above.
+    # region_culture_states immediately above. Carried forward across every tick by
+    # ApplyPath.apply_generation() (TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD).
     entity_legend_facts: Dict[str, "LegendFact"] = field(default_factory=dict, repr=False, compare=False)
     recent_world_events: List["WorldEvent"] = field(default_factory=list)
     quest_registry: Dict[str, "QuestOpportunity"] = field(default_factory=dict)

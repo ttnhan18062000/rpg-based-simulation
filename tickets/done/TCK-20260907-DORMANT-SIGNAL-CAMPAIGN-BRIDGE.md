@@ -155,6 +155,19 @@ the broader `tests/integration/world/ tests/unit/world/` suite, passes cleanly i
 with and without this ticket's diff — not investigated further, out of this ticket's own scope, per
 CLAUDE.md's CI Triage "matches a documented environment-dependent/flaky category" guidance.
 
+## Post-Closure Disclosure (2026-09-07, `TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD`)
+A real gap was found after this ticket closed: `ApplyPath.apply_generation()`
+(`src/engine/apply.py`) never carried `region_loyalty_pressure` forward past the first
+`Kernel.tick_once()` call, silently resetting it to `{}` from tick 2 of any real episode onward —
+so this ticket's own "live in any Campaign-mode run past episode 0" claim (Test Summary below,
+`test_loyalty_pressure_campaign_bridge.py`) was only true for the episode's very first tick, not the
+whole episode as intended. Neither this ticket's own test nor the integration test caught it because
+both exercise `GroupPhase.resolve()` directly against a hand-constructed `AuthoritativeState`,
+bypassing the real `Kernel.tick_once()`/`apply_generation()` round-trip entirely. Fixed by the
+above ticket (adds `region_loyalty_pressure=prior_state.region_loyalty_pressure` to
+`apply_generation()`'s `AuthoritativeState(...)` constructor); this ticket's own implementation and
+test above needed no changes — only the engine-level carry-forward was missing.
+
 ## Test Summary
 `tests/integration/campaigns/test_loyalty_pressure_campaign_bridge.py` — 2 passed (new, proves the
 real bridge end-to-end through `GroupPhase.resolve()` itself, not just the already-covered pure

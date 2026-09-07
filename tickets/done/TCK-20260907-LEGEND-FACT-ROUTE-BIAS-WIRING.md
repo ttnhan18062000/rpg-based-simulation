@@ -182,6 +182,20 @@ Implemented directly following `TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE`'
    Route-Bias Scoring" and rewritten to reflect the new real call site (the perception/motivation
    gaps it originally disclosed remain real and are re-stated, not silently dropped).
 
+## Post-Closure Disclosure (2026-09-07, `TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD`)
+A real gap was found immediately after this ticket closed, while implementing the very next ticket
+(`TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO`): `ApplyPath.apply_generation()`
+(`src/engine/apply.py`) never carried `entity_legend_facts` forward past the first
+`Kernel.tick_once()` call, silently resetting it to `{}` from tick 2 of any real episode onward —
+so the Living Legend branch this ticket shipped only ever produced its intended effect on the
+episode's first tick. Every test below passed because they all call
+`AdventureGoalScorer.score()`/`AdventureRouteScorer.score()` directly against a hand-constructed
+`AuthoritativeState`, bypassing the real `Kernel.tick_once()`/`apply_generation()` round-trip
+entirely — none of them could have caught this. Fixed by the above ticket (adds
+`entity_legend_facts=prior_state.entity_legend_facts` to `apply_generation()`'s
+`AuthoritativeState(...)` constructor); this ticket's own implementation and tests below needed no
+changes — only the engine-level carry-forward was missing.
+
 ## Test Summary
 New tests:
 - `tests/unit/domains/adventure/test_legend_fact_route_bias.py` (4 tests) — proves

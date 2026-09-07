@@ -4265,7 +4265,15 @@
     not a member cached navigation.region_id, so the lookup does not depend on that
     per-entity caches own freshness for a group-level decision) and reads region_loyalty_pressure.get(region.id,
     0.0) -- None-safe fallback to the exact pre-bridge 0.0 default when the anchor
-    resolves to no region, or that region has no region_cultures entry yet.'
+    resolves to no region, or that region has no region_cultures entry yet. CORRECTION
+    (TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD, 2026-09-07): found
+    real gap -- ApplyPath.apply_generation() (src/engine/apply.py) never carried region_loyalty_pressure
+    forward past the first Kernel.tick_once() call, silently resetting it to {} from
+    tick 2 onward -- so the ''live in any Campaign-mode run past episode 0'' claim
+    above was only true for the episode''s first tick, not the whole episode as intended.
+    Fixed: apply_generation() now passes region_loyalty_pressure=prior_state.region_loyalty_pressure
+    through its AuthoritativeState(...) constructor, verified via a direct multi-tick
+    test.'''
   status: verified
   priority: P2
   legacy_evidence: null
@@ -4275,7 +4283,8 @@
     (_build_initial_state() population). src/engine/pipeline_phases/groups.py (GroupPhase.resolve()
     consumption via SpatialQueryService.get_region_at()).
   proof_type: regression
-  test_path: tests/integration/campaigns/test_loyalty_pressure_campaign_bridge.py
+  test_path: tests/integration/campaigns/test_loyalty_pressure_campaign_bridge.py;
+    tests/unit/engine/test_apply_generation_episode_bridge_carryforward.py
   divergence_note: null
   support_boundary: Bridges idea 56 (LoyaltyDriftService/region_cultures) only. Idea
     57 (FameDeriver/LegendFact, the epic own other shared-blocker idea) is explicitly

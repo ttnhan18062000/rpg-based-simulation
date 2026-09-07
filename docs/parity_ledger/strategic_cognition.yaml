@@ -2547,7 +2547,12 @@
     \ additive with, both the trait-based chain and the Culture Drift branch above.\
     \ legend_fact is bridged once per episode from CampaignState.entity_fame via AuthoritativeState.entity_legend_facts,\
     \ gated by LegendFactService.for_entity()'s own FAME_THRESHOLD check (only subjects\
-    \ whose fame >= 0.5 are present)."
+    \ whose fame >= 0.5 are present). CORRECTION (TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD,\
+    \ 2026-09-07): region_culture_states/entity_legend_facts were found not to survive\
+    \ ApplyPath.apply_generation() past tick 1 of any real episode (same gap as SOC-276's\
+    \ region_loyalty_pressure) -- both the Culture Drift and Living Legend branches\
+    \ above were silently inert from tick 2 onward until this fix. Now genuinely persist\
+    \ for the whole episode."
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2593,7 +2598,7 @@
     tests/unit/domains/adventure/test_memory_informed_scoring.py; tests/unit/domains/adventure/test_capability_confidence_scoring.py;
     tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py; tests/unit/domains/adventure/test_culture_drift_route_bias.py;
     tests/unit/ai/goals/test_adventure_goal_scorer.py; tests/unit/domains/adventure/test_legend_fact_route_bias.py;
-    tests/unit/domains/campaigns/test_fame_wiring.py
+    tests/unit/domains/campaigns/test_fame_wiring.py; tests/unit/engine/test_apply_generation_episode_bridge_carryforward.py
   divergence_note: null
   support_boundary: null
 - id: STRAT-228
