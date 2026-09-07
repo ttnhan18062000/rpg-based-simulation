@@ -99,11 +99,15 @@ This epic tracks child tickets only; no direct implementation happens here.
   directly extended the Social & Political Mechanics Bible chapter authored there)
 - `TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO` (P2 — DONE 2026-09-07 as an investigation: the real
   blocker is structural, not a corpus-content gap — split into the ticket below)
-- `TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION` (P2 — real architecture decision
-  split out of the ticket above)
+- `TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION` (P2 — DONE 2026-09-07: real
+  architecture decision split out of the ticket above; Option 1 implemented, `route_new_query`
+  genuinely fires end-to-end)
 - `TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD` (P1 — DONE 2026-09-07, hotfix: found
   while implementing the corpus-scenario ticket above, fixes a real regression silently breaking the
   Culture Drift/Living Legend bias branches above beyond tick 1 of any real campaign episode)
+- `TCK-20260907-INFORMATION-INTENT-EXECUTION-RESULT-TYPE-MISMATCH` (P1 — DONE 2026-09-07, hotfix:
+  NEW, not in the original plan, found while implementing the persistence ticket above — fixes a
+  second, separate, real, pre-existing crash bug in `InformationIntentExecutionPhase`)
 - `TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION` (P3 — DONE 2026-09-07: real decision, defer idea 30,
   `ENABLE_ITEM_INSTANCE_HISTORY` stays OFF — confirmed zero producer AND zero consumer, unlike every
   other ticket in this epic)
@@ -113,8 +117,10 @@ This epic tracks child tickets only; no direct implementation happens here.
   gap into the ticket below)
 - `TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING` (P2 — NEW, not in the original 6-ticket plan: wire
   idea 62's `FidelityState`/idea 63's `BeliefInstitution` into a live consumer, matching the idea
-  56/57 `personality_bias` pattern; scoped 2026-09-07 following the discovery above)
-- `TCK-20260907-CHURCH-CONTENT-AUTHORING` (P3 — pure content, no code)
+  56/57 `personality_bias` pattern; scoped 2026-09-07 following the discovery above — IN PROGRESS)
+- `TCK-20260907-CHURCH-CONTENT-AUTHORING` (P3 — DONE 2026-09-07: original "pure content" premise was
+  wrong — Blessing/Resurrection are inert data labels with zero real code reading them; placed
+  CHURCH anyway and formally disclosed the inertness per the ratified decision)
 
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/rpg_dormant_mechanism_closure_plan.md`
@@ -240,8 +246,24 @@ folded in as if it were always the plan. Listed chronologically, 2026-09-07 unle
    **Option 1** — reclassify `information_source_profiles` as persistent, following the same
    carry-forward pattern as decision #4's fix, with a required recalibration check that
    `pending_information_responses`' own Branch 2 does not double-fire once the catalog persists
-   past tick 1. Implementation in progress at time of writing
-   (`TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION`).
+   past tick 1. **Done** — implemented and verified regression-free against the 3 worlds already
+   shipping this field, but exercising it against `unit_information_routing_pilot` (the corpus
+   world built to prove it) surfaced a **second, separate, real, pre-existing bug**, not caused by
+   this fix: `InformationBeliefPhase.apply()` Branch 3 stores a raw `ActionIntent` into
+   `EntityUpdate.intent_results` (typed for the different `IntentResult` class);
+   `InformationIntentExecutionPhase.execute()` never removed it, so it survived the additive
+   `EntityUpdate.merge()` unchanged and crashed `StrategicWorkQueue.build()` reading `.accepted`
+   off it — dormant, pre-existing code, unreachable before this fix made Branch 3 fire for the
+   first time. This time the fork **correctly stopped and reported back** instead of fixing it or
+   calling `AskUserQuestion` itself — independently verified real by the orchestrator (every cited
+   line checked against actual code) before presenting the decision.
+   Decision (**user**, via `AskUserQuestion`, orchestrator-initiated): fix now as a new hotfix
+   ticket. Fixed in `TCK-20260907-INFORMATION-INTENT-EXECUTION-RESULT-TYPE-MISMATCH` —
+   `InformationIntentExecutionPhase.execute()` now strips resolved `ActionIntent` instances out of
+   `intent_results` before the additive merge. Re-verified via a real 200-tick calibration run: no
+   crash, `route_new_query` genuinely fires (confirmed via the run's own event log), no regression
+   on the 3 real worlds already shipping `information_source_profiles`. AC2 now genuinely
+   satisfied — closes out the entire chain for idea M7's `route_new_query` SimQ rule.
 
 7. **`SocialBond.role` write path appended onto PR #143 rather than a new epic ticket branch** —
    decided before epic child-ticket implementation began.
