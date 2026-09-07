@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260907-PERCEPTION-MOTIVATION-PIPELINE-REVIVAL
-phase: open
+phase: done
 date: 2026-09-07
 tags: [architecture, simulation-quality]
 ---
@@ -12,10 +12,13 @@ tags: [architecture, simulation-quality]
 # TCK-20260907-PERCEPTION-MOTIVATION-PIPELINE-REVIVAL
 
 ## Title
-Revive the dead Perception → Motivation route-bias pipeline — unlocks idea 57 (Living Legend) and the already-built Culture Drift bias overlay
+Revive the dead Perception → Motivation route-bias pipeline — investigation found the real scope, split into 2 follow-up tickets
 
 ## Status
-BLOCKED — escalated 2026-09-07, real scope is a 4-component dead chain plus a missing data model, not the 2-component gap originally scoped (see Implementation Notes)
+DONE — investigation complete; split into `TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE` and
+`TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING` per orchestrating-session decision 2026-09-07 (see
+Completion Summary). This ticket's own deliverable is the investigation itself — no code was
+written or was ever expected to be, once the real scope became clear.
 
 ## Tier
 standard
@@ -79,18 +82,24 @@ Reviving both subsystems properly unlocks two real, already-shipped mechanisms a
   `world_signals` set to what's actually shipped, not a speculative future framework.
 
 ## Acceptance Criteria
-- [ ] `PerceptionUpdatePhase` has a real, live, non-test caller inside the Kernel's per-tick pipeline,
-      at a deliberately chosen phase-ordering position (not an arbitrary slot).
-- [ ] `MotivationBiasService.compute_bias_multiplier()` has a real, live, non-test caller feeding a
-      real route/goal-scoring decision through the authoritative apply-path.
-- [ ] A real test shows a `LegendFact`-derived signal producing a measurable route-bias shift for at
-      least one Townsperson entity, through the real live pipeline (not a hand-called pure function).
-- [ ] The Culture Drift bias overlay's own live-reachability is confirmed or explicitly disclosed if
-      still gapped after this ticket's own wiring (don't assume it's automatically fixed without
-      verifying).
-- [ ] Determinism confirmed: no unsorted iteration over any new per-tick signal aggregation feeds a
-      durable structure's key/iteration order (the same failure class this epic's own sibling ticket,
-      `TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE`, already checked for its own bridge).
+- [ ] ~~`PerceptionUpdatePhase` has a real, live, non-test caller...~~ — **superseded.** This AC
+      assumed a 2-component gap; investigation found 4 dead components plus a missing data model.
+      Reassigned to `TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE`/
+      `TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING`, whichever ends up owning the real phase-ordering
+      decision.
+- [ ] ~~`MotivationBiasService.compute_bias_multiplier()` has a real, live, non-test caller...~~ —
+      **superseded**, reassigned to `TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE`.
+- [ ] ~~A real test shows a `LegendFact`-derived signal producing a measurable route-bias shift...~~
+      — **superseded**, reassigned to `TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING`.
+- [ ] ~~The Culture Drift bias overlay's own live-reachability is confirmed...~~ — **superseded**,
+      reassigned to `TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE`.
+- [ ] ~~Determinism confirmed...~~ — **superseded**, reassigned to both follow-up tickets, each
+      responsible for determinism-checking its own new code.
+- [x] **This ticket's own real, achieved AC**: the true scope of idea 57's revival is investigated
+      and disclosed accurately (4 dead links + a missing data model + a vocabulary mismatch + no
+      existing bias hook in the live scorer), not guessed at or under-scoped — confirmed via direct
+      grep, independently re-verified by the orchestrating session before any follow-up ticket was
+      filed.
 
 ## Related Tickets
 - `TCK-20260907-EPIC-RPG-DORMANT-MECHANISM-CLOSURE` (parent epic)
@@ -204,30 +213,38 @@ own established discipline says to escalate rather than force.
 
 ### Recommendation
 
-Do not implement this ticket as currently scoped. Real options for whoever tracks this epic next:
+Do not implement this ticket as currently scoped. Real options were presented to the orchestrating
+session; **decision made 2026-09-07: split further (option 1 below)**.
 1. **Split further**: separate "wire `DoctrineResolver` + add a minimal `tags` field to
    `AdventureRouteOption` + add a bias term to `AdventureRouteScorer.score()`" (the real
    prerequisite infrastructure, benefits BOTH idea 57 and Culture Drift) from "wire `LegendFact`
    specifically into whatever that infrastructure turns out to be" (idea 57's own narrow piece).
-2. **Re-scope narrower**: skip `PerceptionUpdatePhase` and route generation/scoring entirely; wire
-   `LegendFact` → a new, `culture_values`-shaped `legend_values` input on
-   `compute_bias_multiplier()` → a single, hand-picked existing decision point (e.g. directly
-   inside `StrategicIntelligenceSystem.fused_strategic_pass()`, already real and live) — smaller,
-   but bypasses `PerceptionUpdatePhase` and the route-scoring layer entirely, which may or may not
-   match idea 57's own original design intent (re-read `TCK-20260905-FAME-DERIVER-LEGEND-FACT`
-   closely before choosing this).
-3. **Accept this really is epic-sized** and scope a proper multi-ticket mini-epic for the whole
-   route-bias-scoring revival, treating idea 57/Culture Drift as two of several beneficiaries.
+2. Re-scope narrower (bypass `PerceptionUpdatePhase`/route-scoring, wire directly into
+   `StrategicIntelligenceSystem.fused_strategic_pass()`) — not chosen.
+3. Accept this is epic-sized and scope a full multi-ticket mini-epic — not chosen; option 1
+   achieves the same real split at a more actionable granularity.
 
-No code, docs, or test changes were made — this Implementation Notes section IS the deliverable of
-this Investigate-phase pass.
+No code, docs, or test changes were made in this ticket — this Implementation Notes section IS the
+deliverable of this Investigate-phase pass.
 
 ## Test Summary
 No tests run — no code changed. All grep-based investigation results above are independently
-reproducible via the exact commands cited.
+reproducible via the exact commands cited, and were independently re-verified by the orchestrating
+session before the split decision was made (`DoctrineResolver` zero callers, `AdventureRouteOption`
+has no `tags` field, the tag-vocabulary mismatch, and `AdventureRouteScorer.score()`'s real formula
+having no existing bias term — all confirmed against real code).
 
 ## Files Changed
 None.
 
 ## Completion Summary
-(Not completed — escalated per Implementation Notes above.)
+Investigation found the real scope is a 4-component dead chain (`DoctrineResolver.resolve()`,
+`PerceptionUpdatePhase`, no real `PerceptionModel` consumer, `MotivationBiasService.
+compute_bias_multiplier()`) plus a missing data model (`AdventureRouteOption` has no `tags` field)
+and a genuine vocabulary mismatch between `IdentityDoctrine`'s combat-style tags and
+`AdventureRouteOption.family`'s `RouteFamily` enum — materially larger than this ticket's own
+2-component premise. Escalated rather than forced or guessed at any of the 4 independent design
+axes involved. Split per orchestrating-session decision into `TCK-20260907-ROUTE-BIAS-SCORING-
+INFRASTRUCTURE` (the real shared prerequisite, benefits idea 57 and Culture Drift) and
+`TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING` (idea 57's own narrow piece, depends on the
+infrastructure ticket landing first).
