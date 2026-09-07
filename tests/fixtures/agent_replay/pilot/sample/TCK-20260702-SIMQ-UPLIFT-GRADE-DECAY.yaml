@@ -1,0 +1,60 @@
+# Bulk-converted replay fixture for TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY (TCK-20260907-FILTERED-REPLAY-EVAL-PILOT tools/agent_replay/fixture_converter.py).
+# Review.output.verdict/.violations RECONSTRUCTED from a truncated events.jsonl summary — see docs/ai/replay_fixture_spec.md and this ticket's conversion_log.yaml (review_output_fidelity='reconstructed_from_truncated_summary').
+version: 1
+source:
+  ticket_id: TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY
+  ticket_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/tickets/done/TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY.md
+  stored_artifacts_dir: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY/
+  events_run_id: TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY
+  events_seq_range:
+  - 1
+  - 4
+  final_status: DONE
+  tier: standard
+phases:
+- phase: Scope
+  agent: ticket-scoper
+  input:
+    tags:
+    - simulation-quality
+    - combat
+    - world
+    - grade-thresholds
+    - normalization
+    - scoring
+    conflicts: []
+  output:
+    status: ok
+    summary: Loaded existing ticket TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY
+    ts: '2026-07-02T15:26:59Z'
+  transition: ok
+- phase: Investigate
+  agent: investigator
+  input: {}
+  output:
+    status: ok
+    summary: 'H2 confirmed: COMBAT raw=127 identical at 200t/401t; A/B boundary at
+      0.5; D2 fix chosen'
+    ts: '2026-07-02T15:26:59Z'
+  transition: ok
+- phase: Plan
+  agent: planner
+  input:
+    plan_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY/plan.md
+  output:
+    status: ok
+    summary: floor_tick=current_tick//4 added to prevent S-inflation; 8 steps planned
+    ts: '2026-07-02T15:26:59Z'
+  transition: ok
+- phase: Review
+  agent: architecture-reviewer
+  input:
+    plan_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY/plan.md
+    investigation_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY/investigation.md
+  output:
+    verdict: NEEDS_CHANGES
+    violations: []
+    status: ok
+    summary: "NEEDS_CHANGES\u2192APPROVED after parity routing fix (INFRA-255 primary)"
+    ts: '2026-07-02T15:26:59Z'
+  transition: NEEDS_CHANGES

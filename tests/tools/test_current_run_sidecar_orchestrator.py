@@ -514,6 +514,26 @@ def test_scope_resume_branch_also_writes_session_scoped_copy():
     ) in pre_scope_region
 
 
+# ---------------------------------------------------------------------------
+# 12. TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING — the log-only detection call is wired in right
+#     after tid is confirmed real, well before writeSidecar's own definition.
+# ---------------------------------------------------------------------------
+
+
+def test_scope_phase_wires_detection_call_at_tid_confirmation_point():
+    source = _read_workflow_source()
+
+    tid_idx = source.index("const tid = ticketInfo.ticket_id")
+    write_sidecar_def_idx = source.index("const writeSidecar = async")
+    detection_call_idx = source.index("ticket_claim_detection.py")
+
+    assert tid_idx < detection_call_idx < write_sidecar_def_idx
+    assert (
+        'await bash(`python3 tools/agent-monitoring/ticket_claim_detection.py "${tid}" 2>/dev/null || true`)'
+        in source
+    )
+
+
 def test_record_run_events_seq_offset_never_read_sidecar():
     # C3 verification, folded into this ticket per its own investigation recommendation: none of
     # these three writers should ever OPEN/READ the sidecar file (they take run_id explicitly via

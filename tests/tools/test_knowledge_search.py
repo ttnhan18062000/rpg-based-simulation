@@ -708,6 +708,42 @@ class TestExtractWorkingLogRows:
         assert {row["id"] for row in rows} == {"TCK-001", "TCK-002"}
         assert "embedded-header-duplicate" in capsys.readouterr().err
 
+    def test_knowledge_search_dedupes_exact_content_working_log_rows_without_writing_csv(
+        self, tmp_path, capsys, monkeypatch
+    ):
+        """TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP: a squash-merge whole-block
+        duplication (e.g. tickets/working_log.csv's confirmed ~1586-row incident) must not
+        produce one corpus document per duplicate physical line -- only the first occurrence
+        of each distinct (ticket_id, title, summary) tuple is kept. This must never open the
+        source file in a non-read mode."""
+        csv_file = tmp_path / "working_log.csv"
+        csv_file.write_text(
+            "ticket_id,title,summary,date\n"
+            "TCK-001,First Ticket,First summary,2026-01-01\n"
+            "TCK-002,Second Ticket,Second summary,2026-01-02\n"
+            "TCK-001,First Ticket,First summary,2026-01-03\n"  # exact-content duplicate
+            "TCK-001,First Ticket,First summary,2026-01-04\n"  # exact-content duplicate
+            "TCK-003,Third Ticket,Third summary,2026-01-05\n",
+            encoding="utf-8",
+        )
+
+        real_open = open
+
+        def _guarded_open(file, mode="r", *args, **kwargs):
+            if str(file) == str(csv_file) and mode not in ("r", "rt"):
+                raise AssertionError(f"opened {file} in non-read mode {mode!r}")
+            return real_open(file, mode, *args, **kwargs)
+
+        monkeypatch.setattr("builtins.open", _guarded_open)
+
+        rows = _ks._extract_working_log_rows(csv_file)
+
+        assert len(rows) == 3
+        assert [row["id"] for row in rows] == ["TCK-001", "TCK-002", "TCK-003"]
+        assert "exact-content-duplicate" in capsys.readouterr().err
+        # source file content itself is untouched
+        assert csv_file.read_text(encoding="utf-8").count("TCK-001") == 3
+
 
 # ---------------------------------------------------------------------------
 # Unit tests — _collect_corpus (boundaries)

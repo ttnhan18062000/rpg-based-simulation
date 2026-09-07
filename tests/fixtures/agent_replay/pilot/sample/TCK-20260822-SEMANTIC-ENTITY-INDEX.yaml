@@ -1,0 +1,59 @@
+# Bulk-converted replay fixture for TCK-20260822-SEMANTIC-ENTITY-INDEX (TCK-20260907-FILTERED-REPLAY-EVAL-PILOT tools/agent_replay/fixture_converter.py).
+# Review.output.verdict/.violations RECONSTRUCTED from a truncated events.jsonl summary — see docs/ai/replay_fixture_spec.md and this ticket's conversion_log.yaml (review_output_fidelity='reconstructed_from_truncated_summary').
+version: 1
+source:
+  ticket_id: TCK-20260822-SEMANTIC-ENTITY-INDEX
+  ticket_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/tickets/done/TCK-20260822-SEMANTIC-ENTITY-INDEX.md
+  stored_artifacts_dir: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260822-SEMANTIC-ENTITY-INDEX/
+  events_run_id: TCK-20260822-SEMANTIC-ENTITY-INDEX
+  events_seq_range:
+  - 1
+  - 5
+  final_status: DONE
+  tier: standard
+phases:
+- phase: Scope
+  agent: ticket-scoper
+  input:
+    tags:
+    - engine
+    - performance
+    - determinism
+    conflicts: []
+  output:
+    status: ok
+    summary: Loaded existing ticket TCK-20260822-SEMANTIC-ENTITY-INDEX; no conflicts,
+      open lifecycle/entity_needs questions flagged for Investigate/Plan
+    ts: '2026-08-26T08:00:25Z'
+  transition: ok
+- phase: Investigate
+  agent: investigator
+  input: {}
+  output:
+    status: ok
+    summary: 'Both open questions resolved with source evidence: lazy WorldIndexService
+      lifecycle, entity_needs maps to BiologicalComponent fields'
+    ts: '2026-08-26T08:02:01Z'
+  transition: ok
+- phase: Plan
+  agent: planner
+  input:
+    plan_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260822-SEMANTIC-ENTITY-INDEX/plan.md
+  output:
+    status: blocked
+    summary: "Plan contains unresolved questions \u2014 human review required"
+    ts: '2026-08-26T08:08:03Z'
+  transition: ok
+- phase: Review
+  agent: architecture-reviewer
+  input:
+    plan_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260822-SEMANTIC-ENTITY-INDEX/plan.md
+    investigation_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260822-SEMANTIC-ENTITY-INDEX/investigation.md
+  output:
+    verdict: NEEDS_CHANGES
+    violations: []
+    status: failed
+    summary: 'NEEDS_CHANGES: identity_entities not folded into all_dirty_entities,
+      unsourced 70.0 needs threshold'
+    ts: '2026-08-26T08:48:17Z'
+  transition: NEEDS_CHANGES

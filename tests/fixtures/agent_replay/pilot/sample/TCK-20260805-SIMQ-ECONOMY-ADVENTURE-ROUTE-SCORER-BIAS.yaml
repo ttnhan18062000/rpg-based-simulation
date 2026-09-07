@@ -1,0 +1,60 @@
+# Bulk-converted replay fixture for TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS (TCK-20260907-FILTERED-REPLAY-EVAL-PILOT tools/agent_replay/fixture_converter.py).
+# Review.output.verdict/.violations RECONSTRUCTED from a truncated events.jsonl summary — see docs/ai/replay_fixture_spec.md and this ticket's conversion_log.yaml (review_output_fidelity='reconstructed_from_truncated_summary').
+version: 1
+source:
+  ticket_id: TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS
+  ticket_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/tickets/done/TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS.md
+  stored_artifacts_dir: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS/
+  events_run_id: TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS
+  events_seq_range:
+  - 1
+  - 4
+  final_status: DONE
+  tier: standard
+phases:
+- phase: Scope
+  agent: ticket-scoper
+  input:
+    tags:
+    - simulation-quality
+    - economy
+    - adventure
+    conflicts: []
+  output:
+    status: ok
+    summary: Loaded existing ticket, copied todos->inprogress, tags registered, no
+      conflicts
+    ts: '2026-08-05T15:17:34Z'
+  transition: ok
+- phase: Investigate
+  agent: investigator
+  input: {}
+  output:
+    status: ok
+    summary: 'Root cause found: craft/buy score-0.0 is correct blocker_penalty behavior
+      (missing gold/materials), not a scorer bug - traces to same upstream harvest
+      gap as Factors 1/3'
+    ts: '2026-08-05T15:20:11Z'
+  transition: ok
+- phase: Plan
+  agent: planner
+  input:
+    plan_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS/plan.md
+  output:
+    status: ok
+    summary: 'Doc-only plan: no code fix warranted, correct current_state.md/D20 doc
+      Factor 2 framing'
+    ts: '2026-08-05T15:21:15Z'
+  transition: ok
+- phase: Review
+  agent: architecture-reviewer
+  input:
+    plan_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS/plan.md
+    investigation_path: /home/u24desktop/Working/rpg-based-simulation/.claude/worktrees/doc-tag-enforcement/stored_artifacts/TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS/investigation.md
+  output:
+    verdict: APPROVED
+    violations: []
+    status: ok
+    summary: APPROVED - doc-only plan, no durable state/API/parity impact
+    ts: '2026-08-05T15:21:25Z'
+  transition: APPROVED

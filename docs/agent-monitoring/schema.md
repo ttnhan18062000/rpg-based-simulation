@@ -86,6 +86,8 @@ One record per workflow invocation.
 
 **`duration_s` is naive wall-clock time** (`end_ts - start_ts`), with no awareness of idle gaps between phase transitions — a run paused for hours awaiting human review reports the same inflated `duration_s` as one that spent that whole span in real active work. `tools/agent-monitoring/duration_utils.py::compute_active_idle_split()` (TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT) computes a read-time-only `active_duration_s`/`idle_gap_s` split per run from its own `events.jsonl` rows (never mutating `runs.jsonl`/`events.jsonl` themselves), surfaced additively alongside raw `duration_s` in `generate_retro.py`'s Slow Runs and Duration outliers sections and in `retrieval_baseline_metrics.py`'s one-off snapshot — `duration_s` itself is not corrected or reinterpreted anywhere.
 
+**`workflow_version` per run and `input_hash` per phase are not recorded.** Neither `runs.jsonl` nor `events.jsonl` has a field capturing which `agent-orchestration/workflows/implement-ticket.yaml` `workflow_version` a run executed against, or a hash of the specific input a given phase consumed. `docs/ai/phase_resume_validation_rule_decision.md` (TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN) investigated both as part of designing a future phase-level workflow-resume validation rule and confirmed this gap directly against this section: both would need new fields added to these records — `workflow_version` cannot be inferred from any existing field, and `input_hash` is not the same thing as `cited_source_hashes` (a different, retrieval-event-only field gated behind `SHADOW_CONTEXT_PACKET_ENABLED`, not a general per-phase input hash). Neither field is recorded today; adding them is future implementation work, not yet scoped to a ticket.
+
 ### `final_status` values
 
 | Value | Meaning |
@@ -530,6 +532,88 @@ exact match rule.
 
 ---
 
+## `claim_detections` (`agent-monitoring/data/YYYY-Www/claim_detections.jsonl`)
+
+Log-only ticket-claim detection (`TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING`, Bucket-B
+experiment per `docs/plans/agent_infrastructure/ai_first_hardening_epics/workflow_reliability_epic.md`
+M2). Unlike every section above, this is a genuinely new file family, not an additive field family
+on `runs`/`events`/`tools` — the Scope-phase `tid`-confirmation point this signal is emitted from
+has no existing `(run_id, seq)` event of its own to attach fields to, unlike the
+retrieval-event/shadow-reviewer-event precedents elsewhere in this file, which both annotate an
+already-emitted production event.
+
+Written from `.claude/workflows/implement-ticket.js`'s Scope phase, immediately after
+`const tid = ticketInfo.ticket_id` (line ~213), by a dedicated `bash()` call into
+`tools/agent-monitoring/ticket_claim_detection.py::check_and_log()`. The check enumerates every
+other session's `.claude/current_run.*` sidecar file (reusing `post_tool_hook.py`'s own
+`Path(".claude").glob("current_run.*")` enumeration pattern, not its function — this module never
+imports `post_tool_hook.py`) and writes exactly one record when another session's scoped sidecar
+has **both** `run_id == tid` and an mtime within `CLAIM_DETECTION_WINDOW_SECONDS` (900 seconds / 15
+minutes, a plain module constant — deliberately distinct from `post_tool_hook.py`'s unrelated
+`_SIDECAR_STALE_SECONDS = 24 * 3600` prune threshold, which answers a different question:
+safe-to-delete, not currently-active) of now.
+
+```json
+{
+  "ticket_id": "TCK-20260907-EXAMPLE-TICKET",
+  "ts": "2026-09-07T04:12:00Z",
+  "detecting_session_id": "sess-abc123",
+  "other_session_ids": ["sess-def456"],
+  "window_seconds": 900,
+  "sidecar_files": [".claude/current_run.sess-def456"]
+}
+```
+
+### Fields
+
+| Field | Type | Nullable | Description |
+|---|---|---|---|
+| `ticket_id` | string | No | The ticket ID (`run_id`) this detection concerns — the same `tid` value the detecting session's own Scope phase just confirmed. |
+| `ts` | ISO 8601 | No | UTC timestamp the detection was written, in the same `Z`-suffixed format `runs`/`events`/`tools` already use. |
+| `detecting_session_id` | string | Yes | The `CLAUDE_CODE_SESSION_ID` of the session that ran the check. `null` if the env var was unset at check time. |
+| `other_session_ids` | array of string | No | Session IDs of every other scoped sidecar that matched (both `run_id == tid` and within the window). Empty arrays are never written — a record only exists when at least one match was found. |
+| `window_seconds` | int | No | The window threshold actually used for this detection, so a later reader can tell if the constant changed between detections. |
+| `sidecar_files` | array of string | No | The matched `.claude/current_run.*` paths, for manual follow-up. |
+
+### Write path and safety
+
+Written via the same shared `tools/agent-monitoring/writer.py::write_line()` O_CREAT|O_EXCL
+lock-file primitive `record_run.py`/`record_events.py`/`post_tool_hook.py` already use, but to its
+own distinct target file — `claim_detections.jsonl.lock` is a separate lock from
+`runs.jsonl.lock`/`events.jsonl.lock`/`tools.jsonl.lock` (the lock file name is derived from the
+target file's own name), so this write never contends with the three existing shards. This is a
+**read-only** consumer of `.claude/current_run.*` — it never writes, deletes, or otherwise mutates
+any sidecar file. Every per-file read/parse/stat inside the enumeration is wrapped in its own
+`try/except Exception: continue`, and the whole check is wrapped again in `try/except Exception:
+return None` — malformed JSON, a missing `run_id` key, or a file vanishing mid-scan (a real
+possibility against `post_tool_hook.py`'s own concurrent 24-hour prune of the same file family) is
+silently skipped, never raised into `implement-ticket.js`'s control flow.
+
+### Advisory, log-only — never a gate input
+
+This file is **purely observability**, feeding the 30-day/quarter decision gate on whether to
+later build an actual claim lock (see
+`docs/plans/agent_infrastructure/ai_first_hardening_epics/ticket_claim_detection_experiment.md`).
+No gate check (`done-checker`, `doc_staleness_check.py`, or any other) reads this file as a
+blocking input, and none should ever be made to. The check itself is always-on (no env-var gate,
+unlike the shadow-reviewer-logging precedent, since a local glob + JSON parse has negligible cost).
+
+**Known false-negative gap, not fixed by this design**: the window is measured against the other
+session's sidecar's last **phase-transition** write, not its continuous activity —
+`writeSidecar()` only updates a sidecar's mtime once per phase transition, not on any regular
+heartbeat, so a session mid-way through one long phase (real Implement/Investigate/Plan-phase
+dispatches have been observed running 20-30+ minutes) can look stale to this check well before it
+is actually done. This is an accepted, documented limitation of a log-only, best-effort signal, not
+a defect — see the experiment spec's Known Limitations section for the full rationale on why
+widening the window is not the fix.
+
+### `.gitattributes` coverage
+
+Already covered by the existing `agent-monitoring/data/*/*.jsonl merge=union` glob — no new
+`.gitattributes` entry was needed for this new file (confirmed by direct pattern match).
+
+---
+
 ## Join Example
 
 ```python
@@ -655,6 +739,32 @@ design went live. The check's real value is prospective — catching the first g
 write-time-vs-record-time divergence — not retrospective.
 
 Full evidence: `stored_artifacts/TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK/investigation.md`.
+
+### Duplicate content block in `2026-W36/tools.jsonl` (squash-merge artifact)
+
+`agent-monitoring/data/2026-W36/tools.jsonl` physical lines 22830–22908 (79 lines) are
+byte-for-byte identical, at a fixed +409 line offset, to lines 23239–23317 — confirmed down to
+the microsecond `ts` field on a sampled pair, ruling out coincidental repeats
+(`TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP`). Root cause: the same defect class as
+that ticket's ~1586-row `tickets/working_log.csv` duplication — GitHub squash-merge (this repo's
+de facto standard PR-landing mechanism, confirmed 5/5 on a recent-PR sample) never invokes git's
+merge machinery, so `.gitattributes`' `agent-monitoring/data/*/*.jsonl merge=union` driver never
+gets a chance to run. This is **not remediated**: unlike `tickets/working_log.csv` (which received
+a one-time cleanup commit in the same ticket), this shard was deliberately left as-is because
+`agent-monitoring/data/*/*.jsonl` shards have a materially more active, per-tool-call writer
+profile than `working_log.csv`'s occasional ticket-close appends, so a cleanup edit here carries a
+higher, less-understood concurrent-write collision risk than that ticket's evidence base
+justified taking on. It is tracked, not silently left, via
+`tests/integrity/test_no_duplicate_content_blocks.py`'s `KNOWN_DUPLICATE_BLOCKS` allowlist, which
+also provides ongoing detection for any further undetected duplicate block in any `merge=union`-
+covered file, going forward. A follow-up ticket to remediate this specific shard (once the
+write-collision risk is separately assessed) is recommended but not yet filed. As with the other
+Known Limitations above, this affects raw row counts in `tools.jsonl` for readers/tools that do
+not already dedupe by exact content — no downstream consumer-specific dedup fix beyond
+`tools/knowledge_search.py`'s working-log corpus extraction (a different file) was part of that
+ticket's scope.
+
+Full evidence: `stored_artifacts/TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP/investigation.md`.
 
 ### Full evidence
 
