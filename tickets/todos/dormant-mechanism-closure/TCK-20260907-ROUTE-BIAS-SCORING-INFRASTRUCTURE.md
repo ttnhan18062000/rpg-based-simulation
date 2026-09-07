@@ -12,14 +12,22 @@ tags: [architecture, simulation-quality]
 # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE
 
 ## Title
-Build the real prerequisite infrastructure for route-bias scoring — wires DoctrineResolver, adds a tags field to AdventureRouteOption, adds a bias term to AdventureRouteScorer
+Add Culture Drift as a new branch in the live personality_bias mechanism — bypass the dead Doctrine/Values chain entirely
 
 ## Status
-BLOCKED — escalated 2026-09-07: `AdventureRouteScorer.score()` already has a separate, live,
-already-shipped `personality_bias` term doing conceptually the same job this ticket's own
-Doctrine/Values path would duplicate — see Implementation Notes. Real, buildable path exists for
-the Culture Drift half of this ticket, but a real architecture/consolidation decision is needed
-before writing code.
+OPEN — re-scoped 2026-09-07 per orchestrating-session decision (see Implementation Notes below for
+the full investigation that produced this decision).
+
+**Decision, 2026-09-07 (RATIFIED — not open for re-litigation by whoever implements this):**
+`MotivationBiasService.compute_bias_multiplier()`/`DoctrineResolver`/`IdentityDoctrine`/
+`ValuePreferenceProfile` are confirmed-dead legacy code, superseded by the already-live
+`personality_bias` mechanism in `AdventureRouteScorer.score()` (`src/domains/adventure/scoring.py`,
+lines ~206-223), which does the same conceptual job (personality/context → route-family bias) using
+real, populated per-entity trait data. **Do not revive the Doctrine/Values chain.** Instead, add
+Culture Drift's signal as a new branch directly inside `personality_bias`'s own existing
+`route.family`-keyed pattern, mirroring its established style exactly. This also changes idea 57's
+(Living Legend) own eventual integration point — see `TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING`,
+which has been re-scoped to match.
 
 ## Tier
 standard
@@ -61,58 +69,75 @@ real effect without this infrastructure existing first, regardless of which spec
 eventually flows through it.
 
 ## Scope
-- Wire `DoctrineResolver.resolve()` to a real, live call site — confirm during Investigate whether
-  this should happen once at entity construction (keyed by `class_id`) or be re-resolved
-  dynamically; ground the decision in how `IdentityDoctrine`'s own fields are meant to be used
-  (read `DoctrineResolver`'s own docstring/tests for its original design intent).
-- Add a `tags` field to `AdventureRouteOption` (or an equivalent real mechanism) that can carry a
-  real, populated set of tags per route option. Decide the real vocabulary: reuse
-  `IdentityDoctrine`'s combat-style vocabulary, introduce a new route-specific vocabulary, or
-  support both — ground this decision in what `AdventureRouteGenerator`'s real route-construction
-  call sites can actually populate today, not an invented ideal.
-- Add a real bias/multiplier term to `AdventureRouteScorer.score()`'s existing formula, sourced from
-  `MotivationBiasService.compute_bias_multiplier()` fed by the new `tags` field and the entity's
-  (now-real) `IdentityDoctrine`. This is a change to a live, already-certified scoring formula —
-  treat it with the same care as any Mechanics Bible formula change (update
-  `docs/mechanics/`/parity ledger if this formula is documented there; confirm during Investigate).
-- Confirm the Culture Drift bias overlay's own live-reachability once this infrastructure exists —
-  `compute_bias_multiplier(entity, tags, culture_values)` already accepts a `culture_values`
-  parameter designed for `CulturalBiasApplicator`'s output; wiring the real call site should make
-  this reachable as a side effect, but verify directly, don't assume.
-- Add real tests proving `DoctrineResolver` output reaches a real scored route, and that a non-empty
-  `tags`/doctrine combination produces a measurably different `final_score` than the empty-doctrine
-  baseline (a real regression-catching assertion, not a tautology).
-- Given this touches a live, already-certified scoring formula and multiple subsystem boundaries
-  (motivation → adventure route generation → scoring), this ticket likely warrants an
-  `architecture-reviewer` pass on the Plan before Implementation.
+- Bridge `CampaignState.region_cultures: Dict[str, CultureCarryForward]` into per-tick-reachable
+  state, mirroring `TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE`'s own exact precedent: a new
+  `AuthoritativeState.region_culture_states: Dict[str, CultureState]` field, populated once per
+  episode by `CampaignOrchestrator._build_initial_state()` (sorted iteration for determinism).
+- In `AdventureGoalScorer.score()` (`src/ai/goals/adventure_scorer.py:96` — confirmed the live,
+  sole, unconditional per-tick adventure-decision call site with full `AuthoritativeState` access),
+  resolve the entity's real region (`entity.navigation.region_id`) and look up the bridged
+  `CultureState` for it (None-safe: no-op if the region has no culture-state entry yet).
+- Thread the resolved `CultureState` down through `AdventureDecisionService.decide()`
+  (`src/domains/adventure/service.py`) into `AdventureRouteScorer.score()`
+  (`src/domains/adventure/scoring.py`) as a new parameter — confirm the real, minimal signature
+  change needed during Investigate.
+- Inside `AdventureRouteScorer.score()`'s existing `personality_bias` block (the `route.family`-keyed
+  `if`/`elif` chain, lines ~206-223), add a new additive term computed from the bridged
+  `CultureState` — reuse `CulturalBiasApplicator.compute_culture_delta(culture, tags)`'s own real
+  logic/vocabulary (`"recovery"`/`"flee"`/`"caution"`, `"cooperation"`/`"help"`/`"party"`,
+  `"exploration"`/`"research"`/`"intel"`/`"knowledge"`, `"gold"`/`"chest"`/`"loot"`/`"reward"` —
+  confirmed via its own docstring example) mapped onto the real `RouteFamily` values already present
+  in the same `if`/`elif` chain (e.g. `RECOVER` → `"recovery"`, `FORM_PARTY` → `"party"`/
+  `"cooperation"`, `SELL_LOOT_FOR_GOLD` → `"gold"`/`"loot"`, `SCOUT_LOCATION`/`ASK_INFORMATION` →
+  `"exploration"`/`"intel"`/`"knowledge"`) — a small, real mapping table, not a new tags data model.
+  This is a change to a live, already-certified scoring formula — update `docs/mechanics/`/the
+  parity ledger entry that documents `AdventureRouteScorer.score()` (confirm which entry during
+  Investigate, likely in `strategic_cognition.yaml` or wherever route-scoring is already tracked).
+- **Explicitly disclose, do not silently ignore**: `MotivationBiasService.compute_bias_multiplier()`,
+  `DoctrineResolver`, `IdentityDoctrine`, and `ValuePreferenceProfile` are confirmed-dead legacy code,
+  superseded by `personality_bias`, and are deliberately NOT revived by this ticket. Add a real
+  disclosure (a docstring/comment at the dead code's own definition sites, plus a
+  `docs/guidelines/intentional_divergences.md` entry per this repo's own convention for a deliberate
+  behavior/architecture decision) rather than leaving future readers to wonder why a whole module
+  went unused.
+- Add real tests proving a non-default `CultureState` (real `faction_conflict_exposure`/other real
+  fields) produces a measurably different `final_score` than the culture-absent baseline, through the
+  real bridged pipeline — not a hand-called pure function.
+- Given this touches a live, already-certified scoring formula and the live per-tick adventure-scoring
+  call site, this ticket likely still warrants an `architecture-reviewer` pass on the Plan before
+  Implementation, even with the redundancy question now resolved.
 
 ## Out of Scope
-- Wiring `LegendFact` specifically into this infrastructure — that is
-  `TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING`'s own scope, sequenced after this ticket.
-  This ticket only builds the shared prerequisite; it does not need to produce a Living-Legend
-  specific test.
-- Reviving `PerceptionUpdatePhase` or wiring any `PerceptionModel` consumer — the investigation that
-  split this ticket out found no real code anywhere reads `PerceptionModel` fields for route
-  generation/scoring, and `compute_bias_multiplier()` does not require `PerceptionUpdatePhase`'s
-  output at all (it takes `culture_values`/`tags` directly, not a perception snapshot) — confirm
-  this finding still holds during Investigate, but do not assume `PerceptionUpdatePhase` needs
-  reviving as part of this ticket unless Investigate finds real evidence otherwise.
-- Rebuilding `CulturalBiasApplicator`/`IdentityDoctrine`/`AdventureRouteScorer` themselves — all
-  confirmed correct and already shipped; this ticket only builds the missing connective wiring.
+- Wiring `LegendFact` specifically — that is `TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING`'s own
+  scope, sequenced after this ticket and re-scoped to target `personality_bias` too (not
+  `compute_bias_multiplier()`).
+- **Reviving `DoctrineResolver`/`IdentityDoctrine`/`ValuePreferenceProfile`/
+  `MotivationBiasService.compute_bias_multiplier()`** — confirmed-dead, superseded legacy code per
+  the ratified decision above. Disclose their dead status (see Scope); do not wire real callers for
+  them, do not delete them either unless a separate, dedicated cleanup ticket decides to (deletion is
+  a bigger, separate decision than this ticket's own scope — not deciding retirement-vs-dormant-
+  documentation here beyond the disclosure itself).
+- Reviving `PerceptionUpdatePhase` or wiring any `PerceptionModel` consumer — confirmed no real
+  consumer need for it in this path.
+- Adding a new `tags` field to `AdventureRouteOption` — no longer needed; the small
+  `RouteFamily`-keyed mapping approach above avoids this data-model addition entirely.
+- Rebuilding `CulturalBiasApplicator`/`AdventureRouteScorer`/`AdventureGoalScorer` themselves — all
+  confirmed correct and already shipped; this ticket only adds one new branch/bridge.
 
 ## Acceptance Criteria
-- [ ] `DoctrineResolver.resolve()` has a real, live, non-test caller.
-- [ ] `AdventureRouteOption` (or an equivalent real mechanism) carries a real, populated tag/doctrine
-      signal for at least one real route-generation call site.
-- [ ] `MotivationBiasService.compute_bias_multiplier()` has a real, live, non-test caller feeding
-      `AdventureRouteScorer.score()`'s formula, confirmed via a test showing a non-default doctrine
-      value producing a different `final_score` than the empty-doctrine baseline.
-- [ ] The Culture Drift bias overlay's own live-reachability is confirmed (or explicitly disclosed
-      as still gapped, with a real reason) once this infrastructure exists.
+- [ ] A real bridge carries `region_cultures`/`CultureState` from `CampaignState` into per-tick-
+      reachable state at episode start (mirroring the idea-56 bridge precedent exactly).
+- [ ] `AdventureGoalScorer.score()` → `AdventureDecisionService.decide()` →
+      `AdventureRouteScorer.score()` threads the bridged `CultureState` through to a new branch
+      inside the existing `personality_bias` block, confirmed via a test showing a non-default
+      `CultureState` producing a different `final_score` than the culture-absent baseline.
+- [ ] `MotivationBiasService`/`DoctrineResolver`/`IdentityDoctrine`/`ValuePreferenceProfile`'s
+      confirmed-dead status is explicitly disclosed (docstring/comment + a real
+      `intentional_divergences.md` entry) — not silently left unexplained.
 - [ ] Determinism confirmed: no unsorted iteration over any new per-tick aggregation feeds a durable
       structure's key/iteration order.
-- [ ] If `AdventureRouteScorer.score()`'s formula is documented in `docs/mechanics/` or the parity
-      ledger, both are updated to reflect the new bias term, per the Authoritative Mechanics Rule.
+- [ ] The parity ledger entry documenting `AdventureRouteScorer.score()`'s formula is updated to
+      reflect the new Culture Drift branch, per the Authoritative Mechanics Rule.
 
 ## Related Tickets
 - `TCK-20260907-EPIC-RPG-DORMANT-MECHANISM-CLOSURE` (parent epic)
@@ -131,22 +156,46 @@ eventually flows through it.
 None yet — created by this ticket's own Investigate/Plan phases once picked up for implementation.
 
 ## Related Code Areas
-- `src/domains/motivation/resolver.py` (`DoctrineResolver`)
-- `src/domains/motivation/service.py` (`MotivationBiasService.compute_bias_multiplier()`)
-- `src/domains/adventure/schema.py` (`AdventureRouteOption`)
-- `src/domains/adventure/scoring.py` (`AdventureRouteScorer.score()`)
-- `src/domains/culture/applicator.py` (`CulturalBiasApplicator`, E62C)
+- `src/core/state.py` (new `AuthoritativeState.region_culture_states` field)
+- `src/domains/campaigns/orchestrator.py` (`CampaignOrchestrator._build_initial_state()`)
+- `src/ai/goals/adventure_scorer.py` (`AdventureGoalScorer.score()`, the live call site)
+- `src/domains/adventure/service.py` (`AdventureDecisionService.decide()`)
+- `src/domains/adventure/scoring.py` (`AdventureRouteScorer.score()`'s `personality_bias` block)
+- `src/domains/culture/applicator.py` (`CulturalBiasApplicator.compute_culture_delta()`, E62C — the
+  real logic/vocabulary this ticket's new branch reuses)
+- `src/domains/motivation/{resolver,service}.py`, `src/core/cognition.py` (`IdentityDoctrine`/
+  `ValuePreferenceProfile`) — confirmed-dead legacy, disclosure only, not revived
 
 ## Assumptions / Open Questions
-- The exact real vocabulary for the new `tags` field (reuse `IdentityDoctrine`'s combat-style
-  vocabulary, a new route-specific one, or both) is not decided here — real design work for this
-  ticket's own Investigate/Plan phases.
-- Whether `DoctrineResolver.resolve()` should run once at construction or dynamically is not decided
-  here.
+- The exact real `RouteFamily` → Culture Drift vocabulary mapping (which real `route.family` values
+  map to which of `compute_culture_delta()`'s real tag strings) is not finalized here — real design
+  work for this ticket's own Investigate/Plan phases, grounded in what's already established by
+  `personality_bias`'s own existing `route.family`-keyed branches.
 - Whether this new formula term has any real performance-budget implications is not assessed here —
   confirm during Investigate against `docs/engine/performance_contract.md`.
+- Whether `DoctrineResolver`/`IdentityDoctrine`/`ValuePreferenceProfile`/
+  `MotivationBiasService.compute_bias_multiplier()` should eventually be deleted outright (vs. left
+  dormant-but-disclosed) is a separate, later decision — not resolved here, and not this ticket's
+  own job to make.
 
 ## Implementation Notes
+
+## Test Summary
+
+## Files Changed
+
+## Completion Summary
+
+---
+
+## Investigation History (2026-09-07, pre-decision — kept for evidence, not re-litigation)
+
+The section below is the original investigation that led to the ratified decision above (Culture
+Drift as a new `personality_bias` branch; `DoctrineResolver`/`IdentityDoctrine`/
+`ValuePreferenceProfile`/`compute_bias_multiplier()` confirmed-dead, disclosed not revived). Every
+citation in it was independently re-verified by the orchestrating session against real code before
+the decision was made. Whoever implements this ticket should read it for the evidence, but the
+decision itself is not open for re-litigation — implement per the Scope/AC above.
 
 **Escalated, 2026-09-07 — no code written; this is a pure Investigate-phase finding, the 3rd round
 of honest re-scoping for idea 57's revival chain.**
@@ -279,18 +328,6 @@ Do not implement this ticket as currently scoped, and do not implement even the 
    before either of the above, since that question is orthogonal to whether Culture Drift itself
    becomes live.
 
-No code, docs, or test changes were made — this Implementation Notes section IS the deliverable of
-this Investigate-phase pass. All citations above are independently reproducible via the exact
-file:line references and grep commands cited.
-
-## Test Summary
-No tests run — no code changed.
-
-## Files Changed
-None.
-
-## Completion Summary
-(Not completed — escalated per Implementation Notes above. A real, buildable path for the Culture
-Drift half of this ticket was found, but implementing it requires a prior decision on whether
-`MotivationBiasService`/`DoctrineResolver` are redundant legacy code (superseded by the already-live
-`personality_bias` mechanism) or should be kept alive as a parallel system — not decided here.)
+**Decision made 2026-09-07: option 1.** All citations above are independently reproducible via the
+exact file:line references and grep commands cited, and were independently re-verified by the
+orchestrating session before this decision was ratified.

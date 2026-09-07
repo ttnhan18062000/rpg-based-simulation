@@ -35,6 +35,16 @@ the shared prerequisite infrastructure is real, connect `LegendFact` specificall
 to it, producing a measurable route-bias shift for at least one Townsperson entity — the original
 design intent of idea 57, finally reachable in live gameplay.
 
+**Re-scoped, 2026-09-07, per the infrastructure ticket's own investigation and the orchestrating
+session's ratified decision**: the real integration point is a new branch inside
+`AdventureRouteScorer.score()`'s existing `personality_bias` mechanism (`src/domains/adventure/
+scoring.py`), NOT `MotivationBiasService.compute_bias_multiplier()`/`DoctrineResolver`/
+`IdentityDoctrine` — those are confirmed-dead legacy code, superseded by `personality_bias`, and are
+deliberately not being revived (see `TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE`'s own
+Implementation Notes for the full evidence). Re-confirm this ticket's own citations against whatever
+that infrastructure ticket actually shipped before implementing — do not assume the exact shape from
+this text alone.
+
 ## Scope
 - Re-confirm `TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE`'s own real, shipped shape during this
   ticket's own Investigate phase — do not assume its exact design from this ticket's own text; read
