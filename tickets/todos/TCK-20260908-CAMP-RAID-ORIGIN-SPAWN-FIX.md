@@ -58,9 +58,26 @@ the discard bug is fixed.
 occurs — draining camp maturity for zero gameplay effect, not just inert dead code.
 
 ## Scope
+**Scope extended 2026-09-08 (user decision) to cover raid *targeting*, not only spawn origin.**
+Follow-up review found that fixing the spawn origin alone would not produce a working raid:
+`RaidService.check_for_raid()` computes its spawn position relative to town center `(0,0)`
+(`src/world/raid.py:36`) and hardcodes every raider's destination with
+`navigation=replace(mob.navigation, target=(0, 0))` (line 63, comment: *"Raiders target the town
+(0,0)"*). Camp-anchored raiders would therefore spawn correctly at the camp and then immediately
+walk to the world origin — entities would exist, and the raid would still be meaningless. That is
+the same built-but-not-observable failure this epic exists to close, so both halves are in scope
+here rather than split.
+
 - Fix the raid-reuse code so `raid_update.entities_add`'s computed raiders are actually appended to
   `process_camps()`'s own returned `entities_add`, positioned/anchored at the triggering camp (per
   the existing comment's own stated intent — "in a real system we'd pass the origin").
+- Give camp-triggered raiders a real destination instead of the hardcoded `(0,0)` — most likely the
+  nearest settlement to the originating camp. Decide the selection rule during Investigate, and
+  confirm what happens when a world has no settlement, or none within a sensible range.
+- Confirm whether the existing global (non-camp) raid path should keep its `(0,0)` assumption or
+  share the same target-selection logic. The `(0,0)` hardcode encodes a single-settlement-at-origin
+  world model that may no longer hold — note that `state.regions`/`state.places` are now populated
+  in Campaign mode as of PR #148, where they previously were not.
 - This likely needs `RaidService.check_for_raid()`'s own signature or return contract extended to
   accept/apply a real origin — investigate the minimal real change, not a rewrite of `RaidService`'s
   own targeting logic.
@@ -80,6 +97,10 @@ occurs — draining camp maturity for zero gameplay effect, not just inert dead 
 ## Acceptance Criteria
 - [ ] A camp-triggered raid actually spawns real raider entities in `state.entities`, confirmed via
       a real simulation run (not a hand-constructed unit test alone).
+- [ ] Those raiders travel toward a sensible target derived from the originating camp, NOT the
+      hardcoded world origin — proven by observed movement in a real run, not just by asserting the
+      `navigation.target` field was set. "Spawned but walking to (0,0)" does not satisfy this
+      ticket.
 - [ ] Camp maturity cost (`-20.0`) and `last_raid_tick_set` bookkeeping remain correct and only apply
       when a raid genuinely occurs.
 - [ ] No regression in existing camp/raid test suites.

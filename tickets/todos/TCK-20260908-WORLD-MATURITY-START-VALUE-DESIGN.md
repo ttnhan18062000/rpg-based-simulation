@@ -47,12 +47,21 @@ a materially wider blast radius than the schema gap suggests.
   spawn, or whether other real mechanisms also key off `state.maturity` at various thresholds
   (re-grep for `state.maturity` comparisons across `src/`) — the real blast radius of any change
   here needs to be understood before deciding.
-- Design and decide: should `WorldComposition`/`RegionSpec`'s own schema gain a real
-  `starting_world_maturity` (or similar) field, letting a world compile with a non-zero
-  `state.maturity` from tick 0? Or is this better left as a disclosed, accepted long-horizon gap
-  (matching this epic's own precedent for similarly-gated mechanisms)?
-- If a new field is added: confirm it doesn't silently change behavior for every existing world
-  that doesn't set it (default must stay 0, current behavior unchanged).
+- **Decision already made (user, 2026-09-08): accept the gate as long-horizon-only and record the
+  divergence. Do NOT add a schema field, and do NOT recalibrate the gate value.** Both alternatives
+  were considered and rejected: adding `starting_world_maturity` has the widest blast radius (it
+  fast-forwards every maturity-gated mechanism at once, not just Lair occupants), and lowering the
+  `state.maturity >= 50` threshold would change when lairs appear in every existing world. Neither
+  is justified without demonstrated demand, and there is none today.
+- The remaining work is therefore the blast-radius survey plus the disclosure, not a design
+  decision: re-grep `state.maturity` comparisons across `src/` to identify every mechanism gated on
+  it, so the recorded divergence states accurately what else is long-horizon-gated rather than
+  claiming Lair occupants are the only one.
+- Record the accepted gap in `docs/guidelines/intentional_divergences.md` with a rationale class
+  and a verification path, per the Authoritative Mechanics Rule. A ticket-body note is explicitly
+  not sufficient.
+- If the survey turns up a maturity-gated mechanism that someone actually depends on reaching in a
+  practical run, **file a ticket** for it — do not reopen the schema question inside this one.
 
 ## Out of Scope
 - Redesigning `CalamityService`'s own maturity-accrual formula or interval — confirmed correct as a
@@ -65,13 +74,12 @@ a materially wider blast radius than the schema gap suggests.
   blast-radius awareness, per Scope above).
 
 ## Acceptance Criteria
-- [ ] A real, evidenced decision is made: add a compile-time `starting_world_maturity` field, or
-      formally accept the current gate as long-horizon-only with no schema change.
-- [ ] If a field is added: default behavior for every existing world is unchanged, and the new field
-      is exercised by at least one real corpus/calibration world proving the Lair-occupant gate can
-      now fire in a practical run.
-- [ ] If accepted as-is: the disposition is recorded in `docs/guidelines/intentional_divergences.md`
-      or an equivalent disclosed-gap location, not left as only a ticket-body note.
+- [ ] A complete list of `state.maturity`-gated mechanisms exists, produced by a real survey of
+      `src/`, so the disclosure describes the true scope of what is long-horizon-gated.
+- [ ] The accepted gap is recorded in `docs/guidelines/intentional_divergences.md` with a rationale
+      class and a verification path — not left as only a ticket-body note.
+- [ ] No schema change and no gate-value change are made. If the survey produces evidence that
+      genuinely overturns the decision, stop and raise it rather than acting on it unilaterally.
 
 ## Related Tickets
 - `TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE` (`tickets/done/` — found this gap during its own
