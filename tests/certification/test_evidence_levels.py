@@ -88,6 +88,15 @@ class FakeState:
     building_tiles: dict = {}
     rng_checkpoint = None
 
+    # TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE: 6 more fields
+    # CanonicalStateHasher.to_canonical_data() now reads unconditionally.
+    region_loyalty_pressure: dict = {}
+    region_culture_states: dict = {}
+    entity_legend_facts: dict = {}
+    information_source_profiles: list = []
+    entity_belief_institutions: dict = {}
+    event_fidelity: dict = {}
+
 
 class FakeResourceNode:
     def __init__(self, qty: int):

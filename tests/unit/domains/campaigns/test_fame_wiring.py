@@ -17,7 +17,20 @@ from src.domains.belief_institution.model import BeliefInstitution, BeliefInstit
 
 
 def _make_manifest() -> CampaignManifest:
-    return CampaignManifest(id="test_campaign", episodes=[MagicMock()])
+    return CampaignManifest(id="test_campaign", episodes=[_episode_spec()])
+
+
+def _episode_spec(world_id: str = "unit_faction_tension") -> MagicMock:
+    """Episode spec naming a real, tiny corpus world.
+
+    TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY: `_build_initial_state()` now takes the
+    episode spec and really compiles `spec.world_composition` via WorldRepository +
+    WorldCompiler, so a bare MagicMock (whose `.world_composition` is another
+    MagicMock, not a str) no longer works as an episode spec.
+    """
+    spec = MagicMock()
+    spec.world_composition = world_id
+    return spec
 
 
 def test_fame_wiring_advance_state_calls_fame_exporter_alongside_culture_and_fidelity():
@@ -88,7 +101,7 @@ def test_build_initial_state_bridges_entity_fame_above_threshold_into_entity_leg
         entity_id=1, level=1, xp=0, equipment={}, reputation=1.0, alive=True,
     )
 
-    state = orch._build_initial_state(episode_seed=1)
+    state = orch._build_initial_state(1, _episode_spec())
 
     assert "hero_1" in state.entity_legend_facts
     assert state.entity_legend_facts["hero_1"].fame == 0.7
@@ -128,7 +141,7 @@ def test_build_initial_state_bridges_belief_institutions_and_fidelity_by_entity_
         entity_id=1, level=1, xp=0, equipment={}, reputation=1.0, alive=True,
     )
 
-    state = orch._build_initial_state(episode_seed=1)
+    state = orch._build_initial_state(1, _episode_spec())
 
     # Entity 1 is a real adherent of clan_1's institution only.
     assert 1 in state.entity_belief_institutions

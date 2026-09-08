@@ -72,3 +72,12 @@
   dominant_factions: ["forest_wardens", "spirit_court"]
   populations: ["forest_warden_patrol", "sacred_grove_guardians"]
   resources: ["healing_flower_patch", "spirit_wisp"]
+
+# TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: calibration-only ecology, isolated to
+# camp_maturity_calibration_pilot world only.
+- id: "monster_calibration_ecology"
+  display_name: "Monster Calibration Ecology"
+  biomes: ["monster_calibration_zone"]
+  dominant_factions: ["goblin_warband"]
+  populations: []
+  resources: []

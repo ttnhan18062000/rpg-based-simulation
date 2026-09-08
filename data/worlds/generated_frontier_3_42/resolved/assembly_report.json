@@ -31,14 +31,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -894,14 +894,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -1737,12 +1737,12 @@
     }
   ],
   "fingerprints": {
-    "catalog": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+    "catalog": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
     "modules": {
       "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
       "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
-      "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
-      "moon_cult_ruins": "c88d3ef942949a3d1a211d59602619701a43ee944dad0ec928b2eaf60248a3c7",
+      "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
+      "moon_cult_ruins": "221540c964e3501b5484973b794233e06a5a3217fd9f6398a34c85b9ab9c11ac",
       "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
       "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
     }

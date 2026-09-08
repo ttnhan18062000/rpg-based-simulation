@@ -12,6 +12,23 @@ regions:
     hazard_level: 4.0
     hazard_kind: "ARCANE_CORRUPTION"
     tags: [cave]
+    # TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: LAIR-kind Place — no real corpus
+    # world had one before this ticket (TCK-20260904-LAIR-ENTITY-ANCHOR's own
+    # finding). Position is the centroid of grid_bounds. creature_kind is
+    # CAMP/NEST-only (PlaceRecipeSpec), deliberately unset here.
+    # BossService.check_for_lair_spawn() mints a real dragonkin occupant per-Place
+    # once state.maturity >= 50.0 AND this region's own trauma_score >= 20.0
+    # (src/world/boss.py:217-228) — a per-tick simulation condition, not a
+    # compile-time guarantee. moon_cave is the corpus's best structural fit: a
+    # cave at the top hazard_level (4.0), so it accrues trauma faster than any
+    # lower-hazard candidate. Deliberately NOT placed in mountain_pass_zone —
+    # that region is authored as intentionally place-free "pure transit terrain",
+    # guarded by test_place_wiring.py::
+    # test_hero_guild_routing_real_content_produces_expected_non_uniform_place_kinds.
+    places:
+      - id: "moon_cave_lair"
+        kind: "lair"
+        position: [115, 90]
 factions: ["moon_cult", "arcane_circle"]
 populations:
   - "moon_cult_apprentice_circle"

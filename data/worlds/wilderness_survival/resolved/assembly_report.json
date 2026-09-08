@@ -29,14 +29,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -874,14 +874,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -1701,12 +1701,12 @@
     }
   ],
   "fingerprints": {
-    "catalog": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+    "catalog": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
     "modules": {
       "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
       "survivor_camp_shelter": "276cbe476a87bcf8c1478fee6e2406712ffcae041748e377310a531d55fceeb4",
       "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-      "wolf_den_near_forest": "14dcdf22f8bfc5ea7340de80e47d9bab361e279778e165bd721367bc573f7769"
+      "wolf_den_near_forest": "d80c2b1a161759b7d69273f2ab35d462d6bdda149adb67541212e3592cdf5559"
     }
   }
 }

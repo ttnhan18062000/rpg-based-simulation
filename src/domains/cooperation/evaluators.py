@@ -43,11 +43,21 @@ class HelpNeedEvaluator:
                     objective = obj
                     break
                     
-        # Check combat risk belief
+        # Check combat risk belief.
+        # TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN: this key now holds a real BeliefEntry
+        # (written by CombatEngagementPhase.apply()), not the previous bespoke {"level": ...}
+        # plain dict -- BeliefEntry is a frozen slots dataclass with no .get(), so read .claim
+        # and parse it back into a RiskLevel. `beliefs` is generically typed, so an absent or
+        # unparseable claim degrades to NORMAL rather than raising inside Phase 7.
         combat_belief = entity.strategic.beliefs.get("combat_risk")
         risk_level = RiskLevel.NORMAL
-        if combat_belief:
-            risk_level = combat_belief.get("level", RiskLevel.NORMAL)
+        if combat_belief is not None:
+            claim = getattr(combat_belief, "claim", None)
+            if claim is not None:
+                try:
+                    risk_level = RiskLevel(claim)
+                except ValueError:
+                    risk_level = RiskLevel.NORMAL
             
         # Check prior near-death turning points
         has_near_death = any(tp.kind == "near_death" for tp in entity.strategic.turning_points)

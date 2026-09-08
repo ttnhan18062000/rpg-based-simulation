@@ -11,6 +11,7 @@ from src.core.strategic import RiskLevel, ProjectState, ProjectKind, ObjectiveSt
 from src.core.updates import StateUpdate
 from src.domains.cooperation.phase import CooperationPhase
 from src.domains.cooperation.postures import CooperationPosture
+from src.domains.combat_engagement.phase import build_combat_risk_belief
 
 
 def test_scenario_7_1_risky_objective_creates_help_request():
@@ -33,7 +34,8 @@ def test_scenario_7_1_risky_objective_creates_help_request():
     obj = ObjectiveState(id="obj_wolf", kind=ObjectiveKind.DEFEAT_ENEMY)
     proj = ProjectState(id="proj_wolf", kind=ProjectKind.COMBAT, objectives=[obj], active_objective_id="obj_wolf")
     
-    a.strategic.beliefs["combat_risk"] = {"level": RiskLevel.HIGH}
+    # TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN: real BeliefEntry (death_risk 0.6 -> HIGH)
+    a.strategic.beliefs["combat_risk"] = build_combat_risk_belief(death_risk=0.6, current_tick=1)
     a.strategic.projects["proj_wolf"] = proj
     object.__setattr__(a.strategic, "current_project_id", "proj_wolf")
     object.__setattr__(a.strategic, "current_objective_id", "obj_wolf")
@@ -79,7 +81,8 @@ def test_scenario_7_2_no_good_partner_causes_defer():
     obj = ObjectiveState(id="obj_wolf", kind=ObjectiveKind.DEFEAT_ENEMY)
     proj = ProjectState(id="proj_wolf", kind=ProjectKind.COMBAT, objectives=[obj], active_objective_id="obj_wolf")
     
-    a.strategic.beliefs["combat_risk"] = {"level": RiskLevel.HIGH}
+    # TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN: real BeliefEntry (death_risk 0.6 -> HIGH)
+    a.strategic.beliefs["combat_risk"] = build_combat_risk_belief(death_risk=0.6, current_tick=1)
     a.strategic.projects["proj_wolf"] = proj
     object.__setattr__(a.strategic, "current_project_id", "proj_wolf")
     object.__setattr__(a.strategic, "current_objective_id", "obj_wolf")

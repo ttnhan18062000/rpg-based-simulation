@@ -56,6 +56,7 @@ regions:
     position:
     - 110
     - 38
+    creature_kind: goblin
 - id: moon_cave
   type: wilderness
   bounds:
@@ -68,7 +69,12 @@ regions:
   hazard_kind: ARCANE_CORRUPTION
   tags:
   - cave
-  places: []
+  places:
+  - id: moon_cave_lair
+    kind: LAIR
+    position:
+    - 115
+    - 90
 - id: old_mine
   type: wilderness
   bounds:

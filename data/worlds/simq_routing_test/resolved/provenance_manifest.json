@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_a3d150c12e9b45a5",
+  "manifest_id": "prov_cc3ee776b541547d",
   "world_id": "simq_routing_test",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
-    "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
+    "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2"
   },
   "composition_fingerprint": "b4ed528d56da186beccd84efff62da4c5ad69de5c1484210f0417772b63912cd",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "a3d150c12e9b45a5429850ce03fc2d08f61d9369e2e66c3b65185683854d351c",
-  "created_at": "2026-09-04T08:05:34.291263Z",
+  "content_fingerprint": "cc3ee776b541547d2a3a5d301634ada5222a905e10fbc9efcedced44e832db21",
+  "created_at": "2026-09-08T02:50:57.496491Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

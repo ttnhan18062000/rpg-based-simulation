@@ -36,6 +36,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
     },
@@ -44,12 +50,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -890,6 +890,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
     },
@@ -898,12 +904,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -1719,10 +1719,10 @@
     }
   ],
   "fingerprints": {
-    "catalog": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+    "catalog": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
     "modules": {
       "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
-      "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
+      "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
       "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
       "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
       "ruins_mystery_quest": "f3f207173e20af140fa99f881e6c39a94e60a1849f66cd33ad68ea6b6805cf71"

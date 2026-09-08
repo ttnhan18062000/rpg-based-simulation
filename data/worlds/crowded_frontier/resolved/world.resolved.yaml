@@ -59,6 +59,7 @@ regions:
     position:
     - 110
     - 38
+    creature_kind: goblin
 - id: orc_stronghold
   type: wilderness
   bounds:

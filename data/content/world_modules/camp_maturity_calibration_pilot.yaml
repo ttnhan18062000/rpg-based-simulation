@@ -1,0 +1,53 @@
+# STATE: ADDITIONAL
+# TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: unit-tier isolation module proving
+# CampService.process_camps()'s raid and Nest-spread branches (RAID_MATURITY_THRESHOLD=80.0)
+# fire in a real, practical-length run. At the real production rate
+# (MATURITY_PER_TICK=0.05 per world_dynamics invocation, cadence 100 in PROD_SMALL), reaching
+# 80.0 maturity from a 0.0 start takes ~160,000 ticks -- 1-2 orders of magnitude beyond any
+# real run this repo performs (measured directly against goblin_camp_conflict/
+# wolf_den_near_forest's own shared, catalog-default-maturity places).
+#
+# Real user decision (2026-09-08, via AskUserQuestion): prove reachability via a dedicated
+# calibration-only world with a high SEEDED starting maturity, not by changing
+# CampService.RAID_MATURITY_THRESHOLD/MATURITY_PER_TICK themselves (those stay untouched for
+# every other world, including goblin_camp_conflict/wolf_den_near_forest's own shared
+# production content). PlaceRecipeSpec.maturity is already a real, content-authorable field
+# (src/worldbuilding/schema.py, "CAMP/NEST-kind: growth-over-time value"), passed straight
+# through at compile time (WorldCompiler.compile(), `maturity=p_spec.maturity`) with zero code
+# change needed -- this module seeds it at 79.5, just under the real threshold, so
+# `state.tick - camp.last_raid_tick >= 500` (last_raid_tick defaults to 0) is the only real gate
+# left, reachable in ~600 practical ticks. A dedicated NEW module (not editing the existing
+# shared goblin_camp_conflict/wolf_den_near_forest catalog entries) keeps this seed isolated to
+# this one calibration world -- no other of the 16 worlds composing those two modules is
+# affected.
+module_id: "camp_maturity_calibration_pilot"
+module_type: "ecology"
+display_name: "Camp Maturity Calibration Pilot"
+description: "Unit-tier isolation module seeding near-threshold camp/nest maturity to prove CampService's raid and Nest-spread branches fire in a practical-length run."
+requires: ["frontier_village_core"]
+biomes: ["monster_calibration_zone"]
+ecologies: ["monster_calibration_ecology"]
+regions:
+  - id: "monster_calibration_zone"
+    type: "wilderness"
+    grid_bounds: [150, 150, 190, 190]
+    terrain: "forest"
+    hazard_level: 2.0
+    hazard_kind: "NATURAL_TERRAIN"
+    tags: [forest]
+    places:
+      - id: "calibration_goblin_camp"
+        kind: "camp"
+        position: [160, 160]
+        creature_kind: "goblin"
+        maturity: 79.9
+      - id: "calibration_wolf_nest"
+        kind: "nest"
+        position: [180, 180]
+        creature_kind: "wolf"
+        maturity: 79.9
+factions: ["goblin_warband"]
+populations: []
+relationships: []
+resources: {}
+observability_tags: ["ecology", "calibration"]

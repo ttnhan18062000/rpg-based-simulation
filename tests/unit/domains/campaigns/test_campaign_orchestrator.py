@@ -33,8 +33,22 @@ from src.domains.campaigns.state import (
 # ---------------------------------------------------------------------------
 
 def _make_manifest(n_episodes: int = 3, base_seed: int = 0) -> CampaignManifest:
-    """Minimal manifest with n mocked episode specs."""
-    episodes = [MagicMock() for _ in range(n_episodes)]
+    """Minimal manifest with n mocked episode specs.
+
+    TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY: `world_composition` is set to a
+    real, tiny unit-tier corpus world (`unit_faction_tension`) rather than left
+    as a bare MagicMock — `_build_initial_state()` now really calls
+    `WorldRepository.load_world_with_context(spec.world_composition)`, which
+    needs a real string world_id, not a MagicMock. Only `regions`/`places` are
+    threaded from this real compile into the returned state (never `entities`),
+    so every existing entity/faction/carry-forward assertion in this file is
+    unaffected — confirmed by re-running the full file after this change.
+    """
+    episodes = []
+    for _ in range(n_episodes):
+        ep = MagicMock()
+        ep.world_composition = "unit_faction_tension"
+        episodes.append(ep)
     return CampaignManifest(id="test_campaign", episodes=episodes, base_seed=base_seed)
 
 
@@ -447,4 +461,94 @@ def test_run_episode_flushes_pending_grief_triggers_before_reading_final_state()
 
     assert call_order.index("start") < call_order.index("flush") < call_order.index(
         "read_final_state"
+    )
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY — Region/Place carry into per-episode
+# AuthoritativeState (both the episode-0 and survivor-reconstruction branches)
+# ---------------------------------------------------------------------------
+
+def _real_episode_spec(world_id: str = "unit_faction_tension") -> MagicMock:
+    """Episode spec whose world_composition names a real, tiny corpus world."""
+    spec = MagicMock()
+    spec.world_composition = world_id
+    return spec
+
+
+def test_build_initial_state_episode_zero_carries_compiled_regions_and_places():
+    """Episode 0 (no surviving carry-forwards) must get real compiled regions/places.
+
+    Before TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY this branch returned a bare
+    AuthoritativeState(tick=0, seed=...) with regions={} / places={}.
+    """
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
+    assert orch.state.persistent_entities == {}, "precondition: episode-0 branch"
+
+    state = orch._build_initial_state(7, _real_episode_spec())
+
+    assert state.regions, (
+        "episode 0 must receive real compiled regions — an empty dict is the exact "
+        "pre-fix bug this ticket exists to close"
+    )
+    assert all(
+        hasattr(region, "id") and region.id == region_id
+        for region_id, region in state.regions.items()
+    ), "compiled regions must be real RegionState objects keyed by their own id"
+    # places is a real compiled dict (may legitimately be empty for a world whose
+    # modules declare no Places — assert the type/carry, not a non-empty count).
+    assert isinstance(state.places, dict)
+    assert state.tick == 0 and state.seed == 7, "seed/tick contract unchanged"
+    assert state.entities == {}, (
+        "episode 0 must NOT inherit the compiled world's own entity roster — only "
+        "region/place topology is threaded from the compile"
+    )
+
+
+def test_build_initial_state_survivor_branch_also_carries_compiled_regions_and_places():
+    """Episode N>0 (survivor reconstruction) must get compiled regions/places too."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=2))
+    orch.state.persistent_entities[42] = EntityCarryForward(
+        entity_id=42, level=4, xp=900, equipment={}, reputation=0.8, alive=True
+    )
+
+    state = orch._build_initial_state(11, _real_episode_spec())
+
+    assert state.regions, (
+        "the survivor-reconstruction branch must receive real compiled regions, not "
+        "just the episode-0 branch"
+    )
+    assert isinstance(state.places, dict)
+    assert 42 in state.entities, "carried survivor must still be reconstructed"
+    assert state.entities[42].identity.evolution_level == 4, (
+        "carry-forward reconstruction must be unaffected by the region/place change"
+    )
+    assert state.seed == 11
+
+
+def test_town_resolution_no_longer_early_exits_once_campaign_regions_are_populated():
+    """Deliberate verification of the ticket's own second Scope bullet.
+
+    TownResolutionSystem.resolve() early-exits when both town_tiles and regions are
+    empty (`src/engine/town_resolution.py`). That early exit is exactly what made
+    regional tax/suppression logic silently inert for every Campaign-mode episode.
+    This asserts the real state produced by _build_initial_state() no longer trips
+    it, and that running the now-live path is non-crashing and update-shaped.
+    """
+    from src.core.updates import StateUpdate
+    from src.engine.town_resolution import TownResolutionSystem
+
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
+    state = orch._build_initial_state(3, _real_episode_spec())
+
+    assert len(state.regions) > 0, "precondition: regions are now populated"
+
+    update = StateUpdate()
+    result = TownResolutionSystem.resolve(state, update)
+
+    # The early-exit path returns the *identical* update object; the live path
+    # builds a new one. Identity (not equality) is what distinguishes them.
+    assert result is not update, (
+        "with regions populated, resolve() must run its real regional logic instead "
+        "of hitting the `not has_town and not has_regions` early-exit"
     )

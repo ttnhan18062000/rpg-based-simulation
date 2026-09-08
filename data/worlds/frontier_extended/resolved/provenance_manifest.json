@@ -1,23 +1,23 @@
 {
-  "manifest_id": "prov_f6c24133a6a6f1dc",
+  "manifest_id": "prov_084cf3fd91f820ca",
   "world_id": "frontier_extended",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
-    "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
+    "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
     "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "14dcdf22f8bfc5ea7340de80e47d9bab361e279778e165bd721367bc573f7769",
+    "wolf_den_near_forest": "d80c2b1a161759b7d69273f2ab35d462d6bdda149adb67541212e3592cdf5559",
     "forest_warden_grove": "1afd9828cbd2087f5cbafffdbd2d3b81c59a32d20fa66debd95249844022e3fe"
   },
   "composition_fingerprint": "8218c3f899ebb6a37a4892785039858234dea59157550a17d2a1a0357dd59cac",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "f6c24133a6a6f1dc0c514ef78ed14894477aa2227c9686ebbc3e31ff69b24983",
-  "created_at": "2026-09-04T08:05:12.802731Z",
+  "content_fingerprint": "084cf3fd91f820ca632e95b6042f739bfe82fda1c0a30bec1c3007254c066541",
+  "created_at": "2026-09-08T02:50:43.417220Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

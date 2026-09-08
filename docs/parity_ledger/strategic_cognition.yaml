@@ -4195,3 +4195,35 @@
     tests/unit/world/test_displacement.py::test_home_region_id_preserved_when_already_set
   divergence_note: null
   support_boundary: null
+- id: STRAT-272
+  text: 'Idea-level: an entity forms a real, durable belief about its own personal
+    combat danger. entity.strategic.beliefs["combat_risk"] is written every tick by
+    CombatEngagementPhase.apply() (Phase 4) as a real BeliefEntry, derived from the
+    EngagementRiskEvaluation.death_risk that phase already computes for the nearby
+    hostile it evaluates. BeliefEntry.claim carries the RiskLevel value (LOW/NORMAL/HIGH/EXTREME);
+    BeliefEntry.certainty carries the raw death_risk that produced it. The id is the
+    stable literal "combat_risk", so each tick replaces the assessment in place rather
+    than accumulating history (merge_dict keys by item.id). HelpNeedEvaluator.evaluate()
+    (Phase 7 cooperation) consumes it, raising a combat_support_needed HelpNeed at
+    HIGH/EXTREME. death_risk -> RiskLevel cutoffs (<=0.20 LOW, <=0.40 NORMAL, <=0.80
+    HIGH, >0.80 EXTREME) are derived from constants already live in EngagementRiskEvaluator:
+    power_ratio 2.0 yields 0.20, evenly-matched 1.0 yields 0.40, and >0.80 is that
+    evaluator own hp_critical_safety_lock cutoff where its near_death max(0.9, ...)
+    floor deliberately lands. Prior to TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN
+    this consumer had zero production producer -- only tests constructed the belief,
+    using a bespoke {"level": RiskLevel} plain dict that was never BeliefEntry-compatible.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/domains/combat_engagement/phase.py (COMBAT_RISK_BELIEF_ID, death_risk_to_level(),
+    build_combat_risk_belief(), written into StrategicUpdate.beliefs_add_or_update
+    from CombatEngagementPhase.apply()); src/domains/cooperation/evaluators.py (HelpNeedEvaluator.evaluate()
+    reads BeliefEntry.claim and parses it back to RiskLevel, degrading to NORMAL on
+    an absent/unparseable claim rather than raising). Real-run proof: a 3-tick AuthoritativeApplyPipeline.refine()
+    + ApplyPath.apply_generation() loop with a 25hp/atk-2 actor beside a 100hp/atk-40
+    hostile produces BeliefEntry(claim=HIGH, certainty=0.66) in durable state, and
+    HelpNeedEvaluator then returns combat_support_needed.'
+  test_path: tests/integration/domains/test_combat_risk_belief_end_to_end.py::test_combat_risk_belief_is_produced_and_consumed_across_real_ticks;
+    tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py
+  divergence_note: null
+  proof_type: parity

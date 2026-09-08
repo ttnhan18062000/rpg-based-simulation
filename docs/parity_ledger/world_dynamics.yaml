@@ -1436,21 +1436,25 @@
   test_path: tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestNodeRecharged;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestThreatEvolved
-  divergence_note: 'camp_constructed remains blocked but for a narrower reason than
-    previously stated: as of TCK-20260904-CAMPSTATE-PLACE-BRIDGE, WorldCompiler.compile()
-    CAN construct a real CampState alongside a PlaceState(kind=CAMP/NEST) when content
-    declares the optional PlaceSpec.creature_kind field -- but no real content does
-    so yet (the field is opt-in and unset on hero_guild_routing''s goblin_camp_place),
-    so CampService still has no populated camps to emit camp_constructed from in any
-    real compiled world today. The original premise (''camps are pre-placed at world
-    generation'') was inaccurate prior to this ticket -- zero production CampState
-    construction existed. Still not pending/future work for THIS entry''s event-emission
-    scope; see TCK-20260904-CAMPSTATE-PLACE-BRIDGE for the construction-path change.
-    Separately, TCK-20260904-LAIR-ENTITY-ANCHOR''s dragonkin addition to event_extractor.py''s
-    boss-kind exclusion lists was NOT mirrored into event_shapers.py''s live-default
-    path -- intentional, ticket-scoped, tracked as an open follow-up rather than a
-    divergence from the Mechanics Bible.'
-  support_boundary: null
+  divergence_note: 'camp_constructed remains blocked, but the content half of the
+    gap is now closed and the reason has narrowed again. As of TCK-20260904-CAMPSTATE-PLACE-BRIDGE,
+    WorldCompiler.compile() constructs a real CampState alongside a PlaceState(kind=CAMP/NEST)
+    when content declares the optional PlaceSpec.creature_kind field. As of TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE
+    (2026-09-08), real content now does so: goblin_camp_conflict.yaml''s goblin_camp_place
+    sets creature_kind=goblin (CAMP) and wolf_den_near_forest.yaml''s new wolf_den_nest
+    sets creature_kind=wolf (NEST). Verified by real compile of lifecycle_full_coverage_world:
+    state.camps is non-empty (2 entries) where it was {} for every world before. camp_constructed
+    itself still cannot be emitted for the original, unchanged reason -- CampService
+    has no event recorder -- which is a code gap, not a content gap.'
+  support_boundary: 'CampService.process_camps()''s spawn branch is confirmed reachable
+    against this real content (fires at tick 1 for both camps, verified by a real
+    Kernel run). Its raid and Nest-spread branches are NOT reachable in any practical
+    run: both gate on camp.maturity >= 80.0, and maturity accrues at MATURITY_PER_TICK=0.05
+    per world_dynamics *invocation* (not per tick) -- at PROD_SMALL''s world_dynamics
+    cadence of 100, that is 0.0005/tick, i.e. ~160,000 ticks to reach the threshold
+    (~32,000 even at the fastest profile cadence of 20). Measured directly: 1,000
+    real ticks moved both camps from 0.0 to 0.50 maturity. This is a mechanism-calibration
+    gap, not a content gap (TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE).'
 - id: WORLD-110
   text: "WORLD pillar grade stability under normalized_score formula change \u2014\
     \ see INFRA-255 (infrastructure.yaml) for the cross-pillar formula. WORLD-specific:\
@@ -1946,6 +1950,15 @@
     tests/unit/domains/optimization/test_apply_plan_builder.py::test_apply_plan_builder_camp_totem_stockpile_palisade
   divergence_note: null
   proof_type: parity
+  support_boundary: 'Real Nest content now exists as of TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE
+    (2026-09-08): wolf_den_near_forest.yaml declares wolf_den_nest (kind=NEST, creature_kind=wolf,
+    in NEST_RACE_KINDS), compiled into a real CampState(kind=''wolf'') -- verified
+    against lifecycle_full_coverage_world. The Nest-spread branch itself remains unreached
+    in practice: it gates on camp.maturity >= 80.0, which accrues at 0.05 per world_dynamics
+    invocation (~0.0005/tick at PROD_SMALL''s cadence of 100), needing on the order
+    of 160,000 ticks. Measured directly over 1,000 real ticks with ENABLE_CAMP_NEST_SPREAD=ON:
+    maturity reached 0.50, no spread fired. Content is no longer the blocker; maturity
+    calibration is.'
 - id: WORLD-CULT-004
   text: 'A region with at least one culture axis above CULTURE_ACTIVATION_THRESHOLD
     (0.3) produces a SettlementPersonalityDescriptor with a non-empty traits tuple
@@ -1996,13 +2009,12 @@
   test_path: tests/unit/domains/chronicle/test_fidelity_deriver.py
   divergence_note: null
   support_boundary: 'TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING (2026-09-07): gained
-    a real live consumer. CampaignOrchestrator._build_initial_state() bridges
-    CampaignState.historical_drift into AuthoritativeState.event_fidelity (entry_id
-    -> fidelity scalar), carried forward every tick by ApplyPath.apply_generation().
-    AdventureGoalScorer.score() threads it into AdventureRouteScorer.score(), which
-    scales the Belief Institution personality_bias branch''s own belief_strength
-    contribution by the matching origin_event_id''s fidelity -- previously no live
-    consumer existed anywhere.'
+    a real live consumer. CampaignOrchestrator._build_initial_state() bridges CampaignState.historical_drift
+    into AuthoritativeState.event_fidelity (entry_id -> fidelity scalar), carried
+    forward every tick by ApplyPath.apply_generation(). AdventureGoalScorer.score()
+    threads it into AdventureRouteScorer.score(), which scales the Belief Institution
+    personality_bias branch''s own belief_strength contribution by the matching origin_event_id''s
+    fidelity -- previously no live consumer existed anywhere.'
 - id: WORLD-FIDELITY-002
   text: 'FidelityDeriver.derive() is deterministic: calling it twice with the same
     ChronicleHierarchy input produces byte-identical output. FidelityCarryForward
@@ -2082,19 +2094,18 @@
     tests/unit/domains/belief_institution/test_deriver.py::test_no_belief_institution_without_qualifying_legend_fact,
     tests/unit/domains/belief_institution/test_deriver.py::test_belief_institution_origin_event_prefers_posthumous_hero_death
   divergence_note: null
-  support_boundary: 'RESOLVED, TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING
-    (2026-09-07): previously "ships with no live consumer" (terminal idea in the
-    M5 Fame -> Fidelity -> Belief-Institution chain, unit-tested only). Now bridged:
-    CampaignOrchestrator._build_initial_state() snapshots belief_institutions into
-    AuthoritativeState.entity_belief_institutions (entity_id -> tuple of real adherent
-    BeliefInstitution snapshots, keyed directly off each institution''s own
-    adherent_entity_ids -- no separate clans lookup needed), carried forward every
-    tick by ApplyPath.apply_generation(). AdventureGoalScorer.score() resolves it
-    per entity and threads it into AdventureRouteScorer.score(), which adds a
-    QUEST_OPPORTUNITY personality_bias bonus (strongest fidelity-scaled institution
+  support_boundary: 'RESOLVED, TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING (2026-09-07):
+    previously "ships with no live consumer" (terminal idea in the M5 Fame -> Fidelity
+    -> Belief-Institution chain, unit-tested only). Now bridged: CampaignOrchestrator._build_initial_state()
+    snapshots belief_institutions into AuthoritativeState.entity_belief_institutions
+    (entity_id -> tuple of real adherent BeliefInstitution snapshots, keyed directly
+    off each institution''s own adherent_entity_ids -- no separate clans lookup needed),
+    carried forward every tick by ApplyPath.apply_generation(). AdventureGoalScorer.score()
+    resolves it per entity and threads it into AdventureRouteScorer.score(), which
+    adds a QUEST_OPPORTUNITY personality_bias bonus (strongest fidelity-scaled institution
     among the entity''s real memberships, not summed) -- mirrors the idea 57 Living
-    Legend branch''s own real semantic tie between group identity and heroic
-    quest-seeking. See docs/guidelines/intentional_divergences.md section 2.53.'
+    Legend branch''s own real semantic tie between group identity and heroic quest-seeking.
+    See docs/guidelines/intentional_divergences.md section 2.53.'
 - id: WORLD-BELIEF-002
   text: 'BeliefInstitutionDeriver.derive() is pure/stateless/deterministic: calling
     it twice with the same (hierarchy, campaign_state, clans) inputs produces byte-identical

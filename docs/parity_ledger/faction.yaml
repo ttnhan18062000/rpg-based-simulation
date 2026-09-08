@@ -64,7 +64,15 @@
     tests/unit/world/test_camp_lifecycle.py::test_camp_service_ignores_expand_territory_directive_for_other_region;
     tests/unit/world/test_world_dynamics.py::test_resolve_dynamics_threads_faction_directives_to_camp_service
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'The EXPAND_TERRITORY -> CampService.process_camps() maturity-boost
+    consumption path had no real camp to consume against before TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE
+    (2026-09-08), because state.camps was {} in every compiled world. Real camps now
+    exist (goblin_camp_place, wolf_den_nest -- verified against lifecycle_full_coverage_world),
+    so the code path is content-reachable for the first time. Its observable *effect*
+    remains hard to demonstrate in a short run: the boost only shifts camp.maturity,
+    whose own downstream gate (raid/Nest-spread at maturity >= 80.0) needs on the
+    order of 160,000 ticks at PROD_SMALL cadence -- see world_dynamics.yaml WORLD-109''s
+    support_boundary for the measured numbers.'
 - id: FACTION-TENSION-001
   text: "FactionAwarenessService.compute_tension_updates() emits FactionUpdate(tension_delta=+0.1)\
     \ for each RESOURCE_DEPLETED WorldEvent whose region_id is in a faction's territory.\

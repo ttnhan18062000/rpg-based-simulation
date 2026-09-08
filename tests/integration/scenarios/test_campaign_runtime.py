@@ -96,11 +96,13 @@ def test_entity_state_persists_across_episodes():
 
     call_count = [0]
 
-    def _patched_build(episode_seed: int):
+    # TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY: _build_initial_state() now also takes
+    # the episode spec (it really compiles spec.world_composition for regions/places).
+    def _patched_build(episode_seed: int, spec):
         if call_count[0] == 0:
             call_count[0] += 1
             return initial_state_ep0
-        return original_build(episode_seed)
+        return original_build(episode_seed, spec)
 
     orch._build_initial_state = _patched_build
 
@@ -192,7 +194,7 @@ def test_dead_faction_absent_in_episode_2():
     )
 
     # _build_initial_state for episode 1 must not include dead entity.
-    ep1_initial = orch._build_initial_state(episode_seed=1)
+    ep1_initial = orch._build_initial_state(1, spec1)
     assert dead_entity_id not in ep1_initial.entities, (
         f"Dead entity {dead_entity_id} must not be injected into episode 1's initial state"
     )

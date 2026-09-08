@@ -17,9 +17,16 @@ regions:
     # position is the centroid of grid_bounds. maturity left unset -- no calibrated value
     # exists yet (same caution as Stage A's scale field).
     places:
+      # TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: creature_kind activates
+      # CampService.process_camps()'s per-tick maturity/spawn/raid machinery for this
+      # Place (src/worldbuilding/compiler.py:336-341 only builds a CampState when
+      # creature_kind is set) — goblin matches this region's own goblin_warband
+      # faction/goblin_raiding_party population, and CAMP (not NEST) per
+      # CampService.NEST_RACE_KINDS, which does not include goblin.
       - id: "goblin_camp_place"
         kind: "camp"
         position: [110, 38]
+        creature_kind: "goblin"
 factions: ["goblin_warband"]
 populations: ["goblin_raiding_party"]
 relationships: ["town_to_goblin_warband", "goblin_warband_to_town"]

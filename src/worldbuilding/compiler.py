@@ -336,10 +336,18 @@ class WorldCompiler:
                 # creature_kind. Inert (camps stays {}) for all content that doesn't set
                 # this field -- see plan.md's Gameplay-Activation Risk Decision.
                 if p_spec.kind in ("CAMP", "NEST") and getattr(p_spec, "creature_kind", None) is not None:
+                    # TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: p_spec.maturity was already
+                    # threaded into the companion PlaceState above (line ~330) but never into
+                    # this CampState -- the one CampService.process_camps() actually reads --
+                    # despite the schema's own docstring already documenting the intent
+                    # ("CAMP/NEST-kind: growth-over-time value... reused from CampState.maturity").
+                    # Content-authored maturity was therefore silently inert. Default (None ->
+                    # CampState's own 0.0 default) is unchanged for every place that doesn't set it.
                     camps[p_spec.id] = CampState(
                         id=p_spec.id,
                         kind=p_spec.creature_kind,
                         position=(float(p_spec.position[0]), float(p_spec.position[1])),
+                        **({"maturity": p_spec.maturity} if p_spec.maturity is not None else {}),
                     )
 
             regions[r_spec.id] = RegionState(

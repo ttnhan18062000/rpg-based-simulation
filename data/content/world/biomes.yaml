@@ -114,3 +114,13 @@
   common_materials: ["herb", "venom_sac", "healing_flower"]
   default_factions: ["swamp_tribe", "wild_beast_pack"]
   danger_level: 3
+
+# TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: calibration-only biome, isolated to
+# camp_maturity_calibration_pilot world only.
+- id: "monster_calibration_zone"
+  display_name: "Monster Calibration Zone"
+  themes: ["forest"]
+  terrain_mix: ["forest"]
+  common_materials: ["wood"]
+  default_factions: ["goblin_warband"]
+  danger_level: 2
