@@ -121,6 +121,23 @@ class IncrementalRenderer:
             else:
                 self.last_entity_pos.pop(eid, None)
 
+        # TCK-20260908-HOTFIX-INCREMENTAL-MIDRUN-DEACTIVATE-RECOLOR-GAP: an entity that
+        # deactivates purely via passive decay (ApplyPath's apply-time-only candidates
+        # pass, src/engine/apply.py) carries no EntityUpdate that tick, so it never
+        # reaches dirty_entity_ids -- the published dirty_set is finalized before that
+        # apply-time mutation runs (src/engine/pipeline.py). Reconcile every still-
+        # tracked id that has since gone inactive (or vanished from state.entities)
+        # so no stale alive/dead-colored pixel survives past the tick it actually
+        # deactivated on. Bounded by distinct ids ever drawn, not a full-state scan.
+        newly_inactive = [
+            eid for eid in self.last_entity_pos
+            if eid not in dirty_entity_ids
+            and not getattr(getattr(state.entities.get(eid), "lifecycle", None), "active", False)
+        ]
+        for eid in newly_inactive:
+            old_pos = self.last_entity_pos.pop(eid)
+            self._restore_background_cell(old_pos[0] - self.min_x, old_pos[1] - self.min_y)
+
     def save(self, path: str) -> None:
         write_png(path, self.width, self.height, self.frame)
 

@@ -143,3 +143,70 @@ def test_incremental_render_repaints_entity_that_dies_in_place(tmp_path):
         "ENTITY_COLOR_DEAD, diverging from a full non-incremental re-render of "
         "the same post-death state"
     )
+
+
+def test_incremental_render_restores_background_when_entity_deactivates_off_dirty_set(tmp_path):
+    """TCK-20260908-HOTFIX-INCREMENTAL-MIDRUN-DEACTIVATE-RECOLOR-GAP regression guard.
+
+    An entity that deactivates (lifecycle.active True -> False) purely via passive
+    decay carries no EntityUpdate that tick, so dirty_entity_ids_for_render() never
+    returns it -- the published dirty_set is finalized before that apply-time-only
+    mutation runs (src/engine/pipeline.py, src/engine/apply.py). Simulates that exact
+    gap directly: the entity is flipped to fully inactive in the state passed to
+    update(), but its id is deliberately withheld from dirty_entity_ids (empty set),
+    matching what the real pipeline actually hands the renderer for such a tick.
+    Asserts the renderer still restores the background cell rather than leaving a
+    stale alive/dead-colored pixel.
+    """
+    kernel = _build_kernel()
+    try:
+        renderer = IncrementalRenderer(kernel._state, scale=_SCALE)
+        all_entity_ids = set(kernel._state.entities.keys())
+
+        for _ in range(5):
+            kernel.tick_once()
+            dirty_ids = dirty_entity_ids_for_render(kernel._status, all_entity_ids)
+            renderer.update(kernel._state, dirty_ids)
+
+        eid = next(
+            e_id for e_id, ent in kernel._state.entities.items()
+            if getattr(ent.lifecycle, "active", True) and ent.combat.alive
+        )
+        entity = kernel._state.entities[eid]
+        assert eid in renderer.last_entity_pos, (
+            "test setup must pick an entity the renderer has already drawn, "
+            "otherwise there is no stale pixel for this gap to leave behind"
+        )
+
+        dead_lifecycle = dataclasses.replace(entity.lifecycle, active=False)
+        dead_entity = dataclasses.replace(entity, lifecycle=dead_lifecycle)
+        died_entities = dict(kernel._state.entities)
+        died_entities[eid] = dead_entity
+        died_state = dataclasses.replace(kernel._state, entities=died_entities)
+
+        # The core reproduction: eid is deliberately absent from dirty_entity_ids,
+        # matching the real gap -- a passive-decay-only deactivation never appears
+        # in the published dirty_set.
+        renderer.update(died_state, set())
+
+        assert eid not in renderer.last_entity_pos, (
+            "renderer must stop tracking an entity once it is confirmed inactive, "
+            "even when its id never appeared in dirty_entity_ids"
+        )
+
+        incremental_path = str(tmp_path / "incremental_deactivate.png")
+        renderer.save(incremental_path)
+
+        full_path = str(tmp_path / "full_deactivate.png")
+        render(died_state, full_path, scale=_SCALE)
+    finally:
+        kernel.shutdown()
+
+    incremental_hash = hashlib.sha256(Path(incremental_path).read_bytes()).hexdigest()
+    full_hash = hashlib.sha256(Path(full_path).read_bytes()).hexdigest()
+
+    assert incremental_hash == full_hash, (
+        "IncrementalRenderer left a stale pixel for an entity that deactivated "
+        "without ever appearing in dirty_entity_ids, diverging from a full "
+        "non-incremental re-render of the same post-deactivation state"
+    )
