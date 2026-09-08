@@ -1721,6 +1721,11 @@ optimistic framing in this section's original text above. See
 `docs/engine/contracts/knowledge_gateway_mcp/keep_or_deprecate_decision.md` for the full record.
 No Phase 5+/Phase 6 work is authorized by this ratification.
 
+**Status update (2026-09-07):** the 2026-08-24 ratification above has been superseded. See
+`docs/engine/contracts/knowledge_gateway_mcp/keep_or_deprecate_decision.md` §4 for the full record
+— re-ratified against a month of real usage data and external research: Option C —
+deprecate/remove. Execution proceeds per `TCK-20260907-KGMCP-DEPRECATION-EPIC`.
+
 ## 26. Repository Evidence Map
 
 The proposal's current-state claims should be revalidated when Phase 0 starts. The inspected
