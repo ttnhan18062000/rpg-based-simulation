@@ -7,17 +7,18 @@ Verifies sensory range triggers, target limits, and performance skips.
 
 import pytest
 from src.core.builder import V2EntityBuilder
+from src.core.enums import Faction
 from src.core.state import CombatComponent, BiologicalComponent, PersonalityComponent, AuthoritativeState
 from src.core.updates import StateUpdate
 from src.domains.combat_engagement.phase import CombatEngagementPhase
 
 
-def _entity(e_id, x=0.0, y=0.0):
+def _entity(e_id, x=0.0, y=0.0, faction: Faction = None):
     b = V2EntityBuilder(e_id)
     b.replace_combat(CombatComponent(hp=100, max_hp=100, atk=10, def_stat=2))
     b.replace_biological(BiologicalComponent(hunger=0.0, sleep_debt=0.0))
     p = PersonalityComponent(greed=0.5, bravery=0.5, sociability=0.5, industry=0.5)
-    b.identity(evolution_level=1, personality=p)
+    b.identity(evolution_level=1, personality=p, faction=faction)
     b.location(x, y)
     return b.build()
 
@@ -47,8 +48,8 @@ def test_phase_skips_entity_without_relevant_target():
 
 
 def test_phase_runs_when_hostile_enters_range():
-    actor = _entity(1, x=0.0, y=0.0)
-    target_near = _entity(2, x=3.0, y=4.0) # within sensory range (dist = 5)
+    actor = _entity(1, x=0.0, y=0.0, faction=Faction.HERO_GUILD)
+    target_near = _entity(2, x=3.0, y=4.0, faction=Faction.MONSTER_HORDE) # within sensory range (dist = 5)
     state = _state([actor, target_near])
     
     update = CombatEngagementPhase.apply(state)

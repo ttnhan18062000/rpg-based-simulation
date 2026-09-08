@@ -22,6 +22,7 @@ import pytest
 from dataclasses import replace as dataclass_replace
 
 from src.core.builder import V2EntityBuilder
+from src.core.enums import Faction
 from src.core.state import (
     AuthoritativeState, CombatComponent, BiologicalComponent, PersonalityComponent
 )
@@ -36,7 +37,7 @@ from src.domains.cooperation.evaluators import HelpNeedEvaluator
 from src.systems.strategic_systems.belief import BeliefEntry
 
 
-def _combatant(ent_id: int, x: float, y: float, hp: int, atk: int):
+def _combatant(ent_id: int, x: float, y: float, hp: int, atk: int, faction: Faction = None):
     b = V2EntityBuilder(ent_id)
     b.replace_combat(CombatComponent(hp=hp, max_hp=100, atk=atk, def_stat=2))
     b.replace_biological(BiologicalComponent(hunger=0.0, sleep_debt=0.0))
@@ -45,6 +46,7 @@ def _combatant(ent_id: int, x: float, y: float, hp: int, atk: int):
         personality=PersonalityComponent(
             greed=0.5, bravery=0.5, sociability=0.5, industry=0.5
         ),
+        faction=faction,
     )
     b.location(x, y)
     b.lifecycle(active=True)
@@ -82,8 +84,8 @@ def test_combat_risk_belief_is_produced_and_consumed_across_real_ticks():
     HelpNeedEvaluator then turns into a combat_support_needed HelpNeed.
     """
     # Weak actor beside a far stronger hostile -> low power_ratio -> high death_risk.
-    weak = _combatant(1, 0.0, 0.0, hp=25, atk=2)
-    strong = _combatant(2, 1.0, 1.0, hp=100, atk=40)
+    weak = _combatant(1, 0.0, 0.0, hp=25, atk=2, faction=Faction.HERO_GUILD)
+    strong = _combatant(2, 1.0, 1.0, hp=100, atk=40, faction=Faction.MONSTER_HORDE)
     state = _state_with_flags([weak, strong])
 
     produced_level = None

@@ -216,6 +216,54 @@ no `.get()`. It now reads `.claim` and parses it back into a `RiskLevel`, degrad
 an absent or unparseable claim rather than raising (the `beliefs` dict is generically typed, so a
 foreign entry under this key must not break Phase 7).
 
+### Correction (2026-09-08)
+
+A post-merge peer review (`rpg-feature-planning`) of this ticket found a real correctness bug in
+`CombatEngagementPhase.apply()`'s target-selection logic (item 2 above), independent of the
+budget-cost tradeoff already documented there:
+
+- **No hostility filter at all.** `targets` was built from `grid.query_radius()` (or the fallback
+  range scan) filtering only on `alive`/`lifecycle.active` — any nearby entity qualified,
+  including an ally, a villager, or a child. The method's own docstring ("Evaluate eligible actors
+  on hostiles entering sensory visibility") was not actually true of the code.
+- **`targets[:3]` was dead code.** The unconditional `break  # evaluate first target only` fired
+  after the first loop iteration regardless of that slice, so in practice `combat_risk` was always
+  written from whichever entity happened to come first in the unordered candidate list — not
+  necessarily the nearest, and not necessarily hostile.
+- **Consequence:** `combat_risk` could silently under-report an actor's real danger (e.g. read as
+  LOW because a harmless neighbor happened to be evaluated instead of an adjacent lethal hostile),
+  exactly the failure mode `HelpNeedEvaluator.evaluate()`'s HIGH/EXTREME-only trigger (see the
+  "Consumer contract change" paragraph above) is meant to catch.
+
+**Fix**, scoped to `src/domains/combat_engagement/phase.py` only: candidates are now filtered
+through `FactionSemanticsService.is_hostile_compat()` (`src/content_semantics/faction.py`) — the
+same hostility-check precedent `src/engine/legality.py`/`tactical.py`/`combat_rewards.py` already
+use for this exact question, reused rather than reinvented — and exactly the nearest hostile
+candidate is evaluated. The dead `[:3]`/`break` pattern is removed; item 2's own "single evaluation
+at zero added cost" budget property is preserved unchanged (still one `evaluate()` call per actor
+per tick), only *which* target gets evaluated changed. Docstring/comments updated to describe the
+corrected behavior.
+
+A new regression test (`test_combat_risk_is_written_from_the_nearest_hostile_not_an_arbitrary_neighbor`
+in `tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py`) reproduces the exact
+scenario: a harmless NEUTRAL neighbor sits closer to the actor than a genuine MONSTER_HORDE threat.
+6 pre-existing tests across 4 files (`test_combat_risk_belief_producer.py`,
+`test_fused_loop.py`, `test_phase4_combat_engagement_phase.py`,
+`test_combat_risk_belief_end_to_end.py`) relied on entities defaulting to the same (NEUTRAL)
+faction and therefore being treated as hostile purely by accident of the missing filter — updated
+to construct explicit `Faction.HERO_GUILD`/`Faction.MONSTER_HORDE` pairs, which is what they always
+should have needed. One test (`test_combat_engagement_caps_candidates`) was renamed to
+`test_combat_engagement_evaluates_exactly_one_nearest_hostile_among_many` since its own name/intent
+(capping a 3-target evaluation) no longer matched what the corrected code does (select one, from
+real hostile candidates). Full `tests/unit/` + `tests/integration/` sweep re-run after the fix
+(`-m "not slow"`): both combat_engagement-related failures fixed and passing; the remaining 9
+sweep failures were independently confirmed pre-existing/unrelated (7 are `tests/unit/domains/
+progression/` test-order-dependency artifacts that pass when run in a smaller isolated batch; 2 are
+`TimeoutError` resource-limit failures — `test_entity_differentiation.py::
+test_bravery_quartile_combat_rate_2x` and `test_long_run_stability.py::test_long_run_stability` —
+confirmed to fail identically on the unmodified pre-fix code, so not a performance regression from
+this change).
+
 ## Test Summary
 19 new tests added across 2 files; all 5 pre-existing tests migrated to construct a real
 `BeliefEntry` via the production helper (`build_combat_risk_belief`) rather than duplicating the
@@ -257,6 +305,17 @@ Results: ticket-scoped suite **89 passed, 0 failed**. Broader regression sweep
   `tools/parity_ledger_writer.py`, not hand-edited)
 - `stored_artifacts/TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN/` (investigation, plan,
   test_plan)
+
+**Correction (2026-09-08):**
+- `src/domains/combat_engagement/phase.py` (hostility filter via `is_hostile_compat()`,
+  nearest-hostile selection, dead `[:3]`/`break` removed, docstring corrected)
+- `tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py` (3 tests updated with
+  explicit factions; 1 new regression test)
+- `tests/integration/domains/test_fused_loop.py` (1 test renamed and rewritten)
+- `tests/integration/domains/combat_engagement/test_phase4_combat_engagement_phase.py` (1 test
+  updated with explicit factions)
+- `tests/integration/domains/test_combat_risk_belief_end_to_end.py` (1 test updated with explicit
+  factions)
 
 ## Completion Summary
 `entity.strategic.beliefs["combat_risk"]` had a real, deliberately-designed, tested consumer

@@ -10,6 +10,7 @@ import pytest
 from typing import Any
 from dataclasses import replace as dataclass_replace
 from src.core.builder import V2EntityBuilder
+from src.core.enums import Faction
 from src.core.state import (
     AuthoritativeState, CombatComponent, BiologicalComponent,
     PersonalityComponent, ResourceNodeState
@@ -24,12 +25,12 @@ from src.domains.information.schema import InformationSourceProfile
 from src.world.providers.information import InformationResponse
 
 
-def _create_entity(ent_id: int, x: float, y: float, hp: int = 100) -> Any:
+def _create_entity(ent_id: int, x: float, y: float, hp: int = 100, faction: Faction = None) -> Any:
     b = V2EntityBuilder(ent_id)
     b.replace_combat(CombatComponent(hp=hp, max_hp=100, atk=10, def_stat=2))
     b.replace_biological(BiologicalComponent(hunger=0.0, sleep_debt=0.0))
     p = PersonalityComponent(greed=0.5, bravery=0.5, sociability=0.5, industry=0.5)
-    b.identity(evolution_level=1, personality=p, class_id="warrior")
+    b.identity(evolution_level=1, personality=p, class_id="warrior", faction=faction)
     b.location(x, y)
     b.lifecycle(active=True)
     return b.build()
@@ -143,15 +144,24 @@ def test_adventure_phase_receives_nonempty_world_opportunities():
     assert opps[0].subject == "iron_ore"
 
 
-def test_combat_engagement_caps_candidates():
+def test_combat_engagement_evaluates_exactly_one_nearest_hostile_among_many():
     """
-    Verify CombatEngagementPhase uses the proximity grid/capping to evaluate up to 3 candidate targets.
+    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): with multiple real
+    hostiles nearby, CombatEngagementPhase.apply() still evaluates exactly one (the nearest
+    hostile, per the strategic-budget constraint) -- proving the post-fix hostility-filter +
+    nearest-selection logic still processes correctly with several genuine candidates present,
+    not just a single trivial one. Faction is set explicitly on both sides: entities with no
+    faction default to NEUTRAL, which is never hostile to anything, so this scenario would not
+    exercise real hostile-target selection without it.
     """
-    actor = _create_entity(1, 0.0, 0.0)
-    # Add 5 hostiles close by
-    hostiles = [_create_entity(i, 0.5, 0.5) for i in range(2, 8)]
+    actor = _create_entity(1, 0.0, 0.0, faction=Faction.HERO_GUILD)
+    # 5 real hostiles close by, at varying distances so "nearest" is well-defined.
+    hostiles = [
+        _create_entity(i, 0.5 * (i - 1), 0.5 * (i - 1), faction=Faction.MONSTER_HORDE)
+        for i in range(2, 8)
+    ]
     state = _create_state([actor] + hostiles)
-    
+
     # Enable Combat phase
     state = dataclass_replace(state, feature_flags={
         "ENABLE_COMBAT_ENGAGEMENT": FeatureMode.ON,
@@ -159,10 +169,11 @@ def test_combat_engagement_caps_candidates():
 
     update = StateUpdate()
     refined = AuthoritativeApplyPipeline.refine(state, update)
-    
-    # Verify that the posture selection processed cleanly
+
+    # Verify that the posture selection processed cleanly against the nearest real hostile.
     assert actor.id in refined.entity_updates
     assert "last_combat_posture" in refined.entity_updates[actor.id].property_updates
+    assert refined.entity_updates[actor.id].property_updates["last_combat_posture_target"] == 2
 
 
 def test_belief_assimilation_persists_facts():

@@ -21,6 +21,7 @@ from src.core.builder import V2EntityBuilder
 from src.core.state import (
     AuthoritativeState, CombatComponent, BiologicalComponent, PersonalityComponent
 )
+from src.core.enums import Faction
 from src.core.strategic import RiskLevel
 from src.engine.apply import ApplyPath
 from src.domains.combat_engagement.phase import (
@@ -33,7 +34,8 @@ from src.domains.cooperation.evaluators import HelpNeedEvaluator
 from src.systems.strategic_systems.belief import BeliefEntry
 
 
-def _entity(ent_id: int, x: float, y: float, hp: int = 100, atk: int = 10, bravery: float = 0.5):
+def _entity(ent_id: int, x: float, y: float, hp: int = 100, atk: int = 10, bravery: float = 0.5,
+            faction: Faction = None):
     b = V2EntityBuilder(ent_id)
     b.replace_combat(CombatComponent(hp=hp, max_hp=100, atk=atk, def_stat=2))
     b.replace_biological(BiologicalComponent(hunger=0.0, sleep_debt=0.0))
@@ -42,6 +44,7 @@ def _entity(ent_id: int, x: float, y: float, hp: int = 100, atk: int = 10, brave
         personality=PersonalityComponent(
             greed=0.5, bravery=bravery, sociability=0.5, industry=0.5
         ),
+        faction=faction,
     )
     b.location(x, y)
     b.lifecycle(active=True)
@@ -100,9 +103,14 @@ def test_built_belief_certainty_is_clamped():
 # ---------------------------------------------------------------------------
 
 def test_phase_emits_combat_risk_belief_for_actor_near_hostile():
-    """A real CombatEngagementPhase.apply() call must produce the belief, not a hand-built update."""
-    actor = _entity(1, 0.0, 0.0)
-    target = _entity(2, 1.0, 1.0)
+    """A real CombatEngagementPhase.apply() call must produce the belief, not a hand-built update.
+
+    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): explicit hostile
+    factions are required post-fix -- an unset (NEUTRAL) faction is never hostile to anything, so
+    this scenario would silently produce zero targets without them.
+    """
+    actor = _entity(1, 0.0, 0.0, faction=Faction.HERO_GUILD)
+    target = _entity(2, 1.0, 1.0, faction=Faction.MONSTER_HORDE)
     state = _state([actor, target])
 
     update = CombatEngagementPhase.apply(state)
@@ -113,6 +121,41 @@ def test_phase_emits_combat_risk_belief_for_actor_near_hostile():
     beliefs = [b for b in strat.beliefs_add_or_update if b.id == COMBAT_RISK_BELIEF_ID]
     assert len(beliefs) == 1, "exactly one combat_risk belief per actor per tick"
     assert beliefs[0].claim in {lvl.value for lvl in RiskLevel}
+
+
+def test_combat_risk_is_written_from_the_nearest_hostile_not_an_arbitrary_neighbor():
+    """
+    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): a post-merge peer
+    review found the original implementation had no hostility filter at all and only ever
+    evaluated whichever entity happened to come first out of an unordered spatial query --
+    meaning `combat_risk` could be written from a harmless (non-hostile) neighbor instead of a
+    real threat, silently under-reporting risk. This is the exact regression scenario: a harmless
+    NEUTRAL entity sits closer to the actor than a genuinely hostile, much-stronger MONSTER_HORDE
+    entity. Pre-fix, the harmless neighbor (or whichever came first) could win and produce a LOW
+    reading; post-fix, the harmless entity must be excluded entirely by the hostility filter, and
+    `combat_risk` must reflect the real hostile threat instead.
+    """
+    actor = _entity(1, 0.0, 0.0, faction=Faction.HERO_GUILD)
+    # Harmless, NOT hostile, and deliberately closer than the real threat.
+    harmless_neighbor = _entity(2, 0.1, 0.1, faction=Faction.NEUTRAL)
+    # Real hostile threat: much higher atk than the actor -> a real elevated death_risk.
+    hostile_threat = _entity(3, 1.0, 1.0, atk=100, faction=Faction.MONSTER_HORDE)
+    state = _state([actor, harmless_neighbor, hostile_threat])
+
+    update = CombatEngagementPhase.apply(state)
+
+    assert 1 in update.entity_updates
+    prop_updates = update.entity_updates[1].property_updates
+    assert prop_updates["last_combat_posture_target"] == 3, (
+        "the harmless closer neighbor must not be selected -- only the hostile entity is a "
+        "valid candidate at all, regardless of distance"
+    )
+    strat = update.entity_updates[1].strategic
+    beliefs = [b for b in strat.beliefs_add_or_update if b.id == COMBAT_RISK_BELIEF_ID]
+    assert len(beliefs) == 1
+    # A much stronger hostile attacker must NOT read as LOW risk -- proves the belief was
+    # genuinely sourced from the real threat, not silently defaulted from a harmless neighbor.
+    assert beliefs[0].claim != RiskLevel.LOW.value
 
 
 def test_phase_emits_no_belief_when_no_targets_nearby():
@@ -137,8 +180,8 @@ def test_belief_lands_in_durable_state_under_the_consumer_lookup_key():
     entity.strategic.beliefs["combat_risk"] -- proving merge_dict()'s `res[item.id] = item`
     keying really does line up with the consumer's lookup key.
     """
-    actor = _entity(1, 0.0, 0.0)
-    target = _entity(2, 1.0, 1.0)
+    actor = _entity(1, 0.0, 0.0, faction=Faction.HERO_GUILD)
+    target = _entity(2, 1.0, 1.0, faction=Faction.MONSTER_HORDE)
     state = _state([actor, target])
 
     update = CombatEngagementPhase.apply(state)
@@ -152,8 +195,8 @@ def test_belief_lands_in_durable_state_under_the_consumer_lookup_key():
 
 def test_repeated_ticks_replace_rather_than_accumulate_the_belief():
     """Stable id => each tick replaces in place; the beliefs dict must not grow unbounded."""
-    actor = _entity(1, 0.0, 0.0)
-    target = _entity(2, 1.0, 1.0)
+    actor = _entity(1, 0.0, 0.0, faction=Faction.HERO_GUILD)
+    target = _entity(2, 1.0, 1.0, faction=Faction.MONSTER_HORDE)
     state = _state([actor, target])
 
     for _ in range(3):
