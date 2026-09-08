@@ -180,6 +180,13 @@ further investment" (Option A of that document's three), against the warm-cache 
 the efficiency-remediation epic's own net verdict (`TCK-20260818-KGMCP-EFFICIENCY-REMEDIATION-EPIC`).
 No Phase 5+/further investment is authorized by this ratification.
 
+**Status update (2026-09-07):** the 2026-08-24 ratification above has been superseded. See
+`keep_or_deprecate_decision.md` §4 for the full record — the repository owner re-ratified against a
+month of real usage data (the gateway's own content-retrieval tool called once, ever, against
+thousands of direct `search_docs` calls) plus external research finding no comparable
+production/AI-first-development practice: Option C — deprecate/remove. Execution proceeds per
+`TCK-20260907-KGMCP-DEPRECATION-EPIC`.
+
 ## 6. Related tickets and docs
 
 Phase 3: `TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING`,

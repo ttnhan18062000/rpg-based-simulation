@@ -30,7 +30,7 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | 3 | Versioned capability-envelope baseline | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M2) |
 | 4 | ~~AST-based import-boundary enforcement~~ **SUPERSEDED — already shipped** on `main` (`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`, found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M1 note; remaining scope is M2/M3) |
 | 5 | ~~Convert 2 proven-failing prose rules to hooks~~ **SHIPPED** — M2 (`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) and M3 (`TCK-20260904-TEST-SCOPER-HANG-GUARD`) both landed | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M2, M3 — both shipped) |
-| 6 | Remove/archive knowledge-gateway — **BLOCKED**, conflicts with `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`'s ratified "no changes authorized" (found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (blocked, pending re-ratification) | `standalone_items.md` (§1) |
+| 6 | Remove/archive knowledge-gateway — **UNBLOCKED 2026-09-07**: `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` re-ratified to Option C (deprecate) via `TCK-20260907-KGMCP-DEPRECATION-EPIC`; execution (M2) in progress | A — Committed | H0, start-now | `standalone_items.md` (§1) |
 | 7 | ~~Migrate the 2 remaining sidecar stragglers~~ **SHIPPED** — corrected to 1 remaining during the 2026-09-04 `create-tickets` investigation pass (`tools/retrieval_cache.py` was already migrated by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`); the last straggler, `.claude/settings.json`'s inline `Edit\|Write` hook, migrated by `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE` | A — Committed | H1 (was) | `workflow_reliability_epic.md` (M1 — shipped) |
 | 8 | ~~`tools.jsonl` sharding + reconciled lifecycle~~ **SUPERSEDED — already shipped** on `main` (PR #112, `TCK-20260902/903-MONITORING-*`, found during planning discussion) | A — Committed | H1 (was) | `telemetry_retention_epic.md` (M1 note; remaining scope is M2/M3) |
 | 9 | Model-diverse reviewer — deploy shadow logging | A — Committed | H1, schedule later | `review_independence_epic.md` (M1) |
@@ -104,11 +104,12 @@ Horizon-2-only — items 11–12** and **7 remaining to implement** overall (1, 
   row above). Both prose-rule-to-hook conversions with directly observed repeated-failure evidence
   have landed: M2 (`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) and M3
   (`TCK-20260904-TEST-SCOPER-HANG-GUARD`).
-- **Standalone — knowledge-gateway removal** (`standalone_items.md` §1): item 6, **now BLOCKED, not
-  start-now** — conflicts with the already-ratified `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`
-  decision, found during the ticket-creation investigation (see item 6's inventory row above). Not
-  an epic — independent value, independent rollback — and still shares one real dependency with
-  Epic G (below), once unblocked.
+- **Standalone — knowledge-gateway removal** (`standalone_items.md` §1): item 6, **UNBLOCKED
+  2026-09-07** — `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` was re-ratified to Option C (deprecate) via
+  `TCK-20260907-KGMCP-DEPRECATION-EPIC` (see item 6's inventory row above and
+  `keep_or_deprecate_decision.md` §4 for the full re-ratification record). Not an epic —
+  independent value, independent rollback — and shares one real dependency with Epic G's M4
+  (`scan_for_secrets()` extraction), now being executed together per the epic's M2.
 
 ### Horizon 1 — ready, schedule later (horizon label is strategic staging, not an automatic execution-order constraint — three items below have no H0-gate dependency at all)
 
@@ -281,9 +282,10 @@ conditions:
    normal advisory operation.
 3. Both converted guardrail hooks (item 5) show **zero recurrence** of their target failure
    pattern across ≥2 subsequent weekly retro reports.
-4. `knowledge-gateway` (item 6) archived with **zero renewed calls** observed over 2 weeks — **this
-   condition itself is now blocked** until item 6's re-ratification (see item 6's inventory row
-   above); the gate cannot close on this condition before that happens.
+4. `knowledge-gateway` (item 6) archived with **zero renewed calls** observed over 2 weeks — item 6
+   was re-ratified to deprecate on 2026-09-07 (see item 6's inventory row above) and archival
+   (`TCK-20260907-KGMCP-DEPRECATION-EPIC` M2 steps 1-2) is in progress; this condition's 2-week
+   monitoring window (M2 steps 3-4) starts once archival lands, tracked as a separate follow-on.
 
 ### Eval-pilot exit gate (item 13)
 

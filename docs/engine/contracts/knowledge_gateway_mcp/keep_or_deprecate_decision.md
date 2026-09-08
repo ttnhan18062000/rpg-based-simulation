@@ -80,9 +80,39 @@ discipline this arc has followed throughout.
 This mirrors `TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`'s own precedent: a real human
 decision, recorded plainly, with no re-derivation of the measurements that informed it.
 
-## 4. Related tickets and docs
+## 4. Re-ratification (2026-09-07)
 
-Decision ticket: `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`.
+A month of real usage data since the 2026-08-24 ratification, plus fresh external research, was
+brought back to the repository owner as new evidence Option A's own reviewer never had:
+
+- **Usage gap widened, not narrowed.** Exactly 1 real `knowledge_gateway__knowledge_context`
+  content-retrieval call exists in the project's entire recorded monitoring history (2026-08-17,
+  predating this ratification) against 3,375 real calls to the direct `search_docs` tool it sits
+  alongside (re-counted live against `agent-monitoring/data/*/tools.jsonl` at re-ratification
+  time — it was 2,259 when the epic that re-opened this question was first scoped days earlier).
+- **The `done-checker`/`test-scoper` tool-allowlist grant was an accident**, not a deliberate
+  design choice — sourced from `TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE`'s historical-usage-
+  derived scoping pass; no considered rationale exists anywhere for it.
+- **External research** (Cursor, Windsurf, Sourcegraph Cody, Aider, Devin/Cognition's own removal
+  of an embeddings-based retrieval layer in favor of direct search, Anthropic's internal Claude
+  Code usage study, Sourcegraph/Amp, the Zup internal-agent case study) found no production or
+  AI-first-development system building a live routing/caching context gateway in front of direct
+  retrieval tools — the consistent pattern is direct tools plus routing guidance expressed as
+  prompts/instructions (which this project already has, in CLAUDE.md's Proactive Tool Use table).
+- **The measured overhead is the wrapping/routing cost, not caching** — the warm-cache
+  re-comparison in §2 above still lost 7/7 even with caching fully realized, confirming a partial
+  fix (better cache-hit rates) would not by itself close the gap.
+
+**Re-ratified by the repository owner on 2026-09-07: Option C — deprecate/remove.** This
+supersedes the 2026-08-24 Option A ratification above. Execution proceeds per
+`TCK-20260907-KGMCP-DEPRECATION-EPIC`'s M2: extract `scan_for_secrets()` to a location independent
+of the gateway (a real cross-epic dependency), archive (not hard-delete) the remaining gateway
+modules and deregister `.mcp.json`, monitor 2 weeks for zero renewed calls, then delete.
+
+## 5. Related tickets and docs
+
+Decision ticket: `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` (original ratification),
+`TCK-20260907-KGMCP-DEPRECATION-EPIC` (re-ratification and execution).
 
 Evidence cited: `TCK-20260818-KGMCP-EFFICIENCY-REMEDIATION-EPIC`,
 `TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON`, `TCK-20260818-KGMCP-POST-CAP-FIX-RECOMPARISON`,

@@ -19,10 +19,12 @@ from gate_checks.ci_workflow_test_coverage import (  # noqa: E402
     check_ci_workflow_test_coverage,
     directories_from_test_files,
     directory_is_covered_by_file_listings,
+    directory_is_excluded_from_pytest_collection,
     directory_is_slow_only_legitimate,
     file_is_fully_slow_marked,
     is_directory_covered,
     parse_job_pytest_paths,
+    pytest_norecursedirs,
 )
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
@@ -415,6 +417,72 @@ def test_fixture_loose_files_need_every_one_individually_listed_to_pass():
 
         complete = check_ci_workflow_test_coverage(workflow_path, tmp_path, test_files=files)
         assert {r["condition"]: r for r in complete}["ci_test_dir_covered:tests/loose"]["status"] == "PASS"
+
+
+# ---------------------------------------------------------------------------
+# pytest_norecursedirs / directory_is_excluded_from_pytest_collection --
+# TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE's own archival of tests/archive/ (excluded from
+# pytest collection via pyproject.toml's norecursedirs, still containing real test_*.py files)
+# surfaced a real gap this checker's original design didn't anticipate: a norecursedirs-excluded
+# directory is never collected in ANY job, so it cannot be a "silently orphaned" violation this
+# checker exists to catch, but the checker had no way to know that.
+# ---------------------------------------------------------------------------
+
+
+def test_pytest_norecursedirs_reads_real_pyproject_toml():
+    norecursedirs = pytest_norecursedirs(_REPO_ROOT / "pyproject.toml")
+    assert "archive" in norecursedirs
+    assert "stored_artifacts" in norecursedirs
+
+
+def test_pytest_norecursedirs_returns_empty_set_for_missing_file(tmp_path):
+    assert pytest_norecursedirs(tmp_path / "does-not-exist.toml") == set()
+
+
+def test_directory_is_excluded_from_pytest_collection_matches_any_path_segment():
+    norecursedirs = {"archive", "scratch"}
+    assert directory_is_excluded_from_pytest_collection("tests/archive", norecursedirs) is True
+    assert directory_is_excluded_from_pytest_collection("tests/tools", norecursedirs) is False
+
+
+def test_directory_is_excluded_from_pytest_collection_false_for_no_match():
+    assert directory_is_excluded_from_pytest_collection("tests/orphan", {"archive"}) is False
+
+
+def test_fixture_norecursedirs_excluded_directory_passes_instead_of_failing():
+    """The core acceptance-criterion proof for the new exclusion: without norecursedirs, the
+    orphan directory FAILs exactly as it always did; injecting norecursedirs containing its
+    basename flips it to PASS with distinct, honest evidence -- proving this is a real behavior
+    change, not a no-op."""
+    with __import__("tempfile").TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        workflow_path, files = _write_fixture_tree(tmp_path)
+
+        without_exclusion = check_ci_workflow_test_coverage(
+            workflow_path, tmp_path, test_files=files, norecursedirs=set()
+        )
+        by_condition = {r["condition"]: r for r in without_exclusion}
+        assert by_condition["ci_test_dir_covered:tests/orphan"]["status"] == "FAIL"
+
+        with_exclusion = check_ci_workflow_test_coverage(
+            workflow_path, tmp_path, test_files=files, norecursedirs={"orphan"}
+        )
+        by_condition = {r["condition"]: r for r in with_exclusion}
+        excluded = by_condition["ci_test_dir_covered:tests/orphan"]
+        assert excluded["status"] == "PASS"
+        assert "norecursedirs" in excluded["evidence"]
+
+        # Directories outside the exclusion set are completely unaffected by it.
+        assert by_condition["ci_test_dir_covered:tests/unit/covered"]["status"] == "PASS"
+        assert by_condition["ci_test_dir_covered:tests/slowdir"]["status"] == "PASS"
+
+
+def test_check_against_real_repo_state_recognizes_tests_archive_as_norecursedirs_excluded():
+    results = check_ci_workflow_test_coverage(_REAL_WORKFLOW_PATH, _REPO_ROOT)
+    by_condition = {r["condition"]: r for r in results}
+    archive = by_condition["ci_test_dir_covered:tests/archive"]
+    assert archive["status"] == "PASS"
+    assert "norecursedirs" in archive["evidence"]
 
 
 # ---------------------------------------------------------------------------

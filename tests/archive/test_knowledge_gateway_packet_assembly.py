@@ -34,7 +34,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from tools import knowledge_gateway_packet_assembly as kpa  # noqa: E402
 
-_MODULE_PATH = _REPO_ROOT / "tools" / "knowledge_gateway_packet_assembly.py"
+_MODULE_PATH = _REPO_ROOT / "tools" / "archive" / "knowledge_gateway_packet_assembly.py"
 
 
 # ---------------------------------------------------------------------------
