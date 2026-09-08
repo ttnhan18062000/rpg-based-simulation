@@ -1,21 +1,21 @@
 {
-  "manifest_id": "prov_63a3a01e840131a8",
+  "manifest_id": "prov_74d76c960fe95428",
   "world_id": "frontier_living_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
-    "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
+    "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "trading_company_hub": "89edf663d96b8aa771438773ace9dda4780ed4fb1440a0fa697beb34d302ccd6",
     "undead_battlefield": "f6c0b36a0b8d6baa8314f5569b08d2d217e0a5c2d00439362e668dbdd9e71087",
-    "wolf_den_near_forest": "14dcdf22f8bfc5ea7340de80e47d9bab361e279778e165bd721367bc573f7769"
+    "wolf_den_near_forest": "d80c2b1a161759b7d69273f2ab35d462d6bdda149adb67541212e3592cdf5559"
   },
   "composition_fingerprint": "16d74dede05aa383c3654d17373db69dae159c1fb1db368db5ffd53e000422b8",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "63a3a01e840131a899425000a34cca26a2acd1b89e5b7b49e66b2848a023661e",
-  "created_at": "2026-09-04T08:05:15.033096Z",
+  "content_fingerprint": "74d76c960fe954282b1983446e218ac77104ff4fcfd5bba992b2d29766cc3cf7",
+  "created_at": "2026-09-08T02:50:44.930340Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

@@ -88,7 +88,13 @@ regions:
     weight: 3.0
   - terrain: swamp
     weight: 1.0
-  places: []
+  places:
+  - id: wolf_den_nest
+    kind: NEST
+    position:
+    - 87
+    - 50
+    creature_kind: wolf
 factions:
 - id: hero_guild
   type: defender

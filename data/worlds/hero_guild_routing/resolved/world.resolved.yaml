@@ -52,6 +52,7 @@ regions:
     position:
     - 110
     - 38
+    creature_kind: goblin
 - id: mountain_pass_zone
   type: wilderness
   bounds:

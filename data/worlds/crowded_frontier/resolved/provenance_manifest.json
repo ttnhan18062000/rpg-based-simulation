@@ -1,19 +1,19 @@
 {
-  "manifest_id": "prov_16971a16b00ba653",
+  "manifest_id": "prov_c30294dd56c7f976",
   "world_id": "crowded_frontier",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "d7fc8aecc1e3c27ea6fe330dc5bbfe5655a68ce9fb3c913d3a531a00fc5cd827",
+  "catalog_fingerprint": "6da61f22d2005beeba00abd72afe77546f79295169b90c0204621a072eb153e0",
   "module_fingerprints": {
     "frontier_village_core": "3ef51465da6b68679ecacc3493851ce19353bd132303533efaaa7839a8544c7b",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
-    "goblin_camp_conflict": "d05eaed77112f54b7ea402dde8ef2a526566991c67e6ea636d7ffece2972d51a",
+    "goblin_camp_conflict": "cd019fb5d37335c8c869afecb554f59769f2ea39c06bb3a4d897da15a932f262",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
   },
   "composition_fingerprint": "c1236b66f875f9584b2078c18ff1e3ac317b15422201051050e0d880a50aebd2",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "16971a16b00ba6535a6c212b0e497c57cc536e790165ff0a3924c6054164d492",
-  "created_at": "2026-09-04T08:05:08.541146Z",
+  "content_fingerprint": "c30294dd56c7f976d7b6f2b1508588494e7b6ec8f02281464f011ba4850a3d62",
+  "created_at": "2026-09-08T02:50:40.407291Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

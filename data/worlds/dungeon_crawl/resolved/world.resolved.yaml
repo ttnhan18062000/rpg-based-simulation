@@ -26,6 +26,7 @@ regions:
     position:
     - 110
     - 38
+    creature_kind: goblin
 - id: old_mine
   type: wilderness
   bounds:

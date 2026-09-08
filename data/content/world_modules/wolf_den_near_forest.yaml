@@ -53,6 +53,17 @@ regions:
     hazard_level: 2.0
     hazard_kind: "NATURAL_TERRAIN"
     tags: [forest]
+    # TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: NEST-kind Place, position is the
+    # centroid of grid_bounds. creature_kind=wolf is in CampService.NEST_RACE_KINDS,
+    # so with ENABLE_CAMP_NEST_SPREAD=ON this camp's own raid branch is replaced by
+    # the Nest-spread offspring branch instead — matches this module's own
+    # wild_beast_pack/wolf_pack_small theming exactly. maturity left unset, same
+    # caution as every other Stage B Place in this corpus (no calibrated value yet).
+    places:
+      - id: "wolf_den_nest"
+        kind: "nest"
+        position: [87, 50]
+        creature_kind: "wolf"
 factions: ["wild_beast_pack"]
 populations: ["wolf_pack_small"]
 relationships: ["town_to_wild_beasts", "wild_beasts_to_town"]
