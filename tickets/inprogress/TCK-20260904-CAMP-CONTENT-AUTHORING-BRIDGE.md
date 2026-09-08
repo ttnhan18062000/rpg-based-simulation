@@ -345,18 +345,25 @@ here before reporting.)
 
 **AC4 (EXPAND_TERRITORY) and the Lair-occupant half of AC2: confirmed genuinely unreachable by any
 means available to this ticket, for reasons deeper than originally scoped:**
-- `FactionState.territory` (`src/core/state.py`, `Tuple[str, ...] = ()`) is **never seeded at
-  compile time and never derived by any runtime phase** — confirmed via `grep -rn "territory_add"
-  src/` (only ever read in `apply.py`'s merge logic and observability shapers, never emitted by any
-  real producer) and by direct inspection of `WorldCompiler.compile()`'s own `FactionState(...)`
-  construction (only `faction_id`/`tension_level` set). `region.owner_faction_id` *is*
-  compile-time-seedable (`context.region_ownership`), but nothing propagates that into the
-  corresponding faction's own `territory` tuple. `FactionDecisionPhase.execute()`'s own
-  `EXPAND_TERRITORY` gate (`if fs.territory: ...`) can therefore never be true for any faction in
-  any real compiled world today — this is a separate, real dormant-mechanism gap, independent of
-  camp/maturity content, and squarely outside this ticket's own content-authoring scope to fix (it
-  needs either a compile-time territory-derivation step or a runtime seeding phase — a real
-  mechanism decision, not a content change).
+- `FactionState.territory` (`src/core/state.py`, `Tuple[str, ...] = ()`) is **not seeded at compile
+  time** — confirmed by direct inspection of `WorldCompiler.compile()`'s own `FactionState(...)`
+  construction (only `faction_id`/`tension_level` set); `region.owner_faction_id` *is*
+  compile-time-seedable (`context.region_ownership`) but nothing propagates that into the
+  corresponding faction's own `territory` tuple at compile time.
+  **Correction (orchestrator, 2026-09-08): the fork's original claim that territory is "never
+  derived by any runtime phase" is factually wrong, independently verified against real code.**
+  `MilitaryConflictPhase` (`src/engine/military_conflict.py`) *is* wired into the real per-tick
+  pipeline (`src/engine/pipeline.py:287-293`) and *does* emit `FactionUpdate(territory_add=...)`/
+  `territory_remove=...` when a region's `SiegeState.siege_progress` reaches `1.0` — a real,
+  live siege-resolution mechanism, not dead code (`SiegeState` is started by
+  `military_conflict.py:301-304` and its `siege_progress` genuinely increments via
+  `apply_plan.py:141-147`). So `EXPAND_TERRITORY`'s gate is not "can never be true for any faction
+  in any real compiled world" — it's gated behind a full siege actually starting and completing,
+  which is a real but separate reachability question (how often, if ever, a siege reaches
+  `progress >= 1.0` in a real corpus run) that was not investigated here and needs its own real
+  answer before concluding whether this is truly unreachable or just rare/slow like the camp
+  maturity gate. Not yet re-investigated to the same evidentiary bar as the rest of this ticket —
+  flagged for whoever picks up the follow-on decision below, not resolved here.
 - The Lair-occupant gates (`state.maturity >= 50.0`, world-level, +1 per calamity; `region.
   trauma_score >= 20.0`) have no compile-time content-seed path in the schema (confirmed: no
   `RegionSpec`/`WorldComposition`-level field for either). Natural accrual: `CalamityService`'s own
