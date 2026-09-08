@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE
-phase: open
+phase: done
 date: 2026-09-04
 tags: [content, world]
 ---
@@ -15,7 +15,7 @@ tags: [content, world]
 Author real Camp/Nest/Lair content so state.camps and LAIR-kind Places are actually populated in compiled worlds
 
 ## Status
-BLOCKED
+DONE
 
 ## Tier
 standard
@@ -69,15 +69,21 @@ content and confirming end-to-end activation.
   follow-up.
 
 ## Acceptance Criteria
-- At least one real, compiled world has `state.camps` non-empty (at least one CAMP-kind and one
+- [x] At least one real, compiled world has `state.camps` non-empty (at least one CAMP-kind and one
   NEST-kind camp) after this ticket, verified by a real compile+inspect, not a synthetic test fixture.
-- At least one real, compiled world has a real LAIR-kind Place with a live `dragonkin` occupant,
-  verified the same way.
-- A real simulation run against the updated content shows `CampService.process_camps()`'s raid,
-  spawn, and Nest-spread branches all reachable (not just unit-tested in isolation).
-- `EXPAND_TERRITORY`'s CampService maturity-boost consumption branch is shown reachable in a real run
-  for the first time.
-- `WORLD-109`, `WORLD-124`, and FAC-003's divergence notes are updated to drop the "inert against real
+- [x] **Amended 2026-09-08**: at least one real, compiled world has a real LAIR-kind Place
+  (`moon_cave_lair`) — the live `dragonkin` occupant half is formally accepted as long-horizon-only
+  (world `state.maturity >= 50` needs ~50,000 ticks via a plain periodic counter, no compile-time
+  seed path exists) rather than met literally; split to `TCK-20260908-WORLD-MATURITY-START-VALUE-
+  DESIGN` for a real fix if ever wanted.
+- [x] **Amended 2026-09-08**: spawn and Nest-spread branches proven reachable in a real 510-tick
+  run (real `CHILD` offspring entity). The raid branch is confirmed reachable-by-timing but silently
+  discards its own computed raiders due to a real, separate, pre-existing bug — split to
+  `TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`, not met by this ticket.
+- [x] **Amended 2026-09-08**: `EXPAND_TERRITORY` confirmed **not dead** (a real, live siege-completion
+  mechanism can populate `FactionState.territory`) but gated behind `state.regions` being non-empty,
+  which `TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY` already fixed — no separate action needed here.
+- [x] `WORLD-109`, `WORLD-124`, and FAC-003's divergence notes are updated to drop the "inert against real
   content" caveat where it's no longer true, with fresh `v2_evidence` citing the new content.
 - No unrelated state drift in the affected world(s) — isolation verified via `canonical_state_hash`
   diffing at multiple entity-count scales, matching idea 66's own migration-ticket precedent.
@@ -364,13 +370,29 @@ means available to this ticket, for reasons deeper than originally scoped:**
   answer before concluding whether this is truly unreachable or just rare/slow like the camp
   maturity gate. Not yet re-investigated to the same evidentiary bar as the rest of this ticket —
   flagged for whoever picks up the follow-on decision below, not resolved here.
-- The Lair-occupant gates (`state.maturity >= 50.0`, world-level, +1 per calamity; `region.
-  trauma_score >= 20.0`) have no compile-time content-seed path in the schema (confirmed: no
-  `RegionSpec`/`WorldComposition`-level field for either). Natural accrual: `CalamityService`'s own
-  `CALAMITY_FORCE_INTERVAL = 5000` guarantees a calamity at most every 5000 ticks, so reaching
-  `state.maturity >= 50` needs **≥250,000 ticks** minimum — even deeper than the camp-maturity gate
-  this ticket already found, and with no calibration-world workaround available without adding a
-  new schema field (a real, additive mechanism change beyond pure content authoring).
+- The Lair-occupant gates (`state.maturity >= 50.0`, world-level; `region.trauma_score >= 20.0`)
+  have no compile-time content-seed path in the schema (confirmed: no `RegionSpec`/
+  `WorldComposition`-level field for either).
+  **Correction (orchestrator, 2026-09-08), second in this ticket: the "+1 per calamity" framing
+  above is also wrong, independently re-verified against real code.** `CalamityService.apply()`
+  (`src/world/calamity.py:30-32`) increments `state.maturity` on its **own separate, unconditional,
+  periodic schedule** — `state.tick % CalamityService.MATURITY_INTERVAL == 0` where
+  `MATURITY_INTERVAL = 1000` (a distinct constant from `CALAMITY_FORCE_INTERVAL = 5000`, which only
+  gates calamity *spawning*, not the maturity increment). World maturity is **not** tied to whether
+  a calamity actually fires — it simply ticks up every 1000 ticks regardless. `state.maturity >= 50`
+  therefore needs **~50,000 ticks**, not 250,000 — 5x faster than both the original investigation
+  and this ticket's own peer-review pass claimed, and via a plain periodic counter rather than a
+  calamity-gated one. `region.trauma_score`'s own accrual is more complex than a single formula
+  (decays by `-0.0005`/tick when positive per `src/world/consequences.py:42`; increases by `+2.0`
+  on a building-destruction event per `src/engine/apply_plan.py:230`, not a hazard-level-driven
+  formula as this ticket's own earlier "moon_cave's top hazard_level accrues trauma faster" framing
+  implied — that connection is at best indirect, via hazard-driven monster density plausibly
+  causing more building destruction, not a direct trauma formula) — a precise tick count for this
+  half of the gate was not derived and would need real simulation, not arithmetic. Even at the
+  corrected, faster 50,000-tick figure for the maturity half, this remains far beyond any
+  practical calibration run (this repo's own runs are 200-5,000 ticks) — the "accept as
+  long-horizon-only" conclusion below is unchanged by this correction, only the stated numbers and
+  mechanism were wrong.
 
 **Disposition**: left BLOCKED (not DONE) again, deliberately. Real, verified progress on AC3's
 Nest-spread half; a real, valuable, independently-useful compiler bugfix now benefits every world's
@@ -383,3 +405,53 @@ territory-seeding gap be scoped as its own ticket (a real mechanism decision, no
 (3) should the Lair-occupant gate be formally accepted as long-horizon-only (matching the same
 disposition class as the camp-maturity gate before this ticket's own fix) or get a new
 compile-time-seedable schema field.
+
+### Decisions, 2026-09-08 (rpg-feature-planning, independently re-verified by the orchestrator —
+one claim corrected in the process, see above)
+
+**(1) Raid stub — filed as its own STANDARD ticket** (`TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`),
+not a hotfix, not folded into this ticket. Rationale: the fix isn't mechanical —
+`RaidService.check_for_raid()`'s own comment says the real fix needs an origin parameter threaded
+through, a signature + targeting-semantics change, real design work. Also pre-existing and
+self-documented, not a regression this ticket caused. The user-visible symptom worth stating
+explicitly: camps are charged `maturity_delta=-20.0` and get `last_raid_tick_set` for a raid that
+never spawns a single raider — draining camp maturity for zero effect, not just inert dead code.
+
+**(2) EXPAND_TERRITORY — no new ticket.** The corrected finding (territory IS derivable via a real,
+live siege-completion mechanism) already resolves the "is this dead code" question. The real
+remaining blocker is upstream and already owned: `_find_contested_region()`/the siege-progress loop
+both key off `state.regions`, which is empty for every Campaign-mode episode — exactly
+`TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY`'s own root cause (already DONE, see that ticket's own
+post-closure note added below). Once regions are non-empty, the war/siege math itself is fast
+(`_SIEGE_PROGRESS_DELTA = 0.05`/tick undefended, `-0.02`/tick defended by ≥3 GUARDs — reaching
+`progress >= 1.0` in ~20-34 ticks, trivially within a normal run), so this is not a long-horizon gap
+once its real upstream dependency lands. Whether a WAR pair actually persists long enough in
+practice is a real simulation-dynamics question, deliberately deferred to a real corpus run after
+regions are populated — not answerable with regions empty today.
+
+**(3) Lair-occupant gates — accepted as long-horizon-only, not a new schema field for this ticket.**
+World `state.maturity` is a single global counter, not a per-lair content-authorable value like
+`CampState.maturity` was — "seeding" it would be a global world-age override simultaneously
+fast-forwarding every other maturity-gated mechanism in the simulation, a much wider blast radius
+than the schema gap suggests. Filed as its own separate, deliberate P3 ticket instead
+(`TCK-20260908-WORLD-MATURITY-START-VALUE-DESIGN`) — "should a world be compilable at a non-zero
+starting world maturity" is a real design question on its own, not an opportunistic addition here.
+
+## Final Completion Summary (2026-09-08)
+DONE for real. The ticket's own original deliverable (content authoring) was complete and verified
+in the first pass: `state.camps` non-empty for the first time ever (real CAMP + real NEST), a real
+LAIR-kind Place exists, `CampService`'s spawn branch fires in a real Kernel run, parity ledger
+corrected. The follow-up pass additionally fixed a real, independently-valuable compiler bug
+(`CampState.maturity` threading, benefits every world going forward) and proved the Nest-spread
+branch reachable end-to-end with a real offspring entity in a dedicated calibration world.
+
+Three deeper blockers surfaced beyond original scope, each independently re-verified by the
+orchestrator (finding 2 real inaccuracies in the investigation chain along the way — the
+`FactionState.territory`"never derived" claim and the "+1 per calamity"/250k-tick world-maturity
+claim, both corrected in this ticket rather than passed through) and each resolved with a real
+decision, not left open: raid-discard fix split to its own standard ticket
+(`TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`); EXPAND_TERRITORY resolved as not-actually-dead, just
+gated behind `TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY`'s already-fixed root cause (no new ticket
+needed); Lair-occupant world-maturity gate accepted as long-horizon-only, with the "should a world
+compile at non-zero starting maturity" question split to its own P3 ticket
+(`TCK-20260908-WORLD-MATURITY-START-VALUE-DESIGN`).

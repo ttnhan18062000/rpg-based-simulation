@@ -213,3 +213,23 @@ own entity roster, so every existing carry-forward contract is preserved. The ti
 open questions were both resolved with real evidence rather than assumption, and the
 "is the early-exit removal neutral?" question in particular was verified by directly observing the
 guard's inputs and `resolve()`'s live-vs-early-exit return behavior on a real compiled state.
+
+## Post-Closure Disclosure (2026-09-08, found during `TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE`'s
+own follow-up pass)
+This ticket's own fix has a materially higher-stakes consequence than originally scoped, surfaced
+by `rpg-feature-planning` and independently re-verified: **the entire war/siege/territory-transfer
+subsystem was silently no-op'ing in Campaign mode for the same root cause this ticket fixed.**
+`MilitaryConflictPhase._find_contested_region()` (`src/engine/military_conflict.py`) and the
+siege-progress loop both key off `state.regions`; with `state.regions` empty (this ticket's own
+bug, now fixed), no siege could ever begin, so `FactionState.territory` could never be populated
+and `FactionDecisionPhase`'s `EXPAND_TERRITORY` gate could never fire for any faction in any
+Campaign-mode episode — not because the mechanism was dead, but because its one real, live
+producer (siege completion) was unreachable. Once regions are populated (this ticket's own fix),
+the war/siege math itself is fast (`_SIEGE_PROGRESS_DELTA = 0.05`/tick undefended, `-0.02`/tick
+defended by ≥3 GUARDs — reaching `progress >= 1.0` in ~20-34 ticks), so this is not expected to be
+a long-horizon gap once exercised. Not re-opening this ticket or adding new scope — this note
+exists so a future investigator finds the connection rather than re-discovering it, and so this
+ticket's own real-world impact is accurately understood as broader than "regional tax/suppression
+logic." Whether a real WAR pair persists long enough in practice to actually complete a siege is a
+genuine simulation-dynamics question, deliberately left open for a future corpus run now that
+regions are populated — not answerable before this fix landed.
