@@ -124,12 +124,15 @@ def test_combat_risk_belief_is_produced_and_consumed_across_real_ticks():
     )
 
 
-def test_isolated_entity_gets_low_risk_combat_belief_in_a_real_run():
+def test_isolated_entity_gets_no_combat_risk_belief_in_a_real_run():
     """
-    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): no nearby hostile
-    now yields a real, current LOW-risk belief (not an absent one) through the real authoritative
-    apply path -- restoring the "current assessment, replaced every tick" invariant this module
-    documents, which the hostility filter would otherwise leave permanently stale.
+    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (2nd correction, 2026-09-08): negative control
+    -- an entity that never meets a hostile must not have a combat_risk belief fabricated for it,
+    through the real authoritative apply path. Writing an unconditional LOW belief here (the first
+    correction's shape) would mark every actor strategic-dirty every tick regardless of hostile
+    presence, defeating dirty-set short-circuiting for downstream "strategic"-gated phases -- see
+    src/domains/combat_engagement/phase.py's own comment. HelpNeedEvaluator already degrades an
+    absent belief to NORMAL, so nothing is lost by not writing one.
     """
     lone = _combatant(1, 0.0, 0.0, hp=100, atk=10)
     faraway = _combatant(2, 400.0, 400.0, hp=100, atk=10)
@@ -139,6 +142,4 @@ def test_isolated_entity_gets_low_risk_combat_belief_in_a_real_run():
         refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
         state = ApplyPath.apply_generation(state, refined, next_tick=state.tick + 1)
 
-    belief = state.entities[1].strategic.beliefs.get("combat_risk")
-    assert belief is not None
-    assert belief.claim == "LOW"
+    assert state.entities[1].strategic.beliefs.get("combat_risk") is None

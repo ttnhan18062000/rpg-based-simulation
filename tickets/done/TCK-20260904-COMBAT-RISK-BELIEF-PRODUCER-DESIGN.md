@@ -366,6 +366,59 @@ Full `tests/unit/domains tests/integration/domains` sweep after this fix: **998 
 `BeliefCycleSystem.decay_stale_beliefs()`'s name promises belief decay but the function only ever
 touches `leads` and has no live callers — `TCK-20260908-BELIEF-CYCLE-DEAD-DECAY-METHOD-CLEANUP`.
 
+**Third correction files changed:**
+- `src/domains/combat_engagement/phase.py` (no-threat write now conditional on the actor's
+  existing belief; comment explaining the dirty-set-churn mechanism)
+- `tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py` (1 test renamed and
+  rewritten to assert no-write; `test_stale_combat_risk_belief_clears_once_hostile_leaves_range`
+  unchanged, confirmed to still pass)
+- `tests/integration/domains/combat_engagement/test_phase4_combat_engagement_phase.py` (1 test
+  renamed and rewritten to assert no-write)
+- `tests/integration/domains/test_combat_risk_belief_end_to_end.py` (1 test renamed and rewritten
+  to assert no-write)
+
+**Third correction (2026-09-08, same review round) — the stickiness fix above had its own
+second-order cost, found by peer review, independently verified against real code before fixing:**
+
+The unconditional no-threat write from the second correction (above) writes an `EntityUpdate` for
+**every** actor with no hostile nearby, on every tick this phase runs — not just on the one tick a
+threat departs. Verified: `combat_engagement`'s own `PhaseMetadata` entry
+(`src/engine/phase_graph.py`) declares `output_domains={"combat", "strategic"}` and
+`input_domains={"combat", "movement"}`, so in any world with moving entities (essentially always)
+this phase runs every tick, and its unconditional write marks every living actor
+`strategic`-dirty every tick. Consequence: `ds.strategic_entities` is permanently non-empty by
+construction, which per `phase_graph.py`'s own dirty-set short-circuiting (`can_skip_when_no_dirty`)
+means **every downstream phase gated on `"strategic"` can never short-circuit** — the mirror image
+of the rendering-thread finding (`TCK-20260908-DIRTY-SET-PASSIVE-DECAY-CONSUMER-INVESTIGATION`),
+where a phase was wrongly *skipped*; here one is permanently prevented from *ever* skipping. It also
+likely keeps `all_dirty_entities` permanently non-empty, invalidating the read model
+(`apply_plan.py`'s `invalidate_read_model` gate) every tick as well — this specific consequence
+was reasoned from the same already-verified gate, not independently re-measured.
+
+**Fix**: the no-threat write is now conditional. `CombatEngagementPhase.apply()` reads the actor's
+own existing `combat_risk` belief before deciding to write: skip entirely when no belief exists yet
+(an absent belief already degrades to `NORMAL` in `HelpNeedEvaluator.evaluate()`, identical in
+effect to a real `LOW` belief for that consumer), skip when the belief is already `LOW` (no change
+to make), and write only when a stale non-`LOW` belief needs downgrading — exactly the
+threat-departure transition this whole correction chain exists to model. Writes collapse from
+"every actor with no hostile, every tick" to "once per threat-departure transition."
+
+Two tests from the second correction were adjusted to match (`test_stale_combat_risk_belief_clears_
+once_hostile_leaves_range` needed no change — it is precisely the transition case that still
+writes, confirmed to still pass unmodified): `test_phase_writes_low_risk_belief_when_no_hostile_
+nearby` renamed to `test_phase_makes_no_write_when_no_hostile_and_no_prior_belief` (now asserts no
+write for an actor with no prior belief, restoring the semantics of the *original*, pre-first-
+correction negative-control test — for a different, now-correct reason). Two further tests, updated
+the same way: `test_phase_writes_no_threat_belief_without_skipping_posture_for_entity_without_
+relevant_target` → `test_phase_skips_entity_without_relevant_target_and_no_prior_belief`
+(`tests/integration/domains/combat_engagement/test_phase4_combat_engagement_phase.py`), and
+`test_isolated_entity_gets_low_risk_combat_belief_in_a_real_run` →
+`test_isolated_entity_gets_no_combat_risk_belief_in_a_real_run`
+(`tests/integration/domains/test_combat_risk_belief_end_to_end.py`). All three confirmed to fail
+against the unconditional-write version before this refinement and pass with it. Full
+`tests/unit/domains tests/integration/domains` sweep: **998 passed, 0 failed** (same count as the
+second correction — tests renamed, not net-added).
+
 ## Completion Summary
 `entity.strategic.beliefs["combat_risk"]` had a real, deliberately-designed, tested consumer
 (`HelpNeedEvaluator.evaluate()`) and **zero** production producer — only tests constructed it, using

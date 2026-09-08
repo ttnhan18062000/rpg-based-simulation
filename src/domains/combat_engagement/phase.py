@@ -156,15 +156,37 @@ class CombatEngagementPhase:
                 # the threat left or died -- HelpNeedEvaluator.evaluate() has no staleness check
                 # and BeliefCycleSystem.decay_stale_beliefs() only touches `leads`, never
                 # `beliefs`, so nothing else would ever clear it. Writing a real no-threat (LOW)
-                # assessment here, before the early-out, restores the invariant at zero added
-                # evaluate() cost -- no target means no posture/intent resolution, but it does
-                # mean a real, current "no threat" belief.
-                no_threat_belief = build_combat_risk_belief(death_risk=0.0, current_tick=state.tick)
-                entity_updates[actor.id] = EntityUpdate(
-                    entity_id=actor.id,
-                    intent_results=[],
-                    strategic=StrategicUpdate(beliefs_add_or_update=[no_threat_belief]),
+                # assessment restores the invariant at zero added evaluate() cost -- no target
+                # means no posture/intent resolution, but it does mean a real, current "no
+                # threat" belief.
+                #
+                # (2nd correction, 2026-09-08, same review round): only write when it actually
+                # changes something -- an earlier version wrote this unconditionally for every
+                # actor with no hostile nearby, every tick. Since combat_engagement's own output
+                # domain is "strategic" (src/engine/phase_graph.py), and this phase runs whenever
+                # `movement`/`combat` are dirty (i.e. essentially every tick in a moving world),
+                # that meant every living actor got a fresh EntityUpdate.strategic every tick --
+                # ds.strategic_entities permanently non-empty, defeating dirty-set short-
+                # circuiting for every downstream phase gated on "strategic", and (per
+                # apply_plan.py's invalidate_read_model gate) invalidating the read model every
+                # tick too. An actor with no existing combat_risk belief (never met a hostile)
+                # correctly needs no write at all -- HelpNeedEvaluator already degrades an absent
+                # belief to NORMAL, identical to a real LOW belief for its own purposes -- and an
+                # actor already sitting at LOW needs no re-write either. Only a stale non-LOW
+                # belief (a real threat that has since left) needs downgrading, and only once,
+                # on the transition tick -- which is the real event this producer models anyway.
+                existing_belief = actor.strategic.beliefs.get(COMBAT_RISK_BELIEF_ID)
+                needs_no_threat_write = (
+                    existing_belief is not None
+                    and getattr(existing_belief, "claim", None) != RiskLevel.LOW.value
                 )
+                if needs_no_threat_write:
+                    no_threat_belief = build_combat_risk_belief(death_risk=0.0, current_tick=state.tick)
+                    entity_updates[actor.id] = EntityUpdate(
+                        entity_id=actor.id,
+                        intent_results=[],
+                        strategic=StrategicUpdate(beliefs_add_or_update=[no_threat_belief]),
+                    )
                 continue
 
             # Evaluate exactly the nearest hostile candidate -- one evaluate() call per actor

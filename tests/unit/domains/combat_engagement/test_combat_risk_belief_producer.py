@@ -160,16 +160,18 @@ def test_combat_risk_is_written_from_the_nearest_hostile_not_an_arbitrary_neighb
     assert beliefs[0].claim != RiskLevel.LOW.value
 
 
-def test_phase_writes_low_risk_belief_when_no_hostile_nearby():
+def test_phase_makes_no_write_when_no_hostile_and_no_prior_belief():
     """
-    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): an isolated actor
-    (no hostile candidate at all) must still get a real, current LOW-risk belief written -- not
-    no belief. This restores the module's own documented invariant (COMBAT_RISK_BELIEF_ID's
-    docstring: "a *current* assessment that each tick replaces in place"), which the hostility
-    filter broke by removing the accidental every-tick refresh the old arbitrary-neighbor version
-    relied on. No target means no posture/intent resolution, but it does mean a real "no threat"
-    assessment -- see test_stale_combat_risk_belief_clears_once_hostile_leaves_range below for
-    the exact staleness scenario this exists to fix.
+    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (2nd correction, 2026-09-08): an actor that
+    has never met a hostile (no prior combat_risk belief at all) must get NO write when no
+    hostile is nearby -- not a fabricated LOW belief. This is the churn-avoidance refinement: an
+    unconditional write here would mark effectively every actor strategic-dirty every tick
+    (combat_engagement's own output domain is "strategic", src/engine/phase_graph.py), permanently
+    defeating dirty-set short-circuiting for every downstream phase gated on it. An absent belief
+    already degrades to NORMAL in HelpNeedEvaluator.evaluate(), identical in effect to a real LOW
+    belief for that consumer's own purposes, so there is nothing to gain from writing one. See
+    test_stale_combat_risk_belief_clears_once_hostile_leaves_range below for the case that DOES
+    still need a write: a stale non-LOW belief from a threat that has since left.
     """
     actor = _entity(1, 0.0, 0.0)
     far = _entity(2, 500.0, 500.0)
@@ -177,13 +179,7 @@ def test_phase_writes_low_risk_belief_when_no_hostile_nearby():
 
     update = CombatEngagementPhase.apply(state)
 
-    assert actor.id in update.entity_updates
-    eu = update.entity_updates[actor.id]
-    assert eu.property_updates == {}, "no target -- no posture/intent resolution should happen"
-    beliefs = [b for b in eu.strategic.beliefs_add_or_update if b.id == COMBAT_RISK_BELIEF_ID]
-    assert len(beliefs) == 1
-    assert beliefs[0].claim == RiskLevel.LOW.value
-    assert beliefs[0].certainty == 0.0
+    assert actor.id not in update.entity_updates
 
 
 def test_stale_combat_risk_belief_clears_once_hostile_leaves_range():
