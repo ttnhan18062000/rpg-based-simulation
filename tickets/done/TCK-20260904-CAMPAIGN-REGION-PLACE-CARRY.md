@@ -233,3 +233,12 @@ ticket's own real-world impact is accurately understood as broader than "regiona
 logic." Whether a real WAR pair persists long enough in practice to actually complete a siege is a
 genuine simulation-dynamics question, deliberately left open for a future corpus run now that
 regions are populated — not answerable before this fix landed.
+
+**Amended 2026-09-08 (second peer-review pass, independently re-verified): a third affected
+subsystem.** `CalamityService.process_world_dynamics()` (`src/world/calamity.py`) selects its
+calamity/world-boss spawn target via `[r for r in state.regions.values() if r.calamity_intensity >
+0.3]` — with `state.regions` empty, this list is always empty, so calamity/world-boss spawning was
+*also* silently no-op'ing in Campaign mode for the same root cause, alongside war/siege/territory-
+transfer. Confirmed directly against `src/world/calamity.py`. Same disposition as above: not
+re-opening this ticket, this fix already resolves it — recorded here so the full blast radius is
+accurately understood.
