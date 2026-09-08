@@ -85,6 +85,18 @@ a materially wider blast radius than the schema gap suggests.
 - `TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE` (`tickets/done/` — found this gap during its own
   follow-up pass)
 - `TCK-20260904-LAIR-ENTITY-ANCHOR` (the ticket that originally built the Lair-occupant mechanism)
+- `TCK-20260908-HOTFIX-STATE-PLACES-APPLY-CARRYFORWARD-GAP` — **second, independent blocker on
+  Lair-occupant/boss spawning, found and fixed after this ticket's own decision was made.**
+  `BossService.check_for_lair_spawn()` (`src/world/boss.py:206`) iterates `state.places.items()`
+  filtering `kind == PlaceKind.LAIR` — but `state.places` was never carried forward tick-to-tick in
+  `apply.py` (a separate bug from `CAMPAIGN-REGION-PLACE-CARRY`'s initial-construction fix), so this
+  loop found zero LAIR places past the first tick, in every simulation mode, **independent of the
+  `state.maturity >= 50` gate this ticket investigated**. That carry-forward gap is now fixed. This
+  does not change this ticket's own accept-and-disclose decision (the `state.maturity` gate itself
+  is still real and still long-horizon-only) — it means the disposition/divergence-entry this ticket
+  produces must record BOTH blockers (the maturity gate AND the — now-fixed —
+  places-carry-forward gap that was silently compounding it), not just the one originally
+  investigated, so a future reader understands the full history rather than a partial one.
 
 ## Related Docs
 None yet.

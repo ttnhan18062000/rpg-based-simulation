@@ -455,6 +455,16 @@ class ApplyPath:
             factions=new_factions,
             clans=new_clans,
             information_providers=new_information_providers,
+            # TCK-20260908-HOTFIX-STATE-PLACES-APPLY-CARRYFORWARD-GAP: places (idea 66's compiled
+            # world topology -- CITY/CAMP/NEST/LAIR/RUIN/DUNGEON/LANDMARK) was never carried
+            # forward here, silently resetting to {} after the first tick, in every simulation
+            # mode -- the same defect class APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD fixed for
+            # region_loyalty_pressure/region_culture_states/entity_legend_facts immediately below.
+            # No StateUpdate field or PlaceUpdate type exists anywhere in src/ for mutating
+            # PlaceState entries -- places is never mutated mid-episode, only read -- so a plain
+            # passthrough is correct, matching that precedent's own pattern rather than the
+            # copy-on-write pattern regions uses (regions genuinely is mutated via WorldUpdate).
+            places=prior_state.places,
             # Carry feature_flags across ticks so per-profile overrides injected at
             # engine start (e.g. ENABLE_SOCIAL_COOPERATION=ON) are not silently lost
             # when apply_generation reconstructs AuthoritativeState each tick.

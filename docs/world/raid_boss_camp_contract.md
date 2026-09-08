@@ -71,7 +71,12 @@ A camp is cleared when all its associated monsters are killed. On clear:
 - `region.trauma_score -= 10`
 - CAMP_CLEARED event broadcast (see [threat_and_consequences_contract.md](threat_and_consequences_contract.md))
 
-**Known gap:** Camp-to-raid position anchoring is incomplete. The raid spawns at a hardcoded position (0,0) rather than near the camp's actual location. This is noted in camp.py comments as a stub pending implementation.
+**Resolved (`TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`):** camp-triggered raids now spawn anchored
+at the camp's own position and target the nearest real `PlaceKind.CITY` place in `state.places`,
+via `RaidService.spawn_raid(origin, target, raid_size)`. If no CITY place exists to target, the
+raid is skipped entirely for that tick — no raiders, no maturity cost, no cooldown reset. The
+global (non-camp) tick-cadence raid path (`RaidService.check_for_raid()`) is unchanged and still
+uses the `(0,0)` anchor — see "Raid — `raid.py`" below.
 
 ### World-gen construction (`TCK-20260904-CAMPSTATE-PLACE-BRIDGE`)
 
@@ -138,7 +143,13 @@ Raids are also checked every **500 ticks** independently of camp triggers. The c
 raid_size = 3 + camp.maturity  (integer — high-maturity camps send larger raids)
 ```
 
-Raiders spawn as `goblin_raider` entities at `difficulty_tier=4`. Target: nearest settlement (currently hardcoded to position (0,0) — same anchor gap as camp position).
+Raiders spawn as `goblin_raider` entities at `difficulty_tier=4`. Target: nearest settlement —
+**camp-triggered raids** now resolve this to the real nearest `PlaceKind.CITY` place
+(`TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`, see "Camp — `camp.py`" above). The **global
+(non-camp) tick-cadence path** (`RaidService.check_for_raid()`) still hardcodes both origin and
+target to `(0,0)` — deliberately left unchanged by that ticket's own Out of Scope, since it
+already has real, observable behavior tied to it and changing it was not required to fix the
+camp-triggered discard bug.
 
 ### Raid outcome
 
@@ -216,7 +227,11 @@ Monsters spawned in monster-controlled regions (influence ≤ −50) receive a f
      variant of the raid-trigger step, not the monster-cap/growth-rate steps — it substitutes the
      trigger's *outcome* for Nest-classified camps while reusing the unmodified growth rate,
      monster cap, and cadence constants verbatim.
-2. To add a new raid type: extend `raid.py` with a new raid composition. Fix the hardcoded (0,0) anchor before adding new raid types — position anchoring is a known gap.
+2. To add a new raid type: extend `raid.py` with a new raid composition. Reuse
+   `RaidService.spawn_raid(origin, target, raid_size)` (`TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`)
+   for the actual composition step rather than duplicating it — the global tick-cadence path's own
+   `(0,0)` anchor is a deliberate, scoped-out-of-that-ticket choice, not a gap to fix reflexively;
+   only change it with a real reason and its own regression coverage.
 3. To add a new boss type: add to `SPAWN_POOLS` and `DIFFICULTY_ZONES` in `spawn_config.py`. The idempotency lock is per region_id — if multiple boss types should coexist in one region, the locking mechanism needs extending.
    - **Addressed for LAIR-kind Places (`TCK-20260904-LAIR-ENTITY-ANCHOR`):** `check_for_lair_spawn` closes this gap specifically for LAIR-kind Places via a parallel per-`place_id` lock (`identity.properties["lair_place_id"]`), so multiple LAIR Places can coexist in one Region without colliding. The original `world_boss`/`ancient_sentinel` mechanism (`check_for_boss_spawn`) is unchanged and remains region-scoped by design — a Region should still have at most one `world_boss`.
 4. To add a new spawn pool: extend `spawn_config.py`. Do not hardcode monster types in `spawn.py`.
