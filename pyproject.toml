@@ -59,6 +59,7 @@ norecursedirs = [
     ".git",
     "node_modules",
     "__pycache__",
+    "archive",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",

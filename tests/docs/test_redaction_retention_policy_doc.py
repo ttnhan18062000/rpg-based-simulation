@@ -22,7 +22,6 @@ _POLICY_DOC = (
     / "redaction_retention_policy.md"
 )
 _RETRIEVAL_CACHE_PY = _REPO_ROOT / "tools" / "retrieval_cache.py"
-_KNOWLEDGE_GATEWAY_REDACTION_PY = _REPO_ROOT / "tools" / "knowledge_gateway_redaction.py"
 
 
 def _read_doc() -> str:
@@ -72,12 +71,12 @@ def test_redaction_retention_policy_doc_exists_and_has_required_sections():
 def test_payload_size_cap_doc_matches_live_module_constant():
     """The §5 cap was originally an unmeasured placeholder (8192) and was recalibrated to a real,
     data-derived value once real payload sizes existed. Cross-checks the doc's stated value against
-    the live tools/knowledge_gateway_redaction.py::MAX_PAYLOAD_BYTES constant so the two can never
+    the live tools/write_path_guard.py::MAX_PAYLOAD_BYTES constant so the two can never
     silently drift apart — a future recalibration must update both together."""
     import sys
 
     sys.path.insert(0, str(_REPO_ROOT / "tools"))
-    import knowledge_gateway_redaction as kgr
+    import write_path_guard as kgr
 
     text = _read_doc()
     assert str(kgr.MAX_PAYLOAD_BYTES) in text, (

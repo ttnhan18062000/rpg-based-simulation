@@ -20,9 +20,9 @@ from unittest.mock import MagicMock
 import pytest
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_ROUTER_PATH = _REPO_ROOT / "tools" / "knowledge_gateway_router.py"
+_ROUTER_PATH = _REPO_ROOT / "tools" / "archive" / "knowledge_gateway_router.py"
 _CONTEXT_SEARCH_TEST_HELPER_PATH = (
-    _REPO_ROOT / "tests" / "tools" / "test_knowledge_gateway_contract_schemas.py"
+    _REPO_ROOT / "tests" / "archive" / "test_knowledge_gateway_contract_schemas.py"
 )
 
 

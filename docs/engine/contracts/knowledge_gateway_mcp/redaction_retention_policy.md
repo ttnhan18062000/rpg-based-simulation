@@ -54,20 +54,27 @@ wired a real, third live provider, `parity_ledger`
 (`docs/engine/contracts/knowledge_gateway_mcp/provider_capabilities_parity_ledger.json`,
 `tools/knowledge_gateway_router.py::_run_parity_provider()`), genuinely reachable end-to-end from
 `_run_knowledge_context()` and able to appear in a real response's `providers_consulted_this_call`.
-Neither `tools/knowledge_gateway_redaction.py::ALLOWED_SOURCE_TYPES` (still only
+Neither `tools/write_path_guard.py::ALLOWED_SOURCE_TYPES` (still only
 `SOURCE_TYPE_CONTEXT_SEARCH`/`SOURCE_TYPE_GRAPHIFY`) nor the Level 1/Level 2 cache-write
 `source_type` derivation in `tools/knowledge_gateway_cache.py` (`"context_search" in
 providers_consulted else SOURCE_TYPE_GRAPHIFY` — a binary check, no `parity_ledger` branch, present
 at both the Level 1 and Level 2 write-path call sites) were updated to account for it. Because
 `parity_ledger` is only ever selected alongside `context_search` on the
 `requirement_completeness_verification` routing row (never alone,
-`tools/knowledge_gateway_router.py::ROUTING_TABLE`), this binary check always resolves such a
-payload's `source_type` to `SOURCE_TYPE_CONTEXT_SEARCH` today — the write is allowed by
-`check_allowlist()`, but the resulting cache row is silently mislabeled as Context-Search-sourced
-rather than being explicitly allowlisted (or rejected) as parity-sourced. This is a real,
+`tools/knowledge_gateway_router.py::ROUTING_TABLE`), this binary check always resolved such a
+payload's `source_type` to `SOURCE_TYPE_CONTEXT_SEARCH` — the write was allowed by
+`check_allowlist()`, but the resulting cache row was silently mislabeled as Context-Search-sourced
+rather than being explicitly allowlisted (or rejected) as parity-sourced. This was a real,
 disclosed gap for a follow-up ticket to resolve (either add `parity_ledger` as a named §2 eligible
 source type with its own `SOURCE_TYPE_PARITY_LEDGER` allowlist/labeling, or make an explicit,
 justified decision to keep it unlabeled) — not a silent omission.
+
+**Moot as of `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` (2026-09-07):** `tools/knowledge_gateway_router.py`
+and `tools/knowledge_gateway_cache.py` (the two modules this gap was about) are now archived at
+`tools/archive/knowledge_gateway_router.py`/`tools/archive/knowledge_gateway_cache.py`, and the
+Knowledge Gateway MCP's `.mcp.json` registration is removed — there is no longer any live call path
+that can reach this routing decision. The gap described above is preserved as historical record,
+not because it still needs a follow-up fix in production.
 
 ## 3. Redaction Rules
 
@@ -129,8 +136,11 @@ Enumeration), never silently redacted and stored.
 no live caller. `TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING` is the ticket that wired real cache
 reads and writes into the live `knowledge_context` request path
 (`tools/knowledge_gateway_mcp.py::_run_knowledge_context()`), so cache writes governed by this
-ruleset are now genuinely reachable from a real, running MCP tool call — the condition this
-precondition's own "before Phase 2 payload caching goes live" language names. That ticket's own
+ruleset became genuinely reachable from a real, running MCP tool call — the condition this
+precondition's own "before Phase 2 payload caching goes live" language names. (As of
+`TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`, `tools/knowledge_gateway_mcp.py` is archived at
+`tools/archive/knowledge_gateway_mcp.py` and deregistered from `.mcp.json` — this call path is no
+longer live; the ruleset itself lives on, relocated, in `tools/write_path_guard.py`.) That ticket's own
 Architecture Review ruling (DD5) made no claim that this precondition was satisfied at Implement
 time; its own Security-Review phase subsequently found the original four-pattern baseline had
 concrete, named gaps and required — as a narrow, bounded fix, not a redesign — the expansion to ten
@@ -190,11 +200,14 @@ bumps `redaction_policy_version` when, and only when, those rules themselves cha
 **No callable shipped as part of this ticket** (`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`) —
 this section documented the field only. `redaction_policy_version` is now implemented as a real,
 stamped value: the module-level constant `redaction_policy_version = 1`
-(`tools/knowledge_gateway_redaction.py:47`) and the `WriteDecision.redaction_policy_version` field
-(`tools/knowledge_gateway_redaction.py:225`), stamped on every `ALLOW` and `REJECT` decision
-returned by `evaluate_write_candidate()`, added by `TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH`.
+(`tools/write_path_guard.py:48`) and the `WriteDecision.redaction_policy_version` field
+(`tools/write_path_guard.py:255`), stamped on every `ALLOW` and `REJECT` decision
+returned by `evaluate_write_candidate()`, added by `TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH`
+(relocated from `tools/knowledge_gateway_redaction.py` — now archived at
+`tools/archive/knowledge_gateway_redaction.py` — to `tools/write_path_guard.py` by
+`TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`).
 Its distinctness from the other 3 version axes named above is verified by a dedicated test in
-`tests/tools/test_knowledge_gateway_redaction.py`.
+`tests/tools/test_write_path_guard.py`.
 
 **Persistence resolved by `TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING` (Architecture Review DD3,
 option b).** `redaction_policy_version` is now persisted onto an actual
@@ -211,14 +224,24 @@ documented shape.
 table, `retrieval_context_packet_cache_rows`, via `migration_004_add_level2_write_path_columns(conn)`
 (`tools/retrieval_cache.py`), the same idempotent `ALTER TABLE ... ADD COLUMN` pattern migration 3
 established. Level 2 writes were independently re-verified — not assumed — to route through the
-same `evaluate_write_candidate()` gate this section describes, with no bypass path: a real,
-currently-passing architecture-guard test
+same `evaluate_write_candidate()` gate this section describes, with no bypass path: an
+architecture-guard test
 (`test_no_raw_insert_statement_bypasses_redaction_anywhere_in_level2_cache_module`,
-`tests/tools/test_knowledge_gateway_cache.py`) asserts no raw `.execute(`/`sqlite3` call reaches
-`retrieval_context_packet_cache_rows` outside that gate, and
-`test_level2_write_stamps_redaction_policy_version_column` confirms the column is genuinely
+originally `tests/tools/test_knowledge_gateway_cache.py`) asserted no raw `.execute(`/`sqlite3` call
+reached `retrieval_context_packet_cache_rows` outside that gate, and
+`test_level2_write_stamps_redaction_policy_version_column` confirmed the column was genuinely
 populated on write, not left null. No new `source_type` literal was introduced for Level 2 writes —
 the same 2-entry allowlist (§2) is reused unmodified.
+
+**Citation no longer live as of `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`:** this test file
+moved to `tests/archive/test_knowledge_gateway_cache.py` (excluded from default pytest collection)
+and, per that ticket's own Implementation Notes, is one of 5 archived test files that fail
+collection outright when run directly (a plain `from tools import knowledge_gateway_cache` import
+of a module now itself archived without an `__init__.py`) — it is a frozen historical record of a
+finding that was true and independently verified at the time, not a currently-executable test. The
+underlying behavior it verified (no raw-`.execute()` bypass of the redaction gate) has not been
+re-verified against the live `tools/write_path_guard.py`/`tools/retrieval_cache.py` code path since
+this archival; that re-verification, if ever needed, is out of this ticket's own scope.
 
 ## 7. Never-Cache Enumeration
 
@@ -288,11 +311,15 @@ schema currently freezes its value set as an enum.
 
 **No callable shipped in `tools/` as part of this ticket** (`TCK-20260814-KGMCP-REDACTION-RETENTION-POLICY`)
 — this section documented the method only, consistent with that ticket's Out of Scope excluding
-cache read/write implementation. `kgmcp_char_heuristic_v1` is now implemented as a real callable at
+cache read/write implementation. `kgmcp_char_heuristic_v1` was implemented as a real callable at
 `tools/knowledge_gateway_packet_assembly.py:81`, added by `TCK-20260815-KGMCP-P1-PACKET-ASSEMBLY`
 as part of its token-budgeted assembly work (§15); see
 `test_kgmcp_char_heuristic_v1_matches_frozen_formula`
 (`tests/tools/test_knowledge_gateway_packet_assembly.py:111`) for the formula-parity test.
+As of `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`, both citations above are archived, frozen
+snapshots — `tools/archive/knowledge_gateway_packet_assembly.py` and
+`tests/archive/test_knowledge_gateway_packet_assembly.py` (the latter excluded from default pytest
+collection via `pyproject.toml`'s `norecursedirs`) — no longer live/executed code.
 
 **Ratification (§24 item 4):** approved as drafted by the repository owner on 2026-08-15, recorded
 in `TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`. `kgmcp_char_heuristic_v1` and its ±20%
@@ -303,15 +330,21 @@ ratification.
 
 These were **documented defaults, not implemented in `tools/retrieval_cache.py` by this
 document's own architectural boundary** — `tools/retrieval_cache.py` is not, and is not intended to
-become, the home for these limits. They are now implemented as real, tested logic
-in a separate new module, `tools/knowledge_gateway_redaction.py`, added by
-`TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH`: `open_connection_with_limits(db_path)` applies
+become, the home for these limits. They were originally implemented as real, tested logic in a
+separate new module, `tools/knowledge_gateway_redaction.py`, added by
+`TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH`. `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` later
+split that module in two: `open_connection_with_limits(db_path)` — which applies
 `PRAGMA journal_mode=WAL` and `PRAGMA busy_timeout=5000` on every connection open and chmods the
-file `0600` immediately after creation (never re-chmodding a pre-existing file);
-`check_db_size_within_limit(db_path)` enforces the 256 MB ceiling; `execute_bounded_transaction()`
-wraps a caller-supplied statement list in a single per-call transaction; and
-`acquire_write_guard()` / `release_write_guard()` implement the per-key stampede guard as an
-in-process lock keyed by cache key (not multi-process safe — see the functions' own docstrings).
+file `0600` immediately after creation (never re-chmodding a pre-existing file) — moved to the new,
+gateway-independent `tools/write_path_guard.py`, since `tools/retrieval_cache.py` has a real, live
+call dependency on it. `check_db_size_within_limit(db_path)` (enforces the 256 MB ceiling),
+`execute_bounded_transaction()` (wraps a caller-supplied statement list in a single per-call
+transaction), and `acquire_write_guard()` / `release_write_guard()` (the per-key stampede guard, an
+in-process lock keyed by cache key — not multi-process safe, see the functions' own docstrings) had
+no real consumer outside the Knowledge Gateway MCP package and stayed behind in
+`tools/knowledge_gateway_redaction.py`, now archived (no longer live code) at
+`tools/archive/knowledge_gateway_redaction.py` alongside the rest of the deregistered Knowledge
+Gateway MCP.
 `tools/retrieval_cache.py` itself remains byte-unchanged by this work — `db_path` is a required,
 caller-supplied parameter with no default onto `tools.retrieval_cache.CACHE_DB_PATH`, and
 `test_sqlite_defaults_not_silently_implemented` (`tests/docs/test_redaction_retention_policy_doc.py`)

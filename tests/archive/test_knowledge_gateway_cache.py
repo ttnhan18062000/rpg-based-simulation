@@ -30,7 +30,7 @@ import pytest
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _TOOLS_DIR = _REPO_ROOT / "tools"
 _CONTRACTS_DIR = _REPO_ROOT / "docs" / "engine" / "contracts" / "knowledge_gateway_mcp"
-_CACHE_MODULE_PATH = _TOOLS_DIR / "knowledge_gateway_cache.py"
+_CACHE_MODULE_PATH = _TOOLS_DIR / "archive" / "knowledge_gateway_cache.py"
 
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))

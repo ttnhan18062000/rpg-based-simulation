@@ -30,7 +30,7 @@ _EVIDENCE_KINDS_SCHEMA = _CONTRACTS_DIR / "evidence_identity_kinds.schema.json"
 _MIGRATION_PLAN_MD = _CONTRACTS_DIR / "cache_migration_plan.md"
 _SHARED_ENUMS = _CONTRACTS_DIR / "shared_enums.schema.json"
 _REQUEST_SCHEMA = _CONTRACTS_DIR / "knowledge_context_request.schema.json"
-_SIBLING_SCHEMA_TEST = _REPO_ROOT / "tests" / "tools" / "test_knowledge_gateway_contract_schemas.py"
+_SIBLING_SCHEMA_TEST = _REPO_ROOT / "tests" / "archive" / "test_knowledge_gateway_contract_schemas.py"
 
 _RETRIEVAL_CACHE_PY = _REPO_ROOT / "tools" / "retrieval_cache.py"
 

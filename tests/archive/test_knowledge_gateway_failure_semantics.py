@@ -54,7 +54,7 @@ import pytest
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _TOOLS_DIR = _REPO_ROOT / "tools"
 _CONTRACTS_DIR = _REPO_ROOT / "docs" / "engine" / "contracts" / "knowledge_gateway_mcp"
-_MCP_MODULE_PATH = _TOOLS_DIR / "knowledge_gateway_mcp.py"
+_MCP_MODULE_PATH = _TOOLS_DIR / "archive" / "knowledge_gateway_mcp.py"
 
 # A stable, made-up single-identifier-shaped string: not a ticket id, not a parity id, not an
 # existing repo-relative path, not a registered doc path, not a subsystem id — reaches
