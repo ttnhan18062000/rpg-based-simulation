@@ -14,10 +14,16 @@ from src.domains.campaigns.state import EpisodeSummary
 
 
 def _make_manifest(n_episodes: int = 3) -> CampaignManifest:
-    return CampaignManifest(
-        id="prog_test",
-        episodes=[MagicMock() for _ in range(n_episodes)],
-    )
+    # TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY: _build_initial_state() now really
+    # compiles spec.world_composition (WorldRepository + WorldCompiler), so each
+    # episode spec needs a real string world_id -- a bare MagicMock's
+    # .world_composition is another MagicMock and fails world-id validation.
+    episodes = []
+    for _ in range(n_episodes):
+        ep = MagicMock()
+        ep.world_composition = "unit_faction_tension"
+        episodes.append(ep)
+    return CampaignManifest(id="prog_test", episodes=episodes)
 
 
 def _make_entity(entity_id: int, level: int, alive: bool) -> MagicMock:

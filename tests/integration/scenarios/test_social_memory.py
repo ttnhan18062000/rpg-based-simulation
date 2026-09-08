@@ -110,7 +110,7 @@ def test_reputation_transfer_across_episodes():
 
     # Inject the pre-seeded initial state for ep0 by monkeypatching
     # _build_initial_state for this test only.
-    orchestrator._build_initial_state = lambda seed: ep0_initial  # type: ignore[method-assign]
+    orchestrator._build_initial_state = lambda seed, spec: ep0_initial  # type: ignore[method-assign]
 
     summary0 = orchestrator.run_episode()
     assert summary0.episode_index == 0
@@ -186,7 +186,7 @@ def test_social_memories_serialized_in_campaign_state():
     spec0 = _make_spec("ep_serial", tick_limit=3)
     manifest = CampaignManifest(id="test_serial_campaign", episodes=[spec0])
     orchestrator = CampaignOrchestrator(manifest)
-    orchestrator._build_initial_state = lambda seed: ep0_initial  # type: ignore[method-assign]
+    orchestrator._build_initial_state = lambda seed, spec: ep0_initial  # type: ignore[method-assign]
 
     orchestrator.run_episode()
 
@@ -241,7 +241,7 @@ def test_consequence_events_fire_at_episode_entity_spawn():
             faction_reputation={"default": 0.95},
         )
 
-        initial_state = orchestrator._build_initial_state(episode_seed=1)
+        initial_state = orchestrator._build_initial_state(1, spec0)
 
         assert 1 in initial_state.entities
         legendary_events = [e for e in recorder.events if e.event_type == "LEGENDARY_ARRIVAL"]
@@ -270,5 +270,5 @@ def test_consequence_events_noop_without_event_recorder():
         faction_reputation={"default": 0.95},
     )
 
-    initial_state = orchestrator._build_initial_state(episode_seed=1)
+    initial_state = orchestrator._build_initial_state(1, spec0)
     assert 1 in initial_state.entities

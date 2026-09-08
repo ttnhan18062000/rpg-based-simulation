@@ -180,7 +180,7 @@ class CampaignOrchestrator:
         spec = self._manifest.episodes[idx]
         episode_seed = self._manifest.base_seed + idx
 
-        initial_state = self._build_initial_state(episode_seed)
+        initial_state = self._build_initial_state(episode_seed, spec)
 
         # Deferred import avoids circular import and module-level engine construction.
         from src.engine.scenario_runtime import ScenarioRuntimeService
@@ -601,7 +601,9 @@ class CampaignOrchestrator:
             for entity_id, entity in final_state.entities.items()
         }
 
-    def _build_initial_state(self, episode_seed: int) -> "AuthoritativeState":
+    def _build_initial_state(
+        self, episode_seed: int, spec: "SimulationScenarioDefinition"
+    ) -> "AuthoritativeState":
         """Construct an AuthoritativeState seeded with carry-forward entity data.
 
         For episode 0 (no prior persistent_entities): returns a fresh
@@ -611,6 +613,21 @@ class CampaignOrchestrator:
 
         Only alive entities (lifecycle.active=True) are spawned in the new episode.
         Dead entities remain in persistent_entities for history but are not injected.
+
+        TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY: both branches below thread in
+        `regions=`/`places=` from a real `WorldCompiler.compile()` call, matching
+        every non-Campaign entrypoint (src/cli/entry.py, src/api/engine_manager.py,
+        src/lab/orchestrator.py, src/worldbuilding/cli.py) — before this ticket,
+        `state.regions`/`.places` stayed empty for every Campaign-mode episode,
+        silently making TownResolutionSystem.resolve()'s regional logic (and
+        anything else keyed on `len(state.regions) == 0`) inert. Deliberately does
+        NOT thread `entities=`/`buildings=`/etc. from the compiled state — carried
+        entities (episode N>0) or a fresh empty roster (episode 0) remain the sole
+        source of truth for `entities`, matching this method's own pre-existing
+        contract; only region/place topology comes from the fresh per-episode
+        compile (deterministic per `episode_seed`, matching the non-Campaign
+        entrypoints' own seed-to-compile relationship — recompiled every episode
+        rather than cached once, since each episode already gets a fresh seed).
         """
         from dataclasses import replace as dc_replace
 
@@ -618,6 +635,16 @@ class CampaignOrchestrator:
         from src.core.state import AuthoritativeState, EntityState
         from src.core.updates import SocialUpdate
         from src.systems.social_systems.relationships import RelationshipService
+        from src.worldbuilding.compiler import WorldCompiler
+        from src.worldbuilding.repository import WorldRepository
+
+        world_repo = WorldRepository("data/worlds")
+        world_spec, world_context = world_repo.load_world_with_context(spec.world_composition)
+        compiled_state, _compile_report = WorldCompiler.compile(
+            world_spec, seed=episode_seed, context=world_context
+        )
+        compiled_regions = compiled_state.regions
+        compiled_places = compiled_state.places
 
         alive_carry_forwards = {
             eid: cf
@@ -626,8 +653,14 @@ class CampaignOrchestrator:
         }
 
         if not alive_carry_forwards:
-            # Episode 0 or no surviving entities — start fresh.
-            return AuthoritativeState(tick=0, seed=episode_seed)
+            # Episode 0 or no surviving entities — start fresh, but with real
+            # region/place topology now that compilation actually runs.
+            return AuthoritativeState(
+                tick=0,
+                seed=episode_seed,
+                regions=compiled_regions,
+                places=compiled_places,
+            )
 
         # Reconstruct minimal EntityState objects from carry-forward snapshots.
         # Fields not captured in EntityCarryForward (e.g. combat state, position,
@@ -817,6 +850,8 @@ class CampaignOrchestrator:
             tick=0,
             seed=episode_seed,
             entities=entities,
+            regions=compiled_regions,
+            places=compiled_places,
             region_loyalty_pressure=region_loyalty_pressure,
             region_culture_states=region_culture_states,
             entity_legend_facts=entity_legend_facts,
