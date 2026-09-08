@@ -136,15 +136,22 @@ a fix without a real decision on the disposition.**
   verification is deferred to this ticket)
 - TCK-20260908-DIRTY-SET-PASSIVE-DECAY-CONSUMER-INVESTIGATION (a different, already-ruled-out
   mechanism for the same symptom class — confirmed not the cause here)
-- TCK-20260908-CAMPAIGN-LIFE-ARC-EPISODE-STALL-TRUNCATION — **hypothesized (not yet confirmed)
-  shared root cause**, raised by peer review (`rpg-feature-planning`, 2026-09-08): if
-  `campaign_life_arc` episodes enter `RuntimeMode.DEGRADED` early and most entities have no active
-  AI goal, this ticket's own starvation loop would silence movement (and any events it would have
-  generated) across the whole episode, which is exactly the ~50-consecutive-zero-event pattern that
-  ticket's own stall detector fires on. Not traced end to end from this side either. Whoever
-  investigates this ticket's own Scope item ("how often, and under what real conditions, is
-  `DEGRADED`/`EXACT_DIRTY` actually entered in practice") should check `campaign_life_arc`
-  specifically as one such real condition, rather than only a synthetic/generic long-run.
+- TCK-20260908-CAMPAIGN-LIFE-ARC-EPISODE-STALL-TRUNCATION — **shared-root-cause hypothesis tested
+  and RULED OUT for that specific ticket (2026-09-08)**, without weakening this ticket's own
+  standing evidence. A real, uninstrumented per-tick probe of a `campaign_life_arc` episode
+  confirmed `governor_mode=DEGRADED`/`scan_policy=EXACT_DIRTY` from tick 1 onward (the mechanism
+  this ticket investigates is real and present there) — but that episode's world has **zero
+  entities** throughout (`CampaignOrchestrator._build_initial_state()` never spawns any; see that
+  ticket's own Implementation Notes). With nothing alive to select as a movement candidate,
+  `EXACT_DIRTY`'s non-urgent-exclusion mechanism cannot be what silenced that specific run — the
+  real cause there is upstream (no entities ever exist), not this ticket's own starvation
+  mechanism. **This does not disprove or weaken this ticket's own findings** — the real,
+  reproduced starvation (3 spawned `goblin_raider` entities, real `navigation.target`, zero net
+  position change across 30 real ticks once `EXACT_DIRTY` engaged, from
+  `TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`) is separate, real evidence on its own and stands
+  unaffected; it simply isn't what killed `campaign_life_arc` specifically. Keep the two findings
+  distinct — one confirmed-real mechanism (this ticket) and one confirmed-different root cause for
+  a specific symptom that briefly looked like it might share the same cause (the campaign ticket).
 
 ## Related Docs
 - Wherever the existing Kernel wall-clock mid-tick throttle determinism finding is recorded
