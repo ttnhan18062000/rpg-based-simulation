@@ -219,3 +219,13 @@ measured directly rather than estimated. That is a balance-constant problem insi
 Out of Scope, so it needs a real decision (retune the constants, lower the thresholds for a
 dedicated corpus world, or formally accept these branches as long-horizon-only and amend ACs 2-4)
 rather than a unilateral fix here.
+
+### Decision, 2026-09-08 (real user decision, via `AskUserQuestion`, orchestrator-initiated)
+**Dedicated corpus world with lowered thresholds** — a small calibration-only world/profile that
+overrides the maturity gate (via whatever override mechanism the corpus/profile system already
+supports — e.g. a calibration-profile-scoped constant override, not a change to
+`CampService.RAID_MATURITY_THRESHOLD`/`MATURITY_PER_TICK` themselves) so the raid, Nest-spread, and
+EXPAND_TERRITORY-boost branches can be genuinely proven reachable in a real, practical-length run —
+without touching real production game-balance constants used by every other world. The real
+production `CampService`/`BossService` mechanism and constants stay exactly as they are; only this
+one dedicated calibration world sees a lowered gate.
