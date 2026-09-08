@@ -17,6 +17,8 @@ real, callable code even though unreferenced by the pipeline).
 """
 from __future__ import annotations
 
+from unittest.mock import create_autospec
+
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState
 from src.core.updates import StateUpdate
@@ -36,7 +38,11 @@ def _entity(eid: int = 1, pos: tuple = (0.0, 0.0)):
 
 
 def _fake_decide_factory(raw_score, family, target_node_id=None):
-    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None, culture_state=None, legend_fact=None, belief_institutions=None, event_fidelity=None):
+    """Wraps the fake behavior in create_autospec(AdventureDecisionService.decide) so a future
+    signature change is caught structurally at mock-call time
+    (TCK-20260908-ADVENTURE-DECIDE-MOCK-SIGNATURE-DRIFT-HARDENING)."""
+
+    def _fake_decide(entity, candidates, **kwargs):
         selected = AdventureRouteOption(
             family=family,
             score=raw_score,
@@ -49,7 +55,7 @@ def _fake_decide_factory(raw_score, family, target_node_id=None):
             selected=selected, rejected=(), proposed_project=None, proposed_objective=None, trace={},
         )
 
-    return _fake_decide
+    return create_autospec(AdventureDecisionService.decide, side_effect=_fake_decide)
 
 
 def test_fused_strategic_pass_property_updates_carries_last_routing_family(monkeypatch):

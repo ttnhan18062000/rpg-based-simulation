@@ -1,7 +1,7 @@
 import pytest
 from dataclasses import replace
 from src.core.state import EntityState
-from src.core.cognition import CognitionModel, CommitmentModel, CommitmentEntry, PublicReputationProfile, RelationshipModel, ValuePreferenceProfile, MotivationModel
+from src.core.cognition import CognitionModel, CommitmentModel, CommitmentEntry, PublicReputationProfile, RelationshipModel, MotivationModel
 from src.domains.commitment.pressure import CommitmentPressureService
 from src.domains.commitment.abandonment import AbandonmentEvaluator
 from src.domains.commitment.reputation import ReputationUpdateService

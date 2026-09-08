@@ -1631,15 +1631,16 @@ This document is the canonical record of intentional behavior shifts in `src` co
   definition explicitly (does the new signal genuinely bias route-family choice the same way these
   3 do, or does it belong somewhere else in the pipeline) rather than added by the same "it's the
   only live hook" reasoning without re-confirming fit.
-- **Dead Doctrine/Values/Culture chain retirement, added 2026-09-07**: no ticket currently exists to
-  delete or formally retire `MotivationBiasService`/`DoctrineResolver`/`IdentityDoctrine`/
-  `ValuePreferenceProfile` — they remain in `src/` with "CONFIRMED DEAD LEGACY CODE" docstrings
-  (added by this ticket) as the only signal to a future investigator that they're not live. This is
-  a real, disclosed gap, not silently dropped: a future cleanup ticket should either (a) delete the
-  4 modules outright once nothing references the docstring disclosure as a "why does this still
-  exist" answer, or (b) formally document them as permanently-retired-in-place if deletion carries
-  its own risk (e.g. external tooling referencing the module paths). Not actioned here — this entry
-  exists so the gap is findable, not to resolve it.
+- **Dead Doctrine/Values/Culture chain retirement — resolved 2026-09-08**
+  (`TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT`): real user decision, **delete outright**.
+  `src/domains/motivation/service.py` (`MotivationBiasService`) and
+  `src/domains/motivation/resolver.py` (`DoctrineResolver`) were deleted entirely;
+  `IdentityDoctrine`/`ValuePreferenceProfile` classes removed from `src/core/cognition.py`, along
+  with the now-unused `doctrine`/`values` fields on `MotivationModel` (confirmed those fields were
+  themselves never read outside the deleted `compute_bias_multiplier()`). No real external reference
+  to these exact module/class paths was found outside `src/` before deleting. Docstring
+  cross-references in `AdventureRouteScorer.score()`, `CulturalBiasApplicator`, and
+  `CultureDriftExporter`/`CultureDriftImporter` updated to stop pointing at now-deleted code.
 - **Status**: RATIFIED
 
 ---

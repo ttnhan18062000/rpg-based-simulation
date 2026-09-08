@@ -280,7 +280,8 @@ class AdventureRouteScorer:
         # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: Culture Drift bias, additive and
         # independent of the trait-based if/elif chain above (a route can be affected by both a
         # personality trait AND regional culture at once, unlike the trait chain's own
-        # one-match-only structure). Deliberately bypasses the dead MotivationBiasService/
+        # one-match-only structure). Deliberately bypasses the (now-deleted, per
+        # TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT) dead MotivationBiasService/
         # DoctrineResolver/IdentityDoctrine/ValuePreferenceProfile chain (see docs/guidelines/
         # intentional_divergences.md §2.53) — reuses the same real, already-shipped
         # CulturalBiasApplicator.compute_culture_delta() logic that idea-56/57's own investigation
