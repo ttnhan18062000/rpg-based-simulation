@@ -12,7 +12,17 @@ tags: [simulation-quality, calibration, corpus]
 # TCK-20260908-CAMPAIGN-LIFE-ARC-EPISODE-STALL-TRUNCATION
 
 ## Title
-`campaign_life_arc` episodes stall and truncate at ~tick 52 regardless of the configured 200-tick limit
+`campaign_life_arc` episodes produce zero kernel `SimulationEvent`s from ~tick 2 onward — the
+stall-detector truncation at ~tick 52 is its correct downstream report, not the bug
+
+**Naming note (2026-09-08, peer review `rpg-feature-planning`):** this ticket's original title
+("episodes stall and truncate at ~tick 52") named the symptom the stall detector correctly
+reports, not the underlying defect — that framing invites the wrong fix (raising
+`STALL_THRESHOLD` past 200 makes the ticket's own AC read "closed" while the simulation is still
+dead for ~198 of 200 ticks, and disables the one mechanism that was honestly reporting the
+problem). Retitled to name the real finding. **Do not fix this ticket by raising
+`STALL_THRESHOLD` or otherwise changing what the stall detector counts** — see amended Scope/Out
+of Scope below.
 
 ## Status
 OPEN
@@ -27,6 +37,14 @@ bug
 P2
 
 ## Request Summary
+**The real finding: `campaign_life_arc` episodes produce zero kernel `SimulationEvent`s from
+roughly tick 2 onward.** The ~tick-52 truncation is the stall detector correctly reporting that
+inactivity 50 ticks later — it is the downstream symptom, not the defect. Confirmed directly from
+the originating investigation's own event-stream data (18 `world_emergence_event`s, all at tick 1;
+`scenario_objective_progressed` is recorded after `kernel.tick_once()` returns each tick and so
+never resets the stall counter) — every simulation-quality measurement made against
+`campaign_life_arc` to date was measured on a world that stops doing anything after the first tick.
+
 Found during `TCK-20260908-CAMPAIGN-MODE-ACTIVATED-SUBSYSTEM-BASELINE-DRIFT`'s investigation into
 whether Campaign-mode baselines drifted after PR #148. That investigation ran
 `campaign_life_arc` (`config/simulation_quality/profiles/campaign_life_arc.yaml`,
@@ -53,26 +71,35 @@ determine whether the PR #148-reactivated war/siege/calamity subsystems fire wit
 are themselves unreachable.
 
 ## Scope
-- Confirm the stall-detector mechanism is genuinely the cause (the citation above is a strong,
-  directly-corroborated hypothesis from one investigation's own instrumentation, not yet
-  independently re-verified from a fresh session).
-- Determine whether ~50 consecutive zero-event ticks early in a `campaign_life_arc` episode is
-  itself expected (e.g. a quiet narrative-setup phase genuinely produces no `SimulationEvent`
-  objects for that long) or a real content/wiring gap (e.g. some system that should be producing
-  events during this window silently isn't).
-- If expected: determine the right fix — raise `STALL_THRESHOLD` for Campaign-mode profiles
-  specifically, change what counts toward the stall counter, or accept the profile's own quiet
-  start and document why 52 ticks is an acceptable/intended real episode length for this profile
-  (in which case `TCK-20260908-CAMPAIGN-MODE-ACTIVATED-SUBSYSTEM-BASELINE-DRIFT`'s own Finding 3
-  should be revisited with that context).
-- If a real gap: fix the underlying missing event production, not the stall detector itself.
-- Re-run the war/siege/calamity observability question from the originating investigation once
-  episodes run to something close to their intended length, to finally answer whether those
-  subsystems fire in a real, full-length Campaign-mode run.
+- Confirm the "zero kernel events from ~tick 2 onward" finding directly (per-tick
+  `_current_tick_event_count` logging across a real `campaign_life_arc` episode), not only via the
+  originating investigation's own aggregate JSONL counts.
+- Determine WHY the simulation goes event-silent that early — this is the actual defect to find,
+  not merely re-confirm the stall detector's report of it. Test the peer-raised hypothesis (not
+  yet confirmed — see `TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION`'s
+  cross-reference) that `RuntimeMode.DEGRADED`/`ScanPolicy.EXACT_DIRTY` movement starvation is the
+  cause, alongside any other real candidate (e.g. a genuinely quiet, event-sparse narrative-setup
+  phase by design — check content/scenario config before assuming a bug).
+- If a real gap in event production (or in whatever mechanism should be generating activity) is
+  found: fix that underlying cause.
+- If the ~50-tick silence is confirmed to be intended, event-sparse content behavior (not a bug):
+  document that explicitly as the disposition, with real evidence for why it's intended — do not
+  default to this conclusion without positive evidence.
+- Once the real silence is fixed (or confirmed intended and something else explains the observed
+  truncation), re-run the war/siege/calamity observability question from the originating
+  investigation to finally answer whether those subsystems fire in a real, full-length Campaign-mode
+  run.
 
 ## Out of Scope
+- **Raising `STALL_THRESHOLD`, or otherwise changing what the stall detector counts, as a fix.**
+  The detector is correctly reporting genuine simulation inactivity — per peer review, this is the
+  same class of defect as violating Gate Integrity: the stall detector is a correctness signal,
+  not an obstacle, and tuning it to stop reporting the silence would hide the real defect rather
+  than fix it. A disposition of "raise the threshold" is not an acceptable closure for this ticket
+  under any circumstance short of the event-silence itself being fixed or independently confirmed
+  as intended content behavior with real evidence.
 - The stall detector's own general design/threshold value for non-Campaign-mode profiles — this
-  ticket is scoped to `campaign_life_arc`'s specific observed truncation, not a general stall-
+  ticket is scoped to `campaign_life_arc`'s specific observed event-silence, not a general stall-
   detector redesign.
 - Tuning or balancing the war/siege/calamity subsystems themselves once they are observable —
   `TCK-20260908-CAMPAIGN-MODE-ACTIVATED-SUBSYSTEM-BASELINE-DRIFT`'s own Out of Scope already
@@ -81,13 +108,19 @@ are themselves unreachable.
   here; anything found that is "correct but slower" is deferred to the planned performance effort.
 
 ## Acceptance Criteria
-- [ ] The stall-detector-triggered truncation is independently re-confirmed (not assumed from the
-      originating investigation's own citation alone).
-- [ ] A real determination is made: is ~50 ticks of silence at the start of a `campaign_life_arc`
-      episode expected content behavior, or a real gap in event production?
+- [ ] Per-tick `_current_tick_event_count` evidence directly confirms the event-silence (not
+      inferred only from the stall detector's own aggregate report).
+- [ ] A real determination is made of WHY the simulation goes event-silent: a real gap (e.g. the
+      peer-hypothesized `EXACT_DIRTY` movement-starvation link, confirmed or ruled out with real
+      evidence) or genuinely intended event-sparse content behavior (with positive evidence, not
+      assumed).
 - [ ] A disposition is recorded and, if a fix is warranted, implemented with test evidence that
-      episodes now run closer to their configured length (or that the shorter length is confirmed
-      intended and documented).
+      the simulation produces real activity across the episode (not merely that episodes now run
+      to their full configured tick count — running longer while still silent is not a fix).
+- [ ] The fix, if any, is NOT a `STALL_THRESHOLD` change or any other alteration to what the stall
+      detector counts (see Out of Scope) — verified by checking the diff touches
+      `scenario_runtime.py` only if fixing a genuine bug in the detector's own logic (e.g. an
+      off-by-one), never its threshold or event-counting policy as a workaround.
 - [ ] `TCK-20260908-CAMPAIGN-MODE-ACTIVATED-SUBSYSTEM-BASELINE-DRIFT`'s own Finding 3 (whether
       war/siege/calamity fire within a full-length episode) is revisited once episodes run long
       enough to test it for real, and that ticket's own record is updated if the answer changes.
