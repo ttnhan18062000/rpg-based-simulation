@@ -205,12 +205,70 @@ change that reflects the world's authored content" framing already used to rejec
 hero+goblin spawn — but flagging both for peer review before locking in, per this ticket's own
 "bring the plan back before implementing" instruction.
 
-## Test Summary
-_(pending — Investigate/Plan phases only so far; no implementation, per explicit instruction to
-bring the plan to peer review first)_
+## Test Summary (WIP — ticket not closed, real open question below)
 
-## Files Changed
-_(pending — no `src/` files changed yet)_
+**Repository lifetime (decision 2 from plan.md), resolved with evidence**: both
+`CatalogRepository` and `WorldModuleRepository` confirmed genuinely immutable after `load_all()` —
+grepped every method in both classes; only `load_all()`/`_load_module_file()` write instance
+state, every `get_*`/`list_*` is a pure read, and no downstream consumer
+(`WorldAssemblyResolver`/`ArchetypeEntityFactory`/`WorldEntitySpawner`) mutates the repository
+objects it's given. Built once in `CampaignOrchestrator.__init__()`, reused across all episodes —
+no state-leak risk to episode isolation.
+
+**Scatter (decision 1 from plan.md), implemented and empirically verified**: added
+`CampaignOrchestrator._scatter_catalog_entities()`, an explicitly-labeled INTERIM WORKAROUND
+(deterministic, seeded from `episode_seed` via `DeterministicRNG`, same mechanism
+`RaidService.spawn_raid()` already uses) — deployed after `CatalogScenarioStateBuilder.build()`
+produces its co-located entities, before they're threaded into the returned `AuthoritativeState`.
+Re-ran the same real 70-tick episode used to find the original problem:
+- 15 distinct positions, zero tile collisions.
+- **Zero `LAW-OCCUPANCY-COLLISION` violations** anywhere in the run (was 41).
+- Event mix now varied and plausible: 15 separate `combat_initiated` events across the run (was 1
+  isolated fight), `cooperation_event` down to 67 from 935 (no longer 79% of all activity), real
+  economic activity (`gold_sink_fired`, `contract_offer_created`), 2 real deaths from distributed
+  combat (13/15 alive at end). `stall_counter` touches 1 occasionally but never sustains — nowhere
+  near `STALL_THRESHOLD=50`.
+
+**New, more serious finding surfaced while investigating the peer-flagged "duplication" concern
+for the `unit_faction_tension.yaml` content mirror (see Files Changed) — not yet resolved, ticket
+NOT closed pending this**: `data/worlds/<world_id>/world.yaml` (read by `WorldRepository`, used for
+`regions`/`places`) and `data/content/world_compositions/<world_id>.yaml` (read by
+`ScenarioSetupResolver`, used for the new entity-spawn path) are not guaranteed duplicates of each
+other — for `frontier_living_world` (the real `campaign_life_arc` world), they have already
+diverged. `diff`'d directly: `data/worlds/frontier_living_world/world.yaml` has 7 modules via the
+richer `module_refs` form (including `trading_company_hub`) plus `information_source_profiles`/
+`pending_information_responses` (Pattern-6 fields this orchestrator's own survivor branch and
+`pipeline.py`'s `information_belief` phase both read elsewhere); `data/content/world_compositions/
+frontier_living_world.yaml` has only 6 modules via the plain `modules:` shorthand, no
+`trading_company_hub`, no information-source data. Consequence: for the real profile, this
+ticket's own current implementation compiles regions/places from a 7-module world and spawns
+entities from a 6-module world, in the same episode — entities from `trading_company_hub` never
+spawn. Confirmed `WorldAssemblyResolver` CAN consume the richer `module_refs` form directly
+(`WorldCompositionNormalizer.normalize()` handles either shape) — so pointing
+`ScenarioSetupResolver`'s own `compositions_dir` at `data/worlds/` instead of
+`data/content/world_compositions/` for Campaign's own resolution is a real, available option, not
+decided here — routed to peer review.
+
+## Files Changed (WIP)
+- `src/domains/campaigns/orchestrator.py` — `CampaignOrchestrator.__init__()` builds
+  `CatalogRepository`/`WorldModuleRepository`/`CatalogScenarioStateBuilder` once;
+  `_build_initial_state()`'s empty-carry-forwards branch spawns and scatters entities;
+  `_scatter_catalog_entities()` new static method (interim workaround, see its own docstring).
+- `data/content/world_compositions/unit_faction_tension.yaml` — new. Mirrors
+  `data/worlds/unit_faction_tension/world.yaml` (verified byte-identical composition content for
+  this specific world) so `ScenarioSetupResolver` can resolve the same world the existing unit
+  tests already use via `WorldRepository`. **Not yet confirmed this is the right general answer**
+  — see the divergence finding above; may need revisiting depending on the
+  `compositions_dir`-pointed-at-`data/worlds/` option's own resolution.
+- 10 existing tests in `tests/unit/domains/campaigns/test_campaign_orchestrator.py` and
+  `tests/integration/campaigns/test_progression_planner_three_episode.py` currently FAIL (their
+  `MagicMock` scenario fixtures lack real `id`/`perspective` string values, which
+  `ResolvedScenarioSetup`'s pydantic validation now requires since `_build_initial_state()`
+  actually calls `ScenarioSetupResolver.resolve()` for real) — not yet fixed. Per peer review:
+  don't just patch the mocks to pass — read each test and confirm what it actually verifies now
+  that episodes contain real entities, since these were originally written against an
+  always-empty world.
 
 ## Completion Summary
-_(pending)_
+_(pending — real open architectural question above, routed to peer review; scatter fix confirmed
+clean and verified, repository lifetime decision resolved with evidence, but ticket not closed)_
